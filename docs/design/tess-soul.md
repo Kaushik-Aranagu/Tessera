@@ -1,26 +1,50 @@
-# Tess's soul
+# Tess's soul (v2: wet paint)
 
-Kaushik's pick: Tess's living mark is three dabs of paint. How they move says what Tess is doing. Mockups: `mockups/TessSoul.dc.html` (every state) and `mockups/TessPlayground.dc.html` (travel and the jump to Home).
+Tess's living mark is three dabs of paint. How they move says what Tess is doing. In v2, every state has the soft blur and colour mixing that Kaushik liked in Thinking. There are no flat or solid blocks of colour anywhere.
+
+Mockups:
+- `mockups/TessSoul2.dc.html` shows every state.
+- `mockups/TessPlayground.dc.html` shows travel, hand-off and the jump to Home.
+
+`soul.css` inside either file is the exact reference. v1 (solid blobs, 1.5pt blur) is retired.
 
 ## Form
-- **Three blobs,** each about 64×58pt with slightly different, irregular corner radii.
-- **Offsets:** (−13, −7), (13, −7) and (0, 12).
-- **Colours:** vermilion `#C8452F`, cobalt `#2E6DA4`, cadmium `#E0B341`.
-- **Blend:** **multiply** on light grounds. On dark grounds use **screen**, with the brighter colours `#D9563F`, `#3F7FC0` and `#E8BD4C`.
-- **Blur:** 1.5pt.
-- **Scale:** 0.62 in the bar.
+- **Three main dabs** of about 76×70pt. Each has its own irregular corner radii:
+  - `52% 48% 60% 40% / 55% 45% 55% 45%`
+  - `45% 55% 40% 60% / 50% 60% 40% 50%`
+  - `60% 40% 55% 45% / 45% 55% 45% 55%`
+- **Fill:** each dab is a soft radial wash, not a solid shape. Alpha runs from 0.80 at the centre to 0.60 at 40% of the radius, then fades to 0 at the edge.
+- **Live blur:** 3–9pt, animated with the motion (see the table under Modes). The blur is part of the life, not a fixed filter.
+- **Three satellite dabs** (46×42pt), one per colour. They sit further out, at (−22, 10), (20, 12) and (4, −20), and run the same mode out of phase. They are what makes the soul read as paint mixing, not three circles.
+- **Halo:** a 150×140 blurred radial wash under everything: vermilion at 16%, then violet at 10%, then clear. It breathes between 0.8 and 1.0 over 7s.
+- **Group grade:** saturation 1.45 and contrast 1.04 on the whole group, so the overlaps go vivid rather than muddy.
+
+| | vermilion | cobalt | cadmium |
+|---|---|---|---|
+| Light ground (blend **multiply**) | `#C8452F` | `#2E6DA4` | `#E0B341` |
+| Dark ground (blend **screen**) | `#D9563F` | `#3F7FC0` | `#E8BD4C` |
+| Main offset (x, y) | (−14, −8) | (14, −8) | (0, 13) |
+| Bloom target (x, y) | (18, −10) | (−16, −12) | (0, 18) |
+
+On dark grounds the paint glows instead of staining. The halo there is vermilion 22% then cobalt 14%, and the done ring is cadmium.
+
+**Size:** draw at scale 0.5 in the Ask Tess bar. Idle is deliberately small.
 
 ## Modes
-| Mode | Motion |
-|---|---|
-| idle | A slow breath: scale 0.80↔0.88 and offsets ×1.18 over 6s, each dab a third out of phase |
-| listening | Each dab pulses at its own period (0.9 / 0.72 / 1.1s). Later, drive it from the mic level |
-| thinking | Bloom: from the centre out to (18, −10), (−16, −12) and (0, 18). Scale 0.55→1.15, blur 2→6, 2.4s, staggered by a third |
-| working | The whole soul rotates once every 1.6s while the dabs smear (scale 1 × 0.7, blur 3) |
-| done | All three merge to the centre, pop to 1.15, send out one ring splash to 2.8×, then relax. About 1.6s, with a success haptic |
-| needsYou | The vermilion dab lifts (+10, −16) and nudges over 2.4s, and a small drip falls. The others stay idle |
-| handOff(target:) | One dab flies to the changed row, stretches into a blurred wash (2.6 × 0.7, about 35% opacity) behind it, then fades |
-| resting | Desaturate to 0.3, scale 0.66, a 9s breath. For night and focus mode |
+Each mode is a set of parameters: offset multiplier, scale, blur, opacity and period. Blend between modes; never cut from one to another.
+
+| Mode | Motion | Scale | Blur | Period |
+|---|---|---|---|---|
+| idle | Each dab circles its offset by ±6pt, like a slow drift. All six dabs run different periods, so it never repeats visibly | 0.78–0.92 | 3→6 | 7, 8.5, 10, 9, 11, 7.5s |
+| listening | Pulses outward (offset ×0.6→1.3), each dab at its own rate. Later, drive the amplitude from the mic level | 0.72–1.06 | 3→7 | 0.66–1.1s |
+| thinking | Bloom: from the centre out to the bloom target and back, staggered by thirds | 0.55→1.15 | 2→6 | 2.4s |
+| working | The whole soul rotates (2.2s per turn) while each dab smears: wide and flat, offset ×0.8→1.5 | 0.85×0.7 → 1.1×0.66 | 5→8 | 0.9s |
+| done | All dabs pour into the centre, swell to 1.35 (blur 9) and relax back out. Satellites lag 80ms each. A soft ring splashes out to 2.6×. Success haptic | 0.8→1.35→1 | 4→9→6 | 1.8s (once) |
+| needsYou | The vermilion dab lifts (+12, −16) and taps twice. A small drip falls 34pt and fades. The others stay idle | 0.85–1.06 | 4→7 | 2.4s |
+| handOff(target:) | One dab and its satellite fly to the changed thing, spread into a wash (2.8 × 0.75, 45–60% opacity, blur 10–12) behind it, then fade and reform at home | | 4→12 | about 3.4s |
+| resting | Saturation 0.35 and brightness 1.06. Very slow drift | 0.62–0.68 | 6→8 | 12–15s |
+
+Kaushik liked the ideas behind done, listening and resting; keep them. Mosaic's glint, Kernel's round robin and Kernel's tick are approved as companion motifs (see the last section).
 
 ## Travel
 - Animate position with a different easing on each axis, so the path arcs:
@@ -34,11 +58,13 @@ Kaushik's pick: Tess's living mark is three dabs of paint. How they move says wh
 - Home swaps in underneath with its directional entrance, and the paint fades away.
 - Tapping again goes back.
 
-## Performance and Reduce Motion
-- Use `TimelineView` with `Canvas`, or `PhaseAnimator`. Idle must cost almost nothing at 120Hz.
-- With Reduce Motion: static dabs, with the mode shown by colour and opacity only.
+## Implementation
+- **Recommended route (Research lab idea, welcome):** a single Metal shader for the whole soul. Use domain-warped noise over three colour fields with subtractive (multiply) or additive (screen) mixing, and treat each mode as a parameter set. Animate between parameter sets so modes blend continuously. A `.colorEffect` / `.layerEffect` in a `TimelineView` is enough.
+- **Fallback:** six `RadialGradient` ellipses in a `Canvas`, with `.blendMode(.multiply)` or `.screen`, `.blur` per dab, and `.saturation(1.45)` on the group.
+- **Cost:** idle must cost almost nothing at 120Hz. Pause the soul when it is off screen, and drop to 30fps while it is in the resting mode.
+- **Reduce Motion:** static soft dabs (keep the blur and mixing). Show the mode by scale and opacity only.
 
 ## Motifs we reuse, sparingly
-- **Glint** (from the Mosaic concept): a light sheen crosses text or an edge about every 5s, with a slow breath. Use it for a new PR, the current item, or a fresh note from Tess.
+- **Glint** (from Mosaic): a light sheen crosses text or an edge about every 3–5s. Use it for a possible PR, the running-process seam, or a fresh note from Tess.
 - **Round robin** (from Kernel): five bars with one lit, sweeping every 1.25s. Use it for background jobs: sync, Health import, Tess working through a batch.
 - **Tick** (from Kernel): rolling digits using `numericText`. Use it for rest, the workout clock and countdowns.

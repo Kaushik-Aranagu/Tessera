@@ -3,19 +3,21 @@
 ## Type: four tiers, nothing smaller than 16pt
 | Tier | Size / line height | Use |
 |---|---|---|
-| Hero | 56–64pt / 0.92, weight 850, tracking −4.5% | The object's name only |
-| Title | 34–40pt, weight 850, tracking −3–4% | Section heads, exercise names |
-| Body | 21pt / 1.3, weight 500–600 | Rows, keys |
-| Label | 16pt mono, uppercase, +4% tracking | Metadata. Numerals are tabular mono |
+| Hero | 56–72pt / 0.95, Fraunces weight 600–640, tracking −2.5 to −3% | The object's name, or the one number that matters (weight, rest) |
+| Title | 34–48pt, Fraunces (italic 34 for section words like "Later") | Exercise names, section heads |
+| Body | 21pt / 1.3–1.4, Hanken Grotesk weight 500–600 | Rows, keys |
+| Label | 16pt Hanken Grotesk 700, uppercase, +8% tracking | Metadata, times, plate maths |
 
-- **Fonts for this round:** Schibsted Grotesk for the UI, Martian Mono for numbers and labels.
-- **Tess speaks in Fraunces italic**, in cobalt.
-- Fonts sit behind `Theme`, because the base theme isn't final.
+- **Fonts:**
+  - **Fraunces** (variable: opsz 144, SOFT 100, WONK 1 for display) for heroes and numerals. Use tabular lining numerals.
+  - **Fraunces italic** for context lines ("now, until twenty to four") and for everything Tess says, in cobalt.
+  - **Hanken Grotesk** for the UI.
+- Fonts sit behind `Theme`.
 - Use `Font.custom(_:size:relativeTo:)`. Cap the hero at about 80pt.
-- At accessibility text sizes, switch to a single column and turn rotated labels horizontal.
+- **Accessibility text sizes:** switch to a single column.
 - **Long hero names:**
   1. Allow up to 3 lines.
-  2. Step down the width axis.
+  2. Step down opsz and size.
   3. Demote to Title.
   4. Only then truncate, with the full name in the accessibility label.
 
@@ -28,7 +30,8 @@
 | Process (workout) | Full-screen cover rising from the bottom, `.spring(0.45, bounce 0.1)`; exit 0.32s |
 | Page entrance | First 5–6 elements in reading order, 25ms stagger, 12–16pt travel, blur 4→0 on the hero only. Total ≤ 250ms. Only on the first visit in a session; never blocks taps |
 
-- **Machinery feel:**
-  - Parts slide in tracks and seat with a detent; nothing bounces loosely.
+- **Paint feel:**
+  - Things arrive like paint: strokes draw in, fills spread from where you touch, and nothing wipes linearly.
+  - Precision lives in the instruments: the dial and drum snap with detents.
   - The house spring is tight. `.bouncy` is for PRs only.
 - **Reduce Motion:** cross-fades of 0.15–0.2s, and opacity-only entrances.

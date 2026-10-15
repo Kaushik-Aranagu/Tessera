@@ -1,43 +1,47 @@
-# Home v1
+# Home v1 (painterly)
 
-Light material. One screen tall. Mockup: `mockups/MachinedHome.dc.html`.
+Light ground. One screen tall. Sparse: one hero, one action, one short list. Mockup: `mockups/PleinHome.dc.html`.
 
 ## The three axes
-- **x:** three sibling pages, REVIEW · **NOW** · TRAINING. They are paged, stop at the edges and open on NOW. The sibling rail and its carriage sit at the top (see materials.md).
-- **y:** only inside bounded wells. The page itself doesn't scroll.
+- **x:** three sibling pages, REVIEW · **TODAY** · TRAINING.
+  - They are paged, stop at the edges, and open on TODAY.
+  - The sibling rail sits at y 58: three label-style words, with the active one in ink and the others in `#A39AAE`. Under them, a painted vermilion underline glides continuously with the scroll.
+- **y:** only inside the bounded "Later" window. The page itself doesn't scroll.
 - **z:** tap any name to zoom into its object page.
 
-## NOW, top to bottom
-1. **Sibling rail** at y ≈ 56.
-2. **Day strip** at y ≈ 104. This is its own bounded x lane, one full-width page per day (yesterday, today, tomorrow and so on), opening on today.
-   - Label row: "THU 15 · TODAY" on the left, "15:26" on the right.
-   - A 30pt recessed channel with raised blocks (3pt radius) for each event, coloured by area.
-   - A 2pt cadmium now-line that breathes (glow 0→10pt over 4s).
-   - Hour labels 07 · 11 · 15 · 19 · 23 underneath, with the x ruler below them.
-3. **Seam** at y ≈ 236.
-4. **Label** "NOW · UNTIL 15:40" in `#8A6A1C`.
-5. **Hero:** the object's name only, at 56pt, weight 850, tracking −4.5%, line height 0.92. It zooms into the object page.
-6. **Hold key:** raised, 62pt tall, radius 10, with a recessed channel inset 8.
-   - While you hold, the channel fills cadmium left to right over 900ms. On release it empties over 220ms.
-   - On completion, the next item writes itself into the hero, entering from the right (18pt travel, blur 3→0 on the hero only), and Tess plays her `done` mode.
-7. **NEXT label**, then a bounded recessed well: 180pt tall, radius 10, three rows visible.
-   - It scrolls vertically and snaps to each 60pt row, with the y ruler inside its right edge.
-   - Rows are separated by seams, not boxes. Each row has a 12pt colour inlay, the name at 21pt and a mono time.
-8. **Ask Tess** glass lens at the bottom, with the soul on its left.
+## TODAY, top to bottom
+1. **The day stroke** (y 100, 96pt tall). The day is one watercolour brushstroke, and it is its own bounded x lane: swipe it for yesterday or tomorrow. It opens on today.
+   - **Label:** Fraunces italic 21, e.g. "Thursday afternoon", "Wednesday, done", "Friday, three planned".
+   - **The stroke:** 20pt wide with round caps, and wet edges from turbulence displacement (scale 7). Its gradient runs through the day: morning sky `#9EC3D6` → sage → violet `#7A5C8E` → amber `#E0A35C` → vermilion evening.
+   - **Progress:** the stroke is painted up to now. A dashed ink guide (22%) shows the rest of the day.
+   - **Entrance:** the stroke paints in over 700ms.
+   - **Today only:** a 26pt wet amber tip sits at now and breathes (scale 1↔1.35, blur 3↔6, 3.6s).
+2. **Now line** (y 222): "now, until twenty to four", in Fraunces italic 21, violet.
+3. **Hero** (y 252): the current thing's name only, at Fraunces 60 / 0.95, weight 640, tracking −2.5%, with opsz 144, SOFT 100 and WONK 1. Up to 3 lines. Tap it to zoom into the object.
+4. **Hold to finish** (y 470): an ink key, 220×58.
+   - While you hold, vermilion paint spreads through the key from the left over 900ms, blurred. Releasing drains it in 220ms.
+   - The time left sits beside the key in labels: "14 MIN / LEFT".
+   - **On completion:** the next item writes itself into the hero, entering from the right (18pt travel, blur 4→0, 340ms). Tess plays `done`, and her bar says "Done. Next one is up."
+5. **Later** (y 566): the heading is Fraunces italic 34. Below it, a bounded window 112pt tall shows about two rows and fades out at the bottom, scrolling vertically with a snap per 50pt row.
+   - Each row is a paint dab in its area colour, the name at 21pt, and the time in labels.
+   - No separators.
+6. **Ask Tess** glass bar at y 762, with the soul at scale 0.5 on its left.
 
 ## TRAINING
-- "Push Day A" hero, with the label "TODAY 18:00 · 5 EXERCISES · 55 MIN".
-- A recessed list of exercises, separated by seams, each with "4 × 8 · 82.5" in mono.
-- A solid ink "Start workout" key (radius 10). It raises the workout as a full-screen cover from the bottom.
-- One line from Tess in Fraunces italic, cobalt.
+- **Context line:** "this evening at six".
+- **Hero:** "Push Day A".
+- **Plan:** five rows of 50pt, e.g. "Bench press" with "4 × 8" in labels.
+- **Start workout:** an ink key that raises the workout as a full-screen cover.
+- **Tess line:** one line in cobalt italic, e.g. "Bench is ready for 82.5 today."
 
 ## REVIEW
-- "This week" hero.
-- A seven-cell consistency strip milled from one block. Today's cell is raised and the others are recessed; done days carry a 14pt colour inlay.
-- Sets per muscle: recessed 14pt channels with an ink fill, plus mono counts like "6/14".
-- One line from Tess.
+- **Context line:** "the week so far".
+- **Hero:** a sentence, not a chart: "Four good days of seven".
+- **Week:** seven day dabs (34×30) in a row.
+  - Done days are filled with their main area's colour. Missed days are an empty ink ring at 25%.
+  - Day letters sit under the dabs; today's is in ink.
+- **Tess line:** one line in cobalt italic, e.g. "Chest is a little behind. I slipped one more press into Thursday."
 
 ## Nested scrolling
-- The day strip and the Next well each own their own axis inside their frames.
+- The day stroke and the Later window each own their own axis inside their frames.
 - Edge swipes always belong to the page.
-- When a vertical surface sits inside the horizontally paged screen, give it the opposite axis.
