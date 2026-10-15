@@ -11,3 +11,7 @@
 - More M5 candidates: Money, People and Home upkeep. Also "build me an app" with Claude, and daemons.
 
 **Pending review-guide edits (when the phone gets its next build):** remove the #109 known gap (tap to edit is merged), add back the Today swipe line once QA passes Builder B's hotfix, and add a Groceries check that the last aisle scrolls clear of the closed basket.
+
+**When Builder A's cook mode (kitchen slice 12) reaches the phone:** add Kitchen's 10-step `cook-mode-script.md` (#137, f77bb01) to review-session.md as the cook mode item, and drop the "no cook mode" known gap.
+
+**Thursday Oct 22, end of his first kitchen week** (Groceries and Recipes reached the phone with 21566b8 on Oct 15): the three one-word questions from `kitchen-week-one.md` go on that day's morning list in one message (pantry check, saving a recipe from a website, reaching for something else). The answers go to the Kitchen lead to scope v2.
