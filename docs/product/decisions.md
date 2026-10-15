@@ -84,3 +84,20 @@
 - **"buy" with a clearly non-food object is a task** (4:30 PM PT, Research #145 kitchen rows). "buy train tickets" and "buy new trainers" become tasks; "buy" with food or household groceries stays Groceries. This amends People decision 8 and Lists G7, and call 3 at 4:26 PM PT. When the object is unclear, Groceries stays the default, and Tess names the list so a wrong pick is one Undo.
 - **Day log v1 rule gaps** (4:30 PM PT, Research #145), so Core builds without waiting: counts use proper singulars ("1 task", "2 tasks"). Captures fold into one line, as the fixtures do; this settles the Oct 6 and Oct 8 examples, and "Also:" counts follow the fixtures. A planned rest day shows a "Rest day" line from the plan, even though it leaves nothing in the op log.
 - **"paid" plus an amount belongs to Money** (4:34 PM PT, confirmed against Research #149). It logs a spend, and if it names a chore, ticks that chore in the same ghost row. Upkeep rows 34 and 40 change to match. Under the agreed M5 order only 5 of 170 rows change, and the guards in `research/fixtures/m5-parse-order.md` go with Core's M5 engine items.
+- **Show mode photo calls** (4:39 PM PT, Research #150, `research/fixtures/show-photos.md` open questions). All defaults:
+  1. A photo read never commits by itself. A sure receipt waits for a tap, like every OCR result (`capture-modes.md` 1.6), and still does once Money ships. Design's 2 s drying is for typed phrases only.
+  2. The store shows in title case ("Tesco" for TESCO). The category is the whole name as printed ("Blue Bottle Coffee"), lower-cased only for matching.
+  3. No store row means an empty store. Don't guess from a screenshot's app name.
+  4. Symbol-led whole amounts are allowed for ¥, ₩ and ₹, and the Japanese total words are added. ¥ stores as JPY, read from the photo; the four typed currencies are unchanged.
+  5. Too blurry reuses "No text in that photo." (one line, not two).
+  6. Short text (a dog tag, a slogan) goes nowhere, with "Nothing to save in that photo."
+  7. Card numbers are refused before routing, with "That looks like a card, not saved."
+  8. No CASH, CARD or CHANGE row and no total keyword is enough to call it a menu, so it becomes a note.
+  9. Duplicate check on total plus store plus date. A match still makes the ghost row, with "Already logged today?" on it, and waits for a tap.
+  10. The note title comes from Vision's `isTitle`, else the tallest line, else the first line.
+  11. `@` in photo text never links: a `linksMentions: false` flag on `CreateNote`, so his text isn't rewritten.
+  12. Prose recipes go to a note with the recipe switch, as row 20; no model fallback by default.
+  13. An iCloud-only photo offline uses photo-field's line: "That photo is still in iCloud. Try again online."
+  14. No ordinal on spend lines from photos, as in the Money fixtures.
+  Also: "1,280" reads a comma before exactly 3 digits as a thousands mark.
+
