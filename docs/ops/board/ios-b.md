@@ -2,10 +2,10 @@
 
 *Owns: Home, the Command/Ask Tess bar, RootView, and the glue that hooks Notes, Review and Kitchen into Home.*
 
-**Now:** M2 slice 8, Today on Home (`ship-list-m2.md`). Done when it shows Now, then up to 3 Next and Later in a bounded surface, with swipe right for done and left for not now. It meets the UI bar.
+**Started 19:23** (Mac session, own worktree). **Now:** the button sweep on BottomChrome and the Home labels, then the Tess capture glyph (Next 2), then the M2 Home slices and Lists 9 to 12.
 
 **Next:**
-1. Button sweep (Kaushik, 19:00: no rounded-rectangle, oval or pill buttons anywhere, Apple defaults included). After the install and once Design's `docs/design/no-buttons.md` lands. Done when every button on Builder B's screens (Home, Command, RootView), reusing Builder A's DesignSystem button style uses Design's replacement language and the audit's rows for those files are ticked, with a recording.
+1. (Now) Button sweep (Kaushik, 19:00: no rounded-rectangle, oval or pill buttons anywhere, Apple defaults included). After the install and once Design's `docs/design/no-buttons.md` lands. Done when every button on Builder B's screens (Home, Command, RootView), reusing Builder A's DesignSystem button style uses Design's replacement language and the audit's rows for those files are ticked, with a recording.
 2. Ask Tess capture surface (Kaushik, 19:18; `../product/spatial-interaction.md` section 0, built to Design's revised `no-buttons.md`). Done when Ask Tess is a small glyph, not a bar, that animates open into a capture surface; typing works in it with the ghost row as today; and voice works through on-device speech to text (Apple's on-device speech framework) into the same grammar, which also covers v1 slice 17, voice in the gym, including during a workout. Photo, file and video modes come later as their own item. Show it in a recording.
 3. M2 slice 9, the task finish moment (Ink strike and haptic). Not rough.
 4. NowPicker wiring. Done when cooking, shopping and timed tasks become Now through the same picker as workouts.

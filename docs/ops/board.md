@@ -1,6 +1,6 @@
 # Tessera board (index)
 
-*Only the planning lead (Product lead thread) edits this file. Each team's queue lives in its own file under `board/`, and only that team's lead edits it. Updated 2026-10-15 18:55. First phone build cut at 19:45 UTC; review guide in `../product/review-session.md`.*
+*Only the planning lead (Product lead thread) edits this file. Each team's queue lives in its own file under `board/`, and only that team's lead edits it. Updated 2026-10-15 18:55. First phone build: PRs cut at 20:05 UTC (moved from 19:45), then the final build; review guide in `../product/review-session.md`.*
 
 ## Priority order (central)
 

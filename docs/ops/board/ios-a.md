@@ -4,7 +4,7 @@
 
 **Done:** ship-2 (#91): v1 slices 8 to 12, G1, a haptic, P2, B3, the launch note, and the mic hidden.
 
-**Now:** Release build and install for Kaushik's review. Afterwards, run the gym-flow sections not run before the cut (D, E, H) and `regression.md` on the phone.
+**Now (until the 20:05 cut):** PaintKey ink rewrite, then D4 (rest survives an app kill), then the edit-set steer. After the final build, run gym-flow D, E and H plus `regression.md` on the phone.
 
 **Next:**
 1. Button sweep (Kaushik, 19:00: no rounded-rectangle, oval or pill buttons anywhere, Apple defaults included). Start once Design's `docs/design/no-buttons.md` lands. Done when every button on Builder A's screens (Workout, Exercise, Plans, Routine, Widgets) uses Design's replacement language and the audit's rows for those files are ticked, with a recording. Put the shared button style in DesignSystem first so Builder B and Core can reuse it.
