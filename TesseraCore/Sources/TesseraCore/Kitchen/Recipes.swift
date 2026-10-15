@@ -231,3 +231,15 @@ public struct EditRecipe: EngineAction {
         "Changed \(store.object(id: recipe)?.title ?? "the recipe")"
     }
 }
+
+public extension RecipeBook {
+    /// The recipe's lines at another size (not stored). Without a size on the recipe, they're returned as written.
+    func scaledLines(of recipe: ObjectRecord, serves target: Int) -> [Line] {
+        let lines = lines(of: recipe)
+        guard let serves = serves(recipe) else { return lines }
+        let scaled = RecipeMath.scaled(lines.map(\.line), from: serves, to: target)
+        return zip(lines, scaled).map { line, scaled in
+            Line(id: line.id, object: line.object, line: scaled, ingredient: line.ingredient, isStaple: line.isStaple)
+        }
+    }
+}
