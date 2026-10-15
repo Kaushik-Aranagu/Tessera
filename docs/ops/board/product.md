@@ -10,4 +10,4 @@
 **Later:**
 - More M5 candidates: Money, People and Home upkeep. Also "build me an app" with Claude, and daemons.
 
-**Pending review-guide edits (when the phone gets its next build):** remove the #109 known gap (tap to edit is merged), and add back the Today swipe line once QA passes Builder B's hotfix.
+**Pending review-guide edits (when the phone gets its next build):** remove the #109 known gap (tap to edit is merged), add back the Today swipe line once QA passes Builder B's hotfix, and add a Groceries check that the last aisle scrolls clear of the closed basket.
