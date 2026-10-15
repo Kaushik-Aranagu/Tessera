@@ -101,4 +101,27 @@
   14. No ordinal on spend lines from photos, as in the Money fixtures.
   Also: "1,280" reads a comma before exactly 3 digits as a thousands mark.
 - **Time-form rules, replacing parts of the 4:26 PM PT calls** (4:41 PM PT, Research #150 rows). "thu 3pm" said on a Thursday after 3 PM means next Thursday, because a named weekday means that weekday. A bare 7 to 11 on another day is PM with a meal or evening word ("dinner fri at 8") and AM otherwise; on today the 4:26 rule stands (the next one that hasn't passed). "tonight" or "this evening" said after 8 PM stays today, until 11:30 PM.
+- **Hint ledger calls** (4:50 PM PT, Research #154, `research/fixtures/hint-ledger.md` open questions). S and G lines stop on day 15, counting day 1 as the first, at 4 AM. H lines keep going for actions he has never done by hand. Every other choice the file made stands, including the placeholder counting toward 3 a day, one H per action, G lines retiring on use, the build sheet's placement, and lasting instruction lines not counting. Copy: H lines read "Next time, just say it: ...", because "Next time" alone already means progression on the Exercise page. The Speak line uses the build sheet's "Hold me and say it: 80 for 8.", H16 uses the lift form "bench 80x8", and timers and notes get H lines too. In Show the hint sits under the waiting ghost with no dry time; the 4:39 rule wins. A G line has no swipe of its own, so the ghost row owns swipe-to-discard. "once" is added as a retire reason, an empty placeholder is fine, and `RollForward.logicalDay` becomes public.
+- **Cook timer calls** (4:50 PM PT, `fixtures/cook-timer-phrases.md`):
+  - A bare length is labelled with the current step's verb ("Simmer").
+  - With no name: flared timer first, then the soonest, with Undo, never asking.
+  - A running label restarts that timer.
+  - "step 3" by voice is allowed.
+  - Bare-number cap is 180 minutes.
+  - "2 onions" mid-cook writes nothing.
+  - In cook mode, "done with that" finishes the step (the last step finishes the cook, "dal, done.").
+  - Under 2 minutes reads in seconds ("90 sec.").
+  - Q1 may run ahead of the question guard.
+  - Extend and Pause wait for slice 12b.
+- **Upkeep starter calls** (4:50 PM PT, `fixtures/upkeep-starters.md`):
+  - Take guards S1 to S6.
+  - The first screen shows 12 starters plus "more" (the other 13, plus Bleed the radiators).
+  - A picked chore never drifts to Now until its first log.
+  - Near-misses follow the file's default.
+  - Noun-first logs ("bins done", "rent paid") work, with the same limits.
+  - "fine" counts as done for check chores (smoke alarm, meters).
+  - Rent and council tax stay as starters he can skip.
+  - Seasonal chores are plain 30 days, paused by hand.
+  - "alarm" stops being an AM cue.
+  - "get new sheets" is a task, matching the 4:30 non-food rule.
 
