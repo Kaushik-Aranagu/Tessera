@@ -72,9 +72,14 @@ public struct FinishShop: EngineAction {
 }
 
 extension Transaction {
-    /// While shopping, checking an item off keeps Now's line current ("Shopping, 8 left").
+    /// While shopping, any change to the list keeps Now's line current ("Shopping, 8 left").
     mutating func refreshShopLine(for item: ObjectRecord) throws {
-        guard let list = item.parent, list.id == Groceries.listID, let process = openProcess(for: list) else { return }
+        guard let list = item.parent, list.id == Groceries.listID else { return }
+        try refreshShopLine()
+    }
+
+    mutating func refreshShopLine() throws {
+        guard let list = store.object(id: Groceries.listID), let process = openProcess(for: list) else { return }
         let line = Groceries(store: store, classes: classes).shoppingLine()
         try set("nextStep", to: .text(line), on: process)
     }

@@ -31,8 +31,9 @@ public extension Transaction {
         if let existing = book.find(name) {
             return existing
         }
-        let key = IngredientLine.key(for: name.trimmingCharacters(in: .whitespacesAndNewlines))
-        let title = key.prefix(1).uppercased() + key.dropFirst()
+        // Titled as written ("Garlic cloves"); `key` is only for matching.
+        let typed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let title = typed.prefix(1).uppercased() + typed.dropFirst()
         return try create(classDef(.ingredient), title: title)
     }
 }

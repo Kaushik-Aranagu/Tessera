@@ -5,7 +5,7 @@ import Foundation
 public enum KitchenUnit: String, Sendable, Codable, CaseIterable {
     case gram = "g", kilogram = "kg", millilitre = "ml", litre = "l"
     case teaspoon = "tsp", tablespoon = "tbsp", cup
-    case clove, pinch, handful, bunch, can, slice, sprig, piece
+    case clove, pinch, handful, bunch, can, slice, sprig, piece, stick, head
 
     public enum Dimension: Sendable { case mass, volume, count }
 
@@ -46,10 +46,16 @@ public enum KitchenUnit: String, Sendable, Codable, CaseIterable {
         "clove": .clove, "cloves": .clove, "pinch": .pinch, "pinches": .pinch,
         "handful": .handful, "handfuls": .handful, "bunch": .bunch, "bunches": .bunch,
         "can": .can, "cans": .can, "tin": .can, "tins": .can,
-        "slice": .slice, "slices": .slice, "sprig": .sprig, "sprigs": .sprig,
+        "slice": .slice, "slices": .slice, "sprig": .sprig, "sprigs": .sprig, "stick": .stick, "sticks": .stick,
+        "head": .head, "heads": .head,
     ]
 
     public init?(word: String) {
+        // In recipes a capital T is a tablespoon and a small t a teaspoon.
+        if word == "T" || word == "T." {
+            self = .tablespoon
+            return
+        }
         guard let unit = Self.words[word.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: "."))] else {
             return nil
         }
@@ -114,7 +120,7 @@ public struct IngredientLine: Hashable, Sendable, Codable {
             amount = 1
             rest = String(rest[match.1.startIndex...])
         } else if let match = rest.firstMatch(
-            of: /^(\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:[.,]\d+)?)(?:\s*(?:-|–|to)\s*(\d+\/\d+|\d+(?:[.,]\d+)?))?/
+            of: /^(\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:[.,]\d+)?)(?:\s*(?:-|–|to)\s*(\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:[.,]\d+)?))?/
         ) {
             amount = Self.number(String(match.1))
             amountMax = match.2.flatMap { Self.number(String($0)) }
@@ -144,7 +150,19 @@ public struct IngredientLine: Hashable, Sendable, Codable {
             prep = after.isEmpty ? nil : after
             rest = String(rest[..<comma])
         }
-        let name = rest.trimmingCharacters(in: .whitespaces)
+        var name = rest.trimmingCharacters(in: .whitespaces)
+        // Size and freshness words describe this one, not the ingredient: "1 large onion" is an onion.
+        var sizes: [String] = []
+        while let match = name
+            .firstMatch(of: /(?i)^(large|small|medium|big|fresh|ripe|cooked|extra[- ]large)\s+(.+)$/)
+        {
+            sizes.append(match.1.lowercased())
+            name = String(match.2)
+        }
+        if !sizes.isEmpty {
+            let size = sizes.joined(separator: " ")
+            prep = prep.map { "\(size), \($0)" } ?? size
+        }
         guard !name.isEmpty else { return nil }
         return IngredientLine(original: original, amount: amount, amountMax: amountMax, unit: unit, name: name,
                               prep: prep, toTaste: toTaste)
@@ -156,14 +174,19 @@ public struct IngredientLine: Hashable, Sendable, Codable {
     }
 
     static func singular(_ word: String) -> String {
+        if ["cookies", "brownies", "smoothies", "veggies", "movies", "pies"].contains(word) {
+            return String(word.dropLast())
+        }
         if word.hasSuffix("ies"), word.count > 4 {
             return String(word.dropLast(3)) + "y"
         }
         if word.hasSuffix("oes") {
             return String(word.dropLast(2))
         }
-        if word.hasSuffix("ves"), word.count > 4 {
-            return String(word.dropLast(3)) + "f"
+        // "ves" → "f" only for the words that do that; cloves, olives and chives just lose the s.
+        let fWords = ["leaves": "leaf", "halves": "half", "loaves": "loaf", "calves": "calf", "knives": "knife"]
+        if let single = fWords[word] {
+            return single
         }
         if word.hasSuffix("ches") || word.hasSuffix("shes") || word
             .hasSuffix("sses")
