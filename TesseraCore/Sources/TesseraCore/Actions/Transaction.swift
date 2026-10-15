@@ -65,6 +65,13 @@ public struct Transaction {
         ops.append(.setLinks(object: object.id, field: fieldID, old: old, new: new))
     }
 
+    public mutating func setSortIndex(_ index: Int, on object: ObjectRecord) {
+        guard object.sortIndex != index else { return }
+        ops.append(.setSortIndex(object: object.id, old: object.sortIndex, new: index))
+        object.sortIndex = index
+        store.noteChange(object)
+    }
+
     public mutating func setTitle(_ title: String, on object: ObjectRecord) {
         guard object.title != title else { return }
         ops.append(.setTitle(object: object.id, old: object.title, new: title))
