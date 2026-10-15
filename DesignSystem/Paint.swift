@@ -221,101 +221,119 @@ struct Brushstroke: Shape {
 
 // MARK: - Keys
 
-/// A hold-to-act key: radius 14 (never height/2), a 0.5 pt hairline, one lit top chamfer and a soft drop. While you
-/// hold, paint spreads through it as a blurred radial blot growing from the thumb side; letting go drains it.
-/// `isTap` keys act on a tap (Skip rest, Next exercise).
-struct PaintKey<Label: View>: View {
+/// The stroke word (docs/design/no-buttons.md): the one primary action on a screen, shown as a word sitting in a
+/// dry brushstroke of the action's paint. No container, no corners, no shadow. Tap actions wet the stroke on touch
+/// and fire on release; hold actions empty to a trace, repaint left to right under the thumb over `duration`, then
+/// bloom at the tip and fire. `height` is the hit height; the hit area spans the full width.
+struct PaintKey<Label: View, Meta: View>: View {
     enum Finish { case ink, cream }
 
+    /// Kept for API compatibility; the word's colour follows the ground (ink on light, cream on dark).
     var finish: Finish = .ink
     var paint: Color = Theme.Colors.live
     var duration: Double = Theme.Motion.holdDuration
     var isTap = false
-    var height: CGFloat = 58
+    var height: CGFloat = 64
     /// How far the finger may wander while holding before the hold cancels.
     var drift: CGFloat = 30
     let action: () -> Void
-    /// Receives whether the key is being held (labels turn to "Keep holding").
+    /// Receives whether the word is being held. The word itself shouldn't change ("HOLD" lives in the meta).
     @ViewBuilder var label: (Bool) -> Label
+    /// On the same baseline to the right, in the label style: "HOLD · 82.5 × 5".
+    @ViewBuilder var meta: () -> Meta
 
     @GestureState private var isPressing = false
-    @State private var spread: CGFloat = 0
+    @State private var fill: CGFloat = 1
+    @State private var wet = false
+    @State private var bloom: CGFloat = 1
     @State private var completions = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
-
-    private static var radius: CGFloat {
-        14
-    }
+    @Environment(\.isEnabled) private var isEnabled
 
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: Self.radius, style: .continuous)
         let dark = colorScheme == .dark
-        let ground = finish == .ink ? Theme.Colors.ink : Color(hex: 0xF3ECE0)
-        let foreground = finish == .ink ? Theme.Colors.paper : Color(hex: 0x1C1828)
-        label(isPressing)
-            .foregroundStyle(spread > 0.35 ? Color(hex: 0xF3ECE0) : foreground)
-            .padding(.horizontal, 20)
-            .frame(maxWidth: .infinity, minHeight: height, alignment: .leading)
-            .background {
-                ZStack {
-                    ground
-                    GeometryReader { proxy in
-                        // The blot is anchored 12% from the left (the thumb side) and grows past the key's far edge.
-                        let diameter = proxy.size.width * 2.3
-                        Circle()
-                            .fill(RadialGradient(
-                                colors: [paint, paint, paint.opacity(0)],
-                                center: .center,
-                                startRadius: 0,
-                                endRadius: diameter / 2
-                            ))
-                            .frame(width: diameter, height: diameter)
-                            .scaleEffect(spread, anchor: .center)
-                            .position(x: proxy.size.width * 0.12, y: proxy.size.height / 2)
-                            .blur(radius: 4)
-                    }
+        let ink = dark ? Color(hex: 0xF3ECE0) : Theme.Colors.ink
+        HStack(alignment: .firstTextBaseline, spacing: 16) {
+            label(isPressing)
+                .font(InkWordType.font)
+                .foregroundStyle(ink.opacity(isEnabled ? 1 : 0.4))
+                .offset(y: wet && !reduceMotion ? 1 : 0)
+                .background(alignment: .bottom) { stroke }
+                .fixedSize()
+            meta()
+                .textRole(.label)
+                .foregroundStyle(ink.opacity(0.6))
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, minHeight: height, alignment: .leading)
+        .contentShape(Rectangle())
+        .gesture(isTap ? nil : hold)
+        .simultaneousGesture(isTap ? tapPress : nil)
+        .onChange(of: isPressing) { _, pressing in
+            guard !isTap else { return }
+            if pressing {
+                // Empty to a dry trace, then repaint left to right under the thumb, easing out.
+                fill = 0
+                withAnimation(reduceMotion ? .linear(duration: duration) : .timingCurve(0.2, 0.6, 0.35, 1,
+                                                                                        duration: duration))
+                {
+                    fill = 1
                 }
-                .clipShape(shape)
+            } else if completionsSnapshot == completions {
+                // Let go early: the paint drains back.
+                withAnimation(.easeIn(duration: 0.22)) { fill = 1 }
             }
-            .overlay {
-                shape.strokeBorder(
-                    LinearGradient(
-                        stops: [
-                            .init(color: .white.opacity(finish == .ink ? 0.18 : 0.7), location: 0),
-                            .init(color: .white.opacity(0), location: 0.08),
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    ),
-                    lineWidth: 1
-                )
+        }
+        .sensoryFeedback(.impact(weight: .light), trigger: isPressing) { _, new in new && !isTap }
+        .sensoryFeedback(.selection, trigger: completions) { _, _ in isTap }
+        .sensoryFeedback(.impact(flexibility: .rigid, intensity: 1), trigger: completions) { _, _ in !isTap }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint(isTap ? "" : "Touch and hold")
+        .accessibilityAction { complete() }
+    }
+
+    @State private var completionsSnapshot = 0
+
+    @ViewBuilder private var stroke: some View {
+        if isEnabled {
+            let holding = isPressing && !isTap
+            ZStack(alignment: .leading) {
+                // The dry trace while a hold empties the stroke.
+                InkStroke(seed: 3)
+                    .fill(paint.opacity(holding ? 0.2 : 0))
+                InkStroke(seed: 3)
+                    .fill(paint.opacity(wet ? 1 : 0.82))
+                    .mask(alignment: .leading) {
+                        GeometryReader { proxy in
+                            Rectangle().frame(width: proxy.size.width * (holding ? fill : 1))
+                        }
+                    }
             }
-            .overlay { shape.stroke(dark ? Color.black.opacity(0.6) : Theme.Colors.ink.opacity(0.5), lineWidth: 0.5) }
-            .shadow(color: dark ? .black.opacity(0.35) : Theme.Colors.ink.opacity(0.14), radius: dark ? 14 : 9,
-                    y: dark ? 10 : 6)
-            .contentShape(shape)
-            .scaleEffect(isPressing && !reduceMotion ? 0.985 : 1)
-            .animation(Theme.Motion.snappy, value: isPressing)
-            .gesture(isTap ? nil : hold)
-            .onTapGesture {
-                if isTap {
+            .frame(height: 19)
+            .scaleEffect(x: 1, y: (wet && !reduceMotion ? 1.65 : 1) * bloom, anchor: UnitPoint(x: 0.5, y: 0.7))
+            .blur(radius: wet && !reduceMotion ? 1 : 0)
+            .padding(.horizontal, -7)
+            .offset(y: 3)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
+    }
+
+    /// Tap words wet on touch-down and fire on release.
+    private var tapPress: some Gesture {
+        DragGesture(minimumDistance: 0)
+            .onChanged { _ in
+                guard !wet else { return }
+                withAnimation(MotionPolicy.resolve(.easeOut(duration: 0.12), reduceMotion: reduceMotion)) { wet = true }
+            }
+            .onEnded { value in
+                withAnimation(MotionPolicy.resolve(Theme.Motion.house, reduceMotion: reduceMotion)) { wet = false }
+                if abs(value.translation.width) < drift, abs(value.translation.height) < drift {
                     complete()
                 }
             }
-            .onChange(of: isPressing) { _, pressing in
-                if pressing {
-                    // Paint fills, it doesn't wipe: the spread eases in as it soaks through.
-                    withAnimation(.timingCurve(0.3, 0.1, 0.4, 1, duration: duration)) { spread = 1 }
-                } else if spread < 1 {
-                    withAnimation(.easeOut(duration: 0.22)) { spread = 0 }
-                }
-            }
-            .sensoryFeedback(.impact(weight: .light), trigger: isPressing) { _, new in new }
-            .sensoryFeedback(.impact(flexibility: .rigid, intensity: 1), trigger: completions)
-            .accessibilityElement(children: .combine)
-            .accessibilityAddTraits(.isButton)
-            .accessibilityAction { complete() }
     }
 
     private var hold: some Gesture {
@@ -326,9 +344,31 @@ struct PaintKey<Label: View>: View {
 
     private func complete() {
         completions += 1
-        action()
-        withAnimation(MotionPolicy.resolve(.easeOut(duration: 0.3), reduceMotion: reduceMotion).delay(0.15)) {
-            spread = 0
+        completionsSnapshot = completions
+        if !isTap, !reduceMotion {
+            // The tip blooms, then settles.
+            withAnimation(.easeOut(duration: 0.13)) { bloom = 1.9 }
+            withAnimation(.easeInOut(duration: 0.13).delay(0.13)) { bloom = 1.2 }
+            withAnimation(Theme.Motion.house.delay(0.4)) { bloom = 1 }
         }
+        fill = 1
+        action()
+    }
+}
+
+extension PaintKey where Meta == EmptyView {
+    init(finish: Finish = .ink, paint: Color = Theme.Colors.live, duration: Double = Theme.Motion.holdDuration,
+         isTap: Bool = false, height: CGFloat = 64, drift: CGFloat = 30, action: @escaping () -> Void,
+         @ViewBuilder label: @escaping (Bool) -> Label)
+    {
+        self.init(finish: finish, paint: paint, duration: duration, isTap: isTap, height: height, drift: drift,
+                  action: action, label: label, meta: { EmptyView() })
+    }
+}
+
+private enum InkWordType {
+    /// Title 34/500, the stroke word's size.
+    static var font: Font {
+        Theme.Typography.face(Theme.concept.fonts.display, size: 34, relativeTo: .title, serif: false).weight(.medium)
     }
 }

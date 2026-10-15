@@ -338,13 +338,12 @@ struct EditSetKeys: View {
 
     var body: some View {
         if let row = session.editingRow {
-            PaintKey(finish: .cream, paint: Paint.cobalt, isTap: true, height: 62) {
+            PaintKey(paint: Paint.cobalt, isTap: true, height: 64) {
                 withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { session.saveEdit() }
                 onSave()
             } label: { _ in
-                Text("Save set \(row.number)").textRole(.bodyStrong)
+                Text("Save set \(row.number)")
             }
-            .frame(width: 200)
             .accessibilityLabel("Save set \(row.number) as \(Format.kilograms(session.weight)) by \(Int(session.reps))")
             Button {
                 withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { session.endEditing() }

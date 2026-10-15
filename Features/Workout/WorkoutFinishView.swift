@@ -75,10 +75,9 @@ struct WorkoutFinishView: View {
             .padding(.horizontal, Theme.Spacing.gutter)
             .accessibilityElement(children: .combine)
 
-            PaintKey(finish: .cream, paint: Paint.cobalt, isTap: true, height: 62, action: onDone) { _ in
-                Text("Back to today").textRole(.bodyStrong)
+            PaintKey(paint: Paint.cobalt, isTap: true, height: 64, action: onDone) { _ in
+                Text("Back to today")
             }
-            .frame(width: 240)
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.top, Theme.Spacing.l)
             .opacity(settled ? 1 : 0)

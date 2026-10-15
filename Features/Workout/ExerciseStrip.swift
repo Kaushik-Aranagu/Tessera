@@ -107,10 +107,11 @@ struct RunningOrderSheet: View {
                 .padding(.top, Theme.Spacing.m)
             if let onFinish {
                 // Done for today with exercises left: what's logged is saved, the rest is simply not done.
-                PaintKey(finish: .cream, paint: Paint.live, duration: 0.6, height: 60, drift: 20, action: onFinish) {
-                    Text($0 ? "Keep holding" : "Hold to finish here").textRole(.bodyStrong)
+                PaintKey(paint: Paint.live, duration: 0.7, height: 64, drift: 20, action: onFinish) { _ in
+                    Text("Finish here")
+                } meta: {
+                    Text("Hold")
                 }
-                .frame(width: 240)
                 .padding(.top, Theme.Spacing.l)
                 .accessibilityAction(named: "Finish workout", onFinish)
             }
