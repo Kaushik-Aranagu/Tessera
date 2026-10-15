@@ -18,6 +18,7 @@ The source of truth for how v1 looks, moves and feels. iOS build implements from
 | [m4-steers.md](m4-steers.md) | M4 screen steers: Plan my day with the energy drum, Shutdown, the Day log, the focus block (with its Live Activity) and What Tess knows |
 | [widgets-and-snippets.md](widgets-and-snippets.md) | Widgets, Lock Screen accessories, snippets and the Tell Tess control (M4 slice 10): one thing, one seam, one control; painted grounds; tinted mode. Board in `recordings/` |
 | [day-strip.md](day-strip.md) | The day strip (M2 slices 11 and 13): tasks, the workout and events as marks on the day stroke, the moving now marker, and "full" shown as the dash gaps (your slack) closing, with Make room |
+| [plate-stack.md](plate-stack.md) | Concept, not scheduled: the plate stack, where paused processes are stepped slivers behind Now that fan out when you pull Now down. Recording in `recordings/` |
 | [live-polish.md](live-polish.md) | Live mode polish (v1 slice 13): exact timing, curves and haptics for the stamp, rest on the dial and the PR sweep, plus the haptic map and Reduce Motion |
 | [live-activity.md](live-activity.md) | The rest timer on the Lock Screen and Dynamic Island (Inter Tight, horizon line as timer, tap the set to log it), with its Go state, Undo after Done, and colour moods |
 | [tess-soul.md](tess-soul.md) | Tess's living mark, v2 wet paint: its form, mode parameters, travel, going home, the shader route, and the motifs we reuse. `mockups/SoulLab.dc.html` mixes any state with the unapproved shape and colour ideas |
