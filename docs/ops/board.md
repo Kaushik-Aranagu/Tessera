@@ -69,28 +69,36 @@
 
 ## Design studio
 
+**Done (2026-10-15):** kitchen build sheets on branch `claude/project-thread-b3tu3f`, `docs/design/kitchen/`: 13 Groceries (f36ff12), 10/11 Recipe page and paste (8989878), 12 Cook mode, 14 Shelf and 15 Lists v0 (d4957ac). Reviews: Notes v0, Groceries #58 (fixes in the Design thread).
+
 **Now:** steers for the M3 Feature screens: Class inspector, Body weight, Settings, and "What Tess did" (`ship-list-m3.md` slices 1, 6, 9, 12). Done when each has a one-paragraph steer like those in `ship-list-kitchen.md`.
 
+**Always on:** review each Core or iOS screen as it merges, with file-and-change fixes posted in the Design thread.
+
 **Next:**
-1. Live-mode polish spec for v1 slice 13. Done when the motion, haptic and Reduce Motion values for Stamp, the rest dial and the PR sweep are written down for iOS build.
-2. Today on Home motion (M2 slice 8). Done when the Now / Next / Later surface and its swipe gestures have a short motion note and a recording.
-3. M4 screen steers: Day log, Shutdown, Focus block and the energy check-in (`ship-list-m4.md`). Plan my day waits for Kaushik's OK.
+1. Home integration points for Notes, Review and Kitchen (for iOS Builder B's Later item).
+2. Live-mode polish spec for v1 slice 13. Done when the motion, haptic and Reduce Motion values for Stamp, the rest dial and the PR sweep are written down for iOS build.
+3. Today on Home motion (M2 slice 8). Done when the Now / Next / Later surface and its swipe gestures have a short motion note and a recording.
+4. M4 screen steers: Day log, Shutdown, Focus block and the energy check-in (`ship-list-m4.md`). Plan my day waits for Kaushik's OK.
 
 **Later:**
+- Lists screens 9-12 steer pass with the Kitchen lead (`ship-list-lists.md` supersedes my sheet 15 where they differ).
 - A widget and snippet visual language.
 - The plate-stack concept prototype from `whats-running.md`.
 
-## Recipes and groceries (Kitchen lead)
+## Recipes and groceries, then Lists (Kitchen lead)
 
-**Now:** review each kitchen screen as Core lands it against your design steers. Done when every merged kitchen screen has a pass or a fix list sent to the coordinator.
+**Now:** review each kitchen screen as Core lands it, in `docs/product/kitchen-acceptance.md` (branch `claude/project-thread-nq38le`). Engine slices 1-9 checked (6 small fixes). Groceries #58 checked (pass, 4 fixes). Next up: Recipe page and Paste a recipe when they land.
 
 **Next:**
-1. Kitchen v2 scope. Done when there's a ship list for pantry and "what can I cook", a meal-plan week view, and web or AI recipe import, all engine-first.
-2. Seed recipes. Done when about 10 everyday recipes are in pasteable text, so the kitchen isn't empty on day one.
-3. A capture grammar test set. Done when there are 50 real kitchen phrases with their expected results, for Core's tests.
+1. Seed recipes. Done when about 10 everyday recipes are in pasteable text, so the kitchen isn't empty on day one.
+2. A capture grammar test set. Done when there are 50 real kitchen and list phrases with their expected results, for Core's tests.
+3. Design steer pass on Lists screens 9-12 once Core starts them.
+
+**Done:** Lists ship list, `docs/product/ship-list-lists.md` (e6541cd; supersedes kitchen slice 15). Kitchen v2 backlog, `docs/product/kitchen-v2-backlog.md` (held until Kaushik has used v1 for a week).
 
 **Later:**
-- Nutrition, after Kaushik asks for it.
+- Kitchen v2 scope from the backlog, after a week of use. Nutrition only if Kaushik asks.
 
 ## Research lab
 
@@ -108,14 +116,13 @@
 
 *No simulator or Swift toolchain in this thread, so QA here is code review on master, not running the app.*
 
-**Now:** review merged PRs #46 to #57 for bugs and cross-PR clashes. Done when each finding is posted in the Repo maintainer thread with file:line and a fix, for the coordinator to route.
+**Now:** review each new merge to master. #46 to #58 are done: 13 bugs, written up in `tessera/qa/review-46-to-58.md` and sent to the coordinator for routing.
 
 **Next:**
-1. Review each new PR as it merges to master.
-2. Docs index at `docs/README.md`. Commit fe13d3d is on branch `claude/project-thread-ri9mgm`, waiting for the coordinator to merge.
-3. Kitchen flow script. Done when a written check covers paste, scale, add to groceries, shop, cook with two timers, and finish, for a Mac lead to run.
-4. v1 gym flow script. Done when a written end-to-end check covers seed, prefilled hold-to-log, the dial, finishing, killing the app mid-set and resuming, and lock-screen Done.
-5. Regression checklist. Done when a short pre-merge list covers undo, export, What's running, and Reduce Motion.
+1. Kitchen flow script. Done when a written check covers paste, scale, add to groceries, shop, cook with two timers, and finish, for a Mac lead to run.
+2. v1 gym flow script. Done when a written end-to-end check covers seed, prefilled hold-to-log, the dial, finishing, killing the app mid-set and resuming, and lock-screen Done.
+3. Regression checklist. Done when a short pre-merge list covers undo, export, What's running, and Reduce Motion.
+4. Keep the docs index at `docs/README.md` current (merged as #60).
 
 **Later:**
 - Performance budget checks (launch time, dial at 120 fps). These need a Mac lead to run them.
