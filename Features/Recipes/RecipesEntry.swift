@@ -13,10 +13,7 @@ struct RecipeView: View {
         NavigationStack {
             Group {
                 if let id = recipeID ?? RecipeBook(store: model.store, classes: model.classes).recipes().first?.id {
-                    RecipePage(recipeID: id) { recipe, serves in
-                        _ = try? model.engine.perform(StartCooking(recipe: recipe, serves: serves), by: .user)
-                        model.touch()
-                    }
+                    RecipePage(recipeID: id)
                 } else {
                     PasteRecipe()
                 }

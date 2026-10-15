@@ -62,7 +62,7 @@ struct PortionDrum: View {
                 ForEach(Array(range), id: \.self) { value in
                     let isCurrent = value == (scrolled ?? serves)
                     Text("\(value)")
-                        .textRole(isCurrent ? .titleNumber : .data)
+                        .textRole(isCurrent ? .titleNumber : .body)
                         .foregroundStyle(isCurrent ? Theme.Colors.ink : Theme.Colors.inkTertiary)
                         .frame(width: Metrics.width, height: Metrics.pitch)
                         .animation(.easeOut(duration: 0.16), value: isCurrent)
