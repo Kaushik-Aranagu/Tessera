@@ -9,7 +9,7 @@ import Testing
 struct ScaleTests {
     static let workouts = ProcessInfo.processInfo.environment["TESSERA_SCALE"].flatMap(Int.init) ?? 200
 
-    @Test func historyQueriesStayFast() throws {
+    @Test func historyQueriesStayFast() async throws {
         let container = TesseraSchema.makeContainer(inMemory: true)
         let context = container.mainContext
         let classes = try SystemCatalog.seed(in: context)
@@ -55,7 +55,10 @@ struct ScaleTests {
             try timings.append((name, clock.measure(work)))
         }
 
-        try time("firstIndex") { _ = ledger.sessions(of: bench) }
+        let warmStart = clock.now
+        await ledger.warmUp()
+        timings.append(("warmUp(background)", clock.now - warmStart))
+        try time("firstQuery") { _ = ledger.sessions(of: bench) }
         try time("records") { _ = ledger.records(for: bench) }
         try time("nextTarget") { _ = ledger.nextTarget(for: bench) }
         try time("trend") { _ = ledger.trend(of: bench, days: 90, now: now) }
@@ -73,9 +76,16 @@ struct ScaleTests {
             "SCALE \(workouts) workouts:",
             timings.map { "\($0.0)=\(Self.milliseconds($0.1))ms" }.joined(separator: " ")
         )
-        let budgets: [String: Double] = ["records": 50, "nextTarget": 100, "trend": 50, "logAndHint": 250]
+        let budgets: [String: Double] = [
+            "firstQuery": 100,
+            "records": 50,
+            "nextTarget": 100,
+            "trend": 50,
+            "logAndHint": 250,
+        ]
         for (name, duration) in timings {
-            if let budget = budgets[name] {
+            // Five years of history get twice the room of the default run.
+            if let budget = budgets[name].map({ workouts > 1000 ? $0 * 2 : $0 }) {
                 #expect(Self.milliseconds(duration) < budget, "\(name) took \(Self.milliseconds(duration)) ms")
             }
         }

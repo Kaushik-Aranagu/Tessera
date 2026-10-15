@@ -85,6 +85,8 @@ final class Cache {
 @MainActor
 final class DerivedCache {
     var trainingIndex: (revision: Int, index: TrainingIndex)?
+    /// Sorted sessions per exercise class (with subclasses), for the current revision.
+    var sessions: [UUID: (revision: Int, sessions: [TrainingLedger.Session])] = [:]
     /// Objects written since derived caches were last brought up to date.
     var touched: Set<UUID> = []
     var needsRebuild = false

@@ -39,7 +39,7 @@ public extension TrainingLedger {
         // Volume per workout, from the training index (warm-ups already left out).
         var workouts: [UUID: (date: Date, volume: Double)] = [:]
         for (_, session) in index.allSessions where session.date >= typicalWindow && session.date < interval.end {
-            workouts[session.workout.id, default: (session.date, 0)].volume += session.volume
+            workouts[session.workoutID, default: (session.date, 0)].volume += session.volume
         }
         let recent = workouts.values.map(\.volume).filter { $0 > 0 }.sorted()
         let typical = recent.isEmpty ? 0 : recent[recent.count / 2]

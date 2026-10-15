@@ -26,11 +26,22 @@ public struct TrainingLedger {
     public struct Session: Identifiable {
         /// The exercise entry's id.
         public let id: UUID
+        /// The workout's id, readable without loading the workout.
+        public let workoutID: UUID
         public let workout: ObjectRecord
         public let entry: ObjectRecord
         public let date: Date
         /// Working sets in order; warm-ups are left out.
         public let sets: [LoggedSet]
+
+        init(id: UUID, workoutID: UUID, workout: ObjectRecord, entry: ObjectRecord, date: Date, sets: [LoggedSet]) {
+            self.id = id
+            self.workoutID = workoutID
+            self.workout = workout
+            self.entry = entry
+            self.date = date
+            self.sets = sets
+        }
 
         public var bestE1RM: Double {
             sets.map(\.e1RM).max() ?? 0
@@ -71,9 +82,9 @@ public struct TrainingLedger {
     /// Records are compared with a little slack so floating-point noise never shows as a PR.
     private static let tolerance = 0.05
     /// Rep maxes are tracked from 1 to 10 reps.
-    public static let repMaxRange = 1 ... 10
+    public nonisolated static let repMaxRange = 1 ... 10
     /// Sets above this many effective reps don't estimate a one-rep max.
-    public static let e1RMRepLimit = 12.0
+    public nonisolated static let e1RMRepLimit = 12.0
 
     public init(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) {
         self.store = store
@@ -85,10 +96,18 @@ public struct TrainingLedger {
     /// Sessions of an exercise class and its subclasses, newest first.
     public func sessions(of exercise: ClassDef, excludingWorkout excludedID: UUID? = nil) -> [Session] {
         let index = index
-        return ClassResolver.descendants(of: exercise)
-            .flatMap { index.sessionsByClass[$0.id] ?? [] }
-            .filter { $0.workout.id != excludedID }
-            .sorted { $0.date > $1.date }
+        let derived = store.derived
+        let revision = store.revision
+        let all: [Session]
+        if let cached = derived.sessions[exercise.id], cached.revision == revision {
+            all = cached.sessions
+        } else {
+            all = ClassResolver.descendants(of: exercise)
+                .flatMap { index.sessionsByClass[$0.id] ?? [] }
+                .sorted { $0.date > $1.date }
+            derived.sessions[exercise.id] = (revision, all)
+        }
+        return excludedID.map { excluded in all.filter { $0.workoutID != excluded } } ?? all
     }
 
     public func bestSet(of exercise: ClassDef, excludingWorkout excludedID: UUID? = nil) -> LoggedSet? {
@@ -164,7 +183,7 @@ public struct TrainingLedger {
     }
 
     /// Reps plus the reps left in the tank: 5 @ RPE 8 is a 7-rep effort.
-    public static func effectiveReps(_ reps: Double, rpe: Double?) -> Double {
+    public nonisolated static func effectiveReps(_ reps: Double, rpe: Double?) -> Double {
         reps + (10 - min(max(rpe ?? 10, 1), 10))
     }
 
