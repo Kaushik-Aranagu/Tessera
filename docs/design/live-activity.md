@@ -63,6 +63,7 @@ Trigger this with `staleDate` = the end of rest, and branch on `context.isStale`
 
 ## Behaviour
 - **Done** (tapping the set) logs the next planned set (weight and reps as dialled for it) through the same typed action as hold to log, then starts the next rest.
+- **Undo after Done** (a wet palm can tap it): until that rest ends, the right column shows "Set 3 logged" (17/400 at 62%) over **"Undo"** (24/400 in `#FFB896`), and a small curved return arrow replaces the tick. The column is one `Button(intent: UndoLastSet)`. The new rest starts full; the bottom left reads "Rest, then set 4". Undo removes the set through the op log (one undo stack with the app) and returns to the Go state, with "Set 3 taken back" bottom left. When the rest ends, Undo leaves the lock screen. Mockup: `mockups/LiveDetails.dc.html`, moment 7.
 - **+15** extends the rest. **Skip** ends rest, or skips the set once rest is over.
 - All of these work without unlocking.
 - **Tap anywhere else** to open the live workout at that set.
