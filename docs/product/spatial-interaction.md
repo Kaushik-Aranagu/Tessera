@@ -8,7 +8,7 @@
 - **The screen is the scarce resource.** At any moment, pack in only what is most meaningful for what he is doing now: the running process, the time of day, what he just did, the page he's on.
 - **Reveal more on demand.** Drill into an object (z), expand an element into more options, and keep fast paths home and to the other places he goes often. Never show everything at once.
 - **Inputs follow the same rule.** A control starts small and grows into what the input needs. The first case is Ask Tess: a small glyph that animates open into a capture surface. Typing, voice (on-device speech to text, cleaned into a sentence) and photo, file or video each change the surface to suit. Nothing is typed inline on the page.
-- **Later:** "context packing" means Home choosing what to show from context. Research scouts it.
+- **How it's built:** one shared context ranker for NowPicker and Home, with overrides, weighted scores and a "why" on every pick (`../research/context-packing.md`; Core builds the ranker, Builder B wires NowPage). On screen, Design's "The screen is the resource" section in `docs/design/no-buttons.md` sets one primary action, at most two fast paths, and layers that open from what you touched.
 
 ## 1. Three axes, each with one job
 

@@ -7,11 +7,12 @@
 **Next:**
 1. (Now) Button sweep (Kaushik, 19:00: no rounded-rectangle, oval or pill buttons anywhere, Apple defaults included). After the install and once Design's `docs/design/no-buttons.md` lands. Done when every button on Builder B's screens (Home, Command, RootView), reusing Builder A's DesignSystem button style uses Design's replacement language and the audit's rows for those files are ticked, with a recording.
 2. Ask Tess capture surface (Kaushik, 19:18; `../product/spatial-interaction.md` section 0, built to Design's revised `no-buttons.md`). Done when Ask Tess is a small glyph, not a bar, that animates open into a capture surface; typing works in it with the ghost row as today; and voice works through on-device speech to text (Apple's on-device speech framework) into the same grammar, which also covers v1 slice 17, voice in the gym, including during a workout. Photo, file and video modes come later as their own item. Show it in a recording.
-3. M2 slice 9, the task finish moment (Ink strike and haptic). Not rough.
-4. NowPicker wiring. Done when cooking, shopping and timed tasks become Now through the same picker as workouts.
-5. M2 slice 11, the day strip showing tasks and the workout, with the now marker.
-6. M2 slice 12, the full What's running ledger for tasks: suspended and waiting, with the stale rules.
-7. M2 slice 13, the day-full warning.
+3. NowPage reads the context ranker. Done when NowPage (the Home hero) reads Core's `rank()` in place of `AppModel.currentTask`, re-ranks on events (set logged, task done, process started or ended, time of day), and can show the pick's `why` one gesture deep. Starts when Core's ranker lands; until then, the next item.
+4. M2 slice 9, the task finish moment (Ink strike and haptic). Not rough.
+5. NowPicker wiring. Done when cooking, shopping and timed tasks become Now through the same picker as workouts.
+6. M2 slice 11, the day strip showing tasks and the workout, with the now marker.
+7. M2 slice 12, the full What's running ledger for tasks: suspended and waiting, with the stale rules.
+8. M2 slice 13, the day-full warning.
 
 **Later:**
 - M5 Money screens 6, 7, 5 in `ship-list-m5-money.md` (after Core's slices 1 to 3), then M5 Upkeep screens 5 to 7 in `ship-list-m5-upkeep.md`, then the M5 People screens in `ship-list-m5-people.md`.

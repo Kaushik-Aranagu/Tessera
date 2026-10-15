@@ -52,3 +52,4 @@
 - **Plan my day fallback** (19:22): on a timeout or failure, the rules plan shows with one quiet line, "Here's your usual plan", rather than silence. This matches tess-voice lines M18 and M22.
 - **M5 People approved** (19:22) with all 9 defaults (`ship-list-m5-people.md`). It comes after Upkeep and has no Contacts access.
 - **Build list approved** (19:22): make an app from a sentence (`ship-list-build.md`). A1, undo for schema changes in the op log, comes first, after M3 slices 3, 6 and 10 and T1 to T3.
+- **Context ranker is backbone work** (19:27). Core rebuilds NowPicker around `rank()` with `Pick.why` as Next 3, after the v1 gaps and the grammar fix. Builder B makes NowPage read it, right after the capture surface.
