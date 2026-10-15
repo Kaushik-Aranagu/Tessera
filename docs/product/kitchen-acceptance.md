@@ -33,3 +33,10 @@ List block and its undoable actions; ingredient line parsing (fractions, ranges,
 4. **The recording opens on about 6 s of blank paper.** Trim it, so the clip starts on the page.
 
 Not blocking: the page scrolls as a whole when the list is long. That is fine for groceries; keep the hero and writing line in place if it starts to feel long in use.
+
+# Engine hotfix (#70, 63c3f90)
+
+*Checked the diff on master against engine fixes 1-6, the seed-recipe parser notes and the failing `kitchen-phrases.md` rows.* **Pass.** All six fixes are in as asked: dated buy/get stays a task, kitchen phrases run after lifts, "pepper" is no longer a staple, size words and "cooked" go to prep, cooking an open recipe resumes it, and `GoToCookStep` takes a time. `stick`, `head`, seconds timers and the "Cook time:" / step split are also in. Phrase rows 9-12, 20, 27 and 50 are fixed. Two small misses, neither blocking:
+
+1. **"2 garlic cloves" makes its own ingredient and lands in Other.** Unit words after the name aren't read, so the name is "garlic cloves". It doesn't merge with "3 cloves garlic", and `AisleGuide` finds no aisle for "garlic clove". In `IngredientLine.parse`, when the name's last word is a unit word (clove, sprig, stick, head, slice), move it to `unit`.
+2. **One unknown item sinks a comma list.** `looksLikeGroceries` must hold for every item, so "milk, toothpaste" becomes a task because toothpaste isn't in the guide. Accept the list when at least half the items read as shopping and none looks like a set or a date. Adding the common toiletries (toothpaste, shampoo, soap, deodorant, razor) to the Household aisle also helps.
