@@ -59,3 +59,6 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [on-device-context-size.md](on-device-context-size.md) | Core, Product: on-device model window is 4,096 tokens; Tess prompt budget, trim order, when to route to Claude |
 | [free-signing-survival.md](free-signing-survival.md) | Core, iOS build, Coordinator: 7-day expiry keeps data; weekly re-sign; .tessera export/restore and daily backups slice |
 | [fixtures/year-of-data.md](fixtures/year-of-data.md) | Core, QA: deterministic 12-month generator, counts, performance targets and how to measure |
+| [ranker-tuning.md](ranker-tuning.md) | Core, Product: on-device rank log (separate ranklog.sqlite), weekly retune with guardrails |
+| [tess-discoverability.md](tess-discoverability.md) | Builder B, Design, Product: teaching Tess phrases in two weeks (context placeholder, ghost-row also-say, after-hand line), 20 hint lines |
+| [fixtures/spoken-normaliser.md](fixtures/spoken-normaliser.md) | Builder B, Core: 80 spoken transcript to text rows, 17 normaliser rules, grammar gaps |
