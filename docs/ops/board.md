@@ -20,10 +20,15 @@
 3. Kitchen shelf. Done when slice 14 in `ship-list-kitchen.md` is met.
 4. Lists app v0. Done when slice 15 in `ship-list-kitchen.md` is met.
 
+**Idle-time slices** (from `../research/next-areas.md` part 2; each takes an afternoon, pull one whenever blocked):
+- Meal plan feeds groceries. Done when "carbonara thursday" puts its ingredients on Groceries the evening before, linked to the task.
+- Logs fill habits. Done when a habit can count itself each time a Workout or Cook finishes. Needs M3 slice 2.
+- Body weight is the load. Done when pull-ups and dips use the latest body weight plus added weight for e1RM and volume. Needs M3 slice 1.
+
 **Later:**
 - **Lists**, from `ship-list-lists.md`. The Recipes and groceries thread is drafting it, and it comes next after the kitchen screens.
 - M3 slices 1 to 12 in `ship-list-m3.md`. Land the M3 List template on the kitchen `List` class.
-- M4 engine slices 1, 2, 4, 5 and 9 in `ship-list-m4.md`. These come after Lists.
+- M4 engine slices 1, 2, 4, 5 (Day log) and 9 in `ship-list-m4.md`. These come after Lists. Slice 6, Plan my day, stays out until Kaushik OKs a model call.
 
 ## iOS Builder A (Mac, current iOS build thread)
 
@@ -123,4 +128,4 @@
 3. Kitchen v2 scope review with the Kitchen lead.
 
 **Later:**
-- M5 candidates: "build me an app" with Claude, and daemons and automations.
+- M5 candidates, in Research lab's order: Money, Reading queue, People and Home upkeep. Also "build me an app" with Claude, and daemons.
