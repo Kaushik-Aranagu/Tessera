@@ -1,27 +1,25 @@
 # Spec: Tess model layer (foundation)
 
-*Planning lead, 2026-10-15 18:55. Kaushik wants Claude in Tessera's foundations as early as possible, not added late. This slice goes early in Core's queue after tonight's release. Research scouts the details first: `../research/tess-model-layer.md`, to come.*
+*Planning lead, 2026-10-15 18:55, reconciled with Research at 18:50. Kaushik wants Claude in Tessera's foundations as early as possible, not added late (18:41). This is Core's first item after tonight's release. **The build plan is Research's brief, `../research/tess-model-layer.md` (merged as #83). Its slices T1 to T7, S1 and S2 are the slices, in its order.** This page records the product calls on top of it.*
 
 ## What it is
 
-There is one place in the engine where Tess asks a model for help. Everything that wants a model goes through it: capture beyond the grammar, Plan my day wording (M4 slice 6b), questions about the log (M3 slice 7), recipe-from-link (kitchen v2), and later "build me an app".
+There is one place in the engine where Tess asks a model for help, in a fixed order: grammar first, then on-device, then Claude. Everything that wants a model goes through it: capture beyond the grammar, Plan my day wording (M4 6b), questions about the log (M3 4 and 7), pasted recipes and lists, and later "build me an app". A model never writes directly. It can only call registry tools, which run as pending ghost rows with undo, with `actor = tess` and the new `route` and `model` columns on the op log.
 
-## Slice
+## Build order (from Research)
 
-| # | Slice | Done when | Type |
-|---|---|---|---|
-| 1 | **Model router** | The order is always the same: grammar first, then on-device Foundation Models, then Claude, each step tried only when the one before has no confident answer. One `TessModel` protocol with on-device and Claude implementations. Each call is tagged with the purpose it serves (capture, plan, question, recipe) | Engine |
-| 2 | **Claude client** | Calls the Anthropic Messages API directly from the app with structured output (tool use with `strict` schemas generated from the action catalog). Model per purpose: Haiku 5.5 for capture and recipes, Sonnet 5.5 for plan and questions. The catalog and schema go first, with prompt caching | Engine |
-| 3 | **Key in the Keychain** | Kaushik pastes his API key once in Settings. It's stored in the Keychain, never in the repo, logs or exports. With no key, Tess quietly stays on-device | Engine + Settings row |
-| 4 | **Cost cap** | Token usage and an estimated cost are logged per call. A monthly cap (default $5) and a daily cap (default $0.50) are enforced. Once a cap is hit, the call falls back to on-device or the rules version, with one calm line. Settings shows "this month: $0.84 of $5" | Engine + Settings row |
-| 5 | **Writes only through the kernel** | A model returns proposed actions only. The kernel validates them, they show as ghost rows, and they commit on tap or after 2 s with undo. A model never writes directly, and every op records the actor (`tess:claude`, `tess:ondevice`) | Engine |
-| 6 | **Privacy line** | The bloom shows a small cloud mark whenever data leaves the phone. A per-class "never send to Claude" flag exists, defaulting to off for every class | Engine + Tess UI |
-| 7 | **First uses** | Capture fallback and Plan my day wording (6b) go through the layer. Each has an eval set (`tess-eval-phrases.md`, `plan-my-day-scenarios.md`) run against both on-device and Claude | Engine |
+T1 TessModel and router (with op-log `route` and `model` columns), then T2 shared tool registry, then T3 Claude route, key and usage ledger, then T4 context packs alongside S1 Settings: Claude, then **T6 Plan my day wording (6b), the first visible win**, then T7 questions via the query AST. T5 eval harness and S2 cloud mark and receipt run alongside.
 
-## Defaults taken
+## Product calls (reconciled)
 
-- The app calls the API directly, with no proxy server, since this is a personal app.
-- Caps are $5 a month and $0.50 a day.
-- Haiku handles capture and Sonnet handles planning. Opus waits for "build me an app".
-- No streaming in v1 of the layer, since ghost rows fill in when the call finishes.
-- It needs Kaushik's API key, which the coordinator will ask for at the huddle.
+- **Cost cap: $10 a month, hard stop.** This replaces my earlier $5 a month and $0.50 a day; there is no daily cap. Expected use is under $1 a month, so a daily cap only adds a way to fail on a busy paste day. The Settings line turns amber at 80%. At the cap every use falls back to rules or on-device, and Tess says once "Claude paused until 1 Nov." A Console spend limit on his key acts as a second, server-side cap. Kaushik confirms the number at the huddle.
+- **Transport is not settled.** Research recommends Anthropic's beta Claude for Foundation Models Swift package, dropped into the existing `LanguageModelSession` path. **Core confirms in T1** that it builds on iOS 27 under free signing and exposes the usage numbers the cap needs. If it doesn't, the fallback is Research's thin `URLSession` client, and nothing upstream changes.
+- **Streaming is fine where the package gives it** (plan and paste fill in as they arrive). This replaces my earlier "no streaming".
+- **Models:** Haiku 5.5 for capture, questions and pastes; Sonnet 5.5 for plan wording and hard pastes. No Opus yet.
+- **Key:** pasted once in Settings and stored in the Keychain on this device only. It never goes in the repo, logs, exports or the op log, and a test checks that. With no key, Claude stays off and Tess runs as today.
+- **Privacy:** each use sends only its own context pack, never the database. Health values are never sent; Plan my day sees only "light day: yes or no". A cloud mark shows on the bloom whenever data leaves the phone.
+- **Offline:** capture never blocks. A missed capture waits as "1 waiting for Tess" and becomes ghost rows when he's back, never committing on its own.
+
+## Waits on Kaushik (huddle)
+
+His API key, plus the three questions in `review-session.md`: the cap, whether Claude may see sleep and energy, and whether grammar misses go to Claude automatically. Defaults are $10 hard stop, no, and yes. T1 and T2 need none of these.
