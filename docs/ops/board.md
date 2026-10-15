@@ -72,7 +72,7 @@
 **Next:**
 1. Live-mode polish spec for v1 slice 13. Done when the motion, haptic and Reduce Motion values for Stamp, the rest dial and the PR sweep are written down for iOS build.
 2. Today on Home motion (M2 slice 8). Done when the Now / Next / Later surface and its swipe gestures have a short motion note and a recording.
-3. M4 screen steers: Plan my day, Shutdown, Focus block and Time Machine (`ship-list-m4.md`).
+3. M4 screen steers: Day log, Shutdown, Focus block and the energy check-in (`ship-list-m4.md`). Plan my day waits for Kaushik's OK.
 
 **Later:**
 - A widget and snippet visual language.
