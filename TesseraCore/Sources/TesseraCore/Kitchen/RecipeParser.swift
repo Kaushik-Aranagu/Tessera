@@ -106,7 +106,8 @@ public enum RecipeParser {
 
     /// "Prep time: 15 min", "Total time 1 hour", "Cook: 20 mins".
     static func timeLine(_ line: String) -> (String, Double)? {
-        guard let match = line.firstMatch(of: /(?i)^(prep|active|cook|cooking|total)(?:\s+time)?\s*:?\s*(.+)$/),
+        // "Cook time: 20 min" or "Cook: 20 min", never a step like "Cook the pasta for 10 minutes."
+        guard let match = line.firstMatch(of: /(?i)^(prep|active|cook|cooking|total)(?:\s+time\s*:?|\s*:)\s*(.+)$/),
               let minutes = durations(in: String(match.2)).first?.lowerBound else { return nil }
         let kind = match.1.lowercased()
         return (kind == "cooking" ? "cook" : kind, minutes)

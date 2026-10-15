@@ -36,7 +36,7 @@ struct GroceryTests {
         try engine.perform(AddRecipeToGroceries(recipe: sauce.id), by: .user)
         let added = try engine.perform(AddRecipeToGroceries(recipe: salad.id), by: .user)
         // Staples (olive oil) and "to taste" lines are skipped; tomatoes merge.
-        #expect(lists.items(of: list).map(\.text) == ["tomato", "onion", "cucumber"])
+        #expect(lists.items(of: list).map(\.text) == ["tomatoes", "onion", "cucumber"])
         let tomato = try #require(lists.items(of: list).first)
         #expect(tomato.quantity == "600 g")
         #expect(tomato.section == "Produce")
@@ -50,7 +50,7 @@ struct GroceryTests {
         // Taking the salad back out leaves the sauce's share; cucumber was only for the salad.
         try engine.perform(RemoveRecipeFromGroceries(recipe: salad.id), by: .user)
         #expect(lists.item(tomato.object).quantity == "1.2 kg")
-        #expect(lists.items(of: list).map(\.text) == ["tomato", "onion"])
+        #expect(lists.items(of: list).map(\.text) == ["tomatoes", "onion"])
         #expect(added.output.count == 2)
     }
 

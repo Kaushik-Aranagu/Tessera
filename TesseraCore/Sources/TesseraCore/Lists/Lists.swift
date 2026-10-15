@@ -266,6 +266,9 @@ public struct ClearDoneItems: EngineAction {
         for item in done {
             transaction.delete(item)
         }
+        if list.id == Groceries.listID {
+            try transaction.refreshShopLine()
+        }
         return done.count
     }
 

@@ -59,11 +59,14 @@ public struct ObjectStore {
         }
     }
 
+    /// Brings an object back with the children that went with it; children deleted earlier (a cleared list item)
+    /// stay deleted.
     public func restore(_ object: ObjectRecord) {
         noteChange(object)
         cache.classObjects.removeAll()
+        let deletedAt = object.deletedAt
         object.deletedAt = nil
-        for child in object.children ?? [] {
+        for child in object.children ?? [] where deletedAt == nil || child.deletedAt == deletedAt {
             restore(child)
         }
     }
