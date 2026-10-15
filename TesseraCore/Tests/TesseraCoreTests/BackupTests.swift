@@ -132,6 +132,23 @@ struct BackupTests {
         TesseraSchema.clearLaunchNote()
     }
 
+    @Test func aStagedRestoreCanBeSeenAndCancelled() throws {
+        // QA R1: a waiting restore is visible, and cancelling it leaves the store as it is at the next launch.
+        let dir = try folder()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let storeURL = dir.appendingPathComponent("tessera.sqlite")
+        try seededStore(at: storeURL).save()
+        #expect(TesseraBackup.pendingRestore(storeURL: storeURL) == nil)
+        let source = try seededStore(at: dir.appendingPathComponent("source.sqlite"))
+        let file = dir.appendingPathComponent("b.tessera")
+        try TesseraBackup.write(from: source.context, to: file)
+        let info = try TesseraBackup.stageRestore(from: file, storeURL: storeURL)
+        #expect(TesseraBackup.pendingRestore(storeURL: storeURL) == info)
+        TesseraBackup.cancelRestore(storeURL: storeURL)
+        #expect(TesseraBackup.pendingRestore(storeURL: storeURL) == nil)
+        #expect(!TesseraBackup.applyPendingRestore(to: storeURL, keepIn: dir.appendingPathComponent("Kept")))
+    }
+
     @Test func rollingWritesLeaveNoPartialFiles() throws {
         // QA B3: written under a temporary name, then renamed.
         let dir = try folder()

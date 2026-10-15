@@ -160,6 +160,20 @@ public enum TesseraBackup {
         return info
     }
 
+    /// The restore waiting for the next launch, if any (nil when none is staged or the staged file is unreadable).
+    @MainActor
+    public static func pendingRestore(storeURL: URL = TesseraSchema.defaultURL) -> Info? {
+        let pending = pendingURL(for: storeURL)
+        guard FileManager.default.fileExists(atPath: pending.path) else { return nil }
+        return try? inspect(pending)
+    }
+
+    /// Drops a staged restore, so the next launch opens the store as it is.
+    @MainActor
+    public static func cancelRestore(storeURL: URL = TesseraSchema.defaultURL) {
+        try? FileManager.default.removeItem(at: pendingURL(for: storeURL))
+    }
+
     /// At launch, before the store opens: if a restore is staged, the current store is first kept as a stamped
     /// backup in `keptFolder` (so the restore can be undone by restoring that), then moved aside and the staged file
     /// takes its place. Anything goes wrong, and the current store stays as it was. A staged file that turns out bad is

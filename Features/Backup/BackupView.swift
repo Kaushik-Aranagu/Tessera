@@ -15,6 +15,8 @@ struct BackupView: View {
     @State private var saving: BackupFile?
     @State private var line: String?
     @State private var refresh = 0
+    /// A picked backup, checked and copied in, waiting for "Replace everything".
+    @State private var confirming: Picked?
 
     var body: some View {
         let _ = refresh
@@ -78,6 +80,43 @@ struct BackupView: View {
                 .padding(.top, Theme.Spacing.section)
                 .entrance(5)
 
+                if let confirming {
+                    VStack(alignment: .leading, spacing: Theme.Spacing.s) {
+                        Text("Replace everything with the copy from \(BackupCopy.day(confirming.info.createdAt))?")
+                            .textRole(.body)
+                            .foregroundStyle(Theme.Colors.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                        PaintKey(paint: Theme.Colors.live, action: confirmRestore) { _ in
+                            Text("Replace")
+                        } meta: {
+                            Text("Hold")
+                        }
+                        .accessibilityHint("Replaces your data with this copy next time Tessera opens")
+                        Button("Keep what's here") { dropPicked() }
+                            .buttonStyle(.labelWord)
+                    }
+                    .padding(.top, Theme.Spacing.xl)
+                    .transition(.opacity)
+                } else if let pending = TesseraBackup.pendingRestore() {
+                    VStack(alignment: .leading, spacing: Theme.Spacing.s) {
+                        Text("A restore is waiting")
+                            .textRole(.title)
+                            .foregroundStyle(Theme.Colors.ink)
+                        Text("The copy from \(BackupCopy.day(pending.createdAt)) replaces everything the next time "
+                            + "Tessera opens. Close Tessera from the app switcher to restore now.")
+                            .font(Theme.voice)
+                            .foregroundStyle(Theme.Colors.context)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Button("Cancel restore") {
+                            TesseraBackup.cancelRestore()
+                            say("Cancelled. Nothing will be replaced.")
+                        }
+                        .buttonStyle(.labelWord)
+                    }
+                    .padding(.top, Theme.Spacing.xl)
+                    .transition(.opacity)
+                }
+
                 if let line {
                     Text(line)
                         .font(Theme.voice)
@@ -127,6 +166,7 @@ struct BackupView: View {
         saving = BackupFile(data: data, name: url.deletingPathExtension().lastPathComponent)
     }
 
+    /// Checks the picked file and copies it in while access lasts; nothing is staged until "Replace" is held.
     private func restore(from url: URL) {
         let accessing = url.startAccessingSecurityScopedResource()
         defer {
@@ -135,15 +175,39 @@ struct BackupView: View {
             }
         }
         do {
-            let info = try TesseraBackup.stageRestore(from: url)
-            say("Restores the copy from \(info.createdAt.formatted(.dateTime.weekday(.wide).day().month(.wide))) "
-                + "next time you open Tessera. Anything you log before then is replaced, and what's here now is "
-                + "kept in Backups to restore again.")
+            let info = try TesseraBackup.inspect(url)
+            let copy = FileManager.default.temporaryDirectory
+                .appendingPathComponent("picked-\(UUID().uuidString).\(TesseraBackup.fileExtension)")
+            try FileManager.default.copyItem(at: url, to: copy)
+            dropPicked()
+            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+                line = nil
+                confirming = Picked(url: copy, info: info)
+            }
         } catch TesseraBackup.BackupError.newerSchema {
             say("That copy is from a newer Tessera. Update first.")
         } catch {
             say("That file isn't a Tessera backup.")
         }
+    }
+
+    private func confirmRestore() {
+        guard let picked = confirming else { return }
+        do {
+            _ = try TesseraBackup.stageRestore(from: picked.url)
+            dropPicked()
+            say("What's here now is kept in Backups, so this can be undone.")
+        } catch {
+            dropPicked()
+            say("That copy couldn't be staged. Nothing was replaced.")
+        }
+    }
+
+    private func dropPicked() {
+        if let picked = confirming {
+            try? FileManager.default.removeItem(at: picked.url)
+        }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { confirming = nil }
     }
 
     private func say(_ text: String) {
@@ -152,6 +216,12 @@ struct BackupView: View {
             refresh += 1
         }
     }
+}
+
+/// A picked backup, copied in and checked, awaiting confirmation.
+private struct Picked {
+    let url: URL
+    let info: TesseraBackup.Info
 }
 
 /// A backup file for the export sheet.
@@ -186,6 +256,11 @@ enum BackupCopy {
             : calendar.isDateInYesterday(latest) ? "yesterday"
             : latest.formatted(.dateTime.weekday(.wide))
         return "A copy is made every day, the last one \(when). Seven are kept."
+    }
+
+    /// "Tuesday 14 October"
+    static func day(_ date: Date) -> String {
+        date.formatted(.dateTime.weekday(.wide).day().month(.wide))
     }
 
     /// "iCloud Drive/Tessera"
