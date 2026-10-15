@@ -13,7 +13,7 @@
 6. M2 slice 13, the day-full warning.
 
 **Later:**
-- M5 Money screens 6, 7, 5 in `ship-list-m5-money.md` (after Core's slices 1 to 3).
+- M5 Money screens 6, 7, 5 in `ship-list-m5-money.md` (after Core's slices 1 to 3), then M5 Upkeep screens 5 to 7 in `ship-list-m5-upkeep.md`.
 - Entry points from Home into Notes, Review, Kitchen and Lists (Groceries is `GroceriesView()`, #58).
 - Dated list items in Today, and a running list as Now. This wires the UI for Lists slices 5 and 6 once Core lands them.
 - **Lists screens 9 to 12** in `ship-list-lists.md`, in `Features/Lists/`, after the Home slices:
