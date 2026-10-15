@@ -94,3 +94,25 @@ struct RecipeObjectTests {
         #expect(throws: ActionError.self) { try engine.perform(CreateRecipe(text: " "), by: .user) }
     }
 }
+
+@MainActor
+struct PasteCorrectionTests {
+    @Test func tappedLinesReadAsTheyWereMarked() throws {
+        let text = "Toast\nIngredients\n2 slices bread\nbutter\nMethod\nToast the bread."
+        let lines = RecipeParser.classify(text)
+        #expect(lines.map(\.line).count == 6)
+        guard case .title = lines[0].kind, case .heading = lines[1].kind, case .ingredient = lines[3].kind else {
+            Issue.record("classify")
+            return
+        }
+        // Mark "butter" as ignored and the step as an ingredient-less step stays a step.
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let recipe = try engine.perform(CreateRecipe(text: text, corrections: [3: "ignore"]), by: .user).output
+        let book = RecipeBook(store: store, classes: classes)
+        #expect(book.lines(of: recipe).map(\.line.name) == ["bread"])
+        #expect(book.steps(of: recipe).count == 1)
+        #expect(Groceries(store: store, classes: classes).share(of: recipe).isEmpty)
+    }
+}

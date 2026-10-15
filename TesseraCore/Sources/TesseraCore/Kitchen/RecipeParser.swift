@@ -21,57 +21,83 @@ public struct ParsedRecipe: Hashable, Sendable {
 public enum RecipeParser {
     enum Mode { case unknown, ingredients, steps }
 
-    /// Splits on "Ingredients" / "Method" headings when there are any, else by line shape: amounts and short
-    /// lines are ingredients, sentences are steps. The text is kept verbatim in `source`.
-    // swiftlint:disable:next cyclomatic_complexity
-    public static func parse(_ text: String) -> ParsedRecipe? {
+    /// How one line of pasted text was read (what the paste screen paints).
+    public enum LineKind: Hashable, Sendable {
+        case title, heading, meta
+        case ingredient(IngredientLine)
+        case step(text: String, timers: [ClosedRange<Double>])
+        /// Read as nothing (a tap on the paste screen can make a line this).
+        case ignored
+    }
+
+    /// Every non-empty line with how it reads: headings switch mode ("Ingredients", "Method"), "Serves 2" and
+    /// "Total time: 25 min" are meta, the first line is the title unless it opens with an amount, and before any
+    /// heading lines go by their shape (amounts and short lines are ingredients, sentences are steps).
+    public static func classify(_ text: String) -> [(line: String, kind: LineKind)] {
         let lines = text.components(separatedBy: .newlines)
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
-        guard !lines.isEmpty else { return nil }
+        var mode = Mode.unknown
+        var result: [(String, LineKind)] = []
+        for (index, line) in lines.enumerated() {
+            if let next = heading(of: line) {
+                mode = next
+                result.append((line, .heading))
+            } else if servesCount(in: line) != nil || timeLine(line) != nil {
+                result.append((line, .meta))
+            } else if index == 0, !startsWithAmount(line) {
+                result.append((line, .title))
+            } else {
+                let isIngredient = switch mode {
+                case .ingredients: true
+                case .steps: false
+                case .unknown: looksLikeIngredient(line)
+                }
+                if isIngredient, let parsed = IngredientLine.parse(line) {
+                    result.append((line, .ingredient(parsed)))
+                } else {
+                    let body = stripNumbering(line)
+                    result.append((line, body.isEmpty ? .ignored : .step(text: body, timers: durations(in: body))))
+                }
+            }
+        }
+        return result
+    }
 
+    /// Splits on "Ingredients" / "Method" headings when there are any, else by line shape: amounts and short
+    /// lines are ingredients, sentences are steps. The text is kept verbatim in `source`.
+    public static func parse(_ text: String) -> ParsedRecipe? {
+        parse(text, lines: classify(text))
+    }
+
+    /// The recipe from lines already classified (the paste screen's corrections included).
+    public static func parse(_ text: String, lines: [(line: String, kind: LineKind)]) -> ParsedRecipe? {
         var title: String?
         var serves: Int?
         var active: Double?
         var total: Double?
         var ingredients: [IngredientLine] = []
         var steps: [ParsedRecipe.Step] = []
-        var mode = Mode.unknown
-
-        for (index, line) in lines.enumerated() {
-            if let next = heading(of: line) {
-                mode = next
-                continue
-            }
-            if let count = servesCount(in: line) {
-                serves = count
-                continue
-            }
-            if let (kind, minutes) = timeLine(line) {
-                if kind == "total" {
-                    total = minutes
-                } else if kind == "prep" || kind == "active" {
-                    active = minutes
+        for (line, kind) in lines {
+            switch kind {
+            case .title:
+                title = title ?? line.trimmingCharacters(in: CharacterSet(charactersIn: "#*: "))
+            case .meta:
+                if let count = servesCount(in: line) {
+                    serves = count
+                } else if let (which, minutes) = timeLine(line) {
+                    if which == "total" {
+                        total = minutes
+                    } else if which == "prep" || which == "active" {
+                        active = minutes
+                    }
                 }
-                continue
-            }
-            // The first line is the title unless it opens with an amount ("200 g flour").
-            if index == 0, title == nil, !startsWithAmount(line) {
-                title = line.trimmingCharacters(in: CharacterSet(charactersIn: "#*: "))
-                continue
-            }
-            let isIngredient = switch mode {
-            case .ingredients: true
-            case .steps: false
-            // Before any heading (or with none), go by the line's shape.
-            case .unknown: looksLikeIngredient(line)
-            }
-            if isIngredient, let parsed = IngredientLine.parse(line) {
+            case let .ingredient(parsed):
                 ingredients.append(parsed)
-            } else {
-                let body = stripNumbering(line)
-                guard !body.isEmpty else { continue }
-                steps.append(.init(text: body, timers: durations(in: body)))
+            case let .step(body, timers):
+                steps.append(.init(text: body, timers: timers))
+            case .heading, .ignored:
+                continue
             }
         }
         guard !ingredients.isEmpty || !steps.isEmpty else { return nil }
