@@ -61,6 +61,10 @@ final class AppModel {
     var isWorkoutPresented = false
     var commandDraft = ""
     var isCommandExpanded = false
+    /// What Tess's soul is doing right now.
+    var tessMode: TessSoul.Mode = .idle
+    /// Home (the launcher Tess paints in) vs Today.
+    var isHomeShown = false
 
     init(context: ModelContext) {
         self.context = context

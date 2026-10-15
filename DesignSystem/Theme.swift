@@ -84,6 +84,8 @@ struct ThemeConcept: Sendable {
 
     /// How "Tess is thinking" looks. Each concept supplies its own; `ThinkingIndicator` renders it.
     enum ThinkingStyle: Sendable {
+        /// Tess's soul in its thinking bloom (Kaushik's pick).
+        case soul
         /// A spark whose rays breathe and turn, like a thinking glyph.
         case spark
         /// Three mono dots that pulse in sequence.
@@ -141,7 +143,7 @@ extension ThemeConcept {
         background: .groundWithSky,
         separator: .hairline,
         completion: .strike,
-        thinking: .spark,
+        thinking: .soul,
         workout: WorkoutPalette(
             ground: 0x0D1411,
             groundRaised: 0x16211C,

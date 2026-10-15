@@ -9,6 +9,7 @@ struct TesseraApp: App {
 
     init() {
         FontRegistry.registerAll()
+        Theme.configure()
         AppClock.configure()
         let container = TesseraSchema.makeContainer()
         self.container = container
@@ -19,8 +20,18 @@ struct TesseraApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .environment(model)
+            Group {
+                #if DEBUG
+                    if ProcessInfo.processInfo.arguments.contains("-soulGallery") {
+                        SoulGallery()
+                    } else {
+                        RootView()
+                    }
+                #else
+                    RootView()
+                #endif
+            }
+            .environment(model)
         }
         .modelContainer(container)
     }

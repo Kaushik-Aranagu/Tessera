@@ -2,37 +2,29 @@ import SwiftData
 import SwiftUI
 import TesseraCore
 
-/// The only glass in the app: the command bar (which morphs into Tess's capture panel) and the running-workout
-/// pill, sharing one `GlassEffectContainer` so they blend as they move.
+/// The floating chrome: the command bar, which morphs into Tess's capture panel. Tess's soul lives at its
+/// leading edge; tapping her goes Home. Glass is shaped as a flush, machined inlay — no capsules.
 struct BottomChrome: View {
+    var onSoulTap: () -> Void = {}
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.zoomNamespace) private var zoomNamespace
     @Namespace private var glass
     @FocusState private var focused: Bool
     @State private var feedback: String?
-    @State private var isThinking = false
+    @State private var isBusy = false
+
+    private let barShape = RoundedRectangle(cornerRadius: 18, style: .continuous)
 
     var body: some View {
-        @Bindable var model = model
         GlassEffectContainer(spacing: 14) {
-            VStack(spacing: 10) {
-                if let session = model.session, !model.isWorkoutPresented, !model.isCommandExpanded {
-                    WorkoutPill(session: session)
-                        .glassEffect(.regular.interactive(), in: .capsule)
-                        .glassEffectID("pill", in: glass)
-                        .modifier(ZoomSource(id: "workout", namespace: zoomNamespace))
-                        .onTapGesture { model.isWorkoutPresented = true }
-                }
-                if model.isCommandExpanded {
-                    panel
-                        .glassEffect(.regular, in: .rect(cornerRadius: Theme.Radius.panel))
-                        .glassEffectID("command", in: glass)
-                } else {
-                    collapsed
-                        .glassEffect(.regular.interactive(), in: .capsule)
-                        .glassEffectID("command", in: glass)
-                }
+            if model.isCommandExpanded {
+                panel
+                    .glassEffect(.regular, in: .rect(cornerRadius: 22, style: .continuous))
+                    .glassEffectID("command", in: glass)
+            } else {
+                collapsed
+                    .glassEffect(.regular.interactive(), in: barShape)
+                    .glassEffectID("command", in: glass)
             }
         }
         .padding(.horizontal, Theme.Spacing.l)
@@ -42,71 +34,90 @@ struct BottomChrome: View {
             if !expanded {
                 feedback = nil
             }
+            if !isBusy {
+                model.tessMode = expanded ? .listening : restingOrIdle
+            }
         }
+        .onAppear { model.tessMode = restingOrIdle }
+    }
+
+    private var restingOrIdle: TessSoul.Mode {
+        let hour = Calendar.current.component(.hour, from: AppClock.now)
+        return hour >= 23 || hour < 6 ? .resting : .idle
     }
 
     private func toggle(_ expanded: Bool) {
         withTesseraAnimation(reduceMotion: reduceMotion) { model.isCommandExpanded = expanded }
     }
 
-    private var collapsed: some View {
-        Button { toggle(true) } label: {
-            HStack(spacing: Theme.Spacing.m) {
-                Text("›")
-                    .textRole(.labelStrong)
-                    .foregroundStyle(Theme.Colors.live)
-                Text("Ask Tess, or log 82.5×8")
-                    .textRole(.body)
-                    .foregroundStyle(Theme.Colors.inkSecondary)
-                    .lineLimit(1)
-                Spacer(minLength: 0)
-                Image(systemName: "mic")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(Theme.Colors.ink)
-            }
-            .padding(.horizontal, Theme.Spacing.l + 2)
-            .frame(height: 54)
-            .contentShape(Capsule())
+    private var soul: some View {
+        Button(action: onSoulTap) {
+            TessSoul(mode: model.tessMode)
+                .scaleEffect(0.62)
+                .frame(width: 52, height: 52)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Ask Tess or log something")
+        .accessibilityLabel("Tess. Go home")
+    }
+
+    private var collapsed: some View {
+        HStack(spacing: Theme.Spacing.s) {
+            soul
+            Button { toggle(true) } label: {
+                HStack(spacing: Theme.Spacing.m) {
+                    Text("Ask Tess, or log 82.5×8")
+                        .textRole(.body)
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                    Image(systemName: "mic")
+                        .font(.system(size: 17, weight: .medium))
+                        .foregroundStyle(Theme.Colors.ink)
+                }
+                .frame(height: 56)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Ask Tess or log something")
+        }
+        .padding(.leading, Theme.Spacing.xs)
+        .padding(.trailing, Theme.Spacing.l + 2)
     }
 
     private var panel: some View {
         @Bindable var model = model
         return VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-            HStack {
+            HStack(spacing: Theme.Spacing.s) {
+                soul
                 Eyebrow(text: "Tess", color: Theme.Colors.live)
                 Spacer()
                 Button { toggle(false) } label: {
-                    Image(systemName: "xmark").font(.system(size: 13, weight: .semibold))
+                    Image(systemName: "xmark").font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(Theme.Colors.inkSecondary)
-                        .frame(width: 32, height: 32)
+                        .frame(width: 44, height: 44)
                 }
                 .accessibilityLabel("Close")
             }
-            HStack(alignment: .center, spacing: Theme.Spacing.s) {
-                Group {
-                    if isThinking {
-                        ThinkingIndicator(size: 20).transition(.scale.combined(with: .opacity))
-                    } else {
-                        Text("›").textRole(.labelStrong).foregroundStyle(Theme.Colors.live)
+            TextField("log 82.5×8, or ask", text: $model.commandDraft)
+                .textRole(.body)
+                .foregroundStyle(Theme.Colors.ink)
+                .focused($focused)
+                .submitLabel(.go)
+                .onSubmit(submit)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .padding(.horizontal, Theme.Spacing.xs)
+                .onChange(of: model.commandDraft) { _, draft in
+                    if !isBusy {
+                        model.tessMode = draft.isEmpty ? .idle : .listening
                     }
                 }
-                .frame(width: 22)
-                TextField("log 82.5×8, or ask", text: $model.commandDraft)
-                    .textRole(.body)
-                    .foregroundStyle(Theme.Colors.ink)
-                    .focused($focused)
-                    .submitLabel(.go)
-                    .onSubmit(submit)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-            }
             if let feedback {
                 Text(feedback)
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.ink)
+                    .padding(.horizontal, Theme.Spacing.xs)
                     .transition(.opacity.combined(with: .offset(y: 6)))
             }
             FlowLayout(spacing: Theme.Spacing.s) {
@@ -119,72 +130,76 @@ struct BottomChrome: View {
                             .textRole(.data)
                             .foregroundStyle(Theme.Colors.inkSecondary)
                             .padding(.horizontal, 10)
-                            .padding(.vertical, 7)
-                            .overlay(Capsule().strokeBorder(Theme.Colors.hairline, lineWidth: 1))
-                            .contentShape(Capsule())
+                            .padding(.vertical, 8)
+                            .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(
+                                Theme.Colors.hairline,
+                                lineWidth: 1
+                            ))
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
             }
         }
-        .padding(Theme.Spacing.l + 2)
+        .padding(Theme.Spacing.m)
     }
 
+    /// listening → thinking → working → done (with haptic) → idle.
     private func submit() {
         let text = model.commandDraft
-        guard !text.trimmingCharacters(in: .whitespaces).isEmpty, !isThinking else { return }
+        guard !text.trimmingCharacters(in: .whitespaces).isEmpty, !isBusy else { return }
+        isBusy = true
         withTesseraAnimation(reduceMotion: reduceMotion) {
-            isThinking = true
             feedback = nil
+            model.tessMode = .thinking
         }
         Task { @MainActor in
-            // Tess's grammar is instant today; the beat lets the thinking state read before the answer lands.
-            try? await Task.sleep(for: .milliseconds(650))
+            // Tess's grammar is instant today; these beats let each state read before the answer lands.
+            try? await Task.sleep(for: .milliseconds(900))
+            model.tessMode = .working
+            try? await Task.sleep(for: .milliseconds(500))
             let reply = CommandInterpreter(model: model).run(text)
             withTesseraAnimation(reduceMotion: reduceMotion) {
-                isThinking = false
                 feedback = reply
                 model.commandDraft = ""
+                model.tessMode = .done
             }
+            try? await Task.sleep(for: .milliseconds(1700))
+            model.tessMode = model.isCommandExpanded ? .listening : restingOrIdle
+            isBusy = false
         }
     }
 }
 
-private struct WorkoutPill: View {
+/// A running process (a live workout) shown as a lit seam along the top edge; tap to return to it.
+struct RunningSeam: View {
     let session: WorkoutSession
+    var onTap: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        HStack(spacing: Theme.Spacing.m) {
-            Image(systemName: "circle.fill")
-                .font(.system(size: 8))
-                .foregroundStyle(Theme.Colors.training)
-                .symbolEffect(.pulse, options: .repeating, isActive: !reduceMotion)
-            Text(session.workout.title)
-                .textRole(.bodyStrong)
-                .foregroundStyle(Theme.Colors.ink)
-            if let entry = session.currentEntry {
-                Text(
-                    "· \(session.currentExercise?.name ?? "") \(session.loggedSets(of: entry).count)/\(session.targetSets(of: entry))"
-                )
-                .textRole(.body)
-                .foregroundStyle(Theme.Colors.inkSecondary)
-                .lineLimit(1)
+        Button(action: onTap) {
+            ZStack(alignment: .top) {
+                Color.clear.frame(height: 44)
+                TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { context in
+                    let sweep = TessSoul.phase(context.date.timeIntervalSinceReferenceDate, period: 2.2)
+                    GeometryReader { proxy in
+                        ZStack(alignment: .leading) {
+                            Rectangle().fill(Theme.Colors.training.opacity(0.55))
+                            Rectangle()
+                                .fill(LinearGradient(colors: [.clear, Theme.Colors.training, .clear],
+                                                     startPoint: .leading, endPoint: .trailing))
+                                .frame(width: proxy.size.width * 0.35)
+                                .offset(x: reduceMotion ? 0 : proxy.size.width * (sweep * 1.35 - 0.35))
+                        }
+                    }
+                    .frame(height: 2)
+                }
             }
-            Spacer(minLength: 0)
-            TimelineView(.periodic(from: .now, by: 1)) { context in
-                Text(Format.duration(AppClock.adjust(context.date).timeIntervalSince(session.startedAt)))
-                    .textRole(.data)
-                    .foregroundStyle(Theme.Colors.ink)
-                    .contentTransition(.numericText())
-            }
+            .contentShape(Rectangle())
         }
-        .padding(.horizontal, Theme.Spacing.l + 2)
-        .frame(height: 48)
-        .contentShape(Capsule())
-        .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(.isButton)
-        .accessibilityHint("Opens the running workout")
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(session.workout.title) is running. Return to workout")
     }
 }
 
@@ -219,7 +234,9 @@ struct CommandInterpreter {
     }
 
     private func exercise(matching text: String) -> ClassDef? {
-        let words = text.lowercased().split(separator: " ").map(String.init).filter { $0.count > 2 && $0 != "log" }
+        let words = text.lowercased().split(separator: " ").map(String.init)
+            .map { $0.trimmingCharacters(in: .punctuationCharacters) }
+            .filter { $0.count > 2 && $0 != "log" }
         let classes = (try? model.context.fetch(FetchDescriptor<ClassDef>())) ?? []
         guard let exerciseRoot = model.classDef(.exercise) else { return nil }
         return classes
