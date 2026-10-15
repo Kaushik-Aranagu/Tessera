@@ -21,7 +21,7 @@ If the recipe page lands before the cut, also paste a recipe's text into the bar
 
 *If a calm note ever shows at launch, that's the new data-safety guard (#84) protecting your data, not a crash.*
 
-*Known gaps, already queued, so no need to report them: you can undo the last set but can't yet tap an older set to fix it; the next session doesn't raise the weight yet after you hit the top of the range; the plan's routine can't be edited yet (only today's); voice isn't in yet.*
+*Known gaps, already queued, so no need to report them: the next session doesn't raise the weight yet after you hit the top of the range, and voice isn't in yet (the mic is hidden). Tapping a logged set to fix it, and editing your routine, arrived in tonight's build, so do try them.*
 
 ## Look and feel: what to notice (from Design studio)
 
