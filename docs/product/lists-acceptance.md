@@ -1,6 +1,6 @@
 # Lists acceptance checks
 
-*Kitchen lead, 2026-10-15. One block per slice in `ship-list-lists.md`. A Lists PR passes when every check in its block holds; the Kitchen lead runs them against the merged code and recording and posts pass or a fix list. "Undo" means one `undo` restores the exact previous state, including order and `checkedAt`.*
+*Kitchen lead, 2026-10-15; screen checks follow Design's build sheet `docs/design/kitchen/lists-9-12.md` (d134bf0). One block per slice in `ship-list-lists.md`. A Lists PR passes when every check in its block holds; the Kitchen lead runs them against the merged code and recording and posts pass or a fix list. "Undo" means one `undo` restores the exact previous state, including order and `checkedAt`.*
 
 ## 1. List housekeeping (engine)
 - Rename a list; undo restores the old name. Groceries can be renamed but keeps its fixed id.
@@ -68,18 +68,20 @@
 
 ## 10. A list page (screen)
 - Hero is the list name; one context line; items at 21pt; tap strikes and sinks into "N done".
-- Options only behind a long-press on the hero, as words; a used option stays as one word under the context line.
+- Options open by tapping the context line, which unfolds in place into the option words (no sheet); tapping outside folds them back. A used option stays as a labels line under the hero ("REUSABLE · PICK ONE").
+- Holding the hero does nothing unless Pick one is on (then it picks, see 12).
 - Swiping between lists pages horizontally with the hero parallax; the page stays one screen tall with a bounded item window.
 - A running list shows the lit vermilion seam at the top.
-- Reusable list: the fold is a hold-to-reset key whose paint drains back out.
+- The fold is pinned at the bottom: tap to open and restore, hold 0.7 s to clear done. On a reusable list it reads "N done · hold to reset" and the strikes un-paint right to left while held.
 
 ## 11. An item, opened (screen)
 - Zoom transition from the item row; dragging down zooms back into it.
 - Note editable in place; @links in cobalt and tappable.
-- Date in words, changed through the day strip; backlinks as names at the bottom.
+- Date in words; tapping it opens a day lane of day words in place (x scroll with snap), not a picker. No date shows "Add a day" at 40%. Backlinks as names under "LINKED FROM".
+- Swiping right on the hero strikes the item and zooms back to the list.
 - An empty item shows only a faint "Add a note" line; no form fields.
 
 ## 12. Pick one moment (screen)
-- Others dim to 20%; one name lifts and grows to hero with a small bloom and a soft haptic, within 600 ms.
-- Tap opens the item; swipe away picks again.
+- Only with Pick one on: hold the hero 0.6 s (paint fills its underline). Others dim to 20%; one name lifts with matched geometry and grows to hero at the centre in about 520 ms, with the small bloom and a medium haptic.
+- Tap opens the item; swipe left sends it back into its row and picks again.
 - Reduce Motion: a cross-fade only. Recording committed.
