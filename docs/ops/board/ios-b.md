@@ -5,11 +5,12 @@
 **Now:** M2 slice 8, Today on Home (`ship-list-m2.md`). Done when it shows Now, then up to 3 Next and Later in a bounded surface, with swipe right for done and left for not now. It meets the UI bar.
 
 **Next:**
-1. M2 slice 9, the task finish moment (Ink strike and haptic). Not rough.
-2. NowPicker wiring. Done when cooking, shopping and timed tasks become Now through the same picker as workouts.
-3. M2 slice 11, the day strip showing tasks and the workout, with the now marker.
-4. M2 slice 12, the full What's running ledger for tasks: suspended and waiting, with the stale rules.
-5. M2 slice 13, the day-full warning.
+1. Button sweep (Kaushik, 19:00: no rounded-rectangle, oval or pill buttons anywhere, Apple defaults included). After the install and once Design's `docs/design/no-buttons.md` lands. Done when every button on Builder B's screens (Home, Command, RootView), reusing Builder A's DesignSystem button style uses Design's replacement language and the audit's rows for those files are ticked, with a recording.
+2. M2 slice 9, the task finish moment (Ink strike and haptic). Not rough.
+3. NowPicker wiring. Done when cooking, shopping and timed tasks become Now through the same picker as workouts.
+4. M2 slice 11, the day strip showing tasks and the workout, with the now marker.
+5. M2 slice 12, the full What's running ledger for tasks: suspended and waiting, with the stale rules.
+6. M2 slice 13, the day-full warning.
 
 **Later:**
 - Entry points from Home into Notes, Review, Kitchen and Lists (Groceries is `GroceriesView()`, #58).
