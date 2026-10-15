@@ -43,13 +43,15 @@ struct GroceryTests {
         #expect(Set(groceries.recipes(for: tomato.object).map(\.title)) == ["Tomato sauce", "Salad"])
         #expect(groceries.aisles().map(\.aisle) == ["Produce"])
 
-        // Scaled: the sauce for 4 adds another 800 g.
+        // Added again at 4: the sauce's share becomes 800 g (replaced, not doubled), plus the salad's 200 g.
         try engine.perform(AddRecipeToGroceries(recipe: sauce.id, serves: 4), by: .user)
-        #expect(lists.item(tomato.object).quantity == "1.4 kg")
+        #expect(lists.item(tomato.object).quantity == "1 kg")
+        try engine.perform(AddRecipeToGroceries(recipe: sauce.id, serves: 4), by: .user)
+        #expect(lists.item(tomato.object).quantity == "1 kg")
 
         // Taking the salad back out leaves the sauce's share; cucumber was only for the salad.
         try engine.perform(RemoveRecipeFromGroceries(recipe: salad.id), by: .user)
-        #expect(lists.item(tomato.object).quantity == "1.2 kg")
+        #expect(lists.item(tomato.object).quantity == "800 g")
         #expect(lists.items(of: list).map(\.text) == ["tomatoes", "onion"])
         #expect(added.output.count == 2)
         #expect(groceries.share(of: sauce).count == 2)

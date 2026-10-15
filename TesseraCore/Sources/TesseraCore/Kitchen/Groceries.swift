@@ -154,6 +154,10 @@ extension Transaction {
             try AddListItem(list: list.id, text: text, section: aisle(of: ingredient)).apply(&self)
         }
         var shares = GroceryShare.decode(store.value("shares", of: item)?.stringValue)
+        // A recipe added again replaces its share (a new size), never doubles it.
+        if let recipe = share.recipe {
+            shares.removeAll { $0.recipe == recipe }
+        }
         shares.append(share)
         try writeShares(shares, on: item, ingredient: ingredient)
         return item
