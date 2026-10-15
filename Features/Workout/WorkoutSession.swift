@@ -568,7 +568,7 @@ extension WorkoutSession {
         case .lastTime:
             prefill.weight.map { "Same as last time, \(Format.kilograms($0)) × \(prefill.reps)" }
         case .thisSession: nil
-        case .target: prefill.weight == nil ? "First time. Start light, \(prefill.reps) reps" : "From the plan"
+        case .target: prefill.isFirstTime ? "First time. Start light, \(prefill.reps) reps" : "From the plan"
         case .none: "First time. Start light"
         }
     }

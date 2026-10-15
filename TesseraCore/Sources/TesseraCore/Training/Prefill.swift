@@ -16,6 +16,8 @@ public struct SetPrefill: Hashable, Sendable {
     public var weight: Double?
     public var reps: Int
     public var source: Source
+    /// No history for this exercise: the weight, if any, is a light starting weight, not something earned.
+    public var isFirstTime = false
 }
 
 @MainActor
@@ -40,12 +42,13 @@ public extension TrainingLedger {
             return SetPrefill(weight: previousTime.weight, reps: Int(previousTime.reps.rounded()), source: .lastTime)
         }
         if targetWeight != nil || targetReps != nil {
-            return SetPrefill(weight: targetWeight, reps: targetReps ?? 8, source: .target)
+            return SetPrefill(weight: targetWeight, reps: targetReps ?? 8, source: .target, isFirstTime: lastTime.isEmpty)
         }
         let slot = store.linkedObjects("slot", of: entry).first ?? exercise.flatMap { store.planSlot(for: $0) }
         let low = slot.flatMap { store.number("repMin", of: $0) }.map(Int.init)
             ?? exercise.flatMap { store.classValue("repMin", of: $0)?.numericValue }.map(Int.init) ?? 8
-        return SetPrefill(weight: exercise.flatMap { store.startingWeight(for: $0) }, reps: low, source: .none)
+        return SetPrefill(weight: exercise.flatMap { store.startingWeight(for: $0) }, reps: low, source: .none,
+                          isFirstTime: true)
     }
 }
 
