@@ -76,6 +76,15 @@ Screenshot: [screenshots/today-v0.jpg](screenshots/today-v0.jpg).
 - [qa/review-86.md](qa/review-86.md): the recipe page and paste-a-recipe screens (R1–R8).
 - [qa/review-89.md](qa/review-89.md): Tess model layer T1, the v2 migration and the merging migration retry (M1, M2).
 - [qa/rc-read-5cb92c4.md](qa/rc-read-5cb92c4.md): the release-candidate read of master for Kaushik's first phone install (GO), with W1–W3 and PL1–PL4.
+- [qa/review-106.md](qa/review-106.md): Tess T2 tools shared by the on-device model and Claude (T2-1 rollback, T2-2).
+- [qa/review-107-108.md](qa/review-107-108.md): Home links, Kitchen entry points and the stroke-word keys (NAV1, D4 rest persistence).
+- [qa/review-107-110-113.md](qa/review-107-110-113.md): master after #107, #110, #106 and #113 (NAV1 confirmed fixed, N1, N2).
+- [qa/review-109.md](qa/review-109.md): tap a logged stroke to edit a set, and the paint seed clamp.
+- [qa/review-112.md](qa/review-112.md): backup and restore data safety (B1–B5) and the #114 hotfix.
+- [qa/review-115.md](qa/review-115.md): grammar collision rules 1–3 (G1–G7) and the #117 hotfix.
+- [qa/review-116.md](qa/review-116.md): Today queue swipes against Home's pager (Q1 blocker, Q2).
+- [qa/review-118.md](qa/review-118.md): Groceries polish, the Backups entry, restore confirm (R1–R3, #120).
+- [qa/review-122.md](qa/review-122.md): v1 engine gaps: RemoveSlot, clearRPE, rest days in the week, library groups (E1–E4).
 - [qa/regression.md](qa/regression.md): the pre-merge checklist (undo, export, What's running, Tess phrases, Reduce Motion).
 - [qa/gym-flow.md](qa/gym-flow.md): the v1 gym check (seed, prefill, dial, kill and resume, Lock Screen, edit and undo, finish).
 - [qa/kitchen-flow.md](qa/kitchen-flow.md): the end-to-end kitchen run-through a Mac lead does before a kitchen PR merges. The Kitchen lead's per-slice acceptance is in [product/kitchen-acceptance.md](product/kitchen-acceptance.md).
