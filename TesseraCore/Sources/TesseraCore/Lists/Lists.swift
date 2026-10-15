@@ -195,6 +195,12 @@ public struct MoveListItem: EngineAction {
         let item = try transaction.object(item, is: .listItem)
         if let section {
             try transaction.set("section", to: section.isEmpty ? nil : .text(section), on: item)
+            // On the groceries list, moving an item to another aisle teaches its ingredient (kitchen slice 7).
+            if item.parent?.id == Groceries.listID, !section.isEmpty,
+               let ingredient = Groceries(store: transaction.store, classes: transaction.classes).ingredient(of: item)
+            {
+                try transaction.set("aisle", to: .text(section), on: ingredient)
+            }
         }
         guard let index, let list = item.parent else { return }
         var siblings = list.orderedChildren.filter { $0.id != item.id }

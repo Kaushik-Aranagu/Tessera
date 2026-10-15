@@ -12,7 +12,7 @@ struct ListTests {
         let lists = ListContents(store: store, classes: classes)
 
         let packing = try engine.perform(CreateList(name: "Packing"), by: .user).output
-        #expect(lists.lists().map(\.title) == ["Packing"])
+        #expect(lists.lists().map(\.title) == ["Groceries", "Packing"])
         let socks = try engine.perform(AddListItem(list: packing.id, text: "Socks", quantity: "5", section: "Clothes"),
                                        by: .user).output
         let charger = try engine.perform(AddListItem(list: packing.id, text: "Charger", section: "Tech"), by: .user)
