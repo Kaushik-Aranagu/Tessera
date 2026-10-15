@@ -1,6 +1,6 @@
 # Tessera board (index)
 
-*Only the planning lead (Product lead thread) edits this file. Each team's queue lives in its own file under `board/`, and only that team's lead edits it. Updated 2026-10-15 18:42.*
+*Only the planning lead (Product lead thread) edits this file. Each team's queue lives in its own file under `board/`, and only that team's lead edits it. Updated 2026-10-15 18:55. First phone build cut at 19:45 UTC; review guide in `../product/review-session.md`.*
 
 ## Priority order (central)
 
@@ -12,7 +12,7 @@
 
 Small product calls are logged in `../product/decisions.md`.
 
-M3 engine slices fill gaps in Core's queue. Cloud model calls (Plan my day rewording, M4 slice 6b) wait for Kaushik's OK.
+**Foundation, right after tonight's release:** the Tess model layer (`tess-model-layer.md`). Claude is approved and goes in as early as possible. M3 engine slices fill gaps in Core's queue.
 
 ## Team queues
 

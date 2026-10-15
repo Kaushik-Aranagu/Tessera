@@ -1,0 +1,28 @@
+# Review session: what to try tonight
+
+*Planning lead, 2026-10-15 18:50. For Kaushik's first build on his phone, cut at 19:45 UTC. This only covers what's on master at the cut (checked against master at #81). If something here isn't in the build, skip it and tell us.*
+
+## What to try (about 15 minutes)
+
+Home has a word rail across the top: **Review · Today · Training**. **Kitchen** joins it if it lands before the cut. The capture bar sits at the bottom of every screen.
+
+1. **Start a workout.** Go to Home, then **Training**, and tap today's push/pull/legs routine. The workout rises as its own screen. *Check:* does it feel like an instrument rather than a form?
+2. **Log a set with one hold.** In the workout, each set opens already filled in. Hold to log it, then turn the **weight dial**, where the plates per side show beside it, and roll the **reps drum** for the next set. *Check:* the feel of the dial's clicks and the hold timing.
+3. **Rest from the lock screen.** After logging a set, lock your phone. The rest timer runs on the Lock Screen, and **Done** logs the next set without unlocking.
+4. **Leave and come back.** Swipe the workout down or kill the app mid-set, then reopen it. Home's Now and What's running should take you back to the exact set.
+5. **Swap an exercise.** In the workout, pull down on the exercise name and pick an alternative from the same movement pattern.
+6. **Finish, and look at the exercise.** Finish the workout and see it saved on Home. Then tap an exercise name to open its page, with your best set and history.
+7. **Plans.** From **Training**, open the week view and the month view.
+8. **Tell Tess.** In the bottom bar, type "log bench 80x8", "buy milk, eggs, 2 lemons", "call mum thursday" or "note: bar felt heavy". Each shows as a faded ghost row that saves after 2 seconds, and you can undo it.
+9. **Groceries.** Open Groceries (from the rail or Kitchen once it's on Home) and see the items from step 8 sorted by aisle. Tap an item to strike it.
+10. **Notes and Review.** Open a note from step 8, then swipe to **Review** to see the week as counts.
+
+If the recipe page lands before the cut, also paste a recipe's text into the bar and watch it get read.
+
+## Five questions for the huddle
+
+1. **What did you reach for first, and what didn't you find?** This tells us whether Home's layout and rail are right before we add more apps.
+2. **Logging a set: is one hold, the dial and the drum fast enough between sets, or is anything in the way?** This decides how much of the next week goes into gym polish versus new areas.
+3. **Does the look feel like yours?** That covers paint, type, seams and Tess's bloom. What would you change first? Design can redirect now, cheaply, before more screens are built.
+4. **What should Tess do for you in the first week now that Claude is in?** For example: plan the day, answer "what did I lift", read recipes from links, or something else. This sets the order of the new Tess model layer.
+5. **After the gym and the kitchen, which area would you open daily?** The candidates are the Day log, Reading, Money, People or Home upkeep. This orders everything after M4.

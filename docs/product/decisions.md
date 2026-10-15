@@ -2,6 +2,15 @@
 
 *Small calls made by Product so that fixtures and builds stay consistent. Newest first. Kaushik's own decisions are in `morning-questions.md`.*
 
+## 2026-10-15 18:41 (Kaushik)
+
+- **Home rail:** add KITCHEN as a fourth word, next to Review, Today and Training. Yes.
+- **Claude for Plan my day:** yes. M4 slice 6b is unparked.
+- **Claude as a foundation:** Claude is part of the base, built in as early as possible, not bolted on later. A "Tess model layer" foundation slice goes early in the queue after tonight's release.
+- **Fetching a recipe page from a pasted link:** approved. It goes into kitchen v2, which still waits for a week of use.
+- **Apple Watch:** yes. Sleep stages and resting HR are in (M4 slice 2), and the "In bed" fallback stays for nights without the Watch.
+- **First phone build:** cut at 19:45 UTC, reviewed with `review-session.md`, then a huddle to make the plan concrete.
+
 ## 2026-10-15 18:40 (from Research #78)
 
 **Plan my day (M4 slice 6)**
