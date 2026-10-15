@@ -39,3 +39,7 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [shutdown-daylog-copy.md](shutdown-daylog-copy.md) | Design, Core: 32 Day log and Shutdown lines in Tess voice (M4 slices 5, 7) |
 | [ship-list-reading-draft.md](ship-list-reading-draft.md) | Product: DRAFT Reading ship list, 7 slices (M5) |
 | [tess-model-layer.md](tess-model-layer.md) | Product, Core: Claude in Tess (official Swift package, Keychain key, $10 cap, grammar then on-device then Claude, first slices) |
+| [fixtures/recipe-paste-corpus.md](fixtures/recipe-paste-corpus.md) | Core, Kitchen lead: 30 recipe paste fixtures with expected parse and parser gaps (kitchen 2, 3, 11) |
+| [fixtures/cook-mode-scenarios.md](fixtures/cook-mode-scenarios.md) | Core: 15 cook mode timer, process and Now scenarios (kitchen 12) |
+| [fixtures/lists-fixtures.md](fixtures/lists-fixtures.md) | Core, Kitchen lead: 40 list pastes and 60 list phrases (Lists 3, 8) |
+| [grammar-collisions.md](grammar-collisions.md) | Core: 46 Tess grammar collisions across domains, precedence rules, 56 test rows |
