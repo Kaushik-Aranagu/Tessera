@@ -27,7 +27,7 @@ public enum RecipeMath {
             return max(0.5, (value * 2).rounded() / 2)
         case .cup:
             return max(0.25, (value * 4).rounded() / 4)
-        case nil, .clove, .pinch, .handful, .bunch, .can, .slice, .sprig, .piece:
+        case nil, .clove, .pinch, .handful, .bunch, .can, .slice, .sprig, .piece, .stick, .head:
             return max(1, value.rounded())
         }
     }
@@ -48,7 +48,7 @@ public extension IngredientLine {
         guard let unit else { return text }
         let plural = (amountMax ?? amount ?? 1) > 1
         let word = switch unit {
-        case .clove, .pinch, .handful, .bunch, .can, .slice, .sprig, .piece, .cup:
+        case .clove, .pinch, .handful, .bunch, .can, .slice, .sprig, .piece, .stick, .head, .cup:
             plural ? (unit == .bunch || unit == .pinch ? "\(unit.rawValue)es" : "\(unit.rawValue)s") : unit.rawValue
         default: unit.rawValue
         }

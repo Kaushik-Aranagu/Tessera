@@ -54,7 +54,7 @@ struct IngredientLineTests {
         let book = IngredientBook(store: store, classes: classes)
         var transaction = Transaction(store: store, classes: classes)
         let tomato = try transaction.ingredient(named: "tomatoes")
-        #expect(tomato.title == "Tomato")
+        #expect(tomato.title == "Tomatoes") // as typed; matching ignores the plural
         #expect(try transaction.ingredient(named: "Tomato").id == tomato.id)
         #expect(book.find("TOMATOES")?.id == tomato.id)
         #expect(book.all().count == 1)

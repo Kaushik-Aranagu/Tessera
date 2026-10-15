@@ -16,7 +16,7 @@ public enum Aisle: String, CaseIterable, Sendable {
 /// ~150 common ingredients with their aisle, and the staples that are skipped when a recipe goes on the list.
 public enum AisleGuide {
     public static let staples: Set<String> = [
-        "salt", "black pepper", "pepper", "olive oil", "vegetable oil", "oil", "water", "sea salt",
+        "salt", "black pepper", "olive oil", "vegetable oil", "oil", "water", "sea salt",
     ]
 
     public static func aisle(for name: String) -> Aisle? {

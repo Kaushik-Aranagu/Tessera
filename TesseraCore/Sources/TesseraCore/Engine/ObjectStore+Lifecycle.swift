@@ -60,6 +60,11 @@ public extension ObjectStore {
         try? context.save()
         invalidateCaches()
         // The starter plan and gym kit are user data too; put them back so a reset install looks like a fresh one.
+        // The library classes survive, so its equipment objects are reinstalled explicitly.
+        if let classes = try? SystemCatalog.seed(in: context) {
+            _ = try? ExerciseLibraryInstaller.install(shape: ExerciseLibraryInstaller.chosenShape, store: self,
+                                                      classes: classes)
+        }
         _ = try? prepareCatalog()
     }
 }

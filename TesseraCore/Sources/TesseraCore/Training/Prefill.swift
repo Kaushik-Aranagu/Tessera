@@ -46,7 +46,10 @@ public extension TrainingLedger {
                 weight: targetWeight,
                 reps: targetReps ?? 8,
                 source: .target,
+                // First time only when the weight is our light starting weight; a weight the plan or a person set
+                // reads "From the plan".
                 isFirstTime: lastTime.isEmpty
+                    && (targetWeight == nil || targetWeight == exercise.flatMap { store.startingWeight(for: $0) })
             )
         }
         let slot = store.linkedObjects("slot", of: entry).first ?? exercise.flatMap { store.planSlot(for: $0) }

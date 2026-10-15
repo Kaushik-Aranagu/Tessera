@@ -210,6 +210,7 @@ public struct AddRecipeToGroceries: EngineAction {
                 items.append(item)
             }
         }
+        try transaction.refreshShopLine()
         return items
     }
 
@@ -245,6 +246,7 @@ public struct RemoveRecipeFromGroceries: EngineAction {
                 try transaction.writeShares(rest, on: item, ingredient: ingredient)
             }
         }
+        try transaction.refreshShopLine()
     }
 
     public func summary(in store: ObjectStore) -> String {
@@ -277,6 +279,7 @@ public struct AddGroceries: EngineAction {
         guard !items.isEmpty else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "nothing to add")
         }
+        try transaction.refreshShopLine()
         return items
     }
 

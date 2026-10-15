@@ -47,8 +47,8 @@ public struct TessGrammar {
         if let note = parseNote(phrase) {
             return note
         }
-        if let kitchen = parseKitchen(phrase, context: context) {
-            return kitchen
+        if let recipe = parsePastedRecipe(phrase) {
+            return recipe
         }
         let entry = context.entry.flatMap { store.object(id: $0) }
         if let entry, let parsed = parseRelativeSet(text, entry: entry) {
@@ -56,6 +56,10 @@ public struct TessGrammar {
         }
         if let lift = parseLift(text, entry: entry) {
             return lift
+        }
+        // After lifts, so "bench 80x8, 82.5x6" stays a lift.
+        if let kitchen = parseKitchen(phrase, context: context) {
+            return kitchen
         }
         return parseTask(phrase, context: context)
     }
@@ -259,6 +263,7 @@ enum TessDates {
         var day: Date?
         var time: (hour: Int, minute: Int)?
         var remaining: [String] = []
+        var fromWeekday = false
         var index = 0
         while index < words.count {
             let word = words[index].lowercased().trimmingCharacters(in: .punctuationCharacters)
@@ -271,6 +276,7 @@ enum TessDates {
                 day = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now))
             } else if let weekday = weekdays[word] {
                 day = nextDate(weekday: weekday, after: now, calendar: calendar)
+                fromWeekday = true
             } else if word == "at", index + 1 < words.count, let parsed = parseTime(words[index + 1].lowercased()) {
                 time = parsed
                 index += 1
@@ -290,7 +296,12 @@ enum TessDates {
             base = calendar.date(byAdding: .day, value: 1, to: base) ?? base
         }
         let (hour, minute) = time ?? (9, 0)
-        return (calendar.date(bySettingHour: hour, minute: minute, second: 0, of: base), remaining)
+        var date = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: base)
+        // "thu" on a Thursday evening means next Thursday, not this morning.
+        if fromWeekday, let resolved = date, resolved <= now {
+            date = calendar.date(byAdding: .day, value: 7, to: resolved)
+        }
+        return (date, remaining)
     }
 
     /// The next given weekday; today counts only if it hasn't passed (it's the same day, so we keep it).

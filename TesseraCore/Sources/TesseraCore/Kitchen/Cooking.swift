@@ -89,6 +89,19 @@ public struct StartCooking: EngineAction {
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
         let recipe = try transaction.object(recipe, is: .recipe)
         let book = RecipeBook(store: transaction.store, classes: transaction.classes)
+        // Already cooking this (running or set aside)? Pick that cook back up rather than starting a second one.
+        if let cookClass = transaction.classes[.cook],
+           let open = transaction.store.objects(of: cookClass).first(where: { cook in
+               transaction.store.linkedObjects("recipe", of: cook).first?.id == recipe.id
+                   && transaction.store.value("cookedAt", of: cook) == nil && transaction.openProcess(for: cook) != nil
+           })
+        {
+            if let serves {
+                try transaction.set("serves", to: .number(Double(serves)), on: open)
+            }
+            try StartProcess(subject: open.id, ownerApp: "Kitchen", time: time).apply(&transaction)
+            return open
+        }
         let cook = try transaction.create(transaction.classDef(.cook), title: recipe.title)
         try transaction.setLinks("recipe", on: cook, to: [recipe])
         if let size = serves ?? book.serves(recipe) {
@@ -115,10 +128,12 @@ public struct GoToCookStep: EngineAction {
 
     public var cook: UUID
     public var step: Int
+    public var time: Date?
 
-    public init(cook: UUID, step: Int) {
+    public init(cook: UUID, step: Int, time: Date? = nil) {
         self.cook = cook
         self.step = step
+        self.time = time
     }
 
     public func apply(_ transaction: inout Transaction) throws {
@@ -128,7 +143,7 @@ public struct GoToCookStep: EngineAction {
         let steps = RecipeBook(store: transaction.store, classes: transaction.classes).steps(of: recipe)
         let index = max(0, min(step, steps.count - 1))
         try transaction.saveContext(process, resumePoint: ResumePoint(index: index),
-                                    nextStep: steps.indices.contains(index) ? steps[index].text : nil, at: .now)
+                                    nextStep: steps.indices.contains(index) ? steps[index].text : nil, at: time ?? .now)
     }
 
     public func summary(in _: ObjectStore) -> String {
