@@ -215,19 +215,19 @@ struct DrainBar: View {
 /// A dry brushstroke as a filled shape: tapered, slightly ragged ends and a wavering edge, never a capsule.
 private struct DryStroke: Shape {
     func path(in rect: CGRect) -> Path {
-        let w = rect.width, h = rect.height
-        guard w > 1 else { return Path() }
-        let taper = min(8, w / 3)
+        let width = rect.width, height = rect.height
+        guard width > 1 else { return Path() }
+        let taper = min(8, width / 3)
         var path = Path()
-        path.move(to: CGPoint(x: rect.minX, y: rect.midY + h * 0.1))
-        path.addLine(to: CGPoint(x: rect.minX + taper * 0.4, y: rect.minY + h * 0.3))
-        path.addQuadCurve(to: CGPoint(x: rect.maxX - taper, y: rect.minY + h * 0.05),
-                          control: CGPoint(x: rect.midX, y: rect.minY - h * 0.15))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY - h * 0.15))
-        path.addLine(to: CGPoint(x: rect.maxX - taper * 0.3, y: rect.midY + h * 0.2))
-        path.addLine(to: CGPoint(x: rect.maxX - taper * 0.7, y: rect.maxY - h * 0.05))
-        path.addQuadCurve(to: CGPoint(x: rect.minX + taper, y: rect.maxY - h * 0.1),
-                          control: CGPoint(x: rect.midX, y: rect.maxY + h * 0.1))
+        path.move(to: CGPoint(x: rect.minX, y: rect.midY + height * 0.1))
+        path.addLine(to: CGPoint(x: rect.minX + taper * 0.4, y: rect.minY + height * 0.3))
+        path.addQuadCurve(to: CGPoint(x: rect.maxX - taper, y: rect.minY + height * 0.05),
+                          control: CGPoint(x: rect.midX, y: rect.minY - height * 0.15))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY - height * 0.15))
+        path.addLine(to: CGPoint(x: rect.maxX - taper * 0.3, y: rect.midY + height * 0.2))
+        path.addLine(to: CGPoint(x: rect.maxX - taper * 0.7, y: rect.maxY - height * 0.05))
+        path.addQuadCurve(to: CGPoint(x: rect.minX + taper, y: rect.maxY - height * 0.1),
+                          control: CGPoint(x: rect.midX, y: rect.maxY + height * 0.1))
         path.closeSubpath()
         return path
     }
