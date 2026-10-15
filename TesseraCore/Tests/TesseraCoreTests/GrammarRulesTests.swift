@@ -35,8 +35,13 @@ struct GrammarRulesTests {
             Issue.record("move dentist to friday")
         }
         #expect(grammar.parse("move the piano to friday", context: context) == nil
-            || { if case .reschedule? = grammar.parse("move the piano to friday", context: context) { false }
-                 else { true } }())
+            || {
+                if case .reschedule? = grammar.parse("move the piano to friday", context: context) {
+                    false
+                } else {
+                    true
+                }
+            }())
         // Questions with dates never become tasks.
         for question in ["what did i weigh monday", "anything due tmrw", "everything from tuesday",
                          "what did i get done today", "how many workouts this week?"]
@@ -46,7 +51,11 @@ struct GrammarRulesTests {
         // Two exercises in one comma phrase.
         if case let .sets(parts)? = grammar.parse("squat 100 5, deadlift 140 3", context: context) {
             let read = parts.compactMap { part -> [Double]? in
-                if case let .lift(_, _, reps, weight, _) = part { [weight, reps] } else { nil }
+                if case let .lift(_, _, reps, weight, _) = part {
+                    [weight, reps]
+                } else {
+                    nil
+                }
             }
             #expect(read == [[100, 5], [140, 3]])
         } else {

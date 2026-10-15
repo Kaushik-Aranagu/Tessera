@@ -126,7 +126,8 @@ public struct TessGrammar {
     /// "move dentist to friday", "push the dentist to thu 3pm": an existing open task, to a new day. With no such
     /// task this isn't a reschedule (and never makes a task titled with the verb).
     private func parseReschedule(_ phrase: String, context: TessContext) -> Parse? {
-        guard let match = phrase.firstMatch(of: /^(?i)(?:move|push|shift|reschedule|put)\s+(.+?)\s+(?:to|till|until)\s+(.+)$/)
+        guard let match = phrase
+            .firstMatch(of: /^(?i)(?:move|push|shift|reschedule|put)\s+(.+?)\s+(?:to|till|until)\s+(.+)$/)
         else { return nil }
         let (date, rest) = TessDates.extract(from: String(match.2).split(separator: " ").map(String.init),
                                              now: context.now, calendar: context.calendar)
@@ -321,7 +322,8 @@ public struct TessGrammar {
         guard !words.isEmpty, words.allSatisfy({ $0.count >= 3 }) else { return nil }
         return names
             .filter { _, name in
-                let nameWords = Set(name.split(separator: " ").map { $0.hasSuffix("s") && $0.count > 3 ? $0.dropLast() : $0 })
+                let nameWords = Set(name.split(separator: " ")
+                    .map { $0.hasSuffix("s") && $0.count > 3 ? $0.dropLast() : $0 })
                 return words.allSatisfy { nameWords.contains($0) }
             }
             .min { $0.1.count < $1.1.count }?.0
