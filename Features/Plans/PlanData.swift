@@ -10,11 +10,13 @@ struct PlanData {
     let sessions: [TrainedSession]
     let today: (routine: String, id: UUID?)?
     let perWeek: Int?
+    private let ledger: TrainingLedger
 
     init(model: AppModel, plan chosen: ObjectRecord?, now: Date) {
         let store = model.store
         let ledger = model.ledger!
-        plan = chosen ?? model.objects(of: .plan).last
+        self.ledger = ledger
+        plan = chosen ?? model.plan
         cycle = plan.map { store.linkedObjects("routines", of: $0) } ?? []
         next = plan.flatMap { ledger.nextRoutine(in: $0) }
         perWeek = PlanRhythm.perWeek(cycleCount: cycle.count)
@@ -40,8 +42,11 @@ struct PlanData {
     }
 
     func week(now: Date, calendar: Calendar = .current) -> PlanWeek {
-        PlanWeek.build(now: now, calendar: calendar, sessions: sessions,
-                       rhythm: .init(cycle: cycleTitles, next: next?.title, perWeek: perWeek), todayWorkout: today)
+        PlanWeek.from(ledger.week(containing: now, plan: plan, now: now, calendar: calendar), cycle: cycleTitles,
+                      perWeek: perWeek, todayWorkoutID: today?.id)
+        { summary in
+            Self.routine(of: summary.workout, store: ledger.store)
+        }
     }
 
     func month(_ ledger: TrainingLedger, now: Date, calendar: Calendar = .current) -> PlanMonth {
