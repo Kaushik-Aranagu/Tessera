@@ -31,6 +31,7 @@ Run this before merging anything to master. There's no CI, so this list and `scr
 - [ ] `buy milk` adds milk to Groceries.
 - [ ] `call mum friday` makes a Friday task.
 - [ ] Any phrase this PR teaches Tess doesn't change what an older phrase does.
+- [ ] If the PR touches the grammar: run the phrases in the collision table of [research/grammar-collisions.md](../research/grammar-collisions.md) and check each still reads as its "Correct" column (or as before, for rows not yet fixed).
 
 ## Reduce Motion
 

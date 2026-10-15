@@ -110,6 +110,33 @@ struct WorkoutSessionTests {
         #expect(session.lastSeated?.records.isEmpty == true) // a second record this session stays quiet
     }
 
+    @Test func aLoggedSetCanBeChangedOnTheDialAndTheChangeUndone() throws {
+        let (model, session) = try startedSession()
+        session.logSet() // 82.5 × 7
+        session.skipRest()
+        let entry = try #require(session.currentEntry)
+        let first = try #require(session.setRows(of: entry).first)
+        let next = (session.weight, session.reps)
+
+        session.beginEditing(setID: first.id)
+        #expect(session.isEditing && session.weight == 82.5 && session.reps == 7)
+        session.weight = 85
+        session.reps = 6
+        session.saveEdit()
+        #expect(model.engine.history(limit: 1).first?.action == "editSet")
+        #expect(session.setRows(of: entry).first?.weight == 85)
+        #expect(session.setRows(of: entry).first?.reps == 6)
+        #expect(!session.isEditing && session.weight == next.0 && session.reps == next.1) // the next set is back
+        #expect(session.editNote == "Changed set 1 to 85 × 6.")
+
+        // Undo takes the latest action first: the edit, then the set.
+        #expect(session.canUndoLast)
+        session.undoLast()
+        #expect(session.setRows(of: entry).first?.weight == 82.5)
+        session.undoLast()
+        #expect(session.setRows(of: entry).isEmpty)
+    }
+
     @Test func aSecondRecordHasToBeatTheFirst() throws {
         let (_, session) = try startedSession()
         session.logSet() // 82.5 × 7, level with the best
@@ -287,5 +314,29 @@ struct WorkoutSessionTests {
         #expect(summary.sets == 1 && summary.exercises == 1)
         #expect(summary.line == "1 exercise, 1 set. New best: 82.5 × 8.")
         #expect(session.workout.title == "Push Day A")
+    }
+
+    // MARK: QA W1 / W2
+
+    @Test func aSetTypedToTessIsTheLatestActionForUndo() throws {
+        let (_, session) = try startedSession()
+        session.logSet()
+        #expect(session.canUndo)
+        let entry = try #require(session.currentEntry)
+        let held = try #require(session.setRows(of: entry).last)
+        session.seatCaptured(setIDs: [held.id])
+        #expect(!session.canUndo) // the live Undo no longer reaches back to the earlier held set
+        #expect(session.lastEdit == nil && session.editNote == nil)
+    }
+
+    @Test func undoingTheSetBeingEditedLeavesAKeyOnScreen() throws {
+        let (_, session) = try startedSession()
+        session.logSet()
+        let entry = try #require(session.currentEntry)
+        let row = try #require(session.setRows(of: entry).last)
+        session.beginEditing(setID: row.id)
+        #expect(session.isEditing)
+        session.undoLastSet()
+        #expect(!session.isEditing)
     }
 }

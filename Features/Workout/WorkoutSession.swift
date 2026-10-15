@@ -6,15 +6,16 @@ import TesseraCore
 /// order), y = sets of the current exercise (done above, the dialled set at eye level, remaining below). Rest lives
 /// in the same set block: after a set is seated the weight dial becomes the countdown.
 ///
-/// Every write goes through Core's `ActionEngine` (LogSet, SwapExercise, FinishWorkout), so the op log holds it and
+/// Every write goes through Core's `ActionEngine` (LogSet, LogNextSet, EditSet, SwapEntryExercise, FinishWorkout), so
+/// the op log holds it and
 /// undo replays it. Defaults come from Core's `TrainingLedger.prefill`; the dial's detents from the exercise's
 /// `WeightDial`.
 @MainActor
 @Observable
 final class WorkoutSession {
     let workout: ObjectRecord
-    private unowned let model: AppModel
-    private var ledger: TrainingLedger {
+    unowned let model: AppModel
+    var ledger: TrainingLedger {
         model.ledger
     }
 
@@ -239,6 +240,14 @@ final class WorkoutSession {
     private var estimated: Set<UUID> = []
     /// What Core prefilled the current set with.
     private(set) var prefill: SetPrefill?
+    /// The logged set being changed on the dial and drum (tap its stroke); nil when dialling the next set.
+    var editingSetID: UUID?
+    /// Tess's line after an edit or its undo ("Changed set 2 to 85 × 6.").
+    var editNote: String?
+    /// The next set's numbers, put back when the edit ends.
+    var editStash: (weight: Double, reps: Double, rpe: Double?)?
+    /// The last edit, undoable until the next action.
+    var lastEdit: (record: OpRecord, number: Int)?
 }
 
 extension WorkoutSession {
@@ -288,39 +297,6 @@ extension WorkoutSession {
         currentEntry.flatMap { swaps[$0.id] }
     }
 
-    // MARK: Personal records
-
-    /// Reps of last time's top set for this exercise (the drum's ghost before today's first set).
-    var lastTimeReps: Double? {
-        guard let exercise = currentExercise,
-              let last = ledger.sessions(of: exercise, excludingWorkout: workout.id).first else { return nil }
-        return last.sets.max { $0.weight < $1.weight }?.reps
-    }
-
-    var previewE1RM: Double? {
-        ledger.e1RM(weight: weight, reps: reps, rpe: rpe)
-    }
-
-    /// Best set before this workout, for the PR hint.
-    var previousBest: AppModel.LoggedSet? {
-        currentExercise.flatMap { ledger.bestSet(of: $0, excludingWorkout: workout.id) }
-            .map { AppModel.LoggedSet(weight: $0.weight, reps: $0.reps, e1RM: $0.e1RM) }
-    }
-
-    /// Core's quiet hint for the dialled set ("beats 5RM", "was 80 × 5"), RPE included; nil when it beats nothing.
-    var recordHint: RecordHint? {
-        currentEntry.flatMap { ledger.recordHint(for: $0, weight: weight, reps: reps, rpe: rpe) }
-    }
-
-    var isPersonalRecord: Bool {
-        recordHint != nil
-    }
-
-    /// Reps needed at the current weight to beat the previous best e1RM.
-    var repsForRecord: Int? {
-        currentExercise.flatMap { ledger.repsToBeatBestE1RM(weight: weight, for: $0, excludingWorkout: workout.id) }
-    }
-
     // MARK: Actions
 
     func adjustWeight(by delta: Double) {
@@ -357,6 +333,8 @@ extension WorkoutSession {
             )).map { ($0.output, $0.record) }
         }
         guard let result = performed else { return }
+        lastEdit = nil
+        editNote = nil
         let set = result.output
         // One celebration per exercise per session (Core decides); later records still count, quietly.
         let records = ledger.shouldCelebrate(set) ? beaten : []
@@ -382,6 +360,30 @@ extension WorkoutSession {
         loadDefaults()
     }
 
+    /// Sets logged from outside the live screen (typed in the Bar, Tess) seat like a held set once they dry: the
+    /// stroke paints in, the dial becomes the rest, and the next set opens prefilled.
+    func seatCaptured(setIDs: [UUID]) {
+        // The typed set is now the latest action: the live Undo must not reach back to an earlier held set.
+        endEditing()
+        undoable = nil
+        lastEdit = nil
+        editNote = nil
+        let all = entries
+        guard let (entry, row) = all.lazy.compactMap({ entry in
+            self.setRows(of: entry).last { setIDs.contains($0.id) }.map { (entry, $0) }
+        }).last else { return refreshAfterExternalWrite() }
+        if let index = all.firstIndex(where: { $0.id == entry.id }), index != currentIndex {
+            currentIndex = index
+        }
+        lastSeated = Seated(setID: row.id, entryID: entry.id, number: row.number, records: [], e1RM: row.e1RM,
+                            weight: row.weight, reps: row.reps)
+        restTotal = restSeconds
+        restEndsAt = all.allSatisfy(isFinished) ? nil : AppClock.now.addingTimeInterval(restTotal)
+        lastTouchedAt = AppClock.now
+        loggedCount += 1
+        loadDefaults()
+    }
+
     var canUndo: Bool {
         guard let undoable else { return false }
         return undoable.record.state != .undone && finishedAt == nil
@@ -390,6 +392,7 @@ extension WorkoutSession {
     /// Undoes the last logged set through the op log, and puts its numbers back on the dial to fix and re-log.
     func undoLastSet() {
         guard canUndo, let undoable else { return }
+        endEditing()
         model.engine.undo(undoable.record)
         if let index = entries.firstIndex(where: { $0.id == undoable.entryID }) {
             currentIndex = index
@@ -480,9 +483,10 @@ extension WorkoutSession {
 
     /// Swaps the current exercise for today only, through the engine. The slot and scheme stay.
     func swap(to option: ExerciseSwaps.Option) {
+        endEditing()
         guard let entry = currentEntry, let from = currentExercise else { return }
         guard let result = try? model.engine.perform(
-            SwapExercise(entry: entry.id, exercise: option.exercise.id, targetWeight: option.load), by: .user
+            SwapEntryExercise(entry: entry.id, exercise: option.exercise.id, targetWeight: option.load), by: .user
         ) else { return }
         let swappedID = result.output
         if swappedID != entry.id, let index = order.firstIndex(of: entry.id) {
@@ -511,6 +515,8 @@ extension WorkoutSession {
 
     func select(entryAt index: Int) {
         guard entries.indices.contains(index), index != currentIndex else { return }
+        editingSetID = nil
+        editStash = nil
         currentIndex = index
         lastSeated = nil
         lastTouchedAt = AppClock.now
@@ -532,10 +538,16 @@ extension WorkoutSession {
     // MARK: Finish
 
     /// Hold to finish: ends the workout through the engine. The view then plays the gather.
-    func finish() {
+    /// Early (from the running order): Core's FinishWorkoutEarly marks the unstarted exercises skipped, one undo.
+    func finish(early: Bool = false) {
         guard finishedAt == nil else { return }
+        endEditing()
         let now = AppClock.now
-        _ = try? model.engine.perform(FinishWorkout(workout: workout.id, time: now), by: .user)
+        if early, !entries.allSatisfy(isFinished) {
+            _ = try? model.engine.perform(FinishWorkoutEarly(workout: workout.id, time: now), by: .user)
+        } else {
+            _ = try? model.engine.perform(FinishWorkout(workout: workout.id, time: now), by: .user)
+        }
         finishedAt = now
         restEndsAt = nil
         undoable = nil
@@ -553,31 +565,13 @@ extension WorkoutSession {
         let prefill = ledger.prefill(for: entry)
         self.prefill = prefill
         targetReason = Self.reason(for: prefill)
+        // Core prefills a light first-session weight too (StartRoutine, store.startingWeight); bands have none.
         if let raw = presetWeight[entry.id] ?? prefill.weight, let exercise = currentExercise {
             weight = weightDial(of: exercise).snap(raw)
         } else {
-            weight = detents.first ?? 20
+            weight = 0
         }
         reps = Double(prefill.reps)
         rpe = nil
-    }
-
-    /// Why the dial opened where it did, in Tess's words.
-    static func reason(for prefill: SetPrefill) -> String? {
-        switch prefill.source {
-        case .lastTime:
-            prefill.weight.map { "Same as last time, \(Format.kilograms($0)) × \(prefill.reps)" }
-        case .thisSession: nil
-        case .target: prefill.isFirstTime ? "First time. Start light, \(prefill.reps) reps" : "From the plan"
-        case .none: "First time. Start light"
-        }
-    }
-
-    /// The dial still holds the prefill exactly, so Core's LogNextSet can log it as is.
-    var isAtPrefill: Bool {
-        guard let entry = currentEntry, rpe == nil, Format.unit == .kilograms else { return false }
-        let prefill = ledger.prefill(for: entry)
-        guard let weight = prefill.weight else { return false }
-        return abs(weight - self.weight) < 0.001 && prefill.reps == Int(reps)
     }
 }

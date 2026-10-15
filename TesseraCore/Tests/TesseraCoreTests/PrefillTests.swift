@@ -48,4 +48,22 @@ struct PrefillTests {
         try engine.perform(LogNextSet(entry: entry.id), by: .user)
         #expect(ledger.prefill(for: entry) == SetPrefill(weight: 82.5, reps: 8, source: .thisSession))
     }
+
+    @Test func aRaisedTargetWinsOverLastTime() throws {
+        // Last time every set hit the top of the range, so progression raises the weight.
+        let first = try engine.perform(StartRoutine(routine: pushA().id), by: .user).output
+        let bench = try #require(first.orderedChildren.first)
+        let high = try #require(store.linkedObjects("slot", of: bench).first.flatMap { store.number("repMax", of: $0) })
+        for _ in 0 ..< 3 {
+            try engine.perform(LogSet(entry: bench.id, weight: 80, reps: high), by: .user)
+        }
+        try engine.perform(FinishWorkout(workout: first.id), by: .user)
+
+        let next = try engine.perform(StartRoutine(routine: pushA().id), by: .user).output
+        let entry = try #require(next.orderedChildren.first)
+        let target = try #require(store.number("targetWeight", of: entry))
+        #expect(target > 80)
+        let opening = ledger.prefill(for: entry)
+        #expect(opening.weight == target && opening.source == .target && !opening.isFirstTime)
+    }
 }
