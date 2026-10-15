@@ -37,14 +37,14 @@ struct HomeSpatialView: View {
     }
 
     /// Space kept free at the bottom of every page for the dock (Ask Tess + What's running) in BottomChrome.
-    static let dockClearance: CGFloat = 12
+    static let dockClearance: CGFloat = 104
 
     /// Where Home was left this session (spatial memory).
     @MainActor private static var remembered = Page.today.rawValue
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
-    @State private var page: Int? = HomeSpatialView.remembered
+    @State private var position = ScrollPosition(id: HomeSpatialView.remembered)
     @State private var progress = Double(HomeSpatialView.remembered)
 
     var body: some View {
@@ -58,6 +58,8 @@ struct HomeSpatialView: View {
                     ForEach(Page.allCases) { sibling in
                         fitted(content(for: sibling))
                             .containerRelativeFrame(.horizontal)
+                            // The hero's parallax stays inside its own page.
+                            .clipped()
                             .id(sibling.rawValue)
                     }
                 }
@@ -65,13 +67,15 @@ struct HomeSpatialView: View {
             }
             .scrollTargetBehavior(.paging)
             .scrollIndicators(.hidden)
-            .scrollPosition(id: $page)
+            // Opens where Home was left (TODAY the first time) without a visible jump.
+            .scrollPosition($position)
+            .onAppear { position.scrollTo(id: Self.remembered) }
             .onScrollGeometryChange(for: Double.self) { geometry in
                 geometry.containerSize.width > 0 ? geometry.contentOffset.x / geometry.containerSize.width : 0
             } action: { _, new in
                 progress = new
             }
-            .onChange(of: page) { _, new in
+            .onChange(of: position.viewID(type: Int.self)) { _, new in
                 if let new {
                     Self.remembered = new
                 }
@@ -107,7 +111,7 @@ struct HomeSpatialView: View {
     }
 
     private func show(_ index: Int) {
-        withTesseraAnimation(.snappy(duration: 0.3), reduceMotion: reduceMotion) { page = index }
+        withTesseraAnimation(.snappy(duration: 0.3), reduceMotion: reduceMotion) { position.scrollTo(id: index) }
     }
 
     private func show(_ sibling: Page) {
@@ -168,12 +172,10 @@ private struct SiblingParallax: ViewModifier {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
-        let amount = reduceMotion ? 0.0 : 0.3
-        content.visualEffect { effect, proxy in
-            // The hero is centred in its page, so its distance from the scroll view's centre is the paging offset.
-            let visible = proxy.bounds(of: .scrollView(axis: .horizontal))
-            let drift = visible.map { proxy.frame(in: .scrollView(axis: .horizontal)).midX - $0.width / 2 } ?? 0
-            return effect.offset(x: -drift * amount)
+        let amount: CGFloat = reduceMotion ? 0 : 0.3
+        // The phase is −1 … 1 as the hero's page slides out to either side, and exactly 0 at rest.
+        content.scrollTransition(.interactive, axis: .horizontal) { effect, phase in
+            effect.offset(x: -phase.value * amount * 390)
         }
     }
 }

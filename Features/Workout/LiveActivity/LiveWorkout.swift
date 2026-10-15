@@ -25,6 +25,8 @@ enum LiveWorkout {
             session.extendRest(by: 15)
         case .skipRest:
             session.skipRest()
+        case .skipSet:
+            session.skipSet()
         }
         RestActivityController.shared.update(for: session)
     }

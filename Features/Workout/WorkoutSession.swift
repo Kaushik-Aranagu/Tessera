@@ -90,7 +90,18 @@ final class WorkoutSession {
     }
 
     func targetSets(of entry: ObjectRecord) -> Int {
-        Int(model.store.number("targetSets", of: entry) ?? 3)
+        max(Int(model.store.number("targetSets", of: entry) ?? 3) - (skipped[entry.id] ?? 0), 0)
+    }
+
+    /// Planned sets skipped this session, per exercise entry (nothing is written for a skipped set).
+    private var skipped: [UUID: Int] = [:]
+
+    /// Skips the planned set (e.g. Skip on the Lock Screen once rest is over): the exercise needs one set fewer.
+    func skipSet() {
+        guard let entry = currentEntry, setRows(of: entry).count < targetSets(of: entry) else { return }
+        skipped[entry.id, default: 0] += 1
+        restEndsAt = nil
+        loggedCount += 1
     }
 
     func targetReps(of entry: ObjectRecord) -> Double {

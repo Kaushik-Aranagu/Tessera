@@ -374,8 +374,10 @@ enum Theme {
 
         /// The family if it is registered; otherwise the system face (serif for display faces), never a silent
         /// fallback to SF Pro where a serif was designed.
+        private static let registeredFamilies = Set(UIFont.familyNames)
+
         static func face(_ family: String, size: CGFloat, relativeTo style: Font.TextStyle, serif: Bool) -> Font {
-            if UIFont.familyNames.contains(family) {
+            if registeredFamilies.contains(family) {
                 return Font.custom(family, size: size, relativeTo: style)
             }
             let scaled = UIFontMetrics(forTextStyle: style.uiKit).scaledValue(for: size)

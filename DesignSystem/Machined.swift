@@ -538,9 +538,9 @@ extension Theme {
             .monospacedDigit()
     }
 
-    /// Tess and context lines speak in the italic serif (Fraunces italic in Plein).
+    /// Tess and context lines speak in the serif voice. Upright: Kaushik ruled out italics everywhere (2026-10-15).
     static func voice(size: CGFloat) -> Font {
-        Typography.face(concept.fonts.voice, size: size, relativeTo: .body, serif: true).italic()
+        Typography.face(concept.fonts.voice, size: size, relativeTo: .body, serif: true)
     }
 
     static var voice: Font {

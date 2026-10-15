@@ -96,19 +96,29 @@ struct PleinGround: View {
             ]
     }
 
-    /// The only ambient motion on the ground: one wash drifting ±12 pt (14 s light, 16 s dark).
+    /// The only ambient motion on the ground: one wash drifting ±12 pt (14 s light, 16 s dark). Driven by a
+    /// repeating animation, so Core Animation moves it and the view tree isn't re-evaluated every frame.
     private func drift(size: CGSize, dark: Bool) -> some View {
-        TimelineView(.animation(minimumInterval: 1 / 20, paused: reduceMotion)) { context in
-            let period: Double = dark ? 16 : 14
-            let phase = sin(context.date.timeIntervalSinceReferenceDate / period * 2 * .pi)
-            let tint = dark ? Color(hex: 0x7A5C8E).opacity(0.35) : Color(hex: 0xE9B7A8).opacity(0.5)
-            Ellipse()
-                .fill(RadialGradient(colors: [tint, tint.opacity(0)], center: .center, startRadius: 0, endRadius: 140))
-                .frame(width: dark ? 300 : 260, height: dark ? 240 : 200)
-                .scaleEffect(1 + 0.04 * (1 - phase))
-                .offset(x: -12 * (1 - phase), y: 8 * (1 - phase))
-                .position(x: size.width + (dark ? 70 : 70), y: dark ? 340 : 220)
-        }
+        DriftingWash(dark: dark).position(x: size.width + 70, y: dark ? 340 : 220)
+    }
+}
+
+private struct DriftingWash: View {
+    let dark: Bool
+    @State private var away = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        let tint = dark ? Color(hex: 0x7A5C8E).opacity(0.35) : Color(hex: 0xE9B7A8).opacity(0.5)
+        Ellipse()
+            .fill(RadialGradient(colors: [tint, tint.opacity(0)], center: .center, startRadius: 0, endRadius: 140))
+            .frame(width: dark ? 300 : 260, height: dark ? 240 : 200)
+            .scaleEffect(away ? 1.08 : 1)
+            .offset(x: away ? -12 : 0, y: away ? 8 : 0)
+            .onAppear {
+                guard !reduceMotion else { return }
+                withAnimation(.easeInOut(duration: dark ? 8 : 7).repeatForever(autoreverses: true)) { away = true }
+            }
     }
 }
 
@@ -123,8 +133,10 @@ struct PaperGrain: View {
     }()
 
     var body: some View {
+        // A tiled image is composited by Core Animation; an image fill would be re-rasterised on the CPU every
+        // time anything above it animates.
         if let tile = Self.tile {
-            Rectangle().fill(.image(tile, sourceRect: CGRect(x: 0, y: 0, width: 1, height: 1), scale: 1))
+            tile.resizable(resizingMode: .tile)
         }
     }
 }

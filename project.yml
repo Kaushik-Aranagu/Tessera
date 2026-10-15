@@ -59,6 +59,8 @@ targets:
       path: Widgets/Info.plist
       properties:
         CFBundleDisplayName: Tessera
+        UIAppFonts:
+          - InterTight-Variable.ttf
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     sources:

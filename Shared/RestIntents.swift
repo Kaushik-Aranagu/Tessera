@@ -9,6 +9,8 @@ enum RestAction: Sendable {
     case extendRest
     /// End the rest now.
     case skipRest
+    /// Once rest is over: skip the planned set.
+    case skipSet
 }
 
 /// Hands rest actions from the intents to the live workout. The intents are compiled into both the app and the widget
@@ -53,6 +55,17 @@ struct SkipRestIntent: LiveActivityIntent {
 
     func perform() async throws -> some IntentResult {
         await RestIntentRelay.perform(.skipRest)
+        return .result()
+    }
+}
+
+/// Skip once rest is over: skips the planned set.
+struct SkipSetIntent: LiveActivityIntent {
+    static let title: LocalizedStringResource = "Skip Set"
+    static let isDiscoverable = false
+
+    func perform() async throws -> some IntentResult {
+        await RestIntentRelay.perform(.skipSet)
         return .result()
     }
 }

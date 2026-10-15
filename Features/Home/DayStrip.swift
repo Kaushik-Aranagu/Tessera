@@ -70,7 +70,7 @@ struct DayLane: Identifiable, Equatable {
 /// scroll view claims horizontal swipes only inside its own frame; the page gutters around it still page Home.
 struct HomeDayStrip: View {
     let lanes: [DayLane]
-    @State private var position: Int? = 0
+    @State private var position = ScrollPosition(id: 0)
 
     var body: some View {
         ScrollView(.horizontal) {
@@ -85,7 +85,9 @@ struct HomeDayStrip: View {
         }
         .scrollTargetBehavior(.paging)
         .scrollIndicators(.hidden)
-        .scrollPosition(id: $position)
+        // Opens on today on first layout, without a visible jump.
+        .scrollPosition($position)
+        .onAppear { position.scrollTo(id: 0) }
         .frame(height: 96)
         .accessibilityElement(children: .contain)
         .accessibilityHint("Swipe left or right for other days")

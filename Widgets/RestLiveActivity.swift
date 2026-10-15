@@ -3,51 +3,81 @@ import AppIntents
 import SwiftUI
 import WidgetKit
 
-// MARK: Constants (spec: docs/design/live-activity.md, mockup docs/design/mockups/LiveRest.dc.html)
+// MARK: Constants (spec: docs/design/live-activity.md, mockup docs/design/mockups/LiveFinal.dc.html)
 
-/// The extension can't see the app's Theme, so the painterly palette is pinned here.
+/// The extension can't see the app's Theme, so the palette is pinned here.
 private enum Palette {
-    static let ground = Color(hex: 0x1C1828)
-    /// Violet wash from the top left.
-    static let violet = Color(hex: 0x3B2D57)
-    /// Teal wash from the bottom right.
-    static let teal = Color(hex: 0x1E3D4A)
-    static let cream = Color(hex: 0xF3ECE0)
-    static let secondary = Color(hex: 0xA79FB5)
-    /// Rest: cadmium.
-    static let cadmium = Color(hex: 0xE8BD4C)
-    /// Live / ready: vermilion.
-    static let vermilion = Color(hex: 0xD9563F)
-    static let glint = Color(hex: 0xFFE2A8)
+    static let cream = Color(hex: 0xF6EFE4)
+    static let vermilion = Color(hex: 0xE2603F)
+    /// Under the system material, as in the mockup (rgba(18,14,26,.46)).
+    static let materialTint = Color(hex: 0x120E1A).opacity(0.46)
+    /// Go: the sky warms to cadmium and vermilion.
+    static let goWash1 = Color(hex: 0xE8BD4C).opacity(0.75)
+    static let goWash2 = Color(hex: 0xE2603F).opacity(0.6)
 }
 
-/// Fraunces and Hanken Grotesk aren't bundled yet: same fallback as the app (system serif / system sans). Swap here.
+/// Colour moods. Kaushik hasn't picked yet; Cobalt sky is the default.
+enum RestMood {
+    case cobaltSky, dusk, sage, ink
+
+    static let current: RestMood = .cobaltSky
+
+    /// Top-left wash.
+    var wash1: Color {
+        switch self {
+        case .cobaltSky: Color(hex: 0x3F7FC0).opacity(0.75)
+        case .dusk: Color(hex: 0xE2603F).opacity(0.7)
+        case .sage: Color(hex: 0x6E9E6A).opacity(0.75)
+        case .ink: .clear
+        }
+    }
+
+    /// Top-right wash.
+    var wash2: Color {
+        switch self {
+        case .cobaltSky: Color(hex: 0x7A5CA0).opacity(0.45)
+        case .dusk: Color(hex: 0x965096).opacity(0.55)
+        case .sage: Color(hex: 0x2A7F86).opacity(0.6)
+        case .ink: .clear
+        }
+    }
+
+    var line: Color {
+        switch self {
+        case .cobaltSky, .ink: Palette.cream
+        case .dusk: Color(hex: 0xFFB896)
+        case .sage: Color(hex: 0xC8E6B4)
+        }
+    }
+
+    var tick: Color {
+        self == .dusk ? Color(hex: 0xFFE3D2) : Palette.vermilion
+    }
+}
+
+/// Inter Tight, bundled in the extension (Widgets/Fonts, `UIAppFonts`). If the font file is missing, `.custom`
+/// falls back to the system font, so the layout still holds.
 private enum Typeface {
-    /// Fraunces, tabular figures.
-    static func display(_ size: CGFloat, weight: Font.Weight = .semibold) -> Font {
-        .system(size: size, weight: weight, design: .serif).monospacedDigit()
+    static let family = "Inter Tight"
+
+    static func font(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
+        .custom(family, fixedSize: size).weight(weight)
     }
 
-    /// Fraunces italic.
-    static func italic(_ size: CGFloat) -> Font {
-        .system(size: size, design: .serif).italic()
-    }
-
-    /// Hanken Grotesk.
-    static func body(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .system(size: size, weight: weight)
+    /// The countdown: Light (wght 250 is between .ultraLight and .light; .light is the nearest named weight).
+    static func numerals(_ size: CGFloat) -> Font {
+        font(size, .light).monospacedDigit()
     }
 }
 
 private enum Metric {
-    static let doneKey = CGSize(width: 112, height: 52)
-    static let doneKeyIsland = CGSize(width: 104, height: 50)
-    static let doneRadius: CGFloat = 14
-    static let ghostKey = CGSize(width: 64, height: 40)
-    static let ghostRadius: CGFloat = 12
-    static let strokeHeight: CGFloat = 7
-    /// Set false to fall back to a plain rounded-rect drain if the brush mask doesn't render.
-    static let brushMask = true
+    /// The right column (the Done button) starts here on the Lock Screen.
+    static let rightColumn: CGFloat = 160
+    static let lineWidth: CGFloat = 2.5
+    static let guideWidth: CGFloat = 1.5
+    static let lineHeight: CGFloat = 12
+    /// Set false for a straight 2.5pt line if the curved mask doesn't render.
+    static let curvedLine = true
 }
 
 private let workoutURL = URL(string: "tessera://workout")
@@ -57,53 +87,48 @@ private let workoutURL = URL(string: "tessera://workout")
 struct RestLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: RestActivityAttributes.self) { context in
-            RestLockScreenView(context: context)
-                .activityBackgroundTint(Palette.ground.opacity(0.92))
+            RestLockScreenView(state: context.state, isGo: RestFace.isGoTime(context))
+                .activityBackgroundTint(Palette.materialTint)
                 .activitySystemActionForegroundColor(Palette.cream)
                 .widgetURL(workoutURL)
         } dynamicIsland: { context in
             let state = context.state
-            let ready = RestFace.isReady(context)
+            let isGo = RestFace.isGoTime(context)
+            let mood = RestMood.current
             return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    RestFace.headline(state, ready: ready, size: 44)
-                        .padding(.leading, 6)
+                    Countdown(state: state, isGo: isGo, size: 40)
+                        .padding(.leading, 8)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    DoneKey(ready: ready, size: Metric.doneKeyIsland)
-                        .padding(.trailing, 4)
+                    PlannedSetButton(state: state, isGo: isGo, nameSize: 16, setSize: 21)
+                        .padding(.trailing, 8)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        if !ready {
-                            DryingStroke(state: state)
-                        }
-                        HStack(alignment: .center) {
-                            RestFace.nextSet(state)
-                            Spacer(minLength: 8)
-                            if !ready {
-                                GhostKey(title: "Skip", intent: SkipRestIntent())
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 6)
+                    HorizonLine(state: state, isGo: isGo, color: mood.line)
+                        .padding(.horizontal, 8)
+                        .padding(.top, 6)
                 }
             } compactLeading: {
-                PaintDab(ready: ready)
+                Tick(color: mood.tick)
+                    .frame(width: 18, height: 14)
             } compactTrailing: {
-                if ready {
-                    Text("Set \(state.setNumber)")
-                        .font(Typeface.display(18))
-                        .foregroundStyle(Palette.vermilion)
-                } else {
-                    RestFace.countdown(state)
-                        .font(Typeface.display(18))
-                        .frame(maxWidth: 52)
+                Group {
+                    if isGo {
+                        Text("Go")
+                    } else {
+                        Text(timerInterval: state.restInterval, countsDown: true)
+                            .multilineTextAlignment(.trailing)
+                    }
                 }
+                .font(Typeface.font(17).monospacedDigit())
+                .foregroundStyle(Palette.cream)
+                .frame(maxWidth: 48)
             } minimal: {
-                PaintDab(ready: ready)
+                Tick(color: mood.tick)
+                    .frame(width: 16, height: 13)
             }
-            .keylineTint(ready ? Palette.vermilion : Palette.cadmium)
+            .keylineTint(isGo ? Palette.vermilion : mood.wash1)
             .widgetURL(workoutURL)
         }
     }
@@ -112,137 +137,233 @@ struct RestLiveActivity: Widget {
 // MARK: Lock Screen
 
 private struct RestLockScreenView: View {
-    let context: ActivityViewContext<RestActivityAttributes>
+    let state: RestActivityAttributes.ContentState
+    let isGo: Bool
+    private let mood = RestMood.current
 
     var body: some View {
-        let state = context.state
-        let ready = RestFace.isReady(context)
         VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .top) {
-                RestFace.headline(state, ready: ready, size: 52)
-                    .padding(.top, 4)
-                Spacer(minLength: 8)
-                DoneKey(ready: ready, size: Metric.doneKey)
+            HStack(alignment: .top, spacing: 0) {
+                Countdown(state: state, isGo: isGo, size: 48)
+                    .padding(.leading, 22)
+                    .padding(.top, 10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Rectangle()
+                    .fill(Palette.cream.opacity(0.16))
+                    .frame(width: 1, height: 60)
+                PlannedSetButton(state: state, isGo: isGo, nameSize: 17, setSize: 24)
+                    .padding(.leading, 16)
+                    .padding(.trailing, 16)
+                    .frame(width: Metric.rightColumn)
             }
-            Spacer(minLength: 0)
-            if ready {
-                VStack(alignment: .leading, spacing: 2) {
-                    RestFace.nextSet(state)
-                    Text("rested \(Duration.seconds(state.restTotal).formatted(.time(pattern: .minuteSecond)))")
-                        .font(Typeface.italic(18))
-                        .foregroundStyle(Palette.secondary)
+            .padding(.top, 14)
+            HorizonLine(state: state, isGo: isGo, color: mood.line)
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+            HStack(spacing: 0) {
+                Group {
+                    if isGo {
+                        Text("Rested \(Duration.seconds(state.restTotal).formatted(.time(pattern: .minuteSecond)))")
+                    } else {
+                        Text("Rest, then set \(state.setNumber)")
+                    }
                 }
-            } else {
-                DryingStroke(state: state)
-                Spacer(minLength: 0)
-                HStack(alignment: .center, spacing: 8) {
-                    RestFace.nextSet(state)
-                    Spacer(minLength: 8)
-                    GhostKey(title: "+15s", intent: ExtendRestIntent())
-                    GhostKey(title: "Skip", intent: SkipRestIntent())
-                }
+                .font(Typeface.font(17))
+                .foregroundStyle(Palette.cream.opacity(0.58))
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .padding(.leading, 22)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                BottomKeys(isGo: isGo)
+                    .frame(width: Metric.rightColumn)
             }
+            .frame(height: 34)
+            .padding(.bottom, 8)
         }
-        .padding(.leading, 20)
-        .padding(.trailing, 14)
-        .padding(.vertical, 14)
-        .frame(height: 156)
-        .background { PainterlyGround() }
+        .frame(height: 150)
+        .background { Washes(isGo: isGo, mood: mood) }
     }
 }
 
-/// The workout's painterly ground, machined only at the edge, with the lit process seam on top.
-private struct PainterlyGround: View {
+/// Two soft blurred washes inside the system material, top left and top right. Go warms them.
+private struct Washes: View {
+    let isGo: Bool
+    let mood: RestMood
+
     var body: some View {
-        ZStack(alignment: .top) {
-            Palette.ground.opacity(0.92)
-            RadialGradient(colors: [Palette.violet.opacity(0.95), .clear], center: .topLeading, startRadius: 0,
-                           endRadius: 280)
-            RadialGradient(colors: [Palette.teal.opacity(0.95), .clear], center: .bottomTrailing, startRadius: 0,
-                           endRadius: 260)
-            // Inner top chamfer.
-            Rectangle().fill(.white.opacity(0.14)).frame(height: 1).padding(.top, 2)
-            // The lit 2pt vermilion process seam, with its glint.
-            Rectangle()
-                .fill(LinearGradient(stops: [
-                    .init(color: Palette.vermilion, location: 0.4),
-                    .init(color: Palette.glint, location: 0.5),
-                    .init(color: Palette.vermilion, location: 0.6),
-                ], startPoint: .leading, endPoint: .trailing))
-                .frame(height: 2)
-                .shadow(color: Palette.vermilion.opacity(0.6), radius: 6)
+        GeometryReader { proxy in
+            ZStack(alignment: .topLeading) {
+                Ellipse()
+                    .fill(RadialGradient(colors: [isGo ? Palette.goWash1 : mood.wash1, .clear], center: .center,
+                                         startRadius: 0, endRadius: 135))
+                    .frame(width: 270, height: 150)
+                    .offset(x: -40, y: -60)
+                    .blur(radius: 8)
+                Ellipse()
+                    .fill(RadialGradient(colors: [isGo ? Palette.goWash2 : mood.wash2, .clear], center: .center,
+                                         startRadius: 0, endRadius: 110))
+                    .frame(width: 220, height: 130)
+                    .offset(x: proxy.size.width - 170, y: -40)
+                    .blur(radius: 10)
+            }
         }
-        .overlay { ContainerRelativeShape().strokeBorder(.black.opacity(0.6), lineWidth: 0.5) }
+        .allowsHitTesting(false)
     }
 }
 
 // MARK: Pieces
 
 private enum RestFace {
-    /// The content goes stale when the rest runs out, so the face flips to ready even if the app is suspended.
-    static func isReady(_ context: ActivityViewContext<RestActivityAttributes>) -> Bool {
+    /// The content goes stale at the rest end (`staleDate`), so the face turns to Go even if the app is suspended.
+    static func isGoTime(_ context: ActivityViewContext<RestActivityAttributes>) -> Bool {
         context.state.phase == .ready || context.isStale
-    }
-
-    /// Resting: "2:30 rest". Ready: "Set 4 is up".
-    @ViewBuilder
-    static func headline(_ state: RestActivityAttributes.ContentState, ready: Bool, size: CGFloat) -> some View {
-        if ready {
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text("Set \(state.setNumber)")
-                    .font(Typeface.display(size))
-                    .foregroundStyle(Palette.cream)
-                Text("is up")
-                    .font(Typeface.italic(18))
-                    .foregroundStyle(Palette.cadmium)
-            }
-            .lineLimit(1)
-        } else {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                countdown(state)
-                    .font(Typeface.display(size))
-                    // Timer text claims all the width it can; pin it to the width of "m:ss".
-                    .frame(width: size * 2.2, alignment: .leading)
-                Text("rest")
-                    .font(Typeface.italic(18))
-                    .foregroundStyle(Palette.secondary)
-            }
-            .lineLimit(1)
-        }
-    }
-
-    static func countdown(_ state: RestActivityAttributes.ContentState) -> some View {
-        Text(timerInterval: state.restInterval, countsDown: true)
-            .monospacedDigit()
-            .contentTransition(.numericText(countsDown: true))
-            .foregroundStyle(Palette.cadmium)
-            .minimumScaleFactor(0.7)
-    }
-
-    /// "Bench, 82.5 × 8".
-    static func nextSet(_ state: RestActivityAttributes.ContentState) -> some View {
-        Text("\(state.exercise), \(state.plannedSet)")
-            .font(Typeface.italic(21))
-            .foregroundStyle(Palette.cream)
-            .lineLimit(1)
-            .minimumScaleFactor(0.8)
     }
 }
 
-/// The drying stroke: a 7pt cadmium brushstroke that shortens from the right as rest runs out, over a 2pt guide at
-/// the full length. The system animates `ProgressView(timerInterval:)`, so it dries even while the app is suspended.
-private struct DryingStroke: View {
+/// The countdown (cream, Light, tabular), or "Go" pushing in from below. Always-On shows a still "Ready at 18:26".
+private struct Countdown: View {
     let state: RestActivityAttributes.ContentState
+    let isGo: Bool
+    let size: CGFloat
+    @Environment(\.isLuminanceReduced) private var isLuminanceReduced
 
     var body: some View {
-        ZStack(alignment: .leading) {
-            Rectangle()
-                .fill(Palette.cream.opacity(0.14))
-                .frame(height: 2)
-            drain
+        Group {
+            if isGo {
+                Text("Go")
+                    .font(Typeface.font(size, .light))
+                    .transition(.push(from: .bottom))
+            } else if isLuminanceReduced {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("Ready at")
+                        .font(Typeface.font(17))
+                        .foregroundStyle(Palette.cream.opacity(0.62))
+                    Text(state.restEndsAt, format: .dateTime.hour().minute())
+                        .font(Typeface.numerals(size * 0.75))
+                }
+            } else {
+                Text(timerInterval: state.restInterval, countsDown: true)
+                    .font(Typeface.numerals(size))
+                    .contentTransition(.numericText(countsDown: true))
+                    // Timer text claims all the width it can; pin it to the width of "m:ss".
+                    .frame(width: size * 2.4, alignment: .leading)
+            }
         }
-        .frame(height: Metric.strokeHeight)
+        .tracking(-size * 0.02)
+        .foregroundStyle(Palette.cream)
+        .lineLimit(1)
+        .minimumScaleFactor(0.7)
+        .id(isGo)
+    }
+}
+
+/// The planned set is the Done button: tapping it logs the set, like hold to log.
+private struct PlannedSetButton: View {
+    let state: RestActivityAttributes.ContentState
+    let isGo: Bool
+    let nameSize: CGFloat
+    let setSize: CGFloat
+
+    var body: some View {
+        Button(intent: LogPlannedSetIntent()) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(state.exercise)
+                    .font(Typeface.font(nameSize))
+                    .foregroundStyle(Palette.cream.opacity(0.62))
+                    .padding(.trailing, 26)
+                Text(state.plannedSet)
+                    .font(Typeface.font(setSize).monospacedDigit())
+                    .tracking(-setSize * 0.01)
+                    .foregroundStyle(Palette.cream)
+            }
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .overlay(alignment: .topTrailing) {
+                ZStack {
+                    if isGo {
+                        // "Tap the set": a soft vermilion glow behind the tick.
+                        Ellipse()
+                            .fill(RadialGradient(colors: [Palette.vermilion.opacity(0.55), .clear], center: .center,
+                                                 startRadius: 0, endRadius: 22))
+                            .frame(width: 44, height: 40)
+                    }
+                    Tick(color: RestMood.current.tick, lineWidth: isGo ? 3 : 2.6)
+                        .frame(width: 22, height: 18)
+                }
+                .offset(y: 4)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Log \(state.exercise), \(state.plannedSet)")
+    }
+}
+
+/// "+15" | "Skip", split by a hairline. Once rest is over +15 dims and Skip skips the set.
+private struct BottomKeys: View {
+    let isGo: Bool
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Group {
+                if isGo {
+                    Text("+15").opacity(0.25)
+                } else {
+                    Button(intent: ExtendRestIntent()) { label("+15") }
+                }
+            }
+            .frame(maxWidth: .infinity)
+            Rectangle()
+                .fill(Palette.cream.opacity(0.16))
+                .frame(width: 1, height: 18)
+            Group {
+                if isGo {
+                    Button(intent: SkipSetIntent()) { label("Skip") }
+                } else {
+                    Button(intent: SkipRestIntent()) { label("Skip") }
+                }
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .font(Typeface.font(18, .medium))
+        .foregroundStyle(Palette.cream)
+        .buttonStyle(.plain)
+    }
+
+    private func label(_ title: LocalizedStringKey) -> some View {
+        Text(title)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(Rectangle())
+    }
+}
+
+/// The horizon line: a cream stroke over a full-width 1.5pt guide that drains toward the left as rest runs out.
+/// The system animates `ProgressView(timerInterval:)`, so it drains even while the app is suspended.
+private struct HorizonLine: View {
+    let state: RestActivityAttributes.ContentState
+    let isGo: Bool
+    let color: Color
+
+    var body: some View {
+        ZStack {
+            guide
+            if !isGo {
+                drain
+            }
+        }
+        .frame(height: Metric.lineHeight)
         .accessibilityHidden(true)
+    }
+
+    @ViewBuilder
+    private var guide: some View {
+        if Metric.curvedLine {
+            HorizonCurve()
+                .stroke(Palette.cream.opacity(0.14), style: StrokeStyle(lineWidth: Metric.guideWidth, lineCap: .round))
+        } else {
+            Rectangle().fill(Palette.cream.opacity(0.14)).frame(height: Metric.guideWidth)
+        }
     }
 
     @ViewBuilder
@@ -253,117 +374,57 @@ private struct DryingStroke: View {
             EmptyView()
         }
         .progressViewStyle(.linear)
-        .tint(Palette.cadmium)
-        // Stretch the system bar past the stroke's height and ends, so only its fill shows through the shape.
-        .scaleEffect(x: 1, y: 3)
-        .padding(.horizontal, -6)
-        .frame(height: Metric.strokeHeight)
-        if Metric.brushMask {
-            bar.mask { BrushStroke() }
+        .tint(color)
+        // Stretch the system bar over the curve's height so only the masked stroke shows.
+        .scaleEffect(x: 1, y: 4)
+        .frame(height: Metric.lineHeight)
+        if Metric.curvedLine {
+            bar.mask {
+                HorizonCurve().stroke(style: StrokeStyle(lineWidth: Metric.lineWidth, lineCap: .round))
+            }
         } else {
-            bar.clipShape(RoundedRectangle(cornerRadius: 2))
+            bar.mask { Rectangle().frame(height: Metric.lineWidth) }
         }
     }
 }
 
-/// A dry-brush stroke: slightly uneven edges with a blunt loaded start and a feathered tail.
-private struct BrushStroke: Shape {
+/// The mockup's horizon: M2 6 C 90 3, 200 9, 332 5 in a 334 × 12 box.
+private struct HorizonCurve: Shape {
     func path(in rect: CGRect) -> Path {
-        let width = rect.width, height = rect.height
+        let scaleX = rect.width / 334, scaleY = rect.height / 12
+        func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+            CGPoint(x: rect.minX + x * scaleX, y: rect.minY + y * scaleY)
+        }
         var path = Path()
-        path.move(to: CGPoint(x: rect.minX + 1, y: rect.minY + height * 0.18))
-        path.addCurve(to: CGPoint(x: rect.minX + width * 0.5, y: rect.minY + height * 0.05),
-                      control1: CGPoint(x: width * 0.18, y: rect.minY - height * 0.05),
-                      control2: CGPoint(x: width * 0.34, y: rect.minY + height * 0.16))
-        path.addCurve(to: CGPoint(x: rect.maxX, y: rect.minY + height * 0.3),
-                      control1: CGPoint(x: width * 0.7, y: rect.minY - height * 0.06),
-                      control2: CGPoint(x: width * 0.92, y: rect.minY + height * 0.1))
-        path.addLine(to: CGPoint(x: rect.maxX - 2, y: rect.maxY - height * 0.25))
-        path.addCurve(to: CGPoint(x: rect.minX + width * 0.45, y: rect.maxY - height * 0.04),
-                      control1: CGPoint(x: width * 0.8, y: rect.maxY + height * 0.02),
-                      control2: CGPoint(x: width * 0.62, y: rect.maxY - height * 0.14))
-        path.addCurve(to: CGPoint(x: rect.minX, y: rect.maxY - height * 0.12),
-                      control1: CGPoint(x: width * 0.26, y: rect.maxY + height * 0.06),
-                      control2: CGPoint(x: width * 0.08, y: rect.maxY))
-        path.closeSubpath()
+        path.move(to: point(2, 6))
+        path.addCurve(to: point(332, 5), control1: point(90, 3), control2: point(200, 9))
         return path
     }
 }
 
-/// The cadmium paint dab (compact leading and minimal); vermilion once the set is up.
-private struct PaintDab: View {
-    let ready: Bool
+/// The red brush tick: M2 11 C 6 13, 8 16, 10 18 C 14 10, 19 5, 24 2 in a 26 × 20 box.
+private struct Tick: View {
+    let color: Color
+    var lineWidth: CGFloat = 2.6
 
     var body: some View {
-        let color = ready ? Palette.vermilion : Palette.cadmium
-        Ellipse()
-            .fill(RadialGradient(colors: [color, color.opacity(0.3)], center: .center, startRadius: 0,
-                                 endRadius: 9))
-            .frame(width: 18, height: 16)
-            .rotationEffect(.degrees(-12))
-            .blur(radius: 1.4)
-            .accessibilityLabel(ready ? "Set is up" : "Resting")
+        TickShape()
+            .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
+            .accessibilityHidden(true)
     }
 }
 
-/// Done: cream key; glows vermilion once the set is up.
-private struct DoneKey: View {
-    let ready: Bool
-    let size: CGSize
-
-    var body: some View {
-        Button(intent: LogPlannedSetIntent()) {
-            Text("Done")
+private struct TickShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        let scaleX = rect.width / 26, scaleY = rect.height / 20
+        func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+            CGPoint(x: rect.minX + x * scaleX, y: rect.minY + y * scaleY)
         }
-        .buttonStyle(KeyStyle(radius: Metric.doneRadius, size: size, fill: Palette.cream, ink: Palette.ground,
-                              font: Typeface.body(21, weight: .semibold), outline: nil))
-        .shadow(color: ready ? Palette.vermilion.opacity(0.55) : .clear, radius: 11)
-    }
-}
-
-/// A hairline key (+15s, Skip).
-private struct GhostKey<Intent: AppIntent>: View {
-    let title: LocalizedStringKey
-    let intent: Intent
-
-    var body: some View {
-        Button(intent: intent) {
-            Text(title)
-        }
-        .buttonStyle(KeyStyle(radius: Metric.ghostRadius, size: Metric.ghostKey, fill: .clear, ink: Palette.cream,
-                              font: Typeface.body(18, weight: .medium), outline: Palette.cream.opacity(0.32)))
-    }
-}
-
-/// A small-radius slab, never a capsule: inner top highlight on filled keys, 0.5pt black hairline, or a 1pt outline.
-private struct KeyStyle: ButtonStyle {
-    let radius: CGFloat
-    let size: CGSize
-    let fill: Color
-    let ink: Color
-    let font: Font
-    let outline: Color?
-
-    func makeBody(configuration: Configuration) -> some View {
-        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
-        configuration.label
-            .font(font)
-            .foregroundStyle(ink)
-            .lineLimit(1)
-            .minimumScaleFactor(0.8)
-            .frame(width: size.width, height: size.height)
-            .background(fill, in: shape)
-            .overlay {
-                if let outline {
-                    shape.strokeBorder(outline, lineWidth: 1)
-                } else {
-                    shape.strokeBorder(.black.opacity(0.6), lineWidth: 0.5)
-                    Rectangle().fill(.white.opacity(0.7)).frame(height: 1).padding(.horizontal, radius)
-                        .frame(maxHeight: .infinity, alignment: .top).padding(.top, 0.5)
-                }
-            }
-            .contentShape(shape)
-            .opacity(configuration.isPressed ? 0.75 : 1)
+        var path = Path()
+        path.move(to: point(2, 11))
+        path.addCurve(to: point(10, 18), control1: point(6, 13), control2: point(8, 16))
+        path.addCurve(to: point(24, 2), control1: point(14, 10), control2: point(19, 5))
+        return path
     }
 }
 
