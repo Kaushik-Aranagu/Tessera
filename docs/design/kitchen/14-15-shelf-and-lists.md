@@ -1,5 +1,7 @@
 # 14 · Kitchen shelf and 15 · Lists app v0 (build sheet)
 
+> **Sheet 15 (Lists app v0) is superseded** by `lists-9-12.md`, which follows `ship-list-lists.md`.
+
 Just enough to build. Product steer: `docs/product/ship-list-kitchen.md` §14 and §15. Light ground, kitchen colours as in `13-groceries.md`.
 
 ## 14 · Kitchen shelf (`Features/Recipes/`, the RECIPES page)
