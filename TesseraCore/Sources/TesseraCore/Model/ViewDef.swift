@@ -16,6 +16,7 @@ public final class ViewDef {
     public var classDef: ClassDef?
 
     public init(name: String = "", layout: Layout = .list) {
+        id = .v7()
         self.name = name
         layoutRaw = layout.rawValue
     }

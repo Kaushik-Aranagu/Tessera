@@ -23,6 +23,7 @@ public struct LogSet: EngineAction {
             .init("isWarmup", .boolean, "A warm-up set, left out of records", required: false),
             .init("kind", .string, "warmup, working, drop or failure; defaults to working", required: false),
             .init("source", .string, "hold, dial, lockScreen, tess, manual or intent", required: false),
+            .init("unit", .string, "kg or lb; the weight's unit, defaults to kg", required: false),
         ]
     )
 
@@ -33,9 +34,11 @@ public struct LogSet: EngineAction {
     public var isWarmup: Bool?
     public var kind: SetKind?
     public var source: SetSource?
+    /// The unit `weight` is in; stored as kilograms either way.
+    public var unit: MassUnit?
 
     public init(entry: UUID, weight: Double, reps: Double, rpe: Double? = nil, isWarmup: Bool? = nil,
-                kind: SetKind? = nil, source: SetSource? = nil)
+                kind: SetKind? = nil, source: SetSource? = nil, unit: MassUnit? = nil)
     {
         self.entry = entry
         self.weight = weight
@@ -44,13 +47,21 @@ public struct LogSet: EngineAction {
         self.isWarmup = isWarmup
         self.kind = kind
         self.source = source
+        self.unit = unit
+    }
+
+    var weightInKilograms: Double {
+        (unit ?? .kilograms).toKilograms(weight)
     }
 
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
-        try validateSet(weight: weight, reps: reps, rpe: rpe, action: Self.descriptor.name)
+        try validateSet(weight: weightInKilograms, reps: reps, rpe: rpe, action: Self.descriptor.name)
         let entry = try transaction.object(entry, is: .exerciseEntry)
         let set = try transaction.create(transaction.classDef(.set), parent: entry)
-        try transaction.set("weight", to: .mass(weight), on: set)
+        try transaction.set("weight", to: .mass(weightInKilograms), on: set)
+        if let unit, unit != .kilograms {
+            try transaction.set("enteredUnit", to: .choice(unit.rawValue), on: set)
+        }
         try transaction.set("reps", to: .number(reps), on: set)
         try transaction.set("rpe", to: rpe.map(FieldValue.number), on: set)
         try transaction.set("loggedAt", to: .date(.now), on: set)
@@ -67,7 +78,8 @@ public struct LogSet: EngineAction {
 
     public func summary(in store: ObjectStore) -> String {
         let name = store.object(id: entry).flatMap { store.linkedClass("exercise", of: $0)?.name.lowercased() } ?? "set"
-        return "Logged \(name) \(kilograms(weight)) × \(count(reps))"
+        let shown = unit.map { "\(kilograms(weight)) \($0.symbol)" } ?? kilograms(weight)
+        return "Logged \(name) \(shown) × \(count(reps))"
     }
 }
 
@@ -231,6 +243,7 @@ public struct LogExercise: EngineAction {
             .init("weight", .number, "Weight in kilograms"),
             .init("reps", .integer, "Repetitions per set"),
             .init("sets", .integer, "How many sets; defaults to 1", required: false),
+            .init("unit", .string, "kg or lb; defaults to kg", required: false),
         ]
     )
 
@@ -238,12 +251,14 @@ public struct LogExercise: EngineAction {
     public var weight: Double
     public var reps: Double
     public var sets: Int?
+    public var unit: MassUnit?
 
-    public init(exercise: UUID, weight: Double, reps: Double, sets: Int? = nil) {
+    public init(exercise: UUID, weight: Double, reps: Double, sets: Int? = nil, unit: MassUnit? = nil) {
         self.exercise = exercise
         self.weight = weight
         self.reps = reps
         self.sets = sets
+        self.unit = unit
     }
 
     public func apply(_ transaction: inout Transaction) throws -> [ObjectRecord] {
@@ -251,14 +266,15 @@ public struct LogExercise: EngineAction {
         guard (1 ... 20).contains(count) else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "sets must be 1 to 20")
         }
-        try validateSet(weight: weight, reps: reps, rpe: nil, action: Self.descriptor.name)
+        try validateSet(weight: (unit ?? .kilograms).toKilograms(weight), reps: reps, rpe: nil,
+                        action: Self.descriptor.name)
         let exerciseClass = try transaction.exerciseClass(exercise)
         let workout = try activeWorkout(&transaction)
         let entry = try workout.orderedChildren
             .last { transaction.store.linkedClass("exercise", of: $0)?.id == exercise }
             ?? AddExercise(workout: workout.id, exercise: exerciseClass.id).apply(&transaction)
         return try (0 ..< count).map { _ in
-            try LogSet(entry: entry.id, weight: weight, reps: reps).apply(&transaction)
+            try LogSet(entry: entry.id, weight: weight, reps: reps, unit: unit).apply(&transaction)
         }
     }
 
@@ -278,7 +294,7 @@ public struct LogExercise: EngineAction {
 
     public func summary(in store: ObjectStore) -> String {
         let name = store.classDef(id: exercise)?.name.lowercased() ?? "exercise"
-        return "Logged \(name) \(sets ?? 1)×\(count(reps)) at \(kilograms(weight)) kg"
+        return "Logged \(name) \(sets ?? 1)×\(count(reps)) at \(kilograms(weight)) \((unit ?? .kilograms).symbol)"
     }
 }
 

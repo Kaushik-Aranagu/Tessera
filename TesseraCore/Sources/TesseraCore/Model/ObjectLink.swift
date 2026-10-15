@@ -18,6 +18,7 @@ public final class ObjectLink {
 
     /// An unrelated link; insert it into a context, then set `from` and a target.
     public init(fieldID: UUID, sortIndex: Int = 0) {
+        id = .v7()
         self.fieldID = fieldID
         self.sortIndex = sortIndex
     }
@@ -29,6 +30,7 @@ public final class ObjectLink {
         toClass: ClassDef? = nil,
         sortIndex: Int = 0
     ) {
+        id = .v7()
         self.from = from
         self.fieldID = fieldID
         self.toObject = toObject

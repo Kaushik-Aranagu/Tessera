@@ -20,6 +20,7 @@ public struct TesseraExport: Codable, Sendable {
         public var expression: String?
         public var defaultValue: FieldValue?
         public var overridesFieldID: UUID?
+        public var isUserModified: Bool?
     }
 
     public struct ClassEntry: Codable, Sendable {
@@ -32,6 +33,9 @@ public struct TesseraExport: Codable, Sendable {
         public var traits: [String]
         public var sortIndex: Int
         public var createdAt: Date
+        public var packageID: String?
+        public var packageVersion: Int?
+        public var isUserModified: Bool?
         public var fields: [Field]
     }
 
@@ -101,12 +105,14 @@ public extension TesseraExport {
             ClassEntry(
                 id: classDef.id, name: classDef.name, parentID: classDef.parent?.id, systemKey: classDef.systemKey,
                 symbolName: classDef.symbolName, colorRole: classDef.colorRole, traits: classDef.traitsRaw,
-                sortIndex: classDef.sortIndex, createdAt: classDef.createdAt,
+                sortIndex: classDef.sortIndex, createdAt: classDef.createdAt, packageID: classDef.packageID,
+                packageVersion: classDef.packageVersion, isUserModified: classDef.isUserModified,
                 fields: (classDef.ownFields ?? []).sorted { $0.sortIndex < $1.sortIndex }.map { field in
                     Field(id: field.id, key: field.key, name: field.name, kind: field.kind, sortIndex: field.sortIndex,
                           isRequired: field.isRequired, unit: field.unit, options: field.enumOptions,
                           targetClassID: field.targetClassID, expression: field.expression,
-                          defaultValue: field.defaultValue, overridesFieldID: field.overridesFieldID)
+                          defaultValue: field.defaultValue, overridesFieldID: field.overridesFieldID,
+                          isUserModified: field.isUserModified)
                 }
             )
         }
@@ -161,6 +167,9 @@ public extension TesseraExport {
             classDef.traitsRaw = entry.traits
             classDef.sortIndex = entry.sortIndex
             classDef.createdAt = entry.createdAt
+            classDef.packageID = entry.packageID
+            classDef.packageVersion = entry.packageVersion ?? 0
+            classDef.isUserModified = entry.isUserModified ?? false
             context.insert(classDef)
             classByID[entry.id] = classDef
             for spec in entry.fields {
@@ -172,6 +181,7 @@ public extension TesseraExport {
                 field.targetClassID = spec.targetClassID
                 field.expression = spec.expression
                 field.overridesFieldID = spec.overridesFieldID
+                field.isUserModified = spec.isUserModified ?? false
                 context.insert(field)
                 field.owner = classDef
             }

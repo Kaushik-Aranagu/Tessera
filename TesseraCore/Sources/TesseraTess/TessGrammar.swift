@@ -7,9 +7,11 @@ import TesseraCore
 public struct TessGrammar {
     public enum Parse {
         /// Log sets of a named exercise (into the entry in focus if it's the same exercise, else today's workout).
-        case lift(exercise: ClassDef, sets: Int, reps: Double, weight: Double)
+        case lift(exercise: ClassDef, sets: Int, reps: Double, weight: Double, unit: MassUnit)
         /// A set in the entry in focus: "same", "8", "80 x 8", "drop to 70 for 10".
-        case set(entry: ObjectRecord, weight: Double, reps: Double, kind: SetKind, phrase: SetPhrase)
+        /// `weight` is in kilograms; `unit` is how it was said.
+        case set(entry: ObjectRecord, weight: Double, reps: Double, kind: SetKind, phrase: SetPhrase,
+                 unit: MassUnit = .kilograms)
         case task(title: String, startsAt: Date?)
     }
 
@@ -48,15 +50,19 @@ public struct TessGrammar {
         if let reps = Self.number(text), reps.rounded() == reps, reps >= 1, reps <= 100, let last {
             return .set(entry: entry, weight: last.weight, reps: reps, kind: .working, phrase: .repsOnly)
         }
-        if let match = text.firstMatch(of: /^drop(?: to)? (\d+(?:\.\d+)?)(?: kg)? (?:for|x) (\d+)$/),
-           let weight = Double(match.1), let reps = Double(match.2)
+        if let match = text.firstMatch(of: /^drop(?: to)? (\d+(?:\.\d+)?)(?: (kg|lb))? (?:for|x) (\d+)$/),
+           let weight = Double(match.1), let reps = Double(match.3)
         {
-            return .set(entry: entry, weight: weight, reps: reps, kind: .drop, phrase: .drop)
+            let unit = match.2.flatMap { MassUnit(parsing: String($0)) } ?? .kilograms
+            return .set(entry: entry, weight: unit.toKilograms(weight), reps: reps, kind: .drop, phrase: .drop,
+                        unit: unit)
         }
-        if let match = text.firstMatch(of: /^(\d+(?:\.\d+)?)(?: kg)? (?:x|for) (\d+)$/),
-           let weight = Double(match.1), let reps = Double(match.2)
+        if let match = text.firstMatch(of: /^(\d+(?:\.\d+)?)(?: (kg|lb))? (?:x|for) (\d+)$/),
+           let weight = Double(match.1), let reps = Double(match.3)
         {
-            return .set(entry: entry, weight: weight, reps: reps, kind: .working, phrase: .full)
+            let unit = match.2.flatMap { MassUnit(parsing: String($0)) } ?? .kilograms
+            return .set(entry: entry, weight: unit.toKilograms(weight), reps: reps, kind: .working, phrase: .full,
+                        unit: unit)
         }
         return nil
     }
@@ -74,49 +80,59 @@ public struct TessGrammar {
 
     /// "3x10 bench 80", "bench 3x10 80", "bench 80x8", "bench 80 for 8", "bench 3x8 at 80", "squat 100 5".
     private func parseLift(_ text: String, entry: ObjectRecord?) -> Parse? {
+        var lift = LiftWords()
+        var rest = Substring(text)
+        if let scheme = rest.firstMatch(of: /(\d+) ?x ?(\d+)(?: (?:at|@) (\d+(?:\.\d+)?))?/) {
+            lift.readScheme(Double(scheme.1) ?? 0, Double(scheme.2) ?? 0, at: scheme.3.flatMap { Double($0) },
+                            weightElsewhere: Self.hasOtherNumber(rest, excluding: scheme.range))
+            rest.removeSubrange(scheme.range)
+        }
+        rest.split(separator: " ").forEach { lift.read($0) }
+        let (sets, unit, reps, weight, words) = (lift.sets, lift.unit, lift.reps, lift.weight, lift.words)
+        guard let reps, let weight, !words.isEmpty, (1 ... 20).contains(sets), reps >= 1, reps <= 100,
+              reps.rounded() == reps, weight > 0, unit.toKilograms(weight) <= 1000,
+              let exercise = resolveExercise(words.joined(separator: " ")) else { return nil }
+        if let entry, sets == 1, store.linkedClass("exercise", of: entry)?.id == exercise.id {
+            return .set(entry: entry, weight: unit.toKilograms(weight), reps: reps, kind: .working, phrase: .full,
+                        unit: unit)
+        }
+        return .lift(exercise: exercise, sets: sets, reps: reps, weight: weight, unit: unit)
+    }
+
+    /// The numbers and words of a lift phrase.
+    private struct LiftWords {
         var sets = 1
+        var unit = MassUnit.kilograms
         var reps: Double?
         var weight: Double?
         var words: [Substring] = []
-        var rest = Substring(text)
 
-        if let scheme = rest.firstMatch(of: /(\d+) ?x ?(\d+)(?: (?:at|@) (\d+(?:\.\d+)?))?/) {
-            let first = Double(scheme.1) ?? 0
-            let second = Double(scheme.2) ?? 0
-            if let atWeight = scheme.3.flatMap({ Double($0) }) {
+        mutating func readScheme(_ first: Double, _ second: Double, at atWeight: Double?, weightElsewhere: Bool) {
+            if let atWeight {
                 // "3x8 at 80": sets x reps at weight.
-                sets = Int(first)
-                reps = second
-                weight = atWeight
-            } else if first <= 10, second <= 30, Self.hasOtherNumber(rest, excluding: scheme.range) {
+                (sets, reps, weight) = (Int(first), second, atWeight)
+            } else if first <= 10, second <= 30, weightElsewhere {
                 // "3x10 bench 80": sets x reps, weight elsewhere.
-                sets = Int(first)
-                reps = second
+                (sets, reps) = (Int(first), second)
             } else {
                 // "80x8": weight x reps.
-                weight = first
-                reps = second
+                (weight, reps) = (first, second)
             }
-            rest.removeSubrange(scheme.range)
         }
-        for token in rest.split(separator: " ") {
-            if let value = Double(token) {
+
+        mutating func read(_ token: Substring) {
+            if let parsed = MassUnit(parsing: String(token)) {
+                unit = parsed
+            } else if let value = Double(token) {
                 if weight == nil {
                     weight = value
                 } else if reps == nil {
                     reps = value
                 }
-            } else if !["kg", "for", "at", "@", "of", "x", "sets", "reps"].contains(token) {
+            } else if !["for", "at", "@", "of", "x", "sets", "reps"].contains(token) {
                 words.append(token)
             }
         }
-        guard let reps, let weight, !words.isEmpty, (1 ... 20).contains(sets), reps >= 1, reps <= 100,
-              reps.rounded() == reps, weight > 0, weight <= 1000,
-              let exercise = resolveExercise(words.joined(separator: " ")) else { return nil }
-        if let entry, sets == 1, store.linkedClass("exercise", of: entry)?.id == exercise.id {
-            return .set(entry: entry, weight: weight, reps: reps, kind: .working, phrase: .full)
-        }
-        return .lift(exercise: exercise, sets: sets, reps: reps, weight: weight)
     }
 
     private static func hasOtherNumber(_ text: Substring, excluding range: Range<Substring.Index>) -> Bool {
@@ -179,6 +195,9 @@ public struct TessGrammar {
         text.lowercased()
             .replacingOccurrences(of: "×", with: "x")
             .replacingOccurrences(of: ",", with: " ")
+            // "180lbs" and "80kg" become "180 lb" and "80 kg".
+            .replacing(/(\d)(kgs?|lbs?)\b/) { "\($0.1) \($0.2.hasPrefix("k") ? "kg" : "lb")" }
+            .replacing(/\blbs\b/, with: "lb")
             .split(whereSeparator: \.isWhitespace)
             .joined(separator: " ")
             .trimmingCharacters(in: .punctuationCharacters)

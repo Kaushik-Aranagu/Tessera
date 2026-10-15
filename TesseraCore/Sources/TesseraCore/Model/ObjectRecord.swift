@@ -31,6 +31,7 @@ public final class ObjectRecord {
     public var incomingLinks: [ObjectLink]? = []
 
     public init(title: String = "", classDef: ClassDef?, parent: ObjectRecord? = nil) {
+        id = .v7()
         self.title = title
         self.classDef = classDef
         self.parent = parent

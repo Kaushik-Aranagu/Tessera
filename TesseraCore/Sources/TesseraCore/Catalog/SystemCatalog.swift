@@ -139,6 +139,9 @@ public enum SystemCatalog {
                       FieldSpec(key: "source", name: "Logged with", kind: .choice,
                                 options: SetSource.allCases.map(\.rawValue)),
                       FieldSpec(key: "loggedAt", name: "Logged", kind: .date),
+                      // The unit the weight was entered in; the weight itself is always stored in kg.
+                      FieldSpec(key: "enteredUnit", name: "Entered in", kind: .choice,
+                                options: MassUnit.allCases.map(\.rawValue)),
                       // Epley on effective reps: with RPE logged, 5 @ 8 counts as a 7-rep effort.
                       FieldSpec(key: "e1rm", name: "Estimated 1RM", kind: .computed, unit: "kg",
                                 expression: honestE1RM),
@@ -194,6 +197,11 @@ public enum SystemCatalog {
                   ]),
     ]
 
+    /// Built-in classes ship as a versioned package. Bump `version` whenever a spec changes; seeding then
+    /// refreshes shipped names, symbols, units, options, defaults and formulas, except what the person edited.
+    public static let package = CatalogPackage(id: "system", version: 2, name: "Tessera built-ins",
+                                               source: "Tessera", license: "Tessera")
+
     static let honestE1RM = "weight * (1 + (reps + 10 - coalesce(rpe, 10)) / 30)"
 
     /// Formulas earlier builds shipped; seeding upgrades a system field still using one of them.
@@ -226,11 +234,18 @@ public enum SystemCatalog {
                 context.insert(classDef)
                 classes[spec.key] = classDef
             }
+            let needsRefresh = classDef.packageVersion < package.version
+            if needsRefresh {
+                refresh(classDef, from: spec)
+            }
             // Adds fields introduced in later versions to classes seeded by earlier ones.
             let present = Set((classDef.ownFields ?? []).map(\.id))
             for (index, fieldSpec) in spec.fields.enumerated() {
                 let fieldID = stableID("\(spec.key.systemKey).\(fieldSpec.key)")
                 if present.contains(fieldID) {
+                    if needsRefresh, let field = classDef.ownFields?.first(where: { $0.id == fieldID }) {
+                        refresh(field, from: fieldSpec)
+                    }
                     upgradeExpression(of: fieldID, in: classDef, to: fieldSpec.expression,
                                       key: "\(spec.key.systemKey).\(fieldSpec.key)")
                     continue
@@ -259,6 +274,29 @@ public enum SystemCatalog {
         }
         try context.save()
         return classes
+    }
+
+    /// Applies the package's class spec, keeping the person's edits (the overlay).
+    private static func refresh(_ classDef: ClassDef, from spec: ClassSpec) {
+        if !classDef.isUserModified {
+            classDef.name = spec.name
+            classDef.symbolName = spec.symbol
+            classDef.colorRole = spec.colorRole
+            classDef.traitsRaw = spec.traits.map(\.rawValue)
+        }
+        classDef.packageID = package.id
+        classDef.packageVersion = package.version
+    }
+
+    private static func refresh(_ field: FieldDef, from spec: FieldSpec) {
+        guard !field.isUserModified else { return }
+        field.name = spec.name
+        field.unit = spec.unit
+        field.enumOptions = spec.options
+        field.defaultValue = spec.defaultValue
+        if spec.expression != nil {
+            field.expression = spec.expression
+        }
     }
 
     /// Moves a system formula forward, unless the person has edited it.

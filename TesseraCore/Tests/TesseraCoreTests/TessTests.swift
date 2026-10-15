@@ -44,10 +44,10 @@ struct TessTests {
     @Test func gymShorthandParses() {
         let grammar = TessGrammar(store: store, classes: classes)
         func lift(_ phrase: String) -> String? {
-            guard case let .lift(exercise, sets, reps, weight)? = grammar.parse(phrase, context: context()) else {
-                return nil
-            }
-            return "\(exercise.name) \(sets)x\(TessVoice.number(reps))@\(TessVoice.number(weight))"
+            guard case let .lift(exercise, sets, reps, weight, unit)? = grammar.parse(phrase, context: context())
+            else { return nil }
+            let suffix = unit == .kilograms ? "" : unit.symbol
+            return "\(exercise.name) \(sets)x\(TessVoice.number(reps))@\(TessVoice.number(weight))\(suffix)"
         }
         #expect(lift("3x10 bench 80") == "Bench Press 3x10@80")
         #expect(lift("bench 80x8") == "Bench Press 1x8@80")
@@ -56,6 +56,8 @@ struct TessTests {
         #expect(lift("ohp 3x8 at 45") == "Overhead Press 3x8@45")
         #expect(lift("RDL 100 × 8") == "Romanian Deadlift 1x8@100")
         #expect(lift("incline press 3x10 30") == "Incline Dumbbell Press 3x10@30")
+        #expect(lift("bench 180lbs x 5") == "Bench Press 1x5@180lb")
+        #expect(lift("ohp 3x5 95 lb") == "Overhead Press 3x5@95lb")
         #expect(lift("bench") == nil)
         #expect(lift("teleport 80x8") == nil)
         #expect(grammar.parse("asdf qwer", context: context()) == nil)
@@ -68,7 +70,7 @@ struct TessTests {
         try engine.perform(LogSet(entry: entry.id, weight: 80, reps: 8), by: .user)
         let grammar = TessGrammar(store: store, classes: classes)
         func set(_ phrase: String) -> String? {
-            guard case let .set(_, weight, reps, kind, how)? = grammar.parse(phrase, context: context(entry: entry))
+            guard case let .set(_, weight, reps, kind, how, _)? = grammar.parse(phrase, context: context(entry: entry))
             else { return nil }
             return "\(TessVoice.number(weight))x\(TessVoice.number(reps)) \(kind) \(how)"
         }

@@ -27,6 +27,11 @@ public final class ClassDef {
     public var systemKey: String?
     public var sortIndex: Int = 0
     public var createdAt: Date = Date.now
+    /// The package that ships this class ("system" for built-ins), and the package version last applied.
+    public var packageID: String?
+    public var packageVersion: Int = 0
+    /// Set when the person edits a shipped class; package upgrades then leave its name, symbol and traits alone.
+    public var isUserModified: Bool = false
 
     public var parent: ClassDef?
 
@@ -54,6 +59,7 @@ public final class ClassDef {
         traits: [ClassTrait] = [],
         systemKey: String? = nil
     ) {
+        id = .v7()
         self.name = name
         self.parent = parent
         self.symbolName = symbolName

@@ -20,6 +20,7 @@ public final class OpRecord {
     public var objectIDs: [UUID] = []
 
     public init(action: String, actor: Actor, summary: String, ops: [Op], state: OpState) {
+        id = .v7()
         self.action = action
         actorRaw = actor.rawValue
         self.summary = summary

@@ -21,6 +21,8 @@ public final class FieldDef {
     public var defaultValueData: Data?
     /// When set, this field doesn't add a new property: it overrides the default of an inherited field.
     public var overridesFieldID: UUID?
+    /// Set when the person edits a shipped field (the user overlay); package upgrades then leave it alone.
+    public var isUserModified: Bool = false
 
     public var owner: ClassDef?
 
@@ -32,6 +34,7 @@ public final class FieldDef {
         unit: String? = nil,
         defaultValue: FieldValue? = nil
     ) {
+        id = .v7()
         self.name = name
         self.key = key
         kindRaw = kind.rawValue
