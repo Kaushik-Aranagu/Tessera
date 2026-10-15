@@ -1,6 +1,6 @@
 # 10 · Recipe page and 11 · Paste a recipe (build sheet)
 
-Just enough to build. Product steer: `docs/product/ship-list-kitchen.md` §10 and §11. Engine: slices 3 (recipe and parser) and 4 (scaling). Folder: `Features/Recipes/`. Light ground, kitchen colours as in `13-groceries.md`.
+Just enough to build. Product steer: `docs/product/ship-list-kitchen.md` §10 and §11. Recording of the brush read, save, the portion drum rolling amounts and the swipe to Groceries: `../recordings/recipe-and-paste.mp4` (source `../studies/recipe-and-paste.html`). Engine: slices 3 (recipe and parser) and 4 (scaling). Folder: `Features/Recipes/`. Light ground, kitchen colours as in `13-groceries.md`.
 
 ## 10 · Recipe page (an object page)
 | y | Element |
