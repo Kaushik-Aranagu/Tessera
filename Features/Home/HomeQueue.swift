@@ -243,6 +243,12 @@ private struct QueueRow: View {
         .modifier(ZoomSource(id: Route.object(entry.id), namespace: namespace))
         .sensoryFeedback(.selection, trigger: armed) { _, now in now }
         .sensoryFeedback(.impact(weight: .light, intensity: 0.5), trigger: holding) { _, now in now }
+        // A held row that leaves the tree (it finished, or the page changed) must give the pager back.
+        .onDisappear {
+            if holding {
+                grab(false)
+            }
+        }
         .onChange(of: holding) { _, now in
             grab(now)
             if !now {

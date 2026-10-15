@@ -11,13 +11,19 @@ struct NowPage: View {
     @Environment(\.zoomNamespace) private var namespace
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var finishes = 0
+    /// The current Now, passed back to the ranker so it holds against equal challengers (no flicker).
+    @State private var incumbent: UUID?
 
     var body: some View {
         let _ = model.revision
         let now = AppClock.now
         let lanes = HomeData.lanes(model, now: now)
         let schedule = model.schedule(around: now)
-        let current = model.currentTask(around: now)
+        // Now comes from Core's ranker (rest day, the 15-minute override, re-entry, the scored rank). It re-runs
+        // when the data changes (revision) and as the clock moves, never on its own timer.
+        let top = rank(now: now).first
+        let ranked = top?.item.kind == .task ? schedule.first { $0.id == top?.item.id } : nil
+        let current = ranked ?? model.currentTask(around: now)
 
         VStack(alignment: .leading, spacing: 0) {
             HomeDayStrip(lanes: lanes)
@@ -28,6 +34,8 @@ struct NowPage: View {
                 // A running process is Now (docs/product/whats-running.md).
                 if let session = model.session, model.processes.running()?.subject?.id == session.workout.id {
                     RunningHero(session: session)
+                } else if let top, top.item.kind == .rest {
+                    RestHero(next: top.item.object)
                 } else {
                     hero(current, now: now)
                 }
@@ -48,6 +56,23 @@ struct NowPage: View {
             Spacer(minLength: 0)
         }
         .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: finishes)
+        .onChange(of: top?.id, initial: true) { _, id in
+            incumbent = id
+        }
+    }
+
+    private func rank(now: Date) -> [Pick] {
+        let picker = NowPicker(engine: model.engine)
+        let plan = model.plan
+        let cycle = plan.map { model.store.linkedObjects("routines", of: $0).count } ?? 0
+        return picker.rank(RankContext(
+            now: now,
+            plan: plan,
+            sessionsPerWeek: PlanRhythm.perWeek(cycleCount: cycle),
+            incumbent: incumbent,
+            lastAction: picker.lastAction(),
+            daysAway: picker.daysAway(at: now)
+        ))
     }
 
     // MARK: Hero
@@ -337,6 +362,33 @@ private struct DoneHero: View {
 }
 
 /// Nothing else on: the plan's next routine is Now, with one key into live mode.
+/// A planned rest day: one quiet line, no guilt, and the next routine one tap away as a label word.
+private struct RestHero: View {
+    let next: ObjectRecord
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+            Text("today")
+                .font(Theme.voice(size: 21))
+                .foregroundStyle(Theme.Colors.context)
+                .entrance(1)
+            HeroText(text: RestDay.line) { $0 }
+                .foregroundStyle(Theme.Colors.ink)
+                .siblingParallax()
+                .entrance(2, hero: true)
+            Text("\(next.title) is a tap away.")
+                .font(Theme.voice(size: 21))
+                .foregroundStyle(Theme.Colors.context)
+                .entrance(3)
+            Button("Start \(next.title)") { model.startRoutine(next) }
+                .buttonStyle(InkLabelWordStyle(color: Theme.Colors.live))
+                .accessibilityHint("Starts \(next.title) anyway")
+                .entrance(3)
+        }
+    }
+}
+
 private struct RoutineHero: View {
     let routine: ObjectRecord
     @Environment(AppModel.self) private var model
