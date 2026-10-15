@@ -53,6 +53,8 @@ public enum TesseraIntentsCatalog {
         "swapSlotExercise": "in-app only: routine editor",
         "swapExercise": "in-app only: live mode swap",
         "rollForwardTasks": "system: nightly roll-forward",
+        "startTask": "in-app only for now",
+        "waitOnTask": "in-app only for now",
         "moveTask": "in-app only for now (Now's \"not now\" and Later)",
     ]
 }
