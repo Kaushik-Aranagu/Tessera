@@ -611,7 +611,7 @@ private struct TessNoteLine: View {
                         }
                     }
                     .buttonStyle(InkLabelWordStyle(color: Theme.Colors.live))
-                    .accessibilityHint("Puts them back in the basket")
+                    .accessibilityHint("Undoes what Tess just said")
                 }
             }
         }
