@@ -60,7 +60,9 @@ public enum TessTools {
             throw answer
         } catch {
             for record in engine.history(limit: 50) {
-                if record.id == mark { break }
+                if record.id == mark {
+                    break
+                }
                 if record.state == .pending {
                     _ = try? engine.discard(record)
                 } else if record.state != .undone {
