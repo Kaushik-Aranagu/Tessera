@@ -16,7 +16,7 @@ Reads with: `kitchen-v2.md` §2 (the no-model version), `tess-model-layer.md` §
 | Point | Decision |
 |---|---|
 | Client | `URLSession(configuration: .ephemeral)`: no cookie jar, no cache on disk, nothing remembered between fetches. One GET, only when he pastes a link. No crawling, no following "print" links |
-| User-Agent | The plain iPhone Safari UA string (what WKWebView sends). The default `Tessera/1 CFNetwork/... Darwin/...` is refused by some bot checks. This is a change from `kitchen-v2.md` ("no spoofed user agents"): it is the same request his Safari makes for a page he chose. Product call; DEFAULT yes. Never rotate UAs or retry with tricks |
+| User-Agent | An honest Tessera user agent (`Tessera/1 (iPhone; personal recipe import)` plus the CFNetwork default), never a spoofed Safari string (Product decision, decisions.md, 2026-10-15). If a site blocks it (403, bot check), Tess offers "Paste the text" and the deterministic parser takes it from there. |
 | https only | ATS stays default (no `NSAllowsArbitraryLoads`). A pasted `http://` link is rewritten to `https://`; if that fails: "That site only works without https, so I can't read it. Paste the text instead." |
 | Redirects | Delegate `willPerformHTTPRedirection`: at most 5, each must stay https. Keep the final URL as `sourceURL` (strips `amp/`, tracking hops) |
 | Hosts | Reject IP literals in private ranges, `localhost`, `.local`, and ports other than 443 before fetching, so a link can't poke his router or LAN |
@@ -154,7 +154,7 @@ All failures land on the paste screen with the link kept, and the line comes fro
 
 ## 5. Privacy
 
-- The fetch goes from the phone straight to the recipe site, like opening it in Safari: the site sees his IP and the Safari UA, no cookies (ephemeral session).
+- The fetch goes from the phone straight to the recipe site, like opening it in Safari: the site sees his IP and the Tessera user agent, no cookies (ephemeral session).
 - **Nothing goes to Anthropic unless steps 2a to 2c all fail** and Claude is switched on. Then only the URL's host and the trimmed visible text leave the phone, and the cloud mark shows on the bloom (`tess-model-layer.md` §6). Add a `TessContextPack` snapshot test for the link use.
 - Stored on the Recipe: `sourceURL` (final URL after redirects, tracking query items like `utm_*` removed), `sourceText` (the generated plain text or the trimmed visible text), and the recipe fields. Not stored: HTML, images, headnotes, comments. Recipe page shows the source host one level under the name, tappable to open in Safari.
 
