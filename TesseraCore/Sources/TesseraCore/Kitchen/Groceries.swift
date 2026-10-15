@@ -43,6 +43,14 @@ public struct Groceries {
         return store.linkedObjects("about", of: item).filter { $0.classDef?.id == recipeClass.id }
     }
 
+    /// The open items that carry this recipe's share (empty when it isn't on the list): the recipe page's "12 to buy".
+    public func share(of recipe: ObjectRecord) -> [ListContents.Item] {
+        guard let list else { return [] }
+        return ListContents(store: store, classes: classes).open(in: list).filter { item in
+            GroceryShare.decode(store.value("shares", of: item.object)?.stringValue).contains { $0.recipe == recipe.id }
+        }
+    }
+
     public func ingredient(of item: ObjectRecord) -> ObjectRecord? {
         guard let ingredientClass = classes[.ingredient] else { return nil }
         return store.linkedObjects("about", of: item).first { $0.classDef?.id == ingredientClass.id }

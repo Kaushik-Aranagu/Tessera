@@ -52,6 +52,8 @@ struct GroceryTests {
         #expect(lists.item(tomato.object).quantity == "1.2 kg")
         #expect(lists.items(of: list).map(\.text) == ["tomatoes", "onion"])
         #expect(added.output.count == 2)
+        #expect(groceries.share(of: sauce).count == 2)
+        #expect(groceries.share(of: salad).isEmpty)
     }
 
     @Test func typedLinesFindTheirAisleAndMovesTeachIt() throws {
