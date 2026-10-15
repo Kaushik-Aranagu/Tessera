@@ -95,6 +95,8 @@ struct RepsDrum: View {
                 .opacity(isCurrent ? 1 : 0)
             Text("\(value)")
         }
+        // "× 12" is wider than the drum: it grows to the left rather than truncating.
+        .fixedSize()
         .font(Theme.numeral(Metrics.current))
         .dynamicTypeSize(...DynamicTypeSize.large)
         .foregroundStyle(isCurrent ? Paint.cream : Paint.neighbour)

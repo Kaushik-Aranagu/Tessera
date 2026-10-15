@@ -8,6 +8,7 @@ enum FontRegistry {
         "InstrumentSans-Variable",
         "InstrumentSans-Italic-Variable",
         "MartianMono-Variable",
+        "InterTight-Variable",
     ]
 
     static func registerAll() {

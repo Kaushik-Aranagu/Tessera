@@ -1,4 +1,5 @@
 import SwiftUI
+import TesseraCore
 
 /// TODAY: the day stroke, the one current thing as the hero, hold to finish, a short "Later" window and, when a
 /// workout is running, one quiet line to get back to it. Grouping is by space and type alone.
@@ -26,7 +27,7 @@ struct NowPage: View {
 
             Group {
                 // A running process is Now (docs/product/whats-running.md).
-                if let session = model.session, !session.isSuspended(at: now) {
+                if let session = model.session, model.processes.running()?.subject?.id == session.workout.id {
                     RunningHero(session: session)
                 } else {
                     hero(current, now: now)
@@ -35,8 +36,8 @@ struct NowPage: View {
             .padding(.bottom, Theme.Spacing.xl)
 
             // The ledger: suspended processes (v1: a workout left idle), at most three, state in the seam above.
-            if let session = model.session, session.isSuspended(at: now) {
-                LedgerRow(session: session, now: now)
+            ForEach(model.processes.ledger(now: now)) { process in
+                LedgerRow(process: process, now: now)
                     .padding(.bottom, Theme.Spacing.l)
                     .transition(.offset(y: 10).combined(with: .opacity))
             }
@@ -228,6 +229,14 @@ private struct LaterRow: View {
     @Environment(\.zoomNamespace) private var namespace
 
     var body: some View {
+        if model.isGhost(item.id) {
+            GhostRow(item: item)
+        } else {
+            row
+        }
+    }
+
+    private var row: some View {
         Button {
             model.open(.object(item.id))
         } label: {
@@ -251,6 +260,66 @@ private struct LaterRow: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(item.title), \(Format.clock(item.start))")
         .accessibilityHint("Opens \(item.title)")
+    }
+}
+
+/// A capture that is still wet paint: everything cobalt, breathing, with a brushstroke painting along under it
+/// as the commit timer. Tap to keep it now; swipe it sideways to drop it (nothing is written).
+private struct GhostRow: View {
+    let item: ScheduleItem
+    @Environment(AppModel.self) private var model
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var stroke: CGFloat = 0
+    @State private var drag: CGFloat = 0
+    @State private var arrived = false
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { context in
+            let breath = (sin(context.date.timeIntervalSinceReferenceDate / 1.6 * .pi) + 1) / 2
+            HStack(spacing: Theme.Spacing.m) {
+                PaintDab(color: Theme.Colors.tess, seed: item.title.count)
+                    .blur(radius: 1.5)
+                Text(item.title)
+                    .font(Theme.voice)
+                    .foregroundStyle(Theme.Colors.tess)
+                    .lineLimit(1)
+                Spacer(minLength: Theme.Spacing.s)
+                Text(Format.clock(item.start))
+                    .textRole(.label)
+                    .foregroundStyle(Theme.Colors.tess)
+                    .monospacedDigit()
+            }
+            .opacity(reduceMotion ? 0.6 : 0.5 + 0.16 * breath)
+        }
+        .frame(maxHeight: .infinity)
+        .overlay(alignment: .bottomLeading) {
+            Brushstroke(progress: stroke)
+                .stroke(Theme.Colors.tess.opacity(0.7), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                .frame(height: 8)
+                .blur(radius: 0.4)
+        }
+        .offset(x: drag, y: arrived ? 0 : -10)
+        .blur(radius: arrived ? 0 : 6)
+        .opacity(arrived ? 1 - Double(min(abs(drag) / 200, 0.8)) : 0)
+        .contentShape(Rectangle())
+        .onTapGesture { model.commitCapture() }
+        .gesture(DragGesture(minimumDistance: 12).onChanged { drag = min(0, $0.translation.width) }.onEnded { value in
+            if value.translation.width < -80 {
+                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { drag = -400 }
+                model.discardCapture()
+            } else {
+                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { drag = 0 }
+            }
+        })
+        .onAppear {
+            withTesseraAnimation(.easeOut(duration: 0.42), reduceMotion: reduceMotion) { arrived = true }
+            // The commit timer, as visible time: the stroke paints along under the row over exactly 2 s.
+            withAnimation(.linear(duration: AppModel.captureDryTime)) { stroke = 1 }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Proposed: \(item.title), \(Format.clock(item.start))")
+        .accessibilityHint("Saves in two seconds. Double-tap to keep it now.")
+        .accessibilityAction(named: "Drop it") { model.discardCapture() }
     }
 }
 
@@ -310,42 +379,54 @@ private struct RunningHero: View {
 }
 
 /// One ledger row: the subject, the next step stated as time (never judgement) and a text-only Resume. Its state
-/// is the seam 6 pt above it: suspended = 2 pt vermilion, lit and still.
+/// is the seam 6 pt above it: suspended = 2 pt vermilion, lit and still; waiting = an engraved hairline.
 private struct LedgerRow: View {
-    let session: WorkoutSession
+    let process: ProcessSnapshot
     let now: Date
     @Environment(AppModel.self) private var model
+    @Environment(\.displayScale) private var displayScale
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Theme.Colors.live
-                .frame(height: 2)
-                .shadow(color: Theme.Colors.live.opacity(0.45), radius: 4)
-            Button { model.isWorkoutPresented = true } label: {
+            seam
+            Button { model.resume(process) } label: {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(session.workout.title).textRole(.bodyStrong).foregroundStyle(Theme.Colors.ink)
+                        Text(process.subject?.title ?? process.object.title)
+                            .textRole(.bodyStrong)
+                            .foregroundStyle(Theme.Colors.ink)
                         Text(step)
                             .font(Theme.voice(size: 18))
                             .foregroundStyle(Color(hex: 0x6E6480))
                             .lineLimit(1)
+                            .truncationMode(.middle)
                     }
                     Spacer(minLength: Theme.Spacing.s)
                     Text("Resume").textRole(.bodyStrong).foregroundStyle(Theme.Colors.live)
                 }
-                .frame(height: 64)
+                .frame(minHeight: 64)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("\(session.workout.title), \(step). Resume")
+            .accessibilityLabel("\(process.subject?.title ?? process.object.title), \(step). Resume")
+        }
+    }
+
+    @ViewBuilder private var seam: some View {
+        if process.state == .suspended {
+            Theme.Colors.live
+                .frame(height: 2)
+                .shadow(color: Theme.Colors.live.opacity(0.45), radius: 4)
+        } else {
+            VStack(spacing: 0) {
+                Theme.Colors.ink.opacity(0.12).frame(height: 1 / displayScale)
+                Color.white.opacity(0.8).frame(height: 1 / displayScale)
+            }
         }
     }
 
     private var step: String {
-        let exercise = session.currentExercise?.name.components(separatedBy: " ").first ?? "Workout"
-        let entry = session.currentEntry
-        let minutes = Int(now.timeIntervalSince(session.lastTouchedAt) / 60)
-        let target = entry.map(session.targetSets(of:)) ?? 0
-        return "\(exercise), set \(session.currentSetNumber) of \(target), \(minutes) min ago"
+        let ago = process.lastTouchedAt.map { Format.duration(now.timeIntervalSince($0)) + " ago" }
+        return [process.nextStep, ago].compactMap(\.self).joined(separator: ", ")
     }
 }

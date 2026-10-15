@@ -35,74 +35,87 @@ struct WorkoutModeView: View {
     }
 }
 
-private typealias Palette = Theme.Colors.Workout
-
-/// Paint for the workout's dark ground: colours that mean something.
-private enum Paint {
-    static let live = Color(hex: 0xD9563F)
-    static let tess = Color(hex: 0x9DBFE6)
-    static let tessBar = Color(hex: 0xC9D9EE)
-    static let now = Color(hex: 0xE8BD4C)
-    static let health = Color(hex: 0x7FB07A)
-    static let cobalt = Color(hex: 0x3F7FC0)
-    static let secondary = Color(hex: 0xA79FB5)
-    static let cream = Color(hex: 0xF3ECE0)
-
-    /// Each logged set leaves a stroke; the colour cycles set to set.
-    static func set(_ number: Int) -> Color {
-        [live, cobalt, now, health][(number - 1) % 4]
-    }
-}
+private typealias Paint = WorkoutPaint
 
 private struct WorkoutContent: View {
     @Bindable var session: WorkoutSession
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.zoomNamespace) private var zoomNamespace
 
     /// The lane's scroll position (x). Kept in step with `session.currentIndex` both ways.
     @State private var laneIndex: Int?
     @State private var tessMode: TessSoul.Mode = .idle
     @State private var lockHaptic = 0
     @State private var celebrated = 0
+    @State private var undoHaptic = 0
+    @State private var revealHaptic = 0
+    /// The running order sheet (pulled down from the seam).
+    @State private var isOrderOpen = false
+    /// The swap panel (pulled down from the exercise name).
+    @State private var isSwapOpen = false
+    @State private var swapOptions: [ExerciseSwaps.Option] = []
+    /// "Go" rises in where the countdown was, just after a skip.
+    @State private var showsGo = false
+    /// A glint sweeps the numeral once when rest ends on its own.
+    @State private var restEndedGlint = false
+    @State private var summaryLine: String?
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             let now = AppClock.adjust(context.date)
             let phase = session.phase(at: now)
-            VStack(alignment: .leading, spacing: 0) {
-                header(now: now)
-                    .padding(.horizontal, Theme.Spacing.gutter)
-                    .padding(.top, Theme.Spacing.m)
-                lane.padding(.top, Theme.Spacing.m)
-                SetStrokes(session: session, phase: phase)
-                    .padding(.horizontal, Theme.Spacing.gutter)
-                    .padding(.top, Theme.Spacing.l)
-                subline(phase: phase)
-                    .padding(.horizontal, Theme.Spacing.gutter)
-                    .padding(.top, Theme.Spacing.m)
-                numberRow(phase: phase, now: now)
-                    .padding(.horizontal, Theme.Spacing.gutter)
-                    .padding(.top, Theme.Spacing.xl)
-                Spacer(minLength: Theme.Spacing.m)
-                WeightDial(
-                    weight: $session.weight,
-                    isLocked: phase != .set,
-                    restFraction: session.restFraction(at: now)
-                )
-                Spacer(minLength: Theme.Spacing.m)
-                keyRow(phase: phase)
-                    .padding(.horizontal, Theme.Spacing.gutter)
-                tessBar(phase: phase)
-                    .padding(.horizontal, 14)
-                    .padding(.top, Theme.Spacing.l)
+            Group {
+                if let finished = session.finishedAt {
+                    VStack(spacing: 0) {
+                        WorkoutFinishView(
+                            strokes: sessionStrokes,
+                            title: session.workout.title,
+                            startedAt: session.startedAt,
+                            endedAt: finished,
+                            summary: session.summary,
+                            onGathered: {
+                                summaryLine = session.summary.line
+                                play(.done)
+                            },
+                            onDone: leaveFinished
+                        )
+                        WorkoutTessBar(
+                            line: WorkoutLines.tess(session, phase: phase, summary: summaryLine),
+                            mode: tessMode,
+                            canUndo: session.canUndo && session.finishedAt == nil
+                        ) {
+                            withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLastSet() }
+                            undoHaptic += 1
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.top, Theme.Spacing.l)
+                    }
+                    .transition(.opacity)
+                } else {
+                    live(phase: phase, now: now)
+                }
+            }
+            .onChange(of: phase == .set) { wasSet, isSet in
+                // Rest ran out on its own (not skipped or undone): the next set rises already prefilled and one
+                // glint sweeps the numeral.
+                if isSet, !wasSet, let end = session.restEndsAt, end <= now {
+                    restEndedGlint = true
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .seconds(1.2))
+                        restEndedGlint = false
+                    }
+                }
             }
         }
         .overlay(alignment: .top) {
-            ProcessSeam(color: Paint.live).ignoresSafeArea(edges: .top)
+            ExerciseStrip(segments: segments)
+                .ignoresSafeArea(edges: .top)
         }
+        .overlay(alignment: .top) { runningOrder }
         .background { PleinGround() }
         .preferredColorScheme(.dark)
+        .persistentSystemOverlays(.hidden)
+        .defersSystemGestures(on: .bottom)
         .onAppear { laneIndex = session.currentIndex }
         .onChange(of: laneIndex) { _, index in
             guard let index, index != session.currentIndex else { return }
@@ -127,6 +140,56 @@ private struct WorkoutContent: View {
             }
         }
         .sensoryFeedback(.success, trigger: lockHaptic)
+        .sensoryFeedback(.decrease, trigger: undoHaptic)
+        .sensoryFeedback(.impact(weight: .light), trigger: revealHaptic)
+    }
+
+    private func live(phase: WorkoutSession.Phase, now: Date) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            header(now: now)
+                .padding(.horizontal, Theme.Spacing.gutter)
+                .padding(.top, Theme.Spacing.m)
+            ExerciseLane(session: session, laneIndex: $laneIndex, isSwapOpen: isSwapOpen, setSwap: setSwap(open:))
+                .padding(.top, Theme.Spacing.m)
+                .overlay(alignment: .topLeading) { swapPanel }
+                .zIndex(2)
+            LiveSetStrokes(session: session, phase: phase)
+                .padding(.horizontal, Theme.Spacing.gutter)
+                .padding(.top, Theme.Spacing.l)
+                .opacity(isSwapOpen ? 0 : 1)
+            subline(phase: phase)
+                .padding(.horizontal, Theme.Spacing.gutter)
+                .padding(.top, Theme.Spacing.m)
+                .opacity(isSwapOpen ? 0 : 1)
+            numberRow(phase: phase, now: now)
+                .padding(.horizontal, Theme.Spacing.gutter)
+                .padding(.top, Theme.Spacing.l)
+            Spacer(minLength: Theme.Spacing.s)
+            setArea(phase: phase)
+                .padding(.horizontal, Theme.Spacing.gutter)
+            Spacer(minLength: Theme.Spacing.s)
+            WeightDial(
+                weight: $session.weight,
+                detents: session.detents,
+                isLocked: phase != .set,
+                restFraction: session.restFraction(at: now),
+                onExtendRest: { extendRest() },
+                onSkipRest: { skipRest() }
+            )
+            .padding(.horizontal, 20)
+            Spacer(minLength: Theme.Spacing.m)
+            keyRow(phase: phase)
+                .padding(.horizontal, Theme.Spacing.gutter)
+            WorkoutTessBar(line: WorkoutLines.tess(session, phase: phase, summary: summaryLine), mode: tessMode,
+                           canUndo: session.canUndo && session.finishedAt == nil)
+            {
+                withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLastSet() }
+                undoHaptic += 1
+            }
+            .padding(.horizontal, 14)
+            .padding(.top, Theme.Spacing.l)
+        }
+        .tesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.52), value: session.isEffortShown)
     }
 
     private func play(_ mode: TessSoul.Mode, then next: TessSoul.Mode? = nil, after delay: Double = 0) {
@@ -140,6 +203,62 @@ private struct WorkoutContent: View {
             tessMode = .idle
         }
     }
+}
+
+extension WorkoutContent {
+    // MARK: The strip and the running order
+
+    private var segments: [ExerciseStrip.Segment] {
+        let entries = session.entries
+        if session.finishedAt != nil {
+            return entries.map { _ in .done }
+        }
+        return entries.enumerated().map { index, entry in
+            if index == session.currentIndex {
+                return .current
+            }
+            return session.isFinished(entry) ? .done : .remaining
+        }
+    }
+
+    @ViewBuilder
+    private var runningOrder: some View {
+        if isOrderOpen {
+            GeometryReader { proxy in
+                ZStack(alignment: .top) {
+                    Color.black.opacity(0.35)
+                        .ignoresSafeArea()
+                        .onTapGesture { setOrder(open: false) }
+                        .accessibilityLabel("Close running order")
+                        .accessibilityAddTraits(.isButton)
+                    RunningOrderSheet(
+                        session: session,
+                        topInset: proxy.safeAreaInsets.top,
+                        onSelect: { index in
+                            setOrder(open: false)
+                            withTesseraAnimation(.snappy(duration: 0.3), reduceMotion: reduceMotion) {
+                                laneIndex = index
+                            }
+                        },
+                        onClose: { setOrder(open: false) }
+                    )
+                    .ignoresSafeArea(edges: .top)
+                    .transition(reduceMotion ? .opacity : .move(edge: .top))
+                }
+            }
+            .transition(.opacity)
+        }
+    }
+
+    private func setOrder(open: Bool) {
+        if open {
+            revealHaptic += 1
+            isSwapOpen = false
+        }
+        withTesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.46), reduceMotion: reduceMotion) {
+            isOrderOpen = open
+        }
+    }
 
     // MARK: Header and lane (x)
 
@@ -149,7 +268,17 @@ private struct WorkoutContent: View {
                 .font(Theme.voice)
                 .foregroundStyle(Paint.secondary)
                 .contentTransition(.numericText())
-            Spacer()
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
+                // Pull down on the seam (or tap it) for the running order.
+                .onTapGesture { setOrder(open: true) }
+                .gesture(DragGesture(minimumDistance: 12).onEnded { drag in
+                    if drag.translation.height > 30 {
+                        setOrder(open: true)
+                    }
+                })
+                .accessibilityAddTraits(.isButton)
+                .accessibilityHint("Shows the running order")
             Text("\((laneIndex ?? session.currentIndex) + 1) / \(session.entries.count)")
                 .textRole(.label)
                 .foregroundStyle(Paint.secondary)
@@ -159,7 +288,7 @@ private struct WorkoutContent: View {
                 Image(systemName: "chevron.down")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(Paint.cream)
-                    .frame(width: 44, height: 32)
+                    .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
             }
             .accessibilityLabel("Minimise workout")
@@ -167,76 +296,45 @@ private struct WorkoutContent: View {
         .accessibilityElement(children: .contain)
     }
 
-    private var lane: some View {
-        ScrollView(.horizontal) {
-            LazyHStack(spacing: 0) {
-                ForEach(Array(session.entries.enumerated()), id: \.offset) { index, entry in
-                    let exercise = session.exerciseClass(of: entry)
-                    let isCurrent = index == (laneIndex ?? session.currentIndex)
-                    Button {
-                        if let exercise {
-                            model.open(.classDef(exercise.id), .deeper)
-                        }
-                    } label: {
-                        Text(exercise?.name ?? "Exercise")
-                            .textRole(.title)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.6)
-                            .foregroundStyle(Paint.cream.opacity(isCurrent ? 1 : 0.28))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .modifier(ZoomSource(id: exercise.map { Route.classDef($0.id) }, namespace: zoomNamespace))
-                    .containerRelativeFrame(.horizontal) { width, _ in width - Theme.Spacing.gutter - 46 }
-                    .id(index)
-                    .accessibilityHint(isCurrent ? "Opens the exercise page" : "")
-                    .tesseraAnimation(.easeOut(duration: 0.24), value: isCurrent)
+    @ViewBuilder
+    private var swapPanel: some View {
+        if isSwapOpen {
+            SwapPanel(options: swapOptions, current: session.currentExercise?.name ?? "This") { option in
+                setSwap(open: false)
+                withTesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.5), reduceMotion: reduceMotion) {
+                    session.swap(to: option)
                 }
+                play(.done)
             }
-            .scrollTargetLayout()
+            .padding(.horizontal, Theme.Spacing.s)
+            .offset(y: 64 + Theme.Spacing.m)
+            .transition(reduceMotion ? AnyTransition.opacity
+                : .asymmetric(insertion: AnyTransition.offset(y: -16).combined(with: AnyTransition(.blurReplace)),
+                              removal: .opacity))
         }
-        .contentMargins(.leading, Theme.Spacing.gutter, for: .scrollContent)
-        .contentMargins(.trailing, 46, for: .scrollContent)
-        .scrollTargetBehavior(.viewAligned(limitBehavior: .alwaysByOne))
-        .scrollPosition(id: $laneIndex, anchor: .leading)
-        .scrollIndicators(.hidden)
-        .frame(height: 64)
+    }
+
+    private func setSwap(open: Bool) {
+        if open {
+            swapOptions = session.swapOptions()
+            revealHaptic += 1
+        }
+        withTesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.42), reduceMotion: reduceMotion) {
+            isSwapOpen = open
+        }
     }
 
     // MARK: y, in words and numbers
 
     private func subline(phase: WorkoutSession.Phase) -> some View {
-        let (text, color) = sublineText(phase: phase)
+        let (text, color) = WorkoutLines.subline(session, phase: phase)
         return Text(text)
             .font(Theme.voice)
             .foregroundStyle(color)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
             .contentTransition(.opacity)
             .tesseraAnimation(value: text)
-    }
-
-    private func sublineText(phase: WorkoutSession.Phase) -> (String, Color) {
-        guard let entry = session.currentEntry else { return ("", Paint.secondary) }
-        let target = session.targetSets(of: entry)
-        let rows = session.setRows(of: entry)
-        let tenth = { (value: Double) in Format.kilograms((value * 10).rounded() / 10) }
-        switch phase {
-        case .rest:
-            if let seated = session.lastSeated, !seated.records.isEmpty, let e1RM = seated.e1RM {
-                return ("a new best: e1RM \(tenth(e1RM))", Paint.now)
-            }
-            return ("set \(rows.count) seated", Paint.secondary)
-        case .exerciseDone:
-            return ("all \(target) sets in. Swipe for the next.", Paint.secondary)
-        case .workoutDone:
-            return ("every set is in", Paint.secondary)
-        case .set:
-            if session.isPersonalRecord {
-                return ("set \(session.currentSetNumber): this would be a new best", Paint.now)
-            }
-            let last = rows.last.map { ", last was \(Format.kilograms($0.weight)) × \(Int($0.reps))" } ?? ""
-            return ("set \(session.currentSetNumber) of \(target)\(last)", Paint.secondary)
-        }
     }
 
     private func numberRow(phase: WorkoutSession.Phase, now: Date) -> some View {
@@ -244,50 +342,111 @@ private struct WorkoutContent: View {
             if case let .rest(end) = phase {
                 let remaining = max(0, end.timeIntervalSince(now)).rounded(.up)
                 VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-                    HStack(alignment: .firstTextBaseline, spacing: 10) {
-                        Text(Format.duration(remaining))
-                            .font(Theme.numeral(72))
-                            .foregroundStyle(Paint.now)
-                            .contentTransition(.numericText(countsDown: true))
-                            .animation(MotionPolicy.resolve(Theme.Motion.snappy, reduceMotion: reduceMotion),
-                                       value: remaining)
-                        Text("rest").font(Theme.voice).foregroundStyle(Paint.secondary)
+                    // Tap the countdown for +15 (the one-tap twin of dragging the dial right).
+                    Button { extendRest() } label: {
+                        HStack(alignment: .firstTextBaseline, spacing: 10) {
+                            Text(Format.duration(remaining))
+                                .font(Theme.numeral(72))
+                                .foregroundStyle(Paint.now)
+                                .contentTransition(.numericText(countsDown: true))
+                                .animation(MotionPolicy.resolve(Theme.Motion.snappy, reduceMotion: reduceMotion),
+                                           value: remaining)
+                            Text("rest").font(Theme.voice).foregroundStyle(Paint.secondary)
+                        }
+                        .frame(minHeight: 60)
+                        .contentShape(Rectangle())
                     }
-                    .accessibilityElement(children: .combine)
+                    .buttonStyle(.plain)
                     .accessibilityLabel("Rest, \(Int(remaining)) seconds left")
-                    Text("Rest lives in the dial. When it empties, it turns back into weight.")
+                    .accessibilityHint("Adds 15 seconds")
+                    Text(session.restNote ?? "Tap or drag the dial right for 15 more. Fling it left to go.")
                         .font(Theme.voice)
                         .foregroundStyle(Paint.tess)
                         .fixedSize(horizontal: false, vertical: true)
+                        .contentTransition(.opacity)
+                        .tesseraAnimation(value: session.restNote)
                 }
                 .transition(.opacity.combined(with: .blurReplace))
             } else {
                 VStack(alignment: .leading, spacing: Theme.Spacing.s) {
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(Format.kilograms(session.weight))
+                    if showsGo {
+                        Text("Go")
                             .font(Theme.numeral(72))
-                            .foregroundStyle(Paint.cream)
-                            .contentTransition(.numericText(value: session.weight))
-                            .animation(MotionPolicy.resolve(Theme.Motion.snappy, reduceMotion: reduceMotion),
-                                       value: session.weight)
-                            .modifier(GlintIf(isOn: phase == .set && session.isPersonalRecord))
-                        Text("kg").font(Theme.voice).foregroundStyle(Paint.secondary)
+                            .foregroundStyle(Paint.now)
+                            .transition(reduceMotion ? AnyTransition.opacity
+                                : AnyTransition.offset(y: 14).combined(with: AnyTransition(.blurReplace)))
+                    } else {
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Text(Format.kilograms(session.weight))
+                                .font(Theme.numeral(72))
+                                .foregroundStyle(Paint.cream)
+                                .contentTransition(.numericText(value: session.weight))
+                                .animation(MotionPolicy.resolve(Theme.Motion.snappy, reduceMotion: reduceMotion),
+                                           value: session.weight)
+                                .modifier(GlintIf(isOn: (phase == .set && session.isPersonalRecord)
+                                        || restEndedGlint))
+                            Text(unit).font(Theme.voice).foregroundStyle(Paint.secondary)
+                        }
+                        .accessibilityHidden(true)
                     }
-                    .accessibilityHidden(true)
-                    PlateStack(weight: session.weight)
+                    plateLine
                 }
                 Spacer(minLength: Theme.Spacing.s)
                 VStack(spacing: 2) {
                     RepsDrum(reps: repsBinding, ghost: lastReps)
                         .disabled(phase != .set)
-                    Text("reps").font(Theme.voice(size: 18)).foregroundStyle(Paint.cream.opacity(0.55))
+                    EffortHandle(isShown: session.isEffortShown, enabled: phase == .set, setShown: setEffort(shown:))
                 }
                 .transition(.opacity)
             }
         }
-        .frame(height: 170, alignment: .top)
+        .frame(height: 196, alignment: .top)
         .tesseraAnimation(.easeOut(duration: 0.32), value: phase == .set)
+        .tesseraAnimation(.easeOut(duration: 0.32), value: showsGo)
         .sensoryFeedback(.impact(flexibility: .soft, intensity: 0.8), trigger: celebrated)
+    }
+
+    /// "kg", or "kg each" for dumbbells.
+    private var unit: String {
+        let perHand = session.currentExercise.map { ExerciseSwaps.isPerHand($0, store: model.store) } ?? false
+        return perHand ? "kg each" : "kg"
+    }
+
+    @ViewBuilder
+    private var plateLine: some View {
+        if session.isEstimatedLoad, let from = session.swappedFrom {
+            Text("An estimate from \(SwapPanel.short(from).lowercased())")
+                .textRole(.label)
+                .foregroundStyle(Paint.tess)
+        } else if let load = session.plateLoad {
+            PlateStack(weight: session.weight, bar: load.bar, perSide: session.platesPerSide)
+        }
+    }
+
+    private func setEffort(shown: Bool) {
+        guard shown != session.isEffortShown else { return }
+        revealHaptic += 1
+        withTesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.52), reduceMotion: reduceMotion) {
+            session.isEffortShown = shown
+        }
+    }
+
+    /// Between the plate maths and the dial: the effort slider when pulled out, and the top-set check.
+    private func setArea(phase: WorkoutSession.Phase) -> some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.s) {
+            if session.isEffortShown, phase == .set {
+                RPEStops(rpe: $session.rpe)
+                    .transition(.revealLeading(reduceMotion: reduceMotion))
+            }
+            if let check = session.topSetCheck, check.entryID == session.currentEntry?.id {
+                TopSetCheckLine(check: check) {
+                    withTesseraAnimation(reduceMotion: reduceMotion) { session.acceptTopSetCheck() }
+                    play(.done)
+                }
+                .transition(.opacity)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var repsBinding: Binding<Int> {
@@ -296,7 +455,31 @@ private struct WorkoutContent: View {
 
     private var lastReps: Int? {
         guard let entry = session.currentEntry else { return nil }
-        return session.setRows(of: entry).last.map { Int($0.reps) } ?? Int(session.targetReps(of: entry))
+        return session.setRows(of: entry).last.map { Int($0.reps) } ?? session.lastTimeReps.map(Int.init)
+    }
+}
+
+extension WorkoutContent {
+    private var logLabel: String {
+        let weight = Format.kilograms(session.weight)
+        return "Hold to log set \(session.currentSetNumber), \(weight) kilograms for \(Int(session.reps)) reps"
+    }
+
+    // MARK: Rest
+
+    private func extendRest() {
+        withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { session.extendRest(by: 15) }
+    }
+
+    private func skipRest() {
+        withTesseraAnimation(.easeOut(duration: 0.32), reduceMotion: reduceMotion) {
+            session.skipRest()
+            showsGo = true
+        }
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(0.9))
+            withTesseraAnimation(.easeOut(duration: 0.32), reduceMotion: reduceMotion) { showsGo = false }
+        }
     }
 
     // MARK: The key
@@ -311,24 +494,20 @@ private struct WorkoutContent: View {
                     Text(holding ? "Keep holding" : "Hold to log").textRole(.bodyStrong)
                 }
                 .frame(width: 240)
-                .accessibilityLabel(
-                    "Hold to log set \(session.currentSetNumber), \(Format.kilograms(session.weight)) kilograms for \(Int(session.reps)) reps"
-                )
+                .accessibilityLabel(logLabel)
+                .accessibilityAction(named: "Log set") {
+                    withTesseraAnimation(reduceMotion: reduceMotion) { session.logSet() }
+                }
                 Text("\(Format.kilograms(session.weight)) × \(Int(session.reps))")
                     .textRole(.label)
                     .foregroundStyle(Paint.cream)
             case .rest:
                 PaintKey(finish: .cream, paint: Paint.now, isTap: true, height: 62) {
-                    withTesseraAnimation(reduceMotion: reduceMotion) { session.skipRest() }
+                    skipRest()
                 } label: { _ in
                     Text("Skip rest").textRole(.bodyStrong)
                 }
                 .frame(width: 240)
-                Button("+15s") { session.extendRest(by: 15) }
-                    .textRole(.label)
-                    .foregroundStyle(Paint.cream)
-                    .frame(minWidth: 44, minHeight: 44)
-                    .accessibilityLabel("Add 15 seconds of rest")
             case .exerciseDone:
                 PaintKey(finish: .cream, paint: Paint.cobalt, isTap: true, height: 62) {
                     if let next = session.nextUnfinishedIndex {
@@ -339,13 +518,14 @@ private struct WorkoutContent: View {
                 }
                 .frame(width: 240)
             case .workoutDone:
-                PaintKey(finish: .cream, paint: Paint.live, height: 62) {
-                    model.endWorkout()
+                PaintKey(finish: .cream, paint: Paint.live, duration: 0.8, height: 62) {
+                    finish()
                 } label: { holding in
                     Text(holding ? "Keep holding" : "Hold to finish").textRole(.bodyStrong)
                 }
                 .frame(width: 240)
-                Text("\(session.entries.reduce(0) { $0 + session.setRows(of: $1).count }) sets")
+                .accessibilityAction(named: "Finish workout") { finish() }
+                Text("\(session.summary.sets) sets")
                     .textRole(.label)
                     .foregroundStyle(Paint.cream)
             }
@@ -354,136 +534,22 @@ private struct WorkoutContent: View {
         .frame(height: 62)
     }
 
-    // MARK: Tess
+    // MARK: Finish
 
-    private func tessBar(phase: WorkoutSession.Phase) -> some View {
-        let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
-        return HStack(spacing: Theme.Spacing.s) {
-            TessSoul(mode: tessMode)
-                .scaleEffect(0.5)
-                .frame(width: 56, height: 56)
-            Text(tessLine(phase: phase))
-                .font(Theme.voice)
-                .foregroundStyle(Paint.tessBar)
-                .lineLimit(2)
-                .contentTransition(.opacity)
-                .tesseraAnimation(value: tessLine(phase: phase))
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, 12)
-        .frame(height: 66)
-        .background(shape.fill(.white.opacity(0.07)))
-        .glassEffect(.regular, in: shape)
-        .overlay {
-            shape.strokeBorder(LinearGradient(stops: [.init(color: .white.opacity(0.16), location: 0),
-                                                      .init(color: .clear, location: 0.06)],
-                                              startPoint: .top, endPoint: .bottom), lineWidth: 1)
-        }
-        .overlay { shape.stroke(.black.opacity(0.6), lineWidth: 0.5) }
-        .accessibilityElement(children: .combine)
+    private var sessionStrokes: [Color] {
+        session.entries.flatMap { entry in session.setRows(of: entry).map { Paint.set($0.number) } }
     }
 
-    private func tessLine(phase: WorkoutSession.Phase) -> String {
-        if case .rest = phase, let seated = session.lastSeated {
-            return seated.records.isEmpty ? "Seated. Next set when the dial empties." : "That one goes on the wall."
-        }
-        switch phase {
-        case .exerciseDone: return "\(session.currentExercise?.name ?? "That") is done."
-        case .workoutDone: return "Everything's in. Hold to finish."
-        default:
-            if session.isPersonalRecord {
-                return "Go on. You have this."
-            }
-            if let best = session.previousBest {
-                return "Last best was \(Format.kilograms(best.weight)) × \(Int(best.reps))."
-            }
-            return "Same as last time is fine."
-        }
+    private func finish() {
+        isSwapOpen = false
+        isOrderOpen = false
+        withTesseraAnimation(.easeOut(duration: 0.4), reduceMotion: reduceMotion) { session.finish() }
     }
-}
 
-/// The glint motif, only while a set could be a new best.
-private struct GlintIf: ViewModifier {
-    let isOn: Bool
-
-    func body(content: Content) -> some View {
-        if isOn {
-            content.modifier(Glint(period: 3, sheen: Color(hex: 0xFFE2A8)))
-        } else {
-            content
-        }
-    }
-}
-
-// MARK: - Sets as brushstrokes (y)
-
-/// One stroke per planned set: logged sets are 9 pt strokes in their paint, the current set a breathing dashed cream
-/// guide, later sets a faint guide. A freshly logged set paints in over 700 ms. Long-press a logged stroke to undo it.
-private struct SetStrokes: View {
-    let session: WorkoutSession
-    let phase: WorkoutSession.Phase
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    var body: some View {
-        let entry = session.currentEntry
-        let rows = entry.map(session.setRows(of:)) ?? []
-        let target = entry.map(session.targetSets(of:)) ?? 0
-        HStack(spacing: 10) {
-            ForEach(0 ..< max(target, rows.count), id: \.self) { index in
-                if index < rows.count {
-                    LoggedStroke(number: index + 1, isFresh: session.lastSeated?.setID == rows[index].id)
-                        .contextMenu {
-                            if index == rows.count - 1 {
-                                Button("Undo set \(index + 1)", systemImage: "arrow.uturn.backward") {
-                                    withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLastSet() }
-                                }
-                            }
-                        }
-                        .accessibilityLabel(
-                            "Set \(index + 1), \(Format.kilograms(rows[index].weight)) by \(Int(rows[index].reps))"
-                        )
-                } else {
-                    GuideStroke(isCurrent: index == rows.count && phase == .set)
-                        .accessibilityHidden(true)
-                }
-            }
-        }
-        .frame(height: 20)
-        .id(entry?.id)
-        .transition(.opacity)
-    }
-}
-
-private struct LoggedStroke: View {
-    let number: Int
-    let isFresh: Bool
-    @State private var progress: CGFloat = 1
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    var body: some View {
-        Brushstroke(progress: progress)
-            .stroke(Paint.set(number), style: StrokeStyle(lineWidth: 9, lineCap: .round))
-            .frame(width: 64, height: 20)
-            .blur(radius: 0.4)
-            .onAppear {
-                guard isFresh, !reduceMotion else { return }
-                progress = 0
-                withAnimation(.timingCurve(0.3, 0.7, 0.2, 1, duration: 0.7)) { progress = 1 }
-            }
-    }
-}
-
-private struct GuideStroke: View {
-    let isCurrent: Bool
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 20, paused: !isCurrent || reduceMotion)) { context in
-            let breath = (sin(context.date.timeIntervalSinceReferenceDate / 2.4 * 2 * .pi) + 1) / 2
-            Brushstroke()
-                .stroke(Paint.cream, style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [3, 5]))
-                .opacity(isCurrent ? 0.45 + 0.45 * breath : 0.22)
-        }
-        .frame(width: 64, height: 20)
+    /// The workout is already finished (FinishWorkout ran on the hold); leaving drops it into today on Home.
+    private func leaveFinished() {
+        model.isWorkoutPresented = false
+        model.session = nil
+        model.touch()
     }
 }

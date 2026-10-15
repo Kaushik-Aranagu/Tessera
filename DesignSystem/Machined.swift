@@ -532,7 +532,7 @@ extension View {
 
 extension Theme {
     /// The display face with tabular lining numerals: weights, reps, rest. (Fraunces in Plein.)
-    static func numeral(_ size: CGFloat, weight: Font.Weight = .semibold) -> Font {
+    static func numeral(_ size: CGFloat, weight: Font.Weight = .light) -> Font {
         Typography.face(concept.fonts.display, size: size, relativeTo: size > 40 ? .largeTitle : .title, serif: true)
             .weight(weight)
             .monospacedDigit()
@@ -540,7 +540,7 @@ extension Theme {
 
     /// Tess and context lines speak in the serif voice. Upright: Kaushik ruled out italics everywhere (2026-10-15).
     static func voice(size: CGFloat) -> Font {
-        Typography.face(concept.fonts.voice, size: size, relativeTo: .body, serif: true)
+        Typography.face(concept.fonts.voice, size: size, relativeTo: .body, serif: false).weight(.regular)
     }
 
     static var voice: Font {

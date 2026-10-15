@@ -24,7 +24,14 @@ struct WorkoutSessionTests {
         let (_, session) = try startedSession()
         #expect(session.phase() == .set)
         #expect(session.currentSetNumber == 1)
-        #expect(session.weight == 82.5 && session.reps == 8)
+        // From the ledger's next target: the library's bench runs dp(+2.5, 5, 8) and last time was 7 then 6 at 82.5,
+        // so the same weight, aiming for 7 on every set.
+        #expect(session.weight == 82.5 && session.reps == 7)
+        #expect(session.targetReason?.contains("aim for 7") == true)
+        // Bench is plate-loaded: the dial's detents come from its load profile, the plates from PlateLoad.
+        #expect(session.detents.first == 20)
+        #expect(session.detents.contains(82.5))
+        #expect(session.platesPerSide == [25, 5, 1.25])
     }
 
     @Test func loggingSeatsTheSetAndTurnsTheDialIntoRest() throws {
@@ -33,7 +40,7 @@ struct WorkoutSessionTests {
         session.logSet()
         let seated = try #require(session.lastSeated)
         #expect(seated.number == 1)
-        #expect(seated.records.contains(.e1RM)) // 82.5 × 8 beats 82.5 × 7
+        #expect(seated.records.contains(.e1RM)) // 82.5 × 7 at RPE 8 is a 9-rep effort: beats 82.5 × 7
         guard case .rest = session.phase() else {
             Issue.record("expected rest")
             return
@@ -51,7 +58,7 @@ struct WorkoutSessionTests {
 
     @Test func aSecondRecordHasToBeatTheFirst() throws {
         let (_, session) = try startedSession()
-        session.logSet() // 82.5 × 8, a new best
+        session.logSet() // 82.5 × 7, level with the best
         session.skipRest()
         #expect(!session.isPersonalRecord) // the same set again is not a new best
         session.reps = 9
@@ -91,5 +98,140 @@ struct WorkoutSessionTests {
         #expect(ledger.repsToBeatBestE1RM(weight: 82.5, for: bench, excludingWorkout: session.workout.id) == 8)
         #expect(ledger.recordsBeaten(weight: 85, reps: 7, for: bench).contains(.repMax(7)))
         #expect(ledger.recordsBeaten(weight: 60, reps: 5, for: bench).isEmpty)
+    }
+
+    // MARK: Round 9
+
+    @Test func undoWorksUntilTheNextSetIsLogged() throws {
+        let (_, session) = try startedSession()
+        session.logSet()
+        let first = try #require(session.undoable)
+        session.skipRest()
+        session.logSet()
+        #expect(session.undoable?.setID != first.setID)
+        #expect(first.record.state == .committed) // the earlier set is no longer the undoable one
+        session.weight = 60
+        session.undoLastSet()
+        let entry = try #require(session.currentEntry)
+        #expect(session.setRows(of: entry).count == 1)
+        #expect(!session.canUndo)
+        #expect(session.weight == 82.5) // the undone set's numbers come back to fix and re-log
+        #expect(session.phase() == .set)
+    }
+
+    @Test func effortIsHiddenUntilWantedAndFeedsTheHonestE1RM() throws {
+        let (_, session) = try startedSession()
+        #expect(!session.isEffortShown)
+        #expect(session.rpe == nil)
+        let plain = try #require(session.previewE1RM)
+        session.rpe = 8
+        let honest = try #require(session.previewE1RM)
+        #expect(honest > plain) // 8 @ RPE 8 is a 10-rep effort
+        session.logSet()
+        #expect(session.rpe == nil) // each set starts without effort
+    }
+
+    @Test func restTakesFifteenMoreOrSkips() throws {
+        let (_, session) = try startedSession()
+        session.logSet()
+        let before = try #require(session.restEndsAt)
+        session.extendRest(by: 15)
+        #expect(session.restEndsAt == before.addingTimeInterval(15))
+        #expect(session.restNote == "+15. Drag again for more.")
+        session.skipRest()
+        #expect(session.phase() == .set)
+        #expect(session.restNote == "Skipped. Set 2 is up.")
+    }
+
+    @Test func aHeavyFirstSetOffersADropForTheRest() throws {
+        let (_, session) = try startedSession()
+        session.rpe = 10 // two above the default target of 8
+        session.logSet()
+        let check = try #require(session.topSetCheck)
+        #expect(check.suggested == 77.5)
+        #expect(check.fromSet == 2 && check.toSet == 4)
+        session.acceptTopSetCheck()
+        #expect(session.weight == 77.5)
+        session.skipRest()
+        session.logSet()
+        #expect(session.topSetCheck == nil) // it leaves when the next set is logged
+        session.skipRest()
+        #expect(session.weight == 77.5) // the remaining sets stay re-preset
+    }
+
+    @Test func aFirstSetAtTargetIsNotChecked() throws {
+        let (_, session) = try startedSession()
+        session.rpe = 9
+        session.logSet()
+        #expect(session.topSetCheck == nil)
+    }
+
+    @Test func reorderingIsForTodayAndKeepsTheCurrentExercise() throws {
+        let (_, session) = try startedSession()
+        let bench = try #require(session.currentEntry)
+        let last = try #require(session.entries.last)
+        session.move(entryID: last.id, to: 0)
+        #expect(session.entries.first?.id == last.id)
+        #expect(session.currentEntry?.id == bench.id)
+        #expect(session.currentIndex == 1)
+        // The plan's own order is untouched.
+        #expect(session.workout.orderedChildren.last?.id == last.id)
+    }
+
+    @Test func swapsRankTheFamilyFirstThenTheMovement() throws {
+        let (_, session) = try startedSession()
+        let options = session.swapOptions()
+        let names = options.map(\.exercise.name)
+        #expect(names.contains("Dumbbell Bench Press"))
+        #expect(names.contains("Cable Fly")) // the best of the wider movement keeps one row
+        #expect(!names.contains("Overhead Press"))
+        #expect(options.count == 4)
+        let groups = options.map(\.group)
+        #expect(groups == [.family, .family, .family, .movement])
+        let dumbbell = try #require(options.first { $0.exercise.name == "Dumbbell Bench Press" })
+        #expect(dumbbell.isEstimate && dumbbell.isPerHand)
+        #expect(dumbbell.load == 32.5) // 82.5 × 0.4, on the rack's nearest dumbbell
+    }
+
+    @Test func swappingBeforeAnySetRelinksTheEntryThroughTheEngine() throws {
+        let (model, session) = try startedSession()
+        let entry = try #require(session.currentEntry)
+        let dumbbell = try #require(session.swapOptions().first { $0.exercise.name == "Dumbbell Bench Press" })
+        session.swap(to: dumbbell)
+        #expect(session.currentEntry?.id == entry.id)
+        #expect(session.currentExercise?.name == "Dumbbell Bench Press")
+        #expect(session.swappedFrom == "Bench Press")
+        #expect(session.isEstimatedLoad)
+        #expect(session.weight == 32.5)
+        #expect(model.engine.history(limit: 1).first?.action == "swapExercise")
+    }
+
+    @Test func swappingMidExerciseKeepsTheLoggedSetsWithTheOldOne() throws {
+        let (_, session) = try startedSession()
+        session.logSet()
+        session.skipRest()
+        let bench = try #require(session.currentEntry)
+        let fly = try #require(session.swapOptions().first { $0.exercise.name == "Cable Fly" })
+        session.swap(to: fly)
+        #expect(session.currentEntry?.id != bench.id)
+        #expect(session.currentExercise?.name == "Cable Fly")
+        #expect(session.targetSets(of: bench) == 1)
+        let swapped = try #require(session.currentEntry)
+        #expect(session.targetSets(of: swapped) == 3)
+        #expect(session.entries.firstIndex { $0.id == swapped.id } == 1) // right after bench, today only
+    }
+
+    @Test func finishingSummarisesInOneLine() throws {
+        let (_, session) = try startedSession()
+        session.reps = 8 // 82.5 × 8 beats 82.5 × 7
+        session.logSet()
+        session.skipRest()
+        session.finish()
+        #expect(session.finishedAt != nil)
+        #expect(!session.canUndo)
+        let summary = session.summary
+        #expect(summary.sets == 1 && summary.exercises == 1)
+        #expect(summary.line == "1 exercise, 1 set. New best: 82.5 × 8.")
+        #expect(session.workout.title == "Push Day A")
     }
 }

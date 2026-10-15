@@ -40,8 +40,9 @@ struct RootView: View {
             .overlay(alignment: .top) {
                 // A running process lights the top edge; tapping it resumes. A suspended one moves to the ledger.
                 TimelineView(.periodic(from: .now, by: 30)) { context in
+                    let _ = context.date
                     if let session = model.session, !model.isWorkoutPresented,
-                       !session.isSuspended(at: AppClock.adjust(context.date))
+                       model.processes.running()?.subject?.id == session.workout.id
                     {
                         RunningSeam(session: session) { model.isWorkoutPresented = true }
                             .ignoresSafeArea(edges: .top)

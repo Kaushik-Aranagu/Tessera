@@ -134,20 +134,23 @@ struct HomeDataTests {
     @Test func setsPerMuscleWalkWorkoutsEntriesAndClasses() throws {
         let model = AppModel(context: container.mainContext)
         DemoData.prepare(model)
-        // Demo history: Push Day A three days ago with 4 bench sets (chest, triceps, front delts) and 3 overhead
-        // press sets (front delts, triceps, upper back).
+        // Demo history: Push Day A three days ago with 4 bench sets and 3 overhead press sets. Primary muscles come
+        // from Core's library: bench is chest, overhead press is front delts.
         let now = AppClock.now
         let window = DateInterval(start: now.addingTimeInterval(-4 * 86400), end: now.addingTimeInterval(-2 * 86400))
         let volume = MuscleVolume.compute(model, in: window)
-        let sets = Dictionary(uniqueKeysWithValues: volume.map { ($0.muscle.title, $0.sets) })
-        #expect(sets == ["Chest": 4, "Triceps": 7, "Front Delts": 7, "Upper Back": 3])
-        #expect(volume.first?.sets == 7)
-        #expect(WeekReview.tessLine(volume) == "Upper Back is a little behind: 3 sets of 10 this week.")
+        let trained = volume.filter { $0.sets > 0 }
+        let sets = Dictionary(uniqueKeysWithValues: trained.map { ($0.muscle.title, $0.sets) })
+        #expect(sets == ["Chest": 4, "Front Delts": 3])
+        #expect(volume.first?.sets == 4)
+        #expect(WeekReview.tessLine(trained) == "Front Delts is a little behind: 3 sets of 10 this week.")
         #expect(WeekReview.tessLine([]) == nil)
 
         // A subclass without its own profile inherits its parent's muscles.
-        let paused = try #require(model.classDef(.benchPress)?.subclasses?.first { $0.name == "Paused Bench Press" })
-        #expect(Set(MuscleVolume.muscles(of: paused, model: model).map(\.title)) == ["Chest", "Triceps", "Front Delts"])
+        let bench = try #require(model.classDef(.benchPress))
+        let paused = ClassDef(name: "Paused Bench Press", parent: bench)
+        model.context.insert(paused)
+        #expect(Set(MuscleVolume.muscles(of: paused, model: model).map(\.title)) == ["Chest"])
     }
 
     @Test func upcomingSkipsTheHeroAndFinishedItems() throws {

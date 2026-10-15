@@ -1,139 +1,153 @@
 import SwiftUI
 
-/// Round 6 ("Plein") paint. Kept here so a restyle is a one-line change.
+/// Round 9 ("Plein") paint. Kept here so a restyle is a one-line change.
 private enum Paint {
     static let cream = Color(hex: 0xF3ECE0)
-    static let vermilion = Color(hex: 0xD9563F)
-    static let stop = cream.opacity(0.38)
-    static let stopReached = cream.opacity(0.9)
-    static let rail = cream.opacity(0.14)
-    static let off = cream.opacity(0.38)
+    static let cadmium = Color(hex: 0xE8BD4C)
+    static let rail = cream.opacity(0.22)
+    static let dab = cream.opacity(0.45)
+    static let whole = cream.opacity(0.45)
 }
 
-/// Optional effort as a short slider with stops at 6, 6.5 … 10 and an "off" stop at the far left. One swipe sets it;
-/// the marker snaps from stop to stop under the finger with a selection tick.
+/// Effort, only when wanted: a stop-slider of nine stops from 6 to 10 in half steps along a hairline. Whole numbers
+/// carry a light numeral; half steps are small dabs. The chosen stop's dab grows into a cadmium dab with a soft glow
+/// and its number turns cream. Each stop the finger crosses is one selection tick. Tapping the chosen stop clears it.
+/// It slides out left to right when revealed (the caller pulls it out from under the reps).
 struct RPEStops: View {
     @Binding var rpe: Double?
 
     @State private var dragHaptic = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-    /// Index 0 is off; 1 … 9 are 6.0 … 10.0 in halves.
-    private static let stops: [Double?] = [nil] + stride(from: 6.0, through: 10.0, by: 0.5).map(Optional.some)
+    static let stops: [Double] = Array(stride(from: 6.0, through: 10.0, by: 0.5))
 
     private enum Metrics {
-        static let trackWidth: CGFloat = 196
-        static let height: CGFloat = 44
-        static let stopShort: CGFloat = 8
-        static let stopLong: CGFloat = 14
-        static let marker: CGFloat = 24
+        static let height: CGFloat = 60
+        static let dab: CGFloat = 5
+        static let chosen: CGFloat = 18
+        static let inset: CGFloat = 14
+        static let rail: CGFloat = 22
     }
 
     var body: some View {
-        // At accessibility sizes the label sits above the track instead of beside it.
-        let layout = dynamicTypeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.s))
-            : AnyLayout(HStackLayout(spacing: Theme.Spacing.l))
-        layout {
-            Text(title)
-                .textRole(.label)
-                .foregroundStyle(rpe == nil ? Paint.off : Paint.cream)
-                .contentTransition(.numericText())
-                .tesseraAnimation(Theme.Motion.snappy, value: rpe)
-            track
-        }
-        .sensoryFeedback(.selection, trigger: dragHaptic)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Effort, RPE")
-        .accessibilityValue(rpe.map(Self.formatted) ?? "Off")
-        .accessibilityAdjustableAction { direction in
-            switch direction {
-            case .increment: select(min(currentIndex + 1, Self.stops.count - 1), haptic: false)
-            case .decrement: select(max(currentIndex - 1, 0), haptic: false)
-            @unknown default: break
-            }
-        }
-    }
-
-    private var title: String {
-        "RPE " + (rpe.map(Self.formatted) ?? "—")
-    }
-
-    private var track: some View {
         GeometryReader { proxy in
             let width = proxy.size.width
-            ZStack(alignment: .leading) {
+            ZStack(alignment: .topLeading) {
                 Paint.rail
-                    .frame(height: 1)
+                    .frame(width: max(width - 2 * Metrics.inset, 0), height: 0.75)
+                    .offset(x: Metrics.inset, y: Metrics.rail)
                 ForEach(Self.stops.indices, id: \.self) { index in
-                    stopMark(index)
-                        .position(x: x(for: index, in: width), y: proxy.size.height / 2)
+                    stop(index)
+                        .position(x: x(for: index, in: width), y: Metrics.rail)
+                    if Self.stops[index] == Self.stops[index].rounded() || Self.stops[index] == rpe {
+                        label(index)
+                            .position(x: x(for: index, in: width), y: Metrics.rail + 24)
+                    }
                 }
-                Paint.vermilion
-                    .shadow(color: Paint.vermilion.opacity(0.7), radius: 5)
-                    .opacity(rpe == nil ? 0 : 1)
-                    .frame(width: 2, height: Metrics.marker)
-                    .position(x: x(for: currentIndex, in: width), y: proxy.size.height / 2)
-                    .tesseraAnimation(Theme.Motion.snappy, value: currentIndex)
             }
-            .frame(maxHeight: .infinity)
+            .frame(width: width, height: Metrics.height, alignment: .topLeading)
             .contentShape(Rectangle())
             .gesture(
                 DragGesture(minimumDistance: 0)
-                    .onChanged { drag in select(index(at: drag.location.x, in: width), haptic: true) }
+                    .onChanged { drag in
+                        let index = index(at: drag.location.x, in: width)
+                        if startedOnChosen == nil {
+                            startedOnChosen = Self.stops[index] == rpe
+                        }
+                        select(index, haptic: true)
+                    }
+                    .onEnded { drag in
+                        // A plain tap on the stop that was already chosen clears it.
+                        if startedOnChosen == true, abs(drag.translation.width) < 6 {
+                            withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { rpe = nil }
+                            dragHaptic += 1
+                        }
+                        startedOnChosen = nil
+                    }
             )
         }
-        .frame(width: Metrics.trackWidth, height: Metrics.height)
+        .frame(height: Metrics.height)
+        .sensoryFeedback(.selection, trigger: dragHaptic)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Effort, RPE")
+        .accessibilityValue(rpe.map { "\(Self.formatted($0)), \(Self.words(for: $0))" } ?? "Not set")
+        .accessibilityAdjustableAction { direction in
+            let current = rpe.flatMap { Self.stops.firstIndex(of: $0) }
+            switch direction {
+            case .increment: select(min((current ?? -1) + 1, Self.stops.count - 1), haptic: false)
+            case .decrement: select(max((current ?? 1) - 1, 0), haptic: false)
+            @unknown default: break
+            }
+        }
+        .accessibilityAction(named: "Clear effort") { rpe = nil }
     }
 
-    private func stopMark(_ index: Int) -> some View {
+    /// Whether the touch began on the stop already chosen (a tap there clears it).
+    @State private var startedOnChosen: Bool?
+
+    private func stop(_ index: Int) -> some View {
+        let isChosen = Self.stops[index] == rpe
+        return Circle()
+            .fill(isChosen ? Paint.cadmium : Paint.dab)
+            .frame(width: isChosen ? Metrics.chosen : Metrics.dab, height: isChosen ? Metrics.chosen : Metrics.dab)
+            .shadow(color: Paint.cadmium.opacity(isChosen ? 0.6 : 0), radius: 8)
+            .tesseraAnimation(Theme.Motion.snappy, value: isChosen)
+    }
+
+    private func label(_ index: Int) -> some View {
         let value = Self.stops[index]
-        let isWhole = value.map { $0 == $0.rounded() } ?? false
-        let isReached = value.map { stop in rpe.map { stop <= $0 } ?? false } ?? false
-        return RoundedRectangle(cornerRadius: 0.5, style: .continuous)
-            .fill(isReached ? Paint.stopReached : Paint.stop)
-            .frame(
-                width: value == nil ? Metrics.stopShort : 1.5,
-                height: value == nil ? 1.5 : isWhole ? Metrics.stopLong
-                    : Metrics.stopShort
-            )
-    }
-
-    private var currentIndex: Int {
-        Self.stops.firstIndex(of: rpe) ?? 0
+        let isChosen = value == rpe
+        return Text(Self.formatted(value))
+            .font(isChosen ? Theme.numeral(26, weight: .medium) : Theme.numeral(21, weight: .light))
+            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+            .foregroundStyle(isChosen ? Paint.cream : Paint.whole)
+            .fixedSize()
+            .contentTransition(.opacity)
     }
 
     private func x(for index: Int, in width: CGFloat) -> CGFloat {
-        let inset = Metrics.stopShort / 2
-        return inset + (width - 2 * inset) * CGFloat(index) / CGFloat(Self.stops.count - 1)
+        Metrics.inset + (width - 2 * Metrics.inset) * CGFloat(index) / CGFloat(Self.stops.count - 1)
     }
 
     private func index(at x: CGFloat, in width: CGFloat) -> Int {
-        let inset = Metrics.stopShort / 2
-        let fraction = (x - inset) / max(width - 2 * inset, 1)
+        let fraction = (x - Metrics.inset) / max(width - 2 * Metrics.inset, 1)
         let raw = (fraction * CGFloat(Self.stops.count - 1)).rounded()
         return min(max(Int(raw), 0), Self.stops.count - 1)
     }
 
     private func select(_ index: Int, haptic: Bool) {
-        guard index != currentIndex else { return }
-        withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) {
-            rpe = Self.stops[index]
-        }
+        let value = Self.stops[index]
+        guard value != rpe else { return }
+        withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { rpe = value }
         if haptic {
             dragHaptic += 1
         }
     }
 
-    private static func formatted(_ value: Double) -> String {
+    static func formatted(_ value: Double) -> String {
         value.formatted(.number.precision(.fractionLength(0 ... 1)))
+    }
+
+    /// RPE in words: "two left in the tank".
+    static func words(for rpe: Double) -> String {
+        switch rpe {
+        case 10...: "nothing left"
+        case 9.5...: "maybe one left"
+        case 9...: "one left in the tank"
+        case 8.5...: "one or two left"
+        case 8...: "two left in the tank"
+        case 7.5...: "two or three left"
+        case 7...: "three left in the tank"
+        case 6.5...: "three or four left"
+        default: "four or more left"
+        }
     }
 }
 
 #Preview {
     @Previewable @State var rpe: Double? = 8
     RPEStops(rpe: $rpe)
+        .padding(.horizontal, 24)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.Colors.Workout.ground)
 }

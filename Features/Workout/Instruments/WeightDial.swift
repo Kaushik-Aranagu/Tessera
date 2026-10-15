@@ -11,18 +11,25 @@ private enum Paint {
     static let washTip = cadmium.opacity(0.28)
 }
 
-/// The precision dial for weight: a horizontal strip of ticks under a fixed centre needle. A flick spins with
-/// momentum and settles exactly on a tick (a valid plate load). During rest the same part counts down: it locks,
-/// the dial dims and a cadmium wash covers it, draining as `restFraction` runs from 1 to 0.
+/// The precision dial for weight: a horizontal strip of ticks under a fixed centre needle, one tick per weight the
+/// gym can load (Core's `LoadProfile` detents). A flick spins with momentum and settles exactly on a tick. Tapping
+/// left or right of the needle steps one load (the one-tap twin of the drag).
 ///
-/// Hairline ticks on nothing, one lit needle (docs/design/workout-v1.md, "Weight dial").
+/// During rest the same part counts down: it locks, dims and a cadmium wash covers it, draining as `restFraction`
+/// runs from 1 to 0. It then takes two drags: right past the needle adds 15 s (the fill grows under the finger and
+/// "+15" rises over its edge), a fling left skips (the fill drains to nothing in 420 ms).
+///
+/// Hairline ticks on nothing, one lit needle (docs/design/workout-v1.md, "Weight dial" and "Rest on the dial").
 struct WeightDial: View {
     @Binding var weight: Double
-    var range: ClosedRange<Double> = 0 ... 300
-    var step: Double = 2.5
+    /// Every loadable weight, ascending.
+    var detents: [Double] = Array(stride(from: 0, through: 300, by: 2.5))
     var isLocked: Bool = false
     /// 1 → 0 while resting; nil hides the rest fill.
     var restFraction: Double?
+    /// Rest drags. Nil turns them off.
+    var onExtendRest: (() -> Void)?
+    var onSkipRest: (() -> Void)?
 
     /// The tick under the needle. Kept in step with `weight` both ways.
     @State private var scrolledIndex: Int?
@@ -31,8 +38,13 @@ struct WeightDial: View {
     /// Bumped only for changes made by the hand, so programmatic moves stay silent.
     @State private var tickHaptic = 0
     @State private var majorHaptic = 0
+    @State private var extendHaptic = 0
+    @State private var skipHaptic = 0
     @State private var isTyping = false
     @State private var typedValue = ""
+    /// How far the finger has dragged the rest fill (points; right is positive).
+    @State private var restDrag: CGFloat = 0
+    @State private var isDraining = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private enum Metrics {
@@ -50,6 +62,11 @@ struct WeightDial: View {
         /// The dial during rest.
         static let lockedOpacity = 0.35
         static let lockedNeedleOpacity = 0.3
+        /// Dragging the fill this far right adds 15 s.
+        static let extendThreshold: CGFloat = 48
+        /// A fling left this far (or predicted twice as far) skips.
+        static let skipThreshold: CGFloat = 56
+        static let drain = 0.42
     }
 
     var body: some View {
@@ -59,22 +76,33 @@ struct WeightDial: View {
             needle
         }
         .frame(height: Metrics.height)
+        .contentShape(Rectangle())
+        .gesture(restGesture, isEnabled: restFraction != nil && onExtendRest != nil)
         .tesseraAnimation(value: restFraction == nil)
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
         .onAppear { scrolledIndex = index(for: weight) }
         .onChange(of: scrolledIndex) { _, new in dialTurned(to: new) }
         .onChange(of: weight) { _, new in weightChanged(to: new) }
+        .onChange(of: detents) { _, _ in scrolledIndex = index(for: weight) }
+        .onChange(of: restFraction == nil) { _, ended in
+            if ended {
+                isDraining = false
+                restDrag = 0
+            }
+        }
         .sensoryFeedback(.selection, trigger: tickHaptic)
         .sensoryFeedback(.impact(weight: .heavy), trigger: majorHaptic)
+        .sensoryFeedback(.increase, trigger: extendHaptic)
+        .sensoryFeedback(.impact(flexibility: .solid, intensity: 0.7), trigger: skipHaptic)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Weight")
+        .accessibilityLabel(restFraction == nil ? "Weight" : "Rest")
         .accessibilityValue("\(formatted(weight)) kilograms")
-        .accessibilityHint(isLocked ? "Locked while resting" : "")
+        .accessibilityHint(isLocked ? "Resting. Actions add 15 seconds or skip." : "Swipe up or down for one load")
         .accessibilityAdjustableAction { direction in
             guard !isLocked else { return }
             switch direction {
-            case .increment: weight = clamp(snap(weight) + step)
-            case .decrement: weight = clamp(snap(weight) - step)
+            case .increment: step(up: true, haptic: false)
+            case .decrement: step(up: false, haptic: false)
             @unknown default: break
             }
         }
@@ -83,13 +111,19 @@ struct WeightDial: View {
             typedValue = formatted(weight)
             isTyping = true
         }
+        .accessibilityActions {
+            if restFraction != nil, let onExtendRest, let onSkipRest {
+                Button("Add 15 seconds", action: onExtendRest)
+                Button("Skip rest", action: onSkipRest)
+            }
+        }
         .alert("Weight", isPresented: $isTyping) {
             TextField("Kilograms", text: $typedValue)
                 .keyboardType(.decimalPad)
             Button("Set") { commitTypedValue() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Rounds to the nearest \(formatted(step)) kg.")
+            Text("Goes to the nearest weight the gym can load.")
         }
     }
 
@@ -98,7 +132,7 @@ struct WeightDial: View {
     private var strip: some View {
         ScrollView(.horizontal) {
             LazyHStack(alignment: .top, spacing: 0) {
-                ForEach(0 ..< tickCount, id: \.self) { index in
+                ForEach(detents.indices, id: \.self) { index in
                     tick(at: index)
                 }
             }
@@ -110,6 +144,11 @@ struct WeightDial: View {
         .contentMargins(.horizontal, max(0, width / 2 - Metrics.pitch / 2), for: .scrollContent)
         .scrollDisabled(isLocked)
         .onScrollPhaseChange { _, new in phase = new }
+        .onTapGesture { location in
+            // The one-tap twin: left of the needle is one load lighter, right is one heavier.
+            guard !isLocked, abs(location.x - width / 2) > Metrics.pitch else { return }
+            step(up: location.x > width / 2, haptic: true)
+        }
         .mask {
             LinearGradient(
                 stops: [
@@ -127,7 +166,7 @@ struct WeightDial: View {
     }
 
     private func tick(at index: Int) -> some View {
-        let value = value(at: index)
+        let value = detents[index]
         let kind = TickKind(value)
         return Rectangle()
             .fill(kind.color)
@@ -151,13 +190,25 @@ struct WeightDial: View {
     private var restFill: some View {
         if let restFraction {
             GeometryReader { proxy in
+                let base = min(max(restFraction, 0), 1)
+                let dragged = min(base + max(restDrag, 0) / max(proxy.size.width, 1), 1)
+                let fraction = isDraining ? 0 : dragged
+                let edge = proxy.size.width * fraction
                 LinearGradient(colors: [Paint.cadmium.opacity(0), Paint.washTip], startPoint: .leading,
                                endPoint: .trailing)
                     .overlay(alignment: .trailing) { Paint.cadmium.frame(width: 2) }
-                    .frame(width: proxy.size.width * min(max(restFraction, 0), 1), height: Metrics.washHeight)
+                    .frame(width: edge, height: Metrics.washHeight)
                     .offset(y: Metrics.washTop)
                     // The countdown ticks once a second; the edge drains continuously between ticks.
-                    .tesseraAnimation(.linear(duration: 1), value: restFraction)
+                    .tesseraAnimation(restDrag == 0 ? .linear(duration: 1) : .interactiveSpring, value: fraction)
+                Text("+15")
+                    .textRole(.labelStrong)
+                    .foregroundStyle(Paint.cadmium)
+                    .fixedSize()
+                    .position(x: max(edge - 16, 16), y: Metrics.washTop - 6)
+                    .offset(y: restDrag >= Metrics.extendThreshold ? -8 : 4)
+                    .opacity(restDrag >= Metrics.extendThreshold && !isDraining ? 1 : 0)
+                    .tesseraAnimation(Theme.Motion.snappy, value: restDrag >= Metrics.extendThreshold)
             }
             .allowsHitTesting(false)
             .transition(.opacity)
@@ -172,6 +223,38 @@ struct WeightDial: View {
             .frame(maxWidth: .infinity)
             .allowsHitTesting(false)
             .tesseraAnimation(value: isLocked)
+    }
+
+    // MARK: Rest drags
+
+    private var restGesture: some Gesture {
+        DragGesture(minimumDistance: 12)
+            .onChanged { drag in
+                guard !isDraining else { return }
+                restDrag = drag.translation.width
+            }
+            .onEnded { drag in
+                guard !isDraining else { return }
+                let distance = drag.translation.width
+                let predicted = drag.predictedEndTranslation.width
+                if distance >= Metrics.extendThreshold {
+                    extendHaptic += 1
+                    onExtendRest?()
+                    withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { restDrag = 0 }
+                } else if distance <= -Metrics.skipThreshold || predicted <= -Metrics.skipThreshold * 2.5 {
+                    skipHaptic += 1
+                    restDrag = 0
+                    withTesseraAnimation(.easeIn(duration: Metrics.drain), reduceMotion: reduceMotion) {
+                        isDraining = true
+                    }
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .seconds(Metrics.drain))
+                        onSkipRest?()
+                    }
+                } else {
+                    withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { restDrag = 0 }
+                }
+            }
     }
 
     private enum TickKind {
@@ -214,11 +297,22 @@ struct WeightDial: View {
     }
 
     private func dialTurned(to index: Int?) {
-        guard let index, isHandDriven, !isLocked else { return }
-        let newValue = value(at: index)
+        guard let index, isHandDriven, !isLocked, detents.indices.contains(index) else { return }
+        set(detents[index], haptic: true)
+    }
+
+    private func step(up: Bool, haptic: Bool) {
+        let current = index(for: weight)
+        let next = min(max(current + (up ? 1 : -1), 0), detents.count - 1)
+        guard detents.indices.contains(next) else { return }
+        set(detents[next], haptic: haptic)
+    }
+
+    private func set(_ newValue: Double, haptic: Bool) {
         guard newValue != weight else { return }
         let crossedMajor = Int((weight / 10).rounded(.down)) != Int((newValue / 10).rounded(.down))
         weight = newValue
+        guard haptic else { return }
         if crossedMajor {
             majorHaptic += 1
         } else {
@@ -236,31 +330,20 @@ struct WeightDial: View {
 
     private func commitTypedValue() {
         let text = typedValue.replacingOccurrences(of: ",", with: ".")
-        guard let typed = Double(text.trimmingCharacters(in: .whitespaces)) else { return }
-        weight = clamp(snap(typed))
+        guard let typed = Double(text.trimmingCharacters(in: .whitespaces)), !detents.isEmpty else { return }
+        weight = detents[index(for: typed)]
     }
 
     // MARK: Values
 
-    private var tickCount: Int {
-        Int(((range.upperBound - range.lowerBound) / step).rounded(.down)) + 1
-    }
-
-    private func value(at index: Int) -> Double {
-        range.lowerBound + Double(index) * step
-    }
-
+    /// The nearest detent's index.
     private func index(for value: Double) -> Int {
-        let raw = ((value - range.lowerBound) / step).rounded()
-        return min(max(Int(raw), 0), tickCount - 1)
-    }
-
-    private func snap(_ value: Double) -> Double {
-        self.value(at: index(for: value))
-    }
-
-    private func clamp(_ value: Double) -> Double {
-        min(max(value, range.lowerBound), self.value(at: tickCount - 1))
+        guard !detents.isEmpty else { return 0 }
+        var best = 0
+        for (index, detent) in detents.enumerated() where abs(detent - value) < abs(detents[best] - value) {
+            best = index
+        }
+        return best
     }
 
     private func formatted(_ value: Double) -> String {

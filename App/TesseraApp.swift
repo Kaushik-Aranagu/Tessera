@@ -1,3 +1,4 @@
+import AppIntents
 import SwiftUI
 import TesseraCore
 import TesseraLegacyStore
@@ -6,6 +7,8 @@ import TesseraLegacyStore
 struct TesseraApp: App {
     private let container: TesseraContainer
     @State private var model: AppModel
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var didWarmUp = false
 
     init() {
         FontRegistry.registerAll()
@@ -22,6 +25,8 @@ struct TesseraApp: App {
         DemoData.prepare(model)
         _model = State(initialValue: model)
         LiveWorkout.model = model
+        // App Intents (Shortcuts, Siri, the Action button) run against the same engine as the UI.
+        AppDependencyManager.shared.add(dependency: model.runtime!)
     }
 
     var body: some Scene {
@@ -43,6 +48,15 @@ struct TesseraApp: App {
                 RestActivityController.shared.update(for: model.session)
             }
             .onChange(of: model.session?.restEndsAt) { RestActivityController.shared.update(for: model.session) }
+            .onChange(of: scenePhase, initial: true) { _, phase in
+                if phase == .active {
+                    model.tidyProcesses()
+                }
+                if phase == .active, !didWarmUp {
+                    didWarmUp = true
+                    Task { await model.ledger.warmUp() }
+                }
+            }
             .onOpenURL { url in
                 if url.host() == "workout", model.session != nil {
                     model.isWorkoutPresented = true

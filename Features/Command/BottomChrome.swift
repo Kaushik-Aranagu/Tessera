@@ -54,6 +54,7 @@ struct BottomChrome: View {
     }
 
     private func toggle(_ expanded: Bool) {
+        model.launchNote = nil
         withTesseraAnimation(reduceMotion: reduceMotion) { model.isCommandExpanded = expanded }
     }
 
@@ -73,11 +74,23 @@ struct BottomChrome: View {
             soul
             Button { toggle(true) } label: {
                 HStack(spacing: Theme.Spacing.m) {
-                    Text("Ask Tess, or log 82.5×8")
+                    Text(model.lastCapture != nil ? "Added to Later." :
+                        model.pendingCapture != nil ? "Drying. Swipe to drop it." :
+                        model.launchNote ?? "Ask Tess, or log a set")
                         .font(Theme.voice)
-                        .foregroundStyle(Theme.Colors.inkSecondary)
+                        .foregroundStyle(model.lastCapture != nil || model.pendingCapture != nil || model
+                            .launchNote != nil
+                            ? Theme.Colors.tess : Theme.Colors.inkSecondary)
                         .lineLimit(1)
+                        .contentTransition(.opacity)
                     Spacer(minLength: 0)
+                    if model.lastCapture != nil {
+                        Button("Undo") { model.undoLastCapture() }
+                            .textRole(.bodyStrong)
+                            .foregroundStyle(Theme.Colors.live)
+                            .frame(minWidth: 60, minHeight: 60)
+                            .transition(.opacity)
+                    }
                     Image(systemName: "mic")
                         .font(.system(size: 17, weight: .medium))
                         .foregroundStyle(Theme.Colors.ink)
@@ -161,11 +174,17 @@ struct BottomChrome: View {
             model.tessMode = .thinking
         }
         Task { @MainActor in
-            // Tess's grammar is instant today; these beats let each state read before the answer lands.
-            try? await Task.sleep(for: .milliseconds(900))
-            model.tessMode = .thinking
-            try? await Task.sleep(for: .milliseconds(500))
-            let reply = CommandInterpreter(model: model).run(text)
+            // Questions about records are answered here; everything else is a capture through Tess's engine
+            // (grammar first, the on-device model when Apple Intelligence is available), shown as ghost rows.
+            let lowered = text.lowercased()
+            let isQuestion = lowered.contains("best") || lowered.contains(" pr") || lowered.hasSuffix("?")
+            let started = Date()
+            let reply = isQuestion ? CommandInterpreter(model: model).run(text) : await model.ask(text)
+            // Let thinking read for a beat even when the answer is instant.
+            let elapsed = Date().timeIntervalSince(started)
+            if elapsed < 0.6 {
+                try? await Task.sleep(for: .seconds(0.6 - elapsed))
+            }
             withTesseraAnimation(reduceMotion: reduceMotion) {
                 feedback = reply
                 model.commandDraft = ""
@@ -217,12 +236,11 @@ struct CommandInterpreter {
             return "Your best \(exercise.name.lowercased()): \(Format.kilograms(best.weight)) × \(Int(best.reps)), "
                 + "e1RM \(Format.kilograms((best.e1RM * 10).rounded() / 10)) kg."
         }
-        guard let taskClass = model.classDef(.task) else { return "Couldn’t save that." }
-        let task = model.store.create(taskClass, title: text.prefix(1).uppercased() + text.dropFirst())
-        try? model.store.set("startsAt", to: .date(AppClock.now.addingTimeInterval(4 * 3600)), on: task)
-        try? model.store.set("length", to: .duration(1800), on: task)
-        model.touch()
-        return "Added “\(task.title)” to later today."
+        let title = text.prefix(1).uppercased() + text.dropFirst()
+        guard model.capture(title: title, startsAt: AppClock.now.addingTimeInterval(4 * 3600)) != nil else {
+            return "Couldn’t save that."
+        }
+        return "Drying. Swipe to drop it."
     }
 
     private func exercise(matching text: String) -> ClassDef? {

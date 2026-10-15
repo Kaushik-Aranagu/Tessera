@@ -11,7 +11,8 @@ struct AppModelTests {
         let model = AppModel(context: container.mainContext)
         DemoData.prepare(model)
 
-        #expect(model.objects(of: .muscle).count == 4)
+        // The 18 muscles come with Core's exercise library now (the demo used to make its own four).
+        #expect(model.objects(of: .muscle).count == 18)
         #expect(model.objects(of: .task).count == 8)
         let schedule = model.schedule()
         #expect(schedule.count == 9)
@@ -35,8 +36,11 @@ struct AppModelTests {
         let session = try #require(model.session)
 
         #expect(session.currentExercise?.name == "Bench Press")
-        #expect(session.weight == 82.5 && session.reps == 8)
-        #expect(session.restSeconds == 180) // inherited from Barbell Lift
+        // The library's bench runs dp(+2.5, 5, 8): last time 82.5 × 7, so aim for 7 again; 8 would be a best.
+        #expect(session.weight == 82.5 && session.reps == 7)
+        #expect(session.restSeconds == 180) // the library's bench rest
+        #expect(!session.isPersonalRecord)
+        session.reps = 8
         #expect(session.isPersonalRecord)
 
         session.logSet()
@@ -54,6 +58,7 @@ struct AppModelTests {
         #expect(interpreter.run("log bench 82.5x8").hasPrefix("Logged bench press 82.5 × 8"))
         #expect(model.session != nil)
         #expect(interpreter.run("what's my bench best?").contains("e1RM"))
-        #expect(interpreter.run("stretch at 21:00").hasPrefix("Added"))
+        #expect(interpreter.run("stretch at 21:00").hasPrefix("Drying"))
+        #expect(model.pendingCapture != nil)
     }
 }

@@ -41,8 +41,9 @@ enum WeekReview {
     /// Tess's one line: the muscle furthest behind its weekly target (over the last seven days), if any is.
     @MainActor
     static func tessLine(_ volume: [MuscleVolume], target: Int = weeklySetTarget) -> String? {
-        guard volume.contains(where: { $0.sets > 0 }),
-              let behind = volume.min(by: { $0.sets < $1.sets }), behind.sets < target else { return nil }
+        // Only muscles trained this week: an untrained muscle out of 18 isn't "behind", it just isn't in the plan.
+        let trained = volume.filter { $0.sets > 0 }
+        guard let behind = trained.min(by: { $0.sets < $1.sets }), behind.sets < target else { return nil }
         let sets = behind.sets == 1 ? "1 set" : "\(behind.sets) sets"
         return "\(behind.muscle.title) is a little behind: \(sets) of \(target) this week."
     }
