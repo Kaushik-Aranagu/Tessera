@@ -46,15 +46,21 @@ public extension TrainingLedger {
         // Zero or less means no rhythm (QA E4): every day ahead gets the next routine, as without a count.
         let perWeek = (sessionsPerWeek ?? plan.flatMap { store.number("sessionsPerWeek", of: $0) }.map { Int($0) })
             .flatMap { $0 > 0 ? $0 : nil }
-        // Spread the sessions still due evenly over the days ahead, today first: 3 over 5 days trains every other day.
+        // Spread the sessions still due evenly over the days ahead: 3 over 5 days trains every other day. Today comes
+        // first, unless it trained yesterday and there's room for the rest: then today rests and the spread starts
+        // tomorrow (so a rest day can be today).
         var training = Set(ahead)
         if let perWeek {
             let due = max(0, perWeek - done.count { !$0.isEmpty })
-            let left = ahead.count
-            if due < left {
-                let steps = due <= 1 ? Array(0 ..< due)
+            let trainedYesterday = calendar.date(byAdding: .day, value: -1, to: today)
+                .map { !finishedWorkouts(on: $0, calendar: calendar).isEmpty } ?? false
+            let startsToday = ahead.first.map { calendar.isDate(dates[$0], inSameDayAs: today) } ?? false
+            let pool = trainedYesterday && startsToday && due < ahead.count ? Array(ahead.dropFirst()) : ahead
+            if due < ahead.count {
+                let left = pool.count
+                let steps = due <= 1 ? Array(0 ..< min(due, left))
                     : (0 ..< due).map { Int((Double($0 * (left - 1)) / Double(due - 1)).rounded()) }
-                training = Set(steps.map { ahead[$0] })
+                training = Set(steps.map { pool[$0] })
             }
         }
         return dates.indices.map { index in
