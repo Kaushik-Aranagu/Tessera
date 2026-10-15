@@ -8,7 +8,7 @@
 2. The kitchen: cooking, then groceries.
 3. Lists, ahead of M3.
 4. M4 "My day, connected".
-5. M5 Reading (`ship-list-m5-reading.md`, approved), then Money.
+5. M5 Reading (`ship-list-m5-reading.md`), then Money (`ship-list-m5-money.md`), both approved.
 
 Small product calls are logged in `../product/decisions.md`.
 
