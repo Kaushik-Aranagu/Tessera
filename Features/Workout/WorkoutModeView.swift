@@ -408,8 +408,8 @@ extension WorkoutContent {
 
     /// "kg", or "kg each" for dumbbells.
     private var unit: String {
-        let seed = session.currentExercise.flatMap(ExerciseSwaps.seed(for:))
-        return seed?.equipment == .dumbbell || seed?.equipment == .kettlebell ? "kg each" : "kg"
+        let perHand = session.currentExercise.map { ExerciseSwaps.isPerHand($0, store: model.store) } ?? false
+        return perHand ? "kg each" : "kg"
     }
 
     @ViewBuilder
@@ -455,7 +455,7 @@ extension WorkoutContent {
 
     private var lastReps: Int? {
         guard let entry = session.currentEntry else { return nil }
-        return session.setRows(of: entry).last.map { Int($0.reps) } ?? Int(session.targetReps(of: entry))
+        return session.setRows(of: entry).last.map { Int($0.reps) } ?? session.lastTimeReps.map(Int.init)
     }
 }
 

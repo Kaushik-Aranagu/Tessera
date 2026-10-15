@@ -81,7 +81,9 @@ struct ExerciseAndPlansTests {
         log(model, bench, daysAgo: 3, sets: [(82.5, 7), (80, 8)], now: now)
 
         let digest = ExerciseDigest(exercise: bench, ledger: model.ledger, store: model.store, now: now)
-        #expect(digest.path.map(\.title) == ["Exercises", "Barbell Lifts"])
+        // The library moved Bench Press under its movement pattern.
+        #expect(digest.path.first?.title == "Exercises")
+        #expect(digest.path.last?.title.hasPrefix("Horizontal Push") == true)
         #expect(digest.history.count == 2)
         #expect(digest.history.first?.topSet == "82.5 × 7")
         #expect(digest.history.first?.isRecord == true)
@@ -92,8 +94,8 @@ struct ExerciseAndPlansTests {
         #expect(digest.repMaxes[8] == 80)
         #expect(digest.trend?.points.count == 2)
         #expect(digest.trend?.isRise == true)
-        // Barbell lifts inherit dp(+2.5, 8, 12): same weight, one more rep, then the next plate.
-        #expect(digest.nextTime == "Next time: 82.5 for 8, then 85.")
+        // The library's bench runs dp(+2.5, 5, 8): same weight, one more rep up to the top of the range.
+        #expect(digest.nextTime == "Next time: 82.5 for 8.")
     }
 
     private func log(_ model: AppModel, _ exercise: ClassDef, daysAgo: Double, sets: [(Double, Double)], now: Date) {

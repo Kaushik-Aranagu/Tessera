@@ -1,11 +1,10 @@
 import Foundation
 import TesseraCore
 
-/// Swap within the movement (docs/product/workouts.md, "Swap within the pattern"): alternatives for an exercise,
-/// first the same family, then the same movement pattern, each ranked by primary-muscle overlap and then by
-/// whether the gym has the kit. Pattern, family, equipment and muscles come from Core's `ExerciseLibrary` seed
-/// matched by name or alias; a class without a seed inherits its nearest ancestor's (Paused Bench → Bench Press),
-/// and a class inside another's subtree always counts as the same family.
+/// Swap within the movement (docs/product/workouts.md, "Swap within the pattern"). The ranking is Core's
+/// `TrainingLedger.swapCandidates(for:limit:)`: same family first, then same movement pattern, by primary-muscle
+/// overlap. On top of it this adds what the panel shows: the group heading, and a starting load for each, the
+/// exercise's own next target when it has history, else a conversion from the dialled weight (marked "≈").
 @MainActor
 struct ExerciseSwaps {
     enum Group: Int, Comparable {
@@ -44,103 +43,66 @@ struct ExerciseSwaps {
 
     let store: ObjectStore
     let ledger: TrainingLedger
-    /// Every exercise class you could do (system abstractions like Strength Exercise left out).
-    let library: [ClassDef]
 
     /// At most this many rows show (design: four).
     static let limit = 4
 
     /// Ranked alternatives for `exercise`, loaded from `weight` (the weight on the dial).
     func options(for exercise: ClassDef, from weight: Double, excludingWorkout workoutID: UUID?) -> [Option] {
-        let seed = Self.seed(for: exercise)
-        let muscles = primaryMuscles(of: exercise, seed: seed)
-        let ranked = library.compactMap { candidate -> (Option, Int, Bool)? in
-            guard candidate.id != exercise.id else { return nil }
-            let other = Self.seed(for: candidate)
-            guard let group = Self.group(exercise, seed, candidate, other) else { return nil }
-            let overlap = muscles.intersection(primaryMuscles(of: candidate, seed: other)).count
-            let hasKit = !store.linkedObjects("equipment", ofClass: candidate).isEmpty
-            let option = load(for: candidate, seed: other, from: (seed, weight), group: group,
-                              excludingWorkout: workoutID)
-            return (option, overlap, hasKit)
+        let familyName = store.classValue("family", of: exercise)?.stringValue
+        let ranked = ledger.swapCandidates(for: exercise, limit: Self.limit * 2).map { candidate in
+            let sameFamily = familyName != nil
+                && store.classValue("family", of: candidate)?.stringValue == familyName
+            return (candidate, sameFamily ? Group.family : .movement)
         }
-        return ranked.sorted { lhs, rhs in
-            if lhs.0.group != rhs.0.group {
-                return lhs.0.group < rhs.0.group
-            }
-            if lhs.1 != rhs.1 {
-                return lhs.1 > rhs.1
-            }
-            if lhs.2 != rhs.2 {
-                return lhs.2
-            }
-            return lhs.0.exercise.name < rhs.0.exercise.name
+        // Core ranks the family first; keep one row for the best of the wider movement when there is one, so
+        // a taken bench can still swap for something off the bench.
+        let movement = ranked.filter { $0.1 == .movement }.prefix(1)
+        let family = ranked.filter { $0.1 == .family }.prefix(Self.limit - movement.count)
+        return (family + movement).map { candidate, group in
+            load(for: candidate, replacing: (exercise, weight), group: group, excludingWorkout: workoutID)
         }
-        .prefix(Self.limit)
-        .map(\.0)
     }
 
-    // MARK: Grouping
-
-    private static func group(_ exercise: ClassDef, _ seed: ExerciseSeed?, _ candidate: ClassDef,
-                              _ other: ExerciseSeed?) -> Group?
-    {
-        if ClassResolver.isSubclass(candidate, of: exercise) || ClassResolver.isSubclass(exercise, of: candidate) {
-            return .family
-        }
-        guard let seed, let other else { return nil }
-        if let family = seed.family, family == other.family {
-            return .family
-        }
-        return seed.pattern == other.pattern ? .movement : nil
-    }
-
-    /// The library seed for a class: by name or alias, else the nearest ancestor's.
-    static func seed(for exercise: ClassDef) -> ExerciseSeed? {
-        for classDef in ClassResolver.lineage(of: exercise).reversed() {
-            let name = classDef.name.lowercased()
-            if let seed = ExerciseLibrary.seeds.first(where: { seed in
-                seed.name.lowercased() == name || seed.aliases.contains { $0.lowercased() == name }
-            }) {
-                return seed
-            }
-        }
-        return nil
-    }
-
-    private func primaryMuscles(of exercise: ClassDef, seed: ExerciseSeed?) -> Set<String> {
-        let linked = store.linkedObjects("primaryMuscles", ofClass: exercise).map { $0.title.lowercased() }
-        if !linked.isEmpty {
-            return Set(linked)
-        }
-        return Set(seed?.primary.map { $0.name.lowercased() } ?? [])
+    /// Whether an exercise is loaded per hand (dumbbells, kettlebells).
+    static func isPerHand(_ exercise: ClassDef, store: ObjectStore) -> Bool {
+        store.equipmentKind(of: exercise)?.isPerHand ?? false
     }
 
     // MARK: Loads
 
-    /// `from` is the exercise being replaced: its seed and the weight on the dial.
-    private func load(for candidate: ClassDef, seed: ExerciseSeed?, from: (seed: ExerciseSeed?, weight: Double),
-                      group: Group, excludingWorkout workoutID: UUID?) -> Option
+    /// `replacing` is the exercise being swapped out and the weight on its dial.
+    private func load(for candidate: ClassDef, replacing: (exercise: ClassDef, weight: Double), group: Group,
+                      excludingWorkout workoutID: UUID?) -> Option
     {
-        let (fromSeed, weight) = from
-        let isPerHand = seed?.equipment == .dumbbell || seed?.equipment == .kettlebell
+        let isPerHand = Self.isPerHand(candidate, store: store)
         // Its own history beats any conversion.
-        let target = ledger.nextTarget(for: candidate, excludingWorkout: workoutID)
-        if let own = target.weight {
+        if let own = ledger.nextTarget(for: candidate, excludingWorkout: workoutID).weight {
             return Option(exercise: candidate, group: group, load: own, isEstimate: false, isPerHand: isPerHand)
         }
-        guard weight > 0 else {
+        guard replacing.weight > 0 else {
             return Option(exercise: candidate, group: group, load: nil, isEstimate: true, isPerHand: isPerHand)
         }
-        let ratio = Self.ratio(from: fromSeed, to: seed, group: group)
-        let snapped = store.loadProfile(for: candidate).nearest(to: weight * ratio)
+        let ratio = Self.ratio(
+            from: (store.equipmentKind(of: replacing.exercise), mechanic(of: replacing.exercise)),
+            into: (store.equipmentKind(of: candidate), mechanic(of: candidate)),
+            group: group
+        )
+        let snapped = store.loadProfile(for: candidate).nearest(to: replacing.weight * ratio)
         return Option(exercise: candidate, group: group, load: snapped, isEstimate: true, isPerHand: isPerHand)
     }
 
-    /// A rough load mapping between equipment and mechanics. Every converted load is shown with "≈".
-    static func ratio(from source: ExerciseSeed?, to target: ExerciseSeed?, group: Group) -> Double {
-        let from = source?.equipment ?? .barbell
-        let into = target?.equipment ?? from
+    private func mechanic(of exercise: ClassDef) -> Mechanic? {
+        store.classValue("mechanic", of: exercise)?.stringValue.flatMap(Mechanic.init(rawValue:))
+    }
+
+    /// A rough load mapping between equipment and mechanics (Core has no conversion data yet). Every converted
+    /// load is shown with "≈".
+    static func ratio(from source: (EquipmentKind?, Mechanic?), into target: (EquipmentKind?, Mechanic?),
+                      group: Group) -> Double
+    {
+        let from = source.0 ?? .barbell
+        let into = target.0 ?? from
         var ratio: Double = switch (from.isPerHand, into.isPerHand) {
         case (false, true): 0.4
         case (true, false): 2.5
@@ -149,7 +111,7 @@ struct ExerciseSwaps {
         if from != into, !from.isPerHand, !into.isPerHand {
             ratio *= into == .machine ? 0.9 : 0.8
         }
-        if source?.mechanic == .compound, target?.mechanic == .isolation {
+        if source.1 == .compound, target.1 == .isolation {
             ratio *= 0.3
         } else if group == .family, from == into {
             // A variant of the same lift on the same kit (paused, incline, close grip) runs a little lighter.

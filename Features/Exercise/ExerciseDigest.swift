@@ -164,7 +164,15 @@ enum ExerciseWords {
 
     /// "Barbell Lift" → "Barbell Lifts". Names that already end in s stay as they are.
     static func plural(_ name: String) -> String {
-        name.lowercased().hasSuffix("s") ? name : name + "s"
+        let lower = name.lowercased()
+        if lower.hasSuffix("s") {
+            return name
+        }
+        // Movement patterns ("Horizontal Push", "Hip Hinge") read as categories; keep them as they are.
+        if ["sh", "ch", "x", "z"].contains(where: lower.hasSuffix) || lower.hasSuffix("hinge") {
+            return name
+        }
+        return name + "s"
     }
 
     /// "+6.5", "−2.5", "+0"

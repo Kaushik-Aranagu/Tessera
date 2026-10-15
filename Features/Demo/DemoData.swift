@@ -1,15 +1,15 @@
 import Foundation
 import TesseraCore
 
-/// Seeds a lived-in library through the object model: muscles, equipment, exercise subclasses with profiles,
-/// a few weeks of Push Day history, today's schedule and tonight's workout.
+/// Seeds a lived-in day on top of Core's exercise library: a Push / Pull / Legs plan, six weeks of history, today's
+/// schedule and tonight's workout.
 @MainActor
 enum DemoData {
     static func prepare(_ model: AppModel, arguments: [String] = ProcessInfo.processInfo.arguments) {
         if arguments.contains("-resetDemo") {
             reset(model)
         }
-        if model.objects(of: .muscle).isEmpty {
+        if model.objects(of: .routine).isEmpty {
             seedLibrary(model)
         }
         if model.schedule().isEmpty {
@@ -20,70 +20,30 @@ enum DemoData {
 
     private static func reset(_ model: AppModel) {
         model.store.resetUserData()
+        // The wipe takes the library's muscles, equipment and exercise profiles with it: put them back.
+        model.store.invalidateCaches()
+        _ = try? ExerciseLibraryInstaller.install(shape: ExerciseLibraryInstaller.chosenShape, store: model.store,
+                                                  classes: model.classes)
     }
 
     // MARK: Library
 
+    /// A library exercise by its seed key (`ExerciseLibrary`); Bench Press is the system class.
+    private static func library(_ key: String, _ model: AppModel) -> ClassDef? {
+        if key == "benchPress" {
+            return model.classDef(.benchPress)
+        }
+        return model.store.classDef(id: SystemCatalog.stableID("library.\(key)"))
+    }
+
+    /// The demo trains on Core's exercise library (muscles, equipment and profiles come with it); it only adds the
+    /// plan and the history.
     private static func seedLibrary(_ model: AppModel) {
-        let store = model.store
-        guard let muscle = model.classDef(.muscle), let equipment = model.classDef(.equipment),
-              let lift = model.classDef(.barbellLift), let strength = model.classDef(.strengthExercise),
-              let bench = model.classDef(.benchPress) else { return }
-
-        func make(_ classDef: ClassDef, _ title: String, notes: String? = nil) -> ObjectRecord {
-            let object = store.create(classDef, title: title)
-            if let notes {
-                try? store.set("notes", to: .richText(notes), on: object)
-            }
-            return object
-        }
-
-        let chest = make(muscle, "Chest", notes: "Pectoralis major — sternal and clavicular heads.")
-        let triceps = make(muscle, "Triceps", notes: "Long, lateral and medial heads. Elbow extension.")
-        let delts = make(muscle, "Front Delts", notes: "Anterior deltoid. Shoulder flexion.")
-        let upperBack = make(muscle, "Upper Back")
-        let barbell = make(equipment, "Barbell", notes: "20 kg Olympic bar.")
-        let flatBench = make(equipment, "Flat Bench")
-        let cable = make(equipment, "Cable Stack")
-        let dumbbells = make(equipment, "Dumbbells")
-
-        func subclass(_ name: String, of parent: ClassDef, symbol: String = "dumbbell") -> ClassDef {
-            let classDef = ClassDef(name: name, parent: parent, symbolName: symbol, colorRole: "training")
-            model.context.insert(classDef)
-            return classDef
-        }
-
-        let overhead = subclass("Overhead Press", of: lift)
-        let incline = subclass("Incline Dumbbell Press", of: strength)
-        let fly = subclass("Cable Fly", of: strength, symbol: "figure.strengthtraining.functional")
-        let pushdown = subclass("Triceps Pushdown", of: strength, symbol: "figure.strengthtraining.functional")
-        _ = subclass("Paused Bench Press", of: bench)
-
-        func profile(_ classDef: ClassDef, muscles: [ObjectRecord], gear: [ObjectRecord], cue: String) {
-            let object = store.ensureClassObject(of: classDef)
-            try? store.set("notes", to: .richText(cue), on: object)
-            try? store.setLinks("primaryMuscles", on: object, to: muscles)
-            try? store.setLinks("equipment", on: object, to: gear)
-        }
-
-        profile(bench, muscles: [chest, triceps, delts], gear: [barbell, flatBench],
-                cue: "Shoulder blades pinned, slight arch, bar to lower chest, drive feet.")
-        profile(overhead, muscles: [delts, triceps, upperBack], gear: [barbell],
-                cue: "Squeeze glutes, bar path close to the face, lock out overhead.")
-        profile(incline, muscles: [chest, delts], gear: [dumbbells, flatBench], cue: "30° bench. Elbows at 45°.")
-        profile(fly, muscles: [chest], gear: [cable], cue: "Soft elbows, hug a tree, slow on the way back.")
-        profile(pushdown, muscles: [triceps], gear: [cable], cue: "Elbows pinned to your sides.")
-
-        // Pull and legs, so the Push / Pull / Legs plan has something to roll through. Their muscles stay within the
-        // four above (Home's tests pin them); legs carry gear only.
-        let row = subclass("Barbell Row", of: lift)
-        let pulldown = subclass("Lat Pulldown", of: strength, symbol: "figure.strengthtraining.functional")
-        let squat = subclass("Back Squat", of: lift)
-        let deadlift = subclass("Romanian Deadlift", of: lift)
-        profile(row, muscles: [upperBack], gear: [barbell], cue: "Flat back, pull to the belly, pause.")
-        profile(pulldown, muscles: [upperBack], gear: [cable], cue: "Chest up, elbows to your pockets.")
-        profile(squat, muscles: [], gear: [barbell], cue: "Brace, sit between the heels, drive up.")
-        profile(deadlift, muscles: [], gear: [barbell], cue: "Hips back, bar close, soft knees.")
+        guard let bench = library("benchPress", model), let overhead = library("overheadPress", model),
+              let incline = library("inclineDbPress", model), let fly = library("cableFly", model),
+              let pushdown = library("ropePushdown", model), let row = library("barbellRow", model),
+              let pulldown = library("latPulldown", model), let squat = library("backSquat", model),
+              let deadlift = library("romanianDeadlift", model) else { return }
 
         // The plan, through typed actions like any other write.
         let routines = seedPlan(model, slots: [
@@ -93,7 +53,6 @@ enum DemoData {
         ])
 
         seedHistory(model, routines: routines, push: (bench, overhead), pull: (row, pulldown), legs: (squat, deadlift))
-        _ = (incline, fly, pushdown)
         try? model.context.save()
     }
 
@@ -231,15 +190,14 @@ enum DemoData {
             try? store.setLinks("routine", on: workout, to: [push])
         }
         let lineup: [(String, Double, Double, Double)] = [
-            ("Bench Press", 4, 8, 82.5),
-            ("Overhead Press", 3, 8, 47.5),
-            ("Incline Dumbbell Press", 3, 10, 26),
-            ("Cable Fly", 3, 12, 15),
-            ("Triceps Pushdown", 3, 12, 25),
+            ("benchPress", 4, 8, 82.5),
+            ("overheadPress", 3, 8, 47.5),
+            ("inclineDbPress", 3, 10, 26),
+            ("cableFly", 3, 12, 15),
+            ("ropePushdown", 3, 12, 25),
         ]
-        let allClasses = model.store.allClasses()
         for (index, item) in lineup.enumerated() {
-            guard let exercise = allClasses.first(where: { $0.name == item.0 }) else { continue }
+            guard let exercise = library(item.0, model) else { continue }
             let entry = store.create(entryClass, parent: workout)
             entry.sortIndex = index
             try? store.setClassLink("exercise", on: entry, to: exercise)

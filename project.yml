@@ -10,6 +10,9 @@ packages:
     path: TesseraCore
 settings:
   base:
+    # Kaushik's free Personal Team: installs on his iPhone, re-signed every 7 days.
+    DEVELOPMENT_TEAM: WMP2WF3P54
+    CODE_SIGN_STYLE: Automatic
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
     MARKETING_VERSION: "0.1.0"

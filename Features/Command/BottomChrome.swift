@@ -76,7 +76,7 @@ struct BottomChrome: View {
                 HStack(spacing: Theme.Spacing.m) {
                     Text(model.lastCapture != nil ? "Added to Later." :
                         model.pendingCapture != nil ? "Drying. Swipe to drop it." :
-                        model.launchNote ?? "Ask Tess, or log 82.5×8")
+                        model.launchNote ?? "Ask Tess, or log a set")
                         .font(Theme.voice)
                         .foregroundStyle(model.lastCapture != nil || model.pendingCapture != nil || model
                             .launchNote != nil

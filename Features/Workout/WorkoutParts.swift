@@ -35,6 +35,8 @@ struct ExerciseLane: View {
                             .lineLimit(1)
                             .minimumScaleFactor(0.45)
                             .foregroundStyle(Paint.cream.opacity(isCurrent ? 1 : 0.28))
+                            // A long name steps down a size and keeps clear of the next one peeking in.
+                            .padding(.trailing, Theme.Spacing.m)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .id(name)
                             .transition(reduceMotion ? .opacity

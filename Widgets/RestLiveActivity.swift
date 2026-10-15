@@ -16,42 +16,28 @@ private enum Palette {
     static let goWash2 = Color(hex: 0xE2603F).opacity(0.6)
 }
 
-/// Colour moods. Kaushik hasn't picked yet; Cobalt sky is the default.
+/// The lock screen's colour: Cobalt sky (Kaushik's pick, 2026-10-15), the only mood.
 enum RestMood {
-    case cobaltSky, dusk, sage, ink
+    case cobaltSky
 
     static let current: RestMood = .cobaltSky
 
     /// Top-left wash.
     var wash1: Color {
-        switch self {
-        case .cobaltSky: Color(hex: 0x3F7FC0).opacity(0.75)
-        case .dusk: Color(hex: 0xE2603F).opacity(0.7)
-        case .sage: Color(hex: 0x6E9E6A).opacity(0.75)
-        case .ink: .clear
-        }
+        Color(hex: 0x3F7FC0).opacity(0.75)
     }
 
     /// Top-right wash.
     var wash2: Color {
-        switch self {
-        case .cobaltSky: Color(hex: 0x7A5CA0).opacity(0.45)
-        case .dusk: Color(hex: 0x965096).opacity(0.55)
-        case .sage: Color(hex: 0x2A7F86).opacity(0.6)
-        case .ink: .clear
-        }
+        Color(hex: 0x7A5CA0).opacity(0.45)
     }
 
     var line: Color {
-        switch self {
-        case .cobaltSky, .ink: Palette.cream
-        case .dusk: Color(hex: 0xFFB896)
-        case .sage: Color(hex: 0xC8E6B4)
-        }
+        Palette.cream
     }
 
     var tick: Color {
-        self == .dusk ? Color(hex: 0xFFE3D2) : Palette.vermilion
+        Palette.vermilion
     }
 }
 

@@ -82,6 +82,8 @@ final class AppModel {
         store = ObjectStore(context: context)
         do {
             classes = try SystemCatalog.seed(in: context)
+            // The 72-exercise library on the movement-pattern spine (cheap after the first run).
+            _ = try ExerciseLibraryInstaller.installIfNeeded(store: store, classes: classes)
         } catch {
             assertionFailure("Seeding failed: \(error)")
         }
@@ -229,6 +231,11 @@ final class AppModel {
         let table = ProcessTable(engine: engine)
         table.suspendIfIdle(now: now, idleLimit: idleLimit)
         processNotes = table.tidy(now: now)
+        // A workout left untouched for 6 hours is wrapped up by Core; let the live session go with it.
+        if let session, store.value("endedAt", of: session.workout) != nil {
+            self.session = nil
+            isWorkoutPresented = false
+        }
         touch()
     }
 

@@ -247,23 +247,9 @@ extension WorkoutSession {
         if let cached = profiles[exercise.id] {
             return cached
         }
-        var profile = model.store.loadProfile(for: exercise)
-        // Equipment without a kind gets Core's 2.5 kg steps; a barbell lift still loads plates on a 20 kg bar.
-        if !(profile is PlateLoad), isBarbell(exercise) {
-            profile = PlateLoad()
-        }
+        let profile = model.store.loadProfile(for: exercise)
         profiles[exercise.id] = profile
         return profile
-    }
-
-    private func isBarbell(_ exercise: ClassDef) -> Bool {
-        let kinds = model.store.linkedObjects("equipment", ofClass: exercise)
-            .compactMap { model.store.value("kind", of: $0)?.stringValue }
-        guard kinds.isEmpty else { return kinds.contains(EquipmentKind.barbell.rawValue) }
-        if let lift = model.classDef(.barbellLift), ClassResolver.isSubclass(exercise, of: lift) {
-            return true
-        }
-        return ExerciseSwaps.seed(for: exercise)?.equipment == .barbell
     }
 
     /// Every weight the gym can load for the current exercise, ascending.
@@ -294,6 +280,13 @@ extension WorkoutSession {
     }
 
     // MARK: Personal records
+
+    /// Reps of last time's top set for this exercise (the drum's ghost before today's first set).
+    var lastTimeReps: Double? {
+        guard let exercise = currentExercise,
+              let last = ledger.sessions(of: exercise, excludingWorkout: workout.id).first else { return nil }
+        return last.sets.max { $0.weight < $1.weight }?.reps
+    }
 
     var previewE1RM: Double? {
         ledger.e1RM(weight: weight, reps: reps, rpe: rpe)
@@ -469,12 +462,8 @@ extension WorkoutSession {
     }
 
     func swapOptions() -> [ExerciseSwaps.Option] {
-        guard let exercise = currentExercise, let base = model.classDef(.exercise) else { return [] }
-        let abstract = Set([SystemCatalog.Key.exercise, .strengthExercise, .barbellLift].compactMap {
-            model.classDef($0)?.id
-        })
-        let library = ClassResolver.descendants(of: base).filter { !abstract.contains($0.id) }
-        return ExerciseSwaps(store: model.store, ledger: ledger, library: library)
+        guard let exercise = currentExercise else { return [] }
+        return ExerciseSwaps(store: model.store, ledger: ledger)
             .options(for: exercise, from: weight, excludingWorkout: workout.id)
     }
 

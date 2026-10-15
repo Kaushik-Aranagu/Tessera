@@ -24,9 +24,10 @@ struct WorkoutSessionTests {
         let (_, session) = try startedSession()
         #expect(session.phase() == .set)
         #expect(session.currentSetNumber == 1)
-        #expect(session.weight == 82.5 && session.reps == 8)
-        // From the ledger's next target (double progression: same weight, aim for 8 on every set).
-        #expect(session.targetReason?.contains("aim for 8") == true)
+        // From the ledger's next target: the library's bench runs dp(+2.5, 5, 8) and last time was 7 then 6 at 82.5,
+        // so the same weight, aiming for 7 on every set.
+        #expect(session.weight == 82.5 && session.reps == 7)
+        #expect(session.targetReason?.contains("aim for 7") == true)
         // Bench is plate-loaded: the dial's detents come from its load profile, the plates from PlateLoad.
         #expect(session.detents.first == 20)
         #expect(session.detents.contains(82.5))
@@ -39,7 +40,7 @@ struct WorkoutSessionTests {
         session.logSet()
         let seated = try #require(session.lastSeated)
         #expect(seated.number == 1)
-        #expect(seated.records.contains(.e1RM)) // 82.5 × 8 beats 82.5 × 7
+        #expect(seated.records.contains(.e1RM)) // 82.5 × 7 at RPE 8 is a 9-rep effort: beats 82.5 × 7
         guard case .rest = session.phase() else {
             Issue.record("expected rest")
             return
@@ -57,7 +58,7 @@ struct WorkoutSessionTests {
 
     @Test func aSecondRecordHasToBeatTheFirst() throws {
         let (_, session) = try startedSession()
-        session.logSet() // 82.5 × 8, a new best
+        session.logSet() // 82.5 × 7, level with the best
         session.skipRest()
         #expect(!session.isPersonalRecord) // the same set again is not a new best
         session.reps = 9
@@ -181,23 +182,24 @@ struct WorkoutSessionTests {
         let (_, session) = try startedSession()
         let options = session.swapOptions()
         let names = options.map(\.exercise.name)
-        #expect(names.contains("Incline Dumbbell Press"))
-        #expect(names.contains("Cable Fly"))
+        #expect(names.contains("Dumbbell Bench Press"))
+        #expect(names.contains("Cable Fly")) // the best of the wider movement keeps one row
         #expect(!names.contains("Overhead Press"))
+        #expect(options.count == 4)
         let groups = options.map(\.group)
-        #expect(groups == groups.sorted())
-        let incline = try #require(options.first { $0.exercise.name == "Incline Dumbbell Press" })
-        #expect(incline.isEstimate && incline.isPerHand)
-        #expect(incline.load == 32.5) // 82.5 × 0.4, on a 2.5 kg step
+        #expect(groups == [.family, .family, .family, .movement])
+        let dumbbell = try #require(options.first { $0.exercise.name == "Dumbbell Bench Press" })
+        #expect(dumbbell.isEstimate && dumbbell.isPerHand)
+        #expect(dumbbell.load == 32.5) // 82.5 × 0.4, on the rack's nearest dumbbell
     }
 
     @Test func swappingBeforeAnySetRelinksTheEntryThroughTheEngine() throws {
         let (model, session) = try startedSession()
         let entry = try #require(session.currentEntry)
-        let incline = try #require(session.swapOptions().first { $0.exercise.name == "Incline Dumbbell Press" })
-        session.swap(to: incline)
+        let dumbbell = try #require(session.swapOptions().first { $0.exercise.name == "Dumbbell Bench Press" })
+        session.swap(to: dumbbell)
         #expect(session.currentEntry?.id == entry.id)
-        #expect(session.currentExercise?.name == "Incline Dumbbell Press")
+        #expect(session.currentExercise?.name == "Dumbbell Bench Press")
         #expect(session.swappedFrom == "Bench Press")
         #expect(session.isEstimatedLoad)
         #expect(session.weight == 32.5)
@@ -221,7 +223,8 @@ struct WorkoutSessionTests {
 
     @Test func finishingSummarisesInOneLine() throws {
         let (_, session) = try startedSession()
-        session.logSet() // a new best
+        session.reps = 8 // 82.5 × 8 beats 82.5 × 7
+        session.logSet()
         session.skipRest()
         session.finish()
         #expect(session.finishedAt != nil)
