@@ -13,6 +13,7 @@ struct BackupView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isPresented) private var isPresented
     @State private var picking = false
+    @State private var folderTaps = 0
     @State private var importing = false
     @State private var saving: BackupFile?
     @State private var line: String?
@@ -64,9 +65,11 @@ struct BackupView: View {
                     .tint(Theme.Colors.ink)
                     .fixedSize(horizontal: false, vertical: true)
                     .environment(\.openURL, OpenURLAction { _ in
+                        folderTaps += 1
                         picking = true
                         return .handled
                     })
+                    .sensoryFeedback(.selection, trigger: folderTaps)
                     .accessibilityAction(named: "Choose the folder") { picking = true }
                     .padding(.top, Theme.Spacing.m)
                     .entrance(3)

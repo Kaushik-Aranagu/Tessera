@@ -37,7 +37,6 @@ private struct GroceriesPage: View {
     @State private var basketTarget: CGPoint = .zero
     @State private var breathe = false
     @State private var landed = 0
-    @State private var cleared: Cleared?
     @FocusState private var writing: Bool
 
     private var groceries: Groceries {
@@ -67,32 +66,40 @@ private struct GroceriesPage: View {
                     .contentTransition(.numericText())
                     .entrance(0)
 
-                if shopping {
-                    AtTheShop(aisles: aisles, striking: striking, recipes: recipes(for:), onTap: check)
-                        .padding(.top, Theme.Spacing.m)
-                } else {
-                    ShopTitle(onHold: toggleShop)
-                        .padding(.top, Theme.Spacing.s)
-                        .entrance(1, hero: true)
-
-                    GroceryWritingLine(text: $draft, focused: $writing, onSubmit: add)
-                        .padding(.top, Theme.Spacing.xl)
-                        .entrance(2)
-
-                    if aisles.isEmpty {
-                        GroceriesEmpty(basket: basket.count)
-                            .padding(.top, Theme.Spacing.section)
-                            .entrance(3)
+                // Shop and list share one slot: the outgoing layout folds back as the incoming one rises (never a
+                // cross-fade of two whole layouts).
+                ZStack(alignment: .topLeading) {
+                    if shopping {
+                        AtTheShop(aisles: aisles, striking: striking, recipes: recipes(for:), onTap: check)
+                            .padding(.top, Theme.Spacing.m)
+                            .transition(AisleHandoff.transition(reduceMotion: reduceMotion))
                     } else {
-                        VStack(alignment: .leading, spacing: 24) {
-                            ForEach(Array(aisles.enumerated()), id: \.element.aisle) { index, aisle in
-                                AisleSection(name: aisle.aisle, items: aisle.items, striking: striking,
-                                             recipes: recipes(for:), onTap: check)
-                                    .entrance(3 + min(index, 3))
-                                    .transition(.opacity)
+                        VStack(alignment: .leading, spacing: 0) {
+                            ShopTitle(onHold: toggleShop)
+                                .padding(.top, Theme.Spacing.s)
+                                .entrance(1, hero: true)
+
+                            GroceryWritingLine(text: $draft, focused: $writing, onSubmit: add)
+                                .padding(.top, Theme.Spacing.xl)
+                                .entrance(2)
+
+                            if aisles.isEmpty {
+                                GroceriesEmpty(basket: basket.count)
+                                    .padding(.top, Theme.Spacing.section)
+                                    .entrance(3)
+                            } else {
+                                VStack(alignment: .leading, spacing: 24) {
+                                    ForEach(Array(aisles.enumerated()), id: \.element.aisle) { index, aisle in
+                                        AisleSection(name: aisle.aisle, items: aisle.items, striking: striking,
+                                                     recipes: recipes(for:), onTap: check)
+                                            .entrance(3 + min(index, 3))
+                                            .transition(.opacity)
+                                    }
+                                }
+                                .padding(.top, Theme.Spacing.xxl)
                             }
                         }
-                        .padding(.top, Theme.Spacing.xxl)
+                        .transition(AisleHandoff.transition(reduceMotion: reduceMotion))
                     }
                 }
             }
@@ -139,16 +146,20 @@ private struct GroceriesPage: View {
                         } action: { basketTarget = $0 }
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
-                if let cleared, basket.isEmpty, !shopping {
-                    ClearedLine(count: cleared.count, undo: undoClear)
-                        .padding(.horizontal, Theme.Spacing.gutter)
-                        .padding(.top, Theme.Spacing.m)
+                // Groceries opens as a full-screen layer above Tess's soul, so her reply line is mirrored here, in
+                // the inset, so the list scrolls clear of it.
+                if TessVoice.shared.note != nil, basket.isEmpty {
+                    TessNoteLine()
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .padding(.top, Theme.Spacing.l)
                         .veil(edge: .bottom)
                         .transition(.opacity)
                 }
             }
             .tesseraAnimation(Theme.Motion.house, value: basket.isEmpty)
+            .tesseraAnimation(Theme.Motion.house, value: TessVoice.shared.note)
         }
+
         .overlay {
             // The struck items' dabs, on their arcs into the basket.
             ForEach(sinking) { sink in
@@ -231,37 +242,17 @@ private struct GroceriesPage: View {
         }
     }
 
+    /// Tess says it beside her soul, with Undo (the same reply line as everywhere else).
     private func clearBasket(count: Int) {
         guard let list = groceries.list else { return }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
-            if let result = try? model.engine.perform(ClearDoneItems(list: list.id), by: .user) {
-                cleared = Cleared(record: result.record, count: count)
-            }
+            let result = try? model.engine.perform(ClearDoneItems(list: list.id), by: .user)
             basketOpen = false
             model.touch()
-        }
-        let record = cleared?.record.id
-        Task { @MainActor in
-            try? await Task.sleep(for: .seconds(6))
-            if cleared?.record.id == record {
-                withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { cleared = nil }
+            if let result {
+                TessVoice.shared.say("Cleared \(count) from the basket.", undo: result.record)
             }
         }
-    }
-
-    private func undoClear() {
-        guard let cleared else { return }
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
-            model.engine.undo(cleared.record)
-            self.cleared = nil
-            model.touch()
-        }
-    }
-
-    /// The last basket clear, offered back for a few seconds.
-    struct Cleared {
-        let record: OpRecord
-        let count: Int
     }
 
     private func toggleShop() {
@@ -470,25 +461,24 @@ private struct AtTheShop: View {
     var body: some View {
         if let current = aisles.first {
             VStack(alignment: .leading, spacing: 0) {
-                VStack(alignment: .leading, spacing: Theme.Spacing.s) {
-                    Text(current.aisle)
-                        .textRole(.hero)
-                        .foregroundStyle(Theme.Colors.ink)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .accessibilityAddTraits(.isHeader)
-                    VStack(alignment: .leading, spacing: 0) {
-                        ForEach(current.items) { item in
-                            GroceryRow(item: item, isStriking: striking.contains(item.id), recipes: recipes(item),
-                                       height: 64) { onTap(item) }
-                                .transition(.opacity)
+                ZStack(alignment: .topLeading) {
+                    VStack(alignment: .leading, spacing: Theme.Spacing.s) {
+                        Text(current.aisle)
+                            .textRole(.hero)
+                            .foregroundStyle(Theme.Colors.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityAddTraits(.isHeader)
+                        VStack(alignment: .leading, spacing: 0) {
+                            ForEach(current.items) { item in
+                                GroceryRow(item: item, isStriking: striking.contains(item.id), recipes: recipes(item),
+                                           height: 64) { onTap(item) }
+                                    .transition(.opacity)
+                            }
                         }
                     }
+                    .id(current.aisle)
+                    .transition(AisleHandoff.transition(reduceMotion: reduceMotion))
                 }
-                .id(current.aisle)
-                .transition(reduceMotion ? .opacity : .asymmetric(
-                    insertion: .modifier(active: RiseIn(progress: 0), identity: RiseIn(progress: 1)),
-                    removal: .modifier(active: FoldAway(progress: 1), identity: FoldAway(progress: 0))
-                ))
                 if aisles.count > 1 {
                     Text("then \(aisles[1].aisle)")
                         .textRole(.body)
@@ -500,6 +490,21 @@ private struct AtTheShop: View {
             .animation(reduceMotion ? .easeOut(duration: 0.18) : .smooth(duration: 0.42), value: current.aisle)
             .sensoryFeedback(.impact(weight: .medium), trigger: current.aisle)
         }
+    }
+}
+
+/// One aisle (or the whole list) handing over to the next: the outgoing one tilts back about its top edge and fades
+/// over 260 ms; the incoming one rises 14 pt out of a 4 pt blur over 340 ms, starting 120 ms in, so two hero words are
+/// never fully visible together. Reduce Motion: a short cross-fade.
+private enum AisleHandoff {
+    static func transition(reduceMotion: Bool) -> AnyTransition {
+        guard !reduceMotion else { return .opacity.animation(.easeOut(duration: 0.18)) }
+        return .asymmetric(
+            insertion: .modifier(active: RiseIn(progress: 0), identity: RiseIn(progress: 1))
+                .animation(.smooth(duration: 0.34).delay(0.12)),
+            removal: .modifier(active: FoldAway(progress: 1), identity: FoldAway(progress: 0))
+                .animation(.smooth(duration: 0.26))
+        )
     }
 }
 
@@ -581,24 +586,38 @@ private struct BasketFold: View {
     }
 }
 
-/// "Cleared 3 from the basket" in Tess's ink, with Undo, for a few seconds after the hold.
-private struct ClearedLine: View {
-    let count: Int
-    let undo: () -> Void
+/// Tess's reply line as BottomChrome draws it (right-aligned, Tess ink, UNDO as a vermilion label word), reading the
+/// shared `TessVoice`, for layers that cover her soul.
+private struct TessNoteLine: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private let voice = TessVoice.shared
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text("Cleared \(count) from the basket.")
-                .font(Theme.voice)
-                .foregroundStyle(Theme.Colors.tess)
-            Spacer()
-            Button("Undo", action: undo)
-                .textRole(.labelStrong)
-                .foregroundStyle(Theme.Colors.inkSecondary)
-                .buttonStyle(HandleButtonStyle())
-                .frame(minHeight: 44)
-                .accessibilityHint("Puts them back in the basket")
+        VStack(alignment: .trailing, spacing: 2) {
+            if let note = voice.note {
+                Text(note.text)
+                    .frame(maxWidth: 270, alignment: .trailing)
+                    .textRole(.body)
+                    .foregroundStyle(Theme.Colors.tess)
+                    .multilineTextAlignment(.trailing)
+                    .lineLimit(2)
+                if let record = note.undo {
+                    Button("Undo") {
+                        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+                            _ = model.engine.undo(record)
+                            model.touch()
+                            voice.clear()
+                        }
+                    }
+                    .buttonStyle(InkLabelWordStyle(color: Theme.Colors.live))
+                    .accessibilityHint("Puts them back in the basket")
+                }
+            }
         }
+        .padding(.vertical, Theme.Spacing.xs)
+        .padding(.trailing, Theme.Spacing.gutter)
+        .padding(.bottom, Theme.Spacing.s)
     }
 }
 
