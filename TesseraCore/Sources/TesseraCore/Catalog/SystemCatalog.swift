@@ -14,6 +14,7 @@ public enum SystemCatalog {
         case muscle, equipment
         case workout, exerciseEntry, set
         case routine, task, note
+        case list, listItem
         case process
         case slot, plan
 
@@ -200,6 +201,16 @@ public enum SystemCatalog {
             FieldSpec(key: "body", name: "Body", kind: .text),
             FieldSpec(key: "about", name: "About", kind: .refList, target: .thing),
         ]),
+        // The actionable list block (groceries, packing, any list). Items are the list's children, in order.
+        ClassSpec(key: .list, name: "List", parent: .thing, symbol: "list.bullet", colorRole: "planning"),
+        ClassSpec(key: .listItem, name: "List Item", parent: .thing, symbol: "circle", colorRole: "planning",
+                  fields: [
+                      FieldSpec(key: "quantity", name: "Quantity", kind: .text),
+                      FieldSpec(key: "isDone", name: "Done", kind: .bool, defaultValue: .bool(false)),
+                      FieldSpec(key: "checkedAt", name: "Checked", kind: .date),
+                      FieldSpec(key: "section", name: "Section", kind: .text),
+                      FieldSpec(key: "about", name: "About", kind: .refList, target: .thing),
+                  ]),
         ClassSpec(key: .process, name: "Process", parent: .thing, symbol: "circle.dotted", colorRole: "neutral",
                   traits: [.timed], fields: [
                       FieldSpec(key: "subject", name: "Subject", kind: .ref, target: .thing),
