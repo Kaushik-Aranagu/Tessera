@@ -353,8 +353,6 @@ final class AppModel {
     /// once-a-second UI ticks must stay far under a frame.
     @ObservationIgnored private var scheduleCache: (revision: Int, anchor: Date, items: [ScheduleItem])?
     @ObservationIgnored private var workoutCache: (revision: Int, anchor: Date, workout: ObjectRecord?)?
-    /// Finished workouts per day (Core's summaries), rebuilt when data changes.
-    @ObservationIgnored var finishedCache: [Date: (revision: Int, summaries: [WorkoutSummary])] = [:]
 
     func schedule(around now: Date = AppClock.now) -> [ScheduleItem] {
         let revision = revision
@@ -478,10 +476,10 @@ final class AppModel {
 // MARK: - Plan
 
 extension AppModel {
-    /// The plan Home trains from: Kaushik's starter PPL×2 (installed first, so the oldest plan).
+    /// The plan Home trains from: Kaushik's starter PPL×2, else the first plan there is.
     var plan: ObjectRecord? {
         _ = revision
-        return objects(of: .plan).first
+        return store.object(id: StarterContent.planID) ?? objects(of: .plan).first
     }
 
     /// Today's routine from the plan, when there is no workout object for today yet (nothing scheduled, nothing
@@ -497,14 +495,10 @@ extension AppModel {
         finishedWorkouts(on: now)
     }
 
+    /// Core caches these per store revision.
     func finishedWorkouts(on day: Date) -> [WorkoutSummary] {
-        let key = Calendar.current.startOfDay(for: day)
-        if let cached = finishedCache[key], cached.revision == revision {
-            return cached.summaries
-        }
-        let summaries = ledger.finishedWorkouts(on: day)
-        finishedCache[key] = (revision, summaries)
-        return summaries
+        _ = revision
+        return ledger.finishedWorkouts(on: day)
     }
 
     /// Start: today's workout from the routine through the engine (one entry per slot, prefilled), then live mode.

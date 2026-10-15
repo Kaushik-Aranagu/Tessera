@@ -544,10 +544,15 @@ extension WorkoutSession {
     // MARK: Finish
 
     /// Hold to finish: ends the workout through the engine. The view then plays the gather.
-    func finish() {
+    /// Early (from the running order): Core's FinishWorkoutEarly marks the unstarted exercises skipped, one undo.
+    func finish(early: Bool = false) {
         guard finishedAt == nil else { return }
         let now = AppClock.now
-        _ = try? model.engine.perform(FinishWorkout(workout: workout.id, time: now), by: .user)
+        if early, !entries.allSatisfy(isFinished) {
+            _ = try? model.engine.perform(FinishWorkoutEarly(workout: workout.id, time: now), by: .user)
+        } else {
+            _ = try? model.engine.perform(FinishWorkout(workout: workout.id, time: now), by: .user)
+        }
         finishedAt = now
         restEndsAt = nil
         undoable = nil
@@ -565,31 +570,13 @@ extension WorkoutSession {
         let prefill = ledger.prefill(for: entry)
         self.prefill = prefill
         targetReason = Self.reason(for: prefill)
+        // Core prefills a light first-session weight too (StartRoutine, store.startingWeight); bands have none.
         if let raw = presetWeight[entry.id] ?? prefill.weight, let exercise = currentExercise {
             weight = weightDial(of: exercise).snap(raw)
         } else {
-            weight = detents.first ?? 20
+            weight = 0
         }
         reps = Double(prefill.reps)
         rpe = nil
-    }
-
-    /// Why the dial opened where it did, in Tess's words.
-    static func reason(for prefill: SetPrefill) -> String? {
-        switch prefill.source {
-        case .lastTime:
-            prefill.weight.map { "Same as last time, \(Format.kilograms($0)) × \(prefill.reps)" }
-        case .thisSession: nil
-        case .target: prefill.isFirstTime ? "First time. Start light, \(prefill.reps) reps" : "From the plan"
-        case .none: "First time. Start light"
-        }
-    }
-
-    /// The dial still holds the prefill exactly, so Core's LogNextSet can log it as is.
-    var isAtPrefill: Bool {
-        guard let entry = currentEntry, rpe == nil, Format.unit == .kilograms else { return false }
-        let prefill = ledger.prefill(for: entry)
-        guard let weight = prefill.weight else { return false }
-        return abs(weight - self.weight) < 0.001 && prefill.reps == Int(reps)
     }
 }

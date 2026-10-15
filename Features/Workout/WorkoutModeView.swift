@@ -259,7 +259,7 @@ extension WorkoutContent {
                         onClose: { setOrder(open: false) },
                         onFinish: session.summary.sets > 0 ? {
                             setOrder(open: false)
-                            finish()
+                            finish(early: true)
                         } : nil
                     )
                     .ignoresSafeArea(edges: .top)
@@ -577,10 +577,10 @@ extension WorkoutContent {
         session.entries.flatMap { entry in session.setRows(of: entry).map { Paint.set($0.number) } }
     }
 
-    private func finish() {
+    private func finish(early: Bool = false) {
         isSwapOpen = false
         isOrderOpen = false
-        withTesseraAnimation(.easeOut(duration: 0.4), reduceMotion: reduceMotion) { session.finish() }
+        withTesseraAnimation(.easeOut(duration: 0.4), reduceMotion: reduceMotion) { session.finish(early: early) }
     }
 
     /// The workout is already finished (FinishWorkout ran on the hold); leaving drops it into today on Home.
