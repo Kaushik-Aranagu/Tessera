@@ -1,6 +1,6 @@
 # Workout v1 (live, painterly)
 
-A dark painterly ground. The workout is a foreground process: it rises as a full-screen cover. Sparse: one exercise, one number, one action. Mockups: `mockups/PleinWorkout.dc.html` (the set, dial, drum and hold) and `mockups/LiveDetails.dc.html` (the strip, swap, top-set check, effort, rest drags, finish and lock-screen undo; tap each moment to play it). Behaviour follows Product's `workouts.md`, section 2.
+A dark painterly ground. The workout is a foreground process: it rises as a full-screen cover. Sparse: one exercise, one number, one action. Mockups: `mockups/WorkoutTight.dc.html` (the set, dial, drum and hold, in Inter Tight; `PleinWorkout` is the same screen in the retired serif) and `mockups/LiveDetails.dc.html` (the strip, swap, top-set check, effort, rest drags, finish and lock-screen undo; tap each moment to play it). Behaviour follows Product's `workouts.md`, section 2.
 
 ## Layout and axes
 - **x** = exercises. **y** = sets (drawn as strokes). **z** = the exercise's object page.
@@ -8,12 +8,12 @@ A dark painterly ground. The workout is a foreground process: it rises as a full
 | y | Element |
 |---|---|
 | 0 | **The strip:** the lit process seam, split into one segment per exercise (see The strip) |
-| 56 | "Push Day A, 12:48" in Fraunces italic 21, secondary colour, with the clock ticking. "1 / 5" sits on the right in labels |
-| 92 | **Exercise lane**, Fraunces 48, weight 640: one name per 322pt page. The next name peeks in at 28% cream. Tap the name to zoom into the exercise |
+| 56 | "Push Day A, 12:48" in 21/400, secondary colour, with the clock ticking. "1 / 5" sits on the right in labels |
+| 92 | **Exercise lane**, Inter Tight 44, weight 500, tracking −3.5%: one name per 322pt page. The next name peeks in at 28% cream. Tap the name to zoom into the exercise |
 | 176 | **Sets as brushstrokes**: one 64×20 stroke per set (see below) |
-| 210 | **Subline**, Fraunces italic 21, e.g. "set 3 of 4, last was 82.5 × 8" |
-| 270 | **Weight**: Fraunces 72, weight 600, tabular lining numerals, with "kg" in italic 21. Plate maths below it in labels: "31.25 KG A SIDE" |
-| 252–384 (right) | **Reps drum**, with "reps" in italic 18 at 55% below it |
+| 210 | **Subline**, 21/400, e.g. "set 3 of 4, last was 82.5 × 8" |
+| 270 | **Weight**: the numeral tier (Inter Tight 80, Light 300, −4%, tabular), with "kg" at 21/400. Plate maths below it in labels: "31.25 KG A SIDE" |
+| 252–384 (right) | **Reps drum**, with "reps" at 18/400 at 55% below it |
 | 470 | **Weight dial** |
 | 624 | **Hold-to-log key**, 240×62, with "82.5 × 8" beside it in labels |
 | 756 | **Tess bar** (dark glass), with the soul in screen blend |
@@ -26,7 +26,7 @@ A dark painterly ground. The workout is a foreground process: it rises as a full
 ## Reps drum
 - No box, slot or lens: just numbers in a vertical snap scroll, 92 wide, three rows visible at a 44pt pitch.
 - The top and bottom fade out through a mask.
-- The centre value is Fraunces 48 in cream, prefixed "× ". Neighbours are 21pt at 35%.
+- The centre value is Inter Tight 48 Light in cream. Neighbours are 21pt at 35%.
 - Size and colour transition over 160ms as it rolls.
 - It defaults to the target reps.
 

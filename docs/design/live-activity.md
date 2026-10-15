@@ -6,7 +6,7 @@ The rest timer lives on the Lock Screen and in the Dynamic Island, so the phone 
 - The layout merges Gesso and Horizon.
 - The typeface is **Inter Tight**.
 - **No italics anywhere.**
-- Colour mood: default to Cobalt sky until he picks one.
+- Colour mood: **Cobalt sky** (final, 2026-10-15).
 
 Principles, from research: one number, one action, the system's own glass, cream numerals.
 
@@ -42,13 +42,12 @@ Trigger this with `staleDate` = the end of rest, and branch on `context.isStale`
 - "+15" dims to 25%, and the bottom left reads "Rested 2:30".
 - One haptic alert plays when rest ends. Never repeat it.
 
-## Colour moods (to be picked; Cobalt sky is the default)
-| Mood | Wash 1 (top left) | Wash 2 (top right) | Line | Tick |
-|---|---|---|---|---|
-| Cobalt sky | `rgba(63,127,192,.75)` | `rgba(122,92,160,.45)` | cream | vermilion |
-| Dusk | `rgba(226,96,63,.7)` | `rgba(150,80,150,.55)` | `#FFB896` | `#FFE3D2` |
-| Sage | `rgba(110,158,106,.75)` | `rgba(42,127,134,.6)` | `#C8E6B4` | vermilion |
-| Ink | none | none | cream | vermilion |
+## Colour mood: Cobalt sky (final)
+| Wash 1 (top left) | Wash 2 (top right) | Line | Tick |
+|---|---|---|---|
+| cobalt `rgba(63,127,192,.75)` | violet `rgba(122,92,160,.45)` | cream `#F6EFE4` | vermilion `#E2603F` |
+
+Dusk, Sage and Ink were explored on the `LiveFinal` board and not chosen; don't build them.
 
 ## Dynamic Island
 - **Compact:**

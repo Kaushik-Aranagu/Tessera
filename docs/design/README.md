@@ -2,7 +2,7 @@
 
 The source of truth for how v1 looks, moves and feels. iOS build implements from these files; Design studio keeps them current.
 
-- **Interactive mockups (canvas):** https://claude.ai/artifact/Ma6zBUdJJe4giqRNWHzF3r (private to Kaushik). The current rounds are **Round 6** (painterly Home and Workout, plus soul v2) and **Round 7** (Tess captures and the rest Live Activity), and **Round 9** (What's running as Now plus the ledger in `HomeLedger`, the live-mode details in `LiveDetails`, the exercise page, plans, the Soul Lab, and the Inter Tight vs serif comparison boards). Round 7's bottom dock is retired. Round 5's machined look was rejected; ignore it.
+- **Interactive mockups (canvas):** https://claude.ai/artifact/Ma6zBUdJJe4giqRNWHzF3r (private to Kaushik). The current rounds are **Round 6** (painterly Home and Workout, plus soul v2) and **Round 7** (Tess captures and the rest Live Activity), and **Round 9** (What's running as Now plus the ledger in `HomeLedger`, the live-mode details in `LiveDetails`, the exercise page, plans, the Soul Lab, and Home and Workout in Inter Tight). **Type is Inter Tight app-wide, no italics** (Kaushik, 2026-10-15); boards drawn in Fraunces show layout and paint only. Round 7's bottom dock is retired. Round 5's machined look was rejected; ignore it.
 - **Mockup source:** [`mockups/`](mockups/) holds the HTML for those boards. They won't render on their own (they need the canvas runtime), but every colour, size, timing and keyframe in them is exact. Read them as reference code.
 
 | File | What it covers |

@@ -1,6 +1,6 @@
 # Materials: painterly ground, machined edges
 
-The look is Plein air: impressionist washes, paper grain, big serif type, and very little on screen. "Zero tolerance" is a finishing detail on that look, not a material of its own. It shows up as a hairline outline, one lit chamfer, a precise tick ruler, and a lit seam. There are no milled blocks, recesses or seams between rows. Round 5's machined materials are retired.
+The look is Plein air: impressionist washes, paper grain, big type, and very little on screen. "Zero tolerance" is a finishing detail on that look, not a material of its own. It shows up as a hairline outline, one lit chamfer, a precise tick ruler, and a lit seam. There are no milled blocks, recesses or seams between rows. Round 5's machined materials are retired.
 
 ## Light ground: Home
 - **Base:** layered soft radial washes over paper `#F2ECE3`:

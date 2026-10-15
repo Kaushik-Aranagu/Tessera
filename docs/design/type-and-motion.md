@@ -1,25 +1,27 @@
 # Type and motion
 
-> **No italics anywhere** (Kaushik, 2026-10-15). Wherever these specs say "italic", use the upright cut at the same size and colour; Tess's lines stay cobalt. The app-wide typeface is still open: Fraunces + Hanken Grotesk (below) or Inter Tight throughout, as on the Rest Live Activity. Compare `mockups/HomeTight.dc.html` / `HomeSerif.dc.html` and `WorkoutTight.dc.html` / `WorkoutSerif.dc.html`. Keep building on the tokens below until he picks; the swap should be a `Theme` change only.
+> **Inter Tight, app-wide** (Kaushik, 2026-10-15). Fraunces and Hanken Grotesk are retired. **No italics anywhere.** If an older note says "italic", it means the upright cut at the same size and colour.
 
 ## Type: four tiers, nothing smaller than 16pt
-| Tier | Size / line height | Use |
-|---|---|---|
-| Hero | 56–72pt / 0.95, Fraunces weight 600–640, tracking −2.5 to −3% | The object's name, or the one number that matters (weight, rest) |
-| Title | 34–48pt, Fraunces (italic 34 for section words like "Later") | Exercise names, section heads |
-| Body | 21pt / 1.3–1.4, Hanken Grotesk weight 500–600 | Rows, keys |
-| Label | 16pt Hanken Grotesk 700, uppercase, +8% tracking | Metadata, times, plate maths |
+One family, **Inter Tight** (variable, 100–900), bundled in the app and the widget extension. Tabular figures everywhere a number can change.
 
-- **Fonts:**
-  - **Fraunces** (variable: opsz 144, SOFT 100, WONK 1 for display) for heroes and numerals. Use tabular lining numerals.
-  - **Fraunces, upright** (formerly italic) for context lines ("now, until twenty to four") and for everything Tess says, in cobalt.
-  - **Hanken Grotesk** for the UI.
+| Tier | Size / line height | Weight, tracking | Use |
+|---|---|---|---|
+| Hero | 56pt / 1.0 (up to 72) | 500, −4% | The object's name, a sentence hero ("Four good days of seven") |
+| Numeral | 80pt / 1.0 | 300 (Light), −4%, tabular | The one number that matters: weight, rest, the reps drum's centre |
+| Title | 34–44pt / 1.05–1.2 | 500, −3.5% | Exercise names (44), section words like "Later" (34) |
+| Body | 21pt / 1.25–1.4 | 400 for context lines and Tess; 500–600 for rows and keys | Rows, keys, context lines ("now, until twenty to four"), everything Tess says (in cobalt) |
+| Label | 16pt | 700, uppercase, +8% | Metadata, times, plate maths |
+
+- Secondary lines inside a row may use 18pt (400) where a 21pt line would wrap; never smaller.
+- The lock screen keeps its own sizes (48 Light countdown), see `live-activity.md`.
+- Hierarchy comes from size and weight steps, never from italics or a second family.
 - Fonts sit behind `Theme`.
-- Use `Font.custom(_:size:relativeTo:)`. Cap the hero at about 80pt.
+- Use `Font.custom("InterTight", size:relativeTo:)` with the variable weight axis. Cap the hero at about 80pt.
 - **Accessibility text sizes:** switch to a single column.
 - **Long hero names:**
   1. Allow up to 3 lines.
-  2. Step down opsz and size.
+  2. Step down a size (56 → 44 → 34).
   3. Demote to Title.
   4. Only then truncate, with the full name in the accessibility label.
 
