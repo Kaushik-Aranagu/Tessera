@@ -109,6 +109,10 @@ struct NowPage: View {
                     }
                 }
                 .entrance(3)
+                // The countdown as time you can see: a wash that drains while the item runs.
+                DrainBar(start: task.start, end: task.end)
+                    .padding(.top, Theme.Spacing.s)
+                    .entrance(4)
             }
         } else if let routine = model.todaysRoutine(now: now) {
             RoutineHero(routine: routine)
@@ -172,6 +176,48 @@ struct NowPage: View {
         withTesseraAnimation(.smooth(duration: 0.34), reduceMotion: reduceMotion) {
             model.finish(taskID: task.id)
         }
+    }
+}
+
+/// Now's countdown drawn as a bar that drains (the rest dial's wash, in day paint): full before the item starts,
+/// emptying towards the left as it runs, gone at its end. Ticks once a second; the edge glides between ticks.
+struct DrainBar: View {
+    let start: Date
+    let end: Date
+
+    private static let height: CGFloat = 14
+    /// A slightly uneven stroke end, not a pill.
+    private static let shape = UnevenRoundedRectangle(topLeadingRadius: 4, bottomLeadingRadius: 2.5,
+                                                      bottomTrailingRadius: 4, topTrailingRadius: 2.5,
+                                                      style: .continuous)
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let now = AppClock.adjust(context.date)
+            let fraction = Self.remaining(start: start, end: end, now: now)
+            GeometryReader { proxy in
+                ZStack(alignment: .leading) {
+                    Self.shape.fill(Theme.Colors.ink.opacity(0.05))
+                    LinearGradient(colors: [HomePaint.dayAmber.opacity(0.15), HomePaint.dayAmber.opacity(0.55)],
+                                   startPoint: .leading, endPoint: .trailing)
+                        .overlay(alignment: .trailing) { HomePaint.dayAmber.frame(width: 2) }
+                        .frame(width: proxy.size.width * fraction)
+                        .clipShape(Self.shape)
+                        .tesseraAnimation(.linear(duration: 1), value: fraction)
+                }
+            }
+            .frame(height: Self.height)
+            .accessibilityElement()
+            .accessibilityLabel("Time left")
+            .accessibilityValue("\(Int((fraction * 100).rounded())) percent")
+        }
+    }
+
+    /// 1 before the start, draining to 0 at the end.
+    static func remaining(start: Date, end: Date, now: Date) -> Double {
+        let total = end.timeIntervalSince(start)
+        guard total > 0, now > start else { return 1 }
+        return min(max(end.timeIntervalSince(now) / total, 0), 1)
     }
 }
 

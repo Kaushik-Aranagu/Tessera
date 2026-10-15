@@ -186,4 +186,12 @@ struct HomeDataTests {
         #expect(TrainingPage.target(sets: 4, reps: 8) == "4 × 8")
         #expect(TrainingPage.target(sets: 4, reps: 8, weight: 82.5) == "4 × 8 · 82.5")
     }
+
+    @Test func nowDrainsFromFullToEmptyAcrossTheItem() {
+        let start = Date(timeIntervalSinceReferenceDate: 0)
+        let end = start.addingTimeInterval(3600)
+        #expect(DrainBar.remaining(start: start, end: end, now: start.addingTimeInterval(-60)) == 1)
+        #expect(DrainBar.remaining(start: start, end: end, now: start.addingTimeInterval(900)) == 0.75)
+        #expect(DrainBar.remaining(start: start, end: end, now: end.addingTimeInterval(60)) == 0)
+    }
 }
