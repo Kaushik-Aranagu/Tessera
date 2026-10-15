@@ -31,3 +31,9 @@ swiftformat .
 swiftlint
 ```
 Fix lint errors before committing. Don't commit build products, DerivedData or `xcuserdata`.
+
+## Design & motion
+Read `docs/DESIGN_MOTION.md` before building or changing any UI. The bar is first-party-Apple polish, not a generic
+app: continuous transitions, spring physics, haptics, Liquid Glass on the navigation layer only, Reduce Motion /
+Dynamic Type respected. Use the installed skills (`swiftui-pro`, `swiftui-expert`, `liquid-glass`, `swiftui-skills`,
+framework skills) and check new APIs against them rather than guessing.

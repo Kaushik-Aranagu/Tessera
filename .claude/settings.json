@@ -1,5 +1,45 @@
 {
   "enabledPlugins": {
-    "swift-lsp@claude-plugins-official": true
+    "swift-lsp@claude-plugins-official": true,
+    "swiftui-pro@swiftui-agent-skill": true,
+    "swiftui-expert@swiftui-expert-skill": true,
+    "swift-concurrency@swift-concurrency-agent-skill": true,
+    "liquid-glass@liquid-glass": true,
+    "swiftui-skills@swift-ios-skills": true,
+    "ios-app-framework-skills@swift-ios-skills": true,
+    "ios-data-framework-skills@swift-ios-skills": true,
+    "ios-ai-ml-skills@swift-ios-skills": true
+  },
+  "extraKnownMarketplaces": {
+    "swiftui-agent-skill": {
+      "source": {
+        "source": "github",
+        "repo": "twostraws/SwiftUI-Agent-Skill"
+      }
+    },
+    "swiftui-expert-skill": {
+      "source": {
+        "source": "github",
+        "repo": "AvdLee/SwiftUI-Agent-Skill"
+      }
+    },
+    "swift-concurrency-agent-skill": {
+      "source": {
+        "source": "github",
+        "repo": "AvdLee/Swift-Concurrency-Agent-Skill"
+      }
+    },
+    "liquid-glass": {
+      "source": {
+        "source": "github",
+        "repo": "heyparsadev/liquid-glass-skill"
+      }
+    },
+    "swift-ios-skills": {
+      "source": {
+        "source": "github",
+        "repo": "dpearson2699/swift-ios-skills"
+      }
+    }
   }
 }
