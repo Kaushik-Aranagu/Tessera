@@ -21,7 +21,8 @@ public extension TaskList {
     static let workoutMinutes = 60.0
 
     /// The rest of today, from now (or the start of the day) to the day's end (23:00 by default).
-    func load(at now: Date = .now, dayStartHour: Int = 7, dayEndHour: Int = 23,
+    /// `restDay` leaves out a workout still scheduled for today (the plan rests, so it doesn't load the day).
+    func load(at now: Date = .now, dayStartHour: Int = 7, dayEndHour: Int = 23, restDay: Bool = false,
               calendar: Calendar = .current) -> DayLoad
     {
         let start = calendar.date(bySettingHour: dayStartHour, minute: 0, second: 0, of: now) ?? now
@@ -35,7 +36,7 @@ public extension TaskList {
             return when.addingTimeInterval((item.minutes ?? 0) * 60) > now
         }
         let taskMinutes = remaining.reduce(0) { $0 + ($1.minutes ?? Self.defaultTaskMinutes) }
-        let workouts = classes[.workout].map { workoutClass in
+        let workouts = restDay ? 0 : classes[.workout].map { workoutClass in
             store.objects(of: workoutClass).filter { workout in
                 store.value("endedAt", of: workout) == nil
                     && (store.value("scheduledFor", of: workout)?.dateValue)

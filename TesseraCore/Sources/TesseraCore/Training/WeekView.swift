@@ -55,12 +55,17 @@ public extension TrainingLedger {
             let trainedYesterday = calendar.date(byAdding: .day, value: -1, to: today)
                 .map { !finishedWorkouts(on: $0, calendar: calendar).isEmpty } ?? false
             let startsToday = ahead.first.map { calendar.isDate(dates[$0], inSameDayAs: today) } ?? false
+            // A workout under way today makes today a training day, whatever the spread says (QA E6).
+            let busyToday = hasWorkoutUnderway(on: now, calendar: calendar)
             let pool = trainedYesterday && startsToday && due < ahead.count ? Array(ahead.dropFirst()) : ahead
             if due < ahead.count {
                 let left = pool.count
                 let steps = due <= 1 ? Array(0 ..< min(due, left))
                     : (0 ..< due).map { Int((Double($0 * (left - 1)) / Double(due - 1)).rounded()) }
                 training = Set(steps.map { pool[$0] })
+                if busyToday, let first = ahead.first, calendar.isDate(dates[first], inSameDayAs: today) {
+                    training.insert(first)
+                }
             }
         }
         return dates.indices.map { index in
