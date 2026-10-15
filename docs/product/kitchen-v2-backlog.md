@@ -53,13 +53,19 @@
 
 *Design: `docs/design/kitchen/kitchen-v2.md` §P, §R, §W, with the recording `pantry-light.mp4`. These are the top three rows of the table above, made into slices. Core builds the engine, and the screens are changes to existing sheets (10, the Ingredient page, 13, 14). They are still held until Kaushik has cooked and shopped with v1 for a week.*
 
-**P. Pantry light.**
+**P. Pantry light.** (After R, and only if R's evidence and week one show he wants a state.)
 - Engine: `Ingredient.state` (in, low, out or unknown) and `lastBoughtAt`, set by clearing the shop, by `FinishCooking`, and by "out of milk" or "have rice".
 - Recipe page: an out line drops to 400 weight at 55%, with a faint ring in the margin, never red. Low, unknown and staples show nothing.
 - Ingredient page: a state sentence ("**Out** since you cooked dal on Tuesday"). Tapping the value word cycles in, low, out, and the change can be undone.
 - **Swipe-to-Groceries sends out, low and unknown lines, and skips in lines and staples** (decided, see below).
 
-**R. Running low by rhythm.** After P has three buys of history. A **USUALLY BY NOW** line sits at the foot of Groceries with at most three names, dim. Tapping a name adds it to its aisle, with Undo. Swiping one left skips it until its next gap. Nothing is ever added on its own.
+**R. Usually have (Research's U0, `docs/research/pantry-light.md` §9).** This no longer waits on P: it reads the Groceries history that already exists (checked items keep `checkedAt` after clearing). If week one's question 1 comes back "yes", it is the first v2 pantry step. Decided 2026-10-15:
+- The rule is Research's rules 1-9. An item qualifies after 3 or more typed buys within 56 days at a steady interval U. It is due from **0.85 × U to 2 × U** days after the last buy; the backlog's 1.5× would show weekly milk a week late. Recipe-only items like lemons never qualify.
+- At most **3 names**, the most overdue first. Each is offered for **one shop run**: if it's shown and not bought when the shop clears, it goes quiet until the next buy resets it. Swiping left does the same (`SkipUsual`).
+- **The copy is "Usually have: milk, eggs"**, replacing Design's USUALLY BY NOW. It states a fact about him with no deadline feel. It keeps Design's §R look: the label at 55% and the names at 21/400 at 55%, as the last thing in the aisle window and in at-the-shop mode, never pinned, taking no space when empty.
+- Tapping a name adds it to its aisle, and Tess says "Milk, in Groceries." with Undo. Long-pressing gives the reason: "Bought 6 times in 8 weeks, about weekly." On the Ingredient page it reads "Usually every 7 days. Last bought 9 days ago."
+- It never notifies, never shows a badge, never makes a Home offer, never adds anything on its own, and never uses red.
+- *Accept against* Research's 20-week fixture (§7), every row.
 
 **W. What can I cook.** After P.
 - **CAN COOK** replaces FROM THE BASKET as the shelf's third filter word (decided, see below). It is off by default.
