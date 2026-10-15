@@ -234,3 +234,28 @@ struct GrammarTraceTests {
         #expect(kind("cook tomato and basil pasta") == "cook")
     }
 }
+
+/// The kitchen lead's two misses on #70.
+@MainActor
+struct KitchenAcceptanceFollowUpTests {
+    @Test func trailingUnitsAndMixedLists() throws {
+        let cloves = try #require(IngredientLine.parse("2 garlic cloves"))
+        #expect(cloves.name == "garlic" && cloves.unit == .clove && cloves.amount == 2)
+        #expect(AisleGuide.aisle(for: "toothpaste") == .household)
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let grammar = TessGrammar(store: store, classes: classes)
+        let context = TessContext(now: .now, calendar: .current)
+        if case let .groceries(lines)? = grammar.parse("milk, toothpaste", context: context) {
+            #expect(lines == ["milk", "toothpaste"])
+        } else {
+            Issue.record("milk, toothpaste should be groceries")
+        }
+        if case .groceries? = grammar.parse("milk, sriracha", context: context) {} else {
+            Issue.record("half shopping is enough")
+        }
+        if case .groceries? = grammar.parse("call mum, dentist", context: context) {
+            Issue.record("call mum, dentist isn't shopping")
+        }
+    }
+}

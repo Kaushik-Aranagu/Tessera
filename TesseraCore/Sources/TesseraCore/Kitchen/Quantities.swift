@@ -163,6 +163,14 @@ public struct IngredientLine: Hashable, Sendable, Codable {
             let size = sizes.joined(separator: " ")
             prep = prep.map { "\(size), \($0)" } ?? size
         }
+        // "2 garlic cloves" is 2 cloves of garlic: a trailing unit word moves to the unit.
+        if unit == nil, amount != nil,
+           let match = name.firstMatch(of: /(?i)^(.+?)\s+(cloves?|sprigs?|sticks?|heads?|slices?)$/),
+           let trailing = KitchenUnit(word: String(match.2))
+        {
+            unit = trailing
+            name = String(match.1)
+        }
         guard !name.isEmpty else { return nil }
         return IngredientLine(original: original, amount: amount, amountMax: amountMax, unit: unit, name: name,
                               prep: prep, toTaste: toTaste)
