@@ -31,9 +31,23 @@ struct ExerciseOverviewTests {
         let entry = try #require(today.orderedChildren.first)
         let swaps = ledger.swapCandidates(for: bench)
         let dbPress = try #require(swaps.first { $0.name.contains("Dumbbell") })
-        try engine.perform(SwapEntryExercise(entry: entry.id, exercise: dbPress.id), by: .user)
+        let carrier = try engine.perform(SwapEntryExercise(entry: entry.id, exercise: dbPress.id), by: .user).output
+        #expect(carrier == entry.id)
         #expect(store.linkedClass("exercise", of: entry)?.id == dbPress.id)
         #expect(store.number("targetWeight", of: entry) == nil)
+
+        // With sets logged, the done sets stay with the old exercise and a new entry carries the rest.
+        let second = try #require(today.orderedChildren.dropFirst().first)
+        try engine.perform(LogSet(entry: second.id, weight: 45, reps: 8), by: .user)
+        let machine = try #require(store.classDef(id: SystemCatalog.stableID("library.machineShoulderPress")))
+        let split = try engine.perform(SwapEntryExercise(entry: second.id, exercise: machine.id, targetWeight: 40),
+                                       by: .user).output
+        #expect(split != second.id)
+        #expect(store.number("targetSets", of: second) == 1)
+        let newEntry = try #require(store.object(id: split))
+        #expect(store.number("targetSets", of: newEntry) == 2 && store.number("targetWeight", of: newEntry) == 40)
+        #expect(store.linkedObjects("slot", of: newEntry).first?.id == store.linkedObjects("slot", of: second).first?
+            .id)
         #expect(store.linkedClass("exercise", of: pushA.orderedChildren[0])?.id == bench.id)
     }
 }
