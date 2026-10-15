@@ -2,8 +2,8 @@ import SwiftUI
 import TesseraCore
 
 /// Motion grammar: deeper pages zoom out of the tapped row (drag-to-dismiss zooms back = up); jumps and
-/// breadcrumbs cross-fade; workout mode is a process, so it rises from the bottom; Tess morphs out of the glass bar,
-/// and tapping her floods the screen with paint to go Home.
+/// breadcrumbs cross-fade; workout mode is a process, so it rises from the bottom; Tess opens out of her soul in the
+/// corner (the page recedes behind her), and double-tapping her floods the screen with paint to go Home.
 struct RootView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -30,11 +30,27 @@ struct RootView: View {
                 }
                 .tint(Theme.Colors.ink)
                 .environment(\.zoomNamespace, zoom)
-                .safeAreaInset(edge: .bottom, spacing: 0) {
-                    BottomChrome(onSoulTap: goHome).environment(\.zoomNamespace, zoom)
+                // Tess open: the page recedes (z) and a tap on it closes her.
+                .opacity(model.isCommandExpanded ? 0.22 : 1)
+                .blur(radius: model.isCommandExpanded ? 3 : 0)
+                .scaleEffect(model.isCommandExpanded ? 0.985 : 1)
+                .tesseraAnimation(.easeInOut(duration: 0.42), value: model.isCommandExpanded)
+                .overlay {
+                    if model.isCommandExpanded {
+                        Color.clear
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                withTesseraAnimation(reduceMotion: reduceMotion) { model.isCommandExpanded = false }
+                            }
+                            .accessibilityHidden(true)
+                    }
                 }
 
-                PaintFlood(isOn: flooding, origin: CGPoint(x: 44, y: proxy.size.height - 30))
+                BottomChrome(onSoulDoubleTap: goHome)
+                    .environment(\.zoomNamespace, zoom)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+
+                PaintFlood(isOn: flooding, origin: CGPoint(x: proxy.size.width - 46, y: proxy.size.height - 30))
                     .ignoresSafeArea()
             }
             .overlay(alignment: .top) {

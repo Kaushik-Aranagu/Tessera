@@ -22,7 +22,7 @@ enum HomePaint {
 /// name.
 struct HomeSpatialView: View {
     enum Page: Int, CaseIterable, Identifiable {
-        case review, today, training
+        case review, today, training, kitchen
 
         var id: Int {
             rawValue
@@ -33,6 +33,7 @@ struct HomeSpatialView: View {
             case .review: "Review"
             case .today: "Today"
             case .training: "Training"
+            case .kitchen: "Kitchen"
             }
         }
     }
@@ -84,14 +85,22 @@ struct HomeSpatialView: View {
         }
         .background { ThemedBackground() }
         .toolbarVisibility(.hidden, for: .navigationBar)
+        .navigationDestination(for: HomeLink.self) { link in
+            link.destination
+                .toolbarVisibility(.visible, for: .navigationBar)
+        }
     }
 
     @ViewBuilder
     private func content(for sibling: Page) -> some View {
         switch sibling {
-        case .review: ReviewPage()
+        case .review:
+            ReviewPage()
+                .frame(maxHeight: .infinity, alignment: .top)
+                .overlay(alignment: .bottomLeading) { HomeLinkLine(links: [.review, .notes]) }
         case .today: NowPage(onShow: show)
         case .training: TrainingPage()
+        case .kitchen: KitchenPage()
         }
     }
 
@@ -117,6 +126,83 @@ struct HomeSpatialView: View {
 
     private func show(_ sibling: Page) {
         show(sibling.rawValue)
+    }
+}
+
+// MARK: - Entry points
+
+/// The screens Home reaches that are not objects: Notes, Review, Groceries and Recipes. Pushed on the same stack,
+/// so the edge swipe walks back and a double tap on the soul goes Home.
+enum HomeLink: Hashable, CaseIterable {
+    case groceries, recipes, notes, review
+
+    var title: String {
+        switch self {
+        case .groceries: "Groceries"
+        case .recipes: "Recipes"
+        case .notes: "Notes"
+        case .review: "The week"
+        }
+    }
+
+    @MainActor @ViewBuilder
+    var destination: some View {
+        switch self {
+        case .groceries: GroceriesView()
+        case .recipes: RecipeView(recipeID: nil)
+        case .notes: NotesView()
+        case .review: ReviewView()
+        }
+    }
+}
+
+/// Kitchen: two names at hero-ish size, ink words with no shape around them; a tap zooms in.
+private struct KitchenPage: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
+            Text("What we eat, and what we need.")
+                .font(Theme.voice(size: 21))
+                .foregroundStyle(Theme.Colors.inkSecondary)
+            ForEach([HomeLink.groceries, .recipes], id: \.self) { link in
+                NavigationLink(value: link) {
+                    HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
+                        PaintDab(color: link == .groceries ? HomePaint.daySage : HomePaint.dayAmber,
+                                 seed: link == .groceries ? 2 : 5)
+                        Text(link.title)
+                            .textRole(.title)
+                            .foregroundStyle(Theme.Colors.ink)
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.top, Theme.Spacing.xl)
+    }
+}
+
+/// A line of entry words ("The week · Notes") at the foot of a page.
+private struct HomeLinkLine: View {
+    let links: [HomeLink]
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(Array(links.enumerated()), id: \.offset) { index, link in
+                if index > 0 {
+                    Text(" · ").textRole(.body).foregroundStyle(Theme.Colors.ink.opacity(0.6))
+                }
+                NavigationLink(value: link) {
+                    Text(link.title)
+                        .textRole(.bodyStrong)
+                        .foregroundStyle(Theme.Colors.ink)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
     }
 }
 
