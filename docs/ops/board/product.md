@@ -14,4 +14,6 @@
 
 **When Builder A's cook mode (kitchen slice 12) reaches the phone:** add Kitchen's 10-step `cook-mode-script.md` (#137, f77bb01) to review-session.md as the cook mode item, and drop the "no cook mode" known gap.
 
+**When Builder B's Speak (V1 and V2) reaches the phone:** add Research's `speech-test-script.md` (#138) to review-session.md: 30 phrases, run on a Thursday. It writes to real data, so the guide ends with the cleanup step.
+
 **Thursday Oct 22, end of his first kitchen week** (Groceries and Recipes reached the phone with 21566b8 on Oct 15): the three one-word questions from `kitchen-week-one.md` go on that day's morning list in one message (pantry check, saving a recipe from a website, reaching for something else). The answers go to the Kitchen lead to scope v2.

@@ -70,3 +70,6 @@
 - **Money open questions** (4:10 PM PT) go on the coordinator's morning list with defaults that hold until Kaushik answers: no merchant field yet, four currencies, a bare "38" answers a waiting shop total only when no workout runs, "paid" plus an amount is a spend, and a split logs his share (`ship-list-m5-money.md`).
 - **Live grammar misfires get a Core fix batch right after the ranker** (4:10 PM PT): "watered plants sat", "get mum a card", "coffee with ravi at 7". Research writes a misfire sweep so the batch catches the rest.
 - **Back word order** (4:12 PM PT, Design's `back-word.md`): "< NAME" replaces every system back button, Home covers get "< HOME" in place of "Close", and edge swipe stays. Builder A builds the shared BackWord view right after the #122 hookups. Builder B and Core adopt it in their next polish PRs. The first pass fades the word in; the flight comes later.
+- **Build A1 calls** (4:13 PM PT, Research #138): a shipped field can be hidden, never deleted, and hiding is undoable. A new field never reuses a retired field's key. A1 starts by clearing its six blockers on master.
+- **Watch W3 recovery line** (4:13 PM PT, Research #138): a 28-day baseline, no HRV percent on screen, and Plan my day's "light day" never comes from these readings. W3 waits for a small HealthKit read layer, which master doesn't have yet.
+
