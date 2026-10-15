@@ -14,6 +14,7 @@ public enum SystemCatalog {
         case workout, exerciseEntry, set
         case routine, task, note
         case process
+        case slot, plan
 
         public var systemKey: String {
             "system.\(rawValue)"
@@ -48,12 +49,33 @@ public enum SystemCatalog {
         ClassSpec(key: .thing, name: "Thing", symbol: "circle", colorRole: "neutral", fields: [
             FieldSpec(key: "notes", name: "Notes", kind: .richText),
         ]),
-        ClassSpec(key: .muscle, name: "Muscle", parent: .thing, symbol: "figure.arms.open", colorRole: "training"),
-        ClassSpec(key: .equipment, name: "Equipment", parent: .thing, symbol: "dumbbell", colorRole: "training"),
+        ClassSpec(key: .muscle, name: "Muscle", parent: .thing, symbol: "figure.arms.open", colorRole: "training",
+                  traits: [.measurable], fields: [
+                      FieldSpec(key: "group", name: "Group", kind: .text),
+                      FieldSpec(
+                          key: "weeklySetsMin",
+                          name: "Weekly sets from",
+                          kind: .number,
+                          defaultValue: .number(10)
+                      ),
+                      FieldSpec(key: "weeklySetsMax", name: "Weekly sets to", kind: .number, defaultValue: .number(20)),
+                  ]),
+        ClassSpec(key: .equipment, name: "Equipment", parent: .thing, symbol: "dumbbell", colorRole: "training",
+                  fields: [
+                      FieldSpec(key: "kind", name: "Kind", kind: .choice,
+                                options: EquipmentKind.allCases.map(\.rawValue)),
+                      FieldSpec(key: "barWeight", name: "Bar", kind: .mass, unit: "kg"),
+                      // Plate sizes available in pairs, e.g. "25, 20, 15, 10, 5, 2.5, 1.25".
+                      FieldSpec(key: "plates", name: "Plates", kind: .text),
+                      // Fixed loads for dumbbells or a machine stack, e.g. "2, 4, 6, 8, 10, 12.5".
+                      FieldSpec(key: "loads", name: "Loads", kind: .text),
+                      FieldSpec(key: "increment", name: "Smallest step", kind: .mass, unit: "kg"),
+                  ]),
         ClassSpec(key: .activity, name: "Activity", parent: .thing, symbol: "figure.walk", colorRole: "training"),
         ClassSpec(key: .exercise, name: "Exercise", parent: .activity, symbol: "figure.strengthtraining.traditional",
                   colorRole: "training", fields: [
                       FieldSpec(key: "primaryMuscles", name: "Primary muscles", kind: .refList, target: .muscle),
+                      FieldSpec(key: "secondaryMuscles", name: "Secondary muscles", kind: .refList, target: .muscle),
                       FieldSpec(key: "equipment", name: "Equipment", kind: .refList, target: .equipment),
                       FieldSpec(
                           key: "restSeconds",
@@ -62,6 +84,10 @@ public enum SystemCatalog {
                           unit: "s",
                           defaultValue: .duration(90)
                       ),
+                      FieldSpec(key: "repMin", name: "Reps from", kind: .number, defaultValue: .number(8)),
+                      FieldSpec(key: "repMax", name: "Reps to", kind: .number, defaultValue: .number(12)),
+                      FieldSpec(key: "progression", name: "Progression", kind: .text),
+                      FieldSpec(key: "variantOf", name: "Variant of", kind: .classRef, target: .exercise),
                   ]),
         ClassSpec(key: .strengthExercise, name: "Strength Exercise", parent: .exercise,
                   symbol: "figure.strengthtraining.traditional", colorRole: "training", traits: [.measurable], fields: [
@@ -72,6 +98,8 @@ public enum SystemCatalog {
                   colorRole: "training", fields: [
                       FieldSpec(key: "restSeconds", name: "Rest", kind: .duration, defaultValue: .duration(180),
                                 overrides: "restSeconds"),
+                      FieldSpec(key: "progression", name: "Progression", kind: .text,
+                                defaultValue: .text("dp(+2.5, 8, 12)"), overrides: "progression"),
                   ]),
         ClassSpec(
             key: .benchPress,
@@ -85,6 +113,7 @@ public enum SystemCatalog {
                       FieldSpec(key: "scheduledFor", name: "Scheduled", kind: .date),
                       FieldSpec(key: "startedAt", name: "Started", kind: .date),
                       FieldSpec(key: "endedAt", name: "Ended", kind: .date),
+                      FieldSpec(key: "routine", name: "Routine", kind: .ref, target: .routine),
                   ]),
         ClassSpec(key: .exerciseEntry, name: "Exercise Entry", parent: .thing, symbol: "list.bullet",
                   colorRole: "training", fields: [
@@ -92,6 +121,7 @@ public enum SystemCatalog {
                       FieldSpec(key: "targetSets", name: "Target sets", kind: .number),
                       FieldSpec(key: "targetReps", name: "Target reps", kind: .number),
                       FieldSpec(key: "targetWeight", name: "Target weight", kind: .mass, unit: "kg"),
+                      FieldSpec(key: "slot", name: "Slot", kind: .ref, target: .slot),
                   ]),
         ClassSpec(key: .set, name: "Set", parent: .thing, symbol: "number", colorRole: "training",
                   traits: [.trackable, .measurable], fields: [
@@ -99,15 +129,44 @@ public enum SystemCatalog {
                       FieldSpec(key: "reps", name: "Reps", kind: .number),
                       FieldSpec(key: "rpe", name: "RPE", kind: .number),
                       FieldSpec(key: "isWarmup", name: "Warm-up", kind: .bool, defaultValue: .bool(false)),
+                      FieldSpec(
+                          key: "kind",
+                          name: "Kind",
+                          kind: .choice,
+                          defaultValue: .choice(SetKind.working.rawValue),
+                          options: SetKind.allCases.map(\.rawValue)
+                      ),
+                      FieldSpec(key: "source", name: "Logged with", kind: .choice,
+                                options: SetSource.allCases.map(\.rawValue)),
+                      FieldSpec(key: "loggedAt", name: "Logged", kind: .date),
+                      // Epley on effective reps: with RPE logged, 5 @ 8 counts as a 7-rep effort.
                       FieldSpec(key: "e1rm", name: "Estimated 1RM", kind: .computed, unit: "kg",
-                                expression: "weight * (1 + reps / 30)"),
+                                expression: honestE1RM),
                       FieldSpec(key: "volume", name: "Volume", kind: .computed, unit: "kg",
                                 expression: "weight * reps"),
                   ]),
-        ClassSpec(key: .routine, name: "Plan", parent: .thing, symbol: "calendar", colorRole: "planning",
-                  traits: [.schedulable], fields: [
+        // A routine (Push Day A) is an ordered list of slots, held as its children.
+        ClassSpec(key: .routine, name: "Routine", parent: .thing, symbol: "list.number", colorRole: "planning",
+                  fields: [
                       FieldSpec(key: "cadence", name: "Cadence", kind: .choice, defaultValue: .choice("week"),
                                 options: ["day", "week", "month"]),
+                  ]),
+        ClassSpec(key: .slot, name: "Slot", parent: .thing, symbol: "rectangle.stack", colorRole: "planning",
+                  fields: [
+                      FieldSpec(key: "exercise", name: "Exercise", kind: .classRef, target: .exercise),
+                      FieldSpec(key: "sets", name: "Sets", kind: .number, defaultValue: .number(3)),
+                      FieldSpec(key: "repMin", name: "Reps from", kind: .number),
+                      FieldSpec(key: "repMax", name: "Reps to", kind: .number),
+                      FieldSpec(key: "targetRPE", name: "Target RPE", kind: .number),
+                      FieldSpec(key: "restSeconds", name: "Rest", kind: .duration, unit: "s"),
+                      FieldSpec(key: "progression", name: "Progression", kind: .text),
+                  ]),
+        // A plan cycles through routines in order; a missed day just moves to the next routine.
+        ClassSpec(key: .plan, name: "Plan", parent: .thing, symbol: "calendar", colorRole: "planning",
+                  traits: [.schedulable], fields: [
+                      FieldSpec(key: "routines", name: "Routines", kind: .refList, target: .routine),
+                      FieldSpec(key: "startsOn", name: "Starts", kind: .date),
+                      FieldSpec(key: "weeks", name: "Weeks", kind: .number),
                   ]),
         ClassSpec(key: .task, name: "Task", parent: .thing, symbol: "checkmark.circle", colorRole: "planning",
                   traits: [.schedulable], fields: [
@@ -135,6 +194,13 @@ public enum SystemCatalog {
                   ]),
     ]
 
+    static let honestE1RM = "weight * (1 + (reps + 10 - coalesce(rpe, 10)) / 30)"
+
+    /// Formulas earlier builds shipped; seeding upgrades a system field still using one of them.
+    private static let retiredExpressions: [String: Set<String>] = [
+        "system.set.e1rm": ["weight * (1 + reps / 30)"],
+    ]
+
     /// Inserts any missing system classes and returns all of them by key.
     @discardableResult
     public static func seed(in context: ModelContext) throws -> [Key: ClassDef] {
@@ -143,6 +209,10 @@ public enum SystemCatalog {
             let classDef: ClassDef
             if let existing = classes[spec.key] {
                 classDef = existing
+                // Earlier builds called the routine class "Plan"; Plan is now its own class.
+                if spec.key == .routine, existing.name == "Plan" {
+                    existing.name = spec.name
+                }
             } else {
                 classDef = ClassDef(
                     name: spec.name,
@@ -160,7 +230,11 @@ public enum SystemCatalog {
             let present = Set((classDef.ownFields ?? []).map(\.id))
             for (index, fieldSpec) in spec.fields.enumerated() {
                 let fieldID = stableID("\(spec.key.systemKey).\(fieldSpec.key)")
-                guard !present.contains(fieldID) else { continue }
+                if present.contains(fieldID) {
+                    upgradeExpression(of: fieldID, in: classDef, to: fieldSpec.expression,
+                                      key: "\(spec.key.systemKey).\(fieldSpec.key)")
+                    continue
+                }
                 let field = FieldDef(
                     name: fieldSpec.name,
                     key: fieldSpec.key,
@@ -185,6 +259,16 @@ public enum SystemCatalog {
         }
         try context.save()
         return classes
+    }
+
+    /// Moves a system formula forward, unless the person has edited it.
+    private static func upgradeExpression(of fieldID: UUID, in classDef: ClassDef, to expression: String?,
+                                          key: String)
+    {
+        guard let expression, let retired = retiredExpressions[key],
+              let field = classDef.ownFields?.first(where: { $0.id == fieldID }),
+              let current = field.expression, retired.contains(current) else { return }
+        field.expression = expression
     }
 
     public static func existing(in context: ModelContext) throws -> [Key: ClassDef] {

@@ -12,7 +12,11 @@ public struct TrainingLedger {
         public let weight: Double
         public let reps: Double
         public let rpe: Double?
+        public let kind: SetKind
+        /// Epley on effective reps (reps + 10 − RPE when RPE is logged).
         public let e1RM: Double
+        /// Only sets of up to 12 effective reps estimate a max honestly.
+        public let isE1RMEligible: Bool
         public var volume: Double {
             weight * reps
         }
@@ -66,6 +70,10 @@ public struct TrainingLedger {
 
     /// Records are compared with a little slack so floating-point noise never shows as a PR.
     private static let tolerance = 0.05
+    /// Rep maxes are tracked from 1 to 10 reps.
+    public static let repMaxRange = 1 ... 10
+    /// Sets above this many effective reps don't estimate a one-rep max.
+    public static let e1RMRepLimit = 12.0
 
     public init(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) {
         self.store = store
@@ -95,11 +103,13 @@ public struct TrainingLedger {
         var records = PersonalRecords()
         for session in sessions(of: exercise, excludingWorkout: excludedID) {
             for set in session.sets {
-                if set.e1RM > (records.bestE1RM?.e1RM ?? -.infinity) {
+                if set.isE1RMEligible, set.e1RM > (records.bestE1RM?.e1RM ?? -.infinity) {
                     records.bestE1RM = set
                 }
                 let reps = Int(set.reps.rounded())
-                records.bestWeightByReps[reps] = max(records.bestWeightByReps[reps] ?? 0, set.weight)
+                if Self.repMaxRange.contains(reps) {
+                    records.bestWeightByReps[reps] = max(records.bestWeightByReps[reps] ?? 0, set.weight)
+                }
             }
             records.bestSessionVolume = max(records.bestSessionVolume ?? 0, session.volume)
         }
@@ -107,17 +117,21 @@ public struct TrainingLedger {
     }
 
     /// Which records a set at this weight and reps would beat. Empty until there is history to beat.
-    public func recordsBeaten(weight: Double, reps: Double, for exercise: ClassDef,
+    public func recordsBeaten(weight: Double, reps: Double, rpe: Double? = nil, for exercise: ClassDef,
                               excludingWorkout excludedID: UUID? = nil) -> [RecordKind]
     {
         let records = records(for: exercise, excludingWorkout: excludedID)
         guard let best = records.bestE1RM else { return [] }
         var beaten: [RecordKind] = []
-        if let e1RM = e1RM(weight: weight, reps: reps), e1RM > best.e1RM + Self.tolerance {
+        if Self.effectiveReps(reps, rpe: rpe) <= Self.e1RMRepLimit,
+           let e1RM = e1RM(weight: weight, reps: reps, rpe: rpe), e1RM > best.e1RM + Self.tolerance
+        {
             beaten.append(.e1RM)
         }
         let wholeReps = Int(reps.rounded())
-        if let previous = records.bestWeightByReps[wholeReps], weight > previous + Self.tolerance {
+        if Self.repMaxRange.contains(wholeReps), let previous = records.bestWeightByReps[wholeReps],
+           weight > previous + Self.tolerance
+        {
             beaten.append(.repMax(wholeReps))
         }
         return beaten
@@ -145,10 +159,17 @@ public struct TrainingLedger {
     // MARK: Formulas
 
     /// Evaluates the Set class's own `e1rm` formula for values that aren't logged yet.
-    public func e1RM(weight: Double, reps: Double) -> Double? {
+    public func e1RM(weight: Double, reps: Double, rpe: Double? = nil) -> Double? {
         guard let setClass = classes[.set], let source = ClassResolver.field("e1rm", of: setClass)?.expression,
               let formula = try? Formula.parse(source) else { return nil }
-        return formula.evaluate { ["weight": weight, "reps": reps][$0] }
+        var values = ["weight": weight, "reps": reps]
+        values["rpe"] = rpe
+        return formula.evaluate { values[$0] }
+    }
+
+    /// Reps plus the reps left in the tank: 5 @ RPE 8 is a 7-rep effort.
+    public static func effectiveReps(_ reps: Double, rpe: Double?) -> Double {
+        reps + (10 - min(max(rpe ?? 10, 1), 10))
     }
 
     // MARK: Logging
@@ -163,16 +184,47 @@ public struct TrainingLedger {
         try store.set("weight", to: .mass(weight), on: set)
         try store.set("reps", to: .number(reps), on: set)
         try store.set("rpe", to: rpe.map(FieldValue.number), on: set)
+        try store.set("loggedAt", to: .date(.now), on: set)
         if isWarmup {
-            try store.set("isWarmup", to: .bool(true), on: set)
+            try store.set("kind", to: .choice(SetKind.warmup.rawValue), on: set)
         }
         return set
     }
 
     // MARK: Volume
 
-    /// Working sets per muscle for the week containing `date`, keyed by muscle object id.
-    /// Each set counts once for every primary muscle of its exercise class.
+    /// Fractional working sets per muscle for the week containing `date`, keyed by muscle object id.
+    /// A set counts 1 for each primary muscle of its exercise and 0.5 for each secondary one.
+    public func weeklySets(weekContaining date: Date, calendar: Calendar = .current) -> [UUID: Double] {
+        var counts: [UUID: Double] = [:]
+        forEachEntry(inWeekOf: date, calendar: calendar) { exercise, sets in
+            for muscle in store.linkedObjects("primaryMuscles", ofClass: exercise) {
+                counts[muscle.id, default: 0] += Double(sets)
+            }
+            for muscle in store.linkedObjects("secondaryMuscles", ofClass: exercise) {
+                counts[muscle.id, default: 0] += Double(sets) * 0.5
+            }
+        }
+        return counts
+    }
+
+    private func forEachEntry(inWeekOf date: Date, calendar: Calendar, _ body: (ClassDef, Int) -> Void) {
+        guard let workoutClass = classes[.workout],
+              let week = calendar.dateInterval(of: .weekOfYear, for: date) else { return }
+        for workout in store.objects(of: workoutClass) {
+            guard let when = workoutDate(workout), week.contains(when) else { continue }
+            for entry in workout.orderedChildren {
+                guard let exercise = store.linkedClass("exercise", of: entry) else { continue }
+                let sets = workingSets(in: entry).count
+                if sets > 0 {
+                    body(exercise, sets)
+                }
+            }
+        }
+    }
+
+    /// Working sets per primary muscle for the week containing `date` (whole sets, primary muscles only).
+    /// Prefer `weeklySets(weekContaining:)`, which also counts secondary muscles at half a set.
     public func weeklySetsPerMuscle(weekContaining date: Date,
                                     calendar: Calendar = .current) -> [UUID: Int]
     {
@@ -201,10 +253,21 @@ public struct TrainingLedger {
 
     private func workingSets(in entry: ObjectRecord) -> [LoggedSet] {
         entry.orderedChildren.compactMap { set -> LoggedSet? in
-            guard store.value("isWarmup", of: set) != .bool(true),
+            let kind = setKind(set)
+            guard kind.counts,
                   let weight = store.number("weight", of: set), let reps = store.number("reps", of: set),
                   let e1RM = store.number("e1rm", of: set) else { return nil }
-            return LoggedSet(id: set.id, weight: weight, reps: reps, rpe: store.number("rpe", of: set), e1RM: e1RM)
+            let rpe = store.number("rpe", of: set)
+            return LoggedSet(id: set.id, weight: weight, reps: reps, rpe: rpe, kind: kind, e1RM: e1RM,
+                             isE1RMEligible: Self.effectiveReps(reps, rpe: rpe) <= Self.e1RMRepLimit)
         }
+    }
+
+    /// The set's kind; the older warm-up flag still counts.
+    public func setKind(_ set: ObjectRecord) -> SetKind {
+        if store.value("isWarmup", of: set) == .bool(true) {
+            return .warmup
+        }
+        return store.value("kind", of: set)?.stringValue.flatMap(SetKind.init(rawValue:)) ?? .working
     }
 }
