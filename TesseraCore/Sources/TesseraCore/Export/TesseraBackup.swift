@@ -54,6 +54,35 @@ public enum TesseraBackup {
         }
     }
 
+    /// A stamped copy of the store file at `storeURL` (closed, at launch), for keeping what's replaced by a restore.
+    nonisolated static func write(fromStoreAt storeURL: URL, to url: URL, now: Date = .now) throws {
+        try? FileManager.default.removeItem(at: url)
+        let source = try DatabaseQueue(path: storeURL.path)
+        defer { try? source.close() }
+        let copy = try DatabaseQueue(path: url.path)
+        try source.backup(to: copy)
+        try copy.writeWithoutTransaction { try $0.execute(sql: "PRAGMA journal_mode = DELETE") }
+        try copy.write { db in
+            try db.execute(sql: """
+            CREATE TABLE IF NOT EXISTS backupInfo(format TEXT NOT NULL, version INTEGER NOT NULL, createdAt REAL NOT NULL,
+              appVersion TEXT);
+            DELETE FROM backupInfo;
+            """)
+            try db.execute(sql: "INSERT INTO backupInfo VALUES (?, ?, ?, NULL)",
+                           arguments: [format, version, now.timeIntervalSince1970])
+        }
+        try copy.close()
+        for sibling in ["-wal", "-shm"] {
+            try? FileManager.default.removeItem(atPath: url.path + sibling)
+        }
+    }
+
+    /// Where the store a restore replaces is kept, as a stamped backup the app can restore again (undo) and Files
+    /// can see.
+    public nonisolated static var keptFolder: URL {
+        URL.documentsDirectory.appendingPathComponent("Backups", isDirectory: true)
+    }
+
     /// Today's rolling copy in `folder`, once a day ("Tessera-2026-10-15.tessera"), keeping the newest `keep`.
     /// Returns the file written, or nil when today's copy already exists.
     @MainActor
@@ -66,7 +95,10 @@ public enum TesseraBackup {
         let day = String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
         let file = folder.appendingPathComponent("Tessera-\(day).\(fileExtension)")
         guard !FileManager.default.fileExists(atPath: file.path) else { return nil }
-        try write(from: context, to: file, now: now)
+        // Written under a temporary name, then renamed: a kill mid-write never leaves a partial copy.
+        let partial = folder.appendingPathComponent(".\(file.lastPathComponent).partial")
+        try write(from: context, to: partial, now: now)
+        try FileManager.default.moveItem(at: partial, to: file)
         let copies = try FileManager.default.contentsOfDirectory(atPath: folder.path)
             .filter { $0.hasPrefix("Tessera-") && $0.hasSuffix(".\(fileExtension)") }
             .sorted(by: >)
@@ -128,11 +160,15 @@ public enum TesseraBackup {
         return info
     }
 
-    /// At launch, before the store opens: if a restore is staged, the current store goes to Backups (so it can be
-    /// put back) and the staged file takes its place. A staged file that turns out bad is set aside and the current
+    /// At launch, before the store opens: if a restore is staged, the current store is first kept as a stamped
+    /// backup in `keptFolder` (so the restore can be undone by restoring that), then moved aside and the staged file
+    /// takes its place. Anything goes wrong, and the current store stays as it was. A staged file that turns out bad is
+    /// set aside and the current
     /// store stays as it was. Returns whether a restore was applied.
     @discardableResult
-    nonisolated static func applyPendingRestore(to storeURL: URL) -> Bool {
+    nonisolated static func applyPendingRestore(to storeURL: URL, keepIn keptFolder: URL = keptFolder,
+                                                now: Date = .now) -> Bool
+    {
         let manager = FileManager.default
         let pending = pendingURL(for: storeURL)
         guard manager.fileExists(atPath: pending.path) else { return false }
@@ -143,7 +179,34 @@ public enum TesseraBackup {
             TesseraSchema.setLaunchNote("That backup couldn't be read, so your data is as it was.")
             return false
         }
+        let hasStore = manager.fileExists(atPath: storeURL.path)
+        if hasStore {
+            // What's here now is kept first as a stamped backup he can restore again: the undo for a restore.
+            let stamp = now.formatted(.iso8601.year().month().day().time(includingFractionalSeconds: false)
+                .timeSeparator(.omitted).dateTimeSeparator(.standard))
+            let kept = keptFolder.appendingPathComponent("Before-restore-\(stamp).\(fileExtension)")
+            do {
+                try manager.createDirectory(at: keptFolder, withIntermediateDirectories: true)
+                try write(fromStoreAt: storeURL, to: kept, now: now)
+            } catch {
+                TesseraSchema.setLaunchNote("Couldn't keep a copy of your data first, so I didn't restore. "
+                    + "I'll try again next time.")
+                return false
+            }
+        }
         let backup = TesseraSchema.moveStoreAside(storeURL)
+        // A store that's there but wouldn't fully move aside: stop, rather than let a leftover -wal replay onto the
+        // restored file.
+        if hasStore, backup == nil || manager.fileExists(atPath: storeURL.path)
+            || manager.fileExists(atPath: storeURL.path + "-wal")
+        {
+            if let backup {
+                TesseraSchema.moveBack(from: backup, to: storeURL)
+            }
+            TesseraSchema.setLaunchNote("Couldn't restore that backup just now, so your data is as it was. "
+                + "I'll try again next time.")
+            return false
+        }
         do {
             try manager.moveItem(at: pending, to: storeURL)
         } catch {
@@ -153,7 +216,8 @@ public enum TesseraBackup {
             TesseraSchema.setLaunchNote("Couldn't restore that backup just now, so your data is as it was.")
             return false
         }
-        TesseraSchema.setLaunchNote("Restored from your backup. What was here before is kept in Backups.")
+        TesseraSchema.setLaunchNote("Restored from your backup. What was here before is kept in Backups, "
+            + "so you can restore it again.")
         return true
     }
 }

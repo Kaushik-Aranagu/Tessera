@@ -137,7 +137,8 @@ struct BackupView: View {
         do {
             let info = try TesseraBackup.stageRestore(from: url)
             say("Restores the copy from \(info.createdAt.formatted(.dateTime.weekday(.wide).day().month(.wide))) "
-                + "next time you open Tessera. What's here now is kept.")
+                + "next time you open Tessera. Anything you log before then is replaced, and what's here now is "
+                + "kept in Backups to restore again.")
         } catch TesseraBackup.BackupError.newerSchema {
             say("That copy is from a newer Tessera. Update first.")
         } catch {
