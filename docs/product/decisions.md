@@ -49,3 +49,6 @@
 - **M5 Home upkeep ship list approved** (19:11) with all seven defaults (`ship-list-m5-upkeep.md`). It comes after Money and needs M3 slice 2.
 - **Model tools: add completeTask and rescheduleTask** (19:12), making 10. Tick-off, timers and open-list stay without a tool for now.
 - **Principle: one ground layer, the screen is scarce** (Kaushik, 19:18). Show what matters for the current context and reveal more on demand. This is now section 0 of `spatial-interaction.md`. Ask Tess becomes a small glyph that expands into a capture surface for typing, on-device voice, and later photo, file or video. Builder B owns it, and it absorbs v1 slice 17 (voice). Research scouts context packing.
+- **Plan my day fallback** (19:22): on a timeout or failure, the rules plan shows with one quiet line, "Here's your usual plan", rather than silence. This matches tess-voice lines M18 and M22.
+- **M5 People approved** (19:22) with all 9 defaults (`ship-list-m5-people.md`). It comes after Upkeep and has no Contacts access.
+- **Build list approved** (19:22): make an app from a sentence (`ship-list-build.md`). A1, undo for schema changes in the op log, comes first, after M3 slices 3, 6 and 10 and T1 to T3.
