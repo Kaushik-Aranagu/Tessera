@@ -54,3 +54,5 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [app-from-a-sentence.md](app-from-a-sentence.md) | Product, Core: make an app from a sentence via proposeClass; needs schema undo (A1) |
 | [context-packing.md](context-packing.md) | Core, Builder B, Product: how Home and NowPicker pick what to show (signals, one ranker with why, 20 moments) |
 | [huddle-triage.md](huddle-triage.md) | Coordinator, Product: one-page template to turn Kaushik review feedback into board items |
+| [speech-capture.md](speech-capture.md) | Builder B, Core: on-device speech for Ask Tess (SpeechAnalyzer, spoken normaliser, 30 phrases, usage strings) |
+| [capture-modes.md](capture-modes.md) | Builder B, Core, Kitchen: photo, file and video capture (on-device Vision text, receipt total, recipe, page to note; 15 examples) |
