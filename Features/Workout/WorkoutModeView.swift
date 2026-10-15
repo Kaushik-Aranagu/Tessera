@@ -1,15 +1,34 @@
 import SwiftUI
 import TesseraCore
 
-/// Full-screen live logging in a dark green-black environment. Numbers roll, plates rebuild per side,
-/// holding logs a set with a stamp and a success haptic, then the rest ring counts down.
+/// Live workout, a foreground process (it rises as a full-screen cover). One screen, three axes:
+/// x = the exercises of the session (a paged lane; the next name peeks in), y = the sets of the current exercise
+/// (seated sets stack above, the dialled set sits at eye level, the remaining one waits below), z = tap the exercise
+/// name to zoom into its page. The set block changes role: after a set is seated, the weight numeral and the dial
+/// become the rest countdown, so nothing new appears.
+///
+/// Round 6 "Plein air" (docs/design/workout-v1.md): dark painterly ground, one exercise, one number, one action.
 struct WorkoutModeView: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Namespace private var zoom
 
     var body: some View {
+        @Bindable var model = model
         if let session = model.session {
-            WorkoutContent(session: session)
+            NavigationStack(path: $model.workoutPath) {
+                WorkoutContent(session: session)
+                    .toolbarVisibility(.hidden, for: .navigationBar)
+                    .navigationDestination(for: Route.self) { route in
+                        ObjectPage(route: route)
+                            .environment(\.animateEntrance, model.consumeFirstVisit(route))
+                            .modifier(ArrivalTransition(
+                                id: route,
+                                arrival: model.arrivals[route] ?? .crossFade,
+                                namespace: zoom
+                            ))
+                    }
+            }
+            .environment(\.zoomNamespace, zoom)
         } else {
             Color.clear.onAppear { model.isWorkoutPresented = false }
         }
@@ -18,409 +37,454 @@ struct WorkoutModeView: View {
 
 private typealias Palette = Theme.Colors.Workout
 
+/// Paint for the workout's dark ground: colours that mean something.
+private enum Paint {
+    static let live = Color(hex: 0xD9563F)
+    static let tess = Color(hex: 0x9DBFE6)
+    static let tessBar = Color(hex: 0xC9D9EE)
+    static let now = Color(hex: 0xE8BD4C)
+    static let health = Color(hex: 0x7FB07A)
+    static let cobalt = Color(hex: 0x3F7FC0)
+    static let secondary = Color(hex: 0xA79FB5)
+    static let cream = Color(hex: 0xF3ECE0)
+
+    /// Each logged set leaves a stroke; the colour cycles set to set.
+    static func set(_ number: Int) -> Color {
+        [live, cobalt, now, health][(number - 1) % 4]
+    }
+}
+
 private struct WorkoutContent: View {
     @Bindable var session: WorkoutSession
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.zoomNamespace) private var zoomNamespace
+
+    /// The lane's scroll position (x). Kept in step with `session.currentIndex` both ways.
+    @State private var laneIndex: Int?
+    @State private var tessMode: TessSoul.Mode = .idle
+    @State private var lockHaptic = 0
+    @State private var celebrated = 0
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
-                topBar
-                titleBlock.entrance(0)
-                exerciseBlock.entrance(1)
-                numberBlock.entrance(2, hero: true)
-                PlateView(weight: session.weight)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 76)
-                    .entrance(3)
-                steppers.entrance(4)
-                recordHint
-                RestRow(session: session)
-                logControl.entrance(5)
-                doneSets
-                upNext
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let now = AppClock.adjust(context.date)
+            let phase = session.phase(at: now)
+            VStack(alignment: .leading, spacing: 0) {
+                header(now: now)
+                    .padding(.horizontal, Theme.Spacing.gutter)
+                    .padding(.top, Theme.Spacing.m)
+                lane.padding(.top, Theme.Spacing.m)
+                SetStrokes(session: session, phase: phase)
+                    .padding(.horizontal, Theme.Spacing.gutter)
+                    .padding(.top, Theme.Spacing.l)
+                subline(phase: phase)
+                    .padding(.horizontal, Theme.Spacing.gutter)
+                    .padding(.top, Theme.Spacing.m)
+                numberRow(phase: phase, now: now)
+                    .padding(.horizontal, Theme.Spacing.gutter)
+                    .padding(.top, Theme.Spacing.xl)
+                Spacer(minLength: Theme.Spacing.m)
+                WeightDial(
+                    weight: $session.weight,
+                    isLocked: phase != .set,
+                    restFraction: session.restFraction(at: now)
+                )
+                Spacer(minLength: Theme.Spacing.m)
+                keyRow(phase: phase)
+                    .padding(.horizontal, Theme.Spacing.gutter)
+                tessBar(phase: phase)
+                    .padding(.horizontal, 14)
+                    .padding(.top, Theme.Spacing.l)
             }
-            .padding(.horizontal, Theme.Spacing.gutter)
-            .padding(.top, Theme.Spacing.s)
-            .padding(.bottom, Theme.Spacing.section)
         }
-        .scrollIndicators(.hidden)
-        .background(background)
+        .overlay(alignment: .top) {
+            ProcessSeam(color: Paint.live).ignoresSafeArea(edges: .top)
+        }
+        .background { PleinGround() }
         .preferredColorScheme(.dark)
-        .sensoryFeedback(.success, trigger: session.loggedCount)
-        .sensoryFeedback(.selection, trigger: session.weight)
-        .sensoryFeedback(.selection, trigger: session.reps)
-    }
-
-    private var background: some View {
-        ZStack(alignment: .top) {
-            Palette.ground
-            RadialGradient(
-                colors: [Palette.groundRaised, Palette.ground],
-                center: .top,
-                startRadius: 20,
-                endRadius: 520
-            )
-            .frame(height: 520)
+        .onAppear { laneIndex = session.currentIndex }
+        .onChange(of: laneIndex) { _, index in
+            guard let index, index != session.currentIndex else { return }
+            withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { session.select(entryAt: index) }
         }
-        .ignoresSafeArea()
+        .onChange(of: session.currentIndex) { _, index in
+            guard laneIndex != index else { return }
+            withTesseraAnimation(.snappy(duration: 0.3), reduceMotion: reduceMotion) { laneIndex = index }
+        }
+        .onChange(of: session.lastSeated) { _, seated in
+            guard let seated else { return }
+            Task { @MainActor in
+                // The key lands the set (rigid); it locks (success) once its stroke has painted in.
+                try? await Task.sleep(for: .milliseconds(700))
+                lockHaptic += 1
+            }
+            if seated.records.isEmpty {
+                play(.done)
+            } else {
+                celebrated += 1
+                play(.thinking, then: .done, after: 1.2)
+            }
+        }
+        .sensoryFeedback(.success, trigger: lockHaptic)
     }
 
-    // MARK: Sections
+    private func play(_ mode: TessSoul.Mode, then next: TessSoul.Mode? = nil, after delay: Double = 0) {
+        tessMode = mode
+        Task { @MainActor in
+            if let next {
+                try? await Task.sleep(for: .seconds(delay))
+                tessMode = next
+            }
+            try? await Task.sleep(for: .seconds(1.8))
+            tessMode = .idle
+        }
+    }
 
-    private var topBar: some View {
-        HStack {
+    // MARK: Header and lane (x)
+
+    private func header(now: Date) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text("\(session.workout.title), \(Format.duration(now.timeIntervalSince(session.startedAt)))")
+                .font(Theme.voice)
+                .foregroundStyle(Paint.secondary)
+                .contentTransition(.numericText())
+            Spacer()
+            Text("\((laneIndex ?? session.currentIndex) + 1) / \(session.entries.count)")
+                .textRole(.label)
+                .foregroundStyle(Paint.secondary)
             Button {
                 model.isWorkoutPresented = false
             } label: {
                 Image(systemName: "chevron.down")
-                    .font(.system(size: 17, weight: .semibold))
-                    .frame(width: 44, height: 44)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Paint.cream)
+                    .frame(width: 44, height: 32)
+                    .contentShape(Rectangle())
             }
             .accessibilityLabel("Minimise workout")
-            Spacer()
-            TimelineView(.periodic(from: .now, by: 1)) { context in
-                let elapsed = AppClock.adjust(context.date).timeIntervalSince(session.startedAt)
-                Text(Format.duration(elapsed))
-                    .textRole(.data)
-                    .foregroundStyle(Palette.inkSecondary)
-                    .contentTransition(.numericText())
-                    .animation(
-                        MotionPolicy.resolve(Theme.Motion.house, reduceMotion: reduceMotion),
-                        value: Int(elapsed)
-                    )
-            }
-            Spacer()
-            Button("Finish") { model.endWorkout() }
-                .textRole(.bodyStrong)
-                .frame(height: 44)
         }
-        .foregroundStyle(Palette.ink)
+        .accessibilityElement(children: .contain)
     }
 
-    private var titleBlock: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-            Eyebrow(text: "Workout · live", color: Palette.signal)
-            Text(session.workout.title)
-                .textRole(.title)
-                .foregroundStyle(Palette.ink)
-        }
-    }
-
-    private var exerciseBlock: some View {
-        let entry = session.currentEntry
-        let logged = entry.map { session.loggedSets(of: $0).count } ?? 0
-        let target = entry.map(session.targetSets(of:)) ?? 0
-        return VStack(alignment: .leading, spacing: Theme.Spacing.s) {
-            Hairline(color: Palette.hairline)
-            HStack {
-                Eyebrow(
-                    text: "Exercise \(session.currentIndex + 1) of \(session.entries.count)",
-                    color: Palette.inkTertiary
-                )
-                Spacer()
-                Eyebrow(text: "Set \(min(logged + 1, max(target, logged + 1))) of \(max(target, logged))",
-                        color: Palette.inkSecondary)
-                    .contentTransition(.numericText())
-            }
-            Text(session.currentExercise?.name ?? "Exercise")
-                .textRole(.title)
-                .foregroundStyle(Palette.ink)
-                .id(session.currentIndex)
-                .transition(.opacity.combined(with: .offset(y: 8)))
-            if let exercise = session.currentExercise {
-                Text(classLine(exercise))
-                    .textRole(.data)
-                    .foregroundStyle(Palette.inkTertiary)
-            }
-        }
-        .tesseraAnimation(value: session.currentIndex)
-    }
-
-    private func classLine(_ exercise: ClassDef) -> String {
-        let parent = exercise.parent.map { Format.identifier($0.name, upperFirst: true) } ?? "Exercise"
-        return "\(Format.identifier(exercise.name, upperFirst: true)) : \(parent) · rest \(Format.duration(session.restSeconds)) ↑"
-    }
-
-    private var numberBlock: some View {
-        VStack(spacing: Theme.Spacing.xs) {
-            HStack(alignment: .firstTextBaseline, spacing: 14) {
-                Text(Format.kilograms(session.weight))
-                    .contentTransition(.numericText(value: session.weight))
-                Text("×")
-                    .textRole(.titleNumber)
-                    .foregroundStyle(Palette.inkTertiary)
-                Text("\(Int(session.reps))")
-                    .contentTransition(.numericText(value: session.reps))
-            }
-            .textRole(.heroNumber)
-            .foregroundStyle(Palette.ink)
-            .lineLimit(1)
-            .minimumScaleFactor(0.6)
-            .tesseraAnimation(Theme.Motion.snappy, value: session.weight)
-            .tesseraAnimation(Theme.Motion.snappy, value: session.reps)
-            .frame(maxWidth: .infinity)
-            .overlay { LoggedStamp(trigger: session.loggedCount) }
-            HStack {
-                Text("KG")
-                Spacer()
-                Text("REPS")
-            }
-            .textRole(.label)
-            .tracking(1.4)
-            .foregroundStyle(Palette.inkTertiary)
-            .padding(.horizontal, Theme.Spacing.xl)
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(Format.kilograms(session.weight)) kilograms for \(Int(session.reps)) reps")
-    }
-
-    private var steppers: some View {
-        HStack {
-            StepperPair(minus: "−2.5", plus: "+2.5", label: "weight") { session.adjustWeight(by: $0 ? 2.5 : -2.5) }
-            Spacer()
-            StepperPair(minus: "−1", plus: "+1", label: "reps") { session.adjustReps(by: $0 ? 1 : -1) }
-        }
-    }
-
-    @ViewBuilder private var recordHint: some View {
-        if let best = session.previousBest, let preview = session.previewE1RM {
-            let tenth = { (value: Double) in Format.kilograms((value * 10).rounded() / 10) }
-            HStack(spacing: 6) {
-                Image(systemName: session.isPersonalRecord ? "arrow.up.forward" : "scope")
-                Text(session.isPersonalRecord
-                    ? "e1RM \(tenth(preview)) · new best (was \(tenth(best.e1RM)))"
-                    :
-                    "\(session.repsForRecord ?? 0) reps at \(Format.kilograms(session.weight)) beats your best e1RM \(tenth(best.e1RM))")
-                    .contentTransition(.opacity)
-            }
-            .textRole(.body)
-            .foregroundStyle(session.isPersonalRecord ? Palette.signal : Palette.inkSecondary)
-            .tesseraAnimation(value: session.isPersonalRecord)
-        }
-    }
-
-    private var logControl: some View {
-        HoldToConfirm(tint: Palette.signal, fill: Palette.signal.opacity(0.28)) {
-            session.logSet()
-        } label: {
-            HStack(spacing: Theme.Spacing.s) {
-                Image(systemName: "checkmark")
-                Text("Hold to log set")
-            }
-            .textRole(.bodyStrong)
-            .foregroundStyle(Palette.ink)
-        }
-    }
-
-    @ViewBuilder private var doneSets: some View {
-        if let entry = session.currentEntry {
-            let sets = session.loggedSets(of: entry)
-            if !sets.isEmpty {
-                ScrollView(.horizontal) {
-                    HStack(spacing: Theme.Spacing.s) {
-                        ForEach(Array(sets.enumerated()), id: \.offset) { _, set in
-                            HStack(spacing: 4) {
-                                Image(systemName: "checkmark").font(.system(size: 10, weight: .bold))
-                                Text("\(Format.kilograms(set.weight))×\(Int(set.reps))")
-                            }
-                            .textRole(.data)
-                            .foregroundStyle(Palette.ink)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .overlay(Capsule().strokeBorder(Palette.hairline, lineWidth: 1))
-                            .transition(.scale(scale: 0.6).combined(with: .opacity))
-                        }
-                    }
-                }
-                .scrollIndicators(.hidden)
-                .tesseraAnimation(value: sets.count)
-            }
-        }
-    }
-
-    @ViewBuilder private var upNext: some View {
-        let upcoming = Array(session.entries.enumerated()).filter { $0.offset != session.currentIndex }
-        if !upcoming.isEmpty {
-            VStack(alignment: .leading, spacing: 0) {
-                Eyebrow(text: "Up next", color: Palette.inkTertiary).padding(.bottom, Theme.Spacing.s)
-                ForEach(upcoming, id: \.element.id) { index, entry in
+    private var lane: some View {
+        ScrollView(.horizontal) {
+            LazyHStack(spacing: 0) {
+                ForEach(Array(session.entries.enumerated()), id: \.offset) { index, entry in
+                    let exercise = session.exerciseClass(of: entry)
+                    let isCurrent = index == (laneIndex ?? session.currentIndex)
                     Button {
-                        withTesseraAnimation(reduceMotion: reduceMotion) { session.select(entryAt: index) }
-                    } label: {
-                        HStack(alignment: .firstTextBaseline) {
-                            Text(session.exerciseClass(of: entry)?.name ?? "Exercise")
-                                .textRole(.body)
-                            Spacer()
-                            let logged = session.loggedSets(of: entry).count
-                            Text(logged > 0 ? "\(logged)/\(session.targetSets(of: entry)) done"
-                                : "\(session.targetSets(of: entry)) × \(Int(session.targetReps(of: entry)))")
-                                .textRole(.label)
-                                .foregroundStyle(Palette.inkSecondary)
+                        if let exercise {
+                            model.open(.classDef(exercise.id), .deeper)
                         }
-                        .foregroundStyle(Palette.ink)
-                        .padding(.vertical, Theme.Spacing.m)
-                        .contentShape(Rectangle())
+                    } label: {
+                        Text(exercise?.name ?? "Exercise")
+                            .textRole(.title)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
+                            .foregroundStyle(Paint.cream.opacity(isCurrent ? 1 : 0.28))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    Hairline(color: Palette.hairline)
+                    .modifier(ZoomSource(id: exercise.map { Route.classDef($0.id) }, namespace: zoomNamespace))
+                    .containerRelativeFrame(.horizontal) { width, _ in width - Theme.Spacing.gutter - 46 }
+                    .id(index)
+                    .accessibilityHint(isCurrent ? "Opens the exercise page" : "")
+                    .tesseraAnimation(.easeOut(duration: 0.24), value: isCurrent)
                 }
             }
-            .padding(.top, Theme.Spacing.l)
+            .scrollTargetLayout()
         }
-    }
-}
-
-// MARK: - Pieces
-
-private struct StepperPair: View {
-    let minus: String
-    let plus: String
-    let label: String
-    let step: (Bool) -> Void
-
-    var body: some View {
-        HStack(spacing: Theme.Spacing.s) {
-            button(minus, up: false)
-            button(plus, up: true)
-        }
+        .contentMargins(.leading, Theme.Spacing.gutter, for: .scrollContent)
+        .contentMargins(.trailing, 46, for: .scrollContent)
+        .scrollTargetBehavior(.viewAligned(limitBehavior: .alwaysByOne))
+        .scrollPosition(id: $laneIndex, anchor: .leading)
+        .scrollIndicators(.hidden)
+        .frame(height: 64)
     }
 
-    private func button(_ title: String, up: Bool) -> some View {
-        Button { step(up) } label: {
-            Text(title)
-                .textRole(.labelStrong)
-                .foregroundStyle(Palette.ink)
-                .frame(width: 64, height: 44)
-                .overlay(Capsule().strokeBorder(Palette.hairline, lineWidth: 1))
-                .contentShape(Capsule())
-        }
-        .buttonStyle(PressScaleStyle())
-        .buttonRepeatBehavior(.enabled)
-        .accessibilityLabel("\(up ? "Increase" : "Decrease") \(label) by \(title.dropFirst())")
-    }
-}
+    // MARK: y, in words and numbers
 
-/// Plates per side for the current weight on a 20 kg bar.
-struct PlateView: View {
-    let weight: Double
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    private static let sizes: [Double] = [25, 20, 15, 10, 5, 2.5, 1.25]
-
-    var body: some View {
-        let plates = Self.plates(for: weight)
-        HStack(spacing: 2) {
-            ForEach(Array(plates.reversed().enumerated()), id: \.offset) { _, kg in plate(kg) }
-            Capsule().fill(Palette.inkTertiary).frame(width: 14, height: 10)
-            Rectangle().fill(Palette.inkSecondary).frame(width: 110, height: 4)
-            Capsule().fill(Palette.inkTertiary).frame(width: 14, height: 10)
-            ForEach(Array(plates.enumerated()), id: \.offset) { _, kg in plate(kg) }
-        }
-        .tesseraAnimation(value: plates)
-        .accessibilityLabel("Per side: " + plates.map(Format.kilograms).joined(separator: ", "))
+    private func subline(phase: WorkoutSession.Phase) -> some View {
+        let (text, color) = sublineText(phase: phase)
+        return Text(text)
+            .font(Theme.voice)
+            .foregroundStyle(color)
+            .contentTransition(.opacity)
+            .tesseraAnimation(value: text)
     }
 
-    private func plate(_ kg: Double) -> some View {
-        let height: CGFloat = [25: 72, 20: 66, 15: 58, 10: 48, 5: 36, 2.5: 28, 1.25: 22][kg] ?? 22
-        return RoundedRectangle(cornerRadius: 2)
-            .fill(Theme.Colors.plate(kg))
-            .frame(width: kg >= 10 ? 11 : 7, height: height)
-            .transition(.scale(scale: 0.2, anchor: .center).combined(with: .opacity))
-    }
-
-    static func plates(for weight: Double) -> [Double] {
-        var perSide = max(0, (weight - 20) / 2)
-        var result: [Double] = []
-        for size in sizes {
-            while perSide + 0.001 >= size {
-                result.append(size)
-                perSide -= size
+    private func sublineText(phase: WorkoutSession.Phase) -> (String, Color) {
+        guard let entry = session.currentEntry else { return ("", Paint.secondary) }
+        let target = session.targetSets(of: entry)
+        let rows = session.setRows(of: entry)
+        let tenth = { (value: Double) in Format.kilograms((value * 10).rounded() / 10) }
+        switch phase {
+        case .rest:
+            if let seated = session.lastSeated, !seated.records.isEmpty, let e1RM = seated.e1RM {
+                return ("a new best: e1RM \(tenth(e1RM))", Paint.now)
             }
+            return ("set \(rows.count) seated", Paint.secondary)
+        case .exerciseDone:
+            return ("all \(target) sets in. Swipe for the next.", Paint.secondary)
+        case .workoutDone:
+            return ("every set is in", Paint.secondary)
+        case .set:
+            if session.isPersonalRecord {
+                return ("set \(session.currentSetNumber): this would be a new best", Paint.now)
+            }
+            let last = rows.last.map { ", last was \(Format.kilograms($0.weight)) × \(Int($0.reps))" } ?? ""
+            return ("set \(session.currentSetNumber) of \(target)\(last)", Paint.secondary)
         }
-        return result
     }
-}
 
-private struct RestRow: View {
-    let session: WorkoutSession
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    var body: some View {
-        if let end = session.restEndsAt {
-            TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { context in
-                let remaining = end.timeIntervalSince(AppClock.adjust(context.date))
-                if remaining > 0 {
-                    HStack(spacing: Theme.Spacing.l) {
-                        ZStack {
-                            Circle().stroke(Palette.hairline, lineWidth: 4)
-                            Circle()
-                                .trim(from: 0, to: remaining / max(session.restTotal, 1))
-                                .stroke(Palette.rest, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                                .rotationEffect(.degrees(-90))
-                        }
-                        .frame(width: 52, height: 52)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Eyebrow(text: "Rest", color: Palette.rest)
-                            Text(Format.duration(remaining.rounded(.up)))
-                                .textRole(.titleNumber)
-                                .foregroundStyle(Palette.ink)
-                                .contentTransition(.numericText(countsDown: true))
-                                .animation(Theme.Motion.snappy, value: Int(remaining))
-                        }
-                        Spacer()
-                        Button("Skip") { session.skipRest() }
-                            .textRole(.bodyStrong)
-                            .foregroundStyle(Palette.inkSecondary)
+    private func numberRow(phase: WorkoutSession.Phase, now: Date) -> some View {
+        HStack(alignment: .top) {
+            if case let .rest(end) = phase {
+                let remaining = max(0, end.timeIntervalSince(now)).rounded(.up)
+                VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        Text(Format.duration(remaining))
+                            .font(Theme.numeral(72))
+                            .foregroundStyle(Paint.now)
+                            .contentTransition(.numericText(countsDown: true))
+                            .animation(MotionPolicy.resolve(Theme.Motion.snappy, reduceMotion: reduceMotion),
+                                       value: remaining)
+                        Text("rest").font(Theme.voice).foregroundStyle(Paint.secondary)
                     }
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Rest, \(Int(remaining)) seconds left")
+                    Text("Rest lives in the dial. When it empties, it turns back into weight.")
+                        .font(Theme.voice)
+                        .foregroundStyle(Paint.tess)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
+                .transition(.opacity.combined(with: .blurReplace))
+            } else {
+                VStack(alignment: .leading, spacing: Theme.Spacing.s) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(Format.kilograms(session.weight))
+                            .font(Theme.numeral(72))
+                            .foregroundStyle(Paint.cream)
+                            .contentTransition(.numericText(value: session.weight))
+                            .animation(MotionPolicy.resolve(Theme.Motion.snappy, reduceMotion: reduceMotion),
+                                       value: session.weight)
+                            .modifier(GlintIf(isOn: phase == .set && session.isPersonalRecord))
+                        Text("kg").font(Theme.voice).foregroundStyle(Paint.secondary)
+                    }
+                    .accessibilityHidden(true)
+                    PlateStack(weight: session.weight)
+                }
+                Spacer(minLength: Theme.Spacing.s)
+                VStack(spacing: 2) {
+                    RepsDrum(reps: repsBinding, ghost: lastReps)
+                        .disabled(phase != .set)
+                    Text("reps").font(Theme.voice(size: 18)).foregroundStyle(Paint.cream.opacity(0.55))
+                }
+                .transition(.opacity)
             }
+        }
+        .frame(height: 170, alignment: .top)
+        .tesseraAnimation(.easeOut(duration: 0.32), value: phase == .set)
+        .sensoryFeedback(.impact(flexibility: .soft, intensity: 0.8), trigger: celebrated)
+    }
+
+    private var repsBinding: Binding<Int> {
+        Binding(get: { Int(session.reps) }, set: { session.reps = Double($0) })
+    }
+
+    private var lastReps: Int? {
+        guard let entry = session.currentEntry else { return nil }
+        return session.setRows(of: entry).last.map { Int($0.reps) } ?? Int(session.targetReps(of: entry))
+    }
+
+    // MARK: The key
+
+    private func keyRow(phase: WorkoutSession.Phase) -> some View {
+        HStack(spacing: Theme.Spacing.l) {
+            switch phase {
+            case .set:
+                PaintKey(finish: .cream, paint: Paint.live, duration: 0.8, height: 62) {
+                    withTesseraAnimation(reduceMotion: reduceMotion) { session.logSet() }
+                } label: { holding in
+                    Text(holding ? "Keep holding" : "Hold to log").textRole(.bodyStrong)
+                }
+                .frame(width: 240)
+                .accessibilityLabel(
+                    "Hold to log set \(session.currentSetNumber), \(Format.kilograms(session.weight)) kilograms for \(Int(session.reps)) reps"
+                )
+                Text("\(Format.kilograms(session.weight)) × \(Int(session.reps))")
+                    .textRole(.label)
+                    .foregroundStyle(Paint.cream)
+            case .rest:
+                PaintKey(finish: .cream, paint: Paint.now, isTap: true, height: 62) {
+                    withTesseraAnimation(reduceMotion: reduceMotion) { session.skipRest() }
+                } label: { _ in
+                    Text("Skip rest").textRole(.bodyStrong)
+                }
+                .frame(width: 240)
+                Button("+15s") { session.extendRest(by: 15) }
+                    .textRole(.label)
+                    .foregroundStyle(Paint.cream)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .accessibilityLabel("Add 15 seconds of rest")
+            case .exerciseDone:
+                PaintKey(finish: .cream, paint: Paint.cobalt, isTap: true, height: 62) {
+                    if let next = session.nextUnfinishedIndex {
+                        withTesseraAnimation(.snappy(duration: 0.3), reduceMotion: reduceMotion) { laneIndex = next }
+                    }
+                } label: { _ in
+                    Text("Next exercise").textRole(.bodyStrong)
+                }
+                .frame(width: 240)
+            case .workoutDone:
+                PaintKey(finish: .cream, paint: Paint.live, height: 62) {
+                    model.endWorkout()
+                } label: { holding in
+                    Text(holding ? "Keep holding" : "Hold to finish").textRole(.bodyStrong)
+                }
+                .frame(width: 240)
+                Text("\(session.entries.reduce(0) { $0 + session.setRows(of: $1).count }) sets")
+                    .textRole(.label)
+                    .foregroundStyle(Paint.cream)
+            }
+            Spacer(minLength: 0)
+        }
+        .frame(height: 62)
+    }
+
+    // MARK: Tess
+
+    private func tessBar(phase: WorkoutSession.Phase) -> some View {
+        let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
+        return HStack(spacing: Theme.Spacing.s) {
+            TessSoul(mode: tessMode)
+                .scaleEffect(0.5)
+                .frame(width: 56, height: 56)
+                .blendMode(.screen)
+            Text(tessLine(phase: phase))
+                .font(Theme.voice)
+                .foregroundStyle(Paint.tessBar)
+                .lineLimit(2)
+                .contentTransition(.opacity)
+                .tesseraAnimation(value: tessLine(phase: phase))
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 66)
+        .background(shape.fill(.white.opacity(0.07)))
+        .glassEffect(.regular, in: shape)
+        .overlay {
+            shape.strokeBorder(LinearGradient(stops: [.init(color: .white.opacity(0.16), location: 0),
+                                                      .init(color: .clear, location: 0.06)],
+                                              startPoint: .top, endPoint: .bottom), lineWidth: 1)
+        }
+        .overlay { shape.stroke(.black.opacity(0.6), lineWidth: 0.5) }
+        .accessibilityElement(children: .combine)
+    }
+
+    private func tessLine(phase: WorkoutSession.Phase) -> String {
+        if case .rest = phase, let seated = session.lastSeated {
+            return seated.records.isEmpty ? "Seated. Next set when the dial empties." : "That one goes on the wall."
+        }
+        switch phase {
+        case .exerciseDone: return "\(session.currentExercise?.name ?? "That") is done."
+        case .workoutDone: return "Everything's in. Hold to finish."
+        default:
+            if session.isPersonalRecord {
+                return "Go on. You have this."
+            }
+            if let best = session.previousBest {
+                return "Last best was \(Format.kilograms(best.weight)) × \(Int(best.reps))."
+            }
+            return "Same as last time is fine."
         }
     }
 }
 
-/// "LOGGED" stamp that slams in and fades on each logged set.
-private struct LoggedStamp: View {
-    let trigger: Int
+/// The glint motif, only while a set could be a new best.
+private struct GlintIf: ViewModifier {
+    let isOn: Bool
 
-    struct Values {
-        var scale = 1.7
-        var opacity = 0.0
-        var rotation = -14.0
+    func body(content: Content) -> some View {
+        if isOn {
+            content.modifier(Glint(period: 3, sheen: Color(hex: 0xFFE2A8)))
+        } else {
+            content
+        }
     }
+}
+
+// MARK: - Sets as brushstrokes (y)
+
+/// One stroke per planned set: logged sets are 9 pt strokes in their paint, the current set a breathing dashed cream
+/// guide, later sets a faint guide. A freshly logged set paints in over 700 ms. Long-press a logged stroke to undo it.
+private struct SetStrokes: View {
+    let session: WorkoutSession
+    let phase: WorkoutSession.Phase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        Text("LOGGED")
-            .textRole(.titleNumber).fontWeight(.bold)
-            .tracking(3)
-            .foregroundStyle(Palette.signal)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 6)
-            .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.signal, lineWidth: 2.5))
-            .keyframeAnimator(initialValue: Values(), trigger: trigger) { content, value in
-                content
-                    .scaleEffect(value.scale)
-                    .rotationEffect(.degrees(value.rotation))
-                    .opacity(value.opacity)
-            } keyframes: { _ in
-                KeyframeTrack(\.scale) {
-                    SpringKeyframe(0.92, duration: 0.18, spring: .snappy)
-                    SpringKeyframe(1.0, duration: 0.2)
-                    LinearKeyframe(1.0, duration: 0.5)
-                    CubicKeyframe(1.08, duration: 0.3)
-                }
-                KeyframeTrack(\.opacity) {
-                    LinearKeyframe(1, duration: 0.08)
-                    LinearKeyframe(1, duration: 0.8)
-                    LinearKeyframe(0, duration: 0.3)
-                }
-                KeyframeTrack(\.rotation) {
-                    SpringKeyframe(-7, duration: 0.25)
+        let entry = session.currentEntry
+        let rows = entry.map(session.setRows(of:)) ?? []
+        let target = entry.map(session.targetSets(of:)) ?? 0
+        HStack(spacing: 10) {
+            ForEach(0 ..< max(target, rows.count), id: \.self) { index in
+                if index < rows.count {
+                    LoggedStroke(number: index + 1, isFresh: session.lastSeated?.setID == rows[index].id)
+                        .contextMenu {
+                            if index == rows.count - 1 {
+                                Button("Undo set \(index + 1)", systemImage: "arrow.uturn.backward") {
+                                    withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLastSet() }
+                                }
+                            }
+                        }
+                        .accessibilityLabel(
+                            "Set \(index + 1), \(Format.kilograms(rows[index].weight)) by \(Int(rows[index].reps))"
+                        )
+                } else {
+                    GuideStroke(isCurrent: index == rows.count && phase == .set)
+                        .accessibilityHidden(true)
                 }
             }
-            .allowsHitTesting(false)
-            .accessibilityHidden(true)
+        }
+        .frame(height: 20)
+        .id(entry?.id)
+        .transition(.opacity)
+    }
+}
+
+private struct LoggedStroke: View {
+    let number: Int
+    let isFresh: Bool
+    @State private var progress: CGFloat = 1
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        Brushstroke(progress: progress)
+            .stroke(Paint.set(number), style: StrokeStyle(lineWidth: 9, lineCap: .round))
+            .frame(width: 64, height: 20)
+            .blur(radius: 0.4)
+            .onAppear {
+                guard isFresh, !reduceMotion else { return }
+                progress = 0
+                withAnimation(.timingCurve(0.3, 0.7, 0.2, 1, duration: 0.7)) { progress = 1 }
+            }
+    }
+}
+
+private struct GuideStroke: View {
+    let isCurrent: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 20, paused: !isCurrent || reduceMotion)) { context in
+            let breath = (sin(context.date.timeIntervalSinceReferenceDate / 2.4 * 2 * .pi) + 1) / 2
+            Brushstroke()
+                .stroke(Paint.cream, style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [3, 5]))
+                .opacity(isCurrent ? 0.45 + 0.45 * breath : 0.22)
+        }
+        .frame(width: 64, height: 20)
     }
 }

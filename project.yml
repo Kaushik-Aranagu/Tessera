@@ -25,8 +25,13 @@ targets:
       properties:
         UILaunchScreen:
           UIColorName: LaunchBackground
+        NSSupportsLiveActivities: true
+        CFBundleURLTypes:
+          - CFBundleURLName: com.kaushikaranagu.tessera
+            CFBundleURLSchemes: [tessera]
     sources:
       - App
+      - Shared
       - DesignSystem
       - Features
       - path: Resources
@@ -44,6 +49,27 @@ targets:
         SUPPORTS_MACCATALYST: NO
         SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
         SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
+    dependencies:
+      - target: TesseraWidgets
+        embed: true
+  TesseraWidgets:
+    type: app-extension
+    platform: iOS
+    info:
+      path: Widgets/Info.plist
+      properties:
+        CFBundleDisplayName: Tessera
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    sources:
+      - Widgets
+      - Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kaushikaranagu.tessera.widgets
+        GENERATE_INFOPLIST_FILE: YES
+        SKIP_INSTALL: YES
+        SUPPORTS_MACCATALYST: NO
   TesseraTests:
     type: bundle.unit-test
     platform: iOS

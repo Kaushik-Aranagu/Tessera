@@ -2,21 +2,61 @@ import Foundation
 import Observation
 import TesseraCore
 
-/// A live workout: the "process" running while you train. Reads targets and rest times through the object
-/// model (rest comes from the exercise class's inherited `restSeconds`, e.g. 3:00 for any barbell lift).
+/// A live workout: the "process" running while you train. x = exercises (`currentIndex`), y = sets of the current
+/// exercise (done above, the dialled set at eye level, remaining below). Rest lives in the same set block: after a set
+/// is seated the weight dial becomes the countdown. Reads targets and rest through the object model (rest comes from
+/// the exercise class's inherited `restSeconds`, e.g. 3:00 for any barbell lift).
 @MainActor
 @Observable
 final class WorkoutSession {
     let workout: ObjectRecord
     private unowned let model: AppModel
+    private var ledger: TrainingLedger {
+        TrainingLedger(model: model)
+    }
 
+    /// The exercise on screen (x).
     private(set) var currentIndex = 0
+    /// The dialled set. Opens on last set's values (or the target), so most sets need one hold.
     var weight: Double = 20
     var reps: Double = 8
+    var rpe: Double?
     private(set) var restEndsAt: Date?
     private(set) var restTotal: TimeInterval = 0
-    /// Increments on every logged set (drives the stamp + haptic).
+    /// Increments on every logged set (drives the seat animation + haptics).
     private(set) var loggedCount = 0
+    /// The set that was just seated, for the seat / paint-bleed / PR choreography.
+    private(set) var lastSeated: Seated?
+
+    struct Seated: Equatable {
+        let setID: UUID
+        let entryID: UUID
+        /// 1-based number of the set within its exercise.
+        let number: Int
+        let records: [TrainingLedger.RecordKind]
+        let e1RM: Double?
+    }
+
+    /// One row of the sets stack.
+    struct SetRow: Identifiable, Equatable {
+        let id: UUID
+        let number: Int
+        let weight: Double
+        let reps: Double
+        let rpe: Double?
+        let e1RM: Double
+    }
+
+    enum Phase: Equatable {
+        /// Dialling the next set.
+        case set
+        /// Resting; the dial counts down.
+        case rest(endsAt: Date)
+        /// All sets of this exercise are seated: the key pages to the next exercise.
+        case exerciseDone
+        /// Every exercise is done.
+        case workoutDone
+    }
 
     init(workout: ObjectRecord, model: AppModel) {
         self.workout = workout
@@ -62,12 +102,27 @@ final class WorkoutSession {
     }
 
     func loggedSets(of entry: ObjectRecord) -> [AppModel.LoggedSet] {
+        setRows(of: entry).map { AppModel.LoggedSet(weight: $0.weight, reps: $0.reps, e1RM: $0.e1RM) }
+    }
+
+    func setRows(of entry: ObjectRecord) -> [SetRow] {
         _ = loggedCount
-        return entry.orderedChildren.compactMap { set in
+        return entry.orderedChildren.enumerated().compactMap { index, set in
             guard let weight = model.store.number("weight", of: set), let reps = model.store.number("reps", of: set),
                   let e1RM = model.store.number("e1rm", of: set) else { return nil }
-            return AppModel.LoggedSet(weight: weight, reps: reps, e1RM: e1RM)
+            return SetRow(id: set.id, number: index + 1, weight: weight, reps: reps,
+                          rpe: model.store.number("rpe", of: set), e1RM: e1RM)
         }
+    }
+
+    func isFinished(_ entry: ObjectRecord) -> Bool {
+        setRows(of: entry).count >= targetSets(of: entry)
+    }
+
+    /// 1-based number of the set being dialled in the current exercise.
+    var currentSetNumber: Int {
+        guard let entry = currentEntry else { return 1 }
+        return min(setRows(of: entry).count + 1, max(targetSets(of: entry), 1))
     }
 
     var restSeconds: TimeInterval {
@@ -77,27 +132,51 @@ final class WorkoutSession {
         return prototypeValue ?? inherited ?? 120
     }
 
+    func phase(at now: Date = AppClock.now) -> Phase {
+        if let end = restEndsAt, end > now {
+            return .rest(endsAt: end)
+        }
+        if !entries.isEmpty, entries.allSatisfy(isFinished) {
+            return .workoutDone
+        }
+        if let entry = currentEntry, isFinished(entry) {
+            return .exerciseDone
+        }
+        return .set
+    }
+
+    /// 1 → 0 across the rest.
+    func restFraction(at now: Date = AppClock.now) -> Double? {
+        guard let end = restEndsAt, restTotal > 0 else { return nil }
+        let remaining = end.timeIntervalSince(now)
+        return remaining > 0 ? remaining / restTotal : nil
+    }
+
     // MARK: Personal records
 
     var previewE1RM: Double? {
-        model.previewE1RM(weight: weight, reps: reps)
+        ledger.e1RM(weight: weight, reps: reps)
     }
 
     /// Best set before this workout, for the PR hint.
     var previousBest: AppModel.LoggedSet? {
-        currentExercise.flatMap { model.bestSet(of: $0, excludingWorkout: workout.id) }
+        currentExercise.flatMap { ledger.bestSet(of: $0, excludingWorkout: workout.id) }
+    }
+
+    /// Best e1RM including sets already logged today, so a second PR has to beat the first.
+    private var bestE1RMSoFar: Double? {
+        let today = currentEntry.map { setRows(of: $0).map(\.e1RM) } ?? []
+        return ([previousBest?.e1RM].compactMap(\.self) + today).max()
     }
 
     var isPersonalRecord: Bool {
-        guard let preview = previewE1RM, let best = previousBest else { return false }
-        return preview > best.e1RM + 0.05
+        guard let preview = previewE1RM, let best = bestE1RMSoFar else { return false }
+        return preview > best + 0.05
     }
 
     /// Reps needed at the current weight to beat the previous best e1RM.
     var repsForRecord: Int? {
-        guard let best = previousBest, weight > 0 else { return nil }
-        let needed = (best.e1RM / weight - 1) * 30
-        return max(Int(needed.rounded(.down)) + 1, 1)
+        currentExercise.flatMap { ledger.repsToBeatBestE1RM(weight: weight, for: $0, excludingWorkout: workout.id) }
     }
 
     // MARK: Actions
@@ -110,14 +189,24 @@ final class WorkoutSession {
         reps = max(1, min(50, reps + delta))
     }
 
+    /// Hold to log: seats the dialled set, then the dial turns into the rest countdown.
     func logSet() {
-        guard let entry = currentEntry, let setClass = model.classDef(.set) else { return }
-        let set = model.store.create(setClass, parent: entry)
-        try? model.store.set("weight", to: .mass(weight), on: set)
-        try? model.store.set("reps", to: .number(reps), on: set)
+        guard let entry = currentEntry, let exercise = currentExercise else { return }
+        let wasRecord = isPersonalRecord
+        var records = ledger.recordsBeaten(weight: weight, reps: reps, for: exercise, excludingWorkout: workout.id)
+        if wasRecord, !records.contains(.e1RM) {
+            records.append(.e1RM)
+        } else if !wasRecord {
+            records.removeAll { $0 == .e1RM }
+        }
+        let e1RM = previewE1RM
+        guard let set = ledger.logSet(weight: weight, reps: reps, rpe: rpe, in: entry) else { return }
         restTotal = restSeconds
-        restEndsAt = AppClock.now.addingTimeInterval(restTotal)
         loggedCount += 1
+        lastSeated = Seated(setID: set.id, entryID: entry.id, number: setRows(of: entry).count, records: records,
+                            e1RM: e1RM)
+        // The last set of the exercise doesn't need a rest before paging on, but the workout's last does nothing.
+        restEndsAt = entries.allSatisfy(isFinished) ? nil : AppClock.now.addingTimeInterval(restTotal)
         model.touch()
     }
 
@@ -125,9 +214,27 @@ final class WorkoutSession {
         restEndsAt = nil
     }
 
+    func extendRest(by seconds: TimeInterval) {
+        guard let end = restEndsAt else { return }
+        restEndsAt = end.addingTimeInterval(seconds)
+        restTotal += seconds
+    }
+
+    /// Removes the most recent set of the current exercise (undo).
+    func undoLastSet() {
+        guard let entry = currentEntry, let last = entry.orderedChildren.last else { return }
+        model.store.softDelete(last)
+        restEndsAt = nil
+        lastSeated = nil
+        loggedCount += 1
+        loadDefaults()
+        model.touch()
+    }
+
     func select(entryAt index: Int) {
-        guard entries.indices.contains(index) else { return }
+        guard entries.indices.contains(index), index != currentIndex else { return }
         currentIndex = index
+        lastSeated = nil
         loadDefaults()
     }
 
@@ -136,10 +243,17 @@ final class WorkoutSession {
         return entries.indices.contains(next) ? next : nil
     }
 
+    /// The first exercise after the current one that still has sets to do.
+    var nextUnfinishedIndex: Int? {
+        let order = Array(entries.indices.dropFirst(currentIndex + 1)) + Array(entries.indices.prefix(currentIndex))
+        return order.first { !isFinished(entries[$0]) }
+    }
+
     private func loadDefaults() {
         guard let entry = currentEntry else { return }
-        let last = loggedSets(of: entry).last
+        let last = setRows(of: entry).last
         weight = last?.weight ?? targetWeight(of: entry) ?? 20
         reps = last?.reps ?? targetReps(of: entry)
+        rpe = nil
     }
 }

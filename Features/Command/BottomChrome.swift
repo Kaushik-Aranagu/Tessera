@@ -13,7 +13,9 @@ struct BottomChrome: View {
     @State private var feedback: String?
     @State private var isBusy = false
 
-    private let barShape = RoundedRectangle(cornerRadius: 18, style: .continuous)
+    @State private var isDockOpen = false
+
+    private let barShape = RoundedRectangle(cornerRadius: 22, style: .continuous)
 
     var body: some View {
         GlassEffectContainer(spacing: 14) {
@@ -22,12 +24,28 @@ struct BottomChrome: View {
                     .glassEffect(.regular, in: .rect(cornerRadius: 22, style: .continuous))
                     .glassEffectID("command", in: glass)
             } else {
-                collapsed
+                dock
+                    .background(barShape.fill(Color(hex: 0xFAF6EF).opacity(isDockOpen ? 0.94 : 0.62)))
                     .glassEffect(.regular.interactive(), in: barShape)
+                    .overlay {
+                        barShape.strokeBorder(LinearGradient(stops: [.init(color: .white.opacity(0.9), location: 0),
+                                                                     .init(color: .clear, location: 0.05)],
+                                                             startPoint: .top, endPoint: .bottom), lineWidth: 1)
+                            .allowsHitTesting(false)
+                    }
+                    .overlay { barShape.stroke(Theme.Colors.ink.opacity(0.25), lineWidth: 0.5).allowsHitTesting(false) }
+                    .overlay(alignment: .top) {
+                        // A running process lights the dock's top edge; the screen's own top edge stays clean on Home.
+                        if model.session != nil {
+                            ProcessSeam()
+                                .padding(.horizontal, 18)
+                                .transition(.opacity)
+                        }
+                    }
                     .glassEffectID("command", in: glass)
             }
         }
-        .padding(.horizontal, Theme.Spacing.l)
+        .padding(.horizontal, 14)
         .padding(.bottom, Theme.Spacing.xs)
         .onChange(of: model.isCommandExpanded) { _, expanded in
             focused = expanded
@@ -61,13 +79,50 @@ struct BottomChrome: View {
         .accessibilityLabel("Tess. Go home")
     }
 
+    /// The dock: What's running sits on top of Ask Tess in one glass lens. Collapsed, it shows the most urgent
+    /// process (the workout always wins); tapping the process name grows it into the full list.
+    private var dock: some View {
+        VStack(spacing: 0) {
+            if let session = model.session {
+                if isDockOpen {
+                    Text("what's running")
+                        .font(Theme.voice)
+                        .foregroundStyle(Theme.Colors.context)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 18)
+                        .padding(.top, 18)
+                        .transition(.opacity.combined(with: .offset(y: 12)))
+                }
+                ProcessRow(session: session, isOpen: isDockOpen) {
+                    withAnimation(MotionPolicy.resolve(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.44),
+                                                       reduceMotion: reduceMotion)) { isDockOpen.toggle() }
+                } resume: {
+                    isDockOpen = false
+                    model.isWorkoutPresented = true
+                }
+                MachinedSeam().padding(.horizontal, 14)
+            }
+            collapsed
+        }
+        .gesture(DragGesture(minimumDistance: 20).onEnded { value in
+            if value.translation.height > 30, isDockOpen {
+                withTesseraAnimation(reduceMotion: reduceMotion) { isDockOpen = false }
+            }
+        })
+        .onChange(of: model.session == nil) { _, ended in
+            if ended {
+                isDockOpen = false
+            }
+        }
+    }
+
     private var collapsed: some View {
         HStack(spacing: Theme.Spacing.s) {
             soul
             Button { toggle(true) } label: {
                 HStack(spacing: Theme.Spacing.m) {
                     Text("Ask Tess, or log 82.5×8")
-                        .textRole(.body)
+                        .font(Theme.voice)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                         .lineLimit(1)
                     Spacer(minLength: 0)
@@ -75,7 +130,7 @@ struct BottomChrome: View {
                         .font(.system(size: 17, weight: .medium))
                         .foregroundStyle(Theme.Colors.ink)
                 }
-                .frame(height: 56)
+                .frame(height: 74)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -171,32 +226,108 @@ struct BottomChrome: View {
     }
 }
 
+/// One open loop in the dock: a state dab, the name, its state line and one control.
+private struct ProcessRow: View {
+    let session: WorkoutSession
+    let isOpen: Bool
+    var toggle: () -> Void
+    var resume: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let now = AppClock.adjust(context.date)
+            HStack(spacing: 14) {
+                Button(action: toggle) {
+                    HStack(spacing: 14) {
+                        BreathingDab(color: Theme.Colors.live)
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text(session.workout.title)
+                                .textRole(.bodyStrong)
+                                .foregroundStyle(Theme.Colors.ink)
+                            Text(stateLine(now: now))
+                                .font(Theme.voice(size: 18))
+                                .foregroundStyle(stateIsUrgent(now: now) ? Theme.Colors.live : Color(hex: 0x6E6480))
+                                .contentTransition(.numericText(countsDown: true))
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint(isOpen ? "Collapses the list" : "Shows everything that's running")
+                Button(action: resume) {
+                    Text("Resume")
+                        .textRole(.bodyStrong)
+                        .foregroundStyle(Theme.Colors.paper)
+                        .frame(width: 104, height: 44)
+                        .background(Theme.Colors.ink, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                .buttonStyle(PressScaleStyle())
+            }
+            .padding(.horizontal, 18)
+            .frame(height: 64)
+        }
+    }
+
+    private func stateLine(now: Date) -> String {
+        switch session.phase(at: now) {
+        case let .rest(end): "resting, \(Format.duration(max(0, end.timeIntervalSince(now)).rounded(.up)))"
+        case .set: "set \(session.currentSetNumber) is up"
+        case .exerciseDone: "next exercise is up"
+        case .workoutDone: "ready to finish"
+        }
+    }
+
+    private func stateIsUrgent(now: Date) -> Bool {
+        if case .rest = session.phase(at: now) {
+            false
+        } else {
+            true
+        }
+    }
+}
+
+/// The vermilion state dab of a running process: breathing (1 ↔ 1.12) with a soft glow over 3 s.
+private struct BreathingDab: View {
+    let color: Color
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { context in
+            let breath = (sin(context.date.timeIntervalSinceReferenceDate / 3 * 2 * .pi) + 1) / 2
+            PaintDab(color: color, size: CGSize(width: 16, height: 14), seed: 3)
+                .scaleEffect(1 + 0.12 * breath)
+                .shadow(color: color.opacity(0.5 * breath), radius: 6)
+        }
+        .frame(width: 20, height: 20)
+    }
+}
+
+/// A machined seam between dock rows: 1 px ink at 12% over 1 px white at 80%.
+private struct MachinedSeam: View {
+    @Environment(\.displayScale) private var displayScale
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Theme.Colors.ink.opacity(0.12).frame(height: 1 / displayScale)
+            Color.white.opacity(0.8).frame(height: 1 / displayScale)
+        }
+        .accessibilityHidden(true)
+    }
+}
+
 /// A running process (a live workout) shown as a lit seam along the top edge; tap to return to it.
 struct RunningSeam: View {
     let session: WorkoutSession
     var onTap: () -> Void
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Button(action: onTap) {
-            ZStack(alignment: .top) {
-                Color.clear.frame(height: 44)
-                TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { context in
-                    let sweep = TessSoul.phase(context.date.timeIntervalSinceReferenceDate, period: 2.2)
-                    GeometryReader { proxy in
-                        ZStack(alignment: .leading) {
-                            Rectangle().fill(Theme.Colors.training.opacity(0.55))
-                            Rectangle()
-                                .fill(LinearGradient(colors: [.clear, Theme.Colors.training, .clear],
-                                                     startPoint: .leading, endPoint: .trailing))
-                                .frame(width: proxy.size.width * 0.35)
-                                .offset(x: reduceMotion ? 0 : proxy.size.width * (sweep * 1.35 - 0.35))
-                        }
-                    }
-                    .frame(height: 2)
-                }
-            }
-            .contentShape(Rectangle())
+            ProcessSeam()
+                .frame(maxHeight: .infinity, alignment: .top)
+                .frame(height: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(session.workout.title) is running. Return to workout")

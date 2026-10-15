@@ -6,6 +6,7 @@ struct ThemedBackground: View {
         switch Theme.concept.background {
         case .groundWithSky: GroundWithSky()
         case .flat: Theme.Colors.paper.ignoresSafeArea()
+        case .plein: PleinGround()
         }
     }
 }

@@ -50,8 +50,10 @@ final class AppModel {
 
     /// Bumped after writes so views re-read derived data.
     private(set) var revision = 0
-    /// Pages above Today.
+    /// Pages above Home.
     var path: [Route] = []
+    /// Pages zoomed into from the live workout (z), stacked inside the workout's own cover.
+    var workoutPath: [Route] = []
     /// How each pushed page arrives: zoom out of the tapped row (deeper) or cross-fade (jump / up).
     @ObservationIgnored private(set) var arrivals: [Route: Arrival] = [:]
     /// Pages already seen this session — their entrance choreography only plays on the first visit.
@@ -64,7 +66,8 @@ final class AppModel {
     /// What Tess's soul is doing right now.
     var tessMode: TessSoul.Mode = .idle
     /// Home (the launcher Tess paints in) vs Today.
-    var isHomeShown = false
+    /// Where you were when Tess took you Home; tapping her again goes back.
+    var homeReturnPath: [Route]?
 
     init(context: ModelContext) {
         self.context = context
@@ -90,27 +93,41 @@ final class AppModel {
     enum Arrival { case zoom, crossFade }
 
     func open(_ route: Route, _ relation: Relation = .deeper) {
-        guard route != path.last else { return }
-        switch relation {
-        case .deeper:
-            arrivals[route] = .zoom
-            path.append(route)
-        case .jump:
-            arrivals[route] = .crossFade
-            path.append(route)
-        case .up:
-            if let index = path.firstIndex(of: route) {
-                path.removeSubrange((index + 1)...)
-            } else {
-                arrivals[route] = .crossFade
-                path.append(route)
-            }
+        // While the workout cover is up, depth stacks inside it, so the process stays in front.
+        if isWorkoutPresented {
+            workoutPath = navigate(workoutPath, to: route, relation)
+        } else {
+            path = navigate(path, to: route, relation)
         }
     }
 
+    private func navigate(_ stack: [Route], to route: Route, _ relation: Relation) -> [Route] {
+        guard route != stack.last else { return stack }
+        var stack = stack
+        switch relation {
+        case .deeper:
+            arrivals[route] = .zoom
+            stack.append(route)
+        case .jump:
+            arrivals[route] = .crossFade
+            stack.append(route)
+        case .up:
+            if let index = stack.firstIndex(of: route) {
+                stack.removeSubrange((index + 1)...)
+            } else {
+                arrivals[route] = .crossFade
+                stack.append(route)
+            }
+        }
+        return stack
+    }
+
     func back() {
-        guard !path.isEmpty else { return }
-        path.removeLast()
+        if isWorkoutPresented, !workoutPath.isEmpty {
+            workoutPath.removeLast()
+        } else if !path.isEmpty {
+            path.removeLast()
+        }
     }
 
     /// True the first time a page is shown this session (then it's marked as seen).

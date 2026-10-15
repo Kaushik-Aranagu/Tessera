@@ -1,3 +1,4 @@
+// swiftlint:disable identifier_name -- short names are the geometry here (x, y, w, h, t); TessSoul is replaced by Soul v2.
 import SwiftUI
 
 /// Tess's living mark: three paint dabs (vermilion, cobalt, cadmium), multiply-blended with a light blur.
