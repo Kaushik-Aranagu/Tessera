@@ -46,3 +46,22 @@ Not blocking: the page scrolls as a whole when the list is long. That is fine fo
 *Checked the diff on master against the two #70 misses and `kitchen-phrases.md`.* **Pass.** "2 garlic cloves" now reads as 2 cloves of garlic, so it merges with "3 cloves garlic" and lands in Produce. A comma list goes to groceries when one item reads as shopping and none is a set, an errand ("call mum") or a date. Toiletries are in Household. Every row of `kitchen-phrases.md` except the Lists rows (41-48, waiting on Lists slice 8) now matches. Bonus fixes checked: "buy sun cream" is no longer read as Sunday, "pancake" finds "Protein pancakes", and "dough rest timer 45" stays in minutes.
 
 One thing to watch, not a fix: "get" with a short unknown object still goes to groceries ("get haircut" becomes a grocery item called "haircut"). It's a ghost row with undo, so let Kaushik's use decide. If it bites, treat "get X" as groceries only when X reads as shopping, as the comma rule does.
+
+# Screens 10-11: Recipe page and Paste a recipe (#86, 25ab380)
+
+*Checked the diff and `docs/recordings/13-recipe-and-paste.mp4` against the slice 10 and 11 steers and the "Screen needs" above, and the engine against Research's `docs/research/fixtures/recipe-paste-corpus.md`.* **Pass, merge it.**
+
+Recipe page: the name is the hero with the context line under it, and the portion drum sits beside one 21pt ingredient column. Amounts are at 600 and names at 400, and staples ("to taste Black pepper") are dimmed. Steps show only as the "4 steps" peek over an ink Cook key. Swiping the column left leaves "4 to buy, in Groceries" with Undo, through the new `Groceries.share(of:)`. Tapping an ingredient zooms into it, and the source text and cook history sit one level deeper. No text is under 16pt, and there are no cards or pills.
+
+Paste: the raw text stays put and the parser paints over it, with cadmium under-strokes on amounts, sage dabs on names, cadmium durations, and numerals in the margin at step breaks. The cobalt Tess line reads "Seven ingredients, three steps, two timers." Tapping a line cycles it through ingredient, step and ignore, and `CreateRecipe(corrections:)` saves those taps, which the test covers. Save leaves "Weeknight dal saved." with Undo. The saved dal reads "serves 4, 33 min".
+
+Fixes for the paste-hardening/polish slice (none blocks):
+1. On the paste screen the last step sits under the Save bar ("Stir in the coconut milk…" is cut off). Give the column a bottom inset equal to the bar's height.
+2. The recording shows about 5 s of blank paper before the paste prompt (23-28 s). Either the prompt is late or the clip needs trimming.
+3. The recording never turns the drum, cycles a line, zooms into an ingredient or opens the source layer. The next kitchen recording should show these four.
+
+Corpus gaps. #86 changes how lines are classified but not how they parse, so every gap Research found on master is still here. None blocks a basic paste, because a misread line can be fixed with a tap. In priority order for Paste hardening:
+1. Unknown headings and blog noise (corpus gap 4). In paste-25 every step becomes an ingredient after "Do it like this", which takes five taps to repair. This is the worst one, so do it first.
+2. No oz, lb or pint, and pack sizes ("1 (14 oz) can") end up in the name. These break grocery merging on US recipes.
+3. Worded and fractional durations ("half an hour", "1½ hours") give no timer.
+4. "salt & pepper" links to peppers, and short mentions don't link.
