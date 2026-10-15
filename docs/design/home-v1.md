@@ -18,37 +18,42 @@ Light ground. One screen tall. Sparse: one hero, one action, one short list. Moc
    - **Today only:** a 26pt wet amber tip sits at now and breathes (scale 1↔1.35, blur 3↔6, 3.6s).
 2. **Now line** (y 222): "now, until twenty to four", in Fraunces italic 21, violet.
 3. **Hero** (y 252): the current thing's name only, at Fraunces 60 / 0.95, weight 640, tracking −2.5%, with opsz 144, SOFT 100 and WONK 1. Up to 3 lines. Tap it to zoom into the object.
-4. **Hold to finish** (y 470): an ink key, 220×58.
-   - While you hold, vermilion paint spreads through the key from the left over 900ms, blurred. Releasing drains it in 220ms.
+4. **Hold to finish** (y 452): an ink key, 220×58.
+   - While you hold, vermilion paint spreads through the key from the left over **700ms**, blurred. Releasing drains it in 220ms. (Holds stay between 0.5 and 0.8s; see `workout-v1.md`, Instrument rules.)
    - The time left sits beside the key in labels: "14 MIN / LEFT".
    - **On completion:** the next item writes itself into the hero, entering from the right (18pt travel, blur 4→0, 340ms). Tess plays `done`, and her bar says "Done. Next one is up."
-5. **Later** (y 566): the heading is Fraunces italic 34. Below it, a bounded window 112pt tall shows about two rows and fades out at the bottom, scrolling vertically with a snap per 50pt row.
+5. **The ledger** (y 536, only when there is a suspended process): see below.
+6. **Later** (y 532, or y 616 under a ledger row): the heading is 34. Below it, a bounded window (92pt tall, 70pt under a ledger row) shows about two rows and fades out at the bottom, scrolling vertically with a snap per 50pt row.
    - Each row is a paint dab in its area colour, the name at 21pt, and the time in labels.
    - No separators.
-6. **The dock** (see below) at the bottom: What's running sits on top of Ask Tess in one glass lens.
+7. **Ask Tess** at the bottom: one glass bar, 74pt tall, radius 20, at bottom 18 with 14pt side insets. Light fill `rgba(250,246,239,.62)`, 18pt blur, 0.5pt hairline, white 90% inner top. The soul sits at scale 0.5 on the left (centre x 50), then Tess's line at 21.
 
-## The dock: What's running + Ask Tess
-Mockup: `mockups/HomeRunning.dc.html` (the dock, the process list, and the capture flow).
+## What's running: Now plus the ledger (replaces the Round 7 dock)
+Decided 2026-10-15 to match Product's `whats-running.md` and Research's concept A. **The bottom dock is retired.** Home has no process list above Ask Tess; Ask Tess is a plain bar again. Mockup: `mockups/HomeLedger.dc.html` (tap "DEMO" at the top right to cycle running, paused and none). The mockup is drawn in Inter Tight for the type comparison; the type spec in `type-and-motion.md` is unchanged until Kaushik picks.
 
-The dock is one glass lens, radius 22, at bottom 18 with 14pt side insets. Light fill is `rgba(250,246,239,.62)` with an 18pt blur, a 0.5pt hairline and a white 90% inner top. From the bottom up, it holds:
-- **Ask Tess row,** 74pt tall: the soul at scale 0.5 on the left (centre x 50), then Tess's line in Fraunces italic 21.
-- **One process row** per open loop, 64pt tall. Rows are split by a machined seam: a 1px ink line at 12%, then 1px white at 80% below it.
-- When anything is running, a **lit 2pt vermilion seam** runs along the dock's top edge (the process seam, with a glint every 4.5s). The screen's own top edge stays clean on Home.
+**A running process is Now.** Only one process runs at a time, so it takes the Now slot instead of getting a row:
+- **Now line:** "running now, Push Day A".
+- **Hero:** the resume point, e.g. "Bench press, set 3 of 4".
+- **The one control:** a vermilion key, "Resume", 220×58 at y 452, in place of Hold to finish. Beside it in labels: "RESTING / 1:42" (tick motif), or "SET 4 / IS UP" once rest is over.
+- **Top edge:** a lit 2pt vermilion seam with light travelling along it (glint every 4.5s), the same seam every other screen shows while something runs. Tapping it resumes.
+- There is no ledger row for the running process, so Home never shows the same next thing twice.
 
-**Process row:** a 16×14 state dab, two lines of text (the name in 21/600, the state in Fraunces italic 18 in `#6E6480`), and **one** control on the right (104×44, radius 12).
+**The ledger** holds suspended processes (and, from M2, waiting ones whose check time has passed), most recently touched first, **at most 3 rows**; the rest are one level deeper in the full list. In v1 only workouts are processes, so it shows zero or one row.
+- **Row:** full width (22pt insets), 64pt tall. The subject in 21/600 ("Push Day A"); the next step under it in 18 at `#6E6480`, stating time and never judgement ("Bench, set 3 of 4, 40 min ago"). It must fit on one line; shorten the step rather than wrap. On the right, one control: "Resume" in vermilion 21/600, text only, no key.
+- **State lives in the seam above the row,** 6pt above it, never in a badge or dab:
 
-| State | Dab | State line | Control |
-|---|---|---|---|
-| running | vermilion, breathing (scale 1↔1.12 with a soft glow, 3s) | "resting, 1:42" (tick motif) or "set 4 is up" in vermilion | Ink key, "Resume" |
-| paused | solid cadmium | "paused at Tuesday", which is the saved context (automatic context save) | Hairline key, "Resume" |
-| waiting | hollow cobalt ring | "waiting since Monday" | Hairline key, "Open" |
+| State | Seam |
+|---|---|
+| suspended | 2pt vermilion, lit and still (glow `0 0 8px rgba(200,69,47,.45)`) |
+| waiting (M2) | 1px engraved and unlit: ink at 12%, then white at 80% below it |
+| running | never appears in the ledger (it is Now) |
 
-**v1 behaviour:**
-- Collapsed, the dock shows only the most urgent process (the workout always wins), so it is 138pt tall in total. With nothing running, it is just the Ask row with no seam.
-- **Tap the process name** to grow the dock upward into the full list (318pt, 440ms, `cubic(.2,.9,.25,1)`). The rows rise in after 80ms under the heading "what's running" (italic 21, violet), and the glass thickens to 94% so the page underneath doesn't show through. Tap the name again, or swipe down, to collapse it.
-- **Resume** zooms into the process at its saved place. For the workout, that means the live workout with the cover rising.
-- Paused tasks and waiting items are P2 in the feature list. Draw them only once they exist.
-- To make room on TODAY, the hold key moves to y 452, Later to y 532, and the Later window to y 584 (92pt tall).
+- Rows are joined by the hairline seam of the row below; there are no separators beyond the seams.
+- **Entrance:** rows rise in (10pt, 320ms ease-out) and Later slides down to make room (320ms, `cubic(.2,.8,.2,1)`).
+- **Tap** zooms from the row straight to the resume point: live mode, set at eye level, the dial preset, one glint sweep across the set (a haptic instead under Reduce Motion).
+- **Swipe left** puts it away: the row slides into its track and the gap closes, with Undo in the Ask Tess bar.
+- **Pull down** on the row opens the process page with its trail.
+- **Leaving Home's layout:** with a ledger row, Later moves to y 616 and its window to y 668 (70pt tall); with none, they stay at 532 and 584.
 
 ## Tess captures: a ghost row that dries
 A capture is wet paint until it is committed.
@@ -57,7 +62,7 @@ A capture is wet paint until it is committed.
    - The proposed row slides into its place in its list (from −10pt, blur 6→0, 420ms).
    - It is drawn wet: everything in cobalt, opacity breathing between 0.5 and 0.66, a blurred cobalt dab, and the name in Fraunces italic.
    - A cobalt brushstroke paints along under the row over exactly **2s**. This is the commit timer, as visible time.
-   - The rows below shift down 50pt.
+   - The rows below shift down 50pt (under a ledger row, the ghost lands at y 668).
    - The soul hands off: the cobalt dab flies to the row and spreads into a wash.
    - Ask Tess reads "Drying. Swipe to drop it."
 3. **Commit**, on tap or when the stroke finishes:

@@ -2,13 +2,13 @@
 
 The source of truth for how v1 looks, moves and feels. iOS build implements from these files; Design studio keeps them current.
 
-- **Interactive mockups (canvas):** https://claude.ai/artifact/Ma6zBUdJJe4giqRNWHzF3r (private to Kaushik). The current rounds are **Round 6** (painterly Home and Workout, plus soul v2) and **Round 7** (What's running, Tess captures, and the rest Live Activity). Round 5's machined look was rejected; ignore it.
+- **Interactive mockups (canvas):** https://claude.ai/artifact/Ma6zBUdJJe4giqRNWHzF3r (private to Kaushik). The current rounds are **Round 6** (painterly Home and Workout, plus soul v2) and **Round 7** (Tess captures and the rest Live Activity), and **Round 9** (What's running as Now plus the ledger in `HomeLedger`, and the Inter Tight vs serif comparison boards). Round 7's bottom dock is retired. Round 5's machined look was rejected; ignore it.
 - **Mockup source:** [`mockups/`](mockups/) holds the HTML for those boards. They won't render on their own (they need the canvas runtime), but every colour, size, timing and keyframe in them is exact. Read them as reference code.
 
 | File | What it covers |
 |---|---|
 | [materials.md](materials.md) | The painterly grounds, the paint colours, and where the machined precision lives (key edges, glass, ticks, the process seam) |
-| [home-v1.md](home-v1.md) | Home across x (Review, Today, Training): the day stroke, the hero, hold to finish, the Later window, the dock (What's running + Ask Tess) and ghost captures |
+| [home-v1.md](home-v1.md) | Home across x (Review, Today, Training): the day stroke, the hero, hold to finish, the Later window, What's running (the running process becomes Now; suspended ones sit in the ledger under it), Ask Tess and ghost captures |
 | [workout-v1.md](workout-v1.md) | Live workout: exercise lane, sets as brushstrokes, weight dial, reps drum, hold to log, rest in the dial, PR moment |
 | [live-activity.md](live-activity.md) | The rest timer on the Lock Screen and Dynamic Island (Inter Tight, horizon line as timer, tap the set to log it), with its Go state and colour moods |
 | [tess-soul.md](tess-soul.md) | Tess's living mark, v2 wet paint: its form, mode parameters, travel, going home, the shader route, and the motifs we reuse |

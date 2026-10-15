@@ -1,5 +1,7 @@
 # Type and motion
 
+> **No italics anywhere** (Kaushik, 2026-10-15). Wherever these specs say "italic", use the upright cut at the same size and colour; Tess's lines stay cobalt. The app-wide typeface is still open: Fraunces + Hanken Grotesk (below) or Inter Tight throughout, as on the Rest Live Activity. Compare `mockups/HomeTight.dc.html` / `HomeSerif.dc.html` and `WorkoutTight.dc.html` / `WorkoutSerif.dc.html`. Keep building on the tokens below until he picks; the swap should be a `Theme` change only.
+
 ## Type: four tiers, nothing smaller than 16pt
 | Tier | Size / line height | Use |
 |---|---|---|
@@ -10,7 +12,7 @@
 
 - **Fonts:**
   - **Fraunces** (variable: opsz 144, SOFT 100, WONK 1 for display) for heroes and numerals. Use tabular lining numerals.
-  - **Fraunces italic** for context lines ("now, until twenty to four") and for everything Tess says, in cobalt.
+  - **Fraunces, upright** (formerly italic) for context lines ("now, until twenty to four") and for everything Tess says, in cobalt.
   - **Hanken Grotesk** for the UI.
 - Fonts sit behind `Theme`.
 - Use `Font.custom(_:size:relativeTo:)`. Cap the hero at about 80pt.
