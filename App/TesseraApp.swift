@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import TesseraCore
 
 @main
 struct TesseraApp: App {

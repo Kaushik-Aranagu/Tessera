@@ -1,4 +1,5 @@
 import SwiftUI
+import TesseraCore
 
 /// Today: a greeting that writes itself in, a thin day strip, one hero ("Now"), a departures-board schedule
 /// and tonight's workout. No cards — hierarchy comes from the four type sizes, margins and negative space.

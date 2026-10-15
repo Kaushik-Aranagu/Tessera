@@ -3,17 +3,18 @@ import Foundation
 import SwiftData
 
 /// Built-in classes every install starts with. Seeding is idempotent, and system classes and fields
-/// get deterministic ids derived from their keys, so separate devices seed identical ids before CloudKit
-/// sync merges them.
+/// get deterministic ids derived from their keys, so separate devices seed identical `id`s.
+/// CloudKit does not merge records by our `id`, though: two devices that both seed will sync two copies.
+/// A dedupe pass by `systemKey` / field id must run before sync is switched on (see docs/engine/research-01.md).
 @MainActor
-enum SystemCatalog {
-    enum Key: String, CaseIterable {
+public enum SystemCatalog {
+    public enum Key: String, CaseIterable, Sendable {
         case thing, activity, exercise, strengthExercise, barbellLift, benchPress
         case muscle, equipment
         case workout, exerciseEntry, set
         case routine, task, note
 
-        var systemKey: String {
+        public var systemKey: String {
             "system.\(rawValue)"
         }
     }
@@ -99,6 +100,8 @@ enum SystemCatalog {
                       FieldSpec(key: "isWarmup", name: "Warm-up", kind: .bool, defaultValue: .bool(false)),
                       FieldSpec(key: "e1rm", name: "Estimated 1RM", kind: .computed, unit: "kg",
                                 expression: "weight * (1 + reps / 30)"),
+                      FieldSpec(key: "volume", name: "Volume", kind: .computed, unit: "kg",
+                                expression: "weight * reps"),
                   ]),
         ClassSpec(key: .routine, name: "Plan", parent: .thing, symbol: "calendar", colorRole: "planning",
                   traits: [.schedulable], fields: [
@@ -117,7 +120,7 @@ enum SystemCatalog {
 
     /// Inserts any missing system classes and returns all of them by key.
     @discardableResult
-    static func seed(in context: ModelContext) throws -> [Key: ClassDef] {
+    public static func seed(in context: ModelContext) throws -> [Key: ClassDef] {
         var classes = try existing(in: context)
         for spec in specs {
             let classDef: ClassDef
@@ -167,7 +170,7 @@ enum SystemCatalog {
         return classes
     }
 
-    static func existing(in context: ModelContext) throws -> [Key: ClassDef] {
+    public static func existing(in context: ModelContext) throws -> [Key: ClassDef] {
         let all = try context.fetch(FetchDescriptor<ClassDef>(predicate: #Predicate { $0.systemKey != nil }))
         var result: [Key: ClassDef] = [:]
         for classDef in all {
@@ -182,7 +185,7 @@ enum SystemCatalog {
     }
 
     /// Deterministic UUID from a string (SHA-256, formatted as an RFC 4122 v5-style UUID).
-    static func stableID(_ name: String) -> UUID {
+    public nonisolated static func stableID(_ name: String) -> UUID {
         // The "tessera:" salt is part of every system id — never change it.
         var bytes = Array(SHA256.hash(data: Data("tessera:\(name)".utf8)).prefix(16))
         bytes[6] = (bytes[6] & 0x0F) | 0x50

@@ -1,6 +1,6 @@
 import Foundation
 import SwiftData
-@testable import Tessera
+@testable import TesseraCore
 import Testing
 
 @MainActor
@@ -89,13 +89,13 @@ struct ObjectModelTests {
         #expect(throws: ObjectStore.StoreError.self) { try store.set("e1rm", to: .number(1), on: set) }
     }
 
-    @Test func expressionParsingAndEvaluation() throws {
-        let expression = try Expression.parse("weight * (1 + reps / 30) - -2")
-        #expect(expression.variables == ["weight", "reps"])
-        #expect(expression.evaluate { ["weight": 60, "reps": 30][$0] } == 122)
-        #expect(try Expression.parse("1 / 0").evaluate { _ in nil } == nil)
-        #expect(throws: Expression.ParseError.self) { try Expression.parse("2 +") }
-        #expect(throws: Expression.ParseError.self) { try Expression.parse("2 $ 3") }
+    @Test func formulaParsingAndEvaluation() throws {
+        let formula = try Formula.parse("weight * (1 + reps / 30) - -2")
+        #expect(formula.variables == ["weight", "reps"])
+        #expect(formula.evaluate { ["weight": 60, "reps": 30][$0] } == 122)
+        #expect(try Formula.parse("1 / 0").evaluate { _ in nil } == nil)
+        #expect(throws: Formula.ParseError.self) { try Formula.parse("2 +") }
+        #expect(throws: Formula.ParseError.self) { try Formula.parse("2 $ 3") }
     }
 
     // MARK: Composition

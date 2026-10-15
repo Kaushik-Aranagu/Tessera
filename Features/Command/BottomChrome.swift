@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import TesseraCore
 
 /// The only glass in the app: the command bar (which morphs into Tess's capture panel) and the running-workout
 /// pill, sharing one `GlassEffectContainer` so they blend as they move.

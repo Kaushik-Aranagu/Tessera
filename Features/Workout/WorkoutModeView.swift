@@ -1,4 +1,5 @@
 import SwiftUI
+import TesseraCore
 
 /// Full-screen live logging in a dark green-black environment. Numbers roll, plates rebuild per side,
 /// holding logs a set with a stamp and a success haptic, then the rest ring counts down.

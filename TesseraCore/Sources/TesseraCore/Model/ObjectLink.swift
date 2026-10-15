@@ -4,19 +4,19 @@ import SwiftData
 /// A typed reference from one object's field to another object or to a class.
 /// Stored as rows so backlinks ("used in 12 workouts") are a query, not a scan of JSON.
 @Model
-final class ObjectLink {
-    var id: UUID = UUID()
+public final class ObjectLink {
+    public var id: UUID = UUID()
     /// The `FieldDef.id` this link belongs to.
-    var fieldID: UUID = UUID()
-    var sortIndex: Int = 0
-    var createdAt: Date = Date.now
+    public var fieldID: UUID = UUID()
+    public var sortIndex: Int = 0
+    public var createdAt: Date = Date.now
 
-    var from: ObjectRecord?
+    public var from: ObjectRecord?
     /// Exactly one of `toObject` / `toClass` is set.
-    var toObject: ObjectRecord?
-    var toClass: ClassDef?
+    public var toObject: ObjectRecord?
+    public var toClass: ClassDef?
 
-    init(
+    public init(
         from: ObjectRecord,
         fieldID: UUID,
         toObject: ObjectRecord? = nil,

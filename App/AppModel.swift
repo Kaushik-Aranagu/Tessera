@@ -2,6 +2,7 @@ import Foundation
 import Observation
 import SwiftData
 import SwiftUI
+import TesseraCore
 
 /// Something you can navigate to: every name in the UI is a handle to one of these.
 enum Route: Hashable {
@@ -283,7 +284,7 @@ final class AppModel {
     /// Evaluates the Set class's own `e1rm` expression for values that aren't logged yet.
     func previewE1RM(weight: Double, reps: Double) -> Double? {
         guard let setClass = classes[.set], let source = ClassResolver.field("e1rm", of: setClass)?.expression,
-              let expression = try? Expression.parse(source) else { return nil }
+              let expression = try? Formula.parse(source) else { return nil }
         return expression.evaluate { ["weight": weight, "reps": reps][$0] }
     }
 }

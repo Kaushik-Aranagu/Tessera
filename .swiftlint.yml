@@ -1,7 +1,8 @@
 included:
   - App
   - DesignSystem
-  - Core
+  - TesseraCore/Sources
+  - TesseraCore/Tests
   - Features
   - TesseraTests
 excluded:
