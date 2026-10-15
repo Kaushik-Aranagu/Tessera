@@ -110,6 +110,8 @@ struct NowPage: View {
                 }
                 .entrance(3)
             }
+        } else if let routine = model.todaysRoutine(now: now) {
+            RoutineHero(routine: routine)
         } else {
             VStack(alignment: .leading, spacing: Theme.Spacing.l) {
                 Text("Nothing else is planned today.")
@@ -320,6 +322,52 @@ private struct GhostRow: View {
         .accessibilityLabel("Proposed: \(item.title), \(Format.clock(item.start))")
         .accessibilityHint("Saves in two seconds. Double-tap to keep it now.")
         .accessibilityAction(named: "Drop it") { model.discardCapture() }
+    }
+}
+
+/// Nothing else on: the plan's next routine is Now, with one key into live mode.
+private struct RoutineHero: View {
+    let routine: ObjectRecord
+    @Environment(AppModel.self) private var model
+    @Environment(\.zoomNamespace) private var namespace
+
+    var body: some View {
+        let slots = routine.orderedChildren.count
+        let sets = routine.orderedChildren.reduce(0) { $0 + Int(model.store.number("sets", of: $1) ?? 3) }
+        VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+            Text("today's training")
+                .font(Theme.voice(size: 21))
+                .foregroundStyle(Theme.Colors.context)
+                .entrance(1)
+            Button {
+                model.open(.object(routine.id))
+            } label: {
+                HeroText(text: routine.title) { $0 }
+                    .foregroundStyle(Theme.Colors.ink)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(HandleButtonStyle())
+            .modifier(ZoomSource(id: Route.object(routine.id), namespace: namespace))
+            .accessibilityHint("Opens \(routine.title)")
+            .siblingParallax()
+            .entrance(2, hero: true)
+            .padding(.bottom, Theme.Spacing.l)
+            HStack(alignment: .center, spacing: Theme.Spacing.l) {
+                PaintKey(isTap: true, action: { model.startRoutine(routine) }, label: { _ in
+                    Text("Start").textRole(.bodyStrong)
+                })
+                .frame(width: 220)
+                .accessibilityLabel("Start \(routine.title)")
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("\(slots) EXERCISES")
+                    Text("\(sets) SETS")
+                }
+                .textRole(.label)
+                .foregroundStyle(Theme.Colors.inkSecondary)
+                .accessibilityElement(children: .combine)
+            }
+            .entrance(3)
+        }
     }
 }
 

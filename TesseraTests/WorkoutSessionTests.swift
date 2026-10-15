@@ -190,7 +190,7 @@ struct WorkoutSessionTests {
         #expect(groups == [.family, .family, .family, .movement])
         let dumbbell = try #require(options.first { $0.exercise.name == "Dumbbell Bench Press" })
         #expect(dumbbell.isEstimate && dumbbell.isPerHand)
-        #expect(dumbbell.load == 32.5) // 82.5 × 0.4, on the rack's nearest dumbbell
+        #expect(dumbbell.load == 32) // 82.5 × 0.4 = 33, on his rack (2 kg steps) the nearest dumbbell
     }
 
     @Test func swappingBeforeAnySetRelinksTheEntryThroughTheEngine() throws {
@@ -202,7 +202,7 @@ struct WorkoutSessionTests {
         #expect(session.currentExercise?.name == "Dumbbell Bench Press")
         #expect(session.swappedFrom == "Bench Press")
         #expect(session.isEstimatedLoad)
-        #expect(session.weight == 32.5)
+        #expect(session.weight == 32)
         #expect(model.engine.history(limit: 1).first?.action == "swapExercise")
     }
 

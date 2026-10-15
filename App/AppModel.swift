@@ -469,3 +469,36 @@ final class AppModel {
         return expression.evaluate { ["weight": weight, "reps": reps][$0] }
     }
 }
+
+// MARK: - Plan
+
+extension AppModel {
+    /// The plan Home trains from: Kaushik's starter PPL×2 (installed first, so the oldest plan).
+    var plan: ObjectRecord? {
+        _ = revision
+        return objects(of: .plan).first
+    }
+
+    /// Today's routine from the plan, when there is no workout object for today yet (nothing scheduled, nothing
+    /// running, nothing finished today). The plan rolls: the routine after the last one finished.
+    func todaysRoutine(now: Date = AppClock.now) -> ObjectRecord? {
+        guard session == nil, tonightWorkout(around: now) == nil, finishedToday(now: now).isEmpty,
+              let plan else { return nil }
+        return ledger.nextRoutine(in: plan)
+    }
+
+    /// Workouts finished today, newest first (Core's summaries: counts, records and Tess's line).
+    func finishedToday(now: Date = AppClock.now) -> [WorkoutSummary] {
+        _ = revision
+        return ledger.finishedWorkouts(on: now)
+    }
+
+    /// Start: today's workout from the routine through the engine (one entry per slot, prefilled), then live mode.
+    func startRoutine(_ routine: ObjectRecord) {
+        guard let workout = try? engine.perform(StartRoutine(routine: routine.id, time: AppClock.now), by: .user)
+            .output else { return }
+        session = WorkoutSession(workout: workout, model: self)
+        isWorkoutPresented = true
+        touch()
+    }
+}

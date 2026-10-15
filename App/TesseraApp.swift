@@ -32,7 +32,9 @@ struct TesseraApp: App {
         _model = State(initialValue: model)
         LiveWorkout.model = model
         // App Intents (Shortcuts, Siri, the Action button) run against the same engine as the UI.
-        AppDependencyManager.shared.add(dependency: model.runtime!)
+        if let runtime = model.runtime {
+            AppDependencyManager.shared.add(dependency: runtime)
+        }
         health = HealthExporter(engine: model.engine)
     }
 

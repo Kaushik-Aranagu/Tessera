@@ -7,6 +7,23 @@ import Testing
 struct AppModelTests {
     let container = TesseraSchema.makeContainer(inMemory: true)
 
+    @Test func withoutDemoHomeTrainsFromHisPlan() throws {
+        let model = AppModel(context: container.mainContext)
+        // Fresh install: no history, no workout object, just the PPL×2 plan.
+        #expect(model.tonightWorkout() == nil)
+        let routine = try #require(model.todaysRoutine())
+        #expect(routine.title == "Push A")
+        #expect(routine.orderedChildren.count == 5)
+
+        model.startRoutine(routine)
+        let session = try #require(model.session)
+        #expect(model.isWorkoutPresented)
+        #expect(session.entries.count == 5)
+        #expect(session.currentExercise?.name == "Bench Press")
+        // Started: today's training is the running workout now, not the routine.
+        #expect(model.todaysRoutine() == nil)
+    }
+
     @Test func demoDataProducesALivedInDay() throws {
         let model = AppModel(context: container.mainContext)
         DemoData.prepare(model)
