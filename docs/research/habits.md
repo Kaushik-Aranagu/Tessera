@@ -1,17 +1,17 @@
 # Habits that count, not judge
 
 For: Product lead, Core engine, Design studio
-Date: 2026-10-15
+Date: 2026-10-15 (citations checked against sources 18:40)
 
 ## What the apps and studies say
 
-- **Weekly targets beat daily chains.** Streaks and Habitify allow "x times per week"; Loop allows "x times in y days". Apple Fitness rings fill themselves from sensors, and since watchOS 11 you can pause rings and set goals per weekday. Weekly targets give slack, and slack keeps people going: Sharif and Shu (2017) found that built-in "emergency reserve" days raised persistence.
-- **Missing one day does not matter.** Lally (2010): habits took a median of 66 days to become automatic, and one missed day did not change the curve. Loop's habit strength score works the same way: a miss lowers the score a little, it never sets it back to zero.
-- **Broken streaks make people quit.** Silverman and Barasch (2022): once a streak breaks, people do the activity less. This is the "what-the-hell effect" (Polivy and Herman): one slip, then "the day is ruined anyway". Way of Life's red X and Not Boring Habits' streak counter are built on this risk. Atoms ("never miss twice") still talks in streaks.
+- **Weekly targets beat daily chains.** Streaks allows "x times a week", Habitify a weekly goal, and Loop "x times per interval". Apple Fitness rings fill themselves from sensors, and since watchOS 11 you can pause rings and set goals per weekday. Weekly targets give slack, and slack keeps people going: Sharif and Shu (2017, *Journal of Marketing Research*) found that built-in "emergency reserve" days raised persistence.
+- **Missing one day does not matter.** Lally et al. (2010): habits took a median of 66 days to become automatic (range 18 to 254), and one missed day did not change the curve. Loop's habit strength score works the same way: a miss lowers the score a little, and a few misses after a long run don't erase the progress.
+- **Broken streaks make people quit.** Silverman and Barasch (2022, *Journal of Consumer Research*): once a streak breaks, people do the activity less, most when they blame themselves. This is the "what-the-hell effect" described by Polivy and Herman: one slip, then "the day is ruined anyway". Way of Life marks a missed day red, which carries this risk. Atoms ("never miss twice") still talks in streaks, while Not Boring Habits avoids streaks and penalties.
 - **Monday is a gift.** Dai, Milkman and Riis (2014), the fresh-start effect: people start goals more often at the start of a week. A clean Monday is a feature, as long as it does not show a debt.
 - **Close to done pulls you forward.** Goal gradient (Kivetz et al. 2006): effort speeds up near the goal. "3 of 4" works better than "75%".
-- **Gentle apps last.** Finch (a pet you care for, no penalty) and Tiimo (visual day, no guilt) are the ADHD favourites. People say they quit apps because of red, nagging reminders and catch-up screens.
-- **Auto-fill removes the double entry.** Habitify and Streaks read Apple Health (steps, workouts). The check-in happens without a second tap, so the habit is just a view of what you already did.
+- **Gentle apps last.** Finch (a pet you care for, no penalty) and Tiimo (visual day, no guilt) are widely recommended for ADHD (blog and vendor sources, no usage data). People say they quit apps because of red, nagging reminders and catch-up screens.
+- **Auto-fill removes the double entry.** Streaks completes habits from Apple Health (steps, exercise minutes, workouts), and Habitify Pro auto-logs distance, duration and energy goals. The check-in happens without a second tap, so the habit is just a view of what you already did.
 
 ## The habit, as data
 
