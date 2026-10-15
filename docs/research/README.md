@@ -62,3 +62,5 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [ranker-tuning.md](ranker-tuning.md) | Core, Product: on-device rank log (separate ranklog.sqlite), weekly retune with guardrails |
 | [tess-discoverability.md](tess-discoverability.md) | Builder B, Design, Product: teaching Tess phrases in two weeks (context placeholder, ghost-row also-say, after-hand line), 20 hint lines |
 | [fixtures/spoken-normaliser.md](fixtures/spoken-normaliser.md) | Builder B, Core: 80 spoken transcript to text rows, 17 normaliser rules, grammar gaps |
+| [screen-fast-paths.md](screen-fast-paths.md) | Builder A, Builder B, Design, Product: primary action, two fast paths and Tess placeholder for all 20 screens; 5 cheapest fixes |
+| [photo-field.md](photo-field.md) | Core: photo field kind (hash ref, media/ files, thumbnails, GPS strip, undo, export, never in Claude packs) |
