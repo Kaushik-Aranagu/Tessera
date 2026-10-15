@@ -15,7 +15,7 @@ struct InkStroke: Shape {
         guard w > 0, h > 0 else { return Path() }
         let wobble: [CGFloat] = [0.06, -0.04, 0.05, -0.07, 0.03, -0.02, 0.06, -0.05]
         func jitter(_ i: Int) -> CGFloat {
-            wobble[(i + seed) % wobble.count] * h
+            wobble[abs((i &+ seed) % wobble.count)] * h
         }
         var path = Path()
         // Top edge, left to right, with a ragged start.
@@ -101,7 +101,7 @@ struct ValueWashStyle: ButtonStyle {
                     .fill(Theme.Colors.tess.opacity(configuration.isPressed ? 0.22 : 0))
                     .padding(-10)
                     .blur(radius: 5)
-                    .animation(.easeOut(duration: 0.18), value: configuration.isPressed)
+                    .tesseraAnimation(.easeOut(duration: 0.18), value: configuration.isPressed)
             }
             .contentShape(Rectangle())
     }
@@ -110,53 +110,6 @@ struct ValueWashStyle: ButtonStyle {
 extension ButtonStyle where Self == ValueWashStyle {
     static var valueWash: ValueWashStyle {
         ValueWashStyle()
-    }
-}
-
-// MARK: - The Tess horizon
-
-/// Replaces every Tess bar: a full-bleed band of glass at the bottom with no top edge (it fades in over its top
-/// 55%), and one hairline writing line from the soul to the right gutter. Content sits on the line.
-struct TessHorizon<Leading: View, Content: View>: View {
-    var height: CGFloat = 150
-    var isFocused = false
-    @ViewBuilder var leading: () -> Leading
-    @ViewBuilder var content: () -> Content
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        let dark = colorScheme == .dark
-        ZStack(alignment: .bottomLeading) {
-            Rectangle()
-                .fill(.ultraThinMaterial)
-                .mask {
-                    LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.55)],
-                                   startPoint: .top, endPoint: .bottom)
-                }
-                .ignoresSafeArea(edges: .bottom)
-                .allowsHitTesting(false)
-            HStack(alignment: .lastTextBaseline, spacing: 12) {
-                leading()
-                    .frame(width: 52)
-                content()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .overlay(alignment: .bottom) {
-                        // The writing line: the only edge.
-                        Rectangle()
-                            .fill((dark ? Color(hex: 0xF3ECE0) : Theme.Colors.ink)
-                                .opacity(isFocused ? 0.6 : (dark ? 0.3 : 0.28)))
-                            .frame(height: 0.5)
-                            .padding(.leading, isFocused ? -8 : 0)
-                            .offset(y: 6)
-                            .allowsHitTesting(false)
-                    }
-            }
-            .padding(.leading, 24)
-            .padding(.trailing, Theme.Spacing.gutter)
-            .padding(.bottom, 18)
-        }
-        .frame(height: height)
-        .animation(Theme.Motion.house, value: isFocused)
     }
 }
 

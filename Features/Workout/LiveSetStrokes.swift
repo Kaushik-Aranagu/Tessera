@@ -19,40 +19,38 @@ struct GlintIf: ViewModifier {
 
 /// One stroke per planned set: logged sets are 9 pt strokes in their paint, the current set a breathing dashed cream
 /// guide, later sets a faint guide. A freshly logged set paints in over 700 ms. Tap a logged stroke to change it on
-/// the dial and drum (the one being changed lifts and glows); long-press the last one to undo it.
+/// the dial and drum (it lifts, thickens and wets while the others dim); tap it again to leave. No context menu:
+/// Undo lives only in Tess's line (docs/design/edit-set.md).
 struct LiveSetStrokes: View {
     let session: WorkoutSession
     let phase: WorkoutSession.Phase
     var onEdit: (UUID) -> Void = { _ in }
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let entry = session.currentEntry
         let rows = entry.map(session.setRows(of:)) ?? []
         let target = entry.map(session.targetSets(of:)) ?? 0
-        HStack(spacing: 10) {
+        let editingID = session.isEditing ? session.editingSetID : nil
+        HStack(spacing: 0) {
             ForEach(0 ..< max(target, rows.count), id: \.self) { index in
                 if index < rows.count {
-                    LoggedStroke(number: index + 1, isFresh: session.lastSeated?.setID == rows[index].id,
-                                 isEditing: session.editingSetID == rows[index].id,
-                                 isGhost: session.model.isGhost(rows[index].id))
-                        .frame(height: 44)
-                        .contentShape(Rectangle())
-                        .onTapGesture { onEdit(rows[index].id) }
-                        .accessibilityAddTraits(.isButton)
-                        .accessibilityHint("Changes this set on the dial")
-                        .contextMenu {
-                            if index == rows.count - 1, session.undoable?.setID == rows[index].id, session.canUndo {
-                                Button("Undo set \(index + 1)", systemImage: "arrow.uturn.backward") {
-                                    withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLastSet() }
-                                }
-                            }
-                        }
-                        .accessibilityLabel(
-                            "Set \(index + 1), \(Format.kilograms(rows[index].weight)) by \(Int(rows[index].reps))"
-                        )
+                    let row = rows[index]
+                    Button { onEdit(row.id) } label: {
+                        LoggedStroke(number: index + 1, isFresh: session.lastSeated?.setID == row.id,
+                                     isEditing: editingID == row.id,
+                                     isDimmed: editingID != nil && editingID != row.id,
+                                     isGhost: session.model.isGhost(row.id))
+                            .frame(width: 74, height: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(
+                        "Set \(index + 1), \(Format.kilograms(row.weight)) kilograms by \(Int(row.reps)). Edit."
+                    )
                 } else {
                     GuideStroke(isCurrent: index == rows.count && phase == .set)
+                        .frame(width: 74, height: 44)
+                        .opacity(editingID == nil ? 1 : 0.3)
                         .accessibilityHidden(true)
                 }
             }
@@ -67,21 +65,25 @@ private struct LoggedStroke: View {
     let number: Int
     let isFresh: Bool
     var isEditing = false
+    /// Another stroke is being edited: this one steps back to 30 %.
+    var isDimmed = false
     /// Typed in the Bar and still drying: drawn wet in Tess's cobalt until it commits.
     var isGhost = false
     @State private var progress: CGFloat = 1
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
+        // Reduce Motion: no lift or wet, only the dim cross-fades.
+        let lifted = isEditing && !reduceMotion
         Brushstroke(progress: progress)
             .stroke(isGhost ? Paint.tess.opacity(0.55) : Paint.set(number),
-                    style: StrokeStyle(lineWidth: 9, lineCap: .round))
+                    style: StrokeStyle(lineWidth: lifted ? 13 : 9, lineCap: .round))
             .frame(width: 64, height: 20)
-            .blur(radius: 0.4)
-            .shadow(color: Paint.set(number).opacity(isEditing ? 0.8 : 0), radius: 6)
-            .offset(y: isEditing ? -6 : 0)
-            .opacity(isEditing ? 1 : 0.92)
-            .tesseraAnimation(Theme.Motion.snappy, value: isEditing)
+            .blur(radius: lifted ? 1 : 0.4)
+            .offset(y: lifted ? -4 : 0)
+            .opacity(isDimmed ? 0.3 : isEditing ? 1 : 0.92)
+            .tesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.22), value: isEditing)
+            .tesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.22), value: isDimmed)
             .onAppear {
                 guard isFresh, !reduceMotion else { return }
                 progress = 0

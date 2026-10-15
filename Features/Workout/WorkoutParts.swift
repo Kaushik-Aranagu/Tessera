@@ -105,7 +105,7 @@ enum WorkoutLines {
     static func subline(_ session: WorkoutSession, phase: WorkoutSession.Phase) -> (String, Color) {
         guard let entry = session.currentEntry else { return ("", Paint.secondary) }
         if let row = session.editingRow {
-            return ("changing set \(row.number), was \(Format.kilograms(row.weight)) × \(Int(row.reps))", Paint.tess)
+            return ("set \(row.number), as logged: \(Format.kilograms(row.weight)) × \(Int(row.reps))", Paint.tess)
         }
         let target = session.targetSets(of: entry)
         let rows = session.setRows(of: entry)
@@ -334,27 +334,34 @@ struct PlateStepKey: View {
 struct EditSetKeys: View {
     let session: WorkoutSession
     var onSave: () -> Void
+    var onRemove: () -> Void = {}
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         if let row = session.editingRow {
-            PaintKey(paint: Paint.cobalt, isTap: true, height: 64) {
+            // A tap in that set's own paint; the meta follows the dial and drum.
+            PaintKey(paint: Paint.set(row.number), isTap: true, height: 64) {
                 withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { session.saveEdit() }
                 onSave()
             } label: { _ in
                 Text("Save set \(row.number)")
+            } meta: {
+                Text("\(Format.kilograms(session.weight)) × \(Int(session.reps))")
             }
             .accessibilityLabel("Save set \(row.number) as \(Format.kilograms(session.weight)) by \(Int(session.reps))")
-            Button {
-                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { session.endEditing() }
-            } label: {
-                Text("Cancel")
-                    .textRole(.bodyStrong)
-                    .foregroundStyle(Paint.secondary)
-                    .frame(minWidth: 60, minHeight: 60)
-                    .contentShape(Rectangle())
+            Spacer(minLength: 0)
+            HStack(spacing: 30) {
+                Button("Remove") {
+                    withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { session.removeEditing() }
+                    onRemove()
+                }
+                .buttonStyle(.labelWord(Paint.live))
+                .accessibilityLabel("Remove set \(row.number)")
+                Button("Cancel") {
+                    withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { session.endEditing() }
+                }
+                .buttonStyle(.labelWord(Paint.secondary))
             }
-            .buttonStyle(.plain)
         }
     }
 }

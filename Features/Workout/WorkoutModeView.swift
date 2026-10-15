@@ -47,6 +47,8 @@ private struct WorkoutContent: View {
     @State private var tessMode: TessSoul.Mode = .idle
     @State private var celebrated = 0
     @State private var undoHaptic = 0
+    @State private var editHaptic = 0
+    @State private var saveHaptic = 0
     @State private var revealHaptic = 0
     /// The running order sheet (pulled down from the seam).
     @State private var isOrderOpen = false
@@ -147,6 +149,8 @@ private struct WorkoutContent: View {
             }
         }
         .sensoryFeedback(.decrease, trigger: undoHaptic)
+        .sensoryFeedback(.selection, trigger: editHaptic)
+        .sensoryFeedback(.impact(flexibility: .rigid), trigger: saveHaptic)
         .sensoryFeedback(.impact(weight: .light), trigger: revealHaptic)
     }
 
@@ -162,9 +166,17 @@ private struct WorkoutContent: View {
                 .overlay(alignment: .topLeading) { swapPanel }
                 .zIndex(2)
             LiveSetStrokes(session: session, phase: actual) { id in
-                revealHaptic += 1
+                // Tap a stroke to edit it, the same one again to leave, another to switch.
+                let isSame = session.isEditing && session.editingSetID == id
+                if !isSame {
+                    editHaptic += 1
+                }
                 withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) {
-                    session.beginEditing(setID: id)
+                    if isSame {
+                        session.endEditing()
+                    } else {
+                        session.beginEditing(setID: id)
+                    }
                 }
             }
             .padding(.horizontal, Theme.Spacing.gutter)
@@ -536,7 +548,7 @@ extension WorkoutContent {
     private func keyRow(phase: WorkoutSession.Phase) -> some View {
         HStack(spacing: Theme.Spacing.l) {
             if session.isEditing {
-                EditSetKeys(session: session) {}
+                EditSetKeys(session: session) { saveHaptic += 1 }
             } else {
                 switch phase {
                 case .set:

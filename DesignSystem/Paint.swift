@@ -152,7 +152,7 @@ struct PaintDab: View {
     var filled = true
 
     var body: some View {
-        let tilt = Double((seed * 37) % 17) - 8
+        let tilt = Double((seed &* 37) % 17) - 8
         DabShape(seed: seed)
             .fill(filled ? color : .clear)
             .overlay {
@@ -173,7 +173,8 @@ struct DabShape: Shape {
 
     func path(in rect: CGRect) -> Path {
         let jitter: [CGFloat] = [0.55, 0.45, 0.6, 0.4, 0.5, 0.6, 0.4, 0.5]
-        let shift = seed % 4
+        // Any seed is fine, hash values included: negative ones fold back into range.
+        let shift = abs(seed % 4)
         func j(_ i: Int) -> CGFloat {
             jitter[(i + shift * 2) % jitter.count]
         }
@@ -287,7 +288,7 @@ struct PaintKey<Label: View, Meta: View>: View {
         }
         .sensoryFeedback(.impact(weight: .light), trigger: isPressing) { _, new in new && !isTap }
         .sensoryFeedback(.selection, trigger: completions) { _, _ in isTap }
-        .sensoryFeedback(.impact(flexibility: .rigid, intensity: 1), trigger: completions) { _, _ in !isTap }
+        .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: completions) { _, _ in !isTap }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
         .accessibilityHint(isTap ? "" : "Touch and hold")
@@ -348,8 +349,8 @@ struct PaintKey<Label: View, Meta: View>: View {
         completionsSnapshot = completions
         if !isTap, !reduceMotion {
             // The tip blooms, then settles.
-            withAnimation(.easeOut(duration: 0.13)) { bloom = 1.9 }
-            withAnimation(.easeInOut(duration: 0.13).delay(0.13)) { bloom = 1.2 }
+            withAnimation(.easeOut(duration: 0.13)) { bloom = 1.3 }
+            withAnimation(.easeInOut(duration: 0.13).delay(0.13)) { bloom = 1.1 }
             withAnimation(Theme.Motion.house.delay(0.4)) { bloom = 1 }
         }
         fill = 1
