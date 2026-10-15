@@ -322,6 +322,11 @@ struct NowPickerTests {
         }
     }
 
+    @Test func n1TaskActionsCountAsTasks() {
+        #expect(NowPicker.area(of: "setTaskDone") == .tasks && NowPicker.area(of: "createTask") == .tasks)
+        #expect(NowPicker.area(of: "logSet") == .training && NowPicker.area(of: "checkListItem") == .groceries)
+    }
+
     static func fresh() -> NowPickerTests {
         // swiftlint:disable:next force_try
         try! NowPickerTests()

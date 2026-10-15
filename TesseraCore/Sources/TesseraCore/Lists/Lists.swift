@@ -150,21 +150,25 @@ public struct CheckListItem: EngineAction {
                                                     parameters: [
                                                         .init("item", .object, "The item"),
                                                         .init("done", .boolean, "False to uncheck", required: false),
+                                                        .init("time", .date, "Defaults to now", required: false),
                                                     ])
 
     public var item: UUID
     public var done: Bool?
+    /// When it was checked; the app passes its clock (so `-demoTime` and fixtures hold).
+    public var time: Date?
 
-    public init(item: UUID, done: Bool? = true) {
+    public init(item: UUID, done: Bool? = true, time: Date? = nil) {
         self.item = item
         self.done = done
+        self.time = time
     }
 
     public func apply(_ transaction: inout Transaction) throws {
         let item = try transaction.object(item, is: .listItem)
         let isDone = done ?? true
         try transaction.set("isDone", to: .bool(isDone), on: item)
-        try transaction.set("checkedAt", to: isDone ? .date(.now) : nil, on: item)
+        try transaction.set("checkedAt", to: isDone ? .date(time ?? .now) : nil, on: item)
         try transaction.refreshShopLine(for: item)
     }
 

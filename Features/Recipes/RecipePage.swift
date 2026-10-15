@@ -210,9 +210,7 @@ private struct SentLine: View {
                 .foregroundStyle(Theme.Colors.health)
             Spacer()
             Button("Undo", action: undo)
-                .textRole(.labelStrong)
-                .foregroundStyle(Theme.Colors.inkSecondary)
-                .buttonStyle(HandleButtonStyle())
+                .buttonStyle(InkLabelWordStyle(color: Theme.Colors.live))
                 .frame(minHeight: 44)
         }
         .padding(.top, Theme.Spacing.m)
