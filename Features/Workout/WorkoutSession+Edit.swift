@@ -52,6 +52,11 @@ extension WorkoutSession {
         if let result = try? model.engine.perform(DeleteObject(object: row.id), by: .user) {
             lastEdit = (result.record, row.number)
             editNote = "Set \(row.number) removed."
+            // The rest that is running belongs to the latest set; removing that set ends it, as Undo does.
+            if undoable?.setID == row.id || lastSeated?.setID == row.id {
+                restEndsAt = nil
+                restNote = nil
+            }
             if undoable?.setID == row.id {
                 undoable = nil
             }
