@@ -1,9 +1,13 @@
-# Questions for Kaushik (held overnight, 2026-10-15)
+# Questions for Kaushik
 
-Sent to the coordinator for its combined morning list; not posted to Kaushik directly. Product picked a default for each, and work continues on the default.
+Open questions go to the coordinator's combined morning list. None are open right now.
 
-1. **Units:** kg or lb? Default: kg.
-2. **Your current split:** what do you train now (e.g. Push / Pull / Legs, Upper / Lower)? Default: Push / Pull / Legs × 2 as a starter plan you replace.
-3. **Your gym's kit:** bar weight and smallest plate (e.g. 20 kg bar, 1.25 kg plates)? Default: 20 kg bar, 1.25 kg plates, dumbbells in 2 kg steps.
-4. **Missed days:** should the plan roll on to the next routine (no debt), or stick to fixed weekdays? Default: roll on.
-5. **Equipment as a trait** (Research lab, held by the coordinator): should Barbell, Dumbbell and so on become traits on a movement-pattern tree, replacing classes like BarbellLift? Product recommends yes, so swaps follow the movement, not the equipment.
+## Decided (Kaushik took every recommended default, 2026-10-15 15:37)
+
+1. **Units:** kg by default (pound entry still works).
+2. **Split and kit:** Push / Pull / Legs twice a week; 20 kg bar, 1.25 kg smallest plate, dumbbells in 2 kg steps.
+3. **Missed days:** the plan rolls on to the next routine; no fixed weekdays.
+4. **Auto-finish:** a workout left untouched for 6 hours is wrapped up with the sets already logged.
+5. **Exercise tree:** equipment is a trait (Barbell, Dumbbell…) on a movement-pattern tree, so BenchPress sits under HorizontalPush.
+6. **Typeface:** Inter Tight app-wide (download approved).
+7. **Lock-screen colour:** Cobalt sky.

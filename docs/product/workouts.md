@@ -1,6 +1,6 @@
 # Spec: Workouts v1 (live mode, set logging, PRs, plans)
 
-*Product lead, 2026-10-15. Builds on `v1-features.md` and `spatial-interaction.md`, and adopts ideas from `../research/fitness-and-workouts.md`. Defaults marked **(default)** were chosen overnight without Kaushik; questions that need him are in `morning-questions.md` and go to him through the coordinator's morning list.*
+*Product lead, 2026-10-15. Builds on `v1-features.md` and `spatial-interaction.md`, and adopts ideas from `../research/fitness-and-workouts.md`. Kaushik confirmed the overnight defaults on 2026-10-15 (see `morning-questions.md`): kg, Push / Pull / Legs × 2, 20 kg bar with 1.25 kg plates and 2 kg dumbbell steps, plans roll on after a missed day, 6-hour auto-finish, equipment as a trait. Smaller items still marked **(default)** are product calls.*
 
 ## 0. Goal and success measure
 
@@ -13,14 +13,14 @@ Kaushik logs every gym session in Tessera for two weeks without opening another 
 - **Variants are their own Exercise objects** linked by `variantOf`, with their own history and PRs. Paused, tempo, belt and straps are set tags, not new exercises.
 - **A family subclass** exists only when 3 or more variants share a swap pool and a progression rule.
 - **Muscle links** carry a role: primary 1.0, secondary 0.5, with an optional contribution override.
-- **Held for Kaushik:** whether equipment becomes a trait (Barbell, Dumbbell…), replacing classes like `BarbellLift`. Until he decides, build the pattern spine and keep equipment behaviour (plate math, increment, bar weight) behind one interface, so either answer is a small change.
+- **Equipment is a trait** (Barbell, Dumbbell, Cable, Machine…), not a class: BenchPress sits under HorizontalPush. Decided by Kaushik, 2026-10-15. The trait brings plate math, load increment, bar weight and e1RM rules.
 
 | Class | Parent / traits | Key fields | Notes |
 |---|---|---|---|
 | `Exercise` | StrengthExercise subtree · Trackable | aliases, muscles (role, contribution), equipment, mechanic, laterality, logType, loadIncrement, e1rmEligible, variantOf, angle/grip/stance, repRange, rest, progressionRule, source/license | Defaults inherit: compound rest 150 s, isolation 90 s |
 | `Muscle` | Thing · Measurable | group (e.g. Shoulders), weeklySetTarget (default 10–20) | 18 muscles; computed: sets this week (fractional) |
 | `Equipment` | Thing | bar weight, plates available (pairs), smallest increment, dumbbell set | Drives dial detents |
-| `Gym` | Thing | equipment list | v1 has one gym **(default)** |
+| `Gym` | Thing | equipment list | v1 has one gym, seeded with a 20 kg bar, 1.25 kg smallest plate and dumbbells in 2 kg steps |
 | `Routine` | Thing | ordered `Slot`s | e.g. Push Day A |
 | `Slot` | Thing | exercise, setScheme (sets × rep range, optional RPE target), progressionRule (overrides exercise), rest | A routine position; the rule lives here |
 | `Plan` | Thing · Schedulable | cycle of routines, start date, length in weeks (optional) | Week and month views read from it |
@@ -100,7 +100,7 @@ All writes go through typed actions with an op log (`v1-features.md`). Records, 
 **Week (P1).**
 - A plan is a repeating pattern of routines over the week (e.g. Push / Pull / Legs / rest / Upper / Lower / rest).
 - The week view is one screen: days across (x), and under each day its routine and state (planned, done, moved).
-- Missing a day doesn't create debt. The plan simply continues with the next routine **(default: rolling sequence, not fixed weekdays)**.
+- Missing a day doesn't create debt. The plan simply continues with the next routine (decided: rolling sequence, not fixed weekdays).
 - **Weekly sets per muscle:** fractional counting (primary 1, secondary 0.5) against the muscle's target range. Shown as a compact strip of muscles with a fill level. Below range is neutral, never red.
 
 **Month (P1).**
@@ -114,7 +114,7 @@ Generic object page with this summary strip: best e1RM, best set, 90-day e1RM tr
 
 ## 7. Seed content
 
-v1 ships with the 69-exercise seed from `../research/exercise-catalog.md`, written in our own words with no third-party images, and one starter plan **(default: Push / Pull / Legs × 2)** that Kaushik replaces with his own.
+v1 ships with the 69-exercise seed from `../research/exercise-catalog.md`, written in our own words with no third-party images, and Kaushik's plan: Push / Pull / Legs twice a week. Units default to kg.
 
 ## 8. Out of v1
 
