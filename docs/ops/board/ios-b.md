@@ -2,7 +2,7 @@
 
 *Owns: Home, the Command/Ask Tess bar, RootView, and the glue that hooks Notes, Review and Kitchen into Home.*
 
-**Started 12:23 PM PT** (Mac session, own worktree). **Done:** #116 (Today on Home, M2 slices 8 and 9, 0f183ae); #107 (Home links as a zoom, Kitchen on the rail, Notes at the foot of Review); #110 (Finish, Start and Resume at full size); Tess soul in the corner with Write working. **Now:** QA's #116 hotfix first (Q1/Q2: a normal Home page swipe over a Today row must never finish or move the task; the phone install is held at 34665f0 until it lands). Then the dab flying to the day stroke on Tomorrow, then the hero promotion morph, then the day strip (M2 slice 11). The Today swipes haven't had a finger test yet, so Kaushik's first swipe on the phone is the real test, and his feedback on it goes first.
+**Started 12:23 PM PT** (Mac session, own worktree). **Done:** #116 (Today on Home, M2 slices 8 and 9, 0f183ae); #107 (Home links as a zoom, Kitchen on the rail, Notes at the foot of Review); #110 (Finish, Start and Resume at full size); Tess soul in the corner with Write working. **Now:** QA's #116 hotfix first (Q1/Q2: a normal Home page swipe over a Today row must never finish or move the task; the phone install is held at 34665f0 until it lands). Then the dab flying to the day stroke on Tomorrow, then the hero promotion morph, then the day strip (M2 slice 11). `DayStrip.swift` exists but shows no tasks yet, so it's done when tasks and the workout show on it with the now marker. The Today swipes haven't had a finger test yet, so Kaushik's first swipe on the phone is the real test, and his feedback on it goes first.
 
 **Next:**
 1. Rest day on Now. Done when, on a planned rest day, the Home hero shows a quiet "Rest day" line from Core's NowPicker override, and the next routine is one tap away. No guilt copy and no red.
@@ -16,7 +16,7 @@
 9. M2 slice 13, the day-full warning.
 
 **Later:**
-- M5 Money screens 6, 7, 5 in `ship-list-m5-money.md` (after Core's slices 1 to 3), then M5 Upkeep screens 5 to 7 in `ship-list-m5-upkeep.md`, then the M5 People screens in `ship-list-m5-people.md`.
+- M5 Upkeep screens 5 to 7 in `ship-list-m5-upkeep.md`, then the M5 People screens in `ship-list-m5-people.md`.
 - Entry points from Home into Notes, Review, Kitchen and Lists (Groceries is `GroceriesView()`, #58).
 - Dated list items in Today, and a running list as Now. This wires the UI for Lists slices 5 and 6 once Core lands them.
 - **Lists screens 9 to 12** in `ship-list-lists.md`, in `Features/Lists/`, after the Home slices:

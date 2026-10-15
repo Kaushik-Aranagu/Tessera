@@ -30,12 +30,16 @@ Small product calls are logged in `../product/decisions.md`.
 
 ## Cross-team order
 
-- **Cook mode:** Core builds all of it, including the live screen. Builder A reviews the shared instruments.
+- **Breadth waves:** follow Research's `../research/breadth-map.md`. Builder A takes the cook mode screen, plus M5 Reading and Money screens. Builder B keeps M2 Home, the capture surface, Lists 9 to 12, Upkeep and People. Core stays on engine slices, since it's the bottleneck.
+
+- **Cook mode:** the engine is merged. Builder A builds the screen (slices 12 and 12b), and Core handles any engine follow-ups.
 - **Lists:** the engine (Core) comes before the screens. Lists screens 9 to 12 go to Builder B after its Home slices.
 - **M3 slice 10:** the List shape creates a Lists `List`. Lists come first.
 - **M4:** after Lists. Research's fixtures (scenarios, calendar and Health, query evals) feed Core's tests.
 
 ## Rules
+
+- **Every new area needs a HomeLink word** in `HomeSpatialView`, or it's DEBUG-only and Kaushik can't reach it. Each area's first screen slice includes it.
 
 - **Times are in Pacific time** (Kaushik, 1:56 PM PT). Anything Kaushik reads uses Pacific (PDT, UTC-7 today), never UTC. Timestamps written before this rule in `decisions.md` and on the team boards are UTC.
 
