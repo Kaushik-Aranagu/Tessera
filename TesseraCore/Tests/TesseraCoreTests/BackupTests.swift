@@ -101,7 +101,46 @@ struct BackupTests {
         let backups = dir.appendingPathComponent("Backups")
         #expect(try !FileManager.default.contentsOfDirectory(atPath: backups.path).isEmpty)
         #expect(!FileManager.default.fileExists(atPath: TesseraBackup.pendingURL(for: storeURL).path))
+        // QA B1: what was here is kept as a stamped backup that can be restored again (the undo).
+        let kept = try FileManager.default.contentsOfDirectory(at: dir.appendingPathComponent("Kept"),
+                                                               includingPropertiesForKeys: nil)
+        #expect(kept.count == 1)
+        let info = try TesseraBackup.inspect(#require(kept.first))
+        #expect(info.migrations == ["v1", "v2"])
         TesseraSchema.clearLaunchNote()
+    }
+
+    @Test func aStoreThatWontMoveAsideIsNotRestoredOver() throws {
+        // QA B2: the store is there but can't be moved (a read-only folder), so the restore stops.
+        let dir = try folder()
+        defer {
+            try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: dir.path)
+            try? FileManager.default.removeItem(at: dir)
+        }
+        let storeURL = dir.appendingPathComponent("tessera.sqlite")
+        let current = try seededStore(at: storeURL)
+        current.save()
+        let source = try seededStore(at: dir.appendingPathComponent("source.sqlite"))
+        let file = dir.appendingPathComponent("b.tessera")
+        try TesseraBackup.write(from: source.context, to: file)
+        _ = try TesseraBackup.stageRestore(from: file, storeURL: storeURL)
+        let kept = dir.appendingPathComponent("Kept")
+        try FileManager.default.createDirectory(at: kept, withIntermediateDirectories: true)
+        try FileManager.default.setAttributes([.posixPermissions: 0o555], ofItemAtPath: dir.path)
+        #expect(!TesseraBackup.applyPendingRestore(to: storeURL, keepIn: kept))
+        #expect(FileManager.default.fileExists(atPath: storeURL.path))
+        TesseraSchema.clearLaunchNote()
+    }
+
+    @Test func rollingWritesLeaveNoPartialFiles() throws {
+        // QA B3: written under a temporary name, then renamed.
+        let dir = try folder()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let store = try seededStore(at: dir.appendingPathComponent("tessera.sqlite"))
+        let backups = dir.appendingPathComponent("Backups")
+        try TesseraBackup.writeRolling(from: store.context, in: backups)
+        let names = try FileManager.default.contentsOfDirectory(atPath: backups.path)
+        #expect(names.count == 1 && !names[0].hasSuffix(".partial"))
     }
 
     @Test func badRestoreLeavesCurrentStoreUntouched() throws {
