@@ -7,7 +7,7 @@
 Home has a word rail across the top: **Review · Today · Training · Kitchen**. Every key is a painted stroke word, not a button. **Tess** is the soul in the corner: tap her to open the capture surface.
 
 1. **Start a workout.** Go to Home, then **Training**, and tap today's push/pull/legs routine. The workout rises as its own screen. *Check:* does it feel like an instrument rather than a form?
-2. **Log a set with one hold.** In the workout, each set opens already filled in. Hold to log it, then turn the **weight dial**, where the plates per side show beside it, and roll the **reps drum** for the next set. *Check:* the feel of the dial's clicks and the hold timing.
+2. **Log a set with one hold.** In the workout, each set opens already filled in. Hold to log it. Once you hit the top of the rep range, the next session opens the dial a step heavier. Turn the **weight dial**, where the plates per side show beside it, and roll the **reps drum** for the next set. *Check:* the feel of the dial's clicks and the hold timing.
 3. **Rest from the lock screen.** After logging a set, lock your phone. The rest timer runs on the Lock Screen, and **Done** logs the next set without unlocking.
 4. **Leave and come back.** Swipe the workout down or kill the app mid-set, even during a rest, then reopen it. Home's **Resume** should take you back to the exact set, with the rest still counting.
 5. **Swap an exercise.** In the workout, pull down on the exercise name and pick an alternative from the same movement pattern.
@@ -25,7 +25,6 @@ Home has a word rail across the top: **Review · Today · Training · Kitchen**.
 - *Tapping a logged set to fix it comes with #109. Undo of the last set works now.*
 - *Voice isn't in yet (Speak says "comes next").*
 - *Cook mode isn't built yet.*
-- *The next session doesn't raise the weight yet after you hit the top of the range.*
 
 ## Look and feel: what to notice (from Design studio)
 

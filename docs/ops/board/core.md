@@ -2,11 +2,10 @@
 
 **Done:** grammar collision fix (#115, 34665f0); backup safety hotfix (#114); backup and restore (#112, 30e06a7; daily copies run automatically, Settings entry goes to Builder A); Tess T2 tools plus T2-1 (#106, 43c7ddb). Groceries screen, kitchen slice 13 (#58); kitchen engine hotfixes (#70, #80); data-safety D1–D4 (#84); recipe page and paste, slices 10/11 (PR open, merges after the install).
 
-**Now:** Groceries polish (Design's #58 list plus whatever Kaushik flags). The #86 follow-up comes once #86 merges. **Then the v1 engine gaps (Next 1) before anything else**, because the progression fix matters for his gym session tomorrow.
+**Now:** Groceries polish (Design's #58 list plus whatever Kaushik flags). The #86 follow-up comes once #86 merges. Then the v1 engine gaps (Next 1). Progression already reaches the dial (#92, with an end-to-end test shipping with the G1–G5 grammar hotfix).
 
 **Next:**
 1. v1 engine gaps (small, before the gym tomorrow if possible), from `../research/v1-gap-audit.md` and iOS build's ship-2 notes. Done when:
-   - `Prefill.swift` prefers the raised `targetWeight` from `Progression.nextTarget` over last time's weight, with a test. This is slice 14: set 1 opens at the new load.
    - A `RemoveSlot` action exists with undo. The builders use DeleteObject for now.
    - `EditSet` can clear RPE.
    - `week(containing:)` returns rest days.
