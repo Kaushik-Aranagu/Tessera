@@ -34,6 +34,20 @@ List block and its undoable actions; ingredient line parsing (fractions, ranges,
 
 Not blocking: the page scrolls as a whole when the list is long. That is fine for groceries; keep the hero and writing line in place if it starts to feel long in use.
 
+# Groceries polish (#118, a07f6a0)
+
+*Checked the `GroceriesView.swift` diff and `docs/recordings/16-groceries-polish.mp4` against the four #58 fixes above.* **Pass. All four are fixed.**
+1. Quantities now sit before the name in body type at 600 weight ("**1 tbsp** ginger"), so nothing on the list is under 16pt.
+2. Plurals read correctly: "3 eggs" and "2 lemons".
+3. At the shop, a finished aisle folds away and the next one rises into the hero position ("Produce", then "Bakery", then "then Meat and fish"). The two titles never overlap.
+4. The clip opens on the page.
+
+The new moments match the steer. A struck item's dab arcs into the basket fold. Holding the title starts the shop, and "Clear the basket" and "Done" are hold keys.
+
+Two small things for Core's next kitchen pass (not blocking):
+1. At the shop, the faint "then Bakery" line is set larger than the items you're picking ("2 lemons" at body size). The aisle you're in should read loudest. Set the shop items one tier up (Title), or set the peek no larger than the items.
+2. The basket bar covers the last aisle's title ("Dai…" peeks above "1 in the basket"). Add a bottom content inset equal to the bar's height so the last aisle can scroll clear of it.
+
 # Engine hotfix (#70, 63c3f90)
 
 *Checked the diff on master against engine fixes 1-6, the seed-recipe parser notes and the failing `kitchen-phrases.md` rows.* **Pass.** All six fixes are in as asked: dated buy/get stays a task, kitchen phrases run after lifts, "pepper" is no longer a staple, size words and "cooked" go to prep, cooking an open recipe resumes it, and `GoToCookStep` takes a time. `stick`, `head`, seconds timers and the "Cook time:" / step split are also in. Phrase rows 9-12, 20, 27 and 50 are fixed. Two small misses, neither blocking:
