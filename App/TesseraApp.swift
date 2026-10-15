@@ -6,6 +6,8 @@ import TesseraLegacyStore
 @main
 struct TesseraApp: App {
     private let container: TesseraContainer
+    /// Saves finished workouts to Apple Health.
+    private let health: HealthExporter
     @State private var model: AppModel
     @Environment(\.scenePhase) private var scenePhase
     @State private var didWarmUp = false
@@ -27,6 +29,7 @@ struct TesseraApp: App {
         LiveWorkout.model = model
         // App Intents (Shortcuts, Siri, the Action button) run against the same engine as the UI.
         AppDependencyManager.shared.add(dependency: model.runtime!)
+        health = HealthExporter(engine: model.engine)
     }
 
     var body: some Scene {

@@ -54,6 +54,9 @@ public final class ActionEngine {
             state: pending ? .pending : .committed
         )
         store.context.insert(record)
+        if !pending {
+            notify(record)
+        }
         return Result(record: record, output: output)
     }
 
@@ -70,11 +73,28 @@ public final class ActionEngine {
         try perform(action, by: actor, pending: pending).record
     }
 
+    // MARK: Observers
+
+    /// Called on the main actor for every action once it's committed (straight away, or when a preview commits).
+    /// Integrations hang off this: Apple Health saves a workout when `finishWorkout` lands.
+    public func observe(_ observer: @escaping @MainActor (OpRecord) -> Void) {
+        observers.append(observer)
+    }
+
+    private var observers: [@MainActor (OpRecord) -> Void] = []
+
+    private func notify(_ record: OpRecord) {
+        for observer in observers {
+            observer(record)
+        }
+    }
+
     // MARK: Pending previews
 
     public func commit(_ record: OpRecord) throws {
         guard record.state == .pending else { throw ActionError.notPending(record.id) }
         record.state = .committed
+        notify(record)
     }
 
     /// Reverts a preview the person dismissed.
@@ -88,6 +108,7 @@ public final class ActionEngine {
     public func commitExpired(now: Date = .now) {
         for record in pendingRecords() where now.timeIntervalSince(record.createdAt) >= pendingGracePeriod {
             record.state = .committed
+            notify(record)
         }
     }
 
