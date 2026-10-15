@@ -30,37 +30,63 @@ public extension TrainingLedger {
     }
 }
 
-/// Swaps the exercise of an entry in the session in progress ("bench taken"); the routine stays as it is.
+/// Swaps an exercise entry for today only ("bench taken"): the routine's slot, scheme and rule stay as they are.
+/// - Nothing logged yet: the entry is relinked to the new exercise, with an optional starting weight.
+/// - Some sets logged: those stay with the old exercise (its entry now plans only what's done) and a new entry
+///   carries the remaining sets, linked to the same slot.
+/// Returns the id of the entry that now carries the new exercise.
 public struct SwapEntryExercise: EngineAction {
     public static let descriptor = ActionDescriptor(
-        name: "swapEntryExercise",
+        name: "swapExercise",
         summary: "Swap an exercise for this session only",
         parameters: [
             .init("entry", .object, "The exercise entry in the workout"),
             .init("exercise", .classRef, "The exercise to do instead"),
+            .init("targetWeight", .number, "Starting weight in kilograms", required: false),
         ]
     )
 
     public var entry: UUID
     public var exercise: UUID
+    public var targetWeight: Double?
 
-    public init(entry: UUID, exercise: UUID) {
+    public init(entry: UUID, exercise: UUID, targetWeight: Double? = nil) {
         self.entry = entry
         self.exercise = exercise
+        self.targetWeight = targetWeight
     }
 
-    public func apply(_ transaction: inout Transaction) throws {
+    public func apply(_ transaction: inout Transaction) throws -> UUID {
         let entry = try transaction.object(entry, is: .exerciseEntry)
         let replacement = try transaction.exerciseClass(exercise)
-        try transaction.setClassLink("exercise", on: entry, to: replacement)
-        // The old exercise's weight doesn't carry over; the new one opens at its own last time.
-        try transaction.set("targetWeight", to: nil, on: entry)
-        if let workout = try transaction.store.ancestor(of: entry, ofClass: transaction.classDef(.workout)) {
+        let store = transaction.store
+        let logged = entry.orderedChildren.count
+        let carrier: ObjectRecord
+        if logged == 0 {
+            try transaction.setClassLink("exercise", on: entry, to: replacement)
+            try transaction.set("targetWeight", to: targetWeight.map(FieldValue.mass), on: entry)
+            carrier = entry
+        } else {
+            guard let workout = entry.parent else { throw ActionError.objectNotFound(self.entry) }
+            let planned = store.number("targetSets", of: entry) ?? Double(logged)
+            carrier = try transaction.create(transaction.classDef(.exerciseEntry), parent: workout)
+            try transaction.setClassLink("exercise", on: carrier, to: replacement)
+            try transaction.set("targetSets", to: .number(max(planned - Double(logged), 1)), on: carrier)
+            try transaction.set("targetReps", to: store.value("targetReps", of: entry), on: carrier)
+            try transaction.set("targetWeight", to: targetWeight.map(FieldValue.mass), on: carrier)
+            let slot = store.linkedObjects("slot", of: entry)
+            if !slot.isEmpty {
+                try transaction.setLinks("slot", on: carrier, to: slot)
+            }
+            try transaction.set("targetSets", to: .number(Double(logged)), on: entry)
+        }
+        if let workout = try store.ancestor(of: carrier, ofClass: transaction.classDef(.workout)) {
             try transaction.touchWorkoutProcess(workout, at: .now)
         }
+        return carrier.id
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "Swapped to \(store.classDef(id: exercise)?.name ?? "another exercise") for today"
+        "Swapped to \(store.classDef(id: exercise)?.name.lowercased() ?? "another exercise") for today"
     }
 }

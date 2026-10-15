@@ -9,7 +9,7 @@ struct TesseraAppIntentsPackage: AppIntentsPackage {
 }
 
 /// Shortcuts have to be declared in the app target: a Swift package's `AppShortcutsProvider` isn't extracted into
-/// the app's metadata. Mirrors Core's `TesseraShortcuts` (which can be removed from the package).
+/// the app's metadata, so this is the only provider. The intents themselves live in Core's `TesseraIntents`.
 struct TesseraAppShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(intent: TellTessIntent(), phrases: ["Tell \(.applicationName)", "Log in \(.applicationName)"],

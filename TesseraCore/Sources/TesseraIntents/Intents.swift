@@ -148,23 +148,6 @@ public struct TellTessIntent: AppIntent {
     }
 }
 
-public struct TesseraShortcuts: AppShortcutsProvider {
-    public static var appShortcuts: [AppShortcut] {
-        AppShortcut(intent: TellTessIntent(), phrases: ["Tell \(.applicationName)", "Log in \(.applicationName)"],
-                    shortTitle: "Tell Tess", systemImageName: "text.bubble")
-        AppShortcut(intent: LogSetIntent(), phrases: ["Log a set in \(.applicationName)"],
-                    shortTitle: "Log a Set", systemImageName: "dumbbell")
-        AppShortcut(intent: UndoLastSetIntent(), phrases: ["Undo last set in \(.applicationName)"],
-                    shortTitle: "Undo Last Set", systemImageName: "arrow.uturn.backward")
-        AppShortcut(intent: StartRoutineIntent(), phrases: ["Start \(\.$routine) in \(.applicationName)"],
-                    shortTitle: "Start Workout", systemImageName: "figure.strengthtraining.traditional")
-        AppShortcut(intent: FinishWorkoutIntent(), phrases: ["Finish my workout in \(.applicationName)"],
-                    shortTitle: "Finish Workout", systemImageName: "flag.checkered")
-        AppShortcut(intent: CreateTaskIntent(), phrases: ["Add a task in \(.applicationName)"],
-                    shortTitle: "Add Task", systemImageName: "checkmark.circle")
-    }
-}
-
 /// Lets the app's metadata include this package's intents.
 public struct TesseraIntentsPackage: AppIntentsPackage {}
 
