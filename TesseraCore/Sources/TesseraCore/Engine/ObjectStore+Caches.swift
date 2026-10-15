@@ -78,6 +78,8 @@ final class Cache {
     var classInfo: [UUID: ObjectStore.ClassInfo] = [:]
     var formulas: [String: Formula?] = [:]
     var revision = 0
+    /// Kept alive for stores made with `ObjectStore.open`.
+    var container: ModelContainer?
     let derived = DerivedCache()
 }
 
