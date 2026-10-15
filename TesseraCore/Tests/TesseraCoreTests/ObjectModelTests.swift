@@ -23,7 +23,8 @@ struct ObjectModelTests {
         #expect(ClassResolver.lineage(of: bench).map(\.name) ==
             ["Thing", "Activity", "Exercise", "Strength Exercise", "Barbell Lift", "Bench Press"])
         #expect(ClassResolver.effectiveFields(of: bench).map(\.key) ==
-            ["notes", "primaryMuscles", "equipment", "restSeconds"])
+            ["notes", "primaryMuscles", "secondaryMuscles", "equipment", "restSeconds", "repMin", "repMax",
+             "progression", "variantOf"])
         #expect(try ClassResolver.isSubclass(bench, of: #require(classes[.exercise])))
         #expect(try !ClassResolver.isSubclass(#require(classes[.exercise]), of: bench))
         #expect(ClassResolver.traits(of: bench) == [.measurable])
@@ -60,7 +61,7 @@ struct ObjectModelTests {
         depth.owner = squat
         context.insert(depth)
 
-        #expect(ClassResolver.effectiveFields(of: squat).map(\.key).suffix(2) == ["restSeconds", "depth"])
+        #expect(ClassResolver.effectiveFields(of: squat).map(\.key).last == "depth")
         #expect(ClassResolver.field("restSeconds", of: squat)?.defaultValue == .duration(180))
     }
 

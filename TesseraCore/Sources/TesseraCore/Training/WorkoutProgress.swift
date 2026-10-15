@@ -49,7 +49,7 @@ public struct WorkoutProgress {
         exerciseName = next.flatMap { store.linkedClass("exercise", of: $0.0)?.name }
     }
 
-    static func format(_ value: Double) -> String {
+    nonisolated static func format(_ value: Double) -> String {
         value.rounded() == value ? String(Int(value)) : String(format: "%.1f", value)
     }
 }

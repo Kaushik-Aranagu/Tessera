@@ -21,6 +21,8 @@ public struct LogSet: EngineAction {
             .init("reps", .integer, "Repetitions"),
             .init("rpe", .number, "Rate of perceived exertion, 1 to 10", required: false),
             .init("isWarmup", .boolean, "A warm-up set, left out of records", required: false),
+            .init("kind", .string, "warmup, working, drop or failure; defaults to working", required: false),
+            .init("source", .string, "hold, dial, lockScreen, tess, manual or intent", required: false),
         ]
     )
 
@@ -29,13 +31,19 @@ public struct LogSet: EngineAction {
     public var reps: Double
     public var rpe: Double?
     public var isWarmup: Bool?
+    public var kind: SetKind?
+    public var source: SetSource?
 
-    public init(entry: UUID, weight: Double, reps: Double, rpe: Double? = nil, isWarmup: Bool? = nil) {
+    public init(entry: UUID, weight: Double, reps: Double, rpe: Double? = nil, isWarmup: Bool? = nil,
+                kind: SetKind? = nil, source: SetSource? = nil)
+    {
         self.entry = entry
         self.weight = weight
         self.reps = reps
         self.rpe = rpe
         self.isWarmup = isWarmup
+        self.kind = kind
+        self.source = source
     }
 
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
@@ -45,9 +53,12 @@ public struct LogSet: EngineAction {
         try transaction.set("weight", to: .mass(weight), on: set)
         try transaction.set("reps", to: .number(reps), on: set)
         try transaction.set("rpe", to: rpe.map(FieldValue.number), on: set)
-        if isWarmup == true {
-            try transaction.set("isWarmup", to: .bool(true), on: set)
+        try transaction.set("loggedAt", to: .date(.now), on: set)
+        let setKind = isWarmup == true ? .warmup : kind ?? .working
+        if setKind != .working {
+            try transaction.set("kind", to: .choice(setKind.rawValue), on: set)
         }
+        try transaction.set("source", to: source.map { .choice($0.rawValue) }, on: set)
         if let workout = try transaction.store.ancestor(of: entry, ofClass: transaction.classDef(.workout)) {
             try transaction.touchWorkoutProcess(workout, at: .now)
         }

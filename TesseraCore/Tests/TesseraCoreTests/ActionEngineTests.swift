@@ -35,7 +35,7 @@ struct ActionEngineTests {
         #expect(result.record.summary == "Logged bench press 82.5 × 8")
         #expect(result.record.actor == .user)
         #expect(result.record.objectIDs == [set.id])
-        #expect(store.number("e1rm", of: set).map { ($0 * 100).rounded() / 100 } == 104.5)
+        #expect(store.number("e1rm", of: set).map { ($0 * 100).rounded() / 100 } == 110) // 8 @ RPE 8 is a 10-rep effort
         #expect(entry.orderedChildren.map(\.id) == [set.id])
 
         #expect(engine.undo(result.record) == .applied)

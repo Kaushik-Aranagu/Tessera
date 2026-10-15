@@ -7,7 +7,8 @@ public enum ActionRegistry {
         LogSet.descriptor, EditSet.descriptor, AddExercise.descriptor, StartWorkout.descriptor,
         FinishWorkout.descriptor, LogExercise.descriptor, CreateTask.descriptor, SetTaskDone.descriptor,
         RenameObject.descriptor, DeleteObject.descriptor, StartProcess.descriptor, SaveContext.descriptor,
-        SuspendProcess.descriptor, ResumeProcess.descriptor, EndProcess.descriptor,
+        SuspendProcess.descriptor, ResumeProcess.descriptor, EndProcess.descriptor, CreateRoutine.descriptor,
+        AddSlot.descriptor, StartRoutine.descriptor, CreatePlan.descriptor,
     ]
 
     /// The compact catalog for the on-device model's instructions, one action per line.
@@ -44,6 +45,10 @@ public enum ActionRegistry {
         SuspendProcess.descriptor.name: { try decode(SuspendProcess.self, SuspendProcess.descriptor.name, $0) },
         ResumeProcess.descriptor.name: { try decode(ResumeProcess.self, ResumeProcess.descriptor.name, $0) },
         EndProcess.descriptor.name: { try decode(EndProcess.self, EndProcess.descriptor.name, $0) },
+        CreateRoutine.descriptor.name: { try decode(CreateRoutine.self, CreateRoutine.descriptor.name, $0) },
+        AddSlot.descriptor.name: { try decode(AddSlot.self, AddSlot.descriptor.name, $0) },
+        StartRoutine.descriptor.name: { try decode(StartRoutine.self, StartRoutine.descriptor.name, $0) },
+        CreatePlan.descriptor.name: { try decode(CreatePlan.self, CreatePlan.descriptor.name, $0) },
     ]
 
     private static func decode<A: EngineAction>(_ type: A.Type, _ name: String, _ arguments: Data) throws -> A {

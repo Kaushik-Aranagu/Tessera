@@ -2,7 +2,8 @@ import Foundation
 
 /// The one small expression language behind computed fields (and, later, filters and automations).
 /// Numbers, field keys, `+ - * /`, unary minus, parentheses and a few functions:
-/// `min`, `max`, `abs`, `round`, `floor`, `ceil`. Example: `weight * (1 + reps / 30)`.
+/// `min`, `max`, `abs`, `round`, `floor`, `ceil`, and `coalesce` (first argument with a value).
+/// Example: `weight * (1 + reps / 30)`.
 public indirect enum Formula: Equatable, Sendable {
     case number(Double)
     case variable(String)
@@ -21,6 +22,7 @@ public indirect enum Formula: Equatable, Sendable {
     public static let functions: [String: ClosedRange<Int>] = [
         "min": 1 ... Int.max, "max": 1 ... Int.max,
         "abs": 1 ... 1, "round": 1 ... 1, "floor": 1 ... 1, "ceil": 1 ... 1,
+        "coalesce": 1 ... Int.max,
     ]
 
     public static func parse(_ source: String) throws -> Formula {
@@ -55,9 +57,21 @@ public indirect enum Formula: Equatable, Sendable {
             lhs.evaluate(lookup).flatMap { left in
                 rhs.evaluate(lookup).flatMap { right in Self.apply(symbol, left, right) }
             }
+        case let .call("coalesce", arguments):
+            // The first argument that has a value: `coalesce(rpe, 10)`.
+            Self.firstValue(arguments, lookup)
         case let .call(name, arguments):
             Self.call(name, arguments.map { $0.evaluate(lookup) })
         }
+    }
+
+    private static func firstValue(_ arguments: [Formula], _ lookup: (String) -> Double?) -> Double? {
+        for argument in arguments {
+            if let value = argument.evaluate(lookup) {
+                return value
+            }
+        }
+        return nil
     }
 
     private static func apply(_ symbol: Character, _ left: Double, _ right: Double) -> Double? {

@@ -125,12 +125,15 @@ public final class ActionEngine {
         return outcome
     }
 
-    /// Undoes the latest action, optionally only one by a given actor ("undo what Tess did").
+    /// Undoes the latest action, optionally only one by a given actor ("undo what Tess did") or of a given
+    /// kind ("undo the last set" from the Lock Screen: `undoLatest(action: LogSet.descriptor.name)`).
     @discardableResult
-    public func undoLatest(by actor: Actor? = nil) -> OpRecord? {
-        guard let record = history(limit: 50)
-            .first(where: { $0.state != .undone && (actor == nil || $0.actor == actor) })
-        else { return nil }
+    public func undoLatest(by actor: Actor? = nil, action: String? = nil) -> OpRecord? {
+        let match = { (record: OpRecord) in
+            record.state != .undone && (actor == nil || record.actor == actor)
+                && (action == nil || record.action == action)
+        }
+        guard let record = history(limit: 200).first(where: match) else { return nil }
         undo(record)
         return record
     }
