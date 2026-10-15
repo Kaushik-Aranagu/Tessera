@@ -29,6 +29,12 @@ public struct TessGrammar {
         case recipe(text: String)
         /// Several sets said at once, comma separated: "bench 80x8, 82.5x6" or "80x8, 80x8, 80x6".
         case sets([Parse])
+        /// "move dentist to friday": an open task, to a new time.
+        case reschedule(task: ObjectRecord, to: Date)
+        /// "next" / "done" while cooking.
+        case cookStep(cook: ObjectRecord, next: Bool)
+        /// Bare input the running workout owns but Tess doesn't act on (a rest timer is the workout screen's).
+        case ignoredInWorkout
     }
 
     public enum SetPhrase: Equatable, Sendable {
@@ -52,6 +58,14 @@ public struct TessGrammar {
         if let recipe = parsePastedRecipe(phrase) {
             return recipe
         }
+        // Rule 2: a question never writes; it goes to the model's read-only answer.
+        if Self.isQuestion(text) {
+            return nil
+        }
+        // Rule 3: the process in front decides bare input.
+        if let bare = parseForProcess(text, context: context) {
+            return bare
+        }
         let entry = context.entry.flatMap { store.object(id: $0) }
         if let entry, let parsed = parseRelativeSet(text, entry: entry) {
             return parsed
@@ -66,7 +80,66 @@ public struct TessGrammar {
         if let kitchen = parseKitchen(phrase, context: context) {
             return kitchen
         }
+        if let reschedule = parseReschedule(phrase, context: context) {
+            return reschedule
+        }
         return parseTask(phrase, context: context)
+    }
+
+    /// Lead words that ask rather than tell ("what did i weigh monday", "anything due tmrw").
+    static func isQuestion(_ text: String) -> Bool {
+        let first = text.split(separator: " ").first.map(String.init) ?? ""
+        let leads: Set = ["what", "whats", "what's", "when", "how", "did", "anything", "everything", "show", "which",
+                          "who", "where", "why", "do", "does", "is", "are"]
+        return leads.contains(first) || text.hasPrefix("am i ") || text.hasSuffix("?")
+    }
+
+    /// Rule 3: while a workout, cook or shop is running (Now), bare input belongs to it.
+    private func parseForProcess(_ text: String, context: TessContext) -> Parse? {
+        guard let subject = context.process.flatMap({ store.object(id: $0) }), let classDef = subject.classDef else {
+            return nil
+        }
+        func isA(_ key: SystemCatalog.Key) -> Bool {
+            classes[key].map { store.isSubclass(classDef, ofClassID: $0.id) } ?? false
+        }
+        if isA(.cook) {
+            if ["next", "next step", "done", "finished", "done with that"].contains(text) {
+                return .cookStep(cook: subject, next: text.hasPrefix("next"))
+            }
+        } else if isA(.workout) {
+            // "timer 90" / "rest 90" in a workout is the rest between sets, not a kitchen timer: leave it to the
+            // workout screen (no kitchen reading).
+            if text.hasPrefix("timer") || text.hasPrefix("rest") {
+                return .ignoredInWorkout
+            }
+        } else if subject.id == Groceries.listID {
+            // At the shop, a bare thing is for the list.
+            if !text.contains(where: \.isNumber) || IngredientLine.parse(text)?.amount != nil,
+               text.split(separator: " ").count <= 4
+            {
+                return .groceries(lines: [text])
+            }
+        }
+        return nil
+    }
+
+    /// "move dentist to friday", "push the dentist to thu 3pm": an existing open task, to a new day. With no such
+    /// task this isn't a reschedule (and never makes a task titled with the verb).
+    private func parseReschedule(_ phrase: String, context: TessContext) -> Parse? {
+        guard let match = phrase.firstMatch(of: /^(?i)(?:move|push|shift|reschedule|put)\s+(.+?)\s+(?:to|till|until)\s+(.+)$/)
+        else { return nil }
+        let (date, rest) = TessDates.extract(from: String(match.2).split(separator: " ").map(String.init),
+                                             now: context.now, calendar: context.calendar)
+        guard let date, rest.isEmpty || rest == ["next"] else { return nil }
+        let name = String(match.1).lowercased().replacing(/^(the|my)\s+/, with: "")
+        let open = TaskList(store: store, classes: classes).all().filter { !$0.isDone }
+        let words = name.split(separator: " ")
+        let matches = open.filter { item in
+            let title = Set(item.title.lowercased().split { !$0.isLetter && !$0.isNumber }.map(String.init))
+            return words.allSatisfy { title.contains(String($0)) }
+        }
+        guard matches.count == 1, let task = matches.first?.task else { return nil }
+        return .reschedule(task: task, to: date)
     }
 
     /// "note: …" or "note …" at the start makes a note of the rest, keeping its text as typed.
@@ -243,9 +316,14 @@ public struct TessGrammar {
                 return classDef
             }
         }
+        // Whole words only, three letters or more ("p" isn't Dip, "rolls" isn't Rollout).
         let words = target.split(separator: " ").map { $0.hasSuffix("s") && $0.count > 3 ? $0.dropLast() : $0 }
+        guard !words.isEmpty, words.allSatisfy({ $0.count >= 3 }) else { return nil }
         return names
-            .filter { _, name in words.allSatisfy { name.contains($0) } }
+            .filter { _, name in
+                let nameWords = Set(name.split(separator: " ").map { $0.hasSuffix("s") && $0.count > 3 ? $0.dropLast() : $0 })
+                return words.allSatisfy { nameWords.contains($0) }
+            }
             .min { $0.1.count < $1.1.count }?.0
     }
 
@@ -337,9 +415,22 @@ enum TessDates {
         }
         let (hour, minute) = time ?? (9, 0)
         var date = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: base)
-        // "thu" on a Thursday evening means next Thursday, not this morning.
+        // "thu" said on a Thursday means today (Product, 2026-10-15). With no time, never in the past: the next
+        // whole hour. With a time that's passed, next week.
         if fromWeekday, let resolved = date, resolved <= now {
-            date = calendar.date(byAdding: .day, value: 7, to: resolved)
+            if time == nil {
+                let hour = calendar.component(.hour, from: now) + 1
+                date = hour < 24 ? calendar.date(bySettingHour: hour, minute: 0, second: 0, of: now)
+                    : calendar.date(byAdding: .day, value: 7, to: resolved)
+            } else {
+                date = calendar.date(byAdding: .day, value: 7, to: resolved)
+            }
+        } else if day != nil, !fromWeekday, time == nil, let resolved = date, resolved <= now {
+            // "today" with no time after 09:00: the next whole hour, not this morning.
+            let hour = calendar.component(.hour, from: now) + 1
+            if hour < 24 {
+                date = calendar.date(bySettingHour: hour, minute: 0, second: 0, of: now)
+            }
         }
         return (date, remaining)
     }

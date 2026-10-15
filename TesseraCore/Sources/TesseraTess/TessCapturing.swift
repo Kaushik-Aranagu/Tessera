@@ -16,12 +16,18 @@ public struct TessContext: Sendable {
     public var entry: UUID?
     /// Set when the capture should commit immediately (e.g. a Shortcut) instead of showing a ghost row.
     public var commitImmediately: Bool
+    /// The subject of the process running in Now (a workout, cook or the groceries list being shopped). The
+    /// capture engine fills it in when it's not given.
+    public var process: UUID?
 
-    public init(now: Date = .now, calendar: Calendar = .current, entry: UUID? = nil, commitImmediately: Bool = false) {
+    public init(now: Date = .now, calendar: Calendar = .current, entry: UUID? = nil, commitImmediately: Bool = false,
+                process: UUID? = nil)
+    {
         self.now = now
         self.calendar = calendar
         self.entry = entry
         self.commitImmediately = commitImmediately
+        self.process = process
     }
 }
 
