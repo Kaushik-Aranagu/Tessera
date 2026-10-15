@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=390">
 <title>Plan and Shutdown</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
-<!-- Motion study for M4 slices 6, 10b and 7 (docs/design/m4-steers.md). Plays once on load; add ?x2 to render at 2x. -->
+<!-- Motion study for M4 slices 6, 10b and 7 (docs/design/m4-steers.md), redrawn to docs/design/no-buttons.md: stroke words instead of keys, Tess in her corner, and a ghost line edited in place. Plays once on load; add ?x2 to render at 2x. -->
 <style>
 :root{--ink:#2B2440;--mute:#A39AAE;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4;--amber:#E0A35C}
 body{margin:0;background:#EFE7DC}
@@ -15,7 +15,11 @@ body{margin:0;background:#EFE7DC}
 .lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub)}
 .ctx{font-size:21px;font-weight:400;color:var(--ctx)}
 .hero{font-weight:500;font-size:56px;line-height:1;letter-spacing:-.04em}
-.key{border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 .5px rgba(43,36,64,.5),0 6px 18px rgba(43,36,64,.14);overflow:hidden}
+.sw{font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:44px;white-space:nowrap}
+.sw svg{position:absolute;left:-7px;bottom:7px;z-index:-1}
+.sd{position:absolute;width:40px;height:36px;margin:-18px 0 0 -20px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.85) 0%,rgba(var(--c),.6) 42%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(2.5px)}
+.caret{display:inline-block;width:2px;height:24px;margin-left:2px;vertical-align:-4px;background:var(--cobalt);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
 .row{position:absolute;left:22px;right:22px;height:48px;display:grid;grid-template-columns:30px 1fr auto;align-items:center}
 .dab{width:18px;height:15px;border-radius:55% 45% 60% 40%/50% 60% 40% 50%;filter:blur(.4px)}
 .nm{font-size:21px;white-space:nowrap}
@@ -35,10 +39,7 @@ body{margin:0;background:#EFE7DC}
     <rect width="390" height="844" filter="url(#grain)"/>
   </svg>
 
-  <div class="abs lbl" style="left:22px;right:22px;top:58px;display:grid;grid-template-columns:1fr 1fr 1fr">
-    <span style="color:var(--mute)">REVIEW</span><span style="color:var(--ink);text-align:center">TODAY</span><span style="color:var(--mute);text-align:right">TRAINING</span>
-  </div>
-  <span class="abs" style="left:163px;top:84px;width:64px;height:4px;border-radius:2px 6px 3px 5px;background:var(--verm);filter:blur(.5px)"></span>
+  <div class="abs lbl" style="left:22px;top:58px;display:flex;gap:16px"><span style="color:var(--mute)">REVIEW</span><span style="color:var(--ink)">TODAY</span><span style="color:var(--mute)">TRAINING</span><span style="color:var(--mute)">KITCHEN</span></div>
 
   <span id="dayLabel" class="abs ctx" style="left:22px;top:100px;color:var(--ink)">Thursday morning</span>
   <svg id="daySvg" width="346" height="56" viewBox="0 0 346 56" class="abs" style="left:22px;top:134px;overflow:visible" aria-hidden="true">
@@ -70,19 +71,20 @@ body{margin:0;background:#EFE7DC}
     <span id="eWord" class="lbl abs" style="left:0;top:62px;color:var(--ink)">OKAY</span>
   </div>
 
-  <div id="key" class="abs key" style="left:22px;width:346px;top:452px;height:58px;background:var(--cobalt);color:#F6F0E6">
-    <span id="fill" class="abs" style="inset:-30px;background:radial-gradient(closest-side,#1F4E78 0%,#1F4E78 70%,rgba(31,78,120,0) 100%);transform-origin:10% 50%;transform:scale(0);filter:blur(4px)"></span>
-    <span id="keyText" style="position:relative;display:flex;height:100%;align-items:center;padding:0 20px;font-size:21px;font-weight:400">Start with&nbsp;<b style="font-weight:600">Call the dentist</b></span>
+  <svg width="0" height="0" class="abs"><filter id="rough" x="-10%" y="-60%" width="120%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.9 0.25" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter></svg>
+  <!-- the one action: a stroke word, held to repaint -->
+  <div id="key" class="abs" style="left:22px;top:450px">
+    <div id="keyLbl" class="lbl">START WITH</div>
+    <div id="keyWord" class="sw" style="position:relative;margin-top:2px"><span id="keyText">Call the dentist</span><svg id="trace" width="250" height="19" viewBox="0 0 200 14" preserveAspectRatio="none"><path d="M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z" fill="#2E6DA4" opacity=".82" filter="url(#rough)"/></svg><svg id="paint" width="250" height="19" viewBox="0 0 200 14" preserveAspectRatio="none" style="transform-origin:0 50%;transform:scaleX(0)"><path d="M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z" fill="#2E6DA4" opacity=".9" filter="url(#rough)"/></svg></div>
   </div>
 
-  <div id="qHead" class="abs" style="left:22px;top:540px;font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:40px">Plan</div>
+  <div id="qHead" class="abs" style="left:22px;top:552px;font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:40px">Plan</div>
   <div id="rows"></div>
 
-  <div class="abs" style="left:14px;right:14px;bottom:18px;height:74px;border-radius:20px;background:rgba(250,246,239,.62);backdrop-filter:blur(18px);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 0 0 .5px rgba(43,36,64,.2),0 10px 28px rgba(43,36,64,.12)">
-    <span id="tess" class="abs" style="left:78px;right:20px;top:24px;font-size:21px;color:#8A7F96;white-space:nowrap;overflow:hidden">Ask Tess…</span>
-  </div>
-  <div id="soul" class="abs" style="left:50px;top:789px;width:0;height:0;transform:scale(.5)">
-    <span class="d r" style="animation:idle 7s ease-in-out infinite"></span><span class="d b" style="animation:idle 8.5s ease-in-out -3s infinite"></span><span class="d y" style="animation:idle 10s ease-in-out -6s infinite"></span>
+  <!-- Tess in her corner: lines right-aligned beside the soul -->
+  <span id="tess" class="abs" style="right:78px;top:775px;font-size:21px;color:var(--cobalt);white-space:nowrap;text-align:right"></span>
+  <div id="soul" class="abs" style="left:346px;top:788px;width:0;height:0">
+    <div class="sd" style="--c:200,69,47;transform:translate(-10px,-6px) scale(.72)"></div><div class="sd" style="--c:46,109,164;transform:translate(10px,-6px) scale(.72)"></div><div class="sd" style="--c:224,179,65;transform:translate(0,9px) scale(.72)"></div>
   </div>
   <div id="clock" class="abs lbl" style="right:22px;top:14px;color:#7A6E86">08:00</div>
   <div id="finger" class="abs"></div>
@@ -114,7 +116,14 @@ async function tessSay(text, colour = '#2E6DA4') {
   t.textContent = text; t.style.color = colour;
   anim(t, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 240, easing: HOUSE });
 }
-const soulDone = () => anim($('soul'), [{ transform: 'scale(.5)' }, { transform: 'scale(.66)' }, { transform: 'scale(.5)' }], { duration: 900, easing: 'ease-in-out' });
+const soulDone = () => anim($('soul'), [{ transform: 'scale(1)' }, { transform: 'scale(1.3)' }, { transform: 'scale(1)' }], { duration: 900, easing: 'ease-in-out' });
+// hold a stroke word: it empties to a trace, then repaints left to right; the tip blooms at the end
+async function holdStroke(ms) {
+  anim($('trace'), [{ opacity: 1 }, { opacity: .2 }], { duration: 120 });
+  await anim($('paint'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: ms, easing: 'cubic-bezier(.3,.6,.4,1)' });
+  anim($('paint'), [{ transform: 'scaleX(1) scaleY(1)' }, { transform: 'scaleX(1.02) scaleY(1.6)' }, { transform: 'scaleX(1) scaleY(1)' }], { duration: 300, easing: 'ease-out' });
+}
+function sizeStroke() { const k = $('ph').getBoundingClientRect().width / 390; const w = $('keyText').getBoundingClientRect().width / k + 14; $('trace').setAttribute('width', w); $('paint').setAttribute('width', w); }
 function setClock(t) { $('clock').textContent = t; }
 
 // ---- rows ----
@@ -126,7 +135,7 @@ function addRow(o) {
 }
 async function closeUp(dur = 420) {
   rows = rows.filter((r) => !r.gone);
-  await Promise.all(rows.map((r, k) => { const to = 588 + k * 48; const from = parseFloat(r.el.style.top); r.el.style.top = to + 'px'; return anim(r.el, [{ transform: `translateY(${from - to}px)` }, { transform: 'none' }], { duration: dur, easing: HOUSE }); }));
+  await Promise.all(rows.map((r, k) => { const to = 600 + k * 48; const from = parseFloat(r.el.style.top); r.el.style.top = to + 'px'; return anim(r.el, [{ transform: `translateY(${from - to}px)` }, { transform: 'none' }], { duration: dur, easing: HOUSE }); }));
 }
 async function flyDab(dabEl, h, colour) {
   const d = rel(dabEl.getBoundingClientRect());
@@ -158,8 +167,8 @@ async function accept(o) {
     { n: 'Draft the push‑day plan', t: '11:15', c: '#7A5C8E', h: 11.25 },
     { n: 'Renew passport', t: '16:15', c: '#E0A35C', h: 16.25 }
   ];
-  plan.forEach((p, k) => { p.y = 588 + k * 48; p.tc = '#2E6DA4'; const o = addRow(p); o.el.style.color = '#2E6DA4'; o.el.querySelector('.nm').style.color = '#2E6DA4'; o.el.querySelector('.dab').style.background = 'radial-gradient(closest-side,rgba(46,109,164,.9),rgba(46,109,164,.25))'; o.el.style.animation = 'wet 1.6s ease-in-out infinite'; o.el.style.opacity = 0; });
-  await document.fonts.ready; await sleep(400); document.body.dataset.start = '1';
+  plan.forEach((p, k) => { p.y = 600 + k * 48; p.tc = '#2E6DA4'; const o = addRow(p); o.el.style.color = '#2E6DA4'; o.el.querySelector('.nm').style.color = '#2E6DA4'; o.el.querySelector('.dab').style.background = 'radial-gradient(closest-side,rgba(46,109,164,.9),rgba(46,109,164,.25))'; o.el.style.animation = 'wet 1.6s ease-in-out infinite'; o.el.style.opacity = 0; });
+  await document.fonts.ready; sizeStroke(); await sleep(400); document.body.dataset.start = '1';
 
   // ---- morning: Plan my day arrives as Now ----
   $('dayStroke').animate([{ strokeDashoffset: 340 }, { strokeDashoffset: 340 - X(8) }], { duration: 700, easing: 'cubic-bezier(.3,.7,.2,1)', fill: 'forwards' });
@@ -178,15 +187,30 @@ async function accept(o) {
   tessSay('Short night. Two things today.');
   await sleep(1300);
 
+  // edit a ghost line in place: tap its words, a cobalt writing line draws under them, type, Return
+  const ed = rows[1], nm = ed.el.querySelector('.nm'); const er = rel(nm.getBoundingClientRect());
+  await fingerOn(er.left + 60, er.top + er.height / 2); await sleep(100); fingerOff();
+  ed.el.style.animation = 'none'; ed.el.style.opacity = 1;
+  const wl = document.createElement('span'); wl.className = 'abs';
+  Object.assign(wl.style, { left: er.left + 'px', top: (er.top + er.height + 2) + 'px', width: '300px', height: '1px', background: '#2E6DA4', transformOrigin: '0 50%', zIndex: 5 });
+  $('ph').appendChild(wl); anim(wl, [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 260, easing: HOUSE });
+  await anim(nm, [{ opacity: 1, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(3px)' }], { duration: 140 });
+  nm.innerHTML = '<span class="caret"></span>'; nm.getAnimations().forEach((a) => a.cancel());
+  for (const ch of 'Plan push day, 30 min') { nm.firstChild.nodeType === 3 ? nm.firstChild.textContent += ch : nm.insertAdjacentText('afterbegin', ch); await sleep(55); }
+  await sleep(350);
+  nm.querySelector('.caret').remove(); anim(wl, [{ opacity: 1 }, { opacity: 0 }], { duration: 220 });
+  ed.n = 'Plan push day, 30 min'; ed.el.style.animation = 'wet 1.6s ease-in-out infinite';
+  tessSay('Got it, 30 minutes.');
+  await sleep(1000);
+
   // accept both lines
   await accept(rows[0]); await sleep(250);
   await accept(rows[1]); await sleep(500);
 
   // Start with: hold the cobalt key, the plan lifts, the first item rises into the hero
-  await fingerOn(160, 481);
-  await anim($('fill'), [{ transform: 'scale(0)' }, { transform: 'scale(1.3)' }], { duration: 600, easing: 'cubic-bezier(.3,.6,.4,1)' });
+  await fingerOn(120, 494);
+  await holdStroke(600);
   fingerOff(); soulDone(); tessSay('Starting with the dentist.');
-  anim($('fill'), [{ transform: 'scale(1.3)' }, { transform: 'scale(0)' }], { duration: 220 });
   ['hero', 'sub', 'energy'].forEach((id) => anim($(id), [{ opacity: 1, transform: 'none', filter: 'blur(0)' }, { opacity: 0, transform: 'translateY(-14px)', filter: 'blur(4px)' }], { duration: 260, easing: 'ease-in' }));
   await sleep(260);
   const first = rows[0]; const r = rel(first.el.querySelector('.nm').getBoundingClientRect());
@@ -195,7 +219,7 @@ async function accept(o) {
   $('ph').appendChild(ghost); first.el.style.visibility = 'hidden'; first.gone = true;
   anim($('nowLine'), [{ opacity: 1 }, { opacity: 0 }], { duration: 160 }).then(() => { $('nowLine').textContent = 'now, until half nine'; anim($('nowLine'), [{ opacity: 0, transform: 'translateX(12px)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: HOUSE }); });
   anim($('qHead'), [{ opacity: 1 }, { opacity: 0 }], { duration: 160 }).then(() => { $('qHead').textContent = 'Next'; anim($('qHead'), [{ opacity: 0 }, { opacity: 1 }], { duration: 240 }); });
-  anim($('key'), [{ opacity: 1 }, { opacity: 0 }], { duration: 200 }).then(() => { $('key').style.width = '220px'; $('key').style.background = '#2B2440'; $('keyText').innerHTML = '<b style="font-weight:600">Hold to finish</b>'; anim($('key'), [{ opacity: 0 }, { opacity: 1 }], { duration: 240 }); });
+  anim($('key'), [{ opacity: 1 }, { opacity: 0 }], { duration: 240 });
   closeUp(460);
   await anim(ghost, [{ left: r.left + 'px', top: r.top + 'px', fontSize: '21px', lineHeight: r.height + 'px', letterSpacing: '-.005em' }, { left: '20px', top: '252px', fontSize: '56px', lineHeight: '56px', letterSpacing: '-.04em' }], { duration: 460, easing: HOUSE });
   $('hero').textContent = 'Call the dentist'; $('hero').getAnimations().forEach((a) => a.cancel()); ghost.remove();
@@ -211,10 +235,11 @@ async function accept(o) {
   $('rows').innerHTML = ''; rows = [];
   $('nowLine').textContent = 'this evening';
   $('hero').innerHTML = 'Four tasks,<br>one workout,<br>cooked once';
-  $('key').style.width = '260px'; $('keyText').innerHTML = '<b style="font-weight:600">Shutdown complete</b>';
-  $('qHead').className = 'abs lbl'; $('qHead').style.fontSize = '16px'; $('qHead').style.letterSpacing = '.08em'; $('qHead').style.top = '552px'; $('qHead').textContent = 'GOING TO TOMORROW';
-  [{ n: 'Renew passport', c: '#2E6DA4' }, { n: 'Book the car service', c: '#2E6DA4' }].forEach((p, k) => { p.y = 588 + k * 48; addRow(p).el.querySelector('.nm').style.fontWeight = 500; });
-  $('rows').style.opacity = 1; $('tess').textContent = 'Ask Tess…'; $('tess').style.color = '#8A7F96';
+  $('keyLbl').textContent = 'WHEN YOU’RE DONE'; $('keyText').textContent = 'Shutdown complete'; sizeStroke();
+  ['trace', 'paint'].forEach((id) => { $(id).querySelector('path').setAttribute('fill', '#7A5C8E'); $(id).getAnimations().forEach((a) => a.cancel()); }); $('paint').style.transform = 'scaleX(0)';
+  $('qHead').className = 'abs lbl'; $('qHead').style.fontSize = '16px'; $('qHead').style.letterSpacing = '.08em'; $('qHead').style.top = '566px'; $('qHead').textContent = 'GOING TO TOMORROW';
+  [{ n: 'Renew passport', c: '#2E6DA4' }, { n: 'Book the car service', c: '#2E6DA4' }].forEach((p, k) => { p.y = 600 + k * 48; addRow(p).el.querySelector('.nm').style.fontWeight = 500; });
+  $('rows').style.opacity = 1; $('tess').textContent = '';
   await sleep(700);
   for (const [k, id] of ['nowLine', 'hero', 'key', 'qHead', 'rows', 'tess'].entries()) anim($(id), [{ opacity: 0, transform: 'translateY(14px)', filter: 'blur(4px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }], { duration: 340, easing: HOUSE, delay: k * 50 });
   await sleep(1300);
@@ -229,16 +254,13 @@ async function accept(o) {
   await sleep(900);
 
   // Shutdown complete: hold, the day paints to its end, the rolled dab flies to tomorrow, Done for today
-  $('fill').style.background = 'radial-gradient(closest-side,#C8452F 0%,#C8452F 70%,rgba(200,69,47,0) 100%)';
-  $('key').style.background = '#2B2440';
-  await fingerOn(150, 481);
-  await anim($('fill'), [{ transform: 'scale(0)' }, { transform: 'scale(1.4)' }], { duration: 700, easing: 'cubic-bezier(.3,.6,.4,1)' });
+  await fingerOn(140, 494);
+  await holdStroke(700);
   fingerOff();
   $('dayStroke').animate([{ strokeDashoffset: 340 - X(21) }, { strokeDashoffset: 0 }], { duration: 700, easing: 'cubic-bezier(.3,.7,.2,1)', fill: 'forwards' });
   anim($('tip'), [{ opacity: .75 }, { opacity: 0 }], { duration: 400 });
   const go = rows[0];
   flyDab(go.el.querySelector('.dab'), 23, '#2E6DA4').then((f) => { f.remove(); anim($('tmrw'), [{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'scale(1.25)' }, { opacity: 0, transform: 'scale(1)' }], { duration: 700 }); });
-  anim($('fill'), [{ transform: 'scale(1.4)' }, { transform: 'scale(0)' }], { duration: 240, delay: 200 });
   await anim($('hero'), [{ opacity: 1, transform: 'none', filter: 'blur(0)' }, { opacity: 0, transform: 'translateY(-14px)', filter: 'blur(4px)' }], { duration: 260, easing: 'ease-in', delay: 120 });
   ['key', 'qHead', 'rows'].forEach((id) => anim($(id), [{ opacity: 1 }, { opacity: 0 }], { duration: 300 }));
   $('hero').innerHTML = 'Done for<br>today.';

@@ -3,13 +3,14 @@
 One paragraph or so per Feature screen in `docs/product/ship-list-m4.md` (Product's copy: `tessera/product/ship-list-m4.md`), at the weight of `m3-steers.md`. Rough is fine; the UI bar is not optional: Inter Tight tiers, nothing under 16pt, no italics, no cards, pills or stock lists, painterly ground with hairline seams, directional entrances. Plan my day and Shutdown are **Now on Home**, not separate screens, so they reuse `today-on-home.md`'s queue, gestures and haptics.
 
 ## 6 · Plan my day (rules only), with 10b · the energy check-in
-Recording of 6, 10b and 7 together: `recordings/plan-and-shutdown.mp4` (source `studies/plan-and-shutdown.html`).
+Recording of 6, 10b and 7 together: `recordings/plan-and-shutdown.mp4` (source `studies/plan-and-shutdown.html`). Redrawn to `no-buttons.md` on 15 Oct: stroke words instead of keys, Tess in her corner, and a ghost line edited in place.
 At 08:00 the plan becomes Now. It's a state of TODAY, not a card or a sheet.
 - **Now line:** "this morning". **Hero** is the day in one sentence: "Three meetings, four hours free". The context line under the hero is the body: "slept 6h40" (21/400; "no sleep data" when Health has nothing).
 - **The day stroke tells the time you have.** Calendar events paint onto the dashed rest-of-day guide as short ink segments at their times (ink 55%, 6pt, round caps). Free time stays dashed. This is the Tiimo lesson, time you can see, in the stroke you already know.
 - **Energy** (10b) sits in one line under the context line: "Energy" at 21/400, then the **rep drum** (`RepsDrum`, 1 to 5, centre numeral 48 Light), with the value's word under the centre in labels: FLAT · LOW · OKAY · GOOD · BRIGHT. It's optional; the plan below is already filled for 3. Setting it re-flows the plan live: at 2 or below, the third line slides out (fades and the queue closes up, 320ms), and Tess's line in cobalt says "Short night. Two things, and a lighter top set."
 - **The plan** is up to 3 **ghost rows** in the queue window (cobalt, wet, as in Tess captures), but they don't dry on a timer. **Swipe right accepts** a line: it dries into ink and its dab flies to its slot on the day stroke (the same flight as "tomorrow", landing at its time). **Swipe left skips** it: it fades and the queue closes up. Rows untouched when you start count as accepted.
-- **The one control** is a cobalt `PaintKey`, 220×58 at y 452: "Start with **Call the dentist**" (the name in 600). Holding it (0.6s) makes that item Now. The plan's hero sentence lifts away and the item rises into the hero (the promotion motion). That's the end; the whole flow is under a minute.
+- **Edit a ghost line in place:** tap its words. A 1pt cobalt writing line draws under the row (260ms), the words blur out, and the keyboard rises with the row's text ready to change ("Plan push day, 30 min"). Return keeps it a ghost with the new words, re-parsed through the grammar so "30 min" becomes its length, and Tess says "Got it, 30 minutes." The time on the right is a value word that opens the time drum. Nothing is accepted until it's swiped.
+- **The one action** is a stroke word at y 450: the label "START WITH" (16/700), and under it the first item's name at Title 34 on a cobalt brushstroke. Holding it (0.6s) empties the stroke to a 20% trace and repaints it left to right, and the tip blooms. That makes the item Now. The plan's hero sentence lifts away and the item rises into the hero (the promotion motion). That's the end; the whole flow is under a minute.
 - Skipping the whole plan: swipe the hero left (the plan only; it has no strike). It drops back to normal Today until tomorrow.
 
 ## 7 · Shutdown
@@ -17,7 +18,7 @@ At 21:00 Shutdown becomes Now, and the ground turns to **evening**: the paint wa
 - **Now line:** "this evening". **Hero** is counts only: "Four tasks, one workout, cooked once". Never what didn't happen.
 - **Rolling on:** a labels line, "GOING TO TOMORROW", then unfinished items as rows in the queue window, each with a small cobalt dab (going with you). **Tap a row to keep it off tomorrow:** the dab drains out, and the row reads "to Later" in labels at the right. Tap again to put it back. There's no checkbox and no red.
 - **One optional line:** "Tomorrow, first:" as a writing line at 21/400 (50% placeholder). It's the one line for the Day log too.
-- **The control:** an ink `PaintKey`, "Shutdown complete", hold 0.7s.
+- **The action:** the label "WHEN YOU'RE DONE", and under it "Shutdown complete" as a stroke word on a plum brushstroke (`#7A5C8E`). Hold 0.7s to repaint it.
 - **The living moment:** the day stroke paints the rest of its length to the vermilion end (700ms), the rolled rows' dabs fly off to tomorrow one after another (80ms stagger), the hero is replaced by "Done for today." at Hero 56/500, Tess plays `done`, and `.success` plays. This is the one exception to "no success on Home", because a day is a bigger finish than a task. After it, Now reads "tomorrow, first: …" quietly until morning.
 
 ## 5 · Day log (Time Machine)
@@ -31,14 +32,14 @@ Recording: `recordings/day-log.mp4` (source `studies/day-log.html`): reading bac
   - **The quiet line** in labels at 45%: "SLEPT 7H10 · 3 MEETINGS · ENERGY 4".
 - **The paint spine:** under each date, one area-colour dab per headline item, stacked. Scrolling the log shows a column of colour in the margin, a painted history of your weeks. No chart.
 - **Empty runs** collapse to one row in labels at 45%: "OCT 3 TO 6". No count of empty days.
-- **Undo from there:** tap a headline item and it gets an ink underline. Ask Tess shows the preview sentence in cobalt, at most two lines ("Removes bench 80 × 5. PR back to 77.5."), with a vermilion "Undo" on the right. Tapping it runs the strike on that item, and today's block gains "undid 1 thing from Oct 12" in the count line. If the item has changed since, the preview says "Changed since. Open it" and tapping zooms to the object.
+- **Undo from there:** tap a headline item and it gets an ink underline. Tess shows the preview sentence by her soul in cobalt, at most two lines ("Removes bench 80 × 5. PR back to 77.5."), with a vermilion "Undo" on the right. Tapping it runs the strike on that item, and today's block gains "undid 1 thing from Oct 12" in the count line. If the item has changed since, the preview says "Changed since. Open it" and tapping zooms to the object.
 - **Later:** the right-edge rail scrubber (a light tick per day, a firmer one per week).
 
 ## 8 · Focus block and body double
 - **Start:** "focus on the deck 25" through Tess, or on any task's object page, a "Focus" key with the duration as a word that cycles 25 / 50 on tap (the Settings grammar). Hold 0.6s to start.
 - **It's a process, so it's Now:** the lit seam runs on the top edge; the hero is the task; the key reads "Done" (hold); the meta beside it reads "18 MIN / LEFT".
 - **The timer is a horizon line** at y 204, just under the day stroke: a 2.5pt cream-on-ink stroke burning left to right (cook mode's timers), with no numerals ticking on screen.
-- **The body double is Tess's soul.** While a block runs, the soul in the Ask Tess bar slows to one breath every 6s (scale 0.5 ↔ 0.56) and her line says "I'm here." That's all she does. **At halfway**, she asks once, "Still on the deck?", with two words on the right: **Yes** (ink) and **Switch** (vermilion). When the app is closed, a local notification asks the same.
+- **The body double is Tess's soul.** While a block runs, the soul in her corner slows to one breath every 6s (scale 0.72 ↔ 0.8) and her line says "I'm here." That's all she does. **At halfway**, she asks once, "Still on the deck?", with two words on the right: **Yes** (ink) and **Switch** (vermilion). When the app is closed, a local notification asks the same.
 - **The wrap-up:** when the time ends, the horizon flares cadmium (cook mode's flare). Tess says one line ("Twenty-five minutes on the deck."), with "Add a line" in cobalt to write the Day log line. Finishing the task itself is still the hold (or a swipe right in the queue).
 - **Live Activity:** the rest activity's layout and Cobalt sky mood (`live-activity.md`). The left column is the task name at 21/600, then the horizon as `ProgressView(timerInterval:countsDown:)` (cream tint, 2.5pt tall) with `Text(timerInterval:)` in labels. The bottom row has one control, **Done**. No +15 or Skip. Give it a stale date at the block's end plus 15 minutes, so a forgotten block doesn't sit on the Lock Screen.
 
