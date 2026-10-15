@@ -97,10 +97,10 @@
 
 **Next:**
 1. Accept the engine hotfix PR and the Groceries polish PR against the 10 fixes.
-2. Starter lists: one reusable "Gym bag" and one "Leaving the house" list as pasteable text, for Lists slice 3 (like the seed recipes).
-3. Design steer check on Lists screens 9-12 with Design studio before Core starts them.
+2. Design steer check on Lists screens 9-12 with Design studio before Core starts them.
+3. Accept Recipe page and Paste a recipe (10, 11), Cook mode (12), Kitchen shelf (14) as each lands.
 
-**Done (PR #61, branch `claude/project-thread-nq38le`):** Lists ship list `ship-list-lists.md`; Lists acceptance checks `lists-acceptance.md`; 10 seed recipes `kitchen-seed-recipes.md`; 50-phrase test set `kitchen-phrases.md`; Kitchen v2 backlog `kitchen-v2-backlog.md` (held for a week of use).
+**Done:** Lists ship list `ship-list-lists.md` (#61); Lists acceptance checks `lists-acceptance.md` and starter lists `starter-lists.md` (#62, to merge); 10 seed recipes `kitchen-seed-recipes.md`; 50-phrase test set `kitchen-phrases.md`; Kitchen v2 backlog `kitchen-v2-backlog.md` (held for a week of use).
 
 **Later:**
 - Kitchen v2 scope from the backlog, after a week of use. Nutrition only if Kaushik asks.
