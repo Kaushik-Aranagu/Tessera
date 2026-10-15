@@ -73,3 +73,6 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [fixtures/upkeep.md](fixtures/upkeep.md) | Core: 40 upkeep phrases, collisions with tasks/groceries/Reading/Money, 16 rules |
 | [fixtures/people.md](fixtures/people.md) | Core: 40 people phrases, collisions (called mum vs completeTask, names in shop runs), 18 rules |
 | [fixtures/money.md](fixtures/money.md) | Core: 50 currency-neutral money rows, collisions with sets/groceries/tasks/Reading, rules M1-M11 |
+| [speech-test-script.md](speech-test-script.md) | Builder B, Kaushik: 5-minute Speak phone test, 30 phrases with expected Tess lines (after V1, V2) |
+| [build-a1-brief.md](build-a1-brief.md) | Core: schema ops with undo (retire/revive, rename by key), 20 fixtures, master blockers |
+| [recovery-line.md](recovery-line.md) | Core, Builder B: Watch W3 recovery line from sleep, resting HR, HRV vs own baseline; 20 fixture days; never sent to Claude |
