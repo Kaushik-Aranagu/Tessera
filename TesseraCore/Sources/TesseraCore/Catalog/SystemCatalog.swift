@@ -1,6 +1,5 @@
 import CryptoKit
 import Foundation
-import SwiftData
 
 /// Built-in classes every install starts with. Seeding is idempotent, and system classes and fields
 /// get deterministic ids derived from their keys, so separate devices seed identical `id`s.
@@ -222,7 +221,7 @@ public enum SystemCatalog {
 
     /// Inserts any missing system classes and returns all of them by key.
     @discardableResult
-    public static func seed(in context: ModelContext) throws -> [Key: ClassDef] {
+    public static func seed(in context: TesseraContext) throws -> [Key: ClassDef] {
         var classes = try existing(in: context)
         for spec in specs {
             let classDef: ClassDef
@@ -320,8 +319,8 @@ public enum SystemCatalog {
         field.expression = expression
     }
 
-    public static func existing(in context: ModelContext) throws -> [Key: ClassDef] {
-        let all = try context.fetch(FetchDescriptor<ClassDef>(predicate: #Predicate { $0.systemKey != nil }))
+    public static func existing(in context: TesseraContext) throws -> [Key: ClassDef] {
+        let all = context.all(ClassDef.self).filter { $0.systemKey != nil }
         var result: [Key: ClassDef] = [:]
         for classDef in all {
             guard let key = Key.allCases.first(where: { $0.systemKey == classDef.systemKey }) else { continue }

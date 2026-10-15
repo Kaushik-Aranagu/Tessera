@@ -1,48 +1,49 @@
 import Foundation
 import SwiftData
+import TesseraCore
 
 /// An instance of a class: a logged set, a workout, a muscle, a note.
 /// Objects compose through `parent`/`children` (Workout → exercise entries → sets).
 @Model
-public final class ObjectRecord {
-    public var id: UUID = UUID()
-    public var title: String = ""
-    public var sortIndex: Int = 0
-    public var createdAt: Date = Date.now
-    public var updatedAt: Date = Date.now
+final class ObjectRecord {
+    var id: UUID = UUID()
+    var title: String = ""
+    var sortIndex: Int = 0
+    var createdAt: Date = Date.now
+    var updatedAt: Date = Date.now
     /// Soft delete; hidden from normal queries, recoverable.
-    public var deletedAt: Date?
+    var deletedAt: Date?
     /// External storage is part of the shipped schema; changing it needs a migration plan (no automatic mapping).
-    @Attribute(.externalStorage) public var valuesData: Data?
+    @Attribute(.externalStorage) var valuesData: Data?
     /// The class's own object (like a metaclass instance): holds class-level values such as
     /// Bench Press's muscles or cues, which every object of the class and its subclasses inherits.
-    public var isClassObject: Bool = false
+    var isClassObject: Bool = false
 
-    public var classDef: ClassDef?
-    public var parent: ObjectRecord?
+    var classDef: ClassDef?
+    var parent: ObjectRecord?
 
     @Relationship(deleteRule: .cascade, inverse: \ObjectRecord.parent)
-    public var children: [ObjectRecord]? = []
+    var children: [ObjectRecord]? = []
 
     @Relationship(deleteRule: .cascade, inverse: \ObjectLink.from)
-    public var outgoingLinks: [ObjectLink]? = []
+    var outgoingLinks: [ObjectLink]? = []
 
     @Relationship(deleteRule: .cascade, inverse: \ObjectLink.toObject)
-    public var incomingLinks: [ObjectLink]? = []
+    var incomingLinks: [ObjectLink]? = []
 
-    public init(title: String = "", classDef: ClassDef?, parent: ObjectRecord? = nil) {
+    init(title: String = "", classDef: ClassDef?, parent: ObjectRecord? = nil) {
         id = .v7()
         self.title = title
         self.classDef = classDef
         self.parent = parent
     }
 
-    public var isDeleted: Bool {
+    var isDeleted: Bool {
         deletedAt != nil
     }
 
     /// Raw stored values; prefer `ObjectStore` accessors, which apply defaults and computed fields.
-    public var values: FieldValues {
+    var values: FieldValues {
         get {
             // Decoding JSON on every read dominated long histories; keep the last decode until the data changes.
             let data = valuesData
@@ -71,7 +72,7 @@ public final class ObjectRecord {
     }
 
     /// Live children in order, excluding soft-deleted ones.
-    public var orderedChildren: [ObjectRecord] {
+    var orderedChildren: [ObjectRecord] {
         (children ?? []).filter { !$0.isDeleted }.sorted { ($0.sortIndex, $0.createdAt) < ($1.sortIndex, $1.createdAt) }
     }
 }

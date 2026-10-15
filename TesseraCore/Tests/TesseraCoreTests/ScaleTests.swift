@@ -1,5 +1,4 @@
 import Foundation
-import SwiftData
 @testable import TesseraCore
 import Testing
 
@@ -93,5 +92,57 @@ struct ScaleTests {
 
     static func milliseconds(_ duration: Duration) -> Double {
         Double(duration.components.seconds) * 1000 + Double(duration.components.attoseconds) / 1e15
+    }
+}
+
+@MainActor
+struct OnDiskTests {
+    /// Writes a history to SQLite, reopens it cold, and checks everything came back wired up.
+    @Test func historySurvivesARoundTripThroughSQLite() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let url = folder.appendingPathComponent("tessera.sqlite")
+        let workouts = ScaleTests.workouts
+        let clock = ContinuousClock()
+        var expected: TrainingLedger.PersonalRecords?
+        let write = try clock.measure {
+            let container = TesseraSchema.makeContainer(url: url)
+            let context = container.mainContext
+            context.autosaveEnabled = false
+            let classes = try SystemCatalog.seed(in: context)
+            let store = ObjectStore(context: context)
+            let engine = ActionEngine(store: store, classes: classes)
+            let bench = try #require(classes[.benchPress])
+            for day in 0 ..< workouts {
+                let workout = try store.create(#require(classes[.workout]), title: "Day \(day)")
+                let entry = try engine.perform(AddExercise(workout: workout.id, exercise: bench.id), by: .user).output
+                for set in 0 ..< 5 {
+                    try engine.perform(LogSet(entry: entry.id, weight: 60 + Double(day % 40), reps: Double(5 + set)),
+                                       by: .user)
+                }
+                try engine.perform(FinishWorkout(workout: workout.id,
+                                                 time: Date(timeIntervalSince1970: 1_700_000_000 + Double(day) *
+                                                     86400)),
+                                   by: .user)
+                try context.save() // one save per workout, as the app writes
+            }
+            expected = TrainingLedger(store: store, classes: classes).records(for: bench)
+        }
+        var reopened: TesseraContainer?
+        let open = clock.measure { reopened = TesseraSchema.makeContainer(url: url) }
+        let context = try #require(reopened).mainContext
+        let classes = try SystemCatalog.existing(in: context)
+        let ledger = TrainingLedger(store: ObjectStore(context: context), classes: classes)
+        let bench = try #require(classes[.benchPress])
+        let records = ledger.records(for: bench)
+        #expect(records.bestE1RM?.e1RM == expected?.bestE1RM?.e1RM)
+        #expect(records.bestWeightByReps == expected?.bestWeightByReps)
+        #expect(ledger.sessions(of: bench).count == workouts)
+        #expect(ActionEngine(store: ObjectStore(context: context), classes: classes).history(limit: .max).count
+            == workouts * 7)
+        print(
+            "DISK \(workouts) workouts: write+save=\(ScaleTests.milliseconds(write))ms open=\(ScaleTests.milliseconds(open))ms"
+        )
     }
 }

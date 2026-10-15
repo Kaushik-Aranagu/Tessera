@@ -1,5 +1,4 @@
 import Foundation
-import SwiftData
 
 /// Every exercise session, built in a few batched fetches instead of walking relationships set by set,
 /// then patched entry by entry as sets are logged or edited.
@@ -18,31 +17,18 @@ struct TrainingIndex {
 
     init() {}
 
-    /// A full build: every set and every entry → exercise link in one fetch each.
+    /// A full build from the in-memory graph: every exercise class's incoming entry links, then each entry's sets.
     init(ledger: TrainingLedger) {
         let store = ledger.store
-        guard let entryClass = ledger.classes[.exerciseEntry], let setClass = ledger.classes[.set],
+        guard let entryClass = ledger.classes[.exerciseEntry], let root = ledger.classes[.exercise],
               let exerciseField = store.field("exercise", of: entryClass)?.id else { return }
         let reader = SetReader(ledger: ledger)
-
-        var setsByEntry: [UUID: [ObjectRecord]] = [:]
-        for classID in ClassResolver.descendants(of: setClass).map(\.id) {
-            var descriptor = FetchDescriptor<ObjectRecord>(predicate: #Predicate {
-                $0.deletedAt == nil && $0.classDef?.id == classID
-            })
-            descriptor.relationshipKeyPathsForPrefetching = [\.parent]
-            for set in (try? store.context.fetch(descriptor)) ?? [] {
-                guard let entryID = set.parent?.id else { continue }
-                setsByEntry[entryID, default: []].append(set)
+        for exercise in ClassResolver.descendants(of: root) {
+            for link in exercise.incomingLinks ?? [] where link.fieldID == exerciseField {
+                guard let entry = link.from,
+                      let session = reader.session(entry: entry, sets: entry.children ?? []) else { continue }
+                insert(session, classID: exercise.id)
             }
-        }
-
-        var links = FetchDescriptor<ObjectLink>(predicate: #Predicate { $0.fieldID == exerciseField })
-        links.relationshipKeyPathsForPrefetching = [\.from, \.toClass]
-        for link in (try? store.context.fetch(links)) ?? [] {
-            guard let entry = link.from, let exercise = link.toClass,
-                  let session = reader.session(entry: entry, sets: setsByEntry[entry.id] ?? []) else { continue }
-            insert(session, classID: exercise.id)
         }
     }
 

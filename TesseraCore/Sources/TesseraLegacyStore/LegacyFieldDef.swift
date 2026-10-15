@@ -1,32 +1,33 @@
 import Foundation
 import SwiftData
+import TesseraCore
 
 /// A property declared by a class. Values are stored by `id`, never by name.
 @Model
-public final class FieldDef {
-    public var id: UUID = UUID()
+final class FieldDef {
+    var id: UUID = UUID()
     /// Display name, freely renamable.
-    public var name: String = ""
+    var name: String = ""
     /// Identifier used by formulas and code (e.g. "weight"). Values are still stored by `id`.
-    public var key: String = ""
-    public var kindRaw: String = FieldKind.text.rawValue
-    public var sortIndex: Int = 0
-    public var isRequired: Bool = false
-    public var unit: String?
-    public var enumOptions: [String] = []
+    var key: String = ""
+    var kindRaw: String = FieldKind.text.rawValue
+    var sortIndex: Int = 0
+    var isRequired: Bool = false
+    var unit: String?
+    var enumOptions: [String] = []
     /// For `.ref`, `.refList`, `.classRef`: the target class (subclasses are accepted too).
-    public var targetClassID: UUID?
+    var targetClassID: UUID?
     /// For `.computed`: a `Formula` over other field keys, e.g. `weight * (1 + reps / 30)`.
-    public var expression: String?
-    public var defaultValueData: Data?
+    var expression: String?
+    var defaultValueData: Data?
     /// When set, this field doesn't add a new property: it overrides the default of an inherited field.
-    public var overridesFieldID: UUID?
+    var overridesFieldID: UUID?
     /// Set when the person edits a shipped field (the user overlay); package upgrades then leave it alone.
-    public var isUserModified: Bool = false
+    var isUserModified: Bool = false
 
-    public var owner: ClassDef?
+    var owner: ClassDef?
 
-    public init(
+    init(
         name: String,
         key: String,
         kind: FieldKind,
@@ -43,12 +44,12 @@ public final class FieldDef {
         self.defaultValue = defaultValue
     }
 
-    public var kind: FieldKind {
+    var kind: FieldKind {
         get { FieldKind(rawValue: kindRaw) ?? .text }
         set { kindRaw = newValue.rawValue }
     }
 
-    public var defaultValue: FieldValue? {
+    var defaultValue: FieldValue? {
         get { defaultValueData.flatMap { try? JSONDecoder().decode(FieldValue.self, from: $0) } }
         set { defaultValueData = newValue.flatMap { try? JSONEncoder().encode($0) } }
     }

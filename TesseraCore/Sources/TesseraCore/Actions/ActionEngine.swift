@@ -1,5 +1,4 @@
 import Foundation
-import SwiftData
 
 /// Runs typed actions and keeps the operation log: commit, pending previews, undo and redo.
 ///
@@ -93,12 +92,9 @@ public final class ActionEngine {
     }
 
     public func pendingRecords() -> [OpRecord] {
-        let pending = OpState.pending.rawValue
-        let descriptor = FetchDescriptor<OpRecord>(
-            predicate: #Predicate { $0.stateRaw == pending },
-            sortBy: [SortDescriptor(\.createdAt)]
-        )
-        return (try? store.context.fetch(descriptor)) ?? []
+        store.context.all(OpRecord.self)
+            .filter { $0.state == .pending }
+            .sorted { $0.createdAt < $1.createdAt }
     }
 
     /// Whether an object only exists or changed because of a preview (draw it as a ghost).
@@ -142,16 +138,16 @@ public final class ActionEngine {
 
     /// Newest first.
     public func history(limit: Int = 100) -> [OpRecord] {
-        var descriptor = FetchDescriptor<OpRecord>(sortBy: [SortDescriptor(\.createdAt, order: .reverse)])
-        descriptor.fetchLimit = limit
-        return (try? store.context.fetch(descriptor)) ?? []
+        Array(newestFirst().prefix(limit))
     }
 
     /// Actions that touched an object, newest first (for the object page's history scrubber).
     public func history(of objectID: UUID, limit: Int = 100) -> [OpRecord] {
-        let descriptor = FetchDescriptor<OpRecord>(sortBy: [SortDescriptor(\.createdAt, order: .reverse)])
-        let all = (try? store.context.fetch(descriptor)) ?? []
-        return Array(all.lazy.filter { $0.objectIDs.contains(objectID) }.prefix(limit))
+        Array(newestFirst().lazy.filter { $0.objectIDs.contains(objectID) }.prefix(limit))
+    }
+
+    private func newestFirst() -> [OpRecord] {
+        store.context.all(OpRecord.self).sorted { $0.createdAt > $1.createdAt }
     }
 
     // MARK: Replay

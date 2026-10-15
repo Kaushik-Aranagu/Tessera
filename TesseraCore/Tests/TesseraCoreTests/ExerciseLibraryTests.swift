@@ -1,5 +1,4 @@
 import Foundation
-import SwiftData
 @testable import TesseraCore
 @testable import TesseraTess
 import Testing
@@ -37,7 +36,7 @@ struct ExerciseLibraryTests {
         let freshClasses = try SystemCatalog.seed(in: fresh.mainContext)
         #expect(try ExerciseLibraryInstaller.installIfNeeded(store: freshStore, classes: freshClasses) == true)
         #expect(try ExerciseLibraryInstaller.installIfNeeded(store: freshStore, classes: freshClasses) == false)
-        let all = try container.mainContext.fetch(FetchDescriptor<ClassDef>())
+        let all = container.mainContext.all(ClassDef.self)
         #expect(Set(all.map(\.id)).count == all.count)
         let incline = try #require(installed["inclineDbPress"])
         #expect(all.filter { $0.name == incline.name }.count == 1)

@@ -1,6 +1,5 @@
 import Foundation
 import Observation
-import SwiftData
 import SwiftUI
 import TesseraCore
 
@@ -44,7 +43,7 @@ struct ScheduleItem: Identifiable, Equatable {
 @MainActor
 @Observable
 final class AppModel {
-    let context: ModelContext
+    let context: TesseraContext
     let store: ObjectStore
     private(set) var classes: [SystemCatalog.Key: ClassDef] = [:]
 
@@ -76,7 +75,7 @@ final class AppModel {
     /// Where you were when Tess took you Home; tapping her again goes back.
     var homeReturnPath: [Route]?
 
-    init(context: ModelContext) {
+    init(context: TesseraContext) {
         self.context = context
         store = ObjectStore(context: context)
         do {
@@ -168,20 +167,16 @@ final class AppModel {
     // MARK: Lookup
 
     func object(_ id: UUID) -> ObjectRecord? {
-        try? context.fetch(FetchDescriptor<ObjectRecord>(predicate: #Predicate { $0.id == id })).first
+        store.object(id: id)
     }
 
     func classDef(id: UUID) -> ClassDef? {
-        try? context.fetch(FetchDescriptor<ClassDef>(predicate: #Predicate { $0.id == id })).first
+        store.classDef(id: id)
     }
 
     func objects(of key: SystemCatalog.Key) -> [ObjectRecord] {
-        guard let classID = classes[key]?.id else { return [] }
-        let descriptor = FetchDescriptor<ObjectRecord>(
-            predicate: #Predicate { $0.classDef?.id == classID && $0.deletedAt == nil },
-            sortBy: [SortDescriptor(\.createdAt)]
-        )
-        return (try? context.fetch(descriptor)) ?? []
+        guard let classDef = classes[key] else { return [] }
+        return (classDef.objects ?? []).filter { !$0.isDeleted }.sorted { $0.createdAt < $1.createdAt }
     }
 
     /// The "profile" object of a class: holds class-level values like Bench Press's muscles and cues.

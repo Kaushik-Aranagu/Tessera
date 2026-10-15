@@ -1,6 +1,5 @@
 import Foundation
 import FoundationModels
-import SwiftData
 @testable import TesseraCore
 @testable import TesseraIntents
 @testable import TesseraTess

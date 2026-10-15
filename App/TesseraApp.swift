@@ -1,10 +1,10 @@
-import SwiftData
 import SwiftUI
 import TesseraCore
+import TesseraLegacyStore
 
 @main
 struct TesseraApp: App {
-    private let container: ModelContainer
+    private let container: TesseraContainer
     @State private var model: AppModel
 
     init() {
@@ -13,6 +13,8 @@ struct TesseraApp: App {
         AppClock.configure()
         let container = TesseraSchema.makeContainer()
         self.container = container
+        // Data from builds before GRDB (SwiftData) moves across once, then the old store goes to Backups.
+        try? LegacyStore.migrate(into: container.mainContext)
         let model = AppModel(context: container.mainContext)
         DemoData.prepare(model)
         _model = State(initialValue: model)
@@ -44,6 +46,5 @@ struct TesseraApp: App {
                 }
             }
         }
-        .modelContainer(container)
     }
 }

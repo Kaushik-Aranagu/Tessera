@@ -18,6 +18,7 @@ public struct ResolvedField: Identifiable, Hashable, Sendable {
 }
 
 /// Resolves inheritance: ancestry, traits, effective fields and paths.
+@MainActor
 public enum ClassResolver {
     /// Root first, `classDef` last. Stops at cycles instead of looping forever.
     public static func lineage(of classDef: ClassDef) -> [ClassDef] {

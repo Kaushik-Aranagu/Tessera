@@ -1,25 +1,26 @@
 import Foundation
 import SwiftData
+import TesseraCore
 
 /// One entry in the append-only operation log: a typed action, who did it, and the ops it applied.
 /// State tables (objects, links) are the fast cache; this log is the history behind undo, receipts and export.
 @Model
-public final class OpRecord {
-    public var id: UUID = UUID()
+final class OpRecord {
+    var id: UUID = UUID()
     /// The typed action's name, e.g. "logSet".
-    public var action: String = ""
-    public var actorRaw: String = Actor.user.rawValue
-    public var stateRaw: String = OpState.committed.rawValue
+    var action: String = ""
+    var actorRaw: String = Actor.user.rawValue
+    var stateRaw: String = OpState.committed.rawValue
     /// One line, in Tess's voice, for receipts: "Logged bench press 82.5 × 8".
-    public var summary: String = ""
-    public var createdAt: Date = Date.now
-    public var updatedAt: Date = Date.now
+    var summary: String = ""
+    var createdAt: Date = Date.now
+    var updatedAt: Date = Date.now
     /// The encoded `[Op]`, in the order applied.
-    public var opsData: Data?
+    var opsData: Data?
     /// Objects this action touched, for "what changed this?" lookups.
-    public var objectIDs: [UUID] = []
+    var objectIDs: [UUID] = []
 
-    public init(action: String, actor: Actor, summary: String, ops: [Op], state: OpState) {
+    init(action: String, actor: Actor, summary: String, ops: [Op], state: OpState) {
         id = .v7()
         self.action = action
         actorRaw = actor.rawValue
@@ -30,11 +31,11 @@ public final class OpRecord {
         objectIDs = ops.map(\.objectID).filter { seen.insert($0).inserted }
     }
 
-    public var actor: Actor {
+    var actor: Actor {
         Actor(rawValue: actorRaw) ?? .user
     }
 
-    public var state: OpState {
+    var state: OpState {
         get { OpState(rawValue: stateRaw) ?? .committed }
         set {
             stateRaw = newValue.rawValue
@@ -42,7 +43,7 @@ public final class OpRecord {
         }
     }
 
-    public var ops: [Op] {
+    var ops: [Op] {
         opsData.flatMap { try? JSONDecoder().decode([Op].self, from: $0) } ?? []
     }
 }

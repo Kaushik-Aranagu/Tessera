@@ -39,6 +39,7 @@ enum WeekReview {
     }
 
     /// Tess's one line: the muscle furthest behind its weekly target (over the last seven days), if any is.
+    @MainActor
     static func tessLine(_ volume: [MuscleVolume], target: Int = weeklySetTarget) -> String? {
         guard volume.contains(where: { $0.sets > 0 }),
               let behind = volume.min(by: { $0.sets < $1.sets }), behind.sets < target else { return nil }
@@ -50,11 +51,15 @@ enum WeekReview {
 /// Sets per muscle, read through the object model: workout → entries → sets, entry → exercise class → its
 /// profile's primary muscles (walking up the class chain, so Paused Bench Press counts like Bench Press).
 struct MuscleVolume: Identifiable, Equatable {
+    let id: UUID
     let muscle: ObjectRecord
     let sets: Int
 
-    var id: UUID {
-        muscle.id
+    @MainActor
+    init(muscle: ObjectRecord, sets: Int) {
+        id = muscle.id
+        self.muscle = muscle
+        self.sets = sets
     }
 
     @MainActor

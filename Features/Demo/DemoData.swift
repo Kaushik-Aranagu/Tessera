@@ -1,5 +1,4 @@
 import Foundation
-import SwiftData
 import TesseraCore
 
 /// Seeds a lived-in library through the object model: muscles, equipment, exercise subclasses with profiles,
@@ -20,15 +19,7 @@ enum DemoData {
     }
 
     private static func reset(_ model: AppModel) {
-        let context = model.context
-        try? context.delete(model: ObjectLink.self)
-        try? context.delete(model: ObjectRecord.self)
-        let userClasses = (try? context
-            .fetch(FetchDescriptor<ClassDef>(predicate: #Predicate { $0.systemKey == nil }))) ?? []
-        for classDef in userClasses {
-            context.delete(classDef)
-        }
-        try? context.save()
+        model.store.resetUserData()
     }
 
     // MARK: Library
@@ -149,7 +140,7 @@ enum DemoData {
             ("Cable Fly", 3, 12, 15),
             ("Triceps Pushdown", 3, 12, 25),
         ]
-        let allClasses = (try? model.context.fetch(FetchDescriptor<ClassDef>())) ?? []
+        let allClasses = model.store.allClasses()
         for (index, item) in lineup.enumerated() {
             guard let exercise = allClasses.first(where: { $0.name == item.0 }) else { continue }
             let entry = store.create(entryClass, parent: workout)

@@ -1,12 +1,11 @@
 import Foundation
-import SwiftData
 @testable import TesseraCore
 import Testing
 
 @MainActor
 struct ObjectModelTests {
     let container = TesseraSchema.makeContainer(inMemory: true)
-    var context: ModelContext {
+    var context: TesseraContext {
         container.mainContext
     }
 
@@ -121,8 +120,8 @@ struct ObjectModelTests {
 
         context.delete(workout)
         try context.save()
-        #expect(try context.fetchCount(FetchDescriptor<ObjectRecord>()) == 0)
-        #expect(try context.fetchCount(FetchDescriptor<ObjectLink>()) == 0)
+        #expect(context.count(ObjectRecord.self) == 0)
+        #expect(context.count(ObjectLink.self) == 0)
     }
 
     // MARK: Links & backlinks
@@ -180,7 +179,7 @@ struct ObjectModelTests {
     @Test func seedingIsIdempotentWithStableIDs() throws {
         let first = try SystemCatalog.seed(in: context)
         let second = try SystemCatalog.seed(in: context)
-        #expect(try context.fetchCount(FetchDescriptor<ClassDef>()) == SystemCatalog.Key.allCases.count)
+        #expect(context.count(ClassDef.self) == SystemCatalog.Key.allCases.count)
         #expect(first.mapValues(\.id) == second.mapValues(\.id))
         #expect(first[.benchPress]?.id == SystemCatalog.stableID("system.benchPress"))
 

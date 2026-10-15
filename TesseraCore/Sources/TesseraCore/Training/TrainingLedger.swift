@@ -1,5 +1,4 @@
 import Foundation
-import SwiftData
 
 /// Training history and records, derived from the object graph:
 /// Workout → Exercise Entry (classRef to an exercise class) → Set.
