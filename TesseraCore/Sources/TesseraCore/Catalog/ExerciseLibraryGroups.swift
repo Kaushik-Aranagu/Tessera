@@ -17,7 +17,8 @@ public struct ExerciseGroup: Identifiable {
 
 @MainActor
 public extension ObjectStore {
-    /// The exercise library for pickers, by movement pattern in the library's order, each pattern's exercises by
+    /// The exercise library for pickers (groupings like Curl never show; an exercise with a variant under it does,
+    /// alongside the variant, QA E3), by movement pattern in the library's order, each pattern's exercises by
     /// name, then "Yours" for exercises made outside the patterns. Empty patterns are left out. `root` is the
     /// Exercise class.
     func exerciseGroups(root: ClassDef?) -> [ExerciseGroup] {
@@ -27,13 +28,13 @@ public extension ObjectStore {
         var placed = Set<UUID>()
         var groups: [ExerciseGroup] = patterns.map { pattern in
             let exercises = ClassResolver.descendants(of: pattern).dropFirst()
-                .filter { isConcreteExercise($0, root: root) && ($0.subclasses ?? []).isEmpty }
+                .filter { isConcreteExercise($0, root: root) }
                 .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
             placed.formUnion(exercises.map(\.id))
             return ExerciseGroup(id: pattern.id, pattern: pattern, name: pattern.name, exercises: exercises)
         }
         let yours = everything
-            .filter { !placed.contains($0.id) && isConcreteExercise($0, root: root) && ($0.subclasses ?? []).isEmpty }
+            .filter { !placed.contains($0.id) && isConcreteExercise($0, root: root) }
             .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
         groups.append(ExerciseGroup(id: ExerciseGroup.yoursID, pattern: nil, name: "Yours", exercises: yours))
         return groups.filter { !$0.exercises.isEmpty }

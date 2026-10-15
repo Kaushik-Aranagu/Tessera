@@ -47,9 +47,13 @@ struct ExerciseLibraryTests {
         try ExerciseLibraryInstaller.install(shape: .patternSpine, store: store, classes: classes)
         let strength = try #require(classes[.strengthExercise])
         _ = store.createClass(name: "Landmine Press", parent: strength)
+        let bench = try #require(classes[.benchPress])
+        _ = store.createClass(name: "Paused Bench", parent: bench)
         let groups = store.exerciseGroups(root: classes[.exercise])
         let push = try #require(groups.first { $0.name == "Horizontal Push" })
+        // QA E3: a variant shows beside its parent, which stays loggable.
         #expect(push.exercises.contains { $0.name == "Bench Press" })
+        #expect(push.exercises.contains { $0.name == "Paused Bench" })
         #expect(push.exercises.map(\.name) == push.exercises.map(\.name).sorted {
             $0.localizedStandardCompare($1) == .orderedAscending
         })
@@ -57,7 +61,7 @@ struct ExerciseLibraryTests {
         let shown = groups.flatMap(\.exercises)
         #expect(!shown.contains { $0.name == "Curl" || $0.name == "Isolation" })
         #expect(Set(shown.map(\.id)).count == shown.count)
-        #expect(shown.count == ExerciseLibrary.seeds.count + 1)
+        #expect(shown.count == ExerciseLibrary.seeds.count + 2)
         #expect(groups.last?.name == "Yours" && groups.last?.exercises.map(\.name) == ["Landmine Press"])
     }
 

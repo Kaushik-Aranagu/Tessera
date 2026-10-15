@@ -43,7 +43,9 @@ public extension TrainingLedger {
         }
         let done = dates.map { finishedWorkouts(on: $0, calendar: calendar) }
         let ahead = dates.indices.filter { done[$0].isEmpty && dates[$0] >= today }
-        let perWeek = sessionsPerWeek ?? plan.flatMap { store.number("sessionsPerWeek", of: $0) }.map { Int($0) }
+        // Zero or less means no rhythm (QA E4): every day ahead gets the next routine, as without a count.
+        let perWeek = (sessionsPerWeek ?? plan.flatMap { store.number("sessionsPerWeek", of: $0) }.map { Int($0) })
+            .flatMap { $0 > 0 ? $0 : nil }
         // Spread the sessions still due evenly over the days ahead, today first: 3 over 5 days trains every other day.
         var training = Set(ahead)
         if let perWeek {
