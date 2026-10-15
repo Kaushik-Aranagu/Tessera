@@ -14,14 +14,14 @@ Home has a word rail across the top: **Review · Today · Training**. **Kitchen*
 6. **Finish, and look at the exercise.** Finish the workout and see it saved on Home. Then tap an exercise name to open its page, with your best set and history.
 7. **Plans.** From **Training**, open the week view and the month view.
 8. **Tell Tess.** In the bottom bar, type "log bench 80x8", "buy milk, eggs, 2 lemons", "call mum thursday" or "note: bar felt heavy". Each shows as a faded ghost row that saves after 2 seconds, and you can undo it.
-9. **Groceries.** Open Groceries (from the rail or Kitchen once it's on Home) and see the items from step 8 sorted by aisle. Tap an item to strike it.
-10. **Notes and Review.** Open a note from step 8, then swipe to **Review** to see the week as counts.
+9. **Groceries** *(only if Kitchen is on Home in this build)*. Open Groceries (from the rail or Kitchen once it's on Home) and see the items from step 8 sorted by aisle. Tap an item to strike it.
+10. **Notes and Review** *(only if they're reachable from Home in this build)*. Open a note from step 8, then swipe to **Review** to see the week as counts.
 
 If the recipe page lands before the cut, also paste a recipe's text into the bar and watch it get read.
 
 *If a calm note ever shows at launch, that's the new data-safety guard (#84) protecting your data, not a crash.*
 
-*Known gaps, already queued, so no need to report them: the next session doesn't raise the weight yet after you hit the top of the range, and voice isn't in yet (the mic is hidden). Tapping a logged set to fix it, and editing your routine, arrived in tonight's build, so do try them.*
+*Known gaps, already queued, so no need to report them: if Notes, Groceries, Recipes or Review can't be opened from Home, their entry points didn't make tonight's cut and come in the next build. Cook is hidden until cook mode exists. Also: the next session doesn't raise the weight yet after you hit the top of the range, and voice isn't in yet (the mic is hidden). Tapping a logged set to fix it, and editing your routine, arrived in tonight's build, so do try them.*
 
 ## Look and feel: what to notice (from Design studio)
 

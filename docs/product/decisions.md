@@ -57,3 +57,5 @@
 - **Backup and restore jumps to Core Next 1** (19:37), because nothing protects his data from tomorrow. It makes daily .tessera copies (keeping the newest 7) in an iCloud Drive folder he picks, with a checked restore. The year-of-data generator goes in Later.
 - **Design goes breadthwise** (Kaushik, Design thread 19:37). Today's design shape is the baseline, so cover every upcoming screen with a "just enough" sheet now and deepen each one after use. Planning follows the same rule: more areas at a first version, then iterate.
 - **Money copy stays currency-neutral** ("Groceries, 38.20") until Kaushik answers the home currency question. The default is to store amounts as typed.
+- **Research's three questions** (19:47), all answered with the defaults. The Exercise page's main action is history and progress, while logging stays in the live workout. Cook stays hidden until cook mode (slice 12) lands. We keep the newer Review screen, #44's sentence hero.
+- **One way back into a running workout** (19:47): the lit top seam plus the Live Activity, replacing the six paths.
