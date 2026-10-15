@@ -76,19 +76,18 @@
 
 ## Design studio
 
-**Done (2026-10-15):** kitchen build sheets on branch `claude/project-thread-b3tu3f`, `docs/design/kitchen/`: 13 Groceries (f36ff12), 10/11 Recipe page and paste (8989878), 12 Cook mode, 14 Shelf and 15 Lists v0 (d4957ac). Reviews: Notes v0, Groceries #58 (fixes in the Design thread). M3 steers and Home entry points: `docs/design/m3-steers.md` (60932f4). Live-mode polish values for v1 slice 13: `docs/design/live-polish.md` (742ffda).
+**Done (2026-10-15):** kitchen build sheets on branch `claude/project-thread-b3tu3f`, `docs/design/kitchen/`: 13 Groceries (f36ff12), 10/11 Recipe page and paste (8989878), 12 Cook mode, 14 Shelf and 15 Lists v0 (d4957ac). Reviews: Notes v0, Groceries #58 (fixes in the Design thread). M3 steers and Home entry points: `docs/design/m3-steers.md` (60932f4). Live-mode polish values for v1 slice 13: `docs/design/live-polish.md` (742ffda). Today on Home motion for M2 slices 8 and 9, with a recording: `docs/design/today-on-home.md` (e961d26).
 
-**Now:** Today on Home motion (M2 slice 8). Done when the Now / Next / Later surface and its swipe gestures have a short motion note and a recording.
+**Now:** M4 screen steers: Plan my day (rules), Shutdown, Day log, Focus block Live Activity and the energy check-in (`ship-list-m4.md`).
 
 **Always on:** review each Core or iOS screen as it merges, with file-and-change fixes posted in the Design thread.
 
 **Next:**
-1. M4 screen steers: Plan my day (rules), Shutdown, Day log, Focus block Live Activity and the energy check-in (`ship-list-m4.md`).
-2. A widget and snippet visual language (pulled forward for M4 slice 10).
-3. The task finish moment (M2 slice 9): Ink strike timing and haptic for Builder B.
+1. A widget and snippet visual language (pulled forward for M4 slice 10).
+2. Day strip and day-full warning motion (M2 slices 11 and 13) for Builder B.
+3. Lists screens 9-12 steer pass with the Kitchen lead (`ship-list-lists.md` supersedes my sheet 15 where they differ).
 
 **Later:**
-- Lists screens 9-12 steer pass with the Kitchen lead (`ship-list-lists.md` supersedes my sheet 15 where they differ).
 - The plate-stack concept prototype from `whats-running.md`.
 
 ## Recipes and groceries, then Lists (Kitchen lead)
@@ -107,31 +106,31 @@
 
 ## Research lab
 
-**Done (#65):** M4 scouting, Tess routing with 200 eval phrases, and kitchen v2. Next areas earlier (#59).
+**Done:** #59 next areas; #65 M4 scouting, Tess routing and eval phrases, kitchen v2; #68 widgets and snippets, retention; PR open for `day-log.md` and `m5-money-reading.md`.
 
-**Now:** Day log patterns for M4 slice 5. Done when there's a short brief on journals that write themselves (what to auto-include, how to keep it from becoming noise) and on scrubbing back through days.
+**Now (running):** People and Home upkeep scouting.
 
 **Next:**
-1. Widget and snippet patterns. Done when the best iOS 26/27 interactive widgets and App Intent snippets are scouted for M4 slice 10.
-2. Retention. Done when there's a brief on what makes a personal OS stick past week 3, with 3 to 5 concrete product changes.
-3. M5 scouting for Money and the Reading queue. Done when each has the smallest version, a first-time flow and the pitfalls (Money: no bank data).
+1. Lists and templates pattern scan, for Lists slices 4 and 7 and M3 slice 10. Done when there's a brief on how Things, Reminders, Notion templates and checklist apps handle reusable lists, list templates, "pick one" and pasting a block into a list, with 3 to 5 changes to `ship-list-lists.md`.
+2. Habits that count, not nag, for M3 slice 2 and the "logs fill habits" idle slice. Done when there's a brief on weekly-target models (x of 7), auto-filled check-ins, and what makes habit apps feel like guilt, tied to concrete rules.
+3. Adding a field without feeling like programming, for M3 slices 3, 6 and 10. Done when there's a brief on how Notion, Airtable, Tana and Capacities let people add properties and pick types, plus the smallest "gentle slope" flow for the Class inspector.
+4. Quiet interrupts on iOS, for M4 slice 4. Done when there's a brief on interruption levels, Focus filters and the Time Sensitive limits, and on how to queue low-priority notifications during a workout or cook within what iOS allows.
+5. Body weight trends, for M3 slice 1. Done when there's a brief on smoothing daily swings (moving average or trend weight, as in Happy Scale and Libra) and showing them calmly.
 
 **Later:**
-- People and Home upkeep scouting.
 - Checking the on-device context size (4K vs 8K) once a Mac lead can run it.
 
 ## QA (Repo maintainer)
 
 *No simulator or Swift toolchain in this thread, so QA here is code review on master, not running the app.*
 
-**Now:** review each new merge to master. #46 to #58 are done: 13 bugs, written up in `tessera/qa/review-46-to-58.md` and sent to the coordinator for routing.
+**Now:** reviewing the earlier merges #40 to #45 (Notes, Review, capture and day load), and each new merge as it lands. #46 to #58 are done: 13 bugs plus T1–T6 from the grammar trace, all routed to Core and iOS build.
 
 **Next:**
 1. Re-review the fixes for the 13 findings as they land.
-2. Check the Kitchen lead's phrase set (`docs/product/kitchen-phrases.md`) against the grammar on master, and add workout and task phrases that the kitchen rules must not take over.
-3. Keep the docs index at `docs/README.md` current (merged as #60).
+2. Keep the docs index at `docs/README.md` current (merged as #60).
 
-**Done:** kitchen flow, gym flow and regression checks merged as #63. The review write-up and docs index update merged as #64.
+**Done:** kitchen flow, gym flow and regression checks merged as #63. The review write-up and docs index update merged as #64. The grammar trace (`docs/qa/grammar-trace.md`: 6 new findings T1–T6, and 16 regression phrases) merged as #67.
 
 **Later:**
 - Performance budget checks (launch time, dial at 120 fps). These need a Mac lead to run them.
