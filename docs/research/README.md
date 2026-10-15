@@ -22,3 +22,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [m4-scouting.md](m4-scouting.md) | Product lead, Core engine: M4 calendar and health mounts, Plan my day, Shutdown, focus block |
 | [tess-routing.md](tess-routing.md) | Core engine (Tess engine): grammar first, then on-device model |
 | [tess-eval-phrases.md](tess-eval-phrases.md) | Core engine: 200 capture phrases to test Tess |
+| [kitchen-v2.md](kitchen-v2.md) | Kitchen lead, Core engine: a pantry with no counting, recipes from links |
