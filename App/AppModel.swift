@@ -2,6 +2,8 @@ import Foundation
 import Observation
 import SwiftUI
 import TesseraCore
+import TesseraIntents
+import TesseraTess
 
 /// Something you can navigate to: every name in the UI is a handle to one of these.
 enum Route: Hashable {
@@ -85,7 +87,19 @@ final class AppModel {
         }
         engine = ActionEngine(store: store, classes: classes)
         ledger = TrainingLedger(store: store, classes: classes)
+        runtime = TesseraRuntime(engine: engine)
+        launchNote = switch TesseraSchema.lastOpenOutcome {
+        case .opened: nil
+        case .recoveredWithBackup: "Started fresh; your old data is saved in Backups."
+        case .inMemoryFallback: "Couldn't open your data, so nothing will be saved this time."
+        }
     }
+
+    /// One calm line in Tess's voice when launch didn't go normally (a failed migration). Shown in the Ask bar.
+    var launchNote: String?
+
+    /// Tess's capture engine and the App Intents runtime (Core's TesseraTess / TesseraIntents).
+    @ObservationIgnored private(set) var runtime: TesseraRuntime!
 
     /// Every UI write goes through typed actions, so it lands in the op log with undo (Core engine).
     @ObservationIgnored private(set) var engine: ActionEngine!
@@ -117,6 +131,7 @@ final class AppModel {
             CreateTask(title: title, startsAt: startsAt, minutes: 30), by: .tess, pending: true
         ).record else { return nil }
         pendingCapture = record
+        pendingCaptures = [record]
         let id = record.id
         pendingCaptureID = id
         touch()
@@ -130,12 +145,43 @@ final class AppModel {
     }
 
     func isGhost(_ objectID: UUID) -> Bool {
-        pendingCapture?.objectIDs.contains(objectID) ?? false
+        pendingCaptures.contains { $0.objectIDs.contains(objectID) }
+    }
+
+    /// Everything Tess just proposed (one phrase can become several actions).
+    private(set) var pendingCaptures: [OpRecord] = []
+
+    /// Ask Tess: the grammar or on-device model turns the phrase into pending actions (ghost rows), which dry after
+    /// `captureDryTime` unless tapped or dropped. Returns Tess's one line.
+    func ask(_ phrase: String) async -> String {
+        commitCapture()
+        let result = await runtime.tess.capture(phrase, context: TessContext(now: AppClock.now,
+                                                                             entry: session?.currentEntry?.id))
+        let pending = result.records.filter { $0.state == .pending }
+        if let first = pending.first {
+            pendingCaptures = pending
+            pendingCapture = first
+            let id = first.id
+            pendingCaptureID = id
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .seconds(Self.captureDryTime))
+                if let self, pendingCaptureID == id {
+                    commitCapture()
+                }
+            }
+        }
+        session?.refreshAfterExternalWrite()
+        touch()
+        return result.line
     }
 
     /// Tap, or the stroke finishing: the ghost dries into a real row.
     func commitCapture() {
         guard let record = pendingCapture else { return }
+        for other in pendingCaptures where other.id != record.id {
+            try? engine.commit(other)
+        }
+        pendingCaptures = []
         try? engine.commit(record)
         pendingCapture = nil
         pendingCaptureID = nil
@@ -155,6 +201,10 @@ final class AppModel {
     /// Swipe the ghost away: nothing is written.
     func discardCapture() {
         guard let record = pendingCapture else { return }
+        for other in pendingCaptures.reversed() where other.id != record.id {
+            _ = try? engine.discard(other)
+        }
+        pendingCaptures = []
         _ = try? engine.discard(record)
         pendingCapture = nil
         pendingCaptureID = nil
@@ -390,29 +440,20 @@ final class AppModel {
     }
 
     /// Completed sessions for an exercise class (and its subclasses), newest first.
+    /// Completed sessions for an exercise class (and its subclasses), newest first. Reads Core's training index
+    /// (milliseconds even with years of history) instead of walking backlinks.
     func history(of exercise: ClassDef) -> [SessionSummary] {
         _ = revision
-        let workoutClass = classes[.workout]
-        return store.backlinks(to: exercise, includingSubclasses: true).compactMap { entry in
-            guard let workoutClass, let workout = store.ancestor(of: entry, ofClass: workoutClass),
-                  case let .date(date)? = store.value("endedAt", of: workout) ?? store.value("startedAt", of: workout)
-            else { return nil }
-            let sets = entry.orderedChildren.compactMap { set -> LoggedSet? in
-                guard let weight = store.number("weight", of: set), let reps = store.number("reps", of: set),
-                      let e1RM = store.number("e1rm", of: set) else { return nil }
-                return LoggedSet(weight: weight, reps: reps, e1RM: e1RM)
-            }
-            guard !sets.isEmpty else { return nil }
-            return SessionSummary(id: entry.id, workout: workout, date: date, sets: sets)
+        return ledger.sessions(of: exercise).map { session in
+            SessionSummary(id: session.id, workout: session.workout, date: session.date,
+                           sets: session.sets.map { LoggedSet(weight: $0.weight, reps: $0.reps, e1RM: $0.e1RM) })
         }
-        .sorted { $0.date > $1.date }
     }
 
     func bestSet(of exercise: ClassDef, excludingWorkout excludedID: UUID? = nil) -> LoggedSet? {
-        history(of: exercise)
-            .filter { $0.workout.id != excludedID }
-            .flatMap(\.sets)
-            .max { $0.e1RM < $1.e1RM }
+        _ = revision
+        return ledger.bestSet(of: exercise, excludingWorkout: excludedID)
+            .map { LoggedSet(weight: $0.weight, reps: $0.reps, e1RM: $0.e1RM) }
     }
 
     /// Evaluates the Set class's own `e1rm` expression for values that aren't logged yet.

@@ -54,6 +54,7 @@ struct BottomChrome: View {
     }
 
     private func toggle(_ expanded: Bool) {
+        model.launchNote = nil
         withTesseraAnimation(reduceMotion: reduceMotion) { model.isCommandExpanded = expanded }
     }
 
@@ -74,9 +75,11 @@ struct BottomChrome: View {
             Button { toggle(true) } label: {
                 HStack(spacing: Theme.Spacing.m) {
                     Text(model.lastCapture != nil ? "Added to Later." :
-                        model.pendingCapture != nil ? "Drying. Swipe to drop it." : "Ask Tess, or log 82.5×8")
+                        model.pendingCapture != nil ? "Drying. Swipe to drop it." :
+                        model.launchNote ?? "Ask Tess, or log 82.5×8")
                         .font(Theme.voice)
-                        .foregroundStyle(model.lastCapture != nil || model.pendingCapture != nil
+                        .foregroundStyle(model.lastCapture != nil || model.pendingCapture != nil || model
+                            .launchNote != nil
                             ? Theme.Colors.tess : Theme.Colors.inkSecondary)
                         .lineLimit(1)
                         .contentTransition(.opacity)
@@ -171,11 +174,17 @@ struct BottomChrome: View {
             model.tessMode = .thinking
         }
         Task { @MainActor in
-            // Tess's grammar is instant today; these beats let each state read before the answer lands.
-            try? await Task.sleep(for: .milliseconds(900))
-            model.tessMode = .thinking
-            try? await Task.sleep(for: .milliseconds(500))
-            let reply = CommandInterpreter(model: model).run(text)
+            // Questions about records are answered here; everything else is a capture through Tess's engine
+            // (grammar first, the on-device model when Apple Intelligence is available), shown as ghost rows.
+            let lowered = text.lowercased()
+            let isQuestion = lowered.contains("best") || lowered.contains(" pr") || lowered.hasSuffix("?")
+            let started = Date()
+            let reply = isQuestion ? CommandInterpreter(model: model).run(text) : await model.ask(text)
+            // Let thinking read for a beat even when the answer is instant.
+            let elapsed = Date().timeIntervalSince(started)
+            if elapsed < 0.6 {
+                try? await Task.sleep(for: .seconds(0.6 - elapsed))
+            }
             withTesseraAnimation(reduceMotion: reduceMotion) {
                 feedback = reply
                 model.commandDraft = ""

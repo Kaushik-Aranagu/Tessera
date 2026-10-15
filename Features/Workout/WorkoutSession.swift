@@ -144,6 +144,11 @@ final class WorkoutSession {
     private var skipped: [UUID: Int] = [:]
 
     /// Skips the planned set (e.g. Skip on the Lock Screen once rest is over): the exercise needs one set fewer.
+    /// Something outside the live screen wrote to this workout (Tess, an intent): re-read sets and defaults.
+    func refreshAfterExternalWrite() {
+        loggedCount += 1
+    }
+
     func skipSet() {
         guard let entry = currentEntry, setRows(of: entry).count < targetSets(of: entry) else { return }
         skipped[entry.id, default: 0] += 1

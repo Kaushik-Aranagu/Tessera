@@ -40,6 +40,10 @@ targets:
       - package: TesseraCore
       - package: TesseraCore
         product: TesseraLegacyStore
+      - package: TesseraCore
+        product: TesseraTess
+      - package: TesseraCore
+        product: TesseraIntents
       - target: TesseraWidgets
         embed: true
     settings:
