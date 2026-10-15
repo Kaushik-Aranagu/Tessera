@@ -80,14 +80,16 @@ private struct LegacyExport: Encodable {
         let classDefs = try context.fetch(FetchDescriptor<ClassDef>(sortBy: [SortDescriptor(\.createdAt)]))
         classes = classDefs.map { cls in
             ClassEntry(
-                id: cls.id, name: cls.name, parentID: cls.parent?.id, systemKey: cls.systemKey, symbolName: cls.symbolName,
+                id: cls.id, name: cls.name, parentID: cls.parent?.id, systemKey: cls.systemKey,
+                symbolName: cls.symbolName,
                 colorRole: cls.colorRole, traits: cls.traitsRaw, sortIndex: cls.sortIndex, createdAt: cls.createdAt,
                 packageID: cls.packageID, packageVersion: cls.packageVersion, isUserModified: cls.isUserModified,
                 fields: (cls.ownFields ?? []).sorted { $0.sortIndex < $1.sortIndex }.map { fld in
                     Field(id: fld.id, key: fld.key, name: fld.name, kind: fld.kind, sortIndex: fld.sortIndex,
                           isRequired: fld.isRequired, unit: fld.unit, options: fld.enumOptions,
                           targetClassID: fld.targetClassID,
-                          expression: fld.expression, defaultValue: fld.defaultValue, overridesFieldID: fld.overridesFieldID,
+                          expression: fld.expression, defaultValue: fld.defaultValue,
+                          overridesFieldID: fld.overridesFieldID,
                           isUserModified: fld.isUserModified)
                 }
             )
@@ -96,14 +98,22 @@ private struct LegacyExport: Encodable {
                                uniquingKeysWith: { first, _ in first })
         objects = try context.fetch(FetchDescriptor<ObjectRecord>(sortBy: [SortDescriptor(\.createdAt)])).map { obj in
             ObjectEntry(id: obj.id, classID: obj.classDef?.id, parentID: obj.parent?.id, title: obj.title,
-                        sortIndex: obj.sortIndex, createdAt: obj.createdAt, updatedAt: obj.updatedAt, deletedAt: obj.deletedAt,
+                        sortIndex: obj.sortIndex, createdAt: obj.createdAt, updatedAt: obj.updatedAt,
+                        deletedAt: obj.deletedAt,
                         isClassObject: obj.isClassObject,
                         values: Dictionary(uniqueKeysWithValues: obj.values.storage
                             .map { ($0.key.uuidString, $0.value) }))
         }
         links = try context.fetch(FetchDescriptor<ObjectLink>(sortBy: [SortDescriptor(\.createdAt)])).map { lnk in
-            LinkEntry(id: lnk.id, fieldID: lnk.fieldID, from: lnk.from?.id, toObject: lnk.toObject?.id, toClass: lnk.toClass?.id,
-                      sortIndex: lnk.sortIndex, createdAt: lnk.createdAt)
+            LinkEntry(
+                id: lnk.id,
+                fieldID: lnk.fieldID,
+                from: lnk.from?.id,
+                toObject: lnk.toObject?.id,
+                toClass: lnk.toClass?.id,
+                sortIndex: lnk.sortIndex,
+                createdAt: lnk.createdAt
+            )
         }
         operations = try context.fetch(FetchDescriptor<OpRecord>(sortBy: [SortDescriptor(\.createdAt)])).map { rec in
             OpEntry(id: rec.id, action: rec.action, actor: rec.actor, state: rec.state, summary: rec.summary,
