@@ -118,6 +118,8 @@ final class AppModel {
     private(set) var pendingCapture: OpRecord?
     /// The capture just committed, for the Undo in the Ask Tess bar (about 4 s).
     private(set) var lastCapture: OpRecord?
+    /// Every record the last capture committed (one phrase can log several sets); Undo reverts them all.
+    @ObservationIgnored private var lastCaptures: [OpRecord] = []
     /// Captured ids, so the delayed timers never touch a record that is gone (a reset context, a discard).
     @ObservationIgnored private var pendingCaptureID: UUID?
     @ObservationIgnored private var lastCaptureID: UUID?
@@ -189,6 +191,7 @@ final class AppModel {
         pendingCapture = nil
         pendingCaptureID = nil
         lastCapture = record
+        lastCaptures = committed.contains { $0.id == record.id } ? committed : committed + [record]
         let id = record.id
         lastCaptureID = id
         touch()
@@ -217,9 +220,14 @@ final class AppModel {
     /// Undo in the Ask Tess bar, through the op log.
     func undoLastCapture() {
         guard let record = lastCapture else { return }
+        for other in lastCaptures.reversed() where other.id != record.id {
+            engine.undo(other)
+        }
+        lastCaptures = []
         engine.undo(record)
         lastCapture = nil
         lastCaptureID = nil
+        session?.refreshAfterExternalWrite()
         touch()
     }
 

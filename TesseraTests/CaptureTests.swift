@@ -69,4 +69,17 @@ struct CaptureTests {
         #expect(session.entries.count == 1)
         #expect(!fresh.isWorkoutPresented)
     }
+
+    @Test func undoAfterAMultiSetCaptureTakesBackEverySet() async throws {
+        let workout = try #require(model.tonightWorkout())
+        model.startWorkout(workout)
+        let session = try #require(model.session)
+        let entry = try #require(session.currentEntry)
+        let before = session.setRows(of: entry).count
+        _ = await model.ask("bench 80x8, 82.5x6")
+        model.commitCapture()
+        #expect(session.setRows(of: entry).count == before + 2)
+        model.undoLastCapture()
+        #expect(session.setRows(of: entry).count == before)
+    }
 }
