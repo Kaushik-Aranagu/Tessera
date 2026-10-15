@@ -2,7 +2,7 @@
 
 *Repo maintainer, 2026-10-15. I traced each phrase by hand through `TessGrammar.parse` on master after #62, with the 10 seed recipes plus Carbonara and Weeknight dal present. This was a static read, so nothing was run. Phrase numbers refer to `docs/product/kitchen-phrases.md`. "K:" means `TessGrammar+Kitchen.swift` and "G:" means `TessGrammar.swift`.*
 
-**Parse order:** `parseNote`, then `parseKitchen` (pasted recipe, then list, shop, timer, buy/get, comma list, cook), then `parseRelativeSet`, `parseLift` and `parseTask`. Every kitchen rule runs before the set, lift and task rules. Moving `parseKitchen` after `parseLift`, and putting a date check on buy/get and on timers, fixes most of the rows below.
+**Parse order (current, since #70 and #80):** `parseNote`, then the pasted recipe, then the relative set (only with an exercise in focus), then comma sets, then `parseLift`, then `parseKitchen` (list, shop, timer, buy/get, comma list, cook), then `parseTask`. *When this trace was written, every kitchen rule ran before the set, lift and task rules; most rows below were fixed by moving `parseKitchen` after `parseLift`. The current dispatch, with line references, is in [research/grammar-collisions.md](../research/grammar-collisions.md).*
 
 ## Kitchen phrases that don't match the doc
 
