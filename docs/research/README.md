@@ -87,3 +87,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [fixtures/hint-ledger.md](fixtures/hint-ledger.md) | Core: 15 days of Tess hints (max 3 a day, "Next time, this works"), with the no-hint cases |
 | [fixtures/upkeep-starters.md](fixtures/upkeep-starters.md) | Core: 25 starter chores with intervals, logging phrases and collision checks against the M5 order |
 | [fixtures/cook-timer-phrases.md](fixtures/cook-timer-phrases.md) | Core and Builder A: 40 cook timer phrases (RC15) with expected parses, Tess lines and look-alike guards |
+| [fixtures/review-sentence.md](fixtures/review-sentence.md) | Builder B and Core: 30 weeks with the expected Review hero sentence and dabs, 22 guilt flags with replacement copy |

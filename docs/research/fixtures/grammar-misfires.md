@@ -579,3 +579,59 @@ Also add one plain test that would have caught fact 1: `#expect(TessGrammar.isQu
 3. **`buy` for non-food (RC3).** The Kitchen lead's rows (B5, B16) want `buy train tickets` and `buy new trainers` as tasks, which goes against People Decision 8 (`buy` is always groceries). Which one wins? The revised RC3 follows the Kitchen rows.
 4. **"is" questions (RC5 b).** The code says "is" phrases stay captures. Is `is the gym open sat` a capture?
 5. **Today with a passed time (RC9).** Ask, drop to the model, or keep the past task?
+
+## Post-hotfix check (master db049cb)
+
+Re-traced by hand against `origin/master` at `db049cbedeb6db3563599b9023ed8e2eb592d7b4`, which includes #153 (`82c51d9`, grammar hotfix) and #151 (Home swipe, no grammar change). Same clock, contexts and fixtures as above. Nothing was run. The hotfix touched `TessGrammar.swift` (question guard on the raw `?` and new leads, the shop-run branch, `parsePastLog`, `TessDates.find` with bare hours, passed times, lead words and `bareColon`, reschedule keeping what wasn't said, the plank guard) and `TessGrammar+Kitchen.swift` (`notGroceries` on `buy`/`get`, `shop` during a shop run). Rows whose root cause the hotfix did not touch were not re-traced from scratch; every OK row was spot-checked against the new code, all 60 Kitchen rows and every set and lift row in full.
+
+Expected results follow `product/decisions.md`: the 4:26 PM calls (bare hours; past logs become a note dated that day; "is" phrases ask; a passed time today lands tomorrow), the 4:30 PM call ("buy" with a clearly non-food thing is a task) and the 4:41 PM time-form calls. Where a row's expected column above says "model" for a past log, a dated note now counts as OK (call 2).
+
+### New counts
+
+- **298 rows. Misfires: 56** (was 169): **40 wrong writes** (was 153) and **16 misses** (was 16). 242 rows OK (was 129).
+- 113 rows went from MISFIRE to OK. One row changed from wrong write to miss (row 60). No OK row became a misfire.
+
+### Rows that changed status
+
+| Root cause | Rows now OK | What master does now |
+|---|---|---|
+| RC2 past logs (26) | 1, 4 to 25, 38, 39, 40 | `parsePastLog`: a note dated that past day at noon, the day word dropped ("Watered plants", Sat 10; "Called mum", today; "Saw mum", Sat 10). Row 12 (`paid 40 for gas sat`) is a note dated Sat 10 until Money takes "paid" plus an amount (4:34 PM). Row 25 (`benched 80x8 mon`) is a note "Benched 80x8" dated Mon 12, never a task |
+| RC1 bare hours (23) | 3, 61, 86, 95 to 100, 105, 111, 118, 121 to 124, 145, 146, 148, 149, 193, 205, 298 | `at 7` today is 19:00, `at 3`/`at 4` are 15:00/16:00 and roll to Fri when passed, `dinner`/`drinks` force pm (`dinner tomorrow at 7` is Fri 19:00), `thu at 8` on a Thursday is today 20:00, `at 6` (18:00, equal to now) rolls to Fri 18:00 |
+| RC9 today/tonight (4) | 106, 107, 109, 110 | `tonight at 9` and `at 9 tonight` are today 21:00 (`tonight` is a pm cue). `today at 5` and `today 3pm` have passed, so Fri 17:00 and Fri 15:00 (call 5) |
+| RC3 get/buy (28) | 2, 42 to 58, 132, 133, 134, 279, 281 to 284, 294, 295 | `notGroceries` makes one item a task for Later: person words (`mum`, `her`, `him`, `dad`), the gift shape (`Candy a drink`, `Olive a present`, `Basil some flowers`), service words (`haircut`, `plumber`, `phone`, `photos`, `petrol`, `cash`, `flights`, `tickets`, `present`, `washed`, `jab`, `trainers`) |
+| RC4 shop run (10) | 41, 131, 196 to 203 | `call mum`, `text Olive`, `done`, `thanks`, `finished shopping`, `pick up dry cleaning` go to the model; `shop` writes nothing; `buy milk` is groceries ["milk"] through the kitchen rule; `get mum a card` is a Later task; `sun cream` is groceries (shop branch now uses `hasDate`) |
+| RC10 short weekdays (1) | 204 | `sat nav charger` at the shop is groceries, through the same `hasDate` swap |
+| RC5 questions (10) | 175, 176, 209 to 215, 218 | Raw `?` checked; `is`, `who's`, `do i`, `can i`, `should i` ask. `show` now asks only as `show me/my/all`, so row 218 (`show ravi the flat sat`, was a miss) is the task "Show ravi the flat", Sat 09:00 |
+| RC7 title leftovers (7) | 157, 219, 220, 221, 223, 224, 227 | `on`, `by`, `this`, `for` before a day or time go; a `to` after the date in a reminder goes; trailing `,;:` is trimmed |
+| RC11 colon holds (2) | 119, 120 | `plank 2:30` (I and W) goes to the model: a bare colon time with no day and an exercise title |
+| RC13 reschedule (2) | 125, 126 | Dentist to Fri 10:00; `to 3pm` keeps its Sat 17 day, Sat 15:00 |
+
+Changed but still a misfire:
+
+- **Row 60** (`get protein and do legs`): wrong write to **miss**. `do legs` is an errand item, and a list with one goes to the model (K:52-53). Safe; the split is still RC6.
+- **Rows 90, 165, 167, 169**: the time is now right (today 19:00, Fri 16:00, today 19:00, today 19:00), but the title is still wrong (`Call mum pm`; the set or workout part kept in the title).
+- **Row 29** (`slept at 11`): now the task "Slept", today 23:00 (was Fri 11:00). **Row 30** (`woke up at 6`): task "Woke up", Fri 18:00 (was Fri 06:00). `parsePastLog` needs a day word, so a past verb with only a time still becomes a task. **Row 28** (`ran 5k in 22:15`) is unchanged.
+- **Row 177** (`done for today`, W): the task title is now "Done" (`for` dropped), today 19:00.
+- **Row 184** (`bench 80x8 at 7`): task "Bench 80x8", now today 19:00 (was Fri 07:00).
+
+### Regressions
+
+None among the 298 rows. All 129 rows that were OK still pass, including all 35 OK Kitchen part A rows (239 to 278), the 10 OK part B rows, and every set and lift guard (79, 173, 174, 178, 179, 185, 208, 253 to 255, 261, 276). The checks that mattered: `notGroceries` passes `500 g chicken thighs`, `3 x 400 g tins chickpeas`, `1 (400 g) tin coconut milk` (the gift shape skips a leading digit), `press n seal`, `bench scraper`, `squat rack hooks`, `bin bags`, `batteries`, `flowers for mum`; `need`, `feed`, `weed` stay out of `isPastVerb` (rows 33 to 35); `wake me at 7` stays Fri 07:00; `call mum thu 3pm` stays Thu 22; `dentist sat at 10` stays Sat 10:00.
+
+Things outside the 298 rows that the new code would get wrong (not counted):
+
+1. **The gift shape's look-ahead has no word boundary** (K:164, `(?!(?:a|an|some|us|\d))`). A name that starts with those letters escapes it: `buy Amy a drink`, `get Anu a card`, `get Usha a coffee` stay groceries (unless a service word catches them).
+2. **`pastDay` reads a short weekday anywhere** (G:597), with no `hasDate`-style filter: `fixed the sat nav` becomes the note "Fixed the nav" dated Sat 10.
+3. **`alarm` is still an am cue** (G:476). The 4:50 PM upkeep call says it stops being one. No row here uses it.
+
+### Top 5 remaining root causes, by row count
+
+| Rank | RC | Rows still misfiring | Rows |
+|---|---|---|---|
+| 1 | RC6 no split of a set and an errand | 14 (9 wrong writes, 5 misses) | 59, 60, 160 to 171 |
+| 2 | RC11 time forms (`half 7`, `7.30`, `7 pm`, `morning`, `afternoon`) | 8 | 73, 90, 91 to 94, 115, 116 |
+| 3 | RC12 lift edge cases | 7 | 26, 27, 180 to 184 |
+| 4 (tie) | RC8 comma lists with names | 4 | 136 to 139 |
+| 4 (tie) | RC10 short weekdays outside `hasDate` | 4 | 72, 228, 229, 230 |
+
+Then 3 rows each: RC2 (28 to 30, a past verb with a time but no day), RC15 (189 to 191), RC17 (273 to 275). Then 2: RC3 (135 `get Candy flowers`, 292 `buy time with the landlord`; `with` was left out of the service words). Then 1 each: RC1 (117, `table` is not a pm cue), RC5 (216, `any` is not a lead), RC7 (222, `next` kept by design until GC open question 4), RC14 (177), RC16 (234), RC18 (278), RC19 (260), RC20 (289).

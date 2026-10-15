@@ -304,3 +304,41 @@ Checked against `origin/master` at `254ed5168eda99adaab6aa5b07d27a1f8923e5bd` (`
 5. **`add` by process: `add N` in a workout is the next set (GC 41), `add X` elsewhere is groceries (GC 40) (Core): 2 rows** (15, 46).
 
 Then one row each: drop with no reps (row 7, Core), reminder openers in the normaliser (row 36, Builder B), `prepone` as a reschedule verb (row 57, Core), relative offsets to the model (row 60, Core), and the skip-grammar route (row 74, Builder B).
+
+## Post-hotfix check (master db049cb)
+
+Re-traced by hand against `origin/master` at `db049cbedeb6db3563599b9023ed8e2eb592d7b4`, which includes #153 (`82c51d9`, grammar hotfix) and #151 (Home swipe, no grammar change). Same clock and contexts as the Master check above; the input is each row's normalised text. Nothing was run. The 23 FAIL rows were traced again in full, and every PASS row was spot-checked against what the hotfix changed: the question guard (raw `?`; `is`, `are`, `who`, `where`, `which`; `do/can/should i`), the shop-run branch, `parsePastLog`, `TessDates.find` (bare hours, a passed time rolls to tomorrow, lead words `on`/`by`/`this`/`for` dropped), and `notGroceries` on `buy`/`get`. Expected results follow `product/decisions.md`, the 4:26 PM bare-hour calls and the 4:41 PM time-form calls.
+
+### New counts
+
+- **60 PASS, 20 FAIL** out of 80 (was 57 and 23).
+- Of the 20 FAILs, **7 are wrong writes** (was 10): rows 36, 50, 53, 56, 57, 60, 74. **13 are G\* gaps** that go to the model (unchanged): rows 7 to 11, 15, 26, 46, 61, 64 to 66, 68.
+
+### Rows that changed status
+
+| # | Was | Now | Current parse on master |
+|---|---|---|---|
+| 52 | FAIL (wrong write) | PASS | task "Put the bins out", today 20:00. `Thursday` is today, so the bare 8 takes the next one that hasn't passed |
+| 76 | FAIL (wrong write) | PASS | task "Meeting in Room 101", Fri 16 Oct 15:00. `at 3` is 15:00, already passed, so tomorrow |
+| 77 | FAIL (wrong write) | PASS | task "Book a table for 2", today 19:00 |
+
+Changed result, same status:
+
+- **Row 53** (`Dentist on the 20th at 3:30`): still a wrong write, now task "Dentist on the 20th", Fri 16 Oct 15:30 (was 03:30). The hour is right; `20th` is still not a date.
+- **Row 36**: still a wrong write, now titled "I'd like a reminder to book the MOT" (the `for` before `Friday` is dropped), Fri 09:00.
+- **Row 43** (PASS): the title is now "Send the invoice", Fri 17:00, not "By send the invoice", because `by` before `5pm` is dropped. Better than the row's written intent.
+- **Row 78** (PASS): the title is now "Work nine to five", Sat 09:00 (the `on` before `Saturday` is dropped).
+
+### Regressions
+
+None. The 57 rows that passed still pass. Checked in particular: rows 38, 40, 41 and 44 stay groceries under `notGroceries` (`a pint of milk` finds the dairy aisle on its last word; `some milk`, `1 kg atta` and `0.5 kg dahi` skip the gift shape); row 45 stays groceries in the shop run; row 35 stays Sat 09:00 (`alarm` is an am cue, but the row has no clock time); row 67 (`Paid 120000 rs deposit`) has a past verb but no day, so `parsePastLog` leaves it to the model as before; rows 61 and 65 start with `Spent`, which is not in `pastVerbs`, so they still go to the model.
+
+### Top 5 remaining root causes, by row count
+
+1. **Money grammar, M5 `spend` rule (Core): 6 rows** (26, 61, 64, 65, 66, 68), all G\* gaps.
+2. **RPE `@N` after a full set or `same`, live workout only (Core): 4 rows** (8 to 11), all G\* gaps.
+3. **Relative dates in `TessDates`, `in N min` and `day after tomorrow` (Core): 2 rows** (50, 56), both wrong writes.
+4. **`add` by process, GC 40 and GC 41 (Core): 2 rows** (15, 46), both G\* gaps.
+5. **Ordinal dates, `on the 20th` (Core): 1 row** (53), a wrong write. The bare-hour half of the old fix 3 is done.
+
+Then one row each: drop with no reps (row 7), reminder openers (row 36, Builder B, with a Core backstop), `prepone` as a reschedule verb (row 57), relative offsets to the model (row 60), and the skip-grammar route for a spoken correction (row 74, Builder B). Of the 7 wrong writes left, 5 are Core's (50, 53, 56, 57, 60) and 2 are Builder B's (36, 74).
