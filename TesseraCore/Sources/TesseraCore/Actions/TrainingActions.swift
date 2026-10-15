@@ -360,7 +360,9 @@ public struct SetTaskDone: EngineAction {
 
     public func apply(_ transaction: inout Transaction) throws {
         let task = try transaction.object(task, is: .task)
-        try transaction.set("isDone", to: .bool(done ?? true), on: task)
+        let isDone = done ?? true
+        try transaction.set("isDone", to: .bool(isDone), on: task)
+        try transaction.set("doneAt", to: isDone ? .date(.now) : nil, on: task)
     }
 
     public func summary(in store: ObjectStore) -> String {
