@@ -40,6 +40,7 @@ extension WorkoutSession {
             lastEdit = (result.record, row.number)
             editNote = "Changed set \(row.number) to \(Format.kilograms(weight)) × \(Int(reps))."
             refreshAfterExternalWrite()
+            persistRest()
             model.touch()
         }
         endEditing()

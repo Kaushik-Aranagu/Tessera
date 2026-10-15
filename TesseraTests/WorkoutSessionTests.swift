@@ -395,6 +395,16 @@ struct WorkoutRestRelaunchTests {
         #expect(WorkoutSession(workout: session.workout, model: model).restEndsAt == nil)
     }
 
+    @Test func aRestSurvivesASwapAndARelaunch() throws {
+        let (model, session) = try startedSession()
+        session.logSet()
+        let endsAt = try #require(session.restEndsAt)
+        let option = try #require(session.swapOptions().first)
+        session.swap(to: option)
+        #expect(session.restEndsAt == endsAt)
+        #expect(WorkoutSession(workout: session.workout, model: model).restEndsAt == endsAt)
+    }
+
     @Test func aRestThatEndedWhileTheAppWasGoneIsOver() throws {
         let (model, session) = try startedSession()
         session.logSet()
