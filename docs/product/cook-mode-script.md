@@ -13,7 +13,8 @@
 | 7 | Tap the notification | Cook mode opens on this cook. The finished line flares and step 2 slides back in with a haptic. The current step doesn't change | S03 |
 | 8 | Swipe the app away from the app switcher with the 20-minute timer running, then reopen it | The timer is still there with the right time left, and there's exactly one Lock Screen activity | S06 |
 | 9 | Go to Home, then leave the phone for 15 minutes (or use `-demoTime`) | On return the cook is still running and still Now, not tucked into the ledger | S07 |
-| 10 | Go to the last step and hold **Finish** | The page closes. Any timer still running stops silently. Tess says one line. The Lock Screen activity goes and the recipe's context line reads "cooked today" | S14 |
+| 9b | Back in cook mode, drag the running timer's line left, then tap UNDO | It fades with "Stopped …" and UNDO, and UNDO brings it back with its real time left | |
+| 10 | Go to the last step and hold **Finish** | The page closes. Any timer still running stops silently. Tess says one line. The Lock Screen activity goes and the recipe's context line reads "cooked today". UNDO on Tess's line reopens the cook on its last step | S14 |
 
 **Write down any fail with its step number and a screenshot, and send it to the Kitchen lead.** Steps 5, 6 and 8 matter most: a timer that doesn't alert with the phone locked is the one failure that ruins a dinner.
 
