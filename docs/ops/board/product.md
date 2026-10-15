@@ -12,6 +12,8 @@
 
 **Pending review-guide edits (when the phone gets its next build):** remove the #109 known gap (tap to edit is merged), add back the Today swipe line once QA passes Builder B's hotfix, and add a Groceries check that the last aisle scrolls clear of the closed basket.
 
+**When Core's grammar hotfix reaches the phone:** remove the "typed phrases land wrong" known gap from review-session.md (added 4:26 PM PT).
+
 **When Builder A's cook mode (kitchen slice 12) reaches the phone:** add Kitchen's 10-step `cook-mode-script.md` (#137, f77bb01) to review-session.md as the cook mode item, and drop the "no cook mode" known gap.
 
 **When Builder B's Speak (V1 and V2) reaches the phone:** add Research's `speech-test-script.md` (#138) to review-session.md: 30 phrases, run on a Thursday. It writes to real data, so the guide ends with the cleanup step.

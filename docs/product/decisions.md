@@ -74,3 +74,11 @@
 - **Watch W3 recovery line** (4:13 PM PT, Research #138): a 28-day baseline, no HRV percent on screen, and Plan my day's "light day" never comes from these readings. W3 waits for a small HealthKit read layer, which master doesn't have yet.
 - **W3 asks for Health permission with a one-time line on Now he can tap** (4:20 PM PT). No prompt at launch; if he says no, the line never comes back and Now shows no recovery line.
 - **Show and hints split** (4:22 PM PT, Design's `show-and-hints.md`): Builder B builds the Show layer (Photos · Camera · File) and the hint lines. Core builds PageReader, the routes and the hint ledger, right after the photo field type.
+- **Grammar sweep calls** (4:26 PM PT, Research #143, `fixtures/grammar-misfires.md` open questions). Defaults, so Core isn't blocked:
+  1. Bare hours: 1 to 6 mean PM, and 7 to 11 mean the next one that hasn't passed today; 12 is noon. Tess never asks; the ghost row shows the time, so a wrong pick is one tap or Undo.
+  2. Past logs before Upkeep and People land: the grammar writes a note dated that past day ("Watered plants", Sat). It's true, it shows on the Day log, and Upkeep can adopt it later. Not a task.
+  3. `buy` stays Groceries (People decision 8 and Lists G7); Tess names the list. Non-food `get` (RC3 a to c) goes to tasks as Research proposes.
+  4. "is" questions such as "is the gym open sat" are questions, not captures. They go to the question path (the model), never to a task.
+  5. A time today that has already passed: never write a task in the past. It lands tomorrow at that time, and the ghost row says "Tomorrow, 7 AM" so he sees it.
+- **Grammar comes first** (4:26 PM PT, coordinator). Core's order is N1, then a hotfix for the sweep's top 5 root causes, then the polish PR, then the rest of the grammar batch, then Day log v1, then meal plan feeds groceries. Until the hotfix lands, the review guide says typed past-tense or bare-hour phrases can land wrong and Undo fixes them.
+

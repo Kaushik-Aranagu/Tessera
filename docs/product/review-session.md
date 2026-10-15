@@ -25,6 +25,7 @@ Home has a word rail across the top: **Review · Today · Training · Kitchen**.
 - *Tapping a logged set to fix it comes with #109. Undo of the last set works now.*
 - *Voice isn't in yet (Speak says "comes next").*
 - *Cook mode isn't built yet.*
+- *Some typed phrases still land wrong, especially past tense ("watered plants sat") or a bare hour ("coffee at 7" can land at 7 AM). Undo fixes them, and a grammar fix is next in line.*
 
 ## Look and feel: what to notice (from Design studio)
 
