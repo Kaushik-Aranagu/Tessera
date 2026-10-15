@@ -32,10 +32,12 @@
 - Quantities read as in groceries ("2 t-shirts" → quantity "2", text "t-shirts").
 - `AddListItems(list, lines)` adds many in one op; undo removes all of them.
 - A blank or whitespace-only paste is refused.
+- The paste shows a change preview (items, sections, checked) before anything is written; dismissing it writes nothing.
 
 ## 4. Reusable lists (engine)
 - The flag is off by default; turning it on is undoable.
 - On a reusable list "clear done" unchecks instead of deleting; item count is unchanged.
+- `CopyList(list, name:)` makes a new list with the same sections and items, all open, in one op; the original is untouched. Nothing in the API or copy says "template".
 - Groceries can't be made reusable (it has recurring items later in Kitchen v2 instead).
 
 ## 5. Run a list on Now (engine)
@@ -52,7 +54,7 @@
 ## 7. Pick one (engine)
 - `pick(from:)` returns only open items and nil for an empty list.
 - Given a fixed seed and three items, one of which was picked in the last 7 days, that one is never chosen while others exist.
-- Picking stamps `pickedAt`; it is undoable but doesn't appear in "What Tess did" unless Tess did it.
+- Accepting a pick (opening it) stamps `pickedAt`; a skip doesn't. Picking never checks the item. Undoable; it shows in "What Tess did" only if Tess did it.
 
 ## 8. List phrases (engine)
 - The Lists rows (41-48) in `kitchen-phrases.md` pass.
