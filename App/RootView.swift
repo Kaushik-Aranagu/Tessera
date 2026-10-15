@@ -30,6 +30,10 @@ struct RootView: View {
                 }
                 .tint(Theme.Colors.ink)
                 .environment(\.zoomNamespace, zoom)
+                // Room for Tess's soul (a 64 pt corner overlay), so the last row of any page can scroll clear of it.
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    Color.clear.frame(height: 56).allowsHitTesting(false)
+                }
                 BottomChrome(onSoulDoubleTap: goHome)
                     .environment(\.zoomNamespace, zoom)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
