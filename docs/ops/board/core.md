@@ -1,10 +1,11 @@
 # Core engine (Mac)
 
-**Done:** Groceries screen, kitchen slice 13 (#58); the kitchen engine hotfix (#70).
+**Done:** Groceries screen, kitchen slice 13 (#58); kitchen engine hotfixes (#70, #80).
 
-**Now:** Recipe page and Paste a recipe. Done when slices 10 and 11 in `ship-list-kitchen.md` are met.
+**Now:** the D1–D4 data-safety PR.
 
 **Next:**
+0. Recipe page and Paste a recipe. Done when slices 10 and 11 in `ship-list-kitchen.md` are met.
 1. Groceries polish. Done when Design's and the kitchen lead's fixes to #58 are merged.
 2. Meal plan feeds groceries (the idle-time slice below).
 3. Cook mode. Done when slice 12 in `ship-list-kitchen.md` is met: timers on the Lock Screen and a Cook entry on finish. Core builds the live screen too, and Builder A reviews the shared instruments.
