@@ -26,7 +26,8 @@ extension TessGrammar {
             return name.isEmpty ? nil : .list(name: name.prefix(1).uppercased() + name.dropFirst())
         }
         if ["shop", "start shopping", "shopping", "go shopping", "at the shop"].contains(text) {
-            return .shop
+            // Already shopping: nothing to start.
+            return context.process == Groceries.listID ? nil : .shop
         }
         // "remind me to reset the oven timer at 9 tomorrow" is a task: no kitchen reading for explicit tasks, and a
         // timer never has a day.
@@ -44,6 +45,13 @@ extension TessGrammar {
             // coffee").
             if text.hasPrefix("get "), !lines.allSatisfy(isGettable) {
                 return nil
+            }
+            // People, gifts, services and errands aren't groceries, after "buy" or "get" (Product: a clearly non-food
+            // thing is a task; unclear stays Groceries). One such item is a task for Later; a list with one goes to
+            // the model.
+            if text.hasPrefix("get ") || text.hasPrefix("buy "), lines.contains(where: notGroceries) {
+                guard lines.count == 1 else { return nil }
+                return .task(title: trimmed.prefix(1).uppercased() + trimmed.dropFirst(), startsAt: nil)
             }
             return lines.isEmpty ? nil : .groceries(lines: lines)
         }
@@ -143,6 +151,29 @@ extension TessGrammar {
         let verbs: Set = ["call", "email", "text", "ring", "book", "pay", "fix", "clean", "skip", "meet", "send",
                           "write", "check", "ask", "tell", "pick", "drop", "visit", "go", "do", "make", "finish"]
         return item.split(separator: " ").first.map { verbs.contains($0.lowercased()) } ?? false
+    }
+
+    /// After "buy" or "get": a person ("mum a card"), a gift shape ("Olive a present"), "a/an" plus something that
+    /// isn't food ("a haircut"), a service or non-shop word ("tickets", "petrol"), or an errand verb.
+    func notGroceries(_ item: String) -> Bool {
+        let lower = item.lowercased()
+        let people = /^(mum|mom|dad|nan|nana|gran|granny|grandma|grandad|grandpa|sis|bro|wife|husband|partner|kids|boss|her|him|them)\b/
+        if lower.firstMatch(of: people) != nil || Self.startsWithErrand(lower) {
+            return true
+        }
+        if lower.firstMatch(of: /^(?!(?:a|an|some|us|\d))\S+\s+(?:a|an|some)\s+\S/) != nil {
+            return true
+        }
+        let services = /\b(haircut|jab|appointment|tickets?|flights?|phone|trainers|shoes|present|gift|plumber|petrol|cash|photos?|washed|booked|serviced|fixed)\b/
+        if lower.firstMatch(of: services) != nil {
+            return true
+        }
+        if let rest = lower.firstMatch(of: /^(?:a|an)\s+(.+)$/)?.1 {
+            let name = String(rest)
+            return AisleGuide.aisle(for: name) == nil && IngredientBook(store: store, classes: classes)
+                .find(name) == nil
+        }
+        return false
     }
 
     /// "get coffee" yes; "get up early", "get the car serviced", "get 5x5 squats done" no.

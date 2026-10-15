@@ -107,8 +107,11 @@ public final class TessCaptureEngine: TessCapturing {
             let record = try engine.perform(CreateTask(title: title, startsAt: startsAt), by: .tess, pending: pending)
                 .record
             return (record, startsAt.map { "\(title), \(Self.when($0, context: context))." } ?? "\(title), in Later.")
-        case let .note(body):
-            let record = try engine.perform(CreateNote(body: body), by: .tess, pending: pending).record
+        case let .note(body, on):
+            let record = try engine.perform(CreateNote(body: body, on: on), by: .tess, pending: pending).record
+            if let on, !context.calendar.isDate(on, inSameDayAs: context.now) {
+                return (record, "Noted for \(Self.when(on, context: context).split(separator: " ").first ?? "then").")
+            }
             let links = record.ops.count {
                 if case .setLinks = $0 {
                     true

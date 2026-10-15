@@ -326,6 +326,13 @@ private struct ShopTitle: View {
                 started += 1
                 held = true
                 onHold()
+                // If the shop didn't start, the title is still here: drain it back to ink (QA G8). Once the shop
+                // starts this view is gone, so nothing runs.
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(700))
+                    held = false
+                    withTesseraAnimation(.smooth(duration: 0.22), reduceMotion: reduceMotion) { fill = 0 }
+                }
             } onPressingChanged: { pressing in
                 if pressing {
                     withTesseraAnimation(.smooth(duration: 0.7), reduceMotion: reduceMotion) { fill = 1 }
