@@ -45,7 +45,6 @@ private struct WorkoutContent: View {
     /// The lane's scroll position (x). Kept in step with `session.currentIndex` both ways.
     @State private var laneIndex: Int?
     @State private var tessMode: TessSoul.Mode = .idle
-    @State private var lockHaptic = 0
     @State private var celebrated = 0
     @State private var undoHaptic = 0
     @State private var revealHaptic = 0
@@ -139,11 +138,7 @@ private struct WorkoutContent: View {
         }
         .onChange(of: session.lastSeated) { _, seated in
             guard let seated else { return }
-            Task { @MainActor in
-                // The key lands the set (rigid); it locks (success) once its stroke has painted in.
-                try? await Task.sleep(for: .milliseconds(700))
-                lockHaptic += 1
-            }
+            // One haptic per set: the key's rigid impact as it lands (no second "lock" after the stroke).
             if seated.records.isEmpty {
                 play(.done)
             } else {
@@ -151,7 +146,6 @@ private struct WorkoutContent: View {
                 play(.thinking, then: .done, after: 1.2)
             }
         }
-        .sensoryFeedback(.success, trigger: lockHaptic)
         .sensoryFeedback(.decrease, trigger: undoHaptic)
         .sensoryFeedback(.impact(weight: .light), trigger: revealHaptic)
     }
@@ -542,7 +536,7 @@ extension WorkoutContent {
     private func keyRow(phase: WorkoutSession.Phase) -> some View {
         HStack(spacing: Theme.Spacing.l) {
             if session.isEditing {
-                EditSetKeys(session: session) { lockHaptic += 1 }
+                EditSetKeys(session: session) {}
             } else {
                 switch phase {
                 case .set:

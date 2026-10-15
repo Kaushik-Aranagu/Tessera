@@ -230,7 +230,15 @@ final class AppModel {
     func tidyProcesses(now: Date = AppClock.now) {
         let idleLimit = (session?.restSeconds ?? 180) + 10 * 60
         let table = ProcessTable(engine: engine)
-        table.suspendIfIdle(now: now, idleLimit: idleLimit)
+        // While the live cover is up (a long locked rest, cardio) the workout is in use: never suspend it, and if
+        // something already did, run it again.
+        if isWorkoutPresented {
+            if let workout = session?.workout, let process = table.process(for: workout), process.state != .running {
+                _ = try? engine.perform(ResumeProcess(process: process.id, time: now), by: .system)
+            }
+        } else {
+            table.suspendIfIdle(now: now, idleLimit: idleLimit)
+        }
         processNotes = table.tidy(now: now)
         pickUpRunningWorkout(table)
         // A workout left untouched for 6 hours is wrapped up by Core; let the live session go with it.
