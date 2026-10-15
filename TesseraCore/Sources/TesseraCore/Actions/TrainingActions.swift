@@ -83,28 +83,34 @@ public struct LogSet: EngineAction {
     }
 }
 
-/// Changes a logged set. Nil arguments stay as they are.
+/// Changes a logged set. Nil arguments stay as they are; `clearRPE` removes the RPE.
 public struct EditSet: EngineAction {
     public static let descriptor = ActionDescriptor(name: "editSet", summary: "Change a logged set", parameters: [
         .init("set", .object, "The set to change"),
         .init("weight", .number, "New weight in kilograms", required: false),
         .init("reps", .integer, "New repetitions", required: false),
         .init("rpe", .number, "New RPE", required: false),
+        .init("clearRPE", .boolean, "True to remove the RPE", required: false),
     ])
 
     public var set: UUID
     public var weight: Double?
     public var reps: Double?
     public var rpe: Double?
+    public var clearRPE: Bool?
 
-    public init(set: UUID, weight: Double? = nil, reps: Double? = nil, rpe: Double? = nil) {
+    public init(set: UUID, weight: Double? = nil, reps: Double? = nil, rpe: Double? = nil, clearRPE: Bool? = nil) {
         self.set = set
         self.weight = weight
         self.reps = reps
         self.rpe = rpe
+        self.clearRPE = clearRPE
     }
 
     public func apply(_ transaction: inout Transaction) throws {
+        if clearRPE == true, rpe != nil {
+            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "rpe and clearRPE together")
+        }
         try validateSet(weight: weight ?? 0, reps: reps ?? 1, rpe: rpe, action: Self.descriptor.name)
         let set = try transaction.object(set, is: .set)
         if let weight {
@@ -113,7 +119,9 @@ public struct EditSet: EngineAction {
         if let reps {
             try transaction.set("reps", to: .number(reps), on: set)
         }
-        if let rpe {
+        if clearRPE == true {
+            try transaction.set("rpe", to: nil, on: set)
+        } else if let rpe {
             try transaction.set("rpe", to: .number(rpe), on: set)
         }
     }

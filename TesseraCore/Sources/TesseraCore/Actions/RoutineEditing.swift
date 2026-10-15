@@ -113,6 +113,36 @@ public struct EditSlot: EngineAction {
     }
 }
 
+/// Removes a slot from its routine; the others close up. Past workouts keep their sets. Undo puts it back in place.
+public struct RemoveSlot: EngineAction {
+    public static let descriptor = ActionDescriptor(
+        name: "removeSlot",
+        summary: "Remove an exercise from a routine",
+        parameters: [.init("slot", .object, "The slot")],
+        isDestructive: true
+    )
+
+    public var slot: UUID
+
+    public init(slot: UUID) {
+        self.slot = slot
+    }
+
+    public func apply(_ transaction: inout Transaction) throws {
+        let slot = try transaction.object(slot, is: .slot)
+        let siblings = slot.parent?.orderedChildren.filter { $0.id != slot.id } ?? []
+        transaction.delete(slot)
+        for (index, sibling) in siblings.enumerated() {
+            transaction.setSortIndex(index, on: sibling)
+        }
+    }
+
+    public func summary(in store: ObjectStore) -> String {
+        let name = store.object(id: slot).flatMap { store.linkedClass("exercise", of: $0)?.name } ?? "the exercise"
+        return "Removed \(name)"
+    }
+}
+
 /// Replaces a slot's exercise (keeps its sets, reps and rule).
 public struct SwapSlotExercise: EngineAction {
     public static let descriptor = ActionDescriptor(

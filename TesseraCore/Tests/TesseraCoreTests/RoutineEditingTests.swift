@@ -30,10 +30,13 @@ struct RoutineEditingTests {
         let dbPress = try #require(store.classDef(id: SystemCatalog.stableID("library.dbBenchPress")))
         try engine.perform(SwapSlotExercise(slot: pushA.orderedChildren[2].id, exercise: dbPress.id), by: .user)
         #expect(names()[2] == dbPress.name)
-        let remove = try engine.perform(DeleteObject(object: pushA.orderedChildren[4].id), by: .user)
-        #expect(names().count == 4)
+        let before = names()
+        let remove = try engine.perform(RemoveSlot(slot: pushA.orderedChildren[1].id), by: .user)
+        #expect(remove.record.summary == "Removed \(before[1])")
+        #expect(names() == before.enumerated().filter { $0.offset != 1 }.map(\.element))
+        #expect(pushA.orderedChildren.map(\.sortIndex) == [0, 1, 2, 3])
         engine.undo(remove.record)
-        #expect(names().count == 5)
+        #expect(names() == before)
 
         // A started workout follows the edited routine.
         let workout = try engine.perform(StartRoutine(routine: pushA.id), by: .user).output

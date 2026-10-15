@@ -127,7 +127,7 @@ struct WorkoutsModelTests {
         _ = try finishedWorkout(daysAgo: 3, [(80, 12), (80, 12), (80, 12)])
         let raise = ledger.nextTarget(for: bench)
         #expect(raise.weight == 82.5 && raise.reps == 8)
-        #expect(raise.reason == "Every set hit 12 last time, so +2.5 kg")
+        #expect(raise.reason == "Up 2.5 kg from last time")
 
         // A slot's rule overrides the class's.
         let routine = try engine.perform(CreateRoutine(title: "Push Day A"), by: .user).output

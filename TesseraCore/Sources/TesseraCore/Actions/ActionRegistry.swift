@@ -9,7 +9,7 @@ public enum ActionRegistry {
         RenameObject.descriptor, DeleteObject.descriptor, StartProcess.descriptor, SaveContext.descriptor,
         SuspendProcess.descriptor, ResumeProcess.descriptor, EndProcess.descriptor, CreateRoutine.descriptor,
         AddSlot.descriptor, StartRoutine.descriptor, CreatePlan.descriptor, LogNextSet.descriptor, MoveSlot.descriptor,
-        EditSlot.descriptor,
+        EditSlot.descriptor, RemoveSlot.descriptor,
         SwapSlotExercise.descriptor,
         SwapEntryExercise.descriptor, MoveTask.descriptor, CreateNote.descriptor, EditNote.descriptor,
         StartShop.descriptor, FinishShop.descriptor,
@@ -102,6 +102,7 @@ public enum ActionRegistry {
         LogNextSet.descriptor.name: { try decode(LogNextSet.self, LogNextSet.descriptor.name, $0) },
         MoveSlot.descriptor.name: { try decode(MoveSlot.self, MoveSlot.descriptor.name, $0) },
         EditSlot.descriptor.name: { try decode(EditSlot.self, EditSlot.descriptor.name, $0) },
+        RemoveSlot.descriptor.name: { try decode(RemoveSlot.self, RemoveSlot.descriptor.name, $0) },
         SwapSlotExercise.descriptor.name: { try decode(SwapSlotExercise.self, SwapSlotExercise.descriptor.name, $0) },
         SwapEntryExercise.descriptor
             .name: { try decode(SwapEntryExercise.self, SwapEntryExercise.descriptor.name, $0) },
