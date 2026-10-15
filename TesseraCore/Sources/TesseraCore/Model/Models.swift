@@ -536,6 +536,20 @@ public final class OpRecord: TesseraModel, AttachableModel {
         didSet { didChange() }
     }
 
+    /// For Tess's actions: which route produced it (grammar, on-device, Claude). Nil for everything else.
+    public var routeRaw: String? {
+        didSet { didChange() }
+    }
+
+    /// For model routes: the model's name, e.g. "claude-haiku-5-5".
+    public var model: String? {
+        didSet { didChange() }
+    }
+
+    public var route: OpRoute? {
+        routeRaw.flatMap(OpRoute.init(rawValue:))
+    }
+
     public init(action: String, actor: Actor, summary: String, ops: [Op], state: OpState) {
         id = .v7()
         self.action = action
@@ -562,4 +576,9 @@ public final class OpRecord: TesseraModel, AttachableModel {
     public var ops: [Op] {
         opsData.flatMap { try? JSONDecoder().decode([Op].self, from: $0) } ?? []
     }
+}
+
+/// Which of Tess's routes performed an action, kept on its op record for receipts ("via Claude") and evals.
+public enum OpRoute: String, Codable, Sendable, CaseIterable {
+    case grammar, onDevice, claude
 }

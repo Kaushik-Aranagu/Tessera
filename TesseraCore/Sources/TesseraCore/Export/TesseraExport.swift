@@ -71,6 +71,9 @@ public struct TesseraExport: Codable, Sendable {
         public var createdAt: Date
         public var updatedAt: Date
         public var ops: [Op]
+        /// Tess's route and model (older exports leave them out).
+        public var route: String?
+        public var model: String?
     }
 
     public var format = Self.format
@@ -131,7 +134,8 @@ public extension TesseraExport {
         }
         operations = opRecords.map { record in
             OpEntry(id: record.id, action: record.action, actor: record.actor, state: record.state,
-                    summary: record.summary, createdAt: record.createdAt, updatedAt: record.updatedAt, ops: record.ops)
+                    summary: record.summary, createdAt: record.createdAt, updatedAt: record.updatedAt, ops: record.ops,
+                    route: record.routeRaw, model: record.model)
         }
     }
 
@@ -154,23 +158,19 @@ public extension TesseraExport {
     }
 
     /// Restores into an empty store, keeping every id, so links, history and the op log stay intact.
-    /// With `replacingSeeded`, a store that holds only what launch seeded (nobody has done anything in it yet: no op
-    /// log) is cleared first, so a migration that failed once can still run on a later launch.
-    func restore(into context: TesseraContext, replacingSeeded: Bool = false) throws {
+    /// With `merging`, the store may already hold things (launch seeding, or what was done since a migration first
+    /// failed): anything whose id is already there is kept as it is, and everything else from the export is added.
+    /// That's how a pending legacy migration still lands after the app has been used.
+    func restore(into context: TesseraContext, merging: Bool = false) throws {
         let empty = context.count(ObjectRecord.self) == 0 && context.count(ClassDef.self) == 0
-        if !empty, replacingSeeded, context.count(OpRecord.self) == 0 {
-            context.deleteAll(ObjectLink.self)
-            context.deleteAll(ObjectRecord.self)
-            context.deleteAll(ViewDef.self)
-            context.deleteAll(FieldDef.self)
-            context.deleteAll(ClassDef.self)
-            try context.save()
-        } else if !empty {
+        if !empty, !merging {
             throw ExportError.storeNotEmpty
         }
 
-        var classByID: [UUID: ClassDef] = [:]
-        for entry in classes {
+        var classByID: [UUID: ClassDef] = context.classes
+        var newClasses = Set<UUID>()
+        for entry in classes where classByID[entry.id] == nil {
+            newClasses.insert(entry.id)
             let classDef = ClassDef(name: entry.name, symbolName: entry.symbolName, colorRole: entry.colorRole,
                                     systemKey: entry.systemKey)
             classDef.id = entry.id
@@ -196,12 +196,14 @@ public extension TesseraExport {
                 field.owner = classDef
             }
         }
-        for entry in classes {
+        for entry in classes where newClasses.contains(entry.id) {
             classByID[entry.id]?.parent = entry.parentID.flatMap { classByID[$0] }
         }
 
-        var objectByID: [UUID: ObjectRecord] = [:]
-        for entry in objects {
+        var objectByID: [UUID: ObjectRecord] = context.objects
+        var newObjects = Set<UUID>()
+        for entry in objects where objectByID[entry.id] == nil {
+            newObjects.insert(entry.id)
             let object = ObjectRecord(title: entry.title, classDef: nil)
             object.id = entry.id
             object.sortIndex = entry.sortIndex
@@ -217,10 +219,10 @@ public extension TesseraExport {
             object.updatedAt = entry.updatedAt
             objectByID[entry.id] = object
         }
-        for entry in objects {
+        for entry in objects where newObjects.contains(entry.id) {
             objectByID[entry.id]?.parent = entry.parentID.flatMap { objectByID[$0] }
         }
-        for entry in links {
+        for entry in links where context.links[entry.id] == nil {
             let link = ObjectLink(fieldID: entry.fieldID, sortIndex: entry.sortIndex)
             link.id = entry.id
             link.createdAt = entry.createdAt
@@ -229,12 +231,14 @@ public extension TesseraExport {
             link.toObject = entry.toObject.flatMap { objectByID[$0] }
             link.toClass = entry.toClass.flatMap { classByID[$0] }
         }
-        for entry in operations {
+        for entry in operations where context.operations[entry.id] == nil {
             let record = OpRecord(action: entry.action, actor: entry.actor, summary: entry.summary, ops: entry.ops,
                                   state: entry.state)
             record.id = entry.id
             record.createdAt = entry.createdAt
             record.updatedAt = entry.updatedAt
+            record.routeRaw = entry.route
+            record.model = entry.model
             context.insert(record)
         }
         try context.save()
