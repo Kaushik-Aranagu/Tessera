@@ -34,6 +34,16 @@ List block and its undoable actions; ingredient line parsing (fractions, ranges,
 
 Not blocking: the page scrolls as a whole when the list is long. That is fine for groceries; keep the hero and writing line in place if it starts to feel long in use.
 
+# Groceries design pass (#124, 5258866)
+
+*Checked the `GroceriesView.swift` diff and `docs/recordings/19-groceries-design-pass.mp4` against the two #118 notes.* **Pass.**
+- At the shop, "then Bakery" is now set in body type at 35% ink, under the items, so the aisle you're in reads loudest.
+- The basket is now a soft veil with one hairline instead of a hard sheet. When it opens, the page dims and a tap folds it again.
+- Holding "Clear the basket" leaves "Cleared 2 from the basket." in Tess's ink with Undo for 6 s.
+- Amounts are at 600 and names at 400. The writing line opens with an "Add" label at the Label tier.
+
+Still to confirm in use (not blocking): the last aisle's title still sits under the closed basket veil ("Dairy" at the bottom). The veil makes the overlap soft, and the list scrolls, but check on the phone that the last aisle can scroll fully clear of the veil. If it can't, raise the bottom padding to the veil's height.
+
 # Groceries polish (#118, a07f6a0)
 
 *Checked the `GroceriesView.swift` diff and `docs/recordings/16-groceries-polish.mp4` against the four #58 fixes above.* **Pass. All four are fixed.**
