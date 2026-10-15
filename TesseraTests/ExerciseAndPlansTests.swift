@@ -119,41 +119,37 @@ struct ExerciseAndPlansTests {
         TrainedSession(workoutID: UUID(), date: october(day), routine: routine, volume: 5000)
     }
 
-    @Test func weekRollsOnWithRestAfterToday() {
-        // The mockup: Push, Pull, Legs done; Push today; Friday rest; Pull and Legs at the weekend.
-        let week = PlanWeek.build(
-            now: october(15, 15), calendar: calendar,
-            sessions: [session(12, "Push"), session(13, "Pull"), session(14, "Legs")],
-            rhythm: .init(cycle: ["Push", "Pull", "Legs"], next: "Push", perWeek: PlanRhythm.perWeek(cycleCount: 3)),
-            todayWorkout: nil
-        )
-        #expect(week.days.map(\.state) == [.done, .done, .done, .today, .rest, .planned, .planned])
-        #expect(week.days.map(\.routine) == ["Push", "Pull", "Legs", "Push", nil, "Pull", "Legs"])
-        #expect(week.days.map(\.paint) == [.vermilion, .cobalt, .cadmium, .vermilion, nil, .cobalt, .cadmium])
-        #expect(week.headline == "3 of 6\nsessions")
+    @Test func weekComesFromCoreAndRollsOnFromToday() throws {
+        // Fresh install: his PPL×2, nothing done. Today is Push A and the days after roll on in order.
+        let model = AppModel(context: container.mainContext)
+        let now = AppClock.now
+        let week = PlanData(model: model, plan: nil, now: now).week(now: now)
+        let todayIndex = try #require(week.days.firstIndex { $0.state == .today })
+        #expect(week.days[todayIndex].routine == "Push A")
+        let after = week.days[(todayIndex + 1)...].map(\.routine)
+        #expect(Array(after) == Array(["Pull A", "Legs A", "Push B", "Pull B", "Legs B", "Push A"].prefix(after.count)))
+        #expect(week.days[..<todayIndex].allSatisfy { $0.state == .open }) // past days are never "missed"
+        #expect(week.headline == "0 of 6\nsessions")
     }
 
-    @Test func missedDaysCreateNoDebt() {
-        let week = PlanWeek.build(
-            now: october(15, 15), calendar: calendar, sessions: [session(12, "Push")],
-            rhythm: .init(cycle: ["Push", "Pull", "Legs"], next: "Pull", perWeek: 6), todayWorkout: nil
-        )
-        // Tuesday and Wednesday stay neutral; the plan simply continues with Pull today.
-        #expect(week.days[1].state == .open && week.days[2].state == .open)
-        #expect(week.days[3].state == .today && week.days[3].routine == "Pull")
-        #expect(Array(week.days[4...].map(\.routine)) == ["Legs", "Push", "Pull"])
-    }
-
-    @Test func withoutAPlanTheWeekOnlyCounts() {
-        let id = UUID()
-        let week = PlanWeek.build(
-            now: october(15, 15), calendar: calendar, sessions: [session(12, "Push Day A")],
-            rhythm: .init(), todayWorkout: ("Push Day A", id)
-        )
-        #expect(week.days[3].state == .today && week.days[3].workoutID == id)
-        #expect(Array(week.days[4...].map(\.state)) == [.open, .open, .open])
-        #expect(week.headline == "1 session\nso far")
-        #expect(RoutinePaint.short("Push Day A") == "Push")
+    @Test func aFinishedWorkoutMarksTodayDoneAndThePlanRollsOn() throws {
+        let model = AppModel(context: container.mainContext)
+        let routine = try #require(model.todaysRoutine())
+        model.startRoutine(routine)
+        let session = try #require(model.session)
+        session.logSet()
+        session.finish(early: true)
+        model.session = nil
+        model.touch()
+        let now = AppClock.now
+        let week = PlanData(model: model, plan: nil, now: now).week(now: now)
+        let today = try #require(week.days.first { Calendar.current.isDate($0.date, inSameDayAs: now) })
+        #expect(today.state == .done && today.routine == "Push A" && today.workoutID == session.workout.id)
+        let next = week.days.first { $0.date > today.date }
+        if let next {
+            #expect(next.state == .planned && next.routine == "Pull A")
+        }
+        #expect(week.done == 1)
     }
 
     @Test func rhythmAndMuscleCounts() {
@@ -195,5 +191,14 @@ struct ExerciseAndPlansTests {
             == "Eleven more keeps October level with September.")
         #expect(PlanMonth.tessLine(done: 2, lastMonth: 0, leftThisWeek: 3, month: "October", previous: "September")
             == nil)
+    }
+
+    @Test func theRoutineLibraryIsGroupedByMovementPattern() throws {
+        let model = AppModel(context: container.mainContext)
+        let groups = ExerciseLibraryList.groups(model)
+        #expect(groups.count >= 6)
+        let push = try #require(groups.first { $0.pattern.name == "Horizontal Push" })
+        #expect(push.exercises.contains { $0.name == "Bench Press" })
+        #expect(groups.allSatisfy { !$0.exercises.isEmpty })
     }
 }

@@ -32,7 +32,8 @@ struct AppModelTests {
         session.logSet()
         session.skipRest()
         session.logSet()
-        session.finish()
+        session.finish(early: true)
+        #expect(model.engine.history(limit: 1).first?.action == "finishWorkoutEarly")
         model.isWorkoutPresented = false
         model.session = nil
         model.touch()

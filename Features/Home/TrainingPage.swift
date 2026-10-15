@@ -112,9 +112,15 @@ private struct WorkoutPlan: View {
     }
 
     /// "Bench Press is ready for 82.5 today."
+    /// "Bench Press is ready for 82.5 today." from Core's prefill; a first session's light starting weight is not a
+    /// working weight, so it reads "First time on bench press. Start light." instead.
     private func tessLine(_ entry: ObjectRecord?) -> String? {
-        guard let entry, let exercise = model.store.linkedClass("exercise", of: entry),
-              let weight = model.store.number("targetWeight", of: entry), weight > 0 else { return nil }
+        guard let entry, let exercise = model.store.linkedClass("exercise", of: entry) else { return nil }
+        let prefill = model.ledger.prefill(for: entry)
+        if prefill.isFirstTime {
+            return "First time on \(exercise.name.lowercased()). Start light."
+        }
+        guard let weight = prefill.weight, weight > 0 else { return nil }
         return "\(exercise.name) is ready for \(Format.kilograms(weight)) today."
     }
 }
