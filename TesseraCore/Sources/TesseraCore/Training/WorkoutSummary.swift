@@ -76,14 +76,29 @@ public extension TrainingLedger {
     }
 
     /// Workouts finished on the day containing `date`, newest first: today's history on Home.
+    /// Cached for the store's revision: one pass sorts workouts into days, and each day's summaries are built once.
     func finishedWorkouts(on date: Date, calendar: Calendar = .current) -> [WorkoutSummary] {
         guard let workoutClass = classes[.workout] else { return [] }
-        return store.objects(of: workoutClass)
-            .filter { workout in
-                guard let ended = store.value("endedAt", of: workout)?.dateValue else { return false }
-                return calendar.isDate(ended, inSameDayAs: date)
+        let derived = store.cache.derived
+        let revision = store.revision
+        let day = calendar.startOfDay(for: date)
+        if let cached = derived.daySummaries[day], cached.revision == revision {
+            return cached.summaries
+        }
+        if derived.workoutDays?.revision != revision {
+            var days: [Date: [UUID]] = [:]
+            for workout in store.objects(of: workoutClass) {
+                guard let ended = store.value("endedAt", of: workout)?.dateValue else { continue }
+                days[calendar.startOfDay(for: ended), default: []].append(workout.id)
             }
+            derived.workoutDays = (revision, days)
+            derived.daySummaries = [:]
+        }
+        let summaries = (derived.workoutDays?.days[day] ?? [])
+            .compactMap { store.object(id: $0) }
             .map(summary)
             .sorted { ($0.endedAt ?? .distantPast) > ($1.endedAt ?? .distantPast) }
+        derived.daySummaries[day] = (revision, summaries)
+        return summaries
     }
 }

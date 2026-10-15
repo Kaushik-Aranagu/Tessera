@@ -233,6 +233,43 @@ public struct FinishWorkout: EngineAction {
     }
 }
 
+/// Finishes a workout early: entries with no logged sets are marked skipped (kept, so the plan stays visible),
+/// then it finishes as usual. One undo restores both.
+public struct FinishWorkoutEarly: EngineAction {
+    public static let descriptor = ActionDescriptor(
+        name: "finishWorkoutEarly",
+        summary: "Finish a workout now, skipping the exercises not started",
+        parameters: [
+            .init("workout", .object, "The workout to finish"),
+            .init("time", .date, "When it ended; defaults to now", required: false),
+        ]
+    )
+
+    public var workout: UUID
+    public var time: Date?
+
+    public init(workout: UUID, time: Date? = nil) {
+        self.workout = workout
+        self.time = time
+    }
+
+    public func apply(_ transaction: inout Transaction) throws -> [UUID] {
+        let workout = try transaction.object(workout, is: .workout)
+        let ledger = TrainingLedger(store: transaction.store, classes: transaction.classes)
+        var skipped: [UUID] = []
+        for entry in workout.orderedChildren where entry.orderedChildren.compactMap(ledger.loggedSet).isEmpty {
+            try transaction.set("skipped", to: .bool(true), on: entry)
+            skipped.append(entry.id)
+        }
+        try FinishWorkout(workout: workout.id, time: time).apply(&transaction)
+        return skipped
+    }
+
+    public func summary(in store: ObjectStore) -> String {
+        "Finished \(store.object(id: workout).map { store.displayTitle(of: $0) } ?? "the workout") early"
+    }
+}
+
 /// Quick Capture for training ("3x10 bench 80"): logs sets into the workout in progress, creating what's missing.
 public struct LogExercise: EngineAction {
     public static let descriptor = ActionDescriptor(

@@ -88,6 +88,9 @@ final class DerivedCache {
     var trainingIndex: (revision: Int, index: TrainingIndex)?
     /// Sorted sessions per exercise class (with subclasses), for the current revision.
     var sessions: [UUID: (revision: Int, sessions: [TrainingLedger.Session])] = [:]
+    /// Finished workouts by the start of the day they ended, and summaries already built per day.
+    var workoutDays: (revision: Int, days: [Date: [UUID]])?
+    var daySummaries: [Date: (revision: Int, summaries: [WorkoutSummary])] = [:]
     /// Objects written since derived caches were last brought up to date.
     var touched: Set<UUID> = []
     var needsRebuild = false

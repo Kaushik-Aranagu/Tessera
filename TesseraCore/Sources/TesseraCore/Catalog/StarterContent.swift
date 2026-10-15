@@ -60,7 +60,7 @@ public enum StarterContent {
     static let plates = "25, 20, 15, 10, 5, 2.5, 1.25"
     static let dumbbells = stride(from: 2.0, through: 50, by: 2).map { "\(Int($0))" }.joined(separator: ", ")
 
-    static var planID: UUID {
+    public static var planID: UUID {
         SystemCatalog.stableID("starter.plan.ppl2")
     }
 

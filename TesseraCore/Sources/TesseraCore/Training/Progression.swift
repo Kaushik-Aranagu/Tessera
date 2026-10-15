@@ -38,6 +38,8 @@ public extension TrainingLedger {
     func nextTarget(for exercise: ClassDef, slot: ObjectRecord? = nil,
                     excludingWorkout excludedID: UUID? = nil) -> SetTarget
     {
+        // With no slot given (the exercise page), use the plan's slot for this exercise, so its rep range counts.
+        let slot = slot ?? store.planSlot(for: exercise)
         let classLow = store.classValue("repMin", of: exercise)?.numericValue.map(Int.init) ?? 8
         let classHigh = store.classValue("repMax", of: exercise)?.numericValue.map(Int.init) ?? 12
         let ruleText = slot.flatMap { store.value("progression", of: $0)?.stringValue }
@@ -97,5 +99,44 @@ extension ProgressionRule {
         } else {
             1
         }
+    }
+}
+
+public extension ObjectStore {
+    /// A light first-session weight for an exercise with no history: the empty bar, light dumbbells or a kettlebell,
+    /// the first plate on a stack, no added load on bodyweight work. Nil for bands (nothing to load).
+    func startingWeight(for exercise: ClassDef) -> Double? {
+        let profile = loadProfile(for: exercise)
+        switch equipmentKind(of: exercise) {
+        case .barbell, .ezBar, .smith: return (profile as? PlateLoad)?.bar ?? profile.nearest(to: 20)
+        case .dumbbell: return profile.nearest(to: 8)
+        case .kettlebell: return profile.nearest(to: 12)
+        case .machine, .cable: return profile.nearest(to: 20)
+        case .bodyweight: return 0
+        case .band: return nil
+        case nil: return profile.nearest(to: 20)
+        }
+    }
+
+    /// The routine slot that programs this exercise (or a parent class of it), preferring the starter plan's
+    /// routines: where a rep range for it lives when there's no workout in hand.
+    func planSlot(for exercise: ClassDef) -> ObjectRecord? {
+        guard let slotClass = allClasses().first(where: { $0.systemKey == SystemCatalog.Key.slot.systemKey })
+        else { return nil }
+        let lineage = Set(lineage(of: exercise).map(\.id))
+        let slots = objects(of: slotClass).filter { slot in
+            linkedClass("exercise", of: slot).map { lineage.contains($0.id) } ?? false
+        }
+        let starter = Set(object(id: StarterContent.planID).map { linkedObjects("routines", of: $0).map(\.id) } ?? [])
+        let ranked = slots.sorted { lhs, rhs in
+            let lhsPlan = lhs.parent.map { starter.contains($0.id) } ?? false
+            let rhsPlan = rhs.parent.map { starter.contains($0.id) } ?? false
+            if lhsPlan != rhsPlan {
+                return lhsPlan
+            }
+            return lhs.createdAt < rhs.createdAt
+        }
+        // An exact match beats a parent class's slot.
+        return ranked.first { linkedClass("exercise", of: $0)?.id == exercise.id } ?? ranked.first
     }
 }

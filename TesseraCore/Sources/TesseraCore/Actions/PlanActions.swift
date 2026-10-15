@@ -124,7 +124,9 @@ public struct StartRoutine: EngineAction {
             let entry = try AddExercise(
                 workout: workout.id, exercise: exercise.id,
                 targetSets: transaction.store.number("sets", of: slot) ?? 3,
-                targetReps: Double(target.reps), targetWeight: target.weight
+                // A first-ever session starts light (the empty bar, light dumbbells) rather than blank.
+                targetReps: Double(target.reps),
+                targetWeight: target.weight ?? transaction.store.startingWeight(for: exercise)
             ).apply(&transaction)
             try transaction.setLinks("slot", on: entry, to: [slot])
         }
