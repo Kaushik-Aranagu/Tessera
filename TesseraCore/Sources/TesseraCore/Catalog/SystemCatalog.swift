@@ -180,6 +180,7 @@ public enum SystemCatalog {
                       FieldSpec(key: "routines", name: "Routines", kind: .refList, target: .routine),
                       FieldSpec(key: "startsOn", name: "Starts", kind: .date),
                       FieldSpec(key: "weeks", name: "Weeks", kind: .number),
+                      FieldSpec(key: "sessionsPerWeek", name: "Sessions a week", kind: .number),
                   ]),
         ClassSpec(key: .task, name: "Task", parent: .thing, symbol: "checkmark.circle", colorRole: "planning",
                   traits: [.schedulable], fields: [

@@ -61,3 +61,19 @@ public extension TrainingLedger {
         return days
     }
 }
+
+@MainActor
+public extension TrainingLedger {
+    /// "Session 6 of 14 this month": sessions done in the month containing `date`, and how many the plan
+    /// expects (its sessions a week, else one per routine up to six, spread over the month's days).
+    func monthCounts(containing date: Date, plan: ObjectRecord?,
+                     calendar: Calendar = .current) -> (done: Int, planned: Int?)
+    {
+        let days = month(containing: date, calendar: calendar)
+        let done = days.reduce(0) { $0 + $1.sessions }
+        guard let plan else { return (done, nil) }
+        let routines = store.linkedObjects("routines", of: plan).count
+        let perWeek = store.number("sessionsPerWeek", of: plan) ?? Double(min(max(routines, 1), 6))
+        return (done, Int((perWeek * Double(days.count) / 7).rounded()))
+    }
+}
