@@ -192,3 +192,29 @@ struct CommaSetTests {
         #expect(entry.orderedChildren.count == before)
     }
 }
+
+/// QA M1 on #89: a migration retry into a seeded store doesn't double the starter plan.
+@MainActor
+struct MergeRetryTests {
+    @Test func retryIntoASeededStoreKeepsOneStarterPlan() throws {
+        let source = ObjectStore.open(inMemory: true)
+        let sourceClasses = try source.prepareCatalog()
+        try ActionEngine(store: source, classes: sourceClasses).perform(CreateNote(body: "Old note"), by: .user)
+        let data = try TesseraExport(context: source.context).encoded()
+
+        let seeded = ObjectStore.open(inMemory: true)
+        _ = try seeded.prepareCatalog()
+        let plan = try #require(seeded.object(id: StarterContent.planID))
+        let routines = seeded.linkedObjects("routines", of: plan).count
+        let pushA = try #require(seeded.linkedObjects("routines", of: plan).first)
+        let slots = pushA.orderedChildren.count
+
+        try TesseraExport.decode(data).restore(into: seeded.context, merging: true)
+        let store = ObjectStore(context: seeded.context)
+        let classes = try store.prepareCatalog()
+        let mergedPlan = try #require(store.object(id: StarterContent.planID))
+        #expect(store.linkedObjects("routines", of: mergedPlan).count == routines)
+        #expect(try #require(store.linkedObjects("routines", of: mergedPlan).first).orderedChildren.count == slots)
+        #expect(NoteList(store: store, classes: classes).recent().map(\.title) == ["Old note"])
+    }
+}

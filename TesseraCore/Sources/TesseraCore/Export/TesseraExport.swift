@@ -202,7 +202,13 @@ public extension TesseraExport {
 
         var objectByID: [UUID: ObjectRecord] = context.objects
         var newObjects = Set<UUID>()
-        for entry in objects where objectByID[entry.id] == nil {
+        // Merging: the children of something already here (a seeded routine's slots) are the store's own; the
+        // export's copies would double them. Things without a parent (workouts, notes, tasks) still come across.
+        let existing = Set(context.objects.keys)
+        let skipped = Set(objects.filter { entry in
+            merging && entry.parentID.map { existing.contains($0) } == true
+        }.map(\.id))
+        for entry in objects where objectByID[entry.id] == nil && !skipped.contains(entry.id) {
             newObjects.insert(entry.id)
             let object = ObjectRecord(title: entry.title, classDef: nil)
             object.id = entry.id
@@ -222,7 +228,10 @@ public extension TesseraExport {
         for entry in objects where newObjects.contains(entry.id) {
             objectByID[entry.id]?.parent = entry.parentID.flatMap { objectByID[$0] }
         }
-        for entry in links where context.links[entry.id] == nil {
+        // Links from something already here (the seeded plan's routines) are the store's own too.
+        for entry in links where context.links[entry.id] == nil
+            && !(merging && entry.from.map { existing.contains($0) } == true)
+        {
             let link = ObjectLink(fieldID: entry.fieldID, sortIndex: entry.sortIndex)
             link.id = entry.id
             link.createdAt = entry.createdAt
