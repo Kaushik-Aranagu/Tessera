@@ -519,6 +519,8 @@ extension WorkoutSession {
             weight = weightDial(of: option.exercise).snap(load)
         }
         lastTouchedAt = AppClock.now
+        // The swap moves the resume point on; a rest that was running keeps running after a relaunch.
+        persistRest()
         model.touch()
     }
 

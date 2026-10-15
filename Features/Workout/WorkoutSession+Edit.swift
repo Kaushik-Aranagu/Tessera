@@ -60,6 +60,7 @@ extension WorkoutSession {
             }
             bests.removeAll { $0.setID == row.id }
             refreshAfterExternalWrite()
+            persistRest()
             model.touch()
         }
         endEditing()
