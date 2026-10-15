@@ -18,7 +18,6 @@ struct NowPage: View {
         let lanes = HomeData.lanes(model, now: now)
         let schedule = model.schedule(around: now)
         let current = model.currentTask(around: now)
-        let upcoming = HomeData.upcoming(schedule, excluding: current, now: now)
 
         VStack(alignment: .leading, spacing: 0) {
             HomeDayStrip(lanes: lanes)
@@ -42,20 +41,13 @@ struct NowPage: View {
                     .transition(.offset(y: 10).combined(with: .opacity))
             }
 
-            if !upcoming.isEmpty {
-                Text("Later")
-                    .font(Theme.voice(size: 34))
-                    .foregroundStyle(Theme.Colors.ink)
-                    .accessibilityAddTraits(.isHeader)
-                    .padding(.bottom, Theme.Spacing.s)
-                    .entrance(4)
-                LaterWindow(items: upcoming)
-                    .entrance(5)
-            }
+            let queue = QueueEntry.split(model: model, schedule: schedule, current: current, now: now)
+            QueueWindow(next: queue.next, later: queue.later)
+                .entrance(4)
 
             Spacer(minLength: 0)
         }
-        .sensoryFeedback(.success, trigger: finishes)
+        .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: finishes)
     }
 
     // MARK: Hero
@@ -166,9 +158,12 @@ struct NowPage: View {
 
     private func finish(_ task: ScheduleItem) {
         finishes += 1
+        let record = try? model.engine.perform(SetTaskDone(task: task.id, done: true), by: .user).record
         withTesseraAnimation(.smooth(duration: 0.34), reduceMotion: reduceMotion) {
-            model.finish(taskID: task.id)
+            model.touch()
         }
+        let hasNext = model.currentTask(around: AppClock.now) != nil
+        TessVoice.shared.say(hasNext ? "Done. Next one is up." : "Done. \(task.title).", undo: record)
     }
 }
 
@@ -247,83 +242,6 @@ private struct HeroWriteIn: ViewModifier {
 }
 
 // MARK: - Later window
-
-/// A bounded window, 92 pt tall (about two rows), snapping per 50 pt row and fading out at the bottom. No
-/// separators, no ruler.
-private struct LaterWindow: View {
-    let items: [ScheduleItem]
-
-    static let rowHeight: CGFloat = 50
-    static let height: CGFloat = 92
-
-    var body: some View {
-        let height = min(Self.height, Self.rowHeight * CGFloat(items.count))
-        ScrollView(.vertical) {
-            LazyVStack(spacing: 0) {
-                ForEach(items) { item in
-                    LaterRow(item: item)
-                        .frame(height: Self.rowHeight)
-                }
-            }
-            .scrollTargetLayout()
-        }
-        .scrollTargetBehavior(.viewAligned)
-        .scrollIndicators(.hidden)
-        .scrollBounceBehavior(.basedOnSize)
-        .frame(height: height)
-        .mask {
-            LinearGradient(
-                stops: [
-                    .init(color: .black, location: 0.6),
-                    .init(color: .black.opacity(items.count > 2 ? 0 : 1), location: 1),
-                ],
-                startPoint: .top, endPoint: .bottom
-            )
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Later, \(items.count) items")
-    }
-}
-
-private struct LaterRow: View {
-    let item: ScheduleItem
-    @Environment(AppModel.self) private var model
-    @Environment(\.zoomNamespace) private var namespace
-
-    var body: some View {
-        if model.isGhost(item.id) {
-            GhostRow(item: item)
-        } else {
-            row
-        }
-    }
-
-    private var row: some View {
-        Button {
-            model.open(.object(item.id))
-        } label: {
-            HStack(spacing: Theme.Spacing.m) {
-                PaintDab(color: item.isWorkout ? Theme.Colors.live : Theme.Colors.context, seed: item.title.count)
-                Text(item.title)
-                    .textRole(.body)
-                    .foregroundStyle(Theme.Colors.ink)
-                    .lineLimit(1)
-                Spacer(minLength: Theme.Spacing.s)
-                Text(Format.clock(item.start))
-                    .textRole(.label)
-                    .foregroundStyle(Theme.Colors.inkSecondary)
-                    .monospacedDigit()
-            }
-            .frame(maxHeight: .infinity)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(HandleButtonStyle())
-        .modifier(ZoomSource(id: Route.object(item.id), namespace: namespace))
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(item.title), \(Format.clock(item.start))")
-        .accessibilityHint("Opens \(item.title)")
-    }
-}
 
 /// A capture that is still wet paint: everything cobalt, breathing, with a brushstroke painting along under it
 /// as the commit timer. Tap to keep it now; swipe it sideways to drop it (nothing is written).
