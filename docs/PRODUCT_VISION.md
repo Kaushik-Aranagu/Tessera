@@ -45,12 +45,15 @@ ideas from OOP and operating systems on purpose so he can compose new things him
 - Cards need more substance and better hierarchy, not decoration.
 - The type needs to be better (more character, better hierarchy).
 
-## How the current data model maps (and what's missing)
-| Vision | Current model (`Core/Model/Models.swift`) | Gap |
+## Data model (implemented in `Core/`)
+| Vision | Type | Notes |
 |---|---|---|
-| Class | `AppType` | needs `parent: AppType?` (inheritance) and inherited-field resolution |
-| Property | `FieldDef` | needs a `reference` kind (link to another class), list/collection kinds, units |
-| Object | `Record` | needs typed references to other records + backlinks; parent/child (e.g. Workout → Set) |
-| View | `ViewDef` | fine for now |
+| Class | `ClassDef` | single inheritance via `parent`; `traits` (schedulable, timed, trackable, measurable) inherited like interfaces; semantic `colorRole` |
+| Property | `FieldDef` | stable `id` (storage key) + `key` (for expressions) + renamable `name`; kinds: text, number, bool, date, duration, mass, choice, ref, refList, classRef, computed, richText; `overridesFieldID` lets a subclass change an inherited default |
+| Object | `ObjectRecord` | `values` JSON keyed by field id; composition via `parent`/`children` (Workout → Exercise Entry → Set); soft delete |
+| Link | `ObjectLink` | rows for ref/refList/classRef fields, so backlinks are relationships, not JSON scans |
+| Engine | `ClassResolver`, `ObjectStore`, `Expression` | effective fields, defaults, computed values (`weight * (1 + reps / 30)`), typed links, backlinks, ancestors |
+| Built-ins | `SystemCatalog` | Thing → Activity → Exercise → Strength Exercise → Barbell Lift → Bench Press; Muscle, Equipment, Workout, Exercise Entry, Set (e1RM), Plan, Task, Note. Deterministic ids so devices seed identically before CloudKit sync |
 
-The model should be evolved for this before building screens. That's the next step once the visual direction is final.
+Bench Press is a **class**. A logged set is an instance of `Set`, a child of an `Exercise Entry` whose `exercise`
+classRef points at Bench Press, so "Bench Press → used in N workouts" is a backlink query plus walking up to the workout.

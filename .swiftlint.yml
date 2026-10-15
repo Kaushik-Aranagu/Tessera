@@ -16,3 +16,4 @@ type_name:
   min_length: 2
 disabled_rules:
   - trailing_comma # SwiftFormat owns formatting
+  - opening_brace # SwiftFormat wraps multi-line conditions with the brace on its own line

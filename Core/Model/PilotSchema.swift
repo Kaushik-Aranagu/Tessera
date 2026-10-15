@@ -2,9 +2,10 @@ import SwiftData
 
 enum PilotSchema {
     static let models: [any PersistentModel.Type] = [
-        AppType.self,
+        ClassDef.self,
         FieldDef.self,
-        Record.self,
+        ObjectRecord.self,
+        ObjectLink.self,
         ViewDef.self,
     ]
 
