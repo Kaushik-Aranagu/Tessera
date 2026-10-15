@@ -31,6 +31,9 @@ public final class ActionEngine {
         self.classes = classes
     }
 
+    /// Set by Tess's router while one route runs, so the ops it performs record which route and model did them.
+    public var attribution: (route: OpRoute, model: String?)?
+
     // MARK: Performing
 
     /// Runs an action and logs it. If it throws, everything it wrote so far is rolled back.
@@ -53,6 +56,10 @@ public final class ActionEngine {
             ops: transaction.ops,
             state: pending ? .pending : .committed
         )
+        if let attribution, actor == .tess {
+            record.routeRaw = attribution.route.rawValue
+            record.model = attribution.model
+        }
         store.context.insert(record)
         if !pending {
             notify(record)

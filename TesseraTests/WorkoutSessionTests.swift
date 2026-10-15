@@ -315,4 +315,28 @@ struct WorkoutSessionTests {
         #expect(summary.line == "1 exercise, 1 set. New best: 82.5 × 8.")
         #expect(session.workout.title == "Push Day A")
     }
+
+    // MARK: QA W1 / W2
+
+    @Test func aSetTypedToTessIsTheLatestActionForUndo() throws {
+        let (_, session) = try startedSession()
+        session.logSet()
+        #expect(session.canUndo)
+        let entry = try #require(session.currentEntry)
+        let held = try #require(session.setRows(of: entry).last)
+        session.seatCaptured(setIDs: [held.id])
+        #expect(!session.canUndo) // the live Undo no longer reaches back to the earlier held set
+        #expect(session.lastEdit == nil && session.editNote == nil)
+    }
+
+    @Test func undoingTheSetBeingEditedLeavesAKeyOnScreen() throws {
+        let (_, session) = try startedSession()
+        session.logSet()
+        let entry = try #require(session.currentEntry)
+        let row = try #require(session.setRows(of: entry).last)
+        session.beginEditing(setID: row.id)
+        #expect(session.isEditing)
+        session.undoLastSet()
+        #expect(!session.isEditing)
+    }
 }

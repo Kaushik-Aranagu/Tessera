@@ -39,10 +39,8 @@ public struct ProcessTable {
         all().first { $0.state == .running }
     }
 
-    /// Home's ledger under Now: suspended processes touched in the last 3 days, then waiting ones whose check
-    /// time has passed. At most 3; the running process is shown as Now, not here.
     /// The workout in progress: the running one, else the most recent one set aside.
-    public func openWorkout(now _: Date = .now) -> ProcessSnapshot? {
+    public func openWorkout() -> ProcessSnapshot? {
         if let running = running(), let subject = running.subject, isWorkout(subject) {
             return running
         }
@@ -50,6 +48,8 @@ public struct ProcessTable {
             .max { ($0.lastTouchedAt ?? .distantPast) < ($1.lastTouchedAt ?? .distantPast) }
     }
 
+    /// Home's ledger under Now: suspended processes touched in the last 3 days, then waiting ones whose check
+    /// time has passed. At most 3; the running process is shown as Now, not here.
     public func ledger(now: Date = .now) -> [ProcessSnapshot] {
         let processes = all()
         let suspended = processes.filter { $0.state == .suspended && $0.idle(at: now) < Limits.leavesHome }

@@ -49,3 +49,6 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [apple-watch.md](apple-watch.md) | Product, Builder A, Core: Apple Watch without a Watch app first (Health reads, Smart Stack rest timer), slices W1-W4 |
 | [ship-list-m5-upkeep-draft.md](ship-list-m5-upkeep-draft.md) | Product: DRAFT Home upkeep ship list, 7 slices, 15 phrases (M5) |
 | [tess-eval-claude.md](tess-eval-claude.md) | Core: 80 grammar misses with expected Claude tool calls and context packs (model layer T4, T5) |
+| [plan-my-day-prompt.md](plan-my-day-prompt.md) | Core: Plan my day prompt pack for T6 (instructions, proposePlan schema, validation, 20-scenario hand check) |
+| [ship-list-m5-people-draft.md](ship-list-m5-people-draft.md) | Product: DRAFT People ship list, 8 slices, 15 phrases (M5) |
+| [app-from-a-sentence.md](app-from-a-sentence.md) | Product, Core: make an app from a sentence via proposeClass; needs schema undo (A1) |

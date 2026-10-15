@@ -363,6 +363,11 @@ extension WorkoutSession {
     /// Sets logged from outside the live screen (typed in the Bar, Tess) seat like a held set once they dry: the
     /// stroke paints in, the dial becomes the rest, and the next set opens prefilled.
     func seatCaptured(setIDs: [UUID]) {
+        // The typed set is now the latest action: the live Undo must not reach back to an earlier held set.
+        endEditing()
+        undoable = nil
+        lastEdit = nil
+        editNote = nil
         let all = entries
         guard let (entry, row) = all.lazy.compactMap({ entry in
             self.setRows(of: entry).last { setIDs.contains($0.id) }.map { (entry, $0) }
@@ -387,6 +392,7 @@ extension WorkoutSession {
     /// Undoes the last logged set through the op log, and puts its numbers back on the dial to fix and re-log.
     func undoLastSet() {
         guard canUndo, let undoable else { return }
+        endEditing()
         model.engine.undo(undoable.record)
         if let index = entries.firstIndex(where: { $0.id == undoable.entryID }) {
             currentIndex = index
@@ -477,6 +483,7 @@ extension WorkoutSession {
 
     /// Swaps the current exercise for today only, through the engine. The slot and scheme stay.
     func swap(to option: ExerciseSwaps.Option) {
+        endEditing()
         guard let entry = currentEntry, let from = currentExercise else { return }
         guard let result = try? model.engine.perform(
             SwapEntryExercise(entry: entry.id, exercise: option.exercise.id, targetWeight: option.load), by: .user
@@ -534,6 +541,7 @@ extension WorkoutSession {
     /// Early (from the running order): Core's FinishWorkoutEarly marks the unstarted exercises skipped, one undo.
     func finish(early: Bool = false) {
         guard finishedAt == nil else { return }
+        endEditing()
         let now = AppClock.now
         if early, !entries.allSatisfy(isFinished) {
             _ = try? model.engine.perform(FinishWorkoutEarly(workout: workout.id, time: now), by: .user)

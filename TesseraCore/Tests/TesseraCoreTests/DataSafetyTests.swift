@@ -84,10 +84,14 @@ struct DataSafetyTests {
         let seeded = ObjectStore.open(inMemory: true)
         _ = try seeded.prepareCatalog()
         #expect(throws: (any Error).self) { try TesseraExport.decode(data).restore(into: seeded.context) }
-        try TesseraExport.decode(data).restore(into: seeded.context, replacingSeeded: true)
+        // Used since: a task added before the migration landed.
+        try ActionEngine(store: seeded, classes: seeded.prepareCatalog())
+            .perform(CreateTask(title: "Added since"), by: .user)
+        try TesseraExport.decode(data).restore(into: seeded.context, merging: true)
         let fresh = ObjectStore(context: seeded.context)
         let classes = try fresh.prepareCatalog()
         #expect(NoteList(store: fresh, classes: classes).recent().map(\.title) == ["History from before"])
+        #expect(TaskList(store: fresh, classes: classes).all().map(\.title) == ["Added since"])
     }
 
     @Test func exportsKeepFractionalSeconds() throws {
@@ -171,10 +175,46 @@ struct CommaSetTests {
         }
         #expect(three.count == 3)
 
-        // B4: all or nothing. A phrase whose second part can't log takes back the first.
         let tess = TessCaptureEngine(engine: engine)
         let capture = await tess.capture("80x8, 80x8, 80x6", context: focused)
         #expect(capture.records.count == 3)
         #expect(entry.orderedChildren.count == 3)
+
+        // B4: all or nothing. The second set goes to an entry that's gone, so the first is taken back.
+        let other = try #require(workout.orderedChildren.dropFirst().first)
+        try engine.perform(DeleteObject(object: other.id), by: .user)
+        let before = entry.orderedChildren.count
+        let failed = tess.performSets([
+            .set(entry: entry, weight: 80, reps: 8, kind: .working, phrase: .full),
+            .set(entry: other, weight: 80, reps: 8, kind: .working, phrase: .full),
+        ], context: focused)
+        #expect(failed.records.isEmpty)
+        #expect(entry.orderedChildren.count == before)
+    }
+}
+
+/// QA M1 on #89: a migration retry into a seeded store doesn't double the starter plan.
+@MainActor
+struct MergeRetryTests {
+    @Test func retryIntoASeededStoreKeepsOneStarterPlan() throws {
+        let source = ObjectStore.open(inMemory: true)
+        let sourceClasses = try source.prepareCatalog()
+        try ActionEngine(store: source, classes: sourceClasses).perform(CreateNote(body: "Old note"), by: .user)
+        let data = try TesseraExport(context: source.context).encoded()
+
+        let seeded = ObjectStore.open(inMemory: true)
+        _ = try seeded.prepareCatalog()
+        let plan = try #require(seeded.object(id: StarterContent.planID))
+        let routines = seeded.linkedObjects("routines", of: plan).count
+        let pushA = try #require(seeded.linkedObjects("routines", of: plan).first)
+        let slots = pushA.orderedChildren.count
+
+        try TesseraExport.decode(data).restore(into: seeded.context, merging: true)
+        let store = ObjectStore(context: seeded.context)
+        let classes = try store.prepareCatalog()
+        let mergedPlan = try #require(store.object(id: StarterContent.planID))
+        #expect(store.linkedObjects("routines", of: mergedPlan).count == routines)
+        #expect(try #require(store.linkedObjects("routines", of: mergedPlan).first).orderedChildren.count == slots)
+        #expect(NoteList(store: store, classes: classes).recent().map(\.title) == ["Old note"])
     }
 }

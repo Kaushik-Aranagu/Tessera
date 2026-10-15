@@ -17,32 +17,50 @@ public final class TessCaptureEngine: TessCapturing {
         self.model = model
     }
 
+    /// Runs the routes in order (grammar, then the on-device model) through `TessRouter`.
     public func capture(_ phrase: String, context: TessContext) async -> TessCapture {
+        await router.run(TessRequest(text: phrase, context: context, use: .capture))
+    }
+
+    /// The router for this engine: grammar first, then the model step if there is one.
+    public var router: TessRouter {
+        var models: [any TessModel] = [GrammarTessModel(capture: self)]
+        if let model {
+            models.append(OnDeviceTessModel(model))
+        }
+        return TessRouter(engine: engine, models: models)
+    }
+
+    /// Several sets from one phrase, all or nothing: if one can't log, the ones already logged are taken back.
+    func performSets(_ parts: [TessGrammar.Parse], context: TessContext) -> TessCapture {
+        var records: [OpRecord] = []
+        var lines: [String] = []
+        for part in parts {
+            do {
+                let (record, line) = try perform(part, context: context)
+                records.append(record)
+                lines.append(line)
+            } catch {
+                for record in records.reversed() {
+                    if record.state == .pending {
+                        _ = try? engine.discard(record)
+                    } else {
+                        engine.undo(record)
+                    }
+                }
+                return TessCapture(records: [], line: Self.line(for: error), source: .grammar)
+            }
+        }
+        let line = lines.count > 1 ? "\(lines.count) sets logged." : lines.first ?? ""
+        return TessCapture(records: records, line: line, source: .grammar)
+    }
+
+    /// The grammar route: a capture when the grammar reads the phrase, else nil.
+    func grammarCapture(_ phrase: String, context: TessContext) -> TessCapture? {
         if let parse = grammar.parse(phrase, context: context) {
             do {
                 if case let .sets(parts) = parse {
-                    var records: [OpRecord] = []
-                    var lines: [String] = []
-                    for part in parts {
-                        do {
-                            let (record, line) = try perform(part, context: context)
-                            records.append(record)
-                            lines.append(line)
-                        } catch {
-                            // All or nothing: take back the sets already logged from this phrase.
-                            for record in records.reversed() {
-                                if record.state == .pending {
-                                    _ = try? engine.discard(record)
-                                } else {
-                                    engine.undo(record)
-                                }
-                            }
-                            return TessCapture(records: [], line: Self.line(for: error), source: .grammar)
-                        }
-                    }
-                    let line = parts.count == lines.count && lines.count > 1 ? "\(lines.count) sets logged." : lines
-                        .first ?? ""
-                    return TessCapture(records: records, line: line, source: .grammar)
+                    return performSets(parts, context: context)
                 }
                 let (record, line) = try perform(parse, context: context)
                 return TessCapture(records: [record], line: line, source: .grammar)
@@ -50,10 +68,7 @@ public final class TessCaptureEngine: TessCapturing {
                 return TessCapture(records: [], line: Self.line(for: error), source: .grammar)
             }
         }
-        if let model, model.isAvailable {
-            return await model.capture(phrase, context: context, engine: engine)
-        }
-        return TessCapture(records: [], line: "Didn't catch that. Try \u{201C}bench 80 x 8\u{201D}.", source: .none)
+        return nil
     }
 
     private func perform(_ parse: TessGrammar.Parse, context: TessContext) throws -> (OpRecord, String) {
