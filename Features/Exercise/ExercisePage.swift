@@ -124,10 +124,23 @@ private struct ExerciseSummary: View {
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
+        if digest.bestSet == nil {
+            // Zero history: one plain line instead of two empty numbers.
+            Text("No best yet. The first logged set sets one.")
+                .font(Theme.voice(size: 21))
+                .foregroundStyle(Theme.Colors.inkSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            stats
+        }
+    }
+
+    private var stats: some View {
         let layout = typeSize.isAccessibilitySize
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.m))
             : AnyLayout(HStackLayout(alignment: .top, spacing: 0))
-        layout {
+        return layout {
             stat(digest.bestE1RM.map { Format.kilograms($0) } ?? "—", label: "Best e1RM, kg",
                  spoken: digest.bestE1RM.map { "Best estimated one-rep max, \(Format.kilograms($0)) kilograms" })
             stat(digest.bestSet ?? "—", label: "Best set",
