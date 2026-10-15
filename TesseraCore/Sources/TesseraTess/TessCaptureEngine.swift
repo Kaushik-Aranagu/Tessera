@@ -35,23 +35,29 @@ public final class TessCaptureEngine: TessCapturing {
     private func perform(_ parse: TessGrammar.Parse, context: TessContext) throws -> (OpRecord, String) {
         let pending = !context.commitImmediately
         switch parse {
-        case let .lift(exercise, sets, reps, weight):
+        case let .lift(exercise, sets, reps, weight, unit):
             let record = try engine.perform(
-                LogExercise(exercise: exercise.id, weight: weight, reps: reps, sets: sets), by: .tess, pending: pending
+                LogExercise(exercise: exercise.id, weight: weight, reps: reps, sets: sets, unit: unit),
+                by: .tess, pending: pending
             ).record
             let name = Self.shortName(exercise.name)
             let scheme = sets > 1 ? "\(sets) x \(TessVoice.number(reps))" : "\(TessVoice.number(reps)) reps"
-            return (record, "\(name) \(scheme) at \(TessVoice.number(weight)). Added to today.")
-        case let .set(entry, weight, reps, kind, phrase):
+            let load = TessVoice.number(weight) + (unit == .kilograms ? "" : " \(unit.symbol)")
+            return (record, "\(name) \(scheme) at \(load). Added to today.")
+        case let .set(entry, kilograms, reps, kind, phrase, unit):
+            // Logged in the unit it was said in, so the set keeps its entered unit.
+            let said = unit.fromKilograms(kilograms, rounded: false)
             let record = try engine.perform(
-                LogSet(entry: entry.id, weight: weight, reps: reps, kind: kind, source: .tess), by: .tess,
-                pending: pending
+                LogSet(entry: entry.id, weight: said, reps: reps, kind: kind, source: .tess,
+                       unit: unit == .kilograms ? nil : unit),
+                by: .tess, pending: pending
             ).record
             let number = entry.orderedChildren.count
+            let weight = unit == .kilograms ? TessVoice.number(kilograms) : unit.format(kilograms: kilograms)
             let line = switch phrase {
             case .same: "Same again, logged."
-            case .drop: "Drop set. \(TessVoice.number(weight)) x \(TessVoice.number(reps))."
-            case .repsOnly, .full: "Set \(number). \(TessVoice.number(weight)) x \(TessVoice.number(reps))."
+            case .drop: "Drop set. \(weight) x \(TessVoice.number(reps))."
+            case .repsOnly, .full: "Set \(number). \(weight) x \(TessVoice.number(reps))."
             }
             return (record, line)
         case let .task(title, startsAt):
