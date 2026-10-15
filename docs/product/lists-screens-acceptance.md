@@ -1,6 +1,6 @@
 # Lists screens 9-12: decisions and acceptance (Builder B)
 
-*Kitchen lead (Lists owner), 2026-10-15. This reads with Design's `docs/design/kitchen/lists-9-12.md` (Design branch; it supersedes sheet 15), `ship-list-lists.md`, `lists-acceptance.md` (engine slices 1-8) and Research's `docs/research/lists-daily.md`. First I settle Research's open points G1-G13, then give one pass/fail row per screen element. Product can overrule any line.*
+*Kitchen lead (Lists owner), 2026-10-15. Design's sheet (c8a83ff) maps every row below and is accepted. This reads with Design's `docs/design/kitchen/lists-9-12.md` (Design branch; it supersedes sheet 15), `ship-list-lists.md`, `lists-acceptance.md` (engine slices 1-8) and Research's `docs/research/lists-daily.md`. First I settle Research's open points G1-G13, then give one pass/fail row per screen element. Product can overrule any line.*
 
 ## Decisions on Research's gaps
 
@@ -25,11 +25,11 @@
 **9 · Shelf**
 | # | Pass when |
 |---|---|
-| 9.1 | The rail reads LISTS and the context line reads "6 lists, packing running" |
+| 9.1 | The back word "‹ KITCHEN" sits at the top, LISTS is in labels, and the context line reads "6 lists, packing running" |
 | 9.2 | Names are sized by last touched (56, then two at 34, the rest at 21 at 75%), and the running list is first and largest (G10) |
 | 9.3 | State words sit under the names in labels: "3 OF 7", "RUNNING" in vermilion with a lit seam, "REUSABLE", "PICK ONE" |
 | 9.4 | On arrival, the names settle into their sizes with a stagger |
-| 9.5 | Pasting a block anywhere gives a wet cobalt ghost list with "Twelve things, two sections." It dries in 2 s or on tap, then grows to hero and moves to the top |
+| 9.5 | Pasting a block anywhere gives a wet cobalt ghost list at the foot of the column with "Twelve things, two sections." It dries in 2 s or on tap, then moves to its place by last touched: to the top at 56 when nothing runs, or just under the running list at 34 when one does (G10) |
 | 9.6 | Groceries appears once and opens Groceries. "Archived" sits at the foot at 45% |
 
 **10 · A list page**
