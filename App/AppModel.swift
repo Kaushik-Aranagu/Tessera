@@ -60,7 +60,14 @@ final class AppModel {
     @ObservationIgnored private var visited: Set<Route> = []
     var hasRevealedGreeting = false
     var session: WorkoutSession?
-    var isWorkoutPresented = false
+    var isWorkoutPresented = false {
+        didSet {
+            if isWorkoutPresented {
+                session?.touch()
+            }
+        }
+    }
+
     var commandDraft = ""
     var isCommandExpanded = false
     /// What Tess's soul is doing right now.

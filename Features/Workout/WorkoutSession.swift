@@ -25,6 +25,24 @@ final class WorkoutSession {
     private(set) var restTotal: TimeInterval = 0
     /// Increments on every logged set (drives the seat animation + haptics).
     private(set) var loggedCount = 0
+    /// Last time you did anything in this process (log, skip, page, open it). Drives suspension.
+    private(set) var lastTouchedAt = AppClock.now
+
+    /// Idle this long outside a rest and the workout counts as suspended: it leaves Now for a ledger row on Home.
+    static let suspendAfter: TimeInterval = 20 * 60
+
+    func isSuspended(at now: Date = AppClock.now) -> Bool {
+        if case .rest = phase(at: now) {
+            return false
+        }
+        return now.timeIntervalSince(lastTouchedAt) > Self.suspendAfter
+    }
+
+    /// Called when you open the live workout again.
+    func touch() {
+        lastTouchedAt = AppClock.now
+    }
+
     /// The set that was just seated, for the seat / paint-bleed / PR choreography.
     private(set) var lastSeated: Seated?
 
@@ -214,6 +232,7 @@ final class WorkoutSession {
         guard let set = ledger.logSet(weight: weight, reps: reps, rpe: rpe, in: entry) else { return }
         restTotal = restSeconds
         loggedCount += 1
+        lastTouchedAt = AppClock.now
         lastSeated = Seated(setID: set.id, entryID: entry.id, number: setRows(of: entry).count, records: records,
                             e1RM: e1RM)
         // The last set of the exercise doesn't need a rest before paging on, but the workout's last does nothing.
@@ -246,6 +265,7 @@ final class WorkoutSession {
         guard entries.indices.contains(index), index != currentIndex else { return }
         currentIndex = index
         lastSeated = nil
+        lastTouchedAt = AppClock.now
         loadDefaults()
     }
 

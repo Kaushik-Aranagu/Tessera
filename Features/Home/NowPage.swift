@@ -24,8 +24,22 @@ struct NowPage: View {
                 .entrance(0)
                 .padding(.bottom, Theme.Spacing.l)
 
-            hero(current, now: now)
-                .padding(.bottom, Theme.Spacing.xl)
+            Group {
+                // A running process is Now (docs/product/whats-running.md).
+                if let session = model.session, !session.isSuspended(at: now) {
+                    RunningHero(session: session)
+                } else {
+                    hero(current, now: now)
+                }
+            }
+            .padding(.bottom, Theme.Spacing.xl)
+
+            // The ledger: suspended processes (v1: a workout left idle), at most three, state in the seam above.
+            if let session = model.session, session.isSuspended(at: now) {
+                LedgerRow(session: session, now: now)
+                    .padding(.bottom, Theme.Spacing.l)
+                    .transition(.offset(y: 10).combined(with: .opacity))
+            }
 
             if !upcoming.isEmpty {
                 Text("Later")
@@ -74,7 +88,7 @@ struct NowPage: View {
                 .padding(.bottom, Theme.Spacing.l)
 
                 HStack(alignment: .center, spacing: Theme.Spacing.l) {
-                    PaintKey(action: { finish(task) }, label: { holding in
+                    PaintKey(duration: 0.7, action: { finish(task) }, label: { holding in
                         Text(holding ? "Keep holding" : "Hold to finish")
                             .textRole(.bodyStrong)
                     })
@@ -237,5 +251,101 @@ private struct LaterRow: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(item.title), \(Format.clock(item.start))")
         .accessibilityHint("Opens \(item.title)")
+    }
+}
+
+/// The live workout as Now: "running now, Push Day A", the resume point as the hero and one vermilion Resume key
+/// (docs/design/home-v1.md, "What's running").
+private struct RunningHero: View {
+    let session: WorkoutSession
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+            Text("running now, \(session.workout.title)")
+                .font(Theme.voice(size: 21))
+                .foregroundStyle(Theme.Colors.context)
+            HeroText(text: resumePoint) { $0 }
+                .foregroundStyle(Theme.Colors.ink)
+                .siblingParallax()
+                .padding(.bottom, Theme.Spacing.l)
+            HStack(alignment: .center, spacing: Theme.Spacing.l) {
+                PaintKey(finish: .ink, paint: Theme.Colors.live, isTap: true,
+                         action: { model.isWorkoutPresented = true }, label: { _ in
+                             Text("Resume").textRole(.bodyStrong)
+                         })
+                         .tint(Theme.Colors.live)
+                         .frame(width: 220)
+                         .accessibilityLabel("Resume \(session.workout.title), \(resumePoint)")
+                TimelineView(.periodic(from: .now, by: 1)) { context in
+                    let lines = state(now: AppClock.adjust(context.date))
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(lines.0)
+                        Text(lines.1).contentTransition(.numericText(countsDown: true))
+                    }
+                    .textRole(.label)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .monospacedDigit()
+                    .accessibilityElement(children: .combine)
+                }
+            }
+        }
+        .accessibilityElement(children: .contain)
+    }
+
+    private var resumePoint: String {
+        let exercise = session.currentExercise?.name ?? "Workout"
+        guard let entry = session.currentEntry else { return exercise }
+        return "\(exercise), set \(session.currentSetNumber) of \(session.targetSets(of: entry))"
+    }
+
+    private func state(now: Date) -> (String, String) {
+        switch session.phase(at: now) {
+        case let .rest(end): ("Resting", Format.duration(max(0, end.timeIntervalSince(now)).rounded(.up)))
+        case .set: ("Set \(session.currentSetNumber)", "is up")
+        case .exerciseDone: ("Next", "exercise")
+        case .workoutDone: ("Ready", "to finish")
+        }
+    }
+}
+
+/// One ledger row: the subject, the next step stated as time (never judgement) and a text-only Resume. Its state
+/// is the seam 6 pt above it: suspended = 2 pt vermilion, lit and still.
+private struct LedgerRow: View {
+    let session: WorkoutSession
+    let now: Date
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Theme.Colors.live
+                .frame(height: 2)
+                .shadow(color: Theme.Colors.live.opacity(0.45), radius: 4)
+            Button { model.isWorkoutPresented = true } label: {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(session.workout.title).textRole(.bodyStrong).foregroundStyle(Theme.Colors.ink)
+                        Text(step)
+                            .font(Theme.voice(size: 18))
+                            .foregroundStyle(Color(hex: 0x6E6480))
+                            .lineLimit(1)
+                    }
+                    Spacer(minLength: Theme.Spacing.s)
+                    Text("Resume").textRole(.bodyStrong).foregroundStyle(Theme.Colors.live)
+                }
+                .frame(height: 64)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(session.workout.title), \(step). Resume")
+        }
+    }
+
+    private var step: String {
+        let exercise = session.currentExercise?.name.components(separatedBy: " ").first ?? "Workout"
+        let entry = session.currentEntry
+        let minutes = Int(now.timeIntervalSince(session.lastTouchedAt) / 60)
+        let target = entry.map(session.targetSets(of:)) ?? 0
+        return "\(exercise), set \(session.currentSetNumber) of \(target), \(minutes) min ago"
     }
 }

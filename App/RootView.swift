@@ -37,6 +37,18 @@ struct RootView: View {
                 PaintFlood(isOn: flooding, origin: CGPoint(x: 44, y: proxy.size.height - 30))
                     .ignoresSafeArea()
             }
+            .overlay(alignment: .top) {
+                // A running process lights the top edge; tapping it resumes. A suspended one moves to the ledger.
+                TimelineView(.periodic(from: .now, by: 30)) { context in
+                    if let session = model.session, !model.isWorkoutPresented,
+                       !session.isSuspended(at: AppClock.adjust(context.date))
+                    {
+                        RunningSeam(session: session) { model.isWorkoutPresented = true }
+                            .ignoresSafeArea(edges: .top)
+                            .transition(.opacity)
+                    }
+                }
+            }
         }
         .fullScreenCover(isPresented: $model.isWorkoutPresented) {
             WorkoutModeView()
