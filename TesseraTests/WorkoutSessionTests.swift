@@ -24,14 +24,41 @@ struct WorkoutSessionTests {
         let (_, session) = try startedSession()
         #expect(session.phase() == .set)
         #expect(session.currentSetNumber == 1)
-        // From the ledger's next target: the library's bench runs dp(+2.5, 5, 8) and last time was 7 then 6 at 82.5,
-        // so the same weight, aiming for 7 on every set.
+        // Core's prefill: set 1 opens at last time's set 1 (82.5 × 7, three days ago).
         #expect(session.weight == 82.5 && session.reps == 7)
-        #expect(session.targetReason?.contains("aim for 7") == true)
+        #expect(session.targetReason == "Same as last time, 82.5 × 7")
+        #expect(session.isAtPrefill)
         // Bench is plate-loaded: the dial's detents come from its load profile, the plates from PlateLoad.
         #expect(session.detents.first == 20)
         #expect(session.detents.contains(82.5))
         #expect(session.platesPerSide == [25, 5, 1.25])
+    }
+
+    @Test func oneHoldOnThePrefillLogsItThroughLogNextSet() throws {
+        let (model, session) = try startedSession()
+        session.logSet()
+        #expect(model.engine.history(limit: 1).first?.action == "logNextSet")
+        // Set 2 keeps today's weight with last time's set-2 reps (82.5 × 6).
+        #expect(session.weight == 82.5 && session.reps == 6)
+        session.skipRest()
+        session.reps = 8
+        session.logSet()
+        #expect(model.engine.history(limit: 1).first?.action == "logSet")
+    }
+
+    @Test func aFirstEverSessionOpensAtTheSlotTarget() throws {
+        // No demo: his plan, no history.
+        let routine = try #require(model.todaysRoutine())
+        model.startRoutine(routine)
+        let session = try #require(model.session)
+        #expect(session.currentExercise?.name == "Bench Press")
+        #expect(session.reps == 5) // the bottom of 4 × 5–8
+        #expect(session.weight == 20) // nothing to go on: the empty bar
+        #expect(session.targetReason == "First time. Start light, 5 reps")
+        session.logSet()
+        let entry = try #require(session.currentEntry)
+        #expect(session.setRows(of: entry).count == 1)
+        #expect(session.weight == 20 && session.reps == 5) // set 2 carries today's numbers
     }
 
     @Test func loggingSeatsTheSetAndTurnsTheDialIntoRest() throws {

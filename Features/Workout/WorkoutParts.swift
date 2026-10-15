@@ -167,7 +167,7 @@ enum WorkoutLines {
         if let best = session.previousBest {
             return "Last best was \(Format.kilograms(best.weight)) × \(Int(best.reps))."
         }
-        return "Same as last time is fine."
+        return "Set \(session.currentSetNumber). \(Format.kilograms(session.weight)) × \(Int(session.reps))."
     }
 }
 

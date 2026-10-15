@@ -20,7 +20,7 @@ final class WorkoutSession {
 
     /// The exercise on screen (x), an index into `entries`.
     private(set) var currentIndex = 0
-    /// The dialled set. Opens prefilled (the ledger's next target, else the last set), so most sets need one hold.
+    /// The dialled set. Opens prefilled (Core's `ledger.prefill`: last time's set), so most sets need one hold.
     var weight: Double = 20
     var reps: Double = 8
     var rpe: Double?
@@ -238,6 +238,8 @@ final class WorkoutSession {
     private var swaps: [UUID: String] = [:]
     private var presetWeight: [UUID: Double] = [:]
     private var estimated: Set<UUID> = []
+    /// What Core prefilled the current set with.
+    private(set) var prefill: SetPrefill?
 }
 
 extension WorkoutSession {
@@ -346,10 +348,17 @@ extension WorkoutSession {
             records.removeAll { $0 == .e1RM }
         }
         let e1RM = previewE1RM
-        guard let result = try? model.engine.perform(
-            LogSet(entry: entry.id, weight: weight, reps: reps, rpe: rpe, source: source, unit: Format.unit),
-            by: actor
-        ) else { return }
+        // One hold on an untouched prefill is Core's LogNextSet (the same action as the Lock Screen's Done).
+        let performed: (output: ObjectRecord, record: OpRecord)? = if isAtPrefill, presetWeight[entry.id] == nil {
+            (try? model.engine.perform(LogNextSet(entry: entry.id, source: source), by: actor))
+                .map { ($0.output, $0.record) }
+        } else {
+            (try? model.engine.perform(
+                LogSet(entry: entry.id, weight: weight, reps: reps, rpe: rpe, source: source, unit: Format.unit),
+                by: actor
+            )).map { ($0.output, $0.record) }
+        }
+        guard let result = performed else { return }
         let set = result.output
         undoable = Undoable(record: result.record, entryID: entry.id, setID: set.id, weight: weight, reps: reps,
                             rpe: rpe)
@@ -369,6 +378,8 @@ extension WorkoutSession {
         // The last set of the exercise doesn't need a rest before paging on, but the workout's last does nothing.
         restEndsAt = entries.allSatisfy(isFinished) ? nil : AppClock.now.addingTimeInterval(restTotal)
         model.touch()
+        // The next set opens prefilled: this session's weight, last time's reps for that set.
+        loadDefaults()
     }
 
     var canUndo: Bool {
@@ -534,31 +545,39 @@ extension WorkoutSession {
 
     // MARK: Defaults
 
-    /// Prefill: the weight Tess re-preset (top-set check, swap), else the last set today, else the ledger's next
-    /// target (the progression rule, else last time), else the entry's planned target. Always on a loadable detent.
+    /// Prefill (Core's `ledger.prefill`): set 1 opens at last time's set 1, later sets keep this session's weight with
+    /// last time's reps for that position, a first-ever session opens at the slot's target. A weight Tess re-preset
+    /// (top-set check, swap) wins. Always on a loadable detent; with no weight at all, the lightest load.
     private func loadDefaults() {
         guard let entry = currentEntry else { return }
-        let last = setRows(of: entry).last
-        let target = currentExercise.map { exercise in
-            ledger.nextTarget(for: exercise, slot: model.store.linkedObjects("slot", of: entry).first,
-                              excludingWorkout: workout.id)
-        }
-        let hasHistory = target?.weight != nil
-        targetReason = hasHistory ? target?.reason : nil
-        let prefill = target?.weight ?? targetWeight(of: entry)
-        let raw = presetWeight[entry.id] ?? last?.weight ?? prefill
-        if let raw, let exercise = currentExercise {
+        let prefill = ledger.prefill(for: entry)
+        self.prefill = prefill
+        targetReason = Self.reason(for: prefill)
+        if let raw = presetWeight[entry.id] ?? prefill.weight, let exercise = currentExercise {
             weight = loadProfile(of: exercise).nearest(to: raw)
         } else {
-            weight = raw ?? detents.first ?? 20
+            weight = detents.first ?? 20
         }
-        if let last {
-            reps = last.reps
-        } else if hasHistory, let target {
-            reps = Double(target.reps)
-        } else {
-            reps = model.store.number("targetReps", of: entry) ?? Double(target?.reps ?? 8)
-        }
+        reps = Double(prefill.reps)
         rpe = nil
+    }
+
+    /// Why the dial opened where it did, in Tess's words.
+    static func reason(for prefill: SetPrefill) -> String? {
+        switch prefill.source {
+        case .lastTime:
+            prefill.weight.map { "Same as last time, \(Format.kilograms($0)) × \(prefill.reps)" }
+        case .thisSession: nil
+        case .target: prefill.weight == nil ? "First time. Start light, \(prefill.reps) reps" : "From the plan"
+        case .none: "First time. Start light"
+        }
+    }
+
+    /// The dial still holds the prefill exactly, so Core's LogNextSet can log it as is.
+    var isAtPrefill: Bool {
+        guard let entry = currentEntry, rpe == nil, Format.unit == .kilograms else { return false }
+        let prefill = ledger.prefill(for: entry)
+        guard let weight = prefill.weight else { return false }
+        return abs(weight - self.weight) < 0.001 && prefill.reps == Int(reps)
     }
 }

@@ -488,7 +488,8 @@ extension WorkoutContent {
         HStack(spacing: Theme.Spacing.l) {
             switch phase {
             case .set:
-                PaintKey(finish: .cream, paint: Paint.live, duration: 0.8, height: 62) {
+                // Hold to log: 0.6 s, 20 pt of drift (docs/research/ship-now.md).
+                PaintKey(finish: .cream, paint: Paint.live, duration: 0.6, height: 62, drift: 20) {
                     withTesseraAnimation(reduceMotion: reduceMotion) { session.logSet() }
                 } label: { holding in
                     Text(holding ? "Keep holding" : "Hold to log").textRole(.bodyStrong)
