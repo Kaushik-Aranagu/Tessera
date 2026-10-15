@@ -15,7 +15,7 @@ struct InkStroke: Shape {
         guard w > 0, h > 0 else { return Path() }
         let wobble: [CGFloat] = [0.06, -0.04, 0.05, -0.07, 0.03, -0.02, 0.06, -0.05]
         func jitter(_ i: Int) -> CGFloat {
-            wobble[(i + seed) % wobble.count] * h
+            wobble[abs((i &+ seed) % wobble.count)] * h
         }
         var path = Path()
         // Top edge, left to right, with a ragged start.

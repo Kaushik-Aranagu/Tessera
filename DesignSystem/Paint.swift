@@ -152,7 +152,7 @@ struct PaintDab: View {
     var filled = true
 
     var body: some View {
-        let tilt = Double((seed * 37) % 17) - 8
+        let tilt = Double((seed &* 37) % 17) - 8
         DabShape(seed: seed)
             .fill(filled ? color : .clear)
             .overlay {
@@ -173,7 +173,8 @@ struct DabShape: Shape {
 
     func path(in rect: CGRect) -> Path {
         let jitter: [CGFloat] = [0.55, 0.45, 0.6, 0.4, 0.5, 0.6, 0.4, 0.5]
-        let shift = seed % 4
+        // Any seed is fine, hash values included: negative ones fold back into range.
+        let shift = abs(seed % 4)
         func j(_ i: Int) -> CGFloat {
             jitter[(i + shift * 2) % jitter.count]
         }
