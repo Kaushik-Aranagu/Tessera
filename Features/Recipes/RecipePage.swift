@@ -10,7 +10,8 @@ import TesseraCore
 /// text and cook history; swipe the ingredient column left to send it to Groceries.
 struct RecipePage: View {
     let recipeID: UUID
-    var onCook: (UUID, Int?) -> Void = { _, _ in }
+    /// What Cook opens. Until cook mode (screen 12) lands, the page starts the cook itself and shows it running.
+    var onCook: ((UUID, Int?) -> Void)?
 
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -71,7 +72,7 @@ struct RecipePage: View {
                         .scrollIndicators(.hidden)
                         .scrollBounceBehavior(.basedOnSize)
                         .offset(x: away ? -columnWidth * 1.4 : min(0, drag))
-                        .gesture(sendGesture(recipe: recipe.id, serves: size))
+                        .simultaneousGesture(sendGesture(recipe: recipe.id, serves: size))
                         PortionDrum(serves: Binding(get: { size ?? 2 }, set: { serves = $0 }), isEnabled: own != nil)
                     }
                     if let sent {
@@ -84,26 +85,39 @@ struct RecipePage: View {
                 .padding(.top, Theme.Spacing.xl)
                 .entrance(3)
 
+                // Already on the list (and not just sent): how much of it is still to buy.
+                let onList = Groceries(store: model.store, classes: model.classes).share(of: recipe).count
+                if sent == nil, onList > 0 {
+                    (Text("\(onList)").fontWeight(.semibold) + Text(" to buy, in Groceries"))
+                        .textRole(.body)
+                        .foregroundStyle(Theme.Colors.health)
+                        .padding(.top, Theme.Spacing.s)
+                        .transition(.opacity)
+                }
+
                 Text(steps.count == 1 ? "1 step" : "\(steps.count) steps")
                     .textRole(.label)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .padding(.top, Theme.Spacing.m)
+                let cooking = RecipeCopy.cookStep(of: recipe, model: model)
                 HStack(spacing: Theme.Spacing.l) {
                     PaintKey(finish: .ink, paint: Theme.Colors.now, isTap: true,
-                             action: { onCook(recipe.id, size) })
+                             action: { cook(recipe.id, size) })
                     { _ in
-                        Text("Cook")
+                        Text(cooking == nil ? "Cook" : "Cooking")
                             .textRole(.labelStrong)
                     }
                     .frame(maxWidth: 220)
-                    .accessibilityHint("Starts cook mode at this size")
-                    if let total = model.store.number("totalMinutes", of: recipe) {
-                        Text("\(Int(total)) min")
-                            .textRole(.label)
-                            .foregroundStyle(Theme.Colors.inkSecondary)
+                    .accessibilityHint(cooking == nil ? "Starts cooking at this size" : "It's cooking now")
+                    if let cooking {
+                        Text(cooking)
+                            .font(Theme.voice)
+                            .foregroundStyle(Theme.Colors.now)
+                            .transition(.opacity)
                     }
                 }
                 .padding(.top, Theme.Spacing.s)
+                .tesseraAnimation(Theme.Motion.house, value: cooking)
                 .entrance(4)
             }
             .padding(.horizontal, Theme.Spacing.gutter)
@@ -122,6 +136,17 @@ struct RecipePage: View {
                 .foregroundStyle(Theme.Colors.context)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background { ThemedBackground() }
+        }
+    }
+
+    private func cook(_ recipe: UUID, _ serves: Int?) {
+        if let onCook {
+            onCook(recipe, serves)
+            return
+        }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+            _ = try? model.engine.perform(StartCooking(recipe: recipe, serves: serves), by: .user)
+            model.touch()
         }
     }
 
@@ -335,6 +360,14 @@ enum RecipeCopy {
             parts.append("cooked \(relative(last, now: now))")
         }
         return parts.joined(separator: ", ")
+    }
+
+    /// "Step 1 of 4" while this recipe is cooking, else nil.
+    static func cookStep(of recipe: ObjectRecord, model: AppModel) -> String? {
+        guard let running = ProcessTable(engine: model.engine).running(), let cook = running.subject,
+              model.store.linkedObjects("recipe", of: cook).first?.id == recipe.id else { return nil }
+        let steps = RecipeBook(store: model.store, classes: model.classes).steps(of: recipe).count
+        return "Step \((running.resumePoint?.index ?? 0) + 1) of \(steps)"
     }
 
     static func hours(_ minutes: Double) -> String {
