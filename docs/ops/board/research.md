@@ -21,7 +21,7 @@
 
 12. Speak normaliser check against master's grammar (Builder B's Speak is close). Done when `fixtures/spoken-normaliser.md`'s 80 rows have been run through master's grammar after normalising, each marked as pass or fail with the current parse, and every fail has a proposed fix for Core or Builder B.
 13. Day log copy against real days (`day-log-first.md`, Core Next 3). Done when 5 days of op logs, built from the synthetic year generator's shapes plus today's real merges (workout, groceries, notes, rest day), each come with the exact `DayStory` lines expected, including the unfinished-workout line and the "Also:" cut-off.
-14. Meal plan to groceries brief (Core Later). Done when `meal-plan-groceries.md` gives Core the smallest rule ("carbonara thursday" puts its ingredients on Groceries the evening before, linked to the task): when it fires, merging with items already on the list, what undo does, and 15 fixtures, checked against master's Groceries and Recipes code.
+14. M5 parse order check (decisions.md, 4:10 PM PT). Done when every row in `fixtures/reading`, `money`, `people` and `upkeep` has been checked against the agreed order (notes, pasted recipes, relative sets, reading, money, people, comma sets, lifts, kitchen, upkeep, tasks), with any row whose parse changes listed alongside a proposed fix, so Core's M5 phrase slices start clean.
 
 **Later:**
 - Run the 5-line context size check from `on-device-context-size.md` on Kaushik's phone (needs a Mac lead).
