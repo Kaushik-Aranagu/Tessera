@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Day log page</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for docs/design/day-log-page.md (M4 slice 5, Day log v1), with the real lines from docs/research/day-log-first.md. Review's Day log word zooms in onto today; reading up the week; a line opens its object; the margin scrub runs back to an empty run. Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4;--sage:#6E9E6A;--cad:#E0B341;--muted:#A39AAE}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 85% 6%,#E9E0F0 0%,rgba(233,224,240,0) 70%),radial-gradient(70% 45% at 0% 40%,#E3EAD8 0%,rgba(227,234,216,0) 70%),radial-gradient(80% 50% at 100% 80%,#EFE2CF 0%,rgba(239,226,207,0) 70%),#F4F0EA}
+.abs{position:absolute}
+.page{position:absolute;inset:0}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub);white-space:nowrap}
+.back .line,.la .line{position:absolute;left:0;right:0;bottom:-6px;height:1.5px;background:var(--ink);transform:scaleX(0);transform-origin:left}
+.hero{position:absolute;left:20px;font-weight:500;letter-spacing:-.035em;white-space:nowrap}
+.d{position:absolute;width:40px;height:36px;margin:-18px 0 0 -20px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.85) 0%,rgba(var(--c),.6) 42%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(2.5px)}
+/* the log */
+.day{position:absolute;left:0;right:0}
+.dh{position:absolute;left:22px;top:0}
+.ln{position:absolute;left:0;right:0}
+.ln .t{position:absolute;left:22px;top:4px;font-weight:600;font-size:16px;letter-spacing:.02em;font-variant-numeric:tabular-nums;color:var(--sub);opacity:.75}
+.ln .dab{position:absolute;left:78px;top:9px;width:13px;height:11px;border-radius:55% 45% 60% 40%/50% 60% 40% 50%;filter:blur(.5px)}
+.ln .x{position:absolute;left:98px;right:22px;top:0;font-size:21px;line-height:28px}
+.ln .x span{position:relative}
+.ln .x .line{position:absolute;left:0;right:0;bottom:-3px;height:1.5px;background:var(--ink);transform:scaleX(0);transform-origin:left}
+.also .x{color:rgba(43,36,64,.7)}
+.empty{opacity:.45}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:30;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <svg width="390" height="844" class="abs" style="inset:0;mix-blend-mode:multiply;opacity:.3;pointer-events:none" aria-hidden="true">
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .45  0 0 0 .55 0"/></filter>
+    <rect width="390" height="844" filter="url(#grain)"/>
+  </svg>
+
+  <!-- Review, the page you come from -->
+  <section id="review" class="page">
+    <div class="abs lbl" style="left:22px;top:58px">REVIEW</div>
+    <div class="hero" style="top:96px;font-size:44px;line-height:1.08;white-space:normal;right:22px">Four sessions this week, and you cooked three times.</div>
+    <div class="abs" style="left:22px;top:300px;display:flex;gap:22px" id="dabs"></div>
+    <div class="abs" style="left:22px;top:380px;font-size:21px;color:var(--ctx)">Tuesday was the big one: bench 82.5 × 8.</div>
+    <div class="abs" style="left:22px;top:640px;font-size:21px;font-weight:600">The week<span style="color:var(--sub);font-weight:400"> · </span><span id="dlw" style="position:relative">Day log<span class="line" style="position:absolute;left:0;right:0;bottom:-4px;height:1.5px;background:var(--ink);transform:scaleX(0);transform-origin:left"></span></span><span style="color:var(--sub);font-weight:400"> · </span>Notes</div>
+    <div class="abs lbl" style="left:22px;top:700px;opacity:.6">BACKUPS</div>
+  </section>
+
+  <!-- the Day log -->
+  <section id="log" class="page" style="opacity:0;pointer-events:none">
+    <div class="back abs lbl" id="back" style="left:22px;top:58px">‹ HOME<span class="line"></span></div>
+    <div id="month" class="hero" style="top:92px;font-size:44px;line-height:1">October</div>
+    <div id="win" class="abs" style="left:0;right:0;top:150px;height:618px;overflow:hidden;-webkit-mask-image:linear-gradient(transparent,#000 48px);mask-image:linear-gradient(transparent,#000 48px)">
+      <div id="lane" class="abs" style="left:0;right:0;top:0"></div>
+    </div>
+    <div id="scrub" class="abs" style="right:22px;top:0;text-align:right;opacity:0;z-index:8;pointer-events:none">
+      <div id="sdow" class="lbl" style="color:var(--ink)">SUN</div>
+      <div id="snum" style="font-size:80px;font-weight:300;line-height:.9;letter-spacing:-.04em;font-variant-numeric:tabular-nums">11</div>
+    </div>
+  </section>
+
+  <!-- the object a line opens -->
+  <section id="obj" class="page" style="opacity:0;pointer-events:none">
+    <div class="back abs lbl" id="back2" style="left:22px;top:58px">‹ DAYS<span class="line"></span></div>
+    <div class="hero" style="top:90px;font-size:56px;line-height:1">Carbonara</div>
+    <div class="abs" style="left:22px;top:160px;font-size:21px;color:var(--ctx)">serves 2, 35 min, cooked Tuesday</div>
+    <div class="abs" style="left:22px;top:226px;font-size:21px;line-height:44px"><b style="font-weight:600;display:inline-block;min-width:92px">200 g</b>spaghetti<br><b style="font-weight:600;display:inline-block;min-width:92px">100 g</b>guanciale<br><b style="font-weight:600;display:inline-block;min-width:92px">3</b>egg yolks<br><b style="font-weight:600;display:inline-block;min-width:92px">50 g</b>pecorino</div>
+  </section>
+
+  <div id="soul" class="abs" style="left:346px;top:788px;width:0;height:0;z-index:13">
+    <div class="d" style="--c:200,69,47;transform:translate(-10px,-6px) scale(.72)"></div><div class="d" style="--c:46,109,164;transform:translate(10px,-6px) scale(.72)"></div><div class="d" style="--c:224,179,65;transform:translate(0,9px) scale(.72)"></div>
+  </div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+const tween = (dur, fn, e = ease) => new Promise((res) => { const t0 = performance.now(); const st = (n) => { const t = Math.min(1, (n - t0) / dur); fn(e(t)); t < 1 ? requestAnimationFrame(st) : res(); }; requestAnimationFrame(st); });
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const centre = (el) => { const r = rel(el.getBoundingClientRect()); return [r.left + r.width / 2, r.top + r.height / 2]; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+
+// Review's seven day dabs
+const DC = ['200,69,47', '110,158,106', '200,69,47', '163,154,174', '200,69,47', '110,158,106', '200,69,47'];
+$('dabs').innerHTML = DC.map((c, i) => `<div style="position:relative;width:24px;height:24px"><div class="d" style="--c:${c};left:12px;top:12px;transform:scale(.62);${i === 3 ? 'opacity:.35' : ''}"></div></div>`).join('');
+
+// colour by the line's class colorRole: training, health (kitchen), planning (tasks, lists), neutral (notes)
+const R = { training: 'var(--verm)', health: 'var(--sage)', planning: 'var(--cad)', neutral: 'var(--muted)' };
+// DayStory.lines, oldest first; today at the bottom. Copy from docs/research/day-log-first.md
+const DAYS = [
+  { run: 'OCT 1 TO 4' },
+  { h: 'MON 5', n: 5, l: [['18:20', 'Legs, 48 min. Squat 100 x 5.', 'training']] },
+  { h: 'TUE 6', n: 6, l: [['08:05', 'Added 4 tasks, 3 groceries', 'planning'], ['12:30', 'Pull day, 9 sets. Curl 14 x 12.', 'training', 'dry'], ['16:00', 'Done: send the invoice, book the dentist', 'planning']] },
+  { h: 'WED 7', n: 7, l: [['19:00', 'Cooked ramen, 40 min', 'health'], ['23:20', 'Push day B, 75 min. Incline 30 x 10, PR.', 'training']] },
+  { run: 'THU 8', n: 8 },
+  { h: 'FRI 9', n: 9, l: [['20:10', 'Done: renew passport photo', 'planning']] },
+  { h: 'SAT 10', n: 10, l: [['10:20', 'Saved dal tadka', 'health'], ['10:25', 'Added groceries for dal tadka', 'planning'], ['11:30', 'Shopped, 14 items', 'health'], ['18:45', 'Cooked dal tadka, 50 min', 'health']] },
+  { h: 'SUN 11', n: 11, l: [['07:05', 'Ticked 9 on Lisbon packing', 'planning'], ['07:30', 'Done: water the plants', 'planning'], ['14:55', 'Note: gate B32, seat 14C', 'neutral'], ['22:10', 'Added 2 tasks', 'planning']] },
+  { h: 'MON 12', n: 12, l: [['18:10', 'Push day, 4 sets, not finished', 'training', 'dry'], ['20:30', '2 tasks done', 'planning']] },
+  { h: 'TUE 13', n: 13, l: [['07:10', 'Push day A, 52 min. Bench 82.5 x 8, PR.', 'training'], ['12:40', 'Done: call the bank', 'planning'], ['19:30', 'Cooked carbonara, 35 min', 'health', 0, 'carb']] },
+  { h: 'WED 14', n: 14, l: [['09:15', 'Added 3 tasks', 'planning'], ['18:05', 'Ticked 2 on Home', 'planning'], ['21:40', 'Note: shoulder felt fine', 'neutral']] },
+  { h: 'TODAY', n: 15, today: 1, l: [['06:50', 'Pull day, 61 min. Row 70 x 10.', 'training'], ['08:30', '4 tasks done', 'planning'], ['09:00', 'Added 7 tasks', 'planning'], ['13:15', 'New list: Lisbon packing', 'planning'], ['17:40', 'Cooked omelette, 10 min', 'health'], [null, 'Also: 3 notes, 5 groceries, ticked 4 on Lisbon packing.']] },
+];
+const DOW = { 5: 'MON', 6: 'TUE', 7: 'WED', 8: 'THU', 9: 'FRI', 10: 'SAT', 11: 'SUN', 12: 'MON', 13: 'TUE', 14: 'WED', 15: 'THU' };
+const lane = $('lane');
+let y = 8; const todayLines = [];
+function build() {
+for (const d of DAYS) {
+  const b = document.createElement('div'); b.className = 'day'; b.style.top = y + 'px'; lane.appendChild(b); d.el = b; d.top = y;
+  if (d.run) { b.innerHTML = `<div class="dh lbl empty">${d.run}</div>`; y += 26 + 30; continue; }
+  b.innerHTML = `<div class="dh lbl" style="${d.today ? 'color:var(--ink)' : ''}">${d.h}</div>`;
+  let ly = 34;
+  for (const [t, x, role, dry, id] of d.l) {
+    const ln = document.createElement('div'); ln.className = 'ln' + (t ? '' : ' also'); ln.style.top = ly + 'px';
+    ln.innerHTML = (t ? `<span class="t">${t}</span><span class="dab" style="background:${R[role]};${dry ? 'opacity:.4' : ''}"></span>` : '') + `<div class="x"><span ${id ? `id="${id}"` : ''}>${x}<span class="line"></span></span></div>`;
+    b.appendChild(ln);
+    if (d.today) todayLines.push(ln);
+    const h = ln.querySelector('.x').offsetHeight;
+    ly += Math.max(30, h + 4);
+  }
+  y += ly + 30;
+}
+}
+let laneH = 0;
+const winH = 618;
+let off = 0;
+const setOff = (v) => { off = v; lane.style.transform = `translateY(${v}px)`; };
+
+// the day under a y in the window
+const dayAt = (wy) => { let pick = DAYS[0]; for (const d of DAYS) if (d.top + off <= wy) pick = d; return pick; };
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  await document.fonts.ready; build(); laneH = y; setOff(winH - laneH - 6);
+  await sleep(400); document.body.dataset.start = '1';
+  await sleep(900);
+
+  // 1 · on Review, tap Day log: hairline, then the log zooms in (z) and lands on today, lines arriving bottom up
+  const [wx, wy] = centre($('dlw')); await fingerOn(wx, wy);
+  await anim($('dlw').querySelector('.line'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 150, easing: 'ease-out' });
+  fingerOff();
+  anim($('review'), [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(1.06)', filter: 'blur(3px)' }], { duration: 380, easing: HOUSE });
+  const log = $('log'); log.style.transformOrigin = `${wx}px ${wy}px`;
+  for (const ln of todayLines) ln.style.opacity = 0;
+  await sleep(160);
+  await anim(log, [{ opacity: 0, transform: 'scale(.94)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: HOUSE });
+  [...todayLines].reverse().forEach((ln, i) => anim(ln, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 360, delay: i * 40, easing: HOUSE }));
+  await sleep(1900);
+
+  // 2 · read up the week: drag down, the past comes in from above
+  const carb = DAYS.find((d) => d.h === 'TUE 13');
+  const to1 = Math.min(0, -(carb.top) + 40);
+  await fingerOn(230, 300);
+  const o0 = off;
+  await tween(1500, (t) => { setOff(o0 + (to1 - o0) * t); fingerAt(230, 300 + (to1 - o0) * Math.min(1, t * 1.15)); }, easeOut);
+  fingerOff(); await sleep(1300);
+
+  // 3 · tap a line: hairline, then its object opens out of the line's band; ‹ DAYS goes back
+  const c = $('carb'); const [cx, cy] = centre(c); const band = rel(c.closest('.ln').getBoundingClientRect());
+  await fingerOn(cx, cy);
+  await anim(c.querySelector('.line'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 150, easing: 'ease-out' });
+  fingerOff();
+  const obj = $('obj'); obj.style.opacity = 1;
+  anim(log, [{ opacity: 1 }, { opacity: 0 }], { duration: 300, easing: HOUSE });
+  await anim(obj, [{ clipPath: `inset(${band.top - 4}px 0 ${844 - band.top - band.height - 4}px 0)` }, { clipPath: 'inset(0 0 0 0)' }], { duration: 440, easing: HOUSE });
+  await sleep(1300);
+  const [bx, by] = centre($('back2')); await fingerOn(bx, by);
+  await anim($('back2').querySelector('.line'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 150, easing: 'ease-out' });
+  fingerOff();
+  anim(log, [{ opacity: 0 }, { opacity: 1 }], { duration: 320, easing: HOUSE });
+  await anim(obj, [{ clipPath: 'inset(0 0 0 0)' }, { clipPath: `inset(${band.top - 4}px 0 ${844 - band.top - band.height - 4}px 0)`, opacity: 0 }], { duration: 400, easing: HOUSE });
+  c.querySelector('.line').animate([{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }], { duration: 200, fill: 'forwards' });
+  await sleep(900);
+
+  // 4 · scrub in the margin: the lines step back, the day under the thumb rises as a numeral, a tick per day
+  const sc = $('scrub'); const fy0 = 230;
+  await fingerOn(40, fy0);
+  anim(lane, [{ opacity: 1 }, { opacity: .3 }], { duration: 200 });
+  anim(sc, [{ opacity: 0 }, { opacity: 1 }], { duration: 200 });
+  let last = null; const o1 = off, to2 = 40;
+  await tween(2000, (t) => {
+    const fy = fy0 + 380 * t; fingerAt(40, fy); setOff(o1 + (to2 - o1) * t);
+    const d = dayAt(fy - 150);
+    sc.style.top = (fy - 70) + 'px';
+    const n = d.n || 4; const lab = d.run && !d.n ? 'OCT' : (DOW[n] || 'SUN');
+    if (d !== last) { last = d; $('snum').textContent = d.run && !d.n ? '1–4' : n; $('sdow').textContent = lab; }
+  }, (t) => t);
+  await sleep(250);
+  fingerOff();
+  anim(sc, [{ opacity: 1 }, { opacity: 0 }], { duration: 220 });
+  await anim($('lane'), [{ opacity: .3 }, { opacity: 1 }], { duration: 260, easing: HOUSE });
+  await sleep(1800);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>
