@@ -104,6 +104,9 @@ struct ExerciseLane: View {
 enum WorkoutLines {
     static func subline(_ session: WorkoutSession, phase: WorkoutSession.Phase) -> (String, Color) {
         guard let entry = session.currentEntry else { return ("", Paint.secondary) }
+        if let row = session.editingRow {
+            return ("changing set \(row.number), was \(Format.kilograms(row.weight)) × \(Int(row.reps))", Paint.tess)
+        }
         let target = session.targetSets(of: entry)
         let rows = session.setRows(of: entry)
         let tenth = { (value: Double) in Format.kilograms((value * 10).rounded() / 10) }
@@ -136,6 +139,12 @@ enum WorkoutLines {
     static func tess(_ session: WorkoutSession, phase: WorkoutSession.Phase, summary: String?) -> String {
         if session.finishedAt != nil {
             return summary ?? ""
+        }
+        if session.isEditing {
+            return "Dial it in, then save."
+        }
+        if let note = session.editNote {
+            return note
         }
         if case .rest = phase, let seated = session.lastSeated {
             // tess-voice: "Set 3. 80 x 8." and "New best: 85 x 5. e1RM 99."
@@ -260,7 +269,7 @@ struct WorkoutTessBar: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Undo the last set")
+                .accessibilityLabel("Undo the last change")
                 .transition(.opacity)
             }
         }
@@ -309,5 +318,37 @@ struct PlateStepKey: View {
         .buttonRepeatBehavior(.enabled)
         .sensoryFeedback(.selection, trigger: presses)
         .accessibilityLabel(up ? "Heavier by \(step) kilograms" : "Lighter by \(step) kilograms")
+    }
+}
+
+// MARK: - Edit keys
+
+/// While a logged set is on the dial: Save set N (Core's EditSet) and a plain Cancel.
+struct EditSetKeys: View {
+    let session: WorkoutSession
+    var onSave: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        if let row = session.editingRow {
+            PaintKey(finish: .cream, paint: Paint.cobalt, isTap: true, height: 62) {
+                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { session.saveEdit() }
+                onSave()
+            } label: { _ in
+                Text("Save set \(row.number)").textRole(.bodyStrong)
+            }
+            .frame(width: 200)
+            .accessibilityLabel("Save set \(row.number) as \(Format.kilograms(session.weight)) by \(Int(session.reps))")
+            Button {
+                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { session.endEditing() }
+            } label: {
+                Text("Cancel")
+                    .textRole(.bodyStrong)
+                    .foregroundStyle(Paint.secondary)
+                    .frame(minWidth: 60, minHeight: 60)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
     }
 }

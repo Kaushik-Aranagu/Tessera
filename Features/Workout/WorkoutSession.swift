@@ -13,7 +13,7 @@ import TesseraCore
 @Observable
 final class WorkoutSession {
     let workout: ObjectRecord
-    private unowned let model: AppModel
+    unowned let model: AppModel
     private var ledger: TrainingLedger {
         model.ledger
     }
@@ -239,6 +239,14 @@ final class WorkoutSession {
     private var estimated: Set<UUID> = []
     /// What Core prefilled the current set with.
     private(set) var prefill: SetPrefill?
+    /// The logged set being changed on the dial and drum (tap its stroke); nil when dialling the next set.
+    var editingSetID: UUID?
+    /// Tess's line after an edit or its undo ("Changed set 2 to 85 × 6.").
+    var editNote: String?
+    /// The next set's numbers, put back when the edit ends.
+    var editStash: (weight: Double, reps: Double, rpe: Double?)?
+    /// The last edit, undoable until the next action.
+    var lastEdit: (record: OpRecord, number: Int)?
 }
 
 extension WorkoutSession {
@@ -357,6 +365,8 @@ extension WorkoutSession {
             )).map { ($0.output, $0.record) }
         }
         guard let result = performed else { return }
+        lastEdit = nil
+        editNote = nil
         let set = result.output
         // One celebration per exercise per session (Core decides); later records still count, quietly.
         let records = ledger.shouldCelebrate(set) ? beaten : []
@@ -511,6 +521,8 @@ extension WorkoutSession {
 
     func select(entryAt index: Int) {
         guard entries.indices.contains(index), index != currentIndex else { return }
+        editingSetID = nil
+        editStash = nil
         currentIndex = index
         lastSeated = nil
         lastTouchedAt = AppClock.now
