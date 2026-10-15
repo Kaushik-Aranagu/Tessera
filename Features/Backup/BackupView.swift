@@ -10,6 +10,8 @@ import UniformTypeIdentifiers
 struct BackupView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.isPresented) private var isPresented
     @State private var picking = false
     @State private var importing = false
     @State private var saving: BackupFile?
@@ -17,6 +19,8 @@ struct BackupView: View {
     @State private var refresh = 0
     /// A picked backup, checked and copied in, waiting for "Replace everything".
     @State private var confirming: Picked?
+    /// The staged restore, read once and refreshed on stage or cancel (the check reads the whole file).
+    @State private var pending: TesseraBackup.Info?
 
     var body: some View {
         let _ = refresh
@@ -24,6 +28,16 @@ struct BackupView: View {
         let latest = BackupKeeper.latestLocal
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
+                if isPresented {
+                    Button { dismiss() } label: {
+                        Text("‹ Review")
+                            .textRole(.label)
+                            .foregroundStyle(Theme.Colors.inkSecondary)
+                            .frame(minHeight: 44)
+                    }
+                    .buttonStyle(HandleButtonStyle())
+                    .accessibilityLabel("Back to Review")
+                }
                 Text("your history")
                     .font(Theme.voice)
                     .foregroundStyle(Theme.Colors.context)
@@ -43,23 +57,19 @@ struct BackupView: View {
                     .padding(.top, Theme.Spacing.xl)
                     .entrance(2)
 
-                HStack(alignment: .firstTextBaseline, spacing: 0) {
-                    Text(folder == nil ? "Also keep them in " : "Also kept in ")
-                        .textRole(.body)
-                        .foregroundStyle(Theme.Colors.ink)
-                    Button { picking = true } label: {
-                        Text(folder.map { BackupCopy.folderName($0) } ?? "a folder you choose")
-                            .textRole(.bodyStrong)
-                            .foregroundStyle(Theme.Colors.ink)
-                    }
-                    .buttonStyle(.valueWash)
-                    .accessibilityHint("Picks the folder, for example iCloud Drive")
-                    Text(".")
-                        .textRole(.body)
-                        .foregroundStyle(Theme.Colors.ink)
-                }
-                .padding(.top, Theme.Spacing.m)
-                .entrance(3)
+                // One sentence that wraps as text; the folder is a value word in 600 ink that opens the picker.
+                Text(BackupCopy.folderSentence(folder))
+                    .textRole(.body)
+                    .foregroundStyle(Theme.Colors.ink)
+                    .tint(Theme.Colors.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .environment(\.openURL, OpenURLAction { _ in
+                        picking = true
+                        return .handled
+                    })
+                    .accessibilityAction(named: "Choose the folder") { picking = true }
+                    .padding(.top, Theme.Spacing.m)
+                    .entrance(3)
 
                 Text(folder == nil
                     ? "Copies on this iPhone go if the app is deleted. A folder in iCloud Drive keeps them."
@@ -80,42 +90,7 @@ struct BackupView: View {
                 .padding(.top, Theme.Spacing.section)
                 .entrance(5)
 
-                if let confirming {
-                    VStack(alignment: .leading, spacing: Theme.Spacing.s) {
-                        Text("Replace everything with the copy from \(BackupCopy.day(confirming.info.createdAt))?")
-                            .textRole(.body)
-                            .foregroundStyle(Theme.Colors.ink)
-                            .fixedSize(horizontal: false, vertical: true)
-                        PaintKey(paint: Theme.Colors.live, action: confirmRestore) { _ in
-                            Text("Replace")
-                        } meta: {
-                            Text("Hold")
-                        }
-                        .accessibilityHint("Replaces your data with this copy next time Tessera opens")
-                        Button("Keep what's here") { dropPicked() }
-                            .buttonStyle(.labelWord)
-                    }
-                    .padding(.top, Theme.Spacing.xl)
-                    .transition(.opacity)
-                } else if let pending = TesseraBackup.pendingRestore() {
-                    VStack(alignment: .leading, spacing: Theme.Spacing.s) {
-                        Text("A restore is waiting")
-                            .textRole(.title)
-                            .foregroundStyle(Theme.Colors.ink)
-                        Text("The copy from \(BackupCopy.day(pending.createdAt)) replaces everything the next time "
-                            + "Tessera opens. Close Tessera from the app switcher to restore now.")
-                            .font(Theme.voice)
-                            .foregroundStyle(Theme.Colors.context)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Button("Cancel restore") {
-                            TesseraBackup.cancelRestore()
-                            say("Cancelled. Nothing will be replaced.")
-                        }
-                        .buttonStyle(.labelWord)
-                    }
-                    .padding(.top, Theme.Spacing.xl)
-                    .transition(.opacity)
-                }
+                restoreSection
 
                 if let line {
                     Text(line)
@@ -132,6 +107,9 @@ struct BackupView: View {
         }
         .scrollIndicators(.hidden)
         .background { ThemedBackground() }
+        .navigationBarBackButtonHidden(isPresented)
+        .background { EdgeSwipeBack() }
+        .task { pending = TesseraBackup.pendingRestore() }
         .environment(\.animateEntrance, true)
         .fileImporter(isPresented: $picking, allowedContentTypes: [.folder]) { result in
             guard case let .success(url) = result else { return }
@@ -155,6 +133,47 @@ struct BackupView: View {
             if case .success = result {
                 say("Saved.")
             }
+        }
+    }
+
+    /// The restore in progress: a picked copy waiting for "Replace", or a staged one that can be cancelled.
+    @ViewBuilder private var restoreSection: some View {
+        if let confirming {
+            VStack(alignment: .leading, spacing: Theme.Spacing.s) {
+                Text("Replace everything with the copy from \(BackupCopy.day(confirming.info.createdAt))?")
+                    .textRole(.body)
+                    .foregroundStyle(Theme.Colors.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                PaintKey(paint: Theme.Colors.live, action: confirmRestore) { _ in
+                    Text("Replace")
+                } meta: {
+                    Text("Hold")
+                }
+                .accessibilityHint("Replaces your data with this copy next time Tessera opens")
+                Button("Keep what's here") { dropPicked() }
+                    .buttonStyle(.labelWord)
+            }
+            .padding(.top, Theme.Spacing.xl)
+            .transition(.opacity)
+        } else if let staged = pending {
+            VStack(alignment: .leading, spacing: Theme.Spacing.s) {
+                Text("A restore is waiting")
+                    .textRole(.title)
+                    .foregroundStyle(Theme.Colors.ink)
+                Text("The copy from \(BackupCopy.day(staged.createdAt)) replaces everything the next time "
+                    + "Tessera opens. Close Tessera from the app switcher to restore now.")
+                    .font(Theme.voice)
+                    .foregroundStyle(Theme.Colors.context)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button("Cancel restore") {
+                    TesseraBackup.cancelRestore()
+                    pending = nil
+                    say("Cancelled. Nothing will be replaced.")
+                }
+                .buttonStyle(.labelWord)
+            }
+            .padding(.top, Theme.Spacing.xl)
+            .transition(.opacity)
         }
     }
 
@@ -194,7 +213,7 @@ struct BackupView: View {
     private func confirmRestore() {
         guard let picked = confirming else { return }
         do {
-            _ = try TesseraBackup.stageRestore(from: picked.url)
+            pending = try TesseraBackup.stageRestore(from: picked.url)
             dropPicked()
             say("What's here now is kept in Backups, so this can be undone.")
         } catch {
@@ -256,6 +275,17 @@ enum BackupCopy {
             : calendar.isDateInYesterday(latest) ? "yesterday"
             : latest.formatted(.dateTime.weekday(.wide))
         return "A copy is made every day, the last one \(when). Seven are kept."
+    }
+
+    /// "Also keep them in a folder you choose." with the folder as a tappable value word in 600.
+    static func folderSentence(_ folder: URL?) -> AttributedString {
+        var sentence = AttributedString(folder == nil ? "Also keep them in " : "Also kept in ")
+        var value = AttributedString(folder.map(folderName) ?? "a folder you choose")
+        value.inlinePresentationIntent = .stronglyEmphasized
+        value.link = URL(string: "tessera://backups/folder")
+        sentence += value
+        sentence += AttributedString(".")
+        return sentence
     }
 
     /// "Tuesday 14 October"

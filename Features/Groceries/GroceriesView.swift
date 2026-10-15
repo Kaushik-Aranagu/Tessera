@@ -37,6 +37,7 @@ private struct GroceriesPage: View {
     @State private var basketTarget: CGPoint = .zero
     @State private var breathe = false
     @State private var landed = 0
+    @State private var cleared: Cleared?
     @FocusState private var writing: Bool
 
     private var groceries: Groceries {
@@ -100,11 +101,24 @@ private struct GroceriesPage: View {
             .padding(.bottom, Theme.Spacing.section)
             .tesseraAnimation(Theme.Motion.house, value: aisles.map(\.aisle))
             .tesseraAnimation(Theme.Motion.house, value: shopping)
+            .opacity(basketOpen && !shopping ? 0.5 : 1)
+            .tesseraAnimation(Theme.Motion.house, value: basketOpen)
         }
         .scrollIndicators(.hidden)
         .scrollDismissesKeyboard(.interactively)
         .background { ThemedBackground() }
         .coordinateSpace(.named("groceries"))
+        // While the basket is open, the dimmed page folds it on a tap (under the basket, so its words still work).
+        .overlay {
+            if basketOpen, !shopping {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { basketOpen = false }
+                    }
+                    .accessibilityHidden(true)
+            }
+        }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 0) {
                 if shopping {
@@ -118,12 +132,19 @@ private struct GroceriesPage: View {
                 }
                 if !basket.isEmpty, !shopping {
                     BasketFold(items: basket, isOpen: $basketOpen, breathe: breathe, onTap: uncheck,
-                               onClear: clearBasket)
+                               onClear: { clearBasket(count: basket.count) })
                         .onGeometryChange(for: CGPoint.self) { proxy in
                             let frame = proxy.frame(in: .named("groceries"))
                             return CGPoint(x: frame.minX + Theme.Spacing.gutter + 6, y: frame.minY + 22)
                         } action: { basketTarget = $0 }
                         .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+                if let cleared, basket.isEmpty, !shopping {
+                    ClearedLine(count: cleared.count, undo: undoClear)
+                        .padding(.horizontal, Theme.Spacing.gutter)
+                        .padding(.top, Theme.Spacing.m)
+                        .veil(edge: .bottom)
+                        .transition(.opacity)
                 }
             }
             .tesseraAnimation(Theme.Motion.house, value: basket.isEmpty)
@@ -210,13 +231,37 @@ private struct GroceriesPage: View {
         }
     }
 
-    private func clearBasket() {
+    private func clearBasket(count: Int) {
         guard let list = groceries.list else { return }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
-            _ = try? model.engine.perform(ClearDoneItems(list: list.id), by: .user)
+            if let result = try? model.engine.perform(ClearDoneItems(list: list.id), by: .user) {
+                cleared = Cleared(record: result.record, count: count)
+            }
             basketOpen = false
             model.touch()
         }
+        let record = cleared?.record.id
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(6))
+            if cleared?.record.id == record {
+                withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { cleared = nil }
+            }
+        }
+    }
+
+    private func undoClear() {
+        guard let cleared else { return }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+            model.engine.undo(cleared.record)
+            self.cleared = nil
+            model.touch()
+        }
+    }
+
+    /// The last basket clear, offered back for a few seconds.
+    struct Cleared {
+        let record: OpRecord
+        let count: Int
     }
 
     private func toggleShop() {
@@ -294,7 +339,7 @@ private struct ShopTitle: View {
     }
 }
 
-/// The writing line: a faint sage dab and the prompt; items fly to their aisles on return.
+/// The writing line: an "Add" label and the prompt; items fly to their aisles on return.
 private struct GroceryWritingLine: View {
     @Binding var text: String
     var focused: FocusState<Bool>.Binding
@@ -304,9 +349,11 @@ private struct GroceryWritingLine: View {
         let active = focused.wrappedValue || !text.isEmpty
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
             HStack(alignment: .center, spacing: Theme.Spacing.m) {
-                PaintDab(color: Theme.Colors.health, size: CGSize(width: 14, height: 12), seed: 5)
-                    .opacity(active ? 1 : 0.35)
+                Text("Add")
+                    .textRole(.label)
+                    .foregroundStyle(active ? Theme.Colors.health : Theme.Colors.inkSecondary)
                     .tesseraAnimation(Theme.Motion.house, value: active)
+                    .accessibilityHidden(true)
                 TextField("", text: $text, prompt: Text("eggs, milk, 2 lemons")
                     .foregroundStyle(Theme.Colors.inkSecondary))
                     .textRole(.body)
@@ -370,7 +417,7 @@ private struct GroceryRow: View {
             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                 HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.s) {
                     (Text(item.quantity.map { "\($0) " } ?? "").fontWeight(.semibold)
-                        + Text(GroceriesCopy.name(item)))
+                        + Text(GroceriesCopy.name(item)).fontWeight(.regular))
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.ink)
                         .lineLimit(1)
@@ -444,7 +491,7 @@ private struct AtTheShop: View {
                 ))
                 if aisles.count > 1 {
                     Text("then \(aisles[1].aisle)")
-                        .textRole(.title)
+                        .textRole(.body)
                         .foregroundStyle(Theme.Colors.ink.opacity(0.35))
                         .padding(.top, Theme.Spacing.xxl)
                         .contentTransition(.opacity)
@@ -489,16 +536,14 @@ private struct BasketFold: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Rectangle()
-                .fill(Theme.Colors.hairline)
-                .frame(height: Theme.Stroke.hairline)
             Button {
                 withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { isOpen.toggle() }
             } label: {
-                (Text("\(items.count)").fontWeight(.semibold) + Text(" in the basket"))
+                (Text("\(items.count)").fontWeight(.semibold) + Text(" in the basket").fontWeight(.regular))
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.ink)
                     .contentTransition(.numericText(value: Double(items.count)))
+                    .scaleEffect(breathe ? 1.04 : 1, anchor: .leading)
                     .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                     .contentShape(Rectangle())
             }
@@ -510,7 +555,7 @@ private struct BasketFold: View {
                     ForEach(items) { item in
                         Button { onTap(item) } label: {
                             (Text(item.quantity.map { "\($0) " } ?? "").fontWeight(.semibold)
-                                + Text(GroceriesCopy.name(item)))
+                                + Text(GroceriesCopy.name(item)).fontWeight(.regular))
                                 .textRole(.body)
                                 .foregroundStyle(Theme.Colors.inkSecondary)
                                 .textRenderer(StrikeRenderer(progress: 1, color: Theme.Colors.inkSecondary))
@@ -530,8 +575,30 @@ private struct BasketFold: View {
                 .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
         }
-        .background(Theme.Colors.health.opacity(breathe ? 0.18 : 0.10))
-        .background { ThemedBackground() }
+        .padding(.top, Theme.Spacing.xxl)
+        // A soft veil instead of a hard sheet edge: it fades in over the page with one hairline seam.
+        .veil(edge: .bottom)
+    }
+}
+
+/// "Cleared 3 from the basket" in Tess's ink, with Undo, for a few seconds after the hold.
+private struct ClearedLine: View {
+    let count: Int
+    let undo: () -> Void
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text("Cleared \(count) from the basket.")
+                .font(Theme.voice)
+                .foregroundStyle(Theme.Colors.tess)
+            Spacer()
+            Button("Undo", action: undo)
+                .textRole(.labelStrong)
+                .foregroundStyle(Theme.Colors.inkSecondary)
+                .buttonStyle(HandleButtonStyle())
+                .frame(minHeight: 44)
+                .accessibilityHint("Puts them back in the basket")
+        }
     }
 }
 
