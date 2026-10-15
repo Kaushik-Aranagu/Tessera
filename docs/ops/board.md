@@ -76,16 +76,16 @@
 
 ## Design studio
 
-**Done (2026-10-15):** kitchen build sheets on branch `claude/project-thread-b3tu3f`, `docs/design/kitchen/`: 13 Groceries (f36ff12), 10/11 Recipe page and paste (8989878), 12 Cook mode, 14 Shelf and 15 Lists v0 (d4957ac). Reviews: Notes v0, Groceries #58 (fixes in the Design thread). M3 steers and Home entry points: `docs/design/m3-steers.md` (60932f4).
+**Done (2026-10-15):** kitchen build sheets on branch `claude/project-thread-b3tu3f`, `docs/design/kitchen/`: 13 Groceries (f36ff12), 10/11 Recipe page and paste (8989878), 12 Cook mode, 14 Shelf and 15 Lists v0 (d4957ac). Reviews: Notes v0, Groceries #58 (fixes in the Design thread). M3 steers and Home entry points: `docs/design/m3-steers.md` (60932f4). Live-mode polish values for v1 slice 13: `docs/design/live-polish.md` (742ffda).
 
-**Now:** Live-mode polish spec for v1 slice 13. Done when the motion, haptic and Reduce Motion values for Stamp, the rest dial and the PR sweep are written down for iOS build.
+**Now:** Today on Home motion (M2 slice 8). Done when the Now / Next / Later surface and its swipe gestures have a short motion note and a recording.
 
 **Always on:** review each Core or iOS screen as it merges, with file-and-change fixes posted in the Design thread.
 
 **Next:**
-1. Today on Home motion (M2 slice 8). Done when the Now / Next / Later surface and its swipe gestures have a short motion note and a recording.
-2. M4 screen steers: Day log, Shutdown, Focus block and the energy check-in (`ship-list-m4.md`). Plan my day waits for Kaushik's OK.
-3. A widget and snippet visual language (pulled forward for M4 slice 10).
+1. M4 screen steers: Day log, Shutdown, Focus block and the energy check-in (`ship-list-m4.md`). Plan my day waits for Kaushik's OK.
+2. A widget and snippet visual language (pulled forward for M4 slice 10).
+3. The task finish moment (M2 slice 9): Ink strike timing and haptic for Builder B.
 
 **Later:**
 - Lists screens 9-12 steer pass with the Kitchen lead (`ship-list-lists.md` supersedes my sheet 15 where they differ).
@@ -100,22 +100,20 @@
 2. Design steer check on Lists screens 9-12 with Design studio before Core starts them.
 3. Accept Recipe page and Paste a recipe (10, 11), Cook mode (12), Kitchen shelf (14) as each lands.
 
-**Done:** Lists ship list `ship-list-lists.md` (#61); Lists acceptance checks `lists-acceptance.md` and starter lists `starter-lists.md` (#62, to merge); 10 seed recipes `kitchen-seed-recipes.md`; 50-phrase test set `kitchen-phrases.md`; Kitchen v2 backlog `kitchen-v2-backlog.md` (held for a week of use).
+**Done:** Lists ship list `ship-list-lists.md` (#61); Lists acceptance checks `lists-acceptance.md` and starter lists `starter-lists.md` (#62); 10 seed recipes `kitchen-seed-recipes.md`; 50-phrase test set `kitchen-phrases.md`; Kitchen v2 backlog `kitchen-v2-backlog.md` (held for a week of use).
 
 **Later:**
 - Kitchen v2 scope from the backlog, after a week of use. Nutrition only if Kaushik asks.
 
 ## Research lab
 
-**Now:** M4 scouting. Done when there's a ranked brief on calendar and health mounts, Plan my day and Shutdown patterns, and body doubling, each tied to an `ship-list-m4.md` slice.
+**Done (2026-10-15):** `next-areas.md` (#59); M4 scouting `m4-scouting.md`, Tess routing `tess-routing.md` with 200 eval phrases `tess-eval-phrases.md`, Kitchen v2 `kitchen-v2.md` (all in PR #65).
+
+**Now (running, two scouts):** Widget and snippet patterns, plus Next 1. Done when the best iOS 26/27 interactive widget and snippet examples are scouted for M4 slice 10.
 
 **Next:**
-1. Tess beyond grammar. Done when there's a brief on when the grammar runs out, on-device model routing, and an eval set of 200 capture phrases across workouts, tasks and the kitchen.
-2. Kitchen v2 research for the Kitchen lead. Done when pantry tracking that doesn't feel like a chore and web recipe extraction are scouted.
-3. Widget and snippet patterns. Done when the best iOS 26/27 interactive widget and snippet examples are scouted for M4 slice 10.
+1. What makes a personal OS stick past week 3: a retention and habit research brief.
 
-**Later:**
-- What makes a personal OS stick past week 3: a retention and habit research brief.
 
 ## QA (Repo maintainer)
 
@@ -124,11 +122,11 @@
 **Now:** review each new merge to master. #46 to #58 are done: 13 bugs, written up in `tessera/qa/review-46-to-58.md` and sent to the coordinator for routing.
 
 **Next:**
-1. v1 gym flow script. Done when a written end-to-end check covers seed, prefilled hold-to-log, the dial, finishing, killing the app mid-set and resuming, and lock-screen Done.
-2. Regression checklist. Done when a short pre-merge list covers undo, export, What's running, and Reduce Motion.
+1. Re-review the fixes for the 13 findings as they land.
+2. Check the Kitchen lead's phrase set (`docs/product/kitchen-phrases.md`) against the grammar on master, and add workout and task phrases that the kitchen rules must not take over.
 3. Keep the docs index at `docs/README.md` current (merged as #60).
 
-**Done:** kitchen flow check at `docs/qa/kitchen-flow.md`, commit 0803f09 on `claude/project-thread-ri9mgm`, waiting to merge.
+**Done:** kitchen flow, gym flow and regression checks merged as #63. The review write-up and docs index update merged as #64.
 
 **Later:**
 - Performance budget checks (launch time, dial at 120 fps). These need a Mac lead to run them.
