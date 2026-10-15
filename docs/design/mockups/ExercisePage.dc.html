@@ -22,7 +22,7 @@ body{margin:0}
 .lbl{font-family:'Inter Tight',sans-serif;font-weight:600;font-size:16px;letter-spacing:.08em}
 .key{border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 .5px rgba(43,36,64,.5),0 6px 18px rgba(43,36,64,.14)}
 .dab{display:inline-block;border-radius:55% 45% 60% 40% / 50% 60% 40% 50%;filter:blur(.5px)}
-.tog{position:absolute;right:22px;top:14px;height:30px;display:flex;align-items:center;gap:6px;font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:600;letter-spacing:.06em;cursor:pointer;z-index:9}
+.tog{display:none;position:absolute;right:22px;top:14px;height:30px;display:flex;align-items:center;gap:6px;font-family:'Inter Tight',sans-serif;font-size:16px;font-weight:600;letter-spacing:.06em;cursor:pointer;z-index:9}
 @keyframes inR{0%{opacity:0;transform:translateX(18px);filter:blur(4px)}100%{opacity:1;transform:none;filter:blur(0)}}
 @keyframes inR2{0%{opacity:0;transform:translateX(18px);filter:blur(4px)}100%{opacity:1;transform:none;filter:blur(0)}}
 @keyframes drift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-12px,8px) scale(1.06)}}
@@ -66,7 +66,7 @@ body{margin:0}
       <sc-for list="{{hist}}" as="h" hint-placeholder-count="5">
         <a href="BoardWorkout.dc.html" style="display: grid; grid-template-columns: 92px 1fr auto; align-items: center; height: 52px; animation: rowIn 300ms ease-out {{h.d}} both">
           <span style="font-size: 18px; color: #6E6480">{{h.date}}</span>
-          <span style="display: flex; gap: 5px">{{h.strokes}}</span>
+          <span style="display: flex; gap: 5px"><sc-for list="{{h.strokes}}" as="k" hint-placeholder-count="4"><svg width="30" height="12" viewBox="0 0 30 12" style="overflow: visible" aria-hidden="true"><path d="M2 7 C 9 3, 19 9, 28 4" fill="none" stroke="{{k.c}}" stroke-width="6" stroke-linecap="round"/></svg></sc-for></span>
           <span class="num" style="font-size: 21px; font-weight: 400">{{h.top}}</span>
         </a>
       </sc-for>
@@ -122,7 +122,7 @@ class Component extends DCLogic {
   renderVals() {
     const s = this.state, ink = '#2B2440', mute = '#A39AAE';
     const paints = ['#C8452F', '#2E6DA4', '#E0B341', '#6E9E6A'];
-    const sk = (n) => Array.from({ length: n }, (_, i) => `<svg width="30" height="12" viewBox="0 0 30 12" style="overflow:visible"><path d="M2 7 C 9 3, 19 9, 28 4" fill="none" stroke="${paints[i % 4]}" stroke-width="6" stroke-linecap="round"/></svg>`).join('');
+    const sk = (n) => Array.from({ length: n }, (_, i) => ({ c: paints[i % 4] }));
     const hist = [['Today', 3, '82.5 × 8'], ['Mon 12', 4, '82.5 × 7'], ['Thu 8', 4, '80 × 8'], ['Mon 5', 4, '80 × 8'], ['Thu 1', 3, '80 × 7'], ['Sep 27', 4, '77.5 × 8']].map(([date, n, top], i) => ({ date, strokes: sk(n), top, d: (i * 30) + 'ms' }));
     const rms = [[1, '97.5'], [2, '92.5'], [3, '90'], [4, '87.5'], [5, '87.5'], [6, '85'], [7, '82.5'], [8, '82.5'], [9, '77.5'], [10, '75']].map(([n, w], i) => ({ n, w, d: (i * 20) + 'ms' }));
     const mus = [['Chest', 'primary', '30px', '26px', 1], ['Triceps', 'half a set each', '22px', '19px', .7], ['Front delts', 'half a set each', '22px', '19px', .7]].map(([n, r, s1, s2, o], i) => ({ n, r, s: s1, s2, o, d: (i * 40) + 'ms' }));

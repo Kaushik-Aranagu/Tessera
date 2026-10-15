@@ -39,7 +39,7 @@ body{margin:0}
       <div class="act">
       <span style="position:absolute;left:-40px;top:-60px;width:270px;height:150px;background:radial-gradient(closest-side,{{wash1}},transparent);filter:blur(8px);transition:background 1.4s ease"></span>
       <span style="position:absolute;right:-50px;top:-40px;width:220px;height:130px;background:radial-gradient(closest-side,{{wash2}},transparent);filter:blur(10px);transition:background 1.4s ease"></span>
-      <div class="num" style="position:absolute;left:22px;top:24px;animation: {{numAnim}};">{{numTxt}}</div>
+      <div class="num" style="position:absolute;left:22px;top:24px;animation: {{numAnim}};">{{numM}}<span class="colon">{{numC}}</span>{{numS}}</div>
       <div class="hair" style="left:206px;top:20px;height:60px;width:1px"></div>
       <div style="position:absolute;left:222px;right:16px;top:20px">
         <div style="font-size:17px;font-weight:400;color:rgba(246,239,228,.62)">Bench</div>
@@ -180,7 +180,7 @@ class Component extends DCLogic {
     const s = this.state, go = s.go > 0, left = s.rest / 15;
     const t = '0:' + String(s.rest).padStart(2, '0');
     return {
-      numTxt: go ? 'Go' : '0<span class="colon">:</span>' + String(s.rest).padStart(2, '0'),
+      numM: go ? 'Go' : '0', numC: go ? '' : ':', numS: go ? '' : String(s.rest).padStart(2, '0'),
       numPlain: go ? 'Go' : t,
       numAnim: go ? 'goIn 700ms cubic-bezier(.2,.8,.2,1) both' : 'none',
       wash1: go ? 'rgba(232,189,76,.75)' : 'rgba(63,127,192,.75)',
