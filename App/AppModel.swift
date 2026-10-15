@@ -81,9 +81,8 @@ final class AppModel {
         self.context = context
         store = ObjectStore(context: context)
         do {
-            classes = try SystemCatalog.seed(in: context)
-            // The 72-exercise library on the movement-pattern spine (cheap after the first run).
-            _ = try ExerciseLibraryInstaller.installIfNeeded(store: store, classes: classes)
+            // Built-in classes, the 72-exercise library and Kaushik's starter plan (cheap after the first run).
+            classes = try store.prepareCatalog()
         } catch {
             assertionFailure("Seeding failed: \(error)")
         }

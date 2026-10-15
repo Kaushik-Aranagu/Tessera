@@ -59,6 +59,6 @@ and verify APIs with the `xcode` MCP `DocumentationSearch` or the `sosumi` MCP r
   `$(xcrun agent plugin path --plugin-format claude)/skills/`.
 
 ## Running the demo
-- `-demoTime HH:mm` (DEBUG) shifts the app clock so the demo day looks the same at any hour; `-resetDemo` wipes and
+- `-demoTime HH:mm` (DEBUG) shifts the app clock so the demo day looks the same at any hour; `-demo` seeds the demo history (off by default, so it never lands on the phone); `-resetDemo` wipes and
   reseeds demo data; `-theme <name>` picks a theme concept. Example: `-demoTime 18:10 -resetDemo`.
 - Raw simulator recordings (`docs/recordings/raw-*.mp4`) are gitignored; trimmed clips are kept.
