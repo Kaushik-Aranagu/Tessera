@@ -48,7 +48,7 @@ class simplenet(nn.Module):
 
         #Global Max Pooling
         out = F.max_pool2d(out, kernel_size=out.size()[2:]) 
-        out = F.dropout2d(out, 0.1, training=True)
+        out = F.dropout2d(out, 0.1, training=self.training)
 
         out = out.view(out.size(0), -1)
 
