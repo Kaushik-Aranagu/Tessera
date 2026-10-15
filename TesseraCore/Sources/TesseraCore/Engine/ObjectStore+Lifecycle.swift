@@ -17,6 +17,7 @@ public extension ObjectStore {
         let classes = try SystemCatalog.seed(in: context)
         try ExerciseLibraryInstaller.installIfNeeded(store: self, classes: classes)
         try StarterContent.installIfNeeded(store: self, classes: classes)
+        Groceries.installIfNeeded(store: self, classes: classes)
         return classes
     }
 

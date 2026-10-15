@@ -211,6 +211,8 @@ public enum SystemCatalog {
                       FieldSpec(key: "checkedAt", name: "Checked", kind: .date),
                       FieldSpec(key: "section", name: "Section", kind: .text),
                       FieldSpec(key: "about", name: "About", kind: .refList, target: .thing),
+                      // Groceries: each recipe's (or typed line's) share, so a recipe can be taken back out.
+                      FieldSpec(key: "shares", name: "Shares", kind: .text),
                   ]),
         // Something you cook with. Recipe lines and grocery items link to one; it knows its aisle and if it's a staple.
         ClassSpec(key: .ingredient, name: "Ingredient", parent: .thing, symbol: "carrot", colorRole: "health",
