@@ -54,7 +54,7 @@ Full spec: `workouts.md`.
 | P0 | **Quick Capture** | On-device Foundation Models turn "3x10 bench 80" or "dentist thu 3pm" into proposed actions |
 | P0 | **Ghost preview, then commit** | Tess never writes directly. A capture appears as a faded ghost row (bloom in "acting") that commits on tap or after 2 s, and stays undoable through the op log. Added 2026-10-15 (Kaushik approved) |
 | P0 | **Tess's soul: the paint-dab bloom** | Distinct states for idle, thinking, acting and "tap to go home"; it may travel to where she is acting |
-| P0 | Personality | Brief, warm, a little dry. Speaks in counts, never guilt. Confirms what she did in one line |
+| P0 | Personality | Follows `../research/tess-voice.md`: done then the number, one line under 12 words, counts not streaks, offers never instructs, dry humour rarely and only on done states, silence when nothing changed |
 | P1 | Commands | `log bench 82.5x8`, `open push day`, `what's next`, `what did I lift last week` |
 | P1 | App Intents | Same actions from Siri, the Action button and Shortcuts |
 | P2 | Claude API tasks | Plan my day, shutdown summary, "build me an app" (M4) |

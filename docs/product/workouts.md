@@ -1,6 +1,6 @@
 # Spec: Workouts v1 (live mode, set logging, PRs, plans)
 
-*Product lead, 2026-10-15. Builds on `v1-features.md` and `spatial-interaction.md`, and adopts ideas from `../research/fitness-and-workouts.md`. Defaults marked **(default)** were chosen overnight without Kaushik and are listed in `morning-questions.md`.*
+*Product lead, 2026-10-15. Builds on `v1-features.md` and `spatial-interaction.md`, and adopts ideas from `../research/fitness-and-workouts.md`. Defaults marked **(default)** were chosen overnight without Kaushik; questions that need him are in `morning-questions.md` and go to him through the coordinator's morning list.*
 
 ## 0. Goal and success measure
 
@@ -8,18 +8,25 @@ Kaushik logs every gym session in Tessera for two weeks without opening another 
 
 ## 1. Objects (what Core engine models)
 
+**Exercise catalog.** Follows `../research/exercise-catalog.md`:
+- **Movement pattern is the inheritance spine:** HorizontalPush > BenchPress family, VerticalPull, Hinge, and so on.
+- **Variants are their own Exercise objects** linked by `variantOf`, with their own history and PRs. Paused, tempo, belt and straps are set tags, not new exercises.
+- **A family subclass** exists only when 3 or more variants share a swap pool and a progression rule.
+- **Muscle links** carry a role: primary 1.0, secondary 0.5, with an optional contribution override.
+- **Held for Kaushik:** whether equipment becomes a trait (Barbell, Dumbbell…), replacing classes like `BarbellLift`. Until he decides, build the pattern spine and keep equipment behaviour (plate math, increment, bar weight) behind one interface, so either answer is a small change.
+
 | Class | Parent / traits | Key fields | Notes |
 |---|---|---|---|
-| `Exercise` | Thing · Trackable | muscles (links with role: primary 1.0, secondary 0.5), equipment, repRange, rest, progressionRule | Tree: Exercise > StrengthExercise > BarbellLift / DumbbellLift / MachineLift / Bodyweight > BenchPress… Defaults inherit down |
-| `Muscle` | Thing · Measurable | weeklySetTarget (range, default 10–20) | Computed: sets this week (fractional) |
+| `Exercise` | StrengthExercise subtree · Trackable | aliases, muscles (role, contribution), equipment, mechanic, laterality, logType, loadIncrement, e1rmEligible, variantOf, angle/grip/stance, repRange, rest, progressionRule, source/license | Defaults inherit: compound rest 150 s, isolation 90 s |
+| `Muscle` | Thing · Measurable | group (e.g. Shoulders), weeklySetTarget (default 10–20) | 18 muscles; computed: sets this week (fractional) |
 | `Equipment` | Thing | bar weight, plates available (pairs), smallest increment, dumbbell set | Drives dial detents |
-| `Gym` | Thing | equipment list, default | v1 has one gym **(default)** |
+| `Gym` | Thing | equipment list | v1 has one gym **(default)** |
 | `Routine` | Thing | ordered `Slot`s | e.g. Push Day A |
 | `Slot` | Thing | exercise, setScheme (sets × rep range, optional RPE target), progressionRule (overrides exercise), rest | A routine position; the rule lives here |
-| `Plan` | Thing · Schedulable | cycle of routines (week pattern), start date, length in weeks (optional) | Week and month views read from it |
-| `Workout` | Thing · Schedulable · Timed | routine (optional), entries, state (planned / running / paused / done), note | A process object (see `whats-running.md`) |
+| `Plan` | Thing · Schedulable | cycle of routines, start date, length in weeks (optional) | Week and month views read from it |
+| `Workout` | Thing · Schedulable · Timed | routine (optional), entries, note | Its open state is a `Process` (see `whats-running.md`) |
 | `ExerciseEntry` | Thing | exercise, slot (optional), sets | Created from a Slot or ad hoc |
-| `Set` | Thing | weight (kg canonical), reps, rpe?, kind (warm-up / working / drop / failure), loggedAt, source (hold / dial / lock screen / Tess) | Computed: e1RM, volume |
+| `Set` | Thing | weight (kg canonical), reps, rpe?, kind (warm-up / working / drop / failure), tags, loggedAt, source (hold / dial / lock screen / Tess) | Computed: e1RM, volume |
 | `Record` | projection, not hand-edited | exercise, kind, value, set, date | Recomputed from sets |
 
 All writes go through typed actions with an op log (`v1-features.md`). Records, weekly muscle sets and trends are projections rebuilt when any set changes, so editing an old set fixes everything downstream.
@@ -47,16 +54,16 @@ All writes go through typed actions with an op log (`v1-features.md`). Records, 
 
 **Top-set check.** If the first working set's RPE is 2 or more above the slot target, Tess offers one quiet line inside the set area: "Drop to 77.5 for the rest?" One tap accepts. No other prompts or surveys between sets.
 
-**Swap within the class.** Pull down on the exercise name to see its siblings in the class tree (Incline Press, Dumbbell Press). Picking one keeps the slot, scheme and rule for this session only **(default)**.
+**Swap within the pattern.** Pull down on the exercise name to see alternatives: first the same family, then the same movement pattern, ranked by primary-muscle overlap and then by equipment the gym has. Picking one keeps the slot, scheme and rule for this session only **(default)**, and converts the load where a mapping exists (marked as an estimate).
 
 **Voice (P1).** Hold the Bar: "same", "8", "80 for 7 at 8", "drop to 70 for 10", "swap to dumbbell press", "skip". A deterministic grammar first, the on-device model as fallback. Each shows as a ghost set that commits on its own after 2 s, with Undo.
 
 **Leaving and resuming.**
 - Every set is saved the moment it's logged. Killing the app loses nothing.
 - Swiping the cover down minimises the workout: it keeps running as a process (lit seam at the top, What's running row on Now, Live Activity).
-- No activity for 3 hours pauses the workout **(default)**; the next day it offers "Finish" (keeps what was logged) or "Resume".
+- Background for longer than the rest time plus 10 minutes suspends the workout. After 6 hours suspended it is wrapped up with the sets already logged ("Saved Push Day, 3 of 5 exercises"). Resuming lands on the set at eye level with the dial preset (see `whats-running.md`).
 
-**Finishing.** Hold the finish control at the end of the last exercise (or Tess: "done"). The session stack compresses into one Workout object and drops into today's history on Now. A one-line summary appears in Tess's voice: "6 of 6 exercises, 22 sets, 1 record." A half session still counts as a session.
+**Finishing.** Hold the finish control at the end of the last exercise (or Tess: "done"). The session stack compresses into one Workout object and drops into today's history on Now. A one-line summary appears in Tess's voice (`../research/tess-voice.md`): "6 exercises, 22 sets. New best: 85 × 5." A half session still counts as a session.
 
 ## 3. Lock screen (Live Activity, P0)
 
@@ -107,7 +114,7 @@ Generic object page with this summary strip: best e1RM, best set, 90-day e1RM tr
 
 ## 7. Seed content
 
-v1 ships with an exercise library of about 60 common lifts in the class tree, with muscles and default rep ranges and rest, and one starter plan **(default: Push / Pull / Legs × 2)** that Kaushik replaces with his own.
+v1 ships with the 69-exercise seed from `../research/exercise-catalog.md`, written in our own words with no third-party images, and one starter plan **(default: Push / Pull / Legs × 2)** that Kaushik replaces with his own.
 
 ## 8. Out of v1
 

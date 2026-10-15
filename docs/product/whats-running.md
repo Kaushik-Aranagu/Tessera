@@ -1,46 +1,72 @@
 # Spec: What's running (v1)
 
-*Product lead, 2026-10-15. Approved by Kaushik from Research lab's process-list idea. Replaces Ready-to-Resume.*
+*Product lead, 2026-10-15, revised with Research lab round 2 (`../research/whats-running.md`). Approved by Kaushik from Research lab's process-list idea. Replaces Ready-to-Resume.*
 
-## What it is
+## Why
 
-Tessera's open loops shown the way an OS shows processes. It externalises working memory: anything left half-done is visible, with one way back in.
+Interrupted work fades unless the exact resume spot is cued loudly, and hidden work comes back much later than visible work. Writing the next step is itself the relief from an open loop. So Tessera keeps open loops visible on Home, each with its next step and a single resume control. A history of everything is not the goal.
+
+## The Process class (built in)
+
+`Process` is a built-in class in the system catalog: an ordinary, linkable object with its own page.
+
+| Field | Example |
+|---|---|
+| subject (link) | Push Day A (the Workout) |
+| owner app | Workouts |
+| state | running, suspended, waiting, done, closed, put away |
+| resume point (structured) | exercise 2, set 3, dial at 80 kg |
+| next step (one line, verb first) | "Bench, set 3: 80 kg × 8" |
+| started, last touched | 18:10, 18:42 |
+| waiting on, check at | "Arjun's reply", Thu 10:00 (M2) |
+| trail | last 3 op-log entries, for replay |
+| ended at, end reason | 19:30, done |
+
+The engine writes the resume point and next step on every context switch. Nobody types them.
 
 ## States
 
-| State | Meaning | v1 example |
+| From | To | Trigger |
 |---|---|---|
-| **Running** | Active now, owns the foreground or a timer | The workout in progress, a rest timer |
-| **Paused** | Left mid-way, resumable | A workout minimised or auto-paused; a half-edited routine |
-| **Waiting** | Blocked on something outside the app or on time | (M2: a task waiting on someone) |
+| (none) | running | Start a workout, or open a task and act on it |
+| running | suspended | Leave the object mid-way, or the app stays in the background longer than the rest time plus 10 minutes |
+| suspended | running | Resume (one tap) |
+| any open | waiting | Marked as blocked on someone or something (M2) |
+| waiting | suspended | The check-at time arrives, so it can become Now again |
+| running | done | Finish the workout or task |
+| any open | closed | Put away by hand; kept in history, with no shame copy |
+| suspended | put away | Stale rules below; fully restorable |
 
-v1 implements **Running** and **Paused** for workouts and **Paused** for any object page left mid-edit. Waiting and tasks come in M2.
+**Only one process can be running at a time, and a running process is Now,** so Home never shows two "next things".
 
-## Where it appears
+## On Home: the ledger (v1)
 
-- **On Now:** a single row under the Now item when anything is running or paused. One process shows its name, state and a one-line resume note ("Bench press, set 3 of 4, 82.5 × 8 next"). Two or more collapse into "2 running", which expands in place (y) on pull.
-- **At the top seam:** a lit seam while something is running, on every screen. Tapping the seam returns to the process.
-- **On the Lock Screen:** the workout's Live Activity (see `workouts.md`).
-- No separate screen in v1 **(default)**. M2 adds a full process view on the Review side.
+- **At most 3 rows** under Now: first the running process, then suspended ones by most recent touch, then waiting ones whose check time has passed. The rest sit one level deeper (z) in the full list.
+- Each row is full width and joined to the next by a hairline seam, like a machined index plate. The subject is in the big type tier, and the next step in the second tier.
+- **State lives in the seam above the row, not in a badge:**
+  - running: a lit seam with light travelling along it;
+  - suspended: a lit, still seam;
+  - waiting: an engraved, unlit seam.
+- The breathing glint appears on the running row only.
+- **Tap to resume:** zoom from the row straight to the resume point. **Swipe left to put it away:** the row slides into its track and the gap closes. **Pull down on the row** to open the process page with its trail.
+- Copy states time, never judgement: "Left at set 3 of 5, 40 min ago".
+- In v1 only workouts are processes, so Home shows zero or one row.
 
-## Resume
+## Other screens
 
-- One control per process: tap the row (or the seam) and the process opens exactly where it was, at the same set, scroll position and draft.
-- The resume note is generated automatically from the saved state; for non-workout objects it is "where you were" plus "next step" if one can be inferred, else just where you were.
-- Optional: hold the row to dictate your own "next step" note (P1).
+The top edge shows a lit seam while something is running, as in `spatial-interaction.md`. Tapping it returns to the process. Only the workout gets a Live Activity, because Live Activities end after 8 hours.
 
-## Automatic context save (P0)
+## Resume lands on a loud cue
 
-- Leaving an object mid-way (backgrounding the app, navigating away from an edit, minimising a workout) saves its state as a process snapshot: object, view position, draft values and time.
-- Snapshots are written through the same action path as everything else, so they sync and appear in the op log.
-- A paused process older than 7 days is quietly archived to the Review side **(default)**, never deleted, and never shown as overdue.
+Resuming a workout opens live mode with the set at eye level, the dial already preset (for example at 80 kg), and one glint sweep across that set. Under Reduce Motion, a haptic replaces the sweep. Tess's bloom appears only when she writes or rewrites a next step (M2), so it stays rare.
 
-## Ending a process
+## Stale processes
 
-- Finishing the thing ends its process (finishing the workout, saving the edit).
-- Swipe the row sideways to end it without finishing ("Close"); the work done so far is kept. Undoable.
+- Suspended and untouched for **3 days**: leaves Home and moves into the full list.
+- **7 days**: put away to Later, with one line from Tess: "Put two things away. They're in Later." It never counts misses and never says "overdue", and nothing is red.
+- **A workout suspended for 6 hours** is wrapped up with the sets already logged ("Saved Push Day, 3 of 5 exercises"), never thrown away.
 
-## Engineering notes
+## Later
 
-- A `Process` record: subject (link to the object), state, startedAt, lastActiveAt, snapshot (JSON), resumeNote. Owned by the kernel, so every app gets processes free.
-- The workout's process drives the Live Activity; ending the process ends the Activity.
+- **M2:** tasks and waiting items become processes.
+- **M2 concept to prototype:** the "plate stack", where suspended processes sit as stepped slivers behind Now and fan out when you pull Now down. It's worth trying once there are 3 or more processes.
