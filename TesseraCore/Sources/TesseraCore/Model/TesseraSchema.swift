@@ -7,6 +7,7 @@ public enum TesseraSchema {
         ObjectRecord.self,
         ObjectLink.self,
         ViewDef.self,
+        OpRecord.self,
     ]
 
     /// Local-only store for now. Switch `cloudKitDatabase` to `.private(...)`

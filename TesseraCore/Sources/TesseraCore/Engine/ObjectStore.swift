@@ -39,9 +39,6 @@ public struct ObjectStore {
         let object = ObjectRecord(title: title, classDef: classDef, parent: parent)
         object.sortIndex = siblings
         context.insert(object)
-        if parent == nil, title == classDef.name {
-            cache.classObjects[classDef.id] = nil
-        }
         return object
     }
 
@@ -85,7 +82,8 @@ public struct ObjectStore {
     // MARK: Class objects
 
     /// The object that holds class-level values for `classDef` (Bench Press's muscles, cues, rest).
-    /// Also recognises the older convention: a top-level object titled with the class's name.
+    /// Only objects flagged `isClassObject` count: matching by title made an ordinary workout titled
+    /// "Workout" vanish into the Workout class.
     public func classObject(of classDef: ClassDef) -> ObjectRecord? {
         if let cached = cache.classObjects[classDef.id] {
             return cached
@@ -101,24 +99,13 @@ public struct ObjectStore {
             $0.isClassObject && $0.deletedAt == nil && $0.classDef?.id == classID
         }, sortBy: [SortDescriptor(\.createdAt)])
         flagged.fetchLimit = 1
-        if let object = try? context.fetch(flagged).first {
-            return object
-        }
-        let name = classDef.name
-        var legacy = FetchDescriptor<ObjectRecord>(predicate: #Predicate {
-            $0.parent == nil && $0.title == name && $0.deletedAt == nil && $0.classDef?.id == classID
-        }, sortBy: [SortDescriptor(\.createdAt)])
-        legacy.fetchLimit = 1
-        return try? context.fetch(legacy).first
+        return try? context.fetch(flagged).first
     }
 
     /// Returns the class object, creating it if needed.
     @discardableResult
     public func ensureClassObject(of classDef: ClassDef) -> ObjectRecord {
         if let existing = classObject(of: classDef) {
-            if !existing.isClassObject {
-                existing.isClassObject = true
-            }
             return existing
         }
         let object = create(classDef, title: classDef.name)
@@ -324,6 +311,46 @@ public struct ObjectStore {
         guard let siblings = object.parent?.orderedChildren,
               let index = siblings.firstIndex(where: { $0.id == object.id }) else { return className }
         return "\(className) \(index + 1)"
+    }
+
+    // MARK: Raw access for the op log
+
+    /// The object's own link targets for a field, in order (not inherited ones).
+    func ownLinkTargets(fieldID: UUID, of object: ObjectRecord) -> [LinkTarget] {
+        (object.outgoingLinks ?? [])
+            .filter { $0.fieldID == fieldID }
+            .sorted { $0.sortIndex < $1.sortIndex }
+            .compactMap { link in
+                if let target = link.toObject {
+                    return .object(target.id)
+                }
+                if let target = link.toClass {
+                    return .classDef(target.id)
+                }
+                return nil
+            }
+    }
+
+    /// Writes a stored value by field id, bypassing key lookup and validation (used to replay and revert ops).
+    func setRaw(fieldID: UUID, to value: FieldValue?, on object: ObjectRecord) {
+        var values = object.values
+        values[fieldID] = value
+        object.values = values
+    }
+
+    /// Replaces a field's links by id (used to replay and revert ops). Targets that no longer exist are skipped.
+    func setLinksRaw(fieldID: UUID, on object: ObjectRecord, to targets: [LinkTarget]) {
+        removeLinks(fieldID: fieldID, from: object)
+        for (index, target) in targets.enumerated() {
+            switch target {
+            case let .object(id):
+                guard let target = self.object(id: id) else { continue }
+                context.insert(ObjectLink(from: object, fieldID: fieldID, toObject: target, sortIndex: index))
+            case let .classDef(id):
+                guard let target = classDef(id: id) else { continue }
+                context.insert(ObjectLink(from: object, fieldID: fieldID, toClass: target, sortIndex: index))
+            }
+        }
     }
 
     // MARK: Private

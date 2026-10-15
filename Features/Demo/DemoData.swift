@@ -69,7 +69,8 @@ enum DemoData {
         _ = subclass("Paused Bench Press", of: bench)
 
         func profile(_ classDef: ClassDef, muscles: [ObjectRecord], gear: [ObjectRecord], cue: String) {
-            let object = make(classDef, classDef.name, notes: cue)
+            let object = store.ensureClassObject(of: classDef)
+            try? store.set("notes", to: .richText(cue), on: object)
             try? store.setLinks("primaryMuscles", on: object, to: muscles)
             try? store.setLinks("equipment", on: object, to: gear)
         }

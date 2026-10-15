@@ -52,14 +52,15 @@ struct ClassObjectAndPathTests {
         #expect(store.objects(of: bench).map(\.title) == ["Tuesday paused"])
     }
 
-    @Test func legacyPrototypeObjectsCountAsClassObjects() throws {
+    @Test func onlyFlaggedObjectsAreClassObjects() throws {
         let classes = try SystemCatalog.seed(in: context)
-        let bench = try #require(classes[.benchPress])
-        let legacy = store.create(bench, title: "Bench Press")
-        _ = store.create(bench, title: "Something else")
-        #expect(store.classObject(of: bench)?.id == legacy.id)
-        #expect(store.ensureClassObject(of: bench).isClassObject)
-        #expect(store.objects(of: bench).map(\.title) == ["Something else"])
+        let workoutClass = try #require(classes[.workout])
+        // An ordinary workout that happens to share the class's name stays an ordinary object.
+        let workout = store.create(workoutClass, title: "Workout")
+        #expect(store.classObject(of: workoutClass) == nil)
+        #expect(store.objects(of: workoutClass).map(\.id) == [workout.id])
+        let classObject = store.ensureClassObject(of: workoutClass)
+        #expect(classObject.isClassObject && classObject.id != workout.id)
     }
 
     // MARK: Validation
