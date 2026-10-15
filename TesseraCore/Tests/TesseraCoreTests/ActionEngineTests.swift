@@ -216,3 +216,19 @@ struct ActionEngineTests {
         #expect(entry.orderedChildren.count == 1)
     }
 }
+
+@MainActor
+struct ActionObserverTests {
+    @Test func observersHearCommittedActionsOnly() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        var heard: [String] = []
+        engine.observe { heard.append($0.action) }
+        try engine.perform(CreateTask(title: "Now"), by: .user)
+        let preview = try engine.perform(CreateTask(title: "Ghost"), by: .tess, pending: true)
+        #expect(heard == ["createTask"])
+        try engine.commit(preview.record)
+        #expect(heard == ["createTask", "createTask"])
+    }
+}
