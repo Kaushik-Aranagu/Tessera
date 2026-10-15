@@ -97,6 +97,79 @@ final class AppModel {
         return ProcessTable(engine: engine)
     }
 
+    // MARK: Tess captures (ghost rows)
+
+    /// A capture Tess made that is still wet paint: drawn as a ghost row until committed or dropped.
+    private(set) var pendingCapture: OpRecord?
+    /// The capture just committed, for the Undo in the Ask Tess bar (about 4 s).
+    private(set) var lastCapture: OpRecord?
+    /// Captured ids, so the delayed timers never touch a record that is gone (a reset context, a discard).
+    @ObservationIgnored private var pendingCaptureID: UUID?
+    @ObservationIgnored private var lastCaptureID: UUID?
+
+    static let captureDryTime: Double = 2
+
+    /// Proposes a task as a pending op (a ghost). It dries into a normal row after `captureDryTime` unless dropped.
+    @discardableResult
+    func capture(title: String, startsAt: Date) -> UUID? {
+        commitCapture()
+        guard let record = try? engine.perform(
+            CreateTask(title: title, startsAt: startsAt, minutes: 30), by: .tess, pending: true
+        ).record else { return nil }
+        pendingCapture = record
+        let id = record.id
+        pendingCaptureID = id
+        touch()
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(Self.captureDryTime))
+            if let self, pendingCaptureID == id {
+                commitCapture()
+            }
+        }
+        return record.objectIDs.first
+    }
+
+    func isGhost(_ objectID: UUID) -> Bool {
+        pendingCapture?.objectIDs.contains(objectID) ?? false
+    }
+
+    /// Tap, or the stroke finishing: the ghost dries into a real row.
+    func commitCapture() {
+        guard let record = pendingCapture else { return }
+        try? engine.commit(record)
+        pendingCapture = nil
+        pendingCaptureID = nil
+        lastCapture = record
+        let id = record.id
+        lastCaptureID = id
+        touch()
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(4))
+            if let self, lastCaptureID == id {
+                lastCapture = nil
+                lastCaptureID = nil
+            }
+        }
+    }
+
+    /// Swipe the ghost away: nothing is written.
+    func discardCapture() {
+        guard let record = pendingCapture else { return }
+        _ = try? engine.discard(record)
+        pendingCapture = nil
+        pendingCaptureID = nil
+        touch()
+    }
+
+    /// Undo in the Ask Tess bar, through the op log.
+    func undoLastCapture() {
+        guard let record = lastCapture else { return }
+        engine.undo(record)
+        lastCapture = nil
+        lastCaptureID = nil
+        touch()
+    }
+
     /// Tess's one-liners from the last tidy (e.g. a workout wrapped up overnight).
     var processNotes: [String] = []
 

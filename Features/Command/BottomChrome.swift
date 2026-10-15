@@ -73,11 +73,21 @@ struct BottomChrome: View {
             soul
             Button { toggle(true) } label: {
                 HStack(spacing: Theme.Spacing.m) {
-                    Text("Ask Tess, or log 82.5×8")
+                    Text(model.lastCapture != nil ? "Added to Later." :
+                        model.pendingCapture != nil ? "Drying. Swipe to drop it." : "Ask Tess, or log 82.5×8")
                         .font(Theme.voice)
-                        .foregroundStyle(Theme.Colors.inkSecondary)
+                        .foregroundStyle(model.lastCapture != nil || model.pendingCapture != nil
+                            ? Theme.Colors.tess : Theme.Colors.inkSecondary)
                         .lineLimit(1)
+                        .contentTransition(.opacity)
                     Spacer(minLength: 0)
+                    if model.lastCapture != nil {
+                        Button("Undo") { model.undoLastCapture() }
+                            .textRole(.bodyStrong)
+                            .foregroundStyle(Theme.Colors.live)
+                            .frame(minWidth: 60, minHeight: 60)
+                            .transition(.opacity)
+                    }
                     Image(systemName: "mic")
                         .font(.system(size: 17, weight: .medium))
                         .foregroundStyle(Theme.Colors.ink)
@@ -217,12 +227,11 @@ struct CommandInterpreter {
             return "Your best \(exercise.name.lowercased()): \(Format.kilograms(best.weight)) × \(Int(best.reps)), "
                 + "e1RM \(Format.kilograms((best.e1RM * 10).rounded() / 10)) kg."
         }
-        guard let taskClass = model.classDef(.task) else { return "Couldn’t save that." }
-        let task = model.store.create(taskClass, title: text.prefix(1).uppercased() + text.dropFirst())
-        try? model.store.set("startsAt", to: .date(AppClock.now.addingTimeInterval(4 * 3600)), on: task)
-        try? model.store.set("length", to: .duration(1800), on: task)
-        model.touch()
-        return "Added “\(task.title)” to later today."
+        let title = text.prefix(1).uppercased() + text.dropFirst()
+        guard model.capture(title: title, startsAt: AppClock.now.addingTimeInterval(4 * 3600)) != nil else {
+            return "Couldn’t save that."
+        }
+        return "Drying. Swipe to drop it."
     }
 
     private func exercise(matching text: String) -> ClassDef? {

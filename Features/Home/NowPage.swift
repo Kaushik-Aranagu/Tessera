@@ -229,6 +229,14 @@ private struct LaterRow: View {
     @Environment(\.zoomNamespace) private var namespace
 
     var body: some View {
+        if model.isGhost(item.id) {
+            GhostRow(item: item)
+        } else {
+            row
+        }
+    }
+
+    private var row: some View {
         Button {
             model.open(.object(item.id))
         } label: {
@@ -252,6 +260,66 @@ private struct LaterRow: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(item.title), \(Format.clock(item.start))")
         .accessibilityHint("Opens \(item.title)")
+    }
+}
+
+/// A capture that is still wet paint: everything cobalt, breathing, with a brushstroke painting along under it
+/// as the commit timer. Tap to keep it now; swipe it sideways to drop it (nothing is written).
+private struct GhostRow: View {
+    let item: ScheduleItem
+    @Environment(AppModel.self) private var model
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var stroke: CGFloat = 0
+    @State private var drag: CGFloat = 0
+    @State private var arrived = false
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { context in
+            let breath = (sin(context.date.timeIntervalSinceReferenceDate / 1.6 * .pi) + 1) / 2
+            HStack(spacing: Theme.Spacing.m) {
+                PaintDab(color: Theme.Colors.tess, seed: item.title.count)
+                    .blur(radius: 1.5)
+                Text(item.title)
+                    .font(Theme.voice)
+                    .foregroundStyle(Theme.Colors.tess)
+                    .lineLimit(1)
+                Spacer(minLength: Theme.Spacing.s)
+                Text(Format.clock(item.start))
+                    .textRole(.label)
+                    .foregroundStyle(Theme.Colors.tess)
+                    .monospacedDigit()
+            }
+            .opacity(reduceMotion ? 0.6 : 0.5 + 0.16 * breath)
+        }
+        .frame(maxHeight: .infinity)
+        .overlay(alignment: .bottomLeading) {
+            Brushstroke(progress: stroke)
+                .stroke(Theme.Colors.tess.opacity(0.7), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                .frame(height: 8)
+                .blur(radius: 0.4)
+        }
+        .offset(x: drag, y: arrived ? 0 : -10)
+        .blur(radius: arrived ? 0 : 6)
+        .opacity(arrived ? 1 - Double(min(abs(drag) / 200, 0.8)) : 0)
+        .contentShape(Rectangle())
+        .onTapGesture { model.commitCapture() }
+        .gesture(DragGesture(minimumDistance: 12).onChanged { drag = min(0, $0.translation.width) }.onEnded { value in
+            if value.translation.width < -80 {
+                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { drag = -400 }
+                model.discardCapture()
+            } else {
+                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { drag = 0 }
+            }
+        })
+        .onAppear {
+            withTesseraAnimation(.easeOut(duration: 0.42), reduceMotion: reduceMotion) { arrived = true }
+            // The commit timer, as visible time: the stroke paints along under the row over exactly 2 s.
+            withAnimation(.linear(duration: AppModel.captureDryTime)) { stroke = 1 }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Proposed: \(item.title), \(Format.clock(item.start))")
+        .accessibilityHint("Saves in two seconds. Double-tap to keep it now.")
+        .accessibilityAction(named: "Drop it") { model.discardCapture() }
     }
 }
 

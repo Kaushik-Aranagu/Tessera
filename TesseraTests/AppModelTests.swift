@@ -54,6 +54,7 @@ struct AppModelTests {
         #expect(interpreter.run("log bench 82.5x8").hasPrefix("Logged bench press 82.5 × 8"))
         #expect(model.session != nil)
         #expect(interpreter.run("what's my bench best?").contains("e1RM"))
-        #expect(interpreter.run("stretch at 21:00").hasPrefix("Added"))
+        #expect(interpreter.run("stretch at 21:00").hasPrefix("Drying"))
+        #expect(model.pendingCapture != nil)
     }
 }
