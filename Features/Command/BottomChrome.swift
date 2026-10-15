@@ -61,6 +61,11 @@ struct BottomChrome: View {
         .onAppear {
             model.tessMode = restingOrIdle
             breathe = !reduceMotion
+            #if DEBUG
+                if ProcessInfo.processInfo.arguments.contains("-tessScript") {
+                    playScript()
+                }
+            #endif
         }
         .sensoryFeedback(.selection, trigger: opens)
     }
@@ -294,6 +299,26 @@ struct BottomChrome: View {
         spec.size = 34
         return Theme.Typography.font(spec, weight: .medium)
     }
+
+    #if DEBUG
+        /// `-tessScript`: plays open → Write → type → Return so the flow can be recorded without touch automation.
+        private func playScript() {
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(2))
+                open()
+                try? await Task.sleep(for: .seconds(1.6))
+                withTesseraAnimation(reduceMotion: reduceMotion) { layer = .write }
+                focused = true
+                try? await Task.sleep(for: .seconds(1.2))
+                for character in "stretch at 21:30" {
+                    model.commandDraft.append(character)
+                    try? await Task.sleep(for: .milliseconds(90))
+                }
+                try? await Task.sleep(for: .seconds(0.8))
+                dry()
+            }
+        }
+    #endif
 
     // MARK: Actions
 

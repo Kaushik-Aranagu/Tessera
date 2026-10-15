@@ -73,7 +73,21 @@ struct HomeSpatialView: View {
             .scrollIndicators(.hidden)
             // Opens where Home was left (TODAY the first time) without a visible jump.
             .scrollPosition($position)
-            .onAppear { position.scrollTo(id: Self.remembered) }
+            .onAppear {
+                position.scrollTo(id: Self.remembered)
+                #if DEBUG
+                    // `-openLink notes|recipes|groceries|review` opens that screen the way its Home word does.
+                    let arguments = ProcessInfo.processInfo.arguments
+                    if let index = arguments.firstIndex(of: "-openLink"), index + 1 < arguments.count,
+                       let link = HomeLink.allCases.first(where: { "\($0)" == arguments[index + 1] })
+                    {
+                        Task { @MainActor in
+                            try? await Task.sleep(for: .seconds(1.5))
+                            presented = link
+                        }
+                    }
+                #endif
+            }
             .onScrollGeometryChange(for: Double.self) { geometry in
                 geometry.containerSize.width > 0 ? geometry.contentOffset.x / geometry.containerSize.width : 0
             } action: { _, new in
