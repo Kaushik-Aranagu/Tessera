@@ -15,6 +15,8 @@ struct BottomChrome: View {
     @State private var swell = false
     @State private var pressed = false
     @State private var glow = false
+    @State private var undos = 0
+    private let voice = TessVoice.shared
     @State private var breathe = false
     @State private var opens = 0
     @State private var reply: String?
@@ -84,6 +86,7 @@ struct BottomChrome: View {
         }
         .sensoryFeedback(.selection, trigger: opens)
         .sensoryFeedback(.success, trigger: glow) { _, lit in lit }
+        .sensoryFeedback(.decrease, trigger: undos)
     }
 
     private var restingOrIdle: TessSoul.Mode {
@@ -95,12 +98,28 @@ struct BottomChrome: View {
 
     /// One line per capture: Tess's reply wins; there are no generic fallbacks. UNDO stays while there's a capture.
     private var line: String? {
-        reply ?? model.launchNote
+        reply ?? voice.note?.text ?? model.launchNote
+    }
+
+    private var canUndo: Bool {
+        model.lastCapture != nil || voice.note?.undo != nil
+    }
+
+    /// Home's last action (done, moved) first, else the last capture.
+    private func undo() {
+        if let record = voice.note?.undo {
+            _ = model.engine.undo(record)
+            model.touch()
+            undos += 1
+            withTesseraAnimation(reduceMotion: reduceMotion) { voice.clear() }
+        } else {
+            model.undoLastCapture()
+        }
     }
 
     private var resting: some View {
         HStack(alignment: .center, spacing: Theme.Spacing.m) {
-            if !model.isCommandExpanded, line != nil || model.lastCapture != nil {
+            if !model.isCommandExpanded, line != nil || canUndo {
                 VStack(alignment: .trailing, spacing: 2) {
                     if let line {
                         Text(line)
@@ -111,8 +130,8 @@ struct BottomChrome: View {
                             .lineLimit(2)
                             .contentTransition(.opacity)
                     }
-                    if model.lastCapture != nil {
-                        Button("Undo") { model.undoLastCapture() }
+                    if canUndo {
+                        Button("Undo") { undo() }
                             .buttonStyle(InkLabelWordStyle(color: Theme.Colors.live))
                     }
                 }
@@ -126,7 +145,7 @@ struct BottomChrome: View {
         .padding(.trailing, 13)
         .padding(.bottom, 2)
         .tesseraAnimation(value: line)
-        .tesseraAnimation(value: model.lastCapture != nil)
+        .tesseraAnimation(value: canUndo)
     }
 
     /// The soul at 0.72, breathing 1 ↔ 1.08 over 3.2 s; tap opens, hold opens, double tap goes Home.
@@ -406,10 +425,10 @@ struct BottomChrome: View {
 
     /// The small soul's "done": its colours brighten for a beat, with a success haptic.
     private func brighten() {
-        withAnimation(.easeOut(duration: 0.25)) { glow = true }
+        withTesseraAnimation(.easeOut(duration: 0.25), reduceMotion: reduceMotion) { glow = true }
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(900))
-            withAnimation(.easeInOut(duration: 0.6)) { glow = false }
+            withTesseraAnimation(.easeInOut(duration: 0.6), reduceMotion: reduceMotion) { glow = false }
         }
     }
 

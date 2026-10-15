@@ -19,7 +19,11 @@ public final class TessCaptureEngine: TessCapturing {
 
     /// Runs the routes in order (grammar, then the on-device model) through `TessRouter`.
     public func capture(_ phrase: String, context: TessContext) async -> TessCapture {
-        await router.run(TessRequest(text: phrase, context: context, use: .capture))
+        var context = context
+        if context.process == nil {
+            context.process = ProcessTable(engine: engine).running()?.subject?.id
+        }
+        return await router.run(TessRequest(text: phrase, context: context, use: .capture))
     }
 
     /// The router for this engine: grammar first, then the model step if there is one.
@@ -148,6 +152,21 @@ public final class TessCaptureEngine: TessCapturing {
             let record = try engine.perform(StartShop(), by: .tess, pending: pending).record
             let line = Groceries(store: engine.store, classes: engine.classes).shoppingLine()
             return (record, "\(line).")
+        case let .reschedule(task, date):
+            let record = try engine.perform(MoveTask(task: task.id, to: date), by: .tess, pending: pending).record
+            return (record, "\(task.title), \(Self.when(date, context: context)).")
+        case let .cookStep(cook, next):
+            if next {
+                let index = (ProcessTable(engine: engine).running()?.resumePoint?.index ?? 0) + 1
+                let record = try engine.perform(GoToCookStep(cook: cook.id, step: index, time: context.now), by: .tess,
+                                                pending: pending).record
+                return (record, "Step \(index + 1).")
+            }
+            let record = try engine.perform(FinishCooking(cook: cook.id, time: context.now), by: .tess,
+                                            pending: pending).record
+            return (record, "\(cook.title), done.")
+        case .ignoredInWorkout:
+            throw ActionError.invalidArguments(action: "capture", reason: "the rest timer lives on the workout screen")
         case let .recipe(text):
             let record = try engine.perform(CreateRecipe(text: text), by: .tess, pending: pending).record
             let parsed = RecipeParser.parse(text)
