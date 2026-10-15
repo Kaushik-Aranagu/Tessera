@@ -19,6 +19,16 @@ Home has a word rail across the top: **Review · Today · Training**. **Kitchen*
 
 If the recipe page lands before the cut, also paste a recipe's text into the bar and watch it get read.
 
+## Look and feel: what to notice (from Design studio)
+
+1. **Type and paint on Home.** Does Inter Tight at the big sizes feel like your app? Does the painted background with hairline seams feel premium or washed out? Name one thing that looks stock.
+2. **The hands-on moments.** Hold to finish on Home, hold to log in a workout, the weight dial and the reps drum. Is each hold (about 0.7 s) worth holding, and does the haptic land as one clean clunk rather than a buzz?
+3. **Moving between places.** Swiping Review, Today and Training, zooming into an exercise and back, and starting a workout. Does anything jump, fade flatly or feel slow? Which transition did you like most?
+4. **Groceries strike and sink.** Is striking an item satisfying enough to use in a shop, and is the text readable at arm's length?
+5. **Tess's presence.** The soul in the Ask Tess bar and the ghost row drying in 2 s. Does it feel alive without being distracting, and does cobalt read clearly as Tess's colour?
+
+Screenshot anything that bugs you, or just say "this bit". Design takes your feedback first after the review.
+
 ## Six questions for the huddle
 
 1. **What did you reach for first, and what didn't you find?** This tells us whether Home's layout and rail are right before we add more apps.
