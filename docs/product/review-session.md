@@ -1,27 +1,33 @@
 # Review session: what to try tonight
 
-*Planning lead, 2026-10-15 11:50 AM PT. For Kaushik's first build on his phone, cut at 2:05 PM Pacific. This only covers what's on master at the cut (checked against master at #81). If something here isn't in the build, skip it and tell us.*
+*Planning lead, 2026-10-15, updated 2:15 PM Pacific. For Kaushik's first build on his phone: master `2ec1879` at the 2:05 PM Pacific cut. That's everything through #108 (all keys are stroke words, and rest survives a kill) and #111 (Groceries "Done shopping" stroke, full-size Cook and Save recipe). If something here isn't in the build, skip it and tell us.*
 
 ## What to try (about 15 minutes)
 
-Home has a word rail across the top: **Review · Today · Training · Kitchen**. Kitchen leads to Groceries and Recipes, and Notes sits at the foot of Review. The capture bar sits at the bottom of every screen.
+Home has a word rail across the top: **Review · Today · Training**. The Kitchen word and Home's links into Groceries, Recipes and Notes come in the next build (#107). Every key is now a painted stroke word, not a button. The capture bar sits at the bottom of every screen.
 
 1. **Start a workout.** Go to Home, then **Training**, and tap today's push/pull/legs routine. The workout rises as its own screen. *Check:* does it feel like an instrument rather than a form?
 2. **Log a set with one hold.** In the workout, each set opens already filled in. Hold to log it, then turn the **weight dial**, where the plates per side show beside it, and roll the **reps drum** for the next set. *Check:* the feel of the dial's clicks and the hold timing.
 3. **Rest from the lock screen.** After logging a set, lock your phone. The rest timer runs on the Lock Screen, and **Done** logs the next set without unlocking.
-4. **Leave and come back.** Swipe the workout down or kill the app mid-set, then reopen it. Home's Now and What's running should take you back to the exact set.
+4. **Leave and come back.** Swipe the workout down or kill the app mid-set, even during a rest, then reopen it. Home's Now and What's running should take you back to the exact set, with the rest still counting.
 5. **Swap an exercise.** In the workout, pull down on the exercise name and pick an alternative from the same movement pattern.
 6. **Finish, and look at the exercise.** Finish the workout and see it saved on Home. Then tap an exercise name to open its page, with your best set and history.
 7. **Plans.** From **Training**, open the week view and the month view.
 8. **Tell Tess.** In the bottom bar, type "log bench 80x8", "buy milk, eggs, 2 lemons", "call mum thursday" or "note: bar felt heavy". Each shows as a faded ghost row that saves after 2 seconds, and you can undo it.
-9. **Groceries** *(only if Kitchen is on Home in this build)*. Open Groceries (from the rail or Kitchen once it's on Home) and see the items from step 8 sorted by aisle. Tap an item to strike it.
-10. **Notes and Review** *(only if they're reachable from Home in this build)*. Open a note from step 8, then swipe to **Review** to see the week as counts.
+9. **Groceries** *(only if you can reach it tonight; Home's link comes with #107)*. See the items from step 8 sorted by aisle, tap one to strike it, and finish with the "Done shopping" stroke.
+10. **Review.** Swipe to **Review** to see the week as a sentence and counts. Notes from step 8 open from there once #107 lands.
 
-**Bonus: Recipes.** From Kitchen, open Recipes and paste a recipe's text (from a website or Notes). Watch it get read into ingredients and steps, then open its page.
+**Bonus: Recipes** *(once reachable)*. Paste a recipe's text from a website or Notes and watch it get read into ingredients and steps, then use the full-size Save.
 
 *If a calm note ever shows at launch, that's the new data-safety guard (#84) protecting your data, not a crash.*
 
-*Known gaps, already queued, so no need to report them: if Notes, Groceries, Recipes or Review can't be opened from Home, their entry points didn't make tonight's cut and come in the next build. Cook is hidden until cook mode exists. Also: the next session doesn't raise the weight yet after you hit the top of the range, and voice isn't in yet (the mic is hidden). Tapping a logged set to fix it, and editing your routine, arrived in tonight's build, so do try them.*
+*Known gaps, already queued, so no need to report them:*
+- *On Home, Finish, Start and Resume look small tonight. #110 makes them full size (with "21 min ago") right after.*
+- *Kitchen on the rail and Home's links into Groceries, Recipes and Notes come with #107.*
+- *Tapping a logged set to fix it comes with #109. Undo of the last set works now.*
+- *The next session doesn't raise the weight yet after you hit the top of the range.*
+- *Voice isn't in yet, so the mic is hidden.*
+- *Cook mode itself isn't built yet.*
 
 ## Look and feel: what to notice (from Design studio)
 
