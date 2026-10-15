@@ -34,7 +34,7 @@ The team board lives at `tessera/ops/board.md` in the shared folder. A copy is o
 
 ## Research briefs
 
-[research/README.md](research/README.md) ranks the briefs and says which team each is for: AI and Tess, design and motion, exercise catalog, fitness and workouts, instrument robustness, object model and data, personal OS and productivity, ship now, storage spike, Tess's voice, and What's running.
+[research/README.md](research/README.md) ranks the briefs and says which team each is for: AI and Tess, design and motion, exercise catalog, fitness and workouts, instrument robustness, object model and data, personal OS and productivity, ship now, storage spike, Tess's voice, What's running, and next app areas with cross-app links.
 
 ## Recordings and screenshots
 
@@ -54,6 +54,7 @@ All in [recordings/](recordings/) (`.mp4`, with `.gif` for the early ones) and [
 | 09 | Real plan on a fresh install, first set |
 | 10 | Review v0 |
 | 11 | Notes polish |
+| 12 | Groceries |
 
 Screenshot: [screenshots/today-v0.jpg](screenshots/today-v0.jpg).
 
