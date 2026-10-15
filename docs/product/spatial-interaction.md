@@ -23,6 +23,7 @@ Pages must not get long. Content spreads across both screen dimensions, and dept
 
 - **Centre:** Now. The one next thing, with the day strip and its moving "now" marker.
 - **Vertical surface on Now:** Next and Later, scrolling inside a bounded area, never the whole backlog.
+- **What's running:** the running workout (and later other open loops) sits on Now as a lit seam row with one resume control.
 - **Horizontal siblings:** today's workout on one side and the Review view on the other. Swiping on the day strip moves to yesterday or tomorrow.
 - **Depth:** tapping anything zooms into its object page.
 

@@ -20,8 +20,8 @@ Tessera is a personal OS on the iPhone. Every noun is an object of a class, the 
 | | Milestone | What Kaushik gets | Done when |
 |---|---|---|---|
 | **M0** | **Foundations** | The visual language locked, and the kernel underneath | Theme chosen; tokens (colour, type tiers, spacing, the house spring) and motion system in code; object store, class registry and event bus with tests; one generic object page that renders any class |
-| **M1** | **Train with it** (first daily use) | Workouts end to end, a first Today, Tess v0 | Kaushik logs every gym session in Tessera for two weeks without falling back to another app |
-| **M2** | **Run my day** | Tasks, Notes, Plans and the scheduler, Ready-to-Resume, widgets and the Live Activity, the Review page | Today is the first screen he opens each morning |
+| **M1** | **Train with it** (first daily use) | Workouts end to end with lock-screen set logging, a first Today with What's running, Tess v0 with ghost-preview capture | Kaushik logs every gym session in Tessera for two weeks without falling back to another app |
+| **M2** | **Run my day** | Tasks, Notes, Plans and the scheduler, the full What's running list, widgets and the Live Activity, the Review page | Today is the first screen he opens each morning |
 | **M3** | **Make it mine** | Class editor (visual plus code view), Remix a tile, add fields and views, formulas | He builds one real app of his own that looks as good as the built-in ones |
 | **M4** | **Tess builds** | "Build me an app that…", Plan my day, shutdown summary, rule-based automations | Tess produces a usable app spec from one sentence, using only the block catalog |
 
@@ -33,4 +33,5 @@ Specs go from Product to Design (UI language, motion, Tess's states) and Enginee
 
 - **Theme:** Mosaic, Plein air or Kernel for the whole app. Owned by Design studio, which is asking Kaushik; Tess's "soul" is already the Plein air bloom.
 - **v1 cut line:** confirmed by Kaushik on 2026-10-15: v1 is M0 + M1 (Workouts, the home page, the object system, Tess v0), and M2 follows as v1.1.
+- **Research lab additions (approved by Kaushik 2026-10-15):** What's running replaces Ready-to-Resume, the rest-timer Live Activity with lock-screen Done moves to P0, and Tess writes only through a ghost preview.
 - **Spatial layout, controls and materials:** see `spatial-interaction.md` (x for siblings, y for sequence, z for depth; dial and drum inputs; zero-tolerance machined look, no pills).
