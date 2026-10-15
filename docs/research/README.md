@@ -19,3 +19,6 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | **Spikes** | |
 | [storage-spike.md](storage-spike.md) | Kaushik (decision), Core engine |
 | [next-areas.md](next-areas.md) | Product lead (planning): next app areas and cross-app links |
+| [m4-scouting.md](m4-scouting.md) | Product lead, Core engine: M4 calendar and health mounts, Plan my day, Shutdown, focus block |
+| [tess-routing.md](tess-routing.md) | Core engine (Tess engine): grammar first, then on-device model |
+| [tess-eval-phrases.md](tess-eval-phrases.md) | Core engine: 200 capture phrases to test Tess |
