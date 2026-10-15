@@ -63,7 +63,7 @@ In every case: no modal, no error code, and nothing written. The link stays wher
 - On arrival the out lines lighten over 420ms after the page settles, and each ring draws round from the top (520ms, house curve, 160ms apart). That is the one living moment.
 - **Low** and **unknown** show nothing here. **Staples** stay as they are (45%, amounts at 400, no ring), so a staple never reads as missing.
 - The amount column needs about 92pt for "1 bunch". Keep it fixed-width so out lines don't shift when their weight drops.
-- **Swipe to Groceries** (sheet 10) sends out and unknown lines. Lines that are *in* stay put, like staples.
+- **Swipe to Groceries** (sheet 10) sends out, low and unknown lines. Lines that are *in* stay put, like staples.
 
 ### On the Ingredient page
 - Tap an ingredient name on a recipe; it travels up to be the hero (21 to 56, 460ms), and the rest of the page rises 14pt.
@@ -88,7 +88,7 @@ In every case: no modal, no error code, and nothing written. The link stays wher
 - When there's nothing due, the line takes no space.
 
 ## W · What can I cook (shelf filter word, sheet 14)
-- **CAN COOK** replaces FROM THE BASKET as the third filter word: QUICK · NOT LATELY · CAN COOK. It's off by default and gets the vermilion carriage when on.
+- **CAN COOK** replaces FROM THE BASKET as the third filter word when slice W lands (v1's shelf keeps FROM THE BASKET until pantry state exists): QUICK · NOT LATELY · CAN COOK. It's off by default and gets the vermilion carriage when on.
 - **On:** names missing two or more drop (fade down 10pt, 180ms). The rest re-sort on the settle spring (460ms), keeping their sizes: nothing missing first (ties go to the one not cooked lately), then one missing. The context line swaps to "3 you can cook now".
 - **One missing:** a line under the name unrolls left to right (360ms, 80ms apart) at 21/400 in the context colour, "1 missing: **lemons**", with the ingredient as a value word. Tap it to put it on the list: the line turns sage, "lemons is on the list", and Tess says "Lemons, in Groceries." with **UNDO**.
 - **Unknown counts as missing**, as the research says, but the line says so honestly: "1 to check: **lemons**". Tapping it opens the Ingredient page instead of adding it.
@@ -98,6 +98,7 @@ In every case: no modal, no error code, and nothing written. The link stays wher
 - Reduce Motion: the reading sweep becomes a breath. Marks and rings fade in together over 200ms. Flights and re-sorts become crossfades in place.
 - At accessibility sizes, the ring moves inline before the amount, and the missing line wraps under the name.
 
-## Open for the Kitchen lead
-1. CAN COOK as the new name for FROM THE BASKET, and "1 to check" for unknowns. Recommended yes to both, since the old word stops making sense once pantry state exists.
-2. Should swipe-to-Groceries skip *in* lines? Recommended yes.
+## Decided with the Kitchen lead (2026-10-15)
+1. CAN COOK replaces FROM THE BASKET with slice W, and unknowns say "1 to check".
+2. Swipe-to-Groceries skips *in* lines and staples; low lines go along with out and unknown.
+3. Low stays unmarked on the recipe page. Anything that marks it must be quieter than the out ring, and nothing is needed yet.
