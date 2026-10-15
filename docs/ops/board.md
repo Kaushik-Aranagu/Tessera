@@ -12,10 +12,12 @@
 
 ## Core engine (Mac)
 
-**Now:** Groceries screen. Done when it meets slice 13 in `ship-list-kitchen.md`.
+**Done:** Groceries screen, kitchen slice 13 (#58).
+
+**Now:** Recipe page and Paste a recipe. Done when slices 10 and 11 in `ship-list-kitchen.md` are met.
 
 **Next:**
-1. Recipe page and Paste a recipe. Done when slices 10 and 11 in `ship-list-kitchen.md` are met.
+1. Meal plan feeds groceries (idle-time slice below, ready now).
 2. Cook mode. Done when slice 12 in `ship-list-kitchen.md` is met: timers on the Lock Screen and a Cook entry on finish.
 3. Kitchen shelf. Done when slice 14 in `ship-list-kitchen.md` is met.
 4. Lists app v0. Done when slice 15 in `ship-list-kitchen.md` is met.
