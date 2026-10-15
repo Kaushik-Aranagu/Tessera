@@ -18,10 +18,12 @@
 
 ## 2. Workouts
 
+Full spec: `workouts.md`.
+
 | Pri | Feature | Notes |
 |---|---|---|
 | P0 | **Live workout mode** | Foreground "process": exercises on x, sets on y, exercise page on z; weight dial with plate math, rep drum, hold to log, rest counts down on the dial |
-| P0 | **Set logging** | Weight, reps, optional RPE; logging is the "Stamp" moment (number roll, haptic); edit and undo any set |
+| P0 | **Set logging** | Each set opens prefilled with its target, so one hold logs a planned set. Weight, reps, optional RPE; logging is the "Stamp" moment (number roll, haptic); edit and undo any set |
 | P0 | **Personal records** | Best e1RM, best weight at each rep count, best volume; shown as a quiet hint during the set that could beat one, and on the exercise page |
 | P0 | **Plans: day** | Routines (Push Day A) with exercises and set schemes; today's routine appears on Today |
 | P0 | **Rest-timer Live Activity with lock-screen logging** | Lock Screen and Dynamic Island show the draining rest time and a Done button that logs the planned set, so the phone stays locked on the bench. In the app, a lit seam along the top edge (no pills). Added 2026-10-15 (Kaushik approved Research lab idea) |
@@ -40,7 +42,7 @@
 | P0 | Today's workout row | "Push Day · 0/5" as a handle; tapping starts or resumes workout mode |
 | P0 | Tasks, minimal | Create, finish (the "Ink" moment), roll forward without red |
 | P1 | Breathing current tile | The Mosaic glow: the current item catches light every few seconds |
-| P0 | **What's running** | Open loops shown as processes (running, paused, waiting), each with one resume control. v1 has the workout as the first process. Replaces Ready-to-Resume. Added 2026-10-15 (Kaushik approved) |
+| P0 | **What's running** (spec: `whats-running.md`) | Open loops shown as processes (running, paused, waiting), each with one resume control. v1 has the workout as the first process. Replaces Ready-to-Resume. Added 2026-10-15 (Kaushik approved) |
 | P0 | Automatic context save | Leaving an object mid-way (quitting mid-set, leaving a task) saves where you were and the next step, shown in one line on return and in What's running |
 | P2 | Full What's running (tasks, waiting-on items), Apps and Review pages, widgets, pinch-to-zoom time | M2 |
 
