@@ -94,6 +94,32 @@ Kaushik, 19:18: "just a small element… we click on it, it will show some anima
 
 **On dark grounds** (workout, cook mode) the dabs use screen blend, and the wash is the dark ground at 93%.
 
+### Tonight's cut for Builder B (closed soul, opening to Write)
+Build these first; Speak and Show can follow after the install.
+1. **`TessSoulKey`** (replaces `BottomChrome`'s collapsed bar):
+   - The existing `TessSoul` view at 46×40, idle mode, scale 0.72.
+   - Position: `.overlay(alignment: .bottomTrailing)` on the root, with 22pt trailing padding and 34pt bottom padding above the home indicator (centre about (346, 788) on a 390×844 screen). Hit area 64×64 (`contentShape(Rectangle())`).
+   - A slow breath: scale 1↔1.08, 3.2s, `.easeInOut`, repeating.
+   - **Tess's line** is a `Text` to the soul's left, trailing-aligned with 12pt spacing, at 21 regular in `Theme.Colors.cobalt`. It slides in from +12pt x with opacity over 300ms, house curve, and fades after 4s.
+   - **UNDO** sits under the line as a label word (16/700, uppercase, vermilion).
+   - Remove the glass rect, the suggestion chips and the collapsed "Ask Tess…" text.
+2. **Tap → open to Write** (the default for tonight; Speak and Show sit above it as words, and are inert until their layers ship):
+   - **Haptic:** `.selection` on touch-down.
+   - **The soul swells** (×1.35, then back over 260ms). Then the three dabs **move with `matchedGeometryEffect`** to their mode positions, using `.spring(response: 0.48, dampingFraction: 0.68)`, staggered 40ms from the bottom.
+   - **The mode words:** Title 34/500, trailing at x 314 (76pt from the right edge), 70pt apart. Show is at the bottom (y 734), then Write (664), then Speak (594). Each enters from +24pt x with opacity over 360ms.
+   - **The page behind:** opacity 0.22, `.blur(radius: 3)`, `.scaleEffect(0.985)`, all over 420ms.
+   - **The wash:** a bottom-anchored `Rectangle`, 470pt tall, filled with the ground colour at 0.95 and masked by a `LinearGradient` (clear → black at 30%). On light grounds add a cobalt radial at 12% from the corner. You can use `.glassEffect(.regular, in: Rectangle())` under the same mask if it reads better, but no corners. It rises 60pt with opacity over 460ms.
+   - **Above the modes:** at y 452, the screen's question at 21 in cobalt. Under it, up to two fast paths as value words (21/600 ink joined by " · " at 75%).
+3. **Write (tap Write, or open Tess with a hardware keyboard attached):**
+   - Speak and Show fade (180ms).
+   - The cobalt dab **stretches into the writing line:** scaleX 1→9 while it moves to x 22, then cross-fades to a 0.5pt hairline in cobalt at 60%, x 22 to 368, at y 600 (380ms, house curve).
+   - A `TextField` sits on the line at Title 34/500 with a cobalt `tint` caret and `.textFieldStyle(.plain)`, focused immediately so the keyboard rises.
+   - The question moves to sit just above it.
+   - The wash and line ride up with the keyboard (`.ignoresSafeArea(.keyboard)` off).
+   - **Return:** the text dims to 45% as a ghost. A 1.5pt cobalt drying line draws under it over 2s (touching cancels), then it commits through the same grammar path `BottomChrome` uses today. Everything closes back into the soul (420ms, reverse), and Tess's reply shows beside the soul with UNDO.
+4. **Close:** tap the dimmed page, swipe down on the wash, or Escape. This is the reverse of opening.
+5. **Reduce Motion:** no swell or spring travel. The wash and words cross-fade over 200ms, and the dab-to-line stretch becomes a fade.
+
 ### Veils (replace glass panels and cards)
 - A panel that slides over content (the swap list, the exercise strip, the expanded command) is a **veil**: full-bleed glass or ground that is attached to one edge of the screen and **fades out on its open side** over 40pt. One hairline seam marks where it meets the content.
 - There are no rounded corners and no floating inset panels.
