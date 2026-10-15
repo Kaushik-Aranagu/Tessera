@@ -59,6 +59,8 @@ struct WeekViewTests {
         let full = ledger.week(containing: now, plan: plan, now: now, sessionsPerWeek: 1, calendar: calendar)
         let restAhead = full.dropFirst(2).map(\.isRest)
         #expect(restAhead == [true, true, true, true, true])
+        let none = ledger.week(containing: now, plan: plan, now: now, sessionsPerWeek: 0, calendar: calendar)
+        #expect(none.allSatisfy { !$0.isRest })
         let busy = ledger.week(containing: now, plan: plan, now: now, sessionsPerWeek: 9, calendar: calendar)
         #expect(busy.allSatisfy { !$0.isRest })
     }
