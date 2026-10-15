@@ -211,16 +211,17 @@ extension ThemeConcept {
             progress: (0xE0A35C, 0xE8BD4C),
             sky: Array(repeating: [0xF2ECE3, 0xF2ECE3, 0xF2ECE3], count: 4)
         ),
-        fonts: FontPairing(display: "Fraunces", ui: "Hanken Grotesk", mono: "Hanken Grotesk", voice: "Fraunces"),
+        // Inter Tight app-wide (Kaushik, 2026-10-15); no italics. docs/design/type-and-motion.md.
+        fonts: FontPairing(display: "Inter Tight", ui: "Inter Tight", mono: "Inter Tight", voice: "Inter Tight"),
         scale: TypeScale(
-            hero: TypeSpec(family: .display, size: 60, weight: .semibold, tracking: -0.025, lineHeight: 0.95,
+            hero: TypeSpec(family: .display, size: 56, weight: .medium, tracking: -0.04, lineHeight: 1.0,
                            textStyle: .largeTitle),
-            title: TypeSpec(family: .display, size: 48, weight: .semibold, tracking: -0.025, lineHeight: 1.1,
+            title: TypeSpec(family: .display, size: 44, weight: .medium, tracking: -0.035, lineHeight: 1.05,
                             textStyle: .title),
-            body: TypeSpec(family: .ui, size: 21, weight: .medium, tracking: 0, lineHeight: 1.35, textStyle: .body),
+            body: TypeSpec(family: .ui, size: 21, weight: .medium, tracking: 0, lineHeight: 1.3, textStyle: .body),
             label: TypeSpec(family: .ui, size: 16, weight: .bold, tracking: 0.08, lineHeight: 1.25, uppercase: true,
                             textStyle: .callout),
-            heroNumberWeight: .semibold
+            heroNumberWeight: .light
         ),
         background: .plein,
         separator: .none,

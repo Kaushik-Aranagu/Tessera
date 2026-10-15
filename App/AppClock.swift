@@ -1,3 +1,4 @@
+import TesseraCore
 import Foundation
 
 /// The app's notion of "now". Normally the real time; `-demoTime HH:mm` (DEBUG) shifts the clock so demos and
@@ -31,6 +32,14 @@ enum AppClock {
 }
 
 enum Format {
+    /// The unit the dial and labels use. Weights are stored as kilograms either way; kg until Kaushik picks.
+    nonisolated(unsafe) static var unit: MassUnit = .kilograms
+
+    /// A stored kilogram value in the chosen unit, with its symbol ("82.5 kg", "180 lb").
+    static func mass(_ kilograms: Double) -> String {
+        unit.format(kilograms: kilograms)
+    }
+
     static func kilograms(_ value: Double) -> String {
         value.formatted(.number.precision(.fractionLength(0 ... 2)))
     }

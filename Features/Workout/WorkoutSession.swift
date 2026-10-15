@@ -354,7 +354,8 @@ extension WorkoutSession {
         }
         let e1RM = previewE1RM
         guard let result = try? model.engine.perform(
-            LogSet(entry: entry.id, weight: weight, reps: reps, rpe: rpe, source: source), by: actor
+            LogSet(entry: entry.id, weight: weight, reps: reps, rpe: rpe, source: source, unit: Format.unit),
+            by: actor
         ) else { return }
         let set = result.output
         undoable = Undoable(record: result.record, entryID: entry.id, setID: set.id, weight: weight, reps: reps,
