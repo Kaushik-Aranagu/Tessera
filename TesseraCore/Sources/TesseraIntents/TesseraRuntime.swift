@@ -50,6 +50,7 @@ public enum TesseraIntentsCatalog {
         "logNextSet": "LogNextSetIntent (the Lock Screen's Done)",
         "moveSlot": "in-app only: routine editor",
         "editSlot": "in-app only: routine editor",
+        "removeSlot": "in-app only: routine editor",
         "swapSlotExercise": "in-app only: routine editor",
         "swapExercise": "in-app only: live mode swap",
         "rollForwardTasks": "system: nightly roll-forward",

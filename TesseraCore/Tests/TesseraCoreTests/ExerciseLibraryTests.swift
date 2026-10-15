@@ -43,6 +43,24 @@ struct ExerciseLibraryTests {
         #expect(try store.objects(of: #require(classes[.muscle])).count == 18)
     }
 
+    @Test func groupsFollowThePatternsThenYours() throws {
+        try ExerciseLibraryInstaller.install(shape: .patternSpine, store: store, classes: classes)
+        let strength = try #require(classes[.strengthExercise])
+        _ = store.createClass(name: "Landmine Press", parent: strength)
+        let groups = store.exerciseGroups(root: classes[.exercise])
+        let push = try #require(groups.first { $0.name == "Horizontal Push" })
+        #expect(push.exercises.contains { $0.name == "Bench Press" })
+        #expect(push.exercises.map(\.name) == push.exercises.map(\.name).sorted {
+            $0.localizedStandardCompare($1) == .orderedAscending
+        })
+        // Groupings (Curl, Isolation) never show as exercises; every seed shows exactly once.
+        let shown = groups.flatMap(\.exercises)
+        #expect(!shown.contains { $0.name == "Curl" || $0.name == "Isolation" })
+        #expect(Set(shown.map(\.id)).count == shown.count)
+        #expect(shown.count == ExerciseLibrary.seeds.count + 1)
+        #expect(groups.last?.name == "Yours" && groups.last?.exercises.map(\.name) == ["Landmine Press"])
+    }
+
     @Test func equipmentClassShapeIsTheSmallAlternative() throws {
         let installed = try ExerciseLibraryInstaller.install(shape: .equipmentClasses, store: store, classes: classes)
         #expect(installed["benchPress"]?.parent?.id == classes[.barbellLift]?.id)

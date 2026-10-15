@@ -57,6 +57,19 @@ struct ActionEngineTests {
         #expect(store.value("reps", of: set) == .number(8))
     }
 
+    @Test func editCanClearTheRPEAndUndoPutsItBack() throws {
+        let (_, entry) = try benchEntry()
+        let set = try engine.perform(LogSet(entry: entry.id, weight: 80, reps: 8, rpe: 8), by: .user).output
+        let clear = try engine.perform(EditSet(set: set.id, clearRPE: true), by: .user)
+        #expect(store.value("rpe", of: set) == nil)
+        #expect(store.value("weight", of: set) == .mass(80))
+        engine.undo(clear.record)
+        #expect(store.value("rpe", of: set) == .number(8))
+        #expect(throws: ActionError.self) {
+            try engine.perform(EditSet(set: set.id, rpe: 7, clearRPE: true), by: .user)
+        }
+    }
+
     @Test func undoNeverOverwritesALaterChange() throws {
         let (_, entry) = try benchEntry()
         let set = try engine.perform(LogSet(entry: entry.id, weight: 80, reps: 8), by: .user).output
@@ -203,7 +216,10 @@ struct ActionEngineTests {
         let schema = try #require(logSet["input_schema"] as? [String: Any])
         #expect(schema["type"] as? String == "object")
         #expect(Set(schema["required"] as? [String] ?? []) == ["entry", "weight", "reps"])
-        #expect(ActionRegistry.descriptors.filter(\.isDestructive).map(\.name) == ["deleteObject"])
+        #expect(ActionRegistry.descriptors.filter(\.isDestructive).map(\.name).sorted() == [
+            "deleteObject",
+            "removeSlot",
+        ])
     }
 
     @Test func deleteIsRecoverable() throws {
