@@ -32,6 +32,26 @@ public struct LogSetIntent: AppIntent {
     }
 }
 
+/// Logs the next set of the running workout exactly as prefilled (the Lock Screen's Done).
+public struct LogNextSetIntent: AppIntent {
+    public static let title: LocalizedStringResource = "Log Next Set"
+    public static let description = IntentDescription("Logs the next set of the workout in progress, as prefilled.")
+
+    @Dependency private var runtime: TesseraRuntime
+
+    public init() {}
+
+    @MainActor
+    public func perform() async throws -> some IntentResult & ProvidesDialog {
+        let table = ProcessTable(engine: runtime.engine)
+        guard let workout = table.running()?.subject,
+              let entry = WorkoutProgress(of: workout, store: runtime.store).entry
+        else { return .result(dialog: "No workout running.") }
+        let record = try runtime.engine.perform(LogNextSet(entry: entry.id, source: .lockScreen), by: .intent).record
+        return .result(dialog: "\(record.summary).")
+    }
+}
+
 /// Undoes the most recent set, from anywhere (the Lock Screen's Live Activity uses it).
 public struct UndoLastSetIntent: AppIntent {
     public static let title: LocalizedStringResource = "Undo Last Set"
@@ -151,4 +171,5 @@ public struct TesseraIntentsPackage: AppIntentsPackage {}
 #if os(iOS)
     /// The Lock Screen's undo runs in the app's process, against the same op log.
     extension UndoLastSetIntent: LiveActivityIntent {}
+    extension LogNextSetIntent: LiveActivityIntent {}
 #endif

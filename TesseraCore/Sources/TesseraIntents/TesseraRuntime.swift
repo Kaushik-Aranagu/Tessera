@@ -47,5 +47,6 @@ public enum TesseraIntentsCatalog {
         "addSlot": "in-app only",
         "startRoutine": "StartRoutineIntent",
         "createPlan": "in-app only",
+        "logNextSet": "LogNextSetIntent (the Lock Screen's Done)",
     ]
 }
