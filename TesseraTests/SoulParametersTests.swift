@@ -1,5 +1,6 @@
 import Foundation
 @testable import Tessera
+import TesseraCore
 import Testing
 
 struct SoulParametersTests {

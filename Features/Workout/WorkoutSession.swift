@@ -12,7 +12,7 @@ final class WorkoutSession {
     let workout: ObjectRecord
     private unowned let model: AppModel
     private var ledger: TrainingLedger {
-        TrainingLedger(model: model)
+        model.ledger
     }
 
     /// The exercise on screen (x).
@@ -190,6 +190,7 @@ final class WorkoutSession {
     /// Best set before this workout, for the PR hint.
     var previousBest: AppModel.LoggedSet? {
         currentExercise.flatMap { ledger.bestSet(of: $0, excludingWorkout: workout.id) }
+            .map { AppModel.LoggedSet(weight: $0.weight, reps: $0.reps, e1RM: $0.e1RM) }
     }
 
     /// Best e1RM including sets already logged today, so a second PR has to beat the first.
@@ -219,7 +220,7 @@ final class WorkoutSession {
     }
 
     /// Hold to log: seats the dialled set, then the dial turns into the rest countdown.
-    func logSet() {
+    func logSet(source: SetSource = .hold, by actor: Actor = .user) {
         guard let entry = currentEntry, let exercise = currentExercise else { return }
         let wasRecord = isPersonalRecord
         var records = ledger.recordsBeaten(weight: weight, reps: reps, for: exercise, excludingWorkout: workout.id)
@@ -229,7 +230,9 @@ final class WorkoutSession {
             records.removeAll { $0 == .e1RM }
         }
         let e1RM = previewE1RM
-        guard let set = ledger.logSet(weight: weight, reps: reps, rpe: rpe, in: entry) else { return }
+        guard let set = try? model.engine.perform(
+            LogSet(entry: entry.id, weight: weight, reps: reps, rpe: rpe, source: source), by: actor
+        ).output else { return }
         restTotal = restSeconds
         loggedCount += 1
         lastTouchedAt = AppClock.now

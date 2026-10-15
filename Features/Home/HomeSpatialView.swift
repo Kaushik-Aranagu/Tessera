@@ -1,4 +1,5 @@
 import SwiftUI
+import TesseraCore
 
 /// Paint used only on Home that has no Theme token yet (docs/design/home-v1.md, materials.md).
 enum HomePaint {

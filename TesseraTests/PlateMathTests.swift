@@ -1,4 +1,5 @@
 @testable import Tessera
+import TesseraCore
 import Testing
 
 struct PlateMathTests {

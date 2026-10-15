@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 @testable import Tessera
+import TesseraCore
 import Testing
 
 @MainActor
@@ -86,10 +87,10 @@ struct WorkoutSessionTests {
     @Test func ledgerRepsToBeatAndRecordKinds() throws {
         let (model, session) = try startedSession()
         let bench = try #require(model.classDef(.benchPress))
-        let ledger = TrainingLedger(model: model)
+        let ledger = try #require(model.ledger)
         // Best is 82.5 × 7 → e1RM 101.75; at 82.5 kg that needs 8 reps.
         #expect(ledger.repsToBeatBestE1RM(weight: 82.5, for: bench, excludingWorkout: session.workout.id) == 8)
-        #expect(ledger.recordsBeaten(weight: 85, reps: 7, for: bench).contains(.weightAtReps))
+        #expect(ledger.recordsBeaten(weight: 85, reps: 7, for: bench).contains(.repMax(7)))
         #expect(ledger.recordsBeaten(weight: 60, reps: 5, for: bench).isEmpty)
     }
 }

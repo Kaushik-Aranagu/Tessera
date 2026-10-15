@@ -1,4 +1,5 @@
 import SwiftUI
+import TesseraCore
 
 /// TRAINING: a context line, today's workout as the hero, its exercises as plain 50 pt rows, one ink key to start or
 /// resume, and one line from Tess.

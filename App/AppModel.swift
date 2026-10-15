@@ -84,7 +84,13 @@ final class AppModel {
         } catch {
             assertionFailure("Seeding failed: \(error)")
         }
+        engine = ActionEngine(store: store, classes: classes)
+        ledger = TrainingLedger(store: store, classes: classes)
     }
+
+    /// Every UI write goes through typed actions, so it lands in the op log with undo (Core engine).
+    @ObservationIgnored private(set) var engine: ActionEngine!
+    @ObservationIgnored private(set) var ledger: TrainingLedger!
 
     // MARK: Navigation
 
@@ -242,8 +248,7 @@ final class AppModel {
     }
 
     func finish(taskID: UUID) {
-        guard let task = object(taskID) else { return }
-        try? store.set("isDone", to: .bool(true), on: task)
+        _ = try? engine.perform(SetTaskDone(task: taskID, done: true), by: .user)
         touch()
     }
 
@@ -252,7 +257,7 @@ final class AppModel {
     func startWorkout(_ workout: ObjectRecord) {
         if session?.workout.id != workout.id {
             if store.value("startedAt", of: workout) == nil {
-                try? store.set("startedAt", to: .date(AppClock.now), on: workout)
+                _ = try? engine.perform(StartWorkout(workout: workout.id, time: AppClock.now), by: .user)
             }
             session = WorkoutSession(workout: workout, model: self)
         }
@@ -262,7 +267,7 @@ final class AppModel {
 
     func endWorkout() {
         guard let session else { return }
-        try? store.set("endedAt", to: .date(AppClock.now), on: session.workout)
+        _ = try? engine.perform(FinishWorkout(workout: session.workout.id, time: AppClock.now), by: .user)
         isWorkoutPresented = false
         self.session = nil
         touch()
