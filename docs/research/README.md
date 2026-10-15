@@ -28,3 +28,8 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [day-log.md](day-log.md) | Product lead, Core engine, Design studio: what the Day log shows, undo from a past day, the scrub rail |
 | [m5-money-reading.md](m5-money-reading.md) | Product lead: smallest Money and Reading apps |
 | [people-and-upkeep.md](people-and-upkeep.md) | Product lead: smallest People and Home upkeep apps |
+| [lists-templates.md](lists-templates.md) | Kitchen lead (Lists), Product lead, Core: reset vs copy, pick one, paste into a list |
+| [habits.md](habits.md) | Product lead, Core, Design: weekly targets, auto-filled check-ins, no guilt |
+| [add-a-field.md](add-a-field.md) | Product lead, Core, Design: add a field by typing, type inference |
+| [quiet-interrupts.md](quiet-interrupts.md) | Core, Product lead: holding notifications during a process |
+| [body-weight-trend.md](body-weight-trend.md) | Core, Product lead, Design: smoothed trend weight |
