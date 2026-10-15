@@ -38,6 +38,8 @@ struct TesseraApp: App {
                 #if DEBUG
                     if ProcessInfo.processInfo.arguments.contains("-soulGallery") {
                         SoulGallery()
+                    } else if ProcessInfo.processInfo.arguments.contains("-notes") {
+                        NotesView()
                     } else {
                         RootView()
                     }
