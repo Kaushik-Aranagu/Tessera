@@ -3,7 +3,7 @@
 For Builder B, after Core's `ShopReceipt` and `LogShopTotal` (ship-list-m5-money slice 3). It is drawn to `no-buttons.md`. Recording: `recordings/money-dial.mp4` (source `studies/money-dial.html`).
 
 ## The ask lives in Now
-- While a total is awaited, Now reads **"Groceries total?"** at Hero, with the context line "Shop finished at 5:40 pm" in Body.
+- While a total is awaited, Now reads **"Groceries total?"** at Hero, with the context line "the shop you finished at 5:40" in Body.
 - **Tap Now** to z into the instrument: the Now line grows into the title, and the rest of Home fades back. There is no sheet and no card.
 
 ## The instrument
