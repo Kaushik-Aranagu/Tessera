@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Claude settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Motion study for model layer S1 (Settings: Claude) and S2 (cloud mark and receipt), per docs/product/tess-model-layer.md. Drawn to docs/design/no-buttons.md. Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4;--cad:#D08A36}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 85% 6%,#D6E2F0 0%,rgba(214,226,240,0) 70%),radial-gradient(70% 45% at 0% 35%,#D8CBE6 0%,rgba(216,203,230,0) 70%),radial-gradient(80% 50% at 100% 75%,#F2E2C8 0%,rgba(242,226,200,0) 70%),#F4F0EC}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub)}
+.sec{position:absolute;left:22px;font-size:34px;font-weight:500;letter-spacing:-.035em}
+.row{position:absolute;left:22px;right:22px;font-size:21px;line-height:30px;color:rgba(43,36,64,.88)}
+.v{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.d{position:absolute;width:40px;height:36px;margin:-18px 0 0 -20px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.85) 0%,rgba(var(--c),.6) 42%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(2.5px)}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:30;pointer-events:none}
+.la .line{position:absolute;left:0;right:0;bottom:-6px;height:1.5px;transform:scaleX(0)}
+.dot{display:inline-block;width:7px;height:7px;margin:0 2px;border-radius:50%;background:var(--cobalt);vertical-align:middle}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <section id="page" class="abs" style="inset:0">
+    <div class="abs" style="left:20px;top:84px;font-size:56px;font-weight:500;line-height:1;letter-spacing:-.04em">Settings</div>
+    <div class="sec" style="top:172px">Claude</div>
+    <div id="off" class="row" style="top:220px">Tess thinks <span class="v">on this phone</span> only.</div>
+    <div id="add" class="row" style="top:258px;color:var(--cobalt)">Add a Claude key</div>
+    <!-- the key line: writing in place, no box -->
+    <div id="keyLine" class="abs" style="left:22px;right:22px;top:292px;height:.5px;background:rgba(46,109,164,.6);opacity:0;transform-origin:0 50%"></div>
+    <div id="key" class="abs" style="left:22px;right:22px;top:258px;font-size:21px;line-height:30px;white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums;color:rgba(43,36,64,.6)"></div>
+    <!-- once there is a key -->
+    <div id="on" class="abs" style="left:0;right:0;top:220px;opacity:0">
+      <div class="row" style="top:0">Tess can ask <span class="v">Claude</span>.</div>
+      <div class="row" style="top:48px">This month <span class="v" id="spent">$0.00</span> of <span class="v">$10</span></div>
+      <div class="abs" style="left:22px;right:22px;top:88px;height:1px;background:rgba(43,36,64,.18)"></div>
+      <svg id="month" class="abs" style="left:22px;top:82px;overflow:visible" width="346" height="12"><path id="mp" d="M0 6 C 80 3, 200 8, 346 5" stroke="#2E6DA4" stroke-width="6" fill="none" stroke-linecap="butt" opacity=".85"/></svg>
+      <div id="paused" class="lbl abs" style="left:22px;top:104px;opacity:0">PAUSES AT $10 UNTIL 1 NOV</div>
+      <div class="row" style="top:150px">Sees sleep and energy: <span class="v">no</span>.</div>
+      <div class="row" style="top:188px">Misses go to Claude: <span class="v">yes</span>.</div>
+      <div class="row" style="top:226px">Key ends in <span class="v" id="ends">x7Qa</span>.</div>
+      <div class="row" style="top:264px;color:var(--cobalt)">Receipts</div>
+    </div>
+    <div id="units" class="sec" style="top:560px;opacity:.5">Units</div>
+  </section>
+
+  <!-- receipt: unfolds from Tess's line, one layer down -->
+  <div id="receipt" class="abs" style="left:22px;right:22px;top:610px;opacity:0;z-index:12">
+    <div class="lbl">PLAN MY DAY · SONNET · 1.2¢</div>
+    <div style="font-size:21px;line-height:30px;margin-top:8px">Sent: your 6 tasks, their times, today's date.</div>
+    <div style="font-size:21px;line-height:30px;color:rgba(43,36,64,.6)">Not sent: health, notes, anything else.</div>
+  </div>
+
+  <div id="say" class="abs" style="right:78px;top:775px;font-size:21px;color:var(--cobalt);text-align:right;opacity:0;z-index:12;white-space:nowrap"></div>
+  <span id="via" class="abs la lbl" style="right:78px;top:808px;opacity:0;z-index:12">VIA CLAUDE<span class="line" style="background:var(--sub)"></span></span>
+  <svg id="wisp" class="abs" style="left:310px;top:700px;z-index:13;overflow:visible;opacity:0" width="72" height="72" viewBox="0 0 48 48"></svg>
+  <div id="soul" class="abs" style="left:346px;top:788px;width:0;height:0;z-index:13">
+    <div class="d" style="--c:200,69,47;transform:translate(-10px,-6px) scale(.72)"></div><div class="d" style="--c:46,109,164;transform:translate(10px,-6px) scale(.72)"></div><div class="d" style="--c:224,179,65;transform:translate(0,9px) scale(.72)"></div>
+  </div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const tween = (dur, fn, e = ease) => new Promise((res) => { const t0 = performance.now(); const st = (n) => { const t = Math.min(1, (n - t0) / dur); fn(e(t)); t < 1 ? requestAnimationFrame(st) : res(); }; requestAnimationFrame(st); });
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+const centre = (el) => { const r = rel(el.getBoundingClientRect()); return [r.left + r.width / 2, r.top + r.height / 2]; };
+const tapEl = async (el) => { const [x, y] = centre(el); await fingerOn(x, y); await sleep(110); fingerOff(); };
+async function swap(el, html, colour) { await anim(el, [{ opacity: 1, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(3px)' }], { duration: 120 }); el.innerHTML = html; if (colour) el.style.color = colour; await anim(el, [{ opacity: 0, filter: 'blur(3px)' }, { opacity: 1, filter: 'blur(0)' }], { duration: 180, easing: HOUSE }); }
+const mp = $('mp'); const ML = mp.getTotalLength(); mp.style.strokeDasharray = ML; mp.style.strokeDashoffset = ML;
+const setMonth = (f) => { mp.style.strokeDashoffset = ML * (1 - f); };
+// the cloud mark: three short cobalt wisps rising off the soul while data is away from the phone
+const wisp = $('wisp');
+wisp.innerHTML = [0, 1, 2].map((i) => `<path d="M${16 + i * 8} 44 C ${12 + i * 8} 34, ${22 + i * 8} 26, ${16 + i * 8} 14" stroke="#2E6DA4" stroke-width="2.5" fill="none" stroke-linecap="round" opacity=".8"/>`).join('');
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  await document.fonts.ready; await sleep(400); document.body.dataset.start = '1';
+  await sleep(1200);
+
+  // 1 · add the key: the line opens in place, you paste, the key collapses into dots, only its end stays readable
+  await tapEl($('add'));
+  anim($('add'), [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+  anim($('keyLine'), [{ opacity: 0, transform: 'scaleX(0)' }, { opacity: 1, transform: 'none' }], { duration: 360, easing: HOUSE });
+  await sleep(700);
+  const KEY = 'sk-ant-api03-Hq2mR8vLz0pW6t…x7Qa';
+  $('key').textContent = KEY;
+  await anim($('key'), [{ opacity: 0, filter: 'blur(4px)' }, { opacity: 1, filter: 'blur(0)' }], { duration: 220 });
+  await sleep(500);
+  // each character but the last four drains into a small cobalt dot, then the dots close up to six
+  const chars = [...KEY]; $('key').innerHTML = chars.map((c, i) => `<span style="display:inline-block">${c}</span>`).join('');
+  const sp = [...$('key').children];
+  sp.slice(0, -4).forEach((s, i) => anim(s, [{ opacity: 1, transform: 'none', maxWidth: '20px' }, { opacity: 0, transform: 'translateY(4px) scale(.3)', maxWidth: '0px' }], { duration: 260, delay: i * 9, easing: HOUSE }));
+  await sleep(chars.length * 9 + 260);
+  await swap($('key'), 'Key saved. Ends in <b style="font-weight:600;color:var(--ink)">x7Qa</b>.', 'var(--cobalt)');
+  anim($('keyLine'), [{ opacity: 1 }, { opacity: 0 }], { duration: 300 });
+  await sleep(1100);
+  // the Claude sentences unfold in place of the "this phone only" line
+  anim($('off'), [{ opacity: 1 }, { opacity: 0 }], { duration: 200 }); anim($('key'), [{ opacity: 1 }, { opacity: 0 }], { duration: 200 });
+  $('on').style.opacity = 1;
+  [...$('on').children].forEach((c, k) => anim(c, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: c.id === 'paused' ? 0 : 1, transform: 'none' }], { duration: 300, delay: k * 40, easing: HOUSE }));
+  anim($('units'), [{ transform: 'none' }, { transform: 'translateY(80px)' }], { duration: 360, easing: HOUSE });
+  await sleep(900);
+  await tween(500, (t) => { setMonth(.042 * t); $('spent').textContent = '$' + (0.42 * t).toFixed(2); });
+  await sleep(1000);
+
+  // 2 · later in the month: past 80% the line and the amount turn amber; the cap is said in words under it
+  await tween(1400, (t) => { const f = .042 + (.82 - .042) * t; setMonth(f); $('spent').textContent = '$' + (10 * f).toFixed(2); if (f >= .8) { mp.setAttribute('stroke', '#D08A36'); $('spent').style.color = '#B8742A'; } });
+  anim($('paused'), [{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
+  await sleep(1600);
+
+  // 3 · the cloud mark: while a request is away, wisps rise off the soul; the answer comes back marked VIA CLAUDE, which opens its receipt
+  anim($('soul'), [{ transform: 'scale(1)' }, { transform: 'scale(1.12)' }, { transform: 'scale(1)' }], { duration: 700, iterations: 3 });
+  wisp.style.opacity = 1;
+  [...wisp.children].forEach((p, i) => p.animate([{ transform: 'translateY(8px)', opacity: 0 }, { opacity: .8, offset: .4 }, { transform: 'translateY(-10px)', opacity: 0 }], { duration: 1100, delay: i * 220, iterations: 2 }));
+  await sleep(2100);
+  wisp.style.opacity = 0;
+  $('say').textContent = 'Your day is planned.';
+  anim($('say'), [{ opacity: 0, transform: 'translateX(12px)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: HOUSE });
+  anim($('via'), [{ opacity: 0 }, { opacity: 1 }], { duration: 240, delay: 120 });
+  await sleep(1100);
+  // tap VIA CLAUDE: the receipt unfolds in sentences
+  await tapEl($('via'));
+  const ln = $('via').querySelector('.line'); anim(ln, [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 180, easing: HOUSE });
+  anim($('page'), [{ opacity: 1, filter: 'blur(0)' }, { opacity: .2, filter: 'blur(3px)' }], { duration: 300 });
+  anim($('receipt'), [{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'none' }], { duration: 360, easing: HOUSE });
+  await sleep(2600);
+  document.body.dataset.done = '1';
+})();
+</script>
+</body>
+</html>
