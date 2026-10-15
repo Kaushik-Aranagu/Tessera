@@ -38,8 +38,8 @@ struct HomeSpatialView: View {
         }
     }
 
-    /// Space kept free at the bottom of every page for the dock (Ask Tess + What's running) in BottomChrome.
-    static let dockClearance: CGFloat = 104
+    /// Space kept free at the bottom of every page, on top of the 56 pt RootView keeps for the soul.
+    static let dockClearance: CGFloat = 48
 
     /// Where Home was left this session (spatial memory).
     @MainActor private static var remembered = Page.today.rawValue
@@ -79,7 +79,7 @@ struct HomeSpatialView: View {
                     // `-openLink notes|recipes|groceries|review` opens that screen the way its Home word does.
                     let arguments = ProcessInfo.processInfo.arguments
                     if let index = arguments.firstIndex(of: "-openLink"), index + 1 < arguments.count,
-                       let link = HomeLink.allCases.first(where: { "\($0)" == arguments[index + 1] })
+                       let link = HomeLink.allCases.first(where: { arguments[index + 1] == "\($0)" })
                     {
                         Task { @MainActor in
                             try? await Task.sleep(for: .seconds(1.5))
@@ -105,10 +105,14 @@ struct HomeSpatialView: View {
         // screen, swipe down to close) instead of being pushed inside Home's stack.
         .fullScreenCover(item: $presented) { link in
             link.destination
-                .overlay(alignment: .topTrailing) {
-                    Button("Close") { presented = nil }
-                        .buttonStyle(InkLabelWordStyle())
-                        .padding(.trailing, Theme.Spacing.gutter - 8)
+                // Its own row above the screen, so it never sits on a title.
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    HStack {
+                        Spacer()
+                        Button("Close") { presented = nil }
+                            .buttonStyle(InkLabelWordStyle())
+                    }
+                    .padding(.horizontal, Theme.Spacing.gutter - 8)
                 }
                 .navigationTransition(.zoom(sourceID: link, in: linkZoom))
         }

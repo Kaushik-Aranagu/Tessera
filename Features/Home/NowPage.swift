@@ -172,17 +172,13 @@ struct NowPage: View {
     }
 }
 
-/// Now's countdown drawn as a bar that drains (the rest dial's wash, in day paint): full before the item starts,
-/// emptying towards the left as it runs, gone at its end. Ticks once a second; the edge glides between ticks.
+/// Now's countdown: a 2 pt hairline track with a dry 6 pt amber brushstroke over the elapsed part, growing to the
+/// right as the item runs. No container and no rounded ends. Ticks once a second; the tip glides between ticks.
 struct DrainBar: View {
     let start: Date
     let end: Date
 
     private static let height: CGFloat = 14
-    /// A slightly uneven stroke end, not a pill.
-    private static let shape = UnevenRoundedRectangle(topLeadingRadius: 4, bottomLeadingRadius: 2.5,
-                                                      bottomTrailingRadius: 4, topTrailingRadius: 2.5,
-                                                      style: .continuous)
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -190,14 +186,16 @@ struct DrainBar: View {
             let fraction = Self.remaining(start: start, end: end, now: now)
             GeometryReader { proxy in
                 ZStack(alignment: .leading) {
-                    Self.shape.fill(Theme.Colors.ink.opacity(0.05))
-                    LinearGradient(colors: [HomePaint.dayAmber.opacity(0.15), HomePaint.dayAmber.opacity(0.55)],
-                                   startPoint: .leading, endPoint: .trailing)
-                        .overlay(alignment: .trailing) { HomePaint.dayAmber.frame(width: 2) }
-                        .frame(width: proxy.size.width * fraction)
-                        .clipShape(Self.shape)
+                    Rectangle()
+                        .fill(Theme.Colors.ink.opacity(0.14))
+                        .frame(height: 2)
+                    DryStroke()
+                        .fill(HomePaint.dayAmber.opacity(0.85))
+                        .frame(width: max(proxy.size.width * (1 - fraction), 0), height: 6)
+                        .blur(radius: 0.3)
                         .tesseraAnimation(.linear(duration: 1), value: fraction)
                 }
+                .frame(maxHeight: .infinity)
             }
             .frame(height: Self.height)
             .accessibilityElement()
@@ -211,6 +209,27 @@ struct DrainBar: View {
         let total = end.timeIntervalSince(start)
         guard total > 0, now > start else { return 1 }
         return min(max(end.timeIntervalSince(now) / total, 0), 1)
+    }
+}
+
+/// A dry brushstroke as a filled shape: tapered, slightly ragged ends and a wavering edge, never a capsule.
+private struct DryStroke: Shape {
+    func path(in rect: CGRect) -> Path {
+        let width = rect.width, height = rect.height
+        guard width > 1 else { return Path() }
+        let taper = min(8, width / 3)
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.midY + height * 0.1))
+        path.addLine(to: CGPoint(x: rect.minX + taper * 0.4, y: rect.minY + height * 0.3))
+        path.addQuadCurve(to: CGPoint(x: rect.maxX - taper, y: rect.minY + height * 0.05),
+                          control: CGPoint(x: rect.midX, y: rect.minY - height * 0.15))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY - height * 0.15))
+        path.addLine(to: CGPoint(x: rect.maxX - taper * 0.3, y: rect.midY + height * 0.2))
+        path.addLine(to: CGPoint(x: rect.maxX - taper * 0.7, y: rect.maxY - height * 0.05))
+        path.addQuadCurve(to: CGPoint(x: rect.minX + taper, y: rect.maxY - height * 0.1),
+                          control: CGPoint(x: rect.midX, y: rect.maxY + height * 0.1))
+        path.closeSubpath()
+        return path
     }
 }
 
@@ -553,8 +572,12 @@ private struct LedgerRow: View {
     /// "just now", "21 min ago", "2 h ago" (never a mm:ss duration).
     static func ago(_ seconds: TimeInterval) -> String {
         let minutes = Int(seconds / 60)
-        if minutes < 1 { return "just now" }
-        if minutes < 60 { return "\(minutes) min ago" }
+        if minutes < 1 {
+            return "just now"
+        }
+        if minutes < 60 {
+            return "\(minutes) min ago"
+        }
         return "\(minutes / 60) h ago"
     }
 }

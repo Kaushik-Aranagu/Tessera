@@ -50,6 +50,8 @@ struct TesseraApp: App {
                         ReviewView()
                     } else if ProcessInfo.processInfo.arguments.contains("-groceries") {
                         GroceriesView()
+                    } else if ProcessInfo.processInfo.arguments.contains("-backup") {
+                        BackupView()
                     } else if ProcessInfo.processInfo.arguments.contains("-recipe") {
                         RecipeView(recipeID: nil)
                     } else if ProcessInfo.processInfo.arguments.contains("-pasteRecipe") {
@@ -68,6 +70,10 @@ struct TesseraApp: App {
             }
             .onChange(of: model.session?.restEndsAt) { RestActivityController.shared.update(for: model.session) }
             .onChange(of: scenePhase, initial: true) { _, phase in
+                // Once a day, on the way out: a backup copy (docs/research/free-signing-survival.md).
+                if phase == .background {
+                    BackupKeeper.runDaily(model.context)
+                }
                 if phase == .active {
                     model.tidyProcesses()
                 }
