@@ -41,6 +41,15 @@ public struct ProcessTable {
 
     /// Home's ledger under Now: suspended processes touched in the last 3 days, then waiting ones whose check
     /// time has passed. At most 3; the running process is shown as Now, not here.
+    /// The workout in progress: the running one, else the most recent one set aside.
+    public func openWorkout(now _: Date = .now) -> ProcessSnapshot? {
+        if let running = running(), let subject = running.subject, isWorkout(subject) {
+            return running
+        }
+        return all().filter { $0.state == .suspended && ($0.subject.map(isWorkout) ?? false) }
+            .max { ($0.lastTouchedAt ?? .distantPast) < ($1.lastTouchedAt ?? .distantPast) }
+    }
+
     public func ledger(now: Date = .now) -> [ProcessSnapshot] {
         let processes = all()
         let suspended = processes.filter { $0.state == .suspended && $0.idle(at: now) < Limits.leavesHome }
@@ -75,7 +84,9 @@ public struct ProcessTable {
     /// (the rest time plus 10 minutes while backgrounded). Returns the suspended process.
     @discardableResult
     public func suspendIfIdle(now: Date = .now, idleLimit: TimeInterval) -> ProcessSnapshot? {
-        guard let running = running(), running.idle(at: now) > idleLimit else { return nil }
+        // Only workouts go idle this way (the rest-based limit means nothing for a shop, a cook or a task).
+        guard let running = running(), let subject = running.subject, isWorkout(subject),
+              running.idle(at: now) > idleLimit else { return nil }
         _ = try? engine.perform(SuspendProcess(process: running.id, time: running.lastTouchedAt), by: .system)
         return running
     }

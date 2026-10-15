@@ -16,7 +16,9 @@ struct NoteEditor: View {
 
     private enum Field { case heading, rest }
     @State private var loaded = false
-    /// The text as it was opened, so leaving without typing writes nothing.
+    /// Set by the first real edit, so opening and leaving writes nothing.
+    @State private var edited = false
+    /// The text as it was opened (the load itself fires onChange; that isn't an edit).
     @State private var openedAs = ""
     @State private var saveTask: Task<Void, Never>?
     @State private var deleted = false
@@ -107,9 +109,15 @@ struct NoteEditor: View {
             openedAs = NotesEditorCopy.join(heading: heading, rest: text)
             loaded = true
         }
-        .onChange(of: text) { _, _ in scheduleSave() }
-        .onChange(of: heading) { _, _ in scheduleSave() }
+        .onChange(of: text) { _, _ in noteEdit() }
+        .onChange(of: heading) { _, _ in noteEdit() }
         .onDisappear { save() }
+    }
+
+    private func noteEdit() {
+        guard loaded, edited || NotesEditorCopy.join(heading: heading, rest: text) != openedAs else { return }
+        edited = true
+        scheduleSave()
     }
 
     private func scheduleSave() {
@@ -126,8 +134,9 @@ struct NoteEditor: View {
         saveTask?.cancel()
         guard loaded, !deleted, let note = model.store.object(id: noteID), !note.isDeleted else { return }
         let trimmed = NotesEditorCopy.join(heading: heading, rest: text)
-        // Unchanged since it was opened: nothing to save (no rewrite, no jump to the top, no op).
-        guard trimmed != openedAs else { return }
+        // Never touched since it was opened: nothing to save (no rewrite, no jump to the top, no op). Once edited,
+        // compare with what's stored, so typing back to the original after an autosave still saves.
+        guard edited else { return }
         let current = model.store.value("body", of: note)?.stringValue ?? ""
         guard !trimmed.isEmpty, trimmed != current else { return }
         _ = try? model.engine.perform(

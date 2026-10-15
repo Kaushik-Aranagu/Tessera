@@ -44,7 +44,7 @@ public struct LogNextSetIntent: AppIntent {
     @MainActor
     public func perform() async throws -> some IntentResult & ProvidesDialog {
         let table = ProcessTable(engine: runtime.engine)
-        guard let workout = table.running()?.subject,
+        guard let open = table.openWorkout(), let workout = open.subject,
               let entry = WorkoutProgress(of: workout, store: runtime.store).entry
         else { return .result(dialog: "No workout running.") }
         let record = try runtime.engine.perform(LogNextSet(entry: entry.id, source: .lockScreen), by: .intent).record
@@ -63,7 +63,7 @@ public struct UndoLastSetIntent: AppIntent {
 
     @MainActor
     public func perform() async throws -> some IntentResult & ProvidesDialog {
-        guard runtime.engine.undoLatest(action: LogSet.descriptor.name) != nil else {
+        guard runtime.engine.undoLatestSet() != nil else {
             return .result(dialog: "No set to undo.")
         }
         return .result(dialog: "Last set removed.")
@@ -101,10 +101,7 @@ public struct FinishWorkoutIntent: AppIntent {
     @MainActor
     public func perform() async throws -> some IntentResult & ProvidesDialog {
         let table = ProcessTable(engine: runtime.engine)
-        guard let workout = table.running()?.subject ?? table.ledger().first?.subject,
-              let workoutClass = runtime.engine.classes[.workout], let classDef = workout.classDef,
-              ClassResolver.isSubclass(classDef, of: workoutClass)
-        else { return .result(dialog: "No workout running.") }
+        guard let workout = table.openWorkout()?.subject else { return .result(dialog: "No workout running.") }
         try runtime.engine.perform(FinishWorkout(workout: workout.id), by: .intent)
         let progress = WorkoutProgress(of: workout, store: runtime.store)
         return .result(dialog: "Finished. \(progress.entriesStarted) of \(progress.entryCount) exercises.")

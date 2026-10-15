@@ -80,7 +80,8 @@ public struct ObjectStore {
         return classes
             .flatMap { $0.objects ?? [] }
             .filter { !$0.isDeleted && !$0.isClassObject && !classObjectIDs.contains($0.id) }
-            .sorted { ($0.createdAt, $0.sortIndex) < ($1.createdAt, $1.sortIndex) }
+            // Ties (same instant) break by id: UUIDv7 ids sort by creation.
+            .sorted { ($0.createdAt, $0.sortIndex, $0.id.uuidString) < ($1.createdAt, $1.sortIndex, $1.id.uuidString) }
     }
 
     public func object(id: UUID) -> ObjectRecord? {

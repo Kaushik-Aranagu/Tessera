@@ -60,6 +60,10 @@ extension Transaction {
     /// Refreshes the workout's process with its next set, if it has an open one.
     mutating func touchWorkoutProcess(_ workout: ObjectRecord, at now: Date) throws {
         guard let process = openProcess(for: workout) else { return }
+        // Logging into a set-aside workout picks it back up.
+        if store.value("state", of: process)?.stringValue == ProcessState.suspended.rawValue {
+            try makeRunning(process, at: now)
+        }
         let progress = WorkoutProgress(of: workout, store: store)
         try saveContext(process, resumePoint: progress.resumePoint, nextStep: progress.nextStep, at: now)
     }

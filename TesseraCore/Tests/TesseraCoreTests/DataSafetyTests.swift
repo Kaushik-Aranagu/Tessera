@@ -1,0 +1,137 @@
+import Foundation
+import GRDB
+@testable import TesseraCore
+@testable import TesseraTess
+import Testing
+
+/// docs/qa/review-data-safety.md (D1–D4) and QA's process findings (P1–P4).
+@MainActor
+struct DataSafetyTests {
+    func setUp() throws -> (ObjectStore, ActionEngine, ObjectRecord) {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let plan = try #require(store.object(id: StarterContent.planID))
+        let pushA = try #require(store.linkedObjects("routines", of: plan).first)
+        return (store, engine, pushA)
+    }
+
+    @Test func undoLastSetTakesTheNewestSetFromAnyPathInTheRunningWorkout() throws {
+        let (store, engine, pushA) = try setUp()
+        // An older, finished workout with a typed set.
+        let old = try engine.perform(StartRoutine(routine: pushA.id), by: .user).output
+        let oldEntry = try #require(old.orderedChildren.first)
+        try engine.perform(LogSet(entry: oldEntry.id, weight: 60, reps: 8), by: .user)
+        try engine.perform(FinishWorkout(workout: old.id), by: .user)
+        #expect(engine.undoLatestSet() == nil) // nothing running: never reach into a finished workout
+
+        let workout = try engine.perform(StartRoutine(routine: pushA.id), by: .user).output
+        let entry = try #require(workout.orderedChildren.first)
+        try engine.perform(LogSet(entry: entry.id, weight: 20, reps: 5), by: .user) // typed
+        try engine.perform(LogNextSet(entry: entry.id), by: .user) // the hold
+        try engine.perform(LogNextSet(entry: entry.id, source: .lockScreen), by: .intent) // Lock Screen Done
+        #expect(entry.orderedChildren.count == 3)
+        let undone = try #require(engine.undoLatestSet())
+        #expect(undone.action == "logNextSet")
+        #expect(entry.orderedChildren.count == 2)
+        #expect(oldEntry.orderedChildren.count == 1)
+        _ = store
+    }
+
+    @Test func onlyDamageMovesTheStoreAside() throws {
+        #expect(TesseraSchema.isDamaged(DatabaseError(resultCode: .SQLITE_CORRUPT)))
+        #expect(TesseraSchema.isDamaged(DatabaseError(resultCode: .SQLITE_NOTADB)))
+        #expect(!TesseraSchema.isDamaged(DatabaseError(resultCode: .SQLITE_FULL)))
+        #expect(!TesseraSchema.isDamaged(DatabaseError(resultCode: .SQLITE_IOERR)))
+        #expect(!TesseraSchema.isDamaged(DatabaseError(resultCode: .SQLITE_CANTOPEN)))
+
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let url = folder.appendingPathComponent("tessera.sqlite")
+        try Data("my history".utf8).write(to: url)
+
+        // A passing error: nothing moves, and a note is kept.
+        TesseraSchema.clearLaunchNote()
+        let (_, passing) = TesseraSchema.open(url) { _ in throw DatabaseError(resultCode: .SQLITE_FULL) }
+        #expect(passing == .inMemoryFallback)
+        #expect(try String(contentsOf: url, encoding: .utf8) == "my history")
+        #expect(TesseraSchema.launchNote != nil)
+
+        // Damage, and the fresh store won't open either: the backup goes back where it was.
+        let (_, twice) = TesseraSchema.open(url) { _ in throw DatabaseError(resultCode: .SQLITE_NOTADB) }
+        #expect(twice == .inMemoryFallback)
+        #expect(try String(contentsOf: url, encoding: .utf8) == "my history")
+
+        // Real damage: moved aside, fresh store.
+        let (_, recovered) = TesseraSchema.open(url) { try TesseraContext(url: $0) }
+        guard case let .recoveredWithBackup(backup) = recovered else {
+            Issue.record("expected a backup")
+            return
+        }
+        #expect(FileManager.default.fileExists(atPath: backup.appendingPathComponent("tessera.sqlite").path))
+        TesseraSchema.clearLaunchNote()
+    }
+
+    @Test func aMigrationCanStillRunAfterSeeding() throws {
+        // The old store's export, as if the first migration had failed and launch then seeded the new store.
+        let source = ObjectStore.open(inMemory: true)
+        let sourceClasses = try source.prepareCatalog()
+        let sourceEngine = ActionEngine(store: source, classes: sourceClasses)
+        try sourceEngine.perform(CreateNote(body: "History from before"), by: .user)
+        let data = try TesseraExport(context: source.context).encoded()
+
+        let seeded = ObjectStore.open(inMemory: true)
+        _ = try seeded.prepareCatalog()
+        #expect(throws: (any Error).self) { try TesseraExport.decode(data).restore(into: seeded.context) }
+        try TesseraExport.decode(data).restore(into: seeded.context, replacingSeeded: true)
+        let fresh = ObjectStore(context: seeded.context)
+        let classes = try fresh.prepareCatalog()
+        #expect(NoteList(store: fresh, classes: classes).recent().map(\.title) == ["History from before"])
+    }
+
+    @Test func exportsKeepFractionalSeconds() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let note = try engine.perform(CreateNote(body: "A"), by: .user).output
+        note.createdAt = Date(timeIntervalSince1970: 1_792_000_000.123)
+        let data = try TesseraExport(context: store.context).encoded()
+        let restored = ObjectStore.open(inMemory: true)
+        try TesseraExport.decode(data).restore(into: restored.context)
+        let copy = try #require(restored.object(id: note.id))
+        #expect(abs(copy.createdAt.timeIntervalSince1970 - 1_792_000_000.123) < 0.001)
+        // Old whole-second exports still read.
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = ExportDates.decoding
+        #expect(try decoder.decode([Date].self, from: Data(#"["2026-10-15T10:00:00Z"]"#.utf8)).count == 1)
+    }
+
+    @Test func onlyWorkoutsGoIdleAndSetAsideWorkoutsResume() throws {
+        let (store, engine, pushA) = try setUp()
+        let table = ProcessTable(engine: engine)
+        try engine.perform(AddGroceries(lines: ["milk"]), by: .user)
+        let start = Date.now
+        try engine.perform(StartShop(time: start), by: .user)
+        // P1: a 15-minute shop isn't suspended.
+        #expect(table.suspendIfIdle(now: start.addingTimeInterval(900), idleLimit: 780) == nil)
+        #expect(table.running()?.subject?.id == Groceries.listID)
+
+        // P2/P3: a workout set aside picks back up when a set is logged into it.
+        let workout = try engine.perform(StartRoutine(routine: pushA.id), by: .user).output
+        let running = try #require(table.running())
+        try engine.perform(SuspendProcess(process: running.id), by: .user)
+        #expect(table.openWorkout()?.subject?.id == workout.id)
+        let entry = try #require(workout.orderedChildren.first)
+        try engine.perform(LogNextSet(entry: entry.id, source: .lockScreen), by: .intent)
+        #expect(table.running()?.subject?.id == workout.id)
+        _ = store
+    }
+
+    @Test func theModelOnlyGetsPersonActions() {
+        let names = Set(TessToolCatalog.descriptors.map(\.name))
+        #expect(!names.contains("rollForwardTasks")) // P4
+        #expect(names.isSubset(of: TessToolCatalog.allowed))
+        #expect(names.isSuperset(of: ["logExercise", "createTask", "createRoutine"]))
+    }
+}

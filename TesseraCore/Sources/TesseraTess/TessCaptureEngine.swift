@@ -24,9 +24,16 @@ public final class TessCaptureEngine: TessCapturing {
                     var records: [OpRecord] = []
                     var lines: [String] = []
                     for part in parts {
-                        let (record, line) = try perform(part, context: context)
-                        records.append(record)
-                        lines.append(line)
+                        do {
+                            let (record, line) = try perform(part, context: context)
+                            records.append(record)
+                            lines.append(line)
+                        } catch {
+                            // Report what did log, so it shows and can be undone.
+                            let logged = records.isEmpty ? "" : "\(records.count) logged. "
+                            return TessCapture(records: records, line: logged + Self.line(for: error),
+                                               source: .grammar)
+                        }
                     }
                     let line = parts.count == lines.count && lines.count > 1 ? "\(lines.count) sets logged." : lines
                         .first ?? ""
