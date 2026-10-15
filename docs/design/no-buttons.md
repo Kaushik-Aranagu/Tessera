@@ -95,6 +95,7 @@ Kaushik, 19:18: "just a small element… we click on it, it will show some anima
 **On dark grounds** (workout, cook mode) the dabs use screen blend, and the wash is the dark ground at 93%.
 
 ### Tonight's cut for Builder B (closed soul, opening to Write)
+Recording: `recordings/tess-write.mp4` (source `studies/tess-write.html`): tap the soul, Write, type, Return, the ghost dries, and it closes back into the soul with the reply beside it.
 Build these first; Speak and Show can follow after the install.
 1. **`TessSoulKey`** (replaces `BottomChrome`'s collapsed bar):
    - The existing `TessSoul` view at 46×40, idle mode, scale 0.72.

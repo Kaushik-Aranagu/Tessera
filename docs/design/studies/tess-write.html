@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<title>Tess write</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Write path for Builder B (docs/design/no-buttons.md, Tonight's cut). Based on tess-capture.html: at rest Tess is only her soul in the corner; a tap opens her into Speak, Write and Show, and each opens its own layer. Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:#2B2440;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4;--cad:#E0A35C}
+body{margin:0;background:#EFE7DC}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
+ background:radial-gradient(60% 40% at 85% 6%,#F7E6B8 0%,rgba(247,230,184,0) 70%),radial-gradient(70% 45% at 0% 35%,#D8CBE6 0%,rgba(216,203,230,0) 70%),radial-gradient(80% 50% at 100% 75%,#F2E2C8 0%,rgba(242,226,200,0) 70%),#F4F0EC}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub)}
+.d{position:absolute;width:40px;height:36px;margin:-18px 0 0 -20px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.85) 0%,rgba(var(--c),.6) 42%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(2.5px)}
+.mode{position:absolute;right:76px;font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:40px;opacity:0;white-space:nowrap;z-index:12}
+.sub2{position:absolute;right:76px;font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:40px;opacity:0;white-space:nowrap;z-index:12}
+#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:30;pointer-events:none}
+.la .line{position:absolute;left:0;right:0;bottom:-6px;height:1.5px;transform:scaleX(0)}
+</style>
+</head>
+<body>
+<div class="ph" id="ph">
+  <!-- Home, using the whole height now that there is no bar -->
+  <section id="page" class="abs" style="inset:0;transform-origin:50% 30%">
+    <div class="abs lbl" style="left:22px;top:58px;display:flex;gap:16px"><span>REVIEW</span><span style="color:var(--ink)">TODAY</span><span>TRAINING</span><span>KITCHEN</span></div>
+    <div class="abs" style="left:0;right:0;top:140px;height:1px;background:linear-gradient(90deg,rgba(200,69,47,0),rgba(200,69,47,.8) 20%,rgba(200,69,47,.8) 80%,rgba(200,69,47,0))"></div>
+    <div class="abs lbl" style="left:22px;top:150px">NOW</div>
+    <div class="abs" style="left:20px;right:22px;top:178px;font-size:56px;font-weight:500;line-height:1;letter-spacing:-.04em">Write the<br>report</div>
+    <div class="abs" style="left:22px;top:302px;font-size:21px;color:var(--ctx)">for Priya, due at 5</div>
+    <div class="abs" style="left:22px;top:380px;font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:44px">Finish<svg class="abs" style="left:-7px;bottom:3px;z-index:-1" width="104" height="19" viewBox="0 0 200 14" preserveAspectRatio="none"><path d="M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z" fill="#C8452F" opacity=".82"/></svg></div>
+    <div class="abs lbl" style="left:130px;top:397px">HOLD · 14 MIN LEFT</div>
+    <div class="abs lbl" style="left:22px;top:500px">NEXT</div>
+    <div class="abs" style="left:22px;top:530px;font-size:21px;line-height:48px">Call the dentist<br><span style="opacity:.88">Pay the electricity bill</span><br><span style="opacity:.76">Pick up the parcel</span></div>
+  </section>
+
+  <!-- the opened surface: paint rising from the corner, no edge -->
+  <div id="veil" class="abs" style="left:0;right:0;bottom:0;height:470px;opacity:0;z-index:10;pointer-events:none;
+    background:radial-gradient(120% 90% at 92% 100%,rgba(244,240,236,.97) 0%,rgba(244,240,236,.93) 55%,rgba(244,240,236,0) 100%),radial-gradient(60% 50% at 90% 95%,rgba(46,109,164,.12),rgba(46,109,164,0));
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);-webkit-mask-image:linear-gradient(transparent,#000 30%);mask-image:linear-gradient(transparent,#000 30%)"></div>
+  <div id="ask" class="abs" style="left:22px;right:22px;top:452px;font-size:21px;color:var(--cobalt);opacity:0;z-index:12">What's next?</div>
+  <div id="fast" class="abs" style="left:22px;right:22px;top:490px;font-size:21px;opacity:0;z-index:12;color:rgba(43,36,64,.75)"><b style="font-weight:600;color:var(--ink)">Start Push Day A</b> · <b style="font-weight:600;color:var(--ink)">Groceries</b></div>
+  <div id="mSpeak" class="mode" style="top:594px">Speak</div>
+  <div id="mWrite" class="mode" style="top:664px">Write</div>
+  <div id="mShow" class="mode" style="top:734px">Show</div>
+  <div id="sPhoto" class="sub2" style="top:594px">Photo</div>
+  <div id="sVideo" class="sub2" style="top:664px">Video</div>
+  <div id="sFile" class="sub2" style="top:734px">File</div>
+  <div id="heard" class="abs" style="left:22px;right:22px;top:520px;font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:42px;z-index:12"></div>
+  <div id="dry" class="abs" style="left:22px;top:656px;height:1.5px;width:0;background:var(--cobalt);z-index:12"></div>
+
+  <!-- Tess's own line, beside her soul when she has something to say -->
+  <div id="say" class="abs" style="right:78px;top:775px;font-size:21px;color:var(--cobalt);text-align:right;opacity:0;z-index:12;white-space:nowrap"></div>
+  <span id="undo" class="abs la lbl" style="right:78px;top:808px;color:var(--verm);opacity:0;z-index:12">UNDO<span class="line" style="background:var(--verm)"></span></span>
+
+  <div id="kb" class="abs" style="left:0;right:0;bottom:0;height:291px;background:#D3D0D8;z-index:14;transform:translateY(291px)"><div class="abs lbl" style="left:0;right:0;top:120px;text-align:center;opacity:.5">SYSTEM KEYBOARD</div></div>
+  <div id="wline" class="abs" style="left:22px;width:346px;top:548px;height:.5px;background:rgba(46,109,164,.6);opacity:0;z-index:12;transform-origin:100% 50%"></div>
+  <div id="typed" class="abs" style="left:22px;right:22px;top:504px;font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:40px;z-index:12;white-space:nowrap"><span id="tx"></span><span id="caret" style="display:inline-block;width:2px;height:30px;background:var(--cobalt);vertical-align:-4px;margin-left:1px;opacity:0"></span></div>
+  <div id="dry2" class="abs" style="left:22px;top:552px;height:1.5px;width:0;background:var(--cobalt);z-index:12"></div>
+  <!-- the soul: the whole of Ask Tess at rest -->
+  <div id="soul" class="abs" style="left:346px;top:788px;width:0;height:0;z-index:13">
+    <div class="d" id="dR" style="--c:200,69,47"></div><div class="d" id="dB" style="--c:46,109,164"></div><div class="d" id="dY" style="--c:224,179,65"></div>
+  </div>
+  <div id="finger" class="abs"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
+const SPRING = 'cubic-bezier(.3,1.3,.5,1)';
+const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
+const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+const tween = (dur, fn, e = ease) => new Promise((res) => { const t0 = performance.now(); const st = (n) => { const t = Math.min(1, (n - t0) / dur); fn(e(t)); t < 1 ? requestAnimationFrame(st) : res(); }; requestAnimationFrame(st); });
+const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
+const finger = $('finger');
+const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
+const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
+const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
+const tapAt = async (x, y) => { await fingerOn(x, y); await sleep(110); fingerOff(); };
+const centre = (el) => { const r = rel(el.getBoundingClientRect()); return [r.left + r.width / 2, r.top + r.height / 2]; };
+
+// the three dabs: where they sit in the resting soul, and where each one goes when Tess opens
+const D = { R: $('dR'), B: $('dB'), Y: $('dY') };
+const REST = { R: [-10, -6, .72], B: [10, -6, .72], Y: [0, 9, .72] };
+const OPEN = { R: [0, -180, 1], B: [0, -110, 1], Y: [0, -40, 1] };     // beside Speak, Write, Show
+const pos = {};
+function place(k, [x, y, s]) { pos[k] = [x, y, s]; D[k].style.transform = `translate(${x}px,${y}px) scale(${s})`; }
+function move(k, to, dur, easing = SPRING, delay = 0) { const from = pos[k]; pos[k] = to; return anim(D[k], [{ transform: `translate(${from[0]}px,${from[1]}px) scale(${from[2]})` }, { transform: `translate(${to[0]}px,${to[1]}px) scale(${to[2]})` }], { duration: dur, easing, delay }); }
+Object.keys(D).forEach((k) => place(k, REST[k]));
+// idle: the soul breathes, small
+const breathe = $('soul').animate([{ transform: 'scale(1)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 3200, iterations: Infinity, easing: 'ease-in-out' });
+
+async function open() {
+  breathe.pause();
+  anim($('page'), [{ opacity: 1, filter: 'blur(0)', transform: 'scale(1)' }, { opacity: .22, filter: 'blur(3px)', transform: 'scale(.985)' }], { duration: 420, easing: HOUSE });
+  anim($('veil'), [{ opacity: 0, transform: 'translateY(60px)' }, { opacity: 1, transform: 'none' }], { duration: 460, easing: HOUSE });
+  // the soul swells once, then its three colours rise into a column, each landing beside its word
+  await anim($('soul'), [{ transform: 'scale(1)' }, { transform: 'scale(1.35)' }, { transform: 'scale(1)' }], { duration: 260, easing: 'ease-out' });
+  move('Y', OPEN.Y, 480, SPRING, 0); move('B', OPEN.B, 480, SPRING, 40); move('R', OPEN.R, 480, SPRING, 80);
+  [['mShow', 120], ['mWrite', 160], ['mSpeak', 200]].forEach(([id, d]) => anim($(id), [{ opacity: 0, transform: 'translateX(24px)' }, { opacity: 1, transform: 'none' }], { duration: 360, delay: d, easing: HOUSE }));
+  anim($('ask'), [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 320, delay: 220, easing: HOUSE });
+  anim($('fast'), [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 320, delay: 280, easing: HOUSE });
+  await sleep(560);
+}
+async function close() {
+  ['mSpeak', 'mWrite', 'mShow', 'sPhoto', 'sVideo', 'sFile', 'ask', 'fast', 'heard'].forEach((id) => { const e = $(id); if (getComputedStyle(e).opacity > 0) anim(e, [{ opacity: getComputedStyle(e).opacity }, { opacity: 0 }], { duration: 180 }); });
+  Object.keys(D).forEach((k, i) => move(k, REST[k], 420, HOUSE, i * 30));
+  anim($('veil'), [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(60px)' }], { duration: 380, delay: 80, easing: HOUSE });
+  await anim($('page'), [{ opacity: .22, filter: 'blur(3px)', transform: 'scale(.985)' }, { opacity: 1, filter: 'blur(0)', transform: 'scale(1)' }], { duration: 420, delay: 80, easing: HOUSE });
+  breathe.play();
+}
+async function say(text, undo) {
+  $('say').textContent = text;
+  anim($('say'), [{ opacity: 0, transform: 'translateX(12px)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: HOUSE });
+  if (undo) anim($('undo'), [{ opacity: 0 }, { opacity: 1 }], { duration: 240, delay: 120 });
+}
+
+(async () => {
+  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
+  await document.fonts.ready; await sleep(400); document.body.dataset.start = '1';
+  await sleep(1200);
+  await tapAt(346, 788);
+  await open();
+  await sleep(900);
+  // Write: Speak and Show fade; the cobalt dab stretches into the writing line; the keyboard rises and everything rides up with it
+  await tapAt(...centre($('mWrite')));
+  ['mSpeak', 'mShow', 'fast'].forEach((id) => anim($(id), [{ opacity: 1 }, { opacity: 0 }], { duration: 180 }));
+  anim($('mWrite'), [{ opacity: 1 }, { opacity: 0, transform: 'translateX(-12px)' }], { duration: 220, delay: 80 });
+  move('R', [-6, -3, .45], 300, HOUSE); move('Y', [3, 5, .45], 300, HOUSE);
+  const from = pos.B; pos.B = [-150, -238, 1];
+  anim(D.B, [{ transform: `translate(${from[0]}px,${from[1]}px) scale(1)` }, { transform: 'translate(-160px,-238px) scale(9,.18)', opacity: .4 }], { duration: 380, easing: HOUSE });
+  anim($('ask'), [{ transform: 'none' }, { transform: 'translateY(4px)' }], { duration: 380, easing: HOUSE });
+  await sleep(260);
+  anim($('wline'), [{ opacity: 0, transform: 'scaleX(.3)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: HOUSE });
+  anim(D.B, [{ opacity: .4 }, { opacity: 0 }], { duration: 200 });
+  anim($('kb'), [{ transform: 'translateY(291px)' }, { transform: 'none' }], { duration: 380, easing: HOUSE });
+  anim($('caret'), [{ opacity: 1 }, { opacity: 0 }, { opacity: 1 }], { duration: 900, iterations: Infinity });
+  await sleep(500);
+  for (const ch of 'call mum at 6') { $('tx').textContent += ch; await sleep(75); }
+  await sleep(500);
+  // Return: a ghost at 45% that dries for 2s, then everything closes into the soul
+  $('caret').remove();
+  anim($('kb'), [{ transform: 'none' }, { transform: 'translateY(291px)' }], { duration: 320, easing: HOUSE });
+  await anim($('typed'), [{ opacity: 1 }, { opacity: .45 }], { duration: 200 });
+  await swapText($('ask'), 'Saving in a moment');
+  await tween(2000, (t) => { $('dry2').style.width = (346 * t) + 'px'; }, (t) => t);
+  ['typed', 'wline', 'dry2', 'ask'].forEach((id) => anim($(id), [{ opacity: getComputedStyle($(id)).opacity }, { opacity: 0 }], { duration: 200 }));
+  D.B.getAnimations().forEach((a) => a.cancel()); pos.B = [0, -40, .3]; D.B.style.transform = 'translate(0px,-40px) scale(.3)';
+  await close();
+  say('Call mum, today at 6.', true);
+  await sleep(2400);
+  document.body.dataset.done = '1';
+})();
+async function swapText(el, t) { await anim(el, [{ opacity: 1, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(3px)' }], { duration: 120 }); el.textContent = t; await anim(el, [{ opacity: 0, filter: 'blur(3px)' }, { opacity: 1, filter: 'blur(0)' }], { duration: 180, easing: HOUSE }); }
+</script>
+</body>
+</html>
