@@ -169,6 +169,12 @@ public final class ActionEngine {
             return setDeleted(false, object, guarded: guarded)
         case .softDelete:
             return setDeleted(true, object, guarded: guarded)
+        case let .setSortIndex(_, old, new):
+            if guarded, object.sortIndex != old {
+                return false
+            }
+            object.sortIndex = new
+            store.noteChange(object)
         case let .setTitle(_, old, new):
             if guarded, object.title != old {
                 return false

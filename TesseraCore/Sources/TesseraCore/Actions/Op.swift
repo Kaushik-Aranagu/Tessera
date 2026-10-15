@@ -24,6 +24,8 @@ public enum Op: Codable, Hashable, Sendable {
     case softDelete(object: UUID)
     case restore(object: UUID)
     case setTitle(object: UUID, old: String, new: String)
+    /// Position among siblings (reordering a routine's slots, a workout's entries).
+    case setSortIndex(object: UUID, old: Int, new: Int)
     case setValue(object: UUID, field: UUID, old: FieldValue?, new: FieldValue?)
     case setLinks(object: UUID, field: UUID, old: [LinkTarget], new: [LinkTarget])
 
@@ -34,6 +36,7 @@ public enum Op: Codable, Hashable, Sendable {
         case let .softDelete(object): .restore(object: object)
         case let .restore(object): .softDelete(object: object)
         case let .setTitle(object, old, new): .setTitle(object: object, old: new, new: old)
+        case let .setSortIndex(object, old, new): .setSortIndex(object: object, old: new, new: old)
         case let .setValue(object, field, old, new): .setValue(object: object, field: field, old: new, new: old)
         case let .setLinks(object, field, old, new): .setLinks(object: object, field: field, old: new, new: old)
         }
@@ -43,7 +46,8 @@ public enum Op: Codable, Hashable, Sendable {
     public var objectID: UUID {
         switch self {
         case let .create(object, _, _, _), let .softDelete(object), let .restore(object),
-             let .setTitle(object, _, _), let .setValue(object, _, _, _), let .setLinks(object, _, _, _):
+             let .setTitle(object, _, _), let .setSortIndex(object, _, _), let .setValue(object, _, _, _),
+             let .setLinks(object, _, _, _):
             object
         }
     }

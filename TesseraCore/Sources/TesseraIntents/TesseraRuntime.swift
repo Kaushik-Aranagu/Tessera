@@ -48,5 +48,8 @@ public enum TesseraIntentsCatalog {
         "startRoutine": "StartRoutineIntent",
         "createPlan": "in-app only",
         "logNextSet": "LogNextSetIntent (the Lock Screen's Done)",
+        "moveSlot": "in-app only: routine editor",
+        "editSlot": "in-app only: routine editor",
+        "swapSlotExercise": "in-app only: routine editor",
     ]
 }
