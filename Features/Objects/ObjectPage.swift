@@ -1,4 +1,5 @@
 import SwiftUI
+import TesseraCore
 
 /// One page for every class and object: path, hero name, class line, summary numbers, properties (inherited
 /// ones marked ↑), contents, history, subclasses and backlinks — all rendered from the object model.

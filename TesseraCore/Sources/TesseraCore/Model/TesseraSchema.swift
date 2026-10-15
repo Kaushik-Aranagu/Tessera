@@ -1,7 +1,7 @@
 import SwiftData
 
-enum TesseraSchema {
-    static let models: [any PersistentModel.Type] = [
+public enum TesseraSchema {
+    public static let models: [any PersistentModel.Type] = [
         ClassDef.self,
         FieldDef.self,
         ObjectRecord.self,
@@ -11,7 +11,7 @@ enum TesseraSchema {
 
     /// Local-only store for now. Switch `cloudKitDatabase` to `.private(...)`
     /// once the iCloud entitlement is added (needs a paid developer account).
-    static func makeContainer(inMemory: Bool = false) -> ModelContainer {
+    public static func makeContainer(inMemory: Bool = false) -> ModelContainer {
         let configuration = ModelConfiguration(
             schema: Schema(models),
             isStoredInMemoryOnly: inMemory,

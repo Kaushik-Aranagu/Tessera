@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import TesseraCore
 
 /// Seeds a lived-in library through the object model: muscles, equipment, exercise subclasses with profiles,
 /// a few weeks of Push Day history, today's schedule and tonight's workout.

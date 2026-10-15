@@ -5,6 +5,9 @@ options:
     iOS: "27.0"
   createIntermediateGroups: true
   developmentLanguage: en
+packages:
+  TesseraCore:
+    path: TesseraCore
 settings:
   base:
     SWIFT_VERSION: "6.0"
@@ -25,10 +28,11 @@ targets:
     sources:
       - App
       - DesignSystem
-      - Core
       - Features
       - path: Resources
         buildPhase: resources
+    dependencies:
+      - package: TesseraCore
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.kaushikaranagu.tessera

@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import TesseraCore
 
 /// A live workout: the "process" running while you train. Reads targets and rest times through the object
 /// model (rest comes from the exercise class's inherited `restSeconds`, e.g. 3:00 for any barbell lift).

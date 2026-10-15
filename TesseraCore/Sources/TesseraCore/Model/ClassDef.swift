@@ -6,7 +6,7 @@ import SwiftData
 
 /// Interface-like mixins a class can adopt. Features key off these
 /// (e.g. anything `schedulable` can sit in Now / Next / Later or a plan).
-enum ClassTrait: String, Codable, CaseIterable, Sendable {
+public enum ClassTrait: String, Codable, CaseIterable, Sendable {
     case schedulable
     case timed
     case trackable
@@ -16,37 +16,37 @@ enum ClassTrait: String, Codable, CaseIterable, Sendable {
 /// A user-definable kind of object ("Exercise", "Bench Press", "Workout", "Book").
 /// Single inheritance through `parent`; fields are inherited down the chain.
 @Model
-final class ClassDef {
-    var id: UUID = UUID()
-    var name: String = ""
-    var symbolName: String = "circle"
+public final class ClassDef {
+    public var id: UUID = UUID()
+    public var name: String = ""
+    public var symbolName: String = "circle"
     /// Semantic color role resolved by the design system (e.g. "training", "planning"), never a raw color.
-    var colorRole: String = "neutral"
-    var traitsRaw: [String] = []
+    public var colorRole: String = "neutral"
+    public var traitsRaw: [String] = []
     /// Stable key for built-in classes (e.g. "system.benchPress"); nil for user classes.
-    var systemKey: String?
-    var sortIndex: Int = 0
-    var createdAt: Date = Date.now
+    public var systemKey: String?
+    public var sortIndex: Int = 0
+    public var createdAt: Date = Date.now
 
-    var parent: ClassDef?
+    public var parent: ClassDef?
 
     @Relationship(deleteRule: .nullify, inverse: \ClassDef.parent)
-    var subclasses: [ClassDef]? = []
+    public var subclasses: [ClassDef]? = []
 
     @Relationship(deleteRule: .cascade, inverse: \FieldDef.owner)
-    var ownFields: [FieldDef]? = []
+    public var ownFields: [FieldDef]? = []
 
     @Relationship(deleteRule: .nullify, inverse: \ObjectRecord.classDef)
-    var objects: [ObjectRecord]? = []
+    public var objects: [ObjectRecord]? = []
 
     /// Links that point at this class (classRef fields), e.g. every logged entry of Bench Press.
     @Relationship(deleteRule: .cascade, inverse: \ObjectLink.toClass)
-    var incomingLinks: [ObjectLink]? = []
+    public var incomingLinks: [ObjectLink]? = []
 
     @Relationship(deleteRule: .cascade, inverse: \ViewDef.classDef)
-    var views: [ViewDef]? = []
+    public var views: [ViewDef]? = []
 
-    init(
+    public init(
         name: String,
         parent: ClassDef? = nil,
         symbolName: String = "circle",
@@ -63,7 +63,7 @@ final class ClassDef {
     }
 
     /// Own traits only. Use `ClassResolver.traits(of:)` for the inherited set.
-    var ownTraits: Set<ClassTrait> {
+    public var ownTraits: Set<ClassTrait> {
         Set(traitsRaw.compactMap(ClassTrait.init(rawValue:)))
     }
 }
