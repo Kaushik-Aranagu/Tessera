@@ -1,6 +1,6 @@
 # Cook mode (kitchen slice 12): cut, defaults and acceptance script
 
-*Kitchen lead, 2026-10-15. This reads with the slice 12 steer in `ship-list-kitchen.md` and Research's `docs/research/fixtures/cook-mode-scenarios.md` (S01-S15, ASSUMED 1-12). It settles the open points so Core can build without waiting. Product can overrule any line; until then these are the defaults.*
+*Kitchen lead, 2026-10-15. Design's build sheet `docs/design/kitchen/12-cook-mode.md` matches this file (Finish has no confirm and no note field, and stopping is a drag left with UNDO). This reads with the slice 12 steer in `ship-list-kitchen.md` and Research's `docs/research/fixtures/cook-mode-scenarios.md` (S01-S15, ASSUMED 1-12). It settles the open points so Core can build without waiting. Product can overrule any line; until then these are the defaults.*
 
 ## The cut: what slice 12 must have
 
@@ -46,6 +46,7 @@ These wait because the scenarios that need them (S08, S09) are edge cases in a f
 5. A timer ends. Its line flares cadmium and its step slides back in, with a haptic.
 6. Lock the phone. The cook Live Activity shows the soonest timer and "+1". When it ends, the Done face flips on its own and the notification arrives.
 7. Background the app for more than 13 min with a timer running (fixture or clock shift), then return. The cook is still running and still Now.
+7b. Drag a running timer's line left. It fades, and Tess says "Stopped simmer." with UNDO. Tapping the flared stack stops a finished timer.
 8. Hold Finish on the last step. The cover closes, the Cook entry is written, and Tess's line appears ("Weeknight dal, first time.").
 
 **UI bar.**
