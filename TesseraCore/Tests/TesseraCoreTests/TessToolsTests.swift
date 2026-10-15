@@ -16,7 +16,7 @@ struct TessToolsTests {
         let engine = ActionEngine(store: store, classes: classes)
         #expect(TessTools.all.map(\.name) == ["logSet", "createTask", "completeTask", "rescheduleTask",
                                               "addGroceries", "addToList", "createList", "createNote",
-                                              "createRecipe", "answerQuery"])
+                                              "createRecipe", "answerQuery", "startShop"])
 
         let set = try call("logSet", #"{"exercise":"bench","weight":80,"reps":8,"sets":1,"unit":"kg"}"#, engine)
         #expect(set.first?.action == "logExercise" && set.first?.state == .pending)
@@ -84,7 +84,7 @@ struct TessToolsTests {
     @Test func claudeGetsStrictSchemas() throws {
         let data = try TessTools.definitionsJSON()
         let tools = try #require(try JSONSerialization.jsonObject(with: data) as? [[String: Any]])
-        #expect(tools.count == 10)
+        #expect(tools.count == 11)
         func check(_ schema: [String: Any], path: String) {
             if schema["type"] as? String == "object" {
                 #expect(schema["additionalProperties"] as? Bool == false, "\(path) must be closed")
@@ -112,5 +112,24 @@ struct TessToolsTests {
         for tool in TessTools.all {
             _ = try GenerationSchemaCheck.make(tool)
         }
+    }
+
+    @Test func aListWithNoItemsAndAFailedCallLeaveNoGhost() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        // T2-1: the most common list call has no items.
+        let records = try call("createList", #"{"name":"Packing","items":[]}"#, engine)
+        #expect(records.map(\.action) == ["createList"])
+        // A call that fails part-way takes back what it did: the list is made, then an item can't be.
+        let before = engine.history().count
+        #expect(throws: TessToolError.self) {
+            try call("createList", #"{"name":"Films","items":[{"text":"","section":null,"done":false}]}"#, engine)
+        }
+        #expect(!ListContents(store: store, classes: classes).lists().contains { $0.title == "Films" })
+        #expect(engine.history().filter { $0.state == .pending }.count == 1) // only Packing's
+        _ = before
+        let shop = try call("startShop", "{}", engine)
+        #expect(shop.first?.action == "startShop")
     }
 }

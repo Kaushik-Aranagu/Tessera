@@ -34,7 +34,7 @@ public enum TessTools {
 
     public static var all: [Tool] {
         [logSet, createTask, completeTask, rescheduleTask, addGroceries, addToList, createList, createNote,
-         createRecipe, answerQuery]
+         createRecipe, answerQuery, startShop]
     }
 
     public static func tool(named name: String) -> Tool? {
@@ -52,15 +52,23 @@ public enum TessTools {
         }
         let call = Call(engine: engine, grammar: TessGrammar(store: engine.store, classes: engine.classes),
                         pending: pending, now: now)
-        var records: [OpRecord] = []
+        // A tool that fails part-way takes back what it already did, so no half-done ghost is left behind.
+        let mark = engine.history(limit: 1).first?.id
         do {
-            records = try tool.run(object, call)
+            return try tool.run(object, call)
         } catch let answer as TessToolAnswer {
             throw answer
         } catch {
+            for record in engine.history(limit: 50) {
+                if record.id == mark { break }
+                if record.state == .pending {
+                    _ = try? engine.discard(record)
+                } else if record.state != .undone {
+                    engine.undo(record)
+                }
+            }
             throw (error as? TessToolError) ?? TessToolError("\(error)")
         }
-        return records
     }
 
     /// Claude's tool definitions, strict: every object closed, every field required (optional ones nullable).
@@ -161,7 +169,9 @@ public enum TessTools {
         { args, call in
             let record = try call.perform(CreateList(name: args.string("name")))
             guard let list = call.store.object(id: record.objectIDs.first ?? UUID()) else { return [record] }
-            return try [record] + call.addItems(args["items"] as? [[String: Any]] ?? [], to: list)
+            let items = args["items"] as? [[String: Any]] ?? []
+            // "new list packing" with nothing in it yet is fine.
+            return items.isEmpty ? [record] : try [record] + call.addItems(items, to: list)
         }
     }
 
@@ -207,6 +217,12 @@ public enum TessTools {
         lines.append("Method")
         lines += args["steps"] as? [String] ?? []
         return lines.joined(separator: "\n")
+    }
+
+    static var startShop: Tool {
+        Tool(name: "startShop", description: "Start shopping the groceries list", input: .object([])) { _, call in
+            try [call.perform(StartShop(time: call.now))]
+        }
     }
 
     /// Read-only: counts of things over a span, answered on the phone. (The full query AST is M3 slice 4; this is
