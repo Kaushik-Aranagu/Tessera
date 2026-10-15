@@ -122,5 +122,7 @@ Beyond the smallest version, not in this list:
 5. **When does a dated contact task count as talked?** Default: when it is done, at doneAt.
 6. **A birthday heads-up a week ahead?** Default: no extra task; the birthday task shows in Upcoming and is on Now on the day.
 7. **People names and Claude?** Default: only the typed phrase leaves the phone; no list of people, birthdays or notes is ever sent.
+*Amended 4:30 PM PT (decisions.md): "buy" plus a clearly non-food object (tickets, clothes, services) is a task; other "buy" phrases stay Groceries.*
+
 8. **A person and another object share a title (Rosemary)?** Default: @ mentions prefer the Person; grammar without a contact phrase keeps the kitchen meaning.
 9. **People app or Home only?** Default: its own small app, `Features/People/`, beside Reading, Money and Upkeep on the sibling rail.
