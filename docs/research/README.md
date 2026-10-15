@@ -48,3 +48,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [recipe-link-fetch.md](recipe-link-fetch.md) | Core, Kitchen lead: recipe link fetch (JSON-LD, parser, Haiku fallback), slices L1-L3 |
 | [apple-watch.md](apple-watch.md) | Product, Builder A, Core: Apple Watch without a Watch app first (Health reads, Smart Stack rest timer), slices W1-W4 |
 | [ship-list-m5-upkeep-draft.md](ship-list-m5-upkeep-draft.md) | Product: DRAFT Home upkeep ship list, 7 slices, 15 phrases (M5) |
+| [tess-eval-claude.md](tess-eval-claude.md) | Core: 80 grammar misses with expected Claude tool calls and context packs (model layer T4, T5) |
