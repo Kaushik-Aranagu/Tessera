@@ -245,6 +245,8 @@ struct WorkoutTessBar: View {
     let mode: TessSoul.Mode
     let canUndo: Bool
     var onUndo: () -> Void
+    /// Tap Tess's line to type to her ("log bench 80x8"); the field rises above the keyboard (LiveAskField).
+    var onTap: (() -> Void)?
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -259,6 +261,11 @@ struct WorkoutTessBar: View {
                 .minimumScaleFactor(0.85)
                 .contentTransition(.opacity)
                 .tesseraAnimation(value: line)
+                .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading)
+                .contentShape(Rectangle())
+                .onTapGesture { onTap?() }
+                .accessibilityAddTraits(onTap == nil ? [] : .isButton)
+                .accessibilityHint(onTap == nil ? "" : "Type to Tess")
             Spacer(minLength: 0)
             if canUndo {
                 Button(action: onUndo) {
@@ -350,5 +357,57 @@ struct EditSetKeys: View {
             }
             .buttonStyle(.plain)
         }
+    }
+}
+
+// MARK: - Typing to Tess in live mode
+
+/// Typed capture during a workout ("log bench 80x8", "8", "same"): a field that sits on the keyboard, sends the
+/// phrase through Core's capture engine (the set shows as a ghost stroke, then seats), and closes.
+struct LiveAskField: View {
+    @Binding var isShown: Bool
+    var onAsk: (String) -> Void
+    @State private var draft = ""
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
+        HStack(spacing: Theme.Spacing.s) {
+            TextField("log bench 80x8, or ask", text: $draft)
+                .font(Theme.voice)
+                .foregroundStyle(Paint.cream)
+                .focused($focused)
+                .submitLabel(.go)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .onSubmit(submit)
+            Button("Close") { close() }
+                .textRole(.labelStrong)
+                .foregroundStyle(Paint.secondary)
+                .frame(minWidth: 60, minHeight: 44)
+                .buttonStyle(.plain)
+        }
+        .padding(.horizontal, Theme.Spacing.m)
+        .frame(height: 60)
+        .overlay { shape.stroke(.white.opacity(0.12), lineWidth: 0.5) }
+        .padding(.horizontal, 14)
+        .padding(.top, Theme.Spacing.s)
+        .frame(maxHeight: .infinity, alignment: .top)
+        .preferredColorScheme(.dark)
+        .onAppear { focused = true }
+    }
+
+    private func submit() {
+        let phrase = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        draft = ""
+        if !phrase.isEmpty {
+            onAsk(phrase)
+        }
+        close()
+    }
+
+    private func close() {
+        focused = false
+        isShown = false
     }
 }

@@ -59,6 +59,9 @@ private struct WorkoutContent: View {
     /// A glint sweeps the numeral once when rest ends on its own.
     @State private var restEndedGlint = false
     @State private var summaryLine: String?
+    /// Typing to Tess (LiveAskField) and her reply, shown in the bar for a few seconds.
+    @State private var isAsking = false
+    @State private var askReply: String?
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -113,6 +116,14 @@ private struct WorkoutContent: View {
                 .ignoresSafeArea(edges: .top)
         }
         .overlay(alignment: .top) { runningOrder }
+        // The set block keeps its layout; the ask field rides on the keyboard in a short sheet.
+        .ignoresSafeArea(.keyboard)
+        .sheet(isPresented: $isAsking) {
+            LiveAskField(isShown: $isAsking) { phrase in ask(phrase) }
+                .presentationDetents([.height(84)])
+                .presentationBackground(Color(hex: 0x1C1828))
+                .presentationDragIndicator(.hidden)
+        }
         .background { PleinGround() }
         .preferredColorScheme(.dark)
         .persistentSystemOverlays(.hidden)
@@ -196,16 +207,29 @@ private struct WorkoutContent: View {
             Spacer(minLength: Theme.Spacing.m)
             keyRow(phase: phase)
                 .padding(.horizontal, Theme.Spacing.gutter)
-            WorkoutTessBar(line: WorkoutLines.tess(session, phase: phase, summary: summaryLine), mode: tessMode,
-                           canUndo: session.canUndoLast && !session.isEditing)
-            {
-                withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLast() }
-                undoHaptic += 1
-            }
-            .padding(.horizontal, 14)
-            .padding(.top, Theme.Spacing.l)
+            WorkoutTessBar(line: askReply ?? WorkoutLines.tess(session, phase: phase, summary: summaryLine),
+                           mode: tessMode,
+                           canUndo: session.canUndoLast && !session.isEditing, onUndo: {
+                               withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLast() }
+                               undoHaptic += 1
+                           }, onTap: { isAsking = true })
+                .padding(.horizontal, 14)
+                .padding(.top, Theme.Spacing.l)
         }
         .tesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.52), value: session.isEffortShown)
+    }
+
+    private func ask(_ phrase: String) {
+        play(.thinking)
+        Task { @MainActor in
+            let reply = await model.ask(phrase)
+            askReply = reply
+            play(.done)
+            try? await Task.sleep(for: .seconds(4))
+            if askReply == reply {
+                askReply = nil
+            }
+        }
     }
 
     private func play(_ mode: TessSoul.Mode, then next: TessSoul.Mode? = nil, after delay: Double = 0) {

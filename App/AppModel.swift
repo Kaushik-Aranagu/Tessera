@@ -182,8 +182,10 @@ final class AppModel {
         for other in pendingCaptures where other.id != record.id {
             try? engine.commit(other)
         }
+        let committed = pendingCaptures.isEmpty ? [record] : pendingCaptures
         pendingCaptures = []
         try? engine.commit(record)
+        adoptCapturedSets(committed)
         pendingCapture = nil
         pendingCaptureID = nil
         lastCapture = record
@@ -516,5 +518,18 @@ extension AppModel {
         guard session == nil, let workout = table.running()?.subject,
               workout.classDef?.id == classes[.workout]?.id, store.value("endedAt", of: workout) == nil else { return }
         session = WorkoutSession(workout: workout, model: self)
+    }
+
+    /// Sets typed in the Bar ("log bench 80x8") land in the live workout: they seat like a held set. Typed on Home
+    /// with nothing running, Core starts a workout; it becomes the running session (Now shows it with Resume).
+    func adoptCapturedSets(_ records: [OpRecord]) {
+        let logs = records.filter { $0.action == LogExercise.descriptor.name || $0.action == LogSet.descriptor.name }
+        guard !logs.isEmpty else { return }
+        if session == nil {
+            pickUpRunningWorkout(ProcessTable(engine: engine))
+        }
+        let setClass = classes[.set]?.id
+        let ids = logs.flatMap(\.objectIDs).filter { store.object(id: $0)?.classDef?.id == setClass }
+        session?.seatCaptured(setIDs: ids)
     }
 }

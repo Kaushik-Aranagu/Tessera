@@ -24,4 +24,37 @@ extension WorkoutSession {
         guard let weight = prefill.weight else { return false }
         return abs(weight - self.weight) < 0.001 && prefill.reps == Int(reps)
     }
+
+    // MARK: Personal records
+
+    /// Reps of last time's top set for this exercise (the drum's ghost before today's first set).
+    var lastTimeReps: Double? {
+        guard let exercise = currentExercise,
+              let last = ledger.sessions(of: exercise, excludingWorkout: workout.id).first else { return nil }
+        return last.sets.max { $0.weight < $1.weight }?.reps
+    }
+
+    var previewE1RM: Double? {
+        ledger.e1RM(weight: weight, reps: reps, rpe: rpe)
+    }
+
+    /// Best set before this workout, for the PR hint.
+    var previousBest: AppModel.LoggedSet? {
+        currentExercise.flatMap { ledger.bestSet(of: $0, excludingWorkout: workout.id) }
+            .map { AppModel.LoggedSet(weight: $0.weight, reps: $0.reps, e1RM: $0.e1RM) }
+    }
+
+    /// Core's quiet hint for the dialled set ("beats 5RM", "was 80 × 5"), RPE included; nil when it beats nothing.
+    var recordHint: RecordHint? {
+        currentEntry.flatMap { ledger.recordHint(for: $0, weight: weight, reps: reps, rpe: rpe) }
+    }
+
+    var isPersonalRecord: Bool {
+        recordHint != nil
+    }
+
+    /// Reps needed at the current weight to beat the previous best e1RM.
+    var repsForRecord: Int? {
+        currentExercise.flatMap { ledger.repsToBeatBestE1RM(weight: weight, for: $0, excludingWorkout: workout.id) }
+    }
 }

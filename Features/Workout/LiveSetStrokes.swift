@@ -34,7 +34,8 @@ struct LiveSetStrokes: View {
             ForEach(0 ..< max(target, rows.count), id: \.self) { index in
                 if index < rows.count {
                     LoggedStroke(number: index + 1, isFresh: session.lastSeated?.setID == rows[index].id,
-                                 isEditing: session.editingSetID == rows[index].id)
+                                 isEditing: session.editingSetID == rows[index].id,
+                                 isGhost: session.model.isGhost(rows[index].id))
                         .frame(height: 44)
                         .contentShape(Rectangle())
                         .onTapGesture { onEdit(rows[index].id) }
@@ -66,12 +67,15 @@ private struct LoggedStroke: View {
     let number: Int
     let isFresh: Bool
     var isEditing = false
+    /// Typed in the Bar and still drying: drawn wet in Tess's cobalt until it commits.
+    var isGhost = false
     @State private var progress: CGFloat = 1
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Brushstroke(progress: progress)
-            .stroke(Paint.set(number), style: StrokeStyle(lineWidth: 9, lineCap: .round))
+            .stroke(isGhost ? Paint.tess.opacity(0.55) : Paint.set(number),
+                    style: StrokeStyle(lineWidth: 9, lineCap: .round))
             .frame(width: 64, height: 20)
             .blur(radius: 0.4)
             .shadow(color: Paint.set(number).opacity(isEditing ? 0.8 : 0), radius: 6)

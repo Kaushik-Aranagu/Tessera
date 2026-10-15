@@ -15,7 +15,7 @@ import TesseraCore
 final class WorkoutSession {
     let workout: ObjectRecord
     unowned let model: AppModel
-    private var ledger: TrainingLedger {
+    var ledger: TrainingLedger {
         model.ledger
     }
 
@@ -297,39 +297,6 @@ extension WorkoutSession {
         currentEntry.flatMap { swaps[$0.id] }
     }
 
-    // MARK: Personal records
-
-    /// Reps of last time's top set for this exercise (the drum's ghost before today's first set).
-    var lastTimeReps: Double? {
-        guard let exercise = currentExercise,
-              let last = ledger.sessions(of: exercise, excludingWorkout: workout.id).first else { return nil }
-        return last.sets.max { $0.weight < $1.weight }?.reps
-    }
-
-    var previewE1RM: Double? {
-        ledger.e1RM(weight: weight, reps: reps, rpe: rpe)
-    }
-
-    /// Best set before this workout, for the PR hint.
-    var previousBest: AppModel.LoggedSet? {
-        currentExercise.flatMap { ledger.bestSet(of: $0, excludingWorkout: workout.id) }
-            .map { AppModel.LoggedSet(weight: $0.weight, reps: $0.reps, e1RM: $0.e1RM) }
-    }
-
-    /// Core's quiet hint for the dialled set ("beats 5RM", "was 80 × 5"), RPE included; nil when it beats nothing.
-    var recordHint: RecordHint? {
-        currentEntry.flatMap { ledger.recordHint(for: $0, weight: weight, reps: reps, rpe: rpe) }
-    }
-
-    var isPersonalRecord: Bool {
-        recordHint != nil
-    }
-
-    /// Reps needed at the current weight to beat the previous best e1RM.
-    var repsForRecord: Int? {
-        currentExercise.flatMap { ledger.repsToBeatBestE1RM(weight: weight, for: $0, excludingWorkout: workout.id) }
-    }
-
     // MARK: Actions
 
     func adjustWeight(by delta: Double) {
@@ -390,6 +357,25 @@ extension WorkoutSession {
         restEndsAt = entries.allSatisfy(isFinished) ? nil : AppClock.now.addingTimeInterval(restTotal)
         model.touch()
         // The next set opens prefilled: this session's weight, last time's reps for that set.
+        loadDefaults()
+    }
+
+    /// Sets logged from outside the live screen (typed in the Bar, Tess) seat like a held set once they dry: the
+    /// stroke paints in, the dial becomes the rest, and the next set opens prefilled.
+    func seatCaptured(setIDs: [UUID]) {
+        let all = entries
+        guard let (entry, row) = all.lazy.compactMap({ entry in
+            self.setRows(of: entry).last { setIDs.contains($0.id) }.map { (entry, $0) }
+        }).last else { return refreshAfterExternalWrite() }
+        if let index = all.firstIndex(where: { $0.id == entry.id }), index != currentIndex {
+            currentIndex = index
+        }
+        lastSeated = Seated(setID: row.id, entryID: entry.id, number: row.number, records: [], e1RM: row.e1RM,
+                            weight: row.weight, reps: row.reps)
+        restTotal = restSeconds
+        restEndsAt = all.allSatisfy(isFinished) ? nil : AppClock.now.addingTimeInterval(restTotal)
+        lastTouchedAt = AppClock.now
+        loggedCount += 1
         loadDefaults()
     }
 
