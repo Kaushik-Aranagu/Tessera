@@ -86,3 +86,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [fixtures/reschedule-time-rows.md](fixtures/reschedule-time-rows.md) | Core: 40 reschedule rows (RC13) and 40 time-form rows (RC11) with expected parses under the 4:26 PM calls |
 | [fixtures/hint-ledger.md](fixtures/hint-ledger.md) | Core: 15 days of Tess hints (max 3 a day, "Next time, this works"), with the no-hint cases |
 | [fixtures/upkeep-starters.md](fixtures/upkeep-starters.md) | Core: 25 starter chores with intervals, logging phrases and collision checks against the M5 order |
+| [fixtures/cook-timer-phrases.md](fixtures/cook-timer-phrases.md) | Core and Builder A: 40 cook timer phrases (RC15) with expected parses, Tess lines and look-alike guards |
