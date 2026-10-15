@@ -82,3 +82,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [fixtures/grammar-misfires.md](fixtures/grammar-misfires.md) | Core: 238 everyday phrases traced through master grammar, 154 misfires, 16 root causes, top-10 fix list |
 | [fixtures/day-log-days.md](fixtures/day-log-days.md) | Core: five real-shaped days of op logs with the exact DayStory lines, including the unfinished workout and the "Also:" cut-off |
 | [fixtures/m5-parse-order.md](fixtures/m5-parse-order.md) | Core: 170 Reading, Money, People and Upkeep rows checked against the M5 parse order, 5 that change, guards per rule |
+| [fixtures/show-photos.md](fixtures/show-photos.md) | Core: 25 Show mode photos (pages, recipes, receipts, whiteboard, blurry) with the text Vision reads, the route and the exact ghost row |
