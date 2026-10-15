@@ -48,6 +48,8 @@ struct TesseraApp: App {
                         NotesView()
                     } else if ProcessInfo.processInfo.arguments.contains("-review") {
                         ReviewView()
+                    } else if ProcessInfo.processInfo.arguments.contains("-groceries") {
+                        GroceriesView()
                     } else {
                         RootView()
                     }
