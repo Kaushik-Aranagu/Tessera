@@ -14,15 +14,21 @@ struct PasteRecipe: View {
     @State private var text = ""
     @State private var reading = false
     @State private var revealed = 0
+    /// The brush band's position down the column, 0 … 1.
+    @State private var band: CGFloat = -0.2
     @State private var corrections: [Int: String] = [:]
     @State private var saved: (id: UUID, record: OpRecord)?
     @FocusState private var editing: Bool
+
+    private var savedTitle: String {
+        saved.flatMap { model.store.object(id: $0.id)?.title } ?? "Recipe"
+    }
 
     var body: some View {
         let lines = CreateRecipe.lines(of: text, corrections: corrections)
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text(reading ? PasteCopy.tess(lines) : "Paste a recipe and I'll read it.")
+                Text(reading && revealed >= lines.count ? PasteCopy.tess(lines) : "Paste a recipe and I'll read it.")
                     .font(Theme.voice)
                     .foregroundStyle(Theme.Colors.tess)
                     .contentTransition(.opacity)
@@ -36,6 +42,19 @@ struct PasteRecipe: View {
                                         painted: index < revealed) {
                                 cycle(index, current: line.kind)
                             }
+                        }
+                    }
+                    .overlay {
+                        // The brush passing: a soft cadmium band moves down over the text as it's read.
+                        GeometryReader { proxy in
+                            LinearGradient(colors: [Theme.Colors.now.opacity(0), Theme.Colors.now,
+                                                    Theme.Colors.now.opacity(0)],
+                                           startPoint: .top, endPoint: .bottom)
+                                .frame(height: 80)
+                                .offset(y: band * proxy.size.height - 40)
+                                .blendMode(.multiply)
+                                .opacity(reduceMotion || band >= 1 ? 0 : 0.25)
+                                .allowsHitTesting(false)
                         }
                     }
                     .padding(.top, Theme.Spacing.xl)
@@ -62,35 +81,6 @@ struct PasteRecipe: View {
                         .accessibilityLabel("Recipe text")
                         .entrance(1)
                 }
-
-                if reading {
-                    VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-                        if let saved {
-                            HStack(spacing: Theme.Spacing.m) {
-                                Text("Saved.")
-                                    .font(Theme.voice)
-                                    .foregroundStyle(Theme.Colors.tess)
-                                Button("Undo") { undo(saved.record) }
-                                    .textRole(.labelStrong)
-                                    .foregroundStyle(Theme.Colors.tess)
-                                    .buttonStyle(HandleButtonStyle())
-                                    .frame(minHeight: 44)
-                            }
-                            .transition(.opacity)
-                        } else {
-                            PaintKey(paint: Theme.Colors.health, isTap: true, action: save) { _ in
-                                Text("Save recipe")
-                                    .textRole(.labelStrong)
-                            }
-                            Button("Edit the text") { edit() }
-                                .textRole(.label)
-                                .foregroundStyle(Theme.Colors.inkSecondary)
-                                .buttonStyle(HandleButtonStyle())
-                                .frame(minHeight: 44)
-                        }
-                    }
-                    .padding(.top, Theme.Spacing.xxl)
-                }
             }
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.top, Theme.Spacing.l)
@@ -99,6 +89,16 @@ struct PasteRecipe: View {
         .scrollIndicators(.hidden)
         .scrollDismissesKeyboard(.interactively)
         .background { ThemedBackground() }
+        .safeAreaInset(edge: .bottom) {
+            if reading {
+                SaveBar(saved: saved != nil, title: savedTitle, onSave: save, onUndo: { if let saved { undo(saved.record) } },
+                        onEdit: edit)
+                    .padding(.horizontal, Theme.Spacing.gutter)
+                    .padding(.vertical, Theme.Spacing.m)
+                    .background { ThemedBackground().opacity(0.92) }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
         .onChange(of: text) { old, new in
             // A paste lands as one big change: read it straight away.
             if new.count - old.count > 40 {
@@ -128,8 +128,10 @@ struct PasteRecipe: View {
             return
         }
         revealed = 0
+        band = -0.2
+        withAnimation(.smooth(duration: min(0.9, max(0.6, Double(count) * 0.03)))) { band = 1.2 }
         Task { @MainActor in
-            let step = max(0.012, 0.6 / Double(max(count, 1)))
+            let step = max(0.012, min(0.9, max(0.6, Double(count) * 0.03)) / Double(max(count, 1)))
             for index in 1 ... max(count, 1) {
                 try? await Task.sleep(for: .seconds(step))
                 withAnimation(.smooth(duration: 0.28)) { revealed = index }
@@ -177,6 +179,43 @@ struct PasteRecipe: View {
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
             saved = nil
             model.touch()
+        }
+    }
+}
+
+/// Pinned at the bottom: Save (tap), or once saved "Carbonara saved." with Undo.
+private struct SaveBar: View {
+    let saved: Bool
+    let title: String
+    let onSave: () -> Void
+    let onUndo: () -> Void
+    let onEdit: () -> Void
+
+    var body: some View {
+        if saved {
+            HStack(alignment: .firstTextBaseline) {
+                Text("\(title) saved.")
+                    .font(Theme.voice)
+                    .foregroundStyle(Theme.Colors.tess)
+                Spacer()
+                Button("Undo", action: onUndo)
+                    .textRole(.labelStrong)
+                    .foregroundStyle(Theme.Colors.tess)
+                    .buttonStyle(HandleButtonStyle())
+                    .frame(minHeight: 44)
+            }
+        } else {
+            HStack(spacing: Theme.Spacing.l) {
+                PaintKey(paint: Theme.Colors.health, isTap: true, action: onSave) { _ in
+                    Text("Save recipe")
+                        .textRole(.labelStrong)
+                }
+                Button("Edit", action: onEdit)
+                    .textRole(.label)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .buttonStyle(HandleButtonStyle())
+                    .frame(minHeight: 44)
+            }
         }
     }
 }
@@ -253,7 +292,7 @@ private struct PaintedLine: View {
     }
 }
 
-/// "200 g flour": the amount gets a cadmium under-stroke, the name a sage dab after it.
+/// "200 g flour": the amount gets a cadmium under-stroke, the name a sage dab just before it.
 private struct IngredientPaint: View {
     let line: String
     let parsed: IngredientLine
@@ -273,14 +312,14 @@ private struct IngredientPaint: View {
                             .offset(y: 6)
                     }
             }
-            Text(rest)
-                .textRole(.body)
-                .foregroundStyle(Theme.Colors.ink)
-                .fixedSize(horizontal: false, vertical: true)
-            PaintDab(color: Theme.Colors.health, size: CGSize(width: 11, height: 9), seed: line.count)
-                .padding(.leading, Theme.Spacing.s)
+            PaintDab(color: Theme.Colors.health, size: CGSize(width: 10, height: 8), seed: line.count)
+                .padding(.horizontal, Theme.Spacing.xs)
                 .opacity(painted ? 1 : 0)
                 .scaleEffect(painted ? 1 : 0.4)
+            Text(rest)
+                .textRole(.body)
+                .foregroundStyle(Theme.Colors.ink.opacity(0.85))
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 }
@@ -298,7 +337,7 @@ enum PasteCopy {
             default: break
             }
         }
-        guard ingredients + steps > 0 else { return "I couldn't find a recipe in that yet." }
+        guard ingredients > 0 else { return "I couldn't find ingredients. Tap a line to mark one." }
         func count(_ value: Int, _ one: String) -> String {
             "\(SpokenTime.number(value)) \(value == 1 ? one : one + "s")"
         }

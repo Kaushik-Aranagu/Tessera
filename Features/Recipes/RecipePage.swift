@@ -14,87 +14,107 @@ struct RecipePage: View {
 
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dismiss) private var dismiss
     @Namespace private var zoom
     @State private var serves: Int?
-    @State private var sent: Int?
+    @State private var sent: (count: Int, record: OpRecord)?
     @State private var drag: CGFloat = 0
-    @State private var path: [Route] = []
+    @State private var columnWidth: CGFloat = 260
+    @State private var away = false
 
     var body: some View {
         let _ = model.revision
         let book = RecipeBook(store: model.store, classes: model.classes)
         if let recipe = model.store.object(id: recipeID), !recipe.isDeleted {
-            let size = serves ?? book.serves(recipe)
+            let own = book.serves(recipe)
+            let size = serves ?? own
             let lines = size.map { book.scaledLines(of: recipe, serves: $0) } ?? book.lines(of: recipe)
             let steps = book.steps(of: recipe)
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    NavigationLink(value: Route.object(recipe.id)) {
-                        Text(recipe.title)
-                            .textRole(.hero)
-                            .foregroundStyle(Theme.Colors.ink)
-                            .multilineTextAlignment(.leading)
-                            .lineLimit(3)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .buttonStyle(HandleButtonStyle())
-                    .matchedTransitionSource(id: recipe.id, in: zoom)
-                    .accessibilityAddTraits(.isHeader)
-                    .accessibilityHint("The original text and when it was cooked")
-                    .entrance(0, hero: true)
-
-                    Text(RecipeCopy.context(recipe, serves: size, model: model, now: AppClock.now))
-                        .textRole(.body)
+            VStack(alignment: .leading, spacing: 0) {
+                Button { dismiss() } label: {
+                    Text("Recipes")
+                        .textRole(.label)
                         .foregroundStyle(Theme.Colors.inkSecondary)
-                        .padding(.top, Theme.Spacing.s)
-                        .entrance(1)
+                        .frame(minHeight: 32)
+                }
+                .buttonStyle(HandleButtonStyle())
+                .accessibilityHint("Back to the recipes")
+                .entrance(0)
 
-                    HStack(alignment: .top, spacing: Theme.Spacing.l) {
-                        IngredientColumn(lines: lines, zoom: zoom)
-                            .offset(x: min(0, drag))
-                            .opacity(1 - Double(min(1, -drag / 260)) * 0.6)
-                            .gesture(sendGesture(recipe: recipe.id, serves: size))
-                        if size != nil {
-                            PortionDrum(serves: Binding(get: { size ?? 2 }, set: { serves = $0 }))
-                                .accessibilityLabel("Serves")
-                        }
-                    }
-                    .padding(.top, Theme.Spacing.xxl)
+                NavigationLink(value: Route.object(recipe.id)) {
+                    Text(recipe.title)
+                        .textRole(.hero)
+                        .foregroundStyle(Theme.Colors.ink)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(3)
+                        .minimumScaleFactor(0.6)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(HandleButtonStyle())
+                .matchedTransitionSource(id: recipe.id, in: zoom)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityHint("The original text and when it was cooked")
+                .entrance(1, hero: true)
+
+                Text(RecipeCopy.context(recipe, serves: size, model: model, now: AppClock.now))
+                    .font(Theme.voice)
+                    .foregroundStyle(Theme.Colors.context)
+                    .padding(.top, Theme.Spacing.s)
                     .entrance(2)
 
-                    if let sent {
-                        Text("\(sent) to buy")
-                            .textRole(.labelStrong)
-                            .foregroundStyle(Theme.Colors.health)
-                            .padding(.top, Theme.Spacing.m)
-                            .transition(.opacity.combined(with: .move(edge: .trailing)))
+                ZStack(alignment: .topLeading) {
+                    HStack(alignment: .top, spacing: Theme.Spacing.m) {
+                        ScrollView {
+                            IngredientColumn(lines: lines, zoom: zoom)
+                                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { columnWidth = $0 }
+                        }
+                        .scrollIndicators(.hidden)
+                        .scrollBounceBehavior(.basedOnSize)
+                        .offset(x: away ? -columnWidth * 1.4 : min(0, drag))
+                        .gesture(sendGesture(recipe: recipe.id, serves: size))
+                        PortionDrum(serves: Binding(get: { size ?? 2 }, set: { serves = $0 }), isEnabled: own != nil)
                     }
+                    if let sent {
+                        SentLine(count: sent.count) { undoSend(sent.record) }
+                            .frame(width: columnWidth)
+                            .transition(.opacity)
+                    }
+                }
+                .frame(maxHeight: .infinity, alignment: .top)
+                .padding(.top, Theme.Spacing.xl)
+                .entrance(3)
 
-                    VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-                        Text(steps.count == 1 ? "1 step" : "\(steps.count) steps")
+                Text(steps.count == 1 ? "1 step" : "\(steps.count) steps")
+                    .textRole(.label)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .padding(.top, Theme.Spacing.m)
+                HStack(spacing: Theme.Spacing.l) {
+                    PaintKey(finish: .ink, paint: Theme.Colors.now, isTap: true,
+                             action: { onCook(recipe.id, size) }) { _ in
+                        Text("Cook")
+                            .textRole(.labelStrong)
+                    }
+                    .frame(maxWidth: 220)
+                    .accessibilityHint("Starts cook mode at this size")
+                    if let total = model.store.number("totalMinutes", of: recipe) {
+                        Text("\(Int(total)) min")
                             .textRole(.label)
                             .foregroundStyle(Theme.Colors.inkSecondary)
-                        PaintKey(paint: Theme.Colors.now, isTap: true, action: { onCook(recipe.id, size) }) { _ in
-                            Text("Cook")
-                                .textRole(.labelStrong)
-                        }
-                        .accessibilityHint("Starts cook mode at this size")
                     }
-                    .padding(.top, Theme.Spacing.section)
-                    .entrance(3)
                 }
-                .padding(.horizontal, Theme.Spacing.gutter)
-                .padding(.top, Theme.Spacing.l)
-                .padding(.bottom, Theme.Spacing.section)
+                .padding(.top, Theme.Spacing.s)
+                .entrance(4)
             }
-            .scrollIndicators(.hidden)
+            .padding(.horizontal, Theme.Spacing.gutter)
+            .padding(.top, Theme.Spacing.s)
+            .padding(.bottom, Theme.Spacing.l)
             .background { ThemedBackground() }
+            .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: Route.self) { route in
                 RecipeDepth(route: route)
                     .navigationTransition(.zoom(sourceID: routeID(route), in: zoom))
             }
-            .tesseraAnimation(Theme.Motion.house, value: sent)
+            .sensoryFeedback(.success, trigger: sent?.count)
         } else {
             Text("This recipe is gone. Undo brings it back.")
                 .font(Theme.voice)
@@ -110,58 +130,133 @@ struct RecipePage: View {
         }
     }
 
-    /// Swipe the column left: it slides toward the Groceries edge and leaves a count behind.
+    /// Swipe the column left: past 40% of its width it slides off toward Groceries and leaves "12 to buy" behind;
+    /// after 4 s it comes back.
     private func sendGesture(recipe: UUID, serves: Int?) -> some Gesture {
         DragGesture(minimumDistance: 24)
             .onChanged { value in
-                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                guard abs(value.translation.width) > abs(value.translation.height), sent == nil else { return }
                 drag = value.translation.width
             }
             .onEnded { value in
-                let send = value.translation.width < -120 || value.predictedEndTranslation.width < -260
-                withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
-                    if send {
-                        let items = try? model.engine.perform(AddRecipeToGroceries(recipe: recipe, serves: serves),
-                                                              by: .user).output
-                        sent = items?.count ?? 0
-                        model.touch()
-                    }
+                let send = -value.translation.width > columnWidth * 0.4
+                    || -value.predictedEndTranslation.width > columnWidth
+                guard send, sent == nil else {
+                    withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { drag = 0 }
+                    return
+                }
+                guard let result = try? model.engine.perform(AddRecipeToGroceries(recipe: recipe, serves: serves),
+                                                             by: .user) else { return }
+                withAnimation(reduceMotion ? .easeOut(duration: 0.15) : .smooth(duration: 0.36)) {
+                    away = true
                     drag = 0
+                    sent = (result.output.count, result.record)
+                    model.touch()
+                }
+                Task { @MainActor in
+                    try? await Task.sleep(for: .seconds(4))
+                    withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+                        away = false
+                        sent = nil
+                    }
                 }
             }
     }
+
+    private func undoSend(_ record: OpRecord) {
+        model.engine.undo(record)
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+            away = false
+            sent = nil
+            model.touch()
+        }
+    }
 }
 
-/// The ingredients: amount in 600, name in 400, staples and "to taste" dimmer. Tap one to zoom into it.
+/// "12 to buy, in Groceries" where the column was, with Undo.
+private struct SentLine: View {
+    let count: Int
+    let undo: () -> Void
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline) {
+            (Text("\(count)").fontWeight(.semibold) + Text(" to buy, in Groceries"))
+                .textRole(.body)
+                .foregroundStyle(Theme.Colors.health)
+            Spacer()
+            Button("Undo", action: undo)
+                .textRole(.labelStrong)
+                .foregroundStyle(Theme.Colors.inkSecondary)
+                .buttonStyle(HandleButtonStyle())
+                .frame(minHeight: 44)
+        }
+        .padding(.top, Theme.Spacing.m)
+    }
+}
+
+/// The ingredients: amount in 600 in a fixed tabular column (so nothing jumps when it rolls), name in 400, prep in
+/// secondary ink; staples at 45% with their amounts at 400. Tap a row to zoom into the ingredient; tap a spoon or
+/// cup amount to see it in metric for a moment.
 private struct IngredientColumn: View {
     let lines: [RecipeBook.Line]
     let zoom: Namespace.ID
+    @State private var metric: UUID?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.s) {
-            ForEach(lines) { line in
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(lines.enumerated()), id: \.element.id) { index, line in
                 let dim = line.isStaple || line.line.toTaste
-                NavigationLink(value: Route.object(line.ingredient?.id ?? line.id)) {
-                    (Text(line.line.quantityText.map { "\($0) " } ?? "")
-                        .fontWeight(.semibold)
-                        .foregroundStyle(dim ? Theme.Colors.inkTertiary : Theme.Colors.ink)
-                        + Text(RecipeCopy.name(of: line.line))
-                        .foregroundStyle(dim ? Theme.Colors.inkTertiary : Theme.Colors.ink))
+                HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.s) {
+                    Text(amount(line))
                         .textRole(.body)
+                        .fontWeight(dim ? .regular : .semibold)
                         .monospacedDigit()
+                        .foregroundStyle(Theme.Colors.ink)
                         .contentTransition(.numericText())
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, minHeight: 32, alignment: .leading)
+                        .animation(reduceMotion ? nil : .smooth(duration: 0.22).delay(Double(index) * 0.015),
+                                   value: line.line.amount)
+                        .frame(width: 92, alignment: .leading)
+                        .onTapGesture { flip(line) }
+                    NavigationLink(value: Route.object(line.ingredient?.id ?? line.id)) {
+                        (Text(line.line.name)
+                            .foregroundStyle(Theme.Colors.ink)
+                            + Text(line.line.prep.map { ", \($0)" } ?? "")
+                            .foregroundStyle(Theme.Colors.inkSecondary))
+                            .textRole(.body)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .buttonStyle(HandleButtonStyle())
+                    .matchedTransitionSource(id: line.ingredient?.id ?? line.id, in: zoom)
+                    .accessibilityHint("Opens the ingredient")
                 }
-                .buttonStyle(HandleButtonStyle())
-                .matchedTransitionSource(id: line.ingredient?.id ?? line.id, in: zoom)
-                .accessibilityHint("Opens the ingredient")
+                .opacity(dim ? 0.45 : 1)
+                .frame(minHeight: 44)
             }
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Ingredients")
         .accessibilityHint("Swipe left to add them to groceries")
+    }
+
+    private func amount(_ line: RecipeBook.Line) -> String {
+        if metric == line.id, let text = line.line.metricText {
+            return text
+        }
+        return line.line.quantityText ?? (line.line.toTaste ? "to taste" : "")
+    }
+
+    private func flip(_ line: RecipeBook.Line) {
+        guard line.line.metricText != nil else { return }
+        withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { metric = line.id }
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(3))
+            if metric == line.id {
+                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { metric = nil }
+            }
+        }
     }
 }
 
@@ -226,7 +321,7 @@ private struct RecipeOriginal: View {
 
 @MainActor
 enum RecipeCopy {
-    /// "serves 2 · 25 min · cooked 12 days ago" (each part only when known).
+    /// "serves 2, 25 min, cooked 12 days ago" (each part only when known; never "never cooked").
     static func context(_ recipe: ObjectRecord, serves: Int?, model: AppModel, now: Date) -> String {
         var parts: [String] = []
         if let serves {
@@ -235,9 +330,10 @@ enum RecipeCopy {
         if let total = model.store.number("totalMinutes", of: recipe) {
             parts.append(total >= 60 ? "\(hours(total)) h" : "\(Int(total)) min")
         }
-        let last = CookLog(store: model.store, classes: model.classes).lastCooked(recipe)
-        parts.append(last.map { "cooked \(relative($0, now: now))" } ?? "not cooked yet")
-        return parts.joined(separator: " · ")
+        if let last = CookLog(store: model.store, classes: model.classes).lastCooked(recipe) {
+            parts.append("cooked \(relative(last, now: now))")
+        }
+        return parts.joined(separator: ", ")
     }
 
     static func hours(_ minutes: Double) -> String {

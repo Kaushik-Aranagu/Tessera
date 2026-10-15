@@ -4,6 +4,8 @@ import SwiftUI
 /// centre one large in ink, its neighbours small and dim, the ends fading out. "serves" sits under it.
 struct PortionDrum: View {
     @Binding var serves: Int
+    /// Off when the recipe has no size: it shows "–".
+    var isEnabled = true
     var range: ClosedRange<Int> = 1 ... 12
 
     @State private var scrolled: Int?
@@ -17,6 +19,44 @@ struct PortionDrum: View {
 
     var body: some View {
         VStack(spacing: Theme.Spacing.xs) {
+            if isEnabled {
+                drum
+            } else {
+                Text("–")
+                    .textRole(.titleNumber)
+                    .foregroundStyle(Theme.Colors.inkTertiary)
+                    .frame(width: Metrics.width, height: Metrics.pitch * Metrics.rows)
+            }
+            Text("serves")
+                .font(Theme.voice(size: 18))
+                .foregroundStyle(Theme.Colors.inkSecondary)
+        }
+        .onAppear { scrolled = serves }
+        .onChange(of: scrolled) { _, new in
+            guard let new, new != serves else { return }
+            serves = new
+            tick += 1
+        }
+        .onChange(of: serves) { _, new in
+            if scrolled != new {
+                scrolled = new
+            }
+        }
+        .sensoryFeedback(.selection, trigger: tick)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Serves")
+        .accessibilityValue(isEnabled ? "\(serves)" : "not given")
+        .accessibilityAdjustableAction { direction in
+            guard isEnabled else { return }
+            switch direction {
+            case .increment: serves = min(range.upperBound, serves + 1)
+            case .decrement: serves = max(range.lowerBound, serves - 1)
+            @unknown default: break
+            }
+        }
+    }
+
+    private var drum: some View {
             ScrollView(.vertical) {
                 LazyVStack(spacing: 0) {
                     ForEach(Array(range), id: \.self) { value in
@@ -41,30 +81,5 @@ struct PortionDrum: View {
                     .init(color: .black, location: 0.7), .init(color: .clear, location: 1),
                 ], startPoint: .top, endPoint: .bottom)
             }
-            Text("serves")
-                .textRole(.label)
-                .foregroundStyle(Theme.Colors.inkSecondary)
-        }
-        .onAppear { scrolled = serves }
-        .onChange(of: scrolled) { _, new in
-            guard let new, new != serves else { return }
-            serves = new
-            tick += 1
-        }
-        .onChange(of: serves) { _, new in
-            if scrolled != new {
-                scrolled = new
-            }
-        }
-        .sensoryFeedback(.selection, trigger: tick)
-        .accessibilityElement(children: .ignore)
-        .accessibilityValue("\(serves)")
-        .accessibilityAdjustableAction { direction in
-            switch direction {
-            case .increment: serves = min(range.upperBound, serves + 1)
-            case .decrement: serves = max(range.lowerBound, serves - 1)
-            @unknown default: break
-            }
-        }
     }
 }
