@@ -43,6 +43,10 @@ Each mode is a set of parameters: offset multiplier, scale, blur, opacity and pe
 | needsYou | The vermilion dab lifts (+12, −16) and taps twice. A small drip falls 34pt and fades. The others stay idle | 0.85–1.06 | 4→7 | 2.4s |
 | handOff(target:) | One dab and its satellite fly to the changed thing, spread into a wash (2.8 × 0.75, 45–60% opacity, blur 10–12) behind it, then fade and reform at home | | 4→12 | about 3.4s |
 | resting | Saturation 0.35 and brightness 1.06. Very slow drift | 0.62–0.68 | 6→8 | 12–15s |
+| present (M4 focus block, the body double) | All three main dabs breathe **together**, in phase, which is unlike idle's turn-taking: in toward the centre (offset ×0.7) on the in-breath, back out on the out-breath. The satellites hold still. Paired with the line "I'm here." It reads as company, not as activity | 0.74→0.84 | 4→5 | 6s (one breath) |
+| checkIn (halfway through a focus block) | needsYou made soft: the cobalt dab (not vermilion) lifts (+8, −10) and taps **once**, with no drip and no haptic. Then back to present | 0.84–0.98 | 4→6 | 1.6s (once) |
+
+**Focus block wrap-up** (M4 slice 8): when the block's time ends, play `done` unchanged, at the same moment as the horizon's cadmium flare (`m4-steers.md`, §8). Don't add a new mode for it.
 
 **Working is removed** (Kaushik, 2026-10-15). While Tess is doing something, she shows thinking, then hand-off, then done. Exact keyframes are in `mockups/TessSoul3.dc.html` (`lift`, `bloomS`, `listen`).
 
