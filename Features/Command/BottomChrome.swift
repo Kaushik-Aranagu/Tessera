@@ -1,51 +1,84 @@
 import SwiftUI
 import TesseraCore
 
-/// The floating chrome: the command bar, which morphs into Tess's capture panel. Tess's soul lives at its
-/// leading edge; tapping her goes Home. Glass is shaped as a flush, machined inlay — no capsules.
+/// Tess at rest is only her soul in the bottom-right thumb corner: no bar, no band, no writing line. A tap opens
+/// her capture surface (the soul swells, its three dabs rise into Speak · Write · Show over a wash with no top
+/// edge, and the page recedes); a double tap goes Home from any depth. Write stretches the cobalt dab into a
+/// writing line. Speak and Show are words only until their layers ship. Spec: `docs/design/no-buttons.md`.
 struct BottomChrome: View {
-    var onSoulTap: () -> Void = {}
+    var onSoulDoubleTap: () -> Void = {}
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Namespace private var glass
+    @Environment(\.colorScheme) private var colorScheme
     @FocusState private var focused: Bool
-    @State private var feedback: String?
+    @State private var layer = Layer.modes
+    @State private var swell = false
+    @State private var pressed = false
+    @State private var breathe = false
+    @State private var opens = 0
+    @State private var reply: String?
+    @State private var replyCount = 0
+    @State private var ghost: String?
+    @State private var drying: CGFloat = 0
+    @State private var dryTask: Task<Void, Never>?
     @State private var isBusy = false
 
-    private let barShape = RoundedRectangle(cornerRadius: 20, style: .continuous)
+    enum Layer { case modes, write }
+
+    /// The three modes, top to bottom. Their dabs are the soul's three colours.
+    fileprivate static let modes: [(word: String, seed: Int)] = [("Speak", 1), ("Write", 2), ("Show", 3)]
+    fileprivate static let rowHeight: CGFloat = 70
+    /// The soul's centre sits this far above the bottom of the chrome; the mode column starts above it.
+    fileprivate static let soulLift: CGFloat = 54
 
     var body: some View {
-        GlassEffectContainer(spacing: 14) {
+        ZStack(alignment: .bottomTrailing) {
             if model.isCommandExpanded {
-                panel
-                    .glassEffect(.regular, in: .rect(cornerRadius: 22, style: .continuous))
-                    .glassEffectID("command", in: glass)
-            } else {
-                collapsed
-                    .background(barShape.fill(Color(hex: 0xFAF6EF).opacity(0.55)))
-                    .glassEffect(.regular.interactive(), in: barShape)
-                    .overlay {
-                        barShape.strokeBorder(LinearGradient(stops: [.init(color: .white.opacity(0.9), location: 0),
-                                                                     .init(color: .clear, location: 0.05)],
-                                                             startPoint: .top, endPoint: .bottom), lineWidth: 1)
-                            .allowsHitTesting(false)
-                    }
-                    .overlay { barShape.stroke(Theme.Colors.ink.opacity(0.25), lineWidth: 0.5).allowsHitTesting(false) }
-                    .glassEffectID("command", in: glass)
+                // The page recedes behind a veil of blurred ground (z); a tap on it closes Tess.
+                ZStack {
+                    Rectangle().fill(.ultraThinMaterial)
+                    Theme.Colors.paper.opacity(0.7)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea()
+                .contentShape(Rectangle())
+                .onTapGesture { close() }
+                .accessibilityHidden(true)
+                .transition(.opacity)
+                CaptureWash(dark: colorScheme == .dark)
+                    .transition(.asymmetric(insertion: .offset(y: 60).combined(with: .opacity),
+                                            removal: .offset(y: 40).combined(with: .opacity)))
+                    .gesture(DragGesture(minimumDistance: 20).onEnded { value in
+                        if value.translation.height > 40 {
+                            close()
+                        }
+                    })
+                surface
+                    .transition(.opacity)
             }
+            resting
         }
-        .padding(.horizontal, 14)
-        .padding(.bottom, Theme.Spacing.xs)
         .onChange(of: model.isCommandExpanded) { _, expanded in
-            focused = expanded
-            if !expanded {
-                feedback = nil
-            }
-            if !isBusy {
-                model.tessMode = expanded ? .listening : restingOrIdle
+            if expanded {
+                opened()
+            } else {
+                focused = false
+                layer = .modes
+                if !isBusy {
+                    model.tessMode = restingOrIdle
+                }
             }
         }
-        .onAppear { model.tessMode = restingOrIdle }
+        .onAppear {
+            model.tessMode = restingOrIdle
+            breathe = !reduceMotion
+            #if DEBUG
+                if ProcessInfo.processInfo.arguments.contains("-tessScript") {
+                    playScript()
+                }
+            #endif
+        }
+        .sensoryFeedback(.selection, trigger: opens)
     }
 
     private var restingOrIdle: TessSoul.Mode {
@@ -53,148 +86,490 @@ struct BottomChrome: View {
         return hour >= 23 || hour < 6 ? .resting : .idle
     }
 
-    private func toggle(_ expanded: Bool) {
+    // MARK: Rest
+
+    /// What Tess has to say beside the soul: her last reply, a drying capture, or the launch note.
+    private var line: String? {
+        if let reply {
+            return reply
+        }
+        if model.lastCapture != nil {
+            return "Added to Later."
+        }
+        if model.pendingCapture != nil {
+            return "Drying. Swipe to drop it."
+        }
+        return model.launchNote
+    }
+
+    private var resting: some View {
+        HStack(alignment: .center, spacing: Theme.Spacing.m) {
+            if !model.isCommandExpanded, line != nil || model.lastCapture != nil {
+                VStack(alignment: .trailing, spacing: 2) {
+                    if let line {
+                        Text(line)
+                            .frame(maxWidth: 270, alignment: .trailing)
+                            .textRole(.body)
+                            .foregroundStyle(Theme.Colors.tess)
+                            .multilineTextAlignment(.trailing)
+                            .lineLimit(2)
+                            .contentTransition(.opacity)
+                    }
+                    if model.lastCapture != nil {
+                        Button("Undo") { model.undoLastCapture() }
+                            .buttonStyle(InkLabelWordStyle(color: Theme.Colors.live))
+                    }
+                }
+                .padding(.vertical, Theme.Spacing.xs)
+                .background { WordHalo(dark: colorScheme == .dark) }
+                .transition(.offset(x: 12).combined(with: .opacity))
+            }
+            soulKey
+        }
+        .padding(.leading, Theme.Spacing.gutter)
+        .padding(.trailing, 13)
+        .padding(.bottom, 2)
+        .tesseraAnimation(value: line)
+        .tesseraAnimation(value: model.lastCapture != nil)
+    }
+
+    /// The soul at 0.72, breathing 1 ↔ 1.08 over 3.2 s; tap opens, hold opens, double tap goes Home.
+    private var soulKey: some View {
+        TessSoul(mode: model.tessMode)
+            .scaleEffect(0.72)
+            .scaleEffect(breathe ? 1.08 : 1)
+            .tesseraAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true), value: breathe)
+            .scaleEffect(swell ? 1.35 : 1)
+            .frame(width: 46, height: 40)
+            .frame(width: 64, height: 64)
+            .contentShape(Rectangle())
+            .opacity(model.isCommandExpanded ? 0 : 1)
+            // Feedback on touch-down, so the double-tap wait never reads as lag.
+            .simultaneousGesture(DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    guard !pressed else { return }
+                    pressed = true
+                    opens += 1
+                    if !reduceMotion {
+                        withAnimation(.easeOut(duration: 0.13)) { swell = true }
+                    }
+                }
+                .onEnded { _ in
+                    pressed = false
+                    withAnimation(.easeInOut(duration: 0.13)) { swell = false }
+                })
+            .onTapGesture(count: 2) { onSoulDoubleTap() }
+            .onTapGesture { model.isCommandExpanded ? close() : open() }
+            .onLongPressGesture(minimumDuration: 0.4) { open() }
+            .accessibilityElement()
+            .accessibilityLabel("Tess")
+            .accessibilityHint("Opens Tess.")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction(named: "Go home") { onSoulDoubleTap() }
+    }
+
+    // MARK: Open
+
+    private var question: String {
+        if model.session != nil {
+            return "Tell me a set."
+        }
+        return model.path.isEmpty ? "What’s next?" : "Log it, ask, or note it."
+    }
+
+    /// At most two fast paths, the likeliest for this screen right now.
+    private var fastPaths: [(String, () -> Void)] {
+        var paths: [(String, () -> Void)] = []
+        if let session = model.session {
+            paths.append(("Back to \(session.workout.title)", { [model] in
+                model.isCommandExpanded = false
+                model.isWorkoutPresented = true
+            }))
+        } else if let workout = model.tonightWorkout() {
+            paths.append(("Start \(workout.title)", { [model] in
+                model.isCommandExpanded = false
+                model.startWorkout(workout)
+            }))
+        }
+        if !model.path.isEmpty {
+            paths.append(("Today", { [onSoulDoubleTap] in onSoulDoubleTap() }))
+        }
+        return Array(paths.prefix(2))
+    }
+
+    private var surface: some View {
+        VStack(alignment: .trailing, spacing: 0) {
+            VStack(alignment: layer == .write ? .leading : .trailing, spacing: Theme.Spacing.s) {
+                Text(question)
+                    .textRole(.body)
+                    .foregroundStyle(Theme.Colors.tess)
+                if layer == .modes, !fastPaths.isEmpty {
+                    HStack(spacing: 0) {
+                        ForEach(Array(fastPaths.enumerated()), id: \.offset) { index, path in
+                            if index > 0 {
+                                Text(" · ").textRole(.body).foregroundStyle(Theme.Colors.ink.opacity(0.75))
+                            }
+                            Button(path.0, action: path.1)
+                                .buttonStyle(ValueWordStyle())
+                        }
+                    }
+                    .transition(.opacity)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: layer == .write ? .leading : .trailing)
+            .padding(.horizontal, Theme.Spacing.gutter)
+            .padding(.bottom, Theme.Spacing.xl)
+
+            if layer == .write {
+                writing
+                    .transition(.opacity)
+            }
+            ForEach(Array(Self.modes.enumerated()), id: \.offset) { index, mode in
+                ModeRow(word: mode.word, seed: mode.seed, color: SoulColor.of(index),
+                        rise: CGFloat(Self.modes.count - index) * Self.rowHeight - Self.rowHeight / 2 + Self.soulLift
+                            - Self.rowHeight / 2,
+                        delay: Double(Self.modes.count - 1 - index) * 0.04,
+                        isActive: mode.word == "Write",
+                        isFolded: layer == .write)
+                {
+                    if mode.word == "Write" {
+                        withTesseraAnimation(reduceMotion: reduceMotion) { layer = .write }
+                        focused = true
+                    } else {
+                        // Speak and Show are words until their layers ship.
+                        close()
+                        say("\(mode.word) comes next.")
+                    }
+                }
+            }
+            Color.clear.frame(height: Self.soulLift - Self.rowHeight / 2 + 32)
+        }
+        .tesseraAnimation(value: layer)
+    }
+
+    private var writing: some View {
+        @Bindable var model = model
+        return VStack(alignment: .leading, spacing: Theme.Spacing.s) {
+            ZStack(alignment: .bottomLeading) {
+                TextField("log 82.5×8, or ask", text: $model.commandDraft)
+                    .font(Self.modeFont)
+                    .foregroundStyle(Theme.Colors.ink.opacity(ghost == nil ? 1 : 0.45))
+                    .tint(Theme.Colors.tess)
+                    .textFieldStyle(.plain)
+                    .focused($focused)
+                    .submitLabel(.go)
+                    .onSubmit(dry)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .disabled(ghost != nil)
+                    .padding(.bottom, 8)
+                    .onKeyPress(.escape) {
+                        close()
+                        return .handled
+                    }
+                    .onChange(of: model.commandDraft) { _, draft in
+                        if !isBusy {
+                            model.tessMode = draft.isEmpty ? .idle : .listening
+                        }
+                    }
+                WritingLine(color: Theme.Colors.tess, reduceMotion: reduceMotion)
+                if ghost != nil {
+                    Rectangle()
+                        .fill(Theme.Colors.tess)
+                        .frame(height: 1.5)
+                        .scaleEffect(x: drying, anchor: .leading)
+                }
+            }
+            .contentShape(Rectangle())
+            .onTapGesture { cancelDrying() }
+            HStack(spacing: 0) {
+                // At most two, and a tap only fills the line: nothing submits until Return.
+                ForEach(Array(["log bench 82.5x8", "bench best?"].enumerated()),
+                        id: \.offset)
+                { index, suggestion in
+                    if index > 0 {
+                        Text(" · ").textRole(.body).foregroundStyle(Theme.Colors.ink.opacity(0.6))
+                    }
+                    Button(suggestion) {
+                        model.commandDraft = suggestion
+                        focused = true
+                    }
+                    .buttonStyle(ValueWordStyle(weight: .regular, opacity: 0.6))
+                }
+            }
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+        }
+        .padding(.horizontal, Theme.Spacing.gutter)
+        .padding(.bottom, Theme.Spacing.xl)
+    }
+
+    fileprivate static var modeFont: Font {
+        var spec = Theme.concept.scale.title
+        spec.size = 34
+        return Theme.Typography.font(spec, weight: .medium)
+    }
+
+    #if DEBUG
+        /// `-tessScript`: plays open → Write → type → Return so the flow can be recorded without touch automation.
+        private func playScript() {
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(2))
+                open()
+                try? await Task.sleep(for: .seconds(1.6))
+                withTesseraAnimation(reduceMotion: reduceMotion) { layer = .write }
+                focused = true
+                try? await Task.sleep(for: .seconds(1.2))
+                for character in "stretch at 21:30" {
+                    model.commandDraft.append(character)
+                    try? await Task.sleep(for: .milliseconds(90))
+                }
+                try? await Task.sleep(for: .seconds(0.8))
+                dry()
+            }
+        }
+    #endif
+
+    // MARK: Actions
+
+    private func open() {
         if model.launchNote != nil {
             TesseraSchema.clearLaunchNote()
         }
         model.launchNote = nil
-        withTesseraAnimation(reduceMotion: reduceMotion) { model.isCommandExpanded = expanded }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.isCommandExpanded = true }
     }
 
-    private var soul: some View {
-        Button(action: onSoulTap) {
-            TessSoul(mode: model.tessMode)
-                .scaleEffect(0.62)
-                .frame(width: 52, height: 52)
-                .contentShape(Rectangle())
+    /// Runs on every open, including when another screen opens Tess with a draft ("log bench ").
+    private func opened() {
+        reply = nil
+        model.tessMode = .listening
+        if !reduceMotion {
+            withAnimation(.easeOut(duration: 0.13)) { swell = true }
+            withAnimation(.easeInOut(duration: 0.13).delay(0.13)) { swell = false }
+        }
+        if !model.commandDraft.isEmpty {
+            layer = .write
+            focused = true
+        }
+    }
+
+    private func close() {
+        cancelDrying()
+        withTesseraAnimation(.spring(response: 0.42, dampingFraction: 0.9), reduceMotion: reduceMotion) {
+            model.isCommandExpanded = false
+        }
+    }
+
+    /// Return: the text dims to a ghost and a cobalt line dries under it for 2 s (touching cancels), then it commits.
+    private func dry() {
+        let text = model.commandDraft
+        guard !text.trimmingCharacters(in: .whitespaces).isEmpty, !isBusy, ghost == nil else { return }
+        ghost = text
+        drying = 0
+        model.tessMode = .thinking
+        withAnimation(reduceMotion ? .linear(duration: 0.01) : .linear(duration: 2)) { drying = 1 }
+        dryTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(reduceMotion ? 0.6 : 2))
+            guard !Task.isCancelled else { return }
+            await commit(text)
+        }
+    }
+
+    private func cancelDrying() {
+        guard ghost != nil, !isBusy else { return }
+        dryTask?.cancel()
+        dryTask = nil
+        ghost = nil
+        drying = 0
+        model.tessMode = .listening
+        focused = true
+    }
+
+    /// The same grammar path as before: questions about records are answered here; everything else is a capture
+    /// through Tess's engine (grammar first, the on-device model when Apple Intelligence is available).
+    private func commit(_ text: String) async {
+        isBusy = true
+        let lowered = text.lowercased()
+        let isQuestion = lowered.contains("best") || lowered.contains(/\bprs?\b/) || lowered.hasSuffix("?")
+        let answer = isQuestion ? CommandInterpreter(model: model).run(text) : await model.ask(text)
+        ghost = nil
+        drying = 0
+        model.commandDraft = ""
+        withTesseraAnimation(.spring(response: 0.42, dampingFraction: 0.9), reduceMotion: reduceMotion) {
+            model.isCommandExpanded = false
+            model.tessMode = .done
+        }
+        isBusy = false
+        say(answer)
+    }
+
+    /// Tess's line beside the soul, faded after 4 s.
+    private func say(_ text: String) {
+        withTesseraAnimation(reduceMotion: reduceMotion) { reply = text }
+        replyCount += 1
+        let shown = replyCount
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(4))
+            guard replyCount == shown else { return }
+            withTesseraAnimation(reduceMotion: reduceMotion) { reply = nil }
+            if !model.isCommandExpanded {
+                model.tessMode = restingOrIdle
+            }
+        }
+    }
+}
+
+// MARK: - Parts
+
+/// The soul's three paints, top to bottom: vermilion (Speak), cobalt (Write), cadmium (Show).
+private enum SoulColor {
+    static func of(_ index: Int) -> Color {
+        switch index {
+        case 0: Theme.Colors.live
+        case 1: Theme.Colors.tess
+        default: Theme.Colors.now
+        }
+    }
+}
+
+/// One mode: its word at 34 and its dab, which rises out of the soul with a slight overshoot.
+private struct ModeRow: View {
+    let word: String
+    let seed: Int
+    let color: Color
+    /// How far below its row the soul sits, in points; the dab starts there.
+    let rise: CGFloat
+    let delay: Double
+    let isActive: Bool
+    let isFolded: Bool
+    let action: () -> Void
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var risen = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 18) {
+                Text(word)
+                    .font(BottomChrome.modeFont)
+                    .foregroundStyle(isActive ? Theme.Colors.ink : Theme.Colors.ink.opacity(0.55))
+                    .offset(x: risen || reduceMotion ? 0 : 24)
+                    .opacity(risen ? 1 : 0)
+                PaintDab(color: color, size: CGSize(width: 22, height: 18), seed: seed)
+                    .scaleEffect(risen ? 1 : 0.7)
+                    .offset(y: risen || reduceMotion ? 0 : rise)
+                    .frame(width: 64)
+            }
+            .frame(maxWidth: .infinity, minHeight: BottomChrome.rowHeight, alignment: .trailing)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Tess. Go home")
+        .padding(.trailing, 13)
+        .opacity(isFolded ? 0 : 1)
+        .frame(height: isFolded ? 0 : BottomChrome.rowHeight)
+        .clipped(antialiased: false)
+        .allowsHitTesting(!isFolded)
+        .accessibilityHidden(isFolded)
+        .onAppear {
+            withTesseraAnimation(.spring(response: 0.48, dampingFraction: 0.68).delay(delay),
+                                 reduceMotion: reduceMotion) { risen = true }
+        }
     }
+}
 
-    private var collapsed: some View {
-        HStack(spacing: Theme.Spacing.s) {
-            soul
-            Button { toggle(true) } label: {
-                HStack(spacing: Theme.Spacing.m) {
-                    Text(model.lastCapture != nil ? "Added to Later." :
-                        model.pendingCapture != nil ? "Drying. Swipe to drop it." :
-                        model.launchNote ?? "Ask Tess, or log a set")
-                        .font(Theme.voice)
-                        .foregroundStyle(model.lastCapture != nil || model.pendingCapture != nil || model
-                            .launchNote != nil
-                            ? Theme.Colors.tess : Theme.Colors.inkSecondary)
-                        .lineLimit(1)
-                        .contentTransition(.opacity)
-                    Spacer(minLength: 0)
-                    if model.lastCapture != nil {
-                        Button("Undo") { model.undoLastCapture() }
-                            .textRole(.bodyStrong)
-                            .foregroundStyle(Theme.Colors.live)
-                            .frame(minWidth: 60, minHeight: 60)
-                            .transition(.opacity)
-                    }
-                    // No mic glyph until voice ships (slice 17): it did nothing.
-                }
-                .frame(height: 74)
-                .contentShape(Rectangle())
+/// The writing line: the cobalt dab stretched sideways into a 0.5 pt hairline at 60%, drawn from the right.
+private struct WritingLine: View {
+    let color: Color
+    let reduceMotion: Bool
+    @State private var drawn = false
+
+    var body: some View {
+        Rectangle()
+            .fill(color.opacity(0.6))
+            .frame(height: 0.5)
+            .scaleEffect(x: drawn ? 1 : 0.06, anchor: .trailing)
+            .opacity(drawn ? 1 : 0)
+            .onAppear {
+                withAnimation(reduceMotion ? .easeOut(duration: 0.2) : Theme.Motion.house.delay(0.05)) { drawn = true }
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Ask Tess or log something")
-        }
-        .padding(.leading, Theme.Spacing.xs)
-        .padding(.trailing, Theme.Spacing.l + 2)
     }
+}
 
-    private var panel: some View {
-        @Bindable var model = model
-        return VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-            HStack(spacing: Theme.Spacing.s) {
-                soul
-                Eyebrow(text: "Tess", color: Theme.Colors.live)
-                Spacer()
-                Button { toggle(false) } label: {
-                    Image(systemName: "xmark").font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(Theme.Colors.inkSecondary)
-                        .frame(width: 44, height: 44)
-                }
-                .accessibilityLabel("Close")
-            }
-            TextField("log 82.5×8, or ask", text: $model.commandDraft)
-                .textRole(.body)
-                .foregroundStyle(Theme.Colors.ink)
-                .focused($focused)
-                .submitLabel(.go)
-                .onSubmit(submit)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .padding(.horizontal, Theme.Spacing.xs)
-                .onChange(of: model.commandDraft) { _, draft in
-                    if !isBusy {
-                        model.tessMode = draft.isEmpty ? .idle : .listening
-                    }
-                }
-            if let feedback {
-                Text(feedback)
-                    .textRole(.body)
-                    .foregroundStyle(Theme.Colors.ink)
-                    .padding(.horizontal, Theme.Spacing.xs)
-                    .transition(.opacity.combined(with: .offset(y: 6)))
-            }
-            FlowLayout(spacing: Theme.Spacing.s) {
-                ForEach(["log bench 82.5x8", "bench best?", "stretch at 21:00"], id: \.self) { suggestion in
-                    Button {
-                        model.commandDraft = suggestion
-                        submit()
-                    } label: {
-                        Text(suggestion)
-                            .textRole(.data)
-                            .foregroundStyle(Theme.Colors.inkSecondary)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 8)
-                            .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(
-                                Theme.Colors.hairline,
-                                lineWidth: 1
-                            ))
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
+/// The wash Tess opens over: the ground at 95% rising from the bottom, 470 pt, with no top edge and a faint
+/// cobalt warmth in the soul's corner.
+private struct CaptureWash: View {
+    let dark: Bool
+
+    var body: some View {
+        ZStack(alignment: .bottomTrailing) {
+            Rectangle().fill(Theme.Colors.paper.opacity(0.95))
+            if !dark {
+                RadialGradient(colors: [Theme.Colors.tess.opacity(0.12), .clear],
+                               center: .bottomTrailing, startRadius: 0, endRadius: 320)
             }
         }
-        .padding(Theme.Spacing.m)
+        .frame(height: 470)
+        .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.3)],
+                             startPoint: .top, endPoint: .bottom))
+        .ignoresSafeArea(.container, edges: .bottom)
+        .frame(maxHeight: .infinity, alignment: .bottom)
+        .contentShape(Rectangle())
     }
+}
 
-    /// listening → thinking → done (with haptic) → idle.
-    private func submit() {
-        let text = model.commandDraft
-        guard !text.trimmingCharacters(in: .whitespaces).isEmpty, !isBusy else { return }
-        isBusy = true
-        withTesseraAnimation(reduceMotion: reduceMotion) {
-            feedback = nil
-            model.tessMode = .thinking
-        }
-        Task { @MainActor in
-            // Questions about records are answered here; everything else is a capture through Tess's engine
-            // (grammar first, the on-device model when Apple Intelligence is available), shown as ghost rows.
-            let lowered = text.lowercased()
-            let isQuestion = lowered.contains("best") || lowered.contains(" pr") || lowered.hasSuffix("?")
-            let started = Date()
-            let reply = isQuestion ? CommandInterpreter(model: model).run(text) : await model.ask(text)
-            // Let thinking read for a beat even when the answer is instant.
-            let elapsed = Date().timeIntervalSince(started)
-            if elapsed < 0.6 {
-                try? await Task.sleep(for: .seconds(0.6 - elapsed))
+/// A soft, edgeless lift of ground behind Tess's line at rest so it reads over any page.
+private struct WordHalo: View {
+    let dark: Bool
+
+    var body: some View {
+        Rectangle()
+            .fill(Theme.Colors.paper.opacity(0.85))
+            .blur(radius: 14)
+            .padding(-10)
+            .allowsHitTesting(false)
+    }
+}
+
+/// A label word (16/700 uppercase): on touch the ink goes full and a 1.5 pt hairline draws out from the centre.
+struct InkLabelWordStyle: ButtonStyle {
+    var color: Color = Theme.Colors.inkSecondary
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .textRole(.labelStrong)
+            .textCase(.uppercase)
+            .foregroundStyle(color.opacity(configuration.isPressed ? 1 : 0.85))
+            .overlay(alignment: .bottom) {
+                Rectangle().fill(color).frame(height: 1.5)
+                    .scaleEffect(x: configuration.isPressed ? 1 : 0, anchor: .center)
+                    .offset(y: 4)
+                    .tesseraAnimation(.easeOut(duration: 0.18), value: configuration.isPressed)
             }
-            withTesseraAnimation(reduceMotion: reduceMotion) {
-                feedback = reply
-                model.commandDraft = ""
-                model.tessMode = .done
+            .frame(minWidth: 44, minHeight: 44)
+            .contentShape(Rectangle())
+            .sensoryFeedback(.selection, trigger: configuration.isPressed) { _, pressed in pressed }
+    }
+}
+
+/// A value word inside a line: on touch a soft, edgeless cobalt wash blooms behind it.
+private struct ValueWordStyle: ButtonStyle {
+    var weight: Font.Weight = .semibold
+    var opacity: Double = 1
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(Theme.Typography.font(Theme.concept.scale.body, weight: weight))
+            .foregroundStyle(Theme.Colors.ink.opacity(configuration.isPressed ? 1 : opacity))
+            .background {
+                Rectangle()
+                    .fill(Theme.Colors.tess.opacity(configuration.isPressed ? 0.22 : 0))
+                    .padding(-6)
+                    .blur(radius: 5)
+                    .tesseraAnimation(.easeOut(duration: 0.12), value: configuration.isPressed)
             }
-            try? await Task.sleep(for: .milliseconds(1700))
-            model.tessMode = model.isCommandExpanded ? .listening : restingOrIdle
-            isBusy = false
-        }
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
     }
 }
 
@@ -230,7 +605,7 @@ struct CommandInterpreter {
                 reps: Double(match.3) ?? 0
             )
         }
-        if text.lowercased().contains("best") || text.lowercased().contains(" pr") {
+        if text.lowercased().contains("best") || text.lowercased().contains(/\bprs?\b/) {
             guard let exercise = exercise(matching: text), let best = model.bestSet(of: exercise) else {
                 return "No logged sets for that yet."
             }

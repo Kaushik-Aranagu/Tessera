@@ -89,24 +89,17 @@ struct NowPage: View {
                 .padding(.bottom, Theme.Spacing.l)
 
                 HStack(alignment: .center, spacing: Theme.Spacing.l) {
-                    PaintKey(duration: 0.7, action: { finish(task) }, label: { holding in
-                        Text(holding ? "Keep holding" : "Hold to finish")
-                            .textRole(.bodyStrong)
+                    PaintKey(duration: 0.7, action: { finish(task) }, label: { _ in
+                        Text("Finish")
+                    }, meta: {
+                        TimelineView(.periodic(from: .now, by: 30)) { context in
+                            let lines = Self.timeLeft(task, now: AppClock.adjust(context.date))
+                            Text("Hold · \(lines.0) \(lines.1)")
+                                .monospacedDigit()
+                        }
                     })
-                    .frame(width: 220)
                     .accessibilityLabel("Finish \(task.title)")
                     .accessibilityHint("Touch and hold")
-                    TimelineView(.periodic(from: .now, by: 30)) { context in
-                        let lines = Self.timeLeft(task, now: AppClock.adjust(context.date))
-                        VStack(alignment: .leading, spacing: 0) {
-                            Text(lines.0)
-                            Text(lines.1)
-                        }
-                        .textRole(.label)
-                        .foregroundStyle(Theme.Colors.inkSecondary)
-                        .monospacedDigit()
-                        .accessibilityElement(children: .combine)
-                    }
                 }
                 .entrance(3)
                 // The countdown as time you can see: a wash that drains while the item runs.
@@ -435,9 +428,8 @@ private struct RoutineHero: View {
             .padding(.bottom, Theme.Spacing.l)
             HStack(alignment: .center, spacing: Theme.Spacing.l) {
                 PaintKey(isTap: true, action: { model.startRoutine(routine) }, label: { _ in
-                    Text("Start").textRole(.bodyStrong)
+                    Text("Start")
                 })
-                .frame(width: 220)
                 .accessibilityLabel("Start \(routine.title)")
                 VStack(alignment: .leading, spacing: 0) {
                     Text("\(slots) EXERCISES")
@@ -470,10 +462,9 @@ private struct RunningHero: View {
             HStack(alignment: .center, spacing: Theme.Spacing.l) {
                 PaintKey(finish: .ink, paint: Theme.Colors.live, isTap: true,
                          action: { model.isWorkoutPresented = true }, label: { _ in
-                             Text("Resume").textRole(.bodyStrong)
+                             Text("Resume")
                          })
                          .tint(Theme.Colors.live)
-                         .frame(width: 220)
                          .accessibilityLabel("Resume \(session.workout.title), \(resumePoint)")
                 TimelineView(.periodic(from: .now, by: 1)) { context in
                     let lines = state(now: AppClock.adjust(context.date))
@@ -555,7 +546,15 @@ private struct LedgerRow: View {
     }
 
     private var step: String {
-        let ago = process.lastTouchedAt.map { Format.duration(now.timeIntervalSince($0)) + " ago" }
+        let ago = process.lastTouchedAt.map { Self.ago(now.timeIntervalSince($0)) }
         return [process.nextStep, ago].compactMap(\.self).joined(separator: ", ")
+    }
+
+    /// "just now", "21 min ago", "2 h ago" (never a mm:ss duration).
+    static func ago(_ seconds: TimeInterval) -> String {
+        let minutes = Int(seconds / 60)
+        if minutes < 1 { return "just now" }
+        if minutes < 60 { return "\(minutes) min ago" }
+        return "\(minutes / 60) h ago"
     }
 }
