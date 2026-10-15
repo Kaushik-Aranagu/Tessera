@@ -9,6 +9,19 @@ struct ObjectPage: View {
 
     var body: some View {
         let _ = model.revision
+        // Exercises and plans have their own object pages (Features/Exercise, Features/Plans).
+        if case let .classDef(id) = route, let classDef = model.classDef(id: id),
+           ExerciseRouting.isExercise(classDef, classes: model.classes)
+        {
+            ExercisePage(exercise: classDef)
+        } else if let plan = ExerciseRouting.plan(for: route, model: model) {
+            PlansView(plan: plan.object)
+        } else {
+            generic
+        }
+    }
+
+    private var generic: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Spacing.xxl) {
                 switch route {

@@ -29,11 +29,27 @@ private struct WorkoutPlan: View {
         let isRunning = model.session != nil
 
         VStack(alignment: .leading, spacing: 0) {
-            Text(context)
-                .font(Theme.voice(size: 21))
-                .foregroundStyle(Theme.Colors.context)
-                .padding(.bottom, Theme.Spacing.m)
-                .entrance(0)
+            HStack(alignment: .firstTextBaseline) {
+                Text(context)
+                    .font(Theme.voice(size: 21))
+                    .foregroundStyle(Theme.Colors.context)
+                Spacer(minLength: Theme.Spacing.s)
+                // z: the week and month plan this workout belongs to.
+                if let plan = model.classDef(.plan) {
+                    Button { model.open(.classDef(plan.id)) } label: {
+                        Text("Plan →")
+                            .textRole(.label)
+                            .foregroundStyle(Theme.Colors.ink)
+                            .frame(minWidth: 60, minHeight: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(HandleButtonStyle())
+                    .modifier(ZoomSource(id: Route.classDef(plan.id), namespace: namespace))
+                    .accessibilityLabel("Training plan")
+                }
+            }
+            .padding(.bottom, Theme.Spacing.m)
+            .entrance(0)
 
             Button {
                 model.open(.object(workout.id))
