@@ -55,6 +55,8 @@ public enum TesseraIntentsCatalog {
         "rollForwardTasks": "system: nightly roll-forward",
         "startTask": "in-app only for now",
         "waitOnTask": "in-app only for now",
+        "createNote": "Tell Tess (\"note: …\")",
+        "editNote": "in-app only: notes app",
         "moveTask": "in-app only for now (Now's \"not now\" and Later)",
     ]
 }
