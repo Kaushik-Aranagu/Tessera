@@ -31,7 +31,7 @@ struct ThemeConcept: Sendable {
         var sky: [[UInt32]]
         /// Tess's words and anything she changed (cobalt).
         var tess: (UInt32, UInt32) = (0x2E6DA4, 0x9DBFE6)
-        /// Context lines in the italic voice ("now, until twenty to four").
+        /// Context lines in the voice ("now, until twenty to four"). Upright; there are no italics.
         var context: (UInt32, UInt32) = (0x7A5C8E, 0xA79FB5)
         /// Now, rest, a possible PR (cadmium).
         var now: (UInt32, UInt32) = (0xE0B341, 0xE8BD4C)
@@ -53,8 +53,8 @@ struct ThemeConcept: Sendable {
         var display: String
         var ui: String
         var mono: String
-        /// Tess's voice: an italic serif.
-        var voice: String = "Fraunces"
+        /// Tess's voice: Inter Tight, upright (no italics anywhere).
+        var voice: String = "Inter Tight"
     }
 
     /// Exactly four sizes. 16 pt is the floor.
@@ -198,9 +198,8 @@ extension ThemeConcept {
                                 rest: 0xE8BD4C)
     )
 
-    /// Round 6, "Plein air": impressionist washes, paper grain, big serif type, very little on screen; precision only
-    /// as edge detail (docs/design/materials.md, type-and-motion.md). Fraunces + Hanken Grotesk; until they are
-    /// bundled, the display face falls back to the system serif.
+    /// Round 6, "Plein air": impressionist washes, paper grain, big type, very little on screen; precision only as
+    /// edge detail (docs/design/materials.md, type-and-motion.md). Inter Tight throughout, bundled in Resources/Fonts.
     static let plein = ThemeConcept(
         name: "Plein",
         palette: Palette(
