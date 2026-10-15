@@ -6,9 +6,9 @@ import SwiftData
 /// get deterministic ids derived from their keys, so separate devices seed identical `id`s.
 /// CloudKit does not merge records by our `id`, though: two devices that both seed will sync two copies.
 /// A dedupe pass by `systemKey` / field id must run before sync is switched on (see docs/engine/research-01.md).
+@MainActor
 // The catalog is mostly declarative class specs; their length is the point.
 // swiftlint:disable:next type_body_length
-@MainActor
 public enum SystemCatalog {
     public enum Key: String, CaseIterable, Sendable {
         case thing, activity, exercise, strengthExercise, barbellLift, benchPress
