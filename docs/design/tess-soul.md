@@ -3,7 +3,8 @@
 Tess's living mark is three dabs of paint. How they move says what Tess is doing. In v2, every state has the soft blur and colour mixing that Kaushik liked in Thinking. There are no flat or solid blocks of colour anywhere.
 
 Mockups:
-- `mockups/TessSoul2.dc.html` shows every state.
+- `mockups/TessSoul3.dc.html` shows every current state (round 3) plus the colour and shape explorations.
+- `mockups/TessSoul2.dc.html` shows the v2 material.
 - `mockups/TessPlayground.dc.html` shows travel, hand-off and the jump to Home.
 
 `soul.css` inside either file is the exact reference. v1 (solid blobs, 1.5pt blur) is retired.
@@ -35,16 +36,17 @@ Each mode is a set of parameters: offset multiplier, scale, blur, opacity and pe
 
 | Mode | Motion | Scale | Blur | Period |
 |---|---|---|---|---|
-| idle | Each dab circles its offset by ±6pt, like a slow drift. All six dabs run different periods, so it never repeats visibly | 0.78–0.92 | 3→6 | 7, 8.5, 10, 9, 11, 7.5s |
-| listening | Pulses outward (offset ×0.6→1.3), each dab at its own rate. Later, drive the amplitude from the mic level | 0.72–1.06 | 3→7 | 0.66–1.1s |
-| thinking | Bloom: from the centre out to the bloom target and back, staggered by thirds | 0.55→1.15 | 2→6 | 2.4s |
-| working | The whole soul rotates (2.2s per turn) while each dab smears: wide and flat, offset ×0.8→1.5 | 0.85×0.7 → 1.1×0.66 | 5→8 | 0.9s |
-| done | All dabs pour into the centre, swell to 1.35 (blur 9) and relax back out. Satellites lag 80ms each. A soft ring splashes out to 2.6×. Success haptic | 0.8→1.35→1 | 4→9→6 | 1.8s (once) |
+| idle | Calm "needs you": one main dab at a time lifts (+5, −10), taps once, and settles. The three main dabs take turns (delays 0, −6, −3s), and the satellites drift. No drip. The whole soul draws at 0.62 of the bar size | 0.78–0.92 | 4→5.5 | 9s per dab |
+| listening | Bloom (formerly thinking): from near the centre (offset ×0.45, so the dabs never stack into a dark pool) out to the bloom target and back, staggered by thirds. Later, drive the amplitude from the mic level | 0.6→1.15 | 3→6 | 2.4s |
+| thinking | Pulse (formerly listening): each dab swells outward (offset ×0.6→1.3) at its own rate. This also covers Tess acting on something | 0.72–1.06 | 3→7 | 0.66–1.1s |
+| done | **Kaushik: perfect, keep exactly.** All dabs pour into the centre, swell to 1.35 (blur 9) and relax back out. Satellites lag 80ms each. A soft ring splashes out to 2.6×. Success haptic | 0.8→1.35→1 | 4→9→6 | 1.8s (once) |
 | needsYou | The vermilion dab lifts (+12, −16) and taps twice. A small drip falls 34pt and fades. The others stay idle | 0.85–1.06 | 4→7 | 2.4s |
 | handOff(target:) | One dab and its satellite fly to the changed thing, spread into a wash (2.8 × 0.75, 45–60% opacity, blur 10–12) behind it, then fade and reform at home | | 4→12 | about 3.4s |
 | resting | Saturation 0.35 and brightness 1.06. Very slow drift | 0.62–0.68 | 6→8 | 12–15s |
 
-Kaushik liked the ideas behind done, listening and resting; keep them. Mosaic's glint, Kernel's round robin and Kernel's tick are approved as companion motifs (see the last section).
+**Working is removed** (Kaushik, 2026-10-15). While Tess is doing something, she shows thinking, then hand-off, then done. Exact keyframes are in `mockups/TessSoul3.dc.html` (`lift`, `bloomS`, `listen`).
+
+**Colour and shape explorations** are on the same board: follows the day, colour chase, borrows the room, drops to strokes, pointillism, wet on wet, catches the light, and one-colour moods. None of these is approved yet; don't build them until Kaushik picks.
 
 ## Travel
 - Animate position with a different easing on each axis, so the path arcs:

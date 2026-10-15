@@ -1,5 +1,7 @@
 # Rest timer Live Activity
 
+> **On hold (2026-10-15):** Kaushik rejected this visual as basic (the fonts and the buttons). Three new directions are in `mockups/LiveRest2.dc.html`: Gesso, Horizon and Palette. Build only the behaviour below until he picks one. The research brief says: one number, one action, the system glass, cream numerals not gold, and use `staleDate` / `isStale` for the "set is up" state.
+
 The rest timer lives on the Lock Screen and in the Dynamic Island, so the phone can stay locked on the bench. Mockup: `mockups/LiveRest.dc.html`. Feature spec: Product lead's v1-features.md (P0).
 
 ## Lock Screen (356 × about 156pt; the system clips the corners)
