@@ -50,7 +50,8 @@ extension TessGrammar {
         if trimmed.contains(","), !trimmed.contains("\n") {
             let lines = Self.splitItems(trimmed)
             // Every item needs a word ("bench 80, 8" is a lift, not a list), and no day ("call mum, thu").
-            if lines.count >= 2, !hasDate, lines.allSatisfy(looksLikeGroceries) {
+            // At least half read as shopping and none is a set ("milk, toothpaste" is shopping).
+            if lines.count >= 2, !hasDate, Self.isShoppingList(lines, looksLikeGroceries) {
                 return .groceries(lines: lines)
             }
         }
@@ -119,6 +120,11 @@ extension TessGrammar {
             let title = Set(recipe.title.lowercased().split { !$0.isLetter && !$0.isNumber }.map(String.init))
             return words.allSatisfy { title.contains($0) }
         }
+    }
+
+    static func isShoppingList(_ lines: [String], _ looksLikeGroceries: (String) -> Bool) -> Bool {
+        guard !lines.contains(where: { $0.firstMatch(of: /\d\s*[x×]\s*\d/) != nil }) else { return false }
+        return lines.count(where: looksLikeGroceries) * 2 >= lines.count
     }
 
     /// "milk, eggs and 2 lemons" → ["milk", "eggs", "2 lemons"].
