@@ -30,11 +30,13 @@ public struct NoteList {
         store.classObject(of: classDef).map(notes(about:)) ?? []
     }
 
-    /// Objects an @ mention can name: every titled object (not soft-deleted) and every concrete class.
-    func resolve(_ name: String) -> ObjectRecord? {
+    /// Objects an @ mention can name: every titled object (not soft-deleted) and every concrete class. A class
+    /// with no class object yet gets one from `classObject` (the transaction's, so it's in the op log); reading
+    /// without one links only class objects that exist.
+    func resolve(_ name: String, classObject: ((ClassDef) -> ObjectRecord?)? = nil) -> ObjectRecord? {
         let needle = name.lowercased()
         if let classDef = store.allClasses().first(where: { $0.name.lowercased() == needle }) {
-            return store.ensureClassObject(of: classDef)
+            return classObject?(classDef) ?? store.classObject(of: classDef)
         }
         return store.context.all(ObjectRecord.self)
             .filter { !$0.isDeleted && !$0.isClassObject && $0.title.lowercased() == needle }
@@ -44,6 +46,10 @@ public struct NoteList {
     /// The objects a body mentions, in order, without repeats. "@[Long Name]" or "@Name", trying the longest
     /// run of up to four words first so "@Bench Press felt heavy" finds Bench Press.
     public func mentions(in body: String) -> [ObjectRecord] {
+        mentions(in: body, classObject: nil)
+    }
+
+    func mentions(in body: String, classObject: ((ClassDef) -> ObjectRecord?)?) -> [ObjectRecord] {
         var found: [ObjectRecord] = []
         var seen = Set<UUID>()
         func add(_ object: ObjectRecord?) {
@@ -52,12 +58,15 @@ public struct NoteList {
             }
         }
         for match in body.matches(of: /@\[([^\]]+)\]/) {
-            add(resolve(String(match.1)))
+            add(resolve(String(match.1), classObject: classObject))
         }
         for match in body.matches(of: /@([^\s@\[][^@\n]*)/) {
-            let words = match.1.split(separator: " ").map { $0.trimmingCharacters(in: .punctuationCharacters) }
+            // Trim punctuation from the candidate's ends only, so "@Mac & Cheese was great" finds "Mac & Cheese".
+            let words = match.1.split(separator: " ").map(String.init)
             for count in stride(from: min(4, words.count), through: 1, by: -1) {
-                if let object = resolve(words.prefix(count).joined(separator: " ")) {
+                let candidate = words.prefix(count).joined(separator: " ")
+                    .trimmingCharacters(in: .punctuationCharacters)
+                if let object = resolve(candidate, classObject: classObject) {
                     add(object)
                     break
                 }
@@ -139,7 +148,31 @@ public struct EditNote: EngineAction {
 
 extension Transaction {
     mutating func linkMentions(of note: ObjectRecord, body: String) throws {
+        var created: [ClassDef] = []
+        let store = store
+        // First pass: which classes need a class object; create those through this transaction, then link.
+        _ = NoteList(store: store, classes: classes).mentions(in: body) { classDef in
+            if store.classObject(of: classDef) == nil {
+                created.append(classDef)
+            }
+            return nil
+        }
+        for classDef in created {
+            ensureClassObject(of: classDef)
+        }
         let mentioned = NoteList(store: store, classes: classes).mentions(in: body)
         try setLinks("about", on: note, to: mentioned)
+    }
+
+    /// A class's class object, created in this transaction (so undo removes it) when it's missing.
+    @discardableResult
+    mutating func ensureClassObject(of classDef: ClassDef) -> ObjectRecord {
+        if let existing = store.classObject(of: classDef) {
+            return existing
+        }
+        let object = create(classDef, title: classDef.name)
+        object.isClassObject = true
+        store.invalidateCaches()
+        return object
     }
 }
