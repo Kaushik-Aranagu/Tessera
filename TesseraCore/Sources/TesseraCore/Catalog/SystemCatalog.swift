@@ -193,7 +193,11 @@ public enum SystemCatalog {
                       FieldSpec(key: "rolledFrom", name: "First planned", kind: .date),
                       FieldSpec(key: "rolls", name: "Rolled", kind: .number),
                   ]),
-        ClassSpec(key: .note, name: "Note", parent: .thing, symbol: "note.text", colorRole: "neutral"),
+        // Plain text with @ links; `about` holds the objects it mentions (classes via their class objects).
+        ClassSpec(key: .note, name: "Note", parent: .thing, symbol: "note.text", colorRole: "neutral", fields: [
+            FieldSpec(key: "body", name: "Body", kind: .text),
+            FieldSpec(key: "about", name: "About", kind: .refList, target: .thing),
+        ]),
         ClassSpec(key: .process, name: "Process", parent: .thing, symbol: "circle.dotted", colorRole: "neutral",
                   traits: [.timed], fields: [
                       FieldSpec(key: "subject", name: "Subject", kind: .ref, target: .thing),
