@@ -42,7 +42,12 @@ public extension TrainingLedger {
             return SetPrefill(weight: previousTime.weight, reps: Int(previousTime.reps.rounded()), source: .lastTime)
         }
         if targetWeight != nil || targetReps != nil {
-            return SetPrefill(weight: targetWeight, reps: targetReps ?? 8, source: .target, isFirstTime: lastTime.isEmpty)
+            return SetPrefill(
+                weight: targetWeight,
+                reps: targetReps ?? 8,
+                source: .target,
+                isFirstTime: lastTime.isEmpty
+            )
         }
         let slot = store.linkedObjects("slot", of: entry).first ?? exercise.flatMap { store.planSlot(for: $0) }
         let low = slot.flatMap { store.number("repMin", of: $0) }.map(Int.init)
