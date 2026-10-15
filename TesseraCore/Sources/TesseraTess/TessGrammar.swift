@@ -129,7 +129,7 @@ public struct TessGrammar {
                 } else if reps == nil {
                     reps = value
                 }
-            } else if !["for", "at", "@", "of", "x", "sets", "reps"].contains(token) {
+            } else if !["for", "at", "@", "of", "x", "sets", "reps", "log", "logged", "add", "did"].contains(token) {
                 words.append(token)
             }
         }
