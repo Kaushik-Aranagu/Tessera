@@ -1,0 +1,77 @@
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 4997 checkpointed: 4997
+CoreData: debug: PostSaveMaintenance: fileSize 20587672 greater than prune threshold
+CoreData: annotation: PostSaveMaintenance: wal_checkpoint(TRUNCATE) 
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 0 checkpointed: 0
+RESULT sd.insert.oneTx 19242.27
+RESULT sd.sizeKB.oneTx 20032.00
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1005 checkpointed: 1005
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1026 checkpointed: 1026
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1032 checkpointed: 1032
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1038 checkpointed: 1038
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1000 checkpointed: 1000
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1031 checkpointed: 1031
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1006 checkpointed: 1006
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1020 checkpointed: 1020
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1023 checkpointed: 1023
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1041 checkpointed: 1041
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1028 checkpointed: 1028
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1027 checkpointed: 1027
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1017 checkpointed: 1017
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1024 checkpointed: 1024
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1003 checkpointed: 1003
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1026 checkpointed: 1026
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1017 checkpointed: 1017
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1013 checkpointed: 1013
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1000 checkpointed: 1000
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1005 checkpointed: 1005
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1028 checkpointed: 1028
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1018 checkpointed: 1018
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1020 checkpointed: 1020
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1016 checkpointed: 1016
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1006 checkpointed: 1006
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1022 checkpointed: 1022
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1019 checkpointed: 1019
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1000 checkpointed: 1000
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1009 checkpointed: 1009
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1033 checkpointed: 1033
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1025 checkpointed: 1025
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1027 checkpointed: 1027
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1015 checkpointed: 1015
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1031 checkpointed: 1031
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1031 checkpointed: 1031
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1000 checkpointed: 1000
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1026 checkpointed: 1026
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1001 checkpointed: 1001
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1023 checkpointed: 1023
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1011 checkpointed: 1011
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1030 checkpointed: 1030
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1040 checkpointed: 1040
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1039 checkpointed: 1039
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1023 checkpointed: 1023
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1026 checkpointed: 1026
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1011 checkpointed: 1011
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1035 checkpointed: 1035
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1027 checkpointed: 1027
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1008 checkpointed: 1008
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1011 checkpointed: 1011
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1008 checkpointed: 1008
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1018 checkpointed: 1018
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1006 checkpointed: 1006
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1025 checkpointed: 1025
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1033 checkpointed: 1033
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1015 checkpointed: 1015
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1031 checkpointed: 1031
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1027 checkpointed: 1027
+CoreData: debug: WAL checkpoint: Database did checkpoint. Log size: 1006 checkpointed: 1006
+RESULT sd.insert.perWorkout 196024.83
+RESULT sd.sizeKB.perWorkout 19156.00
+RESULT sd.open 19.15
+RESULT sd.read 1699.78
+RESULT sd.openAndRead 1718.99
+INFO sd entries=7500 sets=37500
+RESULT sd.records 825.75
+INFO sd bestE1RM=128.70000000000002
+RESULT sd.logAndRequery 967.37
+INFO sd bestAfterLog=175.0
+RESULT sd.sizeKB.afterLog 19156.00
+-- run 1 done

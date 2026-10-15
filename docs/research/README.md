@@ -14,3 +14,5 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [tess-voice.md](tess-voice.md) | Tess AI (future), Design studio (copy), Product lead |
 | [exercise-catalog.md](exercise-catalog.md) | Core engine (catalog), iOS build, Product lead |
 | [instrument-robustness.md](instrument-robustness.md) | iOS build, Design studio |
+| **Spikes** | |
+| [storage-spike.md](storage-spike.md) | Kaushik (decision), Core engine |
