@@ -109,7 +109,15 @@ struct NowPage: View {
                     }
                 }
                 .entrance(3)
+                // The countdown as time you can see: a wash that drains while the item runs.
+                DrainBar(start: task.start, end: task.end)
+                    .padding(.top, Theme.Spacing.s)
+                    .entrance(4)
             }
+        } else if let routine = model.todaysRoutine(now: now) {
+            RoutineHero(routine: routine)
+        } else if let done = model.finishedToday(now: now).first {
+            DoneHero(summary: done, onShow: onShow)
         } else {
             VStack(alignment: .leading, spacing: Theme.Spacing.l) {
                 Text("Nothing else is planned today.")
@@ -168,6 +176,48 @@ struct NowPage: View {
         withTesseraAnimation(.smooth(duration: 0.34), reduceMotion: reduceMotion) {
             model.finish(taskID: task.id)
         }
+    }
+}
+
+/// Now's countdown drawn as a bar that drains (the rest dial's wash, in day paint): full before the item starts,
+/// emptying towards the left as it runs, gone at its end. Ticks once a second; the edge glides between ticks.
+struct DrainBar: View {
+    let start: Date
+    let end: Date
+
+    private static let height: CGFloat = 14
+    /// A slightly uneven stroke end, not a pill.
+    private static let shape = UnevenRoundedRectangle(topLeadingRadius: 4, bottomLeadingRadius: 2.5,
+                                                      bottomTrailingRadius: 4, topTrailingRadius: 2.5,
+                                                      style: .continuous)
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let now = AppClock.adjust(context.date)
+            let fraction = Self.remaining(start: start, end: end, now: now)
+            GeometryReader { proxy in
+                ZStack(alignment: .leading) {
+                    Self.shape.fill(Theme.Colors.ink.opacity(0.05))
+                    LinearGradient(colors: [HomePaint.dayAmber.opacity(0.15), HomePaint.dayAmber.opacity(0.55)],
+                                   startPoint: .leading, endPoint: .trailing)
+                        .overlay(alignment: .trailing) { HomePaint.dayAmber.frame(width: 2) }
+                        .frame(width: proxy.size.width * fraction)
+                        .clipShape(Self.shape)
+                        .tesseraAnimation(.linear(duration: 1), value: fraction)
+                }
+            }
+            .frame(height: Self.height)
+            .accessibilityElement()
+            .accessibilityLabel("Time left")
+            .accessibilityValue("\(Int((fraction * 100).rounded())) percent")
+        }
+    }
+
+    /// 1 before the start, draining to 0 at the end.
+    static func remaining(start: Date, end: Date, now: Date) -> Double {
+        let total = end.timeIntervalSince(start)
+        guard total > 0, now > start else { return 1 }
+        return min(max(end.timeIntervalSince(now) / total, 0), 1)
     }
 }
 
@@ -320,6 +370,85 @@ private struct GhostRow: View {
         .accessibilityLabel("Proposed: \(item.title), \(Format.clock(item.start))")
         .accessibilityHint("Saves in two seconds. Double-tap to keep it now.")
         .accessibilityAction(named: "Drop it") { model.discardCapture() }
+    }
+}
+
+/// Trained today and nothing else on: the workout, saved, with Tess's one count line.
+private struct DoneHero: View {
+    let summary: WorkoutSummary
+    var onShow: (HomeSpatialView.Page) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+            Text(summary.endedAt.map { "trained this \(SpokenTime.partOfDay($0))" } ?? "trained today")
+                .font(Theme.voice(size: 21))
+                .foregroundStyle(Theme.Colors.context)
+                .entrance(1)
+            Button {
+                onShow(.training)
+            } label: {
+                HeroText(text: summary.title) { $0 }
+                    .foregroundStyle(Theme.Colors.ink)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(HandleButtonStyle())
+            .accessibilityLabel("\(summary.title), done")
+            .accessibilityHint("Shows today's training")
+            .siblingParallax()
+            .entrance(2, hero: true)
+            Text(summary.line)
+                .font(Theme.voice(size: 21))
+                .foregroundStyle(Theme.Colors.tess)
+                .fixedSize(horizontal: false, vertical: true)
+                .entrance(3)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// Nothing else on: the plan's next routine is Now, with one key into live mode.
+private struct RoutineHero: View {
+    let routine: ObjectRecord
+    @Environment(AppModel.self) private var model
+    @Environment(\.zoomNamespace) private var namespace
+
+    var body: some View {
+        let slots = routine.orderedChildren.count
+        let sets = routine.orderedChildren.reduce(0) { $0 + Int(model.store.number("sets", of: $1) ?? 3) }
+        VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+            Text("today's training")
+                .font(Theme.voice(size: 21))
+                .foregroundStyle(Theme.Colors.context)
+                .entrance(1)
+            Button {
+                model.open(.object(routine.id))
+            } label: {
+                HeroText(text: routine.title) { $0 }
+                    .foregroundStyle(Theme.Colors.ink)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(HandleButtonStyle())
+            .modifier(ZoomSource(id: Route.object(routine.id), namespace: namespace))
+            .accessibilityHint("Opens \(routine.title)")
+            .siblingParallax()
+            .entrance(2, hero: true)
+            .padding(.bottom, Theme.Spacing.l)
+            HStack(alignment: .center, spacing: Theme.Spacing.l) {
+                PaintKey(isTap: true, action: { model.startRoutine(routine) }, label: { _ in
+                    Text("Start").textRole(.bodyStrong)
+                })
+                .frame(width: 220)
+                .accessibilityLabel("Start \(routine.title)")
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("\(slots) EXERCISES")
+                    Text("\(sets) SETS")
+                }
+                .textRole(.label)
+                .foregroundStyle(Theme.Colors.inkSecondary)
+                .accessibilityElement(children: .combine)
+            }
+            .entrance(3)
+        }
     }
 }
 

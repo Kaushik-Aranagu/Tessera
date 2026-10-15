@@ -24,14 +24,47 @@ struct WorkoutSessionTests {
         let (_, session) = try startedSession()
         #expect(session.phase() == .set)
         #expect(session.currentSetNumber == 1)
-        // From the ledger's next target: the library's bench runs dp(+2.5, 5, 8) and last time was 7 then 6 at 82.5,
-        // so the same weight, aiming for 7 on every set.
+        // Core's prefill: set 1 opens at last time's set 1 (82.5 × 7, three days ago).
         #expect(session.weight == 82.5 && session.reps == 7)
-        #expect(session.targetReason?.contains("aim for 7") == true)
-        // Bench is plate-loaded: the dial's detents come from its load profile, the plates from PlateLoad.
+        #expect(session.targetReason == "Same as last time, 82.5 × 7")
+        #expect(session.isAtPrefill)
+        // Bench is plate-loaded: detents and plates come from Core's weight dial.
         #expect(session.detents.first == 20)
         #expect(session.detents.contains(82.5))
         #expect(session.platesPerSide == [25, 5, 1.25])
+        // The plus and minus beside the dial step one load (a pair of 1.25s).
+        session.stepWeight(up: true)
+        #expect(session.weight == 85)
+        session.stepWeight(up: false)
+        session.stepWeight(up: false)
+        #expect(session.weight == 80)
+    }
+
+    @Test func oneHoldOnThePrefillLogsItThroughLogNextSet() throws {
+        let (model, session) = try startedSession()
+        session.logSet()
+        #expect(model.engine.history(limit: 1).first?.action == "logNextSet")
+        // Set 2 keeps today's weight with last time's set-2 reps (82.5 × 6).
+        #expect(session.weight == 82.5 && session.reps == 6)
+        session.skipRest()
+        session.reps = 8
+        session.logSet()
+        #expect(model.engine.history(limit: 1).first?.action == "logSet")
+    }
+
+    @Test func aFirstEverSessionOpensAtTheSlotTarget() throws {
+        // No demo: his plan, no history.
+        let routine = try #require(model.todaysRoutine())
+        model.startRoutine(routine)
+        let session = try #require(model.session)
+        #expect(session.currentExercise?.name == "Bench Press")
+        #expect(session.reps == 5) // the bottom of 4 × 5–8
+        #expect(session.weight == 20) // nothing to go on: the empty bar
+        #expect(session.targetReason == "First time. Start light, 5 reps")
+        session.logSet()
+        let entry = try #require(session.currentEntry)
+        #expect(session.setRows(of: entry).count == 1)
+        #expect(session.weight == 20 && session.reps == 5) // set 2 carries today's numbers
     }
 
     @Test func loggingSeatsTheSetAndTurnsTheDialIntoRest() throws {
@@ -54,6 +87,27 @@ struct WorkoutSessionTests {
         #expect(session.currentSetNumber == 2)
         let entry = try #require(session.currentEntry)
         #expect(session.setRows(of: entry).first?.rpe == 8)
+    }
+
+    @Test func recordHintComesFromCoreAndCelebratesOncePerExercise() throws {
+        let (_, session) = try startedSession()
+        #expect(session.recordHint == nil) // 82.5 × 7 is level with the best
+        session.rpe = 7 // 7 reps with 3 in the tank is a 10-rep effort
+        #expect(session.recordHint?.text == "best e1RM")
+        session.rpe = nil
+        session.weight = 85
+        let hint = try #require(session.recordHint)
+        #expect(hint.text == "beats 7RM" && hint.previous == "was 82.5 × 7")
+        #expect(WorkoutLines.subline(session, phase: .set).0 == "set 1: beats 7RM, was 82.5 × 7")
+
+        session.logSet()
+        #expect(session.lastSeated?.records.isEmpty == false) // the one celebration
+        #expect(WorkoutLines.tess(session, phase: session.phase(), summary: nil).hasPrefix("New best: 85 × 7."))
+        session.skipRest()
+        session.weight = 87.5
+        session.reps = 7
+        session.logSet()
+        #expect(session.lastSeated?.records.isEmpty == true) // a second record this session stays quiet
     }
 
     @Test func aSecondRecordHasToBeatTheFirst() throws {
@@ -190,7 +244,7 @@ struct WorkoutSessionTests {
         #expect(groups == [.family, .family, .family, .movement])
         let dumbbell = try #require(options.first { $0.exercise.name == "Dumbbell Bench Press" })
         #expect(dumbbell.isEstimate && dumbbell.isPerHand)
-        #expect(dumbbell.load == 32.5) // 82.5 × 0.4, on the rack's nearest dumbbell
+        #expect(dumbbell.load == 32) // 82.5 × 0.4 = 33, on his rack (2 kg steps) the nearest dumbbell
     }
 
     @Test func swappingBeforeAnySetRelinksTheEntryThroughTheEngine() throws {
@@ -202,7 +256,7 @@ struct WorkoutSessionTests {
         #expect(session.currentExercise?.name == "Dumbbell Bench Press")
         #expect(session.swappedFrom == "Bench Press")
         #expect(session.isEstimatedLoad)
-        #expect(session.weight == 32.5)
+        #expect(session.weight == 32)
         #expect(model.engine.history(limit: 1).first?.action == "swapExercise")
     }
 

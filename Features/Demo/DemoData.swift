@@ -9,7 +9,8 @@ enum DemoData {
         if arguments.contains("-resetDemo") {
             reset(model)
         }
-        if model.objects(of: .routine).isEmpty {
+        // Kaushik's starter plan is always installed; the demo adds its own plan and history once.
+        if !model.objects(of: .routine).contains(where: { $0.title == "Push Day A" }) {
             seedLibrary(model)
         }
         if model.schedule().isEmpty {

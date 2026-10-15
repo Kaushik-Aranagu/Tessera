@@ -45,6 +45,8 @@ struct DayLane: Identifiable, Equatable {
     let offset: Int
     let date: Date
     let items: [ScheduleItem]
+    /// Workouts finished that day, start to end: drawn as vermilion marks on the stroke.
+    var workouts: [ClosedRange<Date>] = []
 
     var id: Int {
         offset
@@ -105,7 +107,8 @@ private struct DayStrokePage: View {
                 Text(lane.phrase(now: now))
                     .font(Theme.voice(size: 21))
                     .foregroundStyle(Theme.Colors.ink)
-                DayStroke(painted: timeline.painted(dayOffset: lane.offset, now: now), isToday: lane.offset == 0)
+                DayStroke(painted: timeline.painted(dayOffset: lane.offset, now: now), isToday: lane.offset == 0,
+                          marks: lane.workouts.compactMap { timeline.span(start: $0.lowerBound, end: $0.upperBound) })
                     .frame(height: 30)
             }
             .frame(maxHeight: .infinity, alignment: .top)
@@ -118,15 +121,19 @@ private struct DayStrokePage: View {
         let count = lane.items.count
         let things = count == 1 ? "1 thing" : "\(count) things"
         let clock = lane.offset == 0 ? " Now \(Format.clock(now))." : ""
-        return "\(lane.phrase(now: now)). \(things) scheduled.\(clock)"
+        let trained = lane.workouts.isEmpty ? "" : " Trained."
+        return "\(lane.phrase(now: now)). \(things) scheduled.\(trained)\(clock)"
     }
 }
 
 /// A 20 pt stroke with round caps through sky → sage → violet → amber → vermilion, painted to `painted`; a dashed
-/// ink guide (22%) carries the rest. Paints in over 700 ms on first appearance; today carries a breathing wet tip.
+/// ink guide (22%) carries the rest. Finished workouts sit on it as vermilion marks. Paints in over 700 ms on first
+/// appearance; today carries a breathing wet tip.
 private struct DayStroke: View {
     let painted: Double
     let isToday: Bool
+    /// Finished workouts, as fractions of the day: a short vermilion stroke laid over the day where each happened.
+    var marks: [ClosedRange<Double>] = []
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var drawn: Double = 0
 
@@ -149,6 +156,14 @@ private struct DayStroke: View {
                     .stroke(gradient, style: StrokeStyle(lineWidth: 20, lineCap: .round))
                     .opacity(0.85)
                     .blur(radius: 0.6)
+                ForEach(Array(marks.enumerated()), id: \.offset) { _, mark in
+                    // At least a dab, even for a short session.
+                    let lower = min(mark.lowerBound, 0.985), upper = max(mark.upperBound, lower + 0.015)
+                    BrushPath().trim(from: lower, to: min(upper, min(reach + 0.015, 1)))
+                        .stroke(Theme.Colors.live, style: StrokeStyle(lineWidth: 9, lineCap: .round))
+                        .blur(radius: 0.4)
+                        .shadow(color: Theme.Colors.live.opacity(0.45), radius: 3)
+                }
                 if isToday {
                     WetTip()
                         .position(Self.point(at: reach, in: size))

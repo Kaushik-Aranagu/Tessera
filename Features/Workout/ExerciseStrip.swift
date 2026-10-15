@@ -70,6 +70,8 @@ struct RunningOrderSheet: View {
     var topInset: CGFloat
     var onSelect: (Int) -> Void
     var onClose: () -> Void
+    /// Ends the workout with what's logged (shown once a set is in).
+    var onFinish: (() -> Void)?
 
     @State private var dragging: UUID?
     @State private var dragOffset: CGFloat = 0
@@ -103,6 +105,15 @@ struct RunningOrderSheet: View {
                 .foregroundStyle(Paint.secondary)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, Theme.Spacing.m)
+            if let onFinish {
+                // Done for today with exercises left: what's logged is saved, the rest is simply not done.
+                PaintKey(finish: .cream, paint: Paint.live, duration: 0.6, height: 60, drift: 20, action: onFinish) {
+                    Text($0 ? "Keep holding" : "Hold to finish here").textRole(.bodyStrong)
+                }
+                .frame(width: 240)
+                .padding(.top, Theme.Spacing.l)
+                .accessibilityAction(named: "Finish workout", onFinish)
+            }
         }
         .padding(.horizontal, Theme.Spacing.gutter)
         .padding(.top, topInset + 18)

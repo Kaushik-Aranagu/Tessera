@@ -232,6 +232,8 @@ struct PaintKey<Label: View>: View {
     var duration: Double = Theme.Motion.holdDuration
     var isTap = false
     var height: CGFloat = 58
+    /// How far the finger may wander while holding before the hold cancels.
+    var drift: CGFloat = 30
     let action: () -> Void
     /// Receives whether the key is being held (labels turn to "Keep holding").
     @ViewBuilder var label: (Bool) -> Label
@@ -317,7 +319,7 @@ struct PaintKey<Label: View>: View {
     }
 
     private var hold: some Gesture {
-        LongPressGesture(minimumDuration: duration, maximumDistance: 30)
+        LongPressGesture(minimumDuration: duration, maximumDistance: drift)
             .updating($isPressing) { current, state, _ in state = current }
             .onEnded { _ in complete() }
     }

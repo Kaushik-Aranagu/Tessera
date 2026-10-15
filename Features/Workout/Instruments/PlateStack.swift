@@ -12,44 +12,13 @@ private enum Paint {
     static let changeSmall = Color(hex: 0xA8A49C)
 }
 
-/// Plate maths for a barbell loaded symmetrically with standard kilogram plates.
-enum PlateMath {
-    /// Plates available per side, heaviest first.
-    static let sizes: [Double] = [25, 20, 15, 10, 5, 2.5, 1.25]
-
-    /// The plates on one side of the bar, heaviest first (greedy). Anything below the smallest plate is dropped, so
-    /// an unloadable weight gives the load just under it; a weight at or below the bar gives no plates.
-    static func perSide(_ weight: Double, bar: Double = 20) -> [Double] {
-        var remaining = (weight - bar) / 2
-        var plates: [Double] = []
-        for size in sizes {
-            while remaining >= size - tolerance {
-                plates.append(size)
-                remaining -= size
-            }
-        }
-        return plates
-    }
-
-    /// The closest weight the plates can make (bar + a multiple of two of the smallest plate); halfway rounds up.
-    /// Never less than the bar.
-    static func nearestLoadable(_ weight: Double, bar: Double = 20) -> Double {
-        guard let smallest = sizes.last else { return bar }
-        let increment = smallest * 2
-        let steps = (max(weight - bar, 0) / increment).rounded(.toNearestOrAwayFromZero)
-        return bar + steps * increment
-    }
-
-    private static let tolerance = 1e-6
-}
-
-/// Plate maths as a label line, "31.25 KG A SIDE" (or "BAR ONLY"). Optionally draws one side of the bar before it:
-/// the sleeve, then the plates outward; adding or removing a plate slides only that plate in or out from the sleeve.
+/// Plates per side as a label line, "25 + 5 + 1.25 EACH SIDE" (or "BAR ONLY"), from Core's `WeightDial`. Optionally
+/// draws one side of the bar before it: the sleeve, then the plates outward; adding or removing a plate slides only
+/// that plate in or out from the sleeve.
 struct PlateStack: View {
     let weight: Double
-    var bar: Double = 20
-    /// One side's plates from the gym's own `PlateLoad`; nil falls back to standard plate maths.
-    var perSide: [Double]?
+    /// One side's plates, heaviest first (empty for the bar alone).
+    let perSide: [Double]
     /// The text is primary; the drawing is optional.
     var drawsPlates: Bool = false
 
@@ -74,7 +43,7 @@ struct PlateStack: View {
     }
 
     var body: some View {
-        let plates = keyed(perSide ?? PlateMath.perSide(weight, bar: bar))
+        let plates = keyed(perSide)
         HStack(spacing: Theme.Spacing.m) {
             if drawsPlates {
                 drawing(plates)
@@ -151,8 +120,7 @@ struct PlateStack: View {
 
     private func caption(_ plates: [Plate]) -> String {
         guard !plates.isEmpty else { return "Bar only" }
-        let perSide = plates.reduce(0) { $0 + $1.kilograms }
-        return "\(Self.formatted(perSide)) kg a side"
+        return plates.map { Self.formatted($0.kilograms) }.joined(separator: " + ") + " each side"
     }
 
     private func accessibilityValue(_ plates: [Plate]) -> String {
@@ -168,17 +136,12 @@ struct PlateStack: View {
 }
 
 #Preview {
-    @Previewable @State var weight = 82.5
+    let weight = 82.5
     VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
-        PlateStack(weight: weight)
-        PlateStack(weight: weight, drawsPlates: true)
-        PlateStack(weight: 20, drawsPlates: true)
-        PlateStack(weight: 142.5, drawsPlates: true)
-        HStack {
-            Button("−2.5") { weight -= 2.5 }
-            Button("+2.5") { weight += 2.5 }
-        }
-        .textRole(.label)
+        PlateStack(weight: weight, perSide: [25, 5, 1.25])
+        PlateStack(weight: weight, perSide: [25, 5, 1.25], drawsPlates: true)
+        PlateStack(weight: 20, perSide: [], drawsPlates: true)
+        PlateStack(weight: 142.5, perSide: [25, 25, 10, 1.25], drawsPlates: true)
     }
     .padding(Theme.Spacing.gutter)
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)

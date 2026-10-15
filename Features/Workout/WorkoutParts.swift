@@ -121,8 +121,9 @@ enum WorkoutLines {
             if let rpe = session.rpe {
                 return ("RPE \(RPEStops.formatted(rpe)), \(RPEStops.words(for: rpe))", Paint.now)
             }
-            if session.isPersonalRecord {
-                return ("set \(session.currentSetNumber): this would be a new best", Paint.now)
+            if let hint = session.recordHint {
+                let previous = hint.previous.map { ", \($0)" } ?? ""
+                return ("set \(session.currentSetNumber): \(hint.text)\(previous)", Paint.now)
             }
             if session.swappedFrom != nil, rows.isEmpty {
                 return ("swapped for today, set \(session.currentSetNumber) of \(target)", Paint.tess)
@@ -137,7 +138,13 @@ enum WorkoutLines {
             return summary ?? ""
         }
         if case .rest = phase, let seated = session.lastSeated {
-            return seated.records.isEmpty ? "Logged." : "That one goes on the wall."
+            // tess-voice: "Set 3. 80 x 8." and "New best: 85 x 5. e1RM 99."
+            let set = "\(Format.kilograms(seated.weight)) × \(Int(seated.reps))"
+            if seated.records.isEmpty {
+                return "Set \(seated.number). \(set)."
+            }
+            return "New best: \(set)." +
+                (seated.e1RM.map { " e1RM \(Format.kilograms(($0 * 10).rounded() / 10))." } ?? "")
         }
         switch phase {
         case .exerciseDone: return "\(session.currentExercise?.name ?? "That") is done."
@@ -152,8 +159,16 @@ enum WorkoutLines {
         if let from = session.swappedFrom, let entry = session.currentEntry, session.setRows(of: entry).isEmpty {
             return "\(SwapPanel.short(from)) stays in the plan."
         }
-        if session.isPersonalRecord {
-            return "Go on. You have this."
+        // The subline carries the numbers; Tess says what it would mean, once, quietly.
+        if let hint = session.recordHint {
+            let reps = hint.kinds.compactMap { kind -> Int? in
+                if case let .repMax(count) = kind {
+                    return count
+                }
+                return nil
+            }.first
+            let name = session.currentExercise?.name.lowercased() ?? "lift"
+            return reps.map { "Best \($0)-rep \(name) yet, if it goes." } ?? "Best e1RM yet, if it goes."
         }
         if let note = session.restNote, note.hasPrefix("Skipped") {
             return note
@@ -167,7 +182,7 @@ enum WorkoutLines {
         if let best = session.previousBest {
             return "Last best was \(Format.kilograms(best.weight)) × \(Int(best.reps))."
         }
-        return "Same as last time is fine."
+        return "Set \(session.currentSetNumber). \(Format.kilograms(session.weight)) × \(Int(session.reps))."
     }
 }
 
@@ -262,5 +277,37 @@ struct WorkoutTessBar: View {
         .overlay { shape.stroke(.black.opacity(0.6), lineWidth: 0.5) }
         .tesseraAnimation(value: canUndo)
         .accessibilityElement(children: .contain)
+    }
+}
+
+// MARK: - Plate step keys
+
+/// The dial's non-gesture path: a bare minus or plus, 60 pt square, one load per press (a pair of the smallest
+/// plates on a barbell, the next dumbbell on the rack). No pill and no box; the glyph is the key.
+struct PlateStepKey: View {
+    let up: Bool
+    let enabled: Bool
+    /// "2.5", spoken in the label.
+    let step: String
+    let action: () -> Void
+
+    @State private var presses = 0
+
+    var body: some View {
+        Button {
+            presses += 1
+            action()
+        } label: {
+            Text(up ? "+" : "−")
+                .font(Theme.numeral(34))
+                .foregroundStyle(Paint.cream.opacity(enabled ? 0.85 : 0.25))
+                .frame(width: 60, height: 60)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+        .buttonRepeatBehavior(.enabled)
+        .sensoryFeedback(.selection, trigger: presses)
+        .accessibilityLabel(up ? "Heavier by \(step) kilograms" : "Lighter by \(step) kilograms")
     }
 }

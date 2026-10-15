@@ -7,6 +7,46 @@ import Testing
 struct AppModelTests {
     let container = TesseraSchema.makeContainer(inMemory: true)
 
+    @Test func withoutDemoHomeTrainsFromHisPlan() throws {
+        let model = AppModel(context: container.mainContext)
+        // Fresh install: no history, no workout object, just the PPL×2 plan.
+        #expect(model.tonightWorkout() == nil)
+        let routine = try #require(model.todaysRoutine())
+        #expect(routine.title == "Push A")
+        #expect(routine.orderedChildren.count == 5)
+
+        model.startRoutine(routine)
+        let session = try #require(model.session)
+        #expect(model.isWorkoutPresented)
+        #expect(session.entries.count == 5)
+        #expect(session.currentExercise?.name == "Bench Press")
+        // Started: today's training is the running workout now, not the routine.
+        #expect(model.todaysRoutine() == nil)
+    }
+
+    @Test func aFinishedWorkoutIsSavedIntoTodayOnHome() throws {
+        let model = AppModel(context: container.mainContext)
+        let routine = try #require(model.todaysRoutine())
+        model.startRoutine(routine)
+        let session = try #require(model.session)
+        session.logSet()
+        session.skipRest()
+        session.logSet()
+        session.finish()
+        model.isWorkoutPresented = false
+        model.session = nil
+        model.touch()
+
+        let done = try #require(model.finishedToday().first)
+        #expect(done.title == "Push A")
+        #expect(done.line == "1 of 5 exercises, 2 sets.")
+        // Trained today: Home shows the done state, not the next routine; the plan rolls on to Pull A.
+        #expect(model.todaysRoutine() == nil)
+        #expect(model.plan.flatMap { model.ledger.nextRoutine(in: $0) }?.title == "Pull A")
+        let today = try #require(HomeData.lanes(model, now: AppClock.now).first { $0.offset == 0 })
+        #expect(today.workouts.count == 1)
+    }
+
     @Test func demoDataProducesALivedInDay() throws {
         let model = AppModel(context: container.mainContext)
         DemoData.prepare(model)
@@ -47,7 +87,11 @@ struct AppModelTests {
         let entry = try #require(session.currentEntry)
         #expect(session.loggedSets(of: entry).count == 1)
         #expect(session.restEndsAt != nil)
-        #expect(PlateMath.perSide(82.5) == [25, 5, 1.25])
+        // Plates per side come from Core's weight dial for his kit (20 kg bar, plates down to 1.25).
+        session.weight = 82.5
+        #expect(session.platesPerSide == [25, 5, 1.25])
+        #expect(session.plateLine == "25 + 5 + 1.25")
+        #expect(session.spokenLoad == "82.5 kilograms, 31.25 per side")
     }
 
     @Test func commandInterpreterLogsAndAnswers() {

@@ -12,8 +12,9 @@ private enum Paint {
 }
 
 /// The precision dial for weight: a horizontal strip of ticks under a fixed centre needle, one tick per weight the
-/// gym can load (Core's `LoadProfile` detents). A flick spins with momentum and settles exactly on a tick. Tapping
-/// left or right of the needle steps one load (the one-tap twin of the drag).
+/// gym can load (Core's `WeightDial` detents). The dial owns vertical drags only (up is heavier, one load per 12 pt;
+/// a flick carries on with momentum and settles exactly on a tick), so sideways swipes stay with paging. Tapping left
+/// or right of the needle steps one load; the plus and minus beside it are the non-gesture path.
 ///
 /// During rest the same part counts down: it locks, dims and a cadmium wash covers it, draining as `restFraction`
 /// runs from 1 to 0. It then takes two drags: right past the needle adds 15 s (the fill grows under the finger and
@@ -30,6 +31,8 @@ struct WeightDial: View {
     /// Rest drags. Nil turns them off.
     var onExtendRest: (() -> Void)?
     var onSkipRest: (() -> Void)?
+    /// VoiceOver's value, e.g. "80 kilograms, 30 per side".
+    var spokenValue: String?
 
     /// The tick under the needle. Kept in step with `weight` both ways.
     @State private var scrolledIndex: Int?
@@ -45,6 +48,8 @@ struct WeightDial: View {
     /// How far the finger has dragged the rest fill (points; right is positive).
     @State private var restDrag: CGFloat = 0
     @State private var isDraining = false
+    /// The detent under the needle when the vertical drag began; nil when not dragging.
+    @State private var dragStartIndex: Int?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private enum Metrics {
@@ -67,6 +72,10 @@ struct WeightDial: View {
         /// A fling left this far (or predicted twice as far) skips.
         static let skipThreshold: CGFloat = 56
         static let drain = 0.42
+        /// Vertical travel per detent.
+        static let dragPitch: CGFloat = 12
+        /// The most a flick carries on past the finger.
+        static let maxMomentum = 24
     }
 
     var body: some View {
@@ -78,6 +87,7 @@ struct WeightDial: View {
         .frame(height: Metrics.height)
         .contentShape(Rectangle())
         .gesture(restGesture, isEnabled: restFraction != nil && onExtendRest != nil)
+        .gesture(dialGesture, isEnabled: !isLocked && restFraction == nil)
         .tesseraAnimation(value: restFraction == nil)
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
         .onAppear { scrolledIndex = index(for: weight) }
@@ -96,7 +106,7 @@ struct WeightDial: View {
         .sensoryFeedback(.impact(flexibility: .solid, intensity: 0.7), trigger: skipHaptic)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(restFraction == nil ? "Weight" : "Rest")
-        .accessibilityValue("\(formatted(weight)) kilograms")
+        .accessibilityValue(spokenValue ?? "\(formatted(weight)) kilograms")
         .accessibilityHint(isLocked ? "Resting. Actions add 15 seconds or skip." : "Swipe up or down for one load")
         .accessibilityAdjustableAction { direction in
             guard !isLocked else { return }
@@ -142,7 +152,8 @@ struct WeightDial: View {
         .scrollTargetBehavior(.viewAligned(limitBehavior: .never))
         .scrollPosition(id: $scrolledIndex, anchor: .center)
         .contentMargins(.horizontal, max(0, width / 2 - Metrics.pitch / 2), for: .scrollContent)
-        .scrollDisabled(isLocked)
+        // Hand input is the vertical drag below; the strip only shows where the needle is.
+        .scrollDisabled(true)
         .onScrollPhaseChange { _, new in phase = new }
         .onTapGesture { location in
             // The one-tap twin: left of the needle is one load lighter, right is one heavier.
@@ -348,6 +359,39 @@ struct WeightDial: View {
 
     private func formatted(_ value: Double) -> String {
         value.formatted(.number.precision(.fractionLength(0 ... 2)))
+    }
+}
+
+extension WeightDial {
+    // MARK: The vertical drag
+
+    /// Claims only drags that start more vertical than horizontal; up is heavier.
+    var dialGesture: some Gesture {
+        DragGesture(minimumDistance: 6)
+            .onChanged { drag in
+                if dragStartIndex == nil {
+                    guard abs(drag.translation.height) > abs(drag.translation.width) else { return }
+                    dragStartIndex = index(for: weight)
+                }
+                guard let start = dragStartIndex else { return }
+                let steps = Int((-drag.translation.height / Metrics.dragPitch).rounded(.towardZero))
+                move(to: start + steps)
+            }
+            .onEnded { drag in
+                defer { dragStartIndex = nil }
+                guard let start = dragStartIndex else { return }
+                let steps = Int((-drag.translation.height / Metrics.dragPitch).rounded(.towardZero))
+                // Reduce Motion: no momentum, the dial stops under the finger.
+                let flick = reduceMotion ? 0 : (drag.translation.height - drag.predictedEndTranslation.height)
+                    / Metrics.dragPitch / 2
+                let momentum = max(-Metrics.maxMomentum, min(Metrics.maxMomentum, Int(flick.rounded())))
+                move(to: start + steps + momentum)
+            }
+    }
+
+    private func move(to index: Int) {
+        guard !detents.isEmpty else { return }
+        set(detents[min(max(index, 0), detents.count - 1)], haptic: true)
     }
 }
 

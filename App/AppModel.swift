@@ -81,9 +81,8 @@ final class AppModel {
         self.context = context
         store = ObjectStore(context: context)
         do {
-            classes = try SystemCatalog.seed(in: context)
-            // The 72-exercise library on the movement-pattern spine (cheap after the first run).
-            _ = try ExerciseLibraryInstaller.installIfNeeded(store: store, classes: classes)
+            // Built-in classes, the 72-exercise library and Kaushik's starter plan (cheap after the first run).
+            classes = try store.prepareCatalog()
         } catch {
             assertionFailure("Seeding failed: \(error)")
         }
@@ -231,6 +230,7 @@ final class AppModel {
         let table = ProcessTable(engine: engine)
         table.suspendIfIdle(now: now, idleLimit: idleLimit)
         processNotes = table.tidy(now: now)
+        pickUpRunningWorkout(table)
         // A workout left untouched for 6 hours is wrapped up by Core; let the live session go with it.
         if let session, store.value("endedAt", of: session.workout) != nil {
             self.session = nil
@@ -353,6 +353,8 @@ final class AppModel {
     /// once-a-second UI ticks must stay far under a frame.
     @ObservationIgnored private var scheduleCache: (revision: Int, anchor: Date, items: [ScheduleItem])?
     @ObservationIgnored private var workoutCache: (revision: Int, anchor: Date, workout: ObjectRecord?)?
+    /// Finished workouts per day (Core's summaries), rebuilt when data changes.
+    @ObservationIgnored var finishedCache: [Date: (revision: Int, summaries: [WorkoutSummary])] = [:]
 
     func schedule(around now: Date = AppClock.now) -> [ScheduleItem] {
         let revision = revision
@@ -400,7 +402,9 @@ final class AppModel {
 
     private func findTonightWorkout(around now: Date) -> ObjectRecord? {
         objects(of: .workout).first { workout in
-            guard case let .date(date)? = store.value("scheduledFor", of: workout) else { return false }
+            // Scheduled, or started from a routine (no schedule) and not finished: either is today's workout.
+            guard let date = store.value("scheduledFor", of: workout)?.dateValue
+                ?? store.value("startedAt", of: workout)?.dateValue else { return false }
             return store.value("endedAt", of: workout) == nil && abs(date.timeIntervalSince(now)) < 12 * 3600
         }
     }
@@ -468,5 +472,55 @@ final class AppModel {
         guard let setClass = classes[.set], let source = ClassResolver.field("e1rm", of: setClass)?.expression,
               let expression = try? Formula.parse(source) else { return nil }
         return expression.evaluate { ["weight": weight, "reps": reps][$0] }
+    }
+}
+
+// MARK: - Plan
+
+extension AppModel {
+    /// The plan Home trains from: Kaushik's starter PPL×2 (installed first, so the oldest plan).
+    var plan: ObjectRecord? {
+        _ = revision
+        return objects(of: .plan).first
+    }
+
+    /// Today's routine from the plan, when there is no workout object for today yet (nothing scheduled, nothing
+    /// running, nothing finished today). The plan rolls: the routine after the last one finished.
+    func todaysRoutine(now: Date = AppClock.now) -> ObjectRecord? {
+        guard session == nil, tonightWorkout(around: now) == nil, finishedToday(now: now).isEmpty,
+              let plan else { return nil }
+        return ledger.nextRoutine(in: plan)
+    }
+
+    /// Workouts finished today, newest first (Core's summaries: counts, records and Tess's line).
+    func finishedToday(now: Date = AppClock.now) -> [WorkoutSummary] {
+        finishedWorkouts(on: now)
+    }
+
+    func finishedWorkouts(on day: Date) -> [WorkoutSummary] {
+        let key = Calendar.current.startOfDay(for: day)
+        if let cached = finishedCache[key], cached.revision == revision {
+            return cached.summaries
+        }
+        let summaries = ledger.finishedWorkouts(on: day)
+        finishedCache[key] = (revision, summaries)
+        return summaries
+    }
+
+    /// Start: today's workout from the routine through the engine (one entry per slot, prefilled), then live mode.
+    func startRoutine(_ routine: ObjectRecord) {
+        guard let workout = try? engine.perform(StartRoutine(routine: routine.id, time: AppClock.now), by: .user)
+            .output else { return }
+        session = WorkoutSession(workout: workout, model: self)
+        isWorkoutPresented = true
+        touch()
+    }
+
+    /// After a relaunch the workout's process is still running but the live session is gone: pick it back up (not
+    /// presented), so Now shows it with Resume.
+    func pickUpRunningWorkout(_ table: ProcessTable) {
+        guard session == nil, let workout = table.running()?.subject,
+              workout.classDef?.id == classes[.workout]?.id, store.value("endedAt", of: workout) == nil else { return }
+        session = WorkoutSession(workout: workout, model: self)
     }
 }

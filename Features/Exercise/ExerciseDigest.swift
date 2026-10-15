@@ -66,14 +66,14 @@ struct ExerciseDigest {
             + secondary.map { MuscleRow(id: $0.id, name: $0.title, role: .secondary) }
         context = ExerciseWords.musclePhrase(primary: primary.map(\.title), secondary: secondary.map(\.title))
 
-        let records = ledger.records(for: exercise)
-        let best = records.bestE1RM
+        // One call to Core: best set and e1RM, rep maxes, the last 5 sessions and the 90-day trend.
+        let overview = ledger.overview(of: exercise, recent: 5, now: now)
+        let best = overview.bestSet
         bestE1RM = best.map { ($0.e1RM * 10).rounded() / 10 }
         bestSet = best.map { ExerciseWords.set(weight: $0.weight, reps: $0.reps) }
-        repMaxes = records.bestWeightByReps
+        repMaxes = overview.repMaxes
 
-        let sessions = ledger.sessions(of: exercise)
-        history = sessions.map { session in
+        history = overview.recentSessions.map { session in
             let top = session.sets.max { ($0.weight, $0.reps) < ($1.weight, $1.reps) }
             return HistoryRow(
                 id: session.id,
@@ -85,8 +85,7 @@ struct ExerciseDigest {
             )
         }
 
-        let points = ledger.trend(of: exercise, days: 90, now: now)
-        trend = Self.trend(points.map { ($0.date, $0.bestE1RM) }, now: now, calendar: calendar)
+        trend = Self.trend(overview.trend.map { ($0.date, $0.bestE1RM) }, now: now, calendar: calendar)
         nextTime = Self.nextTime(for: exercise, ledger: ledger, store: store)
     }
 
