@@ -14,7 +14,7 @@ public struct TessGrammar {
                  unit: MassUnit = .kilograms)
         case task(title: String, startsAt: Date?)
         /// "note: bar felt heavy" (or "note bar felt heavy").
-        case note(body: String)
+        case note(body: String, on: Date? = nil)
         /// Kitchen: "buy milk", "milk, eggs, 2 lemons".
         case groceries(lines: [String])
         /// "cook carbonara" (now, `on` nil) or "cook carbonara thu" (a dated task linking the recipe).
@@ -58,8 +58,9 @@ public struct TessGrammar {
         if let recipe = parsePastedRecipe(phrase) {
             return recipe
         }
-        // Rule 2: a question never writes; it goes to the model's read-only answer.
-        if Self.isQuestion(text) {
+        // Rule 2: a question never writes; it goes to the model's read-only answer. The raw phrase, so a typed "?"
+        // still counts (normalize trims it).
+        if Self.isQuestion(text) || phrase.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix("?") {
             return nil
         }
         // Rule 3: the process in front decides bare input.
@@ -75,6 +76,10 @@ public struct TessGrammar {
         }
         if let lift = parseLift(text, entry: entry) {
             return lift
+        }
+        // A past-tense log with a day ("watered plants sat") is a note dated that day, never a future task.
+        if let log = parsePastLog(phrase, context: context) {
+            return log
         }
         // After lifts, so "bench 80x8, 82.5x6" stays a lift.
         if let kitchen = parseKitchen(phrase, context: context) {
@@ -93,9 +98,13 @@ public struct TessGrammar {
     /// Lead words that ask rather than tell ("what did i weigh monday", "anything due tmrw").
     static func isQuestion(_ text: String) -> Bool {
         let first = text.split(separator: " ").first.map(String.init) ?? ""
-        // The spec's list only: "do laundry thu" and "is" phrases stay captures.
-        let leads: Set = ["what", "whats", "what's", "when", "how", "did", "anything", "everything", "show"]
+        // "is" and "are" phrases ask (Product, 2026-10-15). "do laundry thu" stays a capture: "do" only asks with a
+        // subject after it. "show" only asks as "show me / my / all".
+        let leads: Set = ["what", "whats", "what's", "when", "how", "did", "anything", "everything", "is", "are",
+                          "who", "who's", "whos", "where", "where's", "when's", "whens", "which"]
         return leads.contains(first) || text.hasPrefix("am i ") || text.hasSuffix("?")
+            || text.firstMatch(of: /^(do|does|can|could|should|have) (i|we|you)\b/) != nil
+            || text.firstMatch(of: /^show (me|my|all)\b/) != nil
     }
 
     /// Rule 3: while a workout, cook or shop is running (Now), bare input belongs to it.
@@ -118,10 +127,19 @@ public struct TessGrammar {
                 return .ignoredInWorkout
             }
         } else if subject.id == Groceries.listID {
-            // At the shop, a bare thing is for the list (but "call mum thu" is still a task).
-            let dated = TessDates.extract(from: text.split(separator: " ").map(String.init), now: context.now,
-                                          calendar: context.calendar).0 != nil
-            if !dated, !text.contains(where: \.isNumber) || IngredientLine.parse(text)?.amount != nil,
+            // At the shop, a bare thing is for the list, but not an errand ("call mum"), a word for the shop itself
+            // ("done", "thanks"), or a verb the kitchen rules read ("buy milk" goes there, without the verb).
+            let first = text.split(separator: " ").first.map(String.init) ?? ""
+            if text
+                .firstMatch(
+                    of: /^(done|finished|finished shopping|done shopping|shop|shopping|thanks|thank you|ok|cancel|stop)$/
+                )
+                != nil || Self.startsWithErrand(text) || ["buy", "get", "add", "pick"].contains(first)
+            {
+                return nil
+            }
+            if !Self.hasDate(text, context: context),
+               !text.contains(where: \.isNumber) || IngredientLine.parse(text)?.amount != nil,
                text.split(separator: " ").count <= 4
             {
                 return .groceries(lines: [text])
@@ -136,9 +154,9 @@ public struct TessGrammar {
     /// said, to the new day. Nil when no single task matches; `parse` then sends the phrase to the model.
     private func parseReschedule(_ phrase: String, context: TessContext) -> Parse? {
         guard let match = phrase.firstMatch(of: Self.rescheduleShape) else { return nil }
-        let (date, rest) = TessDates.extract(from: String(match.2).split(separator: " ").map(String.init),
-                                             now: context.now, calendar: context.calendar)
-        guard let date, rest.isEmpty || rest == ["next"] else { return nil }
+        let found = TessDates.find(in: String(match.2).split(separator: " ").map(String.init), now: context.now,
+                                   calendar: context.calendar)
+        guard var date = found.date, found.remaining.isEmpty || found.remaining == ["next"] else { return nil }
         let name = String(match.1).lowercased().replacing(/^(the|my)\s+/, with: "")
         let open = TaskList(store: store, classes: classes).all().filter { !$0.isDone }
         let words = name.split(separator: " ")
@@ -147,7 +165,44 @@ public struct TessGrammar {
             return words.allSatisfy { title.contains(String($0)) }
         }
         guard matches.count == 1, let task = matches.first?.task else { return nil }
+        // Keep what wasn't said: a new day keeps the task's time; a new time keeps its day.
+        let calendar = context.calendar
+        if let old = store.value("startsAt", of: task)?.dateValue {
+            if found.saidDay, !found.saidTime {
+                let parts = calendar.dateComponents([.hour, .minute], from: old)
+                date = calendar.date(bySettingHour: parts.hour ?? 9, minute: parts.minute ?? 0, second: 0, of: date)
+                    ?? date
+            } else if found.saidTime, !found.saidDay {
+                let parts = calendar.dateComponents([.hour, .minute], from: date)
+                date = calendar.date(bySettingHour: parts.hour ?? 9, minute: parts.minute ?? 0, second: 0, of: old)
+                    ?? date
+            }
+        }
         return .reschedule(task: task, to: date)
+    }
+
+    /// Past verbs that start a log ("watered", "saw", "went"). Words that only look past ("need", "feed") don't.
+    static let pastVerbs: Set = ["did", "went", "saw", "met", "ate", "had", "ran", "took", "got", "bought", "made",
+                                 "paid", "sent", "rang", "spoke", "slept", "woke", "fed", "drank", "swam", "rode",
+                                 "left", "came", "gave", "wrote", "called", "was", "were"]
+    static let notPast: Set = ["need", "feed", "seed", "weed", "bleed", "breed", "speed", "shed", "embed", "exceed",
+                               "proceed", "succeed", "red", "bed", "shred", "sled", "wed"]
+
+    static func isPastVerb(_ word: String) -> Bool {
+        let word = word.lowercased()
+        return !notPast.contains(word) && (pastVerbs.contains(word) || word.count >= 5 && word.hasSuffix("ed"))
+    }
+
+    /// "watered plants sat", "saw mum yesterday": a note dated that day (Product, 2026-10-15).
+    private func parsePastLog(_ phrase: String, context: TessContext) -> Parse? {
+        let words = phrase.split(separator: " ").map(String.init)
+        guard let first = words.first, Self.isPastVerb(first),
+              let (day, rest) = TessDates.pastDay(in: words, now: context.now, calendar: context.calendar),
+              !rest.isEmpty else { return nil }
+        let body = rest.joined(separator: " ")
+        // Midday on that day, so it sits inside the day wherever its edges are drawn.
+        let noon = context.calendar.date(bySettingHour: 12, minute: 0, second: 0, of: day) ?? day
+        return .note(body: body.prefix(1).uppercased() + body.dropFirst(), on: noon)
     }
 
     /// "note: …" or "note …" at the start makes a note of the rest, keeping its text as typed.
@@ -364,10 +419,21 @@ public struct TessGrammar {
                 words.removeFirst()
             }
         }
-        let (date, remaining) = TessDates.extract(from: words, now: context.now, calendar: context.calendar)
+        let found = TessDates.find(in: words, now: context.now, calendar: context.calendar)
+        var remaining = found.remaining
+        // "remind me tomorrow to call mum": the "to" sat after the date.
+        if remaining.first?.lowercased() == "to", explicit {
+            remaining.removeFirst()
+        }
         let title = remaining.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !title.isEmpty, explicit || date != nil else { return nil }
-        return .task(title: title.prefix(1).uppercased() + title.dropFirst(), startsAt: date)
+            .trimmingCharacters(in: CharacterSet(charactersIn: ",;:"))
+            .trimmingCharacters(in: .whitespaces)
+        guard !title.isEmpty, explicit || found.date != nil else { return nil }
+        // "plank 2:30" is a hold, not a time: leave it to the model.
+        if found.bareColon, !found.saidDay, resolveExercise(title.lowercased()) != nil {
+            return nil
+        }
+        return .task(title: title.prefix(1).uppercased() + title.dropFirst(), startsAt: found.date)
     }
 
     // MARK: Helpers
@@ -396,62 +462,159 @@ enum TessDates {
         "thu": 5, "thur": 5, "thurs": 5, "thursday": 5, "fri": 6, "friday": 6, "sat": 7, "saturday": 7,
     ]
 
+    /// What a phrase said about when: the date, the words left over, and which parts were said.
+    struct Found {
+        var date: Date?
+        var remaining: [String]
+        var saidDay = false
+        var saidTime = false
+        /// The time came from a bare "2:30" with no "at" (could be a duration: "plank 2:30").
+        var bareColon = false
+    }
+
+    /// Cues that settle a bare hour: "wake me at 7" is morning, "drinks at 9" is evening.
+    static let amCues: Set = ["wake", "alarm", "morning", "breakfast"]
+    static let pmCues: Set = ["tonight", "evening", "dinner", "drinks", "pub", "party"]
+    /// Words that only lead into a day or time ("on fri", "by thu", "this sat", "for tomorrow").
+    static let lead: Set = ["on", "by", "this", "for"]
+
     static func extract(from words: [String], now: Date, calendar: Calendar) -> (Date?, [String]) {
+        let found = find(in: words, now: now, calendar: calendar)
+        return (found.date, found.remaining)
+    }
+
+    /// Bare hours (Product, 2026-10-15): 1 to 6 mean pm, 7 to 11 the next one today (another day: am), 12 is noon;
+    /// an am or pm cue settles it. A time today that has passed lands tomorrow.
+    static func find(in words: [String], now: Date, calendar: Calendar) -> Found {
         var day: Date?
-        var time: (hour: Int, minute: Int)?
+        var time: (hour: Int, minute: Int, explicit: Bool)?
         var remaining: [String] = []
-        var fromWeekday = false
+        var fromWeekday = false, saidToday = false, bareColon = false
+        let lower = Set(words.map { $0.lowercased().trimmingCharacters(in: .punctuationCharacters) })
+        func dropLead() {
+            if let last = remaining.last?.lowercased(), lead.contains(last) {
+                remaining.removeLast()
+            }
+        }
         var index = 0
         while index < words.count {
             let word = words[index].lowercased().trimmingCharacters(in: .punctuationCharacters)
             if word == "today" || word == "tonight" {
                 day = calendar.startOfDay(for: now)
+                saidToday = true
                 if word == "tonight", time == nil {
-                    time = (20, 0)
+                    time = (20, 0, true)
                 }
+                dropLead()
             } else if word == "tomorrow" || word == "tmrw" {
                 day = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now))
+                dropLead()
             } else if let weekday = weekdays[word] {
                 day = nextDate(weekday: weekday, after: now, calendar: calendar)
                 fromWeekday = true
-            } else if word == "at", index + 1 < words.count, let parsed = parseTime(words[index + 1].lowercased()) {
+                dropLead()
+            } else if word == "at", index + 1 < words.count, let parsed = clock(words[index + 1].lowercased()) {
                 time = parsed
                 index += 1
-            } else if let parsed = parseTime(word), word.contains(where: \.isLetter) || word.contains(":") {
+            } else if let parsed = clock(word), word.contains(where: \.isLetter) || word.contains(":") {
                 time = parsed
+                bareColon = !word.contains(where: \.isLetter)
+                dropLead()
             } else {
                 remaining.append(words[index])
             }
             index += 1
         }
-        guard day != nil || time != nil else { return (nil, words) }
+        guard day != nil || time != nil else { return Found(date: nil, remaining: words) }
         var base = day ?? calendar.startOfDay(for: now)
-        if day == nil, let time,
-           let candidate = calendar.date(bySettingHour: time.hour, minute: time.minute, second: 0, of: base),
-           candidate <= now
+        let today = day == nil || saidToday
+        // A weekday that names today ("thu" on a Thursday) also counts as today for the hour rule only.
+        let hourToday = today || fromWeekday && day.map { calendar.isDate($0, inSameDayAs: now) } == true
+        var hour = time?.hour ?? 9, minute = time?.minute ?? 0
+        if let time, !time.explicit, (1 ... 12).contains(time.hour) {
+            if !lower.isDisjoint(with: pmCues), time.hour < 12 {
+                hour = time.hour + 12
+            } else if !lower.isDisjoint(with: amCues) || time.hour == 12 {
+                hour = time.hour
+            } else if time.hour <= 6 {
+                hour = time.hour + 12
+            } else if hourToday, let morning = calendar.date(
+                bySettingHour: time.hour,
+                minute: minute,
+                second: 0,
+                of: base
+            ),
+                morning <= now,
+                let evening = calendar.date(bySettingHour: time.hour + 12, minute: minute, second: 0, of: base),
+                evening > now
+            {
+                hour = time.hour + 12 // 7 to 11: the next one today (both passed: tomorrow morning)
+            }
+        }
+        if today, time != nil,
+           let candidate = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: base), candidate <= now
         {
             base = calendar.date(byAdding: .day, value: 1, to: base) ?? base
         }
-        let (hour, minute) = time ?? (9, 0)
         var date = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: base)
         // "thu" said on a Thursday means today (Product, 2026-10-15). With no time, never in the past: the next
         // whole hour. With a time that's passed, next week.
         if fromWeekday, let resolved = date, resolved <= now {
             if time == nil {
-                let hour = calendar.component(.hour, from: now) + 1
-                date = hour < 24 ? calendar.date(bySettingHour: hour, minute: 0, second: 0, of: now)
+                let next = calendar.component(.hour, from: now) + 1
+                date = next < 24 ? calendar.date(bySettingHour: next, minute: 0, second: 0, of: now)
                     : calendar.date(byAdding: .day, value: 7, to: resolved)
             } else {
                 date = calendar.date(byAdding: .day, value: 7, to: resolved)
             }
         } else if day != nil, !fromWeekday, time == nil, let resolved = date, resolved <= now {
             // "today" with no time after 09:00: the next whole hour, not this morning.
-            let hour = calendar.component(.hour, from: now) + 1
-            if hour < 24 {
-                date = calendar.date(bySettingHour: hour, minute: 0, second: 0, of: now)
+            let next = calendar.component(.hour, from: now) + 1
+            if next < 24 {
+                date = calendar.date(bySettingHour: next, minute: 0, second: 0, of: now)
             }
         }
-        return (date, remaining)
+        return Found(date: date, remaining: remaining, saidDay: day != nil, saidTime: time != nil,
+                     bareColon: bareColon)
+    }
+
+    /// A past day for a log: "sat" is the last Saturday (today if it's Saturday), "yesterday", "today", "last night".
+    /// Nil when no day was said. The day word goes; the rest stays.
+    static func pastDay(in words: [String], now: Date, calendar: Calendar) -> (Date, [String])? {
+        let today = calendar.startOfDay(for: now)
+        var day: Date?
+        var remaining: [String] = []
+        var index = 0
+        while index < words.count {
+            let word = words[index].lowercased().trimmingCharacters(in: .punctuationCharacters)
+            let nextWord = index + 1 < words.count ? words[index + 1].lowercased() : ""
+            if word == "yesterday" || word == "last" && nextWord.hasPrefix("night") {
+                day = calendar.date(byAdding: .day, value: -1, to: today)
+                index += word == "last" ? 1 : 0
+            } else if word == "today" || word == "tonight" || word == "this" && nextWord == "morning" {
+                day = today
+                index += word == "this" ? 1 : 0
+            } else if let weekday = weekdays[word] {
+                let back = (calendar.component(.weekday, from: now) - weekday + 7) % 7
+                day = calendar.date(byAdding: .day, value: -back, to: today)
+                if let last = remaining.last?.lowercased(), ["on", "last"].contains(last) {
+                    remaining.removeLast()
+                }
+            } else {
+                remaining.append(words[index])
+            }
+            index += 1
+        }
+        return day.map { ($0, remaining) }
+    }
+
+    /// A clock time and whether it said am or pm (or was 13 or more, or 0).
+    static func clock(_ text: String) -> (hour: Int, minute: Int, explicit: Bool)? {
+        let word = text.trimmingCharacters(in: .punctuationCharacters)
+        guard let parsed = parseTime(word) else { return nil }
+        let explicit = word == "noon" || word.hasSuffix("am") || word.hasSuffix("pm") || parsed.hour >= 13
+            || parsed.hour == 0
+        return (parsed.hour, parsed.minute, explicit)
     }
 
     /// The next given weekday; today counts only if it hasn't passed (it's the same day, so we keep it).

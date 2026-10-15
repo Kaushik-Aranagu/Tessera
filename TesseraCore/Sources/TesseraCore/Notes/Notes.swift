@@ -81,14 +81,18 @@ public struct CreateNote: EngineAction {
     public static let descriptor = ActionDescriptor(name: "createNote", summary: "Write a note", parameters: [
         .init("body", .string, "The text; @Name links to things"),
         .init("title", .string, "Defaults to the first line", required: false),
+        .init("on", .date, "The day it's about, for a log said afterwards", required: false),
     ])
 
     public var body: String
     public var title: String?
+    /// The day it's about, for a log said afterwards ("watered plants sat"); nil is now.
+    public var on: Date?
 
-    public init(body: String, title: String? = nil) {
+    public init(body: String, title: String? = nil, on: Date? = nil) {
         self.body = body
         self.title = title
+        self.on = on
     }
 
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
@@ -99,6 +103,9 @@ public struct CreateNote: EngineAction {
         let note = try transaction.create(transaction.classDef(.note), title: title ?? Self.firstLine(text))
         try transaction.set("body", to: .text(text), on: note)
         try transaction.linkMentions(of: note, body: text)
+        if let on {
+            note.createdAt = on
+        }
         return note
     }
 
