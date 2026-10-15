@@ -20,7 +20,7 @@
 
 ## Recipe from a link: slices L1-L3 (scheduled with kitchen v2)
 
-*Product decided this on 2026-10-15 at 19:06; the brief is `docs/research/recipe-link-fetch.md`. Engine first, Core builds it, and the screens are the existing paste paint-over. The reading order is fixed: JSON-LD first, then the deterministic parser, then Claude Haiku last. Every result lands as a ghost recipe with Undo and keeps the link.*
+*Design: `docs/design/kitchen/kitchen-v2.md` §L (Design branch, 1cb2fb6). There is no new screen: the paste paint-over reads the link, with a cadmium wash while reading and no spinner. Claude's reading streams in as a wet cobalt ghost that dries to ink on Save. Every failure keeps the link and opens a writing line, with Tess's line from the sheet's table and no modal. Product decided this on 2026-10-15 at 19:06; the brief is `docs/research/recipe-link-fetch.md`. Engine first, Core builds it, and the screens are the existing paste paint-over. The reading order is fixed: JSON-LD first, then the deterministic parser, then Claude Haiku last. Every result lands as a ghost recipe with Undo and keeps the link.*
 
 **L1. Fetch, JSON-LD and the share sheet.**
 - `Recipe` gets `sourceURL` (`.text`), and `CreateRecipe` takes a URL input, `CreateRecipe(parsed:sourceURL:)`, alongside `CreateRecipe(text:)`.
@@ -48,3 +48,24 @@
 - The app sets `sourceURL` and `sourceText`, never the model. The arguments go through `ActionRegistry.decode` as a pending ghost (`actor = tess`, `route = claude`).
 - It costs about $0.0013 per link.
 - *Accept when:* a page that L1 and L2 reject (or a fixture made to fail them) arrives as a ghost recipe with Undo, and with Claude off it ends at the paste line.
+
+## Pantry light, rhythm and what can I cook: slices P, R, W (designed, held for a week of use)
+
+*Design: `docs/design/kitchen/kitchen-v2.md` §P, §R, §W, with the recording `pantry-light.mp4`. These are the top three rows of the table above, made into slices. Core builds the engine, and the screens are changes to existing sheets (10, the Ingredient page, 13, 14). They are still held until Kaushik has cooked and shopped with v1 for a week.*
+
+**P. Pantry light.**
+- Engine: `Ingredient.state` (in, low, out or unknown) and `lastBoughtAt`, set by clearing the shop, by `FinishCooking`, and by "out of milk" or "have rice".
+- Recipe page: an out line drops to 400 weight at 55%, with a faint ring in the margin, never red. Low, unknown and staples show nothing.
+- Ingredient page: a state sentence ("**Out** since you cooked dal on Tuesday"). Tapping the value word cycles in, low, out, and the change can be undone.
+- **Swipe-to-Groceries sends out, low and unknown lines, and skips in lines and staples** (decided, see below).
+
+**R. Running low by rhythm.** After P has three buys of history. A **USUALLY BY NOW** line sits at the foot of Groceries with at most three names, dim. Tapping a name adds it to its aisle, with Undo. Swiping one left skips it until its next gap. Nothing is ever added on its own.
+
+**W. What can I cook.** After P.
+- **CAN COOK** replaces FROM THE BASKET as the shelf's third filter word (decided, see below). It is off by default.
+- Names missing two or more ingredients drop away. Names missing nothing come first, then names missing one, which show "1 missing: **lemons**". Tapping the value word adds it to Groceries.
+- **An unknown counts as missing but reads "1 to check: lemons"**, and tapping it opens the Ingredient page.
+
+**Kitchen lead decisions on Design's two questions (2026-10-15):**
+1. **Yes**, rename FROM THE BASKET to CAN COOK, and say "1 to check" for unknowns. The rename lands with W; until pantry state exists, v1's shelf keeps FROM THE BASKET.
+2. **Yes**, swipe-to-Groceries skips in lines. Low lines go along with out and unknown, since "low" means "might not be enough for this recipe". Staples stay skipped as today.
