@@ -49,6 +49,8 @@ struct HomeSpatialView: View {
     @State private var position = ScrollPosition(id: HomeSpatialView.remembered)
     @State private var progress = Double(HomeSpatialView.remembered)
     @State private var presented: HomeLink?
+    @State private var pagerIdle = true
+    @State private var rowGrabbed = false
     @Namespace private var linkZoom
 
     var body: some View {
@@ -71,6 +73,14 @@ struct HomeSpatialView: View {
             }
             .scrollTargetBehavior(.paging)
             .scrollIndicators(.hidden)
+            // Rows on a page only take a drag while the pager is at rest.
+            .onScrollPhaseChange { _, phase in
+                pagerIdle = phase == .idle
+            }
+            .scrollDisabled(rowGrabbed)
+            .environment(\.homePagerIdle, pagerIdle)
+            .environment(\.homeRowGrabbed, rowGrabbed)
+            .environment(\.homeRowGrab) { rowGrabbed = $0 }
             // Opens where Home was left (TODAY the first time) without a visible jump.
             .scrollPosition($position)
             .onAppear {

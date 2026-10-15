@@ -109,7 +109,27 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Tessera.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Tessera"
         BUNDLE_LOADER: "$(TEST_HOST)"
+  TesseraUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - TesseraUITests
+    dependencies:
+      - target: Tessera
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kaushikaranagu.tessera.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Tessera
 schemes:
+  TesseraUITests:
+    build:
+      targets:
+        Tessera: all
+        TesseraUITests: [test]
+    test:
+      targets:
+        - TesseraUITests
   Tessera:
     build:
       targets:

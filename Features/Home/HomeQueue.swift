@@ -80,6 +80,7 @@ struct QueueWindow: View {
     static let windowHeight: CGFloat = 156
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.homeRowGrabbed) private var rowGrabbed
     @State private var offset: CGFloat = 0
 
     /// Where the in-flow "Later" word sits in the scroll content.
@@ -127,6 +128,7 @@ struct QueueWindow: View {
                 .scrollTargetBehavior(.viewAligned)
                 .scrollIndicators(.hidden)
                 .scrollBounceBehavior(.basedOnSize)
+                .scrollDisabled(rowGrabbed)
                 .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y } action: { _, new in
                     offset = new
                 }
@@ -179,8 +181,9 @@ struct QueueWindow: View {
 
 // MARK: - A row
 
-/// Dab, name and time. Swipe right: the strike follows the finger and past 40% the row is done. Swipe left: the
-/// row slides to reveal TOMORROW (or NEXT WEEK for an undated row); past 120 pt it moves. Tap opens it.
+/// Dab, name and time. Press for a beat, then drag right: the strike follows the finger and past 140 pt the row
+/// is done. Drag left: the row slides to reveal TOMORROW (or NEXT WEEK for an undated row); past 120 pt it moves.
+/// Tap opens it.
 private struct QueueRow: View {
     let entry: QueueEntry
     let isNext: Bool
@@ -196,9 +199,14 @@ private struct QueueRow: View {
     @State private var struck = false
     @State private var finishes = 0
     @State private var moves = 0
+    @State private var away = false
+    @State private var holding = false
+    @Environment(\.homePagerIdle) private var pagerIdle
+    @Environment(\.homeRowGrab) private var grab
 
     private static let strikeSpan: CGFloat = 250
-    private static let doneThreshold = 0.4
+    /// Past this the row is done (and armed, with a `.selection`).
+    private static let finishDistance: CGFloat = 140
     private static let moveThreshold: CGFloat = 120
 
     private var destination: String {
@@ -215,13 +223,32 @@ private struct QueueRow: View {
                 .offset(y: drag < -110 ? 0 : 6)
                 .accessibilityHidden(true)
             content
-                .offset(x: drag < 0 ? leftOffset : drag * 0.04)
+                .offset(x: drag < 0 ? leftOffset : min(drag * 0.12, 20))
+                // Lifted while held: a soft shadow on the text itself and a slight scale, no highlight shape.
+                .scaleEffect(holding && !struck ? 1.03 : 1, anchor: .leading)
+                .shadow(color: Theme.Colors.ink.opacity(holding && !struck ? 0.18 : 0), radius: 6, y: 3)
+                .tesseraAnimation(.spring(Spring(duration: 0.25, bounce: 0.2)), value: holding)
         }
         .contentShape(Rectangle())
-        .gesture(entry.isWorkout ? nil : swipe)
+        // A UIKit press-then-drag: it never claims a moving finger, so a flick always pages Home; once the press
+        // lands, Home and the queue stop scrolling (below) and the drag belongs to the row.
+        .gesture(RowPressDrag(
+            isEnabled: !entry.isWorkout && pagerIdle && !struck,
+            began: { holding = true },
+            changed: { track($0) },
+            ended: { commit($0) },
+            cancelled: { holding = false }
+        ))
         .onTapGesture { model.open(.object(entry.id)) }
         .modifier(ZoomSource(id: Route.object(entry.id), namespace: namespace))
         .sensoryFeedback(.selection, trigger: armed) { _, now in now }
+        .sensoryFeedback(.impact(weight: .light, intensity: 0.5), trigger: holding) { _, now in now }
+        .onChange(of: holding) { _, now in
+            grab(now)
+            if !now {
+                settle()
+            }
+        }
         .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: finishes)
         .sensoryFeedback(.impact(weight: .light), trigger: moves)
         .accessibilityElement(children: .combine)
@@ -252,10 +279,10 @@ private struct QueueRow: View {
             let first = QueueRow.scripted.count == 1
             try? await Task.sleep(for: .seconds(first ? 2.5 : 8))
             if first {
-                for step in 1 ... 30 {
+                for step in 1 ... 38 {
                     drag = CGFloat(step) * 4
                     strike = min(Double(drag / Self.strikeSpan), 1)
-                    armed = strike >= Self.doneThreshold
+                    armed = drag >= Self.finishDistance
                     try? await Task.sleep(for: .milliseconds(16))
                 }
                 finish()
@@ -298,35 +325,36 @@ private struct QueueRow: View {
         return -(pull <= 150 ? pull : 150 + (pull - 150) * 0.35)
     }
 
-    private var swipe: some Gesture {
-        DragGesture(minimumDistance: 12, coordinateSpace: .global)
-            .onChanged { value in
-                guard !struck else { return }
-                // Edge swipes page Home: a row gesture starts 24 pt in from either edge, mostly horizontal.
-                let width = value.startLocation.x
-                guard width > 24, abs(value.translation.width) > abs(value.translation.height) * 1.4 else { return }
-                drag = value.translation.width
-                if drag > 0 {
-                    strike = min(Double(drag / Self.strikeSpan), 1)
-                    armed = strike >= Self.doneThreshold
-                } else {
-                    strike = 0
-                    armed = -drag >= Self.moveThreshold
-                }
-            }
-            .onEnded { _ in
-                if drag > 0, strike >= Self.doneThreshold {
-                    finish()
-                } else if drag < 0, -drag >= Self.moveThreshold {
-                    move()
-                } else {
-                    withTesseraAnimation(.easeOut(duration: 0.22), reduceMotion: reduceMotion) {
-                        drag = 0
-                        strike = 0
-                    }
-                }
-                armed = false
-            }
+    private func commit(_ distance: CGFloat) {
+        holding = false
+        if distance >= Self.finishDistance {
+            finish()
+        } else if -distance >= Self.moveThreshold {
+            move()
+        } else {
+            settle()
+        }
+    }
+
+    private func track(_ distance: CGFloat) {
+        drag = distance
+        if distance > 0 {
+            strike = min(Double(distance / Self.strikeSpan), 1)
+            armed = distance >= Self.finishDistance
+        } else {
+            strike = 0
+            armed = -distance >= Self.moveThreshold
+        }
+    }
+
+    /// Back to rest: the strike retracts (220 ms ease-out). Also runs when the gesture is cancelled.
+    private func settle() {
+        armed = false
+        guard !struck, !away else { return }
+        withTesseraAnimation(.easeOut(duration: 0.22), reduceMotion: reduceMotion) {
+            drag = 0
+            strike = 0
+        }
     }
 
     /// The strike runs out, the name dims, the finish haptic fires; the row holds 600 ms, then the op lands and
@@ -355,6 +383,7 @@ private struct QueueRow: View {
             ? Calendar.current.date(byAdding: .day, value: 7, to: Calendar.current.startOfDay(for: AppClock.now))?
             .addingTimeInterval(9 * 3600)
             : nil
+        away = true
         withTesseraAnimation(.easeIn(duration: 0.2), reduceMotion: reduceMotion) { drag = -420 }
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(200))
@@ -363,6 +392,62 @@ private struct QueueRow: View {
                 model.touch()
             }
             voice.say(entry.time == nil ? "Moved to next week." : "Moved to tomorrow.", undo: record)
+        }
+    }
+}
+
+extension EnvironmentValues {
+    /// False while Home's pager is scrolling or settling; rows ignore their own gestures then.
+    @Entry var homePagerIdle = true
+    /// A row reports when it has the finger (after its press), so Home's pager and the queue stop scrolling.
+    @Entry var homeRowGrab: (Bool) -> Void = { _ in }
+    @Entry var homeRowGrabbed = false
+}
+
+/// Press for 0.2 s without moving, then drag: reports the horizontal travel since the press landed. Built on
+/// `UILongPressGestureRecognizer`, which fails as soon as the finger moves before the press, so it never competes
+/// with a scroll view's pan.
+private struct RowPressDrag: UIGestureRecognizerRepresentable {
+    var isEnabled: Bool
+    var began: () -> Void
+    var changed: (CGFloat) -> Void
+    var ended: (CGFloat) -> Void
+    var cancelled: () -> Void
+
+    final class Coordinator {
+        var startX: CGFloat = 0
+    }
+
+    func makeCoordinator(converter _: CoordinateSpaceConverter) -> Coordinator {
+        Coordinator()
+    }
+
+    func makeUIGestureRecognizer(context _: Context) -> UILongPressGestureRecognizer {
+        let recognizer = UILongPressGestureRecognizer()
+        recognizer.minimumPressDuration = 0.2
+        recognizer.allowableMovement = 8
+        recognizer.cancelsTouchesInView = false
+        return recognizer
+    }
+
+    func updateUIGestureRecognizer(_ recognizer: UILongPressGestureRecognizer, context _: Context) {
+        recognizer.isEnabled = isEnabled
+    }
+
+    func handleUIGestureRecognizerAction(_ recognizer: UILongPressGestureRecognizer, context: Context) {
+        let x = recognizer.location(in: nil).x
+        switch recognizer.state {
+        case .began:
+            context.coordinator.startX = x
+            began()
+        case .changed:
+            changed(x - context.coordinator.startX)
+        case .ended:
+            ended(x - context.coordinator.startX)
+        case .cancelled, .failed:
+            cancelled()
+        default:
+            break
         }
     }
 }
