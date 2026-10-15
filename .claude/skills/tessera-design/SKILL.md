@@ -1,11 +1,11 @@
 ---
-name: pilot-design
-description: Pilot's house design rules — the anti-generic checklist for every screen, component, animation and piece of copy. Read this before writing, changing or reviewing any UI in Pilot (SwiftUI views, DesignSystem, widgets, Live Activities, empty/error states, onboarding, copy).
+name: tessera-design
+description: Tessera's house design rules — the anti-generic checklist for every screen, component, animation and piece of copy. Read this before writing, changing or reviewing any UI in Tessera (SwiftUI views, DesignSystem, widgets, Live Activities, empty/error states, onboarding, copy).
 ---
 
-# Pilot design rules
+# Tessera design rules
 
-Pilot is a personal app meant to be used every day. It should feel crafted, calm and specific, not like a generic
+Tessera is a personal app meant to be used every day. It should feel crafted, calm and specific, not like a generic
 AI-generated app. Read `docs/DESIGN_MOTION.md` for the signature moments; this file has the hard rules.
 
 ## Never
@@ -26,7 +26,7 @@ AI-generated app. Read `docs/DESIGN_MOTION.md` for the signature moments; this f
 - **Direct manipulation** (drag, swipe, scrub, toggles under the finger): `Theme.Motion.snappy`.
 - **Celebration only** (finishing something meaningful, rare): `Theme.Motion.celebrate` (`.bouncy`).
 - **Every animation goes through `MotionPolicy`** (`DesignSystem/MotionPolicy.swift`): use
-  `.pilotAnimation(_:value:)` or `withPilotAnimation(_:reduceMotion:_:)`. With Reduce Motion on, movement becomes
+  `.tesseraAnimation(_:value:)` or `withTesseraAnimation(_:reduceMotion:_:)`. With Reduce Motion on, movement becomes
   a short opacity cross-fade; nothing slides, scales, bounces or spins.
 - No linear or ease-in-out curves for UI movement. No animation longer than ~0.5 s except celebrations.
 - Haptics via `.sensoryFeedback` for meaningful state changes only; never on scroll.

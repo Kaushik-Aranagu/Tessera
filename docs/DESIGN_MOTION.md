@@ -1,6 +1,6 @@
-# Pilot — Design & Motion Playbook
+# Tessera — Design & Motion Playbook
 
-Pilot should feel like a first-party Apple app built by a small, obsessive team: quiet, fast, tactile, and full of
+Tessera should feel like a first-party Apple app built by a small, obsessive team: quiet, fast, tactile, and full of
 small moments of delight. This is the bar every screen is held to. It is *not* a generic "AI app" (no gradient blobs,
 no chat-bubble-first UI, no sparkle emoji everywhere).
 

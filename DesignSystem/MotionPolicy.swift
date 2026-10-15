@@ -10,7 +10,7 @@ enum MotionPolicy {
     }
 }
 
-private struct PilotAnimationModifier<Value: Equatable>: ViewModifier {
+private struct TesseraAnimationModifier<Value: Equatable>: ViewModifier {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let animation: Animation
     let value: Value
@@ -22,14 +22,14 @@ private struct PilotAnimationModifier<Value: Equatable>: ViewModifier {
 
 extension View {
     /// Use instead of `.animation(_:value:)` so Reduce Motion is always respected.
-    func pilotAnimation(_ animation: Animation = Theme.Motion.house, value: some Equatable) -> some View {
-        modifier(PilotAnimationModifier(animation: animation, value: value))
+    func tesseraAnimation(_ animation: Animation = Theme.Motion.house, value: some Equatable) -> some View {
+        modifier(TesseraAnimationModifier(animation: animation, value: value))
     }
 }
 
 /// Use instead of `withAnimation`. Pass the view's `@Environment(\.accessibilityReduceMotion)` value.
 @MainActor
-func withPilotAnimation<Result>(
+func withTesseraAnimation<Result>(
     _ animation: Animation = Theme.Motion.house,
     reduceMotion: Bool,
     _ body: () throws -> Result

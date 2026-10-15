@@ -11,5 +11,5 @@ struct RootView: View {
 
 #Preview {
     RootView()
-        .modelContainer(PilotSchema.makeContainer(inMemory: true))
+        .modelContainer(TesseraSchema.makeContainer(inMemory: true))
 }

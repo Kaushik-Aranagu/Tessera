@@ -1,6 +1,6 @@
 import SwiftData
 
-enum PilotSchema {
+enum TesseraSchema {
     static let models: [any PersistentModel.Type] = [
         ClassDef.self,
         FieldDef.self,

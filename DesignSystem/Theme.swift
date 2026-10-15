@@ -33,7 +33,7 @@ enum Theme {
         static let l: CGFloat = 22
     }
 
-    /// Always applied through `MotionPolicy` (`.pilotAnimation` / `withPilotAnimation`).
+    /// Always applied through `MotionPolicy` (`.tesseraAnimation` / `withTesseraAnimation`).
     enum Motion {
         /// House spring — ~90% of all motion.
         static let house = Animation.spring(Spring(duration: 0.42, bounce: 0.12))

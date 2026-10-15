@@ -1,11 +1,11 @@
 import Foundation
-@testable import Pilot
 import SwiftData
+@testable import Tessera
 import Testing
 
 @MainActor
 struct ObjectModelTests {
-    let container = PilotSchema.makeContainer(inMemory: true)
+    let container = TesseraSchema.makeContainer(inMemory: true)
     var context: ModelContext {
         container.mainContext
     }
@@ -184,7 +184,7 @@ struct ObjectModelTests {
         #expect(first[.benchPress]?.id == SystemCatalog.stableID("system.benchPress"))
 
         // A fresh store on another "device" derives the same ids.
-        let otherContainer = PilotSchema.makeContainer(inMemory: true)
+        let otherContainer = TesseraSchema.makeContainer(inMemory: true)
         let otherContext = otherContainer.mainContext
         let other = try SystemCatalog.seed(in: otherContext)
         #expect(other[.set].flatMap { ClassResolver.field("e1rm", of: $0)?.id } ==

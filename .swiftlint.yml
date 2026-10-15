@@ -3,7 +3,7 @@ included:
   - DesignSystem
   - Core
   - Features
-  - PilotTests
+  - TesseraTests
 excluded:
   - DerivedData
   - .build

@@ -1,4 +1,4 @@
-name: Pilot
+name: Tessera
 options:
   bundleIdPrefix: com.kaushikaranagu
   deploymentTarget:
@@ -14,7 +14,7 @@ settings:
     TARGETED_DEVICE_FAMILY: "1"
     ENABLE_USER_SCRIPT_SANDBOXING: YES
 targets:
-  Pilot:
+  Tessera:
     type: application
     platform: iOS
     sources:
@@ -24,34 +24,34 @@ targets:
       - Features
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.kaushikaranagu.pilot
+        PRODUCT_BUNDLE_IDENTIFIER: com.kaushikaranagu.tessera
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
-        INFOPLIST_KEY_CFBundleDisplayName: Pilot
+        INFOPLIST_KEY_CFBundleDisplayName: Tessera
         SUPPORTS_MACCATALYST: NO
         SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
         SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
-  PilotTests:
+  TesseraTests:
     type: bundle.unit-test
     platform: iOS
     sources:
-      - PilotTests
+      - TesseraTests
     dependencies:
-      - target: Pilot
+      - target: Tessera
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.kaushikaranagu.pilot.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.kaushikaranagu.tessera.tests
         GENERATE_INFOPLIST_FILE: YES
-        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Pilot.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Pilot"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Tessera.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Tessera"
         BUNDLE_LOADER: "$(TEST_HOST)"
 schemes:
-  Pilot:
+  Tessera:
     build:
       targets:
-        Pilot: all
-        PilotTests: [test]
+        Tessera: all
+        TesseraTests: [test]
     test:
       targets:
-        - PilotTests
+        - TesseraTests

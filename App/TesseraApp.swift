@@ -2,11 +2,11 @@ import SwiftData
 import SwiftUI
 
 @main
-struct PilotApp: App {
+struct TesseraApp: App {
     private let container: ModelContainer
 
     init() {
-        container = PilotSchema.makeContainer()
+        container = TesseraSchema.makeContainer()
         do {
             try SystemCatalog.seed(in: container.mainContext)
         } catch {

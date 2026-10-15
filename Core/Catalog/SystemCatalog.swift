@@ -168,7 +168,8 @@ enum SystemCatalog {
 
     /// Deterministic UUID from a string (SHA-256, formatted as an RFC 4122 v5-style UUID).
     static func stableID(_ name: String) -> UUID {
-        var bytes = Array(SHA256.hash(data: Data("pilot:\(name)".utf8)).prefix(16))
+        // The "tessera:" salt is part of every system id — never change it.
+        var bytes = Array(SHA256.hash(data: Data("tessera:\(name)".utf8)).prefix(16))
         bytes[6] = (bytes[6] & 0x0F) | 0x50
         bytes[8] = (bytes[8] & 0x3F) | 0x80
         return UUID(uuid: (

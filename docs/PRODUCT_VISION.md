@@ -1,10 +1,14 @@
-# Pilot — Product Vision
+# Tessera — Product Vision
 
 Captured from Kaushik, 2026-10-15. Read this before designing any feature or changing the data model.
 
+## Name
+The app is **Tessera**. Its built-in personal assistant (on-device, Foundation Models) is **Tess**, a calm,
+specific voice that follows the tone rules in the `tessera-design` skill.
+
 ## The core idea: everything is an object
 
-Pilot is built the way a software engineer thinks: **classes, objects, inheritance and links**. Kaushik borrowed the
+Tessera is built the way a software engineer thinks: **classes, objects, inheritance and links**. Kaushik borrowed the
 ideas from OOP and operating systems on purpose so he can compose new things himself.
 
 - **Every noun is a linkable object.** "Bench Press" on a workout screen isn't just text. It's an object you can tap
@@ -20,7 +24,7 @@ ideas from OOP and operating systems on purpose so he can compose new things him
   composes.
 
 ### OS / kernel metaphors (design vocabulary, used where they clarify)
-| Concept | In Pilot |
+| Concept | In Tessera |
 |---|---|
 | Class / object / inheritance | Types, records, parent types with inherited fields |
 | File system / paths | Every object has an address; breadcrumbs show where you are (`Fitness / Exercises / Bench Press`) |
