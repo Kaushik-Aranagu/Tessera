@@ -4,7 +4,7 @@
 
 **Next:**
 1. A v1 acceptance pass. Done when each v1 slice has been checked against the latest recordings, with any gaps added to `ios-a.md` Next.
-2. Draft M5, starting with the Reading queue (Research recommends Reading before Money). Done when `ship-list-m5.md` exists in the house format.
+2. M5 next area after Reading: Money, from `../research/m5-money-reading.md`. Done when there's a ship list in the house format. (Reading is approved as `ship-list-m5-reading.md`.)
 3. Kitchen v2 scope review with the Kitchen lead, after Kaushik has used the kitchen for a week.
 
 **Later:**
