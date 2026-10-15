@@ -34,6 +34,17 @@ struct BottomChrome: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             if model.isCommandExpanded {
+                // The page recedes behind a veil of blurred ground (z); a tap on it closes Tess.
+                ZStack {
+                    Rectangle().fill(.ultraThinMaterial)
+                    Theme.Colors.paper.opacity(0.7)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea()
+                .contentShape(Rectangle())
+                .onTapGesture { close() }
+                .accessibilityHidden(true)
+                .transition(.opacity)
                 CaptureWash(dark: colorScheme == .dark)
                     .transition(.asymmetric(insertion: .offset(y: 60).combined(with: .opacity),
                                             removal: .offset(y: 40).combined(with: .opacity)))
@@ -175,8 +186,7 @@ struct BottomChrome: View {
                 model.isWorkoutPresented = true
             }))
         } else if let workout = model.tonightWorkout() {
-            let title = model.store.value("title", of: workout)?.stringValue ?? "the workout"
-            paths.append(("Start \(title)", { [model] in
+            paths.append(("Start \(workout.title)", { [model] in
                 model.isCommandExpanded = false
                 model.startWorkout(workout)
             }))

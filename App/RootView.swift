@@ -30,22 +30,6 @@ struct RootView: View {
                 }
                 .tint(Theme.Colors.ink)
                 .environment(\.zoomNamespace, zoom)
-                // Tess open: the page recedes (z) and a tap on it closes her.
-                .opacity(model.isCommandExpanded ? 0.22 : 1)
-                .blur(radius: model.isCommandExpanded ? 3 : 0)
-                .scaleEffect(model.isCommandExpanded ? 0.985 : 1)
-                .tesseraAnimation(.easeInOut(duration: 0.42), value: model.isCommandExpanded)
-                .overlay {
-                    if model.isCommandExpanded {
-                        Color.clear
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                withTesseraAnimation(reduceMotion: reduceMotion) { model.isCommandExpanded = false }
-                            }
-                            .accessibilityHidden(true)
-                    }
-                }
-
                 BottomChrome(onSoulDoubleTap: goHome)
                     .environment(\.zoomNamespace, zoom)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
