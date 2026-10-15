@@ -2,7 +2,8 @@ import Foundation
 import TesseraCore
 
 /// Edit and undo any set (ship list slice 8): tap a logged stroke and the dial and drum hold that set's numbers;
-/// Save writes Core's EditSet (in the op log, undoable), Cancel puts the next set's numbers back.
+/// Save writes Core's EditSet and Remove Core's DeleteObject (both in the op log, undoable); Cancel puts the
+/// next set's numbers back.
 extension WorkoutSession {
     /// Only while the edited set still exists in the current exercise (an undo or swap can take it away).
     var isEditing: Bool {
@@ -38,7 +39,26 @@ extension WorkoutSession {
             EditSet(set: row.id, weight: weight, reps: reps, rpe: rpe), by: .user
         ) {
             lastEdit = (result.record, row.number)
-            editNote = "Changed set \(row.number) to \(Format.kilograms(weight)) × \(Int(reps))."
+            editNote = "Set \(row.number) is \(Format.kilograms(weight)) × \(Int(reps)) now."
+            refreshAfterExternalWrite()
+            model.touch()
+        }
+        endEditing()
+    }
+
+    /// Removes the set being edited through Core's DeleteObject (in the op log, so Undo brings it back).
+    func removeEditing() {
+        guard let row = editingRow else { return endEditing() }
+        if let result = try? model.engine.perform(DeleteObject(object: row.id), by: .user) {
+            lastEdit = (result.record, row.number)
+            editNote = "Set \(row.number) removed."
+            if undoable?.setID == row.id {
+                undoable = nil
+            }
+            if lastSeated?.setID == row.id {
+                lastSeated = nil
+            }
+            bests.removeAll { $0.setID == row.id }
             refreshAfterExternalWrite()
             model.touch()
         }

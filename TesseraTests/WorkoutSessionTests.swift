@@ -127,7 +127,7 @@ struct WorkoutSessionTests {
         #expect(session.setRows(of: entry).first?.weight == 85)
         #expect(session.setRows(of: entry).first?.reps == 6)
         #expect(!session.isEditing && session.weight == next.0 && session.reps == next.1) // the next set is back
-        #expect(session.editNote == "Changed set 1 to 85 × 6.")
+        #expect(session.editNote == "Set 1 is 85 × 6 now.")
 
         // Undo takes the latest action first: the edit, then the set.
         #expect(session.canUndoLast)
@@ -135,6 +135,24 @@ struct WorkoutSessionTests {
         #expect(session.setRows(of: entry).first?.weight == 82.5)
         session.undoLast()
         #expect(session.setRows(of: entry).isEmpty)
+    }
+
+    @Test func aLoggedSetCanBeRemovedInEditAndTheRemovalUndone() throws {
+        let (_, session) = try startedSession()
+        session.logSet()
+        session.skipRest()
+        let entry = try #require(session.currentEntry)
+        let first = try #require(session.setRows(of: entry).first)
+
+        session.beginEditing(setID: first.id)
+        session.removeEditing()
+        #expect(session.setRows(of: entry).isEmpty)
+        #expect(!session.isEditing)
+        #expect(session.editNote == "Set 1 removed.")
+
+        #expect(session.canUndoLast)
+        session.undoLast()
+        #expect(session.setRows(of: entry).count == 1)
     }
 
     @Test func aSecondRecordHasToBeatTheFirst() throws {

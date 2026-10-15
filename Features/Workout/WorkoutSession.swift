@@ -61,9 +61,9 @@ final class WorkoutSession {
     }
 
     /// The set that was just seated, for the seat / paint-bleed / PR choreography.
-    private(set) var lastSeated: Seated?
+    var lastSeated: Seated?
     /// The last logged set, undoable until the next set is logged. Shares the op log with the Lock Screen.
-    private(set) var undoable: Undoable?
+    var undoable: Undoable?
 
     enum Phase: Equatable {
         /// Dialling the next set.
@@ -239,7 +239,7 @@ final class WorkoutSession {
 
     @ObservationIgnored private var dials: [UUID: TesseraCore.WeightDial] = [:]
     /// Bests set this session, in order.
-    private(set) var bests: [Seated] = []
+    var bests: [Seated] = []
     /// Today's swaps: entry id → the exercise it replaced.
     private var swaps: [UUID: String] = [:]
     private var presetWeight: [UUID: Double] = [:]
