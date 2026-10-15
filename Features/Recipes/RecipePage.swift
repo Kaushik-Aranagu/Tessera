@@ -105,7 +105,6 @@ struct RecipePage: View {
                              action: { cook(recipe.id, size) })
                     { _ in
                         Text(cooking == nil ? "Cook" : "Cooking")
-                            .textRole(.labelStrong)
                     }
                     .frame(maxWidth: 220)
                     .accessibilityHint(cooking == nil ? "Starts cooking at this size" : "It's cooking now")

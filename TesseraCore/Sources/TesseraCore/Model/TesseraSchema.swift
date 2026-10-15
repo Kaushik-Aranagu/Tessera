@@ -32,6 +32,14 @@ public enum TesseraSchema {
             return TesseraContainer(memory: ())
         }
         let storeURL = url ?? defaultURL
+        // A restore staged last time takes its place before anything opens.
+        // The real store keeps what a restore replaces in Documents/Backups (seen in Files); a store at another path
+        // (tests, tools) keeps it next to itself.
+        TesseraBackup.applyPendingRestore(
+            to: storeURL,
+            keepIn: url == nil ? TesseraBackup.keptFolder
+                : storeURL.deletingLastPathComponent().appendingPathComponent("Kept", isDirectory: true)
+        )
         let (container, outcome) = open(storeURL) { try TesseraContext(url: $0) }
         lastOpenOutcome = outcome
         return container

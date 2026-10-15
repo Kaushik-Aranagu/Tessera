@@ -186,26 +186,27 @@ struct TessTests {
     // MARK: One registry, three faces
 
     @Test func everyModelToolHasAValidSchema() throws {
-        let names = TessToolCatalog.descriptors.map(\.name)
-        #expect(Set(names).isSuperset(of: ["logExercise", "createTask", "createRoutine"]))
-        #expect(!names.contains("deleteObject") && !names.contains("logSet"))
-        for descriptor in TessToolCatalog.descriptors {
-            _ = try RegistryTool.schema(for: descriptor)
+        let names = TessTools.all.map(\.name)
+        #expect(Set(names).isSuperset(of: ["logSet", "createTask", "addGroceries"]))
+        #expect(!names.contains("deleteObject") && !names.contains("rollForwardTasks"))
+        for tool in TessTools.all {
+            _ = try GenerationSchemaCheck.make(tool)
         }
     }
 
     @Test func modelToolCallsResolveNamesAndRunAsPendingTess() async throws {
         let recorder = TessToolRecorder()
-        let descriptor = try #require(ActionRegistry.descriptors.first { $0.name == "logExercise" })
-        let tool = RegistryTool(descriptor: descriptor, engine: engine,
-                                grammar: TessGrammar(store: store, classes: classes), pending: true, recorder: recorder)
-        let output = try await tool
-            .call(arguments: GeneratedContent(json: #"{"exercise":"bench","weight":80,"reps":8,"sets":2}"#))
+        let tool = try CatalogTool(tool: #require(TessTools.tool(named: "logSet")), engine: engine, pending: true,
+                                   now: .now, recorder: recorder)
+        let output = try await tool.call(arguments: GeneratedContent(
+            json: #"{"exercise":"bench","weight":80,"reps":8,"sets":2,"unit":"kg"}"#
+        ))
         #expect(output.hasPrefix("Done: Logged bench press 2×8"))
         #expect(recorder.records.first?.state == .pending)
         #expect(recorder.records.first?.actor == .tess)
-        let bad = try await tool
-            .call(arguments: GeneratedContent(json: #"{"exercise":"levitation","weight":80,"reps":8}"#))
+        let bad = try await tool.call(arguments: GeneratedContent(
+            json: #"{"exercise":"levitation","weight":80,"reps":8,"sets":1,"unit":"kg"}"#
+        ))
         #expect(bad == "Error: no exercise called levitation")
         #expect(recorder.records.count == 1)
     }

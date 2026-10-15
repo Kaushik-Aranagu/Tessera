@@ -20,6 +20,25 @@ struct WorkoutSessionTests {
         return try (model, #require(model.session))
     }
 
+    /// Gym day: after every set hit the top of the range, the live dial opens at the raised weight, not last week's.
+    @Test func aRaisedTargetOpensTheLiveDial() throws {
+        let routine = try #require(model.todaysRoutine())
+        model.startRoutine(routine)
+        var session = try #require(model.session)
+        let entry = try #require(session.currentEntry)
+        let slot = try #require(model.store.linkedObjects("slot", of: entry).first)
+        let top = try #require(model.store.number("repMax", of: slot))
+        for _ in 0 ..< 3 {
+            try model.engine.perform(LogSet(entry: entry.id, weight: 60, reps: top), by: .user)
+        }
+        model.endWorkout()
+
+        model.startRoutine(routine)
+        session = try #require(model.session)
+        #expect(session.weight > 60)
+        #expect(session.targetReason == "From the plan")
+    }
+
     @Test func setsOpenPrefilledSoOneHoldLogsThem() throws {
         let (_, session) = try startedSession()
         #expect(session.phase() == .set)

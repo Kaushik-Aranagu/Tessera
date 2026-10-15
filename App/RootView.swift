@@ -2,8 +2,8 @@ import SwiftUI
 import TesseraCore
 
 /// Motion grammar: deeper pages zoom out of the tapped row (drag-to-dismiss zooms back = up); jumps and
-/// breadcrumbs cross-fade; workout mode is a process, so it rises from the bottom; Tess morphs out of the glass bar,
-/// and tapping her floods the screen with paint to go Home.
+/// breadcrumbs cross-fade; workout mode is a process, so it rises from the bottom; Tess opens out of her soul in the
+/// corner (the page recedes behind her), and double-tapping her floods the screen with paint to go Home.
 struct RootView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -30,11 +30,15 @@ struct RootView: View {
                 }
                 .tint(Theme.Colors.ink)
                 .environment(\.zoomNamespace, zoom)
+                // Room for Tess's soul (a 64 pt corner overlay), so the last row of any page can scroll clear of it.
                 .safeAreaInset(edge: .bottom, spacing: 0) {
-                    BottomChrome(onSoulTap: goHome).environment(\.zoomNamespace, zoom)
+                    Color.clear.frame(height: 56).allowsHitTesting(false)
                 }
+                BottomChrome(onSoulDoubleTap: goHome)
+                    .environment(\.zoomNamespace, zoom)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
 
-                PaintFlood(isOn: flooding, origin: CGPoint(x: 44, y: proxy.size.height - 30))
+                PaintFlood(isOn: flooding, origin: CGPoint(x: proxy.size.width - 46, y: proxy.size.height - 30))
                     .ignoresSafeArea()
             }
             .overlay(alignment: .top) {
