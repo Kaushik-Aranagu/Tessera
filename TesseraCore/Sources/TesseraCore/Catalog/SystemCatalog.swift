@@ -7,6 +7,8 @@ import SwiftData
 /// CloudKit does not merge records by our `id`, though: two devices that both seed will sync two copies.
 /// A dedupe pass by `systemKey` / field id must run before sync is switched on (see docs/engine/research-01.md).
 @MainActor
+// The catalog is mostly declarative class specs; their length is the point.
+// swiftlint:disable:next type_body_length
 public enum SystemCatalog {
     public enum Key: String, CaseIterable, Sendable {
         case thing, activity, exercise, strengthExercise, barbellLift, benchPress
@@ -88,6 +90,15 @@ public enum SystemCatalog {
                       FieldSpec(key: "repMax", name: "Reps to", kind: .number, defaultValue: .number(12)),
                       FieldSpec(key: "progression", name: "Progression", kind: .text),
                       FieldSpec(key: "variantOf", name: "Variant of", kind: .classRef, target: .exercise),
+                      // Swap pools and search: set on each library exercise's class object.
+                      FieldSpec(key: "pattern", name: "Movement pattern", kind: .choice,
+                                options: MovementPattern.allCases.map(\.rawValue)),
+                      FieldSpec(key: "family", name: "Family", kind: .text),
+                      FieldSpec(key: "mechanic", name: "Mechanic", kind: .choice, options: ["compound", "isolation"]),
+                      FieldSpec(key: "logType", name: "Logged as", kind: .choice,
+                                options: ["weightReps", "bodyweightPlus", "assisted", "repsOnly", "duration",
+                                          "distanceLoad"]),
+                      FieldSpec(key: "aliases", name: "Also called", kind: .text),
                   ]),
         ClassSpec(key: .strengthExercise, name: "Strength Exercise", parent: .exercise,
                   symbol: "figure.strengthtraining.traditional", colorRole: "training", traits: [.measurable], fields: [
@@ -199,7 +210,7 @@ public enum SystemCatalog {
 
     /// Built-in classes ship as a versioned package. Bump `version` whenever a spec changes; seeding then
     /// refreshes shipped names, symbols, units, options, defaults and formulas, except what the person edited.
-    public static let package = CatalogPackage(id: "system", version: 2, name: "Tessera built-ins",
+    public static let package = CatalogPackage(id: "system", version: 3, name: "Tessera built-ins",
                                                source: "Tessera", license: "Tessera")
 
     static let honestE1RM = "weight * (1 + (reps + 10 - coalesce(rpe, 10)) / 30)"

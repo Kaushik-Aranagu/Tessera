@@ -134,6 +134,18 @@ public struct ObjectStore {
 
     // MARK: Values
 
+    /// A class-level value: the nearest class object up the lineage that sets it, else the field's default.
+    /// (Bench Press's rep range, rest or progression, without needing an instance.)
+    public func classValue(_ key: String, of classDef: ClassDef) -> FieldValue? {
+        guard let field = field(key, of: classDef) else { return nil }
+        for node in lineage(of: classDef).reversed() {
+            if let object = classObject(of: node), let value = object.values[field.id] {
+                return value
+            }
+        }
+        return field.defaultValue
+    }
+
     /// Own value, else inherited from a class object, else the class default, else the computed result.
     public func value(_ key: String, of object: ObjectRecord) -> FieldValue? {
         guard let classDef = object.classDef, let field = field(key, of: classDef) else { return nil }

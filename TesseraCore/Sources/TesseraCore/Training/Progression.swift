@@ -38,14 +38,16 @@ public extension TrainingLedger {
     func nextTarget(for exercise: ClassDef, slot: ObjectRecord? = nil,
                     excludingWorkout excludedID: UUID? = nil) -> SetTarget
     {
+        let classLow = store.classValue("repMin", of: exercise)?.numericValue.map(Int.init) ?? 8
+        let classHigh = store.classValue("repMax", of: exercise)?.numericValue.map(Int.init) ?? 12
         let ruleText = slot.flatMap { store.value("progression", of: $0)?.stringValue }
-            ?? store.classObject(of: exercise).flatMap { store.value("progression", of: $0)?.stringValue }
-            ?? ClassResolver.field("progression", of: exercise)?.defaultValue?.stringValue
+            ?? store.classValue("progression", of: exercise)?.stringValue
         let rule = ruleText.flatMap(ProgressionRule.init(parsing:))
-        let low = slot.flatMap { store.number("repMin", of: $0) }.map(Int.init) ?? rule.map(\.repMin)
-            ?? Int(ClassResolver.field("repMin", of: exercise)?.defaultValue?.numericValue ?? 8)
-        let high = slot.flatMap { store.number("repMax", of: $0) }.map(Int.init) ?? rule.map(\.repMax)
-            ?? Int(ClassResolver.field("repMax", of: exercise)?.defaultValue?.numericValue ?? 12)
+            ?? store.equipmentKind(of: exercise).flatMap {
+                ProgressionRule.default(for: $0, low: classLow, high: max(classHigh, classLow))
+            }
+        let low = slot.flatMap { store.number("repMin", of: $0) }.map(Int.init) ?? rule.map(\.repMin) ?? classLow
+        let high = slot.flatMap { store.number("repMax", of: $0) }.map(Int.init) ?? rule.map(\.repMax) ?? classHigh
 
         guard let last = sessions(of: exercise, excludingWorkout: excludedID).first,
               let top = last.sets.max(by: { $0.weight < $1.weight })
@@ -70,6 +72,17 @@ public extension TrainingLedger {
 }
 
 extension ProgressionRule {
+    /// The equipment's default rule, when neither a slot nor the class sets one: barbells add 2.5 kg,
+    /// dumbbells 2 kg, machines and cables a 5 kg plate. Bodyweight work progresses by reps only.
+    static func `default`(for equipment: EquipmentKind, low: Int, high: Int) -> ProgressionRule? {
+        switch equipment {
+        case .barbell, .ezBar, .smith: .doubleProgression(increment: 2.5, repMin: low, repMax: high)
+        case .dumbbell, .kettlebell: .doubleProgression(increment: 2, repMin: low, repMax: high)
+        case .machine, .cable: .doubleProgression(increment: 5, repMin: low, repMax: high)
+        case .bodyweight, .band: nil
+        }
+    }
+
     var repMin: Int {
         if case let .doubleProgression(_, low, _) = self {
             low

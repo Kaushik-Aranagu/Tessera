@@ -83,6 +83,7 @@ public extension ObjectStore {
     func loadProfile(for exercise: ClassDef) -> any LoadProfile {
         let equipment = linkedObjects("equipment", ofClass: exercise).first
         let kind = equipment.flatMap { value("kind", of: $0)?.stringValue }.flatMap(EquipmentKind.init(rawValue:))
+            ?? equipmentKind(of: exercise)
         let parse = { (key: String) -> [Double] in
             guard let equipment, let text = value(key, of: equipment)?.stringValue else { return [] }
             return text.split { $0 == "," || $0 == " " }.compactMap { Double($0) }

@@ -48,7 +48,7 @@ public struct ExerciseQuery: EntityStringQuery {
     static func all(_ runtime: TesseraRuntime) -> [ExerciseEntity] {
         guard let root = runtime.engine.classes[.exercise] else { return [] }
         return ClassResolver.descendants(of: root)
-            .filter { $0.id != root.id && $0.subclasses?.isEmpty != false }
+            .filter { runtime.store.isConcreteExercise($0, root: root) }
             .map { ExerciseEntity(id: $0.id, name: $0.name) }
             .sorted { $0.name < $1.name }
     }
