@@ -22,7 +22,7 @@ public enum LegacyStore {
         context.autosaveEnabled = false
         let export = try LegacyExport(context: context)
         let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
+        encoder.dateEncodingStrategy = ExportDates.encoding
         return try encoder.encode(export)
     }
 
@@ -32,8 +32,17 @@ public enum LegacyStore {
     @discardableResult
     public static func migrate(from url: URL = defaultURL, into context: TesseraContext) throws -> Bool {
         guard let data = try exportData(from: url) else { return false }
-        try TesseraExport.decode(data).restore(into: context)
+        do {
+            // Seeded content from an earlier launch doesn't count as "already migrated".
+            try TesseraExport.decode(data).restore(into: context, replacingSeeded: true)
+        } catch {
+            // Leave the old store where it is so the next launch tries again, and say so.
+            TesseraSchema.setLaunchNote("Your older history hasn't moved across yet. It's safe, and I'll try again "
+                + "next time the app opens.")
+            throw error
+        }
         _ = TesseraSchema.moveStoreAsideForLegacy(url)
+        TesseraSchema.clearLaunchNote()
         return true
     }
 }

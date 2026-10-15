@@ -24,9 +24,21 @@ public final class TessCaptureEngine: TessCapturing {
                     var records: [OpRecord] = []
                     var lines: [String] = []
                     for part in parts {
-                        let (record, line) = try perform(part, context: context)
-                        records.append(record)
-                        lines.append(line)
+                        do {
+                            let (record, line) = try perform(part, context: context)
+                            records.append(record)
+                            lines.append(line)
+                        } catch {
+                            // All or nothing: take back the sets already logged from this phrase.
+                            for record in records.reversed() {
+                                if record.state == .pending {
+                                    _ = try? engine.discard(record)
+                                } else {
+                                    engine.undo(record)
+                                }
+                            }
+                            return TessCapture(records: [], line: Self.line(for: error), source: .grammar)
+                        }
                     }
                     let line = parts.count == lines.count && lines.count > 1 ? "\(lines.count) sets logged." : lines
                         .first ?? ""

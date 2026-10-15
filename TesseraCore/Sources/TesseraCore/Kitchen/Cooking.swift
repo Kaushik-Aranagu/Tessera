@@ -184,7 +184,11 @@ public struct StartKitchenTimer: EngineAction {
         try transaction.set("endsAt", to: .date(start.addingTimeInterval(minutes * 60)), on: timer)
         try transaction.set("minutes", to: .number(minutes), on: timer)
         if let cook {
-            try transaction.setLinks("cook", on: timer, to: [transaction.object(cook, is: .cook)])
+            let cookObject = try transaction.object(cook, is: .cook)
+            try transaction.setLinks("cook", on: timer, to: [cookObject])
+            if let process = transaction.openProcess(for: cookObject) {
+                try transaction.saveContext(process, resumePoint: nil, nextStep: nil, at: start)
+            }
         }
         return timer
     }

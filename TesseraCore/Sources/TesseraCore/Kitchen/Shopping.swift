@@ -81,6 +81,6 @@ extension Transaction {
     mutating func refreshShopLine() throws {
         guard let list = store.object(id: Groceries.listID), let process = openProcess(for: list) else { return }
         let line = Groceries(store: store, classes: classes).shoppingLine()
-        try set("nextStep", to: .text(line), on: process)
+        try saveContext(process, resumePoint: nil, nextStep: line, at: .now)
     }
 }

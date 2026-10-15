@@ -12,3 +12,13 @@ struct NoteEditorTests {
         #expect(NotesEditorCopy.join(heading: reopened.heading, rest: reopened.rest) == asOpened)
     }
 }
+
+/// QA N1 (second pass): the blank line after the heading survives a split and join.
+struct NoteJoinTests {
+    @Test func splitAndJoinAreExactInverses() {
+        for body in ["Garage gym\n\nRubber floor, a second bench.", "One line", "Title\nRest\n\nMore"] {
+            let parts = NotesEditorCopy.split(body)
+            #expect(NotesEditorCopy.join(heading: parts.heading, rest: parts.rest) == body)
+        }
+    }
+}
