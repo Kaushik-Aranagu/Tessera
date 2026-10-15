@@ -1,8 +1,8 @@
 import SwiftUI
 import TesseraCore
 
-/// One note, open: just the text to edit (the text is the hero: no title above it repeating its first line),
-/// with when it was edited above and what it links to below.
+/// One note, open: its first line at the Title tier, the rest at body size, when it was edited above and what it
+/// links to below. The first line is its own field (return moves into the rest), so it's stored as one plain body.
 /// Saves through the engine (EditNote, undoable) a moment after typing stops and when leaving.
 struct NoteEditor: View {
     let noteID: UUID
@@ -10,7 +10,11 @@ struct NoteEditor: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var heading = ""
     @State private var text = ""
+    @FocusState private var focus: Field?
+
+    private enum Field { case heading, rest }
     @State private var loaded = false
     @State private var saveTask: Task<Void, Never>?
     @State private var deleted = false
@@ -26,16 +30,27 @@ struct NoteEditor: View {
                         .font(Theme.voice)
                         .foregroundStyle(Theme.Colors.context)
                         .entrance(0)
+                    TextField("", text: $heading, prompt: Text("First line").foregroundStyle(Theme.Colors.inkSecondary),
+                              axis: .vertical)
+                        .textRole(.title)
+                        .foregroundStyle(Theme.Colors.ink)
+                        .focused($focus, equals: .heading)
+                        .submitLabel(.next)
+                        .onSubmit { focus = .rest }
+                        .padding(.top, Theme.Spacing.l)
+                        .accessibilityLabel("First line")
+                        .entrance(1, hero: true)
                     TextEditor(text: $text)
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.ink)
                         .scrollContentBackground(.hidden)
                         .scrollDisabled(true)
-                        .frame(minHeight: 220, alignment: .topLeading)
-                        .padding(.top, Theme.Spacing.l)
-                        .padding(.horizontal, -5) // TextEditor's built-in inset, so text aligns with the context line
+                        .focused($focus, equals: .rest)
+                        .frame(minHeight: 180, alignment: .topLeading)
+                        .padding(.top, Theme.Spacing.s)
+                        .padding(.horizontal, -5) // TextEditor's built-in inset, so text aligns with the first line
                         .accessibilityLabel("Note text")
-                        .entrance(1)
+                        .entrance(2)
 
                     if !links.isEmpty {
                         MarginSection(label: "Links", color: Theme.Colors.tess) {
@@ -83,10 +98,14 @@ struct NoteEditor: View {
         .toolbarTitleDisplayMode(.inline)
         .onAppear {
             guard !loaded, let note else { return }
-            text = model.store.value("body", of: note)?.stringValue ?? note.title
+            let body = model.store.value("body", of: note)?.stringValue ?? note.title
+            let parts = NotesEditorCopy.split(body)
+            heading = parts.heading
+            text = parts.rest
             loaded = true
         }
         .onChange(of: text) { _, _ in scheduleSave() }
+        .onChange(of: heading) { _, _ in scheduleSave() }
         .onDisappear { save() }
     }
 
@@ -103,7 +122,7 @@ struct NoteEditor: View {
     private func save() {
         saveTask?.cancel()
         guard loaded, !deleted, let note = model.store.object(id: noteID), !note.isDeleted else { return }
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = NotesEditorCopy.join(heading: heading, rest: text)
         let current = model.store.value("body", of: note)?.stringValue ?? ""
         guard !trimmed.isEmpty, trimmed != current else { return }
         _ = try? model.engine.perform(
@@ -122,6 +141,22 @@ struct NoteEditor: View {
 }
 
 enum NotesEditorCopy {
+    /// A body as its first line and the rest.
+    static func split(_ body: String) -> (heading: String, rest: String) {
+        guard let newline = body.firstIndex(of: "\n") else { return (body, "") }
+        return (String(body[..<newline]), String(body[body.index(after: newline)...]))
+    }
+
+    /// The first line and the rest, back into one plain body (trimmed; no blank first line).
+    static func join(heading: String, rest: String) -> String {
+        let first = heading.replacingOccurrences(of: "\n", with: " ").trimmingCharacters(in: .whitespaces)
+        let body = rest.trimmingCharacters(in: .whitespacesAndNewlines)
+        if first.isEmpty {
+            return body
+        }
+        return body.isEmpty ? first : first + "\n" + body
+    }
+
     /// The note's first line, as the title.
     static func heading(from text: String, fallback: String) -> String {
         let first = text.split(separator: "\n").first.map { String($0).trimmingCharacters(in: .whitespaces) } ?? ""

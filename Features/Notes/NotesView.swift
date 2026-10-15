@@ -87,7 +87,7 @@ private struct NotesIndex: View {
                                 .entrance(3 + min(index, 2))
                                 .transition(.asymmetric(insertion: .push(from: .top).combined(with: .opacity),
                                                         removal: .opacity))
-                            RowSeparator()
+                            NoteSeam()
                         }
                     }
                     .padding(.top, Theme.Spacing.xl)
@@ -124,10 +124,12 @@ private struct WritingLine: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
             HStack(alignment: .center, spacing: Theme.Spacing.m) {
-                PaintDab(color: Theme.Colors.tess, size: CGSize(width: 14, height: 12), seed: 3,
-                         filled: focused.wrappedValue || !text.isEmpty)
+                // Faint and filled at rest (a hollow ring read like a radio button), full cobalt while writing.
+                PaintDab(color: Theme.Colors.tess, size: CGSize(width: 14, height: 12), seed: 3)
+                    .opacity(focused.wrappedValue || !text.isEmpty ? 1 : 0.35)
+                    .tesseraAnimation(Theme.Motion.house, value: focused.wrappedValue || !text.isEmpty)
                 TextField("", text: $text, prompt: Text("Write something. @ links a thing.")
-                    .foregroundStyle(Theme.Colors.inkTertiary), axis: .vertical)
+                    .foregroundStyle(Theme.Colors.inkSecondary), axis: .vertical)
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.ink)
                     .focused(focused)
@@ -149,7 +151,8 @@ private struct WritingLine: View {
     }
 }
 
-/// One note: its first line, a second line of the rest, and when, hanging right.
+/// One note in two lines: its first line (mentions in cobalt) and one line of the rest, with when hanging right.
+/// Links show in the editor only; the cobalt mention already says what the note is about.
 private struct NoteRow: View {
     let note: ObjectRecord
     let now: Date
@@ -161,32 +164,20 @@ private struct NoteRow: View {
     var body: some View {
         let body = model.store.value("body", of: note)?.stringValue ?? ""
         let rest = NotesCopy.rest(of: body)
-        let links = model.store.linkedObjects("about", of: note)
         Button(action: open) {
             HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.l) {
                 VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                     Text(NotesCopy.inked(note.title))
                         .textRole(.bodyStrong)
                         .foregroundStyle(Theme.Colors.ink)
-                        .lineLimit(2)
+                        .lineLimit(1)
                         .multilineTextAlignment(.leading)
                     if !rest.isEmpty {
                         Text(rest)
-                            .font(Theme.voice)
+                            .font(Theme.voice(size: 18))
                             .foregroundStyle(Theme.Colors.inkSecondary)
-                            .lineLimit(2)
+                            .lineLimit(1)
                             .multilineTextAlignment(.leading)
-                    }
-                    if !links.isEmpty {
-                        HStack(spacing: Theme.Spacing.s) {
-                            PaintDab(color: Theme.Colors.tess, size: CGSize(width: 10, height: 8),
-                                     seed: links.count)
-                            Text(NotesCopy.linkLine(links, store: model.store))
-                                .textRole(.data)
-                                .foregroundStyle(Theme.Colors.tess)
-                                .lineLimit(1)
-                        }
-                        .padding(.top, Theme.Spacing.xs)
                     }
                 }
                 Spacer(minLength: Theme.Spacing.s)
@@ -202,6 +193,18 @@ private struct NoteRow: View {
         .buttonStyle(HandleButtonStyle())
         .accessibilityElement(children: .combine)
         .accessibilityHint("Opens the note")
+    }
+}
+
+/// A 1 px hairline between notes (lighter than the theme's row separator, which reads as a list here).
+private struct NoteSeam: View {
+    @Environment(\.displayScale) private var displayScale
+
+    var body: some View {
+        Rectangle()
+            .fill(Theme.Colors.hairline)
+            .frame(height: 1 / displayScale)
+            .accessibilityHidden(true)
     }
 }
 
