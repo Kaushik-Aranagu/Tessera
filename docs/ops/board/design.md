@@ -15,9 +15,9 @@ Items 2 to 4 of the last round are done (see Done). Item 1's first pass is done;
 3. (done, `day-log-page.md`) Day log page build sheet for Builder B, deepening `day-log.mp4`. Done when the sheet shows the page with real lines from Research's `day-log-first.md` (including "Push day, 4 sets, not finished" and the "Also:" cut-off), an empty day, the scrub back through past days, and its HomeLink word.
 4. (done, c8a83ff) Lists screens 9 to 12 sheets, against the Kitchen lead's `lists-screens-acceptance.md`, for Builder B. Done when the shelf, a list page, an opened item, and the pick-one moment each have a sheet that answers every acceptance row, plus the "Lists" HomeLink under Groceries (G1).
 5. M3 body weight and habits surfaces (`habits.mp4` deepened), for Research's `m3-1-2-brief.md`. Done when the trend line, a weigh-in ghost row ("82.4"), and a habit's x-of-7 (no streaks, no red) each have a sheet with the exact copy.
+6. The W3 recovery line and its one-time Health permission line on Now (`../research/recovery-line.md`, `healthkit-reads.md`). Done when both lines have a sheet in the Now hero's type and space, with the copy for each case.
 7. Upkeep and People first screens, deepened from `upkeep.mp4` and `people.mp4`, against the M5 ship lists and Research's fixtures. Done when each first screen (Builder B's Upkeep 5 to 7 and People screens) has a sheet with real copy and its HomeLink word.
 8. Money and Reading first screens for Builder A, deepened from `money-pages.mp4`, `money-dial.mp4` and `reading.mp4`. Done when each has a sheet with currency-neutral copy, the receipt ghost from `show-photos.md`, and its HomeLink word.
-6. The W3 recovery line and its one-time Health permission line on Now (`../research/recovery-line.md`, `healthkit-reads.md`). Done when both lines have a sheet in the Now hero's type and space, with the copy for each case.
 
 **Later:**
 - Glyph for the Tell Tess control as an SF Symbols template, once slice 10 starts.
