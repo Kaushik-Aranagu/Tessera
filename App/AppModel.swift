@@ -91,6 +91,39 @@ final class AppModel {
     @ObservationIgnored private(set) var engine: ActionEngine!
     @ObservationIgnored private(set) var ledger: TrainingLedger!
 
+    /// What's running (Core's process table): the running process is Now; suspended ones form Home's ledger.
+    var processes: ProcessTable {
+        _ = revision
+        return ProcessTable(engine: engine)
+    }
+
+    /// Tess's one-liners from the last tidy (e.g. a workout wrapped up overnight).
+    var processNotes: [String] = []
+
+    /// On launch and foreground: suspend a process idle past its rest plus 10 minutes, then apply the stale rules.
+    func tidyProcesses(now: Date = AppClock.now) {
+        let idleLimit = (session?.restSeconds ?? 180) + 10 * 60
+        let table = ProcessTable(engine: engine)
+        table.suspendIfIdle(now: now, idleLimit: idleLimit)
+        processNotes = table.tidy(now: now)
+        touch()
+    }
+
+    /// Resume lands on the process's resume point: for a workout, the live cover at its set with the dial preset.
+    func resume(_ process: ProcessSnapshot) {
+        _ = try? engine.perform(ResumeProcess(process: process.id, time: AppClock.now), by: .user)
+        if let workout = process.subject, workout.classDef?.id == classes[.workout]?.id {
+            if session?.workout.id != workout.id {
+                session = WorkoutSession(workout: workout, model: self)
+            }
+            if let point = process.resumePoint {
+                session?.apply(point)
+            }
+            isWorkoutPresented = true
+        }
+        touch()
+    }
+
     // MARK: Navigation
 
     enum Relation {

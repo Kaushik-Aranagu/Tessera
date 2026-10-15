@@ -6,6 +6,7 @@ import TesseraLegacyStore
 struct TesseraApp: App {
     private let container: TesseraContainer
     @State private var model: AppModel
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
         FontRegistry.registerAll()
@@ -40,6 +41,11 @@ struct TesseraApp: App {
                 RestActivityController.shared.update(for: model.session)
             }
             .onChange(of: model.session?.restEndsAt) { RestActivityController.shared.update(for: model.session) }
+            .onChange(of: scenePhase, initial: true) { _, phase in
+                if phase == .active {
+                    model.tidyProcesses()
+                }
+            }
             .onOpenURL { url in
                 if url.host() == "workout", model.session != nil {
                     model.isWorkoutPresented = true
