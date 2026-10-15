@@ -48,6 +48,8 @@ enum PlateMath {
 struct PlateStack: View {
     let weight: Double
     var bar: Double = 20
+    /// One side's plates from the gym's own `PlateLoad`; nil falls back to standard plate maths.
+    var perSide: [Double]?
     /// The text is primary; the drawing is optional.
     var drawsPlates: Bool = false
 
@@ -72,7 +74,7 @@ struct PlateStack: View {
     }
 
     var body: some View {
-        let plates = keyed(PlateMath.perSide(weight, bar: bar))
+        let plates = keyed(perSide ?? PlateMath.perSide(weight, bar: bar))
         HStack(spacing: Theme.Spacing.m) {
             if drawsPlates {
                 drawing(plates)
