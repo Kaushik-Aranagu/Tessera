@@ -31,6 +31,13 @@ The front of the kitchen and the RECIPES sibling of Groceries on the kitchen rai
 ### The one living moment
 On arrival, the names **settle into their sizes**: each enters at Body size and grows to its tier in a quick stagger (25ms) down the column. The shelf visibly arranges itself by use.
 
+Recording: `../recordings/shelf.mp4` (source `../studies/shelf.html`). Values from the study:
+- Names land at Body 21 (fade up 8pt, 18ms apart), then grow to their tiers over 620ms. Hero and Regular names use a spring with a little overshoot (`cubic-bezier(.3,1.3,.5,1)`, about `.spring(response: 0.5, dampingFraction: 0.72)`); Body and quiet names use the house curve.
+- Line heights per tier: Hero 62, Regular 44, Body and quiet 34.
+- The running-cook seam above a name is 140pt wide and gets 10pt of room above the name; it draws in over 420ms.
+- A filter drops non-matching names (fade down 10pt, 180ms), then their lines close (320ms, house). The context line swaps to the filter's sentence ("5 under 30 minutes"). Turning the filter off reverses it.
+- Tapping a name: the others fade and the shelf scales to 1.06 while the name travels to the recipe hero at Hero 56 (460ms), then the page content rises 14pt.
+
 ### States
 - **Empty:** the column holds one cobalt line at Title 34/400: "Paste a recipe and I'll read it." Tapping it opens the paste reader.
 - **Under five recipes:** no hero-sized names until something has been cooked twice.
