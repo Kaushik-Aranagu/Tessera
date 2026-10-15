@@ -56,3 +56,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [huddle-triage.md](huddle-triage.md) | Coordinator, Product: one-page template to turn Kaushik review feedback into board items |
 | [speech-capture.md](speech-capture.md) | Builder B, Core: on-device speech for Ask Tess (SpeechAnalyzer, spoken normaliser, 30 phrases, usage strings) |
 | [capture-modes.md](capture-modes.md) | Builder B, Core, Kitchen: photo, file and video capture (on-device Vision text, receipt total, recipe, page to note; 15 examples) |
+| [on-device-context-size.md](on-device-context-size.md) | Core, Product: on-device model window is 4,096 tokens; Tess prompt budget, trim order, when to route to Claude |
