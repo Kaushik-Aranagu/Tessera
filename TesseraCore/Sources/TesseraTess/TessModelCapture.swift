@@ -19,10 +19,10 @@ public final class TessModelCapture: TessModelCapturing {
 
     public func capture(_ phrase: String, context: TessContext, engine: ActionEngine) async -> TessCapture {
         let recorder = TessToolRecorder()
-        let grammar = TessGrammar(store: engine.store, classes: engine.classes)
-        let tools = TessToolCatalog.descriptors.map { descriptor in
-            RegistryTool(descriptor: descriptor, engine: engine, grammar: grammar,
-                         pending: !context.commitImmediately, recorder: recorder)
+        // The same tools Claude gets (TessTools), converted to the on-device schema.
+        let tools = TessTools.all.map { tool in
+            CatalogTool(tool: tool, engine: engine, pending: !context.commitImmediately, now: context.now,
+                        recorder: recorder)
         }
         let session = LanguageModelSession(
             model: model,
@@ -77,79 +77,59 @@ public final class TessModelCapture: TessModelCapturing {
     }
 }
 
-/// Which registry actions the model may call: ones whose arguments it can fill from words alone
-/// (no object ids), and nothing destructive.
-public enum TessToolCatalog {
-    /// The only actions the on-device model may call: things a person would say. Never system ones like
-    /// rollForwardTasks (which takes its own "now").
-    public static let allowed: Set = ["logExercise", "createTask", "createRoutine", "createPlan", "createNote",
-                                      "createList", "startShop", "logBodyWeight"]
-
-    public static var descriptors: [ActionDescriptor] {
-        ActionRegistry.descriptors.filter { descriptor in
-            allowed.contains(descriptor.name) && !descriptor.isDestructive
-                && descriptor.parameters.allSatisfy { $0.kind != .object && $0.kind != .json }
-        }
-    }
-}
-
 /// Collects what the model's tool calls actually did.
 @MainActor
 final class TessToolRecorder {
     var records: [OpRecord] = []
 }
 
-/// One registry action as a Foundation Models tool, with a schema generated from its descriptor.
-struct RegistryTool: Tool {
+/// One TessTools tool as a Foundation Models tool.
+struct CatalogTool: Tool {
     typealias Arguments = GeneratedContent
 
     let name: String
     let description: String
     let parameters: GenerationSchema
-    private let descriptor: ActionDescriptor
     private let engine: ActionEngine
-    private let grammar: TessGrammar
     private let pending: Bool
+    private let now: Date
     private let recorder: TessToolRecorder
 
     @MainActor
-    init(descriptor: ActionDescriptor, engine: ActionEngine, grammar: TessGrammar, pending: Bool,
-         recorder: TessToolRecorder)
-    {
-        name = descriptor.name
-        description = descriptor.summary
-        self.descriptor = descriptor
+    init(tool: TessTools.Tool, engine: ActionEngine, pending: Bool, now: Date, recorder: TessToolRecorder) {
+        name = tool.name
+        description = tool.description
         self.engine = engine
-        self.grammar = grammar
         self.pending = pending
+        self.now = now
         self.recorder = recorder
-        parameters = (try? Self.schema(for: descriptor)) ?? GenerationSchema(
-            type: GeneratedContent.self, description: descriptor.summary, properties: []
-        )
+        parameters = (try? GenerationSchema(root: Self.dynamic(tool.input, name: tool.name,
+                                                               summary: tool.description), dependencies: []))
+            ?? GenerationSchema(type: GeneratedContent.self, description: tool.description, properties: [])
     }
 
-    /// Ids aren't something a model can know, so class references are asked for by name and resolved here.
-    static func schema(for descriptor: ActionDescriptor) throws -> GenerationSchema {
-        let properties = descriptor.parameters.map { parameter -> DynamicGenerationSchema.Property in
-            let schema = switch parameter.kind {
-            case .number: DynamicGenerationSchema(type: Double.self)
-            case .integer: DynamicGenerationSchema(type: Int.self)
-            case .boolean: DynamicGenerationSchema(type: Bool.self)
-            case .string, .date, .classRef, .object, .json: DynamicGenerationSchema(type: String.self)
-            }
-            let hint = switch parameter.kind {
-            case .date: " (ISO 8601 date-time)"
-            case .classRef: " (its name, e.g. Bench Press)"
-            default: ""
-            }
-            return DynamicGenerationSchema.Property(
-                name: parameter.name, description: parameter.summary + hint, schema: schema,
-                isOptional: !parameter.isRequired
-            )
+    /// TessSchema to the on-device schema: nullable fields become optional properties.
+    static func dynamic(_ schema: TessSchema, name: String, summary: String = "") -> DynamicGenerationSchema {
+        switch schema {
+        case .string: DynamicGenerationSchema(type: String.self)
+        case .number: DynamicGenerationSchema(type: Double.self)
+        case .integer: DynamicGenerationSchema(type: Int.self)
+        case .boolean: DynamicGenerationSchema(type: Bool.self)
+        case let .choice(options, text): DynamicGenerationSchema(name: name, description: text, anyOf: options)
+        case let .array(item): DynamicGenerationSchema(arrayOf: dynamic(item, name: name + "Item"))
+        case let .nullable(inner): dynamic(inner, name: name)
+        case let .object(properties):
+            DynamicGenerationSchema(name: name, description: summary, properties: properties.map { key, value in
+                let optional = if case .nullable = value {
+                    true
+                } else {
+                    false
+                }
+                return DynamicGenerationSchema.Property(name: key, description: value.summary,
+                                                        schema: dynamic(value, name: name + key.capitalized),
+                                                        isOptional: optional)
+            })
         }
-        let root = DynamicGenerationSchema(name: descriptor.name, description: descriptor.summary,
-                                           properties: properties)
-        return try GenerationSchema(root: root, dependencies: [])
     }
 
     func call(arguments: GeneratedContent) async throws -> String {
@@ -159,23 +139,24 @@ struct RegistryTool: Tool {
 
     @MainActor
     private func perform(_ json: String) -> String {
-        guard var object = (try? JSONSerialization.jsonObject(with: Data(json.utf8))) as? [String: Any] else {
-            return "Error: unreadable arguments"
-        }
-        for parameter in descriptor.parameters where parameter.kind == .classRef {
-            guard let name = object[parameter.name] as? String else { continue }
-            guard let classDef = grammar.resolveExercise(name) else {
-                return "Error: no exercise called \(name)"
-            }
-            object[parameter.name] = classDef.id.uuidString
-        }
         do {
-            let data = try JSONSerialization.data(withJSONObject: object)
-            let record = try engine.perform(named: name, arguments: data, by: .tess, pending: pending)
-            recorder.records.append(record)
-            return "Done: \(record.summary)"
+            let records = try TessTools.run(name, arguments: Data(json.utf8), engine: engine, pending: pending,
+                                            now: now)
+            recorder.records += records
+            return "Done: " + records.map(\.summary).joined(separator: "; ")
+        } catch let answer as TessToolAnswer {
+            return "Answer: \(answer.line)"
         } catch {
             return "Error: \(error)"
         }
+    }
+}
+
+/// Builds a tool's on-device schema (tests use it to prove every TessTools tool converts).
+enum GenerationSchemaCheck {
+    @MainActor
+    static func make(_ tool: TessTools.Tool) throws -> GenerationSchema {
+        try GenerationSchema(root: CatalogTool.dynamic(tool.input, name: tool.name, summary: tool.description),
+                             dependencies: [])
     }
 }

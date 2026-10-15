@@ -133,10 +133,10 @@ struct DataSafetyTests {
     }
 
     @Test func theModelOnlyGetsPersonActions() {
-        let names = Set(TessToolCatalog.descriptors.map(\.name))
-        #expect(!names.contains("rollForwardTasks")) // P4
-        #expect(names.isSubset(of: TessToolCatalog.allowed))
-        #expect(names.isSuperset(of: ["logExercise", "createTask", "createRoutine"]))
+        // P4: the models get an explicit, closed list (TessTools); no system actions.
+        let names = Set(TessTools.all.map(\.name))
+        #expect(!names.contains("rollForwardTasks") && !names.contains("deleteObject"))
+        #expect(names.isSuperset(of: ["logSet", "createTask"]))
     }
 }
 
