@@ -95,7 +95,7 @@ All writes go through typed actions with an op log (`v1-features.md`). Records, 
 - Double progression: `dp(+2.5 kg, 8, 12)`. When every working set hits the top of the rep range, the next session's target adds the increment and drops to the bottom of the range.
 - The increment snaps to the gym's smallest loadable step (dumbbells use the next dumbbell).
 - "Why this weight" is one tap deep on the set.
-- Rules inherit down the class tree (all BarbellLifts default to +2.5 kg; dumbbells to the next dumbbell).
+- Rules inherit as defaults by equipment (barbell +2.5 kg, dumbbell +2 kg per hand) and can be overridden on the exercise or slot.
 
 **Week (P1).**
 - A plan is a repeating pattern of routines over the week (e.g. Push / Pull / Legs / rest / Upper / Lower / rest).
