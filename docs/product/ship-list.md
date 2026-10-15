@@ -14,7 +14,7 @@
 | 4 | **Finish and see it saved** | Finishing compresses the session into today's history on Home, with Tess's one-line summary | Yes: simple summary line |
 | 5 | **Now counts down as a draining bar** | Now's countdown is a bar that drains in real time (the same drain as the rest dial), not just a number | Yes: plain bar, refine later |
 | 6 | **Exercise page v0** | Tap an exercise: best set, best e1RM, last 5 sessions | Yes: no chart yet |
-| 7 | **PR hint and moment** | "beats 5RM" hint before the set; one celebration when it happens | Hint can be text; celebration can wait for slice 12 |
+| 7 | **PR hint and moment** | "beats 5RM" hint before the set; one celebration when it happens | Hint can be text; celebration can wait for slice 13 |
 | 8 | **Edit and undo any set** | Tap a logged set to change it; undo the last action | Yes |
 | 9 | **Swap exercise in a session** | Pull down on the name, pick from the same movement pattern | Yes: simple list ranked by pattern only |
 | 10 | **Routine editing** | Reorder, add, remove exercises and change sets × reps in a routine | Yes: plain editor |
