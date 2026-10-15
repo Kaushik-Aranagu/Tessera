@@ -141,6 +141,8 @@ public struct TessGrammar {
         return copy.split(separator: " ").contains { Double($0) != nil }
     }
 
+    static let equipmentWords = ["db": "dumbbell", "bb": "barbell", "kb": "kettlebell", "ez": "ez"]
+
     /// Common gym names for built-in lifts.
     static let aliases: [String: String] = [
         "bench": "bench press", "bp": "bench press", "ohp": "overhead press", "press": "overhead press",
@@ -152,12 +154,22 @@ public struct TessGrammar {
     /// The exercise class whose name best matches: exact, then alias, then every word contained, shortest first.
     public func resolveExercise(_ query: String) -> ClassDef? {
         guard let root = classes[.exercise] else { return nil }
-        let candidates = ClassResolver.descendants(of: root).filter { $0.id != root.id }
-        let normalized = Self.normalize(query)
+        let candidates = ClassResolver.descendants(of: root).filter { store.isConcreteExercise($0, root: root) }
+        // Gym shorthand for equipment: "db press" is a dumbbell press.
+        let normalized = Self.normalize(query).split(separator: " ")
+            .map { Self.equipmentWords[String($0)] ?? String($0) }.joined(separator: " ")
         let target = Self.aliases[normalized] ?? normalized
         let names = candidates.map { ($0, Self.normalize($0.name)) }
         if let exact = names.first(where: { $0.1 == target || $0.1 == normalized }) {
             return exact.0
+        }
+        // Library exercises carry their own aliases ("Flat Bench", "RDL") on their class objects.
+        for (classDef, _) in names {
+            guard let aliases = store.classValue("aliases", of: classDef)?.stringValue else { continue }
+            let list = aliases.split(separator: ",").map { Self.normalize(String($0)) }
+            if list.contains(normalized) {
+                return classDef
+            }
         }
         let words = target.split(separator: " ").map { $0.hasSuffix("s") && $0.count > 3 ? $0.dropLast() : $0 }
         return names
