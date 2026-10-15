@@ -15,7 +15,7 @@ public enum SystemCatalog {
         case workout, exerciseEntry, set
         case routine, task, note
         case list, listItem
-        case ingredient, recipe, recipeLine, recipeStep
+        case ingredient, recipe, recipeLine, recipeStep, cook, kitchenTimer
         case process
         case slot, plan
 
@@ -243,6 +243,21 @@ public enum SystemCatalog {
                       FieldSpec(key: "text", name: "Text", kind: .text),
                       FieldSpec(key: "timers", name: "Timers", kind: .text),
                       FieldSpec(key: "about", name: "Uses", kind: .refList, target: .ingredient),
+                  ]),
+        // One time a recipe was cooked, at a size. Stamped with cookedAt when finished.
+        ClassSpec(key: .cook, name: "Cook", parent: .thing, symbol: "flame", colorRole: "health", fields: [
+            FieldSpec(key: "recipe", name: "Recipe", kind: .ref, target: .recipe),
+            FieldSpec(key: "serves", name: "Serves", kind: .number),
+            FieldSpec(key: "cookedAt", name: "Cooked", kind: .date),
+            FieldSpec(key: "note", name: "Note", kind: .text),
+        ]),
+        ClassSpec(key: .kitchenTimer, name: "Kitchen Timer", parent: .thing, symbol: "timer", colorRole: "health",
+                  traits: [.timed], fields: [
+                      FieldSpec(key: "startedAt", name: "Started", kind: .date),
+                      FieldSpec(key: "endsAt", name: "Ends", kind: .date),
+                      FieldSpec(key: "minutes", name: "Minutes", kind: .number),
+                      FieldSpec(key: "isStopped", name: "Stopped", kind: .bool),
+                      FieldSpec(key: "cook", name: "Cook", kind: .ref, target: .cook),
                   ]),
         ClassSpec(key: .process, name: "Process", parent: .thing, symbol: "circle.dotted", colorRole: "neutral",
                   traits: [.timed], fields: [

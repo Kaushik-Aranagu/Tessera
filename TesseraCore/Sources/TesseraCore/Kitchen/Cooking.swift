@@ -1,0 +1,239 @@
+import Foundation
+
+/// Cooking as a process (kitchen slice 5). `StartCooking` makes a Cook (the recipe at a size) the running process,
+/// with the step index as its resume point. Timers are objects with `endsAt`; several can run at once. Finishing
+/// stamps the Cook, so a recipe knows when it was last cooked and how often.
+@MainActor
+public struct CookLog {
+    public struct Timer: Identifiable {
+        public let id: UUID
+        public let object: ObjectRecord
+        public let label: String
+        public let startedAt: Date
+        public let endsAt: Date
+        public let cook: ObjectRecord?
+
+        public func remaining(at now: Date) -> TimeInterval {
+            max(0, endsAt.timeIntervalSince(now))
+        }
+    }
+
+    public let store: ObjectStore
+    public let classes: [SystemCatalog.Key: ClassDef]
+
+    public init(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) {
+        self.store = store
+        self.classes = classes
+    }
+
+    /// Finished cooks of a recipe, newest first.
+    public func cooks(of recipe: ObjectRecord) -> [(cook: ObjectRecord, at: Date)] {
+        guard let cookClass = classes[.cook] else { return [] }
+        return store.objects(of: cookClass).compactMap { cook in
+            guard store.linkedObjects("recipe", of: cook).first?.id == recipe.id,
+                  let at = store.value("cookedAt", of: cook)?.dateValue else { return nil }
+            return (cook, at)
+        }
+        .sorted { $0.at > $1.at }
+    }
+
+    public func lastCooked(_ recipe: ObjectRecord) -> Date? {
+        cooks(of: recipe).first?.at
+    }
+
+    /// The serving size a cook used.
+    public func serves(of cook: ObjectRecord) -> Int? {
+        store.number("serves", of: cook).map(Int.init)
+    }
+
+    /// Timers still counting (not stopped), soonest first. A timer past its end stays until stopped, at 0.
+    public func timers(at _: Date = .now) -> [Timer] {
+        guard let timerClass = classes[.kitchenTimer] else { return [] }
+        return store.objects(of: timerClass).compactMap { object in
+            guard store.value("isStopped", of: object) != .bool(true),
+                  let ends = store.value("endsAt", of: object)?.dateValue else { return nil }
+            return Timer(id: object.id, object: object, label: object.title,
+                         startedAt: store.value("startedAt", of: object)?.dateValue ?? object.createdAt,
+                         endsAt: ends, cook: store.linkedObjects("cook", of: object).first)
+        }
+        .sorted { $0.endsAt < $1.endsAt }
+    }
+
+    /// "Carbonara, third time this month." Counts, never judgement.
+    public func finishLine(for recipe: ObjectRecord, at now: Date, calendar: Calendar = .current) -> String {
+        let thisMonth = cooks(of: recipe).count { calendar.isDate($0.at, equalTo: now, toGranularity: .month) }
+        let ordinals = ["", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth"]
+        let times = thisMonth < ordinals.count ? ordinals[thisMonth] : "\(thisMonth)th"
+        return "\(recipe.title), \(times) time this month."
+    }
+}
+
+/// Starts cooking a recipe at a size: a Cook object becomes the running process (Now), resuming at step 0.
+public struct StartCooking: EngineAction {
+    public static let descriptor = ActionDescriptor(name: "startCooking", summary: "Start cooking a recipe",
+                                                    parameters: [
+                                                        .init("recipe", .object, "The recipe"),
+                                                        .init("serves", .integer, "At what size", required: false),
+                                                    ])
+
+    public var recipe: UUID
+    public var serves: Int?
+    public var time: Date?
+
+    public init(recipe: UUID, serves: Int? = nil, time: Date? = nil) {
+        self.recipe = recipe
+        self.serves = serves
+        self.time = time
+    }
+
+    public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
+        let recipe = try transaction.object(recipe, is: .recipe)
+        let book = RecipeBook(store: transaction.store, classes: transaction.classes)
+        let cook = try transaction.create(transaction.classDef(.cook), title: recipe.title)
+        try transaction.setLinks("recipe", on: cook, to: [recipe])
+        if let size = serves ?? book.serves(recipe) {
+            try transaction.set("serves", to: .number(Double(size)), on: cook)
+        }
+        let first = book.steps(of: recipe).first?.text
+        try StartProcess(subject: cook.id, ownerApp: "Kitchen", nextStep: first, resumePoint: ResumePoint(index: 0),
+                         time: time).apply(&transaction)
+        return cook
+    }
+
+    public func summary(in store: ObjectStore) -> String {
+        "Cooking \(store.object(id: recipe)?.title ?? "")"
+    }
+}
+
+/// Moves a cook to a step (its resume point and next step).
+public struct GoToCookStep: EngineAction {
+    public static let descriptor = ActionDescriptor(name: "goToCookStep", summary: "Go to a step while cooking",
+                                                    parameters: [
+                                                        .init("cook", .object, "The cook in progress"),
+                                                        .init("step", .integer, "The step index, 0 first"),
+                                                    ])
+
+    public var cook: UUID
+    public var step: Int
+
+    public init(cook: UUID, step: Int) {
+        self.cook = cook
+        self.step = step
+    }
+
+    public func apply(_ transaction: inout Transaction) throws {
+        let cook = try transaction.object(cook, is: .cook)
+        guard let process = transaction.openProcess(for: cook),
+              let recipe = transaction.store.linkedObjects("recipe", of: cook).first else { return }
+        let steps = RecipeBook(store: transaction.store, classes: transaction.classes).steps(of: recipe)
+        let index = max(0, min(step, steps.count - 1))
+        try transaction.saveContext(process, resumePoint: ResumePoint(index: index),
+                                    nextStep: steps.indices.contains(index) ? steps[index].text : nil, at: .now)
+    }
+
+    public func summary(in _: ObjectStore) -> String {
+        "Step \(step + 1)"
+    }
+}
+
+/// Starts a kitchen timer ("pasta", 10 min), optionally for a cook and its step.
+public struct StartKitchenTimer: EngineAction {
+    public static let descriptor = ActionDescriptor(name: "startKitchenTimer", summary: "Start a kitchen timer",
+                                                    parameters: [
+                                                        .init("label", .string, "What it's for, e.g. pasta"),
+                                                        .init("minutes", .number, "How long"),
+                                                        .init("cook", .object, "The cook it belongs to",
+                                                              required: false),
+                                                    ])
+
+    public var label: String
+    public var minutes: Double
+    public var cook: UUID?
+    public var time: Date?
+
+    public init(label: String, minutes: Double, cook: UUID? = nil, time: Date? = nil) {
+        self.label = label
+        self.minutes = minutes
+        self.cook = cook
+        self.time = time
+    }
+
+    public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
+        guard minutes > 0, minutes <= 24 * 60 else {
+            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "a timer needs a length")
+        }
+        let start = time ?? .now
+        let name = label.trimmingCharacters(in: .whitespaces).isEmpty ? "Timer" : label
+        let timer = try transaction.create(transaction.classDef(.kitchenTimer), title: name)
+        try transaction.set("startedAt", to: .date(start), on: timer)
+        try transaction.set("endsAt", to: .date(start.addingTimeInterval(minutes * 60)), on: timer)
+        try transaction.set("minutes", to: .number(minutes), on: timer)
+        if let cook {
+            try transaction.setLinks("cook", on: timer, to: [transaction.object(cook, is: .cook)])
+        }
+        return timer
+    }
+
+    public func summary(in _: ObjectStore) -> String {
+        "\(label) timer, \(minutes.formatted(.number.precision(.fractionLength(0 ... 1)))) min"
+    }
+}
+
+/// Stops a timer (done or cancelled).
+public struct StopKitchenTimer: EngineAction {
+    public static let descriptor = ActionDescriptor(name: "stopKitchenTimer", summary: "Stop a kitchen timer",
+                                                    parameters: [.init("timer", .object, "The timer")])
+
+    public var timer: UUID
+
+    public init(timer: UUID) {
+        self.timer = timer
+    }
+
+    public func apply(_ transaction: inout Transaction) throws {
+        try transaction.set("isStopped", to: .bool(true), on: transaction.object(timer, is: .kitchenTimer))
+    }
+
+    public func summary(in store: ObjectStore) -> String {
+        "Stopped \(store.object(id: timer)?.title ?? "the timer")"
+    }
+}
+
+/// Finishes cooking: stamps the Cook (so the recipe knows it was cooked), ends the process and stops its timers.
+public struct FinishCooking: EngineAction {
+    public static let descriptor = ActionDescriptor(name: "finishCooking", summary: "Finish cooking", parameters: [
+        .init("cook", .object, "The cook in progress"),
+        .init("note", .string, "How it went", required: false),
+    ])
+
+    public var cook: UUID
+    public var note: String?
+    public var time: Date?
+
+    public init(cook: UUID, note: String? = nil, time: Date? = nil) {
+        self.cook = cook
+        self.note = note
+        self.time = time
+    }
+
+    public func apply(_ transaction: inout Transaction) throws {
+        let cook = try transaction.object(cook, is: .cook)
+        let end = time ?? .now
+        try transaction.set("cookedAt", to: .date(end), on: cook)
+        if let note, !note.isEmpty {
+            try transaction.set("note", to: .text(note), on: cook)
+        }
+        if let process = transaction.openProcess(for: cook) {
+            try transaction.end(process, reason: .done, at: end)
+        }
+        for timer in CookLog(store: transaction.store, classes: transaction.classes).timers()
+            where timer.cook?.id == cook.id
+        {
+            try transaction.set("isStopped", to: .bool(true), on: timer.object)
+        }
+    }
+
+    public func summary(in store: ObjectStore) -> String {
+        "Cooked \(store.object(id: cook)?.title ?? "it")"
+    }
+}
