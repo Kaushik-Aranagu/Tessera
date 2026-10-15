@@ -37,3 +37,41 @@ public struct ObjectPath: Hashable, Sendable, CustomStringConvertible {
         ObjectPath(segments: segments + [segment])
     }
 }
+
+@MainActor
+public extension ObjectStore {
+    // MARK: Paths
+
+    /// The class path, then the composition chain: `/activity/workout/push-day-a/bench-press/set-2`.
+    /// Untitled objects are named after a linked class (an entry → "Bench Press") or their class and position.
+    func path(of object: ObjectRecord) -> ObjectPath {
+        var chain: [ObjectRecord] = []
+        var seen = Set<UUID>()
+        var current: ObjectRecord? = object
+        while let node = current, seen.insert(node.id).inserted {
+            chain.append(node)
+            current = node.parent
+        }
+        chain.reverse()
+        var path = chain.first?.classDef.map(ClassResolver.path(of:)) ?? ObjectPath(segments: [])
+        for node in chain where !node.isClassObject {
+            path = path.appending(.init(target: .object(node.id), title: displayTitle(of: node)))
+        }
+        return path
+    }
+
+    /// The object's title, or a stand-in for untitled objects such as sets and entries.
+    func displayTitle(of object: ObjectRecord) -> String {
+        if !object.title.isEmpty {
+            return object.title
+        }
+        let linkedClass = (object.outgoingLinks ?? []).compactMap(\.toClass).first
+        if let linkedClass {
+            return linkedClass.name
+        }
+        let className = object.classDef?.name ?? "Object"
+        guard let siblings = object.parent?.orderedChildren,
+              let index = siblings.firstIndex(where: { $0.id == object.id }) else { return className }
+        return "\(className) \(index + 1)"
+    }
+}

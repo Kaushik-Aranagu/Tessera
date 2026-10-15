@@ -19,7 +19,7 @@ public struct ObjectStore {
     }
 
     public let context: ModelContext
-    private let cache = Cache()
+    let cache = Cache()
 
     public init(context: ModelContext) {
         self.context = context
@@ -27,8 +27,11 @@ public struct ObjectStore {
 
     /// Class-object lookups are cached per store, because every inherited value read walks the lineage.
     /// Writes through this store keep it current; call this after changing objects some other way.
+    /// Call after editing classes or fields (the class editor does), so resolved fields are rebuilt.
     public func invalidateCaches() {
         cache.classObjects.removeAll()
+        cache.classInfo.removeAll()
+        noteChange()
     }
 
     // MARK: Creating & deleting
@@ -36,14 +39,20 @@ public struct ObjectStore {
     @discardableResult
     public func create(_ classDef: ClassDef, title: String = "", parent: ObjectRecord? = nil) -> ObjectRecord {
         let siblings = parent?.children?.count ?? 0
-        let object = ObjectRecord(title: title, classDef: classDef, parent: parent)
+        // Insert first, then relate: SwiftData maintains a to-many inverse (Bench Press → every object) far
+        // faster for an inserted object; relating in the initializer made long histories quadratic.
+        let object = ObjectRecord(title: title, classDef: nil)
         object.sortIndex = siblings
         context.insert(object)
+        object.classDef = classDef
+        object.parent = parent
+        noteChange(object)
         return object
     }
 
     /// Soft-deletes the object and everything composed inside it.
     public func softDelete(_ object: ObjectRecord, at date: Date = .now) {
+        noteChange(object)
         cache.classObjects.removeAll()
         object.deletedAt = date
         for child in object.children ?? [] where !child.isDeleted {
@@ -52,6 +61,7 @@ public struct ObjectStore {
     }
 
     public func restore(_ object: ObjectRecord) {
+        noteChange(object)
         cache.classObjects.removeAll()
         object.deletedAt = nil
         for child in object.children ?? [] {
@@ -117,7 +127,7 @@ public struct ObjectStore {
     /// Class objects that `object` inherits values from, nearest first. Excludes `object` itself.
     private func inheritedClassObjects(for object: ObjectRecord) -> [ObjectRecord] {
         guard let classDef = object.classDef else { return [] }
-        return ClassResolver.lineage(of: classDef).reversed()
+        return lineage(of: classDef).reversed()
             .compactMap(classObject(of:))
             .filter { $0.id != object.id }
     }
@@ -126,8 +136,8 @@ public struct ObjectStore {
 
     /// Own value, else inherited from a class object, else the class default, else the computed result.
     public func value(_ key: String, of object: ObjectRecord) -> FieldValue? {
-        guard let classDef = object.classDef, let field = ClassResolver.field(key, of: classDef) else { return nil }
-        let fields = ClassResolver.effectiveFields(of: classDef)
+        guard let classDef = object.classDef, let field = field(key, of: classDef) else { return nil }
+        let fields = classInfo(classDef).fields
         return value(of: field, in: object, fields: fields, depth: 0)
     }
 
@@ -138,7 +148,7 @@ public struct ObjectStore {
     /// Whether the object stores its own value (rather than inheriting or defaulting). The object page marks the rest
     /// ↑.
     public func hasOwnValue(_ key: String, on object: ObjectRecord) -> Bool {
-        guard let field = object.classDef.flatMap({ ClassResolver.field(key, of: $0) }) else { return false }
+        guard let field = object.classDef.flatMap({ field(key, of: $0) }) else { return false }
         if field.kind.isLink {
             return (object.outgoingLinks ?? []).contains { $0.fieldID == field.id }
         }
@@ -147,7 +157,8 @@ public struct ObjectStore {
 
     /// Stores a value; nil clears it so the object inherits again. The value's kind must match the field.
     public func set(_ key: String, to newValue: FieldValue?, on object: ObjectRecord) throws {
-        guard let classDef = object.classDef, let field = ClassResolver.field(key, of: classDef) else {
+        noteChange(object)
+        guard let classDef = object.classDef, let field = field(key, of: classDef) else {
             throw StoreError.unknownField(key)
         }
         guard field.kind != .computed, !field.kind.isLink else {
@@ -168,7 +179,7 @@ public struct ObjectStore {
                        depth: Int) -> FieldValue?
     {
         if field.kind == .computed {
-            guard depth < 8, let source = field.expression, let formula = try? Formula.parse(source) else {
+            guard depth < 8, let source = field.expression, let formula = formula(source) else {
                 return nil
             }
             let result = formula.evaluate { name in
@@ -193,6 +204,7 @@ public struct ObjectStore {
     /// Replaces the targets of a `.ref` / `.refList` field. An empty list clears the object's own links,
     /// so it inherits its class object's links again.
     public func setLinks(_ key: String, on object: ObjectRecord, to targets: [ObjectRecord]) throws {
+        noteChange(object)
         let field = try linkField(key, of: object, kinds: [.ref, .refList])
         if field.kind == .ref, targets.count > 1 {
             throw StoreError.wrongKind(field: key, expected: [.refList])
@@ -200,7 +212,7 @@ public struct ObjectStore {
         if let targetID = field.targetClassID {
             for target in targets {
                 guard let targetClass = target.classDef,
-                      ClassResolver.isSubclass(targetClass, ofClassID: targetID)
+                      isSubclass(targetClass, ofClassID: targetID)
                 else {
                     throw StoreError.targetNotAllowed(field: key)
                 }
@@ -208,25 +220,26 @@ public struct ObjectStore {
         }
         removeLinks(fieldID: field.id, from: object)
         for (index, target) in targets.enumerated() {
-            context.insert(ObjectLink(from: object, fieldID: field.id, toObject: target, sortIndex: index))
+            insertLink(from: object, fieldID: field.id, toObject: target, sortIndex: index)
         }
     }
 
     /// Points a `.classRef` field at a class (e.g. an exercise entry → `BenchPress`).
     public func setClassLink(_ key: String, on object: ObjectRecord, to target: ClassDef?) throws {
+        noteChange(object)
         let field = try linkField(key, of: object, kinds: [.classRef])
-        if let target, let targetID = field.targetClassID, !ClassResolver.isSubclass(target, ofClassID: targetID) {
+        if let target, let targetID = field.targetClassID, !isSubclass(target, ofClassID: targetID) {
             throw StoreError.targetNotAllowed(field: key)
         }
         removeLinks(fieldID: field.id, from: object)
         if let target {
-            context.insert(ObjectLink(from: object, fieldID: field.id, toClass: target))
+            insertLink(from: object, fieldID: field.id, toClass: target)
         }
     }
 
     /// Linked objects in order: the object's own links, else the nearest class object's.
     public func linkedObjects(_ key: String, of object: ObjectRecord) -> [ObjectRecord] {
-        guard let field = object.classDef.flatMap({ ClassResolver.field(key, of: $0) }) else { return [] }
+        guard let field = object.classDef.flatMap({ field(key, of: $0) }) else { return [] }
         for source in [object] + inheritedClassObjects(for: object) {
             let links = (source.outgoingLinks ?? []).filter { $0.fieldID == field.id }
             if !links.isEmpty {
@@ -237,7 +250,7 @@ public struct ObjectStore {
     }
 
     public func linkedClass(_ key: String, of object: ObjectRecord) -> ClassDef? {
-        guard let field = object.classDef.flatMap({ ClassResolver.field(key, of: $0) }) else { return nil }
+        guard let field = object.classDef.flatMap({ field(key, of: $0) }) else { return nil }
         for source in [object] + inheritedClassObjects(for: object) {
             if let target = (source.outgoingLinks ?? []).first(where: { $0.fieldID == field.id })?.toClass {
                 return target
@@ -249,7 +262,7 @@ public struct ObjectStore {
     /// Objects linked from a class itself, through its class object chain (e.g. Bench Press → its muscles).
     public func linkedObjects(_ key: String, ofClass classDef: ClassDef) -> [ObjectRecord] {
         // The nearest class object up the chain; its own lookup continues further up.
-        guard let nearest = ClassResolver.lineage(of: classDef).reversed().lazy.compactMap(classObject(of:)).first
+        guard let nearest = lineage(of: classDef).reversed().lazy.compactMap(classObject(of:)).first
         else { return [] }
         return linkedObjects(key, of: nearest)
     }
@@ -270,47 +283,12 @@ public struct ObjectStore {
         var current = object.parent
         var seen = Set<UUID>()
         while let node = current, seen.insert(node.id).inserted {
-            if let nodeClass = node.classDef, ClassResolver.isSubclass(nodeClass, of: classDef) {
+            if let nodeClass = node.classDef, isSubclass(nodeClass, ofClassID: classDef.id) {
                 return node
             }
             current = node.parent
         }
         return nil
-    }
-
-    // MARK: Paths
-
-    /// The class path, then the composition chain: `/activity/workout/push-day-a/bench-press/set-2`.
-    /// Untitled objects are named after a linked class (an entry → "Bench Press") or their class and position.
-    public func path(of object: ObjectRecord) -> ObjectPath {
-        var chain: [ObjectRecord] = []
-        var seen = Set<UUID>()
-        var current: ObjectRecord? = object
-        while let node = current, seen.insert(node.id).inserted {
-            chain.append(node)
-            current = node.parent
-        }
-        chain.reverse()
-        var path = chain.first?.classDef.map(ClassResolver.path(of:)) ?? ObjectPath(segments: [])
-        for node in chain where !node.isClassObject {
-            path = path.appending(.init(target: .object(node.id), title: displayTitle(of: node)))
-        }
-        return path
-    }
-
-    /// The object's title, or a stand-in for untitled objects such as sets and entries.
-    public func displayTitle(of object: ObjectRecord) -> String {
-        if !object.title.isEmpty {
-            return object.title
-        }
-        let linkedClass = (object.outgoingLinks ?? []).compactMap(\.toClass).first
-        if let linkedClass {
-            return linkedClass.name
-        }
-        let className = object.classDef?.name ?? "Object"
-        guard let siblings = object.parent?.orderedChildren,
-              let index = siblings.firstIndex(where: { $0.id == object.id }) else { return className }
-        return "\(className) \(index + 1)"
     }
 
     // MARK: Raw access for the op log
@@ -333,6 +311,7 @@ public struct ObjectStore {
 
     /// Writes a stored value by field id, bypassing key lookup and validation (used to replay and revert ops).
     func setRaw(fieldID: UUID, to value: FieldValue?, on object: ObjectRecord) {
+        noteChange(object)
         var values = object.values
         values[fieldID] = value
         object.values = values
@@ -340,15 +319,16 @@ public struct ObjectStore {
 
     /// Replaces a field's links by id (used to replay and revert ops). Targets that no longer exist are skipped.
     func setLinksRaw(fieldID: UUID, on object: ObjectRecord, to targets: [LinkTarget]) {
+        noteChange(object)
         removeLinks(fieldID: fieldID, from: object)
         for (index, target) in targets.enumerated() {
             switch target {
             case let .object(id):
                 guard let target = self.object(id: id) else { continue }
-                context.insert(ObjectLink(from: object, fieldID: fieldID, toObject: target, sortIndex: index))
+                insertLink(from: object, fieldID: fieldID, toObject: target, sortIndex: index)
             case let .classDef(id):
                 guard let target = classDef(id: id) else { continue }
-                context.insert(ObjectLink(from: object, fieldID: fieldID, toClass: target, sortIndex: index))
+                insertLink(from: object, fieldID: fieldID, toClass: target, sortIndex: index)
             }
         }
     }
@@ -356,11 +336,22 @@ public struct ObjectStore {
     // MARK: Private
 
     private func linkField(_ key: String, of object: ObjectRecord, kinds: [FieldKind]) throws -> ResolvedField {
-        guard let classDef = object.classDef, let field = ClassResolver.field(key, of: classDef) else {
+        guard let classDef = object.classDef, let field = field(key, of: classDef) else {
             throw StoreError.unknownField(key)
         }
         guard kinds.contains(field.kind) else { throw StoreError.wrongKind(field: key, expected: kinds) }
         return field
+    }
+
+    /// Inserts a link, then relates it (see `create` for why the order matters).
+    private func insertLink(from source: ObjectRecord, fieldID: UUID, toObject: ObjectRecord? = nil,
+                            toClass: ClassDef? = nil, sortIndex: Int = 0)
+    {
+        let link = ObjectLink(fieldID: fieldID, sortIndex: sortIndex)
+        context.insert(link)
+        link.from = source
+        link.toObject = toObject
+        link.toClass = toClass
     }
 
     private func removeLinks(fieldID: UUID, from object: ObjectRecord) {
@@ -376,10 +367,4 @@ public struct ObjectStore {
             .filter { !$0.isDeleted && seen.insert($0.id).inserted }
             .sorted { $0.createdAt < $1.createdAt }
     }
-}
-
-/// Per-store lookup cache. `classObjects[id] == .some(nil)` caches "this class has no class object".
-@MainActor
-private final class Cache {
-    var classObjects: [UUID: ObjectRecord?] = [:]
 }

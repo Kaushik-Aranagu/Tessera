@@ -34,28 +34,21 @@ public extension TrainingLedger {
 
     /// The month heatmap: one cell per day, filled by that day's volume relative to a typical session.
     func month(containing date: Date, calendar: Calendar = .current) -> [DayVolume] {
-        guard let interval = calendar.dateInterval(of: .month, for: date),
-              let workoutClass = classes[.workout] else { return [] }
-        var byDay: [Date: (Int, Double)] = [:]
-        var recent: [Double] = []
+        guard let interval = calendar.dateInterval(of: .month, for: date) else { return [] }
         let typicalWindow = interval.end.addingTimeInterval(-90 * 86400)
-        for workout in store.objects(of: workoutClass) {
-            guard let ended = store.value("endedAt", of: workout)?.dateValue else { continue }
-            let volume = workout.orderedChildren.reduce(0.0) { total, entry in
-                total + entry.orderedChildren.reduce(0.0) { sum, set in
-                    guard setKind(set).counts else { return sum }
-                    return sum + (store.number("volume", of: set) ?? 0)
-                }
-            }
-            if ended >= typicalWindow, ended < interval.end, volume > 0 {
-                recent.append(volume)
-            }
-            guard interval.contains(ended) else { continue }
-            let day = calendar.startOfDay(for: ended)
-            let current = byDay[day] ?? (0, 0)
-            byDay[day] = (current.0 + 1, current.1 + volume)
+        // Volume per workout, from the training index (warm-ups already left out).
+        var workouts: [UUID: (date: Date, volume: Double)] = [:]
+        for (_, session) in index.allSessions where session.date >= typicalWindow && session.date < interval.end {
+            workouts[session.workout.id, default: (session.date, 0)].volume += session.volume
         }
-        let typical = recent.sorted().dropFirst(recent.count / 2).first ?? 0
+        let recent = workouts.values.map(\.volume).filter { $0 > 0 }.sorted()
+        let typical = recent.isEmpty ? 0 : recent[recent.count / 2]
+        var byDay: [Date: (sessions: Int, volume: Double)] = [:]
+        for workout in workouts.values where interval.contains(workout.date) {
+            let day = calendar.startOfDay(for: workout.date)
+            byDay[day, default: (0, 0)].sessions += 1
+            byDay[day, default: (0, 0)].volume += workout.volume
+        }
         var days: [DayVolume] = []
         var day = interval.start
         while day < interval.end {

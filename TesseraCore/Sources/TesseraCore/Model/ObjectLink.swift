@@ -16,6 +16,12 @@ public final class ObjectLink {
     public var toObject: ObjectRecord?
     public var toClass: ClassDef?
 
+    /// An unrelated link; insert it into a context, then set `from` and a target.
+    public init(fieldID: UUID, sortIndex: Int = 0) {
+        self.fieldID = fieldID
+        self.sortIndex = sortIndex
+    }
+
     public init(
         from: ObjectRecord,
         fieldID: UUID,

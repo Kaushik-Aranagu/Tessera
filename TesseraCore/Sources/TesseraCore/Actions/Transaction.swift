@@ -18,7 +18,7 @@ public struct Transaction {
     public func object(_ id: UUID, is key: SystemCatalog.Key) throws -> ObjectRecord {
         let object = try object(id)
         guard let expected = classes[key], let classDef = object.classDef,
-              ClassResolver.isSubclass(classDef, of: expected)
+              store.isSubclass(classDef, ofClassID: expected.id)
         else { throw ActionError.wrongClass(id, expected: key.rawValue) }
         return object
     }
@@ -38,7 +38,7 @@ public struct Transaction {
     }
 
     public mutating func set(_ key: String, to value: FieldValue?, on object: ObjectRecord) throws {
-        guard let field = object.classDef.flatMap({ ClassResolver.field(key, of: $0) }) else {
+        guard let field = object.classDef.flatMap({ store.field(key, of: $0) }) else {
             throw ObjectStore.StoreError.unknownField(key)
         }
         let old = object.values[field.id]
@@ -70,6 +70,7 @@ public struct Transaction {
         ops.append(.setTitle(object: object.id, old: object.title, new: title))
         object.title = title
         object.updatedAt = .now
+        store.noteChange(object)
     }
 
     /// Soft-deletes the object and its children; undo restores them.
@@ -80,7 +81,7 @@ public struct Transaction {
     }
 
     private func linkFieldID(_ key: String, of object: ObjectRecord) throws -> UUID {
-        guard let field = object.classDef.flatMap({ ClassResolver.field(key, of: $0) }) else {
+        guard let field = object.classDef.flatMap({ store.field(key, of: $0) }) else {
             throw ObjectStore.StoreError.unknownField(key)
         }
         return field.id
