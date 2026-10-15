@@ -31,7 +31,7 @@
 **Later:**
 - **Lists engine.** `ship-list-lists.md` slices, in build order 1 → 3 → 2 → 4 → 5 → 7 → 6 → 8: housekeeping, lists from text, item paragraphs, reusable, run on Now, pick one, dated items in Today, list phrases. These replace kitchen slice 15.
 - M3 slices 1 to 12 in `ship-list-m3.md`. Land the M3 List template on the kitchen `List` class.
-- M4 engine slices 1, 2, 4, 5 (Day log) and 9 in `ship-list-m4.md`. These come after Lists. Slice 6, Plan my day, stays out until Kaushik OKs a model call.
+- M4 engine slices in `ship-list-m4.md`, after Lists: 1 calendar, 2 Health, 3 day full, 5 Day log, 6 Plan my day (rules only), 7 Shutdown, 12 Tess on-device fallback (with the 200-phrase eval set), 4 interrupts, 9 first step. Slice 6b, model rewording, stays parked until Kaushik OKs it.
 
 ## iOS Builder A (Mac, current iOS build thread)
 
@@ -83,7 +83,7 @@
 **Always on:** review each Core or iOS screen as it merges, with file-and-change fixes posted in the Design thread.
 
 **Next:**
-1. M4 screen steers: Day log, Shutdown, Focus block and the energy check-in (`ship-list-m4.md`). Plan my day waits for Kaushik's OK.
+1. M4 screen steers: Plan my day (rules), Shutdown, Day log, Focus block Live Activity and the energy check-in (`ship-list-m4.md`).
 2. A widget and snippet visual language (pulled forward for M4 slice 10).
 3. The task finish moment (M2 slice 9): Ink strike timing and haptic for Builder B.
 
@@ -107,13 +107,18 @@
 
 ## Research lab
 
-**Done (2026-10-15):** `next-areas.md` (#59); M4 scouting `m4-scouting.md`, Tess routing `tess-routing.md` with 200 eval phrases `tess-eval-phrases.md`, Kitchen v2 `kitchen-v2.md` (all in PR #65).
+**Done (#65):** M4 scouting, Tess routing with 200 eval phrases, and kitchen v2. Next areas earlier (#59).
 
-**Now (running, two scouts):** Widget and snippet patterns, plus Next 1. Done when the best iOS 26/27 interactive widget and snippet examples are scouted for M4 slice 10.
+**Now:** Day log patterns for M4 slice 5. Done when there's a short brief on journals that write themselves (what to auto-include, how to keep it from becoming noise) and on scrubbing back through days.
 
 **Next:**
-1. What makes a personal OS stick past week 3: a retention and habit research brief.
+1. Widget and snippet patterns. Done when the best iOS 26/27 interactive widgets and App Intent snippets are scouted for M4 slice 10.
+2. Retention. Done when there's a brief on what makes a personal OS stick past week 3, with 3 to 5 concrete product changes.
+3. M5 scouting for Money and the Reading queue. Done when each has the smallest version, a first-time flow and the pitfalls (Money: no bank data).
 
+**Later:**
+- People and Home upkeep scouting.
+- Checking the on-device context size (4K vs 8K) once a Mac lead can run it.
 
 ## QA (Repo maintainer)
 
@@ -136,9 +141,9 @@
 **Now:** keep this board ahead of the builders. Done when no team's Next holds fewer than 2 items.
 
 **Next:**
-1. Finalise M4 from Research lab's scouting. Done when `ship-list-m4.md` moves from draft to ready.
-2. A v1 acceptance pass. Done when each v1 slice has been checked against the latest recordings, with gaps added to the iOS build's Next.
-3. Kitchen v2 scope review with the Kitchen lead.
+1. A v1 acceptance pass. Done when each v1 slice has been checked against the latest recordings, with gaps added to the iOS build's Next.
+2. Kitchen v2 scope review with the Kitchen lead, after a week of use.
+3. Draft M5 from Research's Money and Reading queue scouting.
 
 **Later:**
 - M5 candidates, in Research lab's order: Money, Reading queue, People and Home upkeep. Also "build me an app" with Claude, and daem
