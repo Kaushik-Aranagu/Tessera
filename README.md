@@ -1,4 +1,5 @@
-# Projects
-Simplenet comtains files for training CIFAR-100 dataset.
+# Pilot
 
-For training on any of the algorithms with more than 1 layer in the classifier, the model file, ./Simplenet/models/simplenet.py needs to be changed accordinggly (comment or uncomment a few lines of code)
+A personal "OS inside an app" for iPhone, built with SwiftUI. App code is coming soon.
+
+The old 2019 Simplenet experiments that used to live here are kept on the `archive/simplenet-2019` branch.
