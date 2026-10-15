@@ -43,3 +43,6 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [fixtures/cook-mode-scenarios.md](fixtures/cook-mode-scenarios.md) | Core: 15 cook mode timer, process and Now scenarios (kitchen 12) |
 | [fixtures/lists-fixtures.md](fixtures/lists-fixtures.md) | Core, Kitchen lead: 40 list pastes and 60 list phrases (Lists 3, 8) |
 | [grammar-collisions.md](grammar-collisions.md) | Core: 46 Tess grammar collisions across domains, precedence rules, 56 test rows |
+| [ship-list-m5-money-draft.md](ship-list-m5-money-draft.md) | Product: DRAFT Money ship list, 7 slices, 15 phrases (M5) |
+| [v1-gap-audit.md](v1-gap-audit.md) | Product, Builder A: v1 slices vs master 285b34a (15 on, 3 partly, 1 missing) |
+| [recipe-link-fetch.md](recipe-link-fetch.md) | Core, Kitchen lead: recipe link fetch (JSON-LD, parser, Haiku fallback), slices L1-L3 |
