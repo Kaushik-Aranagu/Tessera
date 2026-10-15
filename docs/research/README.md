@@ -80,3 +80,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [m3-3-6-10-brief.md](m3-3-6-10-brief.md) | Core: M3 slices 3, 6, 10 shapes and fixtures, mapped to the A1 blockers each clears |
 | [pantry-light.md](pantry-light.md) | Kitchen lead, Core: "Usually have" line from repurchase intervals, 20 fixture weeks, slice U0 |
 | [fixtures/grammar-misfires.md](fixtures/grammar-misfires.md) | Core: 238 everyday phrases traced through master grammar, 154 misfires, 16 root causes, top-10 fix list |
+| [fixtures/day-log-days.md](fixtures/day-log-days.md) | Core: five real-shaped days of op logs with the exact DayStory lines, including the unfinished workout and the "Also:" cut-off |

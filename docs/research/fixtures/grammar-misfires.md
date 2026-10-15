@@ -22,6 +22,7 @@ There is no `TessSpokenNormalizer` on master. The only normalise step is `TessGr
 
 - `../grammar-collisions.md` (GC, written at `fcad46c`). Fixed since: GC 1 (whole-word lifts, G:327-331), GC 13 (reschedule, G:83-89), GC 16 to 20 (question guard), GC 22 (`buy sun cream`, K:160-168), GC 34 and 35 (rest timer in a workout, G:113-119), GC 42 (bare noun at the shop, G:120-128), GC 44 (`thu` on a Thursday means today, G:437-446). Still open and seen again here: GC 11 (`done for today`), GC 25 (`bench 80x8 today`), GC 26 (`bench 80 x 8 at 7`), GC 45 (bare `at 7`).
 - `upkeep.md` rows 18, 19, 28, 30 and `people.md` rows 6, 7, 18, 33, 35: the past-tense, `get mum a card`, bare `at N` and shop-name rows. Rows 1 to 3 here repeat three of them on purpose, as the task asked, and the rest go wider.
+- `docs/product/kitchen-misfire-rows.md` (Kitchen lead, branch `claude/project-thread-nq38le` at `bf95717`, merging as #142): 40 phrases that must stay kitchen and 20 grocery look-alikes. Traced in their own section (rows 239 to 298) and included in the root-cause table, the fix list and the breakage check.
 - `money.md`, `reading.md`: no new grammar on master for these. Money and reading phrases are not repeated here.
 - `spoken-normaliser.md`: rows 43, 52, 53, 54, 76, 77 already name the time problems. This file shows the same problems in typed text, where no normaliser will help.
 
@@ -333,11 +334,80 @@ The last column names the root cause (RC) from the table further down.
 | 237 | call mum | I | Model | Model | OK | |
 | 238 | dentist fri 10am | I | Task "Dentist", Fri 10:00 | Same | OK | |
 
-**Count:** 238 rows. **Misfires: 154** (142 wrong writes and 12 misses). 84 rows are OK; many of them are guard rows that a fix must keep passing.
+### Kitchen lead's rows (docs/product/kitchen-misfire-rows.md)
 
-By category: required rows 3 (3 misfires); past-tense logs 37 rows (30); get/buy 33 rows (23); bare clock times 54 rows (30); food names 30 rows (14); mixed workout and task 28 rows (20); other contexts, questions and titles 53 rows (34).
+Source: `docs/product/kitchen-misfire-rows.md` on branch `claude/project-thread-nq38le` at `bf95717` (merging to master as #142). That branch differs from master only in two docs files, so the grammar traced is the same `0950ba7` code. Each phrase keeps its Kitchen id (A1 to A40, B1 to B20) in brackets. Context is idle unless the row says W. The expected column is the Kitchen lead's, shortened. Part A must stay kitchen; part B looks like groceries but is not.
 
-Misfires per root cause (a row can have two): RC2 29, RC1 26, RC3 23, RC6 14, RC5 11, RC4 10, RC11 10, RC12 8, RC7 8, RC10 6, RC9 4, RC8 4, RC15 3, RC13 2, RC14 1, RC16 1.
+| # | Phrase | Ctx | Master parse (rule, object, fields) | Expected | Verdict | RC |
+|---|---|---|---|---|---|---|
+| 239 | (A1) buy milk | I | Kitchen `buy` (K:39-48): groceries ["milk"] | Same | OK | |
+| 240 | (A2) get oat milk | I | `isGettable`: "oat milk" is in the dairy aisle: groceries ["oat milk"] | Same | OK | |
+| 241 | (A3) milk, eggs, bread | I | Comma sets fail (no lifts). Comma groceries (K:51-57): 3 lines | Same | OK | |
+| 242 | (A4) 2 lemons, a bunch of coriander | I | Comma sets: "2 lemons" has a weight but no reps, so nil. Lift on the whole phrase: weight 2, no reps, nil. Comma groceries: 2 lines | Same | OK | |
+| 243 | (A5) buy 500 g chicken thighs | I | Lift: weight 500, no reps (G:245). `buy`: groceries ["500 g chicken thighs"] | Same | OK | |
+| 244 | (A6) get 6 eggs and butter | I | Lift: weight 6, no reps. `get`: split on "and"; "6 eggs" has an amount, "butter" is dairy: groceries ["6 eggs", "butter"] | Same | OK | |
+| 245 | (A7) groceries: bin bags | I | `groceries:` prefix (K:40): groceries ["bin bags"] | Same | OK | |
+| 246 | (A8) add to groceries: kitchen roll | I | `add to groceries:` prefix (K:40): groceries ["kitchen roll"] | Same | OK | |
+| 247 | (A9) buy chalk | I | No numbers, so no lift. Groceries ["chalk"] | Groceries (the aisle is Other on master, not Household; that is the aisle guide, not the grammar) | OK | |
+| 248 | (A10) buy bench scraper | I | No numbers, so no lift. Groceries ["bench scraper"] | Same | OK | |
+| 249 | (A11) get squat rack hooks | I | `isGettable`: no aisle, but 3 words (K:155): groceries ["squat rack hooks"] | Same | OK | |
+| 250 | (A12) buy press n seal | I | Groceries ["press n seal"] | Same | OK | |
+| 251 | (A13) buy curl cream | I | Groceries ["curl cream"] | Same | OK | |
+| 252 | (A14) 2 tins tomatoes, pasta, parmesan | I | Comma sets fail. Comma groceries: 3 lines | Same | OK | |
+| 253 | (A15) buy coffee beans 1 kg | I | Lift: weight 1, unit kg, no reps, nil. Groceries ["coffee beans 1 kg"] | Same | OK | |
+| 254 | (A16) get bananas x6 | I | The scheme needs a digit before `x` (G:238), so "x6" is a word; no weight. `get`: 2 words: groceries ["bananas x6"] | Same | OK | |
+| 255 | (A17) buy 3 x 400 g tins chickpeas | I | Lift: scheme "3 x 400" read as weight 3, reps 400; reps over 100 fail (G:245). `buy` has no set check: groceries ["3 x 400 g tins chickpeas"] | Same | OK | |
+| 256 | (A18) buy sun cream | I | `hasDate` drops a mid-phrase `sun` (K:162-166): groceries ["sun cream"] | Same | OK | |
+| 257 | (A19) buy sat nav charger | I | `hasDate` drops `sat` (next word "nav" is not a time): groceries ["sat nav charger"] | Same | OK | |
+| 258 | (A20) buy cake candles wed | I | `wed` is last, so a date; `buy` is skipped. Task "Buy cake candles", Wed 21 Oct 09:00 | Same | OK | |
+| 259 | (A21) get tonic water | I | No date word. `get`: 2 words: groceries ["tonic water"] | Same | OK | |
+| 260 | (A22) buy tomorrow's bread | I | `tomorrow's` is not `tomorrow` (G:406 trims only edge punctuation), so no date: groceries ["tomorrow's bread"] | Groceries ["bread"] (a dated task "Buy bread" tomorrow also accepted) | MISFIRE | RC19 |
+| 261 | (A23) timer pasta 10 | I | Lift: weight 10, no reps. Timer (K:74-93): "Pasta", 10 min | Same | OK | |
+| 262 | (A24) 10 min timer | I | Timer "Timer", 10 min | Same | OK | |
+| 263 | (A25) timer 90 sec | I | `secs?` unit: timer "Timer", 1.5 min | Same (90 s) | OK | |
+| 264 | (A26) rice timer 18 | I | Timer "Rice", 18 min | Same | OK | |
+| 265 | (A27) dough rest timer 45 | I | Not a bare "rest", so minutes (K:84): timer "Dough rest", 45 min | Same | OK | |
+| 266 | (A28) cook carbonara | I | `parseCook` explicit (K:98): start cooking Spaghetti carbonara | Same | OK | |
+| 267 | (A29) make dal | I | Explicit `make`; whole-word match finds Weeknight dal: start cooking | Same | OK | |
+| 268 | (A30) cook chilli | I | Start cooking Chilli con carne | Same | OK | |
+| 269 | (A31) carbonara thursday | I | `thursday` is today with no time, so 19:00 (G:439-443). Cook task linking Spaghetti carbonara, today 19:00 (title "Cook spaghetti carbonara", E:135) | Same | OK | |
+| 270 | (A32) cook dal tonight | I | Cook task linking Weeknight dal, today 20:00 | Same | OK | |
+| 271 | (A33) make chilli sat | I | Cook task linking Chilli con carne, Sat 17 Oct 09:00 | Same | OK | |
+| 272 | (A34) shop | I | Shop word (K:28): start the shop | Same | OK | |
+| 273 | (A35) out of milk | I | No prefix the kitchen knows; no date. Model | Groceries ["milk"] | MISFIRE (miss) | RC17 |
+| 274 | (A36) need eggs | I | Model | Groceries ["eggs"] | MISFIRE (miss) | RC17 |
+| 275 | (A37) we're out of coffee | I | Model | Groceries ["coffee"] | MISFIRE (miss) | RC17 |
+| 276 | (A38) buy 1 (400 g) tin coconut milk | I | Lift: weight 1, "(400" and "g)" are words, no reps. Groceries ["1 (400 g) tin coconut milk"], one line. `IngredientLine` drops the bracket from the name (Q:145) | Same | OK | |
+| 277 | (A39) buy milk | W | Workout rule only takes rest/timer (G:117); relative set misses; lift misses. Groceries ["milk"] | Same | OK | |
+| 278 | (A40) 3 lemons | W | Relative set: `Double("3 lemons")` is nil (G:168), so no set. Lift: weight 3, no reps. No kitchen rule for a bare amount. Model | Groceries ["3 lemons"], never a set | MISFIRE (miss) | RC18 |
+| 279 | (B1) get mum a card | I | Same as row 2: groceries ["mum a card"] | Task "Get mum a card" | MISFIRE | RC3 |
+| 280 | (B2) buy present for mum fri | I | Date, so `buy` is skipped. Task "Buy present for mum", Fri 16 Oct 09:00 | Same | OK | |
+| 281 | (B3) get haircut | I | 1 word (K:155): groceries ["haircut"] | Task "Get haircut" | MISFIRE | RC3 |
+| 282 | (B4) get car washed | I | 2 words, no "done" suffix: groceries ["car washed"] | Task "Get car washed" | MISFIRE | RC3 |
+| 283 | (B5) buy train tickets | I | Groceries ["train tickets"] | Task "Buy train tickets" | MISFIRE | RC3 |
+| 284 | (B6) get flu jab | I | Groceries ["flu jab"] | Task "Get flu jab" | MISFIRE | RC3 |
+| 285 | (B7) buy flowers for Anu saturday | I | `saturday` is a full weekday, so a date. Task "Buy flowers for Anu", Sat 09:00 | Same | OK | |
+| 286 | (B8) get milk on the way home tomorrow | I | Date. Task "Get milk on the way home", Fri 09:00 | Same | OK | |
+| 287 | (B9) gifts: mug for anu | I | No list-add grammar on master. Model | List Gifts ["mug for anu"] once Lists slice 8 lands. Model today is the safe miss | OK | |
+| 288 | (B10) packing: charger | I | Model | List Packing ["charger"] (slice 8). Model today | OK | |
+| 289 | (B11) errands: return parcel thu | I | Date, no recipe. Task "Errands: return parcel", today 19:00 | Item "return parcel" on the Errands list, dated Thu | MISFIRE | RC20 |
+| 290 | (B12) get back to Sam | I | `back` is a not-thing (K:151), nil. No date. Model | Task "Get back to Sam" (the model makes it) | OK | |
+| 291 | (B13) get ready for gym | I | `ready` is a not-thing. Model | Task (model) | OK | |
+| 292 | (B14) buy time with the landlord | I | Groceries ["time with the landlord"] | Task, not groceries | MISFIRE | RC3 |
+| 293 | (B15) get the bins out | I | `the` is a not-thing. Model | Task (model) | OK | |
+| 294 | (B16) buy new trainers | I | Groceries ["new trainers"] | Task "Buy new trainers" | MISFIRE | RC3 |
+| 295 | (B17) get a new phone case | I | `a` read as amount 1 (Q:128-130): groceries ["a new phone case"] | Task | MISFIRE | RC3 |
+| 296 | (B18) buy a birthday cake for dad sun | I | `sun` is last, so a date. Task "Buy a birthday cake for dad", Sun 18 Oct 09:00 | Same | OK | |
+| 297 | (B19) note buy milk | I | Note first (G:55): note "buy milk" | Same | OK | |
+| 298 | (B20) remind me to buy milk at 6 | I | Kitchen bails on `remind` (K:33). Task rule: `at 6` is 06:00, passed: task "Buy milk", Fri 06:00 | Task "Buy milk", 18:00 (with the RC1 rule, 18:00 is now, so Fri 18:00) | MISFIRE | RC1 |
+
+Kitchen rows: 60. Part A: 35 OK, 5 misfires (1 wrong write, 4 misses). Part B: 10 OK, 10 misfires (all wrong writes). Rows 279 and 239 repeat rows 2 and 67 on purpose.
+
+**Count:** 298 rows (238 everyday rows plus the Kitchen lead's 60). **Misfires: 169** (153 wrong writes and 16 misses). 129 rows are OK; many of them are guard rows that a fix must keep passing, including all 35 OK rows in Kitchen part A.
+
+By category: required rows 3 (3 misfires); past-tense logs 37 rows (30); get/buy 33 rows (23); bare clock times 54 rows (30); food names 30 rows (14); mixed workout and task 28 rows (20); other contexts, questions and titles 53 rows (34); Kitchen part A 40 rows (5); Kitchen part B 20 rows (10).
+
+Misfires per root cause (a row can have two): RC3 31, RC2 29, RC1 27, RC6 14, RC5 11, RC4 10, RC11 10, RC12 8, RC7 8, RC10 6, RC9 4, RC8 4, RC15 3, RC17 3, RC13 2, RC14 1, RC16 1, RC18 1, RC19 1, RC20 1.
 
 ## Misfires by root cause
 
@@ -345,14 +415,14 @@ Each row gives the smallest change I can see, as a regex or an order change, and
 
 | RC | Root cause | Where | Smallest proposed change | Rows fixed | Breaks / flags |
 |---|---|---|---|---|---|
-| RC1 | A bare hour with no am/pm is read on a 24-hour clock. At 18:00, `at 7` is 07:00, which has passed, so it becomes tomorrow 07:00 | G:417-419, G:429-434, G:470-482 | In `TessDates.extract`, remember whether the time had `am`/`pm` or an hour of 13 or more. If not, and the hour is 1 to 11: if the phrase has an am cue (`/\b(wake|alarm|morning|breakfast)\b/`) use am; if it has a pm cue (`/\b(tonight|evening|dinner|drinks|pub|party)\b/`) use pm; else for today take the first of H:00 and (H+12):00 after `now` (hours 1 to 6 always pm); for another day use am for 7 to 11 and pm for 1 to 6. Hour 12 stays noon | 3, 61, 86, 95 to 100, 105, 111, 117 (only with a "table" pm cue), 118, 121 to 124, 145, 146, 148, 149, 165, 167, 169, 193, 205 | Row 101 (`wake me at 7`) needs the am cue list. Row 100 (`gym at 7`) is truly ambiguous: show Fri 07:00 as a one-tap alternative (GC rule 9). Row 117 is not fixed unless "table" joins the pm cues. A Product yes is needed on "1 to 6 is pm" |
+| RC1 | A bare hour with no am/pm is read on a 24-hour clock. At 18:00, `at 7` is 07:00, which has passed, so it becomes tomorrow 07:00 | G:417-419, G:429-434, G:470-482 | In `TessDates.extract`, remember whether the time had `am`/`pm` or an hour of 13 or more. If not, and the hour is 1 to 11: if the phrase has an am cue (`/\b(wake|alarm|morning|breakfast)\b/`) use am; if it has a pm cue (`/\b(tonight|evening|dinner|drinks|pub|party)\b/`) use pm; else for today take the first of H:00 and (H+12):00 after `now` (hours 1 to 6 always pm); for another day use am for 7 to 11 and pm for 1 to 6. Hour 12 stays noon | 3, 61, 86, 95 to 100, 105, 111, 117 (only with a "table" pm cue), 118, 121 to 124, 145, 146, 148, 149, 165, 167, 169, 193, 205, 298 | Row 101 (`wake me at 7`) needs the am cue list. Row 100 (`gym at 7`) is truly ambiguous: show Fri 07:00 as a one-tap alternative (GC rule 9). Row 117 is not fixed unless "table" joins the pm cues. A Product yes is needed on "1 to 6 is pm" |
 | RC2 | A past-tense log with a day becomes a future task. `TessDates` has no past mode | G:90, G:352-371, K:96-111 | In `parseTask` and `parseCook`, return nil when the first word is a past verb: `/^(?:did|went|saw|met|ate|had|ran|took|got|bought|made|paid|sent|rang|spoke|slept|woke|fed|drank|swam|rode|left|came|gave|wrote|\p{L}{3,}ed)$/` and not in `[need, feed, seed, weed, bleed, breed, speed, shed, embed, exceed, proceed, succeed]`. The phrase then goes to the model (later to Upkeep and People with a past date) | 1, 4 to 25, 28 to 30, 38 to 40 | "need to call mum thu", "feed the cat sat", "weed the garden sun" stay tasks only through the exception list (rows 33 to 35). Titles that start with an adjective in -ed ("advanced driving lesson sat", "scheduled service fri", "guided run sat", "mixed doubles sat") would go to the model instead of becoming tasks. `did` already hits the question guard first |
-| RC3 | `get` takes anything of 3 words or fewer, and `a`/`an` counts as an amount, so people, errands and non-food go on the groceries list. `buy` has no check at all | K:45-46, K:149-156 (fallback K:155), K:64-71, Q:128-130 | (a) In `isGettable`, replace `looksLikeGroceries(item) \|\| item.split(separator: " ").count <= 3` with `looksLikeGroceries(item)`. (b) In `looksLikeGroceries`, count an amount only when the item starts with a digit: `(line.amount != nil && item.first?.isNumber == true)`. (c) Add common drinks and snacks to the aisle guide (A:47-90): coffee, tea, juice, beer, wine, crisps, biscuit, snack, protein. (d) For `buy`, run the same check on each item; on failure return nil (model) | 2, 42 to 54, 60, 132 to 135, and with (d) 55 to 58 | Without (c), row 65 (`get coffee`) and "milk, coffee, tea" stop being groceries. After (a), `get stamps`, `get batteries`, `get quorn` go to the model. (d) changes rows 69 and 70 (`buy batteries`, `buy flowers for mum`) to the model unless batteries and flowers join the guide, and it goes against People Decision 8 ("buy keeps its kitchen meaning"). Product should decide (d) separately |
+| RC3 | `get` takes anything of 3 words or fewer, and `a`/`an` counts as an amount, so people, errands, services and non-food go on the groceries list. `buy` has no check at all | K:39-49, K:149-156 (fallback K:155), K:64-71, Q:128-130 | **Revised after the Kitchen rows.** Keep the 3-word fallback (it is what keeps Kitchen A9 to A13, A16 and A21 on the list) and add blockers, run on every `buy`/`get` item: (1) the item's first word is a person word `/^(mum\|mom\|dad\|nan\|nana\|gran\|granny\|grandma\|grandad\|grandpa\|sis\|bro\|wife\|husband\|partner\|kids\|boss\|her\|him\|them)\b/`; (2) the gift shape `/^(?!(?:a\|an\|some\|\d))\S+\s+(?:a\|an\|some)\s+\S/` ("mum a card", "Olive a present"); (3) the item starts with `a`/`an` and the rest does not look like groceries; (4) a service or non-shop word `/\b(haircut\|jab\|appointment\|tickets?\|flights?\|phone\|trainers\|shoes\|present\|gift\|plumber\|petrol\|cash\|photos?\|washed\|booked\|serviced\|fixed\|with)\b/`; (5) the item starts with an errand verb (`startsWithErrand`, K:142). A blocked single item becomes `.task(title: phrase, startsAt: nil)` (Later); a list with any blocked item returns nil (model) | 2, 42 to 58, 60 (to the model), 132 to 134, 279, 281 to 284, 292, 294, 295 | Row 135 (`get Candy flowers`) is not fixed until People can say "Candy" is a person. `with` in the word list sends "get bread with seeds" to a task. "get us some milk" matches the gift shape (rule 2) and becomes a task; add `us` to rule 2's exceptions if that matters. `buy present for mum` becoming a task goes against People Decision 8 ("buy keeps its kitchen meaning"), though people.md row 28 already expects a task. The first proposal (require `looksLikeGroceries`) is withdrawn: it broke Kitchen rows 247 to 251, 253, 254 and 259 |
 | RC4 | At the shop, every short phrase becomes a grocery line: errands, control words, `buy` with its verb, and `shop` itself | G:120-128 | In the shop branch, before adding: return nil when `Self.startsWithErrand(text)` (K:142) or the first word is `buy`, `get`, `add` or `pick` (so the kitchen rule handles them without the verb); return nil when `text` matches `/^(done|finished|finished shopping|done shopping|shop|shopping|thanks|thank you|ok|cancel|stop)$/`; and use `Self.hasDate(text, context:)` (K:160) in place of the raw `TessDates.extract` at G:122 | 41, 131, 196 to 202, 203 (with RC10) | `pick` as a first word means `pick up a baguette` at the shop goes to the model, not the list. "done" and "finished shopping" then write nothing until a finish-shop action exists |
 | RC5 | The question guard misses typed `?` (always trimmed first), and several common question openers. `show` alone is too broad | G:62, G:94-99, G:384 | (a) Test the raw phrase: `phrase.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix("?")`. (b) Add two-word leads `/^(is|are) (the\|it\|there\|my\|we)\b/`, `/^(do\|does\|can\|could\|should\|have) (i\|we\|you)\b/`, and single words `who`, `who's`, `whos`, `where`, `where's`, `when's`, `whens`, `which`, `any`. (c) Narrow `show` to `/^show (me\|my\|all)\b/` | 175, 176, 209 to 216, 218 | (b) overrides the spec comment at G:96 that "is" phrases stay captures, so Product must agree. Keep `do` alone off the list so "do laundry thu" (GrammarRulesTests:109) stays a task. With (a), a typed `80x8?` in a workout writes nothing; that is the intent |
-| RC6 | No split: a set and an errand in one phrase become one task, one grocery list, or nothing | G:73, G:90, K:39-48 | (a) In `parseTask`, return nil when the phrase has a set shape `/\b\d+(?:\.\d+)?\s*(?:kg\|lb)?\s*[x×]\s*\d+\b/`. (b) In the `buy` branch, return nil if any item has that shape. Both stop the wrong write. (c) Follow-up: split on `/\s*(?:,\s*)?(?:and then\|then\|and)\s+\|,\s+/` when the left part parses as a lift or set, and return a new `.batch([Parse])` | (a) and (b): 59, 162, 163, 165, 166, 167, 171 to the model. (c): 160, 161, 164, 168, 169, 170 | (a) also sends "order 2x4 timber sat" to the model. (c) must not split "milk and eggs" (no lift on the left) or `talked to sam and mum` (people.md row 11) |
+| RC6 | No split: a set and an errand in one phrase become one task, one grocery list, or nothing | G:73, G:90, K:39-48 | **Revised after the Kitchen rows.** (a) In `parseTask`, return nil when the phrase has a set shape `/\b\d+(?:\.\d+)?\s*(?:kg\|lb)?\s*[x×]\s*\d+\b/` **and** the one or two words just before the shape resolve to an exercise (`resolveExercise`). (b) In the `buy`/`get` branch, return nil if any item parses as a lift (`parseLift(item, entry: nil) != nil`), not merely if it has an `x`. Both stop the wrong write. (c) Follow-up: split on `/\s*(?:,\s*)?(?:and then\|then\|and)\s+\|,\s+/` when the left part parses as a lift or set, and return a new `.batch([Parse])` | (a) and (b): 59, 162, 163, 165, 166, 167, 171 to the model. (c): 160, 161, 164, 168, 169, 170 | The plain shape check first proposed would have broken Kitchen A17 (row 255, `buy 3 x 400 g tins chickpeas`) and A16 (row 254); the lift check keeps both. (c) must not split "milk and eggs" (no lift on the left), A6 (row 244, `get 6 eggs and butter`) or `talked to sam and mum` (people.md row 11) |
 | RC7 | Words next to a removed date stay in the title: `on`, `by`, `this`, `next`, `for`, a trailing comma, and `to` after a date in a reminder | G:360-370, G:405-426 | In `TessDates.extract`, when a day or time token is used, also drop the word just before it if it is `on`, `by`, `this`, `next` or `for`. In `parseTask`, strip a leading `to` from the remaining words after `extract` (not before), and trim trailing `,;:` from the title | 157, 219 to 224, 227 | Dropping `next` hides "next Friday" when it means 23 Oct (GC open question 4); keep a flag until that is decided. "for" goes even in "rehearsal for sat", which is fine. Spoken text will reach this after the normaliser, so the two must agree |
-| RC8 | A comma list is groceries if one item looks like food, and the aisle guide reads the last word, so "lunch with Olive" is a tin | K:51-57, K:134-139, A:27-35 | In `isShoppingList`, change `lines.contains(where: looksLikeGroceries)` to `lines.allSatisfy(looksLikeGroceries)`, and in `looksLikeGroceries` return false for items matching `/\b(with\|for\|are\|is)\b/` | 136 to 139 | "milk, coffee, tea" and "bread, stuff for lunch" stop being groceries unless RC3 (c) adds coffee and tea. "chicken with skin, rice" goes to the model |
+| RC8 | A comma list is groceries if one item looks like food, and the aisle guide reads the last word, so "lunch with Olive" is a tin | K:51-57, K:134-139, A:27-35 | In `isShoppingList`, change `lines.contains(where: looksLikeGroceries)` to `lines.allSatisfy(looksLikeGroceries)`, and in `looksLikeGroceries` return false for items matching `/\b(with\|for\|are\|is)\b/` | 136 to 139 | Needs coffee, tea, juice and water added to the aisle guide (A:47-90) in the same change, or "milk, coffee, tea" stops being groceries. Checked against the Kitchen comma rows: A3, A4 and A14 (rows 241, 242, 252) still pass, since every item there has an amount or an aisle word. "bread, stuff for lunch" and "chicken with skin, rice" go to the model |
 | RC9 | `tonight` and `today` with a time can land in the past: `at 9` overwrites tonight's 20:00, and no rule checks a stated time today | G:407-411, G:417-418, G:447-452 | Fold into RC1: `tonight` is a pm cue, so `at 9` with `tonight` is 21:00. Then, after the date is built, if a day word was `today` or `tonight` and the result is before `now`, return nil (the model asks) instead of a past task | 106, 107, 109, 110 | None seen. A deliberate past-time task ("today 3pm" said late) now goes to the model |
 | RC10 | Short weekdays (`sun`, `sat`, `wed`, `mon`) are read as days everywhere except the kitchen check, so `sun cream`, `sat nav` lose a word and gain a date | G:414-416, G:122, K:160-168 | Move the filter from `hasDate` (K:162-166) into `TessDates.extract` itself: an ambiguous short weekday counts only when it is the last word, comes before a time or a part-of-day word, or comes after `on`, `this`, `next` or `by`. `hasDate` then just calls `extract` | 72, 203, 204, 228 to 230 | "call mum sun and dad sat" loses `sun` (not last). With RC11, "dentist sat morning" still works only if part-of-day words count as times in the filter |
 | RC11 | Common time forms are not read: `half 7`, `7.30`, `7 pm` with a space, `morning`/`afternoon`/`evening`. A colon number is always a time | G:420-421, G:465-483 | In `extract`: read `half H` and `half past H` as H:30 (then RC1); read `H.MM` as a time only after `at`; join a number and a following `am`/`pm` token; add `morning` 09:00, `afternoon` 14:00, `evening` 18:00 as times used only when no clock time is given. In `parseTask`, return nil when the remaining title alone resolves to an exercise (`resolveExercise(title) != nil`) and the time came from `H:MM` with no `at` | 73, 90 to 94, 115, 116, 119, 120 | Read `H.MM` only after `at`: in "paid 12.50 at 12.30" only the second number is a time. Never read `H.MM` without `at`, or money amounts become times. "bench at 7" with the exercise rule goes to the model, not a task |
@@ -361,15 +431,22 @@ Each row gives the smallest change I can see, as a regex or an order change, and
 | RC14 | "done for today" in a workout becomes a task | G:113-119 | In the workout branch of `parseForProcess`, return nil for `/^(done\|finished\|all done\|that's it)(?: for today)?$/` (later a `finishWorkout` parse) | 177 | None |
 | RC15 | While cooking, a timer must contain the word "timer"; `finished cooking` is not a step word | G:109-112, K:75 | In the cook branch: `/^(\d+(?:\.\d+)?)\s*(?:m\|min\|mins\|minutes)$/` and `/^(\p{L}+) (\d+)$/` (not `step`) become `.timer`; add `finished cooking`, `done cooking` to the finish words | 189, 190, 191 | "step 3" must be excluded or it becomes a 3-minute timer called "Step". "serves 4" while cooking would become a timer "Serves"; exclude `serves` too |
 | RC16 | `note to self` keeps "to self" in the body | G:156 | `/^(?i)note(?:\s+to\s+self)?[:,\s]\s*(.+)$/` | 234 | None |
+| RC17 | "out of X", "need X" are not grocery phrases | K:39-41 | In `parseKitchen`, after the `buy`/`get` branch and only with no date: `/^(?i)(?:(?:we'?re\|i'?m)\s+)?(?:out of\|need\|we need\|need more)\s+(.+)$/` becomes groceries when every item passes `looksLikeGroceries` | 273, 274, 275 | Row 33 (`need to call mum thu`) has a date and "to call mum" is not groceries, so it stays a task. "need a haircut" and "out of time" fail `looksLikeGroceries` and fall through |
+| RC18 | A bare amount and a food ("3 lemons") has no rule, idle or in a workout | G:168, K:51-58 | After lifts, in `parseKitchen`: a phrase of 4 words or fewer, with no date, whose `IngredientLine` has a digit amount and a name in the aisle guide or the ingredient book, becomes groceries with one line | 278 | A food log like "3 eggs" (meaning eaten) becomes a grocery line. A bare "3" in a workout is still a set (G:168 runs first). "2 x 6 rolls" (GC 27) must stay out: it has a set shape |
+| RC19 | A possessive day word ("tomorrow's bread") stays in the grocery line | K:39-48, G:406 | In `splitItems` (K:171), drop `/\b(?:today\|tomorrow\|tonight)'s\s+/` from each item | 260 | None seen |
+| RC20 | A named list prefix (`errands:`) has no rule, so a dated one becomes a task with the prefix in the title | G:90 | Until Lists slice 8 lands: in `parseTask`, return nil when the first word ends in `:` and, without the colon, is the exact name of an existing list | 289 | Rows 287 and 288 (no date) already go to the model. A task typed as "Dentist: bring forms fri" stays a task unless a list is called Dentist |
 
 Proposed changes that conflict with another row or a spec, in one place:
 
 - RC1 against row 101 and row 100: needs the am cue list and an alternative on the ghost row.
 - RC2 against rows 33 to 35 (guarded by the exception list) and -ed adjectives at the start of a title.
-- RC3 (a) against row 65 unless RC3 (c) lands in the same change. RC3 (d) against People Decision 8 and rows 69, 70.
+- RC3 as first written (require `looksLikeGroceries`) broke Kitchen rows 247 to 251, 253, 254 and 259; it is now revised to blockers, and with the blockers all 35 OK Kitchen A rows still pass. The revised RC3 leaves row 135 unfixed until People, and it goes against People Decision 8 for `buy present for mum`.
+- RC6 as first written (any `x` shape) broke Kitchen rows 254 and 255; revised to a lift check.
 - RC5 (b) against the spec comment at G:96 ("is" phrases stay captures).
 - RC7 dropping `next` against GC open question 4.
-- RC8 against "milk, coffee, tea" unless RC3 (c) lands first.
+- RC8 against "milk, coffee, tea" unless coffee and tea join the aisle guide in the same change.
+- RC17 and RC18 could turn food logs into grocery lines ("need eggs" is fine; "3 eggs" said as a meal log is not).
+- Checked for the Kitchen rows: RC1, RC2, RC4, RC5, RC7, RC9 to RC16 change none of rows 239 to 298 except the ones they fix (row 298 by RC1). RC10 keeps A18 to A20 (rows 256 to 258) because `sun`, `sat` and `wed` there are mid-phrase or last exactly as `hasDate` already treats them. RC7 leaves B7, B8, B18 titles unchanged (the word before the day is not on, by, this, next or for). RC2's past-verb check does not touch `need eggs` (the `need` exception, and RC17 runs in the kitchen first).
 - RC10 against "call mum sun and dad sat".
 - RC12 (e) against high-rep sets.
 - RC15 against "step 3" and "serves 4" unless excluded.
@@ -378,18 +455,18 @@ Proposed changes that conflict with another row or a spec, in one place:
 
 Ordered by how often the phrase shape comes up in a normal day, then by how bad the wrong write is.
 
-1. **RC1 + RC9, bare hours.** `at 7` is the most common time form in typed and spoken text, and today it is 12 hours off for every evening plan. 30 rows, two of which create a task in the past (rows 106, 107).
+1. **RC1 + RC9, bare hours.** `at 7` is the most common time form in typed and spoken text, and today it is 12 hours off for every evening plan. 31 rows (one from the Kitchen rows), two of which create a task in the past (rows 106, 107).
 2. **RC7, title leftovers.** `on friday`, `by fri`, `this sat`, `remind me tomorrow to ...` are everyday phrasing; every one leaves a stray word in the title. 8 rows.
 3. **RC2, past-tense logs.** Logging what he did with a day is common, and each one makes a wrong future task that then sits on Now. 29 rows.
 4. **RC5, the question guard.** Fix the dead `?` check first (one line), then the leads. A question that logs a set (row 176) is the worst case. 11 rows.
-5. **RC3 (a) to (c), get.** People, errands and non-food land on the groceries list. 23 rows. Hold (d) for Product.
-6. **RC4, the shop run.** Every non-grocery thing said at the shop lands on the list, including "done" and "shop". 10 rows.
-7. **RC13, reschedule keeps what was not said.** Every "move X to fri" drops the task's time today. 2 rows, but every reschedule hits row 125's bug.
-8. **RC11, time forms.** `half 7`, `7.30`, `7 pm`, `morning`. 10 rows.
-9. **RC6 (a) and (b) + RC12 (a), set shapes.** Stop sets ending up inside task titles and grocery lines; log `bench 80x8 today`. About 17 rows sent to the model or fixed; the full split (RC6 (c)) is a follow-up.
-10. **RC10, short weekdays in `TessDates`.** `sun cream`, `sat nav`. 6 rows.
+5. **RC3 (revised), get and buy.** People, errands, services and non-food land on the groceries list. 31 rows, 8 of them from the Kitchen lead's part B. Ship the blockers only; none of the 35 OK Kitchen A rows changes.
+6. **RC17, "out of milk", "need eggs".** Everyday kitchen phrasing with no grammar today. 3 rows, all Kitchen part A.
+7. **RC4, the shop run.** Every non-grocery thing said at the shop lands on the list, including "done" and "shop". 10 rows.
+8. **RC13, reschedule keeps what was not said.** Every "move X to fri" drops the task's time today. 2 rows, but every reschedule hits row 125's bug.
+9. **RC11, time forms.** `half 7`, `7.30`, `7 pm`, `morning`. 10 rows.
+10. **RC6 (a) and (b) as revised + RC12 (a), set shapes.** Stop sets ending up inside task titles and grocery lines; log `bench 80x8 today`. About 17 rows sent to the model or fixed, with Kitchen A16 and A17 kept as groceries. The full split (RC6 (c)) is a follow-up.
 
-After the top 10: RC8 (comma lists with names), RC14 (`done for today`), RC15 (cook timers), RC12 (b) to (e), RC16.
+After the top 10: RC10 (short weekdays in `TessDates`, 6 rows), RC8 (comma lists with names), RC18 (bare amount plus food), RC19, RC20, RC14 (`done for today`), RC15 (cook timers), RC12 (b) to (e), RC16.
 
 ## Swift Testing cases to add
 
@@ -429,10 +506,31 @@ static let misfireRows: [MisfireRow] = [
     .init("is the gym open sat", .idle, "nil"),
     .init("do laundry thu", .idle, "task Do laundry Thu 15 19:00"), // guard
     // RC3: get
-    .init("get mum a card", .idle, "nil"),
-    .init("get a haircut", .idle, "nil"),
-    .init("get Olive a present", .idle, "nil"),
+    .init("get mum a card", .idle, "task Get mum a card later"),
+    .init("get a haircut", .idle, "task Get a haircut later"),
+    .init("get Olive a present", .idle, "task Get Olive a present later"),
     .init("get coffee", .idle, "groceries [coffee]"), // guard
+    // Kitchen lead's rows (docs/product/kitchen-misfire-rows.md)
+    .init("get haircut", .idle, "task Get haircut later"),
+    .init("buy train tickets", .idle, "task Buy train tickets later"),
+    .init("get a new phone case", .idle, "task Get a new phone case later"),
+    .init("out of milk", .idle, "groceries [milk]"),
+    .init("need eggs", .idle, "groceries [eggs]"),
+    .init("3 lemons", .workout, "groceries [3 lemons]"),
+    .init("buy tomorrow's bread", .idle, "groceries [bread]"),
+    .init("remind me to buy milk at 6", .idle, "task Buy milk Fri 16 18:00"),
+    .init("get squat rack hooks", .idle, "groceries [squat rack hooks]"), // guard
+    .init("buy bench scraper", .idle, "groceries [bench scraper]"), // guard
+    .init("buy chalk", .idle, "groceries [chalk]"), // guard
+    .init("get tonic water", .idle, "groceries [tonic water]"), // guard
+    .init("get bananas x6", .idle, "groceries [bananas x6]"), // guard
+    .init("buy 3 x 400 g tins chickpeas", .idle, "groceries [3 x 400 g tins chickpeas]"), // guard
+    .init("get 6 eggs and butter", .idle, "groceries [6 eggs, butter]"), // guard
+    .init("buy sat nav charger", .idle, "groceries [sat nav charger]"), // guard
+    .init("buy cake candles wed", .idle, "task Buy cake candles Wed 21 09:00"), // guard
+    .init("dough rest timer 45", .idle, "timer Dough rest 45"), // guard
+    .init("make dal", .idle, "cook Weeknight dal"), // guard
+    .init("buy milk", .workout, "groceries [milk]"), // guard
     .init("buy sun cream", .idle, "groceries [sun cream]"), // guard
     // RC4: shop run
     .init("call mum", .shopping, "nil"),
@@ -478,6 +576,6 @@ Also add one plain test that would have caught fact 1: `#expect(TessGrammar.isQu
 
 1. **Bare hours (RC1).** Is "1 to 6 means pm, 7 to 11 means the next one today" right for him? Should `gym at 7` ask instead of picking?
 2. **Past logs before Upkeep and People land (RC2).** Is "send it to the model" enough for now, or should the grammar write a note with a past date?
-3. **`buy` for non-food (RC3 d).** Keep People Decision 8 (`buy` is always groceries), or send non-groceries `buy` phrases to tasks?
+3. **`buy` for non-food (RC3).** The Kitchen lead's rows (B5, B16) want `buy train tickets` and `buy new trainers` as tasks, which goes against People Decision 8 (`buy` is always groceries). Which one wins? The revised RC3 follows the Kitchen rows.
 4. **"is" questions (RC5 b).** The code says "is" phrases stay captures. Is `is the gym open sat` a capture?
 5. **Today with a passed time (RC9).** Ask, drop to the model, or keep the past task?
