@@ -41,14 +41,18 @@ public struct NowPicker {
     {
         var queue: [NowItem] = []
         if let running = ProcessTable(engine: engine).running(), let subject = running.subject {
+            // Cooking: the soonest timer is Now's draining bar and its line ("Pasta, 6 min").
+            let timer = CookLog(store: store, classes: engine.classes).timers()
+                .first { $0.cook?.id == subject.id && $0.endsAt > now }
             queue.append(NowItem(
                 id: subject.id,
                 kind: .process,
                 object: subject,
                 title: store.displayTitle(of: subject),
-                startsAt: running.startedAt,
-                endsAt: nil,
-                nextStep: running.nextStep
+                startsAt: timer?.startedAt ?? running.startedAt,
+                endsAt: timer?.endsAt,
+                nextStep: timer.map { "\($0.label), \(Int(($0.remaining(at: now) / 60).rounded(.up))) min" }
+                    ?? running.nextStep
             ))
         }
         queue += timedItems(at: now, calendar: calendar)
