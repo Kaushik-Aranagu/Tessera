@@ -57,6 +57,8 @@ public enum TesseraIntentsCatalog {
         "waitOnTask": "in-app only for now",
         "createNote": "Tell Tess (\"note: …\")",
         "editNote": "in-app only: notes app",
+        "createRecipe": "in-app only for now: paste a recipe (Tess ghost is kitchen slice 9)",
+        "editRecipe": "in-app only: recipe page",
         "createList": "in-app only for now (Tess \"list: …\" is kitchen slice 9)",
         "addListItem": "in-app only for now (Tess \"buy milk\" is kitchen slice 9)",
         "checkListItem": "in-app only: lists",

@@ -15,7 +15,7 @@ public enum SystemCatalog {
         case workout, exerciseEntry, set
         case routine, task, note
         case list, listItem
-        case ingredient
+        case ingredient, recipe, recipeLine, recipeStep
         case process
         case slot, plan
 
@@ -217,6 +217,30 @@ public enum SystemCatalog {
                   fields: [
                       FieldSpec(key: "aisle", name: "Aisle", kind: .text),
                       FieldSpec(key: "isStaple", name: "Staple", kind: .bool, defaultValue: .bool(false)),
+                  ]),
+        // A recipe: its ingredient lines and steps are its children, in order. The pasted text is kept verbatim.
+        ClassSpec(key: .recipe, name: "Recipe", parent: .thing, symbol: "fork.knife", colorRole: "health", fields: [
+            FieldSpec(key: "serves", name: "Serves", kind: .number),
+            FieldSpec(key: "activeMinutes", name: "Active", kind: .number, unit: "min"),
+            FieldSpec(key: "totalMinutes", name: "Total", kind: .number, unit: "min"),
+            FieldSpec(key: "sourceText", name: "Original text", kind: .text),
+        ]),
+        ClassSpec(key: .recipeLine, name: "Recipe Line", parent: .thing, symbol: "list.dash", colorRole: "health",
+                  fields: [
+                      FieldSpec(key: "amount", name: "Amount", kind: .number),
+                      FieldSpec(key: "amountMax", name: "Up to", kind: .number),
+                      FieldSpec(key: "unit", name: "Unit", kind: .text),
+                      FieldSpec(key: "prep", name: "Prep", kind: .text),
+                      FieldSpec(key: "toTaste", name: "To taste", kind: .bool),
+                      FieldSpec(key: "original", name: "As written", kind: .text),
+                      FieldSpec(key: "ingredient", name: "Ingredient", kind: .ref, target: .ingredient),
+                  ]),
+        // A step is a paragraph; its timers are minute ranges, its mentions link the ingredients it uses.
+        ClassSpec(key: .recipeStep, name: "Recipe Step", parent: .thing, symbol: "text.alignleft",
+                  colorRole: "health", fields: [
+                      FieldSpec(key: "text", name: "Text", kind: .text),
+                      FieldSpec(key: "timers", name: "Timers", kind: .text),
+                      FieldSpec(key: "about", name: "Uses", kind: .refList, target: .ingredient),
                   ]),
         ClassSpec(key: .process, name: "Process", parent: .thing, symbol: "circle.dotted", colorRole: "neutral",
                   traits: [.timed], fields: [
