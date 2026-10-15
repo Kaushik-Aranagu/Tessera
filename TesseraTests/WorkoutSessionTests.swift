@@ -174,6 +174,18 @@ struct WorkoutSessionTests {
         #expect(session.setRows(of: entry).count == 1)
     }
 
+    @Test func removingTheSetYouAreRestingAfterEndsTheRest() throws {
+        let (model, session) = try startedSession()
+        session.logSet()
+        #expect(session.restEndsAt != nil)
+        let entry = try #require(session.currentEntry)
+        let first = try #require(session.setRows(of: entry).first)
+        session.beginEditing(setID: first.id)
+        session.removeEditing()
+        #expect(session.restEndsAt == nil)
+        #expect(WorkoutSession(workout: session.workout, model: model).restEndsAt == nil)
+    }
+
     @Test func aSecondRecordHasToBeatTheFirst() throws {
         let (_, session) = try startedSession()
         session.logSet() // 82.5 × 7, level with the best

@@ -27,7 +27,7 @@ final class WorkoutSession {
     var rpe: Double?
     /// The effort stop-slider is hidden until you pull up on the reps.
     var isEffortShown = false
-    private(set) var restEndsAt: Date?
+    var restEndsAt: Date?
     private(set) var restTotal: TimeInterval = 0
     /// Increments on every change to the session's shape (a set logged or undone, a swap, a reorder). Drives the
     /// seat animation, haptics and the Live Activity.
@@ -37,7 +37,7 @@ final class WorkoutSession {
     /// Why the dial opened where it did ("Same weight; aim for 8 reps on every set"), from the ledger.
     private(set) var targetReason: String?
     /// The line under the countdown after a rest drag ("+15. Drag again for more.").
-    private(set) var restNote: String?
+    var restNote: String?
     /// The top-set check, when the first working set ran heavy.
     private(set) var topSetCheck: TopSetCheck?
     /// When the workout was finished (the gather plays; FinishWorkout has been performed).

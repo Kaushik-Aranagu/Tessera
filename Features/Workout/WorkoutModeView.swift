@@ -218,6 +218,7 @@ private struct WorkoutContent: View {
             LiveTessCorner(line: askReply ?? WorkoutLines.tess(session, phase: phase, summary: summaryLine),
                            mode: tessMode,
                            canUndo: session.canUndoLast && !session.isEditing,
+                           holdsLine: askReply == nil && phase == .workoutDone,
                            onUndo: {
                                withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLast() }
                                undoHaptic += 1

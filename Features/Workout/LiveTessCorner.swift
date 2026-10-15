@@ -9,6 +9,8 @@ struct LiveTessCorner: View {
     let line: String
     let mode: TessSoul.Mode
     let canUndo: Bool
+    /// An instruction ("Last one. Hold to finish.") stays until it is done; everything else fades after 4 s.
+    var holdsLine = false
     var onUndo: () -> Void
     var onOpen: (() -> Void)?
     var onHome: (() -> Void)?
@@ -17,7 +19,6 @@ struct LiveTessCorner: View {
     @State private var shownLine: String?
     @State private var breathe = false
     @State private var swell = false
-    @State private var pressed = false
     @State private var opens = 0
 
     var body: some View {
@@ -30,9 +31,10 @@ struct LiveTessCorner: View {
                         .multilineTextAlignment(.trailing)
                         .lineLimit(2)
                         .minimumScaleFactor(0.85)
+                        // A new line cross-fades in place; only an empty corner slides a line in.
+                        .contentTransition(.opacity)
                         .transition(.asymmetric(insertion: .offset(x: reduceMotion ? 0 : 12).combined(with: .opacity),
                                                 removal: .opacity))
-                        .id(shownLine)
                 }
                 if canUndo {
                     Button("Undo", action: onUndo)
@@ -46,8 +48,9 @@ struct LiveTessCorner: View {
         }
         .tesseraAnimation(Theme.Motion.house, value: shownLine)
         .tesseraAnimation(value: canUndo)
-        .task(id: line) {
+        .task(id: "\(line)|\(holdsLine)") {
             shownLine = line
+            guard !holdsLine else { return }
             try? await Task.sleep(for: .seconds(4))
             if !Task.isCancelled {
                 shownLine = nil
@@ -66,26 +69,32 @@ struct LiveTessCorner: View {
             .frame(width: 46, height: 40)
             .frame(width: 64, height: 64)
             .contentShape(Rectangle())
-            // The swell answers the touch at once, so the double-tap wait never reads as lag.
-            .simultaneousGesture(DragGesture(minimumDistance: 0)
-                .onChanged { _ in
-                    guard !pressed else { return }
-                    pressed = true
-                    opens += 1
-                    withTesseraAnimation(.easeOut(duration: 0.13), reduceMotion: reduceMotion) { swell = true }
-                }
-                .onEnded { _ in
-                    pressed = false
-                    withTesseraAnimation(.easeInOut(duration: 0.13), reduceMotion: reduceMotion) { swell = false }
-                })
-            .onTapGesture(count: 2) { onHome?() }
-            .onTapGesture { onOpen?() }
+            // One tap types to her, two go to Today; the swell answers either tap.
+            .gesture(TapGesture(count: 2).onEnded { touched(then: onHome) }
+                .exclusively(before: TapGesture().onEnded { touched(then: onOpen) }))
+            // On the finish screen she only speaks: no touch, no haptic.
+            .allowsHitTesting(onOpen != nil || onHome != nil)
             .sensoryFeedback(.selection, trigger: opens)
             .accessibilityElement()
             .accessibilityLabel("Tess")
             .accessibilityValue(shownLine ?? "")
-            .accessibilityHint("Type to Tess.")
-            .accessibilityAddTraits(.isButton)
-            .accessibilityAction(named: "Go to Today") { onHome?() }
+            .accessibilityHint(onOpen == nil ? "" : "Type to Tess.")
+            .accessibilityAddTraits(onOpen == nil ? [] : .isButton)
+            .accessibilityAction { onOpen?() }
+            .accessibilityActions {
+                if let onHome {
+                    Button("Go to Today", action: onHome)
+                }
+            }
+    }
+
+    private func touched(then action: (() -> Void)?) {
+        opens += 1
+        withTesseraAnimation(.easeOut(duration: 0.13), reduceMotion: reduceMotion) { swell = true }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(130))
+            withTesseraAnimation(.easeInOut(duration: 0.13), reduceMotion: reduceMotion) { swell = false }
+        }
+        action?()
     }
 }
