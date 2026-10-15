@@ -1,15 +1,20 @@
 # Design studio
 
-**Done (2026-10-15):** kitchen build sheets on branch `claude/project-thread-b3tu3f`, `docs/design/kitchen/`: 13 Groceries (f36ff12), 10/11 Recipe page and paste (8989878), 12 Cook mode, 14 Shelf and 15 Lists v0 (d4957ac). Reviews: Notes v0, Groceries #58 (fixes in the Design thread). M3 steers and Home entry points: `docs/design/m3-steers.md` (60932f4). Live-mode polish values for v1 slice 13: `docs/design/live-polish.md` (742ffda). Today on Home motion for M2 slices 8 and 9, with a recording: `docs/design/today-on-home.md` (e961d26). M4 screen steers: `docs/design/m4-steers.md` (ead06a0). Widget and snippet language: `docs/design/widgets-and-snippets.md` (7bdcdbb). Day strip and day-full motion: `docs/design/day-strip.md` (00343d5). Lists screens 9-12 values (supersedes sheet 15): `docs/design/kitchen/lists-9-12.md` (d134bf0), sent to the Kitchen lead. Plan my day and Shutdown recording: `docs/design/recordings/plan-and-shutdown.mp4` (0cffd1e). Day strip recording: `docs/design/recordings/day-strip.mp4` (c33273e). Lists pick-one and reset recording: `docs/design/recordings/lists-pick-and-reset.mp4` (45ea06f). Plate stack concept with recording: `docs/design/plate-stack.md`.
+**Done (2026-10-15):** kitchen build sheets on branch `claude/project-thread-b3tu3f`, `docs/design/kitchen/`: 13 Groceries (f36ff12), 10/11 Recipe page and paste (8989878), 12 Cook mode, 14 Shelf and 15 Lists v0 (d4957ac). Reviews: Notes v0, Groceries #58 (fixes in the Design thread). M3 steers and Home entry points: `docs/design/m3-steers.md` (60932f4). Live-mode polish values for v1 slice 13: `docs/design/live-polish.md` (742ffda). Today on Home motion for M2 slices 8 and 9, with a recording: `docs/design/today-on-home.md` (e961d26). M4 screen steers: `docs/design/m4-steers.md` (ead06a0). Widget and snippet language: `docs/design/widgets-and-snippets.md` (7bdcdbb). Day strip and day-full motion: `docs/design/day-strip.md` (00343d5). Lists screens 9-12 values (supersedes sheet 15): `docs/design/kitchen/lists-9-12.md` (d134bf0), sent to the Kitchen lead. Plan my day and Shutdown recording: `docs/design/recordings/plan-and-shutdown.mp4` (0cffd1e). Day strip recording: `docs/design/recordings/day-strip.mp4` (c33273e). Lists pick-one and reset recording: `docs/design/recordings/lists-pick-and-reset.mp4` (45ea06f). Plate stack concept with recording: `docs/design/plate-stack.md` (f8744fc). Focus-block soul modes (present, checkIn) in `docs/design/tess-soul.md` (4321e5d). KITCHEN rail word confirmed by Kaushik (4d1bb4d). Cook mode recording, and sheet 12's timers now stack 30pt apart (986c215). Recipe page and paste recording: `docs/design/recordings/recipe-and-paste.mp4` (44924c3). Day log study and recording: `docs/design/recordings/day-log.mp4`. What Tess knows recording (forget and a new fact): `docs/design/recordings/tess-knows.mp4` (48ef9f9). Recipe shelf settle-into-sizes recording, values added to sheet 14: `docs/design/recordings/shelf.mp4` (1a86293). Settings unit-change roll recording, values in m3-steers §12: `docs/design/recordings/settings-units.mp4` (df6997c).
 
-**Now:** The focus block's slow-breath soul state and wrap-up flare, added to the Soul Lab (M4 slice 8).
+**Now:** Class inspector: a new field writing itself in, as a recording (M3 slice 6).
 
 **Always on:** review each Core or iOS screen as it merges, with file-and-change fixes posted in the Design thread.
 
+**After Kaushik's phone review (build cut 19:45 UTC):** his look-and-feel feedback goes ahead of everything in Next. Watch-points sent to Product for `review-session.md`.
+
 **Next:**
-1. A recording of cook mode's step swipe and timer flare (kitchen slice 12).
-2. A recording of the recipe page's portion drum and the paste reader's brush band (kitchen 10/11).
-3. A motion study of the Day log scrolling back through days, with undo from there (M4 slice 5).
+1. No-buttons language and audit (`docs/design/no-buttons.md`, from Kaushik 19:00). Done when it gives the replacement for every button kind and an audit row per screen file, so Builder A, Builder B and Core can sweep after the install.
+2. Tap to edit a logged set (v1 slice 8, Builder A is building it now). Done when a short steer shows how a logged stroke opens back onto the dial and drum and how the change settles, as a recording or sketch.
+3. Routine editor (v1 slice 10, Builder A Next 3). Done when the sheet shows dropping, reordering and changing an exercise in the plan on the y axis, with no list rows or stock edit mode, as a recording.
+4. Voice in the gym (v1 slice 17). Done when the sheet shows holding the Bar, Tess listening (the bloom), the words appearing and drying into a ghost row, as a recording.
+5. Settings: Claude and the cloud mark (model layer S1 and S2). Done when the sheet shows pasting the key, "Key saved. Ends in ...", the month line with the cap turning amber at 80%, and the cloud mark on the bloom, not a stock Form.
+6. Habits x-of-7: a day's mark filling in on the week row, as a recording (M3).
 
 **Later:**
 - Glyph for the Tell Tess control as an SF Symbols template, once slice 10 starts.

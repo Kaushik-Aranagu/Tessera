@@ -21,6 +21,8 @@ If the recipe page lands before the cut, also paste a recipe's text into the bar
 
 *If a calm note ever shows at launch, that's the new data-safety guard (#84) protecting your data, not a crash.*
 
+*Known gaps, already queued, so no need to report them: you can undo the last set but can't yet tap an older set to fix it; the next session doesn't raise the weight yet after you hit the top of the range; the plan's routine can't be edited yet (only today's); voice isn't in yet.*
+
 ## Look and feel: what to notice (from Design studio)
 
 1. **Type and paint on Home.** Does Inter Tight at the big sizes feel like your app? Does the painted background with hairline seams feel premium or washed out? Name one thing that looks stock.
