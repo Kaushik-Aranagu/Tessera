@@ -54,6 +54,9 @@ struct BottomChrome: View {
     }
 
     private func toggle(_ expanded: Bool) {
+        if model.launchNote != nil {
+            TesseraSchema.clearLaunchNote()
+        }
         model.launchNote = nil
         withTesseraAnimation(reduceMotion: reduceMotion) { model.isCommandExpanded = expanded }
     }
@@ -91,9 +94,7 @@ struct BottomChrome: View {
                             .frame(minWidth: 60, minHeight: 60)
                             .transition(.opacity)
                     }
-                    Image(systemName: "mic")
-                        .font(.system(size: 17, weight: .medium))
-                        .foregroundStyle(Theme.Colors.ink)
+                    // No mic glyph until voice ships (slice 17): it did nothing.
                 }
                 .frame(height: 74)
                 .contentShape(Rectangle())

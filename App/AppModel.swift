@@ -89,11 +89,13 @@ final class AppModel {
         engine = ActionEngine(store: store, classes: classes)
         ledger = TrainingLedger(store: store, classes: classes)
         runtime = TesseraRuntime(engine: engine)
-        launchNote = switch TesseraSchema.lastOpenOutcome {
+        // Core's calm note (store couldn't open, legacy migration pending) wins; else this launch's outcome.
+        let outcome: String? = switch TesseraSchema.lastOpenOutcome {
         case .opened: nil
         case .recoveredWithBackup: "Started fresh; your old data is saved in Backups."
         case .inMemoryFallback: "Couldn't open your data, so nothing will be saved this time."
         }
+        launchNote = TesseraSchema.launchNote ?? outcome
     }
 
     /// One calm line in Tess's voice when launch didn't go normally (a failed migration). Shown in the Ask bar.
