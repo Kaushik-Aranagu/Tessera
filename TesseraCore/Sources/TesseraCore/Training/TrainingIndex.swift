@@ -16,6 +16,8 @@ struct TrainingIndex {
     /// Which class each indexed entry sits under, for patching.
     private var classOfEntry: [UUID: UUID] = [:]
 
+    init() {}
+
     /// A full build: every set and every entry → exercise link in one fetch each.
     init(ledger: TrainingLedger) {
         let store = ledger.store
@@ -70,7 +72,7 @@ struct TrainingIndex {
         return true
     }
 
-    private mutating func insert(_ session: TrainingLedger.Session, classID: UUID) {
+    mutating func insert(_ session: TrainingLedger.Session, classID: UUID) {
         sessionsByClass[classID, default: []].append(session)
         classOfEntry[session.id] = classID
     }
@@ -173,7 +175,14 @@ private struct SetReader {
             .sorted { ($0.sortIndex, $0.createdAt) < ($1.sortIndex, $1.createdAt) }
             .compactMap(loggedSet)
         guard !logged.isEmpty else { return nil }
-        return TrainingLedger.Session(id: entry.id, workout: workout, entry: entry, date: date, sets: logged)
+        return TrainingLedger.Session(
+            id: entry.id,
+            workoutID: workout.id,
+            workout: workout,
+            entry: entry,
+            date: date,
+            sets: logged
+        )
     }
 }
 
