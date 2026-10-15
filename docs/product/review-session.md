@@ -1,6 +1,6 @@
 # Review session: what to try tonight
 
-*Planning lead, 2026-10-15 18:50. For Kaushik's first build on his phone, cut at 21:05 UTC. This only covers what's on master at the cut (checked against master at #81). If something here isn't in the build, skip it and tell us.*
+*Planning lead, 2026-10-15 11:50 AM PT. For Kaushik's first build on his phone, cut at 2:05 PM Pacific. This only covers what's on master at the cut (checked against master at #81). If something here isn't in the build, skip it and tell us.*
 
 ## What to try (about 15 minutes)
 

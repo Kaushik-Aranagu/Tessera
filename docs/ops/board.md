@@ -1,6 +1,6 @@
 # Tessera board (index)
 
-*Only the planning lead (Product lead thread) edits this file. Each team's queue lives in its own file under `board/`, and only that team's lead edits it. Updated 2026-10-15 18:55. First phone build: PRs cut at 21:05 UTC (moved from 19:45, then 20:05), then the final build; review guide in `../product/review-session.md`.*
+*Only the planning lead (Product lead thread) edits this file. Each team's queue lives in its own file under `board/`, and only that team's lead edits it. Updated 2026-10-15. First phone build: PRs cut at 2:05 PM Pacific (moved from 12:45 and 1:05 PM), then the final build; review guide in `../product/review-session.md`.*
 
 ## Priority order (central)
 
@@ -36,6 +36,8 @@ Small product calls are logged in `../product/decisions.md`.
 - **M4:** after Lists. Research's fixtures (scenarios, calendar and Health, query evals) feed Core's tests.
 
 ## Rules
+
+- **Times are in Pacific time** (Kaushik, 1:56 PM PT). Anything Kaushik reads uses Pacific (PDT, UTC-7 today), never UTC. Timestamps written before this rule in `decisions.md` and on the team boards are UTC.
 
 - Each lead edits only its own file under `board/`. Re-read it just before you edit, keep each edit small, and never write any other team's file or this index.
 - Pull the top **Next** item when **Now** is done. Nobody needs to ask first. Take obvious defaults.

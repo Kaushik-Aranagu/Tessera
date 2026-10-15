@@ -59,3 +59,4 @@
 - **Money copy stays currency-neutral** ("Groceries, 38.20") until Kaushik answers the home currency question. The default is to store amounts as typed.
 - **Research's three questions** (19:47), all answered with the defaults. The Exercise page's main action is history and progress, while logging stays in the live workout. Cook stays hidden until cook mode (slice 12) lands. We keep the newer Review screen, #44's sentence hero.
 - **One way back into a running workout** (19:47): the lit top seam plus the Live Activity, replacing the six paths.
+- **All times shown to Kaushik are in Pacific time** (Kaushik, 1:56 PM PT; PDT is UTC-7 today), never UTC. Earlier entries in this log are UTC (for example 19:12 UTC is 12:12 PM PT). New entries use PT.

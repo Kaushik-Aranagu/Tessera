@@ -6,10 +6,10 @@
 
 **Always on:** review each Core or iOS screen as it merges, with file-and-change fixes posted in the Design thread.
 
-**After Kaushik's phone review (build cut 19:45 UTC):** his look-and-feel feedback goes ahead of everything in Next. Watch-points sent to Product for `review-session.md`.
+**After Kaushik's phone review (build cut 2:05 PM Pacific):** his look-and-feel feedback goes ahead of everything in Next. Watch-points sent to Product for `review-session.md`.
 
 **Next:** (Design is ahead of the builders, so this round goes into depth on what ships.)
-1. Design audit of tonight's build, using master after the 20:05 cut. Done when `docs/design/audit-build-1.md` covers every screen against the baseline, with a ranked polish list (file, change, owner team) ready to merge with Kaushik's huddle feedback.
+1. Design audit of tonight's build, using master after the 2:05 PM Pacific cut. Done when `docs/design/audit-build-1.md` covers every screen against the baseline, with a ranked polish list (file, change, owner team) ready to merge with Kaushik's huddle feedback.
 2. The back word and breadcrumb pattern, replacing the system back button on Review, Recipes, Exercise and every z-depth page. Done when the sheet shows the pattern and its motion, and lists every screen it applies to.
 3. Home stroke-word labels, for Builder B to apply once PaintKey lands. Done when a sheet gives each Home label, its stroke treatment and its motion.
 4. Capture surface, Show mode (photo, page, receipt) and the discoverability hint lines. Done when the sheet shows how the surface changes for a photo and where the "You can also say" and "Next time, this works" lines sit, per `../research/tess-discoverability.md`.

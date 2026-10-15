@@ -4,7 +4,7 @@
 
 **Done:** #108 (PaintKey ink rewrite: every key is a stroke word, dead keys removed; D4, rest survives an app kill). ship-2 (#91): v1 slices 8 to 12, G1, a haptic, P2, B3, the launch note, and the mic hidden.
 
-**Now (until the 21:05 cut):** the edit-set steer. After the final build, run gym-flow D, E and H plus `regression.md` on the phone.
+**Now (until the 2:05 PM Pacific cut):** the edit-set steer. After the final build, run gym-flow D, E and H plus `regression.md` on the phone.
 
 **Next:**
 1. Button sweep (Kaushik, 19:00: no rounded-rectangle, oval or pill buttons anywhere, Apple defaults included). Start once Design's `docs/design/no-buttons.md` lands. Done when every button on Builder A's screens (Workout, Exercise, Plans, Routine, Widgets) uses Design's replacement language and the audit's rows for those files are ticked, with a recording. Put the shared button style in DesignSystem first so Builder B and Core can reuse it. Builder A's rows from `../research/screen-fast-paths.md` are part of it: drop "Keep holding"; show the workout instruction lines only the first few times (the keys are now at `WorkoutModeView.swift:544-575`, so no-buttons.md's line numbers are stale); remove the rounded fills on the week range bar and on lifted or picked rows; and make one path back into a running workout, the lit top seam plus the Live Activity, in place of six. The Exercise page's main action is history and progress, not logging (Product, 19:47).
