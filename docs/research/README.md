@@ -68,3 +68,5 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [lists-daily.md](lists-daily.md) | Builder B, Kitchen, Product: 20 daily list moments, slice coverage, 13 gaps with defaults |
 | [day-log-first.md](day-log-first.md) | Core, Builder B, Product: Day log v1 as a pure fold over OpRecord actions, 12 rules, 10 sample days |
 | [fixtures/reading.md](fixtures/reading.md) | Core: 40 reading phrases, 10 resume cases, 8 finish lines, grammar collisions on master |
+| [fixtures/ranker.md](fixtures/ranker.md) | Core: 40 Now-pick contexts with expected pick, why and runner-up; 13 precedence rules |
+| [m3-1-2-brief.md](m3-1-2-brief.md) | Core: M3 slices 1-2 (BodyWeight trend, Habit x-of-7), 30 weight and 20 check-in fixtures, grammar rows |

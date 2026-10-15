@@ -57,8 +57,8 @@ These are 80 transcript-to-text rows for the normaliser that sits between `Speec
 |---|---|---|---|---|---|
 | 22 | W | 185 pounds for 5. | 185 lb x 5 | G: set 83.9 kg x 5, unit lb | `MassUnit(parsing:)` already takes "pounds", but the normaliser writes `lb` so the relative regex `(kg\|lb)` matches |
 | 23 | I | Deadlift 225 lbs. for 3. | Deadlift 225 lb x 3 | G: lift Deadlift 225 lb x 3 | The dot in "lbs." is not a sentence end |
-| 24 | I | I weigh 182 pounds. | I weigh 182 lb | M: logBodyWeight 182 lb | No operator and no second number, so no set |
-| 25 | I | Eleven stone four. | Eleven stone four | **PASS**: M logBodyWeight 72.1 kg | Stone is not a `MassUnit`. "N stone M" is protected so "four" never becomes reps |
+| 24 | I | I weigh 182 pounds. | I weigh 182 lb | M: body weight 182 lb (after M3 slice 1; no tool on master since e0f476a) | No operator and no second number, so no set |
+| 25 | I | Eleven stone four. | Eleven stone four | **PASS**: M body weight 72.1 kg (after M3 slice 1; no tool on master since e0f476a) | Stone is not a `MassUnit`. "N stone M" is protected so "four" never becomes reps |
 | 26 | I | Twelve pounds fifty at Tesco. | £12.50 at Tesco | G\*: spend 12.50 GBP, note "Tesco" (M5 Money draft). Today M | "N pounds MM" with no lift word and no operator is money. Trap pair with row 22 |
 
 ### Filler and noise
@@ -190,5 +190,5 @@ What it never does: guess a domain (no added `buy`, commas or `remind`, row 39),
 10. **en-IN on device.** `SpeechTranscriber` support for en-IN is unverified (`speech-capture.md`). If he uses en-GB with an Indian accent, do "lakh", "into" and "two-three" survive transcription, and does the en-IN locale write `1,00,000`?
 11. **Protected phrase list.** A fixed list ("five a day", "seven eleven") will always miss something. Should a capitalised word from the transcriber also protect the numbers next to it, and who owns the list?
 12. **"Test" for "Tess".** Rows 34 and 35 rely on the transcriber putting a comma after the wake word. Measure on device in V3 before relying on it.
-13. **Model tools.** Many M rows expect `addGroceries`, `LogSpend` or `rescheduleTask`. `TessToolCatalog.allowed` on master is only `logExercise`, `createTask`, `createRoutine`, `createPlan`, `createNote`, `createList`, `startShop`, `logBodyWeight`. `addGroceries` and `rescheduleTask` are among T2's 10 tools; `LogSpend` joins the registry with Money slice 1, so LogSpend rows expect no tool until then.
+13. **Model tools.** Many M rows expect `addGroceries`, `LogSpend` or `rescheduleTask`. `TessToolCatalog.allowed` on master is only `logExercise`, `createTask`, `createRoutine`, `createPlan`, `createNote`, `createList`, `startShop` (`logBodyWeight` was removed in e0f476a; body weight comes with M3 slice 1, see `../m3-1-2-brief.md`). `addGroceries` and `rescheduleTask` are among T2's 10 tools; `LogSpend` joins the registry with Money slice 1, so LogSpend rows expect no tool until then.
 14. **Default unit.** Rows with no unit default to kg. If he lifts in pounds on some days, should the normaliser or the grammar use the entry's last unit?
