@@ -1,0 +1,11 @@
+# Research lab briefs
+
+Ranked idea briefs from the Research lab (2026-10-15, round 1). Each file names the team it is for. Ideas are proposals, not decisions; owning teams decide.
+
+| Brief | For |
+|---|---|
+| [object-model-and-data.md](object-model-and-data.md) | Core engine |
+| [ai-and-tess.md](ai-and-tess.md) | Tess AI (future), Product lead, Core engine (syscall registry) |
+| [fitness-and-workouts.md](fitness-and-workouts.md) | iOS build, Product lead |
+| [design-and-motion.md](design-and-motion.md) | Design studio, iOS build |
+| [personal-os-and-productivity.md](personal-os-and-productivity.md) | Product lead (cross-team) |
