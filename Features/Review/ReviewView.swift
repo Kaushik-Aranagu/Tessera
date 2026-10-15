@@ -206,6 +206,20 @@ private struct ReviewPageBody: View {
                         .padding(.top, Theme.Spacing.xxl)
                         .entrance(6)
                 }
+
+                // The quiet way in to backups: a label word under a hairline, at the foot of the week.
+                Rectangle()
+                    .fill(Theme.Colors.hairline)
+                    .frame(height: Theme.Stroke.hairline)
+                    .padding(.top, Theme.Spacing.section)
+                NavigationLink {
+                    BackupView()
+                } label: {
+                    Text("Backups")
+                }
+                .buttonStyle(.labelWord)
+                .padding(.top, Theme.Spacing.m)
+                .accessibilityHint("Where your history is kept")
             }
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.top, Theme.Spacing.l)

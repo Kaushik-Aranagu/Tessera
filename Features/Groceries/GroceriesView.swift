@@ -32,11 +32,22 @@ private struct GroceriesPage: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var draft = ""
     @State private var striking: Set<UUID> = []
+    @State private var sinking: [Sink] = []
     @State private var basketOpen = false
+    @State private var basketTarget: CGPoint = .zero
+    @State private var breathe = false
+    @State private var landed = 0
     @FocusState private var writing: Bool
 
     private var groceries: Groceries {
         Groceries(store: model.store, classes: model.classes)
+    }
+
+    /// A struck item's dab, falling into the basket.
+    struct Sink: Identifiable {
+        let id: UUID
+        var x: CGFloat
+        var y: CGFloat
     }
 
     var body: some View {
@@ -55,46 +66,33 @@ private struct GroceriesPage: View {
                     .contentTransition(.numericText())
                     .entrance(0)
 
-                ShopTitle(shopping: shopping, onHold: toggleShop)
-                    .padding(.top, Theme.Spacing.s)
-                    .entrance(1, hero: true)
-
-                GroceryWritingLine(text: $draft, focused: $writing, onSubmit: add)
-                    .padding(.top, Theme.Spacing.xl)
-                    .entrance(2)
-
-                if aisles.isEmpty {
-                    GroceriesEmpty(basket: basket.count)
-                        .padding(.top, Theme.Spacing.section)
-                        .entrance(3)
-                } else if shopping {
-                    AtTheShop(aisles: aisles, striking: striking, recipes: recipes(for:), onTap: check)
-                        .padding(.top, Theme.Spacing.xxl)
-                } else {
-                    VStack(alignment: .leading, spacing: Theme.Spacing.xxl) {
-                        ForEach(Array(aisles.enumerated()), id: \.element.aisle) { index, aisle in
-                            AisleSection(name: aisle.aisle, items: aisle.items, offset: index.isMultiple(of: 2) ? 0 : 1,
-                                         striking: striking, recipes: recipes(for:), onTap: check)
-                                .entrance(3 + min(index, 3))
-                                .transition(.opacity.combined(with: .move(edge: .top)))
-                        }
-                    }
-                    .padding(.top, Theme.Spacing.xxl)
-                }
-
-                if !basket.isEmpty {
-                    BasketFold(items: basket, isOpen: $basketOpen, onTap: uncheck)
-                        .padding(.top, Theme.Spacing.section)
-                }
-
                 if shopping {
-                    PaintKey(paint: Theme.Colors.health, action: finishShop) { _ in
-                        Text("Done shopping")
-                    } meta: {
-                        Text("Hold")
+                    AtTheShop(aisles: aisles, striking: striking, recipes: recipes(for:), onTap: check)
+                        .padding(.top, Theme.Spacing.m)
+                } else {
+                    ShopTitle(onHold: toggleShop)
+                        .padding(.top, Theme.Spacing.s)
+                        .entrance(1, hero: true)
+
+                    GroceryWritingLine(text: $draft, focused: $writing, onSubmit: add)
+                        .padding(.top, Theme.Spacing.xl)
+                        .entrance(2)
+
+                    if aisles.isEmpty {
+                        GroceriesEmpty(basket: basket.count)
+                            .padding(.top, Theme.Spacing.section)
+                            .entrance(3)
+                    } else {
+                        VStack(alignment: .leading, spacing: 24) {
+                            ForEach(Array(aisles.enumerated()), id: \.element.aisle) { index, aisle in
+                                AisleSection(name: aisle.aisle, items: aisle.items, striking: striking,
+                                             recipes: recipes(for:), onTap: check)
+                                    .entrance(3 + min(index, 3))
+                                    .transition(.opacity)
+                            }
+                        }
+                        .padding(.top, Theme.Spacing.xxl)
                     }
-                    .padding(.top, Theme.Spacing.xxl)
-                    .accessibilityHint("Clears the basket and ends the shop")
                 }
             }
             .padding(.horizontal, Theme.Spacing.gutter)
@@ -106,6 +104,42 @@ private struct GroceriesPage: View {
         .scrollIndicators(.hidden)
         .scrollDismissesKeyboard(.interactively)
         .background { ThemedBackground() }
+        .coordinateSpace(.named("groceries"))
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: 0) {
+                if shopping {
+                    PaintKey(paint: Theme.Colors.health, action: finishShop) { _ in
+                        Text("Done")
+                    } meta: {
+                        Text("Hold")
+                    }
+                    .padding(.horizontal, Theme.Spacing.gutter)
+                    .accessibilityHint("Clears the basket and ends the shop")
+                }
+                if !basket.isEmpty, !shopping {
+                    BasketFold(items: basket, isOpen: $basketOpen, breathe: breathe, onTap: uncheck,
+                               onClear: clearBasket)
+                        .onGeometryChange(for: CGPoint.self) { proxy in
+                            let frame = proxy.frame(in: .named("groceries"))
+                            return CGPoint(x: frame.minX + Theme.Spacing.gutter + 6, y: frame.minY + 22)
+                        } action: { basketTarget = $0 }
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+            .tesseraAnimation(Theme.Motion.house, value: basket.isEmpty)
+        }
+        .overlay {
+            // The struck items' dabs, on their arcs into the basket.
+            ForEach(sinking) { sink in
+                PaintDab(
+                    color: Theme.Colors.health,
+                    size: CGSize(width: 12, height: 10),
+                    seed: abs(sink.id.hashValue % 7)
+                )
+                .position(x: sink.x, y: sink.y)
+                .allowsHitTesting(false)
+            }
+        }
         .overlay(alignment: .top) {
             if shopping {
                 ProcessSeam(color: Theme.Colors.live)
@@ -113,8 +147,11 @@ private struct GroceriesPage: View {
                     .transition(.opacity)
             }
         }
-        .sensoryFeedback(.success, trigger: basket.count)
+        .onPreferenceChange(RowCenters.self) { rowCenters = $0 }
+        .sensoryFeedback(.impact(weight: .light), trigger: landed)
     }
+
+    @State private var rowCenters: [UUID: CGPoint] = [:]
 
     private func recipes(for item: ListContents.Item) -> [String] {
         groceries.recipes(for: item.object).map(\.title)
@@ -131,23 +168,53 @@ private struct GroceriesPage: View {
         }
     }
 
-    /// The ink strike runs through first; then the item sinks into the basket.
+    /// The ink strike runs through first (light tap when it ends), then the item folds into a sage dab that arcs
+    /// into the basket, and the count rolls up.
     private func check(_ item: ListContents.Item) {
         guard !striking.contains(item.id) else { return }
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { _ = striking.insert(item.id) }
+        withAnimation(reduceMotion ? nil : .easeOut(duration: 0.32)) { _ = striking.insert(item.id) }
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(reduceMotion ? 120 : 420))
-            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+            try? await Task.sleep(for: .milliseconds(reduceMotion ? 150 : 450))
+            landed += 1
+            if !reduceMotion, let start = rowCenters[item.id], basketTarget != .zero || !basketOpen {
+                let target = basketTarget == .zero ? CGPoint(x: start.x, y: start.y + 600) : basketTarget
+                sinking.append(Sink(id: item.id, x: start.x, y: start.y))
+                withAnimation(.timingCurve(0.55, 0, 0.15, 1, duration: 0.52)) {
+                    if let index = sinking.firstIndex(where: { $0.id == item.id }) {
+                        sinking[index].x = target.x
+                    }
+                }
+                withAnimation(.timingCurve(0.3, 0, 0.25, 1, duration: 0.52)) {
+                    if let index = sinking.firstIndex(where: { $0.id == item.id }) {
+                        sinking[index].y = target.y
+                    }
+                }
+            }
+            withAnimation(reduceMotion ? .easeOut(duration: 0.15) : .smooth(duration: 0.28)) {
                 _ = try? model.engine.perform(CheckListItem(item: item.id), by: .user)
                 striking.remove(item.id)
                 model.touch()
             }
+            try? await Task.sleep(for: .milliseconds(520))
+            sinking.removeAll { $0.id == item.id }
+            withAnimation(.easeInOut(duration: 0.2)) { breathe = true }
+            try? await Task.sleep(for: .milliseconds(200))
+            withAnimation(.easeInOut(duration: 0.2)) { breathe = false }
         }
     }
 
     private func uncheck(_ item: ListContents.Item) {
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
             _ = try? model.engine.perform(CheckListItem(item: item.id, done: false), by: .user)
+            model.touch()
+        }
+    }
+
+    private func clearBasket() {
+        guard let list = groceries.list else { return }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+            _ = try? model.engine.perform(ClearDoneItems(list: list.id), by: .user)
+            basketOpen = false
             model.touch()
         }
     }
@@ -169,27 +236,61 @@ private struct GroceriesPage: View {
             basketOpen = false
             model.touch()
         }
+        finished += 1
+    }
+
+    @State private var finished = 0
+}
+
+/// Where each row sits on the page, for the dab's arc.
+private struct RowCenters: PreferenceKey {
+    static let defaultValue: [UUID: CGPoint] = [:]
+    static func reduce(value: inout [UUID: CGPoint], nextValue: () -> [UUID: CGPoint]) {
+        value.merge(nextValue()) { $1 }
     }
 }
 
 // MARK: - Pieces
 
-/// The hero. Holding it starts (or leaves) the shop; it reads "At the shop" while shopping.
+/// The hero. Holding it for 0.7 s starts the shop: vermilion paint spreads through the word as you hold, like a
+/// hold key; letting go early drains it.
 private struct ShopTitle: View {
-    let shopping: Bool
     let onHold: () -> Void
+    @State private var fill: CGFloat = 0
+    @State private var started = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        Text(shopping ? "At the shop" : "Groceries")
+        Text("Groceries")
             .textRole(.hero)
             .foregroundStyle(Theme.Colors.ink)
+            .overlay(alignment: .leading) {
+                Text("Groceries")
+                    .textRole(.hero)
+                    .foregroundStyle(Theme.Colors.live)
+                    .mask(alignment: .leading) {
+                        GeometryReader { proxy in
+                            Rectangle().frame(width: proxy.size.width * fill)
+                        }
+                    }
+                    .accessibilityHidden(true)
+            }
             .fixedSize(horizontal: false, vertical: true)
-            .contentTransition(.opacity)
             .contentShape(Rectangle())
-            .onLongPressGesture(minimumDuration: 0.5, perform: onHold)
-            .sensoryFeedback(.impact(weight: .medium), trigger: shopping)
+            .onLongPressGesture(minimumDuration: 0.7, maximumDistance: 30) {
+                started += 1
+                onHold()
+                fill = 0
+            } onPressingChanged: { pressing in
+                if pressing {
+                    withAnimation(reduceMotion ? nil : .easeOut(duration: 0.7)) { fill = 1 }
+                } else {
+                    withAnimation(.easeIn(duration: 0.22)) { fill = 0 }
+                }
+            }
+            .sensoryFeedback(.impact(flexibility: .rigid), trigger: started)
             .accessibilityAddTraits(.isHeader)
-            .accessibilityAction(named: shopping ? "Leave the shop" : "Start shopping", onHold)
+            .accessibilityAction(named: "Start shopping", onHold)
     }
 }
 
@@ -224,171 +325,213 @@ private struct GroceryWritingLine: View {
     }
 }
 
-/// One aisle: its name in the margin at the Title tier (every other aisle set in a little), items hanging from it.
+/// One aisle: its name at 34, ink at 85%, at the margin; its items hang 42 pt in.
 private struct AisleSection: View {
     let name: String
     let items: [ListContents.Item]
-    let offset: Int
     let striking: Set<UUID>
     let recipes: (ListContents.Item) -> [String]
     let onTap: (ListContents.Item) -> Void
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.s) {
+        VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
             Text(name)
                 .textRole(.title)
-                .foregroundStyle(Theme.Colors.ink)
-                .padding(.leading, typeSize.isAccessibilitySize ? 0 : CGFloat(offset) * Theme.Spacing.xl)
+                .foregroundStyle(Theme.Colors.ink.opacity(0.85))
                 .accessibilityAddTraits(.isHeader)
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(items) { item in
-                    GroceryRow(item: item, isStriking: striking.contains(item.id), recipes: recipes(item)) {
-                        onTap(item)
-                    }
-                    .transition(.asymmetric(insertion: .push(from: .top).combined(with: .opacity),
-                                            removal: .move(edge: .bottom).combined(with: .opacity)))
+                    GroceryRow(item: item, isStriking: striking.contains(item.id), recipes: recipes(item),
+                               height: 48) { onTap(item) }
+                        .transition(.asymmetric(insertion: .push(from: .top).combined(with: .opacity),
+                                                removal: .opacity.combined(with: .scale(scale: 1, anchor: .top))))
                 }
             }
-            .padding(.leading, typeSize.isAccessibilitySize ? 0 : Theme.Spacing.xl)
+            .padding(.leading, typeSize.isAccessibilitySize ? 20 : 42)
         }
         .accessibilityElement(children: .contain)
     }
 }
 
-/// One item: the name at body size, a sage dab when it's for a recipe, the quantity hanging right. Tap strikes it;
-/// a long press shows the recipes it's for.
+/// One item on one line: the amount in 600, the name in 400 (the name truncates, never the amount), and a sage dab at
+/// the end when it's for a recipe. Tap strikes it; a long press says which recipes.
 private struct GroceryRow: View {
     let item: ListContents.Item
     let isStriking: Bool
     let recipes: [String]
+    var height: CGFloat = 48
     let onTap: () -> Void
     @State private var showsRecipes = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-                HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
-                    Text(item.text)
+                HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.s) {
+                    (Text(item.quantity.map { "\($0) " } ?? "").fontWeight(.semibold)
+                        + Text(GroceriesCopy.name(item)))
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.ink)
-                        .textRenderer(CompletionRenderer(progress: isStriking ? 1 : 0, color: Theme.Colors.ink))
-                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .textRenderer(StrikeRenderer(progress: isStriking ? 1 : 0, color: Theme.Colors.ink))
+                    Spacer(minLength: Theme.Spacing.s)
                     if !recipes.isEmpty {
-                        PaintDab(color: Theme.Colors.health, size: CGSize(width: 11, height: 9),
+                        PaintDab(color: Theme.Colors.health, size: CGSize(width: 12, height: 10),
                                  seed: item.text.count)
-                            .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 4 }
-                    }
-                    Spacer(minLength: Theme.Spacing.m)
-                    if let quantity = item.quantity {
-                        Text(quantity)
-                            .textRole(.data)
-                            .foregroundStyle(Theme.Colors.inkSecondary)
                     }
                 }
                 if showsRecipes, !recipes.isEmpty {
-                    Text("for \(recipes.joined(separator: ", "))")
-                        .font(Theme.voice)
+                    Text("for \(recipes.joined(separator: ", ").lowercased())")
+                        .font(Theme.voice(size: 18))
                         .foregroundStyle(Theme.Colors.health)
                         .transition(.opacity.combined(with: .move(edge: .top)))
                 }
             }
-            .padding(.vertical, Theme.Spacing.s)
-            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .frame(maxWidth: .infinity, minHeight: height, alignment: .leading)
             .contentShape(Rectangle())
         }
         .buttonStyle(HandleButtonStyle())
+        .background {
+            GeometryReader { proxy in
+                let frame = proxy.frame(in: .named("groceries"))
+                Color.clear.preference(
+                    key: RowCenters.self,
+                    value: [item.id: CGPoint(x: frame.minX + 6, y: frame.midY)]
+                )
+            }
+        }
         .simultaneousGesture(LongPressGesture(minimumDuration: 0.45).onEnded { _ in
-            withTesseraAnimation(Theme.Motion.house, reduceMotion: false) { showsRecipes.toggle() }
+            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { showsRecipes.toggle() }
         })
-        .tesseraAnimation(Theme.Motion.house, value: isStriking)
-        .sensoryFeedback(.selection, trigger: isStriking)
         .accessibilityElement(children: .combine)
         .accessibilityHint("Puts it in the basket")
         .accessibilityAction(named: "Which recipes") { showsRecipes.toggle() }
     }
 }
 
-/// At the shop: the current aisle at hero size, the rest after it in walking order, smaller. Done aisles have
-/// already folded away (they have nothing open).
+/// At the shop: the hero is the aisle you're in, its items alone at 64 pt (no hang), and the next aisle peeking.
+/// An emptied aisle folds up and away about its top edge and the next one rises into its place.
 private struct AtTheShop: View {
     let aisles: [(aisle: String, items: [ListContents.Item])]
     let striking: Set<UUID>
     let recipes: (ListContents.Item) -> [String]
     let onTap: (ListContents.Item) -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.xxl) {
-            ForEach(Array(aisles.enumerated()), id: \.element.aisle) { index, aisle in
+        if let current = aisles.first {
+            VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading, spacing: Theme.Spacing.s) {
-                    Text(aisle.aisle)
-                        .textRole(index == 0 ? .hero : .title)
-                        .foregroundStyle(index == 0 ? Theme.Colors.ink : Theme.Colors.inkSecondary)
+                    Text(current.aisle)
+                        .textRole(.hero)
+                        .foregroundStyle(Theme.Colors.ink)
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityAddTraits(.isHeader)
                     VStack(alignment: .leading, spacing: 0) {
-                        ForEach(aisle.items) { item in
-                            GroceryRow(item: item, isStriking: striking.contains(item.id), recipes: recipes(item)) {
-                                onTap(item)
-                            }
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                        ForEach(current.items) { item in
+                            GroceryRow(item: item, isStriking: striking.contains(item.id), recipes: recipes(item),
+                                       height: 64) { onTap(item) }
+                                .transition(.opacity)
                         }
                     }
-                    .opacity(index == 0 ? 1 : 0.6)
                 }
-                .transition(.asymmetric(insertion: .opacity,
-                                        removal: .move(edge: .top).combined(with: .opacity)))
+                .id(current.aisle)
+                .transition(reduceMotion ? .opacity : .asymmetric(
+                    insertion: .modifier(active: RiseIn(progress: 0), identity: RiseIn(progress: 1)),
+                    removal: .modifier(active: FoldAway(progress: 1), identity: FoldAway(progress: 0))
+                ))
+                if aisles.count > 1 {
+                    Text("then \(aisles[1].aisle)")
+                        .textRole(.title)
+                        .foregroundStyle(Theme.Colors.ink.opacity(0.35))
+                        .padding(.top, Theme.Spacing.xxl)
+                        .contentTransition(.opacity)
+                }
             }
+            .animation(reduceMotion ? .easeOut(duration: 0.18) : .smooth(duration: 0.42), value: current.aisle)
+            .sensoryFeedback(.impact(weight: .medium), trigger: current.aisle)
         }
     }
 }
 
-/// The basket: a fold at the bottom that shows only a count until you open it. Tapping an item puts it back.
+/// An emptied aisle tilts back about its top edge and fades.
+private struct FoldAway: ViewModifier {
+    var progress: Double
+    func body(content: Content) -> some View {
+        content
+            .rotation3DEffect(.degrees(-65 * progress), axis: (x: 1, y: 0, z: 0), anchor: .top, perspective: 0.6)
+            .opacity(1 - progress)
+    }
+}
+
+/// The next aisle rises into the hero slot: 14 pt up, blur 4 to 0.
+private struct RiseIn: ViewModifier {
+    var progress: Double
+    func body(content: Content) -> some View {
+        content
+            .offset(y: 14 * (1 - progress))
+            .blur(radius: 4 * (1 - progress))
+            .opacity(progress)
+    }
+}
+
+/// The basket: pinned at the bottom, a seam on top, a faint sage wash, "6 in the basket" with the count rolling.
+/// Tap to open the struck items (tap one to put it back) and clear the basket with a hold.
 private struct BasketFold: View {
     let items: [ListContents.Item]
     @Binding var isOpen: Bool
+    let breathe: Bool
     let onTap: (ListContents.Item) -> Void
+    let onClear: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.s) {
+        VStack(alignment: .leading, spacing: 0) {
             Rectangle()
                 .fill(Theme.Colors.hairline)
                 .frame(height: Theme.Stroke.hairline)
             Button {
                 withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { isOpen.toggle() }
             } label: {
-                HStack(spacing: Theme.Spacing.m) {
-                    PaintDab(color: Theme.Colors.health, size: CGSize(width: 14, height: 12), seed: 9)
-                    Text("\(items.count) in the basket")
-                        .textRole(.labelStrong)
-                        .foregroundStyle(Theme.Colors.inkSecondary)
-                        .contentTransition(.numericText(value: Double(items.count)))
-                    Spacer()
-                }
-                .frame(minHeight: 44)
-                .contentShape(Rectangle())
+                (Text("\(items.count)").fontWeight(.semibold) + Text(" in the basket"))
+                    .textRole(.body)
+                    .foregroundStyle(Theme.Colors.ink)
+                    .contentTransition(.numericText(value: Double(items.count)))
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(HandleButtonStyle())
+            .padding(.horizontal, Theme.Spacing.gutter)
             .accessibilityHint(isOpen ? "Folds the basket" : "Shows what's in the basket")
             if isOpen {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(items) { item in
                         Button { onTap(item) } label: {
-                            Text(item.text)
+                            (Text(item.quantity.map { "\($0) " } ?? "").fontWeight(.semibold)
+                                + Text(GroceriesCopy.name(item)))
                                 .textRole(.body)
-                                .foregroundStyle(Theme.Colors.inkTertiary)
-                                .textRenderer(CompletionRenderer(progress: 1, color: Theme.Colors.inkTertiary))
+                                .foregroundStyle(Theme.Colors.inkSecondary)
+                                .textRenderer(StrikeRenderer(progress: 1, color: Theme.Colors.inkSecondary))
                                 .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                                 .contentShape(Rectangle())
                         }
                         .buttonStyle(HandleButtonStyle())
                         .accessibilityHint("Puts it back on the list")
                     }
+                    PaintKey(paint: Theme.Colors.health, action: onClear) { _ in
+                        Text("Clear the basket")
+                    } meta: {
+                        Text("Hold")
+                    }
                 }
-                .transition(.opacity.combined(with: .move(edge: .top)))
+                .padding(.horizontal, Theme.Spacing.gutter)
+                .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
         }
+        .background(Theme.Colors.health.opacity(breathe ? 0.18 : 0.10))
+        .background { ThemedBackground() }
     }
 }
 
@@ -397,23 +540,37 @@ private struct GroceriesEmpty: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
-            Text(basket > 0 ? "All in the basket." : "Nothing to buy.")
+            Text(basket > 0 ? "All in the basket." : "Nothing to get.")
                 .textRole(.title)
                 .foregroundStyle(Theme.Colors.ink)
-            Text("Write above, or swipe a recipe's ingredients across.")
+            Text("Tell me \u{201C}milk, eggs\u{201D}, or swipe a recipe's ingredients here.")
                 .font(Theme.voice)
-                .foregroundStyle(Theme.Colors.context)
+                .foregroundStyle(Theme.Colors.tess)
         }
     }
 }
 
 enum GroceriesCopy {
+    /// The name as it should read beside its amount: "3 eggs", not "3 egg" (a plain count above one, no unit).
+    static func name(_ item: ListContents.Item) -> String {
+        guard let quantity = item.quantity, let count = Double(quantity), count > 1,
+              !item.text.lowercased().hasSuffix("s") else { return item.text }
+        let text = item.text
+        if text.hasSuffix("y"), !"aeiou".contains(text.dropLast().last ?? "a") {
+            return String(text.dropLast()) + "ies"
+        }
+        if text.hasSuffix("o") || text.hasSuffix("ch") || text.hasSuffix("sh") {
+            return text + "es"
+        }
+        return text + "s"
+    }
+
     /// "9 to buy across 4 aisles", "Shopping, 3 left".
     static func context(open: Int, aisles: Int, shopping: Bool) -> String {
         if shopping {
-            return open == 0 ? "Shopping, all in the basket" : "Shopping, \(open) left"
+            return open == 0 ? "shopping, all in the basket" : "shopping, \(open) left"
         }
-        guard open > 0 else { return "One list for the kitchen" }
+        guard open > 0 else { return "Nothing to get" }
         let aisleText = aisles == 1 ? "one aisle" : "\(aisles) aisles"
         return "\(open) to buy across \(aisleText)"
     }
