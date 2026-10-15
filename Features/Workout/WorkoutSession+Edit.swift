@@ -4,8 +4,9 @@ import TesseraCore
 /// Edit and undo any set (ship list slice 8): tap a logged stroke and the dial and drum hold that set's numbers;
 /// Save writes Core's EditSet (in the op log, undoable), Cancel puts the next set's numbers back.
 extension WorkoutSession {
+    /// Only while the edited set still exists in the current exercise (an undo or swap can take it away).
     var isEditing: Bool {
-        editingSetID != nil
+        editingRow != nil
     }
 
     /// The set being edited, as a row (number, weight, reps).
