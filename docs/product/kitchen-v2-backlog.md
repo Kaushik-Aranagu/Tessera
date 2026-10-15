@@ -4,10 +4,12 @@
 
 | Idea | Why it might earn its place | Notes |
 |---|---|---|
-| **Pantry light** | "Do I have it?" without stock counts: an ingredient is *in*, *low* or *out*; checking a grocery item marks it *in*, cooking marks its ingredients *low* | No quantities; the chore is the risk |
-| **What can I cook** | Recipes ranked by how few things are missing (needs pantry light) | A filter word on the shelf, off by default |
+| **Pantry light (inferred)** | "Do I have it?" with no counting and no questions. `Ingredient` gets `state` (in / low / out / unknown) and `lastBoughtAt`. Shop clear → *in*; `FinishCooking` → used non-staples *low*, fresh produce *out*; "out of milk" in the ghost row → *out* and onto Groceries; "have rice" → *in* | One engine slice, no pantry screen: state shows on the Ingredient page and as a dimmer weight on recipe lines you're out of. Research: `tessera/research/kitchen-v2.md` §1 |
+| **Running low by rhythm** | After 3 buys, past 1.5x the median gap an ingredient shows as a dim "usually by now" line at the bottom of Groceries, never auto-added | Needs purchase history; after pantry light |
+| **What can I cook** | `RecipeMath.missing(recipe)`: rank by non-staples *out* or *unknown*, ties by "not cooked lately"; "0 missing", then "1 missing: lemons" | The shelf filter word, off by default; needs pantry light |
 | **Week of dinners** | The dated "cook X thu" tasks shown as a week strip; one tap adds the week's recipes to groceries | Reuses Plans' week layout |
-| **Recipe from a link** | Paste a URL; read schema.org Recipe JSON from the page | No AI; needs network and a fetch policy |
+| **Recipe from a link** | Paste a URL; fetch once, read the schema.org Recipe JSON-LD (handles `@graph`, array `@type`, `HowToSection`, ISO 8601 times), write it out as plain text into the existing paste parser and paint-over. Keep `sourceURL`; store only recipe fields, no photos or headnote; on failure "Couldn't read that page, paste the text instead." | **Waits on Kaushik's yes to fetching** (on the coordinator's list). Research §2 |
+| **Share sheet import** | Share a page from Safari straight into Tessera | Needs an App Group entitlement, so a paid developer account; until then Copy Link and paste |
 | **Recipe edit in place** | Fix a line, reorder or split a step without re-pasting | Same paint-over surface as paste |
 | **Recurring groceries** | "Milk every week" comes back after the shop ends | A list item flag, not a new class |
 | **Leftovers and cooked twice** | "Cook double" scales up and makes a "leftovers, 2 portions" item on Later | Ties into tasks |
