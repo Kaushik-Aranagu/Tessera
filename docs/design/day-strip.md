@@ -2,6 +2,8 @@
 
 For iOS Builder B. The day strip is Home's **day stroke** (`home-v1.md`, item 1): one watercolour brushstroke from morning to night, painted up to now, with a dashed ink guide for the rest of the day. These two slices put things on it and let it say when the day is full. M4's calendar events use the same marks (`m4-steers.md`, Plan my day).
 
+Recording: `recordings/day-strip.mp4` (source `studies/day-strip.html`): the tip sliding and a done item soaking, tapping a dab, the day filling to "full", and Make room reopening the gaps.
+
 ## What sits on the stroke (slice 11)
 - **x is the clock** across the stroke's 342pt, from the day's start (07:00, or the first item if earlier) to its end (23:00, or the last item if later).
 - **A timed task** is a dab in its area colour (14×12, the dab shape, blurred 0.4pt) sitting **on the stroke's centre line** at its time.
