@@ -2,6 +2,8 @@
 
 The steers in `ship-list-lists.md` (Kitchen lead) are the design; this sheet adds exact values and settles three clashes. **It supersedes my sheet 15** (`14-15-shelf-and-lists.md`, "Lists app v0"). Folder: `Features/Lists/`. Same instrument as Groceries (`13-groceries.md`): tap strikes and sinks, no checkboxes, no separators. Lists lean lilac `#D8CBE6` and sky `#9EC3D6` in the washes.
 
+Recording of Pick one and the reset hold: `../recordings/lists-pick-and-reset.mp4` (source `../studies/lists-pick-reset.html`).
+
 ## Three clashes, settled (my defaults)
 1. **Long-press on the hero** was both "options" and "pick one". Now: **hold the hero = Pick one** (only when Pick one is on), and **tap the context line = options**. The line unfolds in place into the option words (Sections · Reusable · Run it · Pick one · Archive), with no sheet. Words rise in at a 30ms stagger, and tapping outside folds them back.
 2. **"A short sheet of words"** becomes that in-place unfold. Sheets are a stock pattern, and the words fit on the page.
@@ -37,7 +39,7 @@ The steers in `ship-list-lists.md` (Kitchen lead) are the design; this sheet add
 
 ## 12 · Pick one
 - **Hold the hero for 0.6s** (paint fills the hero's underline as the hold progresses).
-- The other names dim to 20% (300ms). One name lifts out of the column with matched geometry, grows to Hero 56 at the centre of the window (y 400), and lands in 520ms on the house curve.
+- The other names dim to 14% and blur 2pt (300ms), so the pick reads clear of the column behind it. One name lifts out of the column with matched geometry, grows to Hero 56 at the centre of the window (y 400), and lands in 520ms on the house curve.
 - Behind it, the soul's **bloom**, small (scale 0.6, 900ms, once). `.impact(weight: .medium, intensity: 0.6)` plays when it lands.
 - **Tap** it to open the item. **Swipe it left** to send it back to the column (it shrinks back into its row) and pick again after 200ms; the same motion and haptic play each time.
 - Reduce Motion: a crossfade to the picked name, at the centre, with no growth.
