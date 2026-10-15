@@ -1,6 +1,6 @@
 # Tessera board (index)
 
-*Only the planning lead (Product lead thread) edits this file. Each team's queue lives in its own file under `board/`, and only that team's lead edits it. Updated 2026-10-15 18:35.*
+*Only the planning lead (Product lead thread) edits this file. Each team's queue lives in its own file under `board/`, and only that team's lead edits it. Updated 2026-10-15 18:42.*
 
 ## Priority order (central)
 
@@ -8,6 +8,9 @@
 2. The kitchen: cooking, then groceries.
 3. Lists, ahead of M3.
 4. M4 "My day, connected".
+5. M5 Reading (`ship-list-m5-reading.md`, approved), then Money.
+
+Small product calls are logged in `../product/decisions.md`.
 
 M3 engine slices fill gaps in Core's queue. Cloud model calls (Plan my day rewording, M4 slice 6b) wait for Kaushik's OK.
 
