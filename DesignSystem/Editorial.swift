@@ -198,9 +198,15 @@ struct HeroText<Rendered: View>: View {
             var lines = 1, used = 0
             for word in words {
                 let needed = used == 0 ? word : used + 1 + word
-                if needed > perLine { lines += 1; used = word } else { used = needed }
+                if needed > perLine {
+                    lines += 1; used = word
+                } else {
+                    used = needed
+                }
             }
-            if lines <= 3 { return .hero(fontWidth) }
+            if lines <= 3 {
+                return .hero(fontWidth)
+            }
         }
         return .title
     }
