@@ -123,3 +123,64 @@ Run with Apple's Evaluations framework on every OS model change. Each case passe
 10. **Claim check** → every "done" line matches a tool call in the op log.
 
 Automatic checks: word count, "!" and emoji regex, banned-word list (should, must, missed, streak, great, awesome, sorry, oops). Human check: a weekly read of 20 random lines by Kaushik for "does this sound like her".
+
+## Model layer lines
+
+Added 2026-10-15. Source: `tess-model-layer.md` (routing, the $10 cap, `TessInbox`, the cloud mark, timeouts, the "Use Claude" switch). Format follows `shutdown-daylog-copy.md`.
+
+23 lines covering the 15 slots on the board (some slots need two forms), plus 3 per-use timeout variants in M18. Each slot shows at most one line; when no row matches, Tess says nothing (rule 7).
+
+Building blocks:
+- **{spent}** and **{cap}** are money in the user's typed currency format, two decimals for spend, none for a round cap: "$1.20", "$10". Dollars for now.
+- **{reset}** is the 1st of next month in the phone's locale, short form: "Nov 1". This matches the Day log ("Oct 3 to 6"); the brief's "1 Nov" is replaced.
+- **{fallback}** is what the turn shows instead of Claude, per use: capture gives the best guess as a question, plan gives the rules plan, paste keeps the parser's rows, a question asks again.
+- Lines that name Claude say "Claude", never "the cloud" or "AI". Tess speaks in first person; "{n} waiting for Tess" and "Tess: {spent} this month" are labels the app shows about her, not her speech.
+
+| # | Slot | Line (template) | Filled example | Shown when |
+|---|---|---|---|---|
+| M1 | API key saved | Key saved. Ends in ...{last4}. | Key saved. Ends in ...a1B2. | Pasted key passes the one Haiku check call |
+| M2 | Key invalid | That key didn't work. Paste it again? | That key didn't work. Paste it again? | Check call, or any later call, returns 401 or 403; Use Claude switches off |
+| M3 | Key removed | Key removed. Everything stays on this phone. | Key removed. Everything stays on this phone. | Remove tapped in Settings; Use Claude switches off |
+| M4 | Key missing | No key yet. Paste one to use Claude. | No key yet. Paste one to use Claude. | Use Claude is on but the Keychain item is gone (for example after a reinstall) |
+| M5 | Claude switched on | Claude on. The cloud mark shows what leaves. | Claude on. The cloud mark shows what leaves. | Use Claude switched on with a valid key |
+| M6 | Claude switched off | Claude off. Everything stays on this phone. | Claude off. Everything stays on this phone. | Use Claude switched off |
+| M7 | Monthly usage (receipt) | Tess: {spent} this month. | Tess: $1.20 this month. | Under any receipt that went via Claude. Hidden when no Claude call this month |
+| M8 | Monthly usage (Settings) | Tess: {spent} of {cap} this month. | Tess: $1.20 of $10 this month. | Settings, Claude row, always while a key is saved |
+| M9 | Nearing the cap | Tess: {spent} of {cap} this month. Pauses at {cap}. | Tess: $8.10 of $10 this month. Pauses at $10. | Month total at 80% of the cap or more. Settings only, amber text, no notification |
+| M10 | Paused at the cap | Claude paused until {reset}. On-device until then. | Claude paused until Nov 1. On-device until then. | First use blocked by the cap, once per month; Settings repeats it in place of M8 |
+| M11 | Cap reset | Claude back on for {month}. | Claude back on for November. | First open on or after the 1st, only if last month hit the cap. Silent otherwise |
+| M12 | Offline, queued (Tess) | Kept it. I'll read it once you're online. | Kept it. I'll read it once you're online. | Offline, and grammar and on-device both missed a capture; raw text saved as `TessInbox` |
+| M13 | Offline, queued (badge) | {n} waiting for Tess | 1 waiting for Tess | One or more `TessInbox` items unread. No period; hidden at 0 |
+| M14 | Queue sent | Read {n} waiting. {m} to check. | Read 2 waiting. 3 to check. | Back online, next app open, Claude proposed ghost rows from the inbox |
+| M15 | Queue sent, partly unclear | Read {n} waiting. {k} still unclear. | Read 2 waiting. 1 still unclear. | Same, but some items produced no ghost row; they stay in the inbox |
+| M16 | "via Claude" receipt | {receipt} · via Claude | Bench 3 x 10 at 80 · via Claude | Ghost row whose `OpRecord.route` is `claude`. The receipt keeps its own wording |
+| M17 | Cloud mark, VoiceOver label | Sent to Claude | Sent to Claude | The mark is on the bloom while a request is out |
+| M17h | Cloud mark, VoiceOver hint | Shows what left the phone. | Shows what left the phone. | Only if the mark is tappable and opens the context pack; no hint otherwise |
+| M18 | Claude timeout | Claude timed out. {fallback} | Claude timed out. Bench 80 x 8? | No answer within 8 s (capture, question) or 20 s (plan, paste). Paste: "Claude timed out. Kept 6 rows it read." Plan: "Claude timed out. Here's the rules plan." Question: "Claude timed out. Ask again?" |
+| M19 | Claude unsure (guess) | Didn't catch that. {guess}? | Didn't catch that. Bench 80 x 8? | Claude returns no valid tool call but a partial parse exists |
+| M20 | Claude unsure (choice) | Not sure which {name}. {a} or {b}? | Not sure which bench. Flat or incline? | A name matches 2 objects; no write until he picks |
+| M21 | Question, not a write | {answer} Nothing logged. | 16 sets of bench this week. Nothing logged. | Input read as a question but Claude called a write tool; the write is dropped and the local answer shown |
+| M22 | Rate limit or overload | Claude is busy. {fallback} | Claude is busy. Here's the rules plan. | 429 or 529 after one retry with jitter; never retried if tools already ran |
+
+Silent cases: a Claude call that succeeds says nothing about Claude beyond M16 and M7. Falling back from on-device to Claude is never announced; the cloud mark carries it. The 80% state never interrupts a turn. Offline questions keep the brief's "Needs a connection." (2 words).
+
+### Self-check against the voice rules
+
+| Rule | Result | Notes and fixes |
+|---|---|---|
+| 1. Done, then the number | Pass where something was done | M1, M14, M15, M18 paste, M21 lead with the result and one count. State lines (M9, M10, M11, M13, M22) report a state, not an action, so they follow the error pattern: what happened, then what happens next. Not a breach, but rule 1 has no form for status lines |
+| 2. Counts, not streaks; never red | Pass | M13 to M15 are plain counts. The 80% line is amber, never red, and no line counts days without Claude. The cap reads as a pause with a date, not a limit reached |
+| 3. One line, under 12 words | Pass | Longest: M9 at 9 words in the filled example; every other line is 8 or fewer. No greeting, sign-off or praise. {receipt} in M16 may run long; " · via Claude" adds 2 words, so the receipt itself must stay at 9 or fewer |
+| 4. The user decides | Pass | Offers as questions (M2 "Paste it again?", M18 "Ask again?"). M4 "Paste one to use Claude" is a condition, not an instruction. Queue items become ghost rows; nothing commits without him |
+| 5. Dry, rarely; never on errors | Pass | No humour in any model layer line; all are errors, states or receipts |
+| 6. Honest about limits | Pass | Every fallback says Claude did not answer and what shows instead. M15 says how many stayed unclear. Fixed: the brief's "Claude paused until 1 Nov." gained "On-device until then." so the fallback is stated |
+| 7. Silence is fine | Pass | M7 hidden at no Claude use, M11 silent unless the cap was hit, M13 hidden at 0, successful routing never announced |
+| No emoji, no "!", digits, units once | Pass | Money as "$1.20" in the typed format; times not shown |
+| Banned words (should, must, missed, streak, great, awesome, sorry, oops) | Pass | None used. Fixed: draft "Claude was slow" in M18 became "Claude timed out", a fact instead of a judgement |
+| No italics, no em-dashes | Pass | Middle dot in M16 matches the Day log headline separator |
+| Claim check (eval 10) | Pass with a rule | M14 and M18 paste counts come from ghost rows actually created, never from Claude's text |
+
+Conflicts found:
+- Third person: "{n} waiting for Tess" and "Tess: $1.20 this month" name Tess while she speaks as "I". Kept as app labels, not her lines.
+- Date order: the brief writes "1 Nov", the Day log writes "Oct 3". Settled on the phone's locale ("Nov 1").
+- Rule 1 has no form for status lines; model layer states use "what happened, what's next" instead.

@@ -74,71 +74,33 @@ struct PlanWeek: Equatable {
     /// Sessions the plan expects this week; nil without a plan.
     let planned: Int?
 
-    /// What the plan says about the week.
-    struct Rhythm {
-        /// The plan's routines in order (titles); empty without a plan.
-        var cycle: [String] = []
-        /// The routine the plan does next (Core's `nextRoutine(in:)`).
-        var next: String?
-        /// Sessions a week (`PlanRhythm.perWeek`); nil without a plan.
-        var perWeek: Int?
-    }
-
-    /// `todayWorkout`: a workout set for today that isn't finished, as its routine title and id.
-    static func build(now: Date, calendar: Calendar, sessions: [TrainedSession], rhythm: Rhythm,
-                      todayWorkout: (routine: String, id: UUID?)?) -> PlanWeek
+    /// Core's week (`ledger.week(containing:plan:)`) in the page's terms: done days carry their workout, today and
+    /// later days the plan's next routines in rolling order, past days with nothing done stay neutral (never
+    /// "missed"). `todayWorkoutID` is a workout already set up for today, so tapping today resumes it.
+    @MainActor
+    static func from(_ days: [WeekDay], cycle: [String], perWeek: Int?, todayWorkoutID: UUID?,
+                     routine: (WorkoutSummary) -> String) -> PlanWeek
     {
-        let cycle = rhythm.cycle, next = rhythm.next, perWeek = rhythm.perWeek
-        guard let week = calendar.dateInterval(of: .weekOfYear, for: now) else {
-            return PlanWeek(days: [], done: 0, planned: perWeek)
-        }
-        let dates = (0 ..< 7).compactMap { calendar.date(byAdding: .day, value: $0, to: week.start) }
-        let today = calendar.startOfDay(for: now)
-        let byDay = Dictionary(grouping: sessions.filter { week.contains($0.date) }) {
-            calendar.startOfDay(for: $0.date)
-        }
-        let done = byDay.count
-
-        let pendingToday: (routine: String, id: UUID?)? = byDay[today] == nil
-            ? todayWorkout ?? next.map { ($0, nil) }
-            : nil
-        // The rolling sequence after today: start from the next routine, past the one today uses.
-        var queue: [String] = []
-        if !cycle.isEmpty {
-            var index = next.flatMap { cycle.firstIndex(of: $0) } ?? 0
-            if pendingToday != nil, todayWorkout == nil || todayWorkout?.routine == next {
-                index += 1
-            }
-            queue = (0 ..< 7).map { cycle[(index + $0) % cycle.count] }
-        }
-        let future = dates.filter { $0 > today }
-        let remaining = max((perWeek ?? 0) - done - (pendingToday == nil ? 0 : 1), 0)
-        // Rest comes first (recovery after today), then the remaining sessions in sequence.
-        let rests = cycle.isEmpty ? future.count : max(future.count - remaining, 0)
-
-        var days: [Day] = []
-        for date in dates {
-            if let trained = byDay[date]?.max(by: { $0.date < $1.date }) {
-                days.append(Day(date: date, state: .done, routine: trained.routine,
-                                paint: RoutinePaint.of(trained.routine, cycle: cycle), workoutID: trained.workoutID))
-            } else if date == today, let pendingToday {
-                days.append(Day(date: date, state: .today, routine: pendingToday.routine,
-                                paint: RoutinePaint.of(pendingToday.routine, cycle: cycle),
-                                workoutID: pendingToday.id))
-            } else if date > today, !cycle.isEmpty {
-                let offset = future.firstIndex(of: date) ?? 0
-                if offset < rests {
-                    days.append(Day(date: date, state: .rest, routine: nil, paint: nil, workoutID: nil))
-                } else {
-                    let routine = queue[(offset - rests) % max(queue.count, 1)]
-                    days.append(Day(date: date, state: .planned, routine: routine,
-                                    paint: RoutinePaint.of(routine, cycle: cycle), workoutID: nil))
+        let mapped = days.map { day -> Day in
+            switch day.state {
+            case .done:
+                let latest = day.done.first
+                let title = latest.map(routine)
+                return Day(date: day.day, state: .done, routine: title,
+                           paint: title.map { RoutinePaint.of($0, cycle: cycle) }, workoutID: latest?.workout.id)
+            case .today, .upcoming:
+                guard let planned = day.planned else {
+                    return Day(date: day.day, state: .open, routine: nil, paint: nil, workoutID: nil)
                 }
-            } else {
-                days.append(Day(date: date, state: .open, routine: nil, paint: nil, workoutID: nil))
+                let isToday = day.state == .today
+                return Day(date: day.day, state: isToday ? .today : .planned, routine: planned.title,
+                           paint: RoutinePaint.of(planned.title, cycle: cycle),
+                           workoutID: isToday ? todayWorkoutID : nil)
+            case .past:
+                return Day(date: day.day, state: .open, routine: nil, paint: nil, workoutID: nil)
             }
         }
-        return PlanWeek(days: days, done: done, planned: perWeek)
+        return PlanWeek(days: mapped, done: days.count { $0.state == .done }, planned: perWeek)
     }
 
     /// "3 of 6\nsessions"; without a plan, "2 sessions\nso far".

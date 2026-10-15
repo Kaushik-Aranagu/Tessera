@@ -190,6 +190,75 @@ Order: T1, T2, T3, then T4 and S1 together, then T6 (first visible win), T7, T5 
 2. **Can Claude see sleep and energy for Plan my day?** Recommended: no; the phone applies the "light day" rule and Claude only sees "light day: yes".
 3. **When the grammar misses a capture, can it go to Claude automatically (with the cloud mark), or ask first each time?** Recommended: automatically, since it always lands as an undoable ghost row.
 
+## 11. Tool schemas generated from the action catalog
+
+**Rule: no hand-written Claude tools.** `ActionRegistry.descriptors` is already the one list behind the on-device tools, App Intents and `toolDefinitionsJSON()`. The Claude route reuses it, so declaring an action (descriptor plus decoder entry) is all it takes to become a Claude tool. What exists on origin/master:
+- `ActionDescriptor` (name, summary, typed `Parameter`s, `isDestructive`) in `Actions/EngineAction.swift`; `ActionRegistry` in `Actions/ActionRegistry.swift`.
+- `RegistryTool` (in `TesseraTess/TessModelCapture.swift`) builds a `DynamicGenerationSchema` per descriptor and calls `ActionEngine.perform(named:arguments:by: .tess, pending:)`. `TessToolCatalog` filters by an allow-list and hides `.object`/`.json` parameters and destructive actions.
+- No `@Generable` type exists in code yet; it is only proposed in `ai-and-tess.md` and `tess-routing.md`. Tools use dynamic schemas, which is the right choice because the list is data, not types.
+
+Smallest shape (T2), shared by the on-device and Claude routes:
+
+```swift
+public enum TessTools {
+    /// Stable for a given app build: registry order, never sorted by use or recency.
+    @MainActor static func tools(for use: TessUse, engine: ActionEngine,
+                                 recorder: TessToolRecorder, pending: Bool) -> [any Tool] {
+        let grammar = TessGrammar(store: engine.store, classes: engine.classes)
+        return descriptors(for: use).map {
+            RegistryTool(descriptor: $0, engine: engine, grammar: grammar, pending: pending, recorder: recorder)
+        }
+    }
+
+    static func descriptors(for use: TessUse) -> [ActionDescriptor] {
+        ActionRegistry.descriptors.filter { d in
+            use.allowedActions.contains(d.name) && !d.isDestructive   // allow-list per use, never deleteObject
+                && d.parameters.allSatisfy { $0.kind != .json }       // .object becomes a name, resolved in call()
+        }
+    }
+
+    /// Raw-client and eval path: same descriptors, strict JSON.
+    static func definitionsJSON(for use: TessUse) throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]                       // byte-identical across calls
+        return try encoder.encode(descriptors(for: use).map { $0.toolDefinition.strict() })
+    }
+}
+// ToolDefinition.strict(): adds "strict": true and "additionalProperties": false, lists every
+// property in "required", and turns optional ones into ["type", "null"].
+```
+
+**Strict schemas.** Two layers, both generated:
+- Package route: tool arguments are generated against the `GenerationSchema` from `RegistryTool.schema(for:)`. Whole-response output (`proposePlan`, the `answerQuery` AST) uses `session.respond(to:generating:)` with a `@Generable` type, which the package sends as Claude structured outputs (verified on the docs page). Whether client `Tool` arguments are sent with `strict: true` is not documented (UNVERIFIED, already listed below); `ActionRegistry.decode` stays the real gate either way.
+- Raw route and evals: `strict()` as above. Today `ToolDefinition` lacks `strict` and `additionalProperties`, and maps `.object`/`.classRef` to `format: uuid`; the name-resolving variants change those to plain strings. Keep each use under 20 strict tools and 24 optional parameters.
+- A registry test asserts every allowed descriptor produces a valid strict schema and that every tool name has a decoder, so a new action that breaks either fails `swift test`, not a live call.
+
+**Caching.** Verified: the package caches automatically, and TTL and breakpoints are not configurable. Not stated: what it caches or where it places breakpoints (UNVERIFIED). On the Messages API the cached prefix is tools, then system, then messages, and any byte change invalidates everything after it. So, whatever the package does:
+- Tool order is registry order and filters depend only on `TessUse`, so one use always sends the same bytes. Never add live names (exercises, lists) as `anyOf` enums into tool schemas on the Claude route; that idea from `tess-routing.md` stays on-device only.
+- Instructions put the stable part first (voice, rules, the compact `ActionRegistry.catalog`) and the context pack last. Today `TessVoice.instructions` takes `today` (to the minute), the workout and the last set as arguments; on the Claude route these move into the pack at the end.
+- Short prompts may sit below the model's minimum cacheable prefix and simply not cache; at under $1 a month this is fine. Measure cache-read tokens in T3 before relying on it.
+
+## 12. Pitfalls
+
+| Pitfall | Mitigation |
+|---|---|
+| Beta package changes its API (docs: "APIs might change during the beta") | Pin an exact version; all package calls live in `ClaudeTessModel`; the raw `URLSession` client in section 1 is the escape hatch |
+| Keychain item lost on reinstall under free Personal Team signing (7-day expiry) | Re-running from Xcode installs over the app with the same bundle id and team id, so the item is kept. Deleting the app first also keeps it today, but Apple calls that an undocumented detail. Settings shows "No key" and re-asks instead of failing. Verify on the phone in T3 (UNVERIFIED on iOS 27) |
+| Cap passed mid-stream | Check the cap before each call with that use's `maxTokens` priced in; allow the one call to finish; the next call is blocked |
+| Rate limits (429), 529 overloaded, retries | Package maps 429 to `LanguageModelError.rateLimited`; 529 surfaces as `ClaudeError` (UNVERIFIED which case). At most one retry with jitter, then fall back to rules or on-device for that turn. Never retry a turn whose tools already ran |
+| UI waits on a slow call | Route timeouts from section 5 via the initializer's `timeout`; wrap the run in a `Task` that cancels on timeout or dismiss; ghost rows from completed tool calls stay, the rest are discarded |
+| Claude invents names that don't resolve | Tool returns "Error: no exercise called X, closest: Y" so Claude can retry once; never create objects from an unknown name; second miss becomes "Didn't catch that" |
+| Prompt injection from pasted recipe text | Paste goes in a delimited block marked as data; the paste use only gets `createRecipe`/`createList`; every write is a pending ghost row; no destructive tools on any route |
+| Swift 6 concurrency with streaming | `ClaudeTessModel` and `RegistryTool.perform` are `@MainActor`; stream partials hop to the main actor; only `Sendable` values (strings, `Data`) cross out of `call(arguments:)`, as today |
+| Usage missing on a failed or cancelled call | Record a `TessCall` with outcome `failed` and an estimate (input tokens from text length over 4 plus `maxTokens`); the cap errs high |
+| Month boundary for the cap | Month total is a query over `TessCall` dates in the phone's calendar and time zone; the reset line reads that same calendar; the Console spend limit is the server-side backstop |
+| Testing without spending money | `swift test` and the app tests inject a stub `LanguageModel` returning scripted tool calls; live calls only via `swift run tess-eval --route claude` with an env key |
+| Context pack leaks more than intended | Snapshot test per use (section 9); a test greps exports and the database for `sk-ant-` |
+| Keychain and cap tests touch real state | Behind protocols (`TessKeychain`, `TessUsageLedger`) with in-memory fakes in tests |
+
+Extra unverified items from these two sections: what the package caches and where it places breakpoints; how a 529 surfaces in the package; Keychain survival on iOS 27 under Personal Team signing.
+Keychain source: [Apple DTS on keychain items after app deletion](https://developer.apple.com/forums/thread/36442?page=2).
+
 ## Sources
 
 - [Claude for Foundation Models (Claude docs)](https://platform.claude.com/docs/en/cli-sdks-libraries/libraries/apple-foundation-models), [repo](https://github.com/anthropics/ClaudeForFoundationModels)

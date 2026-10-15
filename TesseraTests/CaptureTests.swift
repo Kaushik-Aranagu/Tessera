@@ -39,4 +39,47 @@ struct CaptureTests {
         model.undoLastCapture()
         #expect(!taskTitles().contains("Call mum"))
     }
+
+    @Test func aSetTypedInTheBarSeatsInTheLiveWorkout() async throws {
+        let workout = try #require(model.tonightWorkout())
+        model.startWorkout(workout)
+        let session = try #require(model.session)
+        let entry = try #require(session.currentEntry)
+        let line = await model.ask("log bench 80x8")
+        #expect(!line.isEmpty)
+        let record = try #require(model.pendingCapture)
+        // In live mode the grammar logs into the current exercise (LogSet); on Home it's LogExercise.
+        #expect(["logSet", "logExercise"].contains(record.action))
+        // A ghost until it dries: the set is there, drawn wet.
+        let ghost = try #require(session.setRows(of: entry).last)
+        #expect(ghost.weight == 80 && ghost.reps == 8)
+        #expect(model.isGhost(ghost.id))
+        model.commitCapture()
+        #expect(!model.isGhost(ghost.id))
+        #expect(session.lastSeated?.setID == ghost.id) // it seats like a held set: stroke, rest, undo
+        #expect(session.restEndsAt != nil)
+    }
+
+    @Test func aSetTypedOnHomeStartsAWorkoutThatShowsAsRunning() async throws {
+        let other = TesseraSchema.makeContainer(inMemory: true)
+        let fresh = AppModel(context: other.mainContext)
+        _ = await fresh.ask("log bench 80x8")
+        fresh.commitCapture()
+        let session = try #require(fresh.session)
+        #expect(session.entries.count == 1)
+        #expect(!fresh.isWorkoutPresented)
+    }
+
+    @Test func undoAfterAMultiSetCaptureTakesBackEverySet() async throws {
+        let workout = try #require(model.tonightWorkout())
+        model.startWorkout(workout)
+        let session = try #require(model.session)
+        let entry = try #require(session.currentEntry)
+        let before = session.setRows(of: entry).count
+        _ = await model.ask("bench 80x8, 82.5x6")
+        model.commitCapture()
+        #expect(session.setRows(of: entry).count == before + 2)
+        model.undoLastCapture()
+        #expect(session.setRows(of: entry).count == before)
+    }
 }

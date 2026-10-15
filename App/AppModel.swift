@@ -89,11 +89,13 @@ final class AppModel {
         engine = ActionEngine(store: store, classes: classes)
         ledger = TrainingLedger(store: store, classes: classes)
         runtime = TesseraRuntime(engine: engine)
-        launchNote = switch TesseraSchema.lastOpenOutcome {
+        // Core's calm note (store couldn't open, legacy migration pending) wins; else this launch's outcome.
+        let outcome: String? = switch TesseraSchema.lastOpenOutcome {
         case .opened: nil
         case .recoveredWithBackup: "Started fresh; your old data is saved in Backups."
         case .inMemoryFallback: "Couldn't open your data, so nothing will be saved this time."
         }
+        launchNote = TesseraSchema.launchNote ?? outcome
     }
 
     /// One calm line in Tess's voice when launch didn't go normally (a failed migration). Shown in the Ask bar.
@@ -118,6 +120,8 @@ final class AppModel {
     private(set) var pendingCapture: OpRecord?
     /// The capture just committed, for the Undo in the Ask Tess bar (about 4 s).
     private(set) var lastCapture: OpRecord?
+    /// Every record the last capture committed (one phrase can log several sets); Undo reverts them all.
+    @ObservationIgnored private var lastCaptures: [OpRecord] = []
     /// Captured ids, so the delayed timers never touch a record that is gone (a reset context, a discard).
     @ObservationIgnored private var pendingCaptureID: UUID?
     @ObservationIgnored private var lastCaptureID: UUID?
@@ -182,11 +186,14 @@ final class AppModel {
         for other in pendingCaptures where other.id != record.id {
             try? engine.commit(other)
         }
+        let committed = pendingCaptures.isEmpty ? [record] : pendingCaptures
         pendingCaptures = []
         try? engine.commit(record)
+        adoptCapturedSets(committed)
         pendingCapture = nil
         pendingCaptureID = nil
         lastCapture = record
+        lastCaptures = committed.contains { $0.id == record.id } ? committed : committed + [record]
         let id = record.id
         lastCaptureID = id
         touch()
@@ -215,9 +222,14 @@ final class AppModel {
     /// Undo in the Ask Tess bar, through the op log.
     func undoLastCapture() {
         guard let record = lastCapture else { return }
+        for other in lastCaptures.reversed() where other.id != record.id {
+            engine.undo(other)
+        }
+        lastCaptures = []
         engine.undo(record)
         lastCapture = nil
         lastCaptureID = nil
+        session?.refreshAfterExternalWrite()
         touch()
     }
 
@@ -228,7 +240,15 @@ final class AppModel {
     func tidyProcesses(now: Date = AppClock.now) {
         let idleLimit = (session?.restSeconds ?? 180) + 10 * 60
         let table = ProcessTable(engine: engine)
-        table.suspendIfIdle(now: now, idleLimit: idleLimit)
+        // While the live cover is up (a long locked rest, cardio) the workout is in use: never suspend it, and if
+        // something already did, run it again.
+        if isWorkoutPresented {
+            if let workout = session?.workout, let process = table.process(for: workout), process.state != .running {
+                _ = try? engine.perform(ResumeProcess(process: process.id, time: now), by: .system)
+            }
+        } else {
+            table.suspendIfIdle(now: now, idleLimit: idleLimit)
+        }
         processNotes = table.tidy(now: now)
         pickUpRunningWorkout(table)
         // A workout left untouched for 6 hours is wrapped up by Core; let the live session go with it.
@@ -353,8 +373,6 @@ final class AppModel {
     /// once-a-second UI ticks must stay far under a frame.
     @ObservationIgnored private var scheduleCache: (revision: Int, anchor: Date, items: [ScheduleItem])?
     @ObservationIgnored private var workoutCache: (revision: Int, anchor: Date, workout: ObjectRecord?)?
-    /// Finished workouts per day (Core's summaries), rebuilt when data changes.
-    @ObservationIgnored var finishedCache: [Date: (revision: Int, summaries: [WorkoutSummary])] = [:]
 
     func schedule(around now: Date = AppClock.now) -> [ScheduleItem] {
         let revision = revision
@@ -478,10 +496,10 @@ final class AppModel {
 // MARK: - Plan
 
 extension AppModel {
-    /// The plan Home trains from: Kaushik's starter PPL×2 (installed first, so the oldest plan).
+    /// The plan Home trains from: Kaushik's starter PPL×2, else the first plan there is.
     var plan: ObjectRecord? {
         _ = revision
-        return objects(of: .plan).first
+        return store.object(id: StarterContent.planID) ?? objects(of: .plan).first
     }
 
     /// Today's routine from the plan, when there is no workout object for today yet (nothing scheduled, nothing
@@ -497,14 +515,10 @@ extension AppModel {
         finishedWorkouts(on: now)
     }
 
+    /// Core caches these per store revision.
     func finishedWorkouts(on day: Date) -> [WorkoutSummary] {
-        let key = Calendar.current.startOfDay(for: day)
-        if let cached = finishedCache[key], cached.revision == revision {
-            return cached.summaries
-        }
-        let summaries = ledger.finishedWorkouts(on: day)
-        finishedCache[key] = (revision, summaries)
-        return summaries
+        _ = revision
+        return ledger.finishedWorkouts(on: day)
     }
 
     /// Start: today's workout from the routine through the engine (one entry per slot, prefilled), then live mode.
@@ -522,5 +536,18 @@ extension AppModel {
         guard session == nil, let workout = table.running()?.subject,
               workout.classDef?.id == classes[.workout]?.id, store.value("endedAt", of: workout) == nil else { return }
         session = WorkoutSession(workout: workout, model: self)
+    }
+
+    /// Sets typed in the Bar ("log bench 80x8") land in the live workout: they seat like a held set. Typed on Home
+    /// with nothing running, Core starts a workout; it becomes the running session (Now shows it with Resume).
+    func adoptCapturedSets(_ records: [OpRecord]) {
+        let logs = records.filter { $0.action == LogExercise.descriptor.name || $0.action == LogSet.descriptor.name }
+        guard !logs.isEmpty else { return }
+        if session == nil {
+            pickUpRunningWorkout(ProcessTable(engine: engine))
+        }
+        let setClass = classes[.set]?.id
+        let ids = logs.flatMap(\.objectIDs).filter { store.object(id: $0)?.classDef?.id == setClass }
+        session?.seatCaptured(setIDs: ids)
     }
 }

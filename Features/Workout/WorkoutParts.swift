@@ -104,6 +104,9 @@ struct ExerciseLane: View {
 enum WorkoutLines {
     static func subline(_ session: WorkoutSession, phase: WorkoutSession.Phase) -> (String, Color) {
         guard let entry = session.currentEntry else { return ("", Paint.secondary) }
+        if let row = session.editingRow {
+            return ("changing set \(row.number), was \(Format.kilograms(row.weight)) × \(Int(row.reps))", Paint.tess)
+        }
         let target = session.targetSets(of: entry)
         let rows = session.setRows(of: entry)
         let tenth = { (value: Double) in Format.kilograms((value * 10).rounded() / 10) }
@@ -136,6 +139,12 @@ enum WorkoutLines {
     static func tess(_ session: WorkoutSession, phase: WorkoutSession.Phase, summary: String?) -> String {
         if session.finishedAt != nil {
             return summary ?? ""
+        }
+        if session.isEditing {
+            return "Dial it in, then save."
+        }
+        if let note = session.editNote {
+            return note
         }
         if case .rest = phase, let seated = session.lastSeated {
             // tess-voice: "Set 3. 80 x 8." and "New best: 85 x 5. e1RM 99."
@@ -236,6 +245,8 @@ struct WorkoutTessBar: View {
     let mode: TessSoul.Mode
     let canUndo: Bool
     var onUndo: () -> Void
+    /// Tap Tess's line to type to her ("log bench 80x8"); the field rises above the keyboard (LiveAskField).
+    var onTap: (() -> Void)?
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -250,6 +261,11 @@ struct WorkoutTessBar: View {
                 .minimumScaleFactor(0.85)
                 .contentTransition(.opacity)
                 .tesseraAnimation(value: line)
+                .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading)
+                .contentShape(Rectangle())
+                .onTapGesture { onTap?() }
+                .accessibilityAddTraits(onTap == nil ? [] : .isButton)
+                .accessibilityHint(onTap == nil ? "" : "Type to Tess")
             Spacer(minLength: 0)
             if canUndo {
                 Button(action: onUndo) {
@@ -260,7 +276,7 @@ struct WorkoutTessBar: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Undo the last set")
+                .accessibilityLabel("Undo the last change")
                 .transition(.opacity)
             }
         }
@@ -309,5 +325,89 @@ struct PlateStepKey: View {
         .buttonRepeatBehavior(.enabled)
         .sensoryFeedback(.selection, trigger: presses)
         .accessibilityLabel(up ? "Heavier by \(step) kilograms" : "Lighter by \(step) kilograms")
+    }
+}
+
+// MARK: - Edit keys
+
+/// While a logged set is on the dial: Save set N (Core's EditSet) and a plain Cancel.
+struct EditSetKeys: View {
+    let session: WorkoutSession
+    var onSave: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        if let row = session.editingRow {
+            PaintKey(finish: .cream, paint: Paint.cobalt, isTap: true, height: 62) {
+                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { session.saveEdit() }
+                onSave()
+            } label: { _ in
+                Text("Save set \(row.number)").textRole(.bodyStrong)
+            }
+            .frame(width: 200)
+            .accessibilityLabel("Save set \(row.number) as \(Format.kilograms(session.weight)) by \(Int(session.reps))")
+            Button {
+                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { session.endEditing() }
+            } label: {
+                Text("Cancel")
+                    .textRole(.bodyStrong)
+                    .foregroundStyle(Paint.secondary)
+                    .frame(minWidth: 60, minHeight: 60)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+    }
+}
+
+// MARK: - Typing to Tess in live mode
+
+/// Typed capture during a workout ("log bench 80x8", "8", "same"): a field that sits on the keyboard, sends the
+/// phrase through Core's capture engine (the set shows as a ghost stroke, then seats), and closes.
+struct LiveAskField: View {
+    @Binding var isShown: Bool
+    var onAsk: (String) -> Void
+    @State private var draft = ""
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
+        HStack(spacing: Theme.Spacing.s) {
+            TextField("log bench 80x8, or ask", text: $draft)
+                .font(Theme.voice)
+                .foregroundStyle(Paint.cream)
+                .focused($focused)
+                .submitLabel(.go)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .onSubmit(submit)
+            Button("Close") { close() }
+                .textRole(.labelStrong)
+                .foregroundStyle(Paint.secondary)
+                .frame(minWidth: 60, minHeight: 44)
+                .buttonStyle(.plain)
+        }
+        .padding(.horizontal, Theme.Spacing.m)
+        .frame(height: 60)
+        .overlay { shape.stroke(.white.opacity(0.12), lineWidth: 0.5) }
+        .padding(.horizontal, 14)
+        .padding(.top, Theme.Spacing.s)
+        .frame(maxHeight: .infinity, alignment: .top)
+        .preferredColorScheme(.dark)
+        .onAppear { focused = true }
+    }
+
+    private func submit() {
+        let phrase = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        draft = ""
+        if !phrase.isEmpty {
+            onAsk(phrase)
+        }
+        close()
+    }
+
+    private func close() {
+        focused = false
+        isShown = false
     }
 }

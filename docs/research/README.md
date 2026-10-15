@@ -39,3 +39,13 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [shutdown-daylog-copy.md](shutdown-daylog-copy.md) | Design, Core: 32 Day log and Shutdown lines in Tess voice (M4 slices 5, 7) |
 | [ship-list-reading-draft.md](ship-list-reading-draft.md) | Product: DRAFT Reading ship list, 7 slices (M5) |
 | [tess-model-layer.md](tess-model-layer.md) | Product, Core: Claude in Tess (official Swift package, Keychain key, $10 cap, grammar then on-device then Claude, first slices) |
+| [fixtures/recipe-paste-corpus.md](fixtures/recipe-paste-corpus.md) | Core, Kitchen lead: 30 recipe paste fixtures with expected parse and parser gaps (kitchen 2, 3, 11) |
+| [fixtures/cook-mode-scenarios.md](fixtures/cook-mode-scenarios.md) | Core: 15 cook mode timer, process and Now scenarios (kitchen 12) |
+| [fixtures/lists-fixtures.md](fixtures/lists-fixtures.md) | Core, Kitchen lead: 40 list pastes and 60 list phrases (Lists 3, 8) |
+| [grammar-collisions.md](grammar-collisions.md) | Core: 46 Tess grammar collisions across domains, precedence rules, 56 test rows |
+| [ship-list-m5-money-draft.md](ship-list-m5-money-draft.md) | Product: DRAFT Money ship list, 7 slices, 15 phrases (M5) |
+| [v1-gap-audit.md](v1-gap-audit.md) | Product, Builder A: v1 slices vs master 285b34a (15 on, 3 partly, 1 missing) |
+| [recipe-link-fetch.md](recipe-link-fetch.md) | Core, Kitchen lead: recipe link fetch (JSON-LD, parser, Haiku fallback), slices L1-L3 |
+| [apple-watch.md](apple-watch.md) | Product, Builder A, Core: Apple Watch without a Watch app first (Health reads, Smart Stack rest timer), slices W1-W4 |
+| [ship-list-m5-upkeep-draft.md](ship-list-m5-upkeep-draft.md) | Product: DRAFT Home upkeep ship list, 7 slices, 15 phrases (M5) |
+| [tess-eval-claude.md](tess-eval-claude.md) | Core: 80 grammar misses with expected Claude tool calls and context packs (model layer T4, T5) |

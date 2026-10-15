@@ -45,7 +45,6 @@ private struct WorkoutContent: View {
     /// The lane's scroll position (x). Kept in step with `session.currentIndex` both ways.
     @State private var laneIndex: Int?
     @State private var tessMode: TessSoul.Mode = .idle
-    @State private var lockHaptic = 0
     @State private var celebrated = 0
     @State private var undoHaptic = 0
     @State private var revealHaptic = 0
@@ -59,6 +58,9 @@ private struct WorkoutContent: View {
     /// A glint sweeps the numeral once when rest ends on its own.
     @State private var restEndedGlint = false
     @State private var summaryLine: String?
+    /// Typing to Tess (LiveAskField) and her reply, shown in the bar for a few seconds.
+    @State private var isAsking = false
+    @State private var askReply: String?
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -113,6 +115,14 @@ private struct WorkoutContent: View {
                 .ignoresSafeArea(edges: .top)
         }
         .overlay(alignment: .top) { runningOrder }
+        // The set block keeps its layout; the ask field rides on the keyboard in a short sheet.
+        .ignoresSafeArea(.keyboard)
+        .sheet(isPresented: $isAsking) {
+            LiveAskField(isShown: $isAsking) { phrase in ask(phrase) }
+                .presentationDetents([.height(84)])
+                .presentationBackground(Color(hex: 0x1C1828))
+                .presentationDragIndicator(.hidden)
+        }
         .background { PleinGround() }
         .preferredColorScheme(.dark)
         .persistentSystemOverlays(.hidden)
@@ -128,11 +138,7 @@ private struct WorkoutContent: View {
         }
         .onChange(of: session.lastSeated) { _, seated in
             guard let seated else { return }
-            Task { @MainActor in
-                // The key lands the set (rigid); it locks (success) once its stroke has painted in.
-                try? await Task.sleep(for: .milliseconds(700))
-                lockHaptic += 1
-            }
+            // One haptic per set: the key's rigid impact as it lands (no second "lock" after the stroke).
             if seated.records.isEmpty {
                 play(.done)
             } else {
@@ -140,13 +146,14 @@ private struct WorkoutContent: View {
                 play(.thinking, then: .done, after: 1.2)
             }
         }
-        .sensoryFeedback(.success, trigger: lockHaptic)
         .sensoryFeedback(.decrease, trigger: undoHaptic)
         .sensoryFeedback(.impact(weight: .light), trigger: revealHaptic)
     }
 
-    private func live(phase: WorkoutSession.Phase, now: Date) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
+    private func live(phase actual: WorkoutSession.Phase, now: Date) -> some View {
+        // Editing a logged set takes the set block over (dial, drum, key), even during rest.
+        let phase = session.isEditing ? .set : actual
+        return VStack(alignment: .leading, spacing: 0) {
             header(now: now)
                 .padding(.horizontal, Theme.Spacing.gutter)
                 .padding(.top, Theme.Spacing.m)
@@ -154,10 +161,15 @@ private struct WorkoutContent: View {
                 .padding(.top, Theme.Spacing.m)
                 .overlay(alignment: .topLeading) { swapPanel }
                 .zIndex(2)
-            LiveSetStrokes(session: session, phase: phase)
-                .padding(.horizontal, Theme.Spacing.gutter)
-                .padding(.top, Theme.Spacing.l)
-                .opacity(isSwapOpen ? 0 : 1)
+            LiveSetStrokes(session: session, phase: actual) { id in
+                revealHaptic += 1
+                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) {
+                    session.beginEditing(setID: id)
+                }
+            }
+            .padding(.horizontal, Theme.Spacing.gutter)
+            .padding(.top, Theme.Spacing.l)
+            .opacity(isSwapOpen ? 0 : 1)
             subline(phase: phase)
                 .padding(.horizontal, Theme.Spacing.gutter)
                 .padding(.top, Theme.Spacing.m)
@@ -176,7 +188,7 @@ private struct WorkoutContent: View {
                     weight: $session.weight,
                     detents: session.detents,
                     isLocked: phase != .set,
-                    restFraction: session.restFraction(at: now),
+                    restFraction: session.isEditing ? nil : session.restFraction(at: now),
                     onExtendRest: { extendRest() },
                     onSkipRest: { skipRest() },
                     spokenValue: session.spokenLoad
@@ -189,16 +201,29 @@ private struct WorkoutContent: View {
             Spacer(minLength: Theme.Spacing.m)
             keyRow(phase: phase)
                 .padding(.horizontal, Theme.Spacing.gutter)
-            WorkoutTessBar(line: WorkoutLines.tess(session, phase: phase, summary: summaryLine), mode: tessMode,
-                           canUndo: session.canUndo && session.finishedAt == nil)
-            {
-                withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLastSet() }
-                undoHaptic += 1
-            }
-            .padding(.horizontal, 14)
-            .padding(.top, Theme.Spacing.l)
+            WorkoutTessBar(line: askReply ?? WorkoutLines.tess(session, phase: phase, summary: summaryLine),
+                           mode: tessMode,
+                           canUndo: session.canUndoLast && !session.isEditing, onUndo: {
+                               withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLast() }
+                               undoHaptic += 1
+                           }, onTap: { isAsking = true })
+                .padding(.horizontal, 14)
+                .padding(.top, Theme.Spacing.l)
         }
         .tesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.52), value: session.isEffortShown)
+    }
+
+    private func ask(_ phrase: String) {
+        play(.thinking)
+        Task { @MainActor in
+            let reply = await model.ask(phrase)
+            askReply = reply
+            play(.done)
+            try? await Task.sleep(for: .seconds(4))
+            if askReply == reply {
+                askReply = nil
+            }
+        }
     }
 
     private func play(_ mode: TessSoul.Mode, then next: TessSoul.Mode? = nil, after delay: Double = 0) {
@@ -252,7 +277,7 @@ extension WorkoutContent {
                         onClose: { setOrder(open: false) },
                         onFinish: session.summary.sets > 0 ? {
                             setOrder(open: false)
-                            finish()
+                            finish(early: true)
                         } : nil
                     )
                     .ignoresSafeArea(edges: .top)
@@ -510,49 +535,54 @@ extension WorkoutContent {
 
     private func keyRow(phase: WorkoutSession.Phase) -> some View {
         HStack(spacing: Theme.Spacing.l) {
-            switch phase {
-            case .set:
-                // Hold to log: 0.6 s, 20 pt of drift (docs/research/ship-now.md).
-                PaintKey(finish: .cream, paint: Paint.live, duration: 0.6, height: 62, drift: 20) {
-                    withTesseraAnimation(reduceMotion: reduceMotion) { session.logSet() }
-                } label: { holding in
-                    Text(holding ? "Keep holding" : "Hold to log").textRole(.bodyStrong)
-                }
-                .frame(width: 240)
-                .accessibilityLabel(logLabel)
-                .accessibilityAction(named: "Log set") {
-                    withTesseraAnimation(reduceMotion: reduceMotion) { session.logSet() }
-                }
-                Text("\(Format.kilograms(session.weight)) × \(Int(session.reps))")
-                    .textRole(.label)
-                    .foregroundStyle(Paint.cream)
-            case .rest:
-                PaintKey(finish: .cream, paint: Paint.now, isTap: true, height: 62) {
-                    skipRest()
-                } label: { _ in
-                    Text("Skip rest").textRole(.bodyStrong)
-                }
-                .frame(width: 240)
-            case .exerciseDone:
-                PaintKey(finish: .cream, paint: Paint.cobalt, isTap: true, height: 62) {
-                    if let next = session.nextUnfinishedIndex {
-                        withTesseraAnimation(.snappy(duration: 0.3), reduceMotion: reduceMotion) { laneIndex = next }
+            if session.isEditing {
+                EditSetKeys(session: session) {}
+            } else {
+                switch phase {
+                case .set:
+                    // Hold to log: 0.6 s, 20 pt of drift (docs/research/ship-now.md).
+                    PaintKey(finish: .cream, paint: Paint.live, duration: 0.6, height: 62, drift: 20) {
+                        withTesseraAnimation(reduceMotion: reduceMotion) { session.logSet() }
+                    } label: { holding in
+                        Text(holding ? "Keep holding" : "Hold to log").textRole(.bodyStrong)
                     }
-                } label: { _ in
-                    Text("Next exercise").textRole(.bodyStrong)
+                    .frame(width: 240)
+                    .accessibilityLabel(logLabel)
+                    .accessibilityAction(named: "Log set") {
+                        withTesseraAnimation(reduceMotion: reduceMotion) { session.logSet() }
+                    }
+                    Text("\(Format.kilograms(session.weight)) × \(Int(session.reps))")
+                        .textRole(.label)
+                        .foregroundStyle(Paint.cream)
+                case .rest:
+                    PaintKey(finish: .cream, paint: Paint.now, isTap: true, height: 62) {
+                        skipRest()
+                    } label: { _ in
+                        Text("Skip rest").textRole(.bodyStrong)
+                    }
+                    .frame(width: 240)
+                case .exerciseDone:
+                    PaintKey(finish: .cream, paint: Paint.cobalt, isTap: true, height: 62) {
+                        if let next = session.nextUnfinishedIndex {
+                            withTesseraAnimation(.snappy(duration: 0.3), reduceMotion: reduceMotion) { laneIndex = next
+                            }
+                        }
+                    } label: { _ in
+                        Text("Next exercise").textRole(.bodyStrong)
+                    }
+                    .frame(width: 240)
+                case .workoutDone:
+                    PaintKey(finish: .cream, paint: Paint.live, duration: 0.8, height: 62) {
+                        finish()
+                    } label: { holding in
+                        Text(holding ? "Keep holding" : "Hold to finish").textRole(.bodyStrong)
+                    }
+                    .frame(width: 240)
+                    .accessibilityAction(named: "Finish workout") { finish() }
+                    Text("\(session.summary.sets) sets")
+                        .textRole(.label)
+                        .foregroundStyle(Paint.cream)
                 }
-                .frame(width: 240)
-            case .workoutDone:
-                PaintKey(finish: .cream, paint: Paint.live, duration: 0.8, height: 62) {
-                    finish()
-                } label: { holding in
-                    Text(holding ? "Keep holding" : "Hold to finish").textRole(.bodyStrong)
-                }
-                .frame(width: 240)
-                .accessibilityAction(named: "Finish workout") { finish() }
-                Text("\(session.summary.sets) sets")
-                    .textRole(.label)
-                    .foregroundStyle(Paint.cream)
             }
             Spacer(minLength: 0)
         }
@@ -565,10 +595,10 @@ extension WorkoutContent {
         session.entries.flatMap { entry in session.setRows(of: entry).map { Paint.set($0.number) } }
     }
 
-    private func finish() {
+    private func finish(early: Bool = false) {
         isSwapOpen = false
         isOrderOpen = false
-        withTesseraAnimation(.easeOut(duration: 0.4), reduceMotion: reduceMotion) { session.finish() }
+        withTesseraAnimation(.easeOut(duration: 0.4), reduceMotion: reduceMotion) { session.finish(early: early) }
     }
 
     /// The workout is already finished (FinishWorkout ran on the hold); leaving drops it into today on Home.

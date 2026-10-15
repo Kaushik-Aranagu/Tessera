@@ -18,10 +18,12 @@ struct GlintIf: ViewModifier {
 // MARK: - Sets as brushstrokes (y)
 
 /// One stroke per planned set: logged sets are 9 pt strokes in their paint, the current set a breathing dashed cream
-/// guide, later sets a faint guide. A freshly logged set paints in over 700 ms. Long-press a logged stroke to undo it.
+/// guide, later sets a faint guide. A freshly logged set paints in over 700 ms. Tap a logged stroke to change it on
+/// the dial and drum (the one being changed lifts and glows); long-press the last one to undo it.
 struct LiveSetStrokes: View {
     let session: WorkoutSession
     let phase: WorkoutSession.Phase
+    var onEdit: (UUID) -> Void = { _ in }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -31,7 +33,14 @@ struct LiveSetStrokes: View {
         HStack(spacing: 10) {
             ForEach(0 ..< max(target, rows.count), id: \.self) { index in
                 if index < rows.count {
-                    LoggedStroke(number: index + 1, isFresh: session.lastSeated?.setID == rows[index].id)
+                    LoggedStroke(number: index + 1, isFresh: session.lastSeated?.setID == rows[index].id,
+                                 isEditing: session.editingSetID == rows[index].id,
+                                 isGhost: session.model.isGhost(rows[index].id))
+                        .frame(height: 44)
+                        .contentShape(Rectangle())
+                        .onTapGesture { onEdit(rows[index].id) }
+                        .accessibilityAddTraits(.isButton)
+                        .accessibilityHint("Changes this set on the dial")
                         .contextMenu {
                             if index == rows.count - 1, session.undoable?.setID == rows[index].id, session.canUndo {
                                 Button("Undo set \(index + 1)", systemImage: "arrow.uturn.backward") {
@@ -48,7 +57,7 @@ struct LiveSetStrokes: View {
                 }
             }
         }
-        .frame(height: 20)
+        .frame(height: 44)
         .id(entry?.id)
         .transition(.opacity)
     }
@@ -57,14 +66,22 @@ struct LiveSetStrokes: View {
 private struct LoggedStroke: View {
     let number: Int
     let isFresh: Bool
+    var isEditing = false
+    /// Typed in the Bar and still drying: drawn wet in Tess's cobalt until it commits.
+    var isGhost = false
     @State private var progress: CGFloat = 1
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Brushstroke(progress: progress)
-            .stroke(Paint.set(number), style: StrokeStyle(lineWidth: 9, lineCap: .round))
+            .stroke(isGhost ? Paint.tess.opacity(0.55) : Paint.set(number),
+                    style: StrokeStyle(lineWidth: 9, lineCap: .round))
             .frame(width: 64, height: 20)
             .blur(radius: 0.4)
+            .shadow(color: Paint.set(number).opacity(isEditing ? 0.8 : 0), radius: 6)
+            .offset(y: isEditing ? -6 : 0)
+            .opacity(isEditing ? 1 : 0.92)
+            .tesseraAnimation(Theme.Motion.snappy, value: isEditing)
             .onAppear {
                 guard isFresh, !reduceMotion else { return }
                 progress = 0
