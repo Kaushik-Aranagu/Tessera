@@ -19,10 +19,11 @@ Home has a word rail across the top: **Review · Today · Training**. **Kitchen*
 
 If the recipe page lands before the cut, also paste a recipe's text into the bar and watch it get read.
 
-## Five questions for the huddle
+## Six questions for the huddle
 
 1. **What did you reach for first, and what didn't you find?** This tells us whether Home's layout and rail are right before we add more apps.
 2. **Logging a set: is one hold, the dial and the drum fast enough between sets, or is anything in the way?** This decides how much of the next week goes into gym polish versus new areas.
 3. **Does the look feel like yours?** That covers paint, type, seams and Tess's bloom. What would you change first? Design can redirect now, cheaply, before more screens are built.
 4. **What should Tess do for you in the first week now that Claude is in?** For example: plan the day, answer "what did I lift", read recipes from links, or something else. This sets the order of the new Tess model layer.
 5. **After the gym and the kitchen, which area would you open daily?** The candidates are the Day log, Reading, Money, People or Home upkeep. This orders everything after M4.
+6. **What's running: keep the ledger, or move to the plate stack?** Design's plate stack concept is in `docs/design/plate-stack.md`, with a recording at `/mnt/project-files/tessera/design/plate-stack.mp4`. Builder B keeps the ledger until you choose. *Recommendation:* watch the recording first, and keep the ledger unless the stack feels clearly better in your hand.
