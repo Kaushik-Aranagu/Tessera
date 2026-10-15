@@ -3,7 +3,7 @@
 Personal iPhone-only app, native SwiftUI.
 
 ## Platform & stack
-- iPhone only (no iPad, Mac or watch targets). Deployment target: iOS 26+.
+- iPhone only (no iPad, Mac or watch targets). Deployment target: iOS 27.0+ — use iOS 27 APIs freely; no `#available` fallbacks for older OSes.
 - UI: SwiftUI. Use modern APIs (Observation `@Observable`, Swift concurrency, Swift 6 strict concurrency).
 - Persistence: SwiftData, synced via CloudKit (private database). Keep models CloudKit-compatible: all properties optional or defaulted, no unique constraints, relationships optional.
 - System integrations: WidgetKit (widgets), ActivityKit (Live Activities), HealthKit, App Intents (Shortcuts/Siri/Spotlight).

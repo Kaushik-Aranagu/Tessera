@@ -27,7 +27,7 @@ no chat-bubble-first UI, no sparkle emoji everywhere).
 |---|---|---|
 | Today | Cards collapse/expand with the header sliding into the nav bar | `scrollTransition`, `onScrollGeometryChange`, matched geometry |
 | Today → item | Tap a card, it *becomes* the detail screen and swipes back home | `.navigationTransition(.zoom(sourceID:in:))` + `matchedTransitionSource` |
-| Now / Next / Later | Drag an item between sections; others make room, drop settles with a spring + haptic | iOS 27 `reorderable()` / `reorderContainer(for:)` (fallback: custom drag on 26) |
+| Now / Next / Later | Drag an item between sections; others make room, drop settles with a spring + haptic | `reorderable(collectionID:)` / `reorderContainer(for:itemID:in:)` |
 | Completing an item | Check fills with a draw-on stroke, row compresses, count ticks down, `.success` haptic | `symbolEffect(.drawOn)`, `numericText`, `sensoryFeedback` |
 | Finishing the day | Subtle confetti/sparkle burst + ripple from the last check | Vortex particles or a Metal `layerEffect` ripple |
 | Floating add button | Glass button morphs into a quick-add bar, then into a sheet | `GlassEffectContainer` + `glassEffectID` morphing |
@@ -42,7 +42,7 @@ no chat-bubble-first UI, no sparkle emoji everywhere).
 ## Toolkit
 
 ### Native (preferred — zero dependencies)
-- Transitions: `navigationTransition(.zoom)`, iOS 27 `.crossFade` and `AnyNavigationTransition`, custom `Transition`
+- Transitions: `navigationTransition(.zoom)`, `.crossFade` and `AnyNavigationTransition`, custom `Transition`
   protocol, `matchedGeometryEffect`.
 - Animation: `PhaseAnimator`, `KeyframeAnimator`, `withAnimation(_:completionCriteria:)`, `CustomAnimation`.
 - Scroll: `scrollTransition`, `visualEffect`, `onScrollGeometryChange`, `scrollTargetBehavior(.viewAligned)`.
