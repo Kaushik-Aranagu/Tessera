@@ -196,6 +196,8 @@ public enum SystemCatalog {
                       // Nightly roll-forward: the day it was first planned for, and how many nights it rolled.
                       FieldSpec(key: "rolledFrom", name: "First planned", kind: .date),
                       FieldSpec(key: "rolls", name: "Rolled", kind: .number),
+                      // What it's for: "cook carbonara thu" links the recipe.
+                      FieldSpec(key: "about", name: "About", kind: .refList, target: .thing),
                   ]),
         // Plain text with @ links; `about` holds the objects it mentions (classes via their class objects).
         ClassSpec(key: .note, name: "Note", parent: .thing, symbol: "note.text", colorRole: "neutral", fields: [

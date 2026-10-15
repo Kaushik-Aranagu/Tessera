@@ -15,6 +15,18 @@ public struct TessGrammar {
         case task(title: String, startsAt: Date?)
         /// "note: bar felt heavy" (or "note bar felt heavy").
         case note(body: String)
+        /// Kitchen: "buy milk", "milk, eggs, 2 lemons".
+        case groceries(lines: [String])
+        /// "cook carbonara" (now, `on` nil) or "cook carbonara thu" (a dated task linking the recipe).
+        case cook(recipe: ObjectRecord, on: Date?)
+        /// "timer pasta 10", "10 min timer".
+        case timer(label: String, minutes: Double)
+        /// "list: packing".
+        case list(name: String)
+        /// "shop": start shopping the groceries list.
+        case shop
+        /// Pasted text with an Ingredients heading.
+        case recipe(text: String)
     }
 
     public enum SetPhrase: Equatable, Sendable {
@@ -34,6 +46,9 @@ public struct TessGrammar {
         guard !text.isEmpty else { return nil }
         if let note = parseNote(phrase) {
             return note
+        }
+        if let kitchen = parseKitchen(phrase, context: context) {
+            return kitchen
         }
         let entry = context.entry.flatMap { store.object(id: $0) }
         if let entry, let parsed = parseRelativeSet(text, entry: entry) {

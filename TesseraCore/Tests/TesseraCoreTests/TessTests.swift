@@ -168,8 +168,8 @@ struct TessTests {
         let model = FakeModel()
         tess.model = model
         _ = await tess.capture("bench 80x8", context: context())
-        _ = await tess.capture("buy chalk", context: context())
-        #expect(model.phrases == ["buy chalk"])
+        _ = await tess.capture("ring the gym about chalk", context: context())
+        #expect(model.phrases == ["ring the gym about chalk"])
     }
 
     // MARK: Voice
