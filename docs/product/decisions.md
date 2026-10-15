@@ -124,4 +124,4 @@
   - Seasonal chores are plain 30 days, paused by hand.
   - "alarm" stops being an AM cue.
   - "get new sheets" is a task, matching the 4:30 non-food rule.
-
+- **Review week fix goes next for Builder B** (4:58 PM PT, Research #155: 22 of 30 weeks flagged). Review opens with a session count, not a grade, rest days get their own dab, and the miss ring only marks a real miss. Two sessions on one day count as two. Order: Builder B's Now hookup and audit polish, then this. Core supplies the week data after the grammar hotfix, and Design draws the rest dab first.
