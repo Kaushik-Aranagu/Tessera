@@ -29,6 +29,19 @@ targets:
         UILaunchScreen:
           UIColorName: LaunchBackground
         NSSupportsLiveActivities: true
+        # Backups show in Files (On My iPhone > Tessera) and open from there.
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: com.kaushikaranagu.tessera.backup
+            UTTypeDescription: Tessera backup
+            UTTypeConformsTo: [public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [tessera]
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Tessera backup
+            LSHandlerRank: Owner
+            LSItemContentTypes: [com.kaushikaranagu.tessera.backup]
         CFBundleURLTypes:
           - CFBundleURLName: com.kaushikaranagu.tessera
             CFBundleURLSchemes: [tessera]

@@ -13,7 +13,7 @@ struct BackupTests {
     }
 
     func seededStore(at url: URL) throws -> ObjectStore {
-        let store = ObjectStore(context: try TesseraContext(url: url))
+        let store = try ObjectStore(context: TesseraContext(url: url))
         let classes = try store.prepareCatalog()
         let engine = ActionEngine(store: store, classes: classes)
         try engine.perform(CreateNote(body: "Bench felt heavy"), by: .user)
@@ -90,7 +90,7 @@ struct BackupTests {
         let expected = try json(TesseraContext(url: dir.appendingPathComponent("source.sqlite")))
 
         do {
-            let current = ObjectStore(context: try TesseraContext(url: storeURL))
+            let current = try ObjectStore(context: TesseraContext(url: storeURL))
             let classes = try current.prepareCatalog()
             try ActionEngine(store: current, classes: classes).perform(CreateNote(body: "Today's note"), by: .user)
             current.save()
