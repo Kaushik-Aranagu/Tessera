@@ -41,16 +41,16 @@ The engine writes the resume point and next step on every context switch. Nobody
 
 ## On Home: the ledger (v1)
 
-- **At most 3 rows** under Now: first the running process, then suspended ones by most recent touch, then waiting ones whose check time has passed. The rest sit one level deeper (z) in the full list.
+- **The running process takes the Now slot itself,** not a ledger row (agreed with Design studio, `docs/design/` commit e81c24d).
+- **The ledger holds only suspended and waiting processes:** at most 3 rows under Now, suspended ones by most recent touch first, then waiting ones whose check time has passed. The rest sit one level deeper (z) in the full list.
 - Each row is full width and joined to the next by a hairline seam, like a machined index plate. The subject is in the big type tier, and the next step in the second tier.
 - **State lives in the seam above the row, not in a badge:**
-  - running: a lit seam with light travelling along it;
   - suspended: a lit, still seam;
   - waiting: an engraved, unlit seam.
-- The breathing glint appears on the running row only.
+- The breathing glint belongs to Now (the running process), not to ledger rows.
 - **Tap to resume:** zoom from the row straight to the resume point. **Swipe left to put it away:** the row slides into its track and the gap closes. **Pull down on the row** to open the process page with its trail.
 - Copy states time, never judgement: "Left at set 3 of 5, 40 min ago".
-- In v1 only workouts are processes, so Home shows zero or one row.
+- In v1 only workouts are processes: a running workout is Now, and a suspended one is the single ledger row.
 
 ## Other screens
 
