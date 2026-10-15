@@ -111,14 +111,36 @@ public struct CreateRecipe: EngineAction {
 
     public var text: String
     public var title: String?
+    /// Lines (by index among the non-empty lines) the paste screen re-read: "ingredient", "step" or "ignore".
+    public var corrections: [Int: String]?
 
-    public init(text: String, title: String? = nil) {
+    public init(text: String, title: String? = nil, corrections: [Int: String]? = nil) {
         self.text = text
         self.title = title
+        self.corrections = corrections
+    }
+
+    /// The text's lines with any corrections applied.
+    public static func lines(of text: String,
+                             corrections: [Int: String]?) -> [(line: String, kind: RecipeParser.LineKind)]
+    {
+        var lines = RecipeParser.classify(text)
+        for (index, kind) in corrections ?? [:] where lines.indices.contains(index) {
+            let line = lines[index].line
+            switch kind {
+            case "ingredient":
+                lines[index].kind = IngredientLine.parse(line).map { .ingredient($0) } ?? .ignored
+            case "step":
+                lines[index].kind = .step(text: line, timers: RecipeParser.durations(in: line))
+            default:
+                lines[index].kind = .ignored
+            }
+        }
+        return lines
     }
 
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
-        guard let parsed = RecipeParser.parse(text) else {
+        guard let parsed = RecipeParser.parse(text, lines: Self.lines(of: text, corrections: corrections)) else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "no ingredients or steps found")
         }
         let recipe = try transaction.create(transaction.classDef(.recipe), title: title ?? parsed.title)

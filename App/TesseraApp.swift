@@ -50,6 +50,10 @@ struct TesseraApp: App {
                         ReviewView()
                     } else if ProcessInfo.processInfo.arguments.contains("-groceries") {
                         GroceriesView()
+                    } else if ProcessInfo.processInfo.arguments.contains("-recipe") {
+                        RecipeView(recipeID: nil)
+                    } else if ProcessInfo.processInfo.arguments.contains("-pasteRecipe") {
+                        PasteRecipeView()
                     } else {
                         RootView()
                     }
