@@ -34,7 +34,7 @@ Score notes in the last column use the weights above. "Rest day" in the Now colu
 | R02 | 18:10 Thu | none | none | Rest day; Pull A scheduled 18:30 | none | Gym bag on Pull A (20 min out) | 5 | Opened Training, 3 min ago | no | Rest day | Rest day. Pull A is a tap away | none (Pull A would have scored 34+15+15 = 64) | Rest beats the strongest gym nudge; the G3 word is hidden with its workout |
 | R03 | 10:00 Sat | none | none | Rest day | Water plants, 10 min, untimed | none | 6 | Last `.user` op Tue 21:40 (4 days away) | no | Rest day | Rest day. Legs A is a tap away | Water plants (0) | `restDay` sits above `reentry`; Tess line "Good to see you. Here is today." still allowed |
 | R04 | 11:30 Sun | Pull A, since 11:28 | none | Rest day | Call mum, untimed | none | 3 | StartWorkout, 2 min ago | no | Pull A | Running since 11:28 | Call mum (0) | Running beats `restDay`; starting a rest-day workout is fine |
-| R05 | 17:50 Wed | none | none | Rest day | Call landlord 18:00 | none | 2 | none | no | Rest day | Rest day. Push A is a tap away | Call landlord 18:00 (37+15 = 52) | `restDay` above every scored item, a timed task too. FLAG C2 |
+| R05 | 17:50 Wed | none | none | Rest day | Call landlord 18:00 | none | 2 | none | no | Call landlord | At 18:00 | Rest day | A timed task within 15 min beats `restDay` (decisions.md 4:01 PM PT). C2 resolved |
 | R06 | 18:45 Mon | Push A, since 18:32 | none | Push A 18:30 | Call landlord 19:00 | Gym bag on Push A | 11 | LogSet, 1 min ago | no | Push A | Running since 18:32 | Call landlord 19:00 (35+15 = 50) | Running always wins; Shop offer gated off while anything runs |
 | R07 | 09:20 Tue | Legs A, since 08:50 | none | Legs A 08:30 | none; event Standup 09:30 | none | 4 | LogSet, 2 min ago | no | Legs A | Running since 08:50 | Standup 09:30 | Running beats `eventSoon` (context-packing yes/no 1) |
 | R08 | 21:05 Mon | Push A, since 20:15 | none | Push A 20:00 | none; Shutdown opted in, 21:00 | none | 3 | LogSet, 1 min ago | no | Push A | Running since 20:15 | Shutdown (40+15 = 55, the one ask) | Running beats an offer at its own start time |
@@ -78,8 +78,8 @@ Coverage: planned rest day R01 to R05; running R04, R06 to R09, R12, R13, R40; s
 ## Rules the rows imply, in precedence order
 
 1. **Running process wins.** Any kind: workout, cook, shop, list run or task. Why "Running since HH:mm". Starting something new suspends the old one. (R04, R06 to R09, R12, R13, R40)
-2. **Event within 15 min** (`eventSoon`, after M4 slice 1). Why "Starts at HH:mm". Never beats a running process. (R07, R37)
-3. **Planned rest day** (`restDay`, new). `WeekDay.isRest` for today drops today's workout from the candidates and puts the quiet "Rest day" line on Now, above every scored item. The routine stays one tap away. (R01 to R05)
+2. **Event or timed task within 15 min** (`eventSoon`; events after M4 slice 1). Why "Starts at HH:mm" or "At HH:mm". Never beats a running process. Beats a planned rest day (decisions.md 4:01 PM PT). (R05, R07, R37)
+3. **Planned rest day** (`restDay`, new). `WeekDay.isRest` for today drops today's workout from the candidates and puts the quiet "Rest day" line on Now, above every scored item. An event or timed task within 15 min still beats it (rule 2). The routine stays one tap away. (R01 to R05)
 4. **Re-entry** (`reentry`, 3 or more days away): smallest item that fits the day part; if nothing fits, fall through. Below rest day. (R03, R39)
 5. **Scored rank** with the context-packing weights. Soon points stop once start plus length has passed (workouts count 60 min, as in `DayLoad`). (R14 to R27)
 6. **Day full**: -10 on untimed items only; the warning is the day's one ask, in the Tess line, offering `couldMove`. (R26, R27)
@@ -96,7 +96,7 @@ Coverage: planned rest day R01 to R05; running R04, R06 to R09, R12, R13, R40; s
 | # | Rows | What the sources say | What I followed |
 |---|---|---|---|
 | C1 | R01 to R05 | context-packing §5 has three hard overrides and ranker-tuning freezes "the three hard overrides". decisions.md (3:37 PM PT) adds a fourth: a planned rest day wins on Now. context-packing is silent on rest days except moment 17. | decisions.md. `restDay` is override 3, after `running` and `eventSoon`. Its place above `reentry` is my call (R03). |
-| C2 | R05 | Read literally, "rest wins on Now" puts the rest line above a timed task 10 min away. context-packing would give Call landlord Now (score 52). | decisions.md, literally. Worth a yes/no for Kaushik: should a timed task within 15 min beat the rest line? |
+| C2 | R05 | Read literally, "rest wins on Now" put the rest line above a timed task 10 min away. | Resolved by decisions.md 4:01 PM PT: running, then event or timed task within 15 min, then rest day. R05 now picks Call landlord. |
 | C3 | R10, R11 | context-packing §5 lists "suspended processes as resumable items" among candidates, and whats-running says a woken waiting item "becomes eligible to be Now". context-packing moment 19 says "suspended items never take Now". | Moment 19, because ranker-tuning says a moment wins over any change. |
 | C4 | R31 | Prose says ties go "to the stalest, then title". The sort tuple compares `$0.item.title > $1.item.title`, which puts Z before A. | A to Z, as the prose reads. The code sketch needs flipping. |
 | C5 | R34 | Prose: the incumbent holds "unless a challenger beats it by 15". The code adds 15 to the incumbent, so exactly 15 makes a tie that goes to the stalest item. | The incumbent holds at exactly 15 (never flicker). |
