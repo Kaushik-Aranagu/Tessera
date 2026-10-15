@@ -28,3 +28,22 @@
 3. Was there a moment in the kitchen when you reached for something else instead of Tessera? (Name it, or "no".)
 
 Then scope v2 from the answers and the table above, in one message to Product, with a recommendation.
+
+## Data check against master (02903a0, Kitchen lead 2026-10-15)
+
+| Watch | Recorded? | How to read it |
+|---|---|---|
+| Recipes saved | Yes | Recipe objects with `sourceText`. The creating op's actor and route say whether it came from the paste screen or the ghost row |
+| Paste corrections | **Inferred** | `CreateRecipe.corrections` isn't stored, because the op log keeps field changes, not action arguments. Re-parse `sourceText` and diff it against the saved lines and steps; every difference is a correction. This is good enough, so no new field is needed |
+| Cooks started, finished, abandoned | Yes | Cook `createdAt`, `cookedAt`, and the Process's `endReason`/`endedAt` |
+| Timers used, stopped early | Yes, via the op log | Kitchen Timer `startedAt`/`endsAt`. The `stopKitchenTimer` op's `createdAt` against `endsAt` tells an early stop |
+| Grocery items by source | Yes | Item `shares` (a recipe share means it came from a recipe), plus the creating op's actor and route (user typed or Tess grammar). Meal-plan shares carry the task once that slice lands |
+| Struck then unstruck, undo pairs | Yes | `checkedAt` changes in the op log, and the op `state` (undone) |
+| Shops with the title hold | Yes | A Process with ownerApp "Kitchen" whose subject is the Groceries list |
+| "cook X thursday" tasks, cooked or not | Yes | Tasks linking a recipe, matched against Cook `cookedAt` |
+| **Links he tried to paste** | **No** | A URL pasted on the paste screen throws "no ingredients or steps found", and nothing is written. In the ghost row it ends at "Didn't catch that.", also unrecorded |
+| **Recipes opened but never cooked** | **No** | Nothing records a recipe page being opened |
+
+**Two gaps for Core (small, before Oct 22 if possible):**
+1. **A capture-miss log.** Record any capture or paste that ends with nothing written (the text truncated to 200 characters, the time, the route, and where it came from: ghost row or paste screen). It can be an `OpRecord` with a `failed` state, or a small local table. This answers week-one question 2 from data and also catches grammar misses. It must never leave the phone.
+2. **`Recipe.lastOpenedAt`** (`.date`), set when the recipe page opens, written without an op so it doesn't flood the log. Lower priority: if it slips, week one skips that row.
