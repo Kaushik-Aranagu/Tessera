@@ -1,0 +1,51 @@
+import AppIntents
+import Foundation
+import TesseraCore
+import TesseraTess
+
+/// What intents run against. The app registers one at launch:
+/// `AppDependencyManager.shared.add(dependency: TesseraRuntime(engine: model.engine))`.
+@MainActor
+public final class TesseraRuntime {
+    public let engine: ActionEngine
+    public let tess: any TessCapturing
+
+    public init(engine: ActionEngine, tess: (any TessCapturing)? = nil) {
+        self.engine = engine
+        self.tess = tess ?? TessCaptureEngine(engine: engine, model: TessModelCapture())
+    }
+
+    var store: ObjectStore {
+        engine.store
+    }
+
+    var ledger: TrainingLedger {
+        TrainingLedger(store: engine.store, classes: engine.classes)
+    }
+}
+
+/// Every registry action, and the App Intent that exposes it (or why it's Tess-only).
+/// One typed action is declared once; its App Intent is a thin wrapper that calls the same action.
+public enum TesseraIntentsCatalog {
+    public static let coverage: [String: String] = [
+        "logSet": "LogSetIntent (via logExercise) and the Lock Screen's Done",
+        "editSet": "in-app only: needs a specific set",
+        "addExercise": "in-app only: needs a workout",
+        "startWorkout": "StartRoutineIntent",
+        "finishWorkout": "FinishWorkoutIntent",
+        "logExercise": "LogSetIntent",
+        "createTask": "CreateTaskIntent",
+        "setTaskDone": "in-app only for now (M2 adds TaskEntity)",
+        "renameObject": "in-app only",
+        "deleteObject": "in-app only: destructive",
+        "startProcess": "kernel-internal",
+        "saveContext": "kernel-internal",
+        "suspendProcess": "kernel-internal",
+        "resumeProcess": "kernel-internal",
+        "endProcess": "kernel-internal",
+        "createRoutine": "in-app only",
+        "addSlot": "in-app only",
+        "startRoutine": "StartRoutineIntent",
+        "createPlan": "in-app only",
+    ]
+}
