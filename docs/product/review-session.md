@@ -35,6 +35,8 @@ Home has a word rail across the top: **Review · Today · Training · Kitchen**.
 4. **Groceries strike and sink.** Is striking an item satisfying enough to use in a shop, and is the text readable at arm's length?
 5. **Tess's presence.** The soul in the corner opening into the capture surface, and the ghost row drying in 2 s. Does it feel alive without being distracting, and does cobalt read clearly as Tess's colour?
 
+*Next build:* Today on Home (#116) arrives. Try swiping a task, because nobody has swiped it with a finger yet.
+
 Screenshot anything that bugs you, or just say "this bit". Design takes your feedback first after the review.
 
 ## Nine questions for the huddle
