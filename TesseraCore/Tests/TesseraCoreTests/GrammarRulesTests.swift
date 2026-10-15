@@ -99,4 +99,35 @@ struct GrammarRulesTests {
             Issue.record("parmesan at the shop")
         }
     }
+
+    @Test func qaHotfixRows() throws {
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let grammar = TessGrammar(store: store, classes: classes)
+        let context = TessContext()
+        // G1: "do laundry thu" is a task, not a question.
+        if case .task? = grammar.parse("do laundry thu", context: context) {} else {
+            Issue.record("do laundry thu")
+        }
+        // G2: in a workout, "restock protein thu" is a task.
+        let plan = try #require(store.object(id: StarterContent.planID))
+        let pushA = try #require(store.linkedObjects("routines", of: plan).first)
+        let workout = try engine.perform(StartRoutine(routine: pushA.id), by: .user).output
+        let training = TessContext(process: workout.id)
+        if case .task? = grammar.parse("restock protein thu", context: training) {} else {
+            Issue.record("restock protein thu")
+        }
+        if case .ignoredInWorkout? = grammar.parse("rest timer 90", context: training) {} else {
+            Issue.record("rest timer 90")
+        }
+        // G3: "ez curl" still resolves.
+        #expect(grammar.resolveExercise("ez curl") != nil)
+        // G4: at the shop, a dated phrase is still a task.
+        let shopping = TessContext(process: Groceries.listID)
+        if case .task? = grammar.parse("call mum thu", context: shopping) {} else {
+            Issue.record("call mum thu")
+        }
+        // G5: an unresolved reschedule goes to the model, never a "Move the piano to" task.
+        #expect(grammar.parse("move the piano to friday", context: context) == nil)
+    }
 }

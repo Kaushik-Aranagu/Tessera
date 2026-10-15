@@ -83,14 +83,18 @@ public struct TessGrammar {
         if let reschedule = parseReschedule(phrase, context: context) {
             return reschedule
         }
+        // A reschedule whose task doesn't resolve goes to the model rather than becoming "Move the piano to".
+        if phrase.firstMatch(of: Self.rescheduleShape) != nil {
+            return nil
+        }
         return parseTask(phrase, context: context)
     }
 
     /// Lead words that ask rather than tell ("what did i weigh monday", "anything due tmrw").
     static func isQuestion(_ text: String) -> Bool {
         let first = text.split(separator: " ").first.map(String.init) ?? ""
-        let leads: Set = ["what", "whats", "what's", "when", "how", "did", "anything", "everything", "show", "which",
-                          "who", "where", "why", "do", "does", "is", "are"]
+        // The spec's list only: "do laundry thu" and "is" phrases stay captures.
+        let leads: Set = ["what", "whats", "what's", "when", "how", "did", "anything", "everything", "show"]
         return leads.contains(first) || text.hasPrefix("am i ") || text.hasSuffix("?")
     }
 
@@ -109,12 +113,15 @@ public struct TessGrammar {
         } else if isA(.workout) {
             // "timer 90" / "rest 90" in a workout is the rest between sets, not a kitchen timer: leave it to the
             // workout screen (no kitchen reading).
-            if text.hasPrefix("timer") || text.hasPrefix("rest") {
+            // Only "rest 90", "timer 90", "rest timer 90" (not "restock protein thu" or "restaurant fri").
+            if text.firstMatch(of: /^(rest|timer)(\s+timer)?\s+\d/) != nil {
                 return .ignoredInWorkout
             }
         } else if subject.id == Groceries.listID {
-            // At the shop, a bare thing is for the list.
-            if !text.contains(where: \.isNumber) || IngredientLine.parse(text)?.amount != nil,
+            // At the shop, a bare thing is for the list (but "call mum thu" is still a task).
+            let dated = TessDates.extract(from: text.split(separator: " ").map(String.init), now: context.now,
+                                          calendar: context.calendar).0 != nil
+            if !dated, !text.contains(where: \.isNumber) || IngredientLine.parse(text)?.amount != nil,
                text.split(separator: " ").count <= 4
             {
                 return .groceries(lines: [text])
@@ -123,12 +130,12 @@ public struct TessGrammar {
         return nil
     }
 
-    /// "move dentist to friday", "push the dentist to thu 3pm": an existing open task, to a new day. With no such
-    /// task this isn't a reschedule (and never makes a task titled with the verb).
+    static let rescheduleShape = /^(?i)(?:move|push|shift|reschedule|put)\s+(.+?)\s+(?:to|till|until)\s+(.+)$/
+
+    /// "move dentist to friday", "push the dentist to thu 3pm": exactly one open task whose title has every word
+    /// said, to the new day. Nil when no single task matches; `parse` then sends the phrase to the model.
     private func parseReschedule(_ phrase: String, context: TessContext) -> Parse? {
-        guard let match = phrase
-            .firstMatch(of: /^(?i)(?:move|push|shift|reschedule|put)\s+(.+?)\s+(?:to|till|until)\s+(.+)$/)
-        else { return nil }
+        guard let match = phrase.firstMatch(of: Self.rescheduleShape) else { return nil }
         let (date, rest) = TessDates.extract(from: String(match.2).split(separator: " ").map(String.init),
                                              now: context.now, calendar: context.calendar)
         guard let date, rest.isEmpty || rest == ["next"] else { return nil }
@@ -319,12 +326,22 @@ public struct TessGrammar {
         }
         // Whole words only, three letters or more ("p" isn't Dip, "rolls" isn't Rollout).
         let words = target.split(separator: " ").map { $0.hasSuffix("s") && $0.count > 3 ? $0.dropLast() : $0 }
-        guard !words.isEmpty, words.allSatisfy({ $0.count >= 3 }) else { return nil }
+        // Gym shorthand ("ez", "db") is exempt from the floor.
+        let shorthand = Set(Self.equipmentWords.keys).union(Self.equipmentWords.values)
+        guard !words.isEmpty, words.allSatisfy({ $0.count >= 3 || shorthand.contains(String($0)) }) else { return nil }
+        // Whole words of the name or its library aliases ("ez curl" finds Preacher Curl through "EZ-Bar Preacher
+        // Curl"), the shortest name winning.
+        func wordSet(_ text: String) -> Set<Substring> {
+            Set(text.split { !$0.isLetter && !$0.isNumber }
+                .map { $0.hasSuffix("s") && $0.count > 3 ? $0.dropLast() : $0 })
+        }
         return names
-            .filter { _, name in
-                let nameWords = Set(name.split(separator: " ")
-                    .map { $0.hasSuffix("s") && $0.count > 3 ? $0.dropLast() : $0 })
-                return words.allSatisfy { nameWords.contains($0) }
+            .filter { classDef, name in
+                var known = wordSet(name)
+                for alias in (store.classValue("aliases", of: classDef)?.stringValue ?? "").split(separator: ",") {
+                    known.formUnion(wordSet(Self.normalize(String(alias))))
+                }
+                return words.allSatisfy { known.contains($0) }
             }
             .min { $0.1.count < $1.1.count }?.0
     }
