@@ -6,9 +6,7 @@ enabledWorkflows:
   - utilities
 sentryDisabled: true
 sessionDefaults:
-  projectPath: /Users/kaushikaranagu/pilot/Tessera.xcodeproj
+  projectPath: Tessera.xcodeproj
   scheme: Tessera
   simulatorName: iPhone 17
-  simulatorPlatform: iOS Simulator
   bundleId: com.kaushikaranagu.tessera
-  simulatorId: E5B8DCEA-4ED5-47FB-AA3E-F5FA6A1A3C38

@@ -153,33 +153,55 @@ private struct RotatedLayout: Layout {
 /// The screen's one hero: the object's NAME only. Long names step down in width (100 → 85 → 75%) at the same
 /// size, then demote to the Title style (never an in-between size); last resort is tail truncation, with the
 /// full name kept in the accessibility label.
+///
+/// The fit is decided from the measured width and the words themselves — not from layout proposals, which are
+/// unreliable mid-transition (a `ViewThatFits` here picked the wrong candidate while rows were animating).
 struct HeroText<Rendered: View>: View {
     let text: String
     /// Applies per-glyph effects to the chosen candidate.
     var render: (Text) -> Rendered
     @ScaledMetric(relativeTo: .largeTitle) private var heroSize = Theme.concept.scale.hero.size
+    @State private var width: CGFloat = 0
+
+    private enum Fit: Equatable { case hero(Font.Width), title }
 
     var body: some View {
-        let maxHeight = heroSize * Theme.concept.scale.hero.lineHeight * 3 + 4
-        ViewThatFits(in: .vertical) {
-            candidate(.standard)
-            candidate(.condensed)
-            candidate(.compressed)
-            render(Text(text))
-                .textRole(.title)
-                .lineLimit(3)
-                .truncationMode(.tail)
-                .fixedSize(horizontal: false, vertical: true)
+        Group {
+            switch fit {
+            case let .hero(fontWidth):
+                render(Text(text))
+                    .textRole(.hero)
+                    .fontWidth(fontWidth)
+                    .allowsTightening(true)
+                    .lineLimit(3)
+            case .title:
+                render(Text(text))
+                    .textRole(.title)
+                    .lineLimit(3)
+                    .truncationMode(.tail)
+            }
         }
-        .frame(maxHeight: maxHeight, alignment: .topLeading)
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
         .accessibilityLabel(text)
     }
 
-    private func candidate(_ width: Font.Width) -> some View {
-        render(Text(text))
-            .textRole(.hero)
-            .fontWidth(width)
-            .allowsTightening(true)
-            .fixedSize(horizontal: false, vertical: true)
+    /// Estimates lines per candidate from an average advance of ~0.56 em (display faces at this weight).
+    private var fit: Fit {
+        guard width > 0 else { return .hero(.standard) }
+        let words = text.split(separator: " ").map(\.count)
+        let longest = words.max() ?? 0
+        for (fontWidth, factor) in [(Font.Width.standard, 1.0), (.condensed, 0.85), (.compressed, 0.75)] {
+            let perLine = Int(width / (heroSize * 0.56 * factor))
+            guard longest <= perLine else { continue }
+            var lines = 1, used = 0
+            for word in words {
+                let needed = used == 0 ? word : used + 1 + word
+                if needed > perLine { lines += 1; used = word } else { used = needed }
+            }
+            if lines <= 3 { return .hero(fontWidth) }
+        }
+        return .title
     }
 }
