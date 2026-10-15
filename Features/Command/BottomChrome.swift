@@ -93,7 +93,7 @@ struct BottomChrome: View {
                     }
                 }
                 .frame(width: 22)
-                TextField("log bench 82.5x8, or ask anything", text: $model.commandDraft)
+                TextField("log 82.5×8, or ask", text: $model.commandDraft)
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.ink)
                     .focused($focused)
@@ -108,27 +108,23 @@ struct BottomChrome: View {
                     .foregroundStyle(Theme.Colors.ink)
                     .transition(.opacity.combined(with: .offset(y: 6)))
             }
-            ScrollView(.horizontal) {
-                HStack(spacing: Theme.Spacing.s) {
-                    ForEach(["log bench 82.5x8", "what's my bench best?", "stretch at 21:00"],
-                            id: \.self)
-                    { suggestion in
-                        Button {
-                            model.commandDraft = suggestion
-                            submit()
-                        } label: {
-                            Text(suggestion)
-                                .textRole(.data)
-                                .foregroundStyle(Theme.Colors.inkSecondary)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 7)
-                                .overlay(Capsule().strokeBorder(Theme.Colors.hairline, lineWidth: 1))
-                        }
-                        .buttonStyle(.plain)
+            FlowLayout(spacing: Theme.Spacing.s) {
+                ForEach(["log bench 82.5x8", "bench best?", "stretch at 21:00"], id: \.self) { suggestion in
+                    Button {
+                        model.commandDraft = suggestion
+                        submit()
+                    } label: {
+                        Text(suggestion)
+                            .textRole(.data)
+                            .foregroundStyle(Theme.Colors.inkSecondary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 7)
+                            .overlay(Capsule().strokeBorder(Theme.Colors.hairline, lineWidth: 1))
+                            .contentShape(Capsule())
                     }
+                    .buttonStyle(.plain)
                 }
             }
-            .scrollIndicators(.hidden)
         }
         .padding(Theme.Spacing.l + 2)
     }
