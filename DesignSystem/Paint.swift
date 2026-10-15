@@ -315,7 +315,8 @@ struct PaintKey<Label: View, Meta: View>: View {
             .scaleEffect(x: 1, y: (wet && !reduceMotion ? 1.65 : 1) * bloom, anchor: UnitPoint(x: 0.5, y: 0.7))
             .blur(radius: wet && !reduceMotion ? 1 : 0)
             .padding(.horizontal, -7)
-            .offset(y: 3)
+            // Bottom 3 pt below the baseline, so the lower third of the letters sits in paint.
+            .offset(y: -5)
             .allowsHitTesting(false)
             .accessibilityHidden(true)
         }
