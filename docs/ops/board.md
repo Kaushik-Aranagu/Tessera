@@ -19,8 +19,9 @@
 **Next:**
 1. Recipe page and Paste a recipe. Done when slices 10 and 11 in `ship-list-kitchen.md` are met.
 2. Groceries polish. Done when Design's and the kitchen lead's fixes to #58 are merged.
-3. Cook mode. Done when slice 12 in `ship-list-kitchen.md` is met: timers on the Lock Screen and a Cook entry on finish. Builder A reviews the shared instruments.
-4. Kitchen shelf. Done when slice 14 in `ship-list-kitchen.md` is met.
+3. Meal plan feeds groceries (the idle-time slice below).
+4. Cook mode. Done when slice 12 in `ship-list-kitchen.md` is met: timers on the Lock Screen and a Cook entry on finish. Core builds the live screen too, and Builder A reviews the shared instruments.
+5. Kitchen shelf. Done when slice 14 in `ship-list-kitchen.md` is met.
 
 **Idle-time slices** (from `../research/next-areas.md` part 2; each takes an afternoon, pull one whenever blocked):
 - Meal plan feeds groceries. Done when "carbonara thursday" puts its ingredients on Groceries the evening before, linked to the task.
@@ -29,7 +30,6 @@
 
 **Later:**
 - **Lists engine.** `ship-list-lists.md` slices, in build order 1 → 3 → 2 → 4 → 5 → 7 → 6 → 8: housekeeping, lists from text, item paragraphs, reusable, run on Now, pick one, dated items in Today, list phrases. These replace kitchen slice 15.
-- **Lists screens 9 and 10.** The shelf and a list page, in `Features/Lists/`.
 - M3 slices 1 to 12 in `ship-list-m3.md`. Land the M3 List template on the kitchen `List` class.
 - M4 engine slices 1, 2, 4, 5 (Day log) and 9 in `ship-list-m4.md`. These come after Lists. Slice 6, Plan my day, stays out until Kaushik OKs a model call.
 
@@ -49,7 +49,6 @@
 - v1 slice 13, live-mode polish (not rough).
 - v1 slices 14 to 19: progression, muscle sets, month heatmap, voice, rep maxes, HealthKit.
 - Review the shared instruments in Core's cook mode (kitchen slice 12).
-- Lists screens 11 and 12 in `ship-list-lists.md`: an item opened (z), and the pick-one living moment. These come after Core's Lists slices 2 and 7.
 - M4 slice 10, widgets and snippets.
 
 ## iOS Builder B (Mac, starts once ios/ship-2 merges)
@@ -68,6 +67,11 @@
 **Later:**
 - Entry points from Home into Notes, Review, Kitchen and Lists (Groceries is `GroceriesView()`, #58).
 - Dated list items in Today, and a running list as Now. This wires the UI for Lists slices 5 and 6 once Core lands them.
+- **Lists screens 9 to 12** in `ship-list-lists.md`, in `Features/Lists/`, after the Home slices:
+  - 9, the shelf, after Core's Lists slices 1 and 3.
+  - 10, a list page, after Core's Lists slices 1 and 3.
+  - 11, an item opened, after Core's Lists slice 2.
+  - 12, the pick-one moment, after Core's Lists slice 7.
 - The Command bar hosting Tess's log answers and edits (M3 slices 7 and 8).
 
 ## Design studio
@@ -120,10 +124,11 @@
 **Now:** review each new merge to master. #46 to #58 are done: 13 bugs, written up in `tessera/qa/review-46-to-58.md` and sent to the coordinator for routing.
 
 **Next:**
-1. Kitchen flow script. Done when a written check covers paste, scale, add to groceries, shop, cook with two timers, and finish, for a Mac lead to run.
-2. v1 gym flow script. Done when a written end-to-end check covers seed, prefilled hold-to-log, the dial, finishing, killing the app mid-set and resuming, and lock-screen Done.
-3. Regression checklist. Done when a short pre-merge list covers undo, export, What's running, and Reduce Motion.
-4. Keep the docs index at `docs/README.md` current (merged as #60).
+1. v1 gym flow script. Done when a written end-to-end check covers seed, prefilled hold-to-log, the dial, finishing, killing the app mid-set and resuming, and lock-screen Done.
+2. Regression checklist. Done when a short pre-merge list covers undo, export, What's running, and Reduce Motion.
+3. Keep the docs index at `docs/README.md` current (merged as #60).
+
+**Done:** kitchen flow check at `docs/qa/kitchen-flow.md`, commit 0803f09 on `claude/project-thread-ri9mgm`, waiting to merge.
 
 **Later:**
 - Performance budget checks (launch time, dial at 120 fps). These need a Mac lead to run them.
