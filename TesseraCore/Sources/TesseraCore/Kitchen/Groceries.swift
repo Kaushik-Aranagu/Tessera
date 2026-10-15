@@ -154,10 +154,6 @@ extension Transaction {
             try AddListItem(list: list.id, text: text, section: aisle(of: ingredient)).apply(&self)
         }
         var shares = GroceryShare.decode(store.value("shares", of: item)?.stringValue)
-        // A recipe added again replaces its share (a new size), never doubles it.
-        if let recipe = share.recipe {
-            shares.removeAll { $0.recipe == recipe }
-        }
         shares.append(share)
         try writeShares(shares, on: item, ingredient: ingredient)
         return item
@@ -203,6 +199,9 @@ public struct AddRecipeToGroceries: EngineAction {
         let recipe = try transaction.object(recipe, is: .recipe)
         let book = RecipeBook(store: transaction.store, classes: transaction.classes)
         let lines = serves.map { book.scaledLines(of: recipe, serves: $0) } ?? book.lines(of: recipe)
+        // Added again (a new size): take its old share out first, once, so it's replaced, never doubled, and an
+        // ingredient listed twice in it ("200 g butter" and "50 g butter") still sums.
+        try RemoveRecipeFromGroceries(recipe: recipe.id).apply(&transaction)
         var items: [ObjectRecord] = []
         for line in lines {
             guard let ingredient = line.ingredient else { continue }
