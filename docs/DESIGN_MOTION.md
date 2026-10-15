@@ -10,7 +10,7 @@ no chat-bubble-first UI, no sparkle emoji everywhere).
    controls, sheets) — never for content cards. Content sits on solid, calm surfaces.
 2. **Everything is continuous.** Nothing pops in or out. Elements travel from where they were to where they're going
    (matched geometry, zoom transitions, glass morphing). The user should never lose track of an object.
-3. **Motion has physics.** Springs everywhere (`.snappy`, `.smooth`, `.bouncy`), interruptible, velocity-preserving.
+3. **Motion has physics.** One house spring (`Theme.Motion.house`) for ~90% of motion, `.snappy` for direct manipulation, `.bouncy` only for celebrations — always via `MotionPolicy`.
    No linear or ease-in-out curves for UI movement. Durations live in `Theme.Motion` only.
 4. **Touch is answered.** Every meaningful state change gets a haptic via `.sensoryFeedback` — light for selection,
    `.success`/`.impact(weight:)` for completion, never for scrolling.
@@ -19,7 +19,7 @@ no chat-bubble-first UI, no sparkle emoji everywhere).
 6. **Respect the user.** Every effect checks `accessibilityReduceMotion` (swap to cross-fade) and
    `accessibilityReduceTransparency`. Dynamic Type through AX5 must not break layouts.
 7. **Delight is earned, not sprayed.** Big effects (particles, shaders) are reserved for real accomplishments —
-   finishing a day, a streak, a goal. Max one "wow" moment per flow.
+   finishing a day, a consistent week, a goal. Max one "wow" moment per flow.
 
 ## Signature moments (to build)
 

@@ -33,9 +33,13 @@ enum Theme {
         static let l: CGFloat = 22
     }
 
+    /// Always applied through `MotionPolicy` (`.pilotAnimation` / `withPilotAnimation`).
     enum Motion {
-        static let quick = Animation.snappy(duration: 0.2)
-        static let standard = Animation.smooth(duration: 0.35)
-        static let bouncy = Animation.bouncy(duration: 0.45)
+        /// House spring — ~90% of all motion.
+        static let house = Animation.spring(Spring(duration: 0.42, bounce: 0.12))
+        /// Direct manipulation: drags, swipes, toggles under the finger.
+        static let snappy = Animation.snappy(duration: 0.25)
+        /// Rare celebrations only.
+        static let celebrate = Animation.bouncy(duration: 0.5)
     }
 }

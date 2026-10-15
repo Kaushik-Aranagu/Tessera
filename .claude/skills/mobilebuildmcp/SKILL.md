@@ -1,11 +1,11 @@
 ---
-name: xcodebuildmcp
-description: Official skill for XcodeBuildMCP. Use when doing iOS/macOS/watchOS/tvOS/visionOS work (build, test, run, debug, log, UI automation).
+name: mobilebuildmcp
+description: Official skill for MobileBuildMCP. Use when doing iOS/macOS/watchOS/tvOS/visionOS work (build, test, run, debug, log, UI automation).
 ---
 
-# XcodeBuildMCP
+# MobileBuildMCP
 
-Use XcodeBuildMCP tools instead of raw `xcodebuild`, `xcrun`, or `simctl`.
+Use MobileBuildMCP tools instead of raw `xcodebuild`, `xcrun`, or `simctl`.
 
 Capabilities:
 - Session defaults: Configure project, scheme, simulator, and device defaults to avoid repetitive parameters
@@ -19,7 +19,7 @@ Capabilities:
 - SwiftPM: Build, run, test, and manage Swift Package Manager projects
 - Project scaffolding: Generate new iOS/macOS project templates
 
-Only simulator workflow tools are enabled by default. If capabilities like device, macOS, debugging, or UI automation are not available, the user must configure XcodeBuildMCP to enable them. See https://xcodebuildmcp.com/docs/configuration for workflow configuration.
+Only simulator workflow tools are enabled by default. If capabilities like device, macOS, debugging, or UI automation are not available, the user must configure MobileBuildMCP to enable them. See https://github.com/getsentry/xcodebuildmcp.com/blob/main/app/docs/_content/configuration.mdx for workflow configuration.
 
 ## Step 1: Establish Session Context
 
@@ -33,7 +33,7 @@ Only simulator workflow tools are enabled by default. If capabilities like devic
 
 - Not all tools are enabled by default; tool availability depends on enabled workflows.
 - If a tool is expected but missing, check enabled workflows first.
-- Update enabled workflows in `.xcodebuildmcp/config.yaml`, then ask user to reload/restart the session to surface refreshes.
+- Update enabled workflows in `.mobilebuildmcp/config.yaml`, then ask user to reload/restart the session to surface refreshes.
 
 ## Step 3: Report Context Clearly
 

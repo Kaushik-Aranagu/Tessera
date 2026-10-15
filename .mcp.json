@@ -1,15 +1,5 @@
 {
   "mcpServers": {
-    "XcodeBuildMCP": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "-y",
-        "xcodebuildmcp@latest",
-        "mcp"
-      ],
-      "env": {}
-    },
     "xcode": {
       "type": "stdio",
       "command": "xcrun",
@@ -17,6 +7,22 @@
         "mcpbridge"
       ],
       "env": {}
+    },
+    "MobileBuildMCP": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "mobilebuildmcp@latest",
+        "mcp"
+      ],
+      "env": {
+        "MOBILEBUILDMCP_SENTRY_DISABLED": "true"
+      }
+    },
+    "sosumi": {
+      "type": "http",
+      "url": "https://sosumi.ai/mcp"
     }
   }
 }

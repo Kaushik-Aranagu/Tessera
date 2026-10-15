@@ -1,4 +1,6 @@
 schemaVersion: 1
+enabledWorkflows: ["simulator", "ui-automation", "debugging", "utilities"]
+sentryDisabled: true
 sessionDefaults:
   projectPath: /Users/kaushikaranagu/pilot/Pilot.xcodeproj
   scheme: Pilot

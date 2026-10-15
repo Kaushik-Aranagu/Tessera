@@ -14,10 +14,10 @@ Personal iPhone-only app, native SwiftUI.
 - Targets: `Pilot` (app, bundle id `com.kaushikaranagu.pilot`), `PilotTests` (Swift Testing). Scheme: `Pilot`.
 - Layout: `App/` (entry point, root view), `DesignSystem/` (`Theme` tokens: colors, type, spacing, radius, motion — use these instead of literals), `Core/Model/` (SwiftData models + `PilotSchema`), `Features/<Feature>/` (one folder per screen/feature), `PilotTests/`.
 - Data model: `AppType` → `FieldDef`, `Record`, `ViewDef`. CloudKit sync is off (`cloudKitDatabase: .none`) until the iCloud entitlement is added; no entitlements yet (no paid developer account).
-- Dev simulator: iPhone 17 (iOS 27 runtime). XcodeBuildMCP defaults are saved in `.xcodebuildmcp/config.yaml`.
+- Dev simulator: iPhone 17 (iOS 27 runtime). MobileBuildMCP defaults are saved in `.mobilebuildmcp/config.yaml`.
 
 ## Build & test
-Prefer the XcodeBuildMCP tools (`build_run_sim`, `test_sim`, `screenshot`). Shell fallback, piped through `xcbeautify`:
+Prefer the MobileBuildMCP tools (`build_run_sim`, `test_sim`, `screenshot`). Shell fallback, piped through `xcbeautify`:
 
 ```bash
 xcodegen generate
@@ -33,7 +33,15 @@ swiftlint
 Fix lint errors before committing. Don't commit build products, DerivedData or `xcuserdata`.
 
 ## Design & motion
-Read `docs/DESIGN_MOTION.md` before building or changing any UI. The bar is first-party-Apple polish, not a generic
+Use the `pilot-design` skill (`.claude/skills/pilot-design`) and read `docs/DESIGN_MOTION.md` before building or changing any UI. Animate only through `MotionPolicy` (`.pilotAnimation`, `withPilotAnimation`). The bar is first-party-Apple polish, not a generic
 app: continuous transitions, spring physics, haptics, Liquid Glass on the navigation layer only, Reduce Motion /
-Dynamic Type respected. Use the installed skills (`swiftui-pro`, `swiftui-expert`, `liquid-glass`, `swiftui-skills`,
-framework skills) and check new APIs against them rather than guessing.
+Dynamic Type respected. Use the installed skills (Apple's `swiftui-specialist` / `swiftui-whats-new-27` / accessibility specialists,
+`swiftui-pro`, `swiftui-expert`, `swiftui-ui-patterns`, `liquid-glass`, `widgets`, `swiftdata-pro`, framework skills)
+and verify APIs with the `xcode` MCP `DocumentationSearch` or the `sosumi` MCP rather than guessing.
+
+## Tooling notes
+- MCP servers (`.mcp.json`): `MobileBuildMCP` (build/run/test, UI automation, video, debugging; config in
+  `.mobilebuildmcp/config.yaml`), `xcode` (Apple's `xcrun mcpbridge`: DocumentationSearch, RenderPreview, device
+  interaction — Xcode must be running with this project open), `sosumi` (Apple docs, HIG, WWDC transcripts).
+- Apple's Xcode agent skills are copied into `.claude/skills/` but gitignored. After an Xcode update, refresh them from
+  `$(xcrun agent plugin path --plugin-format claude)/skills/`.
