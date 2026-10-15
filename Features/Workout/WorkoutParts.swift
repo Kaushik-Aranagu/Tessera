@@ -121,8 +121,9 @@ enum WorkoutLines {
             if let rpe = session.rpe {
                 return ("RPE \(RPEStops.formatted(rpe)), \(RPEStops.words(for: rpe))", Paint.now)
             }
-            if session.isPersonalRecord {
-                return ("set \(session.currentSetNumber): this would be a new best", Paint.now)
+            if let hint = session.recordHint {
+                let previous = hint.previous.map { ", \($0)" } ?? ""
+                return ("set \(session.currentSetNumber): \(hint.text)\(previous)", Paint.now)
             }
             if session.swappedFrom != nil, rows.isEmpty {
                 return ("swapped for today, set \(session.currentSetNumber) of \(target)", Paint.tess)
@@ -137,7 +138,13 @@ enum WorkoutLines {
             return summary ?? ""
         }
         if case .rest = phase, let seated = session.lastSeated {
-            return seated.records.isEmpty ? "Logged." : "That one goes on the wall."
+            // tess-voice: "Set 3. 80 x 8." and "New best: 85 x 5. e1RM 99."
+            let set = "\(Format.kilograms(seated.weight)) × \(Int(seated.reps))"
+            if seated.records.isEmpty {
+                return "Set \(seated.number). \(set)."
+            }
+            return "New best: \(set)." +
+                (seated.e1RM.map { " e1RM \(Format.kilograms(($0 * 10).rounded() / 10))." } ?? "")
         }
         switch phase {
         case .exerciseDone: return "\(session.currentExercise?.name ?? "That") is done."
@@ -152,8 +159,16 @@ enum WorkoutLines {
         if let from = session.swappedFrom, let entry = session.currentEntry, session.setRows(of: entry).isEmpty {
             return "\(SwapPanel.short(from)) stays in the plan."
         }
-        if session.isPersonalRecord {
-            return "Go on. You have this."
+        // The subline carries the numbers; Tess says what it would mean, once, quietly.
+        if let hint = session.recordHint {
+            let reps = hint.kinds.compactMap { kind -> Int? in
+                if case let .repMax(count) = kind {
+                    return count
+                }
+                return nil
+            }.first
+            let name = session.currentExercise?.name.lowercased() ?? "lift"
+            return reps.map { "Best \($0)-rep \(name) yet, if it goes." } ?? "Best e1RM yet, if it goes."
         }
         if let note = session.restNote, note.hasPrefix("Skipped") {
             return note

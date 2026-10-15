@@ -89,6 +89,27 @@ struct WorkoutSessionTests {
         #expect(session.setRows(of: entry).first?.rpe == 8)
     }
 
+    @Test func recordHintComesFromCoreAndCelebratesOncePerExercise() throws {
+        let (_, session) = try startedSession()
+        #expect(session.recordHint == nil) // 82.5 × 7 is level with the best
+        session.rpe = 7 // 7 reps with 3 in the tank is a 10-rep effort
+        #expect(session.recordHint?.text == "best e1RM")
+        session.rpe = nil
+        session.weight = 85
+        let hint = try #require(session.recordHint)
+        #expect(hint.text == "beats 7RM" && hint.previous == "was 82.5 × 7")
+        #expect(WorkoutLines.subline(session, phase: .set).0 == "set 1: beats 7RM, was 82.5 × 7")
+
+        session.logSet()
+        #expect(session.lastSeated?.records.isEmpty == false) // the one celebration
+        #expect(WorkoutLines.tess(session, phase: session.phase(), summary: nil).hasPrefix("New best: 85 × 7."))
+        session.skipRest()
+        session.weight = 87.5
+        session.reps = 7
+        session.logSet()
+        #expect(session.lastSeated?.records.isEmpty == true) // a second record this session stays quiet
+    }
+
     @Test func aSecondRecordHasToBeatTheFirst() throws {
         let (_, session) = try startedSession()
         session.logSet() // 82.5 × 7, level with the best

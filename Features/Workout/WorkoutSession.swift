@@ -307,15 +307,13 @@ extension WorkoutSession {
             .map { AppModel.LoggedSet(weight: $0.weight, reps: $0.reps, e1RM: $0.e1RM) }
     }
 
-    /// Best e1RM including sets already logged today, so a second PR has to beat the first.
-    private var bestE1RMSoFar: Double? {
-        let today = currentEntry.map { setRows(of: $0).map(\.e1RM) } ?? []
-        return ([previousBest?.e1RM].compactMap(\.self) + today).max()
+    /// Core's quiet hint for the dialled set ("beats 5RM", "was 80 × 5"), RPE included; nil when it beats nothing.
+    var recordHint: RecordHint? {
+        currentEntry.flatMap { ledger.recordHint(for: $0, weight: weight, reps: reps, rpe: rpe) }
     }
 
     var isPersonalRecord: Bool {
-        guard let preview = previewE1RM, let best = bestE1RMSoFar else { return false }
-        return preview > best + 0.05
+        recordHint != nil
     }
 
     /// Reps needed at the current weight to beat the previous best e1RM.
@@ -345,14 +343,8 @@ extension WorkoutSession {
     /// Hold to log: seats the dialled set, then the dial turns into the rest countdown.
     func logSet(source: SetSource = .hold, by actor: Actor = .user) {
         guard let entry = currentEntry, let exercise = currentExercise else { return }
-        let wasRecord = isPersonalRecord
-        var records = ledger.recordsBeaten(weight: weight, reps: reps, rpe: rpe, for: exercise,
-                                           excludingWorkout: workout.id)
-        if wasRecord, !records.contains(.e1RM) {
-            records.append(.e1RM)
-        } else if !wasRecord {
-            records.removeAll { $0 == .e1RM }
-        }
+        let beaten = ledger.recordsBeaten(weight: weight, reps: reps, rpe: rpe, for: exercise,
+                                          excludingWorkout: workout.id)
         let e1RM = previewE1RM
         // One hold on an untouched prefill is Core's LogNextSet (the same action as the Lock Screen's Done).
         let performed: (output: ObjectRecord, record: OpRecord)? = if isAtPrefill, presetWeight[entry.id] == nil {
@@ -366,6 +358,8 @@ extension WorkoutSession {
         }
         guard let result = performed else { return }
         let set = result.output
+        // One celebration per exercise per session (Core decides); later records still count, quietly.
+        let records = ledger.shouldCelebrate(set) ? beaten : []
         undoable = Undoable(record: result.record, entryID: entry.id, setID: set.id, weight: weight, reps: reps,
                             rpe: rpe)
         restTotal = restSeconds
