@@ -1,44 +1,74 @@
 # Rest timer Live Activity
 
-> **On hold (2026-10-15):** Kaushik rejected this visual as basic (the fonts and the buttons). Three new directions are in `mockups/LiveRest2.dc.html`: Gesso, Horizon and Palette. Build only the behaviour below until he picks one. The research brief says: one number, one action, the system glass, cream numerals not gold, and use `staleDate` / `isStale` for the "set is up" state.
+The rest timer lives on the Lock Screen and in the Dynamic Island, so the phone can stay locked on the bench. Mockup: `mockups/LiveFinal.dc.html`. Earlier rounds are in LiveRest, LiveRest2 and LiveType; they were superseded.
 
-The rest timer lives on the Lock Screen and in the Dynamic Island, so the phone can stay locked on the bench. Mockup: `mockups/LiveRest.dc.html`. Feature spec: Product lead's v1-features.md (P0).
+**Kaushik's picks (2026-10-15):**
+- The layout merges Gesso and Horizon.
+- The typeface is **Inter Tight**.
+- **No italics anywhere.**
+- Colour mood: default to Cobalt sky until he picks one.
 
-## Lock Screen (356 × about 156pt; the system clips the corners)
-- **Ground:** the workout's painterly ground at 92%: base `#1C1828`, with a violet `#3B2D57` wash from the top left and a teal `#1E3D4A` wash from the bottom right.
-- **Edges:** a white 14% inner top chamfer and a 0.5pt black hairline. A **lit 2pt vermilion process seam** runs along the top edge (with a glint), the same as in the app.
-- **Top row:**
-  - Left: the countdown in Fraunces 52/600, cadmium `#E8BD4C`, tabular, using `Text(timerInterval:countsDown:)`. "rest" follows it in italic 18, `#A79FB5`.
-  - Right: the **Done** key, cream `#F3ECE0`, 112×52, radius 14, 21/600 ink.
-- **The drying stroke** (time you can see): a 7pt cadmium brushstroke across the card that shortens from the right as rest runs out.
-  - A 2pt guide at cream 14% shows the full length.
-  - A soft wet tip (a 16pt blurred cadmium dot) rides the end of the stroke.
-  - Build it with `ProgressView(timerInterval:countsDown:)` masked by a brushstroke shape. Verify that the mask renders in a Live Activity; if it doesn't, a plain 7pt rounded-rect drain is the fallback.
+Principles, from research: one number, one action, the system's own glass, cream numerals.
+
+## Lock Screen (about 366 × 150pt)
+- **Background:** the system's own Live Activity material, not a colour field.
+  - Two soft blurred washes sit inside it, top left and top right (see Colour moods). In code they are blurred `RadialGradient`s at 40–75% opacity.
+- **Countdown:**
+  - Inter Tight 48, weight 250 (Light), tracking −2%, tabular figures.
+  - The colon is at 55% opacity.
+  - Cream `#F6EFE4`.
+  - Use `Text(timerInterval:countsDown:)` in a fixed frame.
+- **Right column** (from x 206, after a 1px hairline at cream 16%). This is **the Done button**: tapping the set logs it.
+  - "Bench" in 17/400 at 62%.
+  - "82.5 × 8" in 24/400.
+  - A red brush tick (`#E2603F`, 2.6pt stroke) at the top right.
+  - The whole column is one `Button(intent: LogPlannedSet)`.
+- **Horizon line (the timer):**
+  - A 2.5pt cream stroke over a full-width 1.5pt guide at 14%.
+  - It drains toward the left as rest runs out.
+  - A soft wet tip (14pt, blurred) rides the end.
+  - Build it with `ProgressView(timerInterval:)` masked by the curved stroke shape. If the mask can't render, use a straight 2.5pt line.
 - **Bottom row:**
-  - Left: the next set in italic 21, e.g. "Bench, 82.5 × 8".
-  - Right: **+15s** and **Skip** as hairline keys, 64×40, radius 12, with a 1pt cream 32% outline and 18pt text.
+  - Left: "Rest, then set 4" in 17/400 at 58%.
+  - Right: "+15" and "Skip" in 18/500, split by a hairline. Each is a `Button(intent:)`.
+- **No text below 16pt.** Bundle Inter Tight in the widget extension.
 
-## When rest is over: "Set 4 is up"
-- The countdown is replaced by "Set 4" (Fraunces 52, cream) with "is up" in cadmium italic.
-- The stroke is gone. The set reads "Bench, 82.5 × 8", with "rested 2:30" below it in italic 18.
-- The Done key glows vermilion (a 22pt glow breathing over 2.2s) until it is pressed. Only Skip remains.
-- One haptic alert plays at the moment rest ends. Never repeat it.
+## When rest is over: Go
+Trigger this with `staleDate` = the end of rest, and branch on `context.isStale`.
+- "Go" replaces the countdown and rises in: 14pt up, blur 6→0, 700ms. In the activity, use `.transition(.push(from: .bottom))`.
+- **The sky warms:** the washes cross-fade to cadmium `rgba(232,189,76,.75)` and vermilion `rgba(226,96,63,.6)` over about 1.4s.
+- The line empties.
+- A soft vermilion glow breathes behind the tick (2.2s), saying "tap the set".
+- "+15" dims to 25%, and the bottom left reads "Rested 2:30".
+- One haptic alert plays when rest ends. Never repeat it.
+
+## Colour moods (to be picked; Cobalt sky is the default)
+| Mood | Wash 1 (top left) | Wash 2 (top right) | Line | Tick |
+|---|---|---|---|---|
+| Cobalt sky | `rgba(63,127,192,.75)` | `rgba(122,92,160,.45)` | cream | vermilion |
+| Dusk | `rgba(226,96,63,.7)` | `rgba(150,80,150,.55)` | `#FFB896` | `#FFE3D2` |
+| Sage | `rgba(110,158,106,.75)` | `rgba(42,127,134,.6)` | `#C8E6B4` | vermilion |
+| Ink | none | none | cream | vermilion |
 
 ## Dynamic Island
 - **Compact:**
-  - Leading: a cadmium paint dab (soft radial, breathing scale 1↔1.15).
-  - Trailing: the countdown in Fraunces 18/600, cadmium.
+  - Leading: the red tick.
+  - Trailing: the time, in Inter Tight 17/400, tabular.
 - **Expanded:**
-  - Top row: the countdown in Fraunces 44, then the Done key 104×50.
-  - Middle: the drying stroke.
-  - Bottom: the next set in italic 21, with Skip on the right.
-- **Minimal:** the dab only.
+  - The countdown in Inter Tight 40 Light on the left.
+  - "Bench" (16) and "82.5 × 8" (21) on the right. This is the Done button.
+  - The horizon line along the bottom.
+- **Minimal:** the tick.
 - The island's capsule outline is the system's. Nothing we draw inside it is a pill.
 
 ## Behaviour
-- **Done** logs the next planned set (weight and reps as dialled for it) through the same typed action as hold to log, then starts the next rest.
-- **+15s** extends the rest. **Skip** ends rest, or skips the set once rest is over.
-- All three are `Button(intent:)` App Intents and work without unlocking.
+- **Done** (tapping the set) logs the next planned set (weight and reps as dialled for it) through the same typed action as hold to log, then starts the next rest.
+- **+15** extends the rest. **Skip** ends rest, or skips the set once rest is over.
+- All of these work without unlocking.
 - **Tap anywhere else** to open the live workout at that set.
 - The activity starts when a set is logged in live mode and ends when the workout ends.
-- **Text:** nothing smaller than 16pt. Bundle Fraunces and Hanken Grotesk in the widget extension.
+
+## Constraints
+- **Explicit animations are ignored.** Motion comes from the system timers and from transitions up to 2s when the content changes.
+- **Always-On:** no ticking. Use `isLuminanceReduced` to show a still "Ready at 18:26" instead of the countdown.
+- **StandBy:** the view is scaled 2× and Night Mode tints it red, so check contrast there.
