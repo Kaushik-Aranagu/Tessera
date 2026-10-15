@@ -2,16 +2,18 @@
 
 *Repo maintainer, 2026-10-15. This was a static read of master at fae1ce6, with no Swift toolchain, so nothing here was compiled or run. Every finding is traced to a concrete input. Lines refer to master.*
 
+**Overlap:** K1 and K2 duplicate Fixes 1 and 2 in the Kitchen lead's `docs/product/kitchen-acceptance.md`. Everything else here is new. That file's Fixes 3–6 (pepper as a staple, size words, double cooks, GoToCookStep's clock) are not repeated here.
+
 **Summary:** 13 bugs (5 high, 6 medium, 2 low), plus one minor screen nit. Core owns all of them except G1, which is iOS build's. The biggest risk is #57: the kitchen grammar runs before the set, lift and task parsers, so it takes over phrases those parsers used to handle.
 
 ## Core: Tess kitchen grammar (#57)
 
 Root cause: `TessGrammar.swift:50` calls `parseKitchen` before `parseRelativeSet`, the lift parser and `parseTask`. The test change at `TessTests.swift:171` (swapping "buy chalk" for "ring the gym about chalk") hid this.
 
-- **K1 (high): "buy …" and "get …" turn dated tasks into groceries.** `TessGrammar+Kitchen.swift:26`
+- **K1 (high): "buy …" and "get …" turn dated tasks into groceries.** `TessGrammar+Kitchen.swift:26`. *Same as Fix 1 in `docs/product/kitchen-acceptance.md`.*
   - **Failure:** "get the car serviced friday" adds a grocery item "the car serviced friday" and an Ingredient with that name, instead of a Friday task.
   - **Fix:** return nil when `TessDates.extract` finds a date in the rest. Consider dropping "get" too.
-- **K2 (high): any comma phrase becomes a grocery list.** `TessGrammar+Kitchen.swift:32-39`
+- **K2 (high): any comma phrase becomes a grocery list.** `TessGrammar+Kitchen.swift:32-39`. *Same as Fix 2 in `docs/product/kitchen-acceptance.md`.*
   - **Failure:** "bench 80, 8" (dictation adds commas) used to log 80 × 8. Now it adds a grocery item "bench 80". "felt good, slept badly" also lands on the list.
   - **Fix:** try `parseLift(normalize(phrase))` first, or move the bare-comma rule after the lift and set parsers.
 - **K3 (medium): "timer" plus any number starts a kitchen timer.** `TessGrammar+Kitchen.swift:46-56`
