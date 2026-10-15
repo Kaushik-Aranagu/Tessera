@@ -3,6 +3,7 @@
 One paragraph or so per Feature screen in `docs/product/ship-list-m4.md` (Product's copy: `tessera/product/ship-list-m4.md`), at the weight of `m3-steers.md`. Rough is fine; the UI bar is not optional: Inter Tight tiers, nothing under 16pt, no italics, no cards, pills or stock lists, painterly ground with hairline seams, directional entrances. Plan my day and Shutdown are **Now on Home**, not separate screens, so they reuse `today-on-home.md`'s queue, gestures and haptics.
 
 ## 6 · Plan my day (rules only), with 10b · the energy check-in
+Recording of 6, 10b and 7 together: `recordings/plan-and-shutdown.mp4` (source `studies/plan-and-shutdown.html`).
 At 08:00 the plan becomes Now. It's a state of TODAY, not a card or a sheet.
 - **Now line:** "this morning". **Hero** is the day in one sentence: "Three meetings, four hours free". The context line under the hero is the body: "slept 6h40" (21/400; "no sleep data" when Health has nothing).
 - **The day stroke tells the time you have.** Calendar events paint onto the dashed rest-of-day guide as short ink segments at their times (ink 55%, 6pt, round caps). Free time stays dashed. This is the Tiimo lesson, time you can see, in the stroke you already know.
