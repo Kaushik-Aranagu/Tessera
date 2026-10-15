@@ -42,6 +42,13 @@ enum TesseraDatabaseSchema {
             CREATE INDEX op_created ON op(createdAt);
             """)
         }
+        // Tess model layer T1: which route and model performed a Tess action.
+        migrator.registerMigration("v2") { db in
+            try db.execute(sql: """
+            ALTER TABLE op ADD COLUMN route TEXT;
+            ALTER TABLE op ADD COLUMN model TEXT;
+            """)
+        }
         return migrator
     }
 
@@ -98,12 +105,13 @@ enum TesseraDatabaseSchema {
                 arguments = [v.id.uuidString, v.name, v.layoutRaw, v.sortIndex, v.filterData, v.classDef?.id.uuidString]
             case let r as OpRecord:
                 sql = """
-                INSERT OR REPLACE INTO op(id, action, actor, state, summary, createdAt, updatedAt, ops, objectIDs)
-                VALUES (?,?,?,?,?,?,?,?,?)
+                INSERT OR REPLACE INTO op(id, action, actor, state, summary, createdAt, updatedAt, ops, objectIDs,
+                  route, model)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?)
                 """
                 arguments = [r.id.uuidString, r.action, r.actorRaw, r.stateRaw, r.summary,
                              r.createdAt.timeIntervalSince1970, r.updatedAt.timeIntervalSince1970, r.opsData,
-                             json(r.objectIDs.map(\.uuidString))]
+                             json(r.objectIDs.map(\.uuidString)), r.routeRaw, r.model]
             default:
                 sql = "SELECT 1"
                 arguments = []
@@ -234,6 +242,8 @@ enum TesseraDatabaseSchema {
                 record.objectIDs = TesseraDatabaseSchema.strings(row["objectIDs"]).compactMap(UUID.init(uuidString:))
                 record.createdAt = date(row, "createdAt") ?? .now
                 record.updatedAt = date(row, "updatedAt") ?? .now
+                record.routeRaw = row["route"]
+                record.model = row["model"]
                 register(record)
             }
         }

@@ -33,8 +33,8 @@ public enum LegacyStore {
     public static func migrate(from url: URL = defaultURL, into context: TesseraContext) throws -> Bool {
         guard let data = try exportData(from: url) else { return false }
         do {
-            // Seeded content from an earlier launch doesn't count as "already migrated".
-            try TesseraExport.decode(data).restore(into: context, replacingSeeded: true)
+            // Pending until it lands, however much the new store has been used meanwhile.
+            try TesseraExport.decode(data).restore(into: context, merging: true)
         } catch {
             // Leave the old store where it is so the next launch tries again, and say so.
             TesseraSchema.setLaunchNote("Your older history hasn't moved across yet. It's safe, and I'll try again "
