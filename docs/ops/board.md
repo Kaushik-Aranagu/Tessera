@@ -75,26 +75,26 @@
 
 ## Design studio
 
-**Done (2026-10-15):** kitchen build sheets on branch `claude/project-thread-b3tu3f`, `docs/design/kitchen/`: 13 Groceries (f36ff12), 10/11 Recipe page and paste (8989878), 12 Cook mode, 14 Shelf and 15 Lists v0 (d4957ac). Reviews: Notes v0, Groceries #58 (fixes in the Design thread). M3 steers and Home entry points: `docs/design/m3-steers.md` (60932f4). Live-mode polish values for v1 slice 13: `docs/design/live-polish.md` (742ffda). Today on Home motion for M2 slices 8 and 9, with a recording: `docs/design/today-on-home.md` (e961d26). M4 screen steers: `docs/design/m4-steers.md` (ead06a0).
+**Done (2026-10-15):** kitchen build sheets on branch `claude/project-thread-b3tu3f`, `docs/design/kitchen/`: 13 Groceries (f36ff12), 10/11 Recipe page and paste (8989878), 12 Cook mode, 14 Shelf and 15 Lists v0 (d4957ac). Reviews: Notes v0, Groceries #58 (fixes in the Design thread). M3 steers and Home entry points: `docs/design/m3-steers.md` (60932f4). Live-mode polish values for v1 slice 13: `docs/design/live-polish.md` (742ffda). Today on Home motion for M2 slices 8 and 9, with a recording: `docs/design/today-on-home.md` (e961d26). M4 screen steers: `docs/design/m4-steers.md` (ead06a0). Widget and snippet language: `docs/design/widgets-and-snippets.md` (7bdcdbb). Day strip and day-full motion: `docs/design/day-strip.md` (00343d5). Lists screens 9-12 values (supersedes sheet 15): `docs/design/kitchen/lists-9-12.md` (d134bf0), sent to the Kitchen lead.
 
-**Now:** A widget and snippet visual language (pulled forward for M4 slice 10).
+**Now:** A motion study and recording for Plan my day and Shutdown (M4 slices 6 and 7).
 
 **Always on:** review each Core or iOS screen as it merges, with file-and-change fixes posted in the Design thread.
 
 **Next:**
-1. Day strip and day-full warning motion (M2 slices 11 and 13) for Builder B.
-2. Lists screens 9-12 steer pass with the Kitchen lead (`ship-list-lists.md` supersedes my sheet 15 where they differ).
-3. A motion study and recording for Plan my day and Shutdown (M4 slices 6 and 7).
+1. A recording of the day strip filling up and Make room (M2 slices 11 and 13).
+2. A recording of Lists' pick-one moment and the reset hold (slices 10 and 12).
+3. The plate-stack concept prototype from `whats-running.md`.
 
 **Later:**
-- The plate-stack concept prototype from `whats-running.md`.
+- Glyph for the Tell Tess control as an SF Symbols template, once slice 10 starts.
 
 ## Recipes and groceries, then Lists (Kitchen lead)
 
 **Now:** accept each kitchen screen as Core lands it, in `docs/product/kitchen-acceptance.md`. Engine 1-9 and Groceries #58 done (10 fixes relayed). Waiting on Recipe page and Paste (10, 11).
 
 **Next:**
-1. Accept the engine hotfix PR and the Groceries polish PR against the 10 fixes.
+1. Accept the Groceries polish PR against the 4 screen fixes. (Engine hotfix #70 accepted: pass, 2 small misses relayed.)
 2. Design steer check on Lists screens 9-12 with Design studio before Core starts them.
 3. Accept Recipe page and Paste a recipe (10, 11), Cook mode (12), Kitchen shelf (14) as each lands.
 
@@ -105,16 +105,15 @@
 
 ## Research lab
 
-**Done:** #59 next areas; #65 M4 scouting, Tess routing and eval phrases, kitchen v2; #68 widgets and snippets, retention; #69 Day log, M5 Money and Reading; PR open for `people-and-upkeep.md`.
+**Done:** #59 next areas; #65 M4 scouting, Tess routing and eval phrases, kitchen v2; #68 widgets and snippets, retention; #69 Day log, M5 Money and Reading; #71 people and upkeep; #73 lists templates, habits, add a field, quiet interrupts, body weight trend.
 
-**Now (running, all five in parallel):** Next 1 to 5 below.
+**Now:** a Plan my day scenario set for M4 slice 6. Done when there are 20 realistic days (calendar, tasks, workout, sleep, energy), each with the plan the rules in `ship-list-m4.md` should produce, as test fixtures for Core.
 
 **Next:**
-1. Lists and templates pattern scan, for Lists slices 4 and 7 and M3 slice 10. Done when there's a brief on how Things, Reminders, Notion templates and checklist apps handle reusable lists, list templates, "pick one" and pasting a block into a list, with 3 to 5 changes to `ship-list-lists.md`.
-2. Habits that count, not nag, for M3 slice 2 and the "logs fill habits" idle slice. Done when there's a brief on weekly-target models (x of 7), auto-filled check-ins, and what makes habit apps feel like guilt, tied to concrete rules.
-3. Adding a field without feeling like programming, for M3 slices 3, 6 and 10. Done when there's a brief on how Notion, Airtable, Tana and Capacities let people add properties and pick types, plus the smallest "gentle slope" flow for the Class inspector.
-4. Quiet interrupts on iOS, for M4 slice 4. Done when there's a brief on interruption levels, Focus filters and the Time Sensitive limits, and on how to queue low-priority notifications during a workout or cook within what iOS allows.
-5. Body weight trends, for M3 slice 1. Done when there's a brief on smoothing daily swings (moving average or trend weight, as in Happy Scale and Libra) and showing them calmly.
+1. Questions and saved queries for M3 slices 4 and 7. Done when 60 real questions and smart-list phrasings ("best bench at 5", "every open item dated this week", "what did I cook last week") are mapped to the expected query AST or answer, as Core's eval set.
+2. Calendar and Health fixtures for M4 slices 1 and 2. Done when the edge cases from `m4-scouting.md` (recurring events, declined invites, all-day events, overlapping sleep sources, no Watch, denied reads) are written as sample data with the expected objects.
+3. Shutdown and Day log copy for M4 slices 5 and 7. Done when there are about 30 lines in Tess's voice for the day summary and Shutdown (counts, no misses), checked against `tess-voice.md`.
+4. Reading queue first slice for M5. Done when the smallest Reading version from `m5-money-reading.md` is turned into a draft ship list in the house format, for Product to review.
 
 **Later:**
 - Checking the on-device context size (4K vs 8K) once a Mac lead can run it.
