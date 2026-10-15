@@ -161,14 +161,15 @@ enum NotesEditorCopy {
         return (String(body[..<newline]), String(body[body.index(after: newline)...]))
     }
 
-    /// The first line and the rest, back into one plain body (trimmed; no blank first line).
+    /// The first line and the rest, back into one plain body: the exact inverse of `split` (blank lines after the
+    /// heading stay), with only trailing whitespace trimmed.
     static func join(heading: String, rest: String) -> String {
-        let first = heading.replacingOccurrences(of: "\n", with: " ").trimmingCharacters(in: .whitespaces)
-        let body = rest.trimmingCharacters(in: .whitespacesAndNewlines)
-        if first.isEmpty {
-            return body
+        let first = heading.replacingOccurrences(of: "\n", with: " ")
+        let body = rest.replacing(/\s+$/, with: "")
+        if first.trimmingCharacters(in: .whitespaces).isEmpty {
+            return body.trimmingCharacters(in: .whitespacesAndNewlines)
         }
-        return body.isEmpty ? first : first + "\n" + body
+        return body.isEmpty ? first.replacing(/\s+$/, with: "") : first + "\n" + body
     }
 
     /// The note's first line, as the title.

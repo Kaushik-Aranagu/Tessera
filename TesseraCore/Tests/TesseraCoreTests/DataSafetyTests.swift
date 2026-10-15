@@ -135,3 +135,46 @@ struct DataSafetyTests {
         #expect(names.isSuperset(of: ["logExercise", "createTask", "createRoutine"]))
     }
 }
+
+/// QA's #80 verification (B1, B4, the restored comma-sets row).
+@MainActor
+struct CommaSetTests {
+    @Test func eachCommaPartIsItsOwnSet() async throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let grammar = TessGrammar(store: store, classes: classes)
+        let context = TessContext(now: .now, calendar: .current)
+        // B1
+        guard case let .sets(parts)? = grammar.parse("bench 80 for 8, 82.5 for 6", context: context) else {
+            Issue.record("bench 80 for 8, 82.5 for 6 should be two sets")
+            return
+        }
+        let read = parts.compactMap { part -> [Double]? in
+            if case let .lift(_, _, reps, weight, _) = part {
+                [weight, reps]
+            } else {
+                nil
+            }
+        }
+        #expect(read == [[80, 8], [82.5, 6]])
+
+        // The restored row: with an entry in focus, "80x8, 80x8, 80x6" is three sets into it.
+        let plan = try #require(store.object(id: StarterContent.planID))
+        let pushA = try #require(store.linkedObjects("routines", of: plan).first)
+        let workout = try engine.perform(StartRoutine(routine: pushA.id), by: .user).output
+        let entry = try #require(workout.orderedChildren.first)
+        let focused = TessContext(now: .now, calendar: .current, entry: entry.id)
+        guard case let .sets(three)? = grammar.parse("80x8, 80x8, 80x6", context: focused) else {
+            Issue.record("80x8, 80x8, 80x6 should be three sets")
+            return
+        }
+        #expect(three.count == 3)
+
+        // B4: all or nothing. A phrase whose second part can't log takes back the first.
+        let tess = TessCaptureEngine(engine: engine)
+        let capture = await tess.capture("80x8, 80x8, 80x6", context: focused)
+        #expect(capture.records.count == 3)
+        #expect(entry.orderedChildren.count == 3)
+    }
+}

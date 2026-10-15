@@ -94,7 +94,7 @@ public struct TessGrammar {
             return .set(entry: entry, weight: unit.toKilograms(weight), reps: reps, kind: .drop, phrase: .drop,
                         unit: unit)
         }
-        if let match = text.firstMatch(of: /^(\d+(?:\.\d+)?)(?: (kg|lb))? (?:x|for) (\d+)$/),
+        if let match = text.firstMatch(of: /^(\d+(?:\.\d+)?)(?: ?(kg|lb))?(?: ?x ?| for )(\d+)$/),
            let weight = Double(match.1), let reps = Double(match.3)
         {
             let unit = match.2.flatMap { MassUnit(parsing: String($0)) } ?? .kilograms
@@ -129,14 +129,18 @@ public struct TessGrammar {
             return lift
         }
         var parsed: [Parse] = []
-        var exerciseWords: String?
+        // The exercise's name carries forward, never the first part's numbers: "bench 80 for 8, 82.5 for 6".
+        var exerciseName: String?
         for part in parts {
             if let lift = parseLift(part, entry: entry) {
                 parsed.append(lift)
-                exerciseWords = part.replacing(/[\d.]+\s*[x×]\s*\d+/, with: "").trimmingCharacters(in: .whitespaces)
-            } else if let words = exerciseWords, !words.isEmpty,
-                      let lift = parseLift("\(words) \(part)", entry: entry)
-            {
+                switch lift {
+                case let .lift(exercise, _, _, _, _): exerciseName = exercise.name.lowercased()
+                case let .set(entry, _, _, _, _, _):
+                    exerciseName = store.linkedClass("exercise", of: entry)?.name.lowercased()
+                default: break
+                }
+            } else if let name = exerciseName, let lift = parseLift("\(name) \(part)", entry: entry) {
                 parsed.append(lift)
             } else if let entry, let set = parseRelativeSet(part, entry: entry) {
                 parsed.append(set)

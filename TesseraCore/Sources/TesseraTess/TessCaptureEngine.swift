@@ -29,10 +29,15 @@ public final class TessCaptureEngine: TessCapturing {
                             records.append(record)
                             lines.append(line)
                         } catch {
-                            // Report what did log, so it shows and can be undone.
-                            let logged = records.isEmpty ? "" : "\(records.count) logged. "
-                            return TessCapture(records: records, line: logged + Self.line(for: error),
-                                               source: .grammar)
+                            // All or nothing: take back the sets already logged from this phrase.
+                            for record in records.reversed() {
+                                if record.state == .pending {
+                                    _ = try? engine.discard(record)
+                                } else {
+                                    engine.undo(record)
+                                }
+                            }
+                            return TessCapture(records: [], line: Self.line(for: error), source: .grammar)
                         }
                     }
                     let line = parts.count == lines.count && lines.count > 1 ? "\(lines.count) sets logged." : lines
