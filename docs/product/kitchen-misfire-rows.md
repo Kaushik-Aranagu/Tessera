@@ -25,7 +25,7 @@
 | A17 | buy 3 x 400 g tins chickpeas | groceries, 1 line; not sets x reps |
 | A18 | buy sun cream | groceries; "sun" is not Sunday |
 | A19 | buy sat nav charger | groceries; "sat" is not Saturday |
-| A20 | buy wed cake candles | groceries; "wed" is not Wednesday (ambiguous: accept groceries) |
+| A20 | buy cake candles wed | **task**, Wednesday (a dated buy stays a task); listed here so the date rule is tested next to A18-A19 |
 | A21 | get tonic water | groceries; "ton" is not a date |
 | A22 | buy tomorrow's bread | groceries ["bread"]; *also accept* a dated task "Buy bread" tomorrow (decision: groceries wins) |
 | A23 | timer pasta 10 | timer "Pasta", 10 min |
@@ -45,7 +45,7 @@
 | A37 | we're out of coffee | groceries ["coffee"] |
 | A38 | buy 1 (400 g) tin coconut milk | groceries, 1 line, pack size kept out of the name (after Paste hardening) |
 | A39 | buy milk during a live workout | groceries; not a set, even with `context.entry` set |
-| A40 | 3 lemons during a live workout | **set rule wins** (bare number in a workout is a relative set) unless the line has a grocery noun; accept groceries ["3 lemons"] as the target |
+| A40 | 3 lemons during a live workout | groceries ["3 lemons"]: a number followed by a known ingredient is never a relative set (a bare "3" still is) |
 
 ## B. Look like groceries, aren't (20)
 
