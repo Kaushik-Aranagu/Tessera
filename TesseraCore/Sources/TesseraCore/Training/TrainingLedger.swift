@@ -84,15 +84,11 @@ public struct TrainingLedger {
 
     /// Sessions of an exercise class and its subclasses, newest first.
     public func sessions(of exercise: ClassDef, excludingWorkout excludedID: UUID? = nil) -> [Session] {
-        guard let workoutClass = classes[.workout] else { return [] }
-        return store.backlinks(to: exercise, includingSubclasses: true).compactMap { entry -> Session? in
-            guard let workout = store.ancestor(of: entry, ofClass: workoutClass), workout.id != excludedID,
-                  let date = workoutDate(workout) else { return nil }
-            let sets = workingSets(in: entry)
-            guard !sets.isEmpty else { return nil }
-            return Session(id: entry.id, workout: workout, entry: entry, date: date, sets: sets)
-        }
-        .sorted { $0.date > $1.date }
+        let index = index
+        return ClassResolver.descendants(of: exercise)
+            .flatMap { index.sessionsByClass[$0.id] ?? [] }
+            .filter { $0.workout.id != excludedID }
+            .sorted { $0.date > $1.date }
     }
 
     public func bestSet(of exercise: ClassDef, excludingWorkout excludedID: UUID? = nil) -> LoggedSet? {
@@ -209,17 +205,10 @@ public struct TrainingLedger {
     }
 
     private func forEachEntry(inWeekOf date: Date, calendar: Calendar, _ body: (ClassDef, Int) -> Void) {
-        guard let workoutClass = classes[.workout],
-              let week = calendar.dateInterval(of: .weekOfYear, for: date) else { return }
-        for workout in store.objects(of: workoutClass) {
-            guard let when = workoutDate(workout), week.contains(when) else { continue }
-            for entry in workout.orderedChildren {
-                guard let exercise = store.linkedClass("exercise", of: entry) else { continue }
-                let sets = workingSets(in: entry).count
-                if sets > 0 {
-                    body(exercise, sets)
-                }
-            }
+        guard let week = calendar.dateInterval(of: .weekOfYear, for: date) else { return }
+        for (classID, session) in index.allSessions where week.contains(session.date) {
+            guard let exercise = store.classDef(id: classID) else { continue }
+            body(exercise, session.sets.count)
         }
     }
 
@@ -228,18 +217,10 @@ public struct TrainingLedger {
     public func weeklySetsPerMuscle(weekContaining date: Date,
                                     calendar: Calendar = .current) -> [UUID: Int]
     {
-        guard let workoutClass = classes[.workout],
-              let week = calendar.dateInterval(of: .weekOfYear, for: date) else { return [:] }
         var counts: [UUID: Int] = [:]
-        for workout in store.objects(of: workoutClass) {
-            guard let when = workoutDate(workout), week.contains(when) else { continue }
-            for entry in workout.orderedChildren {
-                guard let exercise = store.linkedClass("exercise", of: entry) else { continue }
-                let sets = workingSets(in: entry).count
-                guard sets > 0 else { continue }
-                for muscle in store.linkedObjects("primaryMuscles", ofClass: exercise) {
-                    counts[muscle.id, default: 0] += sets
-                }
+        forEachEntry(inWeekOf: date, calendar: calendar) { exercise, sets in
+            for muscle in store.linkedObjects("primaryMuscles", ofClass: exercise) {
+                counts[muscle.id, default: 0] += sets
             }
         }
         return counts
@@ -247,20 +228,23 @@ public struct TrainingLedger {
 
     // MARK: Private
 
-    private func workoutDate(_ workout: ObjectRecord) -> Date? {
+    func workoutDate(_ workout: ObjectRecord) -> Date? {
         (store.value("endedAt", of: workout) ?? store.value("startedAt", of: workout))?.dateValue
     }
 
     private func workingSets(in entry: ObjectRecord) -> [LoggedSet] {
-        entry.orderedChildren.compactMap { set -> LoggedSet? in
-            let kind = setKind(set)
-            guard kind.counts,
-                  let weight = store.number("weight", of: set), let reps = store.number("reps", of: set),
-                  let e1RM = store.number("e1rm", of: set) else { return nil }
-            let rpe = store.number("rpe", of: set)
-            return LoggedSet(id: set.id, weight: weight, reps: reps, rpe: rpe, kind: kind, e1RM: e1RM,
-                             isE1RMEligible: Self.effectiveReps(reps, rpe: rpe) <= Self.e1RMRepLimit)
-        }
+        entry.orderedChildren.compactMap(loggedSet)
+    }
+
+    /// A counted set (not a warm-up) with weight and reps, else nil.
+    func loggedSet(_ set: ObjectRecord) -> LoggedSet? {
+        let kind = setKind(set)
+        guard kind.counts,
+              let weight = store.number("weight", of: set), let reps = store.number("reps", of: set),
+              let e1RM = store.number("e1rm", of: set) else { return nil }
+        let rpe = store.number("rpe", of: set)
+        return LoggedSet(id: set.id, weight: weight, reps: reps, rpe: rpe, kind: kind, e1RM: e1RM,
+                         isE1RMEligible: Self.effectiveReps(reps, rpe: rpe) <= Self.e1RMRepLimit)
     }
 
     /// The set's kind; the older warm-up flag still counts.

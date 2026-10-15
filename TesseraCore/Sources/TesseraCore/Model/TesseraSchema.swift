@@ -1,3 +1,4 @@
+import Foundation
 import SwiftData
 
 public enum TesseraSchema {
@@ -19,7 +20,13 @@ public enum TesseraSchema {
             cloudKitDatabase: .none
         )
         do {
-            return try ModelContainer(for: Schema(models), configurations: configuration)
+            let container = try ModelContainer(for: Schema(models), configurations: configuration)
+            // In-memory stores (tests, previews) don't need autosave, and its timer could fire after a
+            // short-lived container is gone.
+            if inMemory, Thread.isMainThread {
+                MainActor.assumeIsolated { container.mainContext.autosaveEnabled = false }
+            }
+            return container
         } catch {
             fatalError("Failed to create ModelContainer: \(error)")
         }

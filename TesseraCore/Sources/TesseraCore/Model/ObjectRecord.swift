@@ -12,6 +12,7 @@ public final class ObjectRecord {
     public var updatedAt: Date = Date.now
     /// Soft delete; hidden from normal queries, recoverable.
     public var deletedAt: Date?
+    // External storage is part of the shipped schema; changing it needs a migration plan (no automatic mapping).
     @Attribute(.externalStorage) public var valuesData: Data?
     /// The class's own object (like a metaclass instance): holds class-level values such as
     /// Bench Press's muscles or cues, which every object of the class and its subclasses inherits.
@@ -41,14 +42,26 @@ public final class ObjectRecord {
 
     /// Raw stored values; prefer `ObjectStore` accessors, which apply defaults and computed fields.
     public var values: FieldValues {
-        get { valuesData.flatMap { try? JSONDecoder().decode(FieldValues.self, from: $0) } ?? FieldValues() }
+        get {
+            // Decoding JSON on every read dominated long histories; keep the last decode until the data changes.
+            let data = valuesData
+            if let decoded, decoded.data == data {
+                return decoded.values
+            }
+            let values = data.flatMap { try? JSONDecoder().decode(FieldValues.self, from: $0) } ?? FieldValues()
+            decoded = (data, values)
+            return values
+        }
         set {
             // No-op writes don't dirty the record (and don't create sync traffic).
             guard newValue != values, let data = try? Self.encoder.encode(newValue) else { return }
             valuesData = data
+            decoded = (data, newValue)
             updatedAt = .now
         }
     }
+
+    @Transient private var decoded: (data: Data?, values: FieldValues)?
 
     private static var encoder: JSONEncoder {
         let encoder = JSONEncoder()

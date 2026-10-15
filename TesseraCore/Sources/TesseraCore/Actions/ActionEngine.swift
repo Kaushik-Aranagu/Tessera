@@ -179,6 +179,7 @@ public final class ActionEngine {
             }
             object.title = new
             object.updatedAt = .now
+            store.noteChange(object)
         case let .setValue(_, field, old, new):
             if guarded, object.values[field] != old {
                 return false
