@@ -4,11 +4,11 @@
 
 **Done:** #134 (WorkoutTessBar swapped for the Tess soul, 794981a). #109 (tap a logged set to edit it, 940dca2). #108 (PaintKey ink rewrite: every key is a stroke word, dead keys removed; D4, rest survives an app kill). ship-2 (#91): v1 slices 8 to 12, G1, a haptic, P2, B3, the launch note, and the mic hidden.
 
-**Now:** QA's low on removing a set mid-rest, then Next 4 (#122 hookups), then Next 2 (audit rows), then Next 5 (cook mode). Next 3 (persistRest after a swap) fits in wherever it's quickest.
+**Now:** QA's low on removing a set mid-rest, then Design's audit rows 1 and 2 (the weight alert becomes edit in place, the typed ask becomes Tess's Write layer; the most visible in the gym, Coordinator 4:06 PM PT), then Next 4 (#122 hookups), then the rest of Next 2 (audit rows 4, 5, 10 and 11), then Next 5 (cook mode). Next 3 (persistRest after a swap) fits in wherever it's quickest.
 
 **Next:**
 1. (done, #134) Swap WorkoutTessBar for the Tess soul.
-2. Design's audit rows for ExerciseStrip, SwapPanel and WeekPage (`docs/design/audit-build-1.md`). Done when each row is fixed and recorded.
+2. Design's audit rows (`docs/design/audit-build-1.md`): 1 weight alert to edit in place and 2 typed ask to the Write layer (first, see Now), then 4 swap panel as a veil, 5 "Add to routine" as a label word, 10 vermilion UNDO in RoutineEditor, 11 drop the double "Skip". Row 3 is done (#134). Done when each row is fixed and recorded.
 3. QA's fix: rest persists after a swap. Done when swapping an exercise mid-rest keeps the rest counting after a kill, with a test.
 4. Hook up Core's #122 on screen. Done when the routine editor uses `RemoveSlot` in place of DeleteObject, the edit-set view can clear RPE, the week view shows rest days, the exercise library is grouped by movement pattern and then equipment, and the workout shows "Up X kg from last time" when the target rose. This comes right after the mid-rest set removal low (Coordinator, 4:04 PM PT).
 5. Cook mode screen (kitchen slices 12 and 12b, moved from Core because its engine is merged). Done when it passes the Kitchen lead's cook-mode acceptance (#127) and `cook-mode-scenarios.md`: live steps, two timers, timers on the Lock Screen, the idle rule, and a Cook entry on finish. Cook is un-hidden on the recipe page. Includes a HomeLink word in `HomeSpatialView`, so the screen isn't DEBUG-only.
