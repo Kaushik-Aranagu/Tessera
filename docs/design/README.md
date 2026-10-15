@@ -21,6 +21,7 @@ The source of truth for how v1 looks, moves and feels. iOS build implements from
 | [plate-stack.md](plate-stack.md) | Concept, not scheduled: the plate stack, where paused processes are stepped slivers behind Now that fan out when you pull Now down. Recording in `recordings/` |
 | [no-buttons.md](no-buttons.md) | **Ink actions, overrides earlier sheets:** no shape around anything to make it a button, card or bar. Stroke words, label words, value words, the Tess horizon and veils, plus every place on master to change. Recording `recordings/ink-actions.mp4` |
 | [edit-set.md](edit-set.md) | v1 slice 8: tap a logged stroke to edit, remove or undo a set. Recording `recordings/edit-set.mp4` |
+| [routine-editor.md](routine-editor.md) | v1 slice 10: the routine page is always editable. Hold to reorder, swipe to drop, value words open drums, tap a name to change it. Recording `recordings/routine-editor.mp4` |
 | [live-polish.md](live-polish.md) | Live mode polish (v1 slice 13): exact timing, curves and haptics for the stamp, rest on the dial and the PR sweep, plus the haptic map and Reduce Motion |
 | [live-activity.md](live-activity.md) | The rest timer on the Lock Screen and Dynamic Island (Inter Tight, horizon line as timer, tap the set to log it), with its Go state, Undo after Done, and colour moods |
 | [tess-soul.md](tess-soul.md) | Tess's living mark, v2 wet paint: its form, mode parameters, travel, going home, the shader route, and the motifs we reuse. `mockups/SoulLab.dc.html` mixes any state with the unapproved shape and colour ideas |
