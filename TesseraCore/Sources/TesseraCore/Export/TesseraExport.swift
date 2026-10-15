@@ -1,5 +1,4 @@
 import Foundation
-import SwiftData
 
 /// Plain JSON of everything: the schema (classes and fields), every object with its values, every link, and the
 /// operation log. Lossless, so it restores into an empty store; readable, so it's useful outside Tessera too.
@@ -94,11 +93,11 @@ public enum ExportError: Error, Equatable {
 @MainActor
 public extension TesseraExport {
     /// Reads the whole store.
-    init(context: ModelContext, now: Date = .now) throws {
-        let classDefs = try context.fetch(FetchDescriptor<ClassDef>(sortBy: [SortDescriptor(\.createdAt)]))
-        let records = try context.fetch(FetchDescriptor<ObjectRecord>(sortBy: [SortDescriptor(\.createdAt)]))
-        let objectLinks = try context.fetch(FetchDescriptor<ObjectLink>(sortBy: [SortDescriptor(\.createdAt)]))
-        let opRecords = try context.fetch(FetchDescriptor<OpRecord>(sortBy: [SortDescriptor(\.createdAt)]))
+    init(context: TesseraContext, now: Date = .now) throws {
+        let classDefs = context.all(ClassDef.self).sorted { $0.createdAt < $1.createdAt }
+        let records = context.all(ObjectRecord.self).sorted { $0.createdAt < $1.createdAt }
+        let objectLinks = context.all(ObjectLink.self).sorted { $0.createdAt < $1.createdAt }
+        let opRecords = context.all(OpRecord.self).sorted { $0.createdAt < $1.createdAt }
 
         exportedAt = now
         classes = classDefs.map { classDef in
@@ -155,9 +154,10 @@ public extension TesseraExport {
     }
 
     /// Restores into an empty store, keeping every id, so links, history and the op log stay intact.
-    func restore(into context: ModelContext) throws {
-        guard try context.fetchCount(FetchDescriptor<ObjectRecord>()) == 0,
-              try context.fetchCount(FetchDescriptor<ClassDef>()) == 0 else { throw ExportError.storeNotEmpty }
+    func restore(into context: TesseraContext) throws {
+        guard context.count(ObjectRecord.self) == 0, context.count(ClassDef.self) == 0 else {
+            throw ExportError.storeNotEmpty
+        }
 
         var classByID: [UUID: ClassDef] = [:]
         for entry in classes {

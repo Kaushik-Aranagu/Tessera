@@ -90,5 +90,4 @@ struct RootView: View {
     DemoData.prepare(model)
     return RootView()
         .environment(model)
-        .modelContainer(container)
 }

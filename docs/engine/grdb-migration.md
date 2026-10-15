@@ -1,5 +1,7 @@
 # Moving the engine's storage to GRDB
 
+**Status (2026-10-15):** stages 0–2 done. Sync (stage 3) is parked until there is a second device.
+
 *Core engine, 2026-10-15. Kaushik chose GRDB after `docs/research/storage-spike.md`.*
 
 ## Goal

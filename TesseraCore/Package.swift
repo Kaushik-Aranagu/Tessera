@@ -14,10 +14,22 @@ let package = Package(
         .library(name: "TesseraCore", targets: ["TesseraCore"]),
         .library(name: "TesseraTess", targets: ["TesseraTess"]),
         .library(name: "TesseraIntents", targets: ["TesseraIntents"]),
+        .library(name: "TesseraLegacyStore", targets: ["TesseraLegacyStore"]),
+    ],
+    dependencies: [
+        // Storage: SQLite through GRDB (Kaushik's call after docs/research/storage-spike.md).
+        .package(url: "https://github.com/groue/GRDB.swift", from: "7.0.0"),
     ],
     targets: [
         .target(
             name: "TesseraCore",
+            dependencies: [.product(name: "GRDB", package: "GRDB.swift")],
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
+        // Reads stores written by builds before GRDB (SwiftData), so their data can move across once.
+        .target(
+            name: "TesseraLegacyStore",
+            dependencies: ["TesseraCore"],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         .target(
@@ -32,7 +44,7 @@ let package = Package(
         ),
         .testTarget(
             name: "TesseraCoreTests",
-            dependencies: ["TesseraCore", "TesseraTess", "TesseraIntents"],
+            dependencies: ["TesseraCore", "TesseraTess", "TesseraIntents", "TesseraLegacyStore"],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
     ]

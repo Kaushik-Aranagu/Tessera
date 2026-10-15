@@ -1,5 +1,4 @@
 import Foundation
-import SwiftData
 @testable import Tessera
 import TesseraCore
 import Testing

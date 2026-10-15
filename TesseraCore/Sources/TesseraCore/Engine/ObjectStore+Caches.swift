@@ -1,5 +1,4 @@
 import Foundation
-import SwiftData
 
 // Per-store caches: resolved classes, parsed formulas, class objects, and the revision that derived caches
 // (the training index) key off.
@@ -79,7 +78,7 @@ final class Cache {
     var formulas: [String: Formula?] = [:]
     var revision = 0
     /// Kept alive for stores made with `ObjectStore.open`.
-    var container: ModelContainer?
+    var container: TesseraContainer?
     let derived = DerivedCache()
 }
 

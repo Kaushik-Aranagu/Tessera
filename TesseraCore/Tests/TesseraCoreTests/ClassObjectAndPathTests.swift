@@ -1,12 +1,11 @@
 import Foundation
-import SwiftData
 @testable import TesseraCore
 import Testing
 
 @MainActor
 struct ClassObjectAndPathTests {
     let container = TesseraSchema.makeContainer(inMemory: true)
-    var context: ModelContext {
+    var context: TesseraContext {
         container.mainContext
     }
 

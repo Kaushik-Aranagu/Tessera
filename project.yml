@@ -38,6 +38,8 @@ targets:
         buildPhase: resources
     dependencies:
       - package: TesseraCore
+      - package: TesseraCore
+        product: TesseraLegacyStore
       - target: TesseraWidgets
         embed: true
     settings:

@@ -18,7 +18,7 @@ line_length:
   warning: 140
   error: 180
 identifier_name:
-  excluded: [id, s, m, l, xs, xl, xxl, x, y, up, ui, kg, dx, dy]
+  excluded: [id, s, m, l, xs, xl, xxl, x, y, up, ui, kg, dx, dy, db]
 type_name:
   min_length: 2
 large_tuple:

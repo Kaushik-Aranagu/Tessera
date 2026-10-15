@@ -1,31 +1,33 @@
 import Foundation
-import SwiftData
+import GRDB
 
-/// Builds the training index's heavy part on a background context, so a long history never blocks the main
-/// thread at launch. Call `ledger.warmUp()` once after launch; queries before it finishes build synchronously.
+/// Builds the training index's heavy part (decoding every set) off the main thread, straight from SQLite, so a
+/// long history never blocks launch. Call `ledger.warmUp()` once after launch; queries before it finishes build
+/// synchronously.
 @MainActor
 public extension TrainingLedger {
     func warmUp() async {
         let store = store
         guard store.derived.trainingIndex == nil || store.derived.needsRebuild,
               let plan = TrainingIndexBuilder.Plan(ledger: self) else { return }
-        // The background context reads what's saved, so save pending writes first; anything written from
+        // The background read sees what's saved, so save pending writes first; anything written from
         // here on is tracked in `touched` and patched in on the next query.
         if store.context.hasChanges {
             try? store.context.save()
         }
         store.derived.touched.removeAll()
         let startRevision = store.revision
-        let builder = TrainingIndexBuilder(modelContainer: store.context.container)
-        let facts = await builder.facts(plan)
+        let database = store.context.database
+        let facts = await Task.detached { (try? database.read { try TrainingIndexBuilder.facts(plan, db: $0) }) ?? [] }
+            .value
 
         // A synchronous build may have happened meanwhile; keep whichever is current.
         guard store.derived.trainingIndex == nil || store.derived.needsRebuild else { return }
         var index = TrainingIndex()
         let context = store.context
         for fact in facts {
-            guard let workout = context.model(for: fact.workout) as? ObjectRecord,
-                  let entry = context.model(for: fact.entry) as? ObjectRecord else { continue }
+            guard let workout = context.objects[fact.workoutID], let entry = context.objects[fact.entryID],
+                  !workout.isDeleted, !entry.isDeleted else { continue }
             index.insert(
                 Session(
                     id: fact.entryID,
@@ -44,8 +46,7 @@ public extension TrainingLedger {
     }
 }
 
-@ModelActor
-actor TrainingIndexBuilder {
+enum TrainingIndexBuilder {
     /// Everything the background pass needs, resolved on the main actor first.
     struct Plan: Sendable {
         let setClassIDs: [UUID]
@@ -87,8 +88,6 @@ actor TrainingIndexBuilder {
 
     /// One exercise entry's session, as plain values.
     struct EntryFact: Sendable {
-        let entry: PersistentIdentifier
-        let workout: PersistentIdentifier
         let entryID: UUID
         let workoutID: UUID
         let classID: UUID
@@ -96,54 +95,63 @@ actor TrainingIndexBuilder {
         let sets: [TrainingLedger.LoggedSet]
     }
 
-    func facts(_ plan: Plan) -> [EntryFact] {
-        var setsByEntry: [UUID: [ObjectRecord]] = [:]
-        for classID in plan.setClassIDs {
-            var descriptor = FetchDescriptor<ObjectRecord>(predicate: #Predicate {
-                $0.deletedAt == nil && $0.classDef?.id == classID
-            })
-            descriptor.relationshipKeyPathsForPrefetching = [\.parent]
-            for set in (try? modelContext.fetch(descriptor)) ?? [] {
-                guard let entryID = set.parent?.id else { continue }
-                setsByEntry[entryID, default: []].append(set)
+    /// Reads sets, entries, exercise links and workouts as rows and turns them into session facts.
+    static func facts(_ plan: Plan, db: Database) throws -> [EntryFact] {
+        func uuid(_ row: Row, _ column: String) -> UUID? {
+            (row[column] as String?).flatMap(UUID.init(uuidString:))
+        }
+        // Every object's parent and values, and which objects are workouts.
+        var parentOf: [UUID: UUID] = [:]
+        var valuesOf: [UUID: Data] = [:]
+        var setsByEntry: [UUID: [(id: UUID, order: (Int, Double), values: Data?)]] = [:]
+        var workouts: Set<UUID> = []
+        let setClasses = Set(plan.setClassIDs.map(\.uuidString))
+        let workoutClasses = Set(plan.workoutClassIDs.map(\.uuidString))
+        let rows = try Row.fetchCursor(db, sql: """
+        SELECT id, classID, parentID, sortIndex, createdAt, "values" FROM object WHERE deletedAt IS NULL
+        """)
+        while let row = try rows.next() {
+            guard let id = uuid(row, "id") else { continue }
+            let classID: String? = row["classID"]
+            if let parent = uuid(row, "parentID") {
+                parentOf[id] = parent
+            }
+            if let classID, setClasses.contains(classID), let entry = uuid(row, "parentID") {
+                setsByEntry[entry, default: []].append((id, (row["sortIndex"], row["createdAt"]), row["values"]))
+            } else if let classID, workoutClasses.contains(classID) {
+                workouts.insert(id)
+                valuesOf[id] = row["values"]
             }
         }
-        let exerciseField = plan.exerciseField
-        var links = FetchDescriptor<ObjectLink>(predicate: #Predicate { $0.fieldID == exerciseField })
-        links.relationshipKeyPathsForPrefetching = [\.from, \.toClass]
+        let decoder = JSONDecoder()
         var facts: [EntryFact] = []
-        for link in (try? modelContext.fetch(links)) ?? [] {
-            guard let entry = link.from, !entry.isDeleted, let exercise = link.toClass,
-                  let sets = setsByEntry[entry.id], let workout = workout(of: entry, plan), !workout.isDeleted
-            else { continue }
-            let values = workout.values
-            guard let date = (values[plan.endedAt] ?? values[plan.startedAt])?.dateValue else { continue }
+        let links = try Row.fetchCursor(db, sql: "SELECT fromID, toClassID FROM link WHERE fieldID = ?",
+                                        arguments: [plan.exerciseField.uuidString])
+        while let link = try links.next() {
+            guard let entry = uuid(link, "fromID"), let exercise = uuid(link, "toClassID"),
+                  let sets = setsByEntry[entry] else { continue }
+            var ancestor = parentOf[entry]
+            var hops = 0
+            while let node = ancestor, !workouts.contains(node), hops < 16 {
+                ancestor = parentOf[node]
+                hops += 1
+            }
+            guard let workout = ancestor, workouts.contains(workout),
+                  let workoutValues = valuesOf[workout].flatMap({ try? decoder.decode(FieldValues.self, from: $0) }),
+                  let date = (workoutValues[plan.endedAt] ?? workoutValues[plan.startedAt])?.dateValue else { continue }
             let logged = sets
-                .filter { !$0.isDeleted }
-                .sorted { ($0.sortIndex, $0.createdAt) < ($1.sortIndex, $1.createdAt) }
-                .compactMap { loggedSet($0, plan) }
+                .sorted { $0.order < $1.order }
+                .compactMap { set in
+                    loggedSet(set.id, set.values.flatMap { try? decoder.decode(FieldValues.self, from: $0) }, plan)
+                }
             guard !logged.isEmpty else { continue }
-            facts.append(EntryFact(entry: entry.persistentModelID, workout: workout.persistentModelID,
-                                   entryID: entry.id, workoutID: workout.id, classID: exercise.id, date: date,
-                                   sets: logged))
+            facts.append(EntryFact(entryID: entry, workoutID: workout, classID: exercise, date: date, sets: logged))
         }
         return facts
     }
 
-    private func workout(of entry: ObjectRecord, _ plan: Plan) -> ObjectRecord? {
-        var current = entry.parent
-        var seen = Set<UUID>()
-        while let node = current, seen.insert(node.id).inserted {
-            if let classID = node.classDef?.id, plan.workoutClassIDs.contains(classID) {
-                return node
-            }
-            current = node.parent
-        }
-        return nil
-    }
-
-    private func loggedSet(_ set: ObjectRecord, _ plan: Plan) -> TrainingLedger.LoggedSet? {
-        let values = set.values
+    private static func loggedSet(_ id: UUID, _ values: FieldValues?, _ plan: Plan) -> TrainingLedger.LoggedSet? {
+        guard let values else { return nil }
         if values[plan.warmup] == .bool(true) {
             return nil
         }
@@ -154,7 +162,7 @@ actor TrainingIndexBuilder {
         let lookup = ["weight": weight, "reps": reps, "rpe": rpe]
         guard let e1RM = plan.e1rm.evaluate({ lookup[$0] ?? nil }) else { return nil }
         return TrainingLedger.LoggedSet(
-            id: set.id, weight: weight, reps: reps, rpe: rpe, kind: kind, e1RM: e1RM,
+            id: id, weight: weight, reps: reps, rpe: rpe, kind: kind, e1RM: e1RM,
             isE1RMEligible: TrainingLedger.effectiveReps(reps, rpe: rpe) <= TrainingLedger.e1RMRepLimit
         )
     }

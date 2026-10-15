@@ -1,4 +1,3 @@
-import SwiftData
 import SwiftUI
 import TesseraCore
 
@@ -230,7 +229,7 @@ struct CommandInterpreter {
         let words = text.lowercased().split(separator: " ").map(String.init)
             .map { $0.trimmingCharacters(in: .punctuationCharacters) }
             .filter { $0.count > 2 && $0 != "log" }
-        let classes = (try? model.context.fetch(FetchDescriptor<ClassDef>())) ?? []
+        let classes = model.store.allClasses()
         guard let exerciseRoot = model.classDef(.exercise) else { return nil }
         return classes
             .filter { ClassResolver.isSubclass($0, of: exerciseRoot) && $0.id != exerciseRoot.id }

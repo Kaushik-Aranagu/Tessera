@@ -1,8 +1,7 @@
 import Foundation
-import SwiftData
 
-// Everything the app needs from storage, through the engine. The app should not import SwiftData or touch a
-// ModelContext: storage is moving to GRDB (docs/engine/grdb-migration.md), and only these calls will carry over.
+/// Everything the app needs from storage, through the engine. The app should not import SwiftData or touch a
+/// TesseraContext directly (docs/engine/grdb-migration.md).
 public extension ObjectStore {
     /// Opens the app's store (or an in-memory one for tests and previews). The store keeps its container alive.
     static func open(inMemory: Bool = false) -> ObjectStore {
@@ -27,7 +26,7 @@ public extension ObjectStore {
 
     /// Every class, oldest first.
     func allClasses() -> [ClassDef] {
-        (try? context.fetch(FetchDescriptor<ClassDef>(sortBy: [SortDescriptor(\.createdAt)]))) ?? []
+        context.all(ClassDef.self).sorted { $0.createdAt < $1.createdAt }
     }
 
     /// The class with this name, preferring built-in and library classes.
@@ -50,9 +49,9 @@ public extension ObjectStore {
 
     /// Wipes objects, links, the op log and user classes, keeping built-in and library classes (demo reset).
     func resetUserData() {
-        try? context.delete(model: ObjectLink.self)
-        try? context.delete(model: ObjectRecord.self)
-        try? context.delete(model: OpRecord.self)
+        context.deleteAll(ObjectLink.self)
+        context.deleteAll(ObjectRecord.self)
+        context.deleteAll(OpRecord.self)
         for classDef in allClasses() where classDef.systemKey == nil {
             context.delete(classDef)
         }

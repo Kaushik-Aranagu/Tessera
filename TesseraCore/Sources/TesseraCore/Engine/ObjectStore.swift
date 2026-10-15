@@ -1,5 +1,4 @@
 import Foundation
-import SwiftData
 
 /// Reads and writes objects through their class's resolved fields: defaults, class objects, computed values,
 /// typed links and backlinks. Views talk to this, not to raw `valuesData`.
@@ -18,10 +17,10 @@ public struct ObjectStore {
         case notAnOption(field: String, value: String)
     }
 
-    public let context: ModelContext
+    public let context: TesseraContext
     let cache = Cache()
 
-    public init(context: ModelContext) {
+    public init(context: TesseraContext) {
         self.context = context
     }
 
@@ -82,11 +81,11 @@ public struct ObjectStore {
     }
 
     public func object(id: UUID) -> ObjectRecord? {
-        try? context.fetch(FetchDescriptor<ObjectRecord>(predicate: #Predicate { $0.id == id })).first
+        context.objects[id]
     }
 
     public func classDef(id: UUID) -> ClassDef? {
-        try? context.fetch(FetchDescriptor<ClassDef>(predicate: #Predicate { $0.id == id })).first
+        context.classes[id]
     }
 
     // MARK: Class objects
@@ -104,12 +103,7 @@ public struct ObjectStore {
     }
 
     private func fetchClassObject(of classDef: ClassDef) -> ObjectRecord? {
-        let classID = classDef.id
-        var flagged = FetchDescriptor<ObjectRecord>(predicate: #Predicate {
-            $0.isClassObject && $0.deletedAt == nil && $0.classDef?.id == classID
-        }, sortBy: [SortDescriptor(\.createdAt)])
-        flagged.fetchLimit = 1
-        return try? context.fetch(flagged).first
+        (classDef.objects ?? []).filter { $0.isClassObject && !$0.isDeleted }.min { $0.createdAt < $1.createdAt }
     }
 
     /// Returns the class object, creating it if needed.

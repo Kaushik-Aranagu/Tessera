@@ -1,5 +1,4 @@
 import Foundation
-import SwiftData
 
 /// Installs `ExerciseLibrary` as exercise classes. Waiting on Kaushik's class-tree decision; both shapes are here
 /// so switching is one argument.
