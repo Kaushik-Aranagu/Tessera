@@ -74,6 +74,51 @@ public final class TessCaptureEngine: TessCapturing {
                 }
             }
             return (record, links > 0 ? "Noted, linked." : "Noted.")
+        default:
+            return try performKitchen(parse, pending: pending, context: context)
+        }
+    }
+
+    private func performKitchen(_ parse: TessGrammar.Parse, pending: Bool,
+                                context: TessContext) throws -> (OpRecord, String)
+    {
+        switch parse {
+        case let .groceries(lines):
+            let record = try engine.perform(AddGroceries(lines: lines), by: .tess, pending: pending).record
+            return (record, lines.count == 1 ? "\(lines[0].prefix(1).uppercased() + lines[0].dropFirst()), on the list."
+                : "\(lines.count) things on the list.")
+        case let .cook(recipe, date?):
+            let record = try engine.perform(
+                CreateTask(title: "Cook \(recipe.title.lowercased())", startsAt: date, about: [recipe.id]),
+                by: .tess, pending: pending
+            ).record
+            return (record, "\(recipe.title), \(Self.when(date, context: context)).")
+        case let .cook(recipe, nil):
+            let record = try engine.perform(StartCooking(recipe: recipe.id), by: .tess, pending: pending).record
+            return (record, "Cooking \(recipe.title.lowercased()).")
+        case let .timer(label, minutes):
+            let cook = ProcessTable(engine: engine).running()?.subject
+            let cookID = cook.flatMap { $0.classDef?.id == engine.classes[.cook]?.id ? $0.id : nil }
+            let record = try engine.perform(StartKitchenTimer(label: label, minutes: minutes, cook: cookID),
+                                            by: .tess, pending: pending).record
+            return (record, "\(label), \(TessVoice.number(minutes)) min.")
+        case let .list(name):
+            let record = try engine.perform(CreateList(name: name), by: .tess, pending: pending).record
+            return (record, "New list: \(name).")
+        case .shop:
+            let record = try engine.perform(StartShop(), by: .tess, pending: pending).record
+            let line = Groceries(store: engine.store, classes: engine.classes).shoppingLine()
+            return (record, "\(line).")
+        case let .recipe(text):
+            let record = try engine.perform(CreateRecipe(text: text), by: .tess, pending: pending).record
+            let parsed = RecipeParser.parse(text)
+            let timers = parsed?.steps.flatMap(\.timers).count ?? 0
+            let parts = [
+                "\(parsed?.ingredients.count ?? 0) ingredients", "\(parsed?.steps.count ?? 0) steps",
+            ] + (timers > 0 ? ["\(timers) \(timers == 1 ? "timer" : "timers")"] : [])
+            return (record, parts.joined(separator: ", ") + ".")
+        default:
+            throw ActionError.invalidArguments(action: "capture", reason: "not a kitchen phrase")
         }
     }
 

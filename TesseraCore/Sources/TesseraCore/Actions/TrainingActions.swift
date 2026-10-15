@@ -343,18 +343,21 @@ public struct CreateTask: EngineAction {
         .init("startsAt", .date, "When to do it", required: false),
         .init("minutes", .integer, "How long it takes", required: false),
         .init("due", .date, "Deadline", required: false),
+        // `about` (ids, e.g. a recipe) stays off the descriptor so the model's createTask tool keeps a flat schema.
     ])
 
     public var title: String
     public var startsAt: Date?
     public var minutes: Double?
     public var due: Date?
+    public var about: [UUID]?
 
-    public init(title: String, startsAt: Date? = nil, minutes: Double? = nil, due: Date? = nil) {
+    public init(title: String, startsAt: Date? = nil, minutes: Double? = nil, due: Date? = nil, about: [UUID]? = nil) {
         self.title = title
         self.startsAt = startsAt
         self.minutes = minutes
         self.due = due
+        self.about = about
     }
 
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
@@ -369,6 +372,9 @@ public struct CreateTask: EngineAction {
         try transaction.set("startsAt", to: startsAt.map(FieldValue.date), on: task)
         try transaction.set("length", to: minutes.map { .duration($0 * 60) }, on: task)
         try transaction.set("due", to: due.map(FieldValue.date), on: task)
+        if let about, !about.isEmpty {
+            try transaction.setLinks("about", on: task, to: about.map { try transaction.object($0) })
+        }
         return task
     }
 
