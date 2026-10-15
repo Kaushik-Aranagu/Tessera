@@ -115,12 +115,12 @@ These are 80 transcript-to-text rows for the normaliser that sits between `Speec
 | # | Ctx | Raw transcript | Normalised | Expected grammar intent | Note |
 |---|---|---|---|---|---|
 | 61 | I | Spent twelve fifty at Tesco. | Spent 12.50 at Tesco | G\*: spend 12.50, note "Tesco" (M5 Money draft). Today M | After a money cue ("spent", "paid", "cost", £), "twelve fifty" is 12.50, never 1250 or 12 x 50 |
-| 62 | I | Spent 1250 at Tesco. | Spent 1250 at Tesco | **PASS**: M LogSpend, ask "12.50 or 1250?" | The transcriber already wrote "twelve fifty" as 1250. The normaliser cannot know (open question 6) |
-| 63 | I | Lunch was a tenner. | Lunch was £10 | M: LogSpend 10 GBP, note "lunch" | "a tenner" £10, "a fiver" £5. Messy phrases go to the model (M5 draft) |
+| 62 | I | Spent 1250 at Tesco. | Spent 1250 at Tesco | **PASS**: M LogSpend (after Money 1; until then no tool), ask "12.50 or 1250?" | The transcriber already wrote "twelve fifty" as 1250. The normaliser cannot know (open question 6) |
+| 63 | I | Lunch was a tenner. | Lunch was £10 | M: LogSpend 10 GBP, note "lunch" (after Money 1; until then no tool) | "a tenner" £10, "a fiver" £5. Messy phrases go to the model (M5 draft) |
 | 64 | I | 20 quid for petrol. | 20 quid for petrol | G\*: spend 20 GBP, note "petrol" | "for" after a money amount is never x. "quid" stays, since the draft `MoneyAmount.parse` reads it |
 | 65 | I | Spent fifteen hundred on petrol. | Spent 1500 on petrol | G\*: spend 1500, home currency | "fifteen hundred" is 1500 |
 | 66 | I | Spent 1,00,000 on the bike. | Spent 100000 on the bike | G\*: spend 100000 | Indian digit grouping (one lakh) loses its commas. Said as "one lakh", the result is the same |
-| 67 | I | Paid one lakh twenty thousand rupees deposit. | Paid 120000 rs deposit | M: LogSpend 120000 INR, note "deposit" | "lakh" and "crore" are number words. "rupees" to rs. "paid" is not a draft grammar prefix |
+| 67 | I | Paid one lakh twenty thousand rupees deposit. | Paid 120000 rs deposit | M: LogSpend 120000 INR, note "deposit" (after Money 1; until then no tool) | "lakh" and "crore" are number words. "rupees" to rs. "paid" is not a draft grammar prefix |
 | 68 | I | Spent four quid at seven eleven. | Spent 4 quid at seven eleven | G\*: spend 4 GBP, note "seven eleven" | **Trap.** The shop name is a protected phrase. "7 11" would read as weight and reps |
 
 ### Notes
@@ -190,5 +190,5 @@ What it never does: guess a domain (no added `buy`, commas or `remind`, row 39),
 10. **en-IN on device.** `SpeechTranscriber` support for en-IN is unverified (`speech-capture.md`). If he uses en-GB with an Indian accent, do "lakh", "into" and "two-three" survive transcription, and does the en-IN locale write `1,00,000`?
 11. **Protected phrase list.** A fixed list ("five a day", "seven eleven") will always miss something. Should a capitalised word from the transcriber also protect the numbers next to it, and who owns the list?
 12. **"Test" for "Tess".** Rows 34 and 35 rely on the transcriber putting a comma after the wake word. Measure on device in V3 before relying on it.
-13. **Model tools.** Many M rows expect `addGroceries`, `LogSpend` or `rescheduleTask`. `TessToolCatalog.allowed` on master is only `logExercise`, `createTask`, `createRoutine`, `createPlan`, `createNote`, `createList`, `startShop`, `logBodyWeight`. These rows reach the right action only once those tools are allowed.
+13. **Model tools.** Many M rows expect `addGroceries`, `LogSpend` or `rescheduleTask`. `TessToolCatalog.allowed` on master is only `logExercise`, `createTask`, `createRoutine`, `createPlan`, `createNote`, `createList`, `startShop`, `logBodyWeight`. `addGroceries` and `rescheduleTask` are among T2's 10 tools; `LogSpend` joins the registry with Money slice 1, so LogSpend rows expect no tool until then.
 14. **Default unit.** Rows with no unit default to kg. If he lifts in pounds on some days, should the normaliser or the grammar use the entry's last unit?

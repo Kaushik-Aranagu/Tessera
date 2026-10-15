@@ -541,47 +541,52 @@ extension WorkoutContent {
                 switch phase {
                 case .set:
                     // Hold to log: 0.6 s, 20 pt of drift (docs/research/ship-now.md).
-                    PaintKey(finish: .cream, paint: Paint.live, duration: 0.6, height: 62, drift: 20) {
+                    PaintKey(paint: Paint.live, duration: 0.6, height: 64, drift: 20) {
                         withTesseraAnimation(reduceMotion: reduceMotion) { session.logSet() }
-                    } label: { holding in
-                        Text(holding ? "Keep holding" : "Hold to log").textRole(.bodyStrong)
+                    } label: { _ in
+                        Text("Log set")
+                    } meta: {
+                        Text("Hold · \(Format.kilograms(session.weight)) × \(Int(session.reps))")
                     }
-                    .frame(width: 240)
                     .accessibilityLabel(logLabel)
                     .accessibilityAction(named: "Log set") {
                         withTesseraAnimation(reduceMotion: reduceMotion) { session.logSet() }
                     }
-                    Text("\(Format.kilograms(session.weight)) × \(Int(session.reps))")
-                        .textRole(.label)
-                        .foregroundStyle(Paint.cream)
                 case .rest:
-                    PaintKey(finish: .cream, paint: Paint.now, isTap: true, height: 62) {
-                        skipRest()
-                    } label: { _ in
-                        Text("Skip rest").textRole(.bodyStrong)
+                    VStack(alignment: .leading, spacing: 4) {
+                        PaintKey(paint: Paint.now, isTap: true, height: 64) {
+                            skipRest()
+                        } label: { _ in
+                            Text("Skip rest")
+                        }
+                        // The same two words as on the Lock Screen, under the rest horizon.
+                        HStack(spacing: 30) {
+                            Button("+15") {
+                                withTesseraAnimation(reduceMotion: reduceMotion) { session.extendRest(by: 15) }
+                            }
+                            .accessibilityLabel("Add 15 seconds of rest")
+                            Button("Skip") { skipRest() }
+                        }
+                        .buttonStyle(.labelWord(Paint.cream.opacity(0.75)))
                     }
-                    .frame(width: 240)
                 case .exerciseDone:
-                    PaintKey(finish: .cream, paint: Paint.cobalt, isTap: true, height: 62) {
+                    PaintKey(paint: Paint.cobalt, isTap: true, height: 64) {
                         if let next = session.nextUnfinishedIndex {
                             withTesseraAnimation(.snappy(duration: 0.3), reduceMotion: reduceMotion) { laneIndex = next
                             }
                         }
                     } label: { _ in
-                        Text("Next exercise").textRole(.bodyStrong)
+                        Text("Next exercise")
                     }
-                    .frame(width: 240)
                 case .workoutDone:
-                    PaintKey(finish: .cream, paint: Paint.live, duration: 0.8, height: 62) {
+                    PaintKey(paint: Paint.live, duration: 0.8, height: 64) {
                         finish()
-                    } label: { holding in
-                        Text(holding ? "Keep holding" : "Hold to finish").textRole(.bodyStrong)
+                    } label: { _ in
+                        Text("Finish")
+                    } meta: {
+                        Text("Hold · \(session.summary.sets) sets")
                     }
-                    .frame(width: 240)
                     .accessibilityAction(named: "Finish workout") { finish() }
-                    Text("\(session.summary.sets) sets")
-                        .textRole(.label)
-                        .foregroundStyle(Paint.cream)
                 }
             }
             Spacer(minLength: 0)

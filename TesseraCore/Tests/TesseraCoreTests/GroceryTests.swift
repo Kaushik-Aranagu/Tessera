@@ -43,13 +43,15 @@ struct GroceryTests {
         #expect(Set(groceries.recipes(for: tomato.object).map(\.title)) == ["Tomato sauce", "Salad"])
         #expect(groceries.aisles().map(\.aisle) == ["Produce"])
 
-        // Scaled: the sauce for 4 adds another 800 g.
+        // Added again at 4: the sauce's share becomes 800 g (replaced, not doubled), plus the salad's 200 g.
         try engine.perform(AddRecipeToGroceries(recipe: sauce.id, serves: 4), by: .user)
-        #expect(lists.item(tomato.object).quantity == "1.4 kg")
+        #expect(lists.item(tomato.object).quantity == "1 kg")
+        try engine.perform(AddRecipeToGroceries(recipe: sauce.id, serves: 4), by: .user)
+        #expect(lists.item(tomato.object).quantity == "1 kg")
 
         // Taking the salad back out leaves the sauce's share; cucumber was only for the salad.
         try engine.perform(RemoveRecipeFromGroceries(recipe: salad.id), by: .user)
-        #expect(lists.item(tomato.object).quantity == "1.2 kg")
+        #expect(lists.item(tomato.object).quantity == "800 g")
         #expect(lists.items(of: list).map(\.text) == ["tomatoes", "onion"])
         #expect(added.output.count == 2)
         #expect(groceries.share(of: sauce).count == 2)
@@ -81,5 +83,28 @@ struct GroceryTests {
         #expect(lists.items(of: list).last?.section == "Tins and jars")
         #expect(AisleGuide.aisle(for: "red onions") == .produce)
         #expect(AisleGuide.aisle(for: "smoked paprika") == .spices)
+    }
+
+    @Test func anIngredientListedTwiceSumsAndStillReplacesOnReAdd() throws {
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let lists = ListContents(store: store, classes: classes)
+        let pie = try engine.perform(CreateRecipe(text: """
+        Apple pie
+        Serves 4
+        Ingredients
+        200 g butter
+        300 g flour
+        50 g butter
+        Method
+        Make the pastry, then the filling.
+        """), by: .user).output
+        try engine.perform(AddRecipeToGroceries(recipe: pie.id), by: .user)
+        let list = try #require(Groceries(store: store, classes: classes).list)
+        let butter = try #require(lists.items(of: list).first { $0.text == "butter" })
+        #expect(butter.quantity == "250 g")
+        try engine.perform(AddRecipeToGroceries(recipe: pie.id, serves: 8), by: .user)
+        let butters = lists.open(in: list).filter { $0.text == "butter" }
+        #expect(butters.map(\.quantity) == ["500 g"])
     }
 }

@@ -85,7 +85,8 @@ struct PasteRecipe: View {
             }
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.top, Theme.Spacing.l)
-            .padding(.bottom, Theme.Spacing.section)
+            // Room for the pinned Save bar, so the last step never sits under it.
+            .padding(.bottom, reading ? 110 : Theme.Spacing.section)
         }
         .scrollIndicators(.hidden)
         .scrollDismissesKeyboard(.interactively)
@@ -144,6 +145,8 @@ struct PasteRecipe: View {
 
     /// The brush pass: lines paint in one after another over about 600 ms.
     private func read() {
+        // A paste fires both the big-change and the focus-loss reads; the brush passes once.
+        guard !reading else { return }
         editing = false
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { reading = true }
         let count = CreateRecipe.lines(of: text, corrections: corrections).count
@@ -172,13 +175,12 @@ struct PasteRecipe: View {
     }
 
     /// Tap a line to read it differently: ingredient → step → ignore → ingredient.
+    /// Ingredient → step → ignore → ingredient, from what the line was last marked (or read) as, so a line that
+    /// won't read as an ingredient still moves on to step. Titles, headings and details aren't cycled.
     private func cycle(_ index: Int, current: RecipeParser.LineKind) {
-        let next = switch current {
-        case .ingredient: "step"
-        case .step: "ignore"
-        default: "ingredient"
-        }
-        withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { corrections[index] = next }
+        guard let next = PasteCopy.nextReading(after: corrections[index], current: current) else { return }
+        // Instant: the line repaints in place (a crossfade would draw both readings over each other).
+        corrections[index] = next
     }
 
     private func save() {
@@ -232,7 +234,6 @@ private struct SaveBar: View {
             HStack(spacing: Theme.Spacing.l) {
                 PaintKey(paint: Theme.Colors.health, isTap: true, action: onSave) { _ in
                     Text("Save recipe")
-                        .textRole(.labelStrong)
                 }
                 Button("Edit", action: onEdit)
                     .textRole(.label)
@@ -259,7 +260,7 @@ private struct PaintedLine: View {
                 ZStack(alignment: .topLeading) {
                     if let step {
                         Text("\(step)")
-                            .textRole(.data)
+                            .font(Theme.voice(size: 18))
                             .foregroundStyle(Theme.Colors.inkSecondary)
                             .opacity(painted ? 1 : 0)
                     }
@@ -275,11 +276,15 @@ private struct PaintedLine: View {
                 }
                 content
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    // A re-read swaps the line in place; the old reading never fades over the new one.
+                    .id(PasteCopy.kindName(kind))
+                    .transition(.identity)
             }
             .contentShape(Rectangle())
             .frame(minHeight: 32)
         }
         .buttonStyle(HandleButtonStyle())
+        // A re-read repaints in place; never crossfade the two readings over each other.
         .accessibilityElement(children: .combine)
         .accessibilityValue(PasteCopy.kindName(kind))
         .accessibilityHint("Tap to read it as something else")
@@ -349,6 +354,18 @@ private struct IngredientPaint: View {
 }
 
 enum PasteCopy {
+    /// Ingredient → step → ignore → ingredient, from what the line was last marked as (else how it read), so a line
+    /// that won't read as an ingredient still moves on to step. Titles, headings and details aren't cycled.
+    static func nextReading(after marked: String?, current: RecipeParser.LineKind) -> String? {
+        let read = switch current {
+        case .ingredient: "ingredient"
+        case .step: "step"
+        case .ignored: "ignore"
+        case .title, .heading, .meta: ""
+        }
+        return ["ingredient": "step", "step": "ignore", "ignore": "ingredient"][marked ?? read]
+    }
+
     /// "Eight ingredients, six steps, two timers."
     static func tess(_ lines: [(line: String, kind: RecipeParser.LineKind)]) -> String {
         var ingredients = 0, steps = 0, timers = 0

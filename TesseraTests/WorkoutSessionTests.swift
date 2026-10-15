@@ -340,3 +340,58 @@ struct WorkoutSessionTests {
         #expect(!session.isEditing)
     }
 }
+
+/// QA D4: the rest countdown survives the app being killed and relaunched mid-rest.
+@MainActor
+struct WorkoutRestRelaunchTests {
+    let container = TesseraSchema.makeContainer(inMemory: true)
+    /// Held for the whole test: sessions keep an unowned reference to their model.
+    let model: AppModel
+
+    init() {
+        model = AppModel(context: container.mainContext)
+    }
+
+    private func startedSession() throws -> (AppModel, WorkoutSession) {
+        DemoData.prepare(model)
+        let workout = try #require(model.tonightWorkout())
+        model.startWorkout(workout)
+        return try (model, #require(model.session))
+    }
+
+    @Test func aRelaunchMidRestKeepsTheCountdown() throws {
+        let (model, session) = try startedSession()
+        session.logSet()
+        session.extendRest(by: 15)
+        let endsAt = try #require(session.restEndsAt)
+        // The latest op is still the set (the rest is bookkeeping, not an action).
+        #expect(model.engine.history(limit: 1).first?.action == "logNextSet")
+        // Killed and relaunched: the session is rebuilt from the same workout.
+        let relaunched = WorkoutSession(workout: session.workout, model: model)
+        #expect(relaunched.restEndsAt == endsAt)
+        #expect(relaunched.restTotal == session.restTotal)
+        #expect(relaunched.phase() == .rest(endsAt: endsAt))
+        // Skipped rest stays skipped across a relaunch.
+        session.skipRest()
+        #expect(WorkoutSession(workout: session.workout, model: model).restEndsAt == nil)
+    }
+
+    @Test func aRestThatEndedWhileTheAppWasGoneIsOver() throws {
+        let (model, session) = try startedSession()
+        session.logSet()
+        let endsAt = try #require(session.restEndsAt)
+        let point = ProcessTable(engine: model.engine).process(for: session.workout)?.resumePoint
+        #expect(WorkoutSession.savedRest(in: point, at: endsAt.addingTimeInterval(-1))?.endsAt == endsAt)
+        // Relaunched after the rest ran out: no rest, and it doesn't restart.
+        #expect(WorkoutSession.savedRest(in: point, at: endsAt.addingTimeInterval(1)) == nil)
+        var stale = try #require(point)
+        stale.extras[WorkoutSession.RestKey.endsAt] = String(Date.now.addingTimeInterval(-30)
+            .timeIntervalSinceReferenceDate)
+        let process = try #require(ProcessTable(engine: model.engine).process(for: session.workout))
+        let text = try #require(String(bytes: JSONEncoder().encode(stale), encoding: .utf8))
+        try model.store.set("resumePoint", to: .text(text), on: process.object)
+        let relaunched = WorkoutSession(workout: session.workout, model: model)
+        #expect(relaunched.restEndsAt == nil)
+        #expect(relaunched.phase() == .set)
+    }
+}

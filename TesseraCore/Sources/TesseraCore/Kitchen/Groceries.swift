@@ -199,6 +199,9 @@ public struct AddRecipeToGroceries: EngineAction {
         let recipe = try transaction.object(recipe, is: .recipe)
         let book = RecipeBook(store: transaction.store, classes: transaction.classes)
         let lines = serves.map { book.scaledLines(of: recipe, serves: $0) } ?? book.lines(of: recipe)
+        // Added again (a new size): take its old share out first, once, so it's replaced, never doubled, and an
+        // ingredient listed twice in it ("200 g butter" and "50 g butter") still sums.
+        try RemoveRecipeFromGroceries(recipe: recipe.id).apply(&transaction)
         var items: [ObjectRecord] = []
         for line in lines {
             guard let ingredient = line.ingredient else { continue }
