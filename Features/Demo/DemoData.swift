@@ -53,7 +53,7 @@ enum DemoData {
         ])
 
         seedHistory(model, routines: routines, push: (bench, overhead), pull: (row, pulldown), legs: (squat, deadlift))
-        try? model.context.save()
+        model.store.save()
     }
 
     /// Six weeks of a rolling Push / Pull / Legs: September lighter, October progressing, legs yesterday.
@@ -205,6 +205,6 @@ enum DemoData {
             try? store.set("targetReps", to: .number(item.2), on: entry)
             try? store.set("targetWeight", to: .mass(item.3), on: entry)
         }
-        try? model.context.save()
+        model.store.save()
     }
 }

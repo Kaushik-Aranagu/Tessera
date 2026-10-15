@@ -22,7 +22,8 @@ struct ExerciseSwaps {
         }
     }
 
-    struct Option: Identifiable, Equatable {
+    @MainActor
+    struct Option: @MainActor Identifiable, @MainActor Equatable {
         var id: UUID {
             exercise.id
         }
