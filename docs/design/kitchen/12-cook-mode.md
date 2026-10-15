@@ -2,12 +2,14 @@
 
 Just enough to build. Product steer: `docs/product/ship-list-kitchen.md` §12. Engine: slice 5 (cooking as a process, timers, the Cook log). Folder: `Features/Cooking/`.
 
+Recording: `../recordings/cook-mode.mp4` (source `../studies/cook-mode.html`; timers run a minute per second).
+
 A full-screen cover, like the workout: **dark ground** (the workout's `WorkoutPalette` ground with the same washes), cream ink. It's a running process: the lit `ProcessSeam` sits on the top edge, Now on Home reads "Cooking carbonara, step 3 of 6", and leaving suspends it into the ledger. **The screen stays awake. Every target is at least 64pt** (wet hands); holds are 0.6s.
 
 ## Layout
 | y | Element |
 |---|---|
-| 0 | **Timer horizons** (see Timers): one hairline per running timer, stacked down from the top edge, 10pt apart |
+| 0 | **Timer horizons** (see Timers): one hairline per running timer, stacked down from the top edge, 30pt apart |
 | 56 | "Carbonara, for 2" (21/400, secondary) on the left; "3 / 6" in labels on the right |
 | 100 | **The previous step,** dim: one line at 21/400 at 35%, truncated. Tap it to step back |
 | 150 | **This step** at the Title tier: **34/500**, line height 1.15, up to 6 lines. Ingredient mentions are cream at 100%; the rest of the sentence is at 85% |
@@ -23,7 +25,7 @@ A full-screen cover, like the workout: **dark ground** (the workout's `WorkoutPa
 
 ## Timers
 - **The timer key:** when the step has a duration ("simmer 20 min"), a cadmium `PaintKey` reads "**20 min**, hold to start" (64pt tall, 240 wide). Hold 0.6s; the cadmium paint spreads through it. A range ("20–25 min") starts the low end, and the key's label shows the range.
-- **A running timer is a horizon line** across the top of the screen (the rest Live Activity's language): a 2.5pt cream stroke with a soft wet tip, over a 1.5pt guide at 14%, burning down **left to right** as time passes. Its label sits under its left end in labels at 16 ("PASTA 7:42", tabular). Several timers stack as hairlines 10pt apart, soonest on top.
+- **A running timer is a horizon line** across the top of the screen (the rest Live Activity's language): a 2.5pt cream stroke with a soft wet tip, over a 1.5pt guide at 14%, burning down **left to right** as time passes. Its label sits under its left end in labels at 16 ("PASTA 7:42", tabular). Several timers stack 30pt apart (each line with its label under it), soonest on top, and the page content moves down 30pt per extra timer (house spring, 320ms) so nothing overlaps.
 - **Tap a horizon** for +1 min (the one-tap twin of dragging it right). Drag it left to cancel it, with Undo in the Tess bar.
 - **When a timer ends, the one living moment:** its line **flares cadmium** (the whole stroke brightens and blooms to 6pt, then holds glowing), one alert haptic plays, and if you've moved on, **the step it belongs to slides back into view** from above with its text in cadmium for a moment: "Pasta's done." Tap anywhere to dismiss the flare.
 - **Lock Screen:** timers run through the same rest Live Activity (`docs/design/live-activity.md`): the countdown is the soonest timer, and the right column is the timer's label ("Pasta"). +1 min replaces +15, and Done is "Stop".
