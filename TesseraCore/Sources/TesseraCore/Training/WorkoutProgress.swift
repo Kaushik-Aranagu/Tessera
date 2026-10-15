@@ -50,7 +50,9 @@ public struct WorkoutProgress {
     }
 
     nonisolated static func format(_ value: Double) -> String {
-        value.rounded() == value ? String(Int(value)) : String(format: "%.1f", value)
+        // Up to two decimals, trailing zeros dropped: 80, 82.5, 1.25.
+        value.rounded() == value ? String(Int(value)) : String(format: "%.2f", value)
+            .replacingOccurrences(of: #"\.?0+$"#, with: "", options: .regularExpression)
     }
 }
 
