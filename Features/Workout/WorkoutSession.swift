@@ -82,6 +82,11 @@ final class WorkoutSession {
         order = workout.orderedChildren.map(\.id)
         currentIndex = entries.firstIndex { loggedSets(of: $0).count < targetSets(of: $0) } ?? 0
         loadDefaults()
+        // A relaunch mid-rest: the countdown carries on from the process's resume point (see +Rest).
+        if let rest = Self.savedRest(for: workout, model: model) {
+            restEndsAt = rest.endsAt
+            restTotal = rest.total
+        }
     }
 
     var startedAt: Date {
@@ -155,6 +160,7 @@ final class WorkoutSession {
         skipped[entry.id, default: 0] += 1
         restEndsAt = nil
         loggedCount += 1
+        persistRest()
     }
 
     func targetReps(of entry: ObjectRecord) -> Double {
@@ -355,6 +361,7 @@ extension WorkoutSession {
         rpe = nil
         // The last set of the exercise doesn't need a rest before paging on, but the workout's last does nothing.
         restEndsAt = entries.allSatisfy(isFinished) ? nil : AppClock.now.addingTimeInterval(restTotal)
+        persistRest()
         model.touch()
         // The next set opens prefilled: this session's weight, last time's reps for that set.
         loadDefaults()
@@ -379,6 +386,7 @@ extension WorkoutSession {
                             weight: row.weight, reps: row.reps)
         restTotal = restSeconds
         restEndsAt = all.allSatisfy(isFinished) ? nil : AppClock.now.addingTimeInterval(restTotal)
+        persistRest()
         lastTouchedAt = AppClock.now
         loggedCount += 1
         loadDefaults()
@@ -410,6 +418,7 @@ extension WorkoutSession {
         reps = undoable.reps
         rpe = undoable.rpe
         lastTouchedAt = AppClock.now
+        persistRest()
         model.touch()
     }
 
@@ -424,6 +433,7 @@ extension WorkoutSession {
             restNote = "Skipped."
         }
         lastTouchedAt = AppClock.now
+        persistRest()
     }
 
     func extendRest(by seconds: TimeInterval) {
@@ -432,6 +442,7 @@ extension WorkoutSession {
         restTotal += seconds
         restNote = "+\(Int(seconds)). Drag again for more."
         lastTouchedAt = AppClock.now
+        persistRest()
     }
 
     // MARK: Top-set check
