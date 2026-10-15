@@ -11,11 +11,12 @@ public extension ObjectStore {
         return store
     }
 
-    /// Seeds the built-in classes and installs the exercise library if needed. Call once at launch.
+    /// Seeds the built-in classes, the exercise library and the starter plan if needed. Call once at launch.
     @discardableResult
     func prepareCatalog() throws -> [SystemCatalog.Key: ClassDef] {
         let classes = try SystemCatalog.seed(in: context)
         try ExerciseLibraryInstaller.installIfNeeded(store: self, classes: classes)
+        try StarterContent.installIfNeeded(store: self, classes: classes)
         return classes
     }
 
