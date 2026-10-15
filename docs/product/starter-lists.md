@@ -28,3 +28,23 @@ Leaving the house
 - lights off
 - windows shut
 ```
+
+Packing (third starter, reusable; Kitchen lead 2026-10-15, Research G4). "copy packing for lisbon" makes a trip copy of it.
+
+```text
+Packing
+Clothes:
+- socks
+- t-shirts
+- underwear
+- trousers
+- jumper
+Tech:
+- phone charger
+- adaptor
+- headphones
+Papers:
+- passport
+- tickets
+- cards
+```
