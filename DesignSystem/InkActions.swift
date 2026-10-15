@@ -1,3 +1,4 @@
+// swiftlint:disable identifier_name -- the stroke geometry reads as w, h, i
 import SwiftUI
 
 // Ink actions (docs/design/no-buttons.md): nothing gets a shape around it to be a button, a card or a bar.
