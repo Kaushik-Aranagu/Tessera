@@ -33,6 +33,10 @@ xcodebuild -scheme Tessera -destination 'platform=iOS Simulator,name=iPhone 17' 
 xcodebuild -scheme Tessera -destination 'platform=iOS Simulator,name=iPhone 17' test | xcbeautify
 ```
 
+## Before opening a PR
+There is no CI. Run `scripts/test.sh` (engine package tests, then the app build and tests on the simulator;
+`--package-only`, `--app-only`, `--scale` for the 5-year history test) and only open the PR when it ends "All green".
+
 ## Before committing
 ```bash
 swiftformat .
