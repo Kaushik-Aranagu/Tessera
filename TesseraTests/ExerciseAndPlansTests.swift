@@ -196,4 +196,13 @@ struct ExerciseAndPlansTests {
         #expect(PlanMonth.tessLine(done: 2, lastMonth: 0, leftThisWeek: 3, month: "October", previous: "September")
             == nil)
     }
+
+    @Test func theRoutineLibraryIsGroupedByMovementPattern() throws {
+        let model = AppModel(context: container.mainContext)
+        let groups = ExerciseLibraryList.groups(model)
+        #expect(groups.count >= 6)
+        let push = try #require(groups.first { $0.pattern.name == "Horizontal Push" })
+        #expect(push.exercises.contains { $0.name == "Bench Press" })
+        #expect(groups.allSatisfy { !$0.exercises.isEmpty })
+    }
 }

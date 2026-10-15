@@ -16,6 +16,11 @@ struct ObjectPage: View {
             ExercisePage(exercise: classDef)
         } else if let plan = ExerciseRouting.plan(for: route, model: model) {
             PlansView(plan: plan.object)
+        } else if case let .object(id) = route, let routine = model.object(id),
+                  routine.classDef?.id == model.classDef(.routine)?.id
+        {
+            // A routine's page is its editor (Features/Plans/RoutineEditor).
+            RoutineEditor(routine: routine)
         } else {
             generic
         }
