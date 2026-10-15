@@ -2,7 +2,7 @@
 
 **Done:** Groceries screen, kitchen slice 13 (#58); kitchen engine hotfixes (#70, #80); data-safety D1–D4 (#84); recipe page and paste, slices 10/11 (PR open, merges after the install).
 
-**Now:** Tess model layer T2 (T1 done as #89, held with #86 until after the install), then the #86 follow-up PR once #86 merges. The follow-up has to land before Builder B wires the kitchen screens into Home. It's done when the three bugs in `../qa/review-86.md` are fixed (doubled grocery share, Cook doing nothing after a paste, tap-to-fix stuck) along with the polish items there that touch the same files. T2 is done when it meets its row in `../research/tess-model-layer.md` section 10.
+**Now:** Tess model layer T2 (T1 done as #89, held with #86 until after the install), then the #86 follow-up PR once #86 merges. The follow-up has to land before Builder B wires the kitchen screens into Home. It's done when the three bugs in `../qa/review-86.md` are fixed (doubled grocery share, Cook doing nothing after a paste, tap-to-fix stuck) along with the polish items there that touch the same files. T2 is done when it meets its row in `../research/tess-model-layer.md` section 10. T2 ships 10 tools: Research's 8 plus `completeTask` and `rescheduleTask`, both by name (Product, 19:12).
 
 **Next:**
 1. v1 engine gaps (small, before the gym tomorrow if possible), from `../research/v1-gap-audit.md` and iOS build's ship-2 notes. Done when:
