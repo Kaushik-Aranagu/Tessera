@@ -22,7 +22,7 @@
 - M5 Upkeep screens 5 to 7 in `ship-list-m5-upkeep.md`, then the M5 People screens in `ship-list-m5-people.md`.
 - Entry points from Home into Notes, Review, Kitchen and Lists (Groceries is `GroceriesView()`, #58).
 - Dated list items in Today, and a running list as Now. This wires the UI for Lists slices 5 and 6 once Core lands them.
-- **Lists screens 9 to 12** in `ship-list-lists.md`, in `Features/Lists/`, after the Home slices:
+- **Lists screens 9 to 12** in `ship-list-lists.md`, in `Features/Lists/`, after the Home slices. Design's sheet: `docs/design/kitchen/lists-9-12.md` (c8a83ff) with `lists-shelf.mp4`; it overrides acceptance row 9.5 with G10, so a running list stays first on the shelf:
   - 9, the shelf, after Core's Lists slices 1 and 3.
   - 10, a list page, after Core's Lists slices 1 and 3.
   - 11, an item opened, after Core's Lists slice 2.
