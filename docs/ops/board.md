@@ -12,16 +12,15 @@
 
 ## Core engine (Mac)
 
-**Done:** Groceries screen, kitchen slice 13 (#58).
+**Done:** Groceries screen, kitchen slice 13 (#58); the kitchen engine hotfix (#70).
 
-**Now:** a kitchen engine hotfix. Done when the six fixes from the kitchen lead's acceptance check (`kitchen-acceptance.md`) are merged, including the lift-parsing regression.
+**Now:** Recipe page and Paste a recipe. Done when slices 10 and 11 in `ship-list-kitchen.md` are met.
 
 **Next:**
-1. Recipe page and Paste a recipe. Done when slices 10 and 11 in `ship-list-kitchen.md` are met.
-2. Groceries polish. Done when Design's and the kitchen lead's fixes to #58 are merged.
-3. Meal plan feeds groceries (the idle-time slice below).
-4. Cook mode. Done when slice 12 in `ship-list-kitchen.md` is met: timers on the Lock Screen and a Cook entry on finish. Core builds the live screen too, and Builder A reviews the shared instruments.
-5. Kitchen shelf. Done when slice 14 in `ship-list-kitchen.md` is met.
+1. Groceries polish. Done when Design's and the kitchen lead's fixes to #58 are merged.
+2. Meal plan feeds groceries (the idle-time slice below).
+3. Cook mode. Done when slice 12 in `ship-list-kitchen.md` is met: timers on the Lock Screen and a Cook entry on finish. Core builds the live screen too, and Builder A reviews the shared instruments.
+4. Kitchen shelf. Done when slice 14 in `ship-list-kitchen.md` is met.
 
 **Idle-time slices** (from `../research/next-areas.md` part 2; each takes an afternoon, pull one whenever blocked):
 - Meal plan feeds groceries. Done when "carbonara thursday" puts its ingredients on Groceries the evening before, linked to the task.
@@ -76,16 +75,16 @@
 
 ## Design studio
 
-**Done (2026-10-15):** kitchen build sheets on branch `claude/project-thread-b3tu3f`, `docs/design/kitchen/`: 13 Groceries (f36ff12), 10/11 Recipe page and paste (8989878), 12 Cook mode, 14 Shelf and 15 Lists v0 (d4957ac). Reviews: Notes v0, Groceries #58 (fixes in the Design thread). M3 steers and Home entry points: `docs/design/m3-steers.md` (60932f4). Live-mode polish values for v1 slice 13: `docs/design/live-polish.md` (742ffda). Today on Home motion for M2 slices 8 and 9, with a recording: `docs/design/today-on-home.md` (e961d26).
+**Done (2026-10-15):** kitchen build sheets on branch `claude/project-thread-b3tu3f`, `docs/design/kitchen/`: 13 Groceries (f36ff12), 10/11 Recipe page and paste (8989878), 12 Cook mode, 14 Shelf and 15 Lists v0 (d4957ac). Reviews: Notes v0, Groceries #58 (fixes in the Design thread). M3 steers and Home entry points: `docs/design/m3-steers.md` (60932f4). Live-mode polish values for v1 slice 13: `docs/design/live-polish.md` (742ffda). Today on Home motion for M2 slices 8 and 9, with a recording: `docs/design/today-on-home.md` (e961d26). M4 screen steers: `docs/design/m4-steers.md` (ead06a0).
 
-**Now:** M4 screen steers: Plan my day (rules), Shutdown, Day log, Focus block Live Activity and the energy check-in (`ship-list-m4.md`).
+**Now:** A widget and snippet visual language (pulled forward for M4 slice 10).
 
 **Always on:** review each Core or iOS screen as it merges, with file-and-change fixes posted in the Design thread.
 
 **Next:**
-1. A widget and snippet visual language (pulled forward for M4 slice 10).
-2. Day strip and day-full warning motion (M2 slices 11 and 13) for Builder B.
-3. Lists screens 9-12 steer pass with the Kitchen lead (`ship-list-lists.md` supersedes my sheet 15 where they differ).
+1. Day strip and day-full warning motion (M2 slices 11 and 13) for Builder B.
+2. Lists screens 9-12 steer pass with the Kitchen lead (`ship-list-lists.md` supersedes my sheet 15 where they differ).
+3. A motion study and recording for Plan my day and Shutdown (M4 slices 6 and 7).
 
 **Later:**
 - The plate-stack concept prototype from `whats-running.md`.
@@ -106,9 +105,9 @@
 
 ## Research lab
 
-**Done:** #59 next areas; #65 M4 scouting, Tess routing and eval phrases, kitchen v2; #68 widgets and snippets, retention; PR open for `day-log.md` and `m5-money-reading.md`.
+**Done:** #59 next areas; #65 M4 scouting, Tess routing and eval phrases, kitchen v2; #68 widgets and snippets, retention; #69 Day log, M5 Money and Reading; PR open for `people-and-upkeep.md`.
 
-**Now (running):** People and Home upkeep scouting.
+**Now (running, all five in parallel):** Next 1 to 5 below.
 
 **Next:**
 1. Lists and templates pattern scan, for Lists slices 4 and 7 and M3 slice 10. Done when there's a brief on how Things, Reminders, Notion templates and checklist apps handle reusable lists, list templates, "pick one" and pasting a block into a list, with 3 to 5 changes to `ship-list-lists.md`.
@@ -124,25 +123,4 @@
 
 *No simulator or Swift toolchain in this thread, so QA here is code review on master, not running the app.*
 
-**Now:** reviewing the earlier merges #40 to #45 (Notes, Review, capture and day load), and each new merge as it lands. #46 to #58 are done: 13 bugs plus T1–T6 from the grammar trace, all routed to Core and iOS build.
-
-**Next:**
-1. Re-review the fixes for the 13 findings as they land.
-2. Keep the docs index at `docs/README.md` current (merged as #60).
-
-**Done:** kitchen flow, gym flow and regression checks merged as #63. The review write-up and docs index update merged as #64. The grammar trace (`docs/qa/grammar-trace.md`: 6 new findings T1–T6, and 16 regression phrases) merged as #67.
-
-**Later:**
-- Performance budget checks (launch time, dial at 120 fps). These need a Mac lead to run them.
-
-## Planning lead (Product lead thread)
-
-**Now:** keep this board ahead of the builders. Done when no team's Next holds fewer than 2 items.
-
-**Next:**
-1. A v1 acceptance pass. Done when each v1 slice has been checked against the latest recordings, with gaps added to the iOS build's Next.
-2. Kitchen v2 scope review with the Kitchen lead, after a week of use.
-3. Draft M5 from Research's Money and Reading queue scouting.
-
-**Later:**
-- M5 candidates, in Research lab's order: Money, Reading queue, People and Home upkeep. Also "build me an app" with Claude, and daem
+**Now:** reviewing the earlier merges #40 to #45 (Notes, Review, capture and day loa
