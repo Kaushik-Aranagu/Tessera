@@ -17,6 +17,7 @@
 10. Day log page (M4 slice 5 screen), after Core's `DayStory`. Done when a Day page per date shows the story lines from Design's sheet, a scrub back through past days works, and a HomeLink word reaches it.
 
 **Later:**
+- Mount BottomChrome over the Home link covers (Groceries, Recipes, Notes, The week), so Tess speaks in one place. Core then removes its Groceries mirror.
 - Lists screens 9 to 12 include Research's G1, a "Lists" HomeLink word under Groceries (`../research/lists-daily.md`), and the Kitchen lead's `lists-screens-acceptance.md`.
 - M5 Upkeep screens 5 to 7 in `ship-list-m5-upkeep.md`, then the M5 People screens in `ship-list-m5-people.md`.
 - Entry points from Home into Notes, Review, Kitchen and Lists (Groceries is `GroceriesView()`, #58).
