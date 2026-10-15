@@ -131,9 +131,13 @@ private struct GroceriesPage: View {
         .overlay {
             // The struck items' dabs, on their arcs into the basket.
             ForEach(sinking) { sink in
-                PaintDab(color: Theme.Colors.health, size: CGSize(width: 12, height: 10), seed: sink.id.hashValue % 7)
-                    .position(x: sink.x, y: sink.y)
-                    .allowsHitTesting(false)
+                PaintDab(
+                    color: Theme.Colors.health,
+                    size: CGSize(width: 12, height: 10),
+                    seed: abs(sink.id.hashValue % 7)
+                )
+                .position(x: sink.x, y: sink.y)
+                .allowsHitTesting(false)
             }
         }
         .overlay(alignment: .top) {
@@ -176,10 +180,14 @@ private struct GroceriesPage: View {
                 let target = basketTarget == .zero ? CGPoint(x: start.x, y: start.y + 600) : basketTarget
                 sinking.append(Sink(id: item.id, x: start.x, y: start.y))
                 withAnimation(.timingCurve(0.55, 0, 0.15, 1, duration: 0.52)) {
-                    if let index = sinking.firstIndex(where: { $0.id == item.id }) { sinking[index].x = target.x }
+                    if let index = sinking.firstIndex(where: { $0.id == item.id }) {
+                        sinking[index].x = target.x
+                    }
                 }
                 withAnimation(.timingCurve(0.3, 0, 0.25, 1, duration: 0.52)) {
-                    if let index = sinking.firstIndex(where: { $0.id == item.id }) { sinking[index].y = target.y }
+                    if let index = sinking.firstIndex(where: { $0.id == item.id }) {
+                        sinking[index].y = target.y
+                    }
                 }
             }
             withAnimation(reduceMotion ? .easeOut(duration: 0.15) : .smooth(duration: 0.28)) {
@@ -388,7 +396,10 @@ private struct GroceryRow: View {
         .background {
             GeometryReader { proxy in
                 let frame = proxy.frame(in: .named("groceries"))
-                Color.clear.preference(key: RowCenters.self, value: [item.id: CGPoint(x: frame.minX + 6, y: frame.midY)])
+                Color.clear.preference(
+                    key: RowCenters.self,
+                    value: [item.id: CGPoint(x: frame.minX + 6, y: frame.midY)]
+                )
             }
         }
         .simultaneousGesture(LongPressGesture(minimumDuration: 0.45).onEnded { _ in
