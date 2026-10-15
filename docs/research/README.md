@@ -2,7 +2,7 @@
 
 Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-16). Each file names the team it is for. Ideas are proposals, not decisions; owning teams decide.
 
-**Start here:** [ship-now.md](ship-now.md) is the rough first cut of every brief that can ship today.
+**Start here:** [ship-now.md](ship-now.md) holds the research add-ons to Product's ship list (docs/product/ship-list.md).
 
 | Brief | For |
 |---|---|
