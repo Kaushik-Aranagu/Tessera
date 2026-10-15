@@ -1,6 +1,8 @@
 # Pilot
 
-Personal iPhone-only app, native SwiftUI.
+Personal iPhone-only app, native SwiftUI. **Read `docs/PRODUCT_VISION.md` first**: everything is a linkable,
+class-based object (OOP/OS concepts), with dense information revealed progressively. Training (workout logging,
+plans, PRs, live workout mode) is the first domain.
 
 ## Platform & stack
 - iPhone only (no iPad, Mac or watch targets). Deployment target: iOS 27.0+ — use iOS 27 APIs freely; no `#available` fallbacks for older OSes.
