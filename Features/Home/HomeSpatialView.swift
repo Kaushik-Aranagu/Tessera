@@ -48,6 +48,8 @@ struct HomeSpatialView: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var position = ScrollPosition(id: HomeSpatialView.remembered)
     @State private var progress = Double(HomeSpatialView.remembered)
+    @State private var presented: HomeLink?
+    @Namespace private var linkZoom
 
     var body: some View {
         VStack(spacing: Theme.Spacing.l) {
@@ -85,10 +87,19 @@ struct HomeSpatialView: View {
         }
         .background { ThemedBackground() }
         .toolbarVisibility(.hidden, for: .navigationBar)
-        .navigationDestination(for: HomeLink.self) { link in
+        // Each of these screens keeps its own NavigationStack, so it zooms out of the word that opened it (full
+        // screen, swipe down to close) instead of being pushed inside Home's stack.
+        .fullScreenCover(item: $presented) { link in
             link.destination
-                .toolbarVisibility(.visible, for: .navigationBar)
+                .overlay(alignment: .topTrailing) {
+                    Button("Close") { presented = nil }
+                        .buttonStyle(InkLabelWordStyle())
+                        .padding(.trailing, Theme.Spacing.gutter - 8)
+                }
+                .navigationTransition(.zoom(sourceID: link, in: linkZoom))
         }
+        .environment(\.openHomeLink) { presented = $0 }
+        .environment(\.homeLinkZoom, linkZoom)
     }
 
     @ViewBuilder
@@ -131,15 +142,19 @@ struct HomeSpatialView: View {
 
 // MARK: - Entry points
 
-/// The screens Home reaches that are not objects: Notes, Review, Groceries and Recipes. Pushed on the same stack,
-/// so the edge swipe walks back and a double tap on the soul goes Home.
-enum HomeLink: Hashable, CaseIterable {
-    case groceries, recipes, notes, review
+/// The screens Home reaches that are not objects: Notes, Review, Groceries and Recipes.
+enum HomeLink: Hashable, CaseIterable, Identifiable {
+    case groceries, recipes, pasteRecipe, notes, review
+
+    var id: Self {
+        self
+    }
 
     var title: String {
         switch self {
         case .groceries: "Groceries"
         case .recipes: "Recipes"
+        case .pasteRecipe: "Paste a recipe"
         case .notes: "Notes"
         case .review: "The week"
         }
@@ -150,6 +165,7 @@ enum HomeLink: Hashable, CaseIterable {
         switch self {
         case .groceries: GroceriesView()
         case .recipes: RecipeView(recipeID: nil)
+        case .pasteRecipe: PasteRecipeView()
         case .notes: NotesView()
         case .review: ReviewView()
         }
@@ -158,13 +174,16 @@ enum HomeLink: Hashable, CaseIterable {
 
 /// Kitchen: two names at hero-ish size, ink words with no shape around them; a tap zooms in.
 private struct KitchenPage: View {
+    @Environment(\.openHomeLink) private var open
+    @Environment(\.homeLinkZoom) private var zoom
+
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.xl) {
             Text("What we eat, and what we need.")
                 .font(Theme.voice(size: 21))
                 .foregroundStyle(Theme.Colors.inkSecondary)
             ForEach([HomeLink.groceries, .recipes], id: \.self) { link in
-                NavigationLink(value: link) {
+                Button { open(link) } label: {
                     HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
                         PaintDab(color: link == .groceries ? HomePaint.daySage : HomePaint.dayAmber,
                                  seed: link == .groceries ? 2 : 5)
@@ -176,7 +195,9 @@ private struct KitchenPage: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .modifier(LinkZoomSource(link: link, zoom: zoom))
             }
+            HomeLinkLine(links: [.pasteRecipe])
             Spacer(minLength: 0)
         }
         .padding(.top, Theme.Spacing.xl)
@@ -186,6 +207,8 @@ private struct KitchenPage: View {
 /// A line of entry words ("The week · Notes") at the foot of a page.
 private struct HomeLinkLine: View {
     let links: [HomeLink]
+    @Environment(\.openHomeLink) private var open
+    @Environment(\.homeLinkZoom) private var zoom
 
     var body: some View {
         HStack(spacing: 0) {
@@ -193,7 +216,7 @@ private struct HomeLinkLine: View {
                 if index > 0 {
                     Text(" · ").textRole(.body).foregroundStyle(Theme.Colors.ink.opacity(0.6))
                 }
-                NavigationLink(value: link) {
+                Button { open(link) } label: {
                     Text(link.title)
                         .textRole(.bodyStrong)
                         .foregroundStyle(Theme.Colors.ink)
@@ -201,9 +224,29 @@ private struct HomeLinkLine: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .modifier(LinkZoomSource(link: link, zoom: zoom))
             }
         }
     }
+}
+
+/// Marks the word a Home link zooms out of, when Home provides the namespace.
+private struct LinkZoomSource: ViewModifier {
+    let link: HomeLink
+    let zoom: Namespace.ID?
+
+    func body(content: Content) -> some View {
+        if let zoom {
+            content.matchedTransitionSource(id: link, in: zoom)
+        } else {
+            content
+        }
+    }
+}
+
+extension EnvironmentValues {
+    @Entry var openHomeLink: (HomeLink) -> Void = { _ in }
+    @Entry var homeLinkZoom: Namespace.ID?
 }
 
 // MARK: - Sibling rail

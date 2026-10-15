@@ -13,6 +13,7 @@ struct BottomChrome: View {
     @FocusState private var focused: Bool
     @State private var layer = Layer.modes
     @State private var swell = false
+    @State private var pressed = false
     @State private var breathe = false
     @State private var opens = 0
     @State private var reply: String?
@@ -91,6 +92,7 @@ struct BottomChrome: View {
                 VStack(alignment: .trailing, spacing: 2) {
                     if let line {
                         Text(line)
+                            .frame(maxWidth: 270, alignment: .trailing)
                             .textRole(.body)
                             .foregroundStyle(Theme.Colors.tess)
                             .multilineTextAlignment(.trailing)
@@ -126,12 +128,26 @@ struct BottomChrome: View {
             .frame(width: 64, height: 64)
             .contentShape(Rectangle())
             .opacity(model.isCommandExpanded ? 0 : 1)
+            // Feedback on touch-down, so the double-tap wait never reads as lag.
+            .simultaneousGesture(DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    guard !pressed else { return }
+                    pressed = true
+                    opens += 1
+                    if !reduceMotion {
+                        withAnimation(.easeOut(duration: 0.13)) { swell = true }
+                    }
+                }
+                .onEnded { _ in
+                    pressed = false
+                    withAnimation(.easeInOut(duration: 0.13)) { swell = false }
+                })
             .onTapGesture(count: 2) { onSoulDoubleTap() }
             .onTapGesture { model.isCommandExpanded ? close() : open() }
             .onLongPressGesture(minimumDuration: 0.4) { open() }
             .accessibilityElement()
             .accessibilityLabel("Tess")
-            .accessibilityHint("Opens Tess. Double tap twice to go home.")
+            .accessibilityHint("Opens Tess.")
             .accessibilityAddTraits(.isButton)
             .accessibilityAction(named: "Go home") { onSoulDoubleTap() }
     }
@@ -204,6 +220,10 @@ struct BottomChrome: View {
                     if mode.word == "Write" {
                         withTesseraAnimation(reduceMotion: reduceMotion) { layer = .write }
                         focused = true
+                    } else {
+                        // Speak and Show are words until their layers ship.
+                        close()
+                        say("\(mode.word) comes next.")
                     }
                 }
             }
@@ -287,7 +307,6 @@ struct BottomChrome: View {
 
     /// Runs on every open, including when another screen opens Tess with a draft ("log bench ").
     private func opened() {
-        opens += 1
         reply = nil
         model.tessMode = .listening
         if !reduceMotion {
@@ -337,21 +356,27 @@ struct BottomChrome: View {
     private func commit(_ text: String) async {
         isBusy = true
         let lowered = text.lowercased()
-        let isQuestion = lowered.contains("best") || lowered.contains(" pr") || lowered.hasSuffix("?")
+        let isQuestion = lowered.contains("best") || lowered.contains(/\bprs?\b/) || lowered.hasSuffix("?")
         let answer = isQuestion ? CommandInterpreter(model: model).run(text) : await model.ask(text)
         ghost = nil
         drying = 0
         model.commandDraft = ""
         withTesseraAnimation(.spring(response: 0.42, dampingFraction: 0.9), reduceMotion: reduceMotion) {
             model.isCommandExpanded = false
-            reply = answer
             model.tessMode = .done
         }
+        isBusy = false
+        say(answer)
+    }
+
+    /// Tess's line beside the soul, faded after 4 s.
+    private func say(_ text: String) {
+        withTesseraAnimation(reduceMotion: reduceMotion) { reply = text }
         replyCount += 1
         let shown = replyCount
-        isBusy = false
-        try? await Task.sleep(for: .seconds(4))
-        if replyCount == shown {
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(4))
+            guard replyCount == shown else { return }
             withTesseraAnimation(reduceMotion: reduceMotion) { reply = nil }
             if !model.isCommandExpanded {
                 model.tessMode = restingOrIdle
@@ -545,7 +570,7 @@ struct CommandInterpreter {
                 reps: Double(match.3) ?? 0
             )
         }
-        if text.lowercased().contains("best") || text.lowercased().contains(" pr") {
+        if text.lowercased().contains("best") || text.lowercased().contains(/\bprs?\b/) {
             guard let exercise = exercise(matching: text), let best = model.bestSet(of: exercise) else {
                 return "No logged sets for that yet."
             }
