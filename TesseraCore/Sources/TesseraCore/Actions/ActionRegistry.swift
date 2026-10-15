@@ -12,6 +12,8 @@ public enum ActionRegistry {
         EditSlot.descriptor,
         SwapSlotExercise.descriptor,
         SwapEntryExercise.descriptor, MoveTask.descriptor, CreateNote.descriptor, EditNote.descriptor,
+        CreateList.descriptor, AddListItem.descriptor, CheckListItem.descriptor, MoveListItem.descriptor,
+        RenameListSection.descriptor, ClearDoneItems.descriptor,
         FinishWorkoutEarly.descriptor,
         RollForwardTasks.descriptor, StartTask.descriptor,
         WaitOnTask.descriptor,
@@ -39,6 +41,13 @@ public enum ActionRegistry {
         MoveTask.descriptor.name: { try decode(MoveTask.self, MoveTask.descriptor.name, $0) },
         CreateNote.descriptor.name: { try decode(CreateNote.self, CreateNote.descriptor.name, $0) },
         EditNote.descriptor.name: { try decode(EditNote.self, EditNote.descriptor.name, $0) },
+        CreateList.descriptor.name: { try decode(CreateList.self, CreateList.descriptor.name, $0) },
+        AddListItem.descriptor.name: { try decode(AddListItem.self, AddListItem.descriptor.name, $0) },
+        CheckListItem.descriptor.name: { try decode(CheckListItem.self, CheckListItem.descriptor.name, $0) },
+        MoveListItem.descriptor.name: { try decode(MoveListItem.self, MoveListItem.descriptor.name, $0) },
+        RenameListSection.descriptor
+            .name: { try decode(RenameListSection.self, RenameListSection.descriptor.name, $0) },
+        ClearDoneItems.descriptor.name: { try decode(ClearDoneItems.self, ClearDoneItems.descriptor.name, $0) },
         FinishWorkoutEarly.descriptor.name: {
             try decode(FinishWorkoutEarly.self, FinishWorkoutEarly.descriptor.name, $0)
         },

@@ -57,6 +57,12 @@ public enum TesseraIntentsCatalog {
         "waitOnTask": "in-app only for now",
         "createNote": "Tell Tess (\"note: …\")",
         "editNote": "in-app only: notes app",
+        "createList": "in-app only for now (Tess \"list: …\" is kitchen slice 9)",
+        "addListItem": "in-app only for now (Tess \"buy milk\" is kitchen slice 9)",
+        "checkListItem": "in-app only: lists",
+        "moveListItem": "in-app only: lists",
+        "renameListSection": "in-app only: lists",
+        "clearDoneItems": "in-app only: lists",
         "finishWorkoutEarly": "in-app only: live mode's finish early",
         "moveTask": "in-app only for now (Now's \"not now\" and Later)",
     ]
