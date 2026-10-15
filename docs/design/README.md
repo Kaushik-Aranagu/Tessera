@@ -15,6 +15,7 @@ The source of truth for how v1 looks, moves and feels. iOS build implements from
 | [kitchen/](kitchen/) | Kitchen build sheets, one per screen, written ahead of Core: 13 Groceries (with at-the-shop) first |
 | [m3-steers.md](m3-steers.md) | M3 screen steers (body weight, class inspector, What Tess did, settings) and where Notes, Review and Kitchen enter from Home |
 | [today-on-home.md](today-on-home.md) | Today on Home (M2 slices 8 and 9): the queue window with Next and Later and its rolling heading, swipe right to finish (the strike follows your finger), swipe left to send to tomorrow, the finish haptic, and the next item rising into the hero. Recording in `recordings/`, playable study in `studies/` |
+| [m4-steers.md](m4-steers.md) | M4 screen steers: Plan my day with the energy drum, Shutdown, the Day log, the focus block (with its Live Activity) and What Tess knows |
 | [live-polish.md](live-polish.md) | Live mode polish (v1 slice 13): exact timing, curves and haptics for the stamp, rest on the dial and the PR sweep, plus the haptic map and Reduce Motion |
 | [live-activity.md](live-activity.md) | The rest timer on the Lock Screen and Dynamic Island (Inter Tight, horizon line as timer, tap the set to log it), with its Go state, Undo after Done, and colour moods |
 | [tess-soul.md](tess-soul.md) | Tess's living mark, v2 wet paint: its form, mode parameters, travel, going home, the shader route, and the motifs we reuse. `mockups/SoulLab.dc.html` mixes any state with the unapproved shape and colour ideas |
