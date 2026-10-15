@@ -2,6 +2,14 @@
 
 *Product lead, 2026-10-15. Kaushik's direction from the Product lead thread. Applies to every screen in v1 (home and Workouts) and is handed to Design studio to design and prototype.*
 
+## 0. The principle: one ground layer, the screen is scarce (Kaushik, 19:18)
+
+- **All data sits in one ground layer.** Objects, links and the op log are underneath. Views, processing and inputs are layers built on top, and each one is just a way to read or write that ground.
+- **The screen is the scarce resource.** At any moment, pack in only what is most meaningful for what he is doing now: the running process, the time of day, what he just did, the page he's on.
+- **Reveal more on demand.** Drill into an object (z), expand an element into more options, and keep fast paths home and to the other places he goes often. Never show everything at once.
+- **Inputs follow the same rule.** A control starts small and grows into what the input needs. The first case is Ask Tess: a small glyph that animates open into a capture surface. Typing, voice (on-device speech to text, cleaned into a sentence) and photo, file or video each change the surface to suit. Nothing is typed inline on the page.
+- **Later:** "context packing" means Home choosing what to show from context. Research scouts it.
+
 ## 1. Three axes, each with one job
 
 Pages must not get long. Content spreads across both screen dimensions, and depth is used for drilling in.
