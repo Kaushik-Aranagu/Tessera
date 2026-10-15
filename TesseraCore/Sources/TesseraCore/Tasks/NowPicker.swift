@@ -37,11 +37,15 @@ public struct NowPicker {
         engine.store
     }
 
-    /// Now, then up to `count` next items: the ranker's first pick and the ones after it.
-    public func pick(at now: Date = .now, next count: Int = 3,
+    /// Now, then up to `count` next items: the ranker's first pick and the ones after it. It fills the whole context
+    /// (last action and days away from the op log) so no caller gets a context-free pick (QA N2).
+    public func pick(at now: Date = .now, next count: Int = 3, plan: ObjectRecord? = nil,
+                     sessionsPerWeek: Int? = nil, incumbent: UUID? = nil,
                      calendar: Calendar = .current) -> (now: NowItem?, next: [NowItem])
     {
-        let picks = rank(RankContext(now: now, calendar: calendar))
+        let picks = rank(RankContext(now: now, calendar: calendar, plan: plan, sessionsPerWeek: sessionsPerWeek,
+                                     incumbent: incumbent, lastAction: lastAction(),
+                                     daysAway: max(0, daysAway(at: now, calendar: calendar))))
         return (picks.first?.item, picks.dropFirst().prefix(count).map(\.item))
     }
 

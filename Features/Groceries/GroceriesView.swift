@@ -151,8 +151,15 @@ private struct GroceriesPage: View {
                 if TessVoice.shared.note != nil, basket.isEmpty {
                     TessNoteLine()
                         .frame(maxWidth: .infinity, alignment: .trailing)
-                        .padding(.top, Theme.Spacing.l)
-                        .veil(edge: .bottom)
+                        .padding(.top, Theme.Spacing.xxl)
+                        .background {
+                            // The page's own ground, faded in at the top, so nothing shows through her words.
+                            ThemedBackground()
+                                .mask(LinearGradient(stops: [.init(color: .clear, location: 0),
+                                                             .init(color: .black, location: 0.45)],
+                                                     startPoint: .top, endPoint: .bottom))
+                                .ignoresSafeArea(edges: .bottom)
+                        }
                         .transition(.opacity)
                 }
             }
@@ -204,34 +211,34 @@ private struct GroceriesPage: View {
     /// into the basket, and the count rolls up.
     private func check(_ item: ListContents.Item) {
         guard !striking.contains(item.id) else { return }
-        withAnimation(reduceMotion ? nil : .easeOut(duration: 0.32)) { _ = striking.insert(item.id) }
+        withTesseraAnimation(.smooth(duration: 0.32), reduceMotion: reduceMotion) { _ = striking.insert(item.id) }
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(reduceMotion ? 150 : 450))
             landed += 1
             if !reduceMotion, let start = rowCenters[item.id], basketTarget != .zero || !basketOpen {
                 let target = basketTarget == .zero ? CGPoint(x: start.x, y: start.y + 600) : basketTarget
                 sinking.append(Sink(id: item.id, x: start.x, y: start.y))
-                withAnimation(.timingCurve(0.55, 0, 0.15, 1, duration: 0.52)) {
+                withTesseraAnimation(.timingCurve(0.55, 0, 0.15, 1, duration: 0.52), reduceMotion: reduceMotion) {
                     if let index = sinking.firstIndex(where: { $0.id == item.id }) {
                         sinking[index].x = target.x
                     }
                 }
-                withAnimation(.timingCurve(0.3, 0, 0.25, 1, duration: 0.52)) {
+                withTesseraAnimation(.timingCurve(0.3, 0, 0.25, 1, duration: 0.52), reduceMotion: reduceMotion) {
                     if let index = sinking.firstIndex(where: { $0.id == item.id }) {
                         sinking[index].y = target.y
                     }
                 }
             }
-            withAnimation(reduceMotion ? .easeOut(duration: 0.15) : .smooth(duration: 0.28)) {
-                _ = try? model.engine.perform(CheckListItem(item: item.id), by: .user)
+            withTesseraAnimation(.smooth(duration: 0.28), reduceMotion: reduceMotion) {
+                _ = try? model.engine.perform(CheckListItem(item: item.id, time: AppClock.now), by: .user)
                 striking.remove(item.id)
                 model.touch()
             }
             try? await Task.sleep(for: .milliseconds(520))
             sinking.removeAll { $0.id == item.id }
-            withAnimation(.easeInOut(duration: 0.2)) { breathe = true }
+            withTesseraAnimation(.smooth(duration: 0.2), reduceMotion: reduceMotion) { breathe = true }
             try? await Task.sleep(for: .milliseconds(200))
-            withAnimation(.easeInOut(duration: 0.2)) { breathe = false }
+            withTesseraAnimation(.smooth(duration: 0.2), reduceMotion: reduceMotion) { breathe = false }
         }
     }
 
@@ -293,6 +300,8 @@ private struct RowCenters: PreferenceKey {
 private struct ShopTitle: View {
     let onHold: () -> Void
     @State private var fill: CGFloat = 0
+    /// Once the hold lands the title stays vermilion as it folds away (Design).
+    @State private var held = false
     @State private var started = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -315,13 +324,14 @@ private struct ShopTitle: View {
             .contentShape(Rectangle())
             .onLongPressGesture(minimumDuration: 0.7, maximumDistance: 30) {
                 started += 1
+                held = true
                 onHold()
-                fill = 0
             } onPressingChanged: { pressing in
                 if pressing {
-                    withAnimation(reduceMotion ? nil : .easeOut(duration: 0.7)) { fill = 1 }
+                    withTesseraAnimation(.smooth(duration: 0.7), reduceMotion: reduceMotion) { fill = 1 }
                 } else {
-                    withAnimation(.easeIn(duration: 0.22)) { fill = 0 }
+                    guard !held else { return }
+                    withTesseraAnimation(.smooth(duration: 0.22), reduceMotion: reduceMotion) { fill = 0 }
                 }
             }
             .sensoryFeedback(.impact(flexibility: .rigid), trigger: started)
@@ -480,11 +490,20 @@ private struct AtTheShop: View {
                     .transition(AisleHandoff.transition(reduceMotion: reduceMotion))
                 }
                 if aisles.count > 1 {
-                    Text("then \(aisles[1].aisle)")
-                        .textRole(.body)
-                        .foregroundStyle(Theme.Colors.ink.opacity(0.35))
-                        .padding(.top, Theme.Spacing.xxl)
-                        .contentTransition(.opacity)
+                    // The peek swaps like a value word: the old one blurs out, then the new one blurs in.
+                    ZStack(alignment: .leading) {
+                        Text("then \(aisles[1].aisle)")
+                            .textRole(.body)
+                            .foregroundStyle(Theme.Colors.ink.opacity(0.35))
+                            .id(aisles[1].aisle)
+                            .transition(reduceMotion ? .opacity : .asymmetric(
+                                insertion: .modifier(active: BlurFade(progress: 0), identity: BlurFade(progress: 1))
+                                    .animation(.smooth(duration: 0.22).delay(0.12)),
+                                removal: .modifier(active: BlurFade(progress: 0), identity: BlurFade(progress: 1))
+                                    .animation(.smooth(duration: 0.12))
+                            ))
+                    }
+                    .padding(.top, Theme.Spacing.xxl)
                 }
             }
             .animation(reduceMotion ? .easeOut(duration: 0.18) : .smooth(duration: 0.42), value: current.aisle)
@@ -494,17 +513,25 @@ private struct AtTheShop: View {
 }
 
 /// One aisle (or the whole list) handing over to the next: the outgoing one tilts back about its top edge and fades
-/// over 260 ms; the incoming one rises 14 pt out of a 4 pt blur over 340 ms, starting 120 ms in, so two hero words are
+/// over 260 ms; the incoming one rises 14 pt out of a 4 pt blur over 340 ms, starting 160 ms in, so two hero words are
 /// never fully visible together. Reduce Motion: a short cross-fade.
 private enum AisleHandoff {
     static func transition(reduceMotion: Bool) -> AnyTransition {
         guard !reduceMotion else { return .opacity.animation(.easeOut(duration: 0.18)) }
         return .asymmetric(
             insertion: .modifier(active: RiseIn(progress: 0), identity: RiseIn(progress: 1))
-                .animation(.smooth(duration: 0.34).delay(0.12)),
+                .animation(.smooth(duration: 0.34).delay(0.16)),
             removal: .modifier(active: FoldAway(progress: 1), identity: FoldAway(progress: 0))
                 .animation(.smooth(duration: 0.26))
         )
+    }
+}
+
+/// A word blurring in or out.
+private struct BlurFade: ViewModifier {
+    var progress: Double
+    func body(content: Content) -> some View {
+        content.blur(radius: 4 * (1 - progress)).opacity(progress)
     }
 }
 

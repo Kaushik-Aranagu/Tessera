@@ -283,7 +283,7 @@ enum BackupCopy {
     /// "Also keep them in a folder you choose." with the folder as a tappable value word in 600.
     static func folderSentence(_ folder: URL?) -> AttributedString {
         var sentence = AttributedString(folder == nil ? "Also keep them in " : "Also kept in ")
-        var value = AttributedString(folder.map(folderName) ?? "a folder you choose")
+        var value = AttributedString(folder.map(folderName) ?? "a\u{00A0}folder\u{00A0}you\u{00A0}choose")
         value.inlinePresentationIntent = .stronglyEmphasized
         value.link = URL(string: "tessera://backups/folder")
         sentence += value

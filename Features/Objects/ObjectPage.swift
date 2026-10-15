@@ -132,9 +132,9 @@ private struct ClassBody: View {
                 model.commandDraft = "log \(classDef.name.lowercased()) "
                 withTesseraAnimation(reduceMotion: false) { model.isCommandExpanded = true }
             default:
-                let subclass = ClassDef(name: "New \(classDef.name)", parent: classDef, symbolName: classDef.symbolName,
-                                        colorRole: classDef.colorRole)
-                model.context.insert(subclass)
+                // Through the store, so its caches see the new class. (Schema changes join the op log with Build A1.)
+                let subclass = model.store.createClass(name: "New \(classDef.name)", parent: classDef,
+                                                       symbolName: classDef.symbolName, colorRole: classDef.colorRole)
                 model.touch()
                 model.open(.classDef(subclass.id))
             }

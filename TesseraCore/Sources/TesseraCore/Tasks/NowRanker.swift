@@ -131,7 +131,7 @@ public extension NowPicker {
         }
         // 4. Re-entry: the smallest thing that fits now, and nothing else.
         if context.daysAway >= Weight.reentryDays,
-           let small = candidates.filter({ $0.fits(part) }).min(by: { $0.minutes < $1.minutes })
+           let small = candidates.filter({ $0.fits(part, calendar) }).min(by: { $0.minutes < $1.minutes })
         {
             return [Pick(item: small.item, score: .max, why: "Welcome back. Small on purpose", isAsk: false)]
         }
@@ -152,25 +152,25 @@ public extension NowPicker {
                                        to: calendar.startOfDay(for: now)).day ?? 0
     }
 
-    /// Which area an action belongs to.
+    /// Which area an action belongs to: "task" is checked first, so setTaskDone is a task, not training (QA N1).
     static func area(of action: String) -> Area {
         let lower = action.lowercased()
+        if lower.contains("task") {
+            return .tasks
+        }
+        if lower.contains("note") {
+            return .notes
+        }
         if ["grocer", "shop", "listitem", "doneitems"].contains(where: lower.contains) {
             return .groceries
         }
         if ["cook", "kitchentimer", "recipe"].contains(where: lower.contains) {
             return .kitchen
         }
-        if ["set", "workout", "routine", "exercise", "slot", "plan"]
+        if ["logset", "editset", "workout", "routine", "exercise", "slot", "plan", "nextset"]
             .contains(where: lower.contains)
         {
             return .training
-        }
-        if lower.contains("task") {
-            return .tasks
-        }
-        if lower.contains("note") {
-            return .notes
         }
         return .other
     }
@@ -197,8 +197,8 @@ private extension NowPicker {
         /// For offers: the day part they belong to.
         let part: DayPart?
 
-        func fits(_ now: DayPart) -> Bool {
-            (part ?? start.map { DayPart(hour: Calendar.current.component(.hour, from: $0)) }) == now
+        func fits(_ now: DayPart, _ calendar: Calendar) -> Bool {
+            (part ?? start.map { DayPart(hour: calendar.component(.hour, from: $0)) }) == now
         }
     }
 
@@ -291,9 +291,7 @@ private extension NowPicker {
                 points += Weight.carried
                 why.append("carried from \(weekday(from, calendar))")
             }
-            if candidate.fits(part) || candidate.start.map({ DayPart(hour: calendar.component(.hour, from: $0)) })
-                == part
-            {
+            if candidate.fits(part, calendar) {
                 points += Weight.dayPart
                 why.append("your \(part.rawValue) slot")
             }

@@ -33,13 +33,15 @@ public extension TrainingLedger {
 @MainActor
 extension TrainingLedger {
     /// A workout started today and not finished: today is in use, not a rest day. One that is only scheduled (a gym
-    /// nudge on a rest day) doesn't count. Only workouts made in the last two weeks are looked at, so this stays cheap
-    /// with years of history (QA E7).
+    /// nudge on a rest day) doesn't count. A started, unfinished workout is always a process (running or set aside),
+    /// so only the process table is read: cheap at any history size, and nothing made ahead of time is missed
+    /// (QA E7, N5).
     func hasWorkoutUnderway(on now: Date, calendar: Calendar) -> Bool {
-        guard let workoutClass = classes[.workout] else { return false }
-        let recent = now.addingTimeInterval(-14 * 86400)
-        return store.objects(of: workoutClass).contains { workout in
-            guard workout.createdAt > recent, store.value("endedAt", of: workout) == nil else { return false }
+        guard let workoutClass = classes[.workout], let processClass = classes[.process] else { return false }
+        return store.objects(of: processClass).contains { record in
+            let process = ProcessSnapshot(record, store: store)
+            guard let workout = process.subject, workout.classDef?.id == workoutClass.id,
+                  store.value("endedAt", of: workout) == nil else { return false }
             return store.value("startedAt", of: workout)?.dateValue
                 .map { calendar.isDate($0, inSameDayAs: now) } ?? false
         }

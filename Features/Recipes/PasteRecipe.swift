@@ -225,9 +225,7 @@ private struct SaveBar: View {
                     .foregroundStyle(Theme.Colors.tess)
                 Spacer()
                 Button("Undo", action: onUndo)
-                    .textRole(.labelStrong)
-                    .foregroundStyle(Theme.Colors.tess)
-                    .buttonStyle(HandleButtonStyle())
+                    .buttonStyle(InkLabelWordStyle(color: Theme.Colors.live))
                     .frame(minHeight: 44)
             }
         } else {
