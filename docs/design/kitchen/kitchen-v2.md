@@ -67,7 +67,7 @@ In every case: no modal, no error code, and nothing written. The link stays wher
 
 ### On the Ingredient page
 - Tap an ingredient name on a recipe; it travels up to be the hero (21 to 56, 460ms), and the rest of the page rises 14pt.
-- y 58, the path in labels: the recipe you came from ("DAL TADKA").
+- y 58, the back word (`../back-word.md`): "‹ DAL TADKA".
 - y 168, **the state sentence** (21/400 ink), opening with the state as a value word (600 on a cadmium wash):
   - "**Out** since you cooked dal on Tuesday."
   - "**Low**, after dal on Tuesday."
