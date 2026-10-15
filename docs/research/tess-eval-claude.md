@@ -15,7 +15,7 @@ It covers what the other sets don't: no row repeats `tess-eval-phrases.md`, `que
 
 ## Tools
 
-Only the 8 tools in section 2 of `tess-model-layer.md`, with its argument names, as strict schemas (all fields required, optional ones nullable, `additionalProperties: false`):
+10 tools: the 8 in section 2 of `tess-model-layer.md`, with its argument names, plus `completeTask` and `rescheduleTask` (Product decision, 2026-10-15), all as strict schemas (all fields required, optional ones nullable, `additionalProperties: false`):
 
 | Tool | Writes | Arguments |
 |---|---|---|
@@ -27,8 +27,10 @@ Only the 8 tools in section 2 of `tess-model-layer.md`, with its argument names,
 | `createNote` | yes | `body` |
 | `createRecipe` | yes | `title`, `serves`, `totalMinutes`, `ingredients` [{`amount`, `unit`, `name`}], `steps` |
 | `answerQuery` | no | `from`, `where` [{`field`, `op`, `value`}], `during`, `group`, `agg`, `sort`, `limit` |
+| `completeTask` | yes | `task` (an open task's name) |
+| `rescheduleTask` | yes | `task` (an open task's name), `startsAt` (date-time) |
 
-`proposePlan` is not offered on the capture use. No tool completes, reschedules or ticks off anything, starts a workout, cook or timer, or deletes. Phrases that need those get no tool and a refuse line.
+`proposePlan` is not offered on the capture use. `completeTask` and `rescheduleTask` act on open tasks only, resolved by name like the other tools. No tool finishes a workout, ticks off a list item, opens a list, starts a workout, cook or timer, or deletes. Phrases that need those get no tool and a refuse line.
 
 ## Scoring
 
@@ -37,17 +39,17 @@ A row passes when all of these hold:
 1. **Tool names exact.** The set of write calls equals the expected set (order ignored; a multi-intent row needs every call, in one ghost batch). A row that expects `answerQuery` passes on that call; a missing `answerQuery` with a correct one-line handoff ("Asking the log") also passes.
 2. **Required arguments equal after normalization.** Every listed argument must match; arguments left out of a cell are not graded.
    - Strings: lowercase, trimmed, whitespace collapsed, trailing punctuation dropped. Typos in the phrase must be fixed in the call (`flip flops`, not `flip flop`s; `Bench Press`, not `bnech`).
-   - Names (`exercise`, `list`, `about`): must equal an object name from the pack exactly after normalization.
+   - Names (`exercise`, `list`, `about`, `task`): must equal an object name from the pack exactly after normalization.
    - `~[...]` means key words: the value must contain each word (case-insensitive) and no leftover date words ("tomorow", "next week").
    - Numbers: within 0.01. Weights compare in kg after converting `lb`, so `185 lb` and `83.9 kg` both pass.
    - Several `logSet` calls are compared as a multiset of single sets: `{Curl, 14, 12, sets 2}` equals two calls with `sets 1`.
    - `lines` and `items`: compared as multisets after `IngredientLine.parse` (amount, unit, singular name), so `3 avocados`, `avocados x3` and `3 avocado` match. `items` shorthand `["towel"]` means `{text: "towel", section: null, done: false}`.
-   - `startsAt`: `2026-10-16` means any time that day; `2026-10-16T19:00` means that minute (plus or minus 1); `A..B` means any day in the range; `or` lists accepted alternatives. Instants compare in the pack's time zone (London is BST, +01:00, until 25 Oct and GMT after).
+   - `startsAt` (on `createTask` and `rescheduleTask`): `2026-10-16` means any time that day; `2026-10-16T19:00` means that minute (plus or minus 1); `A..B` means any day in the range; `or` lists accepted alternatives. Instants compare in the pack's time zone (London is BST, +01:00, until 25 Oct and GMT after).
    - `createRecipe`: `ingredients ~[...]` grades ingredient names only; `steps >=1` means at least one non-empty step.
 3. **No-tool rows.** Zero write calls, and the Tess line is of the expected kind: `clarify` ends in a question naming the choice, `refuse` says what Tess can't do and offers the nearest action, `ack` is empty or one short line. Every line must pass `TessVoice.violations` (one line, under 12 words, no "!", no banned words). The quoted line is an example, not an exact match.
 4. **Retries.** A call that returns "Error: ..." (an unknown name) wrote nothing and is ignored; only the calls that succeeded are graded.
 
-**False write.** Any successful write call that matches no expected call on tool and target: a write on a no-tool row, an extra call, the wrong tool (`addGroceries` where `addToList` was expected), or the wrong target object (another list, exercise or recipe). A call to a tool outside the 8 also counts. Wrong values in the right tool and target (reps 7 for 8) fail the row but are reported as "wrong args", not false writes. Cells marked "Not:" name the likely false writes. T5 target: 0 false writes over the 80, and at least 72 rows pass.
+**False write.** Any successful write call that matches no expected call on tool and target: a write on a no-tool row, an extra call, the wrong tool (`addGroceries` where `addToList` was expected), or the wrong target object (another list, exercise, recipe or task). A call to a tool outside the 10 also counts. Wrong values in the right tool and target (reps 7 for 8) fail the row but are reported as "wrong args", not false writes. Cells marked "Not:" name the likely false writes. T5 target: 0 false writes over the 80, and at least 72 rows pass.
 
 ## Context packs
 
@@ -93,9 +95,9 @@ Packs: P1 mid-workout, P2 cooking, P3 morning, P4 shopping, P5 Packing open, P6 
 | # | Phrase | Pack | Grammar today (inferred) | Expected |
 |---|---|---|---|---|
 | 1 | done for today | P1 | wrong (GC 11): "today" is a date cue, so task "Done for", today 09:00 | no tool, refuse: "Can't finish workouts from here yet. Tap Finish?" Not: createTask |
-| 2 | done call mum | P6 | nil (GC 12): no completion grammar | no tool, refuse: "Can't tick off tasks yet. Open Tasks?" Not: createTask |
-| 3 | move dentist to friday | P6 | wrong (GC 13): task "Move dentist to", Fri | no tool, refuse: "Can't move tasks yet. Open Dentist?" Not: createTask (a duplicate Dentist) |
-| 4 | not today passport | P6 | wrong (GC 14): task "Not passport", today 09:00 | no tool, refuse: "Can't push tasks yet. Open Renew passport?" |
+| 2 | done call mum | P6 | nil (GC 12): no completion grammar | no tool, clarify: "No open Call mum task. Log it as done anyway?" Not: createTask, completeTask on another task |
+| 3 | move dentist to friday | P6 | wrong (GC 13): task "Move dentist to", Fri | `rescheduleTask {"task":"Dentist","startsAt":"2026-10-16"}` Not: createTask (a duplicate Dentist) |
+| 4 | not today passport | P6 | wrong (GC 14): task "Not passport", today 09:00 | `rescheduleTask {"task":"Renew passport","startsAt":"2026-10-16"}` Not: createTask, completeTask |
 | 5 | i feel like rubbish today skip leg day | P6 | wrong (GC 15): task "I feel like rubbish skip leg day" | no tool, clarify: "Skip Leg Day today? Want a lighter task list?" Not: createTask |
 | 6 | what did i weigh monday | P6 | wrong (GC 16): task "What did i weigh", Mon | `answerQuery {"from":["BodyWeight"],"where":[],"during":"date(2026-10-12)","group":null,"agg":"latest(weight)","sort":null,"limit":null}` |
 | 7 | anything due tmrw | P6 | wrong (GC 17): task "Anything due", Fri | `answerQuery {"from":["Task"],"where":[{"field":"isDone","op":"=","value":"false"}],"during":"tomorrow","agg":"list"}` |
@@ -117,7 +119,7 @@ Packs: P1 mid-workout, P2 cooking, P3 morning, P4 shopping, P5 Packing open, P6 
 | 23 | rice thu | P6 | wrong (GC 33): first recipe with "rice" wins silently | no tool, clarify: "Salmon rice bowl or Egg fried rice, Thursday?" |
 | 24 | rest timer 90 | P1 | wrong (GC 34): kitchen timer "Rest" | no tool, refuse: "Can't start rest timers from here yet." Not: createTask |
 | 25 | timer 90 | P1 | wrong (GC 35): kitchen timer, 90 min | no tool, refuse: "Can't start timers from here yet. 90 s rest?" |
-| 26 | push day thu | P6 | wrong (GC 36): task "Push day", not linked to the routine | `createTask {"title":~["push day"],"startsAt":"2026-10-15 or 2026-10-22","about":["Push Day"]}` |
+| 26 | push day thu | P6 | wrong (GC 36): task "Push day", not linked to the routine | `createTask {"title":~["push day"],"startsAt":"2026-10-15","about":["Push Day"]}` |
 | 27 | make a list called camping | P6 | nil (GC 37): `make` tried as a cook, no recipe, falls through | `createList {"name":"Camping","items":[]}` |
 | 28 | list: books | P6 | wrong (GC 38): a second list called "Books" | no tool, clarify: "Books already exists. Open it?" Not: createList |
 | 29 | Camping\nYou will need:\n- tent\n- stove | P6 | wrong (GC 39): "you will need" heading makes a recipe | `createList {"name":"Camping","items":["tent","stove"]}` Not: createRecipe |
@@ -125,7 +127,7 @@ Packs: P1 mid-workout, P2 cooking, P3 morning, P4 shopping, P5 Packing open, P6 
 | 31 | add 2.5 | P1 | nil (GC 41): not a relative-set form | `logSet {"exercise":"Bench Press","weight":82.5,"reps":8,"sets":1,"unit":"kg"}` Not: addGroceries |
 | 32 | parmesan | P4 | nil (GC 42): the grammar can't see the running shop | `addGroceries {"lines":["parmesan"]}` |
 | 33 | idea: tess should read my log back | P6 | nil (GC 43): only `note` starts a note | `createNote {"body":~["tess","read","log back"]}` |
-| 34 | call mum thu | P6 | wrong (GC 44): next Thu 22 Oct 09:00, eval says today | `createTask {"title":~["call","mum"],"startsAt":"2026-10-15 or 2026-10-22","about":[]}` (rule unresolved, both pass) |
+| 34 | call mum thu | P6 | wrong (GC 44): next Thu 22 Oct 09:00, eval says today | `createTask {"title":~["call","mum"],"startsAt":"2026-10-15","about":[]}` (Product rule: a weekday said on that day means today) |
 | 35 | call mum at 7 | P6 | wrong (GC 45): bare `at 7` read on a 24-hour clock, tomorrow 07:00 | `createTask {"title":~["call","mum"],"startsAt":"2026-10-15T19:00","about":[]}` |
 | 36 | buy milk today | P6 | wrong (GC 46): task "Buy milk", today 09:00, already past | `addGroceries {"lines":["milk"]}` (alt: `createTask {"title":~["milk"],"startsAt":"2026-10-15"}`) |
 
@@ -213,7 +215,7 @@ Packs: P1 mid-workout, P2 cooking, P3 morning, P4 shopping, P5 Packing open, P6 
 | 79 | 60 12 | P3 | nil: no entry in focus; `parseLift` needs exercise words | no tool, clarify: "60 x 12 of which exercise?" |
 | 80 | grab the carbonara recipe from https://example.com/carbonara | P3 | nil | no tool, refuse: "Can't open links. Paste the recipe text?" Not: createRecipe |
 
-Counts: collisions 36, training 8, voice 8, tasks 6, kitchen 5, lists 4, notes 3, run-ons 6, should-not-write 4. Run-ons with two or three intents: 8 (rows 13, 14, 71 to 76). No tool, refuse or clarify: 16 (rows 1 to 5, 16, 20, 23 to 25, 28, 67, 77 to 80). Read-only `answerQuery` only: 5 (rows 6 to 10). Rows with a write: 59.
+Counts: collisions 36, training 8, voice 8, tasks 6, kitchen 5, lists 4, notes 3, run-ons 6, should-not-write 4. Run-ons with two or three intents: 8 (rows 13, 14, 71 to 76). No tool, refuse or clarify: 14 (rows 1, 2, 5, 16, 20, 23 to 25, 28, 67, 77 to 80). Read-only `answerQuery` only: 5 (rows 6 to 10). Rows with a write: 61 (rows 3 and 4 call `rescheduleTask`).
 
 ## Per-phrase context packs (10)
 
@@ -276,15 +278,15 @@ Each is the named pack plus what the row adds. "Leaves" is everything sent; "mus
 
 ## ASSUMED (for Core)
 
-1. The Claude capture use offers exactly the 8 tools from section 2, as T2's name-resolving variants (`logSet` by exercise name, not `entry`; `addToList` by list name). `proposePlan` is not offered for capture.
-2. No tool exists yet for complete, reschedule, tick off, start workout, start cook, timers, rest or open list, so those rows (1 to 4, 24, 25, 28) expect no tool. When such tools join the registry, those rows change to writes; update the cells, not the count.
+1. The Claude capture use offers exactly 10 tools: the 8 from section 2, as T2's name-resolving variants (`logSet` by exercise name, not `entry`; `addToList` by list name), plus `completeTask {task}` and `rescheduleTask {task, startsAt}` (Product decision, 2026-10-15), which resolve `task` by an open task's name. `proposePlan` is not offered for capture.
+2. No tool exists yet for finishing a workout, list item tick-off, start workout, start cook, timers, rest or open list, so those rows (1, 24, 25, 28, and the tick-off part of 71) expect no tool. Rows 3 and 4 now expect `rescheduleTask`. Row 2 stays no tool: Call mum is not an open task, so `completeTask` has nothing to resolve. When more tools join the registry, the affected rows change to writes; update the cells, not the count.
 3. `logSet` by name logs into the entry in focus when it is the same exercise, else into today's workout, as `LogExercise` does. `weight` is in the unit said; `0` means bodyweight, and added load is the weight.
 4. Mixed reps are several `logSet` calls; the grader compares a multiset of single sets.
 5. `createTask` has no due field, so "before the 28th" maps to `startsAt` on or before that day. Part-of-day words: morning 09:00, after lunch 13:00, evening 18:00, tonight 20:00.
-6. "thu" said on a Thursday is unresolved (collision 44); rows 26 and 34 accept today or next week until one rule is chosen.
+6. "thu" said on a Thursday means today (Product decision, 2026-10-15). Rows 26 and 34 expect today only.
 7. Questions on the capture path call `answerQuery`, which is read-only and never counts as a write; its AST is graded loosely here (`from`, `during`, `agg`) and fully in `questions-eval.md`.
-8. Packs add open task titles to the section 6 capture pack, so Claude can refuse "move dentist" instead of creating a duplicate. Titles only; no notes or dates.
+8. Packs add open task titles to the section 6 capture pack, so Claude can resolve "move dentist" to Dentist instead of creating a duplicate. Titles only; no notes or dates.
 9. `lastSet` (one set) is the only training value that leaves the phone, as section 6 allows; it is not set history.
-10. Ambiguous phrases (rows 16, 20, 23, 67, 79) get a clarify line and no write, even though a ghost row would be undoable; any write there counts as a false write.
+10. Ambiguous phrases (rows 2, 16, 20, 23, 67, 79) get a clarify line and no write, even though a ghost row would be undoable; any write there counts as a false write.
 11. T5 runs all 80 phrases on the Claude route directly; the grammar column is checked separately and is static analysis of `285b34a`, not a run.
 12. Pass bar: 72 of 80 rows, 0 false writes. Multi-intent rows pass only when every call is right.
