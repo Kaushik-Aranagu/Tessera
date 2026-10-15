@@ -363,6 +363,7 @@ public struct SetTaskDone: EngineAction {
         let isDone = done ?? true
         try transaction.set("isDone", to: .bool(isDone), on: task)
         try transaction.set("doneAt", to: isDone ? .date(.now) : nil, on: task)
+        try transaction.endTaskProcess(task, done: isDone)
     }
 
     public func summary(in store: ObjectStore) -> String {
