@@ -65,3 +65,4 @@
 - **Lists daily-use gaps** (3:53 PM PT): all 13 of Research's defaults are taken (`lists-daily.md`). The engine parts go into Core's Lists engine, and G1 (a "Lists" HomeLink under Groceries) goes to Builder B.
 - **Day log v1 brought forward** (3:53 PM PT). Core builds `DayStory` after the ranker, and Builder B builds the page. A started workout with sets shows on the day even if it was never finished.
 - **Reading grammar collisions** are fixed in Core's first M5 Reading engine slice.
+- **What Now shows on a rest day** (4:01 PM PT, R05). First a running process, then an event or timed task within 15 minutes, and only then the "Rest day" line. The rest-day rule (3:37 PM PT) only replaces the workout suggestion. It never hides time-bound things.

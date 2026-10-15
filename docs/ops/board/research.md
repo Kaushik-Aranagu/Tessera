@@ -4,6 +4,8 @@
 
 **Now:** Ranker fixtures for Core's context ranker (Core Next 1). Done when `fixtures/ranker.md` has 40 contexts with the expected Now pick and its `why`. Cover planned rest days (rest wins, per decisions.md 3:37 PM PT), a running workout, a suspended cook, a shop with 8+ items, morning, evening, a linked list 60 minutes before its task, a day-full warning, and empty days. Build on `context-packing.md`'s 20 moments rather than repeating them.
 
+**Fix now:** in `fixtures/ranker.md`, flip R05. On a rest day, a timed task or event within 15 minutes beats the rest line. The order is: running, then timed within 15 minutes, then rest day (decisions.md, 4:01 PM PT).
+
 **Next:**
 1. M3 slices 1 and 2 engine brief with fixtures (body weight trend line; Habit class with x-of-7 and no streaks). Done when `m3-1-2-brief.md` gives Core the smallest data shapes, 30 body-weight entries with the expected trend values, 20 habit check-in rows with the expected x-of-7, and the grammar rows ("82.4", "weighed 82.4", "meditated") checked against the grammar collision rules.
 2. Upkeep and People fixtures and collision checks, like the Reading one. Done when `fixtures/upkeep.md` and `fixtures/people.md` each have 40 phrases with expected parses and flag every collision with existing grammar (tasks, groceries, sets, notes, Reading, Money), each with a proposed rule.
