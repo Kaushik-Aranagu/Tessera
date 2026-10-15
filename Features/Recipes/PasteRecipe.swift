@@ -234,7 +234,6 @@ private struct SaveBar: View {
             HStack(spacing: Theme.Spacing.l) {
                 PaintKey(paint: Theme.Colors.health, isTap: true, action: onSave) { _ in
                     Text("Save recipe")
-                        .textRole(.labelStrong)
                 }
                 Button("Edit", action: onEdit)
                     .textRole(.label)

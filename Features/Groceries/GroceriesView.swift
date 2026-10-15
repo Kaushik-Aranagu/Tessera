@@ -88,9 +88,10 @@ private struct GroceriesPage: View {
                 }
 
                 if shopping {
-                    PaintKey(paint: Theme.Colors.health, action: finishShop) { holding in
-                        Text(holding ? "Keep holding" : "Done shopping")
-                            .textRole(.labelStrong)
+                    PaintKey(paint: Theme.Colors.health, action: finishShop) { _ in
+                        Text("Done shopping")
+                    } meta: {
+                        Text("Hold")
                     }
                     .padding(.top, Theme.Spacing.xxl)
                     .accessibilityHint("Clears the basket and ends the shop")
