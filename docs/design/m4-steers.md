@@ -21,16 +21,17 @@ At 21:00 Shutdown becomes Now, and the ground turns to **evening**: the paint wa
 - **The living moment:** the day stroke paints the rest of its length to the vermilion end (700ms), the rolled rows' dabs fly off to tomorrow one after another (80ms stagger), the hero is replaced by "Done for today." at Hero 56/500, Tess plays `done`, and `.success` plays. This is the one exception to "no success on Home", because a day is a bigger finish than a task. After it, Now reads "tomorrow, first: …" quietly until morning.
 
 ## 5 · Day log (Time Machine)
+Recording: `recordings/day-log.mp4` (source `studies/day-log.html`): reading back up the week, undoing one moment from Monday, and today's count line noting it.
 - **Entry is z from the day:** tap the day label on Home ("Thursday afternoon") and the stroke zooms into the Day log, landing on today. The x lane on the stroke still pages yesterday and tomorrow on Home; the Day log is the deep version.
 - **y is time:** today at the bottom, the past above. Pull down to go back, like reading up a thread.
-- **A day** is a block with no frame. The date is a Title word in the margin ("Thu 15"), like aisle words. Then:
+- **A day** is a block with no frame. The date sits in the margin in labels, on two lines ("WED" / "14"; today reads "TODAY" in ink). The content hangs at x 94:
   - **Your line,** if there is one, at Title 34/500, as typed. It's the largest thing on the day.
   - **The headline:** finished things and firsts, joined with " · ", at 21/500 ("Push day, PR on bench · carbonara").
   - **The count line:** 21/400 at 70% ("4 tasks · 2 notes").
   - **The quiet line** in labels at 45%: "SLEPT 7H10 · 3 MEETINGS · ENERGY 4".
-- **The paint spine:** each headline item has its area-colour dab at x 22, so scrolling the log shows a column of colour, a painted history of your weeks. No chart.
+- **The paint spine:** under each date, one area-colour dab per headline item, stacked. Scrolling the log shows a column of colour in the margin, a painted history of your weeks. No chart.
 - **Empty runs** collapse to one row in labels at 45%: "OCT 3 TO 6". No count of empty days.
-- **Undo from there:** tap a headline item and it gets an ink underline. Ask Tess shows the preview sentence in cobalt ("Removes bench 80 × 5 from Oct 12. Your PR goes back to 77.5"), with a vermilion "Undo" on the right. Tapping it runs the strike on that item, and today's block gains "undid 1 thing from Oct 12" in the count line. If the item has changed since, the preview says "Changed since. Open it" and tapping zooms to the object.
+- **Undo from there:** tap a headline item and it gets an ink underline. Ask Tess shows the preview sentence in cobalt, at most two lines ("Removes bench 80 × 5. PR back to 77.5."), with a vermilion "Undo" on the right. Tapping it runs the strike on that item, and today's block gains "undid 1 thing from Oct 12" in the count line. If the item has changed since, the preview says "Changed since. Open it" and tapping zooms to the object.
 - **Later:** the right-edge rail scrubber (a light tick per day, a firmer one per week).
 
 ## 8 · Focus block and body double
