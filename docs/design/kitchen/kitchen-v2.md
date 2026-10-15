@@ -4,7 +4,7 @@ Just enough to build. Product steer: `docs/product/kitchen-v2-backlog.md` (slice
 
 Recordings:
 - `../recordings/link-fetch.mp4` (source `../studies/link-fetch.html`): a JSON-LD read, a site that blocks, Claude reading a page with no recipe card, and a paywall.
-- `../recordings/pantry-light.mp4` (source `../studies/pantry-light.html`): out-of lines on a recipe, the Ingredient page's state word, "usually by now" in Groceries, and CAN COOK on the shelf.
+- `../recordings/pantry-light.mp4` (source `../studies/pantry-light.html`): out-of lines on a recipe, the Ingredient page's state word, "Usually have" at the foot of Groceries (shown with its earlier label), and CAN COOK on the shelf.
 
 ## L · Recipe from a link (the paste screen, sheet 11)
 No new screen. A link is read on the paste paint-over, and whatever comes back is painted by the same brush pass.
@@ -81,9 +81,10 @@ In every case: no modal, no error code, and nothing written. The link stays wher
 - "out of milk": "Milk's out. On the list." with **UNDO**.
 - "have rice": "Rice, in." with **UNDO**.
 
-## R · Running low by rhythm (foot of Groceries)
-- The last thing in the aisle window, after the last aisle, never pinned. **USUALLY BY NOW** in labels at 55%, then the names on one line at 21/400 and 55%, joined by " · ": "milk · eggs · rice". Three at most.
-- **Tap a name** and it joins its aisle. The aisles below open by one row on the settle spring (420ms). The name flies to its new row on the y arc (`cubic-bezier(.3,0,.25,1)`, 520ms), inking from 55% to 100%. The rest of the dim line closes up behind it (360ms, house curve). The context count rolls up by one. Tess: "Milk, in Groceries." with **UNDO**.
+## R · Usually have (foot of Groceries)
+The first pantry step, ahead of pantry state: it reads existing Groceries history (3+ typed buys in 56 days), per the Kitchen lead.
+- The last thing in the aisle window, after the last aisle, never pinned. One line at 21/400 and 55%: "Usually have: milk, eggs, rice", with "Usually have:" in the context colour and the names in ink. Three at most. (The recording still shows the earlier "USUALLY BY NOW" label above the names; the copy is now this one line, and the look and motion are unchanged.)
+- **Tap a name** and it joins its aisle. The aisles below open by one row on the settle spring (420ms). The name flies to its new row on the y arc (`cubic-bezier(.3,0,.25,1)`, 520ms), inking from 55% to 100%. The rest of the line closes up behind it (360ms, house curve). The context count rolls up by one. Tess: "Milk, in Groceries." with **UNDO**.
 - **Swipe a name left** to skip it until its next gap. Nothing is ever added on its own.
 - When there's nothing due, the line takes no space.
 
