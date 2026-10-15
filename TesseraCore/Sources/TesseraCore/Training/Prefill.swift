@@ -22,8 +22,9 @@ public struct SetPrefill: Hashable, Sendable {
 
 @MainActor
 public extension TrainingLedger {
-    /// The next set for an entry: set 1 opens at last time's set 1; later sets keep this session's weight with
-    /// last time's reps for that position; with no history, the entry's targets.
+    /// The next set for an entry: set 1 opens at the plan's raised target when progression moved the weight up, else
+    /// at last time's set 1; later sets keep this session's weight with last time's reps for that position; with no
+    /// history, the entry's targets.
     func prefill(for entry: ObjectRecord) -> SetPrefill {
         let logged = entry.orderedChildren.compactMap(loggedSet)
         let index = logged.count
@@ -37,6 +38,12 @@ public extension TrainingLedger {
         if let previous = logged.last {
             let reps = previousTime.map { Int($0.reps.rounded()) } ?? Int(previous.reps.rounded())
             return SetPrefill(weight: previous.weight, reps: reps, source: .thisSession)
+        }
+        // Set 1 with history: the plan's target wins when progression raised the weight, so the dial opens at the new
+        // weight rather than last time's.
+        if index == 0, let targetWeight, let top = lastTime.map(\.weight).max(), targetWeight > top + 0.001 {
+            return SetPrefill(weight: targetWeight, reps: targetReps ?? Int(previousTime?.reps.rounded() ?? 8),
+                              source: .target)
         }
         if let previousTime {
             return SetPrefill(weight: previousTime.weight, reps: Int(previousTime.reps.rounded()), source: .lastTime)
