@@ -20,6 +20,18 @@ public final class TessCaptureEngine: TessCapturing {
     public func capture(_ phrase: String, context: TessContext) async -> TessCapture {
         if let parse = grammar.parse(phrase, context: context) {
             do {
+                if case let .sets(parts) = parse {
+                    var records: [OpRecord] = []
+                    var lines: [String] = []
+                    for part in parts {
+                        let (record, line) = try perform(part, context: context)
+                        records.append(record)
+                        lines.append(line)
+                    }
+                    let line = parts.count == lines.count && lines.count > 1 ? "\(lines.count) sets logged." : lines
+                        .first ?? ""
+                    return TessCapture(records: records, line: line, source: .grammar)
+                }
                 let (record, line) = try perform(parse, context: context)
                 return TessCapture(records: [record], line: line, source: .grammar)
             } catch {

@@ -122,8 +122,9 @@ private struct GroceriesPage: View {
     private func add() {
         let lines = GroceriesCopy.lines(in: draft)
         guard !lines.isEmpty else { return }
+        // Keep what was typed if it couldn't be added.
+        guard (try? model.engine.perform(AddGroceries(lines: lines), by: .user)) != nil else { return }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
-            _ = try? model.engine.perform(AddGroceries(lines: lines), by: .user)
             draft = ""
             model.touch()
         }

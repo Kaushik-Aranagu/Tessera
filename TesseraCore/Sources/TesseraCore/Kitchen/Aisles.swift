@@ -86,7 +86,7 @@ public enum AisleGuide {
         add(.frozen, "frozen pea, frozen spinach, ice cream, frozen berry, frozen prawn, ice")
         add(.household, """
         kitchen roll, washing up liquid, bin bag, foil, cling film, baking paper, toilet roll, dishwasher tablet, \
-        sponge
+        sponge, toothpaste, shampoo, soap, deodorant, razor
         """)
         return map
     }()

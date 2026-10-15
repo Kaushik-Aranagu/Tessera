@@ -195,20 +195,32 @@ struct GrammarTraceTests {
             case .timer: "timer"
             case .list: "list"
             case .task: "task"
-            case .lift, .set: "lift"
+            case .lift, .set, .sets: "lift"
             case .note: "note"
             case .shop: "shop"
             case .recipe: "recipe"
             case nil: "nothing"
             }
         }
-        let notKitchen = ["Squat 100, 5", "bench 80, 8", "80x8, 80x8, 80x6", "get 5x5 squats done",
-                          "get the car serviced friday", "get up at 6am",
-                          "get bloods done and pick up prescription thu", "todo call mum, book dentist",
-                          "email Sam, Priya and Jo", "knee a bit sore, skip lunges", "boiler timer reset at 6",
-                          "tom 6pm", "make a cake sat", "list the car on ebay sat"]
-        for phrase in notKitchen {
-            #expect(!["groceries", "cook", "timer", "list"].contains(kind(phrase)), "\(phrase) → \(kind(phrase))")
+        // Each row's intended reading, not just "not kitchen" (H5).
+        let expected: [(String, Set<String>)] = [
+            ("Squat 100, 5", ["lift"]), ("bench 80, 8", ["lift"]), ("bench 80x8, 82.5x6", ["lift"]),
+            ("get 5x5 squats done", ["nothing", "task"]), ("get the car serviced friday", ["task"]),
+            ("get up at 6am", ["task"]), ("get bloods done and pick up prescription thu", ["task"]),
+            ("todo call mum, book dentist", ["task"]), ("email Sam, Priya and Jo", ["nothing", "task"]),
+            ("knee a bit sore, skip lunges", ["nothing", "note"]), ("boiler timer reset at 6", ["task"]),
+            ("tom 6pm", ["task"]), ("make a cake sat", ["task"]), ("list the car on ebay sat", ["task"]),
+        ]
+        for (phrase, allowed) in expected {
+            #expect(allowed.contains(kind(phrase)), "\(phrase) → \(kind(phrase))")
+        }
+        if case let .sets(parts)? = grammar.parse("bench 80x8, 82.5x6", context: context) {
+            #expect(parts.count == 2)
+            if case let .lift(_, _, reps, weight, _) = parts[1] {
+                #expect(weight == 82.5 && reps == 6)
+            }
+        } else {
+            Issue.record("bench 80x8, 82.5x6 should be two sets")
         }
         // T2: rest and plank timers in seconds.
         if case let .timer(_, minutes)? = grammar.parse("rest timer 90", context: context) {
@@ -232,5 +244,106 @@ struct GrammarTraceTests {
         #expect(kind("call mum friday") == "task")
         #expect(kind("list: packing") == "list" && kind("new list films") == "list")
         #expect(kind("cook tomato and basil pasta") == "cook")
+    }
+}
+
+/// The kitchen lead's two misses on #70.
+@MainActor
+struct KitchenAcceptanceFollowUpTests {
+    @Test func trailingUnitsAndMixedLists() throws {
+        let cloves = try #require(IngredientLine.parse("2 garlic cloves"))
+        #expect(cloves.name == "garlic" && cloves.unit == .clove && cloves.amount == 2)
+        #expect(AisleGuide.aisle(for: "toothpaste") == .household)
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let grammar = TessGrammar(store: store, classes: classes)
+        let context = TessContext(now: .now, calendar: .current)
+        if case let .groceries(lines)? = grammar.parse("milk, toothpaste", context: context) {
+            #expect(lines == ["milk", "toothpaste"])
+        } else {
+            Issue.record("milk, toothpaste should be groceries")
+        }
+        if case .groceries? = grammar.parse("milk, sriracha", context: context) {} else {
+            Issue.record("half shopping is enough")
+        }
+        if case .groceries? = grammar.parse("call mum, dentist", context: context) {
+            Issue.record("call mum, dentist isn't shopping")
+        }
+    }
+}
+
+/// QA review of #70 (H1–H5) and the Notes findings N3–N4.
+@MainActor
+struct Hotfix70Tests {
+    @Test func unknownThingsStillGoOnTheList() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        try engine.perform(
+            CreateRecipe(text: "Chicken and broccoli stir-fry\nIngredients\n1 head broccoli\nMethod\nFry."),
+            by: .user
+        )
+        try engine.perform(CreateRecipe(text: "Protein pancakes\nIngredients\n2 eggs\nMethod\nFry."), by: .user)
+        let grammar = TessGrammar(store: store, classes: classes)
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .gmt
+        let context = TessContext(now: Date(timeIntervalSince1970: 1_791_986_400), calendar: calendar)
+        func groceries(_ phrase: String) -> [String]? {
+            if case let .groceries(lines)? = grammar.parse(phrase, context: context) {
+                lines
+            } else {
+                nil
+            }
+        }
+        // H1
+        #expect(groceries("milk, coffee, tea") == ["milk", "coffee", "tea"])
+        #expect(groceries("eggs, bread, toothpaste")?.count == 3)
+        #expect(groceries("get coffee") == ["coffee"])
+        #expect(groceries("call mum, dentist") == nil)
+        // H2
+        #expect(groceries("buy sun cream") == ["sun cream"])
+        if case .task? = grammar.parse("buy flowers sun", context: context) {} else {
+            Issue.record("buy flowers sun is a Sunday task")
+        }
+        // H3
+        if case let .cook(recipe, _)? = grammar.parse("cook stir-fry", context: context) {
+            #expect(recipe.title.hasSuffix("stir-fry"))
+        } else {
+            Issue.record("cook stir-fry")
+        }
+        if case let .cook(recipe, _)? = grammar.parse("cook pancake", context: context) {
+            #expect(recipe.title == "Protein pancakes")
+        } else {
+            Issue.record("cook pancake")
+        }
+        // H4
+        if case let .timer(_, minutes)? = grammar.parse("dough rest timer 60", context: context) {
+            #expect(minutes == 60)
+        } else {
+            Issue.record("dough rest timer 60")
+        }
+        // Fix 6 for real: the step's time is the one given.
+        let pancakes = try #require(RecipeBook(store: store, classes: classes).recipes().last)
+        let cook = try engine.perform(StartCooking(recipe: pancakes.id), by: .user).output
+        let time = Date(timeIntervalSince1970: 1_792_000_000)
+        try engine.perform(GoToCookStep(cook: cook.id, step: 0, time: time), by: .user)
+        #expect(ProcessTable(engine: engine).running()?.lastTouchedAt == time)
+    }
+
+    @Test func mentionsWithAmpersandsAndClassObjectsInTheLog() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let mac = try engine.perform(CreateRecipe(text: "Mac & Cheese\nIngredients\n200 g macaroni\nMethod\nBake."),
+                                     by: .user).output
+        let note = try engine.perform(CreateNote(body: "@Mac & Cheese was great"), by: .user).output
+        #expect(store.linkedObjects("about", of: note).map(\.id) == [mac.id]) // N3
+        // N4: the class object a mention needs is made in the note's transaction, so undo removes it.
+        let workout = try #require(classes[.workout])
+        #expect(store.classObject(of: workout) == nil)
+        let result = try engine.perform(CreateNote(body: "@Workout felt long"), by: .user)
+        #expect(store.classObject(of: workout) != nil)
+        engine.undo(result.record)
+        #expect(store.classObject(of: workout).map(\.isDeleted) ?? true)
     }
 }

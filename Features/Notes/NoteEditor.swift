@@ -16,6 +16,8 @@ struct NoteEditor: View {
 
     private enum Field { case heading, rest }
     @State private var loaded = false
+    /// The text as it was opened, so leaving without typing writes nothing.
+    @State private var openedAs = ""
     @State private var saveTask: Task<Void, Never>?
     @State private var deleted = false
 
@@ -80,9 +82,9 @@ struct NoteEditor: View {
                     }
                     .buttonStyle(HandleButtonStyle())
                     .padding(.top, Theme.Spacing.section)
-                    .accessibilityHint("Undo brings it back")
+                    .accessibilityHint("Deletes the note")
                 } else {
-                    Text("This note is gone. Undo brings it back.")
+                    Text("This note is gone.")
                         .font(Theme.voice)
                         .foregroundStyle(Theme.Colors.context)
                 }
@@ -102,6 +104,7 @@ struct NoteEditor: View {
             let parts = NotesEditorCopy.split(body)
             heading = parts.heading
             text = parts.rest
+            openedAs = NotesEditorCopy.join(heading: heading, rest: text)
             loaded = true
         }
         .onChange(of: text) { _, _ in scheduleSave() }
@@ -123,6 +126,8 @@ struct NoteEditor: View {
         saveTask?.cancel()
         guard loaded, !deleted, let note = model.store.object(id: noteID), !note.isDeleted else { return }
         let trimmed = NotesEditorCopy.join(heading: heading, rest: text)
+        // Unchanged since it was opened: nothing to save (no rewrite, no jump to the top, no op).
+        guard trimmed != openedAs else { return }
         let current = model.store.value("body", of: note)?.stringValue ?? ""
         guard !trimmed.isEmpty, trimmed != current else { return }
         _ = try? model.engine.perform(
