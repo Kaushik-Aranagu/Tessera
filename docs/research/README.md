@@ -27,3 +27,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [sticking-past-week-3.md](sticking-past-week-3.md) | Product lead, Design studio: 10 rules for retention, re-entry after a gap |
 | [day-log.md](day-log.md) | Product lead, Core engine, Design studio: what the Day log shows, undo from a past day, the scrub rail |
 | [m5-money-reading.md](m5-money-reading.md) | Product lead: smallest Money and Reading apps |
+| [people-and-upkeep.md](people-and-upkeep.md) | Product lead: smallest People and Home upkeep apps |
