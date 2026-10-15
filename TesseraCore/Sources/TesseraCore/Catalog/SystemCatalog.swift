@@ -188,6 +188,10 @@ public enum SystemCatalog {
                       FieldSpec(key: "length", name: "Length", kind: .duration),
                       FieldSpec(key: "due", name: "Due", kind: .date),
                       FieldSpec(key: "isDone", name: "Done", kind: .bool, defaultValue: .bool(false)),
+                      FieldSpec(key: "doneAt", name: "Done at", kind: .date),
+                      // Nightly roll-forward: the day it was first planned for, and how many nights it rolled.
+                      FieldSpec(key: "rolledFrom", name: "First planned", kind: .date),
+                      FieldSpec(key: "rolls", name: "Rolled", kind: .number),
                   ]),
         ClassSpec(key: .note, name: "Note", parent: .thing, symbol: "note.text", colorRole: "neutral"),
         ClassSpec(key: .process, name: "Process", parent: .thing, symbol: "circle.dotted", colorRole: "neutral",
