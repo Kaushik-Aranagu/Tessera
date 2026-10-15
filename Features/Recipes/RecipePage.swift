@@ -90,7 +90,8 @@ struct RecipePage: View {
                     .padding(.top, Theme.Spacing.m)
                 HStack(spacing: Theme.Spacing.l) {
                     PaintKey(finish: .ink, paint: Theme.Colors.now, isTap: true,
-                             action: { onCook(recipe.id, size) }) { _ in
+                             action: { onCook(recipe.id, size) })
+                    { _ in
                         Text("Cook")
                             .textRole(.labelStrong)
                     }
@@ -361,4 +362,3 @@ enum RecipeCopy {
         return date.formatted(.dateTime.weekday(.wide).day().month(.wide)) + size
     }
 }
-

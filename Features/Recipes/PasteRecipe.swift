@@ -39,7 +39,8 @@ struct PasteRecipe: View {
                     VStack(alignment: .leading, spacing: Theme.Spacing.s) {
                         ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
                             PaintedLine(line: line.line, kind: line.kind, step: stepNumber(at: index, in: lines),
-                                        painted: index < revealed) {
+                                        painted: index < revealed)
+                            {
                                 cycle(index, current: line.kind)
                             }
                         }
@@ -91,12 +92,21 @@ struct PasteRecipe: View {
         .background { ThemedBackground() }
         .safeAreaInset(edge: .bottom) {
             if reading {
-                SaveBar(saved: saved != nil, title: savedTitle, onSave: save, onUndo: { if let saved { undo(saved.record) } },
-                        onEdit: edit)
-                    .padding(.horizontal, Theme.Spacing.gutter)
-                    .padding(.vertical, Theme.Spacing.m)
-                    .background { ThemedBackground().opacity(0.92) }
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                SaveBar(
+                    saved: saved != nil,
+                    title: savedTitle,
+                    onSave: save,
+                    onUndo: {
+                        if let saved {
+                            undo(saved.record)
+                        }
+                    },
+                    onEdit: edit
+                )
+                .padding(.horizontal, Theme.Spacing.gutter)
+                .padding(.vertical, Theme.Spacing.m)
+                .background { ThemedBackground().opacity(0.92) }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         .onChange(of: text) { old, new in
@@ -111,11 +121,25 @@ struct PasteRecipe: View {
             }
         }
         .sensoryFeedback(.success, trigger: saved?.id)
+        #if DEBUG
+            // `-pasteDemo`: lands a recipe as if pasted, for recordings.
+            .task {
+                guard ProcessInfo.processInfo.arguments.contains("-pasteDemo"), text.isEmpty else { return }
+                try? await Task.sleep(for: .seconds(1.2))
+                text = KitchenDemo.dal
+            }
+        #endif
     }
 
     private func stepNumber(at index: Int, in lines: [(line: String, kind: RecipeParser.LineKind)]) -> Int? {
         guard case .step = lines[index].kind else { return nil }
-        return lines[...index].count { if case .step = $0.kind { true } else { false } }
+        return lines[...index].count {
+            if case .step = $0.kind {
+                true
+            } else {
+                false
+            }
+        }
     }
 
     /// The brush pass: lines paint in one after another over about 600 ms.

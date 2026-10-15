@@ -57,29 +57,29 @@ struct PortionDrum: View {
     }
 
     private var drum: some View {
-            ScrollView(.vertical) {
-                LazyVStack(spacing: 0) {
-                    ForEach(Array(range), id: \.self) { value in
-                        let isCurrent = value == (scrolled ?? serves)
-                        Text("\(value)")
-                            .textRole(isCurrent ? .titleNumber : .data)
-                            .foregroundStyle(isCurrent ? Theme.Colors.ink : Theme.Colors.inkTertiary)
-                            .frame(width: Metrics.width, height: Metrics.pitch)
-                            .animation(.easeOut(duration: 0.16), value: isCurrent)
-                    }
+        ScrollView(.vertical) {
+            LazyVStack(spacing: 0) {
+                ForEach(Array(range), id: \.self) { value in
+                    let isCurrent = value == (scrolled ?? serves)
+                    Text("\(value)")
+                        .textRole(isCurrent ? .titleNumber : .data)
+                        .foregroundStyle(isCurrent ? Theme.Colors.ink : Theme.Colors.inkTertiary)
+                        .frame(width: Metrics.width, height: Metrics.pitch)
+                        .animation(.easeOut(duration: 0.16), value: isCurrent)
                 }
-                .scrollTargetLayout()
             }
-            .scrollIndicators(.hidden)
-            .scrollTargetBehavior(.viewAligned(limitBehavior: .never))
-            .scrollPosition(id: $scrolled, anchor: .center)
-            .contentMargins(.vertical, Metrics.pitch * (Metrics.rows - 1) / 2, for: .scrollContent)
-            .frame(width: Metrics.width, height: Metrics.pitch * Metrics.rows)
-            .mask {
-                LinearGradient(stops: [
-                    .init(color: .clear, location: 0), .init(color: .black, location: 0.3),
-                    .init(color: .black, location: 0.7), .init(color: .clear, location: 1),
-                ], startPoint: .top, endPoint: .bottom)
-            }
+            .scrollTargetLayout()
+        }
+        .scrollIndicators(.hidden)
+        .scrollTargetBehavior(.viewAligned(limitBehavior: .never))
+        .scrollPosition(id: $scrolled, anchor: .center)
+        .contentMargins(.vertical, Metrics.pitch * (Metrics.rows - 1) / 2, for: .scrollContent)
+        .frame(width: Metrics.width, height: Metrics.pitch * Metrics.rows)
+        .mask {
+            LinearGradient(stops: [
+                .init(color: .clear, location: 0), .init(color: .black, location: 0.3),
+                .init(color: .black, location: 0.7), .init(color: .clear, location: 1),
+            ], startPoint: .top, endPoint: .bottom)
+        }
     }
 }
