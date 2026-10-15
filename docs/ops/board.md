@@ -8,7 +8,8 @@
 2. The kitchen: cooking, then groceries.
 3. Lists, ahead of M3.
 4. M4 "My day, connected".
-5. M5 Reading (`ship-list-m5-reading.md`), then Money (`ship-list-m5-money.md`), both approved.
+5. M5: Reading, Money, Upkeep, then People (`ship-list-m5-*.md`), all approved.
+6. Build: make an app from a sentence (`ship-list-build.md`), the long-term building-blocks goal. A1 slots in after M3 slices 3, 6 and 10 and model-layer T1 to T3.
 
 Small product calls are logged in `../product/decisions.md`.
 
