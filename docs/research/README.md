@@ -64,3 +64,7 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [fixtures/spoken-normaliser.md](fixtures/spoken-normaliser.md) | Builder B, Core: 80 spoken transcript to text rows, 17 normaliser rules, grammar gaps |
 | [screen-fast-paths.md](screen-fast-paths.md) | Builder A, Builder B, Design, Product: primary action, two fast paths and Tess placeholder for all 20 screens; 5 cheapest fixes |
 | [photo-field.md](photo-field.md) | Core: photo field kind (hash ref, media/ files, thumbnails, GPS strip, undo, export, never in Claude packs) |
+| [breadth-map.md](breadth-map.md) | Product, Coordinator: every area vs master, smallest first version each, 9-wave breadth-first order |
+| [lists-daily.md](lists-daily.md) | Builder B, Kitchen, Product: 20 daily list moments, slice coverage, 13 gaps with defaults |
+| [day-log-first.md](day-log-first.md) | Core, Builder B, Product: Day log v1 as a pure fold over OpRecord actions, 12 rules, 10 sample days |
+| [fixtures/reading.md](fixtures/reading.md) | Core: 40 reading phrases, 10 resume cases, 8 finish lines, grammar collisions on master |
