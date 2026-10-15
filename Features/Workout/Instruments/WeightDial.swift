@@ -93,7 +93,10 @@ struct WeightDial: View {
         .onAppear { scrolledIndex = index(for: weight) }
         .onChange(of: scrolledIndex) { _, new in dialTurned(to: new) }
         .onChange(of: weight) { _, new in weightChanged(to: new) }
-        .onChange(of: detents) { _, _ in scrolledIndex = index(for: weight) }
+        // A new exercise brings new detents: the strip is rebuilt (below) and lands on the weight once laid out.
+        .onChange(of: detents) { _, _ in
+            Task { @MainActor in scrolledIndex = index(for: weight) }
+        }
         .onChange(of: restFraction == nil) { _, ended in
             if ended {
                 isDraining = false
@@ -151,6 +154,7 @@ struct WeightDial: View {
         .scrollIndicators(.hidden)
         .scrollTargetBehavior(.viewAligned(limitBehavior: .never))
         .scrollPosition(id: $scrolledIndex, anchor: .center)
+        .id(detents.count)
         .contentMargins(.horizontal, max(0, width / 2 - Metrics.pitch / 2), for: .scrollContent)
         // Hand input is the vertical drag below; the strip only shows where the needle is.
         .scrollDisabled(true)

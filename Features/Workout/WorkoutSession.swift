@@ -6,7 +6,8 @@ import TesseraCore
 /// order), y = sets of the current exercise (done above, the dialled set at eye level, remaining below). Rest lives
 /// in the same set block: after a set is seated the weight dial becomes the countdown.
 ///
-/// Every write goes through Core's `ActionEngine` (LogSet, SwapExercise, FinishWorkout), so the op log holds it and
+/// Every write goes through Core's `ActionEngine` (LogSet, LogNextSet, EditSet, SwapEntryExercise, FinishWorkout), so
+/// the op log holds it and
 /// undo replays it. Defaults come from Core's `TrainingLedger.prefill`; the dial's detents from the exercise's
 /// `WeightDial`.
 @MainActor
@@ -492,7 +493,7 @@ extension WorkoutSession {
     func swap(to option: ExerciseSwaps.Option) {
         guard let entry = currentEntry, let from = currentExercise else { return }
         guard let result = try? model.engine.perform(
-            SwapExercise(entry: entry.id, exercise: option.exercise.id, targetWeight: option.load), by: .user
+            SwapEntryExercise(entry: entry.id, exercise: option.exercise.id, targetWeight: option.load), by: .user
         ) else { return }
         let swappedID = result.output
         if swappedID != entry.id, let index = order.firstIndex(of: entry.id) {
