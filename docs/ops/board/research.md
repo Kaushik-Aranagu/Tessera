@@ -2,7 +2,7 @@
 
 **Done:** #59 next areas; #65 M4 scouting, Tess routing and eval phrases, kitchen v2; #68 widgets and snippets, retention; #69 Day log, M5 Money and Reading; #71 people and upkeep; #73 lists templates, habits, add a field, quiet interrupts, body weight trend; #76 habits citations checked; #78 Plan my day scenarios, questions eval, Calendar and Health fixtures, Shutdown and Day log copy, Reading draft ship list; #83 Tess model layer (Claude integration); #85 recipe paste corpus, cook-mode scenarios, Lists fixtures, grammar collisions; #87 model layer addendum (catalog tools, pitfalls); #90 Money draft, v1 gap audit, recipe link fetch; #94 Apple Watch, Tess voice for the model layer, Upkeep draft; #96 Claude capture eval set (80 rows); #99 Plan my day prompt pack, People draft, app from a sentence, eval for 10 tools; #100 context packing, huddle triage kit; #101 speech capture, photo/file/video capture modes; #102 on-device context size (4,096 tokens); #103 free-signing survival, year of synthetic data; #104 ranker tuning, Tess discoverability, spoken normaliser fixtures; #105 screen fast paths, photo field type; #130 breadth map, lists in daily use, day log first version, reading fixtures; #133 ranker fixtures, M3 slices 1-2 brief; #135 Upkeep, People and Money fixtures, ranker R05 fix; #138 speech test script, build A1 brief, recovery line; #139 HealthKit reads, M3 slices 3/6/10 brief, pantry light; #143 grammar misfire sweep, ranker no-date task rows; #145 Kitchen misfire rows (298 total), normaliser master check, Day log days; #149 M5 parse order check (5 of 170 rows change); #150 Show mode photo fixtures, reschedule and time-form rows.
 
-**Now:** queue empty after #150 (Later item needs a Mac lead) (12 and 13 done in #145), because Core's fix batch comes right after the ranker. Next 3 (huddle triage) waits for the huddle answers.
+**Now:** 17, then 18, then 19 (Product refill, 4:41 PM PT). Next 3 (huddle triage) waits for the huddle answers.
 
 **Next:**
 1. (done) M3 slices 1 and 2 engine brief with fixtures (body weight trend line; Habit class with x-of-7 and no streaks). Done when `m3-1-2-brief.md` gives Core the smallest data shapes, 30 body-weight entries with the expected trend values, 20 habit check-in rows with the expected x-of-7, and the grammar rows ("82.4", "weighed 82.4", "meditated") checked against the grammar collision rules.
@@ -28,6 +28,8 @@
 
 17. Tess hint ledger fixtures (Core builds it with PageReader; `tess-discoverability.md`, `docs/design/show-and-hints.md`). Done when `fixtures/hint-ledger.md` gives 15 days of use, each with the hints that should show (at most 3 a day, stop on day 15, "Next time, this works" once per action), and the cases that must show none.
 18. Cook mode timer phrases for the grammar batch's RC15 (cook timers). Done when 40 spoken and typed timer phrases during a cook ("pasta 9 minutes", "another 2", "stop the rice") have expected parses against Builder A's cook mode and Kitchen's `cook-mode-script.md`.
+
+19. Upkeep starter chores. Done when `fixtures/upkeep-starters.md` lists 25 common household chores with a default interval each, the phrase that logs each one, and a collision check against the agreed M5 parse order, so Upkeep's first run isn't empty. Only the ones he picks get made; none are seeded silently.
 
 **Later:**
 - Run the 5-line context size check from `on-device-context-size.md` on Kaushik's phone (needs a Mac lead).

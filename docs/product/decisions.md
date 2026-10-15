@@ -100,4 +100,5 @@
   13. An iCloud-only photo offline uses photo-field's line: "That photo is still in iCloud. Try again online."
   14. No ordinal on spend lines from photos, as in the Money fixtures.
   Also: "1,280" reads a comma before exactly 3 digits as a thousands mark.
+- **Time-form rules, replacing parts of the 4:26 PM PT calls** (4:41 PM PT, Research #150 rows). "thu 3pm" said on a Thursday after 3 PM means next Thursday, because a named weekday means that weekday. A bare 7 to 11 on another day is PM with a meal or evening word ("dinner fri at 8") and AM otherwise; on today the 4:26 rule stands (the next one that hasn't passed). "tonight" or "this evening" said after 8 PM stays today, until 11:30 PM.
 

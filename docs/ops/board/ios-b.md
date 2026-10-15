@@ -14,7 +14,7 @@
 7. NowPicker wiring. Done when cooking, shopping and timed tasks become Now through the same picker as workouts.
 8. M2 slice 12, the full What's running ledger for tasks: suspended and waiting, with the stale rules.
 9. M2 slice 13, the day-full warning.
-10. Day log page (M4 slice 5 screen), after Core's `DayStory`. Done when a Day page per date shows the story lines from Design's sheet, a scrub back through past days works, and a HomeLink word reaches it.
+10. Day log page (M4 slice 5 screen), after Core's `DayStory`. Design's sheet is ready: `docs/design/day-log-page.md` on Design's branch. Done when a Day page per date shows the story lines from Design's sheet, a scrub back through past days works, and a HomeLink word reaches it.
 
 **Later:**
 - Mount BottomChrome over the Home link covers (Groceries, Recipes, Notes, The week), so Tess speaks in one place. Core then removes its Groceries mirror.
