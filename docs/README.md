@@ -69,6 +69,9 @@ Screenshot: [screenshots/today-v0.jpg](screenshots/today-v0.jpg).
 
 - [qa/review-46-to-58.md](qa/review-46-to-58.md): code review of merged PRs #46 to #58, with 13 findings by owner.
 - [qa/grammar-trace.md](qa/grammar-trace.md): every kitchen phrase and 16 non-kitchen phrases traced through the Tess grammar, with 6 new findings (T1–T6).
+- [qa/review-70-and-40-to-45.md](qa/review-70-and-40-to-45.md): status of every finding after Core's hotfix #70, five new bugs it introduced (H1–H5), and a review of #40 to #45 (N1–N4).
+- [qa/review-data-safety.md](qa/review-data-safety.md): storage, op log and undo, and export (D1–D4).
+- [qa/review-80-and-processes.md](qa/review-80-and-processes.md): status after Core's hotfix #80, its new bugs (B1–B5), and Tess, processes and HealthKit (P1–P4).
 - [qa/regression.md](qa/regression.md): the pre-merge checklist (undo, export, What's running, Tess phrases, Reduce Motion).
 - [qa/gym-flow.md](qa/gym-flow.md): the v1 gym check (seed, prefill, dial, kill and resume, Lock Screen, edit and undo, finish).
 - [qa/kitchen-flow.md](qa/kitchen-flow.md): the end-to-end kitchen run-through a Mac lead does before a kitchen PR merges. The Kitchen lead's per-slice acceptance is in [product/kitchen-acceptance.md](product/kitchen-acceptance.md).

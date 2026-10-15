@@ -17,9 +17,9 @@ extension TessGrammar {
     func parseKitchen(_ phrase: String, context: TessContext) -> Parse? {
         let trimmed = phrase.trimmingCharacters(in: .whitespacesAndNewlines)
         let text = trimmed.lowercased()
-        // With a day in it ("get haircut thu"), it's a task, not shopping.
-        let hasDate = TessDates.extract(from: trimmed.split(separator: " ").map(String.init), now: context.now,
-                                        calendar: context.calendar).0 != nil
+        // With a day in it ("get haircut thu"), it's a task, not shopping. "sun" in "buy sun cream" isn't a day:
+        // a short weekday only counts at the end or before a time.
+        let hasDate = Self.hasDate(trimmed, context: context)
         // "list: packing" or "new list films"; "list the car on ebay sat" is a task.
         if let match = trimmed.firstMatch(of: /^(?i)(?:list:|new\s+list[:\s])\s*(.+)$/) {
             let name = String(match.1).trimmingCharacters(in: .whitespaces)
@@ -40,8 +40,9 @@ extension TessGrammar {
             .firstMatch(of: /^(?i)(?:buy|get|groceries:|grocery:|shopping:|add to groceries:?)\s+(.+)$/)
         {
             let lines = Self.splitItems(String(match.1))
-            // "get" is a common verb ("get 5x5 squats done", "get up early"): only shopping when it reads as shopping.
-            if text.hasPrefix("get "), !lines.allSatisfy(looksLikeGroceries) {
+            // "get" is a common verb ("get 5x5 squats done", "get up early"); unknown things still count ("get
+            // coffee").
+            if text.hasPrefix("get "), !lines.allSatisfy(isGettable) {
                 return nil
             }
             return lines.isEmpty ? nil : .groceries(lines: lines)
@@ -49,8 +50,8 @@ extension TessGrammar {
         // A bare comma list of short items: "milk, eggs, 2 lemons".
         if trimmed.contains(","), !trimmed.contains("\n") {
             let lines = Self.splitItems(trimmed)
-            // Every item needs a word ("bench 80, 8" is a lift, not a list), and no day ("call mum, thu").
-            // At least half read as shopping and none is a set ("milk, toothpaste" is shopping).
+            // At least one item reads as shopping, none is a set or an errand, and there's no day: "milk, coffee, tea"
+            // is shopping (coffee and tea land in Other); "call mum, dentist" isn't.
             if lines.count >= 2, !hasDate, Self.isShoppingList(lines, looksLikeGroceries) {
                 return .groceries(lines: lines)
             }
@@ -76,8 +77,11 @@ extension TessGrammar {
         guard let match = rest
             .firstMatch(of: /(\d+(?:\.\d+)?)\s*(hours?|hrs?|h|minutes?|mins?|m|seconds?|secs?|s)?\b/),
             let number = Double(match.1) else { return nil }
-        // With no unit, a rest or plank of 30 or more is seconds ("rest timer 90"); anything else is minutes.
-        let isSeconds = match.2 == nil && number >= 30 && (text.contains("rest") || text.contains("plank"))
+        // With no unit, a rest or plank of 30 or more is seconds ("rest timer 90"); anything else, a dough rest
+        // included, is minutes.
+        let bare = text.replacingOccurrences(of: "timer", with: " ").replacing(/[\d.]+/, with: " ")
+            .split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        let isSeconds = match.2 == nil && number >= 30 && (bare == "rest" || bare == "plank")
         let minutes = match.2.map { $0.hasPrefix("h") ? number * 60 : $0.hasPrefix("s") ? number / 60 : number }
             ?? (isSeconds ? number / 60 : number)
         var label = rest
@@ -114,17 +118,53 @@ extension TessGrammar {
         if let exact = recipes.first(where: { $0.title.lowercased() == query }) {
             return exact
         }
-        // Whole words only: "run" must not find "Brunch eggs".
-        let words = query.split(separator: " ").map(String.init)
+        // Whole words only ("run" must not find "Brunch eggs"), split the same way on both sides so "stir-fry" finds
+        // "stir-fry", and singular so "pancake" finds "Protein pancakes".
+        func keys(_ text: String) -> [String] {
+            text.lowercased().split { !$0.isLetter && !$0.isNumber }.map { IngredientLine.key(for: String($0)) }
+        }
+        let words = keys(query)
+        guard !words.isEmpty else { return nil }
         return recipes.first { recipe in
-            let title = Set(recipe.title.lowercased().split { !$0.isLetter && !$0.isNumber }.map(String.init))
+            let title = Set(keys(recipe.title))
             return words.allSatisfy { title.contains($0) }
         }
     }
 
     static func isShoppingList(_ lines: [String], _ looksLikeGroceries: (String) -> Bool) -> Bool {
-        guard !lines.contains(where: { $0.firstMatch(of: /\d\s*[x×]\s*\d/) != nil }) else { return false }
-        return lines.count(where: looksLikeGroceries) * 2 >= lines.count
+        guard !lines.contains(where: { $0.firstMatch(of: /\d\s*[x×]\s*\d/) != nil || startsWithErrand($0) }),
+              lines.allSatisfy({ $0.split(separator: " ").count <= 4 && $0.contains(where: \.isLetter) })
+        else { return false }
+        return lines.contains(where: looksLikeGroceries)
+    }
+
+    /// "call mum", "email Sam", "skip lunges": things to do, not to buy.
+    static func startsWithErrand(_ item: String) -> Bool {
+        let verbs: Set = ["call", "email", "text", "ring", "book", "pay", "fix", "clean", "skip", "meet", "send",
+                          "write", "check", "ask", "tell", "pick", "drop", "visit", "go", "do", "make", "finish"]
+        return item.split(separator: " ").first.map { verbs.contains($0.lowercased()) } ?? false
+    }
+
+    /// "get coffee" yes; "get up early", "get the car serviced", "get 5x5 squats done" no.
+    private func isGettable(_ item: String) -> Bool {
+        let first = item.split(separator: " ").first?.lowercased() ?? ""
+        let notThings: Set = ["up", "the", "to", "back", "ready", "out", "in", "on", "off", "rid", "started", "going",
+                              "home", "dressed", "done", "it", "me"]
+        guard !notThings.contains(first), item.firstMatch(of: /\d\s*[x×]\s*\d/) == nil,
+              !item.lowercased().hasSuffix(" done") else { return false }
+        return looksLikeGroceries(item) || item.split(separator: " ").count <= 3
+    }
+
+    /// A day or time in the phrase, where a short weekday ("sun", "sat", "wed", "mon") only counts at the end or
+    /// before a time.
+    static func hasDate(_ phrase: String, context: TessContext) -> Bool {
+        var words = phrase.split(separator: " ").map(String.init)
+        let ambiguous: Set = ["sun", "sat", "wed", "mon"]
+        words = words.enumerated().filter { index, word in
+            guard ambiguous.contains(word.lowercased()), index < words.count - 1 else { return true }
+            return TessDates.parseTime(words[index + 1].lowercased()) != nil
+        }.map(\.element)
+        return TessDates.extract(from: words, now: context.now, calendar: context.calendar).0 != nil
     }
 
     /// "milk, eggs and 2 lemons" → ["milk", "eggs", "2 lemons"].

@@ -27,6 +27,8 @@ public struct TessGrammar {
         case shop
         /// Pasted text with an Ingredients heading.
         case recipe(text: String)
+        /// Several sets said at once, comma separated: "bench 80x8, 82.5x6" or "80x8, 80x8, 80x6".
+        case sets([Parse])
     }
 
     public enum SetPhrase: Equatable, Sendable {
@@ -53,6 +55,9 @@ public struct TessGrammar {
         let entry = context.entry.flatMap { store.object(id: $0) }
         if let entry, let parsed = parseRelativeSet(text, entry: entry) {
             return parsed
+        }
+        if phrase.contains(","), let sets = parseCommaSets(phrase, entry: entry) {
+            return sets
         }
         if let lift = parseLift(text, entry: entry) {
             return lift
@@ -89,7 +94,7 @@ public struct TessGrammar {
             return .set(entry: entry, weight: unit.toKilograms(weight), reps: reps, kind: .drop, phrase: .drop,
                         unit: unit)
         }
-        if let match = text.firstMatch(of: /^(\d+(?:\.\d+)?)(?: (kg|lb))? (?:x|for) (\d+)$/),
+        if let match = text.firstMatch(of: /^(\d+(?:\.\d+)?)(?: ?(kg|lb))?(?: ?x ?| for )(\d+)$/),
            let weight = Double(match.1), let reps = Double(match.3)
         {
             let unit = match.2.flatMap { MassUnit(parsing: String($0)) } ?? .kilograms
@@ -111,10 +116,45 @@ public struct TessGrammar {
     // MARK: Named lifts
 
     /// "3x10 bench 80", "bench 3x10 80", "bench 80x8", "bench 80 for 8", "bench 3x8 at 80", "squat 100 5".
+    /// "bench 80x8, 82.5x6": each comma part is a set, the exercise carried forward from the first. With an entry in
+    /// focus, "80x8, 80x8, 80x6" logs into it. "Squat 100, 5" is one set (weight, then reps).
+    private func parseCommaSets(_ phrase: String, entry: ObjectRecord?) -> Parse? {
+        let parts = phrase.split(separator: ",").map { Self.normalize(String($0)) }.filter { !$0.isEmpty }
+        guard parts.count >= 2 else { return nil }
+        // "Squat 100, 5" (dictated): weight and reps split by a comma.
+        if parts.count == 2, Self.number(parts[1]) != nil, let lift = parseLift(
+            parts.joined(separator: " "),
+            entry: entry
+        ) {
+            return lift
+        }
+        var parsed: [Parse] = []
+        // The exercise's name carries forward, never the first part's numbers: "bench 80 for 8, 82.5 for 6".
+        var exerciseName: String?
+        for part in parts {
+            if let lift = parseLift(part, entry: entry) {
+                parsed.append(lift)
+                switch lift {
+                case let .lift(exercise, _, _, _, _): exerciseName = exercise.name.lowercased()
+                case let .set(entry, _, _, _, _, _):
+                    exerciseName = store.linkedClass("exercise", of: entry)?.name.lowercased()
+                default: break
+                }
+            } else if let name = exerciseName, let lift = parseLift("\(name) \(part)", entry: entry) {
+                parsed.append(lift)
+            } else if let entry, let set = parseRelativeSet(part, entry: entry) {
+                parsed.append(set)
+            } else {
+                return nil
+            }
+        }
+        return .sets(parsed)
+    }
+
     private func parseLift(_ text: String, entry: ObjectRecord?) -> Parse? {
         var lift = LiftWords()
         var rest = Substring(text)
-        if let scheme = rest.firstMatch(of: /(\d+) ?x ?(\d+)(?: (?:at|@) (\d+(?:\.\d+)?))?/) {
+        if let scheme = rest.firstMatch(of: /(\d+(?:\.\d+)?) ?x ?(\d+)(?: (?:at|@) (\d+(?:\.\d+)?))?/) {
             lift.readScheme(Double(scheme.1) ?? 0, Double(scheme.2) ?? 0, at: scheme.3.flatMap { Double($0) },
                             weightElsewhere: Self.hasOtherNumber(rest, excluding: scheme.range))
             rest.removeSubrange(scheme.range)

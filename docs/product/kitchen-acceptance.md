@@ -40,3 +40,9 @@ Not blocking: the page scrolls as a whole when the list is long. That is fine fo
 
 1. **"2 garlic cloves" makes its own ingredient and lands in Other.** Unit words after the name aren't read, so the name is "garlic cloves". It doesn't merge with "3 cloves garlic", and `AisleGuide` finds no aisle for "garlic clove". In `IngredientLine.parse`, when the name's last word is a unit word (clove, sprig, stick, head, slice), move it to `unit`.
 2. **One unknown item sinks a comma list.** `looksLikeGroceries` must hold for every item, so "milk, toothpaste" becomes a task because toothpaste isn't in the guide. Accept the list when at least half the items read as shopping and none looks like a set or a date. Adding the common toiletries (toothpaste, shampoo, soap, deodorant, razor) to the Household aisle also helps.
+
+# Second engine hotfix (#80, dd8f3ca)
+
+*Checked the diff on master against the two #70 misses and `kitchen-phrases.md`.* **Pass.** "2 garlic cloves" now reads as 2 cloves of garlic, so it merges with "3 cloves garlic" and lands in Produce. A comma list goes to groceries when one item reads as shopping and none is a set, an errand ("call mum") or a date. Toiletries are in Household. Every row of `kitchen-phrases.md` except the Lists rows (41-48, waiting on Lists slice 8) now matches. Bonus fixes checked: "buy sun cream" is no longer read as Sunday, "pancake" finds "Protein pancakes", and "dough rest timer 45" stays in minutes.
+
+One thing to watch, not a fix: "get" with a short unknown object still goes to groceries ("get haircut" becomes a grocery item called "haircut"). It's a ghost row with undo, so let Kaushik's use decide. If it bites, treat "get X" as groceries only when X reads as shopping, as the comma rule does.

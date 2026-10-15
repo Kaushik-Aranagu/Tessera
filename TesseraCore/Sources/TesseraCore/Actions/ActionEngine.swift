@@ -155,6 +155,25 @@ public final class ActionEngine {
         return record
     }
 
+    /// Undoes the newest action that logged a set (typed, the prefill hold, the Lock Screen's Done, Tess) in the
+    /// workout that's still going. Never reaches into a finished workout.
+    @discardableResult
+    public func undoLatestSet() -> OpRecord? {
+        guard let setClass = classes[.set], let workoutClass = classes[.workout] else { return nil }
+        for record in history(limit: 300) where record.state != .undone {
+            for op in record.ops {
+                guard case let .create(objectID, classID, _, _) = op,
+                      let classDef = store.classDef(id: classID), store.isSubclass(classDef, ofClassID: setClass.id),
+                      let set = store.object(id: objectID), !set.isDeleted,
+                      let workout = store.ancestor(of: set, ofClass: workoutClass) else { continue }
+                guard store.value("endedAt", of: workout) == nil else { return nil }
+                undo(record)
+                return record
+            }
+        }
+        return nil
+    }
+
     // MARK: History
 
     /// Newest first.
@@ -168,7 +187,7 @@ public final class ActionEngine {
     }
 
     private func newestFirst() -> [OpRecord] {
-        store.context.all(OpRecord.self).sorted { $0.createdAt > $1.createdAt }
+        store.context.all(OpRecord.self).sorted { ($0.createdAt, $0.id.uuidString) > ($1.createdAt, $1.id.uuidString) }
     }
 
     // MARK: Replay

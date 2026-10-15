@@ -139,13 +139,13 @@ public extension TesseraExport {
     func encoded() throws -> Data {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        encoder.dateEncodingStrategy = .iso8601
+        encoder.dateEncodingStrategy = ExportDates.encoding
         return try encoder.encode(self)
     }
 
     static func decode(_ data: Data) throws -> TesseraExport {
         let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        decoder.dateDecodingStrategy = ExportDates.decoding
         guard let export = try? decoder.decode(TesseraExport.self, from: data), export.format == format else {
             throw ExportError.notAnExport
         }
@@ -154,8 +154,18 @@ public extension TesseraExport {
     }
 
     /// Restores into an empty store, keeping every id, so links, history and the op log stay intact.
-    func restore(into context: TesseraContext) throws {
-        guard context.count(ObjectRecord.self) == 0, context.count(ClassDef.self) == 0 else {
+    /// With `replacingSeeded`, a store that holds only what launch seeded (nobody has done anything in it yet: no op
+    /// log) is cleared first, so a migration that failed once can still run on a later launch.
+    func restore(into context: TesseraContext, replacingSeeded: Bool = false) throws {
+        let empty = context.count(ObjectRecord.self) == 0 && context.count(ClassDef.self) == 0
+        if !empty, replacingSeeded, context.count(OpRecord.self) == 0 {
+            context.deleteAll(ObjectLink.self)
+            context.deleteAll(ObjectRecord.self)
+            context.deleteAll(ViewDef.self)
+            context.deleteAll(FieldDef.self)
+            context.deleteAll(ClassDef.self)
+            try context.save()
+        } else if !empty {
             throw ExportError.storeNotEmpty
         }
 
@@ -228,5 +238,33 @@ public extension TesseraExport {
             context.insert(record)
         }
         try context.save()
+    }
+}
+
+/// Dates in exports at full precision (ISO 8601 with fractional seconds), so records made within the same second
+/// keep their order. Older whole-second exports still read.
+public enum ExportDates {
+    public static var encoding: JSONEncoder.DateEncodingStrategy {
+        .custom { date, encoder in
+            var container = encoder.singleValueContainer()
+            try container.encode(date.formatted(.iso8601.year().month().day().time(includingFractionalSeconds: true)
+                    .timeZone(separator: .omitted)))
+        }
+    }
+
+    public static var decoding: JSONDecoder.DateDecodingStrategy {
+        .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let text = try container.decode(String.self)
+            if let date = try? Date(text, strategy: .iso8601.year().month().day()
+                .time(includingFractionalSeconds: true).timeZone(separator: .omitted))
+            {
+                return date
+            }
+            if let date = try? Date(text, strategy: .iso8601) {
+                return date
+            }
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Not an ISO 8601 date: \(text)")
+        }
     }
 }

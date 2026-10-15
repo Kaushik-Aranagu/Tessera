@@ -28,3 +28,14 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [day-log.md](day-log.md) | Product lead, Core engine, Design studio: what the Day log shows, undo from a past day, the scrub rail |
 | [m5-money-reading.md](m5-money-reading.md) | Product lead: smallest Money and Reading apps |
 | [people-and-upkeep.md](people-and-upkeep.md) | Product lead: smallest People and Home upkeep apps |
+| [lists-templates.md](lists-templates.md) | Kitchen lead (Lists), Product lead, Core: reset vs copy, pick one, paste into a list |
+| [habits.md](habits.md) | Product lead, Core, Design: weekly targets, auto-filled check-ins, no guilt |
+| [add-a-field.md](add-a-field.md) | Product lead, Core, Design: add a field by typing, type inference |
+| [quiet-interrupts.md](quiet-interrupts.md) | Core, Product lead: holding notifications during a process |
+| [body-weight-trend.md](body-weight-trend.md) | Core, Product lead, Design: smoothed trend weight |
+| [plan-my-day-scenarios.md](plan-my-day-scenarios.md) | Core, Product: 20 Plan my day fixture days with expected plans (M4 slice 6) |
+| [questions-eval.md](questions-eval.md) | Core: 60 questions and smart-list phrasings mapped to a query AST (M3 slices 4, 7) |
+| [calendar-health-fixtures.md](calendar-health-fixtures.md) | Core: 36 Calendar and Health edge-case fixtures (M4 slices 1, 2) |
+| [shutdown-daylog-copy.md](shutdown-daylog-copy.md) | Design, Core: 32 Day log and Shutdown lines in Tess voice (M4 slices 5, 7) |
+| [ship-list-reading-draft.md](ship-list-reading-draft.md) | Product: DRAFT Reading ship list, 7 slices (M5) |
+| [tess-model-layer.md](tess-model-layer.md) | Product, Core: Claude in Tess (official Swift package, Keychain key, $10 cap, grammar then on-device then Claude, first slices) |

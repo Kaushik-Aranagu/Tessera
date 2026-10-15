@@ -16,6 +16,10 @@ struct NoteEditor: View {
 
     private enum Field { case heading, rest }
     @State private var loaded = false
+    /// Set by the first real edit, so opening and leaving writes nothing.
+    @State private var edited = false
+    /// The text as it was opened (the load itself fires onChange; that isn't an edit).
+    @State private var openedAs = ""
     @State private var saveTask: Task<Void, Never>?
     @State private var deleted = false
 
@@ -80,9 +84,9 @@ struct NoteEditor: View {
                     }
                     .buttonStyle(HandleButtonStyle())
                     .padding(.top, Theme.Spacing.section)
-                    .accessibilityHint("Undo brings it back")
+                    .accessibilityHint("Deletes the note")
                 } else {
-                    Text("This note is gone. Undo brings it back.")
+                    Text("This note is gone.")
                         .font(Theme.voice)
                         .foregroundStyle(Theme.Colors.context)
                 }
@@ -102,11 +106,18 @@ struct NoteEditor: View {
             let parts = NotesEditorCopy.split(body)
             heading = parts.heading
             text = parts.rest
+            openedAs = NotesEditorCopy.join(heading: heading, rest: text)
             loaded = true
         }
-        .onChange(of: text) { _, _ in scheduleSave() }
-        .onChange(of: heading) { _, _ in scheduleSave() }
+        .onChange(of: text) { _, _ in noteEdit() }
+        .onChange(of: heading) { _, _ in noteEdit() }
         .onDisappear { save() }
+    }
+
+    private func noteEdit() {
+        guard loaded, edited || NotesEditorCopy.join(heading: heading, rest: text) != openedAs else { return }
+        edited = true
+        scheduleSave()
     }
 
     private func scheduleSave() {
@@ -123,6 +134,9 @@ struct NoteEditor: View {
         saveTask?.cancel()
         guard loaded, !deleted, let note = model.store.object(id: noteID), !note.isDeleted else { return }
         let trimmed = NotesEditorCopy.join(heading: heading, rest: text)
+        // Never touched since it was opened: nothing to save (no rewrite, no jump to the top, no op). Once edited,
+        // compare with what's stored, so typing back to the original after an autosave still saves.
+        guard edited else { return }
         let current = model.store.value("body", of: note)?.stringValue ?? ""
         guard !trimmed.isEmpty, trimmed != current else { return }
         _ = try? model.engine.perform(
@@ -147,14 +161,15 @@ enum NotesEditorCopy {
         return (String(body[..<newline]), String(body[body.index(after: newline)...]))
     }
 
-    /// The first line and the rest, back into one plain body (trimmed; no blank first line).
+    /// The first line and the rest, back into one plain body: the exact inverse of `split` (blank lines after the
+    /// heading stay), with only trailing whitespace trimmed.
     static func join(heading: String, rest: String) -> String {
-        let first = heading.replacingOccurrences(of: "\n", with: " ").trimmingCharacters(in: .whitespaces)
-        let body = rest.trimmingCharacters(in: .whitespacesAndNewlines)
-        if first.isEmpty {
-            return body
+        let first = heading.replacingOccurrences(of: "\n", with: " ")
+        let body = rest.replacing(/\s+$/, with: "")
+        if first.trimmingCharacters(in: .whitespaces).isEmpty {
+            return body.trimmingCharacters(in: .whitespacesAndNewlines)
         }
-        return body.isEmpty ? first : first + "\n" + body
+        return body.isEmpty ? first.replacing(/\s+$/, with: "") : first + "\n" + body
     }
 
     /// The note's first line, as the title.

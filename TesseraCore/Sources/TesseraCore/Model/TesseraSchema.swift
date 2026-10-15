@@ -1,4 +1,5 @@
 import Foundation
+import GRDB
 
 /// Opens Tessera's store. One SQLite database (GRDB) holds the whole object graph.
 @MainActor
@@ -22,23 +23,85 @@ public enum TesseraSchema {
         return folder.appendingPathComponent("tessera.sqlite")
     }
 
-    /// Never crashes on a store it can't open: the old files are moved to a dated backup folder next to the
-    /// store and a fresh store starts, so a bad migration can't stop the app from launching.
+    /// Never crashes on a store it can't open. Only a store that's actually damaged (not a database, corrupt, or its
+    /// schema won't migrate) is moved to a dated backup folder for a fresh start; a passing problem (a full disk, a
+    /// locked file before first unlock) leaves the files alone and runs from memory this time. If the fresh store
+    /// won't open either, the backup goes back. Either way a note is kept for the next launch.
     public static func makeContainer(inMemory: Bool = false, url: URL? = nil) -> TesseraContainer {
         if inMemory {
             return TesseraContainer(memory: ())
         }
         let storeURL = url ?? defaultURL
-        if let context = try? TesseraContext(url: storeURL) {
-            lastOpenOutcome = .opened
-            return TesseraContainer(context)
+        let (container, outcome) = open(storeURL) { try TesseraContext(url: $0) }
+        lastOpenOutcome = outcome
+        return container
+    }
+
+    static func open(_ storeURL: URL,
+                     opener: (URL) throws -> TesseraContext) -> (TesseraContainer, OpenOutcome)
+    {
+        let firstError: any Error
+        do {
+            return try (TesseraContainer(opener(storeURL)), .opened)
+        } catch {
+            firstError = error
         }
-        if let backup = moveStoreAside(storeURL), let context = try? TesseraContext(url: storeURL) {
-            lastOpenOutcome = .recoveredWithBackup(backup)
-            return TesseraContainer(context)
+        guard isDamaged(firstError) else {
+            setLaunchNote("Couldn't open your data just now, so nothing you do this time will be kept. "
+                + "Your history is untouched; close and reopen the app.")
+            return (TesseraContainer(memory: ()), .inMemoryFallback)
         }
-        lastOpenOutcome = .inMemoryFallback
-        return TesseraContainer(memory: ())
+        guard let backup = moveStoreAside(storeURL) else {
+            return (TesseraContainer(memory: ()), .inMemoryFallback)
+        }
+        if let context = try? opener(storeURL) {
+            setLaunchNote("Your data couldn't be read, so I started fresh. The old files are kept in Backups.")
+            return (TesseraContainer(context), .recoveredWithBackup(backup))
+        }
+        moveBack(from: backup, to: storeURL)
+        setLaunchNote("Couldn't open your data just now. Your history is untouched; close and reopen the app.")
+        return (TesseraContainer(memory: ()), .inMemoryFallback)
+    }
+
+    /// Damage worth starting fresh for: not a database, corrupt, or anything that isn't a SQLite result (a schema
+    /// that won't migrate or load). A full disk, I/O errors and locked files are passing, never damage.
+    nonisolated static func isDamaged(_ error: any Error) -> Bool {
+        guard let error = error as? DatabaseError else { return true }
+        return [ResultCode.SQLITE_CORRUPT, .SQLITE_NOTADB, .SQLITE_FORMAT, .SQLITE_SCHEMA]
+            .contains(error.resultCode)
+    }
+
+    nonisolated static func moveBack(from backup: URL, to storeURL: URL) {
+        let manager = FileManager.default
+        let folder = storeURL.deletingLastPathComponent()
+        // Anything the failed fresh open left behind goes first.
+        for file in (try? manager.contentsOfDirectory(atPath: folder.path)) ?? []
+            where file.hasPrefix(storeURL.lastPathComponent)
+        {
+            try? manager.removeItem(at: folder.appendingPathComponent(file))
+        }
+        for file in (try? manager.contentsOfDirectory(atPath: backup.path)) ?? [] {
+            try? manager.moveItem(at: backup.appendingPathComponent(file), to: folder.appendingPathComponent(file))
+        }
+        try? manager.removeItem(at: backup)
+    }
+
+    // MARK: Launch note
+
+    private nonisolated static let launchNoteKey = "tessera.launchNote"
+
+    /// Something the app should say calmly on launch about the store (a fresh start, a migration still to come).
+    /// Kept across launches until cleared, so it's never lost to a second failure.
+    public nonisolated static var launchNote: String? {
+        UserDefaults.standard.string(forKey: launchNoteKey)
+    }
+
+    public nonisolated static func setLaunchNote(_ note: String) {
+        UserDefaults.standard.set(note, forKey: launchNoteKey)
+    }
+
+    public nonisolated static func clearLaunchNote() {
+        UserDefaults.standard.removeObject(forKey: launchNoteKey)
     }
 
     /// Moves a pre-GRDB SwiftData store (and its support files) into `Backups/<date>/` after its data moved across.

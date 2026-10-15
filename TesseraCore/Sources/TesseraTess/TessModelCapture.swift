@@ -80,10 +80,15 @@ public final class TessModelCapture: TessModelCapturing {
 /// Which registry actions the model may call: ones whose arguments it can fill from words alone
 /// (no object ids), and nothing destructive.
 public enum TessToolCatalog {
+    /// The only actions the on-device model may call: things a person would say. Never system ones like
+    /// rollForwardTasks (which takes its own "now").
+    public static let allowed: Set = ["logExercise", "createTask", "createRoutine", "createPlan", "createNote",
+                                      "createList", "startShop", "logBodyWeight"]
+
     public static var descriptors: [ActionDescriptor] {
         ActionRegistry.descriptors.filter { descriptor in
-            !descriptor.isDestructive && descriptor.parameters.allSatisfy { $0.kind != .object && $0.kind != .json }
-                && !descriptor.name.hasSuffix("Process")
+            allowed.contains(descriptor.name) && !descriptor.isDestructive
+                && descriptor.parameters.allSatisfy { $0.kind != .object && $0.kind != .json }
         }
     }
 }
