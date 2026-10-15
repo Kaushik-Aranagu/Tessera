@@ -2,15 +2,15 @@
 
 *Owns: Workout, Exercise, Plans, Routine, Widgets, DesignSystem.*
 
-**Done:** #109 (tap a logged set to edit it, 940dca2). #108 (PaintKey ink rewrite: every key is a stroke word, dead keys removed; D4, rest survives an app kill). ship-2 (#91): v1 slices 8 to 12, G1, a haptic, P2, B3, the launch note, and the mic hidden.
+**Done:** #134 (WorkoutTessBar swapped for the Tess soul, 794981a). #109 (tap a logged set to edit it, 940dca2). #108 (PaintKey ink rewrite: every key is a stroke word, dead keys removed; D4, rest survives an app kill). ship-2 (#91): v1 slices 8 to 12, G1, a haptic, P2, B3, the launch note, and the mic hidden.
 
-**Now:** the WorkoutTessBar to soul swap, Design's audit rows, then persistRest after a swap (Next 1 to 3).
+**Now:** QA's low on removing a set mid-rest, then Next 4 (#122 hookups), then Next 2 (audit rows), then Next 5 (cook mode). Next 3 (persistRest after a swap) fits in wherever it's quickest.
 
 **Next:**
-1. Swap WorkoutTessBar for the Tess soul in the workout, so Tess looks the same everywhere. Done when the workout uses the soul-in-the-corner capture, with no separate bar.
+1. (done, #134) Swap WorkoutTessBar for the Tess soul.
 2. Design's audit rows for ExerciseStrip, SwapPanel and WeekPage (`docs/design/audit-build-1.md`). Done when each row is fixed and recorded.
 3. QA's fix: rest persists after a swap. Done when swapping an exercise mid-rest keeps the rest counting after a kill, with a test.
-4. Hook up Core's #122 on screen. Done when the routine editor uses `RemoveSlot` in place of DeleteObject, the edit-set view can clear RPE, the week view shows rest days, the exercise library is grouped by movement pattern and then equipment, and the workout shows "Up X kg from last time" when the target rose. This comes right after Now's three items.
+4. Hook up Core's #122 on screen. Done when the routine editor uses `RemoveSlot` in place of DeleteObject, the edit-set view can clear RPE, the week view shows rest days, the exercise library is grouped by movement pattern and then equipment, and the workout shows "Up X kg from last time" when the target rose. This comes right after the mid-rest set removal low (Coordinator, 4:04 PM PT).
 5. Cook mode screen (kitchen slices 12 and 12b, moved from Core because its engine is merged). Done when it passes the Kitchen lead's cook-mode acceptance (#127) and `cook-mode-scenarios.md`: live steps, two timers, timers on the Lock Screen, the idle rule, and a Cook entry on finish. Cook is un-hidden on the recipe page. Includes a HomeLink word in `HomeSpatialView`, so the screen isn't DEBUG-only.
 6. Button sweep (Kaushik, 19:00: no rounded-rectangle, oval or pill buttons anywhere, Apple defaults included). Start once Design's `docs/design/no-buttons.md` lands. Done when every button on Builder A's screens (Workout, Exercise, Plans, Routine, Widgets) uses Design's replacement language and the audit's rows for those files are ticked, with a recording. Put the shared button style in DesignSystem first so Builder B and Core can reuse it. Builder A's rows from `../research/screen-fast-paths.md` are part of it: drop "Keep holding"; show the workout instruction lines only the first few times (the keys are now at `WorkoutModeView.swift:544-575`, so no-buttons.md's line numbers are stale); remove the rounded fills on the week range bar and on lifted or picked rows; and make one path back into a running workout, the lit top seam plus the Live Activity, in place of six. The Exercise page's main action is history and progress, not logging (Product, 19:47).
 7. Fixes from Kaushik's phone review on Workout, Exercise and Plans (haptics, dial feel, finish animation). These go ahead of 3 and 4 when they come in.

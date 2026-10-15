@@ -8,6 +8,8 @@
 
 **Progressive disclosure rule.** A spend opens as its amount and its word ("12.40 lunch"). Date, currency, links and the typed text are one gesture away. The month shows one line; the list of spends behind it is one gesture away. No charts, no budgets, no streaks.
 
+**Parse order for M5 (decisions.md, 4:10 PM PT):** notes, pasted recipes, relative sets, then reading, money, people, then comma sets, lifts and kitchen, then upkeep, then tasks.
+
 ## Slices
 
 | # | Slice | Done when | Type | Owner |
@@ -108,3 +110,11 @@ Beyond the smallest version, not in this list:
 5. **Ordinal in the feedback line ("14th this month")?** Default: yes, it is a count, not a judgement. No other counts on capture.
 6. **Money app or Home only?** Default: its own small app, `Features/Money/`, joining Reading on the sibling rail when both exist.
 7. **Bank data?** Default: stays parked (`m5-money-reading.md` question 3).
+
+## Open questions for Kaushik (4:10 PM PT, on the coordinator's morning list; defaults hold until he answers)
+
+1. **A shop or merchant field on a spend?** Default: no separate field yet. "38.20 at Tesco" keeps "at Tesco" in the spend's text, so nothing is lost and a field can be filled from it later.
+2. **Currency codes beyond EUR, GBP, USD and INR?** Default: just those four, plus their symbols. Anything else goes to the model, which can still log it as typed.
+3. **Can a bare "38" answer a waiting shop total?** Default: yes, but only while the shop-total question is the open one on screen and no workout is running, so it can never become a set.
+4. **Does "paid" work like "spent"?** Default: yes when an amount follows ("paid 650 rent"). If it names a chore, that chore is ticked in the same ghost row. "paid rent" with no amount stays an upkeep check-in.
+5. **A split: the full amount or his share?** Default: his share ("split 60 with Sam" logs 30), with "split, 60 total" kept in the text.
