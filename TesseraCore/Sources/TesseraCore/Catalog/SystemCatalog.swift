@@ -15,6 +15,7 @@ public enum SystemCatalog {
         case workout, exerciseEntry, set
         case routine, task, note
         case list, listItem
+        case ingredient
         case process
         case slot, plan
 
@@ -210,6 +211,12 @@ public enum SystemCatalog {
                       FieldSpec(key: "checkedAt", name: "Checked", kind: .date),
                       FieldSpec(key: "section", name: "Section", kind: .text),
                       FieldSpec(key: "about", name: "About", kind: .refList, target: .thing),
+                  ]),
+        // Something you cook with. Recipe lines and grocery items link to one; it knows its aisle and if it's a staple.
+        ClassSpec(key: .ingredient, name: "Ingredient", parent: .thing, symbol: "carrot", colorRole: "health",
+                  fields: [
+                      FieldSpec(key: "aisle", name: "Aisle", kind: .text),
+                      FieldSpec(key: "isStaple", name: "Staple", kind: .bool, defaultValue: .bool(false)),
                   ]),
         ClassSpec(key: .process, name: "Process", parent: .thing, symbol: "circle.dotted", colorRole: "neutral",
                   traits: [.timed], fields: [
