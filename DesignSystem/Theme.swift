@@ -29,6 +29,16 @@ struct ThemeConcept: Sendable {
         var progress: (UInt32, UInt32)
         /// Time-of-day tints for backgrounds that use them: dawn, day, dusk, night.
         var sky: [[UInt32]]
+        /// Tess's words and anything she changed (cobalt).
+        var tess: (UInt32, UInt32) = (0x2E6DA4, 0x9DBFE6)
+        /// Context lines in the italic voice ("now, until twenty to four").
+        var context: (UInt32, UInt32) = (0x7A5C8E, 0xA79FB5)
+        /// Now, rest, a possible PR (cadmium).
+        var now: (UInt32, UInt32) = (0xE0B341, 0xE8BD4C)
+        /// Health, recovery, done days (sage).
+        var health: (UInt32, UInt32) = (0x6E9E6A, 0x7FB07A)
+        /// Inactive words (sibling rail).
+        var muted: (UInt32, UInt32) = (0xA39AAE, 0x6F6880)
     }
 
     struct WorkoutPalette: Sendable {
@@ -43,6 +53,8 @@ struct ThemeConcept: Sendable {
         var display: String
         var ui: String
         var mono: String
+        /// Tess's voice: an italic serif.
+        var voice: String = "Fraunces"
     }
 
     /// Exactly four sizes. 16 pt is the floor.
@@ -73,6 +85,8 @@ struct ThemeConcept: Sendable {
         case groundWithSky
         /// Flat ground only.
         case flat
+        /// Plein air: soft radial washes over paper, one drifting wash and paper grain.
+        case plein
     }
 
     enum SeparatorStyle: Sendable {
@@ -84,6 +98,8 @@ struct ThemeConcept: Sendable {
 
     /// How "Tess is thinking" looks. Each concept supplies its own; `ThinkingIndicator` renders it.
     enum ThinkingStyle: Sendable {
+        /// Tess's soul in its thinking bloom (Kaushik's pick).
+        case soul
         /// A spark whose rays breathe and turn, like a thinking glyph.
         case spark
         /// Three mono dots that pulse in sequence.
@@ -141,7 +157,7 @@ extension ThemeConcept {
         background: .groundWithSky,
         separator: .hairline,
         completion: .strike,
-        thinking: .spark,
+        thinking: .soul,
         workout: WorkoutPalette(
             ground: 0x0D1411,
             groundRaised: 0x16211C,
@@ -151,14 +167,77 @@ extension ThemeConcept {
         )
     )
 
-    static let all: [ThemeConcept] = [.workshop]
+    /// Round 5, "zero tolerance": milled aluminium (Home) and anodised graphite (Workout). docs/design/materials.md.
+    /// Schibsted Grotesk falls back to SF Pro at the same weights until the font is bundled.
+    static let machined = ThemeConcept(
+        name: "Machined",
+        palette: Palette(
+            ground: (0xE7E3DC, 0x1B1C1E),
+            ink: (0x1C1B1A, 0xECE9E3),
+            live: (0xC8452F, 0xD9563F),
+            training: (0xC8452F, 0xD9563F),
+            progress: (0x8A6A1C, 0xE8BD4C),
+            sky: Array(repeating: [0xE7E3DC, 0xE7E3DC, 0xE7E3DC], count: 4)
+        ),
+        fonts: FontPairing(display: "Schibsted Grotesk", ui: "Schibsted Grotesk", mono: "Martian Mono"),
+        scale: TypeScale(
+            hero: TypeSpec(family: .display, size: 56, weight: .black, tracking: -0.045, lineHeight: 0.92,
+                           textStyle: .largeTitle),
+            title: TypeSpec(family: .display, size: 40, weight: .black, tracking: -0.04, lineHeight: 1.0,
+                            textStyle: .title),
+            body: TypeSpec(family: .ui, size: 21, weight: .semibold, tracking: 0, lineHeight: 1.3, textStyle: .body),
+            label: TypeSpec(family: .mono, size: 16, weight: .medium, tracking: 0.04, lineHeight: 1.2, condensed: true,
+                            uppercase: true, textStyle: .callout),
+            heroNumberWeight: .semibold
+        ),
+        background: .flat,
+        separator: .hairline,
+        completion: .strike,
+        thinking: .spark,
+        workout: WorkoutPalette(ground: 0x1B1C1E, groundRaised: 0x25262A, ink: 0xECE9E3, signal: 0xD9563F,
+                                rest: 0xE8BD4C)
+    )
+
+    /// Round 6, "Plein air": impressionist washes, paper grain, big serif type, very little on screen; precision only
+    /// as edge detail (docs/design/materials.md, type-and-motion.md). Fraunces + Hanken Grotesk; until they are
+    /// bundled, the display face falls back to the system serif.
+    static let plein = ThemeConcept(
+        name: "Plein",
+        palette: Palette(
+            ground: (0xF2ECE3, 0x1C1828),
+            ink: (0x2B2440, 0xF3ECE0),
+            live: (0xC8452F, 0xD9563F),
+            training: (0x6E9E6A, 0x7FB07A),
+            progress: (0xE0A35C, 0xE8BD4C),
+            sky: Array(repeating: [0xF2ECE3, 0xF2ECE3, 0xF2ECE3], count: 4)
+        ),
+        fonts: FontPairing(display: "Fraunces", ui: "Hanken Grotesk", mono: "Hanken Grotesk", voice: "Fraunces"),
+        scale: TypeScale(
+            hero: TypeSpec(family: .display, size: 60, weight: .semibold, tracking: -0.025, lineHeight: 0.95,
+                           textStyle: .largeTitle),
+            title: TypeSpec(family: .display, size: 48, weight: .semibold, tracking: -0.025, lineHeight: 1.1,
+                            textStyle: .title),
+            body: TypeSpec(family: .ui, size: 21, weight: .medium, tracking: 0, lineHeight: 1.35, textStyle: .body),
+            label: TypeSpec(family: .ui, size: 16, weight: .bold, tracking: 0.08, lineHeight: 1.25, uppercase: true,
+                            textStyle: .callout),
+            heroNumberWeight: .semibold
+        ),
+        background: .plein,
+        separator: .none,
+        completion: .strike,
+        thinking: .spark,
+        workout: WorkoutPalette(ground: 0x1C1828, groundRaised: 0x3B2D57, ink: 0xF3ECE0, signal: 0xD9563F,
+                                rest: 0xE8BD4C)
+    )
+
+    static let all: [ThemeConcept] = [.plein, .workshop, .machined]
 }
 
 // MARK: - Tokens
 
 enum Theme {
     /// The active concept. Set once at launch (`-theme <name>` in DEBUG).
-    nonisolated(unsafe) static var concept: ThemeConcept = .workshop
+    nonisolated(unsafe) static var concept: ThemeConcept = .plein
 
     static func configure(arguments: [String] = ProcessInfo.processInfo.arguments) {
         guard let index = arguments.firstIndex(of: "-theme"), arguments.indices.contains(index + 1) else { return }
@@ -201,6 +280,26 @@ enum Theme {
 
         static var progress: Color {
             Color(light: concept.palette.progress.0, dark: concept.palette.progress.1)
+        }
+
+        static var tess: Color {
+            Color(light: concept.palette.tess.0, dark: concept.palette.tess.1)
+        }
+
+        static var context: Color {
+            Color(light: concept.palette.context.0, dark: concept.palette.context.1)
+        }
+
+        static var now: Color {
+            Color(light: concept.palette.now.0, dark: concept.palette.now.1)
+        }
+
+        static var health: Color {
+            Color(light: concept.palette.health.0, dark: concept.palette.health.1)
+        }
+
+        static var muted: Color {
+            Color(light: concept.palette.muted.0, dark: concept.palette.muted.1)
         }
 
         static func skyTints(hour: Double) -> [Color] {
@@ -268,8 +367,21 @@ enum Theme {
             case .ui: concept.fonts.ui
             case .mono: concept.fonts.mono
             }
-            let font = Font.custom(family, size: spec.size, relativeTo: spec.textStyle).weight(weight ?? spec.weight)
+            let font = face(family, size: spec.size, relativeTo: spec.textStyle, serif: spec.family == .display)
+                .weight(weight ?? spec.weight)
             return spec.condensed ? font.width(.condensed) : font
+        }
+
+        /// The family if it is registered; otherwise the system face (serif for display faces), never a silent
+        /// fallback to SF Pro where a serif was designed.
+        private static let registeredFamilies = Set(UIFont.familyNames)
+
+        static func face(_ family: String, size: CGFloat, relativeTo style: Font.TextStyle, serif: Bool) -> Font {
+            if registeredFamilies.contains(family) {
+                return Font.custom(family, size: size, relativeTo: style)
+            }
+            let scaled = UIFontMetrics(forTextStyle: style.uiKit).scaledValue(for: size)
+            return Font.system(size: scaled, design: serif ? .serif : .default)
         }
 
         /// A number set at a role's size in the mono face.
@@ -336,5 +448,23 @@ extension Color {
                 alpha: 1
             )
         })
+    }
+}
+
+extension Font.TextStyle {
+    var uiKit: UIFont.TextStyle {
+        switch self {
+        case .largeTitle: .largeTitle
+        case .title: .title1
+        case .title2: .title2
+        case .title3: .title3
+        case .headline: .headline
+        case .subheadline: .subheadline
+        case .callout: .callout
+        case .footnote: .footnote
+        case .caption: .caption1
+        case .caption2: .caption2
+        default: .body
+        }
     }
 }

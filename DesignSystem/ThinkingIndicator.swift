@@ -7,11 +7,21 @@ struct ThinkingIndicator: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
+        if Theme.concept.thinking == .soul {
+            TessSoul(mode: .thinking)
+                .scaleEffect(size / 96)
+                .frame(width: size, height: size)
+        } else {
+            glyph
+        }
+    }
+
+    private var glyph: some View {
         TimelineView(.animation(minimumInterval: 1 / 60, paused: false)) { context in
             let time = context.date.timeIntervalSinceReferenceDate
             switch Theme.concept.thinking {
-            case .spark: spark(time: time)
             case .dots: dots(time: time)
+            default: spark(time: time)
             }
         }
         .frame(width: size, height: size)

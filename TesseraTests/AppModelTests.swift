@@ -44,7 +44,7 @@ struct AppModelTests {
         let entry = try #require(session.currentEntry)
         #expect(session.loggedSets(of: entry).count == 1)
         #expect(session.restEndsAt != nil)
-        #expect(PlateView.plates(for: 82.5) == [25, 5, 1.25])
+        #expect(PlateMath.perSide(82.5) == [25, 5, 1.25])
     }
 
     @Test func commandInterpreterLogsAndAnswers() {

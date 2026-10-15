@@ -50,17 +50,31 @@ final class AppModel {
 
     /// Bumped after writes so views re-read derived data.
     private(set) var revision = 0
-    /// Pages above Today.
+    /// Pages above Home.
     var path: [Route] = []
+    /// Pages zoomed into from the live workout (z), stacked inside the workout's own cover.
+    var workoutPath: [Route] = []
     /// How each pushed page arrives: zoom out of the tapped row (deeper) or cross-fade (jump / up).
     @ObservationIgnored private(set) var arrivals: [Route: Arrival] = [:]
     /// Pages already seen this session — their entrance choreography only plays on the first visit.
     @ObservationIgnored private var visited: Set<Route> = []
     var hasRevealedGreeting = false
     var session: WorkoutSession?
-    var isWorkoutPresented = false
+    var isWorkoutPresented = false {
+        didSet {
+            if isWorkoutPresented {
+                session?.touch()
+            }
+        }
+    }
+
     var commandDraft = ""
     var isCommandExpanded = false
+    /// What Tess's soul is doing right now.
+    var tessMode: TessSoul.Mode = .idle
+    /// Home (the launcher Tess paints in) vs Today.
+    /// Where you were when Tess took you Home; tapping her again goes back.
+    var homeReturnPath: [Route]?
 
     init(context: ModelContext) {
         self.context = context
@@ -70,7 +84,13 @@ final class AppModel {
         } catch {
             assertionFailure("Seeding failed: \(error)")
         }
+        engine = ActionEngine(store: store, classes: classes)
+        ledger = TrainingLedger(store: store, classes: classes)
     }
+
+    /// Every UI write goes through typed actions, so it lands in the op log with undo (Core engine).
+    @ObservationIgnored private(set) var engine: ActionEngine!
+    @ObservationIgnored private(set) var ledger: TrainingLedger!
 
     // MARK: Navigation
 
@@ -86,27 +106,41 @@ final class AppModel {
     enum Arrival { case zoom, crossFade }
 
     func open(_ route: Route, _ relation: Relation = .deeper) {
-        guard route != path.last else { return }
-        switch relation {
-        case .deeper:
-            arrivals[route] = .zoom
-            path.append(route)
-        case .jump:
-            arrivals[route] = .crossFade
-            path.append(route)
-        case .up:
-            if let index = path.firstIndex(of: route) {
-                path.removeSubrange((index + 1)...)
-            } else {
-                arrivals[route] = .crossFade
-                path.append(route)
-            }
+        // While the workout cover is up, depth stacks inside it, so the process stays in front.
+        if isWorkoutPresented {
+            workoutPath = navigate(workoutPath, to: route, relation)
+        } else {
+            path = navigate(path, to: route, relation)
         }
     }
 
+    private func navigate(_ stack: [Route], to route: Route, _ relation: Relation) -> [Route] {
+        guard route != stack.last else { return stack }
+        var stack = stack
+        switch relation {
+        case .deeper:
+            arrivals[route] = .zoom
+            stack.append(route)
+        case .jump:
+            arrivals[route] = .crossFade
+            stack.append(route)
+        case .up:
+            if let index = stack.firstIndex(of: route) {
+                stack.removeSubrange((index + 1)...)
+            } else {
+                arrivals[route] = .crossFade
+                stack.append(route)
+            }
+        }
+        return stack
+    }
+
     func back() {
-        guard !path.isEmpty else { return }
-        path.removeLast()
+        if isWorkoutPresented, !workoutPath.isEmpty {
+            workoutPath.removeLast()
+        } else if !path.isEmpty {
+            path.removeLast()
+        }
     }
 
     /// True the first time a page is shown this session (then it's marked as seen).
@@ -214,8 +248,7 @@ final class AppModel {
     }
 
     func finish(taskID: UUID) {
-        guard let task = object(taskID) else { return }
-        try? store.set("isDone", to: .bool(true), on: task)
+        _ = try? engine.perform(SetTaskDone(task: taskID, done: true), by: .user)
         touch()
     }
 
@@ -224,7 +257,7 @@ final class AppModel {
     func startWorkout(_ workout: ObjectRecord) {
         if session?.workout.id != workout.id {
             if store.value("startedAt", of: workout) == nil {
-                try? store.set("startedAt", to: .date(AppClock.now), on: workout)
+                _ = try? engine.perform(StartWorkout(workout: workout.id, time: AppClock.now), by: .user)
             }
             session = WorkoutSession(workout: workout, model: self)
         }
@@ -234,7 +267,7 @@ final class AppModel {
 
     func endWorkout() {
         guard let session else { return }
-        try? store.set("endedAt", to: .date(AppClock.now), on: session.workout)
+        _ = try? engine.perform(FinishWorkout(workout: session.workout.id, time: AppClock.now), by: .user)
         isWorkoutPresented = false
         self.session = nil
         touch()

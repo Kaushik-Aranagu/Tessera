@@ -1,5 +1,7 @@
 included:
   - App
+  - Shared
+  - Widgets
   - DesignSystem
   - TesseraCore/Sources
   - TesseraCore/Tests
