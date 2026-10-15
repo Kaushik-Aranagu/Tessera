@@ -1,8 +1,8 @@
 # Core engine (Mac)
 
-**Done:** Groceries polish and the Backups word on Review (#118, a07f6a0); grammar collision fix (#115, 34665f0); backup safety hotfix (#114); backup and restore (#112, 30e06a7; daily copies run automatically, Settings entry goes to Builder A); Tess T2 tools plus T2-1 (#106, 43c7ddb). Groceries screen, kitchen slice 13 (#58); kitchen engine hotfixes (#70, #80); data-safety D1–D4 (#84); recipe page and paste, slices 10/11 (PR open, merges after the install).
+**Done:** v1 engine gaps (#122, 1aa9565: RemoveSlot, clear RPE, rest days, library groups, raised-target wording; screen hookups went to Builder A); Groceries polish and the Backups word on Review (#118, a07f6a0); grammar collision fix (#115, 34665f0); backup safety hotfix (#114); backup and restore (#112, 30e06a7; daily copies run automatically, Settings entry goes to Builder A); Tess T2 tools plus T2-1 (#106, 43c7ddb). Groceries screen, kitchen slice 13 (#58); kitchen engine hotfixes (#70, #80); data-safety D1–D4 (#84); recipe page and paste, slices 10/11 (PR open, merges after the install).
 
-**Now:** v1 engine gaps (RemoveSlot, EditSet clearing RPE, rest days in `week(containing:)`, library grouping, "Up X kg from last time"). The #86 follow-up comes once #86 merges.
+**Now:** the Groceries and Backups design pass, then the context ranker (Next 1). The #86 follow-up comes once #86 merges.
 
 **Next:**
 1. Context ranker (Kaushik's "the screen is the resource", `../research/context-packing.md`). Done when NowPicker is rebuilt around one shared `rank()` with overrides and weighted scores, every pick carries `Pick.why`, the doc's 20 moments pass as fixtures, and Home can read it in place of `AppModel.currentTask`, so Home and Now never disagree. Builder B wires NowPage to it. Then ranker tuning (`../research/ranker-tuning.md`): a separate ranklog that stays on the phone, retuning after 60 renders, and moving weights by at most 5 points a week.
