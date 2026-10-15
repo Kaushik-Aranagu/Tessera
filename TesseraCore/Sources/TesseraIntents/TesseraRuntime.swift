@@ -51,5 +51,6 @@ public enum TesseraIntentsCatalog {
         "moveSlot": "in-app only: routine editor",
         "editSlot": "in-app only: routine editor",
         "swapSlotExercise": "in-app only: routine editor",
+        "swapEntryExercise": "in-app only: live mode swap",
     ]
 }
