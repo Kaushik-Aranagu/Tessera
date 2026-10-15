@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=390">
 <title>Voice in the gym</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
-<!-- Motion study for v1 slice 17 (voice in the gym): hold the Tess horizon, say "80 for 7", then "same". Drawn to docs/design/no-buttons.md. Add ?x2 to render at 2x. -->
+<!-- Motion study for v1 slice 17 (voice in the gym): hold Tess's soul in the corner, say "80 for 7", then "same". Drawn to docs/design/no-buttons.md. Add ?x2 to render at 2x. -->
 <style>
 :root{--cream:#F3ECE0;--verm:#C8452F;--cobalt:#2E6DA4;--cad:#E0A35C;--sage:#6E9E6A}
 body{margin:0;background:#EFE7DC}
@@ -36,11 +36,11 @@ body{margin:0;background:#EFE7DC}
   <!-- what Tess hears, written large above the horizon while you hold -->
   <div id="heard" class="abs" style="left:22px;right:22px;top:560px;font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:40px;z-index:9"></div>
 
-  <div class="horizon"></div>
-  <div id="hz" class="abs" style="left:76px;right:22px;top:788px;height:.5px;background:rgba(243,236,224,.3);z-index:9;transform-origin:100% 50%"></div>
-  <span id="tess" class="abs" style="left:78px;top:756px;font-size:21px;color:rgba(243,236,224,.55);z-index:9">Hold to tell me a set</span>
-  <span id="undo" class="abs la lbl" style="right:22px;top:762px;color:#F2B8A8;opacity:0;z-index:9">UNDO<span class="line" style="background:#F2B8A8"></span></span>
-  <div id="soul" class="abs" style="left:50px;top:772px;width:0;height:0;z-index:9;transform:scale(.5)">
+  <div id="hz" class="abs" style="display:none"></div>
+  <div id="ask" class="abs" style="left:22px;top:510px;font-size:21px;color:#9DBFE6;opacity:0;z-index:9">Listening</div>
+  <span id="tess" class="abs" style="right:78px;top:775px;font-size:21px;color:rgba(243,236,224,.55);z-index:9;text-align:right;white-space:nowrap">Hold me to tell me a set</span>
+  <span id="undo" class="abs la lbl" style="right:78px;top:808px;color:#F2B8A8;opacity:0;z-index:9">UNDO<span class="line" style="background:#F2B8A8"></span></span>
+  <div id="soul" class="abs" style="left:346px;top:788px;width:0;height:0;z-index:9;transform:scale(.72)">
     <div class="d" style="--c:200,69,47"></div><div class="d" style="--c:46,109,164"></div><div class="d" style="--c:224,179,65"></div>
   </div>
   <div id="finger" class="abs"></div>
@@ -82,13 +82,13 @@ let bloomAnims = [];
 function listen(on) {
   bloomAnims.forEach((a) => a.cancel()); bloomAnims = [];
   if (on) {
-    anim($('soul'), [{ transform: 'scale(.5)' }, { transform: 'scale(1)' }], { duration: 360, easing: HOUSE });
+    anim($('soul'), [{ transform: 'scale(.72)' }, { transform: 'translate(-150px,-90px) scale(1.5)' }], { duration: 420, easing: HOUSE }); anim($('ask'), [{ opacity: 0 }, { opacity: 1 }], { duration: 240 }); anim($('tess'), [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
     dabs.forEach((d, k) => bloomAnims.push(d.animate([
       { transform: `translate(${HOME[k][0] * .45}px,${HOME[k][1] * .45}px) scale(.6)` },
       { transform: `translate(${TARGET[k][0]}px,${TARGET[k][1]}px) scale(1.15)` },
       { transform: `translate(${HOME[k][0] * .45}px,${HOME[k][1] * .45}px) scale(.6)` }
     ], { duration: 1400, delay: k * 466, iterations: Infinity, easing: 'ease-in-out' })));
-  } else anim($('soul'), [{ transform: 'scale(1)' }, { transform: 'scale(.5)' }], { duration: 320, easing: HOUSE });
+  } else { anim($('soul'), [{ transform: 'translate(-150px,-90px) scale(1.5)' }, { transform: 'scale(.72)' }], { duration: 380, easing: HOUSE }); anim($('ask'), [{ opacity: 1 }, { opacity: 0 }], { duration: 200 }); anim($('tess'), [{ opacity: 0 }, { opacity: 1 }], { duration: 200 }); }
 }
 // words arrive as they are heard: each glyph fades up out of blur
 async function hear(text) {
@@ -113,12 +113,13 @@ async function ghost(i, line) {
   const len = s.p.getTotalLength(); s.p.style.strokeDasharray = len; s.p.style.strokeDashoffset = len; s.p.setAttribute('opacity', .35);
   await tween(420, (t) => { s.p.style.strokeDashoffset = len * (1 - t); });
   swap($('tess'), line, '#9DBFE6');
-  const dry = document.createElement('div'); Object.assign(dry.style, { position: 'absolute', left: '76px', top: '787.5px', height: '1.5px', width: '0', background: '#9DBFE6', zIndex: 10 }); $('ph').appendChild(dry);
-  await tween(2000, (t) => { dry.style.width = (292 * t) + 'px'; s.p.setAttribute('opacity', .35 + .65 * t); }, (t) => t);
+  const tw = $('tess').getBoundingClientRect().width / ($('ph').getBoundingClientRect().width / 390);
+  const dry = document.createElement('div'); Object.assign(dry.style, { position: 'absolute', right: '78px', top: '806px', height: '1.5px', width: '0', background: '#9DBFE6', zIndex: 10 }); $('ph').appendChild(dry);
+  await tween(2000, (t) => { dry.style.width = (tw * t) + 'px'; s.p.setAttribute('opacity', .35 + .65 * t); }, (t) => t);
   // saved: a rigid tick, the stroke's paint settles, Undo stays until the next set
   anim(dry, [{ opacity: 1 }, { opacity: 0 }], { duration: 260 }).then(() => dry.remove());
   anim(s.g, [{ transform: `translate(${i * 74}px,0) scaleY(1)` }, { transform: `translate(${i * 74}px,0) scaleY(1.25)` }, { transform: `translate(${i * 74}px,0) scaleY(1)` }], { duration: 260 });
-  anim($('undo'), [{ opacity: 0 }, { opacity: 1 }], { duration: 240 });
+  anim($('undo'), [{ opacity: 0 }, { opacity: 1 }], { duration: 240, delay: 200 });
 }
 
 (async () => {
@@ -127,15 +128,12 @@ async function ghost(i, line) {
   await sleep(1000);
 
   // hold anywhere on the horizon: the soul blooms, the writing line brightens and the page dims a little
-  await fingerOn(220, 770);
+  await fingerOn(346, 788);
   listen(true);
-  anim($('hz'), [{ background: 'rgba(243,236,224,.3)' }, { background: 'rgba(157,191,230,.9)' }], { duration: 300 });
-  swap($('tess'), 'Listening', '#9DBFE6');
   await sleep(300);
   await hear('eighty for seven');
   await sleep(300);
   fingerOff(); listen(false);
-  anim($('hz'), [{ background: 'rgba(157,191,230,.9)' }, { background: 'rgba(243,236,224,.3)' }], { duration: 300 });
   await parse('80 × 7');
   await sleep(200);
   anim($('heard'), [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-330px) scale(.6)' }], { duration: 420, easing: 'cubic-bezier(.5,0,.2,1)' });
@@ -147,12 +145,9 @@ async function ghost(i, line) {
   // "same": the last set again
   anim($('undo'), [{ opacity: 1 }, { opacity: 0 }], { duration: 200 });
   $('heard').getAnimations().forEach((a) => a.cancel()); $('heard').innerHTML = '';
-  await fingerOn(220, 770); listen(true);
-  anim($('hz'), [{ background: 'rgba(243,236,224,.3)' }, { background: 'rgba(157,191,230,.9)' }], { duration: 300 });
-  swap($('tess'), 'Listening', '#9DBFE6');
+  await fingerOn(346, 788); listen(true);
   await sleep(300); await hear('same'); await sleep(400);
   fingerOff(); listen(false);
-  anim($('hz'), [{ background: 'rgba(157,191,230,.9)' }, { background: 'rgba(243,236,224,.3)' }], { duration: 300 });
   await parse('80 × 7 again');
   await sleep(200);
   anim($('heard'), [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-330px) translateX(140px) scale(.6)' }], { duration: 420, easing: 'cubic-bezier(.5,0,.2,1)' });

@@ -21,7 +21,7 @@ For Builder A. There is no list rows, no `EditButton` and no edit mode: the rout
   - The row follows the finger.
   - When it crosses the midpoint of a neighbour, that neighbour slides into the gap (320ms, house curve), with a `.selection` tick for each slot passed.
 - **Release:** the row settles into its slot (260ms) and the seams fade. Tess says "Incline press goes second."
-- Undo is in the Tess horizon.
+- Undo appears beside Tess's soul.
 
 ## Drop: swipe left
 - **The row follows the finger.** Past 90pt, **DROP** rises in the right track in vermilion (the same pattern as FORGET and TOMORROW).
