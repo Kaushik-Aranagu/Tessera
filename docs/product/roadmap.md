@@ -15,6 +15,10 @@ Tessera is a personal OS on the iPhone. Every noun is an object of a class, the 
 5. **Never shame.** Counts ("4 of the last 7"), not streaks; overdue rolls forward, never red.
 6. **Tess acts through the same typed actions as the UI,** so everything she does can be undone.
 
+## Build order
+
+Velocity over perfection (Kaushik, 2026-10-15): the live build order is `ship-list.md`, small end-to-end slices ordered by what he feels first. The milestones below are the long view.
+
 ## Milestones
 
 | | Milestone | What Kaushik gets | Done when |
