@@ -198,6 +198,9 @@ struct GrammarTraceTests {
             case .lift, .set, .sets: "lift"
             case .note: "note"
             case .shop: "shop"
+            case .reschedule: "reschedule"
+            case .cookStep: "cook"
+            case .ignoredInWorkout: "nothing"
             case .recipe: "recipe"
             case nil: "nothing"
             }
