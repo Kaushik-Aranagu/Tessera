@@ -9,8 +9,10 @@
 **After Kaushik's phone review (build cut 19:45 UTC):** his look-and-feel feedback goes ahead of everything in Next. Watch-points sent to Product for `review-session.md`.
 
 **Next:**
-(moved to Now) Done when the sheet shows pasting the key, "Key saved. Ends in ...", the month line with the cap turning amber at 80%, and the cloud mark on the bloom, not a stock Form. Words come from the model-layer lines in `../research/tess-voice.md`.
-1. Habits x-of-7: a day's mark filling in on the week row, as a recording (M3).
+1. Ask Tess capture surface (Kaushik, 19:18; `../product/spatial-interaction.md` section 0). Fold it into the no-buttons revision. Done when the sheet shows the small Tess glyph animating open into the capture surface, with typing, voice and later photo, file and video modes. Each mode changes the surface to fit its input, and words appear and dry into a ghost row, all as a recording. Builder B builds it, and it covers v1 slice 17 (voice).
+2. Watch quick wins for Core (`../research/apple-watch.md` W1 and W2). Done when a short steer covers the rest Live Activity's small Smart Stack layout (countdown, planned set, Done, +15) and the average and max heart rate line on the workout summary, which is absent with no Watch.
+3. Habits x-of-7: a day's mark filling in on the week row, as a recording (M3).
+4. Money amount dial, ahead of M5 (`../product/ship-list-m5-money.md` screen 5). Done when a sheet shows the weight dial's sibling, with whole units on one drum, cents on a smaller one, and typing behind a tap.
 
 **Later:**
 - Glyph for the Tell Tess control as an SF Symbols template, once slice 10 starts.
