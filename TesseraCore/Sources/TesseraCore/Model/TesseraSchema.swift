@@ -32,6 +32,8 @@ public enum TesseraSchema {
             return TesseraContainer(memory: ())
         }
         let storeURL = url ?? defaultURL
+        // A restore staged last time takes its place before anything opens.
+        TesseraBackup.applyPendingRestore(to: storeURL)
         let (container, outcome) = open(storeURL) { try TesseraContext(url: $0) }
         lastOpenOutcome = outcome
         return container

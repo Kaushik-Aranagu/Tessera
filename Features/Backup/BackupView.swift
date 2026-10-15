@@ -1,0 +1,198 @@
+import SwiftUI
+import TesseraCore
+import UniformTypeIdentifiers
+
+/// Backups: where his history is kept safe, said in sentences, not a settings list. The hero says how safe it is
+/// right now; the folder outside the app is a value word inside a sentence (tap to pick or change it); saving a copy
+/// and restoring are label words. A restore is checked, then applied the next time Tessera opens.
+///
+/// Entry point: present `BackupView()`, or launch with `-backup` in DEBUG.
+struct BackupView: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var picking = false
+    @State private var importing = false
+    @State private var saving: BackupFile?
+    @State private var line: String?
+    @State private var refresh = 0
+
+    var body: some View {
+        let _ = refresh
+        let folder = BackupKeeper.pickedFolder
+        let latest = BackupKeeper.latestLocal
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                Text("your history")
+                    .font(Theme.voice)
+                    .foregroundStyle(Theme.Colors.context)
+                    .entrance(0)
+                Text(folder == nil ? "Kept on this iPhone" : "Kept in two places")
+                    .textRole(.hero)
+                    .foregroundStyle(Theme.Colors.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityAddTraits(.isHeader)
+                    .padding(.top, Theme.Spacing.s)
+                    .entrance(1, hero: true)
+
+                Text(BackupCopy.local(latest, now: AppClock.now))
+                    .textRole(.body)
+                    .foregroundStyle(Theme.Colors.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, Theme.Spacing.xl)
+                    .entrance(2)
+
+                HStack(alignment: .firstTextBaseline, spacing: 0) {
+                    Text(folder == nil ? "Also keep them in " : "Also kept in ")
+                        .textRole(.body)
+                        .foregroundStyle(Theme.Colors.ink)
+                    Button { picking = true } label: {
+                        Text(folder.map { BackupCopy.folderName($0) } ?? "a folder you choose")
+                            .textRole(.bodyStrong)
+                            .foregroundStyle(Theme.Colors.ink)
+                    }
+                    .buttonStyle(.valueWash)
+                    .accessibilityHint("Picks the folder, for example iCloud Drive")
+                    Text(".")
+                        .textRole(.body)
+                        .foregroundStyle(Theme.Colors.ink)
+                }
+                .padding(.top, Theme.Spacing.m)
+                .entrance(3)
+
+                Text(folder == nil
+                    ? "Copies on this iPhone go if the app is deleted. A folder in iCloud Drive keeps them."
+                    : "These survive deleting the app.")
+                    .font(Theme.voice)
+                    .foregroundStyle(Theme.Colors.context)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, Theme.Spacing.s)
+                    .entrance(4)
+
+                HStack(spacing: Theme.Spacing.xl) {
+                    Button("Save a copy", action: saveCopy)
+                        .buttonStyle(.labelWord)
+                    Button("Restore") { importing = true }
+                        .buttonStyle(.labelWord)
+                        .accessibilityHint("Picks a backup; it replaces your data next time Tessera opens")
+                }
+                .padding(.top, Theme.Spacing.section)
+                .entrance(5)
+
+                if let line {
+                    Text(line)
+                        .font(Theme.voice)
+                        .foregroundStyle(Theme.Colors.tess)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, Theme.Spacing.m)
+                        .transition(.opacity)
+                }
+            }
+            .padding(.horizontal, Theme.Spacing.gutter)
+            .padding(.top, Theme.Spacing.l)
+            .padding(.bottom, Theme.Spacing.section)
+        }
+        .scrollIndicators(.hidden)
+        .background { ThemedBackground() }
+        .environment(\.animateEntrance, true)
+        .fileImporter(isPresented: $picking, allowedContentTypes: [.folder]) { result in
+            guard case let .success(url) = result else { return }
+            do {
+                try BackupKeeper.pick(url, context: model.context)
+                say("Saved a copy there. One a day from now on.")
+            } catch {
+                say("Couldn't use that folder. Try another one.")
+            }
+        }
+        .fileImporter(isPresented: $importing, allowedContentTypes: [.tesseraBackup, .data]) { result in
+            guard case let .success(url) = result else { return }
+            restore(from: url)
+        }
+        .fileExporter(isPresented: Binding(get: { saving != nil }, set: {
+            if !$0 {
+                saving = nil
+            }
+        }),
+        document: saving, contentType: .tesseraBackup, defaultFilename: saving?.name) { result in
+            if case .success = result {
+                say("Saved.")
+            }
+        }
+    }
+
+    private func saveCopy() {
+        guard let url = try? BackupKeeper.copyForSaving(model.context), let data = try? Data(contentsOf: url) else {
+            say("Couldn't make a copy just now.")
+            return
+        }
+        saving = BackupFile(data: data, name: url.deletingPathExtension().lastPathComponent)
+    }
+
+    private func restore(from url: URL) {
+        let accessing = url.startAccessingSecurityScopedResource()
+        defer {
+            if accessing {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+        do {
+            let info = try TesseraBackup.stageRestore(from: url)
+            say("Restores the copy from \(info.createdAt.formatted(.dateTime.weekday(.wide).day().month(.wide))) "
+                + "next time you open Tessera. What's here now is kept.")
+        } catch TesseraBackup.BackupError.newerSchema {
+            say("That copy is from a newer Tessera. Update first.")
+        } catch {
+            say("That file isn't a Tessera backup.")
+        }
+    }
+
+    private func say(_ text: String) {
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+            line = text
+            refresh += 1
+        }
+    }
+}
+
+/// A backup file for the export sheet.
+struct BackupFile: FileDocument {
+    static var readableContentTypes: [UTType] {
+        [.tesseraBackup]
+    }
+
+    let data: Data
+    var name = "Tessera"
+
+    init(data: Data, name: String) {
+        self.data = data
+        self.name = name
+    }
+
+    init(configuration: ReadConfiguration) throws {
+        data = configuration.file.regularFileContents ?? Data()
+    }
+
+    func fileWrapper(configuration _: WriteConfiguration) throws -> FileWrapper {
+        FileWrapper(regularFileWithContents: data)
+    }
+}
+
+enum BackupCopy {
+    /// "A copy is made every day. The last one was today." / "The first copy is made when you leave the app today."
+    static func local(_ latest: Date?, now: Date) -> String {
+        guard let latest else { return "The first copy is made when you leave the app today." }
+        let calendar = Calendar.current
+        let when = calendar.isDate(latest, inSameDayAs: now) ? "today"
+            : calendar.isDateInYesterday(latest) ? "yesterday"
+            : latest.formatted(.dateTime.weekday(.wide))
+        return "A copy is made every day, the last one \(when). Seven are kept."
+    }
+
+    /// "iCloud Drive/Tessera"
+    static func folderName(_ url: URL) -> String {
+        let parts = url.pathComponents
+        if let index = parts.firstIndex(where: { $0.hasPrefix("com~apple~CloudDocs") }) {
+            return (["iCloud Drive"] + parts[(index + 1)...]).joined(separator: "/")
+        }
+        return parts.suffix(2).joined(separator: "/")
+    }
+}
