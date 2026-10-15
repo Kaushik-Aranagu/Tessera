@@ -84,15 +84,17 @@ private struct WorkoutContent: View {
                             },
                             onDone: leaveFinished
                         )
-                        WorkoutTessBar(
+                        LiveTessCorner(
                             line: WorkoutLines.tess(session, phase: phase, summary: summaryLine),
                             mode: tessMode,
-                            canUndo: session.canUndo && session.finishedAt == nil
-                        ) {
-                            withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLastSet() }
-                            undoHaptic += 1
-                        }
-                        .padding(.horizontal, 14)
+                            canUndo: session.canUndo && session.finishedAt == nil,
+                            onUndo: {
+                                withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLastSet() }
+                                undoHaptic += 1
+                            }
+                        )
+                        .padding(.leading, Theme.Spacing.gutter)
+                        .padding(.trailing, 6)
                         .padding(.top, Theme.Spacing.l)
                     }
                     .transition(.opacity)
@@ -213,14 +215,18 @@ private struct WorkoutContent: View {
             Spacer(minLength: Theme.Spacing.m)
             keyRow(phase: phase)
                 .padding(.horizontal, Theme.Spacing.gutter)
-            WorkoutTessBar(line: askReply ?? WorkoutLines.tess(session, phase: phase, summary: summaryLine),
+            LiveTessCorner(line: askReply ?? WorkoutLines.tess(session, phase: phase, summary: summaryLine),
                            mode: tessMode,
-                           canUndo: session.canUndoLast && !session.isEditing, onUndo: {
+                           canUndo: session.canUndoLast && !session.isEditing,
+                           onUndo: {
                                withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLast() }
                                undoHaptic += 1
-                           }, onTap: { isAsking = true })
-                .padding(.horizontal, 14)
-                .padding(.top, Theme.Spacing.l)
+                           },
+                           onOpen: { isAsking = true },
+                           onHome: { model.isWorkoutPresented = false })
+                .padding(.leading, Theme.Spacing.gutter)
+                .padding(.trailing, 6)
+                .padding(.top, Theme.Spacing.s)
         }
         .tesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.52), value: session.isEffortShown)
     }

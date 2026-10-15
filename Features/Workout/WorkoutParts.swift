@@ -236,66 +236,6 @@ struct EffortHandle: View {
     }
 }
 
-// MARK: - Tess bar
-
-/// Dark glass with Tess's soul in screen blend and her line. After a set is logged it carries Undo on the right
-/// until the next set is logged. No toast timer, never "Are you sure?".
-struct WorkoutTessBar: View {
-    let line: String
-    let mode: TessSoul.Mode
-    let canUndo: Bool
-    var onUndo: () -> Void
-    /// Tap Tess's line to type to her ("log bench 80x8"); the field rises above the keyboard (LiveAskField).
-    var onTap: (() -> Void)?
-
-    var body: some View {
-        let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
-        return HStack(spacing: Theme.Spacing.s) {
-            TessSoul(mode: mode)
-                .scaleEffect(0.5)
-                .frame(width: 56, height: 56)
-            Text(line)
-                .font(Theme.voice)
-                .foregroundStyle(Paint.tessBar)
-                .lineLimit(2)
-                .minimumScaleFactor(0.85)
-                .contentTransition(.opacity)
-                .tesseraAnimation(value: line)
-                .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading)
-                .contentShape(Rectangle())
-                .onTapGesture { onTap?() }
-                .accessibilityAddTraits(onTap == nil ? [] : .isButton)
-                .accessibilityHint(onTap == nil ? "" : "Type to Tess")
-            Spacer(minLength: 0)
-            if canUndo {
-                Button(action: onUndo) {
-                    Text("Undo")
-                        .textRole(.labelStrong)
-                        .foregroundStyle(Paint.cream)
-                        .frame(minWidth: 60, minHeight: 60)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Undo the last change")
-                .transition(.opacity)
-            }
-        }
-        .padding(.leading, 12)
-        .padding(.trailing, 4)
-        .frame(height: 66)
-        .background(shape.fill(.white.opacity(0.07)))
-        .glassEffect(.regular, in: shape)
-        .overlay {
-            shape.strokeBorder(LinearGradient(stops: [.init(color: .white.opacity(0.16), location: 0),
-                                                      .init(color: .clear, location: 0.06)],
-                                              startPoint: .top, endPoint: .bottom), lineWidth: 1)
-        }
-        .overlay { shape.stroke(.black.opacity(0.6), lineWidth: 0.5) }
-        .tesseraAnimation(value: canUndo)
-        .accessibilityElement(children: .contain)
-    }
-}
-
 // MARK: - Plate step keys
 
 /// The dial's non-gesture path: a bare minus or plus, 60 pt square, one load per press (a pair of the smallest
@@ -377,10 +317,9 @@ struct LiveAskField: View {
     @FocusState private var focused: Bool
 
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
-        HStack(spacing: Theme.Spacing.s) {
+        HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.s) {
             TextField("log bench 80x8, or ask", text: $draft)
-                .font(Theme.voice)
+                .font(InkWordType.font)
                 .foregroundStyle(Paint.cream)
                 .focused($focused)
                 .submitLabel(.go)
@@ -388,15 +327,12 @@ struct LiveAskField: View {
                 .autocorrectionDisabled()
                 .onSubmit(submit)
             Button("Close") { close() }
-                .textRole(.labelStrong)
-                .foregroundStyle(Paint.secondary)
-                .frame(minWidth: 60, minHeight: 44)
-                .buttonStyle(.plain)
+                .buttonStyle(.labelWord(Paint.secondary))
         }
-        .padding(.horizontal, Theme.Spacing.m)
-        .frame(height: 60)
-        .overlay { shape.stroke(.white.opacity(0.12), lineWidth: 0.5) }
-        .padding(.horizontal, 14)
+        // A writing line, not a field: 0.5 pt under the words (no-buttons.md, "Write").
+        .padding(.bottom, 6)
+        .overlay(alignment: .bottom) { Rectangle().fill(Paint.tess.opacity(0.6)).frame(height: 0.5) }
+        .padding(.horizontal, Theme.Spacing.gutter)
         .padding(.top, Theme.Spacing.s)
         .frame(maxHeight: .infinity, alignment: .top)
         .preferredColorScheme(.dark)
