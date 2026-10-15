@@ -18,3 +18,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [instrument-robustness.md](instrument-robustness.md) | iOS build, Design studio |
 | **Spikes** | |
 | [storage-spike.md](storage-spike.md) | Kaushik (decision), Core engine |
+| [next-areas.md](next-areas.md) | Product lead (planning): next app areas and cross-app links |
