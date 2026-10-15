@@ -6,7 +6,8 @@ public enum ActionRegistry {
     public static let descriptors: [ActionDescriptor] = [
         LogSet.descriptor, EditSet.descriptor, AddExercise.descriptor, StartWorkout.descriptor,
         FinishWorkout.descriptor, LogExercise.descriptor, CreateTask.descriptor, SetTaskDone.descriptor,
-        RenameObject.descriptor, DeleteObject.descriptor,
+        RenameObject.descriptor, DeleteObject.descriptor, StartProcess.descriptor, SaveContext.descriptor,
+        SuspendProcess.descriptor, ResumeProcess.descriptor, EndProcess.descriptor,
     ]
 
     /// The compact catalog for the on-device model's instructions, one action per line.
@@ -38,6 +39,11 @@ public enum ActionRegistry {
         SetTaskDone.descriptor.name: { try decode(SetTaskDone.self, SetTaskDone.descriptor.name, $0) },
         RenameObject.descriptor.name: { try decode(RenameObject.self, RenameObject.descriptor.name, $0) },
         DeleteObject.descriptor.name: { try decode(DeleteObject.self, DeleteObject.descriptor.name, $0) },
+        StartProcess.descriptor.name: { try decode(StartProcess.self, StartProcess.descriptor.name, $0) },
+        SaveContext.descriptor.name: { try decode(SaveContext.self, SaveContext.descriptor.name, $0) },
+        SuspendProcess.descriptor.name: { try decode(SuspendProcess.self, SuspendProcess.descriptor.name, $0) },
+        ResumeProcess.descriptor.name: { try decode(ResumeProcess.self, ResumeProcess.descriptor.name, $0) },
+        EndProcess.descriptor.name: { try decode(EndProcess.self, EndProcess.descriptor.name, $0) },
     ]
 
     private static func decode<A: EngineAction>(_ type: A.Type, _ name: String, _ arguments: Data) throws -> A {
