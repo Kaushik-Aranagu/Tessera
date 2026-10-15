@@ -1,11 +1,11 @@
 # Core engine (Mac)
 
-**Done:** Groceries screen, kitchen slice 13 (#58); kitchen engine hotfixes (#70, #80); data-safety D1–D4 (#84); recipe page and paste, slices 10/11 (PR open, merges after the install).
+**Done:** Tess T2 tools plus T2-1 (#106, 43c7ddb). Groceries screen, kitchen slice 13 (#58); kitchen engine hotfixes (#70, #80); data-safety D1–D4 (#84); recipe page and paste, slices 10/11 (PR open, merges after the install).
 
-**Now:** the Groceries ink word, then backup and restore (Next 1). T2 is done as #106, held until after the install because it touches the on-device capture path. The #86 follow-up comes once #86 merges. T2 shipped 10 tools: Research's 8 plus `completeTask` and `rescheduleTask`. `LogSpend` joins with Money slice 1.
+**Now:** Backup and restore (Next 1 below). The engine is done and the app side is being wired. The #86 follow-up comes once #86 merges.
 
 **Next:**
-1. Backup and restore, next because his real logs start tomorrow (`../research/free-signing-survival.md`). Done when the app writes a `.tessera` file with GRDB's backup API every day and keeps the newest 7, copies go to an iCloud Drive folder he picks once (so they survive deleting the app), a picked backup is checked and restored at the next launch, and the doc's done-when tests pass. This also wires up the unused `TesseraExport.swift`.
+1. Backup and restore (in progress), because his real logs start tomorrow (`../research/free-signing-survival.md`). Done when the app writes a `.tessera` file with GRDB's backup API every day and keeps the newest 7, copies go to an iCloud Drive folder he picks once (so they survive deleting the app), a picked backup is checked and restored at the next launch, and the doc's done-when tests pass. This also wires up the unused `TesseraExport.swift`.
 2. v1 engine gaps (small, before the gym tomorrow if possible), from `../research/v1-gap-audit.md` and iOS build's ship-2 notes. Done when:
    - `Prefill.swift` prefers the raised `targetWeight` from `Progression.nextTarget` over last time's weight, with a test. This is slice 14: set 1 opens at the new load.
    - A `RemoveSlot` action exists with undo. The builders use DeleteObject for now.
@@ -30,6 +30,7 @@
 - Body weight is the load. Done when pull-ups and dips use the latest body weight plus added weight for e1RM and volume. Needs M3 slice 1.
 
 **Later:**
+- **Future T-tools:** `createRoutine` and `createPlan` (they need routine and plan names plus slot shapes beyond today's 10 tools; best paired with Build A2), and `logBodyWeight` with M3 slice 1.
 - **Tess model layer spec** (`tess-model-layer.md`; build plan = Research's `../research/tess-model-layer.md`, #83), now in Now and Next above. Full order: T1 TessModel + router + op-log route/model columns (confirm the beta Claude for Foundation Models package builds and reports usage, else the URLSession fallback), T2 shared tools, T3 Claude route + Keychain key + ledger with a $10/month hard cap, T4 + S1 Settings, T6 Plan my day wording (first visible win), T7. T1 and T2 need no key.
 - **Lists engine.** `ship-list-lists.md` slices, in build order 1 → 3 → 2 → 4 → 5 → 7 → 6 → 8: housekeeping, lists from text, item paragraphs, reusable, run on Now, pick one, dated items in Today, list phrases. These replace kitchen slice 15.
 - M5 Money engine slices 1, 2, 4, 3 in `ship-list-m5-money.md`, after M5 Reading. Then M5 Upkeep engine slices 1 to 4 in `ship-list-m5-upkeep.md` (needs M3 slice 2). Then M5 People engine slices in `ship-list-m5-people.md`.
