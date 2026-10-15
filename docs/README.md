@@ -60,6 +60,7 @@ Screenshot: [screenshots/today-v0.jpg](screenshots/today-v0.jpg).
 
 ## QA
 
+- [qa/regression.md](qa/regression.md): the pre-merge checklist (undo, export, What's running, Tess phrases, Reduce Motion).
 - [qa/gym-flow.md](qa/gym-flow.md): the v1 gym check (seed, prefill, dial, kill and resume, Lock Screen, edit and undo, finish).
 - [qa/kitchen-flow.md](qa/kitchen-flow.md): the end-to-end kitchen check a Mac lead runs before a kitchen PR merges.
 
