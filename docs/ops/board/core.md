@@ -17,7 +17,7 @@
 - Body weight is the load. Done when pull-ups and dips use the latest body weight plus added weight for e1RM and volume. Needs M3 slice 1.
 
 **Later:**
-- **Tess model layer** (`tess-model-layer.md`). This is a foundation item, first in Later after tonight's release, ahead of Lists. It needs Kaushik's API key, which comes at the huddle, and builds on Research's scouting.
+- **Tess model layer** (`tess-model-layer.md`; build plan = Research's `../research/tess-model-layer.md`, #83). First in Later after tonight's release, ahead of Lists. Order: T1 TessModel + router + op-log route/model columns (confirm the beta Claude for Foundation Models package builds and reports usage, else the URLSession fallback), T2 shared tools, T3 Claude route + Keychain key + ledger with a $10/month hard cap, T4 + S1 Settings, T6 Plan my day wording (first visible win), T7. T1 and T2 need no key.
 - **Lists engine.** `ship-list-lists.md` slices, in build order 1 → 3 → 2 → 4 → 5 → 7 → 6 → 8: housekeeping, lists from text, item paragraphs, reusable, run on Now, pick one, dated items in Today, list phrases. These replace kitchen slice 15.
 - M3 slices 1 to 12 in `ship-list-m3.md`. Land the M3 List template on the kitchen `List` class.
 - M4 engine slices in `ship-list-m4.md`, after Lists: 1 calendar, 2 Health, 3 day full, 5 Day log, 6 Plan my day (rules only), 7 Shutdown, 12 Tess on-device fallback (with the 200-phrase eval set), 4 interrupts, 9 first step. Slice 6b, Claude wording, is approved and runs through the Tess model layer.

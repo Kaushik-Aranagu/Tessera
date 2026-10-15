@@ -29,7 +29,7 @@ If the recipe page lands before the cut, also paste a recipe's text into the bar
 
 Screenshot anything that bugs you, or just say "this bit". Design takes your feedback first after the review.
 
-## Six questions for the huddle
+## Nine questions for the huddle
 
 1. **What did you reach for first, and what didn't you find?** This tells us whether Home's layout and rail are right before we add more apps.
 2. **Logging a set: is one hold, the dial and the drum fast enough between sets, or is anything in the way?** This decides how much of the next week goes into gym polish versus new areas.
@@ -37,3 +37,6 @@ Screenshot anything that bugs you, or just say "this bit". Design takes your fee
 4. **What should Tess do for you in the first week now that Claude is in?** For example: plan the day, answer "what did I lift", read recipes from links, or something else. This sets the order of the new Tess model layer.
 5. **After the gym and the kitchen, which area would you open daily?** The candidates are the Day log, Reading, Money, People or Home upkeep. This orders everything after M4.
 6. **What's running: keep the ledger, or move to the plate stack?** Design's plate stack concept is in `docs/design/plate-stack.md`, with a recording at `/mnt/project-files/tessera/design/plate-stack.mp4`. Builder B keeps the ledger until you choose. *Recommendation:* watch the recording first, and keep the ledger unless the stack feels clearly better in your hand.
+7. **Claude's monthly cap?** *Recommendation:* $10 a month, hard stop. Expected use is under $1, and at the cap Tess falls back to the phone and tells you once.
+8. **Can Claude see your sleep and energy?** *Recommendation:* no. The phone decides whether it's a light day and Claude only sees "light day: yes or no".
+9. **When Tess's grammar misses something you typed, should it go to Claude automatically?** *Recommendation:* yes, with a small cloud mark on the bloom, since it always lands as an undoable ghost row. Also: paste your Claude API key in Settings once the model layer ships (the coordinator will ask for it).

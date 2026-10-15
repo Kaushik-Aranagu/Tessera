@@ -38,3 +38,4 @@
 - **Lists:** "reusable", never "template"; the M3 List shape creates a List; Copy sits next to Reset; a skip is not a pick; a preview appears before saving a paste.
 - **Tess:** grammar first, then the on-device model; cloud models need Kaushik's OK.
 - **Cook mode:** Core builds it, and Builder A reviews the shared instruments.
+- **Tess model layer reconciled with Research (18:50):** Research's T1 to T7, S1 and S2 are the build plan. The cap is $10 a month, hard stop, with no daily cap (replaces $5 and $0.50). Streaming is allowed. The beta Swift package is the planned transport, but Core confirms it in T1. Three Claude questions go to the huddle with defaults.
