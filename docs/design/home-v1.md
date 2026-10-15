@@ -21,9 +21,9 @@ Light ground. One screen tall. Sparse: one hero, one action, one short list. Moc
 4. **Hold to finish** (y 452): an ink key, 220×58.
    - While you hold, vermilion paint spreads through the key from the left over **700ms**, blurred. Releasing drains it in 220ms. (Holds stay between 0.5 and 0.8s; see `workout-v1.md`, Instrument rules.)
    - The time left sits beside the key in labels: "14 MIN / LEFT".
-   - **On completion:** the next item writes itself into the hero, entering from the right (18pt travel, blur 4→0, 340ms). Tess plays `done`, and her bar says "Done. Next one is up."
+   - **On completion:** the hero is struck through, lifts away, and the first Next row rises into the hero (M2; exact motion in `today-on-home.md`). Tess plays `done`, and her bar says "Done. Next one is up."
 5. **The ledger** (y 536, only when there is a suspended process): see below.
-6. **Later** (y 532, or y 616 under a ledger row): the heading is 34. Below it, a bounded window (92pt tall, 70pt under a ledger row) shows about two rows and fades out at the bottom, scrolling vertically with a snap per 50pt row.
+6. **The queue: Next, then Later** (M2: `today-on-home.md` supersedes this item, with Next's 3 rows, the rolling heading and the swipe gestures). The v1 version: **Later** (y 532, or y 616 under a ledger row): the heading is 34. Below it, a bounded window (92pt tall, 70pt under a ledger row) shows about two rows and fades out at the bottom, scrolling vertically with a snap per 50pt row.
    - Each row is a paint dab in its area colour, the name at 21pt, and the time in labels.
    - No separators.
 7. **Ask Tess** at the bottom: one glass bar, 74pt tall, radius 20, at bottom 18 with 14pt side insets. Light fill `rgba(250,246,239,.62)`, 18pt blur, 0.5pt hairline, white 90% inner top. The soul sits at scale 0.5 on the left (centre x 50), then Tess's line at 21.
