@@ -64,7 +64,11 @@ struct AppModelTests {
         let entry = try #require(session.currentEntry)
         #expect(session.loggedSets(of: entry).count == 1)
         #expect(session.restEndsAt != nil)
-        #expect(PlateMath.perSide(82.5) == [25, 5, 1.25])
+        // Plates per side come from Core's weight dial for his kit (20 kg bar, plates down to 1.25).
+        session.weight = 82.5
+        #expect(session.platesPerSide == [25, 5, 1.25])
+        #expect(session.plateLine == "25 + 5 + 1.25")
+        #expect(session.spokenLoad == "82.5 kilograms, 31.25 per side")
     }
 
     @Test func commandInterpreterLogsAndAnswers() {

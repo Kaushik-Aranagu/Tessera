@@ -7,8 +7,8 @@ import TesseraCore
 /// in the same set block: after a set is seated the weight dial becomes the countdown.
 ///
 /// Every write goes through Core's `ActionEngine` (LogSet, SwapExercise, FinishWorkout), so the op log holds it and
-/// undo replays it. Defaults come from Core's `TrainingLedger.nextTarget`; the dial's detents from the exercise's
-/// `LoadProfile`.
+/// undo replays it. Defaults come from Core's `TrainingLedger.prefill`; the dial's detents from the exercise's
+/// `WeightDial`.
 @MainActor
 @Observable
 final class WorkoutSession {
@@ -230,8 +230,7 @@ final class WorkoutSession {
 
     // MARK: Stored choices (see the extensions below)
 
-    @ObservationIgnored private var profiles: [UUID: any LoadProfile] = [:]
-    @ObservationIgnored private var detentCache: [UUID: [Double]] = [:]
+    @ObservationIgnored private var dials: [UUID: TesseraCore.WeightDial] = [:]
     /// Bests set this session, in order.
     private(set) var bests: [Seated] = []
     /// Today's swaps: entry id → the exercise it replaced.
@@ -243,37 +242,45 @@ final class WorkoutSession {
 }
 
 extension WorkoutSession {
-    // MARK: Loads (the dial's detents)
+    // MARK: Loads (Core's weight dial: detents, snap, steps, plates per side)
 
-    func loadProfile(of exercise: ClassDef) -> any LoadProfile {
-        if let cached = profiles[exercise.id] {
+    func weightDial(of exercise: ClassDef) -> TesseraCore.WeightDial {
+        if let cached = dials[exercise.id] {
             return cached
         }
-        let profile = model.store.loadProfile(for: exercise)
-        profiles[exercise.id] = profile
-        return profile
+        let dial = model.store.weightDial(for: exercise)
+        dials[exercise.id] = dial
+        return dial
+    }
+
+    /// The current exercise's dial; nil before there is one.
+    var dial: TesseraCore.WeightDial? {
+        currentExercise.map(weightDial(of:))
     }
 
     /// Every weight the gym can load for the current exercise, ascending.
     var detents: [Double] {
-        guard let exercise = currentExercise else { return Array(stride(from: 0, through: 300, by: 2.5)) }
-        if let cached = detentCache[exercise.id] {
-            return cached
+        guard let detents = dial?.detents, !detents.isEmpty else {
+            return Array(stride(from: 0, through: 300, by: 2.5))
         }
-        let loads = loadProfile(of: exercise).loadable(upTo: 300)
-        let detents = loads.isEmpty ? Array(stride(from: 0, through: 300, by: 2.5)) : loads
-        detentCache[exercise.id] = detents
         return detents
     }
 
-    /// Plates for one side when the exercise is plate-loaded; nil for dumbbells, stacks and bodyweight.
-    var plateLoad: PlateLoad? {
-        currentExercise.flatMap { loadProfile(of: $0) as? PlateLoad }
+    /// One side's plates for the dialled weight; nil for dumbbells, stacks, bodyweight, or a load the bar can't make.
+    var platesPerSide: [Double]? {
+        dial?.platesPerSide(weight)
     }
 
-    /// One side's plates for the dialled weight, or nil when the bar can't make it.
-    var platesPerSide: [Double]? {
-        plateLoad?.plates(for: weight)
+    /// "25 + 5 + 1.25", "bar", or nil when the lift isn't plate-loaded.
+    var plateLine: String? {
+        dial?.plateLine(weight)
+    }
+
+    /// Spoken with the weight: "80 kilograms, 30 per side".
+    var spokenLoad: String {
+        let base = "\(Format.kilograms(weight)) kilograms"
+        guard let plates = platesPerSide else { return base }
+        return plates.isEmpty ? "\(base), bar only" : "\(base), \(Format.kilograms(plates.reduce(0, +))) per side"
     }
 
     /// When the current exercise was swapped in today: the name it replaced ("Bench Press").
@@ -322,14 +329,13 @@ extension WorkoutSession {
         weight = max(0, min(400, weight + delta))
     }
 
-    /// One loadable step up or down (the dial's one-tap twins).
+    /// One loadable step up or down (the plus and minus beside the dial, and the dial's one-tap twins).
     func stepWeight(up: Bool) {
-        let loads = detents
-        if up {
-            weight = loads.first { $0 > weight + 0.001 } ?? weight
-        } else {
-            weight = loads.last { $0 < weight - 0.001 } ?? weight
+        guard let dial, !dial.detents.isEmpty else {
+            adjustWeight(by: up ? 2.5 : -2.5)
+            return
         }
+        weight = dial.step(from: weight, by: up ? 1 : -1)
     }
 
     func adjustReps(by delta: Double) {
@@ -501,7 +507,7 @@ extension WorkoutSession {
         currentIndex = entries.firstIndex { $0.id == swappedID } ?? currentIndex
         loadDefaults()
         if let load = option.load {
-            weight = loadProfile(of: option.exercise).nearest(to: load)
+            weight = weightDial(of: option.exercise).snap(load)
         }
         lastTouchedAt = AppClock.now
         model.touch()
@@ -554,7 +560,7 @@ extension WorkoutSession {
         self.prefill = prefill
         targetReason = Self.reason(for: prefill)
         if let raw = presetWeight[entry.id] ?? prefill.weight, let exercise = currentExercise {
-            weight = loadProfile(of: exercise).nearest(to: raw)
+            weight = weightDial(of: exercise).snap(raw)
         } else {
             weight = detents.first ?? 20
         }

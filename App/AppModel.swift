@@ -230,6 +230,7 @@ final class AppModel {
         let table = ProcessTable(engine: engine)
         table.suspendIfIdle(now: now, idleLimit: idleLimit)
         processNotes = table.tidy(now: now)
+        pickUpRunningWorkout(table)
         // A workout left untouched for 6 hours is wrapped up by Core; let the live session go with it.
         if let session, store.value("endedAt", of: session.workout) != nil {
             self.session = nil
@@ -399,7 +400,9 @@ final class AppModel {
 
     private func findTonightWorkout(around now: Date) -> ObjectRecord? {
         objects(of: .workout).first { workout in
-            guard case let .date(date)? = store.value("scheduledFor", of: workout) else { return false }
+            // Scheduled, or started from a routine (no schedule) and not finished: either is today's workout.
+            guard let date = store.value("scheduledFor", of: workout)?.dateValue
+                ?? store.value("startedAt", of: workout)?.dateValue else { return false }
             return store.value("endedAt", of: workout) == nil && abs(date.timeIntervalSince(now)) < 12 * 3600
         }
     }
@@ -500,5 +503,13 @@ extension AppModel {
         session = WorkoutSession(workout: workout, model: self)
         isWorkoutPresented = true
         touch()
+    }
+
+    /// After a relaunch the workout's process is still running but the live session is gone: pick it back up (not
+    /// presented), so Now shows it with Resume.
+    func pickUpRunningWorkout(_ table: ProcessTable) {
+        guard session == nil, let workout = table.running()?.subject,
+              workout.classDef?.id == classes[.workout]?.id, store.value("endedAt", of: workout) == nil else { return }
+        session = WorkoutSession(workout: workout, model: self)
     }
 }

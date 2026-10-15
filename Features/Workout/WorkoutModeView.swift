@@ -168,14 +168,22 @@ private struct WorkoutContent: View {
             setArea(phase: phase)
                 .padding(.horizontal, Theme.Spacing.gutter)
             Spacer(minLength: Theme.Spacing.s)
-            WeightDial(
-                weight: $session.weight,
-                detents: session.detents,
-                isLocked: phase != .set,
-                restFraction: session.restFraction(at: now),
-                onExtendRest: { extendRest() },
-                onSkipRest: { skipRest() }
-            )
+            HStack(spacing: 0) {
+                PlateStepKey(up: false, enabled: phase == .set && stepLabel(up: false) != "0",
+                             step: stepLabel(up: false)) { stepWeight(up: false) }
+                WeightDial(
+                    weight: $session.weight,
+                    detents: session.detents,
+                    isLocked: phase != .set,
+                    restFraction: session.restFraction(at: now),
+                    onExtendRest: { extendRest() },
+                    onSkipRest: { skipRest() },
+                    spokenValue: session.spokenLoad
+                )
+                PlateStepKey(up: true, enabled: phase == .set && stepLabel(up: true) != "0",
+                             step: stepLabel(up: true)) { stepWeight(up: true) }
+            }
+            // 20 pt clear of the left edge, so the back swipe never fires from the minus key.
             .padding(.horizontal, 20)
             Spacer(minLength: Theme.Spacing.m)
             keyRow(phase: phase)
@@ -418,9 +426,20 @@ extension WorkoutContent {
             Text("An estimate from \(SwapPanel.short(from).lowercased())")
                 .textRole(.label)
                 .foregroundStyle(Paint.tess)
-        } else if let load = session.plateLoad {
-            PlateStack(weight: session.weight, bar: load.bar, perSide: session.platesPerSide)
+        } else if let plates = session.platesPerSide {
+            PlateStack(weight: session.weight, perSide: plates)
         }
+    }
+
+    /// "2.5": what one press of plus or minus changes the weight by.
+    private func stepLabel(up: Bool) -> String {
+        guard let dial = session.dial else { return "2.5" }
+        let next = dial.step(from: session.weight, by: up ? 1 : -1)
+        return Format.kilograms(abs(next - session.weight))
+    }
+
+    private func stepWeight(up: Bool) {
+        withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { session.stepWeight(up: up) }
     }
 
     private func setEffort(shown: Bool) {
