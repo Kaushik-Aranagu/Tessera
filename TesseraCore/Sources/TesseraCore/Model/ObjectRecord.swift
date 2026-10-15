@@ -12,7 +12,7 @@ public final class ObjectRecord {
     public var updatedAt: Date = Date.now
     /// Soft delete; hidden from normal queries, recoverable.
     public var deletedAt: Date?
-    // External storage is part of the shipped schema; changing it needs a migration plan (no automatic mapping).
+    /// External storage is part of the shipped schema; changing it needs a migration plan (no automatic mapping).
     @Attribute(.externalStorage) public var valuesData: Data?
     /// The class's own object (like a metaclass instance): holds class-level values such as
     /// Bench Press's muscles or cues, which every object of the class and its subclasses inherits.
