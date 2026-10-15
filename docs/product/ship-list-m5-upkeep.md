@@ -12,6 +12,8 @@
 
 **Parse order for M5 (decisions.md, 4:10 PM PT):** notes, pasted recipes, relative sets, then reading, money, people, then comma sets, lifts and kitchen, then upkeep, then tasks.
 
+*"paid" plus an amount is Money's (decisions.md, 4:34 PM PT): a spend that also ticks the matching chore, so eval rows 34 and 40 expect that. "paid rent" with no amount stays here.*
+
 ## Slices
 
 | # | Slice | Done when | Type | Owner |
