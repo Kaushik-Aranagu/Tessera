@@ -368,7 +368,7 @@ extension PaintKey where Meta == EmptyView {
     }
 }
 
-private enum InkWordType {
+enum InkWordType {
     /// Title 34/500, the stroke word's size.
     static var font: Font {
         Theme.Typography.face(Theme.concept.fonts.display, size: 34, relativeTo: .title, serif: false).weight(.medium)
