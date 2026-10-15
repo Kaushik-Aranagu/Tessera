@@ -4,7 +4,7 @@
 
 ## What to try (about 15 minutes)
 
-Home has a word rail across the top: **Review · Today · Training**. **Kitchen** joins it if it lands before the cut. The capture bar sits at the bottom of every screen.
+Home has a word rail across the top: **Review · Today · Training · Kitchen**. Kitchen leads to Groceries and Recipes, and Notes sits at the foot of Review. The capture bar sits at the bottom of every screen.
 
 1. **Start a workout.** Go to Home, then **Training**, and tap today's push/pull/legs routine. The workout rises as its own screen. *Check:* does it feel like an instrument rather than a form?
 2. **Log a set with one hold.** In the workout, each set opens already filled in. Hold to log it, then turn the **weight dial**, where the plates per side show beside it, and roll the **reps drum** for the next set. *Check:* the feel of the dial's clicks and the hold timing.
@@ -17,7 +17,7 @@ Home has a word rail across the top: **Review · Today · Training**. **Kitchen*
 9. **Groceries** *(only if Kitchen is on Home in this build)*. Open Groceries (from the rail or Kitchen once it's on Home) and see the items from step 8 sorted by aisle. Tap an item to strike it.
 10. **Notes and Review** *(only if they're reachable from Home in this build)*. Open a note from step 8, then swipe to **Review** to see the week as counts.
 
-If the recipe page lands before the cut, also paste a recipe's text into the bar and watch it get read.
+**Bonus: Recipes.** From Kitchen, open Recipes and paste a recipe's text (from a website or Notes). Watch it get read into ingredients and steps, then open its page.
 
 *If a calm note ever shows at launch, that's the new data-safety guard (#84) protecting your data, not a crash.*
 

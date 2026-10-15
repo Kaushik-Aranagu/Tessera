@@ -2,10 +2,10 @@
 
 **Done:** Groceries screen, kitchen slice 13 (#58); kitchen engine hotfixes (#70, #80); data-safety D1–D4 (#84); recipe page and paste, slices 10/11 (PR open, merges after the install).
 
-**Now:** Tess model layer T2 (T1 done as #89, held with #86 until after the install), then the #86 follow-up PR once #86 merges. The follow-up has to land before Builder B wires the kitchen screens into Home. It's done when the three bugs in `../qa/review-86.md` are fixed (doubled grocery share, Cook doing nothing after a paste, tap-to-fix stuck) along with the polish items there that touch the same files. T2 is done when it meets its row in `../research/tess-model-layer.md` section 10. T2 ships 10 tools: Research's 8 plus `completeTask` and `rescheduleTask`, both by name (Product, 19:12). These cover the eval's addGroceries and rescheduleTask rows. `LogSpend` joins the registry with Money slice 1, so until then its eval rows expect no tool.
+**Now:** the Groceries ink word, then backup and restore (Next 1). T2 is done as #106, held until after the install because it touches the on-device capture path. The #86 follow-up comes once #86 merges. T2 shipped 10 tools: Research's 8 plus `completeTask` and `rescheduleTask`. `LogSpend` joins with Money slice 1.
 
 **Next:**
-1. Backup and restore, straight after T2 and #98 because his real logs start tomorrow (`../research/free-signing-survival.md`). Done when the app writes a `.tessera` file with GRDB's backup API every day and keeps the newest 7, copies go to an iCloud Drive folder he picks once (so they survive deleting the app), a picked backup is checked and restored at the next launch, and the doc's done-when tests pass. This also wires up the unused `TesseraExport.swift`.
+1. Backup and restore, next because his real logs start tomorrow (`../research/free-signing-survival.md`). Done when the app writes a `.tessera` file with GRDB's backup API every day and keeps the newest 7, copies go to an iCloud Drive folder he picks once (so they survive deleting the app), a picked backup is checked and restored at the next launch, and the doc's done-when tests pass. This also wires up the unused `TesseraExport.swift`.
 2. v1 engine gaps (small, before the gym tomorrow if possible), from `../research/v1-gap-audit.md` and iOS build's ship-2 notes. Done when:
    - `Prefill.swift` prefers the raised `targetWeight` from `Progression.nextTarget` over last time's weight, with a test. This is slice 14: set 1 opens at the new load.
    - A `RemoveSlot` action exists with undo. The builders use DeleteObject for now.
