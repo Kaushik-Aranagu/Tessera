@@ -201,10 +201,9 @@ private struct ExerciseMethods: View {
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.m))
             : AnyLayout(HStackLayout(alignment: .center, spacing: Theme.Spacing.l))
         layout {
-            PaintKey(isTap: true, height: 56, action: logASet) { _ in
-                Text("Log a set").textRole(.bodyStrong)
+            PaintKey(isTap: true, height: 64, action: logASet) { _ in
+                Text("Log a set")
             }
-            .frame(maxWidth: typeSize.isAccessibilitySize ? .infinity : 200)
 
             addToRoutine
         }
