@@ -54,3 +54,4 @@
 - **Build list approved** (19:22): make an app from a sentence (`ship-list-build.md`). A1, undo for schema changes in the op log, comes first, after M3 slices 3, 6 and 10 and T1 to T3.
 - **Context ranker is backbone work** (19:27). Core rebuilds NowPicker around `rank()` with `Pick.why` as Next 3, after the v1 gaps and the grammar fix. Builder B makes NowPage read it, right after the capture surface.
 - **The capture surface ships in three modes** (19:30): Write, Speak (SpeechAnalyzer on the phone, which also covers v1 slice 17), and Show (Vision on the phone; page to note first, receipt total after Money 2 and 3). Images never leave the phone. Core adds a photo field type.
+- **Backup and restore jumps to Core Next 1** (19:37), because nothing protects his data from tomorrow. It makes daily .tessera copies (keeping the newest 7) in an iCloud Drive folder he picks, with a checked restore. The year-of-data generator goes in Later.
