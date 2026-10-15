@@ -48,6 +48,9 @@ public struct LogSet: EngineAction {
         if isWarmup == true {
             try transaction.set("isWarmup", to: .bool(true), on: set)
         }
+        if let workout = try transaction.store.ancestor(of: entry, ofClass: transaction.classDef(.workout)) {
+            try transaction.touchWorkoutProcess(workout, at: .now)
+        }
         return set
     }
 
@@ -162,8 +165,13 @@ public struct StartWorkout: EngineAction {
 
     public func apply(_ transaction: inout Transaction) throws {
         let workout = try transaction.object(workout, is: .workout)
-        guard transaction.store.value("startedAt", of: workout) == nil else { return }
-        try transaction.set("startedAt", to: .date(time ?? .now), on: workout)
+        let now = time ?? .now
+        if transaction.store.value("startedAt", of: workout) == nil {
+            try transaction.set("startedAt", to: .date(now), on: workout)
+        }
+        let progress = WorkoutProgress(of: workout, store: transaction.store)
+        _ = try StartProcess(subject: workout.id, ownerApp: "Workouts", nextStep: progress.nextStep,
+                             resumePoint: progress.resumePoint, time: now).apply(&transaction)
     }
 
     public func summary(in store: ObjectStore) -> String {
@@ -192,6 +200,9 @@ public struct FinishWorkout: EngineAction {
             try transaction.set("startedAt", to: .date(end), on: workout)
         }
         try transaction.set("endedAt", to: .date(end), on: workout)
+        if let process = transaction.openProcess(for: workout) {
+            try transaction.end(process, reason: .done, at: end)
+        }
     }
 
     public func summary(in store: ObjectStore) -> String {
@@ -250,7 +261,7 @@ public struct LogExercise: EngineAction {
             return inProgress
         }
         let workout = transaction.create(workoutClass, title: "Workout")
-        try transaction.set("startedAt", to: .date(.now), on: workout)
+        try StartWorkout(workout: workout.id).apply(&transaction)
         return workout
     }
 

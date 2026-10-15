@@ -13,6 +13,7 @@ public enum SystemCatalog {
         case muscle, equipment
         case workout, exerciseEntry, set
         case routine, task, note
+        case process
 
         public var systemKey: String {
             "system.\(rawValue)"
@@ -116,6 +117,22 @@ public enum SystemCatalog {
                       FieldSpec(key: "isDone", name: "Done", kind: .bool, defaultValue: .bool(false)),
                   ]),
         ClassSpec(key: .note, name: "Note", parent: .thing, symbol: "note.text", colorRole: "neutral"),
+        ClassSpec(key: .process, name: "Process", parent: .thing, symbol: "circle.dotted", colorRole: "neutral",
+                  traits: [.timed], fields: [
+                      FieldSpec(key: "subject", name: "Subject", kind: .ref, target: .thing),
+                      FieldSpec(key: "ownerApp", name: "App", kind: .text),
+                      FieldSpec(key: "state", name: "State", kind: .choice, defaultValue: .choice("running"),
+                                options: ProcessState.allCases.map(\.rawValue)),
+                      FieldSpec(key: "resumePoint", name: "Resume point", kind: .text),
+                      FieldSpec(key: "nextStep", name: "Next step", kind: .text),
+                      FieldSpec(key: "startedAt", name: "Started", kind: .date),
+                      FieldSpec(key: "lastTouchedAt", name: "Last touched", kind: .date),
+                      FieldSpec(key: "waitingOn", name: "Waiting on", kind: .text),
+                      FieldSpec(key: "checkAt", name: "Check at", kind: .date),
+                      FieldSpec(key: "endedAt", name: "Ended", kind: .date),
+                      FieldSpec(key: "endReason", name: "End reason", kind: .choice,
+                                options: ProcessEndReason.allCases.map(\.rawValue)),
+                  ]),
     ]
 
     /// Inserts any missing system classes and returns all of them by key.

@@ -21,6 +21,8 @@ public struct ActionDescriptor: Sendable, Hashable {
         case object
         /// The id of a class (an exercise such as Bench Press).
         case classRef
+        /// A structured JSON object.
+        case json
     }
 
     public struct Parameter: Sendable, Hashable {
@@ -89,6 +91,7 @@ public struct ToolDefinition: Encodable, Sendable, Hashable {
             case .boolean: (type, format) = ("boolean", nil)
             case .date: (type, format) = ("string", "date-time")
             case .object, .classRef: (type, format) = ("string", "uuid")
+            case .json: (type, format) = ("object", nil)
             }
             description = parameter.summary
         }
