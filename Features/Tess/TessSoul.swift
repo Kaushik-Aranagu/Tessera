@@ -1,30 +1,30 @@
-// swiftlint:disable identifier_name -- short names are the geometry here (x, y, w, h, t); TessSoul is replaced by Soul v2.
 import SwiftUI
 
-/// Tess's living mark: three paint dabs (vermilion, cobalt, cadmium), multiply-blended with a light blur.
-/// How they move says what Tess is doing. Independent of the app's theme concept.
+/// Tess's living mark: three dabs of wet paint (vermilion, cobalt, cadmium) and three satellites, mixing by
+/// multiply on light grounds and screen on dark. How they move says what Tess is doing.
 ///
-/// Rendered as one `Canvas` driven by a `TimelineView`; slow modes (idle, resting) tick at 30 fps,
-/// active modes at the display rate. Reduce Motion: static dabs, the mode shown by colour and opacity only.
+/// Each mode is one row of `SoulParameters.table`; a change of mode blends the old row into the new over 0.4 s
+/// (`SoulBlend`). One `Canvas` draws the frame and `.drawingGroup()` composites it on the GPU; slow modes (idle,
+/// resting) tick at 30 fps, the rest at 60. Reduce Motion: static dabs, the mode shown by size,
+/// grade and opacity only.
 struct TessSoul: View {
     enum Mode: Equatable {
+        /// A calm "needs you": one dab lifts at a time. Drawn small.
         case idle
+        /// The bloom.
         case listening
+        /// The per-dab pulse. Also covers Tess doing things.
         case thinking
-        case working
-        /// One-shot (~1.6 s): merge, pop, splash, relax. Plays a success haptic.
+        /// One-shot (1.8 s): pour, swell, splash, relax. Plays a success haptic.
         case done
         case needsYou
-        /// One dab flies to `target` (offset from the soul's centre, in points), smears into a wash and fades.
+        /// One dab flies to `target` (offset from the soul's centre, in points), spreads into a wash and fades.
         case handOff(target: CGPoint)
         /// Night and focus: desaturated, smaller, very slow.
         case resting
 
         var isOneShot: Bool {
-            switch self {
-            case .done, .handOff: true
-            default: false
-            }
+            SoulParameters.table(self).isOneShot
         }
     }
 
@@ -33,25 +33,33 @@ struct TessSoul: View {
     var loopsOneShots = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var modeStart = Date()
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var layers: [SoulLayer] = []
     @State private var doneCount = 0
 
     var body: some View {
-        let slow = mode == .idle || mode == .resting
-        TimelineView(.animation(minimumInterval: slow ? 1 / 30 : nil, paused: reduceMotion)) { context in
-            let elapsed = context.date.timeIntervalSince(modeStart)
-            let time = context.date.timeIntervalSinceReferenceDate
-            Canvas { canvas, size in
-                draw(in: &canvas, size: size, time: time, elapsed: elapsed)
+        let slow = SoulParameters.table(mode).isSlow
+        let size = canvasSize
+        let palette = SoulPalette.forScheme(colorScheme)
+        TimelineView(.animation(minimumInterval: slow ? 1 / 30 : 1 / 60, paused: reduceMotion)) { context in
+            let frame = reduceMotion
+                ? SoulFrame.sample(mode, time: 0, elapsed: 0, still: true)
+                : SoulBlend.frame(layers, at: context.date, loops: loopsOneShots)
+                ?? SoulFrame.sample(mode, time: context.date.timeIntervalSinceReferenceDate, elapsed: 0)
+            Canvas(rendersAsynchronously: true) { context, canvasSize in
+                SoulRenderer.draw(frame, in: &context, size: canvasSize, palette: palette)
             }
+            .saturation(frame.look.saturation)
+            .contrast(frame.look.contrast)
+            .brightness(frame.look.brightness)
+            .opacity(frame.look.opacity)
+            // Flattened by Metal: without this the Canvas is rasterised by Core Graphics on the CPU every frame.
+            .drawingGroup()
         }
-        .frame(width: canvasSize.width, height: canvasSize.height)
+        .frame(width: size.width, height: size.height)
         .frame(width: 96, height: 96)
-        .saturation(mode == .resting ? 0.3 : 1)
-        .brightness(mode == .resting ? 0.08 : 0)
-        .opacity(mode == .resting ? 0.75 : 1)
         .onChange(of: mode, initial: true) { _, new in
-            modeStart = Date()
+            layers = SoulBlend.push(new, onto: layers, at: .now)
             if new == .done {
                 doneCount += 1
             }
@@ -62,53 +70,13 @@ struct TessSoul: View {
         .allowsHitTesting(false)
     }
 
-    // MARK: Drawing
-
+    /// Room for the done ring at 2.6× and, for a hand-off, the flight to the target.
     private var canvasSize: CGSize {
         if case let .handOff(target) = mode {
             let reach = max(abs(target.x), abs(target.y)) * 2 + 200
-            return CGSize(width: reach, height: reach)
+            return CGSize(width: max(reach, 240), height: max(reach, 240))
         }
-        return CGSize(width: 200, height: 200)
-    }
-
-    private func draw(in canvas: inout GraphicsContext, size: CGSize, time: Double, elapsed: Double) {
-        let center = CGPoint(x: size.width / 2, y: size.height / 2)
-        canvas.translateBy(x: center.x, y: center.y)
-        let poses = Self.poses(for: mode, time: time, elapsed: elapsed, loop: loopsOneShots, still: reduceMotion)
-
-        if let rotation = poses.rotation {
-            canvas.rotate(by: .radians(rotation))
-        }
-
-        if let ring = poses.ring, ring.opacity > 0.001 {
-            let diameter = 90 * ring.scale
-            let rect = CGRect(x: -diameter / 2, y: -diameter / 2, width: diameter, height: diameter)
-            canvas.stroke(Path(ellipseIn: rect), with: .color(Self.ringColor.opacity(ring.opacity)), lineWidth: 3)
-        }
-
-        // Layers composite onto the canvas with the canvas's blend mode, so overlaps mix like paint.
-        canvas.blendMode = .multiply
-        for (index, dab) in Self.dabs.enumerated() {
-            let pose = poses.dabs[index]
-            guard pose.opacity > 0.001 else { continue }
-            canvas.drawLayer { layer in
-                layer.opacity = pose.opacity
-                layer.addFilter(.blur(radius: pose.blur))
-                layer.translateBy(x: pose.x, y: pose.y)
-                layer.scaleBy(x: pose.sx, y: pose.sy)
-                layer.fill(dab.path, with: .color(dab.color))
-            }
-        }
-        if let drip = poses.drip, drip.opacity > 0.001 {
-            canvas.drawLayer { layer in
-                layer.opacity = drip.opacity
-                layer.addFilter(.blur(radius: 1.5))
-                layer.translateBy(x: drip.x, y: drip.y)
-                layer.scaleBy(x: drip.sx * 22 / 64, y: drip.sy * 20 / 58)
-                layer.fill(Self.dabs[0].path, with: .color(Self.dabs[0].color))
-            }
-        }
+        return CGSize(width: 240, height: 240)
     }
 
     private var accessibilityText: String {
@@ -116,116 +84,11 @@ struct TessSoul: View {
         case .idle: "Tess"
         case .listening: "Tess is listening"
         case .thinking: "Tess is thinking"
-        case .working: "Tess is working"
         case .done: "Tess is done"
         case .needsYou: "Tess needs you"
         case .handOff: "Tess made a change"
         case .resting: "Tess is resting"
         }
-    }
-}
-
-// MARK: - Dabs
-
-extension TessSoul {
-    struct Dab {
-        let color: Color
-        /// Resting offset from the soul's centre.
-        let base: CGPoint
-        /// Where it blooms to while thinking.
-        let bloom: CGPoint
-        let path: Path
-    }
-
-    static let ringColor = Color(hex: 0x7A4A3A)
-
-    /// Vermilion, cobalt, cadmium. Each has slightly different irregular corners (CSS-style elliptical radii, in %).
-    static let dabs: [Dab] = [
-        Dab(color: Color(hex: 0xC8452F), base: CGPoint(x: -13, y: -7), bloom: CGPoint(x: 18, y: -10),
-            path: dabPath(horizontal: [52, 48, 60, 40], vertical: [55, 45, 55, 45])),
-        Dab(color: Color(hex: 0x2E6DA4), base: CGPoint(x: 13, y: -7), bloom: CGPoint(x: -16, y: -12),
-            path: dabPath(horizontal: [45, 55, 40, 60], vertical: [50, 60, 40, 50])),
-        Dab(color: Color(hex: 0xE0B341), base: CGPoint(x: 0, y: 12), bloom: CGPoint(x: 0, y: 18),
-            path: dabPath(horizontal: [60, 40, 55, 45], vertical: [45, 55, 45, 55])),
-    ]
-
-    /// A 64×58 blob centred on the origin. Radii per corner (top-left, top-right, bottom-right, bottom-left) in %.
-    static func dabPath(horizontal h: [CGFloat], vertical v: [CGFloat], width: CGFloat = 64,
-                        height: CGFloat = 58) -> Path
-    {
-        let rx = h.map { $0 / 100 * width }, ry = v.map { $0 / 100 * height }
-        let k: CGFloat = 0.5523
-        var path = Path()
-        let ox = -width / 2, oy = -height / 2
-        func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
-            CGPoint(x: ox + x, y: oy + y)
-        }
-        path.move(to: p(rx[0], 0))
-        path.addLine(to: p(width - rx[1], 0))
-        path.addCurve(
-            to: p(width, ry[1]),
-            control1: p(width - rx[1] + rx[1] * k, 0),
-            control2: p(width, ry[1] - ry[1] * k)
-        )
-        path.addLine(to: p(width, height - ry[2]))
-        path.addCurve(to: p(width - rx[2], height), control1: p(width, height - ry[2] + ry[2] * k),
-                      control2: p(width - rx[2] + rx[2] * k, height))
-        path.addLine(to: p(rx[3], height))
-        path.addCurve(
-            to: p(0, height - ry[3]),
-            control1: p(rx[3] - rx[3] * k, height),
-            control2: p(0, height - ry[3] + ry[3] * k)
-        )
-        path.addLine(to: p(0, ry[0]))
-        path.addCurve(to: p(rx[0], 0), control1: p(0, ry[0] - ry[0] * k), control2: p(rx[0] - rx[0] * k, 0))
-        path.closeSubpath()
-        return path
-    }
-}
-
-// MARK: - Choreography
-
-extension TessSoul {
-    struct Pose {
-        var x: CGFloat = 0
-        var y: CGFloat = 0
-        var sx: CGFloat = 0.8
-        var sy: CGFloat = 0.8
-        var blur: CGFloat = 1.5
-        var opacity: CGFloat = 1
-    }
-
-    struct Ring {
-        var scale: CGFloat
-        var opacity: CGFloat
-    }
-
-    struct Poses {
-        var dabs: [Pose]
-        var rotation: Double?
-        var ring: Ring?
-        var drip: Pose?
-    }
-
-    /// A keyframe: time (0…1) and a pose. The curve eases each segment, like CSS `animation-timing-function`.
-    struct Frame {
-        let t: Double
-        let pose: Pose
-    }
-
-    static func sample(_ frames: [Frame], at progress: Double, curve: UnitCurve = .easeInOut) -> Pose {
-        let p = min(max(progress, 0), 1)
-        guard let next = frames.firstIndex(where: { $0.t >= p }) else { return frames.last?.pose ?? Pose() }
-        guard next > 0 else { return frames[0].pose }
-        let a = frames[next - 1], b = frames[next]
-        let local = b.t == a.t ? 1 : (p - a.t) / (b.t - a.t)
-        let e = CGFloat(curve.value(at: local))
-        func mix(_ u: CGFloat, _ v: CGFloat) -> CGFloat {
-            u + (v - u) * e
-        }
-        return Pose(x: mix(a.pose.x, b.pose.x), y: mix(a.pose.y, b.pose.y), sx: mix(a.pose.sx, b.pose.sx),
-                    sy: mix(a.pose.sy, b.pose.sy), blur: mix(a.pose.blur, b.pose.blur),
-                    opacity: mix(a.pose.opacity, b.pose.opacity))
     }
 
     /// Phase (0…1) of a looping animation with a CSS-style (negative) delay.
@@ -233,175 +96,139 @@ extension TessSoul {
         let value = (time - delay).truncatingRemainder(dividingBy: period) / period
         return value < 0 ? value + 1 : value
     }
+}
 
-    static func uniform(_ x: CGFloat, _ y: CGFloat, _ s: CGFloat, blur: CGFloat = 1.5, opacity: CGFloat = 1) -> Pose {
-        Pose(x: x, y: y, sx: s, sy: s, blur: blur, opacity: opacity)
+// MARK: - Paint
+
+/// The soul's colours for a ground. On dark grounds the paint glows (screen) instead of staining (multiply).
+struct SoulPalette {
+    var blend: GraphicsContext.BlendMode
+    /// A soft radial wash per paint (vermilion, cobalt, cadmium): alpha .8 at the centre, .6 at 40%, 0 at the edge.
+    var washes: [Gradient]
+    var halo: Gradient
+    var ring: Gradient
+
+    static let light = SoulPalette(
+        blend: .multiply,
+        washes: [0xC8452F, 0x2E6DA4, 0xE0B341].map(wash),
+        halo: halo(Color(hex: 0xD66046).opacity(0.16), Color(hex: 0x7A5C8E).opacity(0.10)),
+        ring: ring(Color(hex: 0x7A4A3A))
+    )
+    static let dark = SoulPalette(
+        blend: .screen,
+        washes: [0xD9563F, 0x3F7FC0, 0xE8BD4C].map(wash),
+        halo: halo(Color(hex: 0xD9563F).opacity(0.22), Color(hex: 0x3F7FC0).opacity(0.14)),
+        ring: ring(Color(hex: 0xE8BD4C))
+    )
+
+    static func forScheme(_ scheme: ColorScheme) -> SoulPalette {
+        scheme == .dark ? dark : light
     }
 
-    static func idleFrames(_ dab: Dab) -> [Frame] {
-        let b = dab.base
-        return [
-            Frame(t: 0, pose: uniform(b.x, b.y, 0.8)),
-            Frame(t: 0.5, pose: uniform(b.x * 1.18, b.y * 1.18, 0.88)),
-            Frame(t: 1, pose: uniform(b.x, b.y, 0.8)),
-        ]
+    private static func wash(_ hex: UInt32) -> Gradient {
+        let color = Color(hex: hex)
+        return Gradient(stops: [
+            .init(color: color.opacity(0.8), location: 0),
+            .init(color: color.opacity(0.6), location: 0.4),
+            .init(color: color.opacity(0), location: 1),
+        ])
     }
 
-    // swiftlint:disable:next function_body_length cyclomatic_complexity
-    static func poses(for mode: Mode, time: Double, elapsed: Double, loop: Bool, still: Bool) -> Poses {
-        let delays: [Double] = [0, -2, -4]
-        func idle(_ i: Int, delay: Double? = nil) -> Pose {
-            if still {
-                return uniform(dabs[i].base.x, dabs[i].base.y, 0.8)
-            }
-            return sample(idleFrames(dabs[i]), at: phase(time, period: 6, delay: delay ?? delays[i]))
+    private static func halo(_ inner: Color, _ outer: Color) -> Gradient {
+        Gradient(stops: [
+            .init(color: inner, location: 0),
+            .init(color: outer, location: 0.55),
+            .init(color: outer.opacity(0), location: 1),
+        ])
+    }
+
+    /// A soft band peaking at 72% of the radius (CSS `.ring`).
+    private static func ring(_ color: Color) -> Gradient {
+        Gradient(stops: [
+            .init(color: color.opacity(0), location: 0.52),
+            .init(color: color.opacity(0.5), location: 0.72),
+            .init(color: color.opacity(0), location: 1),
+        ])
+    }
+}
+
+/// Draws a `SoulFrame`: halo and ring in normal blend, then the dabs mixing by multiply or screen, each with its
+/// own live blur. The group grade (saturation, contrast) is applied by the view around the canvas.
+enum SoulRenderer {
+    static func draw(_ frame: SoulFrame, in context: inout GraphicsContext, size: CGSize, palette: SoulPalette) {
+        context.translateBy(x: size.width / 2, y: size.height / 2)
+        context.scaleBy(x: frame.look.scale, y: frame.look.scale)
+
+        if frame.halo.opacity > 0.01 {
+            var halo = context
+            halo.opacity = frame.halo.opacity
+            halo.scaleBy(x: frame.halo.scaleX, y: frame.halo.scaleX * 70 / 75)
+            halo.fill(Path(ellipseIn: CGRect(x: -75, y: -75, width: 150, height: 150)),
+                      with: .radialGradient(palette.halo, center: .zero, startRadius: 0, endRadius: 75))
         }
-        // One-shots: loop in galleries, play once in the app.
-        func oneShot(_ duration: Double) -> Double {
-            loop ? phase(elapsed, period: duration + 0.6) * (duration + 0.6) / duration : elapsed / duration
+        if frame.ring.opacity > 0.01 {
+            let radius = SoulDab.ringDiameter / 2 * frame.ring.scaleX
+            var ring = context
+            ring.opacity = frame.ring.opacity
+            ring.fill(Path(ellipseIn: CGRect(x: -radius, y: -radius, width: radius * 2, height: radius * 2)),
+                      with: .radialGradient(palette.ring, center: .zero, startRadius: 0, endRadius: radius))
         }
 
-        switch mode {
-        case .idle:
-            return Poses(dabs: (0 ..< 3).map { idle($0) })
-
-        case .listening:
-            if still {
-                return Poses(dabs: (0 ..< 3).map { uniform(dabs[$0].base.x * 1.15, dabs[$0].base.y * 1.15, 0.9) })
-            }
-            let periods = [0.9, 0.72, 1.1], ds = [0, -0.3, -0.5]
-            return Poses(dabs: (0 ..< 3).map { i in
-                let b = dabs[i].base
-                return sample([
-                    Frame(t: 0, pose: uniform(b.x, b.y, 0.78)),
-                    Frame(t: 0.25, pose: uniform(b.x * 1.3, b.y * 1.3, 1.02)),
-                    Frame(t: 0.55, pose: uniform(b.x, b.y, 0.84)),
-                    Frame(t: 0.8, pose: uniform(b.x * 1.2, b.y * 1.2, 0.96)),
-                    Frame(t: 1, pose: uniform(b.x, b.y, 0.78)),
-                ], at: phase(time, period: periods[i], delay: ds[i]))
-            })
-
-        case .thinking:
-            if still {
-                return Poses(dabs: (0 ..< 3).map { uniform(
-                    dabs[$0].bloom.x * 0.5,
-                    dabs[$0].bloom.y * 0.5,
-                    0.95,
-                    blur: 4
-                ) })
-            }
-            return Poses(dabs: (0 ..< 3).map { i in
-                let m = dabs[i].bloom
-                return sample([
-                    Frame(t: 0, pose: uniform(0, 0, 0.55, blur: 2)),
-                    Frame(t: 0.4, pose: uniform(m.x, m.y, 1.15, blur: 6)),
-                    Frame(t: 0.7, pose: uniform(0, 0, 0.9, blur: 3)),
-                    Frame(t: 1, pose: uniform(0, 0, 0.55, blur: 2)),
-                ], at: phase(time, period: 2.4, delay: -0.8 * Double(i)))
-            })
-
-        case .working:
-            if still {
-                return Poses(dabs: (0 ..< 3).map { Pose(
-                    x: dabs[$0].base.x,
-                    y: dabs[$0].base.y,
-                    sx: 0.9,
-                    sy: 0.72,
-                    blur: 3
-                ) })
-            }
-            return Poses(dabs: (0 ..< 3).map { i in
-                let b = dabs[i].base
-                return sample([
-                    Frame(t: 0, pose: Pose(x: b.x, y: b.y, sx: 0.8, sy: 0.74, blur: 3)),
-                    Frame(t: 0.5, pose: Pose(x: b.x * 1.4, y: b.y * 1.4, sx: 1, sy: 0.7, blur: 3)),
-                    Frame(t: 1, pose: Pose(x: b.x, y: b.y, sx: 0.8, sy: 0.74, blur: 3)),
-                ], at: phase(time, period: 0.8, delay: -0.27 * Double(i)))
-            }, rotation: phase(time, period: 1.6) * 2 * .pi)
-
-        case .done:
-            if still {
-                return Poses(dabs: (0 ..< 3).map { _ in uniform(0, 0, 0.95) })
-            }
-            let progress = oneShot(1.6)
-            let curve = UnitCurve.bezier(
-                startControlPoint: UnitPoint(x: 0.4, y: 0),
-                endControlPoint: UnitPoint(x: 0.2, y: 1)
-            )
-            let dabPoses = (0 ..< 3).map { i in
-                let b = dabs[i].base
-                return sample([
-                    Frame(t: 0, pose: uniform(b.x, b.y, 0.8)),
-                    Frame(t: 0.3, pose: uniform(0, 0, 0.85)),
-                    Frame(t: 0.42, pose: uniform(0, 0, 1.15)),
-                    Frame(t: 0.55, pose: uniform(0, 0, 0.95)),
-                    Frame(t: 0.7, pose: uniform(0, 0, 0.95)),
-                    Frame(t: 1, pose: uniform(b.x, b.y, 0.8)),
-                ], at: progress, curve: curve)
-            }
-            let ringPose = sample([
-                Frame(t: 0, pose: uniform(0, 0, 0.4, opacity: 0)),
-                Frame(t: 0.3, pose: uniform(0, 0, 0.4, opacity: 0)),
-                Frame(t: 0.38, pose: uniform(0, 0, 0.6, opacity: 0.6)),
-                Frame(t: 0.8, pose: uniform(0, 0, 2.8, opacity: 0)),
-                Frame(t: 1, pose: uniform(0, 0, 2.8, opacity: 0)),
-            ], at: progress, curve: .easeOut)
-            return Poses(dabs: dabPoses, ring: Ring(scale: ringPose.sx, opacity: ringPose.opacity))
-
-        case .needsYou:
-            let b = dabs[0].base
-            if still {
-                return Poses(dabs: [uniform(b.x + 10, b.y - 16, 0.92), idle(1), idle(2)])
-            }
-            let red = sample([
-                Frame(t: 0, pose: uniform(b.x, b.y, 0.8)),
-                Frame(t: 0.3, pose: uniform(b.x + 10, b.y - 16, 0.92)),
-                Frame(t: 0.45, pose: uniform(b.x + 14, b.y - 12, 0.9)),
-                Frame(t: 0.6, pose: uniform(b.x + 10, b.y - 16, 0.92)),
-                Frame(t: 1, pose: uniform(b.x, b.y, 0.8)),
-            ], at: phase(time, period: 2.4))
-            let drip = sample([
-                Frame(t: 0, pose: uniform(-4, -14, 0.2, opacity: 0)),
-                Frame(t: 0.4, pose: uniform(-4, -14, 0.2, opacity: 0)),
-                Frame(t: 0.5, pose: uniform(-2, -6, 0.35, opacity: 0.9)),
-                Frame(t: 0.9, pose: uniform(-2, 30, 0.15, opacity: 0)),
-                Frame(t: 1, pose: uniform(-2, 30, 0.15, opacity: 0)),
-            ], at: phase(time, period: 2.4), curve: .easeIn)
-            return Poses(dabs: [red, idle(1, delay: 0), idle(2, delay: -3)], drip: drip)
-
-        case let .handOff(target):
-            let b = dabs[1].base
-            if still {
-                return Poses(dabs: [idle(0), uniform(b.x, b.y, 0.8, opacity: 0.5), idle(2)])
-            }
-            let curve = UnitCurve.bezier(
-                startControlPoint: UnitPoint(x: 0.5, y: 0),
-                endControlPoint: UnitPoint(x: 0.2, y: 1)
-            )
-            let blue = sample([
-                Frame(t: 0, pose: uniform(b.x, b.y, 0.8)),
-                Frame(t: 0.08, pose: uniform(b.x, b.y, 0.8)),
-                Frame(t: 0.38, pose: uniform(target.x, target.y, 0.55)),
-                Frame(t: 0.48, pose: Pose(x: target.x, y: target.y, sx: 2.6, sy: 0.7, blur: 3, opacity: 0.55)),
-                Frame(t: 0.78, pose: Pose(x: target.x, y: target.y, sx: 2.6, sy: 0.7, blur: 3, opacity: 0.4)),
-                Frame(t: 0.88, pose: uniform(b.x, b.y, 0.3, opacity: 0)),
-                Frame(t: 1, pose: uniform(b.x, b.y, 0.8)),
-            ], at: oneShot(3.4), curve: curve)
-            return Poses(dabs: [idle(0, delay: 0), blue, idle(2, delay: -3)])
-
-        case .resting:
-            if still {
-                return Poses(dabs: (0 ..< 3).map { uniform(dabs[$0].base.x * 0.7, dabs[$0].base.y * 0.7, 0.66) })
-            }
-            return Poses(dabs: (0 ..< 3).map { i in
-                let b = dabs[i].base
-                return sample([
-                    Frame(t: 0, pose: uniform(b.x * 0.7, b.y * 0.7, 0.66)),
-                    Frame(t: 0.5, pose: uniform(b.x * 0.8, b.y * 0.8, 0.7)),
-                    Frame(t: 1, pose: uniform(b.x * 0.7, b.y * 0.7, 0.66)),
-                ], at: phase(time, period: 9, delay: -3 * Double(i)))
-            })
+        context.blendMode = palette.blend
+        for (index, pose) in frame.dabs.enumerated() {
+            let opacity = index < 3 ? 1 : frame.look.satellites
+            dab(pose, SoulDab.all[index], opacity: opacity, in: &context, palette: palette)
         }
+        dab(frame.drip, SoulDab.drip, opacity: 1, in: &context, palette: palette)
+    }
+
+    private static func dab(_ pose: SoulPose, _ dab: SoulDab, opacity: CGFloat, in context: inout GraphicsContext,
+                            palette: SoulPalette)
+    {
+        let alpha = pose.opacity * opacity
+        guard alpha > 0.01, pose.scaleX > 0.01, pose.scaleY > 0.01 else { return }
+        context.drawLayer { layer in
+            layer.opacity = alpha
+            layer.addFilter(.blur(radius: pose.blur))
+            layer.translateBy(x: pose.x, y: pose.y)
+            layer.scaleBy(x: dab.size.width / 2 * pose.scaleX, y: dab.size.height / 2 * pose.scaleY)
+            layer.fill(shapes[dab.paint], with: .radialGradient(
+                palette.washes[dab.paint], center: .zero, startRadius: 0, endRadius: 1
+            ))
+        }
+    }
+
+    /// Each paint's irregular corners (CSS border-radius, horizontal / vertical, TL TR BR BL), in a 2×2 box.
+    static let shapes: [Path] = [
+        shape(horizontal: [52, 48, 60, 40], vertical: [55, 45, 55, 45]),
+        shape(horizontal: [45, 55, 40, 60], vertical: [50, 60, 40, 50]),
+        shape(horizontal: [60, 40, 55, 45], vertical: [45, 55, 45, 55]),
+    ]
+
+    static func shape(horizontal: [CGFloat], vertical: [CGFloat]) -> Path {
+        // Radii as fractions of the 2-unit box; each corner is a quarter ellipse.
+        let radiiX = horizontal.map { $0 / 50 }, radiiY = vertical.map { $0 / 50 }
+        let kappa: CGFloat = 0.5523
+        var path = Path()
+        path.move(to: CGPoint(x: -1 + radiiX[0], y: -1))
+        path.addLine(to: CGPoint(x: 1 - radiiX[1], y: -1))
+        path.addCurve(to: CGPoint(x: 1, y: -1 + radiiY[1]),
+                      control1: CGPoint(x: 1 - radiiX[1] * (1 - kappa), y: -1),
+                      control2: CGPoint(x: 1, y: -1 + radiiY[1] * (1 - kappa)))
+        path.addLine(to: CGPoint(x: 1, y: 1 - radiiY[2]))
+        path.addCurve(to: CGPoint(x: 1 - radiiX[2], y: 1),
+                      control1: CGPoint(x: 1, y: 1 - radiiY[2] * (1 - kappa)),
+                      control2: CGPoint(x: 1 - radiiX[2] * (1 - kappa), y: 1))
+        path.addLine(to: CGPoint(x: -1 + radiiX[3], y: 1))
+        path.addCurve(to: CGPoint(x: -1, y: 1 - radiiY[3]),
+                      control1: CGPoint(x: -1 + radiiX[3] * (1 - kappa), y: 1),
+                      control2: CGPoint(x: -1, y: 1 - radiiY[3] * (1 - kappa)))
+        path.addLine(to: CGPoint(x: -1, y: -1 + radiiY[0]))
+        path.addCurve(to: CGPoint(x: -1 + radiiX[0], y: -1),
+                      control1: CGPoint(x: -1, y: -1 + radiiY[0] * (1 - kappa)),
+                      control2: CGPoint(x: -1 + radiiX[0] * (1 - kappa), y: -1))
+        path.closeSubpath()
+        return path
     }
 }
 

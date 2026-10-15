@@ -362,7 +362,6 @@ private struct WorkoutContent: View {
             TessSoul(mode: tessMode)
                 .scaleEffect(0.5)
                 .frame(width: 56, height: 56)
-                .blendMode(.screen)
             Text(tessLine(phase: phase))
                 .font(Theme.voice)
                 .foregroundStyle(Paint.tessBar)

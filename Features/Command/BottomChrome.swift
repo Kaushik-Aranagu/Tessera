@@ -152,7 +152,7 @@ struct BottomChrome: View {
         .padding(Theme.Spacing.m)
     }
 
-    /// listening → thinking → working → done (with haptic) → idle.
+    /// listening → thinking → done (with haptic) → idle.
     private func submit() {
         let text = model.commandDraft
         guard !text.trimmingCharacters(in: .whitespaces).isEmpty, !isBusy else { return }
@@ -164,7 +164,7 @@ struct BottomChrome: View {
         Task { @MainActor in
             // Tess's grammar is instant today; these beats let each state read before the answer lands.
             try? await Task.sleep(for: .milliseconds(900))
-            model.tessMode = .working
+            model.tessMode = .thinking
             try? await Task.sleep(for: .milliseconds(500))
             let reply = CommandInterpreter(model: model).run(text)
             withTesseraAnimation(reduceMotion: reduceMotion) {
