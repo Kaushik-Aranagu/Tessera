@@ -47,3 +47,6 @@ fastlane/test_output
 .claude/skills/device-interaction/
 .claude/skills/modernize-tests/
 .claude/skills/accessibility-*-specialist/
+
+# Raw simulator recordings (large); trimmed clips/GIFs in docs/recordings are kept
+docs/recordings/raw-*.mp4

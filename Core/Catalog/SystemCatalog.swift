@@ -80,12 +80,16 @@ enum SystemCatalog {
         ),
         ClassSpec(key: .workout, name: "Workout", parent: .activity, symbol: "figure.run", colorRole: "training",
                   traits: [.schedulable, .timed], fields: [
+                      FieldSpec(key: "scheduledFor", name: "Scheduled", kind: .date),
                       FieldSpec(key: "startedAt", name: "Started", kind: .date),
                       FieldSpec(key: "endedAt", name: "Ended", kind: .date),
                   ]),
         ClassSpec(key: .exerciseEntry, name: "Exercise Entry", parent: .thing, symbol: "list.bullet",
                   colorRole: "training", fields: [
                       FieldSpec(key: "exercise", name: "Exercise", kind: .classRef, target: .exercise),
+                      FieldSpec(key: "targetSets", name: "Target sets", kind: .number),
+                      FieldSpec(key: "targetReps", name: "Target reps", kind: .number),
+                      FieldSpec(key: "targetWeight", name: "Target weight", kind: .mass, unit: "kg"),
                   ]),
         ClassSpec(key: .set, name: "Set", parent: .thing, symbol: "number", colorRole: "training",
                   traits: [.trackable, .measurable], fields: [
@@ -103,6 +107,8 @@ enum SystemCatalog {
                   ]),
         ClassSpec(key: .task, name: "Task", parent: .thing, symbol: "checkmark.circle", colorRole: "planning",
                   traits: [.schedulable], fields: [
+                      FieldSpec(key: "startsAt", name: "Starts", kind: .date),
+                      FieldSpec(key: "length", name: "Length", kind: .duration),
                       FieldSpec(key: "due", name: "Due", kind: .date),
                       FieldSpec(key: "isDone", name: "Done", kind: .bool, defaultValue: .bool(false)),
                   ]),
@@ -113,18 +119,28 @@ enum SystemCatalog {
     @discardableResult
     static func seed(in context: ModelContext) throws -> [Key: ClassDef] {
         var classes = try existing(in: context)
-        for spec in specs where classes[spec.key] == nil {
-            let classDef = ClassDef(
-                name: spec.name,
-                parent: spec.parent.flatMap { classes[$0] },
-                symbolName: spec.symbol,
-                colorRole: spec.colorRole,
-                traits: spec.traits,
-                systemKey: spec.key.systemKey
-            )
-            classDef.id = stableID(spec.key.systemKey)
-            context.insert(classDef)
+        for spec in specs {
+            let classDef: ClassDef
+            if let existing = classes[spec.key] {
+                classDef = existing
+            } else {
+                classDef = ClassDef(
+                    name: spec.name,
+                    parent: spec.parent.flatMap { classes[$0] },
+                    symbolName: spec.symbol,
+                    colorRole: spec.colorRole,
+                    traits: spec.traits,
+                    systemKey: spec.key.systemKey
+                )
+                classDef.id = stableID(spec.key.systemKey)
+                context.insert(classDef)
+                classes[spec.key] = classDef
+            }
+            // Adds fields introduced in later versions to classes seeded by earlier ones.
+            let present = Set((classDef.ownFields ?? []).map(\.id))
             for (index, fieldSpec) in spec.fields.enumerated() {
+                let fieldID = stableID("\(spec.key.systemKey).\(fieldSpec.key)")
+                guard !present.contains(fieldID) else { continue }
                 let field = FieldDef(
                     name: fieldSpec.name,
                     key: fieldSpec.key,
@@ -133,7 +149,7 @@ enum SystemCatalog {
                     unit: fieldSpec.unit,
                     defaultValue: fieldSpec.defaultValue
                 )
-                field.id = stableID("\(spec.key.systemKey).\(fieldSpec.key)")
+                field.id = fieldID
                 field.enumOptions = fieldSpec.options
                 field.expression = fieldSpec.expression
                 field.targetClassID = fieldSpec.target.map { stableID($0.systemKey) }
@@ -146,7 +162,6 @@ enum SystemCatalog {
                 field.owner = classDef
                 context.insert(field)
             }
-            classes[spec.key] = classDef
         }
         try context.save()
         return classes

@@ -17,16 +17,23 @@ targets:
   Tessera:
     type: application
     platform: iOS
+    info:
+      path: App/Info.plist
+      properties:
+        UILaunchScreen:
+          UIColorName: LaunchBackground
     sources:
       - App
       - DesignSystem
       - Core
       - Features
+      - path: Resources
+        buildPhase: resources
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.kaushikaranagu.tessera
+        ASSETCATALOG_COMPILER_APPICON_NAME: ""
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_CFBundleDisplayName: Tessera

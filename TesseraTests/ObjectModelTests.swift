@@ -191,6 +191,19 @@ struct ObjectModelTests {
             first[.set].flatMap { ClassResolver.field("e1rm", of: $0)?.id })
     }
 
+    @Test func reseedingAddsFieldsMissingFromOlderInstalls() throws {
+        let classes = try SystemCatalog.seed(in: context)
+        let task = try #require(classes[.task])
+        let startsAt = try #require(task.ownFields?.first { $0.key == "startsAt" })
+        context.delete(startsAt)
+        try context.save()
+        #expect(ClassResolver.field("startsAt", of: task) == nil)
+
+        try SystemCatalog.seed(in: context)
+        #expect(ClassResolver.field("startsAt", of: task)?.id == SystemCatalog.stableID("system.task.startsAt"))
+        #expect(task.ownFields?.filter { $0.key == "isDone" }.count == 1)
+    }
+
     @Test func valuesSurviveFieldRename() throws {
         let classes = try SystemCatalog.seed(in: context)
         let set = try store.create(#require(classes[.set]))

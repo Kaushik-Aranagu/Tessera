@@ -1,5 +1,8 @@
 # Tessera
 
+> **Standing principle (Kaushik):** UI carries equal weight with the backend (50/50). UI is a place for real
+> invention, creativity and new solutions, not polish on top. Never ship stock or card-based screens.
+
 The repo folder is `~/pilot` (the app was renamed from Pilot to Tessera; the folder name stays). The in-app
 personal assistant is called **Tess**.
 
@@ -38,7 +41,7 @@ swiftlint
 Fix lint errors before committing. Don't commit build products, DerivedData or `xcuserdata`.
 
 ## Design & motion
-Use the `tessera-design` skill (`.claude/skills/tessera-design`) and read `docs/DESIGN_MOTION.md` before building or changing any UI. Animate only through `MotionPolicy` (`.tesseraAnimation`, `withTesseraAnimation`). The bar is first-party-Apple polish, not a generic
+Use the `tessera-design` skill (`.claude/skills/tessera-design`) — all visuals go through the swappable `ThemeConcept` — and read `docs/DESIGN_MOTION.md` before building or changing any UI. Animate only through `MotionPolicy` (`.tesseraAnimation`, `withTesseraAnimation`). The bar is first-party-Apple polish, not a generic
 app: continuous transitions, spring physics, haptics, Liquid Glass on the navigation layer only, Reduce Motion /
 Dynamic Type respected. Use the installed skills (Apple's `swiftui-specialist` / `swiftui-whats-new-27` / accessibility specialists,
 `swiftui-pro`, `swiftui-expert`, `swiftui-ui-patterns`, `liquid-glass`, `widgets`, `swiftdata-pro`, framework skills)
@@ -50,3 +53,8 @@ and verify APIs with the `xcode` MCP `DocumentationSearch` or the `sosumi` MCP r
   interaction — Xcode must be running with this project open), `sosumi` (Apple docs, HIG, WWDC transcripts).
 - Apple's Xcode agent skills are copied into `.claude/skills/` but gitignored. After an Xcode update, refresh them from
   `$(xcrun agent plugin path --plugin-format claude)/skills/`.
+
+## Running the demo
+- `-demoTime HH:mm` (DEBUG) shifts the app clock so the demo day looks the same at any hour; `-resetDemo` wipes and
+  reseeds demo data; `-theme <name>` picks a theme concept. Example: `-demoTime 18:10 -resetDemo`.
+- Raw simulator recordings (`docs/recordings/raw-*.mp4`) are gitignored; trimmed clips are kept.

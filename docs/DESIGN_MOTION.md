@@ -1,5 +1,11 @@
 # Tessera — Design & Motion Playbook
 
+> **Standing principle (Kaushik):** UI carries equal weight with the backend (50/50). UI is a place for real
+> invention, creativity and new solutions, not polish on top. Never ship stock or card-based screens.
+>
+> The hard rules (theme concept, four-size type scale, layout, motion grammar) live in the `tessera-design` skill.
+> This document holds the signature moments and the toolkit.
+
 Tessera should feel like a first-party Apple app built by a small, obsessive team: quiet, fast, tactile, and full of
 small moments of delight. This is the bar every screen is held to. It is *not* a generic "AI app" (no gradient blobs,
 no chat-bubble-first UI, no sparkle emoji everywhere).
@@ -73,3 +79,12 @@ no chat-bubble-first UI, no sparkle emoji everywhere).
 - [ ] Dark mode looks designed, not inverted?
 - [ ] 120 Hz smooth — no hitches in Instruments (`swiftui-expert` trace analysis)?
 - [ ] All tokens from `Theme` — no literal colors, sizes, or durations?
+
+
+## Tess's soul (spec, being built)
+Tess's living mark is three paint dabs (vermilion #C8452F, cobalt #2E6DA4, cadmium #E0B341), multiply-blended with a
+light blur. It is independent of the overall theme. Modes: idle, listening, thinking, working, done, needsYou,
+handOff(target:), resting. It lives in the bottom bar (~0.62 scale), travels on arcing paths (different x/y easing),
+and tapping it floods the screen with a paint radial to go Home. Reduce Motion: static dabs, mode shown by colour and
+opacity only. Small siblings: Glint (sheen for new PRs / current item / fresh notes), RoundRobin (background jobs),
+Tick (rolling digits for timers).

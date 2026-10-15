@@ -5,8 +5,45 @@ description: Tessera's house design rules — the anti-generic checklist for eve
 
 # Tessera design rules
 
+> **Standing principle (Kaushik):** UI carries equal weight with the backend (50/50). UI is a place for real
+> invention, creativity and new solutions, not polish on top. Never ship stock or card-based screens.
+
 Tessera is a personal app meant to be used every day. It should feel crafted, calm and specific, not like a generic
 AI-generated app. Read `docs/DESIGN_MOTION.md` for the signature moments; this file has the hard rules.
+
+## Theme
+Every visual decision lives in a `ThemeConcept` (`DesignSystem/Theme.swift`): palette, font families, the four type
+sizes, background layer, row separator, completion effect and the thinking indicator. Views only read tokens
+(`Theme.Colors`, `.textRole(_:)`, `ThemedBackground`, `RowSeparator`, `CompletionRenderer`, `ThinkingIndicator`).
+The visual concept is still open; never hard-code a look into a view.
+
+## Type: four sizes, nothing below 16 pt
+| Role | Default concept | Use |
+|---|---|---|
+| Hero | 64/0.94, display 700, tracking −3%, capped ≈80 pt | The single thing that matters on a screen (the object's NAME only). |
+| Title | 34/1.08, display 600, −1.5% | Section heads. |
+| Body | 21/1.38, UI 400 (500 emphasis) | Rows, properties, exercise lines. |
+| Label | 16/1.2, mono 500, UPPERCASE, +4%, ~85% width | Statuses, eyebrows, vertical margin labels. `.data` = same size, case preserved, for times, numbers, units and class lines. |
+- Secondary information uses 60% ink only — no extra sizes, no extra greys.
+- Long hero names: width 100 → 85 → 75% at the same size (`HeroText`), then demote to Title; never an in-between size.
+- At accessibility sizes: one column, vertical labels turn horizontal (`MarginSection`).
+
+## Layout (no cards)
+- Asymmetry through space: flush-left hero, rotated mono labels in the left margin (`MarginSection`), right-aligned
+  mono metadata in a hanging column, generous uneven gaps between sections.
+- Tappability without boxes: whole-row hit areas ≥ 44 pt (`ObjectRow`), dotted underline on names, a mono "→" or
+  child count, hairline rules between rows.
+- VoiceOver: sections use `.accessibilityElement(children: .contain)`; label+value pairs combine.
+
+## Motion grammar
+- Deeper (child object): native zoom out of the tapped row (`matchedTransitionSource` + `.zoom`); drag-to-dismiss
+  zooms back (= up).
+- Jump / breadcrumb to a non-ancestor: iOS 27 `.crossFade` (`AnyNavigationTransition`, chosen at runtime).
+- Process (workout mode): full-screen cover rising from the bottom.
+- Tess: morphs out of the glass bar (`glassEffectID`).
+- Page entrance: first visit per session only, first ~6 elements, reading order, 25 ms stagger, ~14 pt rise,
+  `.smooth(0.28)`, blur only on the hero; never blocks taps. Revisits and back appear instantly.
+- Reduce Motion: cross-fades (0.15–0.2 s), entrances opacity only, no travel or blur.
 
 ## Never
 - **Inter or Roboto as a display face.** Use SF Pro (system) with deliberate weights/widths, SF Pro Rounded or a
