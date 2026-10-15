@@ -1,6 +1,8 @@
 # Tessera board
 
-*Owned by the planning lead (Product lead thread). Updated 2026-10-15 18:10.*
+*Owned by the planning lead (Product lead thread). Updated 2026-10-15 18:12.*
+
+**Priority order (central):** v1 Workouts, then the kitchen (cooking, then groceries), then Lists, then M4 "My day, connected". M3 engine slices fill gaps in Core's queue.
 
 **Rules**
 - Each lead owns their section and pulls the top **Next** item when **Now** is done. Nobody needs to ask first.
@@ -19,24 +21,44 @@
 4. Lists app v0. Done when slice 15 in `ship-list-kitchen.md` is met.
 
 **Later:**
-- M3 slices 1 to 12 in `ship-list-m3.md`, in order. Land the M3 List template on the kitchen `List` class.
-- M4 engine slices 1, 2, 4, 5 and 9 in `ship-list-m4.md`.
+- **Lists**, from `ship-list-lists.md`. The Recipes and groceries thread is drafting it, and it comes next after the kitchen screens.
+- M3 slices 1 to 12 in `ship-list-m3.md`. Land the M3 List template on the kitchen `List` class.
+- M4 engine slices 1, 2, 4, 5 and 9 in `ship-list-m4.md`. These come after Lists.
 
-## iOS build (Mac)
+## iOS Builder A (Mac, current iOS build thread)
+
+*Owns: Workout, Exercise, Plans, Routine, Widgets, DesignSystem.*
 
 **Now:** v1 slice 8, edit and undo any set (`ship-list.md`).
 
 **Next:**
-1. v1 slice 9: swap an exercise within its pattern.
-2. v1 slice 10: routine editing.
-3. v1 slice 11: week view, rolling on after a missed day.
-4. v1 slice 12: Quick Capture ghost row for "log bench 80x8".
+1. v1 slice 9, swap within the pattern.
+2. v1 slice 10, routine editing.
+3. v1 slice 11, week view with roll-on.
+4. v1 slice 12, Quick Capture ghost row for sets.
 
 **Later:**
-- v1 slice 13, the live-mode polish pass (not rough).
-- M2 slices 8, 9, 11, 12 and 13 in `ship-list-m2.md`: Today on Home, the finish moment, tasks on the day strip, full What's running, and the day-full warning.
-- Hook Notes, Review and the kitchen into Home.
-- M4 slice 10: snippets and widgets.
+- v1 slice 13, live-mode polish (not rough).
+- v1 slices 14 to 19: progression, muscle sets, month heatmap, voice, rep maxes, HealthKit.
+- The cook-mode live screen, if it reuses the instruments (kitchen slice 12, coordinated with Core).
+- M4 slice 10, widgets and snippets.
+
+## iOS Builder B (Mac, starts once ios/ship-2 merges)
+
+*Owns: Home, the Command/Ask Tess bar, RootView, and the glue that hooks Notes, Review and Kitchen into Home.*
+
+**Now:** M2 slice 8, Today on Home (`ship-list-m2.md`). Done when it shows Now, then up to 3 Next and Later in a bounded surface, with swipe right for done and left for not now. It meets the UI bar.
+
+**Next:**
+1. M2 slice 9, the task finish moment (Ink strike and haptic). Not rough.
+2. NowPicker wiring. Done when cooking, shopping and timed tasks become Now through the same picker as workouts.
+3. M2 slice 11, the day strip showing tasks and the workout, with the now marker.
+4. M2 slice 12, the full What's running ledger for tasks: suspended and waiting, with the stale rules.
+5. M2 slice 13, the day-full warning.
+
+**Later:**
+- Entry points from Home into Notes, Review and Kitchen (Groceries is `GroceriesView()`, #58).
+- The Command bar hosting Tess's log answers and edits (M3 slices 7 and 8).
 
 ## Design studio
 
@@ -77,15 +99,19 @@
 
 ## QA (Repo maintainer)
 
-**Now:** test each merged slice on the simulator. Done when every merged PR has a short pass or bug note sent to the coordinator.
+*No simulator or Swift toolchain in this thread, so QA here is code review on master, not running the app.*
+
+**Now:** review merged PRs #46 to #57 for bugs and cross-PR clashes. Done when each finding is posted in the Repo maintainer thread with file:line and a fix, for the coordinator to route.
 
 **Next:**
-1. v1 gym flow script. Done when a written end-to-end check covers seed, prefilled hold-to-log, the dial, finishing, killing the app mid-set and resuming, and lock-screen Done.
-2. Kitchen flow script. Done when a written check covers paste, scale, add to groceries, shop, cook with two timers, and finish.
-3. Regression checklist. Done when a short list is run before each merge to master covers undo, export, What's running, and Reduce Motion.
+1. Review each new PR as it merges to master.
+2. Docs index at `docs/README.md`. Commit fe13d3d is on branch `claude/project-thread-ri9mgm`, waiting for the coordinator to merge.
+3. Kitchen flow script. Done when a written check covers paste, scale, add to groceries, shop, cook with two timers, and finish, for a Mac lead to run.
+4. v1 gym flow script. Done when a written end-to-end check covers seed, prefilled hold-to-log, the dial, finishing, killing the app mid-set and resuming, and lock-screen Done.
+5. Regression checklist. Done when a short pre-merge list covers undo, export, What's running, and Reduce Motion.
 
 **Later:**
-- Performance budget checks: launch time, and the dial at 120 fps.
+- Performance budget checks (launch time, dial at 120 fps). These need a Mac lead to run them.
 
 ## Planning lead (Product lead thread)
 

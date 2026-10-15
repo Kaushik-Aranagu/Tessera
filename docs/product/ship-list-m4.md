@@ -1,6 +1,6 @@
 # M4 "My day, connected" ship list (draft)
 
-*Planning lead, 2026-10-15 18:10. Comes after Workouts, the kitchen and lists, in Kaushik's order. Same rules as earlier lists: small end-to-end slices, velocity over perfection, engine slices first. Defaults are mine, taken without asking Kaushik. Inputs: `../research/personal-os-and-productivity.md` and `../research/ai-and-tess.md`.*
+*Planning lead, 2026-10-15 18:10. Comes after Workouts, the kitchen, and then Lists (`ship-list-lists.md`), in Kaushik's order. Same rules as earlier lists: small end-to-end slices, velocity over perfection, engine slices first. Defaults are mine, taken without asking Kaushik. Inputs: `../research/personal-os-and-productivity.md` and `../research/ai-and-tess.md`.*
 
 **The idea.** So far Tessera knows what Kaushik logs in it. M4 lets it see the rest of his day: his calendar and his body (Apple Health). Tess then plans the day and closes it with him. All of this goes through the same objects, processes and ghost rows he already uses.
 
