@@ -16,5 +16,5 @@ One paragraph per Feature screen in `docs/product/ship-list-m3.md`, the same wei
 - **Kitchen** is reached by its process and by words, not an icon grid:
   - Cooking and shopping become Now through the NowPicker, with the lit seam and Resume (the workout's language).
   - Later rows that link a recipe ("Carbonara, Thursday") zoom into the recipe page.
-  - On the TRAINING page's sibling rail, add **KITCHEN** as a fourth word (REVIEW · TODAY · TRAINING · KITCHEN). Its page is the shelf (sheet 14) with Groceries one swipe further, so Home's x axis becomes the app switcher.
+  - On the TRAINING page's sibling rail, add **KITCHEN** as a fourth word (REVIEW · TODAY · TRAINING · KITCHEN). Its page is the shelf (sheet 14) with Groceries one swipe further, so Home's x axis becomes the app switcher. (Confirmed by Kaushik, 2026-10-15.)
 - Until a home for user-built apps exists (M3 deferred), don't add a launcher grid.
