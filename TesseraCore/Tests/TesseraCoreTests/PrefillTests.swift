@@ -21,12 +21,11 @@ struct PrefillTests {
     }
 
     @Test func setsOpenAtLastTimeThenCarryThisSessionsWeight() throws {
-        // First time: nothing logged, so the slot's target.
+        // First time: nothing logged, so the slot's target, starting light on the empty bar.
         let first = try engine.perform(StartRoutine(routine: pushA().id), by: .user).output
         let bench = try #require(first.orderedChildren.first)
         let opening = ledger.prefill(for: bench)
-        #expect(opening.source == .target && opening.weight == nil && opening.reps == 5)
-        #expect(throws: ActionError.self) { try engine.perform(LogNextSet(entry: bench.id), by: .user) }
+        #expect(opening.source == .target && opening.weight == 20 && opening.reps == 5)
 
         for (weight, reps) in [(80.0, 8.0), (80, 7), (80, 6), (77.5, 8)] {
             try engine.perform(LogSet(entry: bench.id, weight: weight, reps: reps), by: .user)

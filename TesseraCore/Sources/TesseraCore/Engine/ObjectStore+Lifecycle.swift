@@ -58,5 +58,7 @@ public extension ObjectStore {
         }
         try? context.save()
         invalidateCaches()
+        // The starter plan and gym kit are user data too; put them back so a reset install looks like a fresh one.
+        _ = try? prepareCatalog()
     }
 }

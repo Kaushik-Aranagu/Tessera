@@ -57,6 +57,7 @@ public enum TesseraIntentsCatalog {
         "waitOnTask": "in-app only for now",
         "createNote": "Tell Tess (\"note: …\")",
         "editNote": "in-app only: notes app",
+        "finishWorkoutEarly": "in-app only: live mode's finish early",
         "moveTask": "in-app only for now (Now's \"not now\" and Later)",
     ]
 }

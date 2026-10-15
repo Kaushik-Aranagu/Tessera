@@ -132,6 +132,8 @@ public enum SystemCatalog {
                       FieldSpec(key: "targetReps", name: "Target reps", kind: .number),
                       FieldSpec(key: "targetWeight", name: "Target weight", kind: .mass, unit: "kg"),
                       FieldSpec(key: "slot", name: "Slot", kind: .ref, target: .slot),
+                      // Left without sets when the workout finished early.
+                      FieldSpec(key: "skipped", name: "Skipped", kind: .bool),
                   ]),
         ClassSpec(key: .set, name: "Set", parent: .thing, symbol: "number", colorRole: "training",
                   traits: [.trackable, .measurable], fields: [
