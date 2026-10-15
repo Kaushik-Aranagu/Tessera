@@ -1,8 +1,8 @@
 # Tessera board
 
-*Owned by the planning lead (Product lead thread). Updated 2026-10-15 18:12.*
+*Owned by the planning lead (Product lead thread). Leads update their own sections. Updated 2026-10-15 18:15.*
 
-**Priority order (central):** v1 Workouts, then the kitchen (cooking, then groceries), then Lists, then M4 "My day, connected". M3 engine slices fill gaps in Core's queue.
+**Priority order (central):** v1 Workouts, then the kitchen (cooking, then groceries), then Lists (ahead of M3), then M4 "My day, connected". M3 engine slices fill gaps in Core's queue.
 
 **Rules**
 - Each lead owns their section and pulls the top **Next** item when **Now** is done. Nobody needs to ask first.
@@ -14,13 +14,13 @@
 
 **Done:** Groceries screen, kitchen slice 13 (#58).
 
-**Now:** Recipe page and Paste a recipe. Done when slices 10 and 11 in `ship-list-kitchen.md` are met.
+**Now:** a kitchen engine hotfix. Done when the six fixes from the kitchen lead's acceptance check (`kitchen-acceptance.md`) are merged, including the lift-parsing regression.
 
 **Next:**
-1. Meal plan feeds groceries (idle-time slice below, ready now).
-2. Cook mode. Done when slice 12 in `ship-list-kitchen.md` is met: timers on the Lock Screen and a Cook entry on finish.
-3. Kitchen shelf. Done when slice 14 in `ship-list-kitchen.md` is met.
-4. Lists app v0. Done when slice 15 in `ship-list-kitchen.md` is met.
+1. Recipe page and Paste a recipe. Done when slices 10 and 11 in `ship-list-kitchen.md` are met.
+2. Groceries polish. Done when Design's and the kitchen lead's fixes to #58 are merged.
+3. Cook mode. Done when slice 12 in `ship-list-kitchen.md` is met: timers on the Lock Screen and a Cook entry on finish. Builder A reviews the shared instruments.
+4. Kitchen shelf. Done when slice 14 in `ship-list-kitchen.md` is met.
 
 **Idle-time slices** (from `../research/next-areas.md` part 2; each takes an afternoon, pull one whenever blocked):
 - Meal plan feeds groceries. Done when "carbonara thursday" puts its ingredients on Groceries the evening before, linked to the task.
@@ -28,7 +28,8 @@
 - Body weight is the load. Done when pull-ups and dips use the latest body weight plus added weight for e1RM and volume. Needs M3 slice 1.
 
 **Later:**
-- **Lists**, from `ship-list-lists.md`. The Recipes and groceries thread is drafting it, and it comes next after the kitchen screens.
+- **Lists engine.** `ship-list-lists.md` slices, in build order 1 → 3 → 2 → 4 → 5 → 7 → 6 → 8: housekeeping, lists from text, item paragraphs, reusable, run on Now, pick one, dated items in Today, list phrases. These replace kitchen slice 15.
+- **Lists screens 9 and 10.** The shelf and a list page, in `Features/Lists/`.
 - M3 slices 1 to 12 in `ship-list-m3.md`. Land the M3 List template on the kitchen `List` class.
 - M4 engine slices 1, 2, 4, 5 (Day log) and 9 in `ship-list-m4.md`. These come after Lists. Slice 6, Plan my day, stays out until Kaushik OKs a model call.
 
@@ -47,7 +48,8 @@
 **Later:**
 - v1 slice 13, live-mode polish (not rough).
 - v1 slices 14 to 19: progression, muscle sets, month heatmap, voice, rep maxes, HealthKit.
-- The cook-mode live screen, if it reuses the instruments (kitchen slice 12, coordinated with Core).
+- Review the shared instruments in Core's cook mode (kitchen slice 12).
+- Lists screens 11 and 12 in `ship-list-lists.md`: an item opened (z), and the pick-one living moment. These come after Core's Lists slices 2 and 7.
 - M4 slice 10, widgets and snippets.
 
 ## iOS Builder B (Mac, starts once ios/ship-2 merges)
@@ -64,38 +66,37 @@
 5. M2 slice 13, the day-full warning.
 
 **Later:**
-- Entry points from Home into Notes, Review and Kitchen (Groceries is `GroceriesView()`, #58).
+- Entry points from Home into Notes, Review, Kitchen and Lists (Groceries is `GroceriesView()`, #58).
+- Dated list items in Today, and a running list as Now. This wires the UI for Lists slices 5 and 6 once Core lands them.
 - The Command bar hosting Tess's log answers and edits (M3 slices 7 and 8).
 
 ## Design studio
 
-**Done (2026-10-15):** kitchen build sheets on branch `claude/project-thread-b3tu3f`, `docs/design/kitchen/`: 13 Groceries (f36ff12), 10/11 Recipe page and paste (8989878), 12 Cook mode, 14 Shelf and 15 Lists v0 (d4957ac). Reviews: Notes v0, Groceries #58 (fixes in the Design thread).
+**Done (2026-10-15):** kitchen build sheets on branch `claude/project-thread-b3tu3f`, `docs/design/kitchen/`: 13 Groceries (f36ff12), 10/11 Recipe page and paste (8989878), 12 Cook mode, 14 Shelf and 15 Lists v0 (d4957ac). Reviews: Notes v0, Groceries #58 (fixes in the Design thread). M3 steers and Home entry points: `docs/design/m3-steers.md` (60932f4).
 
-**Now:** steers for the M3 Feature screens: Class inspector, Body weight, Settings, and "What Tess did" (`ship-list-m3.md` slices 1, 6, 9, 12). Done when each has a one-paragraph steer like those in `ship-list-kitchen.md`.
+**Now:** Live-mode polish spec for v1 slice 13. Done when the motion, haptic and Reduce Motion values for Stamp, the rest dial and the PR sweep are written down for iOS build.
 
 **Always on:** review each Core or iOS screen as it merges, with file-and-change fixes posted in the Design thread.
 
 **Next:**
-1. Home integration points for Notes, Review and Kitchen (for iOS Builder B's Later item).
-2. Live-mode polish spec for v1 slice 13. Done when the motion, haptic and Reduce Motion values for Stamp, the rest dial and the PR sweep are written down for iOS build.
-3. Today on Home motion (M2 slice 8). Done when the Now / Next / Later surface and its swipe gestures have a short motion note and a recording.
-4. M4 screen steers: Day log, Shutdown, Focus block and the energy check-in (`ship-list-m4.md`). Plan my day waits for Kaushik's OK.
+1. Today on Home motion (M2 slice 8). Done when the Now / Next / Later surface and its swipe gestures have a short motion note and a recording.
+2. M4 screen steers: Day log, Shutdown, Focus block and the energy check-in (`ship-list-m4.md`). Plan my day waits for Kaushik's OK.
+3. A widget and snippet visual language (pulled forward for M4 slice 10).
 
 **Later:**
 - Lists screens 9-12 steer pass with the Kitchen lead (`ship-list-lists.md` supersedes my sheet 15 where they differ).
-- A widget and snippet visual language.
 - The plate-stack concept prototype from `whats-running.md`.
 
 ## Recipes and groceries, then Lists (Kitchen lead)
 
-**Now:** review each kitchen screen as Core lands it, in `docs/product/kitchen-acceptance.md` (branch `claude/project-thread-nq38le`). Engine slices 1-9 checked (6 small fixes). Groceries #58 checked (pass, 4 fixes). Next up: Recipe page and Paste a recipe when they land.
+**Now:** accept each kitchen screen as Core lands it, in `docs/product/kitchen-acceptance.md`. Engine 1-9 and Groceries #58 done (10 fixes relayed). Waiting on Recipe page and Paste (10, 11).
 
 **Next:**
-1. Seed recipes. Done when about 10 everyday recipes are in pasteable text, so the kitchen isn't empty on day one.
-2. A capture grammar test set. Done when there are 50 real kitchen and list phrases with their expected results, for Core's tests.
-3. Design steer pass on Lists screens 9-12 once Core starts them.
+1. Accept the engine hotfix PR and the Groceries polish PR against the 10 fixes.
+2. Starter lists: one reusable "Gym bag" and one "Leaving the house" list as pasteable text, for Lists slice 3 (like the seed recipes).
+3. Design steer check on Lists screens 9-12 with Design studio before Core starts them.
 
-**Done:** Lists ship list, `docs/product/ship-list-lists.md` (e6541cd; supersedes kitchen slice 15). Kitchen v2 backlog, `docs/product/kitchen-v2-backlog.md` (held until Kaushik has used v1 for a week).
+**Done (PR #61, branch `claude/project-thread-nq38le`):** Lists ship list `ship-list-lists.md`; Lists acceptance checks `lists-acceptance.md`; 10 seed recipes `kitchen-seed-recipes.md`; 50-phrase test set `kitchen-phrases.md`; Kitchen v2 backlog `kitchen-v2-backlog.md` (held for a week of use).
 
 **Later:**
 - Kitchen v2 scope from the backlog, after a week of use. Nutrition only if Kaushik asks.
@@ -137,4 +138,4 @@
 3. Kitchen v2 scope review with the Kitchen lead.
 
 **Later:**
-- M5 candidates, in Research lab's order: Money, Reading queue, People and Home upkeep. Also "build me an app" with Claude, and daemons.
+- M5 candidates, in Research lab's order: Money, Reading queue, People and Home upkeep. Also "build me an app" with Claude, and daem
