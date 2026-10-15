@@ -1,0 +1,32 @@
+# Instrument robustness: dial, drum and hold that work for everyone, in a real gym
+
+For: iOS build, Design studio
+Date: 2026-10-16
+
+Ranked by (sets saved from being lost or mislogged) / effort.
+
+1. **Every instrument is a real control underneath.** Dial and drum read as "adjustable", with a spoken value ("82.5 kilograms, 4 plates a side"); swipe up or down moves one loadable weight or one rep. API: `.accessibilityElement(children: .ignore)`, `.accessibilityValue`, `.accessibilityAdjustableAction`. Prefer this over `.accessibilityRepresentation { Slider }`, which Deque found needs VoiceOver toggled to focus and XCUITest cannot read. Counter-example: AppleVis called logging in Hevy "nearly impossible" with VoiceOver. Effort S. [Deque](https://www.deque.com/blog/swiftui-accessibility-goodies-gotchas-part-1/), [AppleVis](https://www.applevis.com/apps/ios/sports-activities/hevy-workout-tracker-planner), [forum 710236](https://developer.apple.com/forums/thread/710236)
+
+2. **Hold to log has a one-tap twin.** Give the set row named actions "Log set", "Same as last", "Undo". The dial also gets tap targets for minus and plus one plate (WCAG 2.5.7: every drag needs a non-drag route). API: `.accessibilityAction(named:)`, `onLongPressGesture(minimumDuration:maximumDistance:perform:onPressingChanged:)`. Effort S. [WCAG 2.5.7](https://specification.website/spec/accessibility/dragging-movements/), [Majid, actions](https://swiftwithmajid.com/2021/04/15/accessibility-actions-in-swiftui/)
+
+3. **Short hold, real undo.** Logging is reversible, so hold about 0.5 to 0.8 s (guidance: 1 to 1.5 s for reversible, 3 s for destructive), with `maximumDistance` around 20 pt so a sliding thumb still counts. Undo lasts until the next set is touched, not a 4 s toast. Model: Gmail Undo Send, never "Are you sure?". Effort S. [hold durations](https://dev.to/tomj/why-holding-buttons-is-superior-to-confirmation-dialogs-in-ux-design-1fic), [Undo Send](https://uxdesign.cc/an-underrated-ux-gmails-undo-send-d2a1ff04251f)
+
+4. **Big targets, bigger guard bands.** 44 pt is the floor; aim for 60 pt on log and dial, 12 pt dead space between unrelated controls. Water on glass causes phantom and missed touches (RainCheck: selection time 0.55 s dry vs 2.5 s with drops), and gloves blur position, so prefer gestures that read direction and speed over exact position. API: `.contentShape`, `.frame(minWidth:minHeight:)`. Effort S. [RainCheck](https://faculty.washington.edu/wobbrock/pubs/icmi-18.02.pdf), [WCAG 2.5.8](https://wcag.dock.codes/documentation/wcag258)
+
+5. **Settle gesture ownership early.** A drag inside a horizontal pager steals or loses the page swipe (worse since iOS 18). The pager owns horizontal; the dial claims vertical or rotational only, decided on first movement, with `DragGesture(minimumDistance: 10...20)`. If SwiftUI arbitration fails, use `UIGestureRecognizerRepresentable` with a delegate. Keep instruments 20 pt off the left edge (back swipe); in live mode `.defersSystemGestures(on: .bottom)`. Test on device: some bugs only show on hardware. Effort M. [forum 760035](https://developer.apple.com/forums/thread/760035), [Majid](https://swiftwithmajid.com/2024/12/17/introducing-uigesturerecognizerrepresentable-protocol-in-swiftui/)
+
+6. **Live Activity buttons are App Intents with hard limits.** Done, +15s, skip are `Button(intent:)` with `LiveActivityIntent`. Limits: 8 h active plus 4 h on Lock Screen, 4 KB state, over 160 pt may be cut, animation modifiers ignored, buttons inert in CarPlay, no network. Draw the countdown with `Text(timerInterval:countsDown:)` / `ProgressView(timerInterval:)`, never by ticking updates; update only on real events to stay inside the budget. Hevy ships these same three controls. Effort M. [Apple ActivityKit](https://developer.apple.com/documentation/activitykit/displaying-live-data-with-live-activities), [Hevy](https://www.hevyapp.com/features/live-activity/), [budget thread](https://developer.apple.com/forums/thread/731715)
+
+7. **Lock-screen Done shows its own undo.** A wet palm can tap it. After Done, the Activity shows the logged set with Undo until rest ends; both paths share one undo stack. Check `isLuminanceReduced` before animating. Effort S.
+
+8. **One haptic per meaning, matched to the picture.** Tick = one step, clunk = logged, PR = its own pattern; never reuse one for opposite outcomes. Match intensity and sharpness to the motion, and fire the tick sound on the same frame (audio events in the `CHHapticPattern`). Offer a haptics and sound off switch. Battery: one `CHHapticEngine`, `isAutoShutdownEnabled = true`, handle `resetHandler`/`stoppedHandler`; simple cases use `.sensoryFeedback`. In a loud gym, haptic first, sound second. Effort M. [HIG haptics](https://developer-mdn.apple.com/design/human-interface-guidelines/patterns/playing-haptics), [WWDC19 520](https://developer.apple.com/videos/play/wwdc2019/520), [WWDC19 810](https://developer.apple.com/videos/play/wwdc2019/810)
+
+9. **Reduce Motion swaps motion for state.** `\.accessibilityReduceMotion`: momentum becomes a direct snap, odometer roll a crossfade, zoom drill a fade; the hold still fills. Keep every haptic. All via `MotionPolicy`. Effort S.
+
+10. **Numerals that survive AX5 text.** `@ScaledMetric` sizes, `.monospacedDigit()`, and at accessibility sizes `ViewThatFits` / `AnyLayout` stacks plate math under the number; `.minimumScaleFactor` only as a last guard; `.accessibilityShowsLargeContentViewer()` for glyphs that cannot grow. Effort M.
+
+11. **Rotors for the workout.** `.accessibilityRotor("Unlogged sets")` and "PRs" let VoiceOver jump straight there. Effort S. [Majid, rotors](https://swiftwithmajid.com/2021/09/14/accessibility-rotors-in-swiftui/)
+
+12. **Glare and the bench.** Logged state changes shape, not only colour (`\.accessibilityDifferentiateWithoutColor`, `\.colorSchemeContrast`). Keep Log in the lower half, usable with the phone flat. Effort S.
+
+13. **Test like a machine.** XCUITest: `app.performAccessibilityAudit()` on each instrument screen; launch at AX XXXL with `-UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityXXXL`; `increment()`/`decrement()` call your adjustable action; `press(forDuration:)` for the hold; assert model values, not pixels. Effort M. [WWDC23 audits](https://wwdcnotes.com/notes/wwdc23/10035), [Create with Swift](https://createwithswift.com/testing-your-apps-accessibility-ui-tests)
