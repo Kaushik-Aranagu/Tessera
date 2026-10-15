@@ -165,6 +165,7 @@ public struct CheckListItem: EngineAction {
         let isDone = done ?? true
         try transaction.set("isDone", to: .bool(isDone), on: item)
         try transaction.set("checkedAt", to: isDone ? .date(.now) : nil, on: item)
+        try transaction.refreshShopLine(for: item)
     }
 
     public func summary(in store: ObjectStore) -> String {

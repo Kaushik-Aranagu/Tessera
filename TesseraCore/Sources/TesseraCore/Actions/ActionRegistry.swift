@@ -12,6 +12,7 @@ public enum ActionRegistry {
         EditSlot.descriptor,
         SwapSlotExercise.descriptor,
         SwapEntryExercise.descriptor, MoveTask.descriptor, CreateNote.descriptor, EditNote.descriptor,
+        StartShop.descriptor, FinishShop.descriptor,
         StartCooking.descriptor, GoToCookStep.descriptor, StartKitchenTimer.descriptor, StopKitchenTimer.descriptor,
         FinishCooking.descriptor,
         AddRecipeToGroceries.descriptor, RemoveRecipeFromGroceries.descriptor, AddGroceries.descriptor,
@@ -45,6 +46,8 @@ public enum ActionRegistry {
         MoveTask.descriptor.name: { try decode(MoveTask.self, MoveTask.descriptor.name, $0) },
         CreateNote.descriptor.name: { try decode(CreateNote.self, CreateNote.descriptor.name, $0) },
         EditNote.descriptor.name: { try decode(EditNote.self, EditNote.descriptor.name, $0) },
+        StartShop.descriptor.name: { try decode(StartShop.self, StartShop.descriptor.name, $0) },
+        FinishShop.descriptor.name: { try decode(FinishShop.self, FinishShop.descriptor.name, $0) },
         StartCooking.descriptor.name: { try decode(StartCooking.self, StartCooking.descriptor.name, $0) },
         GoToCookStep.descriptor.name: { try decode(GoToCookStep.self, GoToCookStep.descriptor.name, $0) },
         StartKitchenTimer.descriptor

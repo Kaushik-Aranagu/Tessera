@@ -57,6 +57,8 @@ public enum TesseraIntentsCatalog {
         "waitOnTask": "in-app only for now",
         "createNote": "Tell Tess (\"note: …\")",
         "editNote": "in-app only: notes app",
+        "startShop": "in-app only for now (Tess \"shop\" is kitchen slice 9)",
+        "finishShop": "in-app only: groceries at the shop",
         "startCooking": "in-app only for now (Tess \"cook carbonara\" is kitchen slice 9)",
         "goToCookStep": "in-app only: cook mode",
         "startKitchenTimer": "in-app only for now (Tess \"timer pasta 10\" is kitchen slice 9)",
