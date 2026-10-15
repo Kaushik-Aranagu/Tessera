@@ -13,6 +13,8 @@ public struct TessGrammar {
         case set(entry: ObjectRecord, weight: Double, reps: Double, kind: SetKind, phrase: SetPhrase,
                  unit: MassUnit = .kilograms)
         case task(title: String, startsAt: Date?)
+        /// "note: bar felt heavy" (or "note bar felt heavy").
+        case note(body: String)
     }
 
     public enum SetPhrase: Equatable, Sendable {
@@ -30,6 +32,9 @@ public struct TessGrammar {
     public func parse(_ phrase: String, context: TessContext) -> Parse? {
         let text = Self.normalize(phrase)
         guard !text.isEmpty else { return nil }
+        if let note = parseNote(phrase) {
+            return note
+        }
         let entry = context.entry.flatMap { store.object(id: $0) }
         if let entry, let parsed = parseRelativeSet(text, entry: entry) {
             return parsed
@@ -38,6 +43,14 @@ public struct TessGrammar {
             return lift
         }
         return parseTask(phrase, context: context)
+    }
+
+    /// "note: …" or "note …" at the start makes a note of the rest, keeping its text as typed.
+    private func parseNote(_ phrase: String) -> Parse? {
+        let trimmed = phrase.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let match = trimmed.firstMatch(of: /^(?i)note[:\s]\s*(.+)$/) else { return nil }
+        let body = String(match.1).trimmingCharacters(in: .whitespacesAndNewlines)
+        return body.isEmpty ? nil : .note(body: body)
     }
 
     // MARK: Sets in focus

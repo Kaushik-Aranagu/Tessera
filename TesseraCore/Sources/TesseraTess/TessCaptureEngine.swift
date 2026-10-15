@@ -63,7 +63,17 @@ public final class TessCaptureEngine: TessCapturing {
         case let .task(title, startsAt):
             let record = try engine.perform(CreateTask(title: title, startsAt: startsAt), by: .tess, pending: pending)
                 .record
-            return (record, startsAt.map { "\(title), \(Self.when($0, context: context))." } ?? "Added \(title).")
+            return (record, startsAt.map { "\(title), \(Self.when($0, context: context))." } ?? "\(title), in Later.")
+        case let .note(body):
+            let record = try engine.perform(CreateNote(body: body), by: .tess, pending: pending).record
+            let links = record.ops.count {
+                if case .setLinks = $0 {
+                    true
+                } else {
+                    false
+                }
+            }
+            return (record, links > 0 ? "Noted, linked." : "Noted.")
         }
     }
 
