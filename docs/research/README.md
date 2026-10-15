@@ -52,3 +52,5 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [plan-my-day-prompt.md](plan-my-day-prompt.md) | Core: Plan my day prompt pack for T6 (instructions, proposePlan schema, validation, 20-scenario hand check) |
 | [ship-list-m5-people-draft.md](ship-list-m5-people-draft.md) | Product: DRAFT People ship list, 8 slices, 15 phrases (M5) |
 | [app-from-a-sentence.md](app-from-a-sentence.md) | Product, Core: make an app from a sentence via proposeClass; needs schema undo (A1) |
+| [context-packing.md](context-packing.md) | Core, Builder B, Product: how Home and NowPicker pick what to show (signals, one ranker with why, 20 moments) |
+| [huddle-triage.md](huddle-triage.md) | Coordinator, Product: one-page template to turn Kaushik review feedback into board items |
