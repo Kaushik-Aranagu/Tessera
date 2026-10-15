@@ -14,6 +14,7 @@ struct BottomChrome: View {
     @State private var layer = Layer.modes
     @State private var swell = false
     @State private var pressed = false
+    @State private var glow = false
     @State private var breathe = false
     @State private var opens = 0
     @State private var reply: String?
@@ -44,7 +45,9 @@ struct BottomChrome: View {
                 .contentShape(Rectangle())
                 .onTapGesture { close() }
                 .accessibilityHidden(true)
-                .transition(.opacity)
+                // The page comes back only after the words have gone, so they never overlap it.
+                .transition(.asymmetric(insertion: .opacity,
+                                        removal: .opacity.animation(.easeInOut(duration: 0.42).delay(0.12))))
                 CaptureWash(dark: colorScheme == .dark)
                     .transition(.asymmetric(insertion: .offset(y: 60).combined(with: .opacity),
                                             removal: .offset(y: 40).combined(with: .opacity)))
@@ -54,7 +57,8 @@ struct BottomChrome: View {
                         }
                     })
                 surface
-                    .transition(.opacity)
+                    .transition(.asymmetric(insertion: .opacity,
+                                            removal: .opacity.animation(.easeOut(duration: 0.16))))
             }
             resting
         }
@@ -79,6 +83,7 @@ struct BottomChrome: View {
             #endif
         }
         .sensoryFeedback(.selection, trigger: opens)
+        .sensoryFeedback(.success, trigger: glow) { _, lit in lit }
     }
 
     private var restingOrIdle: TessSoul.Mode {
@@ -88,18 +93,9 @@ struct BottomChrome: View {
 
     // MARK: Rest
 
-    /// What Tess has to say beside the soul: her last reply, a drying capture, or the launch note.
+    /// One line per capture: Tess's reply wins; there are no generic fallbacks. UNDO stays while there's a capture.
     private var line: String? {
-        if let reply {
-            return reply
-        }
-        if model.lastCapture != nil {
-            return "Added to Later."
-        }
-        if model.pendingCapture != nil {
-            return "Drying. Swipe to drop it."
-        }
-        return model.launchNote
+        reply ?? model.launchNote
     }
 
     private var resting: some View {
@@ -121,7 +117,7 @@ struct BottomChrome: View {
                     }
                 }
                 .padding(.vertical, Theme.Spacing.xs)
-                .background { WordHalo(dark: colorScheme == .dark) }
+                .shadow(color: Theme.Colors.paper.opacity(0.9), radius: 6)
                 .transition(.offset(x: 12).combined(with: .opacity))
             }
             soulKey
@@ -140,6 +136,8 @@ struct BottomChrome: View {
             .scaleEffect(breathe ? 1.08 : 1)
             .tesseraAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true), value: breathe)
             .scaleEffect(swell ? 1.35 : 1)
+            .saturation(glow ? 1.35 : 1)
+            .brightness(glow ? 0.08 : 0)
             .frame(width: 46, height: 40)
             .frame(width: 64, height: 64)
             .contentShape(Rectangle())
@@ -398,10 +396,21 @@ struct BottomChrome: View {
         model.commandDraft = ""
         withTesseraAnimation(.spring(response: 0.42, dampingFraction: 0.9), reduceMotion: reduceMotion) {
             model.isCommandExpanded = false
-            model.tessMode = .done
+            // At rest the soul is small: `.done` would multiply its dabs into mud, so it brightens instead.
+            model.tessMode = restingOrIdle
         }
         isBusy = false
+        brighten()
         say(answer)
+    }
+
+    /// The small soul's "done": its colours brighten for a beat, with a success haptic.
+    private func brighten() {
+        withAnimation(.easeOut(duration: 0.25)) { glow = true }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(900))
+            withAnimation(.easeInOut(duration: 0.6)) { glow = false }
+        }
     }
 
     /// Tess's line beside the soul, faded after 4 s.
@@ -515,19 +524,6 @@ private struct CaptureWash: View {
         .ignoresSafeArea(.container, edges: .bottom)
         .frame(maxHeight: .infinity, alignment: .bottom)
         .contentShape(Rectangle())
-    }
-}
-
-/// A soft, edgeless lift of ground behind Tess's line at rest so it reads over any page.
-private struct WordHalo: View {
-    let dark: Bool
-
-    var body: some View {
-        Rectangle()
-            .fill(Theme.Colors.paper.opacity(0.85))
-            .blur(radius: 14)
-            .padding(-10)
-            .allowsHitTesting(false)
     }
 }
 
