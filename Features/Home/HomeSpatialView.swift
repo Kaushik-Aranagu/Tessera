@@ -206,7 +206,11 @@ enum HomeData {
             guard let day = calendar.date(byAdding: .day, value: offset, to: now) else { return nil }
             let items = model.schedule(around: offset == 0 ? now : day)
                 .filter { calendar.isDate($0.start, inSameDayAs: day) }
-            return DayLane(offset: offset, date: day, items: items)
+            let workouts = model.finishedWorkouts(on: day).compactMap { summary -> ClosedRange<Date>? in
+                guard let end = summary.endedAt else { return nil }
+                return min(summary.startedAt ?? end, end) ... end
+            }
+            return DayLane(offset: offset, date: day, items: items, workouts: workouts)
         }
     }
 

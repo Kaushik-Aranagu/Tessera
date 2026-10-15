@@ -74,7 +74,8 @@ private struct WorkoutContent: View {
                             endedAt: finished,
                             summary: session.summary,
                             onGathered: {
-                                summaryLine = session.summary.line
+                                // Tess's count line from Core's summary: "5 of 5 exercises, 16 sets, 1 record."
+                                summaryLine = model.ledger.summary(of: session.workout).line
                                 play(.done)
                             },
                             onDone: leaveFinished
@@ -248,7 +249,11 @@ extension WorkoutContent {
                                 laneIndex = index
                             }
                         },
-                        onClose: { setOrder(open: false) }
+                        onClose: { setOrder(open: false) },
+                        onFinish: session.summary.sets > 0 ? {
+                            setOrder(open: false)
+                            finish()
+                        } : nil
                     )
                     .ignoresSafeArea(edges: .top)
                     .transition(reduceMotion ? .opacity : .move(edge: .top))

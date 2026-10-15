@@ -112,6 +112,8 @@ struct NowPage: View {
             }
         } else if let routine = model.todaysRoutine(now: now) {
             RoutineHero(routine: routine)
+        } else if let done = model.finishedToday(now: now).first {
+            DoneHero(summary: done, onShow: onShow)
         } else {
             VStack(alignment: .leading, spacing: Theme.Spacing.l) {
                 Text("Nothing else is planned today.")
@@ -322,6 +324,39 @@ private struct GhostRow: View {
         .accessibilityLabel("Proposed: \(item.title), \(Format.clock(item.start))")
         .accessibilityHint("Saves in two seconds. Double-tap to keep it now.")
         .accessibilityAction(named: "Drop it") { model.discardCapture() }
+    }
+}
+
+/// Trained today and nothing else on: the workout, saved, with Tess's one count line.
+private struct DoneHero: View {
+    let summary: WorkoutSummary
+    var onShow: (HomeSpatialView.Page) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+            Text(summary.endedAt.map { "trained this \(SpokenTime.partOfDay($0))" } ?? "trained today")
+                .font(Theme.voice(size: 21))
+                .foregroundStyle(Theme.Colors.context)
+                .entrance(1)
+            Button {
+                onShow(.training)
+            } label: {
+                HeroText(text: summary.title) { $0 }
+                    .foregroundStyle(Theme.Colors.ink)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(HandleButtonStyle())
+            .accessibilityLabel("\(summary.title), done")
+            .accessibilityHint("Shows today's training")
+            .siblingParallax()
+            .entrance(2, hero: true)
+            Text(summary.line)
+                .font(Theme.voice(size: 21))
+                .foregroundStyle(Theme.Colors.tess)
+                .fixedSize(horizontal: false, vertical: true)
+                .entrance(3)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

@@ -16,6 +16,9 @@ struct TrainingPage: View {
         } else if let routine = model.todaysRoutine() {
             // Nothing scheduled yet: the plan's next routine is today's training, one hold from live mode.
             RoutinePlan(routine: routine)
+        } else if let done = model.finishedToday().first {
+            // Trained today: the session, compressed into today's history, with Tess's count line.
+            DoneTraining(summary: done)
         } else {
             EmptyTraining()
         }
@@ -192,6 +195,90 @@ private struct RoutinePlan: View {
     private var context: String {
         guard let plan = model.plan else { return "today" }
         return "next in \(plan.title)"
+    }
+}
+
+/// Today's finished workout: when it ended, what got done per exercise, Tess's line and what's next in the plan.
+private struct DoneTraining: View {
+    let summary: WorkoutSummary
+    @Environment(AppModel.self) private var model
+    @Environment(\.zoomNamespace) private var namespace
+
+    var body: some View {
+        let entries = summary.workout.orderedChildren
+        VStack(alignment: .leading, spacing: 0) {
+            Text(context)
+                .font(Theme.voice(size: 21))
+                .foregroundStyle(Theme.Colors.context)
+                .padding(.bottom, Theme.Spacing.m)
+                .entrance(0)
+
+            Button {
+                model.open(.object(summary.workout.id))
+            } label: {
+                HeroText(text: summary.title) { $0 }
+                    .foregroundStyle(Theme.Colors.ink)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(HandleButtonStyle())
+            .modifier(ZoomSource(id: Route.object(summary.workout.id), namespace: namespace))
+            .accessibilityLabel("\(summary.title), done")
+            .siblingParallax()
+            .entrance(1, hero: true)
+            .padding(.bottom, Theme.Spacing.xl)
+
+            VStack(spacing: 0) {
+                ForEach(entries.prefix(6)) { entry in
+                    DoneRow(entry: entry)
+                        .frame(height: 50)
+                }
+            }
+            .accessibilityElement(children: .contain)
+            .entrance(2)
+
+            Spacer(minLength: Theme.Spacing.xl)
+
+            Text(summary.line)
+                .font(Theme.voice(size: 21))
+                .foregroundStyle(Theme.Colors.tess)
+                .fixedSize(horizontal: false, vertical: true)
+                .entrance(3)
+            if let next {
+                Text("\(next.title) is next.")
+                    .textRole(.label)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .padding(.top, Theme.Spacing.s)
+                    .entrance(4)
+            }
+        }
+    }
+
+    /// "done this afternoon"
+    private var context: String {
+        guard let end = summary.endedAt else { return "done today" }
+        return "done this \(SpokenTime.partOfDay(end))"
+    }
+
+    private var next: ObjectRecord? {
+        model.plan.flatMap { model.ledger.nextRoutine(in: $0) }
+    }
+}
+
+/// One exercise of a finished workout: its name and how many sets were logged ("4 sets", or "not today").
+private struct DoneRow: View {
+    let entry: ObjectRecord
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        if let exercise = model.store.linkedClass("exercise", of: entry) {
+            let sets = entry.orderedChildren.count { model.store.number("reps", of: $0) != nil }
+            ObjectRow(title: exercise.name, route: .classDef(exercise.id), showsArrow: false) {
+                Text(sets == 0 ? "not today" : "\(sets) \(sets == 1 ? "set" : "sets")")
+                    .textRole(.label)
+                    .foregroundStyle(sets == 0 ? Theme.Colors.muted : Theme.Colors.inkSecondary)
+                    .monospacedDigit()
+            }
+        }
     }
 }
 
