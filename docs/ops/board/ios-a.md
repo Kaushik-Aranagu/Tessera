@@ -17,6 +17,7 @@
 8. M4 slice 10, widgets and snippets, pulled forward. Snippets first, then the App Group test build, per Design's `widgets-and-snippets.md`.
 
 **Later:**
+- M3 body weight page, after Core's M3 slice 1, with a BODY WEIGHT word on the Training page. Design's sheet: `docs/design/body-weight-and-habits.md` with `m3-surfaces.mp4` (1f17bd1 on Design's branch), drawn on Research's `../research/m3-1-2-brief.md` fixtures with exact copy.
 - M5 Reading screens (`../product/ship-list-m5-reading.md`) and M5 Money screens 6, 7, 5 (`../product/ship-list-m5-money.md`), each after Core's engine slices land. Includes a HomeLink word in `HomeSpatialView`, so the screen isn't DEBUG-only. (Moved from Builder B, 3:50 PM PT, to spread the screen work.)
 - Fixes from Kaushik's phone review on haptics, dial feel and the finish animation (unverifiable in the simulator).
 
