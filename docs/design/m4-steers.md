@@ -57,7 +57,7 @@ Rewritten 16 Oct to Research 95 (`research/plan-my-day-flow.md`, #240) and Produ
 **Reduce Motion:** cross-fades for the reword, the dry, the reorder and the promotion. No wisps (VoiceOver still says "Sent to Claude"). The hold fills without thickening, and there's no bead.
 
 ## 7 · Shutdown
-At 21:00 Shutdown becomes Now, and the ground turns to **evening**: the paint washes shift to violet and vermilion over 1.2s, the same ground the day stroke ends in.
+At 21:00 Shutdown becomes Now. **The ground does not change** (one base; the evening is only the day stroke reaching its vermilion end). The hero holds at most two counts, the rest go to its label line, and the handoff and what follows until 04:00 are drawn in `evening-on-now.md` (item 17), which wins over this section where they differ.
 - **Now line:** "this evening". **Hero** is counts only: "Four tasks, one workout, cooked once". Never what didn't happen.
 - **Rolling on:** a labels line, "GOING TO TOMORROW", then unfinished items as rows in the queue window at Body 21 in `ink`, with **TOMORROW** as a label in the time column. There's no dab (`no-dots.md`). **Tap a row to keep it off tomorrow:** TOMORROW is struck through (2.5pt, `ink-line.md`) and **LATER** sets in beside it. Tap again to put it back. There's no checkbox and no red.
 - **One optional line:** "Tomorrow, first:" as a writing line at 21/400 (50% placeholder). It's the one line for the Day log too.

@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Evening on Now</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/evening-on-now.md (Design item 17): Now on Home after the day is done. Phones: day done (19:55, trained, evening left), Shutdown (21:04), the day closed (22:30, after Shutdown), and late night without Shutdown (00:45). ?play records Shutdown's handoff into the closed day, then the 04:00 turn into the morning. Obsidian (the night look), one base: the ground never changes. Add ?x2 for 2x. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:36px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:48px;width:390px;line-height:22px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;background:#000;--ink:245,242,236;--s2:.72;--tess:#86B4FF;--ctx:#B7A6E0;--live:#FF5B3A;--now:#FFC23D;--liveInk:#FF7A5C;color:rgb(var(--ink))}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}
+.b{font-size:21px;line-height:28px;white-space:nowrap}
+.hero{font-size:56px;font-weight:500;letter-spacing:-.035em;line-height:60px;width:346px}
+.t34{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px;white-space:nowrap}
+.q{position:absolute;left:22px;right:22px;height:28px}
+.q .tm{position:absolute;right:0;top:0}
+.tess{color:var(--tess)}
+.soul{position:absolute;left:322px;top:782px;width:46px;height:40px;transition:filter .8s,transform .8s,opacity .8s}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px);mix-blend-mode:screen}
+.soul.rest{filter:saturate(.45);transform:scale(.85);opacity:.7}
+.f{transition:opacity .42s var(--house),filter .42s var(--house),transform .42s var(--house)}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;max-width:1700px;line-height:24px}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(245,242,236,.22);box-shadow:0 0 0 1.5px rgba(245,242,236,.6);opacity:0;z-index:20}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play');
+const $=id=>document.getElementById(id),at=(t,f)=>setTimeout(f,t);
+const soul=(id,rest)=>`<div class="soul ${rest?'rest':''}" id="${id}"><i style="left:0;top:4px;background:radial-gradient(closest-side,#86B4FF,rgba(134,180,255,.2))"></i><i style="left:22px;top:2px;background:radial-gradient(closest-side,#FF5B3A,rgba(255,91,58,.2))"></i><i style="left:12px;top:20px;background:radial-gradient(closest-side,#FFC23D,rgba(255,194,61,.2))"></i></div>`;
+const lens=(w,t)=>`M0 6 Q ${w*.42} ${6-t} ${w} 5.6 Q ${w*.58} ${6+t} 0 6 Z`;
+const X=h=>22+(h-7)/16*346;
+// the day stroke: daySpectrum (sky, health, context, now, live) painted to now, a dashed ink guide after
+function stroke(id,now){return `<svg class="abs" style="left:0;top:182px;overflow:visible" width="390" height="12">
+ <defs><linearGradient id="${id}g" gradientUnits="userSpaceOnUse" x1="22" x2="368"><stop offset="0" stop-color="#7FC8E8" stop-opacity=".55"/><stop offset=".3" stop-color="#3FD49A" stop-opacity=".55"/><stop offset=".6" stop-color="#B7A6E0" stop-opacity=".6"/><stop offset=".85" stop-color="#FFC23D" stop-opacity=".65"/><stop offset="1" stop-color="#FF5B3A" stop-opacity=".7"/></linearGradient></defs>
+ <line id="${id}d" x1="${X(now)+8}" y1="6" x2="368" y2="6" stroke="rgba(245,242,236,.25)" stroke-width="1.5" stroke-dasharray="2 6" stroke-linecap="round"/>
+ <line id="${id}p" x1="22" y1="6" x2="${X(now)}" y2="6" stroke="url(#${id}g)" stroke-width="6" stroke-linecap="round"/></svg>`}
+const rail=`<div class="abs lbl" style="left:22px;top:58px;width:346px;display:flex;justify-content:space-between"><span class="s2" style="opacity:.6">REVIEW</span><span>TODAY<svg style="position:absolute;margin:24px 0 0 -62px;overflow:visible" width="58" height="12"><path d="${lens(56,1.2)}" fill="rgb(245,242,236)"/></svg></span><span class="s2" style="opacity:.6">TRAINING</span><span class="s2" style="opacity:.6">KITCHEN</span></div>`;
+const head=(L,day,now)=>`${rail}<div class="abs b" id="${L}day" style="left:22px;top:140px">${day}</div>${stroke(L+'st',now)}`;
+// A · day done, evening left
+const A=`<div class="ph">${head('A','Thursday evening',19.9)}
+ <div class="abs b s2" style="left:22px;top:226px">trained this evening</div>
+ <div class="abs hero" style="left:22px;top:258px">Push A</div>
+ <div class="abs lbl s2" style="left:22px;top:330px">6 OF 6 · 22 SETS · 1 RECORD</div>
+ <div class="abs t34" style="left:22px;top:470px">Next</div>
+ <div class="q b" style="top:524px">Stretch &amp; mobility<span class="tm lbl s2" style="top:4px">20:30</span></div>
+ <div class="q b" style="top:572px">Read · Designing Data-Inten…<span class="tm lbl s2" style="top:4px">21:10</span></div>
+ ${soul('As')}</div>`;
+// B · Shutdown
+function shut(L){return `<div class="ph" id="${L}ph">${head(L,'Thursday evening',21.07)}
+ <div class="abs b s2 f" id="${L}ctx" style="left:22px;top:226px">this evening</div>
+ <div class="abs hero f" id="${L}hero" style="left:22px;top:258px">Four tasks, one workout</div>
+ <div class="abs lbl s2 f" id="${L}meta" style="left:22px;top:390px">COOKED ONCE · 2 NOTES</div>
+ <div class="f" id="${L}low">
+  <div class="abs lbl s2" style="left:22px;top:446px">GOING TO TOMORROW</div>
+  ${[['Reply to landlord',478],['Book physio, 30 min',526],['Clean the oven',574]].map(([t,y],k)=>`<div class="q b" id="${L}r${k}" style="top:${y}px">${t}<span class="tm lbl s2" id="${L}w${k}" style="top:4px">TOMORROW<svg id="${L}x${k}" style="position:absolute;left:-3px;top:4px;overflow:visible;opacity:0" width="100" height="12"><path d="${lens(98,1.25)}" fill="rgb(245,242,236)"/></svg></span><span class="abs lbl s2" id="${L}l${k}" style="right:116px;top:4px;opacity:0">LATER</span></div>`).join('')}
+  <div class="abs b" style="left:22px;top:628px"><span class="s2">Tomorrow, first:</span> Reply to landlord<svg style="position:absolute;left:0;top:32px" width="346" height="2"><rect width="346" height=".5" fill="rgba(245,242,236,.4)"/></svg></div>
+  <div class="abs lbl s2" style="left:22px;top:688px">WHEN YOU'RE DONE</div>
+  <div class="abs t34" id="${L}sc" style="left:22px;top:714px">Shutdown complete
+   <svg id="${L}scL" style="position:absolute;left:-2px;top:41px;overflow:visible" width="290" height="12"><path d="${lens(284,2.5)}" fill="#B7A6E0" opacity=".8"/></svg>
+   <svg style="position:absolute;left:284px;top:41px;overflow:visible" width="1" height="12"><circle id="${L}bead" cx="0" cy="6" r="0" fill="#B7A6E0"/></svg></div>
+ </div>
+ <div class="abs lbl s2 f" id="${L}cl" style="left:22px;top:450px;opacity:0">CLOSE THE DAY</div>
+ <div class="abs b tess f" id="${L}say" style="left:22px;right:80px;top:790px;opacity:0"></div>
+ ${soul(L+'s')}<div id="fing"></div></div>`}
+// C · day closed after Shutdown
+const C=`<div class="ph">${head('C','Thursday night',23)}
+ <div class="abs b s2" style="left:22px;top:226px">tomorrow, first</div>
+ <div class="abs hero s2" style="left:22px;top:258px">Reply to landlord</div>
+ <div class="abs lbl s2" style="left:22px;top:390px">THEN PULL A · 07:30</div>
+ ${soul('Cs',1)}</div>`;
+// D · late night, no Shutdown held
+const D=`<div class="ph">${head('D','Thursday night',23)}
+ <div class="abs b s2" style="left:22px;top:226px">tomorrow, first</div>
+ <div class="abs hero s2" style="left:22px;top:258px">Pull A</div>
+ <div class="abs lbl s2" style="left:22px;top:330px">07:30</div>
+ <div class="abs lbl s2" style="left:22px;top:390px">CLOSE THE DAY</div>
+ <div class="abs b tess" style="left:22px;right:80px;top:790px">Noted. Hotel ideas.</div>
+ ${soul('Ds',1)}</div>`;
+const cap=(t,id='')=>`<div class="cap" ${id?`id="${id}"`:''}>${t}</div>`;
+if(PLAY){
+ $('row').innerHTML=`<div>${cap('21:04 · SHUTDOWN IS NOW','cap')}${shut('P')}</div>`;
+}else{
+ $('row').innerHTML=`<div>${cap('19:55 · DAY DONE, EVENING LEFT')}${A}</div><div>${cap('21:04 · SHUTDOWN, ONE ROW TO LATER')}${shut('B')}</div><div>${cap('22:30 · CLOSED AFTER SHUTDOWN')}${C}</div><div>${cap('00:45 · LATE, NO SHUTDOWN HELD')}${D}</div>`;
+ $('note').innerHTML='ONE BASE: THE GROUND NEVER TURNS TO EVENING; THE EVENING IS ONLY THE DAY STROKE REACHING ITS VERMILION END. DAY DONE KEEPS THE QUEUE. SHUTDOWN TAKES NOW AT 21:00 (HERO IS COUNTS ONLY). AFTER IT, OR FROM 22:00 BY ITSELF, NOW READS "TOMORROW, FIRST" IN INK SECONDARY UNTIL 04:00, WITH THE SOUL RESTING. NO QUEUE, NO "NOTHING ELSE TODAY", NO COUNTS OF WHAT DIDN\'T HAPPEN.';
+ // board B shows one row kept off tomorrow
+ at(0,()=>{$('Bx2').style.opacity=1;$('Bl2').style.opacity=1;$('Bw2').style.opacity=.5});
+}
+const fade=(el,o,b=0)=>{el.style.opacity=o;el.style.filter=`blur(${b}px)`};
+function swapText(el,html,cls){fade(el,0,4);setTimeout(()=>{el.innerHTML=html;if(cls!==undefined)el.className=cls;fade(el,1,0)},420)}
+function finger(x,y,t,hold){const f=$('fing');f.style.left=x+'px';f.style.top=y+'px';at(t,()=>f.style.opacity=1);at(t+hold,()=>f.style.opacity=0)}
+document.fonts.ready.then(()=>{document.body.dataset.start='1';
+ if(!PLAY){setTimeout(()=>document.body.dataset.done='1',200);return}
+ // 1 · tap a row: TOMORROW struck, LATER sets in
+ finger(300,592,900,220);
+ at(1000,()=>{$('Px2').animate([{opacity:0,clipPath:'inset(0 100% 0 0)'},{opacity:1,clipPath:'inset(0 0 0 0)'}],{duration:260,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});$('Pw2').style.transition='opacity .3s';$('Pw2').style.opacity=.5;
+  $('Pl2').animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:260,delay:120,easing:'cubic-bezier(.3,1.3,.5,1)',fill:'forwards'})});
+ // 2 · hold Shutdown complete 0.7 s: the line empties to a trace, repaints, then the bead
+ finger(150,740,2200,800);
+ at(2200,()=>{const p=$('PscL').querySelector('path');p.animate([{d:`path("${lens(284,2.5)}")`},{d:`path("${lens(284,.45)}")`,offset:.35},{d:`path("${lens(284,2.5)}")`}],{duration:700,easing:'cubic-bezier(.2,.8,.2,1)'});
+  $('Pbead').animate([{r:0},{r:4},{r:0}],{duration:360,delay:620,easing:'cubic-bezier(.3,1.3,.5,1)'})});
+ // 3 · the handoff
+ at(2950,()=>{
+  {const l=$('Pstp'),a=X(21.07),t0=performance.now(),ez=u=>1-Math.pow(1-u,3);(function f(n){const u=Math.min(1,(n-t0)/700);l.setAttribute('x2',a+(368-a)*ez(u));if(u<1)requestAnimationFrame(f)})(t0)}$('Pstd').animate([{opacity:1},{opacity:0}],{duration:500,fill:'forwards'});
+  [0,1].forEach(k=>{const w=$('Pw'+k);const r=w.getBoundingClientRect(),ph=$('Pph').getBoundingClientRect(),s=document.body.classList.contains('x2')?2:1;
+   const dx=(368-(r.left-ph.left)/s-40),dy=(188-(r.top-ph.top)/s);
+   w.animate([{transform:'none',opacity:1,filter:'blur(0)'},{transform:`translate(${dx}px,${dy}px) scale(.4)`,opacity:0,filter:'blur(2px)'}],{duration:620,delay:k*80,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'})});
+  at(420,()=>{fade($('Plow'),0,3);fade($('Pmeta'),0,3)});
+  at(300,()=>swapText($('Phero'),'Done for today.'));
+  at(380,()=>{$('Ps').animate([{transform:'scale(1)'},{transform:'scale(1.35)'},{transform:'scale(.92)'},{transform:'scale(1)'}],{duration:1400,easing:'cubic-bezier(.3,1.3,.5,1)'})});
+ });
+ // 4 · it settles into the closed day
+ at(5400,()=>{$('cap').textContent='21:06 · THE DAY CLOSED';swapText($('Pday'),'Thursday night');swapText($('Pctx'),'tomorrow, first');
+  at(120,()=>swapText($('Phero'),'Reply to landlord','abs hero s2 f'));
+  const m=$('Pmeta');m.style.top='390px';at(240,()=>swapText(m,'THEN PULL A · 07:30'));
+  at(600,()=>$('Ps').classList.add('rest'))});
+ // 5 · 04:00, quietly: the day turns, the line dries to ink, a new guide draws
+ at(8000,()=>{$('cap').textContent='04:00 · THE DAY TURNS, NO SOUND';
+  swapText($('Pday'),'Friday morning');swapText($('Pctx'),'first today');
+  const h=$('Phero');h.style.transition='color .6s cubic-bezier(.2,.8,.2,1)';at(260,()=>h.style.color='rgb(245,242,236)');
+  $('Pstp').animate([{opacity:1},{opacity:0}],{duration:420,fill:'forwards'});
+  const d=$('Pstd');d.setAttribute('x1','22');d.animate([{opacity:0,clipPath:'inset(0 100% 0 0)'},{opacity:1,clipPath:'inset(0 0 0 0)'}],{duration:500,delay:300,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+ });
+ at(10200,()=>document.body.dataset.done='1');
+});
+</script>
+</body>
+</html>

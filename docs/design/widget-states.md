@@ -37,6 +37,7 @@ These use Research's running example (Thu 18:10, Push A).
 | All quiet | none | All quiet. (`inkSecondary`) | none | none |
 | Day done | trained this evening | Push A | 6 OF 6 · 22 SETS · 1 RECORD | none |
 | Day closed (after Shutdown) | tomorrow, first | Pull A (`inkSecondary`) | 07:30 | none |
+| Day closed, with his line | tomorrow, first | Reply to landlord (`inkSecondary`) | PULL A · 07:30 | none |
 | 24 h before signing ends | as the state | as the state | RE-SIGN BY THU 18:10, only where the state has no meta of its own; never during a workout | as the state |
 | Signing ended | paused | Run from Xcode to wake it. (`inkSecondary`) | EVERYTHING IS STILL ON THIS PHONE | none |
 
