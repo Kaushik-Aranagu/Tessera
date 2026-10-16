@@ -35,6 +35,7 @@ struct RootView: View {
                     Color.clear.frame(height: 56).allowsHitTesting(false)
                 }
                 BottomChrome(onSoulDoubleTap: goHome)
+                    .soulStroke(model.soul)
                     .environment(\.zoomNamespace, zoom)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
 

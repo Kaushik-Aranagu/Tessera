@@ -30,6 +30,14 @@ enum SoulEvent: Equatable {
     case askWaiting, askAnswered
     /// The glass-tab lens (§15): she is pinned to the dock while it is held.
     case lensHeld, lensReleased
+    /// Stroke her (idea 3): a band pan's finger comes onto her, leaves her, and the pan ends (a stroke or not).
+    case strokeEntered, strokeLeft
+    case strokeEnded(isStroke: Bool)
+    /// One part of a thing ticked (a task, a habit, a grocery row: soul-signals.md): the beat at 520 ms, as the
+    /// fleck lands, and +0.10 of colour for the day (idea 4). `taskUndone` takes one back inside its UNDO window.
+    case taskDone, taskUndone
+    /// Dones that happened while he wasn't looking (Siri, a widget): one beat at once, for the lot.
+    case doneElsewhere
     case backgrounded
     /// The app comes forward. `underLive`: a live workout is on top (his moment wins, so no wake).
     case foregrounded(underLive: Bool)
@@ -58,6 +66,9 @@ final class SoulRouter {
         if mode == .listening {
             return .atHim
         }
+        if isStrokeCrossing {
+            return .alongStroke
+        }
         return isLookingAtLine ? .atLine : .ahead
     }
 
@@ -81,10 +92,43 @@ final class SoulRouter {
     /// When she began waking with him (idea 2), for `SoulWake.duration`; nil otherwise.
     private(set) var wake: Date?
 
+    /// Where her dock is on screen (her centre, global), so a band pan can tell when it crosses her.
+    @ObservationIgnored private(set) var dockCentre: CGPoint?
+    /// When the ripple of a stroke began (idea 3, `SoulRipple.duration`), the finger is on her, and the blink after.
+    private(set) var stroke: Date?
+    private(set) var isStrokeCrossing = false
+    private(set) var strokeBlink: Date?
+    /// Bumped once per stroke for its one soft tick (a second within the ripple restarts it with no tick).
+    private(set) var strokeTicks = 0
+    @ObservationIgnored private var strokeTimer: Task<Void, Never>?
+
+    /// When her last beat landed (§6, `SoulBeat.duration`); nil when none is playing.
+    private(set) var beat: Date?
+    /// A done that arrived while she listened beats when she stops (rule 2).
+    @ObservationIgnored private var beatAfterListening = false
+    @ObservationIgnored private var beatTimer: Task<Void, Never>?
+    /// A beat on its way (a done row's fleck still flying).
+    @ObservationIgnored private var nextBeat: Date?
+    /// The things he has done today, from 04:00, kept across launches (idea 4).
+    private(set) var wearDones = 0
+    /// At 04:00 yesterday's wear dries over the first idle minute: from this much, from this moment.
+    private(set) var wearFade: (from: CGFloat, start: Date)?
+    static let wearDayKey = "tess.wearDay"
+    static let wearDonesKey = "tess.wearDones"
+
+    /// Her colour for the day, at `date` (the fade included).
+    func wear(at date: Date) -> CGFloat {
+        let today = SoulBeat.wear(wearDones)
+        guard let wearFade else { return today }
+        let left = 1 - min(max(date.timeIntervalSince(wearFade.start) / SoulBeat.wearReset, 0), 1)
+        return today + wearFade.from * CGFloat(left)
+    }
+
     init(page: Page = .home, clock: @escaping () -> Date = { AppClock.now }, wakeStore: UserDefaults = .standard) {
         self.page = page
         self.clock = clock
         self.wakeStore = wakeStore
+        rollWearDay()
     }
 
     /// Idle, or resting from 23:00 to 06:00 (as built). The workout's corner always rests at idle.
@@ -113,6 +157,7 @@ final class SoulRouter {
             guard !isWorking else { return gather(thenDone: false) }
             settle(rest)
         case let .foregrounded(underLive):
+            rollWearDay()
             wakeIfFirstOpen(quiet: underLive)
             guard !isDoneInFlight, !isWorking else { return }
             settle(rest)
@@ -193,6 +238,23 @@ final class SoulRouter {
             isPinned = true
         case .lensReleased:
             isPinned = false
+        case .strokeEntered:
+            stroked()
+        case .strokeLeft:
+            isStrokeCrossing = false
+        case .taskDone:
+            beat(landingIn: SoulBeat.landing, wears: 1)
+        case .doneElsewhere:
+            beat(landingIn: 0, wears: 1)
+        case .taskUndone:
+            rollWearDay()
+            setWear(wearDones - 1)
+        case let .strokeEnded(isStroke):
+            isStrokeCrossing = false
+            // One blink lands 50 ms after the finger leaves.
+            if isStroke, stroke != nil {
+                strokeBlink = Date.now.addingTimeInterval(0.05)
+            }
         case .backgrounded:
             // A Done cut by the background would never end: she goes back to rest (QA L6).
             settle(rest)
@@ -240,6 +302,32 @@ final class SoulRouter {
         }
     }
 
+    /// Her centre on screen, from the view that draws her at the dock.
+    func placeDock(_ centre: CGPoint) {
+        dockCentre = centre
+    }
+
+    /// Refused while she works, listens, is held at the dock or an ask waits; the pan is then whatever's under it.
+    var refusesStroke: Bool {
+        page != .home || isWorking || mode == .listening || isAskWaiting || isPinned
+    }
+
+    private func stroked() {
+        guard !refusesStroke else { return }
+        if stroke == nil {
+            strokeTicks += 1
+        }
+        stroke = .now
+        isStrokeCrossing = true
+        strokeTimer?.cancel()
+        strokeTimer = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(SoulRipple.duration))
+            guard !Task.isCancelled, let self else { return }
+            stroke = nil
+            strokeBlink = nil
+        }
+    }
+
     /// Working or gathering home from it.
     var isWorking: Bool {
         mode == .working || mode == .gathering
@@ -275,7 +363,60 @@ final class SoulRouter {
     private func settle(_ next: TessSoul.Mode) {
         timer?.cancel()
         queued = nil
+        let wasListening = mode == .listening
         mode = next
+        if wasListening, next != .listening, beatAfterListening {
+            beatAfterListening = false
+            beat(landingIn: 0, wears: 0)
+        }
+    }
+
+    /// The beat lands `delay` seconds from now, and the day's colour steps up with it. A done while she listens waits
+    /// for her to stop (rule 2); two beats inside 940 ms merge into one (rule 7). The wear always counts.
+    private func beat(landingIn delay: Double, wears: Int) {
+        rollWearDay()
+        if mode == .listening {
+            beatAfterListening = true
+            setWear(wearDones + wears)
+            return
+        }
+        let landing = Date.now.addingTimeInterval(delay)
+        if let last = nextBeat ?? beat, abs(landing.timeIntervalSince(last)) < SoulBeat.duration {
+            setWear(wearDones + wears)
+            return
+        }
+        nextBeat = landing
+        beatTimer = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(delay))
+            guard !Task.isCancelled, let self else { return }
+            beat = landing
+            nextBeat = nil
+            setWear(wearDones + wears)
+            try? await Task.sleep(for: .seconds(SoulBeat.duration))
+            guard !Task.isCancelled, beat == landing else { return }
+            beat = nil
+        }
+    }
+
+    private func setWear(_ dones: Int) {
+        wearDones = max(dones, 0)
+        wakeStore.set(wearDones, forKey: Self.wearDonesKey)
+    }
+
+    /// At his 04:00 the count starts over; what she wore dries away over a minute rather than in one step.
+    private func rollWearDay() {
+        let today = TesseraDay().day(of: clock())
+        let day = wakeStore.object(forKey: Self.wearDayKey) as? Date
+        if day == today {
+            wearDones = wakeStore.integer(forKey: Self.wearDonesKey)
+            return
+        }
+        let previous = day == nil ? 0 : wakeStore.integer(forKey: Self.wearDonesKey)
+        if previous > 0 {
+            wearFade = (SoulBeat.wear(previous), .now)
+        }
+        wakeStore.set(today, forKey: Self.wearDayKey)
+        setWear(0)
     }
 
     /// Done's one-shot (1.8 s), then whatever was queued behind it, else rest.
