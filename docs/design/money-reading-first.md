@@ -1,5 +1,7 @@
 # Money and Reading: the first screens, with real copy (board item 8)
 
+> **Empty states (item 23):** the empty month and the empty shelf are in `empty-states.md`, which wins. The month stays the hero, and "Nothing logged yet." is the quiet line under it.
+
 This sheet deepens `money-pages.md`, `money-dial.md` and `reading.md` for whichever builder takes them. Where they differ, this sheet wins.
 - Drawn to `no-buttons.md`, `themes.md` (one base), `no-dots.md` and `ink-line.md`.
 - The data is the shared eval store: Thu 15 Oct 2026, 18:00.
