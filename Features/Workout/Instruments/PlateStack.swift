@@ -55,6 +55,8 @@ struct PlateStack: View {
         static let sleeveWidth: CGFloat = 6
         static let sleeveHeight: CGFloat = 22
         static let tallest: CGFloat = 64
+        /// Gutter (22) to collar (172), less the collar's own width and the 2 pt gap.
+        static let shaftLength: CGFloat = 172 - 22 - 2 - sleeveWidth * (150 / tallest)
     }
 
     /// A plate keyed by its size and how many of that size come before it, so 82.5 → 85 swaps only the small one.
@@ -87,6 +89,12 @@ struct PlateStack: View {
 
     private func drawing(_ plates: [Plate]) -> some View {
         HStack(spacing: large ? 2 : 1) {
+            if large {
+                // The bar's side view: the shaft runs in from the gutter so the collar sits at x 172 (set-block.md).
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                    .fill(Paint.sleeve)
+                    .frame(width: Metrics.shaftLength, height: 8)
+            }
             RoundedRectangle(cornerRadius: 1, style: .continuous)
                 .fill(Paint.sleeve)
                 .frame(width: Metrics.sleeveWidth * scale, height: Metrics.sleeveHeight * scale)

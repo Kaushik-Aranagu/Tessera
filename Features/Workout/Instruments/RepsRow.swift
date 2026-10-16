@@ -29,7 +29,6 @@ struct RepsRow: View {
     @State private var beats = 0
     @State private var bounds = 0
     @State private var boundFired = false
-    @State private var dried = false
 
     private var beatsLast: Bool {
         ghost.map { reps > $0 } ?? false
@@ -37,7 +36,8 @@ struct RepsRow: View {
 
     var body: some View {
         VStack(alignment: .trailing, spacing: 2) {
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
+            // A fixed 10 pt after the ×; two digits grow rightward.
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Text("×")
                     .font(Theme.numeral(34))
                     .foregroundStyle(Paint.cream.opacity(0.6))
@@ -62,18 +62,21 @@ struct RepsRow: View {
                         }
                     }
                     .fixedSize()
-                    .frame(minWidth: 56, alignment: .trailing)
+                    // Passing last time: a short cadmium stroke paints under the number, left to right in 260 ms.
+                    .overlay(alignment: .bottomLeading) {
+                        Brushstroke(progress: beatsLast ? 1 : 0)
+                            .stroke(Paint.now, style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                            .frame(width: 44, height: 8)
+                            .opacity(beatsLast ? 1 : 0)
+                            .tesseraAnimation(.easeOut(duration: 0.26), value: beatsLast)
+                            .offset(y: 12)
+                            .allowsHitTesting(false)
+                    }
+                    .frame(minWidth: 64, alignment: .leading)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .tesseraAnimation(.spring(response: 0.32, dampingFraction: 0.62), value: reps)
-            // Passing last time: a short cadmium stroke paints under the number.
-            // Colour arrives in the moment and dries to ink (Kaushik: subtle at rest).
-            Brushstroke(progress: beatsLast ? 1 : 0)
-                .stroke(dried ? Paint.cream.opacity(0.35) : Paint.now,
-                        style: StrokeStyle(lineWidth: 5, lineCap: .round))
-                .tesseraAnimation(.easeInOut(duration: 1.2), value: dried)
-                .frame(width: 44, height: 8)
-                .opacity(beatsLast ? 1 : 0)
-                .tesseraAnimation(.easeOut(duration: 0.26), value: beatsLast)
+            Color.clear.frame(height: 8)
             if let ghost, !beatsLast {
                 Text("last \(ghost)")
                     .font(Theme.voice)
@@ -81,7 +84,7 @@ struct RepsRow: View {
                     .transition(.opacity)
             }
         }
-        .frame(width: 96, alignment: .trailing)
+        .frame(width: 112, alignment: .trailing)
         .contentShape(Rectangle().inset(by: -12))
         .gesture(isLocked ? nil : scrub)
         .onChange(of: reps) { old, new in landed(from: old, to: new) }
@@ -152,11 +155,6 @@ struct RepsRow: View {
         if let ghost, new > ghost, old <= ghost {
             beats += 1
             onBeat()
-            dried = false
-            Task { @MainActor in
-                try? await Task.sleep(for: .seconds(1.2))
-                dried = true
-            }
         }
         guard !reduceMotion else { return }
         splash += 1

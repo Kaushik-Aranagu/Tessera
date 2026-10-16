@@ -69,6 +69,7 @@ private struct WorkoutContent: View {
     @State private var snapNote: String?
     /// "DRAG RIGHT +15 · FLING LEFT TO GO" shows for the first three rests only.
     @AppStorage("restHorizonHints") private var restHintsLeft = 3
+    @State private var hintedSet: UUID?
     /// A glint sweeps the numeral once when rest ends on its own.
     @State private var restEndedGlint = false
     @State private var summaryLine: String?
@@ -402,7 +403,7 @@ extension WorkoutContent {
             if case let .rest(end) = phase {
                 let remaining = max(0, end.timeIntervalSince(now)).rounded(.up)
                 VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-                    // Tap the countdown for +15 (the one-tap twin of dragging the dial right).
+                    // Tap the countdown for +15 (the one-tap twin of dragging the horizon right).
                     Button { extendRest() } label: {
                         HStack(alignment: .firstTextBaseline, spacing: 10) {
                             Text(Format.duration(remaining))
@@ -419,12 +420,14 @@ extension WorkoutContent {
                     .buttonStyle(.plain)
                     .accessibilityLabel("Rest, \(Int(remaining)) seconds left")
                     .accessibilityHint("Adds 15 seconds")
-                    Text(session.restNote ?? "Tap the time for 15 more.")
-                        .font(Theme.voice)
-                        .foregroundStyle(Paint.tess)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .contentTransition(.opacity)
-                        .tesseraAnimation(value: session.restNote)
+                    // Only what just happened ("+15. Drag again for more."); the how-to is the horizon's label.
+                    if let note = session.restNote {
+                        Text(note)
+                            .font(Theme.voice)
+                            .foregroundStyle(Paint.tess)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .transition(.opacity)
+                    }
                 }
                 .transition(.opacity.combined(with: .blurReplace))
             } else {
@@ -458,7 +461,17 @@ extension WorkoutContent {
                 }
                 Spacer(minLength: Theme.Spacing.s)
                 VStack(alignment: .trailing, spacing: 2) {
-                    RepsRow(reps: repsBinding, ghost: lastReps, isLocked: phase != .set)
+                    RepsRow(reps: repsBinding, ghost: lastReps, isLocked: phase != .set, onBeat: {
+                        // "One more than last time.", once per set, only while Tess isn't saying anything else.
+                        guard askReply == nil else { return }
+                        askReply = "One more than last time."
+                        Task { @MainActor in
+                            try? await Task.sleep(for: .seconds(4))
+                            if askReply == "One more than last time." {
+                                askReply = nil
+                            }
+                        }
+                    })
                     EffortHandle(isShown: session.isEffortShown, enabled: phase == .set, setShown: setEffort(shown:))
                 }
                 .transition(.opacity)
@@ -483,7 +496,14 @@ extension WorkoutContent {
             RestHorizon(fraction: fraction, showsHint: restHintsLeft > 0, onExtend: { extendRest() },
                         onSkip: { skipRest() })
                 .transition(.opacity)
-                .onAppear { restHintsLeft = max(restHintsLeft - 1, 0) }
+                .onAppear {
+                    // Count a rest once, when it starts after a new set, not when it reappears after an edit.
+                    let set = session.lastSeated?.setID
+                    if let set, set != hintedSet {
+                        hintedSet = set
+                        restHintsLeft = max(restHintsLeft - 1, 0)
+                    }
+                }
         } else if session.isEstimatedLoad, let from = session.swappedFrom {
             Text("An estimate from \(SwapPanel.short(from).lowercased())")
                 .textRole(.label)
@@ -588,21 +608,11 @@ extension WorkoutContent {
                         withTesseraAnimation(reduceMotion: reduceMotion) { session.logSet() }
                     }
                 case .rest:
-                    VStack(alignment: .leading, spacing: 4) {
-                        PaintKey(paint: Paint.now, isTap: true, height: 64) {
-                            skipRest()
-                        } label: { _ in
-                            Text("Skip rest")
-                        }
-                        // The same two words as on the Lock Screen, under the rest horizon.
-                        HStack(spacing: 30) {
-                            Button("+15") {
-                                withTesseraAnimation(reduceMotion: reduceMotion) { session.extendRest(by: 15) }
-                            }
-                            .accessibilityLabel("Add 15 seconds of rest")
-                            Button("Skip") { skipRest() }
-                        }
-                        .buttonStyle(.labelWord(Paint.cream.opacity(0.75)))
+                    // The horizon above carries +15 and the fling; the key only skips.
+                    PaintKey(paint: Paint.now, isTap: true, height: 64) {
+                        skipRest()
+                    } label: { _ in
+                        Text("Skip rest")
                     }
                 case .exerciseDone:
                     PaintKey(paint: Paint.cobalt, isTap: true, height: 64) {

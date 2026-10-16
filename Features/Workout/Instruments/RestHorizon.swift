@@ -34,11 +34,14 @@ struct RestHorizon: View {
                 .frame(maxHeight: .infinity)
                 .contentShape(Rectangle())
                 .gesture(
-                    DragGesture(minimumDistance: 8)
+                    DragGesture(minimumDistance: 8, coordinateSpace: .global)
                         .onChanged { value in
+                            // Starts within 20 pt of the screen's left edge belong to the back swipe.
+                            guard value.startLocation.x > 20 else { return }
                             pull = value.translation.width
                         }
                         .onEnded { value in
+                            guard value.startLocation.x > 20 else { return }
                             let fling = value.predictedEndTranslation.width
                             if fling < -120 {
                                 skips += 1

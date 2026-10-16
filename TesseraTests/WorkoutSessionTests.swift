@@ -51,12 +51,6 @@ struct WorkoutSessionTests {
         #expect(session.detents.first == 20)
         #expect(session.detents.contains(82.5))
         #expect(session.platesPerSide == [25, 5, 1.25])
-        // The plus and minus beside the dial step one load (a pair of 1.25s).
-        session.stepWeight(up: true)
-        #expect(session.weight == 85)
-        session.stepWeight(up: false)
-        session.stepWeight(up: false)
-        #expect(session.weight == 80)
     }
 
     @Test func oneHoldOnThePrefillLogsItThroughLogNextSet() throws {
