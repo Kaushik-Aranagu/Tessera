@@ -4,6 +4,8 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+- **Theme default** (7:22 PM PT, coordinator; shipped in Builder A's #195). Every install, his included, starts at Porcelain by day and Obsidian by night, and he can pin Plein. This overrides Research's 63 proposal.
+- **The daily .tessera copy follows the 4 AM day** (7:22 PM PT, Research #196). Copies are named and written by the logical day, so late-night changes land in that day's copy.
 - **Settings: Claude and Lists copy calls** (7:17 PM PT, Research #192 `settings-claude.md` and `lists-copy.md`, all defaults).
   - Settings: Claude: the cap is a fixed $10, so Design's $5/$10/$20 picker goes. The sleep and energy setting goes too, since Health is never read. Test runs on paste, and TEST stays on the key line. REMOVE is a tap word with a 10 s UNDO ("Claude key is back."), not a hold. A 403 keeps the key. Paste is by long press only, never automatic. Dates read "Nov 1". Amber comes from a theme token.
   - Lists: "put away" everywhere, never "Archive". An empty list's state word is EMPTY. "done" on a reusable list doesn't reset it; it asks, with a hold to reset.
