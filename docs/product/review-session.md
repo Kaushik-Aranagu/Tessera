@@ -8,7 +8,7 @@ It adds #320 (the Tess asks Claude switch), #330 (the icon and the closer soul),
 1. **The icon.** On the Home Screen, Tessera shows Tess's soul. Inside the app, the soul's dabs sit closer together.
 2. **Tess asks Claude.** In Settings, CLAUDE, the first line reads "Tess asks Claude: yes." Tap it to switch to no ("Tess stays on this phone.") and back. Then type your key yourself in "Add a Claude key", if that row is there. Never paste it into chat.
 3. **Finish a task.** Finish one. Expect one three-beat tap and the strike, all under a second. With System Haptics off in iPhone Settings, expect no tap at all.
-4. **Training at rest.** Open Training. It should open on today's plan, with START and the routine name as an ink-line word.
+4. **Training at rest.** Open Training. It should open on today's plan, with START and the routine name as an ink-line word. On the eve of a rest day, the done label still names the next routine ("Push A tomorrow"); "Rest day tomorrow" comes in the next build.
 5. **Return in Notes.** In a note, press Return. It saves instead of starting a new line.
 6. **Speak.** Tap the soul once to open Tess; a double tap goes Home. Hold the soul to speak "call mom at 7".
 Not yet in this build: one plain line per thing on Home, the glass tabs, routines by day, recipe layouts and the week on Review. Those come in the build after, before Oct 22.
