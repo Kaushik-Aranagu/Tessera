@@ -124,3 +124,71 @@ Keep every call site as it is: `Theme.Colors.ink`, `.paper`, `.tess` and the res
    - `soulBlend` (`.multiply` or `.screen`) and `halo` (on for dark looks).
 6. **Live Activity:** pass the look's name in the activity's content state, so the extension draws the right workout palette without an App Group.
 7. **Retire** `workshop` and `machined` from `ThemeConcept.all`. They stay in code for `-theme` until Kaushik has lived with the new five.
+
+## Addendum: gaps from Research's token audit
+This addendum answers `docs/research/themes-token-audit.md` (#185). Where it differs from the sections above, it wins.
+
+### Workout tokens, completed
+The workout follows the theme. Every workout view reads `Theme.Colors.Workout.*`: `WorkoutPaint`, the private `Paint` enums in WeightDial, RPEStops, RepsDrum and PlateStack, and the `0x1C1828` literals all go.
+
+| Workout token | Porcelain | Obsidian | Plein | Lacquer | Celadon |
+|---|---|---|---|---|---|
+| `tess` (Tess's words, the swap wash, the cobalt set stroke; replaces `tess`, `tessBar` and `cobalt`) | #8FB0FF | #6FA4FF | #9DBFE6 | #8DB2FF | #9DBBEA |
+| `health` | #3FC58F | #3FD49A | #7FB07A | #8FCB9E | #5DBE98 |
+| `inkSecondary` | `ink` at 60% (replaces #A79FB5) | same | same | same | same |
+| `glass` | `ground` at 82% over the material | same | same | same | same |
+| `glassEdge` (outline) | `ink` at 12% | `ink` at 12% | black at 60% (today's) | `ink` at 12% | `ink` at 12% |
+| field | flat `ground` | flat `ground` | Plein's dark washes and drift (today's) | the lacquer band at 3% | flat `ground` |
+
+- **`setCycle`:** `[signal, tess, rest, health]` of the workout palette, in that order, as today.
+- **Black drop shadows in the workout** (ExerciseStrip:172, the glass's .45 shadow) stay only on Plein. Every other look lifts with a `raised` fill and draws no shadow, because a black shadow can't show on #000.
+- **Workout hairline: 14%.** That's one rule for every tier, everywhere. The workout's 12% goes.
+- **The workout's background:** `Workout.ground` plus the look's workout field. `PleinGround()` is only the Plein field.
+
+### Sheen (glints)
+| Look | `sheen` | `sheenBlend` |
+|---|---|---|
+| Porcelain | `now` (#F0A500) at 60%, masked to the glyphs | `.normal` |
+| Celadon | `now` (#D99A1C) at 60%, masked to the glyphs | `.normal` |
+| Plein, light pages | #F7E6B8 (today's) | `.plusLighter` |
+| Obsidian, Lacquer, and every workout | #FFE2A8 | `.plusLighter` |
+
+On white, the glint is a gold band passing through the letters; on dark looks it's light passing over them. This covers `Glint`, `GlintOnce`, `GlintIf`, the ExerciseStrip sweep and the ProcessSeam glint.
+
+### Soul, flood and blends
+- **TessSoul:** the washes are the look's `live`, `tess` and `now` (in the workout, `signal`, `Workout.tess` and `rest`).
+  - Halo uses `live` and `context`. The ring uses `context` at 60%.
+  - Blend is `soulBlend`: `.multiply` on light looks and `.screen` on dark looks (all workouts are dark).
+  - The halo glow is on for Obsidian, Lacquer and every workout.
+  - Pick the palette by the look, not by `colorScheme`.
+- **PaintFlood** paints the incoming look's `live`, `context`, `tess` and `now`.
+- **`pigmentBlend`** is the same rule as `soulBlend`, for any pigment overlay. That covers PasteRecipe's cadmium band (multiply on light, screen at 35% on dark) and the RoundRobin bar (`live`).
+- **Glows** (`.shadow(pigment...)` on the needle, the RPE stop, the current exercise, the seam, NowPage:533 and DayStrip:165) all go through `halo`. They're full on dark looks; on light looks a glow becomes a 3pt blur of the pigment at 30%.
+
+### Other tokens
+- **Routine colours (four):** `[live, health, now, context]`, so Pull gets `context` (violet) instead of `tess`. Tess's cobalt stays hers alone.
+- **`progress` retires.** The Best e1RM value on ObjectPage is `ink`, with a small `now` dab beside it. Cadmium already means "a possible record".
+- **`sky`:** a new pigment, the morning end of the day stroke.
+
+  | Porcelain | Obsidian | Plein | Lacquer | Celadon |
+  |---|---|---|---|---|
+  | #7FB6E0 | #7CC4F0 | #9EC3D6 | #9DBCD6 | #8DBBD6 |
+
+  - **`daySpectrum`** is `[sky, health, context, now, live]`, morning to evening.
+  - `HomePaint.dayAmber` and `wetTip` use `now`, and `daySage` uses `health`.
+- **`edgeLight`:** the lit chamfer under Now's seam (NowPage:537).
+  - Plein: white at 80% (today's).
+  - Celadon: white at 90%.
+  - Porcelain, Obsidian and Lacquer: none. The edge isn't drawn.
+  - NowPage:514's step text becomes `inkSecondary`.
+- **Text on a heavy dab** (MonthPage:144): use `paper`.
+- **A held row lifts** with a `raised` fill. The ink shadow (HomeQueue:230) stays only on light looks.
+- **Veil seams** (InkActions:141): `hairline` in every look, with no `colorScheme` branch.
+- **`ProcessSeam`'s default colour** is `Theme.Colors.live`, not Machined's fixed vermilion. That fixes `RunningSeam`.
+- **Plates stay fixed in every theme.** They mean real plates. PlateStack's change plates (#55534F, #A8A49C) move into `Theme.Colors.plate(_:)`.
+
+### Live Activity
+- Add a `Shared/LookTable.swift` holding the five looks' workout palette, plus `tess` and `context`. Compile it into both the app and the widget extension.
+- RestLiveActivity's private `Palette`, `RestMood` and `Color(hex:)` go.
+- `RestActivityAttributes.ContentState` carries `look`.
+- Rest sky: `Workout.tess` at 35% top-left, `context` at 45% top-right. Go washes: `rest` and `signal`. Keyline: `signal`.
