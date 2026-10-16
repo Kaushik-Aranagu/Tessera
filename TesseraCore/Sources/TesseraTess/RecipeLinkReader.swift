@@ -98,7 +98,19 @@ public struct RecipeLinkReader {
         self.claude = claude
     }
 
+    /// Every text it hands back has its private lines cut (Research 137 PR3): the card, the page's words, the video
+    /// description and Claude's reply alike.
     public func read(_ link: String) async -> RecipeLinkResult {
+        let result = await readUnscreened(link)
+        return RecipeLinkResult(
+            kind: result.kind,
+            line: result.line,
+            text: result.text.map { SecretWords.cut($0).text },
+            sourceURL: result.sourceURL
+        )
+    }
+
+    func readUnscreened(_ link: String) async -> RecipeLinkResult {
         guard let url = Self.safeURL(link) else {
             return RecipeLinkResult(kind: .failed, line: RecipeLinkLine.tooBig, text: nil, sourceURL: nil)
         }
@@ -268,11 +280,16 @@ public struct RecipeLinkReader {
             .contains { host == $0 || host.hasSuffix(".\($0)") }
     }
 
-    /// The final URL with `utm_*` and other tracking items removed.
+    static let secretQueryItems: Set<String> = ["password", "pass", "pwd", "token", "key", "auth", "sig", "session",
+                                                "access_token", "apikey", "api_key"]
+
+    /// The final URL with `utm_*`, other tracking items and secret items removed.
     static func stripTracking(_ url: URL) -> URL {
         guard var parts = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return url }
         parts.queryItems = parts.queryItems?.filter {
             !$0.name.lowercased().hasPrefix("utm_") && !["fbclid", "gclid", "mc_cid", "mc_eid"].contains($0.name)
+                // Secrets in a link never reach the saved source (Research 137 PL5).
+                && !Self.secretQueryItems.contains($0.name.lowercased())
         }
         if parts.queryItems?.isEmpty == true {
             parts.queryItems = nil
@@ -348,8 +365,11 @@ public struct ClaudeRecipeReader {
         func failed(_ line: String) -> RecipeLinkResult {
             RecipeLinkResult(kind: .failed, line: line, text: nil, sourceURL: source)
         }
-        guard allowed(), let key = keys.read() else { return failed(RecipeLinkLine.noRecipe) }
-        let page = Self.trimmed(pageText)
+        // A private line never leaves the phone; a page that is only private lines is never sent (Research 137).
+        let page = Self.trimmed(SecretWords.cut(pageText).text)
+        guard allowed(), !page.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, let key = keys.read() else {
+            return failed(RecipeLinkLine.noRecipe)
+        }
         let estimate = TessUsageLedger.estimate(text: Self.instructions + page, maxTokens: Self.maxTokens,
                                                 model: Self.model)
         guard let reservation = ledger.reserve(estimate, now: now(), calendar: calendar) else {
