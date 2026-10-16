@@ -202,7 +202,8 @@ struct PasteRecipe: View {
         ) else {
             // Nothing written (a link, say): kept on the phone for week one, never in the op log.
             // Never a pasted line with a secret word in it (Research 134; QA F3 on #422).
-            if !SecretWords.mentions(text) {
+            // Nor money or a body fact (board 0ah).
+            if !SecretWords.mentions(text), !PrivateFacts.isWalled(text) {
                 CaptureMissLog.beside(model.store)?.record(text, at: AppClock.now, route: "none", source: "paste")
             }
             return
