@@ -537,11 +537,21 @@ def pack_for(moment, which):
     pack = {"now": moment["now"], "partOfDay": moment["partOfDay"], "dayLabel": moment["label"], "items": items}
     if which == "memory":
         pack["restDay"] = moment["restDay"]
-    # Rubric 1: the pack never holds money or body and health facts. A pack that does is a pack bug.
-    leak = set(tokens(json.dumps(items))) & ((HEALTH | MONEY) - {"steps"})
-    if leak or any(c in json.dumps(items) for c in MONEY_MARKS):
-        sys.exit(f"pack bug in {moment['id']}: {sorted(leak)}; stop the run and fix AI-4")
     return pack
+
+
+def guard_pack(moment, pack):
+    """Rubric 1: nothing sent holds money or body and health facts, in the facts or the <memory> block. Recipe
+    "steps" are allowed on cook items only, as the line checker allows them. A leak is a pack bug: stop."""
+    texts = [(json.dumps(i), HEALTH | MONEY if i["kind"] != "cook" else (HEALTH | MONEY) - {"steps"})
+             for i in pack["items"]]
+    texts.append((moment["memory"], HEALTH | MONEY))
+    leak = set()
+    for text, words in texts:
+        leak |= set(tokens(text)) & words
+        leak |= {c for c in MONEY_MARKS if c in text}
+    if leak:
+        sys.exit(f"pack bug in {moment['id']}: {sorted(leak)}; stop the run and fix AI-4")
 
 
 def build_body(moment, model, which):
@@ -549,6 +559,7 @@ def build_body(moment, model, which):
     if all(i["fixed"] for i in moment["items"]):
         return None
     pack = pack_for(moment, which)
+    guard_pack(moment, pack)
     user = moment["memory"] + "\n<facts>\n" + json.dumps(pack) + "\n</facts>\nWrite the lines."
     forced = model == MODELS["haiku"]
     return {"model": model, "max_tokens": 1500, "tools": [PROPOSE_LINES],
