@@ -214,7 +214,10 @@ public struct IngredientLine: Hashable, Sendable, Codable {
             name = String(match.1)
         }
         // "1 pound cake" is a cake, not a pound of one (QA on #309).
-        if unit == .pound, name.lowercased() == "cake" || name.lowercased().hasPrefix("cake ") {
+        // Only the word "pound" and only "cake": "1 lb cake flour" is a pound of flour (QA on #316).
+        if unit == .pound, name.lowercased() == "cake",
+           original.range(of: #"\bpound\s+cake\b"#, options: [.regularExpression, .caseInsensitive]) != nil
+        {
             unit = nil
             name = "pound " + name
         }

@@ -28,6 +28,27 @@ struct LowsTwoTests {
         let cake = try #require(IngredientLine.parse("1 pound cake"))
         #expect(cake.unit == nil && cake.name == "pound cake" && cake.amount == 1)
         #expect(IngredientLine.parse("1 pound carrots")?.unit == .pound)
+        // QA on #316: "lb" is never a pound cake, and "cake flour" is flour.
+        let flour = try #require(IngredientLine.parse("1 lb cake flour"))
+        #expect(flour.unit == .pound && flour.name == "cake flour")
+        #expect(IngredientLine.parse("1 pound cake flour")?.unit == .pound)
+        #expect(IngredientLine.parse("1 lb cake")?.unit == .pound)
+    }
+
+    @Test func alreadyOnGroceriesMakesNoRecordWithoutCommitImmediately() async throws {
+        // QA S1 on #316: no ghost and no empty UNDO when nothing changes.
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        try engine.perform(AddGroceries(lines: ["1 (15 oz) can chickpeas"]), by: .user)
+        let ops = store.context.all(OpRecord.self).count
+        let capture = await TessCaptureEngine(engine: engine).capture("buy chickpeas", context: TessContext())
+        #expect(capture.line == "Chickpeas, already on Groceries.")
+        #expect(capture.records.isEmpty)
+        #expect(store.context.all(OpRecord.self).count == ops)
+        // Something with an amount still adds.
+        let more = await TessCaptureEngine(engine: engine).capture("buy 2 cans chickpeas", context: TessContext())
+        #expect(!more.records.isEmpty)
     }
 
     @Test func aStoreFromCatalogV4KeepsItsSettingsAndObjectsAtV5() throws {
