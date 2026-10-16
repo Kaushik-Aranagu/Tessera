@@ -80,15 +80,15 @@ Companion to `tess-routing.md`. Extends `kitchen-phrases.md` (no kitchen phrase 
 
 | # | Phrase | Expected action | Key fields | Route |
 |---|---|---|---|---|
-| 61 | call mum thu | addTask | "Call mum", Thu 15 Oct | grammar |
+| 61 | call mom thu | addTask | "Call mom", Thu 15 Oct | grammar |
 | 62 | dentist thu 3pm | addTask | "Dentist", Thu 15:00 | grammar |
 | 63 | note: bar felt heavy | addNote | "bar felt heavy" | grammar |
 | 64 | email landlord tomorrow | addTask | "Email landlord", Fri 16 Oct | grammar |
 | 65 | pay rent on the 1st | addTask | "Pay rent", 1 Nov | grammar |
 | 66 | renew passport | addTask | "Renew passport", Later | grammar |
 | 67 | todo fix bike tyre | addTask | "Fix bike tyre", Later | grammar |
-| 68 | remind me to call mum tomorrow | addTask | "Call mum", tomorrow | grammar |
-| 69 | remind me to call mum tomorrow at six | addTask | "Call mum", Fri 18:00 | grammar |
+| 68 | remind me to call mom tomorrow | addTask | "Call mom", tomorrow | grammar |
+| 69 | remind me to call mom tomorrow at six | addTask | "Call mom", Fri 18:00 | grammar |
 | 70 | call the bank monday morning | addTask | "Call the bank", Mon 19 Oct, morning | grammar |
 | 71 | book physio next week | addTask | "Book physio", week of 19 Oct | grammar |
 | 72 | submit taxes by friday | addTask | "Submit taxes", due Fri 16 Oct | grammar |
@@ -98,12 +98,12 @@ Companion to `tess-routing.md`. Extends `kitchen-phrases.md` (no kitchen phrase 
 | 76 | i should probably book a haircut sometime next week | addTask | "Book a haircut", week of 19 Oct | model |
 | 77 | after work pick up the parcel | addTask | "Pick up the parcel", today evening | model |
 | 78 | end of the month cancel the gym trial | addTask | "Cancel the gym trial", 31 Oct | model |
-| 79 | call mum and also text dad | addTask x2 | "Call mum"; "Text dad" | model |
+| 79 | call mom and also text dad | addTask x2 | "Call mom"; "Text dad" | model |
 | 80 | dentist thursday at three thirty pm | addTask | "Dentist", Thu 15:30 | grammar |
 | 81 | dentist on the twenty second at ten | addTask | "Dentist", 22 Oct 10:00 | grammar |
 | 82 | meeting with raj next tuesday 2 | addTask | "Meeting with Raj", Tue 20 Oct 14:00 | model |
 | 83 | every monday take out bins | addTask | "Take out bins", repeats Mon | model |
-| 84 | done call mum | completeTask | "Call mum" | grammar |
+| 84 | done call mom | completeTask | "Call mom" | grammar |
 | 85 | finished the taxes | completeTask | "Submit taxes" | model |
 | 86 | move dentist to friday | rescheduleTask | "Dentist", Fri | grammar |
 | 87 | push the landlord email to next week | rescheduleTask | "Email landlord", week of 19 Oct | model |
@@ -116,19 +116,19 @@ Companion to `tess-routing.md`. Extends `kitchen-phrases.md` (no kitchen phrase 
 | 94 | note to self knee felt fine today | addNote | "Knee felt fine today" | model |
 | 95 | note about push day: shorten rests | addNote | "Shorten rests"; link Push Day | model |
 | 96 | idea: tess should read my log back | addNote | "Tess should read my log back" | grammar |
-| 97 | call mum thu, dentist fri 3pm | addTask x2 | "Call mum" Thu; "Dentist" Fri 15:00 | grammar |
+| 97 | call mom thu, dentist fri 3pm | addTask x2 | "Call mom" Thu; "Dentist" Fri 15:00 | grammar |
 | 98 | tomorrow call the plumber | addTask | "Call the plumber", Fri | grammar |
 | 99 | 3pm today review the lease | addTask | "Review the lease", today 15:00 | grammar |
-| 100 | call mum at 7 | addTask | "Call mum", today 19:00 | grammar |
-| 101 | call mum tonight | addTask | "Call mum", today evening | grammar |
+| 100 | call mom at 7 | addTask | "Call mom", today 19:00 | grammar |
+| 101 | call mom tonight | addTask | "Call mom", today evening | grammar |
 | 102 | wait for the refund check monday | addTask | "Refund", waiting, check Mon | model |
 | 103 | waiting on amazon refund | addTask | "Amazon refund", waiting | model |
 | 104 | start writing the report | addTask + start | "Writing the report", running | model |
 | 105 | need to read chapter four before thursday | addTask | "Read chapter four", due Thu 22 Oct | model |
 | 106 | send invoice friday 9 am and a reminder note to attach receipts | addTask + addNote | task Fri 09:00; note linked | model |
-| 107 | call mum thurs | addTask | "Call mum", Thu | grammar |
+| 107 | call mom thurs | addTask | "Call mom", Thu | grammar |
 | 108 | dentist 3 30 | addTask | "Dentist", today 15:30 | model |
-| 109 | buy present for mums birthday on the twentieth | addTask | "Buy present for mum's birthday", 20 Oct | model |
+| 109 | buy present for moms birthday on the twentieth | addTask | "Buy present for mom's birthday", 20 Oct | model |
 | 110 | email boss re holiday dates asap | addTask | "Email boss re holiday dates", today | model |
 
 ## Kitchen (50)
@@ -202,7 +202,7 @@ Companion to `tess-routing.md`. Extends `kitchen-phrases.md` (no kitchen phrase 
 | 170 | dont forget swim shorts for the trip | addToList | Packing ["swim shorts"] | model |
 | 171 | new list gift ideas | newList | "Gift ideas" | grammar |
 | 172 | make a list called camping | newList | "Camping" | grammar |
-| 173 | start a list for christmas presents mum dad sis | newList + addToList | "Christmas presents", 3 items | model |
+| 173 | start a list for christmas presents mom dad sis | newList + addToList | "Christmas presents", 3 items | model |
 | 174 | run packing | runList | Packing | grammar |
 | 175 | lets pack | runList | Packing | model |
 | 176 | start the packing list | runList | Packing | grammar |
@@ -226,10 +226,10 @@ Companion to `tess-routing.md`. Extends `kitchen-phrases.md` (no kitchen phrase 
 | 189 | whats the weather | none | "Can't do that yet." | model |
 | 190 | bench | none | ask for weight and reps; no write | grammar |
 | 191 | eighty | none | ambiguous (weight or reps); guess "80 x 8?" as a question | model |
-| 192 | log bench eighty for eight and remind me to call mum tomorrow | logSet + addTask | Bench 80x8; "Call mum" Fri | model |
+| 192 | log bench eighty for eight and remind me to call mom tomorrow | logSet + addTask | Bench 80x8; "Call mom" Fri | model |
 | 193 | buy milk no wait we have milk buy bread | addGrocery | ["bread"] only | model |
-| 194 | call mum no actually thursday | addTask | "Call mum", Thu | model |
-| 195 | mum | none | ambiguous; guess "Call mum?" as a question | model |
+| 194 | call mom no actually thursday | addTask | "Call mom", Thu | model |
+| 195 | mom | none | ambiguous; guess "Call mom?" as a question | model |
 | 196 | ok so like the thing for the stuff | none | "Didn't catch that." | model |
 | 197 | delete everything | none | no bulk delete; "Can't do that yet." | model |
 | 198 | squat a hundred for five buy eggs | logSet + addGrocery | Squat 100x5; ["eggs"] | model |

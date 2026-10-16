@@ -96,7 +96,7 @@ Date: 2026-10-16
 - Push A saved where you were. Pick it up Saturday?
 - Dentist, Sat 3 PM. ("tomorrow" said before 4 AM is the coming daytime; the reply names the weekday, 6:07 PM PT.)
 - Pay rent moved to Saturday. (Not now after midnight names the task and the day, never "Moved to tomorrow.")
-- Call mum, Saturday 9 am. On Now then. ("remind me" while notifications are not allowed.)
+- Call mom, Saturday 9 am. On Now then. ("remind me" while notifications are not allowed.)
 - trained tonight (Home and Training hero after 22:00, never "this night").
 - Push day, no sets, not saved. (A zero-set finish or wrap-up, with Undo; never counts as trained, 5:14 PM PT.)
 
@@ -173,7 +173,7 @@ Building blocks:
 | M16 | "via Claude" receipt | {receipt} · via Claude | Bench 3 x 10 at 80 · via Claude | Ghost row whose `OpRecord.route` is `claude`. The receipt keeps its own wording |
 | M17 | Cloud mark, VoiceOver label | Sent to Claude | Sent to Claude | The mark is on the bloom while a request is out |
 | M17h | Cloud mark, VoiceOver hint | Shows what left the phone. | Shows what left the phone. | Only if the mark is tappable and opens the context pack; no hint otherwise |
-| M18 | Claude timeout | Claude didn't answer in time. | Claude didn't answer in time. | No answer within 8 s (capture, question) or 20 s (plan, paste). Per use, the fallback follows it: Capture: ghost rows from tool calls that finished stay, the M19 guess covers the rest ("Claude didn't answer in time. Call mum?"). Paste: "Claude didn't answer in time. Kept 6 rows it read." Plan: "Claude didn't answer in time. Here's your usual plan." (12:22 PM PT; was "Here's the rules plan."). Question: "Claude didn't answer in time. Ask again?" (synced Oct 15, item 47) (Oct 16, item 98: "Claude timed out." became "Claude didn't answer in time." so timeouts read one way, at Test and in use, per Design's C15 and Product 8:46 PM PT) |
+| M18 | Claude timeout | Claude didn't answer in time. | Claude didn't answer in time. | No answer within 8 s (capture, question) or 20 s (plan, paste). Per use, the fallback follows it: Capture: ghost rows from tool calls that finished stay, the M19 guess covers the rest ("Claude didn't answer in time. Call mom?"). Paste: "Claude didn't answer in time. Kept 6 rows it read." Plan: "Claude didn't answer in time. Here's your usual plan." (12:22 PM PT; was "Here's the rules plan."). Question: "Claude didn't answer in time. Ask again?" (synced Oct 15, item 47) (Oct 16, item 98: "Claude timed out." became "Claude didn't answer in time." so timeouts read one way, at Test and in use, per Design's C15 and Product 8:46 PM PT) |
 | M19 | Claude unsure (guess) | Didn't catch that. {guess}? | Didn't catch that. Bench 80 x 8? | Claude returns no valid tool call but a partial parse exists |
 | M20 | Claude unsure (choice) | Not sure which {name}. {a} or {b}? | Not sure which bench. Flat or incline? | A name matches 2 objects; no write until he picks |
 | M21 | Question, not a write | {answer} Nothing logged. | 16 sets of bench this week. Nothing logged. | Input read as a question but Claude called a write tool; the write is dropped and the local answer shown |
@@ -227,7 +227,7 @@ Conflicts found:
 | M38 | Nothing left today | All quiet. | All quiet. | Home and widgets when nothing else is planned; replaces "Nothing else is planned today." everywhere (5:02 PM PT) (synced Oct 15, item 47) |
 | M39 | Capture after midnight | {title}, {weekday} {time}. | Dentist, Sat 3 PM. | "tomorrow" said 00:00 to 03:59 means the coming daytime; the reply names the weekday, never "tomorrow" or "today" (6:07 PM PT) (synced Oct 15, item 47) |
 | M40 | Not now after midnight | {title} moved to {weekday}. | Pay rent moved to Saturday. | Not now from 00:00 to 03:59; replaces "Moved to tomorrow." by naming the task and the day (synced Oct 15, item 47) |
-| M41 | "remind me", no notifications | {capture line} On Now then. | Call mum, Saturday 9 am. On Now then. | "remind me" while the notification ask is pending, Not now or denied (6:07 and 6:20 PM PT); "remind me" plus a day alone lands at 9 AM (6:30 PM PT) (synced Oct 15, item 47) |
+| M41 | "remind me", no notifications | {capture line} On Now then. | Call mom, Saturday 9 am. On Now then. | "remind me" while the notification ask is pending, Not now or denied (6:07 and 6:20 PM PT); "remind me" plus a day alone lands at 9 AM (6:30 PM PT) (synced Oct 15, item 47) |
 | M42 | Done hero, late | trained tonight | trained tonight | Home and Training context word after 22:00; never "this night" (synced Oct 15, item 47) |
 | M43 | Health write ask (A1) | Save workouts to Apple Health? Heart rate too. | Save workouts to Apple Health? Heart rate too. | First in-app finish with 1 or more sets; Save · Not now. "Heart rate too." only once W1 ships. Never from Siri, the Lock Screen or the wrap-up (synced Oct 15, item 47) |
 | M44 | Health read ask (A2) | Add last night's sleep from Health? | Add last night's sleep from Health? | First training-day morning after W3, on Now; the line is the tap; never shown again (4:20 PM PT) (synced Oct 15, item 47) |
@@ -240,8 +240,8 @@ Conflicts found:
 | M51 | Timer, no notifications | Timers alert in the app only. | Timers alert in the app only. | A timer after Not now or denied (synced Oct 15, item 47) |
 | M52 | Live Activities off (A8) | Live Activities are off. Rest shows here. | Live Activities are off. Rest shows here. | `areActivitiesEnabled` false at a rest; once ever (synced Oct 15, item 47) |
 | M53 | Backup folder ask (A9) | Keep copies in iCloud Drive too? They survive deleting the app. | Keep copies in iCloud Drive too? They survive deleting the app. | Day 2 or later, a local copy exists, nothing running; Pick a folder · Not now (synced Oct 15, item 47) |
-| M54 | N1 timed task | Title {task}, body It's {time}. | Call mum / It's 9 am. | At the task's time, for a clock time he gave or "remind me" (plus a day: 9 AM). In quiet hours (11 PM to 7 AM) only things he timed ring (6:20 PM PT) (synced Oct 15, item 47) |
-| M55 | N1 action, next open | {task} done. / {task} moved to {weekday}. Then: {task} taken back. | Call mum done. / Call mum moved to Saturday. | Done or Not now tapped on the notification; shown once on the next open with UNDO (synced Oct 15, item 47) |
+| M54 | N1 timed task | Title {task}, body It's {time}. | Call mom / It's 9 am. | At the task's time, for a clock time he gave or "remind me" (plus a day: 9 AM). In quiet hours (11 PM to 7 AM) only things he timed ring (6:20 PM PT) (synced Oct 15, item 47) |
+| M55 | N1 action, next open | {task} done. / {task} moved to {weekday}. Then: {task} taken back. | Call mom done. / Call mom moved to Saturday. | Done or Not now tapped on the notification; shown once on the next open with UNDO (synced Oct 15, item 47) |
 | M56 | N2 rest done | Title Set {n} is up, body {exercise}, {weight} × {reps} | Set 4 is up / Bench, 82.5 × 8 | Rest ends with the app not on screen. When notifications are allowed this rings and the Live Activity alert stays silent, never both (6:30 PM PT) (synced Oct 15, item 47) |
 | M57 | N3 kitchen timer done | Title {timer} is done, body {recipe}, step {n} (no cook: {length}) | Pasta is done / Carbonara, step 3 | A kitchen timer ends (synced Oct 15, item 47) |
 | M58 | N3 Stop | {timer} stopped. Then: {timer} taken back. | Pasta stopped. / Pasta taken back. | Stop tapped on the notification; shown on return (synced Oct 15, item 47) |
@@ -270,7 +270,7 @@ Checked Oct 16 against every Oct 15 call in `../product/decisions.md`. Lines cha
 | X16 | "Saved 3 workouts to Health." | `ask-lines.md` A1 granted | 5:14 PM PT (name first) | "3 workouts saved to Health." |
 | X17 | "Saved a copy there. One a day from now on." | `ask-lines.md` A9 granted | 5:14 PM PT (name first) | "Copy saved there. One a day from now on." |
 | X18 | "Pay rent, Saturday 11 pm." (Home swipe after midnight) | `late-night.md` S3 | 5:14 PM PT (what happened) and 6:07 PM PT | "Pay rent moved to Saturday." (M40) |
-| X19 | "Dentist, Saturday 3 pm.", "Call mum, Saturday 9 am." and R21 to R23 | `late-night.md` S3, S4; `fixtures/reminders.md` | 6:07 PM PT writes "Sat 3 PM" | Same Product call as X6 |
+| X19 | "Dentist, Saturday 3 pm.", "Call mom, Saturday 9 am." and R21 to R23 | `late-night.md` S3, S4; `fixtures/reminders.md` | 6:07 PM PT writes "Sat 3 PM" | Same Product call as X6 |
 | X20 | N1 "a date with no time keeps master's 09:00 and alerts" | `notifications.md` §2 N1, Fires for | 6:20 PM PT: no time is never saved as 9:00; 6:30 PM PT: only "remind me" plus a day rings at 9 AM | "Only "remind me" plus a day gets 9 AM and an alert; a plain dated task has no time and no alert" |
 | X21 | "Stopped simmer." | cook acceptance, quoted in `notifications.md` §8.6 | 5:14 PM PT (name first) | "Simmer stopped." |
 

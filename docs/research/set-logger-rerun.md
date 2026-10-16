@@ -28,7 +28,7 @@ keeps the first).
 | non-K live rows that change | +6 | -2 | -4 |
 
 All four of Core's claims hold: `100 for 5 at 8` logs 100x5 RPE 8 (K798), a bare `81` writes nothing (K783),
-`81 for 8` logs 80x8 and says "81 isn't loadable." (K790), and `call mum at 7` mid-workout is still the task
+`81 for 8` logs 80x8 and says "81 isn't loadable." (K790), and `call mom at 7` mid-workout is still the task
 (A121). The two K rows still failing are the spoken rows (NRM): no normaliser on master.
 
 If no other row moved, the suite totals go from 613 pass, 121 wrong write, 80 miss to 641, 102, 71 (814 rows).
@@ -110,7 +110,7 @@ Every other `live workout` row was traced through L:14-77. Six change, all towar
 Root cause counts move with them: RPE (B303 to B306) goes to 0; RC12 goes from 8 to 6.
 
 Checked and unchanged (each falls through at L:72 or is claimed with the same answer): A038, A042, A079 (`7` is
-80x7), A080 (`at 7`: L:56 needs text before `at`), A081 to A083, A120, **A121 (`call mum at 7`: `call mum` is no set
+80x7), A080 (`at 7`: L:56 needs text before `at`), A081 to A083, A120, **A121 (`call mom at 7`: `call mom` is no set
 core, L:57 and L:81-84, so it falls through to the task, still pass)**, A153, A159, A168 (now claimed nil by L:72
 because `80x8 then` looks like a set; still miss), A169 (still wrong write, RC6), A170 and A171 (still wrong write),
 A172, A174, A175, A177 to A179, A275, A276 (still miss), B296 to B302, B309 to B311, B313, B316, B321 to B323,

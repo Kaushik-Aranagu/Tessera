@@ -102,7 +102,7 @@ These are 80 transcript-to-text rows for the normaliser that sits between `Speec
 | 51 | I | Pay the window cleaner Thursday. | Pay the window cleaner Thursday | G\*: task today, Thu 15 Oct (GC 44 and 46). Today G gives Thu 22 Oct 09:00 | "thursday" said on a Thursday means today. The normaliser leaves the weekday alone. The same-day rule belongs in `TessDates` |
 | 52 | I | Remind me Thursday at 8 to put the bins out. | Remind me to put the bins out Thursday at 8 | G\*: task today 20:00 (GC rule 7, 12-hour clock). Today G gives Thu 22 Oct 08:00 | Reorder, then the date is the grammar's job |
 | 53 | I | Dentist on the twentieth at half past three. | Dentist on the 20th at 3:30 | G\*: task "Dentist", Tue 20 Oct 15:30 (GC rule 7: ordinals, 12-hour). Today G gives Fri 03:30 | "twentieth" to 20th, "half past three" to 3:30 |
-| 54 | I | Call mum at 7:00 PM. | Call mum at 7pm | G: task "Call mum", today 19:00 | Join "7:00 PM" to "7pm". Without the join, parseTime reads 07:00 and "PM" lands in the title |
+| 54 | I | Call mom at 7:00 PM. | Call mom at 7pm | G: task "Call mom", today 19:00 | Join "7:00 PM" to "7pm". Without the join, parseTime reads 07:00 and "PM" lands in the title |
 | 55 | I | Remind me tomorrow itself to send the form. | Remind me to send the form tomorrow | G: task "Send the form", Fri 16 Oct 09:00 | en-IN "itself" after a day goes, then reorder |
 | 56 | I | Remind me day after tomorrow to pay rent. | Remind me day after tomorrow to pay rent | G\*: task "Pay rent", Sat 17 Oct, once `TessDates` reads "day after tomorrow". Today **wrong G**: task "Day after to pay rent", Fri | The normaliser only reorders date phrases it knows. This one needs a date rule, not a text rule |
 | 57 | I | Prepone the dentist to Wednesday. | Prepone the dentist to Wednesday | **PASS**: M rescheduleTask "Dentist", Wed 21 Oct | en-IN "prepone". "to" with no numbers stays. Today the date cue makes the task "Prepone the dentist to" (GC 13). GC rule 5 must hand it to the model |
@@ -268,7 +268,7 @@ Checked against `origin/master` at `254ed5168eda99adaab6aa5b07d27a1f8923e5bd` (`
 | 51 | PASS | task "Pay the window cleaner", today Thu 15 Oct 19:00 (same-day weekday, next whole hour, G:439-443). G\* target reached | |
 | 52 | FAIL (wrong write) | task "Put the bins out", Thu 22 Oct 08:00 (`at 8` on a 24-hour clock, passed, so +7 days, G:417, G:445) | Core: GC 7, Product's bare-hour rule (decisions.md 4:26 PM PT: 1 to 6 mean pm, 7 to 11 the next one not yet passed today, 12 noon, a passed time lands tomorrow), so today 20:00 |
 | 53 | FAIL (wrong write) | task "Dentist on the 20th", Fri 16 Oct 03:30 (`20th` is not a date; `at 3:30` passed today, so tomorrow, G:417, G:429-434) | Core: GC 7, ordinals (`20th`, `on the 20th`) in `TessDates` plus the bare-hour rule (3 means pm), giving Tue 20 Oct 15:30 |
-| 54 | PASS | task "Call mum", today 19:00 (G:417, G:470) | |
+| 54 | PASS | task "Call mom", today 19:00 (G:417, G:470) | |
 | 55 | PASS | task "Send the form", Fri 16 Oct 09:00 | |
 | 56 | FAIL (wrong write) | task "Day after to pay rent", Fri 16 Oct 09:00 (only `tomorrow` is a date word, G:412) | Core: `TessDates` reads `day after tomorrow` as +2 days, and parseTask drops a `to` left at the start after the date |
 | 57 | FAIL (wrong write) | task "Prepone the dentist to", Wed 21 Oct 09:00. `prepone` is not in the reschedule verbs (G:133), so G:87 does not stop it | Core: add `prepone` and `bring forward` to `rescheduleShape` (G:133). Then it is a reschedule if one open task matches, or the model if not (GC 5, GC 13) |
@@ -404,7 +404,7 @@ nil (nothing written, the model reads it or asks), or task.
 | N20 | a eighty for a eight | W | `80 for 8` | set 80 × 8 (`a` before a plain number word is a filler) |
 | N21 | and eighty for eight reps | W | `80 for 8` | set 80 × 8 (leading `and` goes; `reps` after a full set goes) |
 | N22 | drop to seventy two for ten | W | `drop to 72 for 10` | set 72.5 × 10, drop (as K789); Tess says "Drop set logged. 72.5 × 10, nearest load to 72." |
-| N23 | call mum at seven | W | `call mum at 7` | task "Call mum", today 19:00 (not a set core, L:94-96, so the task rule, as A121) |
+| N23 | call mom at seven | W | `call mom at 7` | task "Call mom", today 19:00 (not a set core, L:94-96, so the task rule, as A121) |
 | N24 | plus five | W | `+5` | nil: a signed change goes to the model (S702, L:40) |
 | N25 | eighty two and a half by six | W | `82.5 × 6` | set 82.5 × 6. `by` between two numbers becomes × (rule 12); the set regex has no `by` (`TessGrammar.swift:286`), so the normaliser has to rewrite it. Tess says "Set N logged. 82.5 × 6." |
 | N26 | two by ten | W | `2 × 10` | the 2 × 10 ask: "2 × 10: 2 sets, or 2 kg?" (`TessGrammar+Live.swift:123`, `TessSetCountAsk.swift:30`); 2 is under half of 80. Typed "2 by 10" asks the same. "two for ten" stays `2 for 10` and does not ask (open question 2) |
@@ -544,7 +544,7 @@ Item 113, Research lab, 2026-10-16. Base `origin/master` at `8d5e427` (Merge PR 
 | 51 | I | `pay the window cleaner thursday` | same | task "Pay the window cleaner" Thu 15 19:00 (now parse, B339) | PASS |
 | 52 | I | `remind me thursday at 8 to put the bins out` | differs: no reorder | task "Put the bins out." Thu 15 20:00 (period) | FAIL (period) |
 | 53 | I | `dentist on the twentieth at half past 3` | differs: ordinal and `half past` not read | nil: no date the grammar reads | FAIL (miss) |
-| 54 | I | `call mum at 7:00 pm` | differs: `7:00 pm` not joined | **wrong write**: task "Call mum PM." Thu 15 19:00 | FAIL (wrong write) |
+| 54 | I | `call mom at 7:00 pm` | differs: `7:00 pm` not joined | **wrong write**: task "Call mom PM." Thu 15 19:00 | FAIL (wrong write) |
 | 55 | I | `remind me tomorrow itself to send the form` | differs: `itself` kept | **wrong write**: task "Itself to send the form." Fri 16 09:00 | FAIL (wrong write) |
 | 56 | I | `remind me day after tomorrow to pay rent` | same | **wrong write**: task "Day after to pay rent." Fri 16 09:00 (RELT, as B343) | FAIL (wrong write) |
 | 57 | I | `prepone the dentist to wednesday` | same | **wrong write**: task "Prepone the dentist to" Wed 21 09:00 (RC13, as B344) | FAIL (wrong write) |
@@ -603,7 +603,7 @@ Item 113, Research lab, 2026-10-16. Base `origin/master` at `8d5e427` (Merge PR 
 | N20 | W | `80 for 8` | same | set 80 × 8 | PASS |
 | N21 | W | `80 for 8` | same | set 80 × 8 | PASS |
 | N22 | W | `drop to 72 for 10` | same | drop set 72.5 × 10, "Drop set logged. 72.5 × 10, nearest load to 72." | PASS |
-| N23 | W | `call mum at 7` | same | nil: only the live rules read `call mum at 7`; the task rule reads the raw `at seven`, which is no time | FAIL (miss) |
+| N23 | W | `call mom at 7` | same | nil: only the live rules read `call mom at 7`; the task rule reads the raw `at seven`, which is no time | FAIL (miss) |
 | N24 | W | `+5` | same | nil: says "Say the set, like 85 × 8." before the model | PASS |
 | N25 | W | `82.5 by 6` | differs: keeps `by` (`82.5 by 6`) | set 82.5 × 6 (the set regex reads ` by `, TG:336) | PASS |
 | N26 | W | `2 by 10` | differs: keeps `by` (`2 by 10`) | asks "2 × 10: 2 sets, or 2 kg?" (LV:153) | PASS |
@@ -618,7 +618,7 @@ Item 113, Research lab, 2026-10-16. Base `origin/master` at `8d5e427` (Merge PR 
 
 1. **Sets lost or invented (flag to Core).** Rows 27, 31 and 34 (W: `Okay Tess, 80 for 8.`, `80 for, for 8.`, `Test, 80 for 8.`) and row 21 (I: `Bench 80 kg, 8 reps only.`) write groceries and lose the set: a comma phrase that the live guard and `parseCommaSets` do not read falls to the kitchen comma list, whose set check knows `x` and `×` but not `for` (`looksLikeGroceries`, `TessGrammar+Kitchen.swift:75`, and `isShoppingList`, line 143), so `80 for 8.` is a grocery line with amount 80. K885's fix covers only phrases with a number word. Fix: treat `N for M` as a set there, and keep the kitchen comma list out of a live workout. Row 12 (I: `Bench 3 sets of 8 at 80.`) invents Bench Press 3 kg × 8: idle, `parseLift` takes the first number as the weight and drops `80` (`TessGrammar.swift:446-458`); `N sets of M` is read only in focus (`TessGrammar+Live.swift:145`). Typed text does the same in every case.
 2. **The hook needs a number word.** Rows 4 and 22 (`80 kilos times 8.`, `185 pounds for 5.`) miss in a live workout although `TessSpoken` reads `times` and `pounds`; `82 and a half for 6` (`speech-capture.md` row 6) misses the same way. Widening the trigger to those words, or to any W phrase, would clear them.
-3. **Only the live rules read the normalised text.** N23 (`call mum at seven`, W) goes to the model where `call mum at 7` is a task at 19:00: the task rule reads the raw `at seven`.
+3. **Only the live rules read the normalised text.** N23 (`call mom at seven`, W) goes to the model where `call mom at 7` is a task at 19:00: the task rule reads the raw `at seven`.
 4. **A `where` that guards one word only** (`TessSpoken.swift:227-231`). In `case "times", "into" where ...` a Swift `where` binds to the last pattern only, so `times`, `kilos`, `kilo`, `kilograms`, `kgs`, `pounds`, `lbs` and `lbs.` are rewritten with no number beside them; only `into`, `k` and `pound` are guarded. No row fails on it today (in focus only the live rules read the result), but run on every transcript it turns row 80 into `2 3 x a week`. Fix: one case per word, or the guard inside the body.
 5. **Protected spans.** `TessSpoken` alone breaks what rule 5 protects and touches a note body (rule 3): rows 25, 59, 68, 70, 75, 78, 79 and 80. Harmless in focus; the Speak path (Builder B) must run the full normaliser around it, not `TessSpoken` alone, on idle text.
 6. **What waits on the Speak normaliser, not on Core.** The idle number-word misses (3, 20, 53, 76, 77, 82, 83, and `speak-first-use.md` 2b `bench eighty for eight`, nil on master), the four title periods, and the wake word, politeness, opener and note-prefix wrong writes (36, 37, 48, 49, 54, 55, 58, 59, 69, 70). Core's own rows stay as before: RELT and RC13 (50, 56, 57, 60) and the corrections backstop (74).

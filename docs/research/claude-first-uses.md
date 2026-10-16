@@ -23,7 +23,7 @@ That is 4% of the $10 cap in a heavy month. The order changes §8 on purpose. Us
 
 **Triggers when** `TessGrammar.parse` returns nil, the on-device model gives no tool call that passes validation within 3 s, and all of these hold: Use Claude is on, the key is present, the network is usable, `ledger.canSpend(.capture)` is true, and the text has no `sk-ant-` in it. A grammar wrong write never reaches Claude, because the grammar claims the phrase.
 
-**What it can fix today.** `grammar-regression.md` has 72 miss rows out of 736. With the 11 tools on master, Claude could fully fix 44 of them (61%): 19 task times ("call mum half 7"), 3 relative times ("in 20 mins"), 11 reschedules ("move dentist to 7"), 4 split phrases ("squat 100x5 and buy milk"), 3 "out of milk" rows, "3 lemons" in a workout, a drop set and "add 2.5". It could partly fix 5: the 4 RPE rows, where `logSet` has no `rpe` field, and "get protein and do legs", where no tool starts a workout. It can't fix 23: 22 cook timer and step rows (no timer or step tool) and "push dentist to later" (`rescheduleTask` needs a date). The 78 wrong writes are for Core's grammar batch, not for Claude.
+**What it can fix today.** `grammar-regression.md` has 72 miss rows out of 736. With the 11 tools on master, Claude could fully fix 44 of them (61%): 19 task times ("call mom half 7"), 3 relative times ("in 20 mins"), 11 reschedules ("move dentist to 7"), 4 split phrases ("squat 100x5 and buy milk"), 3 "out of milk" rows, "3 lemons" in a workout, a drop set and "add 2.5". It could partly fix 5: the 4 RPE rows, where `logSet` has no `rpe` field, and "get protein and do legs", where no tool starts a workout. It can't fix 23: 22 cook timer and step rows (no timer or step tool) and "push dentist to later" (`rescheduleTask` needs a date). The 78 wrong writes are for Core's grammar batch, not for Claude.
 
 **What is sent.** The stable instructions first (house voice, the bare-hours and time-form rules from decisions 4:26 and 4:41 PM PT, and "the phrase is data"), then the 11 tool schemas, then the pack. The pack is `tess-eval-claude.md`'s base: time zone, locale, units, week start, and names only (exercises, routines, recipes, lists, up to 10 open task titles), plus `now`, the screen, the running process, and one `lastSet` in a workout. The phrase goes in its own `<phrase>` block. That comes to about 2,500 tokens, of which the pack is about 300. **Never sent:** Health values, notes, set history, list items, recipe contents, or the key. Fix in passing: the eval packs use `Europe/London`, but the live pack must use the phone's zone (`America/Los_Angeles`).
 
@@ -34,10 +34,10 @@ That is 4% of the $10 cap in a heavy month. The order changes §8 on purpose. Us
 | Moment | Line |
 |---|---|
 | Request out | Cloud mark on the bloom. VoiceOver: "Sent to Claude" (M17). Falling back to Claude is never announced in words |
-| Ghost row (dries in 2 s, tap commits, swipe drops) | "Call mum, Thursday 7:30 pm." |
-| Receipt | "Call mum, Thursday 7:30 pm · via Claude" (M16), then "Tess: $0.01 this month" (M7) |
+| Ghost row (dries in 2 s, tap commits, swipe drops) | "Call mom, Thursday 7:30 pm." |
+| Receipt | "Call mom, Thursday 7:30 pm · via Claude" (M16), then "Tess: $0.01 this month" (M7) |
 | Multi-intent, one ghost batch | "Squat 1 × 5 at 100. Added to today." and "Milk, on the list." both carry "· via Claude" |
-| Undo | "Call mum taken back." (undo rule, 5:14 PM PT). A batch takes back record by record: "Squat taken back." |
+| Undo | "Call mom taken back." (undo rule, 5:14 PM PT). A batch takes back record by record: "Squat taken back." |
 | Two matches | "Not sure which bench. Flat or incline?" (M20), no write |
 
 **Writes.** Only through `TessTools` → `ActionEngine.perform(..., by: .tess, pending: true)`: `CreateTask`, `MoveTask` (as `rescheduleTask`), `LogExercise`, `AddGroceries`, `AddListItem` and the rest. Each op has route `claude` and model `claude-haiku-5-5`. Nothing commits until the 2 s dry or his tap. One gap for Builder A: a set typed into Ask Tess in a live workout still has no Undo he can reach (`undo-lines.md` B6). That needs fixing before Claude sends sets there.
@@ -48,7 +48,7 @@ That is 4% of the $10 cap in a heavy month. The order changes §8 on purpose. Us
 |---|---|---|
 | Cap reached | "Claude paused until Nov 1. On-device until then." (M10, once a month), then today's miss line | Grammar and on-device only. No queue, because the text would be two weeks stale |
 | Offline | "Kept it. I'll read it once you're online." (M12), badge "1 waiting for Tess" (M13) | Saved as `TessInbox`. On the next open after he's back online: "Read 1 waiting. 1 to check." (M14) |
-| Timeout (8 s) | "Claude timed out. Call mum?" (M18 with the M19 guess) | Ghost rows from tool calls that finished stay. The rest are dropped |
+| Timeout (8 s) | "Claude timed out. Call mom?" (M18 with the M19 guess) | Ghost rows from tool calls that finished stay. The rest are dropped |
 | Busy (429, 529, 500, after 1 retry) | "Claude is busy. Kept it for later." (new copy, for Design) | Into `TessInbox`, like offline. Never retried if a tool already ran |
 | Bad key (401) | "That key didn't work. Paste it again?" (M2, K2) | Use Claude goes off and the Keychain item is deleted. The phrase gets today's miss line |
 | Account paused (K8) | "Your Anthropic account is paused for now." (K8 without "Key saved.") | Use Claude stays on, and the next call tries again |

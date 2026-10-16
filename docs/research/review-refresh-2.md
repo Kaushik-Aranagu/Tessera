@@ -40,7 +40,7 @@ or any time by flipping Dark Mode in Control Center. The look never reads the cl
 11. **Effort with a set.** [#205] Write "100 for 5 at 8". Expect "Set N. 100 x 5 @8." Then "same at 9": expect
     "Same again @9, logged."
 12. **Numbers that could be a weight.** [#205] Write just "81", then "+5". Expect: no set and no task for either.
-    "call mum at 7" mid-workout still lands as a task.
+    "call mom at 7" mid-workout still lands as a task.
 13. **Dictated and comma phrases.** [#210] Use the keyboard mic to say "same at nine" (iOS adds a full stop). Expect
     the same line as typed. Type "8, 81": expect no sets (81 may be a weight). Type "100 for 5, at 8": one set @8.
 14. **Set kinds and load words.** [#205, #210] Write "warmup 60x5" (a warmup set), "80 x 6 to failure", and on a

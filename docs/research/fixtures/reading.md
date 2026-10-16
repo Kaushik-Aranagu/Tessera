@@ -12,7 +12,7 @@ These are 40 capture phrases, 10 resume-point cases and 8 finish-review lines fo
 
 **Clock.** Thu 15 Oct 2026, 18:00 Europe/London, the same as `../grammar-collisions.md`.
 
-**Shelf fixture.** Dune (612 pages), Dune Messiah (queued), Project Hail Mary (476 pages, queued), It (1138 pages, queued), Atomic Habits (no page count, queued), 1984 (328 pages, queued), The Sun Also Rises (queued), Catch-22 (453 pages, dropped at p 88), Educated (352 pages, finished at p 352). Open tasks: "Finish the report", "Call mum". The routine Push Day, and the recipes from GC.
+**Shelf fixture.** Dune (612 pages), Dune Messiah (queued), Project Hail Mary (476 pages, queued), It (1138 pages, queued), Atomic Habits (no page count, queued), 1984 (328 pages, queued), The Sun Also Rises (queued), Catch-22 (453 pages, dropped at p 88), Educated (352 pages, finished at p 352). Open tasks: "Finish the report", "Call mom". The routine Push Day, and the recipes from GC.
 
 **Contexts.**
 - **I**: idle. Nothing running, no book reading; Dune is queued.
@@ -133,7 +133,7 @@ Setup unless stated: R, Dune at p 142 of 612. "Now" follows `NowPicker` (running
 | R6 | Page goes backwards | `p 120` after p 142 | Page 120, kept as said. No guard in S2 | "Dune, p 120" | "p 120 of 612" | S2. The op summary template "Read Dune, p 142 to 120" reads as if he read backwards. Proposal: "Dune, back to p 120" when the new page is lower (open question 3) |
 | R7 | Undo a page | `p 142`, then Undo | Page back to 120 | Proposal: the book's last-touched time also goes back, so Now and the two-book choice are as before | "p 120 of 612" | S2 ("every action undoes cleanly"). Open question 9 |
 | R8 | A workout is running at 19:00 | Workout started 18:30. Dune suspended | No change to the book | The workout. The book only in What's running | Workout first, then Dune | S3 (the 19:00 test with a workout) |
-| R9 | A timed task is current at 19:00 | "Call mum" at 19:00, 30 min | No change | "Call mum" until 19:30, then Dune | Dune on the ledger if touched in the last 3 days | S3 (the timed-task test) |
+| R9 | A timed task is current at 19:00 | "Call mom" at 19:00, 30 min | No change | "Call mom" until 19:30, then Dune | Dune on the ledger if touched in the last 3 days | S3 (the timed-task test) |
 | R10 | Resumed, then a workout starts | Dune running in Now at p 142. He starts Push Day | Dune suspended through the existing rule, resume point 142 saved by `SaveContext` | The workout. After it ends, Dune returns only through the evening slot, not as running | Dune suspended, "p 142 of 612" | S2, S3, S6 |
 
 Finishing removes the book from What's running and Now (the process ends with reason done). Undoing `FinishBook` brings the process back suspended at its saved page.

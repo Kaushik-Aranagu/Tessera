@@ -2,7 +2,7 @@
 
 **DRAFT for Product to review.** Research lab, 2026-10-15. Not approved; nothing here is a decision until Product signs it. Comes after Upkeep (`ship-list-m5-upkeep-draft.md`), as Kaushik ordered. Same rules as `../product/ship-list-lists.md` and `../product/ship-list-kitchen.md`: small end-to-end slices, velocity over perfection, engine first so Core can start now. **Engine** = logic and tests only; **Feature screen** = a self-contained screen in its own `Features/People/` folder that meets the UI bar (no cards, pills, capsules or stock lists). Source: the People part of `people-and-upkeep.md` (smallest version only), with Kaushik's yes to both People questions: no Contacts access, and any @mention counts as "mentioned" while only a contact phrase counts as "talked". Owners: **Core** builds engine slices, **Builder B** builds screens. Checked against `origin/master` at `5956550`: there is no `person` key in `SystemCatalog.Key` and no People code. Notes link @mentions today (`NoteList.mentions`, `Transaction.linkMentions` into the note's `about`), but tasks do not: `CreateTask` sets `about` only from ids it is given, and an unknown `@Name` links nothing. `NoteList.resolve` matches a class name first, then the oldest object of any class with that exact title.
 
-**The idea in one line.** A person is an object you mention: "call @Mum" or "dinner with Sam fri" links Mum or Sam, and the person reads "talked 2 days ago", worked out from notes and tasks, never typed. The only new class is `Person`. It reuses notes, tasks, `about` links and backlinks, `ObjectStore`, the op log and undo, the ghost row and `TessCaptureEngine`, `RollForwardTasks` and `NowPicker` as they are. No keep-in-touch intervals, no overdue list, no scores, no Contacts prompt.
+**The idea in one line.** A person is an object you mention: "call @Mom" or "dinner with Sam fri" links Mom or Sam, and the person reads "talked 2 days ago", worked out from notes and tasks, never typed. The only new class is `Person`. It reuses notes, tasks, `about` links and backlinks, `ObjectStore`, the op log and undo, the ghost row and `TessCaptureEngine`, `RollForwardTasks` and `NowPicker` as they are. No keep-in-touch intervals, no overdue list, no scores, no Contacts prompt.
 
 **Birthdays are dated tasks.** A birthday is a day and month on the person and one dated task "Sam's birthday" on its next occurrence. On the day it is an untimed task, so `NowPicker` already puts it on Now with no new rule.
 
@@ -12,8 +12,8 @@
 
 | # | Slice | Done when | Type | Owner |
 |---|---|---|---|---|
-| 1 | **Person class and actions** | `SystemCatalog.Key.person` (parent `thing`): name (title), aliases (`.text`, comma separated: "Mum, Mom, Amma"), birthMonth and birthDay (`.number`, optional), birthYear (`.number`, optional, stored only, no ages shown), contactID (`.text`, empty in v1, kept for a later Contacts link), birthdayTask (`.ref` to `task`). `AddPerson(name, aliases?)`, `EditPerson`, `SetBirthday(person, month, day, year?)`, `ClearBirthday` and `DeleteObject`, all undoable through the op log. `person(named:)` (in `TesseraCore/People/`) tries exact name or alias, case-insensitive; then the same with a possessive "'s" or a trailing "s" dropped ("mums" finds Mum); then a first word that only one person has ("sam" finds Sam Patel). Two matches return `.ambiguous`, never the first. No substring match. `AddPerson` with an existing name returns that person. Op summaries read "Added Sam", "Sam's birthday, 12 Mar" | Engine | Core |
-| 2 | **Mentions in tasks, and people on first use** | `CreateTask` and `RenameObject` on a task run `linkMentions` on the title, as notes do, so "call @Mum" links Mum. An unknown one-word `@Name` (or any `@[Long Name]`) creates a Person in the same transaction, so one undo removes both. When an exact title is shared (Person "Rosemary" and the ingredient Rosemary), `resolve` prefers the Person; class names still win first, as now. Tests: "@Sam" in a task links Sam; unknown "@Priya" in a note makes Priya and undo removes her; "@Bench Press felt heavy" and "@Mac & Cheese was great" still link as today; "@Rosemary" links the person | Engine | Core |
+| 1 | **Person class and actions** | `SystemCatalog.Key.person` (parent `thing`): name (title), aliases (`.text`, comma separated: "Mom, Mum, Amma"), birthMonth and birthDay (`.number`, optional), birthYear (`.number`, optional, stored only, no ages shown), contactID (`.text`, empty in v1, kept for a later Contacts link), birthdayTask (`.ref` to `task`). `AddPerson(name, aliases?)`, `EditPerson`, `SetBirthday(person, month, day, year?)`, `ClearBirthday` and `DeleteObject`, all undoable through the op log. `person(named:)` (in `TesseraCore/People/`) tries exact name or alias, case-insensitive; then the same with a possessive "'s" or a trailing "s" dropped ("moms" finds Mom); then a first word that only one person has ("sam" finds Sam Patel). Two matches return `.ambiguous`, never the first. No substring match. `AddPerson` with an existing name returns that person. Op summaries read "Added Sam", "Sam's birthday, 12 Mar" | Engine | Core |
+| 2 | **Mentions in tasks, and people on first use** | `CreateTask` and `RenameObject` on a task run `linkMentions` on the title, as notes do, so "call @Mom" links Mom. An unknown one-word `@Name` (or any `@[Long Name]`) creates a Person in the same transaction, so one undo removes both. When an exact title is shared (Person "Rosemary" and the ingredient Rosemary), `resolve` prefers the Person; class names still win first, as now. Tests: "@Sam" in a task links Sam; unknown "@Priya" in a note makes Priya and undo removes her; "@Bench Press felt heavy" and "@Mac & Cheese was great" still link as today; "@Rosemary" links the person | Engine | Core |
 | 3 | **Last talked, last mentioned** | `PeopleLedger` (in `TesseraCore/People/`, shaped like `ListContents`) returns per person, all derived from backlinks and never stored: `lastMentioned` (newest note or task that links them, by createdAt), `lastTalked` (newest note that links them and holds a contact phrase, by createdAt, or done task that links them and holds one, by doneAt), `talkLine` ("talked today", "talked Tue", "talked 3 weeks ago"; else "mentioned 5 days ago"; else nothing), and `nextBirthday`. The contact phrase list is fixed and shared with slice 5: talked to, spoke to, called, rang, texted, messaged, facetimed, met, saw, visited, caught up with, coffee / lunch / dinner / drinks / call with, and the task forms call, ring, text, see, meet, visit. "return @Sam's drill" is mentioned only. A dated task "Dinner with Sam" counts as talked only when done. Tests: day boundary at 04:00 (the roll-forward day), undo of the note moves the line back, a deleted note drops out, two people in one note | Engine | Core |
 | 4 | **Birthdays as dated tasks** | `SetBirthday` creates or moves one task "Sam's birthday" (about [Sam], no time) on the next occurrence and stores it as `birthdayTask`; 29 Feb falls on 28 Feb in other years. `RollForwardTasks` skips birthday tasks. In the same action, a past undone birthday task is closed quietly (done at its own day, so it never shows in today) and next year's task is created and linked; one undo reverts both. Done early in the day stays done. `ClearBirthday` deletes the open task. Tests: 15 Oct sets 12 Mar → Fri 12 Mar 2027; setting 15 Oct on 15 Oct → today; a skipped birthday never rolls or counts as carried over; 29 Feb in 2027 and 2028 | Engine | Core |
 | 5 | **People phrases and tools** | `TessGrammar+People.swift`, a `.person` parse case (birthday, talk, contact task), checked after notes, pasted recipes and relative sets, before comma sets, lifts, kitchen and tasks (and after reading, money and upkeep once they land). It binds only when its argument resolves (collision rule 1): a birthday shape, or a contact phrase plus a person from `person(named:)`. The split rule (collision rule 3) does not split inside a contact phrase. All phrases in the table below map as written, with their feedback line. `LogTalk(people: [name], text, at?)` and `SetBirthday` are in `ActionRegistry` with name-only parameters, so the on-device model and Claude can call them. All 15 eval rows pass, and every phrase in `../product/kitchen-phrases.md`, the existing grammar tests and the `grammar-collisions.md` guard rows still parse the same | Engine | Core |
@@ -27,10 +27,10 @@ Build order: 1 → 2 → 3 → 4 → 5; screen 8 after 2, 6 after 3, 7 after 3.
 
 | Phrase | Maps to | Feedback line |
 |---|---|---|
-| `call mum`, `text sam`, `ring mum` (person exists) | task "Call mum", Later, about [Mum] | "Call Mum, in Later." |
-| `call mum thu`, `see sam at 7` | task dated as the task grammar does (`decisions.md`: a weekday that is today means today), about the person | "Call Mum, Thu." |
+| `call mom`, `text sam`, `ring mom` (person exists) | task "Call mom", Later, about [Mom] | "Call Mom, in Later." |
+| `call mom thu`, `see sam at 7` | task dated as the task grammar does (`decisions.md`: a weekday that is today means today), about the person | "Call Mom, Thu." |
 | `dinner with Sam fri`, `coffee with sam and ben sat` | task dated, about every named person | "Dinner with Sam, Fri." |
-| `met Sam`, `talked to sam`, `saw mum yesterday` | `LogTalk`: a note "Met @Sam" dated as said (a day cue means the most recent past day) | "Met Sam. Noted." |
+| `met Sam`, `talked to sam`, `saw mom yesterday` | `LogTalk`: a note "Met @Sam" dated as said (a day cue means the most recent past day) | "Met Sam. Noted." |
 | `met Priya` (no such person) | ambiguous ghost row: "New person Priya, met today" or "Note: met Priya"; waits for a tap | "New person: Priya?" |
 | `Sam's birthday 12 March`, `sam birthday 12/3`, `sam bday march 12`, `birthday sam 12 mar` | `SetBirthday` (and `AddPerson` if new) plus the birthday task | "Sam's birthday, 12 Mar. On your list for Fri 12 Mar." |
 | `Sam's birthday 12 March 1990` | as above, year stored only | as above |
@@ -38,7 +38,7 @@ Build order: 1 → 2 → 3 → 4 → 5; screen 8 after 2, 6 after 3, 7 after 3.
 Rules:
 - Phrases are ghost rows like everything else: pending, commit after 2 s or on tap, undo.
 - A bare name links only after a contact phrase or in a birthday phrase, and only to an existing person. Only `@Name`, a birthday phrase and a tapped "New person" create a person; "call priya" with no Priya goes on unchanged (no date: the model; with a date: a plain task).
-- A birthday needs a day and a month. "mum's birthday present fri" and "buy present for mums birthday on the twentieth" are tasks (the second linked to Mum), never a birthday change.
+- A birthday needs a day and a month. "mom's birthday present fri" and "buy present for moms birthday on the twentieth" are tasks (the second linked to Mom), never a birthday change.
 - An unknown name after a past contact verb must look like a name: 1 to 3 words, no article, pronoun, date word or number, and not the exact title of another object. "met the deadline" and "saw Dune" never make a person.
 - Kitchen keeps its words without a contact phrase: "buy rosemary" is groceries even when Rosemary is a person. A contact phrase decides the other way: "dinner with Rosemary fri" is a task about Rosemary, never a cook or a grocery line.
 - A person's name never reaches the lift resolver once a contact phrase has bound: "drinks with Ben 7pm" is never Bench Press.
@@ -49,11 +49,11 @@ Rules:
 
 ## Eval phrases (15)
 
-Clock: Thu 15 Oct 2026, 18:00 Europe/London, the `grammar-collisions.md` fixtures, plus people Mum (aliases Mom, Amma), Sam (last talked Tue 13 Oct), Ben and Rosemary, the ingredient Rosemary, and no Priya. A context is idle unless stated. "Model" means the grammar returns nil.
+Clock: Thu 15 Oct 2026, 18:00 Europe/London, the `grammar-collisions.md` fixtures, plus people Mom (aliases Mum, Amma), Sam (last talked Tue 13 Oct), Ben and Rosemary, the ingredient Rosemary, and no Priya. A context is idle unless stated. "Model" means the grammar returns nil.
 
 | # | Phrase | Context | Expected |
 |---|---|---|---|
-| 1 | `call mum` | idle | task "Call mum", Later, about [Mum]; Mum's talk line unchanged until done |
+| 1 | `call mom` | idle | task "Call mom", Later, about [Mom]; Mom's talk line unchanged until done |
 | 2 | `dinner with Sam fri` | idle | task "Dinner with Sam", Fri 16 Oct, about [Sam]; counts as talked only when done |
 | 3 | `Sam's birthday 12 March` | idle | person.birthday Sam 12 Mar + task "Sam's birthday" Fri 12 Mar 2027, about [Sam] |
 | 4 | `met Priya` | idle | ambiguous: new person Priya with note "Met @Priya" \| note; no write before a tap |
@@ -63,13 +63,13 @@ Clock: Thu 15 Oct 2026, 18:00 Europe/London, the `grammar-collisions.md` fixture
 | 8 | `dinner with Rosemary fri` | idle | trap: task Fri 16 Oct about Person Rosemary; not groceries, not a cook task |
 | 9 | `buy rosemary` | idle | trap: groceries [rosemary], no person link (guard) |
 | 10 | `note coffee with @Sam, he's moving in may` | idle | note about [Sam], Sam talked 15 Oct; "may" is not a date |
-| 11 | `buy present for mums birthday on the twentieth` | idle | trap: task Tue 20 Oct about [Mum]; Mum's birthday unchanged |
-| 12 | `call mum thu` | idle | task "Call mum" Thu 15 Oct (`decisions.md`), about [Mum] |
-| 13 | `talked to sam and mum` | idle | trap: one note "Talked to @Sam and @Mum", both talked today; not split, no grocery "mum" |
+| 11 | `buy present for moms birthday on the twentieth` | idle | trap: task Tue 20 Oct about [Mom]; Mom's birthday unchanged |
+| 12 | `call mom thu` | idle | task "Call mom" Thu 15 Oct (`decisions.md`), about [Mom] |
+| 13 | `talked to sam and mom` | idle | trap: one note "Talked to @Sam and @Mom", both talked today; not split, no grocery "mom" |
 | 14 | `when did i last talk to sam` | idle | trap: question, no write ("Tue, 2 days ago.") |
 | 15 | `caught sam on the phone, he got the job` | idle, Claude on | model: ghost row note about [Sam] via `LogTalk`, "via Claude"; with no model, "Didn't catch that. Try: talked to Sam." |
 
-As Swift Testing rows, beside `collisionRows`: `.init("call mum", .idle, "task Call mum later about Mum")`, `.init("met Priya", .idle, "ambiguous person.new|note")`, `.init("buy rosemary", .idle, "groceries [rosemary]")`, and so on. The people fixtures are added to the shared eval store.
+As Swift Testing rows, beside `collisionRows`: `.init("call mom", .idle, "task Call mom later about Mom")`, `.init("met Priya", .idle, "ambiguous person.new|note")`, `.init("buy rosemary", .idle, "groceries [rosemary]")`, and so on. The people fixtures are added to the shared eval store.
 
 ## Privacy with Claude
 
@@ -96,7 +96,7 @@ Shared: light ground, the house paper and washes; Design picks the People lean i
 - `grammar-collisions.md` rules 1, 2, 3, 5, 7 and 9: the question guard for eval row 14 (until it lands, row 14 falls back to the model, never to a task), the split rule exemption for row 13, the ordinal fix for row 11, and ambiguous ghost rows for row 4.
 - `tess-model-layer.md` T2 (name-resolving tools) and T4 (context packs) for eval row 15 and the privacy test. Without them, row 15 is "Didn't catch that."
 - Nothing from Reading, Money or Upkeep is required. The people check sits after them in `TessGrammar.parse`; Upkeep's verb list shares no word with the contact phrases.
-- M4 slice 5 (Day log) is not on master. Op summaries ("Met Sam", "Talked to Sam and Mum") are written now for "Talked to Sam, Mum" there.
+- M4 slice 5 (Day log) is not on master. Op summaries ("Met Sam", "Talked to Sam and Mom") are written now for "Talked to Sam, Mom" there.
 
 ## Later
 

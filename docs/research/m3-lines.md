@@ -106,7 +106,7 @@ converted to one decimal ("Body weight logged. 181.7 lb."), and the bare-number 
 | A13 | Habit deleted (check-ins go with it; workouts stay) | "Read deleted." | 10 s: "Read is back." (D9) |
 | A14 | Rule dab tapped | "Push A, Tuesday 6:20 pm" (D4), then zooms to the workout | |
 | A15 | Unknown name (amended, item 109, to match grammar row L848) | With the word "habit" ("habit sing"): nothing from habits, nothing written, the line goes to the model; never creates a habit. A bare unknown name ("meditated", "ran 5k"): nothing from habits; it goes on as today (a note or a task) | |
-| A16 | Target of 1 (item 109): create, or change to 1 | "Call mum added, once a week." / "Call mum now once a week." Digits for 2 to 7 ("5 times a week") | as A1 / as A12 |
+| A16 | Target of 1 (item 109): create, or change to 1 | "Call mom added, once a week." / "Call mom now once a week." Digits for 2 to 7 ("5 times a week") | as A1 / as A12 |
 | A17 | Tap a done day to clear it (item 109; Design's "tapping a done day clears it") | "Read Monday cleared, 1 of 5." Today: "Read today cleared, 1 of 5." | 10 s (a delete): "Read Monday is back, 2 of 5." |
 | A18 | "pause read" or "skip read this week" when already paused (item 109) | "Read is already paused this week." | none (nothing written) |
 | A19 | "resume read" or "unpause read" when not paused (item 109) | "Read is already on this week." | none (nothing written) |

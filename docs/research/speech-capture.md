@@ -139,7 +139,7 @@ Context W = live workout, Bench Press in focus, last set 80 x 8. I = idle, Thu 1
 | 16 | W | eighty k for eight | 80K for 8 | 80 kg x 8 | G: set 80 x 8 |
 | 17 | W | rest ninety | Rest 90. | rest 90 | Rest 90 s (needs GC rule 4 rest grammar; today kitchen timer risk, GC 34) |
 | 18 | I | remind me to call the plumber | Remind me two call the plumber. | remind me to call the plumber | G: task "Call the plumber" (eval 52) |
-| 19 | I | call mum at seven | Call mum at 7. | call mum at 7 | G: task 19:00 today (needs GC rule 7 fix, GC 45) |
+| 19 | I | call mom at seven | Call mom at 7. | call mom at 7 | G: task 19:00 today (needs GC rule 7 fix, GC 45) |
 | 20 | I | move dentist to friday | Move dentist to Friday. | move dentist to friday | M: `rescheduleTask` Dentist Fri. "to" untouched (no numbers) |
 | 21 | I | I'd like to swim on saturday | I'd like to swim on Saturday. | i'd like to swim on saturday | G: task, Sat. **Trap:** "like" is not a filler here |
 | 22 | I | buy milk and bread | By milk and bread. | buy milk and bread | G: groceries milk, bread (eval 50) |
@@ -150,7 +150,7 @@ Context W = live workout, Bench Press in focus, last set 80 x 8. I = idle, Thu 1
 | 27 | I | two tins of tomatoes and four onions | 2 tins of tomatoes and for onions | 2 tins of tomatoes and for onions | M: `addGroceries` ["2 tins of tomatoes", "4 onions"]. **Trap:** "for" without a number before it stays |
 | 28 | I | note four ideas for the app | Note: 4 ideas for the app. | note: 4 ideas for the app | G: note, body as heard |
 | 29 | I | how many sets of bench this week | How many sets of bench this week? | how many sets of bench this week | Question guard (GC rule 2), no write |
-| 30 | I | log bench eighty for eight and remind me to call mum tomorrow | Log bench 80 for 8 and remind me to call mum tomorrow. | log bench 80 x 8 and remind me to call mum tomorrow | Split (GC rule 3): set Bench 80 x 8 + task tomorrow; M until split lands (GC 24) |
+| 30 | I | log bench eighty for eight and remind me to call mom tomorrow | Log bench 80 for 8 and remind me to call mom tomorrow. | log bench 80 x 8 and remind me to call mom tomorrow | Split (GC rule 3): set Bench 80 x 8 + task tomorrow; M until split lands (GC 24) |
 
 Silence or only fillers ("um") gives an empty string: no capture, the Bar goes back to idle with "Didn't hear anything."
 

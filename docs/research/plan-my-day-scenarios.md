@@ -213,7 +213,7 @@ events:
   - {title: Lunch with Nikhil, start: "13:00", end: "14:30"}
 workout: {routine: Legs B, scheduledFor: "11:00"}
 tasks:
-  - {title: Call mum, startsAt: "09:00", length: 20, rolls: 1, rolledFrom: 2026-11-06, updatedAt: 2026-11-05}
+  - {title: Call mom, startsAt: "09:00", length: 20, rolls: 1, rolledFrom: 2026-11-06, updatedAt: 2026-11-05}
   - {title: Cook carbonara, due: date, about: recipe/Carbonara, updatedAt: 2026-11-06}
 later:
   - {title: Sort the garage, length: 120, updatedAt: 2026-10-12}
@@ -221,13 +221,13 @@ expect:
   card: "Today: 2 events, 9h30 free, slept 8h30"
   cap: 3
   blocks:
-    - {start: "08:00", end: "08:20", kind: task, title: Call mum, ghost: true}
+    - {start: "08:00", end: "08:20", kind: task, title: Call mom, ghost: true}
     - {start: "09:00", end: "10:00", kind: event, title: Parkrun}
     - {start: "11:00", end: "12:00", kind: workout, title: Legs B}
     - {start: "13:00", end: "14:30", kind: event, title: Lunch with Nikhil}
     - {start: "14:30", end: "16:30", kind: task, title: Sort the garage, ghost: true}
     - {start: "18:00", end: "18:45", kind: task, title: Cook carbonara, ghost: true}
-  startWith: Call mum
+  startWith: Call mom
   dayFull: null
 ---
 id: d07
@@ -359,24 +359,24 @@ now: "08:00"
 sleep: 465
 energy: 4
 events:
-  - {title: Mum's birthday, allDay: true}
+  - {title: Mom's birthday, allDay: true}
   - {title: Standup, start: "09:30", end: "09:45"}
 workout: {routine: Legs A, scheduledFor: "18:00"}
 tasks:
   - {title: Buy birthday flowers, due: "12:00", length: 20, updatedAt: 2026-11-10}
-  - {title: Call mum, startsAt: "19:30", length: 30, updatedAt: 2026-11-10}
+  - {title: Call mom, startsAt: "19:30", length: 30, updatedAt: 2026-11-10}
 later:
   - {title: Back up photos, updatedAt: 2026-10-18}
 expect:
-  card: "Today: Mum's birthday, 1 meeting, 11h45 free, slept 7h45"
+  card: "Today: Mom's birthday, 1 meeting, 11h45 free, slept 7h45"
   cap: 3
-  allDay: [Mum's birthday]
+  allDay: [Mom's birthday]
   blocks:
     - {start: "08:00", end: "08:20", kind: task, title: Buy birthday flowers, ghost: true}
     - {start: "08:20", end: "08:50", kind: task, title: Back up photos, ghost: true}
     - {start: "09:30", end: "09:45", kind: event, title: Standup}
     - {start: "18:00", end: "19:00", kind: workout, title: Legs A}
-    - {start: "19:30", end: "20:00", kind: timedTask, title: Call mum}
+    - {start: "19:30", end: "20:00", kind: timedTask, title: Call mom}
   startWith: Buy birthday flowers
   dayFull: null
 ---
@@ -610,7 +610,7 @@ events:
 workout: {routine: Legs B, scheduledFor: "07:30", endedAt: "08:35"}
 tasks:
   - {title: Car wash, due: date, length: 30, updatedAt: 2026-11-19}
-  - {title: Call mum, length: 20, rolls: 1, rolledFrom: 2026-11-20, updatedAt: 2026-11-18}
+  - {title: Call mom, length: 20, rolls: 1, rolledFrom: 2026-11-20, updatedAt: 2026-11-18}
 later:
   - {title: Sort the garage, length: 120, updatedAt: 2026-10-12}
   - {title: Back up photos, updatedAt: 2026-10-18}
@@ -618,11 +618,11 @@ expect:
   card: "Today: 1 event, 10h30 free, slept 6h"
   cap: 3
   blocks:
-    - {start: "09:00", end: "09:20", kind: task, title: Call mum, ghost: true}
+    - {start: "09:00", end: "09:20", kind: task, title: Call mom, ghost: true}
     - {start: "09:20", end: "09:50", kind: task, title: Car wash, ghost: true}
     - {start: "10:00", end: "11:30", kind: event, title: Kids football}
     - {start: "11:30", end: "13:30", kind: task, title: Sort the garage, ghost: true}
-  startWith: Call mum
+  startWith: Call mom
   dayFull: null
 ```
 

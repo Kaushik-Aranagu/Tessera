@@ -228,7 +228,7 @@ matter. "Holds" means the expected screen and line are still right.
 | 6 | Holds | Workout ground `0x14111A` on Porcelain (`Looks.swift:68`). The 8:25 PM PT correction (workout on Home's base) is not built yet; when it lands this step changes |
 | 7 | **Needs change** | #248 replaced "81 isn't loadable". Expect "Set N logged. 80 × 8, nearest load to 81." (`TessCaptureEngine.swift:262-273`). Placeholder now at `WorkoutParts.swift:323` |
 | 8 | **Needs change** | Expect "Set N logged. 100 × 5, RPE 8." then "Set N logged, same again, RPE 9." (`TessCaptureEngine.swift:271-273`) |
-| 9 | **Needs change** | Still no set and no task, but the lines are now Tess's own asks, not the model's: `81` gives "81 for how many reps?" (`TessGrammar+Live.swift:93-94`, with 100 kg as the last set); `+5` gives "+5 kg: on the next set?" (`:44`). Do not answer "yes" (that is QA's open Q10). `call mum at 7` holds. The model fallback line is now at `TessModel.swift:86` |
+| 9 | **Needs change** | Still no set and no task, but the lines are now Tess's own asks, not the model's: `81` gives "81 for how many reps?" (`TessGrammar+Live.swift:93-94`, with 100 kg as the last set); `+5` gives "+5 kg: on the next set?" (`:44`). Do not answer "yes" (that is QA's open Q10). `call mom at 7` holds. The model fallback line is now at `TessModel.swift:86` |
 | 10 | Holds | `LookTable.swift:14, 16` |
 | 11 | Holds | No change found |
 | 12 | Holds | `-theme` still in memory only |
@@ -287,7 +287,7 @@ Static read; #254's lines checked at `e7a5be4` and `5e91c56`:
 | 7, 8 | As written | Same lines: "100 for 5 at 8" and "81 for 8" don't take the 2 × 10 ask | Re-check after the PR | Same as its base |
 | 9, `81` | "81 for how many reps?" | Same | Re-check | Same as its base |
 | 9, `+5` | "+5 kg: on the next set?" | A statement, not a question: "Say the set, like 105 × 5." (last set 100 × 5, `TessGrammar+Live.swift:115-117`). A bare "yes" now gets "Say the set, like 100 × 5." and never a task, so the script's "don't answer yes" can go | Re-check | Same as its base |
-| 9, `call mum at 7` | "Call mum, today 7 pm." | Same | Re-check: A162 to A167 change how a set and a task in one phrase split | Same as its base |
+| 9, `call mom at 7` | "Call mom, today 7 pm." | Same | Re-check: A162 to A167 change how a set and a task in one phrase split | Same as its base |
 | 9a | As written | `yes` also logs, like `log it`. LOG joins the named day's last workout, open or finished (D1) | Re-check | Same as its base |
 | Skip (not a script step) | "Skip set N?" | "Skip is on the workout screen." | | |
 | 1, 6, 12, 20, 21 | As written | Same | Same | Re-run: these use `-demoTime`, `-theme`, `-openLink`, `-fakeClaudeKey`, which the helper may change |

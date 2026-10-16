@@ -13,7 +13,7 @@ For: Core engine (`TessGrammar+People.swift`, M5 People P5, plus the kitchen, mo
 
 **Clock.** Thu 15 Oct 2026, 18:00 Europe/London, the same as the other fixture files.
 
-**Store.** The shared eval store from `m5-parse-order.md` (chores Water plants, Clean bathroom, Laundry, Pay rent, Take out the bins, Top up the oil; open tasks "Call mum", "Finish the report", "Clean the oven", "Do the ironing"; the book Dune), plus four people: **Will, Rose, Mark, Bill**. No person called Sky, Basil, June, Honey, Sage, Olive or Ginger. No recipe whose title holds any of these words. No exercise does either (checked `ExerciseSeed.swift`).
+**Store.** The shared eval store from `m5-parse-order.md` (chores Water plants, Clean bathroom, Laundry, Pay rent, Take out the bins, Top up the oil; open tasks "Call mom", "Finish the report", "Clean the oven", "Do the ironing"; the book Dune), plus four people: **Will, Rose, Mark, Bill**. No person called Sky, Basil, June, Honey, Sage, Olive or Ginger. No recipe whose title holds any of these words. No exercise does either (checked `ExerciseSeed.swift`).
 
 **Contexts.** I: idle. W: live workout, Bench Press in focus, last set 80 x 8. S: a shop run of Groceries is going.
 
@@ -62,7 +62,7 @@ Columns: **Master now** is the trace on `db049cb`. **Expected** is the parse und
 |---|---|---|---|---|---|---|
 | 17 | I | `buy rose a card` | Task "Buy rose a card", Later. Gift shape (K:164) | Same task, about [Rose]. Proposal: people's `get <person>` gift form also takes `buy <person> a/an/some X` (people does not claim `buy` today, so the link is a gap) | None | Rose missing: same task, not linked (as master) |
 | 18 | I | `buy rose` | Groceries ["rose"] | Groceries ["rose"]. Tess names the list. No person link (Decision 8: `buy` without a contact phrase keeps its kitchen meaning; 4:30 PM: unclear stays Groceries) | Guard row: a bare `buy <name>` never links a person | Same |
-| 19 | I | `buy flowers for rose` | **Groceries ["flowers for rose"]**. No gift, service or person word fires (K:158-177) | Task "Buy flowers for rose", Later, about [Rose] | **Gift guard (proposed in `m5-parse-order.md` for people 32):** after `buy`, an item that is not in the aisle guide or the ingredient book and is followed by `for <existing person>` is a gift, so a task | Rose missing: Groceries ["flowers for rose"], as master and misfires row 70 (`buy flowers for mum`): an unknown name leaves the object unclear, so Groceries stays |
+| 19 | I | `buy flowers for rose` | **Groceries ["flowers for rose"]**. No gift, service or person word fires (K:158-177) | Task "Buy flowers for rose", Later, about [Rose] | **Gift guard (proposed in `m5-parse-order.md` for people 32):** after `buy`, an item that is not in the aisle guide or the ingredient book and is followed by `for <existing person>` is a gift, so a task | Rose missing: Groceries ["flowers for rose"], as master and misfires row 70 (`buy flowers for mom`): an unknown name leaves the object unclear, so Groceries stays |
 | 20 | I | `buy basil for rose` | Groceries ["basil for rose"] | Groceries ["basil for rose"]. Never a task, never about Rose | Gift guard fires only when the item is not food. Basil is produce (A:52) | Same |
 | 21 | I | `buy sage green paint` | **Groceries ["sage green paint"]**. No non-food word fires; the aisle guide misses (last word `paint`) | Task "Buy sage green paint", Later (4:30 PM: paint is clearly non-food) | **Non-food list:** add paint and DIY words (paint, brush, screws, bulb, batteries) to the K:167 list. Never let the first word (`sage`, an aisle word) decide | Same (Sage is not a person anyway) |
 | 22 | I | `basil and tomatoes` | Model. No comma, so neither comma sets (G:74) nor the comma list (K:59) run; no prefix, no date | Proposal (gap): Groceries ["basil", "tomatoes"]. Today the model gets it, which is safe | **And-list guard:** a bare `X and Y` with no comma is groceries only when every item reads as food (RC8's `allSatisfy`), so `rose and mark` never is | Same. Even with a Basil person it stays groceries (Decision 8) |
@@ -142,7 +142,7 @@ In `TesseraCore/Tests/TesseraTessTests/PeopleNameWordTests.swift`, one `@Test(ar
 ## Open questions
 
 1. **Roses at the shop.** With a Rose in People, `rose` at the shop writes nothing (row 24). Should it instead offer the line with "Rose is a person" and wait for a tap, so he can still buy roses?
-2. **`buy <person> a X`.** Should people link the person in `buy rose a card` (row 17), the way `get mum a card` will?
+2. **`buy <person> a X`.** Should people link the person in `buy rose a card` (row 17), the way `get mom a card` will?
 3. **Modal "will" in titles.** Should `will do laundry sat` become "Do laundry", Sat (row 34), or keep his words? Default here: keep his words.
 4. **Lower-case name-words.** When the name is unknown, should a lower-case ordinary word (`saw rose`) ever be offered as a new person (rows 7 to 9)? Default here: yes, but under the note.
 5. **And-lists without commas.** Should `basil and tomatoes` be groceries when every item is food (row 22), or stay with the model?

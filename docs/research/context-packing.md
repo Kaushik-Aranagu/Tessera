@@ -102,18 +102,18 @@ Base day (from plan-my-day d01): gym 07:15 (Push A), Standup 09:30, Design revie
 | 6 | 08:35 commute | morning, last action 20 min, event in 55 min | Reply to landlord, 15 min ("carried from Mon, fits before 09:30") | none | Standup 09:30 · Book physio | none |
 | 7 | 09:20 meeting in 10 | event ≤15 min override | Standup at 09:30, draining to start | Reply to landlord "Left at draft, 12 min ago" | Book physio · Design review 11:00 | none |
 | 8 | 12:30 lunch | midday, gap 2h30 to 15:00, Book physio due | Book physio, 20 min | Reply to landlord | Expense report 17:00 · 1:1 Priya 15:00 | none |
-| 9 | 15:40 afternoon slump | afternoon, last action 50 min ago, Expense report untouched 3 days | Expense report ("due 17:00") | none | Call mum · Carbonara 19:00 | "First step: open last month's receipts, 2 min?" (the one ask) |
-| 10 | 18:15 groceries trip | evening, Groceries 9, offer taken at 18:05, shop running | Groceries, "Dairy, 6 of 9 left" | none | Carbonara 19:00 · Call mum | none |
-| 11 | 19:10 cook timer | running cook, pasta timer 6 min | Carbonara: "Pasta, 6 min" drain | none | Call mum · Shutdown 21:00 | none |
+| 9 | 15:40 afternoon slump | afternoon, last action 50 min ago, Expense report untouched 3 days | Expense report ("due 17:00") | none | Call mom · Carbonara 19:00 | "First step: open last month's receipts, 2 min?" (the one ask) |
+| 10 | 18:15 groceries trip | evening, Groceries 9, offer taken at 18:05, shop running | Groceries, "Dairy, 6 of 9 left" | none | Carbonara 19:00 · Call mom | none |
+| 11 | 19:10 cook timer | running cook, pasta timer 6 min | Carbonara: "Pasta, 6 min" drain | none | Call mom · Shutdown 21:00 | none |
 | 12 | Thu 17:30 overbooked evening | day full (planned 3h40, free 2h), Push B 18:00 | Push B at 18:00 | none | Dinner with Sam 20:00 · Call bank; day strip reads "full" | "Tonight is full. Move Call bank and Sort the garage to Later?" |
 | 13 | 21:00 Shutdown | shutdown part, opted in | Shutdown: "Did 3 tasks, 1 workout, cooked once"; unfinished preselected to roll | none | Tomorrow: Standup 09:30 | "One line for tomorrow?" (optional) |
 | 14 | 23:40 late night | late, nothing running, day closed | Quiet: "Tomorrow starts with Standup 09:30", dimmed | none | none | none |
 | 15 | Mon 10:05, back after 4 days | daysAway 4, morning | "Short Push day, 30 min, this evening?" (re-entry override) | none (older than 3 days left Home) | none | "Good to see you. Here is today." |
-| 16 | Sat 09:30 weekend morning | weekend, no events, Legs date-only, Groceries 9 | Legs, any time today ("weekend, nothing booked") | none | Water plants (6 days) · Call mum | none (Shop waits for evening) |
+| 16 | Sat 09:30 weekend morning | weekend, no events, Legs date-only, Groceries 9 | Legs, any time today ("weekend, nothing booked") | none | Water plants (6 days) · Call mom | none (Shop waits for evening) |
 | 17 | Wed, empty day | no events, no tasks, rest day | "Nothing planned. Rest day." with the Ask Tess glyph | none | From Later: Sort the garage (stalest) | none |
 | 18 | Wed 08:00, workout missed yesterday | Push A not finished Tue; plan rolls on | Push A, today 18:00 ("your evening slot") | none | Standup 09:30 · Book physio | none (never "missed"; plan simply rolls on) |
 | 19 | Fri 18:40, two processes suspended | workout left at set 3 (40 min), cook at step 4 (15 min), nothing running | Next timed: Call bank 19:00 (suspended items never take Now) | Carbonara "Step 4 of 7, 15 min ago" · Push B "Set 3 of 5, 40 min ago" | Shutdown 21:00 (2 ledger + 1 line ≤ 4) | none |
-| 20 | Sun 16:30, habit close to target | Train 3×/week at 2 of 3, last day of week, no events | Short Legs, 30 min ("1 more for Train 3×/week") | none | Prep lunches · Call mum | none (the why line is enough; no nudge) |
+| 20 | Sun 16:30, habit close to target | Train 3×/week at 2 of 3, last day of week, no events | Short Legs, 30 min ("1 more for Train 3×/week") | none | Prep lunches · Call mom | none (the why line is enough; no nudge) |
 
 ## 8. Anti-patterns (hard rules)
 

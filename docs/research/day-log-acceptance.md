@@ -104,7 +104,7 @@ nothing for that item on that day. Block labels (TODAY, WED 21) are Page; the da
 | DL23 | Core | Cook carbonara, 35 min | Fold | `Cooked carbonara, 35 min` | COPY line forms |
 | DL24 | Core | Shop finished, 1 item; then another day, 14 items | Fold | `Shopped, 1 item`; `Shopped, 14 items` | COPY line forms |
 | DL25 | Core | 1 task captured; another day 3 tasks and 2 groceries | Fold | `Added 1 task`; `Added 3 tasks, 2 groceries` (tasks first) | COPY line forms, state 1 |
-| DL26 | Core | 1 done; 2 dones; 5 dones | Fold | `Done: call the bank`; `Done: water the plants, call mum`; `5 tasks done` | COPY line forms |
+| DL26 | Core | 1 done; 2 dones; 5 dones | Fold | `Done: call the bank`; `Done: water the plants, call mom`; `5 tasks done` | COPY line forms |
 | DL27 | Core | 1 tick on Home; 6 ticks on Lisbon packing | Fold | `Ticked 1 on Home`; `Ticked 6 on Lisbon packing` | COPY line forms |
 | DL28 | Core | 1 note "hotel ideas"; 2 notes | Fold | `Note: hotel ideas`; `2 notes` | COPY line forms |
 | DL29 | Core | New recipe "dal tadka"; new list; new routine | Fold | `Saved dal tadka`; `New list: Lisbon packing`; `New routine: Push Day B` (case as stored) | COPY line forms; 7:34 |
