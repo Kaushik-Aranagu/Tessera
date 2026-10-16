@@ -147,6 +147,8 @@ A20. **Restore, safely.** [#120] Only if a Tessera copy is in Files: tap Restore
 
 *Install-day check, only once Speak is in the build: deny the mic, then turn it on in Settings > Tessera and come back. Tell us whether the app restarted or picked up where you were (Research `speak-first-use.md`, open question).*
 
+*Install-day check for the Mac session (QA L2 on #274): "curls" now resolves to Dumbbell Curl; if his library has sets under an older "Curl" exercise, check that new curls don't land on a different exercise.*
+
 *Install-day checks for the Mac session, not for him (Research `widget-states.md` questions 3 and 5): whether the widget blanks or keeps its last entries once the free profile lapses (only if it lapses before the re-sign), and whether `embedded.mobileprovision` is readable at runtime on this free-signed install.*
 
 *If a calm note ever shows at launch, that's the data-safety guard protecting your data, not a crash.*
