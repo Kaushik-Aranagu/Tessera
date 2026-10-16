@@ -186,3 +186,7 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [morning-page-oct-16.md](morning-page-oct-16.md) | Coordinator: Kaushik's Oct 16 morning page, what changed overnight and his three asks (item 136) |
 | [fixtures/secret-words-paste.md](fixtures/secret-words-paste.md) | Core, QA: secret words in pasted recipes and fetched link pages (item 137), cut the line and keep the recipe, 31 rows (11 near-misses that pass), 7 gaps |
 | [fixtures/money-body-wall.md](fixtures/money-body-wall.md) | Core, QA: the money and body wall (item 138, MU2), 30 must-stop rows across captures, packs and memory, 11 that pass, 9 gaps |
+| [secret-words-check.md](secret-words-check.md) | Core, QA: merged #422 traced against 134 (item 139), 19 of 27 rows hold, 5 differ, 3 untested; the offline inbox drain skips the wall |
+| [fixtures/kitchen-timer-alerts.md](fixtures/kitchen-timer-alerts.md) | Core, Builder A, QA: kitchen timers that ring (item 140, CL6), 19 rules, 26 scenarios, 8 gaps |
+| [trip-check.md](trip-check.md) | Core, QA, coordinator: the Oct 26 trip re-checked on master (item 141), go; 33 of 35 rows hold; N1 to N4 day reads still in the phone's zone |
+| [groceries-check.md](groceries-check.md) | Core, Kitchen lead, QA: merged #380 traced against 123 (item 142), 9 gaps fixed, 6 open, 1 superseded |
