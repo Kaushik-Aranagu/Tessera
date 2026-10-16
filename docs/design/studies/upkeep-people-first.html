@@ -71,13 +71,13 @@ function upkeep(theme){
   </div>`;
 }
 function people(){
-  const names=[['Sam',1],['Mum',1],['Ben',1],['Will',1],['Rose',1],['Mark',1],['Bill',1],['Rosemary',0],['Ravi',0]];
+  const names=[['Sam',1],['Mom',1],['Ben',1],['Will',1],['Rose',1],['Mark',1],['Bill',1],['Rosemary',0],['Ravi',0]];
   const txt=names.map(([n,m])=>`<span style="${m?'':'font-weight:400;color:rgba(var(--ink),var(--t3))'}">${n}</span>`).join('<span style="display:inline-block;width:16px"></span>');
   return `<div class="ph por">
    <div class="abs lbl s2" style="left:22px;top:58px">‹ REVIEW</div>
    <div class="abs lbl s2" style="left:22px;top:132px">PEOPLE</div>
    <div class="abs" style="left:22px;top:170px;width:270px;font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:48px">${txt}</div>
-   <div class="abs body s2" style="right:22px;top:180px;text-align:right">Mum, Sun</div>
+   <div class="abs body s2" style="right:22px;top:180px;text-align:right">Mom, Sun</div>
    <div class="abs body tess" style="left:22px;top:620px;width:340px;opacity:0">.</div>
   </div>`;
 }

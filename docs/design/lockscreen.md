@@ -39,7 +39,7 @@ This sheet covers everything Tessera puts on the Lock Screen and in the Island: 
 ## The three notifications (Core schedules, words from M54 to M58)
 | | Title | Body | Long-press actions | On next open (Tess, with UNDO) |
 |---|---|---|---|---|
-| **N1, a timed task** | "Call mum" | "It's 9 am." or "It's 9 am. 30 min." | **Done** · **Not now** (moves to the same time tomorrow) | "Call mum done." or "Call mum moved to Saturday." UNDO: "Call mum taken back." |
+| **N1, a timed task** | "Call mom" | "It's 9 am." or "It's 9 am. 30 min." | **Done** · **Not now** (moves to the same time tomorrow) | "Call mom done." or "Call mom moved to Saturday." UNDO: "Call mom taken back." |
 | **N2, rest is up, app not on screen** | "Set 4 is up" | "Bench, 82.5 × 8" | none (the activity has the buttons) | none |
 | **N3, a kitchen timer** | "Pasta is done" | "Carbonara, step 3", or "10 min." with no cook | **Stop** | "Pasta stopped." UNDO: "Pasta taken back." |
 
@@ -50,7 +50,7 @@ This sheet covers everything Tessera puts on the Lock Screen and in the Island: 
 
 ## Quiet hours, 23:00 to 07:00
 - **Only the timers he started ring:** rest (N2) and kitchen timers (N3), with the default sound.
-- **A task timed in quiet hours saves but doesn't ring** (decision 6:44 PM PT). Its ghost row says so when he writes it. That line is Research's to word (proposed: "Call mum, 11:15 pm. No buzz in quiet hours.").
+- **A task timed in quiet hours saves but doesn't ring** (decision 6:44 PM PT). Its ghost row says so when he writes it: "Call mom, today 11:15 pm. No buzz in quiet hours." For the next morning: "Call mom, tomorrow 6:30 am. No buzz in quiet hours." (Research's words).
 - Live Activities keep counting, silent as always.
 - Nothing Tessera would post by itself is shown on the Lock Screen at night. It waits on Now.
 
@@ -68,4 +68,3 @@ A badge, a streak, a PR or a count, Review or the week, plan changes, rolled or 
 - **Builder A:** the three activities in Cobalt sky in every look (removing the look-following face), the Undo and 60s faces, the cook activity's flip and Stop, the focus activity with its stale date, the Island regions, and the N2 and N3 calls from the workout and cook mode.
 - **Core:** `NotificationPlan` and the scheduler for N1 to N3 with the words above, quiet hours, `alerts` for explicit times only, the actions by `.intent`, and the return lines with UNDO.
 - **Builder B:** the in-app pre-asks (M49, M50) as `one-ask.md` asks with ALLOW · NOT NOW, the return lines beside the soul, and the quiet-hours ghost-row line.
-- **Research:** the quiet-hours ghost-row line.

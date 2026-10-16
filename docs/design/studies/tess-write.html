@@ -137,7 +137,7 @@ async function say(text, undo) {
   anim($('kb'), [{ transform: 'translateY(291px)' }, { transform: 'none' }], { duration: 380, easing: HOUSE });
   anim($('caret'), [{ opacity: 1 }, { opacity: 0 }, { opacity: 1 }], { duration: 900, iterations: Infinity });
   await sleep(500);
-  for (const ch of 'call mum at 6') { $('tx').textContent += ch; await sleep(75); }
+  for (const ch of 'call mom at 6') { $('tx').textContent += ch; await sleep(75); }
   await sleep(500);
   // Return: a ghost at 45% that dries for 2s, then everything closes into the soul
   $('caret').remove();
@@ -148,7 +148,7 @@ async function say(text, undo) {
   ['typed', 'wline', 'dry2', 'ask'].forEach((id) => anim($(id), [{ opacity: getComputedStyle($(id)).opacity }, { opacity: 0 }], { duration: 200 }));
   D.B.getAnimations().forEach((a) => a.cancel()); pos.B = [0, -40, .3]; D.B.style.transform = 'translate(0px,-40px) scale(.3)';
   await close();
-  say('Call mum, today at 6.', true);
+  say('Call mom, today at 6.', true);
   await sleep(2400);
   document.body.dataset.done = '1';
 })();

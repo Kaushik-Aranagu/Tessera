@@ -36,9 +36,9 @@ body{margin:0;background:#EFE7DC}
   <section id="people" class="abs" style="inset:0">
     <div class="abs lbl" style="left:22px;top:58px">PEOPLE</div>
     <div id="names" class="abs names" style="left:22px;right:70px;top:104px">
-      <span id="sam">Sam</span><span>Mum</span><span>Priya</span><span>Jonah</span><span>Aunt Meera</span><span>Leo</span><span>Dr Shah</span><span>Grace</span><span>Tom</span><span class="q">Ravi</span><span class="q">Elena</span><span class="q">Mr Okafor</span>
+      <span id="sam">Sam</span><span>Mom</span><span>Priya</span><span>Jonah</span><span>Aunt Meera</span><span>Leo</span><span>Dr Shah</span><span>Grace</span><span>Tom</span><span class="q">Ravi</span><span class="q">Elena</span><span class="q">Mr Okafor</span>
     </div>
-    <div id="bday" class="abs body" style="right:22px;top:113px;text-align:right">Mum,<br>Sun</div>
+    <div id="bday" class="abs body" style="right:22px;top:113px;text-align:right">Mom,<br>Sun</div>
   </section>
 
   <!-- 6 · the person page -->
@@ -146,7 +146,7 @@ $('dd').style.top = dY(12) + 'px'; $('mm').style.top = mY(3) + 'px';
   typed.textContent += '@'; await sleep(160);
   const P = $('pick');
   const showPick = (items) => { P.innerHTML = items.map((x, k) => `<span style="margin-right:22px;${k === 0 ? 'font-weight:600;color:#2B2440' : 'color:#6E6480'}">${x}</span>`).join(''); };
-  showPick(['Sam', 'Mum', 'Priya', 'Jonah', 'Aunt Meera']);
+  showPick(['Sam', 'Mom', 'Priya', 'Jonah', 'Aunt Meera']);
   anim(P, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: HOUSE });
   anim($('pickLine'), [{ opacity: 0 }, { opacity: 1 }], { duration: 260 });
   await sleep(700);

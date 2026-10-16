@@ -8,7 +8,7 @@ Shared: people never run, so there's no vermilion, and cobalt is only for Tess. 
 - **Label:** PEOPLE.
 - **One paragraph of names** at Title 34/500, 48pt lines, with a 16pt gap between names (no commas or dots), most recently talked first. Each name taps through to its page.
 - **People never mentioned** sit at the end at 400 weight and 50% ink. **Nobody fades for being quiet**: a name is full ink however long ago you talked.
-- **A birthday within 14 days** hangs in the right margin beside the line holding that name, in Body ("Mum, Sun").
+- **A birthday within 14 days** hangs in the right margin beside the line holding that name, in Body ("Mom, Sun").
 - **Arrival:** names set in one by one, like a sentence being written (12pt rise, 380ms, 40ms per name).
 - **New person:** say it ("@Priya"). **Empty:** Tess says "Tell me who you talked to. Try: met Sam."
 
@@ -33,6 +33,6 @@ Shared: people never run, so there's no vermilion, and cobalt is only for Tess. 
 - **Long-press a mention** to show which object it is, which settles ties like Rosemary the herb and Rosemary the person.
 
 ## Accessibility and Reduce Motion
-- The names paragraph reads as a list of links: "Sam, talked Tuesday". A margin birthday is read with its name: "Mum, birthday Sunday".
+- The names paragraph reads as a list of links: "Sam, talked Tuesday". A margin birthday is read with its name: "Mom, birthday Sunday".
 - The birthday drums are adjustable elements: "Day 14", "Month March".
 - **Reduce Motion:** the hero cross-fades instead of growing, names and lines fade in place, and the drums open without the timeline sliding.

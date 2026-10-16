@@ -90,9 +90,9 @@ Board `mockups/upkeep-us.png` and recording `recordings/upkeep-us.mp4` (source `
 ## People (screen 7, the People page)
 `people.md` §7 stands, with these values:
 - **Names at Title 34/500,** 48pt lines with a 16pt gap, most recently talked first.
-  - Fixture order: Sam, Mum, Ben, Will, Rose, Mark, Bill.
+  - Fixture order: Sam, Mom, Ben, Will, Rose, Mark, Bill.
   - Never mentioned: **Rosemary** and **Ravi**, at 400 weight in `inkTertiary` (allowed at 34pt).
-- **The margin birthday** is Body 21 in `inkSecondary`, on the line that holds the name: "Mum, Sun".
+- **The margin birthday** is Body 21 in `inkSecondary`, on the line that holds the name: "Mom, Sun".
 - **Arrival:** the names set in one by one as `people.md` says. There are no coloured marks. The **one moment** comes when a name moves to the front after "met Sam": it lifts out, travels to the start of the paragraph (settle spring, 520ms) with a faint `context` wash that dries, and the paragraph reflows behind it.
 - **Rosemary, person and herb:** the page shows only the person. A long press on the name shows "PERSON · ALSO A HERB IN RECIPES" as a label line in `inkSecondary`.
 - **Empty:** Tess says "Tell me who you talked to. Try: met Sam."
