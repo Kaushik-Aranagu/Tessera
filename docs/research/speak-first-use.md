@@ -1,21 +1,25 @@
 # Speak: first-use script
 
-For: Builder B (Speak PR), Design studio (copy), Kaushik. Research lab, 2026-10-16. Board item 30.
+For: Builder B (Speak PR), Design studio (copy), Kaushik. Research lab, 2026-10-16. Board item 30. Revised the same day against Design's Speak sheet (`design/speak.md`, board item 9, and `design/mockups/speak-states.png`).
 
-This is the first-launch path for Speak, the voice way into Tess. Each row gives the trigger, what the screen shows, the exact line Tess shows, the fast way back, and how to pass or fail it. Builder B's Speak PR is checked against this table, row by row, on his phone.
+This is the first-launch path for Speak, the voice way into Tess. Each row gives the trigger, what the screen shows, the exact line Tess shows, the fast way back, and how to pass or fail it. Builder B's Speak PR is checked against this table, row by row, on his phone. Every step of the path (the mic and speech asks, denied, restricted, limited, assets not downloaded, offline, unsupported language) has a screen and an exact line.
 
-## What is on origin/master (`15fc404`, read only)
+## What is on origin/master (`3c51cdb`, read only)
 
-- **Speak is a word only.** `Features/Command/BottomChrome.swift:253-258`: tapping Speak (or Show) closes the surface and Tess says "Speak comes next." There is no `SpeechAnalyzer`, `SpeechTranscriber`, `SFSpeechRecognizer`, `AVAudioEngine` or `AVAudioSession` code anywhere on master.
-- **No mic or speech purpose strings.** `project.yml` (Tessera target, `settings.base`) sets only `NSHealthUpdateUsageDescription` and `NSHealthShareUsageDescription`. `App/Info.plist` is generated (`GENERATE_INFOPLIST_FILE: YES`).
-- **The capture surface.** A tap on the soul raises three words, Speak, Write, Show (vermilion, cobalt, cadmium dabs). Write stretches the cobalt dab into a writing line.
-- **Dry time is real code.** `dry()` (`BottomChrome.swift:381`): the text dims to a ghost and a line dries under it for 2 s (0.6 s with Reduce Motion); a touch cancels; then `commit` runs the grammar or `model.ask`, the surface closes, the soul brightens, and Tess's line sits beside the soul for 4 s (`say`, line 436).
-- **The voice checker is real code.** `TessVoice.violations(in:)` (`TesseraCore/Sources/TesseraTess/TessCapturing.swift:88`) fails a line with 12 or more words, a newline, "!", emoji, or a banned word: should, must, missed, streak, great, awesome, sorry, oops. Every line below passes it by hand count.
-- **"Didn't hear anything."** exists only in research docs (`speech-capture.md` section 4, `fixtures/spoken-normaliser.md` row 33 and rule 17, `speech-test-script.md` row 30). The normaliser returns empty text; the line belongs to the Speak path (Builder B), not the engine.
+- **Speak is a word only.** `Features/Command/BottomChrome.swift:264-271`: Write opens its layer; tapping Speak (or Show) closes the surface and Tess says "Speak comes next." There is no `SpeechAnalyzer`, `SpeechTranscriber`, `SFSpeechRecognizer`, `AVAudioEngine`, `AVAudioSession` or `AssetInventory` code anywhere on master.
+- **No mic or speech purpose strings.** `project.yml:69-74` (Tessera target, `settings.base`) sets `GENERATE_INFOPLIST_FILE: YES` and only two privacy keys, `NSHealthUpdateUsageDescription` (line 73) and `NSHealthShareUsageDescription` (line 74).
+- **The capture surface still draws dabs.** `ModeRow` (`BottomChrome.swift:505-548`) puts a 22×18 `PaintDab` beside each word (line 528); the words are 34 pt medium (`modeFont`, lines 343-347) and the inactive ones sit at 55% ink (line 525). Write stretches the cobalt dab into a writing line (`WritingLine`, line 551).
+- **Holding the soul opens the surface.** `soulKey` (`BottomChrome.swift:163-198`): tap opens, `.onLongPressGesture(minimumDuration: 0.4) { open() }` (line 192), double tap goes Home. VoiceOver: label "Tess", hint "Opens Tess." (line 195), action "Go home". Nothing listens.
+- **Dry time is real code.** `dry()` (`BottomChrome.swift:413-430`): the text dims to a ghost and a `Theme.Colors.tess` (cobalt) line fills left to right under it for 2 s, 0.6 s with Reduce Motion (lines 312-316, 424-426); a touch cancels (`cancelDrying`, line 432); then `commit` (line 444) runs, the surface closes, the soul brightens with a `.success` haptic (line 88), and Tess's line sits beside the soul for 4 s (`say`, lines 477-485).
+- **Undo is a label word.** `Button("Undo")` with `InkLabelWordStyle(color: Theme.Colors.live)` (`BottomChrome.swift:145-147`), drawn uppercase (line 597); `undo()` (lines 121-130) fires a `.decrease` haptic (line 89). The live corner does the same with `Paint.live` (`Features/Workout/LiveTessCorner.swift:39-42`).
+- **Capture lines are real code.** `TessCaptureEngine.swift` (`TesseraCore/Sources/TesseraTess/`): a lift outside a workout says "{name} {n} reps at {load}. Added to today." (line 108); a set in a workout says "Set {n}. {weight} x {reps}." with an ASCII x (line 123), "Same again, logged." (line 122). The workout's own line uses × (`Features/Workout/WorkoutParts.swift:194`).
+- **The voice checker is real code.** `TessVoice.violations(in:)` (`TesseraCore/Sources/TesseraTess/TessCapturing.swift:88`) fails a line with 12 or more words (split on whitespace), a newline, "!", emoji, or a banned word (line 85): should, must, missed, streak, great, awesome, sorry, oops. Every line below passes it; counts are whitespace words.
+- **"Didn't hear anything."** is in no Swift file on master. It comes from research (`speech-capture.md` section 4, `fixtures/spoken-normaliser.md` row 33 and rule 17) and now from Design's sheet. The normaliser returns empty text; the line belongs to the Speak path (Builder B), not the engine.
+- **Design's specs are not on master.** `no-buttons.md`, which `BottomChrome.swift:7` names as its spec, and `no-dots.md`, `ink-line.md`, `speak.md` live only in the project's `design/` folder.
 
 ## Design sheet
 
-**There is no Speak sheet from Design.** `/mnt/project-files/tessera/design/` has `voice-gym.mp4` and `tess-capture.mp4` (videos, no written spec, not watched for this file) and no Speak `.md`. `docs/design/no-buttons.md`, which `BottomChrome.swift` names as its spec, is not on master either. Every line below is proposed copy built from `speech-capture.md` section 5, `tess-voice.md` and `tess-discoverability.md` row 20. Design can change the words; the states and pass rules stand.
+**Design's Speak sheet exists now:** `design/speak.md`, with `design/recordings/speak.mp4` (not watched for this file) and the still `design/mockups/speak-states.png` (preparing, mic off, silence). The sheet says Research's states, pass rules and exact lines stand except where it changes them. Its changes are folded into the rows below and listed in "Changes after Design's sheet". The still matches the sheet: the Speak word is ink over a short `live` line while preparing, grey with "Mic is off for Tessera." and an ink "Open Settings" when off, and ink with "Didn't hear anything." in silence. Lines sit in cobalt at Body 21 above the three words.
 
 ## API facts this script rests on
 
@@ -25,7 +29,7 @@ Checked against Apple's documentation JSON on 2026-10-16. "Assumed" means not in
 |---|---|---|
 | `SpeechAnalyzer` + `SpeechTranscriber` (iOS 26+) run on device. Apple: the speech authorization flow "only applies to speech recognition using `SFSpeechRecognizer`. `SpeechAnalyzer` transcriber modules don't send audio data of the user's voice to Apple's servers." | Asking permission to use speech recognition | Verified (docs) |
 | So the recommended build shows **one** system prompt (mic), not two. The speech prompt appears only if the build calls `SFSpeechRecognizer.requestAuthorization`. | Same | Verified (docs); on-device check still to do |
-| `NSSpeechRecognitionUsageDescription`: "If this key is not present, your app will crash when it attempts to request authorization or use the APIs of the Speech framework." Add it anyway. | Same | Verified (docs). Whether `SpeechAnalyzer` alone crashes without it is assumed yes, to be safe |
+| `NSSpeechRecognitionUsageDescription`: "If this key is not present, your app will crash when it attempts to request authorization or use the APIs of the Speech framework." Add it anyway. | Same | Verified (docs). Whether `SpeechAnalyzer` alone crashes without it is assumed yes; both keys go in (Design, speak.md) |
 | `NSMicrophoneUsageDescription` is needed before any mic use. `AVAudioApplication.requestRecordPermission` prompts once; "unless a user grants your app permission to record audio, it captures only silence (zeroed out audio samples)." The system never prompts again after a choice. | `requestRecordPermission(completionHandler:)` | Verified (docs) |
 | `AVAudioApplication.RecordPermission` has `undetermined`, `denied`, `granted`. There is **no restricted case** for the mic. | Record permission enum | Verified (cases); how Screen Time shows up is assumed (reads as `denied`, no prompt) |
 | `SFSpeechRecognizerAuthorizationStatus` has `notDetermined`, `denied`, `restricted`, `authorized`, and can be denied "if speech recognition is not supported on the device". | `authorizationStatus()` | Verified (docs). Only matters on the `SFSpeechRecognizer` path |
@@ -35,64 +39,73 @@ Checked against Apple's documentation JSON on 2026-10-16. "Assumed" means not in
 | Offline works once assets are installed. | WWDC25 277, via `speech-capture.md` | Verified (talk); airplane-mode run still to do |
 | iOS 27 adds `CaptureInputSequenceProvider` ("reads from an AV capture device such as a microphone"), with `provider(from:in:compatibleWith:priority:)` and `providerWithSession(...)`. It could replace the `AVAudioEngine` tap. | CaptureInputSequenceProvider (iOS 27.0) | Verified exists; behaviour under interruption assumed same as a capture session |
 | A call or another app interrupts the audio session: `AVAudioSession.interruptionNotification` with type `began`, later `ended`. | AVAudioSession | Verified (long-standing API) |
-| Changing a privacy switch in Settings ends the app's process; the next open is a cold launch. | Not in the pages read | Assumed (long-standing iOS behaviour); row 6 checks it |
+| Changing a privacy switch in Settings ends the app's process; the next open is a cold launch. | Not in the pages read | Assumed (long-standing iOS behaviour); row 6b checks it |
 | `SpeechTranscriber` is unavailable on the Simulator. | Developer Forums, via `speech-capture.md` | Reported. Run this script on his phone, not the Simulator |
 
 ## Info.plist purpose strings
 
-Add to `project.yml`, Tessera target, `settings.base`. The `speech-capture.md` draft says "hold the bar", but there is no bar on master any more (the soul replaced it), so the wording changes:
+Add both to `project.yml`, Tessera target, `settings.base`, after line 74 (Design, speak.md, question 7). The `speech-capture.md` draft says "hold the bar", but there is no bar on master (the soul replaced it):
 
 ```yaml
-INFOPLIST_KEY_NSMicrophoneUsageDescription: Tess listens only while you hold to talk, so you can log by voice. Audio stays on this iPhone.
+INFOPLIST_KEY_NSMicrophoneUsageDescription: Tess listens only while you talk to her, so you can log by voice. Audio stays on this iPhone.
 INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: Tess turns what you say into text on this iPhone. Audio is never sent anywhere.
 ```
 
-Both strings are true only if no `SFSpeechRecognizer` server path is used. If the PR uses `SFSpeechRecognizer`, it sets `requiresOnDeviceRecognition = true` or the speech string is false.
+The mic string said "while you hold to talk"; with tap Speak now listening without a hold (question 1), it says "while you talk to her". Both strings are true only if no `SFSpeechRecognizer` server path is used. If the PR uses `SFSpeechRecognizer`, it sets `requiresOnDeviceRecognition = true` or the speech string is false. Run `xcodegen generate` after adding them.
 
-## The proposed gesture
+## The gesture (decided)
 
-Master has no hold gesture yet, so this is the shape the rows assume (open question 1):
-- Tap the soul, then **Speak**. The vermilion dab stretches into a speaking line, the way Write stretches cobalt. Tess's line sits above it.
-- **Hold the soul** to listen; words stream onto the line in `inkSecondary` and settle to `ink` as they finalise. **Let go** to send. **Drag left** off the soul to cancel.
-- In a live workout, holding the soul at rest skips the tap on Speak (from `speech-test-script.md`).
-- Permission is asked on the **first tap on Speak**, never at launch, never on a hold.
+Design, speak.md, question 1. Two ways in, one rule each:
+- **From the surface:** tap the soul, then tap **Speak**. Listening starts at once, no hold. A 1.2 s pause or a tap on the bloom ends it and sends it to tidying and the voice ghost.
+- **The fast path, anywhere:** **hold the soul at rest** on any screen, workout or not. It listens while held; **let go** to send; **drag left** off the soul to cancel. This replaces master's hold-to-open (`BottomChrome.swift:192`).
+- **The hint:** "Hold me to talk." beside the soul (live mode: "Hold me to tell me a set") after the first granted use.
+- **Permission** is asked on the **first tap on Speak** or the **first hold of the soul**, never at launch and never on opening the surface.
+- **Speak's states live on the word** (no dabs, `no-dots.md`): ready is `ink` 21/500; preparing sits on a `live` ink line at 25% that fills left to right with download progress; mic off or limited is `inkSecondary` 21/400 with no strike; no language is `inkSecondary` and the layer opens once to say so.
+- **Every line** is Body 21/400 in cobalt at y 470 in the Speak layer, or beside the soul when the layer is closed. Once per event; nothing counts tries.
 
 ## Before you run it
 
-- His phone, iOS 27, `-demoTime 18:10`. Delete Tessera first so both permissions are undetermined (or Settings, General, Transfer or Reset, Reset Location and Privacy).
-- Phone locale en-GB first. Rows 7 and 8 need a second pass in airplane mode and in an unsupported locale.
+- His phone, iOS 27, `-demoTime 18:10`. Delete Tessera first so both permissions are undetermined (or Settings, General, Transfer or Reset, Reset Location and Privacy). Speech assets are shared between apps, so to see row 1d also remove the English speech assets (or run 1d on a locale he has never used).
+- Phone locale en-GB first. Rows 7 and 8 need a second pass in airplane mode, on cellular only, and in an unsupported locale.
 - Each row starts from Home with Tess at rest, unless it says otherwise.
 
 ## The script
 
-Lines in quotes are exact, character for character. Word counts are in brackets for the checker.
+Lines in quotes are exact, character for character. **Bold** words in a line are ink words (tappable, `ink`, not cobalt, no shape around them). Word counts are in brackets for the checker.
 
 ### 1. First tap on Speak: the asks
 
 | # | Trigger | Screen state | Exact line | Fast path back | Pass if / Fail if |
 |---|---|---|---|---|---|
-| 1a | Tap the soul, tap Speak. Mic is undetermined | Speak layer opens: vermilion line, no words on it. Soul still. Tess's line above the line, then the system mic alert rises over it within 0.5 s | "Tess needs the mic to hear you." (7) | The alert's own buttons. A tap on the veil closes Tess | Pass: the alert shows the `NSMicrophoneUsageDescription` text above, word for word, and appears only after the tap on Speak. Fail: any prompt at launch, on opening the surface, or on Write; a custom screen that looks like the system alert |
-| 1b | Tap Allow | Alert gone. Speak layer stays open. Soul breathes slowly once to show it is ready. Nothing recorded from this tap | "Hold me to talk. Let go to send." (8) | Tap the veil to close | Pass: no second system alert on the recommended path (`SpeechAnalyzer`); nothing captured; the line is not a ghost and nothing dries. Fail: a speech recognition alert appears (means the PR calls `SFSpeechRecognizer.requestAuthorization`; then 1c applies) |
-| 1c | Only on the `SFSpeechRecognizer` path: the speech alert follows 1b | Same layer, the system speech alert over it | Line stays "Tess needs the mic to hear you." (7) until the alert closes, then 1b's line | The alert's own buttons | Pass: speech asked **after** mic, never before; the alert shows the `NSSpeechRecognitionUsageDescription` text above. Fail: speech asked first, or asked while the mic alert is up |
-| 1d | First use, assets for the locale not installed, online | Layer open, the vermilion line fills left to right as progress (`AssetInventory` download progress). Holding is ignored until done | "Getting speech ready. Needs a connection once." (7) | Tap Write: typing works during the download | Pass: the download starts on the first Speak tap at the latest (ideally when the surface first opens); progress moves; on finish the line changes to 1b's. Fail: a hold during the download starts the mic; the app waits silently |
+| 1a | Tap the soul, tap Speak. Mic is undetermined | Speak layer opens: Write, Show and the question fold away (200 ms). Speak word `ink` 21/500. Soul does not travel yet. The line at y 470, then the system mic alert rises over it within 0.5 s | "Tess needs the mic to hear you." (7) | The alert's own buttons. A tap on the veil closes Tess | Pass: the alert shows the `NSMicrophoneUsageDescription` text above word for word, and only after a tap on Speak or a hold of the soul. Fail: any prompt at launch, on opening the surface, or on Write; a custom screen that looks like the system alert |
+| 1a2 | First hold of the soul at rest, mic undetermined | No bloom, no listening. The line beside the soul, then the system mic alert | "Tess needs the mic to hear you." (7) | The alert's own buttons | Pass: the hold asks and does not record; after Allow he holds again to talk. Fail: audio captured before Allow |
+| 1b | Tap Allow (from 1a) | Alert gone. **Listening starts at once** (Design, speak.md, question 2): soul travels to (196, 698) on the settle spring and becomes the bloom (×1.4), breathing ×1.4 to ×1.55 with the mic level. Orange mic dot in the status bar | "Listening" (1) | Drag left or tap the veil: cancels, nothing saved | Pass: no second system alert on the `SpeechAnalyzer` path; no extra tap or hold needed. Fail: a speech recognition alert (the PR calls `SFSpeechRecognizer.requestAuthorization`; then 1c applies); waiting for a hold |
+| 1b2 | The first capture after Allow dries (row 2d) | Surface closed, soul at rest. The one-time hint beside the soul after the capture line's 4 s | "Hold me to talk." (4). In a live workout: "Hold me to tell me a set" (7) | (none) | Pass: shown only until the hold has been used (see disagreement 3), never as a step before talking. Fail: the hint blocks listening or repeats after the hold is used |
+| 1c | Only on the `SFSpeechRecognizer` path: the speech alert follows the mic alert | Same layer, the system speech alert over it. No listening yet | Line stays "Tess needs the mic to hear you." (7) until the alert closes, then 1b | The alert's own buttons | Pass: speech asked **after** mic, never before; the alert shows the `NSSpeechRecognitionUsageDescription` text above. Fail: speech asked first, or while the mic alert is up |
+| 1d | Speak tapped (or soul held) before the quiet download (1e) has finished, online | Layer open. The Speak word sits on a `live` ink line at 25% that fills left to right with `AssetInventory` download progress (`speak-states.png`, Preparing). Holding is ignored | "Getting speech ready. Needs a connection once." (7) | Tap Write: the surface goes straight to the writing line; typing works during the download | Pass: the download starts here at the latest, on Wi-Fi or cellular; progress moves; when it finishes with the layer open, listening starts at once with 1b's line. Fail: a hold during the download starts the mic; the app waits with no line |
+| 1e | First open of the capture surface on Wi-Fi, assets not installed | Nothing new: the surface looks as usual. The download runs in the background. If he looks, the Speak word sits on the 25% `live` line, filling | (none) | (none) | Pass: download starts on the first surface open on Wi-Fi only, without a line, so a later first tap on Speak is instant. Fail: a download on cellular before Speak is tapped; any line or alert |
+
+Order when both are missing: the mic ask (1a) first, then 1d. `AssetInventory.status` is read on every Speak tap and every hold (Design, speak.md, question 4).
 
 ### 2. Both allowed: first phrase
 
 | # | Trigger | Screen state | Exact line | Fast path back | Pass if / Fail if |
 |---|---|---|---|---|---|
-| 2a | Hold the soul | Light impact haptic on touch down. Soul breathes with the mic level. Orange mic dot in the status bar | Tess's line clears. The speaking line shows words as he speaks | Drag left off the soul: cancels, `.selection` haptic, text fades, no line | Pass: listening starts within 0.2 s of the hold; first word on the line under 300 ms of speaking (target from `speech-capture.md`). Fail: starts on a tap, or a tap still opens nothing |
-| 2b | Say "bench eighty for eight", let go | Soul stops breathing. Volatile words settle to the final text in under 600 ms. Mic dot goes out | Line shows "bench 80 x 8" (normalised) | Drag left before it settles | Pass: mic off within 0.5 s of release; the normalised text is shown, not the raw "eighty". Fail: mic stays on after release |
-| 2c | The final text arrives | **Ghost row.** The text dims to a ghost (ink 0.45, as in Write). A thin vermilion line dries under it for 2 s (0.6 s with Reduce Motion). Under the ghost, in `inkSecondary`: the raw transcript | "Heard: bench eighty for eight" (shows the transcriber's own words, which may already be digits) | Touch the ghost: drying stops, text goes back to editable (in the Write line), nothing saved | Pass: drying is the same 2 s as Write; a touch cancels; the Heard line is the raw transcript, not the normalised text. Fail: commits at once; no Heard line; a touch commits instead of cancelling |
-| 2d | Dry finishes | Surface closes, soul brightens, `.success` haptic. Tess's line beside the soul for 4 s | "Bench 8 reps at 80. Added to today." (7) (master's line for this capture, per `speech-test-script.md` row 22) | Undo under the line, as for typed captures | Pass: one Bench entry 80 x 8 for today; the line passes `TessVoice.violations`. Fail: a set written twice; a "Logged!" style line |
-| 2e | Doubtful parse (a bare number over 30 in a workout, `speech-capture.md` row 4) | Ghost row with two choices as ink words under it. **No drying line**: nothing commits by itself | "Didn't catch that. 84 x ? or 80 x 4?" (8) | Touch a choice to commit it; drag left to drop | Pass: nothing saved until a touch. Fail: either choice saved on a timer |
+| 2a | Tap the soul, tap Speak (granted, assets installed) | Light impact haptic. Soul travels to the bloom; other words fold away (200 ms). Mic dot on | "Listening" (1) | Tap the veil: cancels, nothing saved (see disagreement 6) | Pass: listening within 0.2 s of the tap; first word on the line under 300 ms of speaking (`speech-capture.md`). Fail: a hold is needed |
+| 2b | Say "bench eighty for eight", then pause 1.2 s (or tap the bloom) | Words stream below "Listening" at Body 21/400 `inkSecondary`, each rising out of a 6 pt blur. On the pause: tidying squeezes out fillers (width to 0, 320 ms) and the rest crossfades into the clean sentence in `ink`, the destination as a value word. Mic dot goes out | The clean sentence, e.g. "bench 80 x 8" (normalised) | Drag left or tap the veil before the ghost | Pass: mic off within 0.5 s of the pause or tap; the normalised text is shown, not "eighty". Fail: listening never ends without a touch |
+| 2c | The clean sentence settles | **Voice ghost.** The sentence at 45%; a thin ink line in `live` (2.5 pt, `ink-line.md` shape) under it drains right to left over **3 s** (0.8 s with Reduce Motion); under that, in `inkSecondary`, the raw transcript | "Heard: bench eighty for eight" (shows the transcriber's own words, which may already be digits) | Touch the ghost: drying stops and the sentence opens in the Write line to edit; nothing saved | Pass: voice dries 3 s, not Write's 2 s (Design, speak.md, question 3); a touch cancels; the Heard line is the raw transcript. Fail: commits at once; no Heard line; a touch commits |
+| 2d | Dry finishes | Everything gathers back into the soul (220 ms), the page comes forward, `.success` haptic. Tess's line beside the soul for 4 s with UNDO | "Bench 8 reps at 80. Added to today." (8) (master's line, `TessCaptureEngine.swift:108`) | UNDO under the line | Pass: one Bench entry 80 x 8 for today; the line passes `TessVoice.violations`. Fail: written twice; a "Logged!" style line |
+| 2e | Doubtful parse (a bare number over 30 in a workout, `speech-capture.md` row 4) | Ghost with **no draining line**: nothing commits by itself. The two guesses as value words | "Didn't catch that. 84 x ? or 80 x 4?" (10). The two guesses are value words | Touch a guess to commit; drag left to drop | Pass: nothing saved until a touch. Fail: either guess saved on a timer. See disagreement 5 |
+| 2f | Hold the soul at rest on Home (not a workout), say "oat milk and eggs", let go | Soul swells in place (×1.4), breathes with the level. Words stream right-aligned above the soul in `inkSecondary`. On release: tidying, then the voice ghost as 2c (3 s) | While held: none. Then "Heard: oat milk and eggs" | Drag left off the soul: `.selection` haptic, words fade, nothing saved, no line | Pass: listens within 0.2 s of the hold, only while held. Fail: the hold opens the surface (master's behaviour) |
+| 2g | Say "undo" or "take that back" as the whole phrase, right after 2d | No ghost. Same as tapping UNDO: the last capture reverts, `.decrease` haptic, the line clears (`BottomChrome.swift:121-130`) | (none) | (none) | Pass: same result as UNDO (Design, speak.md, question 9); "undo the bench" is **not** an undo. Fail: "undo" is captured as a task |
 
 ### 3. Mic denied
 
 | # | Trigger | Screen state | Exact line | Fast path back | Pass if / Fail if |
 |---|---|---|---|---|---|
-| 3a | Tap Don't Allow on the mic alert in 1a | Speak layer stays open. Vermilion dab drawn with a single struck line through it. No second alert | "Mic is off for Tessera. Open Settings?" (6). "Open Settings" is an ink word | Tap "Open Settings": `UIApplication.openSettingsURLString`. Tap Write: the cobalt line opens with the keyboard (keyboard dictation still works) | Pass: no alert again, ever, from inside the app; Write opens in one tap. Fail: the app asks again; a hold starts "listening" and later says "Didn't hear anything." (the mic records zeros when denied, so the PR has to check permission first) |
-| 3b | Later, any tap on Speak while denied | Same as 3a, no alert | "Mic is off for Tessera. Open Settings?" (6) | Same as 3a | Pass: same line every time, no extra words, no count of tries. Fail: anything like "still", "again" or "you need to" |
-| 3c | Hold the soul at rest in a workout while denied | Soul does not breathe. Light warning haptic | "Mic is off for Tessera. Open Settings?" (6) | Tap the soul: normal capture surface | Pass: no listening state at all |
+| 3a | Tap Don't Allow on the mic alert in 1a | Layer stays open. The Speak word turns `inkSecondary` 21/400, no strike (`speak-states.png`, Mic off). No second alert | "Mic is off for Tessera. **Open Settings**" (7). "Open Settings" is an ink word, no question mark | Tap "Open Settings": `UIApplication.openSettingsURLString`. Tap the veil, then Write (keyboard dictation still works) | Pass: no alert again, ever, from inside the app. Fail: the app asks again; a "listening" state that later says "Didn't hear anything." (the mic records zeros when denied, so the PR checks permission first) |
+| 3b | Later, any tap on Speak while denied | Speak word already `inkSecondary` when the surface opens. Layer opens as 3a | "Mic is off for Tessera. **Open Settings**" (7) | Same as 3a | Pass: same line every time, no count of tries. Fail: "still", "again" or "you need to" |
+| 3c | Hold the soul at rest while denied (any screen, workout or not) | Soul does not swell or breathe. Light warning haptic. Line beside the soul | "Mic is off for Tessera. **Open Settings**" (7) | Tap the soul: normal capture surface | Pass: no listening state at all |
 
 ### 4. Speech denied
 
@@ -100,16 +113,17 @@ On the recommended `SpeechAnalyzer` path the speech alert never shows, so Settin
 
 | # | Trigger | Screen state | Exact line | Fast path back | Pass if / Fail if |
 |---|---|---|---|---|---|
-| 4a | After 1b, open Settings, Privacy and Security, Speech Recognition | Tessera is **not** in the list | (none) | (none) | Pass: Tessera absent (proves no `SFSpeechRecognizer` authorization call). Fail: Tessera listed; then run 4b |
-| 4b | `SFSpeechRecognizer` path: Don't Allow on the speech alert | Speak layer stays open, struck dab | "Speech is off for Tessera. Open Settings?" (6) | "Open Settings" ink word; Write as in 3a | Pass: mic stays granted; no alert again. Fail: falls back to sending audio anywhere |
-| 4c | `SFSpeechRecognizer` path: any later tap on Speak | Same as 4b | "Speech is off for Tessera. Open Settings?" (6) | Same | Pass: same line each time |
+| 4a | After 1b, open Settings, Privacy and Security, Speech Recognition | Tessera is **not** in the list | (none) | (none) | Pass: Tessera absent (no `SFSpeechRecognizer` authorization call). Fail: Tessera listed; then run 4b |
+| 4b | `SFSpeechRecognizer` path: Don't Allow on the speech alert | Layer stays open, Speak word `inkSecondary` 21/400 | "Speech is off for Tessera. **Open Settings**" (7) | "Open Settings" ink word; Write as in 3a | Pass: mic stays granted; no alert again. Fail: falls back to sending audio anywhere |
+| 4c | `SFSpeechRecognizer` path: any later tap on Speak | Same as 4b | "Speech is off for Tessera. **Open Settings**" (7) | Same | Pass: same line each time |
 
-### 5. Restricted (Screen Time, device management)
+### 5. Restricted and limited (Screen Time, device management)
 
 | # | Trigger | Screen state | Exact line | Fast path back | Pass if / Fail if |
 |---|---|---|---|---|---|
-| 5a | Screen Time, Content and Privacy Restrictions, Microphone set to Don't Allow Changes, with Tessera's mic undetermined or off. Tap Speak | Assumed: `recordPermission` reads `denied` and no alert shows. Struck dab | "The mic is limited on this iPhone. Write still works." (10) if the PR can tell; otherwise 3a's line | Tap "Write" (the word in the line is an ink word that opens Write) | Pass: no alert, no listening state, Write in one tap. Fail: a loop of "Open Settings" into a greyed-out switch with nothing else offered. If iOS gives no way to tell restricted from denied, 3a's line passes too (open question 4) |
-| 5b | `SFSpeechRecognizer` path only: `authorizationStatus()` is `restricted` | Struck dab | "Speech is limited on this iPhone. Write still works." (9) | Tap "Write" | Pass: no "Open Settings" link, because the user cannot change it there |
+| 5a | Screen Time, Content and Privacy Restrictions, Microphone set to Don't Allow Changes, Tessera's mic undetermined or off. Tap Speak | `recordPermission` reads `denied` (assumed), no alert. Speak word `inkSecondary` 21/400 | "Mic is off for Tessera. **Open Settings**" (7) (Design, speak.md, question 6: restricted maps to micOff) | Tap the veil, then Write | Pass: no alert, no listening state, Write two taps away. Fail: an alert, or a listening state with zeros |
+| 5b | Only if iOS 27 gives the PR a way to read a mic restriction (none in the docs read) | Speak word `inkSecondary` 21/400 | "The mic is limited on this iPhone. **Write** still works." (10). "Write" is an ink word that opens the writing line | Tap "Write" | Pass: no "Open Settings", because the switch is greyed out. Kept for when a restriction becomes readable; until then 5a applies |
+| 5c | `SFSpeechRecognizer` path only: `authorizationStatus()` is `restricted` (this one is readable) | Speak word `inkSecondary` 21/400 | "Speech is limited on this iPhone. **Write** still works." (9) | Tap "Write" | Pass: no "Open Settings" link |
 
 ### 6. Denied, then turned on in Settings
 
@@ -117,84 +131,161 @@ On the recommended `SpeechAnalyzer` path the speech alert never shows, so Settin
 |---|---|---|---|---|---|
 | 6a | From 3a, tap "Open Settings" | Settings opens on Tessera's page with the Microphone switch | (none) | Back to Tessera via the top-left "Tessera" link | Pass: lands on Tessera's own page, not Settings' root |
 | 6b | Turn Microphone on, go back to Tessera | Assumed: cold launch (the switch ends the process). Home, Tess at rest | (none at launch; Tess does not announce the change) | (none) | Pass: no line, no prompt at launch. Fail: Tess greets the change unasked |
-| 6c | Tap the soul, tap Speak | Speak layer, plain vermilion dab (no strike). No alert | "Mic is on. Hold me to talk." (6) once, then 1b's line on later opens | Tap the veil to close | Pass: permission read fresh on every Speak tap (and on `scenePhase` active), so a warm return also works if iOS does not kill the app; asset check (1d) runs if needed. Fail: still struck until a second launch |
-| 6d | Hold and say "same" in a workout | As 2a to 2d | "Same again, logged." (3) | Undo | Pass: works on the first hold |
+| 6c | Tap the soul, tap Speak | Speak word back to `ink` 21/500 before the tap. No alert. Listening starts at once (bloom, mic dot) | "Mic is on. Hold me to talk." (7) in place of "Listening", this once; "Listening" (1) on later opens | Tap the veil to cancel | Pass: permission read fresh on every Speak tap and hold (and on `scenePhase` active), so a warm return also works; the asset check (1d) runs if needed. Fail: still grey until a second launch |
+| 6d | In a workout, hold the soul and say "same" | As 11c: straight to listening in the corner, then the wet numerals | "Same again, logged." (3) (`TessCaptureEngine.swift:122`) | UNDO | Pass: works on the first hold |
 
-### 7. Offline
+### 7. Offline and assets not downloaded
 
 | # | Trigger | Screen state | Exact line | Fast path back | Pass if / Fail if |
 |---|---|---|---|---|---|
-| 7a | Airplane mode, assets **installed** (status `installed`). Hold, say "eighty for seven" in a workout | As 2a to 2d. No cloud mark | "Set N. 80 x 7." (4) | Undo | Pass: works fully offline; release to ghost under 1 s (slice V2 bar). Fail: any network wait |
-| 7b | Airplane mode, assets **not installed** (`supported`, first use). Tap Speak | Speak layer, dab drawn hollow (not struck: nothing is denied). Hold does nothing | "Voice needs a connection once to set up." (7) | Tap Write | Pass: no spinner that never ends; the download starts by itself when the network returns, with 1d's line if Speak is open. Fail: a hold "listens" with no model |
-| 7c | Assets removed by the system after long disuse (Apple: the system "may unsubscribe your app") | Same as 1d or 7b, by network state | 1d's or 7b's line | Same | Pass: the PR checks `AssetInventory.status` on every Speak tap, not once per install |
-| 7d | Online but the transcribed phrase falls to the model layer and Claude is off or offline | Normal ghost, then the on-device model's answer or "Didn't catch that" with a guess | "Didn't catch that. Bench 80 x 8?" (6) (from `tess-voice.md`) | Touch the guess to commit | Pass: same fallbacks as typed text; speech itself never needs the network after setup |
+| 7a | Airplane mode, assets **installed**. In a workout, hold the soul, say "eighty for seven", let go | Soul swells in place. "eighty for seven" right-aligned above the soul in `inkSecondary`. On release the words fade (250 ms) and the set block's numerals turn wet cobalt at 62%: 80 × 7. After 2 s (0.6 s Reduce Motion) they dry into ink, the set stroke lands, the rest horizon starts | "Set N. 80 x 7." (5) (master, `TessCaptureEngine.swift:123`; see disagreement 4) with UNDO | Touch the wet numerals: the in-place editor (`set-block.md`) | Pass: works fully offline; release to ghost under 1 s. Fail: any network wait |
+| 7b | Airplane mode, assets **not installed** (`supported`). Tap Speak | Layer opens. Speak word on the 25% `live` line, not filling. Hold and tap do nothing | "Voice needs a connection once to set up." (8) | Tap the veil, then Write | Pass: no spinner that never ends; the download starts by itself when the network returns, and with the layer open the line becomes 1d's. Fail: a "listening" state with no model. See disagreement 7 |
+| 7c | Cellular only, assets not installed, surface opened before (1e waited for Wi-Fi). Tap Speak | As 1d: the line fills with progress over cellular | "Getting speech ready. Needs a connection once." (7) | Tap Write | Pass: a tap on Speak downloads on any connection; only the quiet download (1e) waits for Wi-Fi |
+| 7d | Assets removed by the system after long disuse (Apple: "may unsubscribe your app") | As 1d online, as 7b offline | 1d's or 7b's line | Same | Pass: `AssetInventory.status` checked on every Speak tap and hold, not once per install |
+| 7e | Online, but the phrase falls to the model layer and Claude is off or offline | Normal voice ghost, then the on-device answer or a guess | "Didn't catch that. Bench 80 x 8?" (7) (from `tess-voice.md`). The guess is a value word | Touch the guess to commit | Pass: same fallbacks as typed text; speech itself never needs the network after setup |
 
-**Is on-device recognition available?** Yes: `SpeechTranscriber` (and `DictationTranscriber`) run on device once the locale's assets are installed. If `SpeechTranscriber.isAvailable` is false (older hardware), use `DictationTranscriber`. If neither has the locale, row 8.
+**Is on-device recognition available?** Yes: `SpeechTranscriber` (and `DictationTranscriber`) run on device once the locale's assets are installed. If `SpeechTranscriber.isAvailable` is false (older hardware), use `DictationTranscriber`. If neither has the locale, section 8.
 
 ### 8. Language not supported
 
 | # | Trigger | Screen state | Exact line | Fast path back | Pass if / Fail if |
 |---|---|---|---|---|---|
-| 8a | Locale where `supportedLocale(equivalentTo: .current)` is nil for both transcribers (or `supportedLocales` is empty). Tap Speak | Speak word shown dimmed in the surface; tapping it still opens the layer once, hollow dab | "Voice isn't available in this language yet. Write still works." (10) | Tap "Write" | Pass: said once per launch at most; Write in one tap. Fail: a crash or empty listening |
-| 8b | Near match: phone en-IN, transcriber returns en-GB | Normal Speak layer | "Listening in English (UK)." (4) on the first open only | A tap on the line opens the language choice (Apple asks for a way to correct the locale) | Pass: shown once, then silent; the choice persists. Fail: shown every time |
+| 8a | `supportedLocale(equivalentTo: .current)` is nil for both transcribers, or both `supportedLocales` are empty (unsupported hardware). Tap Speak | Speak word `inkSecondary` 21/400. The layer opens this once | "Voice isn't available in this language yet. **Write** still works." (10). "Write" is an ink word | Tap "Write" | Pass: the layer opens to say it once; Write in one tap. Fail: a crash or empty listening |
+| 8b | Later taps on Speak in the same unsupported locale | Speak word stays `inkSecondary`; the layer does not open again. The line beside the soul | "Voice isn't available in this language yet. **Write** still works." (10) | Tap "Write" | Pass: no listening state. See disagreement 8 |
+| 8c | Near match: phone en-IN, transcriber returns en-GB (Design, speak.md, question 5) | Normal Speak layer; listening starts | "Listening in English (UK)." (4) in place of "Listening", on the first open only | Tap the line: the choice opens as value words in the same line, **English (US)** · **English (UK)** | Pass: shown once, then plain "Listening"; the choice persists across launches. Fail: shown every time |
 
 ### 9. A call or another app takes the audio
 
 | # | Trigger | Screen state | Exact line | Fast path back | Pass if / Fail if |
 |---|---|---|---|---|---|
-| 9a | Phone call arrives while holding (`interruptionNotification` began) | Listening stops at once. Partial words drop, no ghost, no drying. Soul goes still | "Call took the mic. Nothing saved." (6) shown when he is back in the app | Hold again after the call | Pass: nothing written; no auto-resume when the interruption ends. Fail: a half phrase is committed |
-| 9b | Tap Speak during a call (the session will not start) | Speak layer, hollow dab | "The mic is busy with a call." (7) | Tap Write | Pass: no listening state; no crash on `setActive` failing |
-| 9c | Another app takes the mic (Voice Memos, Siri) while holding | As 9a | "Another app took the mic. Nothing saved." (7) | Hold again | Pass: same as 9a |
+| 9a | Phone call arrives while listening (`interruptionNotification` began) | Listening stops at once. Partial words drop, no ghost, no drying. Soul goes back to rest | "Call took the mic. Nothing saved." (6) shown when he is back in the app | Tap Speak or hold again after the call | Pass: nothing written; no auto-resume when the interruption ends. Fail: a half phrase is committed |
+| 9b | Tap Speak during a call (the session will not start) | Layer open, Speak word `ink`, no bloom | "The mic is busy with a call." (7) | Tap the veil, then Write | Pass: no listening state; no crash on `setActive` failing |
+| 9c | Another app takes the mic (Voice Memos, Siri) while listening | As 9a | "Another app took the mic. Nothing saved." (7) | Tap Speak or hold again | Pass: same as 9a |
 | 9d | Music playing in AirPods, hold and talk | Music keeps playing; input is the phone mic | Normal line from 2d | (none) | Pass: music not paused or switched to call quality (`.mixWithOthers`, no Bluetooth HFP). Fail: AirPods drop to call audio (unverified on device, `speech-capture.md`) |
 
 ### 10. Silence
 
 | # | Trigger | Screen state | Exact line | Fast path back | Pass if / Fail if |
 |---|---|---|---|---|---|
-| 10a | Hold for 2 s, say nothing, let go | No ghost, no drying line. Speak layer stays open | "Didn't hear anything." (3) | Hold again | Pass: nothing saved; the text after the normaliser is empty. Fail: a ghost of empty text; "Didn't catch that" (that line is for words Tess could not parse) |
-| 10b | Say only "um, uh" | As 10a | "Didn't hear anything." (3) | Hold again | Pass: same as 10a (`spoken-normaliser.md` rule 17, row 33) |
-| 10c | Tap the soul quickly (under 0.2 s) in the Speak layer | No listening state | (none) | (none) | Pass: a short tap never says "Didn't hear anything." |
+| 10a | Tap Speak, say nothing | Listening ends with no words (see disagreement 6 for when). No ghost, no drying line. Layer stays open, Speak word `ink` (`speak-states.png`, Silence) | "Didn't hear anything." (3) | Tap Speak again | Pass: nothing saved; the text after the normaliser is empty. Fail: a ghost of empty text; "Didn't catch that" (that line is for words Tess could not parse) |
+| 10b | Hold the soul 2 s, say nothing, let go | Soul back to rest, no ghost | "Didn't hear anything." (3) beside the soul | Hold again | Pass: as 10a |
+| 10c | Say only "um, uh" | As 10a | "Didn't hear anything." (3) | Tap Speak or hold again | Pass: as 10a (`spoken-normaliser.md` rule 17, row 33) |
+| 10d | Touch the soul quickly (under 0.2 s) | A tap: the surface opens (master). No listening state | (none) | (none) | Pass: a short tap never says "Didn't hear anything." |
 
 ### 11. Second launch, permissions granted
 
 | # | Trigger | Screen state | Exact line | Fast path back | Pass if / Fail if |
 |---|---|---|---|---|---|
 | 11a | Quit and open Tessera | Home, Tess at rest | (none) | (none) | Pass: no alert, no speech line at launch |
-| 11b | Tap the soul, tap Speak | Speak layer, plain dab, ready at once (the analyzer preheats when the surface opens) | No setup line. After the first successful capture, the hint "Hold me to talk. Let go to send." (8) is gone; `tess-discoverability.md` row 20 may show one context phrase instead | Tap the veil | Pass: listening starts within 0.2 s of a hold; no 1a to 1d lines. Fail: any permission or setup line repeats |
-| 11c | Hold the soul at rest in a live workout, say "eight" | Straight to listening, then 2b to 2d | "Set N. 80 x 8." (4) | Undo | Pass: no surface needed in a workout |
+| 11b | Tap the soul, tap Speak | Listening at once (the analyzer preheats when the surface opens) | "Listening" (1). The hint "Hold me to talk." no longer shows once the hold has been used | Tap the veil | Pass: listening within 0.2 s; no 1a to 1e lines. Fail: any permission or setup line repeats |
+| 11c | In a live workout, hold the soul at rest, say "eight" | Straight to listening in the corner, then the wet numerals as 7a | "Set N. 80 x 8." (5) | UNDO | Pass: no surface needed in a workout |
+
+### 12. VoiceOver and Reduce Motion
+
+| # | Trigger | Screen state | Exact line | Fast path back | Pass if / Fail if |
+|---|---|---|---|---|---|
+| 12a | VoiceOver on, focus the soul | Actions include "Talk to Tess"; a double tap starts listening, another stops it | Spoken: "Talk to Tess" | Double tap again | Pass: listening without a hold; the transcript is announced when it settles, not word by word |
+| 12b | VoiceOver on, focus the Speak word in each state | (as the state) | Spoken: "Speak, getting ready" (1d), "Speak, microphone off" (3a, 5a) | (none) | Pass: the state is spoken, not only shown in grey or by a line |
+| 12c | Reduce Motion on, run 2a to 2d and 7a | Soul does not travel; the bloom is a still mark at 1.2×. Words fade in without blur. Tidying is a crossfade | Same lines | Same | Pass: ghost dries in 0.8 s (voice) and 0.6 s (set) |
 
 ## Lines in one place
 
-For Design and for a `TessVoice.violations` test table. All are proposed; none are on master except the capture results.
+For Design and for a `TessVoice.violations` test table. Proposed copy, as changed by Design (speak.md); none are on master except the capture results. Bold is an ink word.
 
-| Key | Line |
+| Key | Line | Words |
+|---|---|---|
+| askMic | Tess needs the mic to hear you. | 7 |
+| listening | Listening | 1 |
+| ready (one-time hint by the soul) | Hold me to talk. | 4 |
+| readyLive (one-time hint, live mode) | Hold me to tell me a set | 7 |
+| preparing | Getting speech ready. Needs a connection once. | 7 |
+| micOff (also restricted) | Mic is off for Tessera. **Open Settings** | 7 |
+| speechOff (`SFSpeechRecognizer` path) | Speech is off for Tessera. **Open Settings** | 7 |
+| micLimited (only if readable) | The mic is limited on this iPhone. **Write** still works. | 10 |
+| speechLimited (`SFSpeechRecognizer` path) | Speech is limited on this iPhone. **Write** still works. | 9 |
+| micBack | Mic is on. Hold me to talk. | 7 |
+| needsConnection | Voice needs a connection once to set up. | 8 |
+| noLanguage | Voice isn't available in this language yet. **Write** still works. | 10 |
+| nearLanguage | Listening in English (UK). | 4 |
+| callTook | Call took the mic. Nothing saved. | 6 |
+| callBusy | The mic is busy with a call. | 7 |
+| appTook | Another app took the mic. Nothing saved. | 7 |
+| silence | Didn't hear anything. | 3 |
+| heard | Heard: {raw transcript} | 1 + transcript |
+
+The Heard line can pass 11 words with a long transcript. It is a quote of what he said, not Tess's voice, so the test skips it (or Builder B truncates it at the line's width).
+
+## Test-name stubs
+
+Swift Testing, in `TesseraTests/SpeakFlowTests.swift` (flow, with a fake permission and asset source) and `TesseraCore/Tests/TesseraTessTests/SpeakLinesTests.swift` (lines). Names only; Builder B writes the bodies.
+
+| Test | Rows |
 |---|---|
-| askMic | Tess needs the mic to hear you. |
-| ready | Hold me to talk. Let go to send. |
-| preparing | Getting speech ready. Needs a connection once. |
-| micOff | Mic is off for Tessera. Open Settings? |
-| speechOff | Speech is off for Tessera. Open Settings? |
-| micLimited | The mic is limited on this iPhone. Write still works. |
-| speechLimited | Speech is limited on this iPhone. Write still works. |
-| micBack | Mic is on. Hold me to talk. |
-| needsConnection | Voice needs a connection once to set up. |
-| noLanguage | Voice isn't available in this language yet. Write still works. |
-| nearLanguage | Listening in English (UK). |
-| callTook | Call took the mic. Nothing saved. |
-| callBusy | The mic is busy with a call. |
-| appTook | Another app took the mic. Nothing saved. |
-| silence | Didn't hear anything. |
-| heard | Heard: {raw transcript} |
+| `speakLinesPassVoiceChecker()` (every line in the table except `heard`) | all |
+| `micAskedOnFirstSpeakTapOrHoldOnly()` | 1a, 1a2, 11a |
+| `allowStartsListeningAtOnce()` | 1b |
+| `holdHintShowsUntilHoldUsed()` | 1b2, 11b |
+| `speechAskedAfterMicOnLegacyPathOnly()` | 1c, 4a |
+| `assetsDownloadQuietlyOnFirstSurfaceOpenOnWiFi()` | 1e, 7c |
+| `assetStatusCheckedOnEverySpeakTap()` | 1d, 7d |
+| `pauseOfOnePointTwoSecondsEndsListening()` | 2b |
+| `voiceGhostDriesThreeSecondsSetTwo()` (and 0.8 / 0.6 with Reduce Motion) | 2c, 7a, 12c |
+| `doubtfulParseNeverCommitsOnTimer()` | 2e |
+| `holdListensOnlyWhileHeldAndDragLeftCancels()` | 2f |
+| `spokenUndoMatchesUndoWordWholePhraseOnly()` | 2g |
+| `deniedMicShowsMicOffNeverAsksAgain()` | 3a to 3c |
+| `restrictedMicMapsToMicOff()` | 5a |
+| `legacyRestrictedSpeechShowsSpeechLimited()` | 5c |
+| `permissionReadFreshOnScenePhaseActive()` | 6c |
+| `offlineWithoutAssetsShowsNeedsConnection()` | 7b |
+| `unsupportedLanguageOpensLayerOnce()` | 8a, 8b |
+| `nearLanguageShownOnceChoicePersists()` | 8c |
+| `interruptionDropsPartialAndSavesNothing()` | 9a to 9c |
+| `silenceAndFillersSayDidntHearAnything()` | 10a to 10c |
 
 ## Open questions
 
-1. **Gesture.** Hold the soul, or tap Speak then hold? `speech-capture.md` assumes a bar that no longer exists; this file assumes the soul. Design needs to decide, and whether holding the soul at rest outside a workout also listens.
-2. **First hold after Allow.** Should the tap on Speak after Allow start listening at once (tap to toggle), or wait for a hold as written in 1b?
-3. **Voice dry time.** Keep Write's 2 s, or give voice longer (say 3 s), since the transcript is less certain than typing?
-4. **Restricted vs denied.** The mic API has no restricted state. Can iOS 27 tell a Screen Time restriction apart at all? If not, 5a uses 3a's line.
-5. **Speech key.** Does `SpeechAnalyzer` alone crash without `NSSpeechRecognitionUsageDescription`? Proposed: add it anyway; confirm by removing it in a debug build.
-6. **When to download assets.** On the first Speak tap (row 1d) or quietly the first time the capture surface opens on Wi-Fi? The second makes first use instant but downloads for a feature he may not use.
-7. **en-IN.** Does `supportedLocale(equivalentTo:)` return en-IN, or a near match? This decides whether row 8b ever shows on his phone.
-8. **Struck and hollow dabs.** Two new drawings of the vermilion dab (denied, not ready). Design to draw them through `ThemeConcept`; they replace "mic glyph struck through" in `speech-capture.md`.
-9. **Settings relaunch.** Confirm on the phone that turning the mic on in Settings cold-launches the app (6b). If not, the `scenePhase` check in 6c carries it.
-10. **Undo after voice.** Same Undo as typed capture, or also "say undo"? Not in this script.
+All Design questions are closed. The phone checks stay.
+
+1. ~~Gesture.~~ **Closed (Design, speak.md):** tap Speak starts listening; a 1.2 s pause or a tap on the bloom ends it. Holding the soul anywhere is the fast path: let go to send, drag left to cancel. Rows 1a2, 2a, 2b, 2f.
+2. ~~First hold after Allow.~~ **Closed (Design, speak.md):** listening starts at once after Allow. The ready line becomes a one-time hint, "Hold me to talk." (live mode: "Hold me to tell me a set"). Rows 1b, 1b2.
+3. ~~Voice dry time.~~ **Closed (Design, speak.md):** 3 s for voice with "Heard: …" under the ghost; 2 s for a live set. Reduce Motion 0.8 s and 0.6 s. Rows 2c, 7a, 12c.
+4. ~~Restricted vs denied.~~ **Closed (Design, speak.md):** restricted maps to micOff. Rows 5a, 5b.
+5. ~~Speech key.~~ **Closed (Design, speak.md):** add both purpose strings. Still worth one debug build without the speech key to learn whether `SpeechAnalyzer` crashes, but it no longer decides anything.
+6. ~~When to download assets.~~ **Closed (Design, speak.md):** quietly on the first open of the capture surface on Wi-Fi; row 1d is the fallback; status checked on every Speak tap. Rows 1d, 1e, 7c, 7d.
+7. ~~en-IN.~~ **Closed (Design, speak.md):** use `supportedLocale(equivalentTo:)`; a near match shows nearLanguage once, and the choice persists. Row 8c. Phone check: whether en-IN gets an exact match or en-GB.
+8. ~~Struck and hollow dabs.~~ **Closed (Design, speak.md):** no mode dabs. The Speak word carries the state: preparing is a 25% `live` ink line that fills with download progress; mic off or limited is the word in `inkSecondary` 21/400.
+9. **Settings relaunch (phone check, not a Design question).** Confirm that turning the mic on in Settings cold-launches the app (6b). If not, the `scenePhase` check in 6c carries it.
+10. ~~Undo after voice.~~ **Closed (Design, speak.md):** saying "undo" or "take that back" equals tapping UNDO. Row 2g.
+
+## Changes after Design's sheet
+
+- Gesture decided: tap Speak listens at once and ends on a 1.2 s pause or a tap on the bloom; holding the soul on any screen is the fast path (let go sends, drag left cancels). New rows 1a2, 2f; 2a, 2b rewritten.
+- After Allow, listening starts at once (1b). The old ready line is now a one-time hint by the soul, shortened to "Hold me to talk." with a live-mode form "Hold me to tell me a set" (1b2).
+- New line `listening`: "Listening" (1b, 2a, 6c, 11b).
+- Voice ghost dries 3 s (0.8 s Reduce Motion) on a `live` ink line that drains right to left, with the Heard line under it; live sets keep 2 s (0.6 s) as wet numerals (2c, 7a, 12c).
+- Asset download moved earlier: quietly on the first surface open on Wi-Fi (new row 1e); 1d is the fallback; status read on every Speak tap and hold (7c new, 7d).
+- en-IN: `supportedLocale(equivalentTo:)`, nearLanguage once, choice as value words in the line, persisted (8c).
+- Restricted maps to micOff (5a). micLimited kept only for a restriction iOS can report (5b).
+- Both purpose strings go in; the mic string drops "hold to talk" since tap Speak needs no hold.
+- No dabs: "struck dab" and "hollow dab" are gone from every row. The Speak word shows the state: ink 21/500 ready, 25% `live` line filling while preparing, `inkSecondary` 21/400 for mic off or limited and no language.
+- micOff is now "Mic is off for Tessera. **Open Settings**" (ink word, no question mark). speechOff follows the same form for consistency.
+- micLimited, speechLimited and noLanguage: "Write" is now an ink word that opens the writing line.
+- Spoken "undo" or "take that back" equals UNDO (2g).
+- New section 12 for Design's VoiceOver action ("Talk to Tess"), the spoken Speak states, and Reduce Motion.
+- Research fixes made on the way: word counts recounted on whitespace, as the checker splits (the set lines are 5 words, the doubtful-parse line 10, the lift capture line 8, micBack 7); master citations moved to `3c51cdb`; test-name stubs added.
+
+## Where Design's sheet, master and this doc still disagree
+
+1. **Hold on master opens the surface.** `BottomChrome.swift:192` opens the surface on a 0.4 s hold; Design makes the hold listen. The Speak PR replaces it, and the soul's VoiceOver hint "Opens Tess." (line 195) needs the "Talk to Tess" action beside it.
+2. **Master still draws mode dabs and 34 pt words.** `ModeRow` (`BottomChrome.swift:528`) and `modeFont` (lines 343-347) against `no-dots.md` and the sheet's Speak word at 21/500. The no-dots change is a separate PR; until it lands the Speak word states have no 21 pt word to sit on.
+3. **How long the hold hint stays.** The sheet says both "until it has been used three times" (question 1) and "the one-time hint" (question 2). This doc follows "until the hold has been used"; Design to pick one or three.
+4. **x or × in set lines.** The sheet writes "Set 3. 80 × 7." and "84 × ?"; master's Tess capture line writes "80 x 7" (`TessCaptureEngine.swift:123`, and " x " in line 106) while the workout's own line uses × (`WorkoutParts.swift:194`). This doc keeps master's x in exact lines; one of the two has to change, and the tests follow.
+5. **Doubtful parse line vs value words.** The sheet shows the two guesses as value words under the ghost; this doc's line already names them ("Didn't catch that. 84 x ? or 80 x 4?"), so they would show twice. Proposed: the guesses in the line are the value words and nothing sits under it; Design to confirm.
+6. **Ending and cancelling a tap-started listen.** The sheet gives the 1.2 s pause and a tap on the bloom (both send) but no cancel and no limit when nothing is said. This doc proposes: a tap on the veil cancels (as Write's close does, `BottomChrome.swift:393-394`), and with no word in the first 5 s it ends with "Didn't hear anything." (10a). Design to confirm.
+7. **needsConnection has no word state.** The sheet draws preparing (filling line) but not "offline, nothing downloaded". This doc uses the 25% `live` line, not filling (7b).
+8. **No language after the first time.** The sheet says the layer opens once to say so; it does not say what later taps do. This doc shows the line beside the soul without opening the layer (8b).
+9. **UNDO colour.** The sheet says UNDO in `liveInk`; master draws it in `Theme.Colors.live` (`BottomChrome.swift:147`) and `Paint.live` (`LiveTessCorner.swift:41`).
+10. **Dry line colour and direction.** Master's Write ghost line is cobalt and fills left to right (`BottomChrome.swift:312-316`); the voice ghost is a `live` ink line that drains right to left. Fine if Write keeps its own, but Design's `ink-line.md` may mean Write changes too; not covered by this sheet.
+11. **speechOff and speechLimited are not in the sheet's line table.** They stand here for the `SFSpeechRecognizer` path only, with Design's ink-word treatment applied by analogy.
+12. **micBack replaces "Listening" once.** With listening starting at once, "Mic is on. Hold me to talk." now shows while he is already talking (6c). Design kept the line; it may read better as "Mic is on." (3) with the hold hint left to 1b2.
