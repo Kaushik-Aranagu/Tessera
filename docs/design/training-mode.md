@@ -92,3 +92,8 @@ Research's words are kept, with one default added for what Home does after he sa
 - **"Push A tomorrow" writes nothing,** as Research says: the plan decides the day, and her line only says where it falls. No UNDO.
 - **In a live workout** "skip" stays the workout's own word: "Skip is on the workout screen." (decided Oct 15, 8:58 PM PT).
 - **Owners:** Core (the day mark, `WeekFacts` counts it as rest, not a miss), Builder A (Home and the Training page in the rested state), Product (confirm the mark).
+
+## Addendum, Oct 16: two words from QA's #363 read (L1, L2)
+
+- **L1, a routine that loses its last day.** One wording: **"Push A, no fixed days."** with UNDO, in the undo grammar (the thing, then what happened), beside "Push A on Mondays." and "Push B dropped." Builder A's "Push A has no fixed day." (RoutineEditor.swift:529) changes to it; the engine already says it. The DAYS line folds to "Pick a day" at `inkSecondary`.
+- **L2, FIXED DAYS chosen but no routine has a day.** The plan line tells the truth and what to do: **"PUSH PULL LEGS, NO DAYS YET"**, in the plan line's label case, with FIXED DAYS still the chosen word under it. It never reads "fixed days" (nothing is fixed) and never "rolls on" (he chose otherwise); that the engine rolls the plan meanwhile is right, and Home shows the rolling order until a day is picked. The first picked day turns the line back to "PUSH PULL LEGS, FIXED DAYS". The engine's "Push A, no fixed days." is Tess's line for one routine, not this line.
