@@ -12,7 +12,7 @@ Six named palettes, from `soul-explore.md`. Each is three pigments for her three
 | Palette | Light looks (Porcelain, Plein, Celadon) | Dark looks (Obsidian, Lacquer) | Feels like |
 |---|---|---|---|
 | **Today** | the look's own `tess`, `live`, `now` | the same | her own colours, the app's moment colours |
-| Kiln | #2F3C9E #C4553B #D79A2B | #8E9BFF #F08A6E #F2C062 | warm, earthen, evening |
+| Kiln | #2F3C9E #C4553B #D79A2B | #7C8BF2 #EB7A5C #E9B14E | warm, earthen, evening |
 | Lagoon | #0E8C86 #F0624D #EDB730 | #4FD8CF #FF8A75 #FFD563 | fresh, cool, morning |
 | Orchard | #6E3A8E #E2557A #F29A5B | #C39BFF #FF86A6 #FFBC86 | soft, quiet, a rest day |
 | Aurora | #2F6FE0 #14A37F #8C5BD6 | #7FB0FF #4FE0B5 #BC97FF | cool, clear, late night |
@@ -82,3 +82,8 @@ Research read this sheet against what the phone knows (`research/living-colours-
 - **K3, when leans collide.** A best beats a rest day beats a cook day beats the time of day. A best holds for the rest of the day as before.
 - **K5, three changes spent before evening.** One of the three is held for the evening lean. The turnover is the first; the day's one event (a best, a cook, a rest day, a look change) is the second; evening is the third. A second event in a day waits for tomorrow.
 - Also taken from Research: morning starts at his median first write, evening at his usual training slot, late night at his median last write; the same palette three days running flips to the other lean for that time; a FORGET on a palette keeps it off for 30 days; Claude picks only among the rules' candidates, so it can't paint Ember without a best.
+
+## Addendum, Oct 16, from the motion lab's item 7 clips
+- **The wet lift is 20%** (the lab's value stands; a third blows three screened washes out to white on dark looks).
+- **On dark looks only the mid alpha lifts while wet; the core alpha never does.** Three screened cores already meet near white where the dabs overlap, so a lift there only adds white. On light looks (multiply) both lift, as the lab has it.
+- **Kiln's dark pigments deepen by about 8%** (the table above: `#7C8BF2 #EB7A5C #E9B14E`, was `#8E9BFF #F08A6E #F2C062`), because the lacquer clip showed the pool reading pale at its wettest even at 20%: the fault was the pigments' lightness, not the lift. Orchard stays; its plum carries enough depth. Builder A: `SoulPalette` table.
