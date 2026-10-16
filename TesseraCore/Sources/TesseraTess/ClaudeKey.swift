@@ -129,7 +129,8 @@ public struct TessUsageLedger {
     /// Checks and holds `estimateNano` in one step on the main actor, so two concurrent calls can't both fit under
     /// the cap. Nil when it doesn't fit. Estimate from `max_tokens` (Haiku 5.5 may think).
     public func reserve(_ estimateNano: Int64, now: Date = .now, calendar: Calendar = .current) -> Reservation? {
-        guard canSpend(estimateNano, now: now, calendar: calendar) else { return nil }
+        // A model with no price row estimates 0: refused, so it can never spend outside the cap (QA A6).
+        guard estimateNano > 0, canSpend(estimateNano, now: now, calendar: calendar) else { return nil }
         Self.pendingNano += estimateNano
         return Reservation(nano: estimateNano)
     }

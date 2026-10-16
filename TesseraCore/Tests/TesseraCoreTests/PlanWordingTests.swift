@@ -188,7 +188,7 @@ struct PlanWordingTests {
 
     func wording() -> ClaudePlanWording {
         let wording = ClaudePlanWording(keys: InMemoryKeychain("sk-ant-TEST-plan"), ledger: ledger,
-                                        session: PlanStub.session())
+                                        session: PlanStub.session(), allowed: { true })
         wording.now = { DayPlanTests.at(2, "08:00") }
         wording.calendar = DayPlanTests.calendar
         return wording
@@ -299,6 +299,31 @@ struct PlanWordingTests {
         #expect(!pack.json.contains("Standup") && !pack.json.contains("Priya"))
         #expect(pack.json.contains(#""kind":"event","min":15,"start":"09:30","title":"busy""#))
         #expect(pack.json.contains("Reply to landlord") && pack.json.contains("Push A"))
+    }
+
+    @Test func privateTitlesGoAsTaskOrBusy() {
+        /// QA A4, Research 138 MB24 to MB27 and 139: secret, money and body titles never ride in the pack.
+        func block(_ kind: DayPlan.Kind, _ title: String) -> DayPlan.Block {
+            DayPlan.Block(kind: kind, title: title, start: now, end: now.addingTimeInterval(900), object: nil,
+                          ghost: kind == .task, due: nil, movedFrom: nil, running: false)
+        }
+        for title in ["Coffee 6.25", "Pay Sam back $40", "Refill lexapro 10mg", "Reset my PIN",
+                      "Password reset email"]
+        {
+            #expect(PlanPack.packTitle(block(.task, title), includesEventTitles: true) == "task", "\(title)")
+        }
+        #expect(PlanPack.packTitle(block(.event, "Dentist, copay $35"), includesEventTitles: true) == "busy")
+        #expect(PlanPack.packTitle(block(.task, "Reply to landlord"), includesEventTitles: true) == "Reply to landlord")
+        #expect(PlanPack.packTitle(block(.event, "Standup"), includesEventTitles: true) == "Standup")
+    }
+
+    @Test func everyClaudeModelHasAPriceAndAnUnknownOneNeverSpends() {
+        // QA A6: a model with no price row would cost 0 against the cap; it is refused instead.
+        for model in [ClaudePlanWording.model, ClaudeRecipeReader.model, ClaudeTessModel.model] {
+            #expect(TessUsageLedger.prices[model] != nil, "\(model)")
+        }
+        #expect(TessUsageLedger.estimate(text: "hi", maxTokens: 10, model: "claude-unknown") == 0)
+        #expect(ledger.reserve(0, now: now, calendar: DayPlanTests.calendar) == nil)
     }
 
     @Test func aRejectedPackIsRememberedAndTheSwitchIsOne() async {
