@@ -129,6 +129,6 @@ struct ExerciseLibraryTests {
         #expect(grammar.resolveExercise("incline db press")?.name ==
             ExerciseLibrary.seeds.first { $0.key == "inclineDbPress" }?.name)
         let capture = await TessCaptureEngine(engine: engine).capture("3x5 squat 100", context: TessContext())
-        #expect(capture.line == "Back Squat 3 x 5 at 100. Added to today.")
+        #expect(capture.line == "Back Squat 3 × 5 at 100. Added to today.")
     }
 }

@@ -55,6 +55,8 @@ public struct TessCapture {
         case line
         /// "2 × 10: 2 sets, or 2 kg?": answered by `TessCaptureEngine.answer(_:context:)` or by saying it.
         case setCount(TessSetCountAsk)
+        /// "Bench 80 × 8 for Monday?": answered by `TessCaptureEngine.answer(_:context:)` (LOG or NOT NOW) or said.
+        case datedLift(TessDatedLiftAsk)
     }
 
     public var understood: Bool {
