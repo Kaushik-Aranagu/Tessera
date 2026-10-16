@@ -18,7 +18,7 @@ Recording: `recordings/day-log-page.mp4` (source `studies/day-log-page.html`), w
 ## Layout
 | y | Element |
 |---|---|
-| 58 | Back word **‹ HOME** (`back-word.md`) |
+| 58 | Back word **‹ TODAY** from the day label, **‹ REVIEW** from the link line (`back-word.md`, `day-seams.md` S3) |
 | 92 | **The month** at Title 44/500: "October". It's the month of the day at the top of the window. When that changes, it swaps like a value word (blur crossfade, 220ms) |
 | 150 to 768 | **The log window,** scrolling on y, with a 48pt fade at its top edge. Today sits at the bottom and the past is above. Pull down to read back, like reading up a thread |
 | corner | Tess's soul in its corner, as everywhere |

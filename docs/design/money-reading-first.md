@@ -1,6 +1,7 @@
 # Money and Reading: the first screens, with real copy (board item 8)
 
-> **Empty states (item 23):** the empty month and the empty shelf are in `empty-states.md`, which wins. The month stays the hero, and "Nothing logged yet." is the quiet line under it.
+> **Empty states (item 23):** the empty month and the empty shelf are in `empty-states.md`, which wins.
+> **Seams (item 22, `day-seams.md` S4):** both first screens take a Title 44 page name at y 84 ("Money", "Reading"), with content from 150. Money's hero "October, logged" becomes the label OCTOBER with the month sentence under it. Reading's titles go to Title 34.
 
 This sheet deepens `money-pages.md`, `money-dial.md` and `reading.md` for whichever builder takes them. Where they differ, this sheet wins.
 - Drawn to `no-buttons.md`, `themes.md` (one base), `no-dots.md` and `ink-line.md`.

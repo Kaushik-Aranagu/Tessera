@@ -10,7 +10,7 @@ Just enough to build. Replaces every system back button and the "Close" word on 
 ## The word
 - **Where:** y 58, x 22, in the space system back buttons used. It is the first thing on the page; a page's own path or label line moves under it or goes.
 - **Type:** Label 16/700 uppercase, letter-spacing 0.08em, `inkSecondary`; cream at 60% on the dark workout ground. "‹ " leads it, set in the same style (U+2039, not an SF Symbol chevron).
-- **Text:** the name of the page you came from, not its hero sentence: "‹ PUSH DAY A", "‹ BENCH PRESS", "‹ RECIPES". Covers opened from Home say "‹ HOME". Truncate at the tail past about 22 characters.
+- **Text:** the name of the page you came from, not its hero sentence: "‹ PUSH DAY A", "‹ BENCH PRESS", "‹ RECIPES". Covers opened from Home name the Home page they rose from: "‹ TODAY", "‹ REVIEW", "‹ TRAINING" or "‹ KITCHEN", as the tabs read (`day-seams.md` S3). Nothing on screen is called Home. Truncate at the tail past about 22 characters.
 - **Touch:** ink goes to 100%, a 1.5pt hairline draws under it left to right (150ms, house curve), and `.selection` fires. The hit target is at least 44pt tall and 12pt wider than the text each side. No shape, ever.
 - **Accessibility:** a button labelled "Back to Push Day A". `.accessibilityAction(.escape)` pops, so the two-finger scrub works.
 
@@ -32,7 +32,7 @@ Just enough to build. Replaces every system back button and the "Close" word on 
 
 ## Build notes
 - Make one shared view, `BackWord(title:action:)`, in `DesignSystem/` (Builder A), so every screen uses the same view.
-- **The pusher names the way back.** The page that pushes passes its own short name along with the route; the pushed page reads it for its back word. A page reached some other way (a link from Tess, a widget) says "‹ HOME".
+- **The pusher names the way back.** The page that pushes passes its own short name along with the route; the pushed page reads it for its back word. A page reached some other way (a link from Tess, a widget) says "‹ TODAY".
 - Hide the system back button on every pushed page (`.navigationBarBackButtonHidden()`, toolbar hidden) and keep `EdgeSwipeBack` in the background, as Backups does.
 - **The flight crosses two pages,** so the zoom transition can't carry it on its own. Run it in an overlay above the `NavigationStack`: read the hero's frame through an anchor preference before the push, animate a `Text` copy from that frame to the back word's frame, then show the real back word. If that isn't ready in the first pass, ship the word fading in from 6pt right while the hero fades, and do the flight next. The word itself must not wait for the flight.
 - Motion goes through `MotionPolicy` only.
@@ -40,9 +40,9 @@ Just enough to build. Replaces every system back button and the "Close" word on 
 ## Where it applies
 | Screen | Back word | File | Owner |
 |---|---|---|---|
-| Object pages on the root stack (classes, exercises, routines, any object) | The pusher's name; "‹ HOME" from Home's pages | `App/RootView.swift:17-30`, `Features/Objects/ObjectPage.swift:300-322` | Builder B (root stack), Core (ObjectPage) |
+| Object pages on the root stack (classes, exercises, routines, any object) | The pusher's name; from Home, the tab page's name (‹ TODAY, ‹ REVIEW, ‹ TRAINING, ‹ KITCHEN) | `App/RootView.swift:17-30`, `Features/Objects/ObjectPage.swift:300-322` | Builder B (root stack), Core (ObjectPage) |
 | The object page's class path ("… / Exercise / Bench") | Moves into the class line under the hero, where the parent class stays a tappable handle (`relation: .up`). The top line is only the way back | `Features/Objects/ObjectPage.swift:308-321` | Core |
-| Home covers: Groceries, Recipes, Paste a recipe, Notes, The week | "‹ HOME" at top left, replacing "Close" at top right. Swipe down from the top still dismisses into the word that opened it | `Features/Home/HomeSpatialView.swift:106-116` | Builder B |
+| Home covers: Groceries, Recipes, Paste a recipe, Notes, The week | The Home page they rose from (‹ KITCHEN for Groceries, Recipes and Paste a recipe; ‹ TODAY or ‹ KITCHEN for Notes; ‹ REVIEW for The week) at top left, replacing "Close" at top right. Swipe down from the top still dismisses into the word that opened it | `Features/Home/HomeSpatialView.swift:106-116` | Builder B |
 | Backups | "‹ REVIEW" (already there); switch to `BackWord` | `Features/Backup/BackupView.swift:31-40` | Core |
 | Recipe page | "‹ RECIPES" (sheet 10's path line becomes the back word) | `Features/Recipes/RecipePage.swift` | Core |
 | Ingredient page | "‹ DAL TADKA", or "‹ GROCERIES" when reached from a held item | `Features/Recipes/RecipePage.swift:246`, `Features/Groceries/GroceriesView.swift` | Core |

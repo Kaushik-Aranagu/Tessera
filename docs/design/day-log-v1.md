@@ -42,7 +42,7 @@ This sheet is for Builder B's Day log page, with three asks of Core. It's drawn 
 
 ## The rest of the page rows (pointers and the no-dab answers)
 - **The ways in** (DL32, DL33): Review's link line "The week · **Day log** · Notes", and Home's day label ("Thursday afternoon"). Both are in `day-log-page.md`, with no dab or dot anywhere on either.
-- **Back words** (DL34): ‹ HOME on the page, ‹ DAYS on an object opened from a line.
+- **Back words** (DL34): ‹ TODAY or ‹ REVIEW on the page, by the way he came in (`day-seams.md` S3), ‹ DAYS on an object opened from a line.
 - **The month title** (DL35): "October", Title 44/500.
 - **Date labels** (DL36): TODAY in `ink`, past days in `inkSecondary`.
 - **The scrub numeral** (DL37): `day-log-page.md` ("SUN" over "11", "OCT" over "1–4").

@@ -70,15 +70,15 @@ Board `mockups/upkeep-us.png` and recording `recordings/upkeep-us.mp4` (source `
 - **Dollars, US names and the phone's zone.** "TODAY" and the ages count on the 4 AM day in the phone's current zone. Amounts in Tess's lines are dollars ("Paid the water bill, $42.50.").
 - **NO RHYTHM YET** holds every chore that has never been logged, picked or offered: "Laundry · Take out the trash". It wraps under its label. A chore leaves it with its first log and takes its place in the stack.
 - **The ask** shows on the first Upkeep open on a 4 AM day from 1 Oct to 30 Nov. On a first run it comes only after Keep N or SKIP, never beside the pick.
-  - **The ask takes the foot.** The NO RHYTHM YET block fades out (360ms), and Tess asks there in cobalt, Body 21: "Radiators to bleed this autumn?"
-  - Under it are two label words in `ink`: **KEEP IT · NO RADIATORS**.
+  - **The ask sits beside the soul**, where Tess always speaks (trailing, 270pt wide, `day-seams.md` S1). NO RHYTHM YET stays where it is. Tess asks in cobalt, Body 21: "Radiators to bleed this autumn?"
+  - Under it, trailing, are two label words in `ink`: **KEEP IT · NO RADIATORS**.
   - There's no timer and no nudge. Leaving the page leaves the ask unanswered, and it shows again on the next open inside the window.
 - **KEEP IT** writes `AddChore(Bleed the radiators, bled, 365)` with no check-in.
   - The ask blurs out, and Tess answers in its place: "Bleed the radiators, kept. Once a year." with **UNDO** (`liveInk`, 4s) under it.
-  - **UNDO** takes the chore back: Tess says "Bleed the radiators taken back." in the same place (the undo rule: name the thing, then what happened). Then the foot returns as it was, and the ask stays answered, so it isn't offered again this season.
-  - When UNDO lapses, the answer fades and the foot returns, with "Bleed the radiators" setting in at the end of NO RHYTHM YET (blur 4 → 0, 420ms).
+  - **UNDO** takes the chore back: Tess says "Bleed the radiators taken back." in the same place (the undo rule: name the thing, then what happened). Then her line fades, and the ask stays answered, so it isn't offered again this season.
+  - When UNDO lapses, the answer fades, and "Bleed the radiators" setting in at the end of NO RHYTHM YET (blur 4 → 0, 420ms).
   - It doesn't drift to Now until the first "bled the radiators" (or "radiators done").
-- **NO RADIATORS** writes nothing. Tess says "Okay. I won't ask again." in the same place, and the foot returns. It's never offered again.
+- **NO RADIATORS** writes nothing. Tess says "Okay. I won't ask again." in the same place, then her line fades. It's never offered again.
 - **Never:** a radiator on the pick list, a seasonal banner, a second ask, an amber "due" on the offer, or a dot.
 
 ### A chore on Now (screen 7)

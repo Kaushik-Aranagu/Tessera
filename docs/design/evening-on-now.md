@@ -20,6 +20,8 @@ These states slot into the order that's already decided: a running item first, t
 | 04:00 | The morning: "first today" | "Friday morning" |
 
 ## The states (y in pt; the day stroke is at 182)
+> **Seams (item 22):** these y values are relative to the build's own Home frame. "At 226" means where the build's context line already is; keep the build's frame and the spacing below the hero (`day-seams.md` S2).
+
 **1. Day done** (widget: "trained this evening / Push A / 6 OF 6 · 22 SETS · 1 RECORD")
 - "trained this evening" at y 226, Body 21 in `context` (the context line, `sweep-19.md`).
 - **Hero** "Push A" at y 258, Hero 56/500 `ink`.
