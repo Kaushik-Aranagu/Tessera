@@ -246,7 +246,7 @@ public enum TessTools {
             let window: DateInterval? = switch args["during"] as? String {
             case "today": day.interval(of: call.now)
             case "this week": day.week(containing: call.now)
-            case "this month": calendar.dateInterval(of: .month, for: day.today(call.now))
+            case "this month": day.month(containing: call.now)
             default: nil
             }
             let count = window.map { window in objects.count { window.contains($0.createdAt) } } ?? objects.count

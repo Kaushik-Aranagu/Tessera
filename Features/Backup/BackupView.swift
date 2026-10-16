@@ -6,7 +6,7 @@ import UniformTypeIdentifiers
 /// right now; the folder outside the app is a value word inside a sentence (tap to pick or change it); saving a copy
 /// and restoring are label words. A restore is checked, then applied the next time Tessera opens.
 ///
-/// Entry point: present `BackupView()`, or launch with `-backup` in DEBUG.
+/// Entry point: present `BackupView()`, or launch with `-backup` in DEBUG (`-backupFailure` shows a failed copy).
 struct BackupView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -26,6 +26,7 @@ struct BackupView: View {
     var body: some View {
         let _ = refresh
         let folder = BackupKeeper.pickedFolder
+        let failures = BackupKeeper.failures
         let latest = BackupKeeper.latestLocal
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
@@ -43,7 +44,9 @@ struct BackupView: View {
                     .font(Theme.voice)
                     .foregroundStyle(Theme.Colors.context)
                     .entrance(0)
-                Text(folder == nil ? "Kept on this iPhone" : "Kept in two places")
+                // Two places only when the folder copy is actually saving.
+                Text(folder == nil || failures.contains { $0.place == .folder } ? "Kept on this iPhone"
+                    : "Kept in two places")
                     .textRole(.hero)
                     .foregroundStyle(Theme.Colors.ink)
                     .fixedSize(horizontal: false, vertical: true)
@@ -57,6 +60,15 @@ struct BackupView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, Theme.Spacing.xl)
                     .entrance(2)
+
+                // Quiet, not an alarm: what didn't save and that it tries again.
+                ForEach(failures, id: \.place) { failure in
+                    Text(BackupCopy.failure(failure, folder: folder, now: AppClock.now))
+                        .font(Theme.voice)
+                        .foregroundStyle(Theme.Colors.context)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, Theme.Spacing.s)
+                }
 
                 // One sentence that wraps as text; the folder is a value word in 600 ink that opens the picker.
                 Text(BackupCopy.folderSentence(folder))
@@ -112,7 +124,13 @@ struct BackupView: View {
         .background { ThemedBackground() }
         .navigationBarBackButtonHidden(isPresented)
         .background { EdgeSwipeBack() }
-        .task { pending = TesseraBackup.pendingRestore() }
+        .task {
+            #if DEBUG
+                BackupKeeper.simulateFailureIfRequested()
+            #endif
+            pending = TesseraBackup.pendingRestore()
+            refresh += 1
+        }
         .environment(\.animateEntrance, true)
         .fileImporter(isPresented: $picking, allowedContentTypes: [.folder]) { result in
             guard case let .success(url) = result else { return }
@@ -289,6 +307,14 @@ enum BackupCopy {
         sentence += value
         sentence += AttributedString(".")
         return sentence
+    }
+
+    /// "Yesterday's copy to iCloud Drive/Tessera didn't save. It tries again when you leave the app."
+    static func failure(_ failure: BackupKeeper.Failure, folder: URL?, now: Date) -> String {
+        let day = TesseraDay().isSameDay(failure.at, now) ? "Today's" : "The last"
+        let place = failure.place == .folder ? folder.map { " to \(folderName($0))" } ?? " to your folder"
+            : " on this iPhone"
+        return "\(day) copy\(place) didn't save. It tries again when you leave the app."
     }
 
     /// "Tuesday 14 October"

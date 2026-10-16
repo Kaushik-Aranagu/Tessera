@@ -69,6 +69,18 @@ public struct TesseraDay: Sendable {
         return DateInterval(start: start, end: end)
     }
 
+    /// The month holding the day `date` belongs to, with 04:00 edges (00:30 on the 1st is still last month).
+    public func month(containing date: Date) -> DateInterval {
+        guard let calendarMonth = calendar.dateInterval(of: .month, for: day(of: date)) else {
+            return interval(of: date)
+        }
+        let start = calendar.date(bySettingHour: Self.startHour, minute: 0, second: 0, of: calendarMonth.start)
+            ?? calendarMonth.start
+        let end = calendar.date(bySettingHour: Self.startHour, minute: 0, second: 0, of: calendarMonth.end)
+            ?? calendarMonth.end
+        return DateInterval(start: start, end: end)
+    }
+
     /// The week's day keys (midnights), first weekday first.
     public func weekDays(containing date: Date) -> [Date] {
         guard let calendarWeek = calendar.dateInterval(of: .weekOfYear, for: day(of: date)) else { return [] }

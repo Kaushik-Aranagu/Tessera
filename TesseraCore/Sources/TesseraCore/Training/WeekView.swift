@@ -37,7 +37,7 @@ public extension TrainingLedger {
         let next = plan.flatMap(nextRoutine(in:))
         var cursor = next.flatMap { routine in cycle.firstIndex { $0.id == routine.id } } ?? 0
         let today = tesseraDay.today(now)
-        let done = dates.map { finishedWorkouts(on: $0, calendar: calendar) }
+        let done = dates.map { finishedWorkouts(onDay: $0, calendar: calendar) }
         let ahead = dates.indices.filter { done[$0].isEmpty && dates[$0] >= today }
         // Zero or less means no rhythm (QA E4): every day ahead gets the next routine, as without a count.
         let perWeek = (sessionsPerWeek ?? plan.flatMap { store.number("sessionsPerWeek", of: $0) }.map { Int($0) })
@@ -49,7 +49,7 @@ public extension TrainingLedger {
         if let perWeek {
             let due = max(0, perWeek - done.count { !$0.isEmpty })
             let trainedYesterday = calendar.date(byAdding: .day, value: -1, to: today)
-                .map { !finishedWorkouts(on: $0, calendar: calendar).isEmpty } ?? false
+                .map { !finishedWorkouts(onDay: $0, calendar: calendar).isEmpty } ?? false
             let startsToday = ahead.first.map { calendar.isDate(dates[$0], inSameDayAs: today) } ?? false
             // A workout under way today makes today a training day, whatever the spread says (QA E6).
             let busyToday = hasWorkoutUnderway(on: now, calendar: calendar)

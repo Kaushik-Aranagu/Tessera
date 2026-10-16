@@ -153,8 +153,12 @@ public final class ActionEngine {
     /// kind ("undo the last set" from the Lock Screen: `undoLatest(action: LogSet.descriptor.name)`).
     @discardableResult
     public func undoLatest(by actor: Actor? = nil, action: String? = nil) -> OpRecord? {
+        // With neither an actor nor an action named, the app's own housekeeping (the 04:00 roll, a wrap-up) is skipped:
+        // Undo takes back
+        // what he did, never the roll that ran at 04:00 (QA D1).
         let match = { (record: OpRecord) in
-            record.state != .undone && (actor == nil || record.actor == actor)
+            record.state != .undone
+                && (actor.map { record.actor == $0 } ?? (action != nil || record.actor != .system))
                 && (action == nil || record.action == action)
         }
         guard let record = history(limit: 200).first(where: match) else { return nil }
