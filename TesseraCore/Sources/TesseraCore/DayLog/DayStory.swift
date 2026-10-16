@@ -36,7 +36,7 @@ public struct DayLine: Equatable, Sendable {
         time.map { DayStory.clock($0, calendar: calendar) }
     }
 
-    /// "7:10 am, Push Day A, 52 minutes. Bench 82.5 by 8, PR." for VoiceOver.
+    /// "7:10 am, Push Day A, 52 minutes. Bench 82.5 by 8, best." for VoiceOver.
     public func spoken(_ calendar: Calendar) -> String {
         let words = text.replacingOccurrences(of: " × ", with: " by ")
             .replacing(/(\d+) min\b/) { "\($0.1) minutes" }
@@ -222,7 +222,7 @@ public enum DayStory {
                       workout.sets > 0 // a 0-set workout is no session
                 else { continue }
                 let top = lookup.topSet(inWorkout: root)
-                let topText = top.map { ". \($0.text)\($0.isPR ? ", PR" : "")." } ?? "."
+                let topText = top.map { ". \($0.text)\($0.isPR ? ", best" : "")." } ?? "."
                 if let ended = workout.endedAt {
                     let minutes = Int((ended.timeIntervalSince(started) / 60).rounded())
                     lines.append((DayLine(time: started, text: "\(workout.title), \(minutes) min\(topText)",
