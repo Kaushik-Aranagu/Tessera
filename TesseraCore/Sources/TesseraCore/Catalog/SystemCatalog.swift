@@ -347,8 +347,8 @@ public enum SystemCatalog {
 
     /// Built-in classes ship as a versioned package. Bump `version` whenever a spec changes; seeding then
     /// refreshes shipped names, symbols, units, options, defaults and formulas, except what the person edited.
-    public static let package = CatalogPackage(id: "system", version: 9, name: "Tessera built-ins",
-                                               source: "Tessera", license: "Tessera")
+    public nonisolated static let package = CatalogPackage(id: "system", version: 9, name: "Tessera built-ins",
+                                                           source: "Tessera", license: "Tessera")
 
     static let honestE1RM = "weight * (1 + (reps + 10 - coalesce(rpe, 10)) / 30)"
 
