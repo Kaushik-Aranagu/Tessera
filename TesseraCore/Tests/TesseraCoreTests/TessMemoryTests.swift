@@ -22,6 +22,7 @@ struct TessMemoryTests {
     let classes: [SystemCatalog.Key: ClassDef]
     let engine: ActionEngine
     let memory: TessMemoryStore
+    let forgetLog: URL
 
     init() throws {
         let classes = try store.prepareCatalog()
@@ -29,7 +30,9 @@ struct TessMemoryTests {
         self.classes = classes
         self.engine = engine
         engine.zone = { Self.la }
-        memory = TessMemoryStore(engine: engine, calendar: Self.calendar)
+        forgetLog = FileManager.default.temporaryDirectory
+            .appendingPathComponent("tess-forgotten-\(UUID().uuidString).json")
+        memory = TessMemoryStore(engine: engine, calendar: Self.calendar, forgetLogURL: forgetLog)
     }
 
     @discardableResult
@@ -166,10 +169,10 @@ struct TessMemoryTests {
         let recent = memory.lines(of: .recent)
         #expect(recent.count == 1 && recent.first?.text.hasPrefix("Thu: Push A done") == true)
         let noticed = memory.lines(of: .noticed).map(\.text)
-        #expect(noticed.contains("Usually trains 6 pm to 8 pm."), "\(noticed)")
-        #expect(noticed.contains { $0.hasPrefix("Trains about ") && $0.hasSuffix(" days a week.") }, "\(noticed)")
-        #expect(noticed.contains("Cooks most on Sundays."), "\(noticed)")
-        let training = try #require(memory.lines(of: .noticed).first { $0.text.hasPrefix("Usually") })
+        #expect(noticed.contains("You usually train 6 pm to 8 pm."), "\(noticed)")
+        #expect(noticed.contains { $0.hasPrefix("You train about ") && $0.hasSuffix(" days a week.") }, "\(noticed)")
+        #expect(noticed.contains("You cook most on Sundays."), "\(noticed)")
+        let training = try #require(memory.lines(of: .noticed).first { $0.text.hasPrefix("You usually") })
         #expect(training.evidence.count >= 8 && training
             .sourceLine(now: now) == "from \(training.evidence.count) workouts")
         // Every noticed line's digits are licensed by what it counted.
@@ -211,12 +214,12 @@ struct TessMemoryTests {
             try train(at: Self.at(3, 18, month: 9).addingTimeInterval(Double(week * 7) * 86400))
         }
         memory.turnover(now: Self.at(11, 5)) // a Sunday
-        let hours = try #require(memory.lines(of: .noticed).first { $0.text.hasPrefix("Usually") })
+        let hours = try #require(memory.lines(of: .noticed).first { $0.text.hasPrefix("You usually") })
         try run(ForgetMemory(memory: hours.id), at: Self.at(11, 9))
         memory.redact(hours.id)
         memory.turnover(now: Self.at(18, 5)) // next Sunday
-        #expect(!memory.lines(of: .noticed).contains { $0.text.hasPrefix("Usually") })
-        #expect(memory.lines(of: .noticed).contains { $0.text.hasPrefix("Trains about") })
+        #expect(!memory.lines(of: .noticed).contains { $0.text.hasPrefix("You usually") })
+        #expect(memory.lines(of: .noticed).contains { $0.text.hasPrefix("You train about") })
         // Forget everything, quit inside the UNDO window: the next turnover sweeps the words and nothing returns, not
         // on the Monday with no noticed lines, not on the Sunday after.
         try run(ForgetAllMemory(), at: Self.at(18, 9))
@@ -225,7 +228,7 @@ struct TessMemoryTests {
         #expect(memory.lines(of: .noticed).isEmpty && memory.all().isEmpty)
         let memoryObjects = try store.objects(of: #require(classes[.tessMemory]))
         #expect(memoryObjects.filter(\.isDeleted).allSatisfy { $0.title == TessMemoryStore.redacted })
-        #expect(!store.context.operations.values.contains { $0.summary.contains("Usually trains") })
+        #expect(!store.context.operations.values.contains { $0.summary.contains("usually train") })
 
         // Research F2: words he forgot come back from a restore, and the forget log takes them again.
         try run(RememberFact(text: "I train after work"), at: Self.at(20))
@@ -240,6 +243,17 @@ struct TessMemoryTests {
         #expect(restored.title == TessMemoryStore.redacted)
         // Forgotten hashes never show on the page or in a pack.
         #expect(memory.grouped().isEmpty && memory.pack(.init(told: true, noticed: true, recent: true)).isEmpty)
+
+        // QA F2b: a backup from before the forget is a whole other store; the log outside it still catches the words.
+        let older = ObjectStore.open(inMemory: true)
+        let olderClasses = try older.prepareCatalog()
+        let olderEngine = ActionEngine(store: older, classes: olderClasses)
+        try olderEngine.perform(RememberFact(text: "I train after work"), by: .user)
+        let olderMemory = TessMemoryStore(engine: olderEngine, calendar: Self.calendar, forgetLogURL: forgetLog)
+        #expect(olderMemory.lines(of: .told).count == 1)
+        #expect(olderMemory.reapplyForgets() == 1 && olderMemory.lines(of: .told).isEmpty)
+        #expect(FileManager.default.fileExists(atPath: forgetLog.path))
+        #expect(try !String(contentsOf: forgetLog, encoding: .utf8).contains("train"))
     }
 
     @Test func aPrivateLineIsKeptAsSaid() throws {
@@ -256,6 +270,13 @@ struct TessMemoryTests {
         #expect(memory.lines(of: .told).first { $0.text.contains("from work") }?.isPrivate == false)
         try run(RememberFact(text: "my back hurts after deadlifts"), at: Self.at(9))
         #expect(memory.lines(of: .told).first { $0.text.contains("back hurts") }?.isPrivate == true)
+        // QA F5: a body word alone is private ("my left knee clicks on squats"); S8: a health word with a number is a
+        // measured value, refused.
+        try run(RememberFact(text: "my left knee clicks on squats"), at: Self.at(9))
+        #expect(memory.lines(of: .told).first { $0.text.contains("knee clicks") }?.isPrivate == true)
+        #expect(throws: ActionError.self) {
+            try engine.perform(RememberFact(text: "my resting heart rate is 52"), by: .user)
+        }
     }
 
     @Test func secondPersonAndTheThing() {

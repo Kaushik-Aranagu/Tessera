@@ -328,7 +328,9 @@ final class AppModel {
             processNotes.append(rolled)
         }
         // Tess's memory turnover: yesterday's day line, the 14-day cut, Sunday's noticed lines (AI-7).
-        TessMemoryStore(engine: engine).turnover(now: now)
+        let memory = TessMemoryStore(engine: engine)
+        memory.reapplyForgets() // a restored backup forgets again what he forgot (QA F2b on #356)
+        memory.turnover(now: now)
         pickUpRunningWorkout(table)
         // A workout left untouched for 6 hours is wrapped up by Core; let the live session go with it.
         if let session, store.value("endedAt", of: session.workout) != nil {

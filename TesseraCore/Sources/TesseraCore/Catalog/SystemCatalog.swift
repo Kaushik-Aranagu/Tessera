@@ -253,7 +253,7 @@ public enum SystemCatalog {
                       options: ["told", "noticed", "recent", "forgotten"]),
             // Which counted rule wrote it ("training.hours", "recent.1760500800"): a forgotten rule stays quiet.
             FieldSpec(key: "rule", name: "Rule", kind: .text),
-            FieldSpec(key: "area", name: "Area", kind: .choice, defaultValue: .choice("other"),
+            FieldSpec(key: "area", name: "Area", kind: .choice, defaultValue: .choice("about"),
                       options: ["training", "kitchen", "people", "days", "about"]),
             FieldSpec(key: "evidence", name: "From", kind: .refList, target: .thing),
             FieldSpec(key: "lastUsedAt", name: "Used", kind: .date),

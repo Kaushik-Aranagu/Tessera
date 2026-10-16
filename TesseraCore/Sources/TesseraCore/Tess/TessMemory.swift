@@ -193,10 +193,16 @@ public struct RememberFact: EngineAction {
         let bodyWords: Set = ["shoulder", "shoulders", "knee", "knees", "back", "hip", "hips", "elbow", "wrist",
                               "ankle", "neck"]
         let soreWords: Set = ["sore", "hurts", "hurt", "ache", "aches", "pain", "tight"]
-        let bodyFact = !words.isDisjoint(with: bodyWords) && !words.isDisjoint(with: soreWords)
+        // A body word alone makes it private (QA F5; "back" still needs a sore word, "back from work" is not his back).
+        let bodyFact = !words.isDisjoint(with: bodyWords.subtracting(["back"]))
+            || (words.contains("back") && !words.isDisjoint(with: soreWords))
         var keepsPrivate = isPrivate ?? bodyFact
         // A measured value (a weight, a unit, a pulse) is never kept, private or not.
-        if let value = words.first(where: TessMemoryScreen.healthValueWords.contains) {
+        // A measured value: a unit or weigh word, or a health word next to a number ("resting heart rate is 52"; S8).
+        let measured = !words.isDisjoint(with: TessMemoryScreen.healthWords) && !HomeLines.digits(in: trimmed).isEmpty
+        if let value = words.first(where: TessMemoryScreen.healthValueWords.contains)
+            ?? (measured ? words.first(where: TessMemoryScreen.healthWords.contains) : nil)
+        {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "refused: health(\"\(value)\")")
         }
         if let refusal = TessMemoryScreen.refusal(for: trimmed, numbers: Set(HomeLines.digits(in: trimmed))) {
@@ -303,10 +309,20 @@ public struct ForgetAllMemory: EngineAction {
 public struct TessMemoryStore {
     public let engine: ActionEngine
     public var calendar: Calendar
+    /// The forget log outside the store (Application Support, never inside a .tessera backup), so a restored backup
+    /// from before a forget still forgets it (QA F2b on #356). Nil keeps the log in the store only (tests).
+    public var forgetLogURL: URL?
 
-    public init(engine: ActionEngine, calendar: Calendar = .current) {
+    public init(engine: ActionEngine, calendar: Calendar = .current, forgetLogURL: URL? = Self.defaultForgetLogURL) {
         self.engine = engine
         self.calendar = calendar
+        self.forgetLogURL = forgetLogURL
+    }
+
+    /// Application Support/Tessera/tess-forgotten.json: hashes only, no words.
+    public static var defaultForgetLogURL: URL? {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
+            .appendingPathComponent("Tessera/tess-forgotten.json")
     }
 
     var store: ObjectStore {
@@ -504,21 +520,44 @@ public struct TessMemoryStore {
 
     public static let redacted = "[forgotten]"
 
-    /// The hash of forgotten words, kept as its own quiet object (no words, never shown or packed).
+    /// The hash of forgotten words, kept as its own quiet object (no words, never shown or packed) and in the log
+    /// file outside the store.
     func logForgotten(_ words: String) {
         guard let memoryClass = engine.classes[.tessMemory] else { return }
         let hash = Self.hash(words)
-        guard !forgottenHashes().contains(hash) else { return }
+        var outside = Self.readForgetLog(forgetLogURL)
+        if !outside.contains(hash) {
+            outside.insert(hash)
+            Self.writeForgetLog(outside, to: forgetLogURL)
+        }
+        guard !storedForgottenHashes().contains(hash) else { return }
         let entry = store.create(memoryClass, title: hash)
         try? store.set("kind", to: .choice(TessMemory.Kind.forgotten.rawValue), on: entry)
         try? store.set("isPrivate", to: .bool(true), on: entry)
     }
 
+    /// Hashes from the store and the file together.
     func forgottenHashes() -> Set<String> {
+        storedForgottenHashes().union(Self.readForgetLog(forgetLogURL))
+    }
+
+    func storedForgottenHashes() -> Set<String> {
         guard let memoryClass = engine.classes[.tessMemory] else { return [] }
         return Set(store.objects(of: memoryClass)
             .filter { !$0.isDeleted && store.value("kind", of: $0) == .choice(TessMemory.Kind.forgotten.rawValue) }
             .map(\.title))
+    }
+
+    static func readForgetLog(_ url: URL?) -> Set<String> {
+        guard let url, let data = try? Data(contentsOf: url),
+              let hashes = try? JSONDecoder().decode([String].self, from: data) else { return [] }
+        return Set(hashes)
+    }
+
+    static func writeForgetLog(_ hashes: Set<String>, to url: URL?) {
+        guard let url, let data = try? JSONEncoder().encode(hashes.sorted()) else { return }
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? data.write(to: url, options: [.atomic, .completeFileProtection])
     }
 
     /// After a restore (the turnover runs it too), forgets again every line whose words he once forgot.

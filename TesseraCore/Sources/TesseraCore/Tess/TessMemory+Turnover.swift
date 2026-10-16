@@ -75,11 +75,19 @@ public extension TessMemoryStore {
         var text = "\(weekday): \(parts.joined(separator: ", "))."
         if text.count > TessMemory.maxTextLength {
             // Cut at a word, never mid-word.
-            var cut = String(text.prefix(TessMemory.maxTextLength - 1))
-            if let space = cut.lastIndex(of: " ") {
-                cut = String(cut[..<space])
+            // Whole parts only: "Thu: Push A done, 2 tasks." rather than "…, cooked."
+            var kept = parts
+            while kept.count > 1, "\(weekday): \(kept.joined(separator: ", ")).".count > TessMemory.maxTextLength {
+                kept.removeLast()
             }
-            text = cut.trimmingCharacters(in: CharacterSet(charactersIn: " ,")) + "."
+            text = "\(weekday): \(kept.joined(separator: ", "))."
+            if text.count > TessMemory.maxTextLength {
+                var cut = String(text.prefix(TessMemory.maxTextLength - 1))
+                if let space = cut.lastIndex(of: " ") {
+                    cut = String(cut[..<space])
+                }
+                text = cut.trimmingCharacters(in: CharacterSet(charactersIn: " ,")) + "."
+            }
         }
         return TessMemoryScreen.refusal(for: text, numbers: Set(HomeLines.digits(in: text))) == nil ? text : nil
     }
@@ -133,7 +141,7 @@ public extension TessMemoryStore {
             let mode = counts.max { ($0.value, $0.key) < ($1.value, $1.key) }?.key ?? 18
             let best = (counts[mode + 1] ?? 0) >= (counts[mode - 1] ?? 0) ? mode : mode - 1
             if Double(hours.count { $0 == best || $0 == best + 1 }) >= Double(hours.count) * 0.6 {
-                let text = "Usually trains \(Self.clock(best)) to \(Self.clock(best + 2))."
+                let text = "You usually train \(Self.clock(best)) to \(Self.clock(best + 2))."
                 written.append(write(kind: .noticed, area: .training, text: text, evidence: workouts.map(\.id),
                                      day: nil, numbers: [best % 12 == 0 ? 12 : best % 12,
                                                          (best + 2) % 12 == 0 ? 12 : (best + 2) % 12],
@@ -146,7 +154,7 @@ public extension TessMemoryStore {
                     written.append(write(
                         kind: .noticed,
                         area: .training,
-                        text: "Trains about \(perWeek) \(perWeek == 1 ? "day" : "days") a week.",
+                        text: "You train about \(perWeek) \(perWeek == 1 ? "day" : "days") a week.",
                         evidence: workouts.map(\.id),
                         day: nil,
                         numbers: [perWeek], rule: "training.perWeek"
@@ -170,7 +178,7 @@ public extension TessMemoryStore {
             if let top = Dictionary(grouping: weekdays, by: { $0 }).max(by: { $0.value.count < $1.value.count }),
                Double(top.value.count) >= Double(weekdays.count) * 0.5
             {
-                return [write(kind: .noticed, area: .kitchen, text: "Cooks most on \(Weekdays.name(top.key))s.",
+                return [write(kind: .noticed, area: .kitchen, text: "You cook most on \(Weekdays.name(top.key))s.",
                               evidence: cooks.map(\.id), day: nil, rule: "kitchen.cookDay")].compactMap(\.self)
             }
         }
