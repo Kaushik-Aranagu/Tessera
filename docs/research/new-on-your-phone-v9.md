@@ -10,6 +10,7 @@ Build a36b161 (pin a36b161b7294596848a319c0cc0fc50a3b25f2ee, Catalog v9).
 - **Hold the tab row** for a glass lens across the pages.
 - **Groceries** keep pack sizes and US aisles; salt, oil and pepper are staples.
 - **Private stays private:** secret words, money and body facts never reach Claude, and a Claude key in a note is refused.
+- **Not yet fixed:** in the Notes list a private note still shows its second line, and notes from before this build can still show in full in the Day log. Both are fixed in the next build.
 - **Your data:** nothing changes. Save a copy first. Never restore a copy from this build onto the old one.
 
 ## Team appendix: the full list
