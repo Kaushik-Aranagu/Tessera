@@ -6,9 +6,10 @@
 - [ ] #366 AI-1 Home lines (Builder B): Design clip pass + QA confirm.
 - [ ] The stuck-listening fix (Builder B): refused hold returns Tess to idle; router test green. (decisions.md 11:08 AM PT)
 - [x] #422 secret-word wall + $50 cap (5af8f2c2, Catalog v9).
+- [ ] MU2 (Core): money, body and health phrases never reach Claude. (decisions.md 11:35 AM PT; QA A1, Research MW1)
+- [ ] A2 (Core): the inbox retry goes through the router walls, inside MU2 or a tiny PR beside it.
 
 ## 2. Riders (in only if merged before the last blocker)
-- [ ] MU2 money screen (Core).
 - [ ] Paste/link SecretWords wall (Core).
 - Never in this pin: #403 eyes, #407 tessEyes (v10). They merge right after the pin is named.
 
