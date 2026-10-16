@@ -83,3 +83,53 @@ There are two fixes, both on the new "LOG … AND FINISH" hold, plus a re-cut of
 - Their F2: the rest countdown goes in `now`, per sheet 56 §7.
 - Their F3: the receipt reads "Set 1 logged. 82.5 × 7.".
 - Builder A gets one list: the clip, my F1 and F2, Design's F2 and F3, plus lows L1, L3, L4 and L6.
+
+## Addendum: re-check at `8758235` (11:05 AM PT)
+
+The trial merge onto master `a7797ac` is clean. The diff since bdb178c touches three files in Features/Workout.
+The OpZones and TripZones files in the range diff come from the rebase onto #377, which is already on master.
+Builder A ran the app tests: 121 green, at 03:59 PT.
+
+**Verdict: PASS.**
+
+- **F1, one haptic: fixed.**
+  - The seat's `onChange` now has `guard … session.finishedAt == nil` (WorkoutModeView.swift:194).
+  - `finish(withSet:)` (`:708-716`) plays exactly one haptic: `.newBest` when the set it finished with was a best,
+    otherwise `.done`.
+  - The Tess thinking-then-done no longer stacks on top.
+- **F2, UNDO on the last set: fixed.**
+  - `finishedWithSet` holds the finish record and the set's Undoable (WorkoutSession.swift:69).
+  - `canTakeBackFinish` gives a 10 s window, and the finish view's Tess corner shows UNDO for that window
+    (WorkoutModeView.swift:107-120).
+  - `takeBackFinish()` undoes the finish first, then the set, and puts the set's numbers back on the dial
+    (`undoLastSet`). It plays one undo haptic and says "Push Day A, back on.": the thing, then what happened.
+- **R1, the clip: fixed.** Read as a 2/3 fps contact sheet; it runs 45 s. It shows:
+  - sets 1 to 4 with the countdown in `now`, "Set 1 logged. 82.5 × 7." with UNDO, and "a new best: e1RM 104.5";
+  - "Rest, then Overhead press", "4 sets, 82.5 × 8 best", then PAUSE to Training's "RESUME PUSH DAY A";
+  - "Push Day A, last set" with "LOG 25 × 12 AND FINISH", the finish, UNDO giving "Push Day A, back on.", and
+    the real finish.
+  - It ends inside the app.
+- **Design's F2 and F3: fixed.** The countdown uses `Paint.now` (`:448`), and the receipt reads "Set N logged."
+  (WorkoutParts.swift:230).
+- **Lows: fixed.** L1 (the comment is back above `currentSetNumber`), L3 (all-capital words stay, so "DB Row"
+  is kept), L4 (`Theme.voice` and `Paint.secondary`), L6 (one `let line`).
+- **`-workoutNearEnd`: OK.** It sits inside `#if DEBUG` and reads through `LaunchFlags.has`, which is simulator
+  only (App/LaunchFlags.swift:8-20). No raw ProcessInfo or CommandLine reads were added.
+
+### Lows (new)
+
+- **N1.** The finish view's `onGathered` can still fire after a take-back, setting `summaryLine` and playing
+  Tess's done on the live page. The gather starts as the finish view appears, so an UNDO tapped during the gather
+  would see this. Guard it with `session.finishedAt != nil`.
+- **N2.** In the clip the finish view reads "Friday, 18:10 to 18:10". That is the `-demoTime` relaunch at 3:58
+  resetting the shifted clock, not a bug in real use. Noting it so Design doesn't flag it.
+- **L2 and L5 stay open.** L2: no two-line 34 pt name was recorded, because no demo routine has a long enough
+  name. L5: "last time said once" is Design's follow-up.
+
+### Out of this PR: a wording bug on master (Core)
+
+- The finish line "5 of 5 exercises, 16 sets, **2 records**." comes from `WorkoutSummary.swift:33` on master
+  (`"record" : "records"`).
+- Decision 8e55cd9 says one word, "best", everywhere and never "record".
+- So it should read something like "2 bests". The exact wording is Product's or Design's call; the code owner is
+  Core.
