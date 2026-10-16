@@ -36,10 +36,8 @@ enum WorkoutPaint {
         Theme.Colors.Workout.ink
     }
 
-    /// The glint over the workout's dark ground (the look's sheen, resolved against the workout's pages).
-    static var sheen: Color {
-        Theme.Colors.sheen
-    }
+    /// The glint over the workout's dark ground: light passing over it in every look (#FFE2A8, plus-lighter).
+    static let sheen = Color(hex: 0xFFE2A8)
 
     /// The glass of sheets and panels: the ground at 82% over the material.
     static var glass: Color {

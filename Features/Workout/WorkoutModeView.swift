@@ -239,6 +239,8 @@ private struct WorkoutContent: View {
     }
 
     private func ask(_ phrase: String) {
+        // Refused again before any interpreter sees it.
+        guard !LiveAskField.refuses(phrase) else { return }
         play(.thinking)
         Task { @MainActor in
             let reply = await model.ask(phrase)

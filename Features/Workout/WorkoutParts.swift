@@ -326,6 +326,12 @@ struct LiveAskField: View {
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .onSubmit(submit)
+                // A Claude key pasted here is cleared the moment it lands: no ghost, no set, no miss log.
+                .onChange(of: draft) { _, text in
+                    if LiveAskField.refuses(text) {
+                        draft = ""
+                    }
+                }
             Button("Close") { close() }
                 .buttonStyle(.labelWord(Paint.secondary))
         }
@@ -339,10 +345,15 @@ struct LiveAskField: View {
         .onAppear { focused = true }
     }
 
+    /// Anything holding "sk-ant-", in any case (the guard Ask uses, BottomChrome.looksLikeClaudeKey).
+    static func refuses(_ text: String) -> Bool {
+        BottomChrome.looksLikeClaudeKey(text)
+    }
+
     private func submit() {
         let phrase = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         draft = ""
-        if !phrase.isEmpty {
+        if !phrase.isEmpty, !Self.refuses(phrase) {
             onAsk(phrase)
         }
         close()
