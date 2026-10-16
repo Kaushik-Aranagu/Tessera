@@ -44,7 +44,7 @@ Shared rules:
 
 | Field | Value |
 |---|---|
-| Fires for | An undone task with `alerts = true` and a `startsAt` in the future. `alerts` is a new Task field (Core), true only when he gave a clock time ("call mum 9am", a time edited by hand) or said "remind me" (a date with no time keeps master's 09:00 and alerts). False for times from Plan my day, the model without "remind", roll-forward, `due`-only tasks and events |
+| Fires for | An undone task with `alerts = true` and a `startsAt` in the future. `alerts` is a new Task field (Core), true only when he gave a clock time ("call mum 9am", a time edited by hand) or said "remind me" (a date with no time alerts at 09:00). A plain dated task without "remind me" gets no alert and, per the 6:20 PM call, no 09:00 time (Core storage change). False for times from Plan my day, the model without "remind", roll-forward, `due`-only tasks and events |
 | Lead time | **0 min.** Now already lifts a timed task 15 min ahead (decision 4:01 PM PT), so a 10 min lead would be a second cue for the same thing. See Q2 |
 | Trigger | `UNCalendarNotificationTrigger(dateMatching:repeats: false)` with year, month, day, hour, minute **and `timeZone`** taken from `startsAt` in the zone at scheduling. A pinned zone makes it a fixed instant (dst-travel rule 6: "call mum tue 9am" set in LA rings at 12:00 in New York); 9:00 on 2 Nov is 9:00 PST because the components come from the stored instant. Zone behaviour on device is unverified; the reconcile on `NSSystemTimeZoneDidChange` covers it either way |
 | Title / body | Title: the task title, "Call mum". Body: "It's 9 am." With a length: "It's 9 am. 30 min." |
