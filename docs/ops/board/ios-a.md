@@ -6,6 +6,8 @@
 
 **Now:** QA's low on removing a set mid-rest, then Design's audit rows 1 and 2 (the weight alert becomes edit in place, the typed ask becomes Tess's Write layer; the most visible in the gym, Coordinator 4:06 PM PT), then Next 4 (#122 hookups), then the shared BackWord view in DesignSystem plus "< WORKOUT" on the exercise page (Design's `docs/design/back-word.md`; the word fades in for now, the flight comes later; Builder B and Core adopt it after it lands), then the rest of Next 2 (audit rows 4, 5, 10 and 11), then Next 5 (cook mode). Next 3 (persistRest after a swap) fits in wherever it's quickest.
 
+**Whichever builder frees up first: Settings: Claude screen** (decisions.md 5:49 PM PT). It sits on Core's Keychain store and follows Design's Settings: Claude sheet: paste the key once (it's never shown again, only "Key saved"), Test, the usage line that turns amber at 80%, and "Claude paused until 1 Nov." at the $10 cap. The coordinator assigns it to Builder A or B, whoever finishes their current Now first.
+
 **Next:**
 1. (done, #134) Swap WorkoutTessBar for the Tess soul.
 2. Design's audit rows (`docs/design/audit-build-1.md`): 1 weight alert to edit in place and 2 typed ask to the Write layer (first, see Now), then 4 swap panel as a veil, 5 "Add to routine" as a label word, 10 vermilion UNDO in RoutineEditor, 11 drop the double "Skip". Row 3 is done (#134). Done when each row is fixed and recorded.
