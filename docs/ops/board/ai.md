@@ -4,6 +4,8 @@
 
 **Now:** 2 (Home line writer, with Design 41). Done: 1, plus first three features and ship list (`docs/ai/` on PR #324; copies in `ai/`).
 
+*Product order for the ship list (Oct 16): AI-1 → AI-2 → AI-3 → AI-5 eval → AI-4 → AI-6 → AI-7 → AI-8 → AI-9 → AI-10 → AI-11 → AI-12; AI-13 when already in the file. Core owns most rows, Builder B the screens, Research AI-5, the Kitchen lead AI-12.*
+
 **Next:**
 1. The architecture map. Done when `docs/ai/architecture.md` draws Tessera's data (store, ops, classes, records), Tess's memory (what she knows about him and how he sees and forgets it), and the harness (on-phone router, Claude calls, ledger, TessInbox, validators), with what each Claude call sends and costs, and the gaps ranked for Core.
 2. The Tess line writer for Home. Done when a spec gives one plain line per Home item ("Workout done.", "Groceries: 4 left."), written on the phone by rules first and worded by Claude when the switch is on (cached per day, sent titles only), with the offline line, test cases and the Core and Builder B split. Pairs with Design 41.

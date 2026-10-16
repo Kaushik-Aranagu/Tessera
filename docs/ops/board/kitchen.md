@@ -5,6 +5,7 @@
 **Fix now (small):** in `cook-mode-acceptance.md`, a stopped timer says "Simmer stopped." (Research #175 `tess-voice.md`; decisions.md 6:37 PM PT). Check the doc for any other line that disagrees with tess-voice.
 
 **Next:** (Work that needs nothing from Core. Acceptance of Core's slices still happens whenever one lands.)
+0. AI-12, Groceries that know your recipes (`docs/ai/first-features.md` feature 3). Done when the Groceries AI spec (with the AI team's board item 3 and Design 47) has done-when rows for Core and Builder B: planned recipes linked, missing ingredients offered as rows, one reminder rule.
 1. Kitchen v2 build sheets with Design, for L1 to L3 (recipe from a link) and the top 3 backlog items. Done when each has a sheet on Design's branch, ready the week v2 opens. Include slice P (pantry light) from Research's `../research/pantry-light.md`, so v2 can start on Oct 22 if he says yes.
 2. Accept cook mode when Builder A lands it (kitchen slices 12 and 12b, against #127 and `cook-mode-script.md`). Until then, the next item.
 3. (done, folded into #145) Kitchen rows for the grammar misfire sweep. Done when 40 kitchen and grocery phrases that must stay on Groceries, and 20 that look like groceries but are tasks or gifts ("get mum a card"), go to Research for `fixtures/grammar-misfires.md`, so Core's grammar fix batch can't break kitchen.
