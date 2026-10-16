@@ -34,3 +34,12 @@ Verdict: **PASS**. The diff since 9c95408 is limited to SoulEyes.swift, TessSoul
 ## Addendum: `c053fc7`
 
 PASS stands. The only change since 3099412 is one commit, which adds docs/recordings/48-tess-eyes-done.mp4 (the lab's E2 clip). No code changed.
+
+## Re-review at 15160e0 (Oct 16, ~1:20 PM PT): PASS
+
+- Merges cleanly onto master. The branch's own commits are unchanged (9c95408, 3099412, c053fc7). The three fixes sit in the merge commit 15160e0. I compared the PR's whole diff against master with the c053fc7 diff, line for line. Only three things differ:
+  1. BottomChrome.swift resolves the #453 conflict by keeping master's `hostScale: 0.72` and adding `eyes:` and `gaze:`.
+  2. MotionPolicy. The gaze animation is `.tesseraAnimation(.spring(duration: 0.3, bounce: 0.05), value: gaze)`. The eye fades are `withTesseraAnimation(..., reduceMotion:)` (TessSoul.swift:99, :101). SoulEyes.swift and the eye code in TessSoul.swift have no raw `withAnimation` or `.animation(` left. The two `.animation(` at TessSoul.swift:365/370 are master's Done ring from #453, not this PR.
+  3. Eyes hide for `.done`, `.working` and `.gathering` (TessSoul.swift:98). They come back when the mode leaves those states (`old == .done || !eyesShown`, :100).
+- What he sees: with eyes on, they fade out over 120 ms when Tess starts working and stay hidden through the 820 ms gather. They fade back in over 200 ms as soon as she settles. With eyes off (the default), nothing changes. There's no new copy.
+- Low for Design: "back 200 ms after" is built as a 200 ms fade that starts right away, not a 200 ms pause and then a fade. If §1 means a pause, it needs a `.delay(0.2)`, still through MotionPolicy.
