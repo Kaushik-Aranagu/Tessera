@@ -9,12 +9,17 @@ Prints the bracketed numbers of the Oct 22 message plus the data rows of kitchen
 Standard library only. The capture-miss log (capture-misses.jsonl beside the store) is read when present.
 """
 
+import hashlib
 import json
 import os
 import sqlite3
 import sys
+import uuid
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
+
+PACIFIC = ZoneInfo("America/Los_Angeles")
 
 REFERENCE = datetime(2001, 1, 1, tzinfo=timezone.utc)  # Swift's Date epoch (JSONEncoder default)
 
@@ -25,6 +30,27 @@ def swift_date(seconds):
 
 def unix_date(seconds):
     return datetime.fromtimestamp(seconds, timezone.utc) if seconds is not None else None
+
+
+def stable_id(name):
+    """SystemCatalog.stableID: a UUIDv5-shaped id from SHA-256 of "tessera:<name>"."""
+    b = bytearray(hashlib.sha256(f"tessera:{name}".encode()).digest()[:16])
+    b[6] = (b[6] & 0x0F) | 0x50
+    b[8] = (b[8] & 0x3F) | 0x80
+    return str(uuid.UUID(bytes=bytes(b))).upper()
+
+
+GROCERIES_ID = stable_id("kitchen.groceries")
+
+
+def value_pairs(raw):
+    """FieldValues as stored: a JSON object keyed by field id, or the older flat [id, value, id, value] array."""
+    data = json.loads(raw)
+    if isinstance(data, dict):
+        return list(data.items())
+    if isinstance(data, list):
+        return list(zip(data[::2], data[1::2]))
+    raise ValueError("values is neither an object nor an array")
 
 
 def scalar(value):
@@ -44,27 +70,32 @@ def main():
     path = args[0]
     since = None
     if "--since" in sys.argv:
-        since = datetime.fromisoformat(sys.argv[sys.argv.index("--since") + 1]).replace(tzinfo=timezone.utc)
+        # Midnight Pacific on that date (his day), not UTC.
+        since = datetime.fromisoformat(sys.argv[sys.argv.index("--since") + 1]).replace(tzinfo=PACIFIC)
 
     db = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
     db.row_factory = sqlite3.Row
 
-    classes = {r["id"]: r["systemKey"] for r in db.execute("SELECT id, systemKey FROM classDef")}
-    class_id = {v: k for k, v in classes.items() if v}
+    # systemKey is stored as "system.recipe"; the script speaks in bare keys.
+    classes = {r["id"]: (r["systemKey"] or "").removeprefix("system.") or None
+               for r in db.execute("SELECT id, systemKey FROM classDef")}
+    if "recipe" not in classes.values():
+        sys.exit(f"{path}: no Recipe class in classDef; not a Tessera store, or one from before the kitchen shipped")
     fields = {r["id"]: (r["ownerID"], r["key"]) for r in db.execute("SELECT id, ownerID, key FROM fieldDef")}
 
     objects = {}
     by_class = defaultdict(list)
+    unreadable = 0
     for r in db.execute("SELECT * FROM object WHERE isClassObject = 0"):
         values = {}
         raw = r["values"]
         if raw:
             try:
-                for fid, v in json.loads(raw).items():
-                    key = fields.get(fid.upper(), fields.get(fid, (None, fid)))[1]
+                for fid, v in value_pairs(raw):
+                    key = fields.get(str(fid).upper(), (None, str(fid)))[1]
                     values[key] = scalar(v)
-            except (ValueError, AttributeError):
-                values["_unreadable"] = (None, True)
+            except (ValueError, TypeError, AttributeError):
+                unreadable += 1
         o = {
             "id": r["id"], "cls": classes.get(r["classID"]), "parent": r["parentID"], "title": r["title"],
             "created": unix_date(r["createdAt"]), "deleted": unix_date(r["deletedAt"]), "v": values,
@@ -102,6 +133,8 @@ def main():
     ops = [op for op in ops if in_window(op["created"])]
 
     out = []
+    if unreadable:
+        out.append(f"WARNING: {unreadable} objects had values this script could not read; counts below may be low")
 
     # Recipes saved, and how.
     recipes = [o for o in live("recipe") if in_window(o["created"])]
@@ -111,15 +144,15 @@ def main():
         op = create_ops.get(rec["id"])
         route = (op or {}).get("route") or ""
         source = (value(rec, "sourceText") or "")
-        if value(rec, "sourceURL"):
-            how["link"] += 1
-        elif route == "claude" or (op and op["actor"] == "tess"):
+        if route == "claude" or (op and op["actor"] == "tess"):
             how["ghost row"] += 1
         elif source.strip():
-            how["pasted"] += 1
+            how["pasted or from a link"] += 1
         else:
             how["other"] += 1
     out.append(f"Recipes saved: {len(recipes)} ({', '.join(f'{v} {k}' for k, v in how.items()) or 'none'})")
+    # A link recipe is saved through the paste screen as text and the store keeps no URL (Recipes.swift), so
+    # paste and link can't be told apart here; the capture-miss log below counts links that failed to read.
     edits = sum(1 for op in ops if op["action"] == "editRecipe")
     out.append(f"Recipe edits after saving (editRecipe ops): {edits}")
     opened_not_cooked = [r for r in live("recipe") if value(r, "lastOpenedAt", "date")
@@ -152,8 +185,8 @@ def main():
                + (", ".join(str(n) for n in per_cook.values()) or "none"))
 
     # Groceries items by source.
-    groceries = next((l for l in live("list") if l["title"].lower() == "groceries"), None)
-    items = [o for o in live("listItem") if groceries and o["parent"] == groceries["id"] and in_window(o["created"])]
+    # The built-in list has a stable id (Groceries.listID), whatever he renames it to.
+    items = [o for o in live("listItem") if (o["parent"] or "").upper() == GROCERIES_ID and in_window(o["created"])]
     source = Counter()
     typed_staples = 0
     ingredient_by_id = {i["id"]: i for i in live("ingredient")}
