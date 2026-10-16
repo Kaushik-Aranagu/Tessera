@@ -124,9 +124,6 @@ struct HomeDataTests {
         let count = WeekReview.daysTrained(dates, endingAt: now, calendar: calendar)
         #expect(count == 3)
         #expect(WeekReview.consistencyLine(count) == "Done 3 of the last 7 days")
-        #expect(WeekReview.headline(4) == "Four good days of seven")
-        #expect(WeekReview.headline(1) == "One good day of seven")
-        #expect(WeekReview.headline(0) == "A quiet week so far")
         let all = WeekReview.headline(sessions: 6, perWeek: 6, firstWeek: false, firstUseToday: false)
         #expect("\(all.lead) \(all.tail)" == "All six sessions in")
         let four = WeekReview.headline(sessions: 4, perWeek: 6, firstWeek: false, firstUseToday: false)
@@ -154,7 +151,7 @@ struct HomeDataTests {
         let sets = Dictionary(uniqueKeysWithValues: trained.map { ($0.muscle.title, $0.sets) })
         #expect(sets == ["Chest": 4, "Front Delts": 3])
         #expect(volume.first?.sets == 4)
-        #expect(WeekReview.tessLine(trained) == "Front Delts: 3 sets this week, toward a usual 10.")
+        #expect(WeekReview.tessLine(trained) == "Front delts: 3 sets this week, toward a usual 10.")
         #expect(WeekReview.tessLine([]) == nil)
 
         // A subclass without its own profile inherits its parent's muscles.

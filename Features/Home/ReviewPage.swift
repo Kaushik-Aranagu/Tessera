@@ -25,14 +25,6 @@ enum WeekReview {
             .count(where: \.self)
     }
 
-    /// The hero sentence: "Four good days of seven", "A quiet week so far".
-    static func headline(_ count: Int, of days: Int = 7) -> String {
-        guard count > 0 else { return "A quiet week so far" }
-        let number = SpokenTime.number(count)
-        let noun = count == 1 ? "good day" : "good days"
-        return "\(number.prefix(1).uppercased())\(number.dropFirst()) \(noun) of \(SpokenTime.number(days))"
-    }
-
     /// The hero counts sessions (Research's review-sentence §4): "All six sessions in", "Four sessions this week",
     /// "Two sessions in your first week", "Your first week starts today", "A quiet week so far". Never "good", never
     /// "of seven". Returned as a lead and a tail so it can break after the number phrase, never leaving one word
@@ -61,7 +53,32 @@ enum WeekReview {
     /// (done plus still planned reach it), or when Core marks it rest; else it is open. Days before first use get
     /// nothing.
     enum DayMark: Equatable {
-        case trained(Int), rest, open, none
+        case trained(Int), rest, open, planned, none
+    }
+
+    /// Training marks for any day (rest, open, before first use), from the plan's week each day falls in. The full
+    /// Review uses it for a rolling window that can span two plan weeks.
+    @MainActor
+    static func planMarks(_ model: AppModel, days: [Date], now: Date, calendar: Calendar) -> [Date: DayMark] {
+        let plan = model.plan
+        let perWeek = NowPage.sessionsPerWeek(model: model, plan: plan)
+        let firstUse = ReviewPage.firstUse(model)
+        let restToday = NowPicker(engine: model.engine).restDay(plan: plan, at: now, sessionsPerWeek: perWeek,
+                                                                calendar: calendar) != nil
+        var result: [Date: DayMark] = [:]
+        var seen = Set<Date>()
+        for day in days {
+            guard let start = calendar.dateInterval(of: .weekOfYear, for: day)?.start,
+                  seen.insert(start).inserted else { continue }
+            let week = model.ledger.week(containing: day, plan: plan, now: now, sessionsPerWeek: perWeek,
+                                         calendar: calendar)
+            let marks = Self.marks(week.map(Slot.init), perWeek: perWeek, firstUse: firstUse, restToday: restToday,
+                                   now: now, calendar: calendar)
+            for (index, weekDay) in week.enumerated() {
+                result[calendar.startOfDay(for: weekDay.day)] = marks[index]
+            }
+        }
+        return result
     }
 
     /// A day of the week, as the marks need it (Core's `WeekDay`, reduced).
@@ -84,25 +101,51 @@ enum WeekReview {
         }
     }
 
+    /// The training week runs Monday to Sunday (Sunday's rest last), whatever the locale says.
+    static var mondayFirst: Calendar {
+        var calendar = Calendar.current
+        calendar.firstWeekday = 2
+        return calendar
+    }
+
+    /// The plan leaves `7 − perWeek` rest days a week. Core marks the ones still ahead; the rest of the budget
+    /// goes to empty past days, latest first, and any empty past day beyond it is open (a real miss). Days count
+    /// once however many sessions they hold. Days ahead get no ring (planned), days before first use nothing.
     static func marks(_ week: [Slot], perWeek: Int?, firstUse: Date?, restToday: Bool, now: Date,
                       calendar: Calendar) -> [DayMark]
     {
-        let done = week.reduce(0) { $0 + $1.sessions }
-        let ahead = week.count { $0.sessions == 0 && $0.isPlanned }
-        let meets = perWeek.map { done + ahead >= $0 } ?? false
+        let today = calendar.startOfDay(for: now)
         let firstDay = firstUse.map { calendar.startOfDay(for: $0) }
-        return week.map { day in
-            if day.sessions > 0 {
-                return .trained(day.sessions)
+        let isRestAhead = { (slot: Slot) in
+            slot.sessions == 0 && slot.day >= today
+                && (slot.isRest || (calendar.isDate(slot.day, inSameDayAs: now) && restToday))
+        }
+        let budget = perWeek.map { max(0, 7 - $0) } ?? 0
+        var restLeft = max(0, budget - week.count(where: isRestAhead))
+        var restPast = Set<Int>()
+        for index in week.indices.reversed() {
+            let slot = week[index]
+            guard restLeft > 0, slot.sessions == 0, slot.day < today,
+                  firstDay.map({ slot.day >= $0 }) ?? true else { continue }
+            restPast.insert(index)
+            restLeft -= 1
+        }
+        return week.indices.map { index in
+            let slot = week[index]
+            if slot.sessions > 0 {
+                return .trained(slot.sessions)
             }
-            if let firstDay, day.day < firstDay {
+            if let firstDay, slot.day < firstDay {
                 return .none
             }
-            let isToday = calendar.isDate(day.day, inSameDayAs: now)
-            if day.isRest || (isToday && restToday) || (meets && !day.isPlanned) {
+            // Days after today carry no mark at all, planned training or rest (Design R3).
+            if slot.day > today, !calendar.isDate(slot.day, inSameDayAs: now) {
+                return .planned
+            }
+            if isRestAhead(slot) || restPast.contains(index) {
                 return .rest
             }
-            return .open
+            return slot.day < today ? .open : .planned
         }
     }
 
@@ -119,7 +162,8 @@ enum WeekReview {
         let trained = volume.filter { $0.sets > 0 }
         guard let behind = trained.min(by: { $0.sets < $1.sets }), behind.sets < target else { return nil }
         let sets = behind.sets == 1 ? "1 set" : "\(behind.sets) sets"
-        return "\(behind.muscle.title): \(sets) this week, toward a usual \(target)."
+        let name = behind.muscle.title.prefix(1).uppercased() + behind.muscle.title.dropFirst().lowercased()
+        return "\(name): \(sets) this week, toward a usual \(target)."
     }
 }
 
@@ -189,7 +233,7 @@ struct ReviewPage: View {
     var body: some View {
         let _ = model.revision
         let now = AppClock.now
-        let calendar = Calendar.current
+        let calendar = WeekReview.mondayFirst
         // The plan's week from Core: done days carry their workouts, days ahead carry the plan or a rest day.
         let plan = model.plan
         let perWeek = NowPage.sessionsPerWeek(model: model, plan: plan)
@@ -221,7 +265,7 @@ struct ReviewPage: View {
                 .padding(.bottom, Theme.Spacing.m)
                 .entrance(0)
 
-            ReviewHeadline(lead: headline.lead, tail: headline.tail)
+            ReviewHeadline(text: "\(headline.lead) \(headline.tail)")
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityElement(children: .ignore)
                 .accessibilityAddTraits(.isHeader)
@@ -233,7 +277,6 @@ struct ReviewPage: View {
                 .padding(.bottom, Theme.Spacing.xxl)
 
             DayDabs(week: week, marks: marks, now: now, calendar: calendar)
-                .entrance(2)
                 .padding(.bottom, Theme.Spacing.xxl)
 
             if sessions > 3, let line = WeekReview.tessLine(volume) {
@@ -251,22 +294,44 @@ struct ReviewPage: View {
 
 /// The hero at 56, breaking after the number phrase when one line won't fit ("All six / sessions in"). A new
 /// count fades out with a 4 pt blur and the next fades in; there's no celebration, the sentence is the reward.
-private struct ReviewHeadline: View {
-    let lead: String
-    let tail: String
+struct ReviewHeadline: View {
+    let text: String
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    /// Lines in two-word pairs (three on the first line when the count is odd), so none holds one word alone.
+    private var pairs: [String] {
+        var words = text.split(separator: " ").map(String.init)
+        var lines: [String] = []
+        if words.count % 2 == 1, words.count > 1 {
+            lines.append(words.prefix(3).joined(separator: " "))
+            words.removeFirst(3)
+        }
+        while !words.isEmpty {
+            lines.append(words.prefix(2).joined(separator: " "))
+            words.removeFirst(min(2, words.count))
+        }
+        return lines
+    }
+
     var body: some View {
+        // One line; else break before the last two words ("Four sessions / this week", "All six / sessions in");
+        // else two-word lines. No line ever holds one word alone.
+        let words = text.split(separator: " ").map(String.init)
         ViewThatFits(in: .horizontal) {
-            Text("\(lead) \(tail)").lineLimit(1)
+            Text(text).lineLimit(1)
             VStack(alignment: .leading, spacing: 0) {
-                Text(lead)
-                Text(tail).fixedSize(horizontal: false, vertical: true)
+                Text(words.dropLast(2).joined(separator: " ")).lineLimit(1)
+                Text(words.suffix(2).joined(separator: " ")).lineLimit(1)
+            }
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(Array(pairs.enumerated()), id: \.offset) { _, line in
+                    Text(line).fixedSize(horizontal: false, vertical: true)
+                }
             }
         }
         .textRole(.hero)
         .foregroundStyle(Theme.Colors.ink)
-        .id(lead + tail)
+        .id(text)
         .transition(reduceMotion ? .opacity : .asymmetric(
             insertion: .opacity.animation(.easeOut(duration: 0.22).delay(0.16)),
             removal: .modifier(active: BlurFade(blur: 4, opacity: 0), identity: BlurFade(blur: 0, opacity: 1))
@@ -292,6 +357,8 @@ private struct DayDabs: View {
     let marks: [WeekReview.DayMark]
     let now: Date
     let calendar: Calendar
+    @State private var shown = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: 0) {
@@ -299,11 +366,16 @@ private struct DayDabs: View {
                 let isToday = calendar.isDate(day.day, inSameDayAs: now)
                 let mark = marks[index]
                 VStack(spacing: Theme.Spacing.s) {
-                    markView(mark, seed: index)
+                    // The existing pop stagger: each mark arrives 50 ms after the one before.
+                    DayMarkView(mark: mark, seed: index, delay: 0.1 + Double(index) * 0.05)
                         .frame(width: 34, height: 30)
+                        .scaleEffect(shown || reduceMotion ? 1 : 0.8)
+                        .opacity(shown || reduceMotion ? 1 : 0)
+                        .animation(reduceMotion ? nil : Theme.Motion.house.delay(Double(index) * 0.05),
+                                   value: shown)
                     Text(day.day.formatted(.dateTime.weekday(.narrow)))
                         .textRole(.label)
-                        .foregroundStyle(mark == .none ? Theme.Colors.inkTertiary
+                        .foregroundStyle(mark == .none || mark == .planned ? Theme.Colors.inkTertiary
                             : isToday ? Theme.Colors.ink : Theme.Colors.inkSecondary)
                 }
                 .frame(maxWidth: .infinity)
@@ -313,10 +385,29 @@ private struct DayDabs: View {
             }
         }
         .accessibilityElement(children: .contain)
+        .onAppear { shown = true }
     }
 
-    @ViewBuilder
-    private func markView(_ mark: WeekReview.DayMark, seed: Int) -> some View {
+    private func label(_ day: WeekDay, mark: WeekReview.DayMark) -> String {
+        let name = day.day.formatted(.dateTime.weekday(.wide))
+        return switch mark {
+        case .trained(1): "\(name), trained"
+        case let .trained(count): "\(name), trained, \(count) sessions"
+        case .rest: "\(name), rest"
+        case .planned: "\(name), planned"
+        case .open, .none: "\(name), open"
+        }
+    }
+}
+
+/// One day's mark in its 34×30 slot (shared by Home's Review page and the full Review screen).
+struct DayMarkView: View {
+    let mark: WeekReview.DayMark
+    let seed: Int
+    /// When its draw-in starts (the row's pop stagger).
+    var delay: Double = 0.1
+
+    var body: some View {
         switch mark {
         case let .trained(count):
             ZStack(alignment: .topTrailing) {
@@ -328,22 +419,12 @@ private struct DayDabs: View {
                 }
             }
         case .rest:
-            RestMark(seed: seed)
+            RestMark(seed: seed, delay: delay)
         case .open:
             PaintDab(color: Theme.Colors.ink.opacity(0.25), size: CGSize(width: 34, height: 30), seed: seed,
                      filled: false)
-        case .none:
+        case .planned, .none:
             Color.clear
-        }
-    }
-
-    private func label(_ day: WeekDay, mark: WeekReview.DayMark) -> String {
-        let name = day.day.formatted(.dateTime.weekday(.wide))
-        return switch mark {
-        case .trained(1): "\(name), trained"
-        case let .trained(count): "\(name), trained, \(count) sessions"
-        case .rest: "\(name), rest"
-        case .open, .none: "\(name), open"
         }
     }
 }
@@ -352,21 +433,52 @@ private struct DayDabs: View {
 /// rest timer. It draws in left to right (280 ms) as the row arrives.
 private struct RestMark: View {
     let seed: Int
+    var delay: Double = 0.1
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var drawn = false
 
     var body: some View {
         RestStroke(seed: seed)
             .fill(Theme.Colors.ink.opacity(0.5))
-            .frame(width: 32, height: 5)
-            .blur(radius: 0.3)
-            .scaleEffect(x: drawn || reduceMotion ? 1 : 0.01, anchor: .leading)
-            .opacity(drawn || !reduceMotion ? 1 : 0)
-            .offset(y: 3)
-            .onAppear {
-                withTesseraAnimation(.spring(Spring(duration: 0.28, bounce: 0)).delay(0.1),
-                                     reduceMotion: reduceMotion) { drawn = true }
+            .frame(width: 32, height: 6)
+            // Dry brush: the paint breaks up along the stroke, a little differently each day.
+            .mask(DryBreakUp(seed: seed))
+            .mask(alignment: .leading) {
+                Rectangle().frame(width: drawn || reduceMotion ? 32 : 0)
             }
+            .frame(width: 34, height: 30, alignment: .top)
+            .padding(.top, 15)
+            .frame(width: 34, height: 30, alignment: .top)
+            .opacity(drawn || !reduceMotion ? 1 : 0)
+            .onAppear {
+                withTesseraAnimation(.easeOut(duration: 0.28).delay(delay), reduceMotion: reduceMotion) {
+                    drawn = true
+                }
+            }
+    }
+}
+
+/// Opacity noise along a stroke: thin vertical bands from 55% to 100%, seeded per day.
+private struct DryBreakUp: View {
+    let seed: Int
+
+    var body: some View {
+        Canvas { context, size in
+            let bands = 16
+            let width = size.width / CGFloat(bands)
+            for band in 0 ..< bands {
+                let noise = Double((band * 7 + seed * 13) % 9) / 8
+                let rect = CGRect(x: CGFloat(band) * width, y: 0, width: width + 0.5, height: size.height)
+                context.fill(Path(rect), with: .color(.black.opacity(0.55 + 0.45 * noise)))
+                if (band + seed) % 5 == 0 {
+                    let gap = CGRect(x: CGFloat(band) * width + width * 0.3, y: size.height * 0.55,
+                                     width: width * 0.5, height: size.height * 0.45)
+                    context.blendMode = .clear
+                    context.fill(Path(gap), with: .color(.black))
+                    context.blendMode = .normal
+                }
+            }
+        }
     }
 }
 
