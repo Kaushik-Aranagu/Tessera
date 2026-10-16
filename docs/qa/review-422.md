@@ -41,3 +41,13 @@ Fix, in `EditNote.apply`: `let isPrivate = store.value("isPrivate", of: note) ==
 - L1: false positives become private notes without a word of warning. "Buy combination lock" and "pin the photos" have no task shape, so they turn into "Private note, kept." instead of groceries or a task. The receipt tells him, and nothing is lost. "promo code SAVE20" too.
 - L2: `tokens` splits only on spaces, so "password:tiger42" works through the ":" rule, but "wifi-password tiger42" doesn't match. Fine for spoken and typed lines.
 - L3: the gate rows: M4's rerun now runs at v9 and M5 adds the secret-word rows. Wording is in QA's docs PR (next-build-script.md).
+
+## Addendum: re-check at `88423d3`
+
+Verdict: **PASS**. One commit on top of 71be2af. Trial merge onto master 3fea869 is clean.
+
+- F1 fixed (Notes.swift, `EditNote`). A note that was private, or whose new body or title mentions a secret word, keeps or gets `isPrivate` and the title "Private note". Its `about` links are cleared when it turns private, `linkMentions` never runs on it, and `summary` reads "Private note". Because `summary(in:)` runs after `apply`, a plain note turned private also gets "Private note" as its receipt. The editor's heading suggestion is ignored for private notes. Tests cover the private edit, a code added to a plain note, and a plain edit.
+- F2 fixed: all four Settings strings read `TessUsageLedger.capDollars` (ClaudeSection.swift:191, :196-197, :203, :460). The decision is now on master: decisions.md:21, "The in-app Claude cap is $50 a month (9:27 AM PT Oct 16, Kaushik …)". There are no `$10` strings left in App or Features.
+- F3 fixed: PasteRecipe skips the miss log when the text mentions a secret word (PasteRecipe.swift:204-207).
+- The Day log budget test takes the median of 5 (ScaleTests.swift).
+- Low (new): the comments at ClaudeKey.swift:7 and :83 still say "$10". They're comments only.
