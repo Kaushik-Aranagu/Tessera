@@ -48,6 +48,10 @@ The hero's form sets the pattern the context line answers:
 | shopping | Groceries, 4 left | at the store | 4 left / at the store |
 | planned cook | Tacos tonight | 2 to buy | 2 to buy (count from the phone; see Kitchen's note in `first-features.md` section 3) |
 
+## 2a. The promise on Settings
+
+Settings says, under the spend line: **"Titles and counts only. Never notes, places, health or money."** (Design 50.) The Home pack keeps that literally: per item, its title, kind, state, counts (sets done of target, exercises done of planned, items left), times (start, minutes ago), and record names, which are exercise titles. Nothing else: no weights, reps, note bodies, places, calendar locations, health or money. The pack snapshot test in AI-4 is the proof.
+
 ## 3. When the rules line shows
 
 Always first. The rules line draws at once on every launch and every change. Claude's words replace it only when all hold: the switch is on, online, under the cap and below its 80% line, not in a live workout, the pack hash is new (else the cached words show), and the line passes every check in section 2 on the phone. Offline, capped, switched off, in demo, or on any failed check: the rules line stays, and nothing visible happens.
