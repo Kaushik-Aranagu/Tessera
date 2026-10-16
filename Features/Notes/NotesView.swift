@@ -160,6 +160,7 @@ private struct NoteRow: View {
     let open: () -> Void
 
     @Environment(AppModel.self) private var model
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let body = model.store.value("body", of: note)?.stringValue ?? ""
@@ -185,7 +186,7 @@ private struct NoteRow: View {
                     .textRole(.data)
                     // Arrives in cobalt, then dries to inkSecondary (no-dots B8).
                     .foregroundStyle(isNew ? Theme.Colors.tess : Theme.Colors.inkSecondary)
-                    .tesseraAnimation(Theme.Motion.dry(reduceMotion: false) ?? .default, value: isNew)
+                    .tesseraAnimation(Theme.Motion.dry(reduceMotion: reduceMotion) ?? .default, value: isNew)
                     .fixedSize()
             }
             .padding(.vertical, Theme.Spacing.l)

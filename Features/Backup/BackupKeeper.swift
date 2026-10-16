@@ -119,6 +119,12 @@ enum BackupKeeper {
         UserDefaults.standard.removeObject(forKey: bookmarkKey)
     }
 
+    /// The saved bookmark itself, so a forget can be undone (held in memory for the UNDO only).
+    static var bookmark: Data? {
+        get { UserDefaults.standard.data(forKey: bookmarkKey) }
+        set { UserDefaults.standard.set(newValue, forKey: bookmarkKey) }
+    }
+
     /// The newest copy on this iPhone, if any.
     static var latestLocal: Date? {
         let files = (try? FileManager.default.contentsOfDirectory(at: localFolder, includingPropertiesForKeys: nil))

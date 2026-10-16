@@ -209,7 +209,7 @@ private struct BrushPath: Shape {
     }
 }
 
-/// A 26 pt wet amber tip at now that breathes (scale 1 ↔ 1.35, blur 3 ↔ 6, 3.6 s). Reduce Motion: still.
+/// Now: the stroke's last 14 pt, 1.5 pt thicker, with an amber sheen that breathes (3.6 s). Reduce Motion: still.
 private struct WetTip: View {
     let reach: Double
     /// The sheen's length as a share of the stroke.

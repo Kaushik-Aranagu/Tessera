@@ -352,7 +352,7 @@ private struct IngredientPaint: View {
                         Brushstroke(progress: painted ? 1 : 0)
                             .stroke(Theme.Colors.now.opacity(painted ? 0.35 : 1),
                                     style: StrokeStyle(lineWidth: HomeStroke.underAmount, lineCap: .round))
-                            .animation(Theme.Motion.dry(reduceMotion: false), value: painted)
+                            .tesseraAnimation(Theme.Motion.dry(reduceMotion: false) ?? .default, value: painted)
                             .frame(height: 9)
                             .offset(y: 6)
                     }
