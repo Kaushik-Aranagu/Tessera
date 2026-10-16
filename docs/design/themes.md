@@ -179,6 +179,7 @@ On white, the glint is a gold band passing through the letters; on dark looks it
   | #7FB6E0 | #7CC4F0 | #9EC3D6 | #9DBCD6 | #8DBBD6 |
 
   - **`daySpectrum`** is `[sky, health, context, now, live]`, morning to evening.
+  - **On Porcelain and Celadon the day stroke has its own stops:** sky #509BD5 (3.00:1) and now #C58700 (3.07:1), so the stroke and its wet tip read on white. These two are for the stroke only and never text. Plein keeps today's stroke, and dark looks use the normal tokens (Research item 82).
   - `HomePaint.dayAmber` and `wetTip` use `now`, and `daySage` uses `health`.
 - **`edgeLight`:** the lit chamfer under Now's seam (NowPage:537).
   - Plein: white at 80% (today's).
