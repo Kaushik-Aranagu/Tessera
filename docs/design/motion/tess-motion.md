@@ -137,3 +137,21 @@ Two new `Haptic` cases (`.soulPickUp`, `.soulDrop`) in `DesignSystem/Haptics.swi
 
 ## Design's review (item 51, 12:48 AM PT Oct 16)
 Pass, with the fixes now folded in above: eyes always the dark pigment; constellation at 0.55 with the cobalt child kept at the dock; readers kept, only under rows she reads; two docks; no row dimming on roam; Done in place only with an 80 × 80 clear; the bottom-left dock moves the whole band's words once. No second Design pass on the values, only on Builder A's recording. The build sheet is `tess-motion-build.md`.
+
+## Where she may go on the other pages (added 1:10 AM PT Oct 16)
+The rules above were written against Home. The same seven rules hold everywhere; this is what they come to on the pages that have changed since (`training-mode.md` for Design 44 and #337, `review-week.md` for 46, `tess-knows.md` for 49). Both docks (bottom-right home, bottom-left) exist on every page, since the band at 736 to 820 is hers on all of them; a bottom-left dock moves the band's words to x 96 the same way on each.
+
+| Page | Roam | Readers while working | Drag | Notes |
+|---|---|---|---|---|
+| **Training at rest** (the plan as lanes, 300 + 72k) | To a lane only in the gap between the exercise name's end and its target at the right, 40 pt after the name, 6 above its baseline, and only if that gap is 56 pt or wider ("Bench press" to "82.5 × 8" is; a long name on a narrow phone isn't, so she stays home). Never on the strip at 0, never on the Start mark at 236, never on the set strokes under a name | None: the strokes under each name are the content, and a glint under them would read as a set. The constellation only, at her dock | Yes | Paused is at rest for her. Trained today: same, the lanes are dry |
+| **Training, live** (`LiveTessCorner`) | Never. Her slot is fixed and small; she keeps thinking's pulse | None | No: the corner isn't draggable, and a hold there is the set ask | Eyes: shown in the corner, no glance (nothing to look at but the set) |
+| **Training, the second line** (#337) | Her line on this page is the band's line; the second line is the page's own words, not hers, so she never goes to it and it never moves for her | | | |
+| **Review** (the week as bands) | Never into the bands: every column is a mark, and the columns align by the day letters alone, so there is no free ground between 240 and 660. She may go beside THE WEEK'S LINES (660 on) only when a line is the thing she's changing, which Review doesn't do today. So: home. Reading a day (the tap) changes nothing for her | Under THE WEEK'S LINES' three lines (or the tapped day's four), when she's reading the week ("what was my best this week" through Claude). Never under the bands | Yes | Her line here is forward-looking and only when she has one; the readers are the one sign she's reading |
+| **Routines, a routine's days** | To a routine row's free ground after its second line's words, as a Home row. Never over the unfolded day words | None (local) | Yes | |
+| **What I know** (49) | Never. This page is her voice already, and both of its motions end at her: the forget's flecks drift to the soul, and a new fact arrives under the drying line. The flecks go to wherever she's docked (bottom-left too), on the same reversed hand-off arc | None: "what do you know" is local (thinking), and Claude's `remember` lands as the page shows, not as a read | Yes | FORGET EVERYTHING ends the scroll and the page fades over its last 50 pt above the band, so a drop never lands on it |
+| **Settings** | Never (a page of his values; `settings-place.md`) | None | Yes | |
+| **Day log, Kitchen, Groceries** | As Home rows: after a row's words, 40 pt, 6 above the baseline, 56 × 44 free | Under the rows she's reading (a pasted recipe's lines; the aisle rows when she sorts them) | Yes | Cook mode: never, like a live workout |
+
+Two general rules this adds:
+- **A page's free ground is the page's to declare.** Each page reports its rects through a preference (`tess-motion-build.md`); a page that reports none gets no roam and no readers, only the constellation at the dock. That's the safe default for every page not in this table.
+- **Live things own their surface.** A live workout, cook mode, the Speak layer and a flight from `task-reward.md`: she stays put and does only what she does today.
