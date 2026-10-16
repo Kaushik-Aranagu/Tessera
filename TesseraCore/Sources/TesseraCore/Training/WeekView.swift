@@ -16,8 +16,12 @@ public struct WeekDay: Identifiable {
     public let done: [WorkoutSummary]
     /// The routine projected for this day (today if nothing is done yet, and each day after), in rolling order.
     public let planned: ObjectRecord?
-    /// A day ahead the plan leaves for rest (only when the plan has fewer sessions a week than days left).
+    /// A day the plan leaves for rest: ahead, when the plan has fewer sessions a week than days left; past, when the
+    /// plan as it stood that morning would have rested it.
     public var isRest = false
+    /// A past day with nothing done that the plan, as it stood that morning, would have trained. Review draws its ring
+    /// only for these, never for a planned rest day. Never a "miss" in words.
+    public var wasDue = false
 }
 
 @MainActor
@@ -25,7 +29,8 @@ public extension TrainingLedger {
     /// The week containing `date`: done days show their workouts; today and later days show the plan's next
     /// routines in rolling order. With a weekly count (`sessionsPerWeek`, else the plan's own), the sessions still
     /// due this week are spread over the days left, today first, and the days between are rest. Without one, every
-    /// day ahead gets the next routine. Past days with nothing done are just past, never "missed".
+    /// day ahead gets the next routine. Past days with nothing done carry `isRest` or `wasDue` (never "missed" in
+    /// words).
     func week(containing date: Date, plan: ObjectRecord?, now: Date = .now, sessionsPerWeek: Int? = nil,
               calendar: Calendar = .current) -> [WeekDay]
     {
@@ -42,27 +47,34 @@ public extension TrainingLedger {
         // Zero or less means no rhythm (QA E4): every day ahead gets the next routine, as without a count.
         let perWeek = (sessionsPerWeek ?? plan.flatMap { store.number("sessionsPerWeek", of: $0) }.map { Int($0) })
             .flatMap { $0 > 0 ? $0 : nil }
-        // Spread the sessions still due evenly over the days ahead: 3 over 5 days trains every other day. Today comes
-        // first, unless it trained yesterday and there's room for the rest: then today rests and the spread starts
-        // tomorrow (so a rest day can be today).
         var training = Set(ahead)
         if let perWeek {
-            let due = max(0, perWeek - done.count { !$0.isEmpty })
             let trainedYesterday = calendar.date(byAdding: .day, value: -1, to: today)
                 .map { !finishedWorkouts(onDay: $0, calendar: calendar).isEmpty } ?? false
             let startsToday = ahead.first.map { calendar.isDate(dates[$0], inSameDayAs: today) } ?? false
+            training = Self.spread(ahead, due: max(0, perWeek - done.count { !$0.isEmpty }),
+                                   trainedYesterday: trainedYesterday && startsToday)
             // A workout under way today makes today a training day, whatever the spread says (QA E6).
-            let busyToday = hasWorkoutUnderway(on: now, calendar: calendar)
-            let pool = trainedYesterday && startsToday && due < ahead.count ? Array(ahead.dropFirst()) : ahead
-            if due < ahead.count {
-                let left = pool.count
-                let steps = due <= 1 ? Array(0 ..< min(due, left))
-                    : (0 ..< due).map { Int((Double($0 * (left - 1)) / Double(due - 1)).rounded()) }
-                training = Set(steps.map { pool[$0] })
-                if busyToday, let first = ahead.first, calendar.isDate(dates[first], inSameDayAs: today) {
-                    training.insert(first)
-                }
+            if hasWorkoutUnderway(on: now, calendar: calendar), let first = ahead.first,
+               calendar.isDate(dates[first], inSameDayAs: today)
+            {
+                training.insert(first)
             }
+        }
+        // Past empty days: what the plan would have said that morning (the seeded plan's rhythm when none is set:
+        // a short cycle runs twice a week, a long one once).
+        // An explicit 0 means no rhythm here too.
+        let pastRhythm = sessionsPerWeek != nil ? perWeek : perWeek ?? (cycle.isEmpty ? nil
+            : cycle.count <= 3 ? min(cycle.count * 2, 6) : min(cycle.count, 7))
+        func wasDue(_ index: Int) -> Bool {
+            guard let pastRhythm else { return false }
+            let before = done[..<index].count { !$0.isEmpty }
+            let yesterday = index > 0 ? !done[index - 1].isEmpty
+                : calendar.date(byAdding: .day, value: -1, to: dates[0])
+                .map { !finishedWorkouts(onDay: $0, calendar: calendar).isEmpty } ?? false
+            let thatWeek = Array(index ..< dates.count)
+            return Self.spread(thatWeek, due: max(0, pastRhythm - before), trainedYesterday: yesterday)
+                .contains(index)
         }
         return dates.indices.map { index in
             let day = dates[index]
@@ -70,7 +82,9 @@ public extension TrainingLedger {
                 return WeekDay(day: day, state: .done, done: done[index], planned: nil)
             }
             if day < today {
-                return WeekDay(day: day, state: .past, done: [], planned: nil)
+                let due = wasDue(index)
+                return WeekDay(day: day, state: .past, done: [], planned: nil, isRest: pastRhythm != nil && !due,
+                               wasDue: due)
             }
             let state: WeekDay.State = calendar.isDate(day, inSameDayAs: today) ? .today : .upcoming
             guard training.contains(index) else {
@@ -83,5 +97,18 @@ public extension TrainingLedger {
             }
             return WeekDay(day: day, state: state, done: [], planned: planned)
         }
+    }
+
+    /// The days that train: `due` sessions spread evenly over `days` (3 over 5 trains every other day), the first
+    /// day first, unless it trained the day before and there's room: then the first day rests and the spread starts
+    /// the day after (so a rest day can be today).
+    static func spread(_ days: [Int], due: Int, trainedYesterday: Bool) -> Set<Int> {
+        guard due < days.count else { return Set(days) }
+        let pool = trainedYesterday ? Array(days.dropFirst()) : days
+        let left = pool.count
+        guard left > 0 else { return [] }
+        let steps = due <= 1 ? Array(0 ..< min(due, left))
+            : (0 ..< due).map { Int((Double($0 * (left - 1)) / Double(due - 1)).rounded()) }
+        return Set(steps.map { pool[$0] })
     }
 }

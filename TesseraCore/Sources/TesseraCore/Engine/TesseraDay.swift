@@ -11,7 +11,10 @@ public struct TesseraDay: Sendable {
 
     public var calendar: Calendar
 
+    /// Weeks start on Monday everywhere (the plan, Review and the set counts agree, whatever the locale; QA R5).
     public init(calendar: Calendar = .current) {
+        var calendar = calendar
+        calendar.firstWeekday = 2
         self.calendar = calendar
     }
 
@@ -58,7 +61,7 @@ public struct TesseraDay: Sendable {
         calendar.date(byAdding: .day, value: days, to: day(of: date)) ?? day(of: date)
     }
 
-    /// The week (the calendar's first weekday) holding the day `date` belongs to, with 04:00 edges.
+    /// The week (Monday first) holding the day `date` belongs to, with 04:00 edges.
     public func week(containing date: Date) -> DateInterval {
         let key = day(of: date)
         guard let calendarWeek = calendar.dateInterval(of: .weekOfYear, for: key) else { return interval(of: date) }
@@ -81,7 +84,7 @@ public struct TesseraDay: Sendable {
         return DateInterval(start: start, end: end)
     }
 
-    /// The week's day keys (midnights), first weekday first.
+    /// The week's day keys (midnights), Monday first.
     public func weekDays(containing date: Date) -> [Date] {
         guard let calendarWeek = calendar.dateInterval(of: .weekOfYear, for: day(of: date)) else { return [] }
         return (0 ..< 7).compactMap { calendar.date(byAdding: .day, value: $0, to: calendarWeek.start) }
