@@ -8,12 +8,24 @@ struct RoutinesPage: View {
     let plan: ObjectRecord
     @Environment(AppModel.self) private var model
     @Environment(\.zoomNamespace) private var namespace
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         let _ = model.revision
         let routines = model.store.linkedObjects("routines", of: plan)
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
+                // The back word names the page he came from; no system chevron anywhere (back-word.md).
+                Button { dismiss() } label: {
+                    Text("‹ Training")
+                        .textRole(.label)
+                        .textCase(.uppercase)
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                        .frame(minHeight: 44)
+                }
+                .buttonStyle(HandleButtonStyle())
+                .accessibilityLabel("Back to Training")
+                .padding(.bottom, Theme.Spacing.m)
                 Text("Routines")
                     .textRole(.title)
                     .foregroundStyle(Theme.Colors.ink)
@@ -41,6 +53,10 @@ struct RoutinesPage: View {
         .scrollEdgeEffectStyle(.soft, for: .top)
         .background { ThemedBackground() }
         .toolbarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbarVisibility(.hidden, for: .navigationBar)
+        // Hiding the system back button also drops the edge swipe; keep it (QA K1).
+        .background { EdgeSwipeBack() }
     }
 
     private var next: ObjectRecord? {
@@ -73,7 +89,7 @@ private struct RoutineRow: View {
                     }
                 }
                 Text(detail(slots: slots.count, sets: sets))
-                    .font(.system(size: 16))
+                    .font(Theme.voice(size: 16))
                     .foregroundStyle(Theme.Colors.inkSecondary)
             }
             .frame(maxWidth: .infinity, minHeight: 62, alignment: .leading)

@@ -56,8 +56,15 @@ struct RootView: View {
             }
         }
         .fullScreenCover(isPresented: $model.isWorkoutPresented) {
-            WorkoutModeView()
-                .environment(\.animateEntrance, true)
+            if model.workoutRisesFromLane {
+                // START on Training: live mode rises out of the first lane (training-mode.md).
+                WorkoutModeView()
+                    .environment(\.animateEntrance, true)
+                    .navigationTransition(.zoom(sourceID: WorkoutRise.sourceID, in: zoom))
+            } else {
+                WorkoutModeView()
+                    .environment(\.animateEntrance, true)
+            }
         }
         .background { ThemedBackground() }
     }
