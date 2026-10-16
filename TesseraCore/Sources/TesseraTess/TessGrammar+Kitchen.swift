@@ -55,6 +55,13 @@ extension TessGrammar {
             }
             return lines.isEmpty ? nil : .groceries(lines: lines)
         }
+        // "oat milk and eggs for groceries", "eggs on the shopping list" (Design's Speak review).
+        if !hasDate, let match = trimmed.firstMatch(
+            of: /^(?i)(.+?)\s+(?:for|on|to|onto)\s+(?:the\s+)?(?:groceries|grocery list|shopping list|shopping)$/
+        ) {
+            let lines = Self.splitItems(String(match.1))
+            return lines.isEmpty ? nil : .groceries(lines: lines)
+        }
         // A bare comma list of short items: "milk, eggs, 2 lemons".
         if trimmed.contains(","), !trimmed.contains("\n") {
             let lines = Self.splitItems(trimmed)
@@ -70,9 +77,9 @@ extension TessGrammar {
     /// A comma-list item that reads as shopping: an amount, a known aisle or a known ingredient
     /// ("call mum, dentist" is not shopping).
     private func looksLikeGroceries(_ item: String) -> Bool {
-        // "80x8" and "5x5 squats" are sets, not shopping.
+        // "80x8", "80 for 8" and "5x5 squats" are sets, not shopping.
         guard item.split(separator: " ").count <= 4, item.contains(where: \.isLetter),
-              item.firstMatch(of: /\d\s*[x×]\s*\d/) == nil,
+              item.firstMatch(of: /\d\s*(?:[x×]|for|by)\s*\d/) == nil, item.firstMatch(of: /\d\s*reps?\b/) == nil,
               let line = IngredientLine.parse(item) else { return false }
         return line.amount != nil || AisleGuide.aisle(for: line.name) != nil
             || IngredientBook(store: store, classes: classes).find(line.name) != nil

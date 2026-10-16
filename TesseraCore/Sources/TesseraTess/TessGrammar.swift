@@ -57,6 +57,8 @@ public struct TessGrammar {
     }
 
     public func parse(_ phrase: String, context: TessContext) -> Parse? {
+        // A wake word said with it ("Okay Tess, 80 for 8.") is not part of the phrase.
+        let phrase = phrase.replacing(/^(?i)\s*(?:(?:ok(?:ay)?|hey)\s+)?tess\b[,.:]?\s*/, with: "")
         let text = Self.normalize(phrase)
         guard !text.isEmpty else { return nil }
         if let note = parseNote(phrase) {
@@ -381,7 +383,9 @@ public struct TessGrammar {
 
     func parseLift(_ text: String, entry: ObjectRecord?) -> Parse? {
         var lift = LiftWords()
-        var rest = Substring(text)
+        // "bench 3 sets of 8 at 80" is "bench 3x8 at 80"; "8 reps only" is 8 (never 3 kg, never groceries).
+        var rest = Substring(text.replacing(/(\d+) sets? of (\d+)/) { "\($0.1)x\($0.2)" }
+            .replacing(/(\d) reps?(?: only)?\b/) { "\($0.1)" }.replacing(/(\d) only\b/) { "\($0.1)" })
         if let scheme = rest.firstMatch(of: /(\d+(?:\.\d+)?)(?: ?x ?| by )(\d+)(?: (?:at|@) (\d+(?:\.\d+)?))?/) {
             lift.readScheme(Double(scheme.1) ?? 0, Double(scheme.2) ?? 0, at: scheme.3.flatMap { Double($0) },
                             weightElsewhere: Self.hasOtherNumber(rest, excluding: scheme.range))
@@ -391,8 +395,20 @@ public struct TessGrammar {
         guard !lift.words.isEmpty, let exercise = resolveExercise(lift.words.joined(separator: " ")) else { return nil }
         // "pull ups 3x8": on a bodyweight lift a bare N x M is N sets of M, never N kg (A181).
         let bodyweight = store.equipmentKind(of: exercise) == .bodyweight
+        // In a live workout with that lift in focus, it asks like a bare "10x8" does (Product 9:40 PM PT).
+        if bodyweight, lift.weightFromScheme, let entry, store.linkedClass("exercise", of: entry)?.id == exercise.id,
+           let first = lift.weight, first.rounded() == first, first >= 1, let reps = lift.reps
+        {
+            return .askSetCount(TessSetCountAsk(entry: entry.id, count: Int(first), reps: reps, bodyweight: true))
+        }
         if bodyweight, lift.weightFromScheme, let first = lift.weight, first <= 10, first.rounded() == first {
             (lift.sets, lift.weight) = (Int(first), 0)
+        }
+        // "bench 3x5 at 7": 7 kg is under anything the bar can load, so it's a time, not a weight (QA on #274).
+        if lift.weightAfterAt, let at = lift.weight, at <= 12,
+           let lightest = store.weightDial(for: exercise).detents.first, at < lightest
+        {
+            return nil
         }
         let (sets, unit, reps, weight) = (lift.sets, lift.unit, lift.reps, lift.weight)
         guard let reps, let weight, (1 ... 20).contains(sets), reps >= 1, reps <= 100, reps.rounded() == reps,
@@ -413,11 +429,14 @@ public struct TessGrammar {
         var words: [Substring] = []
         /// The weight is the first number of a bare "N x M" (no "at", no other number).
         var weightFromScheme = false
+        /// The weight came after "at" ("3x5 at 80"), where a small number may be a clock time.
+        var weightAfterAt = false
 
         mutating func readScheme(_ first: Double, _ second: Double, at atWeight: Double?, weightElsewhere: Bool) {
             if let atWeight {
                 // "3x8 at 80": sets x reps at weight.
                 (sets, reps, weight) = (Int(first), second, atWeight)
+                weightAfterAt = true
             } else if first <= 10, second <= 30, weightElsewhere {
                 // "3x10 bench 80": sets x reps, weight elsewhere.
                 (sets, reps) = (Int(first), second)
@@ -552,7 +571,7 @@ public struct TessGrammar {
     }
 
     static func number(_ text: String) -> Double? {
-        Double(text.replacingOccurrences(of: " reps", with: ""))
+        Double(text.replacingOccurrences(of: " only", with: "").replacingOccurrences(of: " reps", with: ""))
     }
 }
 

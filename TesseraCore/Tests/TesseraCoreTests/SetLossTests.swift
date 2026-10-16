@@ -31,6 +31,7 @@ struct SetLossTests {
         case let .sets(parts)?: parts.map { read($0) }.joined(separator: " + ")
         case let .askDatedLift(ask)?: "ask \(ask.line)"
         case let .ask(line)?: "ask \(line)"
+        case let .askSetCount(ask)?: "ask \(ask.line)"
         case let parse?: "\(parse)"
         }
     }
@@ -46,6 +47,14 @@ struct SetLossTests {
         ("A184", "bench 80x8 at 7", "nil"),
         ("A027", "squat 100x5 tue", "ask Squat 100 × 5 for Tuesday?"),
         ("KEEP1", "ohp 3x8 at 45", "lift Overhead Press 3x45x8"),
+        ("A164", "squat 100x5 and buy milk", "lift Back Squat 100x5 + groceries milk"),
+        ("QA274", "bench 3x5 at 7", "nil"),
+        // Research's 113 re-trace and Design's Speak review.
+        ("R113b", "Bench 80 kg, 8 reps only.", "lift Bench Press 80x8"),
+        ("R113c", "Bench 3 sets of 8 at 80.", "lift Bench Press 3x80x8"),
+        ("SPK1", "oat milk and eggs for groceries", "groceries oat milk, eggs"),
+        ("SPK2", "eggs on the shopping list", "groceries eggs"),
+        ("SPK3", "Okay Tess, bench 80 for 8", "lift Bench Press 80x8"),
         ("KEEP3", "bench 80x8 heavy", "nil"),
     ])
     func idle(_ id: String, _ phrase: String, _ expected: String) {
@@ -63,8 +72,63 @@ struct SetLossTests {
         live.process = workout.id
         #expect(read(grammar.parse("bench 80x8 dentist fri", context: live)) == "set 80x8 + task Dentist @")
         #expect(read(grammar.parse("80 x 6 to failure at 9", context: live)) == "set 80x6")
+        // R113a: a wake word and a dictated full stop, during a workout: the set, never Groceries.
+        #expect(read(grammar.parse("Okay Tess, 80 for 8.", context: live)) == "set 80x8")
+        #expect(read(grammar.parse("80 for 8, milk", context: live)) != "groceries 80 for 8, milk")
         // QA R2 on #262: number words and an errand together.
         #expect(read(grammar.parse("bench eighty for eight, call mum at seven", context: live))
             == "set 80x8 + task Call mum @")
+    }
+
+    @Test func theMissLineOffersAnExampleOnlyWhereItFits() async throws {
+        let tess = TessCaptureEngine(engine: engine)
+        #expect(await tess.capture("what is a plate?", context: context).line == "Didn't catch that.")
+        let workout = try store.create(#require(classes[.workout]), title: "Push")
+        let entry = try engine.perform(AddExercise(workout: workout.id, exercise: #require(classes[.benchPress]).id),
+                                       by: .user).output
+        var live = context
+        live.entry = entry.id
+        #expect(await tess.capture("what is a plate?", context: live)
+            .line == "Didn't catch that. Try \u{201C}80 × 8\u{201D}.")
+    }
+
+    @Test func spokenUnitsNeedANumberBesideThem() {
+        // QA on #262: Swift's `where` guarded only the last pattern of each case.
+        #expect(TessSpoken.numbers("pounds of flour") == "pounds of flour")
+        #expect(TessSpoken.numbers("times square") == "times square")
+        #expect(TessSpoken.numbers("kilos") == "kilos")
+        #expect(TessSpoken.numbers("eighty kilos times eight") == "80 kg x 8")
+        #expect(TessSpoken.numbers("bench 80 kg, 8 reps only") == "bench 80 kg, 8 reps")
+    }
+
+    @Test func receiptsForTheNewShapes() async {
+        let tess = TessCaptureEngine(engine: engine)
+        // A181: no "at 0" on a bodyweight lift.
+        #expect(await tess.capture("pull ups 3x8", context: context).line == "Pull-Up 3 × 8. Added to today.")
+        // A027: the dated ask and its LOG line say "Squat".
+        #expect(await tess.capture("squat 100x5 tue", context: context).line == "Squat 100 × 5 for Tuesday?")
+        #expect(tess.answer(TessDatedLiftAsk.Choice.log, context: context).line == "Squat 100 × 5 logged for Tuesday.")
+    }
+
+    @Test func aHundredCommaFiveInAWorkoutIsNeverGroceries() throws {
+        // K885.
+        let workout = try store.create(#require(classes[.workout]), title: "Push")
+        let entry = try engine.perform(AddExercise(workout: workout.id, exercise: #require(classes[.benchPress]).id),
+                                       by: .user).output
+        try engine.perform(LogSet(entry: entry.id, weight: 80, reps: 8), by: .user)
+        var live = context
+        live.entry = entry.id
+        #expect(!read(grammar.parse("a hundred, five", context: live)).hasPrefix("groceries"))
+    }
+
+    @Test func aNamedBodyweightLiftInFocusAsks() throws {
+        // Product 9:40 PM PT: "pull ups 10x8" with Pull-Up in focus asks; with no workout it stays sets (A181).
+        let workout = try store.create(#require(classes[.workout]), title: "Pull")
+        let pullUp = try #require(store.classDef(id: SystemCatalog.stableID("library.pullUp")))
+        let entry = try engine.perform(AddExercise(workout: workout.id, exercise: pullUp.id), by: .user).output
+        var live = context
+        live.entry = entry.id
+        #expect(read(grammar.parse("pull ups 10x8", context: live)) == "ask 10 × 8: 10 sets, or +10 kg?")
+        #expect(read(grammar.parse("pull ups 3x8", context: context)) == "lift Pull-Up 3x0x8")
     }
 }

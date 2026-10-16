@@ -223,16 +223,23 @@ public enum TessSpoken {
         for (index, token) in tokens.enumerated() {
             let previous = out.last ?? ""
             let next = index + 1 < tokens.count ? tokens[index + 1] : ""
+            // Each rule needs its number beside it ("two times ten", never "times" alone; QA on #262).
+            let afterNumber = isNumber(previous)
+            // "80 kg times 8", "8 reps only": a unit or "reps" right after a number still counts as beside it.
+            let afterAmount = afterNumber || ["kg", "lb", "reps"].contains(previous) && out.count >= 2
+                && isNumber(out[out.count - 2])
             switch token {
-            case "times", "into" where isNumber(previous) && isNumber(next):
-                out.append("x")
-            case "kilos", "kilo", "kilograms", "kgs", "k" where isNumber(previous):
-                out.append("kg")
-            case "pounds", "lbs", "lbs.", "pound" where isNumber(previous):
-                out.append("lb")
-            case "rep" where isNumber(previous):
-                out.append("reps")
-            case "reps" where out.count >= 3 && isNumber(previous) && ["for", "x"].contains(out[out.count - 2]):
+            case "times", "into":
+                out.append(afterAmount && isNumber(next) ? "x" : token)
+            case "kilos", "kilo", "kilograms", "kgs", "k":
+                out.append(afterNumber ? "kg" : token)
+            case "pounds", "lbs", "lbs.", "pound":
+                out.append(afterNumber ? "lb" : token)
+            case "rep":
+                out.append(afterNumber ? "reps" : token)
+            case "only" where afterAmount:
+                continue // en-IN emphasis: "8 reps only" (row 21)
+            case "reps" where out.count >= 3 && afterNumber && ["for", "x"].contains(out[out.count - 2]):
                 continue // "80 for 8 reps": the full set already says it (N21)
             default:
                 // A number said twice right before an operator is a stutter ("eighty eighty for eight").
