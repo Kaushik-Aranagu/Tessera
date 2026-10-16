@@ -200,23 +200,24 @@ public struct WeekFactsBuilder {
 
     func cooksByDay() -> [Date: [String]] {
         guard let cookClass = engine.classes[.cook] else { return [:] }
-        let day = TesseraDay(calendar: calendar)
+        let zones = OpZones(store: store)
         var cooks: [Date: [String]] = [:]
         for cook in store.objects(of: cookClass) where !cook.isDeleted {
             guard let at = store.value("cookedAt", of: cook)?.dateValue else { continue }
-            cooks[day.day(of: at), default: []].append(store.displayTitle(of: cook))
+            cooks[zones.dayKey(of: at, for: cook.id, calendar: calendar), default: []]
+                .append(store.displayTitle(of: cook))
         }
         return cooks
     }
 
     func tasksDoneByDay() -> [Date: Int] {
         guard let taskClass = engine.classes[.task] else { return [:] }
-        let day = TesseraDay(calendar: calendar)
+        let zones = OpZones(store: store)
         var dones: [Date: Int] = [:]
         for task in store.objects(of: taskClass) where !task.isDeleted {
             guard store.value("isDone", of: task) == .bool(true),
                   let at = store.value("doneAt", of: task)?.dateValue else { continue }
-            dones[day.day(of: at), default: 0] += 1
+            dones[zones.dayKey(of: at, for: task.id, calendar: calendar), default: 0] += 1
         }
         return dones
     }

@@ -19,14 +19,19 @@ public extension TessMemoryStore {
         var result = Turnover()
         let day = TesseraDay(calendar: calendar)
         // Once per 04:00 day (QA L1): the app calls this on every launch and foreground.
+        // Keyed by the calendar day, not an absolute midnight: on a 27-hour travel day the midnight moves with the
+        // zone and the turnover would run twice (Research 127 T3).
         let key = ObjectIdentifier(store.context)
-        guard Self.lastTurnoverDay[key] != day.today(now) else { return result }
-        Self.lastTurnoverDay[key] = day.today(now)
+        let todayKey = Self.dayLabel(day.today(now), calendar: calendar)
+        guard Self.lastTurnoverDay[key] != todayKey else { return result }
+        Self.lastTurnoverDay[key] = todayKey
         let yesterday = day.day(-1, after: now)
+        let yesterdayKey = Self.dayLabel(yesterday, calendar: calendar)
         let recent = lines(of: .recent)
         sweepForgotten(now: now)
-        if !recent.contains(where: { $0.day == yesterday }), let text = recentLine(for: yesterday, now: now) {
-            let rule = "recent.\(Int(yesterday.timeIntervalSince1970))"
+        let written = recent.contains { $0.day.map { Self.dayLabel($0, calendar: calendar) } == yesterdayKey }
+        if !written, let text = recentLine(for: yesterday, now: now) {
+            let rule = "recent.\(yesterdayKey)"
             result.wroteRecent = write(kind: .recent, area: .days, text: text, evidence: [], day: yesterday,
                                        rule: rule) != nil
         }
@@ -42,7 +47,13 @@ public extension TessMemoryStore {
     }
 
     /// The day the turnover last ran in this process; the data itself is idempotent across launches.
-    nonisolated(unsafe) static var lastTurnoverDay: [ObjectIdentifier: Date] = [:]
+    nonisolated(unsafe) static var lastTurnoverDay: [ObjectIdentifier: String] = [:]
+
+    /// "2026-10-21": the day as a label, the same in every zone he reads it from.
+    static func dayLabel(_ key: Date, calendar: Calendar) -> String {
+        let parts = calendar.dateComponents([.year, .month, .day], from: key)
+        return String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
+    }
 
     /// "Wed: Pull A done, 2 tasks, cooked chili." Counts and titles from the Day log; nil for an empty day.
     func recentLine(for dayKey: Date, now: Date) -> String? {
