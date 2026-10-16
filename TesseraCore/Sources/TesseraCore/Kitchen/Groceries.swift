@@ -31,10 +31,24 @@ public struct Groceries {
     public func aisles() -> [(aisle: String, items: [ListContents.Item])] {
         guard let list else { return [] }
         let contents = ListContents(store: store, classes: classes)
-        return contents.sections(of: list)
-            .map { (aisle: Aisle.shown($0.name ?? Aisle.other.rawValue), items: $0.items.filter { !$0.isDone }) }
+        // Grouped by the name as shown, so an item stored under "Tins and jars" joins "Cans and jars" (QA S1).
+        var order: [String] = []
+        var grouped: [String: [ListContents.Item]] = [:]
+        for section in contents.sections(of: list) {
+            let name = Aisle.shown(section.name ?? Aisle.other.rawValue)
+            if grouped[name] == nil {
+                order.append(name)
+            }
+            grouped[name, default: []] += section.items.filter { !$0.isDone }
+        }
+        return order.map { (aisle: $0, items: grouped[$0] ?? []) }
             .filter { !$0.items.isEmpty }
             .sorted { Aisle.order(of: $0.aisle) < Aisle.order(of: $1.aisle) }
+    }
+
+    /// One pack's size for an item ("14.5 oz"), drawn after the name with a middle dot; nil when it has none.
+    public func packSize(of item: ObjectRecord) -> String? {
+        GroceryShare.decode(store.value("shares", of: item)?.stringValue).lazy.compactMap(\.packSize).first
     }
 
     /// The recipes an item is for.

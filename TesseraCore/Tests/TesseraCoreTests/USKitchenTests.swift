@@ -46,11 +46,16 @@ struct USKitchenTests {
     }
 
     func groceries(_ lines: [String]) throws -> [ListContents.Item] {
+        try kitchen(lines).items
+    }
+
+    func kitchen(_ lines: [String]) throws -> (items: [ListContents.Item], groceries: Groceries) {
         let store = ObjectStore.open(inMemory: true)
         let classes = try store.prepareCatalog()
         try ActionEngine(store: store, classes: classes).perform(AddGroceries(lines: lines), by: .user)
-        let list = try #require(Groceries(store: store, classes: classes).list)
-        return ListContents(store: store, classes: classes).items(of: list)
+        let groceries = Groceries(store: store, classes: classes)
+        let list = try #require(groceries.list)
+        return (ListContents(store: store, classes: classes).items(of: list), groceries)
     }
 
     @Test func mergeRows() throws {
@@ -69,8 +74,10 @@ struct USKitchenTests {
         // U4: same size adds. U5: two sizes stay two rows, never "2". A sized can never joins an unsized one.
         let same = try groceries(["2 (15 oz) cans chickpeas", "1 (15 oz) can chickpeas"])
         #expect(same.map(\.quantity) == ["3 cans"])
-        let mixed = try groceries(["1 (14.5 oz) can diced tomatoes", "1 (28 oz) can diced tomatoes"])
+        let (mixed, book) = try kitchen(["1 (14.5 oz) can diced tomatoes", "1 (28 oz) can diced tomatoes"])
         #expect(mixed.count == 2 && mixed.allSatisfy { $0.quantity == "1 can" })
+        // QA S2: the size reaches the screen.
+        #expect(mixed.map { book.packSize(of: $0.object) } == ["14.5 oz", "28 oz"])
         #expect(try groceries(["1 (13.5 oz) can coconut milk", "1 can coconut milk"]).count == 2)
         // U6, and never Produce.
         let tins = try groceries(["1 can (14.5 oz) diced tomatoes", "1 can (14.5 oz) diced tomatoes"])
@@ -96,5 +103,18 @@ struct USKitchenTests {
     @Test func resizingRoundsTheNewUnitsSensibly() {
         #expect(RecipeMath.round(7.4, unit: .ounce) == 7 && RecipeMath.round(1.3, unit: .pound) == 1.25)
         #expect(RecipeMath.round(1.3, unit: .pint) == 1.5 && RecipeMath.round(2.4, unit: .can) == 2)
+    }
+
+    @Test func anOldAisleNameAndANewOneAreOneSection() throws {
+        // QA S1 on #309: an item stored under "Tins and jars" and a new can share "Cans and jars".
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let groceries = Groceries(store: store, classes: classes)
+        let list = try #require(groceries.list)
+        try engine.perform(AddListItem(list: list.id, text: "sriracha", section: "Tins and jars"), by: .user)
+        try engine.perform(AddGroceries(lines: ["1 can chickpeas"]), by: .user)
+        let aisles = groceries.aisles()
+        #expect(aisles.map(\.aisle) == ["Cans and jars"] && aisles.first?.items.count == 2)
     }
 }
