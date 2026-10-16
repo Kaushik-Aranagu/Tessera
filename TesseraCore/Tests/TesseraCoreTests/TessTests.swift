@@ -224,6 +224,18 @@ struct TessTests {
         #expect(covered.subtracting(actions).isEmpty, "Stale: \(covered.subtracting(actions))")
     }
 
+    @Test func siriAddATaskKeepsKeysOutAndSecretsPrivate() throws {
+        // QA I3 (#428): Siri's Add a Task never saves a Claude key and files a secret with a value as a private note.
+        #expect(try CreateTaskIntent.add("sk-ant-api03-TEST", startsAt: nil, engine: engine) == TessRouter.keyLine)
+        #expect(try CreateTaskIntent.add("door code 4417", startsAt: nil, engine: engine) == "Private note, kept.")
+        let objects = store.context.objects.values
+        #expect(!objects.contains { $0.title.contains("sk-ant") || $0.title.contains("4417") })
+        #expect(objects.contains { $0.title == SecretWords.title })
+        // A task that only names a secret word stays a task.
+        _ = try CreateTaskIntent.add("reset my PIN", startsAt: nil, engine: engine)
+        #expect(store.context.objects.values.contains { $0.title.lowercased() == "reset my pin" })
+    }
+
     @Test func intentsRunTheSameTypedActions() throws {
         let runtime = TesseraRuntime(engine: engine, tess: tess)
         let routine = try engine.perform(CreateRoutine(title: "Push Day A"), by: .user).output
