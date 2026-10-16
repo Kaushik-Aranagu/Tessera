@@ -83,7 +83,15 @@ public struct TessRouter {
         if let asked {
             return asked
         }
-        return TessCapture(records: [], line: "Didn't catch that. Try \u{201C}bench 80 × 8\u{201D}.", source: .none)
+        // An example only where it fits: a set in a workout, things while shopping (Design's Speak review).
+        let example = if request.context.entry != nil {
+            " Try \u{201C}80 × 8\u{201D}."
+        } else if request.context.process == Groceries.listID {
+            " Try \u{201C}milk, eggs\u{201D}."
+        } else {
+            ""
+        }
+        return TessCapture(records: [], line: "Didn't catch that.\(example)", source: .none)
     }
 }
 

@@ -251,7 +251,9 @@ public final class TessCaptureEngine: TessCapturing {
             let name = Self.shortName(exercise.name)
             let scheme = sets > 1 ? "\(sets) × \(TessVoice.number(reps))" : "\(TessVoice.number(reps)) reps"
             let load = TessVoice.number(weight) + (unit == .kilograms ? "" : " \(unit.symbol)")
-            return (record, "\(name) \(scheme) at \(load). Added to today.")
+            // A bodyweight lift has no load to say ("Pull-Up 3 × 8", never "at 0").
+            return (record, weight == 0 ? "\(name) \(scheme). Added to today."
+                : "\(name) \(scheme) at \(load). Added to today.")
         case let .set(entry, kilograms, reps, kind, phrase, unit, rpe, saidWeight):
             // Logged in the unit it was said in, so the set keeps its entered unit.
             let said = unit.fromKilograms(kilograms, rounded: false)
