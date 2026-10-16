@@ -252,6 +252,22 @@ struct ClaudeRouteTests {
         #expect(read.count == 1 && read.first?.records.first?.state == .pending && tess.waitingCount == 0)
     }
 
+    @Test func phrasesQueuedBeforeTheWallsNeverLeave() async throws {
+        // Research 139 and 138 MW4: items saved before the walls drain through them, unread, and only the rest go.
+        let waiting = try #require(classes[.tessWaiting])
+        for phrase in ["wifi password is tacocat", "$38.20 trader joe's", "182.4 this morning", miss] {
+            store.create(waiting, title: phrase).createdAt = .now
+        }
+        let inbox = TessInbox(store: store, classes: classes)
+        #expect(inbox.add("door code 4417", at: .now) == nil && inbox.add("took 2 advil", at: .now) == nil)
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged."))]
+        let tess = tess()
+        _ = await tess.readWaiting(context: context)
+        #expect(tess.waitingCount == 0)
+        let sent = RouteStub.bodies.compactMap { String(data: $0, encoding: .utf8) }.joined()
+        #expect(!sent.isEmpty && !sent.contains("tacocat") && !sent.contains("38.20") && !sent.contains("182.4"))
+    }
+
     @Test func nothingWaitsForSiriAndAKeyNeverWaits() async {
         RouteStub.failure = .notConnectedToInternet
         let tess = tess()
