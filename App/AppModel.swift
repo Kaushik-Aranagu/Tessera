@@ -586,7 +586,7 @@ extension AppModel {
     func todaysRoutine(now: Date = AppClock.now) -> ObjectRecord? {
         guard session == nil, tonightWorkout(around: now) == nil, finishedToday(now: now).isEmpty,
               let plan else { return nil }
-        return ledger.nextRoutine(in: plan)
+        return ledger.nextRoutine(in: plan, now: now)
     }
 
     /// Workouts finished today, newest first (Core's summaries: counts, records and Tess's line).
