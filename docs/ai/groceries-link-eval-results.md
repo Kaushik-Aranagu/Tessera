@@ -4,66 +4,35 @@ Fixture `docs/research/fixtures/groceries-link-eval.md`, claude-haiku-5-5, 3 run
 
 ## Run notes
 
-Run Oct 16, 2026, about 9:50 AM PT, from a cloud session, script unchanged from master. Spend about $0.003 for the
-15 calls, plus one extra diagnostic call (about $0.0002) to see why nothing paired.
-
-Why it fails: the model's pairs were right, but it named the ingredient by title, not handle. For rows 1-6 it
-returned g1 spring onions, g2 red pepper, g4 beef mince, g5 chopped tomatoes, g6 tomato puree, all correct
-must pairs. The runner keeps a pair only when `ingredient` is a handle like `i5`, so every pair was dropped and
-the gate scored 0 of 10. The `linkItems` schema and instructions never say to use handles. The fix is the AI and
-Kitchen teams' call: say so in the tool description, or map titles back to handles on the phone, then rerun.
+Rerun Oct 16, 2026, about 9:56 AM PT, after #413 (handle enums), script unchanged from master. Spend about $0.0033.
+The one miss is row 3, bell pepper, in all 3 runs. It shares a call with row 2, capsicum, which paired with red
+pepper every time; Haiku seems to give each ingredient to one row only (inferred from the batch, not checked).
+Cost per run is $0.0011, just over the $0.001 line, which isn't part of the pass bar.
 
 **Gate: FAIL.**
 
 | Check | Bar | Result |
 |---|---|---|
-| Must rows paired in every run | 10 of 10 | 0 of 10 |
+| Must rows paired in every run | 10 of 10 | 9 of 10 |
 | False pairs in all row-runs | 0 of 75 | 0 |
 | Replies dropped (over 6 pairs, two pairs on a row, no tool call) | 0 | 0 |
-| Cost per run | under $0.001 | $0.0010 |
-| Latency p50 / max | 8 s timeout | 1.5 s / 2.6 s |
+| Cost per run | under $0.001 | $0.0011 |
+| Latency p50 / max | 8 s timeout | 1.3 s / 2.1 s |
 
 ## Must rows missed
 
 | Run | # | Row | Want | Got |
 |---|---|---|---|---|
-| 1 | 1 | scallions | spring onions | nothing |
-| 1 | 2 | capsicum | red pepper | nothing |
 | 1 | 3 | bell pepper | red pepper | nothing |
-| 1 | 4 | ground beef | beef mince | nothing |
-| 1 | 5 | tinned tomatoes | chopped tomatoes | nothing |
-| 1 | 6 | tomato paste | tomato puree | nothing |
-| 1 | 7 | parmigiano | parmesan | nothing |
-| 1 | 9 | beef stock cube | beef stock | nothing |
-| 1 | 10 | cherry toms | cherry tomatoes | nothing |
-| 1 | 25 | feta cheese | feta | nothing |
-| 2 | 1 | scallions | spring onions | nothing |
-| 2 | 2 | capsicum | red pepper | nothing |
 | 2 | 3 | bell pepper | red pepper | nothing |
-| 2 | 4 | ground beef | beef mince | nothing |
-| 2 | 5 | tinned tomatoes | chopped tomatoes | nothing |
-| 2 | 6 | tomato paste | tomato puree | nothing |
-| 2 | 7 | parmigiano | parmesan | nothing |
-| 2 | 9 | beef stock cube | beef stock | nothing |
-| 2 | 10 | cherry toms | cherry tomatoes | nothing |
-| 2 | 25 | feta cheese | feta | nothing |
-| 3 | 1 | scallions | spring onions | nothing |
-| 3 | 2 | capsicum | red pepper | nothing |
 | 3 | 3 | bell pepper | red pepper | nothing |
-| 3 | 4 | ground beef | beef mince | nothing |
-| 3 | 5 | tinned tomatoes | chopped tomatoes | nothing |
-| 3 | 6 | tomato paste | tomato puree | nothing |
-| 3 | 7 | parmigiano | parmesan | nothing |
-| 3 | 9 | beef stock cube | beef stock | nothing |
-| 3 | 10 | cherry toms | cherry tomatoes | nothing |
-| 3 | 25 | feta cheese | feta | nothing |
 
 ## Either rows
 
 | # | Row | Allowed | Paired in runs |
 |---|---|---|---|
-| 17 | cumin seeds | ground cumin | 0 of 3 |
-| 18 | red onion | onion | 0 of 3 |
+| 17 | cumin seeds | ground cumin | 3 of 3 |
+| 18 | red onion | onion | 3 of 3 |
 | 19 | brown rice | basmati rice | 0 of 3 |
 | 22 | linguine | spaghetti | 0 of 3 |
-| 24 | paprika | smoked paprika | 0 of 3 |
+| 24 | paprika | smoked paprika | 3 of 3 |
