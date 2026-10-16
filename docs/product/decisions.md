@@ -4,6 +4,7 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+- **Removing a list row, as drawn** (3:47 AM PT Oct 16, Design 65 `list-remove.md`, 66550d4; accepted). The UNDO line names the list: "Ground beef, back on Groceries." (and "back on Packing" on another list), to match "No rice on Groceries." A removed row never feeds USUALLY.
 - **Nights, timers and private notes** (3:46 AM PT Oct 16, Research 134 and 135, #384; QA F2 on #381).
   - **CL9: his own timers ring at any hour, haptic included.** "No haptic after 23:00" covers moments the app raises, not a kitchen timer he set.
   - **CL6: the kitchen timer must fire.** It is a bug that StartKitchenTimer schedules no notification. Core schedules a local notification when the timer starts and cancels it on stop or UNDO.
