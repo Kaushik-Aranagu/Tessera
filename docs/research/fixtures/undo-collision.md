@@ -12,7 +12,7 @@ Reads with: `docs/research/next-build-v10.md` F1 and F2, `docs/research/undo-win
 - **R3. Windows** (`decisions.md:358` AQ15 and `:161-176`): a new capture 4 s; a change or removal 10 s; recipe to
   Groceries 10 s; a capture's 4 s counts from when its line shows; with VoiceOver on, every window is 10 s; windows
   pause while the app is in the background or the phone is locked; Siri's undo has no window.
-- **R4. The answer to an UNDO names the thing**: "Milk, taken back.", "Call Mum, taken back.",
+- **R4. The answer to an UNDO names the thing**: "Milk, taken back.", "Call mom, taken back.",
   "Private note, taken back." (`decisions.md:171`). A private note's line and its answer never show the value.
 
 ## How the collision happens on master (root cause)
@@ -63,7 +63,7 @@ All times are seconds from the first action, with Reduce Motion off.
   (`AppModel.swift:282`).
 - Spoken capture: the voice ghost dries 3 s (`BottomChrome.swift:651`), then the same as typed from the commit.
 - Home swipe done: the op lands 1.32 s after release (`HomeQueue.swift:444` 0.42 s, `:454` 0.9 s, `:455`), then
-  "Call Mum, done." with a 10 s UNDO.
+  "Call mom, done." with a 10 s UNDO.
 - Home move: the op lands 0.2 s after release (`HomeQueue.swift:474`), then "Moved to tomorrow." with 10 s.
 - Lines on master for the phrases used: "buy milk" says "Milk, on the list." and "buy eggs" says "Eggs, on the list."
   (`TesseraCore/Sources/TesseraTess/TessCaptureEngine.swift:337`); "gate code is 4417" says "Private note, kept."
@@ -89,34 +89,34 @@ Status words: **pass** (master meets the ruling), **wrong** (master shows or doe
 
 ### UC2. Capture, then a Home done
 
-- **Actions.** t=0 types "buy milk", Return. t=2.68 releases a swipe-done on "Call Mum" in Home's queue (op lands
+- **Actions.** t=0 types "buy milk", Return. t=2.68 releases a swipe-done on "Call mom" in Home's queue (op lands
   t=4). t=5 taps UNDO.
-- **Ruled.** t=2 milk's line and UNDO. t=4 "Call Mum, done." becomes the line and owns the UNDO (10 s, to t=14);
-  milk's window closes. The t=5 tap takes back Call Mum and says "Call Mum, taken back."
-- **Master.** t=4 `voice.note` = "Call Mum, done." with its op (`HomeQueue.swift:459`), but the line still reads
-  "Milk, on the list." until t=6 because `reply` wins (`BottomChrome.swift:148`). The t=5 tap reverts Call Mum
+- **Ruled.** t=2 milk's line and UNDO. t=4 "Call mom, done." becomes the line and owns the UNDO (10 s, to t=14);
+  milk's window closes. The t=5 tap takes back Call mom and says "Call mom, taken back."
+- **Master.** t=4 `voice.note` = "Call mom, done." with its op (`HomeQueue.swift:459`), but the line still reads
+  "Milk, on the list." until t=6 because `reply` wins (`BottomChrome.swift:148`). The t=5 tap reverts Call mom
   (`BottomChrome.swift:737-741`) under milk's line. Milk can never be taken back: its `lastCapture` (t=4 to t=8) is
   hidden behind the Home note and expires unseen.
 - **Status: wrong** (the right thing is taken back under the wrong line).
 
 ### UC3. Home done, then a capture (the F1 headline)
 
-- **Actions.** t=0 releases a swipe-done on "Call Mum" (op lands t=1.32). t=3 types "buy milk", Return. t=6 taps
+- **Actions.** t=0 releases a swipe-done on "Call mom" (op lands t=1.32). t=3 types "buy milk", Return. t=6 taps
   UNDO.
-- **Ruled.** t=1.32 "Call Mum, done." with UNDO. t=5 "Milk, on the list." takes the line and the UNDO (window 5 to 9);
-  Call Mum's window closes at 5. The t=6 tap takes back milk and says "Milk, taken back." Call Mum stays done.
+- **Ruled.** t=1.32 "Call mom, done." with UNDO. t=5 "Milk, on the list." takes the line and the UNDO (window 5 to 9);
+  Call mom's window closes at 5. The t=6 tap takes back milk and says "Milk, taken back." Call mom stays done.
 - **Master.** The line reads "Milk, on the list." from t=5 (`BottomChrome.swift:148`), while `canUndo` is true from
-  the Home note (`:729-731`, alive to t=11.32 per `HomeQueue.swift:34`). The t=6 tap reverts Call Mum to not done
+  the Home note (`:729-731`, alive to t=11.32 per `HomeQueue.swift:34`). The t=6 tap reverts Call mom to not done
   (`:737-741`); milk stays. At t=7 milk commits and a second UNDO appears under the same line, now for milk.
 - **Status: wrong.**
 
 ### UC4. Capture, then a move
 
-- **Actions.** t=0 types "buy milk", Return. t=3 releases a swipe-left on "Call Mum" (op lands t=3.2). t=4 taps UNDO.
-- **Ruled.** t=3.2 "Call Mum, tomorrow." (thing first) owns the line and the UNDO for 10 s. The t=4 tap moves Call Mum
-  back and says "Call Mum, taken back."
+- **Actions.** t=0 types "buy milk", Return. t=3 releases a swipe-left on "Call mom" (op lands t=3.2). t=4 taps UNDO.
+- **Ruled.** t=3.2 "Call mom, tomorrow." (thing first) owns the line and the UNDO for 10 s. The t=4 tap moves Call mom
+  back and says "Call mom, taken back."
 - **Master.** The move says "Moved to tomorrow." (`HomeQueue.swift:480`, thing last), hidden behind milk's line until
-  t=6. The t=4 tap moves Call Mum back under "Milk, on the list."
+  t=6. The t=4 tap moves Call mom back under "Milk, on the list."
 - **Status: wrong.**
 
 ### UC5. Recipe sent to Groceries, then a capture
@@ -159,18 +159,18 @@ Status words: **pass** (master meets the ruling), **wrong** (master shows or doe
 
 ### UC8. Home UNDO after its window
 
-- **Actions.** t=0 releases a swipe-done on "Call Mum" (op lands t=1.32). t=12 taps where UNDO was.
-- **Ruled.** Window 1.32 to 11.32. Nothing at t=12; Call Mum stays done.
+- **Actions.** t=0 releases a swipe-done on "Call mom" (op lands t=1.32). t=12 taps where UNDO was.
+- **Ruled.** Window 1.32 to 11.32. Nothing at t=12; Call mom stays done.
 - **Master.** The note clears at t=11.32 (`HomeQueue.swift:34-37`); `canUndo` is false (`BottomChrome.swift:732`,
   no capture). Nothing happens.
 - **Status: pass.**
 
 ### UC9. Home done, then the app goes to the background
 
-- **Actions.** t=0 releases a swipe-done on "Call Mum" (op lands t=1.32). t=3 swipes home (app to the background).
+- **Actions.** t=0 releases a swipe-done on "Call mom" (op lands t=1.32). t=3 swipes home (app to the background).
   t=30 opens the app. t=31 taps UNDO.
-- **Ruled.** The window pauses at t=3 with 8.32 s left (`decisions.md:162`), so on return "Call Mum, done." and its
-  UNDO stay until t=38.32. The t=31 tap says "Call Mum, taken back."
+- **Ruled.** The window pauses at t=3 with 8.32 s left (`decisions.md:162`), so on return "Call mom, done." and its
+  UNDO stay until t=38.32. The t=31 tap says "Call mom, taken back."
 - **Master.** `TessVoice.say` sleeps with `Task.sleep` (`HomeQueue.swift:34`), which keeps counting while the app is
   away; on return the note is gone, so there is no UNDO at t=31. Foreground also runs `tidyProcesses`
   (`App/TesseraApp.swift:85-86`), and any overnight line it raises replaces the Home note outright
@@ -203,12 +203,12 @@ Status words: **pass** (master meets the ruling), **wrong** (master shows or doe
 
 ### UC12. VoiceOver on, Home done then a capture
 
-- **Actions.** VoiceOver on. t=0 double-taps done on "Call Mum" on the Now page (op lands at once,
+- **Actions.** VoiceOver on. t=0 double-taps done on "Call mom" on the Now page (op lands at once,
   `NowPage.swift:237`). t=4 dictates or types "buy milk", Return. t=8 double-taps UNDO.
-- **Ruled.** t=6 milk's line owns the UNDO, 10 s (to t=16). The t=8 double-tap says "Milk, taken back." Call Mum
+- **Ruled.** t=6 milk's line owns the UNDO, 10 s (to t=16). The t=8 double-tap says "Milk, taken back." Call mom
   stays done.
 - **Master.** Now says "Done. Next one is up." with a 10 s note (`NowPage.swift:242`, thing last). From t=6 the line
-  reads milk while UNDO reverts Call Mum, as in UC3. The VoiceOver user hears only "Undo" and has no way to tell
+  reads milk while UNDO reverts Call mom, as in UC3. The VoiceOver user hears only "Undo" and has no way to tell
   which thing it will take back.
 - **Status: wrong.**
 
@@ -236,30 +236,30 @@ Status words: **pass** (master meets the ruling), **wrong** (master shows or doe
 
 ### UC15. A private note captured right after a Home done
 
-- **Actions.** t=0 releases a swipe-done on "Call Mum" (op lands t=1.32). t=3 types "gate code is 4417", Return.
+- **Actions.** t=0 releases a swipe-done on "Call mom" (op lands t=1.32). t=3 types "gate code is 4417", Return.
   t=6 taps UNDO.
 - **Ruled.** t=5 "Private note, kept." owns the line and the UNDO, 4 s. The t=6 tap takes back the note and says
   "Private note, taken back." Neither line nor answer ever shows 4417, and VoiceOver reads only those words.
 - **Master.** The line is "Private note, kept." (`TessCaptureEngine.swift:300`), no value: pass for the line. But the
-  UNDO under it reverts Call Mum (`BottomChrome.swift:737-741`), so the note he meant to take back stays. Only a second
+  UNDO under it reverts Call mom (`BottomChrome.swift:737-741`), so the note he meant to take back stays. Only a second
   tap after the note dries at t=7 takes it back, with no answer line. While drying, the Write line shows the typed
   text as the ghost (`BottomChrome.swift:477`); that is his own field, not Tess's line, and is out of scope here.
 - **Status: wrong** (UNDO); **pass** (line hides the value); **miss** ("Private note, taken back.").
 
 ### UC16. Spoken "undo" after a Home done and a capture
 
-- **Actions.** t=0 releases a swipe-done on "Call Mum" (op lands t=1.32). t=3 types "buy milk", Return. t=6 holds the
+- **Actions.** t=0 releases a swipe-done on "Call mom" (op lands t=1.32). t=3 types "buy milk", Return. t=6 holds the
   soul and says "undo".
 - **Ruled.** As UC3: milk is taken back, "Milk, taken back."
-- **Master.** `SpokenPhrase.isUndo` routes to the same `undo()` (`BottomChrome.swift:631-638`), so Call Mum is
+- **Master.** `SpokenPhrase.isUndo` routes to the same `undo()` (`BottomChrome.swift:631-638`), so Call mom is
   reverted.
 - **Status: wrong.**
 
 ### UC17. Two Home actions in a row
 
-- **Actions.** t=0 releases a swipe-done on "Call Mum" (op lands t=1.32). t=2 releases a swipe-left on "Pay rent"
+- **Actions.** t=0 releases a swipe-done on "Call mom" (op lands t=1.32). t=2 releases a swipe-left on "Pay rent"
   (op lands t=2.2). t=3 taps UNDO.
-- **Ruled.** t=2.2 "Pay rent, tomorrow." owns the UNDO; Call Mum's window closes. The t=3 tap moves Pay rent back:
+- **Ruled.** t=2.2 "Pay rent, tomorrow." owns the UNDO; Call mom's window closes. The t=3 tap moves Pay rent back:
   "Pay rent, taken back."
 - **Master.** The second `say` replaces the note (`HomeQueue.swift:29-31`), so the t=3 tap moves Pay rent back:
   right thing, but the line is "Moved to tomorrow." and the tap says nothing.
@@ -289,14 +289,14 @@ after any in-app UNDO (all). Not built: Lists' remove (NE11) and the Live Activi
 1. Every surface that shows a line with a way back (capture, Home, Now, Groceries, recipe send, backup, live set,
    finish, Routines, notes delete) opens a claim in one shared slot. Opening a claim closes the one before it: the
    older thing keeps its write, but its UNDO goes. There is never more than one UNDO on screen.
-2. A claim carries its thing ("Milk", "Call Mum", "Private note"), its line, its kind, and what it takes back (all
+2. A claim carries its thing ("Milk", "Call mom", "Private note"), its line, its kind, and what it takes back (all
    ops of one phrase together). The line text and the UNDO key both read the current claim; nothing else draws an
    UNDO. A page that draws its own key (recipe, backup, live corner) shows it only while its claim is current.
 3. The window opens when the line shows (for a capture, while the ghost is still drying: an UNDO before it dries
    discards it). Length: 4 s for a new thing, 10 s for a change or removal, 10 s for all with VoiceOver on. It pauses
    in the background and while locked, and resumes on return.
 4. UNDO takes back exactly the claim's ops and answers "Thing, taken back." For a private note the thing is always
-   "Private note". A partial reversal says so ("Call Mum, partly taken back.") rather than looking whole.
+   "Private note". A partial reversal says so ("Call mom, partly taken back.") rather than looking whole.
 5. Siri's "Undo Last Set" stays outside the slot (no window, `decisions.md:167`), but a Siri take-back closes an open
    in-app claim on the same set.
 
