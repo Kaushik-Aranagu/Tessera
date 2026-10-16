@@ -9,8 +9,8 @@ extension WorkoutSession {
             return "First time. Start light, \(prefill.reps) reps"
         }
         return switch prefill.source {
-        case .lastTime:
-            prefill.weight.map { "Same as last time, \(Format.kilograms($0)) × \(prefill.reps)" }
+        // The detail line already says last time; the same again is silence (56 addendum).
+        case .lastTime: nil
         case .thisSession: nil
         case .target: "From the plan"
         case .none: nil

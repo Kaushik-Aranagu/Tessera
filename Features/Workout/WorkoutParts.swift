@@ -255,10 +255,8 @@ enum WorkoutLines {
         if let reason = session.targetReason, session.currentSetNumber == 1 {
             return reason + "."
         }
-        if let best = session.previousBest {
-            return "Last best was \(Format.kilograms(best.weight)) × \(Int(best.reps))."
-        }
-        return "Set \(session.currentSetNumber). \(Format.kilograms(session.weight)) × \(Int(session.reps))."
+        // Before a set the page already says it all (the key, the detail line): Tess stays quiet (56 addendum).
+        return ""
     }
 }
 
