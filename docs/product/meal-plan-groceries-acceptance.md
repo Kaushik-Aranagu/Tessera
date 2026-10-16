@@ -6,7 +6,7 @@
 
 | Question | Default | Why |
 |---|---|---|
-| When | From 17:00 the day before the task's date, on the next app foreground or tidy pass. A cook planned for today, or for tomorrow after 17:00, goes on at once | "The evening before" matches his after-work shop. No background work is needed |
+| When | **Changed 2026-10-16 (Design 47, `groceries-ai-acceptance.md`):** the moment the cook task is captured or its recipe set, for any date. The tidy pass only catches a recipe linked to a task later | He sees the rows land and can undo them; the Home count reminds him on the day |
 | How much | The recipe's own serves, through `AddRecipeToGroceries(recipe:, serves: nil)`, with staples skipped as usual | It is the same path as the recipe page's swipe, so merging and shares already work |
 | Only once | The task records `groceriesAddedAt` and is never added again, even if he clears the basket or removes the recipe by hand | If he takes it off, that was his choice |
 | Linked | The share carries the task: the recipe dab's long-press reads "Carbonara, Thursday", not just "Carbonara" | He can see why an item appeared |
@@ -14,7 +14,7 @@
 | Task deleted or undone | If the recipe was added, `RemoveRecipeFromGroceries` removes the open items that carry only this share, and checked items stay. If it wasn't added, nothing happens | Undo puts things back the way they were |
 | Task done or cooked early | Nothing changes. Open items stay; he may still need them | |
 | Already on the list from the recipe page | The share merges as it does today; there are no duplicate lines | |
-| Tess | No line and no notification. The items quietly appear, with a sage dab | Groceries is where he looks before shopping |
+| Tess | **Changed 2026-10-16:** "Added 2 for tacos." with UNDO for 10 s. No notification. Rows carry "for tacos" under them; no sage dab (`no-dots.md`) | Design 47 |
 
 ## Acceptance script
 
@@ -26,6 +26,6 @@
 5. A task moved from Thursday to Saturday before the add is added on Friday at 17:00.
 6. If the recipe was deleted, the pass skips the task without crashing.
 
-**On the simulator, in the recording.** Capture "dal tomorrow" in the ghost row. Shift `-demoTime` past 17:00 and open Groceries: the dal items are there with sage dabs, and a long-press reads "Weeknight dal, Friday".
+**On the simulator, in the recording.** Capture "dal tomorrow" in the ghost row. Open Groceries: the dal items are there with "for dal" under each, Tess says "Added 3 for dal." with UNDO (Design 47 replaced the 17:00 wait and the sage dab).
 
 **UI bar.** There is nothing new on screen apart from the long-press wording, so it inherits Groceries' acceptance.
