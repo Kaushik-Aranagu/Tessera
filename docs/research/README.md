@@ -127,3 +127,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [week-one-dryrun.md](week-one-dryrun.md) | Coordinator, Core: week-one check-in run on sample copies; 8 query bugs fixed, partial-copy gap |
 | [fixtures/set-logger.md](fixtures/set-logger.md) | Core, Builder A: 40 set-logger phrases (group K in the grammar suite), defaults S701-S706 |
 | [theme-schedule.md](theme-schedule.md) | Builder A, Design: when the day look switches to the night look, pins, Live Activity; 25 fixtures against master |
+| [backup-logical-day.md](backup-logical-day.md) | Core, QA: daily backup copy by the 4 AM day, 12 timelines with test names and phone steps |
