@@ -57,11 +57,13 @@ extension TessGrammar {
             guard let inFocus, let last else {
                 return .ask("\(name) \(Int(first)) × \(TessVoice.number(reps)) at what weight?")
             }
-            // In focus, the ask covers N up to 10 under half the last weight ("bench 8x8" at 80; QA F4).
+            // In focus it always asks and never reaches the weight write (QA F4): under half the last weight it may
+            // be sets ("bench 8x8" at 80); otherwise, at what weight.
             if first < last.weight / 2 {
                 return .askSetCount(TessSetCountAsk(entry: inFocus.id, count: Int(first), reps: reps,
                                                     bodyweight: false))
             }
+            return .ask("\(name) \(Int(first)) × \(TessVoice.number(reps)) at what weight?")
         }
         if lift.setsSaid, lift.weight == nil, let reps = lift.reps {
             let name = TessCaptureEngine.shortName(exercise.name)

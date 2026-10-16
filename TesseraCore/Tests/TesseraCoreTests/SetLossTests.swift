@@ -76,6 +76,7 @@ struct SetLossTests {
         ("F3f", "leg press 5 kg x 5", "lift Leg Press 5x5"),
         ("F3g", "kettlebell swing 3x15", "ask Kettlebell Swing 3 × 15 at what weight?"),
         ("F5", "bench 3 sets of 8 at 7", "ask Bench 3 × 8 at what weight?"),
+        ("F4a", "cable row 5x10", "ask Seated Cable Row 5 × 10 at what weight?"),
         // Research's 113 re-trace and Design's Speak review.
         ("R113b", "Bench 80 kg, 8 reps only.", "lift Bench Press 80x8"),
         ("R113c", "Bench 3 sets of 8 at 80.", "lift Bench Press 3x80x8"),
@@ -212,5 +213,24 @@ struct SetLossTests {
         try engine.perform(LogSet(entry: cable.id, weight: 55, reps: 10), by: .user)
         live.entry = cable.id
         #expect(read(grammar.parse("lat pulldown 10x10", context: live)) == "ask 10 × 10: 10 sets, or 10 kg?")
+        // At or over half the last weight in focus: at what weight, never N kg.
+        let legs = try engine.perform(AddExercise(workout: workout.id, exercise: press.id), by: .user).output
+        try engine.perform(LogSet(entry: legs.id, weight: 100, reps: 10), by: .user)
+        live.entry = legs.id
+        #expect(read(grammar.parse("leg press 8x10", context: live)) == "ask 8 × 10: 8 sets, or 8 kg?")
+        let curl = try #require(store.classDef(id: SystemCatalog.stableID("library.dbCurl")))
+        let curls = try engine.perform(AddExercise(workout: workout.id, exercise: curl.id), by: .user).output
+        try engine.perform(LogSet(entry: curls.id, weight: 12, reps: 10), by: .user)
+        live.entry = curls.id
+        #expect(read(grammar.parse("curls 8x10", context: live)) == "ask Dumbbell Curl 8 × 10 at what weight?")
+    }
+
+    @Test func anExerciseWithNoEquipmentNeverLogsNKilos() throws {
+        // QA on #289: no equipment strides 2.5 from 0; the rule doesn't read loads, so it asks.
+        let root = try #require(classes[.strengthExercise])
+        let sled = ClassDef(name: "Sled Push", parent: root, symbolName: "figure", colorRole: "training", traits: [],
+                            systemKey: nil)
+        store.context.insert(sled)
+        #expect(read(grammar.parse("sled push 3x8", context: context)) == "ask Sled Push 3 × 8 at what weight?")
     }
 }
