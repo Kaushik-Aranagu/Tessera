@@ -1,5 +1,6 @@
 # New on your phone
 
+- **Home** says one plain line per thing, and the day word follows your 4 am day.
 - **Review** is your week on one page. Tap a day to read it.
 - **The live workout** grows out of START, with LOG on the key and "Push A, set 1 of 4" on top.
 - **Routines:** make, drag and drop them, and pick ROLLS ON or FIXED DAYS.
@@ -16,7 +17,7 @@ Written against master on Oct 16. Lines marked *if it lands before the pin* aren
 
 ### Home
 - **Glass tabs:** hold the tab row and a glass lens forms under your finger. The pages shrink side by side, and letting go opens the one under it. A tap still works.
-- **Home lines:** one plain line per thing ("Push A, paused at bench", "Tacos done"), nothing cut short, and the day word follows your 4 am day. *If it lands before the pin.*
+- **Home lines:** one plain line per thing ("Push A, paused at bench", "Tacos done"), nothing cut short, and the day word follows your 4 am day.
 - **Review** is your week on one page: a band each for training, tasks done and cooking, then the week's lines. Tap a day to read just that day; tap again for the week.
 
 **Training and the live workout**
@@ -65,4 +66,4 @@ Written against master on Oct 16. Lines marked *if it lands before the pin* aren
 4. On Routines, switch to FIXED DAYS and give a routine its days.
 5. In Notes, type "wifi password is tacocat4417" and see it kept as a private note.
 
-Built from: #341, #342, #344, #347, #348, #352, #353, #359, #363, #367, #377, #380, #381, #391, #397, #402, #422, #446, #451, #453, #454, #457, #463, #467, #471, #475; if they land: #366 (with #369), P14.
+Built from: #341, #342, #344, #347, #348, #352, #353, #359, #363, #367, #377, #380, #381, #391, #397, #402, #422, #446, #451, #453, #454, #457, #463, #467, #471, #475; #366 (with #369); if it lands: P14.

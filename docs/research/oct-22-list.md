@@ -1,6 +1,7 @@
 # Thursday 22 Oct: re-sign day, and Kaushik's one morning message (board items 91, 92 and 121)
 
-*Research, refreshed Oct 16 about 12:20 PM PT at `origin/master` 234080a. Times Pacific. Sources: `pin-checklist.md`,
+*Research, refreshed Oct 16 about 12:20 PM PT at `origin/master` 234080a; rows fixed 12:55 pm PT at 01b30a2
+(`pin-gate-dry-read.md` G2, G15, G26, G28). Times Pacific. Sources: `pin-checklist.md`,
 `next-build-script-v9.md`, `review-refresh-3.md`, `resign-day.md`, `install-day-script.md`, `review-session.md`,
 `decisions.md`, `ops/board/*.md`, `trip-checklist.md`, master's log since 9:57 AM PT Oct 16.*
 
@@ -8,12 +9,14 @@
 - **On his phone:** 7b321d2, installed Fri Oct 16 9:57 AM PT over the app, data untouched. It carries #320, #330,
   #334, #337 and #343 only. Store at Catalog v5. Free Personal Team signing lapses about **Fri Oct 23, 9:57 AM PT**,
   so Thursday is re-sign day. Reminder: **Thu Oct 22, 10 AM PT**.
-- **The next pin is Catalog v9, not named yet.** At 234080a the blockers #422, #446 and MU2 with A2 (#451) are
-  merged; **#366 (Home lines) is still open** (Design clip pass, then QA confirm). Riders merged: #454 (paste/link
-  wall), #457 (Siri task wall). Not merged: the mark-private pass, P1/T1, P2, the rest-day reader.
+- **The next pin is Catalog v9, not named yet.** At 01b30a2 every blocker is merged: #422, #446, MU2 with A2 (#451),
+  and #366 (Home lines, merged as 6047078 at 12:47 pm PT with the 4 am day label; `HomeLineHero.swift` uses
+  `TesseraDay`). Riders merged: #454 (paste/link wall), #457 (Siri task wall), #471 (notes refuse a Claude key, body
+  facts with no number), #475 (a newer store or backup is refused). Not merged: M1, P14, the mark-private pass,
+  P1/T1, P2, the rest-day reader.
 - **Rules that hold either way:** never delete Tessera; bundle `com.kaushikaranagu.tessera`, team `WMP2WF3P54`,
   App Group `group.com.kaushikaranagu.tessera`, none of them renamed. Step 0 is always SAVE A COPY. Rollback build is
-  444e72b (v5). An older build on a newer store is shown safe through v7 (V4 checks 7b321d2 on the v9 store). A
+  444e72b (v5) before the pin and 7b321d2 after it (pin-checklist §7). An older build on a newer store is shown safe through v7 (V4 checks 7b321d2 on the v9 store). A
   newer backup restored onto an older build is forbidden until tested.
 - **Trip:** leaves Mon Oct 26 (New York), lands at LAX Wed Oct 28, 9:20 PM PT. The trip fixes (#377, #391) are only
   in the pin, which must be on his phone by Sun Oct 25 to help.
@@ -27,7 +30,7 @@ QA read the gate run; Design passed the 66 walk; and he says "install it". Anyth
 1. Not mid-workout. Finish or skip starting one until after.
 2. Review > Backups, tap **SAVE A COPY**. Today's copy shows on the page. Nothing else is asked about his backup.
 3. Two yes/no questions only: is a Claude key on the phone? Is "Tess asks Claude" on? If both yes, note the receipts
-   count in Settings > Claude. Never ask him to type, show or paste the key.
+   count in Review, under Claude. Never ask him to type, show or paste the key.
 
 ## Branch 1: the v9 pin is named and passed its gate
 1. Step 0 above. This copy is v5, made on 7b321d2, so it stays restorable on 7b321d2 and 444e72b.
@@ -64,7 +67,7 @@ Same commit, same store (v5), no migration, no data change. Only the signing clo
 2. Review shows this week as before: same workouts and set counts as this morning.
 3. One exercise page: history and best still go back before today.
 4. Review > Backups: today's copy is there, "the last one today", at most 7 kept.
-5. Settings > Claude: a key is there, yes or no, same as Step 0. Don't paste it again.
+5. Review, under Claude: a key is there, yes or no, same as Step 0. Don't paste it again.
 6. The look sentence reads the same looks as before.
 
 If 1 to 3 show an empty app: stop, log nothing, never delete. The data is still in the container or the copies.
@@ -111,4 +114,4 @@ answer-to-owner table for these questions is unchanged; see this file at 98a4407
 5. Checks 1 to 6 after the install look right? Yes / No (any no: stop, don't delete).
 6. The morning message: one word each, or "defaults".
 
-**Ruled (Product, decisions.md 12:16 PM PT, pin-checklist §7):** after the pin, the rollback build is 7b321d2; before the pin it is 444e72b. MU2 and A2 are ticked; #366 is the only pin blocker left.
+**Ruled (Product, decisions.md 12:16 PM PT, pin-checklist §7):** after the pin, the rollback build is 7b321d2; before the pin it is 444e72b. MU2 and A2 are ticked; #366 merged 6047078 at 12:47 pm PT, so no pin blocker is left open.
