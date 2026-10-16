@@ -2,7 +2,7 @@
 
 *Started 2026-10-16 from Kaushik's first review (11:58 PM PT Oct 15): Tess's soul gets dot eyes, roams the screen, can be dragged, fades into subtle colours while working, splits and gathers back. "Very subtle." Product edits the Next list. Rules: Speak gestures stay (tap opens Tess, double tap in 260 ms goes Home, a hold never opens the layer, so a drag starts from a hold); nothing on a page moves for the soul; colour arrives through motion and dries; 60fps with a Reduce Motion fallback; palettes from `soul-explore.md`. Builder A builds it (TessSoul.swift, SoulParameters.swift).*
 
-**Now:** 11, then 12 and 13. Done: 1 to 10. Standing: every clip ends inside the app, never on the iOS Home Screen.
+**Now:** 14, then 15; then wait for Builder A's motion build and run 16. Done: 1 to 13 (Design reviewing 11 to 13). Standing: every clip ends inside the app, never on the iOS Home Screen.
 
 **Next:**
 1. Dot eyes and idle life. Done when a recording shows the soul with two dot eyes that blink, look toward a new row and rest, in every look, subtle enough to ignore, with values for Builder A.
@@ -18,3 +18,6 @@
 11. The soul in the looks recut. Done when the soul is re-recorded on Design 43's recut looks (Builder A's ios/looks-recut, Obsidian unchanged), with any palette clash fixed in `soul-explore.md`'s per-look pigments.
 12. Motion at rest. Done when a recording shows a full minute of Home untouched, so the eyes, drift and colour are proven calm enough to ignore, with the idle budget (how often anything moves) written down for Builder A.
 13. The quiet versions. Done when every soul state (idle, roam, listening, asking, working, reward, colour change) has its Reduce Motion and Low Power Mode version recorded, still or nearly still, with the switch rules for Builder A.
+14. The event contract. Done when one table maps every app event (capture landed, ask raised, Claude call out and back, task done, set logged, best, workout finished, day closed, palette change, Reduce Motion or Low Power on) to the soul state it triggers, who emits it (Core or the screen) and its priority when two arrive together, so Builder A wires the soul once.
+15. The soul with the glass tabs. Done when a recording shows the soul during #342's hold-and-swipe lens and page changes (where she rides, whether she waits, how she lands on the new page), checked against the roam rules, with values for Builder A.
+16. Build check. When Builder A's motion PR lands, run the item 10 kit against it frame by frame and post pass or fix lines for QA and Design.
