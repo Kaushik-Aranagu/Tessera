@@ -82,6 +82,8 @@ The gesture is the build's: swipe right, armed at 140pt. The strike follows the 
 | Reps pass last time | `.impact(flexibility: .rigid, intensity: 0.8)`, once per set (as built) | RepsRow (A) |
 | Reps hit 1 or 50 | `.impact(flexibility: .soft, intensity: 0.4)`, once, not repeated while pushed | RepsRow (A) |
 | Weight reel, each detent | `.selection` | WeightReel (A) |
+| Weight reel passes a 5 kg or heavier plate going on or off | `.impact(weight: .light)` in place of that detent's tick (#317) | WeightReel (A) |
+| Weight reel hits its bound | `.impact(flexibility: .soft, intensity: 0.4)`, once per push | WeightReel (A) |
 | +15 on rest | `.selection` per tap | workout, Live Activity (A) |
 | Rest is up, app on screen | `.impact(weight: .heavy, intensity: 0.9)`, once | workout (A) |
 | A kitchen timer ends, app on screen | `.impact(weight: .heavy, intensity: 0.9)`, once | cook mode (A) |
