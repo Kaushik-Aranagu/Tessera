@@ -140,4 +140,19 @@ public struct MoveTask: EngineAction {
         let title = store.object(id: task)?.title ?? "it"
         return later == true ? "Moved \(title) to Later" : "Moved \(title)"
     }
+
+    /// "Call mom, in Later", "Call mom, tomorrow 6:30 pm".
+    public func receipt(in store: ObjectStore) -> String? {
+        guard let object = store.object(id: task) else { return nil }
+        guard later != true, let at = store.value("startsAt", of: object)?.dateValue else {
+            return "\(object.title), in Later"
+        }
+        let calendar = Calendar.current
+        let day = TesseraDay(calendar: calendar)
+        let now = time ?? .now
+        let word = day.isSameDay(at, now) ? "today"
+            : day.isSameDay(at, day.adding(days: 1, to: now)) ? "tomorrow"
+            : at.formatted(.dateTime.weekday(.abbreviated).locale(Locale(identifier: "en_US")))
+        return "\(object.title), \(word) \(DayStoryClock.sentenceTime(at, calendar: calendar))"
+    }
 }

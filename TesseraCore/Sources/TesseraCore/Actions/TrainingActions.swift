@@ -480,6 +480,11 @@ public struct SetTaskDone: EngineAction {
         let title = store.object(id: task)?.title ?? "the task"
         return done ?? true ? "Done: \(title)" : "Reopened \(title)"
     }
+
+    public func receipt(in store: ObjectStore) -> String? {
+        let title = store.object(id: task)?.title ?? "The task"
+        return done ?? true ? "\(title), done" : "\(title), back on"
+    }
 }
 
 // MARK: Generic

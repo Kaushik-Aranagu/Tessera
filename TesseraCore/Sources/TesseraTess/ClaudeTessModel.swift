@@ -125,7 +125,10 @@ public struct ClaudeTessModel: TessModel {
         // Never claim more than was done: Claude's own line only if it passes Tess's voice checks.
         var line = reply.trimmingCharacters(in: .whitespacesAndNewlines)
         if line.isEmpty || !TessVoice.violations(in: line).isEmpty {
-            line = records.count == 1 ? records[0].summary + "." : "\(records.count) things done."
+            // Thing first when the action has a spoken form (RC23); the log summary is never read aloud raw.
+            line = records.count == 1 ? (records[0].receipt ?? records[
+                0
+            ].summary) + "." : "\(records.count) things done."
         }
         // The first miss ever sent says where it went, once (Product 8:28 PM PT Oct 15).
         if !flags.noticeShown {
