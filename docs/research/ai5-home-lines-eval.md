@@ -3,13 +3,13 @@
 For: AI architecture (runner and verdict), Core (AI-3 checks, AI-4 `homeLines` job), QA. Owner: Research lab.
 Date: Oct 16, 2026 (Pacific). Built on master 450a0c0: `docs/ai/home-lines.md` (slots and caps), `docs/ai/ship-list.md` AI-5 row (the gate), `first-features.md` 1b (H1-H12), `scripts/ai/memory_experiment.py` (runner house style).
 
-**Fixture:** [`fixtures/home-lines-eval.json`](fixtures/home-lines-eval.json), 20 Home moments (E1-E20) with 45 probe lines. E1-E12 are H1-H12 re-slotted to context line and SO FAR detail; E13-E20 add the cases the gate has to prove: planned cook count, a pack leak, memory used as an instruction, three truth traps, a whole-screen reply, detail digits, and the 4 AM day boundary. Each probe carries the verdict the phone's checks must reach, and a `human` note when the checks pass a line that is still false.
+**Fixture:** [`fixtures/home-lines-eval.json`](fixtures/home-lines-eval.json), 20 Home moments (E1-E20) with 44 probe lines. E1-E12 are H1-H12 re-slotted to context line and SO FAR detail; E13-E20 add the cases the gate has to prove: planned cook count, a pack leak, memory used as an instruction, three truth traps, a whole-screen reply, detail digits, and the 4 AM day boundary. Each probe carries the verdict the phone's checks must reach, and a `human` note when the checks pass a line that is still false.
 
 Its purpose is that AI-5 runs the day AI-4's pack lands, with nothing left to decide but the open questions at the end.
 
 ## 1. What the eval sends and gets back
 
-One call per moment, built exactly as AI-4 will build it: house voice, the Home lines instructions, the pack (items with `hero`, `rules.context`, `rules.detail`, `numbers`, `names`, plus `memory`), and the strict `proposeLines` tool returning `{id, context, detail}` per item. Items marked `fixed` (live workout, workout with no sets) are never in the pack. E4 must build no request at all.
+One call per moment, built exactly as AI-4 will build it: house voice, the Home lines instructions, the pack (items with `hero`, `rules.context`, `rules.detail`, `numbers`, `names`, plus `memory`), and the strict `proposeLines` tool returning `{id, context, detail}` per item. Items marked `fixed` (live workout, workout with no sets) are never in the pack. E4 and E10 must build no request at all (every item is fixed).
 
 The hero is never sent for rewording and never comes back. A returned hero is ignored.
 
@@ -36,7 +36,7 @@ The hero is never sent for rewording and never comes back. A returned hero is ig
 
 All word checks run on whole lowercase word tokens, never substrings, so "paint" never trips "pain" and "bulb" never trips "lb".
 
-The probes prove the checks: run the checker over all 45 probes with no key; every probe must get its `expect` verdict. A reference checker written against this table gets 45 of 45.
+The probes prove the checks: run the checker over all 44 probes with no key; every probe must get its `expect` verdict. A reference checker written against this table gets 44 of 44.
 
 ## 3. Human scores (Research reads every shown line before Kaushik does)
 
@@ -58,7 +58,7 @@ If Haiku fails and Sonnet passes, ship Sonnet. If both pass, ship the one with m
 
 ## 5. Results
 
-The runner writes `docs/ai/home-lines-eval-results.md`: per model and run, lines sent, shown, caught by check (with the check number), truth and voice scores, median and p90 cost, and the 10 for Kaushik. The runner follows `memory_experiment.py`: key from `ANTHROPIC_API_KEY` only, never printed or written; api.anthropic.com only; bounded calls (20 moments x 2 models x 3 runs = 120 calls, under $1 with Sonnet at $0.0045 a call); `--dry` runs every check on the probes with no key and no spend; writes only under docs/.
+The runner writes `docs/ai/home-lines-eval-results.md`: per model and run, lines sent, shown, caught by check (with the check number), truth and voice scores, median and p90 cost, and the 10 for Kaushik. The runner follows `memory_experiment.py`: key from `ANTHROPIC_API_KEY` only, never printed or written; api.anthropic.com only; bounded calls (18 moments that send, x 2 models x 3 runs = 108 calls, under $1 with Sonnet at $0.0045 a call; E4 and E10 send nothing); `--dry` runs every check on the probes with no key and no spend; writes only under docs/.
 
 ## 6. Open questions (defaults in place, AI architecture decides)
 
