@@ -35,3 +35,8 @@ His ask (Oct 16, 1:51 PM PT): the REVIEW / TODAY / TRAINING / KITCHEN row "looks
 - **Builder A (the tab strip is his):** remove the row and 42's lens; add `AreaName` (the rolling word) and `AreaIndex` (a pull and tap gesture driving a `progress` of 0 to 1 and a `picked` index). The live lines come from each area's existing context-line source, with no new reads.
 - **Core:** none.
 - **Not decided here:** a fifth area. The index takes five rows (to 616) without changing.
+
+## His pick (Oct 16, 2:06 PM PT)
+- **A, the index, goes ahead.** C is dropped for good. B's edge spine isn't a way between areas; its idea moves into Today's side page (74).
+- **x on a tab page is no longer the rail.** The index (pull down, or tap the name) is the one way between areas, so a left swipe on a tab page opens that screen's own side page, under sheet 71's order. This replaces "x is still the rail" above, and 71's row "Tab pages: none". Each tab page's side page is mapped in `today-side.md` (74).
+- **Later, with many more areas:** the index will need an order (pinned, recent, grouped by kind) and maybe typing a name. That gets its own sheet when the fifth area is near.
