@@ -59,6 +59,27 @@ final class AppModel {
         settingsAreReal && SettingsStore(engine: engine).read().sendsMissesToClaude
     }
 
+    /// Plan my day's Claude wording stays off until Core's G4 and G9 land and its eval passes (AI architecture, Oct
+    /// 16). Turning it on is their one-line change.
+    static let planWordingReady = false
+
+    /// Plan my day's wording through Claude: one instance for the app, so its cache holds across reopens.
+    var planWording: ClaudePlanWording {
+        if let wording = planWordingStore {
+            return wording
+        }
+        let wording = ClaudePlanWording(
+            keys: SystemKeychain(),
+            ledger: TessUsageLedger(store: store, classes: classes)
+        ) {
+            [weak self] in self?.asksClaude ?? false
+        }
+        planWordingStore = wording
+        return wording
+    }
+
+    @ObservationIgnored private var planWordingStore: ClaudePlanWording?
+
     /// Bumped after writes so views re-read derived data.
     private(set) var revision = 0
     /// Pages above Home.
@@ -91,6 +112,12 @@ final class AppModel {
     let soul = SoulRouter()
     var tessMode: TessSoul.Mode {
         soul.mode
+    }
+
+    /// "Tess has eyes" (Settings › Tess, off by default). Core's `tessEyes` field is on its way; until then only the
+    /// simulator's `-tessEyes` flag turns them on (LaunchFlags is simulator-only, so never on the phone).
+    var tessHasEyes: Bool {
+        LaunchFlags.has("-tessEyes")
     }
 
     /// Home (the launcher Tess paints in) vs Today.

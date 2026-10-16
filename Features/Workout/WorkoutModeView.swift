@@ -108,6 +108,7 @@ private struct WorkoutContent: View {
                             mode: soul.mode,
                             // LOG … AND FINISH keeps a 10 s UNDO that takes back the set and the finish together.
                             canUndo: session.canTakeBackFinish(at: now),
+                            eyes: model.tessHasEyes,
                             // The line (and its UNDO) stays for the whole 10 s window.
                             holdsLine: session.canTakeBackFinish(at: now),
                             onUndo: {
@@ -256,6 +257,7 @@ private struct WorkoutContent: View {
             LiveTessCorner(line: askReply ?? WorkoutLines.tess(session, phase: phase, summary: summaryLine),
                            mode: soul.mode,
                            canUndo: session.canUndoLast && !session.isEditing,
+                           eyes: model.tessHasEyes,
                            holdsLine: askReply == nil && phase == .workoutDone,
                            onUndo: {
                                withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLast() }

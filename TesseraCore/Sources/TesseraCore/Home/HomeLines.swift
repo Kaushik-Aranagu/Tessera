@@ -269,7 +269,8 @@ public enum HomeLines {
             return "\(fact.title) tomorrow"
         }
         if let at = fact.startsAt {
-            return "\(fact.title) at \(DayStoryClock.shortTime(at, calendar: calendar))"
+            // Hero times carry "pm" (TW17, Product): "Tacos at 7 pm".
+            return "\(fact.title) at \(HouseTime.clock(at, calendar: calendar))"
         }
         let evening: Set<DayPart> = [.evening, .shutdown, .late]
         let word = evening.contains(DayPart(hour: calendar.component(.hour, from: now))) ? "tonight" : "today"
@@ -453,20 +454,8 @@ public enum HomeLines {
 
 /// "6:12 pm", "11:20 pm", "12 pm", shared with the Day log.
 enum DayStoryClock {
-    /// "7" or "7:30", for "Tacos at 7".
-    static func shortTime(_ date: Date, calendar: Calendar) -> String {
-        let parts = calendar.dateComponents([.hour, .minute], from: date)
-        let hour = parts.hour ?? 0, minute = parts.minute ?? 0
-        let twelve = hour % 12 == 0 ? 12 : hour % 12
-        return minute == 0 ? "\(twelve)" : String(format: "%d:%02d", twelve, minute)
-    }
-
     static func sentenceTime(_ date: Date, calendar: Calendar) -> String {
-        let parts = calendar.dateComponents([.hour, .minute], from: date)
-        let hour = parts.hour ?? 0, minute = parts.minute ?? 0
-        let twelve = hour % 12 == 0 ? 12 : hour % 12
-        let half = hour < 12 ? "am" : "pm"
-        return minute == 0 ? "\(twelve) \(half)" : String(format: "%d:%02d %@", twelve, minute, half)
+        HouseTime.clock(date, calendar: calendar)
     }
 }
 

@@ -8,7 +8,11 @@ docs/research/fixtures/home-lines-eval.json (E1-E20 and 44 probes) and memory-da
 Two invocations, so the $1 stop can never cut the gate pass short:
   python3 scripts/ai/home_lines_eval.py --pass gate   [--models haiku,sonnet] [--runs 3] [--dry] [--out docs/...]
   python3 scripts/ai/home_lines_eval.py --pass memory [--models haiku,sonnet] [--runs 3] [--dry] [--out docs/...]
-gate scores E1-E20 (context line and detail); memory scores the 27 memory-days moments (context line only).
+gate scores E1-E20 (context line and detail); memory scores the 39 memory-days moments (context line only).
+
+--job done (the AI-5 verdict, Oct 16): Claude is asked only about done workouts with something new to say, a best or a
+gap of GAP_DAYS or more since the same routine. Every other item keeps its rules line and is never sent, and the done
+prompt adds Research's Voice rule. --job all (the default) is the first AI-5 run, kept so it reproduces.
 
 Before any call, dry or not, the scorer runs every vector (L1-L54, P1-P7, parsed from line-check-vectors.md) and every
 fixture probe, and checks that fixed items (E4, E10) build no request. One mismatch and it exits before sending.
@@ -44,7 +48,7 @@ API_HOST = "api.anthropic.com"
 STOP_NANO = 1_000_000_000  # $1 per invocation
 MAX_RUNS = 5
 HOME_TIMEOUT_S = 6.0
-CHECKER_VERSION = "home_lines_eval.py TessLineCheck 1"
+CHECKER_VERSION = "home_lines_eval.py TessLineCheck 2"  # 2: C15 weekday check on "usual"
 SPENT = [0]
 MODELS = {"haiku": "claude-haiku-5-5", "sonnet": "claude-sonnet-5-5"}
 # Nano-dollars per token: input, output, cache read, cache write (TessUsageLedger.prices).
@@ -77,6 +81,37 @@ Both slots:
 Return every item id once. Reply only with proposeLines."""
 
 SYSTEM = VOICE + "\n\n" + HOME_RULES
+
+# --job done: the narrowed job from the AI-5 verdict (home-lines-eval-results.md). Research's Voice rule, Oct 16:
+# a half-filler line fails, so "usual", "as usual" and a restated time of day are gone from the examples and banned.
+GAP_DAYS = 4
+DONE_RULES = """You word two slots on Tessera's Home for each item. Every item you get is a workout he just finished.
+The hero and the day label are the phone's; they are given so you don't repeat them.
+Return the rules line unchanged unless you add one true fact it lacks. The facts worth adding are a best (from
+"records") or the gap since the same routine (from "lastSameRoutineDaysAgo"): "a bench best", "first in 9 days".
+Never write "usual", "as usual" or a time of day the rules line already implies.
+Context line: 6 words or fewer, 32 characters or fewer, no stop at the end.
+- Never use a word the day label or hero already shows (the weekday, the routine name, done) unless rules.context
+  already uses it.
+- The item may drop its clock time. Every other digit in rules.context stays.
+Detail: one sentence ending in a full stop, 14 words or fewer, 80 characters or fewer. Every digit in rules.detail
+stays. If rules.detail is null, return an empty detail.
+Both slots:
+- Digits only from that item's "numbers", never number words. No weights, reps or units.
+- Capitalise only the first word and the item's own names.
+- The word is "best", never "record".
+- Never grade him or the day: never missed, behind, late, again, only, still, yet, streak, should, finally.
+- Never mention sleep, energy, health, body, money, people or places.
+- Only what the facts and memory hold. Never invent.
+Return every item id once. Reply only with proposeLines."""
+SYSTEM_DONE = VOICE + "\n\n" + DONE_RULES
+
+
+def worth_asking(item):
+    """--job done: a done workout with a best or a gap of GAP_DAYS or more. Everything else keeps its rules line."""
+    f = item.get("facts", {})
+    return (item["kind"] == "workout" and item["state"] == "done" and not item.get("fixed")
+            and (bool(f.get("records")) or (f.get("lastSameRoutineDaysAgo") or 0) >= GAP_DAYS))
 
 PROPOSE_LINES = {
     "name": "proposeLines",
@@ -170,7 +205,21 @@ def survives(line_groups, rules, d2):
     return all(have[g] <= max(rest[g], 0) for g in clock.groups())
 
 
-def check_line(line, slot, item, day_label=None):
+USUAL = re.compile(r"\b(usual|usually|after work|before work)\b")
+
+
+def weekday_slip(line, day_label, memory):
+    """C15 (verdict fix 1): "usual", "after work" or "before work" on a weekend day, when the only habit memory holds
+    is a weekday one ("You train after work on weekdays."). Sonnet's Saturday "After work, your usual slot"."""
+    if not memory or not USUAL.search(line.lower()):
+        return False
+    label = tokens(day_label or "")
+    if not label or label[0] not in ("saturday", "sunday"):
+        return False
+    return "weekdays" in memory.lower() and label[0] not in memory.lower()
+
+
+def check_line(line, slot, item, day_label=None, memory=None):
     """One line for one item and slot. Returns "noLine", or a list of codes (empty means it may show).
     item: numbers (strings), names, title, kind, state, hero, rules_context, rules_detail, fixed."""
     if line is None or not line.strip():
@@ -264,6 +313,8 @@ def check_line(line, slot, item, day_label=None):
             codes.append("NOREPEAT")
     if secret_wall(s):
         codes.append("SECRET")
+    if weekday_slip(s, day_label, memory):
+        codes.append("C15")
     return codes
 
 
@@ -302,7 +353,7 @@ def check_plan_line(line):
     return codes
 
 
-def check_reply(items, reply, slot, day_label):
+def check_reply(items, reply, slot, day_label, memory=None):
     """C1 over a whole reply, then each line. Returns (c1 problems, {id: verdict})."""
     sent = {i["id"]: i for i in items}
     ids = [r.get("id") for r in reply]
@@ -316,7 +367,7 @@ def check_reply(items, reply, slot, day_label):
     verdicts = {}
     for r in reply:
         if r.get("id") in sent and Counter(ids)[r["id"]] == 1:
-            verdicts[r["id"]] = check_line(r.get(slot), slot, sent[r["id"]], day_label)
+            verdicts[r["id"]] = check_line(r.get(slot), slot, sent[r["id"]], day_label, memory)
     return c1, verdicts
 
 
@@ -511,6 +562,22 @@ def self_test():
         bad.append(f"fixture holds {probes} probes, want 44")
     if fixed_ok != ["E4", "E10"]:
         bad.append(f"fixed moments {fixed_ok}, want E4 and E10")
+    # --job done: which moments are sent, and C15 (the AI-5 verdict fixes).
+    done_gate = [m["id"] for m in load_moments("gate") if build_body(m, MODELS["sonnet"], "gate", "done")]
+    if done_gate != ["E1", "E2", "E12", "E14", "E19"]:
+        bad.append(f"--job done sends gate moments {done_gate}, want E1, E2, E12, E14, E19")
+    done_mem = [m["id"] for m in load_moments("memory") if build_body(m, MODELS["sonnet"], "memory", "done")]
+    if done_mem != ["d9m2", "d15m2", "d16m2", "d17m2", "d18m2", "d20m2"]:
+        bad.append(f"--job done sends memory moments {done_mem}, want d9m2, d15m2, d16m2, d17m2, d18m2, d20m2")
+    weekday_mem = "<memory>\nTold:\n- You train after work on weekdays.\n</memory>"
+    c15 = [("After work, your usual slot", "Saturday morning", weekday_mem, True),
+           ("After work, your usual slot", "Friday morning", weekday_mem, False),
+           ("this morning, before work", "Sunday morning", weekday_mem, True),
+           ("8:05 pm, a bench best", "Saturday evening", weekday_mem, False),
+           ("After work, as usual", "Saturday morning", None, False)]
+    for line, label, mem, want in c15:
+        if weekday_slip(line, label, mem) != want:
+            bad.append(f"C15 \"{line}\" on {label}: want {want}")
     if bad:
         print("self-test FAILED, nothing sent:", file=sys.stderr)
         for b in bad:
@@ -526,10 +593,10 @@ def self_test():
 # ---------------------------------------------------------------------------------------------------------------
 # Requests.
 
-def pack_for(moment, which):
+def pack_for(moment, which, ids=None):
     items = []
     for i in moment["items"]:
-        if i["fixed"]:
+        if i["fixed"] or (ids is not None and i["id"] not in ids):
             continue
         items.append({"id": i["id"], "kind": i["kind"], "state": i["state"], "title": i["title"], **i["facts"],
                       "hero": i["hero"], "rules": {"context": i["rules_context"], "detail": i["rules_detail"]},
@@ -554,11 +621,17 @@ def guard_pack(moment, pack):
         sys.exit(f"pack bug in {moment['id']}: {sorted(leak)}; stop the run and fix AI-4")
 
 
-def build_body(moment, model, which):
-    """The request for one moment, or None when every item is fixed (E4, E10: no request at all)."""
-    if all(i["fixed"] for i in moment["items"]):
+def sent_items(moment, job):
+    """The items Claude is asked about: every unfixed item, or under --job done only those worth asking."""
+    return [i for i in moment["items"] if not i["fixed"] and (job == "all" or worth_asking(i))]
+
+
+def build_body(moment, model, which, job="all"):
+    """The request for one moment, or None when nothing is sent (E4, E10 under --job all; most moments under done)."""
+    sent = sent_items(moment, job)
+    if not sent:
         return None
-    pack = pack_for(moment, which)
+    pack = pack_for(moment, which, {i["id"] for i in sent})
     guard_pack(moment, pack)
     user = moment["memory"] + "\n<facts>\n" + json.dumps(pack) + "\n</facts>\nWrite the lines."
     forced = model == MODELS["haiku"]
@@ -566,7 +639,8 @@ def build_body(moment, model, which):
             # AI-0: Haiku answered without the tool when it could; Sonnet 5.5 refuses a forced tool.
             "tool_choice": {"type": "tool", "name": "proposeLines"} if forced else {"type": "auto"},
             "output_config": {"effort": "low"},
-            "system": [{"type": "text", "text": SYSTEM, "cache_control": {"type": "ephemeral"}}],
+            "system": [{"type": "text", "text": SYSTEM_DONE if job == "done" else SYSTEM,
+                        "cache_control": {"type": "ephemeral"}}],
             "messages": [{"role": "user", "content": user}]}
 
 
@@ -620,10 +694,10 @@ def post(key, body):
         time.sleep(wait)
 
 
-def stub_reply(body, moment):
+def stub_reply(body, moment, job="all"):
     """--dry: a reply in the API's shape that echoes every sent item's rules lines."""
     lines = [{"id": i["id"], "context": i["rules_context"], "detail": i["rules_detail"] or ""}
-             for i in moment["items"] if not i["fixed"]]
+             for i in sent_items(moment, job)]
     return {"content": [{"type": "tool_use", "name": "proposeLines", "input": {"lines": lines}}],
             "usage": {"input_tokens": len(json.dumps(body)) // 4, "output_tokens": 30 * len(lines)}}, 0.0
 
@@ -657,21 +731,21 @@ def run(args, key, report):
         report[model] = s
         for run_no in range(1, args.runs + 1):
             for m in moments:
-                body = build_body(m, model, args.which)
+                body = build_body(m, model, args.which, args.job)
                 if body is None:
                     if run_no == 1:
                         s["skipped"].append(m["id"])
                     continue
                 if SPENT[0] >= STOP_NANO:
                     sys.exit("stopped at the $1 ceiling")
-                data, secs = stub_reply(body, m) if args.dry else post(key, body)
+                data, secs = stub_reply(body, m, args.job) if args.dry else post(key, body)
                 nano = cost_nano(model, data.get("usage", {}))
                 SPENT[0] += nano
                 s["calls"] += 1
                 s["cost"].append(nano)
                 s["latency"].append(secs)
                 s["memHashes"].add(hashlib.sha256(m["memory"].encode()).hexdigest()[:12])
-                sent = [i for i in m["items"] if not i["fixed"]]
+                sent = sent_items(m, args.job)
                 s["items"] += len(sent)
                 got = tool_input(data)
                 if got is None:
@@ -681,7 +755,7 @@ def run(args, key, report):
                         sys.exit("stopped at the $1 ceiling")
                     continue
                 reply = [r for r in got.get("lines", []) if isinstance(r, dict)]
-                c1, _ = check_reply(sent, reply, "context", m["label"])
+                c1, _ = check_reply(sent, reply, "context", m["label"], m["memory"])
                 if c1:
                     s["c1"].append((run_no, m["id"], c1))
                     s["codes"]["C1"] += 1
@@ -696,7 +770,7 @@ def run(args, key, report):
                         rules = item["rules_context"] if slot == "context" else item["rules_detail"]
                         if slot == "detail" and rules is None:
                             continue
-                        res = check_line(line, slot, item, m["label"])
+                        res = check_line(line, slot, item, m["label"], m["memory"])
                         if res == "noLine":
                             s["noLine"] += 1
                             continue
@@ -756,13 +830,15 @@ def write_report(report, args, selftest, stopped=None):
     total = sum(sum(s["cost"]) for s in report.values()) / 1e9
     calls = sum(s["calls"] for s in report.values())
     tool_choice = ", ".join(f"{m}: {'forced proposeLines' if m == MODELS['haiku'] else 'auto'}" for m in report)
-    lines = [f"## {now_pt()}: {args.which} pass, {', '.join(report)}, {args.runs} run(s)"
+    lines = [f"## {now_pt()}: {args.which} pass{' (job done)' if args.job == 'done' else ''}, {', '.join(report)}, "
+             f"{args.runs} run(s)"
              + (" (DRY: stub replies, nothing sent)" if args.dry else "")
              + (f" **stopped: {stopped}** (partial)" if stopped else ""), "",
              "| Field | Value |", "|---|---|",
              f"| Pass | {args.which} ({'E1-E20, context and detail' if args.which == 'gate' else 'memory-days, context line only'}) |",
              f"| Models | {', '.join(report)} |", f"| Tool choice | {tool_choice} |", "| Effort | low |",
-             f"| Runs | {args.runs} |", f"| Prompt hash | {sha(SYSTEM)} |",
+             f"| Job | {args.job} |",
+             f"| Runs | {args.runs} |", f"| Prompt hash | {sha(SYSTEM_DONE if args.job == 'done' else SYSTEM)} |",
              f"| Tool schema hash | {sha(json.dumps(PROPOSE_LINES, sort_keys=True))} |",
              f"| Fixture hash | {fixture.name} {sha(fixture.read_bytes())} |", f"| Checker | {CHECKER_VERSION} |",
              f"| Self-test | {selftest['vectors']} vectors, {selftest['probes']} probes, all expected verdicts |",
@@ -830,6 +906,8 @@ def main():
     ap.add_argument("--pass", dest="which", required=True, choices=["gate", "memory"])
     ap.add_argument("--models", default="haiku,sonnet")
     ap.add_argument("--runs", type=int, default=3)
+    ap.add_argument("--job", default="all", choices=["all", "done"],
+                    help="all: every unfixed item (first AI-5 run); done: done workouts with a best or a gap only")
     ap.add_argument("--dry", action="store_true", help="build every request, score a stub reply, send nothing")
     ap.add_argument("--out", help="results path under docs/ (default docs/ai/home-lines-eval-results.md)")
     args = ap.parse_args()
@@ -856,7 +934,7 @@ def main():
             write_report(report, args, selftest, stopped=str(stop.code))
         raise
     for model, s in report.items():
-        print(f"{'[dry] ' if args.dry else ''}{args.which} {model}: calls={s['calls']} items={s['items']} "
+        print(f"{'[dry] ' if args.dry else ''}{args.which}/{args.job} {model}: calls={s['calls']} items={s['items']} "
               f"returned={s['returned']} caught={len(s['caught'])} shown={len(s['shown'])} "
               f"no request: {', '.join(s['skipped']) or 'none'} spend=${sum(s['cost']) / 1e9:.4f}")
     write_report(report, args, selftest)

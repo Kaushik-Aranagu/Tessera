@@ -86,7 +86,8 @@ public struct ClaudeTessModel: TessModel {
                 for call in response.toolCalls {
                     do {
                         let done = try TessTools.run(call.name, arguments: call.input, engine: engine,
-                                                     pending: true, now: request.context.now)
+                                                     pending: true, now: request.context.now,
+                                                     calendar: request.context.calendar)
                         records += done
                         results.append(["type": "tool_result", "tool_use_id": call.id, "content": "Done"])
                     } catch let answer as TessToolAnswer {
@@ -124,7 +125,10 @@ public struct ClaudeTessModel: TessModel {
         // Never claim more than was done: Claude's own line only if it passes Tess's voice checks.
         var line = reply.trimmingCharacters(in: .whitespacesAndNewlines)
         if line.isEmpty || !TessVoice.violations(in: line).isEmpty {
-            line = records.count == 1 ? records[0].summary + "." : "\(records.count) things done."
+            // Thing first when the action has a spoken form (RC23); the log summary is never read aloud raw.
+            line = records.count == 1 ? (records[0].receipt ?? records[
+                0
+            ].summary) + "." : "\(records.count) things done."
         }
         // The first miss ever sent says where it went, once (Product 8:28 PM PT Oct 15).
         if !flags.noticeShown {

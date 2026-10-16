@@ -51,7 +51,45 @@
 **From now on, use themed tokens** (Kaushik's themes, 6:40 PM PT): new and touched screens use Builder A's DesignSystem theme tokens, never hard-coded colours, so every theme works.
 
 **Next:**
-0i. (Research undo-windows-audit, #485; decisions 12:45 PM PT) Wire Core's UndoWindow. Fix capture UNDO undoing a Home "done" (BottomChrome.swift:728-744). Deleting a note gets an UNDO. A capture's window counts from its line (about 6 s today). Recipe paste and Recipe to Groceries get 10 s, not 2 s. Every UNDO says "X, taken back."
+0r. PN-MENTION, NEXT BUILD FIRST (QA review-508, 1:24 PM PT), Builder B half: ObjectPage sends notes to NoteEditor, or hides a private note's body. InstanceBody (ObjectPage.swift:348) never shows a private note's text or "Private: yes".
+0s. (Research AK pin-page-check, decisions 1:33 PM PT Oct 16) Draw the pack size on Groceries rows: Groceries.packSize(of:) (Groceries.swift:68) has no app caller, so " · 15 oz" never shows. Wire it into the row's detail. Small PR, with the next Groceries change.
+0t. (Research AN, decisions 1:41 PM PT Oct 16; next build) After Core 0af renames the default, SAVE A COPY warns "This is the Backups folder. Daily copies here get replaced. Save somewhere else?" when the chosen folder is the backups folder. Small PR.
+0u. (Research dst-nov-1.md DS37, decisions 1:52 PM PT Oct 16; low) A Notes row 6 days back reads "26 Oct" instead of "Mon" across a DST change, because the cutoff is 6 * 86400 s (NotesView.swift:272). Use calendar days.
+0v. RIDER, FIRST (decisions 1:58 PM PT Oct 16; Research walls-ui-test-spec.md): Ask bar phrases ending in "?" skip Tess and go straight to CommandInterpreter (BottomChrome.swift:508-509), so "door code 4417?" becomes a plain task. Route "?" phrases through the secret and private walls first. A secret phrase becomes a private note, and a question about a secret gets "It's in your private notes." Also own Research's WallsUITests: a SimulatorOnly `-wallsSpy` flag with an in-memory URLProtocol and a hidden probe, and pending rows under strict XCTExpectFailure. For the next build: the Notes page shows "Private note, kept." (NotesView.swift:118-127).
+0w. RIDER with Core 0ai (decisions 2:06 PM PT Oct 16): Groceries' Add line (GroceriesView.swift:365) shows 0ai's private-note receipt instead of adding an ingredient, and the PasteRecipe miss log (PasteRecipe.swift:205) checks PrivateFacts. Add Research's new WallsUITests rows: groceries, noteEditor, liveAsk, and speak (simulator-only `-speakScript`).
+0q. (Research habits-weight-week; decisions 1:23 PM PT) Habits page and HABITS on Review. A sick mark holds that day's habits asks. HW15: Ask bar UNDO counts from the line and is announced (AppModel.swift:265-287, with 0i).
+0p. (Research notes-day-one; decisions 1:15 PM PT) NEXT BUILD FIRST:
+- N13: a private note's row shows only "Private note", with no second line and no VoiceOver of its text (NotesView.swift:186-216).
+- N7: Notes page receipts "Note, kept." / "Private note, kept." with a 4 s UNDO, announced to VoiceOver.
+- N35: Delete note gets a line and a 10 s UNDO (NoteEditor.swift:170-175).
+- A multi-line paste opens a new note.
+- A bare URL becomes a link note.
+- N6: capture UNDO uses UndoWindow (AppModel.swift:276).
+0o. (Research settings-day-one; decisions 1:13 PM PT)
+- Backups: "Stop using it" clears backupFolderName (BackupKeeper.swift:142). UNDO reads thing first and its timer pauses in the background (BackupView.swift:290-303). The receipt is "Copy, saved.".
+- Claude section: after a 401, reopen the writing line (ClaudeSection.swift:235,363-364). The yes line is "Tess asks Claude when she's unsure." (:293). Remove reads "Claude key removed. Leaving the app makes it final.". Replace holds the old key for 10 s with UNDO.
+- PasteRecipe.swift:33 says "Review, under Claude".
+- Then the Settings page: five sections, UNITS as plain text, TESS once its page exists, and the eyes row after #407.
+0n. (Research shutdown-evening; decisions 1:06 PM PT) Shutdown page on Core 0y:
+- The 9 to 10 pm hero is Shutdown. Until the page exists, Now reads "tomorrow, first" with the word tomorrow (AppModel.swift:476,494-497).
+- The first-Shutdown line is "Tap any for later.".
+- A running cook shows on Now.
+- Use "Tasks, tomorrow."-style thing-first receipts in place of "Moved to tomorrow." (HomeQueue.swift:480), with UndoWindow (:34).
+0m. (Research kitchen-week-day-one; decisions 1:05 PM PT)
+- Groceries copy to Design 67 (KW9/10/12): "14 to get, for tacos and chili", short recipe names with no paint dot, pack sizes shown.
+- Send-to-Groceries receipt (KW5/7/26): "Tacos, 10 added." with a 10 s UNDO. "Tacos, nothing to add." gets no UNDO. Undo reads "Tacos, taken back.".
+- Move and DONE receipts: "Tacos, Friday." and "Tacos, cooked.".
+- KW15-18 come with the 69 recipe clock.
+0l. (Research review-week-story; decisions 1:00 PM PT) Review after Core's week lines:
+- ReviewWeek.swift:130 shows the three count lines.
+- The tapped-day hero uses the thing, not the first word of the line ("Push best", :175).
+- Tapped-day times use Format.clock (:193).
+- The Tasks done and Cooked bands use the zone he was in (:58, :64).
+- Empty states don't stack.
+- Review's hero agrees with ReviewPage ("Four sessions", ReviewView.swift:104).
+0k. (decisions 12:58 PM PT) After #403 and #407: the Design 70 "Tess has eyes" row goes under LOOK in Settings, bound to tessEyes, default off.
+0j. (decisions 12:54 PM PT) Plan my day wiring waits for Core 0u's G1, G4 and G7. Fixture: `docs/research/plan-my-day-pack.md` (refreshed). One kept row reads "Plan, kept." with a 4 s UNDO. Design follow-ups on #529 (coordinator 2:03 PM PT Oct 16, none block): (a) sheet 53 promotion after the hold is not built: the hero lifts, the first item rises, and the key becomes START PUSH DAY A with its line, not "FINISH  HOLD · IN 5 MIN" (audit S1); (b) keep-swipe dries in place instead of wrapping around; (c) the hold commits with no page crossfade; (d) the "Plan kept…" Tess line sits right by the soul; (e) check that "Groceries for the week" survives a hold-keep in Next. More from Design's pass at ffaa0b2 (2:13 PM PT): (f) UNDO after the hold fades the page to empty for about 300 ms and overlaps "Hold me to talk." for a frame; it should crossfade in place like the keep. (g) After a keep, the context should read "at 8:15 am" (sheet 53), riding with (a).
+0i. (Research undo-windows-audit, #485; decisions 12:45 PM PT) Wire Core's UndoWindow. Fix capture UNDO undoing a Home "done" (BottomChrome.swift:728-744). Deleting a note gets an UNDO. A capture's window counts from its line (about 6 s today). Recipe paste and Recipe to Groceries get 10 s, not 2 s. Every UNDO says "X, taken back." UNDO SLOT (decisions 1:35 PM PT Oct 16; Research `fixtures/undo-collision.md`, 18 cases, 13 wrong on 6f73f5f): one @Observable UndoSlot for the app. The line and the UNDO key are one claim (BottomChrome.swift:147-149 vs :728-745). TessVoice.note, lastCapture (set when the line shows, not when the ghost dries, AppModel.swift:252-288), RecipePage.sent and BackupView.forgotten become claims. Receipt: "Thing, taken back." Research's 18 Builder test names apply; Builder B runs UC10 in the Simulator. Words and VoiceOver: Research `fixtures/undo-slot-voiceover.md` K1-K16, BottomChrome rows (decisions 1:48).
 0h. (Research `voiceover-recipe-clock-lists.md`, 47 rows; decisions 12:39 PM PT Oct 16) Announce Tess lines and receipts with AccessibilityNotification.Announcement (none on master; share it with Core if the receipt layer is shared). Give the recipe page's hidden gestures accessibility actions: swipe to Groceries and the metric flip (RecipePage.swift:245-275). The Recipes back word says "Back to Recipes" (RecipePage.swift:46-53, like RoutinesPage.swift:34-41). Speak units as words ("45 minutes", "425 degrees") and read serves once. Builder B owns every recipe page and cook state on that page. The calls are in decisions 12:39.
 0g. (Research `time-words-sweep.md`, your 21 rows; decisions 12:35 PM PT) Weekdays from the 4 am day in Notes (NotesView.swift:273), Review (ReviewView.swift:144), Backup (BackupView.swift:352, use its fileDay) and Recipe (RecipePage.swift:404). partOfDay: "early morning" 4-7 am, "night" from 9 pm, never "this night" (NowPage.swift:361). Now flips to "tomorrow, first" at 9 pm, and its context line uses digits. The Claude receipt uses Format.clock (ClaudeSection.swift:494). Notes: "1 hour ago".
 0f. (Research receipts-thing-first, decisions 12:35 PM PT) Fix your 6 receipts, listed in `receipts-thing-first.md`: "Done. Next one is up." (NowPage.swift:196), "Moved to tomorrow." (HomeQueue.swift:473), "Cleared 3 from the basket.", backup "Saved." and "Saved a copy there.". The thing goes first. List receipts name the list.

@@ -4,6 +4,206 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+**2:16 PM PT Oct 16: money with no day (QA on #534).** DECIDED. A money line with no day, such as "bought a tv for 800", becomes a private note ("Private note, kept."), never a task. An amount never sits in a task title. With a day, it's a private dated note (2:06). Core 0ai carries the row, and Research AZ adds it to the engine-wall table.
+
+**2:15 PM PT Oct 16: Siri receipts for hidden writes (Research, tell-tess-receipts.md).** DECIDED, Research's pick. Siri never says a bare "Saved.". Before P14 merges, Core adds TessCapture.privateLine, which names the kind of thing from the action names only and never from the phrase or the model's text ("Private note, kept.", "Task moved to Friday 9 am."). Siri says that line instead.
+
+**2:13 PM PT Oct 16: signing deadline for the riders build.** DECIDED. a36b161's profile expires Thu Oct 22 at 7:53 PM PT. The riders pin is still named at 9:30 AM Thursday, but if it hasn't passed the gate and been installed by 4:00 PM PT, Builder A re-signs a36b161 with a fresh profile and installs it, so the app never lapses on his phone. HealthKit is entitled on the free team, so Builder A 0m looks for the export problem elsewhere.
+
+**2:12 PM PT Oct 16: Design 72 and 73 boarded; 74 waits.** Kaushik approved 72, the title accent, at 2:09, and picked option A for 73, the area index, at 2:06. Both go on Builder A's board for after the pins (0p). Design 74, side swipes on tab pages, would change the 10:00 AM house rule ("a page one tap down may have one side page; never a tab page or a live workout"). It stays unboarded until Design confirms Kaushik has seen it and wants it. 73 can ship on its own, since the side rail keeps working until 74.
+
+**2:11 PM PT Oct 16: Health round trip (Research AY, fixtures/health-roundtrip.md, 37 cases: 10 pass, 7 wrong, 19 not built).** DECIDED, all of Research's picks. (1) Never write bodyMass to Health. (2) When Health has two weigh-ins on one day, the first after 4 am counts, and Tessera's own entry still wins (1:23). (3) Health weights are kept in memory only, never copied into Tessera's store, and stay out of WeekFacts, Plan my day, memory and Claude. (4) A weigh-in is filed in the sample's own zone, then where Tessera says he was, then the phone's zone. (5) Exported workouts carry their time zone. (6) Failed finishes are retried from an owed list. (7) If Health saving is off, Settings shows one line. (8) The sync version becomes a change counter. (9) Builder A confirms on his phone that HealthKit works with the free Personal Team before anyone builds the weight read. HR37 rides the next pin: project.yml:74 promises only body weight reads, not workouts or heart rate. Taking back a finish removes the Health workout (12:45). That is HR16, needing the exporter's delete plus undo notifying observers.
+
+**2:10 PM PT Oct 16: "bought shoes 120" (QA on #534).** DECIDED: yes, it's money and walled. After a purchase verb (bought, paid, spent, got ... for), a trailing number counts as an amount: a 2-digit or bigger whole number, or any decimal ("bought shoes 120", "paid gas 45.20"). A count before the thing stays plain ("bought 2 lemons", "got 6 eggs"), and so do units and packs ("bought 2 lb chicken"). Following 1:36, when it's unsure it leans walled. With a day, it's a private dated note (2:06). Core makes this change in a later PR on 0ac.
+
+**2:09 PM PT Oct 16: prices on grocery and list items (Kitchen lead).** DECIDED, Kitchen's pick. A price is stripped and dropped and the item stays: "milk $4", "milk 4.99" and "2 for $5 avocados" give milk and avocados, with no price kept on the row, in a note or in the receipt. The receipt is "Milk, on Groceries." (12:35 and 1:48 wording, not "Milk, added."). Packs and amounts are not prices, so "2 lb chicken", "14 oz can" and "6 eggs" keep their numbers. A line that is only money ("rent 2100 fri", "$40 at costco") never lands as a row; it becomes a private dated note (2:06). On lists, body and health items stay items (a packing list needs its meds) but are walled from Claude. Core 0ai and Builder B 0w follow this, with Kitchen's acceptance rows in groceries-ai-acceptance.md §6 and lists-acceptance.md §8b.
+
+**2:08 PM PT Oct 16: Face ID on Siri workout intents (Core #534).** DECIDED. #534 merges as built. In a later Core PR: while a live workout is running, LogSet and FinishWorkout skip Face ID, because the workout was started on an unlocked phone, a set isn't a private fact, and asking for Face ID between sets breaks training. With no live workout, they ask for Face ID as #534 does. StartRoutine keeps Face ID. The Live Activity Done and UNDO buttons stay without it (12:26). Tell Tess's "Saved." for a hidden write gets a thing-first form later (Research low).
+
+**2:06 PM PT Oct 16: one wall at the engine (Research AX, input-paths-walls.md: 32 paths, 10 walled, 13 leak).** DECIDED. Path-by-path walls keep leaking, so the fix goes where every path lands. Core 0ai, a rider, comes right after 0ah. Every action that writes user text into a title (CreateTask, CreateRoutine, AddGroceries, a list item, and an on-device model write) passes one shared check, PrivateFacts plus secret words, in the engine. Secret text never becomes a title: the action becomes a private note and the receipt says "Private note, kept." Money or body text with a day becomes a private dated note (the 1:15 rule), and so "rent 2100 fri" stops being the task "Rent 2100" (parse order TessGrammar.swift:513-543 vs :141, on 0aa). After that, the views need only one line each. Builder B owns Groceries' Add line (GroceriesView.swift:365) and the PasteRecipe miss log. Builder A owns Routines' Name it (RoutinesPage.swift:108). Speak is covered by 0v. Tess memory turnover skips money and body Day log lines (TessMemory+Turnover.swift:67) on 0ac. Research's 25 new WallsUITests rows join AU's suite, and key rows are built at runtime only.
+
+**2:00 PM PT Oct 16: evenings and quiet hours (Research AW, fixtures/evening-quiet.md, 40 evenings: 9 pass, 10 wrong, 21 not built).** DECIDED. All 11 of Research's picks stand: (1) a Finish after 11 pm closes the day quietly, stamped 10:00 pm, with no Shutdown page; (2) a hold that never ends closes at the 6-hour wrap-up or at 4 am, whichever comes first; (3) "until the clock ends" means the recipe clock's last step, and a timer ending doesn't release the hold; (4) Shutdown has no "not now" and leaving the page is the not now; (5) the 7 am snap covers every time he didn't type, lands on the next 7 am, and the receipt names the day; (6) quiet hours use the phone's local time on trips; (7) a close that waited for Shutdown on screen is stamped 10:00 pm; (8) a task timed later tonight isn't a "moving to tomorrow" row; (9) a time he typed still rings in quiet hours; (10) "tonight" isn't snapped; (11) a cook started over Shutdown takes the hero and holds. EQ26 is therefore wrong: "Not now" at 11:20 pm goes to 7 am. The day log cook (EQ14) is the 1:40 rule, already on Core 0ae G2.
+
+**1:58 PM PT Oct 16: wall gaps from Research AU (walls-ui-test-spec.md, 36 rows, 23 pass).** DECIDED. (1) The "?" leak goes FIRST in the rider order. A phrase ending in "?" skips Tess and CommandInterpreter saves it as a task (BottomChrome.swift:508-509, CaptureParts.swift:184-188), so "door code 4417?" becomes a plain task in Home, the Day log and backups. "?" phrases now pass the secret and private walls before CommandInterpreter. A secret one becomes a private note, and a question about a secret gets "It's in your private notes." Builder B 0v owns it, with Core's interpreter half in 0ah. (2) The miss log checks PrivateFacts.isWalled as well as secret words (TessCaptureEngine.swift:58, PasteRecipe.swift:205). This is Core 0ah too, in the same PR. (3) The Notes page shows "Private note, kept." (NotesView.swift:118-127). That's Builder B, for the next build, with 0p. (4) "82.4 this morning" becomes a body weight entry only when it's within 10% of his last logged weight. Otherwise it's a private note. Either way it never goes to Claude. W5 follows this, and Core 0ac owns it with HW13. AU's spec replaces V5 and walk beats 7-8 (the wifi half). His optional line after install is the Notes "wifi password" check.
+
+**1:56 PM PT Oct 16: rider order for Core and the builders (Research AV, next-build-v9r.md §0).** DECIDED. Core has too many riders for Oct 22, so it works them in this order. Each is a small PR of its own, and none waits for another. (1) 0ad PN-MENTION: a live privacy leak on his phone. (2) 0ae trip bands: the trip is Oct 26. (3) 0ag DS8: it bites on the night of Oct 31. (4) 0ac HW19 with CR1. (5) 0aa N15. (6) P14 and HW13. (7) 0ac HW9. (8) 0af. Builder B does 0r first, then 0t and 0u. Builder A does 0n, then the UNDO slot. The UNDO slot (F1-F4, across all three teams) is not a riders-pin item unless it is merged and has passed QA by the branch call.
+
+**1:52 PM PT Oct 16: Nov 1 DST fixes (Research AR, fixtures/dst-nov-1.md, 42 cases: 25 pass, 6 wrong).** DECIDED. DS8, where a 1:30 am task said in the repeated hour lands a day or a week late, is a riders-pin item (Core 0ag), because it bites on the night of Oct 31. DS29 and DS36 ride with it if there's room. The other three are small PRs whenever they're ready: DS18 and DS35 to Builder A (0n), DS37 to Builder B (0u). Day math everywhere uses calendar days and the 4 am day, never a count of seconds.
+
+**1:51 PM PT Oct 16: riders pin cut-off (Research AT, next-build-v9r.md).** DECIDED. The riders pin is named at the Thu Oct 22 9:30 AM branch call with whatever riders have merged and passed QA by then, because signing lapses around Oct 23 and a new build has to go on anyway. It does not wait for any single rider. 0ae is the most wanted, since the trip starts Oct 26, but if it misses, the trip only gets wrong Review bands with no data loss, and it rides the next pin. HW19 goes in only together with CR1; if CR1 slips, both slip. Once the riders SHA is named, it (not a36b161) becomes the rollback after v10 in §7 and in the drill's Pin column (line proposed in next-build-v10.md §3).
+
+**1:50 PM PT Oct 16: no older-build rollback after the pin.** DECIDED, option (b), which supersedes 12:16. Once a36b161 is on his phone, no older build is installed. 7b321d2 opens the v9 store but would show private notes' text, because it predates #422. If something is wrong, Builder A rolls forward with a fix, or restores the Step 0 copy ("Before a36b161") on a36b161. This is why Step 0 is checked before installing. After v10, the §7 after-v10 rule applies.
+
+**1:48 PM PT Oct 16: UNDO slot words (Research AS, fixtures/undo-slot-voiceover.md, K1-K16).** DECIDED. All of Research's picks stand. C1: undoing a removal says "Thing is back." (deleting a note, dropping a routine, the backup folder, the Claude key), and new things and changes say "Thing, taken back." C3: VO20 and VO40 (pause while focus is on Undo) are struck, and the window is a flat 10 s under VoiceOver. C4: "82.5 kilograms for 8". C5: "Milk, on Groceries." replaces "Milk, on the list." (Builder B). C6: the 4 am roll and the wrap-up are one claim, and UNDO takes back both. The invented strings are approved, including every hint, "Call mom, carried into today.", "Private note, deleted." / "Private note is back.", "Claude key replaced.", "Tacos, partly taken back. 2 stayed on Groceries." and "N seconds left". Q2: a plain note is named by its first 8 words. A private note (isPrivate, secret words, money or body) is ALWAYS named "Private note" on the line, in the label, in the announcement and in the taken-back line, and its text is never spoken (coordinator 1:47). Q3: Magic Tap does not undo (LOG keeps it in a live workout). Q4: a private phrase's ghost reads "Private note". Announcements are high priority, never move focus, and the window closes silently.
+
+**1:43 PM PT Oct 16: next pin stays v9; v10 ships alone (Research AQ).** DECIDED, Research's pick. The next pin carries v9 riders only (PN-MENTION, N15, P14, sick words with CR1, the UNDO slot, the 0ae trip bands, the Step 0 name), so a rollback to a36b161 still opens his data. #407 and the eyes setting come after it as a v10 pin of their own. This replaces 12:58's "#407 once the pin is on his phone". The v10 page's "opens empty" line applies only to that later pin. His v9 page also gets a general "Not yet fixed" line: a note that mentions a private note can still open it, so hold off @mentioning private notes until the next build. Research makes a tiny PR. Builder A sends .backgrounded from scenePhase so #403's settle runs.
+
+**1:41 PM PT Oct 16: Step 0 copy and v10 rollback (Research AN, v10-rollback-drill.md).** DECIDED. (1) Starting with today's install, the Step 0 copy is saved outside the Backups folder and renamed "Before a36b161" and checked before installing, because a "Tessera-<day>" copy in Backups is rotated with the dailies. Core 0af changes the default name to "Before update <day>" and keeps rotation on the rolling prefix only; Builder B 0t adds the Backups-folder warning. (2) Pin-checklist §7 is corrected: restoring Step 0 on a36b161 keeps the v10 store as a Before-restore copy, so only work done during the in-memory rollback is lost. (3) 7b321d2 is never installed again, because it predates #422. (4) Builder A runs the drill (R0-R6) on the named v10 SHA in the Simulator, and QA reads the evidence.
+
+**1:40 PM PT Oct 16: a cook's day (Research AP, trip-week.md G2).** DECIDED. A cook belongs to the day it finished, everywhere: the Day log, WeekFacts, Review's cooking band and Home. The Day log changes (DayStory.swift:241-249), so Tuesday's mark and Tuesday's cook line agree. This rides with Core 0ae before Oct 26.
+
+**1:36 PM PT Oct 16: private health words (Research AO, private-health-words.md).** DECIDED. Slice 2 is yes as Research proposed it. All five picks stand: (1) a bare "PT" stays plain, because it usually means his trainer; (2) a flu shot, a covid booster and "buy covid tests" stay plain, like the dentist; (3) "stressed" stays plain and "anxious" is walled; (4) calories burned stay plain and calories eaten are walled; (5) "pain in the neck" walled is an accepted over-wall. When unsure, the rule leans toward walling, because a miss only keeps a line on the phone. Slice 1 (sick and unwell) ships only with the CR1 slang mask. Core 0ac owns both slices.
+
+**1:35 PM PT Oct 16: one UNDO slot (Research AM, undo-collision.md).** DECIDED, Research's rule stands. The app has one UNDO slot, and the line on screen and the UNDO key are one claim. A newer claim closes the older one. The window opens when the line shows: 4 s for a new thing, 10 s for a change, 10 s for everything under VoiceOver, paused in the background. The receipt is "Thing, taken back." The owners are Core 0s (pure UndoWindow), then Builder B 0i (UndoSlot, BottomChrome, lastCapture at line time) and Builder A 0i (live corner, canUndoLast window). This refines 12:45 and is F1 on next-build-v10.
+
+**1:33 PM PT Oct 16: pin page check (Research AK, pin-page-check.md, PR #516).** DECIDED. (1) Tapping a day's training mark in Review opens that workout (ReviewPage.swift:267-272); that's the drill-in principle, so it stays, and his page says "opens that workout". (2) Review's task and cooking bands count by each item's own zone like training does; Core 0ae, before the Oct 26 trip. (3) " · 15 oz" is cut from his v9 page because packSize(of:) has no caller; Builder B 0s wires it for a later build. The 10 partly-true lines stay as Research corrected them.
+
+**1:27 PM PT Oct 16: rollback after v10 (Research next-build-v10.md asked).** DECIDED. Research's section 7 wording stands. After v10 the rollback is a36b161, which opens in memory and shows none of his data, so the real way back is rolling forward or restoring the Step 0 copy. 7b321d2 is never installed after v10 because it would write to the v10 store. The next build's gate and list are next-build-v10.md. F1 (the capture UNDO taking back a Home "done") is the top fix after the four next-build-first rows. #504 (", best") and #403 are already on master, so the next pin needs #407 rebased with nonisolated kept and the v9-opens-v10 test, then R7 flag-to-setting, then the Design 70 row.
+
+**1:23 PM PT Oct 16: habits and body weight (Research habits-weight-week.md asked).** DECIDED. All six of Research's picks stand.
+
+Body weight:
+- Apple Health is read only in v1. One entry a day. Tessera's entry wins, and Health fills the gaps.
+- Siri says "Body weight logged." and never says the number.
+- Body-shaped questions with no number ("what did i weigh monday", "bw trend") stay on the phone.
+
+Sick days:
+- "was sick monday", said on a Thursday, becomes a private note dated Monday. It sets no mark.
+- A sick mark holds every habits ask that day. Rest and skip marks don't.
+- "sick", "unwell" and "feeling sick" join PrivateFacts first on the next build.
+
+Also: a past-tense log with a past weekday ("meditated monday" said on Thursday) logs to that day. It never becomes next week's task.
+
+**1:22 PM PT Oct 16: default task times never land in quiet hours (QA on #507).** DECIDED, QA's suggestion. If a task given only a day would default to a time inside quiet hours (23:00-07:00), the default snaps to 7 am instead. "call mom thu" typed at 1 am becomes 7 am, not 2 am. A time he types himself is kept as typed.
+
+**1:16 PM PT Oct 16: the pin stays a36b161b (coordinator, on Research's N13/N15 flag).** DECIDED.
+- No re-pin mid-gate. 7b321d2 has no private notes at all, so this build is strictly better.
+- Two fast follows go at the top of the next build: Builder B's NoteRow isPrivate guard (NotesView.swift:186-216, 0p) and Core's pre-#422 note pass (DayStory.swift:347, 0aa).
+- His page gets one honest line about both.
+
+**1:15 PM PT Oct 16: Notes day one (Research notes-day-one.md asked).** DECIDED. Eight of Research's nine picks stand; I changed one.
+
+Changed:
+- Pick 3: "paid rent 2100 fri" (past tense with an amount) becomes a PRIVATE dated note, the same as the Siri routing Core is already building (12:26). Money with an amount stays private everywhere.
+- "bought 2 lemons sat" stays a plain dated note, since a count is not an amount.
+
+Stand as picked:
+- The Notes page gets a receipt with a 4 s UNDO: "Note, kept." or "Private note, kept."
+- Body facts typed on the Notes page, or after "note:", go private.
+- He can't toggle private by hand in v1.
+- A multi-line paste opens a new note in the editor and keeps its lines.
+- A bare URL said to Tess becomes a note holding the link, with nothing fetched.
+- An account-number line makes the whole note private.
+- The 200-note cap is lifted now. Search is parked until Spotlight, and private notes are never indexed.
+- VoiceOver announces the key line and the receipt.
+
+Pin: N13 (a private note's row shows its second line) and N15 (notes from before #422 are not marked private) do NOT hold a36b161b. 7b321d2 shows every note in full, so neither is a regression. Both ride the next build first.
+
+**1:13 PM PT Oct 16: Settings day one (Research settings-day-one.md asked).** DECIDED, all eight of Research's picks.
+
+The Claude key:
+- A 401 keeps the key and reopens the writing line. settings-claude S7 and S22 get rewritten to match.
+- Removing the key reads "Claude key removed. Leaving the app makes it final."
+- Replacing the key holds the old one for 10 s with UNDO, the same as REMOVE.
+
+Wording:
+- The switch's yes line is "Tess asks Claude when she's unsure." until Plan my day goes through Claude.
+- The backup receipt reads "Copy, saved."
+- Until the Settings page ships, every pointer line says "Review, under Claude".
+
+Layout:
+- Settings has five sections. TESS (What I know) is added only once that page exists.
+- UNITS is built now, as plain text.
+
+**1:08 PM PT Oct 16: PIN NAMED, a36b161b7294596848a319c0cc0fc50a3b25f2ee** (master after M1 #498, 1:07 PM PT). DECIDED.
+
+Checked on the SHA:
+- Catalog v9 (SystemCatalog.swift:350).
+- 0bff60b, 70112f9 and 7b321d2 are ancestors.
+- No #403 or #407 merge.
+
+It carries:
+- #366 Home lines, with the 4 am day label.
+- #451 MU2 + A2.
+- #422 secret words and the $50 cap.
+- #446 stuck listening.
+- #454 paste/link wall and #457 Siri I3.
+- #471 B1 and the privacy follow-ups.
+- #475 B5/B6 newer-catalog refusal.
+- #494 T1/P1.
+- #498 M1.
+- The trip rows.
+
+Not in: P14 (Siri PrivateFacts), ", best" in DayStory (it still says ", PR" at :225), and the pre-#422 note pass. These ride the next build.
+
+Next steps: Builder A runs the v9 gate (V1-V6, test.sh "All green") and Design's 9-beat walk, then Step 0, then installs in place over Wi-Fi under his standing approval. After that:
+- #403 rebased.
+- #407 once the pin is on his phone.
+
+**1:06 PM PT Oct 16: Shutdown evening (Research shutdown-evening.md asked).** DECIDED, all six of Research's picks.
+
+The 9 to 10 pm hero:
+- Once Shutdown is built, the hero from 9 to 10 pm is Shutdown.
+- Until then, Now shows "tomorrow, first" (12:35).
+- shutdown-flow.md and Design m4 §7 change "evening" to "night".
+
+What holds Shutdown:
+- A paused workout, the same as a live one.
+- A running cook, until DONE or the clock ends.
+
+Wording:
+- A secret-word task shows as "Private task" on the hero, the widget and the Lock Screen.
+- The first-Shutdown line is "Tap any for later."
+
+Trips: the 10 pm close uses the phone's local time.
+
+**1:05 PM PT Oct 16: Kitchen week v1 (Research kitchen-week-day-one.md asked).** DECIDED, all three of Research's picks.
+- Kitchen week v1 is Design 67 inside Groceries and Home, with no page of its own.
+- "what's for dinner" becomes a grammar rule (Core).
+- Move and DONE receipts use short names: "Tacos, Friday." and "Tacos, cooked."
+Also decided: a dated cook task ("cook tacos tuesday") adds that recipe's share to Groceries once, and skipping or deleting the meal takes the share back.
+
+**1:00 PM PT Oct 16: Review week story (Research review-week-story.md asked).** DECIDED, all eight of Research's picks.
+
+How the week is counted:
+- On Monday morning, the story of the week that just ended stays under the new week until Tuesday 4 am.
+- A paused session counts as trained if a set was logged.
+- An empty or notes-only week skips the Claude call.
+- With a day mark, the figure counts against the marked week ("5 of 5").
+
+How it reads:
+- Three plain count lines, such as "4 workouts, 2 new bests, 3 cooks".
+- Tapped-day times are 12-hour.
+- Trip-day times show in the zone he was in.
+- "weight down 0.4 kg" leaves the story and stays on the body page only.
+
+Pin rider (small): DayStory writes ", best" instead of ", PR" (DayStory.swift:225). It goes in if it lands before M1 merges.
+
+**12:58 PM PT Oct 16: eyes and v10 after the pin (Research post-pin-403-407.md asked).** DECIDED, all four of Research's picks.
+- The "Tess has eyes" row lives under LOOK (Design 70).
+- The eyes hide while Tess is working.
+- The .backgrounded-to-rest change ships with #403 if the router and working tests pass.
+- The v7 floor test isn't rerun, since v10 only adds a field.
+Order after the pin:
+1. #403, rebased on #453's working overlay, with MotionPolicy instead of raw animations.
+2. #407 once the pin, carrying #475 and M1, is on his phone. Add one test where v9 code opens a v10 store.
+3. Builder A swaps the launch flag for the showsTessEyes setting. Builder B adds the Design 70 row. The key name in code, tessEyes, wins over tess.eyes in the doc.
+
+**12:54 PM PT Oct 16: Plan my day before wiring (Research plan-my-day-pack refresh asked).** DECIDED, all nine of Research's picks.
+
+Before Builder B wires Plan my day:
+- Core lands G1, G4 and G7 first: includesEventTitles off by default, a check for a running workout, and a correct cost estimate.
+- AI-5 doesn't gate Plan my day. It has its own gate.
+
+What goes to Claude:
+- Event titles go to Claude as "busy" only in v1, matching Home. The 23 packs rerun with "busy" events. That's a key-using run, so it needs his yes.
+- A medicine with no dose is private when the word is a known drug. "Dentist" and "Book physio" go as "task".
+- "combination" alone isn't secret, so "Buy combination lock" stays a task.
+
+What he sees:
+- One kept row reads "Plan, kept." with a 4 s UNDO.
+- Claude's times are re-rendered through the one formatter.
+- An open at 6:40 am is silent. He can pull the plan by hand.
+- Abroad, the cap line reads "Paused until Nov 1" with no PT.
+
+**12:50 PM PT Oct 16: AI-5 verdict, Home wording stays on the rules (#488).** DECIDED.
+- Neither model ships Claude Home wording yet. The rules lines stay the default and the switch stays off.
+- Haiku fails True on both passes. Sonnet fails True and Voice on memory ("After work, your usual slot" three times on a Saturday).
+- Next steps:
+  - Core adds a weekday check on "usual" and "after work".
+  - AI architecture narrows the prompt with Research's rule, then reruns Sonnet only. The rerun needs his yes.
+- Claude wording only earns its cost on done moments that add a best, a gap or a count change.
+
 **12:45 PM PT Oct 16: undo windows (Research undo-windows-audit.md, #485, asked).** DECIDED, all six of Research's picks.
 - Undo windows pause while the app is backgrounded or the phone is locked.
 - Removing the key still commits early when the app goes to the background, because the key is safety-critical, and the line says so.

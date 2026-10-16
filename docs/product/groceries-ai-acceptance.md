@@ -70,6 +70,19 @@ Unchanged: one shop run each (shown and not bought when the shop clears, or swip
 
 The only reminder is the planned cook's Home row through `HomeLines`: context "2 to buy" over "Tacos tonight", key GROCERIES, which opens this page. The count is the open, unchecked items carrying that cook's share. At 0 the context is the time again and the key is COOK. It appears on the cook's day, as the task already does. No notification, badge, dot, Live Activity or Tess line, ever, for groceries.
 
+## 6 · The wall on the Add line (Core 0ai, Builder B 0w; Product 2:06 PM Oct 16)
+
+The engine checks every grocery title before it is written (`AddGroceries`, the ghost row, a paste, the Add line), with the same PrivateFacts plus secret-words check as tasks and list items. Prices are the Kitchen lead's rule: **a price on an item is stripped and dropped, and the item stays.** "milk $4", "milk 4.99", "2 for $5 avocados" give the rows milk and avocados, with no price kept anywhere (not on the row, not in a note, not in the receipt). The reason is that the price is a money fact and the list is a shopping list: a row name can reach Claude through the link ask (section 2), backups and Spotlight, and the shop does not need the number. A pack or an amount is not a price: "2 lb chicken", "14 oz can tomatoes", "6 eggs" keep their numbers as today.
+
+| # | Pass when |
+|---|---|
+| W1 | "milk $4" on the Add line gives the row "milk" and the receipt "Milk, on Groceries."; the row text, the count line, the recipe dab and the backup hold no "$4" |
+| W2 | A line that is only money ("rent 2100 fri", "$40 at costco", "paid 20 for tickets") never lands as a row: it becomes a private dated note with the receipt "Private note, kept." and Groceries is unchanged |
+| W3 | A secret (a pasted key, a door code, a line after a secret word) never lands as a row: private note, "Private note, kept.", nothing in the link ask's candidate set, nothing in Spotlight |
+| W4 | "2 lb chicken", "14 oz can tomatoes", "6 eggs", "2 for 1 crackers" keep their numbers; nothing is stripped |
+| W5 | A pasted block of lines runs the check per line: the money and secret lines drop out as private notes, the rest land, and the receipt counts only the rows that landed ("Tacos, 9 added. 1 private note, kept.") |
+| W6 | UNDO after W1 removes the row; UNDO after W2 or W3 removes the private note. Nothing from a walled line is ever written to a row and then deleted |
+
 ## Done when
 
 **Core**

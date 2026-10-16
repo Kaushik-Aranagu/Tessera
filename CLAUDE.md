@@ -59,6 +59,8 @@ and verify APIs with the `xcode` MCP `DocumentationSearch` or the `sosumi` MCP r
   `$(xcrun agent plugin path --plugin-format claude)/skills/`.
 
 ## Running the demo
-- `-demoTime HH:mm` (DEBUG) shifts the app clock so the demo day looks the same at any hour; `-demo` seeds the demo history (simulator only: on a device the path is gated off and can't run, so it can never touch the phone); `-resetDemo` (simulator only) wipes and
-  reseeds demo data; `-theme <name>` pins a look in memory (simulator only). Example: `-demoTime 18:10 -resetDemo`.
+- Launch flags are read only through `LaunchFlags` (`App/LaunchFlags.swift`) and work only on the simulator. A build on
+  the phone ignores them, Debug included, so they can never touch the phone; `#if DEBUG` is not the guard.
+  `-demoTime HH:mm` shifts the app clock so the demo day looks the same at any hour; `-demo` seeds the demo history;
+  `-resetDemo` wipes and reseeds demo data; `-theme <name>` pins a look in memory. Example: `-demoTime 18:10 -resetDemo`.
 - Raw simulator recordings (`docs/recordings/raw-*.mp4`) are gitignored; trimmed clips are kept.

@@ -88,3 +88,18 @@ Verdict: **PASS** for the code and the S1 fix. Trial merge onto master is clean.
 - The new commit's app change is cosmetic: Home's keys get `.textRole(.labelStrong)` (NowPage.swift), and the accessibility labels are unchanged.
 - **The clip is older than this head.** At 0:12, `home-lines.mp4` (54 s) shows Tess saying "Same as last time, 82.5 × 7." before set 1. This head carries #397 (732d72f is an ancestor), where `.lastTime` returns nil (WorkoutSession+Prefill.swift:13), so the build at 46dfd4d can't say that line. The walk itself matches the test: Start, two sets with a rest, PAUSE, Home showing "Push Day A, bench set 3 / RESUME PUSH DAY A", the running order, FINISH HERE, done, Back to today. It's Design's call whether to accept it or have it re-recorded on 46dfd4d.
 - Low: the last assertion (`… .waitForExistence(timeout: 5) || true`) can never fail. Drop it, or make it a real check of the done line.
+
+## Re-review at d2bbc44 (Oct 16, ~12:50 PM PT): PASS
+
+- Rebased on master, merges cleanly. `git range-diff` shows the two earlier commits are unchanged (6b0960a = 4271588, 46dfd4d = 2e03eef), so the 46dfd4d PASS carries over.
+- New commit d2bbc44:
+  - `DayLabel.words` takes the day from `TesseraDay.today` (04:00 boundary) before `DayLane.phrase` (HomeLineHero.swift:100-104).
+  - At 00:40 Sunday the label reads "Saturday night", and at 09:00 it reads "Sunday morning". `HomeDataTests.dayLabelKeepsTheDayUntilFour` pins both, in America/Los_Angeles.
+  - Only NowPage.swift:35 uses DayLabel.
+- The clip `home-lines.mp4` runs 54.00 s → 53.15 s.
+  - Frames compared by PSNR, all > 51 dB: new t = old t before 13.35 s, and new t = old t + 0.85 s after it, sampled at 5, 13, 14, 15.5, 20, 30, 45 and 52 s.
+  - So exactly 0.85 s was cut and no frames were added or changed.
+  - The stale "Same as last time, 82.5 × 7." line from the earlier finding is gone (contact sheet at 11-16 s).
+- Lines he sees: no new copy. The day word now holds the previous day from 00:00 to 03:59.
+- Low, still open: `HomeWalkUITests.swift:62` `... .waitForExistence(timeout: 5) || true` can never fail. This can go in a follow-up; it doesn't block the pin.
+- Low: `phrase` formats the weekday with the device's own calendar and zone, not the `calendar` passed in. That matches in the app, and it's only a test-portability nit.

@@ -171,8 +171,8 @@ struct ReviewWeekData {
     func day(_ index: Int) -> Day {
         let done = tasksDone[index] ?? 0
         let doneWords = done == 0 ? nil : "\(done) done"
-        // The day's best fact: the first record line ("Bench 85 × 8, PR."), else the first record the summary knows.
-        let best = logLines(index).first { $0.text.contains(", PR.") }?.text.split(separator: " ").first
+        // The day's best fact: the first record line ("Bench 85 × 8, best."), else the first record the summary knows.
+        let best = logLines(index).first { $0.text.contains(", best.") }?.text.split(separator: " ").first
             .map { "\($0) best" }
             ?? sessions[index].first?.records.first.map { "\(TesseraCore.ExerciseWords.short($0.exercise)) best" }
         let forms: [String] = if let workout = sessions[index].first {

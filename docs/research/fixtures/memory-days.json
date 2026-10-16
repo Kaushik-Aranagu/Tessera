@@ -811,6 +811,378 @@
      ]
     }
    ]
+  },
+  {
+   "day": 15,
+   "weekday": "Mon",
+   "restDay": false,
+   "facts": {
+    "trained": true,
+    "routine": "Legs A",
+    "startHour": 18,
+    "exercisesDone": 3,
+    "exercisesPlanned": 3,
+    "records": [],
+    "cook": null,
+    "tasksDone": 2
+   },
+   "moments": [
+    {
+     "id": "d15m1",
+     "now": "Mon 8:10 am",
+     "partOfDay": "morning",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Legs A",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Legs A today."
+      }
+     ]
+    },
+    {
+     "id": "d15m2",
+     "now": "Mon 9:15 pm",
+     "partOfDay": "night",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Legs A",
+       "state": "done",
+       "endedAgoMin": 95,
+       "exercisesDone": 3,
+       "exercisesPlanned": 3,
+       "records": [],
+       "lastSameRoutineDaysAgo": 4,
+       "numbers": [
+        3,
+        3,
+        4,
+        7,
+        40
+       ],
+       "rules": "7:40 pm, first in 4 days"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "day": 16,
+   "weekday": "Tue",
+   "restDay": false,
+   "facts": {
+    "trained": true,
+    "routine": "Push A",
+    "startHour": 18,
+    "exercisesDone": 3,
+    "exercisesPlanned": 3,
+    "records": [
+     "Bench press"
+    ],
+    "cook": null,
+    "tasksDone": 1
+   },
+   "moments": [
+    {
+     "id": "d16m1",
+     "now": "Tue 8:10 am",
+     "partOfDay": "morning",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Push A",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Push A today."
+      }
+     ]
+    },
+    {
+     "id": "d16m2",
+     "now": "Tue 9:00 pm",
+     "partOfDay": "night",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Push A",
+       "state": "done",
+       "endedAgoMin": 95,
+       "exercisesDone": 3,
+       "exercisesPlanned": 3,
+       "records": [
+        "Bench press"
+       ],
+       "lastSameRoutineDaysAgo": 4,
+       "numbers": [
+        3,
+        3,
+        4,
+        7,
+        25
+       ],
+       "rules": "Bench best, first in 4 days"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "day": 17,
+   "weekday": "Wed",
+   "restDay": false,
+   "facts": {
+    "trained": true,
+    "routine": "Pull A",
+    "startHour": 18,
+    "exercisesDone": 3,
+    "exercisesPlanned": 3,
+    "records": [],
+    "cook": "Chili",
+    "tasksDone": 2
+   },
+   "moments": [
+    {
+     "id": "d17m1",
+     "now": "Wed 8:10 am",
+     "partOfDay": "morning",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Pull A",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Pull A today."
+      },
+      {
+       "id": "k1",
+       "kind": "cook",
+       "title": "Chili",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Chili tonight."
+      }
+     ]
+    },
+    {
+     "id": "d17m2",
+     "now": "Wed 9:25 pm",
+     "partOfDay": "night",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Pull A",
+       "state": "done",
+       "endedAgoMin": 95,
+       "exercisesDone": 3,
+       "exercisesPlanned": 3,
+       "records": [],
+       "lastSameRoutineDaysAgo": 4,
+       "numbers": [
+        3,
+        3,
+        4,
+        7,
+        50
+       ],
+       "rules": "7:50 pm, first in 4 days"
+      },
+      {
+       "id": "k1",
+       "kind": "cook",
+       "title": "Chili",
+       "state": "done",
+       "numbers": [],
+       "rules": "Chili cooked."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "day": 18,
+   "weekday": "Thu",
+   "restDay": false,
+   "facts": {
+    "trained": true,
+    "routine": "Push A",
+    "startHour": 18,
+    "exercisesDone": 3,
+    "exercisesPlanned": 3,
+    "records": [
+     "Bench press"
+    ],
+    "cook": null,
+    "tasksDone": 2
+   },
+   "moments": [
+    {
+     "id": "d18m1",
+     "now": "Thu 8:10 am",
+     "partOfDay": "morning",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Push A",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Push A today."
+      }
+     ]
+    },
+    {
+     "id": "d18m2",
+     "now": "Thu 9:15 pm",
+     "partOfDay": "night",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Push A",
+       "state": "done",
+       "endedAgoMin": 95,
+       "exercisesDone": 3,
+       "exercisesPlanned": 3,
+       "records": [
+        "Bench press"
+       ],
+       "lastSameRoutineDaysAgo": 2,
+       "numbers": [
+        3,
+        3,
+        2,
+        7,
+        40
+       ],
+       "rules": "7:40 pm, a bench best"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "day": 19,
+   "weekday": "Fri",
+   "restDay": false,
+   "facts": {
+    "trained": true,
+    "routine": "Pull A",
+    "startHour": 18,
+    "exercisesDone": 3,
+    "exercisesPlanned": 3,
+    "records": [],
+    "cook": null,
+    "tasksDone": 1
+   },
+   "moments": [
+    {
+     "id": "d19m1",
+     "now": "Fri 8:10 am",
+     "partOfDay": "morning",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Pull A",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Pull A today."
+      }
+     ]
+    },
+    {
+     "id": "d19m2",
+     "now": "Fri 9:10 pm",
+     "partOfDay": "night",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Pull A",
+       "state": "done",
+       "endedAgoMin": 95,
+       "exercisesDone": 3,
+       "exercisesPlanned": 3,
+       "records": [],
+       "lastSameRoutineDaysAgo": 2,
+       "numbers": [
+        3,
+        3,
+        2,
+        7,
+        35
+       ],
+       "rules": "7:35 pm"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "day": 20,
+   "weekday": "Sat",
+   "restDay": false,
+   "facts": {
+    "trained": true,
+    "routine": "Legs A",
+    "startHour": 18,
+    "exercisesDone": 3,
+    "exercisesPlanned": 3,
+    "records": [],
+    "cook": null,
+    "tasksDone": 1
+   },
+   "moments": [
+    {
+     "id": "d20m1",
+     "now": "Sat 8:10 am",
+     "partOfDay": "morning",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Legs A",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Legs A today."
+      }
+     ]
+    },
+    {
+     "id": "d20m2",
+     "now": "Sat 9:15 pm",
+     "partOfDay": "night",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Legs A",
+       "state": "done",
+       "endedAgoMin": 95,
+       "exercisesDone": 3,
+       "exercisesPlanned": 3,
+       "records": [],
+       "lastSameRoutineDaysAgo": 5,
+       "numbers": [
+        3,
+        3,
+        5,
+        7,
+        40
+       ],
+       "rules": "7:40 pm, first in 5 days"
+      }
+     ]
+    }
+   ]
   }
  ],
  "awareTargets": {
@@ -827,5 +1199,5 @@
   "d7m1": "rest",
   "d4m3": "paused"
  },
- "note": "Synthetic 14 days in the demo shape. Facts are what the phone knows; moments are Home packs. Numbers in each item's 'numbers' are the only digits a line may use."
+ "note": "Synthetic 20 days in the demo shape. Facts are what the phone knows; moments are Home packs. Numbers in each item's 'numbers' are the only digits a line may use."
 }

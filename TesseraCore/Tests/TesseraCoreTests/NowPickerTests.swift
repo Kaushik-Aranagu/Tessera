@@ -123,7 +123,7 @@ struct NowPickerTests {
         try restThursday()
         let landlord = try task("Call landlord", at: at(15, 18))
         let picks = rank(at(15, 17, 50)) { $0.plan = plan; $0.sessionsPerWeek = 3 }
-        #expect(picks.first?.id == landlord.id && picks.first?.why == "At 18:00, your evening slot")
+        #expect(picks.first?.id == landlord.id && picks.first?.why == "At 6 pm, your evening slot")
         #expect(picks.dropFirst().first?.item.kind == .rest)
     }
 
@@ -194,7 +194,7 @@ struct NowPickerTests {
         try groceries(9)
         let bank = try task("Call bank", at: at(15, 19))
         let picks = rank(at(15, 18, 40))
-        #expect(picks.first?.id == bank.id && picks.first?.why == "At 19:00, your evening slot")
+        #expect(picks.first?.id == bank.id && picks.first?.why == "At 7 pm, your evening slot")
         #expect(picks.dropFirst().first?.item.kind == .offer && picks[1].score == 15)
     }
 
@@ -213,7 +213,7 @@ struct NowPickerTests {
         try task("Call mum")
         let at55 = rank(at(12, 17, 35))
         #expect(at55.first?.id == push.id && at55.first?.score == 37)
-        #expect(at55.first?.why == "At 18:30, your evening slot")
+        #expect(at55.first?.why == "At 6:30 pm, your evening slot")
         #expect(rank(at(12, 17, 29)).first?.score == 35)
     }
 
@@ -231,7 +231,7 @@ struct NowPickerTests {
         try task("Clean garage", due: at(15, 9))
         try task("Sort photos", at: at(13, 9))
         let full = rank(at(15, 16)) { $0.dayFull = true }
-        #expect(full.first?.id == dentist.id && full.first?.why == "At 17:00")
+        #expect(full.first?.id == dentist.id && full.first?.why == "At 5 pm")
         #expect(full.dropFirst().first?.item.title == "Clean garage" && full[1].score == 10)
 
         let bank = try task("Call bank", at: at(16, 16, 20))
@@ -283,7 +283,7 @@ struct NowPickerTests {
         let exactly = rank(at(15, 10, 30)) { $0.incumbent = arjun.id }
         #expect(exactly.map(\.score) == [45, 45] && exactly.first?.id == arjun.id) // R34: exactly 15 holds
         let beaten = rank(at(15, 10, 50)) { $0.incumbent = arjun.id }
-        #expect(beaten.first?.id == plumber.id && beaten.first?.why == "At 11:00, your morning slot") // R36
+        #expect(beaten.first?.id == plumber.id && beaten.first?.why == "At 11 am, your morning slot") // R36
     }
 
     // MARK: Re-entry (R39) and the old pick

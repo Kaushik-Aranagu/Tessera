@@ -16,7 +16,7 @@ Research's: it fixes what a scored item is, splits hard fails from judged rows, 
   person, private lines never. Noticed lines carry no clock digits ("You usually train after work.").
 - **Claude words two slots only:** the context line and the SO FAR detail. The hero, Next rows and the day label
   are the phone's and are never scored.
-- **Fixture:** E1-E20 gate the release; the 27 memory-days moments are a second pass for truth and voice.
+- **Fixture:** E1-E20 gate the release; the 39 memory-days moments (27 in the first AI-5 run; days 15 to 20 added Oct 16 for `--job done`) are a second pass for truth and voice.
 - **The pack never holds money or body and health facts.** A pack that does is a pack bug: stop the run, fix AI-4.
 
 ## 2. What a scored item is

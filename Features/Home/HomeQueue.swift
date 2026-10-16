@@ -17,6 +17,8 @@ final class TessVoice {
         let id = UUID()
         let text: String
         let undo: OpRecord?
+        /// What UNDO runs besides (or instead of) undoing the op: several ops, or state that isn't an op.
+        var takeBack: (() -> Void)?
 
         static func == (lhs: Note, rhs: Note) -> Bool {
             lhs.id == rhs.id
@@ -26,12 +28,12 @@ final class TessVoice {
     private(set) var note: Note?
 
     /// Shows `text` for 4 s (with UNDO when there's an op to undo).
-    func say(_ text: String, undo: OpRecord? = nil) {
-        let note = Note(text: text, undo: undo)
+    func say(_ text: String, undo: OpRecord? = nil, takeBack: (() -> Void)? = nil) {
+        let note = Note(text: text, undo: undo, takeBack: takeBack)
         self.note = note
         Task { @MainActor in
             // A line with something to take back stays 10 s (M37); a plain line, 4 s.
-            try? await Task.sleep(for: .seconds(undo == nil ? 4 : 10))
+            try? await Task.sleep(for: .seconds(undo == nil && takeBack == nil ? 4 : 10))
             if self.note?.id == note.id {
                 self.note = nil
             }
@@ -217,8 +219,6 @@ private struct QueueRow: View {
     /// Set by the window when this row has just moved up into Next.
     var arrives = false
     @State private var holding = false
-    /// Room for the time column; grows with Dynamic Type so titles never run under it.
-    @ScaledMetric(relativeTo: .body) private var timeRoom: CGFloat = 64
     @Environment(\.homePagerIdle) private var pagerIdle
     @Environment(\.homeRowGrab) private var grab
 
@@ -240,7 +240,6 @@ private struct QueueRow: View {
                 .opacity(Double(min(max((-drag - 110) / 20, 0), 1)))
                 .offset(y: drag < -110 ? 0 : 6)
                 .accessibilityHidden(true)
-            timeColumn
             content
                 .offset(x: drag < 0 ? leftOffset : 0)
                 // Lifted while held: a soft shadow on the text itself and a slight scale, no highlight shape.
@@ -344,7 +343,9 @@ private struct QueueRow: View {
     }
 
     private var content: some View {
-        HStack(spacing: Theme.Spacing.m) {
+        // The time sits on the title's first baseline at its own width, so a long title takes the rest of the row and
+        // wraps beside it: nothing cut, nothing under it (Design on #507).
+        HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
             Text(entry.title)
                 .font(Theme.Typography.font(Theme.concept.scale.body, weight: isNext ? .medium : .regular))
                 .foregroundStyle(Theme.Colors.ink.opacity(struck ? 0.45 : ink))
@@ -363,26 +364,20 @@ private struct QueueRow: View {
                         .allowsHitTesting(false)
                 }
             Spacer(minLength: Theme.Spacing.s)
+            if let time = entry.time {
+                // Lowercase like the sentences and the hero: "8:30 pm" (Design picked .data over .label).
+                Text(Format.clock(time))
+                    .textRole(.data)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .monospacedDigit()
+                    .fixedSize()
+                    .opacity(struck ? 0 : Double(max(0, 1 - abs(drag) / 40)))
+            }
         }
-        // Room for the time column, which sits still on the right while the title travels.
-        .padding(.trailing, entry.time == nil ? 0 : timeRoom)
         .frame(maxHeight: .infinity)
     }
 
     /// The time stays put while the title travels, and fades out over the first 40 pt of a drag.
-    @ViewBuilder private var timeColumn: some View {
-        if let time = entry.time {
-            Text(Format.clock(time))
-                .textRole(.label)
-                .foregroundStyle(Theme.Colors.inkSecondary)
-                .monospacedDigit()
-                .opacity(struck ? 0 : Double(max(0, 1 - abs(drag) / 40)))
-                // On the first line of a wrapped title.
-                .frame(maxHeight: .infinity, alignment: .top)
-                .padding(.top, 14)
-        }
-    }
-
     /// 1:1 to 150 pt, then rubber-banded at 35%.
     private var leftOffset: CGFloat {
         let pull = -drag
@@ -493,7 +488,7 @@ extension EnvironmentValues {
 /// Press for 0.2 s without moving, then drag: reports the horizontal travel since the press landed. Built on
 /// `UILongPressGestureRecognizer`, which fails as soon as the finger moves before the press, so it never competes
 /// with a scroll view's pan.
-private struct RowPressDrag: UIGestureRecognizerRepresentable {
+struct RowPressDrag: UIGestureRecognizerRepresentable {
     var isEnabled: Bool
     var began: () -> Void
     var changed: (CGFloat) -> Void

@@ -99,14 +99,14 @@ struct WeekFactsTests {
 
     @Test func bestLinesPutARecordFirstAndOnePerDay() throws {
         try train(routines[0], at: Self.at(12, 18), weight: 60)
-        try train(routines[0], at: Self.at(14, 18), weight: 70) // beats Monday: ", PR."
+        try train(routines[0], at: Self.at(14, 18), weight: 70) // beats Monday: ", best."
         for index in 0 ..< 3 {
             try run(CreateTask(title: "task \(index)"), at: Self.at(13, 9))
         }
         let now = Self.at(16, 12)
         let facts = builder.facts(weekContaining: now, plan: plan, now: now)
         #expect(facts.bestLines.count == 3)
-        #expect(facts.bestLines[0].line.text.hasSuffix(", PR."))
+        #expect(facts.bestLines[0].line.text.hasSuffix(", best."))
         #expect(facts.bestLines[0].day == facts.days[2].date) // Wednesday's
         #expect(Set(facts.bestLines.map(\.day)).count == 3)
         // A day's own lines come from the Day log.

@@ -36,7 +36,7 @@ public struct DayLine: Equatable, Sendable {
         time.map { DayStory.clock($0, calendar: calendar) }
     }
 
-    /// "7:10 am, Push Day A, 52 minutes. Bench 82.5 by 8, PR." for VoiceOver.
+    /// "7:10 am, Push Day A, 52 minutes. Bench 82.5 by 8, best." for VoiceOver.
     public func spoken(_ calendar: Calendar) -> String {
         let words = text.replacingOccurrences(of: " × ", with: " by ")
             .replacing(/(\d+) min\b/) { "\($0.1) minutes" }
@@ -222,7 +222,7 @@ public enum DayStory {
                       workout.sets > 0 // a 0-set workout is no session
                 else { continue }
                 let top = lookup.topSet(inWorkout: root)
-                let topText = top.map { ". \($0.text)\($0.isPR ? ", PR" : "")." } ?? "."
+                let topText = top.map { ". \($0.text)\($0.isPR ? ", best" : "")." } ?? "."
                 if let ended = workout.endedAt {
                     let minutes = Int((ended.timeIntervalSince(started) / 60).rounded())
                     lines.append((DayLine(time: started, text: "\(workout.title), \(minutes) min\(topText)",
@@ -413,11 +413,7 @@ extension DayStory {
 
     /// "6:12 pm", "11:20 pm", "12 pm".
     static func sentenceTime(_ date: Date, calendar: Calendar) -> String {
-        let parts = calendar.dateComponents([.hour, .minute], from: date)
-        let hour = parts.hour ?? 0, minute = parts.minute ?? 0
-        let twelve = hour % 12 == 0 ? 12 : hour % 12
-        let half = hour < 12 ? "am" : "pm"
-        return minute == 0 ? "\(twelve) \(half)" : String(format: "%d:%02d %@", twelve, minute, half)
+        HouseTime.clock(date, calendar: calendar)
     }
 }
 

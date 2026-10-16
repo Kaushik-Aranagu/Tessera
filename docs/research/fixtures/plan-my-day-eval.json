@@ -1,0 +1,4537 @@
+{
+ "about": "Plan my day rerun eval input, Oct 16 2026 (Pacific). Model claude-sonnet-5-5, 3 runs per called pack, budget $1 (stop before a call whose worst case would pass it). Source commit: origin/master 4d67f94 (PlanWording.swift PlanPack, instructions and schemaText). Plan: docs/research/plan-rerun-plan.md. 26 packs: d01 to d23 from fixtures/plan-my-day-claude.md, P02, P14, P24 from fixtures/plan-my-day-pack.md; 24 called (d14 and d22 make no call). Oct 16 rules: every event goes as title busy, allDay is [], screened titles go as title task, pack times stay HH:mm, every time in a line is 12-hour lowercase (7:30 am, 5 pm). Lines that named an event in the source are rewritten to name times only. P24 pack line written by Research Oct 16: P04 plus the timed task Take lexapro at 8:00 (no dose, no length, so 30 min; private under Q4, sent as task); handles follow PlanPack's time order, so it is k1 and Physio is k2. Master today still sends Take lexapro as typed (G9) and event titles by default (G1). expect is one valid proposePlan reply that passes every check; bad holds 18 known bad replies with the codes the checker must catch. Codes: V1 to V12 (PlanProposalValidator), M-fmt, M-light, M-ghost, M-day, N1 to N7 (plan-my-day-claude.md section 3), HF-screened, HF-private, HF-event (plan-rerun-plan.md hard fails). mustNot is the per-pack N5 list plus the day's event titles; matched case-insensitive as words, a word in a pack title sent as typed is exempt. Placeholders only, no key.",
+ "packs": [
+  {
+   "id": "d01",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "end": "08:15",
+      "id": "t1",
+      "kind": "task",
+      "min": 15,
+      "run": 1,
+      "start": "08:00",
+      "title": "Reply to landlord"
+     },
+     {
+      "due": "17:00",
+      "end": "09:00",
+      "id": "t2",
+      "kind": "task",
+      "min": 45,
+      "run": 1,
+      "start": "08:15",
+      "title": "Expense report"
+     },
+     {
+      "end": "09:20",
+      "id": "t3",
+      "kind": "task",
+      "min": 20,
+      "run": 1,
+      "start": "09:00",
+      "title": "Book physio"
+     },
+     {
+      "end": "09:45",
+      "fixed": true,
+      "id": "e1",
+      "kind": "event",
+      "min": 15,
+      "start": "09:30",
+      "title": "busy"
+     },
+     {
+      "end": "12:00",
+      "fixed": true,
+      "id": "e2",
+      "kind": "event",
+      "min": 60,
+      "start": "11:00",
+      "title": "busy"
+     },
+     {
+      "end": "15:30",
+      "fixed": true,
+      "id": "e3",
+      "kind": "event",
+      "min": 30,
+      "start": "15:00",
+      "title": "busy"
+     },
+     {
+      "end": "19:00",
+      "fixed": true,
+      "id": "w1",
+      "kind": "workout",
+      "min": 60,
+      "start": "18:00",
+      "title": "Push A"
+     }
+    ],
+    "cap": 3,
+    "light": false,
+    "now": "08:00",
+    "weekday": "Mon",
+    "window": [
+     "08:00",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "t1",
+      "start": "08:00",
+      "end": "08:15",
+      "lineText": ""
+     },
+     {
+      "id": "t3",
+      "start": "08:15",
+      "end": "08:35",
+      "lineText": ""
+     },
+     {
+      "id": "t2",
+      "start": "08:35",
+      "end": "09:20",
+      "lineText": ""
+     },
+     {
+      "id": "e1",
+      "start": "09:30",
+      "end": "09:45",
+      "lineText": ""
+     },
+     {
+      "id": "e2",
+      "start": "11:00",
+      "end": "12:00",
+      "lineText": ""
+     },
+     {
+      "id": "e3",
+      "start": "15:00",
+      "end": "15:30",
+      "lineText": ""
+     },
+     {
+      "id": "w1",
+      "start": "18:00",
+      "end": "19:00",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "t1",
+     "line": "Landlord reply first, then physio, then the report."
+    },
+    "ghostLines": [
+     {
+      "id": "t1",
+      "line": "15 min, a quick one to open with."
+     },
+     {
+      "id": "t3",
+      "line": "20 min, while the morning is quiet."
+     },
+     {
+      "id": "t2",
+      "line": "45 min, done by 9:20 am. Due 5 pm."
+     }
+    ],
+    "note": null
+   },
+   "mustNot": [
+    "Two quick ones",
+    "17:00",
+    "Standup",
+    "Design review",
+    "Priya",
+    "1:1 Priya"
+   ],
+   "bad": [
+    {
+     "why": "a count in the start line",
+     "codes": [
+      "V11",
+      "N6"
+     ],
+     "reply": {
+      "blocks": [
+       {
+        "id": "t1",
+        "start": "08:00",
+        "end": "08:15",
+        "lineText": ""
+       },
+       {
+        "id": "t3",
+        "start": "08:15",
+        "end": "08:35",
+        "lineText": ""
+       },
+       {
+        "id": "t2",
+        "start": "08:35",
+        "end": "09:20",
+        "lineText": ""
+       },
+       {
+        "id": "e1",
+        "start": "09:30",
+        "end": "09:45",
+        "lineText": ""
+       },
+       {
+        "id": "e2",
+        "start": "11:00",
+        "end": "12:00",
+        "lineText": ""
+       },
+       {
+        "id": "e3",
+        "start": "15:00",
+        "end": "15:30",
+        "lineText": ""
+       },
+       {
+        "id": "w1",
+        "start": "18:00",
+        "end": "19:00",
+        "lineText": ""
+       }
+      ],
+      "startWith": {
+       "id": "t1",
+       "line": "Two quick ones, then the report."
+      },
+      "ghostLines": [
+       {
+        "id": "t1",
+        "line": "15 min, a quick one to open with."
+       },
+       {
+        "id": "t3",
+        "line": "20 min, while the morning is quiet."
+       },
+       {
+        "id": "t2",
+        "line": "45 min, done by 9:20 am. Due 5 pm."
+       }
+      ],
+      "note": null
+     }
+    },
+    {
+     "why": "a 24-hour time in a ghost line",
+     "codes": [
+      "V11",
+      "M-fmt"
+     ],
+     "reply": {
+      "blocks": [
+       {
+        "id": "t1",
+        "start": "08:00",
+        "end": "08:15",
+        "lineText": ""
+       },
+       {
+        "id": "t3",
+        "start": "08:15",
+        "end": "08:35",
+        "lineText": ""
+       },
+       {
+        "id": "t2",
+        "start": "08:35",
+        "end": "09:20",
+        "lineText": ""
+       },
+       {
+        "id": "e1",
+        "start": "09:30",
+        "end": "09:45",
+        "lineText": ""
+       },
+       {
+        "id": "e2",
+        "start": "11:00",
+        "end": "12:00",
+        "lineText": ""
+       },
+       {
+        "id": "e3",
+        "start": "15:00",
+        "end": "15:30",
+        "lineText": ""
+       },
+       {
+        "id": "w1",
+        "start": "18:00",
+        "end": "19:00",
+        "lineText": ""
+       }
+      ],
+      "startWith": {
+       "id": "t1",
+       "line": "Landlord reply first, then physio, then the report."
+      },
+      "ghostLines": [
+       {
+        "id": "t1",
+        "line": "15 min, a quick one to open with."
+       },
+       {
+        "id": "t3",
+        "line": "20 min, while the morning is quiet."
+       },
+       {
+        "id": "t2",
+        "line": "45 min, done by 9:20 am. Due 17:00."
+       }
+      ],
+      "note": null
+     }
+    },
+    {
+     "why": "an event title named in a ghost line",
+     "codes": [
+      "N5",
+      "HF-event"
+     ],
+     "reply": {
+      "blocks": [
+       {
+        "id": "t1",
+        "start": "08:00",
+        "end": "08:15",
+        "lineText": ""
+       },
+       {
+        "id": "t3",
+        "start": "08:15",
+        "end": "08:35",
+        "lineText": ""
+       },
+       {
+        "id": "t2",
+        "start": "08:35",
+        "end": "09:20",
+        "lineText": ""
+       },
+       {
+        "id": "e1",
+        "start": "09:30",
+        "end": "09:45",
+        "lineText": ""
+       },
+       {
+        "id": "e2",
+        "start": "11:00",
+        "end": "12:00",
+        "lineText": ""
+       },
+       {
+        "id": "e3",
+        "start": "15:00",
+        "end": "15:30",
+        "lineText": ""
+       },
+       {
+        "id": "w1",
+        "start": "18:00",
+        "end": "19:00",
+        "lineText": ""
+       }
+      ],
+      "startWith": {
+       "id": "t1",
+       "line": "Landlord reply first, then physio, then the report."
+      },
+      "ghostLines": [
+       {
+        "id": "t1",
+        "line": "15 min, a quick one to open with."
+       },
+       {
+        "id": "t3",
+        "line": "20 min, while the morning is quiet."
+       },
+       {
+        "id": "t2",
+        "line": "45 min, done before Standup. Due 5 pm."
+       }
+      ],
+      "note": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "d02",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "end": "08:15",
+      "id": "t1",
+      "kind": "task",
+      "min": 15,
+      "run": 1,
+      "start": "08:00",
+      "title": "Call bank"
+     },
+     {
+      "end": "08:35",
+      "id": "t2",
+      "kind": "task",
+      "min": 20,
+      "run": 1,
+      "start": "08:15",
+      "title": "Fix bike light"
+     },
+     {
+      "end": "10:35",
+      "id": "t3",
+      "kind": "task",
+      "min": 120,
+      "run": 1,
+      "start": "08:35",
+      "title": "Sort the garage"
+     },
+     {
+      "end": "19:00",
+      "fixed": true,
+      "id": "w1",
+      "kind": "workout",
+      "min": 60,
+      "start": "18:00",
+      "title": "Pull A"
+     }
+    ],
+    "cal": false,
+    "cap": 3,
+    "light": false,
+    "now": "08:00",
+    "weekday": "Tue",
+    "window": [
+     "08:00",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "t1",
+      "start": "08:00",
+      "end": "08:15",
+      "lineText": ""
+     },
+     {
+      "id": "t2",
+      "start": "08:15",
+      "end": "08:35",
+      "lineText": ""
+     },
+     {
+      "id": "t3",
+      "start": "08:35",
+      "end": "10:35",
+      "lineText": ""
+     },
+     {
+      "id": "w1",
+      "start": "18:00",
+      "end": "19:00",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "t1",
+     "line": "Bank call first, then the bike light."
+    },
+    "ghostLines": [
+     {
+      "id": "t1",
+      "line": "15 min to call the bank."
+     },
+     {
+      "id": "t2",
+      "line": "20 min on the bike light."
+     },
+     {
+      "id": "t3",
+      "line": "2 hours in the garage, done by 10:35 am."
+     }
+    ],
+    "note": null
+   },
+   "mustNot": [
+    "clear",
+    "free",
+    "open",
+    "empty",
+    "nothing",
+    "Standup"
+   ],
+   "bad": [
+    {
+     "why": "cal false read as an empty morning",
+     "codes": [
+      "N5"
+     ],
+     "reply": {
+      "blocks": [
+       {
+        "id": "t1",
+        "start": "08:00",
+        "end": "08:15",
+        "lineText": ""
+       },
+       {
+        "id": "t2",
+        "start": "08:15",
+        "end": "08:35",
+        "lineText": ""
+       },
+       {
+        "id": "t3",
+        "start": "08:35",
+        "end": "10:35",
+        "lineText": ""
+       },
+       {
+        "id": "w1",
+        "start": "18:00",
+        "end": "19:00",
+        "lineText": ""
+       }
+      ],
+      "startWith": {
+       "id": "t1",
+       "line": "Morning's clear, so the bank call first."
+      },
+      "ghostLines": [
+       {
+        "id": "t1",
+        "line": "15 min to call the bank."
+       },
+       {
+        "id": "t2",
+        "line": "20 min on the bike light."
+       },
+       {
+        "id": "t3",
+        "line": "2 hours in the garage, done by 10:35 am."
+       }
+      ],
+      "note": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "d03",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "end": "08:15",
+      "id": "t1",
+      "kind": "task",
+      "min": 15,
+      "run": 1,
+      "start": "08:00",
+      "title": "Email Arjun re lease"
+     },
+     {
+      "due": "12:00",
+      "end": "09:00",
+      "id": "t2",
+      "kind": "task",
+      "min": 45,
+      "run": 1,
+      "start": "08:15",
+      "title": "Review PR 412"
+     },
+     {
+      "end": "09:10",
+      "id": "t3",
+      "kind": "task",
+      "min": 10,
+      "run": 1,
+      "start": "09:00",
+      "title": "Submit timesheet"
+     },
+     {
+      "end": "09:45",
+      "fixed": true,
+      "id": "e1",
+      "kind": "event",
+      "min": 15,
+      "start": "09:30",
+      "title": "busy"
+     },
+     {
+      "end": "14:30",
+      "fixed": true,
+      "id": "e2",
+      "kind": "event",
+      "min": 90,
+      "start": "13:00",
+      "title": "busy"
+     },
+     {
+      "end": "19:00",
+      "fixed": true,
+      "id": "w1",
+      "kind": "workout",
+      "min": 60,
+      "start": "18:00",
+      "title": "Legs A"
+     }
+    ],
+    "cap": 3,
+    "light": false,
+    "now": "08:00",
+    "weekday": "Wed",
+    "window": [
+     "08:00",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "t1",
+      "start": "08:00",
+      "end": "08:15",
+      "lineText": ""
+     },
+     {
+      "id": "t3",
+      "start": "08:15",
+      "end": "08:25",
+      "lineText": ""
+     },
+     {
+      "id": "t2",
+      "start": "08:25",
+      "end": "09:10",
+      "lineText": ""
+     },
+     {
+      "id": "e1",
+      "start": "09:30",
+      "end": "09:45",
+      "lineText": ""
+     },
+     {
+      "id": "e2",
+      "start": "13:00",
+      "end": "14:30",
+      "lineText": ""
+     },
+     {
+      "id": "w1",
+      "start": "18:00",
+      "end": "19:00",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "t1",
+     "line": "Arjun email first, then the timesheet, then PR 412."
+    },
+    "ghostLines": [
+     {
+      "id": "t1",
+      "line": "15 min, a quick one to start."
+     },
+     {
+      "id": "t3",
+      "line": "10 min, and the timesheet is in."
+     },
+     {
+      "id": "t2",
+      "line": "45 min on PR 412, done by 9:10 am."
+     }
+    ],
+    "note": null
+   },
+   "mustNot": [
+    "night",
+    "sleep",
+    "tired",
+    "kept it short",
+    "Standup",
+    "Sprint planning"
+   ],
+   "bad": [
+    {
+     "why": "a health word and why the plan is short",
+     "codes": [
+      "V12",
+      "N3"
+     ],
+     "reply": {
+      "blocks": [
+       {
+        "id": "t1",
+        "start": "08:00",
+        "end": "08:15",
+        "lineText": ""
+       },
+       {
+        "id": "t3",
+        "start": "08:15",
+        "end": "08:25",
+        "lineText": ""
+       },
+       {
+        "id": "t2",
+        "start": "08:25",
+        "end": "09:10",
+        "lineText": ""
+       },
+       {
+        "id": "e1",
+        "start": "09:30",
+        "end": "09:45",
+        "lineText": ""
+       },
+       {
+        "id": "e2",
+        "start": "13:00",
+        "end": "14:30",
+        "lineText": ""
+       },
+       {
+        "id": "w1",
+        "start": "18:00",
+        "end": "19:00",
+        "lineText": ""
+       }
+      ],
+      "startWith": {
+       "id": "t1",
+       "line": "Arjun email first, then the timesheet, then PR 412."
+      },
+      "ghostLines": [
+       {
+        "id": "t1",
+        "line": "15 min, kept it short since you're tired."
+       },
+       {
+        "id": "t3",
+        "line": "10 min, and the timesheet is in."
+       },
+       {
+        "id": "t2",
+        "line": "45 min on PR 412, done by 9:10 am."
+       }
+      ],
+      "note": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "d04",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "due": "17:00",
+      "end": "09:00",
+      "id": "t1",
+      "kind": "task",
+      "min": 60,
+      "run": 1,
+      "start": "08:00",
+      "title": "Draft Q4 goals"
+     },
+     {
+      "end": "09:10",
+      "id": "t2",
+      "kind": "task",
+      "min": 10,
+      "run": 1,
+      "start": "09:00",
+      "title": "Pay council tax"
+     },
+     {
+      "end": "09:45",
+      "fixed": true,
+      "id": "e1",
+      "kind": "event",
+      "min": 15,
+      "start": "09:30",
+      "title": "busy"
+     },
+     {
+      "end": "11:00",
+      "fixed": true,
+      "id": "e2",
+      "kind": "event",
+      "min": 60,
+      "start": "10:00",
+      "title": "busy"
+     },
+     {
+      "end": "13:30",
+      "fixed": true,
+      "id": "e3",
+      "kind": "event",
+      "min": 60,
+      "start": "12:30",
+      "title": "busy"
+     },
+     {
+      "end": "19:00",
+      "fixed": true,
+      "id": "w1",
+      "kind": "workout",
+      "min": 60,
+      "start": "18:00",
+      "title": "Push B"
+     }
+    ],
+    "cap": 2,
+    "light": true,
+    "now": "08:00",
+    "weekday": "Thu",
+    "window": [
+     "08:00",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "t2",
+      "start": "08:00",
+      "end": "08:10",
+      "lineText": ""
+     },
+     {
+      "id": "t1",
+      "start": "08:10",
+      "end": "09:10",
+      "lineText": ""
+     },
+     {
+      "id": "e1",
+      "start": "09:30",
+      "end": "09:45",
+      "lineText": ""
+     },
+     {
+      "id": "e2",
+      "start": "10:00",
+      "end": "11:00",
+      "lineText": ""
+     },
+     {
+      "id": "e3",
+      "start": "12:30",
+      "end": "13:30",
+      "lineText": ""
+     },
+     {
+      "id": "w1",
+      "start": "18:00",
+      "end": "19:00",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "t2",
+     "line": "Council tax first, then the goals draft."
+    },
+    "ghostLines": [
+     {
+      "id": "t2",
+      "line": "10 min. Small, and done early."
+     },
+     {
+      "id": "t1",
+      "line": "60 min, finished by 9:10 am. Due 5 pm."
+     }
+    ],
+    "note": null
+   },
+   "mustNot": [
+    "lighter",
+    "go easy",
+    "energy",
+    "gentle",
+    "light day",
+    "Standup",
+    "Client call",
+    "Team lunch"
+   ],
+   "bad": [
+    {
+     "why": "training advice on the light day's workout",
+     "codes": [
+      "V10",
+      "M-light",
+      "N2"
+     ],
+     "reply": {
+      "blocks": [
+       {
+        "id": "t2",
+        "start": "08:00",
+        "end": "08:10",
+        "lineText": ""
+       },
+       {
+        "id": "t1",
+        "start": "08:10",
+        "end": "09:10",
+        "lineText": ""
+       },
+       {
+        "id": "e1",
+        "start": "09:30",
+        "end": "09:45",
+        "lineText": ""
+       },
+       {
+        "id": "e2",
+        "start": "10:00",
+        "end": "11:00",
+        "lineText": ""
+       },
+       {
+        "id": "e3",
+        "start": "12:30",
+        "end": "13:30",
+        "lineText": ""
+       },
+       {
+        "id": "w1",
+        "start": "18:00",
+        "end": "19:00",
+        "lineText": "Go easy on the top set."
+       }
+      ],
+      "startWith": {
+       "id": "t2",
+       "line": "Council tax first, then the goals draft."
+      },
+      "ghostLines": [
+       {
+        "id": "t2",
+        "line": "10 min. Small, and done early."
+       },
+       {
+        "id": "t1",
+        "line": "60 min, finished by 9:10 am. Due 5 pm."
+       }
+      ],
+      "note": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "d05",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "end": "08:40",
+      "id": "t1",
+      "kind": "task",
+      "min": 40,
+      "run": 1,
+      "start": "08:00",
+      "title": "Fill in visa form"
+     },
+     {
+      "end": "08:55",
+      "id": "t2",
+      "kind": "task",
+      "min": 15,
+      "run": 1,
+      "start": "08:40",
+      "title": "Send invoice"
+     },
+     {
+      "end": "09:25",
+      "id": "t3",
+      "kind": "task",
+      "min": 30,
+      "run": 1,
+      "start": "08:55",
+      "title": "Clean fridge"
+     },
+     {
+      "end": "09:45",
+      "fixed": true,
+      "id": "e1",
+      "kind": "event",
+      "min": 15,
+      "start": "09:30",
+      "title": "busy"
+     },
+     {
+      "end": "17:00",
+      "fixed": true,
+      "id": "e2",
+      "kind": "event",
+      "min": 60,
+      "start": "16:00",
+      "title": "busy"
+     },
+     {
+      "end": "18:30",
+      "fixed": true,
+      "id": "e3",
+      "kind": "event",
+      "min": 60,
+      "start": "17:30",
+      "title": "busy"
+     },
+     {
+      "end": "19:30",
+      "fixed": true,
+      "id": "w1",
+      "kind": "workout",
+      "min": 60,
+      "movedFrom": "18:00",
+      "start": "18:30",
+      "title": "Pull B"
+     }
+    ],
+    "cap": 3,
+    "light": false,
+    "now": "08:00",
+    "weekday": "Fri",
+    "window": [
+     "08:00",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "t2",
+      "start": "08:00",
+      "end": "08:15",
+      "lineText": ""
+     },
+     {
+      "id": "t1",
+      "start": "08:15",
+      "end": "08:55",
+      "lineText": ""
+     },
+     {
+      "id": "t3",
+      "start": "08:55",
+      "end": "09:25",
+      "lineText": ""
+     },
+     {
+      "id": "e1",
+      "start": "09:30",
+      "end": "09:45",
+      "lineText": ""
+     },
+     {
+      "id": "e2",
+      "start": "16:00",
+      "end": "17:00",
+      "lineText": ""
+     },
+     {
+      "id": "e3",
+      "start": "17:30",
+      "end": "18:30",
+      "lineText": ""
+     },
+     {
+      "id": "w1",
+      "start": "18:30",
+      "end": "19:30",
+      "lineText": "At 6:30 pm, after the busy hour from 5:30 pm."
+     }
+    ],
+    "startWith": {
+     "id": "t2",
+     "line": "Invoice first, then the visa form."
+    },
+    "ghostLines": [
+     {
+      "id": "t2",
+      "line": "15 min, sent by 8:15 am."
+     },
+     {
+      "id": "t1",
+      "line": "40 min on the visa form."
+     },
+     {
+      "id": "t3",
+      "line": "30 min on the fridge, done by 9:25 am."
+     }
+    ],
+    "note": null
+   },
+   "mustNot": [
+    "pushed back",
+    "moved",
+    "18:00",
+    "Standup",
+    "All-hands",
+    "Vendor call"
+   ],
+   "bad": [
+    {
+     "why": "the moved workout put back at 18:00",
+     "codes": [
+      "V3",
+      "V6",
+      "N4"
+     ],
+     "reply": {
+      "blocks": [
+       {
+        "id": "t2",
+        "start": "08:00",
+        "end": "08:15",
+        "lineText": ""
+       },
+       {
+        "id": "t1",
+        "start": "08:15",
+        "end": "08:55",
+        "lineText": ""
+       },
+       {
+        "id": "t3",
+        "start": "08:55",
+        "end": "09:25",
+        "lineText": ""
+       },
+       {
+        "id": "e1",
+        "start": "09:30",
+        "end": "09:45",
+        "lineText": ""
+       },
+       {
+        "id": "e2",
+        "start": "16:00",
+        "end": "17:00",
+        "lineText": ""
+       },
+       {
+        "id": "e3",
+        "start": "17:30",
+        "end": "18:30",
+        "lineText": ""
+       },
+       {
+        "id": "w1",
+        "start": "18:00",
+        "end": "19:00",
+        "lineText": "At 6:30 pm, after the busy hour from 5:30 pm."
+       }
+      ],
+      "startWith": {
+       "id": "t2",
+       "line": "Invoice first, then the visa form."
+      },
+      "ghostLines": [
+       {
+        "id": "t2",
+        "line": "15 min, sent by 8:15 am."
+       },
+       {
+        "id": "t1",
+        "line": "40 min on the visa form."
+       },
+       {
+        "id": "t3",
+        "line": "30 min on the fridge, done by 9:25 am."
+       }
+      ],
+      "note": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "d06",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "end": "08:20",
+      "id": "t1",
+      "kind": "task",
+      "min": 20,
+      "run": 1,
+      "start": "08:00",
+      "title": "Call mom"
+     },
+     {
+      "end": "10:00",
+      "fixed": true,
+      "id": "e1",
+      "kind": "event",
+      "min": 60,
+      "start": "09:00",
+      "title": "busy"
+     },
+     {
+      "end": "12:00",
+      "fixed": true,
+      "id": "w1",
+      "kind": "workout",
+      "min": 60,
+      "start": "11:00",
+      "title": "Legs B"
+     },
+     {
+      "end": "14:30",
+      "fixed": true,
+      "id": "e2",
+      "kind": "event",
+      "min": 90,
+      "start": "13:00",
+      "title": "busy"
+     },
+     {
+      "end": "16:30",
+      "id": "t2",
+      "kind": "task",
+      "min": 120,
+      "run": 2,
+      "start": "14:30",
+      "title": "Sort the garage"
+     },
+     {
+      "end": "18:45",
+      "id": "t3",
+      "kind": "task",
+      "min": 45,
+      "run": 3,
+      "start": "18:00",
+      "title": "Cook carbonara"
+     }
+    ],
+    "cap": 3,
+    "light": false,
+    "now": "08:00",
+    "weekday": "Sat",
+    "window": [
+     "08:00",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "t1",
+      "start": "08:00",
+      "end": "08:20",
+      "lineText": ""
+     },
+     {
+      "id": "e1",
+      "start": "09:00",
+      "end": "10:00",
+      "lineText": ""
+     },
+     {
+      "id": "w1",
+      "start": "11:00",
+      "end": "12:00",
+      "lineText": ""
+     },
+     {
+      "id": "e2",
+      "start": "13:00",
+      "end": "14:30",
+      "lineText": ""
+     },
+     {
+      "id": "t2",
+      "start": "14:30",
+      "end": "16:30",
+      "lineText": ""
+     },
+     {
+      "id": "t3",
+      "start": "18:00",
+      "end": "18:45",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "t1",
+     "line": "Call mom first, done by 8:20 am."
+    },
+    "ghostLines": [
+     {
+      "id": "t1",
+      "line": "20 min, done before 9 am."
+     },
+     {
+      "id": "t2",
+      "line": "2 hours in the garage from 2:30 pm."
+     },
+     {
+      "id": "t3",
+      "line": "45 min for the carbonara at 6 pm."
+     }
+    ],
+    "note": null
+   },
+   "mustNot": [
+    "Parkrun",
+    "Lunch with Nikhil",
+    "lunch",
+    "Nikhil",
+    "warm up"
+   ],
+   "bad": []
+  },
+  {
+   "id": "d07",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "end": "08:20",
+      "id": "t1",
+      "kind": "task",
+      "min": 20,
+      "run": 1,
+      "start": "08:00",
+      "title": "Meal prep list"
+     },
+     {
+      "end": "08:40",
+      "id": "t2",
+      "kind": "task",
+      "min": 20,
+      "run": 1,
+      "start": "08:20",
+      "title": "Fix bike light"
+     },
+     {
+      "end": "09:10",
+      "id": "t3",
+      "kind": "task",
+      "min": 30,
+      "run": 1,
+      "start": "08:40",
+      "title": "Back up photos"
+     },
+     {
+      "end": "13:00",
+      "fixed": true,
+      "id": "e1",
+      "kind": "event",
+      "min": 120,
+      "start": "11:00",
+      "title": "busy"
+     }
+    ],
+    "cap": 3,
+    "light": false,
+    "now": "08:00",
+    "weekday": "Sun",
+    "window": [
+     "08:00",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "t1",
+      "start": "08:00",
+      "end": "08:20",
+      "lineText": ""
+     },
+     {
+      "id": "t2",
+      "start": "08:20",
+      "end": "08:40",
+      "lineText": ""
+     },
+     {
+      "id": "t3",
+      "start": "08:40",
+      "end": "09:10",
+      "lineText": ""
+     },
+     {
+      "id": "e1",
+      "start": "11:00",
+      "end": "13:00",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "t1",
+     "line": "Meal prep list first, then the bike light."
+    },
+    "ghostLines": [
+     {
+      "id": "t1",
+      "line": "20 min to start the morning."
+     },
+     {
+      "id": "t2",
+      "line": "20 min on the bike light."
+     },
+     {
+      "id": "t3",
+      "line": "30 min, done by 9:10 am."
+     }
+    ],
+    "note": null
+   },
+   "mustNot": [
+    "workout",
+    "gym",
+    "training",
+    "rest",
+    "3 small ones",
+    "Brunch at Anu's",
+    "brunch"
+   ],
+   "bad": []
+  },
+  {
+   "id": "d08",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "due": "12:00",
+      "end": "08:30",
+      "id": "t1",
+      "kind": "task",
+      "min": 30,
+      "run": 1,
+      "start": "08:00",
+      "title": "Renew car insurance"
+     },
+     {
+      "end": "08:40",
+      "id": "t2",
+      "kind": "task",
+      "min": 10,
+      "run": 1,
+      "start": "08:30",
+      "title": "Order new contacts"
+     },
+     {
+      "end": "09:45",
+      "fixed": true,
+      "id": "e1",
+      "kind": "event",
+      "min": 15,
+      "start": "09:30",
+      "title": "busy"
+     },
+     {
+      "end": "10:45",
+      "id": "t3",
+      "kind": "task",
+      "min": 60,
+      "run": 2,
+      "start": "09:45",
+      "title": "Plan Lisbon trip"
+     },
+     {
+      "end": "16:00",
+      "fixed": true,
+      "id": "e2",
+      "kind": "event",
+      "min": 120,
+      "start": "14:00",
+      "title": "busy"
+     },
+     {
+      "end": "19:00",
+      "fixed": true,
+      "id": "w1",
+      "kind": "workout",
+      "min": 60,
+      "start": "18:00",
+      "title": "Push A"
+     }
+    ],
+    "cap": 3,
+    "light": false,
+    "now": "08:00",
+    "weekday": "Mon",
+    "window": [
+     "08:00",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "t2",
+      "start": "08:00",
+      "end": "08:10",
+      "lineText": ""
+     },
+     {
+      "id": "t1",
+      "start": "08:10",
+      "end": "08:40",
+      "lineText": ""
+     },
+     {
+      "id": "e1",
+      "start": "09:30",
+      "end": "09:45",
+      "lineText": ""
+     },
+     {
+      "id": "t3",
+      "start": "09:45",
+      "end": "10:45",
+      "lineText": ""
+     },
+     {
+      "id": "e2",
+      "start": "14:00",
+      "end": "16:00",
+      "lineText": ""
+     },
+     {
+      "id": "w1",
+      "start": "18:00",
+      "end": "19:00",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "t2",
+     "line": "Contacts first, then the car insurance."
+    },
+    "ghostLines": [
+     {
+      "id": "t2",
+      "line": "10 min to order contacts."
+     },
+     {
+      "id": "t1",
+      "line": "30 min, renewed well before 12 pm."
+     },
+     {
+      "id": "t3",
+      "line": "60 min on Lisbon, from 9:45 am."
+     }
+    ],
+    "note": null
+   },
+   "mustNot": [
+    "sleep",
+    "data",
+    "Standup",
+    "Quarterly review"
+   ],
+   "bad": []
+  },
+  {
+   "id": "d09",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "end": "08:15",
+      "id": "t1",
+      "kind": "task",
+      "min": 15,
+      "run": 1,
+      "start": "08:00",
+      "title": "Reply to landlord"
+     },
+     {
+      "end": "08:45",
+      "id": "t2",
+      "kind": "task",
+      "min": 30,
+      "run": 1,
+      "start": "08:15",
+      "title": "Clean fridge"
+     },
+     {
+      "end": "09:45",
+      "fixed": true,
+      "id": "e1",
+      "kind": "event",
+      "min": 15,
+      "start": "09:30",
+      "title": "busy"
+     },
+     {
+      "end": "16:00",
+      "fixed": true,
+      "id": "e2",
+      "kind": "event",
+      "min": 60,
+      "start": "15:00",
+      "title": "busy"
+     },
+     {
+      "end": "19:00",
+      "fixed": true,
+      "id": "w1",
+      "kind": "workout",
+      "min": 60,
+      "start": "18:00",
+      "title": "Push A"
+     }
+    ],
+    "cap": 2,
+    "light": true,
+    "now": "08:00",
+    "weekday": "Tue",
+    "window": [
+     "08:00",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "t1",
+      "start": "08:00",
+      "end": "08:15",
+      "lineText": ""
+     },
+     {
+      "id": "t2",
+      "start": "08:15",
+      "end": "08:45",
+      "lineText": ""
+     },
+     {
+      "id": "e1",
+      "start": "09:30",
+      "end": "09:45",
+      "lineText": ""
+     },
+     {
+      "id": "e2",
+      "start": "15:00",
+      "end": "16:00",
+      "lineText": ""
+     },
+     {
+      "id": "w1",
+      "start": "18:00",
+      "end": "19:00",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "t1",
+     "line": "Landlord reply first, then the fridge."
+    },
+    "ghostLines": [
+     {
+      "id": "t1",
+      "line": "15 min, a quick one."
+     },
+     {
+      "id": "t2",
+      "line": "30 min on the fridge, done by 8:45 am."
+     }
+    ],
+    "note": null
+   },
+   "mustNot": [
+    "again",
+    "missed",
+    "yesterday",
+    "still",
+    "back on track",
+    "Standup",
+    "Hiring panel"
+   ],
+   "bad": [
+    {
+     "why": "a guilt word for the rolled workout",
+     "codes": [
+      "V10",
+      "N2"
+     ],
+     "reply": {
+      "blocks": [
+       {
+        "id": "t1",
+        "start": "08:00",
+        "end": "08:15",
+        "lineText": ""
+       },
+       {
+        "id": "t2",
+        "start": "08:15",
+        "end": "08:45",
+        "lineText": ""
+       },
+       {
+        "id": "e1",
+        "start": "09:30",
+        "end": "09:45",
+        "lineText": ""
+       },
+       {
+        "id": "e2",
+        "start": "15:00",
+        "end": "16:00",
+        "lineText": ""
+       },
+       {
+        "id": "w1",
+        "start": "18:00",
+        "end": "19:00",
+        "lineText": ""
+       }
+      ],
+      "startWith": {
+       "id": "t1",
+       "line": "Landlord reply first, again."
+      },
+      "ghostLines": [
+       {
+        "id": "t1",
+        "line": "15 min, a quick one."
+       },
+       {
+        "id": "t2",
+        "line": "30 min on the fridge, done by 8:45 am."
+       }
+      ],
+      "note": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "d10",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "end": "08:30",
+      "id": "t1",
+      "kind": "task",
+      "min": 30,
+      "run": 1,
+      "start": "08:00",
+      "title": "Fix expense claim"
+     },
+     {
+      "end": "09:00",
+      "fixed": true,
+      "id": "e1",
+      "kind": "event",
+      "min": 30,
+      "start": "08:30",
+      "title": "busy"
+     },
+     {
+      "end": "10:30",
+      "fixed": true,
+      "id": "e2",
+      "kind": "event",
+      "min": 90,
+      "start": "09:00",
+      "title": "busy"
+     },
+     {
+      "end": "12:00",
+      "fixed": true,
+      "id": "e3",
+      "kind": "event",
+      "min": 90,
+      "start": "10:30",
+      "title": "busy"
+     },
+     {
+      "end": "13:00",
+      "fixed": true,
+      "id": "e4",
+      "kind": "event",
+      "min": 30,
+      "start": "12:30",
+      "title": "busy"
+     },
+     {
+      "end": "15:30",
+      "fixed": true,
+      "id": "e5",
+      "kind": "event",
+      "min": 150,
+      "start": "13:00",
+      "title": "busy"
+     },
+     {
+      "end": "16:00",
+      "fixed": true,
+      "id": "e6",
+      "kind": "event",
+      "min": 30,
+      "start": "15:30",
+      "title": "busy"
+     },
+     {
+      "end": "17:30",
+      "fixed": true,
+      "id": "e7",
+      "kind": "event",
+      "min": 90,
+      "start": "16:00",
+      "title": "busy"
+     },
+     {
+      "end": "18:00",
+      "fixed": true,
+      "id": "e8",
+      "kind": "event",
+      "min": 30,
+      "start": "17:30",
+      "title": "busy"
+     },
+     {
+      "end": "19:00",
+      "fixed": true,
+      "id": "w1",
+      "kind": "workout",
+      "min": 60,
+      "start": "18:00",
+      "title": "Pull A"
+     },
+     {
+      "end": "20:00",
+      "id": "t2",
+      "kind": "task",
+      "min": 60,
+      "run": 2,
+      "start": "19:00",
+      "title": "Prepare slides"
+     }
+    ],
+    "cap": 2,
+    "light": true,
+    "now": "08:00",
+    "weekday": "Wed",
+    "window": [
+     "08:00",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "t1",
+      "start": "08:00",
+      "end": "08:30",
+      "lineText": ""
+     },
+     {
+      "id": "e1",
+      "start": "08:30",
+      "end": "09:00",
+      "lineText": ""
+     },
+     {
+      "id": "e2",
+      "start": "09:00",
+      "end": "10:30",
+      "lineText": ""
+     },
+     {
+      "id": "e3",
+      "start": "10:30",
+      "end": "12:00",
+      "lineText": ""
+     },
+     {
+      "id": "e4",
+      "start": "12:30",
+      "end": "13:00",
+      "lineText": ""
+     },
+     {
+      "id": "e5",
+      "start": "13:00",
+      "end": "15:30",
+      "lineText": ""
+     },
+     {
+      "id": "e6",
+      "start": "15:30",
+      "end": "16:00",
+      "lineText": ""
+     },
+     {
+      "id": "e7",
+      "start": "16:00",
+      "end": "17:30",
+      "lineText": ""
+     },
+     {
+      "id": "e8",
+      "start": "17:30",
+      "end": "18:00",
+      "lineText": ""
+     },
+     {
+      "id": "w1",
+      "start": "18:00",
+      "end": "19:00",
+      "lineText": ""
+     },
+     {
+      "id": "t2",
+      "start": "19:00",
+      "end": "20:00",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "t1",
+     "line": "Expense claim first, done by 8:30 am."
+    },
+    "ghostLines": [
+     {
+      "id": "t1",
+      "line": "30 min, in the gap before 8:30 am."
+     },
+     {
+      "id": "t2",
+      "line": "60 min after Pull A, then the evening is yours."
+     }
+    ],
+    "note": "Busy until 6 pm. Each task fits a gap."
+   },
+   "mustNot": [
+    "8 meetings",
+    "meetings",
+    "Board memo",
+    "Call plumber",
+    "Prep call",
+    "Board prep",
+    "Roadmap workshop",
+    "Lunch 1:1 Dev",
+    "Customer workshop",
+    "Sync with Lee",
+    "Exec review",
+    "Wrap-up"
+   ],
+   "bad": [
+    {
+     "why": "counts in the note",
+     "codes": [
+      "V11",
+      "N6"
+     ],
+     "reply": {
+      "blocks": [
+       {
+        "id": "t1",
+        "start": "08:00",
+        "end": "08:30",
+        "lineText": ""
+       },
+       {
+        "id": "e1",
+        "start": "08:30",
+        "end": "09:00",
+        "lineText": ""
+       },
+       {
+        "id": "e2",
+        "start": "09:00",
+        "end": "10:30",
+        "lineText": ""
+       },
+       {
+        "id": "e3",
+        "start": "10:30",
+        "end": "12:00",
+        "lineText": ""
+       },
+       {
+        "id": "e4",
+        "start": "12:30",
+        "end": "13:00",
+        "lineText": ""
+       },
+       {
+        "id": "e5",
+        "start": "13:00",
+        "end": "15:30",
+        "lineText": ""
+       },
+       {
+        "id": "e6",
+        "start": "15:30",
+        "end": "16:00",
+        "lineText": ""
+       },
+       {
+        "id": "e7",
+        "start": "16:00",
+        "end": "17:30",
+        "lineText": ""
+       },
+       {
+        "id": "e8",
+        "start": "17:30",
+        "end": "18:00",
+        "lineText": ""
+       },
+       {
+        "id": "w1",
+        "start": "18:00",
+        "end": "19:00",
+        "lineText": ""
+       },
+       {
+        "id": "t2",
+        "start": "19:00",
+        "end": "20:00",
+        "lineText": ""
+       }
+      ],
+      "startWith": {
+       "id": "t1",
+       "line": "Expense claim first, done by 8:30 am."
+      },
+      "ghostLines": [
+       {
+        "id": "t1",
+        "line": "30 min, in the gap before 8:30 am."
+       },
+       {
+        "id": "t2",
+        "line": "60 min after Pull A, then the evening is yours."
+       }
+      ],
+      "note": "8 meetings today, so 2 short tasks."
+     }
+    },
+    {
+     "why": "slides moved to noon to clear the evening",
+     "codes": [
+      "V4",
+      "V6"
+     ],
+     "reply": {
+      "blocks": [
+       {
+        "id": "t1",
+        "start": "08:00",
+        "end": "08:30",
+        "lineText": ""
+       },
+       {
+        "id": "e1",
+        "start": "08:30",
+        "end": "09:00",
+        "lineText": ""
+       },
+       {
+        "id": "e2",
+        "start": "09:00",
+        "end": "10:30",
+        "lineText": ""
+       },
+       {
+        "id": "e3",
+        "start": "10:30",
+        "end": "12:00",
+        "lineText": ""
+       },
+       {
+        "id": "t2",
+        "start": "12:00",
+        "end": "13:00",
+        "lineText": ""
+       },
+       {
+        "id": "e4",
+        "start": "12:30",
+        "end": "13:00",
+        "lineText": ""
+       },
+       {
+        "id": "e5",
+        "start": "13:00",
+        "end": "15:30",
+        "lineText": ""
+       },
+       {
+        "id": "e6",
+        "start": "15:30",
+        "end": "16:00",
+        "lineText": ""
+       },
+       {
+        "id": "e7",
+        "start": "16:00",
+        "end": "17:30",
+        "lineText": ""
+       },
+       {
+        "id": "e8",
+        "start": "17:30",
+        "end": "18:00",
+        "lineText": ""
+       },
+       {
+        "id": "w1",
+        "start": "18:00",
+        "end": "19:00",
+        "lineText": ""
+       }
+      ],
+      "startWith": {
+       "id": "t1",
+       "line": "Expense claim first, done by 8:30 am."
+      },
+      "ghostLines": [
+       {
+        "id": "t1",
+        "line": "30 min, in the gap before 8:30 am."
+       },
+       {
+        "id": "t2",
+        "line": "60 min after Pull A, then the evening is yours."
+       }
+      ],
+      "note": "Busy until 6 pm. Each task fits a gap."
+     }
+    }
+   ]
+  },
+  {
+   "id": "d11",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "due": "12:00",
+      "end": "08:20",
+      "id": "t1",
+      "kind": "task",
+      "min": 20,
+      "run": 1,
+      "start": "08:00",
+      "title": "Buy birthday flowers"
+     },
+     {
+      "end": "08:50",
+      "id": "t2",
+      "kind": "task",
+      "min": 30,
+      "run": 1,
+      "start": "08:20",
+      "title": "Back up photos"
+     },
+     {
+      "end": "09:45",
+      "fixed": true,
+      "id": "e1",
+      "kind": "event",
+      "min": 15,
+      "start": "09:30",
+      "title": "busy"
+     },
+     {
+      "end": "19:00",
+      "fixed": true,
+      "id": "w1",
+      "kind": "workout",
+      "min": 60,
+      "start": "18:00",
+      "title": "Legs A"
+     },
+     {
+      "end": "20:00",
+      "fixed": true,
+      "id": "k1",
+      "kind": "timedTask",
+      "min": 30,
+      "start": "19:30",
+      "title": "Call mom"
+     }
+    ],
+    "cap": 3,
+    "light": false,
+    "now": "08:00",
+    "weekday": "Thu",
+    "window": [
+     "08:00",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "t1",
+      "start": "08:00",
+      "end": "08:20",
+      "lineText": ""
+     },
+     {
+      "id": "t2",
+      "start": "08:20",
+      "end": "08:50",
+      "lineText": ""
+     },
+     {
+      "id": "e1",
+      "start": "09:30",
+      "end": "09:45",
+      "lineText": ""
+     },
+     {
+      "id": "w1",
+      "start": "18:00",
+      "end": "19:00",
+      "lineText": ""
+     },
+     {
+      "id": "k1",
+      "start": "19:30",
+      "end": "20:00",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "t1",
+     "line": "Flowers first, well before 12 pm."
+    },
+    "ghostLines": [
+     {
+      "id": "t1",
+      "line": "20 min for the flowers."
+     },
+     {
+      "id": "t2",
+      "line": "30 min to back up photos."
+     }
+    ],
+    "note": null
+   },
+   "mustNot": [
+    "Mom's birthday",
+    "Standup"
+   ],
+   "bad": []
+  },
+  {
+   "id": "d12",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "end": "11:30",
+      "fixed": true,
+      "id": "e1",
+      "kind": "event",
+      "min": 30,
+      "start": "11:00",
+      "title": "busy"
+     },
+     {
+      "end": "11:45",
+      "id": "t1",
+      "kind": "task",
+      "min": 15,
+      "run": 1,
+      "start": "11:30",
+      "title": "Reply to landlord"
+     },
+     {
+      "end": "12:00",
+      "id": "t2",
+      "kind": "task",
+      "min": 15,
+      "run": 1,
+      "start": "11:45",
+      "title": "Send invoice"
+     },
+     {
+      "end": "12:15",
+      "id": "t3",
+      "kind": "task",
+      "min": 15,
+      "run": 1,
+      "start": "12:00",
+      "title": "Pick up parcel"
+     },
+     {
+      "end": "17:00",
+      "fixed": true,
+      "id": "e2",
+      "kind": "event",
+      "min": 60,
+      "start": "16:00",
+      "title": "busy"
+     },
+     {
+      "end": "19:00",
+      "fixed": true,
+      "id": "w1",
+      "kind": "workout",
+      "min": 60,
+      "start": "18:00",
+      "title": "Push B"
+     }
+    ],
+    "cap": 3,
+    "light": false,
+    "now": "11:07",
+    "weekday": "Fri",
+    "window": [
+     "11:10",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "e1",
+      "start": "11:00",
+      "end": "11:30",
+      "lineText": ""
+     },
+     {
+      "id": "t1",
+      "start": "11:30",
+      "end": "11:45",
+      "lineText": ""
+     },
+     {
+      "id": "t2",
+      "start": "11:45",
+      "end": "12:00",
+      "lineText": ""
+     },
+     {
+      "id": "t3",
+      "start": "12:00",
+      "end": "12:15",
+      "lineText": ""
+     },
+     {
+      "id": "e2",
+      "start": "16:00",
+      "end": "17:00",
+      "lineText": ""
+     },
+     {
+      "id": "w1",
+      "start": "18:00",
+      "end": "19:00",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "t1",
+     "line": "Landlord reply at 11:30 am, then the invoice."
+    },
+    "ghostLines": [
+     {
+      "id": "t1",
+      "line": "15 min, from 11:30 am."
+     },
+     {
+      "id": "t2",
+      "line": "15 min to send the invoice."
+     },
+     {
+      "id": "t3",
+      "line": "15 min for the parcel, done by 12:15 pm."
+     }
+    ],
+    "note": null
+   },
+   "mustNot": [
+    "late",
+    "behind",
+    "catch up",
+    "still",
+    "this morning",
+    "Design crit",
+    "Retro"
+   ],
+   "bad": [
+    {
+     "why": "grading the late open",
+     "codes": [
+      "V10",
+      "N2"
+     ],
+     "reply": {
+      "blocks": [
+       {
+        "id": "e1",
+        "start": "11:00",
+        "end": "11:30",
+        "lineText": ""
+       },
+       {
+        "id": "t1",
+        "start": "11:30",
+        "end": "11:45",
+        "lineText": ""
+       },
+       {
+        "id": "t2",
+        "start": "11:45",
+        "end": "12:00",
+        "lineText": ""
+       },
+       {
+        "id": "t3",
+        "start": "12:00",
+        "end": "12:15",
+        "lineText": ""
+       },
+       {
+        "id": "e2",
+        "start": "16:00",
+        "end": "17:00",
+        "lineText": ""
+       },
+       {
+        "id": "w1",
+        "start": "18:00",
+        "end": "19:00",
+        "lineText": ""
+       }
+      ],
+      "startWith": {
+       "id": "t1",
+       "line": "Landlord reply at 11:30 am, then the invoice."
+      },
+      "ghostLines": [
+       {
+        "id": "t1",
+        "line": "15 min, a late start for the landlord reply."
+       },
+       {
+        "id": "t2",
+        "line": "15 min to send the invoice."
+       },
+       {
+        "id": "t3",
+        "line": "15 min for the parcel, done by 12:15 pm."
+       }
+      ],
+      "note": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "d13",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "end": "08:30",
+      "id": "t1",
+      "kind": "task",
+      "min": 30,
+      "run": 1,
+      "start": "08:00",
+      "title": "Water plants"
+     },
+     {
+      "end": "09:00",
+      "id": "t2",
+      "kind": "task",
+      "min": 30,
+      "run": 1,
+      "start": "08:30",
+      "title": "Return Amazon parcel"
+     },
+     {
+      "end": "09:30",
+      "id": "t3",
+      "kind": "task",
+      "min": 30,
+      "run": 1,
+      "start": "09:00",
+      "title": "Call grandma"
+     },
+     {
+      "end": "10:45",
+      "fixed": true,
+      "id": "e1",
+      "kind": "event",
+      "min": 45,
+      "start": "10:00",
+      "title": "busy"
+     },
+     {
+      "end": "18:00",
+      "fixed": true,
+      "id": "w1",
+      "kind": "workout",
+      "min": 60,
+      "start": "17:00",
+      "title": "Pull B"
+     }
+    ],
+    "cap": 3,
+    "light": false,
+    "now": "08:00",
+    "weekday": "Sat",
+    "window": [
+     "08:00",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "t1",
+      "start": "08:00",
+      "end": "08:30",
+      "lineText": ""
+     },
+     {
+      "id": "t2",
+      "start": "08:30",
+      "end": "09:00",
+      "lineText": ""
+     },
+     {
+      "id": "t3",
+      "start": "09:00",
+      "end": "09:30",
+      "lineText": ""
+     },
+     {
+      "id": "e1",
+      "start": "10:00",
+      "end": "10:45",
+      "lineText": ""
+     },
+     {
+      "id": "w1",
+      "start": "17:00",
+      "end": "18:00",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "t1",
+     "line": "Plants first, then the parcel, then grandma."
+    },
+    "ghostLines": [
+     {
+      "id": "t1",
+      "line": "30 min with the plants."
+     },
+     {
+      "id": "t2",
+      "line": "30 min to return the parcel."
+     },
+     {
+      "id": "t3",
+      "line": "30 min with grandma, done by 9:30 am."
+     }
+    ],
+    "note": null
+   },
+   "mustNot": [
+    "Haircut"
+   ],
+   "bad": []
+  },
+  {
+   "id": "d14",
+   "call": false,
+   "pack": null,
+   "expect": null,
+   "mustNot": [
+    "empty day: no run blocks, PlanPack is nil"
+   ],
+   "bad": []
+  },
+  {
+   "id": "d15",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "end": "08:10",
+      "id": "t1",
+      "kind": "task",
+      "min": 10,
+      "run": 1,
+      "start": "08:00",
+      "title": "Call GP"
+     },
+     {
+      "end": "08:30",
+      "id": "t2",
+      "kind": "task",
+      "min": 20,
+      "run": 1,
+      "start": "08:10",
+      "title": "Submit receipts"
+     },
+     {
+      "end": "09:45",
+      "fixed": true,
+      "id": "e1",
+      "kind": "event",
+      "min": 15,
+      "start": "09:30",
+      "title": "busy"
+     },
+     {
+      "end": "11:00",
+      "fixed": true,
+      "id": "e2",
+      "kind": "event",
+      "min": 60,
+      "start": "10:00",
+      "title": "busy"
+     },
+     {
+      "end": "13:30",
+      "fixed": true,
+      "id": "e3",
+      "kind": "event",
+      "min": 30,
+      "start": "13:00",
+      "title": "busy"
+     },
+     {
+      "end": "15:45",
+      "fixed": true,
+      "id": "k1",
+      "kind": "timedTask",
+      "min": 45,
+      "start": "15:00",
+      "title": "Dentist"
+     },
+     {
+      "end": "16:45",
+      "fixed": true,
+      "id": "e4",
+      "kind": "event",
+      "min": 15,
+      "start": "16:30",
+      "title": "busy"
+     },
+     {
+      "end": "19:00",
+      "fixed": true,
+      "id": "w1",
+      "kind": "workout",
+      "min": 60,
+      "start": "18:00",
+      "title": "Legs B"
+     }
+    ],
+    "cap": 2,
+    "light": true,
+    "now": "08:00",
+    "weekday": "Mon",
+    "window": [
+     "08:00",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "t1",
+      "start": "08:00",
+      "end": "08:10",
+      "lineText": ""
+     },
+     {
+      "id": "t2",
+      "start": "08:10",
+      "end": "08:30",
+      "lineText": ""
+     },
+     {
+      "id": "e1",
+      "start": "09:30",
+      "end": "09:45",
+      "lineText": ""
+     },
+     {
+      "id": "e2",
+      "start": "10:00",
+      "end": "11:00",
+      "lineText": ""
+     },
+     {
+      "id": "e3",
+      "start": "13:00",
+      "end": "13:30",
+      "lineText": ""
+     },
+     {
+      "id": "k1",
+      "start": "15:00",
+      "end": "15:45",
+      "lineText": ""
+     },
+     {
+      "id": "e4",
+      "start": "16:30",
+      "end": "16:45",
+      "lineText": ""
+     },
+     {
+      "id": "w1",
+      "start": "18:00",
+      "end": "19:00",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "t1",
+     "line": "Call GP first, then the receipts."
+    },
+    "ghostLines": [
+     {
+      "id": "t1",
+      "line": "10 min, a quick call."
+     },
+     {
+      "id": "t2",
+      "line": "20 min on receipts, done by 8:30 am."
+     }
+    ],
+    "note": null
+   },
+   "mustNot": [
+    "appointment",
+    "check-up",
+    "kept it short",
+    "Standup",
+    "Planning",
+    "Payroll sync",
+    "Team photo"
+   ],
+   "bad": []
+  },
+  {
+   "id": "d16",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "due": "16:00",
+      "end": "08:30",
+      "id": "t1",
+      "kind": "task",
+      "min": 30,
+      "run": 1,
+      "start": "08:00",
+      "title": "Book flights"
+     },
+     {
+      "end": "08:40",
+      "id": "t2",
+      "kind": "task",
+      "min": 10,
+      "run": 1,
+      "start": "08:30",
+      "title": "Cancel gym trial"
+     },
+     {
+      "end": "08:45",
+      "id": "t3",
+      "kind": "task",
+      "min": 5,
+      "run": 1,
+      "start": "08:40",
+      "title": "Sign NDA"
+     },
+     {
+      "end": "09:45",
+      "fixed": true,
+      "id": "e1",
+      "kind": "event",
+      "min": 15,
+      "start": "09:30",
+      "title": "busy"
+     },
+     {
+      "end": "15:00",
+      "fixed": true,
+      "id": "e2",
+      "kind": "event",
+      "min": 60,
+      "start": "14:00",
+      "title": "busy"
+     },
+     {
+      "end": "19:00",
+      "fixed": true,
+      "id": "w1",
+      "kind": "workout",
+      "min": 60,
+      "start": "18:00",
+      "title": "Push A"
+     }
+    ],
+    "cap": 3,
+    "light": false,
+    "now": "08:00",
+    "weekday": "Tue",
+    "window": [
+     "08:00",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "t3",
+      "start": "08:00",
+      "end": "08:05",
+      "lineText": ""
+     },
+     {
+      "id": "t2",
+      "start": "08:05",
+      "end": "08:15",
+      "lineText": ""
+     },
+     {
+      "id": "t1",
+      "start": "08:15",
+      "end": "08:45",
+      "lineText": ""
+     },
+     {
+      "id": "e1",
+      "start": "09:30",
+      "end": "09:45",
+      "lineText": ""
+     },
+     {
+      "id": "e2",
+      "start": "14:00",
+      "end": "15:00",
+      "lineText": ""
+     },
+     {
+      "id": "w1",
+      "start": "18:00",
+      "end": "19:00",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "t3",
+     "line": "NDA first, then the gym trial, then flights."
+    },
+    "ghostLines": [
+     {
+      "id": "t3",
+      "line": "5 min to sign."
+     },
+     {
+      "id": "t2",
+      "line": "10 min to cancel the trial."
+     },
+     {
+      "id": "t1",
+      "line": "30 min on flights, booked well before 4 pm."
+     }
+    ],
+    "note": null
+   },
+   "mustNot": [
+    "Vendor pitch",
+    "priority",
+    "urgent",
+    "important",
+    "Standup",
+    "Arch review"
+   ],
+   "bad": []
+  },
+  {
+   "id": "d17",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "end": "08:45",
+      "id": "t1",
+      "kind": "task",
+      "min": 45,
+      "run": 1,
+      "start": "08:00",
+      "title": "Feedback for Ana"
+     },
+     {
+      "end": "09:30",
+      "fixed": true,
+      "id": "e1",
+      "kind": "event",
+      "min": 45,
+      "start": "08:45",
+      "title": "busy"
+     },
+     {
+      "end": "09:40",
+      "id": "t2",
+      "kind": "task",
+      "min": 10,
+      "run": 2,
+      "start": "09:30",
+      "title": "Order team lunch"
+     },
+     {
+      "end": "11:30",
+      "fixed": true,
+      "id": "e2",
+      "kind": "event",
+      "min": 60,
+      "start": "10:30",
+      "title": "busy"
+     },
+     {
+      "end": "13:30",
+      "fixed": true,
+      "id": "e3",
+      "kind": "event",
+      "min": 60,
+      "start": "12:30",
+      "title": "busy"
+     },
+     {
+      "end": "15:30",
+      "fixed": true,
+      "id": "e4",
+      "kind": "event",
+      "min": 60,
+      "start": "14:30",
+      "title": "busy"
+     },
+     {
+      "end": "17:30",
+      "fixed": true,
+      "id": "e5",
+      "kind": "event",
+      "min": 60,
+      "start": "16:30",
+      "title": "busy"
+     },
+     {
+      "end": "19:00",
+      "fixed": true,
+      "id": "w1",
+      "kind": "workout",
+      "min": 60,
+      "start": "18:00",
+      "title": "Pull A"
+     }
+    ],
+    "cap": 2,
+    "light": true,
+    "now": "08:00",
+    "weekday": "Wed",
+    "window": [
+     "08:00",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "t1",
+      "start": "08:00",
+      "end": "08:45",
+      "lineText": ""
+     },
+     {
+      "id": "e1",
+      "start": "08:45",
+      "end": "09:30",
+      "lineText": ""
+     },
+     {
+      "id": "t2",
+      "start": "09:30",
+      "end": "09:40",
+      "lineText": ""
+     },
+     {
+      "id": "e2",
+      "start": "10:30",
+      "end": "11:30",
+      "lineText": ""
+     },
+     {
+      "id": "e3",
+      "start": "12:30",
+      "end": "13:30",
+      "lineText": ""
+     },
+     {
+      "id": "e4",
+      "start": "14:30",
+      "end": "15:30",
+      "lineText": ""
+     },
+     {
+      "id": "e5",
+      "start": "16:30",
+      "end": "17:30",
+      "lineText": ""
+     },
+     {
+      "id": "w1",
+      "start": "18:00",
+      "end": "19:00",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "t1",
+     "line": "Feedback for Ana first, then the team lunch order."
+    },
+    "ghostLines": [
+     {
+      "id": "t1",
+      "line": "45 min, done by 8:45 am."
+     },
+     {
+      "id": "t2",
+      "line": "10 min in the gap at 9:30 am."
+     }
+    ],
+    "note": "Busy until 5:30 pm, then Pull A."
+   },
+   "mustNot": [
+    "5 interviews",
+    "Interview",
+    "interviews",
+    "offsite",
+    "Debrief",
+    "Interview 1",
+    "Interview 2",
+    "Interview 3",
+    "Interview 4"
+   ],
+   "bad": [
+    {
+     "why": "a count of interviews in the note",
+     "codes": [
+      "V11",
+      "N6"
+     ],
+     "reply": {
+      "blocks": [
+       {
+        "id": "t1",
+        "start": "08:00",
+        "end": "08:45",
+        "lineText": ""
+       },
+       {
+        "id": "e1",
+        "start": "08:45",
+        "end": "09:30",
+        "lineText": ""
+       },
+       {
+        "id": "t2",
+        "start": "09:30",
+        "end": "09:40",
+        "lineText": ""
+       },
+       {
+        "id": "e2",
+        "start": "10:30",
+        "end": "11:30",
+        "lineText": ""
+       },
+       {
+        "id": "e3",
+        "start": "12:30",
+        "end": "13:30",
+        "lineText": ""
+       },
+       {
+        "id": "e4",
+        "start": "14:30",
+        "end": "15:30",
+        "lineText": ""
+       },
+       {
+        "id": "e5",
+        "start": "16:30",
+        "end": "17:30",
+        "lineText": ""
+       },
+       {
+        "id": "w1",
+        "start": "18:00",
+        "end": "19:00",
+        "lineText": ""
+       }
+      ],
+      "startWith": {
+       "id": "t1",
+       "line": "Feedback for Ana first, then the team lunch order."
+      },
+      "ghostLines": [
+       {
+        "id": "t1",
+        "line": "45 min, done by 8:45 am."
+       },
+       {
+        "id": "t2",
+        "line": "10 min in the gap at 9:30 am."
+       }
+      ],
+      "note": "5 interviews, then Pull A."
+     }
+    }
+   ]
+  },
+  {
+   "id": "d18",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "end": "09:00",
+      "fixed": true,
+      "id": "w1",
+      "kind": "workout",
+      "min": 60,
+      "start": "08:00",
+      "title": "Legs A"
+     },
+     {
+      "end": "09:20",
+      "id": "t1",
+      "kind": "task",
+      "min": 20,
+      "run": 1,
+      "start": "09:00",
+      "title": "Call insurer"
+     },
+     {
+      "end": "09:30",
+      "id": "t2",
+      "kind": "task",
+      "min": 10,
+      "run": 1,
+      "start": "09:20",
+      "title": "Pay electricity bill"
+     },
+     {
+      "end": "09:45",
+      "fixed": true,
+      "id": "e1",
+      "kind": "event",
+      "min": 15,
+      "start": "09:30",
+      "title": "busy"
+     },
+     {
+      "end": "12:00",
+      "fixed": true,
+      "id": "e2",
+      "kind": "event",
+      "min": 60,
+      "start": "11:00",
+      "title": "busy"
+     }
+    ],
+    "cap": 2,
+    "light": true,
+    "now": "08:00",
+    "weekday": "Thu",
+    "window": [
+     "08:00",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "w1",
+      "start": "08:00",
+      "end": "09:00",
+      "lineText": ""
+     },
+     {
+      "id": "t1",
+      "start": "09:00",
+      "end": "09:20",
+      "lineText": ""
+     },
+     {
+      "id": "t2",
+      "start": "09:20",
+      "end": "09:30",
+      "lineText": ""
+     },
+     {
+      "id": "e1",
+      "start": "09:30",
+      "end": "09:45",
+      "lineText": ""
+     },
+     {
+      "id": "e2",
+      "start": "11:00",
+      "end": "12:00",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "w1",
+     "line": "Legs A at 8 am."
+    },
+    "ghostLines": [
+     {
+      "id": "t1",
+      "line": "20 min, right after Legs A."
+     },
+     {
+      "id": "t2",
+      "line": "10 min, done by 9:30 am."
+     }
+    ],
+    "note": null
+   },
+   "mustNot": [
+    "lighter",
+    "top set",
+    "go easy",
+    "warm up",
+    "Standup",
+    "Ops review"
+   ],
+   "bad": [
+    {
+     "why": "a lighter top set on the light day's start line",
+     "codes": [
+      "V10",
+      "M-light",
+      "N2"
+     ],
+     "reply": {
+      "blocks": [
+       {
+        "id": "w1",
+        "start": "08:00",
+        "end": "09:00",
+        "lineText": ""
+       },
+       {
+        "id": "t1",
+        "start": "09:00",
+        "end": "09:20",
+        "lineText": ""
+       },
+       {
+        "id": "t2",
+        "start": "09:20",
+        "end": "09:30",
+        "lineText": ""
+       },
+       {
+        "id": "e1",
+        "start": "09:30",
+        "end": "09:45",
+        "lineText": ""
+       },
+       {
+        "id": "e2",
+        "start": "11:00",
+        "end": "12:00",
+        "lineText": ""
+       }
+      ],
+      "startWith": {
+       "id": "w1",
+       "line": "Legs A at 8 am. Lighter top set if you want."
+      },
+      "ghostLines": [
+       {
+        "id": "t1",
+        "line": "20 min, right after Legs A."
+       },
+       {
+        "id": "t2",
+        "line": "10 min, done by 9:30 am."
+       }
+      ],
+      "note": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "d19",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "end": "08:15",
+      "id": "t1",
+      "kind": "task",
+      "min": 15,
+      "run": 1,
+      "start": "08:00",
+      "title": "Return library book"
+     },
+     {
+      "end": "09:15",
+      "id": "t2",
+      "kind": "task",
+      "min": 60,
+      "run": 1,
+      "start": "08:15",
+      "title": "Plan Lisbon trip"
+     },
+     {
+      "end": "09:45",
+      "fixed": true,
+      "id": "e1",
+      "kind": "event",
+      "min": 15,
+      "start": "09:30",
+      "title": "busy"
+     },
+     {
+      "end": "17:00",
+      "fixed": true,
+      "id": "e2",
+      "kind": "event",
+      "min": 60,
+      "start": "16:00",
+      "title": "busy"
+     },
+     {
+      "end": "19:00",
+      "fixed": true,
+      "id": "w1",
+      "kind": "workout",
+      "min": 60,
+      "start": "18:00",
+      "title": "Push B"
+     },
+     {
+      "end": "20:30",
+      "id": "t3",
+      "kind": "task",
+      "min": 90,
+      "run": 2,
+      "start": "19:00",
+      "title": "Cook chilli"
+     }
+    ],
+    "cap": 3,
+    "light": false,
+    "now": "08:00",
+    "weekday": "Fri",
+    "window": [
+     "08:00",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "t1",
+      "start": "08:00",
+      "end": "08:15",
+      "lineText": ""
+     },
+     {
+      "id": "t2",
+      "start": "08:15",
+      "end": "09:15",
+      "lineText": ""
+     },
+     {
+      "id": "e1",
+      "start": "09:30",
+      "end": "09:45",
+      "lineText": ""
+     },
+     {
+      "id": "e2",
+      "start": "16:00",
+      "end": "17:00",
+      "lineText": ""
+     },
+     {
+      "id": "w1",
+      "start": "18:00",
+      "end": "19:00",
+      "lineText": ""
+     },
+     {
+      "id": "t3",
+      "start": "19:00",
+      "end": "20:30",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "t1",
+     "line": "Library book first, then Lisbon."
+    },
+    "ghostLines": [
+     {
+      "id": "t1",
+      "line": "15 min for the library book."
+     },
+     {
+      "id": "t2",
+      "line": "60 min on Lisbon, done by 9:15 am."
+     },
+     {
+      "id": "t3",
+      "line": "90 min after Push B, done by 8:30 pm."
+     }
+    ],
+    "note": null
+   },
+   "mustNot": [
+    "Standup",
+    "Friday demo"
+   ],
+   "bad": []
+  },
+  {
+   "id": "d20",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "end": "09:20",
+      "id": "t1",
+      "kind": "task",
+      "min": 20,
+      "run": 1,
+      "start": "09:00",
+      "title": "Call mom"
+     },
+     {
+      "end": "09:50",
+      "id": "t2",
+      "kind": "task",
+      "min": 30,
+      "run": 1,
+      "start": "09:20",
+      "title": "Car wash"
+     },
+     {
+      "end": "11:30",
+      "fixed": true,
+      "id": "e1",
+      "kind": "event",
+      "min": 90,
+      "start": "10:00",
+      "title": "busy"
+     },
+     {
+      "end": "13:30",
+      "id": "t3",
+      "kind": "task",
+      "min": 120,
+      "run": 2,
+      "start": "11:30",
+      "title": "Sort the garage"
+     }
+    ],
+    "cap": 3,
+    "light": false,
+    "now": "09:00",
+    "weekday": "Sat",
+    "window": [
+     "09:00",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "t1",
+      "start": "09:00",
+      "end": "09:20",
+      "lineText": ""
+     },
+     {
+      "id": "t2",
+      "start": "09:20",
+      "end": "09:50",
+      "lineText": ""
+     },
+     {
+      "id": "e1",
+      "start": "10:00",
+      "end": "11:30",
+      "lineText": ""
+     },
+     {
+      "id": "t3",
+      "start": "11:30",
+      "end": "13:30",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "t1",
+     "line": "Call mom first, then the car wash."
+    },
+    "ghostLines": [
+     {
+      "id": "t1",
+      "line": "20 min with mom."
+     },
+     {
+      "id": "t2",
+      "line": "30 min, done by 9:50 am."
+     },
+     {
+      "id": "t3",
+      "line": "2 hours in the garage from 11:30 am."
+     }
+    ],
+    "note": null
+   },
+   "mustNot": [
+    "Legs B",
+    "workout",
+    "Kids football",
+    "football"
+   ],
+   "bad": []
+  },
+  {
+   "id": "d21",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "end": "08:40",
+      "id": "t1",
+      "kind": "task",
+      "min": 10,
+      "run": 1,
+      "start": "08:30",
+      "title": "Book haircut"
+     },
+     {
+      "end": "09:25",
+      "id": "t2",
+      "kind": "task",
+      "min": 45,
+      "run": 1,
+      "start": "08:40",
+      "title": "Clean bathroom"
+     },
+     {
+      "end": "11:00",
+      "fixed": true,
+      "id": "e1",
+      "kind": "event",
+      "min": 60,
+      "start": "10:00",
+      "title": "busy"
+     },
+     {
+      "end": "11:30",
+      "id": "t3",
+      "kind": "task",
+      "min": 30,
+      "run": 2,
+      "start": "11:00",
+      "title": "Plan week meals"
+     }
+    ],
+    "cap": 3,
+    "light": false,
+    "now": "08:30",
+    "rest": true,
+    "weekday": "Sun",
+    "window": [
+     "08:30",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "t1",
+      "start": "08:30",
+      "end": "08:40",
+      "lineText": ""
+     },
+     {
+      "id": "t2",
+      "start": "08:40",
+      "end": "09:25",
+      "lineText": ""
+     },
+     {
+      "id": "e1",
+      "start": "10:00",
+      "end": "11:00",
+      "lineText": ""
+     },
+     {
+      "id": "t3",
+      "start": "11:00",
+      "end": "11:30",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "t1",
+     "line": "Haircut booking first, then the bathroom."
+    },
+    "ghostLines": [
+     {
+      "id": "t1",
+      "line": "10 min to book the haircut."
+     },
+     {
+      "id": "t2",
+      "line": "45 min on the bathroom, done by 9:25 am."
+     },
+     {
+      "id": "t3",
+      "line": "30 min on meals from 11 am."
+     }
+    ],
+    "note": "Rest day."
+   },
+   "mustNot": [
+    "workout",
+    "gym",
+    "training",
+    "session",
+    "routine",
+    "day off",
+    "recover",
+    "Push A",
+    "Farmers market"
+   ],
+   "bad": [
+    {
+     "why": "rest talk outside the note",
+     "codes": [
+      "N5"
+     ],
+     "reply": {
+      "blocks": [
+       {
+        "id": "t1",
+        "start": "08:30",
+        "end": "08:40",
+        "lineText": ""
+       },
+       {
+        "id": "t2",
+        "start": "08:40",
+        "end": "09:25",
+        "lineText": ""
+       },
+       {
+        "id": "e1",
+        "start": "10:00",
+        "end": "11:00",
+        "lineText": ""
+       },
+       {
+        "id": "t3",
+        "start": "11:00",
+        "end": "11:30",
+        "lineText": ""
+       }
+      ],
+      "startWith": {
+       "id": "t1",
+       "line": "Haircut booking first, then the bathroom."
+      },
+      "ghostLines": [
+       {
+        "id": "t1",
+        "line": "10 min, then enjoy the rest day."
+       },
+       {
+        "id": "t2",
+        "line": "45 min on the bathroom, done by 9:25 am."
+       },
+       {
+        "id": "t3",
+        "line": "30 min on meals from 11 am."
+       }
+      ],
+      "note": "Rest day."
+     }
+    }
+   ]
+  },
+  {
+   "id": "d22",
+   "call": false,
+   "pack": null,
+   "expect": null,
+   "mustNot": [
+    "workout running at open: no call during a workout (8:50 pm Oct 15)"
+   ],
+   "bad": []
+  },
+  {
+   "id": "d23",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "end": "08:20",
+      "id": "t1",
+      "kind": "task",
+      "min": 20,
+      "run": 1,
+      "start": "08:00",
+      "title": "Order Anu's gift"
+     },
+     {
+      "end": "08:35",
+      "id": "t2",
+      "kind": "task",
+      "min": 15,
+      "run": 1,
+      "start": "08:20",
+      "title": "Renew parking permit"
+     },
+     {
+      "end": "09:45",
+      "fixed": true,
+      "id": "e1",
+      "kind": "event",
+      "min": 15,
+      "start": "09:30",
+      "title": "busy"
+     },
+     {
+      "end": "15:00",
+      "fixed": true,
+      "id": "e2",
+      "kind": "event",
+      "min": 60,
+      "start": "14:00",
+      "title": "busy"
+     },
+     {
+      "end": "19:00",
+      "fixed": true,
+      "id": "w1",
+      "kind": "workout",
+      "min": 60,
+      "start": "18:00",
+      "title": "Pull A"
+     }
+    ],
+    "cap": 3,
+    "light": false,
+    "now": "08:00",
+    "weekday": "Tue",
+    "window": [
+     "08:00",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "t1",
+      "start": "08:00",
+      "end": "08:20",
+      "lineText": ""
+     },
+     {
+      "id": "t2",
+      "start": "08:20",
+      "end": "08:35",
+      "lineText": ""
+     },
+     {
+      "id": "e1",
+      "start": "09:30",
+      "end": "09:45",
+      "lineText": ""
+     },
+     {
+      "id": "e2",
+      "start": "14:00",
+      "end": "15:00",
+      "lineText": ""
+     },
+     {
+      "id": "w1",
+      "start": "18:00",
+      "end": "19:00",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "t1",
+     "line": "Anu's gift first, then the parking permit."
+    },
+    "ghostLines": [
+     {
+      "id": "t1",
+      "line": "20 min for Anu's gift."
+     },
+     {
+      "id": "t2",
+      "line": "15 min on the permit, done by 8:35 am."
+     }
+    ],
+    "note": null
+   },
+   "mustNot": [
+    "birthday",
+    "bday",
+    "party",
+    "cake",
+    "celebrate",
+    "turns",
+    "Rhea in town",
+    "Rhea",
+    "Standup",
+    "Sprint review"
+   ],
+   "bad": [
+    {
+     "why": "the dropped birthday named",
+     "codes": [
+      "N5"
+     ],
+     "reply": {
+      "blocks": [
+       {
+        "id": "t1",
+        "start": "08:00",
+        "end": "08:20",
+        "lineText": ""
+       },
+       {
+        "id": "t2",
+        "start": "08:20",
+        "end": "08:35",
+        "lineText": ""
+       },
+       {
+        "id": "e1",
+        "start": "09:30",
+        "end": "09:45",
+        "lineText": ""
+       },
+       {
+        "id": "e2",
+        "start": "14:00",
+        "end": "15:00",
+        "lineText": ""
+       },
+       {
+        "id": "w1",
+        "start": "18:00",
+        "end": "19:00",
+        "lineText": ""
+       }
+      ],
+      "startWith": {
+       "id": "t1",
+       "line": "Anu's gift first, then the parking permit."
+      },
+      "ghostLines": [
+       {
+        "id": "t1",
+        "line": "20 min for Anu's birthday gift."
+       },
+       {
+        "id": "t2",
+        "line": "15 min on the permit, done by 8:35 am."
+       }
+      ],
+      "note": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "P02",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "end": "08:20",
+      "id": "t1",
+      "kind": "task",
+      "min": 15,
+      "run": 1,
+      "start": "08:05",
+      "title": "Email landlord re lease"
+     },
+     {
+      "end": "08:30",
+      "id": "t2",
+      "kind": "task",
+      "min": 10,
+      "run": 1,
+      "start": "08:20",
+      "title": "task"
+     },
+     {
+      "end": "09:00",
+      "id": "t3",
+      "kind": "task",
+      "min": 30,
+      "run": 1,
+      "start": "08:30",
+      "title": "Review lease renewal"
+     },
+     {
+      "end": "12:45",
+      "fixed": true,
+      "id": "k1",
+      "kind": "timedTask",
+      "min": 45,
+      "start": "12:00",
+      "title": "Haircut"
+     }
+    ],
+    "cal": false,
+    "cap": 3,
+    "light": false,
+    "now": "08:05",
+    "rest": true,
+    "weekday": "Tue",
+    "window": [
+     "08:05",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "t1",
+      "start": "08:05",
+      "end": "08:20",
+      "lineText": ""
+     },
+     {
+      "id": "t2",
+      "start": "08:20",
+      "end": "08:30",
+      "lineText": ""
+     },
+     {
+      "id": "t3",
+      "start": "08:30",
+      "end": "09:00",
+      "lineText": ""
+     },
+     {
+      "id": "k1",
+      "start": "12:00",
+      "end": "12:45",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "t1",
+     "line": "Landlord email first, 15 min."
+    },
+    "ghostLines": [
+     {
+      "id": "t1",
+      "line": "15 min on the landlord email."
+     },
+     {
+      "id": "t2",
+      "line": "10 min, right after the landlord email."
+     },
+     {
+      "id": "t3",
+      "line": "30 min on the lease renewal, done by 9 am."
+     }
+    ],
+    "note": null
+   },
+   "mustNot": [
+    "PIN",
+    "reset",
+    "clear",
+    "free",
+    "open",
+    "groceries"
+   ],
+   "bad": [
+    {
+     "why": "a screened title leaked into a ghost line",
+     "codes": [
+      "HF-screened",
+      "HF-private"
+     ],
+     "reply": {
+      "blocks": [
+       {
+        "id": "t1",
+        "start": "08:05",
+        "end": "08:20",
+        "lineText": ""
+       },
+       {
+        "id": "t2",
+        "start": "08:20",
+        "end": "08:30",
+        "lineText": ""
+       },
+       {
+        "id": "t3",
+        "start": "08:30",
+        "end": "09:00",
+        "lineText": ""
+       },
+       {
+        "id": "k1",
+        "start": "12:00",
+        "end": "12:45",
+        "lineText": ""
+       }
+      ],
+      "startWith": {
+       "id": "t1",
+       "line": "Landlord email first, 15 min."
+      },
+      "ghostLines": [
+       {
+        "id": "t1",
+        "line": "15 min on the landlord email."
+       },
+       {
+        "id": "t2",
+        "line": "10 min to reset your PIN."
+       },
+       {
+        "id": "t3",
+        "line": "30 min on the lease renewal, done by 9 am."
+       }
+      ],
+      "note": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "P14",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "due": "17:00",
+      "end": "08:15",
+      "id": "t1",
+      "kind": "task",
+      "min": 45,
+      "run": 1,
+      "start": "07:30",
+      "title": "Expense report"
+     },
+     {
+      "end": "08:25",
+      "id": "t2",
+      "kind": "task",
+      "min": 10,
+      "run": 1,
+      "start": "08:15",
+      "title": "task"
+     },
+     {
+      "end": "08:35",
+      "id": "t3",
+      "kind": "task",
+      "min": 10,
+      "run": 1,
+      "start": "08:25",
+      "title": "Water the plants"
+     },
+     {
+      "end": "18:00",
+      "fixed": true,
+      "id": "w1",
+      "kind": "workout",
+      "min": 60,
+      "start": "17:00",
+      "title": "Push A"
+     },
+     {
+      "end": "20:30",
+      "fixed": true,
+      "id": "k1",
+      "kind": "timedTask",
+      "min": 30,
+      "start": "20:00",
+      "title": "Leave for SFO"
+     }
+    ],
+    "cap": 3,
+    "light": false,
+    "now": "07:30",
+    "weekday": "Mon",
+    "window": [
+     "07:30",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "t1",
+      "start": "07:30",
+      "end": "08:15",
+      "lineText": ""
+     },
+     {
+      "id": "t2",
+      "start": "08:15",
+      "end": "08:25",
+      "lineText": ""
+     },
+     {
+      "id": "t3",
+      "start": "08:25",
+      "end": "08:35",
+      "lineText": ""
+     },
+     {
+      "id": "w1",
+      "start": "17:00",
+      "end": "18:00",
+      "lineText": ""
+     },
+     {
+      "id": "k1",
+      "start": "20:00",
+      "end": "20:30",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "t1",
+     "line": "Expense report first, due 5 pm."
+    },
+    "ghostLines": [
+     {
+      "id": "t1",
+      "line": "45 min on the expense report."
+     },
+     {
+      "id": "t2",
+      "line": "10 min, right after the report."
+     },
+     {
+      "id": "t3",
+      "line": "10 min for the plants, done by 8:35 am."
+     }
+    ],
+    "note": null
+   },
+   "mustNot": [
+    "door code",
+    "code",
+    "sitter",
+    "NYC trip",
+    "Flight SFO-JFK",
+    "JFK"
+   ],
+   "bad": [
+    {
+     "why": "a ghost line guessing what the task block is",
+     "codes": [
+      "HF-private"
+     ],
+     "reply": {
+      "blocks": [
+       {
+        "id": "t1",
+        "start": "07:30",
+        "end": "08:15",
+        "lineText": ""
+       },
+       {
+        "id": "t2",
+        "start": "08:15",
+        "end": "08:25",
+        "lineText": ""
+       },
+       {
+        "id": "t3",
+        "start": "08:25",
+        "end": "08:35",
+        "lineText": ""
+       },
+       {
+        "id": "w1",
+        "start": "17:00",
+        "end": "18:00",
+        "lineText": ""
+       },
+       {
+        "id": "k1",
+        "start": "20:00",
+        "end": "20:30",
+        "lineText": ""
+       }
+      ],
+      "startWith": {
+       "id": "t1",
+       "line": "Expense report first, due 5 pm."
+      },
+      "ghostLines": [
+       {
+        "id": "t1",
+        "line": "45 min on the expense report."
+       },
+       {
+        "id": "t2",
+        "line": "10 min to send that message before the gym."
+       },
+       {
+        "id": "t3",
+        "line": "10 min for the plants, done by 8:35 am."
+       }
+      ],
+      "note": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "P24",
+   "call": true,
+   "pack": {
+    "allDay": [],
+    "blocks": [
+     {
+      "end": "07:30",
+      "id": "t1",
+      "kind": "task",
+      "min": 10,
+      "run": 1,
+      "start": "07:20",
+      "title": "task"
+     },
+     {
+      "end": "07:40",
+      "id": "t2",
+      "kind": "task",
+      "min": 10,
+      "run": 1,
+      "start": "07:30",
+      "title": "Submit timesheet"
+     },
+     {
+      "end": "08:30",
+      "fixed": true,
+      "id": "k1",
+      "kind": "timedTask",
+      "min": 30,
+      "start": "08:00",
+      "title": "task"
+     },
+     {
+      "end": "09:45",
+      "fixed": true,
+      "id": "e1",
+      "kind": "event",
+      "min": 15,
+      "start": "09:30",
+      "title": "busy"
+     },
+     {
+      "end": "10:45",
+      "fixed": true,
+      "id": "e2",
+      "kind": "event",
+      "min": 45,
+      "start": "10:00",
+      "title": "busy"
+     },
+     {
+      "end": "13:45",
+      "fixed": true,
+      "id": "k2",
+      "kind": "timedTask",
+      "min": 45,
+      "start": "13:00",
+      "title": "Physio"
+     },
+     {
+      "end": "15:00",
+      "fixed": true,
+      "id": "e3",
+      "kind": "event",
+      "min": 60,
+      "start": "14:00",
+      "title": "busy"
+     },
+     {
+      "end": "16:00",
+      "fixed": true,
+      "id": "e4",
+      "kind": "event",
+      "min": 30,
+      "start": "15:30",
+      "title": "busy"
+     },
+     {
+      "end": "18:00",
+      "fixed": true,
+      "id": "w1",
+      "kind": "workout",
+      "min": 60,
+      "start": "17:00",
+      "title": "Legs A"
+     }
+    ],
+    "cap": 2,
+    "light": true,
+    "now": "07:20",
+    "weekday": "Thu",
+    "window": [
+     "07:20",
+     "21:00"
+    ]
+   },
+   "expect": {
+    "blocks": [
+     {
+      "id": "t1",
+      "start": "07:20",
+      "end": "07:30",
+      "lineText": ""
+     },
+     {
+      "id": "t2",
+      "start": "07:30",
+      "end": "07:40",
+      "lineText": ""
+     },
+     {
+      "id": "k1",
+      "start": "08:00",
+      "end": "08:30",
+      "lineText": ""
+     },
+     {
+      "id": "e1",
+      "start": "09:30",
+      "end": "09:45",
+      "lineText": ""
+     },
+     {
+      "id": "e2",
+      "start": "10:00",
+      "end": "10:45",
+      "lineText": ""
+     },
+     {
+      "id": "k2",
+      "start": "13:00",
+      "end": "13:45",
+      "lineText": ""
+     },
+     {
+      "id": "e3",
+      "start": "14:00",
+      "end": "15:00",
+      "lineText": ""
+     },
+     {
+      "id": "e4",
+      "start": "15:30",
+      "end": "16:00",
+      "lineText": ""
+     },
+     {
+      "id": "w1",
+      "start": "17:00",
+      "end": "18:00",
+      "lineText": ""
+     }
+    ],
+    "startWith": {
+     "id": "t1",
+     "line": "A quick 10 min first, then the timesheet."
+    },
+    "ghostLines": [
+     {
+      "id": "t1",
+      "line": "10 min, done by 7:30 am."
+     },
+     {
+      "id": "t2",
+      "line": "10 min on the timesheet, done by 7:40 am."
+     }
+    ],
+    "note": null
+   },
+   "mustNot": [
+    "lexapro",
+    "10mg",
+    "refill",
+    "medicine",
+    "meds",
+    "pill",
+    "Call insurer",
+    "busy"
+   ],
+   "bad": [
+    {
+     "why": "the private medicine reminder named on its row",
+     "codes": [
+      "HF-screened",
+      "HF-private"
+     ],
+     "reply": {
+      "blocks": [
+       {
+        "id": "t1",
+        "start": "07:20",
+        "end": "07:30",
+        "lineText": ""
+       },
+       {
+        "id": "t2",
+        "start": "07:30",
+        "end": "07:40",
+        "lineText": ""
+       },
+       {
+        "id": "k1",
+        "start": "08:00",
+        "end": "08:30",
+        "lineText": "Lexapro at 8 am, with water."
+       },
+       {
+        "id": "e1",
+        "start": "09:30",
+        "end": "09:45",
+        "lineText": ""
+       },
+       {
+        "id": "e2",
+        "start": "10:00",
+        "end": "10:45",
+        "lineText": ""
+       },
+       {
+        "id": "k2",
+        "start": "13:00",
+        "end": "13:45",
+        "lineText": ""
+       },
+       {
+        "id": "e3",
+        "start": "14:00",
+        "end": "15:00",
+        "lineText": ""
+       },
+       {
+        "id": "e4",
+        "start": "15:30",
+        "end": "16:00",
+        "lineText": ""
+       },
+       {
+        "id": "w1",
+        "start": "17:00",
+        "end": "18:00",
+        "lineText": ""
+       }
+      ],
+      "startWith": {
+       "id": "t1",
+       "line": "A quick 10 min first, then the timesheet."
+      },
+      "ghostLines": [
+       {
+        "id": "t1",
+        "line": "10 min, done by 7:30 am."
+       },
+       {
+        "id": "t2",
+        "line": "10 min on the timesheet, done by 7:40 am."
+       }
+      ],
+      "note": null
+     }
+    }
+   ]
+  }
+ ]
+}

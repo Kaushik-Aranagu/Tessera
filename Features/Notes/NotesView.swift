@@ -183,7 +183,7 @@ private struct NoteRow: View {
 
     var body: some View {
         let body = model.store.value("body", of: note)?.stringValue ?? ""
-        let rest = NotesCopy.rest(of: body)
+        let rest = NotesCopy.preview(of: body, isPrivate: model.store.value("isPrivate", of: note) == .bool(true))
         Button(action: open) {
             HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.l) {
                 VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
@@ -284,6 +284,11 @@ enum NotesCopy {
             attributed[lower ..< upper].foregroundColor = Theme.Colors.tess
         }
         return attributed
+    }
+
+    /// The row's second line. A private note shows only "Private note": no preview, nothing for VoiceOver to read.
+    static func preview(of body: String, isPrivate: Bool) -> String {
+        isPrivate ? "" : rest(of: body)
     }
 
     /// Everything after the first line, joined into one line.

@@ -51,8 +51,8 @@ public enum TesseraSchema {
         // A store from a newer Tessera (a downgrade, or a phone restored from a newer one) is never opened, so this
         // build can't write over what it doesn't understand (QA B5). Untouched on disk; this session runs in memory.
         if TesseraDatabaseSchema.isNewer(at: storeURL) {
-            setLaunchNote("Your data is from a newer Tessera, so I left it untouched. Update the app to open it; "
-                + "nothing you do this time will be kept.")
+            setLaunchNote("Your data is from a newer Tessera, so I left it untouched. Update the app to open it. "
+                + "Nothing you do this time will be kept.")
             return (TesseraContainer(memory: ()), .inMemoryFallback)
         }
         let firstError: any Error
@@ -63,7 +63,7 @@ public enum TesseraSchema {
         }
         guard isDamaged(firstError) else {
             setLaunchNote("Couldn't open your data just now, so nothing you do this time will be kept. "
-                + "Your history is untouched; close and reopen the app.")
+                + "Your history is untouched. Close and reopen the app.")
             return (TesseraContainer(memory: ()), .inMemoryFallback)
         }
         guard let backup = moveStoreAside(storeURL) else {
@@ -74,7 +74,7 @@ public enum TesseraSchema {
             return (TesseraContainer(context), .recoveredWithBackup(backup))
         }
         moveBack(from: backup, to: storeURL)
-        setLaunchNote("Couldn't open your data just now. Your history is untouched; close and reopen the app.")
+        setLaunchNote("Couldn't open your data just now. Your history is untouched. Close and reopen the app.")
         return (TesseraContainer(memory: ()), .inMemoryFallback)
     }
 
