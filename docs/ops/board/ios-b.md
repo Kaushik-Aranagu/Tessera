@@ -6,7 +6,7 @@
 
 **Then, before the rest of Next: Review week fix** (Product, 4:58 PM PT; Kaushik's rule: misses as a faint ring, never red, and he reads Review daily). Done when, per Research's `../research/fixtures/review-sentence.md` (#155; 22 of 30 weeks flagged), Review opens with a session-count headline in `Features/Home/ReviewPage.swift:29` ("All six sessions in", "Two sessions this week") in place of a grade, rest days draw Design's rest dab, and the miss ring only appears on a real miss: never for a rest day, a day before first use, a half session or a running workout. Two sessions on one day count as two. Core supplies the week data; Design draws the rest dab. The top fix clears 18 of the 22 flagged weeks.
 
-**Whichever builder frees up first: Settings: Claude screen** (decisions.md 5:49 PM PT). It sits on Core's Keychain store and follows Design's Settings: Claude sheet: paste the key once (it's never shown again, only "Key saved"), Test, the usage line that turns amber at 80%, and "Claude paused until 1 Nov." at the $10 cap. The coordinator assigns it to Builder A or B, whoever finishes their current Now first.
+**Then: Settings: Claude screen** (B owns Tess; coordinator 5:50 PM PT). It sits on Core's Keychain store and follows Design's Settings: Claude sheet: paste the key once (it's never shown again, only "Key saved"), Test, the usage line that turns amber at 80%, "Claude paused until 1 Nov." at the $10 cap, and the cloud mark on the bloom.
 
 **Next:**
 1. (In Now, blocks the phone update) Rest day on Now, QA E5. Done when Now and the week page agree on a rest day, and, on a planned rest day, the Home hero shows a quiet "Rest day" line from Core's NowPicker override, and the next routine is one tap away. No guilt copy and no red.
