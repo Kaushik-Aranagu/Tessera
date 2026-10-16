@@ -301,8 +301,8 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | A159 | `bench then call mum` | live workout | nil | grammar-misfires#159 | MB | pass |
 | A160 | `bench 80x8 then call mum` | none | lift Bench Press 80x8 + nil for the rest (RC6 split) | grammar-misfires#160 | FX | miss (RC6) |
 | A161 | `bench 80x8, call mum` | none | lift Bench Press 80x8 + nil for the rest (RC6 split) | grammar-misfires#161 | FX | miss (RC6) |
-| A162 | `bench 80x8, call mum thu` | none | lift Bench Press 80x8 + task "Call mum" Thu 15 19:00 | grammar-misfires#162 | FX | wrong write (RC6) |
-| A163 | `bench 80x8 and call mum thu` | none | lift Bench Press 80x8 + task "Call mum" Thu 15 19:00 | grammar-misfires#163 | FX | wrong write (RC6) |
+| A162 | `bench 80x8, call mum thu` | none | lift Bench Press 80x8 + task "Call mum" Thu 15, no time, alerts F (T647, fixed 7:55 PM PT) [N1] · now: lift Bench Press 80x8 + task "Call mum" Thu 15 19:00 (dc0968f: no split, so task "Bench 80x8, call mum" Thu 15 19:00) | grammar-misfires#162 | FX, T647 | wrong write (RC6) |
+| A163 | `bench 80x8 and call mum thu` | none | lift Bench Press 80x8 + task "Call mum" Thu 15, no time, alerts F (T647, fixed 7:55 PM PT) [N1] · now: lift Bench Press 80x8 + task "Call mum" Thu 15 19:00 (dc0968f: no split, so task "Bench 80x8 and call mum" Thu 15 19:00) | grammar-misfires#163 | FX, T647 | wrong write (RC6) |
 | A164 | `squat 100x5 and buy milk` | none | lift Back Squat 100x5 + groceries [milk] | grammar-misfires#164 | FX | miss (RC6) |
 | A165 | `leg day then dentist at 4` | none | task "Dentist" Fri 16 16:00 (workout part to the model) | grammar-misfires#165 | FX | wrong write (RC6) |
 | A166 | `pull ups then call mum tonight` | none | task "Call mum" Thu 15 20:00 | grammar-misfires#166 | FX | wrong write (RC6) |
@@ -1130,7 +1130,7 @@ Wrong writes are the ones to fix first: each puts a wrong object, date or title 
 
 ### Gated and not gated
 
-A gated row is judged on its "now" parse. 294 rows are gated (waiting on a slice); 276 of them pass today, so most of the work on those rows waits for the slice, not for the grammar. On top of that, 112 rows carry an `alerts` mark whose check waits on N1 (79 rows A to I, 32 rows in J, 1 in L); none can pass it on master, and none is counted as failing for it.
+A gated row is judged on its "now" parse. 296 rows are gated (waiting on a slice); 276 of them pass today, so most of the work on those rows waits for the slice, not for the grammar. On top of that, 114 rows carry an `alerts` mark whose check waits on N1 (81 rows A to I, 32 rows in J, 1 in L); none can pass it on master, and none is counted as failing for it.
 
 | gate | rows | pass | wrong write | miss |
 |---|---|---|---|---|
@@ -1138,14 +1138,14 @@ A gated row is judged on its "now" parse. 294 rows are gated (waiting on a slice
 | People (1 also needs month dates; 8 also need N1) | 44 | 44 | 0 | 0 |
 | Money | 40 | 38 | 2 | 0 |
 | Reading | 31 | 30 | 1 | 0 |
-| N1 only (57 dated tasks and cooks with no time, J767 and J769 alert edits) | 59 | 50 | 9 | 0 |
+| N1 only (59 dated tasks and cooks with no time, J767 and J769 alert edits) | 61 | 50 | 11 | 0 |
 | Month dates (I655, also needs N1) | 1 | 1 | 0 | 0 |
 | 12b (cook pause and extend) | 4 | 3 | 0 | 1 |
 | Lists 8 | 3 | 2 | 1 | 0 |
 | Habits (M3 slice 2; L834 also needs `did` narrowed, L840 also needs People) | 22 | 20 | 2 | 0 |
 | Body weight (M3 slice 1) | 13 | 13 | 0 | 0 |
-| **gated** | **294** | **276** | **17** | **1** |
-| **not gated** | **589** | **422** | **96** | **71** |
+| **gated** | **296** | **276** | **19** | **1** |
+| **not gated** | **587** | **422** | **94** | **71** |
 
 ### By root cause (rows that do not pass)
 
@@ -1165,7 +1165,6 @@ A gated row is judged on its "now" parse. 294 rows are gated (waiting on a slice
 | NRM | spoken shape the normaliser should reshape (incl. `uh`, `um`, number words in a set) | 5 | 3 | 2 |
 | RC7 | `next` left in the title or ignored (`dentist next fri`, `move dentist to next fri`), `to` leftovers | 4 | 4 | 0 |
 | RC17 | `out of X`, `need X` not grocery phrases | 3 | 0 | 3 |
-| HABW | a habit phrase with a day word (`skip read today`, `pause read till monday`, `new habit ... from monday`) falls through to the task rule | 3 | 3 | 0 |
 | HABW | a habit phrase with a day word (`skip read today`, `pause read till monday`, `new habit ... from monday`) falls through to the task rule | 3 | 3 | 0 |
 | ORD | ordinal dates (`the 20th`) | 2 | 2 | 0 |
 | DAY4 | the 4 AM day (`tomorrow` at 00:30) and `tonight` after 20:00 | 2 | 2 | 0 |
@@ -1188,7 +1187,7 @@ A gated row is judged on its "now" parse. 294 rows are gated (waiting on a slice
 | RBUY | `remind me to buy` food with no day or time stays a task | 1 | 1 | 0 |
 | **all** | | **185** | **113** | **72** |
 
-Four causes (RC11, RC15, RC13, RELT) hold 88 of the 185 failing rows. RC11, RC13 and RELT all sit in `TessDates.find` (return which parts were said, read the missing time forms, read `in N`), so one Core change there clears about 61 rows. For the reminder rows, `reminders.md`'s ten grammar changes map onto these codes: relative times (RELT, 7 rows in J), leads (LEAD, 7), and the `alerts` field (N1, all 112 marked rows). The live-workout guard (PR #205, with #210) cleared SNAP, LOADW, KIND, SETT and REPW; what is left in training is RC12 (the old lift cases and the SQ8 set counts), RC6 (A rows the guard does not reach), K874 and K875 (a named first part skips the guard) and K883.
+Four causes (RC11, RC15, RC13, RELT) hold 88 of the 185 failing rows. RC11, RC13 and RELT all sit in `TessDates.find` (return which parts were said, read the missing time forms, read `in N`), so one Core change there clears about 61 rows. For the reminder rows, `reminders.md`'s ten grammar changes map onto these codes: relative times (RELT, 7 rows in J), leads (LEAD, 7), and the `alerts` field (N1, all 114 marked rows). The live-workout guard (PR #205, with #210) cleared SNAP, LOADW, KIND, SETT and REPW; what is left in training is RC12 (the old lift cases and the SQ8 set counts), RC6 (A rows the guard does not reach), K874 and K875 (a named first part skips the guard) and K883.
 
 ## How Core loads this table (Swift Testing sketch)
 
