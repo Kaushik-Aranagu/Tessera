@@ -13,6 +13,7 @@ Every mark sits in the same 34×30 slot, with the day letter 8pt under it.
 | **Rest** | **A short dry stroke lying across the slot's lower half.** It's 32×5 at y 15 to 21, ink at 50%, with a rough edge and a dry-brush break-up, and no outline. It's the same horizon the rest timer and the Rest Live Activity use, so rest reads as rest, not as an empty dab. | the same |
 | Open (a real miss) | The faint ink ring at 25%, as today. It's never red and never a colour. | the same |
 | Before first use | Nothing: the slot stays empty. | `inkTertiary` (38%) |
+| Still ahead this week (after today) | Nothing: the slot stays empty, whether it's a planned training day or a planned rest day. Only a day that has passed can be a miss. | `inkTertiary` (38%) |
 
 - **Drawing it:** a `RestStroke` shape next to `PaintDab`, with the same seed per index, so each day's stroke is a little different. It's a filled path of 5pt at the middle, tapering to 3.5pt at the ends. Use `Theme.Colors.ink.opacity(0.5)` with the rough-edge treatment the paint strokes already use. It's ink, never the class colour, so it holds in every theme.
 - **Arrival:** it draws left to right (280ms, house curve) in the dab row's entrance stagger, where the dabs pop.
