@@ -63,9 +63,9 @@ Same `IngredientLine.key`, so the list merges them silently; the snapshot test p
 
 - 10 of 10 must rows pair correctly in 3 of 3 runs.
 - 0 false pairs in all 75 row-runs (a never row with any pair, or a must or either row with a different pair).
-- At most 6 pairs per call, one per row; a reply breaking that is dropped whole by the phone and counts as a failed run.
+- At most 6 pairs per call, one per row; a reply breaking that is dropped whole by the phone and counts as a failed run. One ingredient may pair with several rows in one call (rows 2 and 3, capsicum and bell pepper, both to i9 red pepper): the one-pair rule is per row, never per ingredient, and the tool schema and prompt must allow it (rerun #415 missed row 3 in all 3 runs for this).
 - The pack snapshot for this week holds the 23 ingredient titles, the 25 row titles with their handles, and no amounts, typed text ("400g", "2 "), prices, shops, notes or `checkedAt`. The 5 phone-linked rows are absent.
-- Cost: about 1,500 tokens in and 150 out per call, under $0.001 a run.
+- Cost: about 1,500 tokens in and 150 out per call, about $0.001 a run (a note, not part of the pass bar).
 
 ## A note on "either"
 
