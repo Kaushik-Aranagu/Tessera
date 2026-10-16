@@ -182,6 +182,47 @@ struct ClaudeRouteTests {
         #expect(second.contains("is_error"))
     }
 
+    @Test func everyFailedCallWritesItsRowAndAnEmptyBilledReplyCounts() async {
+        // QA R1 on #283: not JSON, and a 200 with no content but billed tokens.
+        RouteStub.queue = [(200, "not json")]
+        _ = await tess().capture(miss, context: context)
+        RouteStub.queue = [(200, #"{"usage":{"input_tokens":900,"output_tokens":5}}"#)]
+        _ = await tess().capture(miss, context: context)
+        RouteStub.queue = [(200, "{}")]
+        _ = await tess().capture(miss, context: context)
+        #expect(ledger.calls().count == 3)
+        #expect(ledger.monthTotal(now: context.now, calendar: TesseraDayTests.calendar)
+            == TessUsageLedger.cost(model: ClaudeTessModel.model, input: 900, output: 5))
+    }
+
+    @Test func siriAndShortcutsNeverReachClaude() async {
+        // QA R3 on #283: they commit at once, with no ghost and no UNDO.
+        var shortcut = context
+        shortcut.commitImmediately = true
+        let capture = await tess().capture(miss, context: shortcut)
+        #expect(capture.records.isEmpty && RouteStub.requests.isEmpty)
+    }
+
+    @Test func aCutOffOrRefusedReplyMakesNoGhost() async {
+        // QA L1 on #283.
+        for reason in ["max_tokens", "refusal"] {
+            RouteStub.queue = [(200, Self.logBench.replacingOccurrences(of: "\"tool_use\",\"usage\"",
+                                                                        with: "\"\(reason)\",\"usage\""))]
+            let capture = await tess().capture(miss, context: context)
+            #expect(capture.records.isEmpty && capture.line == "Didn't catch that.", "\(reason)")
+        }
+    }
+
+    @Test func toolErrorsGoBackAsFixedLines() async throws {
+        RouteStub.queue = [
+            (200, Self.logBench.replacingOccurrences(of: "Bench Press", with: "Underwater Bench")),
+            (200, Self.answer("Couldn't find that.")),
+        ]
+        _ = await tess().capture(miss, context: context)
+        let second = try #require(String(data: RouteStub.bodies[1], encoding: .utf8))
+        #expect(second.contains("that name or value didn't fit") && !second.contains("Underwater Bench\\u"))
+    }
+
     @Test func whatTheGrammarReadsNeverReachesClaude() async {
         _ = await tess().capture("buy milk", context: context)
         #expect(RouteStub.requests.isEmpty)

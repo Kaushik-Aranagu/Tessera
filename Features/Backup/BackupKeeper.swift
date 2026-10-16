@@ -15,6 +15,22 @@ extension UTType {
 enum BackupKeeper {
     private static let bookmarkKey = "tessera.backupFolderBookmark"
 
+    /// Where the bookmark and failures live; tests pass their own suite (QA T11).
+    static var defaults: UserDefaults = .standard
+    /// Turns a saved bookmark into a URL; tests pass a fake. Refreshing a stale bookmark stays on the real path.
+    static var resolve: (Data) -> (url: URL, stale: Bool)? = { data in
+        var stale = false
+        guard let url = try? URL(resolvingBookmarkData: data, bookmarkDataIsStale: &stale) else { return nil }
+        return (url, stale)
+    }
+
+    /// A folder deleted in Files can still resolve, into the trash or Recently Deleted: never write there (QA B9).
+    static func isInTrash(_ url: URL) -> Bool {
+        let path = url.standardizedFileURL.path.lowercased()
+        return path.contains("/.trash/") || path.hasSuffix("/.trash") || path.contains("/recently deleted")
+            || path.contains("/.trashes/")
+    }
+
     static var localFolder: URL {
         URL.documentsDirectory.appendingPathComponent("Backups", isDirectory: true)
     }
@@ -32,7 +48,7 @@ enum BackupKeeper {
 
     /// The copies that failed last time they ran, by place.
     static var failures: [Failure] {
-        guard let data = UserDefaults.standard.data(forKey: failureKey) else { return [] }
+        guard let data = defaults.data(forKey: failureKey) else { return [] }
         return (try? JSONDecoder().decode([Failure].self, from: data)) ?? []
     }
 
@@ -46,7 +62,7 @@ enum BackupKeeper {
             current.append(Failure(place: place, at: now, reason: String(describing: error)))
         }
         if let data = try? JSONEncoder().encode(current) {
-            UserDefaults.standard.set(data, forKey: failureKey)
+            defaults.set(data, forKey: failureKey)
         }
     }
 
@@ -70,7 +86,7 @@ enum BackupKeeper {
         guard let folder = pickedFolder else {
             // A folder was picked but its bookmark won't resolve (deleted, iCloud signed out): a failure, not "no
             // folder", so Backups doesn't look safe while nothing is written there.
-            let picked = UserDefaults.standard.data(forKey: bookmarkKey) != nil
+            let picked = defaults.data(forKey: bookmarkKey) != nil
             note(.folder, error: picked ? CocoaError(.fileNoSuchFile) : nil, now: now)
             return
         }
@@ -91,13 +107,13 @@ enum BackupKeeper {
     /// The folder outside the app he picked once, from its saved bookmark (refreshed when stale). Nil if none, or if
     /// it's gone.
     static var pickedFolder: URL? {
-        guard let data = UserDefaults.standard.data(forKey: bookmarkKey) else { return nil }
-        var stale = false
-        guard let url = try? URL(resolvingBookmarkData: data, bookmarkDataIsStale: &stale) else { return nil }
+        guard let data = defaults.data(forKey: bookmarkKey), let (url, stale) = resolve(data), !isInTrash(url) else {
+            return nil
+        }
         if stale, url.startAccessingSecurityScopedResource() {
             defer { url.stopAccessingSecurityScopedResource() }
             if let fresh = try? url.bookmarkData() {
-                UserDefaults.standard.set(fresh, forKey: bookmarkKey)
+                defaults.set(fresh, forKey: bookmarkKey)
             }
         }
         return url
@@ -111,20 +127,20 @@ enum BackupKeeper {
                 url.stopAccessingSecurityScopedResource()
             }
         }
-        try UserDefaults.standard.set(url.bookmarkData(), forKey: bookmarkKey)
+        try defaults.set(url.bookmarkData(), forKey: bookmarkKey)
         _ = try TesseraBackup.writeRolling(from: context, in: url, now: AppClock.now)
     }
 
     static func forget() {
-        UserDefaults.standard.removeObject(forKey: bookmarkKey)
+        defaults.removeObject(forKey: bookmarkKey)
         // No folder, no folder failure to report (QA L4).
         note(.folder, error: nil, now: AppClock.now)
     }
 
     /// The saved bookmark itself, so a forget can be undone (held in memory for the UNDO only).
     static var bookmark: Data? {
-        get { UserDefaults.standard.data(forKey: bookmarkKey) }
-        set { UserDefaults.standard.set(newValue, forKey: bookmarkKey) }
+        get { defaults.data(forKey: bookmarkKey) }
+        set { defaults.set(newValue, forKey: bookmarkKey) }
     }
 
     /// The newest copy on this iPhone, if any.

@@ -98,6 +98,20 @@ struct DayBoundaryTests {
         #expect(notes.first?.hasSuffix(", no sets, not saved.") == true)
         #expect(workout.isDeleted && store.value("endedAt", of: workout) == nil)
     }
+
+    @Test func theEmptyWrapUpCarriesItsUndo() throws {
+        // Lines audit 2, item 1: "Push A, no sets, not saved." comes with the record its UNDO takes back.
+        let plan = try #require(store.object(id: StarterContent.planID))
+        let push = try #require(store.linkedObjects("routines", of: plan).first)
+        let workout = try engine.perform(StartRoutine(routine: push.id), by: .user).output
+        let table = ProcessTable(engine: engine)
+        try engine.perform(SuspendProcess(process: #require(table.running()).id), by: .user)
+        let notes = table.tidyNotes(now: Date.now.addingTimeInterval(7 * 3600))
+        let undo = try #require(notes.first?.undo)
+        #expect(workout.isDeleted)
+        engine.undo(undo)
+        #expect(!workout.isDeleted)
+    }
 }
 
 @MainActor

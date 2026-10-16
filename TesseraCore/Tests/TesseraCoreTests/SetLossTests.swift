@@ -49,6 +49,17 @@ struct SetLossTests {
         ("KEEP1", "ohp 3x8 at 45", "lift Overhead Press 3x45x8"),
         ("A164", "squat 100x5 and buy milk", "lift Back Squat 100x5 + groceries milk"),
         ("QA274", "bench 3x5 at 7", "nil"),
+        // QA F1, G1, W1 on #282 and Research's K901+ notes.
+        ("F1a", "bench 3 sets of 8", "ask Bench 3 × 8 at what weight?"),
+        ("F1b", "bench 3x8", "ask Bench 3 × 8 at what weight?"),
+        ("F1c", "dips 3 sets of 10", "lift Dip 3x0x10"),
+        ("F1d", "bench 3 sets of 8 at 80", "lift Bench Press 3x80x8"),
+        ("G1", "spent $40 on groceries", "nil-or-not-groceries"),
+        ("W1a", "Tess's birthday fri", "task Tess's birthday @"),
+        ("W1b", "Tess dinner fri", "task Tess dinner @"),
+        ("R1a", "add eggs for groceries", "groceries eggs"),
+        ("R1b", "buy milk for groceries", "groceries milk"),
+        ("R1c", "get milk for groceries", "groceries milk"),
         // Research's 113 re-trace and Design's Speak review.
         ("R113b", "Bench 80 kg, 8 reps only.", "lift Bench Press 80x8"),
         ("R113c", "Bench 3 sets of 8 at 80.", "lift Bench Press 3x80x8"),
@@ -58,7 +69,12 @@ struct SetLossTests {
         ("KEEP3", "bench 80x8 heavy", "nil"),
     ])
     func idle(_ id: String, _ phrase: String, _ expected: String) {
-        #expect(read(grammar.parse(phrase, context: context)) == expected, "\(id)")
+        let got = read(grammar.parse(phrase, context: context))
+        switch expected {
+        case "nil-or-not-groceries": #expect(!got.hasPrefix("groceries"), "\(id): \(got)")
+        case "not-stripped": #expect(got.lowercased().contains("tess"), "\(id): \(got)")
+        default: #expect(got == expected, "\(id)")
+        }
     }
 
     @Test func aLiftAndADatedErrandInAWorkout() throws {
@@ -130,5 +146,31 @@ struct SetLossTests {
         live.entry = entry.id
         #expect(read(grammar.parse("pull ups 10x8", context: live)) == "ask 10 × 8: 10 sets, or +10 kg?")
         #expect(read(grammar.parse("pull ups 3x8", context: context)) == "lift Pull-Up 3x0x8")
+    }
+
+    @Test func whileShoppingSetsAndForGroceriesAreRead() throws {
+        // Research on #282: shopping running, a workout suspended.
+        var shopping = context
+        shopping.process = Groceries.listID
+        _ = try engine.perform(StartShop(), by: .user)
+        #expect(!read(grammar.parse("80 for 8", context: shopping)).hasPrefix("groceries"))
+        #expect(read(grammar.parse("milk for groceries", context: shopping)) == "groceries milk")
+        #expect(read(grammar.parse("oat milk", context: shopping)) == "groceries oat milk")
+    }
+
+    @Test func aBodyweightLiftWithOneNumberInFocusIsReps() throws {
+        // Research on #282: "pull-ups 8" with Pull-Up in focus logs 8 reps at bodyweight, as "Eight." does.
+        let workout = try store.create(#require(classes[.workout]), title: "Pull")
+        let pullUp = try #require(store.classDef(id: SystemCatalog.stableID("library.pullUp")))
+        let entry = try engine.perform(AddExercise(workout: workout.id, exercise: pullUp.id), by: .user).output
+        var live = context
+        live.entry = entry.id
+        #expect(read(grammar.parse("pull ups 8", context: live)) == "set 0x8")
+        // QA F1 in focus: "bench 3x8" takes the last weight.
+        let bench = try engine.perform(AddExercise(workout: workout.id, exercise: #require(classes[.benchPress]).id),
+                                       by: .user).output
+        try engine.perform(LogSet(entry: bench.id, weight: 80, reps: 8), by: .user)
+        live.entry = bench.id
+        #expect(read(grammar.parse("bench 3x8", context: live)) == "set 80x8 + set 80x8 + set 80x8")
     }
 }

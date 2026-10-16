@@ -45,9 +45,13 @@ public struct ClaudeTessModel: TessModel {
     }
 
     public func run(_ request: TessRequest, engine: ActionEngine) async -> TessResult {
-        guard let key = keys.read() else { return .missed }
-        let estimate = TessUsageLedger.estimate(text: request.text, maxTokens: Self.maxTokens * Self.maxRounds,
-                                                model: Self.model)
+        // Siri and Shortcuts commit at once (no ghost, no UNDO): Claude never writes for them (QA R3 on #283).
+        guard !request.context.commitImmediately, let key = keys.read() else { return .missed }
+        // Every round resends the system prompt and the tool definitions with the phrase (QA on #283).
+        let system = system(request.context, engine: engine)
+        let tools = (try? TessTools.definitionsJSON()).flatMap { String(data: $0, encoding: .utf8) } ?? ""
+        let estimate = TessUsageLedger.estimate(text: request.text + system + tools,
+                                                maxTokens: Self.maxTokens, model: Self.model) * Int64(Self.maxRounds)
         guard let reservation = ledger.reserve(estimate, now: now(), calendar: calendar) else {
             // At the cap: the rules and on-device paths go on; Tess says so if nothing else caught it.
             let reset = (calendar.dateInterval(of: .month, for: now())?.end ?? now())
@@ -63,38 +67,44 @@ public struct ClaudeTessModel: TessModel {
         var reply = ""
         do {
             for _ in 0 ..< Self.maxRounds {
-                let response = try await send(conversation, system: system(request.context, engine: engine), key: key)
+                let response = try await send(conversation, system: system, key: key)
                 usage.add(response.usage)
                 requestID = response.requestID ?? requestID
                 reply = response.text
+                // Cut off or refused: no ghosts, the plain miss line (QA L1 on #283).
+                if ["max_tokens", "refusal"].contains(response.stopReason) {
+                    throw Failure.other
+                }
                 guard !response.toolCalls.isEmpty else { break }
                 conversation.append(["role": "assistant", "content": response.content])
                 var results: [[String: Any]] = []
                 for call in response.toolCalls {
                     do {
                         let done = try TessTools.run(call.name, arguments: call.input, engine: engine,
-                                                     pending: !request.context.commitImmediately,
-                                                     now: request.context.now)
+                                                     pending: true, now: request.context.now)
                         records += done
                         results.append(["type": "tool_result", "tool_use_id": call.id, "content": "Done"])
                     } catch let answer as TessToolAnswer {
                         results.append(["type": "tool_result", "tool_use_id": call.id, "content": answer.line])
                     } catch {
-                        results.append(["type": "tool_result", "tool_use_id": call.id, "content": "Error: \(error)",
+                        // A fixed line per case, never an internal error's text (QA on #283).
+                        let said = error is TessToolError ? "Error: that name or value didn't fit. Try another."
+                            : "Error: that didn't work."
+                        results.append(["type": "tool_result", "tool_use_id": call.id, "content": said,
                                         "is_error": true])
                     }
                 }
                 conversation.append(["role": "user", "content": results])
             }
-        } catch let failure as Failure {
+        } catch {
+            // Every call writes its row, an unreadable reply included (QA on #283).
+            let failure = error as? Failure ?? .other
+            usage.add(failure.used)
             ledger.record(use: .capture, model: Self.model, input: usage.input, output: usage.output,
                           costNano: usage.cost, latency: Date().timeIntervalSince(started),
                           outcome: failure.outcome, requestID: requestID, at: now())
             discard(records, engine: engine)
-            return .asked(TessCapture(records: [], line: failure.line, source: .none))
-        } catch {
-            discard(records, engine: engine)
-            return .missed
+            return error is Failure ? .asked(TessCapture(records: [], line: failure.line, source: .none)) : .missed
         }
         ledger.record(use: .capture, model: Self.model, input: usage.input, output: usage.output,
                       costNano: usage.cost, latency: Date().timeIntervalSince(started),
@@ -161,6 +171,7 @@ public struct ClaudeTessModel: TessModel {
         let content: [[String: Any]]
         let text: String
         let toolCalls: [ToolCall]
+        let stopReason: String?
         let usage: Usage
         let requestID: String?
     }
@@ -169,6 +180,8 @@ public struct ClaudeTessModel: TessModel {
     struct Failure: Error {
         let outcome: String
         let line: String
+        /// Tokens billed before it failed (a 200 with no content).
+        var used = Usage()
 
         static let offline = Failure(outcome: "offline", line: "No connection, so Claude didn't see that.")
         static let timeout = Failure(outcome: "timeout", line: "Claude didn't answer in time.")
@@ -186,17 +199,22 @@ public struct ClaudeTessModel: TessModel {
         http.setValue(key, forHTTPHeaderField: "x-api-key")
         http.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         http.setValue("application/json", forHTTPHeaderField: "content-type")
-        let tools = try JSONSerialization.jsonObject(with: TessTools.definitionsJSON())
-        http.httpBody = try JSONSerialization.data(withJSONObject: [
-            "model": Self.model, "max_tokens": Self.maxTokens, "system": system, "tools": tools,
-            "tool_choice": ["type": "auto"], "messages": messages,
-        ] as [String: Any])
+        // Anything that isn't a clean answer becomes a Failure here, so the caller always writes its row (QA R1).
+        guard let definitions = try? TessTools.definitionsJSON(),
+              let tools = try? JSONSerialization.jsonObject(with: definitions),
+              let body = try? JSONSerialization.data(withJSONObject: [
+                  "model": Self.model, "max_tokens": Self.maxTokens, "system": system, "tools": tools,
+                  "tool_choice": ["type": "auto"], "messages": messages,
+              ] as [String: Any]) else { throw Failure.other }
+        http.httpBody = body
         let data: Data
         let response: URLResponse
         do {
             (data, response) = try await session.data(for: http)
         } catch let error as URLError {
             throw error.code == .timedOut ? Failure.timeout : Failure.offline
+        } catch {
+            throw Failure.other // cancelled
         }
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         switch status {
@@ -205,20 +223,25 @@ public struct ClaudeTessModel: TessModel {
         case 429, 500 ... 599: throw status == 504 ? Failure.timeout : Failure.busy
         default: throw Failure.other
         }
-        guard let body = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let content = body["content"] as? [[String: Any]] else { throw Failure.other }
-        let text = content.compactMap { $0["type"] as? String == "text" ? $0["text"] as? String : nil }
-            .joined(separator: " ")
-        let calls = try content.filter { $0["type"] as? String == "tool_use" }.compactMap { block -> ToolCall? in
-            guard let id = block["id"] as? String, let name = block["name"] as? String else { return nil }
-            return try ToolCall(id: id, name: name,
-                                input: JSONSerialization.data(withJSONObject: block["input"] ?? [String: Any]()))
-        }
+        guard let body = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else { throw Failure.other }
         let used = body["usage"] as? [String: Any] ?? [:]
         let usage = Usage(input: used["input_tokens"] as? Int ?? 0, output: used["output_tokens"] as? Int ?? 0,
                           cacheRead: used["cache_read_input_tokens"] as? Int ?? 0,
                           cacheWrite: used["cache_creation_input_tokens"] as? Int ?? 0)
-        return Response(content: content, text: text, toolCalls: calls, usage: usage,
+        // A billed 200 with no content still counts toward the cap.
+        guard let content = body["content"] as? [[String: Any]] else {
+            throw Failure(outcome: "other", line: Failure.other.line, used: usage)
+        }
+        let text = content.compactMap { $0["type"] as? String == "text" ? $0["text"] as? String : nil }
+            .joined(separator: " ")
+        let calls = content.filter { $0["type"] as? String == "tool_use" }.compactMap { block -> ToolCall? in
+            guard let id = block["id"] as? String, let name = block["name"] as? String,
+                  let input = try? JSONSerialization.data(withJSONObject: block["input"] ?? [String: Any]())
+            else { return nil }
+            return ToolCall(id: id, name: name, input: input)
+        }
+        return Response(content: content, text: text, toolCalls: calls,
+                        stopReason: body["stop_reason"] as? String, usage: usage,
                         requestID: (response as? HTTPURLResponse)?.value(forHTTPHeaderField: "request-id"))
     }
 }

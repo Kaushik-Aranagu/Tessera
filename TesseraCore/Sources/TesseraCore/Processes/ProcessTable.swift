@@ -94,7 +94,18 @@ public struct ProcessTable {
     /// Applies the stale rules and returns Tess's one-line notes for what changed. Run on launch and foreground.
     @discardableResult
     public func tidy(now: Date = .now) -> [String] {
-        var notes: [String] = []
+        tidyNotes(now: now).map(\.line)
+    }
+
+    /// One overnight line, and the record its UNDO takes back (only the empty wrap-up has one: "Push A, no sets, not
+    /// saved." brings the workout back). Generic Undo skips system writes, so the record travels with the line.
+    public struct Note: Sendable {
+        public let line: String
+        public let undo: OpRecord?
+    }
+
+    public func tidyNotes(now: Date = .now) -> [Note] {
+        var notes: [Note] = []
         var putAway = 0
         for process in all() where process.state == .suspended {
             let idle = process.idle(at: now)
@@ -110,7 +121,7 @@ public struct ProcessTable {
         }
         if putAway > 0 {
             let things = putAway == 1 ? "One thing" : "\(spelled(putAway).capitalized) things"
-            notes.append("\(things) moved to Later.")
+            notes.append(Note(line: "\(things) moved to Later.", undo: nil))
         }
         return notes
     }
@@ -120,19 +131,24 @@ public struct ProcessTable {
         return ClassResolver.isSubclass(classDef, of: workoutClass)
     }
 
-    private func wrapUp(_ process: ProcessSnapshot, workout: ObjectRecord) -> String {
+    private func wrapUp(_ process: ProcessSnapshot, workout: ObjectRecord) -> Note {
         let end = process.lastTouchedAt ?? .now
         // Opened and never logged: not a session. Close it without saving a trained day (undo brings it back).
         if !workout.orderedChildren.contains(where: { !$0.orderedChildren.isEmpty }) {
             _ = try? engine.perform(EndProcess(process: process.id, reason: .wrappedUp, time: end), by: .system)
-            _ = try? engine.perform(DeleteObject(object: workout.id), by: .system)
-            return "\(store.displayTitle(of: workout)), no sets, not saved."
+            let title = store.displayTitle(of: workout)
+            let deleted = try? engine.perform(DeleteObject(object: workout.id), by: .system).record
+            // M37, with a 10 s UNDO that brings the workout back (lines audit 2, item 1).
+            return Note(line: "\(title), no sets, not saved.", undo: deleted)
         }
         _ = try? engine.perform(FinishWorkout(workout: workout.id, time: end), by: .system)
         _ = try? engine.perform(EndProcess(process: process.id, reason: .wrappedUp, time: end), by: .system)
         let entries = workout.orderedChildren
         let started = entries.count { !$0.orderedChildren.isEmpty }
-        return "\(store.displayTitle(of: workout)) saved. \(started) of \(entries.count) exercises."
+        return Note(
+            line: "\(store.displayTitle(of: workout)) saved. \(started) of \(entries.count) exercises.",
+            undo: nil
+        )
     }
 
     private func spelled(_ number: Int) -> String {
