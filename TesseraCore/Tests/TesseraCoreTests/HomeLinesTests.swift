@@ -98,7 +98,8 @@ struct HomeLinesTests {
         let line = HomeLines.line(for: rest, now: Self.at(12), calendar: Self.calendar)
         // The day label above already names the day (Builder B's #366): "today", with the weekday as widget meta.
         #expect(line.text == "Rest day." && line.hero == "Rest day" && line.context == "today")
-        #expect(line.widgetLine == "Rest day today.")
+        // Widgets have no day label: "Rest day." with the weekday as the meta (home-lines.md §2, Design 54).
+        #expect(line.widgetLine == "Rest day." && line.widgetMeta == "Thursday")
         #expect(HomeLines.weekday(now: Self.at(12), calendar: Self.calendar) == "Thursday")
         #expect(line.objectID == nil && line.detail == nil)
         // At 01:00 Friday his day is still Thursday (QA on #334).
@@ -109,7 +110,8 @@ struct HomeLinesTests {
         #expect(ahead.text == "Rest day." && ahead.hero == "Rest day tomorrow" && ahead.context == "tomorrow")
         let pull = HomeFact(id: UUID(), kind: .workout, title: "Pull A", state: .planned, tomorrow: true)
         let next = HomeLines.line(for: pull, now: Self.at(22), calendar: Self.calendar)
-        #expect(next.text == "Pull A tomorrow." && next.hero == "Pull A" && next.widgetLine == "Pull A tomorrow.")
+        #expect(next.text == "Pull A tomorrow." && next.hero == "Pull A" && next.context == "tomorrow, first")
+        #expect(next.widgetLine == "Pull A tomorrow, first.")
     }
 
     @Test func cookingAndShopping() {
@@ -235,6 +237,20 @@ struct HomeLinesTests {
         #expect(done.widgetWords == "Push A, all sets in")
         #expect(ExerciseWords.short("Dumbbell Lateral Raise") == "Lateral raise")
         #expect(ExerciseWords.short("Bulgarian Split Squat") == "Split squat")
+        // QA F1 on #369: no two catalog lifts share a short name, so an incline best is never a "Press best".
+        #expect(ExerciseWords.short("Incline Dumbbell Press") == "Incline DB press")
+        let shorts = ExerciseLibrary.seeds.map { ExerciseWords.short($0.name) }
+        let meant: Set = ["Pulldown", "Lateral raise", "Leg curl", "Calf raise"]
+        let clashes = Dictionary(grouping: shorts, by: { $0 }).filter { $0.value.count > 1 && !meant.contains($0.key) }
+        #expect(clashes.isEmpty, "\(clashes.keys.sorted())")
+        // Running: no meta (Design's low); a planned session with a time wins over the rest day (Product 96db137).
+        let running = HomeFact(id: UUID(), kind: .workout, title: "Legs", state: .running, exercise: "Squat", step: 3)
+        #expect(HomeLines.line(for: running).widgetMeta == nil)
+        let timed = HomeFact(id: UUID(), kind: .workout, title: "Push A", state: .planned, startsAt: Self.at(19))
+        let planned = HomeLines.line(for: timed, now: Self.at(18, 10), calendar: Self.calendar)
+        #expect(planned.hero == "Push A at 7 pm" && planned.text == "Push A at 7 pm." && planned
+            .context == "this evening")
+        #expect(planned.widgetLine == "Push A at 7 pm this evening." || planned.widgetLine == "Push A at 7 pm.")
         #expect(ExerciseWords.short("Deadlift") == "Deadlift" && ExerciseWords.short("Face Pull") == "Face pull")
         // Design 54: a paused hero drops its paused context into the meta.
         let paused = HomeFact(id: UUID(), kind: .workout, title: "Push A", state: .paused, exercise: "Incline", step: 2,
@@ -301,7 +317,18 @@ struct HomeLinesTests {
         let finished = facts.cooksFinished(on: .now)
         #expect(finished.count == 1)
         #expect(HomeLines.line(for: facts.fact(doneCook: finished[0])).text == "\(recipe.title) done.")
-        #expect(HomeLines.line(for: facts.rest(next: next)).text == "Rest day.")
+        // On a day with nothing planned (the 13th; the paused workout above sits on today), the rest line shows.
+        let quietDay = Self.at(18).addingTimeInterval(-2 * 86400) // the 13th, 18:00
+        let restFact = try #require(facts.rest(next: next, now: quietDay))
+        #expect(HomeLines.line(for: restFact).text == "Rest day.")
+        // A session scheduled for that day wins over the rest day (Product 96db137).
+        let workoutClass = try #require(classes[.workout])
+        let scheduled = store.create(workoutClass, title: "Push A")
+        try store.set("scheduledFor", to: .date(quietDay.addingTimeInterval(3600)), on: scheduled)
+        #expect(facts.rest(next: next, now: quietDay) == nil)
+        #expect(facts.plannedSession(on: quietDay)?.id == scheduled.id)
+        #expect(HomeLines.line(for: facts.fact(scheduled: scheduled), now: quietDay, calendar: Self.calendar).hero
+            == "Push A at 7 pm")
     }
 
     @Test func aFinishedWorkoutFromTheStoreNamesItsRecord() throws {
