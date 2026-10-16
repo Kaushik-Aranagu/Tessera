@@ -235,6 +235,13 @@ The picks add these events, which come from views and not from the diff:
 | `restEnding` | the live workout only | 10 |
 | `sideTurned(direction)` | the one `SideHost` (sheet 75), on the move into stop 1 (right) and the move that lands on the front (left), never between stop 1 and stop 2 | side |
 
+Sheet 76 (along a run, a side's pages): along and between pages emit nothing to her, and `sideTurned` stays only
+into the glance and back to the front. The band wins over sheet 76's edge zones: a pan that starts at 736 or below is
+hers, even inside the right edge's last 32 pt. `reachedEnd` (idea 9) comes only from vertical scrolling to a page's last
+row, never from a run's or a side's rubber band. While she's working, the readers (idea 1) follow their words' live
+frames as the body moves, skip a word that leaves the screen, and re-map to the new page's touched words when it
+settles. If fewer than two are on screen, she falls back to §5's sweep.
+
 `sideTurned` (sheet 75, every screen has a side): eyes only, 0.4 toward the incoming content over 380 ms on the house
 spring, then ahead over 300 ms; the mouth follows at 70%. She and the band are part of the spine and never move with the
 body. Only when she's idle or roaming; nothing with eyes off, under Reduce Motion or in `.live`. Her side line lands
