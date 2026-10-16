@@ -61,7 +61,7 @@ A theme is mostly ground. Colour arrives only where something matters: the actio
   - Only `tess`, `context` and `liveInk` (or `live` on dark themes) are ever text.
   - `now`, `health` and `training` are pigments for dabs and strokes, never body text on a light ground. On a light ground they fall under 4.5:1.
   - Ink on a stroke word stays `ink`.
-- **The workout is pure black in every look** (fourth addendum). Every look uses Obsidian's workout column, and the workout rows in the table above are superseded.
+- **The workout uses the look's own base** (fourth addendum). The `Workout.*` rows in the table above are retired: the workout reads the same ground, ink and pigments as Home.
 
 ## The field (the background, per theme)
 These are not gradients or textures pasted on. Each field is how the material would really behave.
@@ -234,58 +234,38 @@ This addendum wins over everything above. The tables above already carry the new
 ## Third addendum: no dots (Kaushik, Oct 15, about 8:08 PM PT)
 - **The rule:** colour arrives through motion and moments; resting colour stays low-contrast. The full list of places is in `no-dots.md`.
 - **No coloured mark sits before or after a line of text,** in any look. The row dabs on Home, Now, Kitchen, Groceries, Notes, capture modes, muscles and the month key are removed.
-- **Data marks rest at `restTint`:** the pigment at 45% on light looks and 55% on dark looks and in the workout. They land wet at 100%, then dry over `Theme.Motion.dry` (1.1s on the house curve, after 0.4s).
+- **Data marks rest at `restTint`:** the pigment at 45% on light looks and 55% on dark looks; the workout follows its look. They land wet at 100%, then dry over `Theme.Motion.dry` (1.1s on the house curve, after 0.4s).
 - **On dark looks a resting mark has no halo.** The halo belongs to the wet moment only and dries away with the colour.
 - **The themes preview** (artifact v5) drops the Home row dabs.
 
-## Fourth addendum: the workout is pure black (Kaushik, Oct 15, about 8:22 PM PT)
-He likes the workout in pure black and doesn't like today's tinted workout grounds. He wants one consistent base: nothing much brighter or much darker than the rest.
+## Fourth addendum: one base for the whole app (Kaushik, Oct 15, 8:22 and 8:25 PM PT)
+**What he said:**
+- Keep the base consistent.
+- Whatever base the look gives Home, every area uses: the workout, Kitchen, Review, Settings, all of it.
+- Obsidian is pure black everywhere, and Porcelain is its white everywhere.
+- Only the layers on top change, and they match that base.
+- Nothing pops out brighter or darker than the rest.
+- Each area getting its own look is for later.
 
-**Tokens:** every look uses Obsidian's workout set. This replaces the per-look workout columns from #203.
+**Tokens:**
+- `Workout.ground`, `raised`, `ink`, `signal`, `rest`, `tess` and `health` become aliases of the look's `ground`, `raised`, `ink`, `live`, `now`, `tess` and `health`.
+- The per-look workout columns from #203 are retired.
+- Ink tiers, blend (multiply on light looks, screen on dark), halo (dark looks only) and sheen all follow the look inside the workout too.
+- `LookTable` keeps one palette per look, and the drift test checks that `Workout.*` equals the look's tokens.
 
-| `Workout.*` | Value in every look |
-|---|---|
-| `ground` | #000000 |
-| `raised` | #141217 |
-| `ink` | #F5F2EC |
-| `inkSecondary` | 72% |
-| `inkTertiary` | 38% (34pt and up, or marks only) |
-| `signal` | #FF5B3A |
-| `rest` | #FFC23D |
-| `tess` | #86B4FF |
-| `health` | Obsidian `health`, #3FD49A |
-
-**What follows from that:**
-- **Sheen:** the workout's sheen is Obsidian's, light passing over the letters, never the gold band.
-- **The pin and the day look don't reach the workout.** Pinning Porcelain doesn't make the workout white.
-- **`LookTable` keeps one workout set,** and the drift test checks that all five looks resolve to it.
-
-**Accents on black (consistency):**
-- **Nothing glows at rest.** The halo appears only in a moment: a set landing, a new best, Go, Finish. It dries away with the colour (`no-dots.md`).
-- **The ProcessSeam and the current-exercise segment** keep `signal` with no glow.
-- **Set strokes** land in their cycle colour and rest at 55%.
-- **The soul is unchanged:** screen blend, the workout palette as today, and her halo as today (Kaushik: the soul stays as he knows it).
-- **Status words** rest in workout `ink` (no-dots B1 to B4). Colour arrives only when something changes.
-
-**Entering and leaving the workout on a light look,** so the white-to-black switch isn't a jolt:
-- **Entering.**
-  1. The tapped Start word's stroke stays put.
-  2. Black floods out from it with `PaintFlood` (#000, 620ms, house curve). The page under it fades to 0 over the first 240ms, so no white text is ever drawn on black mid-flood.
-  3. The workout's content rises 12pt and fades in during the last 260ms.
-  4. The status bar flips to light at the flood's halfway point.
-- **Leaving** (Finish, or close after the finish sentence):
-  1. The finish sentence and the gathered set strokes stay.
-  2. Black draws back into the Home Now slot it came from: a reverse flood, 560ms, house curve.
-  3. The light page fades in behind it, already at rest.
-  4. The status bar flips back at the halfway point.
-- **On dark looks** (Obsidian, Lacquer), the change is only the content crossfade (300ms), because the ground is already black or near-black.
-- **Pages opened from inside a running workout** (the exercise page, swap, finish) are black. The same pages opened from Home or Plans follow the look.
-- **Home's running-workout row** on a light look stays on the light page. Only its seam is `signal`.
-- **Reduce Motion:** a 250ms crossfade both ways, with no flood.
+**On a light look the workout is light,** so the parts that assumed a dark workout change:
+- **Text never sits in `now` or `signal` on a light base.**
+  - The rest countdown and "Go" are `ink`. The rest horizon stroke carries the amber.
+  - Signal words use `liveInk` (Finish, UNDO).
+  - Set strokes and the "Same again" stroke stay pigment marks with multiply.
+- **No glow at rest anywhere.** Halo exists only on dark looks, and only in moments (`no-dots.md`).
+- **The scrim (A3)** becomes `ground` at 60%, and `WorkoutGlass` becomes the veil material with `raised` at 82%, as everywhere else.
+- **Entering and leaving the workout** is an ordinary zoom from the Start word, the same as any page: there's no ground change to manage, so there's no flood.
+- **The soul is unchanged.** She uses the look's palette, as on Home.
 
 **The rest Live Activity:**
-- **The Lock Screen rest Live Activity always uses the black workout set,** like the Dynamic Island already does. It ignores the day and night looks, so it matches the workout it belongs to.
-- The rest sky washes stay as approved: rest uses `Workout.tess` at 35% and `context` at 45%, and Go uses `rest` at 75% and `signal` at 60%.
-- The tick rests in ink. Go glows only as it lands.
+- The Lock Screen follows the day or night look, as before #221's Looks work.
+- The Dynamic Island stays on the Obsidian set, because the Island is always black.
+- The rest sky washes stay, at the look's pigments. The tick rests in ink, and Go glows only as it lands, on dark looks.
 
-**Later (a direction, not a task):** each area becomes its own app inside the app, with its own UI and its own look on top of one shared base, like apps on a computer. The workout is the first one. A new look can be explored then. For now there's one consistent base, and customisation sits on top.
+**Later (a direction, not a task):** each area becomes its own app inside the app, with its own UI and look on top of the shared base, like apps on a computer. The workout would be the first. A new look can be explored then.

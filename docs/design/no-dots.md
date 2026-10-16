@@ -65,7 +65,7 @@ These are instruments or Tess. None of them is a bullet. The RPE stops, the exer
 
 ## Tokens (for Builder A's Looks work)
 - **New:** `Theme.Colors.restTint(_ pigment: Color) -> Color`, which returns the pigment at 45% opacity on light looks and 55% on dark looks.
-  - Resolve it per look. The workout always uses 55%.
+  - Resolve it per look. The workout follows the look like every other area (themes.md fourth addendum).
 - **New:** `Theme.Motion.dry`, an ease of 1.1s on the house curve with a 0.4s delay.
   - Use it for every wet-to-rest change.
   - Under Reduce Motion it becomes `nil` (the change is instant).
@@ -93,7 +93,7 @@ Research's ids are used here: A for dots, B for badges and tinted words, C for a
 |---|---|---|---|
 | B1 | "Set N of M", `ExerciseStrip.swift:157-160` | Workout `ink` at 600 weight. | A |
 | B2 | Workout subline, `WorkoutParts.swift:105-135` | **Motion:** amber or cobalt when the line changes, then it dries to workout `inkSecondary`. | A |
-| B3 | Rest countdown and "Go", `WorkoutModeView.swift:411-438` | The countdown is in workout `ink`; the rest horizon already carries the amber. "Go" lands in amber, then dries. | A |
+| B3 | Rest countdown and "Go", `WorkoutModeView.swift:411-438` | The countdown is in workout `ink`; the rest horizon already carries the amber. "Go" lands with the amber rest stroke painting under it, then the stroke dries. | A |
 | B4 | Workout label words in signal, `LiveTessCorner.swift:41`, `WorkoutParts.swift:298` | Workout `ink`. The signal colour shows on press only. Finish stays `liveInk`. | A |
 | B5 | `InkLabelWordStyle` at 85% colour at rest | Rests in `ink` at 600 weight, with colour on press. UNDO, Finish and Resume while something runs keep `liveInk`. | B |
 | B6 | Routine editor open slot, `RoutineEditor.swift:225-264` | An `ink` margin rule, with weight on the open scheme. "Take out" turns vermilion on press only. | A |
@@ -118,7 +118,7 @@ Research's ids are used here: A for dots, B for badges and tinted words, C for a
 | C11 | `PaintKey` stroke at 82% at rest, `Paint.swift:308` | It paints in at 100% when it appears, dries to 60% at rest, and goes back to 100% on press. The action of the moment still leads, just more quietly. | B (shared) |
 | C12 | Workout current-exercise segment and row bar | Keep the signal colour, because it's the running exercise, but drop the glow at rest. | A |
 | C13 | WeightDial needle and rest wash | Superseded by `set-block.md` (the weight is the numeral). The rest horizon stays. | A |
-| C14 | Set-stroke colour cycle | Data marks: each set stroke lands wet in its cycle colour, then dries to `restTint` (55% in the workout). The finish gather stays a full-colour moment. | A |
+| C14 | Set-stroke colour cycle | Data marks: each set stroke lands wet in its cycle colour, then dries to `restTint` (the look's value). The finish gather stays a full-colour moment. | A |
 | C15 | Plans weekly sets band and fill, `WeekPage.swift:194-206` | The band is `ink` at 8%, and the fill rests at `restTint` and lands wet. The Claude spend stroke keeps `claude-settings.md`'s cobalt, turning amber at 80%: it's a meter he reads. | A, B |
 | C16 | Live Activity washes | **Keep.** It's the approved rest sky, and the Dynamic Island stays on the Obsidian set. | none |
 | Hex | `HomePaint` (`HomeSpatialView.swift:7-13`) and `NowPage.swift:519` | Every colour comes from the look. Delete `HomePaint` once C7, C8 and the Kitchen dabs are gone. | B |

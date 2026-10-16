@@ -121,31 +121,31 @@ const THEMES = [
     char:'Pure white with deep aubergine ink and four saturated pigments used sparingly. It reads like a well-printed page: almost all white, with colour arriving only where something matters.',
     field:'<b>The ground</b> is flat white, with no grain and no wash. Colour pools only behind the action of the moment, as a watercolour bloom: 5% in the middle with a 10% dried edge, irregular, never moving. When nothing is running, the page is just white.',
     t:{ ground:'#FFFFFF', raised:'#F5F4F8', ink:'#17141F', context:'#6A4C9C', muted:'#B9B3C3', tess:'#2450D8', live:'#E2432A', now:'#F0A500', health:'#12936A', training:'#CC3F68', neutral:'#9C95A8',
-        wGround:'#000000', wRaised:'#141217', wInk:'#F5F2EC', wSignal:'#FF5B3A', wRest:'#FFC23D' },
+        wGround:'#FFFFFF', wRaised:'#F5F4F8', wInk:'#17141F', wSignal:'#E2432A', wRest:'#F0A500' },
     prop:[['ground',86],['raised',3],['ink',8],['accent',3]], blend:'multiply', bloom:'pigment' },
   { key:'obsidian', name:'Obsidian', mode:'dark', tag:'',
     char:'True black for the OLED screen, warm white ink, and pigments that glow. Black pixels are off, so the colour floats on nothing.',
     field:'<b>The ground</b> is #000000. Pigment becomes light: strokes and dabs carry a soft halo, and the bloom behind the action is an emitted glow (screen blend, 14%) instead of a stain. There are no gradients or textures anywhere else.',
     t:{ ground:'#000000', raised:'#0F0E12', ink:'#F5F2EC', context:'#B7A6E0', muted:'#5C5765', tess:'#6FA4FF', live:'#FF5B3A', now:'#FFC23D', health:'#3FD49A', training:'#FF6B92', neutral:'#8E879A',
-        wGround:'#000000', wRaised:'#141217', wInk:'#F5F2EC', wSignal:'#FF5B3A', wRest:'#FFC23D' },
+        wGround:'#000000', wRaised:'#0F0E12', wInk:'#F5F2EC', wSignal:'#FF5B3A', wRest:'#FFC23D' },
     prop:[['ground',88],['raised',2],['ink',8],['accent',2]], blend:'screen', bloom:'glow' },
   { key:'plein', name:'Plein', mode:'light', tag:'TODAY',
     char:'The current look, kept as approved: warm paper, soft impressionist washes and grain, plum ink.',
     field:'<b>The ground</b> is cream paper with three soft washes and a fine grain. It is the most painterly of the five and the one the app ships with today.',
     t:{ ground:'#F2ECE3', raised:'#FAF6EF', ink:'#2B2440', context:'#7A5C8E', muted:'#A39AAE', tess:'#2E6DA4', live:'#C8452F', now:'#E0B341', health:'#6E9E6A', training:'#C8452F', neutral:'#A39AAE',
-        wGround:'#000000', wRaised:'#141217', wInk:'#F5F2EC', wSignal:'#FF5B3A', wRest:'#FFC23D' },
+        wGround:'#F2ECE3', wRaised:'#FAF6EF', wInk:'#2B2440', wSignal:'#C8452F', wRest:'#E0B341' },
     prop:[['ground',80],['raised',2],['ink',10],['accent',8]], blend:'multiply', bloom:'wash' },
   { key:'lacquer', name:'Lacquer', mode:'dark', tag:'',
     char:'Deep plum-black lacquer, parchment ink and brass. It is dark like Obsidian, but warmer and with depth, for evenings.',
     field:'<b>The ground</b> is layered: plum-black that deepens toward the bottom, with one wide specular band lying across it at 3%, the way light sits on a lacquered tray. On the phone the band can follow the tilt by a few degrees; with Reduce Motion it stays still.',
     t:{ ground:'#140F1B', raised:'#221A2D', ink:'#F1E7D6', context:'#C3A6DE', muted:'#6C6078', tess:'#8DB2FF', live:'#F06A4C', now:'#E8B54A', health:'#8FCB9E', training:'#F07FA0', neutral:'#9A8FA6',
-        wGround:'#000000', wRaised:'#141217', wInk:'#F5F2EC', wSignal:'#FF5B3A', wRest:'#FFC23D' },
+        wGround:'#140F1B', wRaised:'#221A2D', wInk:'#F1E7D6', wSignal:'#F06A4C', wRest:'#E8B54A' },
     prop:[['ground',84],['raised',4],['ink',9],['accent',3]], blend:'screen', bloom:'glow' },
   { key:'celadon', name:'Celadon', mode:'light', tag:'',
     char:'A pale green-grey glaze with deep forest ink and white surfaces. It is calm and cool, a light theme that is not white.',
     field:'<b>The ground</b> is a flat celadon glaze. Anything lifted (a veil, a held row, the Write layer) is pure white slip on top of it. The glaze pools slightly darker at the bottom edge, the way glaze collects at the foot of a pot.',
     t:{ ground:'#E7EEE9', raised:'#FFFFFF', ink:'#0F231D', context:'#4C6B85', muted:'#97ABA2', tess:'#2C59BE', live:'#D8462C', now:'#D99A1C', health:'#23866A', training:'#C24766', neutral:'#7E918A',
-        wGround:'#000000', wRaised:'#141217', wInk:'#F5F2EC', wSignal:'#FF5B3A', wRest:'#FFC23D' },
+        wGround:'#E7EEE9', wRaised:'#FFFFFF', wInk:'#0F231D', wSignal:'#D8462C', wRest:'#D99A1C' },
     prop:[['ground',82],['raised',6],['ink',9],['accent',3]], blend:'multiply', bloom:'pigment' },
 ];
 const STROKE = 'M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z';
@@ -154,19 +154,19 @@ const isDark = (T) => T.mode === 'dark';
 function vars(T, work) {
   const t = T.t, dark = isDark(T);
   const ink = work ? t.wInk : t.ink;
-  return `--ground:${work ? t.wGround : t.ground};--ink:${ink};--ink2:${hexA(ink, .6)};--context:${work ? hexA(t.wInk, .62) : t.context};--muted:${work ? hexA(t.wInk, .35) : t.muted};--tess:${work ? '#86B4FF' : t.tess};--live:${work ? t.wSignal : t.live};--blend:${work || dark ? 'screen' : 'multiply'}`;
+  return `--ground:${work ? t.wGround : t.ground};--ink:${ink};--ink2:${hexA(ink, .6)};--context:${t.context};--muted:${t.muted};--tess:${t.tess};--live:${work ? t.wSignal : t.live};--blend:${dark ? 'screen' : 'multiply'}`;
 }
 function stroke(T, word, col, w, work) {
-  const glow = (isDark(T) || work) ? `filter:drop-shadow(0 0 6px ${hexA(col, .55)})` : '';
+  const glow = isDark(T) ? `filter:drop-shadow(0 0 6px ${hexA(col, .55)})` : '';
   return `<span class="st"><svg width="${w}" height="19" viewBox="0 0 200 14" preserveAspectRatio="none" style="${glow}"><path d="${STROKE}" fill="${col}" opacity=".88" filter="url(#rough)"/></svg><span>${word}</span></span>`;
 }
 function soul(T, work) {
-  const t = T.t, op = (isDark(T) || work) ? .95 : .85;
+  const t = T.t, op = isDark(T) ? .95 : .85;
   return `<div class="soul">${[[t.live, -10, -6], [t.tess, 10, -6], [t.now, 0, 9]].map(([c, x, y]) => `<i style="background:radial-gradient(closest-side,${hexA(c, op)} 0%,${hexA(c, .6)} 42%,${hexA(c, 0)} 100%);transform:translate(${x}px,${y}px) scale(.72)"></i>`).join('')}</div>`;
 }
 function field(T, work) {
   const t = T.t;
-  if (work) return '';
+  
   if (T.key === 'plein') return `<div class="a" style="inset:0;background:radial-gradient(60% 40% at 85% 6%,#F7E6B8 0%,rgba(247,230,184,0) 70%),radial-gradient(70% 45% at 0% 35%,#D8CBE6 0%,rgba(216,203,230,0) 70%),radial-gradient(80% 50% at 100% 75%,#BFD8E2 0%,rgba(191,216,226,0) 70%)"></div><svg class="a" width="390" height="844" style="inset:0;mix-blend-mode:multiply;opacity:.3"><rect width="390" height="844" filter="url(#grain)"/></svg>`;
   if (T.key === 'lacquer') return `<div class="a" style="inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(6,3,10,.75) 100%)"></div><div class="a" style="left:-200px;top:120px;width:820px;height:150px;transform:rotate(-24deg);background:linear-gradient(180deg,rgba(255,240,220,0),rgba(255,240,220,.035) 45%,rgba(255,240,220,.05) 52%,rgba(255,240,220,0));filter:blur(14px)"></div>`;
   if (T.key === 'celadon') return `<div class="a" style="left:0;right:0;bottom:0;height:260px;background:linear-gradient(180deg,rgba(15,35,29,0),rgba(15,35,29,.06))"></div>`;
@@ -214,7 +214,7 @@ const SCREENS = {
     const t = T.t;
     return `<span class="a" style="left:0;right:0;top:0;height:2px;background:var(--live)"></span>
       <svg class="a" style="left:0;top:14px" width="390" height="10"><line x1="22" x2="368" y1="5" y2="5" stroke="${hexA(t.wInk, .14)}" stroke-width="1.5"/><line x1="22" x2="210" y1="5" y2="5" stroke="${t.wRest}" stroke-width="2.5" stroke-linecap="round" style="filter:drop-shadow(0 0 5px ${hexA(t.wRest, .7)})"/></svg>
-      <div class="a L" style="left:22px;top:30px;color:${t.wRest}">Rest 1:22</div>
+      <div class="a L" style="left:22px;top:30px">Rest 1:22</div>
       <div class="a" style="left:22px;top:76px;font-size:21px;color:var(--ink2)">Push day A</div>
       <div class="a L" style="right:22px;top:80px">2 / 5</div>
       <div class="a ttl" style="left:20px;top:150px">Bench press</div>
@@ -222,7 +222,7 @@ const SCREENS = {
       <div class="a num" style="left:18px;top:262px;font-size:80px;font-weight:300;letter-spacing:-.04em;line-height:1">80<span style="font-size:21px;font-weight:400;margin:0 14px 0 6px">kg</span>× 8</div>
       <div class="a" style="left:22px;top:372px;font-size:21px;color:var(--ink2)">last time 80 × 8, RPE 8</div>
       <div class="a" style="left:22px;top:470px;display:flex;align-items:center;gap:22px">${stroke(T, 'Same again', t.wSignal, 186, true)}<span class="L">Tap</span></div>
-      <div class="a" style="left:22px;top:560px;font-size:21px;line-height:1.6;color:var(--ink2)"><b style="font-weight:600;color:var(--ink)">80</b> × 8 &nbsp;<span style="color:${t.wRest}">done</span><br><b style="font-weight:600;color:var(--ink)">80</b> × 8 &nbsp;next</div>
+      <div class="a" style="left:22px;top:560px;font-size:21px;line-height:1.6;color:var(--ink2)"><b style="font-weight:600;color:var(--ink)">80</b> × 8 &nbsp;<span style="color:var(--ink2)">done</span><br><b style="font-weight:600;color:var(--ink)">80</b> × 8 &nbsp;next</div>
       <div class="a" style="left:22px;right:22px;top:690px;font-size:21px;color:${hexA(t.wInk, .3)};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">then: overhead press, 3 × 10</div>
       ${soul(T, true)}`;
   },
