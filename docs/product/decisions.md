@@ -161,4 +161,6 @@
   3. "1:30am" on Nov 1 means the first 1:30.
   4. Day caches are keyed by zone, and Now refreshes when the zone changes.
 - **Late-night rules** (6:07 PM PT, Research #169 `late-night.md`, all defaults). "tomorrow" before 4 AM means the coming daytime, and Tess's reply names the weekday ("Dentist, Sat 3 PM"). A session that crosses 4 AM belongs to the day it started. Until notifications exist, a reminder ask gets "On Now then."
+- **Notifications, first set** (6:20 PM PT, Research #171 `notifications.md`). Three local notifications: a timed task, rest done while the app is closed, and a cook timer done. Quiet hours run 11 PM to 7 AM. When notifications are allowed, they replace the Live Activity rest alert (Q5/A7). The one permission ask fires on his first "remind me", first timed task or first cook timer, whichever comes first, within the one-ask-a-day rule. A task with no time is never saved as 9:00.
+- **The review guide tags every item with its PR or branch, and every known gap with its fix** (6:20 PM PT), so the coordinator's install check (`install-check.md`) can match the guide to the build.
 

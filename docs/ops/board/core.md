@@ -22,6 +22,7 @@
 - Body weight is the load. Done when pull-ups and dips use the latest body weight plus added weight for e1RM and volume. Needs M3 slice 1.
 
 **Audit batches (small PRs, beside other work; decisions.md 5:14 PM PT):**
+- Notifications engine gaps (Research #171, `../research/notifications.md`; decisions.md 6:20 PM PT): undo and redo call observers. Add an `alerts` field, so a task with no time stops being saved as 9:00. "remind me in 20 minutes" should become a timed reminder, not a task titled "In 20 minutes". Then the three local notifications with quiet hours from 11 PM to 7 AM.
 - Ask lines (Research #166, `../research/ask-lines.md`): add the missing calendar, mic, speech and camera usage keys before Speak or the camera ship. Replace the Health read string at `project.yml:74` with Research's text, because the current one promises workouts and body weight, which nothing reads. Build the one-ask-a-day gate (decisions.md, 5:56 PM PT).
 - (Moved into Now's 4 AM day PR) Days start at 4 AM everywhere, including `TaskList.today`, `week(containing:)` and `DayLoad` (#165).
 - Rolled-over tasks are flexible (decisions.md, 5:41 PM PT): the ranker stops treating a rolled-over task as timed, so it no longer jumps ahead of the rest-day line or the 15-minute timed rule.
