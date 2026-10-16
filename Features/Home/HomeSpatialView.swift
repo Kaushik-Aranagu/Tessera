@@ -63,6 +63,7 @@ struct HomeSpatialView: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.scenePhase) private var scenePhase
     @State private var position = ScrollPosition(id: HomeSpatialView.remembered)
     @State private var progress = Double(HomeSpatialView.remembered)
     @State private var settled = false
@@ -73,6 +74,8 @@ struct HomeSpatialView: View {
     /// The glass tab lens (42): where it sits in tab units while held, and the page it was held from.
     @State private var lens: Double?
     @State private var lensFrom = 0
+    /// Whether the lens has crossed a word since it formed; a hold with no slide is a cancel.
+    @State private var lensSlid = false
     /// The pages' scale while the lens is up: 1 at rest, 0.78 held.
     @State private var deckScale: CGFloat = 1
     @State private var lensTicks = 0
@@ -80,7 +83,8 @@ struct HomeSpatialView: View {
     var body: some View {
         VStack(spacing: Theme.Spacing.l) {
             PaintedRail(titles: Page.allCases.map(\.title), progress: progress, lens: lens,
-                        onSelect: { show($0) }, onHold: holdLens, onSlide: slideLens, onRelease: releaseLens)
+                        onSelect: { show($0) }, onHold: holdLens, onSlide: slideLens, onRelease: releaseLens,
+                        onCancel: cancelLens)
                 .padding(.horizontal, Theme.Spacing.gutter)
                 .padding(.top, Theme.Spacing.s)
                 .tesseraFeedback(.selection, trigger: lensTicks)
@@ -167,6 +171,17 @@ struct HomeSpatialView: View {
                 .navigationTransition(.zoom(sourceID: link, in: linkZoom))
         }
         .environment(\.openHomeLink) { presented = $0 }
+        // Leaving the app mid-hold never strands the deck.
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active, lens != nil {
+                cancelLens()
+            }
+        }
+        .onDisappear {
+            if lens != nil {
+                cancelLens()
+            }
+        }
         .environment(\.homeLinkZoom, linkZoom)
     }
 
@@ -206,7 +221,8 @@ struct HomeSpatialView: View {
     private var deck: some View {
         GeometryReader { proxy in
             let width = proxy.size.width
-            let spot = lens ?? progress
+            // One page, one place: the deck settles on the word under the lens, not between pages.
+            let spot = (lens ?? progress).rounded()
             ZStack {
                 deckGround
                 ForEach(Page.allCases) { sibling in
@@ -238,6 +254,7 @@ struct HomeSpatialView: View {
 
     private func holdLens(_ spot: Double) {
         lensFrom = Int(progress.rounded())
+        lensSlid = false
         lensTicks += 1
         withTesseraAnimation(.spring(response: 0.32, dampingFraction: 0.72), reduceMotion: reduceMotion) {
             lens = spot
@@ -251,14 +268,20 @@ struct HomeSpatialView: View {
         guard let old = lens else { return }
         if Int(old.rounded()) != Int(spot.rounded()) {
             lensTicks += 1
+            lensSlid = true
+            withTesseraAnimation(.spring(response: 0.3, dampingFraction: 0.82), reduceMotion: reduceMotion) {
+                lens = spot
+            }
+        } else {
+            lens = spot
         }
-        lens = spot
     }
 
     /// Let go: the page under the lens opens and the deck grows back; the lens melts into the ink line.
     private func releaseLens() {
         guard let spot = lens else { return }
-        let target = Int(spot.rounded())
+        // A hold with no slide is a cancel: back to the page it was held from, no page change.
+        let target = lensSlid ? Int(spot.rounded()) : lensFrom
         var settle = Transaction()
         settle.disablesAnimations = true
         withTransaction(settle) {
@@ -276,6 +299,12 @@ struct HomeSpatialView: View {
         } completion: {
             withAnimation(.easeOut(duration: 0.28)) { lens = nil }
         }
+    }
+
+    /// The touch was taken away mid-hold: put everything back where it was, with no page change.
+    private func cancelLens() {
+        lensSlid = false
+        releaseLens()
     }
 
     private func show(_ index: Int) {
@@ -411,11 +440,15 @@ private struct PaintedRail: View {
     var onHold: (Double) -> Void
     var onSlide: (Double) -> Void
     var onRelease: () -> Void
+    var onCancel: () -> Void
 
     @State private var widths: [Int: CGFloat] = [:]
     @State private var pressedAt: Date?
     @State private var holdTask: Task<Void, Never>?
     @State private var travelled: CGFloat = 0
+    /// True while a finger is on the row; resets on its own when the system cancels the touch (Control Center, a
+    /// call, Siri, backgrounding), which never calls onEnded.
+    @GestureState private var touching = false
 
     private static let holdDelay: Duration = .milliseconds(260)
 
@@ -447,6 +480,15 @@ private struct PaintedRail: View {
                 .frame(height: 44)
                 .contentShape(Rectangle())
                 .gesture(touch(cell: cell))
+                .onChange(of: touching) { _, down in
+                    // A touch that ended without onEnded (cancelled): let go of everything.
+                    guard !down, pressedAt != nil else { return }
+                    holdTask?.cancel()
+                    pressedAt = nil
+                    if lens != nil {
+                        onCancel()
+                    }
+                }
             }
             .frame(height: 44)
             .tesseraAnimation(Theme.Motion.snappy, value: current)
@@ -491,6 +533,7 @@ private struct PaintedRail: View {
     /// One touch: a quick tap selects the word; held 260 ms it becomes the lens and slides.
     private func touch(cell: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 0)
+            .updating($touching) { _, state, _ in state = true }
             .onChanged { value in
                 let position = min(max(Double(value.location.x / cell - 0.5), 0), Double(titles.count - 1))
                 if pressedAt == nil {
