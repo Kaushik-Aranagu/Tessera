@@ -2,7 +2,7 @@
 
 *Started 2026-10-16 from Kaushik's first review (11:58 PM PT Oct 15): Tess's soul gets dot eyes, roams the screen, can be dragged, fades into subtle colours while working, splits and gathers back. "Very subtle." Product edits the Next list. Rules: Speak gestures stay (tap opens Tess, double tap in 260 ms goes Home, a hold never opens the layer, so a drag starts from a hold); nothing on a page moves for the soul; colour arrives through motion and dries; 60fps with a Reduce Motion fallback; palettes from `soul-explore.md`. Builder A builds it (TessSoul.swift, SoulParameters.swift).*
 
-**Now:** waiting for Builder A's motion PR, then 16. Done: 1 to 15.
+**Now:** 17 (Kaushik, 8:48 AM PT: "brainstorm more ways to keep it interactive, but also subtle and stable"), then 16 when Builder A's motion PR lands.
 
 **Next:**
 1. Dot eyes and idle life. Done when a recording shows the soul with two dot eyes that blink, look toward a new row and rest, in every look, subtle enough to ignore, with values for Builder A.
@@ -21,3 +21,4 @@
 14. (done, cae00df; Design passing) The event contract. Done when one table maps every app event (capture landed, ask raised, Claude call out and back, task done, set logged, best, workout finished, day closed, palette change, Reduce Motion or Low Power on) to the soul state it triggers, who emits it (Core or the screen) and its priority when two arrive together, so Builder A wires the soul once.
 15. (done, cae00df; Design passing) The soul with the glass tabs. Done when a recording shows the soul during #342's hold-and-swipe lens and page changes (where she rides, whether she waits, how she lands on the new page), checked against the roam rules, with values for Builder A.
 16. Build check. When Builder A's motion PR lands, run the item 10 kit against it frame by frame and post pass or fix lines for QA and Design.
+17. Brainstorm for him. Done when 8 to 12 ideas for making Tess interactive yet subtle and stable (touch, glance, follow, rest, react to his day) each have a clip of 6 s or less and one line on what it costs in calm, laid out on one page he can pick from. Ideas, not build specs; his picks become sheets.
