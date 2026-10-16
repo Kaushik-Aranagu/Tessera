@@ -4,6 +4,14 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+**12:05 PM PT Oct 16. The recipe clock waits for him.** When a timed step runs over, the bead waits at that step's end until he moves on, and the later minutes shift; the clock never walks ahead of the pan. **Why:** the clock should match what's actually happening on the stove.
+
+**12:04 PM PT Oct 16. "pay" with no amount is a task.** The money guard fires only with an amount or a currency sign; "pay rent fri" is a task and "paid rent fri" or "bought milk sat" is a dated note for that day (the past-tense log rule), as before #298. Rides the pin if in time, since he types these weekly.
+
+**12:03 PM PT Oct 16. Secret words widen slightly (#454).** SecretWords now splits on newlines and knows "pw" and "pwd", so "pw for gym locker 4417" becomes a private note too. That is his rule applied, not a new one.
+
+**12:02 PM PT Oct 16. MU2's leftovers (QA lows on #451).** Body and health facts stay on the phone even with no number ("slept badly", "knee hurts") and with a percent ("body fat 18%"), and "paid N for M" is money. Both go in one small Core follow-up, a pin rider. Reading "6.30" as money fails safe and waits.
+
 **11:57 AM PT Oct 16. Shutdown and a live workout (Research 148 ★).** If a workout is live at 9 pm, Shutdown waits for Finish, and the 10 pm close waits too: it runs after Finish, stamped 10:00 pm, with the workout filed on the day it started. The close also waits while Shutdown is on screen and keeps his draft until 4 am. A first open after 10 pm writes the closed mark without moving rows. Rows kept for tomorrow count as rolls. CL10 beats C7 for the check-in only. **Why:** the live workout band stays quiet, and nothing closes under his hands.
 
 **11:55 AM PT Oct 16. Day marks reach back one day (Research 147 ★).** He can mark today, tomorrow, and yesterday ("was sick yesterday"), so Review shows rest instead of a miss for the day he just had; nothing further back, so a week can't be rewritten. Body words in a mark ("sick") stay on the phone (MU2's body screen) and memory only ever says "rest day". **Why:** a miss ring on a sick day grades him for something he couldn't help; one day back covers the real case.

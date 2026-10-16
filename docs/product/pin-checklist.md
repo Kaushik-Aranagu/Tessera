@@ -6,13 +6,15 @@
 - [ ] #366 AI-1 Home lines (Builder B): Design clip pass + QA confirm.
 - [x] The stuck-listening fix (Builder B): #446, 0eca9bbe.
 - [x] #422 secret-word wall + $50 cap (5af8f2c2, Catalog v9).
-- [ ] MU2 (Core): money, body and health phrases never reach Claude, incl. CA6 answerQuery allow-list and CA7 screens before the offline inbox add. (decisions.md 11:35 AM PT; QA A1, Research MW1)
+- [ ] MU2 (Core, #451 merging): money, body and health phrases never reach Claude, incl. CA6 answerQuery allow-list and CA7 screens before the offline inbox add. (decisions.md 11:35 AM PT; QA A1, Research MW1)
 - [ ] A2 (Core): the inbox retry goes through the router walls, inside MU2 or a tiny PR beside it, with a test that the inbox refuses a queued secret word and a queued money phrase (master has no readWaiting caller, so the gate's I2 alone would pass trivially).
 
 ## 2. Riders (in only if merged before the last blocker)
 - [ ] Paste/link SecretWords wall (Core).
 - [ ] One-time mark-private pass for pre-#422 notes (Core, Research 139).
 - [ ] Siri Add a Task secret-word wall, I3 (Core, QA).
+- [ ] Grammar recount fixes: "pay rent fri" makes a task again (regression on his phone), pins/combination on Groceries, pull-ups alias (Core, Research).
+- [ ] MU2 follow-up: health facts with no number and "paid N for M" stay on the phone (QA L1, L3 on #451).
 - [ ] P1 UNDO revives a hidden workout, T1 zone-less times as UTC (Core, QA); P2 stale session after UNDO (Builder B).
 - Never in this pin: #403 eyes, #407 tessEyes (v10). They merge right after the pin is named.
 

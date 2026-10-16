@@ -12,7 +12,9 @@
 - **Lane 1:** The stuck-listening fix (refused hold leaves Tess in listening; one line plus a router test; BLOCKS the pin).
 - **Lane 2:** #366's re-recorded clip on its head, then Plan my day (53) on ios/plan-home; after #366 merges, the one batch in Next.
 
-**House copy sweep, Builder B's 9 (Research `docs/research/house-copy-sweep.md` (37 misses at 0eca9bb; 12:04 PM PT Oct 16)):** with the receipts and labels PR: ReviewWeek.swift:175 names the lift ("Bench best"); Home times read "6:30 pm", never "18:30" (NowPage.swift:294, HomeQueue.swift:370; Home is not a log, only the Day log keeps its 24-hour column); R1/R2 already listed; the rest per the file.
+**PR6, paste screen line (after Core's paste/link wall #454 merges):** show "I left out 1 line that looked private." from `SecretWords.cut`'s count on the paste screen (Design confirms the line, the Kitchen lead accepts it). Small; with the recipe clock work. With it, QA L1 on #454: tapping a private line shows that it stayed on the phone (Design picks the words).
+
+**House copy sweep, Builder B's 9 (Research `docs/research/house-copy-sweep.md` (37 misses at 0eca9bb; 12:00 PM PT Oct 16)):** with the receipts and labels PR: ReviewWeek.swift:175 names the lift ("Bench best"); Home times read "6:30 pm", never "18:30" (NowPage.swift:294, HomeQueue.swift:370; Home is not a log, only the Day log keeps its 24-hour column); R1/R2 already listed; the rest per the file.
 
 **Claude soul emitters (12:00 PM PT Oct 16), after Core's askClaude routing lands:** emit .askClaude, .claudeDone and .claudeFailed through `model.soul.handle` from ClaudeTessModel, Plan my day, and the link and photo reads, so Builder A's working state fires on real asks, not only the Settings key check.
 
