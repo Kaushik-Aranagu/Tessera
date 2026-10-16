@@ -25,11 +25,14 @@ public enum PrivateFacts {
     /// clock times ("3pm") are never money.
     public static func isMoneyShaped(_ phrase: String) -> Bool {
         let lower = phrase.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard !lower.isEmpty, !isTraining(lower) else { return false }
-        if lower.contains(where: { "$£€₹¥".contains($0) }) {
+        guard !lower.isEmpty else { return false }
+        // "paid" or "spent" with an amount is always money, even shaped like a set: "paid 20 for 2 tickets" (L3).
+        let spent = lower.firstMatch(of: /\b(?:paid|spent|spend|bought)\b/) != nil && hasAmount(lower)
+        guard spent || !isTraining(lower) else { return false }
+        if spent || lower.contains(where: { "$£€₹¥".contains($0) }) {
             return true
         }
-        let words = words(lower)
+        let words = words(withoutTimes(lower))
         if words.contains(where: isAmount), words.contains(where: moneyWords.contains) {
             return true
         }
@@ -48,8 +51,11 @@ public enum PrivateFacts {
                                          "lexapro", "zoloft", "sertraline", "prozac", "adderall", "xanax", "melatonin",
                                          "benadryl", "claritin", "zyrtec", "pill", "pills", "tablet", "tablets",
                                          "capsule", "capsules", "dose", "meds", "medication"]
+    /// Symptoms and hurts: walled with no number (Product on QA L1): "knee hurts", "headache", "slept badly".
     static let symptoms: Set<String> = ["migraine", "nausea", "nauseous", "fever", "rash", "headache", "vomiting",
-                                        "vomited", "dizzy", "diarrhea", "cramps", "insomnia", "symptoms"]
+                                        "vomited", "dizzy", "diarrhea", "cramps", "insomnia", "symptoms", "hurts",
+                                        "hurt", "hurting", "aches", "ache", "aching", "sore", "injured", "sprained",
+                                        "slept", "cramping"]
     /// Kitchen units: "weigh the flour 500 g" is the kitchen, not his body (MB34).
     static let kitchenUnits: Set<String> = ["g", "gram", "grams", "oz", "ml", "cup", "cups", "tbsp", "tsp"]
 
@@ -60,7 +66,9 @@ public enum PrivateFacts {
         guard !lower.isEmpty, !isTraining(lower) else { return false }
         let words = words(lower)
         let hasNumber = words.contains { $0.first?.isNumber == true }
-        if words.contains(where: symptoms.contains) || lower.firstMatch(of: /\d\s*(?:mg|mcg)\b/) != nil {
+        if words.contains(where: symptoms.contains) || lower.firstMatch(of: /\d\s*(?:mg|mcg)\b/) != nil
+            || lower.firstMatch(of: /\bbody\s?fat\b|\bbf\s*\d/) != nil
+        {
             return true
         }
         guard hasNumber else { return false }
@@ -87,6 +95,16 @@ public enum PrivateFacts {
         lower.split { !$0.isLetter && !$0.isNumber && $0 != "." && $0 != "," && $0 != "-" }
             .map { $0.trimmingCharacters(in: CharacterSet(charactersIn: ".,-")) }
             .filter { !$0.isEmpty }
+    }
+
+    /// Whether a phrase holds an amount: a number that is not a clock time.
+    public static func hasAmount(_ phrase: String) -> Bool {
+        words(withoutTimes(phrase.lowercased())).contains(where: isAmount)
+    }
+
+    /// The phrase with clock times taken out ("7:30", "3pm", "11 am"), so a time is never an amount.
+    static func withoutTimes(_ lower: String) -> String {
+        lower.replacing(/\b\d{1,2}:\d{2}\s*(?:am|pm)?|\b\d{1,2}\s*(?:am|pm)\b/, with: " ")
     }
 
     /// A number that is an amount, not a clock time ("3pm", "7:30" are times).

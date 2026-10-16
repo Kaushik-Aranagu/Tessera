@@ -57,7 +57,7 @@ public struct TessRouter {
     public let models: [any TessModel]
 
     /// A key typed into Ask: where it goes instead (it lives in Review, under Claude; lines audit item 4).
-    public static let keyLine = "That looks like a Claude key. It goes in Review, under Claude."
+    public static let keyLine = claudeKeyLine
 
     public init(engine: ActionEngine, models: [any TessModel]) {
         self.engine = engine

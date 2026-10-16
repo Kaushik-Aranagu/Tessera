@@ -103,6 +103,10 @@ public struct CreateNote: EngineAction {
         guard !text.isEmpty else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "the note is empty")
         }
+        // A Claude key never becomes a note (QA B1, backups review): it would ride in every backup and iCloud copy.
+        guard !looksLikeClaudeKey(text), !(title.map(looksLikeClaudeKey) ?? false) else {
+            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "refused: looksLikeKey")
+        }
         // A line with a secret word is private whoever writes it: the model and Claude never get to title it.
         let isPrivate = isPrivate == true || SecretWords.mentions(text)
         let note = try transaction.create(transaction.classDef(.note),
@@ -149,6 +153,9 @@ public struct EditNote: EngineAction {
 
     public func apply(_ transaction: inout Transaction) throws {
         let note = try transaction.object(note, is: .note)
+        guard !(body.map(looksLikeClaudeKey) ?? false), !(title.map(looksLikeClaudeKey) ?? false) else {
+            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "refused: looksLikeKey")
+        }
         // A private note stays private, and a code added to a plain note makes it private (QA F1 on #422): the title
         // stays "Private note" and nothing is linked from its words.
         let wasPrivate = transaction.store.value("isPrivate", of: note) == .bool(true)
