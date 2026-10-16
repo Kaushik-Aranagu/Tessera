@@ -48,7 +48,7 @@ struct HomeSpatialView: View {
     /// Space kept free at the bottom of every page, on top of the 56 pt RootView keeps for the soul.
     static let dockClearance: CGFloat = 48
     /// Lifts a page's foot line clear of Tess's band.
-    static let footLift: CGFloat = 44
+    static let footLift: CGFloat = 56
 
     /// Where Home was left this session (spatial memory).
     @MainActor private static var remembered: Int = {
