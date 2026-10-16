@@ -120,7 +120,7 @@ enum BackupKeeper {
     }
 
     /// Saves the picked folder (from the folder picker's security-scoped URL) and writes a copy there now.
-    static func pick(_ url: URL, context: TesseraContext) throws {
+    static func pick(_ url: URL, context: TesseraContext, engine: ActionEngine) throws {
         let accessing = url.startAccessingSecurityScopedResource()
         defer {
             if accessing {
@@ -129,6 +129,14 @@ enum BackupKeeper {
         }
         try defaults.set(url.bookmarkData(), forKey: bookmarkKey)
         _ = try TesseraBackup.writeRolling(from: context, in: url, now: AppClock.now)
+        // The folder's display name goes in the database (Core's settings), so after a restore Backups can say
+        // where the copies were kept (restore-walk 3b). Never while a demo is running.
+        if !LaunchFlags.has("-demo") {
+            _ = try? SettingsStore(engine: engine).update {
+                $0.backupFolderName = BackupCopy.folderName(url)
+                $0.backupFolderPickedAt = AppClock.now
+            }
+        }
     }
 
     static func forget() {

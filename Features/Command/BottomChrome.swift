@@ -188,13 +188,18 @@ struct BottomChrome: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
                     } else if let line {
-                        Text(line)
-                            .frame(maxWidth: 270, alignment: .trailing)
-                            .textRole(.body)
-                            .foregroundStyle(Theme.Colors.tess)
-                            .multilineTextAlignment(.trailing)
-                            .lineLimit(2)
-                            .contentTransition(.opacity)
+                        // One line sits right by the soul; a line that wraps sets left-aligned from the gutter
+                        // (Design S2 on #273).
+                        ViewThatFits(in: .horizontal) {
+                            Text(line).lineLimit(1)
+                            Text(line)
+                                .multilineTextAlignment(.leading)
+                                .lineLimit(3)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .font(Theme.voice)
+                        .foregroundStyle(Theme.Colors.tess)
+                        .contentTransition(.opacity)
                     }
                     if canUndo {
                         Button("Undo") { undo() }

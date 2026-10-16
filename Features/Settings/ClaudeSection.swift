@@ -56,7 +56,9 @@ struct ClaudeSection: View {
     @State private var line: String?
     @State private var removed = false
     /// Line 3: whether captures the phone can't read go to Claude. A preference, not a secret.
-    @AppStorage("tess.missesGoToClaude") private var missesGoToClaude = true
+    /// The old preference key, still written for one release alongside Core's settings.
+    @AppStorage("tess.missesGoToClaude") private var legacyMisses = true
+    @State private var missesGoToClaude = true
     @State private var removal: Task<Void, Never>?
     /// The clipboard's change count when a key was pasted, so a key still sitting there can be cleared after it passes.
     @State private var pasteChange: Int?
@@ -124,7 +126,7 @@ struct ClaudeSection: View {
             // After a reinstall or on a new phone the key doesn't come along (restore-walk 6).
             Text(ledger.calls().isEmpty
                 ? "Tess thinks \(Text("on this phone").fontWeight(.semibold)) only."
-                : "No Claude key on this phone. Paste one to let Tess ask Claude.")
+                : "No Claude key on this phone. Paste one here.")
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
             if writing {
@@ -172,12 +174,13 @@ struct ClaudeSection: View {
 
             HStack(spacing: 0) {
                 Text("Misses go to Claude: ")
-                Button(missesGoToClaude ? "yes" : "no") { missesGoToClaude.toggle() }
+                Button(missesGoToClaude ? "yes" : "no", action: toggleMisses)
                     .buttonStyle(.valueWash)
                     .fontWeight(.semibold)
                     .contentTransition(.opacity)
                     .accessibilityLabel("Misses go to Claude")
                     .accessibilityValue(missesGoToClaude ? "yes" : "no")
+                Text(".")
             }
             .textRole(.body)
             .foregroundStyle(Theme.Colors.ink)
@@ -190,12 +193,14 @@ struct ClaudeSection: View {
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
                 .accessibilityLabel("Claude key, ends in \(last4), \(status)")
-                HStack(spacing: 22) {
+                HStack(spacing: 0) {
                     Button("Test") { retest() }
+                    Text(" · ").textRole(.labelStrong).foregroundStyle(Theme.Colors.inkSecondary)
                     Button("Replace") {
                         replacing = true
                         open()
                     }
+                    Text(" · ").textRole(.labelStrong).foregroundStyle(Theme.Colors.inkSecondary)
                     Button("Remove", action: remove)
                 }
                 .buttonStyle(.labelWord(Theme.Colors.inkSecondary))
@@ -258,7 +263,17 @@ struct ClaudeSection: View {
 
     // MARK: Actions
 
+    /// "Misses go to Claude" lives in Core's settings; the old key keeps being written for one release.
+    private func toggleMisses() {
+        missesGoToClaude.toggle()
+        legacyMisses = missesGoToClaude
+        guard !LaunchFlags.has("-demo") else { return }
+        let value = missesGoToClaude
+        _ = try? SettingsStore(engine: model.engine).update { $0.missesGoToClaude = value }
+    }
+
     private func load() {
+        missesGoToClaude = SettingsStore(engine: model.engine).read().sendsMissesToClaude
         guard let key = keys.read() else {
             last4 = nil
             return
@@ -310,7 +325,7 @@ struct ClaudeSection: View {
                 if keys.save(previous) {
                     line = "That key didn't pass. Your old key still works."
                 } else {
-                    line = "That key didn't pass, and I couldn't keep the old one. Add it again?"
+                    line = "That key failed, and the old one is gone. Add one?"
                     last4 = nil
                 }
                 replacing = false
@@ -444,8 +459,10 @@ extension ClaudeKeyWords {
     /// "6:12 pm · Plan my day · Sonnet · 1.2¢".
     @MainActor
     static func receipt(_ call: ObjectRecord, store: ObjectStore) -> String {
-        let time = call.createdAt.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).hour().minute())
-            .lowercased()
+        // "Thu 16 Oct, 6:12 pm": names keep their capitals; only am/pm is lower case.
+        let day = call.createdAt.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
+        let clock = call.createdAt.formatted(.dateTime.hour().minute()).lowercased()
+        let time = "\(day), \(clock)"
         let use = store.value("use", of: call)?.stringValue.flatMap(TessUse.init(rawValue:))
         let model = store.value("model", of: call)?.stringValue ?? ""
         let nano = Int64(store.number("costNano", of: call) ?? 0)

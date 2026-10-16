@@ -98,7 +98,7 @@ struct QueueWindow: View {
         if next.isEmpty, later.isEmpty {
             Text("Nothing else today.")
                 .textRole(.body)
-                .foregroundStyle(Theme.Colors.context)
+                .foregroundStyle(Theme.Colors.inkSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         } else {
             VStack(alignment: .leading, spacing: 0) {
