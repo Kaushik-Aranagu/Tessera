@@ -5,7 +5,8 @@ Builds on `restore-walk.md` (fix list 3b, 4 and 5 all wait on this object) and `
 
 **The answer in one line.** Master keeps eight UserDefaults keys, one Keychain item and nine kinds of plain file
 outside the GRDB database, plus 22 launch flags. Only four values belong in the new settings object: the three look
-keys and "Misses go to Claude". A fifth value, the backup folder's display name, is new and goes there too. Everything
+keys and "Misses go to Claude". A fifth value, the backup folder's display name, is new and goes there too, and so
+does a sixth, `restWeekday` (added after Core's 8:58 PM PT design, see the design rules). Everything
 else is device-only and stays out, and five of those must never travel in a backup.
 
 **Search used.** `git grep` on `origin/master -- '*.swift'` for `AppStorage`, `SceneStorage`, `UserDefaults`,
@@ -20,7 +21,7 @@ widget extension (`Widgets/`) holds only the rest Live Activity and touches no U
 
 | Verdict | Count | What |
 |---|---|---|
-| **MOVE** into the settings object | 4 existing + 1 new | `look.day`, `look.night`, `look.pinned`, `tess.missesGoToClaude`; new: backup folder display name |
+| **MOVE** into the settings object | 4 existing + 2 new | `look.day`, `look.night`, `look.pinned`, `tess.missesGoToClaude`; new: backup folder display name, `restWeekday` (decisions.md 8:58 PM PT) |
 | **KEEP OUTSIDE** | 13 stored things + 22 launch flags | Folder bookmark, backup failures, launch note, his Claude key, capture-miss log, `restored-at`, `restore-pending.sqlite`, the `.tessera` copies (Documents/Backups and the picked folder), moved-aside stores, the legacy `default.store`, temp share copies, the Live Activity's look names, and the App Group mirror of the look; all DEBUG and demo flags |
 | **DROP** | 3 keys (one group) | The pre-#221 look keys in standard UserDefaults, after one release |
 
@@ -210,6 +211,7 @@ ClassSpec(key: .settings, name: "Settings", parent: .thing, symbol: "gearshape",
     FieldSpec(key: "missesGoToClaude", name: "Misses go to Claude",  kind: .bool),  // nil -> true
     FieldSpec(key: "backupFolderName", name: "Backup folder",        kind: .text),  // nil -> never picked
     FieldSpec(key: "backupFolderPickedAt", name: "Folder picked",    kind: .date),  // nil -> never picked
+    FieldSpec(key: "restWeekday",      name: "Rest day",             kind: .number),  // nil -> the engine places it
     // Reserved, not built yet: FieldSpec(key: "massUnit", name: "Unit", kind: .choice) // nil -> "kg"
 ])
 
@@ -221,6 +223,7 @@ public struct TesseraSettings: Equatable, Sendable {
     public var missesGoToClaude: Bool?       // read as `missesGoToClaude ?? true`
     public var backupFolderName: String?     // display name only, e.g. "iCloud Drive/Tessera"; never a path or URL
     public var backupFolderPickedAt: Date?
+    public var restWeekday: Int?             // 1 to 7, Calendar weekday numbering (Sunday = 1); nil: the engine decides
 }
 
 @MainActor public struct SettingsStore {
@@ -255,6 +258,16 @@ The design rules, briefly:
   agree.
 - **"Misses go to Claude" after a restore.** The restored value wins, as everything else in a restore does. A value
   that was nil reads as yes, which is today's behaviour.
+- **`restWeekday`** (Core, decisions.md 8:52 and 8:58 PM PT Oct 15; `week-two.md` Q4).
+  - **Key and type.** `restWeekday`, an optional Int from 1 to 7 in Calendar weekday numbering (Sunday = 1, Monday =
+    2, Saturday = 7), stored as `.number`. It lives here, not on the Plan, and there is one value, not a list.
+  - **Empty.** Nil means "the engine decides": the floating rest day on master today (`PlanRhythm.perWeek`, 6 a week
+    for PPL x2, spread by `TrainingLedger.week`). Nil never means Sunday. Any value outside 1 to 7 reads as nil.
+  - **Written.** Only by his answer to Monday's (Oct 19) rest-day question: one op with UNDO ("Rest day: Sunday."),
+    skipped if the field is already set; "Any" leaves it nil. `StarterContent` and the migration never write it.
+  - **Read by.** Now (`NowPicker.restDay`, through NowPage), Review (`ReviewPage` and `week()`) and Plans (PlanData,
+    MonthPage). SQLite's `%w` counts Sunday as 0, so a copy read matches `wd` = restWeekday - 1.
+  - **After a restore.** The restored value wins, like the other fields.
 
 ## Migration
 
@@ -302,6 +315,8 @@ Never migrate: the bookmark, the failures, the launch note, his Claude key, or a
 - `migrationNeverOverwritesAFieldAlreadySet`
 - `migrationNoWinsForMissesGoToClaude`
 - `fallbackReadsOldKeyWhileFieldIsNil`
+- `restWeekdayNilKeepsEnginePlacement` (nil gives today's floating rest day; 1 makes Sunday rest; 0 and 8 read as nil;
+  UNDO of the write returns to nil)
 
 ## Surprising things found
 

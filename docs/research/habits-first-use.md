@@ -113,7 +113,7 @@ Sun Nov 1 (the paused week). Each day runs 04:00 to 04:00.
 | 39 | 07:31 | Taps Monday again | Tess: "Read, 2 of 5 this week." | A2 | missing |
 | 40 | 12:00 | Types "new habit read 4 a week" | Tess: "Read now 4 times a week." UNDO 4 s | A12, HP2 (L824) | missing |
 | 41 | 12:00 | Taps UNDO | Tess: "Read target taken back." Target back to 5 | A12 undo | capture UNDO 4 s exists (`AppModel.swift:204`) |
-| 42 | 21:00 | Types "meditated yesterday" | Checks in Monday. Tess: "Meditate, 2 of 3 this week." | HP3 (L833), A3 | missing; today a note "Meditated" dated Monday |
+| 42 | 21:00 | Types "meditated yesterday" | Monday is already in (step 34): nothing written, count stays 1 of 3. Tess: "Meditate is already in for Monday." | HP3 (L833), A6b (item 109) | missing; today a note "Meditated" dated Monday |
 
 ### Wed Oct 21 (W1, late night)
 
@@ -135,7 +135,7 @@ Sun Nov 1 (the paused week). Each day runs 04:00 to 04:00.
 | 51 | 19:30 | Types "delete read" | Needs the word "habit": to the model | HP7 | today nil |
 | 52 | 19:31 | Types "delete habit call mum" | Tess: "Call mum deleted." UNDO 10 s. Check-ins go with it; the "Call mum" task stays | A13, HP7 (L847) | missing; no 10 s capture UNDO (`AppModel.swift:204` is 4 s) |
 | 53 | 19:31 | Taps UNDO within 10 s | Tess: "Call mum is back." | A13 undo (D9) | missing |
-| 54 | 20:00 | Opens REVIEW | Hero "All three sessions in". Week line "Train 3 of 3, Read 4 of 5, Meditate 2 of 3." No weight clause (no weigh-ins). Habit lines Train, Read, Meditate; Call mum stays off (fourth, and 0) | `ReviewPage.swift:41`; RM sections 2 and 3; Dec 8:07 PM; **GAP 11** | hero exists; week line and habit lines missing |
+| 54 | 20:00 | Opens REVIEW | Hero "All three sessions in". Week line "Train 3 of 3, Read 4 of 5, Meditate 1 of 3." No weight clause (no weigh-ins). Habit lines Train, Read, Meditate; Call mum stays off (fourth, and 0) | `ReviewPage.swift:41`; RM sections 2 and 3; Dec 8:07 PM; **GAP 11** | hero exists; week line and habit lines missing |
 | 55 | 20:01 | VoiceOver on Read's Review line | "Read, 4 of 5 this week. Monday, Tuesday, Wednesday and Thursday done." | RM section 3 | missing |
 | 56 | 20:05 | Opens Habits | No history line yet on any habit (W0 left out, W1 not over) | H6, H10 | missing |
 
@@ -175,7 +175,7 @@ If Train (the workout-rule habit) had been the paused one, Review's training dab
 
 | Line | Steps | | Line | Steps |
 |---|---|---|---|---|
-| H1 | 1, 2 | | A6 | 10 |
+| H1 | 1, 2 | | A6, A6b | 10, 42 |
 | H2 | 2, 13, 22, 30 | | A7 | P6 |
 | H3 | 4, 22, P3 | | A8 | 17, 35, 43, 50 |
 | H4 | 57 | | A9 | 36 |
@@ -187,7 +187,7 @@ If Train (the workout-rule habit) had been the paused one, Review's training dab
 | H10 | 4, 30, 56 | | A15 | 45, 46 |
 | A1 | 3, 4, 11, 14, 20 | | V-block, V-row, V-today | 5, 7, 19, P4 |
 | A2 | 6, 31, 37, 39, 44, 47 | | V-rule, V-count | 19, P4 |
-| A3 | 12, 34, 42 | | HP1 | 3, 9, 11, 14, 20 |
+| A3 | 12, 34 | | HP1 | 3, 9, 11, 14, 20 |
 | A4 | 23, 50 | | HP2 | 8, 40 |
 | A5 | 57 | | HP3 | 42, 48, 49 |
 | | | | HP4 | 10, 12, 45, 47 |
@@ -200,25 +200,25 @@ weigh-ins, Review shows no weight clause and no weight line (RM section 5).
 
 ## Gaps
 
-| # | What | Recommendation | Owner |
-|---|---|---|---|
-| 1 | Creation week, conflict: the Habits page shows "**0** of 5" (H3, H5) while Review reads "Read 0, new this week" with no target (RM section 5) | Page keeps "**n** of 5" (he just set 5; hiding it reads odd); only Review and history treat the week as new. Note it in `m3-lines.md` H3 | Research (copy), Builder B |
-| 2 | No line when the model gets a habit phrase it cannot do: a target past 7 (step 9), a day before Monday (step 49). The model has no habit tool on master or in any spec | Model answers in one line, nothing written: "Habits go up to 7 a week." and "Habits count this week only." | Core (model tool), Research (lines) |
-| 3 | Conflict: "read 20 pages" is a check-in with "Read, 3 of 5 this week." (A2, Sheet) but HL treats "read {n} {unit}" as a note that ticks Read, "Note counted for Read, 1 of 5." | Typed alone it is a check-in (A2). Only a note made through "note: ..." or the Notes page ticks by HL's rule, and then says A2's line, not "Note counted for", so one phrase never gets two lines | Product to confirm; Research to amend HL |
-| 4 | H2 gives Thursday's "3 days to go" only: Saturday's "1 day to go" (plural rule) is not written. Order of blocks on the Habits page is not given (Review orders rule habits first) | "Saturday, 1 day to go". Page order: creation order, same as the habit lines' manual order, rule habits not lifted | Research (copy), Design (order) |
-| 5 | No control, gesture or Tess line for giving a habit a rule ("counts when a workout finishes"). HP1 says the grammar never sets one; Sheet and DH only show the label | A label word under the name, "COUNTS BY HAND", that cycles on tap to "COUNTS WHEN A WORKOUT FINISHES" and "COUNTS WHEN A COOK FINISHES"; Tess: "Train now counts workouts." with 4 s UNDO "Train rule taken back." | Design, Research (line) |
-| 6 | Conflict: a rule habit made mid-week. R says rule counts are a query over the week (Tue and Thu would count, 2 of 3); RM says days before creation draw nothing | Count only finishes after `createdAt` in the creation week; whole weeks after that count every finish | Core (HabitLedger), Product to confirm |
-| 7 | A1 with a target of 1 gives "Call mum added, 1 times a week." A12 has the same problem ("now 1 times a week") | "once a week" for a target of 1 ("Call mum added, once a week."), digits for 2 to 7 | Research (copy) |
-| 8 | Conflict: DH turns "of 5" the habit's colour when the target is reached; Sheet says the number is 600 ink, H4 says no colour change past the target | Keep the count in ink; the brushstroke is the only reward mark (matches no-colour-for-state and H4) | Design |
-| 9 | RM's creation-week clause "{Name} {n}, new this week" joined by ", " gives "Train 1, new this week, Read 1, new this week, Meditate 1, new this week." | In the creation week, one tail for all: "Train 1, Read 1, Meditate 1, all new this week." or leave habits out of the week line that week | Research (RM), Builder B |
-| 10 | Review's habit label for a new habit and the cap: RM gives "GYM · 3 OF 3" and "Gym, paused this week" but no label for "new this week"; nothing says the fourth habit is hidden | "READ · 1, NEW THIS WEEK". No line about the hidden fourth; the full Review lists all | Research (RM), Builder B |
-| 11 | Wording conflict for Review's habit line: the board's example "Read, 4 of 5 this week" (also VoiceOver in RM) vs RM's visible label "READ · 4 OF 5" vs the week line "Read 4 of 5" | Visible label "READ · 4 OF 5"; VoiceOver "Read, 4 of 5 this week."; week line "Read 4 of 5". State all three in RM so Builder B does not mix them | Research |
-| 12 | "skip read today" writes nothing (HP7) but no Tess line is given; silence after typing looks broken | Tess: "Read, nothing to skip." or say nothing and clear the field. Default: no line, the field clears (an empty day is already blank) | Product |
-| 13 | Tapping a done day clears it (DH) but m3-lines has no line for clearing a past day | Same as A2's undo shape: "Read Monday taken back, 1 of 5." with 4 s UNDO "Read Monday is back." | Research (copy) |
-| 14 | Conflict: A15 says an unknown habit name "becomes a task as usual"; L848 expects nil for "habit sing" | With the word "habit", nil (to the model); a bare unknown name ("meditated") goes on as today (note or task) | Research to amend A15 |
-| 15 | A rule finish that reaches the target has two sources: A4 "Train done for the week." and HL "Legs A counted for Train, done for the week." | HL's form (names the workout, then what happened), and add it to m3-lines as A8b | Research |
-| 16 | H6 with one eligible week gives "Met in 1 of the last 1 weeks." | Show H6 from 2 eligible weeks; with 1 eligible met week, "Met last week." | Research (copy), Core (lastWeeks) |
-| 17 | HP7 lines not in m3-lines: "pause X" when already paused, "unpause X" when not paused, "pause X next week" | "Read is already paused this week."; "Read is already on this week."; "Read paused next week." with 4 s UNDO "Read pause taken back." | Research (copy) |
-| 18 | Code: master has no `Habit`, `HabitCheckIn`, `HabitLedger`, `PauseHabitWeek`, grammar rows, model tool, `Features/Habits/`, `HomeLink.habits`, Today foot line, Review week line, or a 10 s capture UNDO (`AppModel.swift:204` is 4 s). Three phrases write wrong tasks today (L822, L844, L846) | Core: slice 2 engine, grammar rows before `parseTask`, the skip guard with them, a 10 s UNDO for A13. Builder B: the page, the foot word, Review lines | Core, Builder B |
-| 19 | `wasDue` (`WeekView.swift:69-78`) has no pause flag, so a paused workout habit leaves rings on Review (RM R10) | Core adds the pause flag in slice 2 | Core |
-| 20 | Superseded but still on disk: `design/habits.md` says "Read, 3 of 7.", "three days to go", 168 pt from y 208; `research/habits.md` says the week starts Monday 00:00 and shows "+1" past the target | Mark both as superseded by the Sheet, m3-lines and Dec 7:53 PM (Monday 04:00) | Design, Research |
+| # | What | Recommendation | Owner | Status |
+|---|---|---|---|---|
+| 1 | Creation week, conflict: the Habits page shows "**0** of 5" (H3, H5) while Review reads "Read 0, new this week" with no target (RM section 5) | Page keeps "**n** of 5" (he just set 5; hiding it reads odd); only Review and history treat the week as new. Note it in `m3-lines.md` H3 | Research (copy), Builder B | Folded (item 109): m3-lines.md H11. Decided (Product 9:04 PM PT): the page shows "0 of 5"; only Review and history call the week new |
+| 2 | No line when the model gets a habit phrase it cannot do: a target past 7 (step 9), a day before Monday (step 49). The model has no habit tool on master or in any spec | Model answers in one line, nothing written: "Habits go up to 7 a week." and "Habits count this week only." | Core (model tool), Research (lines) | Open |
+| 3 | Conflict: "read 20 pages" is a check-in with "Read, 3 of 5 this week." (A2, Sheet) but HL treats "read {n} {unit}" as a note that ticks Read, "Note counted for Read, 1 of 5." | Typed alone it is a check-in (A2). Only a note made through "note: ..." or the Notes page ticks by HL's rule, and then says A2's line, not "Note counted for", so one phrase never gets two lines | Product to confirm; Research to amend HL | Folded (item 109): fixtures/habits-from-logs.md rule 8 (and m3-lines.md A2). Decided (Product 9:04 PM PT): typed alone a check-in; a note made as a note ticks with the same line |
+| 4 | H2 gives Thursday's "3 days to go" only: Saturday's "1 day to go" (plural rule) is not written. Order of blocks on the Habits page is not given (Review orders rule habits first) | "Saturday, 1 day to go". Page order: creation order, same as the habit lines' manual order, rule habits not lifted | Research (copy), Design (order) | Open |
+| 5 | No control, gesture or Tess line for giving a habit a rule ("counts when a workout finishes"). HP1 says the grammar never sets one; Sheet and DH only show the label | A label word under the name, "COUNTS BY HAND", that cycles on tap to "COUNTS WHEN A WORKOUT FINISHES" and "COUNTS WHEN A COOK FINISHES"; Tess: "Train now counts workouts." with 4 s UNDO "Train rule taken back." | Design, Research (line) | Open |
+| 6 | Conflict: a rule habit made mid-week. R says rule counts are a query over the week (Tue and Thu would count, 2 of 3); RM says days before creation draw nothing | Count only finishes after `createdAt` in the creation week; whole weeks after that count every finish | Core (HabitLedger), Product to confirm | Decided (Product 9:04 PM PT): only finishes after createdAt count in the creation week; whole weeks after count every finish (shown in fixtures/review-m3.md R13) |
+| 7 | A1 with a target of 1 gives "Call mum added, 1 times a week." A12 has the same problem ("now 1 times a week") | "once a week" for a target of 1 ("Call mum added, once a week."), digits for 2 to 7 | Research (copy) | Folded (item 109): m3-lines.md A16 |
+| 8 | Conflict: DH turns "of 5" the habit's colour when the target is reached; Sheet says the number is 600 ink, H4 says no colour change past the target | Keep the count in ink; the brushstroke is the only reward mark (matches no-colour-for-state and H4) | Design | Decided (Product 9:04 PM PT): to Design, with Product's lean: the count stays in ink at rest, colour only in the moment the target is met |
+| 9 | RM's creation-week clause "{Name} {n}, new this week" joined by ", " gives "Train 1, new this week, Read 1, new this week, Meditate 1, new this week." | In the creation week, one tail for all: "Train 1, Read 1, Meditate 1, all new this week." or leave habits out of the week line that week | Research (RM), Builder B | Folded (item 109): fixtures/review-m3.md R13 (section 3 rule 1) |
+| 10 | Review's habit label for a new habit and the cap: RM gives "GYM · 3 OF 3" and "Gym, paused this week" but no label for "new this week"; nothing says the fourth habit is hidden | "READ · 1, NEW THIS WEEK". No line about the hidden fourth; the full Review lists all | Research (RM), Builder B | Folded (item 109): fixtures/review-m3.md R13 ("One habit, three forms") |
+| 11 | Wording conflict for Review's habit line: the board's example "Read, 4 of 5 this week" (also VoiceOver in RM) vs RM's visible label "READ · 4 OF 5" vs the week line "Read 4 of 5" | Visible label "READ · 4 OF 5"; VoiceOver "Read, 4 of 5 this week."; week line "Read 4 of 5". State all three in RM so Builder B does not mix them | Research | Folded (item 109): fixtures/review-m3.md R14 ("One habit, three forms") |
+| 12 | "skip read today" writes nothing (HP7) but no Tess line is given; silence after typing looks broken | Tess: "Read, nothing to skip." or say nothing and clear the field. Default: no line, the field clears (an empty day is already blank) | Product | Decided (Product 9:04 PM PT): says nothing and clears the field |
+| 13 | Tapping a done day clears it (DH) but m3-lines has no line for clearing a past day | Same as A2's undo shape: "Read Monday taken back, 1 of 5." with 4 s UNDO "Read Monday is back." | Research (copy) | Folded (item 109): m3-lines.md A17 (UNDO 10 s, not 4 s: clearing deletes a check-in, so the undo rule's destructive window applies) |
+| 14 | Conflict: A15 says an unknown habit name "becomes a task as usual"; L848 expects nil for "habit sing" | With the word "habit", nil (to the model); a bare unknown name ("meditated") goes on as today (note or task) | Research to amend A15 | Folded (item 109): m3-lines.md A15 (amended) |
+| 15 | A rule finish that reaches the target has two sources: A4 "Train done for the week." and HL "Legs A counted for Train, done for the week." | HL's form (names the workout, then what happened), and add it to m3-lines as A8b | Research | Folded (item 109): m3-lines.md A8b (A8c adds the past-target form) |
+| 16 | H6 with one eligible week gives "Met in 1 of the last 1 weeks." | Show H6 from 2 eligible weeks; with 1 eligible met week, "Met last week." | Research (copy), Core (lastWeeks) | Folded (item 109): m3-lines.md H12 (H6 amended) |
+| 17 | HP7 lines not in m3-lines: "pause X" when already paused, "unpause X" when not paused, "pause X next week" | "Read is already paused this week."; "Read is already on this week."; "Read paused next week." with 4 s UNDO "Read pause taken back." | Research (copy) | Folded (item 109): m3-lines.md A18, A19, A20 |
+| 18 | Code: master has no `Habit`, `HabitCheckIn`, `HabitLedger`, `PauseHabitWeek`, grammar rows, model tool, `Features/Habits/`, `HomeLink.habits`, Today foot line, Review week line, or a 10 s capture UNDO (`AppModel.swift:204` is 4 s). Three phrases write wrong tasks today (L822, L844, L846) | Core: slice 2 engine, grammar rows before `parseTask`, the skip guard with them, a 10 s UNDO for A13. Builder B: the page, the foot word, Review lines | Core, Builder B | Open |
+| 19 | `wasDue` (`WeekView.swift:69-78`) has no pause flag, so a paused workout habit leaves rings on Review (RM R10) | Core adds the pause flag in slice 2 | Core | Decided (Product 9:04 PM PT): the pause flag goes to Core's M3 slice 2 |
+| 20 | Superseded but still on disk: `design/habits.md` says "Read, 3 of 7.", "three days to go", 168 pt from y 208; `research/habits.md` says the week starts Monday 00:00 and shows "+1" past the target | Mark both as superseded by the Sheet, m3-lines and Dec 7:53 PM (Monday 04:00) | Design, Research | Closed (Product 9:04 PM PT): research/habits.md marked superseded. design/habits.md is Design's to mark |

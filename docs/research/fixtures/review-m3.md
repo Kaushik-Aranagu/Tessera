@@ -65,7 +65,11 @@ Sessions, spelled out, never "good", never "of seven":
 1. A habit clause "{Name} {n} of {target}" for each habit that has n of 1 or more this week and is not paused.
    Rule habits first (workout, then cook), then manual ones in creation order. At most 3 habit clauses; others
    stay on their lines only. Past the target it is still "{Name} {n} of {target}" ("Gym 4 of 3"; H4, no "+1").
-   A habit created this week reads "{Name} {n}, new this week" (section 5).
+   A habit created this week reads "{Name} {n}, new this week" (section 5). Its clause goes last, after every
+   other clause, and new clauses share one tail (item 109, `../habits-first-use.md` G9): one new, "Gym 2 of 3,
+   Read 1, new this week."; two new, "Gym 2 of 3, Read 1 and Meditate 1, both new this week."; every clause new,
+   "Train 1, Read 1, Meditate 1, all new this week." (R13). The cap picks the 3 by the order rule first, then
+   moves the new ones last.
 2. A weight clause, only when all hold: 3 or more weigh-in days this week; a trend point before this week's Monday
    04:00 that is not cut by a reseed; the first weigh-in 7 or more days before the latest. Change = trend at the
    week's latest weigh-in minus the trend at the last weigh-in before Monday 04:00, in full precision, converted to
@@ -80,6 +84,15 @@ and four clauses at 56 pt would run to five lines.
 
 **Habit line:** "{Name} {n} of {target}". Paused: "{Name}, paused this week", its ticked days still marked (A7: a check-in
 in a paused week marks the day). Created this week: "{Name} {n}, new this week". 0: "{Name} 0 of {target}" (H5).
+
+**One habit, three forms** (item 109, `../habits-first-use.md` G11; R14). Builder B keeps them apart:
+- Visible label on the habit line, Label 16 caps: "READ · 4 OF 5". Created this week: "READ · 1, NEW THIS WEEK"
+  (G10). Paused: "READ, PAUSED THIS WEEK".
+- VoiceOver on that line: "Read, 4 of 5 this week. Monday, Tuesday, Wednesday and Thursday done." Created this week:
+  "Read, new this week. Friday done."
+- Clause in the week line: "Read 4 of 5" (no comma, no "this week").
+A fourth habit gets no line on this page and nothing says it is left off (G10); the full Review and the Habits page
+list every habit.
 
 **Weight line:** "Weight {trend} kg, {n} weigh-ins this week." ("1 weigh-in"). With 0 weigh-ins this week there is no
 weight line: no "no weigh-ins", no nudge. The trend is the app's one trend (EWMA, alpha 0.1, a half-life of about
@@ -121,6 +134,15 @@ and Sunday already holds row 5, so it adds nothing: Read is 4 of 5 in W1 and **1
 | R10 | 26 Oct, Mon 2 Nov 03:50 | One session this week | Cook 3 of 4, Read 4 of 5. | `·●–···.` | Gym, paused this week thread ` ▬     `; Cook 3 of 4 thread ` ▬ ▬  ▬`; Read 4 of 5 thread `▬  ▬ ▬▬` | (none) |
 | R11 | 2 Nov, Mon 2 Nov 04:05 | A quiet week so far | (none) | `.......` | Gym 0 of 3 thread ` ......`; Cook 0 of 4 thread ` ......`; Read 0 of 5 thread ` ......` | (none) |
 | R12 | 2 Nov, Sat 7 Nov 23:00 | Four sessions this week | Gym 4 of 3, Cook 3 of 4, Read 2 of 5. | `●–●–●●.` | Gym 4 of 3 thread `▬ ▬ ▬▬.`; Cook 3 of 4 thread `  ▬ ▬▬.`; Read 2 of 5 thread `    ▬▬.` | (none) |
+| R13 | C: 12 Oct, Sun 18 Oct 20:00, four habits made this week | All three sessions in | Train 1, Read 1, Meditate 1, all new this week. | not traced (demo store) | TRAIN · 1, NEW THIS WEEK thread `     ▬.`; READ · 1, NEW THIS WEEK thread `    ▬ .`; MEDITATE · 1, NEW THIS WEEK thread `     ▬.`. Call mum (fourth) has no line here | (none) |
+| R14 | C: 19 Oct, Thu 22 Oct 20:00 | All three sessions in | Train 3 of 3, Read 4 of 5, Meditate 1 of 3. | not traced (demo store) | TRAIN · 3 OF 3 thread `▬ ▬▬...`; READ · 4 OF 5 thread `▬▬▬▬...`; MEDITATE · 1 OF 3 thread `▬   ...` | (none) |
+
+**World C** (item 109, America/Los_Angeles): the walk in `../habits-first-use.md`. Read (5, manual) made Fri 16 Oct
+20:57, Meditate (3) Sat 09:00, Train (3, rule workout) Sat 09:30, Call mum (1) Sat 12:00 and deleted Thu 22 Oct.
+R13: Train counts only Saturday's Push A; Tuesday's and Thursday's finishes came before Train existed (Product
+9:04 PM PT, G6). Read's 00:40 Saturday "read 20 pages" is Friday's, already in. R14: Meditate is 1 of 3, Monday only;
+the walk's step 42 ("meditated yesterday" on Tuesday) lands on Monday, which step 34 already ticked, so it says
+"Meditate is already in for Monday." and adds nothing (the walk's "2 of 3" at steps 42 and 54 is one too many).
 
 Weight sums (trend at the week's last weigh-in, full precision): R02 79.252 minus 79.406 = -0.154; R03 79.276 minus
 79.252 = +0.024; R04 78.902 minus 79.276 = -0.374; R05 78.672 minus 78.902 = -0.230; R06 the same in lb: 173.441,
@@ -143,6 +165,8 @@ VoiceOver, header element:
 | R10 | One session this week. 1 of 3 sessions this week. Cook 3 of 4, Read 4 of 5. |
 | R11 | A quiet week so far. 0 of 3 sessions this week. |
 | R12 | Four sessions this week. 4 of 3 sessions this week. Gym 4 of 3, Cook 3 of 4, Read 2 of 5. |
+| R13 | All three sessions in. 3 of 3 sessions this week. Train 1, Read 1, Meditate 1, all new this week. |
+| R14 | All three sessions in. 3 of 3 sessions this week. Train 3 of 3, Read 4 of 5, Meditate 1 of 3. |
 
 Habit line examples: R04 Read "Read, 4 of 5 this week. Monday, Tuesday, Thursday and Sunday done."; R10 Gym "Gym,
 paused this week. Tuesday done."; R11 Cook "Cook, 0 of 4 this week. None done yet."; R03 Train "Train, new this
@@ -201,6 +225,8 @@ App target, `TesseraTests/ReviewM3FixtureTests.swift` (`WeekReview` lives in the
 - `noWeightLineWithoutWeighInsThisWeek` (R09), `daysBeforeFirstUseHaveNoDabEvenWithWeighIns` (R01 to R03)
 - `mondayBefore0400ShowsLastWeek` (R10), `mondayAt0400StartsAtZeroQuietly` (R11)
 - `createdMidWeekReadsNewThisWeek` (R03), `pausedWorkoutHabitDropsRings` (R10)
+- `newHabitClausesGoLastWithOneTail` (R13), `fourthHabitHasNoLineAndNoMention` (R13),
+  `labelVoiceOverAndClauseKeepTheirOwnForms` (R14)
 - `doubleDayHeroCountsSessionsHabitCountsDays` (R09), `zeroSetWorkoutNeverFillsADab` (R09)
 
 Core, `TesseraCore/Tests/TesseraCoreTests/`: `BodyWeightLedgerTests.weekChange(from:to:)` (R02 to R08 deltas at
