@@ -42,6 +42,9 @@ struct PlateStack: View {
     let perSide: [Double]
     /// The text is primary; the drawing is optional.
     var drawsPlates: Bool = false
+    /// The set block's large drawing (docs/design/set-block.md): tallest plate 150 pt, the caption under the bar,
+    /// plates dropping on from above and lifting off.
+    var large: Bool = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.displayScale) private var displayScale
@@ -65,7 +68,9 @@ struct PlateStack: View {
 
     var body: some View {
         let plates = keyed(perSide)
-        HStack(spacing: Theme.Spacing.m) {
+        let layout = large ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.s))
+            : AnyLayout(HStackLayout(spacing: Theme.Spacing.m))
+        layout {
             if drawsPlates {
                 drawing(plates)
             }
@@ -81,23 +86,36 @@ struct PlateStack: View {
     }
 
     private func drawing(_ plates: [Plate]) -> some View {
-        HStack(spacing: 1) {
+        HStack(spacing: large ? 2 : 1) {
             RoundedRectangle(cornerRadius: 1, style: .continuous)
                 .fill(Paint.sleeve)
-                .frame(width: Metrics.sleeveWidth, height: Metrics.sleeveHeight)
+                .frame(width: Metrics.sleeveWidth * scale, height: Metrics.sleeveHeight * scale)
                 .zIndex(1)
             ForEach(plates) { plate in
                 plateView(plate.kilograms)
                     .transition(plateTransition)
             }
         }
-        .frame(height: Metrics.tallest)
+        .frame(height: Metrics.tallest * scale)
         .clipped()
-        .tesseraAnimation(Theme.Motion.snappy, value: plates.map(\.id))
+        .tesseraAnimation(large ? .spring(response: 0.3, dampingFraction: 0.72) : Theme.Motion.snappy,
+                          value: plates.map(\.id))
     }
 
     private var plateTransition: AnyTransition {
-        reduceMotion ? .opacity : .move(edge: .leading).combined(with: .opacity)
+        if reduceMotion {
+            return .opacity
+        }
+        // Large: new plates drop on from 30 pt above; removed ones lift 26 pt and fade.
+        return large
+            ? .asymmetric(insertion: .offset(y: -30).combined(with: .opacity),
+                          removal: .offset(y: -26).combined(with: .opacity))
+            : .move(edge: .leading).combined(with: .opacity)
+    }
+
+    /// Tallest plate 150 pt when large, 64 otherwise.
+    private var scale: CGFloat {
+        large ? 150 / Metrics.tallest : 1
     }
 
     private func plateView(_ kilograms: Double) -> some View {
@@ -108,7 +126,7 @@ struct PlateStack: View {
             .overlay(alignment: .leading) { Paint.plateLight.frame(width: pixel) }
             .overlay(alignment: .trailing) { Paint.plateShade.frame(width: pixel) }
             .clipShape(shape)
-            .frame(width: Metrics.plateWidth, height: Self.height(for: kilograms))
+            .frame(width: Metrics.plateWidth * (large ? 1.9 : 1), height: Self.height(for: kilograms) * scale)
     }
 
     private func color(for kilograms: Double) -> Color {

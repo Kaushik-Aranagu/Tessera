@@ -63,6 +63,12 @@ private struct WorkoutContent: View {
     @State private var swapOptions: [ExerciseSwaps.Option] = []
     /// "Go" rises in where the countdown was, just after a skip.
     @State private var showsGo = false
+    /// The weight numeral is a field (typed in place).
+    @State private var isTypingWeight = false
+    /// "81 isn't loadable; 80", for 2 s after a typed weight snaps.
+    @State private var snapNote: String?
+    /// "DRAG RIGHT +15 · FLING LEFT TO GO" shows for the first three rests only.
+    @AppStorage("restHorizonHints") private var restHintsLeft = 3
     /// A glint sweeps the numeral once when rest ends on its own.
     @State private var restEndedGlint = false
     @State private var summaryLine: String?
@@ -204,23 +210,9 @@ private struct WorkoutContent: View {
             setArea(phase: phase)
                 .padding(.horizontal, Theme.Spacing.gutter)
             Spacer(minLength: Theme.Spacing.s)
-            HStack(spacing: 0) {
-                PlateStepKey(up: false, enabled: phase == .set && stepLabel(up: false) != "0",
-                             step: stepLabel(up: false)) { stepWeight(up: false) }
-                WeightDial(
-                    weight: $session.weight,
-                    detents: session.detents,
-                    isLocked: phase != .set,
-                    restFraction: session.isEditing ? nil : session.restFraction(at: now),
-                    onExtendRest: { extendRest() },
-                    onSkipRest: { skipRest() },
-                    spokenValue: session.spokenLoad
-                )
-                PlateStepKey(up: true, enabled: phase == .set && stepLabel(up: true) != "0",
-                             step: stepLabel(up: true)) { stepWeight(up: true) }
-            }
-            // 20 pt clear of the left edge, so the back swipe never fires from the minus key.
-            .padding(.horizontal, 20)
+            // The freed space (set-block.md): the plates, drawn, or the rest horizon in their place.
+            platesOrRest(phase: phase, now: now)
+                .padding(.horizontal, Theme.Spacing.gutter)
             Spacer(minLength: Theme.Spacing.m)
             keyRow(phase: phase)
                 .padding(.horizontal, Theme.Spacing.gutter)
@@ -443,26 +435,28 @@ extension WorkoutContent {
                             .foregroundStyle(Paint.cream)
                             .transition(reduceMotion ? AnyTransition.opacity
                                 : AnyTransition.offset(y: 14).combined(with: AnyTransition(.blurReplace)))
+                    } else if isTypingWeight, phase == .set {
+                        WeightField(weight: $session.weight, detents: session.detents, unit: unit,
+                                    isTyping: $isTypingWeight, onSnapped: { note in showSnap(note) })
+                            .transition(.opacity)
                     } else {
-                        HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            Text(Format.kilograms(session.weight))
-                                .font(Theme.numeral(72))
-                                .foregroundStyle(Paint.cream)
-                                .contentTransition(.numericText(value: session.weight))
-                                .animation(MotionPolicy.resolve(Theme.Motion.snappy, reduceMotion: reduceMotion),
-                                           value: session.weight)
-                                .modifier(GlintIf(isOn: (phase == .set && session.isPersonalRecord)
-                                        || restEndedGlint))
-                            Text(unit).font(Theme.voice).foregroundStyle(Paint.secondary)
-                        }
-                        .accessibilityHidden(true)
+                        // The numeral is the control: drag up or down, tap to type (set-block.md).
+                        WeightReel(weight: $session.weight, detents: session.detents, unit: unit,
+                                   isLocked: phase != .set, spokenValue: session.spokenLoad,
+                                   platesPerSide: { session.dial?.platesPerSide($0) },
+                                   onType: { withTesseraAnimation(reduceMotion: reduceMotion) { isTypingWeight = true } })
+                            .modifier(GlintIf(isOn: (phase == .set && session.isPersonalRecord) || restEndedGlint))
                     }
-                    plateLine
+                    if let snapNote {
+                        Text(snapNote)
+                            .textRole(.label)
+                            .foregroundStyle(Paint.secondary)
+                            .transition(.opacity)
+                    }
                 }
                 Spacer(minLength: Theme.Spacing.s)
-                VStack(spacing: 2) {
-                    RepsDrum(reps: repsBinding, ghost: lastReps)
-                        .disabled(phase != .set)
+                VStack(alignment: .trailing, spacing: 2) {
+                    RepsRow(reps: repsBinding, ghost: lastReps, isLocked: phase != .set)
                     EffortHandle(isShown: session.isEffortShown, enabled: phase == .set, setShown: setEffort(shown:))
                 }
                 .transition(.opacity)
@@ -478,6 +472,37 @@ extension WorkoutContent {
     private var unit: String {
         let perHand = session.currentExercise.map { ExerciseSwaps.isPerHand($0, store: model.store) } ?? false
         return perHand ? "kg each" : "kg"
+    }
+
+    /// Under the numbers: the plates drawn large, or the estimate note after a swap; during rest, the horizon.
+    @ViewBuilder
+    private func platesOrRest(phase: WorkoutSession.Phase, now: Date) -> some View {
+        if case .rest = phase, !session.isEditing, let fraction = session.restFraction(at: now) {
+            RestHorizon(fraction: fraction, showsHint: restHintsLeft > 0, onExtend: { extendRest() },
+                        onSkip: { skipRest() })
+                .transition(.opacity)
+                .onAppear { restHintsLeft = max(restHintsLeft - 1, 0) }
+        } else if session.isEstimatedLoad, let from = session.swappedFrom {
+            Text("An estimate from \(SwapPanel.short(from).lowercased())")
+                .textRole(.label)
+                .foregroundStyle(Paint.tess)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } else if let plates = session.platesPerSide {
+            PlateStack(weight: session.weight, perSide: plates, drawsPlates: true, large: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .transition(.opacity)
+        } else {
+            // Dumbbells and machines have no plates: the space stays empty.
+            Color.clear.frame(height: 1)
+        }
+    }
+
+    private func showSnap(_ note: String) {
+        withTesseraAnimation(reduceMotion: reduceMotion) { snapNote = note }
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(2))
+            withTesseraAnimation(reduceMotion: reduceMotion) { snapNote = nil }
+        }
     }
 
     @ViewBuilder
