@@ -20,3 +20,18 @@ His ask (Oct 16, 1:32 PM PT): the titles, the big text, can carry "a little bit 
 - **Where:** heroes on Home and Title 44 on pages one tap down. Never body text, labels or keys, and never in Tess's band.
 - **Motion (option 1):** the fill edge is an 8% feather. Each step tweens 600 ms on the house curve, and the done lift and dry match how moments land wet and dry elsewhere. Under Reduce Motion the fill steps without the tween, and the dry is a 200 ms crossfade.
 - **Never:** a brush, an underline, a gradient that loops, or colour on a title with nothing in progress (option 1).
+
+## Round 2: the whole title moves (his pick, Oct 16, 1:50 PM PT)
+He liked option 1 but found it too forward, and the half-and-half split looked odd in between. He asked for every in-between state to mean something, for the title to get bolder and shift colour in one direction, for all the effects to join at the end, and for options 1 and 2 to combine.
+- Board: `mockups/title-progress.png`. Recording: `recordings/title-progress.mp4` (15 s, Porcelain). Study: `studies/title-progress.html`.
+
+| Moment | What the title does |
+|---|---|
+| In progress, `p` 0 to 1 | The whole title together: weight 500 → 640, tracking tightens by 0.012 em so the width holds, and its ink leans toward the area's colour from 0 to 60%. No split, no edge. |
+| The word that matters | Wears the area's colour (72% mix) from the first step, as option 2. The rest of the title catches up to it. |
+| Done | Every effect joins: full weight, full lean, and a 3 pt strike drawn left to right through the x-height (420 ms, ease-out, wraps with the lines), then one 250 ms lift. |
+| Dried, 900 ms later | Over 2 s the colour, weight and the word settle to quiet ink at 50%. The strike stays, so a done title reads done at a glance. |
+
+- **Progress source:** the thing's own count (sets in a workout, steps in a cook, tasks in a run), capped at 0.85 until done so the last step still has somewhere to go.
+- **Reduce Motion:** each step lands without the tween, the strike appears whole, and the dry is a 200 ms crossfade.
+- **Kept from round 1:** each area's own colour, the contrast floor, where it applies, and the nevers.
