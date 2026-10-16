@@ -83,7 +83,7 @@ The Kitchen lead found three places where this sheet predates Product's words, a
 **"done" on a reusable list asks; it never resets on its own.**
 - He says or types "done" on a reusable list. The run finishes as any run does: the seam undraws and the rows shrink back to 48 pt. The struck items **stay struck**.
 - Tess: "Packing, done. Reset it for next time?" Under her line are two label words: **RESET**, which is a hold of 0.7 s (the ink line fills under the word as he holds, like FINISH on Home), and **NOT NOW**, a tap.
-- **RESET held:** the reset plays as the fold's hold does. The paint drains out of each struck item, right to left with a 30 ms stagger, and the items rise back into place. Tess: "Packing, reset." with UNDO for 10 s (a change). The context line rolls to "12 to pack".
+- **RESET held:** the reset plays as the fold's hold does. The paint drains out of each struck item, right to left with a 30 ms stagger, and the items rise back into place. Tess: "Packing, reset." with UNDO for 10 s (a change). The context line rolls to "11 to pack" (the Packing starter, `product/starter-lists.md`).
 - **NOT NOW,** or nothing for 10 s: her line goes and nothing changes. The fold still reads "**12** done. Hold to reset.", so the reset is still one hold away.
 - One haptic: the hold's completion tick. A tap on RESET does nothing but show the ink line start to fill, so he learns that it's a hold.
 
