@@ -172,6 +172,82 @@ When a face brings the app forward (a tap on a Live Activity, a notification, it
 - Recording: `recordings/tess-motion-outside.mp4` (Obsidian) and `-light`: the rest face's last seconds and Go on the Lock Screen (Cobalt sky in both looks, nothing of her), then the tap, the app coming forward with her at rest, the return line and her glance.
 - Always-On: the activity's still face (36) has no washes and nothing ticking; in the app, nothing of hers runs in the background (the budget section: `TimelineView` paused).
 
+## 11. The soul on the recut looks (board item 11, #367 / Design 43, added 3:35 AM PT Oct 16)
+Design 43 recut Porcelain, Plein, Celadon and Lacquer (Obsidian unchanged) and said the soul keeps her shape and draws her three dabs from each look's `tess`, `live` and `now`. This section records what that does to every value above, look by look, with the recut tables on master (`Looks.swift` at 0e128c1) and `SoulPalette.look`'s rule as it stands.
+
+| | Porcelain | Plein | Celadon | Obsidian | Lacquer |
+|---|---|---|---|---|---|
+| Her three dabs (cobalt, the warm, the bright: `tess`, `live`, `now`) | #2450D8 #E2432A #F0A500 | **#2A4FA8 #B9452B #C98E1B** (indigo, rust, ochre) | **#2C59BE #D94B2E #CF9418** | #86B4FF #FF5B3A #FFC23D | **#8FB5FF #F0583A #E9B64A** |
+| Blend | multiply | multiply | multiply | screen | screen |
+| Wash stops (core / mid) | 0.58 / 0.42 (pale) | **0.58 / 0.42 (pale, new)** | 0.58 / 0.42 (pale) | 0.8 / 0.6 | 0.8 / 0.6 |
+| Halo (`live` centre / `context` at 55%) | 0.08 / 0.05 | **0.08 / 0.05 (new)** | 0.08 / 0.05 | 0.22 / 0.14 | 0.22 / 0.14 |
+| Done's ring and the pages' flecks (`context`) | **#5A3DAF** | **#7D4E6E** | **#3A6584** slate | #B7A6E0 | **#D9A6B8** rose |
+| Eyes (section 1: ink on light, ground on dark) | **#121016** | **#26201E** | **#0C1E19** | #000000 | **#130A0D** |
+| The field under her dock | flat | flat (the washes and grain are gone) | the glaze foot: 6% ink over the bottom 260 pt | flat | the shade: #050203 at 75% by the foot; the specular band crosses mid-page, never the band 736 to 820 |
+| Living colour's resting centre (section 7's "today") | the dabs above | the dabs above | the dabs above | unchanged | the dabs above |
+
+- **Plein changes the most, and by rule, not by hand.** `SoulPalette.look` picks the pale stops for any look whose field is `pigmentBloom` or `glaze`; #367 made Plein's field `pigmentBloom`, so Plein's soul moved from the full stops (0.8 / 0.6, halo 0.16 / 0.10) to the pale ones with no line of soul code touched. The lab checked both on the new paper (#F3EDE2): the full stops multiply to a brown hole at her centre, the pale ones keep the three pigments readable, so the rule's answer is the right one. `-theme plein-washes` keeps the old field and so the old full stops; that is correct too, it is the look he is comparing against. **Design to confirm on the clips**; if Plein wants a touch more body than Porcelain, the lever is the core stop alone (0.58 → 0.64), never the halo.
+- **The warm dab is no longer vermilion everywhere.** On Plein it is rust (#B9452B) and the bright is ochre; the readers in section 5 ("cobalt + vermilion + cadmium") are the look's three paints, whatever their names: cobalt reads first, the warm second, the bright third. The reward beat's +0.3 saturation and the wet lift are relative, so they hold.
+- **Lacquer's foot.** The work constellation at the dock sits over the deepened shade, where screen-blended lights at 0.55 read a shade brighter than on the ground above; nothing changes, the field is under her, never over her (a field layer is the ground, `ThemeLayers.swift`). The bottom-left dock (47, 779) is in the same shade. The specular band (−24°, 150 pt, 5%) crosses the rows mid-page: roam targets on it are fine, 5% is below what a reader scan or a dab can be confused with.
+- **Celadon's foot.** The glaze pool (6% ink over 260 pt) is under both docks; multiply dabs over a ground 6% darker are the same dabs. Done's ring is now slate (#3A6584) not grey-blue; it reads cooler against the jade, which is the point of 43.
+- **A look switch and a repaint never run together.** 43's flood (`PaintFlood`, 700 ms from the soul) is the look arriving; section 7's pool is a palette arriving. A switch cancels any repaint in flight (the new look's "today" is the resting centre, the switch lands on it) and no repaint starts until the flood has landed and dried (700 ms + section 7's 2.8 s). During the flood the eyes hold (no blink, no glance) and she keeps her mode: a switch during work keeps the constellation and recolours it as the flood passes.
+- **Nothing else moves.** Timings, curves, haptics, the budget, Reduce Motion, the page rules: all as above. The one Obsidian recording is still the reference; the four others are re-rendered on the recut tables.
+- Board: `recordings/tess-motion-looks.png` (five rows, one per look: at rest, the work constellation with the readers, Done). Recordings on the recut tables: `tess-motion-work-light.mp4` (Porcelain), `-work-plein`, `-work-celadon`, `-work-lacquer`, and `tess-motion-colour-porcelain/-plein/-celadon/-lacquer.mp4` re-rendered (section 7's "today" moved with the tokens).
+
+## 12. A full minute of Home at rest, with the idle budget (board item 12, added 3:50 AM PT Oct 16)
+Most of her life is this minute: he opened the app and is reading. The test of the vocabulary is that a minute at rest contains nothing but breath and a blink, and costs almost nothing.
+
+**What the minute contains** (`recordings/tess-motion-minute.mp4`, Obsidian, 60 s at 60 fps, deterministic blinks):
+| | In 60 s | Period |
+|---|---|---|
+| Chrome breath (`BottomChrome`, scale 1 to 1.08) | about 19 | 3.2 s |
+| Halo breath (idle row: scale 0.8 to 1, opacity 0.6 to 1) | about 8 | 7 s |
+| The mains' lift | about 7 | 9 s, delays 0 / −6 / −3 |
+| The satellites' drift | 5 / 8 / 6 | 11 / 7.5 / 9 s |
+| Blinks (section 1) | 7 to 15, about one in five a double | every 3 to 8 s, 160 ms each |
+| Glances, roam, repaints, lines, haptics, sound | **0** | a glance needs something to appear; roam needs a change; a repaint is at most 3 a day after 2 h idle |
+
+Nothing on the page moves, and nothing of hers is owed to the page. There is no "she gets bored" state: no stretch, no look-around, no wander, no sleep. A soul that performs for an empty minute is a screensaver; the life he asked for is that she is *there*, breathing, and answers when something happens. The built `resting` row (12 to 15 s periods) stays what it is for: Shutdown and the quiet hours, not a timeout.
+
+**The idle budget** (the numbers the build is held to, on the device, Release):
+- **Tick rate 30 fps** for idle, listening-at-rest and resting, as built (`TimelineView(.animation(minimumInterval: 1/30))`); a blink is 5 of those frames, which is enough for a 160 ms close-and-open (closed on frame 3). The eyes add two unblurred ellipse fills to the frame, nothing to the tick.
+- **Under 2 ms a frame** for the whole soul draw at rest (six dabs, halo, ring: nine blurred fills, blur ≤ 9) on iPhone 17, which is under 6% of one performance core at 30 fps and lets the GPU stay in its low state. The group grade (saturation, contrast) is constant at rest, so the compositor caches it.
+- **No layout.** At rest she is an `offset` and a `scaleEffect` on a 240 × 240 canvas; nothing invalidates the page, and `TessSoul.body` is not re-evaluated by the tick (the timeline's `context.date` is read inside the canvas, not in `body`).
+- **Energy Low** for the whole minute in Instruments, and the app's share in Settings › Battery at or under Messages' the next morning (the check kit's §4).
+- **Off screen is off.** Another app, the Lock Screen, or the soul scrolled under a sheet: the timeline pauses; no frame is drawn that no one sees. She never drops to a lower tick at rest because the screen has been still (auto-lock does that), and never stops breathing while visible: a still soul reads as dead (section 1 of `tess-soul.md`).
+
+**How QA checks it** (`tess-motion-check.md`, the "Minute" row): the build's blinks are random, so the minute is compared by count and cadence, not frame by frame: 7 to 15 blinks, every gap 3 to 8 s, at least one double, each blink 160 ms ± 1 frame at 30 fps; the soul crop's mean SSIM against the clip over any 10 s window ≥ 0.92 (breath and drift are periodic, so the windows match without alignment); zero frames in which anything outside the soul crop changed.
+
+## 13. Reduce Motion and Low Power, state by state (board item 13, added 4:05 AM PT Oct 16)
+Two switches, two different reasons. **Reduce Motion** is his accessibility setting: motion itself is the problem, so travel, blur-in and swell go and crossfades take their place; the soul is still (the build's `paused: reduceMotion` timeline, the mode shown by size, grade and opacity). **Low Power Mode** (`ProcessInfo.isLowPowerModeEnabled`, with `NSProcessInfoPowerStateDidChange`) is the phone's battery: motion is fine, cost is not, so everything keeps its shape at a lower tick with the expensive layers dropped. Master has no Low Power path yet; this is it. With both on, Reduce Motion wins (nothing moves, so there is nothing left to cheapen).
+
+| State | As designed (sections above) | Reduce Motion | Low Power |
+|---|---|---|---|
+| **Idle** (section 2, 12) | breath 3.2 s, lift, drift, halo breath, 30 fps | still frame of idle; the chrome breath off; eyes open, no blink | unchanged motion at **20 fps**; halo breath held at its mean (0.9 / 0.8) so the frame is one fill cheaper; blinks stay |
+| **Eyes** (1) | blink 160 ms, glance spring 300 ms | no blink, no glance; the dots sit still | blink stays (5 frames at 30, 3 at 20 are enough); glance stays (it is an offset, not a redraw) |
+| **Roam** (3) | `SoulTravel` 760 ms, works beside the row, rides the scroll | no travel: she stays home, the line names the row | **no roam**: she stays at the dock; the line names the row; the work state runs at the dock (the readers' canvas is the one thing that leaves hers, and it is the first cost to drop) |
+| **Drag** (4) | pick up, carry with paint lag, drop on the house spring, flick | 200 ms crossfade to the dock on release; no carry lag, no grow | unchanged (a drag is an `offset` on the view; the lag is six fills she already draws); the carry bloom's breath held at its mean |
+| **Working** (5) | fade 500 ms, split 900 ms into 12 lights, readers, gather 820 ms, colour back, Done | 200 ms crossfade to the faded grade, the three mains loosened 1.5×, satellites at 40%; 200 ms back; Done its still frame | fade and gather unchanged; **six lights, not twelve** (the six children never leave the dabs); **no readers**; constellation at **30 fps** (not 60); the colour returns over the same 550 ms; Done as built |
+| **Thinking** (as built) | per-dab pulse at 60 | still, shown by size | 30 fps |
+| **Listening** (8) | bloom ×1.4 to ×1.55 with the mic level, travel to (196, 698) | blooms in the corner, no travel; eyes hold | unchanged but the level smoothing at 30 fps; travel stays (an offset) |
+| **A one-ask wait** (8) | breath 4.8 s, 4 pt lean | no lean; the breath still | lean stays; 20 fps as idle |
+| **Done** (as built) | pour, swell, splash, relax 1.8 s + `.success` | its still frame, 1.8 s, `.success` | unchanged (1.8 s once; cheapening Done changes Done) |
+| **Reward beat** (6) | glance, gather 180 / 320 ms, brighten 1.12, one blink | no gather, no glance; the brighten is a 200 ms crossfade; the blink stays | unchanged (940 ms, six fills) |
+| **Repaint / living colour** (7) | three pools 120 ms apart, 900 ms, wet swell, dry 2.8 s | one 600 ms crossfade of the pigments, no swell | **deferred**: no repaint starts in Low Power (the palette waits for the next idle after Low Power ends); a repaint in flight finishes at 30 fps |
+| **Look switch flood** (11) | `PaintFlood` 700 ms from the soul | 250 ms crossfade (as built) | unchanged (one pass, 700 ms) |
+| **Outside the app** (9) | nothing of her; the return glance | the return glance stays (a spring under 300 ms) | nothing to change; the widget timeline is the system's |
+| **Haptics** | one per moment | unchanged, beat for beat | unchanged (a haptic costs nothing worth a dead moment) |
+
+**The Low Power rules, in four lines**
+1. Tick: idle and resting 20 fps, every other mode 30 fps, never 60. The constellation and the listening bloom are the two that notice; both still read (the split's 900 ms is 27 frames).
+2. Layers: no readers' canvas, no children (six lights), halo breath held. That is at most 9 blurred fills a frame in any mode, against 14 in full.
+3. Nothing leaves the dock: no roam. Drag stays (his hand, not hers), the Done in place rule is moot.
+4. Nothing new starts that only beautifies: no repaint. Everything that answers him (listening, working, Done, the beat, the lines) keeps its timing exactly, so Low Power never changes what a moment *means*, only how much it costs.
+
+The switch is read once per frame from a cached flag (the notification updates it); a change mid-state is applied at the next mode change, never mid-animation (a constellation that halves its lights mid-split reads as a glitch).
+
+- Recordings: `recordings/tess-motion-low-power.mp4` (Obsidian): the working state in Low Power, six lights, no readers, 30 fps, beside the full one in `tess-motion-work.mp4`; `tess-motion-reduce-motion.mp4` stays the Reduce Motion reference. The simulator can't set Low Power; QA checks it on the device with the flag forced through `-lowPower` (simulator-only `LaunchFlags`, and a real toggle on the phone).
+
 ## Timing and easing, in one place
 | | Curve | Duration |
 |---|---|---|

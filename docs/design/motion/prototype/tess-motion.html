@@ -22,14 +22,17 @@ const params = new URLSearchParams(location.search);
 const SCENE = params.get('scene') || 'work';
 // MARK: - Looks (DesignSystem/Looks.swift; inkSoft is each look's `neutral`)
 const LOOKS_BY_NAME = {
-  obsidian: { ground: '#000000', ink: '#F5F2EC', inkSoft: '#8E879A', tess: '#86B4FF', live: '#FF5B3A', now: '#FFC23D', context: '#B7A6E0', dark: true, pale: false },
-  porcelain: { ground: '#FFFFFF', ink: '#17141F', inkSoft: '#9C95A8', tess: '#2450D8', live: '#E2432A', now: '#F0A500', context: '#6A4C9C', dark: false, pale: true },
-  plein: { ground: '#F2ECE3', ink: '#2B2440', inkSoft: '#A39AAE', tess: '#2A64A0', live: '#C8452F', now: '#E0B341', context: '#7A5C8E', dark: false, pale: false },
-  lacquer: { ground: '#140F1B', ink: '#F1E7D6', inkSoft: '#9A8FA6', tess: '#8DB2FF', live: '#F06A4C', now: '#E8B54A', context: '#C3A6DE', dark: true, pale: false },
-  celadon: { ground: '#E7EEE9', ink: '#0F231D', inkSoft: '#7E918A', tess: '#2C59BE', live: '#D8462C', now: '#D99A1C', context: '#456680', dark: false, pale: true },
+  // Recut tables (#367, Design 43). `pale` is SoulPalette.look's rule on master: field pigmentBloom or glaze
+  // (so Plein, now flat paper with field pigmentBloom, joins it). `?pale=0|1` overrides it for a look.
+  obsidian: { ground: '#000000', ink: '#F5F2EC', inkSoft: '#8E879A', tess: '#86B4FF', live: '#FF5B3A', now: '#FFC23D', context: '#B7A6E0', dark: true, pale: false, field: 'emissive' },
+  porcelain: { ground: '#FFFFFF', ink: '#121016', inkSoft: '#9C95A8', tess: '#2450D8', live: '#E2432A', now: '#F0A500', context: '#5A3DAF', dark: false, pale: true, field: 'flat' },
+  plein: { ground: '#F3EDE2', ink: '#26201E', inkSoft: '#A89C90', tess: '#2A4FA8', live: '#B9452B', now: '#C98E1B', context: '#7D4E6E', dark: false, pale: true, field: 'flat' },
+  lacquer: { ground: '#130A0D', ink: '#F3E8D6', inkSoft: '#9E8F93', tess: '#8FB5FF', live: '#F0583A', now: '#E9B64A', context: '#D9A6B8', dark: true, pale: false, field: 'lacquer', fieldShade: '#050203', fieldSpecular: '#FFF1E0' },
+  celadon: { ground: '#E0EAE2', ink: '#0C1E19', inkSoft: '#7E918A', tess: '#2C59BE', live: '#D94B2E', now: '#CF9418', context: '#3A6584', dark: false, pale: true, field: 'glaze' },
 };
 const LOOK_NAME = params.get('look') || 'obsidian';
 const LOOK = { ...LOOKS_BY_NAME[LOOK_NAME], blend: LOOKS_BY_NAME[LOOK_NAME].dark ? 'screen' : 'multiply' };
+if (params.has('pale')) LOOK.pale = params.get('pale') === '1';
 const LIGHT = !LOOK.dark;
 // Drawn at this size, as BottomChrome does (`.scaleEffect(0.72)`, breathing 1 ↔ 1.08 over 3.2 s).
 const CHROME = 0.72;
@@ -397,8 +400,7 @@ function rowGeom(scrollY = 0) {
 
 function drawPage(o = {}) {
   const scroll = o.scroll || 0;
-  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.fillStyle = LOOK.ground; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.restore();
+  ground();
   text('7:42', 32, 34, 16, LOOK.ink, 600);
   const nav = ['Review', 'Today', 'Training', 'Kitchen'];
   let x = 24;
@@ -464,6 +466,8 @@ function composeSoul(t, s) {
     const wp = workParticles(t, work);
     parts = parts.map((p, i) => { const w = workWeight(i, t, work); return w > 0 ? travel(p, wp[i], w, i) : p; });
   }
+  // Low Power (section 13): the six children never leave the dabs, so only six lights split.
+  if (s.lowPower) parts = parts.map((p, i) => i >= 6 ? { ...p, alpha: 0 } : p);
   if (s.wobble) parts = s.wobble(parts, t, C);
   const beat = s.beat ? s.beat(t) : null;
   if (beat && beat.gather > 0) {
@@ -733,7 +737,22 @@ function tabs(active) {
   nav.forEach(n => { text(n, x, 82, 16, n === active ? LOOK.ink : LOOK.inkSoft, n === active ? 600 : 500); x += width(n, 16) + 22; });
   text('7:42', 32, 34, 16, LOOK.ink, 600);
 }
-function ground() { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = LOOK.ground; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.restore(); }
+// The look's ground with its field (ThemeLayers.swift): Celadon's glaze pools 6 % ink-darker over the bottom
+// 260 pt; Lacquer deepens to fieldShade at 75 % over the bottom 45 % with one specular band at −24°, 150 pt,
+// 5 % warm white, blur 14. Porcelain, Plein (flat since #367) and Obsidian are one colour.
+function ground() {
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.fillStyle = LOOK.ground; ctx.fillRect(0, 0, W, H + CAP);
+  if (LOOK.field === 'glaze') {
+    const g = ctx.createLinearGradient(0, H - 260, 0, H); g.addColorStop(0, rgba(LOOK.ink, 0)); g.addColorStop(1, rgba(LOOK.ink, .06));
+    ctx.fillStyle = g; ctx.fillRect(0, H - 260, W, 260);
+  } else if (LOOK.field === 'lacquer') {
+    const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(.55, rgba(LOOK.fieldShade, 0)); g.addColorStop(1, rgba(LOOK.fieldShade, .75));
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.save(); ctx.translate(W / 2, H / 2); ctx.rotate(-24 * Math.PI / 180); ctx.filter = `blur(${14 * DPR}px)`;
+    ctx.fillStyle = rgba(LOOK.fieldSpecular, .05); ctx.fillRect(-W * 1.1, -75, W * 2.2, 150); ctx.restore();
+  }
+  ctx.restore();
+}
 function stroke(x0, x1, y, w, color, alpha, dash) {
   ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = alpha; ctx.strokeStyle = color; ctx.lineWidth = w; ctx.lineCap = 'round';
   if (dash) ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke(); ctx.restore();
@@ -1224,6 +1243,57 @@ SCENES.outside = () => {
   return { duration: at, segments: segs };
 };
 
+// 12. A full minute of Home at rest (board item 12): nothing happens, and that is the test. Breath 3.2 s, the
+// idle tracks (lift 9 s, drift 11 / 7.5 s, halo 7 s), blinks every 3 to 8 s with a double about one in five, no
+// glance (nothing appeared), no roam, no repaint. Deterministic so the clip and the build can be compared.
+function blinkSchedule(seed = 7, until = 60) {
+  let x = seed; const rnd = () => { x = (x * 1103515245 + 12345) % 2147483648; return x / 2147483648; };
+  const out = []; let t = 2.4 + rnd() * 2;
+  while (t < until) { out.push(t); if (rnd() < .2) out.push(t + .25); t += 3 + rnd() * 5; }
+  return out;
+}
+SCENES.minute = () => {
+  const blinks = blinkSchedule();
+  const blink = t => { let o = 1; for (const b of blinks) { const u = (t - b) / .16; if (u > 0 && u < 1) o = Math.min(o, Math.abs(1 - 2 * u)); } return o; };
+  const caps = [{ at: 0, text: 'A minute at rest. Breath 3.2 s; lift 9 s; halo 7 s.' }];
+  for (let s = 10; s < 60; s += 10) {
+    const n = blinks.filter(b => b < s).length;
+    caps.push({ at: s, text: `0:${s}. ${n} blinks so far. No glance, no roam, no repaint.` });
+  }
+  caps[3].text = '0:30. Idle ticks at 30 fps; every frame is under 2 ms.';
+  caps[5].text = '0:50. Nothing on the page moved. Nothing of hers was owed.';
+  return {
+    duration: 60,
+    page: () => ({}),
+    soul: { modes: [{ mode: 'idle', at: -10 }], centre: () => HOME, eyes: t => ({ alpha: 1, blink: blink(t), look: { x: 0, y: 0 } }) },
+    lines: [],
+    caps,
+  };
+};
+
+// 13. Low Power: the same Plan my day ask with the phone in Low Power Mode. Six lights (the children never leave
+// the dabs), no readers, the constellation at 30 fps, the halo breath held; fade, gather, Done and the line
+// keep their timing exactly.
+SCENES.lowpower = () => {
+  const S = 1.8, G = S + 3.8, D = G + .78;
+  const work = { split: S, gather: G, at: { x: 336, y: 772 } };
+  const modes = [{ mode: 'idle', at: -10 }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }];
+  return {
+    duration: D + 3.4,
+    soul: { modes, centre: () => HOME, work, lowPower: true, tick: 30, eyes: t => ({ alpha: 1, blink: t > 4.1 && t < 4.26 ? Math.abs(1 - 2 * (t - 4.1) / .16) : 1, look: { x: 0, y: 0 } }) },
+    lines: [{ text: 'Planning your day.', at: S - .2, until: D }, { text: 'Plan ready. Gym at 12:15.', at: D + .55 }],
+    caps: [
+      { at: 0, text: 'Low Power: at rest she ticks at 20 fps. Same breath.' },
+      { at: S, text: 'Fade: unchanged, 500 ms.' },
+      { at: S + .3, text: 'Split: six lights, not twelve. No readers. 30 fps.' },
+      { at: 4.1, text: 'The blink stays; the halo breath is held.' },
+      { at: G, text: 'Gather: unchanged, 820 ms.' },
+      { at: D, text: 'Done: exactly as built. A moment never gets cheaper.', haptic: 'success (Done’s own)' },
+      { at: D + 1.9, text: 'Back to rest. No repaint can start in Low Power.' },
+    ],
+  };
+};
+
 // The work state when she's out on a row: tighter constellation, no readers.
 const _workParticles = workParticles;
 workParticles = function (t, work) {
@@ -1254,7 +1324,8 @@ function renderAt(t) {
     // Reduce Motion: the soul's frame is frozen at idle's still phase (no TimelineView ticking).
     composeSoul(0, { ...soul, modes: [{ mode: 'idle', at: -10 }], reduced: () => soul.reduced(t) });
   } else {
-    composeSoul(t, soul);
+    // `tick` holds the soul at that frame rate (Low Power: 30 fps) while the page stays at 60.
+    composeSoul(soul.tick ? Math.floor(t * soul.tick) / soul.tick : t, soul);
   }
   if (scene.finger) drawFinger(scene.finger(t));
   drawCaption(scene.caps, t);
