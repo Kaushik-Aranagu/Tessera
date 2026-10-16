@@ -175,3 +175,36 @@ same words, foreground, still kept.
   three words would do.
 - **The forget log is never cleared.** It isn't touched by a reset or by deleting the app's data from inside the
   app. It's hashes only, so this is a note for whoever writes "erase everything".
+
+## Addendum: re-check at `f934bfa` (Oct 16, about 3:15 AM Pacific): PASS
+
+Master is merged in, and `PlanDaysTests` keeps master's side. The trial merge onto master is now clean. The rest of
+the delta since f55bb0e is #363 coming in through master, plus TessMemory.swift, the turnover and AppModel.
+
+- **F6 closed.** The forget log is now `{forgotten: [hash: date], reappliedAt}`. A bare list in the old file format
+  reads as forgotten long ago. `reapplyForgets()` redacts a line only if it was written before its words were
+  forgotten. A successful `RememberFact` deletes the quiet in-store hash object in the same transaction, so UNDO
+  puts it back. Forget, re-tell, foreground: the line is kept (test added). The re-apply no longer runs in the
+  turnover or on every foreground. AppModel calls `reapplyForgetsIfRestored`, which runs once when
+  `TesseraBackup.restoredAt` is newer than the log's `reappliedAt`.
+- **Measured-value low closed.** A number counts only within three tokens of a health word, and never next to a
+  feeling word. "my knee hurts after 3 sets…" is kept private; "my resting heart rate is 52" is still refused.
+- The forget file is noted for "erase everything".
+
+### Should fix (not a block)
+- **S1. A second forget keeps the first forget's date.** `logForgotten` only writes a date when the hash is new
+  (`if log.forgotten[hash] == nil`), and `forgottenAt()` takes the earliest of the file and store dates. The steps:
+  1. He forgets a line on day 1.
+  2. He says it again on day 3.
+  3. He forgets it again on day 5.
+  4. He restores the day-4 backup.
+
+  The day-3 line is newer than the day-1 date, so it comes back with its words. **Fix:** on every forget, set the
+  date to now (`log.forgotten[hash] = now`), and have `forgottenAt` take the latest date. It's a narrow path, but
+  it's the same promise as F2b.
+
+### Lows
+- `logForgotten` stamps `.now` while the sweep and the turnover take an injected `now`, so tests mix two clocks.
+  Passing `now` through would make the F6 test independent of the wall clock.
+- `reapplyForgetsIfRestored` is only tested on the nil-marker path. A test with a restore marker newer than
+  `reappliedAt` (runs once, then not again) would cover the real path.
