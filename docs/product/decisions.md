@@ -4,6 +4,7 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+- **Plan my day order** (9:45 PM PT, Core #283 parked it). Core builds the rules plan engine first (M4 slice 6, the plan without Claude, which "Here's your usual plan." falls back to), then Plan my day through Claude on top of it, with the TessInbox offline queue alongside. Both follow Core's current list (T11, B8 to B10, G2, the empty wrap-up UNDO, the backup settings wiring).
 - **Radiators UNDO counts as answered** (9:40 PM PT, Design b8434f7, default kept). After KEEP IT then UNDO, the ask isn't offered again that season.
 - **Naming the lift doesn't skip the ask** (9:40 PM PT, QA on #274). In a live workout, a named bodyweight lift in focus ("dips 10x8") asks just like the bare "10x8": "10 × 8: 10 sets, or +10 kg?". With no workout open, "pull ups 3x8" stays 3 sets at bodyweight (A181). Not a blocker for Oct 22.
 - **The radiators ask** (9:35 PM PT, Design item 20, 570e7cb). On the first Upkeep open of a day from Oct 1 to Nov 30 (on a first run, only after Keep N or SKIP), Tess asks "Radiators to bleed this autumn?" with KEEP IT and NO RADIATORS. KEEP IT writes Bleed the radiators every 365 days and says "Bleed the radiators, kept. Once a year." with a 4 s UNDO ("Bleed the radiators taken back."). NO RADIATORS says "Okay. I won't ask again." and writes nothing. Leaving without answering asks again on the next open in the window.
