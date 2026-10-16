@@ -149,7 +149,7 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [training-week-one-questions.md](training-week-one-questions.md) | Coordinator: Mon Oct 19 training check-in questions |
 | [fixtures/review-m3.md](fixtures/review-m3.md) | Builder B, Core: 12 Review weeks with habits and body weight |
 | [colour-at-rest.md](colour-at-rest.md) | Design, Builders A and B: every coloured dot, badge and always-on colour on master, checked against no-dots.md |
-| [install-day-script.md](install-day-script.md) | QA: 23-step simulator script for the install commit before the Oct 22 re-sign |
+| [install-day-script.md](install-day-script.md) | QA: simulator script plus a one-minute Speak check on the phone for the install commit before the Oct 22 re-sign |
 | [install-readiness-oct22.md](install-readiness-oct22.md) | Product: Oct 22 install readiness, merged PRs since b19fb4a with QA verdicts, open fixes, recommended install commit |
 | [grammar-miss-blind-read.md](grammar-miss-blind-read.md) | Kaushik: 30-row unlabelled read of use 1 once his Claude key is in |
 | [lines-audit-2.md](lines-audit-2.md) | Core, Builders A and B: 61 Tess, UNDO and empty-state lines since #158, 24 fixes |
