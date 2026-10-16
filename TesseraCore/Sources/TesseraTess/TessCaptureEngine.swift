@@ -228,6 +228,15 @@ public final class TessCaptureEngine: TessCapturing {
                 return TessCapture(records: [], line: ask.line, source: .grammar, asking: .datedLift(ask))
             default: break
             }
+            // A bare thing already on Groceries changes nothing: the line, with no ghost and no UNDO (QA S1 on #316).
+            if case let .groceries(lines) = parse, lines.count == 1, let line = IngredientLine.parse(lines[0]),
+               line.amount == nil, line.unit == nil,
+               Groceries(store: engine.store, classes: engine.classes).isOn(line.name)
+            {
+                let name = lines[0].prefix(1).uppercased() + lines[0].dropFirst()
+                return TessCapture(records: [], line: "\(name), already on Groceries.", source: .grammar,
+                                   asking: .line)
+            }
             do {
                 if case let .sets(parts) = parse {
                     return performSets(parts, context: context)

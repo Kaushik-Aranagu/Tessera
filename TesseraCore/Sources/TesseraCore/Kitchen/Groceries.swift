@@ -46,6 +46,15 @@ public struct Groceries {
             .sorted { Aisle.order(of: $0.aisle) < Aisle.order(of: $1.aisle) }
     }
 
+    /// Whether a thing is already on the list, open ("chickpeas" when "1 can chickpeas · 15 oz" is there).
+    public func isOn(_ name: String) -> Bool {
+        guard let list, let ingredient = IngredientBook(store: store, classes: classes).find(name) else { return false }
+        return list.orderedChildren.contains { item in
+            store.value("isDone", of: item) != .bool(true) && !item.isDeleted
+                && store.linkedObjects("about", of: item).contains { $0.id == ingredient.id }
+        }
+    }
+
     /// One pack's size for an item ("14.5 oz"), drawn after the name with a middle dot; nil when it has none.
     public func packSize(of item: ObjectRecord) -> String? {
         GroceryShare.decode(store.value("shares", of: item)?.stringValue).lazy.compactMap(\.packSize).first
