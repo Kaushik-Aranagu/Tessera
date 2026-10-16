@@ -63,7 +63,9 @@ Every wall refuses with no network call and before any money is held.
    `SettingsStore.read().sendsMissesToClaude`). Demo: the app already skips wiring Claude when `-demo`,
    `-resetDemo`, `-theme` or `-fakeClaudeKey` is set; `ClaudeClient` takes that as an injected flag too (Core
    can't read `LaunchFlags`). Then the key: `keys.read()` nil means `.refused(.noKey)`.
-2. **Money and body wall.** A money-shaped pack is refused (`.refused(.money)`). Use the same word and currency
+2. **Money and body wall.** A money-shaped pack is refused (`.refused(.money)`). One exception by job: the
+   recipe-link job strips money-shaped spans (prices, costs) from the page text before sending and never refuses
+   the page (Product, decisions.md 11:52 AM PT Oct 16); his own words still pass every wall unchanged. Use the same word and currency
    list as `TessMemoryScreen.moneyWords` and the currency signs. Body and health facts are never packed: that is
    the pack builder's job, and its snapshot test proves it. For capture, the first wall is new in `TessRouter.run`:
    a money screen next to the existing `SecretWords.mentions` check, before any `isAvailable`, so a money-shaped

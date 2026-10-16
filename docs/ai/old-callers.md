@@ -76,7 +76,8 @@ through `JSONSerialization`, so key order is not stable and "byte-identical" mea
 
 1. **Recipe link** (no app caller, one round, no tools). Pin: `RecipeLinkTests` `claudeReadsOnlyWhenAllowedAndUnderTheCap`,
    `claudesKeyAndBusyAndCutOffLines`, `aPageWithNoCardIsReadFromItsText`, `theLinesAreTheTable`. Add: a 504 stays
-   "busy", the row's `requestID` stays nil, a 3xx outcome (new redirect refusal changes it; decide first).
+   "busy", the row's `requestID` stays nil, a 3xx is "unreadable" (decided), and a page
+   with prices is sent with them stripped, never refused.
 2. **Plan** (no app caller; already has the deadline, `stale` and the outcome strings `ClaudeClient` copies).
    Pin: `PlanWordingTests` `claudeWordsItOnceAndTheSamePackIsReused`, `everyFailureShowsTheRulesPlan`,
    `atTheCapNothingIsSent`, `eachFailureHasProductsLine`, `aRejectedPackIsRememberedAndTheSwitchIsOne`,
@@ -94,15 +95,18 @@ Callers used only in tests: `ClaudePlanWording`, `ClaudeRecipeReader`, `TessInbo
 
 ## Where code and docs differ
 
-- **Walls would change behavior.** `claude-client.md` step 2 refuses money-shaped packs using `moneyWords`, which
-  holds "$", "cost" and "price"; most recipe pages and some plan event titles hold one. Step 3 refuses
-  `SecretWords`. No old caller has either wall, so a move as written is not "no change". The jobs need a per-job
-  wall setting, or Kaushik decides the change.
+- **Walls change behavior, on purpose.** `claude-client.md` step 2 refuses money-shaped packs using `moneyWords`
+  ("$", "cost", "price"); step 3 refuses `SecretWords`. No old caller has either wall. DECIDED (Product, decisions.md 11:52 AM PT Oct 16): the
+  recipe-link job strips money-shaped spans from the page text before sending and never refuses the page; his
+  own words (capture, plan titles) pass every wall unchanged. The recipe move adds a strip test; plan event
+  titles holding a money word are refused as the wall says.
 - **Status maps.** The shared table has 504 as timeout; the recipe reader says busy. Key check's map differs in
   five places (section 2). Capture maps a cancelled `URLError` to offline, not "cancelled".
 - **Rounds.** Capture runs up to 3 rounds under one reservation of 3 times the estimate; `TessJob` has no rounds
-  field yet, though section 3 step 4 assumes one.
-- **Redirect refusal** is new for all four; today each follows a 3xx with the key header.
+  field yet, though section 3 step 4 assumes one. DECIDED (Product, decisions.md 11:52 AM PT Oct 16): `TessJob` gains `rounds` and a thinking
+  flag (on Core's board).
+- **Redirect refusal** is new for all four; today each follows a 3xx with the key header. DECIDED (Product, decisions.md 11:52 AM PT Oct 16):
+  refuse; a 3xx is "offline" for capture and "unreadable" for the recipe link.
 - **Cost.** Capture prices cache tokens; plan and recipe price input and output only. Same today (no cache
   control is sent), but a shared parser must not start pricing cache tokens on those rows.
 - **Priorities.** `TessJob.priority` lists `.capture > .plan > .recipe > .lines`; nothing reads it until the 80%
