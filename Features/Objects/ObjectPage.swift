@@ -329,7 +329,7 @@ private struct Header: View {
             Text(classLine)
                 .textRole(.data)
                 .padding(.top, Theme.Spacing.s)
-                .foregroundStyle(Theme.Colors.training)
+                .foregroundStyle(Theme.Colors.inkSecondary)
                 .entrance(3)
         }
     }

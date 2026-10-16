@@ -144,7 +144,7 @@ struct BottomChrome: View {
                     }
                     if canUndo {
                         Button("Undo") { undo() }
-                            .buttonStyle(InkLabelWordStyle(color: Theme.Colors.live))
+                            .buttonStyle(InkLabelWordStyle.undo)
                     }
                 }
                 .padding(.vertical, Theme.Spacing.xs)
@@ -516,6 +516,8 @@ private struct ModeRow: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var risen = false
+    @State private var landed = false
+    @State private var inWord = false
 
     var body: some View {
         Button(action: action) {
@@ -525,9 +527,20 @@ private struct ModeRow: View {
                     .foregroundStyle(isActive ? Theme.Colors.ink : Theme.Colors.ink.opacity(0.55))
                     .offset(x: risen || reduceMotion ? 0 : 24)
                     .opacity(risen ? 1 : 0)
+                    // The pigment lands into the word as a wash behind its first letters, then dries away.
+                    .background(alignment: .leading) {
+                        RadialGradient(colors: [color.opacity(0.28), .clear], center: .center, startRadius: 0,
+                                       endRadius: 40)
+                            .frame(width: 80, height: 50)
+                            .blur(radius: 4)
+                            .opacity(landed ? 1 : 0)
+                            .allowsHitTesting(false)
+                    }
+                // The soul's pigment rises out of it and lands in the word; at rest only the word remains.
                 PaintDab(color: color, size: CGSize(width: 22, height: 18), seed: seed)
                     .scaleEffect(risen ? 1 : 0.7)
                     .offset(y: risen || reduceMotion ? 0 : rise)
+                    .opacity(risen && !inWord ? 1 : 0)
                     .frame(width: 64)
             }
             .frame(maxWidth: .infinity, minHeight: BottomChrome.rowHeight, alignment: .trailing)
@@ -543,6 +556,15 @@ private struct ModeRow: View {
         .onAppear {
             withTesseraAnimation(.spring(response: 0.48, dampingFraction: 0.68).delay(delay),
                                  reduceMotion: reduceMotion) { risen = true }
+            guard !reduceMotion else {
+                inWord = true
+                return
+            }
+            withAnimation(.easeOut(duration: 0.2).delay(delay + 0.45)) {
+                landed = true
+                inWord = true
+            }
+            withAnimation(.easeIn(duration: 0.5).delay(delay + 0.75)) { landed = false }
         }
     }
 }
@@ -590,12 +612,19 @@ private struct CaptureWash: View {
 /// A label word (16/700 uppercase): on touch the ink goes full and a 1.5 pt hairline draws out from the centre.
 struct InkLabelWordStyle: ButtonStyle {
     var color: Color = Theme.Colors.inkSecondary
+    /// UNDO (and Finish or Resume while something runs) keep their colour at rest; every other label word rests in
+    /// ink and shows its colour only on press (no-dots B5).
+    var keepsColor = false
+
+    static var undo: InkLabelWordStyle {
+        InkLabelWordStyle(color: Theme.Colors.liveInk, keepsColor: true)
+    }
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .textRole(.labelStrong)
             .textCase(.uppercase)
-            .foregroundStyle(color.opacity(configuration.isPressed ? 1 : 0.85))
+            .foregroundStyle(configuration.isPressed || keepsColor ? color : Theme.Colors.ink)
             .overlay(alignment: .bottom) {
                 Rectangle().fill(color).frame(height: 1.5)
                     .scaleEffect(x: configuration.isPressed ? 1 : 0, anchor: .center)

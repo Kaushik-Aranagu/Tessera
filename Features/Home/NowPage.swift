@@ -214,8 +214,12 @@ struct DrainBar: View {
                     Rectangle()
                         .fill(Theme.Colors.ink.opacity(0.14))
                         .frame(height: 2)
+                    // Ink at 51% with an amber leading edge (no-dots): the time, not a colour.
                     DryStroke()
-                        .fill(Theme.Colors.now.opacity(0.85))
+                        .fill(LinearGradient(stops: [.init(color: Theme.Colors.ink.opacity(0.51), location: 0),
+                                                     .init(color: Theme.Colors.ink.opacity(0.51), location: 0.85),
+                                                     .init(color: Theme.Colors.now, location: 1)],
+                                             startPoint: .leading, endPoint: .trailing))
                         .frame(width: max(proxy.size.width * (1 - fraction), 0), height: 6)
                         .blur(radius: 0.3)
                         .tesseraAnimation(.linear(duration: 1), value: fraction)
@@ -282,24 +286,38 @@ private struct GhostRow: View {
     @State private var stroke: CGFloat = 0
     @State private var drag: CGFloat = 0
     @State private var arrived = false
+    @State private var accepted = false
+    @State private var timeDried = false
+
+    private func words(breath: Double) -> some View {
+        let title = Text(item.title).font(Theme.voice)
+        let time = Text(Format.clock(item.start)).font(Theme.Typography.font(Theme.concept.scale.label))
+        return HStack(spacing: Theme.Spacing.m) {
+            DryingWords(text: title, dried: accepted)
+                .lineLimit(1)
+            Spacer(minLength: Theme.Spacing.s)
+            DryingWords(text: time, dried: timeDried)
+                .monospacedDigit()
+        }
+        .opacity(accepted ? 1 : reduceMotion ? 0.6 : 0.5 + 0.16 * breath)
+    }
+
+    /// Accepting: the words dry from cobalt into ink, left to right (700 ms), the time 250 ms later, then it lands.
+    private func accept() {
+        guard !accepted else { return }
+        withTesseraAnimation(.spring(Spring(duration: 0.7, bounce: 0)), reduceMotion: reduceMotion) { accepted = true }
+        withTesseraAnimation(.spring(Spring(duration: 0.7, bounce: 0)).delay(0.25), reduceMotion: reduceMotion) {
+            timeDried = true
+        }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(reduceMotion ? 200 : 950))
+            model.commitCapture()
+        }
+    }
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { context in
-            let breath = (sin(context.date.timeIntervalSinceReferenceDate / 1.6 * .pi) + 1) / 2
-            HStack(spacing: Theme.Spacing.m) {
-                PaintDab(color: Theme.Colors.tess, seed: item.title.count)
-                    .blur(radius: 1.5)
-                Text(item.title)
-                    .font(Theme.voice)
-                    .foregroundStyle(Theme.Colors.tess)
-                    .lineLimit(1)
-                Spacer(minLength: Theme.Spacing.s)
-                Text(Format.clock(item.start))
-                    .textRole(.label)
-                    .foregroundStyle(Theme.Colors.tess)
-                    .monospacedDigit()
-            }
-            .opacity(reduceMotion ? 0.6 : 0.5 + 0.16 * breath)
+            words(breath: (sin(context.date.timeIntervalSinceReferenceDate / 1.6 * .pi) + 1) / 2)
         }
         .frame(maxHeight: .infinity)
         .overlay(alignment: .bottomLeading) {
@@ -312,7 +330,7 @@ private struct GhostRow: View {
         .blur(radius: arrived ? 0 : 6)
         .opacity(arrived ? 1 - Double(min(abs(drag) / 200, 0.8)) : 0)
         .contentShape(Rectangle())
-        .onTapGesture { model.commitCapture() }
+        .onTapGesture(perform: accept)
         .gesture(DragGesture(minimumDistance: 12).onChanged { drag = min(0, $0.translation.width) }.onEnded { value in
             if value.translation.width < -80 {
                 withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { drag = -400 }
@@ -521,7 +539,8 @@ private struct LedgerRow: View {
                             .truncationMode(.middle)
                     }
                     Spacer(minLength: Theme.Spacing.s)
-                    Text("Resume").textRole(.bodyStrong).foregroundStyle(Theme.Colors.live)
+                    // A paused thing isn't running: Resume rests in ink at 600 (no-dots C9).
+                    Text("Resume").textRole(.body).fontWeight(.semibold).foregroundStyle(Theme.Colors.ink)
                 }
                 .frame(minHeight: 64)
                 .contentShape(Rectangle())
@@ -531,15 +550,9 @@ private struct LedgerRow: View {
         }
     }
 
-    @ViewBuilder private var seam: some View {
-        if process.state == .suspended {
-            Theme.Colors.live
-                .frame(height: 2)
-                .shadow(color: Theme.Colors.live.opacity(0.45), radius: 4)
-        } else {
-            // One quiet engraved rule, the same on every look (B11).
-            Theme.Colors.hairline.frame(height: 1 / displayScale)
-        }
+    private var seam: some View {
+        // One quiet engraved ink rule, suspended or not: no glow (no-dots C9, B11).
+        Theme.Colors.hairline.frame(height: process.state == .suspended ? 1 : 1 / displayScale)
     }
 
     private var step: String {
@@ -557,5 +570,23 @@ private struct LedgerRow: View {
             return "\(minutes) min ago"
         }
         return "\(minutes / 60) h ago"
+    }
+}
+
+/// Cobalt words drying into ink: an ink copy is revealed over them left to right.
+private struct DryingWords: View {
+    let text: Text
+    let dried: Bool
+
+    var body: some View {
+        text.foregroundStyle(Theme.Colors.tess)
+            .overlay(alignment: .leading) {
+                text.foregroundStyle(Theme.Colors.ink)
+                    .mask(alignment: .leading) {
+                        GeometryReader { proxy in
+                            Rectangle().frame(width: dried ? proxy.size.width : 0)
+                        }
+                    }
+            }
     }
 }

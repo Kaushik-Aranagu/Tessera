@@ -183,7 +183,9 @@ private struct NoteRow: View {
                 Spacer(minLength: Theme.Spacing.s)
                 Text(NotesCopy.when(note.updatedAt, now: now))
                     .textRole(.data)
+                    // Arrives in cobalt, then dries to inkSecondary (no-dots B8).
                     .foregroundStyle(isNew ? Theme.Colors.tess : Theme.Colors.inkSecondary)
+                    .tesseraAnimation(Theme.Motion.dry(reduceMotion: false) ?? .default, value: isNew)
                     .fixedSize()
             }
             .padding(.vertical, Theme.Spacing.l)

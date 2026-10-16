@@ -644,7 +644,7 @@ private struct TessNoteLine: View {
                             voice.clear()
                         }
                     }
-                    .buttonStyle(InkLabelWordStyle(color: Theme.Colors.live))
+                    .buttonStyle(InkLabelWordStyle.undo)
                     .accessibilityHint("Undoes what Tess just said")
                 }
             }

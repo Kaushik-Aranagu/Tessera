@@ -151,26 +151,21 @@ private struct DayStroke: View {
                         Theme.Colors.ink.opacity(0.22),
                         style: StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [4, 6])
                     )
-                // A wider, softer pass under the stroke gives it a wet edge.
+                // One thin pass at 60%: the day at rest (ink-line.md, no-dots.md).
                 BrushPath().trim(from: 0, to: reach)
-                    .stroke(gradient, style: StrokeStyle(lineWidth: 24, lineCap: .round))
-                    .opacity(0.25)
-                    .blur(radius: 2.5)
-                BrushPath().trim(from: 0, to: reach)
-                    .stroke(gradient, style: StrokeStyle(lineWidth: 20, lineCap: .round))
-                    .opacity(0.85)
-                    .blur(radius: 0.6)
+                    .stroke(gradient, style: StrokeStyle(lineWidth: HomeStroke.day, lineCap: .round))
+                    .opacity(0.6)
+                    .blur(radius: 0.3)
                 ForEach(Array(marks.enumerated()), id: \.offset) { _, mark in
                     // At least a dab, even for a short session.
                     let lower = min(mark.lowerBound, 0.985), upper = max(mark.upperBound, lower + 0.015)
                     BrushPath().trim(from: lower, to: min(upper, min(reach + 0.015, 1)))
-                        .stroke(Theme.Colors.live, style: StrokeStyle(lineWidth: 9, lineCap: .round))
+                        .stroke(Theme.Colors.live, style: StrokeStyle(lineWidth: HomeStroke.session, lineCap: .round))
                         .blur(radius: 0.4)
-                        .shadow(color: Theme.Colors.live.opacity(0.45), radius: 3)
                 }
-                if isToday {
-                    WetTip()
-                        .position(Self.point(at: reach, in: size))
+                if isToday, reach > 0 {
+                    // The moment: a breathing sheen on the stroke's last 14 pt, not a dot (no-dots).
+                    WetTip(reach: reach, length: 14 / max(size.width, 1))
                 }
             }
         }
@@ -216,16 +211,17 @@ private struct BrushPath: Shape {
 
 /// A 26 pt wet amber tip at now that breathes (scale 1 ↔ 1.35, blur 3 ↔ 6, 3.6 s). Reduce Motion: still.
 private struct WetTip: View {
+    let reach: Double
+    /// The sheen's length as a share of the stroke.
+    let length: Double
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var breathe = false
 
     var body: some View {
-        Circle()
-            .fill(Theme.Colors.now)
-            .frame(width: 26, height: 26)
-            .scaleEffect(breathe ? 1.35 : 1)
-            .blur(radius: breathe ? 6 : 3)
-            .opacity(breathe ? 0.4 : 0.75)
+        BrushPath().trim(from: max(reach - length, 0), to: reach)
+            .stroke(Theme.Colors.now, style: StrokeStyle(lineWidth: HomeStroke.now, lineCap: .round))
+            .blur(radius: breathe ? 1.2 : 0.4)
+            .opacity(breathe ? 0.55 : 1)
             .tesseraAnimation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true), value: breathe)
             .onAppear { breathe = !reduceMotion }
             .onChange(of: reduceMotion) { _, reduce in breathe = !reduce }

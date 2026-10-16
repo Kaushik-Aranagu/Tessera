@@ -5,9 +5,16 @@ import TesseraCore
 /// use the look's own `daySpectrum`. Light looks (Porcelain, Celadon) darken the sky and amber stops to reach 3:1 on
 /// white; those two values are for this stroke only and never become text colours. Plein keeps its own stroke.
 enum HomeStroke {
+    /// Line widths, behind one place while Design tunes them (ink-line.md).
+    static let day: CGFloat = 6
+    static let now: CGFloat = 7.5
+    static let session: CGFloat = 4
+    static let carriage = CGSize(width: 40, height: 2)
+    static let underAmount: CGFloat = 2
+
     static var gradient: Gradient {
         let look = ThemeStore.shared.paintLook
-        if look.name == Look.plein.name {
+        if look.field == .plein {
             return Gradient(colors: [Color(hex: 0x9EC3D6), Color(hex: 0x8FB58A), Color(hex: 0x7A5C8E),
                                      Color(hex: 0xE0A35C), Color(hex: 0xC8452F)])
         }
@@ -232,15 +239,12 @@ private struct KitchenPage: View {
                 .foregroundStyle(Theme.Colors.inkSecondary)
             ForEach([HomeLink.groceries, .recipes], id: \.self) { link in
                 Button { open(link) } label: {
-                    HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
-                        PaintDab(color: Theme.Colors.classColor(.kitchen),
-                                 seed: link == .groceries ? 2 : 5)
-                        Text(link.title)
-                            .textRole(.title)
-                            .foregroundStyle(Theme.Colors.ink)
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
-                    .contentShape(Rectangle())
+                    // The words alone, in ink (no-dots.md).
+                    Text(link.title)
+                        .textRole(.title)
+                        .foregroundStyle(Theme.Colors.ink)
+                        .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .modifier(LinkZoomSource(link: link, zoom: zoom))
@@ -329,17 +333,15 @@ private struct PaintedRail: View {
 
             GeometryReader { proxy in
                 let cell = proxy.size.width / CGFloat(max(titles.count, 1))
-                UnevenRoundedRectangle(
-                    topLeadingRadius: 2, bottomLeadingRadius: 1.2,
-                    bottomTrailingRadius: 2.4, topTrailingRadius: 1, style: .continuous
-                )
-                .fill(Theme.Colors.live)
-                .frame(width: 64, height: 4)
-                .rotationEffect(.degrees(-1.2))
-                .blur(radius: 0.5)
-                .offset(x: cell * (CGFloat(progress) + 0.5) - 32)
+                // A thin ink carriage at rest; it turns live only while the pages move (ink-line.md).
+                let paging = abs(progress - progress.rounded()) > 0.01
+                Rectangle()
+                    .fill(paging ? Theme.Colors.live : Theme.Colors.ink)
+                    .frame(width: HomeStroke.carriage.width, height: HomeStroke.carriage.height)
+                    .offset(x: cell * (CGFloat(progress) + 0.5) - HomeStroke.carriage.width / 2)
+                    .animation(.easeOut(duration: 0.2), value: paging)
             }
-            .frame(height: 4)
+            .frame(height: HomeStroke.carriage.height)
             .accessibilityHidden(true)
         }
     }
