@@ -1102,6 +1102,127 @@ SCENES.ask = () => {
   return { duration: at, segments: segs };
 };
 
+// 11. Outside the app (board item 9, Design 54 + 36): she is not drawn there. A widget is her line and nothing
+// else; the accessories are words and a time; a Live Activity is Cobalt sky (her voice as a ground, not her
+// body) whose only motion is the system's push and the washes warming on Go; the Island is black. The one
+// moment that is hers is the return: a tap brings the app forward with her at her dock at rest, the return
+// line draws in beside her and she glances once. No beat, no colour, no haptic of hers for what happened
+// while the app was closed.
+const SKY = { cobalt: '#2450D8', violet: '#6A4C9C', cadmium: '#F0A500', vermilion: '#E2432A', cream: '#F6EFE4' };
+function mixHex(a, b, u) {
+  const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+  const c = s => Math.round(lerp((pa >> s) & 255, (pb >> s) & 255, u));
+  return `rgb(${c(16)},${c(8)},${c(0)})`;
+}
+function tick(x, y, s, color, alpha) {
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = alpha; ctx.strokeStyle = color; ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(x - s * .5, y); ctx.lineTo(x - s * .12, y + s * .38); ctx.lineTo(x + s * .55, y - s * .42); ctx.stroke(); ctx.restore();
+}
+// The Lock Screen with the rest Live Activity. `go` is seconds since the rest came up (negative while resting;
+// the countdown shows -go). `alpha` fades the whole thing when the app comes forward.
+function drawLockScreen(go, t, alpha = 1) {
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = alpha;
+  const wall = ctx.createLinearGradient(0, 0, 0, H); wall.addColorStop(0, '#1C1B24'); wall.addColorStop(1, '#09090D');
+  ctx.fillStyle = wall; ctx.fillRect(0, 0, W, H);
+  ctx.restore();
+  const cream = SKY.cream;
+  text('Thursday 16 October', 196, 92, 16, cream, 500, 'center', .8 * alpha);
+  text('7:42', 196, 212, 88, cream, 300, 'center', alpha);
+  // The face: the system's material, clipped, with the two washes.
+  const F = { x: 16, y: 300, w: 361, h: 160, r: 24 };
+  const warm = clamp(go / 1.4); const wu = houseCurve(warm);
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = alpha;
+  ctx.beginPath(); ctx.roundRect(F.x, F.y, F.w, F.h, F.r); ctx.clip();
+  ctx.fillStyle = 'rgba(30,30,40,0.88)'; ctx.fillRect(F.x, F.y, F.w, F.h);
+  const w1 = ctx.createRadialGradient(F.x + 40, F.y + 10, 0, F.x + 40, F.y + 10, 200); w1.addColorStop(0, mixHex(SKY.cobalt, SKY.cadmium, wu)); w1.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.globalAlpha = alpha * .55; ctx.fillStyle = w1; ctx.beginPath(); ctx.arc(F.x + 40, F.y + 10, 200, 0, Math.PI * 2); ctx.fill();
+  const w2 = ctx.createRadialGradient(F.x + F.w - 30, F.y, 0, F.x + F.w - 30, F.y, 190); w2.addColorStop(0, mixHex(SKY.violet, SKY.vermilion, wu)); w2.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.globalAlpha = alpha * .5; ctx.fillStyle = w2; ctx.beginPath(); ctx.arc(F.x + F.w - 30, F.y, 190, 0, Math.PI * 2); ctx.fill();
+  ctx.globalAlpha = alpha;
+  // Left: the countdown, then Go pushing in from below (the system's push, 350 ms).
+  const push = clamp(go / .35), pu = easeOut(push);
+  if (push < 1) {
+    const secs = Math.max(0, Math.ceil(-go)); const dy = -24 * pu, a = 1 - pu;
+    ctx.globalAlpha = alpha * a; ctx.fillStyle = cream; ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+    ctx.font = font(48, 300); ctx.fillText('0', F.x + 20, F.y + 76 + dy);
+    const w0 = ctx.measureText('0').width; ctx.globalAlpha = alpha * a * .55; ctx.fillText(':', F.x + 20 + w0, F.y + 76 + dy);
+    const wc = ctx.measureText(':').width; ctx.globalAlpha = alpha * a; ctx.fillText(String(secs).padStart(2, '0'), F.x + 20 + w0 + wc, F.y + 76 + dy);
+  }
+  if (go > 0) { ctx.globalAlpha = alpha * pu; ctx.fillStyle = cream; ctx.font = font(48, 300); ctx.textAlign = 'left'; ctx.fillText('Go', F.x + 20, F.y + 76 + 24 * (1 - pu)); }
+  // Right column: the set as the Done button, the vermilion tick; on Go a soft glow breathes behind it.
+  ctx.globalAlpha = alpha * .62; ctx.fillStyle = cream; ctx.font = font(17, 400); ctx.textAlign = 'right'; ctx.fillText('Bench', F.x + F.w - 22, F.y + 40);
+  ctx.globalAlpha = alpha; ctx.font = font(24, 400); ctx.fillText('82.5 × 8', F.x + F.w - 22, F.y + 70);
+  if (go > 0) { const b = .22 + .14 * Math.sin(t * 2.4); const gl = ctx.createRadialGradient(F.x + F.w - 34, F.y + 94, 0, F.x + F.w - 34, F.y + 94, 26); gl.addColorStop(0, rgba(SKY.vermilion, b * wu)); gl.addColorStop(1, rgba(SKY.vermilion, 0)); ctx.globalAlpha = alpha; ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(F.x + F.w - 34, F.y + 94, 26, 0, Math.PI * 2); ctx.fill(); }
+  ctx.restore();
+  tick(F.x + F.w - 34, F.y + 94, 14, SKY.vermilion, alpha);
+  // The horizon: a 1.5 pt guide at 14 %, the 2.5 pt cream line draining along it as the rest runs out.
+  const x0 = F.x + 20, x1 = F.x + F.w - 20, hy = F.y + 118;
+  stroke(x0, x1, hy, 1.5, cream, .14 * alpha);
+  const remain = go < 0 ? clamp(-go / 150) : 0; // 0:04 left of a 2:30 rest
+  if (remain > 0) stroke(x0, x0 + (x1 - x0) * remain, hy, 2.5, cream, alpha);
+  // Bottom row.
+  const bottomA = alpha * .8;
+  if (push < 1) text('Rest, then set 4', x0, F.y + 144, 16, cream, 500, 'left', bottomA * (1 - pu));
+  if (go > 0) text('Rested 2:30', x0, F.y + 144, 16, cream, 500, 'left', bottomA * pu);
+  text('Skip', x1, F.y + 144, 16, cream, 600, 'right', alpha);
+  const skipW = width('Skip', 16, 600);
+  text('|', x1 - skipW - 12, F.y + 144, 16, cream, 400, 'right', .3 * alpha);
+  text('+15', x1 - skipW - 28, F.y + 144, 16, cream, 600, 'right', alpha * lerp(1, .25, pu));
+}
+SCENES.outside = () => {
+  const segs = [];
+  // (a) The rest face on the Lock Screen: the last seconds, then Go. Nothing of her is on it.
+  segs.push((() => {
+    const up = 4.0, tapAt = 6.9, D = tapAt + .25;
+    return {
+      duration: D,
+      draw: t => drawLockScreen(t - up, t, 1),
+      finger: t => (t > tapAt - .15 && t < D) ? { x: 196, y: 380, alpha: 1 - ramp(t, tapAt, .2) } : null,
+      soul: { hidden: true, modes: [{ mode: 'idle', at: -10 }], centre: () => HOME },
+      lines: [],
+      caps: [
+        { at: 0, text: 'Outside the app she isn’t drawn: no dabs, no eyes.' },
+        { at: 1.4, text: 'Rest face: Cobalt sky in every look. Her voice, not her.' },
+        { at: up, text: 'Go: the system’s push; washes warm 1.4 s. Not her beat.' },
+        { at: up + 1.7, text: 'Widgets, accessories, Island: words and a time only.' },
+      ],
+    };
+  })());
+  // (b) The tap brings the app forward; she is at her dock, at rest; the return line draws in; one glance.
+  segs.push((() => {
+    const fwd = .05, line = fwd + .55, back = line + .75, D = line + 3.6;
+    return {
+      duration: D,
+      draw: t => {
+        ground(); tabs('Today');
+        text('Thursday night', 24, 138, 21, LOOK.ink, 500);
+        text('running now', 24, 186, 21, LOOK.context, 500);
+        text('Push A, bench set 5', 24, 268, 34, LOOK.ink, 600);
+        text('RESUME PUSH A', 24, 296, 16, LOOK.ink, 700);
+        stroke(24, 369, 304, 1.5, LOOK.ink, .22); stroke(24, 24 + 345 * .48, 304, 1.5, LOOK.ink, 1);
+        text('NEXT', 24, 388, 16, LOOK.inkSoft, 600);
+        HOME41.rows.forEach((r, i) => { const y = 440 + 46 * i; text(r[0], 24, y, 21, LOOK.ink, 500); if (r[1]) text(r[1], 369, y, 16, LOOK.inkSoft, 500, 'right'); });
+        if (t > line) { const a = ramp(t, line, .3); text('UNDO', 24, 812, 16, LOOK.ink, 700, 'left', a * .9); stroke(24, 24 + width('UNDO', 16), 818, 1.5, LOOK.ink, a); }
+        const cover = 1 - ramp(t, fwd, .38, houseCurve); // the Lock Screen gives way to the app (the system's transition)
+        if (cover > 0) drawLockScreen(3.0, t + 7, cover);
+      },
+      soul: {
+        modes: [{ mode: 'idle', at: -10 }], centre: () => HOME,
+        eyes: t => { const g = ramp(t, line, .3, easeOut) * (1 - ramp(t, back, .3)); return { alpha: ramp(t, fwd, .38), blink: 1, look: { x: -1 * g, y: .6 * g } }; },
+      },
+      lines: [{ text: 'Set 4 logged.', at: line }],
+      caps: [
+        { at: 0, text: 'A tap opens the app. She is at her dock, at rest.' },
+        { at: line, text: 'The return line, with UNDO. One glance, 300 ms.' },
+        { at: line + 1.3, text: 'No beat, no colour, no haptic of hers: that moment is gone.' },
+        { at: line + 2.5, text: 'Living colour never reaches Lock Screen, widgets, icon.' },
+      ],
+    };
+  })());
+  let at = 0; for (const s of segs) { s.start = at; at += s.duration; }
+  return { duration: at, segments: segs };
+};
+
 // The work state when she's out on a row: tighter constellation, no readers.
 const _workParticles = workParticles;
 workParticles = function (t, work) {
@@ -1122,7 +1243,7 @@ function renderAt(t) {
   if (scene.segments) {
     const seg = scene.segments.findLast(x => x.start <= t) || scene.segments[0];
     const u = t - seg.start;
-    seg.draw(u); drawLine(seg.lines, u); composeSoul(u, seg.soul); if (seg.finger) drawFinger(seg.finger(u)); drawCaption(seg.caps, u);
+    seg.draw(u); drawLine(seg.lines, u); if (!seg.soul.hidden) composeSoul(u, seg.soul); if (seg.finger) drawFinger(seg.finger(u)); drawCaption(seg.caps, u);
     return;
   }
   if (scene.draw) scene.draw(t); else drawPage(scene.page ? scene.page(t) : {});

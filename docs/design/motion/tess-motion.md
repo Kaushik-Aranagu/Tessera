@@ -147,6 +147,31 @@ Design 48 (`living-colours.md`, with its addendum) owns the palettes, the nudges
 - Reduce Motion: no travel to the bloom (she blooms in the corner), no lean, crossfades as built; the eyes hold.
 - Recording: `recordings/tess-motion-ask.mp4` (Obsidian) and `-light`: Speak from the surface, the hold then a Claude call, and a one-ask wait answered by a tap.
 
+## 9. Outside the app: widgets, the Lock Screen, Live Activities (board item 9, added 3:20 AM PT Oct 16)
+Design 54 (`widget-states.md` addendum) and Design 36 (`lockscreen.md`) own every face outside the app; this section says where the soul is in them. The short answer: **she is not drawn outside the app.** A widget is her line with nowhere to tap down; a Live Activity is one number and one action on Cobalt sky; the Island is the system's black. Drawing her there would make her an icon (Design 54: no dots, dabs, pills or icons anywhere), and a still soul on a timeline that can't breathe reads as a dot. What is hers out there is her voice: the words, and the cobalt the sky is made of.
+
+| Surface | What is hers | What moves | What never happens |
+|---|---|---|---|
+| **Home Screen widgets** (small, medium, large; tinted and clear) | The line, written by the phone's `HomeLines.widgetLine` | Only the system's: words push in from below, numbers `.numericText()` | No dabs, no eyes, no state. A widget never shows working, thinking or Done: a timeline that updates while the phone works keeps its last entry and the result pushes in when it lands. The action's ink line is the only accent |
+| **Lock Screen accessories** (rectangular, circular, inline) | The line, then the time; the circular's one word | Nothing, except `Text(timerInterval:)` | No ring, no tick, no dab (54) |
+| **Live Activities** (rest, cook, focus) | The sky: the cobalt wash top left is her voice colour as a ground, not her body. The words are hers | The horizon drains (the system's `ProgressView`); on Go the word pushes in and the washes warm to cadmium and vermilion over 1.4 s, the vermilion glow breathes behind the tick (36). The cook flare, the focus timer | No dabs, no eyes, no split, no gather, no beat. The Go warming is the face's own motion, **not her reward beat**: no haptic from us (the alert is N2's or the activity's, never both), nothing of the 520 ms pattern. The 60 s "All 22 sets in." face fills the horizon and nothing blooms |
+| **The Island** | Words and the time | The countdown; the compact tick | Nothing of her, in every look |
+| **Notifications** | Tess's one line each (36) | None | No image attachment of her, ever: a picture of the dabs beside "Tessera" is an icon |
+| **The app icon** | Nothing: the icon is the system's (`app-icon.md`, #330) | None | Living colour never reaches it (section 7) |
+
+### The return: the one moment that is hers
+When a face brings the app forward (a tap on a Live Activity, a notification, its UNDO, a widget), she is **at her dock, at rest**, as the page comes in on the system's transition; she does not arrive, travel or bloom. The return line (`lockscreen.md`, Builder B: "Set 4 logged." with UNDO) draws into her band like any line of hers, 300 ms out of a 4 pt blur, and she gives it the glance from section 6 (spring 300 ms, x −3, y +1.3 at scale 1), eyes back after 420 ms, no blink. That is the whole return.
+- **No beat, no colour, no haptic of hers for what happened while the app was closed.** The Done on the face was the face's moment and it is over; the words carry it. A best logged from the Live Activity reaches him as Home's line ("Push A done, a bench best.") and she treats it as any line: a glance. Replaying a beat for a moment he didn't see her in is a badge, and badges are on 36's Never list.
+- If the phone is still working when the app opens (a Claude call started from a Shortcut, Plan my day from the widget's intent), she is already in the working state at the dock, from section 5's fade, with no split-in: the split happened off screen, so she is drawn mid-constellation at the frame the app appears, and gathers when the work lands. Nothing of hers starts from the transition.
+- A widget tap that opens a page other than Home (Pull A opens the routine) finds her where that page's rule puts her (the pages table below): at her dock, at rest.
+- Reduce Motion: the glance is already a spring under 300 ms and stays; nothing else is there to reduce.
+
+### What the extension must not contain
+`TessSoul`, `SoulRenderer`, `SoulParameters` and `SoulFrame` stay in the app target. The widget extension and the Live Activity draw with the shared `DesignSystem` pieces 54 names (`InkLine`, the type tiers, the look's ground from the App Group) and nothing of the soul; the review check is that the extension's target membership has no `Features/Tess/` file. Living colour's palette (`SoulPalette.look(_:living:)`) is not written to the App Group: outside the app the only cobalt is the sky's and the ink's.
+
+- Recording: `recordings/tess-motion-outside.mp4` (Obsidian) and `-light`: the rest face's last seconds and Go on the Lock Screen (Cobalt sky in both looks, nothing of her), then the tap, the app coming forward with her at rest, the return line and her glance.
+- Always-On: the activity's still face (36) has no washes and nothing ticking; in the app, nothing of hers runs in the background (the budget section: `TimelineView` paused).
+
 ## Timing and easing, in one place
 | | Curve | Duration |
 |---|---|---|
@@ -160,6 +185,7 @@ Design 48 (`living-colours.md`, with its addendum) owns the palettes, the nudges
 | Reward beat (gather in / out) | ease-out / settle spring | 180 / 320 ms, dry 900 ms |
 | Repaint pool / wet / dry | house curve / ease-out / house | 900 ms per dab, 120 ms apart / 250 ms / 2.8 s in all |
 | Mode blends | `SoulBlend` 400 ms, as built | |
+| Return from a face (section 9) | the system's app transition; her glance, spring 0.3 s | 300 ms, eyes back at 420 ms; no beat |
 
 ## Haptics (under `task-reward.md`'s rule)
 | Moment | Haptic | Owner |

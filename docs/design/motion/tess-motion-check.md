@@ -19,6 +19,7 @@ For Builder A (before the PR) and QA (the review): how to tell whether the built
 | Pages | `tess-motion-pages.mp4` | per page: 1.5 (leaves), 2.5 (works), 5.3 (Done), 7.2 (home); Review: 2.7 (readers) | one change on each tab |
 | Colour | `tess-motion-colour.mp4` (and the four looks) | 1.2 / 1.32 / 1.44 (the three pools start), 2.1 (wet), 4.0 (dry), 17.0 (the cut: work wins) | a repaint, then a capture 600 ms into the last |
 | Reduce Motion | `tess-motion-reduce-motion.mp4` | 1.6 (crossfade to working), 6.2 (crossfade back) | Reduce Motion on |
+| Outside | `tess-motion-outside.mp4` | 4.0 (Go pushes in, the washes warm), 7.0 (tap), 7.75 (the return line; her glance), 8.2 (eyes back) | a rest Live Activity on the Lock Screen at 0:04; tap it; the soul crop is the dock, the face is the eye's check against `lockscreen.md` (nothing of her on it) |
 
 ## 2. Compare frame by frame
 `docs/design/motion/prototype/compare.sh <reference> <candidate> <out-dir> "<beats>" [crop]` (needs ffmpeg). It brings both clips to 393 × 852 pt at 60 fps, crops the soul (default the bottom-right 160 × 160 pt; pass `x:y:w:h` in points for roam, drag and the pages), and writes:
@@ -40,7 +41,7 @@ What the eye checks that SSIM can't: the order of the lights leaving and landing
 
 ## 5. The run sheet
 1. `scripts/test.sh` green (the new tests in `tess-motion-build.md`).
-2. Record the ten scenes on the simulator, Obsidian and Porcelain.
+2. Record the eleven scenes on the simulator, Obsidian and Porcelain.
 3. `compare.sh` on each; attach `beats.png` and `ssim.txt` to the PR, with the worst frames looked at.
 4. Frame rate and the three Energy Log runs on the device, numbers in the PR.
 5. Design reviews the simulator recordings beat for beat (its item after 58).
