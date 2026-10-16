@@ -409,7 +409,8 @@ function drawMouth(C, scale, frame, mouth, look) {
   if (open < .99) {
     ctx.strokeStyle = rgba(col, .7 * mouth.alpha * (1 - open)); ctx.lineWidth = 1.1 * L; ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.moveTo(cx - w * L, cy + (tilt * .9 - curve * .5) * L);
+    // `tilt` lifts only the right corner; the left never drops, so no corner sits below the middle unless curve < 0.
+    ctx.moveTo(cx - w * L, cy + (-curve * .5) * L);
     ctx.quadraticCurveTo(cx, cy + (curve * 1.7) * L, cx + w * L, cy + (-tilt * .9 - curve * .5) * L);
     ctx.stroke();
   }
@@ -1644,7 +1645,7 @@ IDEAS.mouth = () => {
       },
       mouth: t => {
         const listen = e(t, lis) * (1 - e(t, thk, .2)), think = e(t, thk) * (1 - e(t, ans, .2)), smile = e(t, ans, .3) * (1 - e(t, rel, .6));
-        return { alpha: 1, curve: .2 + .8 * smile, tilt: .7 * think, open: .75 * listen };
+        return { alpha: 1, curve: .2 + .8 * smile, tilt: .4 * think, open: .75 * listen };
       },
     },
   };

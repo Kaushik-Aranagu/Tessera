@@ -61,7 +61,7 @@ knows which things it reads or changes, so the readers go there.
 ### Idea 3: stroke her
 | | |
 |---|---|
-| Gesture | A pan that **starts outside her** 64 pt hit area, inside the band (736 to 820), crosses her and leaves the other side within 700 ms, travelling at least 40 pt. Because it starts off her, it can never be her tap, her hold or her drag (§4). |
+| Gesture | A pan that **starts outside her** 64 pt hit area, inside the band (736 to 820), crosses her and leaves the other side within 700 ms, travelling at least 40 pt. Because it starts off her, it can never be her tap, her hold or her drag (§4). **A pan that starts in the band is always hers; page swipes (sheet 69's peek, swipe for more) start above 736**, so a stroke never opens a page's peek. |
 | What she does | A ripple runs through the paint: each dab is offset by 4 pt × e^(−2.6 k) × sin(0.25 × its x from her centre − 16 k), and y by 0.6 of that on a cosine, for 1.6 s. One blink lands 50 ms after the finger leaves. The eyes look along the stroke (1, 0) while it crosses. The mouth gives a small curve (+0.5) for 900 ms. |
 | Haptic | One soft tick as the finger enters her: `.impact(flexibility: .soft, intensity: 0.3)`. A new case, `.soulStroke`. |
 | Repeats | A second stroke within 1.6 s restarts the ripple with no second tick. |
@@ -70,7 +70,7 @@ knows which things it reads or changes, so the readers go there.
 | `.live` | No. The corner is not a stroke target. |
 | Reduce Motion | No ripple. One blink and the tick. |
 | Low Power | The ripple at 30 fps. |
-| Test | A pan starting on her is not a stroke (it stays drag or hold). A pan from x 280 to x 392 across y 779 in 350 ms is a stroke, with one tick. |
+| Test | A pan starting on her is not a stroke (it stays drag or hold). A pan from x 280 to x 392 across y 779 in 350 ms is a stroke, with one tick. On the recipe page, a band pan from x 380 to x 270 that crosses her is a stroke and doesn't open the peek. |
 
 ### Idea 4: she wears the day
 | | |
@@ -83,6 +83,7 @@ knows which things it reads or changes, so the readers go there.
 | Reduce Motion | The same (colour isn't motion). |
 | Low Power | The same. |
 | Living colour | It multiplies the day's palette (§7). It doesn't replace it. |
+| Not in the clip | In `tess-idea-wear.mp4` the done rows leave holes in the list. That's the prototype only: Home's done stays as built, so builders don't copy it. |
 | Test | Five dones give +0.40. An undone done gives +0.00. At 04:00 she is back to +0.00. |
 
 ## 18c. The mouth (board item 19)
@@ -96,14 +97,14 @@ size it is a pinprick like the eyes).
 | Place | Centred under the eyes: the main dabs' mean + 2.6 pt down. It rides the eyes' glance at 70%. |
 | Size | 5.6 pt wide, 1.1 pt stroke, round caps. |
 | Colour | The eyes' dark pigment at **70%** (the eyes are 82%), so the eyes always lead. |
-| Shapes | One curve with three dials. `curve` is the middle's drop, 1.7 pt at +1 (a small smile), and its ends lift 0.5 pt. `tilt` raises one corner 0.9 pt. `open` rounds it into a soft o, 2.7 × 2.8 pt filled. |
+| Shapes | One curve with three dials. `curve` is the middle's drop, 1.7 pt at +1 (a small smile), and its ends lift 0.5 pt. `tilt` raises only the right corner, 0.9 pt at +1; the left never drops. `open` rounds it into a soft o, 2.7 × 2.8 pt filled. |
 | Down | `curve` goes down only to −0.35, and only for a miss of her own (`claudeFailed`, 1.2 s, then back to rest). **Never a frown at him**: not on UNDO, not on a skipped set, not on a missed habit, not at night. |
 
 | State | curve | tilt | open | Eyes |
 |---|---|---|---|---|
 | Idle / resting | +0.2 | 0 | 0 | ahead |
 | Listening | 0 | 0 | 0.75 | up at him |
-| Thinking (local) | 0 | +0.7 | 0 | aside, toward her line |
+| Thinking (local) | +0.2 | +0.4 (curious, never a smirk) | 0 | aside, toward her line |
 | Working | gone with the eyes when she splits | | | |
 | Her line shown (a reply) | +1.0 for 1.5 s, then relaxes over 600 ms | 0 | 0 | at her line |
 | Done | gone with the eyes (120 ms out, 200 ms back), so Done plays as built | | | |
@@ -123,7 +124,7 @@ size it is a pinprick like the eyes).
 - Build: `SoulMouth` beside `SoulEyes`, drawn in the same overlay and from the same frame (`SoulEyes.centre(of:)` + 2.6 ×
   scale). The router exposes `expression: SoulExpression` (curve, tilt, open), derived from mode plus overlays,
   so no view picks a face. Test: every mode maps to its row above, and no event other than `claudeFailed` produces
-  a negative curve.
+  a corner below the middle.
 
 ## 18d. Sleep (idea 5), she watches what you hold (idea 6), the rest clock (idea 10)
 
@@ -180,7 +181,8 @@ size it is a pinprick like the eyes).
 | | |
 |---|---|
 | Trigger | `wordTyped` from the capture field (a space or punctuation after a letter), while listening. |
-| What she does | One pulse: scale +0.06 over 80 ms, back over 250 ms. The mouth makes a 0.3 open blip in step. There's no glow or haptic. |
+| What she does | One pulse: scale +0.06 over 80 ms, back over 250 ms. There's no glow or haptic. |
+| Mouth | At rest. It never mouths his words (18c: the mouth never talks). |
 | Rate | At most one pulse per 180 ms. Faster typing merges pulses, so it never reads as a typing indicator. |
 | Eyes off | The pulse only. |
 | Reduce Motion | No pulse. Nothing. |
