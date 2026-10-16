@@ -30,9 +30,8 @@ Every key is a painted stroke word, not a button. **Tess** is the soul in the co
    in daytime: the word becomes "Lacquer" and the page does not change.
 5. **Pin one.** [#199, #203] Hold a name for half a second. Expect a firmer haptic and "**Obsidian** always." with
    "Hold it again to follow light and dark mode." Hold again: the sentence opens back out, the look in its own slot.
-6. **The workout follows the look.** [#203, #207; changing per his 8:25 PM call] With Porcelain by day, start a workout.
-   Expect the same white base as Home, with only the workout's layers on top. If the build still shows a plum-black
-   ground, the fix is queued for Builder A, so no need to report it.
+6. **The workout follows the look.** [#203, #207, #266] With Porcelain by day, start a workout. Expect the same
+   white base as Home, with only the workout's layers on top. Flip to Obsidian and it follows.
 7. **The workout holds its look.** [#203, #207] Mid-workout, flip Dark Mode. Expect: the workout does not change
    until you finish or close it; Home then shows the night look.
 8. **Out of a workout, back to white.** [#215] Phone in Light, nothing pinned. Start a workout, tap an exercise name
