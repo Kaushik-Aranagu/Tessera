@@ -191,6 +191,40 @@ public struct EndProcess: EngineAction {
     }
 }
 
+/// The empty wrap-up as one step (QA P1): the process ends and the workout with no sets goes, in one op record, so
+/// UNDO brings both back. Undoing only the delete left an open workout with no process that caught later sets unseen.
+public struct DiscardEmptyWorkout: EngineAction {
+    public static let descriptor = ActionDescriptor(
+        name: "discardEmptyWorkout",
+        summary: "Close a workout with no sets without saving it",
+        parameters: [
+            .init("process", .object, "The workout's process"),
+            .init("workout", .object, "The workout"),
+            .init("time", .date, "Defaults to now", required: false),
+        ],
+        isDestructive: true
+    )
+
+    public var process: UUID
+    public var workout: UUID
+    public var time: Date?
+
+    public init(process: UUID, workout: UUID, time: Date? = nil) {
+        self.process = process
+        self.workout = workout
+        self.time = time
+    }
+
+    public func apply(_ transaction: inout Transaction) throws {
+        try EndProcess(process: process, reason: .wrappedUp, time: time).apply(&transaction)
+        try DeleteObject(object: workout).apply(&transaction)
+    }
+
+    public func summary(in store: ObjectStore) -> String {
+        "\(store.object(id: workout).map { store.displayTitle(of: $0) } ?? "Workout"), no sets, not saved"
+    }
+}
+
 // MARK: Transaction helpers
 
 extension Transaction {

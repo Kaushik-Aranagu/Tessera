@@ -22,7 +22,7 @@ public final class TessModelCapture: TessModelCapturing {
         // The same tools Claude gets (TessTools), converted to the on-device schema.
         let tools = TessTools.all.map { tool in
             CatalogTool(tool: tool, engine: engine, pending: !context.commitImmediately, now: context.now,
-                        recorder: recorder)
+                        calendar: context.calendar, recorder: recorder)
         }
         let session = LanguageModelSession(
             model: model,
@@ -98,15 +98,19 @@ struct CatalogTool: Tool {
     private let engine: ActionEngine
     private let pending: Bool
     private let now: Date
+    private let calendar: Calendar
     private let recorder: TessToolRecorder
 
     @MainActor
-    init(tool: TessTools.Tool, engine: ActionEngine, pending: Bool, now: Date, recorder: TessToolRecorder) {
+    init(tool: TessTools.Tool, engine: ActionEngine, pending: Bool, now: Date, calendar: Calendar,
+         recorder: TessToolRecorder)
+    {
         name = tool.name
         description = tool.description
         self.engine = engine
         self.pending = pending
         self.now = now
+        self.calendar = calendar
         self.recorder = recorder
         parameters = (try? GenerationSchema(root: Self.dynamic(tool.input, name: tool.name,
                                                                summary: tool.description), dependencies: []))
@@ -146,7 +150,7 @@ struct CatalogTool: Tool {
     private func perform(_ json: String) -> String {
         do {
             let records = try TessTools.run(name, arguments: Data(json.utf8), engine: engine, pending: pending,
-                                            now: now)
+                                            now: now, calendar: calendar)
             recorder.records += records
             return "Done: " + records.map(\.summary).joined(separator: "; ")
         } catch let answer as TessToolAnswer {
