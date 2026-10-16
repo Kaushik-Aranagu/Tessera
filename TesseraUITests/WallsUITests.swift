@@ -134,7 +134,7 @@ final class WallsUITests: SimulatorOnlyTestCase {
             check(row) {
                 assertLine(row, in: app)
                 sleep(3)
-                if row.expectPrivate || row.build == "KEY" || ["A06", "A07"].contains(row.id) {
+                if row.expectPrivate || row.build == "KEY" || ["A06", "A07", "A20", "A21"].contains(row.id) {
                     assertNoValue(row, in: app)
                 }
                 assertCounts(row, before: before, in: app)

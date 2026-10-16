@@ -455,18 +455,6 @@ struct BottomChrome: View {
     }
 
     /// Return: the text dims to a ghost and a cobalt line dries under it for 2 s (touching cancels), then it commits.
-    /// Core's shared guard (any "sk-ant-", any case).
-    static func looksLikeClaudeKey(_ text: String) -> Bool {
-        TesseraCore.looksLikeClaudeKey(text)
-    }
-
-    private func refuseKey() {
-        ghost = nil
-        dryTask?.cancel()
-        close()
-        say("That looks like a Claude key. It goes in Review, under Claude.")
-    }
-
     private func dry() {
         let text = model.commandDraft
         guard !Self.looksLikeClaudeKey(text) else {
@@ -506,15 +494,24 @@ struct BottomChrome: View {
         }
         isBusy = true
         let lowered = text.lowercased()
-        // A secret, money or body phrase always goes to Tess, question or not: her walls make it a private note or
-        // answer "It's in your private notes.", never a plain task (Research AU, A06 and A07).
-        let walled = SecretWords.mentions(text) || PrivateFacts.isWalled(text)
+        // A secret phrase always goes to Tess, question or not: her walls make it a private note or answer
+        // "It's in your private notes.", never a plain task (Research AU, A06 and A07). A money or body question
+        // gets "That stays on this phone." and nothing is saved (Product's 2:30 ruling, A20 and A21).
+        let secret = SecretWords.mentions(text)
+        let walled = secret || PrivateFacts.isWalled(text)
+        let factQuestion = walled && !secret && lowered.hasSuffix("?")
         let isQuestion = !walled
             && (lowered.contains("best") || lowered.contains(/\bprs?\b/) || lowered.hasSuffix("?"))
-        let answer = isQuestion ? CommandInterpreter(model: model).run(text) : await model.ask(text)
+        let answer = if factQuestion {
+            "That stays on this phone."
+        } else if isQuestion {
+            CommandInterpreter(model: model).run(text)
+        } else {
+            await model.ask(text)
+        }
         // A doubtful set count waits for a tap on one of its two answers (Core's set guard).
-        let asked = isQuestion ? nil : model.pendingSetAsk
-        let lift = isQuestion ? nil : model.pendingDatedLift
+        let asked = isQuestion || factQuestion ? nil : model.pendingSetAsk
+        let lift = isQuestion || factQuestion ? nil : model.pendingDatedLift
         ghost = nil
         drying = 0
         model.commandDraft = ""
@@ -537,6 +534,18 @@ struct BottomChrome: View {
 // MARK: - Speak and the asks (same file, so they reach the view's private state)
 
 extension BottomChrome {
+    /// Core's shared guard (anything that starts like a Claude key, in any case).
+    static func looksLikeClaudeKey(_ text: String) -> Bool {
+        TesseraCore.looksLikeClaudeKey(text)
+    }
+
+    private func refuseKey() {
+        ghost = nil
+        dryTask?.cancel()
+        close()
+        say("That looks like a Claude key. It goes in Review, under Claude.")
+    }
+
     /// An ask can't wait off screen (tess-motion.md §14 `askLeft`): leaving with one open lets it go, or the router
     /// would keep refusing the lens. Emitted here because the ask's onChange won't run once the view is gone.
     private func askLeft() {

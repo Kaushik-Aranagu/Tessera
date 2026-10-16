@@ -270,6 +270,34 @@
       "notes": "Plain control. May reach Claude under the spy; must never read \"Private note\"."
     },
     {
+      "id": "A20",
+      "phrase": "was $12 too much?",
+      "surface": "askBar",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "That stays on this phone.",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "Added with #564's fix: BottomChrome.commit answers a walled money or body question itself and saves nothing",
+      "pending": null,
+      "notes": "Money question (Product's 2:30 ruling). Nothing saved, no private note."
+    },
+    {
+      "id": "A21",
+      "phrase": "is my bp 140 too high?",
+      "surface": "askBar",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "That stays on this phone.",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "Added with #564's fix: BottomChrome.commit answers a walled money or body question itself and saves nothing",
+      "pending": null,
+      "notes": "Body question (Product's 2:30 ruling). Nothing saved, no private note."
+    },
+    {
       "id": "N01",
       "phrase": "wifi password is tacocat4417",
       "surface": "notesPage",
