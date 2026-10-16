@@ -114,3 +114,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [claude-first-uses.md](claude-first-uses.md) | Core + Builder B: first three Claude uses, screen lines, cost, fallbacks, gating |
 | [fixtures/reminders.md](fixtures/reminders.md) | Core: 40 reminder phrases with expected parse, alerts flag, no-permission line, model routing |
 | [decisions-index.md](decisions-index.md) | Product: Oct 15 decisions by area with pointers, 13 contradictions flagged |
+| [week-one-checkin.md](week-one-checkin.md) | Product, Core: first-week morning check-in from the iCloud backup copy (7 queries, 3 warning signs) |
