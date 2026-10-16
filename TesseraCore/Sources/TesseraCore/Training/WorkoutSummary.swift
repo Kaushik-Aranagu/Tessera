@@ -26,11 +26,11 @@ public struct WorkoutSummary: Identifiable {
         return endedAt.timeIntervalSince(startedAt)
     }
 
-    /// Tess's line: "6 of 6 exercises, 22 sets, 1 record." Counts, never judgement.
+    /// Tess's line: "6 of 6 exercises, 22 sets, 1 best." Counts, never judgement ("best", not "record": Product).
     public var line: String {
         var parts = ["\(exercisesDone) of \(exercisesPlanned) exercises", "\(sets) \(sets == 1 ? "set" : "sets")"]
         if !records.isEmpty {
-            parts.append("\(records.count) \(records.count == 1 ? "record" : "records")")
+            parts.append("\(records.count) \(records.count == 1 ? "best" : "bests")")
         }
         return parts.joined(separator: ", ") + "."
     }

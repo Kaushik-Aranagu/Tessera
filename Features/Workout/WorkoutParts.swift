@@ -245,17 +245,7 @@ enum WorkoutLines {
         if let from = session.swappedFrom, let entry = session.currentEntry, session.setRows(of: entry).isEmpty {
             return "\(SwapPanel.short(from)) stays in the plan."
         }
-        // The subline carries the numbers; Tess says what it would mean, once, quietly.
-        if let hint = session.recordHint {
-            let reps = hint.kinds.compactMap { kind -> Int? in
-                if case let .repMax(count) = kind {
-                    return count
-                }
-                return nil
-            }.first
-            let name = session.currentExercise?.name.lowercased() ?? "lift"
-            return reps.map { "Best \($0)-rep \(name) yet, if it goes." } ?? "Best e1RM yet, if it goes."
-        }
+        // Nothing is said about a best before the set; it's said once logged ("New best: …", 56 addendum).
         if let note = session.restNote, note.hasPrefix("Skipped") {
             return note
         }
