@@ -33,8 +33,9 @@ public final class ActionEngine {
 
     /// Set by Tess's router while one route runs, so the ops it performs record which route and model did them.
     public var attribution: (route: OpRoute, model: String?)?
-    /// The zone stamped on each record; the device's current zone unless a test sets it.
-    public var zone: () -> TimeZone = { TimeZone.current }
+    /// The zone stamped on each record: the device's zone now (autoupdating, so a flight is seen without a relaunch;
+    /// QA Z1), unless a test sets it.
+    public var zone: () -> TimeZone = { TimeZone.autoupdatingCurrent }
 
     // MARK: Performing
 
