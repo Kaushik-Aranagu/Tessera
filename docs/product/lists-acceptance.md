@@ -74,7 +74,7 @@
 - Holding the hero does nothing unless Pick one is on (then it picks, see 12).
 - Swiping between lists pages horizontally with the hero parallax; the page stays one screen tall with a bounded item window.
 - A running list shows the lit vermilion seam at the top.
-- The fold is pinned at the bottom: tap to open and restore, hold 0.7 s to clear done. On a reusable list it reads "N done · hold to reset" and the strikes un-paint right to left while held.
+- The fold is pinned at the bottom: tap to open and restore, hold 0.7 s to clear done. On a reusable list it reads "N done. Hold to reset." (no dot between) and the strikes un-paint right to left while held.
 
 ## 11. An item, opened (screen)
 - Zoom transition from the item row; the back word returns.
