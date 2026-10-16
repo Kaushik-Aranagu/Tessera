@@ -204,4 +204,21 @@ struct HomeDataTests {
         #expect(DrainBar.remaining(start: start, end: end, now: start.addingTimeInterval(900)) == 0.75)
         #expect(DrainBar.remaining(start: start, end: end, now: end.addingTimeInterval(60)) == 0)
     }
+
+    /// His day runs to 04:00 (Research, home-lines-day-one.md): at 00:40 Sunday the day word is still Saturday's.
+    @Test func dayLabelKeepsTheDayUntilFour() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "America/Los_Angeles"))
+        // Sunday 18 Oct 2026, 00:40.
+        let late = try #require(calendar.date(from: DateComponents(
+            year: 2026,
+            month: 10,
+            day: 18,
+            hour: 0,
+            minute: 40
+        )))
+        #expect(DayLabel.words(now: late, calendar: calendar).hasPrefix("Saturday"))
+        let morning = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 18, hour: 9)))
+        #expect(DayLabel.words(now: morning, calendar: calendar).hasPrefix("Sunday"))
+    }
 }

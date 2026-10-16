@@ -97,8 +97,14 @@ struct HomeHeroText: View {
 struct DayLabel: View {
     let now: Date
 
+    /// His day runs 04:00 to 04:00, so at 00:40 Sunday it is still Saturday night.
+    static func words(now: Date, calendar: Calendar = .current) -> String {
+        let day = TesseraDay(calendar: calendar).today(now)
+        return DayLane(offset: 0, date: day, items: []).phrase(now: now, calendar: calendar)
+    }
+
     var body: some View {
-        Text(DayLane(offset: 0, date: now, items: []).phrase(now: now))
+        Text(Self.words(now: now))
             .textRole(.body)
             .foregroundStyle(Theme.Colors.ink)
             .accessibilityAddTraits(.isHeader)
