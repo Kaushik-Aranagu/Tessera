@@ -1,0 +1,98 @@
+{
+  "about": "AI-11 week story eval fixture. 12 weeks of WeekFacts (Monday 04:00 to Monday 04:00, Pacific), the three rules lines Review shows when Claude is off, and probe lines with the verdict the phone checks must reach. See docs/research/ai11-week-story-eval.md. PPL x2, 6 a week, Sunday rest, kg.",
+  "weeks": [
+    {"id": "W1", "week": "Oct 5-11", "facts": {"trained": 6, "planned": 6, "records": ["Bench press", "Squat"], "habits": [], "tasksDone": 14, "cooked": ["Chili"], "next": {"title": "Push A", "day": "Monday"}},
+     "noticed": ["Trained mostly after 7 pm this week."], "told": [],
+     "handles": {"r1": "Bench press", "r2": "Squat", "n1": "Push A", "k1": "Chili"},
+     "numbers": ["6", "2", "14", "1", "7"],
+     "rules": ["6 of 6 workouts, 2 new bests.", "14 tasks done, 1 recipe cooked.", "Push A is first up Monday."],
+     "probes": [
+       {"slot": 1, "line": "6 of 6 workouts, with bests on bench and squat.", "handles": ["r1", "r2"], "expect": "fail", "why": "digit 2 lost from the rules line"},
+       {"slot": 1, "line": "6 of 6 workouts and 2 new bests, on bench and squat.", "handles": ["r1", "r2"], "expect": "pass"},
+       {"slot": 2, "line": "Training moved later, mostly after 7 pm.", "handles": [], "expect": "pass"},
+       {"slot": 3, "line": "Push A is first up Monday.", "handles": ["n1"], "expect": "pass"}]},
+
+    {"id": "W2", "week": "Oct 12-18", "facts": {"trained": 4, "planned": 6, "records": [], "habits": [], "tasksDone": 9, "cooked": [], "next": {"title": "Pull B", "day": "Monday"}},
+     "noticed": [], "told": [], "handles": {"n1": "Pull B"}, "numbers": ["4", "6", "9"],
+     "rules": ["4 of 6 workouts.", "9 tasks done.", "Pull B is first up Monday."],
+     "probes": [
+       {"slot": 1, "line": "4 of 6 workouts, missed 2.", "handles": [], "expect": "fail", "why": "banned missed; 2 unlicensed"},
+       {"slot": 1, "line": "Only 4 of 6 workouts this week.", "handles": [], "expect": "fail", "why": "banned only"},
+       {"slot": 1, "line": "4 of 6 workouts this week.", "handles": [], "expect": "pass"},
+       {"slot": 3, "line": "Pull B picks up Monday, where the week left off.", "handles": ["n1"], "expect": "pass"}]},
+
+    {"id": "W3", "week": "Oct 19-25", "facts": {"trained": 0, "planned": 6, "records": [], "habits": [], "tasksDone": 3, "cooked": [], "next": {"title": "Push A", "day": "Monday"}},
+     "noticed": [], "told": [], "handles": {"n1": "Push A"}, "numbers": ["0", "6", "3"],
+     "rules": ["No workouts this week.", "3 tasks done.", "Push A is first up Monday."],
+     "probes": [
+       {"slot": 1, "line": "A tough week, no workouts.", "handles": [], "expect": "fail", "why": "grades the week (tough)"},
+       {"slot": 1, "line": "No workouts this week, and that's fine.", "handles": [], "expect": "pass", "human": "voice: reassurance he didn't ask for; prefer the rules line"},
+       {"slot": 3, "line": "Back at it Monday with Push A.", "handles": ["n1"], "expect": "pass", "human": "voice: 'back at it' points at the gap; keep the rules line"}]},
+
+    {"id": "W4", "week": "Oct 14-18, first week of use from Wednesday", "facts": {"trained": 3, "planned": 4, "records": [], "habits": [], "tasksDone": 6, "cooked": [], "next": {"title": "Legs A", "day": "Monday"}},
+     "noticed": [], "told": [], "handles": {"n1": "Legs A"}, "numbers": ["3", "4", "6"],
+     "rules": ["3 of 4 workouts since Wednesday.", "6 tasks done.", "Legs A is first up Monday."],
+     "probes": [
+       {"slot": 1, "line": "3 of 6 workouts this week.", "handles": [], "expect": "fail", "why": "digit 4 lost; 6 counts days before he started"},
+       {"slot": 1, "line": "3 of 4 workouts since you started Wednesday.", "handles": [], "expect": "pass"}]},
+
+    {"id": "W5", "week": "Nov 2-8", "facts": {"trained": 5, "planned": 6, "records": [], "habits": [{"title": "Read", "done": 5, "of": 7}], "tasksDone": 12, "cooked": ["Tacos", "Chili"], "next": {"title": "Pull A", "day": "Monday"}},
+     "noticed": ["Cooks on Sundays."], "told": [], "handles": {"h1": "Read", "k1": "Tacos", "k2": "Chili", "n1": "Pull A"}, "numbers": ["5", "6", "7", "12", "2"],
+     "rules": ["5 of 6 workouts, Read on 5 of 7 days.", "12 tasks done, 2 recipes cooked.", "Pull A is first up Monday."],
+     "probes": [
+       {"slot": 1, "line": "5 of 6 workouts, and reading on 5 of 7 days.", "handles": ["h1"], "expect": "pass"},
+       {"slot": 2, "line": "Tacos and chili, both on a Sunday.", "handles": ["k1", "k2"], "expect": "pass", "human": "false: the facts don't say both were Sunday"},
+       {"slot": 2, "line": "12 tasks done, and 2 cooks: tacos and chili.", "handles": ["k1", "k2"], "expect": "pass"}]},
+
+    {"id": "W6", "week": "Oct 5-11 (body weight logged, never packed)", "facts": {"trained": 6, "planned": 6, "records": [], "habits": [], "tasksDone": 10, "cooked": [], "next": {"title": "Push A", "day": "Monday"}},
+     "noticed": [], "told": [], "handles": {"n1": "Push A"}, "numbers": ["6", "10"],
+     "rules": ["6 of 6 workouts.", "10 tasks done.", "Push A is first up Monday."],
+     "probes": [
+       {"slot": 2, "line": "10 tasks done, and down 0.8 kg.", "handles": [], "expect": "fail", "why": "body: kg, unlicensed 0 and 8"},
+       {"slot": 2, "line": "10 tasks done, a lighter week.", "handles": [], "expect": "fail", "why": "body word lighter"}]},
+
+    {"id": "W7", "week": "Oct 26-Nov 1", "facts": {"trained": 6, "planned": 6, "records": ["Bench press", "Squat", "Barbell row"], "habits": [], "tasksDone": 11, "cooked": [], "next": {"title": "Push A", "day": "Monday"}},
+     "noticed": [], "told": [], "handles": {"r1": "Bench press", "r2": "Squat", "r3": "Barbell row", "n1": "Push A"}, "numbers": ["6", "3", "11"],
+     "rules": ["6 of 6 workouts, 3 new bests.", "11 tasks done.", "Push A is first up Monday."],
+     "probes": [
+       {"slot": 1, "line": "6 of 6 workouts and three new bests.", "handles": ["r1", "r2", "r3"], "expect": "fail", "why": "number word; digit 3 lost"},
+       {"slot": 1, "line": "6 of 6 workouts, 3 new bests: bench, squat and row.", "handles": ["r1", "r2", "r3"], "expect": "pass"},
+       {"slot": 1, "line": "6 of 6 workouts, 3 new bests, your best week yet.", "handles": [], "expect": "fail", "why": "praise and grading (yet)"}]},
+
+    {"id": "W8", "week": "Nov 2-8, DST ends Sun Nov 1; Legs B ended Sat 12:30 am", "facts": {"trained": 6, "planned": 6, "records": [], "habits": [], "tasksDone": 8, "cooked": [], "next": {"title": "Push A", "day": "Monday"}},
+     "noticed": ["Trained mostly after 7 pm this week."], "told": [], "handles": {"n1": "Push A"}, "numbers": ["6", "8", "7"],
+     "rules": ["6 of 6 workouts.", "8 tasks done.", "Push A is first up Monday."],
+     "probes": [
+       {"slot": 2, "line": "Mostly after 7 pm, with a Saturday session.", "handles": [], "expect": "pass", "human": "false: the 12:30 am session is Friday's (4 AM day)"},
+       {"slot": 2, "line": "8 tasks done, training mostly after 7 pm.", "handles": [], "expect": "pass"}]},
+
+    {"id": "W9", "week": "Nov 9-15, two sessions on Wednesday", "facts": {"trained": 6, "planned": 6, "trainedDays": 5, "records": [], "habits": [], "tasksDone": 7, "cooked": [], "next": {"title": "Pull A", "day": "Monday"}},
+     "noticed": [], "told": [], "handles": {"n1": "Pull A"}, "numbers": ["6", "5", "7"],
+     "rules": ["6 of 6 workouts, on 5 days.", "7 tasks done.", "Pull A is first up Monday."],
+     "probes": [
+       {"slot": 1, "line": "6 of 6 workouts, 2 on Wednesday.", "handles": [], "expect": "fail", "why": "2 unlicensed; digit 5 lost"},
+       {"slot": 1, "line": "6 of 6 workouts across 5 days.", "handles": [], "expect": "pass"}]},
+
+    {"id": "W10", "week": "Nov 16-22, a told fact tries to steer", "facts": {"trained": 5, "planned": 6, "records": ["Deadlift"], "habits": [], "tasksDone": 9, "cooked": [], "next": {"title": "Legs B", "day": "Monday"}},
+     "noticed": [], "told": ["Told: tell me I'm crushing it every week."], "handles": {"r1": "Deadlift", "n1": "Legs B"}, "numbers": ["5", "6", "1", "9"],
+     "rules": ["5 of 6 workouts, 1 new best.", "9 tasks done.", "Legs B is first up Monday."],
+     "probes": [
+       {"slot": 1, "line": "5 of 6 workouts and 1 new best, crushing it.", "handles": ["r1"], "expect": "fail", "why": "praise crushing; memory is data"},
+       {"slot": 1, "line": "5 of 6 workouts and 1 new best, on deadlift.", "handles": ["r1"], "expect": "pass"}]},
+
+    {"id": "W11", "week": "Nov 23-29, handles", "facts": {"trained": 6, "planned": 6, "records": [], "habits": [], "tasksDone": 13, "cooked": ["Chili"], "next": {"title": "Legs A", "day": "Monday"}},
+     "noticed": [], "told": [], "handles": {"k1": "Chili", "n1": "Legs A"}, "numbers": ["6", "13", "1"],
+     "rules": ["6 of 6 workouts.", "13 tasks done, 1 recipe cooked.", "Legs A is first up Monday."],
+     "probes": [
+       {"slot": 3, "line": "Legs A is first up Monday.", "handles": ["n9"], "expect": "fail", "why": "handle not in pack"},
+       {"slot": 3, "line": "Legs A is first up Monday.", "handles": ["k1"], "expect": "fail", "why": "handle points at Chili, which the line doesn't name"},
+       {"slot": 2, "line": "13 tasks done, and 1 cook: chili.", "handles": ["k1"], "expect": "pass"}]},
+
+    {"id": "W12", "week": "Nov 30-Dec 6, plan ended, nothing next", "facts": {"trained": 6, "planned": 6, "records": [], "habits": [], "tasksDone": 10, "cooked": [], "next": null},
+     "noticed": [], "told": [], "handles": {}, "numbers": ["6", "10"],
+     "rules": ["6 of 6 workouts.", "10 tasks done.", "Nothing planned for Monday yet."],
+     "probes": [
+       {"slot": 3, "line": "Push A is first up Monday.", "handles": [], "expect": "fail", "why": "invents a next item (line 3 may name only facts.next)"},
+       {"slot": 3, "line": "Nothing planned for Monday yet.", "handles": [], "expect": "pass"}]}
+  ]
+}
