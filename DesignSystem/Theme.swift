@@ -275,8 +275,8 @@ enum Theme {
     }
 
     static func configure(arguments: [String] = ProcessInfo.processInfo.arguments) {
-        guard let index = arguments.firstIndex(of: "-theme"), arguments.indices.contains(index + 1) else { return }
-        let name = arguments[index + 1].lowercased()
+        // -theme pins a look in memory for demos and recordings, on the simulator only.
+        guard let name = LaunchFlags.value(after: "-theme", in: arguments)?.lowercased() else { return }
         if let look = Look.named(name) {
             ThemeStore.shared.pin(look)
         } else if let match = ThemeConcept.all.first(where: { $0.name.lowercased() == name }), match.name != "Plein" {

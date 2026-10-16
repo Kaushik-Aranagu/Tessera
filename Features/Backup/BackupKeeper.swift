@@ -53,7 +53,7 @@ enum BackupKeeper {
     #if DEBUG
         /// `-backupFailure`: a failed iPhone copy, to see the quiet line.
         static func simulateFailureIfRequested() {
-            guard ProcessInfo.processInfo.arguments.contains("-backupFailure") else { return }
+            guard LaunchFlags.has("-backupFailure") else { return }
             note(.iPhone, error: CocoaError(.fileWriteOutOfSpace), now: AppClock.now)
         }
     #endif

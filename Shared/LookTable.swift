@@ -10,6 +10,10 @@ struct RestPalette: Hashable {
     var rest: UInt32
     var tess: UInt32
     var context: UInt32
+    /// The Lock Screen's tint strength and how strongly the sky washes show.
+    var tintAlpha: Double = 1
+    var skyLeft = 0.35
+    var skyRight = 0.45
 
     static let porcelain = RestPalette(ground: 0x14111A, ink: 0xF5F2EC, signal: 0xFF5B3A, rest: 0xF0A500,
                                        tess: 0x8FB0FF, context: 0x6A4C9C)
@@ -21,6 +25,10 @@ struct RestPalette: Hashable {
                                      tess: 0x8DB2FF, context: 0xC3A6DE)
     static let celadon = RestPalette(ground: 0x0E1C17, ink: 0xEEF3EF, signal: 0xEE7056, rest: 0xE2A93A,
                                      tess: 0x9DBBEA, context: 0x456680)
+
+    /// Kaushik's Lock Screen pick (2026-10-15, live-activity.md): Cobalt sky, in every look.
+    static let cobaltSky = RestPalette(ground: 0x120E1A, ink: 0xF6EFE4, signal: 0xE2603F, rest: 0xE8BD4C,
+                                       tess: 0x3F7FC0, context: 0x7A5CA0, tintAlpha: 0.46, skyLeft: 0.75, skyRight: 0.45)
 
     static func named(_ name: String?) -> RestPalette? {
         switch name?.lowercased() {
@@ -48,7 +56,7 @@ struct RestPalette: Hashable {
     }
 
     var materialTint: Color {
-        Color(rgb: ground)
+        Color(rgb: ground).opacity(tintAlpha)
     }
 
     /// Go: the sky warms to rest and signal.
@@ -62,11 +70,11 @@ struct RestPalette: Hashable {
 
     /// The rest sky: Workout.tess at 35% top-left, context at 45% top-right.
     var wash1: Color {
-        Color(rgb: tess).opacity(0.35)
+        Color(rgb: tess).opacity(skyLeft)
     }
 
     var wash2: Color {
-        Color(rgb: context).opacity(0.45)
+        Color(rgb: context).opacity(skyRight)
     }
 
     var line: Color {

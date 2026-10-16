@@ -137,7 +137,7 @@ struct PasteRecipe: View {
         #if DEBUG
             // `-pasteDemo`: lands a recipe as if pasted, for recordings.
             .task {
-                guard ProcessInfo.processInfo.arguments.contains("-pasteDemo"), text.isEmpty else { return }
+                guard LaunchFlags.has("-pasteDemo"), text.isEmpty else { return }
                 try? await Task.sleep(for: .seconds(1.2))
                 text = KitchenDemo.dal
             }

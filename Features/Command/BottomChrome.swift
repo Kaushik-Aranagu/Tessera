@@ -79,7 +79,7 @@ struct BottomChrome: View {
             model.tessMode = restingOrIdle
             breathe = !reduceMotion
             #if DEBUG
-                if ProcessInfo.processInfo.arguments.contains("-tessScript") {
+                if LaunchFlags.has("-tessScript") {
                     playScript()
                 }
             #endif

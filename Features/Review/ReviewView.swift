@@ -324,7 +324,7 @@ private struct ReviewLine: View {
     @MainActor
     enum ReviewDemo {
         static func seedIfRequested(_ model: AppModel) {
-            guard ProcessInfo.processInfo.arguments.contains("-demoReview") else { return }
+            guard LaunchFlags.has("-demoReview") else { return }
             let tasks = TaskList(store: model.store, classes: model.classes)
             let open = tasks.all().filter { !$0.isDone }
             guard open.count >= 3, NoteList(store: model.store, classes: model.classes).recent().isEmpty else { return }

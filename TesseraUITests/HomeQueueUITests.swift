@@ -3,7 +3,7 @@ import XCTest
 /// Real touches on Today's queue (QA Q1): a page swipe over a row pages Home and leaves the task alone; a
 /// deliberate press-then-drag finishes it. Runs from the TesseraUITests scheme, not scripts/test.sh.
 @MainActor
-final class HomeQueueUITests: XCTestCase {
+final class HomeQueueUITests: SimulatorOnlyTestCase {
     override func setUp() {
         continueAfterFailure = false
     }

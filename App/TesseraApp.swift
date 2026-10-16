@@ -26,8 +26,7 @@ struct TesseraApp: App {
         }
         let model = AppModel(context: container.mainContext)
         // Fake history only when asked for (simulator, recordings): never on Kaushik's phone.
-        let arguments = ProcessInfo.processInfo.arguments
-        if DemoData.isAllowed, arguments.contains("-demo") || arguments.contains("-resetDemo") {
+        if LaunchFlags.has("-demo") || LaunchFlags.has("-resetDemo") {
             DemoData.prepare(model)
         }
         _model = State(initialValue: model)
@@ -43,24 +42,24 @@ struct TesseraApp: App {
         WindowGroup {
             Group {
                 #if DEBUG
-                    if ProcessInfo.processInfo.arguments.contains("-soulGallery") {
+                    if LaunchFlags.has("-soulGallery") {
                         SoulGallery()
-                    } else if ProcessInfo.processInfo.arguments.contains("-notes") {
+                    } else if LaunchFlags.has("-notes") {
                         NotesView()
-                    } else if ProcessInfo.processInfo.arguments.contains("-review") {
+                    } else if LaunchFlags.has("-review") {
                         ReviewView()
-                    } else if ProcessInfo.processInfo.arguments.contains("-groceries") {
+                    } else if LaunchFlags.has("-groceries") {
                         GroceriesView()
-                    } else if ProcessInfo.processInfo.arguments.contains("-looks") {
+                    } else if LaunchFlags.has("-looks") {
                         LookSentence()
                             .padding(Theme.Spacing.gutter)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .background { ThemedBackground() }
-                    } else if ProcessInfo.processInfo.arguments.contains("-backup") {
+                    } else if LaunchFlags.has("-backup") {
                         BackupView()
-                    } else if ProcessInfo.processInfo.arguments.contains("-recipe") {
+                    } else if LaunchFlags.has("-recipe") {
                         RecipeView(recipeID: nil)
-                    } else if ProcessInfo.processInfo.arguments.contains("-pasteRecipe") {
+                    } else if LaunchFlags.has("-pasteRecipe") {
                         PasteRecipeView()
                     } else {
                         RootView()

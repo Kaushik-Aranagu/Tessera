@@ -7,18 +7,15 @@ import TesseraCore
 enum DemoData {
     /// Demo data exists only on the simulator: the build that goes on his phone from Xcode is a Debug build, so
     /// `#if DEBUG` alone can't keep a ticked -resetDemo from wiping his history (settings-object.md).
-    static var isAllowed: Bool {
-        #if targetEnvironment(simulator)
-            true
-        #else
-            false
-        #endif
+    nonisolated static var isAllowed: Bool {
+        LaunchFlags.allowed
     }
 
     static func prepare(_ model: AppModel, arguments: [String] = ProcessInfo.processInfo.arguments,
                         allowed: Bool = DemoData.isAllowed)
     {
-        guard allowed else { return }
+        // A caller can narrow it (tests), never widen it: off the simulator nothing here runs.
+        guard allowed, LaunchFlags.allowed else { return }
         if arguments.contains("-resetDemo") {
             reset(model)
         }

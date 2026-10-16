@@ -52,9 +52,8 @@ struct HomeSpatialView: View {
     @MainActor private static var remembered: Int = {
         #if DEBUG
             // `-homePage review|today|training|kitchen` opens Home on that page (for recordings).
-            let arguments = ProcessInfo.processInfo.arguments
-            if let index = arguments.firstIndex(of: "-homePage"), index + 1 < arguments.count,
-               let page = Page.allCases.first(where: { arguments[index + 1] == "\($0)" })
+            if let value = LaunchFlags.value(after: "-homePage"),
+               let page = Page.allCases.first(where: { value == "\($0)" })
             {
                 return page.rawValue
             }
@@ -110,9 +109,8 @@ struct HomeSpatialView: View {
                 position.scrollTo(id: Self.remembered)
                 #if DEBUG
                     // `-openLink notes|recipes|groceries|review` opens that screen the way its Home word does.
-                    let arguments = ProcessInfo.processInfo.arguments
-                    if let index = arguments.firstIndex(of: "-openLink"), index + 1 < arguments.count,
-                       let link = HomeLink.allCases.first(where: { arguments[index + 1] == "\($0)" })
+                    if let value = LaunchFlags.value(after: "-openLink"),
+                       let link = HomeLink.allCases.first(where: { value == "\($0)" })
                     {
                         Task { @MainActor in
                             try? await Task.sleep(for: .seconds(1.5))
