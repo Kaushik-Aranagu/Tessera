@@ -13,6 +13,7 @@
 2. Review the remaining older merges: Tess engine, processes and What's running (App Intents + HealthKit done, #428).
 3. Read Builder A's v9 gate run on the pin SHA against `docs/research/next-build-script.md` rows M0 to M4, including the timed v5 restore (+0.7 s before number).
 4. Re-review #407 after its rebase to Catalog v10, with #403, once the pin is named.
+5. CA5 (Research 145, recipe in `docs/research/claude-requests-audit.md`): a stub URLProtocol in a test target that writes each Claude request body to a file you can grep, then use it to check MU2's wall.
 
 **Done:** #46 to #58 reviewed (#64), grammar traced (#67), hotfix #70 checked and #40 to #45 reviewed (#77), the gym, kitchen and regression checks written for the Mac leads (#63), and the data-safety review (D1–D4, merged as #79).
 
