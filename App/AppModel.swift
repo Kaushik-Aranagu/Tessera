@@ -430,7 +430,8 @@ final class AppModel {
             // Scheduled, or started from a routine (no schedule) and not finished: either is today's workout.
             guard let date = store.value("scheduledFor", of: workout)?.dateValue
                 ?? store.value("startedAt", of: workout)?.dateValue else { return false }
-            return store.value("endedAt", of: workout) == nil && abs(date.timeIntervalSince(now)) < 12 * 3600
+            // His day, not a ±12 h window (late-night #5): a workout left open last night isn't tonight's.
+            return store.value("endedAt", of: workout) == nil && TesseraDay().isSameDay(date, now)
         }
     }
 

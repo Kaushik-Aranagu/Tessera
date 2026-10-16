@@ -254,7 +254,7 @@ private struct WeekDabs: View {
         if planned == .rest {
             return .rest
         }
-        return planned ?? .open
+        return planned ?? .planned
     }
 
     var body: some View {

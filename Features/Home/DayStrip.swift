@@ -1,4 +1,5 @@
 import SwiftUI
+import TesseraCore
 
 // MARK: - Geometry (pure)
 
@@ -23,11 +24,12 @@ struct DayTimeline: Equatable {
         min(max((hour - startHour) / (endHour - startHour), 0), 1)
     }
 
-    /// The visible part of an item, or nil when it falls wholly outside 07–23. An item running past midnight is cut
-    /// at the end of the day.
+    /// The visible part of an item, or nil when it falls wholly outside 07–23. Past midnight is still the same day
+    /// until 04:00 (B4), so an item running to 00:30 ends at hour 24.5, up to 28; anything later is cut at 28.
     func span(start: Date, end: Date) -> ClosedRange<Double>? {
         let startHours = hours(of: start)
-        let endHours = calendar.isDate(end, inSameDayAs: start) ? hours(of: end) : 24
+        let endHours = calendar.isDate(end, inSameDayAs: start) ? hours(of: end)
+            : TesseraDay(calendar: calendar).isSameDay(end, start) ? min(hours(of: end) + 24, 28) : 28
         guard endHours > startHour, startHours < endHour else { return nil }
         let lower = fraction(hour: startHours), upper = fraction(hour: max(endHours, startHours))
         return lower ... upper
