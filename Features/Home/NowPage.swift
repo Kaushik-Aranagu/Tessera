@@ -61,14 +61,19 @@ struct NowPage: View {
         }
     }
 
+    /// The seeded starter plan stores no weekly count, so the rhythm comes from its routines (PPL x2: 6 a week,
+    /// leaving one rest day). Without this, the week never has a rest day and Now never says so (QA E5).
+    static func sessionsPerWeek(model: AppModel, plan: ObjectRecord?) -> Int? {
+        PlanRhythm.perWeek(cycleCount: plan.map { model.store.linkedObjects("routines", of: $0).count } ?? 0)
+    }
+
     private func rank(now: Date) -> [Pick] {
         let picker = NowPicker(engine: model.engine)
         let plan = model.plan
-        let cycle = plan.map { model.store.linkedObjects("routines", of: $0).count } ?? 0
         return picker.rank(RankContext(
             now: now,
             plan: plan,
-            sessionsPerWeek: PlanRhythm.perWeek(cycleCount: cycle),
+            sessionsPerWeek: Self.sessionsPerWeek(model: model, plan: plan),
             incumbent: incumbent,
             lastAction: picker.lastAction(),
             daysAway: picker.daysAway(at: now)
