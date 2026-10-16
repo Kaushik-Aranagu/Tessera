@@ -1,6 +1,6 @@
 # Lists screens 9-12: decisions and acceptance (Builder B)
 
-*Kitchen lead (Lists owner), 2026-10-15; refreshed 2026-10-16 against Design's `lists-9-12.md` as amended, Design 65 `list-remove.md` and Product's decisions (put away, UNDO lengths, the reusable "done" ask). Design's sheet (c8a83ff) maps every row below and is accepted. This reads with Design's `docs/design/kitchen/lists-9-12.md` (Design branch; it supersedes sheet 15), `ship-list-lists.md`, `lists-acceptance.md` (engine slices 1-8) and Research's `docs/research/lists-daily.md`. First I settle Research's open points G1-G13, then give one pass/fail row per screen element. Product can overrule any line.*
+*Kitchen lead (Lists owner), 2026-10-15; refreshed 2026-10-16 against Design's `lists-9-12.md` as amended, Design 65 `list-remove.md` and Product's decisions (put away, UNDO lengths, the reusable "done" ask). Design's sheet (c4b019f, with its addendum adopting the eight defaults below) maps every row below and is accepted. This reads with Design's `docs/design/kitchen/lists-9-12.md` (Design branch; it supersedes sheet 15), `ship-list-lists.md`, `lists-acceptance.md` (engine slices 1-8) and Research's `docs/research/lists-daily.md`. First I settle Research's open points G1-G13, then give one pass/fail row per screen element. Product can overrule any line.*
 
 ## Decisions on Research's gaps
 
@@ -39,15 +39,15 @@
 | 10.1 | The hero sits at y 142 with the context line above it. Option words, once used, form one labels line under the hero |
 | 10.2 | Rows are 48 pt at 21/400, with amounts at 600. Sections are margin words at 34 and items hang at x 64, with no checkboxes or separators |
 | 10.3 | Tapping strikes and sinks exactly as in Groceries, and the fold counts up with Tick |
-| 10.4 | Tapping the fold restores items. Holding it for 0.7 s clears done items. On a reusable list it reads "hold to reset", the strikes un-paint right to left, and the items rise back |
+| 10.4 | Tapping the fold restores items. Holding it for 0.7 s clears done items. On a reusable list it reads "4 done. Hold to reset." (no dot), the strikes un-paint right to left, and the items rise back |
 | 10.5 | Tapping the context line unfolds the option words in place (Sections · Reusable · Run it · Pick one · Put away). There is no sheet, and tapping outside folds them |
 | 10.6 | Swiping on x from the hero, the context line or a section word pages between sibling lists, and the hero parallaxes; a rail of list names scrolls on x past four. A swipe that starts on a row is the row's (10.9), never a page |
 | 10.7 | Running gives a lit seam, the context line "Packing, running", 64 pt rows, and sections that fold away as they finish (a removed last row finishes its section the same way). The run survives locking the phone. A task or workout that @links a list shows it as an ink word on Now 60 min before (G3) |
-| 10.8 | The ghost row on the page adds to this list: "Rice, added to Packing." with UNDO for 4 s (G6) |
+| 10.8 | The ghost row on the page adds to this list: "Rice, added to Packing."; several, "Passport and adapter, added to Packing."; UNDO for 4 s (G6) |
 | 10.9 | Remove (Design 65): a left swipe on a row, the row following the finger with REMOVE in `live` at 60 pt; let go past 96 pt commits, short of it springs back. Never a tap, a hold or a red row. Tess: "Ground beef, removed." (the row as written, first letter up) with UNDO for 10 s; UNDO: "Ground beef, back on Groceries." (on Packing, "…, back on Packing."). A removed row never counts in `checkedAt`, so USUALLY never learns from it. Reduce Motion: a crossfade. VoiceOver: the actions "Check off" and "Remove" |
 | 10.10 | Remove by phrase: "remove rice from groceries", "take rice off groceries", "rice is off the list" remove the row with the same line and UNDO; on a list page the list name is optional and the line names that list. No match: "No rice on Groceries." Two matches: "2 rows match. Swipe the one to remove." and nothing is removed |
-| 10.11 | "done" on a reusable list asks with a hold to reset (Product; Design to word it); on a plain list it finishes the run, and a non-reusable list with nothing open is put away: "Packing, Lisbon put away." with UNDO for 10 s (G9). Clear done and reset carry a 10 s UNDO; the fold's hold stays 0.7 s |
-| 10.12 | Back word "‹ LISTS" at the top; an empty list reads EMPTY on the shelf and its page shows the hero and the ghost row only (Design to draw) |
+| 10.11 | "done" on a reusable list finishes the run with the strikes kept and asks: "Packing, done. Reset it for next time?" with RESET (a 0.7 s hold, the ink line filling) and NOT NOW; holding RESET drains the paint, "Packing, reset." with UNDO for 10 s; NOT NOW or 10 s of silence changes nothing. On a plain list "done" finishes the run, and a non-reusable list with nothing open is put away: "Packing, Lisbon put away." with UNDO for 10 s (G9). Clear done and reset carry a 10 s UNDO; the fold's hold stays 0.7 s |
+| 10.12 | Back word "‹ LISTS" at the top; an empty list reads EMPTY on the shelf, its page's context line reads "nothing on it yet" over an empty window, and an empty shelf shows Groceries at 56 with "Paste a list anywhere to make one."; the put-away word is absent until something has been put away (lists-9-12.md c4b019f, which supersedes "Nothing here yet.") |
 
 **11 · An item, opened**
 | # | Pass when |
