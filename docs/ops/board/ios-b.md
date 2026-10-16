@@ -51,6 +51,16 @@
 **From now on, use themed tokens** (Kaushik's themes, 6:40 PM PT): new and touched screens use Builder A's DesignSystem theme tokens, never hard-coded colours, so every theme works.
 
 **Next:**
+0n. (Research shutdown-evening; decisions 1:06 PM PT) Shutdown page on Core 0y:
+- The 9 to 10 pm hero is Shutdown. Until the page exists, Now reads "tomorrow, first" with the word tomorrow (AppModel.swift:476,494-497).
+- The first-Shutdown line is "Tap any for later.".
+- A running cook shows on Now.
+- Use "Tasks, tomorrow."-style thing-first receipts in place of "Moved to tomorrow." (HomeQueue.swift:480), with UndoWindow (:34).
+0m. (Research kitchen-week-day-one; decisions 1:05 PM PT)
+- Groceries copy to Design 67 (KW9/10/12): "14 to get, for tacos and chili", short recipe names with no paint dot, pack sizes shown.
+- Send-to-Groceries receipt (KW5/7/26): "Tacos, 10 added." with a 10 s UNDO. "Tacos, nothing to add." gets no UNDO. Undo reads "Tacos, taken back.".
+- Move and DONE receipts: "Tacos, Friday." and "Tacos, cooked.".
+- KW15-18 come with the 69 recipe clock.
 0l. (Research review-week-story; decisions 1:00 PM PT) Review after Core's week lines:
 - ReviewWeek.swift:130 shows the three count lines.
 - The tapped-day hero uses the thing, not the first word of the line ("Push best", :175).

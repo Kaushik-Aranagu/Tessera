@@ -149,6 +149,14 @@
 - Build the week story Claude job, which skips empty or notes-only weeks.
 - The story of the week just ended holds until Tuesday 4 am.
 - Weight stays out of the story.
+0x. (After the pin. Kitchen lead #499: skip closes the plan, a meal on a day away plans as usual, no Sunday reset, "cook chili" closes on DONE, leftovers out; all five need the Groceries share to carry the plan task, not just the recipe, so delete, skip and UNDO find the rows) (Research `fixtures/kitchen-week-day-one.md`, 30 steps; decisions 1:05 PM PT Oct 16) KW2/3/20/26: "cook tacos tuesday" runs AddRecipeToGroceries as well as making the task (TessCaptureEngine.swift:338-343). The grocery share points to the task, so skipping or deleting the meal removes it. KW14: call HomeLines.fact(plannedCook:) from the app and read startsAt, not due (HomeLines.swift:563-567; with 0n). KW29: add a "what's for dinner" grammar rule.
+0y. (Research `fixtures/shutdown-evening.md`, 16 cases; decisions 1:06 PM PT Oct 16) Shutdown engine (SH items):
+- A closed day, holds, and a silent close at 10 pm local.
+- Held rows count as rolls (RollForward.swift:56-77).
+- Stamp the late close after Finish for live, paused and cooking holds.
+- Wire HomeLines' tomorrow: option for Now after 9 pm.
+- A secret-word task reads "Private task" on the hero, widget and Lock Screen.
+- Cook timer notifications go with Builder A's G2.
 0a. Recipe clock gaps for Core (#461, Kitchen lead's day-one gaps, `docs/research/fixtures/recipe-clock-day-one.md` gap table and `docs/product/cook-mode-acceptance.md` rulings 3-5; Product 12:06 PM PT Oct 16: running over HOLDS, Kitchen's call stands): G3 one source, the bead's step is the resume point and "next"/swipe move both; G4 the bead entering a timed step starts its timer, keyed by step not label; G5 parse "per side" (doubles) and "overnight" (vectors s5, s6, s11, s12); G9 `FinishCooking` line "Paprika chicken, cooked." with the DONE key (with Builder B); G10 the peek key is a dry run of `AddRecipeToGroceries`, receipt "Chicken, 7 added." (with Builder B); G11 cooks idle-suspend after 45 min, idle timer off while the clock runs (with Builder B). Ships in the 69 slice (item 0).
 0b-r. (Design on #454's clip, 12:10 PM PT Oct 16) The Recipes parser strips a leading "N." or "N)" from step text so a pasted "1. Spread…" doesn't show its number twice beside the gutter. Small; with the 69 slice.
 0b. (10:02 AM PT Oct 16) Soul signals (`docs/ai/soul-signals.md`, #418, once the motion lab passes it): the pure HomeFacts diff to at most one soul event, with its tests, no model calls. After AI-2 (see Order); Builder A wires the five new events after its pick PRs (a) and (b).
