@@ -168,4 +168,6 @@
   2. Plan my day wording uses Sonnet, with Haiku in the same eval. It turns on after the first 10 use-1 calls have ledger costs within 10% of the Console, 3 or fewer of them were taken back, and all 20 plan scenarios pass.
   3. Log questions use Haiku. They wait for a question mode that can only call answerQuery.
   - Also settled: the fallback line stays "Here's your usual plan." (12:22 decision; tess-voice M18 changes to match). answerQuery counts only finished workouts, as questions-eval does. The live pack uses Los Angeles time; London stays in the eval packs only. New copy for Design: "Claude is busy. Kept it for later."
+- **Ask lines for notifications, final** (6:30 PM PT, Research #173; supersedes the old Q5/A7). The notification ask fires only on his first "remind me", timed task or cook timer. When notifications are allowed, the rest notification rings and the Live Activity alert stays silent, never both.
+- **"remind me" plus a day alerts at 9 AM** (6:30 PM PT). The words "remind me" ask for an alert, so "remind me sat" rings at 9 AM Saturday. A plain "call mum sat" gets no time and no alert, which keeps the 6:20 rule.
 
