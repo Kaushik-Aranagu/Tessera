@@ -144,6 +144,8 @@ A18. **Recipes (bonus).** [#86] In Kitchen, open Recipes and paste a recipe's te
 A19. **Backups.** [#118, #124, #126] On Review, scroll to the foot and tap "Backups". Go back once with "‹ Review" and once with an edge swipe. An edge swipe on Review itself does nothing, and nothing freezes.
 A20. **Restore, safely.** [#120] Only if a Tessera copy is in Files: tap Restore and pick it. You get a question first; tap "Keep what's here", which changes nothing. Don't hold Replace on the phone.
 
+*After any reinstall (only if the app was ever deleted): restore first, reopen, then pick the iCloud Drive folder again, and paste a fresh Claude key. A normal re-sign installs over the app and needs none of this.*
+
 *If a calm note ever shows at launch, that's the data-safety guard protecting your data, not a crash.*
 
 *Known gaps, already queued, so no need to report them:*
