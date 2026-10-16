@@ -392,9 +392,10 @@ private struct RestHero: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+            // The one context line directly above a hero rests in context (sweep-19).
             Text("today")
                 .font(Theme.voice(size: 21))
-                .foregroundStyle(Theme.Colors.inkSecondary)
+                .foregroundStyle(Theme.Colors.context)
                 .entrance(1)
             HeroText(text: RestDay.line) { $0 }
                 .foregroundStyle(Theme.Colors.ink)

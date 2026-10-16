@@ -67,7 +67,10 @@ struct BackupView: View {
                 // A fresh install with nothing done yet: say a restore is possible (restore-walk 3). Restore first,
                 // then reopen, then pick the folder again.
                 // Anything he, Tess or Siri did counts (QA R3, like Core's userOps): only seeding is "nothing yet".
-                if !model.engine.history(limit: 2000).contains(where: { $0.actor != .system }) {
+                if !model.engine.history(limit: 2000).contains(where: {
+                    // Settings writes (a look, a switch) don't count either (QA C4).
+                    $0.actor != .system && $0.action != WriteSettings.descriptor.name
+                }) {
                     Text("Reinstalled? Restore brings back your copy from iCloud Drive.")
                         .font(Theme.voice)
                         .foregroundStyle(Theme.Colors.tess)
@@ -80,13 +83,14 @@ struct BackupView: View {
                 ForEach(failures, id: \.place) { failure in
                     Text(BackupCopy.failure(failure, folder: folder, now: AppClock.now))
                         .font(Theme.voice)
-                        .foregroundStyle(Theme.Colors.context)
+                        .foregroundStyle(Theme.Colors.inkSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, Theme.Spacing.s)
                 }
 
                 // One sentence that wraps as text; the folder is a value word in 600 ink that opens the picker.
-                Text(BackupCopy.folderSentence(folder))
+                Text(folder == nil ? BackupCopy.rememberedSentence(SettingsStore(engine: model.engine).read()
+                        .backupFolderName) ?? BackupCopy.folderSentence(nil) : BackupCopy.folderSentence(folder))
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.ink)
                     .tint(Theme.Colors.ink)
@@ -115,7 +119,7 @@ struct BackupView: View {
                     ? "Copies on this iPhone go if the app is deleted. A folder in iCloud Drive keeps them."
                     : "These survive deleting the app.")
                     .font(Theme.voice)
-                    .foregroundStyle(Theme.Colors.context)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, Theme.Spacing.s)
                     .entrance(4)
@@ -160,7 +164,7 @@ struct BackupView: View {
         .fileImporter(isPresented: $picking, allowedContentTypes: [.folder]) { result in
             guard case let .success(url) = result else { return }
             do {
-                try BackupKeeper.pick(url, context: model.context)
+                try BackupKeeper.pick(url, context: model.context, engine: model.engine)
                 say("Saved a copy there. One a day from now on.")
             } catch {
                 say("Couldn't use that folder. Try another one.")
@@ -209,7 +213,7 @@ struct BackupView: View {
                 Text("The copy from \(BackupCopy.fileDay(staged.createdAt)) replaces everything the next time "
                     + "Tessera opens. Close Tessera from the app switcher to restore now.")
                     .font(Theme.voice)
-                    .foregroundStyle(Theme.Colors.context)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                 Button("Cancel restore") {
                     TesseraBackup.cancelRestore()
@@ -350,6 +354,19 @@ enum BackupCopy {
     }
 
     /// "Also keep them in a folder you choose." with the folder as a tappable value word in 600.
+    /// After a restore, with no folder on this phone yet: "Your copies were kept in iCloud Drive/Tessera. Choose it
+    /// again." with "Choose it again" as the tappable value word (restore-walk 3b).
+    static func rememberedSentence(_ name: String?) -> AttributedString? {
+        guard let name, !name.isEmpty else { return nil }
+        var sentence = AttributedString("Your copies were kept in \(name). ")
+        var value = AttributedString("Choose\u{00A0}it\u{00A0}again")
+        value.inlinePresentationIntent = .stronglyEmphasized
+        value.link = URL(string: "tessera://backups/folder")
+        sentence += value
+        sentence += AttributedString(".")
+        return sentence
+    }
+
     static func folderSentence(_ folder: URL?) -> AttributedString {
         var sentence = AttributedString(folder == nil ? "Also keep them in " : "Also kept in ")
         var value = AttributedString(folder.map(folderName) ?? "a\u{00A0}folder\u{00A0}you\u{00A0}choose")

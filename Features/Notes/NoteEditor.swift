@@ -88,7 +88,7 @@ struct NoteEditor: View {
                 } else {
                     Text("This note is gone.")
                         .font(Theme.voice)
-                        .foregroundStyle(Theme.Colors.context)
+                        .foregroundStyle(Theme.Colors.inkSecondary)
                 }
             }
             .padding(.horizontal, Theme.Spacing.gutter)

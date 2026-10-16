@@ -55,8 +55,10 @@ struct ClaudeSection: View {
     @State private var checking = false
     @State private var line: String?
     @State private var removed = false
-    /// Line 3: whether captures the phone can't read go to Claude. A preference, not a secret.
-    @AppStorage("tess.missesGoToClaude") private var missesGoToClaude = true
+    /// The first line, "Tess asks Claude": misses and Plan my day. Lives in Core's settings object only.
+    @State private var missesGoToClaude = true
+    /// Tess's answer to the last flip of the switch, shown under it.
+    @State private var switchLine: String?
     @State private var removal: Task<Void, Never>?
     /// The clipboard's change count when a key was pasted, so a key still sitting there can be cleared after it passes.
     @State private var pasteChange: Int?
@@ -124,7 +126,7 @@ struct ClaudeSection: View {
             // After a reinstall or on a new phone the key doesn't come along (restore-walk 6).
             Text(ledger.calls().isEmpty
                 ? "Tess thinks \(Text("on this phone").fontWeight(.semibold)) only."
-                : "No Claude key on this phone. Paste one to let Tess ask Claude.")
+                : "No Claude key on this phone. Paste one here.")
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
             if writing {
@@ -133,8 +135,14 @@ struct ClaudeSection: View {
                 Button("Add a Claude key") { open() }
                     .buttonStyle(.valueWash)
                     .textRole(.body)
-                    .foregroundStyle(Theme.Colors.tess)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Theme.Colors.ink)
                     .frame(minHeight: 44)
+            }
+            // Old receipts outlive the key (C4).
+            if !ledger.calls().isEmpty {
+                NavigationLink("Receipts") { ClaudeReceipts() }
+                    .buttonStyle(.labelWord)
             }
         }
     }
@@ -147,41 +155,55 @@ struct ClaudeSection: View {
         let share = min(Double(spent) / Double(TessUsageLedger.capNano), 1)
         let paused = spent >= TessUsageLedger.capNano
         VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-            Text("Tess can ask \(Text("Claude").fontWeight(.semibold)).")
+            VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                HStack(spacing: 0) {
+                    Text("Tess asks Claude: ")
+                    Button(missesGoToClaude ? "yes" : "no", action: toggleMisses)
+                        .buttonStyle(.valueWash)
+                        .fontWeight(.semibold)
+                        .contentTransition(.opacity)
+                        .accessibilityLabel("Tess asks Claude")
+                        .accessibilityValue(missesGoToClaude ? "yes" : "no")
+                    Text(".")
+                }
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
+                // Tess answers the flip inline, under the switch.
+                if let switchLine {
+                    Text(switchLine)
+                        .textRole(.body)
+                        .foregroundStyle(Theme.Colors.tess)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .transition(.opacity)
+                        .id(switchLine)
+                }
+            }
+            .tesseraAnimation(.easeOut(duration: 0.18), value: missesGoToClaude)
 
             VStack(alignment: .leading, spacing: Theme.Spacing.s) {
-                Group {
-                    if paused {
-                        Text("Paused until \(Text(ClaudeKeyWords.nextMonth(AppClock.now)).fontWeight(.semibold)).")
-                    } else {
-                        Text("This month \(Text(ClaudeKeyWords.dollars(spent)).fontWeight(.semibold)) of $10.")
-                    }
+                // The amount is the word that opens the receipts (C3).
+                HStack(spacing: 0) {
+                    Text("This month ")
+                    NavigationLink(ClaudeKeyWords.dollars(spent)) { ClaudeReceipts() }
+                        .buttonStyle(.valueWash)
+                        .fontWeight(.semibold)
+                        .accessibilityHint("Opens the receipts.")
+                    Text(" of $10.")
                 }
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
                 MonthLine(share: share, warm: share >= 0.8)
                     .accessibilityLabel(String(format: "%.2f of 10 dollars this month", Double(spent) / 1e9))
-                if share >= 0.8, !paused {
+                if paused {
+                    Text("Paused until \(Text(ClaudeKeyWords.nextMonth(AppClock.now)).fontWeight(.semibold)).")
+                        .textRole(.body)
+                        .foregroundStyle(Theme.Colors.ink)
+                } else if share >= 0.8 {
                     Text("PAUSES AT $10")
                         .textRole(.labelStrong)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                 }
             }
-
-            HStack(spacing: 0) {
-                Text("Misses go to Claude: ")
-                Button(missesGoToClaude ? "yes" : "no") { missesGoToClaude.toggle() }
-                    .buttonStyle(.valueWash)
-                    .fontWeight(.semibold)
-                    .contentTransition(.opacity)
-                    .accessibilityLabel("Misses go to Claude")
-                    .accessibilityValue(missesGoToClaude ? "yes" : "no")
-            }
-            .textRole(.body)
-            .foregroundStyle(Theme.Colors.ink)
-            .tesseraAnimation(.easeOut(duration: 0.18), value: missesGoToClaude)
 
             VStack(alignment: .leading, spacing: 0) {
                 Text(
@@ -190,12 +212,14 @@ struct ClaudeSection: View {
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
                 .accessibilityLabel("Claude key, ends in \(last4), \(status)")
-                HStack(spacing: 22) {
+                HStack(spacing: 0) {
                     Button("Test") { retest() }
+                    Text(" · ").textRole(.labelStrong).foregroundStyle(Theme.Colors.inkSecondary)
                     Button("Replace") {
                         replacing = true
                         open()
                     }
+                    Text(" · ").textRole(.labelStrong).foregroundStyle(Theme.Colors.inkSecondary)
                     Button("Remove", action: remove)
                 }
                 .buttonStyle(.labelWord(Theme.Colors.inkSecondary))
@@ -204,17 +228,6 @@ struct ClaudeSection: View {
                     writingLine(prompt: "Paste the new key")
                 }
             }
-
-            // Line 5: every use of Claude, one layer down.
-            NavigationLink {
-                ClaudeReceipts()
-            } label: {
-                Text("Receipts")
-                    .textRole(.body)
-                    .foregroundStyle(Theme.Colors.ink)
-                    .frame(minHeight: 44)
-            }
-            .buttonStyle(.valueWash)
         }
     }
 
@@ -258,7 +271,23 @@ struct ClaudeSection: View {
 
     // MARK: Actions
 
+    /// "Tess asks Claude" lives only in Core's settings: the same field the capture router reads (QA M1).
+    /// The word shows what's stored, read back after the write (QA F2): a failed write never reads as done.
+    private func toggleMisses() {
+        let wanted = !missesGoToClaude
+        if LaunchFlags.has("-demo") {
+            missesGoToClaude = wanted
+        } else {
+            _ = try? SettingsStore(engine: model.engine).update { $0.missesGoToClaude = wanted }
+            missesGoToClaude = model.asksClaude
+        }
+        switchLine = missesGoToClaude
+            ? "Tess asks Claude when she's unsure, and for Plan my day."
+            : "Tess stays on this phone."
+    }
+
     private func load() {
+        missesGoToClaude = model.asksClaude
         guard let key = keys.read() else {
             last4 = nil
             return
@@ -310,7 +339,7 @@ struct ClaudeSection: View {
                 if keys.save(previous) {
                     line = "That key didn't pass. Your old key still works."
                 } else {
-                    line = "That key didn't pass, and I couldn't keep the old one. Add it again?"
+                    line = "That key failed, and the old one is gone. Add one?"
                     last4 = nil
                 }
                 replacing = false
@@ -405,6 +434,7 @@ private struct MonthLine: View {
 /// top in dollars, rounded up; one call shows in cents.
 struct ClaudeReceipts: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         let _ = model.revision
@@ -412,6 +442,9 @@ struct ClaudeReceipts: View {
         let calls = ledger.calls().sorted { $0.createdAt > $1.createdAt }
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+                Button("< Settings") { dismiss() }
+                    .buttonStyle(.labelWord)
+                    .accessibilityLabel("Back to Settings")
                 Text("Receipts")
                     .textRole(.title)
                     .foregroundStyle(Theme.Colors.ink)
@@ -437,6 +470,8 @@ struct ClaudeReceipts: View {
             .padding(.vertical, Theme.Spacing.l)
         }
         .background { ThemedBackground() }
+        .navigationBarBackButtonHidden()
+        .toolbarVisibility(.hidden, for: .navigationBar)
     }
 }
 
@@ -444,8 +479,10 @@ extension ClaudeKeyWords {
     /// "6:12 pm · Plan my day · Sonnet · 1.2¢".
     @MainActor
     static func receipt(_ call: ObjectRecord, store: ObjectStore) -> String {
-        let time = call.createdAt.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).hour().minute())
-            .lowercased()
+        // "Thu 16 Oct, 6:12 pm": names keep their capitals; only am/pm is lower case.
+        let day = call.createdAt.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
+        let clock = call.createdAt.formatted(.dateTime.hour().minute()).lowercased()
+        let time = "\(day), \(clock)"
         let use = store.value("use", of: call)?.stringValue.flatMap(TessUse.init(rawValue:))
         let model = store.value("model", of: call)?.stringValue ?? ""
         let nano = Int64(store.number("costNano", of: call) ?? 0)

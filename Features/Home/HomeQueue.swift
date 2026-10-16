@@ -30,7 +30,8 @@ final class TessVoice {
         let note = Note(text: text, undo: undo)
         self.note = note
         Task { @MainActor in
-            try? await Task.sleep(for: .seconds(4))
+            // A line with something to take back stays 10 s (M37); a plain line, 4 s.
+            try? await Task.sleep(for: .seconds(undo == nil ? 4 : 10))
             if self.note?.id == note.id {
                 self.note = nil
             }
@@ -98,7 +99,7 @@ struct QueueWindow: View {
         if next.isEmpty, later.isEmpty {
             Text("Nothing else today.")
                 .textRole(.body)
-                .foregroundStyle(Theme.Colors.context)
+                .foregroundStyle(Theme.Colors.inkSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         } else {
             VStack(alignment: .leading, spacing: 0) {

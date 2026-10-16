@@ -130,8 +130,10 @@ struct BottomChrome: View {
         // (late-night #13).
         .onChange(of: model.processNotes, initial: true) { _, notes in
             guard !notes.isEmpty else { return }
-            voice.say(notes.joined(separator: " "))
+            // The empty wrap-up's UNDO brings the workout back (QA L2).
+            voice.say(notes.joined(separator: " "), undo: model.processUndo)
             model.processNotes = []
+            model.processUndo = nil
         }
     }
 
@@ -188,13 +190,18 @@ struct BottomChrome: View {
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
                     } else if let line {
-                        Text(line)
-                            .frame(maxWidth: 270, alignment: .trailing)
-                            .textRole(.body)
-                            .foregroundStyle(Theme.Colors.tess)
-                            .multilineTextAlignment(.trailing)
-                            .lineLimit(2)
-                            .contentTransition(.opacity)
+                        // One line sits right by the soul; a line that wraps sets left-aligned from the gutter
+                        // (Design S2 on #273).
+                        ViewThatFits(in: .horizontal) {
+                            Text(line).lineLimit(1)
+                            Text(line)
+                                .multilineTextAlignment(.leading)
+                                .lineLimit(3)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .font(Theme.voice)
+                        .foregroundStyle(Theme.Colors.tess)
+                        .contentTransition(.opacity)
                     }
                     if canUndo {
                         Button("Undo") { undo() }
