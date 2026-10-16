@@ -66,12 +66,16 @@ public struct AddRoutineToPlan: EngineAction {
         self.at = at
     }
 
-    public func apply(_ transaction: inout Transaction) throws {
+    /// Returns the weekdays this routine took from others in the plan (newer pick wins, Product 4b857dc).
+    public func apply(_ transaction: inout Transaction) throws -> [WeekdayHandoff] {
         let plan = try transaction.object(plan, is: .plan)
         let routine = try transaction.object(routine, is: .routine)
         var cycle = transaction.store.linkedObjects("routines", of: plan).filter { $0.id != routine.id }
         cycle.insert(routine, at: max(0, min(at ?? cycle.count, cycle.count)))
         try transaction.setLinks("routines", on: plan, to: cycle)
+        // A routine arriving with days of its own takes them from the routines already here (QA L1 on #341).
+        let days = PlanSchedule.weekdays(of: routine, store: transaction.store)
+        return try PlanSchedule.take(days, for: routine, transaction: &transaction)
     }
 
     public func summary(in store: ObjectStore) -> String {
@@ -137,6 +141,11 @@ public struct DropRoutineFromPlan: EngineAction {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "routine is not in the plan")
         }
         try transaction.setLinks("routines", on: plan, to: cycle)
+        // Its days go with it, so re-adding it later never puts two routines on one weekday (QA L1 on #341).
+        let dropped = try transaction.object(routine, is: .routine)
+        if transaction.store.value("fixedWeekdays", of: dropped) != nil {
+            try transaction.set("fixedWeekdays", to: nil, on: dropped)
+        }
     }
 
     public func summary(in store: ObjectStore) -> String {
@@ -206,22 +215,13 @@ public struct SetRoutineWeekdays: EngineAction {
         guard chosen.count == weekdays.count else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "weekdays are 1 to 7")
         }
-        var handoffs: [WeekdayHandoff] = []
-        // Routines sharing a plan with this one lose any day it takes.
-        for other in PlanSchedule.siblings(of: routine, store: transaction.store, classes: transaction.classes) {
-            let theirs = Weekdays.decode(transaction.store.value("fixedWeekdays", of: other)?.stringValue)
-            let taken = theirs.intersection(chosen)
-            guard !taken.isEmpty else { continue }
-            handoffs += Weekdays.ordered(taken)
-                .map { WeekdayHandoff(weekday: $0, from: other.id, fromTitle: other.title) }
-            try transaction.set("fixedWeekdays", to: .text(Weekdays.encode(theirs.subtracting(taken))), on: other)
-        }
         try transaction.set("fixedWeekdays", to: .text(Weekdays.encode(chosen)), on: routine)
-        return handoffs
+        return try PlanSchedule.take(chosen, for: routine, transaction: &transaction)
     }
 
     public func summary(in store: ObjectStore) -> String {
         let title = store.object(id: routine)?.title ?? "Routine"
+        guard !weekdays.isEmpty else { return "\(title), no fixed days." }
         return "\(title) on \(Weekdays.plural(Weekdays.ordered(Set(weekdays))))."
     }
 }
@@ -244,6 +244,29 @@ public enum PlanSchedule {
     {
         let weekday = calendar.component(.weekday, from: date)
         return store.linkedObjects("routines", of: plan).first { weekdays(of: $0, store: store).contains(weekday) }
+    }
+
+    /// One routine per weekday: every other routine sharing a plan with this one loses the days it now has, and the
+    /// result says which routine lost which day.
+    static func take(_ days: Set<Int>, for routine: ObjectRecord,
+                     transaction: inout Transaction) throws -> [WeekdayHandoff]
+    {
+        guard !days.isEmpty else { return [] }
+        var handoffs: [WeekdayHandoff] = []
+        for other in siblings(of: routine, store: transaction.store, classes: transaction.classes) {
+            let theirs = Weekdays.decode(transaction.store.value("fixedWeekdays", of: other)?.stringValue)
+            let taken = theirs.intersection(days)
+            guard !taken.isEmpty else { continue }
+            handoffs += Weekdays.ordered(taken)
+                .map { WeekdayHandoff(weekday: $0, from: other.id, fromTitle: other.title) }
+            try transaction.set("fixedWeekdays", to: .text(Weekdays.encode(theirs.subtracting(taken))), on: other)
+        }
+        return handoffs
+    }
+
+    /// Whether any routine in the plan has a fixed day; without one, fixed mode falls back to rolling (QA L3).
+    public static func hasFixedDays(_ plan: ObjectRecord, store: ObjectStore) -> Bool {
+        store.linkedObjects("routines", of: plan).contains { !weekdays(of: $0, store: store).isEmpty }
     }
 
     /// Routines that share a plan with this one.
