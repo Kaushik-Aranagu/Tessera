@@ -12,6 +12,8 @@ extension TessGrammar {
         if let said = rest.firstMatch(of: /(\d+) sets? of (\d+)/), let sets = Int(said.1), let reps = Double(said.2) {
             (lift.sets, lift.reps, lift.setsSaid) = (sets, reps, true)
             rest.removeSubrange(said.range)
+            // "3 sets of 8 at 7": the number after "at" is the weight, and goes through the small-"at N" check (F5).
+            lift.weightAfterAt = rest.firstMatch(of: /\b(?:at|@)\s*\d/) != nil
             rest = Substring(rest.replacing(/\b(?:at|@)\b/, with: " "))
         }
         if let scheme = rest.firstMatch(of: /(\d+(?:\.\d+)?)(?: ?x ?| by )(\d+)(?: (?:at|@) (\d+(?:\.\d+)?))?/) {
@@ -55,7 +57,8 @@ extension TessGrammar {
             guard let inFocus, let last else {
                 return .ask("\(name) \(Int(first)) × \(TessVoice.number(reps)) at what weight?")
             }
-            if first <= 6, first < last.weight / 2 {
+            // In focus, the ask covers N up to 10 under half the last weight ("bench 8x8" at 80; QA F4).
+            if first < last.weight / 2 {
                 return .askSetCount(TessSetCountAsk(entry: inFocus.id, count: Int(first), reps: reps,
                                                     bodyweight: false))
             }

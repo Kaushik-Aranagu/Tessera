@@ -75,6 +75,7 @@ struct SetLossTests {
         ("F3e", "curls 3x10 at 5", "ask Dumbbell Curl 3 × 10 at what weight?"),
         ("F3f", "leg press 5 kg x 5", "lift Leg Press 5x5"),
         ("F3g", "kettlebell swing 3x15", "ask Kettlebell Swing 3 × 15 at what weight?"),
+        ("F5", "bench 3 sets of 8 at 7", "ask Bench 3 × 8 at what weight?"),
         // Research's 113 re-trace and Design's Speak review.
         ("R113b", "Bench 80 kg, 8 reps only.", "lift Bench Press 80x8"),
         ("R113c", "Bench 3 sets of 8 at 80.", "lift Bench Press 3x80x8"),
@@ -200,5 +201,16 @@ struct SetLossTests {
         var live = context
         live.entry = entry.id
         #expect(read(grammar.parse("leg press 5x5", context: live)) == "ask 5 × 5: 5 sets, or 5 kg?")
+        // QA F4: up to 10 in focus, under half the last weight, asks; it never logs 8 kg under the bar.
+        let bench = try engine.perform(AddExercise(workout: workout.id, exercise: #require(classes[.benchPress]).id),
+                                       by: .user).output
+        try engine.perform(LogSet(entry: bench.id, weight: 80, reps: 8), by: .user)
+        live.entry = bench.id
+        #expect(read(grammar.parse("bench 8x8", context: live)) == "ask 8 × 8: 8 sets, or 8 kg?")
+        let pulldown = try #require(store.classDef(id: SystemCatalog.stableID("library.latPulldown")))
+        let cable = try engine.perform(AddExercise(workout: workout.id, exercise: pulldown.id), by: .user).output
+        try engine.perform(LogSet(entry: cable.id, weight: 55, reps: 10), by: .user)
+        live.entry = cable.id
+        #expect(read(grammar.parse("lat pulldown 10x10", context: live)) == "ask 10 × 10: 10 sets, or 10 kg?")
     }
 }
