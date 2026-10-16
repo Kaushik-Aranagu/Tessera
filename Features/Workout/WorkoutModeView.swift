@@ -419,7 +419,7 @@ extension WorkoutContent {
                     .buttonStyle(.plain)
                     .accessibilityLabel("Rest, \(Int(remaining)) seconds left")
                     .accessibilityHint("Adds 15 seconds")
-                    Text(session.restNote ?? "Tap or drag the dial right for 15 more. Fling it left to go.")
+                    Text(session.restNote ?? "Tap the time for 15 more.")
                         .font(Theme.voice)
                         .foregroundStyle(Paint.tess)
                         .fixedSize(horizontal: false, vertical: true)
@@ -444,8 +444,10 @@ extension WorkoutContent {
                         WeightReel(weight: $session.weight, detents: session.detents, unit: unit,
                                    isLocked: phase != .set, spokenValue: session.spokenLoad,
                                    platesPerSide: { session.dial?.platesPerSide($0) },
-                                   onType: { withTesseraAnimation(reduceMotion: reduceMotion) { isTypingWeight = true } })
-                            .modifier(GlintIf(isOn: (phase == .set && session.isPersonalRecord) || restEndedGlint))
+                                   onType: { withTesseraAnimation(reduceMotion: reduceMotion) { isTypingWeight = true }
+                                   })
+                                   .modifier(GlintIf(isOn: (phase == .set && session.isPersonalRecord) ||
+                                           restEndedGlint))
                     }
                     if let snapNote {
                         Text(snapNote)
@@ -503,28 +505,6 @@ extension WorkoutContent {
             try? await Task.sleep(for: .seconds(2))
             withTesseraAnimation(reduceMotion: reduceMotion) { snapNote = nil }
         }
-    }
-
-    @ViewBuilder
-    private var plateLine: some View {
-        if session.isEstimatedLoad, let from = session.swappedFrom {
-            Text("An estimate from \(SwapPanel.short(from).lowercased())")
-                .textRole(.label)
-                .foregroundStyle(Paint.tess)
-        } else if let plates = session.platesPerSide {
-            PlateStack(weight: session.weight, perSide: plates)
-        }
-    }
-
-    /// "2.5": what one press of plus or minus changes the weight by.
-    private func stepLabel(up: Bool) -> String {
-        guard let dial = session.dial else { return "2.5" }
-        let next = dial.step(from: session.weight, by: up ? 1 : -1)
-        return Format.kilograms(abs(next - session.weight))
-    }
-
-    private func stepWeight(up: Bool) {
-        withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { session.stepWeight(up: up) }
     }
 
     private func setEffort(shown: Bool) {

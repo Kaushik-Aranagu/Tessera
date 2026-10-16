@@ -62,7 +62,7 @@ struct RepsRow: View {
                         }
                     }
                     .fixedSize()
-                .frame(minWidth: 56, alignment: .trailing)
+                    .frame(minWidth: 56, alignment: .trailing)
             }
             .tesseraAnimation(.spring(response: 0.32, dampingFraction: 0.62), value: reps)
             // Passing last time: a short cadmium stroke paints under the number.

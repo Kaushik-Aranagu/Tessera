@@ -236,38 +236,6 @@ struct EffortHandle: View {
     }
 }
 
-// MARK: - Plate step keys
-
-/// The dial's non-gesture path: a bare minus or plus, 60 pt square, one load per press (a pair of the smallest
-/// plates on a barbell, the next dumbbell on the rack). No pill and no box; the glyph is the key.
-struct PlateStepKey: View {
-    let up: Bool
-    let enabled: Bool
-    /// "2.5", spoken in the label.
-    let step: String
-    let action: () -> Void
-
-    @State private var presses = 0
-
-    var body: some View {
-        Button {
-            presses += 1
-            action()
-        } label: {
-            Text(up ? "+" : "−")
-                .font(Theme.numeral(34))
-                .foregroundStyle(Paint.cream.opacity(enabled ? 0.85 : 0.25))
-                .frame(width: 60, height: 60)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .disabled(!enabled)
-        .buttonRepeatBehavior(.enabled)
-        .sensoryFeedback(.selection, trigger: presses)
-        .accessibilityLabel(up ? "Heavier by \(step) kilograms" : "Lighter by \(step) kilograms")
-    }
-}
-
 // MARK: - Edit keys
 
 /// While a logged set is on the dial: Save set N (Core's EditSet) and a plain Cancel.

@@ -77,7 +77,11 @@ struct WeightReel: View {
             let step = change == .increment ? 1 : -1
             weight = detents[ScrubFeel.land(start: currentIndex, steps: step, count: detents.count).index]
         }
-        .accessibilityAction { if !isLocked { onType() } }
+        .accessibilityAction {
+            if !isLocked {
+                onType()
+            }
+        }
     }
 
     private func neighbour(_ index: Int) -> some View {
