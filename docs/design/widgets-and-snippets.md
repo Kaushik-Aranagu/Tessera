@@ -1,5 +1,7 @@
 # Widgets, controls and snippets (M4 slice 10): the visual language
 
+> **16 Oct:** `widget-states.md` supersedes this sheet's grounds (painterly PNGs, dark workout ground, vermilion top seam) and its 18pt line. One base, no dots, the ink line.
+
 For iOS Builder A (owns `Widgets/`) and Core (the intents). Build order and API notes: Research's `widgets-and-snippets.md` (snippets first, then the control, then widgets once the App Group is confirmed). Board: `recordings/widgets-board.png` (source `studies/widgets.html`).
 
 ## The rule: one thing, one seam, one control
