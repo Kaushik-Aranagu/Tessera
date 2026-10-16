@@ -56,3 +56,22 @@ too, so this can be their call.
   height check on the long title is the useful part.
 - **L5 (pre-existing, not this PR).** The ghost row's title (NowPage.swift:324) and the paused ledger row's step line
   (NowPage.swift:401, `.truncationMode(.middle)`) are still `lineLimit(1)`.
+
+## Addendum: re-check at `a31e7ea`
+
+Verdict: **PASS**. Trial merge onto master 9f91f26 is clean.
+
+- F1 fixed: `QueueRow`'s title has `.fixedSize(horizontal: false, vertical: true)` and no line limit (HomeQueue.swift). Rows use a minimum height and measured heights, so "Read Designing Data-Intensive Applications" wraps to two lines in the clip. `HomeLinesUITests` covers it.
+- F2 fixed: the last child of `LineHero`'s context `ViewThatFits` wraps instead of truncating (HomeLineHero.swift).
+- Design F2 is in: a rest day with a next session shows "Start …" in ink. With no next session, the planned session becomes the hero with START in ink (NowPage.swift).
+- The "today" override is gone. The hero's id is filtered out of Next and Later.
+- The old Done, Rest, Routine and Running heroes are now one `LineHero`. The running or paused session shows "Resume Push Day A" with a progress key.
+- R1 closed: the 53 s clip `docs/recordings/home-lines.mp4` walks Start, Home while running ("Push Day A, bench set 3 / Resume Push Day A"), two logged sets, a skipped rest with UNDO, Finish, and Back to today. It ends on the next task ("Groceries for the week"). There is no "…" in any frame. Heroes use digits and a lower-case "pm" ("Push Day A at 7 pm").
+- Data safety: all three UI tests subclass `SimulatorOnlyTestCase`. `ProcessInfo` appears only in test code, for the snapshot folder. There is no migration. The DemoData title change only drops a "·".
+
+### S1 (should fix, next Builder B push). The walk test's minimise step is stale
+`HomeWalkUITests.swift:28-29` taps (0.89, 0.102), "the chevron at the top right". Since #381 that chevron is gone, and PAUSE ("Pause the workout", WorkoutModeView.swift:689-696) at the bottom of the screen is the way back to Home. The top right now shows the "1 / 5 ⌄" counter, which opens the running order. The `Resume Push` check at :32-34 can still pass on Home's buttons that stay in the tree under the cover, so the test may go green without ever going back to Home. Fix: tap `app.buttons["Pause the workout"]`, then assert Home's RESUME is hittable.
+
+### Lows
+- L1: the walk ends on the next task hero, not a true rest day, as Builder B said. The rest-day path (`facts.rest(next:now:)` nil → planned session with START) has no recording. That is fine for this PR, but a still or clip belongs in the next Home PR.
+- L2 (not this PR): the finish card reads "Friday, 18:10 to 18:10" with "1 MIN" under the `-demoTime` clock. That is #381's N2, still open.
