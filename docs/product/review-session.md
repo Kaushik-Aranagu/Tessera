@@ -2,6 +2,16 @@
 
 *Planning lead, updated 11:30 PM Pacific, Oct 15. **Installed: 444e72b, at 11:28 PM PT Oct 15, over the existing app with your data kept.** It folds in Research's `review-refresh-2.md` (#223) and QA's review-215 smoke step. Not in this build: Settings: Claude (items 33 to 36), Speak, the ink-line keys (#278) and Plan my day, so skip those. First, pick your iCloud Drive folder in Review > Backups. If something else here isn't in the build, skip it and tell us. Late-night items only apply between midnight and 4 AM, since your day ends at 4 AM.*
 
+## Next build: 0d637baa (candidate, 1:01 AM PT Oct 16; installs only on your own "install it" in the iOS build thread)
+
+It adds #320 (the Tess asks Claude switch), #330 (the icon and the closer soul), #337 (Training opens on today's plan), and the haptics (#317) and Speak (#312) merged since 444e72b. If #343 (Return saves in Notes) passes within the hour, the candidate moves to its merge commit. Five minutes:
+1. **The icon.** On the Home Screen, Tessera shows Tess's soul. Inside the app, the soul's dabs sit closer together.
+2. **Tess asks Claude.** In Settings, CLAUDE, the first line reads "Tess asks Claude: yes." Tap it to switch to no ("Tess stays on this phone.") and back. Then type your key yourself in "Add a Claude key", if that row is there. Never paste it into chat.
+3. **Finish a task.** Finish one. Expect one three-beat tap and the strike, all under a second. With System Haptics off in iPhone Settings, expect no tap at all.
+4. **Training at rest.** Open Training. It should open on today's plan, with START and the routine name as an ink-line word.
+5. **Speak.** Tap the soul once to open Tess; a double tap goes Home. Hold the soul to speak "call mom at 7".
+Not yet in this build: one plain line per thing on Home, the glass tabs, routines by day, recipe layouts and the week on Review. Those come in the build after, before Oct 22.
+
 ## 10-minute short path
 
 1. Daytime: item 1 (white Home), then items 3 to 5 on Review (tap, then hold, then hold again). 2 min.
