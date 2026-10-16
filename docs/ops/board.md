@@ -29,6 +29,8 @@ Small product calls are logged in `../product/decisions.md`.
 | Kitchen and Lists | [board/kitchen.md](board/kitchen.md) | Recipes and groceries |
 | Research lab | [board/research.md](board/research.md) | Research lab |
 | QA | [board/qa.md](board/qa.md) | Repo maintainer |
+| AI architecture | [board/ai.md](board/ai.md) | AI architecture thread (new, Oct 16) |
+| Tess motion lab | [board/motion.md](board/motion.md) | Tess motion lab thread (new, Oct 16) |
 
 ## Cross-team order
 
