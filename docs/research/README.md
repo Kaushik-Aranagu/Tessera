@@ -99,3 +99,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [oplog-health.md](oplog-health.md) | Core: every write that skips the op log or cannot be undone, with risk, fix and owner, ahead of Build A1 |
 | [training-week-one.md](training-week-one.md) | Product and Core: 12 counts to pull from the op log in his first training week, gaps, three end-of-week questions |
 | [speak-first-use.md](speak-first-use.md) | Builder B: Speak first-use script, permission paths and lines (draft, copy proposed until the Design sheet lands) |
+| [plan-my-day-dryrun.md](plan-my-day-dryrun.md) | Core: 7 real-shaped days with the exact Plan my day context pack, privacy and size checks, expected wording |
