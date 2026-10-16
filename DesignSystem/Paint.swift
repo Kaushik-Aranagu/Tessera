@@ -244,6 +244,9 @@ struct PaintKey<Label: View, Meta: View>: View {
     /// The owner plays the completion's haptic itself (from the state change it causes), so it isn't lost when
     /// the key leaves in the same update (Reduce Motion, an accessibility action).
     var isSilent = false
+    /// The ink line as progress (home-first-review.md 41.5): a 22% track the full width, filled to this share.
+    /// Nil is the plain full line.
+    var progress: Double?
     let action: () -> Void
     /// Receives whether the word is being held. The word itself shouldn't change ("HOLD" lives in the meta).
     @ViewBuilder var label: (Bool) -> Label
@@ -316,8 +319,21 @@ struct PaintKey<Label: View, Meta: View>: View {
             // and 75%; wet 4 pt at 100%; a hold empties it to a 0.9 pt trace and repaints 2.5 to 3.6 pt.
             let thickness: CGFloat = holding ? 0.9 : (wet && !reduceMotion ? 4 : 2.5)
             ZStack(alignment: .leading) {
-                InkLine(thickness: thickness)
-                    .fill(paint.opacity(holding ? 0.35 : (wet || !dried ? 1 : 0.75)))
+                if let progress, !holding {
+                    InkLine(thickness: thickness)
+                        .fill(paint.opacity(0.22))
+                    InkLine(thickness: thickness)
+                        .fill(paint.opacity(wet || !dried ? 1 : 0.75))
+                        .mask(alignment: .leading) {
+                            GeometryReader { proxy in
+                                Rectangle().frame(width: proxy.size.width * progress)
+                            }
+                        }
+                        .tesseraAnimation(Theme.Motion.house, value: progress)
+                } else {
+                    InkLine(thickness: thickness)
+                        .fill(paint.opacity(holding ? 0.35 : (wet || !dried ? 1 : 0.75)))
+                }
                 if holding {
                     InkLine(thickness: reduceMotion ? 2.5 : 2.5 + 1.1 * fill)
                         .fill(paint)
@@ -449,11 +465,11 @@ struct PaintKey<Label: View, Meta: View>: View {
 
 extension PaintKey where Meta == EmptyView {
     init(finish: Finish = .ink, paint: Color = Theme.Colors.live, duration: Double = Theme.Motion.holdDuration,
-         isTap: Bool = false, height: CGFloat = 64, drift: CGFloat = 30, action: @escaping () -> Void,
-         @ViewBuilder label: @escaping (Bool) -> Label)
+         isTap: Bool = false, height: CGFloat = 64, drift: CGFloat = 30, progress: Double? = nil,
+         action: @escaping () -> Void, @ViewBuilder label: @escaping (Bool) -> Label)
     {
         self.init(finish: finish, paint: paint, duration: duration, isTap: isTap, height: height, drift: drift,
-                  action: action, label: label, meta: { EmptyView() })
+                  progress: progress, action: action, label: label, meta: { EmptyView() })
     }
 }
 

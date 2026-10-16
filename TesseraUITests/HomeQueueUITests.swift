@@ -13,7 +13,8 @@ final class HomeQueueUITests: SimulatorOnlyTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "-demoTime", "18:10", "-resetDemo"]
         app.launch()
-        let hero = app.staticTexts["Thursday evening"]
+        // The day word follows the Mac's weekday; only the part of the day is fixed by -demoTime.
+        let hero = app.staticTexts.matching(NSPredicate(format: "label ENDSWITH %@", " evening")).firstMatch
         XCTAssertTrue(hero.waitForExistence(timeout: 15))
         let from = app.coordinate(withNormalizedOffset: CGVector(dx: 0.15, dy: 0.3))
         from.press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.3)),
