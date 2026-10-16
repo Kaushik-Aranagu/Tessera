@@ -70,13 +70,23 @@ private struct LoggedStroke: View {
     /// Typed in the Bar and still drying: drawn wet in Tess's cobalt until it commits.
     var isGhost = false
     @State private var progress: CGFloat = 1
+    /// A fresh mark lands wet in its pigment and dries to the rest tint (sweep-19: colour only in the moment).
+    @State private var wet = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var paint: Color {
+        if isGhost {
+            return Paint.tess.opacity(0.55)
+        }
+        let pigment = Paint.set(number)
+        return wet || isEditing ? pigment : Theme.Colors.restTint(pigment)
+    }
 
     var body: some View {
         // Reduce Motion: no lift or wet, only the dim cross-fades.
         let lifted = isEditing && !reduceMotion
         Brushstroke(progress: progress)
-            .stroke(isGhost ? Paint.tess.opacity(0.55) : Paint.set(number),
+            .stroke(paint,
                     style: StrokeStyle(lineWidth: lifted ? 13 : 9, lineCap: .round))
             .frame(width: 64, height: 20)
             .blur(radius: lifted ? 1 : 0.4)
@@ -84,8 +94,15 @@ private struct LoggedStroke: View {
             .opacity(isDimmed ? 0.3 : isEditing ? 1 : 0.92)
             .tesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.22), value: isEditing)
             .tesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.22), value: isDimmed)
+            .tesseraAnimation(.easeInOut(duration: 1.2), value: wet)
             .onAppear {
-                guard isFresh, !reduceMotion else { return }
+                guard isFresh else { return }
+                wet = true
+                Task { @MainActor in
+                    try? await Task.sleep(for: .seconds(1.4))
+                    wet = false
+                }
+                guard !reduceMotion else { return }
                 progress = 0
                 withTesseraAnimation(.timingCurve(0.3, 0.7, 0.2, 1, duration: 0.7), reduceMotion: reduceMotion) {
                     progress = 1

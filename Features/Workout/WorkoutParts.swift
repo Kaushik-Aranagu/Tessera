@@ -205,7 +205,7 @@ struct EffortHandle: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 6) {
-            Text("reps").font(Theme.voice(size: 18)).foregroundStyle(Paint.cream.opacity(0.55))
+            Text("reps").font(Theme.voice(size: 16)).foregroundStyle(Paint.cream.opacity(0.55))
             Text("effort")
                 .textRole(.label)
                 .foregroundStyle((isShown ? Paint.now : Paint.secondary).opacity(0.7))

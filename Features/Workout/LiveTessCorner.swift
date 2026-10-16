@@ -38,7 +38,8 @@ struct LiveTessCorner: View {
                         .transition(.asymmetric(insertion: .offset(x: reduceMotion ? 0 : 12).combined(with: .opacity),
                                                 removal: .opacity))
                 }
-                if canUndo {
+                // UNDO leaves with its line, never alone (Design #297 follow-up).
+                if canUndo, shownLine?.isEmpty == false {
                     Button("Undo", action: onUndo)
                         .buttonStyle(.labelWord(Theme.Colors.liveInk))
                         .accessibilityLabel("Undo the last change")
@@ -78,7 +79,7 @@ struct LiveTessCorner: View {
                 .exclusively(before: TapGesture().onEnded { touched(then: onOpen) }))
             // On the finish screen she only speaks: no touch, no haptic.
             .allowsHitTesting(onOpen != nil || onHome != nil)
-            .sensoryFeedback(.selection, trigger: opens)
+            .tesseraFeedback(.selection, trigger: opens)
             .accessibilityElement()
             .accessibilityLabel("Tess")
             .accessibilityValue(shownLine ?? "")

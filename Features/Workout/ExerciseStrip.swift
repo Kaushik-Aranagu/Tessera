@@ -128,8 +128,8 @@ struct RunningOrderSheet: View {
                 }
             }
         )
-        .sensoryFeedback(.impact(weight: .medium), trigger: liftHaptic)
-        .sensoryFeedback(.selection, trigger: slotHaptic)
+        .tesseraFeedback(.pickedUp, trigger: liftHaptic)
+        .tesseraFeedback(.selection, trigger: slotHaptic)
         .onChange(of: destination) { _, new in
             if new != nil {
                 slotHaptic += 1
