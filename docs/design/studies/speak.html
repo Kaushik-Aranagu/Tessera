@@ -99,7 +99,7 @@ document.fonts.ready.then(()=>{
    [...$('tx').children].forEach(s=>{if(s.dataset.w==='um ')s.classList.add('drop')});
    at(380,()=>{$('tx').style.transition='color .4s';$('tx').style.color='rgba(23,20,31,.45)';$('tx').innerHTML='Oat milk and eggs, on <b style="font-weight:600">Groceries</b>.';
      $('heard').textContent='Heard: oat milk and um eggs';$('heard').style.opacity=1;
-     const d=$('hdry');d.innerHTML=`<div style="position:relative">${line(250,'rgb(226,67,42)')}</div>`;d.style.opacity=1;
+     const d=$('hdry');d.innerHTML=`<div style="position:relative">${line(250,'#2450D8')}</div>`;d.style.opacity=1;
      const inner=d.firstChild;inner.animate([{clipPath:'inset(0 0 0 0)'},{clipPath:'inset(0 100% 0 0)'}],{duration:3000,easing:'linear',fill:'forwards'});
      note('THE VOICE GHOST DRIES FOR 3 S. TOUCH IT TO EDIT INSTEAD.')});
  });

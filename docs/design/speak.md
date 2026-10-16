@@ -1,6 +1,6 @@
 # Speak: the voice layer (board item 9)
 
-For Builder B's Speak PR. It's drawn to `no-buttons.md`, `calm-capture.md`, `voice-gym.md`, `no-dots.md`, `ink-line.md` and `themes.md` (one base). It answers Research's `speak-first-use.md` (item 30), which takes its lines from here. **Research's states, pass rules and exact lines stand** except where this sheet changes them.
+For Builder B's Speak PR. It's drawn to `no-buttons.md`, `calm-capture.md`, `voice-gym.md`, `no-dots.md`, `ink-line.md` and `themes.md` (one base). It answers Research's `speak-first-use.md` (item 30, merged as #243), which takes its lines from here. **Research's states, pass rules and exact lines stand** except where this sheet changes them. Research's 12 open disagreements are settled in "Research's walk, settled" at the end (16 Oct).
 
 Recording: `recordings/speak.mp4` (source `studies/speak.html`).
 - On the left: Speak from the capture surface on Home, showing listening, the words as heard, tidying, and the voice ghost drying.
@@ -11,7 +11,9 @@ Recording: `recordings/speak.mp4` (source `studies/speak.html`).
 1. **Gesture: both, one rule each.**
    - **From the surface:** tap the soul, then tap **Speak**. Listening starts at once, with no hold, because choosing Speak already says "I'll talk". A 1.2s pause or a tap on the bloom ends it.
    - **The fast path anywhere:** **hold the soul at rest**, on any screen, workout or not. It listens while held, and letting go sends it. Dragging left off the soul cancels.
-   - The hint "Hold me to tell me a set" (live mode) or "Hold me to talk" (elsewhere) sits beside the soul until it has been used three times.
+   - The hint "Hold me to tell me a set" (live mode) or "Hold me to talk" (elsewhere) sits beside the soul **until the first hold that listens**, then never again.
+   - **Cancel:** a tap on the veil (outside the bloom) cancels a tap-started listen. Nothing is saved and there's no line.
+   - **Limits:** if no word comes in the first 5s, listening ends with "Didn't hear anything." Any listen ends at 60s and sends what it heard, as a pause would.
 2. **First tap after Allow:** listening starts right away. He tapped Speak to talk, so a second gesture would be friction. Research's `ready` line becomes the one-time hint by the soul, not a step.
 3. **Dry time:**
    - **3s for voice outside a workout.** The transcript is less certain than typing, and the Heard line needs a moment to read.
@@ -39,13 +41,13 @@ Recording: `recordings/speak.mp4` (source `studies/speak.html`).
 
 ## The voice ghost
 - **The clean sentence sits at 45%** with the **Heard line** under it in `inkSecondary`: "Heard: oat milk and um eggs". That's the transcriber's raw words.
-- **A thin ink line in `live`** sits between them and drains right to left over 3s (`ink-line.md` shape, 2.5pt).
+- **A thin ink line in cobalt** sits between them and drains right to left over 3s (`ink-line.md` shape, 2.5pt). Write's ghost uses the same line over its 2s, so a drying ghost reads one way everywhere.
 - **Touching the ghost** stops the drying, and the sentence opens in the Write line to edit.
 - **When it dries:**
   1. Everything gathers back into the soul (220ms).
   2. The page comes forward.
-  3. Tess says the result beside the soul with UNDO in `liveInk`: "Added oat milk and eggs to Groceries."
-- **A doubtful parse** (Research 2e) shows no draining line. The two guesses are value words under it ("**84 × ?** · **80 × 4**"), and nothing commits until he taps one.
+  3. Tess says the result beside the soul with UNDO in `liveInk` (the text-safe live, `Looks.swift:44`): "Added oat milk and eggs to Groceries."
+- **A doubtful parse** (Research 2e) shows no draining line. Tess's line names the guesses, and **the guesses in the line are the value words**: "Didn't catch that. **84 × ?** or **80 × 4**?" Nothing sits under it, and nothing commits until he taps one.
 
 ## In a live workout ("80 for 7")
 - **Hold the soul in the corner.** No surface and no wash: the soul swells in place (×1.4) and breathes with the level.
@@ -62,18 +64,21 @@ Recording: `recordings/speak.mp4` (source `studies/speak.html`).
 | Key | Line |
 |---|---|
 | askMic | Tess needs the mic to hear you. |
+| doubtful | Didn't catch that. **84 × ?** or **80 × 4**? (the guesses are value words) |
 | ready (one-time hint by the soul) | **Hold me to talk.** (live mode: "Hold me to tell me a set") |
 | preparing | Getting speech ready. Needs a connection once. |
 | micOff | Mic is off for Tessera. **Open Settings** (an ink word, no question mark) |
 | micLimited | The mic is limited on this iPhone. **Write** still works. ("Write" is an ink word) |
-| micBack | Mic is on. Hold me to talk. |
-| needsConnection | Voice needs a connection once to set up. |
-| noLanguage | Voice isn't available in this language yet. **Write** still works. |
+| speechOff (`SFSpeechRecognizer` path only) | Speech is off for Tessera. **Open Settings** |
+| speechLimited (`SFSpeechRecognizer` path only) | Speech is limited on this iPhone. **Write** still works. |
+| micBack | **Mic is on.** (in place of "Listening", once; the hold hint is left to the one-time hint) |
+| needsConnection | Voice needs a connection once to set up. (The Speak word sits on the 25% `live` line, not filling.) |
+| noLanguage | Voice isn't available in this language yet. **Write** still works. (The layer opens for it once. Later taps show the line beside the soul without opening the layer.) |
 | nearLanguage | Listening in English (UK). |
 | callTook | Call took the mic. Nothing saved. |
 | callBusy | The mic is busy with a call. |
 | appTook | Another app took the mic. Nothing saved. |
-| silence | Didn't hear anything. |
+| silence | Didn't hear anything. (no word in the first 5s) |
 | heard | Heard: {raw transcript} |
 | listening | **Listening** |
 
@@ -87,3 +92,19 @@ Recording: `recordings/speak.mp4` (source `studies/speak.html`).
   - The words fade in without blur.
   - Tidying is a crossfade.
   - The ghost dries in 0.8s (0.6s in a workout).
+
+## Research's walk, settled (16 Oct, `speak-first-use.md` #243)
+1. **Hold on master opens the surface** (`BottomChrome.swift:192`). The Speak PR makes the hold listen. The soul keeps "Opens Tess." as its tap hint and gains the "Talk to Tess" action. Builder B, already in the Speak work.
+2. **Mode dabs and 34pt mode words on master** (`ModeRow`, `BottomChrome.swift:528`, `modeFont` 343-347). These go to 21/500 with no dabs in the Speak PR. Builder B.
+3. **How long the hold hint stays:** until the first hold that listens, then never again.
+4. **× or x: × app-wide** in everything shown or said on screen: Tess lines, set lines, the doubtful line, the Day log. Typing or saying "x" or "by" still parses. Change `TessCaptureEngine.swift:106` and `:123` to ×, and the tests follow. VoiceOver reads × as "by" ("80 by 7").
+5. **The doubtful-parse guesses** show once, inside Tess's line as value words. Nothing sits under it.
+6. **Ending a tap-started listen:** a tap on the veil cancels (nothing saved, no line). No word in the first 5s ends with "Didn't hear anything." Every listen, tap or hold, ends at 60s and sends.
+7. **needsConnection:** the Speak word sits on the 25% `live` line, not filling. Research's 7b stands.
+8. **No language, later taps:** the line shows beside the soul, and the layer doesn't open. Research's 8b stands.
+9. **UNDO colour:** `liveInk` wherever UNDO is text, on every look. `Theme.Colors.live` at `BottomChrome.swift:147` (via `InkLabelWordStyle.undo`) and `Paint.live` at `LiveTessCorner.swift:41` move to `liveInk`. On Porcelain that's #C23A22, which passes contrast at 16/700 where #E2432A doesn't.
+10. **Dry line:** one line for every drying ghost. It's the `ink-line.md` lens at 2.5pt in cobalt, draining right to left: 2s for Write, 3s for voice. Master's Write line (`BottomChrome.swift:312-316`, cobalt, filling left to right) flips to drain.
+11. **speechOff and speechLimited** are in the line table above, for the `SFSpeechRecognizer` path only.
+12. **micBack** is now "Mic is on." It shows once in place of "Listening", and the hold hint is left to the one-time hint.
+
+**Purpose strings:** Research's stand, including the mic string's "while you talk to her".
