@@ -303,12 +303,21 @@ enum Theme {
 
         /// 66% on light looks, 72% on dark (themes.md, second addendum: contrast).
         static var inkSecondary: Color {
-            Color(light: concept.palette.ink.0, dark: concept.palette.ink.1, lightAlpha: 0.66, darkAlpha: 0.72)
+            Color(light: concept.palette.ink.0, dark: concept.palette.ink.1,
+                  lightAlpha: tier(0.66, 0.72).day, darkAlpha: tier(0.66, 0.72).night)
+        }
+
+        /// A tier's alpha by each half's own look (a pinned light look stays light-tiered on a dark-mode phone).
+        private static func tier(_ light: CGFloat, _ dark: CGFloat) -> (day: CGFloat, night: CGFloat) {
+            guard retired == nil else { return (light, dark) }
+            let pair = ThemeStore.shared.pair
+            return (pair.day.isDark ? dark : light, pair.night.isDark ? dark : light)
         }
 
         /// Text only at 34 pt and up; below that it's for marks. 51% light, 38% dark.
         static var inkTertiary: Color {
-            Color(light: concept.palette.ink.0, dark: concept.palette.ink.1, lightAlpha: 0.51, darkAlpha: 0.38)
+            Color(light: concept.palette.ink.0, dark: concept.palette.ink.1,
+                  lightAlpha: tier(0.51, 0.38).day, darkAlpha: tier(0.51, 0.38).night)
         }
 
         /// Veils, held rows, the Write layer.

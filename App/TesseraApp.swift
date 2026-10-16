@@ -70,6 +70,9 @@ struct TesseraApp: App {
                 #endif
             }
             .environment(model)
+            // A pinned look holds the appearance too ("Obsidian always" on a light phone gets a light status bar
+            // on black otherwise).
+            .preferredColorScheme(ThemeStore.shared.pinned.map { $0.isDark ? .dark : .light })
             // The rest Live Activity follows the live session: each logged set, +15s, Skip and the end.
             .onChange(of: model.session?.loggedCount, initial: true) {
                 RestActivityController.shared.update(for: model.session)

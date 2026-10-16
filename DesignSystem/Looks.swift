@@ -73,7 +73,7 @@ struct Look: Sendable, Identifiable, Equatable {
     static let plein = Look(
         name: "Plein", isDark: false, field: .plein,
         ground: 0xF2ECE3, raised: 0xFAF6EF, ink: 0x2B2440, context: 0x7A5C8E, muted: 0xA39AAE, tess: 0x2A64A0,
-        live: 0xC8452F, liveInk: 0xB83C28, now: 0xE0B341, health: 0x6E9E6A, training: 0xC8452F, neutral: 0xA39AAE,
+        live: 0xC8452F, liveInk: 0xB83C28, now: 0xE0B341, health: 0x6E9E6A, training: 0x6E9E6A, neutral: 0xA39AAE,
         sky: 0x9EC3D6,
         workout: Workout(ground: 0x1C1828, raised: 0x3B2D57, ink: 0xF3ECE0, signal: 0xD9563F, rest: 0xE8BD4C,
                          tess: 0x9DBFE6, health: 0x7FB07A)
@@ -100,6 +100,17 @@ struct Look: Sendable, Identifiable, Equatable {
     static let all: [Look] = [.porcelain, .obsidian, .plein, .lacquer, .celadon]
     static let light: [Look] = [.porcelain, .plein, .celadon]
     static let dark: [Look] = [.obsidian, .lacquer]
+
+    /// The VoiceOver hint and preview caption (docs/research/theme-names.md).
+    var line: String {
+        switch name {
+        case "Porcelain": "Pure white. Colour pools only behind what matters now."
+        case "Obsidian": "True black. Colour turns to light and glows."
+        case "Plein": "Warm paper with soft washes and grain, painted outdoors."
+        case "Lacquer": "Plum black with one slow sheen that moves as you tilt."
+        default: "Pale green glaze that pools darker at the foot of the page."
+        }
+    }
 
     static func named(_ name: String) -> Look? {
         all.first { $0.name.lowercased() == name.lowercased() }
