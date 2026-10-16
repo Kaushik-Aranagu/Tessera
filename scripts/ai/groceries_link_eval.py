@@ -214,7 +214,7 @@ def write_report(out, args):
         f"| Must rows paired in every run | {len(musts)} of {len(musts)} | {must_ok} of {len(musts)} |",
         f"| False pairs in all row-runs | 0 of {len(out['rows']) * len(out['runs'])} | {len(false_pairs)} |",
         f"| Replies dropped (over 6 pairs, two pairs on a row, no tool call) | 0 | {out['dropped']} |",
-        f"| Cost per run | under $0.001 | ${per_run:.4f} |",
+        f"| Cost per run | note, not gated | ${per_run:.4f} |",
         f"| Latency p50 / max | 8 s timeout | {secs[len(secs) // 2]:.1f} s / {secs[-1]:.1f} s |", ""]
     if false_pairs:
         lines += ["## False pairs", "", "| Run | # | Row | Expect | Got |", "|---|---|---|---|---|"]

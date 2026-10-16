@@ -15,7 +15,7 @@ Date: Oct 16, 2026 (Pacific). Builds on `docs/research/tess-model-layer.md` and 
 | Capture misses | `ClaudeTessModel.swift` (Haiku 5.5, 512 tokens, 8 s, 3 tool rounds) | Works, gated by the switch |
 | Plan my day wording | `PlanWording.swift` (Sonnet 5.5, effort low, 20 s, strict `proposePlan`, validator, cached on `PlanPack.cacheKey`) | Works |
 | Recipe link L3 | `RecipeLinkReader.swift` (Haiku) | Works |
-| Key, ledger, cap | `ClaudeKey.swift` (`TessKeychain`, `TessUsageLedger`, $10 cap today ($50 proposed, raised in AI-2 after Kaushik's yes), reserve then settle, `TessCall` row per call) | Works |
+| Key, ledger, cap | `ClaudeKey.swift` (`TessKeychain`, `TessUsageLedger`, $50 cap (Kaushik's yes 9:27 AM PT Oct 16, carried in #422), reserve then settle, `TessCall` row per call) | Works |
 | Voice checks | `TessVoice` in `TessCapturing.swift` (under 12 words, banned words, no "!") | Works |
 | One switch | "Tess asks Claude" (`missesGoToClaude`), #320 makes it stick | In review |
 
@@ -143,7 +143,7 @@ Prices from `TessUsageLedger.prices` (Haiku 5.5 $0.10 in and $0.50 out per milli
 | Week story | Sonnet 5.5 | 2,000 / 300 | $0.007 | 8 | $0.06 |
 | Grocery connect (name matching only) | Haiku 5.5 | 1,200 / 150 | $0.0002 | 60 | $0.01 |
 | Existing (capture, plan, link, questions) | | | | | $0.44 (claude-first-uses.md) |
-| **Total** | | | | | **about $0.70** on Haiku, about $4 with Sonnet on Home lines and the week story; cap $10, $50 proposed (Product, Oct 16) |
+| **Total** | | | | | **about $0.70** on Haiku, about $4 with Sonnet on Home lines and the week story; cap $50 (decided Oct 16) |
 
 ## 6. Model per job
 
@@ -177,6 +177,7 @@ No Opus or Fable. The Home lines eval (ship list AI-5) runs Haiku and Sonnet sid
 2. Memory backs up with everything else. DEFAULT: yes, it's his data; the key and miss log still never do.
 3. Noticed lines may mention training time and order, never body or health. DEFAULT: yes.
 4. Week lines in memory. DEFAULT: none stored (Research S1; Design agreed they have no place on the page, addendum d73cba4); the `WeekFacts` lens computes the week live, and recent lines stop at 14 days.
+5. Later goal, parked: Tess as chief of staff (first point of contact, broad view, delegates to expert agents and presents what they find). Not current scope; see `parked.md` for how AI-2 jobs, soul signals, memory shape A and the walls leave room for it.
 
 ## 9. Living colour: Tess's soul palette chosen by Claude
 
