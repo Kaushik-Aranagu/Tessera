@@ -95,3 +95,18 @@ A gear icon, a list of rows, a toggle, a section in a card, the key or its bookm
   - the master fixes Research lists: the full stop after the misses word [C7], middle dots between label words [C10, B5], the switch value word [C1].
 - **Core:** the settings-object fields are already on master (5455f14). The unit fields are still to come.
 - **Builder A:** `PaintFlood`'s origin point.
+
+## Addendum (16 Oct, 1:05 AM PT): the switch's words as Claude's jobs grow (Design item 50, AI-6)
+The "Tess asks Claude" line's answer names what the switch covers, in the order he meets the jobs, and it only names a job once the build does it, so the words never promise what the phone can't yet do. The line stays Body 21 in Tess's voice under the switch, as built in #320.
+
+| When | "yes" answer |
+|---|---|
+| Today (#320) | "Tess asks Claude when she's unsure, and for Plan my day." |
+| Once Home lines go through Claude (AI-4) | "Tess asks Claude when she's unsure, for Plan my day, and to word Home." |
+| Once the week is told (AI-11) | "Tess asks Claude when she's unsure, for Plan my day, and to word Home and your week." |
+
+- The "no" answer stays "Tess stays on this phone." at every stage.
+- **The spend line follows the cap number**, never a setting: "This month **$0.00** of $10." reads "of $50." the day `TessUsageLedger.capNano` changes, with no other word moving. The amber at 80% and "Claude paused until 1 Nov." are unchanged.
+- **One privacy line**, 16 `inkSecondary`, under the spend line from AI-4 on: "Titles and counts only. Never notes, places, health or money." It's the Settings copy of Plan my day's VIA CLAUDE disclosure, and it's there whether the switch says yes or no.
+- Nothing else in the CLAUDE section changes for AI-6.
+
