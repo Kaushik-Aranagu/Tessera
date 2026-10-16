@@ -76,5 +76,5 @@ Money: ‹ REVIEW, "Money", "October, nothing yet" as the context line, "Nothing
 - Every clip ends inside the app.
 
 ## Addendum (Oct 16, Research 130 / Product 999df84)
-- **RF15:** the finished-book receipt is "**Dune, finished.**" (thing first), not "Dune, finished." Replace it in the book page row at 480 and in the recording's words.
+- **RF15:** the finished-book receipt is "**Dune, finished.**" (thing first), not "Finished Dune." Wherever the sheet or the recording words the finish, this is the line.
 - **RF18:** "read 20 pages" is one write: a reading record that the Read habit counts, so no second check-in that day. Nothing to draw.
