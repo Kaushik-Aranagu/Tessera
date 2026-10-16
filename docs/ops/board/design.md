@@ -71,6 +71,7 @@ Items 2 to 4 of the last round are done (see Done). Item 1's first pass is done;
 45. Three recipe layouts. Done when three distinct recipe page layouts are drawn with a real US recipe so he can pick one, for Builder B and the Kitchen lead.
 46. Review, the week on one page. Done when Review shows the whole week on one page (training, tasks done, habits, body weight, money, the day log's best lines) without cards, with a recording, for Builder B.
 47. Groceries with Tess. Done when the AI team's groceries spec (ai.md item 3) has its surfaces drawn: sorted aisles, the recipe link, a suggestion row and a reminder line, for Builder B.
+48. Tess's changing colours (Kaushik, 12:08 AM PT Oct 16), after 41. Done when a recording shows the soul moving between AI-picked pigments within each look's palette (`soul-explore.md`): how a change arrives (through motion, then dries), how often, the ranges per look, and the fallback set, with values for Builder A and the AI team's item 5. Tess only; the app's colours stay fixed.
 
 **Later:**
 - Glyph for the Tell Tess control as an SF Symbols template, once slice 10 starts.
