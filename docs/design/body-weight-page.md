@@ -1,5 +1,7 @@
 # The Body weight page, redrawn (Design item 29)
 
+> **The ask (item 35):** the waiting weigh-in follows `one-ask.md`: the ghost reads "Body weight **82.4** kg" with no question mark, and Tess asks "82.4 kg as today's weight?" with KEEP · NOT NOW (replacing T1's "Tap to keep it."). Tapping the ghost still keeps it.
+
 `body-weight-and-habits.md` §1, redrawn under today's rules: the page top (`day-seams.md` S4), one context line directly above the hero (`sweep-19.md`), nothing coloured at rest (`no-dots.md`), and Tess beside the soul (S1). Copy is Research's `m3-lines.md` §1 to §3 (master), units come from settings, and D12 follows Product's live-workout rule. Where this sheet and §1 differ, this sheet wins; §1 carries a pointer.
 - Board: `mockups/body-weight.png` (source `studies/body-weight.html`). It shows the page from Training in kg, a bare "82.4" waiting, the page from Review in lb in Obsidian just after a keep, and "82.4" said mid-workout.
 - Recording: `recordings/body-weight.mp4` (12s, 60fps). "82.4" waits as a ghost. A tap dries it, the dab drops onto the stroke and the trend rolls from 78.2 to 78.4. Then UNDO takes it back.
