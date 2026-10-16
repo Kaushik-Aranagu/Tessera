@@ -249,7 +249,11 @@ struct PaintKey<Label: View, Meta: View>: View {
     @GestureState private var isPressing = false
     @State private var fill: CGFloat = 1
     @State private var wet = false
-    @State private var bloom: CGFloat = 1
+    @State private var drawnIn = false
+    @State private var dried = false
+    @State private var sheen: CGFloat = 0
+    @State private var bead: CGFloat = 0
+    @State private var beadOpacity: Double = 0
     @State private var completions = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
@@ -303,26 +307,73 @@ struct PaintKey<Label: View, Meta: View>: View {
     @ViewBuilder private var stroke: some View {
         if isEnabled {
             let holding = isPressing && !isTap
+            // docs/design/ink-line.md: a fine tapered swash under the word, never behind the letters. 2.5 pt at rest
+            // and 75%; wet 4 pt at 100%; a hold empties it to a 0.9 pt trace and repaints 2.5 to 3.6 pt.
+            let thickness: CGFloat = holding ? 0.9 : (wet && !reduceMotion ? 4 : 2.5)
             ZStack(alignment: .leading) {
-                // The dry trace while a hold empties the stroke.
-                InkStroke(seed: 3)
-                    .fill(paint.opacity(holding ? 0.2 : 0))
-                InkStroke(seed: 3)
-                    .fill(paint.opacity(wet ? 1 : 0.82))
-                    .mask(alignment: .leading) {
-                        GeometryReader { proxy in
-                            Rectangle().frame(width: proxy.size.width * (holding ? fill : 1))
+                InkLine(thickness: thickness)
+                    .fill(paint.opacity(holding ? 0.35 : (wet || !dried ? 1 : 0.75)))
+                    .opacity(holding ? 1 : 1)
+                if holding {
+                    InkLine(thickness: reduceMotion ? 2.5 : 2.5 + 1.1 * fill)
+                        .fill(paint)
+                        .mask(alignment: .leading) {
+                            GeometryReader { proxy in
+                                Rectangle().frame(width: proxy.size.width * fill)
+                            }
                         }
+                }
+                if !reduceMotion {
+                    // The release sheen: a band running along the line, left to right.
+                    GeometryReader { proxy in
+                        LinearGradient(colors: [.clear, sheenColor, .clear], startPoint: .leading,
+                                       endPoint: .trailing)
+                            .frame(width: proxy.size.width * 0.35)
+                            .offset(x: proxy.size.width * (sheen * 1.35 - 0.35))
+                            .opacity(sheen > 0 && sheen < 1 ? 1 : 0)
                     }
+                    .mask { InkLine(thickness: thickness) }
+                    // The completion bead at the tip.
+                    Circle()
+                        .fill(paint)
+                        .frame(width: bead * 2, height: bead * 2)
+                        .opacity(beadOpacity)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .offset(x: bead)
+                }
             }
-            .frame(height: 19)
-            .scaleEffect(x: 1, y: (wet && !reduceMotion ? 1.65 : 1) * bloom, anchor: UnitPoint(x: 0.5, y: 0.7))
-            .blur(radius: wet && !reduceMotion ? 1 : 0)
-            .padding(.horizontal, -7)
-            // Bottom 3 pt below the baseline, so the lower third of the letters sits in paint.
-            .offset(y: -5)
+            .mask(alignment: .leading) {
+                // Arrival: drawn in from the left.
+                GeometryReader { proxy in
+                    Rectangle().frame(width: proxy.size.width * (drawnIn || reduceMotion ? 1 : 0))
+                }
+            }
+            .frame(height: 12)
+            .padding(.leading, -2)
+            .padding(.trailing, -4)
+            // Centre 7 pt below the baseline (the text frame ends about 8 pt under it at 34 pt).
+            .offset(y: 5)
+            .tesseraAnimation(.easeOut(duration: 0.12), value: wet)
             .allowsHitTesting(false)
             .accessibilityHidden(true)
+            .onAppear(perform: arrive)
+        }
+    }
+
+    private var sheenColor: Color {
+        ThemeStore.shared.paintLook.isDark ? Theme.Colors.sheen : .white.opacity(0.85)
+    }
+
+    private func arrive() {
+        guard !drawnIn else { return }
+        withTesseraAnimation(Theme.Motion.house.speed(0.42 / 0.36), reduceMotion: reduceMotion) { drawnIn = true }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(360))
+            if let dry = Theme.Motion.dry(reduceMotion: reduceMotion) {
+                withAnimation(dry) { dried = true }
+            } else {
+                dried = true
+            }
         }
     }
 
@@ -335,6 +386,7 @@ struct PaintKey<Label: View, Meta: View>: View {
             }
             .onEnded { value in
                 withAnimation(MotionPolicy.resolve(Theme.Motion.house, reduceMotion: reduceMotion)) { wet = false }
+                runSheen()
                 if abs(value.translation.width) < drift, abs(value.translation.height) < drift {
                     complete()
                 }
@@ -351,13 +403,24 @@ struct PaintKey<Label: View, Meta: View>: View {
         completions += 1
         completionsSnapshot = completions
         if !isTap, !reduceMotion {
-            // The tip blooms, then settles.
-            withAnimation(.easeOut(duration: 0.13)) { bloom = 1.3 }
-            withAnimation(.easeInOut(duration: 0.13).delay(0.13)) { bloom = 1.1 }
-            withAnimation(Theme.Motion.house.delay(0.4)) { bloom = 1 }
+            // A bead swells at the tip, r 0 → 5 → 7 as it fades (520 ms).
+            bead = 0
+            beadOpacity = 1
+            withAnimation(.easeOut(duration: 0.2)) { bead = 5 }
+            withAnimation(.easeOut(duration: 0.32).delay(0.2)) {
+                bead = 7
+                beadOpacity = 0
+            }
         }
         fill = 1
         action()
+    }
+
+    /// The sheen runs along the line once, then it dries back.
+    private func runSheen() {
+        guard !reduceMotion else { return }
+        sheen = 0
+        withAnimation(Theme.Motion.house.speed(0.42 / 0.52)) { sheen = 1 }
     }
 }
 
@@ -382,4 +445,28 @@ extension EnvironmentValues {
     /// True on the workout's ground, which is dark in every look: ink there is `Theme.Colors.Workout.ink` (a pinned
     /// light look would otherwise draw its dark ink on the dark ground).
     @Entry var onWorkoutGround = false
+}
+
+/// The ink line (docs/design/ink-line.md): a lens, thickest just left of centre and tapering to a hairline at both
+/// ends, drawn on a w x 12 box: M0 6 Q .42w (6-t) w 5.6 Q .58w (6+t) 0 6 Z. `thickness` animates.
+struct InkLine: Shape {
+    var thickness: CGFloat = 2.5
+
+    var animatableData: CGFloat {
+        get { thickness }
+        set { thickness = newValue }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        let w = rect.width
+        let y = rect.minY + rect.height / 2
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: y))
+        path.addQuadCurve(to: CGPoint(x: rect.minX + w, y: y - 0.4),
+                          control: CGPoint(x: rect.minX + 0.42 * w, y: y - thickness))
+        path.addQuadCurve(to: CGPoint(x: rect.minX, y: y),
+                          control: CGPoint(x: rect.minX + 0.58 * w, y: y + thickness))
+        path.closeSubpath()
+        return path
+    }
 }

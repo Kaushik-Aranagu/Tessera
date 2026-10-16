@@ -10,6 +10,8 @@ public final class TessCaptureEngine: TessCapturing {
     public let grammar: TessGrammar
     /// The model step. Nil, or unavailable on this device, means grammar only.
     public var model: (any TessModelCapturing)?
+    /// The last step: Claude, for what the phone missed. Nil until a key is saved; it checks its own switches.
+    public var claude: ClaudeTessModel?
 
     public init(engine: ActionEngine, model: (any TessModelCapturing)? = nil) {
         self.engine = engine
@@ -138,6 +140,9 @@ public final class TessCaptureEngine: TessCapturing {
         if let model {
             models.append(OnDeviceTessModel(model))
         }
+        if let claude {
+            models.append(claude)
+        }
         return TessRouter(engine: engine, models: models)
     }
 
@@ -251,7 +256,9 @@ public final class TessCaptureEngine: TessCapturing {
             let name = Self.shortName(exercise.name)
             let scheme = sets > 1 ? "\(sets) × \(TessVoice.number(reps))" : "\(TessVoice.number(reps)) reps"
             let load = TessVoice.number(weight) + (unit == .kilograms ? "" : " \(unit.symbol)")
-            return (record, "\(name) \(scheme) at \(load). Added to today.")
+            // A bodyweight lift has no load to say ("Pull-Up 3 × 8", never "at 0").
+            return (record, weight == 0 ? "\(name) \(scheme). Added to today."
+                : "\(name) \(scheme) at \(load). Added to today.")
         case let .set(entry, kilograms, reps, kind, phrase, unit, rpe, saidWeight):
             // Logged in the unit it was said in, so the set keeps its entered unit.
             let said = unit.fromKilograms(kilograms, rounded: false)
@@ -353,9 +360,10 @@ public final class TessCaptureEngine: TessCapturing {
         }
     }
 
-    /// "Bench Press" reads as "Bench" in Tess's one-liners; other names stay whole.
+    /// "Bench Press" reads as "Bench" and "Back Squat" as "Squat" in Tess's one-liners, as he says them (A027);
+    /// other names stay whole.
     static func shortName(_ name: String) -> String {
-        name == "Bench Press" ? "Bench" : name
+        ["Bench Press": "Bench", "Back Squat": "Squat"][name] ?? name
     }
 
     /// "today 3 pm", "tomorrow 9 am", "Saturday 3 pm". By his day (04:00 to 04:00); after midnight and before 04:00

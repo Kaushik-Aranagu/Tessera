@@ -69,6 +69,34 @@ struct WeekViewTests {
 
 @MainActor
 struct RestDayTests {
+    @Test func aDoubleSessionDayCountsOnce() throws {
+        // QA D7 on #219: two sessions on Monday are one done day toward the week, not two.
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let ledger = TrainingLedger(store: store, classes: classes)
+        let plan = try #require(store.object(id: StarterContent.planID))
+        let routines = store.linkedObjects("routines", of: plan)
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .gmt
+        calendar.firstWeekday = 2
+        let now = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 14, hour: 12)))
+        let monday = now.addingTimeInterval(-2 * 86400)
+        for index in 0 ..< 2 {
+            let started = monday.addingTimeInterval(Double(index) * 8 * 3600)
+            let workout = try engine.perform(StartRoutine(routine: routines[index].id, time: started), by: .user)
+                .output
+            let entry = try #require(workout.orderedChildren.first)
+            try engine.perform(LogSet(entry: entry.id, weight: 80, reps: 8), by: .user)
+            try engine.perform(FinishWorkout(workout: workout.id, time: started.addingTimeInterval(3600)), by: .user)
+        }
+        let week = ledger.week(containing: now, plan: plan, now: now, sessionsPerWeek: 4, calendar: calendar)
+        #expect(week[0].done.count == 2)
+        // Same as one session: 3 still due over the 5 days left.
+        #expect(week.map(\.isRest) == [false, true, false, true, false, true, false])
+        #expect(week.compactMap(\.planned).count == 3)
+    }
+
     @Test func aRestDayKeepsTheNextRoutineOneTapAway() throws {
         let store = ObjectStore.open(inMemory: true)
         let classes = try store.prepareCatalog()

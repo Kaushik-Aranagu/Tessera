@@ -82,6 +82,9 @@ struct DataSafetyTests {
         #expect(!TesseraSchema.isDamaged(DatabaseError(resultCode: .SQLITE_FULL)))
         #expect(!TesseraSchema.isDamaged(DatabaseError(resultCode: .SQLITE_IOERR)))
         #expect(!TesseraSchema.isDamaged(DatabaseError(resultCode: .SQLITE_CANTOPEN)))
+        // QA G2: a decode bug in our own code is not damage; the store stays where it is.
+        #expect(!TesseraSchema.isDamaged(DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "bug"))))
+        #expect(!TesseraSchema.isDamaged(CocoaError(.fileReadUnknown)))
 
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)

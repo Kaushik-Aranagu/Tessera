@@ -129,7 +129,9 @@ public enum TesseraBackup {
         let names = try manager.contentsOfDirectory(atPath: folder.path)
         let copies = names.filter { $0.hasPrefix("Tessera-") && $0.hasSuffix(".\(fileExtension)") }.sorted(by: >)
         let newest = copies.first.flatMap { try? inspect(folder.appendingPathComponent($0)).createdAt }
-        let clockBehind = newest.map { now < $0 } ?? false
+        // A newest copy more than 2 days ahead is a clock that was set forward once, not one running behind: it
+        // doesn't stop pruning or the late-night refresh for weeks (QA B10).
+        let clockBehind = newest.map { now < $0 && $0.timeIntervalSince(now) <= 2 * 86400 } ?? false
         // A store with nothing he did (a fresh install, only the seeded catalog) is never copied: it would crowd
         // out a good copy, or replace tonight's (restore walk, risk 1).
         try context.save() // the counts below read the database (QA on #239)

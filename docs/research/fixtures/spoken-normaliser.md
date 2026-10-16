@@ -476,3 +476,151 @@ Design settled the sign app-wide: × in everything shown or said on screen (Tess
 - New rows 81 to 83 and N25, N26 cover "by". Typed "80 by 8" still needs Core: master reads `by` only in the 2 × 10 ask (`TessGrammar+Live.swift:123`), not in the set or scheme regexes (`TessGrammar.swift:286`, 358).
 - Expected Tess lines follow master `fdcaee4` (#248): "Set N logged. 80 × 8.", "Drop set logged. 72.5 × 10, nearest load to 72." (N05, N22, N25, 81). The lift line keeps a plain x for more than one set on master (`TessCaptureEngine.swift:211`, row 82) until Core changes it.
 - Rule 17 now names the Speak layer, not the old Bar.
+
+## Re-trace on master after #262 (12f1c43)
+
+Item 113, Research lab, 2026-10-16. Base `origin/master` at `8d5e427` (Merge PR #270); its `TesseraTess` code is `12f1c43` (Merge PR #262, Core commit `926ce1b`, "Spoken numbers to digits"), and nothing after #262 touches the grammar, the normaliser or a Speak path (#266, #258 and #264 to #271 are UI, settings, backups and launch flags). No Swift toolchain here: `TessSpoken.numbers` was ported line for line to a scratch script, checked against all 34 rows of Core's `SpokenNumbersTests` (output and idempotence, all equal), and run on every raw transcript below; each grammar result is a hand trace. Clock Thu 15 Oct 2026 18:10 America/Los_Angeles (as `grammar-regression.md`; no row changes between 18:00 and 18:10). Contexts as above; D as in the live section.
+
+**What #262 built.** `TessSpoken.numbers` (`TesseraCore/Sources/TesseraTess/TessSpoken.swift`) is the "Live-workout number words" rules 1 to 11 above, nothing more: lowercase, `-` to a space, spaces collapsed, an end `.` or `!` dropped; a leading `and`, `so`, `okay`, `ok` dropped and `a` before a plain number word; `one more` and a number word before `plates` or `side` protected; number runs (`a hundred and five`, `eighty two`, `one oh five`, `one twenty five`, `point`, `and a half`), a comma ending a run; `plus N` and `minus N` at the start; a trailing `for` after one number is 4; `times` and `into` to `x`; kilos and pounds to `kg` and `lb`; `rep` to `reps`, and `reps` after a full set dropped; a stutter before an operator dropped. `for`, `by` and `at N` stay (the grammar reads them). Wake words, politeness, fillers, note prefixes, corrections, money, times, reordering and the other protected spans of rules 1 to 17 are not built.
+
+**Where it runs.** Only in `parseInFocus` (`TessGrammar.swift:115-124`): with an exercise in focus and a number word (`zero` to `ninety`, `hundred`) or `plus`/`minus` in the phrase, the live rules read `TessSpoken.numbers(phrase)` first; if they claim it, that wins; if not, the raw phrase goes on through every rule as before. There is no Speak layer on master (Speak is still a word, `Features/Command/BottomChrome.swift`), so nothing else normalises: I, C and S rows, and W rows with no number word, reach the grammar as the raw transcript (typed, or keyboard dictation into the Write line).
+
+**How it is judged.** "Normaliser" compares `TessSpoken.numbers(raw)` with the Normalised column; case, × against x, and the live rules' kept `for`, `by`, `at N` and `reps` count as the same. "Master" is what master does with what reaches the grammar. PASS when master gives the row's expected intent: a G\* row passes on its target, or on nil where `grammar-regression.md` gates the target (Money); an M or **PASS** row passes on nil. "FAIL (period)": the right task and date, but the title keeps the dictation period. "hook" marks a W row the normaliser reached. TG is `TessGrammar.swift`, LV `TessGrammar+Live.swift`, Kitchen `TessGrammar+Kitchen.swift`, all at `12f1c43`.
+
+### Main rows (1 to 83) on `12f1c43`
+
+| # | Ctx | `TessSpoken.numbers(raw)` | Normaliser | Master (what reaches the grammar) | Result |
+|---|---|---|---|---|---|
+| 1 | W | `85 for 6` | same (keeps `for`) | hook: set 85 × 6, "Set 2 logged. 85 × 6." | PASS |
+| 2 | W | `100 and 7.5 for 3` | differs: `and` joins digits only after a `hundred` word | raw (no number word): the `and` split finds no set, then nil | FAIL (miss) |
+| 3 | I | `squat 1 oh 2.5 for 5` | differs: `one oh 2.5` not read | nil: `parseLift` words `squat one oh` fail the 3-letter floor (TG:501) | FAIL (miss) |
+| 4 | W | `80 kg x 8` | same | raw (no number word): `kilos` read (LV:19), `times` not, so nil | FAIL (miss) |
+| 5 | W | `same again` | same | set 80 × 8 (same), "Set 2 logged, same again." | PASS |
+| 6 | W | `same weight, one more rep` | differs: comma kept | nil: neither the hook text nor the raw phrase is a live set, and the comma parts are no grocery list | PASS |
+| 7 | W | `drop to 70` | same | nil (drop with no reps goes to the model, T706) | PASS |
+| 8 | W | `80 for 8 at 8` | same (keeps `at 8`, rule 9) | set 80 × 8, RPE 8 (raw, LV:37-46) | PASS |
+| 9 | W | `82.5 for 6 at rpe 9` | differs: `at rpe 9` not read | nil: `at rpe 9` is no RPE shape and `looksLikeSet` sends it to the model (LV:81) | FAIL (miss) |
+| 10 | W | `85 for 5 at 9.5` | same (keeps `at`) | hook: set 85 × 5, RPE 9.5 | PASS |
+| 11 | W | `same, at 9` | differs: comma kept | set 80 × 8 (same), RPE 9: the joined parts `same at 9` (TG:155) | PASS |
+| 12 | I | `bench 3 sets of 8 at 80` | differs: `sets of` not rewritten (idle, not run) | **wrong write**: lift Bench Press 1 × 8 at 3 kg (`parseLift` takes 3 as the weight and drops `80`, TG:446-458) | FAIL (wrong write) |
+| 13 | I | `deadlift 2 plates for 5` | same | nil (`deadlift plates` is no exercise) | PASS |
+| 14 | W | `8 reps` | same (keeps `reps`, rule 8) | set 80 × 8, reps only | PASS |
+| 15 | W | `add 2.5` | same | nil (`add 2.5` goes to the model, T706) | PASS |
+| 16 | W | `80 for 8, 80 for 8, 80 for 6` | same (keeps `for`) | sets, 3 into Bench: 80 × 8, 80 × 8, 80 × 6 | PASS |
+| 17 | I | `squat 100, 5` | same | lift Back Squat 1 × 5 at 100 (TG:365-371) | PASS |
+| 18 | W | `80 for ate` | differs: `ate` not read | nil (`ate` is no exercise) | FAIL (miss) |
+| 19 | W | `80 x 8` | same | hook: set 80 × 8 | PASS |
+| 20 | I | `3 x 10 bench at 80` | same (idle, not run) | nil: idle, no digits reach `parseLift` | FAIL (miss) |
+| 21 | I | `bench 80 kg, 8 reps only` | differs: `reps only` kept | **wrong write**: groceries [Bench 80 kg, 8 reps only.]: the comma list counts `8 reps only.` as an amount (Kitchen:59-65); the lift is lost | FAIL (wrong write) |
+| 22 | W | `185 lb for 5` | same | raw (no number word): `pounds` is no unit the live set regex reads, `parseLift` has no exercise word: nil | FAIL (miss) |
+| 23 | I | `deadlift 225 lb for 3` | same | lift Deadlift 1 × 3 at 225 lb | PASS |
+| 24 | I | `i weigh 182 lb` | same | nil | PASS |
+| 25 | I | `11 stone 4` | differs: `11 stone 4` (rule 5 protects `N stone M`) | nil (idle, not run) | PASS |
+| 26 | I | `12 lb 50 at tesco` | differs: `12 lb 50` (money not read) | nil [Money] (gated, now nil) | PASS |
+| 27 | W | `tess, 80 for 8` | differs: `tess,` kept (only `okay` goes) | **wrong write**: groceries [Okay Tess, 80 for 8.] mid-workout: the comma parts fail the live guard and the kitchen comma list reads `80 for 8.` as amount 80; the set is lost | FAIL (wrong write) |
+| 28 | W | `uh, uh, 80, 80 for 8` | differs: fillers and the repeat kept | nil (`uh uh` is no exercise; `80` has no letter, so no grocery list) | FAIL (miss) |
+| 29 | W | `yeah. yeah. 80 for 7` | differs: `yeah.` kept | nil | FAIL (miss) |
+| 30 | W | `come on. come on. 80 for 7` | differs: inner periods kept | nil | PASS |
+| 31 | W | `80 for, for 8` | differs: the stutter kept | **wrong write**: groceries [80 for, for 8.] mid-workout (as row 27); the set is lost | FAIL (wrong write) |
+| 32 | W | `80 for 7 for` | differs: dangling `for` kept (two numbers before it) | nil: `looksLikeSet` sends it to the model (LV:81); no doubtful set | FAIL (miss) |
+| 33 | W | `um` | differs: `um` kept | nil (the model reads `Um.`; nothing written; "Didn't hear anything." is Speak's) | PASS |
+| 34 | W | `test, 80 for 8` | differs: `test,` kept | **wrong write**: groceries [Test, 80 for 8.] mid-workout (as row 27); the set is lost | FAIL (wrong write) |
+| 35 | I | `test the smoke alarm saturday` | same | task "Test the smoke alarm" Sat 17 09:00 (now parse, B324) | PASS |
+| 36 | I | `tess, i'd like a reminder for friday to book the mot` | differs: wake words kept | **wrong write**: task "Okay Tess, I'd like a reminder to book the MOT." Fri 16 09:00 | FAIL (wrong write) |
+| 37 | I | `please remind me to call ravi tomorrow, thanks` | differs: politeness kept | **wrong write**: task "Please remind me to call Ravi thanks." Fri 16 09:00 (not explicit: `please` comes first) | FAIL (wrong write) |
+| 38 | I | `buy 2 lemons and some milk` | same | groceries [two lemons, some milk.] (the right two items; the words stay words) | PASS |
+| 39 | I | `2 lemons and some milk` | same | nil | PASS |
+| 40 | I | `get a dozen eggs` | differs: `a dozen` kept | groceries [a dozen eggs.] (the right item) | PASS |
+| 41 | I | `buy half a dozen eggs and a pint of milk` | differs: `half a dozen` kept | nil: `half a dozen eggs` reads as the gift shape (`notGroceries`, Kitchen:164) in a two-item list | FAIL (miss) |
+| 42 | I | `by 4 lemons and a bag of rice` | same | nil | PASS |
+| 43 | I | `by 5 p.m., send the invoice` | differs: `5 p.m.,` not joined | nil: `p.m.` is no time and `send the invoice` is an errand line | FAIL (miss) |
+| 44 | I | `buy 1 kg atta and half kg dahi` | differs: `half kg` kept | groceries [1 kg atta, half kg dahi.] (the right items) | PASS |
+| 45 | S | `parmesan` | same | groceries [parmesan] (shop run) | PASS |
+| 46 | C | `add 2 tins of chickpeas` | same | nil (`add X` is not read yet: ADD, as B334) | FAIL (miss) |
+| 47 | I | `remind me friday to call the bank` | differs: no reorder | task "Call the bank." Fri 16 09:00 (title keeps the dictation period) | FAIL (period) |
+| 48 | I | `remind me next tuesday to renew the passport` | differs: `next` kept | **wrong write**: task "Next to renew the passport." Tue 20 09:00 | FAIL (wrong write) |
+| 49 | I | `call the dentist tomorrow morning` | differs: `morning` not 9am | **wrong write**: task "Call the dentist morning." Fri 16 09:00 | FAIL (wrong write) |
+| 50 | I | `remind me in 20 minutes to take the chicken out` | differs: no reorder, no `min` | **wrong write**: task "In 20 minutes to take the chicken out." Later (RELT) | FAIL (wrong write) |
+| 51 | I | `pay the window cleaner thursday` | same | task "Pay the window cleaner" Thu 15 19:00 (now parse, B339) | PASS |
+| 52 | I | `remind me thursday at 8 to put the bins out` | differs: no reorder | task "Put the bins out." Thu 15 20:00 (period) | FAIL (period) |
+| 53 | I | `dentist on the twentieth at half past 3` | differs: ordinal and `half past` not read | nil: no date the grammar reads | FAIL (miss) |
+| 54 | I | `call mum at 7:00 pm` | differs: `7:00 pm` not joined | **wrong write**: task "Call mum PM." Thu 15 19:00 | FAIL (wrong write) |
+| 55 | I | `remind me tomorrow itself to send the form` | differs: `itself` kept | **wrong write**: task "Itself to send the form." Fri 16 09:00 | FAIL (wrong write) |
+| 56 | I | `remind me day after tomorrow to pay rent` | same | **wrong write**: task "Day after to pay rent." Fri 16 09:00 (RELT, as B343) | FAIL (wrong write) |
+| 57 | I | `prepone the dentist to wednesday` | same | **wrong write**: task "Prepone the dentist to" Wed 21 09:00 (RC13, as B344) | FAIL (wrong write) |
+| 58 | I | `remind me friday, no, saturday to clean the car` | differs: the correction is kept | **wrong write**: task "No, to clean the car." Sat 17 09:00 | FAIL (wrong write) |
+| 59 | I | `do 1 thing, remind me tomorrow to collect the courier` | differs: `do 1 thing` (opener kept, `one` rewritten) | **wrong write**: task "Do one thing, remind me to collect the courier." Fri 16 09:00 | FAIL (wrong write) |
+| 60 | I | `remind me 2 days before the mot` | same | **wrong write**: task "Two days before the MOT." Later (RELT, as B347) | FAIL (wrong write) |
+| 61 | I | `spent 12 50 at tesco` | differs: `12 50` (money not read) | nil [Money] (gated, now nil) | PASS |
+| 62 | I | `spent 1250 at tesco` | same | nil [Money] | PASS |
+| 63 | I | `lunch was a tenner` | differs: `a tenner` kept | nil | PASS |
+| 64 | I | `20 quid for petrol` | same | nil [Money] | PASS |
+| 65 | I | `spent 15 hundred on petrol` | differs: `15 hundred` | nil [Money] | PASS |
+| 66 | I | `spent 1, 00, 000 on the bike` | differs: grouping commas kept | nil [Money] (`00` has no letter, so no grocery list) | PASS |
+| 67 | I | `paid 1 lakh 20 thousand rupees deposit` | differs: `lakh`, `thousand` not read | nil (`Paid` with no day is no past log) | PASS |
+| 68 | I | `spent 4 quid at 7 11` | differs: `7 11` (rule 5 protects `seven eleven`) | nil [Money] (idle, not run) | PASS |
+| 69 | I | `note. the bar felt heavy today` | differs: `note.` not made `note:` | **wrong write**: task "Note. The bar felt heavy" Thu 15 19:00 (`today` with no time), never a note | FAIL (wrong write) |
+| 70 | I | `note to self, 80 felt easy` | differs: body rewritten to `80` (rule 3 forbids it) | **wrong write**: note "to self, eighty felt easy." (RC16, as A234) | FAIL (wrong write) |
+| 71 | I | `make a note that the squat rack in bay 2 is broken` | differs: `bay 2` (note prefix not read) | nil: `make` is read as a cook verb, no recipe, no task | FAIL (miss) |
+| 72 | W | `80, no wait, 85 for 8` | differs: the correction is kept | nil: the hook's `80, no wait, 85 for 8` is not read (`no wait` is no set), and the raw phrase reaches no rule | FAIL (miss) |
+| 73 | W | `80 for 8, sorry, 9` | differs: the correction is kept | nil: the joined parts start with a set shape, so the model (LV:81) | FAIL (miss) |
+| 74 | I | `buy oat milk, no wait, almond milk` | same | **wrong write**: groceries [oat milk, no wait, almond milk.] (as B361) | FAIL (wrong write) |
+| 75 | I | `remind me to eat 5 a day` | differs: `5 a day` (rule 5 protects it) | task "Eat five a day." Later (period) | FAIL (period) |
+| 76 | I | `meeting in room 101 at 3` | same | nil: `at three` is no time to the grammar | FAIL (miss) |
+| 77 | I | `book a table for 2 at 7` | same | nil: `at seven` is no time to the grammar | FAIL (miss) |
+| 78 | I | `work 9 to 5 on saturday` | differs: `9 to 5` (rule 5 protects it) | task "Work nine to five" Sat 17 09:00 (now parse, B365) | PASS |
+| 79 | W | `2 3 more sets` | differs: `2 3` (rule 5 protects the range) | nil (the hook result `2 3 more sets` is no live phrase; raw nil) | PASS |
+| 80 | I | `remind me to water the plants 2 3 x a week` | differs: `2 3 x a week` (range and `times` rewritten) | task "Water the plants 2-3 times a week." Later (period) | FAIL (period) |
+| 81 | W | `80 by 8` | differs: keeps `by` (the grammar reads it since #254) | hook: set 80 × 8, "Set 2 logged. 80 × 8." | PASS |
+| 82 | I | `bench 3 by 8 at 80` | differs: keeps `by` (idle, not run) | nil: idle, no digits reach `parseLift` | FAIL (miss) |
+| 83 | I | `pay the gas bill by 7` | same | nil: `by seven` is no time to the grammar | FAIL (miss) |
+
+### Live-workout number words (K811, K812, N01 to N26) on `12f1c43`
+
+| id | Ctx | `TessSpoken.numbers(raw)` | Normaliser | Master | Result |
+|---|---|---|---|---|---|
+| K811 | W | `82.5 for 8` | same | set 82.5 × 8, "Set 2 logged. 82.5 × 8." | PASS |
+| K812 | W | `100 for 5 at 8` | same | set 100 × 5, RPE 8, "Set 2 logged. 100 × 5, RPE 8." | PASS |
+| N01 | W | `105` | same | nil: asks "105 for how many reps?" before the model | PASS |
+| N02 | W | `105 for 3` | same | set 105 × 3 | PASS |
+| N03 | W | `100, 5` | same | nil: `100` asks, so the list goes to the model; never groceries (K885) | PASS |
+| N04 | I | `82.4` | same (idle, not run) | nil (idle: the raw words reach no rule) | PASS |
+| N05 | W | `82.4 for 6` | same | set 82.5 × 6, "Set 2 logged. 82.5 × 6, nearest load to 82.4." | PASS |
+| N06 | W | `105 for 5` | same | set 105 × 5 | PASS |
+| N07 | D | `24 reps` | same | set 24 × 24 (reps only, the word `reps` said) | PASS |
+| N08 | D | `24` | same | nil: asks "24: 24 kg, or 24 reps?" before the model | PASS |
+| N09 | W | `8 at 3` | same | nil: `at 3` is no RPE (LV:41-43); never a task | PASS |
+| N10 | W | `8 reps at 9` | same | set 80 × 8, RPE 9 | PASS |
+| N11 | W | `same at 9.5` | same | set 80 × 8 (same), RPE 9.5, "Set 2 logged, same again, RPE 9.5." | PASS |
+| N12 | W | `80 for 8` | same | set 80 × 8 | PASS |
+| N13 | W | `100 for 5 at 8` | same | set 100 × 5, RPE 8 (was a task "100 for five" 20:00 on raw words) | PASS |
+| N14 | W | `a couple more` | same | nil (no number word, so the hook is skipped) | PASS |
+| N15 | W | `10 10 10` | same | nil (`10 10 10` is no set shape, K884) | PASS |
+| N16 | W | `10, 10, 10` | same | sets, 3 × 80 × 10, "Sets 2 to 4 logged. 80 × 10." | PASS |
+| N17 | W | `one more set` | same | nil (`one more set` is protected; the model) | PASS |
+| N18 | W | `100 for 4` | same | set 100 × 4 | PASS |
+| N19 | W | `84 8` | same | nil (`84 8` has no operator) | PASS |
+| N20 | W | `80 for 8` | same | set 80 × 8 | PASS |
+| N21 | W | `80 for 8` | same | set 80 × 8 | PASS |
+| N22 | W | `drop to 72 for 10` | same | drop set 72.5 × 10, "Drop set logged. 72.5 × 10, nearest load to 72." | PASS |
+| N23 | W | `call mum at 7` | same | nil: only the live rules read `call mum at 7`; the task rule reads the raw `at seven`, which is no time | FAIL (miss) |
+| N24 | W | `+5` | same | nil: says "Say the set, like 85 × 8." before the model | PASS |
+| N25 | W | `82.5 by 6` | differs: keeps `by` (`82.5 by 6`) | set 82.5 × 6 (the set regex reads ` by `, TG:336) | PASS |
+| N26 | W | `2 by 10` | differs: keeps `by` (`2 by 10`) | asks "2 × 10: 2 sets, or 2 kg?" (LV:153) | PASS |
+
+### Counts on `12f1c43`
+
+- **Main rows: 38 PASS, 45 FAIL** out of 83. Of the 45: **20 wrong writes** (rows 12, 21, 27, 31, 34, 36, 37, 48, 49, 50, 54, 55, 56, 57, 58, 59, 60, 69, 70, 74), **4 period only** (47, 52, 75, 80) and **21 misses** that write nothing (2, 3, 4, 9, 18, 20, 22, 28, 29, 32, 41, 43, 46, 53, 71, 72, 73, 76, 77, 82, 83). The normaliser's output matches the Normalised column on 32 of 83.
+- **Live rows: 27 PASS, 1 FAIL** out of 28 (N23, a miss). The normaliser matches on 26 of 28; N25 and N26 keep `by`, which the grammar reads (`TessGrammar.swift:336`, `TessGrammar+Live.swift:153`), so the parse is the same. Before #262 every row but N13 gave nil on master and N13 was a wrong write; K811, K812, N02, N05, N06, N07, N10 to N13, N16, N18, N20 to N22, N25 and N26 now write or ask as the table says.
+- These counts are not comparable with the post-hotfix 60 PASS, 20 FAIL: that check traced the Normalised column, as if the full normaliser ran. On the Normalised column, `grammar-regression.md` group B (B296 to B367, rows 1 to 80) keeps the current status: 64 pass, 7 wrong write, 1 miss, unchanged by #262.
+
+### Findings on `12f1c43`
+
+1. **Sets lost or invented (flag to Core).** Rows 27, 31 and 34 (W: `Okay Tess, 80 for 8.`, `80 for, for 8.`, `Test, 80 for 8.`) and row 21 (I: `Bench 80 kg, 8 reps only.`) write groceries and lose the set: a comma phrase that the live guard and `parseCommaSets` do not read falls to the kitchen comma list, whose set check knows `x` and `×` but not `for` (`looksLikeGroceries`, `TessGrammar+Kitchen.swift:75`, and `isShoppingList`, line 143), so `80 for 8.` is a grocery line with amount 80. K885's fix covers only phrases with a number word. Fix: treat `N for M` as a set there, and keep the kitchen comma list out of a live workout. Row 12 (I: `Bench 3 sets of 8 at 80.`) invents Bench Press 3 kg × 8: idle, `parseLift` takes the first number as the weight and drops `80` (`TessGrammar.swift:446-458`); `N sets of M` is read only in focus (`TessGrammar+Live.swift:145`). Typed text does the same in every case.
+2. **The hook needs a number word.** Rows 4 and 22 (`80 kilos times 8.`, `185 pounds for 5.`) miss in a live workout although `TessSpoken` reads `times` and `pounds`; `82 and a half for 6` (`speech-capture.md` row 6) misses the same way. Widening the trigger to those words, or to any W phrase, would clear them.
+3. **Only the live rules read the normalised text.** N23 (`call mum at seven`, W) goes to the model where `call mum at 7` is a task at 19:00: the task rule reads the raw `at seven`.
+4. **A `where` that guards one word only** (`TessSpoken.swift:227-231`). In `case "times", "into" where ...` a Swift `where` binds to the last pattern only, so `times`, `kilos`, `kilo`, `kilograms`, `kgs`, `pounds`, `lbs` and `lbs.` are rewritten with no number beside them; only `into`, `k` and `pound` are guarded. No row fails on it today (in focus only the live rules read the result), but run on every transcript it turns row 80 into `2 3 x a week`. Fix: one case per word, or the guard inside the body.
+5. **Protected spans.** `TessSpoken` alone breaks what rule 5 protects and touches a note body (rule 3): rows 25, 59, 68, 70, 75, 78, 79 and 80. Harmless in focus; the Speak path (Builder B) must run the full normaliser around it, not `TessSpoken` alone, on idle text.
+6. **What waits on the Speak normaliser, not on Core.** The idle number-word misses (3, 20, 53, 76, 77, 82, 83, and `speak-first-use.md` 2b `bench eighty for eight`, nil on master), the four title periods, and the wake word, politeness, opener and note-prefix wrong writes (36, 37, 48, 49, 54, 55, 58, 59, 69, 70). Core's own rows stay as before: RELT and RC13 (50, 56, 57, 60) and the corrections backstop (74).
+
+The Speak-in-the-workout rows of `speak-first-use.md` (7a, 6c to 6d, 11c, 2e) are now `grammar-regression.md` K896 to K900; all pass on `12f1c43` (2e's doubtful line waits on Speak).

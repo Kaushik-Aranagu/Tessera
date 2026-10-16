@@ -57,6 +57,9 @@ public struct TessGrammar {
     }
 
     public func parse(_ phrase: String, context: TessContext) -> Parse? {
+        // A wake word said with it ("Okay Tess, 80 for 8.") is not part of the phrase.
+        // Only "Tess," / "Tess:" or "okay/hey Tess": "Tess's ideas list" and "Tess dinner fri" keep their Tess (QA W1).
+        let phrase = phrase.replacing(/^(?i)\s*(?:(?:ok(?:ay)?|hey)\s+tess(?:[,.:]\s*|\s+)|tess[,:]\s*)/, with: "")
         let text = Self.normalize(phrase)
         guard !text.isEmpty else { return nil }
         if let note = parseNote(phrase) {
@@ -85,11 +88,25 @@ public struct TessGrammar {
             let snapped = parts.map { snap($0, entry: entry) }
             return snapped.contains { $0 == nil } ? nil : .sets(snapped.compactMap(\.self))
         }
+        if let both = parseLiftAndErrand(phrase, context: context, entry: entry) {
+            return both
+        }
         if let dated = parseDatedLift(text, context: context) {
             return dated
         }
         if let lift = parseLift(text, entry: entry) {
             return lift
+        }
+        // "bench 80x8 at 7": a set now, or a plan for 7 pm? Never a task called "Bench 80x8" (A184): the model reads
+        // it.
+        if let timed = text.firstMatch(of: /^(.+) at \d{1,2}(?::\d{2})? ?(?:am|pm)?$/),
+           parseLift(String(timed.1), entry: nil) != nil
+        {
+            return nil
+        }
+        // A bare set with nothing in focus ("80 for 8" while shopping) is never an item or a task: the model reads it.
+        if text.firstMatch(of: /^\d+(?:\.\d+)?(?: ?kg| ?lb)?(?: ?x ?| for | by )\d+(?: reps)?$/) != nil {
+            return nil
         }
         // A past-tense log with a day ("watered plants sat") is a note dated that day, never a future task.
         if let log = parsePastLog(phrase, context: context) {
@@ -111,13 +128,15 @@ public struct TessGrammar {
 
     /// The live workout's rules for a phrase with an exercise in focus; nil when they don't apply (the other rules
     /// then read it), `Live(parse: nil)` when the phrase is a set the grammar mustn't guess.
-    private func parseInFocus(_ phrase: String, text: String, context: TessContext, entry: ObjectRecord) -> Live? {
-        // Number words typed or said ("a hundred, five", K885) are read as digits by the live rules first.
+    private func parseInFocus(_ phrase: String, text: String, context: TessContext, entry: ObjectRecord,
+                              spokenRead: Bool = false) -> Live?
+    {
+        // Number words typed or said ("a hundred, five", K885) are read as digits by the live rules first; one pass.
         let words = phrase.lowercased().split { !$0.isLetter }.map(String.init)
-        if words.contains(where: { TessSpoken.isNumberWord($0) || $0 == "plus" || $0 == "minus" }) {
+        if !spokenRead, words.contains(where: { TessSpoken.isNumberWord($0) || $0 == "plus" || $0 == "minus" }) {
             let spoken = TessSpoken.numbers(phrase)
             if spoken != phrase, let live = parseInFocus(spoken, text: Self.normalize(spoken), context: context,
-                                                         entry: entry)
+                                                         entry: entry, spokenRead: true)
             {
                 return live
             }
@@ -157,41 +176,6 @@ public struct TessGrammar {
             }
         }
         return nil
-    }
-
-    /// "bench 80x8 mon", "yesterday squat 100x5": a lift with a day name, first or last. A past day asks (K887,
-    /// A026); today's name logs as usual; never a task.
-    private func parseDatedLift(_ text: String, context: TessContext) -> Parse? {
-        var words = text.split(separator: " ").map(String.init)
-        guard words.count >= 3 else { return nil }
-        let isDay = { (word: String) in TessDates.weekdays[word] != nil || word == "yesterday" }
-        guard let index = isDay(words[words.count - 1]) ? words.count - 1 : isDay(words[0]) ? 0 : nil else {
-            return nil
-        }
-        let dayWord = words.remove(at: index)
-        guard case let .lift(exercise, sets, reps, weight, unit)? = parseLift(words.joined(separator: " "), entry: nil)
-        else { return nil }
-        let calendar = context.calendar
-        let today = TesseraDay(calendar: calendar).day(of: context.now)
-        let back = if let weekday = TessDates.weekdays[dayWord] {
-            (calendar.component(.weekday, from: today) - weekday + 7) % 7
-        } else {
-            1
-        }
-        guard back > 0 else {
-            return .lift(exercise: exercise, sets: sets, reps: reps, weight: weight, unit: unit)
-        }
-        guard let day = calendar.date(byAdding: .day, value: -back, to: today),
-              let noon = calendar.date(byAdding: .hour, value: 12, to: day) else { return nil }
-        let formatter = DateFormatter()
-        formatter.calendar = calendar
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "EEEE"
-        formatter.timeZone = calendar.timeZone
-        return .askDatedLift(TessDatedLiftAsk(
-            exercise: exercise.id, name: TessCaptureEngine.shortName(exercise.name), sets: sets, reps: reps,
-            weight: weight, unit: unit, day: noon, dayName: formatter.string(from: noon)
-        ))
     }
 
     /// Lead words that ask rather than tell ("what did i weigh monday", "anything due tmrw").
@@ -234,6 +218,14 @@ public struct TessGrammar {
                     of: /^(done|finished|finished shopping|done shopping|shop|shopping|thanks|thank you|ok|cancel|stop)$/
                 )
                 != nil || Self.startsWithErrand(text) || ["buy", "get", "add", "pick"].contains(first)
+                // "milk for groceries" is the kitchen rule's; a set shape ("80 for 8") is never an item (Research
+                // on #282).
+                || text
+                .firstMatch(
+                    of: /\s(?:for|on|to|onto)\s+(?:the\s+|my\s+)?(?:groceries|grocery list|shopping list|shopping)$/
+                ) !=
+                nil
+                || text.firstMatch(of: /\d\s*(?:x|×|for|by)\s*\d/) != nil || Self.isMoney(text)
             {
                 return nil
             }
@@ -402,68 +394,6 @@ public struct TessGrammar {
         return .sets(parsed)
     }
 
-    private func parseLift(_ text: String, entry: ObjectRecord?) -> Parse? {
-        var lift = LiftWords()
-        var rest = Substring(text)
-        if let scheme = rest.firstMatch(of: /(\d+(?:\.\d+)?)(?: ?x ?| by )(\d+)(?: (?:at|@) (\d+(?:\.\d+)?))?/) {
-            lift.readScheme(Double(scheme.1) ?? 0, Double(scheme.2) ?? 0, at: scheme.3.flatMap { Double($0) },
-                            weightElsewhere: Self.hasOtherNumber(rest, excluding: scheme.range))
-            rest.removeSubrange(scheme.range)
-        }
-        rest.split(separator: " ").forEach { lift.read($0) }
-        let (sets, unit, reps, weight, words) = (lift.sets, lift.unit, lift.reps, lift.weight, lift.words)
-        guard let reps, let weight, !words.isEmpty, (1 ... 20).contains(sets), reps >= 1, reps <= 100,
-              reps.rounded() == reps, weight > 0, unit.toKilograms(weight) <= 1000,
-              let exercise = resolveExercise(words.joined(separator: " ")) else { return nil }
-        if let entry, sets == 1, store.linkedClass("exercise", of: entry)?.id == exercise.id {
-            return .set(entry: entry, weight: unit.toKilograms(weight), reps: reps, kind: .working, phrase: .full,
-                        unit: unit)
-        }
-        return .lift(exercise: exercise, sets: sets, reps: reps, weight: weight, unit: unit)
-    }
-
-    /// The numbers and words of a lift phrase.
-    private struct LiftWords {
-        var sets = 1
-        var unit = MassUnit.kilograms
-        var reps: Double?
-        var weight: Double?
-        var words: [Substring] = []
-
-        mutating func readScheme(_ first: Double, _ second: Double, at atWeight: Double?, weightElsewhere: Bool) {
-            if let atWeight {
-                // "3x8 at 80": sets x reps at weight.
-                (sets, reps, weight) = (Int(first), second, atWeight)
-            } else if first <= 10, second <= 30, weightElsewhere {
-                // "3x10 bench 80": sets x reps, weight elsewhere.
-                (sets, reps) = (Int(first), second)
-            } else {
-                // "80x8": weight x reps.
-                (weight, reps) = (first, second)
-            }
-        }
-
-        mutating func read(_ token: Substring) {
-            if let parsed = MassUnit(parsing: String(token)) {
-                unit = parsed
-            } else if let value = Double(token) {
-                if weight == nil {
-                    weight = value
-                } else if reps == nil {
-                    reps = value
-                }
-            } else if !["for", "at", "@", "of", "x", "sets", "reps", "log", "logged", "add", "did"].contains(token) {
-                words.append(token)
-            }
-        }
-    }
-
-    private static func hasOtherNumber(_ text: Substring, excluding range: Range<Substring.Index>) -> Bool {
-        var copy = text
-        copy.removeSubrange(range)
-        return copy.split(separator: " ").contains { Double($0) != nil }
-    }
-
     static let equipmentWords = ["db": "dumbbell", "bb": "barbell", "kb": "kettlebell", "ez": "ez"]
 
     /// Common gym names for built-in lifts.
@@ -471,7 +401,8 @@ public struct TessGrammar {
         "bench": "bench press", "bp": "bench press", "ohp": "overhead press", "press": "overhead press",
         "squat": "back squat", "squats": "back squat", "dl": "deadlift", "deads": "deadlift",
         "rdl": "romanian deadlift", "row": "barbell row", "rows": "barbell row", "pullups": "pull-up",
-        "pull ups": "pull-up", "chinups": "chin-up", "curls": "curl", "dips": "dip", "lat pulldown": "lat pulldown",
+        "pull ups": "pull-up", "chinups": "chin-up", "curls": "dumbbell curl", "curl": "dumbbell curl", "dips": "dip",
+        "lat pulldown": "lat pulldown",
     ]
 
     /// The exercise class whose name best matches: exact, then alias, then every word contained, shortest first.
@@ -566,7 +497,7 @@ public struct TessGrammar {
     }
 
     static func number(_ text: String) -> Double? {
-        Double(text.replacingOccurrences(of: " reps", with: ""))
+        Double(text.replacingOccurrences(of: " only", with: "").replacingOccurrences(of: " reps", with: ""))
     }
 }
 

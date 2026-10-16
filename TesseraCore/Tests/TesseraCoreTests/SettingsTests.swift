@@ -169,3 +169,46 @@ struct SettingsTests {
         #expect(settings.read().missesGoToClaude == false)
     }
 }
+
+/// QA on #258, and a check Research asked for before Oct 22: an older build reading a newer catalog.
+@MainActor
+struct SettingsFollowUpTests {
+    @Test func aRestWeekdayOutsideOneToSevenReadsAsEmpty() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        let settings = SettingsStore(engine: engine)
+        try settings.update { $0.restWeekday = 3 }
+        let object = try #require(store.object(id: SettingsStore.objectID))
+        for stored in [0.0, 8.0] {
+            try store.set("restWeekday", to: .number(stored), on: object)
+            #expect(settings.read().restWeekday == nil)
+        }
+    }
+
+    @Test func aSoftDeletedSettingsObjectIsBroughtBackOnWrite() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        let settings = SettingsStore(engine: engine)
+        try settings.update { $0.lookDay = "Porcelain" }
+        // Undoing the first settings op deletes the object it created.
+        try engine.undo(#require(engine.history(limit: 1).first))
+        #expect(settings.read() == TesseraSettings())
+        try settings.update { $0.lookDay = "Obsidian" }
+        #expect(settings.read().lookDay == "Obsidian")
+    }
+
+    @Test func aClassFromANewerCatalogIsLeftAlone() throws {
+        // Rolling back to an older build: the store still opens and seeds, a class it doesn't know (as v3 doesn't
+        // know Settings) is skipped, not dropped, and its objects survive a copy.
+        let store = ObjectStore.open(inMemory: true)
+        _ = try store.prepareCatalog()
+        let future = ClassDef(name: "From the future", parent: nil, symbolName: "sparkle", colorRole: "neutral",
+                              traits: [], systemKey: "system.fromTheFuture")
+        future.packageVersion = 99
+        store.context.insert(future)
+        let object = store.create(future, title: "Kept")
+        let classes = try store.prepareCatalog()
+        #expect(!classes.values.contains { $0.id == future.id })
+        #expect(future.packageVersion == 99 && store.object(id: object.id) != nil)
+    }
+}

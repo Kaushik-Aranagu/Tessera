@@ -161,23 +161,95 @@ extension TessGrammar {
     /// A169, A170: a set and an errand in one breath ("8 and call mum at 7", "same, call mum thu"). The set part goes
     /// through the live guard; the rest is read as if no workout were in front. Nil unless both parts write.
     func parseSetAndErrand(_ phrase: String, context: TessContext, entry: ObjectRecord) -> Parse? {
+        parseLiftAndErrand(phrase, context: context, entry: entry)
+    }
+
+    /// A lift (or a set in focus) and an errand in one phrase, either order: "bench 80x8, call mum thu" (A162),
+    /// "buy milk and bench 80x8" (A059), "bench 3x5 at 80 then call mum at 7" (A167), and with no joining word when
+    /// the errand has a day: "bench 80x8 dentist fri" (A171). Nil unless both parts write.
+    func parseLiftAndErrand(_ phrase: String, context: TessContext, entry: ObjectRecord?) -> Parse? {
+        // A lift has a number; most phrases don't, and each try below reads its parts again.
+        guard entry != nil || phrase.contains(where: \.isNumber), phrase.split(separator: " ").count >= 2 else {
+            return nil
+        }
         for separator in [/,?\sand\sthen\s/, /,?\sthen\s/, /\sand\s/, /,\s?/] {
             guard let split = phrase.firstMatch(of: separator.ignoresCase()) else { continue }
-            let setPart = String(phrase[..<split.range.lowerBound])
-            let rest = String(phrase[split.range.upperBound...])
-            guard let set = parseLive(setPart, text: Self.normalize(setPart), entry: entry)?.parse, !set.isAsk,
-                  Self.normalize(rest).firstMatch(of: /^[\d.,x ]+$|^(?:same|again|repeat|one more)\b/) == nil
-            else { continue }
-            var errandContext = context
-            errandContext.entry = nil
-            errandContext.process = nil
-            guard let errand = parse(rest, context: errandContext), !errand.isAsk else { continue }
-            switch errand {
-            case .lift, .set, .sets, .ignoredInWorkout: continue
-            default: return .sets([set, errand])
+            let left = String(phrase[..<split.range.lowerBound])
+            let right = String(phrase[split.range.upperBound...])
+            if let lift = liftPart(left, entry: entry), let errand = errandPart(right, context: context) {
+                return .sets([lift, errand])
+            }
+            if let lift = liftPart(right, entry: entry), let errand = errandPart(left, context: context) {
+                return .sets([errand, lift])
             }
         }
+        // No joining word: a lift, then words that make a dated task ("dentist fri").
+        let words = phrase.split(separator: " ").map(String.init)
+        for cut in stride(from: words.count - 1, through: 2, by: -1)
+            where words[cut - 1].contains(where: \.isNumber) && !words[cut].contains(where: \.isNumber)
+        {
+            let rest = words[cut...].joined(separator: " ")
+            // A day word alone is the dated-lift ask's ("bench 80x8 mon"), not an errand; set words never start one
+            // ("80 x 6 to failure at 9").
+            let setWords: Set = [
+                "to",
+                "at",
+                "for",
+                "x",
+                "by",
+                "reps",
+                "rep",
+                "kg",
+                "kgs",
+                "lb",
+                "lbs",
+                "warmup",
+                "warm",
+                "failure",
+                "fail",
+                "sets",
+                "set",
+                "drop",
+                "same",
+                "rpe",
+                "@",
+            ]
+            guard !setWords.contains(words[cut].lowercased()),
+                  TessDates.weekdays[rest.lowercased()] == nil, !["today", "yesterday"].contains(rest.lowercased()),
+                  let lift = liftPart(words[..<cut].joined(separator: " "), entry: entry),
+                  let errand = errandPart(rest, context: context), case .task(_, .some) = errand
+            else { continue }
+            return .sets([lift, errand])
+        }
         return nil
+    }
+
+    /// A set in focus or a named lift; never an ask.
+    private func liftPart(_ text: String, entry: ObjectRecord?) -> Parse? {
+        let normalized = Self.normalize(text)
+        if let entry, let set = parseLive(text, text: normalized, entry: entry)?.parse {
+            return set.isAsk ? nil : set
+        }
+        guard let lift = parseLift(normalized, entry: entry) else { return nil }
+        switch lift {
+        case .lift, .set: return lift
+        default: return nil
+        }
+    }
+
+    /// Anything Tess writes that isn't a set, read as if no workout were in front; a task needs a day or time.
+    private func errandPart(_ text: String, context: TessContext) -> Parse? {
+        guard Self.normalize(text).firstMatch(of: /^[\d.,x ]+$|^(?:same|again|repeat|one more)\b/) == nil else {
+            return nil
+        }
+        var errandContext = context
+        errandContext.entry = nil
+        errandContext.process = nil
+        guard let errand = parse(text, context: errandContext), !errand.isAsk else { return nil }
+        switch errand {
+        case .lift, .set, .sets, .ignoredInWorkout, .task(_, nil): return nil
+        default: return errand
+        }
     }
 
     /// What can carry an RPE: a set shape, "same" and its kin, or bare reps ("call mum at 7" can't).

@@ -37,6 +37,15 @@ extension TessGrammar {
         if !hasDate, let timer = parseTimer(text) {
             return timer
         }
+        // "oat milk and eggs for groceries", "add eggs to the shopping list" (Design's Speak review), read before the
+        // buy/get rule so its verb never lands in the item. Never money said about groceries ("spent $40 on
+        // groceries", QA G1 on #282).
+        if !hasDate, let match = trimmed.firstMatch(
+            of: /^(?i)(?:(?:buy|get|add|pick up)\s+)?(.+?)\s+(?:for|on|to|onto)\s+(?:the\s+|my\s+)?(?:groceries|grocery list|shopping list|shopping)$/
+        ), !Self.isMoney(trimmed) {
+            let lines = Self.splitItems(String(match.1))
+            return lines.isEmpty ? nil : .groceries(lines: lines)
+        }
         if !hasDate, let match = trimmed
             .firstMatch(of: /^(?i)(?:buy|get|groceries:|grocery:|shopping:|add to groceries:?)\s+(.+)$/)
         {
@@ -67,12 +76,18 @@ extension TessGrammar {
         return parseCook(trimmed, context: context)
     }
 
+    /// Money said, not things to buy: a currency sign or a spending verb ("spent $40 on groceries").
+    static func isMoney(_ text: String) -> Bool {
+        text.contains(where: { "$£€₹".contains($0) })
+            || text.lowercased().firstMatch(of: /^(?:spent|spend|paid|pay|cost|bought)\b/) != nil
+    }
+
     /// A comma-list item that reads as shopping: an amount, a known aisle or a known ingredient
     /// ("call mum, dentist" is not shopping).
     private func looksLikeGroceries(_ item: String) -> Bool {
-        // "80x8" and "5x5 squats" are sets, not shopping.
+        // "80x8", "80 for 8" and "5x5 squats" are sets, not shopping.
         guard item.split(separator: " ").count <= 4, item.contains(where: \.isLetter),
-              item.firstMatch(of: /\d\s*[x×]\s*\d/) == nil,
+              item.firstMatch(of: /\d\s*(?:[x×]|for|by)\s*\d/) == nil, item.firstMatch(of: /\d\s*reps?\b/) == nil,
               let line = IngredientLine.parse(item) else { return false }
         return line.amount != nil || AisleGuide.aisle(for: line.name) != nil
             || IngredientBook(store: store, classes: classes).find(line.name) != nil

@@ -71,10 +71,11 @@ public enum TesseraSchema {
         return (TesseraContainer(memory: ()), .inMemoryFallback)
     }
 
-    /// Damage worth starting fresh for: not a database, corrupt, or anything that isn't a SQLite result (a schema
-    /// that won't migrate or load). A full disk, I/O errors and locked files are passing, never damage.
+    /// Damage worth starting fresh for: only SQLite's own corruption codes (not a database, corrupt, bad format or
+    /// schema). Anything else (a full disk, I/O, a locked file, or a decode bug in our own code) is passing: the store
+    /// stays where it is and the launch note says so, so a bug never looks like a wipe (QA G2).
     nonisolated static func isDamaged(_ error: any Error) -> Bool {
-        guard let error = error as? DatabaseError else { return true }
+        guard let error = error as? DatabaseError else { return false }
         return [ResultCode.SQLITE_CORRUPT, .SQLITE_NOTADB, .SQLITE_FORMAT, .SQLITE_SCHEMA]
             .contains(error.resultCode)
     }
