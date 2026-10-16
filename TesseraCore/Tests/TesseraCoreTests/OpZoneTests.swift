@@ -68,6 +68,41 @@ struct OpZoneTests {
         #expect(old != nil && old?.zone == nil)
     }
 
+    @Test func aRealV2FileOpensAtV3() throws {
+        // QA Z2: a store last written by a v2 build (route and model, no zone) migrates in place, keeps its rows, and
+        // the next action records a zone.
+        do {
+            let queue = try DatabaseQueue(path: url.path)
+            try TesseraDatabaseSchema.migrator.migrate(queue, upTo: "v2")
+            try queue.write { db in
+                try db.execute(sql: """
+                INSERT INTO op(id, action, actor, state, summary, createdAt, updatedAt, ops, objectIDs, route, model)
+                VALUES ('00000000-0000-0000-0000-000000000002', 'createNote', 'tess', 'committed', 'From v2', 0, 0,
+                        X'5B5D', '[]', 'grammar', NULL)
+                """)
+            }
+            try queue.close()
+        }
+        let store = try ObjectStore(context: TesseraContext(url: url))
+        let applied = try store.context.database.read { try TesseraDatabaseSchema.migrator.appliedIdentifiers($0) }
+        #expect(applied == ["v1", "v2", "v3"])
+        let old = store.context.all(OpRecord.self).first { $0.summary == "From v2" }
+        #expect(old?.route == .grammar && old?.zone == nil)
+        let engine = try engine(store)
+        engine.zone = { TimeZone(identifier: "Asia/Kolkata")! }
+        try engine.perform(CreateNote(body: "After the update"), by: .user)
+        try store.context.save()
+        let reopened = try TesseraContext(url: url)
+        #expect(reopened.all(OpRecord.self).contains { $0.zone == "Asia/Kolkata" })
+        #expect(reopened.all(OpRecord.self).contains { $0.summary == "From v2" })
+    }
+
+    @Test func theDefaultZoneFollowsTheDevice() throws {
+        // QA Z1: autoupdating, so a long-lived app sees the new zone after a flight without a relaunch.
+        let engine = try engine(ObjectStore(context: TesseraContext(url: url)))
+        #expect(engine.zone() == TimeZone.autoupdatingCurrent)
+    }
+
     @Test func exportCarriesTheZoneAndImportRestoresIt() throws {
         let store = try ObjectStore(context: TesseraContext(url: url))
         let engine = try engine(store)
