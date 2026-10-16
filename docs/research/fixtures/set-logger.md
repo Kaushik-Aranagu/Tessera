@@ -135,3 +135,83 @@ The dial does snap: the VoiceOver "Type value" alert goes to the nearest detent 
 - **S706 Load words.** In a bodyweight entry `bodyweight N` and `bw N` are N reps with nothing added, and `+W for R`
   or `+W x R` is W kg added (S702 covers a bare `+W`). In a barbell entry `bar for N` and `bar x N` are the empty
   bar. In an entry of another kind these go to the model. `skip` writes nothing: skipping is the screen's.
+
+
+## Set counts: the 7:53 PM PT Q8 rule (board item 81)
+
+For Core's set-guard follow-up and QA. Product confirmed SQ8 at 7:53 PM PT (QA Q8, `qa/review-210.md`). In a live
+workout a bare `N x M` (no unit said, written with `x`, not `for`) asks instead of logging when N is 6 or less and N
+is under half the last set's weight, and always on a bodyweight lift. A unit said ("4 kg x 10") always logs. The two
+ask lines are exact: "2 × 10: 2 sets, or 2 kg?" and, on a bodyweight lift, "5 × 5: 5 sets, or +5 kg?". The ask
+writes nothing until he answers.
+
+**Master read:** `origin/master` at `1183d35` (Merge PR #220). `TessGrammar+Live.swift` is unchanged since
+`dc0968f`, so "LV:n" means the same line on both. Today the light-kit check at LV:82-87 decides these phrases: a
+kilogram weight of 10 or less that is not one of the kit's loads goes to the model, and one that is a load logs
+(so `2x10` on dumbbells logs 2 kg). The Q8 rule replaces that check. Hand trace only; nothing was run.
+
+**Contexts** (as above, plus): **db12** Dumbbell Bench Press, last set 12 x 10; **machine** here is Machine Chest
+Press, last set 40 x 10 (`.machine` with no loads set: 5 kg steps from 0, `LoadProfile.swift:102-104`), and
+**machine 0** the same with last set 0 x 12; **cable** is the Lat Pulldown context above (55 x 10); **dip** Dip
+(`bodyweightPlus`), last set +10 x 8, 2.5 kg steps; **kb** Kettlebell Swing, last set 16 x 15 (no loads set, so the
+dumbbell rack list, `LoadProfile.swift:99-101`); **db, no sets** and **bw, no sets** have nothing logged yet. Each
+context holds one set, so the next is Set 2 (Set 1 with no sets).
+
+**Answers.** SETS is a tap on "N sets", or "sets" or "N sets" said: it logs N sets of M at the last set's weight.
+KG is a tap on "N kg" (or "+N kg"), or "kg" or "N kg" said: it logs N kg x M, snapped to the kit as S703 says. A
+receipt names the sets, then the number: "Sets 2 and 3 logged. 24 × 10." Its UNDO takes back every set it names
+("Sets 2 and 3 taken back."); Siri "Undo Last Set" still takes back one. The ask itself writes nothing, so it has no
+Undo line.
+
+| id | phrase | context | Tess | SETS writes | KG writes | Undo line | master `1183d35` |
+|---|---|---|---|---|---|---|---|
+| Q01 | `2x10` | db | ask "2 × 10: 2 sets, or 2 kg?" | Sets 2 and 3, 24 × 10 | Set 2, 2 × 10 | "Sets 2 and 3 taken back." / "Set 2 taken back." | logs 2x10 (2 is a load, LV:83-86); K876 |
+| Q02 | `4x8` | db | ask "4 × 8: 4 sets, or 4 kg?" | Sets 2 to 5, 24 × 8 | Set 2, 4 × 8 | "Sets 2 to 5 taken back." / "Set 2 taken back." | logs 4x8; K877 |
+| Q03 | `6x8` | db | ask "6 × 8: 6 sets, or 6 kg?" (6 is the top N) | Sets 2 to 7, 24 × 8 | Set 2, 6 × 8 | "Sets 2 to 7 taken back." / "Set 2 taken back." | logs 6x8; K878 |
+| Q04 | `7x8` | db | "Set 2 logged. 6 × 8. 7 isn't loadable." (N over 6) | no ask | no ask | "Set 2 taken back." | nil, model (7 is no load, LV:83-86) |
+| Q05 | `6x10` | db12 | "Set 2 logged. 6 × 10." (6 is exactly half of 12, not under) | no ask | no ask | "Set 2 taken back." | logs 6x10 |
+| Q06 | `5x10` | db12 | ask "5 × 10: 5 sets, or 5 kg?" | Sets 2 to 6, 12 × 10 | Set 2, 4 × 10, "5 isn't loadable." | "Sets 2 to 6 taken back." / "Set 2 taken back." | nil, model |
+| Q07 | `5x5` | cable | ask "5 × 5: 5 sets, or 5 kg?" | Sets 2 to 6, 55 × 5 | Set 2, 5 × 5 | "Sets 2 to 6 taken back." / "Set 2 taken back." | logs 5x5 (5 is a stack load); K879 |
+| Q08 | `6x10` | cable | ask "6 × 10: 6 sets, or 6 kg?" | Sets 2 to 7, 55 × 10 | Set 2, 5 × 10, "6 isn't loadable." | "Sets 2 to 7 taken back." / "Set 2 taken back." | nil, model |
+| Q09 | `4x10` | machine | ask "4 × 10: 4 sets, or 4 kg?" | Sets 2 to 5, 40 × 10 | Set 2, 5 × 10, "4 isn't loadable." | "Sets 2 to 5 taken back." / "Set 2 taken back." | nil, model |
+| Q10 | `4x10` | machine 0 | "Set 2 logged. 5 × 10. 4 isn't loadable." (4 is not under half of 0) | no ask | no ask | "Set 2 taken back." | nil, model |
+| Q11 | `2x10` | live (barbell) | ask "2 × 10: 2 sets, or 2 kg?" | Sets 2 and 3, 80 × 10 | nothing: 2 kg is under the 20 kg bar, the model asks (S703) | "Sets 2 and 3 taken back." / none | nil, model (D473) |
+| Q12 | `8x3` | live (barbell) | no ask, no write: 8 kg is under the bar, the model asks (S703) | no ask | no ask | none | nil, model |
+| Q13 | `5x5` | bw (Pull-Up) | ask "5 × 5: 5 sets, or +5 kg?" | Sets 2 to 6, bodyweight × 5 | Set 2, +5 × 5 | "Sets 2 to 6 taken back." / "Set 2 taken back." | logs +5x5; K880 |
+| Q14 | `10x6` | bw | ask "10 × 6: 10 sets, or +10 kg?" (any N on a bodyweight lift) | Sets 2 to 11, bodyweight × 6 | Set 2, +10 × 6 | "Sets 2 to 11 taken back." / "Set 2 taken back." | logs +10x6 (10 is a 2.5 kg step); K881 |
+| Q15 | `3x8` | dip | ask "3 × 8: 3 sets, or +3 kg?" | Sets 2 to 4, +10 × 8 | Set 2, +2.5 × 8, "3 isn't loadable." | "Sets 2 to 4 taken back." / "Set 2 taken back." | nil, model (3 is no step) |
+| Q16 | `4x15` | kb | ask "4 × 15: 4 sets, or 4 kg?" | Sets 2 to 5, 16 × 15 | Set 2, 4 × 15 | "Sets 2 to 5 taken back." / "Set 2 taken back." | logs 4x15 |
+| Q17 | `8x15` | kb | "Set 2 logged. 8 × 15." (N over 6) | no ask | no ask | "Set 2 taken back." | logs 8x15 |
+| Q18 | `4x10` | db, no sets | "Set 1 logged. 4 × 10." (first set: no last weight, logs) | no ask | no ask | "Set 1 taken back." | logs 4x10 |
+| Q19 | `5x5` | bw, no sets | ask "5 × 5: 5 sets, or +5 kg?" (first set on a bodyweight lift still asks) | Sets 1 to 5, bodyweight × 5 | Set 1, +5 × 5 | "Sets 1 to 5 taken back." / "Set 1 taken back." | logs +5x5 |
+| Q20 | `2×10` | db | as Q01 (`×` reads as `x`) | as Q01 | as Q01 | as Q01 | logs 2x10 (`normalize`, TG:468) |
+| Q21 | `2 by 10` | db | as Q01 (`by` reads as `x`) | as Q01 | as Q01 | as Q01 | not a set shape (LV:79), falls to the old rules; not traced (`by` is a day lead word) |
+| Q22 | `2 for 10` | db | "Set 2 logged. 2 × 10." (`for` never asks) | no ask | no ask | "Set 2 taken back." | logs 2x10 |
+| Q23 | `4 kg x 10` | db | "Set 2 logged. 4 × 10." (a unit said always logs) | no ask | no ask | "Set 2 taken back." | logs 4x10; K882 |
+| Q24 | `two kilos times ten` | spoken, db | "Set 2 logged. 2 × 10." (normaliser: `2 kg x 10`, a spoken unit) | no ask | no ask | "Set 2 taken back." | nil, no digits (no normaliser) |
+| Q25 | `two times ten` | spoken, db | as Q01 (normaliser: `2 x 10`) | as Q01 | as Q01 | as Q01 | nil, no digits |
+| Q26 | `5 kg x 5` | bw | "Set 2 logged. +5 × 5." (a unit said logs, as added load) | no ask | no ask | "Set 2 taken back." | logs +5x5 |
+| Q27 | `3 sets of 10` | db | "Sets 2 to 4 logged. 24 × 10." (the word sets says it) | no ask | no ask | "Sets 2 to 4 taken back." | not a set shape (LV:79), falls to the old rules; not traced |
+| Q28 | `same` while Q01's ask is up | db | ask dropped, nothing from it; "Set 2 logged. 24 × 10." | none | none | "Set 2 taken back." | logs 24x10 same |
+
+**Defaults picked here (no Product call yet; Product can overrule):**
+1. N exactly half the last weight logs (Q05): the rule says "under half".
+2. A last set at 0 on a loaded lift logs (Q10): N is never under half of 0. On a bodyweight lift the ask runs anyway.
+3. No last set: ask only on a bodyweight lift, else log (Q18, Q19).
+4. `×` and `by` read as `x` (Q20, Q21); `into` (en-IN) reaches the rule as `x` through the normaliser.
+5. N over 6, or not under half, logs as a weight snapped by S703, with the snap line (Q04, Q10); the light-kit check
+   at LV:82-87 goes, so these no longer go to the model.
+6. A KG answer below the kit's lightest load writes nothing and the model asks (Q11), as S703.
+7. Another phrase while the ask is up drops it (Q28); the ask is not a 4 AM-day ask (`ask-lines.md`), so no cap.
+8. A spoken unit counts as said: `kilos`, `kg`, `pounds` after the normaliser (Q24).
+
+**For Core.** `.set` carries `unit: .kilograms` both when "kg" was said and by default, and `x` and `for` give the same `.full` set (TG:258-263), so the guard
+cannot tell `4 kg x 10` from `4x10`, or `2 for 10` from `2x10`, today: the parse needs "unit said" and "x or for" flags, or the guard reads the raw phrase.
+The ask needs its own parse, say `.askSetCount(entry:, count:, reps:, bodyweight:)`, with both answers as ghost rows.
+
+**Swift Testing names (`SetCountAskTests`, TesseraCoreTests):** `bareSetCountAsksOnALoadedLift` (Q01 to Q03,
+Q06 to Q09, Q11, Q16), `bodyweightLiftAlwaysAsks` (Q13 to Q15, Q19), `askLineIsExact`, `sixAsksSevenLogs` (Q03,
+Q04, Q17), `exactlyHalfLogs` (Q05), `lastSetAtZeroLogs` (Q10), `firstSetAsksOnlyOnBodyweight` (Q18, Q19),
+`timesSignAndByReadAsX` (Q20, Q21), `forNeverAsks` (Q22), `aUnitSaidAlwaysLogs` (Q23, Q24, Q26),
+`setsOfLogsEverySet` (Q27), `setsAnswerLogsNSetsAtTheLastWeight`, `kgAnswerLogsTheSnappedWeight`,
+`kgAnswerUnderTheBarWritesNothing` (Q11), `anotherPhraseDropsTheAsk` (Q28), `undoTakesBackEverySetItNamed`.

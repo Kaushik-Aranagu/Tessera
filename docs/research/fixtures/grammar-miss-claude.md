@@ -1,14 +1,14 @@
-# Grammar misses on Claude: 185 gate fixtures for use 1
+# Grammar misses on Claude: 186 gate fixtures for use 1
 
 For: Core (`ClaudeTessModel`, `TessContextPack`, the T5 harness), QA. Research lab, board item 75, 2026-10-16.
 Inputs: `claude-first-uses.md` (use 1), `tess-model-layer.md`, `tess-eval-claude.md`, `fixtures/plan-my-day-claude.md` (format and bar), `fixtures/grammar-regression.md`.
-**Suite version:** `grammar-regression.md` as traced on `dc0968f` (883 rows: 698 pass, 113 wrong write, 72 miss; md5 `81e6c26c`, with A162 and A163 fixed to T647 at 7:55 PM PT; counts unchanged). Every one of its 113 wrong-write and 72 miss rows is here, 185 in all, plus 6 guard rows (X1 to X6).
+**Suite version:** `grammar-regression.md` as traced on `dc0968f`, with the 7:53 PM PT (SQ8) and 8:00 PM PT (P800) calls applied (883 rows: 697 pass, 113 wrong write, 73 miss; md5 `d74748a6`). F531 went from pass to miss at 8:00 PM PT; no other status moved. Every one of its 113 wrong-write and 73 miss rows is here, 186 in all, plus 6 guard rows (X1 to X6).
 **Master read:** `origin/master` at `1c6193a` (Merge PR #217; the Tess route, tool and engine files are unchanged since `e75f40f`), read with `git show`; nothing was run, no key was used.
 
 ## Bottom line
 
-- **Pass bar (Haiku 5.5, before use 1 is switched on):** 132 of the 146 sent rows pass every must check in 3 of 3 runs (90%, rounded up), the 5 sent guard rows pass in 3 of 3, 0 must-not hits in all 453 calls, the 39 local rows send 0 requests, and Kaushik's read finds no ghost row he would take back (section 5).
-- **Cost:** about $0.0006 a use, $0.0011 at worst. One full eval (151 sent rows x 3 runs) is about $0.28, at most $0.50. The run stops itself at $1.
+- **Pass bar (Haiku 5.5, before use 1 is switched on):** 133 of the 147 sent rows pass every must check in 3 of 3 runs (90%, rounded up), the 5 sent guard rows pass in 3 of 3, 0 must-not hits in all 456 calls, the 39 local rows send 0 requests, and Kaushik's read finds no ghost row he would take back (section 5).
+- **Cost:** about $0.0006 a use, $0.0011 at worst. One full eval (152 sent rows x 3 runs) is about $0.28, at most $0.50. The run stops itself at $1.
 - **Wrong-write rows reach Claude only in the eval.** On master the grammar claims them, so they never fall through. The harness sends every row straight to the Claude route (as `tess-eval-claude.md` does), so the rows also score Claude for the day the grammar stops claiming them.
 - **Before the gate can run, master needs 5 hooks** (section 8): a local stop before Claude, `logSet` into the entry in focus, a date parser that refuses times with no offset, date-only tasks with `alerts`, and a nullable reschedule.
 
@@ -65,11 +65,11 @@ Fields a row may add (the "pack adds" column), each the smallest thing that make
 - N2 a false write: wrong tool, wrong target, an extra call, a tool outside the 11.
 - N3 a time with no offset or in UTC, or a day off by the 4 AM rule (J756) or by "a passed time today lands tomorrow" (C5).
 - N4 a "never a task" cell made into a task (set, grocery, note and question phrases).
-- N5 a set that breaks S701 to S706: a weight read as reps, an unloadable kg weight not snapped, `at N` read as a clock time, a bare `+N` acted on, or (SQ8, proposed) a bare `N x M` logged without asking when N is 6 or less and under half the last weight, or on a bodyweight lift.
+- N5 a set that breaks S701 to S706: a weight read as reps, an unloadable kg weight not snapped, `at N` read as a clock time, a bare `+N` acted on, or (SQ8, Product 7:53 PM PT) a bare `N x M` logged without asking when N is 6 or less and under half the last weight, or on a bodyweight lift.
 - N6 a line that claims an action no tool did, or names a fact not in the pack (a weight, a person, a task time).
 - N7 a request built for a `local` row, or a pack field outside section 1.
 
-## 4. The 185 rows
+## 4. The 186 rows
 
 | id | phrase | st | context | pack adds | expected | stays | not |
 |---|---|---|---|---|---|---|---|
@@ -90,9 +90,9 @@ Fields a row may add (the "pack adds" column), each the smallest thing that make
 | A115 | `call mum sun afternoon` | WW | none · Thu 6:10 pm | - | task "Call mum" @10-18 14:00 | no | sun in title |
 | A116 | `dentist sat morning` | WW | none · Thu 6:10 pm | - | task "Dentist" @10-17 09:00 | no | 10-24 |
 | A127 | `move dentist to 7` | M | none · Thu 6:10 pm | task: Dentist, Sat 10:00 am | move "Dentist" @10-17 07:00 | no | task; 19:00 |
-| A136 | `coffee with Pepper, then gym` | WW | none · Thu 6:10 pm | - | ask "Planning coffee with Pepper, or done?" | no | groceries; any write |
-| A137 | `lunch with Olive, Basil` | WW | none · Thu 6:10 pm | - | ask "Planning lunch with Olive and Basil, or done?" | no | groceries [olive, basil] |
-| A138 | `drinks with Candy, Honey` | WW | none · Thu 6:10 pm | - | ask "Planning drinks with Candy and Honey, or done?" | no | groceries |
+| A136 | `coffee with Pepper, then gym` | WW | none · Thu 6:10 pm | - | task "Coffee with Pepper" Later ("then gym" not graded; 8:00 PM PT) | no | groceries; "planning or done?" |
+| A137 | `lunch with Olive, Basil` | WW | none · Thu 6:10 pm | - | task "Lunch with Olive, Basil" Later (8:00 PM PT) | no | groceries [olive, basil]; "planning or done?" |
+| A138 | `drinks with Candy, Honey` | WW | none · Thu 6:10 pm | - | task "Drinks with Candy, Honey" Later (8:00 PM PT) | no | groceries; "planning or done?" |
 | A139 | `Candy, Honey and Basil are coming` | WW | none · Thu 6:10 pm | - | ask "When are they coming?" | no | groceries [candy, honey, basil] |
 | A160 | `bench 80x8 then call mum` | M | none · Thu 6:10 pm | - | lift "Bench Press" 80x8 + task "Call mum" Later | no | task holding "bench" |
 | A161 | `bench 80x8, call mum` | M | none · Thu 6:10 pm | - | lift "Bench Press" 80x8 + task "Call mum" Later | no | task holding "bench" |
@@ -203,6 +203,7 @@ Fields a row may add (the "pack adds" column), each the smallest thing that make
 | E497 | `buy sage green paint` | WW | people · Thu 6:10 pm | - | task "Buy sage green paint" Later | no | groceries |
 | E499 | `basil, olive and rose` | WW | people · Thu 6:10 pm | - | ask "Groceries, or Basil, Olive and Rose?" | no | groceries |
 | E501 | `will` | WW | shop · Thu 6:10 pm | - | local, zero requests: no write | yes | - |
+| F531 | `lunch with ravi` | M | people · Thu 6:10 pm | - | task "Lunch with ravi" Later, about Ravi (8:00 PM PT) | no | "planning or done?"; a talk logged; a date |
 | F540 | `buy present for mums birthday on the twentieth` | WW | people · Thu 6:10 pm | - | task "Buy present for mums birthday" @10-20 (no time) | no | groceries |
 | F544 | `buy lego for priya` | WW | people · Thu 6:10 pm | - | task "Buy lego for priya" Later | no | groceries |
 | G566 | `read the sun also rises` | WW | book · Thu 6:10 pm | - | local, zero requests: nil until Reading | yes | - |
@@ -248,18 +249,18 @@ Fields a row may add (the "pack adds" column), each the smallest thing that make
 | K812 | `a hundred for five at eight` | M | workout, spoken · Thu 6:10 pm | focus | set 100x5, RPE 8 (RPE graded after gap 3) | no | task at 8 |
 | K874 | `bench 80 for 8, 81` | WW | workout · Thu 6:10 pm | focus | set 80x8; line asks "81 for how many reps?" | no | 80x81; 81 reps |
 | K875 | `bench 80 for 8, 80 for 8, 81` | WW | workout · Thu 6:10 pm | focus | set 80x8, sets 2; line asks "81 for how many reps?" | no | 80x81 |
-| K876 | `2x10` | WW | workout, db · Thu 6:10 pm | focus db | ask "2 sets of 10 at 24, or 2 kg?" (SQ8) | no | any write |
-| K877 | `4x8` | WW | workout, db · Thu 6:10 pm | focus db | ask "4 sets of 8 at 24, or 4 kg?" (SQ8) | no | any write |
-| K878 | `6x8` | WW | workout, db · Thu 6:10 pm | focus db | ask "6 sets of 8 at 24, or 6 kg?" (SQ8) | no | any write |
-| K879 | `5x5` | WW | workout, machine · Thu 6:10 pm | focus machine | ask "5 sets of 5 at 55, or 5 kg?" (SQ8) | no | any write |
-| K880 | `5x5` | WW | workout, bw · Thu 6:10 pm | focus bw | ask "5 kg added for 5, or 5 sets of 5?" (SQ8, S706) | no | any write |
-| K881 | `10x6` | WW | workout, bw · Thu 6:10 pm | focus bw | ask "10 kg added for 6, or 10 sets of 6?" (SQ8, S706) | no | any write |
+| K876 | `2x10` | WW | workout, db · Thu 6:10 pm | focus db | ask "2 × 10: 2 sets, or 2 kg?" (SQ8, exact line) | no | any write |
+| K877 | `4x8` | WW | workout, db · Thu 6:10 pm | focus db | ask "4 × 8: 4 sets, or 4 kg?" (SQ8, exact line) | no | any write |
+| K878 | `6x8` | WW | workout, db · Thu 6:10 pm | focus db | ask "6 × 8: 6 sets, or 6 kg?" (SQ8, exact line) | no | any write |
+| K879 | `5x5` | WW | workout, machine · Thu 6:10 pm | focus machine | ask "5 × 5: 5 sets, or 5 kg?" (SQ8, exact line) | no | any write |
+| K880 | `5x5` | WW | workout, bw · Thu 6:10 pm | focus bw | ask "5 × 5: 5 sets, or +5 kg?" (SQ8, S706, exact line) | no | any write |
+| K881 | `10x6` | WW | workout, bw · Thu 6:10 pm | focus bw | ask "10 × 6: 10 sets, or +10 kg?" (SQ8, S706, exact line) | no | any write |
 | K883 | `warmup 60x5 @7` | M | workout · Thu 6:10 pm | focus | set 60x5, kind warmup, RPE 7 (kind and RPE graded after gap 2) | no | task at 7; 7 sets |
 | L822 | `new habit read 5 a week from monday` | WW | none · Thu 6:10 pm | - | local, zero requests: nil until Habits | yes | - |
 | L844 | `pause read till monday` | WW | habits · Thu 6:10 pm | - | local, zero requests: nil until Habits | yes | - |
 | L846 | `skip read today` | WW | habits · Thu 6:10 pm | - | local, zero requests: no write | yes | - |
 
-Counts: 185 rows (113 WW, 72 M). Sent to Claude: 146. Stay local: 39 (27 cook timer and step rows, decided at 7:55 PM PT, 3 habits, `will`, the Reading, Money and Upkeep rows gated on their slice, `errands:` on Lists 8, and the two alert edits waiting on N1). Ask, refuse or no write: 19 (K874 and K875 also ask, after logging the clear sets). Two-intent rows: 11.
+Counts: 186 rows (113 WW, 73 M). Sent to Claude: 147. Stay local: 39 (27 cook timer and step rows, decided at 7:55 PM PT, 3 habits, `will`, the Reading, Money and Upkeep rows gated on their slice, `errands:` on Lists 8, and the two alert edits waiting on N1). Ask, refuse or no write: 16 (A136 to A138 became tasks at 8:00 PM PT; K874 and K875 also ask, after logging the clear sets). Two-intent rows: 11.
 
 ### Guard rows (adversarial, should refuse or ask)
 
@@ -276,13 +277,13 @@ Counts: 185 rows (113 WW, 72 M). Sent to Claude: 146. Stay local: 39 (27 cook ti
 
 | Check | Bar |
 |---|---|
-| Must checks, raw | 132 of 146 sent rows pass every must check in 3 of 3 runs (90%, rounded up from 131.4), with no engine repair |
+| Must checks, raw | 133 of 147 sent rows pass every must check in 3 of 3 runs (90%, rounded up from 132.3), with no engine repair |
 | Guard rows | X1, X3 to X6 pass in 3 of 3; X2 builds no request |
-| Must-nots | 0 in all 453 calls (151 sent rows x 3) |
+| Must-nots | 0 in all 456 calls (152 sent rows x 3) |
 | Local rows | 39 of 39 build no request, in `swift test`, no key needed |
 | Cost | median under $0.0007 a use, p95 under $0.0011, none over $0.0015; run total within 10% of the Console |
 | Latency | p50 under 3 s, p95 under 8 s, 0 timeouts (targets set before any measurement) |
-| Human read | one run per sent row: at least 117 of 146 ghost rows and ask lines "sound like Tess" (80%, rounded up), 0 he would take back |
+| Human read | one run per sent row: at least 118 of 147 ghost rows and ask lines "sound like Tess" (80%, rounded up from 117.6), 0 he would take back |
 
 Rows that wait on a hook (alerts, date-only, RPE, move to Later) grade what the tools can say today and flag the rest; they flip to full grading when the hook lands. Expected weak spots for Haiku: "half 7" style times (C1), the 4 AM day (J756), keeping a moved task's time (C388, C389), and two-intent splits.
 
@@ -292,8 +293,8 @@ Per use (from `claude-first-uses.md`): two requests, about 5,150 tokens in and 1
 
 | Run | Uses | Typical | Worst |
 |---|---|---|---|
-| One pass of the sent rows | 151 | $0.09 | $0.17 |
-| Full gate (3 runs) | 453 | $0.28 | $0.50 |
+| One pass of the sent rows | 152 | $0.09 | $0.17 |
+| Full gate (3 runs) | 456 | $0.28 | $0.50 |
 | Hard stop for one eval run | | $1.00 | |
 
 ## 7. Harness names (Core)
@@ -322,9 +323,11 @@ Per use (from `claude-first-uses.md`): two requests, about 5,150 tokens in and 1
 - Cook timers stay on the phone: the 27 cook timer and step rows are local and Claude gets no timer tool.
 - A162 and A163 match T647 ("thu" said on a Thursday has no time). The suite rows are fixed; their status is still wrong write (RC6).
 
+**Decided (Product, 7:53 and 8:00 PM PT):** items 1, 2 and 4 below. Item 3 stays open.
+
 **Open (default first):**
 
-1. **People and plans ("lunch with Olive, Basil"): ask, or make a task?** Default: ask "planning or done?" (T706), no write.
-2. **"bench 80x8 mon": ask, or log it today?** Default: ask, since `logSet` can't date a set.
-3. **Is 132 of 146 the right bar?** Default: yes, the same 90% rule Product used for use 2.
-4. **SQ8 (QA Q8): should a bare `N x M` ask when N is 6 or less and under half the last weight, and always on a bodyweight lift?** Default: yes, as proposed; K876 to K881 expect an ask, and K882 (`4 kg x 10`, a unit said) stays a pass.
+1. **People and plans ("lunch with Olive, Basil"): ask, or make a task?** Decided 8:00 PM PT: task, no ask. People plus a coming day, with no past-tense verb, is a task for that day with UNDO; Tess never asks "planning or done?" (A136 to A138; with no day said the task goes to Later). The suite's F531 (`lunch with ravi`) now expects a task and is a miss on master; it is a sent row here.
+2. **"bench 80x8 mon": ask, or log it today?** Decided: ask (A026, A027), since `logSet` can't date a set.
+3. **Is 133 of 147 the right bar?** Default: yes, the same 90% rule Product used for use 2.
+4. **SQ8 (QA Q8): should a bare `N x M` ask when N is 6 or less and under half the last weight, and always on a bodyweight lift?** Decided 7:53 PM PT: yes. K876 to K881 expect the exact lines ("2 × 10: 2 sets, or 2 kg?", on a bodyweight lift "5 × 5: 5 sets, or +5 kg?"), and K882 (`4 kg x 10`, a unit said) stays a pass.
