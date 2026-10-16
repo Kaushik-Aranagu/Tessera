@@ -252,8 +252,8 @@ struct EditSetKeys: View {
 
     var body: some View {
         if let row = session.editingRow {
-            // A tap in that set's own paint; the meta follows the dial and drum.
-            PaintKey(paint: Paint.set(row.number), isTap: true, height: 64) {
+            // A tap in that set's own paint; the meta follows the dial and drum. Silent: onSave plays the set's tap.
+            PaintKey(paint: Paint.set(row.number), isTap: true, height: 64, isSilent: true) {
                 withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { session.saveEdit() }
                 onSave()
             } label: { _ in

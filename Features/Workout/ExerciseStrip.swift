@@ -107,7 +107,10 @@ struct RunningOrderSheet: View {
                 .padding(.top, Theme.Spacing.m)
             if let onFinish {
                 // Done for today with exercises left: what's logged is saved, the rest is simply not done.
-                PaintKey(paint: Paint.live, duration: 0.7, height: 64, drift: 20, action: onFinish) { _ in
+                // Silent: finish(early:) plays the done pattern, the moment's one haptic.
+                PaintKey(paint: Paint.live, duration: 0.7, height: 64, drift: 20, isSilent: true,
+                         action: onFinish)
+                { _ in
                     Text("Finish here")
                 } meta: {
                     Text("Hold")
