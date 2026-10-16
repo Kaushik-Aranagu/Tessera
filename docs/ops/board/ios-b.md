@@ -22,7 +22,7 @@
 7. NowPicker wiring. Done when cooking, shopping and timed tasks become Now through the same picker as workouts.
 8. M2 slice 12, the full What's running ledger for tasks: suspended and waiting, with the stale rules.
 9. M2 slice 13, the day-full warning.
-10. Day log page (M4 slice 5 screen), after Core's `DayStory`. Design's sheet is ready: `docs/design/day-log-page.md` on Design's branch. Done when a Day page per date shows the story lines from Design's sheet, a scrub back through past days works, and a HomeLink word reaches it.
+10. Day log page (M4 slice 5 screen), after Core's `DayStory`. Design's sheet is ready: `docs/design/day-log-page.md` on Design's branch. Exact copy and every empty state: `../research/day-log-copy.md` (#204; decisions.md 7:34 PM PT). Done when a Day page per date shows the story lines from Design's sheet, a scrub back through past days works, and a HomeLink word reaches it.
 
 **Audit batches (small PRs, after the Review week fix; decisions.md 5:14 PM PT):**
 - Late night (Research #169): the wrap-up line is never shown; Home says "trained this night"; Tess's glyph rests during a live workout after 11 PM.
@@ -38,7 +38,7 @@
 - Builder B's 3 op log gaps in `../research/oplog-health.md` (#162).
 - The rest of Builder B's accessibility rows in `../research/accessibility.md`, including Tess's rows ("commits after 2 s with no cancel" for VoiceOver). The Objects rows are Core's.
 - W3 recovery line and the one-time Health permission line on NowPage, after Core's rule and Health reads. Design's sheet: `docs/design/recovery-line.md` with `recovery-line.mp4` (6faa446 on Design's branch).
-- M3 habits page, after Core's M3 slice 2, with a Habits word on the Today foot line. Design's sheet: `docs/design/body-weight-and-habits.md` with `m3-surfaces.mp4` (1f17bd1 on Design's branch), drawn on Research's `../research/m3-1-2-brief.md` fixtures with exact copy.
+- M3 habits page, after Core's M3 slice 2, with a Habits word on the Today foot line. Design's sheet: `docs/design/body-weight-and-habits.md` with `m3-surfaces.mp4` (1f17bd1 on Design's branch), drawn on Research's `../research/m3-1-2-brief.md` fixtures, with every Tess line and empty state from `../research/m3-lines.md` (#204; decisions.md 7:34 PM PT).
 - Mount BottomChrome over the Home link covers (Groceries, Recipes, Notes, The week), so Tess speaks in one place. Core then removes its Groceries mirror.
 - Lists screens 9 to 12 include Research's G1, a "Lists" HomeLink word under Groceries (`../research/lists-daily.md`), and the Kitchen lead's `lists-screens-acceptance.md`.
 - M5 Upkeep screens 5 to 7 in `ship-list-m5-upkeep.md`, then the M5 People screens in `ship-list-m5-people.md`.
