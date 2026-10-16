@@ -40,3 +40,13 @@ With a last weight in focus, the only ask is `first <= 6, first < last.weight / 
 
 ### Low
 - **F5:** "bench 3 sets of 8 at 7" logs 3×8 at 7 kg. The sets-said path removes "at" (:12-16), so `weightAfterAt` is never set, and the small-"at N" ask at :69 doesn't apply. Set `weightAfterAt` when the "sets of" phrase is followed by "at N".
+
+## Addendum 2: head 9bf00b9 (F4, F5)
+**Verdict: PASS. A bare N×M with N ≤ 10, no unit and no "at" never writes N kg on any non-bodyweight kit, in focus or not.**
+- **F4 closed.** In focus, the block now always returns (TessGrammar+Lift.swift:60-66). Under half the last weight, it gives the set-count ask; otherwise it asks "at what weight?". Nothing reaches the weight write.
+  - Tested in focus: Bench at 80 + "bench 8x8", Lat Pulldown at 55 + "10x10", Leg Press at 100 + "8x10". Each gives the set-count ask.
+  - Curls at 12 + "curls 8x10" asks "at what weight?".
+  - Also tested: "cable row 5x10" with nothing in focus, and a no-equipment lift ("sled push 3x8").
+- **Trade-off:** "curls 8x10" with 8 kg dumbbells now always asks, even though 8 kg is plausible. That's the rule as set (never N kg), and the answer is one word. Saying "curls 8 kg x 10" logs straight away.
+- **F5 closed.** After "N sets of M", an "at N" sets `weightAfterAt` (:15-16), so "bench 3 sets of 8 at 7" asks (F5 row). "Bench 3 sets of 8 at 80" still logs (R113c).
+- **L (new, tiny):** the "@" spelling is missed. `\b(?:at|@)` needs a word boundary, and there is none between a space and "@". So "bench 3 sets of 8 @ 7" skips the check and logs 7 kg. Typed only (speech never gives "@"). Fix: use `(?:\bat\b|@)` in both regexes at :15-17.
