@@ -151,3 +151,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [lines-audit-2.md](lines-audit-2.md) | Core, Builders A and B: 61 Tess, UNDO and empty-state lines since #158, 24 fixes |
 | [oct-22-list.md](oct-22-list.md) | Coordinator: Kaushik's Oct 22 morning message, Kitchen and Money one-word questions |
 | [resign-day.md](resign-day.md) | Coordinator, iOS build: what survives the Oct 22 re-sign and what to check after |
+| [restore-walk.md](restore-walk.md) | Core, Builders A and B: restore after a reinstall, what comes back and what does not, 8 fixes |
