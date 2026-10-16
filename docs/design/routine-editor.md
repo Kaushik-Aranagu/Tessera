@@ -3,6 +3,8 @@
 For Builder A. There is no list rows, no `EditButton` and no edit mode: the routine page is always editable, the way a sheet of paper is. This follows `no-buttons.md`. Recording: `recordings/routine-editor.mp4` (source `studies/routine-editor.html`).
 
 ## The page
+> **Update, item 44 (`training-mode.md`):** the page gains a `DAYS` line under the context line (the routine's fixed weekdays as value words, or "rolls on"), and routines are made from the Routines page. Everything below stands.
+
 - **How you get here:** z from a routine name (on Training, the week, or the Now "Start" line), with the house zoom (scale 0.95→1, 420ms). The exercises come in down y with a 45ms stagger.
 - **Top of the page:**
   - The path in labels: "TRAINING › ROUTINES".
