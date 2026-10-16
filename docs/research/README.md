@@ -134,6 +134,7 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [fixtures/plan-my-day-claude.md](fixtures/plan-my-day-claude.md) | Core: 20 Plan my day packs for the Claude gate, checks, Haiku vs Sonnet, pass bar, eval steps |
 | [day-log-late-night.md](day-log-late-night.md) | Builder B, Core: Day log late-night traces (six days, 8 wrong-day cases, 19 test names) |
 | [day-log-acceptance.md](day-log-acceptance.md) | Core, QA: Day log v1 acceptance pack, 71 numbered tests (DL1 to DL71) with expected lines for the DayStory PR |
+| [day-log-v1-check.md](day-log-v1-check.md) | Design, Builder B, Core: Design's day-log-v1.md (8ceb4e5) checked line by line against DL1 to DL71 |
 | [set-logger-rerun.md](set-logger-rerun.md) | Core: set-logger rerun on the live-workout guard (group K 38/0/2) |
 | [fixtures/habits-grammar.md](fixtures/habits-grammar.md) | Core: 30 habit grammar rows (suite group L) |
 | [fixtures/body-weight.md](fixtures/body-weight.md) | Core: 25 body weight rows against S701 (suite group M) |
@@ -157,4 +158,5 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [restore-walk.md](restore-walk.md) | Core, Builders A and B: restore after a reinstall, what comes back and what does not, 8 fixes |
 | [plan-my-day-flow.md](plan-my-day-flow.md) | Builder B, Core: Plan my day morning flow on use 2, 17 steps, 9 branches, m4-steers disagreements |
 | [settings-object.md](settings-object.md) | Core: every preference outside the database, which moves into the settings object, which never travels in a backup |
+| [settings-place-check.md](settings-place-check.md) | Design, Builder B: every line in Design's settings-place.md (231b15e) checked against tess-voice, settings-claude and #246 |
 | [debug-paths.md](debug-paths.md) | Builder A, QA: every launch flag and debug path that could touch his data on a Debug phone build, gate and 14-item checklist |
