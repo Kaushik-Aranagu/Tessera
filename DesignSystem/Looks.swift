@@ -180,6 +180,11 @@ final class ThemeStore {
         demoPin ?? pinned
     }
 
+    /// The workout's look: the one it opened in while it's open, else the one on screen.
+    var workoutLook: Look {
+        workoutHeld ?? current
+    }
+
     /// The look on screen now.
     var current: Look {
         pin ?? (systemIsDark ? night : day)
@@ -214,6 +219,10 @@ final class ThemeStore {
 
     /// A pinned name steps through all five looks, light and dark.
     func cyclePinned(forward: Bool = true) {
+        if let demoPin {
+            self.demoPin = Self.next(after: demoPin, in: forward ? Look.all : Look.all.reversed())
+            return rebuild()
+        }
         guard let pinned else { return }
         self.pinned = Self.next(after: pinned, in: forward ? Look.all : Look.all.reversed())
         save()
@@ -222,6 +231,10 @@ final class ThemeStore {
     /// Hold a name to pin it; hold again to unpin, and the look goes back into its own slot (a dark look by night,
     /// a light one by day), the other slot as it was.
     func togglePin(_ look: Look) {
+        if demoPin == look {
+            demoPin = nil
+            return rebuild()
+        }
         if pinned == look {
             pinned = nil
             if look.isDark {
@@ -254,6 +267,8 @@ final class ThemeStore {
 
     private func save() {
         rebuild()
+        // During a -theme demo nothing is written: taps stay in memory.
+        guard demoPin == nil else { return }
         defaults.set(day.name, forKey: Key.day)
         defaults.set(night.name, forKey: Key.night)
         defaults.set(pinned?.name, forKey: Key.pinned)

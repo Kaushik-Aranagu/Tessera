@@ -250,10 +250,11 @@ struct PaintKey<Label: View, Meta: View>: View {
     @State private var completions = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.onWorkoutGround) private var onWorkoutGround
     @Environment(\.isEnabled) private var isEnabled
 
     var body: some View {
-        let ink = Theme.Colors.ink
+        let ink = onWorkoutGround ? Theme.Colors.Workout.ink : Theme.Colors.ink
         HStack(alignment: .firstTextBaseline, spacing: 16) {
             label(isPressing)
                 .font(InkWordType.font)
@@ -372,4 +373,10 @@ enum InkWordType {
     static var font: Font {
         Theme.Typography.face(Theme.concept.fonts.display, size: 34, relativeTo: .title, serif: false).weight(.medium)
     }
+}
+
+extension EnvironmentValues {
+    /// True on the workout's ground, which is dark in every look: ink there is `Theme.Colors.Workout.ink` (a pinned
+    /// light look would otherwise draw its dark ink on the dark ground).
+    @Entry var onWorkoutGround = false
 }

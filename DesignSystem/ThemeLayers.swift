@@ -72,7 +72,7 @@ struct LookField: View {
 /// its band at 3%, every other look a flat workout ground.
 struct WorkoutField: View {
     var body: some View {
-        let look = ThemeStore.shared.current
+        let look = ThemeStore.shared.workoutLook
         switch look.field {
         case .plein:
             PleinGround()

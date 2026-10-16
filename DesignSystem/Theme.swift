@@ -460,7 +460,7 @@ enum Theme {
 
             /// The glass outline: black 60% on Plein (today's), ink 12% elsewhere (black can't show on #000).
             static var glassEdge: Color {
-                ThemeStore.shared.current.field == .plein ? .black.opacity(0.6) : ink.opacity(0.12)
+                ThemeStore.shared.workoutLook.field == .plein ? .black.opacity(0.6) : ink.opacity(0.12)
             }
 
             /// Set strokes cycle through these, in order.

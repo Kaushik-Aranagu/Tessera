@@ -16,7 +16,7 @@ struct LookSentence: View {
                 .textRole(.label)
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .accessibilityAddTraits(.isHeader)
-            if let pinned = store.pinned {
+            if let pinned = store.pin {
                 HStack(alignment: .firstTextBaseline, spacing: 0) {
                     name(
                         pinned,
@@ -79,7 +79,7 @@ struct LookSentence: View {
     private func name(_ look: Look, slot: String, cycle: @escaping () -> Void,
                       back: @escaping () -> Void) -> some View
     {
-        let isPinned = ThemeStore.shared.pinned == look
+        let isPinned = ThemeStore.shared.pin == look
         return Button {
             taps += 1
             change(cycle)
