@@ -13,8 +13,9 @@ extension TessGrammar {
             (lift.sets, lift.reps, lift.setsSaid) = (sets, reps, true)
             rest.removeSubrange(said.range)
             // "3 sets of 8 at 7": the number after "at" is the weight, and goes through the small-"at N" check (F5).
-            lift.weightAfterAt = rest.firstMatch(of: /\b(?:at|@)\s*\d/) != nil
-            rest = Substring(rest.replacing(/\b(?:at|@)\b/, with: " "))
+            // "@ 7" with a space counts too (QA on #289).
+            lift.weightAfterAt = rest.firstMatch(of: /(?:\bat\b|@)\s*\d/) != nil
+            rest = Substring(rest.replacing(/(?:\bat\b|@)/, with: " "))
         }
         if let scheme = rest.firstMatch(of: /(\d+(?:\.\d+)?)(?: ?x ?| by )(\d+)(?: (?:at|@) (\d+(?:\.\d+)?))?/) {
             lift.readScheme(Double(scheme.1) ?? 0, Double(scheme.2) ?? 0, at: scheme.3.flatMap { Double($0) },

@@ -77,6 +77,14 @@ struct SetLossTests {
         ("F3g", "kettlebell swing 3x15", "ask Kettlebell Swing 3 × 15 at what weight?"),
         ("F5", "bench 3 sets of 8 at 7", "ask Bench 3 × 8 at what weight?"),
         ("F4a", "cable row 5x10", "ask Seated Cable Row 5 × 10 at what weight?"),
+        ("F6", "bench 3 sets of 8 @ 7", "ask Bench 3 × 8 at what weight?"),
+        // Normal sets that must still log (merge check on #289).
+        ("KEEP4", "curls 12x10 at 12", "lift Dumbbell Curl 12x12x10"),
+        ("KEEP5", "bench 3x8 at 80", "lift Bench Press 3x80x8"),
+        // Research's US shop check: money is never groceries or a task; a unit price is a price, not a spend.
+        ("US1", "spent $1,250 on rent", "nil"),
+        ("US2", "spent $23.47 at trader joe's sat", "nil"),
+        ("US3", "chicken $1.29/lb, rice", "groceries chicken $1.29/lb, rice"),
         // Research's 113 re-trace and Design's Speak review.
         ("R113b", "Bench 80 kg, 8 reps only.", "lift Bench Press 80x8"),
         ("R113c", "Bench 3 sets of 8 at 80.", "lift Bench Press 3x80x8"),

@@ -106,6 +106,12 @@ public struct TessGrammar {
         {
             return nil
         }
+        // Money said ("spent $23.47 at trader joe's sat") is never a task or a list until Money exists: the miss line.
+        if Self.isMoney(phrase), phrase.lowercased().firstMatch(of: /^(?:spent|spend|paid|pay|cost|bought)\b/) != nil
+            || phrase.firstMatch(of: /^[$£€₹]\s?\d/) != nil
+        {
+            return nil
+        }
         // A bare set with nothing in focus ("80 for 8" while shopping) is never an item or a task: the model reads it.
         if text.firstMatch(of: /^\d+(?:\.\d+)?(?: ?kg| ?lb)?(?: ?x ?| for | by )\d+(?: reps)?$/) != nil {
             return nil
