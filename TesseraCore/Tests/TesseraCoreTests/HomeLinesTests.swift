@@ -162,7 +162,7 @@ struct HomeLinesTests {
         #expect(line.widgetLine == "Tacos tonight, 2 to buy.")
         let timed = HomeFact(id: UUID(), kind: .cook, title: "Tacos", state: .planned, toBuy: 2,
                              startsAt: Self.at(19))
-        #expect(HomeLines.line(for: timed, now: Self.at(9), calendar: Self.calendar).hero == "Tacos at 7")
+        #expect(HomeLines.line(for: timed, now: Self.at(9), calendar: Self.calendar).hero == "Tacos at 7 pm")
         #expect(line.context == "2 to buy" && line.detail == nil && line.numbers == [2])
         #expect(text(tacos, now: Self.at(21, 30)) == "Tacos tonight, 2 to buy.")
         let stocked = HomeFact(id: UUID(), kind: .cook, title: "Tacos", state: .planned, toBuy: 0)

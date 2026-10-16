@@ -331,9 +331,9 @@ private extension NowPicker {
         }
     }
 
+    /// "since 6:02 pm", never "18:02" (TW18).
     func clock(_ date: Date, _ calendar: Calendar) -> String {
-        let parts = calendar.dateComponents([.hour, .minute], from: date)
-        return String(format: "%02d:%02d", parts.hour ?? 0, parts.minute ?? 0)
+        HouseTime.clock(date, calendar: calendar)
     }
 
     func weekday(_ date: Date, _ calendar: Calendar) -> String {

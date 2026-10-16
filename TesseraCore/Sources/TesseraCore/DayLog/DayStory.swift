@@ -413,11 +413,7 @@ extension DayStory {
 
     /// "6:12 pm", "11:20 pm", "12 pm".
     static func sentenceTime(_ date: Date, calendar: Calendar) -> String {
-        let parts = calendar.dateComponents([.hour, .minute], from: date)
-        let hour = parts.hour ?? 0, minute = parts.minute ?? 0
-        let twelve = hour % 12 == 0 ? 12 : hour % 12
-        let half = hour < 12 ? "am" : "pm"
-        return minute == 0 ? "\(twelve) \(half)" : String(format: "%d:%02d %@", twelve, minute, half)
+        HouseTime.clock(date, calendar: calendar)
     }
 }
 
