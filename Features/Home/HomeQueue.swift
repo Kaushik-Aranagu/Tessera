@@ -82,6 +82,8 @@ struct QueueWindow: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.homeRowGrabbed) private var rowGrabbed
     @State private var offset: CGFloat = 0
+    /// Next's ids as last drawn, so a row that moves up into Next can bloom once (nil until the first draw).
+    @State private var seenNext: Set<UUID>?
 
     /// Where the in-flow "Later" word sits in the scroll content.
     private var laterWordY: CGFloat {
@@ -104,7 +106,8 @@ struct QueueWindow: View {
                 ScrollView(.vertical) {
                     LazyVStack(alignment: .leading, spacing: 0) {
                         ForEach(Array(next.enumerated()), id: \.element.id) { index, entry in
-                            QueueRow(entry: entry, isNext: true, ink: [1, 0.88, 0.76][min(index, 2)])
+                            QueueRow(entry: entry, isNext: true, ink: [1, 0.88, 0.76][min(index, 2)],
+                                     arrives: seenNext != nil && !(seenNext ?? []).contains(entry.id))
                                 .frame(height: Self.rowHeight)
                                 .transition(refill)
                         }
@@ -141,6 +144,10 @@ struct QueueWindow: View {
                     }
                 }
                 .tesseraAnimation(.spring(Spring(duration: 0.42, bounce: 0.12)), value: next.map(\.id))
+                .onAppear { seenNext = Set(next.map(\.id)) }
+                .onChange(of: next.map(\.id)) { _, ids in
+                    Task { @MainActor in seenNext = Set(ids) }
+                }
                 .tesseraAnimation(.spring(Spring(duration: 0.42, bounce: 0.12)), value: later.map(\.id))
             }
             .accessibilityElement(children: .contain)
@@ -200,6 +207,10 @@ private struct QueueRow: View {
     @State private var finishes = 0
     @State private var moves = 0
     @State private var away = false
+    @State private var dried = false
+    @State private var washing = false
+    /// Set by the window when this row has just moved up into Next.
+    var arrives = false
     @State private var holding = false
     /// Room for the time column; grows with Dynamic Type so titles never run under it.
     @ScaledMetric(relativeTo: .body) private var timeRoom: CGFloat = 64
@@ -312,14 +323,29 @@ private struct QueueRow: View {
         @MainActor private static var scripted: Set<UUID> = []
     #endif
 
+    /// The row's class pigment, for its moments only (no dot ever sits beside the name: no-dots.md).
+    private var pigment: Color {
+        entry.isWorkout ? Theme.Colors.live : Theme.Colors.context
+    }
+
     private var content: some View {
         HStack(spacing: Theme.Spacing.m) {
-            PaintDab(color: entry.isWorkout ? Theme.Colors.live : Theme.Colors.context, seed: entry.title.count)
             Text(entry.title)
                 .font(Theme.Typography.font(Theme.concept.scale.body, weight: isNext ? .medium : .regular))
                 .foregroundStyle(Theme.Colors.ink.opacity(struck ? 0.45 : ink))
                 .lineLimit(1)
-                .textRenderer(StrikeRenderer(progress: strike, color: Theme.Colors.ink.opacity(0.85)))
+                // Finishing paints the strike wet in the row's pigment, then it dries to ink with the name.
+                .textRenderer(StrikeRenderer(progress: strike, color: dried ? Theme.Colors.ink.opacity(0.45)
+                        : pigment))
+                .background(alignment: .leading) {
+                    // Becoming next: one faint wash of the pigment blooms behind the name, then rests in ink.
+                    RadialGradient(colors: [pigment.opacity(0.16), .clear], center: .center, startRadius: 0,
+                                   endRadius: 90)
+                        .frame(width: 180, height: 60)
+                        .scaleEffect(washing ? 1.08 : 0.7)
+                        .opacity(washing ? 1 : 0)
+                        .allowsHitTesting(false)
+                }
             Spacer(minLength: Theme.Spacing.s)
         }
         // Room for the time column, which sits still on the right while the title travels.
@@ -381,12 +407,23 @@ private struct QueueRow: View {
     /// the queue closes up.
     private func finish() {
         finishes += 1
-        withTesseraAnimation(.easeOut(duration: reduceMotion ? 0.15 : 0.18), reduceMotion: reduceMotion) {
+        // Reduce Motion: the strike draws in ink, no wet phase.
+        dried = reduceMotion
+        withTesseraAnimation(.easeOut(duration: reduceMotion ? 0.15 : 0.42), reduceMotion: reduceMotion) {
             strike = 1
-            struck = true
         }
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(reduceMotion ? 150 : 600))
+            try? await Task.sleep(for: .milliseconds(reduceMotion ? 0 : 420))
+            if let dry = Theme.Motion.dry(reduceMotion: reduceMotion) {
+                withAnimation(dry) {
+                    dried = true
+                    struck = true
+                }
+            } else {
+                dried = true
+                struck = true
+            }
+            try? await Task.sleep(for: .milliseconds(reduceMotion ? 150 : 900))
             let record = try? model.engine.perform(SetTaskDone(task: entry.id, done: true), by: .user).record
             withTesseraAnimation(.spring(Spring(duration: 0.42, bounce: 0.12)), reduceMotion: reduceMotion) {
                 model.touch()

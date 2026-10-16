@@ -101,7 +101,7 @@ struct RecipePage: View {
                 if sent == nil, onList > 0 {
                     (Text("\(onList)").fontWeight(.semibold) + Text(" to buy, in Groceries"))
                         .textRole(.body)
-                        .foregroundStyle(Theme.Colors.health)
+                        .foregroundStyle(Theme.Colors.ink)
                         .padding(.top, Theme.Spacing.s)
                         .transition(.opacity)
                 }
@@ -122,7 +122,7 @@ struct RecipePage: View {
                     if let cooking {
                         Text(cooking)
                             .font(Theme.voice)
-                            .foregroundStyle(Theme.Colors.now)
+                            .foregroundStyle(Theme.Colors.ink)
                             .transition(.opacity)
                     }
                 }
@@ -218,10 +218,10 @@ private struct SentLine: View {
         HStack(alignment: .firstTextBaseline) {
             (Text("\(count)").fontWeight(.semibold) + Text(" to buy, in Groceries"))
                 .textRole(.body)
-                .foregroundStyle(Theme.Colors.health)
+                .foregroundStyle(Theme.Colors.ink)
             Spacer()
             Button("Undo", action: undo)
-                .buttonStyle(InkLabelWordStyle(color: Theme.Colors.live))
+                .buttonStyle(InkLabelWordStyle.undo)
                 .frame(minHeight: 44)
         }
         .padding(.top, Theme.Spacing.m)
@@ -322,7 +322,7 @@ private struct RecipeOriginal: View {
                 Text(recipe.title)
                     .textRole(.title)
                     .foregroundStyle(Theme.Colors.ink)
-                MarginSection(label: "Cooked", color: Theme.Colors.now) {
+                MarginSection(label: "Cooked", color: Theme.Colors.inkSecondary) {
                     if cooks.isEmpty {
                         Text("Not yet.")
                             .font(Theme.voice)

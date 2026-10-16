@@ -57,7 +57,7 @@ struct NoteEditor: View {
                         .entrance(2)
 
                     if !links.isEmpty {
-                        MarginSection(label: "Links", color: Theme.Colors.tess) {
+                        MarginSection(label: "Links", color: Theme.Colors.inkSecondary) {
                             VStack(alignment: .leading, spacing: 0) {
                                 ForEach(links, id: \.id) { link in
                                     HStack(spacing: Theme.Spacing.m) {

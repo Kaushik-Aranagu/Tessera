@@ -201,6 +201,17 @@ struct ClaudeSection: View {
                     writingLine(prompt: "Paste the new key")
                 }
             }
+
+            // Line 5: every use of Claude, one layer down.
+            NavigationLink {
+                ClaudeReceipts()
+            } label: {
+                Text("Receipts")
+                    .textRole(.body)
+                    .foregroundStyle(Theme.Colors.tess)
+                    .frame(minHeight: 44)
+            }
+            .buttonStyle(.valueWash)
         }
     }
 
@@ -382,5 +393,79 @@ private struct MonthLine: View {
         .onAppear {
             withTesseraAnimation(.easeOut(duration: 0.5), reduceMotion: reduceMotion) { drawn = true }
         }
+    }
+}
+
+// MARK: - Receipts
+
+/// Every Claude call, newest first, one line each: "6:12 pm · Plan my day · Sonnet · 1.2¢". The month total sits on
+/// top in dollars, rounded up; one call shows in cents.
+struct ClaudeReceipts: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let _ = model.revision
+        let ledger = TessUsageLedger(store: model.store, classes: model.classes)
+        let calls = ledger.calls().sorted { $0.createdAt > $1.createdAt }
+        ScrollView {
+            VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+                Text("Receipts")
+                    .textRole(.title)
+                    .foregroundStyle(Theme.Colors.ink)
+                Text(
+                    "This month \(Text(ClaudeKeyWords.dollars(ledger.monthTotal(now: AppClock.now))).fontWeight(.semibold)) of $10."
+                )
+                .textRole(.body)
+                .foregroundStyle(Theme.Colors.ink)
+                if calls.isEmpty {
+                    Text("Nothing has gone to Claude yet.")
+                        .textRole(.body)
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                } else {
+                    ForEach(calls, id: \.id) { call in
+                        Text(ClaudeKeyWords.receipt(call, store: model.store))
+                            .textRole(.body)
+                            .foregroundStyle(Theme.Colors.ink)
+                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                    }
+                }
+            }
+            .padding(.horizontal, Theme.Spacing.gutter)
+            .padding(.vertical, Theme.Spacing.l)
+        }
+        .background { ThemedBackground() }
+    }
+}
+
+extension ClaudeKeyWords {
+    /// "6:12 pm · Plan my day · Sonnet · 1.2¢".
+    @MainActor
+    static func receipt(_ call: ObjectRecord, store: ObjectStore) -> String {
+        let time = call.createdAt.formatted(.dateTime.hour().minute()).lowercased()
+        let use = store.value("use", of: call)?.stringValue.flatMap(TessUse.init(rawValue:))
+        let model = store.value("model", of: call)?.stringValue ?? ""
+        let nano = Int64(store.number("costNano", of: call) ?? 0)
+        return [time, useName(use), modelName(model), cents(nano)].joined(separator: " · ")
+    }
+
+    static func useName(_ use: TessUse?) -> String {
+        switch use {
+        case .keyCheck: "Key check"
+        case .plan: "Plan my day"
+        case .capture: "A capture"
+        case .question: "A question"
+        case .paste: "A paste"
+        default: "Tess"
+        }
+    }
+
+    static func modelName(_ model: String) -> String {
+        model.contains("haiku") ? "Haiku" : model.contains("opus") ? "Opus" : model.contains("sonnet") ? "Sonnet" : "Claude"
+    }
+
+    /// One call in cents, to a tenth: "1.2¢"; nothing spent reads "free".
+    static func cents(_ nano: Int64) -> String {
+        guard nano > 0 else { return "free" }
+        return String(format: "%.1f¢", (Double(nano) / 1_000_000).rounded(.up) / 10)
     }
 }

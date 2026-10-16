@@ -195,7 +195,7 @@ private struct ReviewPageBody: View {
                 }
 
                 if !week.workouts.isEmpty {
-                    MarginSection(label: "Workouts", color: Theme.Colors.training) {
+                    MarginSection(label: "Workouts", color: Theme.Colors.inkSecondary) {
                         VStack(alignment: .leading, spacing: 0) {
                             ForEach(week.workouts.prefix(4)) { workout in
                                 ReviewLine(title: workout.title,

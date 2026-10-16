@@ -241,7 +241,7 @@ private struct SaveBar: View {
                     .foregroundStyle(Theme.Colors.tess)
                 Spacer()
                 Button("Undo", action: onUndo)
-                    .buttonStyle(InkLabelWordStyle(color: Theme.Colors.live))
+                    .buttonStyle(InkLabelWordStyle.undo)
                     .frame(minHeight: 44)
             }
         } else {
@@ -350,7 +350,9 @@ private struct IngredientPaint: View {
                     .foregroundStyle(Theme.Colors.ink)
                     .background(alignment: .bottom) {
                         Brushstroke(progress: painted ? 1 : 0)
-                            .stroke(Theme.Colors.now, style: StrokeStyle(lineWidth: 3.5, lineCap: .round))
+                            .stroke(Theme.Colors.now.opacity(painted ? 0.35 : 1),
+                                    style: StrokeStyle(lineWidth: HomeStroke.underAmount, lineCap: .round))
+                            .animation(Theme.Motion.dry(reduceMotion: false), value: painted)
                             .frame(height: 9)
                             .offset(y: 6)
                     }
