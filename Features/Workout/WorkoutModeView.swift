@@ -51,7 +51,10 @@ private struct WorkoutContent: View {
     /// The lane's scroll position (x). Kept in step with `session.currentIndex` both ways.
     @State private var laneIndex: Int?
     @State private var tessMode: TessSoul.Mode = .idle
-    @State private var celebrated = 0
+    /// Workout-level moments: a set seated, a new best, rest up on screen, the workout finished.
+    @State private var moment = HapticCue()
+    /// The subline whose cadmium has dried.
+    @State private var sublineDried: String?
     @State private var undoHaptic = 0
     @State private var editHaptic = 0
     @State private var saveHaptic = 0
@@ -119,6 +122,7 @@ private struct WorkoutContent: View {
                 // Rest ran out on its own (not skipped or undone): the next set rises already prefilled and one
                 // glint sweeps the numeral.
                 if isSet, !wasSet, let end = session.restEndsAt, end <= now {
+                    moment.play(.timeUp)
                     restEndedGlint = true
                     Task { @MainActor in
                         try? await Task.sleep(for: .seconds(1.2))
@@ -147,7 +151,11 @@ private struct WorkoutContent: View {
         .preferredColorScheme(ThemeStore.shared.workoutLook.isDark ? .dark : .light)
         .persistentSystemOverlays(.hidden)
         .defersSystemGestures(on: .bottom)
-        .onAppear { laneIndex = session.currentIndex }
+        .onAppear {
+            laneIndex = session.currentIndex
+            // The workout can finish here: warm the done pattern so its first beat isn't late.
+            DonePattern.prepare()
+        }
         .onChange(of: laneIndex) { _, index in
             guard let index, index != session.currentIndex else { return }
             withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { session.select(entryAt: index) }
@@ -158,18 +166,20 @@ private struct WorkoutContent: View {
         }
         .onChange(of: session.lastSeated) { _, seated in
             guard let seated else { return }
-            // One haptic per set: the key's rigid impact as it lands (no second "lock" after the stroke).
+            // One haptic per set, played here so it survives the key leaving (Reduce Motion, VoiceOver's action):
+            // the set's tap, or .success in its place for a new best.
+            moment.play(seated.records.isEmpty ? .setLogged : .newBest)
             if seated.records.isEmpty {
                 play(.done)
             } else {
-                celebrated += 1
                 play(.thinking, then: .done, after: 1.2)
             }
         }
-        .sensoryFeedback(.decrease, trigger: undoHaptic)
-        .sensoryFeedback(.selection, trigger: editHaptic)
-        .sensoryFeedback(.impact(flexibility: .rigid), trigger: saveHaptic)
-        .sensoryFeedback(.impact(weight: .light), trigger: revealHaptic)
+        .tesseraFeedback(.undo, trigger: undoHaptic)
+        .tesseraFeedback(.selection, trigger: editHaptic)
+        .tesseraFeedback(.setLogged, trigger: saveHaptic)
+        .tesseraFeedback(.pickedUp, trigger: revealHaptic)
+        .tesseraFeedback(moment)
     }
 
     private func live(phase actual: WorkoutSession.Phase, now: Date) -> some View {
@@ -388,10 +398,19 @@ extension WorkoutContent {
     // MARK: y, in words and numbers
 
     private func subline(phase: WorkoutSession.Phase) -> some View {
-        let (text, color) = WorkoutLines.subline(session, phase: phase)
+        let (text, color, isWet) = WorkoutLines.subline(session, phase: phase)
+        // A best lands in cadmium and dries to the context colour within 2 s (sweep-19).
         return Text(text)
             .font(Theme.voice)
-            .foregroundStyle(color)
+            .foregroundStyle(isWet && sublineDried == text ? Theme.Colors.context : color)
+            .tesseraAnimation(.easeInOut(duration: 0.8), value: sublineDried)
+            .task(id: text) {
+                guard isWet else { return }
+                try? await Task.sleep(for: .seconds(1.2))
+                if !Task.isCancelled {
+                    sublineDried = text
+                }
+            }
             .lineLimit(1)
             .minimumScaleFactor(0.8)
             .contentTransition(.opacity)
@@ -404,7 +423,10 @@ extension WorkoutContent {
                 let remaining = max(0, end.timeIntervalSince(now)).rounded(.up)
                 VStack(alignment: .leading, spacing: Theme.Spacing.m) {
                     // Tap the countdown for +15 (the one-tap twin of dragging the horizon right).
-                    Button { extendRest() } label: {
+                    Button {
+                        moment.play(.selection)
+                        extendRest()
+                    } label: {
                         HStack(alignment: .firstTextBaseline, spacing: 10) {
                             Text(Format.duration(remaining))
                                 .font(Theme.numeral(72))
@@ -424,7 +446,7 @@ extension WorkoutContent {
                     if let note = session.restNote {
                         Text(note)
                             .font(Theme.voice)
-                            .foregroundStyle(Paint.tess)
+                            .foregroundStyle(Paint.secondary)
                             .fixedSize(horizontal: false, vertical: true)
                             .transition(.opacity)
                     }
@@ -480,7 +502,6 @@ extension WorkoutContent {
         .frame(height: 196, alignment: .top)
         .tesseraAnimation(.easeOut(duration: 0.32), value: phase == .set)
         .tesseraAnimation(.easeOut(duration: 0.32), value: showsGo)
-        .sensoryFeedback(.impact(flexibility: .soft, intensity: 0.8), trigger: celebrated)
     }
 
     /// "kg", or "kg each" for dumbbells.
@@ -596,7 +617,8 @@ extension WorkoutContent {
                 switch phase {
                 case .set:
                     // Hold to log: 0.6 s, 20 pt of drift (docs/research/ship-now.md).
-                    PaintKey(paint: Paint.live, duration: 0.6, height: 64, drift: 20) {
+                    // Silent: the set's haptic plays when it seats (onChange of lastSeated).
+                    PaintKey(paint: Paint.live, duration: 0.6, height: 64, drift: 20, isSilent: true) {
                         withTesseraAnimation(reduceMotion: reduceMotion) { session.logSet() }
                     } label: { _ in
                         Text("Log set")
@@ -624,7 +646,7 @@ extension WorkoutContent {
                         Text("Next exercise")
                     }
                 case .workoutDone:
-                    PaintKey(paint: Paint.live, duration: 0.8, height: 64) {
+                    PaintKey(paint: Paint.live, duration: 0.8, height: 64, isSilent: true) {
                         finish()
                     } label: { _ in
                         Text("Finish")
@@ -646,6 +668,8 @@ extension WorkoutContent {
     }
 
     private func finish(early: Bool = false) {
+        // Done plays here for every finish (the key is silent, so it can't be lost as the key leaves).
+        moment.play(.done)
         isSwapOpen = false
         isOrderOpen = false
         withTesseraAnimation(.easeOut(duration: 0.4), reduceMotion: reduceMotion) { session.finish(early: early) }

@@ -81,7 +81,7 @@ struct RPEStops: View {
             )
         }
         .frame(height: Metrics.height)
-        .sensoryFeedback(.selection, trigger: dragHaptic)
+        .tesseraFeedback(.selection, trigger: dragHaptic)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Effort, RPE")
         .accessibilityValue(rpe.map { "\(Self.formatted($0)), \(Self.words(for: $0))" } ?? "Not set")

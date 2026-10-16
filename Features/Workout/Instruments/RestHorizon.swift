@@ -65,8 +65,8 @@ struct RestHorizon: View {
         .onAppear {
             withTesseraAnimation(.easeOut(duration: 0.5), reduceMotion: reduceMotion) { drawn = true }
         }
-        .sensoryFeedback(.increase, trigger: extends)
-        .sensoryFeedback(.impact(flexibility: .solid, intensity: 0.7), trigger: skips)
+        .tesseraFeedback(.selection, trigger: extends)
+        .tesseraFeedback(.selection, trigger: skips)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Rest")
         .accessibilityActions {

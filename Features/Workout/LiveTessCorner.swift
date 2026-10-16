@@ -23,29 +23,11 @@ struct LiveTessCorner: View {
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 12) {
-            VStack(alignment: .trailing, spacing: 6) {
-                if let shownLine, !shownLine.isEmpty {
-                    // Beside the soul, trailing, at most 270 pt and 2 lines, UNDO under it (day-seams S1).
-                    Text(shownLine)
-                        .font(Theme.voice)
-                        .foregroundStyle(Paint.tess)
-                        .multilineTextAlignment(.trailing)
-                        .lineLimit(2)
-                        .frame(maxWidth: 270, alignment: .trailing)
-                        .minimumScaleFactor(0.85)
-                        // A new line cross-fades in place; only an empty corner slides a line in.
-                        .contentTransition(.opacity)
-                        .transition(.asymmetric(insertion: .offset(x: reduceMotion ? 0 : 12).combined(with: .opacity),
-                                                removal: .opacity))
-                }
-                if canUndo {
-                    Button("Undo", action: onUndo)
-                        .buttonStyle(.labelWord(Theme.Colors.liveInk))
-                        .accessibilityLabel("Undo the last change")
-                        // Clear of the soul's done splash, which spreads about 60 pt on dark looks (Design A2).
-                        .padding(.trailing, 12)
-                        .transition(.opacity)
-                }
+            // Tess's slot keeps its height (two lines and the UNDO row) whether or not she speaks, so nothing on
+            // the page moves when her line comes or goes (day-seams S1, one-ask.md).
+            ZStack(alignment: .bottomTrailing) {
+                slotTemplate
+                spoken
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
             soul
@@ -63,6 +45,45 @@ struct LiveTessCorner: View {
         .onAppear { breathe = true }
     }
 
+    /// Her line, trailing beside the soul, with UNDO under it.
+    private var spoken: some View {
+        VStack(alignment: .trailing, spacing: 6) {
+            if let shownLine, !shownLine.isEmpty {
+                // Beside the soul, trailing, at most 270 pt and 2 lines, UNDO under it (day-seams S1).
+                Text(shownLine)
+                    .font(Theme.voice)
+                    .foregroundStyle(Paint.tess)
+                    .multilineTextAlignment(.trailing)
+                    .lineLimit(2)
+                    .frame(maxWidth: 270, alignment: .trailing)
+                    .minimumScaleFactor(0.85)
+                    // A new line cross-fades in place; only an empty corner slides a line in.
+                    .contentTransition(.opacity)
+                    .transition(.asymmetric(insertion: .offset(x: reduceMotion ? 0 : 12).combined(with: .opacity),
+                                            removal: .opacity))
+            }
+            // UNDO leaves with its line, never alone (Design #297 follow-up).
+            if canUndo, shownLine?.isEmpty == false {
+                Button("Undo", action: onUndo)
+                    .buttonStyle(.labelWord(Theme.Colors.liveInk))
+                    .accessibilityLabel("Undo the last change")
+                    // Clear of the soul's done splash, which spreads about 60 pt on dark looks (Design A2).
+                    .padding(.trailing, 12)
+                    .transition(.opacity)
+            }
+        }
+    }
+
+    /// Invisible: reserves two Body lines and the UNDO row at the current Dynamic Type size.
+    private var slotTemplate: some View {
+        VStack(alignment: .trailing, spacing: 6) {
+            Text(verbatim: "Tess\nTess").font(Theme.voice).lineLimit(2)
+            Button("Undo") {}.buttonStyle(.labelWord(Theme.Colors.liveInk))
+        }
+        .hidden()
+        .accessibilityHidden(true)
+    }
+
     /// The three dabs, about 46×40 with a 64×64 hit area, breathing 1 ↔ 1.08 over 3.2 s.
     private var soul: some View {
         TessSoul(mode: mode)
@@ -78,7 +99,7 @@ struct LiveTessCorner: View {
                 .exclusively(before: TapGesture().onEnded { touched(then: onOpen) }))
             // On the finish screen she only speaks: no touch, no haptic.
             .allowsHitTesting(onOpen != nil || onHome != nil)
-            .sensoryFeedback(.selection, trigger: opens)
+            .tesseraFeedback(.selection, trigger: opens)
             .accessibilityElement()
             .accessibilityLabel("Tess")
             .accessibilityValue(shownLine ?? "")

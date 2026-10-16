@@ -25,9 +25,8 @@ struct RepsRow: View {
     @State private var pop = false
     @State private var splash = 0
     @State private var direction: CGFloat = 1
-    @State private var ticks = 0
-    @State private var beats = 0
-    @State private var bounds = 0
+    /// One haptic per step: a tick, the meet tap, the beat tap or the soft stop (task-reward.md).
+    @State private var haptic = HapticCue()
     @State private var boundFired = false
 
     private var beatsLast: Bool {
@@ -88,9 +87,7 @@ struct RepsRow: View {
         .contentShape(Rectangle().inset(by: -12))
         .gesture(isLocked ? nil : scrub)
         .onChange(of: reps) { old, new in landed(from: old, to: new) }
-        .sensoryFeedback(.selection, trigger: ticks)
-        .sensoryFeedback(.impact(flexibility: .rigid, intensity: 1), trigger: beats)
-        .sensoryFeedback(.impact(flexibility: .rigid, intensity: 0.6), trigger: bounds)
+        .tesseraFeedback(haptic)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Reps")
         .accessibilityValue(spoken)
@@ -132,7 +129,7 @@ struct RepsRow: View {
                                              count: range.count)
                 if landing.hitBound, !boundFired {
                     boundFired = true
-                    bounds += 1
+                    haptic.play(.bound)
                 }
                 let next = landing.index + range.lowerBound
                 if next != reps {
@@ -151,10 +148,13 @@ struct RepsRow: View {
         direction = new > old ? 1 : -1
         guard byHand else { return }
         byHand = false
-        ticks += 1
         if let ghost, new > ghost, old <= ghost {
-            beats += 1
+            haptic.play(.repsBeatLast)
             onBeat()
+        } else if new == ghost {
+            haptic.play(.repsMeetLast)
+        } else {
+            haptic.play(.selection)
         }
         guard !reduceMotion else { return }
         splash += 1

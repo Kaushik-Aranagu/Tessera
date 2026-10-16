@@ -30,10 +30,9 @@ struct WeightReel: View {
     @State private var band: CGFloat = 0
     @State private var boundFired = false
     @State private var coast: Task<Void, Never>?
-    @State private var ticks = 0
+    /// One haptic per detent: the tick, or the plate tap when a 5 kg+ plate goes on or off; the soft stop at a bound.
+    @State private var haptic = HapticCue()
     @State private var lastTick = Date.distantPast
-    @State private var plateBumps = 0
-    @State private var bounds = 0
 
     private enum Metrics {
         static let numeral: CGFloat = 80
@@ -65,9 +64,7 @@ struct WeightReel: View {
         }
         .contentShape(Rectangle().inset(by: -16))
         .gesture(isLocked ? nil : scrub)
-        .sensoryFeedback(.selection, trigger: ticks)
-        .sensoryFeedback(.impact(weight: .light), trigger: plateBumps)
-        .sensoryFeedback(.impact(flexibility: .rigid, intensity: 0.6), trigger: bounds)
+        .tesseraFeedback(haptic)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Weight")
         .accessibilityValue(spokenValue ?? "\(Format.kilograms(weight)) kilograms")
@@ -161,7 +158,7 @@ struct WeightReel: View {
         if landing.hitBound {
             if !boundFired {
                 boundFired = true
-                bounds += 1
+                haptic.play(.bound)
             }
             if !reduceMotion {
                 let over = Double(pull) - Double(landing.index - startIndex) * ScrubFeel.pitch
@@ -180,12 +177,12 @@ struct WeightReel: View {
         guard index != previous else { return }
         direction = index > previous ? 1 : -1
         let now = Date.now
-        if now.timeIntervalSince(lastTick) >= 0.03 {
-            ticks += 1
-            lastTick = now
-        }
         if heavyPlateChanged(from: detents[previous], to: detents[index]) {
-            plateBumps += 1
+            haptic.play(.plateOnOff)
+            lastTick = now
+        } else if now.timeIntervalSince(lastTick) >= 0.03 {
+            haptic.play(.selection)
+            lastTick = now
         }
         shownIndex = index
     }
@@ -197,11 +194,11 @@ struct WeightReel: View {
         let count = landing.index - from
         guard count != 0 else { return end() }
         if landing.hitBound {
-            bounds += 1
+            haptic.play(.bound)
         }
         if reduceMotion {
             weight = detents[landing.index]
-            ticks += 1
+            haptic.play(.selection)
             return end()
         }
         coast = Task { @MainActor in
