@@ -85,8 +85,10 @@ struct ReviewWeek {
         let days = (0 ..< 7).compactMap { calendar.date(byAdding: .day, value: $0, to: firstKey) }
         let byDay = days.map { model.ledger.finishedWorkouts(onDay: $0, calendar: calendar) }
         let workouts = byDay.flatMap(\.self)
+        // A task done counts on the day it was done where it was done (trip R12).
+        let doneDays = WeekFactsBuilder(engine: model.engine, calendar: calendar).tasksDoneByDay()
         let goodDays = days.indices.map { index in
-            !byDay[index].isEmpty || doneDates.contains { tesseraDay.day(of: $0) == days[index] }
+            !byDay[index].isEmpty || doneDays[days[index]] ?? 0 > 0
         }
 
         return ReviewWeek(
