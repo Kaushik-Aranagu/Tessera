@@ -606,6 +606,10 @@ def worst_nano(model, body):
 def self_test(fixture_path, event_titles):
     """Exits nonzero, before any call, on any mismatch."""
     bad = []
+    # Research, Oct 16: screening is on distinctive words only; articles and common words never trip it.
+    for ok in ["Water the plants", "Call the bank first, then a quick one.", "Back by 5 pm, then text."]:
+        if screened(ok):
+            bad.append(f"screened() flags \"{ok}\": {screened(ok)}")
     if len(INSTRUCTIONS) < 500 or "proposePlan" not in INSTRUCTIONS or not INSTRUCTIONS.startswith("You are Tess"):
         bad.append(f"instructions parse looks wrong ({len(INSTRUCTIONS)} chars)")
     if "\\\n" in INSTRUCTIONS or "\n    " in INSTRUCTIONS:
@@ -894,9 +898,14 @@ def write_report(report, args, selftest, fixture_path, stopped=None):
                   "| Row | Bar | Result |", "|---|---|---|",
                   f"| Self-test | 100% before any call | {selftest['expect']}/{selftest['called']} expected clean, "
                   f"{selftest['bad']}/{EXPECT_BAD} bad caught |",
-                  f"| Gate: d packs clean in {args.runs} of {args.runs}{gate_note} | 21 of 23 (d14, d22 make no "
-                  f"call) | {len(clean_d)} of {len(called_d)} called; with d14 and d22 by the builder, "
-                  f"{len(clean_d) + 2} of 23 |",
+                  # Research, Oct 16: two rows that must each pass, never merged into one count, so a model pass
+                  # can't hide a builder that calls when it shouldn't.
+                  f"| Model gate: called d packs clean in {args.runs} of {args.runs}{gate_note} | all called "
+                  f"(21 of 21; the other 3 of the 24 called are P02, P14, P24, below) | {len(clean_d)} of "
+                  f"{len(called_d)} |",
+                  f"| Builder gate: d14 and d22 make no call | both | "
+                  f"{'both' if {'d14', 'd22'} <= set(s['skipped']) else 'FAIL: ' + ', '.join(sorted({'d14', 'd22'} - set(s['skipped'])))}"
+                  f" (fixture call false; the app's builder is checked by Core's tests after G4) |",
                   f"| P02, P14, P24 clean in {args.runs} of {args.runs}, 0 hard fails | 3 of 3, not counted | "
                   f"{len(extra_ok)} of 3 ({', '.join(extra_ok) or 'none'}) |",
                   f"| Hard fails (M-fmt 24-hour, HF-screened, HF-private, HF-event) | 0 | {len(s['hard'])} |",
