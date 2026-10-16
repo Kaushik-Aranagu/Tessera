@@ -215,15 +215,15 @@ struct CommandInterpreter {
         session.weight = weight
         session.reps = reps
         session.logSet()
-        let e1RM = model.previewE1RM(weight: weight, reps: reps).map { ($0 * 10).rounded() / 10 }
-        return Self.loggedReceipt(exercise: exercise.name, weight: weight, reps: reps, e1RM: e1RM)
+        let best = model.session?.lastSeated?.records.isEmpty == false
+        return Self.loggedReceipt(exercise: exercise.name, weight: weight, reps: reps, best: best)
     }
 
-    /// Thing first (receipts-thing-first.md RC12): "Bench press 82.5 × 8, logged. e1RM 105.".
-    static func loggedReceipt(exercise: String, weight: Double, reps: Double, e1RM: Double?) -> String {
+    /// Thing first (receipts-thing-first.md RC12): "Bench press 82.5 × 8, logged.", or "…, logged, best." for a new
+    /// best. No e1RM in the receipt; the estimate lives on the exercise page (Product, 2:29 PM PT Oct 16).
+    static func loggedReceipt(exercise: String, weight: Double, reps: Double, best: Bool) -> String {
         let lower = exercise.lowercased()
         let name = lower.prefix(1).uppercased() + lower.dropFirst()
-        let line = "\(name) \(Format.kilograms(weight)) × \(Int(reps)), logged."
-        return e1RM.map { "\(line) e1RM \(Format.kilograms($0))." } ?? line
+        return "\(name) \(Format.kilograms(weight)) × \(Int(reps)), logged\(best ? ", best" : "")."
     }
 }

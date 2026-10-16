@@ -101,8 +101,11 @@ struct AppModelTests {
         DemoData.prepare(model)
         let interpreter = CommandInterpreter(model: model)
 
-        #expect(interpreter.run("log bench 82.5x8").hasPrefix("Bench press 82.5 × 8, logged."))
+        let logged = interpreter.run("log bench 82.5x8")
         #expect(model.session != nil)
+        let best = model.session?.lastSeated?.records.isEmpty == false
+        #expect(logged == (best ? "Bench press 82.5 × 8, logged, best." : "Bench press 82.5 × 8, logged."))
+        #expect(!logged.contains("e1RM"))
         #expect(interpreter.run("what's my bench best?").contains("e1RM"))
         #expect(interpreter.run("stretch at 21:00").hasPrefix("Drying"))
         #expect(model.pendingCapture != nil)
