@@ -12,7 +12,7 @@
 
 ## 2. Riders (in only if merged before the last blocker)
 - B1 (QA backups, 12:12 PM PT): Notes refuses a key-shaped note (Core 0e). First rider.
-- B5/B6 (QA backups, 12:12 PM PT): the v9 build refuses a newer-catalog store or backup (Core 0e). Second rider; if it misses, #407 waits for a build that has it.
+- [x] B5/B6 (#475, merged 76be1c07 12:36 PM PT; QA backups, 12:12 PM PT): the v9 build refuses a newer-catalog store or backup (Core 0e). Second rider; if it misses, #407 waits for a build that has it.
 - M1 (QA review-475, 12:29 PM PT; Core rider 2b): BackupKeeper.runDaily never runs in the in-memory fallback, so a v10 → pin rollback can't roll his 7 good copies away with empty-store backups. Goes with B5/B6. If it misses the pin, #407 waits.
 - P14 (Research privacy trace, 12:26 PM PT): Siri's Add a Task routes like the Ask bar. Body facts, and past-tense money with an amount, become a private note ("Private note, kept.", no echo). "pay rent 2100 friday" stays a task (decisions 12:11). Core 0j/0l or a tiny PR. Third rider, after B5/B6.
 - [ ] Paste/link SecretWords wall (Core).
@@ -41,7 +41,7 @@
 - [ ] Mirror to master in a small docs PR.
 
 ## 6. Install
-- [ ] Only after gate PASS + QA + Design 66 pass, and only on his own "install it" in the iOS build thread.
+- [ ] **Standing approval removes asking him, not the gates. Only the named pin SHA installs: never master, never any other commit.** Install under his standing approval (12:36 PM PT Oct 16, Builder A's thread): Builder A installs whenever the phone is reachable over Wi-Fi, with no ask. Every safety step stays: Product names the SHA, the v9 gate, QA and the Design 66 walk pass, Step 0 SAVE A COPY runs, the install goes in place over Wi-Fi, the app is never deleted, and he gets one line after.
 
 ## 7. Rollback (decisions 12:16 PM PT Oct 16)
 

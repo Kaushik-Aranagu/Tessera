@@ -4,6 +4,8 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+**12:37 PM PT Oct 16: standing install approval (Kaushik, 12:36 PM PT, Builder A's thread).** DECIDED by him. Builder A may install the named pin whenever his phone is reachable over Wi-Fi, without asking. Standing approval removes asking him, not the gates. Only the named pin SHA installs, never master (master is v9 and his phone holds a v5 store). The safety steps all stay: Product names the SHA, the gate, QA and the Design walk pass, Step 0 SAVE A COPY runs, the install is in place, the app is never deleted, and he gets one line after.
+
 **12:35 PM PT Oct 16: time words (Research time-words-sweep.md asked).** DECIDED, all six of Research's picks.
 - "early morning" is only the label; lines say "early this morning".
 - From 9 to 10 pm the label says "night", to match "tonight".

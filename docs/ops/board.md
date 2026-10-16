@@ -1,5 +1,7 @@
 # Tessera board (index)
 
+**Install rule (12:37 PM PT Oct 16):** standing approval removes asking him, not the gates. Only the named pin SHA in product/pin-checklist.md installs, never master.
+
 *Only the planning lead (Product lead thread) edits this file. Each team's queue lives in its own file under `board/`, and only that team's lead edits it. Updated 2026-10-15. First phone build: PRs cut at 2:05 PM Pacific (moved from 12:45 and 1:05 PM), then the final build; review guide in `../product/review-session.md`.*
 
 **Installed (9:57 AM PT Oct 16):** 7b321d2 (#320, #330, #334, #337, #343), over the existing app; signing lapses ~Oct 23 9:57 AM PT, reminder Oct 22 10 AM PT. Next pin waits on #366, MU2 and the inbox-retry fix (stuck-listening #446 merged, 0eca9bbe) (decisions.md 11:08 and 11:35 AM PT) (master at v9 since #422 merged, 5af8f2c2); the paste/link wall rides if it lands first; #407 rebased to v10, merges after the pin with #403. Next build: AI-1 Home, 44 part two, 42, Ask Tess sizes.
