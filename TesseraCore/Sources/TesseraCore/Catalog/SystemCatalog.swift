@@ -242,6 +242,8 @@ public enum SystemCatalog {
             FieldSpec(key: "backupFolderName", name: "Backup folder", kind: .text),
             FieldSpec(key: "backupFolderPickedAt", name: "Folder picked", kind: .date),
             FieldSpec(key: "restWeekday", name: "Rest day", kind: .number),
+            // Tess's eyes (motion build sheet item 1): nil means no, off by default.
+            FieldSpec(key: "tessEyes", name: "Tess's eyes", kind: .bool),
         ]),
         // A phrase the phone couldn't read while Claude was out of reach (tess-model-layer.md section 7): kept as said,
         // read by Claude the next time the app is open and online, and gone once read. Never commits on its own.

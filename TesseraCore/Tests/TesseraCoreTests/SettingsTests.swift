@@ -197,6 +197,39 @@ struct SettingsFollowUpTests {
         #expect(settings.read().lookDay == "Obsidian")
     }
 
+    @Test func tessEyesIsOffUntilTurnedOnAndRollsBack() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        let settings = SettingsStore(engine: engine)
+        // Motion item 1: nil means no; one op turns it on; UNDO takes it back.
+        try settings.update { $0.lookDay = "Porcelain" }
+        #expect(settings.read().tessEyes == nil && !settings.read().showsTessEyes)
+        try settings.update { $0.tessEyes = true }
+        #expect(settings.read().showsTessEyes)
+        let record = try #require(engine.history(limit: 1).first)
+        engine.undo(record)
+        #expect(settings.read().tessEyes == nil && settings.read().lookDay == "Porcelain")
+        // An old backup's settings (encoded before the field existed) decode with it nil.
+        let old = #"{"lookDay":"Porcelain","restWeekday":1}"#
+        let decoded = try JSONDecoder().decode(TesseraSettings.self, from: Data(old.utf8))
+        #expect(decoded.tessEyes == nil && decoded.lookDay == "Porcelain")
+        // An older build ignores the key: a newer settings payload still decodes into the old field set.
+        struct OlderSettings: Decodable {
+            var lookDay: String?
+            var restWeekday: Int?
+        }
+        try settings.update { $0.tessEyes = true }
+        let newer = try JSONEncoder().encode(settings.read())
+        let olderRead = try JSONDecoder().decode(OlderSettings.self, from: newer)
+        #expect(olderRead.lookDay == "Porcelain" && olderRead.restWeekday == nil)
+        // In the store, an older catalog (v8) reseeded at v9 gains the field and keeps the value.
+        for classDef in store.context.all(ClassDef.self) where classDef.systemKey != nil {
+            classDef.packageVersion = 8
+        }
+        _ = try store.prepareCatalog()
+        #expect(settings.read().tessEyes == true)
+    }
+
     @Test func aClassFromANewerCatalogIsLeftAlone() throws {
         // Rolling back to an older build: the store still opens and seeds, a class it doesn't know (as v3 doesn't
         // know Settings) is skipped, not dropped, and its objects survive a copy.
