@@ -75,16 +75,20 @@ public extension TrainingLedger {
         )
     }
 
-    /// Workouts finished on his day containing `date` (04:00 to 04:00), newest first: today's history on Home.
-    /// A workout belongs to the day it started: Push A from 22:50 to 00:40 is Friday's, and a session crossing 04:00
-    /// stays on its first day. `date` is a moment, or a day key (an exact midnight, as `week` and the day lanes pass).
-    /// Cached for the store's revision and time zone (after a flight, the old zone's keys would all miss).
+    /// Workouts finished on his day containing the moment `date` (04:00 to 04:00), newest first: today's history on
+    /// Home. A workout belongs to the day it started: Push A from 22:50 to 00:40 is Friday's, and a session crossing
+    /// 04:00 stays on its first day.
     func finishedWorkouts(on date: Date, calendar: Calendar = .current) -> [WorkoutSummary] {
+        finishedWorkouts(onDay: TesseraDay(calendar: calendar).day(of: date), calendar: calendar)
+    }
+
+    /// The same for a day key (a midnight from `TesseraDay.day(of:)`, as `week` and Review pass).
+    /// Cached for the store's revision and time zone (after a flight, the old zone's keys would all miss).
+    func finishedWorkouts(onDay day: Date, calendar: Calendar = .current) -> [WorkoutSummary] {
         guard let workoutClass = classes[.workout] else { return [] }
         let derived = store.cache.derived
         let revision = store.revision
         let tesseraDay = TesseraDay(calendar: calendar)
-        let day = date == calendar.startOfDay(for: date) ? date : tesseraDay.day(of: date)
         let zone = calendar.timeZone.identifier
         if let cached = derived.daySummaries[day], cached.revision == revision, derived.workoutDaysZone == zone {
             return cached.summaries

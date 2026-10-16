@@ -1,4 +1,5 @@
 import Foundation
+import os
 import TesseraCore
 import UniformTypeIdentifiers
 
@@ -18,18 +19,70 @@ enum BackupKeeper {
         URL.documentsDirectory.appendingPathComponent("Backups", isDirectory: true)
     }
 
-    /// Writes today's copies if they're not there yet. Never throws at the caller: a missing folder or a revoked
-    /// bookmark just skips that copy.
+    /// A daily copy that didn't save: where, when and why. Shown quietly on Backups until a copy there saves again.
+    struct Failure: Codable, Equatable {
+        enum Place: String, Codable { case iPhone, folder }
+        let place: Place
+        let at: Date
+        let reason: String
+    }
+
+    private static let failureKey = "tessera.backupFailures"
+    private static let log = Logger(subsystem: "com.kaushikaranagu.tessera", category: "backup")
+
+    /// The copies that failed last time they ran, by place.
+    static var failures: [Failure] {
+        guard let data = UserDefaults.standard.data(forKey: failureKey) else { return [] }
+        return (try? JSONDecoder().decode([Failure].self, from: data)) ?? []
+    }
+
+    private static func note(_ place: Failure.Place, error: (any Error)?, now: Date) {
+        var current = failures.filter { $0.place != place }
+        if let error {
+            log
+                .error(
+                    "Daily copy to \(place.rawValue, privacy: .public) failed: \(String(describing: error), privacy: .public)"
+                )
+            current.append(Failure(place: place, at: now, reason: String(describing: error)))
+        }
+        if let data = try? JSONEncoder().encode(current) {
+            UserDefaults.standard.set(data, forKey: failureKey)
+        }
+    }
+
+    #if DEBUG
+        /// `-backupFailure`: a failed iPhone copy, to see the quiet line.
+        static func simulateFailureIfRequested() {
+            guard ProcessInfo.processInfo.arguments.contains("-backupFailure") else { return }
+            note(.iPhone, error: CocoaError(.fileWriteOutOfSpace), now: AppClock.now)
+        }
+    #endif
+
+    /// Writes today's copies if they're not there yet. Never throws at the caller, but a copy that fails is logged
+    /// and remembered, so Backups can say so quietly (a revoked folder, a full disk) instead of looking safe.
     static func runDaily(_ context: TesseraContext, now: Date = AppClock.now) {
-        _ = try? TesseraBackup.writeRolling(from: context, in: localFolder, now: now)
-        guard let folder = pickedFolder else { return }
+        do {
+            _ = try TesseraBackup.writeRolling(from: context, in: localFolder, now: now)
+            note(.iPhone, error: nil, now: now)
+        } catch {
+            note(.iPhone, error: error, now: now)
+        }
+        guard let folder = pickedFolder else {
+            note(.folder, error: nil, now: now)
+            return
+        }
         let accessing = folder.startAccessingSecurityScopedResource()
         defer {
             if accessing {
                 folder.stopAccessingSecurityScopedResource()
             }
         }
-        _ = try? TesseraBackup.writeRolling(from: context, in: folder, now: now)
+        do {
+            _ = try TesseraBackup.writeRolling(from: context, in: folder, now: now)
+            note(.folder, error: nil, now: now)
+        } catch {
+            note(.folder, error: error, now: now)
+        }
     }
 
     /// The folder outside the app he picked once, from its saved bookmark (refreshed when stale). Nil if none, or if

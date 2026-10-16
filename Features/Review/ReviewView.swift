@@ -78,7 +78,7 @@ struct ReviewWeek {
 
         // Each day's sessions belong to the day they started, as everywhere else.
         let days = (0 ..< 7).compactMap { calendar.date(byAdding: .day, value: $0, to: firstKey) }
-        let byDay = days.map { model.ledger.finishedWorkouts(on: $0, calendar: calendar) }
+        let byDay = days.map { model.ledger.finishedWorkouts(onDay: $0, calendar: calendar) }
         let workouts = byDay.flatMap(\.self)
         let goodDays = days.indices.map { index in
             !byDay[index].isEmpty || doneDates.contains { tesseraDay.day(of: $0) == days[index] }

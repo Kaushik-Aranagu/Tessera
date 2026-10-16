@@ -31,7 +31,7 @@ struct DayBoundaryTests {
         let ledger = TrainingLedger(store: store, classes: classes)
         // Asked at 01:00 Saturday (still Friday), or for Friday's key: Push A. Saturday is empty.
         #expect(ledger.finishedWorkouts(on: at(10, 17, 1), calendar: calendar).map(\.id) == [workout.id])
-        #expect(ledger.finishedWorkouts(on: TesseraDayTests.key(10, 16), calendar: calendar).count == 1)
+        #expect(ledger.finishedWorkouts(onDay: TesseraDayTests.key(10, 16), calendar: calendar).count == 1)
         #expect(ledger.finishedWorkouts(on: at(10, 17, 12), calendar: calendar).isEmpty)
         let week = ledger.week(containing: at(10, 17, 1), plan: plan, now: at(10, 17, 1), calendar: calendar)
         // Friday (today, still) is done with Push A; Saturday is ahead.
@@ -97,5 +97,23 @@ struct DayBoundaryTests {
         let notes = table.tidy(now: Date.now.addingTimeInterval(7 * 3600))
         #expect(notes.first?.hasSuffix("nothing was logged") == true)
         #expect(workout.isDeleted && store.value("endedAt", of: workout) == nil)
+    }
+}
+
+@MainActor
+struct UndoSkipsHousekeepingTests {
+    @Test func undoAfterFourAMTakesBackHisActionNotTheRoll() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let calendar = TesseraDayTests.calendar
+        try engine.perform(CreateTask(title: "Pay rent", startsAt: TesseraDayTests.at(10, 16, 23)), by: .user)
+        let note = try engine.perform(CreateNote(body: "Bar felt heavy"), by: .user).output
+        // The roll runs after his note (as at 04:00 on foreground), so it is the newest record.
+        _ = TaskList(store: store, classes: classes)
+            .rollForward(engine: engine, now: TesseraDayTests.at(10, 17, 4, 30), calendar: calendar)
+        #expect(engine.history().first?.actor == .system)
+        let undone = engine.undoLatest()
+        #expect(undone?.action == "createNote" && note.isDeleted)
     }
 }
