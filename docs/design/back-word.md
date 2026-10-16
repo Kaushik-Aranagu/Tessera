@@ -67,7 +67,8 @@ The pusher passes its short name with the route, and the pushed page shows it. O
 | 21 | Receipts | $1.20 or RECEIPTS in Settings | ‹ SETTINGS | `settings-place.md` | planned | Builder B |
 | 22 | Day log | Today's day label, or Review's link line | ‹ TODAY or ‹ REVIEW, by the way in | `day-log-v1.md` | planned | Builder B |
 | 23 | An object opened from a Day log line | The Day log | ‹ DAY LOG (was ‹ DAYS) | `day-log-v1.md` DL34 | planned | Builder B |
-| 24 | Habits | The Habits word on Today's foot line | ‹ TODAY | `body-weight-and-habits.md` | planned | Builder B |
+| 24 | Habits | Review's habit band, or HABITS on Review's link line (`habits-grammar.md`; Home has no foot line under 41) | ‹ REVIEW | `habits-grammar.md` | planned | Builder B |
+| 26 | A habit | The Habits page, or its name anywhere | ‹ HABITS | `habits-grammar.md` | planned | Builder B |
 | 25 | Body weight | BODY WEIGHT on Training's link line, or Review's weight line | ‹ TRAINING or ‹ REVIEW, by the way in (a weigh-in on Today is kept in place and opens nothing, `m3-entry-points.md`) | `body-weight-and-habits.md` §1 | planned | Builder A |
 | 26 | Money, Reading, Upkeep, People | Review's second link line | ‹ REVIEW | `money-reading-first.md`, `upkeep-people-first.md` | planned | Builder A (Money, Reading), Builder B (Upkeep, People) |
 | 27 | A spend, a book, a chore, a person | Their area page | The area's title ("‹ MONEY", "‹ READING", "‹ UPKEEP", "‹ PEOPLE") | those sheets | planned | as row 26 |
