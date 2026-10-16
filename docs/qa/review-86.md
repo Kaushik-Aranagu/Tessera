@@ -18,3 +18,7 @@
 
 ## Checked and fine
 `RecipeParser.classify` gives the same result as the old parse (title, headings, meta, shape before headings); corrections index the same non-empty lines; `[Int: String]` round-trips in the op log; scaling at the recipe's own size leaves amounts as written; `share(of:)` filters open items by share.
+
+## Follow-ups (19:30 UTC)
+- **#97 (iOS W1/W2, merged): pass.** A typed set clears the live Undo and edit; `isEditing` follows `editingRow`; undo, swap and finish end editing. W3 still open (low).
+- **#98 (head 369f840):** R2, R3, R4, R5, R6 and the swipe-with-scroll fixed. **R1b (should-fix):** the share replacement in `addGroceryShare` runs per ingredient line, so a recipe listing an ingredient twice ("200 g butter" and "50 g butter") ends up with only the last line's amount. Drop the recipe's old shares once at the start of `AddRecipeToGroceries.apply`, then append per line. OK to merge before the cut either way (not reachable from Home yet).
