@@ -58,7 +58,7 @@ those send something private or useless to Claude when the switch is on (E6, E26
 ## Gaps
 | # | Where | Proposed default | Owner |
 |---|---|---|---|
-| NE1 | `TessMemory.refusal` (TesseraCore/Tess/TessMemory.swift) | Add `.looksLikeSecret`: password, passcode, pin, wifi, code, combo, ssn, social security, account number. Line: "I don't keep passwords." Today only "sk-ant-" is refused | Core (AI-8 before `remember` ships) |
+| NE1 | `TessMemory.refusal` (TesseraCore/Tess/TessMemory.swift) | Add `.looksLikeSecret`: password, passcode, pin, wifi, code, combo, ssn, social security, account number. Line: "I don't keep passwords." Today only the Claude key prefix is refused | Core (AI-8 before `remember` ships) |
 | NE2 | `TessGrammar.parse`, right after `parseNote` | A line with a secret word (NE1's set) and "is" or ":" becomes a note on the phone, as typed. It never reaches the model step, never Claude, and `capture` keeps it out of the miss log like a Claude key | Core |
 | NE3 | `parseKitchen`, before `parseCook` | A bare line of 1 to 3 words where every word is a known aisle word or ingredient (`looksLikeGroceries`) is Groceries, split on spaces ("milk eggs"). Anything else stays with the model | Core, Kitchen to confirm |
 | NE4 | `parseKitchen` buy/get regex | Add "need", "out of", "we're out of", "we need". The same `notGroceries` check applies, so "need a haircut" is a task | Core |
