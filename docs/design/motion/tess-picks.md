@@ -233,6 +233,14 @@ The picks add these events, which come from views and not from the diff:
 | `wordTyped` | the capture field | 8 |
 | `reachedEnd` | every scrolling page | 9 |
 | `restEnding` | the live workout only | 10 |
+| `sideTurned(direction)` | the one `SideHost` (sheet 75), on the move into stop 1 (right) and the move that lands on the front (left), never between stop 1 and stop 2 | side |
+
+`sideTurned` (sheet 75, every screen has a side): eyes only, 0.4 toward the incoming content over 380 ms on the house
+spring, then ahead over 300 ms; the mouth follows at 70%. She and the band are part of the spine and never move with the
+body. Only when she's idle or roaming; nothing with eyes off, under Reduce Motion or in `.live`. Her side line lands
+when stop 1 settles (420 ms). No haptic of hers; stop 2's `.selection` is the side's. Reference
+`recordings/picks/tess-pick-side.mp4`. Test: a `sideTurned` while working, listening or asking leaves the router's
+state unchanged; stop 1 to stop 2 emits nothing.
 
 ## Build order and rows
 Builder A, one PR per sheet, in this order: 18a, 18b, 18c (mouth), 18d, 18e, 18f. Each PR carries its router
