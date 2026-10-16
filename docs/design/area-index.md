@@ -28,7 +28,7 @@ His ask (Oct 16, 1:51 PM PT): the REVIEW / TODAY / TRAINING / KITCHEN row "looks
 - **Pull:** the page follows the finger, rubber-banded. From 20 pt to 90 pt the index forms (the page scales to 0.9, blurs to 6 pt and drops 40 pt; the glass comes down 40 pt; the rows stagger 40 ms). Past 90 pt it's held, and the row under the finger is picked, with `.selection` once per row. Let go on a row to open it; let go above the first row or on the one you're in to close.
 - **Tap:** a tap on the name opens the same index without a finger; tap a row. The hint at 528 reads "Let go to open" while pulling and "Tap one to open" after a tap.
 - **Let go:** the chosen word flies from its row into the name's place, scaling to 0.38 over 460 ms, and becomes the name. The page under it rises to full size and unblurs. One `.impact(.soft)` on arrival.
-- **Reduce Motion:** the index crossfades in 200 ms, and the word swaps without flying.
+- **Reduce Motion:** the index crossfades in 150 ms (MotionPolicy), and the word swaps without flying.
 - **VoiceOver:** the name is a button, "Today, area. Double tap to show all areas". Each row reads as "Training, Push Day A is on". The rotor's Headings jump between areas.
 
 ## For the builders

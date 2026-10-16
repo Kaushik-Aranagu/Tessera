@@ -18,7 +18,7 @@ His ask (Oct 16, 1:32 PM PT): the titles, the big text, can carry "a little bit 
 - **Colours:** each area's existing data colour, mixed 72% with ink so it reads as ink with a lean, never as a link. Training is vermilion `liveInk`, Kitchen is health green, Today's tasks are cobalt, and Review is violet `ctx`. In Obsidian, each look's light partner. No new colours.
 - **Contrast:** at Title 44 and Hero 56, every mix stays above 3:1 on its ground (large text).
 - **Where:** heroes on Home and Title 44 on pages one tap down. Never body text, labels or keys, and never in Tess's band.
-- **Motion (option 1):** the fill edge is an 8% feather. Each step tweens 600 ms on the house curve, and the done lift and dry match how moments land wet and dry elsewhere. Under Reduce Motion the fill steps without the tween, and the dry is a 200 ms crossfade.
+- **Motion (option 1):** the fill edge is an 8% feather. Each step tweens 600 ms on the house curve, and the done lift and dry match how moments land wet and dry elsewhere. Under Reduce Motion the fill steps without the tween, and the dry is a 150 ms crossfade (MotionPolicy).
 - **Never:** a brush, an underline, a gradient that loops, or colour on a title with nothing in progress (option 1).
 
 ## Round 2: the whole title moves (his pick, Oct 16, 1:50 PM PT)
@@ -33,7 +33,7 @@ He liked option 1 but found it too forward, and the half-and-half split looked o
 | Dried, 900 ms later | Over 2 s the colour, weight and the word settle to quiet ink at 50%. The strike stays, so a done title reads done at a glance. |
 
 - **Progress source:** the thing's own count (sets in a workout, steps in a cook, tasks in a run), capped at 0.85 until done so the last step still has somewhere to go.
-- **Reduce Motion:** each step lands without the tween, the strike appears whole, and the dry is a 200 ms crossfade.
+- **Reduce Motion:** each step lands without the tween, the strike appears whole, and the dry is a 150 ms crossfade (MotionPolicy).
 - **Kept from round 1:** each area's own colour, the contrast floor, where it applies, and the nevers.
 
 ## Rulings on Research's fixture (Oct 16, 2:30 PM PT)

@@ -81,7 +81,7 @@ This sheet replaces sheet 71's "which pages get a side page" and Product's 10:00
 - **Product:** board the rollout after the pins: the host and the default side first, then the screens by owner. Rule on Habits, Settings and money (the draft gives each a side that holds only facts).
 - **Kitchen:** FOR WHAT, PER 100 G (the food table's source), COOKS, and PANTRY's place on the Kitchen tab.
 - **AI architecture and Research:** Tess's side line (a job with caps, fixtures and an eval), ask-about-this, and when facts Claude may fill are allowed.
-- **Motion lab:** one side motion for every screen, with Reduce Motion as a 200 ms crossfade.
+- **Motion lab:** one side motion for every screen, with Reduce Motion as a 150 ms crossfade (MotionPolicy).
 - **Builders:** adopt it per screen as Product boards it. Builder A owns Training, the live workout and the looks. Builder B owns Home, Kitchen, Review, Notes and Settings.
 
 ## Two stops: the glance, then the full side (his ask, Oct 16, 2:33 PM PT)
@@ -94,7 +94,7 @@ This sheet replaces sheet 71's "which pages get a side page" and Product's 10:00
   - Lists in a glance follow the copy rule: a count first, then two or three named, and "and N more" from four.
 - **Stop 2, the full side:** pull on past half the width, or tap the glance's word. The glance fades into the full side, and the front leaves as in 71.
 - **Back:** a swipe right goes back one stop at a time. The left edge is still back to the page before (rule 4).
-- **Motion:** each stop settles on the house spring over 380 ms, with no haptic for the glance and one `.selection` at the full side. Under Reduce Motion, each stop is a 200 ms crossfade.
+- **Motion:** each stop settles on the house spring over 380 ms, with no haptic for the glance and one `.selection` at the full side. Under Reduce Motion, each stop is a 150 ms crossfade (MotionPolicy).
 - **Every side declares its glance:** what goes on it, by kind.
   - FACTS: the top number.
   - PARTS: the count and the top part.

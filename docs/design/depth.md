@@ -47,7 +47,7 @@ Every other row of 75 is unchanged. A screen with no run keeps both ways in, the
 ## Motion and access
 - **Motion** (for the motion lab): along and in share the house spring (380 ms). Tess's `sideTurned` plays on the way in to the glance and on the way back to the front only (75). It never plays along a run or between pages.
 - **VoiceOver:** the run is an adjustable element on the body ("Week of Oct 12 to 18. Swipe up or down for another week."). The side is a custom action named by its word ("Show the days"), and the facet words are buttons. Nothing depends on an edge pan.
-- **Reduce Motion:** along, in and between pages are each a 200 ms crossfade.
+- **Reduce Motion:** along, in and between pages are each a 150 ms crossfade (MotionPolicy).
 - **Dynamic Type:** facet words wrap to a second row before they shrink. The glance's big fact drops to Title 44 when it won't fit on one line at Hero 56.
 
 ## For each team
