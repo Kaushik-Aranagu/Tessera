@@ -16,6 +16,9 @@ public struct TessGrammar {
         case task(title: String, startsAt: Date?)
         /// "note: bar felt heavy" (or "note bar felt heavy").
         case note(body: String, on: Date? = nil)
+        /// A line with a secret word: a private note on the phone, never the model, Claude, memory or the miss log.
+        /// `remembered` when he said "remember …" (Tess adds "I don't keep passwords.").
+        case privateNote(body: String, remembered: Bool)
         /// Kitchen: "buy milk", "milk, eggs, 2 lemons".
         case groceries(lines: [String])
         /// "cook carbonara" (now, `on` nil) or "cook carbonara thu" (a dated task linking the recipe).
@@ -64,6 +67,10 @@ public struct TessGrammar {
                                       with: "")
         let text = Self.normalize(phrase)
         guard !text.isEmpty else { return nil }
+        // Secret words first, before notes, recipes and questions (Research 134 R1): nothing with one leaves the phone.
+        if let secret = parseSecret(phrase, text: text, context: context) {
+            return secret
+        }
         if let note = parseNote(phrase) {
             return note
         }
@@ -458,6 +465,28 @@ public struct TessGrammar {
     // MARK: Tasks
 
     /// A task with a day or time cue ("dentist thu 3pm"), or one that says it's a task ("todo call mom").
+    /// Research 134 R1 to R7. A value after the secret word makes a private note; with no value a task shape stays a
+    /// task ("password reset email friday", "code review friday 3pm"); anything else with a secret word is a private
+    /// note too, because nothing with one goes to the model. A question about it is answered on the phone.
+    func parseSecret(_ phrase: String, text: String, context: TessContext) -> Parse? {
+        guard SecretWords.mentions(phrase) else { return nil }
+        var body = phrase.trimmingCharacters(in: .whitespacesAndNewlines)
+        var remembered = false
+        if let match = body.firstMatch(of: /^(?i)note[:\s]\s*(.+)$/) {
+            body = String(match.1)
+        } else if let match = body.firstMatch(of: /^(?i)remember(?:\s+that)?\s+(.+)$/) {
+            body = String(match.1)
+            remembered = true
+        }
+        if Self.isQuestion(text) || body.hasSuffix("?") {
+            return .ask("It's in your private notes.")
+        }
+        if !SecretWords.hasValue(body), !remembered, let task = parseTask(phrase, context: context) {
+            return task
+        }
+        return .privateNote(body: body.prefix(1).uppercased() + body.dropFirst(), remembered: remembered)
+    }
+
     private func parseTask(_ phrase: String, context: TessContext) -> Parse? {
         var words = phrase.split(separator: " ").map(String.init)
         var explicit = false

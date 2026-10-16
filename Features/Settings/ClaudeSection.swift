@@ -188,18 +188,19 @@ struct ClaudeSection: View {
                         .buttonStyle(.valueWash)
                         .fontWeight(.semibold)
                         .accessibilityHint("Opens the receipts.")
-                    Text(" of $10.")
+                    Text(" of $\(TessUsageLedger.capDollars).")
                 }
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
                 MonthLine(share: share, warm: share >= 0.8)
-                    .accessibilityLabel(String(format: "%.2f of 10 dollars this month", Double(spent) / 1e9))
+                    .accessibilityLabel(String(format: "%.2f of %d dollars this month", Double(spent) / 1e9,
+                                               TessUsageLedger.capDollars))
                 if paused {
                     Text("Paused until \(Text(ClaudeKeyWords.nextMonth(AppClock.now)).fontWeight(.semibold)).")
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.ink)
                 } else if share >= 0.8 {
-                    Text("PAUSES AT $10")
+                    Text("PAUSES AT $\(TessUsageLedger.capDollars)")
                         .textRole(.labelStrong)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                 }
@@ -456,7 +457,7 @@ struct ClaudeReceipts: View {
                     .textRole(.title)
                     .foregroundStyle(Theme.Colors.ink)
                 Text(
-                    "This month \(Text(ClaudeKeyWords.dollars(ledger.monthTotal(now: AppClock.now))).fontWeight(.semibold)) of $10."
+                    "This month \(Text(ClaudeKeyWords.dollars(ledger.monthTotal(now: AppClock.now))).fontWeight(.semibold)) of $\(TessUsageLedger.capDollars)."
                 )
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
