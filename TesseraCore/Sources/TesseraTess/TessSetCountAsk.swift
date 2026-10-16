@@ -58,8 +58,54 @@ extension TessGrammar.Parse {
     /// A question, not a write: a guarded phrase or the SQ8 ask.
     var isAsk: Bool {
         switch self {
-        case .ask, .askSetCount: true
+        case .ask, .askSetCount, .askDatedLift: true
         default: false
+        }
+    }
+}
+
+/// A lift said with a past day ("bench 80x8 mon", Product 8:36 PM PT Oct 15): "Bench 80 × 8 for Monday?" with LOG
+/// and NOT NOW. LOG puts it in that day's workout; NOT NOW writes nothing. Never a task.
+public struct TessDatedLiftAsk: Sendable, Equatable {
+    public enum Choice: Sendable, Equatable {
+        case log, notNow
+    }
+
+    public let exercise: UUID
+    /// "Bench", as Tess says it.
+    public let name: String
+    public let sets: Int
+    public let reps: Double
+    public let weight: Double
+    public let unit: MassUnit
+    /// Noon on that day, in the zone it was said in.
+    public let day: Date
+    /// "Monday".
+    public let dayName: String
+
+    /// "Bench 80 × 8", or "Bench 3 × 10 at 80".
+    var lift: String {
+        let load = TessVoice.number(weight) + (unit == .kilograms ? "" : " \(unit.symbol)")
+        return sets > 1 ? "\(name) \(sets) × \(TessVoice.number(reps)) at \(load)"
+            : "\(name) \(load) × \(TessVoice.number(reps))"
+    }
+
+    /// "Bench 80 × 8 for Monday?"
+    public var line: String {
+        "\(lift) for \(dayName)?"
+    }
+
+    /// "Bench 80 × 8 logged for Monday."
+    public var loggedLine: String {
+        "\(lift) logged for \(dayName)."
+    }
+
+    /// A said answer: "log", "log it", "yes" or "not now", "no". Nil for anything else (the ask then drops).
+    @MainActor public func choice(for phrase: String) -> Choice? {
+        switch TessGrammar.normalize(phrase) {
+        case "log", "log it", "yes", "yep", "yeah": .log
+        case "not now", "no", "nope": .notNow
+        default: nil
         }
     }
 }

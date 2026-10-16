@@ -35,10 +35,21 @@ public final class TessCaptureEngine: TessCapturing {
                 return resolve(ask, choice, context: context)
             }
         }
+        if let ask = pendingDatedLift {
+            pendingDatedLift = nil
+            if let choice = ask.choice(for: phrase) {
+                return answer(ask, choice, context: context)
+            }
+        }
         let result = await router.run(TessRequest(text: phrase, context: context, use: .capture))
-        if case let .setCount(ask)? = result.asking {
+        switch result.asking {
+        case let .setCount(ask)?:
             pendingAsk = ask
             return result
+        case let .datedLift(ask)?:
+            pendingDatedLift = ask
+            return result
+        default: break
         }
         // Never log a pasted Claude key, even as a miss (the router refuses it, and the miss log is a file).
         if !result.understood, !looksLikeClaudeKey(phrase) {
@@ -49,6 +60,34 @@ public final class TessCaptureEngine: TessCapturing {
 
     /// The SQ8 ask waiting for an answer ("2 × 10: 2 sets, or 2 kg?"); its two answers are ghost rows.
     public private(set) var pendingAsk: TessSetCountAsk?
+
+    /// The dated-lift ask waiting for LOG or NOT NOW.
+    public private(set) var pendingDatedLift: TessDatedLiftAsk?
+
+    /// A tap on LOG or NOT NOW. Nothing happens if the ask has gone.
+    public func answer(_ choice: TessDatedLiftAsk.Choice, context: TessContext) -> TessCapture {
+        guard let ask = pendingDatedLift else { return TessCapture(records: [], line: "", source: .none) }
+        pendingDatedLift = nil
+        return answer(ask, choice, context: context)
+    }
+
+    private func answer(_ ask: TessDatedLiftAsk, _ choice: TessDatedLiftAsk.Choice,
+                        context: TessContext) -> TessCapture
+    {
+        guard choice == .log else { return TessCapture(records: [], line: "", source: .grammar) }
+        engine.attribution = (.grammar, nil)
+        defer { engine.attribution = nil }
+        do {
+            let record = try engine.perform(
+                LogExercise(exercise: ask.exercise, weight: ask.weight, reps: ask.reps, sets: ask.sets, unit: ask.unit,
+                            on: ask.day),
+                by: .tess, pending: !context.commitImmediately
+            ).record
+            return TessCapture(records: [record], line: ask.loggedLine, source: .grammar)
+        } catch {
+            return TessCapture(records: [], line: Self.line(for: error), source: .grammar)
+        }
+    }
 
     /// A tap on one of the ask's answers. Nothing happens if the ask has gone (another phrase dropped it).
     public func answer(_ choice: TessSetCountAsk.Choice, context: TessContext) -> TessCapture {
@@ -180,6 +219,8 @@ public final class TessCaptureEngine: TessCapturing {
                 return TessCapture(records: [], line: line, source: .grammar, asking: .line)
             case let .askSetCount(ask):
                 return TessCapture(records: [], line: ask.line, source: .grammar, asking: .setCount(ask))
+            case let .askDatedLift(ask):
+                return TessCapture(records: [], line: ask.line, source: .grammar, asking: .datedLift(ask))
             default: break
             }
             do {
@@ -208,7 +249,7 @@ public final class TessCaptureEngine: TessCapturing {
                 by: .tess, pending: pending
             ).record
             let name = Self.shortName(exercise.name)
-            let scheme = sets > 1 ? "\(sets) x \(TessVoice.number(reps))" : "\(TessVoice.number(reps)) reps"
+            let scheme = sets > 1 ? "\(sets) × \(TessVoice.number(reps))" : "\(TessVoice.number(reps)) reps"
             let load = TessVoice.number(weight) + (unit == .kilograms ? "" : " \(unit.symbol)")
             return (record, "\(name) \(scheme) at \(load). Added to today.")
         case let .set(entry, kilograms, reps, kind, phrase, unit, rpe, saidWeight):

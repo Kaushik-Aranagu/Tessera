@@ -112,7 +112,7 @@ struct TessTests {
     @Test func captureLogsAPendingGhostAndSpeaksInTessVoice() async throws {
         let capture = await tess.capture("3x10 bench 80", context: context())
         #expect(capture.source == .grammar)
-        #expect(capture.line == "Bench 3 x 10 at 80. Added to today.")
+        #expect(capture.line == "Bench 3 × 10 at 80. Added to today.")
         #expect(TessVoice.violations(in: capture.line).isEmpty)
         let record = try #require(capture.records.first)
         #expect(record.state == .pending && record.actor == .tess)

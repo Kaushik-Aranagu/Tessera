@@ -297,13 +297,19 @@ public struct LogExercise: EngineAction {
     public var reps: Double
     public var sets: Int?
     public var unit: MassUnit?
+    /// A past day ("bench 80x8 mon"): the sets go into that day's finished workout, made if there is none. Kept off
+    /// the descriptor, so the model's tool stays today-only.
+    public var on: Date?
 
-    public init(exercise: UUID, weight: Double, reps: Double, sets: Int? = nil, unit: MassUnit? = nil) {
+    public init(exercise: UUID, weight: Double, reps: Double, sets: Int? = nil, unit: MassUnit? = nil,
+                on: Date? = nil)
+    {
         self.exercise = exercise
         self.weight = weight
         self.reps = reps
         self.sets = sets
         self.unit = unit
+        self.on = on
     }
 
     public func apply(_ transaction: inout Transaction) throws -> [ObjectRecord] {
@@ -314,13 +320,34 @@ public struct LogExercise: EngineAction {
         try validateSet(weight: (unit ?? .kilograms).toKilograms(weight), reps: reps, rpe: nil,
                         action: Self.descriptor.name)
         let exerciseClass = try transaction.exerciseClass(exercise)
-        let workout = try activeWorkout(&transaction)
+        let workout = try on.map { try pastWorkout(on: $0, &transaction) } ?? activeWorkout(&transaction)
         let entry = try workout.orderedChildren
             .last { transaction.store.linkedClass("exercise", of: $0)?.id == exercise }
             ?? AddExercise(workout: workout.id, exercise: exerciseClass.id).apply(&transaction)
         return try (0 ..< count).map { _ in
             try LogSet(entry: entry.id, weight: weight, reps: reps, unit: unit).apply(&transaction)
         }
+    }
+
+    /// That day's finished workout (by his 4 AM day), or a new one started and ended at `day` (Tess passes noon), with
+    /// no process.
+    @MainActor private func pastWorkout(on day: Date, _ transaction: inout Transaction) throws -> ObjectRecord {
+        let store = transaction.store
+        let workoutClass = try transaction.classDef(.workout)
+        let tessera = TesseraDay(calendar: .current)
+        let key = tessera.day(of: day)
+        let finished = store.objects(of: workoutClass).last {
+            guard let started = store.value("startedAt", of: $0)?.dateValue,
+                  store.value("endedAt", of: $0) != nil else { return false }
+            return tessera.day(of: started) == key
+        }
+        if let finished {
+            return finished
+        }
+        let workout = transaction.create(workoutClass, title: "Workout")
+        try transaction.set("startedAt", to: .date(day), on: workout)
+        try transaction.set("endedAt", to: .date(day), on: workout)
+        return workout
     }
 
     @MainActor private func activeWorkout(_ transaction: inout Transaction) throws -> ObjectRecord {
