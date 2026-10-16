@@ -20,11 +20,12 @@ This sheet deepens `upkeep.md` and `people.md` for Builder B. Where they differ,
 - **This shows the first time the Upkeep page opens**, and never at launch.
 - **Tess's line** in cobalt, Body 21: "What do you keep up with? Pick any."
 - **Ten starters show at first, in five groups.** Each group has a label word in `inkSecondary`:
-  - KITCHEN: Clean the kitchen 7, Take out the bins 4, Descale the kettle 30.
-  - FLOORS AND BATHROOM: Hoover the flat 7, Clean the bathroom 7.
-  - LAUNDRY: Laundry 7, Change the bed sheets 14.
+  - KITCHEN: Clean the kitchen 7, Take out the trash 4, Descale the kettle 30.
+  - ROOMS: Vacuum the apartment 7, Clean the bathroom 7.
+  - LAUNDRY AND BED: Laundry 7, Change the bed sheets 14.
   - PLANTS: Water the plants 7.
-  - BILLS: Pay rent 30, Pay council tax 30.
+  - BILLS AND CHECKS: Pay rent 30, Pay the water bill 30.
+  - These are Research's US starters (`fixtures/upkeep-starters.md`, #263) under its group names. The other fifteen, including Change the furnace filter (90) and Test the smoke alarm (30), are under 15 MORE.
 - **15 MORE** is a label word. A tap unfolds the other fifteen into their groups, in the same column, and the page scrolls.
 - **A starter line:** Body 21 in a 36pt row, with the interval in the right column as a label ("7 DAYS").
   - **Unpicked:** 400 weight, `inkSecondary`.
@@ -49,7 +50,7 @@ These changes are made to `upkeep.md`, so that it meets the type tiers and the c
   - For a chore with no interval: "NEVER LOGGED" or "7 DAYS".
   - This frees the right edge, so long names like "Change the water filter" never collide.
 - **Spacing:** a name and its age take 72pt. Two chores with close staleness never overlap; the later one pushes down by 72. Past staleness 1, chores stack under the hairline, stalest first.
-- **NO RHYTHM YET** sits on a hairline at y 716, with the names in one Body line at `inkSecondary`: "Laundry · Take out the bins". The middle dot here is text, not a marker.
+- **NO RHYTHM YET** sits on a hairline at y 716, with the names in one Body line at `inkSecondary`: "Laundry · Take out the trash". The middle dot here is text, not a marker.
 - **Logging a chore done by holding it (0.6s):**
   - The name fills from left to right in `health` (sage). That's the moment.
   - It sinks to the foot on the settle spring, and the sage dries to the foot's `inkTertiary` over `Theme.Motion.dry`.
@@ -60,9 +61,24 @@ These changes are made to `upkeep.md`, so that it meets the type tiers and the c
 - Clean the bathroom (21 of 14, under the hairline).
 - Water the plants (6 of 7).
 - Pay rent (15 of 30).
-- Top up the oil (9 of 30).
+- Pay the water bill (24 of 30).
 - Clean the kitchen (TODAY, at the foot).
-- Footnote: Laundry · Take out the bins.
+- Footnote: Laundry · Take out the trash.
+
+### A US home, and the autumn radiators ask (Design item 20)
+Board `mockups/upkeep-us.png` and recording `recordings/upkeep-us.mp4` (source `studies/upkeep-us.html`). These follow Research's #263 and Product's 9:01 PM calls.
+- **Dollars, US names and the phone's zone.** "TODAY" and the ages count on the 4 AM day in the phone's current zone. Amounts in Tess's lines are dollars ("Paid the water bill, $42.50.").
+- **NO RHYTHM YET** holds every chore that has never been logged, picked or offered: "Laundry · Take out the trash". It wraps under its label. A chore leaves it with its first log and takes its place in the stack.
+- **The ask** shows on the first Upkeep open on a 4 AM day from 1 Oct to 30 Nov. On a first run it comes only after Keep N or SKIP, never beside the pick.
+  - **The ask takes the foot.** The NO RHYTHM YET block fades out (360ms), and Tess asks there in cobalt, Body 21: "Radiators to bleed this autumn?"
+  - Under it are two label words in `ink`: **KEEP IT · NO RADIATORS**.
+  - There's no timer and no nudge. Leaving the page leaves the ask unanswered, and it shows again on the next open inside the window.
+- **KEEP IT** writes `AddChore(Bleed the radiators, bled, 365)` with no check-in.
+  - The ask blurs out, and Tess answers in its place: "Bleed the radiators, kept. Once a year." with **UNDO** (`liveInk`, 4s) under it.
+  - When UNDO lapses, the answer fades and the foot returns, with "Bleed the radiators" setting in at the end of NO RHYTHM YET (blur 4 → 0, 420ms).
+  - It doesn't drift to Now until the first "bled the radiators" (or "radiators done").
+- **NO RADIATORS** writes nothing. Tess says "Okay. I won't ask again." in the same place, and the foot returns. It's never offered again.
+- **Never:** a radiator on the pick list, a seasonal banner, a second ask, an amber "due" on the offer, or a dot.
 
 ### A chore on Now (screen 7)
 `upkeep.md` §7 stands, with one change:

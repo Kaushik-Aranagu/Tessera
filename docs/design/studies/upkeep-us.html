@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Upkeep US home</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/upkeep-people-first.md, "A US home" (Design item 20), to Research's fixtures/upkeep-starters.md (#263): the first run with US starters, the page on Thu 15 Oct with the autumn radiators ask at the foot, after keeping it, and after declining. ?play records the ask: KEEP IT, the chore sets in at the foot, Tess says it once with UNDO. Porcelain, then Obsidian. No dots, the ink line. Add ?x2 for 2x. -->
+<style>
+body{margin:0;background:#E9E6EE;font-family:'Inter Tight',sans-serif;transform-origin:0 0}
+body.x2{transform:scale(2)}
+.soul{position:absolute;left:322px;top:782px;width:46px;height:40px}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.f{transition:opacity .36s cubic-bezier(.2,.8,.2,1),filter .36s cubic-bezier(.2,.8,.2,1)}
+.liveInk{color:var(--liveInk)}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(23,20,31,.14);box-shadow:0 0 0 1.5px rgba(255,255,255,.8);opacity:0;z-index:20}
+.row{display:flex;gap:40px;padding:40px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;flex:none}
+.por{--ink:23,20,31;--t2:.66;--t3:.51;--tess:#2450D8;--ground:#fff;--health:18,147,106;--liveInk:#C23A22;color:rgb(var(--ink));background:var(--ground)}
+.obs{--ink:245,242,236;--t2:.72;--t3:.38;--tess:#86B4FF;--ground:#000;--health:63,212,154;--liveInk:#FF7A5C;color:rgb(var(--ink));background:var(--ground)}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--t2))}
+.hair{position:absolute;left:22px;right:22px;height:1px;background:rgba(var(--ink),.14)}
+.title{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px;white-space:nowrap}
+.body{font-size:21px;line-height:28px}
+.tess{color:var(--tess)}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:#4a4458;margin-bottom:12px}
+.pick{position:absolute;left:22px;right:22px;display:flex;align-items:baseline;height:36px;font-size:21px}
+.pick .n{flex:1}
+.pick.on .n{font-weight:600;color:rgb(var(--ink))}
+.pick.off .n{color:rgba(var(--ink),var(--t2))}
+.stroke{position:absolute;overflow:visible}
+</style>
+</head>
+<body>
+<div class="row" id="r"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play');const $=id=>document.getElementById(id),at=(t,f)=>setTimeout(f,t);
+const lens=(w,t)=>`M0 6 Q ${w*.42} ${6-t} ${w} 5.6 Q ${w*.58} ${6+t} 0 6 Z`;
+const soul=(o)=>`<div class="soul"><i style="left:0;top:4px;background:radial-gradient(closest-side,${o?'#86B4FF':'#2450D8'},rgba(36,80,216,.2))"></i><i style="left:22px;top:2px;background:radial-gradient(closest-side,${o?'#FF5B3A':'#E2432A'},rgba(226,67,42,.2))"></i><i style="left:12px;top:20px;background:radial-gradient(closest-side,${o?'#FFC23D':'#F0A500'},rgba(240,165,0,.2))"></i></div>`;
+function pick(){
+  const groups=[['KITCHEN',[['Clean the kitchen',7,1],['Take out the trash',4,1],['Descale the kettle',30,0]]],
+   ['ROOMS',[['Vacuum the apartment',7,1],['Clean the bathroom',7,1]]],
+   ['LAUNDRY AND BED',[['Laundry',7,1],['Change the bed sheets',14,0]]],
+   ['PLANTS',[['Water the plants',7,1]]],
+   ['BILLS AND CHECKS',[['Pay rent',30,1],['Pay the water bill',30,1]]]];
+  let y=150,h='';
+  for(const [g,items] of groups){h+=`<div class="abs lbl s2" style="left:22px;top:${y}px">${g}</div>`;y+=28;
+    for(const [n,d,on] of items){h+=`<div class="pick ${on?'on':'off'}" style="top:${y}px"><span class="n">${n}</span><span class="lbl s2">${d} DAYS</span></div>`;y+=36}
+    y+=14}
+  return `<div class="ph por">
+   <div class="abs lbl s2" style="left:22px;top:58px">UPKEEP</div>
+   <div class="abs body tess" style="left:22px;top:92px;width:340px">What do you keep up with? Pick any.</div>
+   ${h}
+   <div class="abs lbl s2" style="left:22px;top:${y-4}px">15 MORE</div>
+   <div class="abs lbl s2" style="left:22px;bottom:52px">SKIP</div>
+   <div class="abs" style="right:22px;bottom:44px;width:72px;height:34px">
+     <svg class="stroke" width="78" height="12" style="left:-2px;top:28px;position:absolute;overflow:visible"><path d="${lens(76,2.5)}" fill="rgba(240,165,0,.85)"/></svg>
+     <div class="abs" style="right:0;top:0;font-size:21px;font-weight:600">Keep 8</div></div>
+  </div>`;
+}
+// state: 'ask' (the radiators ask at the foot), 'kept', 'declined'
+function upkeep(theme,L,state){
+  const t3=theme==='obs'?.38:.51;
+  const chores=[['Clean the bathroom','21 DAYS · USUALLY 14',1.5],['Water the plants','6 DAYS · USUALLY 7',6/7],['Pay the water bill','24 DAYS · USUALLY 30',.8],['Pay rent','15 DAYS · USUALLY 30',.5],['Clean the kitchen','TODAY',0]];
+  let h='',stack=190,last=110;
+  for(const [n,a,s] of chores){
+    let y=s>=1?stack:640-s*450; if(s>=1)stack+=72; y=Math.max(y,last+72); last=y;
+    const op=Math.min(1,t3+(1-t3)*Math.min(s,1));
+    h+=`<div class="abs title" style="left:22px;top:${y}px;color:rgba(var(--ink),${op.toFixed(2)})">${n}</div><div class="abs lbl s2" style="left:22px;top:${y+42}px">${a}</div>`;
+  }
+  const kept=state==='kept';
+  return `<div class="ph ${theme}" id="${L}ph">
+   <div class="abs lbl s2" style="left:22px;top:58px">‹ REVIEW</div>
+   <div class="abs lbl" style="left:22px;top:132px">NOW</div>
+   <div class="hair" style="top:164px;background:rgba(var(--ink),.4)"></div>
+   ${h}
+   <div class="f" id="${L}foot" style="opacity:${state==='kept'?1:0}">
+    <div class="hair" style="top:716px"></div>
+    <div class="abs lbl s2" style="left:22px;top:732px">NO RHYTHM YET</div>
+    <div class="abs body s2" style="left:22px;top:758px;width:290px;line-height:28px">Laundry · Take out the trash${kept?' · <span id="'+L+'new">Bleed the radiators</span>':'<span id="'+L+'new" style="opacity:0"> · Bleed the radiators</span>'}</div>
+   </div>
+   <div class="f" id="${L}ask" style="opacity:${state==='ask'?1:0}">
+    <div class="abs body tess" style="left:22px;top:744px">Radiators to bleed this autumn?</div>
+    <div class="abs lbl" style="left:22px;top:784px">KEEP IT<span class="s2" style="margin:0 10px">·</span>NO RADIATORS</div>
+   </div>
+   <div class="abs body tess f" id="${L}say" style="left:22px;right:80px;top:744px;opacity:${state==='declined'?1:0}">${state==='declined'?'Okay. I won\'t ask again.':''}</div>
+   ${soul(theme==='obs')}${L==='P'?'<div id="fing"></div>':''}
+  </div>`;
+}
+if(PLAY){
+ $('r').innerHTML=`<div><div class="cap" id="cap">THU 15 OCT · THE AUTUMN ASK</div>${upkeep('por','P','ask')}</div>`;
+}else{
+ $('r').innerHTML=
+ `<div><div class="cap">FIRST RUN · US STARTERS</div>${pick()}</div>`+
+ `<div><div class="cap">THU 15 OCT · THE RADIATORS ASK</div>${upkeep('por','A','ask')}</div>`+
+ `<div><div class="cap">KEPT · NEVER LOGGED YET</div>${upkeep('obs','B','kept')}</div>`+
+ `<div><div class="cap">NO RADIATORS · NEVER ASKED AGAIN</div>${upkeep('por','C','declined')}</div>`;
+}
+document.fonts.ready.then(()=>{document.body.dataset.start='1';
+ if(!PLAY){setTimeout(()=>document.body.dataset.done='1',200);return}
+ const f=$('fing');f.style.left='60px';f.style.top='792px';
+ at(1400,()=>f.style.opacity=1);at(1620,()=>f.style.opacity=0);
+ at(1500,()=>{$('cap').textContent='KEEP IT · THE ANSWER HOLDS THE FOOT';
+  const a=$('Pask');a.style.opacity=0;a.style.filter='blur(3px)';
+  const s=$('Psay');s.innerHTML='Bleed the radiators, kept. Once a year.';s.style.top='744px';s.style.right='22px';
+  const u=document.createElement('div');u.className='abs lbl liveInk f';u.style.cssText='left:22px;top:784px;opacity:0';u.textContent='UNDO';$('Pph').appendChild(u);
+  at(320,()=>{s.style.opacity=1;u.style.opacity=1});
+  at(4400,()=>{s.style.opacity=0;u.style.opacity=0;$('cap').textContent='THE FOOT RETURNS WITH IT, NEVER LOGGED'});
+  at(4800,()=>{$('Pfoot').style.opacity=1;const n=$('Pnew');n.animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:420,delay:150,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'})});
+ });
+ at(8200,()=>document.body.dataset.done='1');
+});
+</script>
+</body>
+</html>
