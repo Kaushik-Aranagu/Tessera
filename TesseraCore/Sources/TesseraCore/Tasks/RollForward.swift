@@ -25,14 +25,24 @@ public struct RollForwardTasks: EngineAction {
     public struct Outcome: Sendable {
         public var rolled: [UUID] = []
         public var toLater: [UUID] = []
+        /// Titles, so one moved task is named in the line.
+        public var titles: [UUID: String] = [:]
 
-        /// One neutral line for Tess, or nil when nothing moved. Never counts misses.
+        /// One neutral line for Tess, name first (lines audit 2, item 5), or nil when nothing moved. Never counts
+        /// misses.
         public var line: String? {
+            func tasks(_ count: Int) -> String {
+                count == 1 ? "1 task" : "\(count) tasks"
+            }
             switch (rolled.count, toLater.count) {
-            case (0, 0): nil
-            case (_, 0): rolled.count == 1 ? "Carried one task into today." : "Carried \(rolled.count) tasks into today."
-            case (0, _): toLater.count == 1 ? "Put one task in Later." : "Put \(toLater.count) tasks in Later."
-            default: "Carried \(rolled.count) into today, put \(toLater.count) in Later."
+            case (0, 0): return nil
+            case (_, 0):
+                let one = rolled.count == 1 ? rolled.first.flatMap { titles[$0] } : nil
+                return "\(one ?? tasks(rolled.count)) carried into today."
+            case (0, _):
+                let one = toLater.count == 1 ? toLater.first.flatMap { titles[$0] } : nil
+                return "\(one ?? tasks(toLater.count)) moved to Later."
+            default: return "\(tasks(rolled.count)) carried into today, \(toLater.count) to Later."
             }
         }
     }
@@ -57,11 +67,13 @@ public struct RollForwardTasks: EngineAction {
                 try transaction.set("startsAt", to: nil, on: task)
                 try transaction.set("due", to: nil, on: task)
                 outcome.toLater.append(task.id)
+                outcome.titles[task.id] = task.title
             } else {
                 let days = calendar.dateComponents([.day], from: day, to: today).day ?? 1
                 let moved = calendar.date(byAdding: .day, value: days, to: startsAt) ?? startsAt
                 try transaction.set("startsAt", to: .date(moved), on: task)
                 outcome.rolled.append(task.id)
+                outcome.titles[task.id] = task.title
             }
         }
         return outcome

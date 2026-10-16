@@ -47,15 +47,25 @@ public struct TessCapture {
     /// One line in Tess's voice: "Logged bench 3 × 10 at 80."
     public let line: String
     public let source: Source
+    /// Set when Tess asked instead of writing: a guarded phrase's question, or the SQ8 ask with two answers.
+    public let asking: Asking?
+
+    public enum Asking: Sendable, Equatable {
+        /// A question in the line only ("81: 81 kg, or 81 reps?"); his next phrase answers it.
+        case line
+        /// "2 × 10: 2 sets, or 2 kg?": answered by `TessCaptureEngine.answer(_:context:)` or by saying it.
+        case setCount(TessSetCountAsk)
+    }
 
     public var understood: Bool {
         !records.isEmpty
     }
 
-    public init(records: [OpRecord], line: String, source: Source) {
+    public init(records: [OpRecord], line: String, source: Source, asking: Asking? = nil) {
         self.records = records
         self.line = line
         self.source = source
+        self.asking = asking
     }
 }
 

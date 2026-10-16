@@ -36,6 +36,10 @@ public struct TessGrammar {
         case cookStep(cook: ObjectRecord, next: Bool)
         /// Bare input the running workout owns but Tess doesn't act on (a rest timer is the workout screen's).
         case ignoredInWorkout
+        /// SQ8: a bare "2x10" that may be 2 sets: nothing is written until he answers (`TessSetCountAsk`).
+        case askSetCount(TessSetCountAsk)
+        /// A guarded set phrase the grammar mustn't guess ("81", "fail at 6"): Tess's question, if no model reads it.
+        case ask(String)
     }
 
     public enum SetPhrase: Equatable, Sendable {
@@ -69,24 +73,8 @@ public struct TessGrammar {
             return bare
         }
         let entry = context.entry.flatMap { store.object(id: $0) }
-        // In a live workout, set phrases are guarded first (S701 to S706): a number that could be a weight, a signed
-        // change, "at N" after a set: never a wrong set and never a task.
-        if let entry, !phrase.contains(","), let live = parseLive(phrase, text: text, entry: entry) {
+        if let entry, let live = parseInFocus(phrase, text: text, context: context, entry: entry) {
             return live.parse
-        }
-        // A comma in a live workout (QA Q2): every part goes through the guard ("8, 81" asks: 81 may be a weight); a
-        // comma that only split one set ("100 for 5, at 8") is read whole.
-        if let entry, phrase.contains(",") {
-            let parts = phrase.split(separator: ",").map(String.init)
-                .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
-            let lives = parts.map { parseLive($0, text: Self.normalize($0), entry: entry) }
-            if parts.count >= 2, lives.allSatisfy({ $0 != nil }) {
-                let sets = lives.compactMap { $0?.parse }
-                return sets.count == parts.count ? .sets(sets) : nil
-            }
-            if let live = parseLive(parts.joined(separator: " "), text: text, entry: entry) {
-                return live.parse
-            }
         }
         if phrase.contains(","), let sets = parseCommaSets(phrase, entry: entry) {
             guard let entry else { return sets }
@@ -114,6 +102,46 @@ public struct TessGrammar {
             return nil
         }
         return parseTask(phrase, context: context)
+    }
+
+    /// The live workout's rules for a phrase with an exercise in focus; nil when they don't apply (the other rules
+    /// then read it), `Live(parse: nil)` when the phrase is a set the grammar mustn't guess.
+    private func parseInFocus(_ phrase: String, text: String, context: TessContext, entry: ObjectRecord) -> Live? {
+        // In a live workout, set phrases are guarded first (S701 to S706): a number that could be a weight, a signed
+        // change, "at N" after a set: never a wrong set and never a task.
+        if !phrase.contains(","), let both = parseSetAndErrand(phrase, context: context, entry: entry) {
+            return Live(parse: both)
+        }
+        if !phrase.contains(","), let live = parseLive(phrase, text: text, entry: entry) {
+            return live
+        }
+        // A comma in a live workout (QA Q2): every part goes through the guard ("8, 81" asks: 81 may be a weight); a
+        // comma that only split one set ("100 for 5, at 8") is read whole.
+        if phrase.contains(",") {
+            let parts = phrase.split(separator: ",").map(String.init)
+                .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+            let lives = parts.map { parseLive($0, text: Self.normalize($0), entry: entry) }
+            if parts.count >= 2, lives.allSatisfy({ $0 != nil }) {
+                var sets = lives.compactMap { $0?.parse }
+                guard sets.count == parts.count else { return Live(parse: nil) }
+                // After a set, a bare number is its next weight: Tess asks for the reps (K874).
+                if sets.count > 1, sets.last?.isAsk == true,
+                   let number = Self.number(Self.normalize(parts[parts.count - 1])),
+                   !parts[parts.count - 1].contains("reps")
+                {
+                    sets[sets.count - 1] = .ask("\(TessVoice.number(number)) for how many reps?")
+                }
+                // A guarded part at the end asks after the rest log ("80 for 8, 81": K874); anywhere else, a guess.
+                return Live(parse: sets.dropLast().contains(where: \.isAsk) ? nil : .sets(sets))
+            }
+            if let both = parseSetAndErrand(phrase, context: context, entry: entry) {
+                return Live(parse: both)
+            }
+            if let live = parseLive(parts.joined(separator: " "), text: text, entry: entry) {
+                return live
+            }
+        }
+        return nil
     }
 
     /// Lead words that ask rather than tell ("what did i weigh monday", "anything due tmrw").
@@ -282,11 +310,14 @@ public struct TessGrammar {
     private func parseCommaSets(_ phrase: String, entry: ObjectRecord?) -> Parse? {
         let parts = phrase.split(separator: ",").map { Self.normalize(String($0)) }.filter { !$0.isEmpty }
         guard parts.count >= 2 else { return nil }
-        // "Squat 100, 5" (dictated): weight and reps split by a comma.
-        if parts.count == 2, Self.number(parts[1]) != nil, let lift = parseLift(
-            parts.joined(separator: " "),
-            entry: entry
-        ) {
+        // "Squat 100, 5" (dictated): weight and reps split by a comma. Not when the first part is a whole lift
+        // already ("bench 80x8, 6" is two sets; QA Q7a).
+        if parts.count == 2, Self.number(parts[1]) != nil, parseLift(parts[0], entry: entry) == nil,
+           let lift = parseLift(
+               parts.joined(separator: " "),
+               entry: entry
+           )
+        {
             return lift
         }
         var parsed: [Parse] = []
@@ -303,6 +334,15 @@ public struct TessGrammar {
                 }
             } else if let name = exerciseName, let lift = parseLift("\(name) \(part)", entry: entry) {
                 parsed.append(lift)
+            } else if let entry, let live = parseLive(part, text: part, entry: entry) {
+                // Through the live guard, so "bench 80 for 8, 81" never logs 81 reps (QA Q7b, K874). After a set, a
+                // bare number is its next weight: Tess asks for the reps.
+                guard let set = live.parse, !parsed.contains(where: \.isAsk) else { return nil }
+                if set.isAsk, let number = Self.number(part), !part.hasSuffix(" reps") {
+                    parsed.append(.ask("\(TessVoice.number(number)) for how many reps?"))
+                } else {
+                    parsed.append(set)
+                }
             } else if let entry, let set = parseRelativeSet(part, entry: entry) {
                 parsed.append(set)
             } else {

@@ -132,6 +132,7 @@ public enum TesseraBackup {
         let clockBehind = newest.map { now < $0 } ?? false
         // A store with nothing he did (a fresh install, only the seeded catalog) is never copied: it would crowd
         // out a good copy, or replace tonight's (restore walk, risk 1).
+        try context.save() // the counts below read the database (QA on #239)
         let ops = try context.database.read { try userOps(in: $0) }
         guard ops > 0 else { return nil }
         let exists = manager.fileExists(atPath: file.path)

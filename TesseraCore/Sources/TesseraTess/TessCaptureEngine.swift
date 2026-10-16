@@ -28,12 +28,64 @@ public final class TessCaptureEngine: TessCapturing {
         if context.process == nil {
             context.process = ProcessTable(engine: engine).running()?.subject?.id
         }
+        // An open SQ8 ask: a said answer resolves it; anything else drops it and is read as usual (Q28).
+        if let ask = pendingAsk {
+            pendingAsk = nil
+            if let choice = ask.choice(for: phrase) {
+                return resolve(ask, choice, context: context)
+            }
+        }
         let result = await router.run(TessRequest(text: phrase, context: context, use: .capture))
+        if case let .setCount(ask)? = result.asking {
+            pendingAsk = ask
+            return result
+        }
         // Never log a pasted Claude key, even as a miss (the router refuses it, and the miss log is a file).
         if !result.understood, !looksLikeClaudeKey(phrase) {
             missLog?.record(phrase, at: context.now, route: result.source.rawValue, source: source)
         }
         return result
+    }
+
+    /// The SQ8 ask waiting for an answer ("2 × 10: 2 sets, or 2 kg?"); its two answers are ghost rows.
+    public private(set) var pendingAsk: TessSetCountAsk?
+
+    /// A tap on one of the ask's answers. Nothing happens if the ask has gone (another phrase dropped it).
+    public func answer(_ choice: TessSetCountAsk.Choice, context: TessContext) -> TessCapture {
+        guard let ask = pendingAsk else { return TessCapture(records: [], line: "", source: .none) }
+        pendingAsk = nil
+        return resolve(ask, choice, context: context)
+    }
+
+    /// SETS: N sets of M at the last set's weight (bodyweight on a first bodyweight set). KG: one set of N kg x M,
+    /// snapped to the kit; under the lightest load nothing is written (Q11).
+    private func resolve(_ ask: TessSetCountAsk, _ choice: TessSetCountAsk.Choice,
+                         context: TessContext) -> TessCapture
+    {
+        guard let entry = engine.store.object(id: ask.entry) else {
+            return TessCapture(records: [], line: "That exercise is gone.", source: .grammar)
+        }
+        engine.attribution = (.grammar, nil)
+        defer { engine.attribution = nil }
+        switch choice {
+        case .sets:
+            let weight = grammar.lastSet(in: entry)?.weight ?? 0
+            let set = TessGrammar.Parse.set(entry: entry, weight: weight, reps: ask.reps, kind: .working,
+                                            phrase: .full)
+            return performSets(Array(repeating: set, count: ask.count), context: context)
+        case .kilograms:
+            let said = TessGrammar.Parse.set(entry: entry, weight: Double(ask.count), reps: ask.reps, kind: .working,
+                                             phrase: .full)
+            guard let set = grammar.snap(said, entry: entry) else {
+                return TessCapture(records: [], line: "\(ask.kilogramsAnswer) isn't loadable here.", source: .grammar)
+            }
+            do {
+                let (record, line) = try perform(set, context: context)
+                return TessCapture(records: [record], line: line, source: .grammar)
+            } catch {
+                return TessCapture(records: [], line: Self.line(for: error), source: .grammar)
+            }
+        }
     }
 
     /// Where misses go; nil (nothing written) for an in-memory store.
@@ -50,11 +102,18 @@ public final class TessCaptureEngine: TessCapturing {
         return TessRouter(engine: engine, models: models)
     }
 
-    /// Several sets from one phrase, all or nothing: if one can't log, the ones already logged are taken back.
+    /// Several sets from one phrase, all or nothing: if one can't log, the ones already logged are taken back. A
+    /// set and an errand log both ("8 and call mum at 7"); a guarded last part asks after the rest ("81 for how
+    /// many reps?").
     func performSets(_ parts: [TessGrammar.Parse], context: TessContext) -> TessCapture {
         var records: [OpRecord] = []
         var lines: [String] = []
+        var asking: String?
         for part in parts {
+            if case let .ask(line) = part {
+                asking = line
+                continue
+            }
             do {
                 let (record, line) = try perform(part, context: context)
                 records.append(record)
@@ -70,13 +129,59 @@ public final class TessCaptureEngine: TessCapturing {
                 return TessCapture(records: [], line: Self.line(for: error), source: .grammar)
             }
         }
-        let line = lines.count > 1 ? "\(lines.count) sets logged." : lines.first ?? ""
+        let line = [setsLine(parts.filter { !$0.isAsk }) ?? lines.joined(separator: " "), asking]
+            .compactMap(\.self).joined(separator: " ")
         return TessCapture(records: records, line: line, source: .grammar)
+    }
+
+    /// "Sets 2 and 3 logged. 24 × 10." (one load and reps), "Sets 2 to 4 logged." (mixed), "3 sets logged." (other
+    /// exercises). Nil when the parts aren't all sets (a set and an errand say both lines).
+    private func setsLine(_ parts: [TessGrammar.Parse]) -> String? {
+        let sets = parts.compactMap { part -> (entry: ObjectRecord, weight: Double, reps: Double, unit: MassUnit)? in
+            guard case let .set(entry, weight, reps, _, _, unit, _, _) = part else { return nil }
+            return (entry, weight, reps, unit)
+        }
+        guard parts.count > 1 else { return nil }
+        guard sets.count == parts.count, let first = sets.first,
+              sets.allSatisfy({ $0.entry.id == first.entry.id })
+        else {
+            let lifts = parts.allSatisfy {
+                switch $0 {
+                case .lift, .set: true
+                default: false
+                }
+            }
+            return lifts ? "\(parts.count) sets logged." : nil
+        }
+        let last = first.entry.orderedChildren.count
+        let from = last - sets.count + 1
+        let span = sets.count == 2 ? "\(from) and \(last)" : "\(from) to \(last)"
+        guard sets.allSatisfy({ $0.weight == first.weight && $0.reps == first.reps && $0.unit == first.unit }) else {
+            return "Sets \(span) logged."
+        }
+        return "Sets \(span) logged. \(load(first.weight, unit: first.unit, entry: first.entry)) × "
+            + "\(TessVoice.number(first.reps))."
+    }
+
+    /// How a set's load reads: "80", "180 lb", and on a bodyweight lift "bodyweight" or "+10".
+    private func load(_ kilograms: Double, unit: MassUnit, entry: ObjectRecord) -> String {
+        let kit = engine.store.linkedClass("exercise", of: entry).flatMap { engine.store.equipmentKind(of: $0) }
+        if kit == .bodyweight {
+            return kilograms == 0 ? "bodyweight" : "+\(TessVoice.number(kilograms))"
+        }
+        return unit == .kilograms ? TessVoice.number(kilograms) : unit.format(kilograms: kilograms)
     }
 
     /// The grammar route: a capture when the grammar reads the phrase, else nil.
     func grammarCapture(_ phrase: String, context: TessContext) -> TessCapture? {
         if let parse = grammar.parse(phrase, context: context) {
+            switch parse {
+            case let .ask(line):
+                return TessCapture(records: [], line: line, source: .grammar, asking: .line)
+            case let .askSetCount(ask):
+                return TessCapture(records: [], line: ask.line, source: .grammar, asking: .setCount(ask))
+            default: break
+            }
             do {
                 if case let .sets(parts) = parse {
                     return performSets(parts, context: context)
@@ -114,17 +219,17 @@ public final class TessCaptureEngine: TessCapturing {
                        unit: unit == .kilograms ? nil : unit),
                 by: .tess, pending: pending
             ).record
+            // Name first, then what happened (lines audit X1, X2): "Set 3 logged. 80 × 8, RPE 8."
             let number = entry.orderedChildren.count
-            let weight = unit == .kilograms ? TessVoice.number(kilograms) : unit.format(kilograms: kilograms)
-            let effort = rpe.map { " @\(TessVoice.number($0))" } ?? ""
-            var line = switch phrase {
-            case .same: "Same again\(effort), logged."
-            case .drop: "Drop set. \(weight) x \(TessVoice.number(reps))\(effort)."
-            case .repsOnly, .full: "Set \(number). \(weight) x \(TessVoice.number(reps))\(effort)."
-            }
-            // Snapped to what the kit can load: say so ("81 isn't loadable").
-            if let saidWeight {
-                line += " \(String(format: "%g", saidWeight)) isn't loadable."
+            let set = "\(load(kilograms, unit: unit, entry: entry)) × \(TessVoice.number(reps))"
+            let extras = [rpe.map { "RPE \(TessVoice.number($0))" },
+                          // Snapped to what the kit can load: says what was logged, not what can't be.
+                          saidWeight.map { "nearest load to \(String(format: "%g", $0))" }].compactMap(\.self)
+            let tail = extras.map { ", \($0)" }.joined()
+            let line = switch phrase {
+            case .same: "Set \(number) logged, same again\(tail)."
+            case .drop: "Drop set logged. \(set)\(tail)."
+            case .repsOnly, .full: "Set \(number) logged. \(set)\(tail)."
             }
             return (record, line)
         case let .task(title, startsAt):

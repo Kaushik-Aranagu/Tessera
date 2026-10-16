@@ -82,7 +82,7 @@ struct ClaudeKeyTests {
         // Pasted into the Ask bar: refused before any route, nothing written.
         let engine = ActionEngine(store: store, classes: classes)
         let pasted = await TessCaptureEngine(engine: engine).capture(Self.key, context: TessContext())
-        #expect(pasted.records.isEmpty && pasted.line == "That looks like a Claude key. Paste it in Settings.")
+        #expect(pasted.records.isEmpty && pasted.line == TessRouter.keyLine)
 
         // Nowhere on disk or in defaults.
         let backup = dir.appendingPathComponent("leak.tessera")
@@ -162,7 +162,7 @@ struct ClaudeKeyTests {
         #expect(!looksLikeClaudeKey("skant") && !looksLikeClaudeKey("sk-and-x"))
         let engine = ActionEngine(store: store, classes: classes)
         let pasted = await TessCaptureEngine(engine: engine).capture("Sk-ant-Mixed-Case-Key", context: TessContext())
-        #expect(pasted.records.isEmpty && pasted.line == "That looks like a Claude key. Paste it in Settings.")
+        #expect(pasted.records.isEmpty && pasted.line == TessRouter.keyLine)
     }
 
     @Test func twoCallsAtOnceCannotBothPassTheCap() {

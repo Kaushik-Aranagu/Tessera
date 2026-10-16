@@ -15,6 +15,8 @@ extension TessGrammar {
         // Dictation ends sentences: "Same at 9." (QA Q1).
         let raw = phrase.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
             .replacing(/[.!]+$/, with: "").replacing(/,/, with: " ")
+            // "2 kilos x 10" says its unit (K888).
+            .replacing(/(\d) ?(?:kilos?|kgs)\b/) { "\($0.1) kg" }
             .split(whereSeparator: \.isWhitespace).joined(separator: " ")
         let model = Live(parse: nil)
         let exercise = store.linkedClass("exercise", of: entry)
@@ -37,15 +39,25 @@ extension TessGrammar {
             return Live(parse: .set(entry: entry, weight: bar, reps: reps, kind: .working, phrase: .full))
         }
         // S702: a signed change alone, and "skip" (the screen's), write nothing.
-        if raw.firstMatch(of: /^(?:[+-]|up |down )\d+(?:\.\d+)?(?: ?kg)?$/) != nil || raw == "skip" {
-            return model
+        if let match = raw.firstMatch(of: /^([+-]|up |down )(\d+(?:\.\d+)?)(?: ?kg)?$/), let change = Double(match.2) {
+            let sign = match.1 == "-" || match.1 == "down " ? "-" : "+"
+            return Live(parse: .ask("\(sign)\(TessVoice.number(change)) kg: on the next set?"))
+        }
+        if raw == "skip" {
+            return Live(parse: .ask("Skip set \(entry.orderedChildren.count + 1)?"))
         }
         // S705: "fail at 6" is unclear (rep 6, or 6 reps).
-        if raw.firstMatch(of: /^fail(?:ed)?(?: at)? \d+$/) != nil {
-            return model
+        if let match = raw.firstMatch(of: /^fail(?:ed)?(?: at)? (\d+)$/) {
+            return Live(parse: .ask("Fail at \(match.1): rep \(match.1), or \(match.1) reps?"))
         }
-        // S704: "at N" / "@N" after a set is RPE (read first, so "to failure at 9" works; QA Q5). S705: kind words.
+        // S705: kind words, read before the RPE so "warmup 60x5 at 8" keeps both (QA Q5).
         var core = Self.normalize(raw)
+        var kind: SetKind?
+        if let match = core.firstMatch(of: /^(?:warm ?-?up) (.+)$/) {
+            core = String(match.1)
+            kind = .warmup
+        }
+        // S704: "at N" / "@N" after a set is RPE (read before "to failure", so "to failure at 9" works).
         var rpe: Double?
         if let match = core.firstMatch(of: /^(.+?) ?(?: at |@ ?)(\d+(?:\.\d+)?)$/),
            Self.isSetCore(String(match.1))
@@ -57,37 +69,84 @@ extension TessGrammar {
             rpe = value
             core = String(match.1)
         }
-        var kind: SetKind?
         if let match = core.firstMatch(of: /^(.+?) to failure$/) {
             core = String(match.1)
             kind = .failure
         }
-        if let match = core.firstMatch(of: /^(?:warm ?-?up) (.+)$/) ?? core.firstMatch(of: /^(.+) (?:warm ?-?up)$/) {
+        if kind == nil, let match = core.firstMatch(of: /^(.+) (?:warm ?-?up)$/) {
             core = String(match.1)
             kind = .warmup
         }
         // S701: a bare number is reps only if it can't be a weight. "N reps" says so: only the range applies.
         if let number = Self.number(core) {
             let saidReps = core.hasSuffix(" reps")
-            guard let last = lastSet(in: entry), number.rounded() == number, (1 ... 50).contains(number),
+            let shown = TessVoice.number(number)
+            guard let last = lastSet(in: entry) else {
+                return Live(parse: .ask(saidReps ? "\(shown) reps: at what weight?" : "\(shown): kg, or reps?"))
+            }
+            guard number.rounded() == number, (1 ... 50).contains(number),
                   saidReps ||
                   // On a bodyweight move the last "weight" is 0 added: nothing to confuse reps with (QA Q4).
                   kindOfKit == .bodyweight && last.weight == 0
-                  || !nearLastWeight(number, last: last.weight, dial: dial) else { return model }
+                  || !nearLastWeight(number, last: last.weight, dial: dial)
+            else {
+                let reps = number.rounded() == number && (1 ... 50).contains(number)
+                return Live(parse: .ask(reps ? "\(shown): \(shown) kg, or \(shown) reps?" :
+                        "\(shown) for how many reps?"))
+            }
+        }
+        // SQ8 (Product, 7:53 PM PT): a bare "N x M" may be N sets of M. "3 sets of 10" says so.
+        if rpe == nil, kind == nil, let sets = setCount(core, entry: entry, bodyweight: kindOfKit == .bodyweight) {
+            return Live(parse: sets)
         }
         guard let parsed = parseRelativeSet(core, entry: entry) else {
             return Self.looksLikeSet(core) || rpe != nil || kind != nil ? model : nil
         }
         guard case let .set(entry, weight, reps, setKind, how, unit, _, _) = parsed else { return Live(parse: parsed) }
-        // "3x10" with a light kit is 3 sets of 10, not 3 kg (a small number the kit can't load exactly): ask.
-        if how == .full, unit == .kilograms, weight <= 10, let dial, !dial.detents.isEmpty,
-           !dial.detents.contains(where: { abs($0 - weight) < 0.001 })
-        {
-            return model
-        }
         let withExtras = Parse.set(entry: entry, weight: weight, reps: reps, kind: kind ?? setKind, phrase: how,
                                    unit: unit, rpe: rpe)
         return Live(parse: snap(withExtras, entry: entry))
+    }
+
+    /// SQ8: "2x10" (written with x, no unit said) asks when N is 6 or less and under half the last set's weight, and
+    /// on a bodyweight lift whatever N is, first set included. "3 sets of 10" logs every set at the last weight.
+    func setCount(_ core: String, entry: ObjectRecord, bodyweight: Bool) -> Parse? {
+        let last = lastSet(in: entry)
+        if let match = core.firstMatch(of: /^(\d+) sets? of (\d+)(?: reps)?$/), let count = Int(match.1),
+           let reps = Double(match.2), (1 ... 10).contains(count), (1 ... 100).contains(reps)
+        {
+            guard let weight = last?.weight ?? (bodyweight ? 0 : nil)
+            else { return .ask("\(count) × \(match.2) at what weight?") }
+            return .sets(Array(repeating: .set(entry: entry, weight: weight, reps: reps, kind: .working, phrase: .full),
+                               count: count))
+        }
+        guard let match = core.firstMatch(of: /^(\d+) ?(?:x|by) ?(\d+)$/), let count = Int(match.1),
+              let reps = Double(match.2), count >= 1, (1 ... 100).contains(reps) else { return nil }
+        let asks = bodyweight || count <= 6 && last.map { Double(count) < $0.weight / 2 } == true
+        guard asks, count <= 20 else { return nil }
+        return .askSetCount(TessSetCountAsk(entry: entry.id, count: count, reps: reps, bodyweight: bodyweight))
+    }
+
+    /// A169, A170: a set and an errand in one breath ("8 and call mum at 7", "same, call mum thu"). The set part goes
+    /// through the live guard; the rest is read as if no workout were in front. Nil unless both parts write.
+    func parseSetAndErrand(_ phrase: String, context: TessContext, entry: ObjectRecord) -> Parse? {
+        for separator in [/,?\sand\sthen\s/, /,?\sthen\s/, /\sand\s/, /,\s?/] {
+            guard let split = phrase.firstMatch(of: separator.ignoresCase()) else { continue }
+            let setPart = String(phrase[..<split.range.lowerBound])
+            let rest = String(phrase[split.range.upperBound...])
+            guard let set = parseLive(setPart, text: Self.normalize(setPart), entry: entry)?.parse, !set.isAsk,
+                  Self.normalize(rest).firstMatch(of: /^[\d.,x ]+$|^(?:same|again|repeat|one more)\b/) == nil
+            else { continue }
+            var errandContext = context
+            errandContext.entry = nil
+            errandContext.process = nil
+            guard let errand = parse(rest, context: errandContext), !errand.isAsk else { continue }
+            switch errand {
+            case .lift, .set, .sets, .ignoredInWorkout: continue
+            default: return .sets([set, errand])
+            }
+        }
+        return nil
     }
 
     /// What can carry an RPE: a set shape, "same" and its kin, or bare reps ("call mum at 7" can't).
