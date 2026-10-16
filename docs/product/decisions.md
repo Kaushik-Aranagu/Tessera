@@ -163,4 +163,9 @@
 - **Late-night rules** (6:07 PM PT, Research #169 `late-night.md`, all defaults). "tomorrow" before 4 AM means the coming daytime, and Tess's reply names the weekday ("Dentist, Sat 3 PM"). A session that crosses 4 AM belongs to the day it started. Until notifications exist, a reminder ask gets "On Now then."
 - **Notifications, first set** (6:20 PM PT, Research #171 `notifications.md`). Three local notifications: a timed task, rest done while the app is closed, and a cook timer done. Quiet hours run 11 PM to 7 AM. When notifications are allowed, they replace the Live Activity rest alert (Q5/A7). The one permission ask fires on his first "remind me", first timed task or first cook timer, whichever comes first, within the one-ask-a-day rule. A task with no time is never saved as 9:00.
 - **The review guide tags every item with its PR or branch, and every known gap with its fix** (6:20 PM PT), so the coordinator's install check (`install-check.md`) can match the guide to the build.
+- **Claude's first three uses and their gates** (6:22 PM PT, Research #172 `claude-first-uses.md`). The estimate is about $0.44 a month, or $2.43 in a heavy month.
+  1. Grammar misses go to Haiku with the cloud mark, which fixes 44 of the 72 misses. This turns on when the key Test passes.
+  2. Plan my day wording uses Sonnet, with Haiku in the same eval. It turns on after the first 10 use-1 calls have ledger costs within 10% of the Console, 3 or fewer of them were taken back, and all 20 plan scenarios pass.
+  3. Log questions use Haiku. They wait for a question mode that can only call answerQuery.
+  - Also settled: the fallback line stays "Here's your usual plan." (12:22 decision; tess-voice M18 changes to match). answerQuery counts only finished workouts, as questions-eval does. The live pack uses Los Angeles time; London stays in the eval packs only. New copy for Design: "Claude is busy. Kept it for later."
 
