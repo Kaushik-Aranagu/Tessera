@@ -135,6 +135,13 @@ private struct WritingLine: View {
                     .focused(focused)
                     .submitLabel(.done)
                     .onSubmit(onSubmit)
+                    // A vertical-axis field makes Return a newline and never submits (Kaushik, install 1): a typed
+                    // newline is Return here.
+                    .onChange(of: text) { _, new in
+                        guard new.contains("\n") else { return }
+                        text = new.replacing("\n", with: " ").trimmingCharacters(in: .whitespaces)
+                        onSubmit()
+                    }
                     .lineLimit(1 ... 4)
                     .accessibilityLabel("New note")
             }

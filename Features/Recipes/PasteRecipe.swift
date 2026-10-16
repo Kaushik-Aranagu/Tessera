@@ -70,6 +70,7 @@ struct PasteRecipe: View {
                         .scrollContentBackground(.hidden)
                         .scrollDisabled(true)
                         .focused($editing)
+                        .keyboardDoneWord { editing = false }
                         .frame(minHeight: 320, alignment: .topLeading)
                         .padding(.top, Theme.Spacing.xl)
                         .padding(.horizontal, -5)
