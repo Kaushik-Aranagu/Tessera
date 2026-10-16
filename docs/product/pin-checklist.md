@@ -12,11 +12,12 @@
 ## 2. Riders (in only if merged before the last blocker)
 - [ ] Paste/link SecretWords wall (Core).
 - [ ] One-time mark-private pass for pre-#422 notes (Core, Research 139).
+- [ ] Siri Add a Task secret-word wall, I3 (Core, QA).
 - Never in this pin: #403 eyes, #407 tessEyes (v10). They merge right after the pin is named.
 
 ## 3. Name the SHA
 - [ ] Fetch master; the pin = master HEAD after the last blocker (or rider) merged. Record the full SHA.
-- [ ] `git log --oneline <installed 7b321d2>..<pin>` lists what he gets; confirm #380, #381, #391 (T1-T4 trip), #397, #399, #402, #422 and the blockers are all in.
+- [ ] `git log --oneline <installed 7b321d2>..<pin>` lists what he gets; confirm #380, #381, #377 + #391 (T1-T4 trip: 0bff60b and 70112f9 must be ancestors; Research 141 says the trip is a go on master, so this pin must be on his phone by Oct 25), #397, #399, #402, #422 and the blockers are all in.
 - [ ] Catalog version at the pin is v9; nothing at v10.
 - [ ] CI green on the pin commit.
 

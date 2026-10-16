@@ -15,11 +15,36 @@
 - QA lows: `bestE1RM` tie keeps the newest set (#399 L1); "$10" comments in ClaudeKey.swift (#422); "wifi-password" split into words (#422 L2); OpZones and `StoreDayLookup.zones` share one rule (#377 L1); `wroteRecent` false on an in-place update (#377 L3); Groceries `summary` by op, not a 60 s window (#380 L1); plan lows L1 to L6 (#363).
 - Design receipts, thing first, one small strings PR: R7 (Claude fallback names the things), R8 Lists, R9 processes, R10 "Shopping, done", R11 training actions, R12 Siri "Push Day A, done. 3 of 5 exercises."; E1 "Reading nytimes.com."; E2 note titles cut at a whole word (Core half); E3 the full lineage; H1 paused workout context "paused"; H2 a running flight "since 5:45 pm". Sources: QA `docs/qa/audit-master-oct16.md` (#428); Design `docs/design/audit-ui-bar.md` (UI-bar audit of bb7f082).
 
+**AI loop and tool guards (AI architecture `docs/ai/spend-projection.md`; 11:45 AM PT Oct 16), with AI-2:**
+- A hard cap of 40 Home-lines calls a day in code, and the pack never carries a ticking value ("21 min ago") that would change the cache key every minute (about 1,440 calls a day otherwise).
+- forgetMemory and forgetAllMemory can never be Claude tools (a registry guard plus a test); forgetting is his.
+- Already listed: A6 (unknown model costs 0) before AI-2; the "$10" ClaudeKey.swift comment.
+
+**Design 71 read (11:42 AM PT Oct 16):** `lastTimes(of: routine, limit: 4)` returns plain facts per run (day, sets done of planned, kg moved, bests, left-out exercises); the words belong to the view. For Builder A's LAST TIMES.
+
+**Trip zone reads (Research 141, `docs/research/trip-check.md`; trip is a go on master; none blocks Oct 26; 11:41 AM PT Oct 16):**
+- N1 first (about 10 lines): Review counts done tasks and cooks by op.zone like WeekFacts (ReviewWeek.swift:58, :64; ReviewView.swift:62-66, :89).
+- N2 the Plans month heatmap (PlanSchedule.swift:59-60, PlanDigest.swift:204); N3 Tess's "did X yesterday" (TrainingActions.swift:362-367); N4 the turnover's "already written" check across zones (TessMemory+Turnover.swift:32, NowRanker.swift:153), with a relaunch test.
+- R14, a timer ringing on the trip, rides CL6.
+
+**Groceries check (Research 142 vs master 5601a24, `docs/research/groceries-check.md`; 11:40 AM PT Oct 16):**
+- Receipt bug: changing a recipe's serving size updates amounts in place, keeps row ids (Groceries.swift:316-317), and says "Pasta, 2 servings." (decisions.md 11:40 AM PT).
+- Fractions: add ⅜, ⅝ and ⅞ so half of ¾ tsp reads "⅜ tsp", not "0.38 tsp" (RecipeMath.swift:28, :74-82).
+- G-R15 (Kitchen ruling): garlic reads "7 cloves + 1 head" on one row, and a checked garlic row covers later lines. ("1 (16 oz)" vs "1 (1 lb)" is parked until v2 normalizes pack sizes; not now.)
+- G-R13: at zero, Home shows no Groceries line instead of "nothing to buy" (HomeLines.swift:401; Builder B's HomeLines owner may take it with #366's follow-ups).
+- G-R10 to G-R12 stay in AI-12 rows 1 to 8 (Order line).
+
+**Siri and Health (QA `docs/qa/review-intents-health.md`, #428; 11:38 AM PT Oct 16):**
+- I3 (pin rider): Siri's "Add a Task" (Intents.swift:131) refuses `looksLikeClaudeKey` and sends `SecretWords.hasValue` text to a private note, or routes through `runtime.tess.capture`.
+- I1 Core half: LogSet and LogNextSet refuse a workout with endedAt unless `on:` is set. I2 Core half: "Start <routine>" refuses while a workout is open.
+- Lows: I4 Siri task dates use the 4 AM day; I5 a Siri Tell Tess question leaves no pending ask in the app; I6 intents don't answer "Logged" on the in-memory fallback store.
+- A2 to A4 land before Builder B wires the inbox retry or Plan my day (A2 already blocks the pin).
+
 **Secret-word follow-ups (Research 139, hand trace of #422 at bb7f082; 11:37 AM PT Oct 16; full table `docs/research/secret-words-check.md`):**
 - Pin rider (in if it lands before the last blocker): a one-time pass at launch sets isPrivate on any note whose title or body holds a secret word with a value, so pre-#422 notes stop printing "Note: …" in the Day log (DayStory.swift:347) and the week's best lines (WeekFacts.swift:152); no catalog change; add the older-note test SecretWordsTests.swift:153-154 is missing.
 - With A4: a task title holding a secret word goes into the Plan my day pack as "task", with no words ("Reset my PIN", "Password reset email").
 - False positive: a list or kitchen shape wins over a secret word with no digit value ("rolling pin", "bobby pins" stay on Groceries).
-- SW3 wording everywhere, in the AI-3 small PR: TessCaptureEngine.swift:300, TessMemory.swift:124 (comment :116), TessGrammar.swift:20, SecretWordsTests.swift:89/92 all say "Private note, kept. It stays out of my memory."
+- SW3 wording, in the AI-3 small PR (Design + Research agreed): "remember …" with a secret, where a note is made: "Private note, kept. It stays out of my memory." (TessCaptureEngine.swift:300, TessGrammar.swift:20, SecretWordsTests.swift:89/92); the refusal alone, no note made (`TessMemoryScreen.Refusal.secret.line`, TessMemory.swift:124, comment :116): "It stays out of my memory."; op-log summaries Notes.swift:128 and :180: "Private note, kept." and "Private note, updated."
 
 **Memory-store gaps (AI architecture, `docs/ai/memory-store.md` "Where code and docs differ", #430; 11:36 AM PT Oct 16):**
 - In the AI-3 small PR (already carries SW3): the SW3 line at TessCaptureEngine.swift:300 and `Refusal.secret.line` becomes "Private note, kept. It stays out of my memory."; `RememberFact.refusalLine` returns that line for a secret, not nil; `TessMemoryScreen.refusal` matches the Claude key prefix in any case, like `looksLikeClaudeKey`.
