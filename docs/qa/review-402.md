@@ -47,3 +47,10 @@ Verdict: **PASS**. One commit on cf111f8. Trial merge onto master is clean.
 - The gates still pass: no new `tessMode =` and no new soul `Task.sleep`. The `swiftlint:disable:next cyclomatic_complexity` covers only `handle(_:)`, the §14 table.
 - New low (L5): if BottomChrome leaves while an ask waits, `isAskWaiting` stays true until the next ask change, so the lens is refused until then. The workout's end clears `setAsk` (:108), so the common path is covered.
 - L4 (real-time waits, about 12 s in total) stays a low.
+
+## Addendum: re-check at `45cbcd2` (the lab's F4)
+
+Verdict: **PASS**. The change since 559e093 is limited to SoulRouter.swift and its test. Trial merge is clean.
+
+- `playDone` clears `queued`, and a `.claudeFailed` during a Done clears it too. Every way a thinking gets queued now ends: `.committed` settles rest, while a Done or a failure clears the queue. My line at 559e093 that "every queued thinking is settled" missed the case where the answer arrives during the Done. The lab was right.
+- New low L6, latent: `.backgrounded` cancels the Done timer, and `.foregrounded` is then ignored by the Done-in-flight guard, so she would stay in `.done`. Neither event is emitted yet (no caller in App or Features). When they're wired, `.backgrounded` should settle rest, or `.foregrounded` should skip the guard.
