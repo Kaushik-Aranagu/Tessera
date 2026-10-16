@@ -127,7 +127,8 @@ private struct HistoryList: View {
 
     private func label(_ row: ExerciseDigest.HistoryRow) -> some View {
         HStack(spacing: Theme.Spacing.m) {
-            Text(ExerciseWords.historyDate(row.date, now: AppClock.now, calendar: .current))
+            Text(ExerciseWords.historyDate(row.date, now: AppClock.now, calendar: .current,
+                                           zone: OpZones(store: model.store).zone(of: row.workoutID)))
                 .font(PageType.small)
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .frame(width: 92, alignment: .leading)
@@ -143,7 +144,8 @@ private struct HistoryList: View {
     }
 
     private func spoken(_ row: ExerciseDigest.HistoryRow) -> String {
-        let date = ExerciseWords.historyDate(row.date, now: AppClock.now, calendar: .current)
+        let date = ExerciseWords.historyDate(row.date, now: AppClock.now, calendar: .current,
+                                             zone: OpZones(store: model.store).zone(of: row.workoutID))
         let sets = row.setCount == 1 ? "1 set" : "\(row.setCount) sets"
         let top = row.topSet.replacingOccurrences(of: "×", with: "by")
         return "\(date), \(sets), top set \(top)" + (row.isRecord ? ", your best" : "")
