@@ -34,7 +34,7 @@ Two ink dots on the soul, so she has somewhere to look from. They are an option 
 | Glance | The pair moves together, up to 3 pt sideways and 2.2 pt up or down, on a short spring (300 ms, bounce 0.05) |
 | Where she looks | At her own line when she speaks (down-left for 1 s, then back). Toward a row she just changed or named (up, toward it, until the line leaves). Toward him (up, centred) while listening. Straight ahead otherwise |
 | With the modes | Idle, listening, needs you, resting: shown. Thinking and working: shown while she's whole, gone when she splits. **Done: they fade out in 120 ms as it begins and back in 200 ms after it ends**, so Done plays exactly as built |
-| Reduce Motion | No blink, no glance; the dots sit still |
+| Reduce Motion | The blink stays; no glance; the dots sit still |
 
 At Home size they are two pinpricks, there and not there. That is the intent. The one dial is the 82% alpha, never the size.
 
@@ -223,8 +223,8 @@ Two switches, two different reasons. **Reduce Motion** is his accessibility sett
 
 | State | As designed (sections above) | Reduce Motion | Low Power |
 |---|---|---|---|
-| **Idle** (section 2, 12) | breath 3.2 s, lift, drift, halo breath, 30 fps | still frame of idle; the chrome breath off; eyes open, no blink | unchanged motion at **20 fps**; halo breath held at its mean (0.9 / 0.8) so the frame is one fill cheaper; blinks stay |
-| **Eyes** (1) | blink 160 ms, glance spring 300 ms | no blink, no glance; the dots sit still | blink stays (5 frames at 30, 3 at 20 are enough); glance stays (it is an offset, not a redraw) |
+| **Idle** (section 2, 12) | breath 3.2 s, lift, drift, halo breath, 30 fps | still frame of idle; **the breath is opacity only** (0.85 to 1 over 3.2 s, no scale, no travel); the blink stays (Design, 11-13 pass) | unchanged motion at **20 fps**; halo breath held at its mean (0.9 / 0.8) so the frame is one fill cheaper; blinks stay |
+| **Eyes** (1) | blink 160 ms, glance spring 300 ms | **the blink stays** (160 ms, no travel: not motion in Apple's sense); no glance, the dots sit still | blink stays (5 frames at 30, 3 at 20 are enough); glance stays (it is an offset, not a redraw) |
 | **Roam** (3) | `SoulTravel` 760 ms, works beside the row, rides the scroll | no travel: she stays home, the line names the row | **no roam**: she stays at the dock; the line names the row; the work state runs at the dock (the readers' canvas is the one thing that leaves hers, and it is the first cost to drop) |
 | **Drag** (4) | pick up, carry with paint lag, drop on the house spring, flick | 200 ms crossfade to the dock on release; no carry lag, no grow | unchanged (a drag is an `offset` on the view; the lag is six fills she already draws); the carry bloom's breath held at its mean |
 | **Working** (5) | fade 500 ms, split 900 ms into 12 lights, readers, gather 820 ms, colour back, Done | 200 ms crossfade to the faded grade, the three mains loosened 1.5×, satellites at 40%; 200 ms back; Done its still frame | fade and gather unchanged; **six lights, not twelve** (the six children never leave the dabs); **no readers**; constellation at **30 fps** (not 60); the colour returns over the same 550 ms; Done as built |
@@ -247,6 +247,68 @@ Two switches, two different reasons. **Reduce Motion** is his accessibility sett
 The switch is read once per frame from a cached flag (the notification updates it); a change mid-state is applied at the next mode change, never mid-animation (a constellation that halves its lights mid-split reads as a glitch).
 
 - Recordings: `recordings/tess-motion-low-power.mp4` (Obsidian): the working state in Low Power, six lights, no readers, 30 fps, beside the full one in `tess-motion-work.mp4`; `tess-motion-reduce-motion.mp4` stays the Reduce Motion reference. The simulator can't set Low Power; QA checks it on the device with the flag forced through `-lowPower` (simulator-only `LaunchFlags`, and a real toggle on the phone).
+
+## 14. The event contract (board item 14, added 4:30 AM PT Oct 16)
+Today eleven places write `AppModel.tessMode` directly (`BottomChrome` nine times, `RootView`'s double tap, Settings' key check) and the workout keeps its own copy in `WorkoutModeView.play`. The sections above add working, roam, the beat, repaint, eyes, drag, the return glance, Low Power and the lens on top of that. So that Builder A wires her **once**: views emit an *event*, one router turns events into her state, and the table below is the whole contract. Nothing else may set a mode.
+
+**The shape** (`SoulEvent` → `SoulRouter.handle(_:)` → `SoulState`): a state is a mode (as built) plus four overlays that can ride on a mode: `beat` (section 6), `roam` (a place, section 3), `carried` (section 4), `repaint` (section 7). The workout's `LiveTessCorner` runs the same router with `page = .live`, which the pages table makes roam-free and glance-free.
+
+| Event | Emitted by | Soul state | Notes |
+|---|---|---|---|
+| `appeared` / `closed` (the surface closes, a line fades after 4 s, the app comes forward) | `BottomChrome`, `RootView` | **idle**, or **resting** 23:00 to 06:00 | as built (`restingOrIdle`) |
+| `returnLine(text)` (a line from a face, a notification, the 04:00 roll: `processNotes`) | `BottomChrome.say` | idle + the glance | section 9; no beat |
+| `tessOpened` (tap her, "log bench " from another screen) | `BottomChrome.opened` | **listening** | as built |
+| `draft(isEmpty)` | the text field | listening / idle | as built |
+| `sent(text)` (the ghost dries) / `heard(words)` | `BottomChrome` | **thinking** | as built; local grammar only |
+| `dryCancelled` | a tap on the ghost | listening | as built |
+| `committed(local)` | `BottomChrome.commit` | idle + brighten | as built: **not Done** ("`.done` would multiply its dabs into mud") |
+| `askClaude(kind)` (Claude call, Plan my day, link fetch, photo read) | the router, from `commit`, `ClaudeSection.check`, Shortcuts | **working(reading:)** | section 5; readers only on a page with declared ground; from the bloom only after the 220 ms gather |
+| `claudeDone` / `claudeFailed` | the same | gather → **Done** / gather → idle + the line | section 5 |
+| `speak(hold:)` | Speak tap, the 400 ms hold | **listening** (×1.4, breath on the mic) | section 8; at (196, 698) from the surface, in place from a hold |
+| `heardNothing` | the listener | idle | as built |
+| `setLogged` / `newBest` | the workout | **Done** / thinking 1.2 s → Done | as built (`play`) |
+| `liveAsk` → `liveAnswered` | the workout's ask field | thinking → Done | as built |
+| `swapped`, `topSetAccepted`, `workoutGathered` | the workout | **Done** | as built |
+| `taskDone(row)` (swipe, hero, habit, Groceries) | `QueueRow`, hero, habits, Groceries | current mode + **beat** at 520 ms | section 6; Done's pour never |
+| `doneElsewhere` (a Done that played off screen) | the ledger on foreground | beat at 0 | section 6 |
+| `rowChanged(rect)` (a change to a row that names a place) | the page, through its free-ground preference | **roam** to the place, then the work or Done there | section 3; never while listening, asked, carried or in Low Power |
+| `scrolled(dy)` | the page | roam rides, releases at y 130 / 700 | section 3 |
+| `goHome` (double tap) | `RootView` | **Done** → flood → idle after 900 ms | as built |
+| `held`, `pickedUp(10 pt)`, `carried(point)`, `dropped(dock)`, `flicked(v)` | `BottomChrome`'s gesture | listening-at-rest / **carried** / the dock | section 4 |
+| `askWaiting(words)` / `askAnswered` / `askLeft` | one-ask | idle + the lean, breath 4.8 s / the return 300 ms | section 8 |
+| `lookSwitched` | `ThemeStore` | current mode, flood 700 ms; eyes hold; repaint cancelled | section 11 |
+| `paletteChosen(palette)` | the living-colour rule table | **repaint** overlay, idle only | section 7; deferred while anything else runs or in Low Power |
+| `lensHeld` / `lensReleased` | `HomeSpatialView` | current mode, pinned to the dock; readers home | section 15 |
+| `shutdown`, `quietHours` | Core's scheduler | **resting** | as built |
+| `backgrounded` / `foregrounded` | the scene phase | paused / the mode it left, mid-animation never (working resumes at full constellation) | section 9 |
+| `lowPower(on)` | `ProcessInfo` | applied at the next mode change | section 13 |
+| `reduceMotion` | the environment | the still table | section 13 |
+
+**Who wins when two arrive together** (the router's order; higher beats lower, and a one-shot in flight is not cut except by the first row):
+1. **His touch on her**: `held`, `pickedUp`, `speak(hold:)`. Cuts anything, including Done, with the 400 ms blend; a drag ends roam and work's readers at once (the constellation stays at the dock, then follows the carry).
+2. **Listening.** No roam, drag threshold only before the hold fires, no split, no repaint, no beat while she listens (a Done arriving while he talks waits and plays as the beat when she returns).
+3. **An ask waiting.** Holds the lean; a `taskDone` during the wait beats at once (it is his), `rowChanged` waits.
+4. **Done in flight** (1.8 s): a second Done inside it becomes a beat at 0; `askClaude` inside it queues and starts at the end; `rowChanged` waits.
+5. **Working**: `taskDone` beats on the constellation; `rowChanged` is noted and the roam happens at gather if the place is still there; `paletteChosen` waits; a second `askClaude` joins the running one (one constellation, the later `claudeDone` ends it).
+6. **Thinking** (local, under 2 s): everything queues behind it except a beat.
+7. **Beat** (940 ms overlay): never blocks; two beats inside 940 ms merge into one.
+8. **Roam**: a new `rowChanged` retargets on the same arc from where she is; `lensHeld` sends her home.
+9. **Repaint**: anything above cuts it, drying inside 500 ms.
+10. **Idle / resting.**
+
+Two rules that make it one wire: **views never set a mode** (a view that needs her sends an event; the test is a grep for `tessMode =` outside the router), and **the router is the only timer** (`play`'s 1.8 s, `say`'s 4 s, the beat's 940 ms, the flood's 900 ms all live there, so two timers can't race).
+
+## 15. During the glass-tab hold and swipe (board item 15, Design 42 / #342, added 4:40 AM PT Oct 16)
+#342 built Design 42: hold the tab row 260 ms and a Liquid Glass lens forms, the four pages shrink to 78% on a near-black ground with the neighbours live at 55%, slide and the pages follow 1:1 with a `.selection` tick per word, let go and the page under the lens opens (480 ms), the lens melts into the ink line (280 ms). She is on the chrome layer (`RootView`'s overlay), not in the deck, so the pages shrink around her and she stays where she is, at full size, over the darkened ground.
+
+- **She stays put and keeps breathing.** The lens is him navigating; it is not an event of hers. No glance at the lens or his finger (a soul that follows his finger is a cursor), no roam, no change of mode, no haptic of hers: the ticks are the lens's. The band 736 to 820 holds; the deck's bottom edge (852 × 0.78 from the centre, about 758 at the deck's foot) is above her, so nothing of the pages crosses her.
+- **If she was working when the hold starts,** the readers go home inside the shrink's 360 ms (they live on a page, and the page is leaving) on the gather curve; the constellation stays at the dock and keeps working; the result lands as Done at the dock, on whatever page he let go on. She never reads on a shrunk page or a neighbour at 55%.
+- **If she was out on a row (roam),** the hold sends her home on the same 760 ms arc; a Done owed to that row plays at home.
+- **Carried:** a lens can't form while she is carried (the hold on the tab row is a second finger: ignored while `carried`), and a touch on her while the lens is up is ignored. One hand, one thing.
+- **Listening or an ask waiting:** the tab row's hold is refused (the Speak layer and an ask own the page, section 8); a plain tap on a tab still works as built.
+- **Release:** nothing of hers moves for the page growing back; if the page he opened declares free ground and a `rowChanged` was queued (section 14, rule 5), the roam starts after the 480 ms grow, never during it.
+- **Reduce Motion:** the pages crossfade and the lens still forms (42 rule 7); she does nothing, as above. Low Power: the same.
+- Recording: `recordings/tess-motion-lens.mp4` (Obsidian): the hold from Today, the slide to TRAINING with a tick, the release; then the same hold while she is reading the rows, the readers coming home inside the shrink.
 
 ## Timing and easing, in one place
 | | Curve | Duration |
@@ -274,7 +336,7 @@ The switch is read once per frame from a cached flag (the notification updates i
 Two new `Haptic` cases (`.soulPickUp`, `.soulDrop`) in `DesignSystem/Haptics.swift`; nothing plays twice for one moment. In quiet hours the pick-up and drop still play (they're under his finger).
 
 ## Reduce Motion
-- Nothing travels. Roam: she stays home and the line still names the row. Drag: she jumps to the dock with a 200 ms crossfade. Eyes: no blink or glance.
+- Nothing travels. Roam: she stays home and the line still names the row. Drag: she jumps to the dock with a 200 ms crossfade. Eyes: the blink stays, no glance. The breath is opacity only, 0.85 to 1 over 3.2 s, no scale: a still soul reads as dead (section 1), and an opacity breath and a 160 ms blink are not motion in Apple's sense (Design, 11-13 pass).
 - Working: a 200 ms crossfade to the faded grade with the three main dabs loosened 1.5× from the centre and the satellites at 40%; a 200 ms crossfade back when done. Done is its still frame as built.
 - Haptics stay, beat for beat.
 

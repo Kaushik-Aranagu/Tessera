@@ -253,6 +253,12 @@ function workParticles(t, work) {
       const p = along(work.path, s);
       // The chain tightens as it reads (it's one glint with colour in its tail) and fades a touch on the turns.
       res[i] = { x: p.x, y: p.y + (i === 1 ? 0 : 1.5), rx: i === 1 ? 15 : 12, ry: i === 1 ? 11 : 9, blur: 5, alpha: i === 1 ? .5 : .42 };
+      // The page is leaving (a lens hold, section 15): the readers come home to the constellation inside 360 ms.
+      if (work.pathUntil !== undefined && t > work.pathUntil) {
+        const home = constellationPose([i, 18 + i, 12 + (i % 3) * 4, 6 + i * .3, 5 + i * .2, i, i === 1 ? 15 : 12], t, W0);
+        const u = ramp(t, work.pathUntil, .36, gatherCurve);
+        res[i] = { x: lerp(res[i].x, home.x, u), y: lerp(res[i].y, home.y, u), rx: lerp(res[i].rx, home.rx, u), ry: lerp(res[i].ry, home.ry, u), blur: lerp(5, home.blur, u), alpha: lerp(res[i].alpha, home.alpha, u) };
+      }
     } else {
       res[i] = constellationPose([i, 18 + i, 12 + (i % 3) * 4, 6 + i * .3, 5 + i * .2, i, i === 1 ? 15 : 12], t, W0);
     }
@@ -384,13 +390,14 @@ function text(str, x, y, size, color, weight = 500, align = 'left', alpha = 1) {
 function width(str, size, weight = 500) { ctx.save(); ctx.font = font(size, weight); const w = ctx.measureText(str).width; ctx.restore(); return w; }
 
 const ROWS = [
-  { title: 'Call the bank', when: '09:30' },
-  { title: 'Push day', when: '12:15' },
+  { title: 'Call the bank', when: '9:30 am' },
+  { title: 'Push day', when: '12:15 pm' },
   { title: 'Pick up the dry cleaning', when: '' },
   { title: 'Book the dentist', when: '' },
-  { title: 'Water the plants', when: '18:00' },
+  { title: 'Water the plants', when: '6 pm' },
 ];
-const ROW_Y0 = 262, ROW_DY = 50;
+// Sheet 41's frame: the day label at 138, the context line at 186, the hero at 220 (34), NEXT and the rows below.
+const ROW_Y0 = 330, ROW_DY = 50;
 function rowGeom(scrollY = 0) {
   return ROWS.map((r, i) => {
     const y = ROW_Y0 + i * ROW_DY - scrollY;
@@ -405,8 +412,10 @@ function drawPage(o = {}) {
   const nav = ['Review', 'Today', 'Training', 'Kitchen'];
   let x = 24;
   nav.forEach(n => { text(n, x, 82, 16, n === 'Today' ? LOOK.ink : LOOK.inkSoft, n === 'Today' ? 600 : 500); x += width(n, 16) + 22; });
-  text(o.header || 'Friday morning', 24, 160 - scroll, 34, LOOK.ink, 600);
-  text('NEXT', 24, 222 - scroll, 16, LOOK.inkSoft, 600);
+  text(o.day || 'Friday morning', 24, 138 - scroll, 21, LOOK.ink, 500);
+  text(o.context || 'nothing due till 9:30 am', 24, 186 - scroll, 21, LOOK.context, 500);
+  text(o.header || 'Push day at 12:15 pm', 24, 220 - scroll, 34, LOOK.ink, 600);
+  text('NEXT', 24, 290 - scroll, 16, LOOK.inkSoft, 600);
   rowGeom(scroll).forEach((g, i) => {
     const r = ROWS[i];
     if (g.y < 110 || g.y > 700) return;
@@ -479,7 +488,7 @@ function composeSoul(t, s) {
   const grade = {
     saturation: lerp(frame.look.saturation, .62, fade) * lerp(1, .5, reduced) + (beat ? beat.sat : 0),
     contrast: lerp(frame.look.contrast, 1, fade),
-    opacity: frame.look.opacity * lerp(1, .9, fade) * lerp(1, .6, reduced),
+    opacity: frame.look.opacity * lerp(1, .9, fade) * lerp(1, .6, reduced) * (s.opacityMul ? s.opacityMul(t) : 1),
     fade: Math.max(fade, reduced), haloBoost: s.haloBoost ? s.haloBoost(t) : 1,
     palette: s.palette ? s.palette(t) : null,
   };
@@ -506,7 +515,7 @@ SCENES.work = () => {
   return {
     duration: D + 3.4,
     soul: { modes, centre: () => HOME, work },
-    lines: [{ text: 'Planning your day.', at: S - .2, until: D }, { text: 'Plan ready. Gym at 12:15.', at: D + .55 }],
+    lines: [{ text: 'Planning your day.', at: S - .2, until: D }, { text: 'Plan ready. Push day at 12:15 pm.', at: D + .55 }],
     caps: [
       { at: 0, text: 'At rest: idle, as built.' },
       { at: S, text: 'Fade: her colour drains to 60%, the halo goes.' },
@@ -567,13 +576,13 @@ SCENES.roam = () => {
   const work = { split: S, gather: G, at: spot, small: true };
   return {
     duration: scrollStart + scrollDur + 2.2,
-    page: t => ({ scroll: scroll(t), header: 'Friday morning' }),
+    page: t => ({ scroll: scroll(t) }),
     soul: {
       modes: [{ mode: 'idle', at: -10 }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }],
       centre, work: localWork(work),
       scale: t => 1,
     },
-    lines: [{ text: 'Moving Push day to 18:00.', at: T1 - .1, until: D }, { text: 'Push day moved to 18:00.', at: D + .5, until: T2 }, { text: 'Book the dentist?', at: T2, until: scrollStart + .6 }],
+    lines: [{ text: 'Moving Push day to 6 pm.', at: T1 - .1, until: D }, { text: 'Push day moved to 6 pm.', at: D + .5, until: T2 }, { text: 'Book the dentist?', at: T2, until: scrollStart + .6 }],
     caps: [
       { at: 0, text: 'Roam: she goes to what she’s changing.' },
       { at: T1, text: 'An arc to the free space after the row’s words.' },
@@ -716,10 +725,11 @@ SCENES.reduced = () => {
       centre: () => HOME,
       reduced: t => ramp(t, S, .2) * (1 - ramp(t, G, .2)),
       frozen: true,
+      eyes: t => { let b = 1; for (const k of [1.1, 3.9, 4.15, 7.6]) { const u = (t - k) / .16; if (u > 0 && u < 1) b = Math.min(b, Math.abs(1 - 2 * u)); } return { alpha: 1, blink: b, look: { x: 0, y: 0 } }; },
     },
-    lines: [{ text: 'Planning your day.', at: S - .1, until: G }, { text: 'Plan ready. Gym at 12:15.', at: G + .1 }],
+    lines: [{ text: 'Planning your day.', at: S - .1, until: G }, { text: 'Plan ready. Push day at 12:15 pm.', at: G + .1 }],
     caps: [
-      { at: 0, text: 'Reduce Motion: she holds still.' },
+      { at: 0, text: 'Reduce Motion: no travel. An opacity breath; the blink stays.' },
       { at: S, text: 'Working: a 200 ms crossfade to faded and loosened.' },
       { at: G, text: 'Done: a 200 ms crossfade back. Haptics stay.', haptic: 'success' },
     ],
@@ -767,7 +777,7 @@ function overlay(rects, a) {
 }
 
 const HOME41 = {
-  rows: [['Call the bank', '09:30'], ['Pick up the dry cleaning', ''], ['Book the dentist', ''], ['Water the plants', '18:00']],
+  rows: [['Call the bank', '9:30 am'], ['Pick up the dry cleaning', ''], ['Book the dentist', ''], ['Water the plants', '6 pm']],
   draw() {
     ground(); tabs('Today');
     text('Thursday night', 24, 138, 21, LOOK.ink, 500);
@@ -998,7 +1008,7 @@ SCENES.colour = () => {
     duration: D + 3.4,
     draw: t => { HOME41.draw(); },
     soul: { modes: [{ mode: 'idle', at: -10 }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }], centre: () => HOME, palette: t => repaintState(changes, t, CUT), work, scale: () => 1.35 },
-    lines: [{ text: 'Bench best today.', at: 10.8 - 2, until: 16 }, { text: 'Planning your day.', at: CUT - .1, until: D }, { text: 'Plan ready. Gym at 12:15.', at: D + .5 }],
+    lines: [{ text: 'Bench best today.', at: 10.8 - 2, until: 16 }, { text: 'Planning your day.', at: CUT - .1, until: D }, { text: 'Plan ready. Push day at 12:15 pm.', at: D + .5 }],
     caps: [
       { at: 0, text: 'Living colour: Today, at rest. Shown at 1.35× for the camera.' },
       { at: 1.2, text: 'Morning: Lagoon pools in, cool, warm, bright, 120 ms apart.' },
@@ -1281,7 +1291,7 @@ SCENES.lowpower = () => {
   return {
     duration: D + 3.4,
     soul: { modes, centre: () => HOME, work, lowPower: true, tick: 30, eyes: t => ({ alpha: 1, blink: t > 4.1 && t < 4.26 ? Math.abs(1 - 2 * (t - 4.1) / .16) : 1, look: { x: 0, y: 0 } }) },
-    lines: [{ text: 'Planning your day.', at: S - .2, until: D }, { text: 'Plan ready. Gym at 12:15.', at: D + .55 }],
+    lines: [{ text: 'Planning your day.', at: S - .2, until: D }, { text: 'Plan ready. Push day at 12:15 pm.', at: D + .55 }],
     caps: [
       { at: 0, text: 'Low Power: at rest she ticks at 20 fps. Same breath.' },
       { at: S, text: 'Fade: unchanged, 500 ms.' },
@@ -1292,6 +1302,96 @@ SCENES.lowpower = () => {
       { at: D + 1.9, text: 'Back to rest. No repaint can start in Low Power.' },
     ],
   };
+};
+
+// 15. The glass-tab hold and swipe (Design 42, #342): she is on the chrome layer, so the pages shrink around her
+// and she stays put, breathing. Segment (b): the hold while she is reading the rows; the readers come home inside
+// the shrink, the constellation keeps working at the dock.
+const PAGE_BUFFERS = [0, 1, 2, 3].map(() => document.createElement('canvas'));
+const NAV_H = 104;
+function drawDeck(t, hold, release, slideFrom, slideTo, slide) {
+  // Each page is drawn full size and copied (below its nav row), then the four are drawn back shrunk, side by
+  // side on the darkened ground; the tab row and the lens stay full size on the navigation layer.
+  const shrink = ramp(t, hold, .36, houseCurve) * (1 - ramp(t, release, .48, houseCurve));
+  const sc = lerp(1, .78, shrink);
+  const pos = lerp(slideFrom, slideTo, slide(t)); // in tab units
+  const pages = ['Review', 'Today', 'Training', 'Kitchen'];
+  const headers = ['Four sessions', 'Push day at 12:15 pm', 'Push A today', 'Tacos tonight'];
+  if (shrink <= 0) { drawPage({ header: headers[Math.round(pos)], day: ['This week', 'Friday morning', 'Friday morning', 'Friday morning'][Math.round(pos)] }); return; }
+  pages.forEach((p, i) => {
+    drawPage({ header: headers[i], day: ['This week', 'Friday morning', 'Friday morning', 'Friday morning'][i] });
+    const b = PAGE_BUFFERS[i]; b.width = canvas.width; b.height = canvas.height;
+    const bc = b.getContext('2d'); bc.setTransform(1, 0, 0, 1, 0, 0); bc.drawImage(canvas, 0, 0);
+  });
+  const dark = LOOK.dark ? '#0A0A0C' : mixHex(LOOK.ground, '#000000', .04);
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.fillStyle = dark; ctx.fillRect(0, 0, W, H); ctx.restore();
+  const ph = H - NAV_H, pw = W * sc, gap = 14 * sc, cx = (W - pw) / 2 - pos * (pw + gap), py = NAV_H + (ph - ph * sc) / 2;
+  pages.forEach((p, i) => {
+    const x = cx + i * (pw + gap), near = 1 - Math.min(1, Math.abs(i - pos));
+    ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = lerp(.55, 1, near);
+    ctx.drawImage(PAGE_BUFFERS[i], 0, NAV_H * DPR, canvas.width, ph * DPR, x, py, pw, ph * sc); ctx.restore();
+  });
+  text('7:42', 32, 34, 16, LOOK.ink, 600);
+  const lensUp = ramp(t, hold, .32, x => spring(x * .32, .32, .12)) * (1 - ramp(t, release, .28, houseCurve));
+  let x = 24; const spots = [];
+  pages.forEach(n => { const w = width(n, 16); spots.push({ x, w }); x += w + 22; });
+  const li = clamp(pos, 0, 3), i0 = Math.floor(li), i1 = Math.min(3, i0 + 1), f = li - i0;
+  const lx = lerp(spots[i0].x, spots[i1].x, f), lw = lerp(spots[i0].w, spots[i1].w, f);
+  if (lensUp > .01) {
+    ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = lensUp;
+    ctx.fillStyle = LOOK.dark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.08)'; ctx.strokeStyle = LOOK.dark ? 'rgba(255,255,255,0.22)' : 'rgba(0,0,0,0.12)'; ctx.lineWidth = .8;
+    ctx.beginPath(); ctx.roundRect(lx - 10, 82 - 27, lw + 20, 40, 22); ctx.fill(); ctx.stroke(); ctx.restore();
+  }
+  pages.forEach((n, i) => {
+    const near = 1 - Math.min(1, Math.abs(i - pos)); const s = 1 + .12 * near * lensUp;
+    ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.translate(spots[i].x + spots[i].w / 2, 76); ctx.scale(s, s);
+    ctx.font = font(16, near > .5 ? 600 : 500); ctx.fillStyle = near > .5 ? LOOK.ink : LOOK.inkSoft; ctx.textAlign = 'center'; ctx.fillText(n, 0, 6); ctx.restore();
+  });
+  // The ink line fades while the lens is up.
+  const r = Math.round(pos); stroke(spots[r].x, spots[r].x + spots[r].w, 90, 1.5, LOOK.ink, 1 - lensUp);
+}
+SCENES.lens = () => {
+  const segs = [];
+  segs.push((() => {
+    const hold = .8, slide0 = 1.8, slide1 = 2.6, release = 3.4, D = release + 2.2;
+    const slide = t => ramp(t, slide0, slide1 - slide0, easeInOut);
+    return {
+      duration: D,
+      draw: t => drawDeck(t, hold, release, 1, 2, slide),
+      finger: t => (t > hold - .3 && t < release + .15) ? { x: lerp(118, 190, slide(t)), y: 76, alpha: ramp(t, hold - .3, .2) * (1 - ramp(t, release, .15)), press: t > hold ? .9 : 1 } : null,
+      soul: { modes: [{ mode: 'idle', at: -10 }], centre: () => HOME, eyes: () => ({ alpha: 1, blink: 1, look: { x: 0, y: 0 } }) },
+      lines: [],
+      caps: [
+        { at: 0, text: 'The glass tabs (42): she is on the chrome layer.' },
+        { at: hold, text: 'Hold 260 ms: the lens forms, the pages shrink to 78%.', haptic: 'selection (the lens’s)' },
+        { at: hold + .5, text: 'She stays put, full size, breathing. No glance.' },
+        { at: 2.2, text: 'Slide: a tick per word. Not hers.', haptic: 'selection (the lens’s)' },
+        { at: release, text: 'Let go: Training opens, the lens melts. Nothing of hers moved.' },
+      ],
+    };
+  })());
+  segs.push((() => {
+    const S = 1.0, scan = S + 1.25, hold = scan + 1.4, release = hold + 1.6, G = release + 1.0, D = G + .78;
+    const rows = rowGeom().map(g => ({ y: g.y, x0: 26, x1: Math.max(g.titleEnd, 170) }));
+    const work = { split: S, scan, scanDur: 5.4, pathUntil: hold, gather: G, at: { x: 336, y: 772 }, path: scanPath(rows) };
+    return {
+      duration: D + 2.6,
+      draw: t => drawDeck(t, hold, release, 1, 1, () => 0),
+      finger: t => (t > hold - .3 && t < release + .15) ? { x: 118, y: 76, alpha: ramp(t, hold - .3, .2) * (1 - ramp(t, release, .15)), press: t > hold ? .9 : 1 } : null,
+      soul: { modes: [{ mode: 'idle', at: -10 }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }], centre: () => HOME, work },
+      lines: [{ text: 'Planning your day.', at: S - .2, until: D }, { text: 'Plan ready. Push day at 12:15 pm.', at: D + .55 }],
+      caps: [
+        { at: 0, text: 'The same hold while she is reading the rows.' },
+        { at: scan, text: 'Readers under the rows.' },
+        { at: hold, text: 'Hold: the readers come home inside the shrink (360 ms).', haptic: 'selection (the lens’s)' },
+        { at: hold + .6, text: 'The constellation keeps working at the dock.' },
+        { at: release, text: 'A hold with no slide: the page returns. No haptic.' },
+        { at: D, text: 'Done at the dock, as built.', haptic: 'success' },
+      ],
+    };
+  })());
+  let at = 0; for (const s of segs) { s.start = at; at += s.duration; }
+  return { duration: at, segments: segs };
 };
 
 // The work state when she's out on a row: tighter constellation, no readers.
@@ -1322,7 +1422,9 @@ function renderAt(t) {
   const soul = scene.soul;
   if (soul.frozen) {
     // Reduce Motion: the soul's frame is frozen at idle's still phase (no TimelineView ticking).
-    composeSoul(0, { ...soul, modes: [{ mode: 'idle', at: -10 }], reduced: () => soul.reduced(t) });
+    // Design (11-13 pass): the breath is opacity only, 0.85 to 1 over 3.2 s, and the blink stays.
+    const breath = .85 + .15 * easeInOut(1 - Math.abs(2 * (((t % 3.2) + 3.2) % 3.2) / 3.2 - 1));
+    composeSoul(0, { ...soul, modes: [{ mode: 'idle', at: -10 }], reduced: () => soul.reduced(t), opacityMul: () => breath, eyes: soul.eyes ? () => soul.eyes(t) : undefined });
   } else {
     // `tick` holds the soul at that frame rate (Low Power: 30 fps) while the page stays at 60.
     composeSoul(soul.tick ? Math.floor(t * soul.tick) / soul.tick : t, soul);
