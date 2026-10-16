@@ -343,7 +343,8 @@ private struct TrainingAtRest: View {
             if prefill.isFirstTime {
                 return "First time on \(exercise.name.lowercased()). Start light."
             }
-            // Only when the plan moved the target (progression); the same as last time is silence.
+            // Only from the plan's own target (raised by progression, or a weight set in the plan); opening at last
+            // time's weight is silence.
             guard prefill.source == .target, let weight = prefill.weight, weight > 0 else { return nil }
             return "\(exercise.name) is ready for \(Format.kilograms(weight)) today."
         case .running:
