@@ -115,9 +115,19 @@ public struct WeekFactsBuilder {
                          bestLines: bestLines(for: week.map(\.day), now: now))
     }
 
-    /// A day's own lines, for the tap on a day (Design 46).
-    public func lines(on day: Date, now: Date = .now, isRestDay: Bool = false) -> [DayLine] {
-        DayStory.lines(engine: engine, on: day, calendar: calendar, now: now, isRestDay: isRestDay)
+    /// A day's own lines, for the tap on a day (Design 46). `moment` is any instant in his day (04:00 to 04:00).
+    public func lines(on moment: Date, now: Date = .now, isRestDay: Bool = false) -> [DayLine] {
+        DayStory.lines(engine: engine, on: moment, calendar: calendar, now: now, isRestDay: isRestDay)
+    }
+
+    /// The same for a day key as `WeekFacts.Day.date` carries it (a midnight, which on its own would read as the
+    /// day before under the 04:00 rule).
+    public func lines(onDay key: Date, now: Date = .now, isRestDay: Bool = false) -> [DayLine] {
+        lines(on: Self.noon(of: key, calendar: calendar), now: now, isRestDay: isRestDay)
+    }
+
+    static func noon(of key: Date, calendar: Calendar) -> Date {
+        calendar.date(bySettingHour: 12, minute: 0, second: 0, of: key) ?? key.addingTimeInterval(12 * 3600)
     }
 
     /// The three lines worth telling, over the week's days up to today: a record first, then a first time ("New
@@ -126,7 +136,7 @@ public struct WeekFactsBuilder {
         let today = TesseraDay(calendar: calendar).today(now)
         var ranked: [(rank: Int, line: WeekFacts.Line)] = []
         for day in days where day <= today {
-            for line in lines(on: day, now: now) where line.kind == .finished {
+            for line in lines(onDay: day, now: now) where line.kind == .finished {
                 let rank = line.text.contains(", PR.") ? 0
                     : line.text.hasPrefix("New ") || line.text.hasPrefix("Saved ") ? 1
                     : line.text.contains(" min") ? 2 : 3

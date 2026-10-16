@@ -102,6 +102,7 @@ struct WeekFactsTests {
         #expect(Set(facts.bestLines.map(\.day)).count == 3)
         // A day's own lines come from the Day log.
         #expect(builder.lines(on: Self.at(13), now: now).map(\.text) == ["Added 3 tasks"])
+        #expect(builder.lines(onDay: facts.days[1].date, now: now).map(\.text) == ["Added 3 tasks"])
     }
 
     @Test func nextIsNilOnceThePlanHasEnded() throws {
