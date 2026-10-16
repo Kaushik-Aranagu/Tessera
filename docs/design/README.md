@@ -41,6 +41,8 @@ The source of truth for how v1 looks, moves and feels. iOS build implements from
 | [recovery-line.md](recovery-line.md) | W3 recovery line and the one-time Health line on Now: slot under the action row, exact copy L1 to L3, hold for why, the system sheet. Recording `recordings/recovery-line.mp4` |
 | [rest-dab.md](rest-dab.md) | Review week fix: the rest dab (a dry horizon stroke), four day marks, the session-count headline and its wrap. Mockup `mockups/rest-dab.png` |
 | [themes.md](themes.md) | Five themes (Porcelain default by day, Obsidian by night, Plein, Lacquer, Celadon): tokens, fields, proportions, switching, and the DesignSystem token note for Builder A. Preview `studies/themes.html` |
+| [calm-capture.md](calm-capture.md) | The Ask Tess capture one tier smaller and calmer: 21pt modes, one fast path, no suggestions. Recording `recordings/calm-capture.mp4` |
+| [set-block.md](set-block.md) | The workout set block: weight numeral rolls in place, one-row reps with drama, plates drawn in the freed space, the rest horizon. Recording `recordings/set-block.mp4` |
 | [live-polish.md](live-polish.md) | Live mode polish (v1 slice 13): exact timing, curves and haptics for the stamp, rest on the dial and the PR sweep, plus the haptic map and Reduce Motion |
 | [live-activity.md](live-activity.md) | The rest timer on the Lock Screen and Dynamic Island (Inter Tight, horizon line as timer, tap the set to log it), with its Go state, Undo after Done, and colour moods |
 | [tess-soul.md](tess-soul.md) | Tess's living mark, v2 wet paint: its form, mode parameters, travel, going home, the shader route, and the motifs we reuse. `mockups/SoulLab.dc.html` mixes any state with the unapproved shape and colour ideas |
