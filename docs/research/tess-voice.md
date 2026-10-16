@@ -173,7 +173,7 @@ Building blocks:
 | M16 | "via Claude" receipt | {receipt} · via Claude | Bench 3 x 10 at 80 · via Claude | Ghost row whose `OpRecord.route` is `claude`. The receipt keeps its own wording |
 | M17 | Cloud mark, VoiceOver label | Sent to Claude | Sent to Claude | The mark is on the bloom while a request is out |
 | M17h | Cloud mark, VoiceOver hint | Shows what left the phone. | Shows what left the phone. | Only if the mark is tappable and opens the context pack; no hint otherwise |
-| M18 | Claude timeout | Claude timed out. {fallback} | Claude timed out. Bench 80 × 8? | No answer within 8 s (capture, question) or 20 s (plan, paste). Capture: ghost rows from tool calls that finished stay, the M19 guess covers the rest ("Claude timed out. Call mum?"). Paste: "Claude timed out. Kept 6 rows it read." Plan: "Claude timed out. Here's your usual plan." (12:22 PM PT; was "Here's the rules plan."). Question: "Claude timed out. Ask again?" (synced Oct 15, item 47) |
+| M18 | Claude timeout | Claude didn't answer in time. | Claude didn't answer in time. | No answer within 8 s (capture, question) or 20 s (plan, paste). Per use, the fallback follows it: Capture: ghost rows from tool calls that finished stay, the M19 guess covers the rest ("Claude didn't answer in time. Call mum?"). Paste: "Claude didn't answer in time. Kept 6 rows it read." Plan: "Claude didn't answer in time. Here's your usual plan." (12:22 PM PT; was "Here's the rules plan."). Question: "Claude didn't answer in time. Ask again?" (synced Oct 15, item 47) (Oct 16, item 98: "Claude timed out." became "Claude didn't answer in time." so timeouts read one way, at Test and in use, per Design's C15 and Product 8:46 PM PT) |
 | M19 | Claude unsure (guess) | Didn't catch that. {guess}? | Didn't catch that. Bench 80 x 8? | Claude returns no valid tool call but a partial parse exists |
 | M20 | Claude unsure (choice) | Not sure which {name}. {a} or {b}? | Not sure which bench. Flat or incline? | A name matches 2 objects; no write until he picks |
 | M21 | Question, not a write | {answer} Nothing logged. | 16 sets of bench this week. Nothing logged. | Input read as a question but Claude called a write tool; the write is dropped and the local answer shown |
@@ -204,7 +204,7 @@ Silent cases: a Claude call that succeeds says nothing about Claude beyond M16 a
 | 6. Honest about limits | Pass | Every fallback says Claude did not answer and what shows instead. M15 says how many stayed unclear. Fixed: the brief's "Claude paused until 1 Nov." gained "On-device until then." so the fallback is stated |
 | 7. Silence is fine | Pass | M7 hidden at no Claude use, M11 silent unless the cap was hit, M13 hidden at 0, successful routing never announced |
 | No emoji, no "!", digits, units once | Pass | Money as "$1.20" in the typed format; times not shown |
-| Banned words (should, must, missed, streak, great, awesome, sorry, oops) | Pass | None used. Fixed: draft "Claude was slow" in M18 became "Claude timed out", a fact instead of a judgement |
+| Banned words (should, must, missed, streak, great, awesome, sorry, oops) | Pass | None used. Fixed: draft "Claude was slow" in M18 became a plain fact, now "Claude didn't answer in time." |
 | No italics, no em-dashes | Pass | Middle dot in M16 matches the Day log headline separator |
 | Claim check (eval 10) | Pass with a rule | M14 and M18 paste counts come from ghost rows actually created, never from Claude's text |
 
@@ -276,4 +276,4 @@ Checked Oct 16 against every Oct 15 call in `../product/decisions.md`. Lines cha
 
 Stale status, not lines: `ask-lines.md` Q5 and A7 ("Product to confirm"), `notifications.md` Q1, `fixtures/reminders.md` Q1, `empty-states.md` Q1 to Q4 and Q6, `undo-lines.md` Q1 to Q4, Q6 and Q7, and `claude-first-uses.md` Q1 and Q2 were all answered on Oct 15 (5:14, 6:20, 6:22 and 6:30 PM PT). `lockscreen-lines.md` S1 to S3 already match 5:14 PM PT, and its other strings raise no new conflict.
 
-Also noted, no decision behind it: M27 "Claude didn't answer in time." and M18 "Claude timed out." say the same thing two ways (Design to pick one); M24 "Paste it in Settings." is the one instruction-shaped line in the Claude set; the plan ghost lines in `claude-first-uses.md` use 24-hour times ("17:00", "08:30") while every other line uses am/pm (fold into X6).
+Also noted, no decision behind it: M27 and M18 now both say "Claude didn't answer in time." (settled Oct 16, item 98); M24 "Paste it in Settings." is the one instruction-shaped line in the Claude set; the plan ghost lines in `claude-first-uses.md` use 24-hour times ("17:00", "08:30") while every other line uses am/pm (fold into X6).
