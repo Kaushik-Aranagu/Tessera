@@ -226,3 +226,5 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [fixtures/review-week-story.md](fixtures/review-week-story.md) | Builder B, Core: Review week story over 12 weeks (Product item AD): 25 pass, 20 wrong, 1 miss, 14 not built |
 | [fixtures/kitchen-week-day-one.md](fixtures/kitchen-week-day-one.md) | Core, Builder B, Kitchen lead: Kitchen week day one against Design 67 (Product item AF), 30 steps on 4d67f94: 7 pass, 11 wrong, 6 miss, 6 not built |
 | [fixtures/shutdown-evening.md](fixtures/shutdown-evening.md) | Builders A and B, Core: the Shutdown evening from 8:30 pm to the DST night (Product item AE), 16 cases on 4d67f94: 2 pass, 7 wrong, 1 miss, 6 not built |
+| [fixtures/settings-day-one.md](fixtures/settings-day-one.md) | Builders A and B, Core: the Settings day one (LOOK, CLAUDE, Backups at the foot of Review) (Product item AG), 77 steps on dda42e6: 32 pass, 27 wrong, 8 miss, 10 not built |
+| [fixtures/notes-day-one.md](fixtures/notes-day-one.md) | Builder B, Core: Notes day one after #471 (Product item AH), 43 steps on 4545922: 21 pass, 14 wrong, 4 miss, 4 not built; N29 per the 1:15 pm ruling |
