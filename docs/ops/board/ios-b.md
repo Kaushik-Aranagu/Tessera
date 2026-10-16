@@ -8,7 +8,7 @@
 
 **With Themes, ahead of the audit batches: a calmer Ask Tess capture** (Kaushik, 6:45 PM PT; Design's sheet follows the rest dab). Calmer, smaller, less cluttered type on the capture surface (#107's), neat and peaceful. Folds in audit row 13's "cap her line at 270".
 
-**Then: Settings: Claude screen** (B owns Tess; coordinator 5:50 PM PT). It sits on Core's Keychain store and follows Design's Settings: Claude sheet: paste the key once (it's never shown again, only "Key saved"), Test, the usage line that turns amber at 80%, "Claude paused until 1 Nov." at the $10 cap, and the cloud mark on the bloom, which also shows on every use-1 ghost row that came from Claude (Research #172).
+**Then: Settings: Claude screen** (B owns Tess; coordinator 5:50 PM PT). All 26 states and their lines are in Research's `../research/settings-claude.md` (decisions.md 7:17 PM PT). It sits on Core's Keychain store and follows Design's Settings: Claude sheet: paste the key once (it's never shown again, only "Key saved"), Test, the usage line that turns amber at 80%, "Claude paused until 1 Nov." at the $10 cap, and the cloud mark on the bloom, which also shows on every use-1 ghost row that came from Claude (Research #172).
 
 **From now on, use themed tokens** (Kaushik's themes, 6:40 PM PT): new and touched screens use Builder A's DesignSystem theme tokens, never hard-coded colours, so every theme works.
 
@@ -44,7 +44,7 @@
 - M5 Upkeep screens 5 to 7 in `ship-list-m5-upkeep.md`, then the M5 People screens in `ship-list-m5-people.md`.
 - Entry points from Home into Notes, Review, Kitchen and Lists (Groceries is `GroceriesView()`, #58).
 - Dated list items in Today, and a running list as Now. This wires the UI for Lists slices 5 and 6 once Core lands them.
-- **Lists screens 9 to 12** in `ship-list-lists.md`, in `Features/Lists/`, after the Home slices. Design's sheet: `docs/design/kitchen/lists-9-12.md` (c8a83ff) with `lists-shelf.mp4`; it overrides acceptance row 9.5 with G10, so a running list stays first on the shelf:
+- **Lists screens 9 to 12** in `ship-list-lists.md`, in `Features/Lists/`, after the Home slices. Clearing, resetting, putting away, deleting an item and finishing a run each get a named line and a 10 s UNDO; copy follows Research's `../research/lists-copy.md` ("put away", EMPTY, done on a reusable list asks with a hold to reset). Design's sheet: `docs/design/kitchen/lists-9-12.md` (c8a83ff) with `lists-shelf.mp4`; it overrides acceptance row 9.5 with G10, so a running list stays first on the shelf:
   - 9, the shelf, after Core's Lists slices 1 and 3.
   - 10, a list page, after Core's Lists slices 1 and 3.
   - 11, an item opened, after Core's Lists slice 2.
