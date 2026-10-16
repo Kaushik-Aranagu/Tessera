@@ -24,8 +24,9 @@ public struct TessInbox {
     @discardableResult
     func add(_ phrase: String, at date: Date) -> ObjectRecord? {
         let text = phrase.trimmingCharacters(in: .whitespacesAndNewlines)
-        // Never a key, never the same phrase twice.
+        // Never a key, never money (it would go to Claude later; MU2), never the same phrase twice.
         guard let waitingClass = classes[.tessWaiting], !text.isEmpty, !looksLikeClaudeKey(text),
+              !TessMoneyScreen.isMoneyShaped(text),
               !waiting().contains(where: { $0.title == text }) else { return nil }
         let item = store.create(waitingClass, title: text)
         item.createdAt = date
