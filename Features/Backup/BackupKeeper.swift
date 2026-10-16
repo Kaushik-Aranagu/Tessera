@@ -74,7 +74,11 @@ enum BackupKeeper {
 
     /// A fresh copy to hand to the share/export sheet.
     static func copyForSaving(_ context: TesseraContext) throws -> URL {
-        let day = AppClock.now.formatted(.iso8601.year().month().day())
+        // Local date in the name, not UTC (a copy saved at 21:00 is today's).
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        let day = formatter.string(from: AppClock.now)
         let url = URL.temporaryDirectory.appendingPathComponent("Tessera-\(day).\(TesseraBackup.fileExtension)")
         try TesseraBackup.write(from: context, to: url, now: AppClock.now)
         return url

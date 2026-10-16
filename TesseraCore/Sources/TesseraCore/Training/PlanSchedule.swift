@@ -34,7 +34,9 @@ public extension TrainingLedger {
 
     /// The month heatmap: one cell per day, filled by that day's volume relative to a typical session.
     func month(containing date: Date, calendar: Calendar = .current) -> [DayVolume] {
-        guard let interval = calendar.dateInterval(of: .month, for: date) else { return [] }
+        let tesseraDay = TesseraDay(calendar: calendar)
+        // The month of his day (00:30 on the 1st is still last month); sessions land on the day they belong to.
+        guard let interval = calendar.dateInterval(of: .month, for: tesseraDay.day(of: date)) else { return [] }
         let typicalWindow = interval.end.addingTimeInterval(-90 * 86400)
         // Volume per workout, from the training index (warm-ups already left out).
         var workouts: [UUID: (date: Date, volume: Double)] = [:]
@@ -44,8 +46,8 @@ public extension TrainingLedger {
         let recent = workouts.values.map(\.volume).filter { $0 > 0 }.sorted()
         let typical = recent.isEmpty ? 0 : recent[recent.count / 2]
         var byDay: [Date: (sessions: Int, volume: Double)] = [:]
-        for workout in workouts.values where interval.contains(workout.date) {
-            let day = calendar.startOfDay(for: workout.date)
+        for workout in workouts.values where interval.contains(tesseraDay.day(of: workout.date)) {
+            let day = tesseraDay.day(of: workout.date)
             byDay[day, default: (0, 0)].sessions += 1
             byDay[day, default: (0, 0)].volume += workout.volume
         }

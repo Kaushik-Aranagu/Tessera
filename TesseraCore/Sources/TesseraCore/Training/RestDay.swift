@@ -43,7 +43,7 @@ extension TrainingLedger {
             guard let workout = process.subject, workout.classDef?.id == workoutClass.id,
                   store.value("endedAt", of: workout) == nil else { return false }
             return store.value("startedAt", of: workout)?.dateValue
-                .map { calendar.isDate($0, inSameDayAs: now) } ?? false
+                .map { TesseraDay(calendar: calendar).isSameDay($0, now) } ?? false
         }
     }
 }

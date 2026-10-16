@@ -35,8 +35,9 @@ public struct TaskList {
     /// done today. Ordered by time, with undated ones last.
     public func today(_ now: Date = .now, calendar: Calendar = .current) -> [Item] {
         guard let taskClass = classes[.task] else { return [] }
-        let start = calendar.startOfDay(for: now)
-        guard let end = calendar.date(byAdding: .day, value: 1, to: start) else { return [] }
+        // His day: 04:00 to 04:00 (TesseraDay), so a 23:00 task is still today at 01:00.
+        let day = TesseraDay(calendar: calendar)
+        let start = day.start(of: now), end = day.end(of: now)
         let items = store.objects(of: taskClass).compactMap { task -> Item? in
             let item = item(task, today: start, calendar: calendar)
             if item.isDone {
@@ -61,7 +62,7 @@ public struct TaskList {
 
     /// Undone tasks planned after today, soonest first.
     public func upcoming(_ now: Date = .now, calendar: Calendar = .current) -> [Item] {
-        guard let end = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)) else { return [] }
+        let end = TesseraDay(calendar: calendar).end(of: now)
         return all().filter { !$0.isDone && ($0.when.map { $0 >= end } ?? false) }
             .sorted { ($0.when ?? .distantFuture) < ($1.when ?? .distantFuture) }
     }
@@ -93,14 +94,18 @@ public struct MoveTask: EngineAction {
             .init("task", .object, "The task"),
             .init("to", .date, "When; defaults to the same time tomorrow", required: false),
             .init("later", .boolean, "True to move it to Later, with no date", required: false),
+            .init("time", .date, "Now; defaults to the current time", required: false),
         ]
     )
 
     public var task: UUID
     public var to: Date?
     public var later: Bool?
+    /// Now; the app passes its clock.
+    public var time: Date?
 
-    public init(task: UUID, to: Date? = nil, later: Bool? = nil) {
+    public init(task: UUID, to: Date? = nil, later: Bool? = nil, time: Date? = nil) {
+        self.time = time
         self.task = task
         self.to = to
         self.later = later
@@ -114,9 +119,13 @@ public struct MoveTask: EngineAction {
             try transaction.set("due", to: nil, on: task)
             return
         }
+        // "Not now": the same wall time on his next day. At 01:00 Saturday a Friday 23:00 task moves to Saturday 23:00
+        // (his day still being Friday), not Sunday 00:00.
+        let now = time ?? .now
+        let day = TesseraDay()
         let current = store.value("startsAt", of: task)?.dateValue
-        let base = max(current ?? .now, Calendar.current.startOfDay(for: .now))
-        let target = to ?? Calendar.current.date(byAdding: .day, value: 1, to: base) ?? base.addingTimeInterval(86400)
+        let base = max(current ?? now, day.start(of: now))
+        let target = to ?? day.adding(days: 1, to: base)
         try transaction.set("startsAt", to: .date(target), on: task)
         if let due = store.value("due", of: task)?.dateValue, due < target {
             try transaction.set("due", to: .date(target), on: task)

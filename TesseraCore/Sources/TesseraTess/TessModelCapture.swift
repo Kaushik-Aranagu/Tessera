@@ -58,7 +58,12 @@ public final class TessModelCapture: TessModelCapturing {
         formatter.timeZone = context.calendar.timeZone
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "EEEE d MMMM yyyy, HH:mm"
-        return "today is \(formatter.string(from: context.now))"
+        let line = "today is \(formatter.string(from: context.now))"
+        // After midnight his day hasn't changed yet: say so, or the model reads "tomorrow" a day late.
+        guard context.calendar.component(.hour, from: context.now) < TesseraDay.startHour else { return line }
+        formatter.dateFormat = "EEEE d MMMM"
+        let day = TesseraDay(calendar: context.calendar).today(context.now)
+        return line + "; his day runs to 04:00, so it is still \(formatter.string(from: day))"
     }
 
     static func workout(_ context: TessContext, engine: ActionEngine) -> String {

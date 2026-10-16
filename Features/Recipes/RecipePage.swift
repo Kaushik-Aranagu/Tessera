@@ -383,8 +383,9 @@ enum RecipeCopy {
     }
 
     static func relative(_ date: Date, now: Date) -> String {
-        let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: date),
-                                                   to: Calendar.current.startOfDay(for: now)).day ?? 0
+        let tesseraDay = TesseraDay()
+        let days = Calendar.current.dateComponents([.day], from: tesseraDay.day(of: date),
+                                                   to: tesseraDay.today(now)).day ?? 0
         return switch days {
         case ..<1: "today"
         case 1: "yesterday"

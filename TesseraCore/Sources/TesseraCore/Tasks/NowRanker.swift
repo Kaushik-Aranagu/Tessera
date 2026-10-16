@@ -28,6 +28,7 @@ public enum DayPart: String, Sendable {
 
     public init(hour: Int) {
         self = switch hour {
+        case ..<TesseraDay.startHour: .late
         case ..<7: .early
         case 7 ..< 12: .morning
         case 12 ..< 14: .midday
@@ -148,8 +149,8 @@ public extension NowPicker {
     /// Whole days since the last thing he did by hand, for `RankContext.daysAway`.
     func daysAway(at now: Date, calendar: Calendar = .current) -> Int {
         guard let last = lastAction() else { return 0 }
-        return calendar.dateComponents([.day], from: calendar.startOfDay(for: last.at),
-                                       to: calendar.startOfDay(for: now)).day ?? 0
+        let day = TesseraDay(calendar: calendar)
+        return calendar.dateComponents([.day], from: day.day(of: last.at), to: day.today(now)).day ?? 0
     }
 
     /// Which area an action belongs to: "task" is checked first, so setTaskDone is a task, not training (QA N1).
@@ -215,7 +216,7 @@ private extension NowPicker {
             let minutes = item.minutes ?? TaskList.defaultTaskMinutes
             if let startsAt {
                 // A timed task that's over leaves Now (as before); one still going stays.
-                guard calendar.isDate(startsAt, inSameDayAs: now),
+                guard TesseraDay(calendar: calendar).isSameDay(startsAt, now),
                       startsAt.addingTimeInterval((item.minutes ?? 0) * 60) >= now else { continue }
             }
             let due = store.value("due", of: item.task)?.dateValue
@@ -224,7 +225,7 @@ private extension NowPicker {
                               endsAt: startsAt.map { $0.addingTimeInterval(minutes * 60) }, nextStep: nil),
                 area: .tasks, start: startsAt,
                 soonUntil: startsAt.map { $0.addingTimeInterval((item.minutes ?? 0) * 60) },
-                dueToday: due.map { calendar.isDate($0, inSameDayAs: now) } ?? false,
+                dueToday: due.map { TesseraDay(calendar: calendar).isSameDay($0, now) } ?? false,
                 carriedFrom: item.isCarriedOver ? item.when : nil,
                 minutes: minutes, lastTouched: item.task.updatedAt, isAsk: false, lead: nil, part: nil
             ))
@@ -234,7 +235,7 @@ private extension NowPicker {
                 // Not started (a started one is running or parked in the ledger), not finished, scheduled today.
                 guard store.value("endedAt", of: workout) == nil, store.value("startedAt", of: workout) == nil,
                       let scheduled = store.value("scheduledFor", of: workout)?.dateValue,
-                      calendar.isDate(scheduled, inSameDayAs: now) else { continue }
+                      TesseraDay(calendar: calendar).isSameDay(scheduled, now) else { continue }
                 result.append(Candidate(
                     item: NowItem(id: workout.id, kind: .workout, object: workout,
                                   title: store.displayTitle(of: workout), startsAt: scheduled, endsAt: nil,

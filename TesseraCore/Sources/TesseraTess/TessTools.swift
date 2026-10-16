@@ -241,15 +241,15 @@ public enum TessTools {
             }) else { throw TessToolError("nothing called \(from)") }
             let objects = call.store.objects(of: classDef)
             let calendar = Calendar.current
-            let span: Calendar.Component? = switch args["during"] as? String {
-            case "today": .day
-            case "this week": .weekOfYear
-            case "this month": .month
+            let day = TesseraDay(calendar: calendar)
+            // His day and week (04:00 edges): "coffees today" at 01:00 counts from 04:00 yesterday.
+            let window: DateInterval? = switch args["during"] as? String {
+            case "today": day.interval(of: call.now)
+            case "this week": day.week(containing: call.now)
+            case "this month": calendar.dateInterval(of: .month, for: day.today(call.now))
             default: nil
             }
-            let count = span.map { span in
-                objects.count { calendar.isDate($0.createdAt, equalTo: call.now, toGranularity: span) }
-            } ?? objects.count
+            let count = window.map { window in objects.count { window.contains($0.createdAt) } } ?? objects.count
             throw TessToolAnswer(line: "\(count) \(count == 1 ? classDef.name.lowercased() : from.lowercased()).")
         }
     }

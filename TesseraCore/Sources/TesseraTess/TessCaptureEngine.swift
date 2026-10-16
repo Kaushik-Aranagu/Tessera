@@ -80,7 +80,11 @@ public final class TessCaptureEngine: TessCapturing {
                 if case let .sets(parts) = parse {
                     return performSets(parts, context: context)
                 }
-                let (record, line) = try perform(parse, context: context)
+                var (record, line) = try perform(parse, context: context)
+                // No notifications yet: a reminder is honest about where it will be (late-night #2).
+                if case .task(_, .some) = parse, phrase.lowercased().hasPrefix("remind") {
+                    line += " On Now then."
+                }
                 return TessCapture(records: [record], line: line, source: .grammar)
             } catch {
                 return TessCapture(records: [], line: Self.line(for: error), source: .grammar)
@@ -202,14 +206,16 @@ public final class TessCaptureEngine: TessCapturing {
         name == "Bench Press" ? "Bench" : name
     }
 
+    /// "today 3 pm", "tomorrow 9 am", "Saturday 3 pm". By his day (04:00 to 04:00); after midnight and before 04:00
+    /// "today" and "tomorrow" are ambiguous, so the weekday is named (late-night #9).
     static func when(_ date: Date, context: TessContext) -> String {
         let calendar = context.calendar
+        let tessera = TesseraDay(calendar: calendar)
+        let small = calendar.component(.hour, from: context.now) < TesseraDay.startHour
         let day: String
-        if calendar.isDate(date, inSameDayAs: context.now) {
+        if !small, tessera.isSameDay(date, context.now) {
             day = "today"
-        } else if let tomorrow = calendar.date(byAdding: .day, value: 1, to: context.now),
-                  calendar.isDate(date, inSameDayAs: tomorrow)
-        {
+        } else if !small, tessera.day(of: date) == tessera.day(1, after: context.now) {
             day = "tomorrow"
         } else {
             let formatter = DateFormatter()

@@ -29,18 +29,14 @@ public extension TrainingLedger {
     func week(containing date: Date, plan: ObjectRecord?, now: Date = .now, sessionsPerWeek: Int? = nil,
               calendar: Calendar = .current) -> [WeekDay]
     {
-        guard let interval = calendar.dateInterval(of: .weekOfYear, for: date) else { return [] }
+        // His days (04:00 to 04:00): at 01:00 Saturday it is still Friday, and Friday's late session counts there.
+        let tesseraDay = TesseraDay(calendar: calendar)
+        let dates = tesseraDay.weekDays(containing: date)
+        guard !dates.isEmpty else { return [] }
         let cycle = plan.map { store.linkedObjects("routines", of: $0) } ?? []
         let next = plan.flatMap(nextRoutine(in:))
         var cursor = next.flatMap { routine in cycle.firstIndex { $0.id == routine.id } } ?? 0
-        let today = calendar.startOfDay(for: now)
-        var dates: [Date] = []
-        var day = interval.start
-        while day < interval.end {
-            dates.append(day)
-            guard let following = calendar.date(byAdding: .day, value: 1, to: day) else { break }
-            day = following
-        }
+        let today = tesseraDay.today(now)
         let done = dates.map { finishedWorkouts(on: $0, calendar: calendar) }
         let ahead = dates.indices.filter { done[$0].isEmpty && dates[$0] >= today }
         // Zero or less means no rhythm (QA E4): every day ahead gets the next routine, as without a count.

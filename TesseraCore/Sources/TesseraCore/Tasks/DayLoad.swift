@@ -40,7 +40,7 @@ public extension TaskList {
             store.objects(of: workoutClass).filter { workout in
                 store.value("endedAt", of: workout) == nil
                     && (store.value("scheduledFor", of: workout)?.dateValue)
-                    .map { calendar.isDate($0, inSameDayAs: now) } == true
+                    .map { TesseraDay(calendar: calendar).isSameDay($0, now) } == true
             }.count
         } ?? 0
         let planned = taskMinutes + Double(workouts) * Self.workoutMinutes

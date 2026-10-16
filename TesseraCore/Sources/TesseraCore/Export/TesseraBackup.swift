@@ -196,8 +196,11 @@ public enum TesseraBackup {
         let hasStore = manager.fileExists(atPath: storeURL.path)
         if hasStore {
             // What's here now is kept first as a stamped backup he can restore again: the undo for a restore.
-            let stamp = now.formatted(.iso8601.year().month().day().time(includingFractionalSeconds: false)
-                .timeSeparator(.omitted).dateTimeSeparator(.standard))
+            // Local time in the name (UTC read a day ahead every evening).
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.dateFormat = "yyyy-MM-dd'T'HHmmss"
+            let stamp = formatter.string(from: now)
             let kept = keptFolder.appendingPathComponent("Before-restore-\(stamp).\(fileExtension)")
             do {
                 try manager.createDirectory(at: keptFolder, withIntermediateDirectories: true)
