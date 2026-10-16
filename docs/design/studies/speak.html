@@ -39,14 +39,23 @@ body.states{width:1300px}
 <script>
 const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
 const STATES=Q.includes('states');
+// ?right records the workout phone (the recorder's frame holds one phone)
+if(Q.includes('right'))document.addEventListener('DOMContentLoaded',()=>{document.getElementById('pair').style.left='-400px'});
 const soulHTML=id=>`<div class="soul" id="${id}"><i style="left:0;top:4px;background:radial-gradient(closest-side,#2450D8,rgba(36,80,216,.2))"></i><i style="left:22px;top:2px;background:radial-gradient(closest-side,#E2432A,rgba(226,67,42,.2))"></i><i style="left:12px;top:20px;background:radial-gradient(closest-side,#F0A500,rgba(240,165,0,.2))"></i></div>`;
 const line=(w,c,o=1)=>`<svg width="${w+6}" height="12" style="overflow:visible"><path d="M0 6 Q ${w*.42} 3.5 ${w} 5.6 Q ${w*.58} 8.5 0 6 Z" fill="${c}" opacity="${o}"/></svg>`;
 function home(){return `<div class="page" id="hp">
- <div class="abs lbl s2" style="left:22px;top:58px">THURSDAY 15 OCT</div>
- <div class="abs" style="left:22px;top:118px;font-size:56px;font-weight:500;letter-spacing:-.035em;line-height:60px;width:340px">Two things left today</div>
- <div class="abs lbl s2" style="left:22px;top:318px">NEXT</div>
- <div class="abs b" style="left:22px;top:356px">Stretch &amp; mobility</div><div class="abs lbl s2" style="right:22px;top:362px">7:15 PM</div>
- <div class="abs b" style="left:22px;top:404px">Read</div><div class="abs lbl s2" style="right:22px;top:410px">9:00 PM</div></div>
+ <div class="abs" style="left:22px;right:22px;top:78px;display:flex;justify-content:space-between;font-weight:700;font-size:16px;letter-spacing:.06em"><span style="color:rgba(23,20,31,.38)">REVIEW</span><span>TODAY</span><span style="color:rgba(23,20,31,.38)">TRAINING</span><span style="color:rgba(23,20,31,.38)">KITCHEN</span></div>
+ <div class="abs" style="left:0;right:0;top:104px;display:flex;justify-content:center"><div style="width:44px;height:2px;background:rgb(var(--ink));margin-left:-34px"></div></div>
+ <div class="abs b" style="left:22px;top:138px">Thursday evening</div>
+ <svg class="abs" style="left:0;top:182px;overflow:visible" width="390" height="20"><defs><linearGradient id="ds" x1="30" x2="262" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#7FB7D6"/><stop offset=".55" stop-color="#7CC3B0"/><stop offset="1" stop-color="#E9A23B"/></linearGradient></defs><path d="M30 9 L262 9" stroke="url(#ds)" stroke-width="6" stroke-linecap="round" opacity=".6"/><path d="M270 9 L358 9" stroke="rgba(23,20,31,.22)" stroke-width="1.5" stroke-dasharray="4 5"/></svg>
+ <div class="abs b" style="left:22px;top:246px;color:#6A4C9C">today</div>
+ <div class="abs" style="left:22px;top:280px;font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:58px">Rest day</div>
+ <div class="abs b s2" style="left:22px;top:342px">Push A is a tap away.</div>
+ <div class="abs lbl" style="left:22px;top:384px">START PUSH A</div>
+ <div class="abs" style="left:22px;top:448px;font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px">Next</div>
+ <div class="abs b" style="left:22px;top:500px">Push Day A</div><div class="abs b s2" style="right:22px;top:500px;font-size:18px;font-weight:600;letter-spacing:.04em">19:00</div>
+ <div class="abs b" style="left:22px;top:546px">Stretch and mobility</div><div class="abs b s2" style="right:22px;top:546px;font-size:18px;font-weight:600;letter-spacing:.04em">20:30</div>
+ <div class="abs b" style="left:22px;top:592px;width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Read · Designing Data-Intensive Applications</div><div class="abs b s2" style="right:22px;top:592px;font-size:18px;font-weight:600;letter-spacing:.04em">21:10</div></div>
  <div class="wash" id="hw"></div>
  <div class="abs b tess" id="hq" style="left:22px;top:470px;opacity:0;transition:opacity .3s">What's next?</div>
  <div class="mode" id="m0" style="top:594px">Speak</div><div class="mode" id="m1" style="top:640px">Write</div><div class="mode" id="m2" style="top:686px">Show</div>
@@ -56,20 +65,26 @@ function home(){return `<div class="page" id="hp">
  <div class="dry" id="hdry" style="left:20px;top:562px;opacity:0"></div>
  <div class="abs b tess" id="said" style="right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);opacity:0;transition:opacity .4s">Added oat milk and eggs to Groceries. <span style="display:block;margin-top:4px;color:#C23A22;font-weight:700;font-size:16px;line-height:20px;letter-spacing:.08em">UNDO</span></div>
  ${soulHTML('hs')}`}
-function work(){return `<div class="abs lbl s2" style="left:22px;top:58px">PUSH DAY A · 2 OF 5</div>
- <div class="abs" style="left:22px;top:110px;font-size:34px;font-weight:500;letter-spacing:-.03em">Bench press</div>
- <div class="abs lbl s2" style="left:22px;top:160px">SET 3 OF 4</div>
- <div class="abs num" id="wn" style="left:18px;top:210px">80<span style="font-size:21px;font-weight:400;margin:0 14px 0 6px">kg</span>× <span id="wr">8</span></div>
- <div class="abs b s2" style="left:22px;top:310px">last time 80 × 8</div>
- <div class="abs" id="strokes" style="left:22px;top:380px;display:flex;gap:10px"></div>
+function work(){return `<div class="abs b s2" style="left:22px;top:58px">Push A, 0:24</div><div class="abs lbl s2" style="right:22px;top:62px">1 / 5</div>
+ <div class="abs" style="left:22px;top:100px;font-size:34px;font-weight:500;letter-spacing:-.03em;white-space:nowrap">Bench Press</div><div class="abs" style="left:236px;top:100px;font-size:34px;font-weight:500;letter-spacing:-.03em;white-space:nowrap;color:rgba(23,20,31,.38)">Overhead</div>
+ <div class="abs" id="strokes" style="left:22px;top:146px;display:flex;gap:10px"></div>
+ <div class="abs s2" style="left:22px;top:184px;font-size:16px">set 3 of 4</div>
+ <div class="abs num" id="wn" style="left:18px;top:212px">80<span style="font-size:21px;font-weight:400;margin:0 0 0 6px">kg</span><span style="position:absolute;left:250px;top:14px;font-size:34px;font-weight:400;opacity:.6">×</span><span id="wr" style="position:absolute;left:290px;top:0;font-size:56px;line-height:80px">8</span></div>
+ <div class="abs b s2" style="left:290px;top:300px">last 8</div>
+ <div class="abs" style="left:22px;top:360px;width:120px;height:150px">
+  <div class="abs" style="left:0;top:66px;width:120px;height:14px;background:rgba(23,20,31,.35);border-radius:2px"></div>
+  <div class="abs" style="left:24px;top:0;width:16px;height:150px;background:#C8392B;border-radius:2px"></div>
+  <div class="abs" style="left:42px;top:38px;width:12px;height:74px;background:#E8E3D6;border-radius:2px;box-shadow:inset 0 0 0 1px rgba(23,20,31,.12)"></div></div>
+ <div class="abs lbl s2" style="left:22px;top:524px">25 + 5 EACH SIDE</div>
+ <div class="abs" style="left:22px;top:580px;font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px">Log set<svg style="position:absolute;left:-2px;top:41px;overflow:visible" width="118" height="12"><path d="M0 6 Q 49.6 3.5 118 5.6 Q 68.4 8.5 0 6 Z" fill="rgba(204,63,104,.75)"/></svg></div><div class="abs lbl s2" style="left:156px;top:592px">HOLD · 80 × 8</div>
  <div class="abs lbl s2" id="hint" style="right:86px;top:798px">HOLD ME TO TELL ME A SET</div>
  <div class="abs b" id="wtx" style="right:22px;top:740px;text-align:right;color:rgba(var(--ink),.66)"></div>
  <div class="abs b tess" id="wsaid" style="right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);opacity:0;transition:opacity .4s">Set 3 logged. 80 × 7. <span style="display:block;margin-top:4px;color:#C23A22;font-weight:700;font-size:16px;line-height:20px;letter-spacing:.08em">UNDO</span></div>
  ${soulHTML('ws')}`}
-const setStroke=(c,o)=>`<svg width="64" height="20"><path d="M4 12 C 18 5, 40 15, 60 7" stroke="${c}" stroke-width="5" fill="none" stroke-linecap="round" opacity="${o}"/></svg>`;
+const setStroke=(c,o)=>`<svg width="48" height="14"><path d="M4 8 C 14 5, 30 10, 44 6" stroke="${c}" stroke-width="3" fill="none" stroke-linecap="round" opacity="${o}"/></svg>`;
 function state(title,speakStyle,lineHTML,extra=''){return `<div class="col"><div class="cap">${title}</div><div class="ph">
  <div class="abs" style="left:0;right:0;bottom:0;height:380px;background:rgba(255,255,255,.96)"></div>
- <div class="abs" style="left:22px;top:118px;font-size:56px;font-weight:500;letter-spacing:-.035em;line-height:60px;width:340px;opacity:.12;filter:blur(1.5px)">Two things left today</div>
+ <div class="abs" style="left:22px;top:280px;font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:58px;width:340px;opacity:.12;filter:blur(1.5px)">Rest day</div>
  <div class="abs b" style="left:22px;top:470px;width:346px">${lineHTML}</div>
  <div class="mode" style="top:594px;opacity:1;${speakStyle}">Speak${extra}</div><div class="mode" style="top:640px;opacity:1">Write</div><div class="mode" style="top:686px;opacity:1">Show</div>
  <div style="position:absolute;left:317px;top:759px">${soulHTML('x').replace('class="soul"','class="soul" style="position:relative"')}</div></div></div>`}

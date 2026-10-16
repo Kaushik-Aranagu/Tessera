@@ -2,7 +2,7 @@
 
 For Builder B's Speak PR. It's drawn to `no-buttons.md`, `calm-capture.md`, `voice-gym.md`, `no-dots.md`, `ink-line.md` and `themes.md` (one base). It answers Research's `speak-first-use.md` (item 30, merged as #243), which takes its lines from here. **Research's states, pass rules and exact lines stand** except where this sheet changes them. Research's 12 open disagreements are settled in "Research's walk, settled" at the end (16 Oct).
 
-Recording: `recordings/speak.mp4` (source `studies/speak.html`).
+Recording: `recordings/speak.mp4` (source `studies/speak.html`). Redrawn 16 Oct (item 30) on the build's frames: Home is the build's Today (tabs, day label, day stroke, "today", Rest day, Next), the workout is the build's set screen (Push A, 0:24, Bench Press, the numeral row, plates, Log set), the soul sits at the build's centre, and Tess's line trails beside it with UNDO under it (`day-seams.md` S1, S2, S5, S6). The listening and tidying motion is unchanged. The recording plays the Home half, then the workout half.
 - On the left: Speak from the capture surface on Home, showing listening, the words as heard, tidying, and the voice ghost drying.
 - On the right: holding the soul in a live workout, where "eighty for seven" lands as the set.
 - State still: `mockups/speak-states.png` (preparing, mic off, silence).

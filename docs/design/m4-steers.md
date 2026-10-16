@@ -15,6 +15,22 @@ Rewritten 16 Oct to Research 95 (`research/plan-my-day-flow.md`, #240) and Produ
 
 **Pulling it early.** From 07:00 he can pull the plan before the offer. The Now line reads "this morning · **plan**", where **plan** is a value word (Body 21/600 ink), and saying or writing "plan my day" does the same. A pull while a workout runs gets one Tess line, "Push A is under way, until about 8:05 am.", and leaves Now alone. After he skips the whole plan, only asking brings it back that day.
 
+**On the build's Home frame (item 30, Product's density call 16 Oct 10:25 PM).** This block wins over the y values implied below, and the recording `recordings/plan-my-day.mp4` and board `mockups/plan-my-day.png` are redrawn to it.
+- **Home's top stays fixed:** the tabs, the day label ("Friday morning") and the day stroke, with meetings as ink segments at 55%. The plan lives under it, from the context line at 246.
+| y | Element |
+|---|---|
+| 246 | "this morning" in `context` |
+| 280 | The hero in Title 44, up to 2 lines: "Three meetings, four hours free" |
+| 392 | "slept 6h40" in `inkSecondary` on the left. Energy on the right on the same line: "Energy", the drum's numeral at Title 34 Light, and its word as a label (OKAY). It's the same `RepsDrum`, one row |
+| 448 | START WITH in labels. **VIA CLAUDE** sits on the same line, right-aligned, in `ink` (it taps to the receipt) |
+| 474 | The first item at Title 34 in cobalt on the ink line |
+| 530 | Claude's sentence in `tess`, at most 2 lines: "Landlord reply first, then physio, then the report." |
+| under it, once | **The first time a plan comes via Claude**, one line in `inkSecondary`: "Sends your task and event titles, never notes or places." (Product, 10:29 PM). It never shows again after that plan |
+| 600 → 720 | The plan's rows, 46pt apart, title and time only |
+- **At most 5 rows on Home, and only rows that end above y 720,** so no row ever sits under Tess's band (736 to 820). The rest wait one pull away, counted by a label word in the next slot: "2 MORE". With Claude's sentence that's 3 rows, and on the first time it's 1 row and "2 MORE".
+- **Pull up** on the plan: the column scrolls up under the fixed top until START WITH sits at about 242. Each row then shows Claude's line under it ("20 min, while the morning is quiet.") at 72pt apart. Let go and it settles back on the settle spring. **Claude's per-row lines live only in the pulled view;** on Home a row is its title and time.
+- Keeping a row, the hold on START WITH and the promotion are as below. Tess's lines sit beside the soul with UNDO under them.
+
 **The page (Porcelain, Thu 15 Oct fixture d01).**
 - **Now line:** "this morning".
 - **Hero**, the day in one sentence, Title 44/500. With the calendar read, it may count meetings and free time: "Three meetings, four hours free". **Without the calendar, it counts tasks and the workout only:** "Three tasks, Push A at 6 pm". It never says free, clear or open then.

@@ -2,7 +2,7 @@
 
 This sheet is for Builder B. It gathers what is now spread over Review (LOOK, Claude, Backups) into one Settings page, written as sentences with value words. Fields follow Research's `docs/research/settings-object.md` (on master); the Claude section stays as `claude-settings.md` draws it, with the changes below.
 - Board: `mockups/settings-place.png` (source `studies/settings-place.html`): Review's foot, then Settings in Porcelain and Obsidian.
-- Recording: `recordings/settings-place.mp4`: tap SETTINGS, Settings grows out of the word, "Misses go to Claude" flips to no and Tess answers inline under it, then back.
+- Recording: `recordings/settings-place.mp4`: tap SETTINGS, Settings grows out of the word, "Tess asks Claude" flips to no and Tess answers inline under it, then back.
 
 ## The way in
 - Review keeps **one** quiet word at its foot: **SETTINGS**, a Label 16/700 word in `inkSecondary`, under the link lines (y 744 in `review-week-line.md`). LOOK, Claude **and the Backups word** leave Review. [P1]
@@ -32,9 +32,10 @@ Research checked this sheet line by line (`research/settings-place-check.md`, it
   - With no key but a ledger that has rows: a **RECEIPTS** label word under the no-key line.
 - **Receipt rows:** today's rows read "6:12 pm · Plan my day · Sonnet · 1.2¢". Older rows read "Thu Oct 15, 6:12 pm · …", with the day and month capitalised and "pm" in lower case. [C5]
 - **"Add a Claude key"** is an `ink` 600 value word, not cobalt. Cobalt is Tess speaking, and an offer at rest isn't speech. [C27, N3]
+- **One switch, "Tess asks Claude"** (Product, 16 Oct 10:29 PM). The sentence reads "Tess asks Claude: **yes**." with the value word cycling yes ↔ no. It covers both what used to be "Misses go to Claude" and Plan my day via Claude; there's no second switch. Tess answers inline under it: "Tess stays on this phone." for no, and "Tess asks Claude when she's unsure." for yes (Design's default; Research to check). It stays on `missesGoToClaude` (the settings field), so nothing is migrated.
 - **Lines confirmed:**
   - "Checking it with Claude." [C12]
-  - "Misses stay on this phone." / "Misses go to Claude." [C8]
+  - ~~"Misses stay on this phone." / "Misses go to Claude."~~ [C8] Replaced by the one switch below.
   - The writing-line placeholders "Paste a key from the Claude Console" and "Paste the new key". [C26]
 - **New lines:**
   - S27, the Keychain write fails: "I couldn't save that key. Try again?" [C21]
