@@ -7,6 +7,9 @@ import TesseraTess
 // so everything Siri, Shortcuts or the Action button does lands in the op log and can be undone.
 
 public struct LogSetIntent: AppIntent {
+    /// Siri writes need Face ID (Product P14, decisions 12:26 PM PT Oct 16).
+    public static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
+
     public static let title: LocalizedStringResource = "Log a Set"
     public static let description = IntentDescription("Logs sets of an exercise into today's workout.")
 
@@ -34,6 +37,9 @@ public struct LogSetIntent: AppIntent {
 
 /// Logs the next set of the running workout exactly as prefilled (the Lock Screen's Done).
 public struct LogNextSetIntent: AppIntent {
+    /// Siri writes need Face ID (Product P14, decisions 12:26 PM PT Oct 16).
+    public static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
+
     public static let title: LocalizedStringResource = "Log Next Set"
     public static let description = IntentDescription("Logs the next set of the workout in progress, as prefilled.")
 
@@ -59,6 +65,9 @@ public extension Notification.Name {
 }
 
 public struct UndoLastSetIntent: AppIntent {
+    /// Siri writes need Face ID (Product P14, decisions 12:26 PM PT Oct 16).
+    public static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
+
     public static let title: LocalizedStringResource = "Undo Last Set"
     public static let description = IntentDescription("Takes back the most recently logged set, and only that set.")
 
@@ -78,6 +87,9 @@ public struct UndoLastSetIntent: AppIntent {
 }
 
 public struct StartRoutineIntent: AppIntent {
+    /// Siri writes need Face ID (Product P14, decisions 12:26 PM PT Oct 16).
+    public static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
+
     public static let title: LocalizedStringResource = "Start a Workout"
     public static let description =
         IntentDescription("Starts a workout from a routine, prefilled with today's targets.")
@@ -98,6 +110,9 @@ public struct StartRoutineIntent: AppIntent {
 }
 
 public struct FinishWorkoutIntent: AppIntent {
+    /// Siri writes need Face ID (Product P14, decisions 12:26 PM PT Oct 16).
+    public static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
+
     public static let title: LocalizedStringResource = "Finish Workout"
     public static let description = IntentDescription("Finishes the workout in progress, keeping every set.")
 
@@ -116,6 +131,9 @@ public struct FinishWorkoutIntent: AppIntent {
 }
 
 public struct CreateTaskIntent: AppIntent {
+    /// Siri writes need Face ID (Product P14, decisions 12:26 PM PT Oct 16).
+    public static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
+
     public static let title: LocalizedStringResource = "Add a Task"
     public static let description = IntentDescription("Adds a task to Tessera.")
 
@@ -131,22 +149,33 @@ public struct CreateTaskIntent: AppIntent {
         try .result(dialog: "\(Self.add(title, startsAt: startsAt, engine: runtime.engine))")
     }
 
-    /// QA I3: a Claude key is never saved, and a secret with a value becomes a private note, as in the Ask bar.
+    /// The Bar's one privacy rule (QA I3, Product P14): a Claude key is never saved; what the Bar files as a private
+    /// note is a private note here too, read back as "Private note, kept." and never in his words; a task whose title
+    /// is private is read back as "Task added." (a locked phone may be listening).
     @MainActor
     static func add(_ title: String, startsAt: Date?, engine: ActionEngine) throws -> String {
         if looksLikeClaudeKey(title) {
             return TessRouter.keyLine
         }
-        if SecretWords.hasValue(title) {
-            try engine.perform(CreateNote(body: title, isPrivate: true), by: .intent)
+        let grammar = TessGrammar(store: engine.store, classes: engine.classes)
+        switch grammar.privateParse(title, context: TessContext(commitImmediately: true)) {
+        case let .privateNote(body, _):
+            try engine.perform(CreateNote(body: body, isPrivate: true), by: .intent)
             return "\(SecretWords.title), kept."
+        case let .ask(line):
+            return line
+        default:
+            let record = try engine.perform(CreateTask(title: title, startsAt: startsAt), by: .intent).record
+            return PrivateFacts.isPrivateTitle(title) ? "Task added." : "\(record.summary)."
         }
-        return try "\(engine.perform(CreateTask(title: title, startsAt: startsAt), by: .intent).record.summary)."
     }
 }
 
 /// "Tell Tess…": the same capture pipeline as the Bar, committed straight away (there's no ghost row in Siri).
 public struct TellTessIntent: AppIntent {
+    /// Siri writes need Face ID (Product P14, decisions 12:26 PM PT Oct 16).
+    public static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
+
     public static let title: LocalizedStringResource = "Tell Tess"
     public static let description =
         IntentDescription("Logs a set or adds a task from a phrase, like \u{201C}bench 80 × 8\u{201D}.")
@@ -160,7 +189,10 @@ public struct TellTessIntent: AppIntent {
     @MainActor
     public func perform() async throws -> some IntentResult & ProvidesDialog {
         let capture = await runtime.tess.capture(phrase, context: TessContext(commitImmediately: true))
-        return .result(dialog: "\(capture.line)")
+        // What it wrote is never read back in his words when the words are private (Product P14).
+        let hidden = PrivateFacts.isPrivateTitle(phrase) && !capture.records.isEmpty
+            && capture.line != "\(SecretWords.title), kept."
+        return .result(dialog: "\(hidden ? "Saved." : capture.line)")
     }
 }
 

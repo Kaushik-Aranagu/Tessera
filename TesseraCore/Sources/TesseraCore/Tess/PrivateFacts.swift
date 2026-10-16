@@ -7,6 +7,12 @@ import Foundation
 /// tense the past-tense log wins over W4: "paid rent fri" and "bought milk sat" are ordinary dated notes, not tasks
 /// and not private (Product, 12:21 PM PT Oct 16).
 public enum PrivateFacts {
+    /// Whether a title must stay off surfaces he doesn't unlock (Siri read-backs, the Live Activity, Spotlight): a
+    /// secret word, money or a body fact (Product P14, decisions 12:26 PM PT Oct 16).
+    public static func isPrivateTitle(_ title: String) -> Bool {
+        title == SecretWords.title || SecretWords.mentions(title) || isWalled(title)
+    }
+
     /// Whether a phrase must never reach Claude: money-shaped or body-shaped (secret words have their own wall).
     public static func isWalled(_ phrase: String) -> Bool {
         isMoneyShaped(phrase) || isBodyShaped(phrase)

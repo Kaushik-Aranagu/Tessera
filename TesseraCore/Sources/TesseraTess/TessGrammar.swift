@@ -144,26 +144,8 @@ public struct TessGrammar {
     /// A body fact with a day ("headache since tuesday") is a private note, not a task (QA R1 on #471), unless it
     /// opens with something to do: "call the doctor about my knee thu" and "refill lexapro 10mg fri" stay tasks.
     func parseTaskOrBodyFact(_ phrase: String, context: TessContext) -> Parse? {
-        let toDo = phrase.firstMatch(
-            of: /^(?i)\s*(?:call|ring|book|schedule|see|email|text|ask|refill|order|buy|get|pick up|todo|to do|remind me)\b/
-        ) != nil
-        return toDo ? parseTask(phrase, context: context) ?? parseBodyFact(phrase)
+        Self.isSomethingToDo(phrase) ? parseTask(phrase, context: context) ?? parseBodyFact(phrase)
             : parseBodyFact(phrase) ?? parseTask(phrase, context: context)
-    }
-
-    /// "remember my rent is 2100": a sum of money is never kept, and never leaves the phone (v9 W10).
-    func parseRememberedMoney(_ phrase: String) -> Parse? {
-        guard let match = phrase.firstMatch(of: /^(?i)\s*remember(?:\s+that)?\s+(.+)$/),
-              PrivateFacts.isMoneyShaped(String(match.1)) else { return nil }
-        return .ask(TessMemoryScreen.Refusal.money("").line ?? "I don't keep sums of money.")
-    }
-
-    /// A body or health fact nothing else read stays on the phone as a private note (Product on QA L1, Research 138
-    /// W8): "knee hurts", "slept badly", "body fat 18%".
-    func parseBodyFact(_ phrase: String) -> Parse? {
-        guard PrivateFacts.isBodyShaped(phrase) else { return nil }
-        let body = phrase.trimmingCharacters(in: .whitespacesAndNewlines)
-        return .privateNote(body: body.prefix(1).uppercased() + body.dropFirst(), remembered: false)
     }
 
     /// The live workout's rules for a phrase with an exercise in focus; nil when they don't apply (the other rules
