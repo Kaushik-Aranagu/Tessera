@@ -48,3 +48,21 @@ Builder B, in `Features/Command/BottomChrome.swift` (`surface`, `writing`, `mode
 - **UNDO** is Label 16/700 in full `liveInk` (themes.md). The 0.85 multiplier goes.
 - **Show, when it's built:** one label word naming the kind ("PHOTO", "PDF") above the ghost, then the same reply and UNDO. No filename at Body size.
 - **Every opacity is a token:** `ink`, `inkSecondary`, `tess` or `liveInk`. The literals 0.55, 0.75, 0.6, 0.45 and 0.85 all go.
+
+## Addendum (16 Oct, 1:08 AM PT): his typing smaller than her voice
+Kaushik's phone review: the Ask Tess text is too big. The installed build already had the typed text at Body 21 (f917b00), so the field needs a smaller role. The rule: **his typing sits one step under her voice**, so what he writes never out-sizes what she says.
+
+| Element | Was | Now |
+|---|---|---|
+| Typed text | Body 21/400 ink | **Field 18/400 ink**, a new role in `Theme` (`field`: Inter Tight 18, regular, line height 1.33, `textStyle: .callout` so Dynamic Type scales it with the rest) |
+| Placeholder "Write anything" | Body 21 `inkSecondary` | **Field 18** `inkSecondary` |
+| The ghost text at commit | Body 21/400 `inkSecondary` | **Field 18** `inkSecondary`; the drying line sits 5pt under it instead of 7 |
+| The question line ("What's on your mind?") | Body 21/400 `tess` | unchanged, Body 21 |
+| Tess's reply beside the soul, the miss line | Body 21/400 `tess` | unchanged, Body 21 |
+| Mode words (Speak, Write, Show) | Body 21/500 | unchanged |
+| The fast path label | Label 16/700 | unchanged |
+
+- 18 keeps the 16pt floor and the scale's steps (16, 18, 21, 34, 44, 56 are each about 1.15× to 1.6× apart); 17 would be a size with no neighbour.
+- The same Field 18 goes wherever he types in a line: the Notes writing line and a note's first line, the recipe paste, the `LiveAskField` in a workout, the Settings key field. A note's body (long text) also reads at Field 18. Tess's lines everywhere stay Body 21.
+- Builder B: `Theme.Type.field`, `BottomChrome.swift` (`surface`, `writing`), `WritingLine` in `NotesView.swift`, `NoteEditor.swift`, `PasteRecipe.swift`, `LiveAskField`, `ClaudeSection.swift`'s key line. One tiny PR, then the capture recording re-cut.
+
