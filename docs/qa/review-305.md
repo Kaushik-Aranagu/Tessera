@@ -43,3 +43,10 @@ Fix: remove a phrase only on `.handled` or `.missed` (Claude replied, whatever i
 
 ## Must fix before merge
 1. S1: keep the phrase on every `.asked` failure (busy, timeout, bad key, other, paused), plus a test.
+
+## Addendum: head 252708c (GitHub head confirmed), S1 CLOSED, now PASS
+
+- TessInbox.swift:61-71: `.handled` removes the phrase and returns the capture, and `.missed` removes it (Claude read it and made nothing of it). Any `.asked` result (offline, busy, timeout, bad key, other, cap) keeps the phrase and stops the loop.
+- `.missed` can only come from a reply here. `run` returns it early only for `commitImmediately` (forced false here) or a missing key (blocked by `isAvailable`), and it maps every send error to a `Failure`, which becomes `.asked`.
+- Test: a 529 on read leaves `waitingCount == 1` and returns nothing. The later online read still empties the inbox.
+- The lows L1-L4 stand and are not blocking.
