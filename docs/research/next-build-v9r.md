@@ -18,6 +18,12 @@ decides whether the pin goes without it (the trip week then reads wrong in Revie
 
 Refreshed Fri 1:55 pm PT against master ba86ff4 (Merge #524).
 
+**Order (Product, decisions 1:56 pm).** Merged rows first, then the open riders in build order. Core: 0ad, 0ae, 0ag,
+HW19 with CR1, N15, P14 with HW13, HW9, 0af (HW11 rides with the 0ac work). Builder B: 0r, then 0t and 0u. Builder A:
+0n first. The UNDO slot (F1 to F3) goes in only if it is already done by Oct 22.
+
+**First rider in order with no PR: R8 PN-MENTION (Core 0ad, Builder B 0r).**
+
 **The rule (Product, 1:51 pm).** The riders pin carries whatever has merged and passed QA by the branch call. It does
 not wait for any single rider. At the call, the pin SHA is the newest first-parent merge on master at or after the
 last row below that reads "merged" with a QA PASS. A rider still open at 9:30 am goes to the next pin.
@@ -28,22 +34,22 @@ from the QA board and `docs/qa/review-*.md` on master. "none yet" means nothing 
 
 | Rider | Owner / board item | PR (state) | QA verdict | Merged SHA on master | Gate row | Note |
 |---|---|---|---|---|---|---|
-| R1 HW19 sick, unwell | Core 0ac slice 1 | none yet | none yet | none yet | HP1 | `PrivateFacts.swift:55-56` symptoms has no "sick" or "unwell". Ships only with the CR1 mask. |
-| R2 HW13 "weighed 82.2" via Siri | Core 0ac (with 0l) | none yet | none yet | none yet | P14 | Rides with R7. |
-| R3 HW9 `requiresAuthentication` | Core 0ac (P16 under 0l) | none yet | none yet | none yet | HP2 | No `requiresAuthentication` anywhere in master's Swift. |
-| R4 HW11 body check before `parsePastLog` | Core 0ac, 0l-2, 0aa | none yet | none yet | none yet | HP3 | |
-| R5 N13 private note rows | Builder B 0p | #508 (merged) | PASS at ed30430 (`docs/qa/review-508.md:5`) | e1e3e37 | NP1 | `NotesView.swift:186` uses `NotesCopy.preview`; `NoteEditorTests.swift:30-31`. |
-| R6 N15 one-time private pass | Core 0aa | none yet | none yet | none yet | NP2 | No such pass in `App/` or `TesseraCore/Sources/`. |
-| R7 P14 Siri task wall | Core 0l (tests 0l-2) | none yet | none yet | none yet | P14 | `Intents.swift:140` still checks only `SecretWords.hasValue`. |
-| R8 PN-MENTION | Core 0ad, Builder B 0r | none yet | none yet (QA M1 in `review-508.md:22` is the finding) | none yet | MN1 | `Notes.swift:41-43` `resolve` has no `isPrivate` filter. Both halves needed. |
-| R9 ", best" | Core 0w | #504 (merged) | PASS at 7f37de8 (`docs/qa/review-504.md:5`) | 134759f | DB1 | `DayStory.swift:225`, `ReviewWeek.swift:175`, `WeekFactsTests.swift:109`. |
-| R10 #403 eyes, inert | Builder A 0j | #403 (merged) | PASS, re-review at 15160e0 (`docs/qa/review-403.md:38`) | a88a1ed | EY0 | `AppModel.swift:98` reads only the Simulator launch flag. |
-| R11 Trip bands (with G1, G2) | Core 0ae | none yet | none yet | none yet | TB1 | `ReviewWeek.swift` has no `OpZones` today. Due before Oct 26. |
-| R12 "Before update <day>.tessera" | Core 0af | none yet | none yet | none yet | SC1 | `BackupKeeper.swift:170` still writes "Tessera-<day>". |
-| R13 Backups folder warning | Builder B 0t | none yet | none yet | none yet | SC2 | After R12. The line exists only on the board. |
+| R5 | **N13**: private note rows. | Builder B | B 0p | **merged** (#508, e1e3e37) | **NP1** |
+| R9 | **", best"** | Core | Core 0w | **merged** (#504, 134759f) | **DB1** |
+| R10 | **#403 eyes, inert**: in the build, off, nothing on the phone turns them on. | Builder A | A 0j | **merged** (#403, a88a1ed), inert | **EY0** |
+| R8 | **PN-MENTION**: an "@Private note" mention never resolves to a private note (Core half: `NoteList.resolve`, `Notes.swift:35-43`, has no `isPrivate` filter today), and the object page never shows a private note's body (Builder B half: `InstanceBody`, `ObjectPage.swift:348`). | Core, Builder B | Core 0ad, B 0r | not started | **MN1** |
+| R11 | **Trip bands**: Review's task and cooking bands count by each item's own op zone (`OpZones`), not the phone's zone (`ReviewWeek.swift:53-65` today). Rides along: G1, The week page (`ReviewView.swift:62-90`); G2, a cook files on its finish day everywhere, so the Day log changes (`DayStory.swift:241-249`, decisions 1:40 pm). Spec: `fixtures/trip-week.md`, 13 `ReviewTripWeekTests` names. | Core | Core 0ae | not started | **TB1** |
 | R14 DST: DS8 repeated 1:30 am, with DS29, DS36 (new, 1:52 pm) | Core 0ag | none yet | none yet | none yet | none yet (fixture DS8, DS29, DS36) | `TessGrammar.swift:672-677` `bySettingHour` picks the PDT 1:30. Due before Oct 31 night. |
-| Possible: DS18, DS35 | Builder A 0n | none yet | none yet | none yet | none yet | Rider only if Product names it. `WorkoutFinishView.swift:96`, `ExerciseDigest.swift:106`. |
+| R1 | **HW19**: "sick", "unwell" and "feeling sick" walled in `PrivateFacts.symptoms` (`PrivateFacts.swift:55-58` has none of them today). Ships only with the CR1 sick-slang mask (decisions 1:36 pm), so "sick of this" stays plain. | Core | Core 0ac, slice 1 | not started | **HP1** |
+| R6 | **N15**: a one-time launch pass marks notes from before #422 private when they hold a secret word with a value. Today `DayStory.swift:345-347` still prints "Note:" and an old note's title; no such pass exists in `App/` or `TesseraCore/Sources/`. | Core | Core 0aa | not started | **NP2** |
+| R7 | **P14**: Siri's Add a Task checks `PrivateFacts.isWalled(title)`. Master's `Intents.swift` still checks only `SecretWords.hasValue`. "pay rent 2100 friday" stays a task. | Core | Core 0l (tests 0l-2) | not started | **P14**, now required |
+| R2 | **HW13** (rides P14): Siri Add a Task with "weighed 82.2" saves a private note and replies "Body weight logged." without the number. | Core | Core 0ac (with 0l) | not started | **P14** gains this phrase |
+| R3 | **HW9** (P16): `requiresAuthentication` on Tell Tess and Add a Task. | Core | Core 0ac (P16 under 0l) | not started | **HP2** |
+| R4 | **HW11** (with N18): the body check runs before `parsePastLog`, so "weighed 82.3 yesterday" is private. | Core | Core 0ac "Then", 0l-2, notes half 0aa | not started | **HP3** |
+| R12 | SAVE A COPY's default name becomes "Before update <day>.tessera" (today "Tessera-<day>", `Features/Backup/BackupKeeper.swift:170`), and rotation and pruning touch only the rolling prefix, with a test. | Core | Core 0af | not started | **SC1** |
+| R13 | SAVE A COPY warns "This is the Backups folder. Daily copies here get replaced. Save somewhere else?" when he picks the Backups folder. After R12. | Builder B | B 0t | not started | **SC2** |
 | Possible: DS37 | Builder B 0u | none yet | none yet | none yet | none yet | Rider only if Product names it. `NotesView.swift:272`. |
+| Possible: DS18, DS35 | Builder A 0n | none yet | none yet | none yet | none yet | Rider only if Product names it. `WorkoutFinishView.swift:96`, `ExerciseDigest.swift:106`. |
 
 **Realistic F fixes**
 
