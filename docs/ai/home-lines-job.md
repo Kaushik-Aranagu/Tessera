@@ -57,6 +57,15 @@ once on a Saturday). So the job narrows before anything ships:
   matching weekday. The eval mirrors it as C15.
 - "Claude Home wording" stays off until the `--job done` rerun passes and Kaushik reads his 10 lines.
 
+## 2b. Kaushik's decision (Oct 16, 2026, 2:41 PM PT): Sonnet on Home
+
+He chose "Sonnet on Home" over the recommended "App lines + gap" after reading the rerun (`home-lines-eval-results.md`, "Rerun verdict"). What ships:
+
+- **Job done only.** A finished workout with a best, or one at least 4 days after the same routine. Sonnet 5.5, prompt `SYSTEM_DONE` from `scripts/ai/home_lines_eval.py`. Every other Home moment stays on rules.
+- **Behind "Tess asks Claude"** and the monthly cap. The rules line shows first; Claude's differing words land wet and dry (section 6). A 6 s timeout, no retries, one call per finish, cached on the workout.
+- **The phone checks every line** (caps, C1 to C15 including C15 weekday_slip); a line that fails keeps the rules line.
+- **Gate:** Core's weekday check on "usual" (0t) merges first. Money and body facts are never packed (section 5).
+
 ## 3. Cache and key
 
 - **File** (new): `Application Support/Tessera/home-lines-cache.json`, excluded from backup, complete file

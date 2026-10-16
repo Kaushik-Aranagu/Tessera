@@ -4,6 +4,8 @@ Written by `scripts/ai/home_lines_eval.py`, one section per invocation, newest f
 
 ## Rerun verdict, job done (Oct 16, 2026, AI architecture; Research signed off)
 
+**Kaushik chose Sonnet on Home (Oct 16, 2:41 PM PT).** The recommendation below stands as the record; what ships is in `home-lines-job.md` section 2b.
+
 **Claude adds one fact on Home that the rules lines don't already show: the gap since the same routine ("First in 9 days"). The phone can say that itself for free, so the recommendation is rules lines plus the gap, and Claude Home wording stays off.** Scores per line are in `home-lines-eval-scores.md` ("Rerun, job done").
 
 | Row | Gate (13 shown) | Memory (9 shown) |
