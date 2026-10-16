@@ -112,3 +112,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [notifications.md](notifications.md) | Core + Builders: the three local notifications, permission slot, quiet hours, what never notifies |
 | [install-check.md](install-check.md) | Coordinator + Product: 5-minute check that the review guide matches an install commit |
 | [claude-first-uses.md](claude-first-uses.md) | Core + Builder B: first three Claude uses, screen lines, cost, fallbacks, gating |
+| [fixtures/reminders.md](fixtures/reminders.md) | Core: 40 reminder phrases with expected parse, alerts flag, no-permission line, model routing |
