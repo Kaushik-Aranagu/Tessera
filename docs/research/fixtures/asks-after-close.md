@@ -97,3 +97,12 @@ show again when the slot is empty, after Shutdown's page is gone, and before 23:
 
 **Top three.** CL1 (a wrong write into a finished workout, built today). CL6 (his own timer never fires, day or
 night). CL2 with CL3 (no closed-day state and no hold gate, needed before the first app ask ships).
+
+## Product's answers (Oct 16, 3c2ea39e)
+
+- **CL1, CL2, CL3:** yes, as proposed. The set ask ends with its workout, the close is stored, and app asks hold from the close until 07:00.
+- **CL6:** a real bug. Core schedules a local notification when a timer starts and cancels it on stop or UNDO. It comes right after the privacy walls.
+- **CL9:** his own timers ring at any hour, haptic included. The no-haptic rule covers only moments the app raises. C14 stands.
+- **CL10:** the habits check-in "Read today?" is triggered by Shutdown, as Design 64 draws it, and runs before the day closes.
+- **CL11:** yes. "A closed day never asks" covers app asks only, so "bench 80x8 wed" at 00:40 is answered as usual.
+- **Shutdown (Design 63, confirmed):** slot B's opener is Tess's line, and slot C shows once, on the first Shutdown ever. Slot times use the house form ("9:30 am", "8 am"). The closed line is "Closed. Your line is waiting at 8 am."

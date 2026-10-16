@@ -45,7 +45,7 @@ item and a grocery row, each with where it should land and where it lands today.
 | E22 | book flights | Task "Book flights" in Later | Book flights, in Later. | No date, no todo. Model | misfire (model) |
 | E23 | passport expires 2027 | A note, kept as typed | Noted. | "2027" is not a clock time; no date. Model | misfire (model) |
 | E24 | add charger to packing | Item "Charger" on Packing. Same shape as misfire 230 | Charger, on Packing. | The "add … to" rule only knows groceries and shopping list. Model (`addToList` exists there) | misfire (model) |
-| E25 | remove milk | Milk taken off Groceries, with UNDO | Milk, off Groceries. | No rule, and the model has no remove or uncheck tool. Model, then "Didn't catch that." or a wrong write | misfire (model) |
+| E25 | remove milk | Milk taken off Groceries, with UNDO for 10 s | Milk, removed. | No rule, and the model has no remove or uncheck tool. Model, then "Didn't catch that." or a wrong write | misfire (model) |
 | E26 | https://www.nytimes.com/2026/10/14/travel/kyoto.html | A note holding the link as pasted. No fetch, nothing sent | Noted. | One word: every lift and set rule skips it; no date. Model, so with Claude on the link is sent. `RecipeLinkReader` is not wired into capture | misfire (model) |
 | E27 | todo: taxes | Task "Taxes" in Later | Taxes, in Later. | `parseKitchen` returns nil for "todo"; `parseTask` explicit | ok |
 | E28 | shopping list: rice, beans | Grocery rows Rice, Beans | 2 things on the list. | "shopping:" needs the colon right after "shopping". Comma list: "shopping list: rice" is shopping (last word rice). **Groceries rows "shopping list: rice" and "beans"** | misfire (wrong write) |
@@ -78,3 +78,10 @@ those send something private or useless to Claude when the switch is on (E6, E26
 1. NE1 and NE2: a password typed to Tess goes to Claude and the miss log today, and memory refuses it only by luck.
 2. NE3 and NE4: the most typed lines ("milk", "milk eggs", "need lightbulbs") miss at Home.
 3. NE6 and NE9: real wrong writes he would see on Groceries ("shopping list: rice", "gas", "a birthday card").
+
+## Product's and Design's answers (Oct 16)
+
+- NE11 is decided (Product dce3675): "remove X" soft-deletes the row, Tess says "Milk, removed." and UNDO lasts 10 s. E25 above now expects that line.
+- Design 65 (66550d4) adds two phrase answers for QA:
+  - "remove rice" with no rice row: "No rice on Groceries."
+  - "remove rice" when 2 rows match: "2 rows match. Swipe the one to remove."
