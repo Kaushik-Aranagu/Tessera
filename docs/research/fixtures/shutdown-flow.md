@@ -46,7 +46,7 @@ All names, counts and times below are made up.
 | S15 | Sat Oct 24, 7:10 am | Skipped yesterday | Opens app | Rolled rows on Now; no word about last night | 4 am roll, `rolls` +1 | `AppModel.swift:332` runs the roll |
 | S16 | Sat Oct 24, 9:00 pm | Only Pull A done; "Call the bank" rolls | Looks | Label "1 MOVING TO TOMORROW"; B5 "Pull A, done. That counts." | nothing yet | not built |
 | S17 | Sat Oct 24, 9:00 pm | Nothing done, no facts, nothing rolls | Looks | No label, no rows; B7 "A quiet one. Want a line for tomorrow?"; line has no placeholder | on hold: line, slot A, closed mark | not built |
-| S18 | Sun Oct 25, 9:00 pm | Pull A running since 8:15 pm | Logs sets | Workout stays the hero; Default proposed: Shutdown waits for Finish (SH4 ★) | nothing | ranker puts a running process first (`NowRanker.swift:3-5`) |
+| S18 | Sun Oct 25, 9:00 pm | Pull A running since 8:15 pm | Logs sets | Workout stays the hero; Shutdown waits for Finish (Product 11:57 AM PT) | nothing | ranker puts a running process first (`NowRanker.swift:3-5`) |
 | S19 | Sun Oct 25, 9:40 pm | S18, finishes Pull A | Taps Finish | Finish view, then Shutdown; "Read today?" may now show | as S9 when held | not built |
 | S20 | Sun Oct 25, 9:00 pm | Chili cook running, timer to 9:25 pm | Looks | Shutdown sets in; timer rings at 9:25 pm over it; check-in waits for an empty band (Default proposed) | cook stays open across the close | not built; CL6 |
 | S21 | Mon Oct 26, 9:00 pm EDT | Travel day, phone in Eastern | Looks | Shutdown at 9 pm on the phone's clock; B line as usual | as S9 | `TesseraDay` reads wall clock (`TesseraDay.swift:1-10`) |
@@ -55,6 +55,7 @@ All names, counts and times below are made up.
 | S24 | Fri Oct 23, 12:20 am | Silent close Thu | CLOSE THE DAY, holds | "2 MOVING TO FRIDAY"; F4 "Saved to Thursday. Pick up tomorrow." | rows go to Friday (today after 4 am) | not built |
 | S25 | Fri Oct 23, 4:05 am | Thu closed | Opens app | "Friday morning"; no CLOSE THE DAY | slot A frozen at 4 am if not held | turnover `AppModel.swift:331-338` |
 | S26 | Thu Oct 22, 9:08 pm | Shutdown open | Says "tomorrow first, wifi password is 4471" | "Private note, kept." line stays empty (Default proposed) | private note only | `SecretWords.swift:6` exists, not wired here |
+| S27 | Wed Oct 21, 10:30 pm | Legs B running since 9:20 pm, no Shutdown yet | Taps Finish at 10:30 pm | Finish view, then Shutdown; the 10 pm close waited and runs now | closed mark stamped 10:00 pm Wed; workout filed on Wed, the day it started; rows roll as at the close (SH4) | 10 pm close not built; nothing waits on a live workout |
 
 ## Edge rules
 
@@ -62,7 +63,7 @@ All names, counts and times below are made up.
 - **After 4 am:** yesterday's Shutdown can't be opened. CLOSE THE DAY goes at 4 am, the roll runs, slot A freezes. A "tomorrow first" phrase at 5 am is before 9 pm, so it becomes the next day's line with UNDO "Tomorrow line, taken back.".
 - **Twice in one evening:** UNDO within 10 s reopens as he left it; a second hold is a new step, no second check-in. After the 10 s, Default proposed: no way back (no CLOSE THE DAY after a held close); a said line replaces the hero (Design 34).
 - **Never opened:** the day closes by itself at 10 pm. Default proposed (SH1): no write at 10 pm; on the next open Core writes the closed mark at 10:00 pm, moves no rows, keeps no line; rows roll at 4 am as today.
-- **Live workout at Shutdown:** Default proposed (SH4 ★): the workout stays the hero and Shutdown waits for Finish; no check-in while it runs; the 10 pm close still happens with Pull A open (asks-after-close path C), CLOSE THE DAY is not offered until Finish, Core's 6 h wrap-up (`ProcessTable.swift:14`) still applies.
+- **Live workout at Shutdown** (Product, decisions.md 11:57 AM PT): the workout stays the hero and Shutdown waits for Finish; no check-in while it runs. The 10 pm close waits too: it runs after Finish, stamped 10:00 pm, and the workout is filed on the day it started (S18, S19, S27). Builder B: no Shutdown over a live workout.
 - **Claude off vs on:** Shutdown is rules only, the same words either way (slot rule: no model call). The line, the rows and the check-in never go to Claude. A phrase without the lead phrase goes to capture as usual; money, body and secret words never leave the phone (MU2, NE1). A Claude reply after the close is held (C13).
 - **Reduce Motion:** crossfades only; no lift, no bead, no keyboard ride (the column hides, the line shows above the keys in place); the check-in stroke appears without the drop.
 - **Quiet hours:** no haptic the app raises after 11 pm; his own timers ring (CL9). The hold's `.success` after 11 pm: SH7.
@@ -74,7 +75,7 @@ All names, counts and times below are made up.
 | SH1 | No closed state and no silent-close write; the app may be asleep at 10 pm | `NowRanker.swift:37-38`; CL2 | Closed mark (held or silent, with time) written on the first open after 10 pm, stamped 10:00 pm | Core |
 | SH2 | The 10 pm close can land while he is typing the line or flipping rows | Design 63 §12 | Wait while Shutdown is on screen; close when he leaves; keep his draft for CLOSE THE DAY until 4 am | Core, Builder B |
 | SH3 | Kept rows moved by the hold skip `RollForward`, so `rolls` never counts and a task kept every night never ages to Later | `RollForward.swift:56-77` | The hold sets `rolledFrom` and `rolls` +1 exactly as the 4 am roll | Core |
-| SH4 | Live workout at 9 pm: Shutdown, the check-in and the 10 pm close not drawn | Design 63; ranker precedence | See edge rule; ★ below | Product |
+| SH4 | Live workout at 9 pm: Shutdown, the check-in and the 10 pm close not drawn | Design 63; ranker precedence | Ruled 11:57 AM PT: all wait for Finish; close stamped 10:00 pm (S27) | Core, Builder B |
 | SH5 | First Shutdown with nothing rolling: slot C is silent | Design 63 "first Shutdown ever" | Say B; keep the first-ever flag until a Shutdown with rows | Core |
 | SH6 | A task captured after the close lands today and counts a roll at 4 am | `RollForward.swift:56-61` | Date it to the next day | Core |
 | SH7 | `.success` on a hold after 11 pm: 63 says "before quiet hours", 34 allows "under his finger" | Design 63, 34 | Play it; the hold is his finger (CL9 reading) | Design |
@@ -84,4 +85,4 @@ All names, counts and times below are made up.
 | SH11 | A secret or money line said as the tomorrow line | NE1, MU2 | Secret: private note, line empty. Money: stays the line, never to Claude | Core |
 | SH12 | Slot D, E3 and A printed 24 h ("09:30", "08:00") | `shutdown-daylog-copy.md` | Done: "9:30 am", "8 am"; A2, B2, E2 say "best" (SH8 drawn copy still Design) | Research |
 
-★ **Product:** A live workout at 9 pm: should Shutdown wait for Finish (and the 10 pm close still happen with the workout open), as proposed in SH4?
+Ruled (Product, decisions.md 11:57 AM PT): Shutdown and the 10 pm close wait for Finish; the close is stamped 10:00 pm and the workout is filed on the day it started. SH1, SH2, SH3 and SH9 taken as proposed.
