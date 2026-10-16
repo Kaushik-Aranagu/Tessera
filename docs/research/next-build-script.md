@@ -14,7 +14,7 @@ The script follows the install-day script's shape: one row per step, and one exp
 | Ask Tess sizes | #353 | open |
 | AI-1 Home lines | Builder B's Home PR on `HomeLines` | no PR yet |
 
-## Catalog v7 gate (QA, Oct 16, before anything else)
+## Catalog v7/v8 gate (QA, Oct 16, before anything else)
 
 Master 38466f1 carries **#356 (Tess memory, catalog v6 → v7)**, so the next candidate ships a migration. Data
 safety says a migration never ships untested on his device. Before the "install it" ask:
@@ -26,7 +26,12 @@ safety says a migration never ships untested on his device. Before the "install 
 - **M2 (phone):** Settings → Backups writes a new copy, and its size is about the same as yesterday's.
 - **M3 (phone):** "remember that I train after work" gives "Kept. You train after work." FORGET it, wait 10 s, and the
   page no longer shows it.
-- **Rollback:** a v7 store opened by 7b321d2 must still launch (additive fields are ignored). Never restore a v7
+- **M4 (catalog v8, only if #380 is in the install commit):** the gate now spans v5 → v8. On the M0 Simulator copy,
+  the recipe that was added before the upgrade still opens with every line. Re-paste one recipe with
+  "1 (28 oz) can crushed tomatoes" and "chopped fresh cilantro, for serving". The can shows "28 oz" on its row, and
+  cilantro is on the recipe page but not on the list. On the phone, the Groceries list is unchanged until he adds a
+  recipe.
+- **Rollback:** a v7 (or v8) store opened by 7b321d2 must still launch (additive fields are ignored). Never restore a v7 or v8
   backup on the older build.
 Any M row failing stops the install, and the phone stays on 444e72b or 7b321d2.
 
