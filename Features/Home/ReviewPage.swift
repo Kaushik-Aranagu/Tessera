@@ -242,20 +242,17 @@ struct ReviewPage: View {
                 .entrance(0)
 
             // Title 44, one line: the session count, or the day's own line in the longest form that fits.
-            ViewThatFits(in: .horizontal) {
-                ForEach(day?.heroForms ?? [week.headline], id: \.self) { form in
-                    Text(form).lineLimit(1).fixedSize(horizontal: true, vertical: false)
-                }
-            }
-            .textRole(.title)
-            .foregroundStyle(Theme.Colors.ink)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .accessibilityAddTraits(.isHeader)
-            .accessibilityLabel(day?.hero ?? "\(week.headline). \(week.sessionLine).")
-            .contentTransition(.opacity)
-            .siblingParallax()
-            .entrance(1, hero: true)
-            .padding(.bottom, Theme.Spacing.l)
+            // Title 44 on one line, else Title 34 on one line, else 34 wrapped: it never clips and never widens
+            // the column (Design on #352).
+            FittingHero(forms: day?.heroForms ?? [week.hero])
+                .foregroundStyle(Theme.Colors.ink)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityLabel(day?.hero ?? "\(week.headline). \(week.sessionLine).")
+                .contentTransition(.opacity)
+                .siblingParallax()
+                .entrance(1, hero: true)
+                .padding(.bottom, Theme.Spacing.l)
 
             DayLetters(week: week, reading: reading, read: read)
                 .padding(.bottom, Theme.Spacing.s)
@@ -521,5 +518,34 @@ struct RestStroke: Shape {
         bottom.reversed().forEach { path.addLine(to: $0) }
         path.closeSubpath()
         return path
+    }
+}
+
+/// The first of the hero's forms that fits on one line at Title 44, else at 34, else the shortest form wrapped at
+/// 34. Static children only: `ViewThatFits` traps on a `ForEach`.
+private struct FittingHero: View {
+    let forms: [String]
+
+    var body: some View {
+        let first = forms.first ?? ""
+        let second = forms.count > 1 ? forms[1] : nil
+        let third = forms.count > 2 ? forms[2] : nil
+        ViewThatFits(in: .horizontal) {
+            Text(first).textRole(.title).lineLimit(1)
+            if let second {
+                Text(second).textRole(.title).lineLimit(1)
+            }
+            if let third {
+                Text(third).textRole(.title).lineLimit(1)
+            }
+            Text(first).font(InkWordType.font).lineLimit(1)
+            if let second {
+                Text(second).font(InkWordType.font).lineLimit(1)
+            }
+            if let third {
+                Text(third).font(InkWordType.font).lineLimit(1)
+            }
+            Text(forms.last ?? "").font(InkWordType.font).fixedSize(horizontal: false, vertical: true)
+        }
     }
 }

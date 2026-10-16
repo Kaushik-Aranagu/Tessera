@@ -15,7 +15,12 @@ struct ReviewWeekData {
     let marks: [WeekReview.DayMark]
     let sessions: [[WorkoutSummary]]
     let perWeek: Int?
+    /// The sentence, for VoiceOver.
     let headline: String
+    /// The hero: the count alone ("Four sessions", "All six sessions"); "the week so far" above it says the rest.
+    let hero: String
+    /// Core's pick of the week's lines (a record, a first, the fullest day).
+    let coreBestLines: [WeekFacts.Line]
     /// Per day: nil for a day still ahead (or before first use), else the count.
     let tasksDone: [Int?]
     let cooked: [Int?]
@@ -59,16 +64,23 @@ struct ReviewWeekData {
             past(day) ? cookedAt.count { tesseraDay.day(of: $0) == day } : nil
         }
         // The day log's lines for each day so far (a window of history per day, never the whole log).
+        let builder = WeekFactsBuilder(engine: model.engine, calendar: calendar)
         var lines: [Int: [DayLine]] = [:]
         for (index, day) in days.enumerated() where past(day) {
-            let noon = calendar.date(byAdding: .hour, value: 12, to: day) ?? day
-            lines[index] = DayStory.lines(engine: model.engine, on: noon, calendar: calendar, now: now,
-                                          isRestDay: marks[index] == .rest)
+            lines[index] = builder.lines(onDay: day, now: now, isRestDay: marks[index] == .rest)
+        }
+        let hero: String = if sessionCount == 0 {
+            firstUseToday ? "Your first week" : "A quiet week"
+        } else if let perWeek, perWeek > 0, sessionCount == perWeek {
+            "All \(SpokenTime.number(perWeek)) sessions"
+        } else {
+            "\(headline.lead) \(sessionCount == 1 ? "session" : "sessions")"
         }
         return ReviewWeekData(now: now, calendar: calendar, days: days, today: today, marks: marks,
                               sessions: week.map(\.done), perWeek: perWeek,
-                              headline: "\(headline.lead) \(headline.tail)", tasksDone: tasksDone, cooked: cooked,
-                              lines: lines)
+                              headline: "\(headline.lead) \(headline.tail)", hero: hero,
+                              coreBestLines: builder.facts(weekContaining: now, plan: plan, now: now).bestLines,
+                              tasksDone: tasksDone, cooked: cooked, lines: lines)
     }
 
     func isPast(_ index: Int) -> Bool {
@@ -114,6 +126,16 @@ struct ReviewWeekData {
     /// Core picks the week's three best lines when WeekFacts lands (a best, a first, a record count). Until then:
     /// finished lines, a best or a first ahead of the rest, newest first among equals, shown in day order.
     var bestLines: [WeekLines.Row] {
+        // Core's pick when the log has words; the session fallback otherwise.
+        let core = coreBestLines.compactMap { pick -> WeekLines.Row? in
+            guard let index = days.firstIndex(where: { $0 == pick.day }) else { return nil }
+            return WeekLines.Row(id: "\(index)-\(pick.line.text)",
+                                 lead: days[index].formatted(.dateTime.weekday(.abbreviated)),
+                                 text: pick.line.text, objectID: pick.line.objectIDs.first)
+        }
+        if !core.isEmpty {
+            return core
+        }
         func score(_ line: DayLine) -> Int {
             let text = line.text.lowercased()
             if text.contains("best") || text.contains("record") || text.contains(" pr") {
@@ -149,11 +171,14 @@ struct ReviewWeekData {
     func day(_ index: Int) -> Day {
         let done = tasksDone[index] ?? 0
         let doneWords = done == 0 ? nil : "\(done) done"
+        // The day's best fact: the first record line ("Bench 85 × 8, PR."), else the first record the summary knows.
+        let best = logLines(index).first { $0.text.contains(", PR.") }?.text.split(separator: " ").first
+            .map { "\($0) best" }
+            ?? sessions[index].first?.records.first.map { "\(TesseraCore.ExerciseWords.short($0.exercise)) best" }
         let forms: [String] = if let workout = sessions[index].first {
-            [[workout.title, workout.records.first.map { "\($0.exercise) best" }, doneWords].compactMap(\.self)
-                .joined(separator: ", "),
-                [workout.title, doneWords].compactMap(\.self).joined(separator: ", "),
-                workout.title]
+            [[best, doneWords].compactMap(\.self).joined(separator: ", "),
+             [workout.title, doneWords].compactMap(\.self).joined(separator: ", "),
+             workout.title].filter { !$0.isEmpty }
         } else if let doneWords {
             [doneWords]
         } else if marks[index] == .rest {
