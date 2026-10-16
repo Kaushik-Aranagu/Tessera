@@ -141,21 +141,12 @@ final class ThemeStore {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        // The default is Porcelain by day, Obsidian by night. Anyone who has used the app before the looks existed
-        // was on Plein, and keeps "Plein by day" until they change it.
-        let used = defaults.object(forKey: "tessera.hasLaunched") != nil || Self.hasExistingStore
-        day = defaults.string(forKey: Key.day).flatMap(Look.named) ?? (used ? .plein : .porcelain)
+        // Porcelain by day, Obsidian by night, for everyone (Kaushik: white is his likely default; Plein is a hold
+        // away in the sentence).
+        day = defaults.string(forKey: Key.day).flatMap(Look.named) ?? .porcelain
         night = defaults.string(forKey: Key.night).flatMap(Look.named) ?? .obsidian
         pinned = defaults.string(forKey: Key.pinned).flatMap(Look.named)
-        defaults.set(true, forKey: "tessera.hasLaunched")
         rebuild()
-    }
-
-    /// A database from before the looks existed means someone was living with Plein.
-    private static var hasExistingStore: Bool {
-        guard let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-        else { return false }
-        return FileManager.default.fileExists(atPath: support.appending(path: "Tessera/tessera.sqlite").path())
     }
 
     private func rebuild() {

@@ -67,6 +67,15 @@ struct DataSafetyTests {
         #expect(entry.orderedChildren.count { !$0.isDeleted } == 1)
     }
 
+    /// QA C2: an empty routine can't be started from any caller (Siri's StartRoutineIntent included).
+    @Test func anEmptyRoutineCannotBeStarted() throws {
+        let (store, engine, _) = try setUp()
+        let empty = try engine.perform(CreateRoutine(title: "Nothing yet"), by: .user).output
+        #expect(throws: ActionError.self) { try engine.perform(StartRoutine(routine: empty.id), by: .intent) }
+        let workouts = try store.objects(of: #require(engine.classes[.workout]))
+        #expect(!workouts.contains { $0.title == "Nothing yet" })
+    }
+
     @Test func onlyDamageMovesTheStoreAside() throws {
         #expect(TesseraSchema.isDamaged(DatabaseError(resultCode: .SQLITE_CORRUPT)))
         #expect(TesseraSchema.isDamaged(DatabaseError(resultCode: .SQLITE_NOTADB)))

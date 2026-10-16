@@ -470,6 +470,16 @@ struct WorkoutRestRelaunchTests {
         #expect(WorkoutSession(workout: session.workout, model: model).restEndsAt == nil)
     }
 
+    /// QA's #190 residual: a relaunch, then a rest drag, re-saves the rest still tied to its set.
+    @Test func aRestDraggedAfterARelaunchKeepsItsSet() throws {
+        let (model, session) = try startedSession()
+        session.logSet()
+        let relaunched = WorkoutSession(workout: session.workout, model: model)
+        relaunched.extendRest(by: 15)
+        #expect(model.engine.takeBackLatestSet(by: .intent) != nil)
+        #expect(WorkoutSession(workout: session.workout, model: model).restEndsAt == nil)
+    }
+
     @Test func aRestThatEndedWhileTheAppWasGoneIsOver() throws {
         let (model, session) = try startedSession()
         session.logSet()

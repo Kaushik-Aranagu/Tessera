@@ -12,15 +12,20 @@ extension WorkoutSession {
     }
 
     /// The rest saved on a resume point, if it is still running at `now`. An elapsed rest is simply over.
-    static func savedRest(in point: ResumePoint?, at now: Date) -> (endsAt: Date, total: TimeInterval)? {
+    static func savedRest(in point: ResumePoint?, at now: Date)
+        -> (endsAt: Date, total: TimeInterval, afterSet: UUID?)?
+    {
         guard let extras = point?.extras, let end = extras[RestKey.endsAt].flatMap(TimeInterval.init),
               let total = extras[RestKey.total].flatMap(TimeInterval.init) else { return nil }
         let endsAt = Date(timeIntervalSinceReferenceDate: end)
-        return endsAt > now ? (endsAt, total) : nil
+        let afterSet = extras[RestKey.afterSet].flatMap(UUID.init(uuidString:))
+        return endsAt > now ? (endsAt, total, afterSet) : nil
     }
 
     /// The rest this workout's open process remembers (used when the session is recreated after a relaunch).
-    static func savedRest(for workout: ObjectRecord, model: AppModel) -> (endsAt: Date, total: TimeInterval)? {
+    static func savedRest(for workout: ObjectRecord, model: AppModel)
+        -> (endsAt: Date, total: TimeInterval, afterSet: UUID?)?
+    {
         let point = ProcessTable(engine: model.engine).process(for: workout)?.resumePoint
         if let setID = point?.extras[RestKey.afterSet].flatMap(UUID.init(uuidString:)),
            model.store.object(id: setID).map(\.isDeleted) ?? true
@@ -37,7 +42,8 @@ extension WorkoutSession {
         if let restEndsAt, restTotal > 0 {
             point.extras[RestKey.endsAt] = String(restEndsAt.timeIntervalSinceReferenceDate)
             point.extras[RestKey.total] = String(restTotal)
-            if let setID = lastSeated?.setID ?? undoable?.setID {
+            // After a relaunch the session has no seated set; the restored rest keeps the one it followed.
+            if let setID = lastSeated?.setID ?? undoable?.setID ?? restAfterSetID {
                 point.extras[RestKey.afterSet] = setID.uuidString
             }
         } else if process.resumePoint?.extras[RestKey.endsAt] == nil {

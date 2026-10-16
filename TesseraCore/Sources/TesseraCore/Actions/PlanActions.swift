@@ -115,6 +115,11 @@ public struct StartRoutine: EngineAction {
 
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
         let routine = try transaction.object(routine, is: .routine)
+        // A routine with no exercises has nothing to start (no "0 kg moved" workout), from any caller: the app,
+        // Siri, Shortcuts, Tess.
+        guard routine.orderedChildren.contains(where: { !$0.isDeleted }) else {
+            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "the routine has no exercises")
+        }
         let ledger = TrainingLedger(store: transaction.store, classes: transaction.classes)
         let workout = try transaction.create(transaction.classDef(.workout), title: routine.title)
         try transaction.setLinks("routine", on: workout, to: [routine])
