@@ -71,6 +71,25 @@ Recording: `recordings/m3-surfaces.mp4` (source `studies/m3-surfaces.html`):
 ### Never
 Streaks, flames, chains, "best", "missed", "only", red, rings on missed days, percentages, or a history chart.
 
+## 2a · Page order and the rule label word (Design item 18)
+Research's `habits-first-use.md` gaps 4 and 5. Board `mockups/habits-page-order.png` and recording `recordings/habits-page-order.mp4` (source `studies/habits-page-order.html`).
+
+**Page order.** Habits sit in the order he made them, oldest first:
+- **Rule habits aren't lifted.** Review lifts them, but Review is a summary and this page is his list.
+- A paused habit stays in its place.
+- A new habit rises in at the bottom (10pt, 360ms).
+- Nothing re-sorts by count or progress.
+
+**The context line** follows Research's plural rule: "Thursday, 3 days to go", "Saturday, 1 day to go", "Sunday, the last day", "Monday, a new week".
+
+**The rule label word.** Under every name there is one label word, Label 16/700 in `inkSecondary`, 50pt under the name's top. It reads **COUNTS BY HAND**, **COUNTS WHEN A WORKOUT FINISHES** or **COUNTS WHEN A COOK FINISHES**.
+- **A tap cycles it** in that order, with the value-word swap (blur 3pt out 120ms, then in on the settle spring) and `.selection`.
+- **Each step commits.** Tess says it once: "Train now counts workouts." / "Train now counts cooks." / "Train counts by hand again." It comes with a **4s UNDO** (`liveInk`, under her line), which answers "Train rule taken back."
+- **This week recounts at once.** Under a rule, this week's finished workouts (or cooks) paint in on their days in the class pigment: they drop wet 26pt at ×1.25 and dry to the rest tint, 120ms apart. The count rolls like a value word (0 → 2). Hand check-ins already made stay. Taking the rule back fades only the days the rule added (220ms), and the count rolls back.
+- **The dab colour follows the rule:** planning (cadmium) by hand, training for workouts, health for cooks.
+- **The count stays `ink`** at rest (G8). Colour arrives only in the moment the target is met, as the brushstroke paints behind the week.
+- **VoiceOver:** "Counts by hand. Double-tap to count workouts instead." (V-rule).
+
 ## Owners
 | Part | Where | Owner |
 |---|---|---|
