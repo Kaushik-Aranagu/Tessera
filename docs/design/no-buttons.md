@@ -1,5 +1,7 @@
 # No buttons: ink actions (build sheet)
 
+> **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
+
 Kaushik, 2026-10-15 19:00: he dislikes every rectangular, oval or pill-shaped button and card, Apple's defaults included, and wants something "more elegant and subtle". This widens the old "no pills or capsules" rule.
 
 **The rule:** nothing gets a filled or outlined geometric shape around it to make it a button, a card or a bar. That means no rounded rectangles, capsules, ovals, circles or squares, and no glass slabs. An action is shown by **type, paint and motion**. Painted marks stay as they are: dabs, the soul, day dabs, seams, the carriage, plates and strokes are paint, not containers.

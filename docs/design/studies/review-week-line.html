@@ -13,8 +13,8 @@ body.x2{transform:scale(2)}
 .row{display:flex;gap:40px}
 .cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:34px}
 .ph{position:relative;width:390px;height:844px;overflow:hidden}
-.P{background:#fff;--ink:23,20,31;--s2:.66;--tr:204,63,104;--hl:18,147,106;--nw:240,165,0;--tess:#2450D8;--rest:.45;--liveInk:#C23A22}
-.O{background:#000;--ink:245,242,236;--s2:.72;--tr:255,107,146;--hl:63,212,154;--nw:255,194,61;--tess:#86B4FF;--rest:.55;--liveInk:#FF7A5C}
+.P{--ctx:#6A4C9C;background:#fff;--ink:23,20,31;--s2:.66;--tr:204,63,104;--hl:18,147,106;--nw:240,165,0;--tess:#2450D8;--rest:.45;--liveInk:#C23A22}
+.O{--ctx:#B7A6E0;background:#000;--ink:245,242,236;--s2:.72;--tr:255,107,146;--hl:63,212,154;--nw:255,194,61;--tess:#86B4FF;--rest:.55;--liveInk:#FF7A5C}
 .ph,.ph *{color:rgb(var(--ink))}
 .abs{position:absolute}
 .lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
@@ -43,7 +43,7 @@ function page(look,o){
  const L='MTWTFSS'.split('');
  return `<div class="ph ${look}">
  <div class="abs lbl s2" style="left:22px;top:58px">‹ HOME</div>
- <div class="abs b s2" style="left:22px;top:146px">the week so far</div>
+ <div class="abs b" style="left:22px;top:146px;color:var(--ctx)">the week so far</div>
  <div class="abs" style="left:22px;top:180px;width:346px;font-size:56px;font-weight:500;letter-spacing:-.035em;line-height:60px">One session<br>this week</div>
  <div class="abs b" id="${look}wl" style="left:22px;top:310px;width:346px">${o.week}</div>
  ${dab(1,382)}${restStroke(2,382)}
@@ -61,7 +61,7 @@ if(PLAY){
  document.getElementById('row').innerHTML=`<div><div class="cap">A CHECK-IN, THEN THE THIRD WEIGH-IN</div>${page('P',{week:'Cook 3 of 4, Read <span class="v" id="wr">3</span> of 5<span id="wc"></span>.',read:'3',readDays:[1,0,0,1,0,1,0],weight:base.weight})}</div>`;
 }else{
  document.getElementById('row').innerHTML=`<div><div class="cap">PORCELAIN · R10 WITH 2 WEIGH-INS</div>${page('P',base)}</div><div><div class="cap">OBSIDIAN · THE SAME WEEK</div>${page('O',base)}</div>`;
- document.getElementById('note').innerHTML='WEEK LINE UNDER THE HERO (BODY 21, INK). GYM IS PAUSED: OUT OF THE WEEK LINE, ITS LINE SAYS SO, ITS TICKED DAY STILL PAINTED, AND THE PAUSED WEEK\'S OPEN DAYS (THU TO SAT) DIM THEIR LETTERS. ONLY 2 WEIGH-INS, SO NO WEIGHT CLAUSE IN THE WEEK LINE; THE WEIGHT LINE STILL READS. THREADS, NOT DOTS, AT THE REST TINT. "THE WEEK SO FAR" RESTS IN INK SECONDARY.';
+ document.getElementById('note').innerHTML='WEEK LINE UNDER THE HERO (BODY 21, INK). GYM IS PAUSED: OUT OF THE WEEK LINE, ITS LINE SAYS SO, ITS TICKED DAY STILL PAINTED, AND THE PAUSED WEEK\'S OPEN DAYS (THU TO SAT) DIM THEIR LETTERS. ONLY 2 WEIGH-INS, SO NO WEIGHT CLAUSE IN THE WEEK LINE; THE WEIGHT LINE STILL READS. THREADS, NOT DOTS, AT THE REST TINT. "THE WEEK SO FAR" IS THE CONTEXT LINE, IN CONTEXT.';
 }
 const $=id=>document.getElementById(id);
 function swap(el,text){el.animate([{filter:'blur(0)',opacity:1},{filter:'blur(4px)',opacity:0}],{duration:110,fill:'forwards'}).onfinish=()=>{el.textContent=text;el.animate([{filter:'blur(4px)',opacity:0,transform:'translateY(6px)'},{filter:'blur(0)',opacity:1,transform:'none'}],{duration:260,easing:'cubic-bezier(.3,1.3,.5,1)',fill:'forwards'})}}

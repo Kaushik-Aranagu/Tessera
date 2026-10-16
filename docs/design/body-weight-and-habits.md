@@ -80,7 +80,7 @@ Research's `habits-first-use.md` gaps 4 and 5. Board `mockups/habits-page-order.
 - A new habit rises in at the bottom (10pt, 360ms).
 - Nothing re-sorts by count or progress.
 
-**The context line** follows Research's plural rule: "Thursday, 3 days to go", "Saturday, 1 day to go", "Sunday, the last day", "Monday, a new week".
+**The context line** (in `context`, `sweep-19.md`) follows Research's plural rule: "Thursday, 3 days to go", "Saturday, 1 day to go", "Sunday, the last day", "Monday, a new week".
 
 **The rule label word.** Under every name there is one label word, Label 16/700 in `inkSecondary`, 50pt under the name's top. It reads **COUNTS BY HAND**, **COUNTS WHEN A WORKOUT FINISHES** or **COUNTS WHEN A COOK FINISHES**.
 - **A tap cycles it** in that order, with the value-word swap (blur 3pt out 120ms, then in on the settle spring) and `.selection`.

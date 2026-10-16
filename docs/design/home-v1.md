@@ -1,5 +1,7 @@
 # Home v1 (painterly)
 
+> **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
+
 Light ground. One screen tall. Sparse: one hero, one action, one short list. Mockups: `mockups/HomeLedger.dc.html` (current, in Inter Tight) and `mockups/PleinHome.dc.html` (the original layout and paint; its serif type is retired).
 
 ## The three axes

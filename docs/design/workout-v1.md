@@ -1,5 +1,7 @@
 # Workout v1 (live, painterly)
 
+> **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
+
 A dark painterly ground. The workout is a foreground process: it rises as a full-screen cover. Sparse: one exercise, one number, one action. Mockups: `mockups/WorkoutTight.dc.html` (the set, dial, drum and hold, in Inter Tight; `PleinWorkout` is the same screen in the retired serif) and `mockups/LiveDetails.dc.html` (the strip, swap, top-set check, effort, rest drags, finish and lock-screen undo; tap each moment to play it). Behaviour follows Product's `workouts.md`, section 2.
 
 ## Layout and axes

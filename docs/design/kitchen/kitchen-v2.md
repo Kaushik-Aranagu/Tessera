@@ -1,5 +1,7 @@
 # Kitchen v2: recipe from a link, and pantry light (build sheet)
 
+> **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
+
 Just enough to build. Product steer: `docs/product/kitchen-v2-backlog.md` (slices L1-L3 and the top three backlog items); research brief `docs/research/recipe-link-fetch.md` §4 for every failure line. Drawn to `../no-buttons.md`. Light ground and kitchen colours as in `13-groceries.md`; Tess speaks beside her soul (right 78, bottom 43, width 262), as everywhere since #107.
 
 Recordings:

@@ -1,5 +1,7 @@
 # Voice in the gym (v1 slice 17, steer)
 
+> **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
+
 For Builder A, on the grammar Core ships ("same", "8", "80 for 7"). This follows `no-buttons.md` and the soul modes in `tess-soul.md`. Recording: `recordings/voice-gym.mp4` (source `studies/voice-gym.html`).
 
 **The idea:** you hold Tess's soul in the corner and talk, and you see your words land as the set. This is the hold-to-Speak fast path of the Tess capture surface (`no-buttons.md`, Tess section), with no wash and no menu, because what you say lands on what you are looking at.

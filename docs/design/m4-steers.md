@@ -1,5 +1,7 @@
 # M4 screen steers ("My day, connected")
 
+> **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
+
 One paragraph or so per Feature screen in `docs/product/ship-list-m4.md` (Product's copy: `tessera/product/ship-list-m4.md`), at the weight of `m3-steers.md`. Rough is fine; the UI bar is not optional: Inter Tight tiers, nothing under 16pt, no italics, no cards, pills or stock lists, painterly ground with hairline seams, directional entrances. Plan my day and Shutdown are **Now on Home**, not separate screens, so they reuse `today-on-home.md`'s queue, gestures and haptics.
 
 ## 6 · Plan my day, with 10b · the energy check-in

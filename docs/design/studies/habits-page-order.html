@@ -13,7 +13,8 @@ body.x2{transform:scale(2)}
 .row{display:flex;gap:40px}
 .cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:34px}
 .ph{position:relative;width:390px;height:844px;overflow:hidden;background:#fff;--ink:23,20,31;--s2:.66;--tess:#2450D8;--liveInk:#C23A22;--rest:.45;color:rgb(var(--ink))}
-.O{background:#000;--ink:245,242,236;--s2:.72;--tess:#86B4FF;--liveInk:#FF7A5C;--rest:.55}
+.ph{--ctx:#6A4C9C}
+.O{--ctx:#B7A6E0;background:#000;--ink:245,242,236;--s2:.72;--tess:#86B4FF;--liveInk:#FF7A5C;--rest:.55}
 .abs{position:absolute}
 .lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
 .s2{color:rgba(var(--ink),var(--s2))}
@@ -50,7 +51,7 @@ function block(L,id,y,name,n,target,rule,pig,done,hist){
 function page(L){return `<div class="ph ${L}" id="${L}ph">
  <div class="abs lbl s2" style="left:22px;top:58px">‹ TODAY</div>
  <div class="abs" style="left:22px;top:84px;font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px">This week</div>
- <div class="abs b s2" style="left:22px;top:144px">Saturday, 1 day to go</div>
+ <div class="abs b" style="left:22px;top:144px;color:var(--ctx)">Saturday, 1 day to go</div>
  ${block(L,'a',200,'Read','3',5,'COUNTS BY HAND',PIG[L].plan,[0,2,4],'')}
  ${block(L,'b',396,'Meditate','1',3,'COUNTS BY HAND',PIG[L].plan,[3],'Met in 1 of the last 2 weeks.')}
  ${block(L,'c',592,'Train','0',3,'COUNTS BY HAND',PIG[L].plan,[],'')}

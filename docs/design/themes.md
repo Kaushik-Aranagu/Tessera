@@ -1,5 +1,7 @@
 # Themes (build sheet)
 
+> **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
+
 Kaushik asked for a few rich, sophisticated themes (Oct 15, 6:40 PM PT), including one on pure white with rich colour pops (likely his default) and one on pure black. He wants no cheap gradients or boring textures. This sheet gives the five themes as tokens, the rule for switching, and how DesignSystem should hold them so a switch is cheap.
 
 Preview (Home, Now, a workout and Review in each theme, with swatches and proportions): https://claude.ai/artifact/BLpU1bW4Zx9E3mVtBHdfDz. Its source is `studies/themes.html`.
@@ -58,7 +60,7 @@ A theme is mostly ground. Colour arrives only where something matters: the actio
   - health and kitchen use `health`.
   - neutral uses `neutral`.
 - **Text in a pigment:**
-  - Only `tess`, `context` and `liveInk` (or `live` on dark themes) are ever text.
+  - Only `tess` (when Tess speaks), `context` (only for the context line above a hero, `sweep-19.md`) and `liveInk` (or `live` on dark themes, for UNDO and moments) are ever text.
   - `now`, `health` and `training` are pigments for dabs and strokes, never body text on a light ground. On a light ground they fall under 4.5:1.
   - Ink on a stroke word stays `ink`.
 - **The workout uses the look's own base** (fourth addendum). The `Workout.*` rows in the table above are retired: the workout reads the same ground, ink and pigments as Home.

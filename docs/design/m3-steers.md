@@ -1,5 +1,7 @@
 # M3 screen steers ("Make it mine")
 
+> **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
+
 One paragraph per Feature screen in `docs/product/ship-list-m3.md`, the same weight as the kitchen steers. Rough is fine; the UI bar is not optional: Inter Tight tiers, nothing under 16pt, no italics, no cards, pills or stock lists, painterly ground with hairline seams, directional entrances.
 
 **1 · Body weight.** A light page, one screen tall. The hero is the **7-day average** as a numeral (80 Light, tabular) with "kg" at 21, and a context line above it: "78.4 this morning, steady for two weeks". Under it, the 90-day trend as one painted brushstroke (the exercise page's `PaintedTrend`, in sage, with a wet tip at today), and daily entries as small sage dabs along it rather than a chart with axes. Logging is the ghost row ("bw 78.4"), plus one ink key "Log today" that opens the weight dial (`WeightDial` at 0.1 kg detents, preset to yesterday's value) with hold to log. No goal line and no red; the copy states change in time, never judgement ("down 0.6 since September"). Living moment: today's dab drops onto the stroke and the stroke re-draws its last stretch.

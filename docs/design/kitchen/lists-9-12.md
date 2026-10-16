@@ -1,5 +1,7 @@
 # Lists screens 9 to 12 (build sheet): values for the Kitchen lead's steers
 
+> **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
+
 The steers in `ship-list-lists.md` (Kitchen lead) are the design; this sheet adds exact values and settles three clashes. **It supersedes my sheet 15** (`14-15-shelf-and-lists.md`, "Lists app v0"). Folder: `Features/Lists/`. Same instrument as Groceries (`13-groceries.md`): tap strikes and sinks, no checkboxes, no separators. Lists lean lilac `#D8CBE6` and sky `#9EC3D6` in the washes.
 
 Recordings:

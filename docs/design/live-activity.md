@@ -1,5 +1,7 @@
 # Rest timer Live Activity
 
+> **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
+
 The rest timer lives on the Lock Screen and in the Dynamic Island, so the phone can stay locked on the bench. Mockup: `mockups/LiveFinal.dc.html`. Earlier rounds are in LiveRest, LiveRest2 and LiveType; they were superseded.
 
 **Kaushik's picks (2026-10-15):**

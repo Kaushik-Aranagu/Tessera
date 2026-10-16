@@ -22,6 +22,7 @@ body.x2{transform:scale(2)}
 .q{position:absolute;left:22px;right:22px;height:28px}
 .q .tm{position:absolute;right:0;top:0}
 .tess{color:var(--tess)}
+.ctx{color:var(--ctx)}
 .soul{position:absolute;left:322px;top:782px;width:46px;height:40px;transition:filter .8s,transform .8s,opacity .8s}
 .soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px);mix-blend-mode:screen}
 .soul.rest{filter:saturate(.45);transform:scale(.85);opacity:.7}
@@ -49,7 +50,7 @@ const rail=`<div class="abs lbl" style="left:22px;top:58px;width:346px;display:f
 const head=(L,day,now)=>`${rail}<div class="abs b" id="${L}day" style="left:22px;top:140px">${day}</div>${stroke(L+'st',now)}`;
 // A · day done, evening left
 const A=`<div class="ph">${head('A','Thursday evening',19.9)}
- <div class="abs b s2" style="left:22px;top:226px">trained this evening</div>
+ <div class="abs b ctx" style="left:22px;top:226px">trained this evening</div>
  <div class="abs hero" style="left:22px;top:258px">Push A</div>
  <div class="abs lbl s2" style="left:22px;top:330px">6 OF 6 · 22 SETS · 1 RECORD</div>
  <div class="abs t34" style="left:22px;top:470px">Next</div>
@@ -58,7 +59,7 @@ const A=`<div class="ph">${head('A','Thursday evening',19.9)}
  ${soul('As')}</div>`;
 // B · Shutdown
 function shut(L){return `<div class="ph" id="${L}ph">${head(L,'Thursday evening',21.07)}
- <div class="abs b s2 f" id="${L}ctx" style="left:22px;top:226px">this evening</div>
+ <div class="abs b ctx f" id="${L}ctx" style="left:22px;top:226px">this evening</div>
  <div class="abs hero f" id="${L}hero" style="left:22px;top:258px">Four tasks, one workout</div>
  <div class="abs lbl s2 f" id="${L}meta" style="left:22px;top:390px">COOKED ONCE · 2 NOTES</div>
  <div class="f" id="${L}low">
@@ -75,13 +76,13 @@ function shut(L){return `<div class="ph" id="${L}ph">${head(L,'Thursday evening'
  ${soul(L+'s')}<div id="fing"></div></div>`}
 // C · day closed after Shutdown
 const C=`<div class="ph">${head('C','Thursday night',23)}
- <div class="abs b s2" style="left:22px;top:226px">tomorrow, first</div>
+ <div class="abs b ctx" style="left:22px;top:226px">tomorrow, first</div>
  <div class="abs hero s2" style="left:22px;top:258px">Reply to landlord</div>
  <div class="abs lbl s2" style="left:22px;top:390px">THEN PULL A · 07:30</div>
  ${soul('Cs',1)}</div>`;
 // D · late night, no Shutdown held
 const D=`<div class="ph">${head('D','Thursday night',23)}
- <div class="abs b s2" style="left:22px;top:226px">tomorrow, first</div>
+ <div class="abs b ctx" style="left:22px;top:226px">tomorrow, first</div>
  <div class="abs hero s2" style="left:22px;top:258px">Pull A</div>
  <div class="abs lbl s2" style="left:22px;top:330px">07:30</div>
  <div class="abs lbl s2" style="left:22px;top:390px">CLOSE THE DAY</div>

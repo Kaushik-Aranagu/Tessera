@@ -1,5 +1,7 @@
 # The back word (build sheet)
 
+> **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
+
 Just enough to build. Replaces every system back button and the "Close" word on Home's covers. Recording: `recordings/back-word.mp4` (source `studies/back-word.html`): Push Day A, then Bench press, then Tuesday; back once by tapping the word, then once by the edge swipe. Core's "‹ REVIEW" on Backups (#123, #126) is the first instance; this sheet makes it the rule.
 
 ## The rule

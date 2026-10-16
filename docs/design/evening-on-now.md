@@ -21,7 +21,7 @@ These states slot into the order that's already decided: a running item first, t
 
 ## The states (y in pt; the day stroke is at 182)
 **1. Day done** (widget: "trained this evening / Push A / 6 OF 6 · 22 SETS · 1 RECORD")
-- "trained this evening" at y 226, Body 21 `inkSecondary`.
+- "trained this evening" at y 226, Body 21 in `context` (the context line, `sweep-19.md`).
 - **Hero** "Push A" at y 258, Hero 56/500 `ink`.
 - Its label line at y 330, Label 16 `inkSecondary`: "6 OF 6 · 22 SETS · 1 RECORD".
 - The queue window stays as it is, with the rest of the evening. On a rest day the hero stays "Rest day".
@@ -50,7 +50,7 @@ These states slot into the order that's already decided: a running item first, t
    - The soul goes to `resting`.
 
 **4. The closed day** (widget: "tomorrow, first / Pull A / 07:30")
-- "tomorrow, first" at 226 (`inkSecondary`).
+- "tomorrow, first" at 226, in `context`.
 - **Hero** in `inkSecondary` (resting, not ink):
   - his "Tomorrow, first:" line if he wrote one ("Reply to landlord");
   - otherwise tomorrow's first timed item ("Pull A").

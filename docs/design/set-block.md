@@ -1,5 +1,7 @@
 # The set block: weight in place, smaller reps with more drama (build sheet, Kaushik's 6:45 PM correction)
 
+> **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
+
 Kaushik liked the weight dial's animation. But the strip takes too much room on a busy screen, and it doesn't scroll sideways. He asked for two changes:
 - The number itself should be editable in place: scroll on it, like the reps number on the side.
 - The other dial should be smaller, with more drama.

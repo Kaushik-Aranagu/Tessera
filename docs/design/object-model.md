@@ -1,5 +1,7 @@
 # Tessera (formerly Pilot): the object model, and how OS ideas map to the app
 
+> **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
+
 *2026-10-15. Based on Kaushik's direction: everything is an object, built from classes and parent classes, with dense information that only opens when you need it. The mockups (round 2) are at https://claude.ai/artifact/Ma6zBUdJJe4giqRNWHzF3r.*
 
 ## 1. Everything is an object

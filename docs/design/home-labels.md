@@ -1,5 +1,7 @@
 # Home labels (build sheet for Builder B)
 
+> **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
+
 Every word on Home that does something, what it is in the ink-action language (`no-buttons.md`), and how it moves. The components exist since #108 (`PaintKey` as the stroke word, `InkLabelWordStyle` as the label word). This sheet is the per-label list. Recording: `recordings/home-labels.mp4` (source `studies/home-labels.html`):
 - Start paints in, and a tap hands off to the workout.
 - Resume, with a waiting ledger row and its RESUME label word.

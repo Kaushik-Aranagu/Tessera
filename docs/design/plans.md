@@ -1,5 +1,7 @@
 # Plans: week and month
 
+> **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
+
 Training's plan, one level below the TRAINING page. Two sibling pages on x, WEEK and MONTH. Light painterly ground; one screen tall; dabs, not cards or calendars-in-boxes. Mockup: `mockups/TrainingPlans.dc.html` (swipe between the two). Rules follow Product's `workouts.md` (plans roll on; weekly sets per muscle with fractional counting; below range is neutral, never red).
 
 ## The rail

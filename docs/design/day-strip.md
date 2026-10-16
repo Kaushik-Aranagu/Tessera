@@ -1,5 +1,7 @@
 # The day strip (M2 slices 11 and 13): tasks on the stroke, the now marker, and "full"
 
+> **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
+
 For iOS Builder B. The day strip is Home's **day stroke** (`home-v1.md`, item 1): one watercolour brushstroke from morning to night, painted up to now, with a dashed ink guide for the rest of the day. These two slices put things on it and let it say when the day is full. M4's calendar events use the same marks (`m4-steers.md`, Plan my day).
 
 Recording: `recordings/day-strip.mp4` (source `studies/day-strip.html`): the tip sliding and a done item soaking, tapping a dab, the day filling to "full", and Make room reopening the gaps.

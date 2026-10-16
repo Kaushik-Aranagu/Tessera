@@ -1,5 +1,7 @@
 # Today on Home (M2 slices 8 and 9): Next, Later, swipes and the finish moment
 
+> **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
+
 For iOS Builder B. Layout and paint stay as in `home-v1.md`; this note adds the **Next** stack, the row gestures and the finish moment, with exact motion. Recording: `recordings/today-on-home.mp4` (source: `studies/today-on-home.html`, plays in any browser).
 
 ## The queue window: Next, then Later, in one bounded surface

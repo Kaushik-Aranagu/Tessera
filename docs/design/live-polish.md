@@ -1,5 +1,7 @@
 # Live mode polish (v1 slice 13): exact values
 
+> **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
+
 For iOS Builder A. This is the premium moment, so these values are exact rather than "rough". All motion goes through `MotionPolicy` (`withTesseraAnimation` / `.tesseraAnimation`); all haptics follow **one haptic per meaning** (Research, instrument-robustness). Layout and behaviour are in `workout-v1.md`; this file only adds timing, curves, haptics and Reduce Motion.
 
 ## 1 · Stamp: the set seats into the stack

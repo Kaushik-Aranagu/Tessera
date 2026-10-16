@@ -1,5 +1,7 @@
 # Exercise page (an object page)
 
+> **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
+
 Every exercise is a class object you can zoom into from its name (in live mode, on Training, in history). This is the generic object page with an exercise's summary on it. Light painterly ground, one screen tall, nothing scrolls except one bounded window. Mockup: `mockups/ExercisePage.dc.html` (Bench press). Data rules follow Product's `workouts.md` (honest e1RM, rep maxes, where records live).
 
 ## Top to bottom

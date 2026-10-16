@@ -1,5 +1,7 @@
 # 12 · Cook mode (build sheet)
 
+> **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
+
 Just enough to build. Product steer: `docs/product/ship-list-kitchen.md` §12. The Kitchen lead's cut and defaults: `docs/product/cook-mode-acceptance.md`, checked on the phone with `cook-mode-script.md`. Engine: slice 5 (cooking as a process, timers, the Cook log). Folder: `Features/Cooking/`. Builder A builds it.
 
 Recording: `../recordings/cook-mode.mp4` (source `../studies/cook-mode.html`; timers run a minute per second). It follows the acceptance script with the seed recipe Weeknight dal and starts on its recipe page:
