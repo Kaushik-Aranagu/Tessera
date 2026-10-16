@@ -45,3 +45,7 @@ Verdict: **PASS**. There is one commit on top of 96d0617, and only these four fi
 - The still shows set 1 with "last time 82.5 × 7" once and the corner silent. A still is fine for an absence.
 - L1 (the `.target` comment, now at Features/Home/TrainingPage.swift:345-347) is not in. It stays a low.
 - New low: `previousBest` (WorkoutSession+Prefill.swift:42) has no callers now and can go in a later push.
+
+## Addendum: re-check at `ba66718`
+
+Verdict: **PASS**. One commit on top of 7937f15. It only rewrites the comment at Features/Home/TrainingPage.swift:346-347, so L1 is closed. No code changed.
