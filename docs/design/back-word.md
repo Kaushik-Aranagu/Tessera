@@ -68,7 +68,7 @@ The pusher passes its short name with the route, and the pushed page shows it. O
 | 22 | Day log | Today's day label, or Review's link line | ‹ TODAY or ‹ REVIEW, by the way in | `day-log-v1.md` | planned | Builder B |
 | 23 | An object opened from a Day log line | The Day log | ‹ DAY LOG (was ‹ DAYS) | `day-log-v1.md` DL34 | planned | Builder B |
 | 24 | Habits | The Habits word on Today's foot line | ‹ TODAY | `body-weight-and-habits.md` | planned | Builder B |
-| 25 | Body weight | The weigh-in on Now, or Review's weight line | ‹ TODAY or ‹ REVIEW, by the way in | `body-weight-and-habits.md` | planned | Builder B |
+| 25 | Body weight | BODY WEIGHT on Training's link line, or Review's weight line | ‹ TRAINING or ‹ REVIEW, by the way in (a weigh-in on Today is kept in place and opens nothing, `m3-entry-points.md`) | `body-weight-and-habits.md` §1 | planned | Builder A |
 | 26 | Money, Reading, Upkeep, People | Review's second link line | ‹ REVIEW | `money-reading-first.md`, `upkeep-people-first.md` | planned | Builder A (Money, Reading), Builder B (Upkeep, People) |
 | 27 | A spend, a book, a chore, a person | Their area page | The area's title ("‹ MONEY", "‹ READING", "‹ UPKEEP", "‹ PEOPLE") | those sheets | planned | as row 26 |
 | 28 | Lists | Kitchen | ‹ KITCHEN | `kitchen/lists-9-12.md` | planned | Builder B |

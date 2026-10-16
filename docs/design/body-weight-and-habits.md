@@ -1,5 +1,7 @@
 # Body weight and habits (build sheet, M3 slices 1 and 2)
 
+> **Doors (item 26):** how the weigh-in waits and lands on Today, and the Habits word on Today's foot line, are drawn in `m3-entry-points.md`.
+
 Just enough to build the two screens on Core's engine in `docs/research/m3-1-2-brief.md` (`BodyWeight`, `Habit`, `HabitCheckIn`, `BodyWeightLedger`, `HabitLedger`, and the grammar rows). It deepens `m3-steers.md` §1 and `habits.md`. Where they differ, this sheet wins: the hero is the trend, not a 7-day average, and the count reads "of 5", the target, not "of 7". Every Tess line and empty state is in Research's `docs/research/m3-lines.md` (#204), and that file wins on copy. This sheet places the lines and gives them their motion. Drawn to `no-buttons.md`.
 
 Recording: `recordings/m3-surfaces.mp4` (source `studies/m3-surfaces.html`):
