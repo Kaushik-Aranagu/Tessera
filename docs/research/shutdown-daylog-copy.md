@@ -64,7 +64,7 @@ Shown above the preselected items that roll to tomorrow. Moving is the default a
 | C1 | {n} going to Later. Still there, just quieter. | 2 going to Later. Still there, just quieter. | Some open items are 7 or more days untouched (auto-age rule) |
 | C2 | {n} rolling over. Plan my day picks up to 3. | 7 rolling over. Plan my day picks up to 3. | 6 or more items roll |
 | C3 | {task} moves to tomorrow. Tap to keep it. | Call the bank moves to tomorrow. Tap to keep it. | Exactly 1 item rolls |
-| C4 | {n} moving to tomorrow. Tap any to keep. | 3 moving to tomorrow. Tap any to keep. | 2 to 5 items roll |
+| C4 | {n} moving to tomorrow. Tap any for later. | 3 moving to tomorrow. Tap any for later. | 2 to 5 items roll |
 
 Silent case: nothing rolls, so the section is hidden. If {task} is longer than 4 words, C3 uses the C4 form with n = 1 ("1 moving to tomorrow. Tap to keep it.") so the line stays under 12 words.
 
@@ -102,7 +102,7 @@ Late night means Shutdown is opened at or after 23:00, or between 00:00 and 04:0
 | # | Template | Filled example | Picked when |
 |---|---|---|---|
 | F1 | Filed under {weekday}. Did {counts}. | Filed under Tuesday. Did 3 tasks, cooked once. | Late night, 1 or more counted items (replaces B) |
-| F2 | {n} moving to {nextWeekday}. Tap any to keep. | 2 moving to Wednesday. Tap any to keep. | Past 00:00 and 1 or more items roll (replaces C2 to C4) |
+| F2 | {n} moving to {nextWeekday}. Tap any for later. | 2 moving to Wednesday. Tap any for later. | Past 00:00 and 1 or more items roll (replaces C2 to C4) |
 | F3 | Closed. Sleep is also training. | Closed. Sleep is also training. | Late night and a workout finished that day (replaces E) |
 | F4 | Saved to {weekday}. Pick up tomorrow. | Saved to Tuesday. Pick up tomorrow. | Late night, any other case (replaces E) |
 
@@ -126,7 +126,7 @@ Run over all 32 filled examples above (word count by spaces, banned-word list fr
 | 1. Done, then the number | Pass | Openers and closes lead with the done thing in past tense (B2 to B5, E2, E4, F1). Headlines name the thing, then one count. |
 | 2. Counts, not streaks | Pass | Only counts and "{n} things". No run lengths, no "in a row", no reset. |
 | 3. One line, under 12 words | Pass | Longest filled example is 10 words (C2, C3); C3 has a short form for long task names. Templates with lists cap {counts} at 3 items. No greeting, no sign-off, no praise word. |
-| 4. The user decides | Pass | Carry-over is "Tap any to keep", the tomorrow line is "if you want", B7 asks "Want...?". No "should" or "don't forget". |
+| 4. The user decides | Pass | Carry-over is "Tap any for later", the tomorrow line is "if you want", B7 asks "Want...?". No "should" or "don't forget". |
 | 5. Dry, rarely | Pass | 3 dry lines of 32 (A4 "Fed and trained", E2 "filed under", F3 "Sleep is also training"), all on done states, about 1 in 10. |
 | 6. Honest about limits | Pass | Travel day (A3) only fires on a calendar title or time-zone change, never on a guess. Missing Health data drops the clause instead of inventing a number. |
 | 7. Silence is fine | Pass | Empty past days, note-only days, nothing rolling, and no-match slots all render nothing. |
@@ -141,7 +141,7 @@ Run over all 32 filled examples above (word count by spaces, banned-word list fr
 |---|---|---|
 | Good to see you. Here is today. (from `sticking-past-week-3.md`) | Rule 3, a greeting | Back in. Did {counts} today. (B1) |
 | Nothing logged today. | Points at an absence on a past day | Silence on past days; A10 for today only |
-| 3 tasks left over. Moving them to tomorrow. | Guilt ("left over") | {n} moving to tomorrow. Tap any to keep. (C4) |
+| 3 tasks left over. Moving them to tomorrow. | Guilt ("left over") | {n} moving to tomorrow. Tap any for later. (C4) |
 | Only 2 tasks today, and that's fine. | "Only" grades the day | Quiet day. {counts}. (A8) |
 | Great work. Day closed. Rest well. | Praise word, sign-off | Closed. {n} things in {weekday}'s log. (E4) |
 | You've had a big day of training and cooking. | 10 words but no count, and narrates | {workout} and {recipe}. Fed and trained. (A4) |

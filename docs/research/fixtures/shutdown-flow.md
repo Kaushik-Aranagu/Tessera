@@ -14,7 +14,7 @@ All names, counts and times below are made up.
 1. **9 pm, Shutdown sets in on Home.** Day label "Thursday evening", context line "9:04 pm", hero "Shutdown". From 11 pm the label is "Thursday night".
 2. **The carry-over label:** "3 MOVING TO TOMORROW" (past midnight "2 MOVING TO FRIDAY"). Absent when nothing rolls.
 3. **One line per rolling row**, value TOMORROW at the right, at most 3; with 4 or more the third place reads "5 MORE" and a pull shows the rest.
-4. **Tess's band says the opener**, slot B, no UNDO: "Did 4 tasks, 1 workout, cooked once." Quiet day: "A quiet one. Want a line for tomorrow?" Late night: "Filed under Thursday. Did 3 tasks, cooked once." **First Shutdown ever:** slot C instead, once: "3 moving to tomorrow. Tap any to keep."
+4. **Tess's band says the opener**, slot B, no UNDO: "Did 4 tasks, 1 workout, cooked once." Quiet day: "A quiet one. Want a line for tomorrow?" Late night: "Filed under Thursday. Did 3 tasks, cooked once." **First Shutdown ever:** slot C instead, once: "3 moving to tomorrow. Tap any for later."
 5. **The habits check-in (Design 64),** after the opener dries, one hand-counted habit at a time: "Read today?" with DONE and NOT TODAY. DONE: "Read, done." with UNDO 10 s. NOT TODAY writes nothing and the ask fades. Unanswered, it lapses with the hold.
 6. **Tap a row:** TOMORROW crossfades to LATER, `.selection`. Tap again to bring it back.
 7. **TOMORROW, FIRST** label, then the writing line with slot D's placeholder: "Tomorrow starts with Standup at 9:30 am." or "One line for tomorrow, if you want." (no placeholder on a quiet day).
@@ -29,7 +29,7 @@ All names, counts and times below are made up.
 
 | # | When | State before | He does | On screen | The close stores | Master today |
 |---|---|---|---|---|---|---|
-| S1 | Wed Oct 21, 9:00 pm | First Shutdown ever; 3 tasks today open; Read due | Looks | Hero "Shutdown", "3 MOVING TO TOMORROW", Tess C4 "3 moving to tomorrow. Tap any to keep." | nothing yet | not built; `NowRanker.swift:37` is `.shutdown` only |
+| S1 | Wed Oct 21, 9:00 pm | First Shutdown ever; 3 tasks today open; Read due | Looks | Hero "Shutdown", "3 MOVING TO TOMORROW", Tess C4 "3 moving to tomorrow. Tap any for later." | nothing yet | not built; `NowRanker.swift:37` is `.shutdown` only |
 | S2 | Wed Oct 21, 9:02 pm | S1, C line dried | Waits | "Read today?" DONE · NOT TODAY | nothing yet | no habits code (only `Haptics.swift:8,10` comments) |
 | S3 | Wed Oct 21, 9:03 pm | S2 | Taps DONE | "Read, done." UNDO 10 s | Read check-in for Wed, at once (own UNDO) | not built |
 | S4 | Wed Oct 21, 9:06 pm | S3, no line | Taps Clean the oven, holds CLOSE THE DAY | TOMORROW to LATER; E4 "Closed. 5 things in Wednesday's log." UNDO 10 s | 2 rows to Thu, oven to Later, slot A frozen, closed mark 9:06 pm | not built; no closed state (CL2) |
