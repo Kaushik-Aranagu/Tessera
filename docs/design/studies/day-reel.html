@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>One day, one reel</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- The first-review day reel (Design item 52): one recording walks a Thursday across the new sheets: 41 Home's one line per thing, 48 the living colour arriving at his first write, 42 the glass tab lens to TRAINING, 44 the Start line lifting into the strip and live mode rising, the evening's "Push A done" with the fleck on the day label and Ember for a best, the lens to REVIEW, 46 the week arriving and reading Thursday, then quiet hours and the 04:00 turnover (Aurora, the day label rolls). ?look=por or ?look=obs picks the look; ?play records; ?x2 for 2x. The board (no ?play) shows the six stations side by side. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:36px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:56px;width:390px;line-height:22px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;--ink:245,242,236;--s2:.72;--s3:.38;--tess:#86B4FF;--ctx:#B7A6E0;--liveInk:#FF7A5C;--live:#FF5B3A;--now:#FFC23D;--health:#3FD49A;--tint:.55;--stage:#0A0A0C;background:#000;color:rgb(var(--ink))}
+.ph.por{--ink:18,16,22;--s2:.66;--s3:.51;--tess:#2450D8;--ctx:#5A3DAF;--liveInk:#C23A22;--live:#E2432A;--now:#F0A500;--health:#12936A;--tint:.45;--stage:#F3F2F5;background:#fff}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}
+.s3{color:rgba(var(--ink),var(--s3))}
+.b{font-size:21px;line-height:28px}
+.sm{font-size:16px;line-height:22px}
+.nw{white-space:nowrap}
+.t34{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px;white-space:nowrap}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px;white-space:nowrap}
+.hero{font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:58px;white-space:nowrap}
+.num{font-size:80px;font-weight:300;letter-spacing:-.04em;line-height:80px;font-variant-numeric:tabular-nums}
+.n{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;text-align:center;width:49px}
+.ctx{color:var(--ctx)}
+.tl{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);z-index:6;color:var(--tess);font-size:21px;line-height:28px}
+.tl .u{display:block;font-weight:700;font-size:16px;letter-spacing:.08em;line-height:20px;margin-top:4px;color:var(--liveInk)}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:7}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px);mix-blend-mode:screen}
+.por .soul i{mix-blend-mode:multiply}
+.glass{position:absolute;border-radius:22px;background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.06));backdrop-filter:blur(10px) saturate(1.6);-webkit-backdrop-filter:blur(10px) saturate(1.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(255,255,255,.12),0 8px 24px rgba(0,0,0,.35);z-index:12}
+.por .glass{background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,.35));box-shadow:inset 0 1px 0 #fff,0 8px 24px rgba(23,20,31,.16)}
+.page{position:absolute;left:0;top:0;width:390px;height:844px;transform-origin:0 0;overflow:hidden;background:inherit}
+.seg{position:absolute;top:0;height:3px;border-radius:0 0 2px 2px}
+.col{transition:opacity .3s}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(255,255,255,.18);box-shadow:0 0 0 1.5px rgba(255,255,255,.6);opacity:0;z-index:30;transition:opacity .15s}
+.por #fing{background:rgba(0,0,0,.08);box-shadow:0 0 0 1.5px rgba(0,0,0,.35)}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;line-height:24px;max-width:2560px}
+.clock{position:absolute;left:22px;top:30px;font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(var(--ink),.5);z-index:20}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play'),POR=Q.includes('look=por'),$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const H='cubic-bezier(.2,.8,.2,1)',SET='cubic-bezier(.3,1.3,.5,1)';
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+// Palettes (living-colours.md): Today is the look's own pigments; Lagoon for the morning, Ember for a best, Aurora at the turnover.
+const PAL={Today:[['#2450D8','#E2432A','#F0A500'],['#86B4FF','#FF5B3A','#FFC23D']],Lagoon:[['#0E8C86','#F0624D','#EDB730'],['#4FD8CF','#FF8A75','#FFD563']],Ember:[['#3433D6','#D6266E','#F2B21B'],['#9A98FF','#FF5C9A','#FFD24A']],Aurora:[['#2F6FE0','#14A37F','#8C5BD6'],['#7FB0FF','#4FE0B5','#BC97FF']]};
+const pig=n=>PAL[n][POR?0:1];
+const soul=(name='Today',id='S')=>{const P=pig(name),f=.65,C=[[10,12.5],[32,10.5],[22,28.5]],cx=21.33,cy=17.17;
+ return `<div class="soul" id="${id}">${C.map(([x,y],i)=>`<i style="left:${cx+(x-cx)*f-10+2}px;top:${cy+(y-cy)*f-8.5+3}px;background:radial-gradient(closest-side,${P[i]},${P[i]}33)"></i>`).join('')}</div>`};
+// The change arrives as paint: each dab pools its new pigment from the centre, swells and wets, then dries (48).
+const repaint=(name)=>{const P=pig(name);[...$('S').querySelectorAll('i')].forEach((d,i)=>{const w=document.createElement('b');w.style.cssText=`position:absolute;inset:0;border-radius:inherit;background:radial-gradient(closest-side,${P[i]},${P[i]}33);clip-path:circle(0% at 50% 50%)`;d.appendChild(w);
+ w.animate([{clipPath:'circle(0% at 50% 50%)'},{clipPath:'circle(75% at 50% 50%)'}],{duration:900,delay:i*120,easing:H,fill:'forwards'});
+ d.animate([{transform:'scale(1)',filter:'blur(1.2px) brightness(1)'},{transform:'scale(1.12)',filter:'blur(1.6px) brightness(1.35)',offset:.3},{transform:'scale(1)',filter:'blur(1.2px) brightness(1)'}],{duration:2800,delay:i*120,easing:H,fill:'forwards'})})};
+const TABS=['REVIEW','TODAY','TRAINING','KITCHEN'],TX=[22,118,199,300];
+const tabs=(on,id='T')=>`<div class="abs lbl" id="${id}" style="left:0;right:0;top:78px;height:24px;letter-spacing:.06em;z-index:13">${TABS.map((t,i)=>`<span class="abs" style="left:${TX[i]}px;top:0;color:rgba(var(--ink),${t===on?1:.38})">${t}</span>`).join('')}<svg class="abs" id="${id}l" style="left:${TX[TABS.indexOf(on)]}px;top:24px;overflow:visible" width="90" height="12"><path d="${lens(on.length*10.6,1.2)}" fill="rgb(var(--ink))"/></svg></div>`;
+// 41: the Home frame. Day label 138, context 186, hero 220, Start key 296, Next 388, rows 440 + 46k (a wrapped row 74).
+const startKey=(word,fill,y=296,id='sk')=>`<div class="abs lbl" id="${id}" style="left:22px;top:${y}px">${word}<svg id="${id}l" style="position:absolute;left:0;top:22px;overflow:visible" width="${word.length*10.8}" height="12"><path d="${lens(word.length*10.8-6,1.6)}" fill="rgba(var(--ink),.22)"/><path d="${lens((word.length*10.8-6)*fill,1.6)}" fill="rgb(var(--ink))"/></svg></div>`;
+const next=(y0,rows)=>`<div class="abs t34" style="left:22px;top:${y0}px">Next</div>${rows.map(([t,h,w],k,a)=>{const y=y0+52+a.slice(0,k).reduce((s,r)=>s+(r[2]?74:46),0);return `<div class="abs b" style="left:22px;top:${y}px;width:${h?280:346}px">${t}</div>${h?`<div class="abs lbl s2" style="right:22px;top:${y+4}px">${h}</div>`:''}`}).join('')}`;
+const home=(o)=>`<div class="abs b nw" id="day" style="left:22px;top:138px">${o.day}</div><div class="abs b ctx nw" id="ctxl" style="left:22px;top:186px">${o.ctx}</div><div class="abs hero" id="hero" style="left:22px;top:220px">${o.hero}</div>${o.key?startKey(o.key,o.fill??1):''}${next(o.key?388:326,o.rows)}`;
+const MORNING={day:'Thursday morning',ctx:'today',hero:'Push A',key:'START PUSH A',rows:[['Call the bank','15:00'],['Groceries at Trader Joe’s','17:30'],['Stretch and mobility','20:30'],['Read Designing Data-Intensive Applications','21:10',1]]};
+const EVENING={day:'Thursday evening',ctx:'done at 7:40 pm',hero:'Push A done',rows:[['Stretch and mobility','20:30'],['Read Designing Data-Intensive Applications','21:10',1],['Call mom','tomorrow']]};
+const NIGHT={day:'Thursday night',ctx:'done at 7:40 pm',hero:'Push A done',rows:[['Call mom','tomorrow'],['Pull A','tomorrow']]};
+const FRIDAY={day:'Friday morning',ctx:'today',hero:'Pull A',key:'START PULL A',rows:[['Call mom','12:30'],['Stretch and mobility','20:30']]};
+// 44: Training at rest. The strip (one segment per exercise, its length its sets), the plan as lanes, the Start mark.
+const PLAN=[['Bench press',4,'82.5 × 8'],['Overhead press',3,'47.5 × 8'],['Incline dumbbell',3,'28 × 10'],['Lateral raise',3,'10 × 12'],['Triceps pushdown',3,'30 × 12']];
+const strip=(lit=-1,part=0)=>{const total=PLAN.reduce((s,p)=>s+p[1],0);let x=22;return `<div class="abs" style="left:0;right:0;top:0;height:3px;z-index:14">${PLAN.map((p,i)=>{const w=(346-4*(PLAN.length-1))*p[1]/total;const h=`<div class="seg" style="left:${x}px;width:${w}px;background:rgba(var(--ink),${i<lit?.9:.14})"></div>${i===lit?`<div class="seg" style="left:${x}px;width:${w*part}px;background:var(--live);box-shadow:0 0 6px var(--live)"></div>`:''}`;x+=w+4;return h}).join('')}</div>`};
+const stroke=(x,y,kind,pg)=>kind==='done'?`<svg class="abs" style="left:${x}px;top:${y}px" width="40" height="12"><path d="${lens(40,3.2)}" fill="${pg}"/></svg>`:`<svg class="abs" style="left:${x}px;top:${y}px" width="40" height="12"><path d="M1 6 H39" stroke="rgba(var(--ink),${kind==='current'?.9:.22})" stroke-width="2" stroke-dasharray="5 4" stroke-linecap="round"/></svg>`;
+const PG=['var(--live)','var(--tess)','var(--now)','var(--health)'];
+const planRows=(y0)=>PLAN.map(([n,sets,t],i)=>{const y=y0+72*i;return `<div class="abs b" style="left:22px;top:${y}px;font-weight:500">${n}</div><div class="abs lbl s2" style="right:22px;top:${y+6}px;font-weight:600">${t}</div>${Array.from({length:sets},(_,k)=>stroke(22+48*k,y+34,'future')).join('')}`}).join('');
+const training=()=>`${strip()}<div class="abs b ctx nw" style="left:22px;top:138px">today, 5 exercises, about 55 min</div><div class="abs t44" style="left:22px;top:172px">Push A</div>${startKey('START PUSH A',1,236,'tk')}${planRows(300)}<div class="abs lbl s2" style="left:22px;top:688px">PUSH PULL LEGS, ROLLS ON</div><div class="abs lbl" style="right:22px;top:688px">ROUTINES</div>`;
+const live=()=>`${strip(0,.25)}<div class="abs b s2 nw" style="left:22px;top:56px">Push A, 18:42</div><div class="abs lbl s2" style="right:22px;top:60px">1 / 5</div><div class="abs t44" style="left:22px;top:92px">Bench press</div><div class="abs t44 s3" style="left:300px;top:92px;width:120px;overflow:hidden">Overhead</div>${stroke(22,176,'current')}${stroke(70,176,'future')}${stroke(118,176,'future')}${stroke(166,176,'future')}<div class="abs b s2 nw" style="left:22px;top:210px">set 1 of 4, last was 82.5 × 8</div><div class="abs num" style="left:22px;top:270px">82.5</div><div class="abs b s2" style="left:196px;top:318px">kg</div><div class="abs lbl s2" style="left:22px;top:362px">31.25 KG A SIDE</div><div class="abs" style="right:40px;top:262px;font-size:48px;font-weight:300;line-height:52px;text-align:center">8</div><div class="abs b s3" style="right:52px;top:236px">7</div><div class="abs b s3" style="right:52px;top:316px">9</div><div class="abs s2" style="right:44px;top:350px;font-size:18px">reps</div><div class="abs lbl" style="left:22px;top:560px">LOG 82.5 × 8<svg style="position:absolute;left:0;top:22px;overflow:visible" width="140" height="12"><path d="${lens(128,1.6)}" fill="rgb(var(--ink))"/></svg></div>`;
+// 46: Review, the week on one page. Today is Thursday (3); Thursday's session lands once Push A is done.
+const DAYS=['M','T','W','T','F','S','S'],TODAY=3,X=i=>22+49.4*i,cx=i=>X(i)+24.7;
+const W=(done)=>({training:['Pull A','Legs A','rest',done?'Push A':'open',null,null,null],tasks:[3,5,2,done?4:2,null,null,null],cook:[1,0,1,0,null,null,null],read:[1,1,0,1,null,null,null],weight:[78.6,null,78.4,78.2,null,null,null],money:[32,0,58,71,null,null,null],cooked:[0,1,0,1,null,null,null]});
+const BEST=[['Thu','Bench 85 × 8, a best.'],['Wed','Chili cooked for 4, 2 lunches boxed.'],['Tue','Legs A, every set at target.']];
+const THU=[['6:40 am','Up at 6:40, the earliest this week.'],['7:40 pm','Bench 85 × 8, a best.'],['7:40 pm','Push A done, 4 tasks.']];
+const dab=(x,y,p='var(--health)',a='var(--tint)',id='')=>`<div class="abs" ${id?`id="${id}"`:''} style="left:${x-13}px;top:${y-11}px;width:26px;height:22px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:${p};opacity:${a}"></div>`;
+const restStroke=(x,y)=>`<div class="abs" style="left:${x-16}px;top:${y+4}px;width:32px;height:5px;background:rgba(var(--ink),.5);border-radius:3px 1px 2px 3px/2px 3px 1px 2px;clip-path:polygon(0 20%,30% 0,70% 15%,100% 30%,96% 100%,60% 80%,25% 100%,2% 70%)"></div>`;
+const ring=(x,y)=>`<div class="abs" style="left:${x-11}px;top:${y-9}px;width:22px;height:18px;border-radius:50%;box-shadow:inset 0 0 0 1.5px rgba(var(--ink),.25)"></div>`;
+const thread=(y,vals,p)=>{let o='';for(let i=0;i<7;i++){if(vals[i]===null)continue;if(vals[i]){o+=`<div class="abs" style="left:${cx(i)-14}px;top:${y}px;width:${vals[i+1]?49.4+28:28}px;height:3px;background:${p};opacity:var(--tint);border-radius:2px"></div>`}}return o};
+const band=(y,label,right,cells)=>`<div class="abs lbl s2" style="left:22px;top:${y}px">${label}</div>${right?`<div class="abs lbl" style="right:22px;top:${y}px">${right}</div>`:''}${cells}`;
+const review=(done=true)=>{const w=W(done);let h=`<div class="abs b ctx nw" id="rctx" style="left:22px;top:138px">the week so far</div><div class="abs t44" id="rhero" style="left:22px;top:172px">${done?'Three sessions':'Two sessions'}</div><div class="abs" style="left:0;top:240px;width:390px;height:460px" id="grid">`;
+ for(let i=0;i<7;i++)h+=`<div class="abs lbl col" data-c="${i}" style="left:${X(i)}px;width:49px;text-align:center;top:0;color:rgba(var(--ink),${i===TODAY?1:i<TODAY?'var(--s2)':'var(--s3)'})">${DAYS[i]}</div>`;
+ h+=band(28,'TRAINING',done?'3 OF 6':'2 OF 6',w.training.map((t,i)=>t===null?'':t==='rest'?restStroke(cx(i),52):t==='open'?ring(cx(i),58):dab(cx(i),58,'var(--health)','var(--tint)',i===3?'tdab':'')).map((m,i)=>`<div class="col" data-c="${i}">${m}</div>`).join(''));
+ h+=band(86,'TASKS DONE',done?'14':'12',w.tasks.map((n,i)=>n===null?'':`<div class="abs n col" data-c="${i}" style="left:${X(i)}px;top:108px;color:rgba(var(--ink),${n?1:.38})">${n||'·'}</div>`).join(''));
+ h+=band(140,'COOK · 2 OF 4','',thread(170,w.cook,'var(--health)'));h+=band(188,'READ · 3 OF 5','',thread(218,w.read,'var(--ctx)'));
+ const wy=v=>262+(78.7-v)*40;const pts=w.weight.map((v,i)=>v===null?null:[cx(i),wy(v)]).filter(Boolean);
+ h+=band(236,'WEIGHT','78.2 KG',`<svg class="abs" style="left:0;top:0;overflow:visible" width="390" height="300"><path d="M${pts.map(p=>p.join(' ')).join(' L')}" stroke="var(--now)" stroke-width="3" fill="none" stroke-linecap="round" opacity="var(--tint)"/>${pts.map(([x,y])=>`<circle cx="${x}" cy="${y}" r="3" fill="var(--now)" opacity="var(--tint)"/>`).join('')}</svg><div class="abs sm s2" style="left:${X(0)}px;top:${wy(78.6)+8}px;width:49px;text-align:center">78.6</div><div class="abs sm" style="left:${X(3)}px;top:${wy(78.2)-28}px;width:49px;text-align:center">78.2</div>`);
+ h+=band(306,'MONEY','$161',w.money.map((n,i)=>n===null?'':`<div class="abs n col" data-c="${i}" style="left:${X(i)}px;top:328px;color:rgba(var(--ink),${n?1:.38})">${n?'$'+n:'·'}</div>`).join(''));
+ h+=band(360,'COOKED','2',w.cooked.map((n,i)=>n===null?'':n?dab(cx(i),392,'var(--now)'):'').map((m,i)=>`<div class="col" data-c="${i}">${m}</div>`).join(''));
+ h+=`</div><div class="abs lbl s2" id="rll" style="left:22px;top:660px">THE WEEK’S LINES</div>`;BEST.forEach(([d,t],k)=>{h+=`<div class="abs sm rl" style="left:22px;top:${686+24*k}px;width:346px"><span style="font-weight:600;color:rgba(var(--ink),var(--s2))">${d}</span>&nbsp; ${t}</div>`});return h};
+const kitchen=()=>`<div class="abs b ctx nw" style="left:22px;top:138px">tonight</div><div class="abs t44" style="left:22px;top:172px">Tacos tonight</div><div class="abs b s2" style="left:22px;top:236px">2 to buy</div>${startKey('GROCERIES',1,276,'gk')}${next(360,[['Tacos','tonight'],['Chili','Sunday'],['Oat milk',''],['Scallions','']])}`;
+const phone=(c,inner,opt={})=>`<div><div class="cap">${c}</div><div class="ph${POR?' por':''}" ${opt.id?`id="${opt.id}"`:''}>${inner}${opt.line?`<div class="tl">${opt.line}${opt.undo?'<span class="u">UNDO</span>':''}</div>`:''}${soul(opt.pal||'Today',opt.id?'S':'s'+Math.random().toString(36).slice(2,6))}${opt.fing?'<div id="fing"></div>':''}</div></div>`;
+
+if(!PLAY){
+ $('row').innerHTML=phone('7:10 · HOME, ONE LINE PER THING; LAGOON AT HIS FIRST WRITE',tabs('TODAY','a')+home(MORNING),{pal:'Lagoon'})
+  +phone('12:15 · TRAINING AT REST, THE START LINE',tabs('TRAINING','b')+training(),{line:'Bench press is ready for 82.5 today.',pal:'Lagoon'})
+  +phone('6:42 PM · LIVE MODE, THE STRIP LIT',live(),{line:'Set 1 is up. Bench press.',pal:'Lagoon'})
+  +phone('7:40 PM · PUSH A DONE; EMBER FOR A BEST',tabs('TODAY','c')+home(EVENING),{line:'Push A done. Bench 85 × 8, a best.',pal:'Ember'})
+  +phone('7:45 PM · REVIEW, THE WEEK WITH TODAY IN',tabs('REVIEW','d')+review(true),{pal:'Ember'})
+  +phone('4:00 AM · THE TURNOVER: FRIDAY, AURORA',tabs('TODAY','e')+home(FRIDAY),{pal:'Aurora'});
+ $('note').innerHTML='ONE THURSDAY ACROSS THE NEW SHEETS, IN '+(POR?'PORCELAIN':'OBSIDIAN')+': HOME SAYS ONE LINE PER THING AND HER SOUL TAKES THE MORNING’S LAGOON AT HIS FIRST WRITE; HOLD THE TABS AND THE GLASS LENS SLIDES TO TRAINING, WHERE THE PLAN WAITS AT REST AND START LIFTS ITS LINE INTO THE STRIP; LIVE MODE RISES; THE EVENING HOME SAYS PUSH A DONE WITH THE FLECK ON THE DAY LABEL AND EMBER FOR A BEST; THE LENS TO REVIEW, THE WEEK ARRIVES WITH THURSDAY’S DAB AND READS THE DAY ON A TAP; QUIET HOURS; THE 04:00 TURNOVER ROLLS THE DAY LABEL AND PAINTS AURORA. SAME SOUL, SAME TABS, SAME TYPE, SAME INK LINE ON EVERY PAGE.';
+ document.fonts.ready.then(()=>{document.body.dataset.start='1';document.body.dataset.done='1'});
+}else{
+ $('row').innerHTML=phone('7:10 · HOME, ONE LINE PER THING',`<div id="stage" class="abs" style="inset:0"></div><div id="tabsP"></div><div class="clock" id="clock">7:10</div>`,{id:'P',fing:1});
+ const P=$('P'),st=$('stage'),f=$('fing'),cap=document.querySelector('.cap'),setCap=t=>cap.textContent=t,clock=$('clock');
+ const S=.78,gap=14,step=390*S+gap,base=(390-390*S)/2;
+ let strip_,words,line;
+ // The four live pages side by side at full size, the tab row on top (its ink line is the carriage).
+ const buildStrip=(pages,on)=>{st.innerHTML=`<div id="strip" class="abs" style="left:0;top:0;width:${4*390}px;height:844px;transform:translateX(${-390*on}px)">${pages.map((p,j)=>`<div class="page" id="pg${j}" style="left:${j*390}px">${p}</div>`).join('')}</div>`;
+  $('tabsP').innerHTML=tabs(TABS[on],'T');strip_=$('strip');words=[...$('T').querySelectorAll('span')];line=$('Tl')};
+ const setActive=i=>words.forEach((w,k)=>w.animate([{color:getComputedStyle(w).color},{color:`rgba(${POR?'18,16,22':'245,242,236'},${k===i?1:.38})`}],{duration:160,fill:'forwards'}));
+ // 42: hold the tab row, the lens forms and the pages shrink; slide; let go on the target.
+ const lensTo=async(from,to)=>{f.style.left=(TX[from]+40)+'px';f.style.top='92px';f.style.opacity=1;await sleep(260);
+  P.insertAdjacentHTML('beforeend',`<div class="glass" id="LP" style="left:${TX[from]-10}px;top:70px;width:${TABS[from].length*10.6+20}px;height:40px"></div>`);const lp=$('LP');
+  lp.animate([{opacity:0,transform:'scale(.6)'},{opacity:1,transform:'scale(1)'}],{duration:320,easing:SET,fill:'forwards'});line.animate([{opacity:1},{opacity:0}],{duration:160,fill:'forwards'});
+  P.style.background=getComputedStyle(P).getPropertyValue('--stage');
+  for(let j=0;j<4;j++){const pg=$('pg'+j);pg.style.borderRadius='34px';pg.style.boxShadow=POR?'0 0 0 1px rgba(0,0,0,.06)':'0 0 0 1px rgba(255,255,255,.08)';pg.animate([{transform:'scale(1)',left:(j*390)+'px'},{transform:`scale(${S})`,left:(j*step)+'px'}],{duration:360,easing:H,fill:'forwards'});pg.style.opacity=j===from?1:.55}
+  strip_.animate([{transform:strip_.style.transform},{transform:`translate(${base-from*step}px,150px)`}],{duration:360,easing:H,fill:'forwards'});
+  words[from].animate([{transform:'scale(1)'},{transform:'scale(1.12)'}],{duration:240,easing:SET,fill:'forwards'});await sleep(800);
+  const n=Math.round(Math.abs(to-from)*520/16);let last=from;
+  for(let s=1;s<=n;s++){const p=s/n,e=1-Math.pow(1-p,2.2),x=TX[from]+(TX[to]-TX[from])*e;f.style.left=(x+40)+'px';lp.style.left=(x-10)+'px';const pos=from+(to-from)*e;strip_.style.transform=`translate(${base-pos*step}px,150px)`;
+   const near=Math.round(pos);if(near!==last){words[last].animate([{transform:'scale(1.12)'},{transform:'scale(1)'}],{duration:200,fill:'forwards'});words[near].animate([{transform:'scale(1)'},{transform:'scale(1.12)'}],{duration:200,easing:SET,fill:'forwards'});setActive(near);lp.animate([{width:lp.offsetWidth+'px'},{width:(TABS[near].length*10.6+20)+'px'}],{duration:200,fill:'forwards'});for(let j=0;j<4;j++)$('pg'+j).style.opacity=j===near?1:.55;last=near}
+   await sleep(16)}
+  await sleep(400);f.style.opacity=0;lp.animate([{opacity:1,transform:'scale(1)'},{opacity:0,transform:'scaleY(.2) translateY(60px)'}],{duration:280,easing:H,fill:'forwards'});words[to].animate([{transform:'scale(1.12)'},{transform:'scale(1)'}],{duration:280,fill:'forwards'});
+  for(let j=0;j<4;j++){const pg=$('pg'+j);pg.animate([{transform:`scale(${S})`,left:(j*step)+'px',borderRadius:'34px'},{transform:'scale(1)',left:(j*390)+'px',borderRadius:'0px'}],{duration:480,easing:H,fill:'forwards'})}
+  strip_.animate([{transform:strip_.style.transform},{transform:`translate(${-390*to}px,0)`}],{duration:480,easing:H,fill:'forwards'});strip_.style.transform=`translate(${-390*to}px,0)`;
+  line.style.left=TX[to]+'px';line.firstElementChild.setAttribute('d',lens(TABS[to].length*10.6,1.2));line.animate([{opacity:0},{opacity:1}],{duration:240,delay:160,fill:'forwards'});
+  await sleep(700);P.style.background='';lp.remove();for(let j=0;j<4;j++)$('pg'+j).style.opacity=1};
+ const say=(t,undo)=>{const old=P.querySelector('.tl');if(old)old.remove();if(!t)return;P.insertAdjacentHTML('beforeend',`<div class="tl" style="opacity:0">${t}${undo?'<span class="u">UNDO</span>':''}</div>`);P.querySelector('.tl').animate([{opacity:0,transform:'translateY(-50%) translateY(4px)'},{opacity:1,transform:'translateY(-50%)'}],{duration:300,easing:H,fill:'forwards'})};
+ const cut=async(ms=400)=>{const v=document.createElement('div');v.className='abs';v.style.cssText=`inset:0;background:${POR?'#fff':'#000'};opacity:0;z-index:40`;P.appendChild(v);v.animate([{opacity:0},{opacity:1}],{duration:ms/2,fill:'forwards'});await sleep(ms/2);return async()=>{v.animate([{opacity:1},{opacity:0}],{duration:ms/2,fill:'forwards'});await sleep(ms/2);v.remove()}};
+ async function play(){
+  buildStrip([review(false),home(MORNING),training(),kitchen()],1);await sleep(1400);
+  // 48: at his first write of the day, the morning's Lagoon arrives as paint
+  setCap('7:10 · HIS FIRST WRITE: LAGOON ARRIVES AS PAINT, THEN DRIES');repaint('Lagoon');await sleep(3200);
+  // 42: hold the tabs, slide to TRAINING, let go
+  setCap('12:15 · HOLD THE TABS: THE LENS, THEN TRAINING');clock.textContent='12:15';await lensTo(1,2);await sleep(300);
+  // 44: Training at rest; tap START, the line lifts into the strip, the first segment lights, the first guide wakes
+  say('Bench press is ready for 82.5 today.');setCap('6:40 PM · TAP START: THE LINE LIFTS INTO THE STRIP');clock.textContent='6:40';await sleep(1200);
+  const pg2=$('pg2');f.style.left='70px';f.style.top='244px';f.style.opacity=1;await sleep(180);f.style.opacity=0;
+  const tk=$('tk'),tkl=$('tkl');tkl.animate([{transform:'translateY(0)',filter:'drop-shadow(0 0 0 rgba(0,0,0,0))'},{transform:'translateY(-234px) scaleX(.78)',filter:`drop-shadow(0 0 6px ${POR?'#E2432A':'#FF5B3A'})`}],{duration:520,easing:H,fill:'forwards'});
+  tkl.lastElementChild.animate([{fill:POR?'rgb(18,16,22)':'rgb(245,242,236)'},{fill:POR?'#E2432A':'#FF5B3A'}],{duration:300,fill:'forwards'});tk.animate([{opacity:1},{opacity:.35}],{duration:400,fill:'forwards'});await sleep(520);
+  pg2.insertAdjacentHTML('beforeend',strip(0,0));tkl.style.opacity=0;const segs=[...pg2.querySelectorAll('.seg')];segs[segs.length-5].animate([{width:'0px'},{width:'18px'}],{duration:260,easing:SET,fill:'forwards'});
+  pg2.querySelector('svg path[stroke-dasharray]').animate([{stroke:`rgba(${POR?'18,16,22':'245,242,236'},.22)`},{stroke:`rgba(${POR?'18,16,22':'245,242,236'},.9)`}],{duration:400,fill:'forwards'});
+  say('Push A running. Bench press first.');tk.getAnimations().forEach(a=>a.cancel());tk.querySelector('svg')?.remove();tk.textContent='PAUSE';tk.style.opacity=1;tk.insertAdjacentHTML('beforeend',`<svg style="position:absolute;left:0;top:22px;overflow:visible" width="60" height="12"><path d="${lens(54,1.6)}" fill="rgb(var(--ink))"/></svg>`);await sleep(900);
+  // live mode rises on the first exercise, the plan sinks away
+  setCap('6:42 PM · LIVE MODE RISES ON THE FIRST EXERCISE');clock.textContent='6:42';const L=document.createElement('div');L.className='abs';L.style.cssText=`inset:0;background:${POR?'#fff':'#000'};opacity:0;transform:translateY(60px);z-index:5`;L.innerHTML=live();P.appendChild(L);say('Set 1 is up. Bench press.');
+  L.animate([{opacity:0,transform:'translateY(60px)'},{opacity:1,transform:'translateY(0)'}],{duration:480,easing:H,fill:'forwards'});st.animate([{transform:'scale(1)',opacity:1},{transform:'scale(.96)',opacity:0}],{duration:420,easing:H,fill:'forwards'});$('T').animate([{opacity:1},{opacity:0}],{duration:300,fill:'forwards'});await sleep(1800);
+  // 7:40 pm: Home says Push A done; the fleck lands on the day label (38); Ember for a best (48)
+  const back=await cut();L.remove();st.getAnimations().forEach(a=>a.cancel());st.style.opacity=1;$('T').getAnimations().forEach(a=>a.cancel());
+  buildStrip([review(true),home(EVENING),training(),kitchen()],1);say('');clock.textContent='7:40';setCap('7:40 PM · PUSH A DONE, ONE LINE; THE FLECK LANDS ON THE DAY LABEL');await back();
+  const hero=$('hero');hero.animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:260,fill:'forwards'});
+  const fk=document.createElement('div');fk.className='abs';fk.style.cssText=`left:200px;top:240px;width:10px;height:8px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:var(--live);filter:blur(.6px);z-index:9`;P.appendChild(fk);
+  const dayEl=$('day'),dw=dayEl.getBoundingClientRect().width/(document.body.classList.contains('x2')?2:1);
+  fk.animate([{transform:'translate(0,0) scale(1.4)',opacity:1},{transform:`translate(${22+dw+8-200}px,${142-240}px) scale(1)`,opacity:1,offset:.6},{transform:`translate(${22+dw+8-200}px,${142-240}px) scale(.9)`,opacity:.45}],{duration:2200,easing:H,fill:'forwards'});
+  await sleep(900);say('Push A done. Bench 85 × 8, a best.');await sleep(1500);setCap('7:41 PM · A BEST TODAY: EMBER, FOR THE REST OF THE DAY');repaint('Ember');await sleep(3200);
+  // 42 again, to REVIEW; 46: the week arrives band by band with Thursday's dab; tap Thursday
+  setCap('7:45 PM · THE LENS TO REVIEW');clock.textContent='7:45';say('');await lensTo(1,0);
+  setCap('REVIEW · THE WEEK ARRIVES, THURSDAY’S SESSION IN');const kids=[...$('grid').children];kids.forEach(k=>k.style.opacity=0);await sleep(200);kids.forEach((k,i)=>k.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'translateY(0)'}],{duration:360,delay:Math.min(i*22,700),easing:SET,fill:'forwards'}));await sleep(1800);kids.forEach(k=>{k.getAnimations().forEach(a=>a.cancel());k.style.opacity=1});
+  setCap('TAP THURSDAY: THE PAGE READS THE DAY');f.style.left=cx(3)+'px';f.style.top='250px';f.style.opacity=1;await sleep(200);f.style.opacity=0;
+  [...$('pg0').querySelectorAll('.col')].forEach(el=>{if(el.dataset.c!=='3')el.style.opacity=.3});
+  for(const [id,txt] of [['rctx','Thursday'],['rhero','Bench best, 4 done']]){const el=$(id);el.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:180,fill:'forwards'});await sleep(180);el.textContent=txt;el.animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:260,fill:'forwards'})}
+  $('rll').textContent='THURSDAY';[...$('pg0').querySelectorAll('.rl')].forEach((e,k)=>{e.animate([{opacity:1},{opacity:0}],{duration:160,fill:'forwards'});setTimeout(()=>{const [d,t]=THU[k];e.innerHTML=`<span style="font-weight:600;color:rgba(var(--ink),var(--s2))">${d}</span>&nbsp; ${t}`;e.animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'translateY(0)'}],{duration:300,delay:k*50,easing:H,fill:'forwards'})},180)});
+  say('Thursday was the bench best.');await sleep(2400);
+  // 11:10 pm: quiet hours, nothing changes; 4:00 am: the turnover rolls the day label and paints Aurora
+  const back2=await cut();buildStrip([review(true),home(NIGHT),training(),kitchen()],1);say('');clock.textContent='11:10';setCap('11:10 PM · QUIET HOURS: NOTHING ASKS, NOTHING CHANGES');await back2();await sleep(1800);
+  setCap('4:00 AM · THE TURNOVER: THE DAY LABEL ROLLS, AURORA ARRIVES');clock.textContent='4:00';
+  const d=$('day'),c=$('ctxl'),h2=$('hero'),sk=$('sk');for(const [el,t] of [[d,'Friday morning'],[c,'today'],[h2,'Pull A']]){el.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:180,fill:'forwards'});await sleep(180);el.textContent=t;el.animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:260,fill:'forwards'})}
+  const pg1=$('pg1');[...pg1.querySelectorAll('.t34,.b:not(#day):not(#ctxl)')].forEach(el=>{if(parseInt(el.style.top)>=300)el.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'})});[...pg1.querySelectorAll('.lbl.s2')].forEach(el=>el.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'}));await sleep(220);
+  pg1.insertAdjacentHTML('beforeend',`<div id="fri" style="opacity:0">${startKey('START PULL A',1)}${next(388,FRIDAY.rows)}</div>`);$('fri').animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'translateY(0)'}],{duration:320,easing:H,fill:'forwards'});
+  await sleep(400);repaint('Aurora');await sleep(3400);document.body.dataset.done='1'}
+ document.fonts.ready.then(()=>{document.body.dataset.start='1';play()});
+}
+</script>
+</body>
+</html>

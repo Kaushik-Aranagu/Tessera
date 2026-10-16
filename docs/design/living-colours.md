@@ -49,6 +49,7 @@ Ember and Orchard are the two that mean something; the rest are time of day. Not
 ## Cadence
 - **At most three changes a day,** and never within two hours of the last. The 04:00 turnover is one; a change of kind in the day (first workout finished, evening, a look change) may be another.
 - **Only when she's idle:** no capture, ask, ghost row, workout set, cook step or UNDO in flight; never in a live workout; never in quiet hours (23:00 to 07:00) except at the 04:00 turnover.
+- **And never while something is drying:** a repaint waits for the end of any `Theme.Motion.dry` in flight (the done fleck on the day label, a hero that just changed), so two arrivals never share a moment (seam 2 of `day-reel.md`).
 - A pick made while she's busy waits for idle. If she's not idle within 30 minutes it's dropped, and the next moment picks again.
 - Claude's once-a-day pick, if any, replaces the 04:00 pick for the day; later changes that day come from the rules inside Claude's palette.
 
