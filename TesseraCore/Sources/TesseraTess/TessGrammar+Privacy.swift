@@ -31,10 +31,13 @@ extension TessGrammar {
             return note
         }
         guard PrivateFacts.isMoneyShaped(phrase) else { return nil }
-        if case let .task(_, startsAt)? = parseTask(phrase, context: context), startsAt != nil {
+        if Self.isSomethingToDo(phrase), case let .task(_, startsAt)? = parseTask(phrase, context: context),
+           startsAt != nil
+        {
             return nil
         }
-        return note
+        // "paid rent 2100 fri": a private note on that day (Product 1:15 PM PT).
+        return parsePrivateLog(phrase, context: context) ?? note
     }
 
     /// "remember my rent is 2100": a sum of money is never kept, and never leaves the phone (v9 W10).

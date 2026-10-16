@@ -18,7 +18,7 @@ public struct TessGrammar {
         case note(body: String, on: Date? = nil)
         /// A line with a secret word: a private note on the phone, never the model, Claude, memory or the miss log.
         /// `remembered` when he said "remember …" (Tess adds "I don't keep passwords.").
-        case privateNote(body: String, remembered: Bool)
+        case privateNote(body: String, remembered: Bool, on: Date? = nil)
         /// Kitchen: "buy milk", "milk, eggs, 2 lemons".
         case groceries(lines: [String])
         /// "cook carbonara" (now, `on` nil) or "cook carbonara thu" (a dated task linking the recipe).
@@ -118,8 +118,12 @@ public struct TessGrammar {
             || phrase.firstMatch(of: /^[$£€₹]\s?\d/) != nil
         {
             // Something to do with a day wins over its amount (12:13 PM PT): "pay rent 1800 friday" is a task, said
-            // back without its words. "spent $23.47 at trader joe's sat" stays the miss line.
-            return Self.isSomethingToDo(phrase) ? parseTask(phrase, context: context) : nil
+            // back without its words. Money said in the past with a day is a private note on that day ("paid rent
+            // 2100 fri", Product 1:15 PM PT); with no day it stays the miss line.
+            return Self.isSomethingToDo(phrase) ? parseTask(phrase, context: context) : parsePrivateLog(
+                phrase,
+                context: context
+            )
         }
         // A bare set with nothing in focus ("80 for 8" while shopping) is never an item or a task: the model reads it.
         if text.firstMatch(of: /^\d+(?:\.\d+)?(?: ?kg| ?lb)?(?: ?x ?| for | by )\d+(?: reps)?$/) != nil {
@@ -318,6 +322,13 @@ public struct TessGrammar {
     }
 
     /// "watered plants sat", "saw mum yesterday": a note dated that day (Product, 2026-10-15).
+    /// A past-tense log of money, dated, kept private: "paid rent 2100 fri".
+    func parsePrivateLog(_ phrase: String, context: TessContext) -> Parse? {
+        guard case let .note(_, on)? = parsePastLog(phrase, context: context) else { return nil }
+        let body = phrase.trimmingCharacters(in: .whitespacesAndNewlines)
+        return .privateNote(body: body.prefix(1).uppercased() + body.dropFirst(), remembered: false, on: on)
+    }
+
     private func parsePastLog(_ phrase: String, context: TessContext) -> Parse? {
         let words = phrase.split(separator: " ").map(String.init)
         guard let first = words.first, Self.isPastVerb(first),

@@ -34,7 +34,8 @@ struct PrivacyFollowupTests {
                                             use: .capture))
     }
 
-    @Test(arguments: ["slept badly", "knee hurts", "headache", "body fat 18%", "resting heart rate 58"])
+    @Test(arguments: ["slept badly", "knee hurts", "headache", "body fat 18%", "resting heart rate 58", "feeling sick",
+                      "feeling sick, no gym", "sick today", "i'm sick, skip push", "feeling unwell"])
     func healthWithNoNumberIsAPrivateNote(_ phrase: String) async {
         #expect(PrivateFacts.isWalled(phrase), "\(phrase)")
         let result = await run(phrase)
@@ -42,8 +43,21 @@ struct PrivacyFollowupTests {
         #expect(claude.heard.isEmpty)
     }
 
-    @Test(arguments: ["bench 80 x 8", "knee day at the gym", "weigh the flour 500 g", "Costco run saturday",
-                      "budget meeting 3pm", "pay rent fri 7:30"])
+    @Test(arguments: [
+        "bench 80 x 8",
+        "knee day at the gym",
+        "sick of meetings",
+        "that set was sick",
+        "sick set on bench",
+        "that workout was sick",
+        "sick of rice, buy pasta",
+        "sick of this",
+        "sick beat",
+        "weigh the flour 500 g",
+        "Costco run saturday",
+        "budget meeting 3pm",
+        "pay rent fri 7:30"
+    ])
     func nearMissesStayUnwalled(_ phrase: String) {
         #expect(!PrivateFacts.isWalled(phrase), "\(phrase)")
     }

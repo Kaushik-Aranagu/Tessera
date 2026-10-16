@@ -301,8 +301,13 @@ public final class TessCaptureEngine: TessCapturing {
                 return (record, Self.privateTaskLine(startsAt, context: context))
             }
             return (record, startsAt.map { "\(title), \(Self.when($0, context: context))." } ?? "\(title), in Later.")
-        case let .privateNote(body, remembered):
-            let record = try engine.perform(CreateNote(body: body, isPrivate: true), by: .tess, pending: pending).record
+        case let .privateNote(body, remembered, on):
+            let record = try engine.perform(
+                CreateNote(body: body, on: on, isPrivate: true),
+                by: .tess,
+                pending: pending
+            )
+            .record
             // She never repeats the value (R6).
             return (record, remembered ? "Private note, kept. I don't keep passwords." : "Private note, kept.")
         case let .note(body, on):

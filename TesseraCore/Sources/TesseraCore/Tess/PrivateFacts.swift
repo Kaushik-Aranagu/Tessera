@@ -49,6 +49,13 @@ public enum PrivateFacts {
 
     // MARK: Body (W2, W3)
 
+    /// Research private-health-words CR1: "sick of rice", "that set was sick", "sick beat".
+    nonisolated(unsafe) static let sickSlang: [Regex<Substring>] = [
+        /\bsick\s+of\b/,
+        /\b(?:set|lift|pr|workout|session|pump|song|view|beat|car|shot|play|trick)\s+(?:was|is|looks|looked)?\s*sick\b/,
+        /\bsick\s+(?:set|lift|pr|workout|session|pump|song|view|beat|car|shot|play|trick)\b/,
+    ]
+
     static let weighWords: Set<String> = ["weigh", "weighs", "weighed", "weighing", "weigh-in", "bw", "scale"]
     static let bodyUnits: Set<String> = ["lb", "lbs", "kg", "kgs", "pounds", "kilos"]
     static let dayWords: Set<String> = ["this", "morning", "today", "tonight", "evening", "night", "am", "pm", "at",
@@ -63,7 +70,7 @@ public enum PrivateFacts {
     static let symptoms: Set<String> = ["migraine", "nausea", "nauseous", "fever", "rash", "headache", "vomiting",
                                         "vomited", "dizzy", "diarrhea", "cramps", "insomnia", "symptoms", "hurts",
                                         "hurt", "hurting", "aches", "ache", "aching", "sore", "injured", "sprained",
-                                        "slept", "cramping"]
+                                        "slept", "cramping", "sick", "unwell"]
     /// Kitchen units: "weigh the flour 500 g" is the kitchen, not his body (MB34).
     static let kitchenUnits: Set<String> = ["g", "gram", "grams", "oz", "ml", "cup", "cups", "tbsp", "tsp"]
 
@@ -74,7 +81,10 @@ public enum PrivateFacts {
         guard !lower.isEmpty, !isTraining(lower) else { return false }
         let words = words(lower)
         let hasNumber = words.contains { $0.first?.isNumber == true }
-        if words.contains(where: symptoms.contains) || lower.firstMatch(of: /\d\s*(?:mg|mcg)\b/) != nil
+        // "Feeling sick" is a body fact (HW19, health slice 1); slang and "sick of" are not (Research CR1).
+        let sickOf = Self.sickSlang.contains { lower.firstMatch(of: $0) != nil }
+        if words.contains(where: { symptoms.contains($0) && !($0 == "sick" && sickOf) }) || lower
+            .firstMatch(of: /\d\s*(?:mg|mcg)\b/) != nil
             || lower.firstMatch(of: /\bbody\s?fat\b|\bbf\s*\d/) != nil
         {
             return true

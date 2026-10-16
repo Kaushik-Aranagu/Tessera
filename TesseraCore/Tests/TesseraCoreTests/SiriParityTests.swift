@@ -82,6 +82,31 @@ struct SiriParityTests {
         #expect(claude.heard.isEmpty)
     }
 
+    @Test func paidWithADayIsAPrivateDatedNoteEverywhere() async throws {
+        // Product 1:15 PM PT: "paid rent 2100 fri" is a private note on Friday on the Bar, from Tess and from Siri.
+        // Said on Thursday Oct 15 in the past tense, "fri" is last Friday, Oct 9.
+        let friday = try #require(Self.calendar.date(from: DateComponents(year: 2026, month: 10, day: 9, hour: 12)))
+        for capture in await [say("paid rent 2100 fri"), say("paid rent 2100 fri", tell: true)] {
+            #expect(capture.line == "Private note, kept." && capture.records.map(\.action) == ["createNote"])
+        }
+        #expect(try add("paid rent 2100 fri") == "Private note, kept.")
+        let notes = store.context.objects.values.filter { $0.title == SecretWords.title }
+        #expect(notes.count == 3 && notes.allSatisfy { store.value("isPrivate", of: $0) == .bool(true) })
+        // Dated on that day, on the Bar and for Siri alike.
+        let grammar = TessGrammar(store: store, classes: engine.classes)
+        let context = TessContext(now: Self.now, calendar: Self.calendar)
+        for parse in [grammar.parse("paid rent 2100 fri", context: context),
+                      grammar.privateParse("paid rent 2100 fri", context: context)]
+        {
+            guard case let .privateNote(_, _, on)? = parse, let on else {
+                Issue.record("not a dated private note")
+                continue
+            }
+            #expect(TesseraDay(calendar: Self.calendar).isSameDay(on, friday), "\(on.formatted(.iso8601))")
+        }
+        #expect(nothingHolds("2100") && claude.heard.isEmpty)
+    }
+
     /// S22, S24 to S26, S32 to S33, S35: ordinary things stay as they were; a task with a secret word is said back
     /// without its title.
     @Test func ordinaryAndHiddenTasks() async throws {

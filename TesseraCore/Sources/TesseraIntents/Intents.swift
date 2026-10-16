@@ -164,8 +164,8 @@ public struct CreateTaskIntent: AppIntent {
         let grammar = TessGrammar(store: engine.store, classes: engine.classes)
         let context = TessContext(commitImmediately: true)
         switch grammar.privateParse(title, context: context) {
-        case let .privateNote(body, _):
-            try engine.perform(CreateNote(body: body, isPrivate: true), by: .intent)
+        case let .privateNote(body, _, on):
+            try engine.perform(CreateNote(body: body, on: on, isPrivate: true), by: .intent)
             return "\(SecretWords.title), kept."
         case let .ask(line):
             return line
