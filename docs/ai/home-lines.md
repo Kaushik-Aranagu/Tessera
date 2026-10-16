@@ -32,6 +32,7 @@ It may not:
 - mention sleep, energy, health, body, money, people or places;
 - use "!" or emoji, greet, praise or apologise;
 - exceed 6 words or 32 characters; at Dynamic Type sizes the slot wraps, never cuts.
+- repeat a word the page already shows above or below it. **No-repeat rule:** the day label and the hero are read before the context line is written, on the phone and in Claude's check alike. A word in either (the weekday, the routine name, "done", "paused") may not appear in the context line; the rules line says "today" where it would have said the weekday, and `HomeLines` returns "today" itself whenever a day word is on the page, so the app never overrides the lens. Claude's line fails the check if it carries a day-label or hero word, and the rules line stays.
 
 The hero's form sets the pattern the context line answers:
 
@@ -43,7 +44,7 @@ The hero's form sets the pattern the context line answers:
 | paused | Push A, paused at bench | paused 21 min ago | paused 21 min ago |
 | done | Push A done | done at 7:40 pm | a bench best / done at 7:40 pm / first in 9 days |
 | done, no sets | Push A, no sets | this afternoon | this afternoon (rules only; Claude never comments on an empty workout) |
-| rest day | Rest day | Sunday | Sunday / Sunday, a cook day |
+| rest day | Rest day | today (the day label already says Sunday; no-repeat rule) | today / today, a cook day |
 | cooking | Chili, step 3 | paused 8 min ago | paused 8 min ago |
 | shopping | Groceries, 4 left | at the store | 4 left / at the store |
 | planned cook | Tacos tonight | 2 to buy | 2 to buy (count from the phone; see Kitchen's note in `first-features.md` section 3) |
