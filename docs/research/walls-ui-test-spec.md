@@ -1,7 +1,8 @@
 # WallsUITests: the walls, typed by a test instead of a person
 
 For: Builder B (writes the test and the App-side seam). Owner: Research lab. Product item AU. Oct 16, 2026, read on
-origin/master fbede70. Fixture: [`fixtures/walls-ui-phrases.json`](fixtures/walls-ui-phrases.json) (36 rows).
+origin/master fbede70. Fixture: [`fixtures/walls-ui-phrases.json`](fixtures/walls-ui-phrases.json) (66 rows: 36 typed, 20
+objectPage rows for the Core 0ai private-field mask in section 11, and 10 bare-number body rows in section 12).
 
 **Why.** The v9 gate's V5 and the Design walk's beats 7 and 8 need secret-shaped, money and body phrases typed on the
 Simulator. Builder A's safety check blocks a session from typing secret-shaped phrases, so those beats were covered by
@@ -19,7 +20,9 @@ takes its value from `ClaudeSection.fakeKey` in test code.
 | notesPage | 7 | 3 | N02 (no Notes receipt), N04, N05, N06 (Notes checks secret words only) |
 | siriAddTask | 5 | 3 | S03, S04 (P14 not on master) |
 | paste | 5 | 4 | P04 (money in the miss log) |
-| **Total** | **36** | **23** | **13** |
+| objectPage (section 11, read on 64ffb93) | 20 | 5 | PM01 to PM03, PM05 to PM07, PM11, PM12, PM14 to PM20 (no private-field mask; PM18 and PM19 have no newest row yet) |
+| askBar, bare-number body wall (section 12) | 10 | 7 | BN01, BN02, BN04 (no last-weight check, decisions 2:56) |
+| **Total** | **66** | **35** | **31** |
 
 Two findings matter for the gate itself:
 
@@ -262,6 +265,7 @@ assertion message starts with the row id.
 | `testPasteWalls` | P01 to P05 |
 | `testDayLogShowsNoValue` | the Day log, after the three above (runs last by name order; or set the order in the scheme) |
 | `WallsSiriTests.addATaskWalls` (package) | S01 to S05, one `@Test(arguments:)` row each, so Swift Testing names each row |
+| `testObjectPageMask` | PM01 to PM20 (section 11), its own launch with `-wallsSeedPrivate` |
 
 **Run:** `xcodebuild -scheme TesseraUITests -destination 'platform=iOS Simulator,name=iPhone 17' -only-testing:TesseraUITests/WallsUITests test | xcbeautify`.
 The Tessera scheme doesn't run UI tests (`project.yml:127-143`) and `scripts/test.sh` doesn't either, so Builder A
@@ -290,3 +294,72 @@ The Wall rows W1 to W14 and Inbox I1 to I4 could move into the same fixture late
 ## 10. One line for Kaushik after the install (optional)
 
 In Notes, type "wifi password is tacocat4417" and check it shows as Private note.
+
+## 11. The private-field mask rows (Core 0ai, rider R18)
+
+Product, 2:45 pm: any object flagged private shows only its class's private label ("Private note", "Private task",
+"Private memory") on the generic object page, in `PropertyList` and in the class page's "newest" row. Rows PM01 to
+PM20 are the fixture's PM1 to PM20 ([`fixtures/private-field-mask.md`](fixtures/private-field-mask.md)), with
+`surface` `objectPage`. Read on origin/master 64ffb93.
+
+**New fields.** These rows add `seed` (which fixture object), `route` (how the test gets to the page) and
+`mustNotShow` (strings no label or hint may contain). `WallRow` gains `let seed: String?`, `let route: String?` and
+`let mustNotShow: [String]?`; the typed rows don't have them, so all three are optional. `expectLine` is the label
+the page or row must show ("Private memory"); null means no label check (the controls, which instead assert that no
+private label appears).
+
+**Seeding (App only, no Core change).** Builder B adds `-wallsSeedPrivate`, read through `LaunchFlags` (simulator
+only) inside `#if DEBUG`, beside `-wallsSpy`. After `-resetDemo` it writes the fixture's objects O1 to O8 through
+`ObjectStore` with fixed ids, plus the pre-#422 note (PM16) and a forgotten hash entry (PM17). O1 is written straight
+to the store, since `RememberFact` refuses a secret word (`TessMemory.swift:142-143`). `-openObject <row id>` pushes
+that row's object page for the two rows with no tap route (PM15, PM17), through `model.open(_:_:)` like `-openLink`.
+
+**Routes the test taps.** Notes: Review, today's weekday button, the note's line (`ReviewWeek.swift:358-362`). Tasks:
+the Home queue row (`HomeQueue.swift:263`). Memories: Review, Push A (`ReviewPage.swift:269`), then its Linked from
+row (`ObjectPage.swift:254-262`). Class pages: the breadcrumb (`ObjectPage.swift:312-326`).
+
+**What it asserts, per row.**
+
+| Check | How | Rows |
+|---|---|---|
+| The label | `app.staticTexts[expectLine]` exists (the hero, or the row) | `expectLine` set |
+| Nothing leaks | No static text, button label or `accessibilityHint` contains any `mustNotShow` string (`CONTAINS[c]`) | every row with `mustNotShow` |
+| No fields | No static text "Properties" on a masked page | every `expectPrivate` row with a generic route |
+| Not masked | No "Private note", "Private task" or "Private memory" text for this object; its field row shows | PM08 to PM10, PM13 |
+| Hash | No static text matches `[0-9a-f]{16,}` | PM17 |
+
+PM18 and PM19 wait on Core 0ak's newest row and PM07 on Core 0ac slice 2 (or the 2:22 pm "Private task" title):
+their `pending` says so, and they run under `XCTExpectFailure` like any other pending row (section 8). About 1 minute
+in all: one launch, twenty pages at about 3 s each.
+
+**In the riders gate:** row PF1 in `next-build-v9r.md` section 3 runs `testObjectPageMask` with the run line in
+section 8 (`-only-testing:TesseraUITests/WallsUITests/testObjectPageMask`).
+
+## 12. The bare-number body wall (Core 0ai, rider R19)
+
+Product, 2:56 pm: "is 82.4 good?" is walled. A bare number within 10% of his last logged weight is a body fact even
+with no day word. With no weight logged, a bare decimal is walled only next to a body word (weight, weigh, kg, lb,
+body fat, BMI). Rows BN01 to BN10, surface `askBar`, read on origin/master aed5c24.
+
+**New field.** `seed` here is an object, `{"lastWeightKg": 82.0}` or `{"lastWeightKg": null}` for no weight logged.
+Builder B's `-wallsSeedPrivate` seam writes one body weight entry with that value (or none) before the row runs.
+`WallRow.seed` becomes an enum that decodes either a string (section 11) or this object.
+
+**What it asserts.** `expectNoClaude` true: the `-wallsSpy` call log stays empty and the miss log gains nothing.
+`expectNoClaude` false: the phrase is not walled, so the spy may log a call when "Tess asks Claude" is on. No row
+checks a line.
+
+| Row | Phrase | Last weight | Walled | Master today |
+|---|---|---|---|---|
+| BN01 | is 82.4 good? | 82 kg | yes | plain ("good" is not a day word, `PrivateFacts.swift:104-108`) |
+| BN02 | how's 76 looking? | 82 kg | yes | plain (a whole number is never walled) |
+| BN03 | 82.4? | 82 kg | yes | walled (control) |
+| BN04 | my weight is 82.4, good? | none | yes, body word | plain |
+| BN05 | is 82.4 good? | none | no | plain |
+| BN06 | is 3.5 good? | 82 kg | no (trap) | plain |
+| BN07 | is 120 good? | 82 kg | no (trap) | plain |
+| BN08 | rate this 8.5 | 82 kg | no (trap) | plain |
+| BN09 | is 91 good? | 82 kg | no (just over 90.2) | plain |
+| BN10 | bench 82.5 x 5 good? | 82 kg | no (set notation) | plain (`isTraining`, `PrivateFacts.swift:83`) |
+
+The band is inclusive: 73.8 to 90.2 kg for a last weight of 82. Gate row **BW1** in `next-build-v9r.md`.

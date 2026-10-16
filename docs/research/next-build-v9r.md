@@ -48,6 +48,8 @@ from the QA board and `docs/qa/review-*.md` on master. "none yet" means nothing 
 | R4 | **HW11** (with N18): the body check runs before `parsePastLog`, so "weighed 82.3 yesterday" is private. | Core | Core 0ac "Then", 0l-2, notes half 0aa | not started | **HP3** |
 | R12 | SAVE A COPY's default name becomes "Before update <day>.tessera" (today "Tessera-<day>", `Features/Backup/BackupKeeper.swift:170`), and rotation and pruning touch only the rolling prefix, with a test. | Core | Core 0af | not started | **SC1** |
 | R13 | SAVE A COPY warns "This is the Backups folder. Daily copies here get replaced. Save somewhere else?" when he picks the Backups folder. After R12. | Builder B | B 0t | not started | **SC2** |
+| R18 Private-field mask: any object flagged private shows only its class's private label ("Private note", "Private task", "Private memory") with its fields hidden, on the generic page, `PropertyList` and the class page's "newest" row (decisions 2:45 pm) | Core 0ai | not yet in a PR | none yet | none yet | **PF1** (fixture PM1 to PM20, `fixtures/private-field-mask.md`) | `ObjectPage.swift:227-228` prints a memory's or task's title as hero and class line, `:342-360` prints every field (a note's Body, a memory's Rule), `:261` names a private memory in Linked from. No "newest" row on master yet (0ak). Closes R8's Builder B half too. |
+| R19 Bare-number body wall: a bare number within 10% of his last logged weight is a body fact with no day word ("is 82.4 good?"); with no weight logged, a bare decimal is walled only next to a body word (weight, weigh, kg, lb, body fat, BMI) (decisions 2:56 pm) | Core 0ai | not yet in a PR | none yet | none yet | **BW1** (walls-ui rows BN01 to BN10) | `PrivateFacts.swift:104-108` walls a decimal only when every other word is a day word, and has no last-weight check. Traps that stay plain: "is 3.5 good?", "is 120 good?", "rate this 8.5", "bench 82.5 x 5 good?". |
 | Possible: DS37 | Builder B 0u | none yet | none yet | none yet | none yet | Rider only if Product names it. `NotesView.swift:272`. |
 | Possible: DS18, DS35 | Builder A 0n | none yet | none yet | none yet | none yet | Rider only if Product names it. `WorkoutFinishView.swift:96`, `ExerciseDigest.swift:106`. |
 
@@ -187,6 +189,8 @@ The riders script is `next-build-script-v9.md` copied and changed as below. Row 
 | SC1 | SAVE A COPY; read the suggested name. Background past the daily copy. | "Before update <day>.tessera". The rolling seven never replace or prune it. |
 | SC2 | SAVE A COPY into the Backups folder. | The warning line; saving elsewhere is one tap. |
 | UW1 | VoiceOver on: Home swipe done, a capture, delete a note. | Each UNDO stays 10 s and takes back what its line names: "X, taken back." |
+| PF1 | `WallsUITests/testObjectPageMask` with `-wallsSeedPrivate` (rows PM1 to PM20), then VoiceOver on Push A's Linked from and a private note's generic page (R18). | A private memory, note or task shows only "Private memory", "Private note" or "Private task": no field names, values or counts, and VoiceOver reads the same. Public controls show their fields. |
+| BW1 | `WallsUITests` rows BN01 to BN10 with `-wallsSeedPrivate` seeding the last weight (R19). | BN01 to BN04 make no Claude call and add nothing to the miss log; BN05 to BN10 stay plain. |
 
 Fixture rows for F1 to F12 run under their own ids on the PR that closes them, and on the pin if the PR is in. A row
 whose PR isn't in is skipped, not failed.

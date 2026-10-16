@@ -135,7 +135,7 @@ Columns: the class, the facts the phone counted, the expected rules line or "emp
 | SL-L2 | List (27) | 0 items | empty | 0 | "Add something" |
 | SL-X1 | Live workout (10) | anything | empty | 0 | any line in the side band |
 | SL-H1 | Habit (not built) Water | 5 of 7 days this week | "5 of 7 days this week." | 6 / 22 | "streak" |
-| SL-H2 | Habit (not built) Weigh in | 4 of 7 days | empty | 0 | "82.4" (see Q4) |
+| SL-H2 | Habit (not built) Weigh in | 4 of 7 days | "4 of 7 days this week." | 6 / 22 | "82.4", "kg" (Q4, ruled 2:44) |
 | SL-BW1 | Body weight (not built) | 12 weigh-ins | empty | 0 | any weight, "kg" |
 | SL-MN1 | Money (not built) | 9 spends | empty | 0 | "$" |
 | SL-BK1 | Book (not built) Dune | 4 notes; last Sunday | "4 notes, the last on Sunday." | 6 / 28 | "Great read" |
@@ -172,7 +172,7 @@ Each glance holds one big fact (Hero 56, its unit at 21) and at most two small f
 | GL-19 | Claude receipts: BY JOB (24) | "Home lines" | "$1.10" (1 / 5) | "21 calls" (2 / 8) | ledger |
 | GL-20 | Backups: WHAT'S IN ONE (25) | "4 am" *last one* | "7 kept" (2 / 6) | "Never your Claude key." (4 / 22) | Backup Info |
 | GL-21 | A class page: ITS OBJECTS (26) | "38" *objects* | the newest: "Squat rack" (2 / 10) | the most used: "Olympic bar" (2 / 11) | objects(of:) |
-| GL-22 | Any other object (27), Equipment "Rack" | its most-used field: "20" *kg bar* | next field: "plates to 25 kg" (4 / 15) | "linked from 3" (3 / 13) | fields; backlinks |
+| GL-22 | Any other object (27), Equipment "Rack" | its most-used field (edited most in the last 30 days): "20" *kg bar* | next field: "plates to 25 kg" (4 / 15) | "linked from 3" (3 / 13) | fields; backlinks |
 
 ### Glance edge cases
 
@@ -199,7 +199,7 @@ Core (pure, `TesseraCoreTests`), one `@Test` per name, `@Suite("Side lines")`:
 - `sideLineNeverHoldsSecretWordOrWalledFact` (SL-D4, SL-T4, SL-PA2)
 - `privateNoteSideLineIsEmpty` (SL-N5)
 - `privateNotesAreCountedNeverNamed` (SL-N1, SL-N2, GL-E5)
-- `bodyWeightAndMoneySidesHaveNoLine` (SL-BW1, SL-MN1, SL-H2)
+- `bodyWeightAndMoneySidesHaveNoLine` (SL-BW1, SL-MN1); `bodyHabitShowsCountOnly` (SL-H2)
 - `firstDaySideLineIsEmpty` (SL-D2, SL-T3, SL-I3)
 - `taskStoryCountsHandMovesNotNightlyRolls` (SL-T1, SL-T2)
 - `exerciseLineSaysBestNeverRecord` (SL-E1)
@@ -231,7 +231,7 @@ App (`TesseraTests`, the SideHost):
 - **Q1. Design's task example.** "Moved twice. Today's the day." is two sentences, and `fitsDetail` refuses it (`HomeLines.swift:199`). This file uses "Moved twice, and today's the day." Design to confirm.
 - **Q2. Thing-first on a side.** The Kitchen lines ("7 for 2 cooks, 3 just because.") lead with a count, and the title sits on the spine above. This file keeps that, and leads with a thing only when the line names another one. Product to confirm, or every line gains the title (which then needs the private-title rule E2 in every row).
 - **Q3. Do nightly rolls count as moves?** `rolls` is "never shown as misses" (`Tasks/Tasks.swift:17`). This file counts only his own moves and gives rolls as "First planned Monday". Product to rule.
-- **Q4. A habit named for the body.** "Weigh in, 4 of 7 days" gives no weight, but it is a body habit. This file keeps it empty (SL-H2) until Product rules.
+- **Q4. A habit named for the body.** "Weigh in, 4 of 7 days" gives no weight, but it is a body habit. Ruled 2:44 PM (4): a body-named habit shows its count only, never a value, so SL-H2 reads "4 of 7 days this week."
 - **Q5. Data to build.** The task move count, a public routine last-run helper, cook durations, a month sum, buy cadence (USUALLY), planned cooks and the food table are each one Core helper or more. Cadence needs care: bought rows are deleted at the shop's end, so it must read the op log, or keep a buy date on the ingredient.
 - **Q6. "And N more" in a two-slot glance.** Design's row 18 says small 2 is "the second named, or 'and N more' from four". This file joins them ("Tile quotes and 3 more") so the second name is not lost. Design to confirm.
-- **Q7. GL-22's "most-used field".** "Most used" has no definition on master. This file reads it as the field most often set across that class's objects. Design to confirm.
+- **Q7. GL-22's "most-used field".** Ruled 2:44 PM (7): the most-used field is the field edited most in the last 30 days, counted from his own edits in the op log.
