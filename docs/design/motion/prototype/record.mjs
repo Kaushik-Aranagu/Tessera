@@ -13,7 +13,7 @@ await page.evaluate(() => window.ready);
 const duration = await page.evaluate(() => window.sceneDuration());
 const frames = Math.ceil(duration * FPS);
 const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-vcodec', 'png', '-framerate', String(FPS), '-i', '-',
-  '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '18', '-preset', 'medium', '-movflags', '+faststart', out]);
+  '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '18', '-preset', 'medium', '-movflags', '+faststart', out]);
 for (let i = 0; i < frames; i++) {
   const data = await page.evaluate(t => { window.renderAt(t); return document.getElementById('screen').toDataURL('image/png'); }, i / FPS);
   const buf = Buffer.from(data.slice(data.indexOf(',') + 1), 'base64');
