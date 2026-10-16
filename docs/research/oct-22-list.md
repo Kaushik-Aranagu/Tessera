@@ -38,8 +38,8 @@ QA read the gate run; Design passed the 66 walk; and he says "install it". Anyth
    signing or install error: Branch 2 step 4 (stop, never delete).
 4. The checks right after (below), then the review items: `review-refresh-3.md` items 1 to 14, about 10 minutes
    (items 12 and 13 ride his evening workout). Trip rows T1 and T2 happen in New York.
-5. If anything looks wrong: stop, don't log, don't delete. Roll back by installing 444e72b over the top (the decided
-   rollback build); never restore a backup made on the pin onto it.
+5. If anything looks wrong: stop, don't log, don't delete. Roll back by installing 7b321d2 over the top (the rollback
+   after the pin, decisions 12:16 PM PT; V4 shows it opens the v9 store); never restore a backup made on the pin onto it.
 6. Product logs the install line in `decisions.md` and `board.md`. Signing then lapses 7 days after this install.
 
 ## Branch 2: the pin isn't ready, re-sign 7b321d2 as is
