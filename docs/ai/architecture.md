@@ -205,13 +205,25 @@ No Opus or Fable. The Home lines eval (ship list AI-5) runs Haiku and Sonnet sid
 - **Done never changes.** The done mode's colour and motion read from fixed tokens, outside `SoulPalette`'s living pigments.
 - **Never mid-moment.** A new palette arrives only when she is idle and no capture, ask, ghost row or workout set is in flight, and it crossfades through `MotionPolicy` over about 2.8 s, the same wash every change of hers already uses. Reduce Motion gets a plain crossfade.
 
-### How often
+### Who picks, and how often (Product's rules, Oct 16 12:10 AM PT)
 
-A slow drift. The `soulPalette` job runs at most 3 times a day: at the 04:00 turnover, when his day's shape changes in kind (first workout finishes; evening starts at 18:00), and when the look changes. Never on a timer, never more than once an hour, never during a workout. Claude may answer "keep" by returning the current palette with zero nudges; the instructions say that's the usual answer and a change should feel like weather, not a notification. Design may tighten these.
+Product ruled: Tess only; the base and resting colours stay fixed per look; an on-phone picker chooses by default, and Claude is used only under "Tess asks Claude", cached, **at most once a day**; changes stay inside each look's soul palette, land then dry, and text contrast never depends on them. Design 48 owns the bounds and what moves her. This team owns the choosing side.
+
+So there are two pickers behind one `LivingPalette`:
+
+1. **On-phone picker (always, free, offline).** Runs at the 04:00 turnover and when the day's shape changes in kind (first workout finished, evening at 18:00, look change). It reads the same inputs as the table above and maps them to a palette and nudge inside Design's bounds. It is what she wears whenever Claude is off, offline, capped, or hasn't answered yet.
+2. **Claude (optional, once a day).** Under the switch, the `soulPalette` job runs once at the 04:00 turnover with the same pack plus the recent memory lines, and may replace the on-phone pick for the day. Its answer is cached for the day; later shape changes that day are handled by the on-phone picker, nudging inside the palette Claude chose. Never on a timer, never in a workout, never mid-moment.
+
+**Rules or Foundation Models for the on-phone picker? Recommendation: plain rules first, Foundation Models later if rules feel flat.** A few lines why:
+- The inputs are five or six small facts and the output is one of six names plus two nudges. A rule table (time of day × day state × look, with season as a nudge) covers it in about 40 lines, runs in microseconds, and is unit-testable against Design 48's bounds. Foundation Models adds a 1 to 3 s call, a model that may be unavailable (low battery, not downloaded), and output we'd still have to clamp.
+- Design's "feels like weather" bar is about cadence and motion, which rules control exactly; the model buys variety, not control.
+- The seam is the same either way: both return a `LivingPalette`, so swapping the rules for a `LanguageModelSession` with a `@Generable` palette type later is one file (`OnDeviceTessModel` already shows the pattern). If after a week of use the rules read as predictable, that's the moment to try the model, with the rules kept as its fallback.
+
+**Contrast.** The engine checks every resolved pigment against the look's base for her moment states and clamps lightness into Design's range; text never takes its colour from her pigments, so no line's legibility depends on this.
 
 ### Cost and cache
 
-Haiku 5.5, effort low, about 1,200 tokens in (mostly the stable palette space, which is the cacheable prefix) and 60 out: about $0.0002 a call, 90 calls a month at most, **about $0.02 a month**. The result caches on the pack hash in the same small JSON file as the Home lines; a cold launch paints the last chosen palette at once. Word-only jobs, this one included, step aside at 80% of the month.
+Haiku 5.5, effort low, about 1,200 tokens in (mostly the stable palette space, which is the cacheable prefix) and 60 out: about $0.0002 a call, 31 calls a month at most, **under $0.01 a month**. The result caches on the pack hash in the same small JSON file as the Home lines; a cold launch paints the last chosen palette at once. Word-only jobs, this one included, step aside at 80% of the month.
 
 ### Fallback
 
@@ -219,18 +231,18 @@ Offline, at the cap, switch off, demo, a late or failing reply, an unknown name:
 
 ### How the choice reaches the app
 
-Builder A owns the pigments. `SoulPalette.look(_:)` (`Features/Tess/TessSoul.swift:118`) reads the look's `live`, `tess` and `now` today. The change is: `SoulPalette.look(_:living:)` takes a `LivingPalette` (name, warmth, weight, chosen at) kept by a small `SoulPaletteStore` on `ThemeStore` (via `SettingsStore`, as the looks will be after #320), and resolves it to the three washes from Design's per-look, per-palette pigment table. Core writes `LivingPalette` from the `soulPalette` job's checked reply through a `.system` op (not undoable; it's weather, not something he did). The receipt and the "What Tess knows" page can show "Colours: Lagoon, since Thursday" with FORGET to pin her back to today's colours, which also pauses the job until he unpins.
+Builder A owns the pigments. `SoulPalette.look(_:)` (`Features/Tess/TessSoul.swift:118`) reads the look's `live`, `tess` and `now` today. The change is: `SoulPalette.look(_:living:)` takes a `LivingPalette` (name, warmth, weight, chosen at) kept by a small `SoulPaletteStore` on `ThemeStore` (via `SettingsStore`, as the looks will be after #320), and resolves it to the three washes from Design's per-look, per-palette pigment table. Core writes `LivingPalette` from the on-phone picker, or from the `soulPalette` job's checked reply, through a `.system` op (not undoable; it's weather, not something he did). The receipt and the "What Tess knows" page can show "Colours: Lagoon, since Thursday" with FORGET to pin her back to today's colours, which also pauses the job until he unpins.
 
 ### Could the app's context colours follow?
 
-Mechanically, yes: the same job could return a second field for `context`, `live` and `now`, and the same clamps would hold. But those tokens carry meaning across the whole app (live is vermilion, the beat stroke is cadmium, the Live Activity sky is Cobalt in every look, and the one-base rule says only layers change), so letting them drift would loosen rules he set on Oct 15. Recommendation: soul only for now; the voice token follows Design's table; the app's moment colours stay fixed. That is Product's call, as Design's `soul-explore.md` already says.
+Product has ruled Tess only for now; context colours reach the app only if he asks. For the record: mechanically, yes: the same job could return a second field for `context`, `live` and `now`, and the same clamps would hold. But those tokens carry meaning across the whole app (live is vermilion, the beat stroke is cadmium, the Live Activity sky is Cobalt in every look, and the one-base rule says only layers change), so letting them drift would loosen rules he set on Oct 15. Recommendation: soul only for now; the voice token follows Design's table; the app's moment colours stay fixed. That is Product's call, as Design's `soul-explore.md` already says.
 
 ### Slice for the ship list
 
-AI-14 **Living soul colour**: Core: `soulPalette` job, `LivingPalette`, store and checks, 3-a-day gate, pack snapshot test. Builder A: `SoulPalette.look(_:living:)`, the 2.8 s idle-only crossfade, FORGET pin. Design: the palette space, nudge ranges and the per-look pigment table. Gate: Design's eval of 20 day-shapes, with Kaushik saying the changes feel like weather on a recording. Lands after AI-4.
+AI-14 **Living soul colour**: Core: on-phone rules picker, `LivingPalette`, store and contrast clamp; `soulPalette` job once a day under the switch, pack snapshot test. Builder A: `SoulPalette.look(_:living:)`, the 2.8 s idle-only crossfade, FORGET pin. Design: the palette space, nudge ranges and the per-look pigment table. Gate: Design's eval of 20 day-shapes, with Kaushik saying the changes feel like weather on a recording. Lands after AI-4 and Design 48.
 
 ## Unverified
 
 - Haiku 5.5's minimum cacheable prefix, so whether the cache ever hits on these small prompts.
 - Whether Haiku 5.5 at effort low holds the 6-word budget reliably; the AI-5 eval decides.
-- Whether Haiku 5.5 keeps to "keep" often enough that the soul drifts rather than flickers; the AI-14 eval decides, and the 3-a-day gate bounds it either way.
+- Whether a rules picker reads as weather or as predictable after a week; that decides whether Foundation Models replaces it.
