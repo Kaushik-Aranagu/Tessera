@@ -13,7 +13,7 @@ This sheet replaces sheet 71's "which pages get a side page" and Product's 10:00
 1. **A screen is a unit.** It has a **front**, the thing you came for, and a **side**, the other side of the same thing. The side is never another place. It's the same object, or the same view, turned over.
 2. **Every screen declares exactly one side.** For now this is required: a screen without one fails review. An overlay isn't a screen (the capture veil, Speak, the running order, the swap panel). The screen under it keeps its side.
 3. **The side has a kind** (below), a word, and a way-back word. The word sits at the right of the context line and names the side. On the side, the same place names the front.
-4. **The way there** follows 71's order: the left edge is back, Tess's band is hers, and a row's own swipe stays the row's; otherwise a left swipe past 60 pt opens the side. The word always works. **When x is already taken** (sibling views on x, the live workout's exercise lane, paging by day or week), the word is the only way, and x keeps its job.
+4. **The way there** follows 71's order: the left edge is back, Tess's band is hers (a pan that starts at or below 736 is always hers, tess-picks 18b, so a side swipe starts above 736), and a row's own swipe stays the row's; otherwise a left swipe past 60 pt opens the side. The word always works. **When x is already taken** (sibling views on x, the live workout's exercise lane, paging by day or week), the word is the only way, and x keeps its job.
 5. **The spine:** the back word and the title stay put, and only the body moves (71's motion). A page with a strip keeps its strip.
 6. **No controls on a side.** A side holds facts and links, plus at most its own one key when the side is about acting on its facts (ADD 4 TO GROCERIES on INGREDIENTS). Settings and money keep every control on the front, and their side only explains.
 7. **Live things don't leave their surface.** A live screen's side is a peek over it (69's INGREDIENTS during a cook), never a page that takes the live surface away.
@@ -41,7 +41,7 @@ This sheet replaces sheet 71's "which pages get a side page" and Product's 10:00
 | 9 | A workout (finished or planned) | THE SETS (PARTS) | swipe or word | Becomes its own page, no longer the generic one. Drawn |
 | 10 | Live workout | the running order, as it is now (AHEAD) | pull down, as built | Rule 7: it's already its side |
 | 12 | Workout finish | THE SETS (PARTS) | word | Swipe down still drops into today |
-| 13 | Kitchen tab | THE WEEK'S COOKS (AHEAD), 74; PANTRY later | swipe or word | |
+| 13 | Kitchen tab | THE WEEK'S COOKS (AHEAD), 74: planned cooks by day, "N to buy" each | swipe or word | Pantry is its own area, with its own front and side (OUT AND LOW, drawn after a week of v1) |
 | 14, 15 | Groceries, and at the shop | FOR WHAT (LINKS): each thing under the cook it's for | swipe or word; a peek at the shop | REMOVE (65) keeps the row swipe |
 | 16 | A recipe | INGREDIENTS (PARTS), 69 | swipe or word | The ingredient column's send-to-Groceries swipe becomes the side's one key, ADD N TO GROCERIES, so the page owns the swipe |
 | 17 | Recipe original | COOKS (BEFORE): each time cooked, how long | swipe or word | |
@@ -103,3 +103,21 @@ This sheet replaces sheet 71's "which pages get a side page" and Product's 10:00
   - LINKS: the count and the names.
   - A side too small for two stops opens straight to the full side.
 - **Tess's line** shows at both stops, and it's the same line.
+
+## Rulings folded in (Oct 16, 2:45 PM PT)
+- **Product (decisions 2:41):**
+  - Habits, Settings and money get sides that hold facts only.
+  - A side never shows a private fact its front hides, and nothing on a side goes to Claude except what rule 3 of Tess's part allows.
+  - The recipe column swipe becomes INGREDIENTS' key.
+  - From the SideHost PR (Core 0ak) on, any new or changed screen without a side fails review. Existing screens get theirs in rollout order: 0ak, then 74's tab sides, then the drawn ones, then the rest.
+- **Kitchen** (`product/kitchen-sides-acceptance.md`):
+  - **FOR WHAT** groups by cook, soonest first, with "Just because" and "Usually" groups. A row shared by two cooks shows once, with "also dal". Tess: "7 for 2 cooks, 3 just because."
+  - **PER 100 G** comes from USDA FoodData Central (public domain), bundled, with the source shown. **Nothing ever sums these** (no totals per recipe, day or shop), because intake is a body fact. A Claude fill sends the ingredient key only, once per key, never for a private recipe and never with "Tess asks Claude" off, and NOT NOW is remembered.
+  - **COOKS** lists one line per cook, newest first. Tess: "Cooked 4 times, about 45 min." (the median; empty under 2).
+  - **INGREDIENTS'** key is ADD N TO GROCERIES with "Chicken, 7 added." and a 10 s UNDO, absent at 0.
+  - **THE WEEK'S COOKS:** Tess says "3 cooks this week, 8 to buy."
+- **Motion lab:**
+  - Tess and her band hold still as the body moves; she's part of the spine.
+  - On every turn she glances, eyes only: `sideTurned(direction)`, 0.4 toward the incoming content over 320 ms, then back over 300 ms, with the mouth at 70%. It plays only when she's idle or roaming, and never with eyes off, under Reduce Motion or in `.live`. It comes from the SideHost, not from each screen.
+  - Her side line lands at 360 ms, after the turn.
+  - There's no haptic for a side opening. Stop 2's `.selection` is the only tick.

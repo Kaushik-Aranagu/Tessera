@@ -14,7 +14,7 @@ Sheet 71's order holds on every page: the left edge is back, Tess's band is hers
 |---|---|---|
 | Today | **THE DAY**, drawn here | NOW |
 | Training | **THE WEEK**: the routines on their fixed days, with what each did last time. It's 71's LAST TIMES one level up (to draw when Builder A has LAST TIMES in) | TRAINING |
-| Kitchen | **THE WEEK'S COOKS** (Kitchen week, 67). PANTRY takes this place when Pantry arrives | KITCHEN |
+| Kitchen | **THE WEEK'S COOKS** (Kitchen week, 67). Pantry is its own area with its own side (Kitchen lead, 2:45 PM) | KITCHEN |
 | Review | None: x already moves by week (46) | — |
 
 ## THE DAY
