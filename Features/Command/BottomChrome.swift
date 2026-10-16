@@ -15,7 +15,6 @@ struct BottomChrome: View {
     @State private var layer = Layer.modes
     @State private var swell = false
     @State private var pressed = false
-    @State private var glow = false
     @State private var undos = 0
     /// The open set-count ask, drawn beside the soul until he taps an answer or says something new.
     @State private var setAsk: TessSetCountAsk?
@@ -96,9 +95,13 @@ struct BottomChrome: View {
                 focused = false
                 layer = .modes
                 if !isBusy {
-                    model.tessMode = restingOrIdle
+                    model.soul.handle(.closed)
                 }
             }
+        }
+        // An ask beside her owns the page while it waits (tess-motion.md §8, §15).
+        .onChange(of: setAsk != nil || liftAsk != nil) { _, waiting in
+            model.soul.handle(waiting ? .askWaiting : .askAnswered)
         }
         // A set ask belongs to the workout: it goes when the workout ends (QA C3).
         .onChange(of: model.session == nil) { _, ended in
@@ -107,7 +110,7 @@ struct BottomChrome: View {
             }
         }
         .onAppear {
-            model.tessMode = restingOrIdle
+            model.soul.handle(.appeared)
             breathe = !reduceMotion
             #if DEBUG
                 if LaunchFlags.has("-tessScript") {
@@ -124,7 +127,7 @@ struct BottomChrome: View {
             #endif
         }
         .sensoryFeedback(.selection, trigger: opens)
-        .sensoryFeedback(.success, trigger: glow) { _, lit in lit }
+        .sensoryFeedback(.success, trigger: model.soul.isBright) { _, lit in lit }
         .sensoryFeedback(.decrease, trigger: undos)
         // Core's overnight lines (the 04:00 roll, a workout wrapped up while away) show once, beside the soul
         // (late-night #13).
@@ -135,11 +138,6 @@ struct BottomChrome: View {
             model.processNotes = []
             model.processUndo = nil
         }
-    }
-
-    private var restingOrIdle: TessSoul.Mode {
-        let hour = Calendar.current.component(.hour, from: AppClock.now)
-        return hour >= 23 || hour < 6 ? .resting : .idle
     }
 
     // MARK: Rest
@@ -228,8 +226,10 @@ struct BottomChrome: View {
             .scaleEffect(breathe ? 1.08 : 1)
             .tesseraAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true), value: breathe)
             .scaleEffect(swell ? 1.06 : 1)
-            .saturation(glow ? 1.35 : 1)
-            .brightness(glow ? 0.08 : 0)
+            // The brighten after a local capture is the router's (900 ms), drawn here.
+            .saturation(model.soul.isBright ? 1.35 : 1)
+            .brightness(model.soul.isBright ? 0.08 : 0)
+            .tesseraAnimation(.easeOut(duration: model.soul.isBright ? 0.25 : 0.6), value: model.soul.isBright)
             .frame(width: 46, height: 40)
             .frame(width: 64, height: 64)
             .contentShape(Rectangle())
@@ -397,7 +397,7 @@ struct BottomChrome: View {
                             return
                         }
                         if !isBusy {
-                            model.tessMode = draft.isEmpty ? .idle : .listening
+                            model.soul.handle(.draft(isEmpty: draft.isEmpty))
                         }
                     }
                 // While the ghost dries only the dry line shows (Design B2 on #264).
@@ -434,7 +434,7 @@ struct BottomChrome: View {
         reply = nil
         setAsk = nil
         liftAsk = nil
-        model.tessMode = .listening
+        model.soul.handle(.tessOpened)
         if !reduceMotion {
             withAnimation(.easeOut(duration: 0.13)) { swell = true }
             withAnimation(.easeInOut(duration: 0.13).delay(0.13)) { swell = false }
@@ -475,7 +475,7 @@ struct BottomChrome: View {
         guard !text.trimmingCharacters(in: .whitespaces).isEmpty, !isBusy, ghost == nil else { return }
         ghost = text
         drying = 0
-        model.tessMode = .thinking
+        model.soul.handle(.sent)
         withAnimation(reduceMotion ? .linear(duration: 0.01) : .linear(duration: 2)) { drying = 1 }
         dryTask = Task { @MainActor in
             try? await Task.sleep(for: .seconds(reduceMotion ? 0.6 : 2))
@@ -490,7 +490,7 @@ struct BottomChrome: View {
         dryTask = nil
         ghost = nil
         drying = 0
-        model.tessMode = .listening
+        model.soul.handle(.dryCancelled)
         focused = true
     }
 
@@ -515,10 +515,9 @@ struct BottomChrome: View {
         withTesseraAnimation(.spring(response: 0.42, dampingFraction: 0.9), reduceMotion: reduceMotion) {
             model.isCommandExpanded = false
             // At rest the soul is small: `.done` would multiply its dabs into mud, so it brightens instead.
-            model.tessMode = restingOrIdle
+            model.soul.handle(.committed)
         }
         isBusy = false
-        brighten()
         if let asked {
             withTesseraAnimation(reduceMotion: reduceMotion) { setAsk = asked }
         } else if let lift {
@@ -575,7 +574,7 @@ extension BottomChrome {
         if !hold {
             withTesseraAnimation(reduceMotion: reduceMotion) { layer = .speak }
         }
-        model.tessMode = .listening
+        model.soul.handle(.speak(hold: hold))
         listener.onFinish = { heard in finishListening(heard, hold: hold) }
         #if DEBUG
             // `-speakScript`: words play in as if heard (the simulator has no mic to record).
@@ -614,7 +613,7 @@ extension BottomChrome {
             } else if !hold {
                 close()
             }
-            model.tessMode = restingOrIdle
+            model.soul.handle(.heardNothing)
             return
         }
         if SpokenPhrase.isUndo(heard) {
@@ -635,7 +634,7 @@ extension BottomChrome {
         }
         layer = .speak
         withTesseraAnimation(reduceMotion: reduceMotion) { voiceGhost = (clean, heard) }
-        model.tessMode = .thinking
+        model.soul.handle(.heard)
         drying = 0
         let seconds = reduceMotion ? 0.8 : 3.0
         withAnimation(.linear(duration: seconds)) { drying = 1 }
@@ -698,27 +697,17 @@ extension BottomChrome {
         }
     #endif
 
-    /// The small soul's "done": its colours brighten for a beat, with a success haptic.
-    private func brighten() {
-        withTesseraAnimation(.easeOut(duration: 0.25), reduceMotion: reduceMotion) { glow = true }
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(900))
-            withTesseraAnimation(.easeInOut(duration: 0.6), reduceMotion: reduceMotion) { glow = false }
-        }
-    }
-
     /// Tess's line beside the soul, faded after 4 s.
     private func say(_ text: String) {
         withTesseraAnimation(reduceMotion: reduceMotion) { reply = text }
+        // Her side of the line (back to rest after 4 s) is the router's timer.
+        model.soul.handle(.lineShown)
         replyCount += 1
         let shown = replyCount
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(4))
             guard replyCount == shown else { return }
             withTesseraAnimation(reduceMotion: reduceMotion) { reply = nil }
-            if !model.isCommandExpanded {
-                model.tessMode = restingOrIdle
-            }
         }
     }
 

@@ -40,4 +40,26 @@ The script writes `docs/ai/memory-experiment-results.md`: one table per model wi
 
 ## Where the key comes from
 
-The script reads `ANTHROPIC_API_KEY` from the environment only. It refuses to run if the variable is missing, never prints it, and writes no request bodies to disk. On a Mac that is `ANTHROPIC_API_KEY=... python3 scripts/ai/memory_experiment.py`; in a cloud session it is the environment's Network secret. The key is never in the repo, the results file, a thread or memory.
+The script reads `TESSERA_CLAUDE_KEY` (falling back to `ANTHROPIC_API_KEY`) from the environment only. It refuses to run if the variable is missing, never prints it, and writes no request bodies to disk. On a Mac that is `ANTHROPIC_API_KEY=... python3 scripts/ai/memory_experiment.py`; in a cloud session it is the variable `TESSERA_CLAUDE_KEY` on the Tess environment, because cloud sessions withhold `ANTHROPIC_API_KEY`. The key is never in the repo, the results file, a thread or memory.
+
+## Result and decision (AI team, Oct 16, 10:00 AM PT)
+
+Results: `docs/ai/memory-experiment-results.md` (#410; 570 calls, about $0.60). The decision:
+
+- **Shape A, one profile block, wins.** On Sonnet it used memory best (9 of 33 aware chances, against 8 for B and 7 for C) and failed fewest lines (37 of 81, against 60 and 40). The whole memory is about 120 tokens, so picking lines per area (B) saves nothing and cost it truth: B's noticed line "6 to 8 pm" leaked into "usual 6 pm slot", a digit the item never licensed. Every job that reads memory gets the same block: told lines, then noticed lines, then the last 7 recent lines, all in the second person, private lines never.
+- **Claude writes no memory (C is out).** 31 of its 72 self-written notes failed the phone's checks, and it was the dearest shape ($1.33 a month against $1.05). Noticed lines stay computed on the phone, as section 4 of `architecture.md` already says.
+- **Noticed lines carry no clock digits.** "You usually train after work.", not "6 to 8 pm". Words the slot can use as they are, and no digit to leak.
+- **Sonnet 5.5 stays the Home model for now.** Haiku answered without calling the line tool for 118 items, because the run let it choose (`tool_choice` auto). That says nothing about its wording. AI-5 re-runs Haiku with the tool forced before the model is settled; Sonnet refuses a forced tool, so it keeps auto, and a reply with no tool call means the rules line stays.
+- **Most failures were the old frame, not untruth.** The run asked for a whole line ("Push A done, 3 of 3 exercises.", 7 words). Under Design 41 the hero and its counts are the phone's and Claude words only the context line, so that class of failure goes away by construction. AI-5 scores the context line alone.
+- **Cost holds.** Sonnet at 20 Home calls a day is about $1.05 a month on shape A, p95 at most 4.8 s, inside the $10 cap.
+
+## Fixes this asks for
+
+| Fix | Owner |
+|---|---|
+| The names check skips a capitalised word at the start of a sentence, weekdays and months ("Cook day.", "Your usual slot." were flagged as invented names) | Core, in `TessLineCheck` (AI-3); the runner's `check_line` gets the same rule when next touched |
+| Tool choice per model in `TessJob`: forced for Haiku, auto for Sonnet; no tool call means the rules line stays and the ledger row says so | Core, AI-2 |
+| Noticed-line templates without clock digits | Core, AI-7 follow-up |
+
+Builder B has nothing to change: the swap-in already keeps the rules line when Claude's line fails or doesn't come.
+

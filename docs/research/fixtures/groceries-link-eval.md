@@ -1,6 +1,6 @@
 # Groceries link eval: the `linkItems` gate fixture (AI-12)
 
-*Kitchen lead, 2026-10-16. The fixture behind the match eval in `docs/product/groceries-ai-acceptance.md`. The AI thread runs it (3 runs, Haiku 5.5, effort low, 8 s) with the same harness as `grammar-miss-claude.md`; Core's pack snapshot test uses the same week. Every row is checked against the 10 seed recipes in `docs/product/kitchen-seed-recipes.md`.*
+*Kitchen lead, 2026-10-16 (row 25 added the same day: the bar said 10 must rows and the table held 9). The fixture behind the match eval in `docs/product/groceries-ai-acceptance.md`. The AI thread runs it (3 runs, Haiku 5.5, effort low, 8 s) with the same harness as `grammar-miss-claude.md`; Core's pack snapshot test uses the same week. Every row is checked against the 10 seed recipes in `docs/product/kitchen-seed-recipes.md`.*
 
 ## The planned week
 
@@ -27,7 +27,7 @@ Same `IngredientLine.key`, so the list merges them silently; the snapshot test p
 | salmon fillet | i1 salmon fillets |
 | 400g chopped tomatoes | i12 chopped tomatoes |
 
-## The 24 candidate rows
+## The 25 candidate rows
 
 **Must** rows come back in every run with exactly that pair. **Never** rows come back with no pair in any run (any pair is a false pair). **Either** rows may come back with the named pair or nothing; any other pair is false.
 
@@ -57,14 +57,15 @@ Same `IngredientLine.key`, so the list merges them silently; the snapshot test p
 | 22 | linguine | either | i20 spaghetti | Pasta swap he'd accept |
 | 23 | rocket | never | | Not basil |
 | 24 | paprika | either | i16 smoked paprika | He may mean it |
+| 25 | feta cheese | must | i18 feta | Same thing with the word cheese; the key differs, so the phone can't link it |
 
 ## Pass bar
 
 - 10 of 10 must rows pair correctly in 3 of 3 runs.
-- 0 false pairs in all 72 row-runs (a never row with any pair, or a must or either row with a different pair).
-- At most 6 pairs per call, one per row; a reply breaking that is dropped whole by the phone and counts as a failed run.
-- The pack snapshot for this week holds the 23 ingredient titles, the 24 row titles with their handles, and no amounts, typed text ("400g", "2 "), prices, shops, notes or `checkedAt`. The 5 phone-linked rows are absent.
-- Cost: about 1,500 tokens in and 150 out per call, under $0.001 a run.
+- 0 false pairs in all 75 row-runs (a never row with any pair, or a must or either row with a different pair).
+- At most 6 pairs per call, one per row; a reply breaking that is dropped whole by the phone and counts as a failed run. One ingredient may pair with several rows in one call (rows 2 and 3, capsicum and bell pepper, both to i9 red pepper): the one-pair rule is per row, never per ingredient, and the tool schema and prompt must allow it (rerun #415 missed row 3 in all 3 runs for this).
+- The pack snapshot for this week holds the 23 ingredient titles, the 25 row titles with their handles, and no amounts, typed text ("400g", "2 "), prices, shops, notes or `checkedAt`. The 5 phone-linked rows are absent.
+- Cost: about 1,500 tokens in and 150 out per call, about $0.001 a run (a note, not part of the pass bar).
 
 ## A note on "either"
 

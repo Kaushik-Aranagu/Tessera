@@ -89,6 +89,51 @@ struct TripZonesTests {
             .contains { $0.id == task.id })
     }
 
+    @Test func opZonesReadsOnlyWhatIsNew() throws {
+        // QA S1 on #377: the op log only grows, so each read walks the new records, never the whole log again.
+        for index in 0 ..< 20 {
+            try run(CreateTask(title: "task \(index)"), at: Self.at(12, 9), zone: Self.la)
+        }
+        _ = OpZones(store: store)
+        let afterFirst = OpZones.recordsRead(in: store)
+        #expect(afterFirst == store.context.operations.count)
+        try run(CreateTask(title: "one more"), at: Self.at(12, 10), zone: Self.newYork)
+        let zones = OpZones(store: store)
+        #expect(OpZones.recordsRead(in: store) == afterFirst + 1)
+        let newest = try #require(store.context.operations.values.max { $0.createdAt < $1.createdAt }?.objectIDs.first)
+        #expect(zones.zone(of: newest)?.identifier == "America/New_York")
+        // Reading twice at one revision costs nothing.
+        _ = OpZones(store: store)
+        #expect(OpZones.recordsRead(in: store) == afterFirst + 1)
+    }
+
+    @Test func zonesDoNotDependOnReadOrder() {
+        // QA F1 on #399: a start in New York, a logExercise from Los Angeles, two finishes; read both ways, the same.
+        let id = UUID()
+        let base = Self.at(21, 6)
+        let records: [(Int, TimeZone, Date)] = [
+            (0, Self.la, base.addingTimeInterval(-60)), (2, Self.newYork, base),
+            (2, Self.la, base.addingTimeInterval(600)), (1, Self.newYork, base.addingTimeInterval(3600)),
+            (1, Self.la, base.addingTimeInterval(7200)),
+        ]
+        var forward = OpZonesState(), backward = OpZonesState()
+        for (rank, zone, at) in records {
+            forward.set(zone, for: id, rank: rank, at: at)
+        }
+        for (rank, zone, at) in records.reversed() {
+            backward.set(zone, for: id, rank: rank, at: at)
+        }
+        #expect(forward.zones[id] == backward.zones[id] && forward.zones[id] == Self.newYork) // the earliest start
+        var finishes = OpZonesState(), finishesBack = OpZonesState()
+        for (rank, zone, at) in records where rank == 1 {
+            finishes.set(zone, for: id, rank: rank, at: at)
+        }
+        for (rank, zone, at) in records.reversed() where rank == 1 {
+            finishesBack.set(zone, for: id, rank: rank, at: at)
+        }
+        #expect(finishes.zones[id] == Self.la && finishesBack.zones[id] == Self.la) // the latest finish
+    }
+
     @Test func theTurnoverRunsOnceOnATravelDay() throws {
         // T3: flying west makes a 27-hour Wednesday; the midnight moves with the zone, the day does not.
         let memory = TessMemoryStore(engine: engine, calendar: Self.calendar(Self.newYork), forgetLogURL: nil)
