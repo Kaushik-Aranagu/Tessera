@@ -132,7 +132,7 @@ enum BackupKeeper {
         // The folder's display name goes in the database (Core's settings), so after a restore Backups can say
         // where the copies were kept (restore-walk 3b). Never while a demo is running.
         if !LaunchFlags.has("-demo") {
-            _ = try? SettingsStore(engine: engine).update {
+            _ = try? SettingsStore(engine: engine).update(by: .system) {
                 $0.backupFolderName = BackupCopy.folderName(url)
                 $0.backupFolderPickedAt = AppClock.now
             }

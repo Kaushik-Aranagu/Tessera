@@ -49,6 +49,13 @@ final class AppModel {
     let context: TesseraContext
     let store: ObjectStore
     private(set) var classes: [SystemCatalog.Key: ClassDef] = [:]
+    /// Whether the settings object lives in his real store (not a memory fallback or a failed seed).
+    var settingsAreReal = false
+
+    /// "Tess asks Claude", for misses and Plan my day: the one settings field, and never on a throwaway store.
+    var asksClaude: Bool {
+        settingsAreReal && SettingsStore(engine: engine).read().sendsMissesToClaude
+    }
 
     /// Bumped after writes so views re-read derived data.
     private(set) var revision = 0
@@ -91,10 +98,14 @@ final class AppModel {
         }
         engine = ActionEngine(store: store, classes: classes)
         ledger = TrainingLedger(store: store, classes: classes)
+        // QA F1: only his real store holds his settings. On a throwaway store (memory fallback, a failed seed) the
+        // settings read as empty, which would mean "yes": skip the migrate (it would delete his old "no") and keep
+        // Claude off.
+        settingsAreReal = TesseraSchema.lastOpenOutcome == .opened && classes[.settings] != nil
         // The release that adds the settings object: the old keys move in once, as system (settings-object.md).
         // Never while a demo flag is on, so a demo can't freeze a look into his data.
         let demo = ["-demo", "-resetDemo", "-theme", "-fakeClaudeKey"].contains(where: { LaunchFlags.has($0) })
-        if !demo {
+        if !demo, settingsAreReal {
             SettingsStore(engine: engine).migrateAtLaunch(looks: ThemeStore.sharedDefaults, standard: .standard,
                                                           folderName: BackupKeeper.pickedFolder
                                                               .map(BackupCopy.folderName))
@@ -107,8 +118,8 @@ final class AppModel {
                 keys: SystemKeychain(),
                 ledger: TessUsageLedger(store: store, classes: classes),
                 flags: ClaudeMissFlags()
-            ) { [engine] in
-                SettingsStore(engine: engine).read().sendsMissesToClaude
+            ) { [weak self] in
+                self?.asksClaude ?? false
             }
         }
         // Core's calm note (store couldn't open, legacy migration pending) wins; else this launch's outcome.

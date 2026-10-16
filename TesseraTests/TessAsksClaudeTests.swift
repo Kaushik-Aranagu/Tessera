@@ -45,4 +45,12 @@ struct TessAsksClaudeTests {
         launch()
         #expect(asks)
     }
+
+    /// QA F1: on a throwaway store (memory fallback, failed seed) the empty settings must not read as yes.
+    @Test func aThrowawayStoreNeverAsksClaude() {
+        model.settingsAreReal = false
+        #expect(!model.asksClaude)
+        model.settingsAreReal = true
+        #expect(model.asksClaude)
+    }
 }
