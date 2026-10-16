@@ -97,7 +97,34 @@ struct BackupTests {
         #expect(outcome == .inMemoryFallback)
         #expect(TesseraSchema.launchNote?.contains("newer Tessera") == true)
         #expect(try Data(contentsOf: newerStore) == before)
+
+        // A newer copy already staged (by a newer build, before a downgrade) never applies, and says why (QA R2).
+        try FileManager.default.copyItem(at: newer, to: TesseraBackup.pendingURL(for: storeURL))
+        #expect(!TesseraBackup.applyPendingRestore(to: storeURL, keepIn: dir.appendingPathComponent("Kept")))
+        #expect(TesseraSchema.launchNote
+            == "That backup is from a newer Tessera, so your data is as it was. Update the app first.")
+        #expect(!TesseraDatabaseSchema.isNewer(at: storeURL))
         TesseraSchema.clearLaunchNote()
+    }
+
+    @Test func aSessionInMemoryNeverRollsCopies() throws {
+        // QA M1 on #475: after an in-memory fallback, the daily copy must not replace his good ones.
+        let dir = try folder()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let copies = dir.appendingPathComponent("Copies")
+        let good = try seededStore(at: dir.appendingPathComponent("tessera.sqlite"))
+        _ = try TesseraBackup.writeRolling(from: good.context, in: copies)
+        let before = try FileManager.default.contentsOfDirectory(atPath: copies.path).sorted()
+        #expect(before.count == 1)
+
+        let memory = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: memory, classes: memory.prepareCatalog())
+        try engine.perform(CreateNote(body: "typed while in memory"), by: .user)
+        for day in 1 ... 8 {
+            let later = Date.now.addingTimeInterval(Double(day) * 86400)
+            #expect(try TesseraBackup.writeRolling(from: memory.context, in: copies, now: later) == nil)
+        }
+        #expect(try FileManager.default.contentsOfDirectory(atPath: copies.path).sorted() == before)
     }
 
     @Test func rollingKeepsOnePerDayAndSeven() throws {
