@@ -32,7 +32,7 @@ It may not:
 - mention sleep, energy, health, body, money, people or places;
 - use "!" or emoji, greet, praise or apologise;
 - exceed 6 words or 32 characters; at Dynamic Type sizes the slot wraps, never cuts.
-- repeat a word the page already shows above or below it. **No-repeat rule:** the day label and the hero are read before the context line is written, on the phone and in Claude's check alike. A word in either (the weekday, the routine name, "done", "paused") may not appear in the context line; the rules line says "today" where it would have said the weekday, and `HomeLines` returns "today" itself whenever a day word is on the page, so the app never overrides the lens. Claude's line fails the check if it carries a day-label or hero word, and the rules line stays.
+- repeat a word the page already shows above or below it. **No-repeat rule:** the day label and the hero are read before the context line is written, on the phone and in Claude's check alike. A word in either (the weekday, the routine name, "done", "paused") may not appear in the context line; the rules line says "today" where it would have said the weekday, and `HomeLines` returns "today" itself whenever a day word is on the page, so the app never overrides the lens. Claude's line fails the check if it carries a day-label or hero word, and the rules line stays. Widgets have no day label, so Design 54's widget line keeps "Rest day." with the weekday as its meta; the rule is about what is on the same surface.
 
 The hero's form sets the pattern the context line answers:
 
