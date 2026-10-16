@@ -271,3 +271,82 @@ Tick each against the PR diff (code review is enough where no simulator is avail
 - [ ] Optional: a device launch with a demo flag shows one launch note saying the flags were ignored.
 - [ ] Simulator still works: `-demoTime 18:10 -resetDemo` reseeds the demo there, and `scripts/test.sh` ends
       "All green".
+
+## After #244 (806b085)
+
+*Addendum, 2026-10-16. Re-checked on `origin/master` at `fdcaee4`, which contains #244 (merge `806b085`, branch
+`ios/demo-guard`). The sections above are unchanged and still describe `fee3606`.*
+
+**Why the first sweep missed it:** #244 merged right after the scan. Master was at `fee3606` (#243) when I fetched,
+and `ios/demo-guard` was not among the remote branches at that moment.
+
+### What #244 does
+
+- `Features/Demo/DemoData.swift:10-16` adds `DemoData.isAllowed`, which is `true` only under
+  `#if targetEnvironment(simulator)` and is a compile-time `false` in a device build.
+- `Features/Demo/DemoData.swift:18-21`: `prepare` takes `allowed: Bool = DemoData.isAllowed` and returns at once when
+  it is false, before the `-resetDemo` check (`:22-24`) and the seeders (`:26-31`).
+- `App/TesseraApp.swift:30` checks `DemoData.isAllowed` before it even looks at `-demo` / `-resetDemo`.
+- `TesseraTests/DemoGuardTests.swift` (new): with `allowed: false`, a real task survives `["-demo", "-resetDemo"]` and
+  no "Push Day A" routine appears.
+- `CLAUDE.md:62` now says `-demo` and `-resetDemo` are simulator only.
+
+### Items closed
+
+- **Item 1, `-resetDemo`: closed on a device.** The only app caller of `resetUserData()` is `DemoData.reset`
+  (`DemoData.swift:35-36`, private), and it is reachable only through `prepare` past the guard at `:21`. The other
+  `DemoData.prepare` call outside tests is the `#Preview` in `App/RootView.swift:92-95`, which uses an in-memory store.
+  The remaining `resetUserData()` calls are Core package tests on their own stores.
+- **Item 2, the TesseraUITests scheme on his phone: the wipe is closed** (it went through item 1). It is not fully
+  closed: see "Still open".
+- **Item 3, `-demo`: closed on a device**, with the same guard (`TesseraApp.swift:30`, `DemoData.swift:21`).
+
+Checklist lines #244 ticks:
+
+- [x] `-resetDemo` cannot run on a device (`TesseraApp.swift:30`, `DemoData.swift:11-15, 21`). It is gated by
+      `targetEnvironment(simulator)` alone, not `DEBUG &&`. That is fine, because the simulator gate is the stronger one.
+- [x] `-demo` cannot run on a device (same lines).
+- [x] `project.yml` schemes still carry no launch arguments or environment variables, and no `.xcscheme` was added.
+      #244 touched only the four files above.
+- [x] CLAUDE.md says the demo flags are simulator only (`CLAUDE.md:62`).
+- [~] Simulator still works: by code review yes, because the simulator path through `prepare` is unchanged and
+      `theTestsRunWhereDemoDataIsAllowed` asserts it. I did not run `scripts/test.sh` (no simulator here).
+
+### Still open, for Builder A's next small PR
+
+- [ ] **`XCTSkip` on a device in TesseraUITests** (`ClaudeSettingsUITests.swift:6-8`, `HomeQueueUITests.swift:7-9`). On
+      a device the tests no longer wipe, but they still launch his real app with `-demoTime 18:10` (still honoured on a
+      device) and drive it. The drag test looks for the demo row "Stretch & mobility", so on his data it should fail
+      at the wait rather than finish one of his tasks. That is luck, not a guard.
+- [ ] **One `LaunchFlags` helper, simulator only**, for `-queueScript` (`HomeQueue.swift:299`), `-tessScript`
+      (`BottomChrome.swift:82`), `-demoTime` (`AppClock.swift:19-20`), `-demoReview` (`ReviewView.swift:327`),
+      `-demoKitchen` (`GroceriesView.swift:746`), `-demoNotes` (`NotesView.swift:33`) and `-theme`
+      (`Theme.swift:277-285`, still with no `#if DEBUG` at all). Add `-backupFailure` (`BackupKeeper.swift:56`) too. It
+      only writes a fake failure line, but that line persists. All of these still run on his phone today.
+      `-demoReview` and `-queueScript` still edit his real tasks.
+- [ ] **`resetUserData()` refusing a store with real ops: not included.** `ObjectStore+Lifecycle.swift:53-71` is
+      unchanged, and it is `public` (`:5`, `public extension ObjectStore`). This matters on the simulator: a simulator
+      holding a restored copy of his real backup (the restore drill) is still wiped by `-resetDemo`.
+- [ ] Optional, not included: a launch note on a device saying the demo flags were ignored.
+- [ ] Checklist line "`git grep processInfo.arguments` shows no write-capable flag outside the helper": still fails;
+      there is no helper yet.
+
+### Things #244 does that look slightly off (none is a device data-loss path)
+
+1. **There is no second line of defence in Core.** `resetUserData()` is a public, unguarded wipe of objects, links,
+   the op log and user classes. #244 guards only its one caller. Any future caller in the app or an intent bypasses the
+   guard. The fix is the refusal rule above, or `resetUserData` taking a "this is a demo store" proof.
+2. **`prepare(_:arguments:allowed:)` takes `allowed` as an ordinary parameter.** It exists for the test, but any call
+   site can pass `allowed: true` and seed or wipe on a device. A comment saying "tests only", or limiting the
+   parameter to the test target (for example behind `#if DEBUG` plus a test-only overload), would close it.
+3. **The guard is simulator-only, not `DEBUG &&` simulator.** A Release build on the simulator still honours
+   `-resetDemo`. That is harmless for his phone and fine to leave, but the original recommendation was
+   `#if DEBUG && targetEnvironment(simulator)`.
+4. **The test file is in the hosted `TesseraTests` target** and uses an in-memory store, so running it on his phone is
+   safe. `theTestsRunWhereDemoDataIsAllowed` would fail on a device, which is a fine signal that the tests are running
+   in the wrong place.
+
+**Bottom line:** both data-loss paths (items 1 and 2) are closed on his phone. Seven writing flags remain open on his phone:
+`-queueScript`, `-tessScript`, `-demoReview`, `-demoKitchen`, `-demoNotes`, `-demoTime` and `-backupFailure`. The
+argument-domain item stays as advised. `-theme` is also open (harmless, but still not inside `#if DEBUG`). The
+UI test `XCTSkip` and the `resetUserData` refusal are still to do.
