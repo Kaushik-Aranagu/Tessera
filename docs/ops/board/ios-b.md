@@ -51,6 +51,19 @@
 **From now on, use themed tokens** (Kaushik's themes, 6:40 PM PT): new and touched screens use Builder A's DesignSystem theme tokens, never hard-coded colours, so every theme works.
 
 **Next:**
+0q. (Research habits-weight-week; decisions 1:23 PM PT) Habits page and HABITS on Review. A sick mark holds that day's habits asks. HW15: Ask bar UNDO counts from the line and is announced (AppModel.swift:265-287, with 0i).
+0p. (Research notes-day-one; decisions 1:15 PM PT) NEXT BUILD FIRST:
+- N13: a private note's row shows only "Private note", with no second line and no VoiceOver of its text (NotesView.swift:186-216).
+- N7: Notes page receipts "Note, kept." / "Private note, kept." with a 4 s UNDO, announced to VoiceOver.
+- N35: Delete note gets a line and a 10 s UNDO (NoteEditor.swift:170-175).
+- A multi-line paste opens a new note.
+- A bare URL becomes a link note.
+- N6: capture UNDO uses UndoWindow (AppModel.swift:276).
+0o. (Research settings-day-one; decisions 1:13 PM PT)
+- Backups: "Stop using it" clears backupFolderName (BackupKeeper.swift:142). UNDO reads thing first and its timer pauses in the background (BackupView.swift:290-303). The receipt is "Copy, saved.".
+- Claude section: after a 401, reopen the writing line (ClaudeSection.swift:235,363-364). The yes line is "Tess asks Claude when she's unsure." (:293). Remove reads "Claude key removed. Leaving the app makes it final.". Replace holds the old key for 10 s with UNDO.
+- PasteRecipe.swift:33 says "Review, under Claude".
+- Then the Settings page: five sections, UNITS as plain text, TESS once its page exists, and the eyes row after #407.
 0n. (Research shutdown-evening; decisions 1:06 PM PT) Shutdown page on Core 0y:
 - The 9 to 10 pm hero is Shutdown. Until the page exists, Now reads "tomorrow, first" with the word tomorrow (AppModel.swift:476,494-497).
 - The first-Shutdown line is "Tap any for later.".
