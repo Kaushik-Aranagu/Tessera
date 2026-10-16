@@ -445,6 +445,7 @@ struct ClaudeReceipts: View {
                 Button { dismiss() } label: {
                     Text("‹ Settings")
                         .textRole(.label)
+                        .textCase(.uppercase)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                         .frame(minHeight: 44)
                 }
@@ -475,6 +476,8 @@ struct ClaudeReceipts: View {
             .padding(.vertical, Theme.Spacing.l)
         }
         .background { ThemedBackground() }
+        // The system back button is hidden, so the edge swipe back is ours (QA L1 on #353).
+        .background { EdgeSwipeBack() }
         .navigationBarBackButtonHidden()
         .toolbarVisibility(.hidden, for: .navigationBar)
     }
