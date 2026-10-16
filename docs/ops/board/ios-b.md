@@ -6,6 +6,8 @@
 
 **Then, before the rest of Next: Review week fix** (Product, 4:58 PM PT; Kaushik's rule: misses as a faint ring, never red, and he reads Review daily). Done when, per Research's `../research/fixtures/review-sentence.md` (#155; 22 of 30 weeks flagged), Review opens with a session-count headline in `Features/Home/ReviewPage.swift:29` ("All six sessions in", "Two sessions this week") in place of a grade, rest days draw Design's rest dab, and the miss ring only appears on a real miss: never for a rest day, a day before first use, a half session or a running workout. Two sessions on one day count as two. Core supplies the week data; Design draws the rest dab. The top fix clears 18 of the 22 flagged weeks.
 
+**With Themes, ahead of the audit batches: a calmer Ask Tess capture** (Kaushik, 6:45 PM PT; Design's sheet follows the rest dab). Calmer, smaller, less cluttered type on the capture surface (#107's), neat and peaceful. Folds in audit row 13's "cap her line at 270".
+
 **Then: Settings: Claude screen** (B owns Tess; coordinator 5:50 PM PT). It sits on Core's Keychain store and follows Design's Settings: Claude sheet: paste the key once (it's never shown again, only "Key saved"), Test, the usage line that turns amber at 80%, "Claude paused until 1 Nov." at the $10 cap, and the cloud mark on the bloom, which also shows on every use-1 ghost row that came from Claude (Research #172).
 
 **From now on, use themed tokens** (Kaushik's themes, 6:40 PM PT): new and touched screens use Builder A's DesignSystem theme tokens, never hard-coded colours, so every theme works.

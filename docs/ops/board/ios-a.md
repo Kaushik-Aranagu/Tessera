@@ -19,6 +19,8 @@
 
 **Themes, right after the Siri undo hotfix** (Kaushik, 6:40 PM PT; decisions.md). Build DesignSystem theme tokens (background, surfaces, ink, accents, Tess cobalt, vermilion UNDO) plus a theme switch, from Design's `themes.md` and token note. Ship a light default (white with rich colour pops) and a pure black theme first, then the rest of Design's set. Move every hard-coded colour in DesignSystem to a token so all teams inherit it. It goes in the build after tonight's install. The restore drill follows.
 
+**With Themes, ahead of the audit batches: the set logger** (Kaushik, 6:45 PM PT; Design's sheet follows the rest dab). Replace the weight scale with the number editable in place (scroll on the number, like the side dial), so the scale's space goes to what matters on that screen. Make the sets round dial smaller, with more drama. This absorbs audit row 1 (the weight alert becomes edit in place).
+
 **Restore drill, once, after Themes** (Research #161, `../research/restore-drill.md`; QA has no simulator). Run the 10 steps and 5 edge cases on the simulator and send the results to QA and Core. Trap: don't relaunch with `-resetDemo`, because it wipes the restore. It runs again after Core's Backup batch.
 
 **Audit batches (small PRs, beside other work; decisions.md 5:14 PM PT):**
