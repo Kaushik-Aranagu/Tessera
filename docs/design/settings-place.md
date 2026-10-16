@@ -18,7 +18,7 @@ This sheet is for Builder B. It gathers what is now spread over Review (LOOK, Cl
 | 158 | The sections, a column with 22pt between sections. Each section is its label (Label 16/700 `inkSecondary`, 12pt above its first line), then Body 21 lines 8pt apart. The page scrolls if Dynamic Type needs it; the bottom 72pt stays clear for Tess's line. |
 
 ## The sections
-1. **LOOK**: "**Porcelain** by day, **Obsidian** by night." Each look name is a value word that cycles through the looks (`look.day`, `look.night`). When a look is pinned, the line reads "**Lacquer**, day and night." and a hold on the name unpins it (the existing hold-to-pin).
+1. **LOOK**: "**Porcelain** by day, **Obsidian** by night." Each look name is a value word that cycles through the looks (`look.day`, `look.night`). When a look is pinned, the line reads "**Lacquer**, day and night." and a hold on the name unpins it (the existing hold-to-pin). **A look change paints in from the word:** the PaintFlood (`themes.md`) starts at the tapped name, not the screen centre, washing the incoming look's `live`, `context`, `tess` and `now` outward over the page (the existing flood timing), then the page settles on the new ground. Only the name in the active half (day by day, night by night) floods; cycling the other half just swaps the word.
 2. **CLAUDE**: as `claude-settings.md` (every state, the month line, the key line, TEST · REPLACE · REMOVE, "Misses go to Claude"). **One change:** the "Receipts" line goes. The spend value word **$1.20** opens the receipts one layer down instead, so the spend and its record are one thing.
 3. **BACKUPS**: what the Backups page holds today, folded in.
    - "Two copies. Last one today, 4:02 am." (keep the time and "am" together with a no-break space).
