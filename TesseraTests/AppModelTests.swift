@@ -115,7 +115,9 @@ struct AppModelTests {
         #expect(interpreter.run("what's the wifi password?") == "It's in your private notes.")
         #expect(interpreter.run("did I pay rent 2100?") == "That stays on this phone.")
         #expect(interpreter.run("door code 4417") == "Private note, kept.")
-        #expect(interpreter.run("sk-ant-api03-TEST") == claudeKeyLine)
+        // Built at run time and plainly fake: nothing key-shaped is committed (#487).
+        let key = ["sk", "ant", "TEST"].joined(separator: "-") + "-FAKE"
+        #expect(interpreter.run(key) == claudeKeyLine)
         let titles = model.store.context.objects.values.map(\.title)
         #expect(!titles.contains { $0.contains("4417") || $0.contains("password") || $0.contains("2100") })
         #expect(!titles.contains { $0.contains("sk-ant") } && model.pendingCapture == nil)

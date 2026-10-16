@@ -192,14 +192,14 @@ struct CommandInterpreter {
                 return secret ? "It's in your private notes." : "That stays on this phone."
             }
             guard (try? model.engine.perform(CreateNote(body: text, isPrivate: true), by: .user)) != nil else {
-                return "Couldn’t save that."
+                return "Couldn't save that."
             }
             model.touch()
             return "\(SecretWords.title), kept."
         }
         let title = text.prefix(1).uppercased() + text.dropFirst()
         guard model.capture(title: title, startsAt: AppClock.now.addingTimeInterval(4 * 3600)) != nil else {
-            return "Couldn’t save that."
+            return "Couldn't save that."
         }
         return "Drying. Swipe to drop it."
     }
