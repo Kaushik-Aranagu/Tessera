@@ -51,6 +51,7 @@
 **From now on, use themed tokens** (Kaushik's themes, 6:40 PM PT): new and touched screens use Builder A's DesignSystem theme tokens, never hard-coded colours, so every theme works.
 
 **Next:**
+0r. PN-MENTION, NEXT BUILD FIRST (QA review-508, 1:24 PM PT), Builder B half: ObjectPage sends notes to NoteEditor, or hides a private note's body. InstanceBody (ObjectPage.swift:348) never shows a private note's text or "Private: yes".
 0q. (Research habits-weight-week; decisions 1:23 PM PT) Habits page and HABITS on Review. A sick mark holds that day's habits asks. HW15: Ask bar UNDO counts from the line and is announced (AppModel.swift:265-287, with 0i).
 0p. (Research notes-day-one; decisions 1:15 PM PT) NEXT BUILD FIRST:
 - N13: a private note's row shows only "Private note", with no second line and no VoiceOver of its text (NotesView.swift:186-216).
