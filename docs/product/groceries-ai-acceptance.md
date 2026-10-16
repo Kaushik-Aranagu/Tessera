@@ -77,7 +77,7 @@ The only reminder is the planned cook's Home row through `HomeLines`: context "2
 2. A typed "spring onions" before planning is linked silently (same key); "scallions" is not, and appears in the pack as a candidate with its ingredient title, not the typed text.
 3. KEEP on (scallions, spring onions) moves the recipe share onto scallions, removes the open spring onions ghost row, keeps the typed amount, sets the learned aisle, and UNDO reverses all of it. NOT NOW writes nothing and the pair is filtered from the next pack until the task's date passes.
 4. The five checks drop bad pairs: an unknown handle, a linked row, a NOT NOW pair, a same-key pair, a staple.
-5. Pack snapshot for the fixture week holds no amounts, typed text, prices, shops, notes or `checkedAt`; a candidate titled with a shop name is absent; a pack containing `sk-ant-` is refused.
+5. Pack snapshot for the fixture week holds no amounts, typed text, prices, shops, notes or `checkedAt`; a candidate titled with a shop name is absent; a pack holding anything shaped like an API key prefix is refused.
 6. No call while a shop process runs, in a live workout, with the switch off, offline, at the cap or in demo; in each, planning still adds the rows.
 7. `usuallyOutOf()` passes Research's 20-week fixture row by row with the cap at 4.
 8. `HomeLines` gives "2 to buy" / "Tacos today" before 17:00 and "Tacos tonight" after, the time when the task has one, for a planned cook with two open items; at zero the context is the day word and the key is COOK (G-R13).
