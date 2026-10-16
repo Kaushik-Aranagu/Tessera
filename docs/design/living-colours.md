@@ -37,7 +37,7 @@ The picker should read like weather, not a mood ring: slow, plausible, never a c
 | Morning (04:00 to 11:00) | Lagoon or Aurora, weight +0.1 |
 | Midday | Today |
 | Evening (18:00 on) | Kiln, warmth +0.1 |
-| Late night (23:00 to 04:00) | Aurora, weight −0.1 |
+| Late night | Aurora, weight −0.1, carried by the 04:00 turnover (see the addendum) |
 | A rest day | Orchard |
 | A record today | Ember, for the rest of the day |
 | A cook day (a planned recipe) | Kiln |
@@ -73,3 +73,11 @@ Nothing new. The "Tess asks Claude: yes." line in Settings › Claude already co
 
 ## Owners
 - **Core:** the rules, cadence and store. **Builder A:** the pigments and the bloom. **AI architecture:** Claude's pick.
+
+## Addendum (16 Oct, 12:50 AM PT): Research's four conflicts, settled
+Research read this sheet against what the phone knows (`research/living-colours-learning.md`). The answers, so the sheet and the brief agree:
+- **K1, the late lean inside quiet hours.** The 04:00 turnover carries it: the turnover's pick is Aurora at weight −0.1, and the morning lean (Lagoon or Aurora, +0.1) arrives at his first write of the day, which is past the two-hour gap by then. Nothing is picked between 23:00 and 04:00.
+- **K2, bloom or crossfade.** The bloom, as this sheet draws it. `architecture.md` section 9's crossfade is the Reduce Motion case only.
+- **K3, when leans collide.** A best beats a rest day beats a cook day beats the time of day. A best holds for the rest of the day as before.
+- **K5, three changes spent before evening.** One of the three is held for the evening lean. The turnover is the first; the day's one event (a best, a cook, a rest day, a look change) is the second; evening is the third. A second event in a day waits for tomorrow.
+- Also taken from Research: morning starts at his median first write, evening at his usual training slot, late night at his median last write; the same palette three days running flips to the other lean for that time; a FORGET on a palette keeps it off for 30 days; Claude picks only among the rules' candidates, so it can't paint Ember without a best.
