@@ -87,7 +87,12 @@ final class AppModel {
     var commandDraft = ""
     var isCommandExpanded = false
     /// What Tess's soul is doing right now.
-    var tessMode: TessSoul.Mode = .idle
+    /// Tess's state, set only by the router (tess-motion.md §14); views emit `soul.handle(_:)` events.
+    let soul = SoulRouter()
+    var tessMode: TessSoul.Mode {
+        soul.mode
+    }
+
     /// Home (the launcher Tess paints in) vs Today.
     /// Where you were when Tess took you Home; tapping her again goes back.
     var homeReturnPath: [Route]?

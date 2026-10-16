@@ -50,7 +50,8 @@ private struct WorkoutContent: View {
 
     /// The lane's scroll position (x). Kept in step with `session.currentIndex` both ways.
     @State private var laneIndex: Int?
-    @State private var tessMode: TessSoul.Mode = .idle
+    /// The corner soul runs the same router as Home's, with page .live (tess-motion.md §14).
+    @State private var soul = SoulRouter(page: .live)
     /// Workout-level moments: a set seated, a new best, rest up on screen, the workout finished.
     @State private var moment = HapticCue()
     /// The subline whose cadmium has dried.
@@ -98,13 +99,13 @@ private struct WorkoutContent: View {
                                 guard session.finishedAt != nil else { return }
                                 // Tess's count line from Core's summary: "5 of 5 exercises, 16 sets, 1 best."
                                 summaryLine = model.ledger.summary(of: session.workout).line
-                                play(.done)
+                                soul.handle(.workoutGathered)
                             },
                             onDone: leaveFinished
                         )
                         LiveTessCorner(
                             line: WorkoutLines.tess(session, phase: phase, summary: summaryLine),
-                            mode: tessMode,
+                            mode: soul.mode,
                             // LOG … AND FINISH keeps a 10 s UNDO that takes back the set and the finish together.
                             canUndo: session.canTakeBackFinish(at: now),
                             // The line (and its UNDO) stays for the whole 10 s window.
@@ -198,11 +199,7 @@ private struct WorkoutContent: View {
             // One haptic per set, played here so it survives the key leaving (Reduce Motion, VoiceOver's action):
             // the set's tap, or .success in its place for a new best.
             moment.play(seated.records.isEmpty ? .setLogged : .newBest)
-            if seated.records.isEmpty {
-                play(.done)
-            } else {
-                play(.thinking, then: .done, after: 1.2)
-            }
+            soul.handle(seated.records.isEmpty ? .setLogged : .newBest)
         }
         .tesseraFeedback(.undo, trigger: undoHaptic)
         .tesseraFeedback(.selection, trigger: editHaptic)
@@ -257,7 +254,7 @@ private struct WorkoutContent: View {
             keyRow(phase: phase)
                 .padding(.horizontal, Theme.Spacing.gutter)
             LiveTessCorner(line: askReply ?? WorkoutLines.tess(session, phase: phase, summary: summaryLine),
-                           mode: tessMode,
+                           mode: soul.mode,
                            canUndo: session.canUndoLast && !session.isEditing,
                            holdsLine: askReply == nil && phase == .workoutDone,
                            onUndo: {
@@ -276,27 +273,15 @@ private struct WorkoutContent: View {
     private func ask(_ phrase: String) {
         // Refused again before any interpreter sees it.
         guard !LiveAskField.refuses(phrase) else { return }
-        play(.thinking)
+        soul.handle(.liveAsk)
         Task { @MainActor in
             let reply = await model.ask(phrase)
             askReply = reply
-            play(.done)
+            soul.handle(.liveAnswered)
             try? await Task.sleep(for: .seconds(4))
             if askReply == reply {
                 askReply = nil
             }
-        }
-    }
-
-    private func play(_ mode: TessSoul.Mode, then next: TessSoul.Mode? = nil, after delay: Double = 0) {
-        tessMode = mode
-        Task { @MainActor in
-            if let next {
-                try? await Task.sleep(for: .seconds(delay))
-                tessMode = next
-            }
-            try? await Task.sleep(for: .seconds(1.8))
-            tessMode = .idle
         }
     }
 }
@@ -391,7 +376,7 @@ extension WorkoutContent {
                 withTesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.5), reduceMotion: reduceMotion) {
                     session.swap(to: option)
                 }
-                play(.done)
+                soul.handle(.swapped)
             }
             .padding(.horizontal, Theme.Spacing.s)
             .offset(y: 64 + Theme.Spacing.m)
@@ -583,7 +568,7 @@ extension WorkoutContent {
             if let check = session.topSetCheck, check.entryID == session.currentEntry?.id {
                 TopSetCheckLine(check: check) {
                     withTesseraAnimation(reduceMotion: reduceMotion) { session.acceptTopSetCheck() }
-                    play(.done)
+                    soul.handle(.topSetAccepted)
                 }
                 .transition(.opacity)
             }
