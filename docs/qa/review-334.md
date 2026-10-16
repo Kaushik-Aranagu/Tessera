@@ -1,5 +1,5 @@
 # Review 334: HomeLines lens (AI-1)
-PR #334 (core/home-lines) at 39a6495, cut from 450a0c0. Trial merge onto master d55d29c clean. TesseraCore only: `Home/HomeLines.swift` (+457), `Groceries.toBuy(for:)` (+9), DayStory's short names moved to `ExerciseWords` (no change in output), `HomeLinesTests.swift` (+275). No app files, no catalog or schema change. Static review against docs/ai/home-lines.md on master, Oct 16 PT.
+PR #334 (core/home-lines) at 39a6495, cut from 450a0c0; re-confirmed at 2d3cbaa, which is that head plus a master merge (no change to the PR's 4 files). Trial merge onto master d55d29c clean. TesseraCore only: `Home/HomeLines.swift` (+457), `Groceries.toBuy(for:)` (+9), DayStory's short names moved to `ExerciseWords` (no change in output), `HomeLinesTests.swift` (+275). No app files, no catalog or schema change. Static review against docs/ai/home-lines.md on master, Oct 16 PT.
 
 **Verdict: PASS.** One small fix to fold in (L1); nothing blocks.
 
