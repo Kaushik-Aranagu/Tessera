@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Plan my day on the new Home</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Design item 53: Plan my day (m4-steers section 6) redrawn in sheet 41's one-line grammar on the 60pt-higher Home frame. The plan is a state of Home: day label 138, context 186, hero 220, the key at 296 (START WITH, the hold), the Plan word at 388 with VIA CLAUDE, ghost rows at 440 + 46k, at most five above y 720. The Start key's line is the planned workout's progress once the plan is kept. ?look=por or ?look=obs; ?play records the morning (the offer, Claude's words landing, a keep, the hold) in Porcelain. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:36px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:56px;width:390px;line-height:22px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;--ink:245,242,236;--s2:.72;--s3:.38;--tess:#86B4FF;--ctx:#B7A6E0;--liveInk:#FF7A5C;--live:#FF5B3A;--now:#FFC23D;--health:#3FD49A;background:#000;color:rgb(var(--ink))}
+.ph.por{--ink:18,16,22;--s2:.66;--s3:.51;--tess:#2450D8;--ctx:#5A3DAF;--liveInk:#C23A22;--live:#E2432A;--now:#F0A500;--health:#12936A;background:#fff}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}
+.s3{color:rgba(var(--ink),var(--s3))}
+.b{font-size:21px;line-height:28px}
+.sm{font-size:16px;line-height:21px}
+.nw{white-space:nowrap}
+.t34{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px;white-space:nowrap}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px;white-space:nowrap}
+.t44.wrap{white-space:normal;width:346px}
+.hero{font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:58px;white-space:nowrap}
+.ctx{color:var(--ctx)}
+.ghost{color:var(--tess);font-weight:500;animation:breathe 2.6s ease-in-out infinite}
+.ghost .tm{color:var(--tess)}
+@keyframes breathe{0%,100%{opacity:.5}50%{opacity:.66}}
+.tl{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);z-index:6;color:var(--tess);font-size:21px;line-height:28px}
+.tl .u{display:block;font-weight:700;font-size:16px;letter-spacing:.08em;line-height:20px;margin-top:4px;color:var(--liveInk)}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:7}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px);mix-blend-mode:screen}
+.por .soul i{mix-blend-mode:multiply}
+.wisp{position:absolute;width:3px;height:14px;border-radius:2px;background:var(--tess);opacity:0;filter:blur(.6px);z-index:8}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(255,255,255,.18);box-shadow:0 0 0 1.5px rgba(255,255,255,.6);opacity:0;z-index:30;transition:opacity .15s}
+.por #fing{background:rgba(0,0,0,.08);box-shadow:0 0 0 1.5px rgba(0,0,0,.35)}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;line-height:24px;max-width:2560px}
+.clock{position:absolute;left:22px;top:30px;font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(var(--ink),.5);z-index:20}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play'),POR=PLAY||Q.includes('look=por'),$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const H='cubic-bezier(.2,.8,.2,1)',SET='cubic-bezier(.3,1.3,.5,1)';
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+const PIG=POR?['#2450D8','#E2432A','#F0A500']:['#86B4FF','#FF5B3A','#FFC23D'];
+const soul=(id='S')=>{const f=.65,C=[[10,12.5],[32,10.5],[22,28.5]],cx=21.33,cy=17.17;return `<div class="soul" id="${id}">${C.map(([x,y],i)=>`<i style="left:${cx+(x-cx)*f-10+2}px;top:${cy+(y-cy)*f-8.5+3}px;background:radial-gradient(closest-side,${PIG[i]},${PIG[i]}33)"></i>`).join('')}</div>`};
+const TABS=['REVIEW','TODAY','TRAINING','KITCHEN'],TX=[22,118,199,300];
+const tabs=(on='TODAY')=>`<div class="abs lbl" style="left:0;right:0;top:78px;height:24px;letter-spacing:.06em;z-index:13">${TABS.map((t,i)=>`<span class="abs" style="left:${TX[i]}px;top:0;color:rgba(var(--ink),${t===on?1:.38})">${t}</span>`).join('')}<svg class="abs" style="left:${TX[TABS.indexOf(on)]}px;top:24px;overflow:visible" width="90" height="12"><path d="${lens(on.length*10.6,1.2)}" fill="rgb(var(--ink))"/></svg></div>`;
+// 41's key: a label word with the ink-line lens under it. fill = the planned workout's progress (1 before it starts). track = the 22% track shows when fill < 1.
+const key=(word,fill=1,y=296,id='sk')=>{const w=word.length*10.8-6;return `<div class="abs lbl" id="${id}" style="left:22px;top:${y}px">${word}<svg id="${id}l" style="position:absolute;left:0;top:22px;overflow:visible" width="${w+6}" height="12">${fill<1?`<path d="${lens(w,1.6)}" fill="rgba(var(--ink),.22)"/>`:''}<path id="${id}f" d="${lens(w*fill,1.6)}" fill="rgb(var(--ink))"/></svg></div>`};
+// Rows at 440 + 46k; a wrapped row is 74. A ghost row (the plan's) breathes in cobalt; a kept row is ink.
+const rows=(y0,list,ghost)=>{let y=y0;return list.map(([t,h,w,kind])=>{const g=kind==='ghost'||(ghost&&kind!=='ink');const out=`<div class="abs b pr${g?' ghost':''}" data-t="${t}" style="left:22px;top:${y}px;width:${h?280:346}px${w?'':';white-space:nowrap'}">${t}</div>${h?`<div class="abs lbl pt ${g?'tm':'s2'}" style="right:22px;top:${y+4}px;font-weight:600">${h}</div>`:''}`;y+=w?74:46;return out}).join('')};
+const more=(n,y)=>`<div class="abs lbl" style="left:22px;top:${y+4}px">${n} MORE</div>`;
+const privacy=(y)=>`<div class="abs sm s2" style="left:22px;top:${y}px;width:346px">Sends your task and calendar titles, never notes, places or health.</div>`;
+const section=(word,y,via)=>`<div class="abs t34" id="sec" style="left:22px;top:${y}px">${word}</div>${via?`<div class="abs lbl" id="via" style="right:22px;top:${y+14}px">VIA CLAUDE</div>`:''}`;
+const home=(o)=>{const two=o.two?50:0;return `<div class="abs b nw" id="day" style="left:22px;top:138px">${o.day}</div><div class="abs b ctx nw" id="ctxl" style="left:22px;top:186px">${o.ctx}</div><div class="abs ${o.two?'t44 wrap':o.h56?'hero':'t44'}" id="hero" style="left:22px;top:${o.h56?220:224}px">${o.hero}</div>${o.key?key(o.key,o.fill??1,296+two):''}${section(o.sec||'Next',388+two,o.via)}${rows(440+two,o.rows,o.ghost)}${o.more?more(o.more,o.moreY+two):''}${o.first?privacy(o.firstY+two):''}`};
+const PLAN=[['Reply to landlord','8:00'],['Book physio','10:30'],['Write the report','13:00'],['Push A','18:00'],['Read Designing Data-Intensive Applications','21:10',1]];
+const RULES=[['Write the report','8:00'],['Reply to landlord','10:30'],['Book physio','13:00'],['Push A','18:00'],['Read Designing Data-Intensive Applications','21:10',1]];
+const OFFER={day:'Friday morning',ctx:'this morning, slept 6h40',hero:'Four hours free',key:'START WITH WRITE THE REPORT',sec:'Plan',rows:RULES,ghost:1};
+const CLAUDE={...OFFER,key:'START WITH REPLY TO LANDLORD',rows:PLAN,via:1};
+const FIRST={...CLAUDE,rows:PLAN.slice(0,3),more:2,moreY:578,first:1,firstY:636};
+const KEPT={day:'Friday morning',ctx:'this morning, 8 am',hero:'Reply to landlord',key:'START PUSH A',rows:PLAN.slice(1)};
+const PAUSED={day:'Friday evening',ctx:'paused 21 min ago',hero:'Push A, paused at bench',two:1,key:'RESUME PUSH A',fill:.22,rows:[['Read Designing Data-Intensive Applications','21:10',1],['Call mom','tomorrow']]};
+const NOCAL={day:'Friday morning',ctx:'this morning',hero:'Three tasks, Push A at 6',two:1,key:'START WITH WRITE THE REPORT',sec:'Plan',rows:RULES.slice(0,4),ghost:1,more:1,moreY:624};
+const phone=(c,inner,opt={})=>`<div><div class="cap">${c}</div><div class="ph${(opt.por??POR)?' por':''}" ${opt.id?`id="${opt.id}"`:''}>${tabs()}${inner}${opt.line?`<div class="tl">${opt.line}${opt.undo?'<span class="u">UNDO</span>':''}</div>`:''}${soul(opt.id?'S':'s'+Math.random().toString(36).slice(2,6))}${opt.fing?'<div id="fing"></div>':''}</div></div>`;
+
+if(!PLAY){
+ $('row').innerHTML=phone('7:58 · THE OFFER: THE RULES PLAN, PLAIN WORDS, WET',home(OFFER),{por:1})
+  +phone('8:00 · CLAUDE’S WORDS LAND: THE ORDER, VIA CLAUDE, HER LINE',home(CLAUDE),{por:1,line:'Landlord reply first, then physio.'})
+  +phone('THE FIRST TIME: ONE LINE SAYS WHAT WAS SENT',home(FIRST),{por:1,line:'Landlord reply first, then physio.'})
+  +phone('8:01 · KEPT: THE FIRST ITEM IS NOW, THE WORKOUT’S KEY WAITS',home(KEPT),{por:1,line:'Plan kept. Reply to landlord is up.',undo:1})
+  +phone('6:30 PM · THE PLANNED WORKOUT, PAUSED: THE KEY’S LINE IS ITS PROGRESS',home(PAUSED),{por:0})
+  +phone('WITHOUT THE CALENDAR: A TWO-LINE HERO, ONE ROW FEWER',home(NOCAL),{por:0});
+ $('note').innerHTML='PLAN MY DAY AS A STATE OF HOME, IN 41’S GRAMMAR: THE DAY LABEL, THE TIME AS THE CONTEXT LINE (SLEEP RIDES IN IT), THE DAY AS THE HERO, START WITH AS THE KEY (A HOLD), THE PLAN WORD WITH VIA CLAUDE, AND ONE LINE PER ROW IN WET COBALT UNTIL HE KEEPS IT. AT MOST FIVE ROWS ABOVE 720; THE REST ARE “2 MORE”. CLAUDE’S SENTENCE IS TESS’S LINE, NOT A LINE ON THE PAGE. KEPT, THE FIRST ITEM RISES INTO THE HERO AND THE KEY BECOMES THE WORKOUT’S, ITS LINE THE WORKOUT’S PROGRESS.';
+ document.fonts.ready.then(()=>{document.body.dataset.start='1';document.body.dataset.done='1'});
+}else{
+ $('row').innerHTML=phone('7:58 · THE OFFER, PLAIN WORDS',home(OFFER)+'<div class="clock" id="clock">7:58</div>',{id:'P',fing:1,por:1});
+ const P=$('P'),f=$('fing'),cap=document.querySelector('.cap'),setCap=t=>cap.textContent=t,clock=$('clock');
+ const say=(t,undo)=>{const old=P.querySelector('.tl');if(old)old.remove();if(!t)return;P.insertAdjacentHTML('beforeend',`<div class="tl" style="opacity:0">${t}${undo?'<span class="u">UNDO</span>':''}</div>`);P.querySelector('.tl').animate([{opacity:0,transform:'translateY(-50%) translateY(4px)'},{opacity:1,transform:'translateY(-50%)'}],{duration:300,easing:H,fill:'forwards'})};
+ const swap=async(el,txt,cls)=>{el.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:180,fill:'forwards'});await sleep(180);el.textContent=txt;if(cls)el.className=cls;el.animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:420,easing:H,fill:'forwards'})};
+ const INK=POR?'rgb(18,16,22)':'rgb(245,242,236)';
+ async function play(){
+  await sleep(1200);
+  // The call goes out: three cobalt wisps rise off the soul; the plain words stay readable
+  setCap('7:58 · SENT TO CLAUDE: THE WISPS RISE, THE WORDS STAY');for(let i=0;i<3;i++){const w=document.createElement('div');w.className='wisp';w.style.left=(334+i*9)+'px';w.style.top='760px';P.appendChild(w);w.animate([{opacity:0,transform:'translateY(0) scaleY(.6)'},{opacity:.8,transform:'translateY(-26px) scaleY(1)',offset:.3},{opacity:0,transform:'translateY(-70px) scaleY(1.3)'}],{duration:1600,delay:i*260,iterations:2,easing:H,fill:'forwards'})}
+  await sleep(2600);
+  // The reply lands: the words cross-fade in place, rows slide to their new order, VIA CLAUDE sits by the Plan word, Tess says the order
+  setCap('8:00 · CLAUDE’S WORDS LAND: THE ROWS SLIDE INTO ORDER, VIA CLAUDE');clock.textContent='8:00';
+  const prs=[...P.querySelectorAll('.pr')],pts=[...P.querySelectorAll('.pt')];const order={'Reply to landlord':0,'Book physio':1,'Write the report':2,'Push A':3,'Read Designing Data-Intensive Applications':4};
+  prs.forEach((el,i)=>{const to=440+46*order[el.dataset.t],dy=to-parseInt(el.style.top);el.animate([{transform:'translateY(0)'},{transform:`translateY(${dy}px)`}],{duration:520,easing:SET,fill:'forwards'})});
+  await sleep(540);prs.forEach((el,i)=>{el.getAnimations().forEach(a=>a.cancel());const to=440+46*order[el.dataset.t];el.style.top=to+'px'});
+  P.insertAdjacentHTML('beforeend',`<div class="abs lbl" id="via" style="right:22px;top:402px;opacity:0">VIA CLAUDE</div>`);$('via').animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:420,easing:H,fill:'forwards'});
+  await swap($('sk').firstChild?$('sk'):$('sk'),'',null);
+  await sleep(0);const sk=$('sk');sk.outerHTML=key('START WITH REPLY TO LANDLORD',1);$('sk').animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:420,easing:H,fill:'forwards'});
+  say('Landlord reply first, then physio.');await sleep(2400);
+  // Swipe right keeps a row: the words dry from cobalt into ink left to right, the time follows; Tess names it with UNDO
+  setCap('8:00 · SWIPE RIGHT KEEPS A ROW: IT DRIES INTO INK');const r0=prs.find(e=>e.dataset.t==='Reply to landlord'),t0=pts[0];f.style.left='60px';f.style.top='454px';f.style.opacity=1;
+  f.animate([{left:'60px'},{left:'180px'}],{duration:420,easing:H,fill:'forwards'});r0.animate([{transform:'translateY(0)'},{transform:'translateY(0) translateX(28px)',offset:.5},{transform:'translateY(0)'}],{duration:800,easing:H});await sleep(420);f.style.opacity=0;
+  r0.classList.remove('ghost');r0.style.opacity=1;r0.style.color='var(--tess)';r0.style.fontWeight=400;const ink=r0.cloneNode(true);ink.style.color=INK;ink.style.clipPath='inset(0 100% 0 0)';ink.style.top=r0.style.top;ink.classList.remove('pr');r0.parentNode.appendChild(ink);ink.animate([{clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0 0 0)'}],{duration:700,easing:H,fill:'forwards'});
+  await sleep(250);t0.animate([{color:'var(--tess)'},{color:`rgba(${POR?'18,16,22':'245,242,236'},var(--s2))`}],{duration:450,fill:'forwards'});say('Reply to landlord, 8 am.',1);await sleep(2600);
+  // Hold START WITH: the line empties to a trace and repaints left to right over 0.7 s; the plan is kept as one transaction
+  setCap('8:01 · HOLD START WITH: THE LINE FILLS, THE PLAN IS KEPT');clock.textContent='8:01';f.style.left='90px';f.style.top='306px';f.style.opacity=1;
+  const skf=$('skf');skf.animate([{opacity:1},{opacity:.35}],{duration:120,fill:'forwards'});const tr=skf.cloneNode();tr.id='';tr.style.clipPath='inset(0 100% 0 0)';skf.parentNode.appendChild(tr);tr.animate([{clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0 0 0)'}],{duration:700,easing:'linear',fill:'forwards'});await sleep(760);f.style.opacity=0;
+  // The promotion: the day's hero lifts away, the first item rises into the hero, the key becomes the workout's, Plan becomes Next and the rows dry
+  setCap('8:01 · KEPT: REPLY TO LANDLORD RISES INTO THE HERO; THE KEY IS THE WORKOUT’S');
+  const hero=$('hero');hero.animate([{opacity:1,transform:'translateY(0)',filter:'blur(0)'},{opacity:0,transform:'translateY(-24px)',filter:'blur(6px)'}],{duration:320,easing:H,fill:'forwards'});
+  r0.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'});ink.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'});t0.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'});await sleep(200);
+  P.insertAdjacentHTML('beforeend',`<div class="abs t44" id="hero2" style="left:22px;top:224px;opacity:0">Reply to landlord</div>`);$('hero2').animate([{opacity:0,transform:'translateY(60px) scale(.6)',transformOrigin:'0 0'},{opacity:1,transform:'translateY(0) scale(1)',transformOrigin:'0 0'}],{duration:480,easing:H,fill:'forwards'});
+  swap($('ctxl'),'this morning, 8 am');$('via').animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'});swap($('sec'),'Next');
+  const sk2=$('sk');sk2.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:180,fill:'forwards'});await sleep(180);sk2.outerHTML=key('START PUSH A',1);$('sk').animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:420,easing:H,fill:'forwards'});
+  // The kept rows close up and dry to ink
+  const rest=prs.filter(e=>e!==r0);rest.forEach(el=>{const to=440+46*(order[el.dataset.t]-1);el.classList.remove('ghost');el.style.opacity=1;el.animate([{top:el.style.top,color:'var(--tess)'},{top:to+'px',color:INK}],{duration:520,easing:H,fill:'forwards'})});pts.slice(1).forEach((t,k)=>t.animate([{top:t.style.top,color:'var(--tess)'},{top:(444+46*k)+'px',color:`rgba(${POR?'18,16,22':'245,242,236'},var(--s2))`}],{duration:520,easing:H,fill:'forwards'}));
+  await sleep(300);
+  say('Plan kept. Reply to landlord is up.',1);await sleep(3000);document.body.dataset.done='1'}
+ document.fonts.ready.then(()=>{document.body.dataset.start='1';play()});
+}
+</script>
+</body>
+</html>
