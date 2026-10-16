@@ -162,3 +162,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [settings-place-check.md](settings-place-check.md) | Design, Builder B: every line in Design's settings-place.md (231b15e) checked against tess-voice, settings-claude and #246 |
 | [debug-paths.md](debug-paths.md) | Builder A, QA: every launch flag and debug path that could touch his data on a Debug phone build, gate and 14-item checklist |
 | [ai5-home-lines-eval.md](ai5-home-lines-eval.md) | AI architecture, Core, QA: the AI-5 gate for Claude Home lines, 14 phone checks, truth and voice scores, 20 moments with 45 probes in fixtures/home-lines-eval.json |
+| [living-colours-learning.md](living-colours-learning.md) | Core, AI architecture, Design: how Design 48's rule table bends to his day, Claude picking among the rules' candidates, 5 conflicts, 12 day-shape fixtures |
