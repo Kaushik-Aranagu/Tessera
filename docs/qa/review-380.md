@@ -80,3 +80,11 @@ There are three small fixes, all in the parser and the join rule. Two of them ar
 
 - GroceriesWeekTests with r4 added (F1), plus the F2 and F3 tests.
 - Next-build script row **M4 (catalog v8)**, added in this round. The migration gate now spans v5 to v8.
+
+## Addendum: rulings (10:45 AM PT)
+
+- Kitchen lead passes the G-R rulings. Their one gap is that r4 is missing from GroceriesWeekTests; the week
+  should assert 36 rows. Core adds r4 along with F1-F3.
+- Core changes the receipt count to use apply's set of new rows, which closes L1.
+- Product rules on L2: "Tacos, nothing to add.", with no write and no UNDO. L2 is closed.
+- L3 stays with Kitchen lead.
