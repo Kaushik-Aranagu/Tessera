@@ -4,6 +4,10 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+**1:35 PM PT Oct 16: one UNDO slot (Research AM, undo-collision.md).** DECIDED, Research's rule stands. The app has one UNDO slot, and the line on screen and the UNDO key are one claim. A newer claim closes the older one. The window opens when the line shows: 4 s for a new thing, 10 s for a change, 10 s for everything under VoiceOver, paused in the background. The receipt is "Thing, taken back." The owners are Core 0s (pure UndoWindow), then Builder B 0i (UndoSlot, BottomChrome, lastCapture at line time) and Builder A 0i (live corner, canUndoLast window). This refines 12:45 and is F1 on next-build-v10.
+
+**1:33 PM PT Oct 16: pin page check (Research AK, pin-page-check.md, PR #516).** DECIDED. (1) Tapping a day's training mark in Review opens that workout (ReviewPage.swift:267-272); that's the drill-in principle, so it stays, and his page says "opens that workout". (2) Review's task and cooking bands count by each item's own zone like training does; Core 0ae, before the Oct 26 trip. (3) " · 15 oz" is cut from his v9 page because packSize(of:) has no caller; Builder B 0s wires it for a later build. The 10 partly-true lines stay as Research corrected them.
+
 **1:27 PM PT Oct 16: rollback after v10 (Research next-build-v10.md asked).** DECIDED. Research's section 7 wording stands. After v10 the rollback is a36b161, which opens in memory and shows none of his data, so the real way back is rolling forward or restoring the Step 0 copy. 7b321d2 is never installed after v10 because it would write to the v10 store. The next build's gate and list are next-build-v10.md. F1 (the capture UNDO taking back a Home "done") is the top fix after the four next-build-first rows. #504 (", best") and #403 are already on master, so the next pin needs #407 rebased with nonisolated kept and the v9-opens-v10 test, then R7 flag-to-setting, then the Design 70 row.
 
 **1:23 PM PT Oct 16: habits and body weight (Research habits-weight-week.md asked).** DECIDED. All six of Research's picks stand.
