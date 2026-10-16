@@ -4,7 +4,7 @@
 
 **Now:** 2 (Home line writer, with Design 41). Done: 1 and 5 (architecture section 9, 7371b14), plus first three features and ship list (`docs/ai/` on master, PR #324 merged; copies in `ai/`).
 
-*Product order for the ship list (Oct 16): AI-1 → AI-7 memory store → AI-8 "remember that…" → AI-9 What Tess knows → AI-2 → AI-3 → AI-5 eval → AI-4 → AI-10 → AI-6 → AI-11 → AI-12 (memory moved up, 12:14 AM PT; cap now $50 a month); AI-13 when already in the file. Core owns most rows, Builder B the screens, Research AI-5, the Kitchen lead AI-12.*
+*Product order for the ship list (Oct 16): AI-1 → AI-7 memory store → AI-8 "remember that…" → AI-9 What Tess knows → AI-2 → AI-3 → AI-5 eval → AI-4 → AI-10 → AI-6 → AI-11 → AI-12 → AI-14 living colour (Builder A, after Design 48) (memory moved up, 12:14 AM PT; $50 cap waits on his yes); AI-13 when already in the file. Core owns most rows, Builder B the screens, Research AI-5, the Kitchen lead AI-12.*
 
 **Next:**
 1. The architecture map. Done when `docs/ai/architecture.md` draws Tessera's data (store, ops, classes, records), Tess's memory (what she knows about him and how he sees and forgets it), and the harness (on-phone router, Claude calls, ledger, TessInbox, validators), with what each Claude call sends and costs, and the gaps ranked for Core.
