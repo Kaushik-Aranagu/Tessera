@@ -14,6 +14,8 @@ struct ObjectPage: View {
            ExerciseRouting.isExercise(classDef, classes: model.classes)
         {
             ExercisePage(exercise: classDef)
+        } else if case let .routines(id) = route, let plan = model.object(id) {
+            RoutinesPage(plan: plan)
         } else if let plan = ExerciseRouting.plan(for: route, model: model) {
             PlansView(plan: plan.object)
         } else if case let .object(id) = route, let routine = model.object(id),
@@ -38,6 +40,8 @@ struct ObjectPage: View {
                     if let object = model.object(id) {
                         InstanceBody(object: object)
                     }
+                case .routines:
+                    EmptyView()
                 }
             }
             .padding(.leading, Theme.Spacing.gutter - 6)

@@ -10,6 +10,8 @@ import TesseraTess
 enum Route: Hashable {
     case object(UUID)
     case classDef(UUID)
+    /// A plan's routines (docs/design/training-mode.md, "Routines").
+    case routines(UUID)
 }
 
 /// One row of the day's schedule.
@@ -377,6 +379,7 @@ final class AppModel {
         switch route {
         case let .object(id): object(id)?.title ?? "Object"
         case let .classDef(id): classDef(id: id)?.name ?? "Class"
+        case .routines: "Routines"
         }
     }
 
