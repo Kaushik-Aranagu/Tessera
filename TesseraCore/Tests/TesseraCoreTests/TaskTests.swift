@@ -65,7 +65,7 @@ struct TaskTests {
         #expect(store.value("startsAt", of: task)?.dateValue == now.addingTimeInterval(7200))
 
         let later = try engine.perform(MoveTask(task: task.id, later: true), by: .user)
-        #expect(later.record.summary == "Moved Stretch to Later")
+        #expect(later.record.summary == "Stretch, moved to Later")
         #expect(list.later().map(\.id) == [task.id])
         // Delete is undoable too.
         let delete = try engine.perform(DeleteObject(object: task.id), by: .user)

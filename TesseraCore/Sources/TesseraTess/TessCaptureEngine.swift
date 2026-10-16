@@ -393,7 +393,8 @@ public final class TessCaptureEngine: TessCapturing {
 
     /// "today 3 pm", "tomorrow 9 am", "Saturday 3 pm". By his day (04:00 to 04:00); after midnight and before 04:00
     /// "today" and "tomorrow" are ambiguous, so the weekday is named (late-night #9).
-    static func when(_ date: Date, context: TessContext) -> String {
+    /// "tomorrow 7 am", "Friday 6:30 pm": the day and time Tess says for a task.
+    public static func when(_ date: Date, context: TessContext) -> String {
         let calendar = context.calendar
         let tessera = TesseraDay(calendar: calendar)
         let small = calendar.component(.hour, from: context.now) < TesseraDay.startHour

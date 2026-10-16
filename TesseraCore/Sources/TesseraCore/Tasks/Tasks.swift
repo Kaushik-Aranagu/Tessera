@@ -152,6 +152,7 @@ public struct MoveTask: EngineAction {
 
     public func summary(in store: ObjectStore) -> String {
         let title = store.object(id: task)?.title ?? "it"
-        return later == true ? "Moved \(title) to Later" : "Moved \(title)"
+        // Thing first in his history (Product 2:48 PM PT): "Stretch, moved to Later".
+        return later == true ? "\(title), moved to Later" : "\(title), moved"
     }
 }

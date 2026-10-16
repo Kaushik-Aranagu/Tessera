@@ -1,5 +1,6 @@
 import SwiftUI
 import TesseraCore
+import TesseraTess
 
 // Today on Home (docs/design/today-on-home.md, M2 slices 8 and 9): the queue window under Now. Next, then Later,
 // in one bounded surface with a heading that rolls; swipe right to finish (the strike follows the finger), swipe
@@ -470,7 +471,11 @@ private struct QueueRow: View {
             withTesseraAnimation(.spring(Spring(duration: 0.42, bounce: 0.12)), reduceMotion: reduceMotion) {
                 model.touch()
             }
-            voice.say(entry.time == nil ? "Moved to next week." : "Moved to tomorrow.", undo: record)
+            // Thing first with where it went, the way Tess says it (Design on #553): "Stretch, tomorrow 7 am."
+            let moved = model.store.object(id: entry.id).flatMap { model.store.value("startsAt", of: $0)?.dateValue }
+            let when = entry.time == nil ? "next week"
+                : moved.map { TessCaptureEngine.when($0, context: TessContext(now: AppClock.now)) } ?? "tomorrow"
+            voice.say("\(entry.title), \(when).", undo: record)
         }
     }
 }
