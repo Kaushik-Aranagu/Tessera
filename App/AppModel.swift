@@ -77,6 +77,9 @@ final class AppModel {
         didSet {
             if isWorkoutPresented {
                 session?.touch()
+            } else {
+                // Whoever closed the cover, the next one (Resume, the seam) is a plain one.
+                workoutRisesFromLane = false
             }
         }
     }

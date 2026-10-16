@@ -135,7 +135,7 @@ private struct TrainingAtRest: View {
                         Text(line)
                             .font(Theme.voice(size: 21))
                             .foregroundStyle(Theme.Colors.tess)
-                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
                             .contentTransition(.opacity)
                             .transition(.opacity)
                     }
@@ -155,8 +155,13 @@ private struct TrainingAtRest: View {
         }
         .tesseraFeedback(.made, trigger: liftTaps)
         .onDisappear {
+            // Leaving mid-START: stop it and put the page back whole.
             startTask?.cancel()
             startTask = nil
+            sinking = false
+            landed = false
+            isLifting = false
+            lift = 0
         }
         .onChange(of: model.isWorkoutPresented) { _, presented in
             guard !presented else { return }

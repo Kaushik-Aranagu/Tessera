@@ -55,6 +55,8 @@ struct RoutinesPage: View {
         .toolbarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbarVisibility(.hidden, for: .navigationBar)
+        // Hiding the system back button also drops the edge swipe; keep it (QA K1).
+        .background { EdgeSwipeBack() }
     }
 
     private var next: ObjectRecord? {
