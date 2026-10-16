@@ -17,13 +17,16 @@ Accepted. The side groups the open rows under the cook each is for, in short nam
 
 **The table.** The phone carries no food table today, and nutrition was "only if he asks" with licensing first (`kitchen-v2-backlog.md`). His 2:20 example ("a grocery item shows calorie info") is the ask. The source is **USDA FoodData Central** (Foundation Foods and SR Legacy), a US government work in the public domain, so it ships inside the app with no licence text to carry; Research confirms the licence line and picks the subset before Core bundles it. The bundle is small: one row per ingredient key the app already knows (the aisle and alias list, a few hundred), with energy (kcal), protein, carbohydrate, fat and fibre per 100 g, and the source shown on the side as "USDA FoodData Central". No per-serving maths, no totals per recipe, no daily totals anywhere: a food's facts are public facts about the food, and the moment the app adds them up it becomes a body fact (intake is walled, `private-health-words.md` BW88), so the app never adds them up.
 
+**The build (Research `food-table-usda.md`, `fixtures/food-table-20.json`).** Licence: CC0 1.0, public domain, FDC asks only to be listed as the source; the suggested citation goes on the app's licences page, the side shows "USDA FoodData Central". The subset is master's 271 keys (`AisleGuide.guide`), one whole record per key: a Foundation record only when it publishes kcal under nutrient 1008 and the other four; otherwise that key's SR Legacy record, whole, never a mix of two records. Energy is 1008 only; 2047 and 2048 (Atwater) are never used, silently or otherwise. A key with no usable record is absent and the side is complete without it. Core re-checks the 20 fixture rows against the FDC CSV before bundling, since Research read them through a summarising fetch; each bundled row keeps its FDC id and data type.
+
 **Claude may fill a missing row** only as sheet 75 §3 says, with these Kitchen limits: only for a named food with no table row, asked once per ingredient key, the ask carries the ingredient's key and nothing else (no note, no recipe, no amount), the answer lands wet with "From Claude, Oct 16" and dries, and the row is kept on the Ingredient object. Never for an ingredient on a private recipe or one that holds a secret word, never when "Tess asks Claude" is off (the side is complete without the row), and never re-asked after NOT NOW.
 
 **Where it's used** lists the recipes that hold the ingredient (short names), then USUALLY's sentence when it has one. Tess's line: "You buy it about every 9 days." when USUALLY knows, else the count of recipes, else empty.
 
 | # | Pass when |
 |---|---|
-| 2.1 | Chicken thighs shows kcal, protein, carbohydrate, fat and fibre per 100 g with "USDA FoodData Central" under them; the numbers match the bundled row |
+| 2.1 | Chicken thigh shows 121 kcal, 19.7 g protein, 0 g carbohydrate, 4.12 g fat, 0 g fibre per 100 g with "USDA FoodData Central" under them (fixture row, FDC 173627); the other 19 fixture keys match their rows |
+| 2.1b | No bundled row carries energy from 2047 or 2048; every row's FDC id resolves to a record of the stated data type |
 | 2.2 | An ingredient with no row and Claude off shows only where it's used; nothing says the row is missing |
 | 2.3 | With Claude on, the first open of a rowless ingredient asks once; KEEP writes the row with "From Claude, Oct 16"; NOT NOW is remembered; the request body holds the key only |
 | 2.4 | No screen anywhere sums these numbers for a recipe, a day or a shop; Review and Home never mention calories |
@@ -56,5 +59,16 @@ THE WEEK'S COOKS (AHEAD, sheet 74) now, and it stays that way when Pantry arrive
 |---|---|
 | 5.1 | The Kitchen tab's side lists the week's planned cooks by day with "N to buy" each; a day with no cook is absent |
 | 5.2 | Nothing on the Kitchen tab's side changes when Pantry ships |
+
+
+## Glances (Kaushik 2:33 PM: every side opens on a half-screen glance as stop 1)
+
+| Side | Glance | Why |
+|---|---|---|
+| FOR WHAT | "7 for 2 cooks", the two cooks named by short name | Design's draft |
+| PER 100 G | kcal big, then protein and fat; carbohydrate and fibre wait for the full side; the source line sits under the glance | Design's draft, with the source always visible since the number came from somewhere |
+| COOKS | The last cook with its day and duration: "Thursday, 46 min" | Design's draft, with the duration so the glance says something the front does not |
+| INGREDIENTS | "7 to buy" with the key ADD 7 TO GROCERIES; at 0, "Nothing to buy." and no key | Changed from "12 things": the glance's number and the key's number must be the same number, and the thing-count is already on the front |
+| THE WEEK'S COOKS | The next cook in Home's own words: "Tacos tonight, 2 to buy." | Changed from "the next cook" alone: Tess's line and Home never disagree, so the glance is Home's line for that cook |
 
 **Everywhere:** the way back is the front's name; sides never carry controls beyond the one key named above; Reduce Motion is a 200 ms crossfade; Dynamic Type at AX sizes keeps one column. Each Kitchen side lands in its own PR with a recording that starts on the front and turns it over.
