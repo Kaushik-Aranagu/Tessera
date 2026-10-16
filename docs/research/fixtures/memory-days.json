@@ -258,7 +258,8 @@
         2,
         3
        ],
-       "rules": "Overhead press paused at set 2."
+       "rules": "paused at set 2",
+       "hero": "Push A, paused at Overhead press"
       }
      ]
     }
@@ -652,7 +653,8 @@
         2,
         3
        ],
-       "rules": "Romanian deadlift paused at set 2."
+       "rules": "paused at set 2",
+       "hero": "Legs A, paused at Romanian deadlift"
       }
      ]
     }

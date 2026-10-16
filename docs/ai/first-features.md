@@ -112,6 +112,8 @@ The ✗ rows are there on purpose: the eval proves the checks catch them.
 
 **His words:** "Review, I don't know, it doesn't show me so much. I need more stuff here to review."
 
+**Where it lands (Design 46, `docs/design/review-week.md`, da55bb6):** Review is the week on one page; under the bands, THE WEEK'S LINES holds three lines, so this feature's shape is three lines at the Home line caps (context: 6 words, 32 characters each), never a paragraph.
+
 **What he sees.** Review opens on three lines about his week, written once a week (Sunday after 04:00) and again only when the week's facts change: what happened, one thing noticed, and what's next. For example: "5 of 6 workouts, with records on bench and squat." / "Training moved later this week, mostly after 7 pm." / "Legs is first up Monday." Each line links to what it's about (handles, as Plan my day does). One tap down: "What Tess knows", the memory page (m4-steers section 11).
 
 **Why second.** It needs the memory store (architecture section 4) and a `WeekFacts` lens, and the memory page is where he sees and deletes what Tess knows. Home lines don't need stored memory to start (1b can run with recent day lines built on the fly).
@@ -136,5 +138,6 @@ The ✗ rows are there on purpose: the eval proves the checks catch them.
 
 **Pack:** ingredient titles of this week's planned recipes (never his typed lines, which carry shops and brands), current grocery item names, staples flags, told memory ("never buy cilantro"). Never quantities, prices or shops. No pantry: pantry light waits until after week one, and AI-12 doesn't wait on it.
 **Model:** Haiku 5.5, one strict `linkItems` tool, no writes except the kept ghost rows.
+**Surface (Design 47, `docs/design/groceries-tess.md`, 05d14dd):** one ask in Tess's line, "Scallions, for the tacos?" with KEEP / NOT NOW under the one-ask rules, never while shopping; KEEP dries the "for tacos?" line into the link. That is the whole Claude surface of this feature.
 **Owner note:** Groceries belongs to the Recipes and groceries lead and Builder B; this is a proposal for their queue.
 **Done when:** on the kitchen fixtures every proposed link joins a real ingredient of a planned recipe to a real list row with 0 wrong matches in 3 runs; nothing is written until he keeps it; no typed line text leaves the phone (pack snapshot test).
