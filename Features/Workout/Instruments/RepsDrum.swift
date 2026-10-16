@@ -2,9 +2,17 @@ import SwiftUI
 
 /// Round 6 ("Plein") paint. Kept here so a restyle is a one-line change.
 private enum Paint {
-    static let cream = Color(hex: 0xF3ECE0)
-    static let neighbour = cream.opacity(0.35)
-    static let ghost = cream.opacity(0.55)
+    static var cream: Color {
+        Theme.Colors.Workout.ink
+    }
+
+    static var neighbour: Color {
+        cream.opacity(0.35)
+    }
+
+    static var ghost: Color {
+        cream.opacity(0.55)
+    }
 }
 
 /// Reps as a vertical drum, on the opposite axis to the weight dial: just numbers in a snap scroll, no box. Three

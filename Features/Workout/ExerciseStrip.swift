@@ -169,7 +169,7 @@ struct RunningOrderSheet: View {
         .background {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(Paint.cream.opacity(isLifted ? 0.1 : 0))
-                .shadow(color: .black.opacity(isLifted ? 0.4 : 0), radius: 14)
+                .shadow(color: .black.opacity(isLifted && WorkoutPaint.dropsShadows ? 0.4 : 0), radius: 14)
         }
         .scaleEffect(isLifted && !reduceMotion ? 1.03 : 1)
         .offset(y: isLifted ? dragOffset : 0)

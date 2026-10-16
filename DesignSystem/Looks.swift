@@ -1,5 +1,6 @@
 import Observation
 import SwiftUI
+import UIKit
 
 // MARK: - Looks
 
@@ -129,9 +130,14 @@ final class ThemeStore {
     private(set) var night: Look
     /// When set, this look holds day and night ("Obsidian always").
     private(set) var pinned: Look?
-    /// The system appearance, tracked from the root background, so the always-dark workout knows which look's
-    /// workout palette is on.
-    var systemIsDark = false {
+    /// `-theme <name>` (DEBUG): a pin for demos and recordings that is never saved, whatever else is tapped.
+    private(set) var demoPin: Look?
+    /// The workout keeps the look it opened in until it closes, so the appearance flipping mid-set can't change it
+    /// (theme-schedule.md).
+    private(set) var workoutHeld: Look?
+    /// The system appearance (day is Light, night is Dark, whatever set it). Read from the trait before the first
+    /// frame, then tracked from the root background.
+    var systemIsDark: Bool {
         didSet {
             if oldValue != systemIsDark {
                 rebuild()
@@ -150,9 +156,13 @@ final class ThemeStore {
 
     private let defaults: UserDefaults
 
-    init(defaults: UserDefaults = .standard) {
+    init(
+        defaults: UserDefaults = .standard,
+        systemIsDark: Bool = UITraitCollection.current.userInterfaceStyle == .dark
+    ) {
         self.defaults = defaults
-        // Porcelain by day, Obsidian by night, for everyone (Kaushik: white is his likely default; Plein is a hold
+        self.systemIsDark = systemIsDark
+        // Porcelain by day, Obsidian by night, for everyone (Kaushik: white is his likely default; Plein is a tap
         // away in the sentence).
         day = defaults.string(forKey: Key.day).flatMap(Look.named) ?? .porcelain
         night = defaults.string(forKey: Key.night).flatMap(Look.named) ?? .obsidian
@@ -162,17 +172,22 @@ final class ThemeStore {
 
     private func rebuild() {
         let (day, night) = pair
-        concept = ThemeConcept.dressed(day: day, night: night, current: current)
+        concept = ThemeConcept.dressed(day: day, night: night, current: workoutHeld ?? current)
+    }
+
+    /// The pin in force: the demo's, else his.
+    var pin: Look? {
+        demoPin ?? pinned
     }
 
     /// The look on screen now.
     var current: Look {
-        pinned ?? (systemIsDark ? night : day)
+        pin ?? (systemIsDark ? night : day)
     }
 
     /// Day and night as the two halves of every dynamic colour.
     var pair: (day: Look, night: Look) {
-        pinned.map { ($0, $0) } ?? (day, night)
+        pin.map { ($0, $0) } ?? (day, night)
     }
 
     /// Tap a name: the next light look by day, the next dark look by night.
@@ -186,15 +201,54 @@ final class ThemeStore {
         save()
     }
 
-    /// Hold a name to pin it; hold again to unpin.
-    func togglePin(_ look: Look) {
-        pinned = pinned == look ? nil : look
+    /// The day or night name stepped back (VoiceOver's decrement).
+    func cycleDayBack() {
+        day = Self.next(after: day, in: Look.light.reversed())
         save()
     }
 
-    /// `-theme <name>` (DEBUG) pins a look for demos and recordings.
+    func cycleNightBack() {
+        night = Self.next(after: night, in: Look.dark.reversed())
+        save()
+    }
+
+    /// A pinned name steps through all five looks, light and dark.
+    func cyclePinned(forward: Bool = true) {
+        guard let pinned else { return }
+        self.pinned = Self.next(after: pinned, in: forward ? Look.all : Look.all.reversed())
+        save()
+    }
+
+    /// Hold a name to pin it; hold again to unpin, and the look goes back into its own slot (a dark look by night,
+    /// a light one by day), the other slot as it was.
+    func togglePin(_ look: Look) {
+        if pinned == look {
+            pinned = nil
+            if look.isDark {
+                night = look
+            } else {
+                day = look
+            }
+        } else {
+            pinned = look
+        }
+        save()
+    }
+
+    /// `-theme <name>` (DEBUG): pins in memory only.
     func pin(_ look: Look) {
-        pinned = look
+        demoPin = look
+        rebuild()
+    }
+
+    /// The workout opens: hold its palette until it closes.
+    func holdWorkoutLook() {
+        workoutHeld = current
+        rebuild()
+    }
+
+    func releaseWorkoutLook() {
+        workoutHeld = nil
         rebuild()
     }
 

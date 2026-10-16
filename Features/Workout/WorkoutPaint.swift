@@ -1,23 +1,58 @@
 import SwiftUI
 
-/// Paint for the workout's dark ground: colours that mean something. Shared by the live workout's parts.
-/// (A DesignSystem candidate: `Theme.Colors.Workout` could carry these once the Plein concept settles.)
+/// Paint for the workout's dark ground: colours that mean something, read from the look on screen
+/// (`Theme.Colors.Workout`, themes.md addendum), so the workout follows the theme. Names kept for the call sites.
 enum WorkoutPaint {
-    static let live = Color(hex: 0xD9563F)
-    static let tess = Color(hex: 0x9DBFE6)
-    static let tessBar = Color(hex: 0xC9D9EE)
-    static let now = Color(hex: 0xE8BD4C)
-    static let health = Color(hex: 0x7FB07A)
-    static let cobalt = Color(hex: 0x3F7FC0)
-    static let secondary = Color(hex: 0xA79FB5)
-    static let cream = Color(hex: 0xF3ECE0)
+    static var live: Color {
+        Theme.Colors.Workout.signal
+    }
+
+    /// Tess's words, the swap wash, the cobalt set stroke (one token: `Workout.tess`).
+    static var tess: Color {
+        Theme.Colors.Workout.tess
+    }
+
+    static var tessBar: Color {
+        Theme.Colors.Workout.tess
+    }
+
+    static var cobalt: Color {
+        Theme.Colors.Workout.tess
+    }
+
+    static var now: Color {
+        Theme.Colors.Workout.rest
+    }
+
+    static var health: Color {
+        Theme.Colors.Workout.health
+    }
+
+    static var secondary: Color {
+        Theme.Colors.Workout.inkSecondary
+    }
+
+    static var cream: Color {
+        Theme.Colors.Workout.ink
+    }
+
+    /// The glint over a dark ground (every workout is dark).
     static let sheen = Color(hex: 0xFFE2A8)
-    /// The dark glass of sheets and panels over the ground: rgba(28, 24, 40, .82).
-    static let glass = Color(hex: 0x1C1828).opacity(0.82)
+
+    /// The glass of sheets and panels: the ground at 82% over the material.
+    static var glass: Color {
+        Theme.Colors.Workout.ground.opacity(0.82)
+    }
 
     /// Each logged set leaves a stroke; the colour cycles set to set.
     static func set(_ number: Int) -> Color {
-        [live, cobalt, now, health][max(number - 1, 0) % 4]
+        let cycle = Theme.Colors.Workout.setCycle
+        return cycle[max(number - 1, 0) % cycle.count]
+    }
+
+    /// Black drop shadows only on Plein (a black shadow can't show on #000); other looks lift with `raised`.
+    static var dropsShadows: Bool {
+        ThemeStore.shared.current.field == .plein
     }
 }
 
@@ -53,8 +88,8 @@ struct WorkoutGlass<S: InsettableShape>: ViewModifier {
                                                           .init(color: .clear, location: 0.08)],
                                                   startPoint: .top, endPoint: .bottom), lineWidth: 1)
             }
-            .overlay { shape.stroke(.black.opacity(0.6), lineWidth: 0.5) }
-            .shadow(color: .black.opacity(0.45), radius: 30, y: 24)
+            .overlay { shape.stroke(Theme.Colors.Workout.glassEdge, lineWidth: 0.5) }
+            .shadow(color: .black.opacity(WorkoutPaint.dropsShadows ? 0.45 : 0), radius: 30, y: 24)
     }
 }
 

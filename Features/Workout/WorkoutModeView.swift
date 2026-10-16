@@ -29,6 +29,9 @@ struct WorkoutModeView: View {
                     }
             }
             .environment(\.zoomNamespace, zoom)
+            // The workout keeps the look it opened in until it closes (theme-schedule.md).
+            .onAppear { ThemeStore.shared.holdWorkoutLook() }
+            .onDisappear { ThemeStore.shared.releaseWorkoutLook() }
         } else {
             Color.clear.onAppear { model.isWorkoutPresented = false }
         }
@@ -124,10 +127,10 @@ private struct WorkoutContent: View {
         .sheet(isPresented: $isAsking) {
             LiveAskField(isShown: $isAsking) { phrase in ask(phrase) }
                 .presentationDetents([.height(84)])
-                .presentationBackground(Color(hex: 0x1C1828))
+                .presentationBackground(Theme.Colors.Workout.ground)
                 .presentationDragIndicator(.hidden)
         }
-        .background { PleinGround() }
+        .background { WorkoutField() }
         .preferredColorScheme(.dark)
         .persistentSystemOverlays(.hidden)
         .defersSystemGestures(on: .bottom)
