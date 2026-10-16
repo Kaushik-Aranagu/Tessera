@@ -386,8 +386,8 @@ enum HomeData {
         return (-1 ... 1).compactMap { offset in
             let day = tesseraDay.day(offset, after: now)
             let items = model.schedule(around: offset == 0 ? now : day)
-                .filter { tesseraDay.isSameDay($0.start, day) }
-            let workouts = model.finishedWorkouts(on: day).compactMap { summary -> ClosedRange<Date>? in
+                .filter { tesseraDay.day(of: $0.start) == day }
+            let workouts = model.ledger.finishedWorkouts(onDay: day).compactMap { summary -> ClosedRange<Date>? in
                 guard let end = summary.endedAt else { return nil }
                 return min(summary.startedAt ?? end, end) ... end
             }

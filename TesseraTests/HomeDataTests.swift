@@ -183,11 +183,13 @@ struct HomeDataTests {
         let now = AppClock.now
         let lanes = HomeData.lanes(model, now: now)
         #expect(lanes.map(\.offset) == [-1, 0, 1])
+        // His day runs to 04:00: a lane holds the items whose own day is the lane's day.
+        let tesseraDay = TesseraDay()
         for lane in lanes {
-            #expect(lane.items.allSatisfy { Calendar.current.isDate($0.start, inSameDayAs: lane.date) })
+            #expect(lane.items.allSatisfy { tesseraDay.day(of: $0.start) == lane.date })
         }
         #expect(lanes[1].items.count == model.schedule(around: now)
-            .count(where: { Calendar.current.isDate($0.start, inSameDayAs: now) }))
+            .count(where: { tesseraDay.isSameDay($0.start, now) }))
     }
 
     @Test func trainingTargetsReadLikeTheMockup() {

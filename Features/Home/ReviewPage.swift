@@ -17,7 +17,8 @@ enum WeekReview {
     /// One flag per day: whether anything was trained that day.
     static func trainedDays(_ dates: [Date], on days: [Date], calendar: Calendar) -> [Bool] {
         let tesseraDay = TesseraDay(calendar: calendar)
-        return days.map { day in dates.contains { tesseraDay.isSameDay($0, day) } }
+        // `days` are day keys (midnights); compare each moment's own day to them.
+        return days.map { day in dates.contains { tesseraDay.day(of: $0) == day } }
     }
 
     /// Distinct days with training among the last `days` days, today included.

@@ -47,7 +47,7 @@ struct HomeRestDayTests {
         let lateThursday = days[4].addingTimeInterval(3600)
         let late = WeekReview.marks(week, firstUse: nil, restToday: false, now: lateThursday, calendar: calendar)
         #expect(late[3] == .planned)
-        let fresh = WeekReview.marks(week, firstUse: days[2], restToday: false, now: thursday, calendar: calendar)
+        let fresh = WeekReview.marks(week, firstUse: days[2].addingTimeInterval(9 * 3600), restToday: false, now: thursday, calendar: calendar)
         #expect(fresh[0] == .trained(2) && fresh[1] == .none)
     }
 }
