@@ -37,11 +37,18 @@ struct ClaudeSection: View {
     /// The real Keychain in the app; previews and recordings pass an in-memory one with a fake key.
     var keys: any TessKeychain = ClaudeSection.defaultKeys
 
+    #if DEBUG
+        /// Recordings only: plainly synthetic, built at run time so no key-shaped literal sits in the app.
+        static var fakeKey: String {
+            "sk-" + "ant-" + String(repeating: "x", count: 32)
+        }
+    #endif
+
     @MainActor static let defaultKeys: any TessKeychain = {
         #if DEBUG
             // `-fakeClaudeKey`: an in-memory key that only looks real, for recordings. Never the Keychain.
             if LaunchFlags.has("-fakeClaudeKey") {
-                return InMemoryKeychain("sk-ant-api03-FAKE-recording-only-a1B2")
+                return InMemoryKeychain(fakeKey)
             }
         #endif
         return SystemKeychain()
