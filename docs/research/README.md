@@ -96,3 +96,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [lockscreen-lines.md](lockscreen-lines.md) | Builder A and Core: 72 Live Activity, Siri and Shortcuts strings checked against Tess voice and the undo rule |
 | [accessibility.md](accessibility.md) | All teams: 80 VoiceOver, Dynamic Type and Reduce Motion fixes by screen, 9 high |
 | [restore-drill.md](restore-drill.md) | QA and Core: 10-step backup and restore drill on the simulator, 5 edge cases, 10 code-vs-rule gaps |
+| [oplog-health.md](oplog-health.md) | Core: every write that skips the op log or cannot be undone, with risk, fix and owner, ahead of Build A1 |
