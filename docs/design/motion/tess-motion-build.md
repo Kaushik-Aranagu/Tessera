@@ -41,6 +41,11 @@ The one sheet Builder A builds from. Design reviewed `tess-motion.md` (item 51, 
 ## Reduce Motion
 As `tess-motion.md`: nothing travels; 200 ms crossfades; eyes still; haptics stay.
 
+## Acceptance for the PR (Design, 14-15 pass)
+The one-wire rules of `tess-motion.md` section 14 are the PR's gate, checked by grep before anything is recorded:
+- `rg "tessMode\s*=" --type swift` outside `Features/Tess/SoulRouter.swift` returns nothing (views emit events; they never set a mode).
+- `rg "Task.sleep" Features/Tess Features/Command/BottomChrome.swift Features/Workout/WorkoutModeView.swift` finds soul timers only in the router (the 1.8 s one-shot, `say`'s 4 s, the beat's 940 ms, the flood's 900 ms, the drop's dock save).
+
 ## Tests (TesseraTests)
 - Reduce Motion: the timeline is not paused but ticks at 30 fps for the opacity breath (0.85 to 1, 3.2 s) and the blink; no scale, no travel, no glance.
 - Eyes: blink cadence stays in 3 to 8 s over 1000 samples; a double happens about one in five; eyes hidden during `.done` and back after 1.8 s + 200 ms.

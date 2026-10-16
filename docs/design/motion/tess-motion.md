@@ -285,7 +285,7 @@ Today eleven places write `AppModel.tessMode` directly (`BottomChrome` nine time
 | `reduceMotion` | the environment | the still table | section 13 |
 
 **Who wins when two arrive together** (the router's order; higher beats lower, and a one-shot in flight is not cut except by the first row):
-1. **His touch on her**: `held`, `pickedUp`, `speak(hold:)`. Cuts anything, including Done, with the 400 ms blend; a drag ends roam and work's readers at once (the constellation stays at the dock, then follows the carry).
+1. **His touch on her**: `held`, `pickedUp`, `speak(hold:)`. Cuts anything, including Done, with the 400 ms blend; a drag ends roam and work's readers at once (the constellation stays at the dock, then follows the carry). The cut never takes back what already happened: the `.success` that played stays played and the receipt line stays in the band (the line is the record; the pour was only the celebration) (Design, 14-15 pass).
 2. **Listening.** No roam, drag threshold only before the hold fires, no split, no repaint, no beat while she listens (a Done arriving while he talks waits and plays as the beat when she returns).
 3. **An ask waiting.** Holds the lean; a `taskDone` during the wait beats at once (it is his), `rowChanged` waits.
 4. **Done in flight** (1.8 s): a second Done inside it becomes a beat at 0; `askClaude` inside it queues and starts at the end; `rowChanged` waits.
