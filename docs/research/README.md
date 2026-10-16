@@ -139,3 +139,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [zone-per-item.md](zone-per-item.md) | Core: storing a time zone per op (write now, read later) |
 | [themes-leftovers.md](themes-leftovers.md) | Builder A, Builder B: 52 theme leftovers on master with owners and Obsidian risks |
 | [fixtures/habits-from-logs.md](fixtures/habits-from-logs.md) | Core: 15 fixture days for logs filling habits |
+| [theme-contrast-fixes.md](theme-contrast-fixes.md) | Design, Builder A, Builder B: proposed contrast values for the Obsidian misses and Best e1RM |
