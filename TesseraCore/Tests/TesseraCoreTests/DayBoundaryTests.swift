@@ -109,8 +109,11 @@ struct DayBoundaryTests {
         let notes = table.tidyNotes(now: Date.now.addingTimeInterval(7 * 3600))
         let undo = try #require(notes.first?.undo)
         #expect(workout.isDeleted)
+        #expect(table.process(for: workout) == nil)
         engine.undo(undo)
         #expect(!workout.isDeleted)
+        // QA P1: the process comes back with it, so the workout is never open and unseen, catching later sets.
+        #expect(table.process(for: workout)?.state == .suspended)
     }
 }
 

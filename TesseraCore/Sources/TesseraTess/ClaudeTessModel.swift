@@ -86,7 +86,8 @@ public struct ClaudeTessModel: TessModel {
                 for call in response.toolCalls {
                     do {
                         let done = try TessTools.run(call.name, arguments: call.input, engine: engine,
-                                                     pending: true, now: request.context.now)
+                                                     pending: true, now: request.context.now,
+                                                     calendar: request.context.calendar)
                         records += done
                         results.append(["type": "tool_result", "tool_use_id": call.id, "content": "Done"])
                     } catch let answer as TessToolAnswer {

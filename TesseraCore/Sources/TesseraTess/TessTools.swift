@@ -22,6 +22,8 @@ public enum TessTools {
         let grammar: TessGrammar
         let pending: Bool
         let now: Date
+        /// His calendar: a time with no zone ("2026-10-21T15:00:00") is read in it, never as UTC (QA T1).
+        let calendar: Calendar
 
         var store: ObjectStore {
             engine.store
@@ -44,14 +46,14 @@ public enum TessTools {
     /// Runs a tool call from its JSON arguments. Returns what was logged; throws `TessToolError` with a line the
     /// model can read and correct.
     public static func run(_ name: String, arguments: Data, engine: ActionEngine, pending: Bool = true,
-                           now: Date = .now) throws -> [OpRecord]
+                           now: Date = .now, calendar: Calendar = .current) throws -> [OpRecord]
     {
         guard let tool = tool(named: name) else { throw TessToolError("no tool called \(name)") }
         guard let object = try? JSONSerialization.jsonObject(with: arguments) as? [String: Any] else {
             throw TessToolError("unreadable arguments")
         }
         let call = Call(engine: engine, grammar: TessGrammar(store: engine.store, classes: engine.classes),
-                        pending: pending, now: now)
+                        pending: pending, now: now, calendar: calendar)
         // A tool that fails part-way takes back what it already did, so no half-done ghost is left behind.
         let mark = engine.history(limit: 1).first?.id
         do {
@@ -113,8 +115,11 @@ public enum TessTools {
                  ("about", .array(.string("A thing it's about, by name"))),
              ])) { args, call in
             let about = (args["about"] as? [String] ?? []).compactMap { call.object(named: $0) }
-            return try [call.perform(CreateTask(title: args.string("title"), startsAt: args.date("startsAt"),
-                                                about: about.map(\.id)))]
+            return try [call.perform(CreateTask(
+                title: args.string("title"),
+                startsAt: args.date("startsAt", in: call.calendar),
+                about: about.map(\.id)
+            ))]
         }
     }
 
@@ -134,7 +139,8 @@ public enum TessTools {
                  ("startsAt", .string("When, ISO 8601 date-time")),
              ])) { args, call in
             let task = try call.task(named: args.string("task"))
-            guard let date = args.date("startsAt") else { throw TessToolError("startsAt isn't a date") }
+            guard let date = args.date("startsAt", in: call.calendar)
+            else { throw TessToolError("startsAt isn't a date") }
             return try [call.perform(MoveTask(task: task.id, to: date))]
         }
     }
@@ -348,11 +354,12 @@ extension [String: Any] {
         throw TessToolError("\(key) isn't a number")
     }
 
-    func date(_ key: String) -> Date? {
+    /// An ISO 8601 date: with a zone or offset, as written; without one, in his calendar's zone (QA T1).
+    func date(_ key: String, in calendar: Calendar) -> Date? {
         guard let text = self[key] as? String else { return nil }
-        return (try? Date(text, strategy: .iso8601))
-            ?? (try? Date(text, strategy: .iso8601.year().month().day().time(includingFractionalSeconds: false)
-                    .timeSeparator(.colon)))
+        let local = Date.ISO8601FormatStyle(timeZone: calendar.timeZone).year().month().day()
+            .time(includingFractionalSeconds: false).timeSeparator(.colon)
+        return (try? Date(text, strategy: .iso8601)) ?? (try? Date(text, strategy: local))
     }
 }
 

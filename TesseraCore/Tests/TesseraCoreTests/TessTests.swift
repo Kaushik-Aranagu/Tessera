@@ -203,7 +203,7 @@ struct TessTests {
     @Test func modelToolCallsResolveNamesAndRunAsPendingTess() async throws {
         let recorder = TessToolRecorder()
         let tool = try CatalogTool(tool: #require(TessTools.tool(named: "logSet")), engine: engine, pending: true,
-                                   now: .now, recorder: recorder)
+                                   now: .now, calendar: .current, recorder: recorder)
         let output = try await tool.call(arguments: GeneratedContent(
             json: #"{"exercise":"bench","weight":80,"reps":8,"sets":2,"unit":"kg"}"#
         ))
