@@ -123,9 +123,9 @@ Status words: **merged**, **open PR**, **not started** (no branch and no commit 
 |---|---|---|---|---|---|
 | R12 | SAVE A COPY's default name becomes "Before update <day>.tessera" (today "Tessera-<day>", `Features/Backup/BackupKeeper.swift:170`), and rotation and pruning touch only the rolling prefix, with a test. | Core | Core 0af | not started | **SC1** |
 | R13 | SAVE A COPY warns "This is the Backups folder. Daily copies here get replaced. Save somewhere else?" when he picks the Backups folder. After R12. | Builder B | B 0t | not started | **SC2** |
-| R15 Review foot line out of Tess's band (Design v9 walk, must land) | Builder B 0x | **not in 56dd028** (no PR) | none yet | none yet | none yet | `HomeSpatialView` HomeLinkLine. |
-| R16 Routines Tess line and "Add an exercise" out of the band, 84 pt inset (Design v9 walk, must land) | Builder A 0q | **not in 56dd028** (no PR) | none yet | none yet | none yet | |
-| R17 Resume key progress reads "sets", not "targetSets" (decisions 2:28 pm) | Builder A 0r | **in 56dd028** (#546, 8ccb150; `NowPage.swift:208`, `:214-218` read targetSets; QA PASS 84ad7dc) | none yet | none yet | none yet | `NowPage.swift:209`; every exercise counts 3 planned sets today. |
+| R15 Review foot line out of Tess's band (Design v9 walk, must land) | Builder B 0x | **not in 56dd028** (no PR) | none yet | none yet | **FB1** | `HomeSpatialView` HomeLinkLine. |
+| R16 Routines Tess line and "Add an exercise" out of the band, 84 pt inset (Design v9 walk, must land) | Builder A 0q | **not in 56dd028** (no PR) | none yet | none yet | **FB2** | |
+| R17 Resume key progress reads targetSets, with 3 for an entry with no plan; nothing writes "sets" (decisions 2:28 pm) | Builder A 0r | **in 56dd028** (#546, 8ccb150; `NowPage.swift:208`, `:214-218` read targetSets; QA PASS 84ad7dc) | none yet | none yet | **RK1** | `NowPage.swift:209`; every exercise counts 3 planned sets today. |
 
 ### Fixes from the Research fixtures (F1 to F12)
 
@@ -192,7 +192,10 @@ The riders script is `next-build-script-v9.md` copied and changed as below. Row 
 | SC2 | SAVE A COPY into the Backups folder. | The warning line; saving elsewhere is one tap. |
 | UW1 | VoiceOver on: Home swipe done, a capture, delete a note. | Each UNDO stays 10 s and takes back what its line names: "X, taken back." |
 | PF1 | `WallsUITests/testObjectPageMask` with `-wallsSeedPrivate` (rows PM1 to PM20), then VoiceOver on Push A's Linked from and a private note's generic page (R18). | A private memory, note or task shows only "Private memory", "Private note" or "Private task": no field names, values or counts, and VoiceOver reads the same. Public controls show their fields. |
-| BW1 | `WallsUITests` rows BN01 to BN11 with `-wallsSeedPrivate` seeding the last weight (R19). | BN01 to BN04 make no Claude call and add nothing to the miss log; BN05 to BN10 stay plain. |
+| BW1 | `WallsUITests` rows BN01 to BN11 with `-wallsSeedPrivate` seeding the last weight (R19), plus `WallsBypassTests` rows BM01 to BM31 (the five 0ai paths and the bar trap, walls-ui spec section 13; decisions 4:46). | BN01 to BN04 answer "That stays on this phone." with no Home task; BN05 to BN10 stay plain; BN11 and BM31 are walled; each path's secret, money and in-band rows are walled and its control stays plain; BM26 to BM30 stay plain. |
+| FB1 | Simulator, iPhone 17, `-demoTime 18:10 -resetDemo`, Home with Tess's band showing a line; then the largest Dynamic Type size (R15). | Review's foot line (`HomeLinkLine`, `HomeSpatialView.swift:195`, `:386`) sits fully above Tess's band: no overlap in a screenshot at either text size, and VoiceOver reads the foot line and Tess's line as separate elements. |
+| FB2 | Simulator, Training, Routines, with Tess's line showing; scroll to the end of the list; repeat at the largest Dynamic Type size (R16). | Tess's line and "Add an exercise" both sit at least 84 pt above the bottom edge, outside the band; the last routine row and "Add an exercise" stay tappable at the end of the scroll. |
+| RK1 | Start Push A with a routine whose exercises plan 2, 4 and 5 sets; log 1 set of the first (R17). | The Resume key's ink line fills by the planned total (1 of 11), not 3 per exercise (`NowPage.swift:214-218`, #546); `TimeWordsTests.plannedSetsReadTargetSets` (`TesseraTests/TimeWordsTests.swift:70-82`, #546) passes: 4+3+5 = 12, and 3 for an entry with no plan. Applies to 56dd028 now. |
 
 Fixture rows for F1 to F12 run under their own ids on the PR that closes them, and on the pin if the PR is in. A row
 whose PR isn't in is skipped, not failed.

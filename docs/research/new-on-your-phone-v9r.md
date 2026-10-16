@@ -163,3 +163,7 @@ than a36b161.
 2. In ROUTINES, drag an exercise to third in Push A, then UNDO: "Bench press, moved to 3.", then "Push A, taken back."
 3. In the Ask bar, type "door code 4417?": "It's in your private notes." and nothing new in Notes or Home.
 4. Open Review, The week: the task and cook counts match the Day log.
+
+### Gates for release 56dd028
+
+QA PASS at each merged head (`ops/board/qa.md:7`, RELEASE GATE: CLEAR). Design PASS, from Design's own verdict log: #403, #504, #507, #508 and #512 (Design's #320-#512 run), #529 at ffaa0b2, #534 at d45600e, #544 at 6a04f07, #546 at 84ad7dc, #547 at 34359e1, #551 at 5c22981, #552 at 4af772e, #558 at 02c59a0 (plus Lab PASS, SSIM 0.959). #548 only rewords a code comment. Design's walk of what's new runs after the install (decisions 3:03), and any fix rides the next release.
