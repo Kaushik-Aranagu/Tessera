@@ -109,3 +109,5 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [late-night.md](late-night.md) | Core + Builders: 11 PM to 3 AM use walk after the TesseraDay fix, 16 leftover bugs |
 | [review-refresh.md](review-refresh.md) | Product: 16 phone review items for everything merged since 34665f0 |
 | [claude-key-test.md](claude-key-test.md) | Core + Builder B: Claude key Test call, outcome lines, ledger, key-leak test |
+| [notifications.md](notifications.md) | Core + Builders: the three local notifications, permission slot, quiet hours, what never notifies |
+| [install-check.md](install-check.md) | Coordinator + Product: 5-minute check that the review guide matches an install commit |
