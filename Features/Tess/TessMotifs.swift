@@ -4,7 +4,8 @@ import SwiftUI
 /// record, the item you're on now, a fresh note from Tess. Reduce Motion: no sheen.
 struct Glint: ViewModifier {
     var period: Double = 5
-    var sheen: Color = .init(hex: 0xF7E6B8)
+    /// The look's sheen (gold through the letters on white looks, light over dark ones); nil reads it per frame.
+    var sheen: Color?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
@@ -21,14 +22,14 @@ struct Glint: ViewModifier {
                         LinearGradient(
                             stops: [
                                 .init(color: .clear, location: 0),
-                                .init(color: sheen.opacity(0.9), location: 0.5),
+                                .init(color: (sheen ?? Theme.Colors.sheen).opacity(0.9), location: 0.5),
                                 .init(color: .clear, location: 1),
                             ],
                             startPoint: UnitPoint(x: x - 0.25, y: 0.2),
                             endPoint: UnitPoint(x: x + 0.25, y: 0.8)
                         )
                         .mask(content)
-                        .blendMode(.plusLighter)
+                        .blendMode(sheen == nil ? Theme.Colors.sheenBlend : .plusLighter)
                         .allowsHitTesting(false)
                     }
                     .opacity(0.94 + 0.06 * sin(time * 2 * .pi / 6))

@@ -205,7 +205,7 @@ struct ProcessSeam: View {
                 }
             }
             .frame(height: 2)
-            .shadow(color: color.opacity(0.6), radius: 7)
+            .pigmentGlow(color)
         }
         .accessibilityHidden(true)
     }

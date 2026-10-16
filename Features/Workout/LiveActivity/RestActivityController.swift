@@ -108,7 +108,8 @@ final class RestActivityController {
         return State(exercise: planned.exercise, setNumber: planned.setNumber, weight: planned.weight,
                      reps: planned.reps,
                      restEndsAt: isResting ? Date(timeIntervalSinceReferenceDate: endsAt) : .distantPast,
-                     restTotal: restTotal, phase: isResting ? .resting : .ready)
+                     restTotal: restTotal, phase: isResting ? .resting : .ready,
+                     lookDay: ThemeStore.shared.pair.day.name, lookNight: ThemeStore.shared.pair.night.name)
     }
 
     /// While resting the content goes stale when the rest ends, so the Lock Screen flips to "ready" on its own even

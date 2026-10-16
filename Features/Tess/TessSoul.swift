@@ -34,13 +34,18 @@ struct TessSoul: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.onWorkoutGround) private var onWorkoutGround
     @State private var layers: [SoulLayer] = []
     @State private var doneCount = 0
 
     var body: some View {
         let slow = SoulParameters.table(mode).isSlow
         let size = canvasSize
-        let palette = SoulPalette.forScheme(colorScheme)
+        // By the look, not the colour scheme (themes.md addendum); the workout is always its own dark palette.
+        let store = ThemeStore.shared
+        let palette = onWorkoutGround
+            ? SoulPalette.workout(store.workoutLook)
+            : SoulPalette.look(colorScheme == .dark ? store.pair.night : store.pair.day)
         TimelineView(.animation(minimumInterval: slow ? 1 / 30 : 1 / 60, paused: reduceMotion)) { context in
             let frame = reduceMotion
                 ? SoulFrame.sample(mode, time: 0, elapsed: 0, still: true)
@@ -123,6 +128,29 @@ struct SoulPalette {
 
     static func forScheme(_ scheme: ColorScheme) -> SoulPalette {
         scheme == .dark ? dark : light
+    }
+
+    /// The look's live, tess and now; halo from live and context, the ring in context at 60%. Multiply on light
+    /// looks, screen (and a fuller halo) on dark ones.
+    static func look(_ look: Look) -> SoulPalette {
+        let glow = look.isDark
+        return SoulPalette(
+            blend: glow ? .screen : .multiply,
+            washes: [look.live, look.tess, look.now].map(wash),
+            halo: halo(Color(hex: look.live).opacity(glow ? 0.22 : 0.16),
+                       Color(hex: look.context).opacity(glow ? 0.14 : 0.10)),
+            ring: ring(Color(hex: look.context).opacity(0.6))
+        )
+    }
+
+    /// Every workout is dark: signal, Workout.tess and rest, screen, halo on.
+    static func workout(_ look: Look) -> SoulPalette {
+        SoulPalette(
+            blend: .screen,
+            washes: [look.workout.signal, look.workout.tess, look.workout.rest].map(wash),
+            halo: halo(Color(hex: look.workout.signal).opacity(0.22), Color(hex: look.context).opacity(0.14)),
+            ring: ring(Color(hex: look.workout.rest).opacity(0.6))
+        )
     }
 
     private static func wash(_ hex: UInt32) -> Gradient {

@@ -28,6 +28,10 @@ struct RestActivityAttributes: ActivityAttributes {
         /// Length of the whole rest, including any +15s, for the draining bar.
         var restTotal: TimeInterval
         var phase: Phase
+        /// The day and night look names (the same name twice when pinned), so the extension draws the right one by
+        /// the Lock Screen's appearance. Optional: older states decode without them.
+        var lookDay: String?
+        var lookNight: String?
 
         /// The rest as a range for `Text(timerInterval:)` and `ProgressView(timerInterval:)`.
         var restInterval: ClosedRange<Date> {
