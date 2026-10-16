@@ -56,3 +56,13 @@ QA thread, Oct 15 PT. Static review plus a read of `docs/recordings/speak-first-
 ## Must fix before it passes the gate
 1. F1: `SpeakSmokeUITests: SimulatorOnlyTestCase`.
 2. F2: a hold that fired is never also a tap.
+
+## Addendum: re-check at 8fa70a6 (Oct 15 PT): PASS
+Base master 7cae550; trial merge is clean. The diff from dbf74be touches two files only.
+- **F1 closed.** `TesseraUITests/SpeakSmokeUITests.swift:6` is now `final class SpeakSmokeUITests: SimulatorOnlyTestCase`. It has no `setUp` override, so the base class's `XCTSkip` on a device always runs.
+- **F2 closed.** `Features/Command/BottomChrome.swift`: `holdFired = false` on touch-down (line 235), set to `true` the moment the 400 ms hold timer fires, before `speak(hold:)` (line 244), and `onEnded` only calls `soulTapped()` when `!holdFired` (line 257). A refused hold now leaves Tess closed. A real tap is unchanged, because the timer is cancelled before it fires.
+- Still no new LaunchFlags or app-side `ProcessInfo` reads; `project.yml` untouched.
+- Install-day check 2 should say "call mom at 7" and expect "mom" (US English), not "Mum".
+- Lows from the first pass stand (30 fps smoke clip; no-input route reads "busy"; Apple's speech prompt wording).
+
+**Verdict: PASS. #312 clears the install gate.**
