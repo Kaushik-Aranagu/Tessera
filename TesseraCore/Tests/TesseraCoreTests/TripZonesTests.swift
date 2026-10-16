@@ -109,8 +109,8 @@ struct TripZonesTests {
                                          now: Self.at(29, 12))
             #expect(!monday.contains { $0.objectIDs == [cook.id] })
             let line = try #require(tuesday.first { $0.objectIDs == [cook.id] })
-            #expect(line.text.hasPrefix("Cooked ") && line.text.hasSuffix(", 415 min"))
-            #expect(line.time == start)
+            #expect(line.text.hasPrefix("Cooked ") && line.text.hasSuffix(", 6 h 55 min"), "\(line.text)")
+            #expect(line.time == finish)
         }
     }
 
