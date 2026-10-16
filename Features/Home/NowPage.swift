@@ -193,7 +193,7 @@ struct NowPage: View {
             model.touch()
         }
         let hasNext = model.currentTask(around: AppClock.now) != nil
-        TessVoice.shared.say(hasNext ? "Done. Next one is up." : "Done. \(task.title).", undo: record)
+        TessVoice.shared.say(hasNext ? "Done. Next one is up." : "\(task.title), done.", undo: record)
     }
 }
 
@@ -394,7 +394,7 @@ private struct RestHero: View {
         VStack(alignment: .leading, spacing: Theme.Spacing.m) {
             Text("today")
                 .font(Theme.voice(size: 21))
-                .foregroundStyle(Theme.Colors.context)
+                .foregroundStyle(Theme.Colors.inkSecondary)
                 .entrance(1)
             HeroText(text: RestDay.line) { $0 }
                 .foregroundStyle(Theme.Colors.ink)
@@ -402,7 +402,7 @@ private struct RestHero: View {
                 .entrance(2, hero: true)
             Text("\(next.title) is a tap away.")
                 .font(Theme.voice(size: 21))
-                .foregroundStyle(Theme.Colors.context)
+                .foregroundStyle(Theme.Colors.inkSecondary)
                 .entrance(3)
             // An empty routine has nothing to start, so no Start word (Builder A's canStart).
             if model.canStart(next) {

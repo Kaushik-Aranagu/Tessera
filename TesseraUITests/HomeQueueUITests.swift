@@ -29,7 +29,8 @@ final class HomeQueueUITests: XCTestCase {
         app.launch()
 
         let row = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "label BEGINSWITH %@", "Stretch & mobility")).firstMatch
+            .matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", "Stretch & mobility", ":"))
+            .firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 15))
 
         // A quick page swipe across the row: Home pages to REVIEW, then back, and the task is still there.

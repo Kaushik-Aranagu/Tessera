@@ -117,6 +117,8 @@ enum BackupKeeper {
 
     static func forget() {
         UserDefaults.standard.removeObject(forKey: bookmarkKey)
+        // No folder, no folder failure to report (QA L4).
+        note(.folder, error: nil, now: AppClock.now)
     }
 
     /// The saved bookmark itself, so a forget can be undone (held in memory for the UNDO only).

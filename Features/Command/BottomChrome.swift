@@ -1,5 +1,6 @@
 import SwiftUI
 import TesseraCore
+import TesseraTess
 
 /// Tess at rest is only her soul in the bottom-right thumb corner: no bar, no band, no writing line. A tap opens
 /// her capture surface (the soul swells, its three dabs rise into Speak · Write · Show over a wash with no top
@@ -16,7 +17,9 @@ struct BottomChrome: View {
     @State private var pressed = false
     @State private var glow = false
     @State private var undos = 0
-    private let voice = TessVoice.shared
+    /// The open set-count ask, drawn beside the soul until he taps an answer or says something new.
+    @State private var setAsk: TessSetCountAsk?
+    private let voice = Tessera.TessVoice.shared
     @State private var breathe = false
     @State private var opens = 0
     @State private var reply: String?
@@ -30,7 +33,7 @@ struct BottomChrome: View {
 
     /// The three modes, top to bottom. Their dabs are the soul's three colours.
     fileprivate static let modes: [(word: String, seed: Int)] = [("Speak", 1), ("Write", 2), ("Show", 3)]
-    fileprivate static let rowHeight: CGFloat = 70
+    fileprivate static let rowHeight: CGFloat = 48
     /// The soul's centre sits this far above the bottom of the chrome; the mode column starts above it.
     fileprivate static let soulLift: CGFloat = 54
 
@@ -38,9 +41,10 @@ struct BottomChrome: View {
         ZStack(alignment: .bottomTrailing) {
             if model.isCommandExpanded {
                 // The page recedes behind a veil of blurred ground (z); a tap on it closes Tess.
+                // Calmer: the page blurs a little and drops to 50% (calm-capture.md).
                 ZStack {
-                    Rectangle().fill(.ultraThinMaterial)
-                    Theme.Colors.paper.opacity(0.7)
+                    Rectangle().fill(.ultraThinMaterial).opacity(0.35)
+                    Theme.Colors.paper.opacity(0.5)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .ignoresSafeArea()
@@ -131,9 +135,28 @@ struct BottomChrome: View {
 
     private var resting: some View {
         HStack(alignment: .center, spacing: Theme.Spacing.m) {
-            if !model.isCommandExpanded, line != nil || canUndo {
+            if !model.isCommandExpanded, line != nil || canUndo || setAsk != nil {
                 VStack(alignment: .trailing, spacing: 2) {
-                    if let line {
+                    if let setAsk {
+                        // "2 × 10: 2 sets, or 2 kg?": the two answers are value words in the line, ink at rest.
+                        HStack(spacing: 0) {
+                            Text("\(setAsk.count) × \(Format.kilograms(setAsk.reps)): ")
+                                .foregroundStyle(Theme.Colors.tess)
+                            Button(setAsk.setsAnswer) { answerAsk(.sets) }
+                                .buttonStyle(.valueWash)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(Theme.Colors.ink)
+                            Text(", or ").foregroundStyle(Theme.Colors.tess)
+                            Button(setAsk.kilogramsAnswer) { answerAsk(.kilograms) }
+                                .buttonStyle(.valueWash)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(Theme.Colors.ink)
+                            Text("?").foregroundStyle(Theme.Colors.tess)
+                        }
+                        .font(Theme.voice)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    } else if let line {
                         Text(line)
                             .frame(maxWidth: 270, alignment: .trailing)
                             .textRole(.body)
@@ -166,7 +189,7 @@ struct BottomChrome: View {
             .scaleEffect(0.72)
             .scaleEffect(breathe ? 1.08 : 1)
             .tesseraAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true), value: breathe)
-            .scaleEffect(swell ? 1.35 : 1)
+            .scaleEffect(swell ? 1.06 : 1)
             .saturation(glow ? 1.35 : 1)
             .brightness(glow ? 0.08 : 0)
             .frame(width: 46, height: 40)
@@ -199,55 +222,47 @@ struct BottomChrome: View {
 
     // MARK: Open
 
+    /// One question, on the mode layer only (calm-capture.md): never a command list.
     private var question: String {
-        if model.session != nil {
-            return "Tell me a set."
-        }
-        return model.path.isEmpty ? "What’s next?" : "Log it, ask, or note it."
+        model.session != nil ? "Tell me a set." : "What’s on your mind?"
     }
 
-    /// At most two fast paths, the likeliest for this screen right now.
-    private var fastPaths: [(String, () -> Void)] {
-        var paths: [(String, () -> Void)] = []
+    /// At most one fast path, the likeliest for right now. "Today" is gone: a double tap on the soul goes home.
+    private var fastPath: (String, () -> Void)? {
         if let session = model.session {
-            paths.append(("Back to \(session.workout.title)", { [model] in
+            return ("Back to \(session.workout.title)", { [model] in
                 model.isCommandExpanded = false
                 model.isWorkoutPresented = true
-            }))
-        } else if let workout = model.tonightWorkout() {
-            paths.append(("Start \(workout.title)", { [model] in
+            })
+        }
+        if let workout = model.tonightWorkout() {
+            return ("Start \(workout.title)", { [model] in
                 model.isCommandExpanded = false
                 model.startWorkout(workout)
-            }))
+            })
         }
-        if !model.path.isEmpty {
-            paths.append(("Today", { [onSoulDoubleTap] in onSoulDoubleTap() }))
-        }
-        return Array(paths.prefix(2))
+        return nil
     }
 
     private var surface: some View {
         VStack(alignment: .trailing, spacing: 0) {
-            VStack(alignment: layer == .write ? .leading : .trailing, spacing: Theme.Spacing.s) {
-                Text(question)
-                    .textRole(.body)
-                    .foregroundStyle(Theme.Colors.tess)
-                if layer == .modes, !fastPaths.isEmpty {
-                    HStack(spacing: 0) {
-                        ForEach(Array(fastPaths.enumerated()), id: \.offset) { index, path in
-                            if index > 0 {
-                                Text(" · ").textRole(.body).foregroundStyle(Theme.Colors.ink.opacity(0.75))
-                            }
-                            Button(path.0, action: path.1)
-                                .buttonStyle(ValueWordStyle())
-                        }
+            if layer == .modes {
+                VStack(alignment: .trailing, spacing: Theme.Spacing.m) {
+                    Text(question)
+                        .font(Theme.voice)
+                        .foregroundStyle(Theme.Colors.tess)
+                    if let fastPath {
+                        Button(fastPath.0, action: fastPath.1)
+                            .buttonStyle(.labelWord)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
                     }
-                    .transition(.opacity)
                 }
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding(.horizontal, Theme.Spacing.gutter)
+                .padding(.bottom, Theme.Spacing.l)
+                .transition(.opacity)
             }
-            .frame(maxWidth: .infinity, alignment: layer == .write ? .leading : .trailing)
-            .padding(.horizontal, Theme.Spacing.gutter)
-            .padding(.bottom, Theme.Spacing.xl)
 
             if layer == .write {
                 writing
@@ -280,9 +295,11 @@ struct BottomChrome: View {
         @Bindable var model = model
         return VStack(alignment: .leading, spacing: Theme.Spacing.s) {
             ZStack(alignment: .bottomLeading) {
-                TextField("log 82.5×8, or ask", text: $model.commandDraft)
-                    .font(Self.modeFont)
-                    .foregroundStyle(Theme.Colors.ink.opacity(ghost == nil ? 1 : 0.45))
+                TextField("Ask", text: $model.commandDraft,
+                          prompt: Text("Write anything").foregroundStyle(Theme.Colors.inkSecondary))
+                    .font(Theme.voice)
+                    // The drying ghost reads in inkSecondary (calm-capture.md).
+                    .foregroundStyle(ghost == nil ? Theme.Colors.ink : Theme.Colors.inkSecondary)
                     .tint(Theme.Colors.tess)
                     .textFieldStyle(.plain)
                     .focused($focused)
@@ -310,40 +327,18 @@ struct BottomChrome: View {
                     }
                 WritingLine(color: Theme.Colors.tess, reduceMotion: reduceMotion)
                 if ghost != nil {
+                    // One dry line for every drying ghost: 2.5 pt cobalt, draining right to left (speak.md 10).
                     Rectangle()
                         .fill(Theme.Colors.tess)
-                        .frame(height: 1.5)
-                        .scaleEffect(x: drying, anchor: .leading)
+                        .frame(height: 2.5)
+                        .scaleEffect(x: 1 - drying, anchor: .leading)
                 }
             }
             .contentShape(Rectangle())
             .onTapGesture { cancelDrying() }
-            HStack(spacing: 0) {
-                // At most two, and a tap only fills the line: nothing submits until Return.
-                ForEach(Array(["log bench 82.5x8", "bench best?"].enumerated()),
-                        id: \.offset)
-                { index, suggestion in
-                    if index > 0 {
-                        Text(" · ").textRole(.body).foregroundStyle(Theme.Colors.ink.opacity(0.6))
-                    }
-                    Button(suggestion) {
-                        model.commandDraft = suggestion
-                        focused = true
-                    }
-                    .buttonStyle(ValueWordStyle(weight: .regular, opacity: 0.6))
-                }
-            }
-            .lineLimit(1)
-            .minimumScaleFactor(0.8)
         }
         .padding(.horizontal, Theme.Spacing.gutter)
         .padding(.bottom, Theme.Spacing.xl)
-    }
-
-    fileprivate static var modeFont: Font {
-        var spec = Theme.concept.scale.title
-        spec.size = 34
-        return Theme.Typography.font(spec, weight: .medium)
     }
 
     #if DEBUG
@@ -379,6 +374,7 @@ struct BottomChrome: View {
     /// Runs on every open, including when another screen opens Tess with a draft ("log bench ").
     private func opened() {
         reply = nil
+        setAsk = nil
         model.tessMode = .listening
         if !reduceMotion {
             withAnimation(.easeOut(duration: 0.13)) { swell = true }
@@ -451,6 +447,8 @@ struct BottomChrome: View {
         let lowered = text.lowercased()
         let isQuestion = lowered.contains("best") || lowered.contains(/\bprs?\b/) || lowered.hasSuffix("?")
         let answer = isQuestion ? CommandInterpreter(model: model).run(text) : await model.ask(text)
+        // A doubtful set count waits for a tap on one of its two answers (Core's set guard).
+        let asked = isQuestion ? nil : model.pendingSetAsk
         ghost = nil
         drying = 0
         model.commandDraft = ""
@@ -461,7 +459,11 @@ struct BottomChrome: View {
         }
         isBusy = false
         brighten()
-        say(answer)
+        if let asked {
+            withTesseraAnimation(reduceMotion: reduceMotion) { setAsk = asked }
+        } else {
+            say(answer)
+        }
     }
 
     /// The small soul's "done": its colours brighten for a beat, with a success haptic.
@@ -471,6 +473,12 @@ struct BottomChrome: View {
             try? await Task.sleep(for: .milliseconds(900))
             withTesseraAnimation(.easeInOut(duration: 0.6), reduceMotion: reduceMotion) { glow = false }
         }
+    }
+
+    private func answerAsk(_ choice: TessSetCountAsk.Choice) {
+        let line = model.answer(choice)
+        withTesseraAnimation(reduceMotion: reduceMotion) { setAsk = nil }
+        say(line)
     }
 
     /// Tess's line beside the soul, faded after 4 s.
@@ -523,9 +531,8 @@ private struct ModeRow: View {
         Button(action: action) {
             HStack(spacing: 18) {
                 Text(word)
-                    .font(BottomChrome.modeFont)
-                    .foregroundStyle(isActive ? Theme.Colors.ink : Theme.Colors.ink.opacity(0.55))
-                    .offset(x: risen || reduceMotion ? 0 : 24)
+                    .textRole(.bodyStrong)
+                    .foregroundStyle(isActive ? Theme.Colors.ink : Theme.Colors.inkSecondary)
                     .opacity(risen ? 1 : 0)
                     // The pigment lands into the word as a wash behind its first letters, then dries away.
                     .background(alignment: .leading) {
@@ -537,7 +544,7 @@ private struct ModeRow: View {
                             .allowsHitTesting(false)
                     }
                 // The soul's pigment rises out of it and lands in the word; at rest only the word remains.
-                PaintDab(color: color, size: CGSize(width: 22, height: 18), seed: seed)
+                PaintDab(color: color, size: CGSize(width: 16, height: 14), seed: seed)
                     .scaleEffect(risen ? 1 : 0.7)
                     .offset(y: risen || reduceMotion ? 0 : rise)
                     .opacity(risen && !inWord ? 1 : 0)
@@ -554,7 +561,7 @@ private struct ModeRow: View {
         .allowsHitTesting(!isFolded)
         .accessibilityHidden(isFolded)
         .onAppear {
-            withTesseraAnimation(.spring(response: 0.48, dampingFraction: 0.68).delay(delay),
+            withTesseraAnimation(.spring(response: 0.46, dampingFraction: 0.85).delay(delay),
                                  reduceMotion: reduceMotion) { risen = true }
             guard !reduceMotion else {
                 inWord = true
@@ -587,25 +594,19 @@ private struct WritingLine: View {
     }
 }
 
-/// The wash Tess opens over: the ground at 95% rising from the bottom, 470 pt, with no top edge and a faint
-/// cobalt warmth in the soul's corner.
+/// The wash Tess opens over: the ground at 96% rising from the bottom, 380 pt, with no top edge and fully opaque from
+/// 22% of its height (calm-capture.md). No cobalt warmth.
 private struct CaptureWash: View {
     let dark: Bool
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            Rectangle().fill(Theme.Colors.paper.opacity(0.95))
-            if !dark {
-                RadialGradient(colors: [Theme.Colors.tess.opacity(0.12), .clear],
-                               center: .bottomTrailing, startRadius: 0, endRadius: 320)
-            }
-        }
-        .frame(height: 470)
-        .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.3)],
-                             startPoint: .top, endPoint: .bottom))
-        .ignoresSafeArea(.container, edges: .bottom)
-        .frame(maxHeight: .infinity, alignment: .bottom)
-        .contentShape(Rectangle())
+        Rectangle().fill(Theme.Colors.paper.opacity(0.96))
+            .frame(height: 380)
+            .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.22)],
+                                 startPoint: .top, endPoint: .bottom))
+            .ignoresSafeArea(.container, edges: .bottom)
+            .frame(maxHeight: .infinity, alignment: .bottom)
+            .contentShape(Rectangle())
     }
 }
 

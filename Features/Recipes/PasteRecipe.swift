@@ -340,6 +340,7 @@ private struct IngredientPaint: View {
     let line: String
     let parsed: IngredientLine
     let painted: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let (amount, rest) = PasteCopy.split(line, name: parsed.name)
@@ -352,7 +353,7 @@ private struct IngredientPaint: View {
                         Brushstroke(progress: painted ? 1 : 0)
                             .stroke(Theme.Colors.now.opacity(painted ? 0.35 : 1),
                                     style: StrokeStyle(lineWidth: HomeStroke.underAmount, lineCap: .round))
-                            .tesseraAnimation(Theme.Motion.dry(reduceMotion: false) ?? .default, value: painted)
+                            .tesseraAnimation(Theme.Motion.dry(reduceMotion: reduceMotion) ?? .default, value: painted)
                             .frame(height: 9)
                             .offset(y: 6)
                     }
