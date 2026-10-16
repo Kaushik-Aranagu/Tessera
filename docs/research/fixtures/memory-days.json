@@ -503,7 +503,7 @@
         3,
         3
        ],
-       "rules": "Push A done. Bench press record."
+       "rules": "Push A done. Bench press best."
       }
      ]
     }
@@ -818,7 +818,7 @@
   "d3m1": "Sunday|Wednesday|cook day",
   "d6m2": "day 5 skipped -> first in 2 days? no; keep rules",
   "d8m1": "after a rest day",
-  "d9m2": "record|first",
+  "d9m2": "best|first",
   "d10m1": "later|8",
   "d11m2": "later",
   "d12m1": "after work|usual",

@@ -24,14 +24,15 @@ Made-up state: a rolling PPL x2 plan, 6 a week, Legs A next; Sunday is rest wher
 - **DM7 Tomorrow and yesterday.** "rest tomorrow", "skip tomorrow" mark his tomorrow; "rest yesterday", "was sick yesterday" mark
   his yesterday. Yesterday, today and tomorrow only, nothing further back (Product, 11:55 AM PT). A yesterday mark moves
   nothing in the plan; it only turns the miss ring into the rest dab. Receipt "Yesterday, rest day." with UNDO (Design to confirm).
-- **DM8 Tess's line, the thing first.** "Today, rest day. Legs A waits for tomorrow." with UNDO for 10 s; UNDO says
-  "Legs A, back on today." (decided). "Tomorrow, rest day." for DM7. Thing-first form: Default proposed.
+- **DM8 Tess's line matches the hero** (Design, copy-pass addendum f0c71e7). Today: "Rest today. Legs A waits for tomorrow."
+  Tomorrow: "Rest tomorrow. Legs A waits for Saturday." Yesterday: "Yesterday, rest day." (as the Day log row). UNDO
+  for 10 s says "Legs A, back on today." / "Legs A, back on tomorrow." / "Yesterday, unmarked."
 - **DM9 Un-marking later.** "back on today", "train today", "not resting today" clear the mark with the UNDO line's
   words and their own 10 s UNDO. Default proposed.
 - **DM10 A timed session on the day** (Push A at 7 pm): the mark takes it off today (decided) and it moves to the same
   time tomorrow; one UNDO puts both back. Move target: Default proposed.
 - **DM11 Home, Now, widget.** Hero "Rest today", context "Legs A waits for tomorrow", no Start until 04:00 (decided).
-  Widget "Rest today." with the weekday as meta, as for a planned rest day. Widget words: Default proposed.
+  Widget (copy-pass row 54): hero "Rest today", second line "Legs A waits for tomorrow" where the family has one; "Rest today" alone on small and the accessory.
 - **DM12 Review and WeekFacts.** A marked day gets the rest dab, never the miss ring, and isn't counted due (decided).
 - **DM13 Privacy.** "sick" is a body fact: the grammar reads every mark phrase on the phone, so none reaches Claude.
   Outside the phone and in memory a mark is only "rest day" ("Fri: rest day."); the kind never is. Default proposed.
@@ -43,7 +44,7 @@ Made-up state: a rolling PPL x2 plan, 6 a week, Legs A next; Sunday is rest wher
 
 | # | When (PDT) | He says | Expected: mark, Tess line, next | Master today |
 |---|---|---|---|---|
-| D1 | Fri Oct 16 7:40 am | rest day today | Rest. "Today, rest day. Legs A waits for tomorrow." UNDO. Legs A Sat | Task "Rest day", today 9 am (`TessGrammar.swift:141`, `:490-519`) |
+| D1 | Fri Oct 16 7:40 am | rest day today | Rest. "Rest today. Legs A waits for tomorrow." UNDO. Legs A Sat | Task "Rest day", today 9 am (`TessGrammar.swift:141`, `:490-519`) |
 | D2 | Fri 6:40 pm | skip today | Skip, as D1 | Task "Skip", today 7 pm (`:665-670`) |
 | D3 | Fri 6:40 pm | no gym today | Skip, as D1 | Task "No gym", 7 pm |
 | D4 | Fri 12:10 pm | sick today | Sick, phone only. The D1 line; never says "sick" | Task "Sick", 1 pm |
@@ -54,14 +55,14 @@ Made-up state: a rolling PPL x2 plan, 6 a week, Legs A next; Sunday is rest wher
 | D9 | Fri 2:00 pm, D1 set | back on today | Mark cleared. "Legs A, back on today." UNDO | Task "Back on", 3 pm |
 | D10 | Fri 6:40 pm, Pull B done 6:05 pm | rest day today | No mark (DM4). Next unchanged | Task "Rest day", 7 pm |
 | D11 | Fri 6:40 pm, Pull B running | skip today | No mark. "Skip is on the workout screen." | Likely task "Skip", 7 pm: only bare "skip" is caught (`TessGrammar+Live.swift:119`) |
-| D12 | Sat Oct 17 1:30 am | rest day today | Rest on his Friday. "Today, rest day. Legs A waits for tomorrow." | Task "Rest day", Sat 9 am ("today" is `startOfDay`, `:586`) |
-| D13 | Fri 9:30 pm | rest tomorrow | Rest on Sat. "Tomorrow, rest day." Training reads "Rest day tomorrow" | Task "Rest", Sat 9 am (`:593-595`) |
-| D14 | Sat 8:00 am, D13 set | (opens Home) | Hero "Rest today", "Legs A waits for Monday", no Start. Widget "Rest today.", meta "Saturday" | Engine's reading only: "Rest day", "Legs A is a tap away.", Start (`NowPage.swift:396-414`) |
+| D12 | Sat Oct 17 1:30 am | rest day today | Rest on his Friday. "Rest today. Legs A waits for tomorrow." | Task "Rest day", Sat 9 am ("today" is `startOfDay`, `:586`) |
+| D13 | Fri 9:30 pm | rest tomorrow | Rest on Sat. "Rest tomorrow. Legs A waits for Monday." Training reads "Rest day tomorrow" | Task "Rest", Sat 9 am (`:593-595`) |
+| D14 | Sat 8:00 am, D13 set | (opens Home) | Hero "Rest today", "Legs A waits for Monday", no Start. Widget "Rest today", second line "Legs A waits for Monday" | Engine's reading only: "Rest day", "Legs A is a tap away.", Start (`NowPage.swift:396-414`) |
 | D15 | Sat 8:00 am, Fri and Sat marked | (opens Home) | As D14. No streak words (DM14) | As D14 |
 | D16 | Sun Oct 18 10:00 am, engine rest | rest day today | No write. "Sunday is already a rest day." | Task "Rest day", 11 am |
 | D17 | Mon Oct 19 8:00 am | (opens Review) | Fri and Sat: rest dab, not the ring; not counted due | Past empty days recomputed from the spread: ring (`WeekView.swift:89-92`, `ReviewPage.swift:137-140`) |
-| D18 | Fri 7:40 am, Push A at 7 pm | rest day today | Rest. Push A moves to Sat 7 pm. "Today, rest day. Push A waits for tomorrow." | Task "Rest day"; Home keeps "Push A at 7 pm" (`HomeLines.swift:578`) |
-| D19 | Fri 9:00 am, fixed days (Legs A Fri, Tue) | skip today | Skip. "Today, rest day. Legs A waits for Tuesday." | Task "Skip", 10 am |
+| D18 | Fri 7:40 am, Push A at 7 pm | rest day today | Rest. Push A moves to Sat 7 pm. "Rest today. Push A waits for tomorrow." | Task "Rest day"; Home keeps "Push A at 7 pm" (`HomeLines.swift:578`) |
+| D19 | Fri 9:00 am, fixed days (Legs A Fri, Tue) | skip today | Skip. "Rest today. Legs A waits for Tuesday." | Task "Skip", 10 am |
 | D20 | Fri 9:00 am | rest day Sunday | Not a mark: the weekday setting (`rest-weekday.md`) | Task "Rest day", Sun 9 am (V-T12) |
 | D21 | Fri 9:00 am | skip the gym email | Not a mark: the model makes the task | Model ✓ |
 | D22 | Fri 9:00 am | skip lunch today | Task "Skip lunch", 10 am. Not training | ✓ |
