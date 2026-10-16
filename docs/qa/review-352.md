@@ -50,3 +50,13 @@ lead. The hero already does it right with `ViewThatFits`.
   ("Still ahead"). One or the other should change.
 - **L4.** If even the shortest hero form doesn't fit, `ViewThatFits` falls back to the last form, which is
   `fixedSize` and would clip rather than wrap. That's unlikely with routine titles.
+
+## Addendum: re-check at `d7870f0` (Oct 16, about 1:50 AM Pacific): PASS
+
+The delta is one modifier. WeekLines' row text drops `.lineLimit(1)` for `.fixedSize(horizontal: false, vertical:
+true)` (`ReviewWeek.swift:329-330`). A long line now wraps under its own column, hanging beside the lead in the
+first-baseline HStack, and nothing on the page ends in "…". F1 is closed. L1 and L3 fold into the WeekFacts swap
+after #348.
+
+Device check, not a block: with three wrapped lines at large Dynamic Type, the page grows taller. Confirm that the
+Review page in Home's pager still shows the last line above Tess's slot (band 736-820) and doesn't run under it.
