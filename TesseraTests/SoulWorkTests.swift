@@ -74,6 +74,23 @@ struct SoulWorkTests {
         #expect(soul.mode == .idle && soul.doneCount == 0)
     }
 
+    /// Lab note on #453: an ask during the gather waits for the lights to land (they never jump back out).
+    @Test func anAskDuringTheGatherWaitsForIt() async throws {
+        let soul = SoulRouter(clock: { Calendar.current.date(bySettingHour: 12, minute: 0, second: 0, of: .now)! })
+        soul.handle(.askClaude)
+        soul.handle(.claudeFailed)
+        soul.handle(.askClaude)
+        #expect(soul.mode == .gathering)
+        try await Task.sleep(for: .seconds(1.0))
+        #expect(soul.mode == .working)
+        soul.handle(.claudeDone)
+        soul.handle(.askClaude)
+        try await Task.sleep(for: .seconds(1.0))
+        #expect(soul.mode == .done)
+        try await Task.sleep(for: .seconds(1.9))
+        #expect(soul.mode == .working)
+    }
+
     @Test func theLiveCornerNeverWorks() {
         let soul = SoulRouter(page: .live)
         soul.handle(.askClaude)
