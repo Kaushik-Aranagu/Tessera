@@ -40,3 +40,15 @@ Neither `ClaudePlanWording` nor `ClaudeRecipeReader` has an app call site in thi
 ## Install-day checks to add
 1. Review > Claude shows "yes" after install (his old answer if it was "no"); toggle no, relaunch, still no; toggle yes, relaunch, still yes.
 2. With yes and a key, a capture the phone can't read shows "Asking Claude." and a receipt; with no, it stays on the phone.
+
+## Addendum: re-check at f907218 (Oct 16 PT, 12:5x am): PASS
+Rebased on master d55d29c; trial merge clean. The new work is ddf6d08 (F1, F2, Design's copy, lows, UI tests) and f907218 (recordings: settings-store 60 fps 21 s, wrap-up-undo 60 fps 9.5 s).
+- **F1 closed.** `AppModel.settingsAreReal = TesseraSchema.lastOpenOutcome == .opened && classes[.settings] != nil` (AppModel.swift:104). `migrateAtLaunch` runs only when it's true (:108), so a memory fallback or a failed seed never deletes his old "no". `AppModel.asksClaude` (:56-58) is the one gate: `settingsAreReal && sendsMissesToClaude`. The capture router's closure reads it (`[weak self]`, false if gone), and so does the switch. `aThrowawayStoreNeverAsksClaude` covers it.
+  - On a `.recoveredWithBackup` launch (the old store moved aside), Claude stays off and the switch reads "no" for that session. The legacy key survives, so the next normal launch migrates it, and "no" still wins. That fails closed, which is right.
+- **F2 closed.** `toggleMisses` writes, then sets the word from `model.asksClaude`, so a failed write shows what's stored. Tess's inline answer uses Product's lines: "Tess stays on this phone." and "Tess asks Claude when she's unsure, and for Plan my day."
+- Lows closed: the folder name is written `.system`; the stale comment is gone; "Tess asks Claude: yes." is the first line. A line carrying UNDO now stays 10 s.
+- **UI tests:** `ClaudeSettingsUITests` and the new `WrapUpUndoUITests` both subclass `SimulatorOnlyTestCase`. Their launch flags are demo flags (simulator-only).
+- **Data safety:** no `ProcessInfo` or `CommandLine` reads, no new flags, `project.yml` untouched, no schema change. Key handling unchanged.
+- **Plan my day / link-fetch:** still not wired in the app. When they are, they read `model.asksClaude`.
+
+**Verdict: PASS. #320 clears the install gate at f907218.**
