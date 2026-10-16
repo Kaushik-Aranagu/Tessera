@@ -4,7 +4,7 @@ For: Core engine (M5 Money slices 1 to 4, `MoneyAmount.parse`, `LogSpend`, `LogS
 
 These are 50 capture rows that expand the 15 eval phrases in the approved Money ship list (`../../product/ship-list-m5-money.md`, Product 2026-10-15 19:07). Each row gives the expected intent, amount, typed text, currency, merchant, category, note and slice. A collision table, the proposed rules and the open questions follow. Grammar facts come from a static read of `origin/master` at `e56c15e` (`TessGrammar.swift`, `TessGrammar+Kitchen.swift`, `TessCapturing.swift`, `TessCaptureEngine.swift`, `Kitchen/Quantities.swift`, `Actions/ActionRegistry.swift`). Nothing was run. There is still no Money or Reading code on master, and `LogSpend` is not in `ActionRegistry`.
 
-Rows 51 to 61 were added on 2026-10-16 for Design's `../../design/kitchen/us-shop.md` (dollars, Trader Joe's, unit prices), read against `origin/master` at `620878b`; see "US shop (dollars)" under the phrase rows.
+Rows 51 to 62 were added on 2026-10-16 (row 62 after Design's answers in `../../design/kitchen/us-kitchen-pages.md` §6, be98105) for Design's `../../design/kitchen/us-shop.md` (dollars, Trader Joe's, unit prices), read against `origin/master` at `620878b`; see "US shop (dollars)" under the phrase rows.
 
 ## How to read the tables
 
@@ -160,7 +160,8 @@ Rows 51 to 61 are for Design's `../../design/kitchen/us-shop.md` (Kaushik shops 
 | 58 | I | `$1.29/lb tomatoes` | 3 | No spend. M. With no model: "Didn't catch that. Try: spent $4.99 tomatoes." | none | none | USD (if ever kept) | none | none | none | M today. **Unit price, not a spend:** a shelf price per pound. Proposal M12: an amount followed by `/lb`, `/oz`, `per lb`, `/ea` or `each` is a price per unit and never a spend. Also never a weight: "lb" here is not a set unit | Gap |
 | 59 | S | `$1.29/lb` | 13 | No grocery line, no spend. M | none | none | none | none | none | none | M today: `isMoney` keeps it out of the shop rule (G6:228), and nothing else claims it. Guard row: a price read off a shelf tag mid-shop must not become an item called "$1.29/lb" | S4 rule (guard), Gap |
 | 60 | I | `spent $12 on 2 lb chicken thighs` | 1 | No grammar write. M: LogSpend 12 USD, note "2 lb chicken thighs", after S1 | 12 (model) | $12 | USD | none | chicken | 2 lb chicken thighs | M today (the lift rule reads 2 lb as a weight but finds no exercise or reps). Rule M11: a second number after the note goes to the model. **"lb" is a weight here and "$" is the money.** "lb" is never money; "pounds" after a money cue is still GBP by rule M4, so "spent 20 pounds" stays GBP even on a US phone | S4 rule (model), M11 |
-| 61 | I | `lunch was 12 bucks` | 15 | M: LogSpend 12 after S1. With no model: "Didn't catch that. Try: spent 12.40 lunch." | 12 (model) | 12 bucks | USD (proposal) | none | lunch | lunch | M today. "bucks" is a dollar word the way "quid" is a pound word, so USD comes from the word, not from where he lives (open question 5) | S4 rule (model), Gap |
+| 61 | I | `lunch was 12 bucks` | 15 | M: LogSpend 12 after S1. With no model: "Didn't catch that. Try: spent 12.40 lunch." | 12 (model) | 12 bucks | USD | none | lunch | lunch | M today. "bucks" is a dollar word the way "quid" is a pound word, so USD comes from the word, not from where he lives (Design, be98105: "bucks" means USD) | S4 rule (model), Gap |
+| 62 | I | `12 bucks lunch` | 3 | LogSpend, 15 Oct. "Logged $12, lunch." | 12 | 12 bucks | USD | none | lunch | lunch | M today: "12" with no reps finds no exercise, and "bucks" is no grammar word. A whole number with a currency word is a money shape (as row 13, "450 rs auto"), so S4 reads it without the model. Feedback shows "$12" while typed keeps "12 bucks", as row 10 does for "20 eur" | S1, S4 rule |
 
 Count: 11 rows. Wrong today: 54 (a task) and 55 (two grocery lines). Never a spend: 58 and 59 (unit prices). Currency from the symbol or word only: 51, 52, 54 to 57, 60, 61 USD; 53 none.
 
@@ -220,7 +221,7 @@ Swift Testing rows, beside `collisionRows` (`Ctx` gains `.shopFinished` and `.wo
 2. **Category from a shop name.** With rule M5, `spent 12.50 at tesco` gets category "tesco", which is a shop, not a kind of spend. Is that fine until the `Category` class lands, or should `at X` leave the category empty?
 3. **ISO codes outside the four.** S1 keeps no code for "chf", "aed" or "jpy", so those amounts join the unmarked group (row 14). Store any valid ISO 4217 code as said, still never converted?
 4. **One decimal place.** "12.5 lunch" goes to the model (row 5). Is that right, or is one decimal plus a non-exercise word enough?
-5. **Words that carry a currency.** "quid", "tenner", "fiver" mean GBP and "rs", "rupees" mean INR. Mapping them is not a home currency, but should "bucks" mean USD, and should `MoneyAmount.parse` read "a tenner" and "a fiver" itself (row 16)?
+5. **Words that carry a currency.** "quid", "tenner", "fiver" mean GBP and "rs", "rupees" mean INR. Mapping them is not a home currency, but should "bucks" mean USD, and should `MoneyAmount.parse` read "a tenner" and "a fiver" itself (row 16)? **Answered (Design, be98105, 2026-10-16):** "bucks" means USD (rows 61, 62).
 6. **Future day cue on a money-shaped phrase.** Keep the approved rule (task "12.40 lunch", Fri) or send it to the model (M8, row 22)?
 7. **"paid" as a prefix.** Add `paid` and `cost` beside `spent`, or keep them for the model (row 25)?
 8. **Whole-number totals.** Should a bare "38" answer an awaited total when nothing is running (row 34)?
