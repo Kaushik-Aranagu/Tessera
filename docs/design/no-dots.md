@@ -115,7 +115,7 @@ Research's ids are used here: A for dots, B for badges and tinted words, C for a
 | C8 | Now's drain bar, `NowPage.swift:212-221` | The fill is `ink` at 51%, and only its moving leading edge (8pt) is amber. Read `now` from the look, not `HomePaint.dayAmber`. | B |
 | C9 | Suspended process row, `NowPage.swift:519-538` | A paused thing isn't running: an `ink` hairline seam with no glow, and "Resume" in `ink` at 600 weight. Route hex 0x6E6480 through `inkSecondary`. | B |
 | C10 | `ProcessSeam` while a workout or shop runs | **Keep vermilion,** because it marks a running thing, but drop the glow at rest. The glint passing along it is the life. | B |
-| C11 | `PaintKey` stroke at 82% at rest, `Paint.swift:308` | It paints in at 100% when it appears, dries to 60% at rest, and goes back to 100% on press. The action of the moment still leads, just more quietly. | B (shared) |
+| C11 | `PaintKey` stroke at 82% at rest, `Paint.swift:308` | Replaced by the thin ink line (`ink-line.md`): it paints in at 100%, rests at 75%, and wets on press. | A |
 | C12 | Workout current-exercise segment and row bar | Keep the signal colour, because it's the running exercise, but drop the glow at rest. | A |
 | C13 | WeightDial needle and rest wash | Superseded by `set-block.md` (the weight is the numeral). The rest horizon stays. | A |
 | C14 | Set-stroke colour cycle | Data marks: each set stroke lands wet in its cycle colour, then dries to `restTint` (the look's value). The finish gather stays a full-colour moment. | A |

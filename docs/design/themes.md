@@ -259,7 +259,8 @@ This addendum wins over everything above. The tables above already carry the new
   - Signal words use `liveInk` (Finish, UNDO).
   - Set strokes and the "Same again" stroke stay pigment marks with multiply.
 - **No glow at rest anywhere.** Halo exists only on dark looks, and only in moments (`no-dots.md`).
-- **The scrim (A3)** becomes `ground` at 60%, and `WorkoutGlass` becomes the veil material with `raised` at 82%, as everywhere else.
+- **The scrim (A3)** becomes `ground` at 60%.
+- **`WorkoutGlass` and the Veil** (`InkActions.swift:127`) are `.ultraThinMaterial` with `ground` at 92% over it (QA G1). That reads as the base with no charcoal lift or grey slab, and goes to 96% if a lift still shows on Obsidian.
 - **Entering and leaving the workout** is an ordinary zoom from the Start word, the same as any page: there's no ground change to manage, so there's no flood.
 - **The soul is unchanged.** She uses the look's palette, as on Home.
 
