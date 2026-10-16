@@ -32,7 +32,7 @@ public struct Groceries {
         guard let list else { return [] }
         let contents = ListContents(store: store, classes: classes)
         return contents.sections(of: list)
-            .map { (aisle: $0.name ?? Aisle.other.rawValue, items: $0.items.filter { !$0.isDone }) }
+            .map { (aisle: Aisle.shown($0.name ?? Aisle.other.rawValue), items: $0.items.filter { !$0.isDone }) }
             .filter { !$0.items.isEmpty }
             .sorted { Aisle.order(of: $0.aisle) < Aisle.order(of: $1.aisle) }
     }
@@ -63,6 +63,8 @@ struct GroceryShare: Codable, Hashable {
     var recipe: UUID?
     var amount: Double?
     var unit: KitchenUnit?
+    /// One pack's size: part of the merge key, so a 14.5 oz and a 28 oz can never add up (Research U5).
+    var packSize: String?
 
     static func decode(_ text: String?) -> [GroceryShare] {
         guard let data = text?.data(using: .utf8) else { return [] }
@@ -76,7 +78,8 @@ struct GroceryShare: Codable, Hashable {
     /// The shares summed where units are compatible: grams with kilos, millilitres with litres, same units
     /// together, counts together; anything else joined with "+".
     static func quantity(_ shares: [GroceryShare]) -> String? {
-        var mass = 0.0, volume = 0.0, count = 0.0
+        var mass = 0.0, volume = 0.0, count = 0.0, ounces = 0.0, fluidOunces = 0.0
+        var hasOunces = false, hasFluidOunces = false
         var other: [KitchenUnit: Double] = [:]
         var order: [KitchenUnit] = []
         var hasMass = false, hasVolume = false, hasCount = false
@@ -92,6 +95,14 @@ struct GroceryShare: Codable, Hashable {
             case nil:
                 count += amount
                 hasCount = true
+            // US weight is its own group: ounces and pounds add as ounces, never with grams (us-shop.md).
+            case .ounce?, .pound?:
+                ounces += share.unit == .pound ? amount * 16 : amount
+                hasOunces = true
+            // Fluid ounces never merge with ounces of weight.
+            case .fluidOunce?:
+                fluidOunces += amount
+                hasFluidOunces = true
             case let unit?:
                 if other[unit] == nil {
                     order.append(unit)
@@ -110,6 +121,16 @@ struct GroceryShare: Codable, Hashable {
         }
         if hasCount {
             parts.append(IngredientLine.kitchenNumber(count, unit: nil))
+        }
+        if hasOunces {
+            // Pounds from 16 oz, only on a whole, ¼, ½ or ¾ pound; else ounces ("18 oz").
+            let pounds = ounces / 16
+            let quarter = (pounds * 4).rounded() == pounds * 4
+            parts.append(pounds >= 1 && quarter ? "\(IngredientLine.kitchenNumber(pounds, unit: .pound)) lb"
+                : "\(IngredientLine.kitchenNumber(ounces, unit: .ounce)) oz")
+        }
+        if hasFluidOunces {
+            parts.append("\(IngredientLine.kitchenNumber(fluidOunces, unit: .fluidOunce)) fl oz")
         }
         for unit in order {
             if let amount = other[unit] {
@@ -132,7 +153,7 @@ extension Transaction {
     /// The aisle for an ingredient: what it learned, else the guide, else Other.
     func aisle(of ingredient: ObjectRecord) -> String {
         if let learned = store.value("aisle", of: ingredient)?.stringValue, !learned.isEmpty {
-            return learned
+            return Aisle.shown(learned)
         }
         return (AisleGuide.aisle(for: ingredient.title) ?? .other).rawValue
     }
@@ -144,14 +165,22 @@ extension Transaction {
                                   text: String) throws -> ObjectRecord
     {
         let list = try groceriesList()
+        // Same ingredient and the same pack size (a sized can never joins an unsized one, U5).
         let existing = list.orderedChildren.first { item in
             store.value("isDone", of: item) != .bool(true)
                 && store.linkedObjects("about", of: item).contains { $0.id == ingredient.id }
+                && GroceryShare.decode(store.value("shares", of: item)?.stringValue)
+                .allSatisfy { $0.packSize == share.packSize }
+        }
+        // A can or jar of something fresh is never filed under Produce ("1 (14.5 oz) can diced tomatoes").
+        var section = aisle(of: ingredient)
+        if share.unit.map({ [.can, .jar, .carton, .bottle].contains($0) }) == true, section == Aisle.produce.rawValue {
+            section = Aisle.cansJars.rawValue
         }
         let item: ObjectRecord = if let existing {
             existing
         } else {
-            try AddListItem(list: list.id, text: text, section: aisle(of: ingredient)).apply(&self)
+            try AddListItem(list: list.id, text: text, section: section).apply(&self)
         }
         var shares = GroceryShare.decode(store.value("shares", of: item)?.stringValue)
         shares.append(share)
@@ -211,7 +240,7 @@ public struct AddRecipeToGroceries: EngineAction {
                 continue
             }
             let share = GroceryShare(recipe: recipe.id, amount: line.line.amountMax ?? line.line.amount,
-                                     unit: line.line.unit)
+                                     unit: line.line.unit, packSize: line.line.packSize)
             let item = try transaction.addGroceryShare(
                 share,
                 ingredient: ingredient,
@@ -284,7 +313,7 @@ public struct AddGroceries: EngineAction {
         for text in lines {
             guard let line = IngredientLine.parse(text) else { continue }
             let ingredient = try transaction.ingredient(named: line.name)
-            let share = GroceryShare(recipe: nil, amount: line.amount, unit: line.unit)
+            let share = GroceryShare(recipe: nil, amount: line.amount, unit: line.unit, packSize: line.packSize)
             try items.append(transaction.addGroceryShare(share, ingredient: ingredient, text: line.name))
         }
         guard !items.isEmpty else {

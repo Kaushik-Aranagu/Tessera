@@ -67,20 +67,20 @@ struct GroceryTests {
 
         try engine.perform(AddGroceries(lines: ["milk", "2 lemons", "500 g beef mince", "sriracha"]), by: .user)
         let items = lists.items(of: list)
-        #expect(items.map(\.section) == ["Dairy", "Produce", "Meat and fish", "Other"])
+        #expect(items.map(\.section) == ["Dairy and eggs", "Produce", "Meat and seafood", "Other"])
         #expect(items[1].quantity == "2")
-        #expect(groceries.aisles().map(\.aisle) == ["Produce", "Meat and fish", "Dairy", "Other"])
+        #expect(groceries.aisles().map(\.aisle) == ["Produce", "Dairy and eggs", "Meat and seafood", "Other"])
 
         // Typing it again merges.
         try engine.perform(AddGroceries(lines: ["1 lemon"]), by: .user)
         #expect(lists.item(items[1].object).quantity == "3")
 
-        // Moving sriracha to Tins and jars teaches it.
-        try engine.perform(MoveListItem(item: items[3].id, section: Aisle.tinsJars.rawValue), by: .user)
+        // Moving sriracha to Cans and jars teaches it.
+        try engine.perform(MoveListItem(item: items[3].id, section: Aisle.cansJars.rawValue), by: .user)
         try engine.perform(CheckListItem(item: items[3].id), by: .user)
         try engine.perform(ClearDoneItems(list: list.id), by: .user)
         try engine.perform(AddGroceries(lines: ["sriracha"]), by: .user)
-        #expect(lists.items(of: list).last?.section == "Tins and jars")
+        #expect(lists.items(of: list).last?.section == "Cans and jars")
         #expect(AisleGuide.aisle(for: "red onions") == .produce)
         #expect(AisleGuide.aisle(for: "smoked paprika") == .spices)
     }

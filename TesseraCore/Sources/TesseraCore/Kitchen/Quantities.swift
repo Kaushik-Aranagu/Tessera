@@ -6,15 +6,24 @@ public enum KitchenUnit: String, Sendable, Codable, CaseIterable {
     case gram = "g", kilogram = "kg", millilitre = "ml", litre = "l"
     case teaspoon = "tsp", tablespoon = "tbsp", cup
     case clove, pinch, handful, bunch, can, slice, sprig, piece, stick, head
+    /// US units, kept as written (us-shop.md): never converted on save or merged with metric.
+    case ounce = "oz", pound = "lb", fluidOunce = "fl oz", pint, quart
+    /// Pack words beside can and stick (us-kitchen-pages.md §6).
+    case bag, jar, box, bottle, carton
 
     public enum Dimension: Sendable { case mass, volume, count }
 
     public var dimension: Dimension {
         switch self {
-        case .gram, .kilogram: .mass
-        case .millilitre, .litre, .teaspoon, .tablespoon, .cup: .volume
+        case .gram, .kilogram, .ounce, .pound: .mass
+        case .millilitre, .litre, .teaspoon, .tablespoon, .cup, .fluidOunce, .pint, .quart: .volume
         default: .count
         }
+    }
+
+    /// A pack you buy whole: its size ("14.5 oz") is `IngredientLine.packSize`.
+    public var isPack: Bool {
+        [.can, .bag, .jar, .box, .bottle, .carton].contains(self)
     }
 
     /// Grams or millilitres per one of this unit (nil for counted units).
@@ -25,13 +34,19 @@ public enum KitchenUnit: String, Sendable, Codable, CaseIterable {
         case .teaspoon: 5
         case .tablespoon: 15
         case .cup: 240
+        // US units: only for the recipe page's quick flip, never for a grocery sum.
+        case .ounce: 28.35
+        case .pound: 453.59
+        case .fluidOunce: 29.57
+        case .pint: 473.18
+        case .quart: 946.35
         default: nil
         }
     }
 
     /// Spoons and cups are kept as written (metric only on request).
     public var isKeptAsWritten: Bool {
-        self == .teaspoon || self == .tablespoon || self == .cup
+        [.teaspoon, .tablespoon, .cup, .ounce, .pound, .fluidOunce, .pint, .quart].contains(self)
     }
 
     static let words: [String: KitchenUnit] = [
@@ -48,6 +63,11 @@ public enum KitchenUnit: String, Sendable, Codable, CaseIterable {
         "can": .can, "cans": .can, "tin": .can, "tins": .can,
         "slice": .slice, "slices": .slice, "sprig": .sprig, "sprigs": .sprig, "stick": .stick, "sticks": .stick,
         "head": .head, "heads": .head,
+        "oz": .ounce, "ounce": .ounce, "ounces": .ounce,
+        "lb": .pound, "lbs": .pound, "pound": .pound, "pounds": .pound,
+        "pint": .pint, "pints": .pint, "pt": .pint, "quart": .quart, "quarts": .quart, "qt": .quart,
+        "bag": .bag, "bags": .bag, "jar": .jar, "jars": .jar, "box": .box, "boxes": .box,
+        "bottle": .bottle, "bottles": .bottle, "carton": .carton, "cartons": .carton,
     ]
 
     public init?(word: String) {
@@ -74,10 +94,13 @@ public struct IngredientLine: Hashable, Sendable, Codable {
     public var name: String
     public var prep: String?
     public var toTaste: Bool
+    /// The size of one pack: "14.5 oz" in "1 (14.5 oz) can diced tomatoes" (paste-hardening gap 2).
+    public var packSize: String?
 
     public init(original: String, amount: Double? = nil, amountMax: Double? = nil, unit: KitchenUnit? = nil,
-                name: String, prep: String? = nil, toTaste: Bool = false)
+                name: String, prep: String? = nil, toTaste: Bool = false, packSize: String? = nil)
     {
+        self.packSize = packSize
         self.original = original
         self.amount = amount
         self.amountMax = amountMax
@@ -96,7 +119,7 @@ public struct IngredientLine: Hashable, Sendable, Codable {
     /// "15 ml" for "1 tbsp" (what a tap shows); nil when there's nothing to convert.
     public var metricText: String? {
         guard let unit, unit.isKeptAsWritten, let metric = metricAmount else { return nil }
-        return "\(Self.format(metric)) ml"
+        return "\(Self.format(metric)) \(unit.dimension == .mass ? "g" : "ml")"
     }
 
     /// The parser: amounts (whole, decimal, fractions, unicode fractions, ranges), an optional unit (also
@@ -132,11 +155,30 @@ public struct IngredientLine: Hashable, Sendable, Codable {
         rest = rest.trimmingCharacters(in: .whitespaces)
 
         var unit: KitchenUnit?
-        if amount != nil, let match = rest.firstMatch(of: /^(\p{L}+\.?)(?=\s|$|\))/),
-           let parsed = KitchenUnit(word: String(match.1))
+        var packSize: String?
+        // A pack size before the pack word: "1 (14.5 oz) can", "2 (15-ounce) cans", "1 14.5 oz can".
+        if amount != nil, let match = rest.firstMatch(of: Self.sizeBeforePack) {
+            packSize = Self.size(String(match.1), String(match.2))
+            rest = String(rest[match.range.upperBound...]).trimmingCharacters(in: .whitespaces)
+        }
+        // "fl oz" is two words; then one word ("200g", "cups", "oz").
+        if amount != nil, let match = rest.firstMatch(of: /(?i)^(?:fl\.?\s?oz|fluid\s+ounces?)\.?(?=\s|$|\))/) {
+            unit = .fluidOunce
+            rest = String(rest[match.range.upperBound...]).trimmingCharacters(in: .whitespaces)
+        } else if amount != nil, let match = rest.firstMatch(of: /^(\p{L}+\.?)(?=\s|$|\))/),
+                  let parsed = KitchenUnit(word: String(match.1))
         {
             unit = parsed
             rest = String(rest[match.range.upperBound...]).trimmingCharacters(in: .whitespaces)
+        }
+        // A pack size in brackets, after the pack word or the name: "1 can (14.5 oz) …", "1 bag spinach (6 oz)".
+        if unit?.isPack == true, packSize == nil, let match = rest.firstMatch(of: Self.sizeInBrackets) {
+            packSize = Self.size(String(match.1), String(match.2))
+            rest.removeSubrange(match.range)
+            rest = rest.trimmingCharacters(in: .whitespaces)
+        }
+        if packSize != nil, unit == nil {
+            packSize = nil // a size with no pack word is a note, as before
         }
         if let match = rest.firstMatch(of: /(?i)^of\s+/) {
             rest = String(rest[match.range.upperBound...])
@@ -173,7 +215,29 @@ public struct IngredientLine: Hashable, Sendable, Codable {
         }
         guard !name.isEmpty else { return nil }
         return IngredientLine(original: original, amount: amount, amountMax: amountMax, unit: unit, name: name,
-                              prep: prep, toTaste: toTaste)
+                              prep: prep, toTaste: toTaste, packSize: unit?.isPack == true ? packSize : nil)
+    }
+
+    /// "(14.5 oz) can", "(15-ounce) cans", "14.5 oz can": a size, then the pack word.
+    static var sizeBeforePack: Regex<(Substring, Substring, Substring)> {
+        /(?i)^\(?\s*(\d+(?:\.\d+)?)\s*-?\s*(fl\.?\s?oz|oz|ounces?|lbs?|pounds?|g|kg|ml|l)\s*\)?\s+(?=(?:cans?|tins?|bags?|jars?|box(?:es)?|bottles?|cartons?)\b)/
+    }
+
+    /// "(6 oz)" anywhere after the pack word.
+    static var sizeInBrackets: Regex<(Substring, Substring, Substring)> {
+        /(?i)\s*\(\s*(\d+(?:\.\d+)?)\s*-?\s*(fl\.?\s?oz|oz|ounces?|lbs?|pounds?|g|kg|ml|l)\s*\)/
+    }
+
+    /// "14.5 oz", "32 fl oz", "400 g".
+    static func size(_ number: String, _ unit: String) -> String {
+        let word = unit.lowercased().replacing(/\s|\./, with: "")
+        let short = switch word {
+        case "floz": "fl oz"
+        case "ounce", "ounces": "oz"
+        case "lbs", "pound", "pounds": "lb"
+        default: word
+        }
+        return "\(number) \(short)"
     }
 
     /// The name reduced for matching: lowercased, simple plurals made singular ("tomatoes" → "tomato").
