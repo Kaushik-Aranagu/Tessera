@@ -2,7 +2,7 @@
 """AI-0 memory experiment: three memory shapes x two models x N runs over the Home moments in
 docs/research/fixtures/memory-days.json. Writes docs/ai/memory-experiment-results.md.
 
-Key: ANTHROPIC_API_KEY from the environment only. Never printed, never written to disk.
+Key: TESSERA_CLAUDE_KEY (or ANTHROPIC_API_KEY on a Mac) from the environment only. Never printed, never written to disk.
 Usage: python3 scripts/ai/memory_experiment.py [--runs 3] [--models haiku,sonnet] [--shapes A,B,C] [--dry] [--out PATH]
 --dry builds every request and runs the scoring path on a stub reply (rules lines echoed back, one good and one
 bad note), so the shapes and checks can be tested with no key and no spend. Results go to --out when given.
@@ -360,9 +360,11 @@ def main():
     args = ap.parse_args()
     args.models = args.models.split(",")
     args.shapes = args.shapes.split(",")
-    key = os.environ.get("ANTHROPIC_API_KEY")
+    # Cloud sessions withhold ANTHROPIC_API_KEY, so the Tess environment carries
+    # the key as TESSERA_CLAUDE_KEY; the Mac can still use ANTHROPIC_API_KEY.
+    key = os.environ.get("TESSERA_CLAUDE_KEY") or os.environ.get("ANTHROPIC_API_KEY")
     if not key and not args.dry:
-        sys.exit("ANTHROPIC_API_KEY is not set. Put it in the environment, never in a file or a chat.")
+        sys.exit("TESSERA_CLAUDE_KEY is not set. Put it in the environment, never in a file or a chat.")
     report = run(args, key)
     if args.dry:
         for (model, shape), s in report.items():
