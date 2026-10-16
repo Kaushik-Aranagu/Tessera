@@ -21,6 +21,7 @@
 10. Day log page (M4 slice 5 screen), after Core's `DayStory`. Design's sheet is ready: `docs/design/day-log-page.md` on Design's branch. Done when a Day page per date shows the story lines from Design's sheet, a scrub back through past days works, and a HomeLink word reaches it.
 
 **Audit batches (small PRs, after the Review week fix; decisions.md 5:14 PM PT):**
+- Late night (Research #169): the wrap-up line is never shown; Home says "trained this night"; Tess's glyph rests during a live workout after 11 PM.
 - Now refreshes when the time zone changes (Research #168; decisions.md 6:06 PM PT).
 - 4 AM day: Builder B's 4 midnight cuts in `../research/day-boundary.md` (#166) (including the HomeQueue next-week swipe), swapped to Core's `TesseraDay` helper once it lands.
 - Home queue heights (Research #160, `../research/accessibility.md`): drop the fixed heights that clip text at large sizes. Normal priority.

@@ -20,6 +20,7 @@
 **Restore drill, once, right after the Siri undo hotfix** (Research #161, `../research/restore-drill.md`; QA has no simulator). Run the 10 steps and 5 edge cases on the simulator and send the results to QA and Core. Trap: don't relaunch with `-resetDemo`, because it wipes the restore. It runs again after Core's Backup batch.
 
 **Audit batches (small PRs, beside other work; decisions.md 5:14 PM PT):**
+- Late night (Research #169): an abandoned session leaves "Set N is up · Go" on the Lock Screen all night. End the Live Activity when the session auto-finishes or goes stale.
 - DST: `ExerciseDigest.swift:195` builds "Yesterday" as now minus 86,400 seconds, which is wrong on Nov 1. Use `TesseraDay` (Research #168).
 - 4 AM day: Builder A's 4 midnight cuts in `../research/day-boundary.md` (#166), swapped to Core's `TesseraDay` helper once it lands.
 - Reduce Motion (Research #160, `../research/accessibility.md`): one DesignSystem `MotionPolicy` fix so Reduce Motion actually stops the slides and scales. It covers most of the Reduce Motion rows. Normal priority; the other accessibility rows are in Later.

@@ -160,4 +160,5 @@
   2. A workout belongs to the day it started, so a session past 1 AM never marks the next day trained.
   3. "1:30am" on Nov 1 means the first 1:30.
   4. Day caches are keyed by zone, and Now refreshes when the zone changes.
+- **Late-night rules** (6:07 PM PT, Research #169 `late-night.md`, all defaults). "tomorrow" before 4 AM means the coming daytime, and Tess's reply names the weekday ("Dentist, Sat 3 PM"). A session that crosses 4 AM belongs to the day it started. Until notifications exist, a reminder ask gets "On Now then."
 
