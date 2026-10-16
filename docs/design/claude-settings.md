@@ -21,7 +21,7 @@ Every line is Body 21/400 ink. Value words are 600. Label words are Label 16/700
 - Tapping "Add a Claude key" opens a 0.5pt cobalt writing line under it (360ms, house curve). There's no sheet and no box.
 - It's a `SecureField`. **Paste is by long press only.** Nothing reads the clipboard on its own, so no system paste banner appears.
 - All whitespace is stripped (S3).
-- **Text that doesn't start `sk-ant-` (S5):** the line empties and stays open. Tess's line sits under it in cobalt: "That doesn't look like a Claude key. Paste it again?"
+- **Text that doesn't start with the Claude key prefix (S5):** the line empties and stays open. Tess's line sits under it in cobalt: "That doesn't look like a Claude key. Paste it again?"
 - Tapping away with the line empty closes it.
 
 **Testing (S4):** the test runs by itself on paste.
