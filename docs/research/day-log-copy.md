@@ -122,12 +122,15 @@ Undone and same-day cancelled records drop. Live, on today: when "Set 3 taken ba
 
 **10. Travel and time zones (red-eye LA to New York, Mon Oct 26).**
 ```
-MON 26
+MON 26        (read in LA)
 07:30  Done: water the plants
-21:40  Mobility, 35 min      (read in LA)
-00:40  Mobility, 35 min      (same line, read in New York)
+21:40  Mobility, 35 min
+
+MON 26        (same day, read in New York)
+10:30  Done: water the plants
+00:40  Mobility, 35 min
 ```
-Times show in the phone's current zone (the `dst-travel.md` fallback until a zone is stored per record), so after landing the 21:40 PDT start reads "00:40", still on Monday's block (before 04:00). A day can look out of order by clock but sorts by instant. No "Travel day" in v1: it needs calendar or a stored zone (5b, A3 "Travel day. 3 things logged on the move."). DST fall back: both 01:30s read "01:30", in instant order, on the evening before.
+Every time prints in the phone's current zone, never a mix of zones (Product, 8:56 PM PT Oct 15). Times show in the phone's current zone (the `dst-travel.md` fallback until a zone is stored per record), so after landing the 21:40 PDT start reads "00:40", still on Monday's block (before 04:00). A day can look out of order by clock but sorts by instant. No "Travel day" in v1: it needs calendar or a stored zone (5b, A3 "Travel day. 3 things logged on the move."). DST fall back: both 01:30s read "01:30", in instant order, on the evening before.
 
 **11. Today in progress (Thu, 18:10, a workout running).**
 ```
