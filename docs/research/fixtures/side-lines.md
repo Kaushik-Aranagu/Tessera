@@ -157,7 +157,7 @@ Each glance holds one big fact (Hero 56, its unit at 21) and at most two small f
 | GL-4 | Routines: LAST TIMES (5) | "Push A" | "today" (1 / 5) | "Pull A, Tuesday" (3 / 15) | last run (partial) |
 | GL-5 | A routine: LAST TIMES (6) | "Thursday" | "5 of 5, 1,072 kg moved." (6 / 23) | "4 times this month" (4 / 18) | WorkoutSummary.volume |
 | GL-6 | Plans: THE PLAN (7) | "4" *days a week* | "Push Pull Legs" (3 / 14) | "on fixed days" (3 / 13) | plan fields |
-| GL-7 | An exercise: YOUR SETUP (8) | "Third hole" | "Olympic bar, 20 kg" (4 / 18) | "written Oct 9" (3 / 13) | `notes`, screened (PL1); `barWeight` (`Catalog/SystemCatalog.swift:74`) |
+| GL-7 | An exercise: YOUR SETUP (8) | "Third hole" | "Olympic bar, 20 kg" (4 / 18) | "written Oct 9" (3 / 13) | `notes`, screened (PL1); `barWeight` (`Catalog/SystemCatalog.swift:74`) (superseded by depth-76.md, sheet 76: the exercise's SETUP is a page of its one side) |
 | GL-8 | A workout or finish: THE SETS (9, 12) | "20" *sets* | "Bench 82.5 × 7" (4 / 14) | "5 exercises" (2 / 11) | WorkoutSummary |
 | GL-9 | Kitchen: THE WEEK'S COOKS (13) | "3" *cooks* | "Tacos, Friday" (2 / 13) | "8 to buy" (3 / 8) | planned cooks (no) |
 | GL-10 | Groceries: FOR WHAT (14) | "7" *for 2 cooks* | "Tacos and chili" (3 / 15) | "3 just because" (3 / 14) | shares |
@@ -165,7 +165,7 @@ Each glance holds one big fact (Hero 56, its unit at 21) and at most two small f
 | GL-12 | Recipe original: COOKS (17) | "4" *times* | "Sunday, 45 min" (3 / 14) | "about 45 min" (3 / 12) | CookLog (duration partial) |
 | GL-13 | An ingredient: PER 100 G (18) | "215" *kcal* | "18.6 g protein" (3 / 14) | "15 g fat" (3 / 8) | food table (no; Kitchen bundles USDA) |
 | GL-14 | Paste: WHAT I READ (19) | "14" *lines kept* | "3 ignored" (2 / 9) | "nytimes.com" (1 / 11) | CreateRecipe.lines |
-| GL-15 | Review: THE MONTH (20) | "11" *sessions* | "4 weeks" (2 / 7) | "41 tasks done" (3 / 13) | WeekFacts summed (partial) |
+| GL-15 | Review: THE MONTH (20) | "11" *sessions* | "4 weeks" (2 / 7) | "41 tasks done" (3 / 13) | WeekFacts summed (partial) (superseded by depth-76.md, sheet 76: Review gets THE DAYS) |
 | GL-16 | The week: WHAT LEAVES THE PHONE (21) | "$3.20" *this month* | "38 calls" (2 / 8) | "Titles and counts only." (4 / 23) | ledger |
 | GL-17 | Notes: BY THING (22) | "23" *notes* | "Landlord, 4" (2 / 11) | "5 private" (2 / 9) | NoteList |
 | GL-18 | A note: WHERE IT'S MENTIONED (23) | "3" *places* | "Garage ideas" (2 / 12) | "Tile quotes" (2 / 11) | backlinks |
