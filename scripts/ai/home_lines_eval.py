@@ -634,15 +634,16 @@ def same_line(a, b):
     return b is not None and (a or "").strip() == b.strip()
 
 
-def run(args, key):
+def run(args, key, report):
+    """Fills `report` in place, so a run cut short by an exit still has what it spent and got back."""
     moments = load_moments(args.which)
     slots = ["context", "detail"] if args.which == "gate" else ["context"]
-    report = {}
     for mk in args.models:
         model = MODELS[mk]
         s = {"calls": 0, "cost": [], "latency": [], "noTool": 0, "items": 0, "itemsLined": 0, "returned": 0,
              "caught": [], "codes": Counter(), "c1": [], "shown": [], "rules": 0, "noLine": 0, "skipped": [],
              "memHashes": set()}
+        report[model] = s
         for run_no in range(1, args.runs + 1):
             for m in moments:
                 body = build_body(m, model, args.which)
@@ -699,7 +700,6 @@ def run(args, key):
                             s["shown"].append((run_no, m["id"], item["id"], slot, rules, line))
                 if SPENT[0] >= STOP_NANO:
                     sys.exit("stopped at the $1 ceiling")
-        report[model] = s
     return report
 
 
@@ -740,13 +740,14 @@ def pct(n, d):
     return f"{100 * n / d:.0f}%" if d else "n/a"
 
 
-def write_report(report, args, selftest):
+def write_report(report, args, selftest, stopped=None):
     fixture = FIXTURE if args.which == "gate" else MEMORY_DAYS
     total = sum(sum(s["cost"]) for s in report.values()) / 1e9
     calls = sum(s["calls"] for s in report.values())
     tool_choice = ", ".join(f"{m}: {'forced proposeLines' if m == MODELS['haiku'] else 'auto'}" for m in report)
     lines = [f"## {now_pt()}: {args.which} pass, {', '.join(report)}, {args.runs} run(s)"
-             + (" (DRY: stub replies, nothing sent)" if args.dry else ""), "",
+             + (" (DRY: stub replies, nothing sent)" if args.dry else "")
+             + (f" **stopped: {stopped}** (partial)" if stopped else ""), "",
              "| Field | Value |", "|---|---|",
              f"| Pass | {args.which} ({'E1-E20, context and detail' if args.which == 'gate' else 'memory-days, context line only'}) |",
              f"| Models | {', '.join(report)} |", f"| Tool choice | {tool_choice} |", "| Effort | low |",
@@ -835,7 +836,14 @@ def main():
         key = os.environ.get("TESSERA_CLAUDE_KEY") or os.environ.get("ANTHROPIC_API_KEY")
         if not key:
             sys.exit("TESSERA_CLAUDE_KEY is not set. Put it in the environment, never in a file or a chat.")
-    report = run(args, key)
+    report = {}
+    try:
+        run(args, key, report)
+    except SystemExit as stop:
+        # The $1 stop, an API error or a network give-up: keep what was spent and returned, then exit.
+        if any(s["calls"] for s in report.values()):
+            write_report(report, args, selftest, stopped=str(stop.code))
+        raise
     for model, s in report.items():
         print(f"{'[dry] ' if args.dry else ''}{args.which} {model}: calls={s['calls']} items={s['items']} "
               f"returned={s['returned']} caught={len(s['caught'])} shown={len(s['shown'])} "
