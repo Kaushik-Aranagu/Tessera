@@ -4,13 +4,12 @@
 short path" in `product/review-session.md` into numbered steps QA can run on the iOS Simulator before the Oct 22
 re-sign. Context: `research/review-refresh-2.md`. All times are Pacific.*
 
-**Next install candidate (QA update, Oct 16, about 1 AM Pacific):** the first master that has #320's fixes
-(head `f907218`, QA PASS) and #330 (the icon and the soul at 0.65, `bec22bc`, already on master), and passes
-`scripts/test.sh` "All green". Not merged yet at this writing (master `73a734d`), so the hash is **TBD**: write the
-short hash you built here: `________`. Product names it. Builder A's #337 (Training page part one) does not ride
-along unless Product says so; Builder B's Return-key PR rides only if QA passes it in time (row R1 below).
-Lines for the CLAUDE section (steps 18 to 20a) are `f907218`'s; every other line is still `444e72b`'s, so re-check
-any line you rely on at the built hash.
+**Install commit (pinned Oct 16, about 1:09 AM Pacific):** `7b321d22eb7782bf5f26d230c3422d57b2e629cb`, master at
+the merge of #343 (Return key). It carries #330 (icon, soul 0.65), #337 (Training page part one), #320 (Tess asks
+Claude in the settings object), #334 (Home lines, rules only), #340 and #343. No catalog v6: #341 and #344 are held.
+Builds only after `scripts/test.sh` ends "All green" on it. Lines for the CLAUDE section (steps 18 to 20a) are
+cited from `f907218` (#320's head, same code at the pin); every other line is still `444e72b`'s, so re-check any
+line you rely on at the pin.
 
 **Last install:** `444e72b` (#269, launch flags), 11:28 PM PT Oct 15. This script was first checked against
 master `8fc5bd3` (Oct 15, 8:12 PM Pacific), then `92078ee`, then `444e72b`, which added #262 (step 8a), #266
@@ -56,7 +55,7 @@ column and write a few words for any F.
 | 3 | 4 | Tap **Porcelain**. Tap again. Tap again. Then tap **Obsidian**, then tap **Lacquer** once more to put it back. | Porcelain becomes **Plein** and the page crossfades to cream in 0.7 s; then **Celadon** (pale green); then **Porcelain** (`Looks.swift:91, 224-227`; fade `LookSentence.swift:119`). Obsidian becomes **Lacquer** and the page does not change by day (`Looks.swift:92, 229-232`); the next tap brings back Obsidian. Light tick: phone only. | Part | [ ] P [ ] F |
 | 4 | 5 | Hold **Obsidian** for half a second. Then hold it again. | Page turns black. Sentence reads "Obsidian always." with "Hold it again to follow light and dark mode." (`LookSentence.swift:27-29`, hold time `:91`). Second hold: back to "Porcelain by day, Obsidian by night." with Obsidian in the night slot (`Looks.swift:258-274`). Watch for: the name also stepping to Lacquer on release (the tap and the hold share the word, `LookSentence.swift:83-94`); if it does, mark F. Firmer haptic: phone only. | Part | [ ] P [ ] F |
 | 5 | 2 | `xcrun simctl ui booted appearance dark`, look, then `... appearance light`. | Page swaps at once to true black (Obsidian, `#000000`, `Looks.swift:60-65`), no paint flood, status bar text turns light. Back to white on Light. The switch by sunset (Automatic) is phone only; the look never reads the clock, so `-demoTime` does not change it. | Part | [ ] P [ ] F |
-| 6 | 6 | Relaunch with `-demoTime 18:10` (no reset). Training, **Start workout** on Push Day A (`Features/Home/TrainingPage.swift:186`). | Since #266 the workout stands on Home's base in the look on screen: with Porcelain by day (Light), a white ground (`#FFFFFF`) with ink keys and numerals (`#17141F`) you can read, status bar text dark (`DesignSystem/Theme.swift:258-262`, `Features/Workout/WorkoutModeView.swift:140`). The rest timer and "Go" are ink, not amber (`WorkoutModeView.swift:418, 443`). **Not** the old plum-black (`#14111A`), which is gone from the code. If the workout opens dark on a Light Simulator, mark F. | Yes | [ ] P [ ] F |
+| 6 | 6 | Relaunch with `-demoTime 18:10` (no reset). Training, **START** on Push Day A (since #337 the ink-line word, `Features/Home/TrainingPage.swift:190` at the pin). | Since #266 the workout stands on Home's base in the look on screen: with Porcelain by day (Light), a white ground (`#FFFFFF`) with ink keys and numerals (`#17141F`) you can read, status bar text dark (`DesignSystem/Theme.swift:258-262`, `Features/Workout/WorkoutModeView.swift:140`). The rest timer and "Go" are ink, not amber (`WorkoutModeView.swift:418, 443`). **Not** the old plum-black (`#14111A`), which is gone from the code. If the workout opens dark on a Light Simulator, mark F. | Yes | [ ] P [ ] F |
 | 7 | 10 | On Bench Press, tap Tess's soul (bottom right). The writing line shows "log bench 80x8, or ask" (`Features/Workout/WorkoutParts.swift:323`). Type `81 for 8`, Return. | "Set N logged. 80 × 8, nearest load to 81." with N the set number (#248; `TesseraCore/Sources/TesseraTess/TessCaptureEngine.swift:263-274`). On the white workout (step 6) the line reads in ink. | Yes | [ ] P [ ] F |
 | 8 | 11 | Tess: `100 for 5 at 8`, Return. Then `same at 9`, Return. | "Set N logged. 100 × 5, RPE 8." then "Set N logged, same again, RPE 9." (#248; `TessCaptureEngine.swift:263-274`). | Yes | [ ] P [ ] F |
 | 8a | #262 | Tess: `same at nine`, Return. Then `a hundred, five`, Return. | `same at nine`: number words are read as digits first in a workout (`TesseraCore/Sources/TesseraTess/TessGrammar.swift:115-124`), so "Set N logged, same again, RPE 9." (`TessCaptureEngine.swift:271`; test row N11, `SpokenNumbersTests.swift:85`). `a hundred, five`: no set and nothing on Groceries or Now (K885, `SpokenNumbersTests.swift:104-118`); any line Tess says is fine. If a set is logged or a grocery item appears, mark F. Last set stays 100 × 5 for step 9. | Yes | [ ] P [ ] F |
@@ -120,7 +119,7 @@ said. For a test capture he doesn't want kept, tap UNDO under Tess's line. S8 to
 | S10 | First ever hold, before answering the mic alert: hold, let the alert come up, answer it. | The soul goes back to its rest size; it never stays swollen behind or after the alert. | [ ] P [ ] F |
 | S7 | **Open check (b), row 8c**, on the first Speak listen above (phone set to English (India), en-IN). | Plain "Listening" means an **exact match**; "Listening in English (UK)." on the first open only means a **near match**. Exact [ ] Near [ ]. Fail: the near-match line shows on every open. | [ ] P [ ] F |
 
-## After the install: the candidate's phone checks (about 3 minutes)
+## After the install: the candidate's phone checks (about 4 minutes)
 
 The icon, the soul and haptics can't be judged on the Simulator. Kaushik runs these on the phone.
 
@@ -130,8 +129,12 @@ The icon, the soul and haptics can't be judged on the Simulator. Kaushik runs th
 | P2 | Open Tessera, watch Tess's soul at rest, open Tess, close it, then drag the soul and let go. | The soul sits a little tighter (dabs drawn in by 0.65, #330) and still blooms when it opens, carries while dragged and drips when let go. | [ ] P [ ] F |
 | P3 | Review, The week, CLAUDE. Tap **yes** so it reads **no**. Close the app from the App Switcher, open it, look. Tap back to **yes**, close and open again. | "Tess stays on this phone." then, after reopening, still **no**. Back to **yes**: "Tess asks Claude when she's unsure, and for Plan my day." and still **yes** after reopening. If he had set "no" before, it reads **no** on the first open of the new build (#320 moves it once). | [ ] P [ ] F |
 | P4 | With **yes** and his key: Tess, type something she can't read on the phone. Then set **no** and type something like it. | With yes: Tess answers through Claude and the month's amount moves, and tapping it shows a new receipt. With no: Tess answers on the phone, nothing is sent and the amount stays. | [ ] P [ ] F |
+| T1 | On a training day, swipe to Training. | The page leads with today's plan: the routine's title, its exercises as lanes, and the START word on the ink line (#337). Tap START: the ink line lifts into the strip, then the workout opens. Close it from Home: Training reads **Resume** *routine*. | [ ] P [ ] F |
+| T2 | On Training, tap **ROUTINES** (right of the plan line, `Features/Home/TrainingPage.swift:169`). Then the back word. | The plan's routines page opens; the back word brings him back to Training, not Today. | [ ] P [ ] F |
+| T3 | After finishing the workout on the evening before his rest day, look at Training. | Known gap, not an F: the build says "*Next routine* tomorrow" (`TrainingPage.swift:197-200`), not "Rest day tomorrow" (review-337 L1). Write down what it says. | [ ] note |
+| T4 | Through T1 to T3, watch Tess's soul in the bottom-right slot. | Nothing moves for Tess's slot: no row, word or line slides under or around it. | [ ] P [ ] F |
 | H1 | Turn off Settings > Sounds & Haptics > System Haptics, then finish a task or a workout. Turn it back on. | No three-tap done pattern (#317). If it still buzzes, tell Builder A, who switches to `.success` because that one respects the switch. | [ ] P [ ] F |
-| R1 | **Only if Builder B's Return-key PR is in the build.** Ask Tess: type a line, press the key. Then in a Notes field: type, press Return, then DONE. | Ask Tess: the key reads **Send** and sends. Notes: Return makes a new line; the DONE ink word closes the field. | [ ] P [ ] F |
+| R1 | **In the build (#343).** Ask Tess: type a line, press the key. Then in a Notes field: type, press Return, then DONE. | Ask Tess: the key reads **Send** and sends. Notes: Return makes a new line; the DONE ink word closes the field. | [ ] P [ ] F |
 
 ## Master strings that look wrong or stale
 
