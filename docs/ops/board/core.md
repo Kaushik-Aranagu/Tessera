@@ -22,6 +22,8 @@
 - Body weight is the load. Done when pull-ups and dips use the latest body weight plus added weight for e1RM and volume. Needs M3 slice 1.
 
 **Audit batches (small PRs, beside other work; decisions.md 5:14 PM PT):**
+- Starter content (Research #159, `../research/starter-content.md`): give the seeded plan a start date (M1; Builder A's "Session 1 of 13" fix reads it), and seed plates so the bar isn't capped at 177.5 kg (M3; one pair of each today). Small, so do it first in this list.
+- Lock Screen and intent lines (Research #159, `../research/lockscreen-lines.md`): the Undo intent's "Undo brings it back" goes, because nothing redoes it. "No set to undo." follows the undo rule. The two short titles match their intent titles.
 - Undo batch: Core's rows in `../research/undo-lines.md` section 2 (wording and behaviour), to the one rule: name the thing, then what happened; Undo says the same name plus "taken back"; UNDO always reverts the record its line names. Includes undoing a finish deleting the Health workout, and HealthExporter.
 - Empty states batch: Core's 8 rows in `../research/empty-states.md`. These cover the Review counts line and one meaning of "good day" (trained), Groceries' double "Nothing to get", the empty shop, a recipe with no lines, an empty "As pasted", the long second line in Notes, the Backups hero before the first copy, and zero-set workouts that are not saved.
 
