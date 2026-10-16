@@ -65,7 +65,7 @@ function phone(L,o={}){
  <div class="abs b ctx f" id="${L}ctx" style="left:22px;top:246px">${closed?'tomorrow, first':'this evening'}</div>
  <div id="${L}col" class="f" style="${closed?'opacity:0':''}">
   <div class="abs t34" id="${L}hero" style="left:22px;top:280px;width:346px">Did 4 tasks, 1 workout, cooked once.</div>
-  <div class="abs b s2" style="left:22px;top:384px;width:346px">3 moving to tomorrow.<br>Tap any to keep.</div>
+  <div class="abs b s2" style="left:22px;top:384px;width:346px">3 moving to tomorrow.<br>Tap any for later.</div>
   ${ROWS.map((t,k)=>`<div class="q b" id="${L}r${k}" style="top:${458+44*k}px">${t}<span class="tm lbl s2" id="${L}w${k}" style="${(o.later||[]).includes(k)?'opacity:.5':''}">TOMORROW${strike(L,k)}</span><span class="abs lbl s2" id="${L}l${k}" style="right:118px;top:4px;opacity:0">LATER</span></div>`).join('')}
  </div>
  <div id="${L}wl" class="f" style="${closed?'opacity:0':''}">

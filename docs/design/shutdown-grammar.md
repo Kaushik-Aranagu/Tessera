@@ -24,7 +24,7 @@ Redraws `shutdown.md` (item 34; which keeps Research's slot lines B to F, the le
 
 A two-line hero never happens here ("Shutdown" fits); a long row name wraps to 74 tall, the value on the first line.
 
-**The first Shutdown ever:** Tess says slot C instead of B ("3 moving to tomorrow. Tap any to keep."), once, so the gesture is said the first time he sees it. From the second evening the count is the label word and B is her line. (For Research: C's "Tap any to keep." is otherwise the VoiceOver hint on each row.)
+**The first Shutdown ever:** Tess says slot C instead of B ("3 moving to tomorrow. Tap any for later."), once, so the gesture is said the first time he sees it. From the second evening the count is the label word and B is her line. (For Research: C's "Tap any for later." is otherwise the VoiceOver hint on each row.)
 
 ## The line, typed
 Tap the writing line: the keyboard rises (system, 340 ms) and TOMORROW, FIRST, the line and its hairline ride up to sit above the keys (label 444, line 468, hairline 500); the hero, the rows, the key and Tess's line fade back (blur 3, 25%, 420 ms). The caret is cobalt, his words in ink at Field 18, the ink line fills under them. **DONE** sits over the keyboard at the right (57's word). Return or DONE drops the keyboard, the line rides back to its place and the page returns. Tess says nothing; the line on the page is the answer. Nothing is stored until the hold.
@@ -33,7 +33,7 @@ Tap the writing line: the keyboard rises (system, 340 ms) and TOMORROW, FIRST, t
 Hold the soul (speak.md's fast path). The heard words stream into the writing line in `inkSecondary`, each rising out of a 6 pt blur. Let go: the lead phrase is squeezed out (width to 0, 320 ms) and the rest turns wet cobalt, breathing 0.5 to 0.66, drying to ink over 3 s. Tess: "Reply to the landlord, tomorrow first." (thing first, 62; was "Tomorrow, first: reply to the landlord."). No UNDO: nothing is written yet, and tapping the line edits it. The lead phrases, and what happens before 21:00 and on the closed day, are `shutdown.md`'s, with their receipts thing first: before 21:00, "Reply to the landlord, tomorrow first." with UNDO "Tomorrow line, taken back."
 
 ## The hold and the closed day
-The hold's writes are `shutdown.md`'s (kept rows to tomorrow, LATER rows to Later, the line stored, the Day log line frozen) as one undoable record.
+The hold's writes are `shutdown.md`'s (kept rows to tomorrow, LATER rows to Later, the line stored, the Day log line frozen) as one undoable step.
 
 **The handoff:** each kept row's TOMORROW lifts away toward the top (620 ms, 80 ms stagger, shrinking and blurring); LATER rows stay; the column folds (blur 3, 420 ms); the soul plays `done`. No day stroke to paint (41 took it off Home).
 
@@ -66,5 +66,5 @@ The day stroke and its dashed guide (41), the Title 34 opener on the page (it is
 
 ## For Builder B
 - `Features/Home/`: Shutdown as a Home state on 41's frame (day label, clock, hero "Shutdown"), the carry-over label, `RollRow`s with the TOMORROW / LATER value flip, the writing line with its keyboard ride and DONE, `CLOSE THE DAY` as `startKey`-style ink-line key with the 0.7 s hold, the handoff, the closed day (his line as the hero, THEN as a label word), Tess's E line with UNDO and UNDO's reverse. The old opener, carry-over sentence, strike and "Shutdown complete" go.
-- Core: unchanged from `shutdown.md` (slots, lead phrases, the one undoable record), plus the first-Shutdown rule for slot C.
+- Core: unchanged from `shutdown.md` (slots, lead phrases, the one undoable step), plus the first-Shutdown rule for slot C.
 - Every clip ends inside the app.

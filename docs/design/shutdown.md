@@ -12,7 +12,7 @@ Shutdown at 21:00 on Now, redrawn on the build's Home frame under today's rules:
 | 182 | The day stroke, painted to now with the dashed guide after it |
 | 246 | **"this evening"**, the context line in `context` (the one line above the hero) |
 | 280 | **Line 1, the opener** (slot B): "Did 4 tasks, 1 workout, cooked once." in **Title 34/500 `ink`**, up to 2 lines. It's a sentence, not a name, so it's drawn at 34, not Hero 56. That also lets all three counts stay in one line, so there's no separate counts label |
-| 384 | **Line 2, the carry-over** (slot C) in Body 21 `inkSecondary`, broken after its first sentence: "3 moving to tomorrow." / "Tap any to keep." Hidden when nothing rolls |
+| 384 | **Line 2, the carry-over** (slot C) in Body 21 `inkSecondary`, broken after its first sentence: "3 moving to tomorrow." / "Tap any for later." Hidden when nothing rolls |
 | 458, 502, 546 | **The rows that roll**, 44pt apart: the name in Body 21 `ink`, **TOMORROW** in labels on the right. At most 3 rows. With 4 or more, the third place reads **"5 MORE"** in labels, and a pull shows the rest (as in Plan my day) |
 | 594 | **TOMORROW, FIRST**, a label word in `inkSecondary` |
 | 618 | **Line 3, the tomorrow line** (slot D): the writing line. Empty, it shows D's placeholder in `inkSecondary`: "Tomorrow starts with Standup at 09:30." or "One line for tomorrow, if you want." Written, it's his words in `ink`. A 0.5pt hairline at 650 |
@@ -20,7 +20,7 @@ Shutdown at 21:00 on Now, redrawn on the build's Home frame under today's rules:
 | 736 → 820 | Tess's band. Nothing on the page enters it |
 
 - **On a B7 day** ("A quiet one. Want a line for tomorrow?"), the opener already offers the line, so the writing line shows no placeholder (Research's rule D).
-- **Late night** (opened at or after 23:00, or 00:00 to 04:00): F1 replaces the opener and F2 the carry-over ("2 moving to Wednesday. Tap any to keep."). The page is the same.
+- **Late night** (opened at or after 23:00, or 00:00 to 04:00): F1 replaces the opener and F2 the carry-over ("2 moving to Wednesday. Tap any for later."). The page is the same.
 - **Rows:** tap one and an ink-line strike draws across TOMORROW (260ms, house curve), the word drops to 50%, and **LATER** sets in to its left (settle spring). Tap again to bring it back. No dots, no colour.
 
 ## "Tomorrow, first," typed
@@ -62,4 +62,4 @@ An evening wash or night ground, dots, a count of what didn't happen, "left over
 
 ## Owners
 - **Builder B:** the Shutdown page on Now (`Features/Home/`): the y table, the Title 34 opener, the carry-over line, the rows with the strike and LATER, the writing line and its keyboard ride, the said line landing in it, the hold, the handoff, the closed day with Tess's E line and UNDO, and UNDO's reverse.
-- **Core:** slots B to F picked by Research's rule, the lead-phrase grammar for "tomorrow, first" (spoken and typed, inside and outside Shutdown), storing the line, the hold's writes as one undoable record (rows, Later, the line, the frozen Day log line), and the 10s UNDO.
+- **Core:** slots B to F picked by Research's rule, the lead-phrase grammar for "tomorrow, first" (spoken and typed, inside and outside Shutdown), storing the line, the hold's writes as one undoable step (rows, Later, the line, the frozen Day log line), and the 10s UNDO.

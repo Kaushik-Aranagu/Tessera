@@ -73,3 +73,16 @@ Research 126 (`docs/research/copy-one-voice.md`, master) read every new line in 
 
 ## For Builders A and B
 Build the "Now" column. Where a clip still says the old words, the sheet wins. The next re-cut of each sheet carries these lines.
+
+## Addendum, Oct 16: day marks and the Shutdown carry-over (Research 147 and 148, #448)
+**Day marks follow rule 3, and each line matches what the page will show for that day.** Today and tomorrow use the hero's words; yesterday uses the Day log row's words, because yesterday is a log now.
+
+| Mark | Tess | UNDO |
+|---|---|---|
+| Today | "Rest today. Legs A waits for tomorrow." (not "Today, rest day.": the hero says "Rest today", and Tess and the page never disagree) | "Legs A, back on today." |
+| Tomorrow | "Rest tomorrow. Legs A waits for Saturday." (the day after, named as a weekday) | "Legs A, back on tomorrow." |
+| Yesterday | "Yesterday, rest day." (the Day log's "Rest day" row) | "Yesterday, unmarked." |
+
+- **The widget** keeps row 54 above: hero "Rest today", and "Legs A waits for tomorrow" as its second line where the family has one. The small family and the Lock Screen accessory show "Rest today" alone.
+- **Shutdown's slot C** reads "3 moving to tomorrow. Tap any for later." A tap sends a row to LATER, so "keep" read both ways (`shutdown.md`, `shutdown-grammar.md`; the clips keep the old words until re-cut).
+- **The hold's writes** are "one undoable step", not "record". SH8's "best" lines live only in Research's `shutdown-daylog-copy.md` B2 and E2, already fixed; no Design sheet or clip ever drew them.
