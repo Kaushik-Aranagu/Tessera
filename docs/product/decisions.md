@@ -4,6 +4,11 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+- **Migration gate, demo-store evidence accepted** (3:50 AM PT Oct 16, Builder A's Simulator run). The upgrade from v5 to v7 kept all 364 rows byte-identical, and 7b321d2 opened the v7 store and ran normally. That is enough to pin the next candidate once #380 (v8) and #366 land, on these conditions:
+  - Builder A reruns the gate on the v8 master. The rerun also tests the restore path: a v5 backup file restored into the v8 build.
+  - The install-day script starts with him tapping a fresh backup in Review > Backups on the phone before installing.
+  - No run over his real backup is needed, so nothing is asked of him.
+  - Rollback: an older build opening a newer store is shown safe through v7. Restoring a newer backup onto an older build stays forbidden until it is tested.
 - **Removing a list row, as drawn** (3:47 AM PT Oct 16, Design 65 `list-remove.md`, 66550d4; accepted). The UNDO line names the list: "Ground beef, back on Groceries." (and "back on Packing" on another list), to match "No rice on Groceries." A removed row never feeds USUALLY.
 - **Nights, timers and private notes** (3:46 AM PT Oct 16, Research 134 and 135, #384; QA F2 on #381).
   - **CL9: his own timers ring at any hour, haptic included.** "No haptic after 23:00" covers moments the app raises, not a kitchen timer he set.
