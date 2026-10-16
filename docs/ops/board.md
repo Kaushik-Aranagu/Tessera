@@ -2,7 +2,7 @@
 
 *Only the planning lead (Product lead thread) edits this file. Each team's queue lives in its own file under `board/`, and only that team's lead edits it. Updated 2026-10-15. First phone build: PRs cut at 2:05 PM Pacific (moved from 12:45 and 1:05 PM), then the final build; review guide in `../product/review-session.md`.*
 
-**Installed (9:57 AM PT Oct 16):** 7b321d2 (#320, #330, #334, #337, #343), over the existing app; signing lapses ~Oct 23 9:57 AM PT, reminder Oct 22 10 AM PT. Next pin waits on #366, Builder B's refused-hold fix, MU2 and the inbox-retry fix (decisions.md 11:08 and 11:35 AM PT) (master at v9 since #422 merged, 5af8f2c2); the paste/link wall rides if it lands first; #407 rebased to v10, merges after the pin with #403. Next build: AI-1 Home, 44 part two, 42, Ask Tess sizes.
+**Installed (9:57 AM PT Oct 16):** 7b321d2 (#320, #330, #334, #337, #343), over the existing app; signing lapses ~Oct 23 9:57 AM PT, reminder Oct 22 10 AM PT. Next pin waits on #366, MU2 and the inbox-retry fix (stuck-listening #446 merged, 0eca9bbe) (decisions.md 11:08 and 11:35 AM PT) (master at v9 since #422 merged, 5af8f2c2); the paste/link wall rides if it lands first; #407 rebased to v10, merges after the pin with #403. Next build: AI-1 Home, 44 part two, 42, Ask Tess sizes.
 
 **Frozen PRs (11:35 AM PT Oct 16):** once a lead sends a PR number for merging, that branch is frozen until it lands. New work goes in a fresh PR from master; every push to a sent PR stops its merge.
 
