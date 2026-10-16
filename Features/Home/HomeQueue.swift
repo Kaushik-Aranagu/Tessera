@@ -448,7 +448,7 @@ private struct QueueRow: View {
             withTesseraAnimation(.spring(Spring(duration: 0.42, bounce: 0.12)), reduceMotion: reduceMotion) {
                 model.touch()
             }
-            voice.say("Done. \(entry.title).", undo: record)
+            voice.say("\(entry.title), done.", undo: record)
         }
     }
 

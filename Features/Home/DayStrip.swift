@@ -165,7 +165,7 @@ private struct DayStroke: View {
                 }
                 if isToday, reach > 0 {
                     // The moment: a breathing sheen on the stroke's last 14 pt, not a dot (no-dots).
-                    WetTip(reach: reach, length: 14 / max(size.width, 1))
+                    WetTip(reach: reach, length: 14 / max(size.width, 1), gradient: gradient)
                 }
             }
         }
@@ -214,12 +214,14 @@ private struct WetTip: View {
     let reach: Double
     /// The sheen's length as a share of the stroke.
     let length: Double
+    /// The stroke's own spectrum: the end keeps its colour, only thicker and breathing (amber is a moment only).
+    let gradient: LinearGradient
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var breathe = false
 
     var body: some View {
         BrushPath().trim(from: max(reach - length, 0), to: reach)
-            .stroke(Theme.Colors.now, style: StrokeStyle(lineWidth: HomeStroke.now, lineCap: .round))
+            .stroke(gradient, style: StrokeStyle(lineWidth: HomeStroke.now, lineCap: .round))
             .blur(radius: breathe ? 1.2 : 0.4)
             .opacity(breathe ? 0.55 : 1)
             .tesseraAnimation(.easeInOut(duration: 1.8).repeatForever(autoreverses: true), value: breathe)

@@ -66,7 +66,8 @@ struct BackupView: View {
 
                 // A fresh install with nothing done yet: say a restore is possible (restore-walk 3). Restore first,
                 // then reopen, then pick the folder again.
-                if !model.engine.history(limit: 50).contains(where: { $0.actor == .user }) {
+                // Anything he, Tess or Siri did counts (QA R3, like Core's userOps): only seeding is "nothing yet".
+                if !model.engine.history(limit: 2000).contains(where: { $0.actor != .system }) {
                     Text("Reinstalled? Restore brings back your copy from iCloud Drive.")
                         .font(Theme.voice)
                         .foregroundStyle(Theme.Colors.tess)

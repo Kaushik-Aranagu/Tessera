@@ -165,6 +165,23 @@ final class AppModel {
         commitCapture()
         let result = await runtime.tess.capture(phrase, context: TessContext(now: AppClock.now,
                                                                              entry: session?.currentEntry?.id))
+        return land(result)
+    }
+
+    /// The open set-count ask ("2 × 10: 2 sets, or 2 kg?"), if the last phrase raised one.
+    var pendingSetAsk: TessSetCountAsk? {
+        (runtime.tess as? TessCaptureEngine)?.pendingAsk
+    }
+
+    /// A tap on one of the ask's answers: lands like a capture and returns Tess's line.
+    func answer(_ choice: TessSetCountAsk.Choice) -> String {
+        guard let engine = runtime.tess as? TessCaptureEngine else { return "" }
+        let result = engine.answer(choice, context: TessContext(now: AppClock.now, entry: session?.currentEntry?.id))
+        return land(result)
+    }
+
+    /// Pending records become ghost rows that dry after `captureDryTime`; returns Tess's line.
+    private func land(_ result: TessCapture) -> String {
         let pending = result.records.filter { $0.state == .pending }
         if let first = pending.first {
             pendingCaptures = pending

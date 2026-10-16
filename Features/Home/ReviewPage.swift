@@ -401,14 +401,7 @@ struct DayMarkView: View {
     var body: some View {
         switch mark {
         case let .trained(count):
-            ZStack(alignment: .topTrailing) {
-                PaintDab(color: Theme.Colors.health, size: CGSize(width: 34, height: 30), seed: seed)
-                if count > 1 {
-                    PaintDab(color: Theme.Colors.health.opacity(0.8), size: CGSize(width: 16, height: 14),
-                             seed: seed + 3)
-                        .offset(x: 8, y: -6)
-                }
-            }
+            TrainedMark(count: count, seed: seed, delay: delay)
         case .rest:
             RestMark(seed: seed, delay: delay)
         case .open:
@@ -416,6 +409,33 @@ struct DayMarkView: View {
                      filled: false)
         case .planned, .none:
             Color.clear
+        }
+    }
+}
+
+/// A trained day: the sage dab lands wet at full pigment, then dries to its rest tint (no-dots.md).
+private struct TrainedMark: View {
+    let count: Int
+    let seed: Int
+    let delay: Double
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var dried = false
+
+    var body: some View {
+        let pigment = dried ? Theme.Colors.restTint(Theme.Colors.health) : Theme.Colors.health
+        ZStack(alignment: .topTrailing) {
+            PaintDab(color: pigment, size: CGSize(width: 34, height: 30), seed: seed)
+            if count > 1 {
+                PaintDab(color: pigment, size: CGSize(width: 16, height: 14), seed: seed + 3)
+                    .offset(x: 8, y: -6)
+            }
+        }
+        .onAppear {
+            guard let dry = Theme.Motion.dry(reduceMotion: reduceMotion) else {
+                dried = true
+                return
+            }
+            withAnimation(dry.delay(delay)) { dried = true }
         }
     }
 }

@@ -124,7 +124,7 @@ struct ClaudeSection: View {
             // After a reinstall or on a new phone the key doesn't come along (restore-walk 6).
             Text(ledger.calls().isEmpty
                 ? "Tess thinks \(Text("on this phone").fontWeight(.semibold)) only."
-                : "Your key stays on the phone it was added on. Paste it again to let Tess ask Claude.")
+                : "No Claude key on this phone. Paste one to let Tess ask Claude.")
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
             if writing {
