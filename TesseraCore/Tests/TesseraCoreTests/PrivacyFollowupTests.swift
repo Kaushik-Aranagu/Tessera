@@ -146,9 +146,10 @@ struct PrivacyFollowupTests {
     }
 
     @Test func aKeySplitAcrossLinesComesOutWhole() {
-        // QA R4 on #471.
-        let cleaned = withoutClaudeKeys("my key sk-ant-api03-abcDEF12\nGHI345jklMNO678 then the rest")
-        #expect(!cleaned.contains("sk-ant") && !cleaned.contains("GHI345") && cleaned.contains("then the rest"))
+        // QA R4 on #471. Built at run time and plainly fake, so nothing key-shaped is committed (#487).
+        let prefix = ["sk", "ant", "TEST"].joined(separator: "-")
+        let cleaned = withoutClaudeKeys("my key \(prefix)-FAKE1\nFAKEFAKE2 then the rest")
+        #expect(!cleaned.contains(prefix) && !cleaned.contains("FAKEFAKE2") && cleaned.contains("then the rest"))
         #expect(withoutClaudeKeys("key: sk-ant-api03-TEST done") == "key:  done")
     }
 
