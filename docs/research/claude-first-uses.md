@@ -1,5 +1,7 @@
 # Claude first uses, in order
 
+> **Update Oct 16, 12:40 pm PT:** the monthly Claude cap is now **$50** (Kaushik's yes at 9:27 am). Read every "$10" cap below as $50, with amber from $40 ("PAUSES AT $50"). Model prices in this file are unchanged. See `cap-math-check.md`.
+
 For: Core (router, client, ledger), Builder B (Home and Command screens, cloud mark), Builder A (sets typed in a live workout). Research lab, board item 44, 2026-10-16.
 Turns `tess-model-layer.md` §8 into the first three things Kaushik sees Claude do once his key passes the Test (`claude-key-test.md` K1). Reads with `tess-voice.md` M1 to M22, `undo-lines.md` §3, `plan-my-day-dryrun.md`, `light-day.md`, `calendar-pack.md`, `questions-eval.md`, `tess-eval-claude.md`, `fixtures/grammar-regression.md` and `../product/decisions.md`.
 Code read on `origin/master` at `9b85986` (no Swift toolchain). Prices and model IDs fetched live on 2026-10-16 (sources at the end).
