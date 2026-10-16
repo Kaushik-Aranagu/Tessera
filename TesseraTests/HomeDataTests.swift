@@ -127,6 +127,10 @@ struct HomeDataTests {
         #expect(WeekReview.headline(4) == "Four good days of seven")
         #expect(WeekReview.headline(1) == "One good day of seven")
         #expect(WeekReview.headline(0) == "A quiet week so far")
+        #expect(WeekReview.sessionHeadline(done: 4, planned: 6) == "Four sessions of six")
+        #expect(WeekReview.sessionHeadline(done: 1, planned: nil) == "One session so far")
+        #expect(WeekReview.sessionHeadline(done: 0, planned: 6) == "No sessions yet")
+        #expect(WeekReview.sessionLine(done: 4, planned: 6) == "4 of 6 sessions this week")
     }
 
     // MARK: Model-backed helpers

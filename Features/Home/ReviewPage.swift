@@ -33,6 +33,22 @@ enum WeekReview {
         return "\(number.prefix(1).uppercased())\(number.dropFirst()) \(noun) of \(SpokenTime.number(days))"
     }
 
+    /// The hero opens with a session count: "Four sessions of six", "One session so far", "No sessions yet".
+    /// Every finished workout counts, so two in a day are two.
+    static func sessionHeadline(done: Int, planned: Int?) -> String {
+        guard done > 0 else { return "No sessions yet" }
+        let number = SpokenTime.number(done)
+        let spoken = number.prefix(1).uppercased() + number.dropFirst()
+        let noun = done == 1 ? "session" : "sessions"
+        guard let planned, planned > 0 else { return "\(spoken) \(noun) so far" }
+        return "\(spoken) \(noun) of \(SpokenTime.number(planned))"
+    }
+
+    /// "4 of 6 sessions this week" (VoiceOver).
+    static func sessionLine(done: Int, planned: Int?) -> String {
+        planned.map { "\(done) of \($0) sessions this week" } ?? "\(done) sessions this week"
+    }
+
     /// "Done 4 of the last 7 days" (for VoiceOver and anywhere the plain count reads better).
     static func consistencyLine(_ count: Int, of days: Int = 7) -> String {
         "Done \(count) of the last \(days) days"
@@ -110,11 +126,13 @@ struct ReviewPage: View {
         let _ = model.revision
         let now = AppClock.now
         let calendar = Calendar.current
-        let dates = HomeData.trainingDates(model).map(\.date)
-        let days = WeekReview.lastDays(endingAt: now, calendar: calendar)
-        let trained = WeekReview.trainedDays(dates, on: days, calendar: calendar)
-        let count = trained.count(where: \.self)
-        let window = days.first.map { DateInterval(start: $0, end: now) }
+        // The plan's week from Core: done days carry their workouts, days ahead carry the plan or a rest day.
+        let plan = model.plan
+        let perWeek = NowPage.sessionsPerWeek(model: model, plan: plan)
+        let week = model.ledger.week(containing: now, plan: plan, now: now, sessionsPerWeek: perWeek,
+                                     calendar: calendar)
+        let sessions = week.reduce(0) { $0 + $1.done.count }
+        let window = week.first.map { DateInterval(start: $0.day, end: now) }
         let volume = window.map { MuscleVolume.compute(model, in: $0) } ?? []
 
         VStack(alignment: .leading, spacing: 0) {
@@ -124,18 +142,18 @@ struct ReviewPage: View {
                 .padding(.bottom, Theme.Spacing.m)
                 .entrance(0)
 
-            Text(WeekReview.headline(count))
+            Text(WeekReview.sessionHeadline(done: sessions, planned: perWeek))
                 .textRole(.hero)
                 .foregroundStyle(Theme.Colors.ink)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityAddTraits(.isHeader)
-                .accessibilityLabel("\(WeekReview.headline(count)). \(WeekReview.consistencyLine(count)).")
+                .accessibilityLabel(WeekReview.sessionLine(done: sessions, planned: perWeek))
                 .siblingParallax()
                 .entrance(1, hero: true)
                 .padding(.bottom, Theme.Spacing.xxl)
 
-            DayDabs(days: days, trained: trained)
+            DayDabs(week: week, now: now, calendar: calendar)
                 .entrance(2)
                 .padding(.bottom, Theme.Spacing.xxl)
 
@@ -152,38 +170,62 @@ struct ReviewPage: View {
     }
 }
 
-/// Seven dabs, 34×30, oldest to today. A trained day is filled with sage (done days); a missed day is an empty ink
-/// ring at 25% — neutral, never red. Letters sit underneath; today's is in ink.
+/// The week, Monday to Sunday, one mark a day. A trained day is a sage dab (a second, smaller dab for a second
+/// session). A rest day the plan leaves is a small muted dab: rest is part of the plan, not a gap. A day still
+/// planned is a faint ring; a past day with nothing is a quiet ring, never red. Letters underneath; today's in ink.
 private struct DayDabs: View {
-    let days: [Date]
-    let trained: [Bool]
+    let week: [WeekDay]
+    let now: Date
+    let calendar: Calendar
 
     var body: some View {
         HStack(spacing: 0) {
-            ForEach(Array(days.enumerated()), id: \.offset) { index, day in
-                let isToday = index == days.count - 1
+            ForEach(Array(week.enumerated()), id: \.offset) { index, day in
+                let isToday = calendar.isDate(day.day, inSameDayAs: now)
                 VStack(spacing: Theme.Spacing.s) {
-                    PaintDab(
-                        color: trained[index] ? Theme.Colors.health : Theme.Colors.ink.opacity(0.25),
-                        size: CGSize(width: 34, height: 30),
-                        seed: index,
-                        filled: trained[index]
-                    )
-                    Text(day.formatted(.dateTime.weekday(.narrow)))
+                    mark(day, seed: index)
+                        .frame(width: 40, height: 30)
+                    Text(day.day.formatted(.dateTime.weekday(.narrow)))
                         .textRole(.label)
                         .foregroundStyle(isToday ? Theme.Colors.ink : Theme.Colors.inkSecondary)
                 }
                 .frame(maxWidth: .infinity)
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel(label(day, trained: trained[index], isToday: isToday))
+                .accessibilityLabel(label(day, isToday: isToday))
             }
         }
         .accessibilityElement(children: .contain)
     }
 
-    private func label(_ day: Date, trained: Bool, isToday: Bool) -> String {
-        let name = day.formatted(.dateTime.weekday(.wide))
-        let state = trained ? "trained" : "rest"
+    @ViewBuilder
+    private func mark(_ day: WeekDay, seed: Int) -> some View {
+        if !day.done.isEmpty {
+            ZStack(alignment: .topTrailing) {
+                PaintDab(color: Theme.Colors.health, size: CGSize(width: 34, height: 30), seed: seed)
+                if day.done.count > 1 {
+                    PaintDab(color: Theme.Colors.health.opacity(0.8), size: CGSize(width: 16, height: 14),
+                             seed: seed + 3)
+                        .offset(x: 8, y: -6)
+                }
+            }
+        } else if day.isRest {
+            PaintDab(color: Theme.Colors.muted.opacity(0.45), size: CGSize(width: 16, height: 13), seed: seed)
+        } else if day.state == .past {
+            PaintDab(color: Theme.Colors.ink.opacity(0.25), size: CGSize(width: 34, height: 30), seed: seed,
+                     filled: false)
+        } else {
+            PaintDab(color: Theme.Colors.ink.opacity(0.12), size: CGSize(width: 34, height: 30), seed: seed,
+                     filled: false)
+        }
+    }
+
+    private func label(_ day: WeekDay, isToday: Bool) -> String {
+        let name = day.day.formatted(.dateTime.weekday(.wide))
+        let state: String = switch day.done.count {
+        case 0: day.isRest ? "rest day" : day.state == .past ? "nothing logged" : "planned"
+        case 1: "trained"
+        default: "trained, \(day.done.count) sessions"
+        }
         return isToday ? "\(name), today, \(state)" : "\(name), \(state)"
     }
 }

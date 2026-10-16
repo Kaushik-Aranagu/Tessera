@@ -42,7 +42,18 @@ struct HomeSpatialView: View {
     static let dockClearance: CGFloat = 48
 
     /// Where Home was left this session (spatial memory).
-    @MainActor private static var remembered = Page.today.rawValue
+    @MainActor private static var remembered: Int = {
+        #if DEBUG
+            // `-homePage review|today|training|kitchen` opens Home on that page (for recordings).
+            let arguments = ProcessInfo.processInfo.arguments
+            if let index = arguments.firstIndex(of: "-homePage"), index + 1 < arguments.count,
+               let page = Page.allCases.first(where: { arguments[index + 1] == "\($0)" })
+            {
+                return page.rawValue
+            }
+        #endif
+        return Page.today.rawValue
+    }()
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -77,6 +88,10 @@ struct HomeSpatialView: View {
             // Rows on a page only take a drag while the pager is at rest.
             .onScrollPhaseChange { _, phase in
                 pagerIdle = phase == .idle
+                // A swipe by hand means the pager is live, even if the restored page never applied.
+                if phase != .idle {
+                    settled = true
+                }
             }
             .scrollDisabled(rowGrabbed)
             .environment(\.homePagerIdle, pagerIdle)
