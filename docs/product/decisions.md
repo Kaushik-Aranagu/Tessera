@@ -4,6 +4,8 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+**1:40 PM PT Oct 16: a cook's day (Research AP, trip-week.md G2).** DECIDED. A cook belongs to the day it finished, everywhere: the Day log, WeekFacts, Review's cooking band and Home. The Day log changes (DayStory.swift:241-249), so Tuesday's mark and Tuesday's cook line agree. This rides with Core 0ae before Oct 26.
+
 **1:36 PM PT Oct 16: private health words (Research AO, private-health-words.md).** DECIDED. Slice 2 is yes as Research proposed it. All five picks stand: (1) a bare "PT" stays plain, because it usually means his trainer; (2) a flu shot, a covid booster and "buy covid tests" stay plain, like the dentist; (3) "stressed" stays plain and "anxious" is walled; (4) calories burned stay plain and calories eaten are walled; (5) "pain in the neck" walled is an accepted over-wall. When unsure, the rule leans toward walling, because a miss only keeps a line on the phone. Slice 1 (sick and unwell) ships only with the CR1 slang mask. Core 0ac owns both slices.
 
 **1:35 PM PT Oct 16: one UNDO slot (Research AM, undo-collision.md).** DECIDED, Research's rule stands. The app has one UNDO slot, and the line on screen and the UNDO key are one claim. A newer claim closes the older one. The window opens when the line shows: 4 s for a new thing, 10 s for a change, 10 s for everything under VoiceOver, paused in the background. The receipt is "Thing, taken back." The owners are Core 0s (pure UndoWindow), then Builder B 0i (UndoSlot, BottomChrome, lastCapture at line time) and Builder A 0i (live corner, canUndoLast window). This refines 12:45 and is F1 on next-build-v10.
