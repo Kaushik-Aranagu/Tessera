@@ -4,7 +4,7 @@
 
 **Install commit (1:09 AM PT Oct 16):** 7b321d2; his "install it" came 9:18 AM, install pending Builder A's confirmation. Next build: AI-1 Home, 44 part two, 42, Ask Tess sizes.
 
-**AI spend (9:45 AM PT Oct 16):** in-app cap $50/month (decided 9:27 AM). Dev spend from cloud runs comes out of his $200/month credits and is logged here: memory experiment ~$0.60 (570 calls; Haiku ~$0.04, Sonnet ~$0.56), Oct 16. Groceries eval (~$0.003) running on his word (9:49 AM).
+**AI spend (9:45 AM PT Oct 16):** in-app cap $50/month (decided 9:27 AM). Dev spend from cloud runs comes out of his $200/month credits and is logged here: memory experiment ~$0.60 (570 calls; Haiku ~$0.04, Sonnet ~$0.56), Oct 16. Groceries eval run 1 (#415) ~$0.0033, 9/10 with 0 false pairs; rerun 2 after #416.
 
 **Themes (Kaushik, 6:40 PM PT):** Design's top job; Builder A builds the tokens and switch after the Siri hotfix; all screens use themed tokens from now on.
 
