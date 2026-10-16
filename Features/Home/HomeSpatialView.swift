@@ -61,6 +61,7 @@ struct HomeSpatialView: View {
         return Page.today.rawValue
     }()
 
+    @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.scenePhase) private var scenePhase
@@ -253,6 +254,9 @@ struct HomeSpatialView: View {
     }
 
     private func holdLens(_ spot: Double) {
+        // Listening or an ask owns the page: the hold is refused (tess-motion.md §15); a tap still works.
+        guard model.tessMode != .listening, !model.isCommandExpanded else { return }
+        model.soul.handle(.lensHeld)
         lensFrom = Int(progress.rounded())
         lensSlid = false
         lensTicks += 1
@@ -280,6 +284,7 @@ struct HomeSpatialView: View {
     /// Let go: the page under the lens opens and the deck grows back; the lens melts into the ink line.
     private func releaseLens() {
         guard let spot = lens else { return }
+        model.soul.handle(.lensReleased)
         // A hold with no slide is a cancel: back to the page it was held from, no page change.
         let target = lensSlid ? Int(spot.rounded()) : lensFrom
         var settle = Transaction()

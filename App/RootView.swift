@@ -73,7 +73,7 @@ struct RootView: View {
     /// Home takes you back to where you were.
     private func goHome() {
         model.isCommandExpanded = false
-        model.tessMode = .done
+        model.soul.handle(.goHome)
         flooding = true
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(reduceMotion ? 150 : 480))
@@ -90,8 +90,6 @@ struct RootView: View {
             }
             try? await Task.sleep(for: .milliseconds(60))
             flooding = false
-            try? await Task.sleep(for: .milliseconds(900))
-            model.tessMode = .idle
         }
     }
 }

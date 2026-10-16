@@ -328,12 +328,12 @@ struct ClaudeSection: View {
         checking = true
         focused = false
         line = "Checking it with Claude."
-        model.tessMode = .thinking
+        model.soul.handle(.askClaude)
         let checker = ClaudeKeyCheck(keys: keys, ledger: ledger)
         Task { @MainActor in
             let result = await checker.test(pasted: key)
             checking = false
-            model.tessMode = .done
+            model.soul.handle(.claudeDone)
             if let previous, result.outcome != .works, result.outcome != .capReached {
                 // A new key that failed: the old one goes back and keeps working (QA C3, C4).
                 if keys.save(previous) {
