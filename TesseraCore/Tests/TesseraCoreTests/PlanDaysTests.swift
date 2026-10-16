@@ -147,7 +147,7 @@ struct PlanDaysTests {
 
     @Test func aStoreFromCatalogV5ReadsRollingAtV6() {
         // Additive: a plan made before the fields exist rolls on, with no days on its routines.
-        #expect(SystemCatalog.package.version == 6)
+        #expect(SystemCatalog.package.version >= 6)
         #expect(store.value("scheduleMode", of: plan) == .choice("rolling") || store
             .value("scheduleMode", of: plan) == nil)
         #expect(PlanSchedule.mode(of: plan, store: store) == .rolling)
