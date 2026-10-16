@@ -2,6 +2,28 @@
 
 Written by `scripts/ai/home_lines_eval.py`, one section per invocation, newest first. Rubric: `docs/ai/eval-rubric.md`. Research's verdict goes above the first section.
 
+## Verdict (Oct 16, 2026, AI architecture; Research signed off)
+
+**Neither model ships Claude wording on Home yet. Rules lines stay the Home default, and "Claude Home wording" stays off.** Person scores for every shown line are in `home-lines-eval-scores.md`.
+
+| Row | Haiku gate | Haiku memory | Sonnet gate | Sonnet memory |
+|---|---|---|---|---|
+| Hard fails shown (0) | 0 | 0 | 0 | 0 |
+| Caught by checks (15% or fewer) | 10% | 20% FAIL | 2% | 1% |
+| True to the pack (100%) | 66% FAIL | 68% FAIL | 100% | 93% FAIL |
+| Tone (0 shown) | 0 | 3 FAIL | 0 | 0 |
+| Plain (90%+) | 97% | 78% FAIL | 100% | 96% |
+| Not repeating (95%+) | 100% | 76% FAIL | 100% | 98% |
+| Voice (80%+) | 8% FAIL | 0% FAIL | 100% | 2% FAIL |
+| Median cost a call | $0.00009 | $0.00010 | $0.00166 | $0.00186 |
+| p95 latency | 1.9 s | 1.6 s | 3.0 s | 2.8 s |
+
+- **Haiku 5.5 is out for Home lines.** About a third of its shown lines are untrue ("this morning, after work"; "your usual slot" where memory has no habit; "Nothing scheduled" with a cook planned), and the checks can't catch these because each word is allowed on its own.
+- **Sonnet 5.5 is the only candidate, but it mostly agrees with the rules.** It returned the rules line unchanged 110 of 120 times on the gate pass and 52 of 99 on memory. Its real wins are few and good: done lines that add a best or a gap ("7:40 pm, first in 9 days", "8:05 pm, a bench best"), all 7 of its shown gate lines and 1 of its 46 memory lines. The other 45 are filler or untrue, mostly one template, "After work, your usual slot" (Research: half filler fails Voice), 3 of them on a Saturday when memory says weekdays (the E17 trap).
+- **Is it worth $0.00166 a call?** Not as an every-moment rewrite: on planned moments it adds nothing at all, and about 90% of all calls buy nothing. It is worth it only where Claude can add a true fact, so the next step is a narrower job: ask Claude only on a done moment with a best, a gap of 4+ days, or a count change, and keep rules lines for planned, paused, rest, cook and shop. That drops most Home calls (planned and rest moments are most of them) and removes the "usual slot" template from the job.
+- **Fixes before any rerun.** (1) A check for "usual" or "after work" that compares the memory line's days with today's weekday (closes the Saturday trap). (2) Research's Voice ruling goes into the prompt as: "Return the rules line unchanged unless you add one true fact it lacks. Never write 'usual', 'as usual' or a time of day the rules line already implies." (3) Rerun the narrowed job on Sonnet only, gate plus memory, 3 runs (well under the first run's $0.27, since only done moments call).
+- **Kaushik reads 10.** The 10 below mix Sonnet's best and worst lines on purpose, including one Saturday slip (#7). Claude wording stays off until he reads them and says yes.
+
 ## Oct 16, 2026 12:40 PM PT: memory pass, claude-haiku-5-5, claude-sonnet-5-5, 3 run(s)
 
 | Field | Value |
@@ -242,18 +264,20 @@ Calls 81; moments that built no request: none. Memory block hashes: 14 distinct.
 
 | # | Rules line | Claude's line | Sounds like Tess? |
 |---|---|---|---|
-| 1 |  |  |  |
-| 2 |  |  |  |
-| 3 |  |  |  |
-| 4 |  |  |  |
-| 5 |  |  |  |
-| 6 |  |  |  |
-| 7 |  |  |  |
-| 8 |  |  |  |
-| 9 |  |  |  |
-| 10 |  |  |  |
+| 1 | done at 8:05 pm | 8:05 pm, a bench best |  |
+| 2 | done at 7:40 pm | 7:40 pm, first in 9 days |  |
+| 3 | done at 7:55 pm | 7:55 pm, Deadlift best |  |
+| 4 | Pull A done. | All 3 exercises ticked off |  |
+| 5 | Push A today. | After work, your usual slot |  |
+| 6 | Push A today. | After work, as usual |  |
+| 7 | Pull A today. | After work, your usual slot (a Saturday) |  |
+| 8 | Push A done. | Finished tonight |  |
+| 9 | Push A done. | After work, as usual |  |
+| 10 | Push A today. | After work, your usual |  |
 
-Scorer: (name)
+All 10 are Sonnet's, from both passes (1 to 3 gate, 4 to 10 memory); sources per line in `home-lines-eval-scores.md`. Sonnet showed lines only for done and planned workouts, so other kinds have no pair.
+
+Scorer: AI architecture, Voice reviewed by Research (scores in `home-lines-eval-scores.md`).
 
 ## Oct 16, 2026 12:36 PM PT: gate pass, claude-haiku-5-5, claude-sonnet-5-5, 3 run(s)
 
@@ -410,17 +434,6 @@ Calls 54; moments that built no request: E4, E10. Memory block hashes: 6 distinc
 
 ### The 10 for Kaushik
 
-| # | Rules line | Claude's line | Sounds like Tess? |
-|---|---|---|---|
-| 1 |  |  |  |
-| 2 |  |  |  |
-| 3 |  |  |  |
-| 4 |  |  |  |
-| 5 |  |  |  |
-| 6 |  |  |  |
-| 7 |  |  |  |
-| 8 |  |  |  |
-| 9 |  |  |  |
-| 10 |  |  |  |
+See the 10 under the memory pass above; they cover both passes.
 
-Scorer: (name)
+Scorer: AI architecture, Voice reviewed by Research (scores in `home-lines-eval-scores.md`).
