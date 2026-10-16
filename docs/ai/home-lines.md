@@ -22,7 +22,7 @@ So Claude touches two slots on Home: the context line and the SO FAR sentence. E
 The context line is the time, with room for one aware touch when it earns its place. Claude may:
 
 - keep the time and add what the facts or memory say: "paused 21 min ago", "this evening, your usual slot", "done at 7:40, a bench best", "first push day in 9 days", "tonight, a cook day";
-- drop the time only when the state makes it plain ("Rest day" needs no time; a done workout may say "a bench best" alone if "done" is in the hero).
+- drop the time only when the state makes it plain ("Rest day" needs no time; a done workout may say "a bench best" alone if "done" is in the hero). **Digit rule (AI-5 C-checks):** the clock time may drop on a done item; every other digit in the rules context survives, and no digit appears that isn't in the item's `numbers`.
 
 It may not:
 
