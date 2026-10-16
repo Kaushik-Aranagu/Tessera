@@ -74,3 +74,7 @@ Money: ‹ REVIEW, "Money", "October, nothing yet" as the context line, "Nothing
 - `Features/Reading/`: `ShelfPage` as `BookLine`s under group labels; `BookPage` with the Title 44, the context line, the drum, FINISHED and SET ASIDE as `InkLabelWord`s, the review writing line; ‹ REVIEW and ‹ READING.
 - Builder B: the suspended book's Home line and RESUME key from `HomeLines`.
 - Every clip ends inside the app.
+
+## Addendum (Oct 16, Research 130 / Product 999df84)
+- **RF15:** the finished-book receipt is "**Dune, finished.**" (thing first), not "Dune, finished." Replace it in the book page row at 480 and in the recording's words.
+- **RF18:** "read 20 pages" is one write: a reading record that the Read habit counts, so no second check-in that day. Nothing to draw.
