@@ -15,7 +15,7 @@
 **From now on, use themed tokens** (Kaushik's themes, 6:40 PM PT): new and touched screens use Builder A's DesignSystem theme tokens, never hard-coded colours, so every theme works.
 
 **Next:**
-000. AI-1 Home reads `HomeLines` (`docs/ai/ship-list.md`), after the Return fix and Ask Tess size, on Design 41's sheet: one line per item, no `lineLimit(1)` + `truncationMode` on any Tess line. Later from the same list: AI-4 swap-in, AI-6 switch copy, AI-9 What Tess knows page, AI-11 Review top lines (with Design 46).
+000. AI-1 Home reads `HomeLines` (`docs/ai/ship-list.md`), after the Return fix and Ask Tess size, on Design 41's sheet: one line per item, no `lineLimit(1)` + `truncationMode` on any Tess line. Next from the same list: AI-9 What Tess knows page (moved up). Later: AI-4 swap-in, AI-6 switch copy (the spend line reads "of $50"), AI-11 Review top lines (with Design 46).
 00. (Kaushik, 12:01 AM PT Oct 16, first) Return in Ask Tess sends. Done when Return sends the line instead of making a new one, and there is no line Kaushik can type but not send.
 0. (Kaushik, 11:58 PM PT Oct 15, after the Return fix and #320's fixes) Ask Tess text smaller. Done when the capture surface type drops to the calm-capture body size (`docs/design/calm-capture.md`, 16pt floor), with a recording for Design. Then, from Design 41, 42, 45 and 46: Home one line per thing, the glass tab strip, the picked recipe layout, Review as the week on one page.
 1. (In Now, blocks the phone update) Rest day on Now, QA E5. Done when Now and the week page agree on a rest day, and, on a planned rest day, the Home hero shows a quiet "Rest day" line from Core's NowPicker override, and the next routine is one tap away. No guilt copy and no red.
