@@ -144,6 +144,36 @@ struct DayStoryTests {
         #expect(lines(Self.at(11, 12)) == ["10:05  Shopped, 1 item"])
     }
 
+    @Test func aRecordStaysARecordAfterALaterSessionBeatsIt() throws {
+        // Product 72954ac: the set carries "was a record" from the moment it was logged.
+        try workout("Push A", start: Self.at(5, 18), sets: [(Self.at(5, 18, 5), 60, 8)], end: Self.at(5, 18, 40))
+        try workout("Push A", start: Self.at(8, 18), sets: [(Self.at(8, 18, 5), 70, 8)], end: Self.at(8, 18, 40))
+        #expect(lines(Self.at(8, 12)) == ["18:00  Push A, 40 min. Bench 70 × 8, PR."])
+        try workout("Push A", start: Self.at(12, 18), sets: [(Self.at(12, 18, 5), 80, 8)], end: Self.at(12, 18, 40))
+        #expect(lines(Self.at(8, 12)) == ["18:00  Push A, 40 min. Bench 70 × 8, PR."])
+        #expect(lines(Self.at(12, 12)) == ["18:00  Push A, 40 min. Bench 80 × 8, PR."])
+        // Every working set carries the decision; the first ever set had nothing to beat.
+        let setClass = try #require(classes[.set])
+        let sets = store.objects(of: setClass)
+        #expect(sets.count { store.value("wasRecord", of: $0) == .bool(true) } == 2)
+        #expect(sets.count { store.value("wasRecord", of: $0) == .bool(false) } == 1)
+    }
+
+    @Test func aCorrectedSetIsReDecided() throws {
+        // QA F1 on #344: "800 for 8" edited to 80 loses its flag; a set corrected up to a record gains it.
+        try workout("Push A", start: Self.at(5, 18), sets: [(Self.at(5, 18, 5), 60, 8)], end: Self.at(5, 18, 40))
+        try workout("Push A", start: Self.at(8, 18), sets: [(Self.at(8, 18, 5), 800, 8)], end: Self.at(8, 18, 40))
+        let setClass = try #require(classes[.set])
+        let typo = try #require(store.objects(of: setClass).first { store.number("weight", of: $0) == 800 })
+        #expect(store.value("wasRecord", of: typo) == .bool(true))
+        try run(EditSet(set: typo.id, weight: 50), at: Self.at(8, 19))
+        #expect(store.value("wasRecord", of: typo) == .bool(false))
+        #expect(lines(Self.at(8, 12)) == ["18:00  Push A, 40 min. Bench 50 × 8."])
+        try run(EditSet(set: typo.id, weight: 80), at: Self.at(8, 19, 30))
+        #expect(store.value("wasRecord", of: typo) == .bool(true))
+        #expect(lines(Self.at(8, 12)) == ["18:00  Push A, 40 min. Bench 80 × 8, PR."])
+    }
+
     @Test func pastUnfinishedWorkoutIsMarkedUnfinished() throws {
         // K8, DL22, DL60: a past day's workout never finished is the faint row, with no words about it.
         try workout("Pull Day A", exercise: .benchPress, start: Self.at(14, 18),

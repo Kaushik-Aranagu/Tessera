@@ -507,7 +507,10 @@ public struct StoreDayLookup: DayLookup {
 
     public func topSet(inWorkout id: UUID) -> (text: String, isPR: Bool)? {
         guard let workout = store.object(id: id) else { return nil }
-        var best: (e1rm: Double, text: String, exercise: ClassDef?, weight: Double, reps: Double)?
+        struct Best {
+            var e1rm: Double, text: String, exercise: ClassDef?, weight: Double, reps: Double, flag: Bool?
+        }
+        var best: Best?
         for entry in workout.orderedChildren {
             let exercise = store.linkedClass("exercise", of: entry)
             let name = Self.shortName(exercise?.name ?? entry.title)
@@ -520,12 +523,18 @@ public struct StoreDayLookup: DayLookup {
                 }
                 let e1rm = weight * (1 + reps / 30)
                 if best == nil || e1rm > best!.e1rm { // swiftlint:disable:this force_unwrapping
-                    best = (e1rm, "\(name) \(Self.number(weight)) × \(Self.number(reps))", exercise, weight, reps)
+                    best = Best(e1rm: e1rm, text: "\(name) \(Self.number(weight)) × \(Self.number(reps))",
+                                exercise: exercise, weight: weight, reps: reps,
+                                flag: store.value("wasRecord", of: set).map { $0 == .bool(true) })
                 }
             }
         }
         guard let best else { return nil }
-        // One records read for the top set's lift, not a summary of every set (QA S1 on #318).
+        // The flag written when it was logged (Product 72954ac) keeps the PR after a later session beats it; sets
+        // from before the flag fall back to one records read for the top set's lift (QA S1 on #318).
+        if let flag = best.flag {
+            return (best.text, flag)
+        }
         let isPR = best.exercise.map {
             !TrainingLedger(store: store, classes: classes)
                 .recordsBeaten(weight: best.weight, reps: best.reps, for: $0, excludingWorkout: id).isEmpty

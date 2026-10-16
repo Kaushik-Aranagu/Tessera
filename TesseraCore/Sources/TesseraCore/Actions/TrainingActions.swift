@@ -60,6 +60,11 @@ public struct LogSet: EngineAction {
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
         try validateSet(weight: weightInKilograms, reps: reps, rpe: rpe, action: Self.descriptor.name)
         let entry = try transaction.object(entry, is: .exerciseEntry)
+        let setKind = isWarmup == true ? .warmup : kind ?? .working
+        let workout = try transaction.store.ancestor(of: entry, ofClass: transaction.classDef(.workout))
+        // Whether it is a record at the time it is logged, decided once and kept on the set for good.
+        let beatsRecord = SetRecord.beats(entry: entry, workout: workout, weight: weightInKilograms, reps: reps,
+                                          rpe: rpe, kind: setKind, transaction: transaction)
         let set = try transaction.create(transaction.classDef(.set), parent: entry)
         try transaction.set("weight", to: .mass(weightInKilograms), on: set)
         if let unit, unit != .kilograms {
@@ -68,12 +73,12 @@ public struct LogSet: EngineAction {
         try transaction.set("reps", to: .number(reps), on: set)
         try transaction.set("rpe", to: rpe.map(FieldValue.number), on: set)
         try transaction.set("loggedAt", to: .date(time ?? .now), on: set)
-        let setKind = isWarmup == true ? .warmup : kind ?? .working
         if setKind != .working {
             try transaction.set("kind", to: .choice(setKind.rawValue), on: set)
         }
+        try transaction.set("wasRecord", to: .bool(beatsRecord), on: set)
         try transaction.set("source", to: source.map { .choice($0.rawValue) }, on: set)
-        if let workout = try transaction.store.ancestor(of: entry, ofClass: transaction.classDef(.workout)) {
+        if let workout {
             try transaction.touchWorkoutProcess(workout, at: time ?? .now)
         }
         return set
@@ -126,6 +131,16 @@ public struct EditSet: EngineAction {
             try transaction.set("rpe", to: nil, on: set)
         } else if let rpe {
             try transaction.set("rpe", to: .number(rpe), on: set)
+        }
+        // A corrected set is re-decided in the same op: "800 for 8" edited to 80 loses its flag (QA F1 on #344).
+        if let entry = set.parent, weight != nil || reps != nil || rpe != nil || clearRPE == true {
+            let store = transaction.store
+            let kind = store.value("kind", of: set)?.stringValue.flatMap(SetKind.init(rawValue:)) ?? .working
+            let workout = try store.ancestor(of: entry, ofClass: transaction.classDef(.workout))
+            let beats = SetRecord.beats(entry: entry, workout: workout, weight: store.number("weight", of: set) ?? 0,
+                                        reps: store.number("reps", of: set) ?? 0, rpe: store.number("rpe", of: set),
+                                        kind: kind, transaction: transaction)
+            try transaction.set("wasRecord", to: .bool(beats), on: set)
         }
     }
 
@@ -538,5 +553,20 @@ extension Transaction {
             throw ActionError.wrongClass(id, expected: SystemCatalog.Key.exercise.rawValue)
         }
         return classDef
+    }
+}
+
+/// "Was a record when logged" (Product 72954ac): decided against every other workout's history at the moment the set
+/// is logged or corrected, written on the set and never recomputed afterwards. Warm-ups and other non-working sets
+/// are never records.
+enum SetRecord {
+    @MainActor
+    static func beats(entry: ObjectRecord, workout: ObjectRecord?, weight: Double, reps: Double, rpe: Double?,
+                      kind: SetKind, transaction: Transaction) -> Bool
+    {
+        guard kind == .working,
+              let exercise = transaction.store.linkedClass("exercise", of: entry) else { return false }
+        return !TrainingLedger(store: transaction.store, classes: transaction.classes)
+            .recordsBeaten(weight: weight, reps: reps, rpe: rpe, for: exercise, excludingWorkout: workout?.id).isEmpty
     }
 }
