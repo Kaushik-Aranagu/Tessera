@@ -342,3 +342,117 @@ None. The 57 rows that passed still pass. Checked in particular: rows 38, 40, 41
 5. **Ordinal dates, `on the 20th` (Core): 1 row** (53), a wrong write. The bare-hour half of the old fix 3 is done.
 
 Then one row each: drop with no reps (row 7), reminder openers (row 36, Builder B, with a Core backstop), `prepone` as a reschedule verb (row 57), relative offsets to the model (row 60), and the skip-grammar route for a spoken correction (row 74, Builder B). Of the 7 wrong writes left, 5 are Core's (50, 53, 56, 57, 60) and 2 are Builder B's (36, 74).
+
+## Live-workout number words (board item 78)
+
+For: Core (the normaliser in `TesseraCore`) and Builder B (Speak). Research lab. Date: 2026-10-16.
+
+K811 and K812 are the two group K rows that still miss on master (`set-logger-rerun.md`): no number-word normaliser
+exists, so spoken numbers reach the grammar as words. This section gives the normaliser's expected output for
+them and for 24 more live-workout number phrases (N01 to N24), and the parse the grammar should then give under
+S701 to S706 and the "N reps" exemption.
+
+**Master read.** `origin/master` at `e75f40f` (merge of PR #210, set guard follow-up: dictation periods, commas,
+non-RPE `at`, N reps). "L:n" is `TessGrammar+Live.swift` line n, "TG:n" is `TessGrammar.swift` line n, both at
+`e75f40f`. No Swift toolchain: each expected parse is a hand trace of the normalised text through master, and
+master already gives every one of them once the normaliser hands it that text. Nothing was run. Raw transcripts
+are guesses at what `SpeechTranscriber` writes, not recordings.
+
+**"N reps" exemption.** PR #210 reads a number followed by `reps` as reps whatever the last weight (L:71-76), and
+`product/decisions.md` (7:43 PM PT) records it as a coordinator default. **Product has not confirmed it yet.** N07
+and N10 depend on it.
+
+**Contexts.** Thu 15 Oct 2026 18:10 America/Los_Angeles, starter kit, as group K.
+- **W**: live workout, Bench Press (barbell, kg) in focus, last set 80 x 8. Loads 20 to 177.5 in 2.5 kg steps.
+- **D**: live workout, Dumbbell Bench Press (dumbbells, kg) in focus, last set 24 x 10. Loads 2 to 50 in 2 kg steps.
+- **I**: idle, nothing in focus.
+
+**Parse** is one of: set (weight x reps, with kind or RPE), reps only (at the last weight), same, sets (a list),
+nil (nothing written, the model reads it or asks), or task.
+
+| id | raw transcript | ctx | normalised | expected parse |
+|---|---|---|---|---|
+| K811 | eighty two and a half for eight | W | `82.5 for 8` | set 82.5 x 8 (TG:258 full set; 82.5 is a load) |
+| K812 | a hundred for five at eight | W | `100 for 5 at 8` | set 100 x 5, RPE 8 (L:50-58), as K798 |
+| N01 | a hundred and five | W | `105` | nil: a weight with no reps, over 50 (S701, L:72) |
+| N02 | a hundred and five for three | W | `105 for 3` | set 105 x 3 |
+| N03 | a hundred, five | W | `100, 5` | nil: the comma path reads `100` as a weight and `5` as reps, so one set from two parts goes to the model (TG:81-85) |
+| N04 | eighty two point four | I | `82.4` | nil: no entry, no reps, no date. The model reads it as body weight (decisions.md D12) |
+| N05 | eighty two  point four for six | W | `82.4 for 6` | set 82.5 x 6, line ends "82.4 isn't loadable." (S703, L:115-125) |
+| N06 | one oh five for five | W | `105 for 5` | set 105 x 5 |
+| N07 | twenty four reps | D | `24 reps` | reps only, 24 x 24 (N reps exemption, L:71-73) |
+| N08 | twenty four | D | `24` | nil: within two loads of the last weight, as K782 (S701) |
+| N09 | eight at three | W | `8 at 3` | nil: `at 3` is no RPE (5 to 10), so the model; never a task (L:54-55) |
+| N10 | eight reps at nine | W | `8 reps at 9` | reps only, 80 x 8, RPE 9 |
+| N11 | same at nine and a half | W | `same at 9.5` | same, 80 x 8, RPE 9.5 |
+| N12 | eighty for 8 | W | `80 for 8` | set 80 x 8 (mixed words and digits) |
+| N13 | 100 for five at 8 | W | `100 for 5 at 8` | set 100 x 5, RPE 8 |
+| N14 | a couple more | W | `a couple more` | nil: no number reaches the grammar; never 2 reps or 2 sets |
+| N15 | ten ten ten | W | `10 10 10` | nil: no set shape and no words (TG:325), so the model |
+| N16 | ten, ten, ten | W | `10, 10, 10` | sets, 3 into Bench Press: 80 x 10 each (comma path, TG:81-85) |
+| N17 | one more set | W | `one more set` | nil: not in the same list (TG:245), so the model; `one` stays a word |
+| N18 | a hundred for for | W | `100 for 4` | set 100 x 4 (a trailing `for` after one number is 4) |
+| N19 | eighty four eight | W | `84 8` | nil: two numbers, no operator. Never 80 x 8 by guess |
+| N20 | a eighty for a eight | W | `80 for 8` | set 80 x 8 (`a` before a plain number word is a filler) |
+| N21 | and eighty for eight reps | W | `80 for 8` | set 80 x 8 (leading `and` goes; `reps` after a full set goes) |
+| N22 | drop to seventy two for ten | W | `drop to 72 for 10` | set 72.5 x 10, drop, "72 isn't loadable." (as K789) |
+| N23 | call mum at seven | W | `call mum at 7` | task "Call mum", today 19:00 (not a set core, L:94-96, so the task rule, as A121) |
+| N24 | plus five | W | `+5` | nil: a signed change goes to the model (S702, L:40) |
+
+Count: 26 rows (K811, K812, N01 to N24). Parses: 13 set or reps-only writes, 1 same, 1 sets, 10 nil, 1 task.
+On master today (no normaliser) the raw words give nil for every row but one: N13 (`100 for five at 8`) is not a
+set shape to L:101, so it falls through and the task rule reads `at 8` as 20:00, making task "100 for five". A
+wrong write until the normaliser lands.
+
+**Two traps if the normaliser gets them wrong.** Collapsing `ten ten ten` to `10`
+(old rule 11) logs one 80 x 10 reps-only set, a wrong write (N15). Keeping `reps` after a full set (`80 for 8 reps`) is safe but a
+miss: the anchored set regex (TG:258) fails and L:79 sends it to the model (N21).
+
+### Number-word rules, in order
+
+These sit inside rule 7 of the list above and change rules 11 to 13 for live-workout numbers. Each step sees the
+output of the one before; the function stays pure and idempotent, and digits pass through untouched (N12, N13).
+
+1. **Lowercase, collapse spaces, drop the end period.** Two or more spaces become one (N05). Keep commas.
+2. **Leading fillers.** A leading `and`, `so`, `okay` goes (N21). `a` goes when the next word is a plain number
+   word (`a eight`, N20), but stays before `hundred`, `thousand`, `dozen`, `couple`, `few`, `half` and `bit`.
+3. **Protect.** `one more`, `one more set`, `a couple`, `a few`, `same again` and number words before a load noun
+   (`two plates`) are never turned into digits (N14, N17, K808).
+4. **Read number runs.** A run is a series of number words with no comma in it. `a hundred` and `one hundred` are
+   100; `and` joins only after `hundred` or `thousand` (`a hundred and five` 105, N01); a tens word plus a unit word
+   is one number (`eighty two` 82, `twenty four` 24); `point` gives a decimal (`82.4`, N05); `and a half` adds 0.5
+   (K811); `oh` is 0 only inside a run (`one oh five` 105, N06); `one twenty five` is 125 (100 to 300 only). Digits
+   already in the run join it (`82 and a half` 82.5).
+5. **A comma ends a run.** `a hundred, five` is `100, 5`, never 105 (N03).
+6. **Repeats.** A number said twice right before an operator is a stutter and collapses (`eighty eighty for
+   eight`). Three or more equal numbers in a row are kept, each as said (N15, N16). Never add commas.
+7. **`for` and `four`.** `for` between two numbers stays `for` (the grammar reads it). A `for` at the end after
+   exactly one number is 4 (N18). `four` inside a run stays a number, so `eighty four eight` is `84 8` (N19).
+8. **`reps`.** Keep `reps` after a bare number (N07, N10); make `rep` after a number `reps`, since the grammar
+   strips only ` reps` (TG:478-480). Drop `reps` after a full `W for R` (N21).
+9. **`at N`.** Keep `at N` as heard (`at 8`, `at 9.5`); since PR #205 the grammar reads both `at N` and `@N`
+   (L:50). Never turn a bare `at N` into a clock time in the normaliser (N09, N23).
+10. **Signs.** `plus N` and `minus N` at the start become `+N` and `-N` (N24, K807); `up N` and `down N` stay.
+11. **Units.** `pounds`, `lbs`, `lb` after a number become `lb`; `kilos`, `kg`, `k` become `kg`. No unit means kg.
+
+What it never does here: snap a weight (that is S703, in the grammar), decide reps against weight (S701), or guess
+an operator between two bare numbers (N19).
+
+### Ambiguous cases and defaults
+
+| case | default | why |
+|---|---|---|
+| `a hundred and five`: 105, or 100 and 5 reps | 105 | British "a hundred and five" is one number. A comma (N03) or `for` splits it |
+| `a hundred, five`: 100 x 5, or a pause | `100, 5`, the model asks | Dictation commas are unreliable; one set from two parts is not guessed |
+| `eighty four eight`: 84 then 8, or 80 for 8 | `84 8`, the model | Rewriting `four` to `for` mid-run would break every real 84 |
+| `ten ten ten`: three sets of 10, or a stutter | keep all three; no comma, so the model | Collapsing it logs one wrong set; adding commas is guessing |
+| `twenty four reps` with dumbbells at 24 | reps, 24 x 24 | The "N reps" exemption, **not yet confirmed by Product** |
+| `eight at three`: RPE 3, rep 3, or 3 pm | nil, the model | S704 allows RPE 5 to 10 only; a set phrase is never a task |
+| `a couple` (more, reps, sets) | words kept, the model | "a couple" is 2 or 3 in speech |
+| `one more set` vs `one more` | `one more` is the same set; `one more set` goes to the model | B301 and K779; "one more set" is often a plan, not a log |
+
+### Decisions for Product
+
+1. **Confirm the "N reps" exemption** (N07, N10). It is on master since PR #210 as a coordinator default only.
+2. **`ten ten ten`** (N15): model (default), or three reps-only sets at the last weight like `ten, ten, ten` (N16).
+3. **`a hundred, five`** (N03): model (default), or 100 x 5 when the second number is 1 to 50.
