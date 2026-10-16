@@ -32,11 +32,11 @@ A theme is mostly ground. Colour arrives only where something matters: the actio
 | `ground` | #FFFFFF | #000000 | #F2ECE3 | #140F1B | #E7EEE9 |
 | `raised` (veils, held rows, Write layer) | #F5F4F8 | #0F0E12 | #FAF6EF | #221A2D | #FFFFFF |
 | `ink` | #17141F | #F5F2EC | #2B2440 | #F1E7D6 | #0F231D |
-| `context` | #6A4C9C | #B7A6E0 | #7A5C8E | #C3A6DE | #4C6B85 |
+| `context` | #6A4C9C | #B7A6E0 | #7A5C8E | #C3A6DE | #456680 |
 | `muted` | #B9B3C3 | #5C5765 | #A39AAE | #6C6078 | #97ABA2 |
-| `tess` (cobalt, Tess only) | #2450D8 | #6FA4FF | #2E6DA4 | #8DB2FF | #2C59BE |
+| `tess` (cobalt, Tess only) | #2450D8 | #86B4FF | #2A64A0 | #8DB2FF | #2C59BE |
 | `live` (running, UNDO, Finish) | #E2432A | #FF5B3A | #C8452F | #F06A4C | #D8462C |
-| `liveInk` (live as text, light themes) | #C23A22 | = live | #B83C28 | = live | #B8361E |
+| `liveInk` (live as text: UNDO, Finish words) | #C23A22 | #FF7A5C | #B83C28 | #FF8466 | #B8361E |
 | `now` (cadmium: the moment, rest, planning) | #F0A500 | #FFC23D | #E0B341 | #E8B54A | #D99A1C |
 | `health` (sage: health, kitchen) | #12936A | #3FD49A | #6E9E6A | #8FCB9E | #23866A |
 | `training` | #CC3F68 | #FF6B92 | #C8452F | #F07FA0 | #C24766 |
@@ -44,10 +44,14 @@ A theme is mostly ground. Colour arrives only where something matters: the actio
 | Workout `ground` | #14111A | #000000 | #1C1828 | #0C0812 | #0E1C17 |
 | Workout `raised` | #221D2C | #141217 | #3B2D57 | #1C1426 | #18302A |
 | Workout `ink` | #F5F2EC | #F5F2EC | #F3ECE0 | #F1E7D6 | #EEF3EF |
-| Workout `signal` | #FF5B3A | #FF5B3A | #D9563F | #F06A4C | #E25A3E |
+| Workout `signal` | #FF5B3A | #FF5B3A | #D9563F | #F06A4C | #EE7056 |
 | Workout `rest` | #F0A500 | #FFC23D | #E8BD4C | #E8B54A | #E2A93A |
 
-- **Ink tiers** are the same in every theme: `ink` 100%, `inkSecondary` 60%, `inkTertiary` 38%, `hairline` 14%.
+- **Ink tiers** (revised by Research's contrast check, see the second addendum):
+  - `ink` is 100% everywhere.
+  - `inkSecondary` is 66% on light looks and 72% on dark looks and every workout.
+  - `inkTertiary` is 51% on light looks and 38% on dark looks, for 34pt and up or marks only.
+  - `hairline` is 14%.
 - **Class colours** map as today:
   - training uses `training`.
   - planning uses `now`.
@@ -192,3 +196,36 @@ On white, the glint is a gold band passing through the letters; on dark looks it
 - RestLiveActivity's private `Palette`, `RestMood` and `Color(hex:)` go.
 - `RestActivityAttributes.ContentState` carries `look`.
 - Rest sky: `Workout.tess` at 35% top-left, `context` at 45% top-right. Go washes: `rest` and `signal`. Keyline: `signal`.
+
+## Second addendum: Research's contrast check (#189, `docs/research/theme-checks.md`)
+This addendum wins over everything above. The tables above already carry the new hex values.
+
+**Hex and tier fixes:**
+1. `inkSecondary`: 66% on light looks (Plein and Celadon failed 4.5:1 at 60%), and 72% on dark looks and the workout (APCA Lc 58 instead of 43).
+2. `inkTertiary`: 51% on light looks, 38% on dark looks. It's text only at 34pt and up; below that, it's for marks. Placeholders use `inkSecondary`.
+3. `muted` is never text. It's for disabled marks only.
+4. `liveInk` is its own value on dark looks too: Obsidian #FF7A5C and Lacquer #FF8466. **UNDO and every vermilion word always use `liveInk`.** Fills and strokes keep `live`.
+5. Obsidian `tess`: #86B4FF, for words and the soul alike.
+6. Plein `tess`: #2A64A0, and Celadon `context`: #456680. These are margin, so the washes and the glaze pool can't drop them under 4.5:1.
+7. Celadon Workout `signal`: #EE7056. Plein keeps #D9563F, because it's the approved look; instead, no signal text ever sits on Plein's Workout `raised`.
+
+**Rules:**
+- **No halo on text under 34pt.** Halo is for strokes, dabs, the soul and numerals only.
+- **On dark looks, a cobalt word never sits next to vermilion.** Keep at least 24pt of ground, or a line of ink, between Tess's words and UNDO.
+- **Ink never sits on a signal fill.** A word on a filled signal patch is Workout `ground`.
+- **The signal keyline stays off the rest-sky wash.**
+
+**Live Activity and widgets:**
+- **Lock Screen:**
+  - `activityBackgroundTint` is Workout `ground`.
+  - `activitySystemActionForegroundColor` is Workout `ink`.
+  - Text is `ink` or `inkSecondary`, never `inkTertiary`, because Always-On dims it.
+- **Dynamic Island:** always the Obsidian workout set, whatever the look (Plein's signal is 4.4:1 on black), with `keylineTint` = `signal`.
+- **StandBy night mode:** signal, rest and Tess must differ by luminance or shape, not hue. The horizon is a line and the timer is a word.
+- **Removable backgrounds** (StandBy, clear or tinted Home Screen): use the night look's ink and pigments.
+- **Lock Screen accessory widgets:** opacity tiers only. Done reads as a filled dab and open as a ring, so meaning never rides on hue.
+- **Accented mode:** exactly one `.widgetAccentable()` element, the action stroke or the running dab. The soul glyph uses `.accented`.
+- **App icon:** three variants.
+  - Light: Porcelain white with the three soul dabs.
+  - Dark: #000 with the Obsidian dabs and no halo.
+  - Tinted: the dabs at clearly different greys (live 30%, tess 55%, now 85% lightness).
