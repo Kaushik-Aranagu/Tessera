@@ -111,7 +111,28 @@ public struct TessUsageLedger {
     }
 
     public func canSpend(_ estimateNano: Int64, now: Date = .now, calendar: Calendar = .current) -> Bool {
-        monthTotal(now: now, calendar: calendar) + estimateNano <= Self.capNano
+        monthTotal(now: now, calendar: calendar) + Self.pendingNano + estimateNano <= Self.capNano
+    }
+
+    /// Money promised to calls still in flight (a call's row is only written after its response).
+    private static var pendingNano: Int64 = 0
+
+    /// A hold on part of the month, taken before a call and released after it.
+    public struct Reservation: Sendable {
+        let nano: Int64
+    }
+
+    /// Checks and holds `estimateNano` in one step on the main actor, so two concurrent calls can't both fit under
+    /// the cap. Nil when it doesn't fit. Estimate from `max_tokens` (Haiku 5.5 may think).
+    public func reserve(_ estimateNano: Int64, now: Date = .now, calendar: Calendar = .current) -> Reservation? {
+        guard canSpend(estimateNano, now: now, calendar: calendar) else { return nil }
+        Self.pendingNano += estimateNano
+        return Reservation(nano: estimateNano)
+    }
+
+    /// Releases a hold once the call's own row (its real cost) is written.
+    public func settle(_ reservation: Reservation) {
+        Self.pendingNano = max(0, Self.pendingNano - reservation.nano)
     }
 
     /// Before a call: bytes / 4 + 10 tokens in, `maxTokens` out.
@@ -154,7 +175,7 @@ public struct TessUsageLedger {
 @MainActor
 public struct ClaudeKeyCheck {
     public enum Outcome: String, Sendable {
-        case works, badKey, notAllowed, offline, timeout, capReached, busy, accountPaused, notAKey, other
+        case works, badKey, notAllowed, offline, timeout, capReached, busy, accountPaused, notAKey, notSaved, other
     }
 
     public struct Result: Sendable {
@@ -182,12 +203,16 @@ public struct ClaudeKeyCheck {
     }
 
     public func test(pasted: String) async -> Result {
-        let key = pasted.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard key.hasPrefix("sk-ant-"), !key.contains(where: \.isWhitespace) else {
+        // A key pasted from a wrapped line can carry spaces or breaks inside it: a key never has any.
+        let key = String(pasted.filter { !$0.isWhitespace })
+        guard key.hasPrefix("sk-ant-"), key.count > 12 else {
             return Result(outcome: .notAKey, line: "That doesn't look like a Claude key. Paste it again?", last4: nil)
         }
         let last4 = String(key.suffix(4))
-        _ = keys.save(key)
+        // Only say "saved" when it was.
+        guard keys.save(key) else {
+            return Result(outcome: .notSaved, line: "I couldn't save that key. Try again?", last4: nil)
+        }
         let started = Date.now
         var outcome: Outcome
         var requestID: String?
@@ -202,9 +227,11 @@ public struct ClaudeKeyCheck {
             let readable = (try? JSONSerialization.jsonObject(with: body) as? [String: Any])?["input_tokens"] != nil
             if status == 404 || status == 405 || status == 200 && !readable {
                 let estimate = TessUsageLedger.estimate(text: "Hi", maxTokens: 1, model: Self.model)
-                guard ledger.canSpend(estimate, now: now(), calendar: calendar) else {
+                // Reserve before the await, so two calls can't both pass the cap (QA K11).
+                guard let reservation = ledger.reserve(estimate, now: now(), calendar: calendar) else {
                     return finish(.capReached, last4: last4, started: started, requestID: id, cost: 0, used: used)
                 }
+                defer { ledger.settle(reservation) }
                 (status, body, id) = try await send(key: key, path: "", body: [
                     "model": Self.model, "max_tokens": 1, "thinking": ["type": "disabled"],
                     "messages": [["role": "user", "content": "Hi"]],
@@ -229,9 +256,8 @@ public struct ClaudeKeyCheck {
         } catch {
             outcome = .other
         }
-        if outcome == .badKey {
-            keys.delete()
-        }
+        // A 401 keeps the key: a header or network mistake on our side must never destroy a good key. He removes
+        // it himself, or pastes again.
         if outcome == .works,
            ledger.monthTotal(now: now(), calendar: calendar) >= TessUsageLedger.capNano
         {
@@ -247,14 +273,18 @@ public struct ClaudeKeyCheck {
                       latency: Date.now.timeIntervalSince(started), outcome: outcome.rawValue, requestID: requestID,
                       at: now())
         return Result(outcome: outcome, line: Self.line(outcome, last4: last4, now: now(), calendar: calendar),
-                      last4: outcome == .badKey ? nil : last4)
+                      last4: last4)
     }
 
     /// One request; the key goes only into this request's header.
     private func send(key: String, path: String, body: [String: Any]) async throws -> (Int, Data, String?) {
-        var request = URLRequest(url: Self.base.appendingPathComponent(path), timeoutInterval: 10)
+        // An empty path is the messages endpoint itself (appending "" would add a trailing slash; QA K12).
+        var request = URLRequest(url: path.isEmpty ? Self.base : Self.base.appendingPathComponent(path),
+                                 timeoutInterval: 10)
         request.httpMethod = "POST"
-        request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        // x-api-key: checked against the live API (a fake key gets "invalid x-api-key" either way; no header gets
+        // "x-api-key header is required").
+        request.setValue(key, forHTTPHeaderField: "x-api-key")
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         request.setValue("application/json", forHTTPHeaderField: "content-type")
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
@@ -285,13 +315,15 @@ public struct ClaudeKeyCheck {
     static func line(_ outcome: Outcome, last4: String, now: Date, calendar: Calendar) -> String {
         switch outcome {
         case .works: return "Key saved. Ends in ...\(last4)."
-        case .badKey: return "That key didn't work. Paste it again?"
+        case .badKey: return "That key didn't work. Check it, or paste it again?"
         case .notAllowed: return "That key can't use Claude yet. Check it in the Console?"
-        case .offline: return "No connection. I kept the key and will check it later."
-        case .timeout: return "Claude didn't answer in time. I'll check again later."
-        case .busy: return "Claude is busy right now. I'll check again soon."
+        // No promise of a retry: nothing retries yet. The key is kept; Test again checks it.
+        case .offline: return "No connection. I kept the key; test it again later."
+        case .timeout: return "Claude didn't answer in time. I kept the key."
+        case .busy: return "Claude is busy right now. I kept the key."
         case .accountPaused: return "Key saved. Your Anthropic account is paused for now."
         case .notAKey: return "That doesn't look like a Claude key. Paste it again?"
+        case .notSaved: return "I couldn't save that key. Try again?"
         case .other: return "I couldn't check that key. Try again?"
         case .capReached:
             let next = calendar.dateInterval(of: .month, for: now)?.end ?? now

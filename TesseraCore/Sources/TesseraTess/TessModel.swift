@@ -60,7 +60,7 @@ public struct TessRouter {
 
     public func run(_ request: TessRequest) async -> TessCapture {
         // A Claude key pasted into the Ask bar never reaches a route (it would become a note, then every backup).
-        if request.text.contains("sk-ant-") {
+        if looksLikeClaudeKey(request.text) {
             return TessCapture(records: [], line: "That looks like a Claude key. Paste it in Settings.", source: .none)
         }
         for model in models where model.isAvailable(for: request.use) {
