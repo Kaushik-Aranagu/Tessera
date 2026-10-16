@@ -1,6 +1,6 @@
 # What's new (Design item 68)
 
-For: the next install message. Owner: Design. Clip: `recordings/whats-new.mp4` (51.5 s, 450 × 1076, 30 fps, no sound).
+For: the next install message. Owner: Design. Clip: `recordings/whats-new.mp4` (51.1 s, 450 × 1076, 30 fps, no sound).
 
 One clip, eleven things, in the order he reviewed them on Oct 15 at 11:58 PM: Home, tabs, routines by day, Training plan first, Field 18, Review week, the icon, Return, the looks recut, then what Tess knows and trip zones. Each thing gets a caption bar (Label 16/700 on the board grey, "3 OF 11" at the right) over the screen it changes, cut from the builders' own recordings on master where one exists, from Design's recordings where not, and drawn as a frame in the house grammar for the two with nothing to show (the icon, trip zones). It opens on a "What's new" card and ends inside the app's grammar, on a Day log frame.
 
@@ -12,7 +12,7 @@ One clip, eleven things, in the order he reviewed them on Oct 15 at 11:58 PM: Ho
 | 2 | Tabs | master `docs/recordings/39-tab-lens.mp4` | 0.8 to 6.8 | 6.0 s |
 | 3 | Routines by day | master `docs/recordings/42-routines-fixed-days.mp4` | 1.0 to 8.0 | 7.0 s |
 | 4 | Training, plan first | master `docs/recordings/44-live-workout-frame.mp4` (#381: the plan page with START, "Push Day A running. Bench Press first.", set 1, the stamp, "Set 1 logged. 82.5 × 7.", the rest starting) | 0 to 4.6 | 4.6 s |
-| 5 | Field 18, for your typing | master `docs/recordings/field-18.mp4` ("Call the bank at 4" to "Call the bank, tomorrow 4 pm.") | 4.0 to 9.5 | 5.5 s |
+| 5 | Field 18, for your typing | master `docs/recordings/field-18.mp4` ("Call the bank at 4" to "Call the bank, tomorrow 4 pm.") | 4.0 to 9.1 | 5.1 s |
 | 6 | Review, the week | master `docs/recordings/review-week.mp4` | 0 to 4.0 | 4.0 s |
 | 7 | The icon | card: `AppIcon` 1024 at 236 pt, "Today's colours, drawn by the system." | | 2.2 s |
 | 8 | Return | master `docs/recordings/return.mp4`: leaving with the receipt up, then back to "Hold me to talk." | 1.5 to 3.5, then 11.6 to 13.3 | 3.7 s |
