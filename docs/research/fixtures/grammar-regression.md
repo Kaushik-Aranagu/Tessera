@@ -4,7 +4,7 @@ For: Core engine (`TessGrammar`, `TessDates`), board item 33. Research lab. Date
 
 One deduplicated table of every grammar phrase row in today's fixtures, with one expected parse per phrase under today's Product calls and its status on current master. Core runs it as a single suite after each grammar PR.
 
-**Master read:** `origin/master` at `15fc404` (Merge PR #162). The grammar files (`TessGrammar.swift`, `TessGrammar+Kitchen.swift`) last changed in `82c51d9` (the #153 hotfix), so `15fc404` parses exactly as `db049cb`, the commit the post-hotfix sections traced. No Swift toolchain here: every status is a hand trace. Nothing was run.
+**Master read:** `origin/master` at `1d0833c` (Merge PR #175), rechecked 2026-10-16 for board item 49: no file under `TesseraCore/` changed between `15fc404` and `1d0833c`, so every status below carries over. First read at `15fc404` (Merge PR #162). The grammar files (`TessGrammar.swift`, `TessGrammar+Kitchen.swift`) last changed in `82c51d9` (the #153 hotfix), so `15fc404` parses exactly as `db049cb`, the commit the post-hotfix sections traced. No Swift toolchain here: every status is a hand trace. Nothing was run.
 
 ## Sources and coverage
 
@@ -18,9 +18,10 @@ One deduplicated table of every grammar phrase row in today's fixtures, with one
 | `reading.md`, `money.md`, `people.md`, `upkeep.md` | 40, 50, 40, 40 | 40, 47, 40, 40 | All traced on `15fc404`. Money rows 38 to 40 are receipt photos and never reach `TessGrammar.parse` |
 | `m5-parse-order.md` | (no rows of its own) | | Used for the agreed order, its guards and the expected values it changes (money 17 and 25, people 32 and 40, upkeep 34, 38 and 40) |
 | `upkeep-starters.md` | 50 phrases plus named near-misses | 88 | Main and alternative phrases, the plain-verb rows and the near-misses its tests name |
+| `reminders.md` | 40 | 40 | Group J, board item 49. Traced at `2473436`; grammar unchanged to `1d0833c`. R14 merges into A224 and R37 into D464, so 38 new rows |
 | `show-photos.md` | 25 photos | 0 | No row routes typed or OCR text through `TessGrammar.parse`: receipts go to `ReceiptTotal`, recipes to `RecipeParser`, notes to `CreateNote`. Guard for Core: OCR text must never be fed to the grammar (row 18's "call plumber thurs" would become a task) |
 
-**736 unique rows** after merging 49 duplicate source rows (same normalised phrase, same context).
+**774 unique rows** after merging 51 duplicate source rows (same normalised phrase, same context; a row written at another clock merges when it gives the same parse, as R14 does into A224).
 
 ## How to read the table
 
@@ -28,10 +29,12 @@ One deduplicated table of every grammar phrase row in today's fixtures, with one
 
 **Context.** The mode, then the store when it matters, then the clock when it is not the default.
 - Modes: **none** (nothing running), **live workout** (Bench Press in focus, last set 80 x 8), **shop run** (Groceries is the running process), **cook** (Weeknight dal running, step 2 of 3 "simmer", timers Rice ends 18:10 and Simmer ends 18:20). "Soften flared" adds an 8-minute Soften timer that ended at 17:59:30 and was not stopped; "last step" puts the cook on step 3.
-- Clock: **Thu 15 Oct 2026 18:10 America/Los_Angeles** unless the cell says 09:00, 23:30 or (all cook rows) 18:00, which the cook timer fixture needs. Rows written at 18:00 Europe/London give the same parse at 18:10, except spoken row 50 ("in 20 min"), now 18:30. Fri is 16 Oct, Sat 17, Sun 18, Mon 19, Tue 20, Wed 21, next Thu 22; for past days, Sat 10, Sun 11, Mon 12, Tue 13, Wed 14, Fri 9.
-- Stores (the part after the mode): none means the misfires store (recipes Spaghetti carbonara, Chilli con carne, Weeknight dal, Salmon rice bowl, Egg fried rice; open tasks Dentist Sat 17 10:00, Call mum, Clean the oven; no people). **tasks**: the reschedule store (adds Haircut today 17:00, Pay rent Fri 09:00, Bins out today 21:00, Call dad Fri 12:00, Call bank done). **people**: the shared M5 store with people Mum (aliases Mom, Amma), Sam, Ben, Rosemary, Ravi, Will, Rose, Mark, Bill; "task done" means "Call mum" is already done. **book**: Dune reading at p 120 of 612 plus the reading shelf; "two books" adds Project Hail Mary reading; "book in front" means Dune is the running process. **total awaited**: a shop ended 1 h ago with no total. **chores**: the 25 upkeep starters picked plus the upkeep.md chores, open tasks "Clean the oven" and "Do the ironing"; "chores paused" means paused until Sun 18.
+- Clock: **Thu 15 Oct 2026 18:10 America/Los_Angeles** unless the cell says 09:00, 23:30 or (all cook rows) 18:00, which the cook timer fixture needs. Group J (reminders) runs on Fri 16 Oct: its context cell gives the day and clock (`Fri 17:40`, `Fri 21:15`, `Sat 00:30`). Rows written at 18:00 Europe/London give the same parse at 18:10, except spoken row 50 ("in 20 min"), now 18:30. Fri is 16 Oct, Sat 17, Sun 18, Mon 19, Tue 20, Wed 21, next Thu 22; for past days, Sat 10, Sun 11, Mon 12, Tue 13, Wed 14, Fri 9.
+- Stores (the part after the mode): none means the misfires store (recipes Spaghetti carbonara, Chilli con carne, Weeknight dal, Salmon rice bowl, Egg fried rice; open tasks Dentist Sat 17 10:00, Call mum, Clean the oven; no people). **tasks**: the reschedule store (adds Haircut today 17:00, Pay rent Fri 09:00, Bins out today 21:00, Call dad Fri 12:00, Call bank done). **people**: the shared M5 store with people Mum (aliases Mom, Amma), Sam, Ben, Rosemary, Ravi, Will, Rose, Mark, Bill; "task done" means "Call mum" is already done. **book**: Dune reading at p 120 of 612 plus the reading shelf; "two books" adds Project Hail Mary reading; "book in front" means Dune is the running process. **total awaited**: a shop ended 1 h ago with no total. **chores**: the 25 upkeep starters picked plus the upkeep.md chores, open tasks "Clean the oven" and "Do the ironing"; "chores paused" means paused until Sun 18. **call mum alert**: adds "Call mum" Fri 16 18:00 with `alerts` true (at Fri 18:02 it has just rung).
 
-**Expected parse.** Action plus key fields: `task "Title" Day dd HH:mm` or `Later`, `note "body" Day dd`, `groceries [a, b]`, `set WxR`, `lift Exercise WxR`, `sets`, `reschedule Task Day dd HH:mm`, `timer "Label" minutes`, `cook Recipe`, `cookStep`, `ignoredInWorkout`, `nil` (the grammar returns nil and the phrase goes to the model). When the target needs a slice that is not on master, the cell names it in brackets and gives what master must do until then: `target [Money] · now: nil`. **Gates:** Money, People, Reading, Upkeep (with `did` narrowed in the question guard), Lists 8, 12b (cook pause and extend).
+**Expected parse.** Action plus key fields: `task "Title" Day dd HH:mm` or `Later`, `note "body" Day dd`, `groceries [a, b]`, `set WxR`, `lift Exercise WxR`, `sets`, `reschedule Task Day dd HH:mm`, `timer "Label" minutes`, `cook Recipe`, `no write, asks "line"` (the grammar claims the phrase, writes nothing and asks), `SetTaskAlerts`, `MoveTask`, `cookStep`, `ignoredInWorkout`, `nil` (the grammar returns nil and the phrase goes to the model). When the target needs a slice that is not on master, the cell names it in brackets and gives what master must do until then: `target [Money] · now: nil`. **Gates:** Money, People, Reading, Upkeep (with `did` narrowed in the question guard), Lists 8, 12b (cook pause and extend), N1 (the `alerts` field and dated tasks with no time, `notifications.md`).
+
+**Day with no time and `alerts` (6:20 and 6:30 PM PT calls).** `Sat 17, no time` is a dated task with no clock time: a task with no time is never saved as 09:00. `alerts T` or `alerts F` at the end of a task says whether it should ring: true for a reminder lead (remind me, nudge me, ping me, don't let me forget, set a reminder) or a clock time, and only when the task has an instant; "remind me" plus a day with no time is 09:00 with `alerts T`; a plain day with no time is `no time, alerts F`. Master has neither `alerts` nor a date-only task, so the status column judges the rest of the parse and the `alerts` part waits on N1. A row with no `alerts` mark is not checked for it. "(6:30 call)" marks the 55 existing rows these two calls changed, plus J752, the call's own example.
 
 **Status on master.** **pass**: master gives the expected parse, or, for a gated row, the "now" parse. **wrong write**: master writes a different object, date, time, title or line, or writes when it should not. **miss**: master returns nil (or writes only part of the parse) where the grammar should act now. A gated row that passes still owes its target when the gate opens. The root cause follows the status in brackets.
 
@@ -54,16 +57,21 @@ One deduplicated table of every grammar phrase row in today's fixtures, with one
 | THU | 18:58 UTC: "thu" said on a Thursday means today |
 | PD8 | People ship list Decision 8 (approved 19:22 UTC): a contact phrase decides; `buy` keeps its kitchen meaning otherwise |
 | MA, RD, PA, UA | The Money (19:07 UTC), Reading (18:40 UTC), People (19:22 UTC) and Upkeep (19:11 UTC) ship lists, approved with their defaults |
+| D558 | 5:58 PM grammar regression calls (used here only for J rows: call 2 "tonight" after 8 PM is tonight, call 3 "next fri" is next week's; not yet applied to rows A to I, see open questions) |
+| L607 | 6:07 PM late-night rules: "tomorrow" before 4 AM is the coming daytime and the reply names the weekday |
+| N620 | 6:20 PM notifications, first set (`notifications.md` N1): `alerts` for a reminder lead or a clock time; quiet hours 11 PM to 7 AM; a task with no time is never saved as 9:00 |
+| H622 | 6:22 PM Claude's first uses: grammar misses go to Haiku, so phrases that need judgement must reach the model |
+| R630 | 6:30 PM: "remind me" plus a day alerts at 9 AM; a plain "call mum sat" gets no time and no alert |
 | MB | Master behaviour the fixtures agree on; no call needed (guard rows) |
 | FX | The fixture's own expected value; no Product call covers it (see open questions where it matters) |
 
 ## Root cause codes
 
-RC1 to RC20 are `grammar-misfires.md`'s. New here: **RELT** relative dates (`in 20 min`, `in 2 hours`, `day after tomorrow`, `N days before X`), **ORD** ordinal dates (`the 20th`, `the twentieth`), **RPE** `@N` after a set, **ADD** `add N` in a workout and `add X` elsewhere (GC 40, 41), **DROP** a drop set with no reps, **NRM** a spoken phrase the normaliser should reshape, with a Core backstop, **UPK** an upkeep verb that falls through to the task rule.
+RC1 to RC20 are `grammar-misfires.md`'s. New here: **RELT** relative dates (`in 20 min`, `in 2 hours`, `day after tomorrow`, `N days before X`), **ORD** ordinal dates (`the 20th`, `the twentieth`), **RPE** `@N` after a set, **ADD** `add N` in a workout and `add X` elsewhere (GC 40, 41), **DROP** a drop set with no reps, **NRM** a spoken phrase the normaliser should reshape, with a Core backstop, **UPK** an upkeep verb that falls through to the task rule. From the reminder rows: **LEAD** reminder leads not read (`ping`, `nudge`, `don't let me forget`, `set a reminder for`, `about` and `later` after the lead, an empty title), **DAY4** the 4 AM day and the late "tonight" window, **DAYW** day words `this weekend`, `every <day>`, **PLACE** `when I get home`, `when I leave work` not stripped, **ALRT** alert edits (`cancel the 6pm reminder`, `again in 10`), **RBUY** `remind me to buy` food with no day or time kept as a task, **GUARD** a remind phrase that needs the model (`actually 7`, `quarter to 7`) claimed by the grammar.
 
 ## Conflicts resolved
 
-22 places where two sources disagree on the expected parse. The later Product call wins.
+24 places where two sources disagree on the expected parse. The later Product call wins.
 
 1. **`push the dentist to thu 3pm`** (C377). Reschedule A12 wanted Fri 16 15:00 (call 5 plus "thu is today"); misfires 112 wanted Thu 22. **T441** (4:41 PM, after both): a named weekday means that weekday. Thu 22 15:00. Same rule settles A112.
 2. **`dinner tomorrow at 7`** (A105). Reschedule open question 2 read 7 on another day as AM (Fri 07:00); misfires 105 wanted 19:00 from the meal word. **T441**: PM with a meal word. Fri 16 19:00.
@@ -87,6 +95,8 @@ RC1 to RC20 are `grammar-misfires.md`'s. New here: **RELT** relative dates (`in 
 20. **`spent 20 chf taxi`** (H604). money.md row 14 logged an unmarked 20. **M410**: four currencies; other codes go to the model.
 21. **`test the smoke alarm at 7`** (I736). Misfires RC1 and master list `alarm` as an AM cue (Fri 07:00). **U450**: `alarm` stops being an AM cue. Thu 15 19:00. `wake me at 7` (A101) keeps its AM cue.
 22. **`get new sheets`** (I711). upkeep-starters said RC3's blockers keep it on Groceries. **U450**: a task, matching the 4:30 rule. `buy bed sheets` (I710) follows B430 the same way.
+23. **A day with no time** (55 rows, marked "(6:30 call)"). The source rows and master save 09:00; `reminders.md` open question 1 and `notifications.md` N1 kept 09:00 with an alert; the 6:20 PM call says a task with no time is never saved as 9:00. **R630** (6:30 PM, last): "remind me" plus a day stays 09:00 with `alerts T` (A224, B326, B335, B336, B342, B343, B345, B346, and J752, J754, J755, J759, J766, J772); a plain day is dated with no time and `alerts F` (47 rows, now gated on N1, keeping master's 09:00 as the "now" parse until N1 lands).
+24. **`next fri`** (J753, reminders R18). `reminders.md` follows the 5:58 PM call 3 (next week's Friday, 23 Oct); A222 and C389 still say "not called". **D558** settles it for J753; A222 and C389 move to 23 Oct in the 5:58 pass, which this merge does not make.
 
 ## New findings from the spot-traces
 
@@ -98,6 +108,7 @@ Rows no post-hotfix section covered, traced on `15fc404`:
 - **`can you move the dentist to friday`** (C395) now goes to the question path (`can you`), so it is a miss instead of a wrong task.
 - **`test the smoke alarm at 7`** (I736) is Fri 07:00 because `alarm` is still in `amCues`.
 - **`timer 2:30` in a cook** (D450) is now the task "Timer", Fri 14:30 (was 02:30).
+- **Reminder rows** (J, traced at `2473436`, same grammar as `1d0833c`): 9 of 38 pass on the parse; none can pass on `alerts`, which master does not have (no `alerts`, no notifications, no "On Now then." anywhere in `TesseraCore`). `remind me tonight` at 21:15 rolls to Sat 20:00 (J751) and `remind me tomorrow at 9` at 00:30 lands on Sun (J756).
 - **`call mum at 7 tonight`** (C407 area, reschedule B16) and **`move haircut to tonight` at 23:30** (C405) now pass.
 
 ## The table
@@ -143,10 +154,10 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | A031 | `did laundry tue` | none | DoChore(Laundry) Tue 13 [Upkeep, did narrowed] · now: nil | grammar-misfires#31 | O410, UA | pass |
 | A032 | `did legs mon` | none | nil (did X never creates a chore) | grammar-misfires#32 | O410 | pass |
 | A033 | `need to call mum thu` | none | task "Need to call mum" Thu 15 19:00 | grammar-misfires#33 | THU | pass |
-| A034 | `feed the cat sat` | none | task "Feed the cat" Sat 17 09:00 | grammar-misfires#34 | MB | pass |
-| A035 | `weed the garden sun` | none | task "Weed the garden" Sun 18 09:00 | grammar-misfires#35 | MB | pass |
-| A036 | `water plants sun` | none | task "Water plants" Sun 18 09:00 | grammar-misfires#36, upkeep#20, upkeep-starters#20 | UA | pass |
-| A037 | `read 40 pages sat` | none | task "Read 40 pages" Sat 17 09:00 | grammar-misfires#37 | MB | pass |
+| A034 | `feed the cat sat` | none | task "Feed the cat" Sat 17, no time, alerts F (6:30 call) [N1] · now: task "Feed the cat" Sat 17 09:00 | grammar-misfires#34 | MB, N620, R630 | pass |
+| A035 | `weed the garden sun` | none | task "Weed the garden" Sun 18, no time, alerts F (6:30 call) [N1] · now: task "Weed the garden" Sun 18 09:00 | grammar-misfires#35 | MB, N620, R630 | pass |
+| A036 | `water plants sun` | none | task "Water plants" Sun 18, no time, alerts F (6:30 call) [N1] · now: task "Water plants" Sun 18 09:00 | grammar-misfires#36, upkeep#20, upkeep-starters#20 | UA, N620, R630 | pass |
+| A037 | `read 40 pages sat` | none | task "Read 40 pages" Sat 17, no time, alerts F (6:30 call) [N1] · now: task "Read 40 pages" Sat 17 09:00 | grammar-misfires#37 | MB, N620, R630 | pass |
 | A038 | `watered plants sat` | live workout | as the idle row: note "Watered plants" Sat 10 12:00 (DoChore once Upkeep lands) | grammar-misfires#38 | C2 | pass |
 | A039 | `watered plants sat` | cook, 18:00 | as the idle row: note "Watered plants" Sat 10 12:00 (DoChore once Upkeep lands) | grammar-misfires#39 | C2 | pass |
 | A040 | `called mum thu` | shop run | note "Called mum" Thu 15 12:00 (SetTaskDone once People lands) | grammar-misfires#40 | C2 | pass |
@@ -173,7 +184,7 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | A061 | `get mum from the station at 8` | none | task "Get mum from the station" Thu 15 20:00 | grammar-misfires#61 | C1 | pass |
 | A062 | `get tickets for the gig` | none | nil | grammar-misfires#62 | MB | pass |
 | A063 | `get the car washed` | none | nil | grammar-misfires#63 | MB | pass |
-| A064 | `get mum a card sat` | none | task "Get mum a card" Sat 17 09:00 | grammar-misfires#64 | MB | pass |
+| A064 | `get mum a card sat` | none | task "Get mum a card" Sat 17, no time, alerts F (6:30 call) [N1] · now: task "Get mum a card" Sat 17 09:00 | grammar-misfires#64 | MB, N620, R630 | pass |
 | A065 | `get coffee` | none | groceries [coffee] | grammar-misfires#65 | B430 | pass |
 | A066 | `get bin bags` | none | groceries [bin bags] | grammar-misfires#66 | B430 | pass |
 | A067 | `buy milk` | none | groceries [milk] | grammar-misfires#67, grammar-misfires#239 | B430 | pass |
@@ -181,7 +192,7 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | A069 | `buy batteries` | none | groceries [batteries] | grammar-misfires#69 | B430 | pass |
 | A070 | `buy flowers for mum` | none | groceries [flowers for mum] (unclear object stays Groceries) | grammar-misfires#70 | B430 | pass |
 | A071 | `buy sun cream` | none | groceries [sun cream] | grammar-misfires#71, grammar-misfires#256 | B430 | pass |
-| A072 | `buy sun cream sat` | none | task "Buy sun cream" Sat 17 09:00 | grammar-misfires#72 | FX | wrong write (RC10) |
+| A072 | `buy sun cream sat` | none | task "Buy sun cream" Sat 17, no time, alerts F (6:30 call) [N1] · now: task "Buy sun cream" Sat 17 09:00 | grammar-misfires#72 | FX, N620, R630 | wrong write (RC10) |
 | A073 | `buy milk sat morning` | none | task "Buy milk" Sat 17 09:00 | grammar-misfires#73 | T441 | wrong write (RC11) |
 | A074 | `7` | none | nil | grammar-misfires#74 | MB | pass |
 | A075 | `at 7` | none | nil | grammar-misfires#75 | MB | pass |
@@ -251,9 +262,9 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | A139 | `Candy, Honey and Basil are coming` | none | nil | grammar-misfires#139 | FX | wrong write (RC8) |
 | A140 | `Olive, Basil and Ginger` | none | groceries [Olive, Basil, Ginger] | grammar-misfires#140 | MB | pass |
 | A141 | `text Ginger, Basil and Honey` | none | nil | grammar-misfires#141 | MB | pass |
-| A142 | `Pepper sat` | none | task "Pepper" Sat 17 09:00 | grammar-misfires#142 | MB | pass |
-| A143 | `Ginger's birthday sat` | none | task "Ginger's birthday" Sat 17 09:00 | grammar-misfires#143 | MB | pass |
-| A144 | `dinner with Ginger fri` | none | task "Dinner with Ginger" Fri 16 09:00 | grammar-misfires#144 | MB | pass |
+| A142 | `Pepper sat` | none | task "Pepper" Sat 17, no time, alerts F (6:30 call) [N1] · now: task "Pepper" Sat 17 09:00 | grammar-misfires#142 | MB, N620, R630 | pass |
+| A143 | `Ginger's birthday sat` | none | task "Ginger's birthday" Sat 17, no time, alerts F (6:30 call) [N1] · now: task "Ginger's birthday" Sat 17 09:00 | grammar-misfires#143 | MB, N620, R630 | pass |
+| A144 | `dinner with Ginger fri` | none | task "Dinner with Ginger" Fri 16, no time, alerts F (6:30 call) [N1] · now: task "Dinner with Ginger" Fri 16 09:00 | grammar-misfires#144 | MB, N620, R630 | pass |
 | A145 | `meet Rosemary at 7` | none | task "Meet Rosemary" Thu 15 19:00 | grammar-misfires#145 | C1 | pass |
 | A146 | `Basil at 7` | none | task "Basil" Thu 15 19:00 | grammar-misfires#146 | C1 | pass |
 | A147 | `Basil 7pm` | none | task "Basil" Thu 15 19:00 | grammar-misfires#147 | MB | pass |
@@ -266,7 +277,7 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | A154 | `Basil` | cook, 18:00 | nil | grammar-misfires#154 | MB | pass |
 | A155 | `Pepper` | shop run | groceries [pepper] | grammar-misfires#155 | MB | pass |
 | A156 | `call Pepper` | none | nil | grammar-misfires#156 | MB | pass |
-| A157 | `lunch with Basil, sat` | none | task "Lunch with Basil" Sat 17 09:00 | grammar-misfires#157 | MB | pass |
+| A157 | `lunch with Basil, sat` | none | task "Lunch with Basil" Sat 17, no time, alerts F (6:30 call) [N1] · now: task "Lunch with Basil" Sat 17 09:00 | grammar-misfires#157 | MB, N620, R630 | pass |
 | A158 | `bench then call mum` | none | nil | grammar-misfires#158 | MB | pass |
 | A159 | `bench then call mum` | live workout | nil | grammar-misfires#159 | MB | pass |
 | A160 | `bench 80x8 then call mum` | none | lift Bench Press 80x8 + nil for the rest (RC6 split) | grammar-misfires#160 | FX | miss (RC6) |
@@ -280,7 +291,7 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | A168 | `80x8 then call mum` | live workout | set 80x8 + nil for the rest | grammar-misfires#168 | FX | miss (RC6) |
 | A169 | `8 and call mum at 7` | live workout | set 80x8 + task "Call mum" Thu 15 19:00 | grammar-misfires#169 | FX | wrong write (RC6) |
 | A170 | `same, call mum thu` | live workout | set 80x8 (same) + task "Call mum" Thu 15 19:00 | grammar-misfires#170 | FX | wrong write (RC6) |
-| A171 | `bench 80x8 dentist fri` | live workout | set 80x8 + task "Dentist" Fri 16 09:00 | grammar-misfires#171 | FX | wrong write (RC6) |
+| A171 | `bench 80x8 dentist fri` | live workout | set 80x8 + task "Dentist" Fri 16, no time, alerts F (6:30 call) [N1] · now: set 80x8 + task "Dentist" Fri 16 09:00 | grammar-misfires#171 | FX, N620, R630 | wrong write (RC6) |
 | A172 | `call mum then bench` | live workout | nil | grammar-misfires#172 | MB | pass |
 | A173 | `squat 100 5, deadlift 140 3` | none | sets [Back Squat 100x5, Deadlift 140x3] | grammar-misfires#173 | MB | pass |
 | A174 | `80x8, 80x8, 80x6` | live workout | sets, 3 into Bench Press | grammar-misfires#174 | MB | pass |
@@ -294,7 +305,7 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | A182 | `curls 15x12` | none | lift Dumbbell Curl 15x12 (or nil) | grammar-misfires#182 | FX | wrong write (RC12) |
 | A183 | `bench 80x8 today` | none | lift Bench Press 80x8 | grammar-misfires#183 | FX | wrong write (RC12) |
 | A184 | `bench 80x8 at 7` | none | nil (ask: set now or plan at 19:00) | grammar-misfires#184 | FX | wrong write (RC12) |
-| A185 | `bench 3x5 at 80 tomorrow` | none | task "Bench 3x5 at 80" Fri 16 09:00 | grammar-misfires#185 | MB | pass |
+| A185 | `bench 3x5 at 80 tomorrow` | none | task "Bench 3x5 at 80" Fri 16, no time, alerts F (6:30 call) [N1] · now: task "Bench 3x5 at 80" Fri 16 09:00 | grammar-misfires#185 | MB, N620, R630 | pass |
 | A186 | `next` | cook, 18:00 | cookStep next (GoToCookStep, step 3) | grammar-misfires#186, cook-timer-phrases#29 | MB | pass |
 | A187 | `done` | cook, 18:00 | cookStep finish (FinishCooking; nothing flared) | grammar-misfires#187 | MB | pass |
 | A188 | `timer 10` | cook, 18:00 | timer "Timer" 10, linked to the cook | grammar-misfires#188 | MB | pass |
@@ -316,7 +327,7 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | A204 | `sat nav charger` | shop run | groceries [sat nav charger] | grammar-misfires#204 | MB | pass |
 | A205 | `coffee with ravi at 7` | shop run | task "Coffee with ravi" Thu 15 19:00 | grammar-misfires#205 | C1 | pass |
 | A206 | `what else` | shop run | nil (question) | grammar-misfires#206 | MB | pass |
-| A207 | `mum's birthday sat` | shop run | task "Mum's birthday" Sat 17 09:00 | grammar-misfires#207 | MB | pass |
+| A207 | `mum's birthday sat` | shop run | task "Mum's birthday" Sat 17, no time, alerts F (6:30 call) [N1] · now: task "Mum's birthday" Sat 17 09:00 | grammar-misfires#207 | MB, N620, R630 | pass |
 | A208 | `bench 80x8` | shop run | lift Bench Press 80x8 | grammar-misfires#208 | MB | pass |
 | A209 | `is the gym open sat` | none | nil (question) | grammar-misfires#209 | C4 | pass |
 | A210 | `is the gym open sat?` | none | nil (question) | grammar-misfires#210 | C4 | pass |
@@ -327,13 +338,13 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | A215 | `should i train today` | none | nil (question) | grammar-misfires#215 | C4 | pass |
 | A216 | `any plans sat` | none | nil (question) | grammar-misfires#216 | C4 | wrong write (RC5) |
 | A217 | `what's on thu` | none | nil (question) | grammar-misfires#217 | MB | pass |
-| A218 | `show ravi the flat sat` | none | task "Show ravi the flat" Sat 17 09:00 | grammar-misfires#218 | MB | pass |
-| A219 | `dentist on friday` | none | task "Dentist" Fri 16 09:00 | grammar-misfires#219 | MB | pass |
-| A220 | `report by fri` | none | task "Report" Fri 16 09:00 | grammar-misfires#220 | MB | pass |
-| A221 | `gym this sat` | none | task "Gym" Sat 17 09:00 | grammar-misfires#221 | MB | pass |
+| A218 | `show ravi the flat sat` | none | task "Show ravi the flat" Sat 17, no time, alerts F (6:30 call) [N1] · now: task "Show ravi the flat" Sat 17 09:00 | grammar-misfires#218 | MB, N620, R630 | pass |
+| A219 | `dentist on friday` | none | task "Dentist" Fri 16, no time, alerts F (6:30 call) [N1] · now: task "Dentist" Fri 16 09:00 | grammar-misfires#219 | MB, N620, R630 | pass |
+| A220 | `report by fri` | none | task "Report" Fri 16, no time, alerts F (6:30 call) [N1] · now: task "Report" Fri 16 09:00 | grammar-misfires#220 | MB, N620, R630 | pass |
+| A221 | `gym this sat` | none | task "Gym" Sat 17, no time, alerts F (6:30 call) [N1] · now: task "Gym" Sat 17 09:00 | grammar-misfires#221 | MB, N620, R630 | pass |
 | A222 | `dentist next fri` | none | task "Dentist" Fri (16 or 23 Oct, not called) | grammar-misfires#222 | FX | wrong write (RC7) |
-| A223 | `packing list for sat` | none | task "Packing list" Sat 17 09:00 | grammar-misfires#223 | MB | pass |
-| A224 | `remind me tomorrow to call mum` | none | task "Call mum" Fri 16 09:00 | grammar-misfires#224 | MB | pass |
+| A223 | `packing list for sat` | none | task "Packing list" Sat 17, no time, alerts F (6:30 call) [N1] · now: task "Packing list" Sat 17 09:00 | grammar-misfires#223 | MB, N620, R630 | pass |
+| A224 | `remind me tomorrow to call mum` | none | task "Call mum" Fri 16 09:00, alerts T (6:30 call) | grammar-misfires#224, reminders#R14 | MB, R630 | pass |
 | A225 | `remind me to call mum` | none | task "Call mum" Later | grammar-misfires#225 | MB | pass |
 | A226 | `todo: renew passport` | none | task "Renew passport" Later | grammar-misfires#226 | MB | pass |
 | A227 | `call mum, thu` | none | task "Call mum" Thu 15 19:00 | grammar-misfires#227 | MB | pass |
@@ -341,7 +352,7 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | A229 | `sun cream` | none | nil (or groceries [sun cream]) | grammar-misfires#229 | FX | wrong write (RC10) |
 | A230 | `add sun cream to packing` | none | nil (add to Packing, model) | grammar-misfires#230 | FX | wrong write (RC10) |
 | A231 | `list: packing` | none | list "Packing" | grammar-misfires#231 | MB | pass |
-| A232 | `list the car on ebay sat` | none | task "List the car on ebay" Sat 17 09:00 | grammar-misfires#232 | MB | pass |
+| A232 | `list the car on ebay sat` | none | task "List the car on ebay" Sat 17, no time, alerts F (6:30 call) [N1] · now: task "List the car on ebay" Sat 17 09:00 | grammar-misfires#232 | MB, N620, R630 | pass |
 | A233 | `note: call mum sat` | none | note "call mum sat" | grammar-misfires#233 | MB | pass |
 | A234 | `note to self, eighty felt easy` | none | note "eighty felt easy" | grammar-misfires#234 | FX | wrong write (RC16) |
 | A235 | `carbonara thu` | none | cook Spaghetti carbonara Thu 15 19:00 | grammar-misfires#235 | THU | pass |
@@ -365,7 +376,7 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | A253 | `get bananas x6` | none | groceries [bananas x6] | grammar-misfires#254 | MB | pass |
 | A254 | `buy 3 x 400 g tins chickpeas` | none | groceries [3 x 400 g tins chickpeas] | grammar-misfires#255 | MB | pass |
 | A255 | `buy sat nav charger` | none | groceries [sat nav charger] | grammar-misfires#257 | B430 | pass |
-| A256 | `buy cake candles wed` | none | task "Buy cake candles" Wed 21 09:00 | grammar-misfires#258 | MB | pass |
+| A256 | `buy cake candles wed` | none | task "Buy cake candles" Wed 21, no time, alerts F (6:30 call) [N1] · now: task "Buy cake candles" Wed 21 09:00 | grammar-misfires#258 | MB, N620, R630 | pass |
 | A257 | `get tonic water` | none | groceries [tonic water] | grammar-misfires#259 | MB | pass |
 | A258 | `buy tomorrow's bread` | none | groceries [bread] | grammar-misfires#260 | FX | wrong write (RC19) |
 | A259 | `timer pasta 10` | none | timer "Pasta" 10 (no cook to link) | grammar-misfires#261, cook-timer-phrases#39 | MB | pass |
@@ -386,13 +397,13 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | A274 | `buy 1 (400 g) tin coconut milk` | none | groceries [1 (400 g) tin coconut milk] | grammar-misfires#276 | MB | pass |
 | A275 | `buy milk` | live workout | groceries [milk] | grammar-misfires#277 | MB | pass |
 | A276 | `3 lemons` | live workout | groceries [3 lemons], never a set | grammar-misfires#278 | FX | miss (RC18) |
-| A277 | `buy present for mum fri` | none | task "Buy present for mum" Fri 16 09:00 | grammar-misfires#280 | MB | pass |
+| A277 | `buy present for mum fri` | none | task "Buy present for mum" Fri 16, no time, alerts F (6:30 call) [N1] · now: task "Buy present for mum" Fri 16 09:00 | grammar-misfires#280 | MB, N620, R630 | pass |
 | A278 | `get haircut` | none | task "Get haircut" Later | grammar-misfires#281 | C3 | pass |
 | A279 | `get car washed` | none | task "Get car washed" Later | grammar-misfires#282 | C3 | pass |
 | A280 | `buy train tickets` | none | task "Buy train tickets" Later | grammar-misfires#283 | B430 | pass |
 | A281 | `get flu jab` | none | task "Get flu jab" Later | grammar-misfires#284 | C3 | pass |
-| A282 | `buy flowers for Anu saturday` | none | task "Buy flowers for Anu" Sat 17 09:00 | grammar-misfires#285 | MB | pass |
-| A283 | `get milk on the way home tomorrow` | none | task "Get milk on the way home" Fri 16 09:00 | grammar-misfires#286 | MB | pass |
+| A282 | `buy flowers for Anu saturday` | none | task "Buy flowers for Anu" Sat 17, no time, alerts F (6:30 call) [N1] · now: task "Buy flowers for Anu" Sat 17 09:00 | grammar-misfires#285 | MB, N620, R630 | pass |
+| A283 | `get milk on the way home tomorrow` | none | task "Get milk on the way home" Fri 16, no time, alerts F (6:30 call) [N1] · now: task "Get milk on the way home" Fri 16 09:00 | grammar-misfires#286 | MB, N620, R630 | pass |
 | A284 | `gifts: mug for anu` | none | list add Gifts [mug for anu] [Lists 8] · now: nil | grammar-misfires#287 | FX | pass |
 | A285 | `packing: charger` | none | list add Packing [charger] [Lists 8] · now: nil | grammar-misfires#288 | FX | pass |
 | A286 | `errands: return parcel thu` | none | list add Errands [return parcel] dated Thu 15 [Lists 8] · now: nil | grammar-misfires#289 | FX | wrong write (RC20) |
@@ -402,7 +413,7 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | A290 | `get the bins out` | none | nil | grammar-misfires#293 | MB | pass |
 | A291 | `buy new trainers` | none | task "Buy new trainers" Later | grammar-misfires#294 | B430 | pass |
 | A292 | `get a new phone case` | none | task "Get a new phone case" Later | grammar-misfires#295 | C3 | pass |
-| A293 | `buy a birthday cake for dad sun` | none | task "Buy a birthday cake for dad" Sun 18 09:00 | grammar-misfires#296 | MB | pass |
+| A293 | `buy a birthday cake for dad sun` | none | task "Buy a birthday cake for dad" Sun 18, no time, alerts F (6:30 call) [N1] · now: task "Buy a birthday cake for dad" Sun 18 09:00 | grammar-misfires#296 | MB, N620, R630 | pass |
 | A294 | `note buy milk` | none | note "buy milk" | grammar-misfires#297 | MB | pass |
 | A295 | `remind me to buy milk at 6` | none | task "Buy milk" Fri 16 18:00 | grammar-misfires#298 | C1, C5 | pass |
 
@@ -438,9 +449,9 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | B321 | `80 x 7` | live workout | set 80x7 | spoken-normaliser#29, spoken-normaliser#32 | MB | pass |
 | B322 | `Come on come on 80 x 7` | live workout | nil | spoken-normaliser#30 | MB | pass |
 | B323 | `(empty string)` | live workout | nil (no capture) | spoken-normaliser#33 | MB | pass |
-| B324 | `Test the smoke alarm Saturday` | none | task "Test the smoke alarm" Sat 17 09:00 | spoken-normaliser#35 | MB | pass |
+| B324 | `Test the smoke alarm Saturday` | none | task "Test the smoke alarm" Sat 17, no time, alerts F (6:30 call) [N1] · now: task "Test the smoke alarm" Sat 17 09:00 | spoken-normaliser#35 | MB, N620, R630 | pass |
 | B325 | `I'd like a reminder for Friday to book the MOT` | none | nil (model makes "Book the MOT" Fri) | spoken-normaliser#36 | FX | wrong write (NRM) |
-| B326 | `Remind me to call Ravi tomorrow` | none | task "Call Ravi" Fri 16 09:00 | spoken-normaliser#37 | MB | pass |
+| B326 | `Remind me to call Ravi tomorrow` | none | task "Call Ravi" Fri 16 09:00, alerts T (6:30 call) | spoken-normaliser#37 | MB, R630 | pass |
 | B327 | `Buy 2 lemons and some milk` | none | groceries [2 lemons, some milk] | spoken-normaliser#38 | MB | pass |
 | B328 | `2 lemons and some milk` | none | nil | spoken-normaliser#39 | MB | pass |
 | B329 | `Get 12 eggs` | none | groceries [12 eggs] | spoken-normaliser#40 | MB | pass |
@@ -449,18 +460,18 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | B332 | `By 5pm send the invoice` | none | task "Send the invoice" Fri 16 17:00 | spoken-normaliser#43 | C5 | pass |
 | B333 | `Buy 1 kg atta and 0.5 kg dahi` | none | groceries [1 kg atta, 0.5 kg dahi] | spoken-normaliser#44 | MB | pass |
 | B334 | `Add 2 tins of chickpeas` | cook, 18:00 | groceries [2 tins of chickpeas] | spoken-normaliser#46 | FX | miss (ADD) |
-| B335 | `Remind me to call the bank Friday` | none | task "Call the bank" Fri 16 09:00 | spoken-normaliser#47 | MB | pass |
-| B336 | `Remind me to renew the passport Tuesday` | none | task "Renew the passport" Tue 20 09:00 | spoken-normaliser#48 | MB | pass |
+| B335 | `Remind me to call the bank Friday` | none | task "Call the bank" Fri 16 09:00, alerts T (6:30 call) | spoken-normaliser#47 | MB, R630 | pass |
+| B336 | `Remind me to renew the passport Tuesday` | none | task "Renew the passport" Tue 20 09:00, alerts T (6:30 call) | spoken-normaliser#48 | MB, R630 | pass |
 | B337 | `Call the dentist tomorrow 9am` | none | task "Call the dentist" Fri 16 09:00 | spoken-normaliser#49 | MB | pass |
 | B338 | `Remind me to take the chicken out in 20 min` | none | task "Take the chicken out" Thu 15 18:30 | spoken-normaliser#50 | FX | wrong write (RELT) |
 | B339 | `Pay the window cleaner Thursday` | none | task "Pay the window cleaner" Thu 15 19:00 | spoken-normaliser#51 | THU | pass |
 | B340 | `Remind me to put the bins out Thursday at 8` | none | task "Put the bins out" Thu 15 20:00 | spoken-normaliser#52 | C1, THU | pass |
 | B341 | `Dentist on the 20th at 3:30` | none | task "Dentist" Tue 20 15:30 | spoken-normaliser#53 | C1 | wrong write (ORD) |
-| B342 | `Remind me to send the form tomorrow` | none | task "Send the form" Fri 16 09:00 | spoken-normaliser#55 | MB | pass |
-| B343 | `Remind me day after tomorrow to pay rent` | none | task "Pay rent" Sat 17 09:00 | spoken-normaliser#56 | FX | wrong write (RELT) |
+| B342 | `Remind me to send the form tomorrow` | none | task "Send the form" Fri 16 09:00, alerts T (6:30 call) | spoken-normaliser#55 | MB, R630 | pass |
+| B343 | `Remind me day after tomorrow to pay rent` | none | task "Pay rent" Sat 17 09:00, alerts T (6:30 call) | spoken-normaliser#56 | FX, R630 | wrong write (RELT) |
 | B344 | `Prepone the dentist to Wednesday` | none | nil (model reschedules; or reschedule Dentist Wed 21 10:00 if `prepone` joins the shape) | spoken-normaliser#57 | FX | wrong write (RC13) |
-| B345 | `Remind me to clean the car Saturday` | none | task "Clean the car" Sat 17 09:00 | spoken-normaliser#58 | MB | pass |
-| B346 | `Remind me to collect the courier tomorrow` | none | task "Collect the courier" Fri 16 09:00 | spoken-normaliser#59 | MB | pass |
+| B345 | `Remind me to clean the car Saturday` | none | task "Clean the car" Sat 17 09:00, alerts T (6:30 call) | spoken-normaliser#58 | MB, R630 | pass |
+| B346 | `Remind me to collect the courier tomorrow` | none | task "Collect the courier" Fri 16 09:00, alerts T (6:30 call) | spoken-normaliser#59 | MB, R630 | pass |
 | B347 | `Remind me 2 days before the MOT` | none | nil | spoken-normaliser#60 | FX | wrong write (RELT) |
 | B348 | `Spent 12.50 at Tesco` | none | spend 12.50, category tesco [Money] · now: nil | spoken-normaliser#61, money#19 | MA | pass |
 | B349 | `Spent 1250 at Tesco` | none | ambiguous ghost "12.50 or 1250?" (spoken digits) [Money] · now: nil | spoken-normaliser#62 | MA | pass |
@@ -479,7 +490,7 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | B362 | `Remind me to eat five a day` | none | task "Eat five a day" Later | spoken-normaliser#75 | MB | pass |
 | B363 | `Meeting in Room 101 at 3` | none | task "Meeting in Room 101" Fri 16 15:00 | spoken-normaliser#76 | C1, C5 | pass |
 | B364 | `Book a table for 2 at 7` | none | task "Book a table for 2" Thu 15 19:00 | spoken-normaliser#77 | C1 | pass |
-| B365 | `Work nine to five on Saturday` | none | task "Work nine to five" Sat 17 09:00 | spoken-normaliser#78 | MB | pass |
+| B365 | `Work nine to five on Saturday` | none | task "Work nine to five" Sat 17, no time, alerts F (6:30 call) [N1] · now: task "Work nine to five" Sat 17 09:00 | spoken-normaliser#78 | MB, N620, R630 | pass |
 | B366 | `Two-three more sets` | live workout | nil | spoken-normaliser#79 | MB | pass |
 | B367 | `Remind me to water the plants 2-3 times a week` | none | task "Water the plants 2-3 times a week" Later | spoken-normaliser#80 | MB | pass |
 
@@ -503,7 +514,7 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | C381 | `move pay rent to 7pm` | none, tasks | reschedule Pay rent Fri 16 19:00 | reschedule-time-rows#A16 | FX | pass |
 | C382 | `move pay rent to 5pm` | none, tasks | reschedule Pay rent Fri 16 17:00 | reschedule-time-rows#A17 | FX | pass |
 | C383 | `move bins out to 9:30` | none, tasks | reschedule Bins out Thu 15 21:30 | reschedule-time-rows#A18 | C1 | pass |
-| C384 | `move call mum to fri` | none, tasks | reschedule Call mum Fri 16 09:00 | reschedule-time-rows#A19 | MB | pass |
+| C384 | `move call mum to fri` | none, tasks | reschedule Call mum Fri 16, no time, alerts F (6:30 call) [N1] · now: reschedule Call mum Fri 16 09:00 | reschedule-time-rows#A19 | MB, N620, R630 | pass |
 | C385 | `move call to fri` | none, tasks | nil (two open matches) | reschedule-time-rows#A21 | MB | pass |
 | C386 | `move call bank to fri` | none, tasks | nil (task is done) | reschedule-time-rows#A22 | MB | pass |
 | C387 | `move call mum to 7` | none, tasks | reschedule Call mum Thu 15 19:00 | reschedule-time-rows#A20 | C1 | miss (RC13) |
@@ -588,7 +599,7 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | D461 | `how long left` | cook, 18:00 | read-only timer answer, no write (runs ahead of the question guard) | cook-timer-phrases#23 | K450 | miss (RC15) |
 | D462 | `is the rice done` | cook, 18:00 | read-only timer answer, no write | cook-timer-phrases#24 | K450, C4 | miss (RC15) |
 | D463 | `pause` | cook, 18:00 | pause Rice [12b] · now: no write, line "Pause isn't here yet." (grammar claims it) | cook-timer-phrases#25 | K450 | miss (RC15) |
-| D464 | `remind me in 20 minutes to take the chicken out` | cook, 18:00 | timer "Take the chicken out" 20, linked | cook-timer-phrases#26 | FX | wrong write (RC15) |
+| D464 | `remind me in 20 minutes to take the chicken out` | cook, 18:00 | timer "Take the chicken out" 20, linked (a cook timer: N3 notification, no task alert) | cook-timer-phrases#26, reminders#R37 | FX | wrong write (RC15) |
 | D465 | `done` | cook, Soften flared, 18:00 | StopKitchenTimer(Soften); the cook keeps going | cook-timer-phrases#27 | FX | wrong write (RC15) |
 | D466 | `finished cooking` | cook, last step, 18:00 | cookStep finish (FinishCooking) | cook-timer-phrases#28 | K450 | miss (RC15) |
 | D467 | `step 3` | cook, 18:00 | GoToCookStep(2), never a timer | cook-timer-phrases#30 | K450 | miss (RC15) |
@@ -609,9 +620,9 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | E477 | `coffee with will thu` | none, people | task "Coffee with will" Thu 15 19:00, about Will [People] · now: same task, no link | people-names#1 | PA, THU | pass |
 | E478 | `call bill` | none, people | task "Call bill" Later, about Bill [People] · now: nil | people-names#2 | PA | pass |
 | E479 | `call will thu` | none, people | task "Call will" Thu 15 19:00, about Will [People] · now: same task, no link | people-names#3 | PA, THU | pass |
-| E480 | `lunch with rose and mark sat` | none, people | task "Lunch with rose and mark" Sat 17 09:00, about Rose and Mark [People] · now: same task, no link | people-names#4 | PA, O410 | pass |
+| E480 | `lunch with rose and mark sat` | none, people | task "Lunch with rose and mark" Sat 17, no time, alerts F (6:30 call), about Rose and Mark [People, N1] · now: task "Lunch with rose and mark" Sat 17 09:00, no link | people-names#4 | PA, O410, N620, R630 | pass |
 | E481 | `drinks with sky at 9` | none, people | task "Drinks with sky" Thu 15 21:00, no link | people-names#5 | C1 | pass |
-| E482 | `dinner with basil fri` | none, people | task "Dinner with basil" Fri 16 09:00, never groceries | people-names#6 | PD8 | pass |
+| E482 | `dinner with basil fri` | none, people | task "Dinner with basil" Fri 16, no time, alerts F (6:30 call), never groceries [N1] · now: task "Dinner with basil" Fri 16 09:00, never groceries | people-names#6 | PD8, N620, R630 | pass |
 | E483 | `saw rose yesterday` | none, people | LogTalk(Rose) Wed 14 [People] · now: note "Saw rose" Wed 14 12:00 | people-names#7 | C2 | pass |
 | E484 | `called mark sat` | none, people | LogTalk(Mark) Sat 10 [People] · now: note "Called mark" Sat 10 12:00 | people-names#8 | C2 | pass |
 | E485 | `texted will` | none, people | LogTalk(Will) now [People] · now: nil | people-names#9 | PA | pass |
@@ -621,7 +632,7 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | E489 | `get honey` | none, people | groceries [honey] | people-names#13 | MB | pass |
 | E490 | `rose's birthday 12 may` | none, people | SetBirthday(Rose, 12 May) + task "Rose's birthday" Wed 12 May 2027 [People] · now: nil | people-names#14 | PA | pass |
 | E491 | `june's birthday june 3` | none, people | AddPerson(June) + SetBirthday(3 Jun) + task Thu 3 Jun 2027 [People] · now: nil | people-names#15 | PA | pass |
-| E492 | `mark's birthday party sat` | none, people | task "Mark's birthday party" Sat 17 09:00, about Mark [People] · now: same task, no link | people-names#16 | PA | pass |
+| E492 | `mark's birthday party sat` | none, people | task "Mark's birthday party" Sat 17, no time, alerts F (6:30 call), about Mark [People, N1] · now: task "Mark's birthday party" Sat 17 09:00, no link | people-names#16 | PA, N620, R630 | pass |
 | E493 | `buy rose a card` | none, people | task "Buy rose a card" Later (link to Rose not called) | people-names#17 | B430 | pass |
 | E494 | `buy rose` | none, people | groceries [rose], no link | people-names#18 | PD8, B430 | pass |
 | E495 | `buy flowers for rose` | none, people | task "Buy flowers for rose" Later, about Rose [People] · now: groceries [flowers for rose] | people-names#19 | B430 | pass |
@@ -636,12 +647,12 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | E504 | `paid bill sat` | none, people | note "Paid bill" Sat 10 12:00, never a chore for a person | people-names#28 | C2 | pass |
 | E505 | `paid bill 20` | none, people | spend 20, note "bill" [Money] · now: nil | people-names#29 | P434 | pass |
 | E506 | `paid will back 15` | none, people | nil (repayment, not a spend) | people-names#30 | FX | pass |
-| E507 | `bill 45 due fri` | none, people | task "Bill 45 due" Fri 16 09:00 | people-names#31 | MB | pass |
+| E507 | `bill 45 due fri` | none, people | task "Bill 45 due" Fri 16, no time, alerts F (6:30 call) [N1] · now: task "Bill 45 due" Fri 16 09:00 | people-names#31 | MB, N620, R630 | pass |
 | E508 | `spent 12.40 lunch with will` | none, people | spend 12.40, note "lunch with will", category lunch [Money] · now: nil | people-names#32 | O410, MA | pass |
 | E509 | `lunch with will was 14 quid` | none, people | nil (model) | people-names#33 | O410 | pass |
-| E510 | `will do laundry sat` | none, people | task "Will do laundry" Sat 17 09:00, never about Will | people-names#34 | MB | pass |
-| E511 | `may need to move gym fri` | none, people | task "May need to move gym" Fri 16 09:00 | people-names#35 | MB | pass |
-| E512 | `june 12 dentist` | none, people | task "Dentist" Sat 12 Jun 2027 09:00 [People, month dates] · now: nil | people-names#36 | PA | pass |
+| E510 | `will do laundry sat` | none, people | task "Will do laundry" Sat 17, no time, alerts F (6:30 call), never about Will [N1] · now: task "Will do laundry" Sat 17 09:00, never about Will | people-names#34 | MB, N620, R630 | pass |
+| E511 | `may need to move gym fri` | none, people | task "May need to move gym" Fri 16, no time, alerts F (6:30 call) [N1] · now: task "May need to move gym" Fri 16 09:00 | people-names#35 | MB, N620, R630 | pass |
+| E512 | `june 12 dentist` | none, people | task "Dentist" Sat 12 Jun 2027, no time, alerts F (6:30 call) [People, month dates, N1] · now: nil | people-names#36 | PA, N620, R630 | pass |
 | E513 | `mark set 3 as warmup` | live workout, people | nil | people-names#37 | MB | pass |
 | E514 | `bench 80x8 with mark` | live workout, people | nil (training partner link not called) | people-names#38 | FX | pass |
 | E515 | `read to rose` | none, people | nil | people-names#39 | O410 | pass |
@@ -667,14 +678,14 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | F530 | `coffee with ravi thu` | none, people | task "Coffee with ravi" Thu 15 19:00, about Ravi [People] · now: same task, no link | people#17 | PA, THU | pass |
 | F531 | `lunch with ravi` | none, people | nil (plan-or-done ghost not called) | people#19 | FX | pass |
 | F532 | `drinks with ben 7pm` | none, people | task "Drinks with ben" Thu 15 19:00, about Ben [People] · now: same task, no link | people#20 | PA | pass |
-| F533 | `dinner with rosemary fri` | none, people | task "Dinner with rosemary" Fri 16 09:00, about Rosemary [People] · now: same task, no link | people#21 | PD8 | pass |
+| F533 | `dinner with rosemary fri` | none, people | task "Dinner with rosemary" Fri 16, no time, alerts F (6:30 call), about Rosemary [People, N1] · now: task "Dinner with rosemary" Fri 16 09:00, no link | people#21 | PD8, N620, R630 | pass |
 | F534 | `ravi's birthday 12 may` | none, people | SetBirthday(Ravi, 12 May) + task Wed 12 May 2027 [People] · now: nil | people#22 | PA | pass |
 | F535 | `Ravi's birthday is on the 12th of May` | none, people | as above [People] · now: nil | people#23 | PA | pass |
 | F536 | `priya's birthday 3 june` | none, people | AddPerson(Priya) + SetBirthday(3 Jun) + task Thu 3 Jun 2027 [People] · now: nil | people#24 | PA | pass |
 | F537 | `sam birthday 12/3` | none, people | SetBirthday(Sam, 12 Mar) + task Fri 12 Mar 2027 [People] · now: nil | people#25 | PA | pass |
 | F538 | `mum's birthday 15 oct` | none, people | SetBirthday(Mum, 15 Oct) + task today, untimed [People] · now: nil | people#26 | PA | pass |
-| F539 | `mum's birthday sat` | none, people | task "Mum's birthday" Sat 17 09:00, about Mum [People] · now: same task, no link | people#27 | PA | pass |
-| F540 | `buy present for mums birthday on the twentieth` | none, people | task "Buy present for mums birthday" Tue 20 09:00 | people#28 | B430 | wrong write (ORD) |
+| F539 | `mum's birthday sat` | none, people | task "Mum's birthday" Sat 17, no time, alerts F (6:30 call), about Mum [People, N1] · now: task "Mum's birthday" Sat 17 09:00, no link | people#27 | PA, N620, R630 | pass |
+| F540 | `buy present for mums birthday on the twentieth` | none, people | task "Buy present for mums birthday" Tue 20, no time, alerts F (6:30 call) [N1] · now: task "Buy present for mums birthday" Tue 20 09:00 | people#28 | B430, N620, R630 | wrong write (ORD) |
 | F541 | `when's ravi's birthday` | none, people | nil (question) | people#29 | MB | pass |
 | F542 | `gift idea for priya: lego` | none, people | nil (gift ideas are Later) | people#30 | PA | pass |
 | F543 | `gift sam: chalk bag` | none, people | nil | people#31 | PA | pass |
@@ -755,11 +766,11 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | H608 | `12 50 at tesco` | none | nil (model asks 12.50 or 1250) | money#18 | MA | pass |
 | H609 | `spent 30 dinner sat` | none | spend 30, category dinner, Sat 10 [Money] · now: note "Spent 30 dinner" Sat 10 12:00; never a task | money#20 | MA, C2 | wrong write (RC2) |
 | H610 | `spent 12.40 lunch thu` | none | spend 12.40, category lunch, Thu 15 [Money] · now: note "Spent 12.40 lunch" Thu 15 12:00; never a task | money#21 | MA, C2 | wrong write (RC2) |
-| H611 | `12.40 lunch fri` | none | task "12.40 lunch" Fri 16 09:00 (as approved; M8 not taken) | money#22 | MA | pass |
-| H612 | `pay rent 650 fri` | none | task "Pay rent 650" Fri 16 09:00 | money#23 | MA | pass |
-| H613 | `pay rent fri` | none | task "Pay rent" Fri 16 09:00 | money#24, upkeep-starters#22 | MA | pass |
+| H611 | `12.40 lunch fri` | none | task "12.40 lunch" Fri 16, no time, alerts F (6:30 call) (as approved; M8 not taken) [N1] · now: task "12.40 lunch" Fri 16 09:00 (as approved; M8 not taken) | money#22 | MA, N620, R630 | pass |
+| H612 | `pay rent 650 fri` | none | task "Pay rent 650" Fri 16, no time, alerts F (6:30 call) [N1] · now: task "Pay rent 650" Fri 16 09:00 | money#23 | MA, N620, R630 | pass |
+| H613 | `pay rent fri` | none | task "Pay rent" Fri 16, no time, alerts F (6:30 call) [N1] · now: task "Pay rent" Fri 16 09:00 | money#24, upkeep-starters#22 | MA, N620, R630 | pass |
 | H614 | `paid rent 650` | none | spend 650, note "rent" + DoChore(Pay rent) in one ghost row [Money] · now: nil | money#25, upkeep#34, upkeep-starters#22 | P434 | pass |
-| H615 | `spent the day at the beach sat` | none | task "Spent the day at the beach" Sat 17 09:00 | money#26 | MA | pass |
+| H615 | `spent the day at the beach sat` | none | task "Spent the day at the beach" Sat 17, no time, alerts F (6:30 call) [N1] · now: task "Spent the day at the beach" Sat 17 09:00 | money#26 | MA, N620, R630 | pass |
 | H616 | `80 x5` | live workout | set 80x5 | money#27 | MB | pass |
 | H617 | `80 for 5` | none | nil | money#28 | MB | pass |
 | H618 | `bench 82.50 x 8` | none | lift Bench Press 82.5x8 | money#29 | MB | pass |
@@ -803,7 +814,7 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | I651 | `defrosted the chicken` | none, chores | nil (ingredient, no chore) | upkeep#16, upkeep-starters#6 | O410 | pass |
 | I652 | `watered plants yesterday` | none, chores | DoChore(Water plants) Wed 14 [Upkeep] · now: note "Watered plants" Wed 14 12:00 | upkeep#17 | C2 | pass |
 | I653 | `bins out thu` | none, chores | task "Bins out" Thu 15 19:00 | upkeep#21, upkeep-starters#2 | UA, THU | pass |
-| I654 | `washed the car tomorrow` | none, chores | task "Washed the car" Fri 16 09:00 | upkeep#22 | UA | pass |
+| I654 | `washed the car tomorrow` | none, chores | task "Washed the car" Fri 16, no time, alerts F (6:30 call) [N1] · now: task "Washed the car" Fri 16 09:00 | upkeep#22 | UA, N620, R630 | pass |
 | I655 | `car service due march` | none, chores | nil (month dates later) | upkeep#23 | FX | pass |
 | I656 | `plants fine` | none, chores | ChoreFine(Water plants); with two plant chores, an ambiguous ghost [Upkeep] · now: nil | upkeep#24, upkeep-starters#20 | U450 | pass |
 | I657 | `checked the oil, fine` | none, chores | ChoreFine(Top up the oil) [Upkeep] · now: nil; never groceries | upkeep#25 | O410 | wrong write (RC8) |
@@ -829,7 +840,7 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | I677 | `cleaned the fridge` | none, chores | DoChore(Clean the fridge) [Upkeep] · now: nil | upkeep-starters#4 | UA | pass |
 | I678 | `did the fridge` | none, chores | DoChore(Clean the fridge) [Upkeep] · now: nil | upkeep-starters#4 | UA | pass |
 | I679 | `clean the fridge` | none, chores | nil | upkeep-starters#4 | UA | pass |
-| I680 | `clean the fridge sat` | none, chores | task "Clean the fridge" Sat 17 09:00 | upkeep-starters#4 | UA | pass |
+| I680 | `clean the fridge sat` | none, chores | task "Clean the fridge" Sat 17, no time, alerts F (6:30 call) [N1] · now: task "Clean the fridge" Sat 17 09:00 | upkeep-starters#4 | UA, N620, R630 | pass |
 | I681 | `clean the fridge, bins out` | none, chores | nil | upkeep-starters#4 | UA | pass |
 | I682 | `cleared out the fridge` | none, chores | nil | upkeep-starters#4 | UA | pass |
 | I683 | `did the oven` | none, chores | DoChore(Clean the oven) + SetTaskDone("Clean the oven") [Upkeep] · now: nil | upkeep-starters#5 | UA | pass |
@@ -858,7 +869,7 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | I706 | `changed the sheets` | none, chores | DoChore(Change the bed sheets) [Upkeep] · now: nil | upkeep-starters#17 | UA | pass |
 | I707 | `changed the bed` | none, chores | DoChore(Change the bed sheets) [Upkeep] · now: nil | upkeep-starters#17 | UA | pass |
 | I708 | `change bed sheets` | none, chores | nil | upkeep-starters#17 | UA | pass |
-| I709 | `change bed sheets sun` | none, chores | task "Change bed sheets" Sun 18 09:00 | upkeep-starters#17 | UA | pass |
+| I709 | `change bed sheets sun` | none, chores | task "Change bed sheets" Sun 18, no time, alerts F (6:30 call) [N1] · now: task "Change bed sheets" Sun 18 09:00 | upkeep-starters#17 | UA, N620, R630 | pass |
 | I710 | `buy bed sheets` | none, chores | task "Buy bed sheets" Later | upkeep-starters#17 | B430 | wrong write (RC3) |
 | I711 | `get new sheets` | none, chores | task "Get new sheets" Later | upkeep-starters#17 | U450 | wrong write (RC3) |
 | I712 | `washed the sheets` | none, chores | DoChore(Change the bed sheets) (S4 family) [Upkeep] · now: nil | upkeep-starters#17 | U450 | pass |
@@ -873,34 +884,81 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | I721 | `fed the plants` | none, chores | DoChore(Feed the plants), never watering (S1) [Upkeep] · now: nil | upkeep-starters#21 | U450 | pass |
 | I722 | `fed plants` | none, chores | DoChore(Feed the plants) [Upkeep] · now: nil | upkeep-starters#21 | U450 | pass |
 | I723 | `fed the plants sun` | none, chores | DoChore(Feed the plants) Sun 11 [Upkeep] · now: note "Fed the plants" Sun 11 12:00 | upkeep-starters#21 | C2 | pass |
-| I724 | `feed the plants sun` | none, chores | task "Feed the plants" Sun 18 09:00 | upkeep-starters#21 | UA | pass |
+| I724 | `feed the plants sun` | none, chores | task "Feed the plants" Sun 18, no time, alerts F (6:30 call) [N1] · now: task "Feed the plants" Sun 18 09:00 | upkeep-starters#21 | UA, N620, R630 | pass |
 | I725 | `paid rent` | none, chores | DoChore(Pay rent) [Upkeep] · now: nil | upkeep-starters#22 | P434 | pass |
 | I726 | `rent paid` | none, chores | DoChore(Pay rent) (noun-first) [Upkeep] · now: nil | upkeep-starters#22 | U450 | pass |
 | I727 | `bins done` | none, chores | DoChore(Take out the bins) (noun-first) [Upkeep] · now: nil | upkeep-starters#2 | U450 | pass |
 | I728 | `paid council tax` | none, chores | DoChore(Pay council tax) [Upkeep] · now: nil | upkeep-starters#23 | UA | pass |
 | I729 | `pay council tax` | none, chores | nil | upkeep-starters#23 | UA | pass |
-| I730 | `pay council tax fri` | none, chores | task "Pay council tax" Fri 16 09:00 | upkeep-starters#23 | UA | pass |
+| I730 | `pay council tax fri` | none, chores | task "Pay council tax" Fri 16, no time, alerts F (6:30 call) [N1] · now: task "Pay council tax" Fri 16 09:00 | upkeep-starters#23 | UA, N620, R630 | pass |
 | I731 | `sent meter readings` | none, chores | DoChore(Send meter readings) (S2, own verb) [Upkeep] · now: nil | upkeep-starters#24 | U450 | pass |
-| I732 | `read the meters sun` | none, chores | task "Read the meters" Sun 18 09:00 (S6) | upkeep-starters#24 | U450 | pass |
+| I732 | `read the meters sun` | none, chores | task "Read the meters" Sun 18, no time, alerts F (6:30 call) (S6) [N1] · now: task "Read the meters" Sun 18 09:00 (S6) | upkeep-starters#24 | U450, N620, R630 | pass |
 | I733 | `tested the smoke alarm` | none, chores | DoChore(Test the smoke alarm) (S2) [Upkeep] · now: nil | upkeep-starters#25 | U450 | pass |
 | I734 | `smoke alarm fine` | none, chores | DoChore(Test the smoke alarm) ("fine" counts as done for checks) [Upkeep] · now: nil | upkeep-starters#25 | U450 | pass |
 | I735 | `tested the smoke alarm sat` | none, chores | DoChore(Test the smoke alarm) Sat 10 [Upkeep] · now: note "Tested the smoke alarm" Sat 10 12:00 | upkeep-starters#25 | C2, U450 | pass |
 | I736 | `test the smoke alarm at 7` | none, chores | task "Test the smoke alarm" Thu 15 19:00 ("alarm" is not an AM cue) | upkeep-starters#25 | U450 | wrong write (RC1) |
 
+### J. Reminders (38 rows)
+
+From `reminders.md` (R01 to R40, traced at `2473436`; grammar unchanged since `82c51d9`). Two rows merged into existing ones: R14 `remind me tomorrow to call mum` into A224 (same phrase and parse; A224 runs at Thu 18:10, R14 at Fri 17:40, and both land on tomorrow 09:00), and R37 (the same phrase in a cook at 18:00) into D464. These rows run on **Fri 16 Oct**, at the clock in the context cell. The reply lines (with and without permission, "On Now then.") stay in `reminders.md` for Builder B; this suite checks the parse and `alerts` only.
+
+| id | phrase | context | expected parse | source rows | decision | status |
+|---|---|---|---|---|---|---|
+| J737 | `remind me in 20 minutes` | none, Fri 17:40 | task "Reminder" Fri 16 18:00, alerts T | reminders#R01 | N620, FX | wrong write (RELT) |
+| J738 | `remind me in 20 minutes to take the chicken out` | none, Fri 17:40 | task "Take the chicken out" Fri 16 18:00, alerts T (in a cook: D464) | reminders#R02 | N620, FX | wrong write (RELT) |
+| J739 | `remind me in an hour to call mum` | none, Fri 17:40 | task "Call mum" Fri 16 18:40, alerts T | reminders#R03 | N620, FX | wrong write (RELT) |
+| J740 | `remind me to stretch in half an hour` | none, Fri 17:40 | task "Stretch" Fri 16 18:10, alerts T | reminders#R04 | N620, FX | wrong write (RELT) |
+| J741 | `remind me in 2h to move the car` | none, Fri 17:40 | task "Move the car" Fri 16 19:40, alerts T | reminders#R05 | N620, FX | wrong write (RELT) |
+| J742 | `ping me in 5` | none, Fri 17:40 | task "Reminder" Fri 16 17:45, alerts T (bare N after "in" is minutes, cap 180) | reminders#R06 | N620, K450, FX | miss (LEAD) |
+| J743 | `remind me in 30 minutes to lock the door` | none, Fri 23:40 | task "Lock the door" Sat 17 00:10, alerts T (rings in quiet hours) | reminders#R07 | N620, FX | wrong write (RELT) |
+| J744 | `remind me at 6 to call mum` | none, Fri 17:40 | task "Call mum" Fri 16 18:00, alerts T | reminders#R08 | C1, N620 | pass |
+| J745 | `remind me to call mum at 6` | none, Fri 17:40 | task "Call mum" Fri 16 18:00, alerts T | reminders#R09 | C1, N620 | pass |
+| J746 | `remind me at 7 to do push day` | none, Fri 17:40 | task "Do push day" Fri 16 19:00, alerts T | reminders#R10 | C1, N620 | pass |
+| J747 | `remind me at 5 to pay rent` | none, Fri 17:40 | task "Pay rent" Sat 17 17:00, alerts T (passed, lands tomorrow) | reminders#R11 | C1, C5, N620 | pass |
+| J748 | `set a reminder for 6 to call mum` | none, Fri 17:40 | task "Call mum" Fri 16 18:00, alerts T | reminders#R12 | C1, N620 | miss (LEAD) |
+| J749 | `Remind me at 6 PM to call Mum.` | none, Fri 17:40 | task "Call Mum" Fri 16 18:00, alerts T | reminders#R13 | N620 | wrong write (RC11) |
+| J750 | `remind me tonight to take my pills` | none, Fri 17:40 | task "Take my pills" Fri 16 20:00, alerts T | reminders#R15 | T441, N620 | pass |
+| J751 | `remind me tonight to take my pills` | none, Fri 21:15 | task "Take my pills" Fri 16 22:00, alerts T (after 20:00: the next whole hour, until 23:30) | reminders#R16 | T441, D558, N620 | wrong write (DAY4) |
+| J752 | `remind me sat to book the MOT` | none, Fri 17:40 | task "Book the MOT" Sat 17 09:00, alerts T (6:30 call) | reminders#R17 | R630 | pass |
+| J753 | `remind me next fri to pay rent` | none, Fri 17:40 | task "Pay rent" Fri 23 Oct 09:00, alerts T | reminders#R18 | D558, R630 | wrong write (RC7) |
+| J754 | `remind me this weekend to clean the car` | none, Fri 17:40 | task "Clean the car" Sat 17 09:00, alerts T ("this weekend" is Saturday) | reminders#R19 | R630, FX | wrong write (DAYW) |
+| J755 | `remind me in 3 days to call the bank` | none, Fri 17:40 | task "Call the bank" Mon 19 09:00, alerts T | reminders#R20 | R630, FX | wrong write (RELT) |
+| J756 | `remind me tomorrow at 9 to call mum` | none, Sat 00:30 | task "Call mum" Sat 17 09:00, alerts T ("tomorrow" before 04:00 is the coming daytime) | reminders#R21 | L607, N620 | wrong write (DAY4) |
+| J757 | `remind me at 2am to take the bread out` | none, Fri 23:30 | task "Take the bread out" Sat 17 02:00, alerts T (rings in quiet hours; reply line in reminders.md) | reminders#R22 | L607, N620 | pass |
+| J758 | `remind me tonight to call mum` | none, Sat 01:00 | task "Call mum" Sat 17 20:00, alerts T (reply line in reminders.md) | reminders#R23 | L607, T441, N620 | pass |
+| J759 | `nudge me tomorrow` | none, Fri 17:40 | task "Reminder" Sat 17 09:00, alerts T | reminders#R24 | R630, FX | wrong write (LEAD) |
+| J760 | `ping me at 8 about the parcel` | none, Fri 17:40 | task "The parcel" Fri 16 20:00, alerts T | reminders#R25 | C1, N620, FX | wrong write (LEAD) |
+| J761 | `don't let me forget to take my pills tonight` | none, Fri 17:40 | task "Take my pills" Fri 16 20:00, alerts T (from the lead; "tonight" alone is not a clock time) | reminders#R26 | T441, N620, FX | wrong write (LEAD) |
+| J762 | `remind me later to call mum` | none, Fri 17:40 | task "Call mum" Later, alerts F (no instant) | reminders#R27 | N620 | wrong write (LEAD) |
+| J763 | `remind me later` | none, Fri 17:40 | no write, asks "Remind you about what?" | reminders#R28 | FX | wrong write (LEAD) |
+| J764 | `remind me when I get home to take the bins out` | none, Fri 17:40 | task "Take the bins out" Later, alerts F (no place reminders yet) | reminders#R29 | FX | wrong write (PLACE) |
+| J765 | `remind me when I leave work to buy eggs` | none, Fri 17:40 | groceries [Eggs] (no place reminders yet) | reminders#R30 | C3, FX | wrong write (PLACE) |
+| J766 | `remind me every sunday to plan the week` | none, Fri 17:40 | task "Plan the week" Sun 18 09:00, alerts T (first one only; repeats wait for Upkeep) | reminders#R31 | R630, FX | wrong write (DAYW) |
+| J767 | `cancel the 6pm reminder` | none, call mum alert, Fri 17:40 | SetTaskAlerts(Call mum, false), task kept [N1] · now: nil | reminders#R32 | FX | wrong write (ALRT) |
+| J768 | `move the call mum reminder to 7` | none, call mum alert, Fri 17:40 | reschedule Call mum Fri 16 19:00, alerts T (kept; the model until the RC13 batch) | reminders#R33 | C1, FX | miss (RC13) |
+| J769 | `remind me again in 10` | none, call mum alert, Fri 18:02 | MoveTask(Call mum) Fri 16 18:12, alerts T (the alert that fired in the last 30 min) [N1] · now: nil | reminders#R34 | FX | wrong write (ALRT) |
+| J770 | `remind me to buy eggs` | none, Fri 17:40 | groceries [Eggs] (food with no day or time) | reminders#R35 | C3, FX | wrong write (RBUY) |
+| J771 | `remind me to buy eggs at 6` | none, Fri 17:40 | task "Buy eggs" Fri 16 18:00, alerts T | reminders#R36 | C1, N620 | pass |
+| J772 | `uh remind me to um call the dentist tomorrow` | none, Fri 17:40 | task "Call the dentist" Sat 17 09:00, alerts T (after the normaliser drops uh and um) | reminders#R38 | R630 | wrong write (NRM) |
+| J773 | `remind me to call mum at 6, actually 7` | none, Fri 17:40 | nil (model makes task "Call mum" Fri 16 19:00, with an alert) | reminders#R39 | H622 | wrong write (GUARD) |
+| J774 | `remind me at quarter to 7 to call mum` | none, Fri 17:40 | nil (model makes task "Call mum" Fri 16 18:45, with an alert) | reminders#R40 | H622 | wrong write (GUARD) |
+
 <!-- rows:end -->
 
 ## Totals
+
+Master `1d0833c`. Rows A to I keep their statuses: no file under `TesseraCore/` changed since `15fc404`, and the 6:20 and 6:30 calls move only the target of the rows they touch (the "now" parse on master is the old expected value). Group J is new.
 
 ### By status
 
 | status | rows | share |
 |---|---|---|
-| pass | 586 | 79.6% |
-| wrong write | 78 | 10.6% |
-| miss | 72 | 9.8% |
-| **all** | **736** | |
+| pass | 595 | 76.9% |
+| wrong write | 104 | 13.4% |
+| miss | 75 | 9.7% |
+| **all** | **774** | |
 
-Wrong writes are the ones to fix first: each puts a wrong object, date or title into the store with no question asked. A miss only costs a model call (or, offline, a "say it another way").
+Wrong writes are the ones to fix first: each puts a wrong object, date or title into the store with no question asked. A miss only costs a model call (or, offline, a "say it another way"). Before this merge: 736 rows, 586 pass, 78 wrong write, 72 miss.
 
 ### By group
 
@@ -915,44 +973,52 @@ Wrong writes are the ones to fix first: each puts a wrong object, date or title 
 | G. Reading | 40 | 39 | 1 | 0 |
 | H. Money | 45 | 43 | 2 | 0 |
 | I. Upkeep and starters | 101 | 94 | 7 | 0 |
-| **all** | **736** | **586** | **78** | **72** |
+| J. Reminders | 38 | 9 | 26 | 3 |
+| **all** | **774** | **595** | **104** | **75** |
 
 ### Gated and not gated
 
-A gated row is judged on its "now" parse. 187 rows are gated; 180 of them pass today, so most of the work on those rows waits for the slice, not for the grammar.
+A gated row is judged on its "now" parse. 231 rows are gated (waiting on a slice); 219 of them pass today, so most of the work on those rows waits for the slice, not for the grammar. On top of that, 87 rows carry an `alerts` mark whose check waits on N1 (55 changed rows A to I, 32 rows in J); none can pass it on master, and none is counted as failing for it.
 
 | gate | rows | pass | wrong write | miss |
 |---|---|---|---|---|
 | Upkeep (3 of them also need `did` narrowed) | 76 | 74 | 2 | 0 |
-| People (1 also needs month dates) | 41 | 41 | 0 | 0 |
+| People (1 also needs month dates; 5 also need N1) | 41 | 41 | 0 | 0 |
 | Money | 37 | 35 | 2 | 0 |
 | Reading | 26 | 25 | 1 | 0 |
+| N1 only (42 dated tasks with no time, J767 and J769 alert edits) | 44 | 39 | 5 | 0 |
 | 12b (cook pause and extend) | 4 | 3 | 0 | 1 |
 | Lists 8 | 3 | 2 | 1 | 0 |
-| **gated** | **187** | **180** | **6** | **1** |
-| **not gated** | **549** | **406** | **72** | **71** |
+| **gated** | **231** | **219** | **11** | **1** |
+| **not gated** | **543** | **376** | **93** | **74** |
 
 ### By root cause (rows that do not pass)
 
 | root cause | what goes wrong | rows | wrong write | miss |
 |---|---|---|---|---|
-| RC11 | `half 7`, `7.30`, `7 pm`, `morning`/`afternoon`/`evening` not read; colon numbers always a time | 28 | 8 | 20 |
+| RC11 | `half 7`, `7.30`, `7 pm`, `6 PM`, `morning`/`afternoon`/`evening` not read; colon numbers always a time | 29 | 9 | 20 |
 | RC15 | cook timers need the word "timer"; `10 min`, `rice 12`, `finished cooking` not read | 27 | 5 | 22 |
-| RC13 | reschedule replaces the whole date, misses `push`/`bump`/`can you move` shapes | 16 | 5 | 11 |
+| RC13 | reschedule replaces the whole date, misses `push`/`bump`/`can you move` shapes and a bare hour after `to` | 17 | 5 | 12 |
+| RELT | relative dates (`in 20 min`, `in an hour`, `in 2h`, `in 3 days`, `day after tomorrow`, `N days before`) | 15 | 12 | 3 |
 | RC6 | a set and an errand in one phrase, no split | 14 | 9 | 5 |
 | RC12 | lift edge cases (day words, `at N`, bodyweight, `curls`, reps cap) | 8 | 8 | 0 |
-| RELT | relative dates (`in 20 min`, `in 2 hours`, `day after tomorrow`, `N days before`) | 8 | 5 | 3 |
+| LEAD | reminder leads (`ping`, `nudge`, `don't let me forget`, `set a reminder for`), `about`/`later` after the lead, empty title | 7 | 5 | 2 |
 | RC2 | past-tense log edge cases (adjective `-ed` titles, `moved X to fri`) | 7 | 7 | 0 |
 | RC8 | comma list called groceries on one food item | 6 | 6 | 0 |
 | RC10 | short weekdays (`sun`, `sat`, `wed`, `mon`) eaten as days | 5 | 5 | 0 |
 | RC3 | `get`/`buy` puts people, services, non-food on the list | 5 | 5 | 0 |
 | RPE | `@N` after a set | 4 | 0 | 4 |
 | RC17 | `out of X`, `need X` not grocery phrases | 3 | 0 | 3 |
+| RC7 | title leftovers (`next`, `to`) | 3 | 3 | 0 |
+| NRM | spoken shape the normaliser should reshape (incl. `uh`, `um`) | 3 | 3 | 0 |
 | RC1 | bare hour cue lists (`alarm`, `table`) | 2 | 2 | 0 |
-| RC7 | title leftovers (`next`, `to`) | 2 | 2 | 0 |
 | ADD | `add N` in a workout, `add X` elsewhere | 2 | 0 | 2 |
-| NRM | spoken shape the normaliser should reshape | 2 | 2 | 0 |
 | ORD | ordinal dates (`the 20th`) | 2 | 2 | 0 |
+| DAY4 | the 4 AM day (`tomorrow` at 00:30) and `tonight` after 20:00 | 2 | 2 | 0 |
+| DAYW | `this weekend`, `every <day>` | 2 | 2 | 0 |
+| PLACE | `when I get home`, `when I leave work` not stripped | 2 | 2 | 0 |
+| ALRT | alert edits (`cancel the 6pm reminder`, `again in 10`) | 2 | 2 | 0 |
+| GUARD | remind phrase that needs the model (`actually 7`, `quarter to 7`) claimed by the grammar | 2 | 2 | 0 |
 | RC4 | shop run takes an errand as a line | 1 | 1 | 0 |
 | RC5 | question guard gap | 1 | 1 | 0 |
 | RC14 | `done for today` in a workout | 1 | 1 | 0 |
@@ -962,9 +1028,10 @@ A gated row is judged on its "now" parse. 187 rows are gated; 180 of them pass t
 | RC20 | named list prefix | 1 | 1 | 0 |
 | DROP | drop set with no reps | 1 | 0 | 1 |
 | UPK | upkeep verb falls through to the task rule | 1 | 1 | 0 |
-| **all** | | **150** | **78** | **72** |
+| RBUY | `remind me to buy` food with no day or time stays a task | 1 | 1 | 0 |
+| **all** | | **179** | **104** | **75** |
 
-Four causes (RC11, RC15, RC13, RC6) hold 85 of the 150 failing rows. RC11 and RC13 share one change in `TessDates.extract` (return which parts were said, read the missing time forms), so one Core change clears about 44 rows.
+Four causes (RC11, RC15, RC13, RELT) hold 88 of the 179 failing rows. RC11, RC13 and RELT all sit in `TessDates.find` (return which parts were said, read the missing time forms, read `in N`), so one Core change there clears about 61 rows. For the reminder rows, `reminders.md`'s ten grammar changes map onto these codes: relative times (RELT, 7 rows in J), leads (LEAD, 7), and the `alerts` field (N1, all 87 marked rows).
 
 ## How Core loads this table (Swift Testing sketch)
 
@@ -981,12 +1048,13 @@ struct RegressionRow: Sendable, CustomTestStringConvertible {
     let phrase: String          // without the backticks
     let context: String         // "none, tasks, 23:30"
     let target: String          // expected parse, gate part removed
-    let gate: String?           // "Upkeep", "Money", ... or nil
+    let gates: [String]         // ["Upkeep"], ["People", "N1"], ... or []
     let now: String?            // the "now:" parse for a gated row
     let sources: String
     let decision: String
     let status: Status
     let rootCause: String?      // "RC11", "RELT", ...
+    let alerts: Bool?           // "alerts T" / "alerts F" in the target, outside parentheses; nil = not checked
 
     enum Status: String, Sendable { case pass, wrongWrite = "wrong write", miss }
     var testDescription: String { "\(id) \(phrase) [\(context)]" }
@@ -1008,12 +1076,15 @@ enum RegressionTable {
         let cells = line.dropFirst(2).dropLast(2)
             .split(separator: /(?<!\\) \| /).map { $0.replacing("\\|", with: "|") }
         guard cells.count == 7 else { Issue.record("bad row: \(line)"); return nil }
-        let (expected, gate, now) = splitGate(cells[3])         // "X [Upkeep] · now: Y"
+        let (expected, gates, now) = splitGate(cells[3])        // "X [People, N1] · now: Y"
+        let bare = expected.replacing(/\([^)]*\)/, with: "")   // notes like "(6:30 call)" never count
+        let alerts = bare.firstMatch(of: /alerts ([TF])/).map { $0.1 == "T" }
         let status = cells[6].firstMatch(of: /^(pass|wrong write|miss)(?: \((\w+)\))?/)!
         return RegressionRow(id: cells[0], phrase: cells[1].trimming(while: { $0 == "`" }),
-                             context: cells[2], target: expected, gate: gate, now: now,
+                             context: cells[2], target: expected, gates: gates, now: now,
                              sources: cells[4], decision: cells[5],
-                             status: .init(rawValue: String(status.1))!, rootCause: status.2.map(String.init))
+                             status: .init(rawValue: String(status.1))!, rootCause: status.2.map(String.init),
+                             alerts: alerts)
     }
 }
 
@@ -1026,8 +1097,9 @@ struct GrammarRegressionTests {
     @Test(arguments: RegressionTable.rows)
     func row(_ row: RegressionRow) throws {
         let context = try world.context(for: row.context)   // mode, store, clock (default Thu 15 18:10 LA)
-        let got = world.kind(world.grammar(for: row.context).parse(row.phrase, context: context))
-        let want = (row.gate.map { !Gates.isOn($0) } ?? false) ? row.now! : row.target
+        let parse = world.grammar(for: row.context).parse(row.phrase, context: context)
+        let got = world.kind(parse)
+        let want = row.gates.allSatisfy(Gates.isOn) ? row.target : row.now!
 
         switch row.status {
         case .pass:
@@ -1037,12 +1109,24 @@ struct GrammarRegressionTests {
                 #expect(normalised(got) == normalised(want))
             }
         }
+
+        // alerts (6:20 and 6:30 PM PT calls): checked apart from the kind, and only once N1 adds the field.
+        if let wantAlerts = row.alerts {
+            let gotAlerts = world.alerts(of: parse)   // nil until N1 adds Parse.task(title:startsAt:alerts:)
+            if Gates.isOn("N1") {
+                #expect(gotAlerts == wantAlerts, "\(row.id) alerts decided by \(row.decision)")
+            } else {
+                withKnownIssue("\(row.id) alerts wait on N1") { #expect(gotAlerts == wantAlerts) }
+            }
+        }
     }
 }
 ```
 
 Notes for Core:
 - `RegressionWorld.context(for:)` reads the comma parts of the context cell in order: the mode (`none`, `live workout`, `shop run`, `cook`), then any store words (`tasks`, `people`, `book`, `chores`, `total awaited`, `Soften flared`, `last step`, and the rest listed under "How to read the table"), then an optional `HH:mm` clock. One store per word, built once per suite.
+- The clock part of the context may carry a day (`Fri 17:40`, `Sat 00:30`, group J); a bare `HH:mm` stays on Thu 15. The store word `call mum alert` adds "Call mum" Fri 16 18:00 with `alerts` true.
+- `normalised` also drops `, alerts T` and `, alerts F` (checked on their own above), and `world.kind` prints a dated task with no time as `Sat 17, no time` once N1 lands.
 - `normalised` drops the quotes and any parenthesised note in the expected cell ("(`alarm` is not an AM cue)"), so the cell can carry a reason without breaking the match.
 - The status column on master is the baseline. When a fix lands, its rows move to `pass` in this file in the same PR; a known issue that stops failing tells the author which rows to flip.
 - The 5 existing `GrammarMisfireTests` and `GrammarRulesTests` rows that overlap stay where they are until this suite is in, then go.
@@ -1061,5 +1145,9 @@ Notes for Core:
 10. **People gaps.** `rang mum` (F519), `lunch with ravi` as a plan or a log (F531), the gift guard for `buy flowers for mum` once Mum is a Person (A070), and the shop function word `will` (E501: Will the person or "will" the verb).
 11. **Clock of record.** The hotfix tests run at 18:00 Europe/London; this table runs at 18:10 America/Los_Angeles. Only spoken row 50 changes (now 18:30). Which clock should Core's suite use?
 12. **Smaller calls.** `basil and tomatoes` (Basil the person vs the herb, E498), `training partner` as a relation word (E514), month dates and a months interval in upkeep (I655), and the title for `bins every thursday` (I660: "Bins" or "Put the bins out").
+
+13. **Questions from the reminder merge (board item 49).** The 6:30 PM call settles `reminders.md` open question 1. Still open, each with `reminders.md`'s default in the rows: the title "Reminder" with no subject (J737, J742, J759); `remind me to buy eggs` as groceries (J770); place reminders as Later with no alert (J764, J765); repeats as the first one only (J766); cancel keeps the task and drops the alert (J767); `again in N` with no recent alert goes to the model.
+14. **Does "no time" reach other default times?** The 6:20 rule names 09:00. Still untouched here: a day with no time that master puts on the next whole hour (`call mum thu` on a Thursday, `move dentist to today`; 14 rows: A033, A130, A170, A227, B339, C379, E477, E479, F529, F530, G565, I653, I660, I674), the 09:00 read from `morning` (A073, A116, C390, C418, C421, C435), and a planned cook with a day (`make chilli sat`, A269).
+15. **The 5:58 PM calls are not applied to rows A to I.** Product answered questions 1 to 4, 7 (in part: the amount and the time), 8 and 11 at 5:58 PM PT ("table" is not a meal word; "tonight" after 8 PM is tonight; "next fri" is next week's; R13c, f, g, i and j taken; the test clock is Los Angeles). Only group J uses them. Rows A117, A222, C389, C373, C388, C391, C395, C397, A127, C430, D465 still need that pass; no Product call needed, a Research pass is.
 
 Core notes (no Product call needed): the past-log rule must move after the Upkeep rule when Upkeep lands, or every `watered plants sat` stays a note (E504); and the `did` narrowing in the question guard must ship with Upkeep, not before.
