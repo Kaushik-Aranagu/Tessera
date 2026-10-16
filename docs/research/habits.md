@@ -1,3 +1,5 @@
+> **Superseded** (Product, 9:04 PM PT Oct 15): use Design's `body-weight-and-habits.md` sheet, `research/m3-lines.md` and decisions.md 7:53 PM PT (weeks start Monday 4 AM). This file's copy and week start are out of date.
+
 # Habits that count, not judge
 
 For: Product lead, Core engine, Design studio
