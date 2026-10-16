@@ -16,16 +16,16 @@ struct RestPalette: Hashable {
     var skyLeft = 0.35
     var skyRight = 0.45
 
-    static let porcelain = RestPalette(ground: 0xFFFFFF, ink: 0x17141F, signal: 0xE2432A, rest: 0xF0A500,
-                                       tess: 0x2450D8, context: 0x6A4C9C)
+    static let porcelain = RestPalette(ground: 0xFFFFFF, ink: 0x121016, signal: 0xE2432A, rest: 0xF0A500,
+                                       tess: 0x2450D8, context: 0x5A3DAF)
     static let obsidian = RestPalette(ground: 0x000000, ink: 0xF5F2EC, signal: 0xFF5B3A, rest: 0xFFC23D,
                                       tess: 0x86B4FF, context: 0xB7A6E0)
-    static let plein = RestPalette(ground: 0xF2ECE3, ink: 0x2B2440, signal: 0xC8452F, rest: 0xE0B341,
-                                   tess: 0x2A64A0, context: 0x7A5C8E)
-    static let lacquer = RestPalette(ground: 0x140F1B, ink: 0xF1E7D6, signal: 0xF06A4C, rest: 0xE8B54A,
-                                     tess: 0x8DB2FF, context: 0xC3A6DE)
-    static let celadon = RestPalette(ground: 0xE7EEE9, ink: 0x0F231D, signal: 0xD8462C, rest: 0xD99A1C,
-                                     tess: 0x2C59BE, context: 0x456680)
+    static let plein = RestPalette(ground: 0xF3EDE2, ink: 0x26201E, signal: 0xB9452B, rest: 0xC98E1B,
+                                   tess: 0x2A4FA8, context: 0x7D4E6E)
+    static let lacquer = RestPalette(ground: 0x130A0D, ink: 0xF3E8D6, signal: 0xF0583A, rest: 0xE9B64A,
+                                     tess: 0x8FB5FF, context: 0xD9A6B8)
+    static let celadon = RestPalette(ground: 0xE0EAE2, ink: 0x0C1E19, signal: 0xD94B2E, rest: 0xCF9418,
+                                     tess: 0x2C59BE, context: 0x3A6584)
 
     /// Kaushik's Lock Screen pick (2026-10-15, live-activity.md): Cobalt sky, in every look.
     static let cobaltSky = RestPalette(ground: 0x120E1A, ink: 0xF6EFE4, signal: 0xE2603F, rest: 0xE8BD4C,

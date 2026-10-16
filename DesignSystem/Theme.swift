@@ -282,7 +282,12 @@ enum Theme {
     static func configure(arguments: [String] = ProcessInfo.processInfo.arguments) {
         // -theme pins a look in memory for demos and recordings, on the simulator only.
         guard let name = LaunchFlags.value(after: "-theme", in: arguments)?.lowercased() else { return }
-        if let look = Look.named(name) {
+        if name == "plein-washes" {
+            // The retired Plein washes and grain, kept until he's lived with the flat Plein (looks-recut.md).
+            var washes = Look.plein
+            washes.field = .plein
+            ThemeStore.shared.pin(washes)
+        } else if let look = Look.named(name) {
             ThemeStore.shared.pin(look)
         } else if let match = ThemeConcept.all.first(where: { $0.name.lowercased() == name }), match.name != "Plein" {
             retired = match
