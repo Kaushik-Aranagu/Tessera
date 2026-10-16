@@ -17,6 +17,7 @@ The one sheet Builder A builds from. Design reviewed `tess-motion.md` (item 51, 
 | Which asks are `working` vs `thinking` | the router: Claude, Plan my day, link fetch, photo read are working; everything local stays thinking | Core |
 | Drag: 10 pt pick-up from the hold, carry, two docks, flick, `tess.dock.<page>`; the band's line, lens, ask words and UNDO shift to x 96 on a bottom-left drop | `Features/Command/BottomChrome.swift` (`soulKey` gesture), `DesignSystem/Haptics.swift` (`.soulPickUp`, `.soulDrop`) | B (gesture), A (soul) |
 | Roam: `TessSoul.place`, free-ground rects per page, ride-and-release on scroll, the 80 × 80 clear test before Done in place | `SoulTravel` as built; each page's view reports free ground through a preference | A (Home, Training), B (Home rows, Kitchen) |
+| Reward beat: a 940 ms overlay (gather, brighten, blink) on the current mode, started by `.tesseraFeedback(.done)`'s moment at 520 ms (at 0 when the fleck leaves the soul) | `TessSoul.swift` (`beat()`), called from QueueRow / hero / habits / Groceries (B) and the workout finish (A) | A, with B's call sites |
 | Repaint beside working | `TessSoul.repaint(to:)` folds its swell into the fade when work starts | A |
 
 ## Values
@@ -38,6 +39,7 @@ As `tess-motion.md`: nothing travels; 200 ms crossfades; eyes still; haptics sta
 - Roam: she never goes where the free-ground rect is under 56 × 44; a row scrolled past y 130 releases her within one frame; no roam while `onWorkoutGround`; Done plays at home when the 80 × 80 clear fails.
 - Drag: only two docks; a bottom-left drop moves the line, lens, ask words and UNDO to x 96 in one step and the band stays 736 to 820.
 - Haptics: exactly one per pick-up and one per drop; none for split, gather, roam or eyes; working done plays only Done's `.success`.
+- Reward: the beat ends within 940 ms of its start; no haptic from `TessSoul` during it; Done's one-shot never starts from a task's done; in a live workout the beat has no glance.
 - Repaint: a repaint in flight when `.working` begins dries within 500 ms; no repaint starts while working, roaming, carried or in Done.
 
 ## Recording for QA

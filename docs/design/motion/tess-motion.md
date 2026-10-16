@@ -97,6 +97,23 @@ In a live workout: never. `LiveTessCorner` keeps thinking's pulse at its fixed s
 
 **On light grounds** (Porcelain, Celadon) the lights multiply; at 11 to 15 pt crossings stay to two lights at a time, and Design checked Porcelain is not muddy at 0.55.
 
+## 6. Her beat in a reward (board item 6, added 1:30 AM PT Oct 16)
+`task-reward.md` owns the done pattern and its haptics; after Design 41 the fleck arcs to the day label. This adds only what the soul herself does in it, under the one-haptic rule: she plays none, the moment's haptics are the row's and the bloom's.
+
+| t (ms) | Her part | Values |
+|---|---|---|
+| 0 (let go) | **Her eyes glance at the row** he struck (eyes on; 300 ms spring, up and toward it). Nothing else of her moves: the fleck is leaving, and a beat now would be two things at once | glance x −3, y −2.2 at soul scale 1 |
+| 520 (the fleck lands, the label blooms) | **Her beat.** The brighten as written (1 to 1.12, settle spring, saturation up) now carries a **small gather**: the three satellites pull in to 55% of their offset over 180 ms and release over 320 ms on the settle spring, so she takes one breath in. Saturation lifts +0.3 at the gather and dries back over 900 ms. **One blink** at the landing (160 ms), then the eyes return to straight ahead at 940 | gather 180 / 320 ms; sat 1.45 → 1.75 → 1.45 |
+| 940 | **Dry.** Everything of hers is back at rest; the bloom's own 900 ms fade is the last thing on the page. Under 1 s, as item 6 asks | |
+
+- **Done's pour never plays for his win.** The 1.8 s pour, swell and splash is hers, for work she finished; a task he finished gets the small beat, so the two never read alike. `TessSoul.Mode` gains no case: the beat is a 940 ms overlay on whatever mode she's in (idle, usually), driven by `.tesseraFeedback(.done)`'s moment, not by a mode change.
+- **Done from elsewhere** (said or written, the hero's finish, a habit, the last set, the shop): the fleck leaves the soul instead of a strike (`task-reward.md`), so her beat plays **at 0**, as the fleck leaves, and nothing at 520. The glance goes to the thing if it's on screen, else to her own line.
+- **The last row of the day:** the same beat; the whole stroke's bloom is the page's, not hers.
+- **Made** (words fly into the soul when Next isn't on screen): the take beat 1 → 1.1 → 1 as written, with one blink as they land. Plan kept: nothing from her.
+- **In a live workout:** the last set's done plays the beat in `LiveTessCorner` at its fixed size, gather and blink only, no glance.
+- **Reduce Motion:** no gather and no glance; the brighten is a 200 ms crossfade; the blink stays. The haptics stay, beat for beat, as `task-reward.md` says.
+- Recording: `recordings/tess-motion-reward.mp4` (and `-light`): swipe right on "Call the bank", armed, let go, the fleck to "Thursday night", the bloom, her beat; the caption names each haptic and whose it is.
+
 ## Timing and easing, in one place
 | | Curve | Duration |
 |---|---|---|
@@ -107,6 +124,7 @@ In a live workout: never. `LiveTessCorner` keeps thinking's pulse at its fixed s
 | Pick up | ease-out | 180 ms |
 | Drop | house spring 0.42 s, bounce 0.12 (flick: 0.55 s, bounce 0.14) | |
 | Eyes blink / glance | ease-in-out / spring 0.3 s, bounce 0.05 | 160 ms / 300 ms |
+| Reward beat (gather in / out) | ease-out / settle spring | 180 / 320 ms, dry 900 ms |
 | Mode blends | `SoulBlend` 400 ms, as built | |
 
 ## Haptics (under `task-reward.md`'s rule)
@@ -115,7 +133,7 @@ In a live workout: never. `LiveTessCorner` keeps thinking's pulse at its fixed s
 | Picked up | `.impact(flexibility: .soft, intensity: 0.5)`, once at 10 pt | BottomChrome (B) |
 | Dropped at a dock | `.selection` | BottomChrome (B) |
 | Working done | Done's own `.success` (already in `TessSoul`), nothing extra | TessSoul (A) |
-| Roam, eyes, split, gather, fail | none | |
+| Roam, eyes, split, gather, fail, her reward beat | none | |
 
 Two new `Haptic` cases (`.soulPickUp`, `.soulDrop`) in `DesignSystem/Haptics.swift`; nothing plays twice for one moment. In quiet hours the pick-up and drop still play (they're under his finger).
 

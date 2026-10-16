@@ -442,7 +442,7 @@ const HOME = { x: 346, y: 779 };
 function composeSoul(t, s) {
   const frame = soulFrame(s.modes, t);
   const C = s.centre(t);
-  const scale = (s.scale ? s.scale(t) : 1) * CHROME * (s.frozen ? 1 : chromeBreath(t));
+  const scale = (s.scale ? s.scale(t) : 1) * CHROME * (s.frozen ? 1 : chromeBreath(t)) * (s.beat ? s.beat(t).scale : 1);
   let parts = formedParticles(frame, C, scale);
   const work = s.work;
   if (work) {
@@ -450,10 +450,15 @@ function composeSoul(t, s) {
     parts = parts.map((p, i) => { const w = workWeight(i, t, work); return w > 0 ? travel(p, wp[i], w, i) : p; });
   }
   if (s.wobble) parts = s.wobble(parts, t, C);
+  const beat = s.beat ? s.beat(t) : null;
+  if (beat && beat.gather > 0) {
+    // The small gather: the satellites (and their children) pull in toward the mains' centre.
+    parts = parts.map((p, i) => PARENT[i] >= 3 ? { ...p, x: lerp(p.x, C.x + (p.x - C.x) * .55, beat.gather), y: lerp(p.y, C.y + (p.y - C.y) * .55, beat.gather) } : p);
+  }
   const fade = workFade(t, work);
   const reduced = s.reduced ? s.reduced(t) : 0;
   const grade = {
-    saturation: lerp(frame.look.saturation, .62, fade) * lerp(1, .5, reduced),
+    saturation: lerp(frame.look.saturation, .62, fade) * lerp(1, .5, reduced) + (beat ? beat.sat : 0),
     contrast: lerp(frame.look.contrast, 1, fade),
     opacity: frame.look.opacity * lerp(1, .9, fade) * lerp(1, .6, reduced),
     fade: Math.max(fade, reduced), haloBoost: s.haloBoost ? s.haloBoost(t) : 1,
@@ -701,6 +706,218 @@ SCENES.reduced = () => {
   };
 };
 
+
+// 7. Pages: the roam rules on each tab page as it stands now (board item 5). Each segment draws its page, shows
+// the lab overlay of her free ground for a moment (not part of the app), then she goes to one allowed spot,
+// works there, Done plays in place when the 80 × 80 clear holds, and she comes home. Review has no free ground
+// in the bands, so she stays home and the readers scan THE WEEK'S LINES.
+function tabs(active) {
+  const nav = ['Review', 'Today', 'Training', 'Kitchen'];
+  let x = 24;
+  nav.forEach(n => { text(n, x, 82, 16, n === active ? LOOK.ink : LOOK.inkSoft, n === active ? 600 : 500); x += width(n, 16) + 22; });
+  text('7:42', 32, 34, 16, LOOK.ink, 600);
+}
+function ground() { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = LOOK.ground; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.restore(); }
+function stroke(x0, x1, y, w, color, alpha, dash) {
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = alpha; ctx.strokeStyle = color; ctx.lineWidth = w; ctx.lineCap = 'round';
+  if (dash) ctx.setLineDash(dash); ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke(); ctx.restore();
+}
+function dab(x, y, r, color, alpha) { ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = alpha; ctx.fillStyle = color; ctx.beginPath(); ctx.ellipse(x, y, r, r * .9, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+function overlay(rects, a) {
+  if (a < .01) return;
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = a; ctx.strokeStyle = LOOK.tess; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+  for (const r of rects) { ctx.beginPath(); ctx.roundRect(r.x, r.y, r.w, r.h, 6); ctx.stroke(); }
+  ctx.restore();
+  text('lab overlay: where she may go', 369, 34, 16, LOOK.tess, 500, 'right', a);
+}
+
+const HOME41 = {
+  rows: [['Call the bank', '09:30'], ['Pick up the dry cleaning', ''], ['Book the dentist', ''], ['Water the plants', '18:00']],
+  draw() {
+    ground(); tabs('Today');
+    text('Thursday night', 24, 138, 21, LOOK.ink, 500);
+    text('paused 21 min ago', 24, 186, 21, LOOK.context, 500);
+    text('Push A, paused', 24, 268, 44, LOOK.ink, 600);
+    text('RESUME PUSH A', 24, 296, 16, LOOK.ink, 700);
+    stroke(24, 369, 304, 1.5, LOOK.ink, .22); stroke(24, 24 + 345 * .22, 304, 1.5, LOOK.ink, 1);
+    text('NEXT', 24, 388, 16, LOOK.inkSoft, 600);
+    this.rows.forEach((r, i) => { const y = 440 + 46 * i; text(r[0], 24, y, 21, LOOK.ink, 500); if (r[1]) text(r[1], 369, y, 16, LOOK.inkSoft, 500, 'right'); });
+  },
+  free() { return this.rows.map((r, i) => ({ x: 24 + width(r[0], 21) + 22, y: 440 + 46 * i - 34, w: 369 - (r[1] ? width(r[1], 16) + 16 : 0) - (24 + width(r[0], 21) + 22), h: 44 })).filter(f => f.w >= 56).concat([{ x: 24, y: 640, w: 345, h: 70 }]); },
+  spot() { const r = this.rows[1]; return { x: 24 + width(r[0], 21) + 40 + 18, y: 440 + 46 - 6 }; },
+};
+const TRAINING = {
+  lanes: [['Bench press', '82.5 × 8', 4], ['Overhead press', '45 × 8', 3], ['Incline dumbbell press', '28 × 10', 3], ['Lateral raise', '9 × 15', 3], ['Triceps pushdown', '30 × 12', 3]],
+  draw() {
+    ground(); tabs('Training');
+    let x = 24; this.lanes.forEach((l, i) => { const w = 30 + l[2] * 12; stroke(x, x + w, 104, 3, LOOK.ink, .14); x += w + 8; });
+    text('today, 5 exercises, about 55 min', 24, 138, 21, LOOK.context, 500);
+    text('Push A', 24, 196, 44, LOOK.ink, 600);
+    text('START PUSH A', 24, 236, 16, LOOK.ink, 700); stroke(24, 369, 244, 1.5, LOOK.ink, 1);
+    this.lanes.forEach((l, i) => {
+      const y = 300 + 72 * i;
+      text(l[0], 24, y, 21, LOOK.ink, 500); text(l[1], 369, y, 16, LOOK.inkSoft, 600, 'right');
+      for (let k = 0; k < l[2]; k++) stroke(24 + 48 * k, 24 + 48 * k + 36, y + 16, 3, LOOK.ink, .22, [6, 5]);
+    });
+    text('PUSH PULL LEGS, ROLLS ON', 24, 688, 16, LOOK.inkSoft, 600); text('ROUTINES', 369, 688, 16, LOOK.ink, 700, 'right');
+    stroke(369 - width('ROUTINES', 16), 369, 696, 1.5, LOOK.ink, 1);
+  },
+  free() { return this.lanes.map((l, i) => { const x0 = 24 + width(l[0], 21) + 22, x1 = 369 - width(l[1], 16) - 16; return { x: x0, y: 300 + 72 * i - 34, w: x1 - x0, h: 44 }; }).filter(f => f.w >= 56); },
+  spot() { const l = this.lanes[0]; return { x: 24 + width(l[0], 21) + 40 + 18, y: 300 - 6 }; },
+};
+const REVIEW = {
+  lines: [['Tue', 'Bench 85 × 8, a best.'], ['Wed', 'First Pull B of the cycle.'], ['Thu', 'Seven tasks done, a record.']],
+  draw() {
+    ground(); tabs('Review');
+    text('the week so far', 24, 138, 21, LOOK.context, 500);
+    text('Three sessions', 24, 196, 44, LOOK.ink, 600);
+    const col = i => 22 + 49.4 * i + 8;
+    'MTWTFSS'.split('').forEach((d, i) => text(d, col(i), 240, 16, i < 3 ? LOOK.inkSoft : i === 3 ? LOOK.ink : LOOK.inkSoft, 500, 'center', i > 3 ? .45 : 1));
+    const band = (y, label, fig) => { text(label, 22, y, 16, LOOK.inkSoft, 600); text(fig, 369, y, 16, LOOK.ink, 600, 'right'); };
+    band(268, 'TRAINING', '3 OF 6'); [0, 1, 3].forEach(i => dab(col(i), 290, 5, LOOK.health || LOOK.context, .5)); stroke(col(2) - 6, col(2) + 6, 290, 2, LOOK.ink, .3);
+    band(326, 'TASKS DONE', '14'); ['3', '4', '2', '5', '·', '·', '·'].forEach((n, i) => text(n, col(i), 350, 16, LOOK.ink, 600, 'center', n === '·' ? .38 : 1));
+    band(380, 'COOK', '2 OF 4'); stroke(col(1) - 4, col(2) + 4, 402, 3, LOOK.now, .5);
+    band(428, 'READ', '3 OF 5'); stroke(col(0) - 4, col(2) + 4, 450, 3, LOOK.context, .5);
+    band(476, 'WEIGHT', '78.2 KG'); stroke(col(0), col(3), 508, 3, LOOK.now, .5); text('78.6', col(0), 528, 16, LOOK.inkSoft, 500, 'center'); text('78.2', col(3), 528, 16, LOOK.inkSoft, 500, 'center');
+    band(546, 'MONEY', '$161'); ['$42', '·', '$78', '$41', '·', '·', '·'].forEach((n, i) => text(n, col(i), 570, 16, LOOK.ink, 600, 'center', n === '·' ? .38 : 1));
+    band(600, 'COOKED', '2'); [1, 2].forEach(i => dab(col(i), 622, 5, LOOK.now, .5));
+    text("THE WEEK'S LINES", 22, 660, 16, LOOK.inkSoft, 600);
+    this.lines.forEach((l, i) => { const y = 686 + 26 * i; text(l[0], 22, y, 16, LOOK.inkSoft, 600); text(l[1], 60, y, 16, LOOK.ink, 500); });
+  },
+  free() { return []; },
+  readRows() { return this.lines.map((l, i) => ({ y: 686 + 26 * i - 2, x0: 60, x1: 60 + width(l[1], 16) })); },
+};
+const KITCHEN = {
+  draw() {
+    ground(); tabs('Kitchen');
+    text('What we eat, and what we need.', 24, 138, 21, LOOK.inkSoft, 500);
+    text('Groceries', 24, 212, 34, LOOK.ink, 600); text('Recipes', 24, 300, 34, LOOK.ink, 600);
+    text('Paste a recipe', 24, 700, 21, LOOK.ink, 600);
+  },
+  free() { return [{ x: 24 + width('Groceries', 34) + 22, y: 212 - 44, w: 369 - (24 + width('Groceries', 34) + 22), h: 56 }, { x: 24 + width('Recipes', 34) + 22, y: 300 - 44, w: 369 - (24 + width('Recipes', 34) + 22), h: 56 }, { x: 24, y: 360, w: 345, h: 300 }]; },
+  spot() { return { x: 24 + width('Groceries', 34) + 40 + 18, y: 212 - 8 }; },
+};
+
+function roamSegment(page, line, doneLine, caps) {
+  const T1 = 1.5, S = T1 + .76 + .2, G = S + 2.3, D = G + .7, back = D + 1.9, end = back + .76 + .9;
+  const spot = page.spot();
+  const goes = (t, from, to, at) => { const u = clamp((t - at) / .76); return { x: lerp(from.x, to.x, travelX(u)), y: lerp(from.y, to.y, travelY(u)) }; };
+  return {
+    duration: end,
+    draw: t => { page.draw(); overlay(page.free(), ramp(t, .2, .3) * (1 - ramp(t, 1.2, .3))); },
+    soul: { modes: [{ mode: 'idle', at: -10 }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }], centre: t => t < back ? goes(t, HOME, spot, T1) : goes(t, spot, HOME, back), work: localWork({ split: S, gather: G, at: spot }) },
+    lines: [{ text: line, at: T1 - .1, until: D }, { text: doneLine, at: D + .5 }],
+    caps: [{ at: 0, text: caps[0] }, { at: .2, text: caps[1] }, { at: .9, text: caps[2] }, { at: T1, text: 'She goes to the thing she is changing.' }, { at: S, text: 'Works there, small.' }, { at: D, text: 'Done in place: the 80 × 80 clear holds.', haptic: 'success' }, { at: back, text: 'Home on the same arc.' }],
+  };
+}
+SCENES.pages = () => {
+  const segs = [
+    roamSegment(HOME41, 'Moving the dry cleaning to Saturday.', 'Dry cleaning moved to Saturday.',
+      ['Home after Design 41: one line per thing.', 'May go: after a Next row, under the last row.', 'Never the hero, the key or the day word.']),
+    roamSegment(TRAINING, 'Bench at 85 today.', 'Bench set to 85 × 8.',
+      ['Training at rest: the plan as lanes.', 'Free ground: the gap between a name and its target, 56 pt or wider. Never the strip, the Start mark, the strokes.', 'She sits in the lane’s gap, above the strokes.']),
+    (() => {
+      const S = 1.5, scan = S + 1.2, scanDur = 2.6, G = scan + scanDur + .3, D = G + .78, end = D + 3;
+      const rows = REVIEW.readRows();
+      return {
+        duration: end,
+        draw: t => { REVIEW.draw(); overlay(rows.map(r => ({ x: r.x0 - 6, y: r.y - 14, w: r.x1 - r.x0 + 12, h: 24 })), ramp(t, .2, .3) * (1 - ramp(t, 1.2, .3))); },
+        soul: { modes: [{ mode: 'idle', at: -10 }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }], centre: () => HOME, work: { split: S, scan, scanDur, gather: G, at: { x: 336, y: 772 }, path: scanPath(rows) } },
+        lines: [{ text: 'Reading your week.', at: S - .1, until: D }, { text: 'Tuesday’s bench was the best.', at: D + .5 }],
+        caps: [{ at: 0, text: 'Review: the week as bands.' }, { at: .2, text: 'No free ground in the bands. She stays home.' }, { at: scan, text: 'Readers only under THE WEEK’S LINES.' }, { at: D, text: 'Done at home.', haptic: 'success' }],
+      };
+    })(),
+    roamSegment(KITCHEN, 'Adding dal to Groceries.', 'Dal added to Groceries, 7 things.',
+      ['Kitchen: two words and a foot line.', 'May go: after each word, and the space below.', 'She sits beside the word she adds to.']),
+  ];
+  let at = 0; for (const s of segs) { s.start = at; at += s.duration; }
+  return { duration: at, segments: segs };
+};
+
+
+// 8. Reward: the done pattern from task-reward.md after Design 41 (the fleck arcs to the day label), with the
+// soul's own beat at the bloom (board item 6): a small gather, the brighten as written, one blink. One haptic
+// per moment, none of them hers.
+SCENES.reward = () => {
+  const A = 1.0, armed = A + .62, go = armed + .5; // finger starts, strike armed at 140 pt, let go
+  const land = go + .52, D = go;
+  const rowIdx = 0, rowY = 440, nameW = width('Call the bank', 21);
+  const labelEnd = 24 + width('Thursday night', 21);
+  const bloomAt = { x: labelEnd + 16, y: 138 - 7 };
+  const fingerX = t => t < A ? 36 : t < armed ? lerp(36, 36 + 140, easeInOut((t - A) / (armed - A))) : t < go ? 176 + 6 * Math.sin((t - armed) * 6) : 176;
+  const strikeEnd = t => {
+    if (t < A) return 0;
+    if (t < armed) return clamp(fingerX(t) - 24, 0, nameW);
+    return lerp(140, nameW, ramp(t, armed, .16, bezier(.3, 0, .2, 1))); // runs itself out
+  };
+  const fold = t => ramp(t, go + .08, .32, bezier(.3, 0, .2, 1)); // the row folds, rows below rise
+  const beat = t => {
+    const up = ramp(t, land, .18, easeOut), down = ramp(t, land + .18, .32, bezier(.3, 0, .2, 1));
+    const g = up * (1 - down);
+    const dry = 1 - ramp(t, land + .2, .9);
+    return { scale: 1 + .12 * g, gather: g, sat: .3 * g * dry };
+  };
+  const eyes = t => {
+    let blink = 1; const u = (t - land) / .16; if (u > 0 && u < 1) blink = Math.abs(1 - 2 * u);
+    const glance = ramp(t, go, .3, easeOut) * (1 - ramp(t, land + .42, .3));
+    return { alpha: 1, blink, look: { x: -1 * glance, y: -1 * glance } };
+  };
+  return {
+    duration: land + 3.2,
+    draw: t => {
+      ground(); tabs('Today');
+      text('Thursday night', 24, 138, 21, LOOK.ink, 500);
+      // The bloom at the day label: a 30 pt wash that grows and fades over 900 ms.
+      const b = ramp(t, land, .9);
+      if (b > 0 && b < 1) {
+        ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalCompositeOperation = LOOK.blend;
+        const r = 30 * lerp(.4, 1.2, easeOut(b)); const g = ctx.createRadialGradient(bloomAt.x, bloomAt.y, 0, bloomAt.x, bloomAt.y, r);
+        g.addColorStop(0, rgba(LOOK.context, .6 * (1 - b))); g.addColorStop(1, rgba(LOOK.context, 0)); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(bloomAt.x, bloomAt.y, r, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      }
+      text('paused 21 min ago', 24, 186, 21, LOOK.context, 500);
+      text('Push A, paused', 24, 268, 44, LOOK.ink, 600);
+      text('RESUME PUSH A', 24, 296, 16, LOOK.ink, 700);
+      stroke(24, 369, 304, 1.5, LOOK.ink, .22); stroke(24, 24 + 345 * .22, 304, 1.5, LOOK.ink, 1);
+      text('NEXT', 24, 388, 16, LOOK.inkSoft, 600);
+      const f = fold(t);
+      HOME41.rows.forEach((r, i) => {
+        if (i === rowIdx) {
+          if (f >= 1) return;
+          const a = (1 - f) * (t >= go ? lerp(1, .45, ramp(t, go, .5)) : 1);
+          text(r[0], 24, rowY, 21, LOOK.ink, 500, 'left', a);
+          if (r[1]) text(r[1], 369, rowY, 16, LOOK.inkSoft, 500, 'right', (1 - clamp(strikeEnd(t) / 40)) * (1 - f));
+          const e = strikeEnd(t);
+          if (e > 0) stroke(24, 24 + e, rowY + 6, 2, LOOK.context, (t >= go ? lerp(1, .45, ramp(t, go, .7)) : 1) * (1 - f));
+          return;
+        }
+        const y = 440 + 46 * i - (i > rowIdx ? 46 * f : 0);
+        text(r[0], 24, y, 21, LOOK.ink, 500); if (r[1]) text(r[1], 369, y, 16, LOOK.inkSoft, 500, 'right');
+      });
+      // The fleck: a 12 pt lens of the pigment leaves the strike's end and arcs up to the day label.
+      const u = ramp(t, go, .52, bezier(.3, 0, .2, 1));
+      if (t >= go && u < 1) {
+        const from = { x: 24 + nameW, y: rowY + 6 }, to = bloomAt, cx = (from.x + to.x) / 2 + 70, cy = (from.y + to.y) / 2 - 60;
+        const x = (1 - u) * (1 - u) * from.x + 2 * (1 - u) * u * cx + u * u * to.x, y = (1 - u) * (1 - u) * from.y + 2 * (1 - u) * u * cy + u * u * to.y;
+        const sc = lerp(1.2, .7, u);
+        ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.fillStyle = LOOK.context; ctx.beginPath(); ctx.ellipse(x, y, 6 * sc, 1.6 * sc, -.5, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      }
+      // UNDO under her line, with the line.
+      if (t > go + .08) { const a = ramp(t, go + .08, .3); text('UNDO', 24, 812, 16, LOOK.ink, 700, 'left', a * .9); stroke(24, 24 + width('UNDO', 16), 818, 1.5, LOOK.ink, a); }
+    },
+    finger: t => (t < A - .2 || t > go + .15) ? null : { x: fingerX(t), y: rowY - 6, alpha: ramp(t, A - .2, .2) * (1 - ramp(t, go, .15)) },
+    soul: { modes: [{ mode: 'idle', at: -10 }], centre: () => HOME, beat, eyes, scale: () => 1 },
+    lines: [{ text: 'Call the bank done.', at: go + .08 }],
+    caps: [
+      { at: 0, text: 'Done, after Design 41: swipe right on a row.' },
+      { at: armed, text: 'Armed at 140 pt: the strike runs itself out.', haptic: 'selection' },
+      { at: go, text: 'Let go: the fleck leaves for the day label.', haptic: 'the done pattern (QueueRow’s)' },
+      { at: go + .02, text: 'Her eyes glance at the row. No beat yet.', haptic: 'the done pattern (QueueRow’s)' },
+      { at: land, text: 'Bloom. Her beat: a small gather, brighter, one blink.', haptic: 'soft impact 0.4 (the bloom’s, not hers)' },
+      { at: land + .5, text: 'Dry by 940 ms. Done’s pour never plays for his win.' },
+    ],
+  };
+};
+
 // The work state when she's out on a row: tighter constellation, no readers.
 const _workParticles = workParticles;
 workParticles = function (t, work) {
@@ -718,8 +935,13 @@ const _compose = composeSoul;
 let scene = null;
 function renderAt(t) {
   if (!scene) scene = SCENES[SCENE]();
-  const pageOpts = scene.page ? scene.page(t) : {};
-  drawPage(pageOpts);
+  if (scene.segments) {
+    const seg = scene.segments.findLast(x => x.start <= t) || scene.segments[0];
+    const u = t - seg.start;
+    seg.draw(u); drawLine(seg.lines, u); composeSoul(u, seg.soul); drawCaption(seg.caps, u);
+    return;
+  }
+  if (scene.draw) scene.draw(t); else drawPage(scene.page ? scene.page(t) : {});
   drawLine(scene.lines, t);
   const soul = scene.soul;
   if (soul.frozen) {
