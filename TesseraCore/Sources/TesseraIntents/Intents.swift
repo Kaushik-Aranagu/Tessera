@@ -137,7 +137,7 @@ public struct CreateTaskIntent: AppIntent {
 public struct TellTessIntent: AppIntent {
     public static let title: LocalizedStringResource = "Tell Tess"
     public static let description =
-        IntentDescription("Logs a set or adds a task from a phrase, like \u{201C}bench 80 x 8\u{201D}.")
+        IntentDescription("Logs a set or adds a task from a phrase, like \u{201C}bench 80 × 8\u{201D}.")
 
     @Parameter(title: "Phrase") public var phrase: String
 

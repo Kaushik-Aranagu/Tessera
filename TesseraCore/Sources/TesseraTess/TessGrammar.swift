@@ -112,6 +112,16 @@ public struct TessGrammar {
     /// The live workout's rules for a phrase with an exercise in focus; nil when they don't apply (the other rules
     /// then read it), `Live(parse: nil)` when the phrase is a set the grammar mustn't guess.
     private func parseInFocus(_ phrase: String, text: String, context: TessContext, entry: ObjectRecord) -> Live? {
+        // Number words typed or said ("a hundred, five", K885) are read as digits by the live rules first.
+        let words = phrase.lowercased().split { !$0.isLetter }.map(String.init)
+        if words.contains(where: { TessSpoken.isNumberWord($0) || $0 == "plus" || $0 == "minus" }) {
+            let spoken = TessSpoken.numbers(phrase)
+            if spoken != phrase, let live = parseInFocus(spoken, text: Self.normalize(spoken), context: context,
+                                                         entry: entry)
+            {
+                return live
+            }
+        }
         // In a live workout, set phrases are guarded first (S701 to S706): a number that could be a weight, a signed
         // change, "at N" after a set: never a wrong set and never a task.
         if !phrase.contains(","), let both = parseSetAndErrand(phrase, context: context, entry: entry) {

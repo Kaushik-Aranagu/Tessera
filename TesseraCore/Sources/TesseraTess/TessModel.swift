@@ -83,7 +83,7 @@ public struct TessRouter {
         if let asked {
             return asked
         }
-        return TessCapture(records: [], line: "Didn't catch that. Try \u{201C}bench 80 x 8\u{201D}.", source: .none)
+        return TessCapture(records: [], line: "Didn't catch that. Try \u{201C}bench 80 × 8\u{201D}.", source: .none)
     }
 }
 
