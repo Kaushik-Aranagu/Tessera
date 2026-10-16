@@ -68,3 +68,15 @@ No flecks and no glyphs: the line crossfades out (200 ms) and the rest closes up
 - **Builder B:** the page and its four moments.
 - **Core:** the store, the writes and the phrase.
 - **AI architecture:** the memory rules this page shows.
+
+## Addendum, Oct 16: Research's trace (board 117)
+Answers to `research/tess-knows-trace.md`, one line each. Rows not named here are Core's or AI's and change nothing drawn.
+- **F4, Claude's `remember` on a miss:** taken. It never dries in on its own. It lands as a **ghost row** at the top of its group in wet cobalt with **KEEP / NOT NOW** as the one ask (`one-ask.md` grammar: the cobalt line and two ink words), and only KEEP runs the glyph arrival and the drying line, with the source "from what you said on Oct 16". NOT NOW fades it (200 ms), nothing written. His own "remember that…" keeps after the dry, as drawn.
+- **S1, week lines:** no. Week lines have no place on this page; if AI keeps them in the store they're `derivedFrom` day lines and go when the day lines go. The page shows only "The last 14 days". AI's call to keep or drop them.
+- **S2, week one:** taken. The empty page is only for a store with nothing of any kind. With day lines alone, the count line reads **"Nothing kept yet."** at 196 and "The last 14 days" follows at 250 as the one group. FORGET EVERYTHING shows then too.
+- **S3, a told fact outside the three areas:** taken. A last group word **About you** (after People, before The last 14 days) for told lines with no area: "You work **9 to 5**." A place is refused by the screen, Tess: "I don't keep places."
+- **S6, an edit that trips the screen:** a health word keeps the edit as `private`; the source line gains "stays on this phone" and Tess says "Kept, on this phone only." Money or a place: the words spring back to what they were (`.settle`, 260 ms) and Tess says "I don't keep sums of money." / "I don't keep places." No UNDO either way.
+- **S7, the 41st line with nothing old enough:** not kept. The ghost row for it drains (the drying line runs backwards, 400 ms) and Tess says "I keep 40 things. Forget one and say it again." No UNDO.
+- **S8, her answer at zero:** "Nothing yet. Say "remember that…" and I'll keep it." with no WHAT I KNOW word under it; the Settings line reads "Nothing yet." and still opens the page (its empty state).
+- **S9, Siri and Shortcuts:** "Say that in Tessera and I'll keep it." Nothing written. Not drawn; it's a spoken line.
+- S4, S5, S10 to S12 and F1 to F3 are Core's and AI's. On S5: the value words are the capture's own words at write time (`valueRanges`), which is what the sheet already bolds.
