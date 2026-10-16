@@ -30,8 +30,8 @@ struct HomeLinesTests {
                             exercisesPlanned: 6, records: ["Bench"], endedAt: Self.at(20, 5))
         let line = HomeLines.line(for: done, now: Self.at(21, 40), calendar: Self.calendar)
         #expect(line.text == "Push A done. Bench best.") // "best", never "record" (Design G3)
-        #expect(line.widgetLine == "Push A done, a bench best." && line.widgetMeta == "8:05 pm")
-        #expect(line.hero == "Push A done" && line.context == "done at 8:05 pm" && line.contextShort == line.context)
+        #expect(line.widgetLine == "Push A done. Bench best." && line.widgetMeta == "8:05 pm")
+        #expect(line.hero == "Push A done" && line.context == "8:05 pm" && line.contextShort == line.context)
         #expect(line.detail == "6 exercises, 22 sets, 1 new best.")
         // The facts' numbers, then every digit in the rules words (8:05 gives 8 and 5), each once.
         #expect(line.numbers == [6, 22, 8, 5, 1] && line.names == ["Push A", "Bench"] && !line.fixed)
@@ -41,7 +41,7 @@ struct HomeLinesTests {
         let two = HomeFact(id: UUID(), kind: .workout, title: "Push A", state: .done, sets: 20, exercisesDone: 6,
                            exercisesPlanned: 6, records: ["Bench", "Press"])
         #expect(text(two) == "Push A done. 2 bests." && two.factNumbers == [6, 6, 20, 2])
-        #expect(HomeLines.line(for: two).widgetLine == "Push A done, 2 bests.")
+        #expect(HomeLines.line(for: two).widgetLine == "Push A done. 2 bests.")
         #expect(HomeLines.detail(for: two) == "6 exercises, 20 sets, 2 new bests.")
     }
 
@@ -125,7 +125,7 @@ struct HomeLinesTests {
         let done = HomeFact(id: UUID(), kind: .cook, title: "Tacos", state: .done, startedAt: Self.at(20, 30),
                             endedAt: Self.at(21, 40))
         let served = HomeLines.line(for: done, now: Self.at(22), calendar: Self.calendar)
-        #expect(served.text == "Tacos done." && served.hero == "Tacos done" && served.context == "done at 9:40 pm")
+        #expect(served.text == "Tacos done." && served.hero == "Tacos done" && served.context == "9:40 pm")
         #expect(served.detail == nil && served.widgetLine == "Tacos done." && served.widgetMeta == "9:40 pm")
         // A paused shop is him at home, not at the store (Research G2).
         let home = HomeFact(id: Groceries.listID, kind: .shop, title: "Groceries", state: .paused, step: 2,
@@ -351,7 +351,7 @@ struct HomeLinesTests {
         let done = HomeFacts(engine: engine).fact(done: summary)
         let line = HomeLines.line(for: done, now: Self.at(21).addingTimeInterval(3 * 86400), calendar: Self.calendar)
         #expect(line.text == "\(done.title) done. \(done.records[0]) best.")
-        #expect(line.context == "done at 6:30 pm" && line.detail?.hasSuffix("1 set, 1 new best.") == true)
+        #expect(line.context == "6:30 pm" && line.detail?.hasSuffix("1 set, 1 new best.") == true)
         #expect(!line.text.contains("70") && !line.numbers.contains(70))
         #expect(done.sinceLastDays == 2 && line.numbers.contains(2))
     }

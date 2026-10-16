@@ -92,7 +92,7 @@ public struct HomeLine: Equatable, Sendable {
     public let text: String
     /// The hero, rules only: "Push A done", "Push A, paused at bench", "Chili, step 3". No stop; the type carries it.
     public let hero: String
-    /// The time words above the hero: "paused 21 min ago", "this evening", "done at 7:40 pm". At most 6 words and
+    /// The time words above the hero: "paused 21 min ago", "this evening", "7:40 pm". At most 6 words and
     /// 32 characters, no stop. Nil when there is nothing to say.
     public let context: String?
     /// The context when the full one doesn't fit its width: "paused 21 min". Words shorten, never the type.
@@ -126,7 +126,7 @@ public struct HomeLine: Equatable, Sendable {
             return hero
         }
         if fact.kind == .workout, fact.state == .done, fact.sets > 0, !records.isEmpty {
-            return records.count == 1 ? "\(hero), a \(records[0].lowercased()) best" : "\(hero), \(records.count) bests"
+            return records.count == 1 ? "\(hero). \(records[0]) best" : "\(hero). \(records.count) bests"
         }
         guard let context, !HomeLines.repeatsState(context, hero: hero) else { return hero }
         // "tomorrow, first": the bare time word joins without a comma, the fact after one (Design 54 rule 2).
@@ -326,10 +326,11 @@ public enum HomeLines {
             // the weekday lives on as the widget's meta through `weekday(now:calendar:)`.
             return same(fact.tomorrow ? "tomorrow" : "today")
         case (.workout, .done):
-            // "done at 7:40 pm"; a workout with no sets only says when: "this afternoon".
+            // "7:40 pm" alone: the hero already says done (home-lines.md §2, no repeats); a workout with no sets only
+            // says when: "this afternoon".
             guard let ended = fact.endedAt else { return (nil, nil) }
             guard fact.sets > 0 else { return same(partWord(ended, calendar: calendar)) }
-            return same("done at \(DayStoryClock.sentenceTime(ended, calendar: calendar))")
+            return same(DayStoryClock.sentenceTime(ended, calendar: calendar))
         case (.workout, .paused), (.cook, .paused), (.shop, .paused):
             // A paused shop is him at home, not at the store (Research G2).
             return since("paused", fact.lastTouchedAt ?? fact.startedAt)
@@ -346,7 +347,7 @@ public enum HomeLines {
     /// The done cook's clock, the planned cook's count, the shop's place.
     static func kitchenContext(for fact: HomeFact, calendar: Calendar) -> String? {
         switch (fact.kind, fact.state) {
-        case (.cook, .done): fact.endedAt.map { "done at \(DayStoryClock.sentenceTime($0, calendar: calendar))" }
+        case (.cook, .done): fact.endedAt.map { DayStoryClock.sentenceTime($0, calendar: calendar) }
         case (.cook, .planned): toBuy(fact)
         case (.shop, _): "at the store"
         default: nil
@@ -434,11 +435,12 @@ public enum HomeLines {
             || weekdays.contains(context)
     }
 
-    /// Whether a context only repeats the hero's state ("done at 8:05 pm" under "Push A done"; "paused 21 min ago"
+    /// Whether a context only repeats the hero's state ("8:05 pm" under "Push A done"; "paused 21 min ago"
     /// under "Push A, paused at incline"; "now" under a running hero).
     static func repeatsState(_ context: String, hero: String) -> Bool {
         let lower = hero.lowercased()
-        return (context.hasPrefix("done") && lower.contains("done"))
+        let clock = context.wholeMatch(of: /\d{1,2}(:\d{2})? ?(am|pm)/) != nil
+        return (context.hasPrefix("done") && lower.contains("done")) || (clock && lower.contains("done"))
             || (context.hasPrefix("paused") && lower.contains("paused")) || context == "now"
     }
 
