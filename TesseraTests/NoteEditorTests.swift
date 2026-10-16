@@ -22,3 +22,12 @@ struct NoteJoinTests {
         }
     }
 }
+
+/// Research on NoteRow: a private note's row never shows or speaks its body.
+struct PrivateNoteRowTests {
+    @Test func aPrivateRowHasNoPreview() {
+        let body = "Private note\nThe code is under the mat"
+        #expect(NotesCopy.preview(of: body, isPrivate: true).isEmpty)
+        #expect(NotesCopy.preview(of: body, isPrivate: false) == "The code is under the mat")
+    }
+}
