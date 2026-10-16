@@ -68,6 +68,14 @@ names.
 6. Run the checks below.
 7. Add the next reminder: Wed 28 Oct, before the same time of day as this install.
 
+## If he ever rolls back to an older build
+
+From QA's `../qa/review-225.md`. After the v3 build runs once, the phone's database is at v3 (one nullable `zone`
+column on the op table, nothing dropped). An older build (fallback b19fb4a or d0154a9) opens that v3 database fine.
+Its own restore will refuse any backup made after v3, because those copies list v3 among their migrations
+(`TesseraBackup.swift:181`); the newer build restores them fine. His data stays safe either way: roll back if needed,
+just don't restore with the old build.
+
 ## Check right after (one line each, with what he should see)
 
 1. **App opens straight to Now**, with no Tess note about a fresh start or moving the store aside.

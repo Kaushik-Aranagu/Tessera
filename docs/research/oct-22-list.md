@@ -29,13 +29,13 @@ Morning! 8 quick ones, one word each. Reply "defaults" to take every ★. Nothin
 
 Kitchen, after your first week:
 1. Did you ever want to know if you already had something at home? Yes / ★No
-2. Did you try to save a recipe from a website? Yes / ★No
+2. Recipe links (yes, already decided) come in Kitchen v2. Want them first? Yes / ★No
 3. Was there a moment in the kitchen you reached for something else instead of Tessera? Name it, or ★No
 
 Money, before it's built:
-4. A shop name on a spend ("38.20 at Tesco")? Its own field / ★Keep it in the text
+4. A shop name on a spend ("38.20 at Trader Joe's")? Its own field / ★Keep it in the text
 5. Currencies: just €, £, $ and ₹? ★Yes / Add one (say which)
-6. After a shop, can a plain "38" answer "Groceries total?"? ★Yes / No
+6. After a shop, Tess asks "Groceries total?" Can you answer with just "38"? ★Yes / No
 7. Does "paid 650 rent" work like "spent"? ★Yes / No
 8. "Split 60 with Sam": log your half or the full 60? ★Half / Full
 
@@ -44,7 +44,7 @@ Still open from Monday:
 ```
 
 **Q2 "seen" wording** (use only if the capture-miss log shows a pasted link):
-`2. You pasted a link as a recipe on [day] and I couldn't read it. Want links to work next? ★Yes / No`
+`2. You pasted a link as a recipe on [day] and I couldn't read it. Want link fetch first in v2? ★Yes / No`
 Fill [day] from the miss's `at` (his 4 AM day, Pacific, written "Tue"). Here the recommendation flips to Yes, because
 the data already says he tried. Quote only the day, never the link itself.
 
@@ -73,11 +73,11 @@ the plan as it is (a missed day rolls on, Now never says "Rest day").
 |---|---|---|---|
 | 1 | **No** (★) | Nothing. Pantry light (P) stays in the v2 backlog, not first | Kitchen lead |
 | 1 | Yes | Pantry light (P) moves into Kitchen v2 scope | Kitchen lead, then Product |
-| 2 | **No** (★) | Link fetch (L1) keeps its place in the backlog | Kitchen lead |
+| 2 | **No** (★) | L1 keeps its place in v2 (link fetch is already a yes; No only means not first) | Kitchen lead |
 | 2 | Yes | Link fetch (L1) moves to the front of Kitchen v2 | Kitchen lead, then Product, then Core |
 | 3 | **No** (★) | Nothing new; v2 is scoped from the data table alone | Kitchen lead |
 | 3 | A named thing ("clock timer", "paper list", "Notes") | That gap is the first v2 item the Kitchen lead looks at: timer means pause and extend (12b), a list means the shop flow, Notes means capture | Kitchen lead, then Product |
-| 4 | **Keep it in the text** (★) | Nothing. "at Tesco" stays in the spend's text; a field can be filled from it later | Core (no change) |
+| 4 | **Keep it in the text** (★) | Nothing. "at Trader Joe's" stays in the spend's text; a field can be filled from it later | Core (no change) |
 | 4 | Its own field | Slice 1 gains a `shop` text field and slice 4 reads "at X" into it; a small board item | Product logs it; Core |
 | 5 | **Yes** (★) | Nothing. EUR, GBP, USD, INR and their symbols only; anything else goes to the model as typed | Core (no change) |
 | 5 | Add one | `MoneyAmount.parse` gains that code and symbol, plus one eval row | Core |
