@@ -56,16 +56,22 @@ struct TimeWordsTests {
         #expect(try #require(next) > Self.at(21, 0))
     }
 
-    @Test @MainActor func notNowLateAtNightMovesToSevenAm() throws {
-        // Product 0ab: "Not now" at 11:20 pm on a task for 11 pm goes to 7 am, not 11 pm tomorrow.
+    @Test @MainActor func notNowNeverLandsInQuietHours() throws {
+        // Product 0ab, QA F1 on #553: the moved time itself leaves quiet hours, to its next 7 am.
         let store = ObjectStore.open(inMemory: true)
         let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
-        let calendar = Calendar.current
-        let now = try #require(calendar.date(bySettingHour: 23, minute: 20, second: 0, of: Date()))
-        let eleven = try #require(calendar.date(bySettingHour: 23, minute: 0, second: 0, of: now))
-        let task = try engine.perform(CreateTask(title: "Stretch", startsAt: eleven), by: .user).output
-        try engine.perform(MoveTask(task: task.id, time: now), by: .user)
-        let moved = try #require(store.value("startsAt", of: task)?.dateValue)
-        #expect(calendar.component(.hour, from: moved) == 7 && moved > now && moved < now.addingTimeInterval(9 * 3600))
+        let calendar = Self.calendar
+        // 11:20 pm Tuesday, a task at 11 pm: tomorrow 11 pm is quiet, so Thursday 7 am.
+        let late = try engine.perform(CreateTask(title: "Stretch", startsAt: Self.at(13, 23)), by: .user).output
+        try engine.perform(MoveTask(task: late.id, time: Self.at(13, 23, 20), calendar: calendar), by: .user)
+        #expect(store.value("startsAt", of: late)?.dateValue == Self.at(15, 7))
+        // 8 pm Tuesday, a task at 6:30 am Wednesday: Thursday 6:30 am is quiet, so Thursday 7 am, a full day on.
+        let early = try engine.perform(CreateTask(title: "Run", startsAt: Self.at(14, 6, 30)), by: .user).output
+        try engine.perform(MoveTask(task: early.id, time: Self.at(13, 20), calendar: calendar), by: .user)
+        #expect(store.value("startsAt", of: early)?.dateValue == Self.at(15, 7))
+        // A task at 9 am moves to 9 am, untouched.
+        let morning = try engine.perform(CreateTask(title: "Call", startsAt: Self.at(14, 9)), by: .user).output
+        try engine.perform(MoveTask(task: morning.id, time: Self.at(13, 20), calendar: calendar), by: .user)
+        #expect(store.value("startsAt", of: morning)?.dateValue == Self.at(15, 9))
     }
 }

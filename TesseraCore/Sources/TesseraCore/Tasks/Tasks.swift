@@ -138,9 +138,10 @@ public struct MoveTask: EngineAction {
         // 2:00 PM PT). A time he picks himself (`to`) is kept.
         if to == nil {
             let hour = calendar.component(.hour, from: target)
+            // The target itself moves to its next 7 am, as the grammar does (QA F1 on #553).
             if hour >= 23 || hour < 7 {
-                let morning = calendar.date(bySettingHour: 7, minute: 0, second: 0, of: now) ?? now
-                target = morning > now ? morning : calendar.date(byAdding: .day, value: 1, to: morning) ?? morning
+                let day = hour >= 23 ? calendar.date(byAdding: .day, value: 1, to: target) ?? target : target
+                target = calendar.date(bySettingHour: 7, minute: 0, second: 0, of: day) ?? target
             }
         }
         try transaction.set("startsAt", to: .date(target), on: task)
