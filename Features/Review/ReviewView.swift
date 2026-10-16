@@ -205,6 +205,10 @@ private struct ReviewPageBody: View {
                         .entrance(6)
                 }
 
+                // The look, until Settings exists: "Porcelain by day, Obsidian by night", each name a value word.
+                LookSentence()
+                    .padding(.top, Theme.Spacing.section)
+
                 // The quiet way in to backups: a label word at the foot of the week.
                 NavigationLink {
                     BackupView()
@@ -212,7 +216,7 @@ private struct ReviewPageBody: View {
                     Text("Backups")
                 }
                 .buttonStyle(.labelWord)
-                .padding(.top, Theme.Spacing.section)
+                .padding(.top, Theme.Spacing.l)
                 .accessibilityHint("Where your history is kept")
             }
             .padding(.horizontal, Theme.Spacing.gutter)

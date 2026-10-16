@@ -28,6 +28,8 @@ final class WorkoutSession {
     /// The effort stop-slider is hidden until you pull up on the reps.
     var isEffortShown = false
     private(set) var restEndsAt: Date?
+    /// The set a restored rest follows (a relaunch mid-rest has no seated set of its own).
+    var restAfterSetID: UUID?
     private(set) var restTotal: TimeInterval = 0
     /// Increments on every change to the session's shape (a set logged or undone, a swap, a reorder). Drives the
     /// seat animation, haptics and the Live Activity.
@@ -86,6 +88,7 @@ final class WorkoutSession {
         if let rest = Self.savedRest(for: workout, model: model) {
             restEndsAt = rest.endsAt
             restTotal = rest.total
+            restAfterSetID = rest.afterSet
         }
     }
 
@@ -449,6 +452,7 @@ extension WorkoutSession {
 
     /// Ends the rest without a skip note (its set was taken back).
     func endRest() {
+        restAfterSetID = nil
         restEndsAt = nil
         restNote = nil
     }
