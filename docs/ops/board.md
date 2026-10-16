@@ -1,5 +1,7 @@
 # Tessera board (index)
 
+**ON HIS PHONE (2:24 PM PT Oct 16): a36b161, the Catalog v9 pin.** Signing lapses Fri Oct 23 at 2:12 PM PT. Next: the riders pin, named at the Thu Oct 22 9:30 AM branch call (pin-checklist). No older build ever installs.
+
 **PIN (1:08 PM PT Oct 16): a36b161b7294596848a319c0cc0fc50a3b25f2ee.** Builder A runs the v9 gate, the Design walk and Step 0, then installs it under his standing approval.
 
 **Install rule (12:37 PM PT Oct 16):** standing approval removes asking him, not the gates. Only the named pin SHA in product/pin-checklist.md installs, never master.

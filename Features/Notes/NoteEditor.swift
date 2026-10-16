@@ -22,8 +22,10 @@ struct NoteEditor: View {
     @State private var openedAs = ""
     @State private var saveTask: Task<Void, Never>?
     @State private var deleted = false
-    /// A Claude key typed or pasted into the note: taken out at once, and Tess says where it goes (QA B1).
+    /// A Claude key typed or pasted into the note: taken out at once, and Tess says where it goes (QA B1). The line
+    /// stays until his next edit (QA R3 on #471); `keyEdits` counts the field changes the removal itself makes.
     @State private var refusedKey = false
+    @State private var keyEdits = 0
 
     var body: some View {
         let _ = model.revision
@@ -131,10 +133,16 @@ struct NoteEditor: View {
     private func noteEdit() {
         if looksLikeClaudeKey(heading) || looksLikeClaudeKey(text) {
             // Taking the key out fires onChange again, which saves the rest as an ordinary edit.
+            keyEdits = (looksLikeClaudeKey(heading) ? 1 : 0) + (looksLikeClaudeKey(text) ? 1 : 0)
             heading = withoutClaudeKeys(heading)
             text = withoutClaudeKeys(text)
             withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { refusedKey = true }
             return
+        }
+        if keyEdits > 0 {
+            keyEdits -= 1
+        } else if refusedKey {
+            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { refusedKey = false }
         }
         guard loaded, edited || NotesEditorCopy.join(heading: heading, rest: text) != openedAs else { return }
         edited = true

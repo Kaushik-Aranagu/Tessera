@@ -240,6 +240,11 @@ enum WorkoutLines {
         }
     }
 
+    /// The receipt after a set lands, thing first (receipts-thing-first.md RC10): "Set 3 logged.".
+    static func loggedLine(_ number: Int?) -> String {
+        number.map { "Set \($0) logged." } ?? "Logged."
+    }
+
     /// While dialling a set.
     private static func setLine(_ session: WorkoutSession) -> String {
         if let from = session.swappedFrom, let entry = session.currentEntry, session.setRows(of: entry).isEmpty {
@@ -250,7 +255,7 @@ enum WorkoutLines {
             return note
         }
         if session.canUndo {
-            return "Logged."
+            return loggedLine(session.lastSeated?.number)
         }
         if let reason = session.targetReason, session.currentSetNumber == 1 {
             return reason + "."
@@ -381,7 +386,7 @@ struct LiveAskField: View {
         .onAppear { focused = true }
     }
 
-    /// Anything holding "sk-ant-", in any case (the guard Ask uses, BottomChrome.looksLikeClaudeKey).
+    /// Anything that looks like a Claude API key, in any case (the guard Ask uses, BottomChrome.looksLikeClaudeKey).
     static func refuses(_ text: String) -> Bool {
         looksLikeClaudeKey(text)
     }

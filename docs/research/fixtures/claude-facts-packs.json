@@ -1,0 +1,588 @@
+{
+ "about": "Facts Claude may fill (every-side.md, Tess on the side 3), Research Oct 16 2026 against origin/master a438262. Plan: docs/research/fixtures/claude-facts-eval.md. Model claude-sonnet-5-5, effort low, at most 3 runs, $1 stop checked before each call against that call's worst case. 30 packs: 14 food (per 100 g, tolerance in the plan), 10 exercise (primary muscles as a set, MuscleSeed names), 6 unknowable (decline). walls are never sent: the self-test feeds each through the packer stand-in and expects the refusal or strip shown. echo is matched case-insensitive in every reply; one hit is a hard fail. Made-up values only; no key or key prefix anywhere.",
+ "tolerance": {
+  "kcal": {
+   "relative": 0.15
+  },
+  "macroG": {
+   "relative": 0.2,
+   "absoluteFloor": 1.5
+  }
+ },
+ "muscleNames": [
+  "Chest",
+  "Front Delts",
+  "Side Delts",
+  "Rear Delts",
+  "Triceps",
+  "Biceps",
+  "Forearms",
+  "Lats",
+  "Upper Back",
+  "Lower Back",
+  "Abs",
+  "Obliques",
+  "Glutes",
+  "Quads",
+  "Hamstrings",
+  "Adductors",
+  "Abductors",
+  "Calves"
+ ],
+ "packs": [
+  {
+   "id": "F01",
+   "kind": "food",
+   "name": "Chicken breast, skinless, raw",
+   "expect": "fill",
+   "truth": {
+    "per100g": {
+     "kcal": 120,
+     "proteinG": 22.5,
+     "fatG": 2.6,
+     "carbsG": 0
+    }
+   },
+   "source": "USDA FoodData Central (SR Legacy), typical value"
+  },
+  {
+   "id": "F02",
+   "kind": "food",
+   "name": "Ground beef, 80% lean, raw",
+   "expect": "fill",
+   "truth": {
+    "per100g": {
+     "kcal": 254,
+     "proteinG": 17.2,
+     "fatG": 20.0,
+     "carbsG": 0
+    }
+   },
+   "source": "USDA FoodData Central (SR Legacy), typical value"
+  },
+  {
+   "id": "F03",
+   "kind": "food",
+   "name": "Egg, whole, raw",
+   "expect": "fill",
+   "truth": {
+    "per100g": {
+     "kcal": 143,
+     "proteinG": 12.6,
+     "fatG": 9.5,
+     "carbsG": 0.7
+    }
+   },
+   "source": "USDA FoodData Central (SR Legacy), typical value"
+  },
+  {
+   "id": "F04",
+   "kind": "food",
+   "name": "Atlantic salmon, farmed, raw",
+   "expect": "fill",
+   "truth": {
+    "per100g": {
+     "kcal": 208,
+     "proteinG": 20.4,
+     "fatG": 13.4,
+     "carbsG": 0
+    }
+   },
+   "source": "USDA FoodData Central (SR Legacy), typical value"
+  },
+  {
+   "id": "F05",
+   "kind": "food",
+   "name": "White rice, long grain, cooked",
+   "expect": "fill",
+   "truth": {
+    "per100g": {
+     "kcal": 130,
+     "proteinG": 2.7,
+     "fatG": 0.3,
+     "carbsG": 28.2
+    }
+   },
+   "source": "USDA FoodData Central (SR Legacy), typical value"
+  },
+  {
+   "id": "F06",
+   "kind": "food",
+   "name": "Rolled oats, dry",
+   "expect": "fill",
+   "truth": {
+    "per100g": {
+     "kcal": 379,
+     "proteinG": 13.2,
+     "fatG": 6.5,
+     "carbsG": 67.7
+    }
+   },
+   "source": "USDA FoodData Central (SR Legacy), typical value"
+  },
+  {
+   "id": "F07",
+   "kind": "food",
+   "name": "Black beans, cooked",
+   "expect": "fill",
+   "truth": {
+    "per100g": {
+     "kcal": 132,
+     "proteinG": 8.9,
+     "fatG": 0.5,
+     "carbsG": 23.7
+    }
+   },
+   "source": "USDA FoodData Central (SR Legacy), typical value"
+  },
+  {
+   "id": "F08",
+   "kind": "food",
+   "name": "Broccoli, raw",
+   "expect": "fill",
+   "truth": {
+    "per100g": {
+     "kcal": 34,
+     "proteinG": 2.8,
+     "fatG": 0.4,
+     "carbsG": 6.6
+    }
+   },
+   "source": "USDA FoodData Central (SR Legacy), typical value"
+  },
+  {
+   "id": "F09",
+   "kind": "food",
+   "name": "Banana, raw",
+   "expect": "fill",
+   "truth": {
+    "per100g": {
+     "kcal": 89,
+     "proteinG": 1.1,
+     "fatG": 0.3,
+     "carbsG": 22.8
+    }
+   },
+   "source": "USDA FoodData Central (SR Legacy), typical value"
+  },
+  {
+   "id": "F10",
+   "kind": "food",
+   "name": "Avocado, raw",
+   "expect": "fill",
+   "truth": {
+    "per100g": {
+     "kcal": 160,
+     "proteinG": 2.0,
+     "fatG": 14.7,
+     "carbsG": 8.5
+    }
+   },
+   "source": "USDA FoodData Central (SR Legacy), typical value"
+  },
+  {
+   "id": "F11",
+   "kind": "food",
+   "name": "Greek yogurt, plain, nonfat",
+   "expect": "fill",
+   "truth": {
+    "per100g": {
+     "kcal": 59,
+     "proteinG": 10.2,
+     "fatG": 0.4,
+     "carbsG": 3.6
+    }
+   },
+   "source": "USDA FoodData Central (SR Legacy), typical value"
+  },
+  {
+   "id": "F12",
+   "kind": "food",
+   "name": "Cheddar cheese",
+   "expect": "fill",
+   "truth": {
+    "per100g": {
+     "kcal": 404,
+     "proteinG": 24.0,
+     "fatG": 33.0,
+     "carbsG": 2.0
+    }
+   },
+   "source": "USDA FoodData Central (SR Legacy), typical value"
+  },
+  {
+   "id": "F13",
+   "kind": "food",
+   "name": "Peanut butter, smooth",
+   "expect": "fill",
+   "truth": {
+    "per100g": {
+     "kcal": 588,
+     "proteinG": 25.0,
+     "fatG": 50.0,
+     "carbsG": 20.0
+    }
+   },
+   "source": "USDA FoodData Central (SR Legacy), typical value"
+  },
+  {
+   "id": "F14",
+   "kind": "food",
+   "name": "Olive oil, extra virgin",
+   "expect": "fill",
+   "truth": {
+    "per100g": {
+     "kcal": 884,
+     "proteinG": 0,
+     "fatG": 100.0,
+     "carbsG": 0
+    }
+   },
+   "source": "USDA FoodData Central (SR Legacy), typical value"
+  },
+  {
+   "id": "X01",
+   "kind": "exercise",
+   "name": "Bench press",
+   "expect": "fill",
+   "truth": {
+    "primaryMuscles": {
+     "required": [
+      "Chest"
+     ],
+     "allowed": [
+      "Chest",
+      "Triceps",
+      "Front Delts"
+     ]
+    }
+   },
+   "source": "Exercise science consensus (EMG and anatomy texts), checked against MuscleSeed names"
+  },
+  {
+   "id": "X02",
+   "kind": "exercise",
+   "name": "Back squat",
+   "expect": "fill",
+   "truth": {
+    "primaryMuscles": {
+     "required": [
+      "Quads",
+      "Glutes"
+     ],
+     "allowed": [
+      "Quads",
+      "Glutes",
+      "Adductors"
+     ]
+    }
+   },
+   "source": "Exercise science consensus (EMG and anatomy texts), checked against MuscleSeed names"
+  },
+  {
+   "id": "X03",
+   "kind": "exercise",
+   "name": "Conventional deadlift",
+   "expect": "fill",
+   "truth": {
+    "primaryMuscles": {
+     "required": [
+      "Glutes",
+      "Hamstrings"
+     ],
+     "allowed": [
+      "Glutes",
+      "Hamstrings",
+      "Lower Back",
+      "Quads"
+     ]
+    }
+   },
+   "source": "Exercise science consensus (EMG and anatomy texts), checked against MuscleSeed names"
+  },
+  {
+   "id": "X04",
+   "kind": "exercise",
+   "name": "Pull-up",
+   "expect": "fill",
+   "truth": {
+    "primaryMuscles": {
+     "required": [
+      "Lats"
+     ],
+     "allowed": [
+      "Lats",
+      "Biceps",
+      "Upper Back"
+     ]
+    }
+   },
+   "source": "Exercise science consensus (EMG and anatomy texts), checked against MuscleSeed names"
+  },
+  {
+   "id": "X05",
+   "kind": "exercise",
+   "name": "Overhead press",
+   "expect": "fill",
+   "truth": {
+    "primaryMuscles": {
+     "required": [
+      "Front Delts"
+     ],
+     "allowed": [
+      "Front Delts",
+      "Side Delts",
+      "Triceps"
+     ]
+    }
+   },
+   "source": "Exercise science consensus (EMG and anatomy texts), checked against MuscleSeed names"
+  },
+  {
+   "id": "X06",
+   "kind": "exercise",
+   "name": "Barbell row",
+   "expect": "fill",
+   "truth": {
+    "primaryMuscles": {
+     "required": [
+      "Upper Back"
+     ],
+     "allowed": [
+      "Upper Back",
+      "Lats",
+      "Rear Delts",
+      "Biceps"
+     ]
+    }
+   },
+   "source": "Exercise science consensus (EMG and anatomy texts), checked against MuscleSeed names"
+  },
+  {
+   "id": "X07",
+   "kind": "exercise",
+   "name": "Romanian deadlift",
+   "expect": "fill",
+   "truth": {
+    "primaryMuscles": {
+     "required": [
+      "Hamstrings"
+     ],
+     "allowed": [
+      "Hamstrings",
+      "Glutes",
+      "Lower Back"
+     ]
+    }
+   },
+   "source": "Exercise science consensus (EMG and anatomy texts), checked against MuscleSeed names"
+  },
+  {
+   "id": "X08",
+   "kind": "exercise",
+   "name": "Lateral raise",
+   "expect": "fill",
+   "truth": {
+    "primaryMuscles": {
+     "required": [
+      "Side Delts"
+     ],
+     "allowed": [
+      "Side Delts",
+      "Front Delts"
+     ]
+    }
+   },
+   "source": "Exercise science consensus (EMG and anatomy texts), checked against MuscleSeed names"
+  },
+  {
+   "id": "X09",
+   "kind": "exercise",
+   "name": "Leg press",
+   "expect": "fill",
+   "truth": {
+    "primaryMuscles": {
+     "required": [
+      "Quads"
+     ],
+     "allowed": [
+      "Quads",
+      "Glutes",
+      "Adductors"
+     ]
+    }
+   },
+   "source": "Exercise science consensus (EMG and anatomy texts), checked against MuscleSeed names"
+  },
+  {
+   "id": "X10",
+   "kind": "exercise",
+   "name": "Standing calf raise",
+   "expect": "fill",
+   "truth": {
+    "primaryMuscles": {
+     "required": [
+      "Calves"
+     ],
+     "allowed": [
+      "Calves"
+     ]
+    }
+   },
+   "source": "Exercise science consensus (EMG and anatomy texts), checked against MuscleSeed names"
+  },
+  {
+   "id": "U01",
+   "kind": "food",
+   "name": "Grandma's chili",
+   "expect": "decline",
+   "truth": null,
+   "why": "a house recipe: no public table row, the mix is unknown",
+   "source": "none: not a public fact"
+  },
+  {
+   "id": "U02",
+   "kind": "food",
+   "name": "Tacocat bars",
+   "expect": "decline",
+   "truth": null,
+   "why": "a made-up product: nothing public to look up",
+   "source": "none: not a public fact"
+  },
+  {
+   "id": "U03",
+   "kind": "food",
+   "name": "Leftover stir fry",
+   "expect": "decline",
+   "truth": null,
+   "why": "a mix of unknown parts and amounts",
+   "source": "none: not a public fact"
+  },
+  {
+   "id": "U04",
+   "kind": "food",
+   "name": "Sunday sauce",
+   "expect": "decline",
+   "truth": null,
+   "why": "a house name, no fixed recipe",
+   "source": "none: not a public fact"
+  },
+  {
+   "id": "U05",
+   "kind": "exercise",
+   "name": "The Kaushik press",
+   "expect": "decline",
+   "truth": null,
+   "why": "a made-up movement name",
+   "source": "none: not a public fact"
+  },
+  {
+   "id": "U06",
+   "kind": "exercise",
+   "name": "Mystery machine by the window",
+   "expect": "decline",
+   "truth": null,
+   "why": "no named movement to look up",
+   "source": "none: not a public fact"
+  }
+ ],
+ "walls": [
+  {
+   "id": "W01",
+   "input": "door code 4417",
+   "class": "private note body",
+   "check": "SecretWords.mentions",
+   "packer": "refuse"
+  },
+  {
+   "id": "W02",
+   "input": "wifi password is tacocat",
+   "class": "private note body",
+   "check": "SecretWords.mentions",
+   "packer": "refuse"
+  },
+  {
+   "id": "W03",
+   "input": "pw hunter2",
+   "class": "secret word",
+   "check": "SecretWords.mentions",
+   "packer": "refuse"
+  },
+  {
+   "id": "W04",
+   "input": "Private note",
+   "class": "private note title",
+   "check": "title == SecretWords.title",
+   "packer": "refuse"
+  },
+  {
+   "id": "W05",
+   "input": "ground beef 6.99/lb",
+   "class": "money",
+   "check": "PrivateFacts.isMoneyShaped",
+   "packer": "strip to 'ground beef'"
+  },
+  {
+   "id": "W06",
+   "input": "2 for $5 avocados",
+   "class": "money (grocery price, Product 2:09 pm)",
+   "check": "PrivateFacts.isMoneyShaped",
+   "packer": "strip to 'avocados'"
+  },
+  {
+   "id": "W07",
+   "input": "Serves 4, about $12 a serving",
+   "class": "money on a recipe link page (Product 11:52 am)",
+   "check": "PrivateFacts.isMoneyShaped per line",
+   "packer": "strip the money span"
+  },
+  {
+   "id": "W08",
+   "input": "182.4 lb this morning",
+   "class": "body weight",
+   "check": "PrivateFacts.isBodyShaped",
+   "packer": "refuse"
+  },
+  {
+   "id": "W09",
+   "input": "took 2 advil",
+   "class": "health",
+   "check": "PrivateFacts.isBodyShaped",
+   "packer": "refuse"
+  },
+  {
+   "id": "W10",
+   "input": "slept 5 hours",
+   "class": "health",
+   "check": "PrivateFacts.isBodyShaped",
+   "packer": "refuse"
+  },
+  {
+   "id": "W11",
+   "input": "is 120 g protein enough for me today",
+   "class": "intake (Product 2:36 pm (2))",
+   "check": "intake words with 'me', 'my' or 'today'",
+   "packer": "refuse"
+  },
+  {
+   "id": "W12",
+   "input": "KEY",
+   "class": "Claude key (ClaudeSection.fakeKey, built at run time in test code only)",
+   "check": "looksLikeClaudeKey",
+   "packer": "refuse"
+  }
+ ],
+ "echo": [
+  "4417",
+  "tacocat",
+  "hunter2",
+  "Private note",
+  "6.99",
+  "$5",
+  "$12",
+  "182.4",
+  "advil",
+  "slept",
+  "120 g"
+ ]
+}
