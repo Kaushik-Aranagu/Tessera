@@ -79,6 +79,7 @@ Left out on purpose, as not a real thing for one person renting an apartment: mo
 - **Accepting** writes one `AddChore(Bleed the radiators, bled, 365)` with no check-in, undoable, like a pick. It then reads "never logged" and does not drift to Now until the first log (closed question 2): the offer itself is the autumn nudge.
 - **Due date rule.** After the first log, due is last log plus 365 days, a plain interval like every other chore. Logging it in autumn keeps it in autumn; there is no calendar anchor after the offer (4:50 PM PT: seasonal chores are plain intervals, paused by hand).
 - **Declining** writes nothing, and it is never offered again (Product, 9:01 PM PT), as with the pick list and with deleted starters never being reinstalled.
+- **Lines (Design, `upkeep-people-first.md` 570e7cb).** The offer asks "Radiators to bleed this autumn?" with the ink words KEEP IT · NO RADIATORS. KEEP IT says "Bleed the radiators, kept. Once a year." with a 4 s UNDO, which answers "Bleed the radiators taken back." NO RADIATORS says "Okay. I won't ask again." and writes nothing.
 - **Done word** is `bled`. It is off the fixed list, so it logs the chore only once it exists (S2) and can never create it.
 
 ## Phrases, parses and collision checks

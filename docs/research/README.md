@@ -151,6 +151,7 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [colour-at-rest.md](colour-at-rest.md) | Design, Builders A and B: every coloured dot, badge and always-on colour on master, checked against no-dots.md |
 | [install-day-script.md](install-day-script.md) | QA: simulator script plus a one-minute Speak check on the phone for the install commit before the Oct 22 re-sign |
 | [install-readiness-oct22.md](install-readiness-oct22.md) | Product: Oct 22 install readiness, merged PRs since b19fb4a with QA verdicts, open fixes, recommended install commit |
+| [set-loss-rerun-274.md](set-loss-rerun-274.md) | Core, QA: the ten set-loss rows re-traced on #274's head (all pass) |
 | [grammar-miss-blind-read.md](grammar-miss-blind-read.md) | Kaushik: 30-row unlabelled read of use 1 once his Claude key is in |
 | [lines-audit-2.md](lines-audit-2.md) | Core, Builders A and B: 61 Tess, UNDO and empty-state lines since #158, 24 fixes |
 | [oct-22-list.md](oct-22-list.md) | Coordinator: Kaushik's Oct 22 morning message, Kitchen and Money one-word questions |
