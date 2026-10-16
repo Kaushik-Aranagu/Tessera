@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settings place</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/settings-place.md (Design item 16): one Settings page gathering LOOK, CLAUDE (with Misses go to Claude), BACKUPS and UNITS, reached from the SETTINGS label word at Review's foot. Sentences with value words, label words for actions, no toggles, no rows, no cards. ?play records the way in from Review, a value word flipping, and the way back. Porcelain and Obsidian, one base. Add ?x2 for 2x. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:40px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:34px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden}
+.P{background:#fff;--ink:23,20,31;--s2:.66;--tess:#2450D8;--now:#F0A500;--liveInk:#C23A22;--hair:rgba(23,20,31,.14)}
+.O{background:#000;--ink:245,242,236;--s2:.72;--tess:#86B4FF;--now:#FFC23D;--liveInk:#FF7A5C;--hair:rgba(245,242,236,.18)}
+.pg{position:absolute;inset:0;color:rgb(var(--ink))}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap;color:rgba(var(--ink),var(--s2))}
+.b{font-size:21px;line-height:28px}
+.s2{color:rgba(var(--ink),var(--s2))}
+.vw{font-weight:600}
+.tess{color:var(--tess)}
+.sec{position:absolute;left:22px;right:22px}
+.sec .lbl{display:block;margin-bottom:12px}
+.sec .b{margin-bottom:8px}
+.words{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(var(--ink),var(--s2))}
+.words i{font-style:normal;margin:0 10px}
+.flow{position:absolute;left:22px;right:22px;top:158px;display:flex;flex-direction:column;gap:22px}
+.flow .sec{position:static}
+.soul{position:absolute;left:322px;top:782px;width:46px;height:40px}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;max-width:1300px;line-height:24px}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play');
+const soul=`<div class="soul"><i style="left:0;top:4px;background:radial-gradient(closest-side,#2450D8,rgba(36,80,216,.2))"></i><i style="left:22px;top:2px;background:radial-gradient(closest-side,#E2432A,rgba(226,67,42,.2))"></i><i style="left:12px;top:20px;background:radial-gradient(closest-side,#F0A500,rgba(240,165,0,.2))"></i></div>`;
+const settings=(L)=>`<div class="pg" id="${L}set">
+ <div class="abs lbl" style="left:22px;top:58px">‹ REVIEW</div>
+ <div class="abs" style="left:22px;top:84px;font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px">Settings</div>
+ <div class="flow"><div class="sec"><span class="lbl">LOOK</span><div class="b"><span class="vw">Porcelain</span> by day, <span class="vw">Obsidian</span> by night.</div></div>
+ <div class="sec"><span class="lbl">CLAUDE</span>
+  <div class="b">Tess can ask <span class="vw">Claude</span>.</div>
+  <div class="b">This month <span class="vw">$1.20</span> of $10.</div>
+  <div style="position:relative;height:14px;margin:-2px 0 10px"><div style="position:absolute;left:0;right:0;top:6px;height:1px;background:var(--hair)"></div><svg style="position:absolute;left:0;top:3px;overflow:visible" width="42" height="8"><path d="M0 4 C 12 2.4, 28 2.6, 41.5 3.6 L 41.5 4.6 C 28 5.8, 12 5.6, 0 5 Z" fill="var(--tess)"/></svg></div>
+  <div class="b">Misses go to Claude: <span class="vw" id="${L}miss">yes</span>.</div>
+  <div class="b">Key ends in <span class="vw">...a1B2</span> <span class="s2">· works</span></div>
+  <div class="words" style="margin:-2px 0 0">TEST<i>·</i>REPLACE<i>·</i>REMOVE</div></div>
+ <div class="sec"><span class="lbl">BACKUPS</span>
+  <div class="b">Two copies. Last one today, 4:02&nbsp;am.</div>
+  <div class="b">Folder <span class="vw">iCloud Drive/Tessera</span>.</div>
+  <div class="words" style="margin-top:2px">SAVE A COPY<i>·</i>RESTORE</div></div>
+ <div class="sec"><span class="lbl">UNITS</span>
+  <div class="b"><span class="vw">Kilograms</span>, bar <span class="vw">20 kg</span>, plates <span class="vw">1.25 kg</span>.</div></div></div>
+ <div class="abs b tess" id="${L}say" style="left:22px;right:80px;top:790px;opacity:0"></div>
+ ${soul}</div>`;
+const reviewFoot=(L,lift)=>`<div class="pg" id="${L}rev">
+ <div class="abs lbl" style="left:22px;top:58px">‹ HOME</div>
+ <div class="abs b s2" style="left:22px;top:146px">the week so far</div>
+ <div class="abs" style="left:22px;top:180px;font-size:56px;font-weight:500;letter-spacing:-.035em;line-height:60px">All three<br>sessions in</div>
+ <div class="abs b" style="left:22px;top:310px;width:346px">Gym 3 of 3, Read 4 of 5, weight down&nbsp;0.4&nbsp;kg.</div>
+ <div class="abs lbl" style="left:22px;top:440px">READ · 4 OF 5</div>
+ <div class="abs b s2" style="left:22px;top:560px">Weight 78.9 kg, 5 weigh-ins this week.</div>
+ <div class="abs b" style="left:22px;top:672px;font-weight:600">The week · Day log · Notes</div>
+ <div class="abs b" style="left:22px;top:704px;font-weight:600">Reading · Money · Upkeep · People</div>
+ <div class="abs lbl" id="${L}sw" style="left:22px;top:748px">SETTINGS<svg id="${L}hl" style="position:absolute;left:0;top:22px;overflow:visible" width="0" height="2"><rect width="96" height="1.5" fill="rgb(var(--ink))"/></svg></div>
+ ${soul}</div>`;
+if(PLAY){
+ document.getElementById('row').innerHTML=`<div><div class="cap">REVIEW'S FOOT → SETTINGS → BACK</div><div class="ph P" id="ph">${settings('P')}${reviewFoot('P')}</div></div>`;
+}else{
+ document.getElementById('row').innerHTML=`<div><div class="cap">REVIEW'S FOOT · THE WAY IN</div><div class="ph P">${reviewFoot('P')}</div></div><div><div class="cap">SETTINGS · PORCELAIN</div><div class="ph P">${settings('P')}</div></div><div><div class="cap">SETTINGS · OBSIDIAN</div><div class="ph O">${settings('O')}</div></div>`;
+ document.getElementById('note').innerHTML='ONE PAGE, FOUR LABELS, SENTENCES WITH VALUE WORDS (600) THAT CYCLE OR OPEN THEIR INSTRUMENT. ACTIONS ARE LABEL WORDS. NO TOGGLES, ROWS, CARDS OR CHEVRONS. LOOK AND CLAUDE LEAVE REVIEW; REVIEW KEEPS ONE QUIET WORD AT ITS FOOT.';
+}
+const $=id=>document.getElementById(id);
+document.fonts.ready.then(()=>{document.body.dataset.start='1';
+ if(!PLAY){document.body.dataset.done='1';return}
+ const set=$('Pset'),rev=$('Prev');set.style.opacity=0;
+ const sw=$('Psw').getBoundingClientRect(),ph=$('ph').getBoundingClientRect();
+ const ox=(sw.left-ph.left)/(document.body.classList.contains('x2')?2:1)+40,oy=(sw.top-ph.top)/(document.body.classList.contains('x2')?2:1)+10;
+ setTimeout(()=>{ // tap SETTINGS: hairline, Review lifts away, Settings grows from the word
+  $('Phl').animate([{width:'0px'},{width:'96px'}],{duration:150,fill:'forwards'});$('Phl').setAttribute('width','96');
+  setTimeout(()=>{rev.animate([{transform:'none',filter:'blur(0)',opacity:1},{transform:'scale(1.06)',filter:'blur(3px)',opacity:0}],{duration:380,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+   set.style.transformOrigin=`${ox}px ${oy}px`;set.animate([{transform:'scale(.94)',opacity:0},{transform:'none',opacity:1}],{duration:420,delay:60,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+   [...set.querySelectorAll('.sec')].forEach((s,k)=>s.animate([{transform:'translateY(10px)',opacity:0},{transform:'none',opacity:1}],{duration:360,delay:160+k*40,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}))},170);
+ },900);
+ setTimeout(()=>{ // flip a value word: yes -> no, crossfade with a 3pt blur
+  const m=$('Pmiss');m.animate([{filter:'blur(0)',opacity:1},{filter:'blur(3px)',opacity:0}],{duration:120,fill:'forwards'}).onfinish=()=>{m.textContent='no';m.animate([{filter:'blur(3px)',opacity:0},{filter:'blur(0)',opacity:1}],{duration:180,fill:'forwards'})};
+  const s=$('Psay');s.textContent='Misses stay on this phone.';s.animate([{opacity:0},{opacity:1}],{duration:300,delay:200,fill:'forwards'});
+ },2900);
+ setTimeout(()=>{ // back: Settings closes into the word, Review returns
+  $('Psay').animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'});
+  set.animate([{transform:'none',opacity:1},{transform:'scale(.94)',opacity:0}],{duration:380,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+  rev.animate([{transform:'scale(1.06)',filter:'blur(3px)',opacity:0},{transform:'none',filter:'blur(0)',opacity:1}],{duration:420,delay:40,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+  $('Phl').animate([{width:'96px'},{width:'0px'}],{duration:150,delay:300,fill:'forwards'});
+ },5200);
+ setTimeout(()=>document.body.dataset.done='1',6600);
+});
+</script>
+</body>
+</html>

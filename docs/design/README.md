@@ -58,3 +58,4 @@ The source of truth for how v1 looks, moves and feels. iOS build implements from
 
 Product rules these specs answer: `/mnt/project-files/tessera/product/spatial-interaction.md` (x = siblings, y = sequence, z = depth; no pills or capsules; inputs as instruments).
 | [review-week-line.md](review-week-line.md) | Item 15: Review week line with habits and weight on one screen (paused habit, too few weigh-ins), threads not dots. Board `mockups/review-week-line.png`, recording `recordings/review-week-line.mp4` |
+| [settings-place.md](settings-place.md) | Item 16: one Settings page (LOOK, CLAUDE, BACKUPS, UNITS) reached from the SETTINGS word at Review's foot; sentences with value words. Board `mockups/settings-place.png`, recording `recordings/settings-place.mp4` |
