@@ -35,7 +35,7 @@ struct BackupTests {
         let file = dir.appendingPathComponent("copy.tessera")
         try TesseraBackup.write(from: store.context, to: file)
         let info = try TesseraBackup.inspect(file)
-        #expect(info.migrations == ["v1", "v2"])
+        #expect(info.migrations == ["v1", "v2", "v3"])
         // Compared as stored (dates are seconds as a Double on disk).
         let copy = try TesseraContext(url: file)
         let source = try TesseraContext(url: dir.appendingPathComponent("tessera.sqlite"))
@@ -109,7 +109,7 @@ struct BackupTests {
                                                                includingPropertiesForKeys: nil)
         #expect(kept.count == 1)
         let info = try TesseraBackup.inspect(#require(kept.first))
-        #expect(info.migrations == ["v1", "v2"])
+        #expect(info.migrations == ["v1", "v2", "v3"])
         TesseraSchema.clearLaunchNote()
     }
 

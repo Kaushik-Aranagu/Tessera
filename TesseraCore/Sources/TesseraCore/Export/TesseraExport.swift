@@ -74,6 +74,8 @@ public struct TesseraExport: Codable, Sendable {
         /// Tess's route and model (older exports leave them out).
         public var route: String?
         public var model: String?
+        /// The zone it was logged in (older exports and rows leave it out).
+        public var zone: String?
     }
 
     public var format = Self.format
@@ -135,7 +137,7 @@ public extension TesseraExport {
         operations = opRecords.map { record in
             OpEntry(id: record.id, action: record.action, actor: record.actor, state: record.state,
                     summary: record.summary, createdAt: record.createdAt, updatedAt: record.updatedAt, ops: record.ops,
-                    route: record.routeRaw, model: record.model)
+                    route: record.routeRaw, model: record.model, zone: record.zone)
         }
     }
 
@@ -248,6 +250,7 @@ public extension TesseraExport {
             record.updatedAt = entry.updatedAt
             record.routeRaw = entry.route
             record.model = entry.model
+            record.zone = entry.zone
             context.insert(record)
         }
         try context.save()

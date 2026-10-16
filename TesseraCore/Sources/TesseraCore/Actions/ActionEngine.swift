@@ -33,6 +33,8 @@ public final class ActionEngine {
 
     /// Set by Tess's router while one route runs, so the ops it performs record which route and model did them.
     public var attribution: (route: OpRoute, model: String?)?
+    /// The zone stamped on each record; the device's current zone unless a test sets it.
+    public var zone: () -> TimeZone = { TimeZone.current }
 
     // MARK: Performing
 
@@ -60,6 +62,8 @@ public final class ActionEngine {
             record.routeRaw = attribution.route.rawValue
             record.model = attribution.model
         }
+        // Which zone he was in, so a day can be read where it happened (a New York session stays Wednesday's).
+        record.zone = zone().identifier
         store.context.insert(record)
         if !pending {
             notify(record)

@@ -546,6 +546,11 @@ public final class OpRecord: TesseraModel, AttachableModel {
         didSet { didChange() }
     }
 
+    /// The time zone it was logged in ("America/New_York"); nil for rows from before v3, meaning the device's zone.
+    public var zone: String? {
+        didSet { didChange() }
+    }
+
     public var route: OpRoute? {
         routeRaw.flatMap(OpRoute.init(rawValue:))
     }

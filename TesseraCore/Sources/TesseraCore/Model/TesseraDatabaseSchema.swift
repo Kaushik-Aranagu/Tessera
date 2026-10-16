@@ -49,6 +49,10 @@ enum TesseraDatabaseSchema {
             ALTER TABLE op ADD COLUMN model TEXT;
             """)
         }
+        // Day log across zones: the time zone each action was logged in. Old rows stay NULL (the device's zone).
+        migrator.registerMigration("v3") { db in
+            try db.execute(sql: "ALTER TABLE op ADD COLUMN zone TEXT")
+        }
         return migrator
     }
 
@@ -106,12 +110,12 @@ enum TesseraDatabaseSchema {
             case let r as OpRecord:
                 sql = """
                 INSERT OR REPLACE INTO op(id, action, actor, state, summary, createdAt, updatedAt, ops, objectIDs,
-                  route, model)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?)
+                  route, model, zone)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
                 """
                 arguments = [r.id.uuidString, r.action, r.actorRaw, r.stateRaw, r.summary,
                              r.createdAt.timeIntervalSince1970, r.updatedAt.timeIntervalSince1970, r.opsData,
-                             json(r.objectIDs.map(\.uuidString)), r.routeRaw, r.model]
+                             json(r.objectIDs.map(\.uuidString)), r.routeRaw, r.model, r.zone]
             default:
                 sql = "SELECT 1"
                 arguments = []
@@ -244,6 +248,7 @@ enum TesseraDatabaseSchema {
                 record.updatedAt = date(row, "updatedAt") ?? .now
                 record.routeRaw = row["route"]
                 record.model = row["model"]
+                record.zone = row["zone"]
                 register(record)
             }
         }
