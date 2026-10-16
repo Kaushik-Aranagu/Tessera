@@ -69,7 +69,7 @@ extension TessGrammar {
             let lines = Self.splitItems(trimmed)
             // At least one item reads as shopping, none is a set or an errand, and there's no day: "milk, coffee, tea"
             // is shopping (coffee and tea land in Other); "call mum, dentist" isn't.
-            if lines.count >= 2, !hasDate, Self.isShoppingList(lines, looksLikeGroceries) {
+            if lines.count >= 2, !hasDate, !Self.isMoney(trimmed), Self.isShoppingList(lines, looksLikeGroceries) {
                 return .groceries(lines: lines)
             }
         }
@@ -78,7 +78,9 @@ extension TessGrammar {
 
     /// Money said, not things to buy: a currency sign or a spending verb ("spent $40 on groceries").
     static func isMoney(_ text: String) -> Bool {
-        text.contains(where: { "$£€₹".contains($0) })
+        // A unit price ("chicken $1.29/lb") is a price on a thing to buy, never a spend (Research's US shop check).
+        let spent = text.replacing(/[$£€₹]\s?\d+(?:[.,]\d+)?\s?\/\s?[a-z]+/, with: "")
+        return spent.contains(where: { "$£€₹".contains($0) })
             || text.lowercased().firstMatch(of: /^(?:spent|spend|paid|pay|cost|bought)\b/) != nil
     }
 

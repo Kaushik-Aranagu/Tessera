@@ -35,12 +35,17 @@ public extension DayPlanner {
         // The day's workout: under way today, else scheduled for today and not finished.
         let ledger = TrainingLedger(store: store, classes: classes)
         if let workoutClass = classes[.workout] {
-            let workouts = store.objects(of: workoutClass)
-            let started = workouts.last { workout in
+            // Earliest first, so the choice never depends on store order (merge check on #290).
+            let workouts = store.objects(of: workoutClass).sorted { lhs, rhs in
+                let left = (store.value("startedAt", of: lhs) ?? store.value("scheduledFor", of: lhs))?.dateValue
+                let right = (store.value("startedAt", of: rhs) ?? store.value("scheduledFor", of: rhs))?.dateValue
+                return (left ?? .distantFuture, lhs.id.uuidString) < (right ?? .distantFuture, rhs.id.uuidString)
+            }
+            let started = workouts.first { workout in
                 store.value("endedAt", of: workout) == nil
                     && store.value("startedAt", of: workout)?.dateValue.map { tesseraDay.isSameDay($0, now) } == true
             }
-            let scheduled = workouts.last { workout in
+            let scheduled = workouts.first { workout in
                 store.value("endedAt", of: workout) == nil && store.value("startedAt", of: workout) == nil
                     && store.value("scheduledFor", of: workout)?.dateValue.map { $0 >= dayStart && $0 < dayEnd } == true
             }
@@ -52,16 +57,27 @@ public extension DayPlanner {
                 )
             }
         }
-        // Light (light-day.md): C1 squeezed week, C2 booked, C3 cut up.
         let restDay = ledger.restDay(plan: plan, now: now, calendar: calendar)
+        // No Workout object yet on a training day (his phone never sets scheduledFor): today's routine from the
+        // rhythm, date-only, so it takes the first free hour from 17:00 (QA B1 on #290).
+        if input.workout == nil, let plan, restDay == nil,
+           ledger.finishedWorkouts(on: now, calendar: calendar).isEmpty,
+           let routine = ledger.week(containing: now, plan: plan, now: now, calendar: calendar)
+           .first(where: { $0.state == .today })?.planned
+        {
+            input.workout = PlanInput.Workout(id: routine.id, title: store.displayTitle(of: routine),
+                                              scheduledFor: tesseraDay.day(of: now))
+        }
+        // Light (light-day.md): C1 squeezed week, C2 booked, C3 cut up. Done tasks count in both, so the cap doesn't
+        // flip as he ticks things off (QA L1).
         let perWeek = plan.flatMap { store.number("sessionsPerWeek", of: $0) }.map { Int($0) }
         let week = tesseraDay.weekDays(containing: now)
         let todayKey = tesseraDay.day(of: now)
         let before = week.filter { $0 < todayKey }
             .reduce(0) { $0 + ledger.finishedWorkouts(onDay: $1, calendar: calendar).count }
         let daysLeft = week.count { $0 >= todayKey }
-        let opens = calendar.date(byAdding: .hour, value: windowFloorHour, to: todayKey) ?? todayKey
-        let closes = calendar.date(byAdding: .hour, value: windowEndHour, to: todayKey) ?? todayKey
+        let opens = calendar.date(bySettingHour: windowFloorHour, minute: 0, second: 0, of: todayKey) ?? todayKey
+        let closes = calendar.date(bySettingHour: windowEndHour, minute: 0, second: 0, of: todayKey) ?? todayKey
         let window = opens ... max(opens, closes)
         let busy = events.filter { !$0.allDay && !$0.declined }.reduce(0.0) { total, event in
             let start = max(event.start, window.lowerBound), end = min(event.end, window.upperBound)
@@ -72,12 +88,14 @@ public extension DayPlanner {
         }
         let fixed = events.count { !$0.allDay && !$0.declined && $0.end > window.lowerBound
             && $0.start < window.upperBound
-        } + input.today.count { task in task.rolls == 0 && task.startsAt.map { window.contains($0) } == true }
-        input.light = lightReason(trainingDay: plan != nil && restDay == nil, perWeek: perWeek,
-                                  sessionsBeforeToday: before, daysLeft: daysLeft,
-                                  bookedMinutes: busy + taskMinutes +
-                                      (plan != nil && restDay == nil ? workoutMinutes : 0),
-                                  fixedBlocks: fixed) != nil
+        } + tasks.today(now, calendar: calendar).count { item in
+            item.rolls == 0 && store.value("startsAt", of: item.task)?.dateValue.map { window.contains($0) } == true
+        }
+        input.lightReason = lightReason(trainingDay: plan != nil && restDay == nil, perWeek: perWeek,
+                                        sessionsBeforeToday: before, daysLeft: daysLeft,
+                                        bookedMinutes: busy + taskMinutes +
+                                            (plan != nil && restDay == nil ? workoutMinutes : 0),
+                                        fixedBlocks: fixed)
         return input
     }
 

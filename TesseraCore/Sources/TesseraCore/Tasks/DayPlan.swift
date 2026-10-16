@@ -40,6 +40,8 @@ public struct DayPlan: Sendable, Equatable {
     public let blocks: [Block]
     public let cap: Int
     public let light: Bool
+    /// Which of C1 to C3 made it light, for Now's debug view and tests; never sent to Claude.
+    public let lightReason: DayPlanner.LightReason?
     /// All-day titles, birthdays dropped.
     public let allDay: [String]
     /// Today's tasks the plan left out, and why.
@@ -74,9 +76,29 @@ public struct DayPlan: Sendable, Equatable {
         return runs
     }
 
+    public init(
+        window: DateInterval?,
+        blocks: [Block],
+        cap: Int,
+        light: Bool,
+        lightReason: DayPlanner.LightReason? = nil,
+        allDay: [String],
+        notPlanned: [(title: String, why: Skip)]
+    ) {
+        self.window = window
+        self.blocks = blocks
+        self.cap = cap
+        self.light = light
+        self.lightReason = lightReason
+        self.allDay = allDay
+        self.notPlanned = notPlanned
+    }
+
     public static func == (lhs: DayPlan, rhs: DayPlan) -> Bool {
         lhs.window == rhs.window && lhs.blocks == rhs.blocks && lhs.cap == rhs.cap && lhs.light == rhs.light
-            && lhs.allDay == rhs.allDay && lhs.notPlanned.map(\.title) == rhs.notPlanned.map(\.title)
+            && lhs.allDay == rhs.allDay && lhs.lightReason == rhs.lightReason
+            && lhs.notPlanned.map(\.title) == rhs.notPlanned.map(\.title)
+            && lhs.notPlanned.map(\.why) == rhs.notPlanned.map(\.why)
     }
 }
 
@@ -159,8 +181,12 @@ public struct PlanInput: Sendable {
     public var later: [Task] = []
     /// The day's workout; nil on a rest day or with no plan.
     public var workout: Workout?
-    /// From light-day.md C1 to C3 (`DayPlanner.isLight`): two plan lines instead of three.
-    public var light = false
+    /// From light-day.md C1 to C3 (`DayPlanner.lightReason`): two plan lines instead of three.
+    public var lightReason: DayPlanner.LightReason?
+
+    public var light: Bool {
+        lightReason != nil
+    }
 
     public init(now: Date, calendar: Calendar) {
         self.now = now
@@ -180,7 +206,8 @@ public enum DayPlanner {
     public static func plan(_ input: PlanInput) -> DayPlan {
         let calendar = input.calendar
         let day = TesseraDay(calendar: calendar).day(of: input.now)
-        let at = { (hour: Int) in calendar.date(byAdding: .hour, value: hour, to: day) ?? day }
+        // Wall-clock hours, so a DST day keeps 07:00 and 21:00 (QA S1 on #290).
+        let at = { (hour: Int) in calendar.date(bySettingHour: hour, minute: 0, second: 0, of: day) ?? day }
         let allDay = input.events.filter { $0.allDay && !$0.declined && !$0.title.lowercased().contains("birthday") }
             .map(\.title)
         let cap = input.light ? 2 : 3
@@ -189,7 +216,8 @@ public enum DayPlanner {
             .rounded(.up) * 300)
         let from = max(rounded, at(windowFloorHour)), to = at(windowEndHour)
         guard from < to else {
-            return DayPlan(window: nil, blocks: [], cap: cap, light: input.light, allDay: allDay, notPlanned: [])
+            return DayPlan(window: nil, blocks: [], cap: cap, light: input.light, lightReason: input.lightReason,
+                           allDay: allDay, notPlanned: [])
         }
         let window = DateInterval(start: from, end: to)
         // R2: fixed blocks.
@@ -207,10 +235,13 @@ public enum DayPlanner {
                                  object: task.id, ghost: false, due: nil, movedFrom: nil, running: false)
         }
         // R3: the workout.
-        if let workout = input.workout, workout.endedAt == nil,
-           let block = workoutBlock(workout, fixed: fixed, from: from, to: to, day: day, calendar: calendar)
-        {
-            fixed.append(block)
+        var workoutSkipped: String?
+        if let workout = input.workout, workout.endedAt == nil {
+            if let block = workoutBlock(workout, fixed: fixed, from: from, to: to, day: day, calendar: calendar) {
+                fixed.append(block)
+            } else {
+                workoutSkipped = workout.title // no free hour left: said, never silently gone (QA L3)
+            }
         }
         fixed.sort { $0.start < $1.start }
         // R4: the order.
@@ -233,7 +264,7 @@ public enum DayPlanner {
         let todayOrder = carried + timedDue + dateDue + passed + undated
         // R5: earliest gap that holds it; stop at the cap.
         var blocks = fixed
-        var notPlanned: [(title: String, why: DayPlan.Skip)] = []
+        var notPlanned: [(title: String, why: DayPlan.Skip)] = workoutSkipped.map { [($0, .noFit)] } ?? []
         var placed = 0
         for (index, task) in (todayOrder + later).enumerated() {
             let isToday = index < todayOrder.count
@@ -259,12 +290,14 @@ public enum DayPlanner {
             blocks.sort { $0.start < $1.start }
             placed += 1
         }
-        return DayPlan(window: window, blocks: blocks, cap: cap, light: input.light, allDay: allDay,
+        return DayPlan(window: window, blocks: blocks, cap: cap, light: input.light, lightReason: input.lightReason,
+                       allDay: allDay,
                        notPlanned: notPlanned)
     }
 
-    /// R3: at its time; a date-only one in the first free hour from 17:00; an event over it wins and the workout
-    /// moves to the first free hour after that event (A7). A running one sits at its start.
+    /// R3: at its time; a date-only one in the first free hour from 17:00; any fixed block over it (an event or a
+    /// timed task) wins and the workout moves to the first free hour after it (A7); one whose time has passed unstarted
+    /// moves to the first free hour from now (QA L2). A running one sits at its start.
     static func workoutBlock(_ workout: PlanInput.Workout, fixed: [DayPlan.Block], from: Date, to: Date, day: Date,
                              calendar: Calendar) -> DayPlan.Block?
     {
@@ -279,9 +312,13 @@ public enum DayPlanner {
         guard let planned = workout.scheduledFor else { return nil }
         let dateOnly = calendar.dateComponents([.hour, .minute], from: planned) == DateComponents(hour: 0, minute: 0)
         if dateOnly {
-            let evening = calendar.date(byAdding: .hour, value: 17, to: day) ?? day
+            let evening = calendar.date(bySettingHour: 17, minute: 0, second: 0, of: day) ?? day
             return firstGap(minutes: workoutMinutes, after: max(evening, from), before: to, busy: fixed)
                 .map { block($0) }
+        }
+        if planned < from {
+            return firstGap(minutes: workoutMinutes, after: from, before: to, busy: fixed)
+                .map { block($0, movedFrom: planned) }
         }
         let range = planned ..< planned.addingTimeInterval(hour)
         guard let clash = fixed.filter({ $0.start < range.upperBound && $0.end > range.lowerBound })

@@ -86,7 +86,7 @@ struct DayPlanTests {
 
     @Test func d04ALightDayPlansTwo() {
         var day = input(5)
-        day.light = true
+        day.lightReason = .squeezedWeek
         day.events = [event(5, "Standup", "09:30", "09:45"), event(5, "Client call", "10:00", "11:00")]
         day.today = [
             PlanInput.Task(title: "Pay council tax", due: Self.at(5, "00:00"), dueIsDateOnly: true, minutes: 10,
@@ -215,5 +215,72 @@ struct DayPlanTests {
         #expect(lines(plan) == ["08:00-08:30 task Sort the garage*", "10:00-10:15 timedTask Reply to landlord"])
         // Nothing was written.
         #expect(engine.history(limit: 10).count == 2)
+    }
+}
+
+/// QA on #290: DST, the workout from the rhythm, a passed workout, no hour left, and accepting a line.
+@MainActor
+struct DayPlanFollowUpTests {
+    let calendar = DayPlanTests.calendar
+
+    @Test(arguments: [(2026, 11, 1), (2027, 3, 14)])
+    func aDSTDayKeepsWallClockHours(_ date: (Int, Int, Int)) throws {
+        // QA S1: the window is 07:00 to 21:00 on the clock, and cook waits for 18:00, on both change days.
+        let day = try #require(calendar.date(from: DateComponents(year: date.0, month: date.1, day: date.2, hour: 6)))
+        var input = PlanInput(now: day, calendar: calendar)
+        input.later = [PlanInput.Task(title: "Fix bike light", minutes: 20, updatedAt: day),
+                       PlanInput.Task(title: "Cook dal", updatedAt: day.addingTimeInterval(60), isCook: true)]
+        let plan = DayPlanner.plan(input)
+        let hours = { (date: Date?) in date.map { calendar.component(.hour, from: $0) } }
+        #expect(hours(plan.window?.start) == 7 && hours(plan.window?.end) == 21)
+        #expect(plan.ghosts.map { hours($0.start) } == [7, 18])
+    }
+
+    @Test func aPassedUnstartedWorkoutMovesToTheNextFreeHour() {
+        // QA L2: Push A at 07:00, opened at 09:00, not started: it moves from now, never "start with" at 7.
+        var input = PlanInput(now: DayPlanTests.at(9, "09:00"), calendar: calendar)
+        input.workout = PlanInput.Workout(title: "Push A", scheduledFor: DayPlanTests.at(9, "07:00"))
+        let workout = DayPlanner.plan(input).blocks.first
+        #expect(workout?.start == DayPlanTests.at(9, "09:00") && workout?.movedFrom == DayPlanTests.at(9, "07:00"))
+    }
+
+    @Test func aWorkoutWithNoHourLeftIsSaidNotDropped() {
+        // QA L3.
+        var input = PlanInput(now: DayPlanTests.at(9, "19:30"), calendar: calendar)
+        input.events = [PlanInput.Event(title: "Dinner", start: DayPlanTests.at(9, "19:30"),
+                                        end: DayPlanTests.at(9, "21:00"))]
+        input.workout = PlanInput.Workout(title: "Push A", scheduledFor: DayPlanTests.at(9, "19:45"))
+        let plan = DayPlanner.plan(input)
+        #expect(plan.notPlanned.map(\.title) == ["Push A"] && plan.notPlanned.first?.why == .noFit)
+    }
+
+    @Test func aTrainingDayWithNoWorkoutObjectTakesTodaysRoutine() throws {
+        // QA B1: the starter plan, a meeting at 18:00: the routine sits 17:00 to 18:00.
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let plan = try #require(store.object(id: StarterContent.planID))
+        let now = DayPlanTests.at(9, "08:00")
+        let meeting = PlanInput.Event(title: "Team dinner", start: DayPlanTests.at(9, "18:00"),
+                                      end: DayPlanTests.at(9, "20:00"))
+        let day = DayPlanner.plan(store: store, classes: classes, plan: plan, now: now, calendar: calendar,
+                                  events: [meeting])
+        let workout = try #require(day.blocks.first { $0.kind == .workout })
+        #expect(workout.start == DayPlanTests.at(9, "17:00") && workout.end == DayPlanTests.at(9, "18:00"))
+    }
+
+    @Test func acceptingALineIsOneMoveTaskAndSkippingWritesNothing() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let task = try engine.perform(CreateTask(title: "Fix bike light", minutes: 20), by: .user).output
+        let plan = DayPlanner.plan(store: store, classes: classes, plan: nil, now: DayPlanTests.at(9, "08:00"),
+                                   calendar: calendar)
+        let ghost = try #require(plan.ghosts.first)
+        let before = engine.history(limit: 100).count
+        // Skip: nothing.
+        #expect(engine.history(limit: 100).count == before)
+        try engine.perform(MoveTask(task: #require(ghost.object), to: ghost.start), by: .user)
+        #expect(engine.history(limit: 100).count == before + 1)
+        #expect(store.value("startsAt", of: task)?.dateValue == DayPlanTests.at(9, "08:00"))
     }
 }
