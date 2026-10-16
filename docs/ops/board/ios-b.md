@@ -21,6 +21,7 @@
 10. Day log page (M4 slice 5 screen), after Core's `DayStory`. Design's sheet is ready: `docs/design/day-log-page.md` on Design's branch. Done when a Day page per date shows the story lines from Design's sheet, a scrub back through past days works, and a HomeLink word reaches it.
 
 **Audit batches (small PRs, after the Review week fix; decisions.md 5:14 PM PT):**
+- 4 AM day: Builder B's 4 midnight cuts in `../research/day-boundary.md` (#166) (including the HomeQueue next-week swipe), swapped to Core's `TesseraDay` helper once it lands.
 - Home queue heights (Research #160, `../research/accessibility.md`): drop the fixed heights that clip text at large sizes. Normal priority.
 - Empty states batch: Builder B's 7 rows in `../research/empty-states.md`. These cover the Today empty hero and its duplicate queue line, Start on an empty routine, the Review first week and no forward line, Training's "rest day" with no plan, the Tess fast path for today's routine, "No workout today to log into." on day one, and the extra Kitchen "Paste a recipe" word. Use Builder A's shared `EmptyLine`.
 - Undo batch: Builder B's rows in `../research/undo-lines.md` section 2, plus the capture code in `App/AppModel.swift`, to the one rule.
