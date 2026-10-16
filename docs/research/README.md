@@ -140,3 +140,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [themes-leftovers.md](themes-leftovers.md) | Builder A, Builder B: 52 theme leftovers on master with owners and Obsidian risks |
 | [fixtures/habits-from-logs.md](fixtures/habits-from-logs.md) | Core: 15 fixture days for logs filling habits |
 | [theme-contrast-fixes.md](theme-contrast-fixes.md) | Design, Builder A, Builder B: proposed contrast values for the Obsidian misses and Best e1RM |
+| [fixtures/grammar-miss-claude.md](fixtures/grammar-miss-claude.md) | Core, QA: use 1 gate, 185 grammar misses on Haiku |
