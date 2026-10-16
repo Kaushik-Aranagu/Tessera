@@ -89,4 +89,22 @@ struct ThemeStoreTests {
         #expect(store.current == .obsidian)
         #expect(store.workoutLook == .plein)
     }
+
+    /// QA W8: while the workout is open, paint tokens resolve against its forced-dark pages.
+    @Test func paintResolvesAgainstTheWorkoutsPages() {
+        let (store, _) = fresh()
+        #expect(store.paintLook == .porcelain)
+        store.holdWorkoutLook()
+        #expect(store.paintLook == .obsidian)
+        store.releaseWorkoutLook()
+        #expect(store.paintLook == .porcelain)
+    }
+
+    @Test func aRestoredLookIsAdoptedOnlyIfNoneWasChosen() {
+        let (store, _) = fresh()
+        store.adoptRestored(day: "Celadon", night: "Lacquer", pinned: nil)
+        #expect(store.day == .celadon && store.night == .lacquer)
+        store.adoptRestored(day: "Plein", night: "Obsidian", pinned: nil)
+        #expect(store.day == .celadon)
+    }
 }

@@ -46,7 +46,7 @@ extension View {
 
 /// Five bars, one lit, sweeping: background work you didn't start (sync, Health import, a batch for Tess).
 struct RoundRobin: View {
-    var tint: Color = .init(hex: 0xC8452F)
+    var tint: Color = Theme.Colors.live
     var ink: Color = Theme.Colors.ink
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 

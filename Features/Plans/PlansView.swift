@@ -100,7 +100,8 @@ extension RoutinePaint {
     var color: Color {
         switch self {
         case .vermilion: Theme.Colors.live
-        case .cobalt: Theme.Colors.tess
+        // Pull's routine colour is violet; Tess's cobalt stays hers.
+        case .cobalt: Theme.Colors.routines[3]
         case .cadmium: Theme.Colors.now
         case .sage: Theme.Colors.health
         }

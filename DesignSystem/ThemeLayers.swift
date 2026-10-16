@@ -53,12 +53,12 @@ struct LookField: View {
             ground
                 .overlay {
                     LinearGradient(stops: [.init(color: .clear, location: 0.55),
-                                           .init(color: Color(hex: 0x06030A).opacity(0.75), location: 1)],
+                                           .init(color: Color(hex: look.fieldShade).opacity(0.75), location: 1)],
                                    startPoint: .top, endPoint: .bottom)
                 }
                 .overlay {
                     Rectangle()
-                        .fill(Color(hex: 0xFFF4E6).opacity(0.05))
+                        .fill(Color(hex: look.fieldSpecular).opacity(0.05))
                         .frame(height: 150)
                         .blur(radius: 14)
                         .rotationEffect(.degrees(-24))
@@ -82,7 +82,7 @@ struct WorkoutField: View {
             Theme.Colors.Workout.ground
                 .overlay {
                     Rectangle()
-                        .fill(Color(hex: 0xFFF4E6).opacity(0.03))
+                        .fill(Color(hex: look.fieldSpecular).opacity(0.03))
                         .frame(height: 150)
                         .blur(radius: 14)
                         .rotationEffect(.degrees(-24))
@@ -110,7 +110,7 @@ private struct ActionBloom: ViewModifier {
 
     func body(content: Content) -> some View {
         content.background {
-            let look = ThemeStore.shared.current
+            let look = ThemeStore.shared.paintLook
             switch look.field {
             case .plein:
                 EmptyView()

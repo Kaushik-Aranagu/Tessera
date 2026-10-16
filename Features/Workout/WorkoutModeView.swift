@@ -285,7 +285,7 @@ extension WorkoutContent {
         if isOrderOpen {
             GeometryReader { proxy in
                 ZStack(alignment: .top) {
-                    Color.black.opacity(0.35)
+                    Theme.Colors.Workout.ground.opacity(0.6)
                         .ignoresSafeArea()
                         .onTapGesture { setOrder(open: false) }
                         .accessibilityLabel("Close running order")

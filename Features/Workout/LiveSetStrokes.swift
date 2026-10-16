@@ -8,7 +8,7 @@ struct GlintIf: ViewModifier {
 
     func body(content: Content) -> some View {
         if isOn {
-            content.modifier(Glint(period: 3, sheen: Color(hex: 0xFFE2A8)))
+            content.modifier(Glint(period: 3, sheen: Paint.sheen))
         } else {
             content
         }

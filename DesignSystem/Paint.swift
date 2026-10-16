@@ -26,7 +26,7 @@ struct PleinGround: View {
         GeometryReader { proxy in
             let size = proxy.size
             ZStack {
-                Color(hex: dark ? 0x1C1828 : 0xF2ECE3)
+                Color(hex: dark ? Look.plein.workout.ground : Look.plein.ground)
                 ForEach(Array(washes(dark: dark).enumerated()), id: \.offset) { _, wash in
                     RadialGradient(
                         colors: [Color(hex: wash.color).opacity(wash.opacity), Color(hex: wash.color).opacity(0)],
