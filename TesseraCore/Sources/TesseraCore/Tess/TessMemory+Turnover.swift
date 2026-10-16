@@ -1,39 +1,49 @@
 import Foundation
 
-/// The 04:00 turnover: yesterday's day line, the 14-day fold, the 40 cap, and on Sundays the noticed lines, all counted
-/// on the phone (architecture section 4).
+/// The 04:00 turnover: the forget log, yesterday's day line, the 14-day cut, and on Sundays the noticed lines, all
+/// counted on the phone (architecture section 4).
 @MainActor
 public extension TessMemoryStore {
     // MARK: The turnover
 
-    /// What the 04:00 turnover did, for Tess's one-time lines.
+    /// What the 04:00 turnover did.
     struct Turnover: Equatable, Sendable {
-        /// A told line let go to make room: "I let one go to make room: Tacos means the sheet-pan tacos."
-        public var dropped: String?
         public var wroteRecent = false
         public var recomputedNoticed = false
     }
 
-    /// Run once a day after 04:00 (the app calls it with its other tidying; idempotent within a day): yesterday's
-    /// recent line, the 14-day fold, the 40 cap, and on Sundays the noticed lines.
+    /// Run once a day after 04:00 (the app calls it with its other tidying; idempotent within a day): the forget log,
+    /// yesterday's recent line, the 14-day cut, and on Sundays the noticed lines.
     @discardableResult
     func turnover(now: Date = .now) -> Turnover {
         var result = Turnover()
         let day = TesseraDay(calendar: calendar)
+        // Once per 04:00 day (QA L1): the app calls this on every launch and foreground.
+        let key = ObjectIdentifier(store.context)
+        guard Self.lastTurnoverDay[key] != day.today(now) else { return result }
+        Self.lastTurnoverDay[key] = day.today(now)
         let yesterday = day.day(-1, after: now)
         let recent = lines(of: .recent)
+        sweepForgotten(now: now)
+        reapplyForgets()
         if !recent.contains(where: { $0.day == yesterday }), let text = recentLine(for: yesterday, now: now) {
-            write(kind: .recent, area: .days, text: text, evidence: [], day: yesterday)
-            result.wroteRecent = true
+            let rule = "recent.\(Int(yesterday.timeIntervalSince1970))"
+            result.wroteRecent = write(kind: .recent, area: .days, text: text, evidence: [], day: yesterday,
+                                       rule: rule) != nil
         }
         foldRecent(now: now)
-        if calendar.component(.weekday, from: day.today(now)) == 1 || lines(of: .noticed).isEmpty {
+        // Sundays, or the first time ever (a forgotten rule counts as computed: it stays quiet).
+        if calendar.component(.weekday, from: day.today(now)) == 1
+            || (lines(of: .noticed).isEmpty && suppressedRules().isEmpty)
+        {
             recomputeNoticed(now: now)
             result.recomputedNoticed = true
         }
-        result.dropped = trimTold(now: now)
         return result
     }
+
+    /// The day the turnover last ran in this process; the data itself is idempotent across launches.
+    nonisolated(unsafe) static var lastTurnoverDay: [ObjectIdentifier: Date] = [:]
 
     /// "Wed: Pull A done, 2 tasks, cooked chili." Counts and titles from the Day log; nil for an empty day.
     func recentLine(for dayKey: Date, now: Date) -> String? {
@@ -64,53 +74,23 @@ public extension TessMemoryStore {
         let weekday = Weekdays.short[calendar.component(.weekday, from: noon) - 1]
         var text = "\(weekday): \(parts.joined(separator: ", "))."
         if text.count > TessMemory.maxTextLength {
-            text = String(text.prefix(TessMemory.maxTextLength - 1)).trimmingCharacters(in: .whitespaces) + "."
+            // Cut at a word, never mid-word.
+            var cut = String(text.prefix(TessMemory.maxTextLength - 1))
+            if let space = cut.lastIndex(of: " ") {
+                cut = String(cut[..<space])
+            }
+            text = cut.trimmingCharacters(in: CharacterSet(charactersIn: " ,")) + "."
         }
         return TessMemoryScreen.refusal(for: text, numbers: Set(HomeLines.digits(in: text))) == nil ? text : nil
     }
 
-    /// Day lines older than 14 days fold into one week line ("Week of Oct 5: trained 3 days, cooked twice."), kept
-    /// 8 weeks; older week lines go.
+    /// Day lines older than 14 days go; the week is never stored (WeekFacts counts it live; AI thread S1).
     func foldRecent(now: Date) {
         let day = TesseraDay(calendar: calendar)
         let cutoff = day.day(-TessMemory.recentDays, after: now)
-        let old = lines(of: .recent).filter { ($0.day ?? $0.createdAt) < cutoff }
-        let days = old.filter { !$0.text.hasPrefix("Week of ") }
-        for (monday, lines) in Dictionary(grouping: days, by: { day.week(containing: $0.day ?? $0.createdAt).start }) {
-            let trained = lines.count { $0.text.contains(" done") }
-            let cooked = lines.count { $0.text.contains("cooked ") }
-            let label = monday.formatted(.dateTime.month(.abbreviated).day().locale(Locale(identifier: "en_US")))
-            var parts: [String] = []
-            if trained > 0 {
-                parts.append("trained \(trained) \(trained == 1 ? "day" : "days")")
-            }
-            if cooked > 0 {
-                parts.append("cooked \(cooked == 1 ? "once" : cooked == 2 ? "twice" : "\(cooked) times")")
-            }
-            let text = "Week of \(label): \(parts.isEmpty ? "quiet" : parts.joined(separator: ", "))."
-            write(kind: .recent, area: .days, text: text, evidence: lines.flatMap(\.evidence), day: monday)
-            for line in lines {
-                remove(line.id)
-            }
+        for old in lines(of: .recent) where (old.day ?? old.createdAt) < cutoff {
+            remove(old.id)
         }
-        let weekCutoff = day.day(-7 * TessMemory.weekLinesKept, after: now)
-        for week in lines(of: .recent)
-            where week.text.hasPrefix("Week of ") && (week.day ?? week.createdAt) < weekCutoff
-        {
-            remove(week.id)
-        }
-    }
-
-    /// At the cap, the oldest told line not used in 90 days drops; returns its words for Tess's one-time line.
-    func trimTold(now: Date) -> String? {
-        let told = lines(of: .told)
-        guard told.count > TessMemory.toldCap else { return nil }
-        let stale = told
-            .filter { !$0.pinned && now.timeIntervalSince($0.lastUsedAt ?? $0.createdAt) > TessMemory.unusedDropAfter }
-            .sorted { ($0.lastUsedAt ?? $0.createdAt) < ($1.lastUsedAt ?? $1.createdAt) }
-        guard let oldest = stale.first else { return nil }
-        remove(oldest.id)
-        return oldest.text
     }
 
     // MARK: Noticed (counted on the phone, never by Claude)
@@ -118,21 +98,33 @@ public extension TessMemoryStore {
     /// Replaces the noticed lines with what the last six weeks show: when he trains, how many days a week, which day
     /// he cooks most. Each needs enough evidence to be a pattern, and every number in a line is one it counted.
     func recomputeNoticed(now: Date) {
-        for old in lines(of: .noticed) {
-            remove(old.id)
-        }
+        // Each rule's line is updated in place (same id; QA T9); a rule that no longer holds is let go without being
+        // marked as forgotten, so it can come back when the pattern does.
+        let before = Set(lines(of: .noticed).map(\.id))
         let since = now.addingTimeInterval(-42 * 86400)
+        var kept = Set<UUID>()
+        defer {
+            for old in lines(of: .noticed) where before.contains(old.id) && !kept.contains(old.id) {
+                if let object = store.object(id: old.id) {
+                    try? store.set("rule", to: nil, on: object)
+                }
+                remove(old.id)
+            }
+        }
         guard let workoutClass = engine.classes[.workout] else { return }
         let workouts = store.objects(of: workoutClass).filter { workout in
             guard !workout.isDeleted, let started = store.value("startedAt", of: workout)?.dateValue,
                   store.value("endedAt", of: workout) != nil else { return false }
             return started >= since && started <= now
         }
-        noticeTraining(workouts, now: now)
-        noticeCooking(since: since, now: now)
+        kept.formUnion(noticeTraining(workouts, now: now).map(\.id))
+        kept.formUnion(noticeCooking(since: since, now: now).map(\.id))
     }
 
-    func noticeTraining(_ workouts: [ObjectRecord], now: Date) {
+    /// The training lines written or refreshed.
+    func noticeTraining(_ workouts: [ObjectRecord], now: Date) -> [ObjectRecord] {
+        var written: [ObjectRecord?] = []
+        defer { _ = written }
         let starts = workouts.compactMap { store.value("startedAt", of: $0)?.dateValue }
         if starts.count >= 4 {
             // The two-hour window around the usual hour, when it holds at least 60% of the starts.
@@ -142,28 +134,32 @@ public extension TessMemoryStore {
             let best = (counts[mode + 1] ?? 0) >= (counts[mode - 1] ?? 0) ? mode : mode - 1
             if Double(hours.count { $0 == best || $0 == best + 1 }) >= Double(hours.count) * 0.6 {
                 let text = "Usually trains \(Self.clock(best)) to \(Self.clock(best + 2))."
-                write(kind: .noticed, area: .training, text: text, evidence: workouts.map(\.id), day: nil,
-                      numbers: [best % 12 == 0 ? 12 : best % 12, (best + 2) % 12 == 0 ? 12 : (best + 2) % 12])
+                written.append(write(kind: .noticed, area: .training, text: text, evidence: workouts.map(\.id),
+                                     day: nil, numbers: [best % 12 == 0 ? 12 : best % 12,
+                                                         (best + 2) % 12 == 0 ? 12 : (best + 2) % 12],
+                                     rule: "training.hours"))
             }
             let weeks = max(1, Int((now.timeIntervalSince(starts.min() ?? now) / (7 * 86400)).rounded(.up)))
             if weeks >= 2 {
                 let perWeek = Int((Double(starts.count) / Double(weeks)).rounded())
                 if perWeek >= 1 {
-                    write(
+                    written.append(write(
                         kind: .noticed,
                         area: .training,
                         text: "Trains about \(perWeek) \(perWeek == 1 ? "day" : "days") a week.",
                         evidence: workouts.map(\.id),
                         day: nil,
-                        numbers: [perWeek]
-                    )
+                        numbers: [perWeek], rule: "training.perWeek"
+                    ))
                 }
             }
         }
+        return written.compactMap(\.self)
     }
 
-    func noticeCooking(since: Date, now: Date) {
-        guard let cookClass = engine.classes[.cook] else { return }
+    /// The kitchen line written or refreshed.
+    func noticeCooking(since: Date, now: Date) -> [ObjectRecord] {
+        guard let cookClass = engine.classes[.cook] else { return [] }
         let cooks = store.objects(of: cookClass).filter { cook in
             guard !cook.isDeleted, let at = store.value("cookedAt", of: cook)?.dateValue else { return false }
             return at >= since && at <= now
@@ -174,10 +170,11 @@ public extension TessMemoryStore {
             if let top = Dictionary(grouping: weekdays, by: { $0 }).max(by: { $0.value.count < $1.value.count }),
                Double(top.value.count) >= Double(weekdays.count) * 0.5
             {
-                write(kind: .noticed, area: .kitchen, text: "Cooks most on \(Weekdays.name(top.key))s.",
-                      evidence: cooks.map(\.id), day: nil)
+                return [write(kind: .noticed, area: .kitchen, text: "Cooks most on \(Weekdays.name(top.key))s.",
+                              evidence: cooks.map(\.id), day: nil, rule: "kitchen.cookDay")].compactMap(\.self)
             }
         }
+        return []
     }
 
     static func clock(_ hour: Int) -> String {

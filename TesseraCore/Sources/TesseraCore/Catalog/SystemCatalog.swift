@@ -250,9 +250,11 @@ public enum SystemCatalog {
         // behind it. Rides in backups; never holds health values, money, note bodies or the key (TessMemoryScreen).
         ClassSpec(key: .tessMemory, name: "Memory", parent: .thing, symbol: "brain", colorRole: "neutral", fields: [
             FieldSpec(key: "kind", name: "Kind", kind: .choice, defaultValue: .choice("told"),
-                      options: ["told", "noticed", "recent"]),
+                      options: ["told", "noticed", "recent", "forgotten"]),
+            // Which counted rule wrote it ("training.hours", "recent.1760500800"): a forgotten rule stays quiet.
+            FieldSpec(key: "rule", name: "Rule", kind: .text),
             FieldSpec(key: "area", name: "Area", kind: .choice, defaultValue: .choice("other"),
-                      options: ["training", "kitchen", "people", "days", "other"]),
+                      options: ["training", "kitchen", "people", "days", "about"]),
             FieldSpec(key: "evidence", name: "From", kind: .refList, target: .thing),
             FieldSpec(key: "lastUsedAt", name: "Used", kind: .date),
             FieldSpec(key: "pinned", name: "Pinned", kind: .bool, defaultValue: .bool(false)),

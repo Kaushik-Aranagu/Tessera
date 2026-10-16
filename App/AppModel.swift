@@ -306,8 +306,6 @@ final class AppModel {
     var processNotes: [String] = []
     /// What UNDO beside those lines takes back: only the empty wrap-up ("Push A, no sets, not saved.") has one.
     var processUndo: OpRecord?
-    /// Tess's one-time line for the What Tess knows page after the 40th told line dropped; the page clears it.
-    var memoryDropNote: String?
 
     /// On launch and foreground: suspend a process idle past its rest plus 10 minutes, then apply the stale rules.
     func tidyProcesses(now: Date = AppClock.now) {
@@ -329,11 +327,8 @@ final class AppModel {
         if let rolled = TaskList(store: store, classes: classes).rollForward(engine: engine, now: now) {
             processNotes.append(rolled)
         }
-        // Tess's memory turnover: yesterday's day line, the 14-day fold, the 40 cap, Sunday's noticed lines (AI-7).
-        // A dropped told line is Tess's one-time line on the What Tess knows page (Design 49).
-        if let dropped = TessMemoryStore(engine: engine).turnover(now: now).dropped {
-            memoryDropNote = "I let one go to make room: \(dropped)"
-        }
+        // Tess's memory turnover: yesterday's day line, the 14-day cut, Sunday's noticed lines (AI-7).
+        TessMemoryStore(engine: engine).turnover(now: now)
         pickUpRunningWorkout(table)
         // A workout left untouched for 6 hours is wrapped up by Core; let the live session go with it.
         if let session, store.value("endedAt", of: session.workout) != nil {

@@ -58,12 +58,15 @@ struct TessMemoryTests {
         #expect(TessMemoryScreen.refusal(for: "Slept 6 hours") == .health("slept"))
         #expect(TessMemoryScreen.refusal(for: "Weighed 82 kg") == .health("weighed"))
         #expect(TessMemoryScreen.refusal(for: "Spent $40 at Costco") == .money("spent"))
-        #expect(TessMemoryScreen.refusal(for: "Shops at Whole Foods") == .money("whole foods"))
+        #expect(TessMemoryScreen.refusal(for: "Shops at Whole Foods") == .place("whole foods"))
         #expect(TessMemoryScreen.refusal(for: "Trains 4 days a week") == .unlicensedNumber(4))
         #expect(TessMemoryScreen.refusal(for: "Trains 4 days a week", numbers: [4]) == nil)
         #expect(TessMemoryScreen.refusal(for: "key sk-ant-abc") == .looksLikeKey)
         #expect(TessMemoryScreen.refusal(for: String(repeating: "a", count: 81)) == .tooLong)
         #expect(TessMemoryScreen.refusal(for: "   ") == .empty)
+        #expect(TessMemoryScreen.refusal(for: "Lives at 12 Oak Street", numbers: [12]) == .place("street"))
+        #expect(TessMemoryScreen.Refusal.money("").line == "I don't keep sums of money.")
+        #expect(TessMemoryScreen.Refusal.place("").line == "I don't keep places.")
     }
 
     // MARK: Told
@@ -72,7 +75,7 @@ struct TessMemoryTests {
         let kept = try run(RememberFact(text: "I train after work on weekdays"), at: Self.at(9))
         #expect(kept.record.summary == "Kept. You train after work on weekdays.")
         let line = try #require(memory.lines(of: .told).first)
-        #expect(line.area == .training && !line.isPrivate && line.evidence.isEmpty)
+        #expect(line.text == "You train after work on weekdays." && line.area == .training && !line.isPrivate)
         #expect(line.sourceLine(now: Self.at(9)) == "you said so today")
         #expect(line.sourceLine(now: Self.at(16)) == "you said so on Oct 9")
         memory.markUsed([line.id], at: Self.at(16))
@@ -83,21 +86,31 @@ struct TessMemoryTests {
         try run(RememberFact(text: "my left shoulder gets sore on overhead pressing"), at: Self.at(10))
         let shoulder = try #require(memory.lines(of: .told).first { $0.text.contains("shoulder") })
         #expect(shoulder.isPrivate && shoulder.sourceLine(now: Self.at(10)).hasSuffix("stays on this phone"))
-        #expect(throws: ActionError.self) { try engine.perform(RememberFact(text: "slept 6 hours"), by: .user) }
-        #expect(throws: ActionError.self) { try engine.perform(RememberFact(text: "rent is $2000"), by: .user) }
+        // A health word keeps the line private; money and places are refused with Tess's line (addendum S6).
+        let slept = try run(RememberFact(text: "slept badly before leg day"), at: Self.at(10))
+        #expect(memory.lines(of: .told).last?.isPrivate == true)
+        #expect(slept.record.summary == "Kept, on this phone only.")
+        let money = #expect(throws: ActionError.self) {
+            try engine.perform(RememberFact(text: "rent is $2000"), by: .user)
+        }
+        #expect(money.flatMap(RememberFact.refusalLine) == "I don't keep sums of money.")
+        let place = #expect(throws: ActionError.self) {
+            try engine.perform(RememberFact(text: "I live at 12 Oak Street"), by: .user)
+        }
+        #expect(place.flatMap(RememberFact.refusalLine) == "I don't keep places.")
         try run(RememberFact(text: "mom means Lakshmi"), at: Self.at(11))
-        #expect(memory.grouped().map(\.area) == [.training, .people, .other]
-            || memory.grouped().map(\.area) == [.training, .people])
+        try run(RememberFact(text: "I like the window seat"), at: Self.at(11))
+        #expect(memory.grouped().map(\.area) == [.training, .people, .about])
 
         let forgot = try run(ForgetMemory(memory: line.id), at: Self.at(12))
-        #expect(forgot.record.summary == "I train after, forgotten.")
-        #expect(memory.lines(of: .told).count == 2)
+        #expect(forgot.record.summary == "Train after, forgotten.")
+        #expect(memory.lines(of: .told).count == 4)
         engine.undo(forgot.record)
-        #expect(memory.lines(of: .told).count == 3)
+        #expect(memory.lines(of: .told).count == 5)
         // After the UNDO window the words leave history for good.
         try run(ForgetMemory(memory: line.id), at: Self.at(12))
         memory.redact(line.id)
-        #expect(memory.lines(of: .told).count == 2)
+        #expect(memory.lines(of: .told).count == 4)
         let history = store.context.operations.values
         #expect(!history.contains { $0.ops.contains { op in
             if case let .create(_, _, _, title) = op {
@@ -110,9 +123,10 @@ struct TessMemoryTests {
         #expect(store.object(id: line.id)?.title == TessMemoryStore.redacted)
 
         let all = try run(ForgetAllMemory(), at: Self.at(13))
-        #expect(all.output == 2 && memory.all().isEmpty && memory.countLine() == "Nothing yet.")
+        #expect(all.output == 4 && memory.all().isEmpty && memory.countLine() == "Nothing kept yet.")
+        #expect(all.record.summary == "Everything forgotten, 4 things.")
         engine.undo(all.record)
-        #expect(memory.all().count == 2)
+        #expect(memory.all().count == 4)
     }
 
     // MARK: The pack
@@ -120,8 +134,8 @@ struct TessMemoryTests {
     @Test func thePackNeverCarriesPrivateLinesAndKeepsItsBudget() throws {
         try run(RememberFact(text: "I train after work"), at: Self.at(9))
         try run(RememberFact(text: "my knee hates deep squats", isPrivate: true), at: Self.at(9))
-        for index in 0 ..< 60 {
-            try run(RememberFact(text: "Fact number \(index) about nothing much at all, said so", area: .other),
+        for index in 0 ..< 38 {
+            try run(RememberFact(text: "Fact number \(index) about nothing much at all, said so", area: .about),
                     at: Self.at(9))
         }
         let pack = memory.pack(.init(told: true))
@@ -148,7 +162,7 @@ struct TessMemoryTests {
         try train(at: Self.at(15, 18))
         let now = Self.at(16, 4).addingTimeInterval(1800)
         let turnover = memory.turnover(now: now)
-        #expect(turnover.wroteRecent && turnover.recomputedNoticed && turnover.dropped == nil)
+        #expect(turnover.wroteRecent && turnover.recomputedNoticed)
         let recent = memory.lines(of: .recent)
         #expect(recent.count == 1 && recent.first?.text.hasPrefix("Thu: Push A done") == true)
         let noticed = memory.lines(of: .noticed).map(\.text)
@@ -166,49 +180,94 @@ struct TessMemoryTests {
         memory.turnover(now: now.addingTimeInterval(3600))
         #expect(memory.lines(of: .recent).count == 1)
 
-        // Old day lines fold into a week line kept 8 weeks.
+        // Old day lines go after 14 days; no week line is stored (the week is counted live).
         memory.write(kind: .recent, area: .days, text: "Tue: Pull A done, 2 tasks.", evidence: [],
                      day: Self.at(22, 0, month: 9))
-        memory.write(
-            kind: .recent,
-            area: .days,
-            text: "Thu: cooked chili.",
-            evidence: [],
-            day: Self.at(24, 0, month: 9)
-        )
         memory.turnover(now: Self.at(17, 5))
-        let week = try #require(memory.lines(of: .recent).first { $0.text.hasPrefix("Week of ") })
-        #expect(week.text == "Week of Sep 21: trained 1 day, cooked once.")
-        #expect(!memory.lines(of: .recent).contains { $0.text.hasPrefix("Tue:") })
-        // The 14-day group on the page comes newest first.
-        #expect(memory.grouped().last?.area == .days && memory.grouped().last?.lines.first?.text
-            .hasPrefix("Fri:") == true
-            || memory.grouped().last?.lines.first?.text.hasPrefix("Thu:") == true)
+        #expect(!memory.lines(of: .recent).contains { $0.text.hasPrefix("Tue:") || $0.text.hasPrefix("Week of") })
+        #expect(memory.grouped().last?.area == .days)
     }
 
-    @Test func theFortiethToldLineDropsTheOldestUnusedOne() throws {
-        for index in 0 ..< 41 {
-            try run(RememberFact(text: "Thing \(index) he said", area: .other),
-                    at: Self.at(1, 9, month: 6).addingTimeInterval(Double(index)))
+    @Test func atTheCapNothingIsWritten() throws {
+        // Addendum S7: 40 told lines; the 41st is refused with Tess's line, nothing drops on its own.
+        for index in 0 ..< 40 {
+            try run(RememberFact(text: "Thing \(index) he said", area: .about), at: Self.at(1, 9, month: 6))
         }
-        try memory.markUsed([#require(memory.lines(of: .told).first?.id)], at: Self.at(15))
-        let turnover = memory.turnover(now: Self.at(16, 5))
-        #expect(turnover.dropped == "Thing 1 he said" && memory.lines(of: .told).count == 40)
-        // Over the cap again: the next oldest unused goes; one said within 90 days never does.
-        try run(RememberFact(text: "Thing 41 he said", area: .other), at: Self.at(15))
-        #expect(memory.turnover(now: Self.at(16, 6)).dropped == "Thing 2 he said")
+        let error = #expect(throws: ActionError.self) {
+            try engine.perform(RememberFact(text: "Thing 40 he said"), by: .user)
+        }
+        #expect(error.flatMap(RememberFact.refusalLine) == "I keep 40 things. Forget one and say it again.")
+        memory.turnover(now: Self.at(16, 5))
         #expect(memory.lines(of: .told).count == 40)
-        try run(RememberFact(text: "Thing 42 he said", area: .other), at: Self.at(15))
-        for line in memory.lines(of: .told) {
-            memory.markUsed([line.id], at: Self.at(15))
+        try run(ForgetMemory(memory: #require(memory.lines(of: .told).first).id), at: Self.at(16, 9))
+        try run(RememberFact(text: "Thing 40 he said"), at: Self.at(16, 9))
+        #expect(memory.lines(of: .told).count == 40)
+    }
+
+    @Test func forgottenLinesStayForgotten() throws {
+        // Research F1: a forgotten noticed line never comes back at the Sunday recompute; forget-everything holds.
+        for week in 0 ..< 6 {
+            try train(at: Self.at(31, 18, month: 8).addingTimeInterval(Double(week * 7) * 86400))
+            try train(at: Self.at(3, 18, month: 9).addingTimeInterval(Double(week * 7) * 86400))
         }
-        #expect(memory.turnover(now: Self.at(16, 7)).dropped == nil && memory.lines(of: .told).count == 41)
+        memory.turnover(now: Self.at(11, 5)) // a Sunday
+        let hours = try #require(memory.lines(of: .noticed).first { $0.text.hasPrefix("Usually") })
+        try run(ForgetMemory(memory: hours.id), at: Self.at(11, 9))
+        memory.redact(hours.id)
+        memory.turnover(now: Self.at(18, 5)) // next Sunday
+        #expect(!memory.lines(of: .noticed).contains { $0.text.hasPrefix("Usually") })
+        #expect(memory.lines(of: .noticed).contains { $0.text.hasPrefix("Trains about") })
+        // Forget everything, quit inside the UNDO window: the next turnover sweeps the words and nothing returns, not
+        // on the Monday with no noticed lines, not on the Sunday after.
+        try run(ForgetAllMemory(), at: Self.at(18, 9))
+        memory.turnover(now: Self.at(19, 5))
+        memory.turnover(now: Self.at(25, 5))
+        #expect(memory.lines(of: .noticed).isEmpty && memory.all().isEmpty)
+        let memoryObjects = try store.objects(of: #require(classes[.tessMemory]))
+        #expect(memoryObjects.filter(\.isDeleted).allSatisfy { $0.title == TessMemoryStore.redacted })
+        #expect(!store.context.operations.values.contains { $0.summary.contains("Usually trains") })
+
+        // Research F2: words he forgot come back from a restore, and the forget log takes them again.
+        try run(RememberFact(text: "I train after work"), at: Self.at(20))
+        let told = try #require(memory.lines(of: .told).first)
+        try run(ForgetMemory(memory: told.id), at: Self.at(20, 13))
+        memory.redact(told.id)
+        let memoryClass = try #require(classes[.tessMemory])
+        let restored = store.create(memoryClass, title: "You train after work.")
+        try store.set("kind", to: .choice("told"), on: restored)
+        #expect(memory.lines(of: .told).count == 1)
+        #expect(memory.reapplyForgets() == 1 && memory.lines(of: .told).isEmpty)
+        #expect(restored.title == TessMemoryStore.redacted)
+        // Forgotten hashes never show on the page or in a pack.
+        #expect(memory.grouped().isEmpty && memory.pack(.init(told: true, noticed: true, recent: true)).isEmpty)
+    }
+
+    @Test func aPrivateLineIsKeptAsSaid() throws {
+        // Research F3, QA F3: a health word keeps the line private; a measured value is never kept, private or not;
+        // body words match whole words, and only with a sore word.
+        try run(RememberFact(text: "I sleep badly before leg day"), at: Self.at(9))
+        #expect(memory.lines(of: .told).first?.isPrivate == true)
+        #expect(memory.pack(.init(told: true)).isEmpty)
+        #expect(throws: ActionError.self) { try engine.perform(RememberFact(text: "I weighed 82 kg"), by: .user) }
+        #expect(throws: ActionError.self) {
+            try engine.perform(RememberFact(text: "I weigh 82 kg and my back hurts", isPrivate: true), by: .user)
+        }
+        try run(RememberFact(text: "I'm back from work by 6"), at: Self.at(9))
+        #expect(memory.lines(of: .told).first { $0.text.contains("from work") }?.isPrivate == false)
+        try run(RememberFact(text: "my back hurts after deadlifts"), at: Self.at(9))
+        #expect(memory.lines(of: .told).first { $0.text.contains("back hurts") }?.isPrivate == true)
     }
 
     @Test func secondPersonAndTheThing() {
         #expect(TessMemoryStore.secondPerson("I rest on Sundays") == "You rest on Sundays.")
         #expect(TessMemoryStore.secondPerson("my mom's name is Lakshmi") == "Your mom's name is Lakshmi.")
-        #expect(TessMemoryStore.thing(of: "Left shoulder gets sore on overhead pressing") == "Left shoulder gets")
+        #expect(TessMemoryStore.thing(of: "Left shoulder gets sore on overhead pressing") == "Left shoulder")
+        #expect(TessMemoryStore.guessArea("I rest on Sundays") == .training)
+        #expect(TessMemoryStore.guessArea("espresso after sunset in any weather") == .about)
+        #expect(TessMemoryScreen.refusal(for: "my chili has 7 steps", numbers: [7]) == nil)
+        #expect(TessMemoryScreen.refusal(for: "shops at Trader Joe's") == .place("trader"))
+        #expect(TessMemoryScreen.refusal(for: "call mom back on Sundays") == nil)
         #expect(TessMemoryStore.guessArea("cook tacos on Tuesdays") == .kitchen)
+        #expect(TessMemoryStore.guessArea("likes the window seat") == .about)
     }
 }
