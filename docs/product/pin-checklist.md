@@ -45,7 +45,7 @@
 - [ ] Mirror to master in a small docs PR.
 
 ## Next build first (decisions 1:15 PM PT)
-- N13 private note rows (Builder B 0p), N15 pre-#422 pass (Core 0aa), P14 (with HW13 "Body weight logged."), ", best", HW19 sick words in PrivateFacts, HW9/P16 Face ID on Siri writes (Core 0ac).
+- N13 private note rows (Builder B 0p), N15 pre-#422 pass (Core 0aa), P14 (with HW13 "Body weight logged."), ", best", HW19 sick words in PrivateFacts, HW9/P16 Face ID on Siri writes (Core 0ac). PN-MENTION: an "@Private note" mention can't open a private note's body (Core 0ad resolve skips private, Builder B 0r ObjectPage; QA review-508). #508 (private-note rows, N13) merged.
 
 ## 6. Install
 - [ ] **Standing approval removes asking him, not the gates. Only the named pin SHA installs: never master, never any other commit.** Install under his standing approval (12:36 PM PT Oct 16, Builder A's thread): Builder A installs whenever the phone is reachable over Wi-Fi, with no ask. Every safety step stays: Product names the SHA, the v9 gate, QA and the Design 66 walk pass, Step 0 SAVE A COPY runs, the install goes in place over Wi-Fi, the app is never deleted, and he gets one line after.
