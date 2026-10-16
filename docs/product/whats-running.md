@@ -70,3 +70,7 @@ Resuming a workout opens live mode with the set at eye level, the dial already p
 
 - **M2:** tasks and waiting items become processes.
 - **M2 concept to prototype:** the "plate stack", where suspended processes sit as stepped slivers behind Now and fan out when you pull Now down. It's worth trying once there are 3 or more processes.
+
+
+## Addendum, 12:17 AM PT Oct 16 (Design 41)
+In v1 the ledger row leaves Home: the only process is a workout, and a suspended workout is the hero with the Start key's progress line. Once a second kind of process exists, suspended and waiting processes return as plain Next rows at the top of Next (title and time, at most 3, in the order above, no detail line). See decisions.md.
