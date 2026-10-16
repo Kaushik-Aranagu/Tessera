@@ -39,7 +39,7 @@ Design 47 lands the rows when the meal is planned, not at 17:00 the day before. 
 - Told memory lines that mention food ("coriander means cilantro").
 - Nothing else: no quantities bought, prices, shops, notes, history, other lists.
 
-**What Claude may return** (strict `linkItems`): `{pairs: [{row, ingredient}]}`, at most one pair per row, at most 6 pairs per call, nothing else. No text, no aisle, no amount, no new row. Both fields are handles only: the tool's `row` field is an enum of that call's row handles and `ingredient` an enum of the pack's ingredient handles, and the prompt says handles, never titles; a pair that names a title, or anything not in the enums, is a failed pair (the first eval run, #412, paired the right things by title and scored 0).
+**What Claude may return** (strict `linkItems`): `{pairs: [{row, ingredient}]}`, at most one pair per row (one ingredient may sit on several rows: capsicum and bell pepper both to red pepper), at most 6 pairs per call, nothing else. No text, no aisle, no amount, no new row. Both fields are handles only: the tool's `row` field is an enum of that call's row handles and `ingredient` an enum of the pack's ingredient handles, and the prompt says handles, never titles; a pair that names a title, or anything not in the enums, is a failed pair (the first eval run, #412, paired the right things by title and scored 0).
 
 **Checks on the phone before anything shows.** A pair is dropped silently when:
 1. Either handle isn't in the pack, or the ingredient isn't in a planned recipe.
