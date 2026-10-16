@@ -8,6 +8,10 @@ final class StubProtocol: URLProtocol, @unchecked Sendable {
     nonisolated(unsafe) static var reply: (status: Int, body: String)? = (200, #"{"input_tokens": 8}"#)
     nonisolated(unsafe) static var failure: URLError.Code?
     nonisolated(unsafe) static var requests: [URLRequest] = []
+    /// Replies used in order before `reply` (a tool round, then the answer).
+    nonisolated(unsafe) static var queue: [(status: Int, body: String)] = []
+    /// Each request's JSON body (URLProtocol sees it as a stream).
+    nonisolated(unsafe) static var bodies: [Data] = []
 
     static func session() -> URLSession {
         let configuration = URLSessionConfiguration.ephemeral
@@ -25,11 +29,25 @@ final class StubProtocol: URLProtocol, @unchecked Sendable {
 
     override func startLoading() {
         Self.requests.append(request)
+        if let stream = request.httpBodyStream {
+            stream.open()
+            var data = Data()
+            var buffer = [UInt8](repeating: 0, count: 4096)
+            while stream.hasBytesAvailable {
+                let count = stream.read(&buffer, maxLength: buffer.count)
+                guard count > 0 else { break }
+                data.append(buffer, count: count)
+            }
+            stream.close()
+            Self.bodies.append(data)
+        } else {
+            Self.bodies.append(request.httpBody ?? Data())
+        }
         if let failure = Self.failure {
             client?.urlProtocol(self, didFailWithError: URLError(failure))
             return
         }
-        let (status, body) = Self.reply ?? (200, "{}")
+        let (status, body) = Self.queue.isEmpty ? Self.reply ?? (200, "{}") : Self.queue.removeFirst()
         let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil,
                                        headerFields: ["request-id": "req_test"])!
         client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
