@@ -4,6 +4,10 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+**2:16 PM PT Oct 16: money with no day (QA on #534).** DECIDED. A money line with no day, such as "bought a tv for 800", becomes a private note ("Private note, kept."), never a task. An amount never sits in a task title. With a day, it's a private dated note (2:06). Core 0ai carries the row, and Research AZ adds it to the engine-wall table.
+
+**2:15 PM PT Oct 16: Siri receipts for hidden writes (Research, tell-tess-receipts.md).** DECIDED, Research's pick. Siri never says a bare "Saved.". Before P14 merges, Core adds TessCapture.privateLine, which names the kind of thing from the action names only and never from the phrase or the model's text ("Private note, kept.", "Task moved to Friday 9 am."). Siri says that line instead.
+
 **2:13 PM PT Oct 16: signing deadline for the riders build.** DECIDED. a36b161's profile expires Thu Oct 22 at 7:53 PM PT. The riders pin is still named at 9:30 AM Thursday, but if it hasn't passed the gate and been installed by 4:00 PM PT, Builder A re-signs a36b161 with a fresh profile and installs it, so the app never lapses on his phone. HealthKit is entitled on the free team, so Builder A 0m looks for the export problem elsewhere.
 
 **2:12 PM PT Oct 16: Design 72 and 73 boarded; 74 waits.** Kaushik approved 72, the title accent, at 2:09, and picked option A for 73, the area index, at 2:06. Both go on Builder A's board for after the pins (0p). Design 74, side swipes on tab pages, would change the 10:00 AM house rule ("a page one tap down may have one side page; never a tab page or a live workout"). It stays unboarded until Design confirms Kaushik has seen it and wants it. 73 can ship on its own, since the side rail keeps working until 74.
