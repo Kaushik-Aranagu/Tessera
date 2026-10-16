@@ -124,3 +124,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [lists-copy.md](lists-copy.md) | Builder B, Core: Lists 9-12 copy audit against voice, undo and empty-state rules (37 rows) |
 | [settings-claude.md](settings-claude.md) | Design, Core: Settings: Claude, 26 states with exact lines, money format, Tess fallbacks, 17 contradictions |
 | [theme-names.md](theme-names.md) | Design, Builder A: look names, the LOOK switch copy, Live Activity and widgets per look, storage and backup |
+| [week-one-dryrun.md](week-one-dryrun.md) | Coordinator, Core: week-one check-in run on sample copies; 8 query bugs fixed, partial-copy gap |

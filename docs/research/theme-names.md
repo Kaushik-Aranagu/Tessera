@@ -76,7 +76,7 @@ The label is LOOK (Label 16/700, uppercase). Under it, one sentence with value w
 | # | What disagrees | Sources | Default |
 |---|---|---|---|
 | T1 | "Persist the choice in `UserDefaults`", yet widgets draw the theme's ground, which the extension can't read from standard defaults | themes.md step 3 vs "Live Activities and widgets" | App Group suite (above). Standard defaults only if the free team refuses App Groups |
-| T2 | "Anyone already on Plein keeps Plein by day", but master never saved a look, so there is nothing to detect | themes.md "Switching" vs Theme.swift:240 | One-time rule on the first launch of this build: no saved keys and the store already holds objects means "Plein by day, Obsidian by night" is saved. A fresh install gets the default |
+| T2 | "Anyone already on Plein keeps Plein by day", but master never saved a look | themes.md "Switching" vs Theme.swift:240 | Decided 7:20 PM PT (coordinator): no carry-over. Every install, his included, starts at Porcelain by day, Obsidian by night; he can pin Plein. No one-time migration rule |
 | T3 | Removable backgrounds use "the night look's ink", but a pinned light look makes the night look Porcelain, which puts dark ink on black | second addendum vs the pin | Use the night look if it's dark, else Obsidian's ink and pigments |
 | T4 | One `look` in `ContentState`, but with the auto pair the look depends on light and dark, which can change with no app update | themes.md step 6, addendum | Send `lookDay` and `lookNight`; the extension picks by colour scheme |
 | T5 | The pin is a hold, but a hold isn't reachable with VoiceOver or Switch Control, and there's no on-screen hint | themes.md "Switching" | The hint line under the sentence, plus a custom accessibility action |
@@ -88,4 +88,4 @@ The label is LOOK (Label 16/700, uppercase). Under it, one sentence with value w
 
 1. Plein's spoken name: keep "Plein" with a pronunciation, or rename to Vellum? Default: keep it.
 2. Should a restore ever change a look he has picked on this phone? Default: no.
-3. Should the existing install move to Porcelain on update, since he asked for white as "likely his default"? Default: no, keep Plein as the spec says; one tap changes it.
+3. Closed (7:20 PM PT): his phone moves to Porcelain by day, Obsidian by night on update, since he asked for white as his likely default; Plein stays one hold away.
