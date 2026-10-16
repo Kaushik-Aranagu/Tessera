@@ -188,6 +188,11 @@ QA's I1 (build TesseraUITests once).
    (`e7a5be4` or later). With review-269 passed, that is now `410403c`, the same app as `444e72b`, so tiers 1 and 3
    coincide. If #273 or #274 merges later, the newest QA-passed master moves only once its own review passes.
 
+**Update (coordinator, 9:35 PM PT Oct 15):** #273 (Speak) and #278 (the ink line) landed after `444e72b`, so they are
+not in the Oct 22 build. #274 (set-loss) passed Research's rerun (item 108, `set-loss-rerun-274.md`: all ten rows,
+head `7dd4e85`) and is merging. No master later than the chosen target goes on his phone until Builder B's Speak fix
+passes QA. The script's "Speak on the phone" check (S1 to S7) applies only to a build that carries Speak.
+
 **Always, whichever commit is installed:** the scheme's Run arguments are empty (check Edit Scheme > Run >
 Arguments before Cmd-R), no TesseraUITests run with his phone as the destination, `resign-day.md`'s safe order is
 followed, and the app is never deleted. Rollback note from `resign-day.md`: after a v3 build runs, b19fb4a still
