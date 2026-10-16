@@ -57,3 +57,4 @@ The source of truth for how v1 looks, moves and feels. iOS build implements from
 | [object-model.md](object-model.md) | Classes, objects and the mapping from OS ideas to the app (for Core engine) |
 
 Product rules these specs answer: `/mnt/project-files/tessera/product/spatial-interaction.md` (x = siblings, y = sequence, z = depth; no pills or capsules; inputs as instruments).
+| [review-week-line.md](review-week-line.md) | Item 15: Review week line with habits and weight on one screen (paused habit, too few weigh-ins), threads not dots. Board `mockups/review-week-line.png`, recording `recordings/review-week-line.mp4` |

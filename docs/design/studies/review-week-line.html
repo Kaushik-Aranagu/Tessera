@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Review week line</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/review-week-line.md (Design item 15), Research fixtures/review-m3.md R10 with two weigh-ins: the week line, a paused habit, three habit threads (no dots), and a weight line with too few weigh-ins for the week-line clause. Porcelain and Obsidian, one base. ?play records Read's check-in (today's stretch paints wet, the counts tick, Tess says it once) and the third weigh-in (the weight clause joins the week line). Add ?x2 for 2x. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:40px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:34px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden}
+.P{background:#fff;--ink:23,20,31;--s2:.66;--tr:204,63,104;--hl:18,147,106;--nw:240,165,0;--tess:#2450D8;--rest:.45;--liveInk:#C23A22}
+.O{background:#000;--ink:245,242,236;--s2:.72;--tr:255,107,146;--hl:63,212,154;--nw:255,194,61;--tess:#86B4FF;--rest:.55;--liveInk:#FF7A5C}
+.ph,.ph *{color:rgb(var(--ink))}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2,.ph .s2{color:rgba(var(--ink),var(--s2))}
+.b{font-size:21px;line-height:28px}
+.ph .v{display:inline-block;color:inherit}
+.soul{position:absolute;left:322px;top:782px;width:46px;height:40px}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;max-width:1300px;line-height:24px}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play');
+const X=i=>22+346/7*(i+.5);
+const soul=`<div class="soul"><i style="left:0;top:4px;background:radial-gradient(closest-side,#2450D8,rgba(36,80,216,.2))"></i><i style="left:22px;top:2px;background:radial-gradient(closest-side,#E2432A,rgba(226,67,42,.2))"></i><i style="left:12px;top:20px;background:radial-gradient(closest-side,#F0A500,rgba(240,165,0,.2))"></i></div>`;
+// a rough 3pt thread over consecutive painted days
+function thread(days,pig,id){let segs=[],s=null;days.forEach((d,i)=>{if(d&&s===null)s=i;if((!d||i===6)&&s!==null){segs.push([s,d&&i===6?i:i-1]);s=null}});
+ return `<svg class="abs" id="${id}" style="left:0;overflow:visible" width="390" height="12">${segs.map(([a,b],k)=>{const x1=X(a)-16,x2=X(b)+16;return `<path d="M${x1} 6 C ${x1+(x2-x1)*.3} ${4.6+k%2} ${x1+(x2-x1)*.7} ${7.2-k%2} ${x2} 5.4" stroke="rgb(var(${pig}))" style="stroke-opacity:var(--rest)" stroke-width="3" stroke-linecap="round" fill="none" data-seg="${a}-${b}"/>`}).join('')}</svg>`}
+const dab=(i,y)=>`<div class="abs" style="left:${X(i)-17}px;top:${y}px;width:34px;height:30px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--hl),calc(var(--rest)*1.6)),rgba(var(--hl),0));filter:blur(1px)"></div>`;
+const restStroke=(i,y)=>`<svg class="abs" style="left:${X(i)-16}px;top:${y+15}px" width="32" height="6"><path d="M1 3 C 8 1.2, 20 1.4, 31 2.6 L 31 3.8 C 20 5, 9 4.8, 1 4 Z" fill="rgba(var(--ink),.5)"/></svg>`;
+function page(look,o){
+ const L='MTWTFSS'.split('');
+ return `<div class="ph ${look}">
+ <div class="abs lbl s2" style="left:22px;top:58px">‹ HOME</div>
+ <div class="abs b s2" style="left:22px;top:146px">the week so far</div>
+ <div class="abs" style="left:22px;top:180px;width:346px;font-size:56px;font-weight:500;letter-spacing:-.035em;line-height:60px">One session<br>this week</div>
+ <div class="abs b" id="${look}wl" style="left:22px;top:310px;width:346px">${o.week}</div>
+ ${dab(1,382)}${restStroke(2,382)}
+ ${L.map((d,i)=>`<div class="abs lbl ${i===6?'':'s2'}" style="left:${X(i)-6}px;top:420px;${i>2&&i<6?'opacity:.58':''}">${d}</div>`).join('')}
+ <div class="abs lbl s2" style="left:22px;top:470px">GYM · PAUSED THIS WEEK</div>${thread([0,1,0,0,0,0,0],'--tr',look+'t1').replace('style="left:0;','style="left:0;top:498px;')}
+ <div class="abs lbl s2" style="left:22px;top:530px">COOK · 3 OF 4</div>${thread([0,1,0,1,0,0,1],'--hl',look+'t2').replace('style="left:0;','style="left:0;top:558px;')}
+ <div class="abs lbl s2" id="${look}rl" style="left:22px;top:590px">READ · <span class="v" id="${look}rc">${o.read}</span> OF 5</div>${thread(o.readDays,'--nw',look+'t3').replace('style="left:0;','style="left:0;top:618px;')}
+ <div class="abs b s2" id="${look}wt" style="left:22px;top:654px;width:346px">${o.weight}</div>
+ <div class="abs b" style="left:22px;top:708px;font-weight:600">The week · Day log · Notes</div>
+ <div class="abs lbl s2" style="left:22px;top:744px">SETTINGS</div>
+ <div class="abs b" id="${look}say" style="left:22px;right:80px;top:790px;color:var(--tess);opacity:0"></div>
+ ${soul}</div>`}
+const base={week:'Cook 3 of 4, Read 4 of 5.',read:'4',readDays:[1,0,0,1,0,1,1],weight:'Weight 78.2 kg, 2 weigh-ins this week.'};
+if(PLAY){
+ document.getElementById('row').innerHTML=`<div><div class="cap">A CHECK-IN, THEN THE THIRD WEIGH-IN</div>${page('P',{week:'Cook 3 of 4, Read <span class="v" id="wr">3</span> of 5<span id="wc"></span>.',read:'3',readDays:[1,0,0,1,0,1,0],weight:base.weight})}</div>`;
+}else{
+ document.getElementById('row').innerHTML=`<div><div class="cap">PORCELAIN · R10 WITH 2 WEIGH-INS</div>${page('P',base)}</div><div><div class="cap">OBSIDIAN · THE SAME WEEK</div>${page('O',base)}</div>`;
+ document.getElementById('note').innerHTML='WEEK LINE UNDER THE HERO (BODY 21, INK). GYM IS PAUSED: OUT OF THE WEEK LINE, ITS LINE SAYS SO, ITS TICKED DAY STILL PAINTED, AND THE PAUSED WEEK\'S OPEN DAYS (THU TO SAT) DIM THEIR LETTERS. ONLY 2 WEIGH-INS, SO NO WEIGHT CLAUSE IN THE WEEK LINE; THE WEIGHT LINE STILL READS. THREADS, NOT DOTS, AT THE REST TINT. "THE WEEK SO FAR" RESTS IN INK SECONDARY.';
+}
+const $=id=>document.getElementById(id);
+function swap(el,text){el.animate([{filter:'blur(0)',opacity:1},{filter:'blur(4px)',opacity:0}],{duration:110,fill:'forwards'}).onfinish=()=>{el.textContent=text;el.animate([{filter:'blur(4px)',opacity:0,transform:'translateY(6px)'},{filter:'blur(0)',opacity:1,transform:'none'}],{duration:260,easing:'cubic-bezier(.3,1.3,.5,1)',fill:'forwards'})}}
+function say(html){const s=$('Psay');s.innerHTML=html;s.animate([{opacity:0},{opacity:1}],{duration:300,fill:'forwards'});setTimeout(()=>s.animate([{opacity:1},{opacity:0}],{duration:300,fill:'forwards'}),2400)}
+document.fonts.ready.then(()=>{document.body.dataset.start='1';
+ if(!PLAY){document.body.dataset.done='1';return}
+ setTimeout(()=>{ // Read check-in: today's stretch paints wet from Saturday
+  const svg=$('Pt3');const old=[...svg.querySelectorAll('path')].find(p=>p.dataset.seg==='5-5');
+  const x1=X(5)-16,x2=X(6)+16;const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+  p.setAttribute('d',`M${x1} 6 C ${x1+(x2-x1)*.3} 4.6 ${x1+(x2-x1)*.7} 7.2 ${x2} 5.4`);p.setAttribute('stroke','rgb(240,165,0)');p.setAttribute('stroke-width','3');p.setAttribute('stroke-linecap','round');p.setAttribute('fill','none');
+  const len=x2-x1+4;p.setAttribute('stroke-dasharray',len);p.setAttribute('stroke-dashoffset',len-(X(5)+16-x1));svg.appendChild(p);old.remove();
+  p.animate([{strokeDashoffset:len-(X(5)+16-x1)},{strokeDashoffset:0}],{duration:500,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+  setTimeout(()=>{swap($('Prc'),'4');swap($('wr'),'4');say('Read, 4 of 5 this week.')},300);
+  setTimeout(()=>p.animate([{strokeOpacity:1},{strokeOpacity:.45}],{duration:1100,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'}),1500);
+ },900);
+ setTimeout(()=>{ // third weigh-in: the clause joins the week line
+  say('Body weight logged. 78.1 kg.');
+  setTimeout(()=>{swap($('Pwt'),'Weight 78.1 kg, 3 weigh-ins this week.');
+   const wc=$('wc');wc.innerHTML=', weight&nbsp;down&nbsp;0.2&nbsp;kg';wc.animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:420,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'})},400);
+ },4400);
+ setTimeout(()=>document.body.dataset.done='1',7600);
+});
+</script>
+</body>
+</html>
