@@ -1826,3 +1826,19 @@ How master merges, in short. A grocery item is keyed by its **Ingredient object*
 6. **Fraction glyphs:** extend `kitchenNumber` to ⅓ ⅔ ⅛ (and decide whether ⅜ ⅝ ⅞ show as glyphs or decimals).
 7. **Rounding when a recipe is resized:** `RecipeMath.round` sends every unknown unit to whole numbers (`RecipeMath.swift:30-31`); the compiler will force a case for the new units. Proposal: oz to whole ounces, lb to a quarter, fl oz to whole, pint to a half.
 8. **Split and compound amounts** ("¾ cup + 2 tbsp buttermilk", "1 lb 4 oz squash") are read as one amount today with the rest in the name. Proposal in paste-33 and paste-35: two lines with the same raw, which the merge then shows as Design wants.
+
+## Design's answers (2026-10-16, `kitchen/us-kitchen-pages.md` §6, be98105)
+
+Design settled the four questions above: bag, jar, box, bottle and carton are pack words beside can and stick; same-size cans add and different sizes stay separate rows; a pint stays a pint (only the recipe page's flip shows ml); "bucks" means USD (`money.md` row 62). Traced on `origin/master` at the commit this section landed on; `Quantities.swift` has the same unit table as `620878b` (`words`, can, tin and stick only; a parenthetical is dropped from the name).
+
+| # | Line or pair | Target | Today on master | Status |
+|---|---|---|---|---|
+| U1 | `1 bag spinach (6 oz)` | {amount: 1, unit: bag, packSize: "6 oz", name: spinach} | amount 1, no unit, name "bag spinach"; the "(6 oz)" is dropped as a note (Quantities.swift, the parenthetical rule), so the pack size is lost | **FAIL** |
+| U2 | `1 jar marinara (24 oz)` | {amount: 1, unit: jar, packSize: "24 oz", name: marinara} | as U1: name "jar marinara" | **FAIL** |
+| U3 | `1 carton chicken broth (32 fl oz)` | {amount: 1, unit: carton, packSize: "32 fl oz", name: chicken broth} | as U1: name "carton chicken broth" | **FAIL** |
+| U4 | `2 (15 oz) cans chickpeas` + `1 (15 oz) can chickpeas` | one row "3 (15 oz) cans chickpeas" | the unit regex stops at "(", so no unit; both names read "cans chickpeas" and "can chickpeas", so two rows, each with no unit | **FAIL** |
+| U5 | `1 (14.5 oz) can diced tomatoes` + `1 (28 oz) can diced tomatoes` (mixed sizes) | two rows: "1 (14.5 oz) can" and "1 (28 oz) can", never "2 cans" | both read amount 1, no unit, name "can diced tomatoes" (the size is dropped), so the merge adds them to one row "2" with no unit and no size: **a wrong sum** | **FAIL (wrong merge)** |
+| U6 | `1 can (14.5 oz) diced tomatoes` + `1 can (14.5 oz) diced tomatoes` | one row "2 (14.5 oz) cans diced tomatoes" | unit can, name "diced tomatoes", size dropped: "2 cans diced tomatoes". Right count, size lost | partial |
+| U7 | `1 pint cherry tomatoes` | {amount: 1, unit: pint, name: cherry tomatoes}; never 473 ml on Groceries | no unit, name "pint cherry tomatoes" | **FAIL** |
+
+**For Core.** U5 is the one wrong sum in the US rows: once pack size is read, it must be part of the merge key (same name, same unit, same pack size), and a size-less can never merges with a sized one. U1 to U3 need the five new pack words and the pack size read from either place, before the unit (`1 (6 oz) bag`) or after the name (`1 bag spinach (6 oz)`).
