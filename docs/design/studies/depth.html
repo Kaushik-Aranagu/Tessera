@@ -85,13 +85,13 @@ const facet = (k) => {
   const head = `<div class="abs facets">${words.map(w => w === k ? `<b>${w}</b>` : `<span>${w}</span>`).join('')}</div>`;
   const body = {
     'HISTORY': `<div class="abs rows" style="top:240px"><div><span>Friday</span><em>82.5 × 7, best</em></div><div><span>Monday</span><em>80 × 8</em></div><div><span>Oct 9</span><em>80 × 7</em></div><div><span>Oct 6</span><em>77.5 × 8</em></div></div>`,
-    'REP MAXES': `<div class="abs rows" style="top:240px"><div><span>1 rep</span><em>95 kg, estimated</em></div><div><span>3 reps</span><em>90 kg</em></div><div><span>5 reps</span><em>87.5 kg</em></div><div><span>8 reps</span><em>80 kg</em></div></div>`,
+    'REP MAXES': `<div class="abs rows" style="top:240px"><div><span>1 rep</span><em>102 kg, estimated</em></div><div><span>3 reps</span><em>92.5 kg, estimated</em></div><div><span>5 reps</span><em>87.5 kg, estimated</em></div><div><span>8 reps</span><em>80 kg</em></div></div>`,
     'MUSCLES': `<div class="abs rows" style="top:240px"><div><span>Chest</span><em>most</em></div><div><span>Front delts</span><em>some</em></div><div><span>Triceps</span><em>some</em></div></div>`,
     'SETUP': `<div class="abs rows" style="top:240px"><div><span>Bench at the third hole</span><em></em></div><div><span>Grip one finger off the rings</span><em></em></div></div>`,
   }[k];
   return head + body;
 };
-const benchGlance = () => `<div class="gl"><div class="gk">HISTORY</div><div class="big">82.5<small>× 7</small></div><div class="gr">today, <em>a best</em></div><div class="gr">about 95 kg <em>for 1</em></div><div class="more">ALL OF IT<i></i></div></div>`;
+const benchGlance = () => `<div class="gl"><div class="gk">HISTORY</div><div class="big">82.5<small>× 7</small></div><div class="gr">today, <em>a best</em></div><div class="gr">about 102 kg <em>for 1</em></div><div class="more">ALL OF IT<i></i></div></div>`;
 
 if (!play) {
   const ph = (inner, opt, h, p) => `<div><div class="ph por">${inner}</div><div class="cap"><div class="opt">${opt}</div><h2>${h}</h2><p>${p}</p></div></div>`;
@@ -108,7 +108,7 @@ if (!play) {
     'ONE OF A RUN · THE MIDDLE', 'Along: the week before', 'Review is a run of weeks, so the middle swipes through them, 1:1, the name held.');
   b += ph(`<div class="abs name">REVIEW</div><div class="body" style="opacity:.3">${week('Oct 12 to 18', 5, 14)}</div>${weekGlance()}<div class="finger" style="left:372px;top:420px;opacity:1"></div>${band('Wednesday was your fullest day.')}`,
     'ONE OF A RUN · THE RIGHT EDGE', 'In: this week’s glance', 'From the right edge it goes in instead. Pull further, or tap ALL DAYS, for every day.');
-  b += ph(`<div class="abs back">‹ PUSH DAY A</div><div class="abs title">Bench press</div>${facet('REP MAXES')}${band('About 95 kg for 1, estimated.')}`,
+  b += ph(`<div class="abs back">‹ PUSH DAY A</div><div class="abs title">Bench press</div>${facet('REP MAXES')}${band('About 102 kg for 1, estimated.')}`,
     'A SIDE WITH PAGES', 'Along, inside the side', 'Bench press’s side has four pages. Once in, the middle swipes through them, named in a row of words; the current one is ink.');
   b += `</div>`;
   document.getElementById('board').innerHTML = b;
@@ -147,7 +147,7 @@ if (!play) {
     ph.innerHTML = `<div class="abs back">‹ PUSH DAY A</div><div class="abs title">Bench press</div><div class="body" id="front">${benchFront().replace(/<div class="abs back">.*?<\/div><div class="abs title">.*?<\/div>/, '')}</div>
       <div class="body" id="gb" style="opacity:0">${benchGlance()}</div>
       <div class="body" id="fb" style="opacity:0"><div class="abs facets" id="fw">${words.map((x, i) => `<span data-i="${i}">${x}</span>`).join('')}</div><div id="pages" class="abs" style="left:0;top:0;width:${393 * 4}px;height:700px;display:flex">${words.map(k => `<div style="position:relative;width:393px;flex:none">${facet(k).replace(/<div class="abs facets">.*?<\/div>/, '')}</div>`).join('')}</div></div>
-      <div class="body" id="tess">${band('About 95 kg for 1, estimated.')}</div><div class="finger" id="fg"></div>`;
+      <div class="body" id="tess">${band('About 102 kg for 1, estimated.')}</div><div class="finger" id="fg"></div>`;
     fg = $('fg');
     const front = $('front'), gb = $('gb'), fb = $('fb'), pages = $('pages'), fw = [...document.querySelectorAll('#fw span')];
     $('tess').style.opacity = 0;

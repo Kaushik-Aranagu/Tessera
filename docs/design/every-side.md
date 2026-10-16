@@ -133,7 +133,7 @@ The big fact is Hero 56 with its unit at 21. The small facts are Body 19, at mos
 | Routines: LAST TIMES | the routine done last: "Push A" | "today" | the next due: "Pull A, Tuesday" |
 | A routine: LAST TIMES | the last day: "Thursday" | "5 of 5, 1,072 kg moved." | "4 times this month" |
 | Plans: THE PLAN | "4" *days a week* | the split: "Push Pull Legs" | "on fixed days" |
-| An exercise: HISTORY (76) | "82.5" *× 7* | "today, a best" | "about 95 kg for 1" |
+| An exercise: HISTORY (76) | "82.5" *× 7* | "today, a best" | "about 102 kg for 1" |
 | A workout or finish: THE SETS | "20" *sets* | the top set: "Bench 82.5 × 7" | "5 exercises" |
 | Kitchen: THE WEEK'S COOKS | "3" *cooks* | the next, in Home's words: "Tacos tonight, 2 to buy." | "8 to buy" this week |
 | Groceries: FOR WHAT | "7" *for 2 cooks* | the cooks: "Tacos and chili" | "3 just because" |
