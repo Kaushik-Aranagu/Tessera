@@ -137,3 +137,5 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [fixtures/body-weight.md](fixtures/body-weight.md) | Core: 25 body weight rows against S701 (suite group M) |
 | [plan-my-day-blind-read.md](plan-my-day-blind-read.md) | Kaushik, Product: Plan my day Haiku vs Sonnet blind-read sheet (use 2 gate) |
 | [zone-per-item.md](zone-per-item.md) | Core: storing a time zone per op (write now, read later) |
+| [themes-leftovers.md](themes-leftovers.md) | Builder A, Builder B: 52 theme leftovers on master with owners and Obsidian risks |
+| [fixtures/habits-from-logs.md](fixtures/habits-from-logs.md) | Core: 15 fixture days for logs filling habits |
