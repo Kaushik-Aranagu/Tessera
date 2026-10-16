@@ -59,7 +59,7 @@ const ORDER=['Produce','Dairy and eggs','Meat and seafood','Cans and jars','Pant
 // state: which meals are planned (string of letters) and which just landed (wet)
 const build=(o)=>{const have=o.have||'',wet=o.wet||'';const by={};for(const [a,amt,n,sub,m] of WEEK){if(m&&!have.includes(m))continue;let A=amt,S=sub;
   if(n==='onion'){A=have.includes('t')?'2':'';S=have.includes('t')?'for tacos':''}
-  if(n==='eggs'){A=have.includes('f')?'8':'1 dozen';S=have.includes('f')?'for frittata':''}
+  if(n==='eggs'){A='1 dozen';S=have.includes('f')?'for frittata':''}
   if(n==='black beans'&&have.includes('c')){A='1 can + 15 oz';S='for tacos and chili · 15 oz'}
   if(n==='chili powder'&&have.includes('c'))S='for tacos and chili';
   (by[a]??=[]).push([A,n,S,{ghost:m&&wet.includes(m)}])}
@@ -82,10 +82,10 @@ if(!PLAY){
   phone('BEFORE PLANNING: THE ROWS HE TYPED, BARE, SORTED INTO AISLES',page({have:'',count:'2 to get'}))+
   phone('TACOS PLANNED: 10 ROWS LAND IN THEIR AISLES, STAPLES STAY OFF',page({have:'t',wet:'t',count:'12 to get, for tacos'}),{line:'Tacos, 10 added.',undo:1})+
   phone('CHILI PLANNED: BLACK BEANS JOIN PACK FIRST, THE 28 OZ CAN IS ITS OWN ROW',page({have:'tc',wet:'c',count:'14 to get, for tacos and chili',scroll:470}),{line:'Chili, 2 added.',undo:1})+
-  phone('FRITTATA PLANNED: THE BARE EGGS ROW TAKES 8, CHECKED BUTTER COVERS',page({have:'tcf',wet:'f',count:'17 to get, for tacos and 2 more',scroll:330,done:1}),{line:'Frittata, 3 added.',undo:1})+
+  phone('FRITTATA PLANNED: HIS 1 DOZEN EGGS KEEPS ITS AMOUNT, CHECKED BUTTER COVERS',page({have:'tcf',wet:'f',count:'17 to get, for tacos and 2 more',scroll:330,done:1}),{line:'Frittata, 3 added.',undo:1})+
   phone('EVERYTHING ALREADY THERE: ONE LINE, NOTHING WRITTEN, NO UNDO',page({have:'tcf',count:'17 to get, for tacos and 2 more'}),{line:'Tacos, nothing to add.'})+
   phone('LAYOUT C: OPTIONAL LINES ON THE PAGE, MARKED, NEVER ON THE LIST',recipe());
- $('note').innerHTML='THE KITCHEN WEEK ON DESIGN 47, WITH CORE\'S #380 RULES (RESEARCH 123, G-R1 TO G-R16): A PLANNED MEAL\'S MISSING LINES LAND AS WET COBALT GHOST ROWS IN THEIR AISLES WITH "FOR TACOS" UNDER EACH, FLYING IN FROM TESS\'S CORNER 60 MS APART AND DRYING OVER 1.4 S; TESS: "TACOS, 10 ADDED." WITH UNDO 10 S (THE SHORT NAME, NEVER THE FULL TITLE). STAPLES, "TO TASTE" AND OPTIONAL LINES NEVER LAND. A SAME-KEY ROW JOINS SILENTLY: THE BARE ROW TAKES THE RECIPE\'S AMOUNT, A PACK AND A WEIGHT JOIN PACK FIRST ("1 CAN + 15 OZ"), TWO PACK SIZES ARE TWO ROWS, A CHECKED ROW COVERS THE LINE. WHEN NOTHING IS MISSING: "TACOS, NOTHING TO ADD.", NO UNDO. THE RECIPE PAGE IS LAYOUT C (THE CLOCK) UNTIL HE PICKS; ITS OPTIONAL LINES SIT ON THE PAGE AT 38% INK AND NEVER ON THE LIST. THE COUNT LINE: "N TO GET, FOR TACOS AND 2 MORE".';
+ $('note').innerHTML='THE KITCHEN WEEK ON DESIGN 47, WITH CORE\'S #380 RULES (RESEARCH 123, G-R1 TO G-R16): A PLANNED MEAL\'S MISSING LINES LAND AS WET COBALT GHOST ROWS IN THEIR AISLES WITH "FOR TACOS" UNDER EACH, FLYING IN FROM TESS\'S CORNER 60 MS APART AND DRYING OVER 1.4 S; TESS: "TACOS, 10 ADDED." WITH UNDO 10 S (THE SHORT NAME, NEVER THE FULL TITLE). STAPLES, "TO TASTE" AND OPTIONAL LINES NEVER LAND. A SAME-KEY ROW JOINS SILENTLY: A BARE ROW TAKES THE RECIPE\'S AMOUNT, A TYPED AMOUNT STAYS, A PACK AND A WEIGHT JOIN PACK FIRST ("1 CAN + 15 OZ"), TWO PACK SIZES ARE TWO ROWS, A CHECKED ROW COVERS THE LINE. WHEN NOTHING IS MISSING: "TACOS, NOTHING TO ADD.", NO UNDO. THE RECIPE PAGE IS LAYOUT C (THE CLOCK) UNTIL HE PICKS; ITS OPTIONAL LINES SIT ON THE PAGE AT 38% INK AND NEVER ON THE LIST. THE COUNT LINE: "N TO GET, FOR TACOS AND 2 MORE".';
  document.fonts.ready.then(()=>setTimeout(()=>document.body.dataset.done='1',200));
 }else{
  $('row').innerHTML=phone('GROCERIES',page({have:'',count:'2 to get'}),{id:'P',fing:1});
@@ -96,7 +96,7 @@ if(!PLAY){
   await sleep(900);ghosts.forEach(g=>g.animate([{color:'#2450D8'},{color:g.classList.contains('sm')?'rgba(18,16,22,.66)':'#121016'}],{duration:1400,delay:600,easing:H,fill:'forwards'}))};
  (async()=>{document.body.dataset.start='1';await sleep(1200);
   setCap('TACOS PLANNED: 10 ROWS FLY IN FROM TESS, ONION JOINS ITS ROW, STAPLES STAY OFF');await land('t','t','12 to get, for tacos','Tacos, 10 added.',1);await sleep(3000);
-  setCap('FRITTATA PLANNED: 3 ROWS; THE BARE EGGS ROW TAKES 8');const e=P.querySelector('[data-row="eggs"]');e.animate([{color:'#121016'},{color:'#2450D8'}],{duration:200,fill:'forwards'});await land('tf','f','15 to get, for tacos and frittata','Frittata, 3 added.',1);await sleep(3000);
+  setCap('FRITTATA PLANNED: 3 ROWS; FOR FRITTATA LANDS UNDER THE EGGS HE TYPED');await land('tf','f','15 to get, for tacos and frittata','Frittata, 3 added.',1);await sleep(3000);
   setCap('TACOS AGAIN NEXT WEEK: EVERYTHING IS THERE, ONE LINE, NOTHING WRITTEN');const t=P.querySelector('.tl');t.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'});await sleep(220);t.remove();P.insertAdjacentHTML('beforeend','<div class="tl" style="opacity:0">Tacos, nothing to add.</div>');P.lastElementChild.animate([{opacity:0},{opacity:1}],{duration:300,fill:'forwards'});await sleep(2400);document.body.dataset.done='1'})();
 }
 </script>
