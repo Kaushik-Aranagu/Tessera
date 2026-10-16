@@ -3,6 +3,7 @@
 Kaushik asked for a real icon with "Tess" on it (11:23 PM PT). **A, recommended: Tess's soul is the icon,** drawn exactly as the app draws her, with the same three pigments in the same places and the same blur, scaled 14 times. It has no letter, badge or glyph. B is the one strong alternative: the page.
 - Board: `mockups/app-icon.png` (source `studies/app-icon.html`). It shows A and B by day, by night and tinted, each on a Home Screen, and A and B at every size from 180px to 29px. The other icons on the Home Screens are neutral blanks, so the board borrows no other app's mark.
 - Masters: `docs/design/icon/` (copies in `/mnt/project-files/tessera/design/icon/`).
+- **Update, 16 Oct (item 40):** the masters and layers are now drawn at the closer spread Kaushik asked for. The dabs sit at 65% of today's distance (`soul-explore.md`), in today's colours, and she's drawn at 16.3× so she fills the same space. They're rendered from `studies/soul-explore.html?icon=current-light&f=.65` (and `-dark`, `-tinted`, plus `&layer=`). The geometry below describes the first board, `mockups/app-icon.png`.
 
 ## A: the soul
 - **By day (Any):** Porcelain ground, a vertical gradient from `#FFFFFF` to `#F5F1EA`. Tess in her Porcelain pigments: cobalt `#2450D8`, vermilion `#E2432A` and cadmium `#F0A500`.

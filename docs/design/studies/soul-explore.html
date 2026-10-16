@@ -44,11 +44,12 @@ const centres=f=>C0.map(([x,y])=>[CX+(x-CX)*f,CY+(y-CY)*f]);
 // k: pt to px. cx,cy: where the centroid sits. pig: three colours. id prefix for animation hooks.
 function soul(k,cx,cy,f,pig,id=''){return centres(f).map(([x,y],i)=>`<div class="blob" ${id?`id="${id}${i}"`:''} style="left:${cx+(x-CX-10)*k}px;top:${cy+(y-CY-8.5)*k}px;width:${20*k}px;height:${17*k}px;background:radial-gradient(closest-side,${pig[i]},${rgba(pig[i],.2)});filter:blur(${1.2*k}px)"></div>`).join('')}
 // The icon, as app-icon.md A, with spread f. The glow washes follow the dabs in.
-function icon(s,f,pal,look){const u=s/1024,k=14*u/(.55+.45*f),P=look==='tinted'?['#FFFFFF','#D8D8D8','#EDEDED']:(look==='dark'?PAL[pal].n:PAL[pal].d);
+function icon(s,f,pal,look,layer){if(layer==='bg')return `<div class="mask" style="width:${s}px;height:${s}px;background:${look==='light'?'linear-gradient(#FFFFFF,#F5F1EA)':'#000'}"></div>`;
+ const only=['cobalt','vermilion','cadmium'].indexOf(layer);const u=s/1024,k=14*u/(.55+.45*f),P=look==='tinted'?['#FFFFFF','#D8D8D8','#EDEDED']:(look==='dark'?PAL[pal].n:PAL[pal].d);
  const cx=s/2,cy=s/2+(CY-21.5+1.5)*0;let h='';
- if(look!=='tinted'){const a=look==='dark'?.22:.13;h+=centres(f).map(([x,y],i)=>`<div style="position:absolute;left:${cx+(x-CX-19)*k}px;top:${cy+(y-CY-16)*k}px;width:${38*k}px;height:${32*k}px;border-radius:50%;background:radial-gradient(closest-side,${rgba(P[i],a)},${rgba(P[i],0)})"></div>`).join('')}
- h+=soul(k,cx,cy,f,P);
- return `<div class="mask" style="width:${s}px;height:${s}px;background:${look==='light'?'linear-gradient(#FFFFFF,#F5F1EA)':'#000'}">${h}</div>`}
+ if(look!=='tinted'){const a=look==='dark'?.22:.13;h+=centres(f).map(([x,y],i)=>only>=0&&only!==i?'':`<div style="position:absolute;left:${cx+(x-CX-19)*k}px;top:${cy+(y-CY-16)*k}px;width:${38*k}px;height:${32*k}px;border-radius:50%;background:radial-gradient(closest-side,${rgba(P[i],a)},${rgba(P[i],0)})"></div>`).join('')}
+ h+=only>=0?soul(k,cx,cy,f,P).split('</div>').filter(Boolean).map(d=>d+'</div>')[only]:soul(k,cx,cy,f,P);
+ return `<div class="mask" style="width:${s}px;height:${s}px;background:${layer?'transparent':look==='light'?'linear-gradient(#FFFFFF,#F5F1EA)':'#000'}">${h}</div>`}
 const masked=(s,f,pal,look)=>`<div style="width:${s}px;height:${s}px;border-radius:${s*.2237}px;overflow:hidden">${icon(s,f,pal,look)}</div>`;
 // Home at true size: the bottom-right of a 390pt phone, Tess's line in the voice colour, the soul at (346,779).
 function crop(f,pal,look,line){const P=look==='dark'?PAL[pal].n:PAL[pal].d,v=PAL[pal].voice[look==='dark'?1:0];
@@ -61,7 +62,7 @@ const REC=.65;
 const ICON=Q.get('icon');
 if(ICON){
  const [pal,look]=ICON.split('-');document.documentElement.style.background=document.body.style.background='transparent';
- $('root').innerHTML=icon(1024,+(Q.get('f')||REC),pal,look);document.fonts.ready.then(()=>{document.body.dataset.done='1'});
+ $('root').innerHTML=icon(1024,+(Q.get('f')||REC),pal,look,Q.get('layer'));document.fonts.ready.then(()=>{document.body.dataset.done='1'});
 }else if(Q.has('play')){
  if(Q.has('x2'))document.body.classList.add('x2');
  document.body.classList.add('board');
