@@ -186,7 +186,11 @@ struct PasteRecipe: View {
     private func save() {
         guard let result = try? model.engine.perform(
             CreateRecipe(text: text, corrections: corrections.isEmpty ? nil : corrections), by: .user
-        ) else { return }
+        ) else {
+            // Nothing written (a link, say): kept on the phone for week one, never in the op log.
+            CaptureMissLog.beside(model.store)?.record(text, at: AppClock.now, route: "none", source: "paste")
+            return
+        }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
             saved = (result.output.id, result.record)
             model.touch()

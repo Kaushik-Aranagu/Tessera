@@ -228,6 +228,8 @@ public enum SystemCatalog {
             FieldSpec(key: "activeMinutes", name: "Active", kind: .number, unit: "min"),
             FieldSpec(key: "totalMinutes", name: "Total", kind: .number, unit: "min"),
             FieldSpec(key: "sourceText", name: "Original text", kind: .text),
+            // Set when the recipe page opens, without an op (kitchen week one: opened but never cooked).
+            FieldSpec(key: "lastOpenedAt", name: "Last opened", kind: .date),
         ]),
         ClassSpec(key: .recipeLine, name: "Recipe Line", parent: .thing, symbol: "list.dash", colorRole: "health",
                   fields: [

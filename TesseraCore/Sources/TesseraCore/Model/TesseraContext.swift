@@ -32,8 +32,12 @@ public final class TesseraContext {
 
     // MARK: Opening
 
+    /// The database file; nil in memory.
+    public let url: URL?
+
     /// Opens (creating and migrating if needed) the database at `url`, or an in-memory one, and loads the graph.
     public init(url: URL?) throws {
+        self.url = url
         if let url {
             var configuration = Configuration()
             configuration.journalMode = .wal

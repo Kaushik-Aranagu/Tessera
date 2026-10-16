@@ -398,13 +398,17 @@ public struct SetTaskDone: EngineAction {
         parameters: [
             .init("task", .object, "The task"),
             .init("done", .boolean, "True to finish, false to reopen", required: false),
+            .init("time", .date, "Defaults to now", required: false),
         ]
     )
 
     public var task: UUID
     public var done: Bool?
+    /// When it was done; the app passes its clock (so `-demoTime` and fixtures hold).
+    public var time: Date?
 
-    public init(task: UUID, done: Bool? = true) {
+    public init(task: UUID, done: Bool? = true, time: Date? = nil) {
+        self.time = time
         self.task = task
         self.done = done
     }
@@ -413,7 +417,7 @@ public struct SetTaskDone: EngineAction {
         let task = try transaction.object(task, is: .task)
         let isDone = done ?? true
         try transaction.set("isDone", to: .bool(isDone), on: task)
-        try transaction.set("doneAt", to: isDone ? .date(.now) : nil, on: task)
+        try transaction.set("doneAt", to: isDone ? .date(time ?? .now) : nil, on: task)
         try transaction.endTaskProcess(task, done: isDone)
     }
 
