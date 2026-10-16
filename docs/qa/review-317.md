@@ -52,3 +52,23 @@ QA thread, Oct 15 PT. Static review. Branch ios/haptics-reward, base 865e465. A 
 ## Design's two questions (answers, not findings)
 1. **Does DonePattern respect the System Haptics setting?** Not by our code: `Haptics.swift` only checks `capabilitiesForHardware().supportsHaptics`, which is about the hardware, not the user's switch. The `.sensoryFeedback` cues follow the system setting; whether a custom `CHHapticEngine` pattern is silenced by Settings > Sounds & Haptics > System Haptics I can't confirm statically (Apple docs aren't reachable from this container). Device check: turn System Haptics off, finish a task, expect no done pattern. If it still buzzes, fall back to the `.success` cue (which then stays quiet too) rather than adding our own setting.
 2. **Does starting the engine on every play add first-tap latency?** Likely, after idle. With `isAutoShutdownEnabled`, the engine stops itself when nothing has played for a while, and `play()` then calls the synchronous `try engine.start()` on the main actor in the same moment as the strike, so the first done after a pause can land a little late and block a frame. Fix if the device shows it: warm the engine with `engine.start(completionHandler:)` (async) when a finishable row appears or the Finish key shows, and keep `start()` in `play()` as the cheap no-op it is when already running. Device check: leave the app idle a minute, finish a task, and watch whether the pattern trails the strike.
+
+## Addendum: re-check at b6112e6 (Oct 15 PT): PASS once H3 is in (one word)
+Rebased on bb57e78; trial merge onto master 9bdc3c7 clean. Clips 33 (52.6 s) and 34 (24 s) are 60 fps.
+- **H1 closed.** `Haptics.swift`: `stoppedHandler` and `resetHandler` are `@Sendable` and hop to `@MainActor` for `engine`/`isRunning`; `prepare()`'s start completion is `@Sendable` too. Any failure in `play()` drops the engine and returns false → `.success` fallback.
+- **H2 closed.** The Log set and Finish `PaintKey`s are `isSilent` (Paint.swift:300-303). The set's haptic plays from `onChange(of: session.lastSeated)` (`.setLogged`, or `.newBest` in its place), so it survives Reduce Motion and VoiceOver's "Log set" action; done plays from `finish()` for every finish, including VoiceOver's "Finish workout". The old `celebrated` soft impact is gone, so a new best is one haptic.
+- **Design's latency question closed.** `DonePattern.prepare()` starts the engine asynchronously on the workout's `onAppear`; `play()` only calls `start()` when it isn't running. Note: if auto-shutdown stops the engine without calling `stoppedHandler`, `isRunning` stays true; the player start then either restarts it (auto-shutdown's normal path) or throws into the `.success` fallback. Safe either way.
+- **System Haptics switch:** no public API; stays install-day check 6 (System Haptics off, finish a workout, expect nothing).
+- Low closed: the wet flag drives the cadmium-to-context dry (1.2 s + 0.8 s, inside 2 s); `@Environment(\.self)` is gone.
+- Data safety: no LaunchFlags, ProcessInfo, UI tests or `project.yml` changes.
+
+### H3 (must fix, one word): "Finish here" plays two haptics
+`ExerciseStrip.swift:110`, the running order's "Finish here" `PaintKey`, isn't `isSilent`. Its hold completion plays the medium impact, and its `onFinish` calls `finish(early: true)`, which now plays the done pattern: two haptics for one moment. Fix: `PaintKey(paint: Paint.live, duration: 0.7, height: 64, drift: 20, isSilent: true, action: onFinish)`.
+
+**Verdict: PASS with H3 in.** No re-review needed beyond confirming that one line.
+
+## Addendum 2: 1a2472d (Oct 16 PT, just after midnight): PASS
+Only two lines changed since b6112e6, and the trial merge onto master is clean.
+- H3 closed. `ExerciseStrip.swift:110`: "Finish here" is `isSilent: true`, so `finish(early: true)` plays the done pattern alone.
+- `WorkoutParts.swift:256`: "Save set N" is `isSilent: true`. Its `onSave` bumps `saveHaptic` (WorkoutModeView.swift:615), which plays `.setLogged` (:180), so a save is one tap, not a tick plus a tap.
+**Verdict: PASS. Merge-ready.**
