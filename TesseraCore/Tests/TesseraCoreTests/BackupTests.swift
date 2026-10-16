@@ -70,11 +70,14 @@ struct BackupTests {
         defer { try? FileManager.default.removeItem(at: dir) }
         let store = try seededStore(at: dir.appendingPathComponent("tessera.sqlite"))
         let backups = dir.appendingPathComponent("Backups")
-        let start = Date(timeIntervalSince1970: 1_792_000_000)
+        // A fixed LA calendar and midday instants (never Calendar.current: after midnight a second call replaces).
+        let calendar = TesseraDayTests.calendar
         for day in 0 ..< 10 {
-            let now = start.addingTimeInterval(Double(day) * 86400)
-            #expect(try TesseraBackup.writeRolling(from: store.context, in: backups, now: now) != nil)
-            #expect(try TesseraBackup.writeRolling(from: store.context, in: backups, now: now) == nil)
+            let now = TesseraDayTests.at(10, 10 + day, 12)
+            #expect(try TesseraBackup.writeRolling(from: store.context, in: backups, now: now, calendar: calendar)
+                != nil)
+            #expect(try TesseraBackup.writeRolling(from: store.context, in: backups, now: now, calendar: calendar)
+                == nil)
         }
         let files = try FileManager.default.contentsOfDirectory(atPath: backups.path)
         #expect(files.count == 7, "\(files.sorted())")

@@ -68,7 +68,10 @@ enum BackupKeeper {
             note(.iPhone, error: error, now: now)
         }
         guard let folder = pickedFolder else {
-            note(.folder, error: nil, now: now)
+            // A folder was picked but its bookmark won't resolve (deleted, iCloud signed out): a failure, not "no
+            // folder", so Backups doesn't look safe while nothing is written there.
+            let picked = UserDefaults.standard.data(forKey: bookmarkKey) != nil
+            note(.folder, error: picked ? CocoaError(.fileNoSuchFile) : nil, now: now)
             return
         }
         let accessing = folder.startAccessingSecurityScopedResource()

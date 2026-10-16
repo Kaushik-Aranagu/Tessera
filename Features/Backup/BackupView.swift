@@ -292,8 +292,10 @@ enum BackupCopy {
     static func local(_ latest: Date?, now: Date) -> String {
         guard let latest else { return "The first copy is made when you leave the app today." }
         let calendar = Calendar.current
-        let when = calendar.isDate(latest, inSameDayAs: now) ? "today"
-            : calendar.isDateInYesterday(latest) ? "yesterday"
+        // His day (04:00 to 04:00): a 23:55 copy read at 01:15 is today's.
+        let tesseraDay = TesseraDay(calendar: calendar)
+        let when = tesseraDay.isSameDay(latest, now) ? "today"
+            : tesseraDay.day(of: latest) == tesseraDay.day(-1, after: now) ? "yesterday"
             : latest.formatted(.dateTime.weekday(.wide))
         return "A copy is made every day, the last one \(when). Seven are kept."
     }
@@ -312,6 +314,9 @@ enum BackupCopy {
     /// "Yesterday's copy to iCloud Drive/Tessera didn't save. It tries again when you leave the app."
     static func failure(_ failure: BackupKeeper.Failure, folder: URL?, now: Date) -> String {
         let day = TesseraDay().isSameDay(failure.at, now) ? "Today's" : "The last"
+        if failure.place == .folder, folder == nil {
+            return "The folder you chose can't be reached, so copies are only on this iPhone. Choose it again."
+        }
         let place = failure.place == .folder ? folder.map { " to \(folderName($0))" } ?? " to your folder"
             : " on this iPhone"
         return "\(day) copy\(place) didn't save. It tries again when you leave the app."
