@@ -61,3 +61,10 @@ Merge rows match Design:
 ## Must fix before merge
 1. S1: merge sections by their shown name in `Groceries.aisles()`, plus a test.
 2. S2: a public read of a row's pack size, plus the U5 test expecting both sizes.
+
+## Addendum: head c99cb0f (GitHub head confirmed), PASS
+
+This is one commit on top of 10bede5. A trial merge onto current master (f1bf709) is clean.
+- **S1, closed.** `aisles()` (Groceries.swift:31-46) now groups by the shown name, keeping first-seen order. It drops done items, then sorts by walk order, so an old "Tins and jars" item and a new can share one "Cans and jars" entry. The `ForEach` id in GroceriesView is unique again. `shoppingOrder()` (Shopping.swift:8-10) and the shop line read `aisles()`, so shop mode is fixed too. Test: `anOldAisleNameAndANewOneAreOneSection` (one entry, 2 items).
+- **S2, closed.** The public `Groceries.packSize(of:)` returns the first share's size. Every share on a row has the same size, because of the merge key. The U5 test now expects "14.5 oz" and "28 oz". Builder B draws the "· 14.5 oz".
+- The lows L1-L4 stand and are not blocking. Nothing writes on launch.
