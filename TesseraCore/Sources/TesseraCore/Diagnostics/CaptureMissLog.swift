@@ -36,7 +36,7 @@ public struct CaptureMissLog: Sendable {
     public func record(_ text: String, at date: Date = .now, route: String, source: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         // A Claude key never goes in a file (the paste screen too).
-        guard !trimmed.isEmpty, !trimmed.contains("sk-ant-") else { return }
+        guard !trimmed.isEmpty, !looksLikeClaudeKey(trimmed) else { return }
         let miss = Miss(text: String(trimmed.prefix(Self.maxText)), at: date, route: route, source: source)
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601

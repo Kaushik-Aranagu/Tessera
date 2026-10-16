@@ -73,7 +73,8 @@ struct ClaudeKeyTests {
         #expect(keys.read() == Self.key)
         let request = try #require(StubProtocol.requests.last)
         #expect(request.url?.path == "/v1/messages/count_tokens")
-        #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer \(Self.key)") // the one place
+        #expect(request.value(forHTTPHeaderField: "x-api-key") == Self.key) // the one place
+        #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
         #expect(request.value(forHTTPHeaderField: "anthropic-version") == "2023-06-01")
         // Counted, at $0.
         #expect(ledger.calls().count == 1 && ledger.monthTotal() == 0)
@@ -134,8 +135,8 @@ struct ClaudeKeyTests {
         let result = await check().test(pasted: Self.key)
         #expect(result.outcome == row.outcome)
         #expect(TessVoice.violations(in: result.line).isEmpty)
-        // A bad key is deleted; every other outcome keeps it.
-        #expect((keys.read() == nil) == (row.outcome == .badKey))
+        // Every outcome keeps the key, a 401 included: a mistake on our side must never destroy a good key.
+        #expect(keys.read() == Self.key)
         #expect(ledger.calls().count == 1)
     }
 
@@ -145,6 +146,35 @@ struct ClaudeKeyTests {
         let result = await check().test(pasted: Self.key)
         #expect(result.outcome == (code == .timedOut ? .timeout : .offline))
         #expect(keys.read() == Self.key && ledger.monthTotal() == 0)
+    }
+
+    @Test func aWrappedPasteIsJoinedAndAFailedSaveSaysSo() async {
+        let result = await check().test(pasted: "sk-ant-TEST-abc\n def-1234")
+        #expect(result.outcome == .works && keys.read() == "sk-ant-TEST-abcdef-1234")
+        let broken = ClaudeKeyCheck(keys: RefusingKeychain(), ledger: ledger, session: StubProtocol.session())
+        let refused = await broken.test(pasted: Self.key)
+        #expect(refused.outcome == .notSaved && refused.line == "I couldn't save that key. Try again?")
+        #expect(StubProtocol.requests.count == 1) // nothing sent for the refused save
+    }
+
+    @Test func theGuardIgnoresCase() async {
+        #expect(looksLikeClaudeKey("Sk-Ant-abc") && looksLikeClaudeKey("my key is SK-ANT-123"))
+        #expect(!looksLikeClaudeKey("skant") && !looksLikeClaudeKey("sk-and-x"))
+        let engine = ActionEngine(store: store, classes: classes)
+        let pasted = await TessCaptureEngine(engine: engine).capture("Sk-ant-Mixed-Case-Key", context: TessContext())
+        #expect(pasted.records.isEmpty && pasted.line == "That looks like a Claude key. Paste it in Settings.")
+    }
+
+    @Test func twoCallsAtOnceCannotBothPassTheCap() {
+        let remaining = TessUsageLedger.capNano - ledger.monthTotal()
+        let share = remaining / 10 * 6
+        let first = ledger.reserve(share)
+        let second = ledger.reserve(share)
+        #expect(first != nil && second == nil)
+        if let first {
+            ledger.settle(first)
+        }
+        #expect(ledger.reserve(share).map { ledger.settle($0) } != nil)
     }
 
     @Test func notAKeyIsNeverSent() async {
@@ -157,7 +187,10 @@ struct ClaudeKeyTests {
         let result = await check().test(pasted: Self.key)
         // Both requests got the same canned 404 here, so the outcome is "other" and nothing was billed.
         #expect(result.outcome == .other)
-        #expect(StubProtocol.requests.map { $0.url?.path } == ["/v1/messages/count_tokens", "/v1/messages"])
+        // The fallback posts to the messages endpoint itself, no trailing slash (QA K12).
+        #expect(StubProtocol.requests.map { $0.url?.absoluteString } == [
+            "https://api.anthropic.com/v1/messages/count_tokens", "https://api.anthropic.com/v1/messages",
+        ])
         #expect(TessUsageLedger.cost(model: ClaudeKeyCheck.model, input: 8, output: 1) == 1300)
     }
 
@@ -194,4 +227,17 @@ struct ClaudeKeyTests {
         #expect(ledger.canSpend(TessUsageLedger.capNano - 700, now: thisMonth, calendar: calendar))
         #expect(!ledger.canSpend(TessUsageLedger.capNano - 699, now: thisMonth, calendar: calendar))
     }
+}
+
+/// A Keychain that refuses every save.
+struct RefusingKeychain: TessKeychain {
+    func read() -> String? {
+        nil
+    }
+
+    func save(_: String) -> Bool {
+        false
+    }
+
+    func delete() {}
 }
