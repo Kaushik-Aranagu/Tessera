@@ -242,6 +242,8 @@ public enum SystemCatalog {
             FieldSpec(key: "backupFolderName", name: "Backup folder", kind: .text),
             FieldSpec(key: "backupFolderPickedAt", name: "Folder picked", kind: .date),
             FieldSpec(key: "restWeekday", name: "Rest day", kind: .number),
+            // Tess's eyes (motion build sheet item 1): nil means no, off by default.
+            FieldSpec(key: "tessEyes", name: "Tess's eyes", kind: .bool),
         ]),
         // A phrase the phone couldn't read while Claude was out of reach (tess-model-layer.md section 7): kept as said,
         // read by Claude the next time the app is open and online, and gone once read. Never commits on its own.
@@ -347,7 +349,7 @@ public enum SystemCatalog {
 
     /// Built-in classes ship as a versioned package. Bump `version` whenever a spec changes; seeding then
     /// refreshes shipped names, symbols, units, options, defaults and formulas, except what the person edited.
-    public static let package = CatalogPackage(id: "system", version: 9, name: "Tessera built-ins",
+    public static let package = CatalogPackage(id: "system", version: 10, name: "Tessera built-ins",
                                                source: "Tessera", license: "Tessera")
 
     static let honestE1RM = "weight * (1 + (reps + 10 - coalesce(rpe, 10)) / 30)"
