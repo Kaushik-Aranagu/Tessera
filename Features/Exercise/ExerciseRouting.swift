@@ -26,6 +26,8 @@ enum ExerciseRouting {
             guard let object = model.object(id), let objectClass = object.classDef,
                   ClassResolver.isSubclass(objectClass, of: planClass) else { return nil }
             return PlanRoute(object: object)
+        case .routines:
+            return nil
         }
     }
 }

@@ -1,333 +1,543 @@
 import SwiftUI
 import TesseraCore
 
-/// TRAINING: a context line, today's workout as the hero, its exercises as plain 50 pt rows, one ink key to start or
-/// resume, and one line from Tess.
+/// TRAINING is the workout at rest (docs/design/training-mode.md): the strip unlit, the plan as lanes with their sets
+/// as guides, and the START mark. Starting is the page waking: the mark's ink line lifts into the strip and lights
+/// the first segment, then live mode rises.
 struct TrainingPage: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
         let _ = model.revision
-        if let workout = model.tonightWorkout() {
-            WorkoutPlan(workout: workout)
-        } else if let session = model.session {
-            // A workout from another day is still running: it is today's training.
-            WorkoutPlan(workout: session.workout)
+        if let session = model.session {
+            // Running (or paused under Home): the plan with what's done, RESUME.
+            TrainingAtRest(plan: .running(session))
+        } else if let workout = model.tonightWorkout() {
+            TrainingAtRest(plan: .scheduled(workout))
         } else if let routine = model.todaysRoutine() {
-            // Nothing scheduled yet: the plan's next routine is today's training, one hold from live mode.
-            RoutinePlan(routine: routine)
+            TrainingAtRest(plan: .routine(routine))
         } else if let done = model.finishedToday().first {
-            // Trained today: the session, compressed into today's history, with Tess's count line.
-            DoneTraining(summary: done)
+            TrainingAtRest(plan: .done(done))
         } else {
             EmptyTraining()
         }
     }
 }
 
-private struct WorkoutPlan: View {
-    let workout: ObjectRecord
+// MARK: - The page
+
+/// What the page is drawn from.
+enum TrainingSource {
+    case routine(ObjectRecord)
+    case scheduled(ObjectRecord)
+    case running(WorkoutSession)
+    case done(WorkoutSummary)
+}
+
+/// One exercise of the plan as a lane: the name, the target at the right and one stroke per set.
+struct TrainingLane: Identifiable, Equatable {
+    let id: UUID
+    let exercise: ClassDef?
+    let name: String
+    let target: String
+    let sets: Int
+    /// The set numbers already logged (drawn as dried strokes in their pigments).
+    let logged: Int
+}
+
+private struct TrainingAtRest: View {
+    let plan: TrainingSource
     @Environment(AppModel.self) private var model
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.zoomNamespace) private var namespace
 
+    /// The START tap's flight: 0 at the word, 1 landed in the strip.
+    @State private var lift: CGFloat = 0
+    @State private var isLifting = false
+    @State private var landed = false
+    @State private var liftTaps = 0
+    @State private var markLine: CGRect = .zero
+    @State private var firstSegment: CGRect = .zero
+
+    private static let space = "training"
+
     var body: some View {
-        let entries = workout.orderedChildren
-        let isRunning = model.session != nil
-
+        let lanes = lanes
         VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(context)
-                    .font(Theme.voice(size: 21))
-                    .foregroundStyle(Theme.Colors.context)
-                Spacer(minLength: Theme.Spacing.s)
-                // z: the week and month plan this workout belongs to.
-                if let plan = model.classDef(.plan) {
-                    Button { model.open(.classDef(plan.id)) } label: {
-                        Text("Plan →")
-                            .textRole(.label)
-                            .foregroundStyle(Theme.Colors.ink)
-                            .frame(minWidth: 60, minHeight: 44)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(HandleButtonStyle())
-                    .modifier(ZoomSource(id: Route.classDef(plan.id), namespace: namespace))
-                    .accessibilityLabel("Training plan")
+            TrainingStrip(sets: lanes.map(\.sets), state: stripState(lanes))
+                .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frame in
+                    let total = max(lanes.map(\.sets).reduce(0, +), 1)
+                    let spacing = 4 * CGFloat(max(lanes.count - 1, 0))
+                    let width = (frame.width - spacing) * CGFloat(lanes.first?.sets ?? 0) / CGFloat(total)
+                    firstSegment = CGRect(x: frame.minX, y: frame.minY, width: width, height: frame.height)
                 }
-            }
-            .padding(.bottom, Theme.Spacing.m)
-            .entrance(0)
+                .padding(.bottom, Theme.Spacing.l)
 
-            Button {
-                model.open(.object(workout.id))
-            } label: {
-                HeroText(text: workout.title) { $0 }
-                    .foregroundStyle(Theme.Colors.ink)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(HandleButtonStyle())
-            .modifier(ZoomSource(id: Route.object(workout.id), namespace: namespace))
-            .accessibilityHint("Opens \(workout.title)")
-            .siblingParallax()
-            .entrance(1, hero: true)
-            .padding(.bottom, Theme.Spacing.xl)
+            Text(context(lanes))
+                .font(Theme.voice(size: 21))
+                .foregroundStyle(Theme.Colors.context)
+                .contentTransition(.opacity)
+                .padding(.bottom, Theme.Spacing.s)
+                .entrance(0)
 
-            VStack(spacing: 0) {
-                ForEach(entries.prefix(5)) { entry in
-                    EntryRow(entry: entry)
-                        .frame(height: 50)
+            titleButton
+                .padding(.bottom, Theme.Spacing.l)
+                .entrance(1, hero: true)
+
+            StartMark(state: markState, lift: lift)
+                .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { frame in
+                    markLine = CGRect(x: frame.minX, y: frame.maxY - 6, width: frame.width, height: 6)
+                }
+                .onTapGesture { tapMark() }
+                .accessibilityAddTraits(markState.isAction ? .isButton : [])
+                .accessibilityAction { tapMark() }
+                .padding(.bottom, Theme.Spacing.xl)
+                .entrance(2)
+
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(Array(lanes.prefix(5).enumerated()), id: \.element.id) { index, lane in
+                    LaneRow(lane: lane, wakes: landed && index == 0, dried: isDone)
+                        .frame(height: 72, alignment: .top)
                 }
             }
             .accessibilityElement(children: .contain)
-            .entrance(2)
-
-            Spacer(minLength: Theme.Spacing.xl)
-
-            PaintKey(isTap: true, action: {
-                if isRunning {
-                    model.isWorkoutPresented = true
-                } else {
-                    model.startWorkout(workout)
-                }
-            }, label: { _ in
-                Text(isRunning ? "Resume workout" : "Start workout")
-                    .textRole(.bodyStrong)
-            })
             .entrance(3)
 
-            if let line = tessLine(entries.first) {
+            Spacer(minLength: Theme.Spacing.m)
+
+            planLine
+                .entrance(4)
+
+            if let line = tessLine(lanes) {
                 Text(line)
                     .font(Theme.voice(size: 21))
                     .foregroundStyle(Theme.Colors.tess)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, Theme.Spacing.l)
-                    .entrance(4)
+                    .contentTransition(.opacity)
+                    .padding(.top, Theme.Spacing.m)
+                    .entrance(5)
             }
         }
-    }
-
-    /// "this evening at six"
-    private var context: String {
-        guard case let .date(date)? = model.store.value("scheduledFor", of: workout) else { return "today" }
-        return SpokenTime.when(date, now: AppClock.now)
-    }
-
-    /// "Bench Press is ready for 82.5 today."
-    /// "Bench Press is ready for 82.5 today." from Core's prefill; a first session's light starting weight is not a
-    /// working weight, so it reads "First time on bench press. Start light." instead.
-    private func tessLine(_ entry: ObjectRecord?) -> String? {
-        guard let entry, let exercise = model.store.linkedClass("exercise", of: entry) else { return nil }
-        let prefill = model.ledger.prefill(for: entry)
-        if prefill.isFirstTime {
-            return "First time on \(exercise.name.lowercased()). Start light."
+        .coordinateSpace(.named(Self.space))
+        .overlay(alignment: .topLeading) {
+            // The line in flight, from under the word up into the strip.
+            if isLifting {
+                LiftingLine(from: markLine, target: firstSegment, progress: lift)
+                    .allowsHitTesting(false)
+            }
         }
-        guard let weight = prefill.weight, weight > 0 else { return nil }
-        return "\(exercise.name) is ready for \(Format.kilograms(weight)) today."
+        .tesseraFeedback(.made, trigger: liftTaps)
     }
-}
 
-/// Today's routine straight from the plan, before any workout exists: the slots as rows, Start makes the workout
-/// (StartRoutine, prefilled from last time) and opens live mode.
-private struct RoutinePlan: View {
-    let routine: ObjectRecord
-    @Environment(AppModel.self) private var model
-    @Environment(\.zoomNamespace) private var namespace
+    // MARK: Parts
 
-    var body: some View {
-        let slots = routine.orderedChildren
-        VStack(alignment: .leading, spacing: 0) {
+    @ViewBuilder
+    private var titleButton: some View {
+        let (title, route) = titleAndRoute
+        Button { model.open(route) } label: {
+            Text(title)
+                .textRole(.title)
+                .foregroundStyle(Theme.Colors.ink)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(HandleButtonStyle())
+        .modifier(ZoomSource(id: route, namespace: namespace))
+        .accessibilityHint("Opens \(title)")
+    }
+
+    private var titleAndRoute: (String, Route) {
+        switch plan {
+        case let .routine(routine): (routine.title, .object(routine.id))
+        case let .scheduled(workout): (workout.title, .object(workout.id))
+        case let .running(session): (session.workout.title, .object(session.workout.id))
+        case let .done(summary): ("\(summary.title) done", .object(summary.workout.id))
+        }
+    }
+
+    /// "PUSH PULL LEGS, ROLLS ON" and ROUTINES.
+    @ViewBuilder
+    private var planLine: some View {
+        if let planObject = model.plan {
             HStack(alignment: .firstTextBaseline) {
-                Text(context)
-                    .font(Theme.voice(size: 21))
-                    .foregroundStyle(Theme.Colors.context)
-                Spacer(minLength: Theme.Spacing.s)
-                if let plan = model.plan {
-                    Button { model.open(.object(plan.id)) } label: {
-                        Text("Plan →")
-                            .textRole(.label)
-                            .foregroundStyle(Theme.Colors.ink)
-                            .frame(minWidth: 60, minHeight: 44)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(HandleButtonStyle())
-                    .modifier(ZoomSource(id: Route.object(plan.id), namespace: namespace))
-                    .accessibilityLabel(plan.title)
-                }
-            }
-            .padding(.bottom, Theme.Spacing.m)
-            .entrance(0)
-
-            Button {
-                model.open(.object(routine.id))
-            } label: {
-                HeroText(text: routine.title) { $0 }
-                    .foregroundStyle(Theme.Colors.ink)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(HandleButtonStyle())
-            .modifier(ZoomSource(id: Route.object(routine.id), namespace: namespace))
-            .accessibilityHint("Opens \(routine.title)")
-            .siblingParallax()
-            .entrance(1, hero: true)
-            .padding(.bottom, Theme.Spacing.xl)
-
-            VStack(spacing: 0) {
-                ForEach(slots.prefix(5)) { slot in
-                    SlotRow(slot: slot)
-                        .frame(height: 50)
-                }
-            }
-            .accessibilityElement(children: .contain)
-            .entrance(2)
-
-            Spacer(minLength: Theme.Spacing.xl)
-
-            if model.canStart(routine) {
-                PaintKey(isTap: true, action: { model.startRoutine(routine) }, label: { _ in
-                    Text("Start workout")
-                })
-                .accessibilityLabel("Start \(routine.title)")
-                .entrance(3)
-            }
-
-            Text(TrainingPage.routineLine(routine, slots: slots.count))
-                .font(Theme.voice(size: 21))
-                .foregroundStyle(Theme.Colors.tess)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, Theme.Spacing.l)
-                .entrance(4)
-        }
-    }
-
-    /// "next in Push Pull Legs"
-    private var context: String {
-        guard let plan = model.plan else { return "today" }
-        return "next in \(plan.title)"
-    }
-}
-
-/// Today's finished workout: when it ended, what got done per exercise, Tess's line and what's next in the plan.
-private struct DoneTraining: View {
-    let summary: WorkoutSummary
-    @Environment(AppModel.self) private var model
-    @Environment(\.zoomNamespace) private var namespace
-
-    var body: some View {
-        let entries = summary.workout.orderedChildren
-        VStack(alignment: .leading, spacing: 0) {
-            Text(context)
-                .font(Theme.voice(size: 21))
-                .foregroundStyle(Theme.Colors.context)
-                .padding(.bottom, Theme.Spacing.m)
-                .entrance(0)
-
-            Button {
-                model.open(.object(summary.workout.id))
-            } label: {
-                HeroText(text: summary.title) { $0 }
-                    .foregroundStyle(Theme.Colors.ink)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(HandleButtonStyle())
-            .modifier(ZoomSource(id: Route.object(summary.workout.id), namespace: namespace))
-            .accessibilityLabel("\(summary.title), done")
-            .siblingParallax()
-            .entrance(1, hero: true)
-            .padding(.bottom, Theme.Spacing.xl)
-
-            VStack(spacing: 0) {
-                ForEach(entries.prefix(6)) { entry in
-                    DoneRow(entry: entry)
-                        .frame(height: 50)
-                }
-            }
-            .accessibilityElement(children: .contain)
-            .entrance(2)
-
-            Spacer(minLength: Theme.Spacing.xl)
-
-            Text(summary.line)
-                .font(Theme.voice(size: 21))
-                .foregroundStyle(Theme.Colors.tess)
-                .fixedSize(horizontal: false, vertical: true)
-                .entrance(3)
-            if let next {
-                Text("\(next.title) is next.")
+                Text("\(planObject.title), rolls on")
                     .textRole(.label)
+                    .textCase(.uppercase)
                     .foregroundStyle(Theme.Colors.inkSecondary)
-                    .padding(.top, Theme.Spacing.s)
-                    .entrance(4)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                Spacer(minLength: Theme.Spacing.s)
+                Button("Routines") { model.open(.routines(planObject.id)) }
+                    .buttonStyle(InkLabelWordStyle())
             }
         }
     }
 
-    /// "done this afternoon"
-    private var context: String {
-        guard let end = summary.endedAt else { return "done today" }
-        return "done this \(SpokenTime.partOfDay(end))"
+    // MARK: State
+
+    private var isDone: Bool {
+        if case .done = plan {
+            return true
+        }
+        return false
     }
 
-    private var next: ObjectRecord? {
-        model.plan.flatMap { model.ledger.nextRoutine(in: $0) }
+    private var markState: StartMark.State {
+        switch plan {
+        case let .routine(routine):
+            if landed {
+                return .running
+            }
+            return model.canStart(routine) ? .ready("Start \(routine.title)") : .label("Add an exercise to start")
+        case let .scheduled(workout):
+            return landed ? .running : .ready("Start \(workout.title)")
+        case let .running(session):
+            let total = session.entries.reduce(0) { $0 + session.targetSets(of: $1) }
+            let done = session.entries.reduce(0) { $0 + session.setRows(of: $1).count }
+            return .paused("Resume \(session.workout.title)", total > 0 ? Double(done) / Double(total) : 0)
+        case .done:
+            if let next = model.plan.flatMap({ model.ledger.nextRoutine(in: $0) }) {
+                return .label("\(next.title) tomorrow")
+            }
+            return .label("Done for today")
+        }
+    }
+
+    private func stripState(_ lanes: [TrainingLane]) -> [TrainingStrip.Segment] {
+        switch plan {
+        case .routine, .scheduled:
+            lanes.indices.map { $0 == 0 && landed ? .lit : .unlit }
+        case let .running(session):
+            lanes.indices.map { index in
+                index < session.currentIndex ? .done : index == session.currentIndex ? .lit : .unlit
+            }
+        case .done:
+            lanes.map { _ in .done }
+        }
+    }
+
+    private var lanes: [TrainingLane] {
+        switch plan {
+        case let .routine(routine):
+            routine.orderedChildren.compactMap(slotLane)
+        case let .scheduled(workout):
+            workout.orderedChildren.compactMap { entryLane($0, logged: 0) }
+        case let .running(session):
+            session.entries.compactMap { entryLane($0, logged: session.setRows(of: $0).count) }
+        case let .done(summary):
+            summary.workout.orderedChildren.compactMap { entry in
+                let logged = entry.orderedChildren.count { model.store.number("reps", of: $0) != nil }
+                return entryLane(entry, logged: logged, sets: logged)
+            }
+        }
+    }
+
+    private func slotLane(_ slot: ObjectRecord) -> TrainingLane? {
+        guard let exercise = model.store.linkedClass("exercise", of: slot) else { return nil }
+        let sets = Int(model.store.number("sets", of: slot) ?? 3)
+        let last = model.ledger.sessions(of: exercise).first?.sets.first
+        let target = last.map { "\(Format.kilograms($0.weight)) × \(Int($0.reps.rounded()))" }
+            ?? TrainingPage.scheme(sets: Double(sets), repMin: model.store.number("repMin", of: slot),
+                                   repMax: model.store.number("repMax", of: slot))
+        return TrainingLane(id: slot.id, exercise: exercise, name: exercise.name, target: target, sets: sets,
+                            logged: 0)
+    }
+
+    private func entryLane(_ entry: ObjectRecord, logged: Int, sets: Int? = nil) -> TrainingLane? {
+        guard let exercise = model.store.linkedClass("exercise", of: entry) else { return nil }
+        let planned = Int(model.store.number("targetSets", of: entry) ?? 3)
+        let prefill = model.ledger.prefill(for: entry)
+        let target = prefill.weight.map { "\(Format.kilograms($0)) × \(prefill.reps)" }
+            ?? TrainingPage.target(sets: Double(planned), reps: model.store.number("targetReps", of: entry))
+        return TrainingLane(id: entry.id, exercise: exercise, name: exercise.name, target: target,
+                            sets: max(sets ?? planned, logged, 1), logged: logged)
+    }
+
+    /// "today, 5 exercises, about 55 min"; done: "done this afternoon".
+    private func context(_ lanes: [TrainingLane]) -> String {
+        if case let .done(summary) = plan {
+            guard let end = summary.endedAt else { return "done today" }
+            return "done this \(SpokenTime.partOfDay(end))"
+        }
+        if case .running = plan {
+            return "running now"
+        }
+        let count = lanes.count
+        let sets = lanes.map(\.sets).reduce(0, +)
+        return "today, \(count) \(count == 1 ? "exercise" : "exercises"), \(TrainingPage.about(sets: sets))"
+    }
+
+    private func tessLine(_ lanes: [TrainingLane]) -> String? {
+        if landed, let first = lanes.first {
+            return "\(titleAndRoute.0) running. \(first.name) first."
+        }
+        switch plan {
+        case let .routine(routine):
+            guard let slot = routine.orderedChildren.first,
+                  let exercise = model.store.linkedClass("exercise", of: slot) else { return nil }
+            guard let last = model.ledger.sessions(of: exercise).first?.sets.first, last.weight > 0 else {
+                return "First time on \(exercise.name.lowercased()). Start light."
+            }
+            return "\(exercise.name) is ready for \(Format.kilograms(last.weight)) today."
+        case let .scheduled(workout):
+            guard let entry = workout.orderedChildren.first,
+                  let exercise = model.store.linkedClass("exercise", of: entry) else { return nil }
+            let prefill = model.ledger.prefill(for: entry)
+            if prefill.isFirstTime {
+                return "First time on \(exercise.name.lowercased()). Start light."
+            }
+            guard let weight = prefill.weight, weight > 0 else { return nil }
+            return "\(exercise.name) is ready for \(Format.kilograms(weight)) today."
+        case .running:
+            return nil
+        case let .done(summary):
+            return summary.line
+        }
+    }
+
+    // MARK: Start
+
+    private func tapMark() {
+        switch markState {
+        case .ready:
+            guard !isLifting else { return }
+            liftTaps += 1
+            isLifting = true
+            lift = 0
+            // The house curve over 520 ms.
+            withTesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.52), reduceMotion: reduceMotion) {
+                lift = 1
+            }
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(520))
+                withTesseraAnimation(.easeOut(duration: 0.24), reduceMotion: reduceMotion) {
+                    landed = true
+                    isLifting = false
+                }
+                // The page has woken: live mode rises on the first exercise.
+                try? await Task.sleep(for: .milliseconds(420))
+                start()
+            }
+        case .paused:
+            model.isWorkoutPresented = true
+        case .running, .label:
+            break
+        }
+    }
+
+    private func start() {
+        switch plan {
+        case let .routine(routine): model.startRoutine(routine)
+        case let .scheduled(workout): model.startWorkout(workout)
+        case .running, .done: model.isWorkoutPresented = true
+        }
+        landed = false
+        lift = 0
     }
 }
 
-/// One exercise of a finished workout: its name and how many sets were logged ("4 sets", or "not today").
-private struct DoneRow: View {
-    let entry: ObjectRecord
-    @Environment(AppModel.self) private var model
+// MARK: - The strip
+
+/// The live workout's strip before it runs: one 3 pt segment per exercise, its length its sets, 4 pt apart.
+struct TrainingStrip: View {
+    enum Segment: Equatable {
+        case unlit, lit, done
+    }
+
+    let sets: [Int]
+    let state: [Segment]
 
     var body: some View {
-        if let exercise = model.store.linkedClass("exercise", of: entry) {
-            let sets = entry.orderedChildren.count { model.store.number("reps", of: $0) != nil }
-            ObjectRow(title: exercise.name, route: .classDef(exercise.id), showsArrow: false) {
-                Text(sets == 0 ? "not today" : "\(sets) \(sets == 1 ? "set" : "sets")")
-                    .textRole(.label)
-                    .foregroundStyle(sets == 0 ? Theme.Colors.muted : Theme.Colors.inkSecondary)
+        GeometryReader { proxy in
+            let total = CGFloat(max(sets.reduce(0, +), 1))
+            let spacing = 4 * CGFloat(max(sets.count - 1, 0))
+            HStack(spacing: 4) {
+                ForEach(sets.indices, id: \.self) { index in
+                    let width = (proxy.size.width - spacing) * CGFloat(sets[index]) / total
+                    segment(index < state.count ? state[index] : .unlit)
+                        .frame(width: max(width, 0))
+                }
+            }
+        }
+        .frame(height: 3)
+        .tesseraAnimation(.easeOut(duration: 0.42), value: state)
+        .accessibilityHidden(true)
+    }
+
+    @ViewBuilder
+    private func segment(_ kind: Segment) -> some View {
+        switch kind {
+        case .unlit:
+            Theme.Colors.ink.opacity(0.14)
+        case .done:
+            Theme.Colors.ink.opacity(0.72)
+        case .lit:
+            Theme.Colors.live
+                .shadow(color: Theme.Colors.live.opacity(ThemeStore.shared.paintLook.isDark ? 0.8 : 0), radius: 5)
+        }
+    }
+}
+
+/// The ink line in flight: it narrows from the word's width to the first segment's and wets from ink to `live`.
+private struct LiftingLine: View, Animatable {
+    let from: CGRect
+    let target: CGRect
+    var progress: CGFloat
+
+    nonisolated var animatableData: CGFloat {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    var body: some View {
+        let x = from.minX + (target.minX - from.minX) * progress
+        let y = from.midY + (target.midY - from.midY) * progress
+        let width = from.width + (target.width - from.width) * progress
+        let height = 4 - progress
+        ZStack {
+            InkLine(thickness: height).fill(Theme.Colors.ink).opacity(1 - Double(progress))
+            InkLine(thickness: height).fill(Theme.Colors.live).opacity(Double(progress))
+        }
+        .frame(width: max(width, 1), height: 6)
+        .shadow(color: Theme.Colors.live.opacity(ThemeStore.shared.paintLook.isDark ? 0.6 * progress : 0),
+                radius: 5)
+        .position(x: x + width / 2, y: y)
+    }
+}
+
+// MARK: - The Start mark
+
+/// The ink-line label word that starts training (replaces the paint stroke): the line is what changes state.
+struct StartMark: View {
+    enum State: Equatable {
+        case ready(String)
+        case running
+        case paused(String, Double)
+        case label(String)
+
+        var isAction: Bool {
+            switch self {
+            case .ready, .paused: true
+            case .running, .label: false
+            }
+        }
+    }
+
+    let state: State
+    /// The START flight: the word fades to 35% while the line leaves it.
+    var lift: CGFloat = 0
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(word)
+                .textRole(.labelStrong)
+                .textCase(.uppercase)
+                .foregroundStyle(Theme.Colors.ink.opacity(wordOpacity))
+                .contentTransition(.opacity)
+            line
+        }
+        .fixedSize()
+        .frame(minHeight: 44, alignment: .bottom)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(word.capitalized)
+    }
+
+    private var word: String {
+        switch state {
+        case let .ready(word), let .paused(word, _), let .label(word): word
+        case .running: "Pause"
+        }
+    }
+
+    private var wordOpacity: Double {
+        switch state {
+        case .ready: 1 - 0.65 * Double(lift)
+        case .label: 0.72
+        case .running, .paused: 1
+        }
+    }
+
+    @ViewBuilder
+    private var line: some View {
+        switch state {
+        case .ready:
+            // The flight draws the moving copy; the line here empties as it leaves.
+            InkLine().fill(Theme.Colors.ink).opacity(lift > 0 ? 0 : 1).frame(height: 6)
+        case .running:
+            InkLine().fill(Theme.Colors.ink).frame(width: 28, height: 6)
+        case let .paused(_, done):
+            GeometryReader { proxy in
+                ZStack(alignment: .leading) {
+                    InkLine().fill(Theme.Colors.ink.opacity(0.22))
+                    InkLine().fill(Theme.Colors.ink).frame(width: proxy.size.width * min(max(done, 0), 1))
+                }
+            }
+            .frame(height: 6)
+        case .label:
+            Color.clear.frame(height: 6)
+        }
+    }
+}
+
+// MARK: - Lanes
+
+/// One exercise: the name, its target at the right and one stroke per set at 48 pt pitch; future sets are the live
+/// page's dashed guides at 22%, logged sets their pigment dried to the rest tint.
+private struct LaneRow: View {
+    let lane: TrainingLane
+    /// The first guide wakes when START lands: 22% to 90%, breathing.
+    var wakes = false
+    var dried = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(lane.name)
+                    .font(Theme.voice(size: 21).weight(.medium))
+                    .foregroundStyle(Theme.Colors.ink)
+                    .lineLimit(1)
+                Spacer(minLength: Theme.Spacing.s)
+                Text(lane.target)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Theme.Colors.inkSecondary)
                     .monospacedDigit()
             }
-        }
-    }
-}
-
-/// One slot of a routine: the exercise (a handle to its page) and its scheme, "4 × 5–8".
-private struct SlotRow: View {
-    let slot: ObjectRecord
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
-        if let exercise = model.store.linkedClass("exercise", of: slot) {
-            ObjectRow(title: exercise.name, route: .classDef(exercise.id), showsArrow: false) {
-                Text(TrainingPage.scheme(
-                    sets: model.store.number("sets", of: slot),
-                    repMin: model.store.number("repMin", of: slot),
-                    repMax: model.store.number("repMax", of: slot)
-                ))
-                .textRole(.label)
-                .foregroundStyle(Theme.Colors.inkSecondary)
-                .monospacedDigit()
+            HStack(spacing: 8) {
+                ForEach(0 ..< lane.sets, id: \.self) { index in
+                    stroke(index)
+                        .frame(width: 40, height: 12)
+                }
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(lane.name), \(lane.target), \(lane.sets) \(lane.sets == 1 ? "set" : "sets")")
     }
-}
 
-private struct EntryRow: View {
-    let entry: ObjectRecord
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
-        if let exercise = model.store.linkedClass("exercise", of: entry) {
-            ObjectRow(title: exercise.name, route: .classDef(exercise.id), showsArrow: false) {
-                Text(TrainingPage.target(
-                    sets: model.store.number("targetSets", of: entry),
-                    reps: model.store.number("targetReps", of: entry)
-                ))
-                .textRole(.label)
-                .foregroundStyle(Theme.Colors.inkSecondary)
-                .monospacedDigit()
+    @ViewBuilder
+    private func stroke(_ index: Int) -> some View {
+        if index < lane.logged {
+            Brushstroke()
+                .stroke(Theme.Colors.restTint(WorkoutPaint.set(index + 1)),
+                        style: StrokeStyle(lineWidth: 5, lineCap: .round))
+        } else if wakes, index == lane.logged {
+            TimelineView(.animation(minimumInterval: 1 / 20, paused: reduceMotion)) { context in
+                let breath = (sin(context.date.timeIntervalSinceReferenceDate / 2.4 * 2 * .pi) + 1) / 2
+                guide.opacity(reduceMotion ? 0.9 : 0.6 + 0.3 * breath)
             }
+            .transition(.opacity)
+        } else {
+            guide.opacity(dried ? 0.12 : 0.22)
         }
     }
+
+    private var guide: some View {
+        Brushstroke()
+            .stroke(Theme.Colors.ink, style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [3, 5]))
+    }
 }
+
+// MARK: - Words
 
 extension TrainingPage {
     /// "4 × 5–8"; a single rep count when the range is one number.
@@ -337,16 +547,17 @@ extension TrainingPage {
         return low == high ? "\(sets) × \(low)" : "\(sets) × \(low)–\(high)"
     }
 
-    /// Tess's line under Start, counts only: "Push A today. 5 exercises." (tess-voice, Morning).
-    static func routineLine(_ routine: ObjectRecord, slots: Int) -> String {
-        "\(routine.title) today. \(slots) \(slots == 1 ? "exercise" : "exercises")."
-    }
-
     /// "4 × 8"; with a weight, "4 × 8 · 82.5".
     static func target(sets: Double?, reps: Double?, weight: Double? = nil) -> String {
         let scheme = "\(Int(sets ?? 0)) × \(Int(reps ?? 0))"
         guard let weight, weight > 0 else { return scheme }
         return "\(scheme) · \(Format.kilograms(weight))"
+    }
+
+    /// "about 55 min": each set about two and a half minutes with its rest, to the nearest five.
+    static func about(sets: Int) -> String {
+        let minutes = max(5, Int((Double(sets) * 2.5 / 5).rounded()) * 5)
+        return minutes >= 60 && minutes % 60 == 0 ? "about \(minutes / 60) h" : "about \(minutes) min"
     }
 }
 
