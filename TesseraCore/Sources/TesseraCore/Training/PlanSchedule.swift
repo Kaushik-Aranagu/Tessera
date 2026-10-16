@@ -8,7 +8,7 @@ public extension TrainingLedger {
     func nextRoutine(in plan: ObjectRecord, now: Date = .now, calendar: Calendar = .current) -> ObjectRecord? {
         let cycle = store.linkedObjects("routines", of: plan)
         guard !cycle.isEmpty, let workoutClass = classes[.workout] else { return nil }
-        if PlanSchedule.mode(of: plan, store: store) == .fixed {
+        if PlanSchedule.mode(of: plan, store: store) == .fixed, PlanSchedule.hasFixedDays(plan, store: store) {
             let day = TesseraDay(calendar: calendar)
             let today = day.today(now)
             let trainedToday = !finishedWorkouts(onDay: today, calendar: calendar).isEmpty

@@ -39,7 +39,9 @@ public extension TrainingLedger {
         let dates = tesseraDay.weekDays(containing: date)
         guard !dates.isEmpty else { return [] }
         let cycle = plan.map { store.linkedObjects("routines", of: $0) } ?? []
-        if let plan, PlanSchedule.mode(of: plan, store: store) == .fixed {
+        if let plan, PlanSchedule.mode(of: plan, store: store) == .fixed,
+           PlanSchedule.hasFixedDays(plan, store: store)
+        {
             return fixedWeek(dates: dates, plan: plan, now: now, calendar: calendar)
         }
         let next = plan.flatMap { nextRoutine(in: $0, now: now, calendar: calendar) }

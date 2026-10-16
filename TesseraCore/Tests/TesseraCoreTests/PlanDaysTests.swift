@@ -145,9 +145,52 @@ struct PlanDaysTests {
         #expect(ledger.nextRoutine(in: plan, now: Self.at(15), calendar: Self.calendar)?.title == "Pull A")
     }
 
-    @Test func aStoreFromCatalogV5ReadsRollingAtV6() {
-        // Additive: a plan made before the fields exist rolls on, with no days on its routines.
-        #expect(SystemCatalog.package.version == 6)
+    @Test func droppingClearsDaysAndReAddingReconciles() throws {
+        // QA L1 on #341, Product 4b857dc: a dropped routine loses its days; one added with days takes them, newer
+        // pick wins, with the handoff line.
+        try engine.perform(SetScheduleMode(plan: plan.id, mode: .fixed), by: .user)
+        try engine.perform(SetRoutineWeekdays(routine: routines[0].id, weekdays: [2, 5]), by: .user)
+        let dropped = try engine.perform(DropRoutineFromPlan(plan: plan.id, routine: routines[0].id), by: .user)
+        #expect(PlanSchedule.weekdays(of: routines[0], store: store).isEmpty)
+        engine.undo(dropped.record)
+        #expect(PlanSchedule.weekdays(of: routines[0], store: store) == [2, 5] && cycle.count == 3)
+        // A routine from another plan arrives with Thursday already set: Push A loses it.
+        let swim = try engine.perform(CreateRoutine(title: "Swim"), by: .user).output
+        try engine.perform(SetRoutineWeekdays(routine: swim.id, weekdays: [5]), by: .user)
+        let added = try engine.perform(AddRoutineToPlan(plan: plan.id, routine: swim.id), by: .user)
+        #expect(added.output.map(\.weekday) == [5] && added.output.first?.from == routines[0].id)
+        #expect(PlanSchedule.weekdays(of: routines[0], store: store) == [2])
+        engine.undo(added.record)
+        #expect(PlanSchedule.weekdays(of: routines[0], store: store) == [2, 5] && cycle.count == 3)
+    }
+
+    @Test func fixedModeWithNoDaysRollsOn() throws {
+        // QA L3 on #341: until a routine has a day, the plan keeps rolling and the editor can steer him to pick days.
+        try engine.perform(SetScheduleMode(plan: plan.id, mode: .fixed), by: .user)
+        let now = Self.at(14)
+        #expect(ledger.nextRoutine(in: plan, now: now, calendar: Self.calendar)?.title == "Push A")
+        #expect(ledger.week(containing: now, plan: plan, now: now, calendar: Self.calendar)
+            .contains { $0.planned != nil })
+        #expect(try engine.perform(SetRoutineWeekdays(routine: routines[0].id, weekdays: []), by: .user).record.summary
+            == "Push A, no fixed days.")
+        #expect(throws: ActionError.self) {
+            try engine.perform(SetRoutineWeekdays(routine: routines[0].id, weekdays: [2, 2]), by: .user)
+        }
+    }
+
+    @Test func aStoreFromCatalogV5ReadsRollingAtV6() throws {
+        // Additive: a plan made before the fields exist rolls on, with no days on its routines. The classes are set
+        // back to v5 and reseeded, so the fields really are added to an older store (QA L4 on #341).
+        for classDef in store.context.all(ClassDef.self) where classDef.systemKey != nil {
+            classDef.packageVersion = 5
+            for field in classDef.ownFields ?? [] where ["scheduleMode", "fixedWeekdays"].contains(field.key) {
+                store.context.delete(field)
+            }
+        }
+        _ = try store.prepareCatalog()
+        #expect(store.context.all(FieldDef.self).contains { $0.key == "scheduleMode" })
+        #expect(store.context.all(FieldDef.self).contains { $0.key == "fixedWeekdays" })
+        #expect(SystemCatalog.package.version >= 6)
         #expect(store.value("scheduleMode", of: plan) == .choice("rolling") || store
             .value("scheduleMode", of: plan) == nil)
         #expect(PlanSchedule.mode(of: plan, store: store) == .rolling)
