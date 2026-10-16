@@ -455,7 +455,7 @@ struct BottomChrome: View {
     }
 
     /// Return: the text dims to a ghost and a cobalt line dries under it for 2 s (touching cancels), then it commits.
-    /// Core's shared guard (any "sk-ant-", any case).
+    /// Core's shared guard (anything that starts like a Claude key, in any case).
     static func looksLikeClaudeKey(_ text: String) -> Bool {
         TesseraCore.looksLikeClaudeKey(text)
     }

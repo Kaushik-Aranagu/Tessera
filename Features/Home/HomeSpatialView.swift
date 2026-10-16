@@ -47,6 +47,8 @@ struct HomeSpatialView: View {
 
     /// Space kept free at the bottom of every page, on top of the 56 pt RootView keeps for the soul.
     static let dockClearance: CGFloat = 48
+    /// Lifts a page's foot line clear of Tess's band.
+    static let footLift: CGFloat = 44
 
     /// Where Home was left this session (spatial memory).
     @MainActor private static var remembered: Int = {
@@ -192,7 +194,10 @@ struct HomeSpatialView: View {
         case .review:
             ReviewPage()
                 .frame(maxHeight: .infinity, alignment: .top)
-                .overlay(alignment: .bottomLeading) { HomeLinkLine(links: [.review, .notes]) }
+                // Above Tess's band (736 to 820), never beside the soul (Design's v9 walk, R1).
+                .overlay(alignment: .bottomLeading) {
+                    HomeLinkLine(links: [.review, .notes]).padding(.bottom, Self.footLift)
+                }
         case .today: NowPage(onShow: show)
         case .training: TrainingPage()
         case .kitchen: KitchenPage()
