@@ -67,7 +67,7 @@
 - A multi-line paste opens a new note.
 - A bare URL becomes a link note.
 - N6: capture UNDO uses UndoWindow (AppModel.swift:276).
-0o. (Research settings-day-one; decisions 1:13 PM PT)
+0o. (Research settings-day-one; decisions 1:13 PM PT) Tiny (QA on #548): remove the key-prefix literal from the comment at BottomChrome.swift:457. ClaudeSection.swift:321 keeps it, because there it's code.
 - Backups: "Stop using it" clears backupFolderName (BackupKeeper.swift:142). UNDO reads thing first and its timer pauses in the background (BackupView.swift:290-303). The receipt is "Copy, saved.".
 - Claude section: after a 401, reopen the writing line (ClaudeSection.swift:235,363-364). The yes line is "Tess asks Claude when she's unsure." (:293). Remove reads "Claude key removed. Leaving the app makes it final.". Replace holds the old key for 10 s with UNDO.
 - PasteRecipe.swift:33 says "Review, under Claude".
