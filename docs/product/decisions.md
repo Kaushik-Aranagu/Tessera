@@ -4,6 +4,8 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+**1:27 PM PT Oct 16: rollback after v10 (Research next-build-v10.md asked).** DECIDED. Research's section 7 wording stands. After v10 the rollback is a36b161, which opens in memory and shows none of his data, so the real way back is rolling forward or restoring the Step 0 copy. 7b321d2 is never installed after v10 because it would write to the v10 store. The next build's gate and list are next-build-v10.md. F1 (the capture UNDO taking back a Home "done") is the top fix after the four next-build-first rows. #504 (", best") and #403 are already on master, so the next pin needs #407 rebased with nonisolated kept and the v9-opens-v10 test, then R7 flag-to-setting, then the Design 70 row.
+
 **1:23 PM PT Oct 16: habits and body weight (Research habits-weight-week.md asked).** DECIDED. All six of Research's picks stand.
 
 Body weight:
