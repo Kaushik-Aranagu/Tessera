@@ -48,3 +48,7 @@ QA thread, Oct 15 PT. Static review. Branch ios/haptics-reward, base 865e465. A 
 
 ## Must fix before merge
 1. H1: `@Sendable` on the reset handler.
+
+## Design's two questions (answers, not findings)
+1. **Does DonePattern respect the System Haptics setting?** Not by our code: `Haptics.swift` only checks `capabilitiesForHardware().supportsHaptics`, which is about the hardware, not the user's switch. The `.sensoryFeedback` cues follow the system setting; whether a custom `CHHapticEngine` pattern is silenced by Settings > Sounds & Haptics > System Haptics I can't confirm statically (Apple docs aren't reachable from this container). Device check: turn System Haptics off, finish a task, expect no done pattern. If it still buzzes, fall back to the `.success` cue (which then stays quiet too) rather than adding our own setting.
+2. **Does starting the engine on every play add first-tap latency?** Likely, after idle. With `isAutoShutdownEnabled`, the engine stops itself when nothing has played for a while, and `play()` then calls the synchronous `try engine.start()` on the main actor in the same moment as the strike, so the first done after a pause can land a little late and block a frame. Fix if the device shows it: warm the engine with `engine.start(completionHandler:)` (async) when a finishable row appears or the Finish key shows, and keep `start()` in `play()` as the cheap no-op it is when already running. Device check: leave the app idle a minute, finish a task, and watch whether the pattern trails the strike.
