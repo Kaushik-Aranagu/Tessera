@@ -222,6 +222,7 @@ private struct QueueRow: View {
                 .opacity(Double(min(max((-drag - 110) / 20, 0), 1)))
                 .offset(y: drag < -110 ? 0 : 6)
                 .accessibilityHidden(true)
+            timeColumn
             content
                 .offset(x: drag < 0 ? leftOffset : min(drag * 0.12, 20))
                 // Lifted while held: a soft shadow on the text itself and a slight scale, no highlight shape.
@@ -315,14 +316,22 @@ private struct QueueRow: View {
                 .lineLimit(1)
                 .textRenderer(StrikeRenderer(progress: strike, color: Theme.Colors.ink.opacity(0.85)))
             Spacer(minLength: Theme.Spacing.s)
-            if let time = entry.time {
-                Text(Format.clock(time))
-                    .textRole(.label)
-                    .foregroundStyle(Theme.Colors.inkSecondary)
-                    .monospacedDigit()
-            }
         }
+        // Room for the time column, which sits still on the right while the title travels.
+        .padding(.trailing, entry.time == nil ? 0 : 64)
         .frame(maxHeight: .infinity)
+    }
+
+    /// The time stays put while the title travels, and fades out over the first 40 pt of a drag.
+    @ViewBuilder private var timeColumn: some View {
+        if let time = entry.time {
+            Text(Format.clock(time))
+                .textRole(.label)
+                .foregroundStyle(Theme.Colors.inkSecondary)
+                .monospacedDigit()
+                .opacity(struck ? 0 : Double(max(0, 1 - abs(drag) / 40)))
+                .frame(maxHeight: .infinity)
+        }
     }
 
     /// 1:1 to 150 pt, then rubber-banded at 35%.
@@ -370,7 +379,6 @@ private struct QueueRow: View {
         withTesseraAnimation(.easeOut(duration: reduceMotion ? 0.15 : 0.18), reduceMotion: reduceMotion) {
             strike = 1
             struck = true
-            drag = 0
         }
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(reduceMotion ? 150 : 600))

@@ -48,6 +48,7 @@ struct HomeSpatialView: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var position = ScrollPosition(id: HomeSpatialView.remembered)
     @State private var progress = Double(HomeSpatialView.remembered)
+    @State private var settled = false
     @State private var presented: HomeLink?
     @State private var pagerIdle = true
     @State private var rowGrabbed = false
@@ -101,6 +102,10 @@ struct HomeSpatialView: View {
             .onScrollGeometryChange(for: Double.self) { geometry in
                 geometry.containerSize.width > 0 ? geometry.contentOffset.x / geometry.containerSize.width : 0
             } action: { _, new in
+                // Until the pager has landed on the remembered page, its first offsets (0, mid-layout) are not a
+                // swipe: ignoring them keeps the rail's ink and carriage on TODAY from the first frame.
+                guard settled || abs(new - Double(Self.remembered)) < 0.01 else { return }
+                settled = true
                 progress = new
             }
             .onChange(of: position.viewID(type: Int.self)) { _, new in
@@ -295,6 +300,8 @@ private struct PaintedRail: View {
                     Button { onSelect(index) } label: {
                         Text(title)
                             .textRole(.label)
+                            .lineLimit(1)
+                            .fixedSize()
                             .foregroundStyle(index == current ? Theme.Colors.ink : Theme.Colors.muted)
                             .frame(maxWidth: .infinity, minHeight: 44)
                             .contentShape(Rectangle())
