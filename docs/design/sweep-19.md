@@ -29,7 +29,7 @@ This corrects three of Design's own recent calls:
 | `home-labels.md` | The ghost row's "wet cobalt dab"; Kitchen words "with their dab"; "the workout's dark ground rises" | No dabs (`no-dots.md`). The workout rises **on the look's ground** |
 | `workout-v1.md` | "A dark painterly ground"; every "cream"; the cream key | The look's ground, `ink` and `inkSecondary` (#266). The key is the ink-line stroke word. The RPE stop follows `no-dots.md` A14 |
 | `kitchen/12-cook-mode.md` | A dark ground from `WorkoutPalette`; cream ink; the soul always in screen blend | Cook mode stands on the look's ground, in `ink`, with the soul's palette by look. The timer horizon is `ink` at 2.5pt over a 1.5pt guide at 14% |
-| `live-activity.md` | Cream numerals and its own palette | The Lock Screen uses the day or night look's base. The Island stays Obsidian (#266). `widget-states.md` governs the layout |
+| `live-activity.md` | Cream numerals and its own palette | **Unchanged on the Lock Screen and the Island:** the rest Live Activity keeps **Cobalt sky**, Kaushik's pick (#269 holds it in every look). One base covers the app's own screens, not the system's Live Activity surfaces |
 | `back-word.md` | "Cream at 60% on the dark workout ground" | `inkSecondary` in every look, the workout included |
 | `no-buttons.md` | "Cream on dark"; "on dark grounds (workout, cook mode) … the wash is the dark ground at 93%"; the 34pt stroke word | Ink on the look's ground. The wash is the look's ground at 92% (the veil). The stroke word's size and paint come from `ink-line.md` |
 | `m4-steers.md` §8 | The focus timer, "a 2.5pt cream-on-ink stroke" | `ink` on the look's ground. The §7 evening wash was already withdrawn by `evening-on-now.md` |
@@ -51,4 +51,4 @@ This corrects three of Design's own recent calls:
 ## Owners
 These are design-text changes. The build rows they imply are already in `no-dots.md`'s tables, in the #266 and #264 reviews, and in the context-line correction above.
 - **Builder B:** put the rest hero's "today" and Review's "the week so far" back to `context`. Move HomeQueue:101, BackupView:83, :118, :212, NoteEditor:91 and NotesView:222 to `inkSecondary`.
-- **Builder A:** cook mode on the look's ground, and the back word on the workout.
+- **Builder A:** cook mode on the look's ground, and the back word on the workout. The Lock Screen Live Activity stays Cobalt sky.
