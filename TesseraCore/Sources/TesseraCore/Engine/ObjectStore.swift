@@ -36,11 +36,16 @@ public struct ObjectStore {
     // MARK: Creating & deleting
 
     @discardableResult
-    public func create(_ classDef: ClassDef, title: String = "", parent: ObjectRecord? = nil) -> ObjectRecord {
+    public func create(_ classDef: ClassDef, title: String = "", parent: ObjectRecord? = nil,
+                       id: UUID? = nil) -> ObjectRecord
+    {
         let siblings = parent?.children?.count ?? 0
         // Insert first, then relate: SwiftData maintains a to-many inverse (Bench Press → every object) far
         // faster for an inserted object; relating in the initializer made long histories quadratic.
         let object = ObjectRecord(title: title, classDef: nil)
+        if let id {
+            object.id = id
+        }
         object.sortIndex = siblings
         context.insert(object)
         object.classDef = classDef

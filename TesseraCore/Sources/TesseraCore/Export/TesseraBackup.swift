@@ -172,7 +172,9 @@ public enum TesseraBackup {
 
     /// Actions he (or Tess, or Siri) took; the seeded catalog and housekeeping don't count.
     nonisolated static func userOps(in db: Database) throws -> Int {
-        try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM op WHERE actor != 'system'") ?? 0
+        // Settings ops (a look tap, the migration) aren't his things: a store holding only a look is still empty.
+        try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM op WHERE actor != 'system' AND instr(objectIDs, ?) = 0",
+                         arguments: [SettingsStore.objectID.uuidString]) ?? 0
     }
 
     /// The same count in a copy on disk, opened read-only.
