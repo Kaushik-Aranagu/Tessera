@@ -11,7 +11,7 @@ Read with: `../design/day-log-page.md` (the spec, unchanged), `day-log-first.md`
 - **Times in the column** use master's `Format.clock`: "07:10", "21:40", 24 h, tabular. **Times inside a sentence** use L173's form: "9 am", "Saturday 3 pm". See mismatch M1.
 - **Labels** are 16/700 uppercase: TODAY, WED 14, OCT 1 TO 4, ‹ HOME, ‹ DAYS. Dates follow the phone's locale order ("Nov 1", so "NOV 1").
 - **Sets use ×** (decision 5:02 PM PT, master's receipts say "82.5 × 8"). Titles show exactly as stored ("Push Day A", "dal tadka"); the fold never changes case.
-- **No colour means good or bad.** Dabs carry the class colour only. No red anywhere.
+- **No colour means good or bad.** No dabs on the Day log (8:07 PM PT): time, then text. No red anywhere.
 
 ## Fixed words on the page
 
@@ -44,7 +44,7 @@ Read with: `../design/day-log-page.md` (the spec, unchanged), `day-log-first.md`
 | Notes | Note: hotel ideas | 2 notes | |
 | New thing | Saved dal tadka | New list: Lisbon packing | New routine: Push Day B |
 | Tail (no time, no dab, 70%) | Also: 3 notes, 5 groceries, ticked 4 on Lisbon packing. | | |
-| Planned rest day (no time, rest dab) | Rest day | | |
+| Planned rest day (no time, 21/400 `inkSecondary`, no dab) | Rest day | | |
 
 ## The states
 
@@ -69,7 +69,7 @@ SUN 11
 09:15  Added 3 tasks
 18:05  Ticked 2 on Home
 ```
-"Rest day" comes from the plan, not the op log (decision 4:30 PM PT), sits first with no time, and uses Design's rest dab. A rest day with nothing else shows "Rest day" alone. A day with no plan at all never says "Rest day" (`empty-states.md` row on the Training page). See M3.
+"Rest day" comes from the plan, not the op log (decision 4:30 PM PT), sits first with no time, in 21/400 `inkSecondary` with no dab (8:07 PM PT). A rest day with nothing else shows "Rest day" alone. A day with no plan at all never says "Rest day" (`empty-states.md` row on the Training page). See M3.
 
 **3. A late night past midnight (now Sat 01:30, still Friday's day until 04:00).**
 ```
@@ -95,7 +95,7 @@ One line per kind, at the time of the first (rule 8). With 1 note it names it: "
 TODAY
        Your days write themselves here.
 ```
-21/400 at 55%, no dab, no time. It leaves with the first record, which inks in below the date. No empty days are drawn above the first day (days before first use don't exist, as on Review).
+21/400 `inkSecondary`, no dab, no time (Design empty-states.md: 55% is not a token). It leaves with the first record, which inks in below the date. No empty days are drawn above the first day (days before first use don't exist, as on Review).
 
 **7. A training day, not trained (Push Day A planned, 0 sets, other things done).**
 ```
@@ -103,7 +103,7 @@ WED 14
 12:40  Done: call the bank
 19:30  Cooked carbonara, 35 min
 ```
-Nothing about the plan. No "Rest day" (the plan said train), no faint workout row, no 40% dab. With nothing else it is an empty day (state 5). A workout started and finished with 0 sets wrote "Push day, no sets, not saved." in the workout and leaves no line here.
+Nothing about the plan. No "Rest day" (the plan said train), no faint workout row. With nothing else it is an empty day (state 5). A workout started and finished with 0 sets wrote "Push day, no sets, not saved." in the workout and leaves no line here.
 
 **8. A missed day rolled on (Thu's Push Day A rolls to Fri, done Fri).**
 ```
@@ -138,9 +138,9 @@ TODAY
 07:10  Added 2 tasks
 18:02  Push Day A, 4 sets
 ```
-Running: no minutes, no top set, full training dab, no glow (running belongs to Now). New records ink in at the bottom; a Tess write gets the 2.8 s cobalt wash. On finish the line swaps to "Push Day A, 61 min. Bench 82.5 × 8."
+Running: no minutes, no top set, `ink`, no mark, no glow (running belongs to Now). New records ink in at the bottom; a Tess write gets the 2.8 s cobalt wash behind its text. On finish the line swaps to "Push Day A, 61 min. Bench 82.5 × 8."
 
-**12. A past day vs today, same unfinished workout.** Past: "Pull Day A, 3 sets. Row 60 × 10." with its dab at 40%, no words about finishing. Today, still running: "Pull Day A, 3 sets", dab at 100%. If the 6 hour auto-finish ends it, the line turns into minutes.
+**12. A past day vs today, same unfinished workout.** Past: "Pull Day A, 3 sets. Row 60 × 10." as the faint row (text in `inkSecondary`, no mark, 9:12 PM PT), no words about finishing. Today, still running: "Pull Day A, 3 sets", in `ink`. If the 6 hour auto-finish ends it, the line turns into minutes.
 
 ## Tess line (slot A), for 5b only
 
@@ -151,8 +151,8 @@ Not in v1 (spec). When it lands: one line under the date, 21/400 cobalt, rows A1
 | # | Spec says | Conflicts with | Default |
 |---|---|---|---|
 | M1 | Column times "07:10" | `settings-claude.md` and L173 give "6:12 pm" for Tess times | Keep "07:10" in the column (master's `Format.clock`, as on the finish screen and Now's "Running since 21:40"; "11:40 pm" won't fit x 22 to 78). Use "9 am" only inside sentences. Product to confirm |
-| M2 | "Push day, 4 sets, not finished" | `day-log.md` (never show what didn't happen), fixtures Day 3 | Drop "not finished"; the 40% dab carries it: "Pull Day A, 3 sets. Row 60 × 10." |
-| M3 | No rest-day line | Decision 4:30 PM PT: a planned rest day shows "Rest day" from the plan | Add it: first row, no time, rest dab |
+| M2 | "Push day, 4 sets, not finished" | `day-log.md` (never show what didn't happen), fixtures Day 3 | Drop "not finished"; the faint row carries it (9:12 PM PT): "Pull Day A, 3 sets. Row 60 × 10." |
+| M3 | No rest-day line | Decision 4:30 PM PT: a planned rest day shows "Rest day" from the plan | Add it: first row, no time, 21/400 `inkSecondary`, no dab |
 | M4 | "Row 70 x 10", "Push day" | Decision 5:02 PM PT ("×"); fixtures (titles as stored) | "Row 70 × 10", "Pull Day A" |
 | M5 | First-ever line "Your days write themselves here." | Slot A's A10 "Fills itself as you go." | Keep Design's; retire A10 |
 | M6 | Live inks new lines only | Undo and recounts change lines that exist | Value-word swap for a recount, 220 ms fade-out for a line that goes |

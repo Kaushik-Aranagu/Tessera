@@ -85,7 +85,9 @@ motion and moments, resting colour low-contrast (8:07 PM PT); **the faint row re
   Builder B reads out, so they also count under row 35.
 - **5b, not gating:** DL61, DL62.
 
-## Changes the pack needs (listed only, the pack isn't edited here)
+## Changes the pack needs (applied Oct 15, 11:25 PM PT, after Kaushik's yes)
+
+All eight are now in `day-log-acceptance.md`, and the COPY items in `day-log-copy.md`. P6 took Research's default: the sheet's "00:31 Note" is illustrative and stays out of DL3.
 
 - **P1, the faint row (9:12 PM PT).** DL22: "Page: dab at 40%" becomes "Page: the faint row, text in `inkSecondary`, no
   mark". DL60: past "(dab 40%)" becomes "(faint row)", today "(dab 100%)" becomes "(`ink`)". DL64's clause becomes

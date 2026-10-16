@@ -13,9 +13,11 @@ Folds `day-log-copy.md` (item 68), `day-log-late-night.md` (item 72, 19 Swift Te
 | 7:34 | `product/decisions.md`, "Day log and M3 lines" (7:34 PM PT, Research #204) | Took COPY's defaults M1 to M5: "07:10" column, "6:12 pm" in sentences, no "not finished", "Rest day" row, "×", titles as stored, first-day line |
 | 7:40 | `product/decisions.md`, "Day log on late nights" (7:40 PM PT, Research #208) | Took LATE's defaults: fold by TesseraDay on the root item's own start time, never `OpRecord.createdAt`; a workout past 4 AM stays on its start day; times in the current zone "until a zone is stored per item"; in-flight note a known issue until then. The zone is now stored (#225, #236), so the known issue is gone: see K4 |
 | 7:52 | `product/decisions.md`, "Store each record's time zone now" (7:52 PM PT, Research 80) | Zone column on the op table; already merged as #225 and #236. See K4 |
+| 8:07 | `product/decisions.md`, "No dabs" (8:07 PM PT Oct 15; `design/no-dots.md`) | No dabs on the Day log: time, then text. Colour arrives through motion only |
+| 9:12 | `product/decisions.md`, "the faint row" (9:12 PM PT Oct 15) | A past unfinished workout reads as the faint row: text in `inkSecondary`, no words, no mark. Replaces 7:34's faint dab |
 | FIRST | `research/day-log-first.md`, "Smallest Core slice" | The planned API: `DayLine`, `DayLookup`, `DayStory.lines(for:on:calendar:lookup:)` in `TesseraCore/Sources/TesseraCore/DayLog/DayStory.swift` |
 
-### What master has (origin/master 68ad34c, 15 Oct 20:55 PT)
+### What master has (origin/master 68ad34c, 15 Oct 20:55 PT; rechecked on de70d67, 15 Oct 11:25 PM PT: still no `DayStory` or `DayLine`)
 
 - **No `DayStory`, `DayLine`, `DayLookup` or `Features/DayLog/`.** `git grep DayStory origin/master` finds only docs.
   Every test below is new; the file is `TesseraCore/Tests/TesseraCoreTests/DayStoryLateNightTests.swift` (LATE) plus
@@ -45,9 +47,9 @@ Folds `day-log-copy.md` (item 68), `day-log-late-night.md` (item 72, 19 Swift Te
 TesseraDay turns at 04:00. Lines sort by instant (`Date`), never by the "HH:mm" text. Column times are 24 h,
 zero padded ("07:10"); times in sentences and VoiceOver read "6:12 pm" (7:34). Sets use "×" (VoiceOver says "by").
 Titles print exactly as stored. Under 12 words, past tense, digits, units once, no "!", no em-dashes, none of: only,
-missed, not finished, behind, streak, should, again, late, great. No colour means good or bad: dabs carry the class
-colour only, no red, no coloured bullet dots. Inter Tight, no italics. The page never writes, so no UNDO key on it in
-v1. Tests pass a `Calendar(identifier: .gregorian)` with an explicit `timeZone` (LA unless said), never `.current`.
+missed, not finished, behind, streak, should, again, late, great. No colour means good or bad: no dabs on the Day log (8:07 PM PT), no red, no coloured bullet dots. Inter Tight, no italics. The page never writes, so no UNDO key on it in
+v1. Core's text uses plain spaces around ×; the page swaps in no-break spaces when it draws, so tests compare the
+plain strings. Tests pass a `Calendar(identifier: .gregorian)` with an explicit `timeZone` (LA unless said), never `.current`.
 Zone is America/Los_Angeles unless said. "Layer" says who owns the check: Core (the fold's `DayLine` text and day)
 or Page (Builder B's screen; QA checks it on the simulator).
 
@@ -61,6 +63,7 @@ or Page (Builder B's screen; QA checks it on the simulator).
 | K4 | 7:40, LATE Day 5 and DL13 vs master (#225, #236) | 7:40 and LATE keep the in-flight note as a known issue "until a zone is stored per item". That condition is already met on master: every `OpRecord` has `zone` (`Models.swift:549-552`), stamped by `ActionEngine.perform` (`ActionEngine.swift:66-67`) from `TimeZone.autoupdatingCurrent`. The in-flight `createNote` was performed with the phone still on PDT, so its record says "America/Los_Angeles". | DayStory reads the day in the zone of the record that created the root object (workout: its `startWorkout` record; note, task, cook, shop: its create record), falling back to the calendar's zone when `zone` is nil (pre-v3 rows). DL13 is a plain pass, no `withKnownIssue`. Times print in the current zone (decided 8:56 PM PT, K1), so DL11 and DL57 stand. Decided (Product, after 8:56 PM PT Oct 15): the day reads `op.zone` now; "read later" covered printed times only, which stay in the current zone. All 8 wrong-day cases pass. Needs `DayLookup` to expose the root's create-record zone (see K6). |
 | K5 | 7:40 vs LATE wrong-day table | LATE says #7 (in-flight note) stays wrong even in a correct fold until a zone is stored; 7:40 says 8 cases. With `op.zone` on master, a fold that reads the create record's zone gets #7 right too. | All 8 pass in DL69, no known issue. |
 | K6 | 7:40 vs FIRST API | 7:40 folds on the root item's own start time (workout `startedAt`, note `createdAt`). FIRST's `DayLookup` has `title`, `groupRoot` and `topSet` but nothing returns that time, and its signature takes `[OpRecord]` only. | Add `func dayTime(of id: UUID) -> Date?` and `func dayZone(of id: UUID) -> TimeZone?` (or similar) to `DayLookup`; the fake returns the object's `startedAt` or `createdAt`, and the `zone` of the record that created the root (nil means the calendar's zone). Without them DL5, DL9, DL10 and DL13 can't pass. |
+| K8 | 9:12 faint row, 8:07 no dabs, Rest day and tail tiers | The page must pick a tier (finished, running, unfinished, rest, tail) for each line, but `DayLine` carries only `time` and `text`; reading "min." out of the text is fragile. | `DayLine` gains a kind or state (`.finished`, `.running`, `.unfinished`, `.rest`, `.tail`). Core test `pastUnfinishedWorkoutIsMarkedUnfinished` (DL22, DL60); Page check DL70: a running line on a past block stays `ink`. With Core. |
 | K7 | COPY 5b A5 | "Full one. 31 things across 4 apps." counts records; COPY itself says Core should count folded items. | 5b only, not gating this PR. Count folded items when slot A lands (DL61). |
 
 No other conflicts: 7:34 matches COPY's M1 to M5 defaults word for word, and 7:40 matches LATE's defaults.
@@ -76,7 +79,7 @@ nothing for that item on that day. Block labels (TODAY, WED 21) are Page; the da
 |---|---|---|---|---|---|
 | DL1 | `setAfterMidnightStaysInWorkoutStartedBefore` | LA (all records `zone = "America/Los_Angeles"` unless said). Wed 21 Oct 19:05 two `createTask`. Push Day B `startWorkout` 23:20, sets 23:28 to 23:58, set Thu 22 00:40 Incline 30 × 10 (a PR), `finishWorkout` Thu 00:52. | `lines` for Wed 21 and Thu 22 | Wed 21: `19:05  Added 2 tasks`, `23:20  Push Day B, 92 min. Incline 30 × 10, PR.` Thu 22: no Push Day B line. | LATE Day 1; wrong-day #1; 7:40 |
 | DL2 | `workoutAcrossMidnightShowsAbsoluteMinutes` | As DL1 | Read the workout line | `23:20  Push Day B, 92 min. Incline 30 × 10, PR.` (92 = `endedAt` minus `startedAt`) | LATE Day 1 |
-| DL3 | `runningWorkoutAt0045IsUnderToday` | As DL1 but no finish; now Thu 22 00:45; 5 sets logged | `lines` for logical today (Wed 21) | `19:05  Added 2 tasks`, `23:20  Push Day B, 5 sets` (no minutes, no top set). No Thu 22 lines. Page: label TODAY until 04:00, then WED 21 without moving. | LATE Day 1; COPY state 11 |
+| DL3 | `runningWorkoutAt0045IsUnderToday` | As DL1 but no finish; now Thu 22 00:45; 5 sets logged | `lines` for logical today (Wed 21) | `19:05  Added 2 tasks`, `23:20  Push Day B, 5 sets` (no minutes, no top set). No Thu 22 lines. Page: label TODAY until 04:00, then WED 21 without moving. | LATE Day 1; COPY state 11 Design's sheet also draws `00:31  Note: hotel ideas` under Wed 21; that line is illustrative and not part of this fixture (P6, Research default). |
 | DL4 | `noteAt0210BelongsToEveningBefore` | LA. Thu 22 08:30 `setTaskDone` "call the bank"; Fri 23 02:10 `createNote` "hotel ideas" | `lines` for Thu 22 and Fri 23 | Thu 22: `08:30  Done: call the bank`, `02:10  Note: hotel ideas`. Fri 23: no line for it. | LATE Day 2; wrong-day #2 |
 | DL5 | `pastDatedNoteUsesItsOnDateNotRecordTime` | Fri 23 02:12 `createNote`, title "watered the plants", `on` = Wed 21 12:00 (object `createdAt` Wed 12:00, record `createdAt` Fri 02:12) | `lines` for Wed 21, Thu 22, Fri 23 | Wed 21 gains a first line `12:00  Note: watered the plants`. Thu 22 and Fri 23: no line for it. | LATE Day 2; wrong-day #3; 7:40; K3, K6 |
 | DL6 | `taskDoneAt0355IsOnDayBefore` | LA. Fri 23 cook ramen 18:40 to 19:20; Sat 24 03:55 `setTaskDone` "pay rent" | `lines` for Fri 23 and Sat 24 | Fri 23: `18:40  Cooked ramen, 40 min`, `03:55  Done: pay rent`. Sat 24: no line for it. Agrees with `Tasks.swift:44-45`. | LATE Day 3; wrong-day #4 |
@@ -100,7 +103,7 @@ nothing for that item on that day. Block labels (TODAY, WED 21) are Page; the da
 |---|---|---|---|---|---|
 | DL20 | Core | Push Day A, 52 min, finished, top Bench 82.5 × 8 | Fold | `Push Day A, 52 min. Bench 82.5 × 8.` | COPY line forms |
 | DL21 | Core | As DL20, top set is a PR | Fold | `Push Day A, 52 min. Bench 82.5 × 8, PR.` | COPY line forms |
-| DL22 | Core | Past day, Pull Day A, 3 sets, top Row 60 × 10, never finished | Fold | `Pull Day A, 3 sets. Row 60 × 10.` Page: dab at 40%. No "not finished". | COPY line forms, M2; 7:34 |
+| DL22 | Core | Past day, Pull Day A, 3 sets, top Row 60 × 10, never finished | Fold | `Pull Day A, 3 sets. Row 60 × 10.` Page: the faint row, text in `inkSecondary`, no mark. No "not finished". | COPY line forms, M2; 7:34 |
 | DL23 | Core | Cook carbonara, 35 min | Fold | `Cooked carbonara, 35 min` | COPY line forms |
 | DL24 | Core | Shop finished, 1 item; then another day, 14 items | Fold | `Shopped, 1 item`; `Shopped, 14 items` | COPY line forms |
 | DL25 | Core | 1 task captured; another day 3 tasks and 2 groceries | Fold | `Added 1 task`; `Added 3 tasks, 2 groceries` (tasks first) | COPY line forms, state 1 |
@@ -109,7 +112,7 @@ nothing for that item on that day. Block labels (TODAY, WED 21) are Page; the da
 | DL28 | Core | 1 note "hotel ideas"; 2 notes | Fold | `Note: hotel ideas`; `2 notes` | COPY line forms |
 | DL29 | Core | New recipe "dal tadka"; new list; new routine | Fold | `Saved dal tadka`; `New list: Lisbon packing`; `New routine: Push Day B` (case as stored) | COPY line forms; 7:34 |
 | DL30 | Core | More than 6 kinds on a day | Fold, last line | `Also: 3 notes, 5 groceries, ticked 4 on Lisbon packing.` with `time == nil`. Page: no time, no dab, 70%. Largest counts keep a line; the tail orders by first time. | COPY line forms, M9 |
-| DL31 | Core | Planned rest day | Fold, first line | `Rest day` with `time == nil`. Page: rest dab. | COPY line forms, M3; 7:34 |
+| DL31 | Core | Planned rest day | Fold, first line | `Rest day` with `time == nil`. Page: no time, 21/400 `inkSecondary`, no dab. | COPY line forms, M3; 7:34 |
 | DL32 | Page | Review page | Read the link row | `The week · Day log · Notes` | COPY fixed words |
 | DL33 | Page | Home on Thursday afternoon | Read Home's day label (second way in) | `Thursday afternoon` | COPY fixed words |
 | DL34 | Page | Day log open; then an object opened from a line | Read the back word | `‹ HOME`; `‹ DAYS` | COPY fixed words |
@@ -124,11 +127,11 @@ nothing for that item on that day. Block labels (TODAY, WED 21) are Page; the da
 | DL43 | Core | Planned rest day, nothing else | `lines` | `Rest day` alone | COPY state 2 |
 | DL44 | Core | A day with no plan at all, some records | `lines` | No `Rest day` line | COPY state 2 |
 | DL45 | Core, Page | State 3: now Sat 17 01:30; Fri 16 cooked ramen 19:00 40 min; Push Day B 23:20 to 00:35, Incline 30 × 10 PR; plain note "watered the plants" (no date word) at Sat 01:30 | `lines` for Fri 16 | `19:00  Cooked ramen, 40 min`, `23:20  Push Day B, 75 min. Incline 30 × 10, PR.`, `01:30  Note: watered the plants`. Page: label TODAY, no SAT 17 block yet. | COPY state 3; K2 |
-| DL46 | Page | As DL45, clock passes 04:00 | Watch the block | Relabels `FRI 16` without moving; a new empty TODAY appears. No copy comments on the hour. | COPY state 3 |
+| DL46 | Page | As DL45, clock passes 04:00 | Watch the block | Relabels `FRI 16` in place; the window may then ease up 64pt for the new empty TODAY (Design's turnover). Reduce Motion: a crossfade, no ease or rise. No copy comments on the hour. | COPY state 3 |
 | DL47 | Core | State 4: Tue Oct 13, 4 tasks and 3 groceries from 08:05, 3 notes from 14:55 | `lines` | `08:05  Added 4 tasks, 3 groceries`, `14:55  3 notes` | COPY state 4 |
 | DL48 | Core | As DL47 with 1 note "gate B32, seat 14C" | `lines` | `14:55  Note: gate B32, seat 14C` | COPY state 4 |
 | DL49 | Page | Empty past day; empty run; run across months; empty today | Labels | `THU 8` at 45%, no lines; `OCT 1 TO 4` at 45%; `SEP 29 TO OCT 2`; `TODAY` alone, no line under it. Never a count of days. | COPY state 5, M8 |
-| DL50 | Core, Page | State 6: no records ever | Open the log | Under `TODAY`: `Your days write themselves here.` (21/400, 55%, no dab, no time). No days drawn above it. First record inks in below the date and the line leaves. | COPY state 6, M5; 7:34 |
+| DL50 | Core, Page | State 6: no records ever | Open the log | Under `TODAY`: `Your days write themselves here.` (21/400 `inkSecondary`, no dab, no time). No days drawn above it. First record inks in below the date and the line leaves. | COPY state 6, M5; 7:34 |
 | DL51 | Core | State 7: Wed 14, Push Day A planned, 0 sets; 12:40 done "call the bank"; 19:30 cooked carbonara 35 min; plus a workout started and finished with 0 sets | `lines` | `12:40  Done: call the bank`, `19:30  Cooked carbonara, 35 min`. No plan line, no `Rest day`, no faint workout row, no line for the 0-set workout. | COPY state 7, rules ("Trained") |
 | DL52 | Core | State 8: Thu 15 Push Day A rolled to Fri 16, done Fri 07:10, 52 min, Bench 82.5 × 8 | `lines` for Thu 15 and Fri 16 | Thu 15: `[]`. Fri 16: `07:10  Push Day A, 52 min. Bench 82.5 × 8.` No "moved" or "rolled". | COPY state 8 |
 | DL53 | Core | State 9: Mon Oct 5, Leg Day A 18:20, 48 min, 11 sets with 3 undone, a task made and deleted, 2 edits | `lines` | `18:20  Leg Day A, 48 min. Squat 102.5 × 5.` only | COPY state 9 |
@@ -136,9 +139,9 @@ nothing for that item on that day. Block labels (TODAY, WED 21) are Page; the da
 | DL55 | Page | Today, "Added 1 task" showing; "Dentist taken back." on Home; then redo | Watch the line | Line fades out (220 ms); comes back on redo. | COPY state 9, M6 |
 | DL56 | Page | Delete a note (destructive) from its own screen | Watch the log | Where it was made: the undo line names the thing, then what happened, with UNDO for 10 s. The log draws the committed state at once and redraws if UNDO lands. No UNDO key on the log. | COPY rules, state 9 |
 | DL57 | Core | State 10: Mon Oct 26 red-eye, as DL11 | `lines`, LA then New York | LA: `07:30  Done: water the plants`, `21:40  Mobility, 35 min`. New York: `10:30  Done: water the plants`, `00:40  Mobility, 35 min`. No "Travel day". Never a mix such as `07:30` beside `00:40`. | COPY state 10; LATE Day 5; Product 8:56 PM (K1) |
-| DL58 | Core, Page | State 11: Thu 18:10, 07:10 two tasks, Push Day A started 18:02, 4 sets | `lines` | `07:10  Added 2 tasks`, `18:02  Push Day A, 4 sets`. Page: full training dab, no glow; a Tess write gets the 2.8 s cobalt wash. | COPY state 11 |
+| DL58 | Core, Page | State 11: Thu 18:10, 07:10 two tasks, Push Day A started 18:02, 4 sets | `lines` | `07:10  Added 2 tasks`, `18:02  Push Day A, 4 sets`. Page: `ink`, no mark, no glow; a Tess write gets the 2.8 s cobalt wash behind its text. | COPY state 11 |
 | DL59 | Core | As DL58, then finish (61 min, Bench 82.5 × 8) | `lines` | `18:02  Push Day A, 61 min. Bench 82.5 × 8.` | COPY state 11 |
-| DL60 | Core | State 12: same unfinished Pull Day A on a past day and today | `lines` | Past: `Pull Day A, 3 sets. Row 60 × 10.` (dab 40%). Today running: `Pull Day A, 3 sets` (dab 100%). After the 6 h auto-finish: minutes form, as DL20. | COPY state 12 |
+| DL60 | Core | State 12: same unfinished Pull Day A on a past day and today | `lines` | Past: `Pull Day A, 3 sets. Row 60 × 10.` (faint row). Today running: `Pull Day A, 3 sets` (`ink`). After the 6 h auto-finish: minutes form, as DL20. | COPY state 12 |
 | DL61 | 5b, not v1 | State 1 day with Tess slot A | Tess line | `Full one. 31 things across 4 apps.` with the count from folded items. Does not gate this PR. | COPY state 1, slot A; K7 |
 | DL62 | 5b, not v1 | Undo set 3 (bench 80 × 5) from Oct 12 | Preview, commit, refused | `Set 3, bench 80 × 5, from Oct 12. PR goes back to 77.5.`; `Set 3 from Oct 12 taken back.` with UNDO 10 s; refused: `Set 3 changed since. OPEN`. Does not gate this PR. | COPY Tess line (5b) |
 
@@ -150,15 +153,15 @@ D12, habit grammar) is not Day log and is left to `m3-lines.md`.
 | ID | Call clause | Setup | Action | Expected exactly | Proven also by |
 |---|---|---|---|---|---|
 | DL63 | 7:34: column reads "07:10", sentences say "6:12 pm" | One done at 18:12 | Column, VoiceOver | Column `18:12`; VoiceOver starts `6:12 pm, ` | DL17, DL18, DL38 |
-| DL64 | 7:34: unfinished workout gets no "not finished" words; the faint dab carries it | DL22 | Fold | `Pull Day A, 3 sets. Row 60 × 10.` | DL22, DL60 |
+| DL64 | 7:34: unfinished workout gets no "not finished" words; the faint row carries it (9:12 PM PT, replacing 7:34's faint dab) | DL22 | Fold | `Pull Day A, 3 sets. Row 60 × 10.` | DL22, DL60 |
 | DL65 | 7:34: a planned rest day opens with a "Rest day" row | DL42 | Fold | First line `Rest day`, no time | DL31, DL42, DL43 |
 | DL66 | 7:34: sets use "×", titles show exactly as stored | Recipe stored "dal tadka", top set 82.5 × 8 | Fold | `Saved dal tadka`; `... Bench 82.5 × 8.` (never "x", never "Dal Tadka") | DL29, DL20 |
 | DL67 | 7:34: the first day reads "Your days write themselves here." | No records | Open the log | `Your days write themselves here.` | DL50 |
 | DL68 | 7:40: fold by TesseraDay on the root item's own start time, never `OpRecord.createdAt` | DL5 and DL9 records | Fold | As DL5 and DL9 | DL5, DL9, DL10; K6 |
 | DL69 | 7:40: a calendar-day fold gets 8 cases wrong | LATE wrong-day table #1 to #8 as one parameterised test | Fold each | All 8 land on the "Right" column: #1 WED 21 one line; #2 THU 22; #3 WED 21 12:00; #4 FRI 23; #5 SAT 24; #6 MON 26; #7 MON 26 (read the `zone` of the note's `createNote` record, "America/Los_Angeles"); #8 SAT 31. No `withKnownIssue`. | DL1 to DL16; K5 |
 | DL70 | 7:40: a workout running past 4 AM stays on the day it started | DL9's workout, not yet finished; now Sun 25 04:10 | `lines` for Sat 24 and today (Sun 25) | Sat 24: `03:50  Pull Day A, 2 sets`. Sun 25 (TODAY): `[]`. | LATE Day 4 live, Open default |
-| DL71 | 7:40: times print in the current zone until a zone is stored; in-flight note is a known issue until then | DL11, DL13 | Fold | Days from each create record's `zone`, times in the current zone: as DL11, and DL13 passes plainly (zone stored since #225, #236) | DL11, DL13, DL57; K4 |
+| DL71 | 7:40: times print in the current zone until a zone is stored; in-flight note is a known issue until then. **Met** (K4): the zone is stored since #225, #236, so this is no longer a known issue | DL11, DL13 | Fold | Days from each create record's `zone`, times in the current zone: as DL11, and DL13 passes plainly (zone stored since #225, #236) | DL11, DL13, DL57; K4 |
 
 **Count:** 71 numbered checks. DL1 to DL19 are LATE's 19 tests; DL20 to DL62 cover every COPY line, fixed word and
 state (DL61, DL62 are 5b and don't gate); DL63 to DL71 trace each day-log clause of the 7:34 and 7:40 calls.
-Seven conflicts (K1 to K7); K1 and K4 are decided (Product, 8:56 PM PT and after). K3 and K6 are with Core (sent by the coordinator Oct 15).
+Eight conflicts (K1 to K8); K1 and K4 are decided (Product, 8:56 PM PT and after). K3, K6 and K8 are with Core (K3 and K6 sent by the coordinator Oct 15; K8 added with the pack fixes, Oct 15 11:25 PM PT).
