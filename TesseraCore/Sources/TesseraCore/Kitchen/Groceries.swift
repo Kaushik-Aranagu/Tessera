@@ -179,6 +179,16 @@ extension Transaction {
                                   text: String) throws -> ObjectRecord
     {
         let list = try groceriesList()
+        // A bare name ("chickpeas") means "make sure it's on": it joins the first open row for that ingredient,
+        // sized or not, and leaves the count alone (Design, after QA on #309).
+        if share.amount == nil, share.unit == nil, share.recipe == nil,
+           let onList = list.orderedChildren.first(where: { item in
+               store.value("isDone", of: item) != .bool(true)
+                   && store.linkedObjects("about", of: item).contains { $0.id == ingredient.id }
+           })
+        {
+            return onList
+        }
         // Same ingredient and the same pack size (a sized can never joins an unsized one, U5).
         let existing = list.orderedChildren.first { item in
             store.value("isDone", of: item) != .bool(true)

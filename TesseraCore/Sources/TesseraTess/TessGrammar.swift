@@ -218,7 +218,7 @@ public struct TessGrammar {
                 return .ignoredInWorkout
             }
         } else if subject.id == Groceries.listID {
-            // At the shop, a bare thing is for the list, but not an errand ("call mum"), a word for the shop itself
+            // At the shop, a bare thing is for the list, but not an errand ("call mom"), a word for the shop itself
             // ("done", "thanks"), or a verb the kitchen rules read ("buy milk" goes there, without the verb).
             let first = text.split(separator: " ").first.map(String.init) ?? ""
             if text
@@ -457,7 +457,7 @@ public struct TessGrammar {
 
     // MARK: Tasks
 
-    /// A task with a day or time cue ("dentist thu 3pm"), or one that says it's a task ("todo call mum").
+    /// A task with a day or time cue ("dentist thu 3pm"), or one that says it's a task ("todo call mom").
     private func parseTask(_ phrase: String, context: TessContext) -> Parse? {
         var words = phrase.split(separator: " ").map(String.init)
         var explicit = false
@@ -475,7 +475,7 @@ public struct TessGrammar {
         }
         let found = TessDates.find(in: words, now: context.now, calendar: context.calendar)
         var remaining = found.remaining
-        // "remind me tomorrow to call mum": the "to" sat after the date.
+        // "remind me tomorrow to call mom": the "to" sat after the date.
         if remaining.first?.lowercased() == "to", explicit {
             remaining.removeFirst()
         }

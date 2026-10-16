@@ -44,6 +44,12 @@ public extension TessCaptureEngine {
         TessInbox(store: engine.store, classes: engine.classes).waiting().count
     }
 
+    /// Lets the waiting phrases go without reading them (with the switch off they would wait forever; QA L4 on #305).
+    func clearWaiting() {
+        let inbox = TessInbox(store: engine.store, classes: engine.classes)
+        inbox.waiting().forEach(inbox.remove)
+    }
+
     /// Reads the waiting phrases with Claude, oldest first, each as its own pending ghost. A phrase leaves the inbox
     /// once Claude has read it (whatever it made of it); one that's offline again stays. Call it when the app opens
     /// online, never on a timer.

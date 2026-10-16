@@ -147,7 +147,7 @@ public final class TessCaptureEngine: TessCapturing {
     }
 
     /// Several sets from one phrase, all or nothing: if one can't log, the ones already logged are taken back. A
-    /// set and an errand log both ("8 and call mum at 7"); a guarded last part asks after the rest ("81 for how
+    /// set and an errand log both ("8 and call mom at 7"); a guarded last part asks after the rest ("81 for how
     /// many reps?").
     func performSets(_ parts: [TessGrammar.Parse], context: TessContext) -> TessCapture {
         var records: [OpRecord] = []
@@ -308,8 +308,19 @@ public final class TessCaptureEngine: TessCapturing {
         switch parse {
         case let .groceries(lines):
             let record = try engine.perform(AddGroceries(lines: lines), by: .tess, pending: pending).record
-            return (record, lines.count == 1 ? "\(lines[0].prefix(1).uppercased() + lines[0].dropFirst()), on the list."
-                : "\(lines.count) things on the list.")
+            let name = lines.first.map { $0.prefix(1).uppercased() + $0.dropFirst() } ?? ""
+            // One bare thing already on: nothing new was made ("Chickpeas, already on Groceries.").
+            let made = record.ops.contains {
+                if case .create = $0 {
+                    true
+                } else {
+                    false
+                }
+            }
+            if lines.count == 1, !made {
+                return (record, "\(name), already on Groceries.")
+            }
+            return (record, lines.count == 1 ? "\(name), on the list." : "\(lines.count) things on the list.")
         case let .cook(recipe, date?):
             let record = try engine.perform(
                 CreateTask(title: "Cook \(recipe.title.lowercased())", startsAt: date, about: [recipe.id]),
