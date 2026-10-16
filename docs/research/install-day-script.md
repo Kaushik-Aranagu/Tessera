@@ -112,6 +112,12 @@ he doesn't want kept, tap UNDO under Tess's line.
 | S6 | Only if a workout is running: hold the soul, say "eighty by eight", let go. | "Set N logged. 80 × 8." with UNDO; the set's numerals dry into ink (7a, 11c). | [ ] P [ ] F |
 | S7 | **Open check (b), row 8c**, on the first Speak listen above (phone set to English (India), en-IN). | Plain "Listening" means an **exact match**; "Listening in English (UK)." on the first open only means a **near match**. Exact [ ] Near [ ]. Fail: the near-match line shows on every open. | [ ] P [ ] F |
 
+## Next build with #317's haptics: one phone check
+
+| # | Do | Expect | Result |
+|---|---|---|---|
+| H1 | Turn off Settings > Sounds & Haptics > System Haptics, then finish a task or a workout. | No three-tap done pattern. If it still buzzes, tell Builder A, who switches to `.success` because that one respects the switch. | [ ] P [ ] F |
+
 ## Master strings that look wrong or stale
 
 1. **Closed by #248 (`fdcaee4`).** Item 32's two Claude-key lines now agree: Core's router uses
