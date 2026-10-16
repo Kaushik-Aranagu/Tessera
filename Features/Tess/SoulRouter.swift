@@ -41,6 +41,8 @@ enum SoulEvent: Equatable {
     case backgrounded
     /// The app comes forward. `underLive`: a live workout is on top (his moment wins, so no wake).
     case foregrounded(underLive: Bool)
+    /// The live workout came up over Home (QA R1 on #558): a wake still playing gives way to it.
+    case liveOpened
 }
 
 /// The one place that turns events into Tess's state, and the only timer for it (§14: "views never set a mode",
@@ -113,6 +115,7 @@ final class SoulRouter {
     private(set) var wearDones = 0
     /// At 04:00 yesterday's wear dries over the first idle minute: from this much, from this moment.
     private(set) var wearFade: (from: CGFloat, start: Date)?
+    @ObservationIgnored private var didFreshWear = false
     static let wearDayKey = "tess.wearDay"
     static let wearDonesKey = "tess.wearDones"
 
@@ -255,6 +258,9 @@ final class SoulRouter {
             if isStroke, stroke != nil {
                 strokeBlink = Date.now.addingTimeInterval(0.05)
             }
+        case .liveOpened:
+            wakeTimer?.cancel()
+            wake = nil
         case .backgrounded:
             // A Done cut by the background would never end: she goes back to rest (QA L6).
             settle(rest)
@@ -407,6 +413,13 @@ final class SoulRouter {
     private func rollWearDay() {
         let today = TesseraDay().day(of: clock())
         let day = wakeStore.object(forKey: Self.wearDayKey) as? Date
+        // `-freshDay` (simulator only): a launch starts the day plain, for recordings.
+        if LaunchFlags.has("-freshDay"), !didFreshWear {
+            didFreshWear = true
+            wakeStore.set(today, forKey: Self.wearDayKey)
+            setWear(0)
+            return
+        }
         if day == today {
             wearDones = wakeStore.integer(forKey: Self.wearDonesKey)
             return
@@ -440,7 +453,19 @@ extension SoulRouter {
     /// Simulator only, for recordings and the lab's `compare.sh`: `-soulScript work` plays the lab's think scene on
     /// Home (at rest, the ask 2.4 s after launch, the answer 5.2 s later); `workFail` ends it with a failure instead.
     func runScript() {
-        guard let script = LaunchFlags.value(after: "-soulScript"), script.hasPrefix("work") else { return }
+        guard let script = LaunchFlags.value(after: "-soulScript") else { return }
+        if script == "wear" {
+            // The lab's wear clip: five things done, 1.2 s apart, from 0.8 s (after a 2.4 s launch settle).
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .seconds(2.4 + 0.8))
+                for _ in 0 ..< 5 {
+                    self?.handle(.taskDone)
+                    try? await Task.sleep(for: .seconds(1.2))
+                }
+            }
+            return
+        }
+        guard script.hasPrefix("work") else { return }
         Task { @MainActor [weak self] in
             try? await Task.sleep(for: .seconds(2.4))
             self?.handle(.askClaude)

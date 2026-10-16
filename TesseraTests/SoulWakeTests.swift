@@ -66,6 +66,16 @@ struct SoulWakeTests {
         #expect(later.wake == nil)
     }
 
+    /// QA R1 on #558: a cold launch straight into the live workout gives the wake up (the day still counts).
+    @Test func theLiveWorkoutCutsAWakeInProgress() {
+        let clock = Clock(at(9, 0))
+        let soul = SoulRouter(clock: { clock.now }, wakeStore: freshStore())
+        soul.handle(.foregrounded(underLive: false))
+        #expect(soul.wake != nil)
+        soul.handle(.liveOpened)
+        #expect(soul.wake == nil)
+    }
+
     @Test func eyesShutThenOpenThenOneBlink() {
         #expect(SoulWake.lid(at: 0.5) == 0.25)
         #expect(SoulWake.lid(at: 1.2) > 0.25 && SoulWake.lid(at: 1.2) < 1)

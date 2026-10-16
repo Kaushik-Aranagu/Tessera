@@ -172,7 +172,7 @@ struct TessSoul: View {
             ?? SoulFrame.sample(mode, time: date.timeIntervalSinceReferenceDate, elapsed: 0)
         // The day's colour is paint, not motion: it stays under Reduce Motion and Low Power (idea 4).
         let gather = reduceMotion ? 0 : beat.map { SoulBeat.gather(date.timeIntervalSince($0)) } ?? 0
-        var frame = SoulBeat.beating(base, gather: gather, wear: wear(date))
+        var frame = SoulBeat.beating(base, gather: gather, wear: wear(date), swells: mode != .resting)
         guard !reduceMotion else { return frame }
         if let wake, !lowPower {
             frame = SoulWake.stretched(frame, amount: SoulWake.stretch(at: date.timeIntervalSince(wake)))
