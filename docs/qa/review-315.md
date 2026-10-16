@@ -56,3 +56,15 @@ QA thread, Oct 15 PT. Static review. Base 2655789, which is on master. Files: `T
 1. N1: block redirects to private hosts and check `safeURL` on the final URL, plus a test.
 2. N2: stream with a hard 3 MB cap and a hard deadline.
 3. N3 and N4 should ride the same push.
+
+## Addendum: head 9970842 (GitHub head confirmed), N1-N4 CLOSED
+
+This is one commit on 078cb54.
+- **N1, closed.** `download` now calls `session.bytes(for:delegate:)` with a per-task `RedirectGuard`. Its async `willPerformHTTPRedirection` runs `safeURL` on every hop and stops after 5. A refused hop returns nil, so the 3xx is the response, and the read ends on "Too big…" (Design's "odd" row). The final `http.url` is also checked with `safeURL` and https. Test: `aRedirectToHisRouterIsNeverFollowed` (a 302 to 192.168.1.1 is never requested).
+- **`safeURL` now also refuses** a trailing dot ("localhost."), `.internal` and `.lan`.
+- **N2, closed.** It refuses up front when `expectedContentLength` is over 3 MB, streams with `AsyncBytes`, and stops at 3 MB plus one byte. A hard 15 s deadline (a Task that cancels the read) covers the whole fetch, and a cancelled stream reads as "Too big…".
+- **N3, closed.** The L1, paywall, L2 and visible-text parse runs in `Task.detached(priority: .userInitiated)`, and its result is a `Sendable` `Parsed`.
+  - Low: the video path's `meta` scan (`video(html)`) still runs on the main actor. It's one cheap regex over at most 3 MB, so that's fine.
+- **N4, closed.** `httpsOnly` is gone, and an ATS or TLS failure maps to `tooBig`.
+- **Lows closed.** `stop_reason == "max_tokens"` counts as no recipe, with its ledger outcome. 401 and 403 get their own line with outcome "badKey", and 429 or 5xx get a busy line with outcome "busy". The reader only ever calls `keys.read()`. Nothing clears the key or touches the switch.
+- **Pending:** Core's copy commit, with Research's busy and key lines. I'll check it when it lands: the two strings, the table test, and that 401/403 still never clears the key or turns off the switch.
