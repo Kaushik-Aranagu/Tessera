@@ -459,6 +459,17 @@ struct WorkoutRestRelaunchTests {
         #expect(WorkoutSession(workout: session.workout, model: model).restEndsAt == nil)
     }
 
+    /// QA U1: Siri takes the set back while the app is closed (no live session to tidy up). The next open must not
+    /// restore a countdown for a set that's gone.
+    @Test func aRestForASetTakenBackWhileClosedIsNotRestored() throws {
+        let (model, session) = try startedSession()
+        session.logSet()
+        #expect(session.restEndsAt != nil)
+        model.session = nil
+        #expect(model.engine.takeBackLatestSet(by: .intent) != nil)
+        #expect(WorkoutSession(workout: session.workout, model: model).restEndsAt == nil)
+    }
+
     @Test func aRestThatEndedWhileTheAppWasGoneIsOver() throws {
         let (model, session) = try startedSession()
         session.logSet()

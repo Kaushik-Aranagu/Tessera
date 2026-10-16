@@ -73,10 +73,16 @@ private let workoutURL = URL(string: "tessera://workout")
 struct RestLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: RestActivityAttributes.self) { context in
-            RestLockScreenView(state: context.state, isGo: RestFace.isGoTime(context))
-                .activityBackgroundTint(Palette.materialTint)
-                .activitySystemActionForegroundColor(Palette.cream)
-                .widgetURL(workoutURL)
+            Group {
+                if RestFace.isSetAside(context) {
+                    SetAsideFace(title: context.attributes.workoutTitle)
+                } else {
+                    RestLockScreenView(state: context.state, isGo: RestFace.isGoTime(context))
+                }
+            }
+            .activityBackgroundTint(Palette.materialTint)
+            .activitySystemActionForegroundColor(Palette.cream)
+            .widgetURL(workoutURL)
         } dynamicIsland: { context in
             let state = context.state
             let isGo = RestFace.isGoTime(context)
@@ -100,7 +106,9 @@ struct RestLiveActivity: Widget {
                     .frame(width: 18, height: 14)
             } compactTrailing: {
                 Group {
-                    if isGo {
+                    if RestFace.isSetAside(context) {
+                        Text("Aside")
+                    } else if isGo {
                         Text("Go")
                     } else {
                         Text(timerInterval: state.restInterval, countsDown: true)
@@ -203,6 +211,30 @@ private enum RestFace {
     /// The content goes stale at the rest end (`staleDate`), so the face turns to Go even if the app is suspended.
     static func isGoTime(_ context: ActivityViewContext<RestActivityAttributes>) -> Bool {
         context.state.phase == .ready || context.isStale
+    }
+
+    /// Ready, then left: the ready state goes stale ten minutes on (late-night.md #12), so an abandoned session
+    /// doesn't say "Go" on the Lock Screen all night.
+    static func isSetAside(_ context: ActivityViewContext<RestActivityAttributes>) -> Bool {
+        context.state.phase == .ready && context.isStale
+    }
+}
+
+/// "Push A, set aside": no countdown, no Go, a quiet line until the app tidies the activity away.
+private struct SetAsideFace: View {
+    let title: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(Typeface.font(24, .medium))
+                .foregroundStyle(Palette.cream)
+            Text("set aside")
+                .font(Typeface.font(17))
+                .foregroundStyle(Palette.cream.opacity(0.62))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20)
     }
 }
 

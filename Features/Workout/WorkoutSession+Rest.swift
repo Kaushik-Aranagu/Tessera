@@ -7,6 +7,8 @@ extension WorkoutSession {
     enum RestKey {
         static let endsAt = "restEndsAt"
         static let total = "restTotal"
+        /// The set the rest follows. A rest whose set is gone (taken back by Siri while the app was closed) is over.
+        static let afterSet = "restAfterSet"
     }
 
     /// The rest saved on a resume point, if it is still running at `now`. An elapsed rest is simply over.
@@ -19,7 +21,13 @@ extension WorkoutSession {
 
     /// The rest this workout's open process remembers (used when the session is recreated after a relaunch).
     static func savedRest(for workout: ObjectRecord, model: AppModel) -> (endsAt: Date, total: TimeInterval)? {
-        savedRest(in: ProcessTable(engine: model.engine).process(for: workout)?.resumePoint, at: AppClock.now)
+        let point = ProcessTable(engine: model.engine).process(for: workout)?.resumePoint
+        if let setID = point?.extras[RestKey.afterSet].flatMap(UUID.init(uuidString:)),
+           model.store.object(id: setID).map(\.isDeleted) ?? true
+        {
+            return nil
+        }
+        return savedRest(in: point, at: AppClock.now)
     }
 
     /// Saves the current rest (or its absence) on the process, over a fresh resume point for the next set.
@@ -29,6 +37,9 @@ extension WorkoutSession {
         if let restEndsAt, restTotal > 0 {
             point.extras[RestKey.endsAt] = String(restEndsAt.timeIntervalSinceReferenceDate)
             point.extras[RestKey.total] = String(restTotal)
+            if let setID = lastSeated?.setID ?? undoable?.setID {
+                point.extras[RestKey.afterSet] = setID.uuidString
+            }
         } else if process.resumePoint?.extras[RestKey.endsAt] == nil {
             // Nothing saved and nothing to save: nothing to write.
             return

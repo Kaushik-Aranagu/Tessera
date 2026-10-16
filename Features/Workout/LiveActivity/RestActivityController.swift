@@ -113,8 +113,14 @@ final class RestActivityController {
 
     /// While resting the content goes stale when the rest ends, so the Lock Screen flips to "ready" on its own even
     /// if the app is suspended.
+    /// How long "Go" stays up with nothing logged before the Lock Screen calls the session set aside.
+    static let readyLife: TimeInterval = 10 * 60
+
     private static func content(_ state: State) -> ActivityContent<State> {
-        ActivityContent(state: state, staleDate: state.phase == .resting ? state.restEndsAt : nil,
+        // Resting goes stale when the rest ends (the face flips to Go); ready goes stale ten minutes on (the face
+        // reads "set aside", late-night.md #12).
+        ActivityContent(state: state,
+                        staleDate: state.phase == .resting ? state.restEndsAt : Date.now.addingTimeInterval(readyLife),
                         relevanceScore: state.phase == .resting ? 100 : 50)
     }
 
