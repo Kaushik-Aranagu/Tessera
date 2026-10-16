@@ -4,6 +4,11 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+- **Upkeep and People receipts** (3:33 AM PT Oct 16, Design 61, `upkeep-people-grammar.md`, 1662430; all three confirmed).
+  - The done receipt is "Clean the bathroom, done. Was 21 days, usually 14."
+  - The pick receipt is "4 chores, kept. Tell me when you do one."
+  - On People, a birthday within 14 days takes the value slot over the last talk, e.g. "BIRTHDAY SUN" on Mom's line.
+  - Trip zones: T1 to T3 are fixed in #377. R34 (T4, Builder A) is still open before Oct 26.
 - **Money and reading on the phone** (3:24 AM PT Oct 16, Research 129 and 130, #376).
   - **MU1, yes.** A money-shaped last amount after words that aren't an exercise is a spend, decided on the phone. "costco 212.37" logs $212.37 at Costco. This replaces M7's route to Claude for word-then-amount. Exercise names and the live-workout guard still win.
   - **MU2, yes.** Anything money-shaped never goes to Claude. If the phone can't place it, Tess asks one on-phone question in the one-ask pattern, for example "$212.37 at Costco?" with LOG or NOT NOW. Ship-list eval 15's "via Claude" route is struck. A money phrase with no amount ("pay the apple card bill mon") stays a task.
