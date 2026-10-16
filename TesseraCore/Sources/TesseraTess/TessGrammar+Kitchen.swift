@@ -82,7 +82,7 @@ extension TessGrammar {
         // A unit price ("chicken $1.29/lb") is a price on a thing to buy, never a spend (Research's US shop check).
         let spent = text.replacing(/(?i)[$£€₹]\s?\d+(?:[.,]\d+)?\s?\/\s?[a-z]+/, with: "")
         return spent.contains(where: { "$£€₹".contains($0) })
-            || text.lowercased().firstMatch(of: /^(?:spent|spend|paid|pay|cost|bought)\b/) != nil
+            || text.lowercased().firstMatch(of: /^(?:spent|spend|paid|pay|cost)\b/) != nil
             && PrivateFacts.hasAmount(text)
     }
 
