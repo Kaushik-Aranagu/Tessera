@@ -11,6 +11,8 @@ public enum TessUse: String, Sendable, CaseIterable {
     case paste
     /// Rewording the rules' plan for the day.
     case plan
+    /// Checking a pasted Claude key (Settings: Claude).
+    case keyCheck
 }
 
 /// One request through the routes.
@@ -57,6 +59,10 @@ public struct TessRouter {
     }
 
     public func run(_ request: TessRequest) async -> TessCapture {
+        // A Claude key pasted into the Ask bar never reaches a route (it would become a note, then every backup).
+        if request.text.contains("sk-ant-") {
+            return TessCapture(records: [], line: "That looks like a Claude key. Paste it in Settings.", source: .none)
+        }
         for model in models where model.isAvailable(for: request.use) {
             engine.attribution = (model.route, model.modelName)
             let result = await model.run(request, engine: engine)

@@ -35,7 +35,8 @@ public struct CaptureMissLog: Sendable {
     /// Records one miss. Never throws: a log that can't be written is skipped.
     public func record(_ text: String, at date: Date = .now, route: String, source: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
+        // A Claude key never goes in a file (the paste screen too).
+        guard !trimmed.isEmpty, !trimmed.contains("sk-ant-") else { return }
         let miss = Miss(text: String(trimmed.prefix(Self.maxText)), at: date, route: route, source: source)
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
