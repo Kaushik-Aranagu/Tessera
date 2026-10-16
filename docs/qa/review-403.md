@@ -20,3 +20,13 @@ Head `9c95408` on master dbc2557. Trial merge is clean. Eight files changed: Sou
 - L1: the blink schedule restarts every 600 s (`origin = floor(time / 600) * 600`). A blink in flight across that edge is cut short, at most once every 10 minutes. Gaps stay at least 3 s. Not visible in practice.
 - L2: the walk from `origin` takes up to about 200 steps per frame. That's cheap, but caching the last interval would make it O(1).
 - L5 (from #402) is deferred to the working PR, as stated.
+
+## Addendum: re-check at `3099412`
+
+Verdict: **PASS**. The diff since 9c95408 is limited to SoulEyes.swift, TessSoul.swift and SoulEyesTests.swift. Trial merge is clean.
+
+- E1 (the lab): `SoulEyes.centre(of:)` scales once. The pair is scaled, then offset in screen points, with the glance scaled to match. There's no second scale.
+- The eyes' opacity is multiplied by `look.opacity`. The workout corner uses `workoutLook` when `onWorkoutGround`, so the eyes sit on the workout's base.
+- L1 and L2 closed: the schedule is built once over 3600 s and found by binary search, so each frame is O(log n). The last blink ends before `period − 3`, so no blink is cut at the wrap.
+- New low: across the hourly wrap, the gap can run past 8 s, up to about 19 s, because the trimmed tail plus the first gap of 3 to 8 s add up. That happens once an hour. Fine as is.
+- The phone gate is unchanged: `tessHasEyes` is still LaunchFlags-only.
