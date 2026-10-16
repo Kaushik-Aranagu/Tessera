@@ -47,3 +47,25 @@ docs/recordings/42-routines-fixed-days.mp4.
 ## Install script
 Research 118 T5-T10 apply as written once this is in a pinned candidate; add T11 "hold-release opens nothing"
 (L1) and T12 "one tick per day tap" (F1).
+
+## Addendum: re-check at `1b0492c` (Oct 16, about 2:50 AM Pacific): PASS
+
+Trial merge onto master: clean. Delta from 2e92f88: RoutineEditor.swift, RoutinesPage.swift and the re-cut clip.
+
+- **F1 closed.** `haptic += 1` is gone from DaysLine's `onChange` (RoutineEditor.swift, comment cites #359 F1);
+  the day words' own `.tesseraFeedback(.selection, trigger: ticks)` is the one tick.
+- **Back word.** "‹ ROUTINES", or the previous page's title (`model.title(of:)`, the workout stack when a workout is
+  up), as a HandleButtonStyle button calling `dismiss()`, `.textRole(.label)` + `.textCase(.uppercase)`, with
+  `.navigationBarBackButtonHidden(true)`, the nav bar hidden and `.background { EdgeSwipeBack() }`. The glyph is
+  U+2039 SINGLE LEFT-POINTING ANGLE QUOTATION MARK, not "<", the same as BackupView, ClaudeSection and RoutinesPage.
+  L6 closed.
+- **L2 closed.** The Routines Tess line uses `fixedSize(horizontal: false, vertical: true)`, no lineLimit.
+- **Clip** (10.5 s): Training → ROUTINES → FIXED DAYS ("Push Pull Legs on fixed days." with UNDO), rows read
+  "no days · …", Pull A picks Thursday ("Thu · …"), Push A shows "Pick a day", picks Monday ("Push A on Mondays."),
+  then Thursday: "Thursday was Pull A's. Push A has it now." The line wraps to two lines under its own column. The
+  seven-day row is bare words.
+
+Still standing, none block: L1 (hold-release must not open the routine, device check), L3 (no VoiceOver reorder),
+L4 (UNDO until the next change), L5 (FIXED DAYS with no days). New low: the editor header lost the plan's
+ObjectHandle link (the back word replaced it), so the plan is one page further away from a routine. Product's Drop
+and Add defaults still need Core.

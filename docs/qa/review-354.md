@@ -66,3 +66,22 @@ Once F1 and F2 are in, a Mac session (Core or a Builder, on the Simulator) shoul
 
 The demo seeds recipes, a cook and Groceries rows, so a non-zero recipe and grocery line is the pass. QA can read
 the output if it's pasted into the shared folder.
+
+## Addendum: re-check at `ea0f9b1` (Oct 16, about 2:50 AM Pacific): PASS
+
+Trial merge onto master: clean. 2 files (+243/-1): scripts/kitchen-week-one.py, docs/product/kitchen-v2-scope.md.
+It compiles (`python3 -I -m py_compile`); not run against a store here.
+
+- **F1 closed.** `classes` strips `"system."` (`removeprefix`), and the script exits 1 with a plain message when
+  there is no `recipe` class, so a wrong store can't print a clean row of zeros.
+- **F2 closed.** `value_pairs` reads both the keyed object and the older flat `[id, value, …]` array, and an
+  unreadable count prints as a WARNING line at the top instead of being dropped silently.
+- **F3 closed.** One count, "pasted or from a link", with a comment saying why the two can't be told apart; the
+  capture-miss log still counts links that failed to read.
+- **Lows closed.** `--since` is midnight Pacific (`ZoneInfo("America/Los_Angeles")`). Groceries match on
+  `Groceries.listID`: `stable_id("kitchen.groceries")` reproduces `SystemCatalog.stableID` exactly (SHA-256 of
+  `"tessera:<name>"`, first 16 bytes, version 5 and variant bits set, uppercased).
+- **scripts/ checks.** Standard library only, opens with `mode=ro`, no network, no `exec`/`eval`, no shell, no key
+  handling, writes nothing.
+
+The demo-store run still needs a Mac session; I'll read its output when it's in the shared folder.

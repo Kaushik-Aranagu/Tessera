@@ -75,3 +75,62 @@ substring).
 - **The 40 cap** drops the oldest unpinned told line not used in 90 days, and returns its words for Tess's one-time
   "I let one go to make room: …" (Design 49).
 - **UNDO.** Remember, forget and forget-all each undo in one step (test `:71-118`).
+
+## Addendum: re-check at `d6527ac` (Oct 16, about 2:55 AM Pacific): FIX FIRST (two items)
+
+Rebased on master; trial merge clean. 7 files (+1118/-2). Static trace against Research's fixtures
+(`docs/research/fixtures/tess-memory.md`: acceptance M1-M12, screen S1-S20, turnover T1-T9, section 4). Catalog v7
+is still additive (one class, eight fields incl. `rule`); no LaunchFlags or ProcessInfo reads; the AppModel change
+is the one turnover call.
+
+### Closed
+- **F1.** `write` refuses a rule in `suppressedRules()` (deleted objects that still carry a `rule`) and any text whose
+  hash is in the forget log. The recompute clause is now `Sunday || (no noticed && nothing suppressed)`, so M3 and T6
+  hold on the Monday and the Sunday after; a rule that simply stops holding has its `rule` cleared before removal,
+  so it can come back. Rule lines update in place with the same id (T9).
+- **F3.** Whole-word tokens for the screen, `guessArea` and the body words. `weigh/kg/lb/bpm/…` are refused private
+  or not (S9, test `aPrivateLineIsKeptAsSaid`); other health words keep the line private with "Kept, on this phone
+  only." (M4, S6, S7). "back from work" stays public (S10). card/target/steps no longer misfire (S11, S13, S14);
+  espresso/weather/sunset no longer misfire (S18, S19). Shops refuse as places (S12, "I don't keep places.").
+- **Research S1, S3/S11, S4, S6, S7, L1, L2.** No week lines, 14-day cut (T3); "About you"; told lines stored in the
+  second person (M1); "I don't keep sums of money." (M5); the 41st told line refused with the cap line (M10); one
+  turnover per 04:00 day; "Everything forgotten, N things." (M7) and "Left shoulder, forgotten."; "Nothing kept yet."
+  (M9). A recent line is cut at a word, never mid-word (T2).
+- **F2, in-store part.** `sweepForgotten` redacts every memory deleted over 10 s ago (a quit inside the window and
+  forget-everything included), and logs the hash.
+
+### F2b (must fix). The forget log doesn't survive a real restore
+The log is `tessMemory` objects of kind `forgotten` **inside the store**. A restore replaces the whole store file
+(`TesseraBackup.stageRestore`, BackupView.swift:268-271), so restoring any backup made before the forget brings the
+line back with its words and with no hash to catch it: `reapplyForgets()` finds an empty log. That is fixture M8,
+and the rolling backups keep 7 days, so it's the ordinary case. The test (`TessMemoryTests.swift:230-240`) creates
+the "restored" object in the same store, with the log still there, so it can't see this.
+**Fix:** keep the hash log outside the store too (a small file beside `tessera.sqlite`, or carried across by
+`stageRestore` into the incoming store), and run `reapplyForgets()` on the first launch after a restore
+(`TesseraBackup.restoredAt`). Nothing outside the turnover calls `reapplyForgets()` today.
+
+### F5 (must fix). A body fact without a sore word goes to Claude
+"my left knee clicks on squats" (fixture S5): the body word needs a sore word to count, there's no health word, so
+the line is kept **public**, area Training, and `pack` sends it. Product's rule is "body facts never to Claude".
+**Fix:** a body word alone makes the line private (the S10 false positive is already gone with whole words; "back"
+can keep needing a sore word, since "back from work" is common).
+
+### Should fix
+- **S8.** "my resting heart rate is 52" is kept private, not refused: "heart" isn't a value word, and the number
+  check never runs once a health word matched. Research's rule: a health word next to a number is refused. Kept
+  private never leaves the phone, so this is not a block.
+- **T4/T8.** Noticed lines are still third person: "Usually trains 6 pm to 8 pm.", "Trains about 6 days a week.",
+  "Cooks most on Sundays." (TessMemory+Turnover.swift). Told lines are second person, so the page mixes both.
+
+### Lows
+- `area`'s catalog default is `.choice("other")`, which isn't in its options (`about` is). `read` falls back to
+  `.about`, but the spec should say `about`.
+- S16 "I don't eat pork" lands in About you ("eat" isn't a kitchen word); S20 "my sunset walk is my rest" lands in
+  Training ("rest" is needed for M1). Both are the fixtures' calls to settle with Research.
+- `recentLine` cuts at a word but can drop a dish: "…, cooked." Dropping whole parts ("and 3 more") reads better.
+- `ForgetAllMemory.summary` counts with `Date.now` and `classDef(named: "Memory")`, not the injected clock and key.
+- `lastTurnoverDay` is a process-wide static keyed by `ObjectIdentifier(store.context)`; a new context at a reused
+  address would skip a turnover (tests mostly).
+
+### Deferred to AI-8 (agreed, not blocking)
+S5 `valueRanges`, F4 KEEP / NOT NOW, redaction of the raw capture text (M2's capture op).
