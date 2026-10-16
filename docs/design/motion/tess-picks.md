@@ -33,7 +33,7 @@ knows which things it reads or changes, so the readers go there.
 
 | | |
 |---|---|
-| Trigger | `askClaude(kind, touched:)`. `touched` is the list of objects the job reads or changes, in the order the job uses them (Core fills it: Plan my day = the rows it moves or names; a recipe read = the lines it parses; Review's week = the lines it reads) |
+| Trigger | `askClaude(kind, touched:)`. `touched` is the list of objects the job reads or changes, in the order the job uses them (the pack builder returns them and `ClaudeClient` passes them on; they never leave the phone: Plan my day = the rows it moves or names; a recipe read = the lines it parses; Review's week = the lines it reads) |
 | Where the readers go | The page maps each touched object to the rect of its words (the title, and the time if the job changes a time) through the same free-ground preference as §3. A word off screen is skipped. |
 | Path | Hop 340 ms on the house curve with a 10 pt arc up, then dwell 380 ms, sweeping ±45% of the word's width. The order is the job's order, not top to bottom, and she never visits the same word twice in a row. After the last word she starts over at the first, which is fine because the list is different on every ask. |
 | Fallback | Fewer than two touched words on screen: §5's sweep of the rows she reads, as built. |
@@ -222,7 +222,7 @@ The picks add these events, which come from views and not from the diff:
 
 | Event | Emitted by, in every area | Idea |
 |---|---|---|
-| `askClaude(kind, touched:)` | every `TessJob`; `touched` is the one new field (AI architecture) | 1 |
+| `askClaude(kind, touched:)` | every Claude call; `touched` comes from the pack builder through `ClaudeClient`, stays on the phone, and is never sent to Claude (soul-signals.md) | 1 |
 | `firstOpenOfDay` | the router, from `AppClock`'s 04:00 boundary, outside quiet hours | 2 |
 | pan across her | `BottomChrome`'s band (every page has the band) | 3 |
 | `taskDone`, `thingFinished` (counted) | the diff above | 4 |
@@ -235,5 +235,5 @@ The picks add these events, which come from views and not from the diff:
 ## Build order and rows
 Builder A, one PR per sheet, in this order: 18a, 18b, 18c (mouth), 18d, 18e, 18f. Each PR carries its router
 events, tests and a clip recorded per the check kit, and the lab checks it frame by frame (item 16). Builder B
-adds emitters in its areas (§20) as each PR lands. Core adds `touched` (18a), `upcoming` and `firstOpenOfDay`
+adds emitters in its areas (§20) as each PR lands. Core adds `touched` from each pack builder (18a), `upcoming` and `firstOpenOfDay`
 (18a, 18e) and moves resting's end to 07:00 (18d).
