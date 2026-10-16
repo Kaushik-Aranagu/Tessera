@@ -141,7 +141,7 @@ private struct DayDab: View {
 
     private var numeral: Color {
         if let weight = cell.weight, weight > 0.6 {
-            return Color(hex: 0xFFF8EE)
+            return Theme.Colors.paper
         }
         return cell.isFuture ? Theme.Colors.muted : Theme.Colors.ink
     }

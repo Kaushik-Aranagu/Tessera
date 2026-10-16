@@ -68,6 +68,32 @@ struct LookField: View {
     }
 }
 
+/// The workout's ground in the look on screen (themes.md addendum): Plein keeps its dark washes and drift, Lacquer
+/// its band at 3%, every other look a flat workout ground.
+struct WorkoutField: View {
+    var body: some View {
+        let look = ThemeStore.shared.current
+        switch look.field {
+        case .plein:
+            PleinGround()
+        case .lacquer:
+            Theme.Colors.Workout.ground
+                .overlay {
+                    Rectangle()
+                        .fill(Color(hex: 0xFFF4E6).opacity(0.03))
+                        .frame(height: 150)
+                        .blur(radius: 14)
+                        .rotationEffect(.degrees(-24))
+                        .scaleEffect(x: 2.2)
+                }
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+        case .pigmentBloom, .emissive, .glaze:
+            Theme.Colors.Workout.ground.ignoresSafeArea()
+        }
+    }
+}
+
 extension View {
     /// The colour of the moment, pooled behind the action's row by the look's field: a watercolour bloom on light
     /// looks (5% centre, 10% dried edge), an emitted glow on dark ones (screen, 16%, blur 18). Plein's washes

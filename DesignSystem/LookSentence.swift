@@ -18,25 +18,45 @@ struct LookSentence: View {
                 .accessibilityAddTraits(.isHeader)
             if let pinned = store.pinned {
                 HStack(alignment: .firstTextBaseline, spacing: 0) {
-                    name(pinned, slot: "Look") { store.cycle(pinned: pinned) }
+                    name(
+                        pinned,
+                        slot: "Look",
+                        cycle: { store.cyclePinned() },
+                        back: { store.cyclePinned(forward: false) }
+                    )
                     Text(" always.")
                 }
                 hint("Hold it again to follow light and dark mode.")
             } else {
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .firstTextBaseline, spacing: 0) {
-                        name(store.day, slot: "Day look") { store.cycleDay() }
+                        name(store.day, slot: "Day look", cycle: { store.cycleDay() }, back: { store.cycleDayBack() })
                         Text(" by day, ")
-                        name(store.night, slot: "Night look") { store.cycleNight() }
+                        name(
+                            store.night,
+                            slot: "Night look",
+                            cycle: { store.cycleNight() },
+                            back: { store.cycleNightBack() }
+                        )
                         Text(" by night.")
                     }
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(alignment: .firstTextBaseline, spacing: 0) {
-                            name(store.day, slot: "Day look") { store.cycleDay() }
+                            name(
+                                store.day,
+                                slot: "Day look",
+                                cycle: { store.cycleDay() },
+                                back: { store.cycleDayBack() }
+                            )
                             Text(" by day,")
                         }
                         HStack(alignment: .firstTextBaseline, spacing: 0) {
-                            name(store.night, slot: "Night look") { store.cycleNight() }
+                            name(
+                                store.night,
+                                slot: "Night look",
+                                cycle: { store.cycleNight() },
+                                back: { store.cycleNightBack() }
+                            )
                             Text(" by night.")
                         }
                     }
@@ -56,7 +76,9 @@ struct LookSentence: View {
             .foregroundStyle(Theme.Colors.inkSecondary)
     }
 
-    private func name(_ look: Look, slot: String, cycle: @escaping () -> Void) -> some View {
+    private func name(_ look: Look, slot: String, cycle: @escaping () -> Void,
+                      back: @escaping () -> Void) -> some View
+    {
         let isPinned = ThemeStore.shared.pinned == look
         return Button {
             taps += 1
@@ -73,9 +95,9 @@ struct LookSentence: View {
         .accessibilityLabel(slot)
         .accessibilityValue(Text(Self.spoken(look)))
         .accessibilityHint(look.line)
-        .accessibilityAdjustableAction { _ in
+        .accessibilityAdjustableAction { direction in
             taps += 1
-            change(cycle)
+            change(direction == .decrement ? back : cycle)
         }
         .accessibilityAction(named: isPinned ? "Follow light and dark mode" : "Keep \(look.name) day and night") {
             pins += 1
@@ -95,14 +117,5 @@ struct LookSentence: View {
     /// The new ground crossfades in (the soul's flood comes with Settings).
     private func change(_ body: () -> Void) {
         withTesseraAnimation(.easeInOut(duration: reduceMotion ? 0.25 : 0.7), reduceMotion: reduceMotion) { body() }
-    }
-}
-
-extension ThemeStore {
-    /// A pinned name taps through all five looks, light and dark.
-    func cycle(pinned look: Look) {
-        let index = Look.all.firstIndex(of: look) ?? -1
-        togglePin(look)
-        togglePin(Look.all[(index + 1) % Look.all.count])
     }
 }

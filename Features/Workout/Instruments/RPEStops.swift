@@ -2,11 +2,25 @@ import SwiftUI
 
 /// Round 9 ("Plein") paint. Kept here so a restyle is a one-line change.
 private enum Paint {
-    static let cream = Color(hex: 0xF3ECE0)
-    static let cadmium = Color(hex: 0xE8BD4C)
-    static let rail = cream.opacity(0.22)
-    static let dab = cream.opacity(0.45)
-    static let whole = cream.opacity(0.45)
+    static var cream: Color {
+        Theme.Colors.Workout.ink
+    }
+
+    static var cadmium: Color {
+        Theme.Colors.Workout.rest
+    }
+
+    static var rail: Color {
+        cream.opacity(0.22)
+    }
+
+    static var dab: Color {
+        cream.opacity(0.45)
+    }
+
+    static var whole: Color {
+        cream.opacity(0.45)
+    }
 }
 
 /// Effort, only when wanted: a stop-slider of nine stops from 6 to 10 in half steps along a hairline. Whole numbers

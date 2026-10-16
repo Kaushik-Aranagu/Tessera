@@ -138,7 +138,7 @@ private struct Veil: ViewModifier {
                     .ignoresSafeArea(edges: edge == .top ? .top : .bottom)
             }
             .overlay(alignment: edge == .top ? .bottom : .top) {
-                (colorScheme == .dark ? Color.white.opacity(0.12) : Theme.Colors.ink.opacity(0.14))
+                Theme.Colors.hairline
                     .frame(height: 1 / displayScale)
             }
     }

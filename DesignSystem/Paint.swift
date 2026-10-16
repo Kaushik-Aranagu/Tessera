@@ -253,8 +253,7 @@ struct PaintKey<Label: View, Meta: View>: View {
     @Environment(\.isEnabled) private var isEnabled
 
     var body: some View {
-        let dark = colorScheme == .dark
-        let ink = dark ? Color(hex: 0xF3ECE0) : Theme.Colors.ink
+        let ink = Theme.Colors.ink
         HStack(alignment: .firstTextBaseline, spacing: 16) {
             label(isPressing)
                 .font(InkWordType.font)

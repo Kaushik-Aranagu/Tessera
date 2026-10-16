@@ -286,8 +286,6 @@ enum Theme {
             ThemeStore.shared.pin(look)
         } else if let match = ThemeConcept.all.first(where: { $0.name.lowercased() == name }), match.name != "Plein" {
             retired = match
-        } else if name == "plein" {
-            ThemeStore.shared.pin(.plein)
         }
     }
 
@@ -366,6 +364,24 @@ enum Theme {
         /// Pigment over ground: multiply on light looks, screen on dark ones (the soul, any pigment overlay).
         static var soulBlend: BlendMode {
             ThemeStore.shared.current.isDark ? .screen : .multiply
+        }
+
+        /// The glint: a gold band through the letters on Porcelain and Celadon (now at 60%, normal blend), Plein's
+        /// warm light on its pages, and light passing over dark looks (plus-lighter).
+        static var sheen: Color {
+            let look = ThemeStore.shared.current
+            switch look.field {
+            case .pigmentBloom, .glaze: return Color(hex: look.now).opacity(0.6)
+            case .plein: return Color(hex: 0xF7E6B8)
+            case .emissive, .lacquer: return Color(hex: 0xFFE2A8)
+            }
+        }
+
+        static var sheenBlend: BlendMode {
+            switch ThemeStore.shared.current.field {
+            case .pigmentBloom, .glaze: .normal
+            case .plein, .emissive, .lacquer: .plusLighter
+            }
         }
 
         /// Pigment glows on dark looks (strokes, dabs, the soul, numerals; never text under 34 pt).
@@ -485,6 +501,9 @@ enum Theme {
             case 15: Color(hex: 0xD9A72B)
             case 10: Color(hex: 0x3C8A55)
             case 5: Color(hex: 0xE9E4D8)
+            // Change plates (themes.md addendum: plates stay fixed, the change plates move here).
+            case 2.5: Color(hex: 0x55534F)
+            case 1.25: Color(hex: 0xA8A49C)
             default: Color(hex: 0x8F8A80)
             }
         }

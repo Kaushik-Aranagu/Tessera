@@ -2,13 +2,33 @@ import SwiftUI
 
 /// Round 6 ("Plein") paint. Kept here so a restyle is a one-line change.
 private enum Paint {
-    static let cream = Color(hex: 0xF3ECE0)
-    static let vermilion = Color(hex: 0xD9563F)
-    static let cadmium = Color(hex: 0xE8BD4C)
-    static let minorTick = cream.opacity(0.38)
-    static let majorTick = cream.opacity(0.9)
-    static let label = cream.opacity(0.6)
-    static let washTip = cadmium.opacity(0.28)
+    static var cream: Color {
+        Theme.Colors.Workout.ink
+    }
+
+    static var vermilion: Color {
+        Theme.Colors.Workout.signal
+    }
+
+    static var cadmium: Color {
+        Theme.Colors.Workout.rest
+    }
+
+    static var minorTick: Color {
+        cream.opacity(0.38)
+    }
+
+    static var majorTick: Color {
+        cream.opacity(0.9)
+    }
+
+    static var label: Color {
+        cream.opacity(0.72)
+    }
+
+    static var washTip: Color {
+        cadmium.opacity(0.28)
+    }
 }
 
 /// The precision dial for weight: a horizontal strip of ticks under a fixed centre needle, one tick per weight the

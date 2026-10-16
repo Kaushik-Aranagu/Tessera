@@ -3,13 +3,34 @@ import SwiftUI
 /// Round 6 ("Plein") paint. Kept here so a restyle is a one-line change. The big plates take
 /// `Theme.Colors.plate(_:)`; the change plates have no colour there.
 private enum Paint {
-    static let cream = Color(hex: 0xF3ECE0)
-    static let label = Color(hex: 0xA79FB5)
-    static let sleeve = cream.opacity(0.38)
-    static let plateLight = cream.opacity(0.25)
-    static let plateShade = Color(hex: 0x1C1828).opacity(0.45)
-    static let changeLarge = Color(hex: 0x55534F)
-    static let changeSmall = Color(hex: 0xA8A49C)
+    static var cream: Color {
+        Theme.Colors.Workout.ink
+    }
+
+    static var label: Color {
+        Theme.Colors.Workout.inkSecondary
+    }
+
+    static var sleeve: Color {
+        cream.opacity(0.38)
+    }
+
+    static var plateLight: Color {
+        cream.opacity(0.25)
+    }
+
+    static var plateShade: Color {
+        Theme.Colors.Workout.ground.opacity(0.45)
+    }
+
+    /// Change plates are real plates: fixed in every look.
+    static var changeLarge: Color {
+        Theme.Colors.plate(2.5)
+    }
+
+    static var changeSmall: Color {
+        Theme.Colors.plate(1.25)
+    }
 }
 
 /// Plates per side as a label line, "25 + 5 + 1.25 EACH SIDE" (or "BAR ONLY"), from Core's `WeightDial`. Optionally
