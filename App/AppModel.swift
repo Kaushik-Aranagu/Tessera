@@ -327,6 +327,10 @@ final class AppModel {
         if let rolled = TaskList(store: store, classes: classes).rollForward(engine: engine, now: now) {
             processNotes.append(rolled)
         }
+        // Tess's memory turnover: yesterday's day line, the 14-day cut, Sunday's noticed lines (AI-7).
+        let memory = TessMemoryStore(engine: engine)
+        memory.reapplyForgetsIfRestored(now: now) // the first launch after a restore forgets again (QA F2b, F6)
+        memory.turnover(now: now)
         pickUpRunningWorkout(table)
         // A workout left untouched for 6 hours is wrapped up by Core; let the live session go with it.
         if let session, store.value("endedAt", of: session.workout) != nil {
