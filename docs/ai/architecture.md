@@ -50,7 +50,7 @@ A **lens** turns objects into a short list of facts for one surface, each with a
 
 ## 4. Memory
 
-Tess's memory is a set of short lines about him, stored as objects so they follow every rule objects already follow (op log, undo, backup, Time Machine).
+Tess's memory is a set of short lines about him, stored as objects so they follow every rule objects already follow (op log, undo, backup, Time Machine). The detailed notes own the specifics: `memory-store.md` (AI-7, AI-8: record, write walls, profile block, forget, restore) and `what-tess-knows.md` (AI-9: the page's data contract). Where this section and a note differ, the note wins.
 
 **Kinds.**
 
@@ -64,11 +64,11 @@ Tess's memory is a set of short lines about him, stored as objects so they follo
 
 **Shape (AI-0, decided Oct 16).** One profile block, the same for every job that reads memory: told lines, noticed lines, the last 7 recent lines, second person, private lines never (`memory-experiment.md`, "Result and decision"). Today the block is about 120 tokens. Noticed lines carry no clock digits ("You usually train after work.").
 
-**Trimming.** The memory block in any pack is at most about 1,200 tokens, chosen in this order: told lines that match the job (at most 40 told lines exist; at 40 the oldest one not used in 90 days drops off, and Tess says so once as her line, with no UNDO, Product's default), then up to 10 noticed lines for the job's area, then the last 7 recent lines. Each job names which kinds it reads (table in section 6). Home lines read all three kinds and every group but About you: Research 124 (`docs/research/home-lines-memory.md`) shows E7, E15, E17 and E18 need told lines and Kitchen lines, so AI-10's pack is not noticed Training lines alone (H-M1, H-M2). Each Home item also carries `fits: [ruleId]`, the noticed rules today's facts agree with, so "your usual slot" can only be said when the usual-slot rule is in the list and never when today contradicts it (H-M3). A told line with no area goes in "About you" ("You work 9 to 5.") and only the jobs that read every group see it. When all 40 told lines were used in the last 90 days, a 41st is not kept: the ghost drains and Tess says "I keep 40 things. Forget one and say it again." (Research S7, Design 49 addendum.)
+**Trimming.** The memory block in any pack is at most about 1,200 tokens, chosen in this order: told lines that match the job (at most 40 told lines exist; at 40 the oldest one not used in 90 days drops off, and Tess says so once as her line, with no UNDO, Product's default), then up to 10 noticed lines for the job's area, then the last 7 recent lines. Each job names which kinds it reads (table in section 6). Home lines read all three kinds from the Training and Kitchen groups only (Product, decisions.md 11:45 AM PT Oct 16), with `fits: [ruleId]` per item so "usual" is said only when today agrees with the rule; `home-lines-job.md` section 2 owns the pack (Research 124 H-M1 to H-M3). A told line with no area goes in "About you" ("You work 9 to 5.") and only the jobs that read every group see it. When all 40 told lines were used in the last 90 days, a 41st is not kept: the ghost drains and Tess says "I keep 40 things. Forget one and say it again." (Research S7, Design 49 addendum.)
 
 **What memory never holds.** Health values, sleep, body weight numbers, money amounts or merchants, note bodies, places, the key, anything said through Siri or Shortcuts, anything from demo data. A screen runs on every line that could be packed before it is written: the same health and money word lists the plan validator uses, plus a digits check against the evidence (a noticed line can't carry a number its evidence doesn't hold). A told line that trips the health words is kept anyway, marked `private`, and Tess says "Kept, on this phone only." (Research F3.) A body word alone ("my left knee clicks on squats") makes a line private too; it does not need a sore or pain word beside it (QA F5 on #356). Money and sums are still refused ("I don't keep sums of money."), places are refused ("I don't keep places."), and a measured value (digits next to a health word) is refused whatever he says. An edit of a value word goes through the same screen: a health word keeps the edit private, a money word or a place springs the old words back with no UNDO (S6, Design 49 addendum). Siri or Shortcuts asked to remember something answers "Say that in Tessera and I'll keep it." and writes nothing (S9).
 
-**What he can see and delete.** The "What Tess knows" page is already drawn (`docs/design/m4-steers.md` section 11, `recordings/tess-knows.mp4`); Builder B builds it on this store. He reaches it by asking Tess "what do you know" or from Settings ("Tess remembers 12 things"). Each fact shows its source one line under it ("from 6 workouts", "you said so on Oct 9"), read from `evidence`. Swipe left to FORGET gives the usual 10 s UNDO, then removes the object, every line whose `derivedFrom` names it, and redacts their text from earlier ops so none comes back from history. The redaction reaches the capture op that carried his "remember that …" words and the ghost-row op, not only the memory object's own ops (Research F2). FORGET on a noticed line also writes a suppression for that line's rule id (an id, no text), so the Sunday recompute skips the pattern until he says "remember that …" about the same thing (Research F1). "Forget everything" is a hold, behind the same 10 s UNDO; it suppresses every rule, and the empty page is where he lets Tess notice again. **After a backup restore** the forget log (object ids and rule ids, no text) is re-applied by `reapplyForgetsIfRestored()` on the first launch after the restore. The log lives outside the store, in Application Support beside the Home line cache and never inside a `.tessera` backup, because a log kept inside the store is restored along with the words it was meant to keep out (F2b, QA on #356). A forget also drops the cached Claude lines for every item that read the forgotten line, so the next pack is built from what remains and the rules line shows meanwhile (Research 124 H-M4, H-M5). Told lines can be edited through their value words, as Design drew.
+**What he can see and delete.** (`what-tess-knows.md` owns the contract; `memory-store.md` section 5 the forget helpers.) The "What Tess knows" page is already drawn (`docs/design/m4-steers.md` section 11, `recordings/tess-knows.mp4`); Builder B builds it on this store. He reaches it by asking Tess "what do you know" or from Settings ("Tess remembers 12 things"). Each fact shows its source one line under it ("from 6 workouts", "you said so on Oct 9"), read from `evidence`. Swipe left to FORGET gives the usual 10 s UNDO, then removes the object, every line whose `derivedFrom` names it, and redacts their text from earlier ops so none comes back from history. The redaction reaches the capture op that carried his "remember that …" words and the ghost-row op, not only the memory object's own ops (Research F2). FORGET on a noticed line also writes a suppression for that line's rule id (an id, no text), so the Sunday recompute skips the pattern until he says "remember that …" about the same thing (Research F1). "Forget everything" is a hold, behind the same 10 s UNDO; it suppresses every rule, and the empty page is where he lets Tess notice again. **After a backup restore** the forget log (object ids and rule ids, no text) is re-applied by `reapplyForgetsIfRestored()` on the first launch after the restore. The log lives outside the store, in Application Support beside the Home line cache and never inside a `.tessera` backup, because a log kept inside the store is restored along with the words it was meant to keep out (F2b, QA on #356). A forget also drops the cached Claude lines for every item that read the forgotten line, so the next pack is built from what remains and the rules line shows meanwhile (Research 124 H-M4, H-M5). Told lines can be edited through their value words, as Design drew.
 
 **Body facts he tells Tess** ("my left shoulder gets sore on overhead pressing", Design's own example) are kept, because he chose to say them, but they are marked `private` and never go in any pack. DEFAULT; measured health values are never stored at all. Research's trace of the page against this section is `/mnt/project-files/tessera/research/tess-knows-trace.md` (board 117); its test rows M1 to M12 are the acceptance list for AI-7 to AI-9.
 
@@ -99,7 +99,7 @@ public struct TessJob: Sendable {
 }
 ```
 
-`ClaudeClient` takes the shared parts out of the four copies today: headers, the 401/403/429/5xx mapping, `Failure` lines, ledger reserve and record, request ids, the `stale` drop of a late reply, and the demo and switch gates. New jobs use it from day one. The four existing ones move onto it only when someone is already in that file (no big refactor PR).
+`ClaudeClient` takes the shared parts out of the four copies today: headers, the 401/403/429/5xx mapping, `Failure` lines, ledger reserve and record, request ids, the `stale` drop of a late reply, and the demo and switch gates. New jobs use it from day one. The four existing ones move onto it only when someone is already in that file (no big refactor PR). `claude-client.md` (AI-2) owns the interface, call path, errors and tests; it renames `ClaudeReply` and `run(_:pack:)` to `Outcome` and `send(job:pack:)`.
 
 ### 5.2 Prompt assembly
 
@@ -117,7 +117,7 @@ Unchanged from the model layer: Claude writes only through `TessTools` → `Acti
 
 ### 5.4 Validation and the rules line
 
-Every Claude line passes three checks on the phone before it shows, and the rules line shows when any check fails:
+Every Claude line passes three checks on the phone before it shows, and the rules line shows when any check fails (`line-check-vectors.md`, AI-3, owns the vectors and exemptions):
 
 1. **Shape.** Same handles as the pack, one line per handle, each within its slot's word and character budget (Home row: 6 words, 32 characters; hero: 9 words, 44 characters).
 2. **Truth.** Every number in the line appears in that handle's licensed numbers (the plan validator's `numbersAreLicensed`, moved into a shared `TessLineCheck`). Every name in the line appears in the pack.
@@ -127,23 +127,23 @@ Lines never truncate. The budget is checked on the phone, so a line that wouldn'
 
 ### 5.5 Caching, debounce and offline
 
-- **Result cache.** Each job hashes its pack. Same hash, same words: no call. Home keeps the last good set of lines in memory and in a small JSON file in Application Support (not backed up), so a cold launch shows yesterday's Claude lines for any item whose facts haven't changed.
-- **Debounce.** Home lines call when the pack changes, at most once per 10 minutes, except for moments (a workout finishes, a process pauses), and at most 40 calls a day.
+- **Result cache.** Each job hashes its pack. Same hash, same words: no call. Home keeps the last good set of lines in memory and in a small JSON file in Application Support (not backed up), keyed by day, so a cold launch shows rules lines and a new day starts on them (Product, decisions.md 11:45 AM PT Oct 16). Ticking values ("paused 21 min ago") never go in the pack or its hash.
+- **Debounce.** Home lines call when the pack changes, at most once per 10 minutes, except for moments (a workout finishes, a process pauses), and at most 40 calls a day. The 40-a-day count (on `TessCall.job`) and dropping ticking values ride AI-2; `home-lines-job.md` section 4 owns what asks and what doesn't.
 - **Offline, capped, switch off, demo.** The rules line, at once. No queue for lines: a line worded later would describe a moment that's gone. Capture keeps its `TessInbox` queue as today.
 - **Near the cap.** At 80% of the month, word-only jobs (lines, week story) step aside so captures and plans keep the money. Settings says so in the existing amber line.
 
 ### 5.6 Cost
 
-Prices from `TessUsageLedger.prices` (Haiku 5.5 $0.10 in and $0.50 out per million; Sonnet 5.5 $2 and $10). Token counts are estimates (characters over 4), priced with no cache hits.
+Prices from `TessUsageLedger.prices` (Haiku 5.5 $0.10 in and $0.50 out per million; Sonnet 5.5 $2 and $10). Token counts are estimates (characters over 4), priced with no cache hits. `spend-projection.md` owns the full per-job projection, worst cases and the 80% and 100% behaviour; this table is the short form.
 
 | Job | Model | In / out tokens | Per call | Calls a month | Month |
 |---|---|---|---|---|---|
-| Home lines | Haiku 5.5 | 1,500 / 150 | $0.0002 | 600 (20 a day) | $0.14 |
-| Workout done line (part of Home lines) | Haiku 5.5 | included | | | |
+| Home lines | Sonnet 5.5 (until AI-5 decides) | 1,500 / 150 | $0.0045 | 600 (20 a day) | $2.70 |
+| Workout done line (part of Home lines) | Sonnet 5.5 | included | | | |
 | Week story | Sonnet 5.5 | 2,000 / 300 | $0.007 | 8 | $0.06 |
 | Grocery connect (name matching only) | Haiku 5.5 | 1,200 / 150 | $0.0002 | 60 | $0.01 |
 | Existing (capture, plan, link, questions) | | | | | $0.44 (claude-first-uses.md) |
-| **Total** | | | | | **about $0.70** on Haiku, about $4 with Sonnet on Home lines and the week story; cap $50 (decided Oct 16) |
+| **Total** | | | | | **about $3.20** typical, $8.55 worst (`spend-projection.md`); about $0.70 if AI-5 moves Home lines to Haiku; cap $50 |
 
 ## 6. Model per job
 
@@ -152,12 +152,12 @@ Prices from `TessUsageLedger.prices` (Haiku 5.5 $0.10 in and $0.50 out per milli
 | Capture misses | Haiku 5.5 | default | 8 s | told | Fast, tool calls, short |
 | Questions | Haiku 5.5 | default | 8 s | none | One strict `answerQuery`, runs on phone |
 | Recipe link L3 | Haiku 5.5 | default | 15 s | none | Extraction |
-| Home lines | Haiku 5.5 | low | 6 s | recent, noticed | Short, frequent, rules line is always there behind it |
+| Home lines | Sonnet 5.5 until AI-5 decides | low | 6 s | shape A block, Training and Kitchen groups | Short, frequent, rules line is always there behind it; model per Product 11:45 AM PT Oct 16 |
 | Plan my day | Sonnet 5.5 | low | 20 s | noticed (training time only) | The first line he reads each morning (decided) |
-| Week story | Sonnet 5.5 | low | 20 s | all | Once a week, read slowly, worth the better writer |
+| Week story | Sonnet 5.5 | low | 20 s | all | Once a week, read slowly, worth the better writer. Tells the week just ended, worded Monday after 04:00; rules version is three plain count lines (Product 11:45 AM PT Oct 16; `week-story-job.md`) |
 | Grocery connect | Haiku 5.5 | low | 8 s | told | Matching names, short |
 
-No Opus or Fable. The Home lines eval (ship list AI-5) runs Haiku and Sonnet side by side on the same fixtures; if Haiku fails the gate, Home lines move to Sonnet at about $3 a month at 20 a day, still under the cap.
+No Opus or Fable. Home lines run on Sonnet (about $2.70 a month at 20 a day) until the AI-5 eval decides; it reruns Haiku with the tool forced on the same fixtures, scored per `eval-rubric.md`, and if Haiku passes the gate Home lines may move to it. Job details: `home-lines-job.md` (AI-4, AI-10), `week-story-job.md` (AI-11).
 
 ## 7. Privacy lines (all of them, in one place)
 
@@ -203,7 +203,7 @@ No Opus or Fable. The Home lines eval (ship list AI-5) runs Haiku and Sonnet sid
 {"palette": "Lagoon", "warmth": 0.1, "weight": -0.05, "reason": "night after a push day"}
 ```
 
-`palette` must be one of the candidates the phone sent for this moment (a subset of Design 48's per-look table: `Today`, `Kiln`, `Lagoon`, `Orchard`, `Aurora`, `Ember`); any other name is rejected and the on-phone pick stands. `warmth` and `weight` are nudges in [-0.2, 0.2] inside the palette's own room, as Design defines them (hue toward warm or cool; a touch lighter or heavier). `reason` is for the DEBUG "Last sent" view and the receipt, never shown at rest. The phone clamps the nudges and refuses an unknown name.
+`palette` must be one of the candidates the phone sent for this moment (a subset of Design 48's per-look table: `Today`, `Kiln`, `Lagoon`, `Orchard`, `Aurora`, `Ember`); any other name is rejected and the on-phone pick stands. `warmth` and `weight` are nudges in [-0.2, 0.2] inside the palette's own room, as Design defines them (hue toward warm or cool; a touch lighter or heavier). `reason` is for the DEBUG "Last sent" view and the receipt, never shown at rest. The phone clamps an out-of-range nudge (Product, decisions.md 11:45 AM PT Oct 16) and refuses an unknown name. `week-story-job.md` Part 3 checks the AI-14 row against this section.
 
 ### The UI bar holds, by construction
 
@@ -238,7 +238,7 @@ Offline, at the cap, switch off, demo, a late or failing reply, an unknown name:
 
 ### How the choice reaches the app
 
-Builder A owns the pigments. `SoulPalette.look(_:)` (`Features/Tess/TessSoul.swift:118`) reads the look's `live`, `tess` and `now` today. The change is: `SoulPalette.look(_:living:)` takes a `LivingPalette` (name, warmth, weight, chosen at) kept by a small `SoulPaletteStore` on `ThemeStore` (via `SettingsStore`, as the looks will be after #320), and resolves it to the three washes from Design's per-look, per-palette pigment table. Core writes `LivingPalette` from the on-phone picker, or from the `soulPalette` job's checked reply, through a `.system` op (not undoable; it's weather, not something he did). The receipt and the "What Tess knows" page can show "Colours: Lagoon, since Thursday" with FORGET to pin her back to today's colours, which also pauses the job until he unpins.
+Builder A owns the pigments. `SoulPalette.look(_:)` (`Features/Tess/TessSoul.swift:118`) reads the look's `live`, `tess` and `now` today. The change is: `SoulPalette.look(_:living:)` takes a `LivingPalette` (name, warmth, weight, chosen at) kept by a small `SoulPaletteStore` on `ThemeStore` (via `SettingsStore`, as the looks will be after #320), and resolves it to the three washes from Design's per-look, per-palette pigment table. Core writes `LivingPalette` from the on-phone picker, or from the `soulPalette` job's checked reply, through a `.system` op (not undoable; it's weather, not something he did). The receipt and the "What Tess knows" page can show "Colours: Lagoon, since Thursday" with FORGET, which follows Design 48: it keeps that one palette off for 30 days (Product, decisions.md 11:45 AM PT Oct 16).
 
 ### Could the app's context colours follow?
 
@@ -246,7 +246,7 @@ Product has ruled Tess only for now; context colours reach the app only if he as
 
 ### Slice for the ship list
 
-AI-14 **Living soul colour**: Core: on-phone rules picker, `LivingPalette`, store and contrast clamp; `soulPalette` job once a day under the switch, pack snapshot test. Builder A: `SoulPalette.look(_:living:)`, the idle-only pooling bloom, FORGET pin. Design: the palette space, nudge ranges and the per-look pigment table. Gate: Design's eval of 20 day-shapes, with Kaushik saying the changes feel like weather on a recording. Lands after AI-4 and Design 48.
+AI-14 **Living soul colour**: Core: on-phone rules picker, `LivingPalette`, store and contrast clamp; `soulPalette` job once a day under the switch, pack snapshot test. Builder A: `SoulPalette.look(_:living:)`, the idle-only pooling bloom, FORGET (one palette off 30 days). Design: the palette space, nudge ranges and the per-look pigment table. Gate: Design's eval of 20 day-shapes, with Kaushik saying the changes feel like weather on a recording. Lands after AI-4 and Design 48.
 
 ## Unverified
 
