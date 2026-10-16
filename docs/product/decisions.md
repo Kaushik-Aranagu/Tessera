@@ -4,6 +4,7 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+- **A list with one bare weight logs the whole sets, then asks** (9:03 PM PT, Research 102, K874/K875). "bench 80 for 8, 81" logs 80 × 8 and then asks "81 for how many reps?"; a set he fully said is never held back by one he didn't. Suite on master: 895 rows, 721 pass, 102 wrong, 72 miss.
 - **Bleed the radiators, offered in autumn** (9:01 PM PT, Research 106, all three defaults). It is not on the pick list (still 25). It is offered once when he first opens Upkeep between Oct 1 and Nov 30; accepting writes Bleed the radiators, every 365 days, with no check-in. If he declines, it is never offered again. Guard S7 puts "bled" on the past-tense list, so "bled the radiators sun" is a check-in, not a task. Upkeep fixtures now assume a US home on Pacific time: the phone's zone, a water bill instead of council tax, no London water.
 - **Live-workout statements, and the rest weekday field** (8:58 PM PT, Core #254). During a live workout, a bare yes, no or ok gets "Say the set, like 85 × 8."; a skip says "Skip is on the workout screen." Statements, not asks. The settings object carries `restWeekday` (1 to 7, Sunday = 1). Empty keeps the rest day where the engine places it today; it does not mean Sunday until he answers (8:52 PM PT).
 - **Speak's set line** (8:56 PM PT, Design b13d8b4). A spoken set says "Set 3 logged. 80 × 7.", name first, under the undo rule.
