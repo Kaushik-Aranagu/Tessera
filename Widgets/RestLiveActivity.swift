@@ -5,42 +5,6 @@ import WidgetKit
 
 // MARK: Constants (spec: docs/design/live-activity.md, mockup docs/design/mockups/LiveFinal.dc.html)
 
-/// The extension can't see the app's Theme, so the palette is pinned here.
-private enum Palette {
-    static let cream = Color(hex: 0xF6EFE4)
-    static let vermilion = Color(hex: 0xE2603F)
-    /// Under the system material, as in the mockup (rgba(18,14,26,.46)).
-    static let materialTint = Color(hex: 0x120E1A).opacity(0.46)
-    /// Go: the sky warms to cadmium and vermilion.
-    static let goWash1 = Color(hex: 0xE8BD4C).opacity(0.75)
-    static let goWash2 = Color(hex: 0xE2603F).opacity(0.6)
-}
-
-/// The lock screen's colour: Cobalt sky (Kaushik's pick, 2026-10-15), the only mood.
-enum RestMood {
-    case cobaltSky
-
-    static let current: RestMood = .cobaltSky
-
-    /// Top-left wash.
-    var wash1: Color {
-        Color(hex: 0x3F7FC0).opacity(0.75)
-    }
-
-    /// Top-right wash.
-    var wash2: Color {
-        Color(hex: 0x7A5CA0).opacity(0.45)
-    }
-
-    var line: Color {
-        Palette.cream
-    }
-
-    var tick: Color {
-        Palette.vermilion
-    }
-}
-
 /// Inter Tight, bundled in the extension (Widgets/Fonts, `UIAppFonts`). If the font file is missing, `.custom`
 /// falls back to the system font, so the layout still holds.
 private enum Typeface {
@@ -73,33 +37,35 @@ private let workoutURL = URL(string: "tessera://workout")
 struct RestLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: RestActivityAttributes.self) { context in
-            Group {
+            LockScreenRoot(state: context.state) {
                 if RestFace.isSetAside(context) {
                     SetAsideFace(title: context.attributes.workoutTitle)
                 } else {
                     RestLockScreenView(state: context.state, isGo: RestFace.isGoTime(context))
                 }
             }
-            .activityBackgroundTint(Palette.materialTint)
-            .activitySystemActionForegroundColor(Palette.cream)
             .widgetURL(workoutURL)
         } dynamicIsland: { context in
             let state = context.state
             let isGo = RestFace.isGoTime(context)
-            let mood = RestMood.current
+            // The Island is always the Obsidian set, whatever the look (Plein's signal is 4.4:1 on black).
+            let mood = RestPalette.obsidian
             return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     Countdown(state: state, isGo: isGo, size: 40)
                         .padding(.leading, 8)
+                        .environment(\.restPalette, mood)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     PlannedSetButton(state: state, isGo: isGo, nameSize: 16, setSize: 21)
                         .padding(.trailing, 8)
+                        .environment(\.restPalette, mood)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     HorizonLine(state: state, isGo: isGo, color: mood.line)
                         .padding(.horizontal, 8)
                         .padding(.top, 6)
+                        .environment(\.restPalette, mood)
                 }
             } compactLeading: {
                 Tick(color: mood.tick)
@@ -116,13 +82,13 @@ struct RestLiveActivity: Widget {
                     }
                 }
                 .font(Typeface.font(17).monospacedDigit())
-                .foregroundStyle(Palette.cream)
+                .foregroundStyle(mood.cream)
                 .frame(maxWidth: 48)
             } minimal: {
                 Tick(color: mood.tick)
                     .frame(width: 16, height: 13)
             }
-            .keylineTint(isGo ? Palette.vermilion : mood.wash1)
+            .keylineTint(mood.vermilion)
             .widgetURL(workoutURL)
         }
     }
@@ -130,10 +96,26 @@ struct RestLiveActivity: Widget {
 
 // MARK: Lock Screen
 
+/// Picks the look by the Lock Screen's appearance and hands its palette down; the tint is Workout ground and the
+/// system actions Workout ink (second addendum).
+private struct LockScreenRoot<Content: View>: View {
+    let state: RestActivityAttributes.ContentState
+    @ViewBuilder var content: Content
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        let palette = RestPalette.forState(day: state.lookDay, night: state.lookNight, dark: colorScheme == .dark)
+        content
+            .environment(\.restPalette, palette)
+            .activityBackgroundTint(palette.materialTint)
+            .activitySystemActionForegroundColor(palette.cream)
+    }
+}
+
 private struct RestLockScreenView: View {
+    @Environment(\.restPalette) private var palette
     let state: RestActivityAttributes.ContentState
     let isGo: Bool
-    private let mood = RestMood.current
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -143,7 +125,7 @@ private struct RestLockScreenView: View {
                     .padding(.top, 10)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Rectangle()
-                    .fill(Palette.cream.opacity(0.16))
+                    .fill(palette.cream.opacity(0.16))
                     .frame(width: 1, height: 60)
                 PlannedSetButton(state: state, isGo: isGo, nameSize: 17, setSize: 24)
                     .padding(.leading, 16)
@@ -151,7 +133,7 @@ private struct RestLockScreenView: View {
                     .frame(width: Metric.rightColumn)
             }
             .padding(.top, 14)
-            HorizonLine(state: state, isGo: isGo, color: mood.line)
+            HorizonLine(state: state, isGo: isGo, color: palette.line)
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
             HStack(spacing: 0) {
@@ -163,7 +145,7 @@ private struct RestLockScreenView: View {
                     }
                 }
                 .font(Typeface.font(17))
-                .foregroundStyle(Palette.cream.opacity(0.58))
+                .foregroundStyle(palette.cream.opacity(0.58))
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
                 .padding(.leading, 22)
@@ -175,26 +157,26 @@ private struct RestLockScreenView: View {
             .padding(.bottom, 8)
         }
         .frame(height: 150)
-        .background { Washes(isGo: isGo, mood: mood) }
+        .background { Washes(isGo: isGo) }
     }
 }
 
 /// Two soft blurred washes inside the system material, top left and top right. Go warms them.
 private struct Washes: View {
+    @Environment(\.restPalette) private var palette
     let isGo: Bool
-    let mood: RestMood
 
     var body: some View {
         GeometryReader { proxy in
             ZStack(alignment: .topLeading) {
                 Ellipse()
-                    .fill(RadialGradient(colors: [isGo ? Palette.goWash1 : mood.wash1, .clear], center: .center,
+                    .fill(RadialGradient(colors: [isGo ? palette.goWash1 : palette.wash1, .clear], center: .center,
                                          startRadius: 0, endRadius: 135))
                     .frame(width: 270, height: 150)
                     .offset(x: -40, y: -60)
                     .blur(radius: 8)
                 Ellipse()
-                    .fill(RadialGradient(colors: [isGo ? Palette.goWash2 : mood.wash2, .clear], center: .center,
+                    .fill(RadialGradient(colors: [isGo ? palette.goWash2 : palette.wash2, .clear], center: .center,
                                          startRadius: 0, endRadius: 110))
                     .frame(width: 220, height: 130)
                     .offset(x: proxy.size.width - 170, y: -40)
@@ -222,16 +204,17 @@ private enum RestFace {
 
 /// "Push A, set aside": no countdown, no Go, a quiet line until the app tidies the activity away.
 private struct SetAsideFace: View {
+    @Environment(\.restPalette) private var palette
     let title: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .font(Typeface.font(24, .medium))
-                .foregroundStyle(Palette.cream)
+                .foregroundStyle(palette.cream)
             Text("set aside")
                 .font(Typeface.font(17))
-                .foregroundStyle(Palette.cream.opacity(0.62))
+                .foregroundStyle(palette.cream.opacity(0.62))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
@@ -240,6 +223,7 @@ private struct SetAsideFace: View {
 
 /// The countdown (cream, Light, tabular), or "Go" pushing in from below. Always-On shows a still "Ready at 18:26".
 private struct Countdown: View {
+    @Environment(\.restPalette) private var palette
     let state: RestActivityAttributes.ContentState
     let isGo: Bool
     let size: CGFloat
@@ -255,7 +239,7 @@ private struct Countdown: View {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text("Ready at")
                         .font(Typeface.font(17))
-                        .foregroundStyle(Palette.cream.opacity(0.62))
+                        .foregroundStyle(palette.cream.opacity(0.62))
                     Text(state.restEndsAt, format: .dateTime.hour().minute())
                         .font(Typeface.numerals(size * 0.75))
                 }
@@ -268,7 +252,7 @@ private struct Countdown: View {
             }
         }
         .tracking(-size * 0.02)
-        .foregroundStyle(Palette.cream)
+        .foregroundStyle(palette.cream)
         .lineLimit(1)
         .minimumScaleFactor(0.7)
         .id(isGo)
@@ -277,6 +261,7 @@ private struct Countdown: View {
 
 /// The planned set is the Done button: tapping it logs the set, like hold to log.
 private struct PlannedSetButton: View {
+    @Environment(\.restPalette) private var palette
     let state: RestActivityAttributes.ContentState
     let isGo: Bool
     let nameSize: CGFloat
@@ -287,12 +272,12 @@ private struct PlannedSetButton: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(state.exercise)
                     .font(Typeface.font(nameSize))
-                    .foregroundStyle(Palette.cream.opacity(0.62))
+                    .foregroundStyle(palette.cream.opacity(0.62))
                     .padding(.trailing, 26)
                 Text(state.plannedSet)
                     .font(Typeface.font(setSize).monospacedDigit())
                     .tracking(-setSize * 0.01)
-                    .foregroundStyle(Palette.cream)
+                    .foregroundStyle(palette.cream)
             }
             .lineLimit(1)
             .minimumScaleFactor(0.75)
@@ -302,11 +287,11 @@ private struct PlannedSetButton: View {
                     if isGo {
                         // "Tap the set": a soft vermilion glow behind the tick.
                         Ellipse()
-                            .fill(RadialGradient(colors: [Palette.vermilion.opacity(0.55), .clear], center: .center,
+                            .fill(RadialGradient(colors: [palette.vermilion.opacity(0.55), .clear], center: .center,
                                                  startRadius: 0, endRadius: 22))
                             .frame(width: 44, height: 40)
                     }
-                    Tick(color: RestMood.current.tick, lineWidth: isGo ? 3 : 2.6)
+                    Tick(color: palette.tick, lineWidth: isGo ? 3 : 2.6)
                         .frame(width: 22, height: 18)
                 }
                 .offset(y: 4)
@@ -320,6 +305,7 @@ private struct PlannedSetButton: View {
 
 /// "+15" | "Skip", split by a hairline. Once rest is over +15 dims and Skip skips the set.
 private struct BottomKeys: View {
+    @Environment(\.restPalette) private var palette
     let isGo: Bool
 
     var body: some View {
@@ -333,7 +319,7 @@ private struct BottomKeys: View {
             }
             .frame(maxWidth: .infinity)
             Rectangle()
-                .fill(Palette.cream.opacity(0.16))
+                .fill(palette.cream.opacity(0.16))
                 .frame(width: 1, height: 18)
             Group {
                 if isGo {
@@ -345,7 +331,7 @@ private struct BottomKeys: View {
             .frame(maxWidth: .infinity)
         }
         .font(Typeface.font(18, .medium))
-        .foregroundStyle(Palette.cream)
+        .foregroundStyle(palette.cream)
         .buttonStyle(.plain)
     }
 
@@ -359,6 +345,7 @@ private struct BottomKeys: View {
 /// The horizon line: a cream stroke over a full-width 1.5pt guide that drains toward the left as rest runs out.
 /// The system animates `ProgressView(timerInterval:)`, so it drains even while the app is suspended.
 private struct HorizonLine: View {
+    @Environment(\.restPalette) private var palette
     let state: RestActivityAttributes.ContentState
     let isGo: Bool
     let color: Color
@@ -378,9 +365,9 @@ private struct HorizonLine: View {
     private var guide: some View {
         if Metric.curvedLine {
             HorizonCurve()
-                .stroke(Palette.cream.opacity(0.14), style: StrokeStyle(lineWidth: Metric.guideWidth, lineCap: .round))
+                .stroke(palette.cream.opacity(0.14), style: StrokeStyle(lineWidth: Metric.guideWidth, lineCap: .round))
         } else {
-            Rectangle().fill(Palette.cream.opacity(0.14)).frame(height: Metric.guideWidth)
+            Rectangle().fill(palette.cream.opacity(0.14)).frame(height: Metric.guideWidth)
         }
     }
 

@@ -3,6 +3,7 @@ import SwiftUI
 /// The concept's background layer, shared behind every page (pages themselves are transparent).
 struct ThemedBackground: View {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.tracksAppearance) private var tracksAppearance
 
     var body: some View {
         Group {
@@ -15,6 +16,7 @@ struct ThemedBackground: View {
         }
         // The workout is always dark, so it learns the appearance here, at the root.
         .onChange(of: colorScheme, initial: true) { _, scheme in
+            guard tracksAppearance else { return }
             ThemeStore.shared.systemIsDark = scheme == .dark
         }
     }
@@ -211,4 +213,28 @@ struct CompletionRenderer: TextRenderer, Animatable {
             }
         }
     }
+}
+
+extension View {
+    /// A pigment glow through `halo`: full on dark looks and the workout (pigment at 55%, radius 6+), a 3 pt blur at
+    /// 30% on light looks (themes.md addendum, "Glows").
+    func pigmentGlow(_ pigment: Color, radius: CGFloat = 7) -> some View {
+        modifier(PigmentGlow(pigment: pigment, radius: radius))
+    }
+}
+
+private struct PigmentGlow: ViewModifier {
+    let pigment: Color
+    let radius: CGFloat
+    @Environment(\.onWorkoutGround) private var onWorkoutGround
+
+    func body(content: Content) -> some View {
+        let full = onWorkoutGround || Theme.Colors.halo
+        content.shadow(color: pigment.opacity(full ? 0.55 : 0.3), radius: full ? radius : 3)
+    }
+}
+
+extension EnvironmentValues {
+    /// False inside the workout cover, whose pages are forced dark: they must not tell the theme the phone went dark.
+    @Entry var tracksAppearance = true
 }

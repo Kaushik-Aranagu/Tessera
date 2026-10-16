@@ -10,11 +10,12 @@ struct PaintFlood: View {
     var body: some View {
         Circle()
             .fill(RadialGradient(
+                // The incoming look's live, context, tess and now.
                 colors: [
-                    Color(hex: 0xC8452F),
-                    Color(hex: 0x7A5C8E),
-                    Color(hex: 0x2E6DA4),
-                    Color(hex: 0xE0B341).opacity(0),
+                    Theme.Colors.live,
+                    Theme.Colors.context,
+                    Theme.Colors.tess,
+                    Theme.Colors.now.opacity(0),
                 ],
                 center: .center, startRadius: 0, endRadius: 60
             ))

@@ -17,6 +17,7 @@ struct WorkoutModeView: View {
         if let session = model.session {
             NavigationStack(path: $model.workoutPath) {
                 WorkoutContent(session: session)
+                    .environment(\.onWorkoutGround, true)
                     .toolbarVisibility(.hidden, for: .navigationBar)
                     .navigationDestination(for: Route.self) { route in
                         ObjectPage(route: route)
@@ -29,7 +30,8 @@ struct WorkoutModeView: View {
                     }
             }
             .environment(\.zoomNamespace, zoom)
-            .environment(\.onWorkoutGround, true)
+            // Pages pushed inside the cover are forced dark; only the root may tell the theme the appearance.
+            .environment(\.tracksAppearance, false)
             // The workout keeps the look it opened in until it closes (theme-schedule.md).
             .onAppear { ThemeStore.shared.holdWorkoutLook() }
             .onDisappear { ThemeStore.shared.releaseWorkoutLook() }
