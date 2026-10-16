@@ -50,7 +50,7 @@ The expect column follows #357. In the "#356 today" column, private means `isPri
 | S12 | I shop at Trader Joe's on Saturdays | refused: "I don't keep places." | refused **as money** ("trader"). The reason is wrong, so Tess would say the money line |
 | S13 | I target 3 workouts a week | kept, Training | **refused as money** ("target") |
 | S14 | my chili recipe has 7 steps | kept, Kitchen | **refused** (health "steps") |
-| S15 | my key is sk-ant-… (any) | refused, never echoed | refused (`looksLikeKey`) ✓. Tess's line must not repeat the words |
+| S15 | my key is <a Claude key> (any) | refused, never echoed | refused (`looksLikeKey`) ✓. Tess's line must not repeat the words |
 | S16 | I don't eat pork | kept, Kitchen | kept, **Kitchen** ("eat") ✓ |
 | S17 | it's too hot to train when the sun sets late | kept, Training | kept, Training (via "train") ✓ |
 | S18 | I like espresso after lunch | kept, Kitchen | **Training**: "press" in "espresso" matches first |

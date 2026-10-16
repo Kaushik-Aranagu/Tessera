@@ -92,7 +92,7 @@ or any time by flipping Dark Mode in Control Center. The look never reads the cl
     again." and the headline "Kept on this iPhone". Tell us if nothing shows (the folder may sit in Recently Deleted).
 
 **Tess and the Claude key**
-32. **A key typed in the wrong place.** [#218] Write "sk-ant-test" (a made-up key, never a real one). Expect "That
+32. **A key typed in the wrong place.** [#218] Write "<key prefix>test" (a made-up key, never a real one). Expect "That
     looks like a Claude key. Paste it in Settings." and nothing saved.
 33. **Settings: Claude, no key.** [if merged by install; key store #218] Open Settings: Claude. Expect "Tess thinks on
     this phone only." and **Add a Claude key**. The LOOK sentence may move there from Review.

@@ -2,9 +2,9 @@
 
 For: Builder B (Settings: Claude, cloud mark, ghost row, plan), QA. Research lab, board item 85, 2026-10-16.
 Reads with `settings-claude.md` (S1 to S26), `claude-first-uses.md`, `tess-voice.md` (M1 to M58), `tess-model-layer.md`, `fixtures/grammar-miss-claude.md` (use 1), `fixtures/plan-my-day-claude.md` and `plan-my-day-prompt.md` (use 2).
-**Master read:** `origin/master` at `4518c48` (Merge PR #222), read with `git show` and `git grep`; nothing was run and no key was used. #218 (`5a24f54`) added `TesseraCore/Sources/TesseraTess/ClaudeKey.swift` (Keychain store, `TessUsageLedger`, `ClaudeKeyCheck` with one line per outcome), the `tessCall` class, the `sk-ant-` guards in `TessRouter` and the miss log, and `TessUse.keyCheck`. Nothing after #218 touches Claude.
+**Master read:** `origin/master` at `4518c48` (Merge PR #222), read with `git show` and `git grep`; nothing was run and no key was used. #218 (`5a24f54`) added `TesseraCore/Sources/TesseraTess/ClaudeKey.swift` (Keychain store, `TessUsageLedger`, `ClaudeKeyCheck` with one line per outcome), the `tessCall` class, the key-prefix guards in `TessRouter` and the miss log, and `TessUse.keyCheck`. Nothing after #218 touches Claude.
 **Not on master yet:** any Settings screen, Settings: Claude, the `SecureField` paste line, `ClaudeTessModel`, the cloud mark, "· via Claude", receipts, the month line, `TessInbox`, `NWPathMonitor`, Plan my day, `ProposePlan`. Every such step below gives the expected text only.
-Key placeholder in this file: `sk-ant-…`; last four: `a1B2`. No real key appears anywhere here.
+Key placeholder in this file: `<a Claude key>`; last four: `a1B2`. No real key appears anywhere here.
 
 ## The walk
 
@@ -15,11 +15,11 @@ Key placeholder in this file: `sk-ant-…`; last four: `a1B2`. No real key appea
 - **Flag F1:** M24 points at a screen master doesn't have. Fine once Settings: Claude ships; QA should not test M24 as "done" until then.
 
 ### 2. He taps Add and pastes a fresh key
-- **Does:** taps **Add a Claude key**, long-presses the 0.5pt cobalt writing line, pastes `sk-ant-…`.
+- **Does:** taps **Add a Claude key**, long-presses the 0.5pt cobalt writing line, pastes `<a Claude key>`.
 - **Master:** not on master yet.
 - **Expected (S2):** no Tess line; VoiceOver label "Claude key". A `SecureField`, autocorrect off, no `textContentType`, never in `@AppStorage` or `@SceneStorage`, long-press paste only (C13: no pasteboard read on open, so no iOS paste banner).
 - **Key exposure:** the draft must live in `@State` only and be cleared the moment Test returns. No `print`, `Logger`, `dump` or `debugDescription` of the field, the request or `allHTTPHeaderFields`. The scheme must not set `CFNETWORK_DIAGNOSTICS`.
-- **Whitespace (S3):** expected: strip all whitespace, anywhere, then go on. Master trims only the ends and then refuses a key with whitespace inside: `pasted.trimmingCharacters(in: .whitespacesAndNewlines)` then `guard key.hasPrefix("sk-ant-"), !key.contains(where: \.isWhitespace)` (`ClaudeKey.swift:185-186`). A key pasted from Notes with a wrapped line break gets S5's "That doesn't look like a Claude key. Paste it again?", which is wrong. **Flag F2.**
+- **Whitespace (S3):** expected: strip all whitespace, anywhere, then go on. Master trims only the ends and then refuses a key with whitespace inside: `pasted.trimmingCharacters(in: .whitespacesAndNewlines)` then `guard key.hasPrefix("<key prefix>"), !key.contains(where: \.isWhitespace)` (`ClaudeKey.swift:185-186`). A key pasted from Notes with a wrapped line break gets S5's "That doesn't look like a Claude key. Paste it again?", which is wrong. **Flag F2.**
 
 ### 3. The masking
 - **Master:** `ClaudeKeyCheck.Result.last4` is `String(key.suffix(4))` (`ClaudeKey.swift:189`), returned as nil only for a bad key (`:250`). The full key is held only in the `key` local and the request header (`:257`).
@@ -65,7 +65,7 @@ Key placeholder in this file: `sk-ant-…`; last four: `a1B2`. No real key appea
 - **Undo, expected:** "Call mom taken back." (M34). Master's `undoLastCapture()` (`App/AppModel.swift:226`) reverts the records but sets no line, so he gets silence. **Flag F10.**
 - **Pause rule, expected (S25):** 3 of 10 Claude ghost rows taken back in a row: "Misses on this phone today. 3 of 10 taken back." and Settings reads "Misses go to Claude: **not today**." Not on master yet.
 - **Fallbacks, expected:** offline "Kept it. I'll read it once you're online." (M12) and badge "1 waiting for Tess" (M13); busy "Claude is busy. Kept it for later." (M22); timeout "Claude timed out. Call mom?" (M18); cap "Claude paused until Nov 1. On-device until then." (M10, once a month).
-- **Key exposure in Ask:** the router guard runs only for text that reaches `model.ask`. `commit` sends anything with "best", a word "pr"/"prs", or a trailing "?" to `CommandInterpreter` first (`BottomChrome.swift:418-419`). A pasted key followed by "?" ("is this right sk-ant-…?") skips the guard, falls through to `model.capture(title:)` and is saved as a task titled "Is this right sk-ant-…?" (`BottomChrome.swift:637-641`). It then reaches the op log, Now, widgets, backups and exports. A key that starts the text is saved with a capital "Sk-ant-", which defeats every case-sensitive `sk-ant-` check. The leak test (`ClaudeKeyTests.swift:81-98`) only covers `TessCaptureEngine`, not this path. **Flag F11.**
+- **Key exposure in Ask:** the router guard runs only for text that reaches `model.ask`. `commit` sends anything with "best", a word "pr"/"prs", or a trailing "?" to `CommandInterpreter` first (`BottomChrome.swift:418-419`). A pasted key followed by "?" ("is this right <a Claude key>?") skips the guard, falls through to `model.capture(title:)` and is saved as a task titled "Is this right <a Claude key>?" (`BottomChrome.swift:637-641`). It then reaches the op log, Now, widgets, backups and exports. A key that starts the text is saved with a capital "<key prefix>", which defeats every case-sensitive the Claude key prefix check. The leak test (`ClaudeKeyTests.swift:81-98`) only covers `TessCaptureEngine`, not this path. **Flag F11.**
 - **Key on screen in Ask:** the Ask field is a plain `TextField` (`BottomChrome.swift:278`), and the drying ghost shows the whole pasted key at 45% for 2 s (`:280`, `:392`). Any screenshot or recording in that window shows the key. **Flag F12.**
 
 ### 8. First Plan my day on Claude (use 2)
@@ -87,8 +87,8 @@ Key placeholder in this file: `sk-ant-…`; last four: `a1B2`. No real key appea
 7. Wrong key (revoked in the Console): "That key didn't work. Paste it again?"; Keychain item gone; no UNDO.
 8. Airplane mode at Test: "No connection. I kept the key and will check it later."; key line `· not checked`; turn the network on, reopen: it checks once (F6).
 9. Ledger seeded at $10: "Key saved. Claude paused until Nov 1."; key line still says "works" (F7).
-10. After Test, search a backup, the export, the op log, `UserDefaults`, `capture-misses.jsonl` and the device console for `sk-ant-` and the key: zero hits.
-11. In Ask, paste the key alone, then the key plus "?", then "pr sk-ant-…": every case answers "That looks like a Claude key. Paste it in Settings." and writes nothing (F11).
+10. After Test, search a backup, the export, the op log, `UserDefaults`, `capture-misses.jsonl` and the device console for the Claude key prefix and the key: zero hits.
+11. In Ask, paste the key alone, then the key plus "?", then "pr <a Claude key>": every case answers "That looks like a Claude key. Paste it in Settings." and writes nothing (F11).
 12. First use-1 miss: cloud mark and VoiceOver "Sent to Claude" while out; ghost "Call mom, today 7:30 pm." with VIA CLAUDE; receipt then "Tess: $0.01 this month." (F9).
 13. Undo that ghost row: "Call mom taken back." (F10). Undo 3 of 10 in a row: S25 line and "not today".
 14. Offline miss: "Kept it. I'll read it once you're online." and "1 waiting for Tess"; back online, next open: "Read 1 waiting. 1 to check."
@@ -96,8 +96,8 @@ Key placeholder in this file: `sk-ant-…`; last four: `a1B2`. No real key appea
 
 ## Flags for Builder B
 
-1. **F11, key saved as a task.** `commit` (`BottomChrome.swift:418-419`) sends "?", "best" and "pr" text to `CommandInterpreter` before the router's `sk-ant-` guard. Check `sk-ant-` (case-insensitive) at the top of `commit` and `CommandInterpreter.run`, and add this path to the leak test.
-2. **F12, key visible in Ask.** Clear `commandDraft` and show M24 as soon as the draft holds `sk-ant-`, before Return and before the 2 s drying ghost (`BottomChrome.swift:278-294`, `:392`).
+1. **F11, key saved as a task.** `commit` (`BottomChrome.swift:418-419`) sends "?", "best" and "pr" text to `CommandInterpreter` before the router's key-prefix guard. Check the Claude key prefix (case-insensitive) at the top of `commit` and `CommandInterpreter.run`, and add this path to the leak test.
+2. **F12, key visible in Ask.** Clear `commandDraft` and show M24 as soon as the draft holds the Claude key prefix, before Return and before the 2 s drying ghost (`BottomChrome.swift:278-294`, `:392`).
 3. **F5, auth header.** Master sends `Authorization: Bearer` (`ClaudeKey.swift:257`). Confirm on the first real Test; if it 401s, switch to `x-api-key` before he pastes his key, or a good key is deleted.
 4. **F2, whitespace.** Strip all whitespace, not just the ends (`ClaudeKey.swift:185-186`), per S3.
 5. **F4, unchecked save.** `_ = keys.save(key)` (`:190`): if it returns false, show S13 "I couldn't check that key. Try again?", not "Key saved."

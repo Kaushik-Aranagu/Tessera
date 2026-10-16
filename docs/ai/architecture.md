@@ -161,7 +161,7 @@ No Opus or Fable. The Home lines eval (ship list AI-5) runs Haiku and Sonnet sid
 
 - **The switch.** "Tess asks Claude: no" means nothing leaves the phone: no lines, no plan, no misses, no links, no week story. Every job checks it at call time, inside `ClaudeClient`, so a new job can't forget.
 - **Never leaves the phone:** the key (except in the request header), health values, sleep, heart rate, body weight numbers, note bodies, money amounts and merchants, places and calendar locations or attendees, photos, cook timers, Siri and Shortcuts captures, demo data, weights and reps on any word-only job.
-- **Key.** Keychain only, this device only, never backed up, never in the repo, docs, memory or any thread. A pack containing `sk-ant-` is refused before sending.
+- **Key.** Keychain only, this device only, never backed up, never in the repo, docs, memory or any thread. A pack containing the Claude key prefix is refused before sending.
 - **Every pack is visible.** Each job has a snapshot test of exactly what it sends for its fixtures. A DEBUG "Last sent" view shows the last pack per job on the simulator.
 - **Settings promise (Design 50, settings-place.md addendum 839d521).** Under the spend line: "Titles and counts only. Never notes, places, health or money." Every Home and week pack holds that literally: object titles (routines, exercises, recipes, lists, his task titles), states, counts and times, and nothing else.
 - **Settings line** grows to say what goes: "Tess asks Claude when she's unsure, for Plan my day, and to word Home and your week." (Design owns the final copy.)

@@ -20,7 +20,7 @@ Every Test writes a `TessCall` row like any other call, so the $10 ledger sees i
 | Backups | `TesseraBackup.write` copies the whole SQLite store byte for byte (`context.database.backup(to:)`), so anything ever in the database lands in every `.tessera` copy |
 | Export | `TesseraExport(context:)` reads every class, object, link and `OpRecord` into JSON |
 
-**Nothing on master leaks a key today, because nothing holds one.** One path would leak it as soon as he has a key, though. If he pastes `sk-ant-...` into the Ask bar instead of Settings, the grammar or the on-device model can turn it into `createNote`.
+**Nothing on master leaks a key today, because nothing holds one.** One path would leak it as soon as he has a key, though. If he pastes `<a Claude key>` into the Ask bar instead of Settings, the grammar or the on-device model can turn it into `createNote`.
 That puts it in an `ObjectRecord`, an `OpRecord.summary`, the next daily `.tessera` copy and any export, and later it can go out in a Claude context pack. The fix is in §5, rule 1.
 
 ## 2. The call
@@ -69,7 +69,7 @@ The key is saved to the Keychain before any call. Lines follow `tess-voice.md`: 
 | K6 | Cap reached (ours) | `ledger.canSpend` is false. count_tokens costs 0, so it still runs; the 1-token fallback is not sent | Key saved. Claude paused until Nov 1. (M1 + M10) | `...a1B2 · works`, then M10 in place of M8 |
 | K7 | Server busy | 529 `overloaded_error`, 500 `api_error`, or 429 `rate_limit_error` with `retry-after` | Claude is busy right now. I'll check again soon. | `...a1B2 · not checked` |
 | K8 | Account paused (Anthropic's) | 429 with `error.details.error_code == "enforced_spend_limit_reached"` (tier cap, no `retry-after`); 400 whose message begins "You have reached your specified"; 402 `billing_error` | Key saved. Your Anthropic account is paused for now. | `...a1B2 · account paused`, with a link to the Console |
-| K9 | Not a key | The pasted text, after trimming, doesn't start with `sk-ant-`. Nothing is sent | That doesn't look like a Claude key. Paste it again? | Empty field |
+| K9 | Not a key | The pasted text, after trimming, doesn't start with the Claude key prefix. Nothing is sent | That doesn't look like a Claude key. Paste it again? | Empty field |
 | K10 | Anything else | Any other status, or a body that does not decode (after the §2 fallback) | I couldn't check that key. Try again? | `...a1B2 · not checked` |
 
 Notes. The docs don't say whether count_tokens enforces billing or spend limits, so K8 might only show up on the first real call; that call shows the same line (UNVERIFIED).
@@ -89,7 +89,7 @@ Keep `request-id` from the response header for support; it isn't secret. Retry K
 
 ## 5. Keeping the key out of everything
 
-1. **Guard the Ask bar.** In `TessRouter.run`, before any route: if the text contains `sk-ant-`, return line "That looks like a Claude key. Paste it in Settings." with no records and no op. The grammar, on-device and Claude routes never see it.
+1. **Guard the Ask bar.** In `TessRouter.run`, before any route: if the text contains the Claude key prefix, return line "That looks like a Claude key. Paste it in Settings." with no records and no op. The grammar, on-device and Claude routes never see it.
 2. **Keychain item.** `kSecClassGenericPassword`, service `com.kaushikaranagu.tessera.anthropic`, account `api-key`, `kSecAttrAccessible = kSecAttrAccessibleWhenUnlockedThisDeviceOnly`, `kSecAttrSynchronizable = false`.
    This is stricter than the `AfterFirstUnlock` in model-layer §3; Claude runs only with the app open, so WhenUnlocked is enough. It never syncs or restores to another device.
 3. **Read once per call.** Read the key into a local `String` and put it only in the `Authorization` header of a `URLRequest`. Never store it on `URLSessionConfiguration.httpAdditionalHeaders`, in a property that outlives the call, or in a `TessCall`.
