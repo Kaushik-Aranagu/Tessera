@@ -239,9 +239,11 @@ public enum DayStory {
             }
             switch action {
             case "startCooking":
-                guard onDay(record.createdAt, zone: zone(of: record)),
-                      let cook = record.objectIDs.first(where: { lookup.kind(of: $0) == "cook" }),
-                      let finish = cookFinish[cook], seenRoots.insert(cook).inserted
+                // A cook files on the day it was finished, read in the finish's zone, like a done task (Product G2,
+                // trip-week TW4); the line keeps its start time and its length.
+                guard let cook = record.objectIDs.first(where: { lookup.kind(of: $0) == "cook" }),
+                      let finish = cookFinish[cook], onDay(finish.createdAt, zone: zone(of: finish)),
+                      seenRoots.insert(cook).inserted
                 else { continue }
                 let minutes = Int((finish.createdAt.timeIntervalSince(record.createdAt) / 60).rounded())
                 lines.append((DayLine(time: record.createdAt,
