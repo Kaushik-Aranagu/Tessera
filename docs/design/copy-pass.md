@@ -15,7 +15,7 @@ Research 126 (`docs/research/copy-one-voice.md`, master) read every new line in 
 8. **No "…", no " · " outside a pack size, no "Home" on screen** (the page is Today).
 9. **Context lines never repeat a word the page already shows** (home-lines §2): no "the week so far" under "so far", no "morning" under a morning label, no "tonight" under "Tacos tonight".
 10. **What leaves the phone is said one way:** "Titles and counts only. Never notes, places, health or money."
-11. **Settings lines in Tess's colour speak as Tess:** first person. "I ask Claude when unsure, for Plan my day and Today.", "I stay on this phone."
+11. **Settings stays in the third person** (Product f80c08c: the switch is named for Tess and #320 shipped that copy): "Tess asks Claude when unsure, for Plan my day and Today.", "Tess stays on this phone." Tess's first person lives only in her own lines by the soul.
 
 ## The lines, by sheet
 | Sheet | Was | Now |
@@ -45,9 +45,9 @@ Research 126 (`docs/research/copy-one-voice.md`, master) read every new line in 
 | 49 | "Two things match. Swipe the one to forget." | "2 things match. Swipe the one to forget." |
 | 49 | "Train 6 to 8, forgotten." | "Train 6 to 8 pm, forgotten." (a noticed line's name is its whole text) |
 | 49 | 'like "remember that I rest on Sundays".' | 'like "remember that I rest on Sundays."' |
-| 50 `settings-place.md` | "Tess asks Claude when she's unsure, for Plan my day, and to word Home." | "I ask Claude when unsure, for Plan my day and Today." |
-| 50 | "…and to word Home and your week." | "I ask Claude when unsure, for plans, Today and your week." |
-| 50 | "Tess stays on this phone." | "I stay on this phone." |
+| 50 `settings-place.md` | "Tess asks Claude when she's unsure, for Plan my day, and to word Home." | "Tess asks Claude when unsure, for Plan my day and Today." |
+| 50 | "…and to word Home and your week." | "Tess asks Claude when unsure, for plans, Today and your week." |
+| 50 | "Tess stays on this phone." | stays (third person, Product f80c08c) |
 | 50 | "Claude paused until 1 Nov." | "Claude paused until Nov 1." |
 | 53 `plan-home.md` | "this morning, slept 6h40" / "this morning" | "from 8 am" |
 | 53 | "Four hours free" / "Two hours free" | "4 hours free" / "2 hours free" |

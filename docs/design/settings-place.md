@@ -111,4 +111,4 @@ The "Tess asks Claude" line's answer names what the switch covers, in the order 
 - Nothing else in the CLAUDE section changes for AI-6.
 
 ## Addendum, Oct 16: receipts and bests (Design 62, `copy-pass.md`)
-Tess's lines speak as Tess: "I ask Claude when unsure, for Plan my day and Today." (AI-4), "I ask Claude when unsure, for plans, Today and your week." (AI-11), "I stay on this phone."; "Claude paused until Nov 1."; the privacy line is the one wording everywhere. The full table is in `copy-pass.md`; where a clip still says the old words, the sheet wins.
+Settings stays in the third person (Product f80c08c): "Tess asks Claude when unsure, for Plan my day and Today." (AI-4), "Tess asks Claude when unsure, for plans, Today and your week." (AI-11), "Tess stays on this phone." as shipped; "Claude paused until Nov 1."; the privacy line is the one wording everywhere. The full table is in `copy-pass.md`; where a clip still says the old words, the sheet wins.

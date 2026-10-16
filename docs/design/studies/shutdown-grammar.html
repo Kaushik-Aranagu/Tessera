@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Shutdown on the new grammar</title>
+<!-- Design item 63: Shutdown at 21:00 on the Home frame of sheet 41 under the one-line grammar: the day label, the clock as the context line, "Shutdown" as the hero, the rows that roll with TOMORROW or LATER as their value, the tomorrow line as a writing line, CLOSE THE DAY as the ink-line key (hold 0.7 s), and the closed day with his line as the hero and Tess's close with UNDO. Research's slot lines B to F stand. ?look=por|obs; ?play records Porcelain. -->
+<!-- Design item 61: the Upkeep page (height is staleness, one line per chore), a chore, the first-run pick, the People page (one line per person) and a person, under the one-line, no-dots and one-base rules. ?look=por|obs; ?play records Porcelain (Upkeep). -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:36px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:56px;width:390px;line-height:22px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;--ink:245,242,236;--s2:.72;--s3:.38;--tess:#86B4FF;--ctx:#B7A6E0;--liveInk:#FF7A5C;--live:#FF5B3A;--now:#FFC23D;--health:#3FD49A;--tint:.62;--kb:#1C1C1E;--key:#3A3A3C;background:#000;color:rgb(var(--ink))}
+.ph.por{--ink:18,16,22;--s2:.66;--s3:.51;--tess:#2450D8;--ctx:#5A3DAF;--liveInk:#C23A22;--live:#E2432A;--now:#F0A500;--health:#12936A;--tint:.55;--kb:#D1D3D9;--key:#FFFFFF;background:#fff}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}
+.s3{color:rgba(var(--ink),var(--s3))}
+.b{font-size:21px;line-height:28px}
+.nw{white-space:nowrap}
+.tab{font-variant-numeric:tabular-nums}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px;white-space:nowrap}
+.ctx{color:var(--ctx)}
+.v{font-weight:600}
+.tl{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);z-index:6;color:var(--tess);font-size:21px;line-height:28px}
+.tl .u{display:block;font-weight:700;font-size:16px;letter-spacing:.08em;line-height:20px;margin-top:4px;color:var(--liveInk)}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:7}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px);mix-blend-mode:screen}
+.por .soul i{mix-blend-mode:multiply}
+.fade{position:absolute;left:0;right:0;top:686px;height:158px;z-index:5;background:linear-gradient(rgba(0,0,0,0),#000 50px,#000)}
+.por .fade{background:linear-gradient(rgba(255,255,255,0),#fff 50px,#fff)}
+.h56{font-size:56px;font-weight:500;letter-spacing:-.04em;line-height:60px;white-space:nowrap}
+.f18{font-size:18px;line-height:24px}
+.kb{position:absolute;left:0;right:0;bottom:0;height:300px;background:var(--kb);z-index:9}
+.kb i{position:absolute;height:42px;border-radius:5px;background:var(--key);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+.inkline{position:absolute;left:22px;height:1.5px;background:var(--tess);width:0}
+.caret{display:inline-block;width:1.5px;height:20px;background:var(--tess);vertical-align:-3px;margin-left:1px;animation:bl 1s steps(2) infinite}
+@keyframes bl{50%{opacity:0}}
+.hair{position:absolute;left:22px;width:346px;height:1.5px;background:rgba(var(--ink),.12)}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(255,255,255,.18);box-shadow:0 0 0 1.5px rgba(255,255,255,.6);opacity:0;z-index:30;transition:opacity .15s}
+.por #fing{background:rgba(0,0,0,.08);box-shadow:0 0 0 1.5px rgba(0,0,0,.35)}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;line-height:24px;max-width:2560px}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play'),POR=PLAY||Q.includes('look=por'),$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const H='cubic-bezier(.2,.8,.2,1)',SET='cubic-bezier(.3,1.3,.5,1)';
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+const pigOf=por=>por?['#2450D8','#E2432A','#F0A500']:['#86B4FF','#FF5B3A','#FFC23D'];
+const soul=(por,id='S')=>{const P=pigOf(por),f=.65,C=[[10,12.5],[32,10.5],[22,28.5]],cx=21.33,cy=17.17;return `<div class="soul" id="${id}">${C.map(([x,y],i)=>`<i style="left:${cx+(x-cx)*f-10+2}px;top:${cy+(y-cy)*f-8.5+3}px;background:radial-gradient(closest-side,${P[i]},${P[i]}33)"></i>`).join('')}</div>`};
+const back=(w)=>`<div class="abs lbl s2" style="left:22px;top:58px">‹ ${w}</div>`;
+const inkWord=(w,x,y,id='')=>`<div class="abs lbl" ${id?`id="${id}"`:''} style="left:${x}px;top:${y}px">${w}<svg style="position:absolute;left:0;top:22px;overflow:visible" width="${w.length*10.8}" height="12"><path d="${lens(w.length*10.8-6,1.6)}" fill="rgb(var(--ink))"/></svg></div>`;
+const line=(t,v,y,o={})=>`<div class="abs b nw${o.cls?' '+o.cls:''}" ${o.id?`id="${o.id}"`:''} style="left:22px;top:${y}px;${o.style||''}">${t}</div>${v?`<div class="abs lbl nw" ${o.id?`id="${o.id}v"`:''} style="right:22px;top:${y+5}px;font-weight:600;color:${o.wet?'var(--tess)':`rgba(var(--ink),var(--s2))`}">${v}</div>`:''}`;
+const phone=(c,inner,opt={})=>`<div><div class="cap">${c}</div><div class="ph${(opt.por??POR)?' por':''}" ${opt.id?`id="${opt.id}"`:''}>${inner}<div class="fade"></div>${opt.line?`<div class="tl">${opt.line}${opt.undo?'<span class="u">UNDO</span>':''}</div>`:''}${opt.nosoul?'':soul(opt.por??POR,opt.id?'S':'s'+Math.random().toString(36).slice(2,6))}${opt.fing?'<div id="fing"></div>':''}</div></div>`;
+// The Home frame of sheet 41: the tab row at 78 (TODAY with its ink line), the day label at 138, the context line at 186, the hero at 220. Nothing else of Home is on the page during Shutdown.
+const tabs=()=>inkWord('TODAY',22,78)+`<div class="abs lbl s2" style="left:108px;top:78px">TRAINING</div><div class="abs lbl s2" style="left:214px;top:78px">REVIEW</div><div class="abs lbl s2" style="left:300px;top:78px">KITCHEN</div>`;
+const frame=(o)=>tabs()+`<div class="abs b" id="dayl" style="left:22px;top:138px">${o.day}</div><div class="abs b ctx nw" id="ctxl" style="left:22px;top:186px">${o.ctx}</div>`;
+const hero=(t,y=220,two)=>two?`<div class="abs t44" style="left:22px;top:${y}px;white-space:normal;width:346px">${t}</div>`:`<div class="abs h56" style="left:22px;top:${y}px">${t}</div>`;
+const KB=(o)=>`<div class="kb" ${o.id?`id="${o.id}"`:''} style="${o.style||''}">${[0,1,2].map(r=>Array.from({length:r===2?7:10-r},(_,k)=>`<i style="left:${8+(r===1?20:r===2?60:0)+k*38}px;top:${44+r*52}px;width:32px"></i>`).join('')).join('')}<i style="left:8px;top:200px;width:84px"></i><i style="left:100px;top:200px;width:186px"></i><i style="left:294px;top:200px;width:88px;background:var(--tess)"></i><div class="done lbl" style="position:absolute;right:22px;top:-32px">DONE</div></div>`;
+// Shutdown. Rows that roll: one Body 21 line each with TOMORROW as the value; a tap makes it LATER. The tomorrow line is a writing line at Field 18 under TOMORROW, FIRST. CLOSE THE DAY is the ink-line key, a hold of 0.7 s.
+const ROWS=[['Book the physio','TOMORROW'],['Clean the oven','TOMORROW'],['Reply to the landlord','TOMORROW']];
+const shutdown=(o)=>{let h=frame(o)+hero(o.hero||'Shutdown');let y=296;const rows=o.rows===undefined?ROWS:o.rows;
+ if(rows&&rows.length){h+=`<div class="abs lbl s2" id="rlbl" style="left:22px;top:${y}px">${rows.length} MOVING TO ${o.to||'TOMORROW'}</div>`;y+=32;rows.forEach(([n,v],i)=>{h+=line(n,v,y,{id:o.ids?'r'+i:'',style:v==='LATER'?`color:rgba(var(--ink),var(--s2))`:''});y+=40});y+=8}
+ h+=`<div class="abs lbl s2" id="tlbl" style="left:22px;top:${y}px">TOMORROW, FIRST</div><div class="abs f18" id="wl" style="left:22px;top:${y+32}px;width:346px;color:${o.typed?'rgb(var(--ink))':`rgba(var(--ink),var(--s2))`}">${o.typed||o.ph||''}${o.caret?'<span class="caret"></span>':''}</div><div class="hair" id="wh" style="top:${y+64}px"></div>`;
+ return h+inkWord('CLOSE THE DAY',22,y+120,o.ids?'close':'')};
+const closed=(o)=>frame(o)+hero(o.line,220,o.two)+`<div class="abs lbl s2" style="left:22px;top:${o.two?346:296}px">${o.then}</div>`;
+const D1='Tomorrow starts with Standup at 9:30 am.';
+if(!PLAY){
+ $('row').innerHTML=phone('SHUTDOWN AT 9:04 PM: THE CLOCK, ROWS WITH TOMORROW AS THE VALUE, THE LINE, THE KEY',shutdown({day:'Thursday evening',ctx:'9:04 pm',ph:D1}),{por:1,line:'Did 4 tasks, 1 workout, cooked once.'})
+  +phone('A ROW TO LATER, THE LINE TYPED ABOVE THE KEYS, DONE OVER THE KEYBOARD',(()=>{let h=frame({day:'Thursday evening',ctx:'9:04 pm'});h+=`<div class="abs" style="inset:0;opacity:.25;filter:blur(3px)">${hero('Shutdown')}<div class="abs lbl s2" style="left:22px;top:296px">3 MOVING TO TOMORROW</div>${line('Book the physio','TOMORROW',328)}${line('Clean the oven','LATER',368,{style:`color:rgba(var(--ink),var(--s2))`})}${line('Reply to the landlord','TOMORROW',408)}${inkWord('CLOSE THE DAY',22,584)}</div><div class="abs lbl s2" style="left:22px;top:444px">TOMORROW, FIRST</div><div class="abs f18" style="left:22px;top:468px;width:346px">Reply to the landlord<span class="caret"></span></div><div class="hair" style="top:500px"></div><div class="inkline" style="top:500px;width:346px"></div>`+KB({});return h})(),{por:1,nosoul:1})
+  +phone('THE LINE SAID: HOLD THE SOUL, THE WORDS LAND IN THE LINE, WET, AND DRY',shutdown({day:'Thursday evening',ctx:'9:06 pm',typed:'<span style="color:var(--tess)">Reply to the landlord</span>'})+'<div id="fing" style="opacity:1;left:346px;top:779px"></div>',{por:0,line:'Reply to the landlord, tomorrow first.'})
+  +phone('THE CLOSED DAY: HIS LINE AS THE HERO, THEN PULL A, TESS\'S CLOSE WITH UNDO',closed({day:'Thursday night',ctx:'tomorrow, first',line:'Reply to the landlord',two:1,then:'THEN PULL A, 7:30 AM'}),{por:0,line:'Closed. Your line is waiting at 8 am.',undo:1})
+  +phone('LATE NIGHT: THE ROWS MOVE TO FRIDAY, TESS FILES THE DAY UNDER THURSDAY',shutdown({day:'Thursday night',ctx:'12:40 am',to:'FRIDAY',rows:[['Book the physio','FRIDAY'],['Clean the oven','FRIDAY']],ph:D1}),{por:0,line:'Filed under Thursday. Did 3 tasks, cooked once.'})
+  +phone('A QUIET ONE: NO ROWS, TESS OFFERS THE LINE, NOTHING ELSE ON THE PAGE',shutdown({day:'Thursday evening',ctx:'9:00 pm',rows:[]}),{por:1,line:'A quiet one. Want a line for tomorrow?'});
+ $('note').innerHTML='SHUTDOWN UNDER THE ONE-LINE GRAMMAR, ON SHEET 41\'S HOME FRAME: THE DAY LABEL AT 138, THE CLOCK AS THE CONTEXT LINE AT 186, "SHUTDOWN" AS THE HERO AT 220. RESEARCH\'S OPENER (SLOT B) IS TESS\'S LINE; THE CARRY-OVER COUNT (SLOT C) IS THE LABEL WORD OVER THE ROWS; EACH ROW THAT ROLLS IS ONE BODY 21 LINE WITH TOMORROW AS ITS VALUE, A TAP MAKES IT LATER (THE VALUE CROSSFADES, NO STRIKE); THE TOMORROW LINE (SLOT D) IS A WRITING LINE AT FIELD 18; CLOSE THE DAY IS THE INK-LINE KEY, A HOLD OF 0.7 S. THE CLOSED DAY: HIS LINE AS THE HERO IN THE FITTING FORM, THEN PULL A AS A LABEL WORD, TESS\'S CLOSE (SLOT E) WITH UNDO 10 S. GONE: THE DAY STROKE, THE TITLE 34 OPENER, THE INK-LINE STRIKE, "SHUTDOWN COMPLETE" AT TITLE 34, THE MIDDLE DOT IN "THEN PULL A · 07:30". NO EVENING WASH, NO DOTS, NO COUNT OF WHAT DIDN\'T HAPPEN.';
+ document.fonts.ready.then(()=>setTimeout(()=>document.body.dataset.done='1',200));
+}else{
+ $('row').innerHTML=phone('SHUTDOWN',shutdown({day:'Thursday evening',ctx:'9:04 pm',ph:D1,ids:1}),{id:'P',fing:1,por:1,line:'Did 4 tasks, 1 workout, cooked once.'});
+ const P=$('P'),f=$('fing'),cap=document.querySelector('.cap'),setCap=t=>cap.textContent=t;
+ const tap=async(x,y,hold=170)=>{f.style.left=x+'px';f.style.top=y+'px';f.style.opacity=1;await sleep(hold);f.style.opacity=0};
+ const xf=async(el,txt,o=180,i=380)=>{el.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:o,fill:'forwards'});await sleep(o);el.innerHTML=txt;el.animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:i,easing:H,fill:'forwards'})};
+ (async()=>{document.body.dataset.start='1';await sleep(1400);
+  setCap('TAP CLEAN THE OVEN: TOMORROW BECOMES LATER');await tap(330,382);const r1=$('r1'),r1v=$('r1v');xf(r1v,'LATER',160,360);r1.animate([{color:'rgb(18,16,22)'},{color:'rgba(18,16,22,.66)'}],{duration:360,fill:'forwards'});await sleep(1300);
+  setCap('TAP THE LINE: THE KEYBOARD RISES AND THE LINE RIDES UP ABOVE THE KEYS');const wl=$('wl'),wh=$('wh'),tl=$('tlbl');await tap(120,500);
+  P.insertAdjacentHTML('beforeend',KB({id:'kb',style:'transform:translateY(300px)'}));$('kb').animate([{transform:'translateY(300px)'},{transform:'translateY(0)'}],{duration:340,easing:H,fill:'forwards'});
+  const ride=[[tl,444],[wl,468],[wh,500]];const orig=ride.map(([el])=>el.style.top);for(const [el,y] of ride)el.animate([{top:el.style.top},{top:y+'px'}],{duration:340,easing:H,fill:'forwards'});
+  const others=['rlbl','r0','r0v','r1','r1v','r2','r2v','close'].map($);others.forEach(el=>el.animate([{opacity:1,filter:'blur(0)'},{opacity:.25,filter:'blur(3px)'}],{duration:420,fill:'forwards'}));P.querySelector('.h56').animate([{opacity:1,filter:'blur(0)'},{opacity:.25,filter:'blur(3px)'}],{duration:420,fill:'forwards'});P.querySelector('.tl').animate([{opacity:1},{opacity:0}],{duration:300,fill:'forwards'});
+  await sleep(500);wl.style.color='rgb(18,16,22)';wl.innerHTML='<span class="caret"></span>';const T='Reply to the landlord';let s='';for(const ch of T){s+=ch;wl.innerHTML=s+'<span class="caret"></span>';await sleep(48)}
+  P.insertAdjacentHTML('beforeend','<div class="inkline" id="il" style="top:500px"></div>');$('il').animate([{width:'0'},{width:'346px'}],{duration:420,easing:H,fill:'forwards'});await sleep(700);
+  setCap('DONE: THE KEYBOARD DROPS, THE LINE RIDES BACK IN INK, THE PAGE RETURNS');await tap(340,512);$('kb').animate([{transform:'translateY(0)'},{transform:'translateY(300px)'}],{duration:320,easing:H,fill:'forwards'});
+  ride.forEach(([el,y],i)=>el.animate([{top:y+'px'},{top:orig[i]}],{duration:340,easing:H,fill:'forwards'}));$('il').animate([{top:'500px'},{top:orig[2]}],{duration:340,easing:H,fill:'forwards'});wl.innerHTML=T;
+  others.forEach(el=>el.animate([{opacity:.25,filter:'blur(3px)'},{opacity:1,filter:'blur(0)'}],{duration:420,fill:'forwards'}));P.querySelector('.h56').animate([{opacity:.25,filter:'blur(3px)'},{opacity:1,filter:'blur(0)'}],{duration:420,fill:'forwards'});await sleep(400);$('kb').remove();await sleep(900);
+  setCap('HOLD CLOSE THE DAY 0.7 S: THE INK LINE EMPTIES TO A TRACE AND REPAINTS');const cl=$('close'),path=cl.querySelector('path');f.style.left='70px';f.style.top='588px';f.style.opacity=1;
+  path.animate([{opacity:1},{opacity:.35,transform:'scaleY(.6)'},{opacity:1,transform:'scaleY(1)'}],{duration:700,easing:'linear',fill:'forwards'});await sleep(720);f.style.opacity=0;
+  setCap('THE HANDOFF: EACH TOMORROW LIFTS AWAY AND THE COLUMN FOLDS');[$('r0v'),$('r2v')].forEach((el,i)=>el.animate([{transform:'translateY(0)',opacity:1,filter:'blur(0)'},{transform:'translateY(-220px) scale(.7)',opacity:0,filter:'blur(3px)'}],{duration:620,delay:i*80,easing:H,fill:'forwards'}));
+  await sleep(300);['rlbl','r0','r1','r1v','r2','tlbl','wl','wh','close','il'].map($).forEach(el=>el.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(3px)'}],{duration:420,fill:'forwards'}));P.querySelector('.h56').animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(3px)'}],{duration:420,fill:'forwards'});await sleep(500);
+  setCap('THE CLOSED DAY: HIS LINE AS THE HERO, TESS CLOSES WITH UNDO');xf($('dayl'),'Thursday night');xf($('ctxl'),'tomorrow, first');
+  P.insertAdjacentHTML('beforeend',`<div class="abs" id="cd" style="inset:0;opacity:0">${hero('Reply to the landlord',220,1)}<div class="abs lbl s2" style="left:22px;top:346px">THEN PULL A, 7:30 AM</div></div>`);$('cd').animate([{opacity:0,transform:'scale(.97)'},{opacity:1,transform:'scale(1)'}],{duration:480,easing:H,fill:'forwards'});
+  P.insertAdjacentHTML('beforeend',`<div class="tl" style="opacity:0">Closed. Your line is waiting at 8&nbsp;am.<span class="u">UNDO</span></div>`);P.lastElementChild.animate([{opacity:0},{opacity:1}],{duration:300,delay:200,fill:'forwards'});
+  await sleep(2600);document.body.dataset.done='1'})();
+}
+</script>
+</body>
+</html>
