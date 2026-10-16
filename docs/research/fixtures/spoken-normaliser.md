@@ -7,7 +7,7 @@ These are 80 transcript-to-text rows for the normaliser that sits between `Speec
 ## How to read the table
 
 **Clock and fixtures.** Thu 15 Oct 2026, 18:00 Europe/London, the same as `../grammar-collisions.md`. Contexts:
-- **W**: live workout, Bench Press in focus, last set 80 x 8.
+- **W**: live workout, Bench Press in focus, last set 80 × 8.
 - **I**: idle.
 - **C**: cooking Weeknight dal.
 - **S**: a shop run is going.
@@ -21,7 +21,7 @@ These are 80 transcript-to-text rows for the normaliser that sits between `Speec
 
 **Case.** The normalised column keeps the transcriber's case. `TessGrammar.normalize` lowercases for matching anyway, while `parseTask` and `parseNote` build titles and bodies from the phrase as given, so lowercasing here would turn "Call Ravi" into "Call ravi". This differs from the 30 rows in `speech-capture.md`, which are all lowercase (open question 1).
 
-**Operators.** Rows write `x` between weight and reps to match the 30 rows. The grammar already accepts `W for R` in both relative sets and named lifts (open question 2).
+**Operators.** Rows write × between weight and reps, because the normalised text is the clean sentence shown in the voice ghost, and × is the on-screen sign everywhere in the app (Design, speak.md `d288c11`, point 4). The grammar reads × as x (`TessGrammar.normalize`, `TessGrammar.swift:508` at `fdcaee4`), so every parse below is the same as with x. Typed or spoken x, `for`, `times`, `into` and `by` still parse: the normaliser turns spoken `by`, `times` and `into` between two numbers into × (rule 12), and the grammar reads `W x R` and `W for R` (`TessGrammar.swift:286`). A typed "80 by 8" is not a set on master ("by" parses only in the 2 × 10 ask, `TessGrammar+Live.swift:123`); see rows 81 to 83 and the item 100 section. The grammar already accepts `W for R` in both relative sets and named lifts (open question 2).
 
 ## Fixture rows
 
@@ -29,27 +29,27 @@ These are 80 transcript-to-text rows for the normaliser that sits between `Speec
 
 | # | Ctx | Raw transcript | Normalised | Expected grammar intent | Note |
 |---|---|---|---|---|---|
-| 1 | W | Eighty-five for six. | 85 x 6 | G: set 85 x 6 | Hyphenated number words. The sentence period goes |
-| 2 | W | 100 and 7.5 for 3. | 107.5 x 3 | G: set 107.5 x 3 | "and" joins a hundred-run even when the transcriber already wrote digits |
-| 3 | I | Squat one oh 2.5 for 5. | Squat 102.5 x 5 | G: lift Back Squat 102.5 x 5 | "oh" is 0 only inside a digit run ("one oh two"). A lone "oh" is a word |
-| 4 | W | 80 kilos times 8. | 80 kg x 8 | G: set 80 x 8 | "kilos" to kg, "times" to x |
-| 5 | W | Same again. | same again | G: set 80 x 8 (same) | Already a grammar phrase. Only the period goes |
-| 6 | W | Same weight, one more rep. | Same weight one more rep | **PASS** today. G\*: set 80 x 9 once a "same weight, one more rep" relative rule exists | **Trap.** "one more" must never become "1 more": the grammar matches the words `one more` |
-| 7 | W | Drop to 70. | drop to 70 | G\*: drop set 70 x ? (take the last reps, or ask). Today M | The drop regex needs `for R`. "to" stays after drop, never x |
-| 8 | W | 80 for 8 at 8. | 80 x 8 @8 | G\*: set 80 x 8, RPE 8 | No RPE in the grammar on master. `@8` with no space becomes an exercise word, and `@ 8` or `at 8` after a scheme is read as a weight (G:117). The normaliser writes `@N` glued, so it never looks like the weight form |
-| 9 | W | 82.5 for 6 at RPE 9. | 82.5 x 6 @9 | G\*: set 82.5 x 6, RPE 9 | "at RPE N" and "RPE N" both give `@N` |
-| 10 | W | 85 for 5 at nine and a half. | 85 x 5 @9.5 | G\*: set 85 x 5, RPE 9.5 | Half steps only. "at 9.25" stays as said |
-| 11 | W | Same, at 9. | same @9 | G\*: set 80 x 8, RPE 9 | RPE after `same` |
-| 12 | I | Bench 3 sets of 8 at 80. | Bench 3x8 at 80 | G: lift Bench Press 3 x 8 at 80 kg | `at 80` stays: over 10, so a weight, never RPE |
+| 1 | W | Eighty-five for six. | 85 × 6 | G: set 85 × 6 | Hyphenated number words. The sentence period goes |
+| 2 | W | 100 and 7.5 for 3. | 107.5 × 3 | G: set 107.5 × 3 | "and" joins a hundred-run even when the transcriber already wrote digits |
+| 3 | I | Squat one oh 2.5 for 5. | Squat 102.5 × 5 | G: lift Back Squat 102.5 × 5 | "oh" is 0 only inside a digit run ("one oh two"). A lone "oh" is a word |
+| 4 | W | 80 kilos times 8. | 80 kg x 8 | G: set 80 × 8 | "kilos" to kg, "times" to × |
+| 5 | W | Same again. | same again | G: set 80 × 8 (same) | Already a grammar phrase. Only the period goes |
+| 6 | W | Same weight, one more rep. | Same weight one more rep | **PASS** today. G\*: set 80 × 9 once a "same weight, one more rep" relative rule exists | **Trap.** "one more" must never become "1 more": the grammar matches the words `one more` |
+| 7 | W | Drop to 70. | drop to 70 | G\*: drop set 70 × ? (take the last reps, or ask). Today M | The drop regex needs `for R`. "to" stays after drop, never × |
+| 8 | W | 80 for 8 at 8. | 80 × 8 @8 | G\*: set 80 × 8, RPE 8 | No RPE in the grammar on master. `@8` with no space becomes an exercise word, and `@ 8` or `at 8` after a scheme is read as a weight (G:117). The normaliser writes `@N` glued, so it never looks like the weight form |
+| 9 | W | 82.5 for 6 at RPE 9. | 82.5 × 6 @9 | G\*: set 82.5 × 6, RPE 9 | "at RPE N" and "RPE N" both give `@N` |
+| 10 | W | 85 for 5 at nine and a half. | 85 × 5 @9.5 | G\*: set 85 × 5, RPE 9.5 | Half steps only. "at 9.25" stays as said |
+| 11 | W | Same, at 9. | same @9 | G\*: set 80 × 8, RPE 9 | RPE after `same` |
+| 12 | I | Bench 3 sets of 8 at 80. | Bench 3×8 at 80 | G: lift Bench Press 3 × 8 at 80 kg | `at 80` stays: over 10, so a weight, never RPE |
 | 13 | I | Deadlift 2 plates for 5. | Deadlift 2 plates for 5 | **PASS**: M logExercise (the model works out the load from plates and bar) | "for" sits between a noun and a number, so it stays. Plate counts need bar maths, not the grammar. GC rule 6 (whole words) keeps "plates" from matching an exercise |
-| 14 | W | 8 reps. | 8 | G: set 80 x 8 (reps only) | A trailing "reps" goes |
-| 15 | W | Add two and a half. | add 2.5 | G\*: next set 82.5 x 8 (GC 41). Today M | "two and a half" is 2.5 |
-| 16 | W | 80 for 8, 80 for 8, 80 for 6. | 80 x 8, 80 x 8, 80 x 6 | G: sets, 3 sets into Bench | **Trap.** Keep commas between complete sets. `parseCommaSets` needs them |
-| 17 | I | Squat 100, 5. | Squat 100, 5 | G: lift Back Squat 100 x 5 | Keep a comma between two bare numbers too. The grammar reads it as weight, then reps |
-| 18 | W | 80 for ate. | 80 x 8 | G: set 80 x 8 | "ate" is 8 only in a number slot (after for or x, or alone in W) |
-| 19 | W | Eighty into eight. | 80 x 8 | G: set 80 x 8 | en-IN: "into" means times, only between two numbers |
-| 20 | I | Three into ten bench at eighty. | 3x10 Bench at 80 | G: lift Bench Press 3 x 10 at 80 kg | en-IN "into" for sets x reps |
-| 21 | I | Bench 80 kg, 8 reps only. | Bench 80 kg, 8 | G: lift Bench Press 80 x 8 | en-IN emphasis "only" after a number goes, and so does "reps". The comma stays (row 17) |
+| 14 | W | 8 reps. | 8 | G: set 80 × 8 (reps only) | A trailing "reps" goes |
+| 15 | W | Add two and a half. | add 2.5 | G\*: next set 82.5 × 8 (GC 41). Today M | "two and a half" is 2.5 |
+| 16 | W | 80 for 8, 80 for 8, 80 for 6. | 80 × 8, 80 × 8, 80 × 6 | G: sets, 3 sets into Bench | **Trap.** Keep commas between complete sets. `parseCommaSets` needs them |
+| 17 | I | Squat 100, 5. | Squat 100, 5 | G: lift Back Squat 100 × 5 | Keep a comma between two bare numbers too. The grammar reads it as weight, then reps |
+| 18 | W | 80 for ate. | 80 × 8 | G: set 80 × 8 | "ate" is 8 only in a number slot (after for or x, or alone in W) |
+| 19 | W | Eighty into eight. | 80 × 8 | G: set 80 × 8 | en-IN: "into" means times, only between two numbers |
+| 20 | I | Three into ten bench at eighty. | 3×10 Bench at 80 | G: lift Bench Press 3 × 10 at 80 kg | en-IN "into" for sets x reps |
+| 21 | I | Bench 80 kg, 8 reps only. | Bench 80 kg, 8 | G: lift Bench Press 80 × 8 | en-IN emphasis "only" after a number goes, and so does "reps". The comma stays (row 17) |
 
 ### Pounds
 
@@ -65,14 +65,14 @@ These are 80 transcript-to-text rows for the normaliser that sits between `Speec
 
 | # | Ctx | Raw transcript | Normalised | Expected grammar intent | Note |
 |---|---|---|---|---|---|
-| 27 | W | Okay Tess, 80 for 8. | 80 x 8 | G: set 80 x 8 | A leading "okay Tess", "hey Tess" or "Tess," goes, with its comma |
-| 28 | W | Uh, uh, 80, 80 for 8. | 80 x 8 | G: set 80 x 8 | A repeated number collapses. "80," on its own is not a complete set, so its comma goes |
-| 29 | W | Yeah. Yeah. 80 for 7. | 80 x 7 | G: set 80 x 7 | A sentence made only of fillers ("yeah", "okay", "right") goes |
-| 30 | W | Come on. Come on. 80 for 7. | Come on come on 80 x 7 | M: logExercise 80 x 7 | Real words are never dropped, even a spotter's. The "Heard" line shows them. Gym noise is not the normaliser's job |
-| 31 | W | 80 for, for 8. | 80 x 8 | G: set 80 x 8 | Stutter. "for for" before a number collapses. At the end it means "for 4" (speech-capture row 10), so the homophone check runs before repeats collapse |
-| 32 | W | 80 for 7 for | 80 x 7 | G: set 80 x 7, shown as doubtful | A dangling operator after a full set goes (a plate clang or cut-off). "for" becomes 4 only when one number has been said |
+| 27 | W | Okay Tess, 80 for 8. | 80 × 8 | G: set 80 × 8 | A leading "okay Tess", "hey Tess" or "Tess," goes, with its comma |
+| 28 | W | Uh, uh, 80, 80 for 8. | 80 × 8 | G: set 80 × 8 | A repeated number collapses. "80," on its own is not a complete set, so its comma goes |
+| 29 | W | Yeah. Yeah. 80 for 7. | 80 × 7 | G: set 80 × 7 | A sentence made only of fillers ("yeah", "okay", "right") goes |
+| 30 | W | Come on. Come on. 80 for 7. | Come on come on 80 × 7 | M: logExercise 80 × 7 | Real words are never dropped, even a spotter's. The "Heard" line shows them. Gym noise is not the normaliser's job |
+| 31 | W | 80 for, for 8. | 80 × 8 | G: set 80 × 8 | Stutter. "for for" before a number collapses. At the end it means "for 4" (speech-capture row 10), so the homophone check runs before repeats collapse |
+| 32 | W | 80 for 7 for | 80 × 7 | G: set 80 × 7, shown as doubtful | A dangling operator after a full set goes (a plate clang or cut-off). "for" becomes 4 only when one number has been said |
 | 33 | W | Um. | (empty) | none: "Didn't hear anything." | Fillers only |
-| 34 | W | Test, 80 for 8. | 80 x 8 | G: set 80 x 8 | "Tess" misheard as "Test". It goes only as the first word with a comma straight after it |
+| 34 | W | Test, 80 for 8. | 80 × 8 | G: set 80 × 8 | "Tess" misheard as "Test". It goes only as the first word with a comma straight after it |
 | 35 | I | Test the smoke alarm Saturday. | Test the smoke alarm Saturday | G: task "Test the smoke alarm", Sat 17 Oct 09:00 | Trap pair with row 34: no comma, so "Test" stays |
 | 36 | I | Okay Tess, I'd like a reminder for Friday to book the MOT. | I'd like a reminder for Friday to book the MOT | M: createTask "Book the MOT", Fri 16 Oct | "like" stays (not next to a number). Today the date cue makes a wrong task "I'd like a reminder for to book the MOT" (GC rule 5 should send it to the model) |
 | 37 | I | Please remind me to call Ravi tomorrow, thanks. | Remind me to call Ravi tomorrow | G: task "Call Ravi", Fri 16 Oct 09:00 | Politeness at the edges goes. Case kept for the name |
@@ -114,10 +114,10 @@ These are 80 transcript-to-text rows for the normaliser that sits between `Speec
 
 | # | Ctx | Raw transcript | Normalised | Expected grammar intent | Note |
 |---|---|---|---|---|---|
-| 61 | I | Spent twelve fifty at Tesco. | Spent 12.50 at Tesco | G\*: spend 12.50, note "Tesco" (M5 Money draft). Today M | After a money cue ("spent", "paid", "cost", £), "twelve fifty" is 12.50, never 1250 or 12 x 50 |
+| 61 | I | Spent twelve fifty at Tesco. | Spent 12.50 at Tesco | G\*: spend 12.50, note "Tesco" (M5 Money draft). Today M | After a money cue ("spent", "paid", "cost", £), "twelve fifty" is 12.50, never 1250 or 12 × 50 |
 | 62 | I | Spent 1250 at Tesco. | Spent 1250 at Tesco | **PASS**: M LogSpend (after Money 1; until then no tool), ask "12.50 or 1250?" | The transcriber already wrote "twelve fifty" as 1250. The normaliser cannot know (open question 6) |
 | 63 | I | Lunch was a tenner. | Lunch was £10 | M: LogSpend 10 GBP, note "lunch" (after Money 1; until then no tool) | "a tenner" £10, "a fiver" £5. Messy phrases go to the model (M5 draft) |
-| 64 | I | 20 quid for petrol. | 20 quid for petrol | G\*: spend 20 GBP, note "petrol" | "for" after a money amount is never x. "quid" stays, since the draft `MoneyAmount.parse` reads it |
+| 64 | I | 20 quid for petrol. | 20 quid for petrol | G\*: spend 20 GBP, note "petrol" | "for" after a money amount is never ×. "quid" stays, since the draft `MoneyAmount.parse` reads it |
 | 65 | I | Spent fifteen hundred on petrol. | Spent 1500 on petrol | G\*: spend 1500, home currency | "fifteen hundred" is 1500 |
 | 66 | I | Spent 1,00,000 on the bike. | Spent 100000 on the bike | G\*: spend 100000 | Indian digit grouping (one lakh) loses its commas. Said as "one lakh", the result is the same |
 | 67 | I | Paid one lakh twenty thousand rupees deposit. | Paid 120000 rs deposit | M: LogSpend 120000 INR, note "deposit" (after Money 1; until then no tool) | "lakh" and "crore" are number words. "rupees" to rs. "paid" is not a draft grammar prefix |
@@ -135,8 +135,8 @@ These are 80 transcript-to-text rows for the normaliser that sits between `Speec
 
 | # | Ctx | Raw transcript | Normalised | Expected grammar intent | Note |
 |---|---|---|---|---|---|
-| 72 | W | Eighty, no wait, eighty-five for eight. | 85 x 8 | G: set 85 x 8 | The correction replaces the number before the cue |
-| 73 | W | 80 for 8, sorry, 9. | 80 x 9 | G: set 80 x 9 | It replaces the last number, here the reps |
+| 72 | W | Eighty, no wait, eighty-five for eight. | 85 × 8 | G: set 85 × 8 | The correction replaces the number before the cue |
+| 73 | W | 80 for 8, sorry, 9. | 80 × 9 | G: set 80 × 9 | It replaces the last number, here the reps |
 | 74 | I | Buy oat milk, no wait, almond milk. | Buy oat milk, no wait, almond milk | **PASS**: M addGroceries ["almond milk"] | A correction cue with no number or weekday after it is not resolved. The phrase skips the grammar, which would otherwise add three lines including "no wait" |
 
 ### Must not be rewritten
@@ -146,11 +146,19 @@ These are 80 transcript-to-text rows for the normaliser that sits between `Speec
 | 75 | I | Remind me to eat five a day. | Remind me to eat five a day | G: task "Eat five a day", no date | Protected phrase. "a day" is not a date |
 | 76 | I | Meeting in Room 101 at three. | Meeting in Room 101 at 3 | G\*: task "Meeting in Room 101", Fri 16 Oct 15:00. Today G gives Fri 03:00 | "101" is never split or used as a weight. "at 3" is a time; a daytime bias belongs in `TessDates` |
 | 77 | I | Book a table for two at seven. | Book a table for 2 at 7 | G\*: task "Book a table for 2", today 19:00 (GC 45). Today G gives Fri 07:00 | "for 2" has no number before it, so no x |
-| 78 | I | Work nine to five on Saturday. | Work nine to five on Saturday | G: task "Work nine to five on", Sat 17 Oct 09:00 | **Trap.** "to" between numbers would give "9 x 5". Time ranges stay words |
-| 79 | W | Two-three more sets. | Two-three more sets | **PASS**: M, nothing to log | en-IN "two or three". Never 2x3, 23, or a reps-only set of 2 |
+| 78 | I | Work nine to five on Saturday. | Work nine to five on Saturday | G: task "Work nine to five on", Sat 17 Oct 09:00 | **Trap.** "to" between numbers would give "9 × 5". Time ranges stay words |
+| 79 | W | Two-three more sets. | Two-three more sets | **PASS**: M, nothing to log | en-IN "two or three". Never 2×3, 23, or a reps-only set of 2 |
 | 80 | I | Remind me to water the plants 2-3 times a week. | Remind me to water the plants 2-3 times a week | G: task "Water the plants 2-3 times a week", no date | A range "N-M" stays. Recurrence is not parsed |
 
-Count: 80 rows. Routes: 43 G (grammar parses today), 20 G\* (a grammar change first, model until then), 7 M, 9 **PASS** (rows 6, 13, 25, 42, 45, 57, 62, 74, 79) and 1 none. Rows 36, 50, 56, 57 and 60 are caught by the grammar with a wrong result today; the normaliser cannot fix those, the grammar rules named in each row do.
+### "by" between numbers (item 100)
+
+| # | Ctx | Raw transcript | Normalised | Expected grammar intent | Note |
+|---|---|---|---|---|---|
+| 81 | W | Eighty by eight. | 80 × 8 | G: set 80 × 8. Tess: "Set N logged. 80 × 8." | `by` between two numbers becomes × (rule 12). Without the rewrite master gives nil: the set regex reads x or for, not by (`TessGrammar.swift:286`) |
+| 82 | I | Bench three by eight at eighty. | Bench 3×8 at 80 | G: lift Bench Press 3 × 8 at 80 kg. Tess on master: "Bench 3 x 8 at 80. Added to today." (plain x, `TessCaptureEngine.swift:211`; × once Core follows Design d288c11, point 4) | Sets by reps, as row 12 |
+| 83 | I | Pay the gas bill by seven. | Pay the gas bill by 7 | G: task "Pay the gas bill", today 19:00 (`by` is a lead word the date reader drops, `TessGrammar.swift:544`; bare 7 is the next not yet passed) | **Trap.** `by` before a single number is a time word, never ×. Pair with row 43 |
+
+Count: 83 rows. Routes: 46 G (grammar parses today), 20 G\* (a grammar change first, model until then), 7 M, 9 **PASS** (rows 6, 13, 25, 42, 45, 57, 62, 74, 79) and 1 none. Rows 81 to 83 were added for item 100 and traced at `fdcaee4`; the master checks below cover rows 1 to 80. Rows 36, 50, 56, 57 and 60 are caught by the grammar with a wrong result today; the normaliser cannot fix those, the grammar rules named in each row do.
 
 ## Normaliser rules the rows imply
 
@@ -165,22 +173,22 @@ Apply in this order. Each step sees the output of the one before. The whole func
 7. **Number words to digits.** Units, teens, tens, `hundred`, `thousand`, `lakh`, `crore`, `point`, `and a half`, `and half` (en-IN), hyphenated words, `oh` inside a digit run, `a dozen` 12, `half a dozen` 6, `half kg` 0.5 kg, `and` joining a run even across digits the transcriber wrote (`100 and 7.5`). Two-part weights `one twenty-five` give 100 to 300. Remove Indian grouping commas (`1,00,000`). `ate` is 8 only in a number slot (rows 1 to 3, 15, 18, 44, 65 to 67).
 8. **Money.** After a money cue (`spent`, `paid`, `cost`, `£`, `₹`, `quid`, `rupees`): `N fifty` is N.50, `N pounds MM` is £N.MM, `a tenner` £10, `a fiver` £5, `rupees` becomes `rs`. A money amount is never an operand of step 12 (rows 26, 61, 63 to 68).
 9. **Self-correction.** A cue followed by a number replaces the last number before the cue. A cue followed by a weekday replaces the last weekday. The cue and the replaced token go (rows 58, 72, 73).
-10. **Homophones in fixed slots.** `for` at the end becomes 4 only when exactly one number came before it; after a full W x R a dangling `for` is dropped (rows 31, 32). `two` after `remind me`, `need`, `have` becomes `to` only before a verb, never before `days`, `weeks`, `hours`, `minutes`, `times` (row 60). A leading `by` becomes `buy` only when a number does not follow (rows 42, 43).
+10. **Homophones in fixed slots.** `for` at the end becomes 4 only when exactly one number came before it; after a full W × R a dangling `for` is dropped (rows 31, 32). `two` after `remind me`, `need`, `have` becomes `to` only before a verb, never before `days`, `weeks`, `hours`, `minutes`, `times` (row 60). A leading `by` becomes `buy` only when a number does not follow (rows 42, 43).
 11. **Collapse repeats.** An immediate repeat of the same token (`to to`, `80, 80`, `for, for` before a number) collapses to one. This runs after step 10, so a trailing `for for` has already become `for 4` (rows 28, 31).
-12. **Units and operators.** `kilos`, `kilo`, `kilograms`, `kgs`, `k` after a number become `kg`; `pounds`, `lbs`, `lbs.` become `lb` (rows 4, 22, 23). `for`, `by`, `times`, `into` between two numbers become `x`, except after `drop to`, in money, or after a protected place noun (rows 4, 19, 20, 64). `to` between two numbers is never rewritten (row 78). `N sets of M` becomes `NxM`. A trailing `reps`/`rep` and an en-IN `only` after a number go (rows 12, 14, 21).
-13. **RPE.** `at N`, `at RPE N` or `RPE N` with N from 5 to 10 in half steps, straight after a full W x R or `same`, becomes `@N` with no space. `at N` over 10 stays (it is a weight) (rows 8 to 12).
+12. **Units and operators.** `kilos`, `kilo`, `kilograms`, `kgs`, `k` after a number become `kg`; `pounds`, `lbs`, `lbs.` become `lb` (rows 4, 22, 23). `for`, `by`, `times`, `into` between two numbers become `×` (the on-screen sign; the grammar reads it as x), except after `drop to`, in money, or after a protected place noun (rows 4, 19, 20, 64, 81, 82). `by` before a single number is a time word and stays (row 83). `to` between two numbers is never rewritten (row 78). `N sets of M` becomes `N×M`. A trailing `reps`/`rep` and an en-IN `only` after a number go (rows 12, 14, 21).
+13. **RPE.** `at N`, `at RPE N` or `RPE N` with N from 5 to 10 in half steps, straight after a full W × R or `same`, becomes `@N` with no space. `at N` over 10 stays (it is a weight) (rows 8 to 12).
 14. **Times and days.** `7:00 PM`, `7 p.m.`, `7 pm` become `7pm`; `half past three` 3:30; `quarter to seven` 6:45; `o'clock` goes; `tomorrow morning` becomes `tomorrow 9am` (afternoon 2pm, evening 6pm); `itself` after a day goes; `next <weekday>` becomes `<weekday>`; ordinals become `20th`; `in twenty minutes` becomes `in 20 min`. The normaliser never resolves a date and never reads the clock (rows 43, 48 to 55).
 15. **Reorder reminders.** `remind me <date phrase> to X` becomes `remind me to X <date phrase>`, for date phrases step 14 knows. Unknown ones (`day after tomorrow`) stay put (rows 47, 48, 52, 55, 56, 58, 59).
 16. **Commas.** Keep a comma that sits between two complete sets, between two bare numbers, or between list items. Drop a comma left next to a removed word, and a duplicate comma (rows 16, 17, 21, 28).
-17. **Empty means nothing.** If nothing is left, return an empty string: no capture, the Bar says "Didn't hear anything." (row 33).
+17. **Empty means nothing.** If nothing is left, return an empty string: no capture; the Speak layer says "Didn't hear anything." (row 33; `../speak-first-use.md` 10a to 10c).
 
 What it never does: guess a domain (no added `buy`, commas or `remind`, row 39), split run-ons, resolve a date, or touch a note body.
 
 ## Open questions
 
 1. **Case.** These rows keep the transcriber's case so task titles and notes keep names ("Call Ravi"). The 30 rows in `speech-capture.md` lowercase everything. Pick one before V1 tests are written.
-2. **Do we rewrite `for` at all?** The grammar already accepts `W for R`. Rewriting adds risk ("table for 2", "Room 101 for 2 nights") for little gain. The table writes `x` only to match the 30 rows. Default suggestion: keep `for`, rewrite only `times`, `by`, `into`.
-3. **RPE grammar.** Rows 8 to 11 need a grammar change: `@N` after W x R, N from 5 to 10. It collides with GC 26 (`bench 80 x 8 at 7`, ambiguous lift or time). Does `at 8` in an idle lift mean RPE, a time, or ask? Live workout only is the safe default.
+2. **Do we rewrite `for` at all?** The grammar already accepts `W for R`. Rewriting adds risk ("table for 2", "Room 101 for 2 nights") for little gain, and since #248 it changes the parse: the 2 × 10 ask reads only x or by (`TessGrammar+Live.swift:123`), so "two for ten" written as `2 × 10` would ask where `2 for 10` does not. Default suggestion: keep `for` in the text the grammar gets, rewrite only `times`, `by`, `into`, and show × for any of them in the clean sentence on screen (Design d288c11, point 4). The live-workout rules below already keep `for`.
+3. **RPE grammar.** Rows 8 to 11 need a grammar change: `@N` after W × R, N from 5 to 10. It collides with GC 26 (`bench 80 × 8 at 7`, ambiguous lift or time). Does `at 8` in an idle lift mean RPE, a time, or ask? Live workout only is the safe default.
 4. **Weekday meaning.** "Thursday" on a Thursday is today (row 51), which conflicts with `TessDates` today (GC 44). And does "next Tuesday" on a Thursday mean 20 or 27 Oct? UK usage is split. Default suggestion: 20 Oct, with the 27th as a one-tap alternative.
 5. **Should the normaliser read the clock?** "in 20 minutes" and "day after tomorrow" (rows 50, 56) need `now`. Suggestion: no. Add them to `TessDates`, which already has the clock, and keep the normaliser pure.
 6. **Money shape.** The transcriber may write "twelve fifty" as 1250 (row 62). Should a 4-digit spend at a food shop always show "12.50 or 1250?" Also which home currency (GBP or INR) for amounts with no symbol, and do `quid` and `rupees` become symbols or stay words for the M5 parser?
@@ -195,7 +203,7 @@ What it never does: guess a domain (no added `buy`, commas or `remind`, row 39),
 
 ## Master check
 
-Checked against `origin/master` at `254ed5168eda99adaab6aa5b07d27a1f8923e5bd` (`254ed51`, merge of PR #139, 2026-10-15). Static hand trace, nothing was run. Clock Thu 15 Oct 2026 18:00. W has the workout as the running process and the Bench Press entry in focus (last set 80 x 8); I has no process; C has a cook running; S has the groceries list as the running process.
+Checked against `origin/master` at `254ed5168eda99adaab6aa5b07d27a1f8923e5bd` (`254ed51`, merge of PR #139, 2026-10-15). Static hand trace, nothing was run. Clock Thu 15 Oct 2026 18:00. W has the workout as the running process and the Bench Press entry in focus (last set 80 × 8); I has no process; C has a cook running; S has the groceries list as the running process.
 
 **Files.** `G:` is `TesseraCore/Sources/TesseraTess/TessGrammar.swift` (parse order, question guard, process ownership, reschedule, notes, relative sets, comma sets, lifts, tasks, normalize, `TessDates`). `K:` is `TessGrammar+Kitchen.swift` (lists, shop, timers, buy/get, comma groceries, cook). The Tess lines come from `TessCaptureEngine.swift`. There is no `grammar-misfires.md` in `fixtures/`, so the root causes below point at the `grammar-collisions.md` rules (GC n) that the rows already name.
 
@@ -207,40 +215,40 @@ Checked against `origin/master` at `254ed5168eda99adaab6aa5b07d27a1f8923e5bd` (`
 
 | # | Result | Current parse on master (deciding rule) | Proposed fix (owner) |
 |---|---|---|---|
-| 1 | PASS | set 85 x 6 kg, full (relative full regex, G:178) | |
-| 2 | PASS | set 107.5 x 3 kg (G:178) | |
-| 3 | PASS | lift Back Squat, 1 x 5 at 102.5 kg (scheme G:238, alias "squat" G:302, G:252) | |
-| 4 | PASS | set 80 x 8 kg (G:178, " kg" before " x ") | |
-| 5 | PASS | set 80 x 8, phrase same (G:165) | |
+| 1 | PASS | set 85 × 6 kg, full (relative full regex, G:178) | |
+| 2 | PASS | set 107.5 × 3 kg (G:178) | |
+| 3 | PASS | lift Back Squat, 1 × 5 at 102.5 kg (scheme G:238, alias "squat" G:302, G:252) | |
+| 4 | PASS | set 80 × 8 kg (G:178, " kg" before " x ") | |
+| 5 | PASS | set 80 × 8, phrase same (G:165) | |
 | 6 | PASS | nil, goes to the model (no rule matches; parseTask needs a date or prefix, G:369) | |
 | 7 | FAIL (G\* gap) | nil, goes to the model. Drop regex needs `for R` (G:171) | Core: make `(for or x) R` optional in the drop regex and take the last set's reps |
-| 8 | FAIL (G\* gap) | nil, goes to the model. `@8` is read as an exercise word, which fails to resolve (G:285, G:331) | Core: RPE rule, `@N` (5 to 10, half steps) after a full W x R or `same`, live workout only |
+| 8 | FAIL (G\* gap) | nil, goes to the model. `@8` is read as an exercise word, which fails to resolve (G:285, G:331) | Core: RPE rule, `@N` (5 to 10, half steps) after a full W × R or `same`, live workout only |
 | 9 | FAIL (G\* gap) | nil, goes to the model (same as row 8) | Core: RPE rule (row 8) |
 | 10 | FAIL (G\* gap) | nil, goes to the model (same as row 8) | Core: RPE rule (row 8) |
 | 11 | FAIL (G\* gap) | nil, goes to the model. `same @9` is not in the same list (G:165) | Core: RPE rule (row 8), also after `same` |
-| 12 | PASS | lift Bench Press, 3 x 8 at 80 kg (scheme with `at`, G:238, G:266) | |
+| 12 | PASS | lift Bench Press, 3 × 8 at 80 kg (scheme with `at`, G:238, G:266) | |
 | 13 | PASS | nil, goes to the model. "deadlift plates" resolves to no exercise (whole words, G:328-346) | |
-| 14 | PASS | set 80 x 8, reps only (G:168) | |
+| 14 | PASS | set 80 × 8, reps only (G:168) | |
 | 15 | FAIL (G\* gap) | nil, goes to the model. `add` is skipped as a lift word and there are no reps (G:285, G:245) | Core: GC 41, `add N` in a live workout is the next set at last weight + N |
-| 16 | PASS | sets, 3 sets into Bench: 80 x 8, 80 x 8, 80 x 6 (comma sets, each via the relative set, G:226) | |
-| 17 | PASS | lift Back Squat, 1 x 5 at 100 kg (two-part comma rule, G:206) | |
-| 18 | PASS | set 80 x 8 (G:178) | |
-| 19 | PASS | set 80 x 8 (G:178) | |
-| 20 | PASS | lift Bench Press, 3 x 10 at 80 kg (scheme with weight elsewhere, G:267) | |
-| 21 | PASS | lift Bench Press, 1 x 8 at 80 kg (two-part comma rule, G:206) | |
+| 16 | PASS | sets, 3 sets into Bench: 80 × 8, 80 × 8, 80 × 6 (comma sets, each via the relative set, G:226) | |
+| 17 | PASS | lift Back Squat, 1 × 5 at 100 kg (two-part comma rule, G:206) | |
+| 18 | PASS | set 80 × 8 (G:178) | |
+| 19 | PASS | set 80 × 8 (G:178) | |
+| 20 | PASS | lift Bench Press, 3 × 10 at 80 kg (scheme with weight elsewhere, G:267) | |
+| 21 | PASS | lift Bench Press, 1 × 8 at 80 kg (two-part comma rule, G:206) | |
 | 22 | PASS | set 185 lb x 5, stored 83.9 kg, unit lb (G:178) | |
-| 23 | PASS | lift Deadlift, 1 x 3 at 225 lb (token read, G:276-288; exact name G:316) | |
+| 23 | PASS | lift Deadlift, 1 × 3 at 225 lb (token read, G:276-288; exact name G:316) | |
 | 24 | PASS | nil, goes to the model (one number, no reps, G:245) | |
 | 25 | PASS | nil, goes to the model (no rule matches) | |
 | 26 | FAIL (G\* gap) | nil, goes to the model. There is no money rule on master | Core: Money grammar (M5 draft `spend`) |
-| 27 | PASS | set 80 x 8 (G:178) | |
-| 28 | PASS | set 80 x 8 (G:178) | |
-| 29 | PASS | set 80 x 7 (G:178) | |
+| 27 | PASS | set 80 × 8 (G:178) | |
+| 28 | PASS | set 80 × 8 (G:178) | |
+| 29 | PASS | set 80 × 7 (G:178) | |
 | 30 | PASS | nil, goes to the model. Lift words "come on come on" fail the 3-letter floor (G:331) | |
-| 31 | PASS | set 80 x 8 (G:178) | |
-| 32 | PASS | set 80 x 7 (G:178). Note: master has no "doubtful" mark on a set | Builder B: carry a doubt flag on the normaliser output (open question 7); not a grammar change |
+| 31 | PASS | set 80 × 8 (G:178) | |
+| 32 | PASS | set 80 × 7 (G:178). Note: master has no "doubtful" mark on a set | Builder B: carry a doubt flag on the normaliser output (open question 7); not a grammar change |
 | 33 | PASS | nil, empty text (G:54). The command bar also drops empty input (`Features/Command/BottomChrome.swift:384`) | Builder B: the "Didn't hear anything." line belongs to the Speak path; it is not on master |
-| 34 | PASS | set 80 x 8 (G:178) | |
+| 34 | PASS | set 80 × 8 (G:178) | |
 | 35 | PASS | task "Test the smoke alarm", Sat 17 Oct 09:00 (parseTask, G:367; weekday G:414) | |
 | 36 | FAIL (wrong write) | task "I'd like a reminder for to book the MOT", Fri 16 Oct 09:00 (date cue, G:367-370) | Builder B: treat `I'd like a reminder (for <date>) to X`, `set a reminder`, `can you remind me` as `remind me`, then rule 15 gives "Remind me to book the MOT Friday" (a correct G task). Core backstop: a title with `for to` or ending in `to` goes to the model (GC 5) |
 | 37 | PASS | task "Call Ravi", Fri 16 Oct 09:00 (explicit `remind me to`, G:356-366) | |
@@ -278,8 +286,8 @@ Checked against `origin/master` at `254ed5168eda99adaab6aa5b07d27a1f8923e5bd` (`
 | 69 | PASS | note "The bar felt heavy today." (parseNote, G:156) | |
 | 70 | PASS | note "eighty felt easy" (G:156) | |
 | 71 | PASS | note "the squat rack in bay two is broken" (G:156) | |
-| 72 | PASS | set 85 x 8 (G:178) | |
-| 73 | PASS | set 80 x 9 (G:178) | |
+| 72 | PASS | set 85 × 8 (G:178) | |
+| 73 | PASS | set 80 × 9 (G:178) | |
 | 74 | FAIL (wrong write) | groceries ["oat milk", "no wait", "almond milk"] (buy prefix and comma split, K:40, K:171) | Builder B: return the skip-grammar flag and, when it is set, run a `TessRouter` with only `OnDeviceTessModel` (both are public). Core backstop: the grocery splitter refuses a list with a correction cue item (`no wait`, `sorry`, `I mean`) |
 | 75 | PASS | task "Eat five a day", no date (G:356-370) | |
 | 76 | FAIL (wrong write) | task "Meeting in Room 101", Fri 16 Oct 03:00 (`at 3` on a 24-hour clock, passed, so tomorrow, G:417, G:429-434) | Core: GC 7, Product's bare-hour rule (decisions.md 4:26 PM PT: 1 to 6 mean pm, 7 to 11 the next one not yet passed today, 12 noon, a passed time lands tomorrow): 3 means 15:00, already passed today, so Fri 15:00 as the row expects |
@@ -363,8 +371,8 @@ are guesses at what `SpeechTranscriber` writes, not recordings.
 and N10 depend on it.
 
 **Contexts.** Thu 15 Oct 2026 18:10 America/Los_Angeles, starter kit, as group K.
-- **W**: live workout, Bench Press (barbell, kg) in focus, last set 80 x 8. Loads 20 to 177.5 in 2.5 kg steps.
-- **D**: live workout, Dumbbell Bench Press (dumbbells, kg) in focus, last set 24 x 10. Loads 2 to 50 in 2 kg steps.
+- **W**: live workout, Bench Press (barbell, kg) in focus, last set 80 × 8. Loads 20 to 177.5 in 2.5 kg steps.
+- **D**: live workout, Dumbbell Bench Press (dumbbells, kg) in focus, last set 24 × 10. Loads 2 to 50 in 2 kg steps.
 - **I**: idle, nothing in focus.
 
 **Parse** is one of: set (weight x reps, with kind or RPE), reps only (at the last weight), same, sets (a list),
@@ -372,40 +380,42 @@ nil (nothing written, the model reads it or asks), or task.
 
 | id | raw transcript | ctx | normalised | expected parse |
 |---|---|---|---|---|
-| K811 | eighty two and a half for eight | W | `82.5 for 8` | set 82.5 x 8 (TG:258 full set; 82.5 is a load) |
-| K812 | a hundred for five at eight | W | `100 for 5 at 8` | set 100 x 5, RPE 8 (L:50-58), as K798 |
+| K811 | eighty two and a half for eight | W | `82.5 for 8` | set 82.5 × 8 (TG:258 full set; 82.5 is a load) |
+| K812 | a hundred for five at eight | W | `100 for 5 at 8` | set 100 × 5, RPE 8 (L:50-58), as K798 |
 | N01 | a hundred and five | W | `105` | nil: a weight with no reps, over 50 (S701, L:72) |
-| N02 | a hundred and five for three | W | `105 for 3` | set 105 x 3 |
+| N02 | a hundred and five for three | W | `105 for 3` | set 105 × 3 |
 | N03 | a hundred, five | W | `100, 5` | nil: the comma path reads `100` as a weight and `5` as reps, so one set from two parts goes to the model (TG:81-85) |
 | N04 | eighty two point four | I | `82.4` | nil: no entry, no reps, no date. The model reads it as body weight (decisions.md D12) |
-| N05 | eighty two  point four for six | W | `82.4 for 6` | set 82.5 x 6, line ends "82.4 isn't loadable." (S703, L:115-125) |
-| N06 | one oh five for five | W | `105 for 5` | set 105 x 5 |
-| N07 | twenty four reps | D | `24 reps` | reps only, 24 x 24 (N reps exemption, L:71-73) |
+| N05 | eighty two  point four for six | W | `82.4 for 6` | set 82.5 × 6 (S703, L:115-125); Tess says "Set N logged. 82.5 × 6, nearest load to 82.4." (`TessCaptureEngine.swift:224-232` at `fdcaee4`; the old "82.4 isn't loadable." went in #248) |
+| N06 | one oh five for five | W | `105 for 5` | set 105 × 5 |
+| N07 | twenty four reps | D | `24 reps` | reps only, 24 × 24 (N reps exemption, L:71-73) |
 | N08 | twenty four | D | `24` | nil: within two loads of the last weight, as K782 (S701) |
 | N09 | eight at three | W | `8 at 3` | nil: `at 3` is no RPE (5 to 10), so the model; never a task (L:54-55) |
-| N10 | eight reps at nine | W | `8 reps at 9` | reps only, 80 x 8, RPE 9 |
-| N11 | same at nine and a half | W | `same at 9.5` | same, 80 x 8, RPE 9.5 |
-| N12 | eighty for 8 | W | `80 for 8` | set 80 x 8 (mixed words and digits) |
-| N13 | 100 for five at 8 | W | `100 for 5 at 8` | set 100 x 5, RPE 8 |
+| N10 | eight reps at nine | W | `8 reps at 9` | reps only, 80 × 8, RPE 9 |
+| N11 | same at nine and a half | W | `same at 9.5` | same, 80 × 8, RPE 9.5 |
+| N12 | eighty for 8 | W | `80 for 8` | set 80 × 8 (mixed words and digits) |
+| N13 | 100 for five at 8 | W | `100 for 5 at 8` | set 100 × 5, RPE 8 |
 | N14 | a couple more | W | `a couple more` | nil: no number reaches the grammar; never 2 reps or 2 sets |
 | N15 | ten ten ten | W | `10 10 10` | nil: no set shape and no words (TG:325), so the model |
-| N16 | ten, ten, ten | W | `10, 10, 10` | sets, 3 into Bench Press: 80 x 10 each (comma path, TG:81-85) |
+| N16 | ten, ten, ten | W | `10, 10, 10` | sets, 3 into Bench Press: 80 × 10 each (comma path, TG:81-85) |
 | N17 | one more set | W | `one more set` | nil: not in the same list (TG:245), so the model; `one` stays a word |
-| N18 | a hundred for for | W | `100 for 4` | set 100 x 4 (a trailing `for` after one number is 4) |
-| N19 | eighty four eight | W | `84 8` | nil: two numbers, no operator. Never 80 x 8 by guess |
-| N20 | a eighty for a eight | W | `80 for 8` | set 80 x 8 (`a` before a plain number word is a filler) |
-| N21 | and eighty for eight reps | W | `80 for 8` | set 80 x 8 (leading `and` goes; `reps` after a full set goes) |
-| N22 | drop to seventy two for ten | W | `drop to 72 for 10` | set 72.5 x 10, drop, "72 isn't loadable." (as K789) |
+| N18 | a hundred for for | W | `100 for 4` | set 100 × 4 (a trailing `for` after one number is 4) |
+| N19 | eighty four eight | W | `84 8` | nil: two numbers, no operator. Never 80 × 8 by guess |
+| N20 | a eighty for a eight | W | `80 for 8` | set 80 × 8 (`a` before a plain number word is a filler) |
+| N21 | and eighty for eight reps | W | `80 for 8` | set 80 × 8 (leading `and` goes; `reps` after a full set goes) |
+| N22 | drop to seventy two for ten | W | `drop to 72 for 10` | set 72.5 × 10, drop (as K789); Tess says "Drop set logged. 72.5 × 10, nearest load to 72." |
 | N23 | call mum at seven | W | `call mum at 7` | task "Call mum", today 19:00 (not a set core, L:94-96, so the task rule, as A121) |
 | N24 | plus five | W | `+5` | nil: a signed change goes to the model (S702, L:40) |
+| N25 | eighty two and a half by six | W | `82.5 × 6` | set 82.5 × 6. `by` between two numbers becomes × (rule 12); the set regex has no `by` (`TessGrammar.swift:286`), so the normaliser has to rewrite it. Tess says "Set N logged. 82.5 × 6." |
+| N26 | two by ten | W | `2 × 10` | the 2 × 10 ask: "2 × 10: 2 sets, or 2 kg?" (`TessGrammar+Live.swift:123`, `TessSetCountAsk.swift:30`); 2 is under half of 80. Typed "2 by 10" asks the same. "two for ten" stays `2 for 10` and does not ask (open question 2) |
 
-Count: 26 rows (K811, K812, N01 to N24). Parses: 13 set or reps-only writes, 1 same, 1 sets, 10 nil, 1 task.
+Count: 28 rows (K811, K812, N01 to N26). Parses: 14 set or reps-only writes, 1 same, 1 sets, 10 nil, 1 task, 1 ask.
 On master today (no normaliser) the raw words give nil for every row but one: N13 (`100 for five at 8`) is not a
 set shape to L:101, so it falls through and the task rule reads `at 8` as 20:00, making task "100 for five". A
 wrong write until the normaliser lands.
 
 **Two traps if the normaliser gets them wrong.** Collapsing `ten ten ten` to `10`
-(old rule 11) logs one 80 x 10 reps-only set, a wrong write (N15). Keeping `reps` after a full set (`80 for 8 reps`) is safe but a
+(old rule 11) logs one 80 × 10 reps-only set, a wrong write (N15). Keeping `reps` after a full set (`80 for 8 reps`) is safe but a
 miss: the anchored set regex (TG:258) fails and L:79 sends it to the model (N21).
 
 ### Number-word rules, in order
@@ -426,7 +436,7 @@ output of the one before; the function stays pure and idempotent, and digits pas
 5. **A comma ends a run.** `a hundred, five` is `100, 5`, never 105 (N03).
 6. **Repeats.** A number said twice right before an operator is a stutter and collapses (`eighty eighty for
    eight`). Three or more equal numbers in a row are kept, each as said (N15, N16). Never add commas.
-7. **`for` and `four`.** `for` between two numbers stays `for` (the grammar reads it). A `for` at the end after
+7. **`for`, `by` and `four`.** `for` between two numbers stays `for` (the grammar reads it; the clean sentence on screen shows ×). `by` between two numbers becomes × (N25, N26), since the set regex does not read `by`. A `for` at the end after
    exactly one number is 4 (N18). `four` inside a run stays a number, so `eighty four eight` is `84 8` (N19).
 8. **`reps`.** Keep `reps` after a bare number (N07, N10); make `rep` after a number `reps`, since the grammar
    strips only ` reps` (TG:478-480). Drop `reps` after a full `W for R` (N21).
@@ -443,10 +453,10 @@ an operator between two bare numbers (N19).
 | case | default | why |
 |---|---|---|
 | `a hundred and five`: 105, or 100 and 5 reps | 105 | British "a hundred and five" is one number. A comma (N03) or `for` splits it |
-| `a hundred, five`: 100 x 5, or a pause | `100, 5`, the model asks | Dictation commas are unreliable; one set from two parts is not guessed |
+| `a hundred, five`: 100 × 5, or a pause | `100, 5`, the model asks | Dictation commas are unreliable; one set from two parts is not guessed |
 | `eighty four eight`: 84 then 8, or 80 for 8 | `84 8`, the model | Rewriting `four` to `for` mid-run would break every real 84 |
 | `ten ten ten`: three sets of 10, or a stutter | keep all three; no comma, so the model | Collapsing it logs one wrong set; adding commas is guessing |
-| `twenty four reps` with dumbbells at 24 | reps, 24 x 24 | The "N reps" exemption, **not yet confirmed by Product** |
+| `twenty four reps` with dumbbells at 24 | reps, 24 × 24 | The "N reps" exemption, **not yet confirmed by Product** |
 | `eight at three`: RPE 3, rep 3, or 3 pm | nil, the model | S704 allows RPE 5 to 10 only; a set phrase is never a task |
 | `a couple` (more, reps, sets) | words kept, the model | "a couple" is 2 or 3 in speech |
 | `one more set` vs `one more` | `one more` is the same set; `one more set` goes to the model | B301 and K779; "one more set" is often a plan, not a log |
@@ -455,4 +465,14 @@ an operator between two bare numbers (N19).
 
 1. **Confirm the "N reps" exemption** (N07, N10). It is on master since PR #210 as a coordinator default only.
 2. **`ten ten ten`** (N15): model (default), or three reps-only sets at the last weight like `ten, ten, ten` (N16).
-3. **`a hundred, five`** (N03): model (default), or 100 x 5 when the second number is 1 to 50.
+3. **`a hundred, five`** (N03): model (default), or 100 × 5 when the second number is 1 to 50.
+
+## × on screen (item 100, Design d288c11)
+
+Design settled the sign app-wide: × in everything shown or said on screen (Tess lines, set lines, the doubtful line, the Day log); typing or saying x or "by" still parses; VoiceOver reads × as "by". What changed here:
+
+- Every weight-and-reps pair in the tables now uses ×, in the normalised text and in the expected intents. The grammar reads × as x (`TessGrammar.swift:508`), so no parse and no PASS or FAIL above changes.
+- Rule 12 writes × for spoken `by`, `times` and `into` between two numbers; `by` before one number stays a time word (row 83).
+- New rows 81 to 83 and N25, N26 cover "by". Typed "80 by 8" still needs Core: master reads `by` only in the 2 × 10 ask (`TessGrammar+Live.swift:123`), not in the set or scheme regexes (`TessGrammar.swift:286`, 358).
+- Expected Tess lines follow master `fdcaee4` (#248): "Set N logged. 80 × 8.", "Drop set logged. 72.5 × 10, nearest load to 72." (N05, N22, N25, 81). The lift line keeps a plain x for more than one set on master (`TessCaptureEngine.swift:211`, row 82) until Core changes it.
+- Rule 17 now names the Speak layer, not the old Bar.
