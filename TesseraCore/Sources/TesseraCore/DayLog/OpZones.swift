@@ -18,31 +18,40 @@ public struct OpZones {
             zones = cached.zones
             return
         }
-        var started: [UUID: TimeZone] = [:], finished: [UUID: TimeZone] = [:], made: [UUID: TimeZone] = [:]
-        for record in store.context.operations.values.sorted(by: { $0.createdAt < $1.createdAt }) {
-            guard let zone = record.zone.flatMap(TimeZone.init(identifier:)) else { continue }
-            if Self.starts.contains(record.action) {
-                for id in record.objectIDs where started[id] == nil {
-                    started[id] = zone
+        // Incremental (QA S1 on #377): the op log only grows, so only records not seen before are read, and nothing is
+        // sorted. "First start wins" needs no order (a workout starts once); "latest finish wins" compares times.
+        var state = derived.opZonesState ?? OpZonesState()
+        let operations = store.context.operations
+        // Nothing new in the log (a value changed): the zones stand.
+        if operations.count != state.seen.count {
+            for record in operations.values where !state.seen.contains(record.id) {
+                state.seen.insert(record.id)
+                guard let zone = record.zone.flatMap(TimeZone.init(identifier:)) else { continue }
+                if Self.starts.contains(record.action) {
+                    for id in record.objectIDs {
+                        state.set(zone, for: id, rank: 2, at: record.createdAt)
+                    }
                 }
-            }
-            if Self.finishes.contains(record.action) {
-                // The latest finish wins: a task done, reopened and done again files where it was last done.
-                for id in record.objectIDs {
-                    finished[id] = zone
+                if Self.finishes.contains(record.action) {
+                    for id in record.objectIDs {
+                        state.set(zone, for: id, rank: 1, at: record.createdAt)
+                    }
                 }
-            }
-            for op in record.ops {
-                if case let .create(object, _, _, _) = op, made[object] == nil {
-                    made[object] = zone
+                for op in record.ops {
+                    if case let .create(object, _, _, _) = op {
+                        state.set(zone, for: object, rank: 0, at: record.createdAt)
+                    }
                 }
             }
         }
-        var zones = made
-        zones.merge(finished) { _, finish in finish }
-        zones.merge(started) { _, start in start }
-        self.zones = zones
-        derived.opZones = (store.revision, zones)
+        zones = state.zones
+        derived.opZonesState = state
+        derived.opZones = (store.revision, state.zones)
+    }
+
+    /// How many records the log has been read through, for the incremental test.
+    public static func recordsRead(in store: ObjectStore) -> Int {
+        store.cache.derived.opZonesState?.seen.count ?? 0
     }
 
     /// The zone the object was started in (a workout), finished in (a task, a cook) or made in; nil for rows from
@@ -55,6 +64,22 @@ public struct OpZones {
     /// Wednesday wherever he reads it later.
     public func dayKey(of date: Date, for id: UUID, calendar: Calendar) -> Date {
         TesseraDay(calendar: calendar).day(of: date, in: zone(of: id))
+    }
+}
+
+/// What OpZones has read of the op log so far: each object's zone with the rank of the record that set it (a start
+/// beats a finish beats a create; among finishes the latest wins), so a record read in any order lands right.
+struct OpZonesState {
+    var seen = Set<UUID>()
+    var zones: [UUID: TimeZone] = [:]
+    var ranks: [UUID: (rank: Int, at: Date)] = [:]
+
+    mutating func set(_ zone: TimeZone, for id: UUID, rank: Int, at: Date) {
+        if let current = ranks[id] {
+            guard rank > current.rank || (rank == current.rank && rank == 1 && at >= current.at) else { return }
+        }
+        zones[id] = zone
+        ranks[id] = (rank, at)
     }
 }
 
