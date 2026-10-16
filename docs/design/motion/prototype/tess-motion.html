@@ -1736,6 +1736,55 @@ PICKS.typing = () => { const s = IDEAS.typing(); s.caps = [{ at: 0, text: 'He ty
 PICKS.peek = () => { const s = IDEAS.peek(); s.caps = [{ at: 0, text: 'He scrolls to the last row.' }, { at: 2.2, text: '2.2 she rises 5 pt (350 ms).' }, { at: 3.6, text: '3.6 one blink at the top.' }, { at: 3.9, text: '3.9 back down over 500 ms. Once per visit.' }]; return s; };
 // 18f, idea 11: the phone tilting (a stand-in sine for the attitude).
 PICKS.tilt = () => { const s = IDEAS.tilt(); s.caps = [{ at: 0, text: 'He tilts the phone: ±2 pt, the satellites 1.7×.' }, { at: 3.1, text: 'Eyes follow at ±0.6 / ±0.4. Off in Reduce Motion and Low Power.' }]; return s; };
+// Sheet 75, every screen has a side (two stops): `sideTurned(direction)`, eyes only, 0.4 toward the incoming content
+// over 380 ms on the house curve, back over 300 ms; only into stop 1 and back onto the front, never between the stops.
+// She and her band are part of the spine and never move with the body. The side's content is a stand-in.
+PICKS.side = () => {
+  const in1 = 1.0, in2 = 2.8, out2 = 4.6, out1 = 6.2, S = .38;
+  const go = (t, a) => ramp(t, a, S, houseCurve);
+  const glance = t => go(t, in1 + .04) * (1 - go(t, out1 + .04)) * (1 - go(t, in2)) + go(t, out2 + .04) * (1 - go(t, out1));
+  const full = t => go(t, in2) * (1 - go(t, out2));
+  const look = t => { const r = ramp(t, in1, S, houseCurve) * (1 - ramp(t, in1 + S, .3, houseCurve)), l = ramp(t, out1, S, houseCurve) * (1 - ramp(t, out1 + S, .3, houseCurve)); return .4 * r - .4 * l; };
+  const side = (x, a, big) => {
+    text('THE DAY', x, 236, 16, LOOK.inkSoft, 600, 'left', a);
+    text('4', x, 300, 56, LOOK.ink, 600, 'left', a); text('left today', x + width('4', 56, 600) + 8, 300, 21, LOOK.inkSoft, 500, 'left', a);
+    text('Push A at 12:15 pm', x, 348, 19, LOOK.ink, 500, 'left', a); text('Free after 6 pm', x, 380, 19, LOOK.ink, 500, 'left', a);
+    if (big) ['9:30 am  Call the bank', '12:15 pm  Push A', '6 pm  Water the plants', 'Any time  Pick up the dry cleaning', 'Any time  Book the dentist'].forEach((r, i) => text(r, x, 440 + i * 44, 18, LOOK.ink, 500, 'left', a));
+    else text('THE WHOLE DAY', x, 690, 16, LOOK.ink, 600, 'left', a);
+  };
+  return {
+    duration: 7.6,
+    lines: [{ text: 'Busy from 12 to 2 pm.', at: in1 + .42, until: out1 }],
+    draw: t => {
+      ground(); tabs('Today');
+      text('Friday morning', 24, 138, 21, LOOK.ink, 500);
+      const g = glance(t), f = full(t), bodyA = (1 - .7 * g) * (1 - f), dx = -44 * f;
+      text('nothing due till 9:30 am', 24 + dx, 186, 21, LOOK.context, 500, 'left', bodyA);
+      text('Push A at 12:15 pm', 24 + dx, 220, 34, LOOK.ink, 600, 'left', bodyA); text('NEXT', 24 + dx, 290, 16, LOOK.inkSoft, 600, 'left', bodyA);
+      ROWS.forEach((r, i) => { const y = ROW_Y0 + i * ROW_DY; text(r.title, 24 + dx, y, 18, LOOK.ink, 500, 'left', bodyA); if (r.when) text(r.when, 369 + dx, y, 16, LOOK.inkSoft, 500, 'right', bodyA); });
+      if (g > .01) {
+        const x0 = 150 + 60 * (1 - g);
+        ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = g;
+        const gr = ctx.createLinearGradient(x0, 0, x0 + 34, 0); gr.addColorStop(0, rgba(LOOK.ground, 0)); gr.addColorStop(1, rgba(LOOK.ground, 1));
+        ctx.fillStyle = gr; ctx.fillRect(x0, 196, W - x0, 530); ctx.restore();
+        side(x0 + 34, g, false);
+      }
+      if (f > .01) side(24 + 60 * (1 - f), f, true);
+    },
+    finger: t => {
+      for (const [a, x0, x1] of [[in1 - .3, 330, 250], [in2 - .3, 300, 110], [out2 - .3, 110, 260], [out1 - .3, 140, 300]]) {
+        if (t > a - .1 && t < a + .45) { const u = ramp(t, a, .3, easeInOut); return { x: lerp(x0, x1, u), y: 470, alpha: ramp(t, a - .1, .1) * (1 - ramp(t, a + .3, .15)), press: .9 }; }
+      }
+      return null;
+    },
+    soul: {
+      modes: [{ mode: 'idle', at: -10 }], centre: () => HOME,
+      eyes: t => ({ alpha: 1, blink: blinks(t, [3.6]), look: { x: look(t), y: 0 } }),
+      mouth: t => ({ alpha: 1, curve: .2, tilt: 0, open: 0 }),
+    },
+    caps: [{ at: 0, text: 'The front. A swipe left above 736.' }, { at: in1, text: '1.0 stop 1: eyes 0.4 right over 380 ms.' }, { at: in1 + .42, text: '1.42 her line lands as stop 1 settles.' }, { at: in2, text: '2.8 stop 2: she stays still.', haptic: '.selection (the side’s own)' }, { at: out2, text: '4.6 back to stop 1: still.' }, { at: out1, text: '6.2 back to the front: eyes 0.4 left.' }, { at: out1 + .68, text: '6.88 eyes ahead. She never moves with the body.' }],
+  };
+};
 for (const [name, make] of Object.entries(PICKS)) SCENES['pick-' + name] = () => { const s = make(); s.lines = s.lines || []; return s; };
 
 // The work state when she's out on a row: tighter constellation, no readers.
