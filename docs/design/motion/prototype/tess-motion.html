@@ -308,7 +308,8 @@ function drawSoul(parts, frame, C, scale, grade) {
     octx.save(); octx.translate(C.x, C.y); octx.scale(L * frame.halo.s, L * frame.halo.s * 70 / 75);
     const g = octx.createRadialGradient(0, 0, 0, 0, 0, 75);
     const a1 = LIGHT ? .08 : .22, a2 = LIGHT ? .05 : .14;
-    g.addColorStop(0, rgba(LOOK.live, a1)); g.addColorStop(.55, rgba(LOOK.context, a2)); g.addColorStop(1, rgba(LOOK.context, 0));
+    const warm = grade.palette ? (grade.palette.reveal[0] >= 1 ? grade.palette.to[0] : grade.palette.from[0]) : LOOK.live;
+    g.addColorStop(0, rgba(warm, a1)); g.addColorStop(.55, rgba(LOOK.context, a2)); g.addColorStop(1, rgba(LOOK.context, 0));
     octx.globalAlpha = haloA; octx.fillStyle = g; octx.beginPath(); octx.arc(0, 0, 75, 0, Math.PI * 2); octx.fill(); octx.restore();
   }
   if (frame.ring.opacity > .01) {
@@ -319,16 +320,29 @@ function drawSoul(parts, frame, C, scale, grade) {
     octx.globalAlpha = frame.ring.opacity; octx.fillStyle = g; octx.beginPath(); octx.arc(0, 0, r, 0, Math.PI * 2); octx.fill(); octx.restore();
   }
   octx.globalCompositeOperation = LOOK.blend;
+  const pal = grade.palette;
   parts.forEach((p, i) => {
     if (p.alpha < .01 || p.rx < .2 || p.ry < .2) return;
     const paint = PAINT_OF(i);
+    const wet = pal ? pal.wet[paint] : 0, reveal = pal ? pal.reveal[paint] : 0;
     octx.save();
     octx.filter = `blur(${(p.blur * DPR).toFixed(2)}px)`;
     octx.globalAlpha = clamp(p.alpha);
-    octx.translate(p.x, p.y); octx.scale(p.rx, p.ry);
-    const g = octx.createRadialGradient(0, 0, 0, 0, 0, 1);
-    g.addColorStop(0, rgba(PAINTS[paint], CORE)); g.addColorStop(.4, rgba(PAINTS[paint], MID)); g.addColorStop(1, rgba(PAINTS[paint], 0));
-    octx.fillStyle = g; octx.fill(SHAPES[paint]); octx.restore();
+    octx.translate(p.x, p.y); octx.scale(p.rx * (1 + .12 * wet), p.ry * (1 + .12 * wet));
+    const wash = (hex, lift) => { const g = octx.createRadialGradient(0, 0, 0, 0, 0, 1); g.addColorStop(0, rgba(hex, Math.min(1, CORE * (1 + lift)))); g.addColorStop(.4, rgba(hex, Math.min(1, MID * (1 + lift)))); g.addColorStop(1, rgba(hex, 0)); return g; };
+    const oldHex = pal ? pal.from[paint] : PAINTS[paint];
+    // The new pigment pools from the centre outward (900 ms, house curve): its wash grows from the centre to the
+    // edge while the old wash thins under it, so the edge of the pool is as soft as the dab.
+    octx.globalAlpha = clamp(p.alpha) * (1 - reveal);
+    octx.fillStyle = wash(oldHex, 0); octx.fill(SHAPES[paint]);
+    if (reveal > 0) {
+      octx.globalAlpha = clamp(p.alpha);
+      const r = Math.max(reveal * 1.15, .01), hex = pal.to[paint], lift = .33 * wet;
+      const g = octx.createRadialGradient(0, 0, 0, 0, 0, r);
+      g.addColorStop(0, rgba(hex, Math.min(1, CORE * (1 + lift)))); g.addColorStop(.4, rgba(hex, Math.min(1, MID * (1 + lift)))); g.addColorStop(1, rgba(hex, 0));
+      octx.fillStyle = g; octx.fill(SHAPES[paint]);
+    }
+    octx.restore();
   });
   octx.filter = 'none';
   // The group grade: saturation, contrast and opacity over the whole soul, as the SwiftUI view does.
@@ -462,6 +476,7 @@ function composeSoul(t, s) {
     contrast: lerp(frame.look.contrast, 1, fade),
     opacity: frame.look.opacity * lerp(1, .9, fade) * lerp(1, .6, reduced),
     fade: Math.max(fade, reduced), haloBoost: s.haloBoost ? s.haloBoost(t) : 1,
+    palette: s.palette ? s.palette(t) : null,
   };
   if (reduced > 0) {
     // Reduce Motion: no travel. The three mains loosen apart in place and hold; the satellites fade.
@@ -914,6 +929,65 @@ SCENES.reward = () => {
       { at: go + .02, text: 'Her eyes glance at the row. No beat yet.', haptic: 'the done pattern (QueueRow’s)' },
       { at: land, text: 'Bloom. Her beat: a small gather, brighter, one blink.', haptic: 'soft impact 0.4 (the bloom’s, not hers)' },
       { at: land + .5, text: 'Dry by 940 ms. Done’s pour never plays for his win.' },
+    ],
+  };
+};
+
+
+// 9. Living colour (board item 7, Design 48): a palette change arrives as paint through her own dabs. Each dab,
+// 120 ms after the last (cool, warm, bright), pools its new pigment from its centre outward (900 ms, house
+// curve); while it pools it's wet (swells to 1.12, brightens by a third), then dries back over 2.8 s in all. No
+// haptic, no line, no sound; the blur doesn't change; text never follows. A capture mid-repaint: work wins.
+const PALETTES = {
+  today: { light: [LOOK.tess, LOOK.live, LOOK.now], dark: [LOOK.tess, LOOK.live, LOOK.now] },
+  kiln: { light: ['#2F3C9E', '#C4553B', '#D79A2B'], dark: ['#8E9BFF', '#F08A6E', '#F2C062'] },
+  lagoon: { light: ['#0E8C86', '#F0624D', '#EDB730'], dark: ['#4FD8CF', '#FF8A75', '#FFD563'] },
+  orchard: { light: ['#6E3A8E', '#E2557A', '#F29A5B'], dark: ['#C39BFF', '#FF86A6', '#FFBC86'] },
+  aurora: { light: ['#2F6FE0', '#14A37F', '#8C5BD6'], dark: ['#7FB0FF', '#4FE0B5', '#BC97FF'] },
+  ember: { light: ['#3433D6', '#D6266E', '#F2B21B'], dark: ['#9A98FF', '#FF5C9A', '#FFD24A'] },
+};
+// Palette order is cool, warm, bright; her dabs are vermilion (warm), cobalt (cool), cadmium (bright).
+const pigments = name => { const p = PALETTES[name][LOOK.dark ? 'dark' : 'light']; return [p[1], p[0], p[2]]; };
+const houseCurve = bezier(.3, 0, .2, 1);
+function repaintState(changes, t, cut) {
+  // changes: [{at, to}]; the dab order of the pool is cool (cobalt, dab 1), warm (0), bright (2), 120 ms apart.
+  let from = pigments('today'), to = from, reveal = [0, 0, 0], wet = [0, 0, 0];
+  for (const c of changes) {
+    if (t < c.at) break;
+    const order = [1, 0, 2];
+    from = to; to = pigments(c.to);
+    reveal = [0, 0, 0]; wet = [0, 0, 0];
+    order.forEach((dab, k) => {
+      const start = c.at + .12 * k;
+      let u = (t - start) / .9;
+      // A capture that starts mid-repaint: the pool finishes inside the fade's 500 ms (work wins).
+      if (cut && cut > c.at && t > cut) u = Math.max(u, (t - cut) / .5 + (cut - start) / .9);
+      reveal[dab] = houseCurve(clamp(u));
+      const dryEnd = c.at + .12 * k + 2.8;
+      const w = clamp((t - start) / .25) * (1 - clamp((t - start - .9) / (dryEnd - start - .9)));
+      wet[dab] = cut && t > cut ? w * (1 - clamp((t - cut) / .5)) : w;
+    });
+  }
+  return { from, to, reveal, wet };
+}
+SCENES.colour = () => {
+  const changes = [{ at: 1.2, to: 'lagoon' }, { at: 6.0, to: 'kiln' }, { at: 10.8, to: 'ember' }, { at: 16.4, to: 'today' }];
+  const CUT = 17.0, G = CUT + 2.8, D = G + .78; // a capture lands 600 ms into the last repaint
+  const work = { split: CUT, gather: G, at: { x: 336, y: 772 } };
+  return {
+    duration: D + 3.4,
+    draw: t => { HOME41.draw(); },
+    soul: { modes: [{ mode: 'idle', at: -10 }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }], centre: () => HOME, palette: t => repaintState(changes, t, CUT), work, scale: () => 1.35 },
+    lines: [{ text: 'Bench best today.', at: 10.8 - 2, until: 16 }, { text: 'Planning your day.', at: CUT - .1, until: D }, { text: 'Plan ready. Gym at 12:15.', at: D + .5 }],
+    caps: [
+      { at: 0, text: 'Living colour: Today, at rest. Shown at 1.35× for the camera.' },
+      { at: 1.2, text: 'Morning: Lagoon pools in, cool, warm, bright, 120 ms apart.' },
+      { at: 2.3, text: 'Wet while it pools: 1.12, a third brighter; dry over 2.8 s.' },
+      { at: 6.0, text: 'Evening: Kiln. No haptic, no line, no sound.' },
+      { at: 10.8, text: 'A best: Ember. Her voice stays cobalt; text never follows.' },
+      { at: 16.4, text: 'Back to Today, and a capture lands mid-pool:' },
+      { at: CUT, text: 'Work wins: the pool finishes inside the 500 ms fade.' },
+      { at: D, text: 'Done: its own colour and motion, fixed.', haptic: 'success' },
     ],
   };
 };
