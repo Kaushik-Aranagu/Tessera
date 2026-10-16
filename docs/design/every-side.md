@@ -118,6 +118,6 @@ This sheet replaces sheet 71's "which pages get a side page" and Product's 10:00
   - **THE WEEK'S COOKS:** Tess says "3 cooks this week, 8 to buy."
 - **Motion lab:**
   - Tess and her band hold still as the body moves; she's part of the spine.
-  - On every turn she glances, eyes only: `sideTurned(direction)`, 0.4 toward the incoming content over 320 ms, then back over 300 ms, with the mouth at 70%. It plays only when she's idle or roaming, and never with eyes off, under Reduce Motion or in `.live`. It comes from the SideHost, not from each screen.
-  - Her side line lands at 360 ms, after the turn.
+  - She glances, eyes only: `sideTurned(direction)`, 0.4 toward the incoming content over 380 ms on the house spring, then back over 300 ms, with the mouth at 70%. It plays only on the move into stop 1 (right) and on the move that lands back on the front (left), never between stop 1 and stop 2. It plays only when she's idle or roaming, and never with eyes off, under Reduce Motion or in `.live`. It comes from the SideHost, not from each screen.
+  - Her side line lands when stop 1 settles, at 420 ms (40 + 380).
   - There's no haptic for a side opening. Stop 2's `.selection` is the only tick.
