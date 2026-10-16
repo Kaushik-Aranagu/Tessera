@@ -115,11 +115,17 @@ public struct TessUsageLedger {
     }
 
     func canSpend(_ estimateNano: Int64, now: Date = .now, calendar: Calendar = .current) -> Bool {
-        monthTotal(now: now, calendar: calendar) + Self.pendingNano + estimateNano <= Self.capNano
+        monthTotal(now: now, calendar: calendar) + pendingNano + estimateNano <= Self.capNano
     }
 
-    /// Money promised to calls still in flight (a call's row is only written after its response).
-    private static var pendingNano: Int64 = 0
+    /// Money promised to calls still in flight (a call's row is only written after its response), per store: every
+    /// ledger on the app's one store shares it, and a test's own store never sees another test's calls in flight.
+    private static var pending: [ObjectIdentifier: Int64] = [:]
+
+    private var pendingNano: Int64 {
+        get { Self.pending[ObjectIdentifier(store.context)] ?? 0 }
+        nonmutating set { Self.pending[ObjectIdentifier(store.context)] = newValue }
+    }
 
     /// A hold on part of the month, taken before a call and released after it.
     public struct Reservation: Sendable {
@@ -131,13 +137,13 @@ public struct TessUsageLedger {
     public func reserve(_ estimateNano: Int64, now: Date = .now, calendar: Calendar = .current) -> Reservation? {
         // A model with no price row estimates 0: refused, so it can never spend outside the cap (QA A6).
         guard estimateNano > 0, canSpend(estimateNano, now: now, calendar: calendar) else { return nil }
-        Self.pendingNano += estimateNano
+        pendingNano += estimateNano
         return Reservation(nano: estimateNano)
     }
 
     /// Releases a hold once the call's own row (its real cost) is written.
     public func settle(_ reservation: Reservation) {
-        Self.pendingNano = max(0, Self.pendingNano - reservation.nano)
+        pendingNano = max(0, pendingNano - reservation.nano)
     }
 
     /// Before a call: bytes / 4 + 10 tokens in, `maxTokens` out.
