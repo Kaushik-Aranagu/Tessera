@@ -4,6 +4,7 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+- **Fixed days and recipe layouts** (12:32 AM PT Oct 16, after Design 44 and 45). Confirming Design's two defaults in `training-mode.md` (7fcbee6). (1) A missed fixed day does not roll on: a fixed routine waits for its next weekday. A rolling plan keeps "missed day rolls on". (2) One routine per weekday: picking a day on one routine takes it off the routine that had it, and the editor says so in one line naming that routine. Recipe layouts (`recipe-layouts.md`, 95a5e81) wait on his pick on Design's card, with C (the clock) as the default if he says nothing. C needs Core to give each step a start minute from the durations the parser already reads.
 - **Home after Design 41, the ledger, Groceries reminders and past PRs** (12:17 AM PT Oct 16).
   - **The ledger.** Design 41 (091ddcd) takes the ledger row off Home. In v1 that is fine: only workouts are processes, and the one suspended workout becomes the hero with the Start key's progress line, so nothing goes missing. The whats-running rule stays for later. When Core adds a second kind of process (cook timers, waiting checks), suspended and waiting ones come back as plain Next rows at the top of Next: title and time only, at most 3, in whats-running order, with no detail line.
   - **The glass tab strip** (Design 42) goes to Builder A, after the icon and routines, with living colour after it.
