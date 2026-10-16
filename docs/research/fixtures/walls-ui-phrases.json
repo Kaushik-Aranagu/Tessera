@@ -81,9 +81,9 @@
       "expectNotInMissLog": true,
       "expectLine": "It's in your private notes.",
       "lineMatch": "exact",
-      "passesOnMaster": false,
+      "passesOnMaster": true,
       "masterEvidence": "Fails in the app: BottomChrome.swift:508-509 sends any phrase ending in ? to CommandInterpreter, which writes a task titled with the phrase (CaptureParts.swift:184-188, line \"Drying. Swipe to drop it.\"). The grammar answer at TessGrammar.swift:497-498 is never reached from the Ask bar.",
-      "pending": "Builder B: route ? phrases with a secret word through model.ask, or have CommandInterpreter check SecretWords first",
+      "pending": null,
       "notes": "V5's second phrase. Nothing may be written; the test also checks no task row with this title appears."
     },
     {
@@ -95,9 +95,9 @@
       "expectNotInMissLog": true,
       "expectLine": "It's in your private notes.",
       "lineMatch": "exact",
-      "passesOnMaster": false,
+      "passesOnMaster": true,
       "masterEvidence": "Leak: BottomChrome.swift:508-509 then CaptureParts.swift:184-188 write a plain task \"Door code 4417?\" with the value in its title, so it shows on Home and in the Day log and rides backups unmarked.",
-      "pending": "Builder B, same fix as A06",
+      "pending": null,
       "notes": "A secret with a value plus a question mark. The test asserts no static text containing 4417 after the dry."
     },
     {
@@ -491,9 +491,9 @@
       "expectNotInMissLog": true,
       "expectLine": null,
       "lineMatch": null,
-      "passesOnMaster": false,
+      "passesOnMaster": true,
       "masterEvidence": "PasteRecipe.swift:205-206 logs any failed paste unless SecretWords.mentions, so the amount lands in the miss log.",
-      "pending": "Builder B: add !PrivateFacts.isWalled(text) at PasteRecipe.swift:205",
+      "pending": null,
       "notes": "Paste alone, tap Done, then SAVE: nothing is written (no ingredients). Money never goes in the miss log (12:30 pm)."
     },
     {

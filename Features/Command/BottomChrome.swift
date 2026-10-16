@@ -506,7 +506,11 @@ struct BottomChrome: View {
         }
         isBusy = true
         let lowered = text.lowercased()
-        let isQuestion = lowered.contains("best") || lowered.contains(/\bprs?\b/) || lowered.hasSuffix("?")
+        // A secret, money or body phrase always goes to Tess, question or not: her walls make it a private note or
+        // answer "It's in your private notes.", never a plain task (Research AU, A06 and A07).
+        let walled = SecretWords.mentions(text) || PrivateFacts.isWalled(text)
+        let isQuestion = !walled
+            && (lowered.contains("best") || lowered.contains(/\bprs?\b/) || lowered.hasSuffix("?"))
         let answer = isQuestion ? CommandInterpreter(model: model).run(text) : await model.ask(text)
         // A doubtful set count waits for a tap on one of its two answers (Core's set guard).
         let asked = isQuestion ? nil : model.pendingSetAsk

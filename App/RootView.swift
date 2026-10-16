@@ -1,5 +1,6 @@
 import SwiftUI
 import TesseraCore
+import TesseraTess
 
 /// Motion grammar: deeper pages zoom out of the tapped row (drag-to-dismiss zooms back = up); jumps and
 /// breadcrumbs cross-fade; workout mode is a process, so it rises from the bottom; Tess opens out of her soul in the
@@ -67,6 +68,13 @@ struct RootView: View {
             }
         }
         .background { ThemedBackground() }
+        #if DEBUG
+            .overlay(alignment: .topLeading) {
+                if LaunchFlags.has("-wallsSpy") {
+                    WallsProbe()
+                }
+            }
+        #endif
     }
 
     /// Paint floods out of Tess (~0.5 s); Home is swapped in underneath, then the paint fades. Tapping her again on
@@ -101,3 +109,24 @@ struct RootView: View {
     return RootView()
         .environment(model)
 }
+
+#if DEBUG
+    /// `-wallsSpy`'s probe: how many Claude calls the ledger holds and how many lines the miss log has, read by
+    /// WallsUITests (walls-ui-test-spec.md §5). Invisible and never in the way.
+    private struct WallsProbe: View {
+        @Environment(AppModel.self) private var model
+
+        var body: some View {
+            let _ = model.revision
+            let calls = TessUsageLedger(store: model.store, classes: model.classes).calls().count
+            let misses = CaptureMissLog.beside(model.store)
+                .flatMap { try? String(contentsOf: $0.url, encoding: .utf8) }
+                .map { $0.split(separator: "\n").count } ?? 0
+            Text("claude \(calls) misses \(misses)")
+                .font(.system(size: 16))
+                .opacity(0.01)
+                .allowsHitTesting(false)
+                .accessibilityIdentifier("walls.probe")
+        }
+    }
+#endif
