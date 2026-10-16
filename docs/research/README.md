@@ -120,3 +120,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [grammar-open-defaults.md](grammar-open-defaults.md) | Product, Core: 20 proposed defaults for the open grammar questions (relative times, workout extras, Money, Reading, People, upkeep) |
 | [inplace-number.md](inplace-number.md) | Builder A, Design: in-place number scrub feel for the set logger (detents, acceleration, haptics, VoiceOver, 19 fixtures) |
 | [capture-type.md](capture-type.md) | Design, Builder B: Ask Tess capture surface type audit (21 elements) and the calmer set |
+| [theme-checks.md](theme-checks.md) | Design, Builder A: proportions and WCAG/APCA contrast for all five themes, Live Activity and widget needs, proposed hex fixes |
