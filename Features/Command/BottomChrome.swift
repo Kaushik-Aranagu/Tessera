@@ -292,6 +292,13 @@ struct BottomChrome: View {
                         return .handled
                     }
                     .onChange(of: model.commandDraft) { _, draft in
+                        // A Claude key never stays in Ask: not on screen, not as a ghost, not as a task. Cleared the
+                        // moment it lands, before any interpreter can see it.
+                        if Self.looksLikeClaudeKey(draft) {
+                            model.commandDraft = ""
+                            refuseKey()
+                            return
+                        }
                         if !isBusy {
                             model.tessMode = draft.isEmpty ? .idle : .listening
                         }
@@ -386,8 +393,25 @@ struct BottomChrome: View {
     }
 
     /// Return: the text dims to a ghost and a cobalt line dries under it for 2 s (touching cancels), then it commits.
+    /// Until Core's shared helper lands: any "sk-ant-" in any case.
+    static func looksLikeClaudeKey(_ text: String) -> Bool {
+        text.lowercased().contains("sk-ant-")
+    }
+
+    private func refuseKey() {
+        ghost = nil
+        dryTask?.cancel()
+        close()
+        say("That looks like a Claude key. It goes in Review, under Claude.")
+    }
+
     private func dry() {
         let text = model.commandDraft
+        guard !Self.looksLikeClaudeKey(text) else {
+            model.commandDraft = ""
+            refuseKey()
+            return
+        }
         guard !text.trimmingCharacters(in: .whitespaces).isEmpty, !isBusy, ghost == nil else { return }
         ghost = text
         drying = 0
@@ -413,6 +437,11 @@ struct BottomChrome: View {
     /// The same grammar path as before: questions about records are answered here; everything else is a capture
     /// through Tess's engine (grammar first, the on-device model when Apple Intelligence is available).
     private func commit(_ text: String) async {
+        // Belt and braces: nothing that looks like a key reaches an interpreter or the log.
+        guard !Self.looksLikeClaudeKey(text) else {
+            refuseKey()
+            return
+        }
         isBusy = true
         let lowered = text.lowercased()
         let isQuestion = lowered.contains("best") || lowered.contains(/\bprs?\b/) || lowered.hasSuffix("?")
