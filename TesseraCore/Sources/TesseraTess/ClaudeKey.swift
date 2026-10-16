@@ -84,7 +84,10 @@ public final class InMemoryKeychain: TessKeychain, @unchecked Sendable {
 /// phone's calendar, not his 4 AM day and not Anthropic's UTC.
 @MainActor
 public struct TessUsageLedger {
-    public static let capNano: Int64 = 10_000_000_000
+    /// The month's cap: $50 (Kaushik, decisions.md Oct 16). Settings' spend line and the paused copy read this.
+    public static let capNano: Int64 = 50_000_000_000
+    /// The cap in whole dollars, for the words ("of 50 dollars this month").
+    public static let capDollars = Int(capNano / 1_000_000_000)
 
     /// Per-token prices in nano-dollars: (input, output, cache read, cache write).
     public static let prices: [String: (input: Int64, output: Int64, cacheRead: Int64, cacheWrite: Int64)] = [

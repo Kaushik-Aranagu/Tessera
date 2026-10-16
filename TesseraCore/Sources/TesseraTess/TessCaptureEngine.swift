@@ -54,7 +54,8 @@ public final class TessCaptureEngine: TessCapturing {
         default: break
         }
         // Never log a pasted Claude key, even as a miss (the router refuses it, and the miss log is a file).
-        if !result.understood, !looksLikeClaudeKey(phrase) {
+        // Nor a line with a secret word (Research 134): the miss log is a file.
+        if !result.understood, !looksLikeClaudeKey(phrase), !SecretWords.mentions(phrase) {
             missLog?.record(phrase, at: context.now, route: result.source.rawValue, source: source)
         }
         return result
@@ -293,6 +294,10 @@ public final class TessCaptureEngine: TessCapturing {
             let record = try engine.perform(CreateTask(title: title, startsAt: startsAt), by: .tess, pending: pending)
                 .record
             return (record, startsAt.map { "\(title), \(Self.when($0, context: context))." } ?? "\(title), in Later.")
+        case let .privateNote(body, remembered):
+            let record = try engine.perform(CreateNote(body: body, isPrivate: true), by: .tess, pending: pending).record
+            // She never repeats the value (R6).
+            return (record, remembered ? "Private note, kept. I don't keep passwords." : "Private note, kept.")
         case let .note(body, on):
             let record = try engine.perform(CreateNote(body: body, on: on), by: .tess, pending: pending).record
             if let on, !context.calendar.isDate(on, inSameDayAs: context.now) {

@@ -88,11 +88,14 @@ public struct CreateNote: EngineAction {
     public var title: String?
     /// The day it's about, for a log said afterwards ("watered plants sat"); nil is now.
     public var on: Date?
+    /// A private note: its title is "Private note", its words stay in the body (secret words, Research 134).
+    public var isPrivate: Bool?
 
-    public init(body: String, title: String? = nil, on: Date? = nil) {
+    public init(body: String, title: String? = nil, on: Date? = nil, isPrivate: Bool? = nil) {
         self.body = body
         self.title = title
         self.on = on
+        self.isPrivate = isPrivate
     }
 
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
@@ -100,9 +103,16 @@ public struct CreateNote: EngineAction {
         guard !text.isEmpty else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "the note is empty")
         }
-        let note = try transaction.create(transaction.classDef(.note), title: title ?? Self.firstLine(text))
+        // A line with a secret word is private whoever writes it: the model and Claude never get to title it.
+        let isPrivate = isPrivate == true || SecretWords.mentions(text)
+        let note = try transaction.create(transaction.classDef(.note),
+                                          title: isPrivate ? SecretWords.title : title ?? Self.firstLine(text))
         try transaction.set("body", to: .text(text), on: note)
-        try transaction.linkMentions(of: note, body: text)
+        if isPrivate {
+            try transaction.set("isPrivate", to: .bool(true), on: note)
+        } else {
+            try transaction.linkMentions(of: note, body: text)
+        }
         if let on {
             note.createdAt = on
         }
@@ -115,7 +125,7 @@ public struct CreateNote: EngineAction {
     }
 
     public func summary(in _: ObjectStore) -> String {
-        "Noted"
+        isPrivate == true || SecretWords.mentions(body) ? SecretWords.title : "Noted"
     }
 }
 

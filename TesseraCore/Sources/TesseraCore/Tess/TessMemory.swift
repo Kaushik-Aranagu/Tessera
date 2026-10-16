@@ -113,12 +113,15 @@ public enum TessMemoryScreen {
 
     public enum Refusal: Equatable, Sendable {
         case empty, tooLong, health(String), money(String), place(String), unlicensedNumber(Int), looksLikeKey, capFull
+        /// A password, PIN or code: "I don't keep passwords." (Research 134 SW3).
+        case secret
 
         /// Tess's line when she won't keep it (Design 49 addendum S6, S7); nil for a shape problem.
         public var line: String? {
             switch self {
             case .money: "I don't keep sums of money."
             case .place: "I don't keep places."
+            case .secret: "I don't keep passwords."
             case .capFull: TessMemory.capLine
             default: nil
             }
@@ -132,6 +135,9 @@ public enum TessMemoryScreen {
         guard trimmed.count <= TessMemory.maxTextLength else { return .tooLong }
         if trimmed.contains("sk-ant-") {
             return .looksLikeKey
+        }
+        if SecretWords.mentions(trimmed) {
+            return .secret
         }
         let lower = trimmed.lowercased()
         let tokens = lower.split { !$0.isLetter && $0 != "$" && $0 != "£" && $0 != "€" }.map(String.init)

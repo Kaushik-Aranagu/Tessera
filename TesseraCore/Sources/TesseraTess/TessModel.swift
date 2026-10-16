@@ -70,7 +70,9 @@ public struct TessRouter {
             return TessCapture(records: [], line: TessRouter.keyLine, source: .none)
         }
         var asked: TessCapture?
-        for model in models where model.isAvailable(for: request.use) {
+        // A secret word never leaves the grammar (Research 134): no on-device model, no Claude, whatever the switch.
+        let secret = SecretWords.mentions(request.text)
+        for model in models where model.isAvailable(for: request.use) && !(secret && model.route != .grammar) {
             engine.attribution = (model.route, model.modelName)
             let result = await model.run(request, engine: engine)
             engine.attribution = nil
