@@ -528,10 +528,18 @@ extension AppModel {
         return ledger.finishedWorkouts(on: day)
     }
 
+    /// A routine with no exercises has nothing to start: no Start word, and no empty "0 kg moved" workout.
+    func canStart(_ routine: ObjectRecord) -> Bool {
+        routine.orderedChildren.contains { !$0.isDeleted }
+    }
+
     /// Start: today's workout from the routine through the engine (one entry per slot, prefilled), then live mode.
     func startRoutine(_ routine: ObjectRecord) {
-        guard let workout = try? engine.perform(StartRoutine(routine: routine.id, time: AppClock.now), by: .user)
-            .output else { return }
+        guard canStart(routine), let workout = try? engine.perform(
+            StartRoutine(routine: routine.id, time: AppClock.now),
+            by: .user
+        )
+        .output else { return }
         session = WorkoutSession(workout: workout, model: self)
         isWorkoutPresented = true
         touch()
