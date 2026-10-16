@@ -11,6 +11,7 @@
 
 ## 2. Riders (in only if merged before the last blocker)
 - [ ] Paste/link SecretWords wall (Core).
+- [ ] One-time mark-private pass for pre-#422 notes (Core, Research 139).
 - Never in this pin: #403 eyes, #407 tessEyes (v10). They merge right after the pin is named.
 
 ## 3. Name the SHA
