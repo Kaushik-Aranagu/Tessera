@@ -58,14 +58,16 @@ public extension TessCaptureEngine {
             engine.attribution = (claude.route, claude.modelName)
             let result = await claude.run(request, engine: engine)
             engine.attribution = nil
+            // Gone only once Claude has read it (a result, or read and understood nothing). Busy, slow, a bad key,
+            // the cap or still offline: it stays, and the rest wait for next time (QA S1 on #305).
             switch result {
             case let .handled(capture):
                 inbox.remove(item)
                 captures.append(capture)
-            case let .asked(capture) where capture.line == ClaudeTessModel.Failure.offline.line:
-                return captures // still offline: keep the rest for next time
-            case .asked, .missed:
+            case .missed:
                 inbox.remove(item)
+            case .asked:
+                return captures
             }
         }
         return captures

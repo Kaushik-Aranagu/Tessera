@@ -240,6 +240,11 @@ struct ClaudeRouteTests {
         #expect(tess.waitingCount == 1)
         // Still offline at the next open: it stays.
         #expect(await tess.readWaiting(context: context).isEmpty && tess.waitingCount == 1)
+        // Busy on read (529): Claude never read it, so it stays (QA S1 on #305).
+        RouteStub.failure = nil
+        RouteStub.reply = (529, "{}")
+        #expect(await tess.readWaiting(context: context).isEmpty && tess.waitingCount == 1)
+        RouteStub.reply = (200, Self.answer("Logged."))
         // Online: read as a pending ghost, and gone from the inbox.
         RouteStub.failure = nil
         RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged."))]
