@@ -727,15 +727,18 @@ extension BottomChrome {
     /// it only when that line has its own op; a capture's line shows it for that capture.
     private var canUndo: Bool {
         if let note = voice.note {
-            return note.undo != nil
+            return note.undo != nil || note.takeBack != nil
         }
         return model.lastCapture != nil
     }
 
     /// Home's last action (done, moved) first, else the last capture.
     private func undo() {
-        if let record = voice.note?.undo {
-            _ = model.engine.undo(record)
+        if let note = voice.note, note.undo != nil || note.takeBack != nil {
+            if let record = note.undo {
+                _ = model.engine.undo(record)
+            }
+            note.takeBack?()
             model.touch()
             undos += 1
             withTesseraAnimation(reduceMotion: reduceMotion) { voice.clear() }

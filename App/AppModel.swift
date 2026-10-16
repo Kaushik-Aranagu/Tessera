@@ -59,6 +59,23 @@ final class AppModel {
         settingsAreReal && SettingsStore(engine: engine).read().sendsMissesToClaude
     }
 
+    /// Plan my day's wording through Claude: one instance for the app, so its cache holds across reopens.
+    var planWording: ClaudePlanWording {
+        if let wording = planWordingStore {
+            return wording
+        }
+        let wording = ClaudePlanWording(
+            keys: SystemKeychain(),
+            ledger: TessUsageLedger(store: store, classes: classes)
+        ) {
+            [weak self] in self?.asksClaude ?? false
+        }
+        planWordingStore = wording
+        return wording
+    }
+
+    @ObservationIgnored private var planWordingStore: ClaudePlanWording?
+
     /// Bumped after writes so views re-read derived data.
     private(set) var revision = 0
     /// Pages above Home.
