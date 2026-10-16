@@ -48,6 +48,10 @@ The hero's form sets the pattern the context line answers:
 | cooking | Chili, step 3 | paused 8 min ago | paused 8 min ago |
 | shopping | Groceries, 4 left | at the store | 4 left / at the store |
 | planned cook | Tacos tonight | 2 to buy | 2 to buy (count from the phone; see Kitchen's note in `first-features.md` section 3) |
+| reading (Design 60, Product 999df84) | Dune, page 140 of 300 (title and position only; the position is a licensed number) | tonight / 3 days ago | tonight / tonight, your usual slot (never a word about the book's content) |
+| book finished | Dune, finished | today | today (rules only; the receipt is "Dune, finished.") |
+
+**Week-line rank.** When `WeekFacts` ranks the week's lines (AI-11), reading takes the rank after training and cooking and before tasks: a finished book outranks pages read, and pages read appear only when no training or cook line is missing. The book line is title and count only ("Dune, finished." or "Dune, 120 pages."), never what it is about.
 
 ## 2a. The promise on Settings
 
