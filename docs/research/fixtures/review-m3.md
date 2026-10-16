@@ -34,20 +34,24 @@ The page keeps its order: voice line "the week so far", hero, dabs. M3 adds thre
 page ground, no boxes, no rules, no colour fills:
 
 1. **A week line** in the voice face (21 pt) under the hero: the habit counts and the weight change in one sentence.
-2. **One plain text line per habit** under the dabs: the name and count in the label face ("Gym 3 of 3", "Gym,
-   paused this week"), then [habit day mark: Design], the per-day indicator Design is choosing. No coloured dots.
+2. **One plain text line per habit, at most 3** under the dabs: the name and count in the label face ("Gym 3 of 3",
+   "Gym, paused this week"; set as "GYM · 3 OF 3" in Label 16 `inkSecondary`), and under it Design's painted
+   thread (`docs/design/no-dots.md`). No coloured dots. A fourth habit or more stays off this page and shows on the full Review and the Habits page (Product,
+   8:07 PM PT Oct 15); the 3 shown follow the week line's order (rule habits first, then manual in creation order).
 3. **One weight line** under the habits: the trend in kg, one decimal, and how many weigh-ins this week.
 
 **Lines, not marks on the dabs.** The dab already means one thing (a session), with three states and a second
 small dab for a double day. Putting Cook and Read on it needs a colour per habit or a corner glyph, which turns
 seven dabs into a legend to decode and makes each dab's VoiceOver label long. A text line per habit keeps one
-meaning per mark, scales to 3 or 4 habits, and shows a paused habit as its own quiet line rather than a change to
+meaning per mark, fits the 3 habits the page shows, and shows a paused habit as its own quiet line rather than a change to
 every dab.
 
-**Per-day habit indicator: Design's call, no coloured dots** (Kaushik, 16 Oct). Whatever Design picks has one
-constraint from `habits.md`: a ticked day (manual, or a counted log) is marked, and every other day, past or ahead,
-is not. A habit is a weekly target, so a day with no tick is never a miss. No ring, no cross, no red. Until then
-the fixtures carry the placeholder and the VoiceOver sentences carry the days.
+**Per-day habit indicator: one painted thread per habit** (Design, `no-dots.md`, after Kaushik's no coloured dots,
+16 Oct). Under each habit label, a 3 pt rough stroke aligned to the seven day columns, in the habit's class pigment
+at the rest tint. A ticked day (manual, or a counted log) is painted; consecutive ticked days join into one stroke;
+a day with no tick is a gap; future days show nothing. 64 pt per habit, at most 3. A check-in paints today's
+stretch on wet from the previous day (500 ms), the count ticks, then it dries. Per `habits.md` a habit is a weekly
+target, so the gap carries no extra mark: no ring, no cross, no red. The VoiceOver sentences carry the days.
 
 ## 3. The hero and the week line
 
@@ -65,13 +69,13 @@ Sessions, spelled out, never "good", never "of seven":
 2. A weight clause, only when all hold: 3 or more weigh-in days this week; a trend point before this week's Monday
    04:00 that is not cut by a reseed; the first weigh-in 7 or more days before the latest. Change = trend at the
    week's latest weigh-in minus the trend at the last weigh-in before Monday 04:00, in full precision, converted to
-   the display unit, then rounded to one decimal: "weight 0.4 kg less", "weight 0.3 kg more", or "weight about the
-   same" when it rounds to 0.0. Alone, it is capitalised: "Weight 0.3 kg less."
+   the display unit, then rounded to one decimal: "weight down 0.4 kg", "weight up 0.3 kg", or "weight about the
+   same" when it rounds to 0.0. Alone, it is capitalised: "Weight down 0.3 kg."
 3. No clauses: no week line at all. The hero already says the week is quiet; nothing replaces it.
 
-Never in the week line: a paused habit, a 0 count, "down", "up", "lost", "gained", "missed", "streak", "only".
-So the board's "Gym 3 of 3, Cook 2 of 4, weight down 0.4 kg." prints as "Gym 3 of 3, Cook 2 of 4, weight 0.4 kg
-less." under the hero. It is not the hero itself: `review-sentence.md` keeps the 56 pt hero to the session count,
+Never in the week line: a paused habit, a 0 count, "lost", "gained", "missed", "streak", "only". The weight
+clause says "weight down" or "weight up" in plain ink, never coloured (Product, 8:07 PM PT Oct 15). So the board's
+"Gym 3 of 3, Cook 2 of 4, weight down 0.4 kg." prints exactly so under the hero. It is not the hero itself: `review-sentence.md` keeps the 56 pt hero to the session count,
 and four clauses at 56 pt would run to five lines.
 
 **Habit line:** "{Name} {n} of {target}". Paused: "{Name}, paused this week", its ticked days still marked (A7: a check-in
@@ -96,8 +100,9 @@ cook), **Read** (5, manual and "read {n} {unit}" notes), the same 3-a-week plan 
 after 14 Oct. Workouts with at least one logged set only (decision 6:44 PM PT).
 
 Notation, Monday to Sunday. Dabs: `●` trained, `◉` two sessions, `–` rest stroke, `○` faint ring, `.` today or
-ahead with no mark, `·` nothing (before first use, or a paused week's open day). Habit lines are text plus
-[habit day mark: Design]; the days each habit ticked are in its VoiceOver sentence.
+ahead with no mark, `·` nothing (before first use, or a paused week's open day). Habit lines are text plus a
+thread, written `thread:` with `▬` a painted day, ` ` a gap and `.` today or ahead with no paint, Monday first; the
+days each habit ticked are also in its VoiceOver sentence.
 
 **World A correction (4 AM).** Brief row 6 (Read, Mon 28 Sep 00:05) is Sunday 27 Sep under the 7:53 PM PT rule,
 and Sunday already holds row 5, so it adds nothing: Read is 4 of 5 in W1 and **1 of 5** in W2 (the brief has 2).
@@ -105,17 +110,17 @@ and Sunday already holds row 5, so it adds nothing: Read is 4 of 5 in W1 and **1
 | ID | Week, read at | Hero | Week line | Dabs | Habit lines | Weight line |
 |---|---|---|---|---|---|---|
 | R01 | 31 Aug, Sun 6 Sep 20:00 | A quiet week so far | (none: no trend before this week) | `·······` | (no habits) | Weight 79.4 kg, 3 weigh-ins this week. |
-| R02 | 7 Sep, Sun 13 Sep 20:00 | A quiet week so far | Weight 0.2 kg less. | `·······` | (no habits) | Weight 79.3 kg, 6 weigh-ins this week. |
-| R03 | 14 Sep, Sun 20 Sep 20:00, habits made Thu | A quiet week so far | Weight about the same. | `·······` | Train 0, new this week [habit day mark: Design]; Read 0, new this week [habit day mark: Design] | Weight 79.3 kg, 5 weigh-ins this week. |
-| R04 | 21 Sep, Mon 28 Sep 00:10 | All three sessions in | Train 3 of 3, Read 4 of 5, weight 0.4 kg less. | `○●–●–●–` | Train 3 of 3 [habit day mark: Design]; Read 4 of 5 [habit day mark: Design] | Weight 78.9 kg, 5 weigh-ins this week. |
-| R05 | 28 Sep, Sun 4 Oct 20:00 | One session this week | Train 2 of 3, Read 1 of 5, weight 0.2 kg less. | `●–○○○○.` | Train 2 of 3 [habit day mark: Design]; Read 1 of 5 [habit day mark: Design] | Weight 78.7 kg, 4 weigh-ins this week. |
-| R06 | 28 Sep in lb, same moment | One session this week | Train 2 of 3, Read 1 of 5, weight 0.5 lb less. | `●–○○○○.` | as R05 | Weight 173.4 lb, 4 weigh-ins this week. |
-| R07 | 5 Oct, Sun 11 Oct 20:00 | A quiet week so far | Weight 0.3 kg less. | `○○○○○○.` | Train 0 of 3 [habit day mark: Design]; Read, paused this week [habit day mark: Design] | Weight 78.4 kg, 4 weigh-ins this week. |
-| R08 | 12 Oct, Thu 15 Oct 18:00 | One session this week | Train 1 of 3, Read 2 of 5. | `○●–....` | Train 1 of 3 [habit day mark: Design]; Read 2 of 5 [habit day mark: Design] | Weight 78.2 kg, 2 weigh-ins this week. |
-| R09 | 19 Oct, Mon 26 Oct 00:40 | Four sessions this week | Gym 3 of 3, Cook 3 of 4, Read 3 of 5. | `●–●–○◉–` | Gym 3 of 3 [habit day mark: Design]; Cook 3 of 4 [habit day mark: Design]; Read 3 of 5 [habit day mark: Design] | (none) |
-| R10 | 26 Oct, Mon 2 Nov 03:50 | One session this week | Cook 3 of 4, Read 4 of 5. | `·●–···.` | Gym, paused this week [habit day mark: Design]; Cook 3 of 4 [habit day mark: Design]; Read 4 of 5 [habit day mark: Design] | (none) |
-| R11 | 2 Nov, Mon 2 Nov 04:05 | A quiet week so far | (none) | `.......` | Gym 0 of 3 [habit day mark: Design]; Cook 0 of 4 [habit day mark: Design]; Read 0 of 5 [habit day mark: Design] | (none) |
-| R12 | 2 Nov, Sat 7 Nov 23:00 | Four sessions this week | Gym 4 of 3, Cook 3 of 4, Read 2 of 5. | `●–●–●●.` | Gym 4 of 3 [habit day mark: Design]; Cook 3 of 4 [habit day mark: Design]; Read 2 of 5 [habit day mark: Design] | (none) |
+| R02 | 7 Sep, Sun 13 Sep 20:00 | A quiet week so far | Weight down 0.2 kg. | `·······` | (no habits) | Weight 79.3 kg, 6 weigh-ins this week. |
+| R03 | 14 Sep, Sun 20 Sep 20:00, habits made Thu | A quiet week so far | Weight about the same. | `·······` | Train 0, new this week thread `       `; Read 0, new this week thread `       ` | Weight 79.3 kg, 5 weigh-ins this week. |
+| R04 | 21 Sep, Mon 28 Sep 00:10 | All three sessions in | Train 3 of 3, Read 4 of 5, weight down 0.4 kg. | `○●–●–●–` | Train 3 of 3 thread ` ▬ ▬ ▬ `; Read 4 of 5 thread `▬▬ ▬  ▬` | Weight 78.9 kg, 5 weigh-ins this week. |
+| R05 | 28 Sep, Sun 4 Oct 20:00 | One session this week | Train 2 of 3, Read 1 of 5, weight down 0.2 kg. | `●–○○○○.` | Train 2 of 3 thread `▬    ▬ `; Read 1 of 5 thread `    ▬  ` | Weight 78.7 kg, 4 weigh-ins this week. |
+| R06 | 28 Sep in lb, same moment | One session this week | Train 2 of 3, Read 1 of 5, weight down 0.5 lb. | `●–○○○○.` | as R05 | Weight 173.4 lb, 4 weigh-ins this week. |
+| R07 | 5 Oct, Sun 11 Oct 20:00 | A quiet week so far | Weight down 0.3 kg. | `○○○○○○.` | Train 0 of 3 thread `       `; Read, paused this week thread ` ▬     ` | Weight 78.4 kg, 4 weigh-ins this week. |
+| R08 | 12 Oct, Thu 15 Oct 18:00 | One session this week | Train 1 of 3, Read 2 of 5. | `○●–....` | Train 1 of 3 thread ` ▬  ...`; Read 2 of 5 thread `▬ ▬ ...` | Weight 78.2 kg, 2 weigh-ins this week. |
+| R09 | 19 Oct, Mon 26 Oct 00:40 | Four sessions this week | Gym 3 of 3, Cook 3 of 4, Read 3 of 5. | `●–●–○◉–` | Gym 3 of 3 thread `▬ ▬  ▬ `; Cook 3 of 4 thread ` ▬ ▬  ▬`; Read 3 of 5 thread `▬ ▬   ▬` | (none) |
+| R10 | 26 Oct, Mon 2 Nov 03:50 | One session this week | Cook 3 of 4, Read 4 of 5. | `·●–···.` | Gym, paused this week thread ` ▬     `; Cook 3 of 4 thread ` ▬ ▬  ▬`; Read 4 of 5 thread `▬  ▬ ▬▬` | (none) |
+| R11 | 2 Nov, Mon 2 Nov 04:05 | A quiet week so far | (none) | `.......` | Gym 0 of 3 thread ` ......`; Cook 0 of 4 thread ` ......`; Read 0 of 5 thread ` ......` | (none) |
+| R12 | 2 Nov, Sat 7 Nov 23:00 | Four sessions this week | Gym 4 of 3, Cook 3 of 4, Read 2 of 5. | `●–●–●●.` | Gym 4 of 3 thread `▬ ▬ ▬▬.`; Cook 3 of 4 thread `  ▬ ▬▬.`; Read 2 of 5 thread `    ▬▬.` | (none) |
 
 Weight sums (trend at the week's last weigh-in, full precision): R02 79.252 minus 79.406 = -0.154; R03 79.276 minus
 79.252 = +0.024; R04 78.902 minus 79.276 = -0.374; R05 78.672 minus 78.902 = -0.230; R06 the same in lb: 173.441,
@@ -127,12 +132,12 @@ VoiceOver, header element:
 | ID | Exact sentence |
 |---|---|
 | R01 | A quiet week so far. 0 sessions this week. |
-| R02 | A quiet week so far. 0 sessions this week. Weight 0.2 kilograms less. |
+| R02 | A quiet week so far. 0 sessions this week. Weight down 0.2 kilograms. |
 | R03 | A quiet week so far. 0 sessions this week. Weight about the same. |
-| R04 | All three sessions in. 3 of 3 sessions this week. Train 3 of 3, Read 4 of 5, weight 0.4 kilograms less. |
-| R05 | One session this week. 1 of 3 sessions this week. Train 2 of 3, Read 1 of 5, weight 0.2 kilograms less. |
-| R06 | One session this week. 1 of 3 sessions this week. Train 2 of 3, Read 1 of 5, weight 0.5 pounds less. |
-| R07 | A quiet week so far. 0 of 3 sessions this week. Weight 0.3 kilograms less. |
+| R04 | All three sessions in. 3 of 3 sessions this week. Train 3 of 3, Read 4 of 5, weight down 0.4 kilograms. |
+| R05 | One session this week. 1 of 3 sessions this week. Train 2 of 3, Read 1 of 5, weight down 0.2 kilograms. |
+| R06 | One session this week. 1 of 3 sessions this week. Train 2 of 3, Read 1 of 5, weight down 0.5 pounds. |
+| R07 | A quiet week so far. 0 of 3 sessions this week. Weight down 0.3 kilograms. |
 | R08 | One session this week. 1 of 3 sessions this week. Train 1 of 3, Read 2 of 5. |
 | R09 | Four sessions this week. 4 of 3 sessions this week. Gym 3 of 3, Cook 3 of 4, Read 3 of 5. |
 | R10 | One session this week. 1 of 3 sessions this week. Cook 3 of 4, Read 4 of 5. |
@@ -143,7 +148,7 @@ Habit line examples: R04 Read "Read, 4 of 5 this week. Monday, Tuesday, Thursday
 paused this week. Tuesday done."; R11 Cook "Cook, 0 of 4 this week. None done yet."; R03 Train "Train, new this
 week. None done yet." Weight line R08: "Body weight trend 78.2 kilograms, 2 weigh-ins this week."
 
-Days done, for each habit line's "{Days} done." (and for Design's indicator): R04 Train Tue, Thu, Sat; Read Mon,
+Days done, for each habit line's "{Days} done." (and for the thread): R04 Train Tue, Thu, Sat; Read Mon,
 Tue, Thu, Sun. R05 and R06 Train Mon, Sat; Read Fri. R07 Read Tue (paused). R08 Train Tue; Read Mon, Wed. R09 Gym
 Mon, Wed, Sat; Cook Tue, Thu, Sun; Read Mon, Wed, Sun. R10 Gym Tue (paused); Cook Tue, Thu, Sun; Read Mon, Thu,
 Sat, Sun. R12 Gym Mon, Wed, Fri, Sat; Cook Wed, Fri, Sat; Read Fri, Sat. R03 and R11: none.
@@ -173,7 +178,7 @@ Tuesday is rest, not trained; Saturday holds two sessions (Legs A, Mobility) but
 - **Gap over 30 days**. The reseed cuts the trend (m3-lines B14), so the week with the reseed has no weight clause
   even with 3 weigh-ins; the line shows the new trend.
 - **Unit change from lb** (R06). Stored kg never changes. When `Format.unit` is lb, both lines convert the full-
-  precision kg trend and delta, then round to 0.1 lb ("173.4 lb", "0.5 lb less"). Switching mid-week reprints the
+  precision kg trend and delta, then round to 0.1 lb ("173.4 lb", "down 0.5 lb"). Switching mid-week reprints the
   whole week in lb; nothing is mixed. A weigh-in typed in lb ("weight 181 lb", BP3) is converted at write.
 - **The 4 AM boundary on Monday** (R04, R09, R10, R11). Monday 00:00 to 03:59 still shows last week: a check-in at
   03:50 (R10) and a cook finished at 00:30 (R09) count there. At 04:00 the page turns (R11): every count goes to 0
@@ -206,9 +211,9 @@ row 6 correction), `WeekViewTests.pausedRuleHabitWeekHasNoWasDue`.
 
 1. **Week line, not hero.** The hero stays `review-sentence.md`'s session count; habits and weight go in the line
    under it. Alternative: one long hero; rejected for length at 56 pt.
-2. **Text lines under the dabs, not marks on them** (section 2). Per-day habit indicator: Design's call, no
-   coloured dots.
-3. **Weight clause needs 3 weigh-ins this week.** Alternative: 2, which R08 would then print as "0.1 kg less".
+2. **Text lines under the dabs, not marks on them** (section 2). Per-day habit indicator: Design's
+   painted thread, no coloured dots.
+3. **Weight clause needs 3 weigh-ins this week.** Alternative: 2, which R08 would then print as "weight down 0.1 kg".
 4. **First use stays training-only**, so weight-only weeks (R01 to R03) draw no dabs rather than six rings.
 5. **A paused workout habit drops the week's rings.** Alternative: leave Core's rings (R10 then shows `○●–○○○.`).
 6. **Creation week reads "new this week"** with no target and stays out of history. Alternative: a pro-rated target

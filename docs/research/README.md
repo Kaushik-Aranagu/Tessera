@@ -145,3 +145,9 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [claude-first-run.md](claude-first-run.md) | Builder B, QA: Claude first-run walk with key-leak flags |
 | [training-week-one-questions.md](training-week-one-questions.md) | Coordinator: Mon Oct 19 training check-in questions |
 | [fixtures/review-m3.md](fixtures/review-m3.md) | Builder B, Core: 12 Review weeks with habits and body weight |
+| [colour-at-rest.md](colour-at-rest.md) | Design, Builders A and B: every coloured dot, badge and always-on colour on master, checked against no-dots.md |
+| [install-day-script.md](install-day-script.md) | QA: 22-step simulator script for the install commit before the Oct 22 re-sign |
+| [grammar-miss-blind-read.md](grammar-miss-blind-read.md) | Kaushik: 30-row unlabelled read of use 1 once his Claude key is in |
+| [lines-audit-2.md](lines-audit-2.md) | Core, Builders A and B: 61 Tess, UNDO and empty-state lines since #158, 24 fixes |
+| [oct-22-list.md](oct-22-list.md) | Coordinator: Kaushik's Oct 22 morning message, Kitchen and Money one-word questions |
+| [resign-day.md](resign-day.md) | Coordinator, iOS build: what survives the Oct 22 re-sign and what to check after |
