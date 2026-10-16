@@ -24,6 +24,7 @@
 - Undo batch: Builder B's rows in `../research/undo-lines.md` section 2, plus the capture code in `App/AppModel.swift`, to the one rule.
 
 **Later:**
+- Builder B's 3 op log gaps in `../research/oplog-health.md` (#162).
 - The rest of Builder B's accessibility rows in `../research/accessibility.md`, including Tess's rows ("commits after 2 s with no cancel" for VoiceOver). The Objects rows are Core's.
 - W3 recovery line and the one-time Health permission line on NowPage, after Core's rule and Health reads. Design's sheet: `docs/design/recovery-line.md` with `recovery-line.mp4` (6faa446 on Design's branch).
 - M3 habits page, after Core's M3 slice 2, with a Habits word on the Today foot line. Design's sheet: `docs/design/body-weight-and-habits.md` with `m3-surfaces.mp4` (1f17bd1 on Design's branch), drawn on Research's `../research/m3-1-2-brief.md` fixtures with exact copy.
