@@ -12,6 +12,14 @@
 - **Lane 1:** The stuck-listening fix (refused hold leaves Tess in listening; one line plus a router test; BLOCKS the pin).
 - **Lane 2:** #366's re-recorded clip on its head, then Plan my day (53) on ios/plan-home; after #366 merges, the one batch in Next.
 
+**Home reads HomeLines (AI architecture, 11:45 AM PT Oct 16):** NowPage still builds its own contextLine on master. If #366 doesn't switch NowPage to HomeLines, that's the first item after it merges.
+
+**Design 71 on the recipe peek (with 69 in the post-#366 batch):** swipe-more rules 1 to 5 (`docs/design/swipe-more.md`): the left edge is back, a pan in Tess's band is hers, the rest of the page opens INGREDIENTS, and the word always works.
+
+**Lists 9 to 12 refresh (Design `docs/design/lists-9-12.md`, c4b019f; Kitchen's acceptance rows refresh to match):** "put away" replaces Archive; EMPTY is a state word; the reusable list's "done" asks before it resets (RESET as a hold, or NOT NOW); empty states for the list page and the shelf. Pull when Lists come up, after the post-#366 batch.
+
+**Groceries rows (Research 142; 11:40 AM PT Oct 16):** G-R9 plus the pack size: rows show "for tacos" with short recipe names, no dot except the pack size, and call `packSize(of:)` for " · 28 oz" (GroceriesView.swift:196, :435-441). Pull with 69 after #366.
+
 **Audit items (11:35 AM PT Oct 16; pull after the pin blocker, the stuck-listening fix):**
 - One small receipts and labels PR from Design `docs/design/audit-ui-bar.md` (UI-bar audit of bb7f082): R1 "Call mom, done. Next one is up.", R2 "<title>, moved to tomorrow.", R3 "Basket, 3 cleared.", R4 "Today's copy, saved there. One a day from now on.", R5 "Copy, saved."; D1 "now, until 3:40 pm" via `HomeLines.shortTime`; S1 HOLD and 24 MIN LEFT as two label words; S2 the foot line words with no dot; E2 the NoteEditor half (cut at a whole word); H3 the finished workout shows on Home.
 - QA (#428) A7: any `LaunchFlags.allowed` launch with a recording flag counts as demo (one shared list). A3/A4 when wiring Plan my day: pass `{ model.asksClaude }` and `includesEventTitles` explicitly.

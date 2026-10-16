@@ -6,13 +6,15 @@
 - **Lane 1:** #366's clip pass, then 66 (the next-build walk) when Builder A records it on the pin.
 - **Lane 2:** A UI-bar audit of master: every screen against the one-line bar and the receipts rule; fix rows for each builder.
 
-**Now:** 69 recipe clock done (a4801e4, his pick: C with B's list as a peek and lit steps; one lane this build, second lane and Pantry rows later per #414; sent to the Kitchen lead, Builder B via the coordinator's post-#366 batch); #366 re-pass when Builder B's clip comes, then 68's Home swap; 66 when Builder A's walk clip lands. 55 closed by his pick.
+**Now:** two lanes. Lane 1: #366 clip FIX FIRST (live set 1 segment re-record on 46dfd4d), then pass; 66 when Builder A's walk clip lands. Lane 2: done today: 69 recipe clock (042c76f), 68 Home swap (5ac058e), UI-bar audit of master `docs/design/audit-ui-bar.md` (0ff6cea, Product boards the findings), 70 Tess has eyes setting `docs/design/settings-eyes.md` (c5d6e7b, Builder B batch), 71 swipe for more map + LAST TIMES `docs/design/swipe-more.md` (08b3549; Builder A, Builder B, Core).
 
 **Always on:** review each Core or iOS screen as it merges, with file-and-change fixes posted in the Design thread.
 
 **After Kaushik's phone review (build cut 2:05 PM Pacific):** his look-and-feel feedback goes ahead of everything in Next. Watch-points sent to Product for `review-session.md`.
 
-**Next:** (Design is ahead of the builders, so this round goes into depth on what ships.)
+**Next (Oct 16, 11:45 AM PT):** the numbered list below is done through 32 (22 = day-reel.md, 23 = empty-states.md, 27 = day-seams.md closed). Design is ahead of the builders, so lane 2 now takes only build-ready work: recordings of each builder PR as it lands, the audit's follow-ups as owners ask, and his own asks (Pantry and parallel steps stay later, per Product).
+
+**Earlier Next:** (Design is ahead of the builders, so this round goes into depth on what ships.)
 1. Design audit of tonight's build, using master after the 2:05 PM Pacific cut. Done when `docs/design/audit-build-1.md` covers every screen against the baseline, with a ranked polish list (file, change, owner team) ready to merge with Kaushik's huddle feedback.
 Items 2 to 4 of the last round are done (see Done). Item 1's first pass is done; it finishes when the tour recording lands. Done: back word (`back-word.md`), Show and hints (`show-and-hints.md`). New round, depth on what builders reach next (Product, 4:22 PM PT):
 2. (done) Cook mode screen, checked against the Kitchen lead's acceptance (#127) and `cook-mode-script.md`, for Builder A. Done when the slice 12 sheet answers every acceptance row (live steps, two timers, Lock Screen timers, idle rule, Cook entry on finish, the HomeLink word), and any gap is fixed on the sheet.
