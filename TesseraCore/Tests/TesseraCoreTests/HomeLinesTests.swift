@@ -30,23 +30,27 @@ struct HomeLinesTests {
                             exercisesPlanned: 6, records: ["Bench"], endedAt: Self.at(20, 5))
         let line = HomeLines.line(for: done, now: Self.at(21, 40), calendar: Self.calendar)
         #expect(line.text == "Push A done. Bench record.")
-        #expect(line.hero == "Push A done" && line.context == "done 1 h ago" && line.contextShort == "done 1 h")
+        #expect(line.hero == "Push A done" && line.context == "done at 8:05 pm" && line.contextShort == line.context)
         #expect(line.detail == "6 exercises, 22 sets, 1 new best.")
-        #expect(line.numbers == [6, 6])
+        // The facts' numbers, then every digit in the rules words (8:05 gives 8 and 5), each once.
+        #expect(line.numbers == [6, 22, 8, 5, 1] && line.names == ["Push A", "Bench"] && !line.fixed)
         let plain = HomeFact(id: UUID(), kind: .workout, title: "Push A", state: .done, sets: 20, exercisesDone: 6,
                              exercisesPlanned: 6)
         #expect(text(plain) == "Push A done.")
         let two = HomeFact(id: UUID(), kind: .workout, title: "Push A", state: .done, sets: 20, exercisesDone: 6,
                            exercisesPlanned: 6, records: ["Bench", "Press"])
-        #expect(text(two) == "Push A done. 2 records." && two.numbers == [6, 6, 2])
+        #expect(text(two) == "Push A done. 2 records." && two.factNumbers == [6, 6, 20, 2])
         #expect(HomeLines.detail(for: two) == "6 exercises, 20 sets, 2 new bests.")
     }
 
     @Test func workoutDoneWithNothingLogged() {
         // H10: matches ProcessTable's overnight line.
         let empty = HomeFact(id: UUID(), kind: .workout, title: "Push A", state: .done, sets: 0, exercisesDone: 0,
-                             exercisesPlanned: 6)
-        #expect(text(empty) == "Push A, no sets." && HomeLines.hero(for: empty) == "Push A, no sets")
+                             exercisesPlanned: 6, endedAt: Self.at(15, 10))
+        let line = HomeLines.line(for: empty, now: Self.at(21, 40), calendar: Self.calendar)
+        #expect(line.text == "Push A, no sets." && line.hero == "Push A, no sets")
+        // Only when, and never Claude's to comment on.
+        #expect(line.context == "this afternoon" && line.fixed)
     }
 
     @Test func workoutRunningAndPaused() {
@@ -54,16 +58,16 @@ struct HomeLinesTests {
         let running = HomeFact(id: UUID(), kind: .workout, title: "Legs", state: .running, exercise: "Squat", step: 3,
                                exercisesDone: 1, exercisesPlanned: 5, startedAt: Self.at(21, 32))
         let live = HomeLines.line(for: running, now: Self.at(21, 40), calendar: Self.calendar)
-        #expect(live.text == "Squat, set 3." && live.hero == "Legs, at squat")
-        #expect(live.context == "started 8 min ago" && live.contextShort == "started 8 min")
-        #expect(live.numbers == [3])
+        #expect(live.text == "Squat, set 3." && live.hero == "Legs, squat set 3")
+        #expect(live.context == "now" && live.fixed) // no network while he lifts
+        #expect(live.numbers == [3, 1, 5, 0])
         let paused = HomeFact(id: UUID(), kind: .workout, title: "Pull B", state: .paused, exercise: "Row", step: 2,
                               sets: 5, exercisesDone: 2, exercisesPlanned: 5, startedAt: Self.at(20, 30),
                               lastTouchedAt: Self.at(21, 0))
         let rest = HomeLines.line(for: paused, now: Self.at(21, 40), calendar: Self.calendar)
         #expect(rest.text == "Row paused at set 2." && rest.hero == "Pull B, paused at row")
         #expect(rest.context == "paused 40 min ago" && rest.contextShort == "paused 40 min")
-        #expect(rest.detail == "2 exercises, 5 sets.")
+        #expect(rest.detail == "2 exercises, 5 sets." && !rest.fixed)
         // Paused before any exercise was started: the routine alone.
         let fresh = HomeFact(id: UUID(), kind: .workout, title: "Pull B", state: .paused, startedAt: Self.at(21, 39))
         let line = HomeLines.line(for: fresh, now: Self.at(21, 40), calendar: Self.calendar)
@@ -77,17 +81,24 @@ struct HomeLinesTests {
         // H5, H6: "this evening" from 17:00 to 21:00, "today" the rest of his day.
         let legs = HomeFact(id: UUID(), kind: .workout, title: "Legs", state: .planned)
         #expect(text(legs, now: Self.at(18, 10)) == "Legs this evening.")
-        #expect(text(legs, now: Self.at(23)) == "Legs today.")
+        #expect(text(legs, now: Self.at(23)) == "Legs tonight.")
         #expect(text(legs, now: Self.at(9)) == "Legs today.")
         let line = HomeLines.line(for: legs, now: Self.at(18, 10), calendar: Self.calendar)
         #expect(line.hero == "Legs" && line.context == "this evening" && line.detail == nil && line.numbers.isEmpty)
+        // H2: days since the same routine, for Claude's "first in 9 days", licensed as a digit.
+        let back = HomeFact(id: UUID(), kind: .workout, title: "Push A", state: .planned, sinceLastDays: 9)
+        #expect(HomeLines.line(for: back, now: Self.at(9), calendar: Self.calendar).numbers == [9])
     }
 
     @Test func restDay() {
         // H7: the existing RestDay line, a stop on the row, none on the hero.
         let rest = HomeFact(id: nil, kind: .rest, title: RestDay.line, state: .planned)
         let line = HomeLines.line(for: rest, now: Self.at(12), calendar: Self.calendar)
-        #expect(line.text == "Rest day." && line.hero == "Rest day" && line.context == nil && line.objectID == nil)
+        #expect(
+            line.text == "Rest day." && line.hero == "Rest day" && line.context == "Thursday",
+            "\(line.context ?? "")"
+        )
+        #expect(line.objectID == nil && line.detail == nil)
     }
 
     @Test func cookingAndShopping() {
@@ -95,12 +106,15 @@ struct HomeLinesTests {
         let chili = HomeFact(id: UUID(), kind: .cook, title: "Chili", state: .paused, step: 3, steps: 8,
                              startedAt: Self.at(19))
         let cook = HomeLines.line(for: chili, now: Self.at(21, 40), calendar: Self.calendar)
-        #expect(cook.text == "Chili, on step 3." && cook.hero == "Chili, on step 3" && cook.detail == "Step 3 of 8.")
-        #expect(cook.context == "started 2 h ago" && cook.numbers == [3, 8])
+        #expect(cook.text == "Chili, on step 3." && cook.hero == "Chili, step 3" && cook.detail == "Step 3 of 8.")
+        #expect(cook.context == "paused 2 h ago" && cook.contextShort == "paused 2 h" && cook.numbers == [3, 8, 2])
+        let live = HomeFact(id: UUID(), kind: .cook, title: "Chili", state: .running, step: 1, steps: 8)
+        #expect(HomeLines.line(for: live).context == "now")
         let shop = HomeFact(id: Groceries.listID, kind: .shop, title: "Groceries", state: .running, step: 4,
                             startedAt: Self.at(21, 20))
         let line = HomeLines.line(for: shop, now: Self.at(21, 40), calendar: Self.calendar)
         #expect(line.text == "Groceries: 4 left." && line.hero == "Groceries, 4 left" && line.detail == "4 items left.")
+        #expect(line.context == "at the store")
         let basket = HomeFact(id: Groceries.listID, kind: .shop, title: "Groceries", state: .running, step: 0)
         #expect(text(basket) == "Groceries: all in the basket." && HomeLines
             .detail(for: basket) == "All in the basket.")
@@ -113,7 +127,47 @@ struct HomeLinesTests {
                             startsAt: Self.at(18, 30))
         let line = HomeLines.line(for: task, now: Self.at(12), calendar: Self.calendar)
         #expect(line.text == "Call the bank about the card" && line.hero == line.text)
-        #expect(line.context == "6:30 pm" && line.detail == nil)
+        #expect(line.context == "6:30 pm" && line.detail == nil && line.numbers == [6, 30])
+    }
+
+    @Test func aPlannedCookCarriesWhatIsStillToBuy() {
+        // Product (72954ac): groceries never notify; the planned cook's line carries the count.
+        let tacos = HomeFact(id: UUID(), kind: .cook, title: "Tacos", state: .planned, toBuy: 2)
+        let line = HomeLines.line(for: tacos, now: Self.at(18, 30), calendar: Self.calendar)
+        #expect(line.text == "Tacos this evening, 2 to buy." && line.hero == "Tacos this evening")
+        #expect(line.context == "2 to buy" && line.detail == nil && line.numbers == [2])
+        #expect(text(tacos, now: Self.at(21, 30)) == "Tacos tonight, 2 to buy.")
+        let stocked = HomeFact(id: UUID(), kind: .cook, title: "Tacos", state: .planned, toBuy: 0)
+        #expect(HomeLines.line(for: stocked, now: Self.at(9), calendar: Self.calendar).context == "nothing to buy")
+    }
+
+    @Test func theCapsTheCheckerEnforces() {
+        // home-lines.md section 1: context 6 words and 32 characters with no stop; detail one sentence, 14 words,
+        // 80 characters, with its stop. Every rules line fits its own cap.
+        #expect(HomeLines.fitsContext("this evening, your usual slot"))
+        #expect(!HomeLines.fitsContext("this evening, your usual slot."))
+        #expect(!HomeLines.fitsContext("paused twenty one minutes ago at the bench"))
+        #expect(!HomeLines.fitsContext("a very long context line past 32"))
+        #expect(HomeLines.fitsDetail("1 exercise, 2 sets, 1 new best."))
+        #expect(!HomeLines.fitsDetail("1 exercise, 2 sets") && !HomeLines.fitsDetail("Done. Two sentences."))
+        #expect(!HomeLines.fitsDetail("One two three four five six seven eight nine ten eleven twelve thirteen "
+                + "fourteen fifteen."))
+        let facts = [
+            HomeFact(id: UUID(), kind: .workout, title: "Incline Push Day B", state: .done, sets: 22, exercisesDone: 6,
+                     exercisesPlanned: 6, records: ["Bench", "Press", "Row"], endedAt: Self.at(20, 5)),
+            HomeFact(id: UUID(), kind: .workout, title: "Pull B", state: .paused, exercise: "Incline", step: 2,
+                     sets: 5, exercisesDone: 2, exercisesPlanned: 5, lastTouchedAt: Self.at(19)),
+            HomeFact(id: UUID(), kind: .cook, title: "Chili", state: .paused, step: 3, steps: 12,
+                     lastTouchedAt: Self.at(19)),
+            HomeFact(id: UUID(), kind: .cook, title: "Tacos", state: .planned, toBuy: 12),
+            HomeFact(id: UUID(), kind: .shop, title: "Groceries", state: .running, step: 14),
+            HomeFact(id: nil, kind: .rest, title: RestDay.line, state: .planned),
+        ]
+        for line in HomeLines.lines(for: facts, now: Self.at(21, 40), calendar: Self.calendar) {
+            #expect(line.context.map(HomeLines.fitsContext) ?? true, "\(line.context ?? "")")
+            #expect(line.contextShort.map(HomeLines.fitsContext) ?? true, "\(line.contextShort ?? "")")
+            #expect(line.detail.map(HomeLines.fitsDetail) ?? true, "\(line.detail ?? "")")
+        }
     }
 
     @Test func rowLinesStayWithinSixWords() {
@@ -180,8 +234,17 @@ struct HomeLinesTests {
 
         // The planned routine and the rest day.
         let next = try #require(TrainingLedger(store: store, classes: classes).nextRoutine(in: plan))
-        #expect(HomeLines.line(for: facts.fact(planned: next), now: Self.at(18), calendar: Self.calendar).text
+        let planned = facts.fact(planned: next, now: Self.at(18))
+        #expect(HomeLines.line(for: planned, now: Self.at(18), calendar: Self.calendar).text
             == "\(store.displayTitle(of: next)) this evening.")
+        #expect(planned.sinceLastDays == nil) // never run
+        // A planned cook counts the recipe's unbought rows.
+        try engine.perform(AddRecipeToGroceries(recipe: recipe.id), by: .user)
+        let dinner = try engine.perform(CreateTask(title: "cook \(recipe.title)"), by: .user).output
+        let tonight = facts.fact(plannedCook: dinner, recipe: recipe)
+        #expect(tonight.kind == .cook && tonight.state == .planned && (tonight.toBuy ?? 0) > 0)
+        #expect(HomeLines.line(for: tonight, now: Self.at(18), calendar: Self.calendar).text
+            == "\(recipe.title) this evening, \(tonight.toBuy ?? 0) to buy.")
         #expect(HomeLines.line(for: facts.rest(next: next)).text == "Rest day.")
     }
 
@@ -205,7 +268,8 @@ struct HomeLinesTests {
         let done = HomeFacts(engine: engine).fact(done: summary)
         let line = HomeLines.line(for: done, now: Self.at(21).addingTimeInterval(3 * 86400), calendar: Self.calendar)
         #expect(line.text == "\(done.title) done. \(done.records[0]) record.")
-        #expect(line.context == "done 2 h ago" && line.detail?.hasSuffix("1 set, 1 new best.") == true)
-        #expect(!line.text.contains("70"))
+        #expect(line.context == "done at 6:30 pm" && line.detail?.hasSuffix("1 set, 1 new best.") == true)
+        #expect(!line.text.contains("70") && !line.numbers.contains(70))
+        #expect(done.sinceLastDays == 2 && line.numbers.contains(2))
     }
 }

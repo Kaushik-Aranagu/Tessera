@@ -55,6 +55,15 @@ public struct Groceries {
         }
     }
 
+    /// Open rows on the list that a recipe put there, still to buy ("Tacos tonight, 2 to buy." on Home).
+    public func toBuy(for recipe: UUID) -> Int {
+        guard let list else { return 0 }
+        return list.orderedChildren.count { item in
+            !item.isDeleted && store.value("isDone", of: item) != .bool(true)
+                && GroceryShare.decode(store.value("shares", of: item)?.stringValue).contains { $0.recipe == recipe }
+        }
+    }
+
     /// One pack's size for an item ("14.5 oz"), drawn after the name with a middle dot; nil when it has none.
     public func packSize(of item: ObjectRecord) -> String? {
         GroceryShare.decode(store.value("shares", of: item)?.stringValue).lazy.compactMap(\.packSize).first

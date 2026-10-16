@@ -538,8 +538,7 @@ public struct StoreDayLookup: DayLookup {
     }
 
     static func shortName(_ name: String) -> String {
-        ["Bench Press": "Bench", "Back Squat": "Squat", "Barbell Row": "Row", "Incline Bench Press": "Incline",
-         "Overhead Press": "Press"][name] ?? name
+        ExerciseWords.short(name)
     }
 
     static func number(_ value: Double) -> String {
