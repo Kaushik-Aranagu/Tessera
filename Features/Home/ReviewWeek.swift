@@ -326,7 +326,8 @@ struct WeekLines: View {
                     Text(row.text.replacingOccurrences(of: " × ", with: "\u{00A0}×\u{00A0}"))
                         .font(Theme.voice(size: 16))
                         .foregroundStyle(Theme.Colors.ink)
-                        .lineLimit(1)
+                        // A long line wraps; nothing on this page ends in "…" (QA F1).
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(minHeight: 24)
                 .contentShape(Rectangle())
