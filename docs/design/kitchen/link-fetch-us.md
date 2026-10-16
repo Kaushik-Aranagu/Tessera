@@ -30,12 +30,12 @@ The paste screen (sheet 11) on the look's own ground. No new screen.
    - Amounts get a cadmium under-stroke drawn left to right, which dries to 35% (`Theme.Motion.dry`).
    - Names arrive in sage and dry to `ink` over 700ms. There's no sage dab and no dot left behind.
    - Durations get a cadmium tick, and step numerals fade in at the margin.
-4. Tess counts what she found: "Seven ingredients, three steps, two timers." When the page held several recipes: "Read the first of 3 recipes on that page."
+4. Tess counts what she found, in digits like every Tess count: "7 ingredients, 3 steps, 2 timers." When the page held several recipes: "3 recipes on that page. I read the first."
 5. **Save recipe** appears 40pt under the last line. A tap runs the sheen along its line. Then Tess says "Chili mac saved." with **UNDO** under it (10s). UNDO says "Chili mac taken back." and the page returns to the read recipe, unsaved.
 - The recipe keeps its link: on its page, one level down, "From **budgetbytes.com**", with the host as a value word that opens Safari.
 
 ## When Claude reads it (L3)
-- Only after L1 and L2 fail, and only when Settings says **Tess asks Claude: yes**. With no, L3 never runs and the page goes straight to "No recipe on that page. Paste the text instead."
+- Only after L1 and L2 fail, only when Settings says **Tess asks Claude: yes**, and only while Claude isn't paused at the monthly cap (paused goes straight to its line in the table, with no "Asking Claude." and no wisps). With no, L3 never runs and the page goes straight to "No recipe on that page. Paste the text instead."
 - Tess: "No recipe card there. Asking Claude." **Three wisps** rise above the soul for as long as the request is out. This replaces the 22×14 cloud outline.
 - The recipe streams in as a ghost, line by line, in wet cobalt breathing at 0.5 to 0.66, like every ghost. The title becomes the name as it arrives.
 - The brush pass marks it. Tess: "Claude read it. Check it, then save."
@@ -52,10 +52,10 @@ Nothing is written, and there's no modal or error code. The link stays where it 
 | Paywall, nothing read | The link line, the writing line | "That page is paywalled. Paste the text instead." |
 | No recipe found (Claude off, or Claude found none) | The link line, the writing line | "No recipe on that page. Paste the text instead." |
 | Claude timed out (20s) | The link line, the writing line | "Claude didn't answer in time. Paste the text instead." |
-| Claude paused at the monthly cap | The link line, the writing line | "Claude's paused until Nov 1. Paste the text instead." |
-| A video with a recipe in its description | The description, read and marked | "Read the video's description: 9 ingredients." |
+| Claude paused at the monthly cap | The link line, the writing line. L3 is skipped: no "Asking Claude." line and no wisps | "Claude's paused until Nov 1. Paste the text instead." |
+| A video with a recipe in its description | The description, read and marked | "9 ingredients, from the video's description." |
 | A video that links to a recipe site | The link line | "The video links to **budgetbytes.com**. Read that?" The host is a value word; a tap starts Reading on it |
-| A video with nothing written | The link line, the writing line | "No written recipe in that video. Paste one instead." |
+| A video with nothing written | The link line, the writing line | "No written recipe in that video. Paste the text instead." |
 | Offline | The link line at 45% | "You're offline. I'll read it when you're back." It waits in `TessInbox` and comes back as a ghost recipe, never saved by itself |
 | Too big or odd | The link line, the writing line | "Too big to read safely. Paste the text instead." |
 
@@ -72,12 +72,5 @@ Examples for the board and fixtures, not promises about any site; Research's fix
 - **Builder B:** the paste screen (`Features/Recipes/`): the S4 top with the name taking the title, the quiet empty line and PASTE, the link line and its wash, FROM HOST at 150, heads as label words, the redrawn brush pass, Save recipe as an ink-line word, the writing line, the wisps, and every Tess line beside the soul with UNDO under it.
 - **Core:** L1 to L3 and each failure case mapped to its line, L3 skipped when the Claude setting is no, the "several recipes" count, and US amounts and pack sizes kept as written on read.
 
-## For Research
-These lines were shortened from `kitchen-v2.md` and the brief to fit two lines. Please check the wording:
-1. "Got 12 ingredients. The steps are behind the site's paywall; paste them below." is now "The steps are paywalled. Paste them below." (the ingredients are on the page, so the count is dropped).
-2. "That page is behind a paywall. Paste the recipe text instead." is now "That page is paywalled. Paste the text instead."
-3. "Couldn't find a recipe on that page. Paste the text instead." is now "No recipe on that page. Paste the text instead."
-4. "Couldn't read that page, and Claude is paused until 1 Nov. Paste the text instead." is now "Claude's paused until Nov 1. Paste the text instead." (US date order).
-5. "That's a video without a written recipe. Paste the ingredients if you have them." is now "No written recipe in that video. Paste one instead."
-6. "There were 3 on the page; I read the first." is now "Read the first of 3 recipes on that page." and replaces the count line.
-7. New: "Claude didn't answer in time. Paste the text instead." (from Product's Plan my day timeout) and "Chili mac taken back." for UNDO.
+## Research's copy check (applied)
+Every failure line ends "Paste the text instead." where it asks for text. Counts are in digits: "7 ingredients, 3 steps, 2 timers." and "9 ingredients, from the video's description." "3 recipes on that page. I read the first." replaces the earlier wording, which read as an order. The paywall, no-recipe, Nov 1 pause, timeout and "Chili mac taken back." lines stand as written above. Earlier wordings, for the record: "Got 12 ingredients. The steps are behind the site's paywall; paste them below.", "That page is behind a paywall. Paste the recipe text instead.", "Couldn't find a recipe on that page. Paste the text instead.", "Couldn't read that page, and Claude is paused until 1 Nov. Paste the text instead.", "That's a video without a written recipe. Paste the ingredients if you have them.", "There were 3 on the page; I read the first."

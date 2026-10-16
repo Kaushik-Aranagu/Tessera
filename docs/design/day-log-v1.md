@@ -8,7 +8,9 @@ This sheet is for Builder B's Day log page, with three asks of Core. It's drawn 
   4. A rest day, the faint row, an empty day and an untrained day.
   5. The 6-line cap.
   6. The first day.
-- Recording: `recordings/day-log-turnover.mp4`. It shows the 04:00 turnover with a workout still running.
+- Recordings:
+  - `recordings/day-log-tour.mp4` (22s, Porcelain, Thu 15 at 19:40), the final one for Builder B. A set lands and only the number changes (DL54), "Dentist taken back." fades its line out and redo brings it back (DL55), a Tess write lands with its wash behind the text and dries (DL58), then a scroll back through the untrained day, an empty day, the faint row, the Rest day row and the 6-line cap with its tail, and down to TODAY again. Source: `studies/day-log-v1.html?play&tour`.
+  - `recordings/day-log-turnover.mp4` shows the 04:00 turnover with a workout still running (Obsidian, S7).
 
 ## The rules this sheet sets
 1. **No dabs** (`no-dots.md`, Kaushik 8:07 PM). A line is the time, then the text. The text column is at **x 86** (a 64pt time column). The margin scrub stays the left 80pt.
@@ -38,7 +40,7 @@ This sheet is for Builder B's Day log page, with three asks of Core. It's drawn 
 | **An untrained day** | WED 14: "12:40 Done: call the bank", "19:30 Cooked carbonara, 35 min". No plan line, no workout line, no Rest day. | DL51 |
 | **The 6-line cap** | THU 8: six lines, then the tail "Also: 3 notes, ticked 4 on Lisbon packing." (no time, `inkSecondary`, wraps, opens nothing). **The tail appears only past the cap.** | DL30, DL41 |
 | **Empty days and runs** | Labels at 45%, one row each, never a count:<br>- a single day: "TUE 13"<br>- a run: "WED 28 TO FRI 30", "FRI 9 TO SAT 10"<br>- a run across months: "SEP 29 TO OCT 2"<br>- **TODAY** alone with nothing under it<br>QA checks the 45% labels for contrast on Porcelain and the dark looks (16/700 isn't large text). | DL39, DL49 |
-| **The first day** | "TODAY" in `ink` at the bottom, and under it "Your days write themselves here." (21/400, 55%). When the first record lands, it rises in under the date as the line fades (220ms). | DL50, DL67 |
+| **The first day** | "TODAY" in `ink` at the bottom, and under it "Your days write themselves here." (21/400 `inkSecondary`, a quiet line per `empty-states.md`). When the first record lands, it rises in under the date as the line fades (220ms). | DL50, DL67 |
 
 ## The rest of the page rows (pointers and the no-dab answers)
 - **The ways in** (DL32, DL33): Review's link line "The week · **Day log** · Notes", and Home's day label ("Thursday afternoon"). Both are in `day-log-page.md`, with no dab or dot anywhere on either.
@@ -54,6 +56,17 @@ This sheet is for Builder B's Day log page, with three asks of Core. It's drawn 
 - **Something taken back elsewhere** (DL55): "Dentist taken back." on Home fades its line out here (220ms), and it comes back on redo.
 - **A destructive write elsewhere** (DL56): the undo line and its 10s UNDO stay where the change was made. The log draws the committed state at once and redraws if UNDO lands. **There's no UNDO key on this page.**
 - **A Tess write** (DL58): her 2.8s cobalt wash sits **behind the text band** of the new line, as `no-dots.md` does for Home rows, then dries to the line's tier. There's no dab for it to land on.
+
+## Final pass (item 33)
+Checked again against Research's `day-log-v1-check.md` (rows 1 to 39) and the board and both recordings at this commit.
+- **Fixed in this pass:**
+  - The 6-line cap phone drew 5 lines before the tail (row 5). THU 8 now has six ("18:20 Done: pay the rent") and then "Also:".
+  - The first-day line was a literal 55%. It's now `inkSecondary`, like every quiet line (row 24's "one token, not a literal").
+  - The final recording (`day-log-tour.mp4`) draws DL54, DL55 and DL58, which were only stated before (rows 36, 37, 39).
+- **Already closed by this sheet:** rows 2 to 7 (each phone one read in one zone, WED 14 untrained, WED 28 TO FRI 30, the 00:31 note renamed), 10 and 11 (`DayLine.kind`, a running line in `ink` wherever its block is), 12 (no-break spaces at draw), 15 (illustrative note), 18 (nothing moves at 04:00; Reduce Motion stated; DL70 drawn), 23 and 24 (the quiet tier is intended and is `inkSecondary` for every time), 26 (all four empty forms and the VoiceOver run), 28 (the Never list), 29 (Core owns the kind), and 31 to 39 (the page rows section above).
+- **Matches, nothing to do:** rows 9, 13, 14, 16, 17, 19 to 22, 25, 27, 30.
+- **Times and days:** every time prints in the current zone; a day comes from its root item's own stored zone (`op.zone`, nil meaning the calendar's zone) and the 04:00 boundary. The travel phone is the case to test.
+- **Not Design's:** rows 8 and 23's pack wording and P1 to P8 are Research's. `DayLine.kind`, `DayStory` and `DayLookup` are Core's and aren't on master yet (89ee4dd), so the faint row and the running line wait on Core.
 
 ## Never
 Dabs or dots, a zone tag, a "travel" word, a seam at midnight, counts of empty days, red, italics, an UNDO key, two zones in one read. And DL40's words: "not finished", only, missed, behind, streak, should, again, late, great.

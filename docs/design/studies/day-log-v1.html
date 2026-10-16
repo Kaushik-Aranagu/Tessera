@@ -64,14 +64,27 @@ const P4=phone('REST DAY, FAINT ROW, EMPTY, UNTRAINED','October',[
  D('TUE 13',[],'empty'),
  D('WED 14',[L('12:40','Done: call the bank'),L('19:30','Cooked carbonara, 35 min')])]);
 const P5=phone('THE 6-LINE CAP, SCROLLED BACK','October',[
- D('THU 8',[L('06:50','Pull Day A, 61 min. Row 70&nbsp;×&nbsp;10.'),L('08:30','4 tasks done'),L('09:00','Added 7 tasks, 5 groceries'),L('13:15','New list: Lisbon packing'),L('17:40','Cooked omelette, 10 min'),L('','Also: 3 notes, ticked 4 on Lisbon packing.','also')]),
+ D('THU 8',[L('06:50','Pull Day A, 61 min. Row 70&nbsp;×&nbsp;10.'),L('08:30','4 tasks done'),L('09:00','Added 7 tasks, 5 groceries'),L('13:15','New list: Lisbon packing'),L('17:40','Cooked omelette, 10 min'),L('18:20','Done: pay the rent'),L('','Also: 3 notes, ticked 4 on Lisbon packing.','also')]),
  D('FRI 9 TO SAT 10',[],'empty')]);
 const P6=phone('THE FIRST DAY · NOTHING LOGGED YET','October',[
- D('TODAY',[`<div class="x" style="color:rgba(23,20,31,.55);font-weight:400">Your days write themselves here.</div>`],'today')]);
+ D('TODAY',[`<div class="x" style="color:rgba(var(--ink),.66);font-weight:400">Your days write themselves here.</div>`],'today')]);
 const PLAY=Q.includes('play');
 // S7 (day-seams.md): 04:00 is night, so the turnover plays in Obsidian. ?por keeps Porcelain.
-const OBS=Q.includes('obs')||(PLAY&&!Q.includes('por'));if(OBS)document.body.classList.add('obs');
-if(PLAY){
+const TOUR=Q.includes('tour');
+const OBS=Q.includes('obs')||(PLAY&&!TOUR&&!Q.includes('por'));if(OBS)document.body.classList.add('obs');
+// ?tour (item 33): the final recording for Builder B. Porcelain, Thu 15 at 19:40: a set lands, a task is taken back
+// and redone, a Tess write lands with its wash, then a scroll back through the states and down to TODAY again.
+if(PLAY&&TOUR){
+ document.getElementById('row').innerHTML=phone('THU 15, 19:40 · TODAY AT THE FOOT','October',[
+  D('THU 8',[L('06:50','Pull Day A, 61 min. Row 70&nbsp;×&nbsp;10.'),L('08:30','4 tasks done'),L('09:00','Added 7 tasks, 5 groceries'),L('13:15','New list: Lisbon packing'),L('17:40','Cooked omelette, 10 min'),L('18:20','Done: pay the rent'),L('','Also: 3 notes, ticked 4 on Lisbon packing.','also')]),
+  D('FRI 9 TO SAT 10',[],'empty'),
+  D('SUN 11',[L('','Rest day','faint'),L('09:15','Added 3 tasks'),L('18:05','Ticked 2 on Home')]),
+  D('MON 12',[L('06:55','Pull Day A, 3 sets. Row 60&nbsp;×&nbsp;10.','faint'),L('12:30','Done: book the dentist')]),
+  D('TUE 13',[],'empty'),
+  D('WED 14',[L('12:40','Done: call the bank'),L('19:30','Cooked carbonara, 35 min')]),
+  D('TODAY',[L('08:10','Added 2 tasks'),`<div id="dentw" style="overflow:hidden">${L('16:00','Done: dentist')}</div>`,L('18:50','<span id="run">Push Day B, 4 sets</span>'),`<div id="tw" style="overflow:hidden;height:0">${L('19:40','<span style="position:relative;display:inline-block"><span id="wash" style="position:absolute;left:-8px;right:-8px;top:0;bottom:0;border-radius:8px;background:rgba(36,80,216,.16);filter:blur(4px);opacity:0"></span><span id="twx" style="position:relative;color:#2450D8">Added 3 groceries</span></span>')}</div>`],'today')],
+  `<div id="fing" style="position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(23,20,31,.14);box-shadow:0 0 0 1.5px rgba(255,255,255,.8);opacity:0;z-index:20"></div>`);
+}else if(PLAY){
  document.getElementById('row').innerHTML=phone('04:00 · TODAY BECOMES WED 21 IN PLACE, NOTHING MOVES','October',[
   D('TUE 20',[L('07:10','Added 2 tasks'),L('18:40','Cooked ramen, 40 min')]),
   D('<span id="lab">TODAY</span>',[L('19:05','Added 2 tasks'),L('23:20','<span id="run">Push Day B, 6 sets</span>'),L('00:31','Note: flight check-in')],'today','wed')].concat([`<div style="position:absolute;left:22px;bottom:4px" class="date today" id="nt"><span style="opacity:0" id="ntl">TODAY</span></div>`]));
@@ -81,6 +94,7 @@ if(PLAY){
 }
 document.fonts.ready.then(()=>{document.body.dataset.start='1';
  if(!PLAY){document.body.dataset.done='1';return}
+ if(TOUR){tourPlay();return}
  const lab=document.getElementById('lab'),date=lab.parentNode;
  setTimeout(()=>{
   lab.animate([{filter:'blur(0)',opacity:1},{filter:'blur(4px)',opacity:0}],{duration:110,fill:'forwards'}).onfinish=()=>{lab.textContent='WED 21';date.classList.remove('today');lab.animate([{filter:'blur(4px)',opacity:0},{filter:'blur(0)',opacity:1}],{duration:110,fill:'forwards'})};
@@ -89,6 +103,40 @@ document.fonts.ready.then(()=>{document.body.dataset.start='1';
  setTimeout(()=>{const r=document.getElementById('run');r.animate([{filter:'blur(0)',opacity:1},{filter:'blur(4px)',opacity:0}],{duration:110,fill:'forwards'}).onfinish=()=>{r.textContent='Push Day B, 7 sets';r.animate([{filter:'blur(4px)',opacity:0},{filter:'blur(0)',opacity:1}],{duration:110,fill:'forwards'})}},2600);
  setTimeout(()=>document.body.dataset.done='1',4200);
 });
+
+async function tourPlay(){
+ const $=id=>document.getElementById(id),wait=ms=>new Promise(r=>setTimeout(r,ms)),H='cubic-bezier(.2,.8,.2,1)';
+ const cap=t=>{const c=document.querySelector('.cap');c.animate([{opacity:1},{opacity:0}],{duration:120,fill:'forwards'}).onfinish=()=>{c.textContent=t;c.animate([{opacity:0},{opacity:1}],{duration:200,fill:'forwards'})}};
+ const swap=(el,t)=>{el.animate([{filter:'blur(0)',opacity:1},{filter:'blur(4px)',opacity:0}],{duration:110,fill:'forwards'}).onfinish=()=>{el.textContent=t;el.animate([{filter:'blur(4px)',opacity:0},{filter:'blur(0)',opacity:1}],{duration:110,fill:'forwards'})}};
+ const stack=document.querySelector('.stack'),win=document.querySelector('.win'),f=$('fing');
+ let y=0;const scrollTo=(to,ms)=>{const a=stack.animate([{transform:`translateY(${y}px)`},{transform:`translateY(${to}px)`}],{duration:ms,easing:H,fill:'forwards'});y=to;return a.finished};
+ const drag=async(x,y0,dy,ms)=>{f.style.left=x+'px';f.style.top=y0+'px';f.style.opacity=1;f.animate([{transform:'none'},{transform:`translateY(${dy}px)`}],{duration:ms,easing:H,fill:'forwards'});await wait(ms);f.style.opacity=0;f.getAnimations().forEach(a=>a.cancel())};
+ await wait(1600);
+ cap('A SET LANDS ON THE WORKOUT · ONLY THE NUMBER CHANGES');await wait(500);swap($('run'),'Push Day B, 5 sets');await wait(1700);
+ cap('“DENTIST TAKEN BACK.” ON HOME · ITS LINE FADES OUT');await wait(500);
+ const dw=$('dentw'),dh=dw.offsetHeight;
+ await dw.animate([{opacity:1},{opacity:0}],{duration:220,fill:'forwards'}).finished;
+ await dw.animate([{height:dh+'px'},{height:'0px'}],{duration:300,easing:H,fill:'forwards'}).finished;
+ await wait(1200);cap('REDO · IT COMES BACK');await wait(400);
+ await dw.animate([{height:'0px',opacity:0},{height:dh+'px',opacity:0}],{duration:300,easing:H,fill:'forwards'}).finished;
+ await dw.animate([{opacity:0},{opacity:1}],{duration:220,fill:'forwards'}).finished;
+ await wait(1300);cap('A TESS WRITE · THE WASH SITS BEHIND THE TEXT, THEN DRIES');await wait(500);
+ const tw=$('tw');tw.style.height='auto';const th=tw.offsetHeight;tw.style.height='0px';
+ tw.animate([{height:'0px'},{height:th+'px'}],{duration:360,easing:H,fill:'forwards'});
+ tw.firstElementChild.animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:360,easing:H,fill:'forwards'});
+ $('wash').animate([{opacity:0},{opacity:1,offset:.08},{opacity:1,offset:.6},{opacity:0}],{duration:2800,fill:'forwards'});
+ await wait(2100);$('twx').animate([{color:'#2450D8'},{color:'rgb(23,20,31)'}],{duration:700,fill:'forwards'});
+ await wait(1300);
+ const maxY=stack.offsetHeight-win.offsetHeight+60;
+ const sun=[...document.querySelectorAll('.date')].find(d=>d.textContent==='SUN 11');
+ cap('SCROLLED BACK · UNTRAINED, EMPTY, THE FAINT ROW, REST DAY');
+ const target1=Math.max(0,Math.min(maxY,(stack.offsetHeight-sun.parentNode.offsetTop)-win.offsetHeight+40));
+ drag(200,300,240,900);await scrollTo(target1,900);await wait(2600);
+ cap('THE 6-LINE CAP · THE TAIL ONLY PAST SIX');
+ drag(200,300,240,900);await scrollTo(maxY,900);await wait(2600);
+ cap('BACK TO TODAY');drag(200,560,-300,800);await scrollTo(0,800);await wait(1400);
+ document.body.dataset.done='1';
+}
 </script>
 </body>
 </html>
