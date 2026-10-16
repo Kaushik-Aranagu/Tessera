@@ -108,8 +108,13 @@ struct BottomChrome: View {
         reply ?? voice.note?.text ?? model.launchNote
     }
 
+    /// UNDO only ever sits under the line whose record it reverts: a Home line ("Done. …", "Carried 2 tasks") shows
+    /// it only when that line has its own op; a capture's line shows it for that capture.
     private var canUndo: Bool {
-        model.lastCapture != nil || voice.note?.undo != nil
+        if let note = voice.note {
+            return note.undo != nil
+        }
+        return model.lastCapture != nil
     }
 
     /// Home's last action (done, moved) first, else the last capture.
