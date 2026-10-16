@@ -128,8 +128,20 @@ public struct CreateTaskIntent: AppIntent {
 
     @MainActor
     public func perform() async throws -> some IntentResult & ProvidesDialog {
-        let record = try runtime.engine.perform(CreateTask(title: title, startsAt: startsAt), by: .intent).record
-        return .result(dialog: "\(record.summary).")
+        try .result(dialog: "\(Self.add(title, startsAt: startsAt, engine: runtime.engine))")
+    }
+
+    /// QA I3: a Claude key is never saved, and a secret with a value becomes a private note, as in the Ask bar.
+    @MainActor
+    static func add(_ title: String, startsAt: Date?, engine: ActionEngine) throws -> String {
+        if looksLikeClaudeKey(title) {
+            return TessRouter.keyLine
+        }
+        if SecretWords.hasValue(title) {
+            try engine.perform(CreateNote(body: title, isPrivate: true), by: .intent)
+            return "\(SecretWords.title), kept."
+        }
+        return try "\(engine.perform(CreateTask(title: title, startsAt: startsAt), by: .intent).record.summary)."
     }
 }
 
