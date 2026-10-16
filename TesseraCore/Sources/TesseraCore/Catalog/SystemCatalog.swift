@@ -170,6 +170,8 @@ public enum SystemCatalog {
                   fields: [
                       FieldSpec(key: "cadence", name: "Cadence", kind: .choice, defaultValue: .choice("week"),
                                 options: ["day", "week", "month"]),
+                      // Design 44: "2,5" for Mondays and Thursdays on a fixed-days plan (1 Sunday to 7 Saturday).
+                      FieldSpec(key: "fixedWeekdays", name: "Days", kind: .text),
                   ]),
         ClassSpec(key: .slot, name: "Slot", parent: .thing, symbol: "rectangle.stack", colorRole: "planning",
                   fields: [
@@ -188,6 +190,9 @@ public enum SystemCatalog {
                       FieldSpec(key: "startsOn", name: "Starts", kind: .date),
                       FieldSpec(key: "weeks", name: "Weeks", kind: .number),
                       FieldSpec(key: "sessionsPerWeek", name: "Sessions a week", kind: .number),
+                      // Design 44: rolls on (the default, today's behaviour) or each routine on its fixed days.
+                      FieldSpec(key: "scheduleMode", name: "Schedule", kind: .choice,
+                                defaultValue: .choice("rolling"), options: ["rolling", "fixed"]),
                   ]),
         ClassSpec(key: .task, name: "Task", parent: .thing, symbol: "checkmark.circle", colorRole: "planning",
                   traits: [.schedulable], fields: [
@@ -316,7 +321,7 @@ public enum SystemCatalog {
 
     /// Built-in classes ship as a versioned package. Bump `version` whenever a spec changes; seeding then
     /// refreshes shipped names, symbols, units, options, defaults and formulas, except what the person edited.
-    public static let package = CatalogPackage(id: "system", version: 5, name: "Tessera built-ins",
+    public static let package = CatalogPackage(id: "system", version: 6, name: "Tessera built-ins",
                                                source: "Tessera", license: "Tessera")
 
     static let honestE1RM = "weight * (1 + (reps + 10 - coalesce(rpe, 10)) / 30)"

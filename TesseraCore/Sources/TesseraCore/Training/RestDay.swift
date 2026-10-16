@@ -26,7 +26,7 @@ public extension TrainingLedger {
         if let ahead = week[(today + 1)...].first(where: { $0.planned != nil }), let routine = ahead.planned {
             return RestDay(next: routine, nextDay: ahead.day)
         }
-        return nextRoutine(in: plan).map { RestDay(next: $0, nextDay: nil) }
+        return nextRoutine(in: plan, now: now, calendar: calendar).map { RestDay(next: $0, nextDay: nil) }
     }
 }
 

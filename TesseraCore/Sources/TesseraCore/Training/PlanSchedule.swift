@@ -3,10 +3,20 @@ import Foundation
 /// Plans run as a rolling sequence: a missed day never creates debt, the next routine simply comes next.
 @MainActor
 public extension TrainingLedger {
-    /// The routine to do next in a plan: the one after the last finished workout from this plan.
-    func nextRoutine(in plan: ObjectRecord) -> ObjectRecord? {
+    /// The routine to do next in a plan: the one after the last finished workout from this plan. On fixed days:
+    /// today's routine unless it was trained today, else the next weekday with one (a missed day does not roll on).
+    func nextRoutine(in plan: ObjectRecord, now: Date = .now, calendar: Calendar = .current) -> ObjectRecord? {
         let cycle = store.linkedObjects("routines", of: plan)
         guard !cycle.isEmpty, let workoutClass = classes[.workout] else { return nil }
+        if PlanSchedule.mode(of: plan, store: store) == .fixed {
+            let day = TesseraDay(calendar: calendar)
+            let today = day.today(now)
+            let trainedToday = !finishedWorkouts(onDay: today, calendar: calendar).isEmpty
+            return (trainedToday ? 1 ..< 8 : 0 ..< 7).lazy.compactMap { offset -> ObjectRecord? in
+                calendar.date(byAdding: .day, value: offset, to: today)
+                    .flatMap { PlanSchedule.routine(on: $0, in: plan, store: self.store, calendar: calendar) }
+            }.first
+        }
         let finished = store.objects(of: workoutClass)
             .filter { store.value("endedAt", of: $0) != nil }
             .compactMap { workout -> (Date, Int)? in
