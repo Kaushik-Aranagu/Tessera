@@ -141,4 +141,4 @@
   - Empty states stay text only, through one shared `EmptyLine` in DesignSystem (Builder A).
   - The PPL x2 starter plan stays.
   - `Features/Objects/` copy is Core's.
-
+- **Accessibility mostly waits** (5:25 PM PT, Research #160, 80 rows): Kaushik is the only user. Pulled forward at normal priority are Builder A's one MotionPolicy fix, so Reduce Motion really stops slides and scales, and Builder B's Home queue heights, which clip at large text. The rest goes to Later on each board. Tess's rows are Builder B's; Objects rows are Core's (as at 5:14 PM PT).
