@@ -1,5 +1,7 @@
 # 10 · Recipe page and 11 · Paste a recipe (build sheet)
 
+> **US kitchen pages (item 28):** the recipe page and cook mode in US units, with today's page top, Tess beside the soul and cook mode on the look's ground, are in `us-kitchen-pages.md`, which wins over this sheet.
+
 > **US shop (item 25):** aisle names, amounts, fractions, pack sizes and merging for a US kitchen are in `us-shop.md`, which wins over this sheet's metric and UK examples.
 
 Just enough to build. Product steer: `docs/product/ship-list-kitchen.md` §10 and §11. Recording of the brush read, save, the portion drum rolling amounts and the swipe to Groceries: `../recordings/recipe-and-paste.mp4` (source `../studies/recipe-and-paste.html`). Engine: slices 3 (recipe and parser) and 4 (scaling). Folder: `Features/Recipes/`. Light ground, kitchen colours as in `13-groceries.md`.

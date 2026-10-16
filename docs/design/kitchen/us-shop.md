@@ -25,6 +25,9 @@ Kaushik shops at Trader Joe's and reads US recipes, so this sheet checks every K
 - **Fluid ounces never merge with ounces of weight,** and volume never merges with weight. "**1 lb** spinach" plus "**2 cups** spinach" stays one row, reading "**1 lb + 2 cups** spinach". It's never a guess at a conversion.
 - Metric and US weights of the same thing (200 g and 8 oz) also stay as "**200 g + 8 oz**". Converting them is a guess about the recipe.
 
+## Answered later
+Research's four questions (pack words, mixed can sizes, pints, "bucks") are answered in `us-kitchen-pages.md` §6, which also draws the recipe page and cook mode in these units.
+
 ## Owners
 - **Core:** the aisle names and order with the old-name read, oz, lb, pint, fl oz and stick units (gap 1), `packSize` (gap 2), fractions to glyphs on display, and the merge rule.
 - **Builder B:** the amount word with fraction glyphs and the pack size after the dot, on Groceries and the recipe page. Also the quick flip in both directions.

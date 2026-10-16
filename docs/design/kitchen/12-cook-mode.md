@@ -1,5 +1,7 @@
 # 12 · Cook mode (build sheet)
 
+> **US kitchen pages (item 28):** the recipe page and cook mode in US units, with today's page top, Tess beside the soul and cook mode on the look's ground, are in `us-kitchen-pages.md`, which wins over this sheet.
+
 > **US shop (item 25):** aisle names, amounts, fractions, pack sizes and merging for a US kitchen are in `us-shop.md`, which wins over this sheet's metric and UK examples.
 
 > **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
