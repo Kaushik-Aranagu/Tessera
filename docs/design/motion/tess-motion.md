@@ -93,6 +93,8 @@ Working out on a row (section 3): the same fade, split and gather, with the cons
 
 In a live workout: never. `LiveTessCorner` keeps thinking's pulse at its fixed size.
 
+**Beside a repaint** (`living-colours.md`, `TessSoul.repaint(to:)`): a repaint only starts when she's idle, so it never starts while she works, roams, is carried, or during Done. If a repaint is in flight (the 2.8 s pool-and-dry) when work begins, the work wins: the new pigments are already hers from the pool's first frame, so the fade starts at once and the wet swell dries inside the fade's 500 ms instead of its own 2.8 s. Nothing waits on paint drying. The eyes don't change for a repaint.
+
 **On light grounds** (Porcelain, Celadon) the lights multiply, so twelve of them at 0.42 could muddy where they cross. The prototype keeps them at 11 to 15 pt so crossings stay to two lights at a time; Design should check the light recording against Porcelain and say whether 0.42 wants to be 0.36 there.
 
 ## Timing and easing, in one place
@@ -131,7 +133,7 @@ Two new `Haptic` cases (`.soulPickUp`, `.soulDrop`) in `DesignSystem/Haptics.swi
 ## What this does not decide
 - Whether the eyes are on by default. Recommendation: off, so he turns them on and finds out if he likes a face on her.
 - The Metal shader route (Research): this sheet works in the `Canvas` she has today. If Builder A moves her to a shader later, the values carry over unchanged.
-- The spread and palette (`soul-explore.md`, his pick pending). The prototype is at 65% with today's colours, the recommended default; a `?spread=` and `?look=` on the prototype URL show any other.
+- The palette (`soul-explore.md`, `living-colours.md`). The spread is 65% in the app now (#330: the home offsets live in `Features/Tess/SoulFrame.swift`), and the prototype matches; a `?spread=` and `?look=` on the prototype URL show any other.
 
 ## For Design
 Review the recordings for: the eyes' weight on each look; whether the split reads as her or as particles; whether the readers under the rows help or distract; the drag's paint lag (too much, too little); the docks. Then the build sheet goes to Builder A through the coordinator.
