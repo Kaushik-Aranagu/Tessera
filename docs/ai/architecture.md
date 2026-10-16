@@ -172,7 +172,65 @@ No Opus or Fable. The Home lines eval (ship list AI-5) runs Haiku and Sonnet sid
 2. Memory backs up with everything else. DEFAULT: yes, it's his data; the key and miss log still never do.
 3. Noticed lines may mention training time and order, never body or health. DEFAULT: yes.
 
+## 9. Living colour: Tess's soul palette chosen by Claude
+
+**His words** (Oct 16, 12:08 AM PT, Design thread): "we could keep changing the colours. That's the whole point of having AI: use the APIs, figure out which colours and change it dynamically." Scope here is Tess's soul. Design owns the palette space and its rules (after Design 41); this section is the harness side.
+
+**Same rule as every line: the phone computes, Claude picks words, the phone checks.** Claude never returns a hex value. It returns one palette name and a pigment nudge, from a space Design draws, and the phone turns that into pigments and checks every number before anything paints.
+
+### What Claude chooses from
+
+| Input | Where it comes from | Sent |
+|---|---|---|
+| The look (Porcelain, Obsidian, Plein, Lacquer, Celadon) and whether it's day or night | `ThemeStore` | yes |
+| Time of day as a part ("morning", "night"), the weekday, rest day or not | phone clock, plan | yes |
+| What he's doing: the running process kind (workout, cook, shop, nothing), paused or live | `ProcessTable` | yes |
+| His day's shape: the same `HomeLines` facts (done, planned, records yes/no, counts) and the last 7 recent memory lines | lenses, `TessMemory` | yes |
+| The palette he's on and how long it's been on | `SoulPalette` state | yes |
+| The design space: palette names and, per palette, the ranges Claude may nudge within | Design's `soul-explore.md` and its successor, baked as stable instructions | yes (it's the prompt) |
+| Health, body weight, notes, money, people, places, the key | | never |
+
+### What comes back (strict tool `proposeSoul`)
+
+```json
+{"palette": "Lagoon", "warmth": 0.1, "weight": -0.05, "reason": "night after a push day"}
+```
+
+`palette` must be one of Design's names (`Today`, `Kiln`, `Lagoon`, `Orchard`, `Aurora`, `Ember`, or whatever Design settles on). `warmth` and `weight` are nudges in [-0.2, 0.2] inside the palette's own room, as Design defines them (hue toward warm or cool; a touch lighter or heavier). `reason` is for the DEBUG "Last sent" view and the receipt, never shown at rest. The phone clamps the nudges and refuses an unknown name.
+
+### The UI bar holds, by construction
+
+- **Resting colour stays low-contrast.** Claude picks pigments for her moments; the phone keeps her resting state at the look's resting opacity whatever the palette. Claude cannot touch that opacity, since it isn't in the schema.
+- **Cobalt stays Tess's voice.** The voice token (`tess`) is not in the schema either. Where Design's table moves the voice to a palette's blue, that is Design's rule applied on the phone, not Claude's choice.
+- **Done never changes.** The done mode's colour and motion read from fixed tokens, outside `SoulPalette`'s living pigments.
+- **Never mid-moment.** A new palette arrives only when she is idle and no capture, ask, ghost row or workout set is in flight, and it crossfades through `MotionPolicy` over about 2.8 s, the same wash every change of hers already uses. Reduce Motion gets a plain crossfade.
+
+### How often
+
+A slow drift. The `soulPalette` job runs at most 3 times a day: at the 04:00 turnover, when his day's shape changes in kind (first workout finishes; evening starts at 18:00), and when the look changes. Never on a timer, never more than once an hour, never during a workout. Claude may answer "keep" by returning the current palette with zero nudges; the instructions say that's the usual answer and a change should feel like weather, not a notification. Design may tighten these.
+
+### Cost and cache
+
+Haiku 5.5, effort low, about 1,200 tokens in (mostly the stable palette space, which is the cacheable prefix) and 60 out: about $0.0002 a call, 90 calls a month at most, **about $0.02 a month**. The result caches on the pack hash in the same small JSON file as the Home lines; a cold launch paints the last chosen palette at once. Word-only jobs, this one included, step aside at 80% of the month.
+
+### Fallback
+
+Offline, at the cap, switch off, demo, a late or failing reply, an unknown name: she stays on today's colours, meaning the palette she is already on, or Design's default (today's colours at 65%) if none was ever chosen. Nothing visible happens on a failure. Settings' "Tess asks Claude" line grows one more clause when this ships (Design owns the words).
+
+### How the choice reaches the app
+
+Builder A owns the pigments. `SoulPalette.look(_:)` (`Features/Tess/TessSoul.swift:118`) reads the look's `live`, `tess` and `now` today. The change is: `SoulPalette.look(_:living:)` takes a `LivingPalette` (name, warmth, weight, chosen at) kept by a small `SoulPaletteStore` on `ThemeStore` (via `SettingsStore`, as the looks will be after #320), and resolves it to the three washes from Design's per-look, per-palette pigment table. Core writes `LivingPalette` from the `soulPalette` job's checked reply through a `.system` op (not undoable; it's weather, not something he did). The receipt and the "What Tess knows" page can show "Colours: Lagoon, since Thursday" with FORGET to pin her back to today's colours, which also pauses the job until he unpins.
+
+### Could the app's context colours follow?
+
+Mechanically, yes: the same job could return a second field for `context`, `live` and `now`, and the same clamps would hold. But those tokens carry meaning across the whole app (live is vermilion, the beat stroke is cadmium, the Live Activity sky is Cobalt in every look, and the one-base rule says only layers change), so letting them drift would loosen rules he set on Oct 15. Recommendation: soul only for now; the voice token follows Design's table; the app's moment colours stay fixed. That is Product's call, as Design's `soul-explore.md` already says.
+
+### Slice for the ship list
+
+AI-14 **Living soul colour**: Core: `soulPalette` job, `LivingPalette`, store and checks, 3-a-day gate, pack snapshot test. Builder A: `SoulPalette.look(_:living:)`, the 2.8 s idle-only crossfade, FORGET pin. Design: the palette space, nudge ranges and the per-look pigment table. Gate: Design's eval of 20 day-shapes, with Kaushik saying the changes feel like weather on a recording. Lands after AI-4.
+
 ## Unverified
 
 - Haiku 5.5's minimum cacheable prefix, so whether the cache ever hits on these small prompts.
 - Whether Haiku 5.5 at effort low holds the 6-word budget reliably; the AI-5 eval decides.
+- Whether Haiku 5.5 keeps to "keep" often enough that the soul drifts rather than flickers; the AI-14 eval decides, and the 3-a-day gate bounds it either way.

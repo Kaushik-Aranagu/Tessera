@@ -20,6 +20,7 @@ Order is the build order. Each slice is one small PR. "Rules" slices need no key
 | AI-11 | **The week, told** (feature 2) | Core: `WeekFacts` lens and `weekStory` job (Sonnet). Builder B: Review top | Three lines on Review, worded Sunday after 04:00 and when week facts change; handles link; same checks; rules version (three plain count lines) when Claude is off |
 | AI-12 | **Groceries that know your recipes** (feature 3) | Recipes and groceries lead to spec with Design 47; Core job; Builder B | Proposal only from this team; done-when lives in the Groceries AI spec (board item 3, next from this team) |
 | AI-13 | **Old callers onto `ClaudeClient`** | Core, only when already in the file | Capture, plan, recipe link and key check use `ClaudeClient`; no change in behaviour or ledger rows |
+| AI-14 | **Living soul colour** (architecture section 9; his Oct 16 12:08 AM PT ask) | Design: palette space and nudge ranges. Core: `soulPalette` job and `LivingPalette`. Builder A: `SoulPalette.look(_:living:)` and the idle-only crossfade | Claude returns only a Design palette name plus clamped nudges; at most 3 changes a day, never mid-moment or in a workout; resting opacity, the voice token and Done untouched; offline or capped keeps today's colours; FORGET pins her back; about $0.02 a month. After AI-4 |
 
 **First visible win:** AI-1 alone answers his "three dots" and "too much detail" notes, with no key involved.
 **First Claude win:** AI-4 after AI-5 passes.
