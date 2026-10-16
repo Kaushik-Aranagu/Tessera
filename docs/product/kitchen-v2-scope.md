@@ -53,4 +53,4 @@ Not in v2 unless he asks: leftovers and cook double, recurring groceries (USUALL
 
 ## What I'll do on Oct 22
 
-Pull the numbers with the week-one reads (op log and store, on master), fill the brackets, and send the message to Product by 9 AM Pacific with this page's default marked as the recommendation. Then write the acceptance page for whichever slice goes first, the same day.
+Run `python3 scripts/kitchen-week-one.py <copy of tessera.sqlite or a .tessera backup>` (read-only; the capture-miss log is read when it sits beside the store) to get the counts, fill the brackets, and send the message to Product by 9 AM Pacific with this page's default marked as the recommendation. Then write the acceptance page for whichever slice goes first, the same day.
