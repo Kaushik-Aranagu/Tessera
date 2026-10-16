@@ -93,6 +93,56 @@ struct ScaleTests {
     static func milliseconds(_ duration: Duration) -> Double {
         Double(duration.components.seconds) * 1000 + Double(duration.components.attoseconds) / 1e15
     }
+
+    /// The Day log reads one day out of years of op log in a frame or two (QA S1 on #318).
+    @Test func dayLogStaysFast() async throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let lifts = [SystemCatalog.Key](repeating: .benchPress, count: 5)
+        let start = Date(timeIntervalSince1970: 1_700_000_000)
+        let clock = ContinuousClock()
+        let build = try clock.measure {
+            for day in 0 ..< Self.workouts {
+                let time = start.addingTimeInterval(Double(day) * 86400)
+                @MainActor func dated(_ record: OpRecord, _ minutes: Double) {
+                    record.createdAt = time.addingTimeInterval(minutes * 60)
+                }
+                let workout = try store.create(#require(classes[.workout]), title: "Day \(day)")
+                try dated(engine.perform(StartWorkout(workout: workout.id, time: time), by: .user).record, 0)
+                for (index, key) in lifts.enumerated() {
+                    let added = try engine.perform(
+                        AddExercise(workout: workout.id, exercise: #require(classes[key]).id),
+                        by: .user
+                    )
+                    dated(added.record, Double(index * 10))
+                    for set in 0 ..< 5 {
+                        let minutes = Double(index * 10 + set * 2)
+                        try dated(engine.perform(LogSet(entry: added.output.id, weight: 60, reps: Double(5 + set),
+                                                        time: time.addingTimeInterval(minutes * 60)),
+                                                 by: .user).record, minutes)
+                    }
+                }
+                try dated(engine.perform(FinishWorkout(workout: workout.id, time: time.addingTimeInterval(3600)),
+                                         by: .user).record, 60)
+                try dated(engine.perform(CreateTask(title: "task \(day)"), by: .user).record, 120)
+            }
+        }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "America/Los_Angeles"))
+        let last = start.addingTimeInterval(Double(Self.workouts - 1) * 86400 + 600)
+        // The app warms the ledger at launch; the Day log reads after that.
+        await TrainingLedger(store: store, classes: classes).warmUp()
+        var story: [DayLine] = []
+        let read = clock.measure {
+            story = DayStory.lines(engine: engine, on: last, calendar: calendar, now: last.addingTimeInterval(86400))
+        }
+        print("SCALE \(Self.workouts) workouts: dayLogBuild=\(Self.milliseconds(build))ms "
+            + "dayLog=\(Self.milliseconds(read))ms")
+        #expect(story.contains { $0.text.hasPrefix("Day \(Self.workouts - 1), 60 min") })
+        let budget: Double = Self.workouts > 1000 ? 100 : 50
+        #expect(Self.milliseconds(read) < budget, "dayLog took \(Self.milliseconds(read)) ms")
+    }
 }
 
 @MainActor

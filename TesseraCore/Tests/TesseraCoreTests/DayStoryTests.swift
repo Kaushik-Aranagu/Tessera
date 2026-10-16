@@ -49,8 +49,7 @@ struct DayStoryTests {
 
     func lines(_ day: Date, in zone: TimeZone = la, now: Date? = nil, rest: Bool = false) -> [String] {
         let calendar = Self.calendar(zone)
-        return DayStory.lines(store: store, classes: classes, records: engine.history(limit: 10000), on: day,
-                              calendar: calendar, now: now ?? Self.at(30, 12), isRestDay: rest)
+        return DayStory.lines(engine: engine, on: day, calendar: calendar, now: now ?? Self.at(30, 12), isRestDay: rest)
             .map { line in line.clock(calendar).map { "\($0)  \(line.text)" } ?? line.text }
     }
 
@@ -97,6 +96,52 @@ struct DayStoryTests {
         let story = DayStory.lines(store: store, classes: classes, records: engine.history(limit: 100), on: now,
                                    calendar: Self.calendar(), now: now)
         #expect(story.first?.kind == .running)
+    }
+
+    @Test func aLiveWorkoutFromLastNightStaysOnItsDayPast0400() throws {
+        // DL70, QA S2 on #318: started 23:00 Wed, still going at 04:30 Thu: on WED, in ink, still counting.
+        try workout("Push Day B", start: Self.at(21, 23), sets: [(Self.at(21, 23, 10), 80, 8),
+                                                                 (Self.at(22, 4, 20), 80, 8)], end: nil)
+        let now = Self.at(22, 4, 30)
+        let wednesday = DayStory.lines(engine: engine, on: Self.at(21, 12), calendar: Self.calendar(), now: now)
+        #expect(wednesday.map(\.text) == ["Push Day B, 2 sets"] && wednesday.first?.kind == .running)
+        #expect(lines(now, now: now).isEmpty)
+        // Six hours on, it is the faint row.
+        let later = DayStory.lines(engine: engine, on: Self.at(21, 12), calendar: Self.calendar(),
+                                   now: Self.at(22, 5, 1))
+        #expect(later.first?.kind == .unfinished)
+    }
+
+    @Test func ownLinesThatFillTheCapStillLeaveOneAlsoLine() throws {
+        // QA L1 on #318: seven lists made in a day and a task: six lines, the last one the tail.
+        for index in 0 ..< 7 {
+            try run(CreateList(name: "List \(index)"), at: Self.at(9, 10, index))
+        }
+        try task("call mom", at: Self.at(9, 11))
+        let day = lines(Self.at(9, 12))
+        #expect(day.count == 6)
+        #expect(day.last == "Also: New list: List 5, New list: List 6, 1 task.")
+    }
+
+    @Test func doneReopenedAndDoneAgainIsOneDone() throws {
+        // QA L2 on #318.
+        let bins = try task("take out bins", at: Self.at(9, 7))
+        try run(SetTaskDone(task: bins.id, time: Self.at(10, 8)), at: Self.at(10, 8))
+        try run(SetTaskDone(task: bins.id, done: false), at: Self.at(10, 8, 5))
+        try run(SetTaskDone(task: bins.id, time: Self.at(10, 9)), at: Self.at(10, 9))
+        #expect(lines(Self.at(10, 12)) == ["08:00  Done: take out bins"])
+    }
+
+    @Test func twoStartsAndOneFinishAreOneShop() throws {
+        // QA L3 on #318: the later start closes with the finish; the open one prints nothing.
+        let milk = try run(AddGroceries(lines: ["milk"]), at: Self.at(5, 9)).output
+        try run(StartShop(time: Self.at(11, 10)), at: Self.at(11, 10))
+        try run(StartShop(time: Self.at(11, 10, 5)), at: Self.at(11, 10, 5))
+        for item in milk {
+            try run(CheckListItem(item: item.id, time: Self.at(11, 10, 10)), at: Self.at(11, 10, 10))
+        }
+        try run(FinishShop(time: Self.at(11, 10, 20)), at: Self.at(11, 10, 20))
+        #expect(lines(Self.at(11, 12)) == ["10:05  Shopped, 1 item"])
     }
 
     @Test func pastUnfinishedWorkoutIsMarkedUnfinished() throws {

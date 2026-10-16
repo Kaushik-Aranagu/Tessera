@@ -70,6 +70,12 @@ public protocol DayLookup {
 /// counted, at most 6 lines. Pure: it never writes, and the same input always reads the same.
 public enum DayStory {
     public static let maxLines = 6
+    /// An unfinished workout reads as under way this long after its start, whatever the day (DL70, QA S2 on #318).
+    public static let liveFor: TimeInterval = 6 * 3600
+    /// The records a day can need: from 14 h before its 04:00 start (zones east of here) to 20 h after its end
+    /// (zones west, a cook or shop finished late, a note said the next day).
+    static let windowBefore: TimeInterval = 14 * 3600, windowAfter: TimeInterval = 20 * 3600
+    static let notesAfter: TimeInterval = 8 * 86400
 
     /// The 04:00 day start for a moment.
     public static func dayStart(for date: Date, calendar: Calendar) -> Date {
@@ -109,7 +115,6 @@ public enum DayStory {
                              now: Date = .now, isRestDay: Bool = false) -> [DayLine]
     {
         let target = key(TesseraDay(calendar: calendar).day(of: day), in: calendar)
-        let today = key(TesseraDay(calendar: calendar).day(of: now), in: calendar)
         func onDay(_ instant: Date, zone: TimeZone?) -> Bool {
             var zoned = calendar
             zoned.timeZone = zone ?? calendar.timeZone
@@ -137,24 +142,60 @@ public enum DayStory {
 
         let standing = records.filter { $0.state == .committed && $0.actor != .system }
             .sorted { $0.createdAt < $1.createdAt }
-        // Same-day pairs cancel: a thing made and deleted that day, a done reopened.
+        // Same-day pairs cancel: a thing made and deleted that day; a done counts by its last state that day.
         var deletedToday = Set<UUID>()
-        var reopenedToday = Set<UUID>()
-        for record in standing where onDay(record.createdAt, zone: zone(of: record)) {
+        var doneToday: [UUID: Bool] = [:]
+        // A shop is its start and the finish that closes it; a later start replaces an open one (QA L3 on #318).
+        var shopFinish: [UUID: OpRecord] = [:]
+        var openShop: OpRecord?
+        var cookFinish: [UUID: OpRecord] = [:]
+        for record in standing {
+            switch record.action {
+            case "startShop": openShop = record
+            case "finishShop":
+                if let start = openShop {
+                    shopFinish[start.id] = record
+                }
+                openShop = nil
+            case "finishCooking":
+                for id in record.objectIDs where cookFinish[id] == nil {
+                    cookFinish[id] = record
+                }
+            default: break
+            }
+            guard record.action == "deleteObject" || record.action == "setTaskDone",
+                  onDay(record.createdAt, zone: zone(of: record)) else { continue }
             if record.action == "deleteObject" {
                 for op in record.ops {
                     if case let .softDelete(object) = op {
                         deletedToday.insert(object)
                     }
                 }
-            }
-            if record.action == "setTaskDone", valueSet(record, "isDone") == .bool(false) {
-                reopenedToday.formUnion(record.objectIDs)
+            } else if let done = valueSet(record, "isDone") {
+                for id in record.objectIDs {
+                    doneToday[id] = done == .bool(true)
+                }
             }
         }
 
-        var lines: [DayLine] = []
+        // Workouts and own lines, and whether each is a workout (they keep their place first under the cap).
+        var lines: [(line: DayLine, group: Bool)] = []
+        // Every root checked once, on its day or not, and each object's root looked up once (QA S1 on #318).
         var seenRoots = Set<UUID>()
+        var roots: [UUID: UUID] = [:]
+        var rootless = Set<UUID>()
+        func root(of id: UUID) -> UUID? {
+            if let known = roots[id] {
+                return known
+            }
+            guard !rootless.contains(id) else { return nil }
+            guard let found = lookup.groupRoot(of: id) else {
+                rootless.insert(id)
+                return nil
+            }
+            roots[id] = found
+            return found
+        }
         // Loose counts, each at its first time.
         struct Count {
             var time: Date
@@ -175,43 +216,41 @@ public enum DayStory {
             let action = record.action
             // Workouts: one line per workout, on the day it started.
             if workoutActions.contains(action) {
-                guard let root = record.objectIDs.lazy.compactMap({ lookup.groupRoot(of: $0) }).first,
-                      !seenRoots.contains(root), let workout = lookup.workout(root), let started = workout.startedAt,
-                      onDay(started, zone: lookup.dayZone(of: root)) else { continue }
-                seenRoots.insert(root)
-                guard workout.sets > 0 else { continue } // a 0-set workout is no session
+                guard let root = record.objectIDs.lazy.compactMap(root(of:)).first,
+                      seenRoots.insert(root).inserted, let workout = lookup.workout(root),
+                      let started = workout.startedAt, onDay(started, zone: lookup.dayZone(of: root)),
+                      workout.sets > 0 // a 0-set workout is no session
+                else { continue }
                 let top = lookup.topSet(inWorkout: root)
                 let topText = top.map { ". \($0.text)\($0.isPR ? ", PR" : "")." } ?? "."
                 if let ended = workout.endedAt {
                     let minutes = Int((ended.timeIntervalSince(started) / 60).rounded())
-                    lines.append(DayLine(time: started, text: "\(workout.title), \(minutes) min\(topText)",
-                                         objectIDs: [root], kind: .finished))
-                } else if onDay(now, zone: calendar.timeZone), target == today {
-                    lines.append(DayLine(time: started, text: "\(workout.title), \(sets(workout.sets))",
-                                         objectIDs: [root], kind: .running))
+                    lines.append((DayLine(time: started, text: "\(workout.title), \(minutes) min\(topText)",
+                                          objectIDs: [root], kind: .finished), true))
+                } else if now >= started, now.timeIntervalSince(started) < liveFor {
+                    // Still going: in ink on the day it started, even past 04:00 (DL70).
+                    lines.append((DayLine(time: started, text: "\(workout.title), \(sets(workout.sets))",
+                                          objectIDs: [root], kind: .running), true))
                 } else {
-                    lines.append(DayLine(time: started, text: "\(workout.title), \(sets(workout.sets))\(topText)",
-                                         objectIDs: [root], kind: .unfinished))
+                    lines.append((DayLine(time: started, text: "\(workout.title), \(sets(workout.sets))\(topText)",
+                                          objectIDs: [root], kind: .unfinished), true))
                 }
                 continue
             }
             switch action {
             case "startCooking":
-                guard let cook = record.objectIDs.first(where: { lookup.kind(of: $0) == "cook" }),
-                      !seenRoots.contains(cook), onDay(record.createdAt, zone: zone(of: record)),
-                      let finish = standing
-                      .first(where: { $0.action == "finishCooking" && $0.objectIDs.contains(cook) })
-                else { continue }
-                seenRoots.insert(cook)
-                let minutes = Int((finish.createdAt.timeIntervalSince(record.createdAt) / 60).rounded())
-                lines.append(DayLine(time: record.createdAt,
-                                     text: "Cooked \(lookup.title(of: cook) ?? "it"), \(minutes) min",
-                                     objectIDs: [cook], kind: .finished))
-            case "startShop":
                 guard onDay(record.createdAt, zone: zone(of: record)),
-                      let finish = standing
-                      .first(where: { $0.action == "finishShop" && $0.createdAt >= record.createdAt })
+                      let cook = record.objectIDs.first(where: { lookup.kind(of: $0) == "cook" }),
+                      let finish = cookFinish[cook], seenRoots.insert(cook).inserted
                 else { continue }
+                let minutes = Int((finish.createdAt.timeIntervalSince(record.createdAt) / 60).rounded())
+                lines.append((DayLine(time: record.createdAt,
+                                      text: "Cooked \(lookup.title(of: cook) ?? "it"), \(minutes) min",
+                                      objectIDs: [cook], kind: .finished), false))
+            case "startShop":
+                guard onDay(record.createdAt, zone: zone(of: record)), let finish = shopFinish[record.id] else {
+                    continue
+                }
                 let items = finish.ops.count {
                     if case .softDelete = $0 {
                         true
@@ -220,25 +259,31 @@ public enum DayStory {
                     }
                 }
                 guard items > 0 else { continue }
-                lines.append(DayLine(time: record.createdAt,
-                                     text: "Shopped, \(items) \(items == 1 ? "item" : "items")",
-                                     objectIDs: [Groceries.listID], kind: .finished))
+                lines.append((DayLine(time: record.createdAt,
+                                      text: "Shopped, \(items) \(items == 1 ? "item" : "items")",
+                                      objectIDs: [Groceries.listID], kind: .finished), false))
             case "createTask":
+                guard onDay(record.createdAt, zone: zone(of: record)) else { continue }
                 let made = created(record, kind: "task").filter { !deletedToday.contains($0) }
-                guard !made.isEmpty, onDay(record.createdAt, zone: zone(of: record)) else { continue }
+                guard !made.isEmpty else { continue }
                 add(&tasks, at: record.createdAt, objects: made)
             case "addGroceries", "addRecipeToGroceries", "addListItem":
+                guard onDay(record.createdAt, zone: zone(of: record)) else { continue }
                 let made = created(record, kind: "listItem")
                     .filter { lookup.parent(of: $0) == Groceries.listID && !deletedToday.contains($0) }
-                guard !made.isEmpty, onDay(record.createdAt, zone: zone(of: record)) else { continue }
+                guard !made.isEmpty else { continue }
                 add(&groceries, at: record.createdAt, objects: made)
             case "setTaskDone":
-                guard valueSet(record, "isDone") == .bool(true), onDay(record.createdAt, zone: zone(of: record))
+                guard onDay(record.createdAt, zone: zone(of: record)), valueSet(record, "isDone") == .bool(true)
                 else { continue }
-                let done = record.objectIDs.filter { lookup.kind(of: $0) == "task" && !reopenedToday.contains($0) }
+                // Done, reopened, done again: one done, at its first time (QA L2 on #318).
+                let counted = Set(dones?.objects ?? [])
+                let done = record.objectIDs.filter {
+                    doneToday[$0] == true && !counted.contains($0) && lookup.kind(of: $0) == "task"
+                }
                 add(&dones, at: record.createdAt, objects: done, titles: done.compactMap(lookup.title))
             case "checkListItem":
-                guard valueSet(record, "isDone") == .bool(true), onDay(record.createdAt, zone: zone(of: record))
+                guard onDay(record.createdAt, zone: zone(of: record)), valueSet(record, "isDone") == .bool(true)
                 else { continue }
                 for item in record.objectIDs where lookup.kind(of: item) == "listItem" {
                     guard let list = lookup.parent(of: item), list != Groceries.listID else { continue }
@@ -257,12 +302,12 @@ public enum DayStory {
                     add(&notes, at: time, objects: [note], titles: [lookup.title(of: note) ?? "note"])
                 }
             default:
-                if let lead = ownLines[action] {
+                if let lead = ownLines[action], onDay(record.createdAt, zone: zone(of: record)) {
                     let key = String(action.dropFirst("create".count)).lowercased()
                     for object in created(record, kind: key) where !deletedToday.contains(object) {
-                        guard onDay(record.createdAt, zone: zone(of: record)) else { continue }
-                        lines.append(DayLine(time: record.createdAt, text: "\(lead) \(lookup.title(of: object) ?? "")",
-                                             objectIDs: [object], kind: .finished))
+                        lines.append((DayLine(time: record.createdAt,
+                                              text: "\(lead) \(lookup.title(of: object) ?? "")",
+                                              objectIDs: [object], kind: .finished), false))
                     }
                 }
             }
@@ -309,24 +354,31 @@ public enum DayStory {
                                size: count.objects.count, tail: "ticked \(count.objects.count) on \(name)"))
         }
 
-        // At most 6 lines: groups and own lines first, then the largest counts; the rest is one "Also:" tail.
-        let room = maxLines - lines.count - (isRestDay ? 1 : 0)
-        if loose.count > room, room >= 1 {
+        // At most 6 lines: workouts first, then own lines, then the largest counts; the rest is one "Also:" tail,
+        // which takes a slot of its own even when own lines alone would fill them (QA L1 on #318).
+        let cap = maxLines - (isRestDay ? 1 : 0)
+        var drawn: [DayLine]
+        if lines.count + loose.count > cap {
+            let fixed = lines.sorted { ($0.group ? 0 : 1, $0.line.time ?? .distantFuture)
+                < ($1.group ? 0 : 1, $1.line.time ?? .distantFuture)
+            }
+            let keptFixed = min(fixed.count, cap - 1)
             let ranked = loose.sorted { ($0.size, $1.line.time ?? .distantFuture) > (
                 $1.size,
                 $0.line.time ?? .distantFuture
             ) }
-            let kept = Array(ranked.prefix(room - 1))
-            let rest = ranked.dropFirst(room - 1)
+            let room = cap - 1 - keptFixed
+            drawn = fixed.prefix(keptFixed).map(\.line) + ranked.prefix(room).map(\.line)
+            let rest = (fixed.dropFirst(keptFixed).map { Loose(line: $0.line, size: 1, tail: $0.line.text) }
+                + ranked.dropFirst(room))
                 .sorted { ($0.line.time ?? .distantFuture) < ($1.line.time ?? .distantFuture) }
-            lines += kept.map(\.line)
-            lines.append(DayLine(time: nil, text: "Also: \(rest.map(\.tail).joined(separator: ", ")).",
+            drawn.append(DayLine(time: nil, text: "Also: \(rest.map(\.tail).joined(separator: ", ")).",
                                  objectIDs: rest.flatMap(\.line.objectIDs), kind: .tail))
         } else {
-            lines += loose.map(\.line)
+            drawn = lines.map(\.line) + loose.map(\.line)
         }
         // By instant, never by the "HH:mm" text; the tail last.
-        lines.sort { lhs, rhs in
+        drawn.sort { lhs, rhs in
             switch (lhs.time, rhs.time) {
             case let (left?, right?): left < right
             case (_?, nil): true
@@ -334,11 +386,14 @@ public enum DayStory {
             }
         }
         if isRestDay {
-            lines.insert(DayLine(time: nil, text: "Rest day", objectIDs: [], kind: .rest), at: 0)
+            drawn.insert(DayLine(time: nil, text: "Rest day", objectIDs: [], kind: .rest), at: 0)
         }
-        return lines
+        return drawn
     }
+}
 
+/// Words and keys the fold and its lines share.
+extension DayStory {
     static func sets(_ count: Int) -> String {
         "\(count) \(count == 1 ? "set" : "sets")"
     }
@@ -368,13 +423,35 @@ public enum DayStory {
 public struct StoreDayLookup: DayLookup {
     public let store: ObjectStore
     public let classes: [SystemCatalog.Key: ClassDef]
-    let records: [OpRecord]
     let fields: [UUID: String]
+    /// Each root's zone, read once: the record that started it, else the one that created it (QA S1 on #318).
+    let zones: [UUID: TimeZone]
 
     public init(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef], records: [OpRecord]) {
         self.store = store
         self.classes = classes
-        self.records = records
+        var started: [UUID: TimeZone?] = [:], made: [UUID: TimeZone?] = [:]
+        for record in records {
+            let zone = record.zone.flatMap(TimeZone.init(identifier:))
+            if ["startWorkout", "startRoutine", "logExercise"].contains(record.action) {
+                for id in record.objectIDs where started[id] == nil {
+                    started[id] = .some(zone)
+                }
+            }
+            for op in record.ops {
+                if case let .create(object, _, _, _) = op, made[object] == nil {
+                    made[object] = .some(zone)
+                }
+            }
+        }
+        var zones: [UUID: TimeZone] = [:]
+        // A start with no zone (a pre-v3 row) falls back to the create's.
+        for id in Set(started.keys).union(made.keys) {
+            if let zone = started[id].flatMap(\.self) ?? made[id].flatMap(\.self) {
+                zones[id] = zone
+            }
+        }
+        self.zones = zones
         fields = Dictionary(
             store.context.all(FieldDef.self).map { ($0.id, $0.key) },
             uniquingKeysWith: { first, _ in first }
@@ -416,18 +493,7 @@ public struct StoreDayLookup: DayLookup {
     }
 
     public func dayZone(of id: UUID) -> TimeZone? {
-        records
-            .first { ["startWorkout", "startRoutine", "logExercise"].contains($0.action) && $0.objectIDs.contains(id) }
-            .flatMap(\.zone).flatMap(TimeZone.init(identifier:))
-            ?? records.first { record in
-                record.ops.contains {
-                    if case let .create(object, _, _, _) = $0 {
-                        object == id
-                    } else {
-                        false
-                    }
-                }
-            }.flatMap(\.zone).flatMap(TimeZone.init(identifier:))
+        zones[id]
     }
 
     public func workout(_ id: UUID) -> (title: String, startedAt: Date?, endedAt: Date?, sets: Int)? {
@@ -441,9 +507,10 @@ public struct StoreDayLookup: DayLookup {
 
     public func topSet(inWorkout id: UUID) -> (text: String, isPR: Bool)? {
         guard let workout = store.object(id: id) else { return nil }
-        var best: (e1rm: Double, text: String, exercise: String, weight: Double, reps: Double)?
+        var best: (e1rm: Double, text: String, exercise: ClassDef?, weight: Double, reps: Double)?
         for entry in workout.orderedChildren {
-            let name = Self.shortName(store.linkedClass("exercise", of: entry)?.name ?? entry.title)
+            let exercise = store.linkedClass("exercise", of: entry)
+            let name = Self.shortName(exercise?.name ?? entry.title)
             for set in entry.orderedChildren where !set.isDeleted {
                 guard let weight = store.number("weight", of: set), let reps = store.number("reps", of: set) else {
                     continue
@@ -453,13 +520,16 @@ public struct StoreDayLookup: DayLookup {
                 }
                 let e1rm = weight * (1 + reps / 30)
                 if best == nil || e1rm > best!.e1rm { // swiftlint:disable:this force_unwrapping
-                    best = (e1rm, "\(name) \(Self.number(weight)) × \(Self.number(reps))", name, weight, reps)
+                    best = (e1rm, "\(name) \(Self.number(weight)) × \(Self.number(reps))", exercise, weight, reps)
                 }
             }
         }
         guard let best else { return nil }
-        let records = TrainingLedger(store: store, classes: classes).summary(of: workout).records
-        let isPR = records.contains { $0.weight == best.weight && $0.reps == best.reps }
+        // One records read for the top set's lift, not a summary of every set (QA S1 on #318).
+        let isPR = best.exercise.map {
+            !TrainingLedger(store: store, classes: classes)
+                .recordsBeaten(weight: best.weight, reps: best.reps, for: $0, excludingWorkout: id).isEmpty
+        } ?? false
         return (best.text, isPR)
     }
 
@@ -479,7 +549,24 @@ public struct StoreDayLookup: DayLookup {
 
 @MainActor
 public extension DayStory {
-    /// The app's call: the store's committed history for one of his days.
+    /// The app's call: one of his days from a window of the engine's history around it (never the whole log).
+    static func lines(engine: ActionEngine, on day: Date, calendar: Calendar = .current, now: Date = .now,
+                      isRestDay: Bool = false) -> [DayLine]
+    {
+        let start = dayStart(for: day, calendar: calendar)
+        let end = dayStart(for: start.addingTimeInterval(30 * 3600), calendar: calendar)
+        let after = end.addingTimeInterval(windowAfter)
+        // A note said up to a week later can be about this day ("watered the plants sat").
+        let records = engine.history(
+            from: start.addingTimeInterval(-windowBefore),
+            to: after.addingTimeInterval(notesAfter)
+        )
+        .filter { $0.createdAt < after || $0.action == "createNote" }
+        return lines(store: engine.store, classes: engine.classes, records: records, on: day, calendar: calendar,
+                     now: now, isRestDay: isRestDay)
+    }
+
+    /// The store's committed history for one of his days, from records the caller already has.
     static func lines(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef], records: [OpRecord], on day: Date,
                       calendar: Calendar = .current, now: Date = .now, isRestDay: Bool = false) -> [DayLine]
     {
