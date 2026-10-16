@@ -88,3 +88,53 @@ There are three small fixes, all in the parser and the join rule. Two of them ar
 - Core changes the receipt count to use apply's set of new rows, which closes L1.
 - Product rules on L2: "Tacos, nothing to add.", with no write and no UNDO. L2 is closed.
 - L3 stays with Kitchen lead.
+
+## Addendum: re-check at `6b4553b` (11:22 AM PT)
+
+The trial merge onto the live master `ac49a4c` is clean. Core ran the package: 436 green. Kitchen lead re-reads the
+rules in parallel.
+
+**Verdict: PASS.**
+
+- **F1, fixed.** The optional regex drops the `plus more…` alternative (Quantities.swift:148-150).
+  - "1/2 cup grated parmesan, plus more to serve" now parses as parmesan, ½ cup, not optional
+    (GroceriesWeekTests:130-131).
+  - The r4 walk puts ¼ cup parmesan on the list (`:196`).
+- **F2, fixed.** A bare "extra" is out of `sizeWords`, and "extra large" / "extra-large" is stripped as one word
+  first (`:218-220`).
+  - "1 tbsp extra virgin olive oil" keeps its name, is a staple, and stays off the list (`:132-134`, `:197`).
+- **F3, fixed.** A sized share now joins a row only if the row holds exactly that size, or holds no size and no
+  unsized pack (Groceries.swift:225-231).
+  - U5 is tested in both orders (USKitchenTests:81, 83).
+- **r4 is traced, and the week asserts 37 rows** (`:213`). That is Research's 36 plus "green onions" beside his
+  typed "scallions", until the AI-12 KEEP ask folds them, per Kitchen.
+- **L1, closed.** apply records `lastAdded[recipe]` from the same set of new rows it returns, and `summary` reads
+  that count. `summary` runs right after apply (ActionEngine.swift:58), so the two can't disagree.
+- **L2, closed.** "Frittata, nothing to add." covers the case where every line is a staple, optional or already
+  checked off, and nothing of the recipe is on the list. The record has `ops.isEmpty` (`:244-246`). The Day log
+  drops empty grocery records (DayStory.swift:274).
+- **Short names** use `RecipeBook.shortName(of:store:)`, which falls back to the full title when two recipes on
+  the list share a short name (Kitchen #389).
+- **"1 dozen eggs"**: a new `dozen` unit. A recipe's share on a row he typed with his own amount carries
+  `counts: false`, so his amount stands and the frittata's line sits under it (G-R2).
+- **TaskTests**: the NotNow test now passes `time: now`, which fixes the 04:13 failure.
+
+**Catalog v8 and data safety.**
+- The catalog change is still the two additive fields. `KitchenUnit.dozen` is a new raw value inside a text
+  field; no catalog option list is built from `KitchenUnit.allCases`.
+- `GroceryShare.counts` is an optional Codable key.
+- On rollback, an older build reads "dozen" as no unit ("1 eggs") and ignores `counts` (it sums). That is
+  cosmetic, and no data is lost. M4 covers it.
+- No flags, no ProcessInfo, no UI changes.
+
+**Lows (new)**
+- **N1, for Builder B.** The "nothing to add" record is still inserted, with empty ops. The engine always logs.
+  So the Groceries UI must not offer UNDO for a record whose `ops` is empty. That's where "no UNDO" actually
+  holds.
+- **N2.** A re-add at a new size when every one of the recipe's rows is already checked removes its old shares
+  and adds none. The checked rows lose their "for frittata" note, and the receipt says "nothing to add". It's
+  rare and harmless.
+- **N3.** "2 extra large eggs" now drops "extra large" entirely instead of moving it to prep, so the recipe line
+  loses the size word. The `"extra-large"` entry left in `sizeWords` is dead code.
+- **N4.** `lastAdded` is a process-wide static, the same pattern as `lastTurnoverDay`. That's fine while
+  `summary` is only read inside `perform`.
