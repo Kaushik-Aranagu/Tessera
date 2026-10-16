@@ -39,6 +39,9 @@ struct TessSoul: View {
     /// How much the host scales this view (the chrome draws her at 0.72), so the working constellation keeps the
     /// lab's on-screen sizes.
     var hostScale: CGFloat = 1
+    /// Two ink dots (tess-motion.md §1): a setting, off by default.
+    var eyes = false
+    var gaze: SoulGaze = .ahead
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
@@ -51,6 +54,8 @@ struct TessSoul: View {
     @State private var workIsLong = false
     /// Low Power is read when a mode begins and holds until the next one (§13).
     @State private var lowPower = false
+    /// The eyes fade out in 120 ms as Done begins and back in 200 ms after it ends, so Done plays as built.
+    @State private var eyesShown = true
 
     var body: some View {
         let slow = SoulParameters.table(mode).isSlow || (work != nil && workIsLong)
@@ -76,13 +81,24 @@ struct TessSoul: View {
             .drawingGroup()
         }
         .frame(width: size.width, height: size.height)
+        .overlay {
+            if eyes {
+                eyesLayer(palette: palette, slow: slow)
+            }
+        }
         .frame(width: 96, height: 96)
-        .onChange(of: mode, initial: true) { _, new in
+        .onChange(of: mode, initial: true) { old, new in
             let now = Date.now
             layers = SoulBlend.push(new, onto: layers, at: now)
             lowPower = ProcessInfo.processInfo.isLowPowerModeEnabled
             if new == .done {
                 doneCount += 1
+            }
+            // Gone for Done and while she is split (§1); back 200 ms after either ends.
+            if new == .done || new == .working || new == .gathering {
+                withAnimation(.linear(duration: 0.12)) { eyesShown = false }
+            } else if old == .done || !eyesShown {
+                withAnimation(.linear(duration: 0.2)) { eyesShown = true }
             }
             if new == .working {
                 // A new ask after a gather splits her again; a second ask while she works joins the running one.
@@ -133,6 +149,23 @@ struct TessSoul: View {
         let lights = SoulWork.lights(base, scale: base.look.scale * hostScale, sinceSplit: sinceSplit,
                                      sinceGather: sinceGather, lowPower: lowPower)
         return (graded, lights)
+    }
+
+    /// The eyes ride the same frame as the dabs. Their own timeline keeps the blink under Reduce Motion (30 fps),
+    /// when the soul's is paused.
+    private func eyesLayer(palette _: SoulPalette, slow: Bool) -> some View {
+        // The workout corner stands on the workout's look (one base); everywhere else, the paint look.
+        let look = onWorkoutGround ? ThemeStore.shared.workoutLook : ThemeStore.shared.paintLook
+        let dark = Color(hex: look.isDark ? look.ground : look.ink)
+        return TimelineView(.animation(minimumInterval: reduceMotion || slow ? 1 / 30 : 1 / 60)) { context in
+            let frame = reduceMotion
+                ? SoulFrame.sample(mode, time: 0, elapsed: 0, still: true)
+                : SoulBlend.frame(layers, at: context.date, loops: loopsOneShots)
+                ?? SoulFrame.sample(mode, time: context.date.timeIntervalSinceReferenceDate, elapsed: 0)
+            SoulEyes(frame: frame, time: context.date.timeIntervalSinceReferenceDate, gaze: gaze, color: dark,
+                     still: reduceMotion)
+        }
+        .opacity(eyesShown ? 1 : 0)
     }
 
     /// Room for the done ring at 2.6× and, for a hand-off, the flight to the target.

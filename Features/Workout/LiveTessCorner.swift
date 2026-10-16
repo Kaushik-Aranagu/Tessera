@@ -9,6 +9,8 @@ struct LiveTessCorner: View {
     let line: String
     let mode: TessSoul.Mode
     let canUndo: Bool
+    /// "Tess has eyes"; in the workout they never glance (the live page is glance-free, tess-motion.md §14).
+    var eyes = false
     /// An instruction ("Last one. Hold to finish.") stays until it is done; everything else fades after 4 s.
     var holdsLine = false
     var onUndo: () -> Void
@@ -86,7 +88,7 @@ struct LiveTessCorner: View {
 
     /// The three dabs, about 46×40 with a 64×64 hit area, breathing 1 ↔ 1.08 over 3.2 s.
     private var soul: some View {
-        TessSoul(mode: mode)
+        TessSoul(mode: mode, eyes: eyes)
             .scaleEffect(0.72)
             .scaleEffect(breathe ? 1.08 : 1)
             .tesseraAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true), value: breathe)
