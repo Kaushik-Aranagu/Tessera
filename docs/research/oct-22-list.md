@@ -1,116 +1,114 @@
-# Thursday 22 Oct: Kaushik's one morning message (board items 91 and 121)
+# Thursday 22 Oct: re-sign day, and Kaushik's one morning message (board items 91, 92 and 121)
 
-*Research, refreshed 2026-10-16 (item 121), for the coordinator's Thu 22 Oct 9:50 AM PT send. All times Pacific (PDT).*
+*Research, refreshed Oct 16 about 12:20 PM PT at `origin/master` 234080a. Times Pacific. Sources: `pin-checklist.md`,
+`next-build-script-v9.md`, `review-refresh-3.md`, `resign-day.md`, `install-day-script.md`, `review-session.md`,
+`decisions.md`, `ops/board/*.md`, `trip-checklist.md`, master's log since 9:57 AM PT Oct 16.*
 
-*Sources:*
-- *the Kitchen lead's `../product/kitchen-v2-scope.md` (#349), which replaces the old three kitchen questions;*
-- *`../product/ship-list-m5-money.md` (the five money questions);*
-- *`decisions.md`: the $50 cap (12:14 AM PT Oct 16, waiting on his yes), calendar titles to Claude (10:29 PM PT Oct 15), recipe layouts (12:32 AM PT Oct 16, C if he says nothing) and `restWeekday` (8:58 PM PT Oct 15, empty until he answers);*
-- *`training-week-one-questions.md` (Monday's five).*
+## Where things stand
+- **On his phone:** 7b321d2, installed Fri Oct 16 9:57 AM PT over the app, data untouched. It carries #320, #330,
+  #334, #337 and #343 only. Store at Catalog v5. Free Personal Team signing lapses about **Fri Oct 23, 9:57 AM PT**,
+  so Thursday is re-sign day. Reminder: **Thu Oct 22, 10 AM PT**.
+- **The next pin is Catalog v9, not named yet.** At 234080a the blockers #422, #446 and MU2 with A2 (#451) are
+  merged; **#366 (Home lines) is still open** (Design clip pass, then QA confirm). Riders merged: #454 (paste/link
+  wall), #457 (Siri task wall). Not merged: the mark-private pass, P1/T1, P2, the rest-day reader.
+- **Rules that hold either way:** never delete Tessera; bundle `com.kaushikaranagu.tessera`, team `WMP2WF3P54`,
+  App Group `group.com.kaushikaranagu.tessera`, none of them renamed. Step 0 is always SAVE A COPY. Rollback build is
+  444e72b (v5). An older build on a newer store is shown safe through v7 (V4 checks 7b321d2 on the v9 store). A
+  newer backup restored onto an older build is forbidden until tested.
+- **Trip:** leaves Mon Oct 26 (New York), lands at LAX Wed Oct 28, 9:20 PM PT. The trip fixes (#377, #391) are only
+  in the pin, which must be on his phone by Sun Oct 25 to help.
 
-**Shape.** One message, one word per answer, with the recommended answer marked ★. Replying "defaults" takes every ★.
+## 9:30 AM PT: which branch (coordinator, 2 minutes)
+Branch 1 only if **all** hold: Product logged "Pin named" with the SHA in `decisions.md`; Builder A's v9 gate passed
+on that SHA (V1 to V6: 366 v5 rows byte-identical, timed v5 restore at or under 3.23 s, 7b321d2 opens the v9 store);
+QA read the gate run; Design passed the 66 walk; and he says "install it". Anything missing: Branch 2.
 
-Order:
-1. Kitchen first: it is about his week, so it reads warmest.
-2. Money: how the next slice behaves.
-3. Claude.
-4. Recipes and training.
+## Step 0, both branches (on the phone, before anything on the Mac)
+1. Not mid-workout. Finish or skip starting one until after.
+2. Review > Backups, tap **SAVE A COPY**. Today's copy shows on the page. Nothing else is asked about his backup.
+3. Two yes/no questions only: is a Claude key on the phone? Is "Tess asks Claude" on? If both yes, note the receipts
+   count in Settings > Claude. Never ask him to type, show or paste the key.
 
-Monday's leftovers go in a second short message at 6:00 PM PT, because the morning one already has 12.
+## Branch 1: the v9 pin is named and passed its gate
+1. Step 0 above. This copy is v5, made on 7b321d2, so it stays restorable on 7b321d2 and 444e72b.
+2. Mac (repo `~/pilot`): `git fetch origin`, then `git worktree add ~/pilot-pin <pin SHA>` and `cd ~/pilot-pin`.
+   Confirm `git merge-base --is-ancestor 7b321d2 HEAD` succeeds and Catalog is v9 with nothing at v10.
+3. `xcodegen generate`, open `Tessera.xcodeproj`, scheme Tessera, his iPhone. Leave the Signing tab alone. Scheme
+   Run arguments empty. Cmd-R. It installs over 7b321d2; the first launch moves his store from v5 to v9. Any
+   signing or install error: Branch 2 step 4 (stop, never delete).
+4. The checks right after (below), then the review items: `review-refresh-3.md` items 1 to 14, about 10 minutes
+   (items 12 and 13 ride his evening workout). Trip rows T1 and T2 happen in New York.
+5. If anything looks wrong: stop, don't log, don't delete. Roll back by installing 444e72b over the top (the decided
+   rollback build); never restore a backup made on the pin onto it.
+6. Product logs the install line in `decisions.md` and `board.md`. Signing then lapses 7 days after this install.
 
-**Before sending (coordinator, 5 minutes).**
-- **Kitchen numbers.** The Kitchen lead fills the brackets in the kitchen lead-in from his week's data and sends the filled line to Product by 9 AM PT (`kitchen-v2-scope.md`, "What I'll do on Oct 22"). Paste that line as it comes.
-- **Drop answered questions.**
-  - If he has already answered the $50 cap (10), the recipe layout (11) or the rest day (12) by Thursday, delete that line and renumber.
-  - If he answered Monday's rest-day question (Monday's Q4), drop 12.
-  - Check `decisions.md` for "Kaushik" after Oct 16 before sending.
-- **The opener's count.** Change "12 quick ones" to the real count.
+## Branch 2: the pin isn't ready, re-sign 7b321d2 as is
+Same commit, same store (v5), no migration, no data change. Only the signing clock restarts.
+1. Step 0 above.
+2. Mac: `cd ~/pilot && git fetch origin`, then `git worktree add ~/pilot-7b321d2 7b321d2` and
+   `cd ~/pilot-7b321d2`. `git rev-parse --short HEAD` must print `7b321d2`. Never build master here.
+3. `xcodegen generate`, open `Tessera.xcodeproj`, scheme Tessera, his iPhone (unlocked, same Wi-Fi, trusted).
+   Signing tab as is: team `WMP2WF3P54`, Automatic, bundle id unchanged. Scheme Run arguments empty. Cmd-R.
+4. **Any signing or install error: stop. Never delete the app.** "Untrusted developer": Settings > General > VPN &
+   Device Management, trust. Not paired: pair again. App Group refused: remove the group lines from both entitlements
+   files for this install only, never rename it (the look may reset; data doesn't). Anything else: send the error
+   text to the coordinator before touching the phone.
+5. Let the app open by itself from Xcode, then the checks right after (below).
+6. Privacy until the pin is on his phone (decisions 10:18 AM PT Oct 16): "Tess asks Claude" stays no, or he types
+   no passwords, codes or money to Tess. 7b321d2 has none of the walls.
+7. Next lapse: about Thu Oct 29 at the re-sign time. A pin installed Oct 23 to 25 on his word restarts the clock
+   and brings the trip fixes; without it a hotel workout may show a day early (display only).
 
-## The message (ready to paste)
+## Checks right after (both branches, one line each)
+1. Opens to Now, with no Tess note about a fresh start or moving the store aside.
+2. Review shows this week as before: same workouts and set counts as this morning.
+3. One exercise page: history and best still go back before today.
+4. Review > Backups: today's copy is there, "the last one today", at most 7 kept.
+5. Settings > Claude: a key is there, yes or no, same as Step 0. Don't paste it again.
+6. The look sentence reads the same looks as before.
 
+If 1 to 3 show an empty app: stop, log nothing, never delete. The data is still in the container or the copies.
+
+## The morning message, 9:50 AM PT (refreshed; now 10 questions)
+
+Kitchen lead fills the brackets by 9 AM PT. Drop any question he answers first (grep `decisions.md` for "Kaushik"
+after Oct 16), renumber and fix the count. Changes are listed under "Stale".
 ```
-Morning! 12 quick ones, one word each. Reply "defaults" to take every ★. Nothing changes until you answer.
-
+Morning! 10 quick ones, one word each. Reply "defaults" to take every ★. Nothing changes until you answer.
 Kitchen week one: you saved [n] recipes ([p] pasted, [l] from links, [g] typed), cooked [c] times ([t] timers, [e] stopped early), and shopped [s] times with [i] items ([r] from recipes, [y] typed).
 1. Did you ever want to know whether you already had something at home? Yes / ★No
 2. Did you fix a recipe after saving it, or want to? ★Yes / No
 3. Was there a kitchen moment you reached for something else instead of Tessera? Name it, or ★No
-
 Money, before it's built:
 4. A shop name on a spend ("38.20 at Trader Joe's")? Its own field / ★Keep it in the text
 5. Currencies: just €, £, $ and ₹? ★Yes / Add one (say which)
 6. After a shop, Tess asks "Groceries total?" Can you answer with just "38"? ★Yes / No
 7. Does "paid 650 rent" work like "spent"? ★Yes / No
 8. "Split 60 with Sam": log your half or the full 60? ★Half / Full
-
-Claude:
+Claude and recipes:
 9. Plan my day sends Claude your task and calendar titles (never notes, places or health). OK? ★Yes / Leave calendar out
-10. Raise the monthly Claude limit from $10 to $50, so Tess can remember things and word Home? ★Yes / Keep $10
-
-Recipes and training:
-11. Recipe page: the clock (steps by the minute), prose, or two columns? ★Clock / Prose / Columns
-12. Rest day: Sunday? ★Yes / Another day (say which)
+10. Recipe page: the clock (steps by the minute), prose, or two columns? ★Clock / Prose / Columns
 ```
 
-**Why each ★ (for the coordinator, not sent):**
-- **2 ★Yes:** recipe edit in place is the Kitchen lead's first default slice. A yes confirms it; a no lets the data decide (the re-parse diff).
-- **10 ★Yes:** the coordinator's recommendation. $50 leaves room for memory, Home wording and the week story, about $4 a month at Sonnet prices (architecture 5.6), while a runaway loop still stops. He has $200 of credits a month.
-- **11 ★Clock:** Design's recommendation (C, `recipe-layouts.md`). It is also the default if he says nothing, so a "defaults" reply changes nothing built.
-- **12 ★Yes:** Sunday is the engine's current placement, and the Day log, Review and Training already read "Rest day" from it. A "defaults" reply logs `restWeekday` = 1 (Sunday).
+Drop 10 if Design hasn't shown him A, B and C yet (decisions 9:27 AM PT: C stays the default until he picks). The
+answer-to-owner table for these questions is unchanged; see this file at 98a4407. Monday's leftovers still go at
+6 PM PT with Monday's wording, rest-day question excluded.
 
-## Second message, 6:00 PM PT (only if Monday left any open)
+## Stale in the old list
+- **Q10, the $50 cap:** answered. His "start with 50" (9:27 AM PT Oct 16); #422 carries it. Removed.
+- **Q12, rest day Sunday:** taken from his Oct 15 "Sun rest" (decisions 11:52 AM PT); the reader writes Sunday with
+  UNDO on its first launch. Removed; it is review item 1 once the reader is in a pin.
+- The cap "waiting on his yes" and the "12 quick ones" count (now 10).
+- `resign-day.md` step 3 ("pull master" and Run): wrong for Thursday. Build the exact commit (7b321d2 or the pin).
+- `review-session.md`'s 7b321d2 section: step 2 ("type your key yourself") becomes the yes/no question; "the build
+  after, before Oct 22" no longer holds (the pin is not named and may land after Oct 22).
 
-Copy only the ones he didn't answer on Monday, with Monday's wording and ★, numbered from 1.
+## What he says yes or no to on Thursday
+1. Branch 1 only: "install it" for the named pin. Yes / not today (then Branch 2).
+2. Branch 2: re-sign the same build now, phone plugged in? Yes / later today (before Fri 9:57 AM PT).
+3. Step 0: today's copy saved? Yes / No (no install until yes).
+4. Is a Claude key on the phone? Yes / No. Is "Tess asks Claude" on? Yes / No.
+5. Checks 1 to 6 after the install look right? Yes / No (any no: stop, don't delete).
+6. The morning message: one word each, or "defaults".
 
-```
-Four more from Monday, one word each. "defaults" takes every ★.
-1. Sat Push A: 17 sets. All of them? ★All / Most / Few
-2. If you miss a day, pick up where you left off? ★Yes / No
-3. When you say "2 x 10", I ask "sets or kg?". Keep asking? ★Keep / Less / Never
-4. Do the app's weights match your gym? ★Yes / Dumbbells / Plates
-```
-
-- Monday's rest-day question is now morning question 12, so it isn't repeated here.
-- Use Monday's filled-in wording for 1 and 2 (the routine name and set count from his copy) if it went out that way.
-- Monday's warm-up weekend question is stale by Thursday: drop it unless Monday's copy showed fewer sets than he trained.
-- If Monday is fully answered, send nothing at 6 PM.
-
-**Note on "defaults".** Replying "defaults" accepts every ★ in that message. Nothing is decided by silence: until he replies, the shipped defaults keep running (the cap stays $10, the recipe page is C, the rest day stays where the engine places it), and only an answer is logged.
-
-## For the coordinator: what each answer changes, and who it goes to
-
-| # | Answer | What changes | Goes to |
-|---|---|---|---|
-| 1 | **No** (★) | Pantry light stays behind recipe edit in v2's default cut | Kitchen lead |
-| 1 | Yes | P. Pantry light (engine only), then W. CAN COOK move to the front of v2 | Kitchen lead, then Product |
-| 2 | **Yes** (★) | Recipe edit in place goes first in v2 | Kitchen lead |
-| 2 | No | v2's order follows the data (re-parse diff, timers, notes) per `kitchen-v2-scope.md` | Kitchen lead |
-| 3 | **No** (★) | Nothing new | Kitchen lead |
-| 3 | Clock app | Hands-free cook mode moves up | Kitchen lead, then Product |
-| 3 | Paper or Messages for the list | At-the-shop mode gets a review before any new slice | Kitchen lead, then Product |
-| 4 | **Keep it in the text** (★) | Nothing. "at Trader Joe's" stays in the spend's text | Core (no change) |
-| 4 | Its own field | Slice 1 gains a `shop` text field, filled from "at X" | Product logs it; Core |
-| 5 | **Yes** (★) | Nothing. EUR, GBP, USD, INR only | Core (no change) |
-| 5 | Add one | `MoneyAmount.parse` gains that code and symbol, plus one eval row | Core |
-| 6 | **Yes** (★) | Nothing. A bare whole number answers only while "Groceries total?" is on screen and no workout runs | Core (no change) |
-| 6 | No | A total needs decimals or a currency mark; add a "38" eval row expecting no spend | Core; Research |
-| 7 | **Yes** (★) | "paid" joins "spent" when an amount follows | Core; Research adds a guard row for "paid rent" |
-| 7 | No | "paid" stays upkeep only | Core (no change) |
-| 8 | **Half** (★) | "split 60 with Sam" logs 30, with "split, 60 total" in the text | Core |
-| 8 | Full | Logs 60, with "split with Sam" in the text | Core |
-| 9 | **Yes** (★) | Nothing. Plan my day keeps sending task and calendar titles | Product logs it |
-| 9 | Leave calendar out | Plan my day sends task titles only | Product; Core (the plan request); Builder B (the VIA CLAUDE line) |
-| 10 | **Yes** (★) | `TessUsageLedger.capNano` goes from $10 to $50 in AI-2. The Settings spend line, the 80% step-aside and the Nov 1 copy follow the number. Product flips the 12:14 AM decision from proposed to decided | Product, then Core (AI-2), then the AI thread |
-| 10 | Keep $10 | Cap stays $10. The AI thread re-plans which Claude jobs fit (Home wording on Haiku only, the week story monthly) | Product, the AI thread |
-| 11 | **Clock** (★) | Builder B builds layout C. Core gives each step a start minute from the parser's durations | Product logs; Core; Builder B |
-| 11 | Prose / Columns | Builder B builds A or B instead; no Core change | Product logs; Builder B |
-| 12 | **Yes** (★) | `restWeekday` = 1 (Sunday) in the settings object | Product logs; Core (no code, a setting) |
-| 12 | Another day | `restWeekday` = that day. Training's "Rest day tomorrow", Now and Review follow it | Product logs; Core |
-
-**After he replies.**
-- "defaults": log one line in `decisions.md` with the time (PT), naming each question it covered.
-  - Questions 4 to 8 then read as approved in the money ship list.
-  - Question 10 flips the cap decision.
-- Kitchen answers go to the Kitchen lead in one message, which then writes the acceptance page for the first v2 slice that day.
-- A reply that answers only some questions: log those and carry the rest to Friday's list unchanged. Never re-ask an answered one.
-- **Never in this message:** his Claude key. If he pastes it in reply, don't quote it anywhere, and tell him once that it goes in Settings › CLAUDE.
+**Ruled (Product, decisions.md 12:16 PM PT, pin-checklist §7):** after the pin, the rollback build is 7b321d2; before the pin it is 444e72b. MU2 and A2 are ticked; #366 is the only pin blocker left.
