@@ -4,6 +4,7 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+- **Live-workout set phrases** (7:24 PM PT, Research #198 question 15, defaults S701 to S706). A bare number counts as reps only from 1 to 50 and when it isn't close to the last weight; anything else goes to the model. "+N" or "-N" alone goes to the model. A weight spoken to Tess snaps to the nearest loadable weight, ties going lighter. In a live workout, "at N" after a set means RPE, never a time. "to failure" and "warmup" set the kind of set. "bodyweight N", "+W for R" and "bar for N" are understood, and "skip" writes nothing. Core ships this as a small guard right after the past-day flags, because today these phrases lose sets mid-workout.
 - **Theme default** (7:22 PM PT, coordinator; shipped in Builder A's #195). Every install, his included, starts at Porcelain by day and Obsidian by night, and he can pin Plein. This overrides Research's 63 proposal.
 - **The daily .tessera copy follows the 4 AM day** (7:22 PM PT, Research #196). Copies are named and written by the logical day, so late-night changes land in that day's copy.
 - **Settings: Claude and Lists copy calls** (7:17 PM PT, Research #192 `settings-claude.md` and `lists-copy.md`, all defaults).
