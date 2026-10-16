@@ -4,6 +4,7 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+- **Speak's set line** (8:56 PM PT, Design b13d8b4). A spoken set says "Set 3 logged. 80 × 7.", name first, under the undo rule.
 - **Day log times print in the current zone** (8:56 PM PT, Research 104 K1). Every time in the Day log prints in the phone's current zone, as `day-log-late-night.md` says; the travel block in `day-log-copy.md` is fixed to match. Stored zones (op.zone, #225) are read later.
 - **Oct 22 install target** (8:56 PM PT, Research 103). Install at Builder A's launch-flags merge, once QA passes it and #251 and test.sh is green. If launch-flags hasn't merged by Wed Oct 21, 6 PM PT, install 92078ee with empty scheme args and no UITests on his phone.
 - **Rest days keep showing while Monday's question is open** (8:52 PM PT, Research 101). NowPage and ReviewPage do not pass sessionsPerWeek 0. The PPL x2 plan at 6 sessions a week is decided, so a planned rest day is real and keeps its "Rest day" line. Which weekday it lands on is not decided yet: "Sunday" is only the pre-filled answer in Monday's question and is logged only when he answers. Until then, rest falls where the engine puts it today.
