@@ -37,3 +37,5 @@ for side-by-side on the simulator only.
   Design's call whether a short clip is needed.
 - `pleinIsFlatWithEarthPigments` pins `sheen == 0xE0B341`, the old Plein rest colour, while the new Plein rest is
   `0xC98E1B`. If Design meant the sheen to follow, the test pins the wrong value; if not, a comment would say why.
+
+Closed after review: Design confirmed the Plein sheen 0xE0B341 with rest 0xC98E1B is meant (sheet 43).
