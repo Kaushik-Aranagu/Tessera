@@ -145,6 +145,7 @@
 111. Day log v1 sheet against the acceptance pack. Done when Design's `docs/design/day-log-v1.md` (8ceb4e5) is checked line by line against `day-log-acceptance.md` (DL1 to DL71), with the faint row replacing the faint dab (decisions.md 9:12 PM PT), and every difference listed for Design, Builder B and Core.
 112. Settings place lines. Done when every line and state in Design's `docs/design/settings-place.md` (231b15e) is checked against tess-voice, `settings-claude.md`'s 26 states, the look sentence and the Backups lines from #246, with fixes and owners, for Builder B.
 113. Suite and spoken rows after the normaliser. Done when the suite and `fixtures/spoken-normaliser.md` are re-traced on master after #262, with the Speak-in-the-workout rows from `speak-first-use.md` added, totals recounted and any wrong write flagged to Core.
+114. (taken from Later) How the living-colour rule table learns from his day (`living-colours-learning.md`, PR after #332). Done when the five conflicts are settled with Design and the AI thread and 12 day-shape fixtures are handed to Core for AI-14.
 
 **Later:**
 - (Moved to Builder A's Later, since it needs a Mac lead.)
