@@ -15,6 +15,8 @@ struct RoutinesPage: View {
     @FocusState private var draftFocused: Bool
     /// The last change, for UNDO (making a routine is two ops).
     @State private var last: [OpRecord] = []
+    /// What the last change touched, named on its UNDO line ("Push A, taken back.").
+    @State private var lastThing = ""
     @State private var line: String?
     @State private var haptic = HapticCue()
     /// The row being moved by a hold-and-drag, and how far it has travelled.
@@ -148,7 +150,7 @@ struct RoutinesPage: View {
         }
         draft = ""
         making = false
-        said("\(title) made.", records: [made.record, added.record], haptic: .made)
+        said("\(title) made.", thing: title, records: [made.record, added.record], haptic: .made)
         // The new routine opens empty, "Add an exercise" ready.
         model.open(.object(made.output.id))
     }
@@ -181,8 +183,12 @@ struct RoutinesPage: View {
         guard let result = try? model.engine.perform(SetScheduleMode(plan: plan.id, mode: mode), by: .user) else {
             return
         }
-        said("\(plan.title) \(mode == .fixed ? "on fixed days" : "rolls on").", records: [result.record],
-             haptic: .selection)
+        said(
+            "\(plan.title) \(mode == .fixed ? "on fixed days" : "rolls on").",
+            thing: plan.title,
+            records: [result.record],
+            haptic: .selection
+        )
     }
 
     // MARK: Reorder and drop
@@ -209,7 +215,7 @@ struct RoutinesPage: View {
                       let result = try? model.engine.perform(MoveRoutineInPlan(plan: plan.id, routine: routine.id,
                                                                                to: target), by: .user)
                 else { return }
-                said("\(routine.title) moved.", records: [result.record], haptic: .selection)
+                said("\(routine.title) moved.", thing: routine.title, records: [result.record], haptic: .selection)
             }
     }
 
@@ -229,7 +235,7 @@ struct RoutinesPage: View {
     private func drop(_ routine: ObjectRecord) {
         guard let result = try? model.engine.perform(DropRoutineFromPlan(plan: plan.id, routine: routine.id),
                                                      by: .user) else { return }
-        said("\(routine.title) dropped.", records: [result.record], haptic: .notNow)
+        said("\(routine.title) dropped.", thing: routine.title, records: [result.record], haptic: .notNow)
     }
 
     // MARK: Tess
@@ -252,8 +258,9 @@ struct RoutinesPage: View {
         .tesseraAnimation(value: line)
     }
 
-    private func said(_ words: String, records: [OpRecord], haptic moment: Haptic) {
+    private func said(_ words: String, thing: String, records: [OpRecord], haptic moment: Haptic) {
         last = records
+        lastThing = thing
         line = words
         haptic.play(moment)
         model.touch()
@@ -264,7 +271,7 @@ struct RoutinesPage: View {
             model.engine.undo(record)
         }
         last = []
-        line = "Taken back."
+        line = Receipt.takenBack(lastThing)
         haptic.play(.undo)
         model.touch()
     }

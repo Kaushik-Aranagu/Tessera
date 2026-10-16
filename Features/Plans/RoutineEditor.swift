@@ -187,11 +187,12 @@ struct RoutineEditor: View {
 
     /// Runs a Core action, keeps it for Undo and says what changed in Tess's words.
     private func perform(_ action: any EngineAction) {
+        let exercise = Receipt.exercise(of: action, in: model.store)
         guard let record = run(action) else { return }
         haptic += 1
         withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) {
             last = record
-            line = action.summary(in: model.store) + "."
+            line = Receipt.routineEdit(action, exercise: exercise, summary: action.summary(in: model.store))
         }
         model.touch()
     }
@@ -218,7 +219,7 @@ struct RoutineEditor: View {
         haptic += 1
         withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) {
             self.last = nil
-            line = "Undone."
+            line = Receipt.takenBack(routine.title)
         }
         model.touch()
     }

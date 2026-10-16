@@ -112,10 +112,16 @@ struct SwapPanel: View {
 }
 
 /// The top-set check: one line from Tess inside the set area, in cobalt, breathing gently, with a cobalt
-/// brushstroke painting in under it to mark it as tappable. One tap accepts; then it reads "Done. 77.5 for sets 2
-/// to 4." without the stroke. Ignoring it is fine; it leaves when the next set is logged.
+/// brushstroke painting in under it to mark it as tappable. One tap accepts; then it reads "Sets 2 to 4, 77.5
+/// kg." without the stroke. Ignoring it is fine; it leaves when the next set is logged.
 struct TopSetCheckLine: View {
     let check: WorkoutSession.TopSetCheck
+
+    /// The accepted line, thing first (receipts-thing-first.md RC11): "Sets 2 to 4, 85 kg.".
+    static func acceptedLine(weight: Double, fromSet: Int, toSet: Int) -> String {
+        "Sets \(fromSet) to \(toSet), \(Format.mass(weight))."
+    }
+
     var onAccept: () -> Void
 
     @State private var stroke: CGFloat = 0
@@ -124,7 +130,7 @@ struct TopSetCheckLine: View {
     var body: some View {
         let weight = Format.kilograms(check.suggested)
         let text = check.isAccepted
-            ? "Done. \(weight) for sets \(check.fromSet) to \(check.toSet)."
+            ? Self.acceptedLine(weight: check.suggested, fromSet: check.fromSet, toSet: check.toSet)
             : "That was heavy. Drop to \(weight) for the rest?"
         Button(action: onAccept) {
             VStack(alignment: .leading, spacing: 2) {
