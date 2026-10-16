@@ -53,6 +53,7 @@
 **Next:**
 0r. PN-MENTION, NEXT BUILD FIRST (QA review-508, 1:24 PM PT), Builder B half: ObjectPage sends notes to NoteEditor, or hides a private note's body. InstanceBody (ObjectPage.swift:348) never shows a private note's text or "Private: yes".
 0s. (Research AK pin-page-check, decisions 1:33 PM PT Oct 16) Draw the pack size on Groceries rows: Groceries.packSize(of:) (Groceries.swift:68) has no app caller, so " · 15 oz" never shows. Wire it into the row's detail. Small PR, with the next Groceries change.
+0t. (Research AN, decisions 1:41 PM PT Oct 16; next build) After Core 0af renames the default, SAVE A COPY warns "This is the Backups folder. Daily copies here get replaced. Save somewhere else?" when the chosen folder is the backups folder. Small PR.
 0q. (Research habits-weight-week; decisions 1:23 PM PT) Habits page and HABITS on Review. A sick mark holds that day's habits asks. HW15: Ask bar UNDO counts from the line and is announced (AppModel.swift:265-287, with 0i).
 0p. (Research notes-day-one; decisions 1:15 PM PT) NEXT BUILD FIRST:
 - N13: a private note's row shows only "Private note", with no second line and no VoiceOver of its text (NotesView.swift:186-216).
