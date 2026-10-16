@@ -130,6 +130,8 @@ final class AppModel {
         }
         runtime = TesseraRuntime(engine: engine)
         soul.runScript()
+        // A cold launch is a foreground too: told now, so her first frame already has her eyes shut if she wakes.
+        soul.handle(.foregrounded(underLive: false))
         // Claude is the last capture step, gated on the one "Tess asks Claude" field, the key and the pause
         // (it checks each at every call). Off in demos, so a fake key never goes over the network.
         if !demo, let capture = runtime.tess as? TessCaptureEngine {

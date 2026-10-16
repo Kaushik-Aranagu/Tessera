@@ -115,6 +115,8 @@ struct SoulEyes: View {
     let color: Color
     /// Reduce Motion: the blink stays, the dots sit still.
     var still = false
+    /// A lid from a moment of hers (the wake) in place of the blink schedule.
+    var lid: CGFloat?
 
     /// Where the pair sits, in the canvas's points from its centre: the main dabs' mean, 3 pt above it, both scaled
     /// by the soul's drawn scale (the same transform `SoulRenderer` applies to the dabs).
@@ -129,7 +131,7 @@ struct SoulEyes: View {
     var body: some View {
         let centre = Self.centre(of: frame)
         let scale = frame.look.scale
-        let lid = SoulBlink.lid(at: time)
+        let lid = lid ?? SoulBlink.lid(at: time)
         let glance = still ? .zero : gaze.offset
         HStack(spacing: 8.4 - 3.2) {
             eye(lid)
