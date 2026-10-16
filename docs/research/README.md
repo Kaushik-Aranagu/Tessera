@@ -94,3 +94,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [empty-states.md](empty-states.md) | All teams: 14 screens with no data, what they show now and what they should say, owner per fix |
 | [starter-content.md](starter-content.md) | Core and Builder A: everything a fresh install seeds, checked against the decisions, 3 mismatches |
 | [lockscreen-lines.md](lockscreen-lines.md) | Builder A and Core: 72 Live Activity, Siri and Shortcuts strings checked against Tess voice and the undo rule |
+| [accessibility.md](accessibility.md) | All teams: 80 VoiceOver, Dynamic Type and Reduce Motion fixes by screen, 9 high |
