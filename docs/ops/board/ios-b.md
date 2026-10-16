@@ -8,6 +8,8 @@
 
 **Then: Settings: Claude screen** (B owns Tess; coordinator 5:50 PM PT). It sits on Core's Keychain store and follows Design's Settings: Claude sheet: paste the key once (it's never shown again, only "Key saved"), Test, the usage line that turns amber at 80%, "Claude paused until 1 Nov." at the $10 cap, and the cloud mark on the bloom, which also shows on every use-1 ghost row that came from Claude (Research #172).
 
+**From now on, use themed tokens** (Kaushik's themes, 6:40 PM PT): new and touched screens use Builder A's DesignSystem theme tokens, never hard-coded colours, so every theme works.
+
 **Next:**
 1. (In Now, blocks the phone update) Rest day on Now, QA E5. Done when Now and the week page agree on a rest day, and, on a planned rest day, the Home hero shows a quiet "Rest day" line from Core's NowPicker override, and the next routine is one tap away. No guilt copy and no red.
 2. Button sweep (Home labels done; finish the rest) (Kaushik, 19:00: no rounded-rectangle, oval or pill buttons anywhere, Apple defaults included). After the install and once Design's `docs/design/no-buttons.md` lands. Done when every button on Builder B's screens (Home, Command, RootView), reusing Builder A's DesignSystem button style uses Design's replacement language and the audit's rows for those files are ticked, with a recording.

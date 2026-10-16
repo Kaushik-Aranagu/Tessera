@@ -17,7 +17,9 @@
 9. Copy consistency (small, Research #156; decisions.md, 5:02 PM PT). Done when every screen, widget and intent says "All quiet." (not "Nothing else is planned today."), uses "×" in sets, FinishWorkoutIntent reads the `WorkoutSummary.line` text, and set removal says "Set 3 taken back" (not "Last set removed."). Fits beside any PR that touches these files.
 8. M4 slice 10, widgets and snippets, pulled forward. Copy for every state is in Research's `../research/widget-states.md` (#156). Snippets first, then the App Group test build, per Design's `widgets-and-snippets.md`.
 
-**Restore drill, once, right after the Siri undo hotfix** (Research #161, `../research/restore-drill.md`; QA has no simulator). Run the 10 steps and 5 edge cases on the simulator and send the results to QA and Core. Trap: don't relaunch with `-resetDemo`, because it wipes the restore. It runs again after Core's Backup batch.
+**Themes, right after the Siri undo hotfix** (Kaushik, 6:40 PM PT; decisions.md). Build DesignSystem theme tokens (background, surfaces, ink, accents, Tess cobalt, vermilion UNDO) plus a theme switch, from Design's `themes.md` and token note. Ship a light default (white with rich colour pops) and a pure black theme first, then the rest of Design's set. Move every hard-coded colour in DesignSystem to a token so all teams inherit it. It goes in the build after tonight's install. The restore drill follows.
+
+**Restore drill, once, after Themes** (Research #161, `../research/restore-drill.md`; QA has no simulator). Run the 10 steps and 5 edge cases on the simulator and send the results to QA and Core. Trap: don't relaunch with `-resetDemo`, because it wipes the restore. It runs again after Core's Backup batch.
 
 **Audit batches (small PRs, beside other work; decisions.md 5:14 PM PT):**
 - Rest alert (Research #171): the rest-done alert relies on `Task.sleep` today, so it misses when the app is closed. Move it to Core's local notification once it exists; it replaces the Live Activity rest alert when notifications are allowed.

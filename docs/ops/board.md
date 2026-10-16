@@ -2,6 +2,8 @@
 
 *Only the planning lead (Product lead thread) edits this file. Each team's queue lives in its own file under `board/`, and only that team's lead edits it. Updated 2026-10-15. First phone build: PRs cut at 2:05 PM Pacific (moved from 12:45 and 1:05 PM), then the final build; review guide in `../product/review-session.md`.*
 
+**Themes (Kaushik, 6:40 PM PT):** Design's top job; Builder A builds the tokens and switch after the Siri hotfix; all screens use themed tokens from now on.
+
 ## Priority order (central)
 
 1. v1 Workouts.
