@@ -29,13 +29,24 @@ struct BottomChrome: View {
     @State private var dryTask: Task<Void, Never>?
     @State private var isBusy = false
 
-    enum Layer { case modes, write }
+    enum Layer { case modes, write, speak }
+
+    /// Tess's ears, and what she heard while it dries.
+    @State private var listener = SpeechListener()
+    @State private var voiceGhost: (clean: String, heard: String)?
+    @State private var refusal: SpeechListener.Refusal?
+    @State private var holdTimer: Task<Void, Never>?
+    @State private var holdListening = false
+    /// The one-time "Hold me to talk." hint: 0 not yet, 1 showing (after the first Allow), 2 done for good.
+    @AppStorage("tess.holdHint") private var holdHint = 0
+    /// The open dated-lift ask ("Bench 80 × 8 for Monday?"), answered with LOG or NOT NOW.
+    @State private var liftAsk: TessDatedLiftAsk?
 
     /// The three modes, top to bottom. Their dabs are the soul's three colours.
-    fileprivate static let modes: [(word: String, seed: Int)] = [("Speak", 1), ("Write", 2), ("Show", 3)]
-    fileprivate static let rowHeight: CGFloat = 48
+    static let modes: [(word: String, seed: Int)] = [("Speak", 1), ("Write", 2), ("Show", 3)]
+    static let rowHeight: CGFloat = 48
     /// The soul's centre sits this far above the bottom of the chrome; the mode column starts above it.
-    fileprivate static let soulLift: CGFloat = 54
+    static let soulLift: CGFloat = 54
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -49,7 +60,13 @@ struct BottomChrome: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
-                .onTapGesture { close() }
+                // A tap on the veil cancels a listen: nothing saved, no line.
+                .onTapGesture {
+                    if listener.state != .idle {
+                        listener.stop(send: false)
+                    }
+                    close()
+                }
                 .accessibilityHidden(true)
                 // The page comes back only after the words have gone, so they never overlap it.
                 .transition(.asymmetric(insertion: .opacity,
@@ -79,12 +96,26 @@ struct BottomChrome: View {
                 }
             }
         }
+        // A set ask belongs to the workout: it goes when the workout ends (QA C3).
+        .onChange(of: model.session == nil) { _, ended in
+            if ended {
+                setAsk = nil
+            }
+        }
         .onAppear {
             model.tessMode = restingOrIdle
             breathe = !reduceMotion
             #if DEBUG
                 if LaunchFlags.has("-tessScript") {
                     playScript()
+                }
+                if ProcessInfo.processInfo.arguments.contains("-speakScript") {
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .seconds(2))
+                        open()
+                        try? await Task.sleep(for: .seconds(1.4))
+                        speak(hold: false)
+                    }
                 }
             #endif
         }
@@ -112,31 +143,27 @@ struct BottomChrome: View {
         reply ?? voice.note?.text ?? model.launchNote
     }
 
-    /// UNDO only ever sits under the line whose record it reverts: a Home line ("Done. …", "Carried 2 tasks") shows
-    /// it only when that line has its own op; a capture's line shows it for that capture.
-    private var canUndo: Bool {
-        if let note = voice.note {
-            return note.undo != nil
-        }
-        return model.lastCapture != nil
-    }
-
-    /// Home's last action (done, moved) first, else the last capture.
-    private func undo() {
-        if let record = voice.note?.undo {
-            _ = model.engine.undo(record)
-            model.touch()
-            undos += 1
-            withTesseraAnimation(reduceMotion: reduceMotion) { voice.clear() }
-        } else {
-            model.undoLastCapture()
-        }
-    }
-
     private var resting: some View {
         HStack(alignment: .center, spacing: Theme.Spacing.m) {
-            if !model.isCommandExpanded, line != nil || canUndo || setAsk != nil {
+            if !model.isCommandExpanded, line != nil || canUndo || setAsk != nil || liftAsk != nil || holdHint == 1 {
                 VStack(alignment: .trailing, spacing: 2) {
+                    if let liftAsk {
+                        // "Bench 80 × 8 for Monday?" with LOG · NOT NOW as label words.
+                        Text(liftAsk.line)
+                            .font(Theme.voice)
+                            .foregroundStyle(Theme.Colors.tess)
+                            .multilineTextAlignment(.trailing)
+                            .frame(maxWidth: 270, alignment: .trailing)
+                        HStack(spacing: 30) {
+                            Button("Log") { answerLift(.log) }
+                            Button("Not now") { answerLift(.notNow) }
+                        }
+                        .buttonStyle(.labelWord)
+                    } else if setAsk == nil, line == nil, !canUndo, holdHint == 1 {
+                        Text(model.session != nil ? "Hold me to tell me a set." : "Hold me to talk.")
+                            .font(Theme.voice)
+                            .foregroundStyle(Theme.Colors.tess)
+                    }
                     if let setAsk {
                         // "2 × 10: 2 sets, or 2 kg?": the two answers are value words in the line, ink at rest.
                         HStack(spacing: 0) {
@@ -205,19 +232,40 @@ struct BottomChrome: View {
                     if !reduceMotion {
                         withAnimation(.easeOut(duration: 0.13)) { swell = true }
                     }
+                    // Holding the soul at rest is the fast path: listen while held (speak.md 1).
+                    holdTimer = Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(400))
+                        guard !Task.isCancelled, pressed, !model.isCommandExpanded else { return }
+                        holdListening = true
+                        speak(hold: true)
+                    }
                 }
-                .onEnded { _ in
+                .onEnded { value in
                     pressed = false
+                    holdTimer?.cancel()
                     withAnimation(.easeInOut(duration: 0.13)) { swell = false }
+                    // Let go to send; drag left off the soul to cancel.
+                    if holdListening {
+                        holdListening = false
+                        listener.stop(send: value.translation.width > -60)
+                    }
                 })
             .onTapGesture(count: 2) { onSoulDoubleTap() }
             .onTapGesture { model.isCommandExpanded ? close() : open() }
-            .onLongPressGesture(minimumDuration: 0.4) { open() }
+            .scaleEffect(holdListening ? 1.4 + listener.level * 0.15 : 1)
+            .animation(.easeOut(duration: 0.12), value: listener.level)
             .accessibilityElement()
             .accessibilityLabel("Tess")
             .accessibilityHint("Opens Tess.")
             .accessibilityAddTraits(.isButton)
             .accessibilityAction(named: "Go home") { onSoulDoubleTap() }
+            .accessibilityAction(named: "Talk to Tess") {
+                if listener.state == .idle {
+                    speak(hold: true)
+                } else {
+                    listener.stop(send: true)
+                }
+            }
     }
 
     // MARK: Open
@@ -268,17 +316,23 @@ struct BottomChrome: View {
                 writing
                     .transition(.opacity)
             }
+            if layer == .speak {
+                speaking
+                    .transition(.opacity)
+            }
             ForEach(Array(Self.modes.enumerated()), id: \.offset) { index, mode in
                 ModeRow(word: mode.word, seed: mode.seed, color: SoulColor.of(index),
                         rise: CGFloat(Self.modes.count - index) * Self.rowHeight - Self.rowHeight / 2 + Self.soulLift
                             - Self.rowHeight / 2,
                         delay: Double(Self.modes.count - 1 - index) * 0.04,
                         isActive: mode.word == "Write",
-                        isFolded: layer == .write)
+                        isFolded: layer != .modes)
                 {
                     if mode.word == "Write" {
                         withTesseraAnimation(reduceMotion: reduceMotion) { layer = .write }
                         focused = true
+                    } else if mode.word == "Speak" {
+                        speak(hold: false)
                     } else {
                         // Speak and Show are words until their layers ship.
                         close()
@@ -289,6 +343,12 @@ struct BottomChrome: View {
             Color.clear.frame(height: Self.soulLift - Self.rowHeight / 2 + 32)
         }
         .tesseraAnimation(value: layer)
+    }
+
+    /// Listening, then the voice ghost drying (speak.md).
+    private var speaking: some View {
+        SpeakLayer(listener: listener, ghost: voiceGhost, refusal: refusal, drying: drying,
+                   act: { act(on: $0) }, editGhost: editVoiceGhost)
     }
 
     private var writing: some View {
@@ -325,7 +385,10 @@ struct BottomChrome: View {
                             model.tessMode = draft.isEmpty ? .idle : .listening
                         }
                     }
-                WritingLine(color: Theme.Colors.tess, reduceMotion: reduceMotion)
+                // While the ghost dries only the dry line shows (Design B2 on #264).
+                if ghost == nil {
+                    CaptureWritingLine(color: Theme.Colors.tess, reduceMotion: reduceMotion)
+                }
                 if ghost != nil {
                     // One dry line for every drying ghost: 2.5 pt cobalt, draining right to left (speak.md 10).
                     Rectangle()
@@ -341,26 +404,6 @@ struct BottomChrome: View {
         .padding(.bottom, Theme.Spacing.xl)
     }
 
-    #if DEBUG
-        /// `-tessScript`: plays open → Write → type → Return so the flow can be recorded without touch automation.
-        private func playScript() {
-            Task { @MainActor in
-                try? await Task.sleep(for: .seconds(2))
-                open()
-                try? await Task.sleep(for: .seconds(1.6))
-                withTesseraAnimation(reduceMotion: reduceMotion) { layer = .write }
-                focused = true
-                try? await Task.sleep(for: .seconds(1.2))
-                for character in "stretch at 21:30" {
-                    model.commandDraft.append(character)
-                    try? await Task.sleep(for: .milliseconds(90))
-                }
-                try? await Task.sleep(for: .seconds(0.8))
-                dry()
-            }
-        }
-    #endif
-
     // MARK: Actions
 
     private func open() {
@@ -375,6 +418,7 @@ struct BottomChrome: View {
     private func opened() {
         reply = nil
         setAsk = nil
+        liftAsk = nil
         model.tessMode = .listening
         if !reduceMotion {
             withAnimation(.easeOut(duration: 0.13)) { swell = true }
@@ -449,6 +493,7 @@ struct BottomChrome: View {
         let answer = isQuestion ? CommandInterpreter(model: model).run(text) : await model.ask(text)
         // A doubtful set count waits for a tap on one of its two answers (Core's set guard).
         let asked = isQuestion ? nil : model.pendingSetAsk
+        let lift = isQuestion ? nil : model.pendingDatedLift
         ghost = nil
         drying = 0
         model.commandDraft = ""
@@ -461,10 +506,150 @@ struct BottomChrome: View {
         brighten()
         if let asked {
             withTesseraAnimation(reduceMotion: reduceMotion) { setAsk = asked }
+        } else if let lift {
+            withTesseraAnimation(reduceMotion: reduceMotion) { liftAsk = lift }
         } else {
             say(answer)
         }
     }
+}
+
+// MARK: - Speak and the asks (same file, so they reach the view's private state)
+
+extension BottomChrome {
+    /// Touching the drying ghost stops it, and the sentence opens in the Write line to edit.
+    private func editVoiceGhost() {
+        guard let voiceGhost else { return }
+        dryTask?.cancel()
+        drying = 0
+        model.commandDraft = voiceGhost.clean
+        self.voiceGhost = nil
+        withTesseraAnimation(reduceMotion: reduceMotion) { layer = .write }
+        focused = true
+    }
+
+    /// Tap Speak, or hold the soul: ask once, then listen at once.
+    private func speak(hold: Bool) {
+        refusal = nil
+        voiceGhost = nil
+        if !hold {
+            withTesseraAnimation(reduceMotion: reduceMotion) { layer = .speak }
+        }
+        model.tessMode = .listening
+        listener.onFinish = { heard in finishListening(heard, hold: hold) }
+        #if DEBUG
+            // `-speakScript`: words play in as if heard (the simulator has no mic to record).
+            if ProcessInfo.processInfo.arguments.contains("-speakScript") {
+                listener.playScript(["um", "oat", "milk", "and", "eggs", "for", "groceries"])
+                return
+            }
+        #endif
+        Task { @MainActor in
+            if let refused = await listener.start(hold: hold) {
+                holdListening = false
+                if hold {
+                    // From a hold the line shows beside the soul; the layer doesn't open.
+                    say("\(refused.line) \(refused.action) still works.")
+                } else {
+                    withTesseraAnimation(reduceMotion: reduceMotion) { refusal = refused }
+                }
+                return
+            }
+            // After the first Allow, the hold hint shows by the soul until the first hold that listens.
+            if hold {
+                holdHint = 2
+            } else if holdHint == 0 {
+                holdHint = 1
+            }
+        }
+    }
+
+    private func finishListening(_ heard: String?, hold: Bool) {
+        holdListening = false
+        guard let heard else {
+            // Nothing came in the first 5 s (a cancel says nothing at all).
+            if listener.endedInSilence {
+                close()
+                say("Didn't hear anything.")
+            } else if !hold {
+                close()
+            }
+            model.tessMode = restingOrIdle
+            return
+        }
+        if SpokenPhrase.isUndo(heard) {
+            close()
+            undo()
+            return
+        }
+        let clean = TessSpoken.numbers(SpokenPhrase.clean(heard))
+        if !model.isCommandExpanded {
+            withTesseraAnimation(reduceMotion: reduceMotion) { model.isCommandExpanded = true }
+        }
+        layer = .speak
+        withTesseraAnimation(reduceMotion: reduceMotion) { voiceGhost = (clean, heard) }
+        model.tessMode = .thinking
+        drying = 0
+        let seconds = reduceMotion ? 0.8 : 3.0
+        withAnimation(.linear(duration: seconds)) { drying = 1 }
+        dryTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(seconds))
+            guard !Task.isCancelled, voiceGhost != nil else { return }
+            // The ghost stays on screen until the commit closes the surface.
+            await commit(clean)
+            voiceGhost = nil
+        }
+    }
+
+    private func act(on refusal: SpeechListener.Refusal) {
+        switch refusal {
+        case .micOff, .speechOff:
+            if let url = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(url)
+            }
+        case .noLanguage, .busy:
+            self.refusal = nil
+            withTesseraAnimation(reduceMotion: reduceMotion) { layer = .write }
+            focused = true
+        }
+    }
+
+    private func answerLift(_ choice: TessDatedLiftAsk.Choice) {
+        let line = model.answer(choice)
+        withTesseraAnimation(reduceMotion: reduceMotion) { liftAsk = nil }
+        if !line.isEmpty {
+            say(line)
+        }
+    }
+
+    private func answerAsk(_ choice: TessSetCountAsk.Choice) {
+        let line = model.answer(choice)
+        withTesseraAnimation(reduceMotion: reduceMotion) { setAsk = nil }
+        // The engine may already have dropped the ask (a new phrase): then there's nothing to say (QA C2).
+        if !line.isEmpty {
+            say(line)
+        }
+    }
+
+    #if DEBUG
+        /// `-tessScript`: plays open → Write → type → Return so the flow can be recorded without touch automation.
+        private func playScript() {
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(2))
+                open()
+                try? await Task.sleep(for: .seconds(1.6))
+                withTesseraAnimation(reduceMotion: reduceMotion) { layer = .write }
+                focused = true
+                try? await Task.sleep(for: .seconds(1.2))
+                for character in "stretch at 21:30" {
+                    model.commandDraft.append(character)
+                    try? await Task.sleep(for: .milliseconds(90))
+                }
+                try? await Task.sleep(for: .seconds(0.8))
+                dry()
+            }
+        }
+    #endif
 
     /// The small soul's "done": its colours brighten for a beat, with a success haptic.
     private func brighten() {
@@ -473,12 +658,6 @@ struct BottomChrome: View {
             try? await Task.sleep(for: .milliseconds(900))
             withTesseraAnimation(.easeInOut(duration: 0.6), reduceMotion: reduceMotion) { glow = false }
         }
-    }
-
-    private func answerAsk(_ choice: TessSetCountAsk.Choice) {
-        let line = model.answer(choice)
-        withTesseraAnimation(reduceMotion: reduceMotion) { setAsk = nil }
-        say(line)
     }
 
     /// Tess's line beside the soul, faded after 4 s.
@@ -495,245 +674,25 @@ struct BottomChrome: View {
             }
         }
     }
-}
 
-// MARK: - Parts
-
-/// The soul's three paints, top to bottom: vermilion (Speak), cobalt (Write), cadmium (Show).
-private enum SoulColor {
-    static func of(_ index: Int) -> Color {
-        switch index {
-        case 0: Theme.Colors.live
-        case 1: Theme.Colors.tess
-        default: Theme.Colors.now
+    /// UNDO only ever sits under the line whose record it reverts: a Home line ("Done. …", "Carried 2 tasks") shows
+    /// it only when that line has its own op; a capture's line shows it for that capture.
+    private var canUndo: Bool {
+        if let note = voice.note {
+            return note.undo != nil
         }
+        return model.lastCapture != nil
     }
-}
 
-/// One mode: its word at 34 and its dab, which rises out of the soul with a slight overshoot.
-private struct ModeRow: View {
-    let word: String
-    let seed: Int
-    let color: Color
-    /// How far below its row the soul sits, in points; the dab starts there.
-    let rise: CGFloat
-    let delay: Double
-    let isActive: Bool
-    let isFolded: Bool
-    let action: () -> Void
-
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var risen = false
-    @State private var landed = false
-    @State private var inWord = false
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 18) {
-                Text(word)
-                    .textRole(.bodyStrong)
-                    .foregroundStyle(isActive ? Theme.Colors.ink : Theme.Colors.inkSecondary)
-                    .opacity(risen ? 1 : 0)
-                    // The pigment lands into the word as a wash behind its first letters, then dries away.
-                    .background(alignment: .leading) {
-                        RadialGradient(colors: [color.opacity(0.28), .clear], center: .center, startRadius: 0,
-                                       endRadius: 40)
-                            .frame(width: 80, height: 50)
-                            .blur(radius: 4)
-                            .opacity(landed ? 1 : 0)
-                            .allowsHitTesting(false)
-                    }
-                // The soul's pigment rises out of it and lands in the word; at rest only the word remains.
-                PaintDab(color: color, size: CGSize(width: 16, height: 14), seed: seed)
-                    .scaleEffect(risen ? 1 : 0.7)
-                    .offset(y: risen || reduceMotion ? 0 : rise)
-                    .opacity(risen && !inWord ? 1 : 0)
-                    .frame(width: 64)
-            }
-            .frame(maxWidth: .infinity, minHeight: BottomChrome.rowHeight, alignment: .trailing)
-            .contentShape(Rectangle())
+    /// Home's last action (done, moved) first, else the last capture.
+    private func undo() {
+        if let record = voice.note?.undo {
+            _ = model.engine.undo(record)
+            model.touch()
+            undos += 1
+            withTesseraAnimation(reduceMotion: reduceMotion) { voice.clear() }
+        } else {
+            model.undoLastCapture()
         }
-        .buttonStyle(.plain)
-        .padding(.trailing, 13)
-        .opacity(isFolded ? 0 : 1)
-        .frame(height: isFolded ? 0 : BottomChrome.rowHeight)
-        .clipped(antialiased: false)
-        .allowsHitTesting(!isFolded)
-        .accessibilityHidden(isFolded)
-        .onAppear {
-            withTesseraAnimation(.spring(response: 0.46, dampingFraction: 0.85).delay(delay),
-                                 reduceMotion: reduceMotion) { risen = true }
-            guard !reduceMotion else {
-                inWord = true
-                return
-            }
-            withAnimation(.easeOut(duration: 0.2).delay(delay + 0.45)) {
-                landed = true
-                inWord = true
-            }
-            withAnimation(.easeIn(duration: 0.5).delay(delay + 0.75)) { landed = false }
-        }
-    }
-}
-
-/// The writing line: the cobalt dab stretched sideways into a 0.5 pt hairline at 60%, drawn from the right.
-private struct WritingLine: View {
-    let color: Color
-    let reduceMotion: Bool
-    @State private var drawn = false
-
-    var body: some View {
-        Rectangle()
-            .fill(color.opacity(0.6))
-            .frame(height: 0.5)
-            .scaleEffect(x: drawn ? 1 : 0.06, anchor: .trailing)
-            .opacity(drawn ? 1 : 0)
-            .onAppear {
-                withAnimation(reduceMotion ? .easeOut(duration: 0.2) : Theme.Motion.house.delay(0.05)) { drawn = true }
-            }
-    }
-}
-
-/// The wash Tess opens over: the ground at 96% rising from the bottom, 380 pt, with no top edge and fully opaque from
-/// 22% of its height (calm-capture.md). No cobalt warmth.
-private struct CaptureWash: View {
-    let dark: Bool
-
-    var body: some View {
-        Rectangle().fill(Theme.Colors.paper.opacity(0.96))
-            .frame(height: 380)
-            .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.22)],
-                                 startPoint: .top, endPoint: .bottom))
-            .ignoresSafeArea(.container, edges: .bottom)
-            .frame(maxHeight: .infinity, alignment: .bottom)
-            .contentShape(Rectangle())
-    }
-}
-
-/// A label word (16/700 uppercase): on touch the ink goes full and a 1.5 pt hairline draws out from the centre.
-struct InkLabelWordStyle: ButtonStyle {
-    var color: Color = Theme.Colors.inkSecondary
-    /// UNDO (and Finish or Resume while something runs) keep their colour at rest; every other label word rests in
-    /// ink and shows its colour only on press (no-dots B5).
-    var keepsColor = false
-
-    static var undo: InkLabelWordStyle {
-        InkLabelWordStyle(color: Theme.Colors.liveInk, keepsColor: true)
-    }
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .textRole(.labelStrong)
-            .textCase(.uppercase)
-            .foregroundStyle(configuration.isPressed || keepsColor ? color : Theme.Colors.ink)
-            .overlay(alignment: .bottom) {
-                Rectangle().fill(color).frame(height: 1.5)
-                    .scaleEffect(x: configuration.isPressed ? 1 : 0, anchor: .center)
-                    .offset(y: 4)
-                    .tesseraAnimation(.easeOut(duration: 0.18), value: configuration.isPressed)
-            }
-            .frame(minWidth: 44, minHeight: 44)
-            .contentShape(Rectangle())
-            .sensoryFeedback(.selection, trigger: configuration.isPressed) { _, pressed in pressed }
-    }
-}
-
-/// A value word inside a line: on touch a soft, edgeless cobalt wash blooms behind it.
-private struct ValueWordStyle: ButtonStyle {
-    var weight: Font.Weight = .semibold
-    var opacity: Double = 1
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(Theme.Typography.font(Theme.concept.scale.body, weight: weight))
-            .foregroundStyle(Theme.Colors.ink.opacity(configuration.isPressed ? 1 : opacity))
-            .background {
-                Rectangle()
-                    .fill(Theme.Colors.tess.opacity(configuration.isPressed ? 0.22 : 0))
-                    .padding(-6)
-                    .blur(radius: 5)
-                    .tesseraAnimation(.easeOut(duration: 0.12), value: configuration.isPressed)
-            }
-            .frame(minHeight: 44)
-            .contentShape(Rectangle())
-    }
-}
-
-/// A running process (a live workout) shown as a lit seam along the top edge; tap to return to it.
-struct RunningSeam: View {
-    let session: WorkoutSession
-    var onTap: () -> Void
-
-    var body: some View {
-        Button(action: onTap) {
-            ProcessSeam()
-                .frame(maxHeight: .infinity, alignment: .top)
-                .frame(height: 44)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("\(session.workout.title) is running. Return to workout")
-    }
-}
-
-/// Tess's command grammar (on-device, deterministic for now; Foundation Models comes later).
-@MainActor
-struct CommandInterpreter {
-    let model: AppModel
-
-    func run(_ raw: String) -> String {
-        let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return "Try “log bench 82.5x8”." }
-        if let match = text.firstMatch(of: /^log\s+(.+?)\s+(\d+(?:[.,]\d+)?)\s*[x×]\s*(\d+)$/.ignoresCase()) {
-            return log(
-                exerciseQuery: String(match.1),
-                weight: Double(match.2.replacingOccurrences(of: ",", with: ".")) ?? 0,
-                reps: Double(match.3) ?? 0
-            )
-        }
-        if text.lowercased().contains("best") || text.lowercased().contains(/\bprs?\b/) {
-            guard let exercise = exercise(matching: text), let best = model.bestSet(of: exercise) else {
-                return "No logged sets for that yet."
-            }
-            return "Your best \(exercise.name.lowercased()): \(Format.kilograms(best.weight)) × \(Int(best.reps)), "
-                + "e1RM \(Format.kilograms((best.e1RM * 10).rounded() / 10)) kg."
-        }
-        let title = text.prefix(1).uppercased() + text.dropFirst()
-        guard model.capture(title: title, startsAt: AppClock.now.addingTimeInterval(4 * 3600)) != nil else {
-            return "Couldn’t save that."
-        }
-        return "Drying. Swipe to drop it."
-    }
-
-    private func exercise(matching text: String) -> ClassDef? {
-        let words = text.lowercased().split(separator: " ").map(String.init)
-            .map { $0.trimmingCharacters(in: .punctuationCharacters) }
-            .filter { $0.count > 2 && $0 != "log" }
-        let classes = model.store.allClasses()
-        guard let exerciseRoot = model.classDef(.exercise) else { return nil }
-        return classes
-            .filter { ClassResolver.isSubclass($0, of: exerciseRoot) && $0.id != exerciseRoot.id }
-            .filter { candidate in words.contains { candidate.name.lowercased().contains($0) } }
-            .min { $0.name.count < $1.name.count }
-    }
-
-    private func log(exerciseQuery: String, weight: Double, reps: Double) -> String {
-        guard let exercise = exercise(matching: exerciseQuery) else { return "I don’t know “\(exerciseQuery)” yet." }
-        guard let workout = model.session?.workout ?? model.tonightWorkout()
-        else { return "No workout today to log into." }
-        if model.session == nil {
-            model.startWorkout(workout)
-            model.isWorkoutPresented = false
-        }
-        guard let session = model.session,
-              let index = session.entries.firstIndex(where: { session.exerciseClass(of: $0)?.id == exercise.id })
-        else { return "\(exercise.name) isn’t in \(workout.title)." }
-        session.select(entryAt: index)
-        session.weight = weight
-        session.reps = reps
-        session.logSet()
-        let e1RM = model.previewE1RM(weight: weight, reps: reps)
-            .map { " · e1RM \(Format.kilograms(($0 * 10).rounded() / 10))" } ?? ""
-        return "Logged \(exercise.name.lowercased()) \(Format.kilograms(weight)) × \(Int(reps))\(e1RM)."
     }
 }

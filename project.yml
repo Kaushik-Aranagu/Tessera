@@ -72,6 +72,8 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: Tessera
         INFOPLIST_KEY_NSHealthUpdateUsageDescription: Tessera saves your finished workouts to Apple Health.
         INFOPLIST_KEY_NSHealthShareUsageDescription: Tessera reads your workouts, heart rate and body weight from Apple Health to show them beside your training.
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: Tess listens only while you talk to her, so you can log by voice. Audio stays on this iPhone.
+        INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: Tess turns what you say into text on this iPhone. Audio is never sent anywhere.
         CODE_SIGN_ENTITLEMENTS: App/Tessera.entitlements
         SUPPORTS_MACCATALYST: NO
         SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
