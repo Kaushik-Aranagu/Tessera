@@ -32,6 +32,19 @@ public struct PlanPack: Sendable, Equatable {
         lhs.json == rhs.json
     }
 
+    /// A title with a secret word, money or a body fact never goes to Claude (QA A4, Research 138 W7 and 139): a task
+    /// goes as "task" and an event as "busy", with its kind and times only.
+    static func isPrivate(_ title: String) -> Bool {
+        SecretWords.mentions(title) || PrivateFacts.isWalled(title)
+    }
+
+    static func packTitle(_ block: DayPlan.Block, includesEventTitles: Bool) -> String {
+        if block.kind == .event, !includesEventTitles || isPrivate(block.title) {
+            return "busy"
+        }
+        return isPrivate(block.title) ? "task" : block.title
+    }
+
     /// Nil when there's nothing to word: no window, or no plan lines (d14).
     /// `otherNames`: what he has that isn't in this plan (tasks left out, Later, routines, skipped events), for V13.
     /// `includesEventTitles` false (his call on Oct 22): events go as "busy", with their kind and times only.
@@ -74,7 +87,7 @@ public struct PlanPack: Sendable, Equatable {
             let handle = "\(prefix)\(counters[block.kind] ?? 1)"
             handles[handle] = index
             let start = minutes(block.start), end = minutes(block.end)
-            let title = block.kind == .event && !includesEventTitles ? "busy" : block.title
+            let title = Self.packTitle(block, includesEventTitles: includesEventTitles)
             var row: [String: Any] = ["id": handle, "kind": block.kind.rawValue, "title": title,
                                       "start": clock(start), "end": clock(end), "min": block.minutes]
             if let run = runOf[index] {
@@ -102,7 +115,8 @@ public struct PlanPack: Sendable, Equatable {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "EEE"
         var top: [String: Any] = [
-            "allDay": includesEventTitles ? plan.allDay : [], "blocks": rows, "cap": plan.cap, "light": plan.light,
+            "allDay": includesEventTitles ? plan.allDay.filter { !Self.isPrivate($0) } : [], "blocks": rows,
+            "cap": plan.cap, "light": plan.light,
             "now": clock(minutes(now)),
             "weekday": formatter.string(from: TesseraDay(calendar: calendar).day(of: now).addingTimeInterval(43200)),
             "window": [clock(minutes(window.start)), clock(minutes(window.end))],
@@ -147,7 +161,7 @@ public struct PlanPack: Sendable, Equatable {
         // Multi-word names only ("Lunch" would catch "before lunch"), and never one that overlaps a title in the plan
         // or its all-day items ("landlord" in "Reply to landlord") (QA S1 on #303).
         let inPack = (plan.blocks.map(\.title) + plan.allDay).map(phrase)
-        self.otherNames = Set(otherNames.map(phrase).filter { name in
+        self.otherNames = Set(otherNames.filter { !Self.isPrivate($0) }.map(phrase).filter { name in
             // As words, not letters: "pasta" doesn't overlap "pastry bake" (QA on #306).
             let padded = " \(name) "
             return name.contains(" ") && !inPack.contains { padded.contains(" \($0) ") || " \($0) ".contains(padded) }
@@ -157,8 +171,9 @@ public struct PlanPack: Sendable, Equatable {
         func words(_ text: String) -> [String] {
             text.lowercased().split { !$0.isLetter && !$0.isNumber }.map(String.init)
         }
-        let titles: [String] = plan.blocks.filter { includesEventTitles || $0.kind != .event }.map(\.title)
-            + (includesEventTitles ? plan.allDay : [])
+        let titles: [String] = plan.blocks.map { Self.packTitle($0, includesEventTitles: includesEventTitles) }
+            .filter { $0 != "busy" && $0 != "task" } +
+            (includesEventTitles ? plan.allDay.filter { !Self.isPrivate($0) } : [])
         titleWords = Set(titles.flatMap(words))
     }
 }
@@ -409,7 +424,8 @@ public final class ClaudePlanWording {
     public let session: URLSession
     public var timeout: TimeInterval = 20
     /// "Tess asks Claude" (`SettingsStore.read().sendsMissesToClaude`): one switch for misses and plans (Product).
-    public var allowed: () -> Bool = { true }
+    /// Required (QA A3): a caller that forgets the switch can never send a plan.
+    public var allowed: () -> Bool
     public var now: () -> Date = { .now }
     public var calendar: Calendar = .current
     /// The same pack today reuses its wording (no second call).
@@ -420,11 +436,12 @@ public final class ClaudePlanWording {
     private static let log = Logger(subsystem: "com.kaushikaranagu.tessera", category: "tess.plan")
 
     public init(keys: any TessKeychain, ledger: TessUsageLedger,
-                session: URLSession = URLSession(configuration: .ephemeral))
+                session: URLSession = URLSession(configuration: .ephemeral), allowed: @escaping () -> Bool)
     {
         self.keys = keys
         self.ledger = ledger
         self.session = session
+        self.allowed = allowed
     }
 
     /// `stale` is asked once the reply is back: true when he touched the plan or 20 s passed, so a late reply is
