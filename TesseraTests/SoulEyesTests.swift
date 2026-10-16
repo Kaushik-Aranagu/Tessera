@@ -40,6 +40,27 @@ struct SoulEyesTests {
         #expect(soul.gaze == .ahead)
     }
 
+    /// E1: the eyes ride the dabs exactly (the mean of the three main dabs SoulRenderer draws, 3 pt above it, both
+    /// at the drawn scale), at Home idle's 0.62 and at 0.85.
+    @Test func theEyesSitOnTheDrawnDabs() {
+        for scale in [CGFloat(0.62), 0.85] {
+            var frame = SoulFrame.sample(.idle, time: 4.2, elapsed: 0)
+            frame.look.scale = scale
+            let mains = frame.dabs.prefix(3)
+            let meanX = mains.reduce(0) { $0 + $1.x } / 3 * scale
+            let meanY = mains.reduce(0) { $0 + $1.y } / 3 * scale
+            let centre = SoulEyes.centre(of: frame)
+            #expect(abs(centre.x - meanX) < 0.001)
+            #expect(abs(centre.y - (meanY - 3 * scale)) < 0.001)
+        }
+    }
+
+    @Test func theBlinkScheduleNeverWrapsMidBlink() {
+        let last = SoulBlink.schedule.last.map { $0.start + 0.6 } ?? 0
+        #expect(last < SoulBlink.period)
+        #expect(SoulBlink.lid(at: SoulBlink.period - 0.01) == 1)
+    }
+
     /// Up to 3 pt sideways and 2.2 pt up or down (soul scale 1).
     @Test func theGlanceStaysSmall() {
         for gaze in [SoulGaze.ahead, .atLine, .atHim] {

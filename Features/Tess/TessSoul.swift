@@ -91,7 +91,8 @@ struct TessSoul: View {
     /// The eyes ride the same frame as the dabs. Their own timeline keeps the blink under Reduce Motion (30 fps),
     /// when the soul's is paused.
     private func eyesLayer(palette _: SoulPalette, slow: Bool) -> some View {
-        let look = ThemeStore.shared.paintLook
+        // The workout corner stands on the workout's look (one base); everywhere else, the paint look.
+        let look = onWorkoutGround ? ThemeStore.shared.workoutLook : ThemeStore.shared.paintLook
         let dark = Color(hex: look.isDark ? look.ground : look.ink)
         return TimelineView(.animation(minimumInterval: reduceMotion || slow ? 1 / 30 : 1 / 60)) { context in
             let frame = reduceMotion

@@ -25,32 +25,50 @@ enum SoulGaze: Equatable {
 enum SoulBlink {
     static let duration = 0.16
     static let doubleGap = 0.25
+    /// The schedule repeats every hour; the last blink ends well before the wrap, so none is cut short.
+    static let period = 3600.0
+
+    /// Each blink's start and whether it's a double, over one period (seeded, built once).
+    static let schedule: [(start: Double, isDouble: Bool)] = {
+        var result: [(Double, Bool)] = []
+        var time = 0.0
+        var index: UInt64 = 0
+        while true {
+            time += 3 + 5 * unit(index)
+            let isDouble = unit(index &+ 7919) < 0.2
+            guard time + duration * 2 + doubleGap < period - 3 else { break }
+            result.append((time, isDouble))
+            time += isDouble ? duration * 2 + doubleGap : duration
+            index &+= 1
+        }
+        return result
+    }()
 
     /// The lid's height (1 open, 0.25 shut) at `time` seconds.
     static func lid(at time: Double) -> CGFloat {
-        var start = 0.0
-        var index: UInt64 = 0
-        // Walk the schedule to the interval holding `time` (blinks start at the end of each 3–8 s gap).
-        let origin = floor(time / 600) * 600
-        start = origin
-        while true {
-            let gap = 3 + 5 * unit(index &+ UInt64(origin))
-            let blinkAt = start + gap
-            if time < blinkAt {
-                return 1
+        let local = time.truncatingRemainder(dividingBy: period)
+        let wrapped = local < 0 ? local + period : local
+        // The last blink starting at or before `wrapped` (binary search).
+        var low = 0, high = schedule.count - 1, found = -1
+        while low <= high {
+            let mid = (low + high) / 2
+            if schedule[mid].start <= wrapped {
+                found = mid
+                low = mid + 1
+            } else {
+                high = mid - 1
             }
-            let isDouble = unit(index &+ UInt64(origin) &+ 7919) < 0.2
-            let end = blinkAt + (isDouble ? duration * 2 + doubleGap : duration)
-            if time < end {
-                let local = time - blinkAt
-                let phase = isDouble && local > duration + doubleGap ? local - duration - doubleGap
-                    : isDouble && local > duration ? -1 : local
-                guard phase >= 0, phase <= duration else { return 1 }
-                return shape(phase / duration)
-            }
-            start = end
-            index &+= 1
         }
+        guard found >= 0 else { return 1 }
+        let blink = schedule[found]
+        let since = wrapped - blink.start
+        if since <= duration {
+            return shape(since / duration)
+        }
+        if blink.isDouble, since >= duration + doubleGap, since <= duration * 2 + doubleGap {
+            return shape((since - duration - doubleGap) / duration)
+        }
+        return 1
     }
 
     /// The times (in [from, to)) each blink starts, for tests.
@@ -78,7 +96,7 @@ enum SoulBlink {
 
     /// A stable pseudo-random number in [0, 1) for an index.
     private static func unit(_ seed: UInt64) -> Double {
-        var value = seed &* 0x9E37_79B9_7F4A_7C15
+        var value = seed &* 0x9E37_79B9_7F4A_7C15 &+ 0x1234_5678
         value ^= value >> 30
         value &*= 0xBF58_476D_1CE4_E5B9
         value ^= value >> 27
@@ -98,11 +116,18 @@ struct SoulEyes: View {
     /// Reduce Motion: the blink stays, the dots sit still.
     var still = false
 
-    var body: some View {
+    /// Where the pair sits, in the canvas's points from its centre: the main dabs' mean, 3 pt above it, both scaled
+    /// by the soul's drawn scale (the same transform `SoulRenderer` applies to the dabs).
+    static func centre(of frame: SoulFrame) -> CGPoint {
         let mains = frame.dabs.prefix(3)
         let count = CGFloat(max(mains.count, 1))
-        let centre = CGPoint(x: mains.reduce(0) { $0 + $1.x } / count,
-                             y: mains.reduce(0) { $0 + $1.y } / count - 3)
+        let scale = frame.look.scale
+        return CGPoint(x: mains.reduce(0) { $0 + $1.x } / count * scale,
+                       y: (mains.reduce(0) { $0 + $1.y } / count - 3) * scale)
+    }
+
+    var body: some View {
+        let centre = Self.centre(of: frame)
         let scale = frame.look.scale
         let lid = SoulBlink.lid(at: time)
         let glance = still ? .zero : gaze.offset
@@ -110,8 +135,10 @@ struct SoulEyes: View {
             eye(lid)
             eye(lid)
         }
-        .offset(x: (centre.x + glance.width) * scale, y: (centre.y + glance.height) * scale)
+        // Scaled first, then placed: the offset is already in screen points (no second scale).
         .scaleEffect(scale)
+        .offset(x: centre.x + glance.width * scale, y: centre.y + glance.height * scale)
+        .opacity(frame.look.opacity)
         .animation(still ? nil : .spring(duration: 0.3, bounce: 0.05), value: gaze)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
