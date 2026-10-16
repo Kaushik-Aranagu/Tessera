@@ -74,3 +74,6 @@ The Live Activities and notifications already speak one line each; two lines cha
 - **After the last set (60 s face):** "Push A, all sets in." at Title 34 (Core's G5 line), with "ready to finish" at 62% under it. "All 22 sets in." goes.
 - **The Lock Screen accessories** are redrawn in `widget-states.md`'s addendum: the line, then the time; the circular is one word with no ring or tick.
 - Everything else stands: the rest, cook and focus faces, Cobalt sky in every look, the three notifications and quiet hours. The set on the Done button ("82.5 × 8") stays, because it is the one number the face is for.
+
+## Addendum, Oct 16: receipts and bests (Design 62, `copy-pass.md`)
+Times "6 pm" / `6 PM` on every face; "Call landlord at 6 pm."; the rest-day face follows widget-states (meta `SUNDAY`; marked: "Rest today, Legs A waits for tomorrow."). The full table is in `copy-pass.md`; where a clip still says the old words, the sheet wins.

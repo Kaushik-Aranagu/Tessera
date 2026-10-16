@@ -110,3 +110,5 @@ The "Tess asks Claude" line's answer names what the switch covers, in the order 
 - **One privacy line**, 16 `inkSecondary`, under the spend line from AI-4 on: "Titles and counts only. Never notes, places, health or money." It's the Settings copy of Plan my day's VIA CLAUDE disclosure, and it's there whether the switch says yes or no.
 - Nothing else in the CLAUDE section changes for AI-6.
 
+## Addendum, Oct 16: receipts and bests (Design 62, `copy-pass.md`)
+Tess's lines speak as Tess: "I ask Claude when unsure, for Plan my day and Today." (AI-4), "I ask Claude when unsure, for plans, Today and your week." (AI-11), "I stay on this phone."; "Claude paused until Nov 1."; the privacy line is the one wording everywhere. The full table is in `copy-pass.md`; where a clip still says the old words, the sheet wins.

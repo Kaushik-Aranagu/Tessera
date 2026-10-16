@@ -42,3 +42,6 @@ Hold LOG: the line fills (Finish grammar). At full: the number row presses (0.94
 ## Owners
 - **Builder A:** the page, the stamp, rest, Speak's landing in the corner.
 - **Core:** the rest line's next clause; the set's "was PR when logged" flag drives the sweep.
+
+## Addendum, Oct 16: receipts and bests (Design 62, `copy-pass.md`)
+The rest hint is two lines, "DRAG RIGHT +15" / "FLING LEFT TO SKIP" (no " · ", no "TO GO"). The full table is in `copy-pass.md`; where a clip still says the old words, the sheet wins.

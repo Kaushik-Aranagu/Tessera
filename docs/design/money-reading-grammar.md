@@ -78,3 +78,6 @@ Money: ‹ REVIEW, "Money", "October, nothing yet" as the context line, "Nothing
 ## Addendum (Oct 16, Research 130 / Product 999df84)
 - **RF15:** the finished-book receipt is "**Dune, finished.**" (thing first), not "Finished Dune." Wherever the sheet or the recording words the finish, this is the line.
 - **RF18:** "read 20 pages" is one write: a reading record that the Read habit counts, so no second check-in that day. Nothing to draw.
+
+## Addendum, Oct 16: receipts and bests (Design 62, `copy-pass.md`)
+"Dune, set aside." joins "Dune, finished." (thing first). The full table is in `copy-pass.md`; where a clip still says the old words, the sheet wins.

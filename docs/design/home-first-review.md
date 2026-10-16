@@ -53,3 +53,6 @@ This sheet answers his first review of the build (16 Oct, 11:58 PM PT): the "Thu
 - **Builder B:** Home's lines and frame, the Start key's progress, Next rows (41).
 - **Builder A:** the tab lens (42), since the looks and the tab strip are his.
 - **AI architecture thread:** the words in the hero and context lines.
+
+## Addendum, Oct 16: receipts and bests (Design 62, `copy-pass.md`)
+"16 Oct" in prose reads "Oct 16". Nothing on screen changes. The full table is in `copy-pass.md`; where a clip still says the old words, the sheet wins.

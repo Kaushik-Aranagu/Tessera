@@ -103,3 +103,6 @@ The swipe and the hold stay the two gestures on the page. Saying it is a third w
 - **The page opening on a match** is the ordinary WHAT I KNOW page with the matching lines at the top, not a filtered page: the count line and groups are all there, and the two matches sit first in their groups. Nothing is highlighted; the swipe finds them.
 - **Motion:** "forgotten" by voice uses the swipe's exit (the flecks into the soul), from the band, since the page may not be open. Reduce Motion: a fade.
 - Core: the match rule; the AI thread: nothing here is a Claude tool.
+
+## Addendum, Oct 16: receipts and bests (Design 62, `copy-pass.md`)
+Receipts thing first: "Rest on Sundays, kept.", "12 things, forgotten.", "Tacos, forgotten.", "Train 6 to 8 pm, forgotten."; no "…" in the two "remember that" lines; "Tacos means your sheet-pan tacos, let go to make room."; "I keep 40 things. Forget one to make room."; "2 things match. Swipe the one to forget."; the stop inside the quote. The full table is in `copy-pass.md`; where a clip still says the old words, the sheet wins.

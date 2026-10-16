@@ -67,3 +67,6 @@ What the small line under a row shows, at 16 `inkSecondary`, now that recipes ke
 - **The " · " is only ever a pack size,** and it follows the recipe words; a row with no sized pack has no middle dot. Nothing else on the page joins two facts with a dot (41 §3).
 - **Until G-R1 lands** no recipe row shows a size; that is Core's fix, not a drawing, and the line stays "for chili" meanwhile.
 - **Owners:** Core (G-R1 with G-R8, one landing), Builder B (the line's two and three-recipe forms), the Kitchen lead (G-R2's covered rule).
+
+## Addendum, Oct 16: receipts and bests (Design 62, `copy-pass.md`)
+"9 to get, for tacos and 2 more"; the ask and its receipt "Scallions, for tacos?" / "Scallions, for tacos."; the landing receipt is "Tacos, 2 added." with UNDO (Product 3:15 AM, replacing "Added 2 for tacos."); Home context under "Tacos tonight" is "at 7 pm"; "for curry and 2 more". The full table is in `copy-pass.md`; where a clip still says the old words, the sheet wins.

@@ -52,3 +52,6 @@ Redraws `m4-steers.md` section 6 (Plan my day, Research 95 and Product's 8:38 PM
 - **Builder B:** Home's plan state, the rows, the hold and the promotion.
 - **Core:** the plan, Claude's call and its clause.
 - **AI architecture:** the words Claude returns (home-lines caps apply to the hero and context line).
+
+## Addendum, Oct 16: receipts and bests (Design 62, `copy-pass.md`)
+Context "from 8 am" (never sleep, never "morning" under the morning label), "at 8 am" after a keep; heroes in digits "4 hours free", "3 tasks, Push A at 6 pm" (two lines in the fitting form); the first-time slot says "Titles and counts only. Never notes, places, health or money." The full table is in `copy-pass.md`; where a clip still says the old words, the sheet wins.

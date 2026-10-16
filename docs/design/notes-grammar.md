@@ -48,3 +48,6 @@ The note **grows out of its row**: the row's words hold their place while the pa
 - `NotesView.swift`: drop `PaintDab` from `WritingLine` (the hairline inks in instead); `NoteRow` as one Body 21 line (first line) with the time at Label 16/600, `.data` role for the time only (B8); remove `NoteSeam`; the context line at 146 from `NotesCopy`; `NotesEmpty` with the line at 280 and Tess's line in the band.
 - `NoteEditor.swift`: one `TextEditor` at Field 18 with the first line at 600 (no heading `TextField`); the context line at 84 in `context`; links as ink words under LINKS; "Delete note" becomes the `DELETE NOTE` ink-line word with the UNDO line; DONE above the keyboard; back word ‹ NOTES with `EdgeSwipeBack()`.
 - Every clip ends inside the app, on the Notes page.
+
+## Addendum, Oct 16: receipts and bests (Design 62, `copy-pass.md`)
+Row time "Oct 12"; a note's context "edited Tuesday" (LINKS already shows the thing). The full table is in `copy-pass.md`; where a clip still says the old words, the sheet wins.

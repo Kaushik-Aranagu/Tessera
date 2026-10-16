@@ -160,3 +160,6 @@ The third (dim) line goes. The inline widget drops the stop (it sits next to the
 - `HomeLines.widgetLine(for:)` from the App Group snapshot replaces the widget's own context/hero/meta strings; delete the summary meta and the 4-of-5 forms.
 - Circular: `Text` only, no `Gauge`, no ring, no tick; the resting timer as `Text(timerInterval:)`.
 - Everything else on this sheet stands.
+
+## Addendum, Oct 16: receipts and bests (Design 62, `copy-pass.md`)
+Times "6 pm" / `6 PM`; "Push A" (not "Resume") while running; "Call landlord at 6 pm."; a planned rest day carries meta `SUNDAY`, a marked one "Rest today, Legs A waits for tomorrow."; the Log a set snippet reads "Set 22 logged." with UNDO, and "Push A done." has none; "Pull A tomorrow, first." stays. The full table is in `copy-pass.md`; where a clip still says the old words, the sheet wins.

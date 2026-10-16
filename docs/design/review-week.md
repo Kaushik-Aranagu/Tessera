@@ -53,3 +53,6 @@ Each band lands 22ms after the one above (at most 700ms in all), rising 8pt on t
 ## Addendum, Oct 16: Research 120's two lines
 - **COOKED's line says cooks:** "cooked 3 times", because the band's dabs are the days he cooked and the line says what the marks show. Recipes are the Kitchen's count.
 - **The week figure mid-week is "3 SO FAR";** "3 OF 6" only once the week is whole (Sunday, or the next 04:00). Never "to go": owed reads as a shortfall by another name.
+
+## Addendum, Oct 16: receipts and bests (Design 62, `copy-pass.md`)
+Context "Oct 12 to 18" (not "the week so far"); heroes in digits ("3 sessions", "All 6 sessions in"); no dot on an empty day; "COOK, 2 OF 4"; the pick rule reads "a best, a first, the week's top count"; VoiceOver mid-week "Training, 3 so far". The full table is in `copy-pass.md`; where a clip still says the old words, the sheet wins.
