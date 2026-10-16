@@ -42,7 +42,7 @@ Unknown is the state of every ingredient until one of these happens. State never
 1. `swift test`: a shop clear with 3 checked items sets their ingredients to in with `lastBoughtAt`; `FinishCooking` on the tacos sets chicken, onion and tortillas to low and cilantro and limes to out; staples untouched.
 2. "out of milk" sets milk to out and adds "milk" (last typed amount) to Groceries in one undoable op; "have rice" sets in; UNDO restores both.
 3. The Ingredient page cycle writes one op per tap and UNDO reverses it.
-4. Planning a recipe skips an in line and adds low and unknown ones; the peek's dry-run count matches the rows added (the fixture in `research/fixtures/recipe-clock-steps.md`, state D: eggs in, milk low, feta out → frittata adds milk and feta, "ADD 2 TO GROCERIES").
+4. Planning a recipe skips an in line and adds low and unknown ones; the peek's dry-run count matches the rows added (on `research/fixtures/recipe-clock-steps.md` D1 Paprika chicken with the list empty and states chicken thighs in, lemon low, Greek yogurt out, the rest unknown: the peek reads "have", "low", "out" on those three lines, and the key gives "ADD 6 TO GROCERIES", every line but the chicken).
 5. `RecipeMath.missing` gives 0, 1 and "1 to check" for the three seed cases; CAN COOK ranks by missing then not-cooked-lately.
 6. Research's 20-week fixture still passes with the cap at 4 (R unchanged).
 7. The pack snapshot for AI-12 holds no state and no `lastBoughtAt` (nothing new leaves the phone).
