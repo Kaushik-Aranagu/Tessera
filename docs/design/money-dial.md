@@ -1,5 +1,7 @@
 # Money: the receipt total instrument (M5 screen 5, steer)
 
+> **US shop (item 25):** aisle names, amounts, fractions, pack sizes and merging for a US kitchen are in `kitchen/us-shop.md`, which wins over this sheet's metric and UK examples.
+
 For Builder B, after Core's `ShopReceipt` and `LogShopTotal` (ship-list-m5-money slice 3). It is drawn to `no-buttons.md`. Recording: `recordings/money-dial.mp4` (source `studies/money-dial.html`).
 
 ## The ask lives in Now

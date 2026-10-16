@@ -1,5 +1,7 @@
 # 13 · Groceries (build sheet)
 
+> **US shop (item 25):** aisle names, amounts, fractions, pack sizes and merging for a US kitchen are in `us-shop.md`, which wins over this sheet's metric and UK examples.
+
 Just enough to build. Product steer: `docs/product/ship-list-kitchen.md` §13. Engine: slices 1, 6, 7 (list, groceries merge, aisles) and 8 (shopping as a process). Folder: `Features/Groceries/`.
 
 Light ground (`ThemedBackground`, Home's paper and washes). Kitchen colours: **sage** `Theme.Colors.health` for fresh things and done, **cadmium** `Theme.Colors.now` for heat and timers, **vermilion** only for something running, **cobalt** `Theme.Colors.tess` only for Tess. No checkboxes, no cards, no pills, no stock `List`.

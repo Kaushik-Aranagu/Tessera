@@ -1,5 +1,7 @@
 # Show, and the phrase hints (build sheet)
 
+> **US shop (item 25):** aisle names, amounts, fractions, pack sizes and merging for a US kitchen are in `kitchen/us-shop.md`, which wins over this sheet's metric and UK examples.
+
 Just enough to build. Tess's capture surface (`no-buttons.md`, shipped in #107) gets two additions:
 - Its **Show** layer, for photos of receipts, recipes and pages.
 - **Phrase hints**: S, G and H lines, from `research/tess-discoverability.md`.

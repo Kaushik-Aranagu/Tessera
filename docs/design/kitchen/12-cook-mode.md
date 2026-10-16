@@ -1,5 +1,7 @@
 # 12 · Cook mode (build sheet)
 
+> **US shop (item 25):** aisle names, amounts, fractions, pack sizes and merging for a US kitchen are in `us-shop.md`, which wins over this sheet's metric and UK examples.
+
 > **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
 
 Just enough to build. Product steer: `docs/product/ship-list-kitchen.md` §12. The Kitchen lead's cut and defaults: `docs/product/cook-mode-acceptance.md`, checked on the phone with `cook-mode-script.md`. Engine: slice 5 (cooking as a process, timers, the Cook log). Folder: `Features/Cooking/`. Builder A builds it.
