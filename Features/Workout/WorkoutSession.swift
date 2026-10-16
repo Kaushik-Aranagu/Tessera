@@ -487,9 +487,9 @@ extension WorkoutSession {
         guard restEndsAt != nil else { return }
         restEndsAt = nil
         if let entry = currentEntry, !isFinished(entry) {
-            restNote = "Skipped. Set \(currentSetNumber) is up."
+            restNote = "Rest skipped. Set \(currentSetNumber) is up."
         } else {
-            restNote = "Skipped."
+            restNote = "Rest skipped."
         }
         lastTouchedAt = AppClock.now
         persistRest()
