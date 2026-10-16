@@ -30,3 +30,7 @@ Verdict: **PASS**. The diff since 9c95408 is limited to SoulEyes.swift, TessSoul
 - L1 and L2 closed: the schedule is built once over 3600 s and found by binary search, so each frame is O(log n). The last blink ends before `period − 3`, so no blink is cut at the wrap.
 - New low: across the hourly wrap, the gap can run past 8 s, up to about 19 s, because the trimmed tail plus the first gap of 3 to 8 s add up. That happens once an hour. Fine as is.
 - The phone gate is unchanged: `tessHasEyes` is still LaunchFlags-only.
+
+## Addendum: `c053fc7`
+
+PASS stands. The only change since 3099412 is one commit, which adds docs/recordings/48-tess-eyes-done.mp4 (the lab's E2 clip). No code changed.
