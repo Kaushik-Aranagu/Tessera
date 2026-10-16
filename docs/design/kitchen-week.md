@@ -5,14 +5,14 @@
 Checks Core's Kitchen slice (#380 at 79475ed: Research 123's five meals with the Kitchen lead's G-R1 to G-R16 rulings) against Design 47 (`groceries-tess.md`, with its 7d16c88 recipe-line addendum and `copy-pass.md`), and draws the recipe page in layout C (`recipe-layouts.md`, the default while he picks). For Builder B and the Kitchen lead. Every screen below is 47's frame: ‹ KITCHEN at 58, "Groceries" at 84, the count line at 140, the aisle window from 200 fading over its last 50, USUALLY at the foot, Tess's band.
 
 - Board: `mockups/kitchen-week.png` (source `studies/kitchen-week.html`), Porcelain: before planning, tacos planned, chili planned (the joins), frittata planned (the bare row takes the amount, a checked row covers), everything already there, the recipe page in layout C.
-- Recording: `recordings/kitchen-week.mp4` (12 s): tacos planned, 10 rows fly in from Tess's corner 60 ms apart and dry over 1.4 s while the count rolls and "Tacos, 10 added." lands with UNDO; frittata planned, 3 rows and the bare eggs row turning "8"; tacos again with everything there, "Tacos, nothing new to buy." and no UNDO.
+- Recording: `recordings/kitchen-week.mp4` (12 s): tacos planned, 10 rows fly in from Tess's corner 60 ms apart and dry over 1.4 s while the count rolls and "Tacos, 10 added." lands with UNDO; frittata planned, 3 rows and the bare eggs row turning "8"; tacos again with everything there, "Tacos, nothing to add." and no UNDO.
 
 ## What Core's rules look like on the page
 | Rule (#380) | On the page |
 |---|---|
 | The planned meal's missing lines (G-R3, G-R14): staples, "to taste" and optional lines never land | Wet cobalt ghost rows in their aisles, each with "for tacos" under it, flying in from Tess's corner 60 ms apart, drying to ink over 1.4 s after landing; the rows below make room first (320 ms). Kosher salt, olive oil, hot sauce and "cheddar, optional" never appear |
 | The receipt | **"Tacos, 10 added."** with UNDO 10 s (Product 3:15 AM, thing first). One row: "Tacos, added." The **short name**, never the full title: "Sheet-pan chicken fajita tacos, 10 added." is three lines in the band. Core's `record.summary` may keep the full title for the log; the line Tess says is the short one |
-| Nothing missing | **"Tacos, nothing new to buy."** No UNDO (nothing was written), no ghost rows, the count line unchanged |
+| Nothing missing | **"Tacos, nothing to add."** (Product e1981a39). No UNDO (nothing was written), no ghost rows, the count line unchanged |
 | A same-key row joins silently (G-R2, G-R6): the bare row takes the recipe's amount | "onion" becomes "**2** onion" with "for tacos" under it; "1 dozen eggs" becomes "**8** eggs" with "for frittata". The amount turns wet with the landing and dries with the rest; no second row, no line from Tess about the join |
 | A pack and a weight join pack first (G-R8, 7d16c88) | "**1 can + 15 oz** black beans" with "for tacos and chili · 15 oz" |
 | Two pack sizes are two rows (G-R1, U5) | "**1 can** diced tomatoes / for chili · 28 oz" and "**1 can** diced tomatoes / for curry · 14.5 oz", never "2 cans" |
