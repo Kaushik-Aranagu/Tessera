@@ -49,7 +49,7 @@ struct ExerciseLane: View {
                     }
                     .buttonStyle(.plain)
                     .modifier(ZoomSource(id: exercise.map { Route.classDef($0.id) }, namespace: zoomNamespace))
-                    .containerRelativeFrame(.horizontal) { width, _ in width - Theme.Spacing.gutter * 2 }
+                    .containerRelativeFrame(.horizontal)
                     .id(index)
                     .offset(y: isCurrent ? Self.rubberBand(namePull) : 0)
                     .contextMenu {
@@ -202,10 +202,15 @@ enum WorkoutLines {
         }
     }
 
-    /// "Overhead Press" reads "Overhead press" inside a line.
+    /// "Overhead Press" reads "Overhead press" inside a line; all-capital words ("DB", "EZ") stay as written.
     static func sentenceCase(_ name: String) -> String {
-        guard let first = name.first else { return name }
-        return String(first) + name.dropFirst().lowercased()
+        name.split(separator: " ", omittingEmptySubsequences: false).enumerated().map { index, word in
+            let text = String(word)
+            if index == 0 || (text.count > 1 && text == text.uppercased()) {
+                return text
+            }
+            return text.lowercased()
+        }.joined(separator: " ")
     }
 
     static func tess(_ session: WorkoutSession, phase: WorkoutSession.Phase, summary: String?) -> String {
@@ -219,10 +224,10 @@ enum WorkoutLines {
             return note
         }
         if case .rest = phase, let seated = session.lastSeated {
-            // tess-voice: "Set 3. 80 x 8." and "New best: 85 x 5. e1RM 99."
+            // The receipt (live-workout.md §6): "Set 3 logged. 80 × 8." and "New best: 85 × 5. e1RM 99."
             let set = "\(Format.kilograms(seated.weight)) × \(Int(seated.reps))"
             if seated.records.isEmpty {
-                return "Set \(seated.number). \(set)."
+                return "Set \(seated.number) logged. \(set)."
             }
             return "New best: \(set)." +
                 (seated.e1RM.map { " e1RM \(Format.kilograms(($0 * 10).rounded() / 10))." } ?? "")

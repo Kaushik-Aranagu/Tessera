@@ -103,10 +103,21 @@ private struct WorkoutContent: View {
                         LiveTessCorner(
                             line: WorkoutLines.tess(session, phase: phase, summary: summaryLine),
                             mode: tessMode,
-                            canUndo: session.canUndo && session.finishedAt == nil,
+                            // LOG … AND FINISH keeps a 10 s UNDO that takes back the set and the finish together.
+                            canUndo: session.canTakeBackFinish(at: now),
+                            // The line (and its UNDO) stays for the whole 10 s window.
+                            holdsLine: session.canTakeBackFinish(at: now),
                             onUndo: {
-                                withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLastSet() }
+                                withTesseraAnimation(reduceMotion: reduceMotion) { session.takeBackFinish() }
+                                let back = "\(session.workout.title), back on."
+                                askReply = back
                                 undoHaptic += 1
+                                Task { @MainActor in
+                                    try? await Task.sleep(for: .seconds(4))
+                                    if askReply == back {
+                                        askReply = nil
+                                    }
+                                }
                             }
                         )
                         .padding(.leading, Theme.Spacing.gutter)
@@ -155,6 +166,21 @@ private struct WorkoutContent: View {
             laneIndex = session.currentIndex
             // The workout can finish here: warm the done pattern so its first beat isn't late.
             DonePattern.prepare()
+            #if DEBUG
+                // `-workoutNearEnd` (simulator only, recordings): every set but the workout's last is logged.
+                if LaunchFlags.has("-workoutNearEnd"), session.setRows(of: session.entries[0]).isEmpty {
+                    let all = session.entries
+                    for (index, entry) in all.enumerated() {
+                        session.select(entryAt: index)
+                        let keep = index == all.count - 1 ? 1 : 0
+                        while session.setRows(of: entry).count < session.targetSets(of: entry) - keep {
+                            session.logSet()
+                            session.skipRest()
+                        }
+                    }
+                    laneIndex = session.currentIndex
+                }
+            #endif
         }
         .onChange(of: laneIndex) { _, index in
             guard let index, index != session.currentIndex else { return }
@@ -165,7 +191,8 @@ private struct WorkoutContent: View {
             withTesseraAnimation(.snappy(duration: 0.3), reduceMotion: reduceMotion) { laneIndex = index }
         }
         .onChange(of: session.lastSeated) { _, seated in
-            guard let seated else { return }
+            // A set that finished the workout plays its haptic in finish(), once.
+            guard let seated, session.finishedAt == nil else { return }
             // One haptic per set, played here so it survives the key leaving (Reduce Motion, VoiceOver's action):
             // the set's tap, or .success in its place for a new best.
             moment.play(seated.records.isEmpty ? .setLogged : .newBest)
@@ -336,11 +363,12 @@ extension WorkoutContent {
     /// The context line above the name (live-workout.md): "Push A, set 1 of 4", "Rest, then set 2". No count: the
     /// strip says which exercise this is. Tap or pull down for the running order.
     private func header(phase: WorkoutSession.Phase) -> some View {
-        Text(WorkoutLines.context(session, phase: phase))
-            .font(Theme.voice(size: 21))
+        let line = WorkoutLines.context(session, phase: phase)
+        return Text(line)
+            .font(Theme.voice)
             .foregroundStyle(Theme.Colors.context)
             .contentTransition(.opacity)
-            .tesseraAnimation(value: WorkoutLines.context(session, phase: phase))
+            .tesseraAnimation(value: line)
             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             .contentShape(Rectangle())
             .onTapGesture { setOrder(open: true) }
@@ -414,9 +442,10 @@ extension WorkoutContent {
                         extendRest()
                     } label: {
                         HStack(alignment: .firstTextBaseline, spacing: 10) {
+                            // The countdown is the one thing in colour at rest, and it moves (live-workout.md §7).
                             Text(Format.duration(remaining))
                                 .font(Theme.numeral(72))
-                                .foregroundStyle(Paint.cream)
+                                .foregroundStyle(Paint.now)
                                 .contentTransition(.numericText(countsDown: true))
                                 .animation(MotionPolicy.resolve(Theme.Motion.snappy, reduceMotion: reduceMotion),
                                            value: remaining)
@@ -608,7 +637,7 @@ extension WorkoutContent {
                     PaintKey(paint: Paint.live, duration: 0.7, height: 64, drift: 20, isSilent: true) {
                         withTesseraAnimation(reduceMotion: reduceMotion) { session.logSet() }
                         if finishes {
-                            finish()
+                            finish(withSet: true)
                         }
                     } label: { _ in
                         Text(
@@ -624,7 +653,7 @@ extension WorkoutContent {
                     .accessibilityAction(named: "Log set") {
                         withTesseraAnimation(reduceMotion: reduceMotion) { session.logSet() }
                         if finishes {
-                            finish()
+                            finish(withSet: true)
                         }
                     }
                 case .rest:
@@ -660,7 +689,7 @@ extension WorkoutContent {
                 Button("Pause") { model.isWorkoutPresented = false }
                     .textRole(.labelStrong)
                     .textCase(.uppercase)
-                    .foregroundStyle(Paint.cream.opacity(0.6))
+                    .foregroundStyle(Paint.secondary)
                     .frame(minWidth: 44, minHeight: 44)
                     .contentShape(Rectangle())
                     .buttonStyle(.plain)
@@ -676,12 +705,15 @@ extension WorkoutContent {
         session.entries.flatMap { entry in session.setRows(of: entry).map { Paint.set($0.number) } }
     }
 
-    private func finish(early: Bool = false) {
-        // Done plays here for every finish (the key is silent, so it can't be lost as the key leaves).
-        moment.play(.done)
+    /// One haptic for the moment: done, or .success when the set it finished with was a best.
+    private func finish(early: Bool = false, withSet: Bool = false) {
+        let best = withSet && session.lastSeated?.records.isEmpty == false
+        moment.play(best ? .newBest : .done)
         isSwapOpen = false
         isOrderOpen = false
-        withTesseraAnimation(.easeOut(duration: 0.4), reduceMotion: reduceMotion) { session.finish(early: early) }
+        withTesseraAnimation(.easeOut(duration: 0.4), reduceMotion: reduceMotion) {
+            session.finish(early: early, withSet: withSet)
+        }
     }
 
     /// The workout is already finished (FinishWorkout ran on the hold); leaving drops it into today on Home.

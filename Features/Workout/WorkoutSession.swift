@@ -66,6 +66,8 @@ final class WorkoutSession {
     var lastSeated: Seated?
     /// The last logged set, undoable until the next set is logged. Shares the op log with the Lock Screen.
     var undoable: Undoable?
+    /// LOG … AND FINISH: the finish and the set it came with, taken back together for 10 s ("Push A, back on.").
+    private(set) var finishedWithSet: (finish: OpRecord, set: Undoable, at: Date)?
 
     enum Phase: Equatable {
         /// Dialling the next set.
@@ -226,7 +228,6 @@ final class WorkoutSession {
         setRows(of: entry).count >= targetSets(of: entry)
     }
 
-    /// 1-based number of the set being dialled in the current exercise.
     /// This set's place last session: "last time 82.5 × 8".
     func lastTime(setNumber: Int) -> (weight: Double, reps: Double)? {
         guard let entry = currentEntry, let exercise = exerciseClass(of: entry) else { return nil }
@@ -243,6 +244,7 @@ final class WorkoutSession {
         return others.allSatisfy(isFinished) && setRows(of: entry).count + 1 >= targetSets(of: entry)
     }
 
+    /// 1-based number of the set being dialled in the current exercise.
     var currentSetNumber: Int {
         guard let entry = currentEntry else { return 1 }
         return min(setRows(of: entry).count + 1, max(targetSets(of: entry), 1))
@@ -425,6 +427,23 @@ extension WorkoutSession {
         loadDefaults()
     }
 
+    /// The 10 s after LOG … AND FINISH.
+    func canTakeBackFinish(at now: Date = AppClock.now) -> Bool {
+        guard let finishedWithSet else { return false }
+        return now.timeIntervalSince(finishedWithSet.at) < 10
+    }
+
+    /// Takes back the finish and its set together: the workout runs again with the set's numbers on the dial.
+    func takeBackFinish() {
+        guard canTakeBackFinish(), let finishedWithSet else { return }
+        model.engine.undo(finishedWithSet.finish)
+        self.finishedWithSet = nil
+        finishedAt = nil
+        undoable = finishedWithSet.set
+        undoLastSet()
+        model.touch()
+    }
+
     var canUndo: Bool {
         guard let undoable else { return false }
         return undoable.record.state != .undone && finishedAt == nil
@@ -592,14 +611,17 @@ extension WorkoutSession {
 
     /// Hold to finish: ends the workout through the engine. The view then plays the gather.
     /// Early (from the running order): Core's FinishWorkoutEarly marks the unstarted exercises skipped, one undo.
-    func finish(early: Bool = false) {
+    func finish(early: Bool = false, withSet: Bool = false) {
         guard finishedAt == nil else { return }
         endEditing()
         let now = AppClock.now
-        if early, !entries.allSatisfy(isFinished) {
-            _ = try? model.engine.perform(FinishWorkoutEarly(workout: workout.id, time: now), by: .user)
+        let record: OpRecord? = if early, !entries.allSatisfy(isFinished) {
+            try? model.engine.perform(FinishWorkoutEarly(workout: workout.id, time: now), by: .user).record
         } else {
-            _ = try? model.engine.perform(FinishWorkout(workout: workout.id, time: now), by: .user)
+            try? model.engine.perform(FinishWorkout(workout: workout.id, time: now), by: .user).record
+        }
+        if withSet, let record, let undoable {
+            finishedWithSet = (record, undoable, now)
         }
         finishedAt = now
         restEndsAt = nil
