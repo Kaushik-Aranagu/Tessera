@@ -64,7 +64,7 @@ Hot sauce, to taste
 | 1/2 cup sour cream | new row, Dairy and eggs, **½ cup** | same |
 | Hot sauce, to taste | not listed | same |
 
-Tess on planning: "Added 10 for tacos." with UNDO. Today 11 rows land (kosher salt). Home on Tuesday, before shopping:
+Tess on planning: "Tacos, 10 added." with UNDO. Today 11 rows land (kosher salt). Home on Tuesday, before shopping:
 "10 to buy" over "Tacos tonight", key GROCERIES.
 
 ## r2 · Weeknight turkey chili (Wed)
@@ -176,7 +176,7 @@ Everything bagel seasoning, optional
 | salt; black pepper | not listed | same |
 | Everything bagel seasoning, optional | not listed (proposed, G-R4) | a row with no amount, Other |
 
-Tess on planning: "Added 3 for frittata." (butter, green onions, feta are new; eggs, milk and spinach join rows already there,
+Tess on planning: "Frittata, 3 added." (butter, green onions, feta are new; eggs, milk and spinach join rows already there,
 G-R14). Home on Sunday after the Monday shop, with everything checked: "tonight" over "Frittata tonight", key COOK.
 
 ## The week's list, expected (36 rows)
