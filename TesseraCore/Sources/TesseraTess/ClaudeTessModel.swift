@@ -19,6 +19,8 @@ public struct ClaudeTessModel: TessModel {
     /// "Misses go to Claude" (`SettingsStore.read().sendsMissesToClaude`), read at each call.
     public var sendsMisses: () -> Bool
     public var timeout: TimeInterval = 8
+    /// Set while reading the waiting phrases, so a retry that's offline again doesn't queue twice.
+    var retrying = false
     public var now: () -> Date = { .now }
     public var calendar: Calendar = .current
 
@@ -104,6 +106,12 @@ public struct ClaudeTessModel: TessModel {
                           costNano: usage.cost, latency: Date().timeIntervalSince(started),
                           outcome: failure.outcome, requestID: requestID, at: now())
             discard(records, engine: engine)
+            // Offline: the phrase waits for Claude instead of being lost (section 7), unless it's already a retry.
+            if failure.outcome == "offline", !retrying,
+               TessInbox(store: engine.store, classes: engine.classes).add(request.text, at: now()) != nil
+            {
+                return .asked(TessCapture(records: [], line: "No connection. Saved it for Claude.", source: .none))
+            }
             return error is Failure ? .asked(TessCapture(records: [], line: failure.line, source: .none)) : .missed
         }
         ledger.record(use: .capture, model: Self.model, input: usage.input, output: usage.output,

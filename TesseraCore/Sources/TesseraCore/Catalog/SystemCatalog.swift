@@ -20,6 +20,7 @@ public enum SystemCatalog {
         case slot, plan
         case tessCall
         case settings
+        case tessWaiting
 
         public var systemKey: String {
             "system.\(rawValue)"
@@ -230,6 +231,12 @@ public enum SystemCatalog {
             FieldSpec(key: "backupFolderPickedAt", name: "Folder picked", kind: .date),
             FieldSpec(key: "restWeekday", name: "Rest day", kind: .number),
         ]),
+        // A phrase the phone couldn't read while Claude was out of reach (tess-model-layer.md section 7): kept as said,
+        // read by Claude the next time the app is open and online, and gone once read. Never commits on its own.
+        ClassSpec(key: .tessWaiting, name: "Waiting for Tess", parent: .thing, symbol: "tray", colorRole: "neutral",
+                  fields: [
+                      FieldSpec(key: "saidAt", name: "Said", kind: .date),
+                  ]),
         // The actionable list block (groceries, packing, any list). Items are the list's children, in order.
         ClassSpec(key: .list, name: "List", parent: .thing, symbol: "list.bullet", colorRole: "planning"),
         ClassSpec(key: .listItem, name: "List Item", parent: .thing, symbol: "circle", colorRole: "planning",
@@ -309,7 +316,7 @@ public enum SystemCatalog {
 
     /// Built-in classes ship as a versioned package. Bump `version` whenever a spec changes; seeding then
     /// refreshes shipped names, symbols, units, options, defaults and formulas, except what the person edited.
-    public static let package = CatalogPackage(id: "system", version: 4, name: "Tessera built-ins",
+    public static let package = CatalogPackage(id: "system", version: 5, name: "Tessera built-ins",
                                                source: "Tessera", license: "Tessera")
 
     static let honestE1RM = "weight * (1 + (reps + 10 - coalesce(rpe, 10)) / 30)"
