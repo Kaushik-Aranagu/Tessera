@@ -4,7 +4,7 @@
 
 ## 1. Blockers (all merged on master)
 - [ ] #366 AI-1 Home lines (Builder B): Design clip pass + QA confirm.
-  - #366 must also fix its day label to use the 4 am day (HomeLineHero.swift:101; Research home-lines-day-one, 12:29 PM PT) before merge.
+  - Day label fix done: #366 frozen at d2bbc44 with the 4 am day-label fix and tests (138 green). The set-1 stale line is cut from the clip. Waiting on QA's diff review and Design's clip re-pass (12:40 PM PT).
 - [x] The stuck-listening fix (Builder B): #446, 0eca9bbe.
 - [x] #422 secret-word wall + $50 cap (5af8f2c2, Catalog v9).
 - [x] MU2 (Core, #451 merged bf2a4bb5): money, body and health phrases never reach Claude, incl. CA6 answerQuery allow-list and CA7 screens before the offline inbox add. (decisions.md 11:35 AM PT; QA A1, Research MW1)
@@ -30,6 +30,7 @@
 - [ ] CI green on the pin commit.
 
 ## 4. Tell everyone (one message each, through the coordinator)
+- Link his page `docs/research/new-on-your-phone-v9.md` (8 lines) in the one line after install. Research drops whatever didn't make the pin once the SHA is named.
 - Script: `../research/next-build-script-v9.md` (Research 44 steps, run in order). Gate numbers (12:02 PM PT Oct 16): the v5 copy has 366 rows (the 8:56 AM gate read); any other count stops the gate until Builder A explains it. The timed v5 restore fails above 3.23 s (the 2.23 s before-restore time + 1 s).
 - [ ] Builder A: run the gate on the pin (`../research/next-build-script.md`, M0 to M4): upgrade over the v5 backup copy, 366 v5 rows byte-identical, timed v5 restore against the +0.7 s before number (slow = gate failure), an older build opening the v9 store. Then record Design 66's 3-minute Porcelain walk.
 - [ ] QA: read the gate run. Design: pass the 66 walk.

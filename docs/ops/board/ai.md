@@ -11,6 +11,7 @@
 *Product order for the ship list (Oct 16): AI-1 → AI-7 memory store → AI-8 "remember that…" → AI-9 What Tess knows → AI-2 → AI-3 → AI-5 eval → AI-4 → AI-10 → AI-6 → AI-11 → AI-12 → AI-14 living colour (Builder A, after Design 48) (memory moved up, 12:14 AM PT; $50 cap decided 9:27 AM PT Oct 16); AI-13 when already in the file. Core owns most rows, Builder B the screens, Research AI-5, the Kitchen lead AI-12.*
 
 **Next:** (reviews against your notes, as Core's PRs land; docs only)
+0. (Research cap-math-check.md, 12:40 PM PT Oct 16) Fix spend-projection.md: lines 44-45 should read $31.41 and $41.41, and line 69 should say $6.48 a day reaches $50 in 7.7 days. Recheck the Sonnet cache-read price on the models page; code has 200 n$/token, claude-first-uses.md has $0.10/M. Tell Core the right figure.
 1. Review Core's AI-3 small PR (TessLineCheck + SW3 wording) against `line-check-vectors.md`.
 2. Review MU2 + A2 against the money/body/health wall and the router rule (a pin blocker, so first when it opens).
 3. Review Core's AI-2 PR (ClaudeClient + TessJob, the 40-a-day cap, A6) against `claude-client.md` and `spend-projection.md`.

@@ -4,6 +4,60 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+**12:45 PM PT Oct 16: undo windows (Research undo-windows-audit.md, #485, asked).** DECIDED, all six of Research's picks.
+- Undo windows pause while the app is backgrounded or the phone is locked.
+- Removing the key still commits early when the app goes to the background, because the key is safety-critical, and the line says so.
+- Recipe to Groceries gets 10 s.
+- A capture's window counts from when its line shows.
+- Siri undo has no window.
+- Plain hold-to-finish gets a 10 s UNDO.
+
+Also decided:
+- There is one shared window constant that knows about VoiceOver (10 s for all when VoiceOver is on).
+- Every UNDO line names the thing ("X, taken back.").
+- Deleting a note gets an UNDO.
+- Undoing a finish removes the Health workout.
+- At 4 am, an UNDO under the wrap-up and the roll takes back both or shows two UNDOs.
+
+**12:40 PM PT Oct 16: $50 cap math (Research cap-math-check.md, #482, asked).** DECIDED, all five of Research's picks:
+- The month resets at Pacific midnight on the 1st, wherever he is.
+- This month's spend is also kept in a small file outside the store, which restore never touches, like the forget log. The cap takes the higher of the two.
+- AI architecture rechecks the Sonnet cache-read price on the models page, and Core matches it.
+- "Paused" shows as soon as a call is refused.
+- A timed-out call counts its full held amount.
+
+**12:39 PM PT Oct 16: VoiceOver on the recipe clock and Lists (Research voiceover-recipe-clock-lists.md asked).** DECIDED, all six of Research's picks.
+- "425°F" is spoken as "425 degrees".
+- The lit step uses the "Now" value.
+- A step timer uses only the notification while he's in another app.
+- The pause line is "Paprika chicken, paused."
+- A finished section announces "Bathroom, all done." once.
+- With VoiceOver on, every undo window is 10 s.
+Owner: Builder B owns everything on the recipe page, including its cook states and their VoiceOver. Builder A owns the timers, the Live Activity and the notifications (G2, G7's timer, G8's line).
+
+**12:38 PM PT Oct 16: Lists phrases (Research lists-slice-8-phrases.md asked).** DECIDED, all eleven of Research's picks.
+
+How phrases route:
+- On a list page, a bare "milk" goes to that list; "buy milk" goes to Groceries.
+- "reset gym bag" resets at once, with a 10 s UNDO.
+- "new list lisbon fri" drops the day and makes a list named "Lisbon".
+- "pack" when two lists start with "Pack": ask "Packing, or Packing, Lisbon?"
+- "lisbon" finds the one list whose name holds that word.
+- "pick from films" opens the pick moment when Films is on screen; otherwise it says the pick.
+
+What he sees:
+- An item already on the list: "Socks, already on Packing." "charger" beside "phone charger" is a new row, not a duplicate.
+- A copied list: "Lisbon, copied from Packing."
+- "done" with items left: "Packing, Lisbon, done. 3 left."
+- A dated add: "Charger, on Packing, tomorrow."
+- The context line keeps each list's own case: "6 lists, Gym bag running".
+- A name with no matching list: "No list called Costco."
+
+My own calls:
+- A label before a colon ("packing:") sends the phrase to that list ahead of the food rule.
+- Plural "pins" is not a secret word.
+- In "add X to <list>", "sun" is never read as Sunday.
+
 **12:37 PM PT Oct 16: standing install approval (Kaushik, 12:36 PM PT, Builder A's thread).** DECIDED by him. Builder A may install the named pin whenever his phone is reachable over Wi-Fi, without asking. Standing approval removes asking him, not the gates. Only the named pin SHA installs, never master (master is v9 and his phone holds a v5 store). The safety steps all stay: Product names the SHA, the gate, QA and the Design walk pass, Step 0 SAVE A COPY runs, the install is in place, the app is never deleted, and he gets one line after.
 
 **12:35 PM PT Oct 16: time words (Research time-words-sweep.md asked).** DECIDED, all six of Research's picks.
