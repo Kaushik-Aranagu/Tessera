@@ -313,6 +313,8 @@ struct EditSetKeys: View {
 struct LiveAskField: View {
     @Binding var isShown: Bool
     var onAsk: (String) -> Void
+    /// A key was cleared: say where it goes, as Ask does.
+    var onRefuse: () -> Void = {}
     @State private var draft = ""
     @FocusState private var focused: Bool
 
@@ -330,6 +332,7 @@ struct LiveAskField: View {
                 .onChange(of: draft) { _, text in
                     if LiveAskField.refuses(text) {
                         draft = ""
+                        onRefuse()
                     }
                 }
             Button("Close") { close() }
@@ -347,7 +350,7 @@ struct LiveAskField: View {
 
     /// Anything holding "sk-ant-", in any case (the guard Ask uses, BottomChrome.looksLikeClaudeKey).
     static func refuses(_ text: String) -> Bool {
-        BottomChrome.looksLikeClaudeKey(text)
+        looksLikeClaudeKey(text)
     }
 
     private func submit() {
