@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Soul options</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/soul-explore.md (Design item 40). Kaushik 11:41 PM PT: the soul's dabs sit too far apart, on the icon and in the app; and explore colours beyond cobalt, vermilion and cadmium. Only the spread and the colours change: each dab keeps its paint (a radial from the pigment to 20%), its shape and its 1.2pt blur. Board: four spreads (today, 80%, 65%, 50%) on the icon and at Home size, Porcelain and Obsidian; then six palettes at the recommended spread, with what each does to Tess's voice colour. ?play records the six palettes breathing, then speaking. ?icon=<palette>-<light|dark|tinted>&f=<spread> renders a 1024 master. -->
+<style>
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;color:#17141F;transform-origin:0 0}
+body.board{padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(23,20,31,.66)}
+.row{display:flex;gap:36px;align-items:flex-start}
+.col{width:330px;display:flex;flex-direction:column;gap:14px}
+.blob{position:absolute;border-radius:52% 48% 60% 40%/55% 45% 55% 45%}
+.mask{overflow:hidden;position:relative}
+.crop{position:relative;width:330px;height:110px;overflow:hidden}
+.h{font-weight:700;font-size:16px;letter-spacing:.08em;margin:30px 0 14px}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:22px;line-height:24px;max-width:2150px}
+.tl{position:absolute;right:71px;width:240px;text-align:right;top:57px;transform:translateY(-50%);font-size:21px;line-height:28px}
+.tl .u{display:block;font-weight:700;font-size:16px;letter-spacing:.08em;line-height:20px;margin-top:4px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const Q=new URLSearchParams(location.search),$=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+// Palettes: Porcelain pigments, Obsidian pigments, and Tess's voice colour (the line beside her, the ghosts, the wet ink).
+const PAL={
+ current:{name:'TODAY · COBALT, VERMILION, CADMIUM',d:['#2450D8','#E2432A','#F0A500'],n:['#86B4FF','#FF5B3A','#FFC23D'],voice:['#2450D8','#86B4FF'],vnote:'VOICE STAYS COBALT'},
+ kiln:{name:'KILN · INDIGO, TERRACOTTA, OCHRE',d:['#2F3C9E','#C4553B','#D79A2B'],n:['#8E9BFF','#F08A6E','#F2C062'],voice:['#2F3C9E','#8E9BFF'],vnote:'VOICE GOES INDIGO (A SHADE DEEPER)'},
+ lagoon:{name:'LAGOON · TEAL, CORAL, BUTTER',d:['#0E8C86','#F0624D','#EDB730'],n:['#4FD8CF','#FF8A75','#FFD563'],voice:['#2450D8','#86B4FF'],vnote:'NO BLUE: VOICE STAYS COBALT, BESIDE HER, NOT IN HER'},
+ orchard:{name:'ORCHARD · PLUM, ROSE, PEACH',d:['#6E3A8E','#E2557A','#F29A5B'],n:['#C39BFF','#FF86A6','#FFBC86'],voice:['#2450D8','#86B4FF'],vnote:'PLUM IS TOO NEAR CONTEXT VIOLET: VOICE STAYS COBALT'},
+ aurora:{name:'AURORA · SKY, JADE, VIOLET',d:['#2F6FE0','#14A37F','#8C5BD6'],n:['#7FB0FF','#4FE0B5','#BC97FF'],voice:['#2F6FE0','#7FB0FF'],vnote:'VOICE GOES SKY (A SHADE LIGHTER). ALL COOL: NO WARM PIGMENT'},
+ ember:{name:'EMBER · ULTRAMARINE, MAGENTA, GOLD',d:['#3433D6','#D6266E','#F2B21B'],n:['#9A98FF','#FF5C9A','#FFD24A'],voice:['#3433D6','#9A98FF'],vnote:'VOICE GOES ULTRAMARINE'},
+};
+const rgba=(h,a)=>{const n=parseInt(h.slice(1),16);return `rgba(${n>>16},${(n>>8)&255},${n&255},${a})`};
+// The soul's dabs as built: 20 x 17 at (0,4), (22,2) and (12,20) in a 46 x 40 box. Spread f pulls each dab's centre
+// toward the three's centroid; f = 1 is today.
+const C0=[[10,12.5],[32,10.5],[22,28.5]],CX=(10+32+22)/3,CY=(12.5+10.5+28.5)/3;
+const centres=f=>C0.map(([x,y])=>[CX+(x-CX)*f,CY+(y-CY)*f]);
+// k: pt to px. cx,cy: where the centroid sits. pig: three colours. id prefix for animation hooks.
+function soul(k,cx,cy,f,pig,id=''){return centres(f).map(([x,y],i)=>`<div class="blob" ${id?`id="${id}${i}"`:''} style="left:${cx+(x-CX-10)*k}px;top:${cy+(y-CY-8.5)*k}px;width:${20*k}px;height:${17*k}px;background:radial-gradient(closest-side,${pig[i]},${rgba(pig[i],.2)});filter:blur(${1.2*k}px)"></div>`).join('')}
+// The icon, as app-icon.md A, with spread f. The glow washes follow the dabs in.
+function icon(s,f,pal,look){const u=s/1024,k=14*u/(.55+.45*f),P=look==='tinted'?['#FFFFFF','#D8D8D8','#EDEDED']:(look==='dark'?PAL[pal].n:PAL[pal].d);
+ const cx=s/2,cy=s/2+(CY-21.5+1.5)*0;let h='';
+ if(look!=='tinted'){const a=look==='dark'?.22:.13;h+=centres(f).map(([x,y],i)=>`<div style="position:absolute;left:${cx+(x-CX-19)*k}px;top:${cy+(y-CY-16)*k}px;width:${38*k}px;height:${32*k}px;border-radius:50%;background:radial-gradient(closest-side,${rgba(P[i],a)},${rgba(P[i],0)})"></div>`).join('')}
+ h+=soul(k,cx,cy,f,P);
+ return `<div class="mask" style="width:${s}px;height:${s}px;background:${look==='light'?'linear-gradient(#FFFFFF,#F5F1EA)':'#000'}">${h}</div>`}
+const masked=(s,f,pal,look)=>`<div style="width:${s}px;height:${s}px;border-radius:${s*.2237}px;overflow:hidden">${icon(s,f,pal,look)}</div>`;
+// Home at true size: the bottom-right of a 390pt phone, Tess's line in the voice colour, the soul at (346,779).
+function crop(f,pal,look,line){const P=look==='dark'?PAL[pal].n:PAL[pal].d,v=PAL[pal].voice[look==='dark'?1:0];
+ return `<div class="crop" style="background:${look==='dark'?'#000':'#fff'}"><div style="position:absolute;left:-60px;top:-722px;width:390px;height:844px">
+ <div class="tl" style="top:779px;color:${v}">${line}<span class="u" style="color:${look==='dark'?'#FF7A5C':'#C23A22'}">UNDO</span></div>
+ ${soul(1,346,779,f,P)}</div></div>`}
+const SPREADS=[[1,'TODAY · 100%'],[.8,'80%'],[.65,'65% · RECOMMENDED'],[.5,'50%']];
+const REC=.65;
+
+const ICON=Q.get('icon');
+if(ICON){
+ const [pal,look]=ICON.split('-');document.documentElement.style.background=document.body.style.background='transparent';
+ $('root').innerHTML=icon(1024,+(Q.get('f')||REC),pal,look);document.fonts.ready.then(()=>{document.body.dataset.done='1'});
+}else if(Q.has('play')){
+ if(Q.has('x2'))document.body.classList.add('x2');
+ document.body.classList.add('board');
+ // Six palettes at 65%, 6x her Home size, breathing as built (3.2s); then each speaks: the glow rises behind her.
+ $('root').innerHTML=`<div class="lbl s2" id="cap" style="height:34px">SIX PALETTES AT 65%, BREATHING (3.2S, AS BUILT)</div><div style="display:grid;grid-template-columns:repeat(3,300px);gap:24px">${Object.keys(PAL).map((p,j)=>`<div><div class="lbl s2" style="height:26px;font-size:16px">${PAL[p].name.split(' · ')[0]}</div><div style="display:flex;gap:12px"><div id="L${j}" style="position:relative;width:144px;height:144px;border-radius:32px;background:#fff;overflow:hidden">${soul(2.6,72,72,REC,PAL[p].d,'a'+j)}<div id="g${j}" style="position:absolute;inset:0;opacity:0;background:radial-gradient(closest-side,${rgba(PAL[p].d[0],.18)},transparent)"></div></div><div id="D${j}" style="position:relative;width:144px;height:144px;border-radius:32px;background:#000;overflow:hidden">${soul(2.6,72,72,REC,PAL[p].n,'b'+j)}<div id="h${j}" style="position:absolute;inset:0;opacity:0;background:radial-gradient(closest-side,${rgba(PAL[p].n[0],.3)},transparent)"></div></div></div></div>`).join('')}</div>`;
+ document.fonts.ready.then(async()=>{document.body.dataset.start='1';
+  const tiles=[...document.querySelectorAll('[id^=L],[id^=D]')];
+  tiles.forEach((t,i)=>{const inner=[...t.querySelectorAll('.blob')];inner.forEach((b,n)=>b.animate([{transform:'translate(0,0)'},{transform:`translate(${[1.5,-1.2,.4][n]*2.6}px,${[-.8,1,-1.4][n]*2.6}px)`}],{duration:[2900,3500,4100][n],iterations:Infinity,direction:'alternate',easing:'ease-in-out'}));
+   t.animate([{transform:'scale(1)'},{transform:'scale(1.04)'}],{duration:1600,iterations:Infinity,direction:'alternate',easing:'ease-in-out'})});
+  await sleep(4200);$('cap').textContent='EACH SPEAKS: HER GLOW RISES, SHE SWELLS TO 1.1, THEN SETTLES';
+  for(let j=0;j<6;j++){[$('g'+j),$('h'+j)].forEach(g=>g.animate([{opacity:0},{opacity:1},{opacity:0}],{duration:1400,easing:'ease-out'}));
+   [$('L'+j),$('D'+j)].forEach(t=>[...t.querySelectorAll('.blob')].forEach(b=>b.animate([{scale:1},{scale:1.1},{scale:1}],{duration:700,easing:'cubic-bezier(.3,1.3,.5,1)',composite:'add'})));
+   await sleep(650)}
+  await sleep(2200);document.body.dataset.done='1'});
+}else{
+ document.body.classList.add('board');
+ const keys=Object.keys(PAL);
+ const spreadCols=SPREADS.map(([f,t])=>`<div class="col"><div class="lbl ${f===REC?'':'s2'}">${t}</div><div class="row" style="gap:14px">${masked(158,f,'current','light')}${masked(158,f,'current','dark')}</div>${crop(f,'current','light','Call the bank done.')}${crop(f,'current','dark','Call the bank done.')}</div>`).join('');
+ const palCols=keys.map(p=>`<div class="col" style="width:330px"><div class="lbl ${p==='current'?'s2':''}" style="white-space:normal;height:44px;line-height:22px">${PAL[p].name}</div><div class="row" style="gap:14px">${masked(158,REC,p,'light')}${masked(158,REC,p,'dark')}</div>${crop(REC,p,'light','Call the bank done.')}${crop(REC,p,'dark','Call the bank done.')}<div class="lbl" style="white-space:normal;line-height:22px;color:${PAL[p].voice[0]}">${PAL[p].vnote}</div></div>`).join('');
+ $('root').innerHTML=`<div class="h s2">1 · CLOSER. TODAY’S COLOURS, FOUR SPREADS: THE ICON BY DAY AND NIGHT, THEN HOME AT TRUE SIZE</div><div class="row">${spreadCols}</div>
+ <div class="h s2">2 · COLOURS, AT 65%. TODAY FIRST. EACH DAB KEEPS ITS PAINT, SHAPE AND BLUR; ONLY THE PIGMENTS CHANGE</div><div class="row">${palCols}</div>
+ <div class="note">ON THE ICON SHE GROWS AS SHE TIGHTENS, SO THE SOUL FILLS THE SAME SPACE (14× AT 100%, 16.3× AT 65%). AT 65% THE DABS TOUCH AND MIX AT THEIR EDGES, SO SHE READS AS ONE SOUL, NOT THREE DOTS, AND STILL SHOWS THREE COLOURS AT 29PX. 50% STARTS TO MUDDY THE MIDDLE. TESS’S VOICE COLOUR (HER LINE, THE GHOSTS, WET INK) IS HER COOL PIGMENT TODAY; A PALETTE WITH NO BLUE KEEPS COBALT FOR THE VOICE. A NEW PALETTE GOES IN AS SOUL-ONLY PIGMENTS, SO LIVE, NOW, CONTEXT AND THE LIVE ACTIVITY’S COBALT SKY STAY.</div>`;
+ document.fonts.ready.then(()=>{document.body.dataset.done='1'});
+}
+</script>
+</body>
+</html>
