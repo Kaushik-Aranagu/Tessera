@@ -35,6 +35,18 @@ struct BackupLogicalDayTests {
         return other
     }
 
+    @Test func aClockSetFarForwardOnceDoesNotFreezePruning() throws {
+        // QA B10: a copy dated 1 Dec from a clock set forward, then real October time: it's not "behind".
+        for day in 0 ..< 7 {
+            try write(at(10, 10 + day, 12))
+        }
+        #expect(try write(at(12, 1, 12)) == "Tessera-2026-12-01.tessera")
+        #expect(try write(at(10, 17, 12)) == "Tessera-2026-10-17.tessera")
+        #expect(files().count == 7)
+        // Within 2 days ahead it's still a clock running behind: nothing is pruned or replaced.
+        #expect(try write(at(11, 30, 12)) == "Tessera-2026-11-30.tessera")
+    }
+
     @Test func anEmptyStoreIsNeverCopied() throws {
         // Restore walk risk 1: a fresh install pointed at the folder writes nothing, so no good copy is crowded out.
         let empty = try otherStore(notes: 0)

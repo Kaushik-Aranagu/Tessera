@@ -91,6 +91,12 @@ final class AppModel {
         }
         engine = ActionEngine(store: store, classes: classes)
         ledger = TrainingLedger(store: store, classes: classes)
+        // The release that adds the settings object: the old keys move in once, as system (settings-object.md).
+        // Never while a demo flag is on, so a demo can't freeze a look into his data.
+        if !["-demo", "-resetDemo", "-theme"].contains(where: { LaunchFlags.has($0) }) {
+            try? SettingsStore(engine: engine).migrate(looks: ThemeStore.sharedDefaults, standard: .standard,
+                                                       folderName: BackupKeeper.pickedFolder.map(BackupCopy.folderName))
+        }
         runtime = TesseraRuntime(engine: engine)
         // Core's calm note (store couldn't open, legacy migration pending) wins; else this launch's outcome.
         let outcome: String? = switch TesseraSchema.lastOpenOutcome {
