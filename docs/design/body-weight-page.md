@@ -1,6 +1,6 @@
 # The Body weight page, redrawn (Design item 29)
 
-`body-weight-and-habits.md` §1, redrawn under today's rules: the page top (`day-seams.md` S4), one context line directly above the hero (`sweep-19.md`), nothing coloured at rest (`no-dots.md`), and Tess beside the soul (S1). Copy is Research's `m3-lines.md` §1 to §3 (master), units come from settings, and D12 is settled for a workout. Where this sheet and §1 differ, this sheet wins; §1 carries a pointer.
+`body-weight-and-habits.md` §1, redrawn under today's rules: the page top (`day-seams.md` S4), one context line directly above the hero (`sweep-19.md`), nothing coloured at rest (`no-dots.md`), and Tess beside the soul (S1). Copy is Research's `m3-lines.md` §1 to §3 (master), units come from settings, and D12 follows Product's live-workout rule. Where this sheet and §1 differ, this sheet wins; §1 carries a pointer.
 - Board: `mockups/body-weight.png` (source `studies/body-weight.html`). It shows the page from Training in kg, a bare "82.4" waiting, the page from Review in lb in Obsidian just after a keep, and "82.4" said mid-workout.
 - Recording: `recordings/body-weight.mp4` (12s, 60fps). "82.4" waits as a ghost. A tap dries it, the dab drops onto the stroke and the trend rolls from 78.2 to 78.4. Then UNDO takes it back.
 
@@ -43,14 +43,13 @@
 - Entries are stored in kg as written, so switching units never changes a stored value; only what's shown.
 - The axis and the stroke don't change shape between units. Only the numbers do.
 
-## In a workout: D12, settled
-Research's default and the 7:24 PM rule win, with Q10 (no yes/no asks in a live workout):
-- **A bare number never becomes body weight mid-workout.** Only "bw 82.4" does, and it logs as T13 with Tess's line beside the soul. The set screen doesn't change.
-- **"82.4" or "82.4 kg" said mid-workout** becomes a **set ghost** in the numeral row: the weight snapped to the nearest loadable weight (ties go lighter), so "**82.5** kg × 8", in wet cobalt and breathing, with "SNAPPED FROM 82.4" in labels under it. It has no question mark and Tess says nothing, because it's a set waiting for his tap, not a question (Q10).
-- **Tap** keeps it: "Set 4 logged. 82.5 × 8." with the set's own UNDO (T14). **Swipe** drops it. The value word opens the weight reel at 82.5.
-- Reps keep the 1 to 50 rule. A number close to the last weight goes to the model, and what comes back is the same kind of set ghost.
+## In a workout: D12
+Product's standing rule (7:24 PM S701, kept at 7:34 PM) decides it:
+- **Only "bw 82.4" or "weighed 82.4" logs body weight mid-workout.** It logs as T13, with Tess's line beside the soul, and the set screen doesn't change.
+- **A bare number mid-workout is never a weigh-in.** It goes through the live-workout guard, like any other number said or written during a set. The guard decides what it becomes (reps from 1 to 50, a set, an ask, or the model), and Q10 holds: no yes/no asks.
+- **One place the guard can land,** drawn on the board's fourth phone: "82.4" close to the last weight comes back as a set ghost snapped to the nearest loadable weight, "**82.5** kg × 8" in wet cobalt with "SNAPPED FROM 82.4" in labels under it. A tap keeps it ("Set 4 logged. 82.5 × 8.", T14) and a swipe drops it. It's an example of the guard's look, not a rule this page sets.
 
 ## Owners
-- **Builder A:** the page (`Features/Training/BodyWeight…`): the S4 top, the context line, the stroke and marks in ink at rest, the ghost and its keep at y 652, units from settings, the empty state, and the set ghost's look and SNAPPED label in the workout. This replaces the DEBUG-only page.
-- **Core:** the unit read from `SettingsStore` (with kg until the field exists), the lb conversion and the 66 to 550 range (D11), the D12 routing (a bare number mid-workout becomes a snapped set ghost, never body weight), and the BODY WEIGHT link word's and Review weight line's destinations.
+- **Builder A:** the page (`Features/Training/BodyWeight…`): the S4 top, the context line, the stroke and marks in ink at rest, the ghost and its keep at y 652, units from settings, the empty state, and the set ghost's look and SNAPPED label wherever the guard lands on a set. This replaces the DEBUG-only page.
+- **Core:** the unit read from `SettingsStore` (with kg until the field exists), the lb conversion and the 66 to 550 range (D11), D12: a bare number mid-workout goes through the live-workout guard and is never a weigh-in; only "bw" or "weighed" logs body weight, and the BODY WEIGHT link word's and Review weight line's destinations.
 - **Builder B:** Review's weight line opens this page with ‹ REVIEW.

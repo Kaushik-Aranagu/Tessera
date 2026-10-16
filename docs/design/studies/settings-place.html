@@ -46,11 +46,10 @@ const settings=(L)=>`<div class="pg" id="${L}set">
  <div class="abs" style="left:22px;top:84px;font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px">Settings</div>
  <div class="flow"><div class="sec"><span class="lbl">LOOK</span><div class="b"><span class="vw">Porcelain</span> by day, <span class="vw">Obsidian</span> by night.</div><div class="b s2">Hold a name to keep it day and night.</div></div>
  <div class="sec"><span class="lbl">CLAUDE</span>
-  <div class="b">Tess can ask <span class="vw">Claude</span>.</div>
-  <div class="b">This month <span class="vw">$1.20</span> of $10.</div>
-  <div style="position:relative;height:14px;margin:-2px 0 10px"><div style="position:absolute;left:0;right:0;top:6px;height:1px;background:var(--hair)"></div><svg style="position:absolute;left:0;top:3px;overflow:visible" width="42" height="8"><path d="M0 4 C 12 2.4, 28 2.6, 41.5 3.6 L 41.5 4.6 C 28 5.8, 12 5.6, 0 5 Z" fill="var(--tess)"/></svg></div>
   <div class="b">Tess asks Claude: <span class="vw" id="${L}miss">yes</span>.</div>
   <div class="b tess" id="${L}say" style="height:0;opacity:0;margin:0"></div>
+  <div class="b">This month <span class="vw">$1.20</span> of $10.</div>
+  <div style="position:relative;height:14px;margin:-2px 0 10px"><div style="position:absolute;left:0;right:0;top:6px;height:1px;background:var(--hair)"></div><svg style="position:absolute;left:0;top:3px;overflow:visible" width="42" height="8"><path d="M0 4 C 12 2.4, 28 2.6, 41.5 3.6 L 41.5 4.6 C 28 5.8, 12 5.6, 0 5 Z" fill="var(--tess)"/></svg></div>
   <div class="b">Key ends in <span class="vw">...a1B2</span> <span class="s2">· works</span></div>
   <div class="words" style="margin:-2px 0 0">TEST<i>·</i>REPLACE<i>·</i>REMOVE</div></div>
  <div class="sec"><span class="lbl">BACKUPS</span>
@@ -94,13 +93,17 @@ document.fonts.ready.then(()=>{document.body.dataset.start='1';
   const m=$('Pmiss');m.animate([{filter:'blur(0)',opacity:1},{filter:'blur(3px)',opacity:0}],{duration:120,fill:'forwards'}).onfinish=()=>{m.textContent='no';m.animate([{filter:'blur(3px)',opacity:0},{filter:'blur(0)',opacity:1}],{duration:180,fill:'forwards'})};
   const s=$('Psay');s.textContent='Tess stays on this phone.';s.animate([{height:'0px',opacity:0,marginBottom:'0px'},{height:'28px',opacity:1,marginBottom:'8px'}],{duration:320,delay:200,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
  },2900);
+ setTimeout(()=>{ // and back to yes: Tess answers with the yes line (Research, 16 Oct)
+  const m=$('Pmiss');m.animate([{filter:'blur(0)',opacity:1},{filter:'blur(3px)',opacity:0}],{duration:120,fill:'forwards'}).onfinish=()=>{m.textContent='yes';m.animate([{filter:'blur(3px)',opacity:0},{filter:'blur(0)',opacity:1}],{duration:180,fill:'forwards'})};
+  const s=$('Psay');s.animate([{opacity:1},{opacity:0}],{duration:150,fill:'forwards'}).onfinish=()=>{s.textContent='Tess asks Claude when she\'s unsure, and for Plan my day.';s.style.whiteSpace='normal';s.animate([{height:'28px',opacity:0},{height:'56px',opacity:1}],{duration:320,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'})};
+ },4600);
  setTimeout(()=>{ // back: Settings closes into the word, Review returns
   
   set.animate([{transform:'none',opacity:1},{transform:'scale(.94)',opacity:0}],{duration:380,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
   rev.animate([{transform:'scale(1.06)',filter:'blur(3px)',opacity:0},{transform:'none',filter:'blur(0)',opacity:1}],{duration:420,delay:40,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
   $('Phl').animate([{width:'96px'},{width:'0px'}],{duration:150,delay:300,fill:'forwards'});
- },5200);
- setTimeout(()=>document.body.dataset.done='1',6600);
+ },7000);
+ setTimeout(()=>document.body.dataset.done='1',8400);
 });
 </script>
 </body>
