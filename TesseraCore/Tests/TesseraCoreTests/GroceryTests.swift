@@ -53,7 +53,7 @@ struct GroceryTests {
         try engine.perform(RemoveRecipeFromGroceries(recipe: salad.id), by: .user)
         #expect(lists.item(tomato.object).quantity == "800 g")
         #expect(lists.items(of: list).map(\.text) == ["tomatoes", "onion"])
-        #expect(added.output.count == 2)
+        #expect(added.output.count == 1) // new rows only: tomatoes joined, cucumber is new (Research 123 G-R14)
         #expect(groceries.share(of: sauce).count == 2)
         #expect(groceries.share(of: salad).isEmpty)
     }

@@ -297,6 +297,10 @@ public enum SystemCatalog {
                       FieldSpec(key: "toTaste", name: "To taste", kind: .bool),
                       FieldSpec(key: "original", name: "As written", kind: .text),
                       FieldSpec(key: "ingredient", name: "Ingredient", kind: .ref, target: .ingredient),
+                      // Research 123: the pack's size rides the line ("28 oz"), so two can sizes never add up; an
+                      // optional line ("for serving") stays on the recipe page and off the list.
+                      FieldSpec(key: "packSize", name: "Pack size", kind: .text),
+                      FieldSpec(key: "optional", name: "Optional", kind: .bool),
                   ]),
         // A step is a paragraph; its timers are minute ranges, its mentions link the ingredients it uses.
         ClassSpec(key: .recipeStep, name: "Recipe Step", parent: .thing, symbol: "text.alignleft",
@@ -340,7 +344,7 @@ public enum SystemCatalog {
 
     /// Built-in classes ship as a versioned package. Bump `version` whenever a spec changes; seeding then
     /// refreshes shipped names, symbols, units, options, defaults and formulas, except what the person edited.
-    public static let package = CatalogPackage(id: "system", version: 7, name: "Tessera built-ins",
+    public static let package = CatalogPackage(id: "system", version: 8, name: "Tessera built-ins",
                                                source: "Tessera", license: "Tessera")
 
     static let honestE1RM = "weight * (1 + (reps + 10 - coalesce(rpe, 10)) / 30)"

@@ -28,8 +28,19 @@ public enum Aisle: String, CaseIterable, Sendable {
 /// ~150 common ingredients with their aisle, and the staples that are skipped when a recipe goes on the list.
 public enum AisleGuide {
     public static let staples: Set<String> = [
-        "salt", "black pepper", "olive oil", "vegetable oil", "oil", "water", "sea salt",
+        "salt", "black pepper", "olive oil", "vegetable oil", "oil", "water", "sea salt", "kosher salt",
+        "extra-virgin olive oil", "extra virgin olive oil", "canola oil", "avocado oil", "cooking spray",
+        "freshly ground black pepper", "ground black pepper", "table salt", "flaky salt",
     ]
+
+    /// Whether a line names only staples: "kosher salt and black pepper", "salt & pepper" (Research 123 G-R3).
+    public static func isStaple(_ key: String) -> Bool {
+        if staples.contains(key) {
+            return true
+        }
+        let parts = key.replacingOccurrences(of: " & ", with: " and ").components(separatedBy: " and ")
+        return parts.count > 1 && parts.allSatisfy { staples.contains($0.trimmingCharacters(in: .whitespaces)) }
+    }
 
     public static func aisle(for name: String) -> Aisle? {
         let key = IngredientLine.key(for: name)
@@ -57,7 +68,7 @@ public enum AisleGuide {
             }
         }
         add(.produce, """
-        onion, garlic, ginger, shallot, spring onion, leek, carrot, celery, potato, sweet potato, tomato, \
+        onion, garlic, ginger, shallot, spring onion, scallion, green onion, leek, carrot, celery, potato, sweet potato, tomato, \
         cherry tomato, cucumber, courgette, zucchini, aubergine, eggplant, pepper, bell pepper, chilli, chili, \
         lettuce, spinach, rocket, kale, cabbage, broccoli, cauliflower, mushroom, pea, green bean, sweetcorn, \
         avocado, lemon, lime, orange, apple, banana, pear, grape, strawberry, blueberry, raspberry, mango, \
@@ -77,7 +88,8 @@ public enum AisleGuide {
         """)
         add(.pantry, """
         flour, plain flour, self-raising flour, bread flour, sugar, caster sugar, brown sugar, icing sugar, rice, \
-        basmati rice, risotto rice, pasta, spaghetti, penne, linguine, fusilli, lasagne, noodle, egg noodle, \
+        basmati rice, risotto rice, jasmine rice, pasta, spaghetti, penne, linguine, fusilli, lasagne, noodle, \
+        egg noodle, orecchiette, rigatoni, farfalle, macaroni, orzo, ziti, tortellini, ravioli, gnocchi, \
         oat, couscous, quinoa, bulgur, lentil, red lentil, breadcrumb, panko, yeast, baking powder, \
         bicarbonate of soda, baking soda, cornflour, cocoa, chocolate, dark chocolate, honey, maple syrup, \
         nut, almond, walnut, peanut, cashew, pine nut, raisin, stock cube, cereal
@@ -87,11 +99,13 @@ public enum AisleGuide {
         black bean, cannellini bean, baked bean, tuna, sweetcorn tin, olive, caper, anchovy, pesto, jam, \
         peanut butter, mustard, dijon mustard, mayonnaise, ketchup, soy sauce, fish sauce, \
         worcestershire sauce, vinegar, balsamic vinegar, red wine vinegar, olive oil, vegetable oil, oil, \
-        sesame oil, stock, tahini, curry paste
+        sesame oil, stock, broth, chicken broth, beef broth, vegetable broth, chicken stock, tahini, curry paste, \
+        coconut oil, diced tomato, crushed tomato, tomato sauce, salsa, enchilada sauce, refried bean, pinto bean
         """)
         add(.spices, """
-        salt, sea salt, black pepper, paprika, smoked paprika, cumin, ground cumin, coriander seed, turmeric, \
-        chilli flake, chili flake, cayenne, garam masala, curry powder, cinnamon, nutmeg, oregano, \
+        salt, sea salt, kosher salt, black pepper, paprika, smoked paprika, cumin, ground cumin, coriander seed, \
+        turmeric, chilli flake, chili flake, red pepper flake, chili powder, chilli powder, cayenne, garam masala, \
+        curry powder, cinnamon, nutmeg, oregano, taco seasoning, italian seasoning, everything bagel seasoning, \
         dried oregano, mixed herb, clove spice, cardamom, star anise, vanilla, vanilla extract, fennel seed, \
         mustard seed, saffron
         """)
