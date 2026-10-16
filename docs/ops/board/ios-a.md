@@ -37,7 +37,7 @@
 - After Build A1: share Core's rest usage table and write to it from `persistRest`, which writes no op today (per Research's `../research/training-week-one.md` (#163)).
 - The rest of Builder A's 32 accessibility rows in `../research/accessibility.md` (VoiceOver labels and the remaining Dynamic Type rows).
 - M3 body weight page, after Core's M3 slice 1, with a BODY WEIGHT word on the Training page. Design's sheet: `docs/design/body-weight-and-habits.md` with `m3-surfaces.mp4` (1f17bd1 on Design's branch), drawn on Research's `../research/m3-1-2-brief.md` fixtures with exact copy.
-- M5 Reading screens (`../product/ship-list-m5-reading.md`) and M5 Money screens 6, 7, 5 (`../product/ship-list-m5-money.md`), each after Core's engine slices land. Includes a HomeLink word in `HomeSpatialView`, so the screen isn't DEBUG-only. (Moved from Builder B, 3:50 PM PT, to spread the screen work.)
+- M5 Reading screens (`../product/ship-list-m5-reading.md`) and M5 Money screens 6, 7, 5 (`../product/ship-list-m5-money.md`), drawn from Design's `docs/design/money-reading-first.md` (843638f; currency-neutral month page and ledger, a receipt ghost that waits for a tap, a Reading shelf with no counts), owned by Builder A to balance Builder B's queue (Product, 8:32 PM PT), each after Core's engine slices land. Includes a HomeLink word in `HomeSpatialView`, so the screen isn't DEBUG-only. (Moved from Builder B, 3:50 PM PT, to spread the screen work.)
 - Fixes from Kaushik's phone review on haptics, dial feel and the finish animation (unverifiable in the simulator).
 
 *All v1 slices except 17 (voice) are on master after #91. Voice moved to Builder B's Ask Tess capture surface (Kaushik, 19:18). 14 still needs Core's Prefill fix.*

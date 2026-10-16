@@ -33,6 +33,7 @@
 - Undo batch: Builder B's rows in `../research/undo-lines.md` section 2, plus the capture code in `App/AppModel.swift`, to the one rule.
 
 **Later:**
+- Review's link lines per Design's `docs/design/money-reading-first.md` (843638f, replaces the order in `upkeep-people-first.md`): "The week · Day log · Notes" and "Reading · Money · Upkeep · People". Each word appears only when its area's first screen ships, so no link leads nowhere.
 - Plan my day calendar lines (with T6, Research's `../research/calendar-pack.md`, #165): the one-time ask "Plan around your calendar? Times and titles only." and the fallback "Planned without your calendar".
 - After Build A1: a first-set timing mark (per Research's `../research/training-week-one.md` (#163)).
 - Builder B's 3 op log gaps in `../research/oplog-health.md` (#162).
