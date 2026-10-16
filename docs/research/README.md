@@ -183,3 +183,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [trip-checklist.md](trip-checklist.md) | The coordinator: the one-screen trip message for his phone, to send Sun Oct 25, with the two brackets to fill |
 | [fixtures/secret-words.md](fixtures/secret-words.md) | Core, QA: the NE1 secret-word rule as 7 parts and 20 lines (wifi, door code, PIN, a spoken passcode, near-miss tasks), a grep list for QA, 5 gaps (a "note:" password flows into memory and Claude packs today) |
 | [fixtures/asks-after-close.md](fixtures/asks-after-close.md) | Core: one evening 20:28 to 08:00 through Shutdown, the 22:00 close and quiet hours; which asks hold, expire or return, 14 rules, 11 gaps (a pending set ask logs into a finished workout after midnight) |
+| [morning-page-oct-16.md](morning-page-oct-16.md) | Coordinator: Kaushik's Oct 16 morning page, what changed overnight and his three asks (item 136) |
