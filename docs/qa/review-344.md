@@ -51,3 +51,17 @@ That keeps UNDO whole. It is still "at the time it was logged", now with the cor
 
 Nothing to check on the phone until it is in a build. Then: log a set that beats his best, log a bigger one
 another day, and look at the first day in the Day log: it still says PR.
+
+## Addendum: re-check at `0cbf423` (Oct 16, about 1:35 AM Pacific): PASS
+
+The delta is `TrainingActions.swift` (+29 / -9) and one test.
+
+- **F1 closed.** `EditSet` re-decides `wasRecord` in the same op whenever weight, reps, RPE or clearRPE changes.
+  It reads the set's corrected values back from the store and asks the same `SetRecord.beats` read that LogSet
+  uses, against every other workout (`TrainingActions.swift:135-144`, `:562-571`). The set's own workout is
+  excluded, so it never compares against its old self. One op means one UNDO restores both the numbers and the
+  flag. Test: 800 × 8 → 50 loses the flag; → 80 gains it, and the Day log says PR again.
+- **L1 taken.** Every new set writes `.bool(true)` or `.bool(false)` (`:79`), so new sets never fall back to the
+  live read. Warm-ups get `false`.
+- **L2 comment fixed.** L3 is left, which is fine.
+- Safety and the additive catalog are unchanged.
