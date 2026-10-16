@@ -9,7 +9,7 @@ unit tests only. This test reads the phrases from the fixture and types them its
 phone, has to type one by hand.
 
 Every value in the fixture is made up (hunter2, tacocat, 4417, "the fake store"). The key rows hold no key: the test
-builds one at run time from parts.
+takes its value from `ClaudeSection.fakeKey` in test code.
 
 ## 1. What master does today (the short version)
 
@@ -83,7 +83,6 @@ struct WallRow: Decodable {
     let id: String
     let phrase: String?
     let build: String?
-    let buildParts: [String]?
     let surface: String
     let expectPrivate: Bool
     let expectNoClaude: Bool
@@ -108,17 +107,18 @@ static func rows(_ surface: String) throws -> [WallRow] {
 
 ## 4. The key rows
 
-Rows A09, N03, S02 and P03 have `"phrase": null, "build": "KEY"` and `buildParts`. The test joins the parts in code:
+Rows A09, N03, S02 and P03 have `"phrase": null, "build": "KEY"`. The test takes the value from the app's own fake
+key, in test code:
 
 ```swift
 func text(for row: WallRow) -> String {
-    if row.build == "KEY" { return (row.buildParts ?? []).joined() }
+    if row.build == "KEY" { return ClaudeSection.fakeKey }
     return row.phrase ?? ""
 }
 ```
 
-The parts are the literal `sk`, a hyphen, `ant`, and the fake tail `-test-not-a-real-key-0000`, stored as four strings
-so the joined prefix never appears in the fixture, in this spec or in the test source. The tail says what it is.
+Nothing key-shaped is written under docs/: not the fixture, not this spec. The value lives only in
+`ClaudeSection.fakeKey`, which the app already builds at run time.
 
 The key is **pasted, never typed**. The Ask bar (`BottomChrome.swift:395-398`), the Notes line (`NotesView.swift:82-84`)
 and the recipe text (`PasteRecipe.swift:119-121`) clear the field the moment the prefix lands, so `typeText` would
@@ -152,7 +152,7 @@ Builder B adds, behind a new `-wallsSpy` flag (read through `LaunchFlags`, so si
        if LaunchFlags.has("-wallsSpy"), let capture = runtime.tess as? TessCaptureEngine {
            capture.model = nil // grammar only: the run is the same on any Mac (see note)
            capture.claude = ClaudeTessModel(
-               keys: InMemoryKeychain(ClaudeSection.fakeKey), // already built from parts at run time
+               keys: InMemoryKeychain(ClaudeSection.fakeKey), // the app's fake key, built in code
                ledger: TessUsageLedger(store: store, classes: classes),
                flags: ClaudeMissFlags(defaults: UserDefaults(suiteName: "walls-spy")!),
                session: WallsSpy.session(),

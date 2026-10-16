@@ -1,5 +1,5 @@
 {
-  "about": "Walls UI fixture (Product item AU). Every value is made up: hunter2, tacocat and 4417 are placeholders, and the fake store is not a real shop. WallsUITests reads these rows so no session types secret-shaped phrases by hand. Surfaces: askBar (Ask Tess, Write), notesPage (Notes writing line), siriAddTask (CreateTaskIntent.add in a unit test; Siri can't be driven from a UI test), paste (Kitchen, Paste a recipe). The key rows have phrase null and build KEY: the test joins buildParts in code at run time, so the key prefix is never one literal in this file. lineMatch is exact or prefix; expectLine null means no line check. passesOnMaster and masterEvidence were read on origin/master fbede70 (Oct 16, 2026). pending names the owner of a known fail; the test wraps those rows in XCTExpectFailure. Spec: docs/research/walls-ui-test-spec.md.",
+  "about": "Walls UI fixture (Product item AU). Every value is made up: hunter2, tacocat and 4417 are placeholders, and the fake store is not a real shop. WallsUITests reads these rows so no session types secret-shaped phrases by hand. Surfaces: askBar (Ask Tess, Write), notesPage (Notes writing line), siriAddTask (CreateTaskIntent.add in a unit test; Siri can't be driven from a UI test), paste (Kitchen, Paste a recipe). The key rows have phrase null and build KEY: the test takes its value from ClaudeSection.fakeKey in test code, so nothing key-shaped is in this file. lineMatch is exact or prefix; expectLine null means no line check. passesOnMaster and masterEvidence were read on origin/master fbede70 (Oct 16, 2026). pending names the owner of a known fail; the test wraps those rows in XCTExpectFailure. Spec: docs/research/walls-ui-test-spec.md.",
   "master": "fbede70",
   "rows": [
     {
@@ -118,12 +118,6 @@
       "id": "A09",
       "phrase": null,
       "build": "KEY",
-      "buildParts": [
-        "sk",
-        "-",
-        "ant",
-        "-test-not-a-real-key-0000"
-      ],
       "surface": "askBar",
       "expectPrivate": false,
       "expectNoClaude": true,
@@ -307,12 +301,6 @@
       "id": "N03",
       "phrase": null,
       "build": "KEY",
-      "buildParts": [
-        "sk",
-        "-",
-        "ant",
-        "-test-not-a-real-key-0000"
-      ],
       "surface": "notesPage",
       "expectPrivate": false,
       "expectNoClaude": true,
@@ -398,12 +386,6 @@
       "id": "S02",
       "phrase": null,
       "build": "KEY",
-      "buildParts": [
-        "sk",
-        "-",
-        "ant",
-        "-test-not-a-real-key-0000"
-      ],
       "surface": "siriAddTask",
       "expectPrivate": false,
       "expectNoClaude": true,
@@ -489,12 +471,6 @@
       "id": "P03",
       "phrase": null,
       "build": "KEY",
-      "buildParts": [
-        "sk",
-        "-",
-        "ant",
-        "-test-not-a-real-key-0000"
-      ],
       "surface": "paste",
       "expectPrivate": false,
       "expectNoClaude": true,
