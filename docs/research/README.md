@@ -130,3 +130,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [backup-logical-day.md](backup-logical-day.md) | Core, QA: daily backup copy by the 4 AM day, 12 timelines with test names and phone steps |
 | [day-log-copy.md](day-log-copy.md) | Builder B: Day log page copy for 12 states, empty states, 4 AM day |
 | [m3-lines.md](m3-lines.md) | Design, Core: body weight and habits lines, empty states, VoiceOver (about 75 lines) |
+| [fixtures/plan-my-day-claude.md](fixtures/plan-my-day-claude.md) | Core: 20 Plan my day packs for the Claude gate, checks, Haiku vs Sonnet, pass bar, eval steps |
