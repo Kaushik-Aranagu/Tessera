@@ -295,7 +295,7 @@ struct EditSetKeys: View {
                     withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { session.removeEditing() }
                     onRemove()
                 }
-                .buttonStyle(.labelWord(Paint.live))
+                .buttonStyle(.labelWord(Theme.Colors.liveInk))
                 .accessibilityLabel("Remove set \(row.number)")
                 Button("Cancel") {
                     withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { session.endEditing() }
@@ -344,7 +344,7 @@ struct LiveAskField: View {
         .padding(.horizontal, Theme.Spacing.gutter)
         .padding(.top, Theme.Spacing.s)
         .frame(maxHeight: .infinity, alignment: .top)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(ThemeStore.shared.workoutLook.isDark ? .dark : .light)
         .onAppear { focused = true }
     }
 

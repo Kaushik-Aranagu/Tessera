@@ -255,10 +255,11 @@ extension ThemeConcept {
             liveInk: (day.liveInk, night.liveInk), neutral: (day.neutral, night.neutral),
             morning: (day.sky, night.sky)
         )
-        let workout = current.workout
-        concept.workout = WorkoutPalette(ground: workout.ground, groundRaised: workout.raised, ink: workout.ink,
-                                         signal: workout.signal, rest: workout.rest, tess: workout.tess,
-                                         health: workout.health)
+        // One base across the app (Kaushik, 2026-10-16): the workout stands on the same ground as Home in the look,
+        // with its layers matched to it, nothing much brighter or darker than the rest.
+        concept.workout = WorkoutPalette(ground: current.ground, groundRaised: current.raised, ink: current.ink,
+                                         signal: current.live, rest: current.now, tess: current.tess,
+                                         health: current.health)
         return concept
     }
 }
@@ -274,6 +275,7 @@ enum Theme {
         retired ?? ThemeStore.shared.concept
     }
 
+    /// `-theme <name>` pins a look in memory for demos and recordings, on the simulator only (like the demo data).
     static func configure(arguments: [String] = ProcessInfo.processInfo.arguments) {
         // -theme pins a look in memory for demos and recordings, on the simulator only.
         guard let name = LaunchFlags.value(after: "-theme", in: arguments)?.lowercased() else { return }
@@ -450,7 +452,7 @@ enum Theme {
 
             /// The glass outline: black 60% on Plein (today's), ink 12% elsewhere (black can't show on #000).
             static var glassEdge: Color {
-                ThemeStore.shared.workoutLook.field == .plein ? .black.opacity(0.6) : ink.opacity(0.12)
+                ink.opacity(0.12)
             }
 
             /// Set strokes cycle through these, in order.

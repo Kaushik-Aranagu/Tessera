@@ -36,12 +36,14 @@ enum WorkoutPaint {
         Theme.Colors.Workout.ink
     }
 
-    /// The glint over the workout's dark ground: light passing over it in every look (#FFE2A8, plus-lighter).
-    static let sheen = Color(hex: 0xFFE2A8)
+    /// The glint: the look's own sheen (gold through the letters on white, light over dark grounds).
+    static var sheen: Color {
+        Theme.Colors.sheen
+    }
 
-    /// The glass of sheets and panels: the ground at 82% over the material.
+    /// The glass of sheets and panels: the ground at 92% over the material.
     static var glass: Color {
-        Theme.Colors.Workout.ground.opacity(0.82)
+        Theme.Colors.Workout.ground.opacity(0.92)
     }
 
     /// Each logged set leaves a stroke; the colour cycles set to set.
@@ -52,7 +54,7 @@ enum WorkoutPaint {
 
     /// Black drop shadows only on Plein (a black shadow can't show on #000); other looks lift with `raised`.
     static var dropsShadows: Bool {
-        ThemeStore.shared.workoutLook.field == .plein
+        !ThemeStore.shared.workoutLook.isDark
     }
 }
 

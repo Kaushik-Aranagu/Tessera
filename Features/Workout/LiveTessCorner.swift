@@ -38,8 +38,10 @@ struct LiveTessCorner: View {
                 }
                 if canUndo {
                     Button("Undo", action: onUndo)
-                        .buttonStyle(.labelWord(Paint.live))
+                        .buttonStyle(.labelWord(Theme.Colors.liveInk))
                         .accessibilityLabel("Undo the last change")
+                        // Clear of the soul's done splash, which spreads about 60 pt on dark looks (Design A2).
+                        .padding(.trailing, 12)
                         .transition(.opacity)
                 }
             }

@@ -101,7 +101,6 @@ struct RestLiveActivity: Widget {
 private struct LockScreenRoot<Content: View>: View {
     let state: RestActivityAttributes.ContentState
     @ViewBuilder var content: Content
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         // The Lock Screen stays Kaushik's Cobalt sky in every look (QA B3); the names ride along for later.

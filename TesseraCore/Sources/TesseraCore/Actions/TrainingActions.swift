@@ -327,9 +327,14 @@ public struct LogExercise: EngineAction {
         let entry = try workout.orderedChildren
             .last { transaction.store.linkedClass("exercise", of: $0)?.id == exercise }
             ?? AddExercise(workout: workout.id, exercise: exerciseClass.id).apply(&transaction)
+        // A past day's sets are stamped on that day (QA D2): at the workout's end, so they never sit before an evening
+        // session's start (QA P2).
+        let store = transaction.store
+        let stamp = on.map { store.value("endedAt", of: workout)?.dateValue ?? store.value("startedAt", of: workout)?
+            .dateValue ?? $0
+        }
         return try (0 ..< count).map { _ in
-            // A past day's sets are stamped on that day, so anything sorting by loggedAt keeps them there (QA D2).
-            try LogSet(entry: entry.id, weight: weight, reps: reps, unit: unit, time: on).apply(&transaction)
+            try LogSet(entry: entry.id, weight: weight, reps: reps, unit: unit, time: stamp).apply(&transaction)
         }
     }
 
@@ -340,13 +345,17 @@ public struct LogExercise: EngineAction {
         let workoutClass = try transaction.classDef(.workout)
         let tessera = TesseraDay(calendar: .current)
         let key = tessera.day(of: day)
-        // Finished or not (one left open that day is matched too, QA D1).
-        let sameDay = store.objects(of: workoutClass).last {
+        // Finished or not (one left open that day is matched too, QA D1); of two that day, the one that already has
+        // this exercise (QA P1).
+        let sameDay = store.objects(of: workoutClass).filter {
             guard let started = store.value("startedAt", of: $0)?.dateValue else { return false }
             return tessera.day(of: started) == key
         }
-        if let sameDay {
-            return sameDay
+        let withExercise = sameDay.last { workout in
+            workout.orderedChildren.contains { store.linkedClass("exercise", of: $0)?.id == exercise }
+        }
+        if let found = withExercise ?? sameDay.last {
+            return found
         }
         let workout = transaction.create(workoutClass, title: "Workout")
         try transaction.set("startedAt", to: .date(day), on: workout)
