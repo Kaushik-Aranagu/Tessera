@@ -1,50 +1,68 @@
-# Review session: what to try tonight
+# Review session: what to try on the next build
 
-*Planning lead, 2026-10-15, updated 2:37 PM Pacific. For Kaushik's first build on his phone: master `21566b8`, installed over the first build. It adds #110 (Finish, Start and Resume full size, "21 min ago") and #107 (Home links as a zoom, Kitchen on the rail). If something here isn't in the build, skip it and tell us.*
+*Planning lead, updated 6:20 PM Pacific, Oct 15. For the next install, over 34665f0. This build is master from #151 onward plus Builder B's rest-day hookup on Now, which is the last thing the install waits on. It folds in Research's `review-refresh.md`. If something here isn't in the build, skip it and tell us.*
 
-## What to try (about 15 minutes)
+## What to try (about 20 minutes)
 
-Home has a word rail across the top: **Review · Today · Training · Kitchen**. Every key is a painted stroke word, not a button. **Tess** is the soul in the corner: tap her to open the capture surface.
+Home has a word rail across the top: **Review · Today · Training · Kitchen**. Every key is a painted stroke word, not a button. **Tess** is the soul in the corner: tap her to open the capture surface. UNDO is now one vermilion word everywhere.
 
-1. **Start a workout.** Go to Home, then **Training**, and tap today's push/pull/legs routine. The workout rises as its own screen. *Check:* does it feel like an instrument rather than a form?
-2. **Log a set with one hold.** In the workout, each set opens already filled in. Hold to log it. Once you hit the top of the rep range, the next session opens the dial a step heavier. Turn the **weight dial**, where the plates per side show beside it, and roll the **reps drum** for the next set. *Check:* the feel of the dial's clicks and the hold timing.
-3. **Rest from the lock screen.** After logging a set, lock your phone. The rest timer runs on the Lock Screen, and **Done** logs the next set without unlocking.
-4. **Leave and come back.** Swipe the workout down or kill the app mid-set, even during a rest, then reopen it. Home's **Resume** should take you back to the exact set, with the rest still counting.
-5. **Swap an exercise.** In the workout, pull down on the exercise name and pick an alternative from the same movement pattern.
-6. **Finish, and look at the exercise.** Finish the workout and see it saved on Home. Then tap an exercise name to open its page, with your best set and history.
-7. **Plans.** From **Training**, open the week view and the month view.
-8. **Tell Tess.** Tap Tess and choose **Write**, then type "log bench 80x8", "buy milk, eggs, 2 lemons", "call mum thursday" or "note: bar felt heavy". Each shows as a faded ghost row that saves after 2 seconds, and you can undo it. Speak and Show say "comes next" for now.
-9. **Groceries.** Go to **Kitchen**, then Groceries. The items from step 8 are sorted by aisle. Tap one to strike it, then finish with the "Done shopping" stroke.
-10. **Notes and Review.** Open the note from step 8, then swipe to **Review** to see the week as a sentence and zoom into The week.
+**Today and Now**
+1. **Finish a task with a swipe.** On Today, rest a finger still on a row in Next or Later for a moment, then drag it right. The name strikes through, the row leaves, and Tess says "Done. *title*." with UNDO, which brings it back.
+2. **Flick past the rows.** Flick quickly left or right across the same rows without pausing. Home pages to Review or Training, and no task is finished or moved.
+3. **Move a task.** Press still on a row, then drag it left. A timed task says "Moved to tomorrow." and an untimed one "Moved to next week.", both with UNDO.
+4. **Rest day.** On a planned rest day, Now shows a quiet "Rest day" line instead of the next routine, which stays one tap away in Training. A running workout or anything timed in the next 15 minutes still comes first.
 
-**Bonus: Recipes.** In **Kitchen**, open Recipes and paste a recipe's text from a website or Notes. Watch it get read into ingredients and steps, then Save.
+**Workout**
+5. **Start and log.** Training, then today's routine. Each set opens filled in: hold to log it, turn the **weight dial** (plates per side beside it) and roll the **reps drum**. *Check:* the dial's clicks, and whether each hold lands as one clean clunk.
+6. **Fix a set.** Log two sets, tap set 1's stroke, change it, and tap "Save set 1". The other strokes dim, and Tess says "Set 1 is 80 × 7 now." (your numbers) with UNDO.
+7. **Remove a set mid-rest.** While a rest counts down, tap that set's stroke and tap REMOVE. Tess says "Set N removed.", and the countdown stops on the Lock Screen too.
+8. **Rest from the Lock Screen.** Lock the phone after a set: the rest runs there, and **Done** logs the next set without unlocking.
+9. **Swap, then leave.** During a rest, pull down on the exercise name, pick an alternative, then kill the app and reopen. Resume takes you back with the rest still counting.
+10. **Tess in the workout.** Tap her soul in the bottom-right: a writing line with CLOSE as a word. Double tap her to go back to Today, where Now shows Resume. On the last set, "Last one. Hold to finish." stays until you finish.
+11. **Finish, and look at the exercise.** Finish and see it saved. Tap an exercise name for its page, with your best set and history. *Only when it happens:* after a session where every set hit the top of the range, set 1 says "Up 2.5 kg from last time".
 
-*If a calm note ever shows at launch, that's the new data-safety guard (#84) protecting your data, not a crash.*
+**Tell Tess** (tap her, then Write)
+12. **"coffee at 7"** before 7 PM lands "Coffee, today 7 pm." A bare 1 to 6 means PM; 7 to 11 means the next one that hasn't passed today.
+13. **"watered plants sat"** saves a note dated last Saturday ("Noted for Saturday."), not a task.
+14. **"get a haircut", then "get coffee".** The haircut lands as a task in Later; coffee goes on Groceries.
+15. **"are we out of milk"** saves nothing. Questions are never filed as tasks or items.
+
+**Kitchen**
+16. **Groceries.** Kitchen, then Groceries. Type "3 egg" on the Add line: "3 eggs" files under its aisle. Hold the "Groceries" title (about 0.7 s) to start the shop: the aisle you're in is the big word, with the next one peeking. Tap items to strike them into the basket.
+17. **Clear the basket.** Mid-shop, tap the basket, hold "Clear the basket", then tap UNDO: everything goes back. Finish with the "Done" hold key. Tell us if the UNDO line ever shows a line from somewhere else.
+18. **Recipes (bonus).** In Kitchen, open Recipes and paste a recipe's text. It's read into ingredients and steps; then Save.
+
+**Review**
+19. **Backups.** On Review, scroll to the foot and tap "Backups". Go back once with "‹ Review" and once with an edge swipe. An edge swipe on Review itself does nothing, and nothing freezes.
+20. **Restore, safely.** Only if a Tessera copy is in Files: tap Restore and pick it. You get a question first; tap "Keep what's here", which changes nothing. Don't hold Replace on the phone.
+
+*If a calm note ever shows at launch, that's the data-safety guard protecting your data, not a crash.*
 
 *Known gaps, already queued, so no need to report them:*
-- *Tapping a logged set to fix it comes with #109. Undo of the last set works now.*
-- *Voice isn't in yet (Speak says "comes next").*
-- *Cook mode isn't built yet.*
-- *Some typed phrases still land wrong, especially past tense ("watered plants sat") or a bare hour ("coffee at 7" can land at 7 AM). Undo fixes them, and a grammar fix is next in line.*
+- *Voice isn't in yet (Speak says "comes next"), and cook mode isn't built.*
+- *A few typed phrases still land wrong: "buy a lightbulb" or "get a cake" can become a task; "tonight" with no time after 8 PM lands tomorrow; "move dentist to 3pm" can land in the past; a name ending in -ed ("Ahmed bday sat") can read as a past log. Undo fixes them.*
+- *Days still cut at midnight, so "tomorrow" typed after midnight and Now after midnight behave oddly. The 4 AM day fix is next for Core.*
+- *Review still marks rest days and half sessions like misses, and the week page doesn't show rest days yet. The Review fix is queued for Builder B.*
+- *A workout finished with no sets still saves, and some undo lines still use old words ("Undone.", "Last set removed."). Both are queued.*
 
 ## Look and feel: what to notice (from Design studio)
 
 1. **Type and paint on Home.** Does Inter Tight at the big sizes feel like your app? Does the painted background with hairline seams feel premium or washed out? Name one thing that looks stock.
-2. **The hands-on moments.** Hold to finish on Home, hold to log in a workout, the weight dial and the reps drum. Is each hold (about 0.7 s) worth holding, and does the haptic land as one clean clunk rather than a buzz?
-3. **Moving between places.** Swiping Review, Today and Training, zooming into an exercise and back, and starting a workout. Does anything jump, fade flatly or feel slow? Which transition did you like most?
-4. **Groceries strike and sink.** Is striking an item satisfying enough to use in a shop, and is the text readable at arm's length?
-5. **Tess's presence.** The soul in the corner opening into the capture surface, and the ghost row drying in 2 s. Does it feel alive without being distracting, and does cobalt read clearly as Tess's colour?
+2. **The hands-on moments.** Hold to finish, hold to log, the dial and the drum. Is each hold worth holding, and does the haptic land as one medium clunk with the softer stroke bloom?
+3. **Moving between places.** Swiping Review, Today and Training, zooming into an exercise and back, starting a workout. Does anything jump, fade flatly or feel slow? Which transition did you like most?
+4. **The shop.** Is striking an item satisfying in a real shop, and is the aisle word readable at arm's length?
+5. **Tess's presence.** The soul in the corner, the writing line, the ghost row drying in 2 s. Alive without being distracting? Does cobalt read clearly as Tess's colour?
 
-Screenshot anything that bugs you, or just say "this bit". Design takes your feedback first after the review.
+Screenshot anything that bugs you, or just say "this bit". Design takes your feedback first.
 
-## Nine questions for the huddle
+## Questions for the huddle
 
-1. **What did you reach for first, and what didn't you find?** This tells us whether Home's layout and rail are right before we add more apps.
-2. **Logging a set: is one hold, the dial and the drum fast enough between sets, or is anything in the way?** This decides how much of the next week goes into gym polish versus new areas.
-3. **Does the look feel like yours?** That covers paint, type, seams and Tess's bloom. What would you change first? Design can redirect now, cheaply, before more screens are built.
-4. **What should Tess do for you in the first week now that Claude is in?** For example: plan the day, answer "what did I lift", read recipes from links, or something else. This sets the order of the new Tess model layer.
-5. **After the gym and the kitchen, which area would you open daily?** The candidates are the Day log, Reading, Money, People or Home upkeep. This orders everything after M4.
-6. **What's running: keep the ledger, or move to the plate stack?** Design's plate stack concept is in `docs/design/plate-stack.md`, with a recording at `/mnt/project-files/tessera/design/plate-stack.mp4`. Builder B keeps the ledger until you choose. *Recommendation:* watch the recording first, and keep the ledger unless the stack feels clearly better in your hand.
-7. **Claude's monthly cap?** *Recommendation:* $10 a month, hard stop. Expected use is under $1, and at the cap Tess falls back to the phone and tells you once.
-8. **Can Claude see your sleep and energy?** *Recommendation:* no. The phone decides whether it's a light day and Claude only sees "light day: yes or no".
-9. **When Tess's grammar misses something you typed, should it go to Claude automatically?** *Recommendation:* yes, with a small cloud mark on the bloom, since it always lands as an undoable ghost row. Also: paste your Claude API key in Settings once the model layer ships (the coordinator will ask for it).
+1. **What did you reach for first, and what didn't you find?** This tells us whether Home's layout and rail are right before we add more.
+2. **Logging a set: is one hold, the dial and the drum fast enough between sets?** This decides gym polish versus new areas next week.
+3. **Does the look feel like yours?** Paint, type, seams and Tess's bloom. What would you change first?
+4. **What should Tess do for you first now that Claude is coming in?** Plan the day, answer "what did I lift", read recipes from links, or something else.
+5. **After the gym and the kitchen, which area would you open daily?** Day log, Reading, Money, People or Home upkeep.
+6. **What's running: keep the ledger, or move to the plate stack?** Recording at `/mnt/project-files/tessera/design/plate-stack.mp4`. *Recommendation:* keep the ledger unless the stack feels clearly better.
+7. **Claude's monthly cap?** *Recommendation:* $10 a month, hard stop; expected use is under $1.
+8. **Can Claude see your sleep and energy?** *Recommendation:* no. The phone decides "light day: yes or no" from your plan and calendar, never Health.
+9. **When Tess's grammar misses something, should it go to Claude automatically?** *Recommendation:* yes, with a small cloud mark, since it always lands as an undoable ghost row. Your key goes into Settings: Claude on the phone, typed by you, once that screen ships; never paste it in chat.

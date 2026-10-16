@@ -17,7 +17,7 @@ T1 TessModel and router (with op-log `route` and `model` columns), then T2 share
 - **Streaming is fine where the package gives it** (plan and paste fill in as they arrive). This replaces my earlier "no streaming".
 - **Tools: 10, not 8** (19:12). Add `completeTask {task: string}` and `rescheduleTask {task: string, startsAt: string(date-time)}` to Research's eight. Both are daily verbs, both exist as kernel actions, and both resolve tasks by name. Tick-off, timers and open-list stay as no tool for now. Research's `tess-eval-claude.md` updates those rows, and the pass bar stays at 90% with 0 false writes.
 - **Models:** Haiku 5.5 for capture, questions and pastes; Sonnet 5.5 for plan wording and hard pastes. No Opus yet.
-- **Key:** pasted once in Settings and stored in the Keychain on this device only. It never goes in the repo, logs, exports or the op log, and a test checks that. With no key, Claude stays off and Tess runs as today.
+- **Key:** typed once by Kaushik in Settings: Claude and stored in the Keychain as WhenUnlockedThisDeviceOnly (not synced, not in backups). A "Test" makes one tiny call (`../research/claude-key-test.md`). It never goes in the repo, logs, exports or the op log, and a test checks that. With no key, Claude stays off and Tess runs as today.
 - **Privacy:** each use sends only its own context pack, never the database. Health values are never sent; Plan my day sees only "light day: yes or no". A cloud mark shows on the bloom whenever data leaves the phone.
 - **Offline:** capture never blocks. A missed capture waits as "1 waiting for Tess" and becomes ghost rows when he's back, never committing on its own.
 
