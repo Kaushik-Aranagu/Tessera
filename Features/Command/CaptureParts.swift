@@ -181,6 +181,22 @@ struct CommandInterpreter {
             return "Your best \(exercise.name.lowercased()): \(Format.kilograms(best.weight)) × \(Int(best.reps)), "
                 + "e1RM \(Format.kilograms((best.e1RM * 10).rounded() / 10)) kg."
         }
+        // Never a task titled with a key, a secret, money or a body fact (board 0ah, Research AU): a question about
+        // one is answered on the phone and saves nothing; anything else is a private note, as the Bar files it.
+        if looksLikeClaudeKey(text) {
+            return claudeKeyLine
+        }
+        let secret = SecretWords.mentions(text)
+        if secret || PrivateFacts.isWalled(text) {
+            if text.hasSuffix("?") {
+                return secret ? "It's in your private notes." : "That stays on this phone."
+            }
+            guard (try? model.engine.perform(CreateNote(body: text, isPrivate: true), by: .user)) != nil else {
+                return "Couldn’t save that."
+            }
+            model.touch()
+            return "\(SecretWords.title), kept."
+        }
         let title = text.prefix(1).uppercased() + text.dropFirst()
         guard model.capture(title: title, startsAt: AppClock.now.addingTimeInterval(4 * 3600)) != nil else {
             return "Couldn’t save that."

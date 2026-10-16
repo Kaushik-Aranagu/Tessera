@@ -55,7 +55,10 @@ public final class TessCaptureEngine: TessCapturing {
         }
         // Never log a pasted Claude key, even as a miss (the router refuses it, and the miss log is a file).
         // Nor a line with a secret word (Research 134): the miss log is a file.
-        if !result.understood, !looksLikeClaudeKey(phrase), !SecretWords.mentions(phrase) {
+        // Nor money or a body fact (board 0ah).
+        if !result.understood, !looksLikeClaudeKey(phrase), !SecretWords.mentions(phrase),
+           !PrivateFacts.isWalled(phrase)
+        {
             missLog?.record(phrase, at: context.now, route: result.source.rawValue, source: source)
         }
         return result
