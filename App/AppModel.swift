@@ -93,6 +93,12 @@ final class AppModel {
         soul.mode
     }
 
+    /// "Tess has eyes" (Settings › Tess, off by default). Core's `tessEyes` field is on its way; until then only the
+    /// simulator's `-tessEyes` flag turns them on (LaunchFlags is simulator-only, so never on the phone).
+    var tessHasEyes: Bool {
+        LaunchFlags.has("-tessEyes")
+    }
+
     /// Home (the launcher Tess paints in) vs Today.
     /// Where you were when Tess took you Home; tapping her again goes back.
     var homeReturnPath: [Route]?

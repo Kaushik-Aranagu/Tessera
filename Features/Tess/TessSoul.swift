@@ -31,12 +31,17 @@ struct TessSoul: View {
     var mode: Mode
     /// Loops one-shot modes (for galleries); in the app they play once.
     var loopsOneShots = false
+    /// Two ink dots (tess-motion.md §1): a setting, off by default.
+    var eyes = false
+    var gaze: SoulGaze = .ahead
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.onWorkoutGround) private var onWorkoutGround
     @State private var layers: [SoulLayer] = []
     @State private var doneCount = 0
+    /// The eyes fade out in 120 ms as Done begins and back in 200 ms after it ends, so Done plays as built.
+    @State private var eyesShown = true
 
     var body: some View {
         let slow = SoulParameters.table(mode).isSlow
@@ -62,17 +67,41 @@ struct TessSoul: View {
             .drawingGroup()
         }
         .frame(width: size.width, height: size.height)
+        .overlay {
+            if eyes {
+                eyesLayer(palette: palette, slow: slow)
+            }
+        }
         .frame(width: 96, height: 96)
-        .onChange(of: mode, initial: true) { _, new in
+        .onChange(of: mode, initial: true) { old, new in
             layers = SoulBlend.push(new, onto: layers, at: .now)
             if new == .done {
                 doneCount += 1
+                withAnimation(.linear(duration: 0.12)) { eyesShown = false }
+            } else if old == .done || !eyesShown {
+                withAnimation(.linear(duration: 0.2)) { eyesShown = true }
             }
         }
         .sensoryFeedback(.success, trigger: doneCount)
         .accessibilityElement()
         .accessibilityLabel(accessibilityText)
         .allowsHitTesting(false)
+    }
+
+    /// The eyes ride the same frame as the dabs. Their own timeline keeps the blink under Reduce Motion (30 fps),
+    /// when the soul's is paused.
+    private func eyesLayer(palette _: SoulPalette, slow: Bool) -> some View {
+        let look = ThemeStore.shared.paintLook
+        let dark = Color(hex: look.isDark ? look.ground : look.ink)
+        return TimelineView(.animation(minimumInterval: reduceMotion || slow ? 1 / 30 : 1 / 60)) { context in
+            let frame = reduceMotion
+                ? SoulFrame.sample(mode, time: 0, elapsed: 0, still: true)
+                : SoulBlend.frame(layers, at: context.date, loops: loopsOneShots)
+                ?? SoulFrame.sample(mode, time: context.date.timeIntervalSinceReferenceDate, elapsed: 0)
+            SoulEyes(frame: frame, time: context.date.timeIntervalSinceReferenceDate, gaze: gaze, color: dark,
+                     still: reduceMotion)
+        }
+        .opacity(eyesShown ? 1 : 0)
     }
 
     /// Room for the done ring at 2.6× and, for a hand-off, the flight to the target.

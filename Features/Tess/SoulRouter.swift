@@ -48,6 +48,16 @@ final class SoulRouter {
     private(set) var isPinned = false
     /// The brighten after a local capture (900 ms), drawn by the chrome.
     private(set) var isBright = false
+    /// She looks at her own line for a second after she speaks (§1).
+    private(set) var isLookingAtLine = false
+    /// Where her eyes look: at him while she listens, at her line just after she speaks, else ahead.
+    var gaze: SoulGaze {
+        if mode == .listening {
+            return .atHim
+        }
+        return isLookingAtLine ? .atLine : .ahead
+    }
+
     /// An ask is waiting beside her (§8): no lens, no roam.
     private(set) var isAskWaiting = false
     /// The capture surface is open (her line's 4 s doesn't return her to rest under it).
@@ -58,6 +68,7 @@ final class SoulRouter {
     @ObservationIgnored private var timer: Task<Void, Never>?
     @ObservationIgnored private var brightTimer: Task<Void, Never>?
     @ObservationIgnored private var lineTimer: Task<Void, Never>?
+    @ObservationIgnored private var glanceTimer: Task<Void, Never>?
     @ObservationIgnored private let clock: () -> Date
 
     init(page: Page = .home, clock: @escaping () -> Date = { AppClock.now }) {
@@ -97,6 +108,13 @@ final class SoulRouter {
             settle(rest)
             brighten()
         case .lineShown:
+            isLookingAtLine = true
+            glanceTimer?.cancel()
+            glanceTimer = Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled else { return }
+                self?.isLookingAtLine = false
+            }
             lineTimer?.cancel()
             lineTimer = Task { @MainActor [weak self] in
                 try? await Task.sleep(for: .seconds(4))
@@ -147,7 +165,8 @@ final class SoulRouter {
         case .lensReleased:
             isPinned = false
         case .backgrounded:
-            timer?.cancel()
+            // A Done cut by the background would never end: she goes back to rest (QA L6).
+            settle(rest)
         }
     }
 
