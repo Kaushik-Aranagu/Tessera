@@ -246,7 +246,9 @@ public enum HomeLines {
         }
         switch (fact.kind, fact.state) {
         case (.rest, _), (.task, _):
-            return same(Self.weekdays[calendar.component(.weekday, from: now) - 1])
+            // His day's weekday: at 01:00 Friday it is still Thursday (QA on #334).
+            let day = TesseraDay(calendar: calendar).day(of: now)
+            return same(Self.weekdays[calendar.component(.weekday, from: day) - 1])
         case (.workout, .done):
             // "done at 7:40 pm"; a workout with no sets only says when: "this afternoon".
             guard let ended = fact.endedAt else { return (nil, nil) }

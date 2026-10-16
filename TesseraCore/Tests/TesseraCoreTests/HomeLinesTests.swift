@@ -99,6 +99,9 @@ struct HomeLinesTests {
             "\(line.context ?? "")"
         )
         #expect(line.objectID == nil && line.detail == nil)
+        // At 01:00 Friday his day is still Thursday (QA on #334).
+        let late = HomeLines.line(for: rest, now: Self.at(1).addingTimeInterval(86400), calendar: Self.calendar)
+        #expect(late.context == "Thursday")
     }
 
     @Test func cookingAndShopping() {
