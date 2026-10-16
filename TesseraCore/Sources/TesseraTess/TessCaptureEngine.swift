@@ -109,12 +109,12 @@ public final class TessCaptureEngine: TessCapturing {
         switch choice {
         case .sets:
             let weight = grammar.lastSet(in: entry)?.weight ?? 0
-            let set = TessGrammar.Parse.set(entry: entry, weight: weight, reps: ask.reps, kind: .working,
-                                            phrase: .full)
+            let set = TessGrammar.Parse.set(entry: entry, weight: weight, reps: ask.reps, kind: ask.kind,
+                                            phrase: .full, rpe: ask.rpe)
             return performSets(Array(repeating: set, count: ask.count), context: context)
         case .kilograms:
-            let said = TessGrammar.Parse.set(entry: entry, weight: Double(ask.count), reps: ask.reps, kind: .working,
-                                             phrase: .full)
+            let said = TessGrammar.Parse.set(entry: entry, weight: Double(ask.count), reps: ask.reps, kind: ask.kind,
+                                             phrase: .full, rpe: ask.rpe)
             guard let set = grammar.snap(said, entry: entry) else {
                 return TessCapture(records: [], line: "\(ask.kilogramsAnswer) isn't loadable here.", source: .grammar)
             }

@@ -36,10 +36,13 @@ public struct LogSet: EngineAction {
     public var source: SetSource?
     /// The unit `weight` is in; stored as kilograms either way.
     public var unit: MassUnit?
+    /// When it was done, for a set logged into a past day's workout; now when nil. Off the descriptor.
+    public var time: Date?
 
     public init(entry: UUID, weight: Double, reps: Double, rpe: Double? = nil, isWarmup: Bool? = nil,
-                kind: SetKind? = nil, source: SetSource? = nil, unit: MassUnit? = nil)
+                kind: SetKind? = nil, source: SetSource? = nil, unit: MassUnit? = nil, time: Date? = nil)
     {
+        self.time = time
         self.entry = entry
         self.weight = weight
         self.reps = reps
@@ -64,14 +67,14 @@ public struct LogSet: EngineAction {
         }
         try transaction.set("reps", to: .number(reps), on: set)
         try transaction.set("rpe", to: rpe.map(FieldValue.number), on: set)
-        try transaction.set("loggedAt", to: .date(.now), on: set)
+        try transaction.set("loggedAt", to: .date(time ?? .now), on: set)
         let setKind = isWarmup == true ? .warmup : kind ?? .working
         if setKind != .working {
             try transaction.set("kind", to: .choice(setKind.rawValue), on: set)
         }
         try transaction.set("source", to: source.map { .choice($0.rawValue) }, on: set)
         if let workout = try transaction.store.ancestor(of: entry, ofClass: transaction.classDef(.workout)) {
-            try transaction.touchWorkoutProcess(workout, at: .now)
+            try transaction.touchWorkoutProcess(workout, at: time ?? .now)
         }
         return set
     }
@@ -325,24 +328,25 @@ public struct LogExercise: EngineAction {
             .last { transaction.store.linkedClass("exercise", of: $0)?.id == exercise }
             ?? AddExercise(workout: workout.id, exercise: exerciseClass.id).apply(&transaction)
         return try (0 ..< count).map { _ in
-            try LogSet(entry: entry.id, weight: weight, reps: reps, unit: unit).apply(&transaction)
+            // A past day's sets are stamped on that day, so anything sorting by loggedAt keeps them there (QA D2).
+            try LogSet(entry: entry.id, weight: weight, reps: reps, unit: unit, time: on).apply(&transaction)
         }
     }
 
-    /// That day's finished workout (by his 4 AM day), or a new one started and ended at `day` (Tess passes noon), with
+    /// That day's workout (by his 4 AM day), or a new one started and ended at `day` (Tess passes noon), with
     /// no process.
     @MainActor private func pastWorkout(on day: Date, _ transaction: inout Transaction) throws -> ObjectRecord {
         let store = transaction.store
         let workoutClass = try transaction.classDef(.workout)
         let tessera = TesseraDay(calendar: .current)
         let key = tessera.day(of: day)
-        let finished = store.objects(of: workoutClass).last {
-            guard let started = store.value("startedAt", of: $0)?.dateValue,
-                  store.value("endedAt", of: $0) != nil else { return false }
+        // Finished or not (one left open that day is matched too, QA D1).
+        let sameDay = store.objects(of: workoutClass).last {
+            guard let started = store.value("startedAt", of: $0)?.dateValue else { return false }
             return tessera.day(of: started) == key
         }
-        if let finished {
-            return finished
+        if let sameDay {
+            return sameDay
         }
         let workout = transaction.create(workoutClass, title: "Workout")
         try transaction.set("startedAt", to: .date(day), on: workout)

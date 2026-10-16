@@ -38,6 +38,19 @@ struct DatedLiftAskTests {
         #expect(ProcessTable(engine: engine).running() == nil)
     }
 
+    @Test func setsAreStampedOnThatDayAndAnOpenWorkoutIsJoined() async throws {
+        // QA D2: loggedAt is Monday, not now. QA D1: Monday's workout left open is still Monday's.
+        let open = try store.create(#require(classes[.workout]), title: "Push")
+        try engine.perform(AddExercise(workout: open.id, exercise: #require(classes[.benchPress]).id), by: .user)
+        try store.set("startedAt", to: .date(TesseraDayTests.at(10, 12, 18)), on: open)
+        _ = await tess.capture("squat 100x5 mon", context: context)
+        _ = tess.answer(TessDatedLiftAsk.Choice.log, context: context)
+        #expect(workouts.count == 1 && open.orderedChildren.count == 2)
+        let set = try #require(open.orderedChildren.last?.orderedChildren.first)
+        let logged = try #require(store.value("loggedAt", of: set)?.dateValue)
+        #expect(TesseraDay(calendar: TesseraDayTests.calendar).day(of: logged) == TesseraDayTests.at(10, 12, 0))
+    }
+
     @Test func notNowWritesNothing() async {
         _ = await tess.capture("squat 100x5 tue", context: context)
         let skipped = tess.answer(TessDatedLiftAsk.Choice.notNow, context: context)

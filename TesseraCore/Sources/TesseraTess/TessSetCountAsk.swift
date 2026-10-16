@@ -17,12 +17,19 @@ public struct TessSetCountAsk: Sendable, Equatable {
     public let reps: Double
     /// A bodyweight lift: the weight answer is added load ("+5 kg").
     public let bodyweight: Bool
+    /// Said with it ("warmup 2x10", "2x10 @8"): kept on whichever answer logs (QA Q9).
+    public let kind: SetKind
+    public let rpe: Double?
 
-    public init(entry: UUID, count: Int, reps: Double, bodyweight: Bool) {
+    public init(entry: UUID, count: Int, reps: Double, bodyweight: Bool, kind: SetKind = .working,
+                rpe: Double? = nil)
+    {
         self.entry = entry
         self.count = count
         self.reps = reps
         self.bodyweight = bodyweight
+        self.kind = kind
+        self.rpe = rpe
     }
 
     /// "2 × 10: 2 sets, or 2 kg?" (exact, Research's Q01 to Q19).

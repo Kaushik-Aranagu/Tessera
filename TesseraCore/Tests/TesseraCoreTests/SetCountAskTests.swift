@@ -78,6 +78,7 @@ struct SetCountAskTests {
         .init("Q26", "5 kg x 5", .bw, "Set 2 logged. +5 × 5."),
         .init("Q27", "3 sets of 10", .db, "Sets 2 to 4 logged. 24 × 10."),
         .init("K888", "2 kilos x 10", .db, "Set 2 logged. 2 × 10."),
+        .init("BY3", "26 by 8", .db, "Set 2 logged. 26 × 8."),
         .init("K889", "7x10", .db, "Set 2 logged. 6 × 10, nearest load to 7."),
     ]
 
@@ -186,6 +187,26 @@ struct SetCountAskTests {
             try engine.discard(record)
         }
         #expect(entry.orderedChildren.count == 1)
+    }
+
+    @Test func anRPEOrKindStillAsksAndIsKept() async throws {
+        // QA Q9: "2x10 @8" and "warmup 2x10" ask like "2x10"; the answer keeps the RPE and the kind.
+        let entry = try entry(.db)
+        let asked = await tess.capture("2x10 @8", context: context(entry))
+        #expect(asked.line == "2 × 10: 2 sets, or 2 kg?")
+        #expect(tess.answer(.kilograms, context: context(entry)).line == "Set 2 logged. 2 × 10, RPE 8.")
+        let warm = try SetCountAskTests()
+        let warmEntry = try warm.entry(.db)
+        _ = await warm.tess.capture("warmup 2x10", context: warm.context(warmEntry))
+        let warmups = warm.tess.answer(.sets, context: warm.context(warmEntry))
+        #expect(warmups.records.count == 2)
+        #expect(warmEntry.orderedChildren.suffix(2).allSatisfy {
+            warm.store.value("kind", of: $0) == .choice("warmup")
+        })
+        let bar = try SetCountAskTests()
+        let barEntry = try bar.entry(.bar)
+        let barAsk = await bar.tess.capture("3x10 @8", context: bar.context(barEntry))
+        #expect(barAsk.line == "3 × 10: 3 sets, or 3 kg?" && barAsk.records.isEmpty)
     }
 
     // MARK: Sets with errands, commas (A169, A170, K874, QA Q7a)
