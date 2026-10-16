@@ -216,6 +216,21 @@ time counts as a number because `isBodyShaped` never strips times).
 | BW125 | `weigh the flour 500 g` | no | MB34 pass row | false: weigh word with no number | ok | plain |
 | BW126 | `bench 80 x 8` | no | MB31 pass row | false: set notation (`isTraining`) | ok | plain |
 
+**Bare medicine names (decisions 2:52 pm, Core 0ac slice 2).** A medicine name alone, or with only a buy or list verb, is walled. Today `medicines` needs a number beside the word, so every row below leaks.
+
+| ID | Phrase | Wall? | Why | Master today | Result | Proposed |
+|---|---|---|---|---|---|---|
+| BW127 | `advil` | yes | Bare medicine name (the AU and AX finding) | false: `advil` needs a number | **leak** | walled |
+| BW128 | `tylenol` | yes | Bare medicine name | false: no number | **leak** | walled |
+| BW129 | `ibuprofen` | yes | Bare generic name | false: no number | **leak** | walled |
+| BW130 | `lexapro` | yes | Bare name, mental health medication | false: no number | **leak** | walled |
+| BW131 | `zyrtec` | yes | Bare name, allergy medication | false: no number | **leak** | walled |
+| BW132 | `add advil to the list` | yes | List verb plus medicine name | false: no number | **leak** | walled |
+| BW133 | `groceries: milk, advil, eggs` | yes | One medicine item walls that item, not the whole list (the AX groceries path) | false: no number | **leak** | walled item; milk and eggs plain |
+| BW134 | `Advil` | yes | Case: capitalized brand | false: no number | **leak** | walled |
+| BW135 | `vitamin d` | no | Trap: supplement, not a condition | false: no word in any set | ok | plain |
+| BW136 | `cough drops` | no | Trap: shop item (decided plain with flu shot and bare "PT" at 1:36 pm) | false: no word in any set | ok | plain |
+
 ## 4. Word additions, set by set
 
 All words are lowercase whole words as `words(_:)` splits them. "No number" means the word walls by itself (the
