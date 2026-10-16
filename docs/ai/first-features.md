@@ -57,7 +57,7 @@ It ships in two halves so the three dots go first, without waiting on Claude:
    "numbers": [5, 6, 7], "rules": "Push A done. Bench best."},
   {"id": "k1", "kind": "cook", "title": "Chili", "state": "paused", "step": 3, "steps": 8,
    "numbers": [3, 8], "rules": "Chili, on step 3."}],
- "memory": ["Usually trains 6 to 8 pm.", "Wed: Pull A done, cooked chili."]}
+ "memory": ["You usually train after work.", "Wed: Pull A done, cooked chili."]}
 ```
 
 **Instructions** (stable text, after the shared house voice):
@@ -87,7 +87,7 @@ You write Tessera's Home lines: one line per item, so he knows where things stan
 | H2 | Push A done, same routine last ran 9 days ago | Push A done. | Push day done, first in nine days. ✗ (number word: must be a digit from `numbers`, so "first in 9 days") |
 | H3 | Pull B paused at set 2 of row, 40 min ago | Row paused at set 2. | Rows paused at set 2. |
 | H4 | Legs running, set 3 of squat | Squat, set 3. | Squat, set 3 up. |
-| H5 | Legs planned, 6:10 pm, memory "usually trains 6 to 8 pm" | Legs this evening. | Legs this evening, your usual slot. |
+| H5 | Legs planned, 6:10 pm, memory "You usually train after work." | Legs this evening. | Legs this evening, your usual slot. |
 | H6 | Same, 11 pm, not started | Legs today. | Legs still on for today. ✗ ("still" grades him; keep rules) |
 | H7 | Rest day, Sunday | Rest day. | Rest day. |
 | H8 | Chili paused at step 3 of 8 | Chili, on step 3. | Chili waiting at step 3. |
