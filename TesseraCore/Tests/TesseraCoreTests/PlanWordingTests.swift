@@ -100,7 +100,8 @@ struct PlanWordingTests {
     }
 
     var pack: PlanPack? {
-        PlanPack(plan: d01, now: now, calendar: DayPlanTests.calendar, calendarKnown: true, restDay: false)
+        PlanPack(plan: d01, now: now, calendar: DayPlanTests.calendar, calendarKnown: true, restDay: false,
+                 otherNames: ["Sort the garage", "Mum's birthday", "Push A"])
     }
 
     static let ideal = #"""
@@ -168,6 +169,12 @@ struct PlanWordingTests {
         ("V11", "Due 5 pm.", "Due 17:00."),
         ("V11", "Due 5 pm.", "Due 4 pm."),
         ("V12", "while the morning is quiet.", "while you're not tired."),
+        // QA T1: an added, dropped or renamed block.
+        ("V2", #""id":"e3","start":"15:00""#, #""id":"e9","start":"15:00""#),
+        ("V2", #"{"id":"e3","start":"15:00","end":"15:30","lineText":""},"#, ""),
+        // V13 (Product 10:24 PM PT, fixture N5): something he has that isn't in this plan.
+        ("V13", "while the morning is quiet.", "before Sort the garage."),
+        ("V13", "a quick one to open with.", "before Mum's birthday."),
     ])
     func eachBadReplyIsCaught(_ code: String, _ from: String, _ to: String) throws {
         let bad = Self.ideal.replacingOccurrences(of: from, with: to)
@@ -230,5 +237,83 @@ struct PlanWordingTests {
         #expect(await wording().word(d01, pack: pack)
             == .rules(line: "Claude paused until Dec 1. Here's your usual plan."))
         #expect(PlanStub.requests.isEmpty)
+    }
+
+    @Test(arguments: [(2026, 11, 1), (2027, 3, 14)])
+    func aDSTDayPacksWallClockTimes(_ date: (Int, Int, Int)) throws {
+        // QA P1: the pack and the applied plan read 07:00 on the clock, not an hour off.
+        let calendar = DayPlanTests.calendar
+        let open = try #require(calendar.date(from: DateComponents(year: date.0, month: date.1, day: date.2, hour: 6)))
+        var input = PlanInput(now: open, calendar: calendar)
+        input.later = [PlanInput.Task(title: "Fix bike light", minutes: 20, updatedAt: open)]
+        let plan = DayPlanner.plan(input)
+        let pack = try #require(PlanPack(plan: plan, now: open, calendar: calendar, calendarKnown: true,
+                                         restDay: false))
+        #expect(pack.json.contains(#""window":["07:00","21:00"]"#) && pack.json.contains(#""start":"07:00""#))
+        let reply = try JSONDecoder().decode(ProposePlan.self, from: Data(#"""
+        {"blocks":[{"id":"t1","start":"07:00","end":"07:20","lineText":""}],"startWith":{"id":"t1",
+        "line":"Bike light first, 7 am."},"ghostLines":[{"id":"t1","line":"20 min on the bike light."}],"note":null}
+        """#.utf8))
+        #expect(PlanProposalValidator.violations(reply, against: pack).isEmpty)
+        let applied = plan.applying(reply, pack: pack, calendar: calendar, now: open)
+        #expect(try calendar.component(.hour, from: #require(applied.plan.ghosts.first).start) == 7)
+    }
+
+    @Test func aRestDaySaysOnlyRestDay() throws {
+        // V13: no workout block, so no training words; on a rest day the note "Rest day." alone is fine.
+        var input = PlanInput(now: now, calendar: DayPlanTests.calendar)
+        input.later = [PlanInput.Task(title: "Fix bike light", minutes: 20, updatedAt: now)]
+        let plan = DayPlanner.plan(input)
+        let rest = try #require(PlanPack(plan: plan, now: now, calendar: DayPlanTests.calendar, calendarKnown: true,
+                                         restDay: true))
+        func reply(_ note: String) throws -> ProposePlan {
+            let json = #"{"blocks":[{"id":"t1","start":"08:00","end":"08:20","lineText":""}],"#
+                + #""startWith":{"id":"t1","line":"Bike light first."},"#
+                + #""ghostLines":[{"id":"t1","line":"20 min on the bike light."}],"note":""# + note + #""}"#
+            return try JSONDecoder().decode(ProposePlan.self, from: Data(json.utf8))
+        }
+        #expect(try PlanProposalValidator.violations(reply("Rest day."), against: rest).isEmpty)
+        #expect(try PlanProposalValidator.violations(reply("No gym today."), against: rest).contains("V13"))
+    }
+
+    @Test func eachFailureHasProductsLine() async throws {
+        // Product 10:24 PM PT, and effort low on the wire (QA P5).
+        PlanStub.reply = (401, "{}")
+        #expect(await wording().word(d01, pack: pack)
+            == .rules(line: "That key didn't work. Paste it again? Here's your usual plan."))
+        PlanStub.reply = (529, "{}")
+        #expect(await wording().word(d01, pack: pack) == .rules(line: "Here's your usual plan."))
+        PlanStub.failure = .notConnectedToInternet
+        #expect(await wording().word(d01, pack: pack) == .rules(line: "Here's your usual plan."))
+        let body = try #require(String(data: PlanStub.bodies[0], encoding: .utf8))
+        #expect(body.contains(#""effort":"low""#))
+    }
+
+    @Test func eventTitlesCanStayOnThePhone() throws {
+        let pack = try #require(PlanPack(plan: d01, now: now, calendar: DayPlanTests.calendar, calendarKnown: true,
+                                         restDay: false, includesEventTitles: false))
+        #expect(!pack.json.contains("Standup") && !pack.json.contains("Priya"))
+        #expect(pack.json.contains(#""kind":"event","min":15,"start":"09:30","title":"busy""#))
+        #expect(pack.json.contains("Reply to landlord") && pack.json.contains("Push A"))
+    }
+
+    @Test func aRejectedPackIsRememberedAndTheSwitchIsOne() async {
+        // Merge check on #298: reopening after a rejection makes no second paid call.
+        PlanStub.queue = [(200, Self.reply(Self.ideal.replacingOccurrences(of: "Due 5 pm.", with: "Due 17:00.")))]
+        let wording = wording()
+        _ = await wording.word(d01, pack: pack)
+        _ = await wording.word(d01, pack: pack)
+        #expect(PlanStub.requests.count == 1)
+        // "Tess asks Claude" off: nothing is sent.
+        let off = self.wording()
+        off.allowed = { false }
+        #expect(await off.word(d01, pack: pack) == .rules(line: nil) && PlanStub.requests.count == 1)
+    }
+
+    @Test func aCutOffReplyShowsTheRulesPlan() async {
+        PlanStub.queue = [(200, Self.reply(Self.ideal).replacingOccurrences(of: #""stop_reason":"tool_use""#,
+                                                                            with: #""stop_reason":"max_tokens""#))]
+        #expect(await wording().word(d01, pack: pack) == .rules(line: nil))
+        #expect(ledger.calls().last.flatMap { store.value("outcome", of: $0)?.stringValue } == "max_tokens")
     }
 }
