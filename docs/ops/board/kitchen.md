@@ -2,6 +2,8 @@
 
 **Now:** accept each kitchen screen as Core lands it, in `docs/product/kitchen-acceptance.md`. Engine 1-9 and Groceries #58 done (10 fixes relayed). Recipe page and Paste #86 accepted: pass, 3 polish fixes, corpus gaps ranked for Paste hardening (#88).
 
+**Fix now (small):** in `cook-mode-acceptance.md`, a stopped timer says "Simmer stopped." (Research #175 `tess-voice.md`; decisions.md 6:37 PM PT). Check the doc for any other line that disagrees with tess-voice.
+
 **Next:** (Work that needs nothing from Core. Acceptance of Core's slices still happens whenever one lands.)
 1. Kitchen v2 build sheets with Design, for L1 to L3 (recipe from a link) and the top 3 backlog items. Done when each has a sheet on Design's branch, ready the week v2 opens. Include slice P (pantry light) from Research's `../research/pantry-light.md`, so v2 can start on Oct 22 if he says yes.
 2. Accept cook mode when Builder A lands it (kitchen slices 12 and 12b, against #127 and `cook-mode-script.md`). Until then, the next item.
