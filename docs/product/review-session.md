@@ -36,8 +36,8 @@ Every key is a painted stroke word, not a button. **Tess** is the soul in the co
    until you finish or close it; Home then shows the night look.
 8. **Out of a workout, back to white.** [#215] Phone in Light, nothing pinned. Start a workout, tap an exercise name
    to open its page, go back, then finish or close the workout. Expect: Home is white with no glow around Tess's soul or the seams. (QA review-215 smoke step.)
-9. **Lock Screen in the look.** [#215] Log a set, lock the phone. Expect: in Light the rest card is plum-black with
-   an amber timer; in Dark it is pure black with a warmer amber. The Dynamic Island is black in every look.
+9. **Rest on the Lock Screen.** [#215, #269] Log a set, lock the phone. Expect the rest card in Cobalt sky with the
+   horizon timer in every look, Light or Dark. The Dynamic Island is black in every look.
 
 **Workout**
 10. **Weights the bar can't make.** [#205, #210] In a workout on a barbell lift, tap Tess, then Write "81 for 8".
@@ -170,11 +170,13 @@ A20. **Restore, safely.** [#120] Only if a Tessera copy is in Files: tap Restore
 
 ## Look and feel: what to notice (from Design studio)
 
-1. **The five looks.** Does Inter Tight at the big sizes feel like your app on Porcelain and on Obsidian? Is Porcelain by day right, or should Plein come back as the default? Name one thing that looks stock.
-2. **The hands-on moments.** Hold to finish, hold to log, the dial and the drum. Is each hold worth holding, and does the haptic land as one medium clunk with the softer stroke bloom?
-3. **Moving between places.** Swiping Review, Today and Training, zooming into an exercise and back, starting a workout. Does anything jump, fade flatly or feel slow? Which transition did you like most?
-4. **The shop.** Is striking an item satisfying in a real shop, and is the aisle word readable at arm's length?
-5. **Tess's presence.** The soul in the corner, the writing line, the ghost row drying in 2 s. Alive without being distracting? Does cobalt read clearly as Tess's colour?
+*For the Oct 22 build (444e72b). Five things, about a minute each. Two changes you asked for are merged but **not in this build**: the thin ink line under action words (Log set, Finish and Start still sit on the thick band you didn't like, #278), and Speak (voice still says it comes next, #273). The Settings page, the Day log, Habits and the evening on Now aren't in it either, so skip judging those.*
+
+1. **One base, day and night.** *Path:* by day, START today's workout from Now, log a set, finish, then turn on Dark Mode. Expect the workout on the same white as Home, with only its layers on top, and Home in true black once Dark Mode is on. Does anything still feel like a separate room? The Lock Screen rest card stays Cobalt sky in every look; that's your pick.
+2. **Colour only in moments.** *Path:* on Home, drag a task right to finish it. Expect the strike to paint in the row's colour, then dry to ink, and no coloured dots anywhere at rest. Is the moment dramatic enough, or too quiet?
+3. **The calmer capture.** *Path:* tap Tess's soul, tap Write, type something you'd really log, then Return. Expect smaller words, one question line, no suggestions, and the line drying for 2 s before Tess answers. Neat and peaceful, or still busy?
+4. **Changing the look.** *Path:* Review, scroll to the foot, tap "Porcelain". Expect the paint to flood out from Tess's soul into Plein with a light tick. Tap back round to Porcelain, then hold a name to pin it. Is the flood worth seeing every time? (Next build moves this to a Settings page, and the flood starts from the name you tap.)
+5. **The day stroke.** *Path:* on Home, look at the line under the day label, then swipe to Review and back. Expect a thin stroke that ends at now with a slow sheen, and a small carriage under the pages. This is the weight the action words get next build. Is it thin enough?
 
 Screenshot anything that bugs you, or just say "this bit". Design takes your feedback first.
 
