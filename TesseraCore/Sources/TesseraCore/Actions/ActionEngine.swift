@@ -222,6 +222,13 @@ public final class ActionEngine {
         Array(newestFirst().prefix(limit))
     }
 
+    /// Records made in `start ..< end`, newest first. Filters before it sorts, so one day's read never sorts years of
+    /// history (the Day log's window, QA S1 on #318).
+    public func history(from start: Date, to end: Date) -> [OpRecord] {
+        store.context.operations.values.filter { $0.createdAt >= start && $0.createdAt < end }
+            .sorted { ($0.createdAt, $0.id.uuidString) > ($1.createdAt, $1.id.uuidString) }
+    }
+
     /// Actions that touched an object, newest first (for the object page's history scrubber).
     public func history(of objectID: UUID, limit: Int = 100) -> [OpRecord] {
         Array(newestFirst().lazy.filter { $0.objectIDs.contains(objectID) }.prefix(limit))
