@@ -168,3 +168,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [tess-knows-trace.md](tess-knows-trace.md) | Core, Builder B, AI, Design: What Tess knows (Design 49) traced against AI-7 to AI-9 and #350, 4 data gaps, 12 smaller, 12 test rows |
 | [next-build-script.md](next-build-script.md) | QA: phone script for the build after 7b321d2: glass tabs, Training part two, Field 18, AI-1 Home lines |
 | [fixtures/tess-memory.md](fixtures/tess-memory.md) | Core: acceptance, screen and turnover rows for #356 TessMemoryStore under #357 and Design 49, traced against e098e7e |
+| [fixtures/week-rules-lines.md](fixtures/week-rules-lines.md) | Builder B, Design 46, Core: the week's three rules lines on WeekFacts, five weeks, 7 gaps (next day missing on Sundays, bests double-count) |
