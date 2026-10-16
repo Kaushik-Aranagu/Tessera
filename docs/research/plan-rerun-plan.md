@@ -21,6 +21,7 @@ Reads origin/master `ec47bd3`: `fixtures/plan-my-day-claude.md` (23 packs, the u
 - **Runs:** 3 per called pack. **Calls:** 24 x 3 = **72**.
 - **Typical** (in = 870 fixed + pack; out from the 23-pack doc, 217 to 322; 250 assumed for P02, P14, P24): one pass is 24,957 in and 5,929 out = 24,957 x 2,000 + 5,929 x 10,000 = 49,914,000 + 59,290,000 = 109,204,000 n$ = **$0.109**. Three passes: **$0.33**, about $0.0046 a call (range $0.0042 to $0.0055).
 - **Worst** (every call at 1,270 in and max_tokens 1,024 out): 1,270 x 2,000 + 1,024 x 10,000 = 12,780,000 n$ = $0.0128 a call; x 72 = 920,160,000 n$ = **$0.92**.
+- **Runner check (#502):** AI architecture measured d10 by bytes at about $0.0129 a call worst, a bit over the 1,270-token figure. At that rate 72 calls are about $0.93, still under the $1 stop. The gate reports two rows: called packs clean (model), and d14/d22 make no call (builder).
 - **Cache:** none assumed. If the fixed part were cached it would bill at 200 n$ a token, not 2,000, so the estimate only falls.
 - **$1 stop:** before each call the runner adds that call's worst ($0.0128) to what is spent; if the sum would pass $1 it stops and writes what it has. At $0.92 worst, the full 72 calls fit under it.
 
