@@ -107,3 +107,56 @@ These sit on the system platter, with no ground: type does the work.
 4. Copy from the tables above: "All quiet." everywhere; × in sets; `FinishWorkoutIntent` says "Finished. " + `WorkoutSummary.line`.
 5. Live Activity: the Undo state and the 60s "All 22 sets in." face.
 6. The expiry entry, and the 24h re-sign line from `embedded.mobileprovision`, as Research describes.
+
+## Addendum, Oct 16: the widgets speak Home's lines (Design item 54)
+**Kaushik's principle, in one line:** one plain Tess-written line per thing, with the detail one tap down; a widget is that line, nowhere to tap down, so it carries nothing else.
+
+Every widget's hero is **Home's line** (`docs/ai/home-lines.md`): the hero, then the context, as one sentence with a stop. The phone writes it from the same `HomeLines` lens Home draws from, so the widget and Home never disagree; Claude's context words ride along only once they've passed Home's checks. **No counts and no marks:** the 6 OF 6 · 22 SETS · 1 RECORD meta goes, "set 4 of 5" becomes "bench set 4", the circular accessories lose their rings and tick. The one number on any face is a time or a timer. The ground and ink stay the look's; the board shows all five.
+- Board: `mockups/widgets-home-lines.png` (source `studies/widgets-home-lines.html`): the medium widget in Porcelain, Plein, Celadon, Obsidian and Lacquer for six states, the small widgets, the Lock Screen accessories, the 60 s rest face.
+- Recording: `recordings/widgets-home-lines.mp4` (13 s), Porcelain medium: planned, running (the words push in from below), resting with the horizon draining on the seam, set 4 up, done with a best.
+
+### The line (Core: `HomeLines.widgetLine`)
+1. Start with the hero as Home has it: "Push A", "Push A, bench set 4", "Push A done", "Tacos tonight", "Rest day", "All quiet".
+2. Add the context line: a bare time word joins without a comma ("Push A today.", "Push A this evening."); a fact joins after a comma ("Push A done, a bench best.", "Tacos tonight, 2 to buy."); a context that repeats the hero's state word ("done at 7:40 pm" under "Push A done") drops, and its clock time becomes the meta ("7:40 PM").
+3. End with a stop. Title 34, up to two lines on the medium and large; the small drops to 26 past 18 characters.
+
+### Home Screen, every state, redrawn
+| State | The line | Meta (label, time only) | Word |
+|---|---|---|---|
+| Planned | Push A today. | 6:00 PM | Push A (`training` line; opens the routine) |
+| Running | Push A, bench set 4. | none | Resume |
+| Resting | Push A, bench set 4. | **1:32** (21/600) on the horizon seam, draining | Resume |
+| Timed task within 15 min | Call landlord at six. | IN 10 MIN | none |
+| Rest day | Rest day. | none | Pull A |
+| All quiet | All quiet. (`inkSecondary`) | none | none |
+| Day done | Push A done, a bench best. / Push A done. | 7:40 PM | none |
+| A planned cook | Tacos tonight, 2 to buy. | none | Groceries (`now` line) |
+| Day closed | Pull A tomorrow, first. | 7:30 AM | none |
+| 24 h before signing ends, signing ended | as before | as before | as before |
+
+- **Small:** the line alone. Resting: "resting" at 21 `inkSecondary`, the seam, the 64 Light timer. Nothing else.
+- **Large:** the medium on top, then LATER rows as before (titles and times only, 41 rule 7).
+- **Motion:** the words push in from below (`.push(from: .bottom)`), numbers `.numericText()`. Unchanged.
+
+### Lock Screen accessories, redrawn
+| State | Rectangular (bold line, then the time) | Circular (one word) | Inline |
+|---|---|---|---|
+| Planned | Push A today. / 6:00 pm | Push A | Push A today |
+| Running | Push A, bench set 4. | Set 4 | Push A, bench set 4 |
+| Resting | Push A, bench set 4. / Resting 1:32 | 1:32 (`Text(timerInterval:)`, no gauge) | Push A, bench set 4 |
+| Timed task | Call landlord at six. / In 10 min | 10 min | Call landlord at six |
+| Rest day | Rest day. | Rest | Rest day |
+| All quiet | All quiet. | Quiet | All quiet |
+| Day done | Push A done, a bench best. / 7:40 pm | Done | Push A done, a bench best |
+| Day closed | Pull A tomorrow, first. / 7:30 am | 7:30 | Pull A tomorrow, first |
+| Re-sign, signing ended | as before | as before | as before |
+
+The third (dim) line goes. The inline widget drops the stop (it sits next to the clock).
+
+### Snippets
+"What's now" speaks the line and keeps its action words. "Log a set" keeps its two numerals (the set is the one licensed number); its sentence under the seam is the line ("Push A, bench set 4."), and day done reads "Push A done." with UNDO SET 22 as before (the count lives in the undo word, which names the set).
+
+### For Builder A
+- `HomeLines.widgetLine(for:)` from the App Group snapshot replaces the widget's own context/hero/meta strings; delete the summary meta and the 4-of-5 forms.
+- Circular: `Text` only, no `Gauge`, no ring, no tick; the resting timer as `Text(timerInterval:)`.
+- Everything else on this sheet stands.

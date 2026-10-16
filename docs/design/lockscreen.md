@@ -68,3 +68,9 @@ A badge, a streak, a PR or a count, Review or the week, plan changes, rolled or 
 - **Builder A:** the three activities in Cobalt sky in every look (removing the look-following face), the Undo and 60s faces, the cook activity's flip and Stop, the focus activity with its stale date, the Island regions, and the N2 and N3 calls from the workout and cook mode.
 - **Core:** `NotificationPlan` and the scheduler for N1 to N3 with the words above, quiet hours, `alerts` for explicit times only, the actions by `.intent`, and the return lines with UNDO.
 - **Builder B:** the in-app pre-asks (M49, M50) as `one-ask.md` asks with ALLOW · NOT NOW, the return lines beside the soul, and the quiet-hours ghost-row line.
+
+## Addendum, Oct 16: Home's words on the faces (Design item 54)
+The Live Activities and notifications already speak one line each; two lines change so they say what Home says, with no count:
+- **After the last set (60 s face):** "Push A, all sets in." at Title 34 (Core's G5 line), with "ready to finish" at 62% under it. "All 22 sets in." goes.
+- **The Lock Screen accessories** are redrawn in `widget-states.md`'s addendum: the line, then the time; the circular is one word with no ring or tick.
+- Everything else stands: the rest, cook and focus faces, Cobalt sky in every look, the three notifications and quiet hours. The set on the Done button ("82.5 × 8") stays, because it is the one number the face is for.

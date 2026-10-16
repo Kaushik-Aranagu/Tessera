@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Widgets speak Home's lines</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Design item 54: widget-states.md and lockscreen.md redrawn so every surface says Home's line (home-lines.md: the hero, then the context, one sentence with a stop), with no counts and no marks, in every look. Board: the medium widget in the five looks for six states, the small widgets, the Lock Screen accessories, the 60 s rest face. ?play records the Porcelain medium widget walking planned, running, resting, done. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);line-height:22px;margin:26px 0 12px}
+.grid{display:grid;grid-template-columns:repeat(5,364px);gap:24px 36px}
+.sg{display:grid;grid-template-columns:repeat(10,170px);gap:24px 30px}
+.w{position:relative;border-radius:22px;overflow:hidden;width:364px;height:170px;background:var(--g);color:var(--ink);box-shadow:0 1px 0 rgba(23,20,31,.06),0 8px 24px rgba(23,20,31,.08)}
+.w.sm{width:170px}
+.P{--g:#FFFFFF;--ink:#121016;--s2:rgba(18,16,22,.66);--tess:#2450D8;--live:#E2432A;--liveInk:#C23A22;--now:#F0A500;--training:#CC3F68;--seam:rgba(18,16,22,.12)}
+.L{--g:#F3EDE2;--ink:#26201E;--s2:rgba(38,32,30,.66);--tess:#2A4FA8;--live:#B9452B;--liveInk:#A33A22;--now:#C98E1B;--training:#B04A5E;--seam:rgba(38,32,30,.12)}
+.C{--g:#E0EAE2;--ink:#0C1E19;--s2:rgba(12,30,25,.66);--tess:#2C59BE;--live:#D94B2E;--liveInk:#B23A1F;--now:#CF9418;--training:#BF4664;--seam:rgba(12,30,25,.12)}
+.O{--g:#000000;--ink:#F5F2EC;--s2:rgba(245,242,236,.72);--tess:#86B4FF;--live:#FF5B3A;--liveInk:#FF7A5C;--now:#FFC23D;--training:#FF6B92;--seam:rgba(245,242,236,.16)}
+.K{--g:#130A0D;--ink:#F3E8D6;--s2:rgba(243,232,214,.72);--tess:#8FB5FF;--live:#F0583A;--liveInk:#FF7C5E;--now:#E9B64A;--training:#F48BA6;--seam:rgba(243,232,214,.16)}
+.line{position:absolute;left:16px;right:16px;top:24px;font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:38px}
+.line.q{color:var(--s2)}
+.sm .line{font-size:26px;line-height:30px;top:20px}
+.meta{position:absolute;left:16px;bottom:22px;font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--s2)}
+.timer{position:absolute;left:16px;bottom:20px;font-size:21px;font-weight:600;font-variant-numeric:tabular-nums}
+.sm .timer{font-size:64px;font-weight:300;letter-spacing:-.04em;line-height:64px;bottom:18px}
+.seam{position:absolute;left:16px;right:16px;bottom:62px;height:1px;background:var(--seam)}
+.hz{position:absolute;left:16px;bottom:61px;height:2px;background:var(--now);opacity:.55}
+.key{position:absolute;right:16px;bottom:18px;font-size:21px;font-weight:600;line-height:26px}
+.key svg{position:absolute;left:-2px;top:27px;overflow:visible}
+.lock{display:flex;gap:30px;align-items:flex-start}
+.rect{width:200px;height:84px;border-radius:14px;background:rgba(255,255,255,.14);color:#fff;padding:10px 12px;box-sizing:border-box;font-size:16px;line-height:20px}
+.rect b{display:block;font-size:17px;font-weight:700;line-height:21px}
+.rect span{opacity:.66}
+.circ{width:76px;height:76px;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:600;text-align:center;line-height:20px}
+.inl{height:30px;border-radius:15px;background:rgba(255,255,255,.14);color:#fff;padding:0 14px;line-height:30px;font-size:16px;font-weight:600;white-space:nowrap}
+.lockbg{background:#1A1D27;border-radius:22px;padding:22px;display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap}
+.la{position:relative;width:364px;height:160px;border-radius:22px;overflow:hidden;color:#F6EFE4;background:radial-gradient(60% 70% at 0% 0%,rgba(36,80,216,.55),rgba(36,80,216,0) 70%),radial-gradient(60% 70% at 100% 0%,rgba(106,76,156,.55),rgba(106,76,156,0) 70%),#101420}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:26px;line-height:24px;max-width:2000px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');const PLAY=Q.includes('play');
+const $=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms)),H='cubic-bezier(.2,.8,.2,1)';
+const lens=(w,t=2.5)=>`M0 6 Q ${w*.42} ${6-t} ${w} 5.6 Q ${w*.58} ${6+t} 0 6 Z`;
+const key=(word,paint,colour='var(--ink)')=>word?`<div class="key" style="color:${colour}">${word}<svg width="${word.length*11.5+6}" height="12"><path d="${lens(word.length*11.5)}" fill="${paint}" opacity=".75"/></svg></div>`:'';
+const LOOKS=[['P','PORCELAIN'],['L','PLEIN'],['C','CELADON'],['O','OBSIDIAN'],['K','LACQUER']];
+// Home's line on a widget: the hero, then the context, one sentence with a stop (home-lines.md). No counts, no marks.
+const S=[
+ {n:'PLANNED',line:'Push A today.',meta:'6:00 PM',word:'Push A',paint:'var(--training)',small:'Push A today.'},
+ {n:'RUNNING',line:'Push A, bench set 4.',word:'Resume',paint:'var(--live)',colour:'var(--liveInk)',small:'Push A, set 4.'},
+ {n:'RESTING',line:'Push A, bench set 4.',timer:'1:32',hz:.62,word:'Resume',paint:'var(--live)',colour:'var(--liveInk)',small:'1:32',smallTimer:1},
+ {n:'DONE, A BEST',line:'Push A done, a bench best.',meta:'7:40 PM',small:'Push A done.'},
+ {n:'A PLANNED COOK',line:'Tacos tonight, 2 to buy.',word:'Groceries',paint:'var(--now)',small:'Tacos tonight.'},
+ {n:'ALL QUIET',line:'All quiet.',q:1,small:'All quiet.'}
+];
+const medium=(s,look,id='')=>`<div class="w ${look}" ${id?`id="${id}"`:''}><div class="line${s.q?' q':''}" id="${id?id+'l':''}">${s.line}</div>${s.timer?`<div class="seam"></div><div class="hz" id="${id?id+'h':''}" style="width:${332*s.hz}px"></div><div class="timer" id="${id?id+'t':''}">${s.timer}</div>`:''}${s.meta?`<div class="meta">${s.meta}</div>`:''}${key(s.word,s.paint,s.colour)}</div>`;
+const small=(s,look)=>`<div class="w sm ${look}">${s.smallTimer?`<div class="line" style="font-size:21px;font-weight:400;color:var(--s2)">resting</div><div class="seam" style="bottom:88px"></div><div class="hz" style="bottom:87px;width:${138*s.hz}px"></div><div class="timer">${s.small}</div>`:`<div class="line${s.q?' q':''}">${s.small}</div>`}</div>`;
+const R=$('root');
+if(!PLAY){
+ let h='';
+ h+=`<div class="cap">THE MEDIUM WIDGET SAYS HOME’S LINE, IN EVERY LOOK · ${LOOKS.map(l=>l[1]).join(' · ')}</div>`;
+ S.forEach(s=>{h+=`<div class="cap" style="margin-top:10px">${s.n}</div><div class="grid">${LOOKS.map(([k])=>medium(s,k)).join('')}</div>`});
+ h+=`<div class="cap">SMALL: THE LINE ALONE (26 WHEN IT’S LONGER THAN 18 CHARACTERS); RESTING IS THE TIMER OVER THE HORIZON</div><div class="sg">${S.map(s=>small(s,'P')).join('')}${S.slice(0,4).map(s=>small(s,'O')).join('')}</div>`;
+ h+=`<div class="cap">LOCK SCREEN ACCESSORIES: THE LINE, THEN THE TIME; THE CIRCULAR IS ONE WORD, NO RING, NO TICK</div><div class="lockbg">`;
+ const rect=[['Push A today.','6:00 pm'],['Push A, bench set 4.',''],['Push A, bench set 4.','Resting 1:32'],['Call landlord at six.','In 10 min'],['Rest day.',''],['All quiet.',''],['Push A done, a bench best.','7:40 pm'],['Pull A tomorrow, first.','7:30 am']];
+ const circ=['Push A','Set 4','1:32','10 min','Rest','Quiet','Done','7:30'];
+ h+=rect.map(([a,b],i)=>`<div><div class="rect"><b>${a}</b>${b?`<span>${b}</span>`:''}</div><div style="display:flex;gap:16px;align-items:center;margin-top:12px"><div class="circ">${circ[i]}</div><div class="inl">${a.replace(/\.$/,'')}</div></div></div>`).join('');
+ h+=`</div>`;
+ h+=`<div class="cap">THE REST LIVE ACTIVITY AFTER THE LAST SET (60 S): HOME’S WORDS, NO COUNT</div><div class="la"><div style="position:absolute;left:16px;top:28px;font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:38px">Push A, all sets in.</div><div style="position:absolute;left:16px;top:74px;font-size:21px;opacity:.62">ready to finish</div><div style="position:absolute;left:16px;right:16px;top:118px;height:1px;background:rgba(246,239,228,.14)"></div><div style="position:absolute;left:16px;top:117px;height:2.5px;width:332px;background:#F6EFE4"></div><div style="position:absolute;left:16px;top:132px;font-weight:700;font-size:16px;letter-spacing:.08em;opacity:.62">ENDS IN A MINUTE</div></div>`;
+ h+=`<div class="note">EVERY SURFACE OUTSIDE THE APP SAYS WHAT HOME SAYS: THE HERO, THEN THE CONTEXT, ONE SENTENCE WITH A STOP, WRITTEN BY THE PHONE (CLAUDE’S CONTEXT WORDS RIDE ALONG WHEN THEY’VE PASSED THE CHECKS). NO 6 OF 6, NO 22 SETS, NO RECORD COUNT, NO RINGS OR TICKS; THE ONE NUMBER ON ANY FACE IS A TIME OR A TIMER, AND THE ONE ACTION WORD SITS ON ITS INK LINE IN ITS PAINT. THE GROUND AND INK ARE THE LOOK’S, THE LIVE ACTIVITY STAYS COBALT SKY.</div>`;
+ R.innerHTML=h;document.fonts.ready.then(()=>{document.body.dataset.start='1';document.body.dataset.done='1'});
+}else{
+ R.innerHTML=`<div class="cap" id="cap">7:30 AM · PLANNED</div>${medium(S[0],'P','M')}`;
+ const cap=$('cap');const M=$('M');
+ const push=async(el,txt)=>{el.animate([{transform:'translateY(0)',opacity:1},{transform:'translateY(-14px)',opacity:0}],{duration:200,easing:H,fill:'forwards'});await sleep(200);el.textContent=txt;el.animate([{transform:'translateY(18px)',opacity:0},{transform:'translateY(0)',opacity:1}],{duration:380,easing:H,fill:'forwards'})};
+ const setKey=async(word,paint,colour)=>{const old=M.querySelector('.key');if(old){old.animate([{opacity:1},{opacity:0}],{duration:160,fill:'forwards'});await sleep(160);old.remove()}if(word){M.insertAdjacentHTML('beforeend',key(word,paint,colour));M.querySelector('.key').animate([{opacity:0},{opacity:1}],{duration:260,fill:'forwards'})}};
+ const setMeta=async(txt)=>{const old=M.querySelector('.meta');if(old){old.animate([{opacity:1},{opacity:0}],{duration:160,fill:'forwards'});await sleep(160);old.remove()}if(txt){M.insertAdjacentHTML('beforeend',`<div class="meta" style="opacity:0">${txt}</div>`);M.querySelector('.meta').animate([{opacity:0},{opacity:1}],{duration:260,fill:'forwards'})}};
+ (async()=>{document.body.dataset.start='1';await sleep(1400);
+  cap.textContent='6:10 PM · RUNNING: THE WORDS PUSH IN FROM BELOW';await push($('Ml'),'Push A, bench set 4.');setMeta('');setKey('Resume','var(--live)','var(--liveInk)');await sleep(1800);
+  cap.textContent='6:11 PM · RESTING: THE HORIZON DRAINS ON THE SEAM';M.insertAdjacentHTML('beforeend',`<div class="seam" id="sm" style="opacity:0"></div><div class="hz" id="hz" style="width:332px;opacity:0"></div><div class="timer" id="tm" style="opacity:0">2:30</div>`);
+  ['sm','hz','tm'].forEach(i=>$(i).animate([{opacity:i==='hz'?0:0},{opacity:i==='hz'?.55:1}],{duration:300,fill:'forwards'}));$('hz').animate([{width:'332px'},{width:'0px'}],{duration:4200,easing:'linear',fill:'forwards'});
+  let t=150;const tm=$('tm');const iv=setInterval(()=>{t-=5;tm.textContent=`${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`},140);await sleep(4200);clearInterval(iv);
+  cap.textContent='6:12 PM · SET 4 IS UP: THE TIMER GOES, THE LINE STAYS';['sm','hz','tm'].forEach(i=>$(i).animate([{opacity:1},{opacity:0}],{duration:240,fill:'forwards'}));await sleep(1600);
+  cap.textContent='7:40 PM · DONE, A BEST: NO COUNT, THE TIME AS THE META';await push($('Ml'),'Push A done, a bench best.');setKey('');setMeta('7:40 PM');await sleep(2600);document.body.dataset.done='1'})();
+}
+</script>
+</body>
+</html>
