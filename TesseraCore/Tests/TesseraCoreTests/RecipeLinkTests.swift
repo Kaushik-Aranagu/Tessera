@@ -9,6 +9,8 @@ final class LinkStub: URLProtocol, @unchecked Sendable {
         var status = 200
         var body: String
         var type = "text/html; charset=utf-8"
+        /// A 302 to here.
+        var redirect: String?
     }
 
     nonisolated(unsafe) static var pages: [String: Page] = [:]
@@ -36,6 +38,12 @@ final class LinkStub: URLProtocol, @unchecked Sendable {
             return
         }
         let page = Self.pages[request.url?.host() ?? ""] ?? Page(status: 404, body: "")
+        if let target = page.redirect, let url = URL(string: target), let from = request.url {
+            let hop = HTTPURLResponse(url: from, statusCode: 302, httpVersion: nil, headerFields: ["Location": target])!
+            client?.urlProtocol(self, wasRedirectedTo: URLRequest(url: url), redirectResponse: hop)
+            client?.urlProtocolDidFinishLoading(self)
+            return
+        }
         let response = HTTPURLResponse(url: request.url!, statusCode: page.status, httpVersion: nil,
                                        headerFields: ["Content-Type": page.type])!
         client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
@@ -182,9 +190,14 @@ struct RecipeLinkTests {
     }
 
     @Test func linksThatAreNeverRead() async {
-        for link in ["http://localhost/x", "https://192.168.1.1/admin", "https://printer.local/", "https://10.0.0.2/",
-                     "https://example.com:8080/x"]
-        {
+        for link in [
+            "http://localhost/x",
+            "https://localhost./x",
+            "https://192.168.1.1/admin",
+            "https://printer.local/",
+            "https://10.0.0.2/",
+            "https://example.com:8080/x",
+        ] {
             #expect(RecipeLinkReader.safeURL(link) == nil, "\(link)")
         }
         #expect(RecipeLinkReader.safeURL("http://budgetbytes.com/x")?.scheme == "https")
@@ -208,5 +221,25 @@ struct RecipeLinkTests {
     @Test func isoDurations() {
         #expect(RecipeImport.minutes("PT35M") == 35 && RecipeImport.minutes("PT1H30M") == 90)
         #expect(RecipeImport.minutes("P0DT0H35M") == 35 && RecipeImport.minutes("PT0M") == nil)
+    }
+
+    @Test func aRedirectToHisRouterIsNeverFollowed() async {
+        // QA N1 on #315: a 302 to a private host stops there.
+        LinkStub.pages["evil.example.com"] = .init(body: "", redirect: "https://192.168.1.1/")
+        let result = await reader().read("https://evil.example.com/recipe")
+        #expect(result.kind == .failed)
+        #expect(!LinkStub.requests.contains { $0.url?.host() == "192.168.1.1" })
+    }
+
+    @Test func claudesKeyAndBusyAndCutOffLines() async {
+        LinkStub.pages["blog.example.com"] = .init(body: Self.prose)
+        LinkStub.pages["api.anthropic.com"] = .init(status: 401, body: "{}", type: "application/json")
+        #expect(await reader(claude: true).read("https://blog.example.com/beans").line == RecipeLinkLine.badKey)
+        LinkStub.pages["api.anthropic.com"] = .init(status: 429, body: "{}", type: "application/json")
+        #expect(await reader(claude: true).read("https://blog.example.com/beans").line == RecipeLinkLine.claudeBusy)
+        let cut = #"{"content":[{"type":"text","text":"Beans\nIngredients\n1 can beans\n1 onion\nMethod\n1. Cook"}],"#
+            + #""stop_reason":"max_tokens","usage":{"input_tokens":900,"output_tokens":4096}}"#
+        LinkStub.pages["api.anthropic.com"] = .init(body: cut, type: "application/json")
+        #expect(await reader(claude: true).read("https://blog.example.com/beans").line == RecipeLinkLine.noRecipe)
     }
 }

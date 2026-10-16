@@ -11,9 +11,11 @@ public enum RecipeLinkLine {
     public static let videoNoRecipe = "No written recipe in that video. Paste the text instead."
     public static let offline = "You're offline. I'll read it when you're back."
     public static let tooBig = "Too big to read safely. Paste the text instead."
-    public static let httpsOnly = "That site only works without https, so I can't read it. Paste the text instead."
     public static let askingClaude = "No recipe card there. Asking Claude."
     public static let claudeRead = "Claude read it. Check it, then save."
+    /// M2, for a key Claude refused on this read.
+    public static let badKey = "That key didn't work. Paste it again?"
+    public static let claudeBusy = "Claude is busy right now. Paste the text instead."
 
     public static func reading(_ host: String) -> String {
         "Reading \(host)…"
@@ -83,8 +85,8 @@ public struct RecipeLinkResult: Sendable, Equatable {
 /// (L3) only when "Tess asks Claude" is on, keyed and under the cap. Never writes; he saves.
 @MainActor
 public struct RecipeLinkReader {
-    public static let userAgent = "Tessera/1 (iPhone; personal recipe import)"
-    static let maxBytes = 3_000_000
+    public nonisolated static let userAgent = "Tessera/1 (iPhone; personal recipe import)"
+    nonisolated static let maxBytes = 3_000_000
 
     public let session: URLSession
     /// Claude for L3; nil means L3 never runs.
@@ -112,14 +114,19 @@ public struct RecipeLinkReader {
         if Self.isVideo(finalURL) {
             return video(html, source: source)
         }
+        // Up to 3 MB of page through the parsers, off the main thread (QA N3).
+        let page = await Task.detached(priority: .userInitiated) { () -> Parsed in
+            Parsed(cards: RecipeImport.recipes(in: html), paywalled: RecipeImport.isPaywalled(html),
+                   text: RecipeImport.fromText(html), visible: RecipeImport.visibleText(html))
+        }.value
         // L1: the recipe card.
-        let cards = RecipeImport.recipes(in: html)
+        let cards = page.cards
         if let card = cards.first, card.ingredients.count >= 2, !card.steps.isEmpty {
             let line = cards.count > 1 ? RecipeLinkLine.several(cards.count) : RecipeLinkLine.found(card)
             return RecipeLinkResult(kind: .read, line: line, text: RecipeImport.text(of: card), sourceURL: source)
         }
         // A paywall: the ingredients if the card has them; never Claude (a stub has nothing to read).
-        if RecipeImport.isPaywalled(html) {
+        if page.paywalled {
             if let card = cards.first, !card.ingredients.isEmpty {
                 return RecipeLinkResult(kind: .partial, line: RecipeLinkLine.stepsPaywalled,
                                         text: RecipeImport.text(of: card), sourceURL: source)
@@ -127,7 +134,7 @@ public struct RecipeLinkReader {
             return RecipeLinkResult(kind: .failed, line: RecipeLinkLine.paywalled, text: nil, sourceURL: source)
         }
         // L2: the page's own words.
-        if let recipe = RecipeImport.fromText(html) {
+        if let recipe = page.text {
             return RecipeLinkResult(kind: .read, line: RecipeLinkLine.found(recipe),
                                     text: RecipeImport.text(of: recipe), sourceURL: source)
         }
@@ -135,10 +142,17 @@ public struct RecipeLinkReader {
         guard let claude else {
             return RecipeLinkResult(kind: .failed, line: RecipeLinkLine.noRecipe, text: nil, sourceURL: source)
         }
-        return await claude.read(RecipeImport.visibleText(html), source: source)
+        return await claude.read(page.visible, source: source)
     }
 
-    enum Fetched {
+    struct Parsed: Sendable {
+        let cards: [ParsedRecipe]
+        let paywalled: Bool
+        let text: ParsedRecipe?
+        let visible: String
+    }
+
+    enum Fetched: Sendable {
         case page(String, URL)
         case failed(String)
     }
@@ -147,27 +161,61 @@ public struct RecipeLinkReader {
         var request = URLRequest(url: url, timeoutInterval: 8)
         request.setValue(Self.userAgent, forHTTPHeaderField: "User-Agent")
         request.setValue("text/html,application/xhtml+xml", forHTTPHeaderField: "Accept")
-        let data: Data
+        // A hard 15 s for the whole read (URLRequest's timeout only counts idle time; QA N2).
+        let session = session
+        let read = Task { () -> Fetched in
+            await Self.download(request, session: session)
+        }
+        let deadline = Task {
+            try await Task.sleep(for: .seconds(15))
+            read.cancel()
+        }
+        let result = await read.value
+        deadline.cancel()
+        return result
+    }
+
+    /// Streamed and stopped at 3 MB; every redirect hop checked like the link itself (QA N1, N2).
+    nonisolated static func download(_ request: URLRequest, session: URLSession) async -> Fetched {
+        let redirects = RedirectGuard()
+        let bytes: URLSession.AsyncBytes
         let response: URLResponse
         do {
-            (data, response) = try await session.data(for: request)
+            (bytes, response) = try await session.bytes(for: request, delegate: redirects)
         } catch let error as URLError {
             switch error.code {
             case .notConnectedToInternet, .networkConnectionLost,
                  .dataNotAllowed: return .failed(RecipeLinkLine.offline)
             case .secureConnectionFailed, .appTransportSecurityRequiresSecureConnection:
-                return .failed(RecipeLinkLine.httpsOnly)
+                return .failed(RecipeLinkLine.tooBig) // https only: Design's "too big or odd" row (QA N4)
             default: return .failed(RecipeLinkLine.blocked)
             }
         } catch {
             return .failed(RecipeLinkLine.blocked)
         }
         guard let http = response as? HTTPURLResponse else { return .failed(RecipeLinkLine.blocked) }
-        guard (200 ..< 300).contains(http.statusCode) else { return .failed(RecipeLinkLine.blocked) }
+        guard (200 ..< 300).contains(http.statusCode) else {
+            return .failed(redirects.refused ? RecipeLinkLine.tooBig : RecipeLinkLine.blocked)
+        }
         let type = http.value(forHTTPHeaderField: "Content-Type")?.lowercased() ?? "text/html"
-        guard data.count <= Self.maxBytes, type.contains("html") else { return .failed(RecipeLinkLine.tooBig) }
-        let final = http.url ?? url
-        guard final.scheme == "https" else { return .failed(RecipeLinkLine.httpsOnly) }
+        guard type.contains("html"), http.expectedContentLength <= Int64(maxBytes) else {
+            return .failed(RecipeLinkLine.tooBig)
+        }
+        guard let final = http.url ?? request.url, safeURL(final.absoluteString) != nil, final.scheme == "https" else {
+            return .failed(RecipeLinkLine.tooBig)
+        }
+        var data = Data()
+        data.reserveCapacity(min(Int(max(http.expectedContentLength, 0)), maxBytes))
+        do {
+            for try await byte in bytes {
+                data.append(byte)
+                if data.count > maxBytes {
+                    return .failed(RecipeLinkLine.tooBig)
+                }
+            }
+        } catch {
+            return .failed(Task.isCancelled ? RecipeLinkLine.tooBig : RecipeLinkLine.blocked)
+        }
         let text = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .isoLatin1) ?? ""
         // A bot check is a block, whatever its status.
         if text.range(of: "captcha", options: .caseInsensitive) != nil, text.count < 20000 {
@@ -194,7 +242,7 @@ public struct RecipeLinkReader {
     // MARK: Safety
 
     /// https only (http is upgraded), no private or local hosts, no other ports.
-    public static func safeURL(_ link: String) -> URL? {
+    public nonisolated static func safeURL(_ link: String) -> URL? {
         var text = link.trimmingCharacters(in: .whitespacesAndNewlines)
         if text.lowercased().hasPrefix("http://") {
             text = "https://" + text.dropFirst(7)
@@ -202,9 +250,11 @@ public struct RecipeLinkReader {
         if !text.lowercased().hasPrefix("https://") {
             text = "https://" + text
         }
-        guard let url = URL(string: text), url.scheme == "https", let host = url.host()?.lowercased(),
-              url.port == nil || url.port == 443, host.contains(".") else { return nil }
+        guard let url = URL(string: text), url.scheme == "https",
+              let host = url.host()?.lowercased().trimmingCharacters(in: CharacterSet(charactersIn: ".")),
+              url.port == nil || url.port == 443, host.contains(".") || host == "localhost" else { return nil }
         let isLocal = host == "localhost" || host.hasSuffix(".local") || host.hasSuffix(".localhost")
+            || host.hasSuffix(".internal") || host.hasSuffix(".lan")
         let isPrivate = host
             .firstMatch(of: /^(?:10|127|0)\.|^192\.168\.|^172\.(?:1[6-9]|2\d|3[01])\.|^169\.254\./) != nil
             || host.contains(":") // IPv6 literal
@@ -334,11 +384,24 @@ public struct ClaudeRecipeReader {
         } catch {
             return failed(RecipeLinkLine.noRecipe)
         }
-        guard (response as? HTTPURLResponse)?.statusCode == 200,
-              let body = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        if status == 401 || status == 403 {
+            outcome = "badKey"
+            return failed(RecipeLinkLine.badKey)
+        }
+        if status == 429 || status >= 500 {
+            outcome = "busy"
+            return failed(RecipeLinkLine.claudeBusy)
+        }
+        guard status == 200, let body = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
         else { return failed(RecipeLinkLine.noRecipe) }
         let used = body["usage"] as? [String: Any] ?? [:]
         usage = (used["input_tokens"] as? Int ?? 0, used["output_tokens"] as? Int ?? 0)
+        // Cut off: half a recipe is no recipe (QA on #315).
+        if body["stop_reason"] as? String == "max_tokens" {
+            outcome = "max_tokens"
+            return failed(RecipeLinkLine.noRecipe)
+        }
         let reply = (body["content"] as? [[String: Any]] ?? [])
             .compactMap { $0["type"] as? String == "text" ? $0["text"] as? String : nil }.joined(separator: "\n")
         guard reply.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() != "no recipe",
@@ -351,5 +414,30 @@ public struct ClaudeRecipeReader {
         outcome = "works"
         return RecipeLinkResult(kind: .readByClaude, line: RecipeLinkLine.claudeRead,
                                 text: RecipeImport.text(of: recipe), sourceURL: source)
+    }
+}
+
+/// Checks every redirect hop like the link itself: https, no private or local host, at most 5 hops (QA N1).
+final class RedirectGuard: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
+    private let lock = NSLock()
+    private var hops = 0
+    private var stopped = false
+
+    var refused: Bool {
+        lock.withLock { stopped }
+    }
+
+    func urlSession(_: URLSession, task _: URLSessionTask, willPerformHTTPRedirection _: HTTPURLResponse,
+                    newRequest request: URLRequest) async -> URLRequest?
+    {
+        let allowed = lock.withLock {
+            hops += 1
+            return hops <= 5
+        }
+        guard allowed, let url = request.url, RecipeLinkReader.safeURL(url.absoluteString) != nil else {
+            lock.withLock { stopped = true }
+            return nil
+        }
+        return request
     }
 }
