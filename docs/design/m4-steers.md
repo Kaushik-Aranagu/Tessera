@@ -2,24 +2,67 @@
 
 One paragraph or so per Feature screen in `docs/product/ship-list-m4.md` (Product's copy: `tessera/product/ship-list-m4.md`), at the weight of `m3-steers.md`. Rough is fine; the UI bar is not optional: Inter Tight tiers, nothing under 16pt, no italics, no cards, pills or stock lists, painterly ground with hairline seams, directional entrances. Plan my day and Shutdown are **Now on Home**, not separate screens, so they reuse `today-on-home.md`'s queue, gestures and haptics.
 
-## 6 · Plan my day (rules only), with 10b · the energy check-in
-Recording of 6, 10b and 7 together: `recordings/plan-and-shutdown.mp4` (source `studies/plan-and-shutdown.html`). Redrawn to `no-buttons.md` on 15 Oct: stroke words instead of keys, Tess in her corner, and a ghost line edited in place.
-At 08:00 the plan becomes Now. It's a state of TODAY, not a card or a sheet.
-- **Now line:** "this morning". **Hero** is the day in one sentence: "Three meetings, four hours free". The context line under the hero is the body: "slept 6h40" (21/400; "no sleep data" when Health has nothing).
-- **The day stroke tells the time you have.** Calendar events paint onto the dashed rest-of-day guide as short ink segments at their times (ink 55%, 6pt, round caps). Free time stays dashed. This is the Tiimo lesson, time you can see, in the stroke you already know.
-- **Energy** (10b) sits in one line under the context line: "Energy" at 21/400, then the **rep drum** (`RepsDrum`, 1 to 5, centre numeral 48 Light), with the value's word under the centre in labels: FLAT · LOW · OKAY · GOOD · BRIGHT. It's optional; the plan below is already filled for 3. Setting it re-flows the plan live: at 2 or below, the third line slides out (fades and the queue closes up, 320ms), and Tess's line in cobalt says "Short night. Two things, and a lighter top set."
-- **The plan** is up to 3 **ghost rows** in the queue window (cobalt, wet, as in Tess captures), but they don't dry on a timer. **Swipe right accepts** a line: it dries into ink and its dab flies to its slot on the day stroke (the same flight as "tomorrow", landing at its time). **Swipe left skips** it: it fades and the queue closes up. Rows untouched when you start count as accepted.
-- **Edit a ghost line in place:** tap its words. A 1pt cobalt writing line draws under the row (260ms), the words blur out, and the keyboard rises with the row's text ready to change ("Plan push day, 30 min"). Return keeps it a ghost with the new words, re-parsed through the grammar so "30 min" becomes its length, and Tess says "Got it, 30 minutes." The time on the right is a value word that opens the time drum. Nothing is accepted until it's swiped.
-- **The one action** is a stroke word at y 450: the label "START WITH" (16/700), and under it the first item's name at Title 34 on a cobalt brushstroke. Holding it (0.6s) empties the stroke to a 20% trace and repaints it left to right, and the tip blooms. That makes the item Now. The plan's hero sentence lifts away and the item rises into the hero (the promotion motion). That's the end; the whole flow is under a minute.
-- Skipping the whole plan: swipe the hero left (the plan only; it has no strike). It drops back to normal Today until tomorrow.
+## 6 · Plan my day, with 10b · the energy check-in
+Rewritten 16 Oct to Research 95 (`research/plan-my-day-flow.md`, #240) and Product's answers to it (decisions 8:38 PM PT). This version wins over the 15 Oct text, and over `recordings/plan-and-shutdown.mp4`, which is kept only for history. New recording: `recordings/plan-my-day.mp4` (source `studies/plan-my-day.html`), Porcelain.
+
+**When it shows.** The plan is a state of TODAY on Now, never a card or a sheet. It's offered once per 4 AM day, from 08:00 (or his first open after it) until 21:00, and only when the rules plan has at least one task. It takes Now only in its place in Now's order:
+1. **A running workout, cook or focus block keeps Now.** There is no offer while a workout runs. When it ends, the plan is offered the next time Home shows, without that workout.
+2. **A timed task within 15 minutes keeps Now.** The plan waits until it's done or past.
+3. **On a rest day, "Rest day" stays the hero,** with the next routine a tap away. The plan's rows and START WITH arrive under it in the queue window, and the plan has no hero sentence of its own.
+4. **Otherwise the plan is Now.**
+
+**Pulling it early.** From 07:00 he can pull the plan before the offer. The Now line reads "this morning · **plan**", where **plan** is a value word (Body 21/600 ink), and saying or writing "plan my day" does the same. A pull while a workout runs gets one Tess line, "Push A is under way, until about 8:05 am.", and leaves Now alone. After he skips the whole plan, only asking brings it back that day.
+
+**The page (Porcelain, Thu 15 Oct fixture d01).**
+- **Now line:** "this morning".
+- **Hero**, the day in one sentence, Title 44/500. With the calendar read, it may count meetings and free time: "Three meetings, four hours free". **Without the calendar, it counts tasks and the workout only:** "Three tasks, Push A at 6 pm". It never says free, clear or open then.
+- **The context line** is sleep, and only once Health read has been granted from its own ask: "slept 6h40" at 21/400 `inkSecondary`. Before that there's no line at all, and the plan never asks for Health.
+- **The day stroke** (6pt, `ink-line.md`) shows meetings as short ink segments at their times, at 55%, **only when the calendar is read.** Otherwise the stroke is as on any morning.
+- **Energy (10b)** is one optional line under the context line: "Energy" at 21/400 `inkSecondary`, then the rep drum (`RepsDrum`, 1 to 5, numeral 48 Light) with its word under it as a label (FLAT · LOW · OKAY · GOOD · BRIGHT). It's logged for the Day log only. **It never changes the plan, and Tess says nothing about it.** Light days come from C1 to C3 (`light-day.md`), never from sleep or energy.
+- **The one action** at y 450: the label START WITH, and under it the first item's name at Title 34 on the **ink line** in cobalt (`ink-line.md`, 2.5pt at 75%).
+- **Up to 3 plan rows** in the queue window. Each title is Body 21/500 in wet cobalt, breathing (0.5 to 0.66), with its time at the right as a value word. **There's no dab before the words** (`no-dots.md`). The rows don't dry on a timer, and nothing is written by showing them.
+
+**Claude words it (slice 6b).** The rules plan draws at once, in plain words, so there is never a wait.
+- While the call is out, the **cloud mark** rises off the soul (`claude-settings.md`: three cobalt wisps), and VoiceOver says "Sent to Claude". Nothing else moves, and the plain words stay readable.
+- When the reply lands, usually in 2 to 5s, the words cross-fade in place (blur 4pt → 0, 420ms, house curve):
+  - The start line under START WITH becomes Tess's sentence: "Landlord reply first, then physio, then the report."
+  - Rows may reorder inside the run, sliding to their new places on the settle spring.
+  - Each row gets Claude's line under its title at 21/400 `inkSecondary`: "15 min, a quick one to open with."
+  - **VIA CLAUDE** sits once as a label word under the start line (it taps to the receipt, as in `claude-settings.md`). It stands for the whole plan, so three rows don't repeat it. Each row's VoiceOver label ends "Via Claude".
+- **Once he has touched the plan** (any swipe, edit, time change or the hold), a reply that lands later is dropped, and its cost still counts. A reply after 20s is dropped too.
+- **When Claude can't word it,** the rules plan stays exactly as it is, the wisps go, and one quiet Tess line shows, at most one per plan:
+  - Offline, an invalid reply, or a paused account: "Here's your usual plan."
+  - No answer in 20s: "Claude didn't answer in time. Here's your usual plan." (the one timeout wording, `claude-settings.md` C15; replaces M18's "Claude timed out.")
+  - Busy after one retry: "Claude is busy. Here's your usual plan."
+  - At the cap: "Claude paused until Nov 1. Here's your usual plan."
+  - A bad key: "That key didn't work. Paste it again?"
+  - No key, Claude off, or the use-2 gate not yet passed: no line and no wisps.
+
+**What he does with it.**
+- **Swipe right keeps a row.** The words dry from cobalt into ink, left to right (700ms clip sweep), and the time follows 250ms later. **The moment:** the row's slot on the day stroke paints in at its time, wet in cobalt, and dries to ink over `Theme.Motion.dry`. Tess says "Reply to landlord, 8 am." with UNDO (4s). UNDO says "Reply to landlord taken back." and the row goes back to a wet ghost.
+- **Swipe left skips a row.** It fades and the queue closes up (320ms). No line and no UNDO, because nothing was written.
+- **Tap a row's words to edit it.** A 1pt cobalt writing line draws under the row (260ms), the words blur out, and the keyboard rises with the text ready. Return keeps it a ghost with the new words, re-parsed so "30 min" becomes its length, and the run repacks. If it now runs into a fixed block, the last row in the run slides out as a skip. Tess says "**Book physio, 30 min.**" (name first). Claude is not called again.
+- **Tap a row's time** to open the time drum. The drum skips times inside fixed blocks, and Tess says nothing; the row shows the change.
+- **Hold START WITH (0.7s,** the same hold as Finish). The ink line empties to a 0.9pt trace at 35% and repaints left to right, and the bead swells at the tip (`ink-line.md`).
+  - It keeps every row he hasn't skipped, as one named transaction, and makes the first item Now. That's his act, so fixture N7 reads "never committed without his tap or hold".
+  - The plan's hero lifts away and the item rises into the hero (the promotion motion).
+  - Tess says "**Plan kept. Reply to landlord is up.**" with UNDO for **10s**. UNDO says "Plan taken back.", and the rows and START WITH come back as ghosts.
+  - If the first item is a workout, it becomes Now's routine hero with its own Start word. The hold never starts a workout.
+- **Skip the whole plan:** swipe the hero left. It drops back to normal Today with no line and nothing written. The offer is spent until tomorrow's 08:00.
+
+**Silent on purpose:** drawing the plan, a reply landing, a time change, a skipped row, skipping the plan, and setting energy.
+
+**VoiceOver:** a row reads "Proposed: Reply to landlord, 8 am. Via Claude." with the hint "Swipe right to keep, left to skip" and the actions Keep, Skip, Edit, Change time. Times in labels use am and pm. START WITH reads "Start with Reply to landlord" with the hint "Touch and hold".
+
+**Reduce Motion:** cross-fades for the reword, the dry, the reorder and the promotion. No wisps (VoiceOver still says "Sent to Claude"). The hold fills without thickening, and there's no bead.
 
 ## 7 · Shutdown
 At 21:00 Shutdown becomes Now, and the ground turns to **evening**: the paint washes shift to violet and vermilion over 1.2s, the same ground the day stroke ends in.
 - **Now line:** "this evening". **Hero** is counts only: "Four tasks, one workout, cooked once". Never what didn't happen.
-- **Rolling on:** a labels line, "GOING TO TOMORROW", then unfinished items as rows in the queue window, each with a small cobalt dab (going with you). **Tap a row to keep it off tomorrow:** the dab drains out, and the row reads "to Later" in labels at the right. Tap again to put it back. There's no checkbox and no red.
+- **Rolling on:** a labels line, "GOING TO TOMORROW", then unfinished items as rows in the queue window at Body 21 in `ink`, with **TOMORROW** as a label in the time column. There's no dab (`no-dots.md`). **Tap a row to keep it off tomorrow:** TOMORROW is struck through (2.5pt, `ink-line.md`) and **LATER** sets in beside it. Tap again to put it back. There's no checkbox and no red.
 - **One optional line:** "Tomorrow, first:" as a writing line at 21/400 (50% placeholder). It's the one line for the Day log too.
-- **The action:** the label "WHEN YOU'RE DONE", and under it "Shutdown complete" as a stroke word on a plum brushstroke (`#7A5C8E`). Hold 0.7s to repaint it.
-- **The living moment:** the day stroke paints the rest of its length to the vermilion end (700ms), the rolled rows' dabs fly off to tomorrow one after another (80ms stagger), the hero is replaced by "Done for today." at Hero 56/500, Tess plays `done`, and `.success` plays. This is the one exception to "no success on Home", because a day is a bigger finish than a task. After it, Now reads "tomorrow, first: …" quietly until morning.
+- **The action:** the label "WHEN YOU'RE DONE", and under it "Shutdown complete" as a stroke word on the ink line in the look's `context` paint (not the old plum literal). Hold 0.7s, with the ink-line hold and bead.
+- **The living moment:** the day stroke paints the rest of its length to the vermilion end (700ms), the rolled rows' TOMORROW words lift off toward the day stroke's end, one after another (80ms stagger), the hero is replaced by "Done for today." at Hero 56/500, Tess plays `done`, and `.success` plays. This is the one exception to "no success on Home", because a day is a bigger finish than a task. After it, Now reads "tomorrow, first: …" quietly until morning.
 
 ## 5 · Day log (Time Machine)
 Recording: `recordings/day-log.mp4` (source `studies/day-log.html`): reading back up the week, undoing one moment from Monday, and today's count line noting it.
@@ -29,8 +72,8 @@ Recording: `recordings/day-log.mp4` (source `studies/day-log.html`): reading bac
   - **Your line,** if there is one, at Title 34/500, as typed. It's the largest thing on the day.
   - **The headline:** finished things and firsts, joined with " · ", at 21/500 ("Push day, PR on bench · carbonara").
   - **The count line:** 21/400 at 70% ("4 tasks · 2 notes").
-  - **The quiet line** in labels at 45%: "SLEPT 7H10 · 3 MEETINGS · ENERGY 4".
-- **The paint spine:** under each date, one area-colour dab per headline item, stacked. Scrolling the log shows a column of colour in the margin, a painted history of your weeks. No chart.
+  - **The quiet line** in labels at 45%: "SLEPT 7H10 · 3 MEETINGS · ENERGY 4" (sleep only once Health read is granted, meetings only with the calendar).
+- **The paint spine:** under each date, one continuous 3pt margin stroke whose colour shifts by segment, one segment per headline item, at the rest tint (`no-dots.md`). Scrolling the log shows a quiet column of colour in the margin, a painted history of your weeks. No dabs and no chart.
 - **Empty runs** collapse to one row in labels at 45%: "OCT 3 TO 6". No count of empty days.
 - **Undo from there:** tap a headline item and it gets an ink underline. Tess shows the preview sentence by her soul in cobalt, at most two lines ("Removes bench 80 × 5. PR back to 77.5."), with a vermilion "Undo" on the right. Tapping it runs the strike on that item, and today's block gains "undid 1 thing from Oct 12" in the count line. If the item has changed since, the preview says "Changed since. Open it" and tapping zooms to the object.
 - **Later:** the right-edge rail scrubber (a light tick per day, a firmer one per week).

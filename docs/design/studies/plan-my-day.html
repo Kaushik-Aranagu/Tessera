@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Plan my day</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Recording for docs/design/m4-steers.md §6, rewritten 16 Oct to Research 95. Left: the plan offered at 08:00 with the calendar read; Claude words it (wisps off the soul, the rules words cross-fade, rows reorder, VIA CLAUDE); keep a row (dry cobalt to ink, its slot paints onto the day stroke); hold START WITH 0.7 s (ink-line hold and bead), "Plan kept" with a 10 s UNDO. Right: a rest day with no calendar; the plan sits under "Rest day"; Claude doesn't answer, the rules plan stays with one quiet line; skip a row. Porcelain, one base. Add ?x2 to render at 2x. -->
+<style>
+:root{--ink:23,20,31;--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1);--tess:#2450D8}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;width:860px;height:960px;color:rgb(var(--ink));transform-origin:0 0}
+body.x2{transform:scale(2)}
+.pair{position:absolute;left:30px;top:36px;display:flex;gap:40px}
+.col{width:390px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(var(--ink),.66);height:34px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;background:#fff}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),.66)}
+.b{font-size:21px;line-height:28px;white-space:nowrap}
+.tess{color:var(--tess)}
+.ttl{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px}
+.sw{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px;white-space:nowrap}
+.soul{position:absolute;width:46px;height:40px;left:322px;top:782px}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.row{position:absolute;left:22px;right:22px;height:56px;transition:top .52s var(--settle),opacity .32s var(--house)}
+.row .t{position:relative;font-size:21px;font-weight:500;line-height:28px;display:inline-block}
+.row .t .dry{position:absolute;left:0;top:0;color:rgb(var(--ink));clip-path:inset(0 100% 0 0)}
+.row .tm{position:absolute;right:0;top:0;font-size:21px;font-weight:600;line-height:28px;font-variant-numeric:tabular-nums}
+.row .tm .dry{position:absolute;right:0;top:0;color:rgb(var(--ink));clip-path:inset(0 100% 0 0)}
+.row .c{position:absolute;left:0;top:28px;font-size:21px;line-height:28px;white-space:nowrap;letter-spacing:-.01em;color:rgba(var(--ink),.66);opacity:0;filter:blur(4px);transition:opacity .42s var(--house),filter .42s var(--house)}
+.wet{animation:wet 1.6s ease-in-out infinite}
+@keyframes wet{0%,100%{opacity:.5}50%{opacity:.66}}
+.fade{transition:opacity .42s var(--house),filter .42s var(--house),transform .52s var(--house)}
+.say{position:absolute;left:22px;right:80px;bottom:24px;font-size:21px;line-height:28px;color:var(--tess);opacity:0;transition:opacity .4s var(--house)}
+.undo{color:#C23A22;font-weight:600;font-size:16px;letter-spacing:.08em}
+.wisp{position:absolute;width:2.5px;height:30px;border-radius:2px;background:linear-gradient(to top,rgba(36,80,216,.0),rgba(36,80,216,.8) 40%,rgba(36,80,216,0));opacity:0}
+#finger1,#finger2{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(23,20,31,.14);box-shadow:0 0 0 1.5px rgba(255,255,255,.8);opacity:0;z-index:20;pointer-events:none}
+.note{position:absolute;left:30px;top:930px;width:800px;font-size:16px;font-weight:700;letter-spacing:.08em;color:rgba(var(--ink),.66)}
+</style>
+</head>
+<body>
+<div class="pair" id="pair"></div>
+<div class="note" id="note"></div>
+<script>
+if(location.search.includes('x2'))document.body.classList.add('x2');
+const $=id=>document.getElementById(id),at=(t,f)=>setTimeout(f,t),note=t=>$('note').textContent=t;
+const soul=id=>`<div class="soul" id="${id}"><i style="left:0;top:4px;background:radial-gradient(closest-side,#2450D8,rgba(36,80,216,.2))"></i><i style="left:22px;top:2px;background:radial-gradient(closest-side,#E2432A,rgba(226,67,42,.2))"></i><i style="left:12px;top:20px;background:radial-gradient(closest-side,#F0A500,rgba(240,165,0,.2))"></i></div>`;
+const lens=(w,t)=>`M0 6 Q ${w*.42} ${6-t} ${w} 5.6 Q ${w*.58} ${6+t} 0 6 Z`;
+// the day stroke: 7 am to 11 pm across 346 pt, 6 pt, painted to now, dashed after
+const X=h=>22+(h-7)/16*346;
+function stroke(id,meetings){
+ const seg=meetings.map(([a,b])=>`<line x1="${X(a)}" y1="6" x2="${X(b)}" y2="6" stroke="rgba(23,20,31,.55)" stroke-width="6" stroke-linecap="round"/>`).join('');
+ return `<svg class="abs" style="left:0;top:96px;overflow:visible" width="390" height="12">
+  <line x1="${X(8)+6}" y1="6" x2="368" y2="6" stroke="rgba(23,20,31,.22)" stroke-width="1.5" stroke-dasharray="2 6" stroke-linecap="round"/>
+  <line x1="22" y1="6" x2="${X(8)}" y2="6" stroke="rgba(23,20,31,.6)" stroke-width="6" stroke-linecap="round"/>
+  ${seg}
+  <line id="${id}" x1="${X(8)}" y1="6" x2="${X(8.25)+4}" y2="6" stroke="#2450D8" stroke-width="7.5" stroke-linecap="round" opacity="0"/>
+ </svg>`}
+function row(id,top,title,time,claude){return `<div class="row" id="${id}" style="top:${top}px">
+ <span class="t tess"><span class="w wet">${title}</span><span class="dry">${title}</span></span>
+ <span class="tm tess"><span class="w wet">${time}</span><span class="dry">${time}</span></span>
+ <div class="c">${claude||''}</div></div>`}
+function startWith(id,name,w){return `<div class="abs lbl s2" style="left:22px;top:412px">START WITH</div>
+ <div class="abs sw" id="${id}" style="left:22px;top:440px">${name}
+  <svg id="${id}L" style="position:absolute;left:-2px;top:41px;overflow:visible" width="${w+6}" height="12"><path d="${lens(w,2.5)}" fill="#2450D8" opacity=".75"/></svg>
+  <svg id="${id}B" style="position:absolute;left:${w}px;top:41px;overflow:visible" width="1" height="12"><circle cx="0" cy="6" r="0" fill="#2450D8"/></svg></div>`}
+function left(){return `
+ <div class="abs lbl s2" style="left:22px;top:58px">FRIDAY 16 OCT</div>${stroke('slot1',[[9.5,9.75],[11,12],[15,15.5]])}
+ <div class="abs fade" id="L_page">
+  <div class="abs b s2" style="left:22px;top:140px">this morning</div>
+  <div class="abs ttl" style="left:22px;top:174px;width:346px">Three meetings, four hours free</div>
+  <div class="abs b s2" style="left:22px;top:282px">slept 6h40</div>
+  <div class="abs b s2" style="left:22px;top:330px">Energy</div>
+  <div class="abs" style="left:112px;top:316px;font-size:48px;font-weight:300;line-height:52px">3</div>
+  <div class="abs lbl s2" style="left:146px;top:336px">OKAY</div>
+  ${startWith('L_sw','Reply to landlord',268)}
+  <div class="abs b tess fade" id="L_line" style="left:22px;top:498px;width:346px;white-space:normal;opacity:0;filter:blur(4px)">Landlord reply first, then physio, then the report.</div>
+  <div class="abs lbl s2 fade" id="L_via" style="left:22px;top:560px;opacity:0">VIA CLAUDE</div>
+ </div>
+ ${row('L1',590,'Reply to landlord','08:00','15 min, a quick one to open with.')}
+ ${row('L2',652,'Expense report','08:15','45 min, done before Standup. Due 5 pm.')}
+ ${row('L3',714,'Book physio','09:00','20 min, while the morning is quiet.')}
+ <div class="abs ttl fade" id="L_hero" style="left:22px;top:174px;opacity:0;font-size:56px;line-height:60px">Reply to landlord</div>
+ <div class="abs sw fade" id="L_fin" style="left:22px;top:440px;opacity:0">Finish<svg style="position:absolute;left:-2px;top:41px;overflow:visible" width="110" height="12"><path d="M0 6 Q 43.7 3.5 104 5.6 Q 60.3 8.5 0 6 Z" fill="#E2432A" opacity=".75"/></svg></div>
+ <div class="say" id="L_say"></div>
+ ${soul('L_soul')}<div id="L_w"></div><div id="finger1"></div>`}
+function right(){return `
+ <div class="abs lbl s2" style="left:22px;top:58px">SUNDAY 18 OCT</div>${stroke('slot2',[])}
+ <div class="abs b s2" style="left:22px;top:140px">this morning</div>
+ <div class="abs" style="left:22px;top:174px;font-size:56px;font-weight:500;letter-spacing:-.035em;line-height:60px">Rest day</div>
+ <div class="abs b" style="left:22px;top:246px"><span class="s2">Next, </span><span style="font-weight:600">Push A</span><span class="s2"> on Monday</span></div>
+ ${startWith('R_sw','Water the plants',262)}
+ ${row('R1',590,'Water the plants','09:00')}
+ ${row('R2',652,'Call Mum','10:00')}
+ ${row('R3',714,'Order contact lenses','10:20')}
+ <div class="say" id="R_say"></div>
+ ${soul('R_soul')}<div id="R_w"></div><div id="finger2"></div>`}
+$('pair').innerHTML=`<div class="col"><div class="cap">08:00 · CLAUDE WORDS IT</div><div class="ph" id="LP">${left()}</div></div><div class="col"><div class="cap">REST DAY · CLAUDE CAN'T</div><div class="ph" id="RP">${right()}</div></div>`;
+// wisps off the soul
+function wisps(host,on){const h=$(host);if(!on){h.querySelectorAll('.wisp').forEach(w=>{w.getAnimations().forEach(a=>a.cancel());w.remove()});return}
+ [0,1,2].forEach(k=>{const w=document.createElement('div');w.className='wisp';w.style.left=(333+k*9)+'px';w.style.top=(748-k*4)+'px';h.parentNode.appendChild(w);
+  w.animate([{opacity:0,transform:'translateY(0)'},{opacity:1,offset:.35},{opacity:0,transform:'translateY(-18px)'}],{duration:1100,delay:k*220,iterations:Infinity,easing:'cubic-bezier(.2,.8,.2,1)'});
+  w.classList.add('wisp');w.dataset.host=host})}
+function stopWisps(){document.querySelectorAll('.wisp').forEach(w=>{w.animate([{opacity:getComputedStyle(w).opacity},{opacity:0}],{duration:250,fill:'forwards'});setTimeout(()=>w.remove(),260)})}
+function dryRow(id,delay=0){const r=$(id);at(delay,()=>{r.querySelectorAll('.w').forEach(w=>{w.classList.remove('wet');w.style.opacity=0});
+ r.querySelector('.t .dry').animate([{clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0 0 0)'}],{duration:700,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+ r.querySelector('.tm .dry').animate([{clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0 0 0)'}],{duration:700,delay:250,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'})})}
+function finger(id,x,y,o=1){const f=$(id);f.style.left=x+'px';f.style.top=y+'px';f.style.opacity=o}
+function swipe(fid,rid,dx,dur=420){const r=$(rid),y=parseFloat(r.style.top)+46;finger(fid,120,y);
+ const fa=$(fid).animate([{transform:'translateX(0)'},{transform:`translateX(${dx}px)`}],{duration:dur,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+ r.animate([{transform:'translateX(0)'},{transform:`translateX(${dx*.6}px)`}],{duration:dur,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+ return new Promise(res=>setTimeout(()=>{$(fid).style.opacity=0;fa.cancel();res()},dur))}
+function say(id,html){const s=$(id);s.style.opacity=0;setTimeout(()=>{s.innerHTML=html;s.style.opacity=1},180)}
+// the ink-line hold: empty to a trace, repaint left to right, bead at the tip
+function hold(id,w,ms=700){const L=$(id+'L').firstElementChild,B=$(id+'B').firstElementChild;const t0=performance.now();
+ return new Promise(res=>{function f(now){const p=Math.min(1,(now-t0)/ms),e=1-Math.pow(1-p,2);
+   const fill=`<defs><clipPath id="${id}c"><rect x="0" y="0" width="${(w+6)*e}" height="12"/></clipPath></defs>`;
+   $(id+'L').innerHTML=fill+`<path d="${lens(w,.45)}" fill="#2450D8" opacity=".35"/><path d="${lens(w,2.5+1.1*e)}" fill="#2450D8" clip-path="url(#${id}c)"/>`;
+   if(p<1)requestAnimationFrame(f);else{B.animate([{r:0,opacity:1},{r:5,opacity:.9,offset:.4},{r:7,opacity:0}],{duration:520,easing:'cubic-bezier(.2,.8,.2,1)'});
+     B.setAttribute('r',0);setTimeout(()=>{$(id+'L').innerHTML=`<path d="${lens(w,2.5)}" fill="#2450D8" opacity=".75"/>`},300);res()}}
+  requestAnimationFrame(f)})}
+document.fonts.ready.then(()=>{
+ document.body.dataset.start='1';
+ ['L1','L2','L3'].forEach((r,k)=>$(r).animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:420,delay:k*70,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));
+ note('THE RULES PLAN DRAWS AT ONCE, NOTHING WRITTEN. WISPS: CLAUDE IS WORDING IT.');
+ at(500,()=>wisps('L_w',true));
+ at(2700,()=>{note('THE REPLY LANDS: WORDS CROSS-FADE, ROWS REORDER, VIA CLAUDE ONCE.');stopWisps();
+  $('L_line').style.opacity=1;$('L_line').style.filter='none';$('L_via').style.opacity=1;
+  ['L1','L2','L3'].forEach(r=>{const c=$(r).querySelector('.c');c.style.opacity=1;c.style.filter='none'});
+  $('L3').style.top='652px';$('L2').style.top='714px';$('L2').animate([{opacity:1},{opacity:.15,offset:.4},{opacity:1}],{duration:560});
+  const set=(r,t)=>$(r).querySelectorAll('.tm span').forEach(s=>s.textContent=t);
+  at(120,()=>{set('L3','08:15');set('L2','08:35')})});
+ at(4700,async()=>{note('SWIPE RIGHT KEEPS A ROW: IT DRIES TO INK; ITS SLOT PAINTS ONTO THE STROKE.');
+  await swipe('finger1','L1',90);$('L1').animate([{transform:'translateX(54px)'},{transform:'none'}],{duration:520,easing:'cubic-bezier(.3,1.3,.5,1)',fill:'forwards'});
+  dryRow('L1');const s=$('slot1');s.animate([{opacity:0,stroke:'#2450D8'},{opacity:1,stroke:'#2450D8',offset:.25},{opacity:.6,stroke:'#17141F'}],{duration:1500,delay:200,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+  say('L_say','Reply to landlord, 8 am. <span class="undo">UNDO</span>')});
+ at(7800,async()=>{note('HOLD START WITH 0.7 S: EVERY ROW NOT SKIPPED IS KEPT. 10 S UNDO.');
+  $('L_say').style.opacity=0;finger('finger1',150,470,1);await hold('L_sw',268);$('finger1').style.opacity=0;
+  dryRow('L3');dryRow('L2',120);
+  $('L_page').style.opacity=0;$('L_page').style.transform='translateY(-24px)';$('L_page').style.filter='blur(3px)';
+  const h=$('L_hero');h.style.top='440px';h.style.fontSize='34px';h.style.lineHeight='40px';
+  at(30,()=>{h.style.transition='top .52s cubic-bezier(.3,1.3,.5,1),font-size .52s cubic-bezier(.2,.8,.2,1),line-height .52s,opacity .2s';h.style.opacity=1;h.style.top='174px';h.style.fontSize='56px';h.style.lineHeight='60px'});
+  at(420,()=>{$('L1').style.opacity=0;$('L3').style.top='590px';$('L2').style.top='652px';['L2','L3'].forEach(r=>$(r).querySelector('.c').style.opacity=0)});
+  at(700,()=>{$('L_fin').style.opacity=1;$('L_fin').querySelector('path').animate([{clipPath:'inset(0 100% 0 0)',opacity:1},{clipPath:'inset(0 0 0 0)',opacity:1}],{duration:360,easing:'cubic-bezier(.2,.8,.2,1)'})});
+  at(500,()=>say('L_say','Plan kept. Reply to landlord is up. <span class="undo">UNDO</span>'))});
+ // right: rest day
+ at(10600,()=>{note('REST DAY STAYS THE HERO; THE PLAN SITS UNDER IT. NO CALENDAR, NO MEETINGS.');
+  $('LP').style.transition='opacity .4s';$('LP').style.opacity=.55;wisps('R_w',true)});
+ at(12800,()=>{note('NO ANSWER IN 20 S (SHORTENED): THE RULES PLAN STAYS, ONE QUIET LINE.');stopWisps();
+  say('R_say','Claude didn’t answer in time. Here’s your usual plan.')});
+ at(14800,async()=>{note('SWIPE LEFT SKIPS A ROW. NOTHING WAS WRITTEN, SO NO LINE.');
+  await swipe('finger2','R2',-90,360);$('R2').style.opacity=0;at(140,()=>{$('R3').style.top='652px'})});
+ at(17200,()=>{document.body.dataset.done='1'});
+});
+</script>
+</body>
+</html>
