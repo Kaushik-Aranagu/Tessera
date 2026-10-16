@@ -39,7 +39,7 @@ A theme is mostly ground. Colour arrives only where something matters: the actio
 | `liveInk` (live as text: UNDO, Finish words) | #C23A22 | #FF7A5C | #B83C28 | #FF8466 | #B8361E |
 | `now` (cadmium: the moment, rest, planning) | #F0A500 | #FFC23D | #E0B341 | #E8B54A | #D99A1C |
 | `health` (sage: health, kitchen) | #12936A | #3FD49A | #6E9E6A | #8FCB9E | #23866A |
-| `training` | #CC3F68 | #FF6B92 | #C8452F | #F07FA0 | #C24766 |
+| `training` | #CC3F68 | #FF6B92 | #6E9E6A (today's sage) | #F07FA0 | #C24766 |
 | `neutral` (class colour) | #9C95A8 | #8E879A | #A39AAE | #9A8FA6 | #7E918A |
 | Workout `ground` | #14111A | #000000 | #1C1828 | #0C0812 | #0E1C17 |
 | Workout `raised` | #221D2C | #141217 | #3B2D57 | #1C1426 | #18302A |
@@ -137,7 +137,7 @@ The workout follows the theme. Every workout view reads `Theme.Colors.Workout.*`
 
 | Workout token | Porcelain | Obsidian | Plein | Lacquer | Celadon |
 |---|---|---|---|---|---|
-| `tess` (Tess's words, the swap wash, the cobalt set stroke; replaces `tess`, `tessBar` and `cobalt`) | #8FB0FF | #6FA4FF | #9DBFE6 | #8DB2FF | #9DBBEA |
+| `tess` (Tess's words, the swap wash, the cobalt set stroke; replaces `tess`, `tessBar` and `cobalt`) | #8FB0FF | #86B4FF | #9DBFE6 | #8DB2FF | #9DBBEA |
 | `health` | #3FC58F | #3FD49A | #7FB07A | #8FCB9E | #5DBE98 |
 | `inkSecondary` | `ink` at 60% (replaces #A79FB5) | same | same | same | same |
 | `glass` | `ground` at 82% over the material | same | same | same | same |
@@ -205,7 +205,7 @@ This addendum wins over everything above. The tables above already carry the new
 2. `inkTertiary`: 51% on light looks, 38% on dark looks. It's text only at 34pt and up; below that, it's for marks. Placeholders use `inkSecondary`.
 3. `muted` is never text. It's for disabled marks only.
 4. `liveInk` is its own value on dark looks too: Obsidian #FF7A5C and Lacquer #FF8466. **UNDO and every vermilion word always use `liveInk`.** Fills and strokes keep `live`.
-5. Obsidian `tess`: #86B4FF, for words and the soul alike.
+5. Obsidian `tess` and Obsidian Workout `tess` are both #86B4FF, for words and the soul alike.
 6. Plein `tess`: #2A64A0, and Celadon `context`: #456680. These are margin, so the washes and the glaze pool can't drop them under 4.5:1.
 7. Celadon Workout `signal`: #EE7056. Plein keeps #D9563F, because it's the approved look; instead, no signal text ever sits on Plein's Workout `raised`.
 
