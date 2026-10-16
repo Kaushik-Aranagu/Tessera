@@ -9,7 +9,7 @@ Read at origin/master, traced by hand, nothing run. Sources: `Features/Tess/Soul
 `.askClaude(kind, touched:)`, then exactly one of `.claudeDone` or `.claudeFailed`. `askClaude` fires only after the
 walls and `ledger.reserve` pass, just before the first request (CC §3 steps 1 to 4), so a refused ask is silent by
 construction. `touched` stays on the phone and never enters a request body (CC §5, test 8). Today `SoulEvent` has a
-bare `.askClaude` (SR:22) and the router maps it to thinking, not working (SR:121-124).
+bare `.askClaude` (SR:22); the router already maps it to working on Home and to thinking only on the live page (SR:127-133).
 
 ## 1. Asks that emit
 
@@ -18,8 +18,8 @@ bare `.askClaude` (SR:22) and the router maps it to thinking, not working (SR:12
 | A1 | Capture miss: Ask or Speak phrase the grammar and on-device model miss, switch on, key, under cap | `.capture` | `[]` (the phrase is not an object; no readers, the words have gone, TM §8 row "A Claude call out") | `.sent` (local thinking) → gather 220 ms → `askClaude` → `claudeDone` on ghosts, else `claudeFailed` | "Asking Claude." then Claude's line with UNDO, or "Claude didn't answer in time.", "Claude is busy right now.", "Didn't catch that." | Call live (`ClaudeTessModel.swift:49`); soul gets only `.sent` (`BottomChrome.swift:478`) then `.committed` or `.lineShown`. **No askClaude: not built** |
 | A2 | Key check: paste or Test in Settings: Claude | `.keyCheck` | `[]` (CC §5) | `askClaude` → `claudeDone` on works or capReached, else `claudeFailed` | "Checking it with Claude." then the outcome line | **Built, bare event:** `ClaudeSection.swift:332`, `:338`; router shows thinking |
 | A3 | Plan my day opened, switch on, key, under cap | `.plan` | rows the plan moves or names, in plan order (PlanPack block ids t1, e1, w1 mapped back to object ids) | rules plan draws at once → `askClaude` → `claudeDone` on a checked plan, else `claudeFailed` | "Planning your day." then "Plan ready. Push A at 12:15 pm." or "Claude didn't answer in time. Here's your usual plan." | `ClaudePlanWording.word` (`PlanWording.swift:432`) has no caller. **Not built** |
-| A4 | Link read: a recipe link is fetched and parsed (L1 card, L2 text), no Claude | `.linkFetch` | `[]` until lines exist | `askClaude` → `claudeDone` on a found recipe; on L3 it continues as A5 with no second split (TM §14 rule 5) | "Reading the recipe." then the found line, or "You're offline. I'll read it when you're back." | `RecipeLinkReader` never built in App or Features (`RecipeLinkReader.swift:142`). **Not built** |
-| A5 | Recipe reader L3: card and text both fail, not paywalled, switch on, key, under cap | `.recipeLink` | the parsed ingredient and step lines of the draft, in page order | joins A4's working → `claudeDone` / `claudeFailed` | "Reading the recipe." then "Claude read it. Check it, then save." or "Claude didn't answer in time. Paste the text instead." | `ClaudeRecipeReader.read` (`RecipeLinkReader.swift:347`), latent. Line on master is "No recipe card there. Asking Claude." (`:14`). **Not built** |
+| A4 | Link read: a recipe link is fetched and parsed (L1 card, L2 text), no Claude | `.linkFetch` | `[]` until lines exist | `askClaude` → `claudeDone` on a found recipe; on L3 it continues as A5 with no second split (TM §14 rule 5) | "Asking Claude to read the recipe." then the found line, or "You're offline. I'll read it when you're back." | `RecipeLinkReader` never built in App or Features (`RecipeLinkReader.swift:142`). **Not built** |
+| A5 | Recipe reader L3: card and text both fail, not paywalled, switch on, key, under cap | `.recipeLink` | the parsed ingredient and step lines of the draft, in page order | joins A4's working → `claudeDone` / `claudeFailed` | "Asking Claude to read the recipe." then "Claude read it. Check it, then save." or "Claude didn't answer in time. Paste the text instead." | `ClaudeRecipeReader.read` (`RecipeLinkReader.swift:347`), latent. Line on master is "No recipe card there. Asking Claude." (`:14`). **Not built** |
 | A6 | Photo read in Show (Vision on the phone; the image never leaves) | `.photoRead` | the OCR lines in read order, then the ghost row they become | `askClaude` → `claudeDone` on a ghost, `claudeFailed` on "No text in that photo." | "Reading the photo." (proposed; TM lists photo reads under working) | No PageReader on master. **Not built** |
 | A7 | Home lines: the trailing call after a Home fact change, Home on screen | `.homeLines` | packed `HomeFact.id`s in Home order, then memory ids (`home-lines-job.md` §7) | `askClaude` → `claudeDone` only if a slot redraws, else `claudeFailed` (silent, see ★) | No working line: the rules line stays; Failure lines never show on Home | No job, no ClaudeClient. **Not built** |
 | A8 | Week story: Review shown on Monday after 04:00, facts changed | `.weekStory` | the objects behind each handle in line order (`week-story-job.md` §1.6) | `askClaude` → `claudeDone` / `claudeFailed` | "Reading your week." (proposed) | **Not built** |
@@ -51,13 +51,17 @@ on. Never for offline, a bad key or the cap: those are not her miss, and never a
 |---|---|---|---|
 | G1 | No `onAsk` / `onDone` / `onFail` hook: Claude callers can't tell the app an ask started | `ClaudeClient` (or each caller until AI-2) calls `onAsk(kind, touched)` after reserve, before send; `onEnd(outcome)` once | Core |
 | G2 | `touched` from pack builders (plan, recipe, Home lines, week story) | Each builder returns ids in job order; test that none reach the body | Core |
-| G3 | `SoulEvent.askClaude` has no payload; router maps it to thinking (SR:121-124) | `.askClaude(kind:touched:)`, route to working(reading:); readers only with two or more touched words on screen | Builder A |
+| G3 | `SoulEvent.askClaude` has no payload (routing to working on Home is already right, SR:127-133) | `.askClaude(kind:touched:)`, route to working(reading:); readers only with two or more touched words on screen | Builder A |
 | G4 | `claudeFailed` can't say whose miss it was | `.claudeFailed(mine: Bool)`; the mouth dips only when `mine` | Builder A, Core sets it |
 | G5 | Capture miss never emits `askClaude` (Ask shows thinking for the whole call) | `AppModel` forwards G1 to `soul.handle`, skipped while a workout is live (N7) | Builder B |
 | G6 | `.missed` after a real send (Claude made nothing, `ClaudeTessModel.swift:126`) must end working | emit `claudeFailed(mine: true)` with "Didn't catch that." | Core, Builder B |
-| G7 | Recipe line mismatch: master "No recipe card there. Asking Claude." vs sheet "Reading the recipe." | Working line "Reading the recipe."; keep master's line only if Design prefers it | Builder B, Design |
+| G7 | Recipe line mismatch: master "No recipe card there. Asking Claude." vs sheet "Asking Claude to read the recipe." | Working line "Asking Claude to read the recipe."; keep master's line only if Design prefers it | Builder B, Design |
 | G8 | Plan, link, recipe, photo and week story emitters | Emit A3 to A8 as each caller lands | Builder B |
 
 ★ **Product:** Home lines (A7) and week story (A8) run without him waiting. TM §5 says working is "for anything he
 waits on", but `home-lines-job.md` §7 sends `askClaude(touched:)`. Should a background wording job split her into
 working, or stay silent? Default proposed: week story shows working (he opened Review); Home lines emits nothing.
+
+**Ruled (Product, decisions.md 12:14 PM PT):** the week story shows working; Home lines send nothing. G1-G5 are on the Core, Builder A and Builder B boards; CA1 is on QA's board to recheck; G7 goes to Design (expected "Asking Claude to read the recipe.").
+
+**Design (copy-pass addendum b21c36d), G7:** the recipe hand-off line is "Asking Claude to read the recipe."; the fetch line before it stays "Reading nytimes.com.". It replaces "No recipe card there. Asking Claude." and "Reading the recipe.": when something goes to Claude, the line says Claude.
