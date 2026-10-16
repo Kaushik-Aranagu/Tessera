@@ -20,6 +20,8 @@ struct TaskTests {
     init() throws {
         classes = try store.prepareCatalog()
         engine = ActionEngine(store: store, classes: classes)
+        // The test's zone, not the device's: a task is filed under the day it was done where he was (Research 127).
+        engine.zone = { .gmt }
         list = TaskList(store: store, classes: classes)
     }
 
