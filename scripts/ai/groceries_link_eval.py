@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """AI-12 gate: the linkItems match eval over docs/research/fixtures/groceries-link-eval.md.
-Reads the fixture's 24 candidate rows, sends them to Claude in calls of at most 6 rows (the contract allows
+Reads the fixture's candidate rows (25 since #409), sends them to Claude in calls of at most 6 rows (the contract allows
 12 rows and 6 pairs a call; 6 rows keeps every call able to return its whole answer), scores every pair against
 must / never / either, and writes docs/ai/groceries-link-eval-results.md.
 
 Key: TESSERA_CLAUDE_KEY (or ANTHROPIC_API_KEY on a Mac) from the environment only. Never printed, never written.
-Usage: python3 scripts/ai/groceries_link_eval.py [--runs 3] [--model haiku] [--dry] [--out PATH]
+Usage: python3 scripts/ai/groceries_link_eval.py [--runs 3] [--dry] [--out PATH under docs/]
+Haiku 5.5 only, as the fixture specifies (the forced tool choice this gate relies on is refused by Sonnet 5.5).
 --dry builds every request and scores a stub reply (every must pair, plus one false pair), sending nothing.
 The run stops itself once it has spent $1.
 """
@@ -22,8 +23,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURE = ROOT / "docs/research/fixtures/groceries-link-eval.md"
 RESULTS = ROOT / "docs/ai/groceries-link-eval-results.md"
-MODELS = {"haiku": "claude-haiku-5-5", "sonnet": "claude-sonnet-5-5"}
-PRICES = {"claude-haiku-5-5": (100, 500), "claude-sonnet-5-5": (2000, 10000)}  # nano-dollars per token in, out
+MODEL = "claude-haiku-5-5"
+PRICE_IN, PRICE_OUT = 100, 500  # nano-dollars per token (TessUsageLedger.prices)
 STOP_NANO = 1_000_000_000  # $1
 ROWS_PER_CALL = 6
 MAX_PAIRS = 6
@@ -58,6 +59,16 @@ BACKOFF = [2, 4, 8, 16, 32]
 RETRY_AFTER_CAP = 60
 
 
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Refuse every redirect, so the key header never follows a 3xx to another address."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise urllib.error.HTTPError(req.full_url, code, "redirect refused", headers, fp)
+
+
+OPENER = urllib.request.build_opener(NoRedirect)
+
+
 def parse_fixture():
     text = FIXTURE.read_text()
     m = re.search(r"Uncovered ingredient handles in the pack[^:]*:(.*?)\n\n", text, re.S)
@@ -71,8 +82,12 @@ def parse_fixture():
             pair = re.match(r"(i\d+)", cells[3])
             rows.append({"n": int(cells[0]), "handle": f"g{cells[0]}", "title": cells[1], "expect": cells[2],
                          "pair": pair.group(1) if pair else None})
-    if len(rows) != 24 or len(ingredients) != 23:
-        sys.exit(f"fixture parse: {len(rows)} rows, {len(ingredients)} ingredients (want 24, 23)")
+    if [r["n"] for r in rows] != list(range(1, len(rows) + 1)) or len(ingredients) != 23:
+        sys.exit(f"fixture parse: rows {[r['n'] for r in rows]}, {len(ingredients)} ingredients (want 1..N, 23)")
+    bar = re.search(r"(\d+) of \1 must rows", text)
+    musts = sum(r["expect"] == "must" for r in rows)
+    if not bar or int(bar.group(1)) != musts:
+        sys.exit(f"fixture parse: pass bar names {bar.group(1) if bar else 'no'} must rows, table has {musts}")
     return ingredients, rows
 
 
@@ -91,7 +106,7 @@ def post(key, body):
                                               "content-type": "application/json"})
         started = time.time()
         try:
-            with urllib.request.urlopen(req, timeout=30) as r:
+            with OPENER.open(req, timeout=30) as r:
                 return json.load(r), time.time() - started
         except urllib.error.HTTPError as e:
             try:
@@ -123,7 +138,7 @@ def stub_reply(batch):
 
 def run(args, key):
     ingredients, rows = parse_fixture()
-    model = MODELS[args.model]
+    model = MODEL
     batches = [rows[i:i + ROWS_PER_CALL] for i in range(0, len(rows), ROWS_PER_CALL)]
     out = {"model": model, "calls": 0, "dropped": 0, "cost": 0, "secs": [], "runs": []}
     for run_no in range(args.runs):
@@ -140,8 +155,7 @@ def run(args, key):
             out["calls"] += 1
             out["secs"].append(secs)
             usage = data.get("usage", {})
-            i, o = PRICES[model]
-            out["cost"] += usage.get("input_tokens", 0) * i + usage.get("output_tokens", 0) * o
+            out["cost"] += usage.get("input_tokens", 0) * PRICE_IN + usage.get("output_tokens", 0) * PRICE_OUT
             reply = next((b["input"] for b in data.get("content", [])
                           if b.get("type") == "tool_use" and b.get("name") == "linkItems"), None)
             pairs = (reply or {}).get("pairs", [])
@@ -187,7 +201,7 @@ def write_report(out, args):
         f"**Gate: {'PASS' if passed else 'FAIL'}.**", "",
         "| Check | Bar | Result |", "|---|---|---|",
         f"| Must rows paired in every run | {len(musts)} of {len(musts)} | {must_ok} of {len(musts)} |",
-        f"| False pairs in all row-runs | 0 of {24 * len(out['runs'])} | {len(false_pairs)} |",
+        f"| False pairs in all row-runs | 0 of {len(out['rows']) * len(out['runs'])} | {len(false_pairs)} |",
         f"| Replies dropped (over 6 pairs, two pairs on a row, no tool call) | 0 | {out['dropped']} |",
         f"| Cost per run | under $0.001 | ${per_run:.4f} |",
         f"| Latency p50 / max | 8 s timeout | {secs[len(secs) // 2]:.1f} s / {secs[-1]:.1f} s |", ""]
@@ -214,16 +228,14 @@ def write_report(out, args):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", type=int, default=3)
-    ap.add_argument("--model", default="haiku", choices=sorted(MODELS))
     ap.add_argument("--dry", action="store_true", help="build every request, score a stub reply, send nothing")
     ap.add_argument("--out", help="results path (default docs/ai/groceries-link-eval-results.md)")
     args = ap.parse_args()
     key = os.environ.get("TESSERA_CLAUDE_KEY") or os.environ.get("ANTHROPIC_API_KEY")
     if not key and not args.dry:
         sys.exit("TESSERA_CLAUDE_KEY is not set. Put it in the environment, never in a file or a chat.")
-    if args.out and not Path(args.out).resolve().is_relative_to(ROOT / "docs"):
-        if not str(Path(args.out).resolve()).startswith("/tmp/"):
-            sys.exit("--out must be under docs/ (or a scratch path under /tmp)")
+    if args.out and not Path(args.out).resolve().is_relative_to((ROOT / "docs").resolve()):
+        sys.exit("--out must be under docs/")
     write_report(run(args, key), args)
 
 
