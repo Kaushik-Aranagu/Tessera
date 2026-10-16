@@ -4,6 +4,61 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+**1:23 PM PT Oct 16: habits and body weight (Research habits-weight-week.md asked).** DECIDED. All six of Research's picks stand.
+
+Body weight:
+- Apple Health is read only in v1. One entry a day. Tessera's entry wins, and Health fills the gaps.
+- Siri says "Body weight logged." and never says the number.
+- Body-shaped questions with no number ("what did i weigh monday", "bw trend") stay on the phone.
+
+Sick days:
+- "was sick monday", said on a Thursday, becomes a private note dated Monday. It sets no mark.
+- A sick mark holds every habits ask that day. Rest and skip marks don't.
+- "sick", "unwell" and "feeling sick" join PrivateFacts first on the next build.
+
+Also: a past-tense log with a past weekday ("meditated monday" said on Thursday) logs to that day. It never becomes next week's task.
+
+**1:22 PM PT Oct 16: default task times never land in quiet hours (QA on #507).** DECIDED, QA's suggestion. If a task given only a day would default to a time inside quiet hours (23:00-07:00), the default snaps to 7 am instead. "call mom thu" typed at 1 am becomes 7 am, not 2 am. A time he types himself is kept as typed.
+
+**1:16 PM PT Oct 16: the pin stays a36b161b (coordinator, on Research's N13/N15 flag).** DECIDED.
+- No re-pin mid-gate. 7b321d2 has no private notes at all, so this build is strictly better.
+- Two fast follows go at the top of the next build: Builder B's NoteRow isPrivate guard (NotesView.swift:186-216, 0p) and Core's pre-#422 note pass (DayStory.swift:347, 0aa).
+- His page gets one honest line about both.
+
+**1:15 PM PT Oct 16: Notes day one (Research notes-day-one.md asked).** DECIDED. Eight of Research's nine picks stand; I changed one.
+
+Changed:
+- Pick 3: "paid rent 2100 fri" (past tense with an amount) becomes a PRIVATE dated note, the same as the Siri routing Core is already building (12:26). Money with an amount stays private everywhere.
+- "bought 2 lemons sat" stays a plain dated note, since a count is not an amount.
+
+Stand as picked:
+- The Notes page gets a receipt with a 4 s UNDO: "Note, kept." or "Private note, kept."
+- Body facts typed on the Notes page, or after "note:", go private.
+- He can't toggle private by hand in v1.
+- A multi-line paste opens a new note in the editor and keeps its lines.
+- A bare URL said to Tess becomes a note holding the link, with nothing fetched.
+- An account-number line makes the whole note private.
+- The 200-note cap is lifted now. Search is parked until Spotlight, and private notes are never indexed.
+- VoiceOver announces the key line and the receipt.
+
+Pin: N13 (a private note's row shows its second line) and N15 (notes from before #422 are not marked private) do NOT hold a36b161b. 7b321d2 shows every note in full, so neither is a regression. Both ride the next build first.
+
+**1:13 PM PT Oct 16: Settings day one (Research settings-day-one.md asked).** DECIDED, all eight of Research's picks.
+
+The Claude key:
+- A 401 keeps the key and reopens the writing line. settings-claude S7 and S22 get rewritten to match.
+- Removing the key reads "Claude key removed. Leaving the app makes it final."
+- Replacing the key holds the old one for 10 s with UNDO, the same as REMOVE.
+
+Wording:
+- The switch's yes line is "Tess asks Claude when she's unsure." until Plan my day goes through Claude.
+- The backup receipt reads "Copy, saved."
+- Until the Settings page ships, every pointer line says "Review, under Claude".
+
+Layout:
+- Settings has five sections. TESS (What I know) is added only once that page exists.
+- UNITS is built now, as plain text.
+
 **1:08 PM PT Oct 16: PIN NAMED, a36b161b7294596848a319c0cc0fc50a3b25f2ee** (master after M1 #498, 1:07 PM PT). DECIDED.
 
 Checked on the SHA:

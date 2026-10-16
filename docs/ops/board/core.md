@@ -157,6 +157,27 @@
 - Wire HomeLines' tomorrow: option for Now after 9 pm.
 - A secret-word task reads "Private task" on the hero, widget and Lock Screen.
 - Cook timer notifications go with Builder A's G2.
+0z. (Research `fixtures/settings-day-one.md`, 77 steps; decisions 1:13 PM PT Oct 16) Fix the key and pointer gaps (S3, S23, S35-37):
+- S23, with Builder B: a 401 keeps the key and reopens the writing line (ClaudeKey.swift:270-271).
+- S3: the pointer lines in ClaudeTessModel.swift:133,203 say "Review, under Claude".
+- S35-37 is the same as 0r: "Paused" shows on refusal, the spend file lives outside the store, and the month is Pacific (ClaudeKey.swift:110-114).
+0aa. (Research `fixtures/notes-day-one.md`; decisions 1:15 PM PT Oct 16) NEXT BUILD FIRST:
+- N15, the pre-#422 mark-private pass (DayStory.swift:347 still prints old secrets).
+- N18, with 0j R1: parsePastLog runs after the body-fact check (TessGrammar.swift:127 vs :141,:153).
+- N28/N29: "bought 2 lemons sat" becomes a plain dated note, and "paid rent 2100 fri" a private dated note. Neither goes to the miss log (TessGrammar.swift:116-120, TessCaptureEngine.swift:58).
+- An account-number line makes the whole note private.
+- Lift the 200-note cap.
+0ab. (QA review-507 low; decisions 1:22 PM PT Oct 16) If an untimed task's default time (the next whole hour) falls in quiet hours (23:00-07:00), snap it to 7 am. A time he types is kept. Add a test: "call mom thu" at 1 am gives 7 am.
+0ac. (Research `fixtures/habits-weight-week.md`, 38 steps; decisions 1:23 PM PT Oct 16) NEXT BUILD FIRST:
+- HW19: add sick, unwell and feeling sick to PrivateFacts.symptoms (PrivateFacts.swift:55-58).
+- HW13, with P14: Siri saves "weighed 82.2" as private and replies "Body weight logged."
+- HW9: requiresAuthentication on both intents (Intents.swift:118,149), same as P16.
+
+Then:
+- HW11: run parsePastLog after the body check (with 0j R1/N18).
+- HW17: day marks, so "was sick yesterday" is a private dated note.
+- HW7/25: "today" before 4 am means the 4 am day (TessGrammar.swift:609, with 0q).
+- HW18: a past-tense log with a past weekday logs to that day.
 0a. Recipe clock gaps for Core (#461, Kitchen lead's day-one gaps, `docs/research/fixtures/recipe-clock-day-one.md` gap table and `docs/product/cook-mode-acceptance.md` rulings 3-5; Product 12:06 PM PT Oct 16: running over HOLDS, Kitchen's call stands): G3 one source, the bead's step is the resume point and "next"/swipe move both; G4 the bead entering a timed step starts its timer, keyed by step not label; G5 parse "per side" (doubles) and "overnight" (vectors s5, s6, s11, s12); G9 `FinishCooking` line "Paprika chicken, cooked." with the DONE key (with Builder B); G10 the peek key is a dry run of `AddRecipeToGroceries`, receipt "Chicken, 7 added." (with Builder B); G11 cooks idle-suspend after 45 min, idle timer off while the clock runs (with Builder B). Ships in the 69 slice (item 0).
 0b-r. (Design on #454's clip, 12:10 PM PT Oct 16) The Recipes parser strips a leading "N." or "N)" from step text so a pasted "1. Spread…" doesn't show its number twice beside the gutter. Small; with the 69 slice.
 0b. (10:02 AM PT Oct 16) Soul signals (`docs/ai/soul-signals.md`, #418, once the motion lab passes it): the pure HomeFacts diff to at most one soul event, with its tests, no model calls. After AI-2 (see Order); Builder A wires the five new events after its pick PRs (a) and (b).
