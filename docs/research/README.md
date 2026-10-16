@@ -118,3 +118,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [themes-token-audit.md](themes-token-audit.md) | Builder A, Builder B, Design: every hard-coded colour the Themes PR must touch, mapped to themes.md tokens (102 hits) |
 | [miss-counts.md](miss-counts.md) | Core: counts-only capture-miss table written into each .tessera copy, fixtures, check-in Q8 |
 | [grammar-open-defaults.md](grammar-open-defaults.md) | Product, Core: 20 proposed defaults for the open grammar questions (relative times, workout extras, Money, Reading, People, upkeep) |
+| [inplace-number.md](inplace-number.md) | Builder A, Design: in-place number scrub feel for the set logger (detents, acceleration, haptics, VoiceOver, 19 fixtures) |
