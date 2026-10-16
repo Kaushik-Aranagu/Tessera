@@ -224,3 +224,5 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [fixtures/plan-my-day-eval.json](fixtures/plan-my-day-eval.json) | AI architecture: the 26 Plan my day eval packs for the runner, 24 called, 18 bad variants; every expect reply passes the PlanProposalValidator port |
 | [post-pin-403-407.md](post-pin-403-407.md) | Coordinator, Builder A, Core: merge read for #403 (Tess eyes) and #407 (Catalog v10) after the pin (Product item AC) |
 | [fixtures/review-week-story.md](fixtures/review-week-story.md) | Builder B, Core: Review week story over 12 weeks (Product item AD): 25 pass, 20 wrong, 1 miss, 14 not built |
+| [fixtures/kitchen-week-day-one.md](fixtures/kitchen-week-day-one.md) | Core, Builder B, Kitchen lead: Kitchen week day one against Design 67 (Product item AF), 30 steps on 4d67f94: 7 pass, 11 wrong, 6 miss, 6 not built |
+| [fixtures/shutdown-evening.md](fixtures/shutdown-evening.md) | Builders A and B, Core: the Shutdown evening from 8:30 pm to the DST night (Product item AE), 16 cases on 4d67f94: 2 pass, 7 wrong, 1 miss, 6 not built |
