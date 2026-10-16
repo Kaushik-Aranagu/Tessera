@@ -22,7 +22,7 @@
 7. NowPicker wiring. Done when cooking, shopping and timed tasks become Now through the same picker as workouts.
 8. M2 slice 12, the full What's running ledger for tasks: suspended and waiting, with the stale rules.
 9. M2 slice 13, the day-full warning.
-10. Day log page (M4 slice 5 screen), after Core's `DayStory`. Design's sheet is ready: `docs/design/day-log-page.md` on Design's branch. Exact copy and every empty state: `../research/day-log-copy.md` (#204; decisions.md 7:34 PM PT). Done when a Day page per date shows the story lines from Design's sheet, a scrub back through past days works, and a HomeLink word reaches it.
+10. Day log page (M4 slice 5 screen), after Core's `DayStory`. Design's sheet is ready: `docs/design/day-log-page.md` on Design's branch. Exact copy and every empty state: `../research/day-log-copy.md` (#204; decisions.md 7:34 PM PT); late-night days per `../research/day-log-late-night.md` (#208), times in the current zone. Done when a Day page per date shows the story lines from Design's sheet, a scrub back through past days works, and a HomeLink word reaches it.
 
 **Audit batches (small PRs, after the Review week fix; decisions.md 5:14 PM PT):**
 - Late night (Research #169): the wrap-up line is never shown; Home says "trained this night"; Tess's glyph rests during a live workout after 11 PM.
