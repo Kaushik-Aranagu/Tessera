@@ -12,6 +12,10 @@
 - **Lane 1:** The stuck-listening fix (refused hold leaves Tess in listening; one line plus a router test; BLOCKS the pin).
 - **Lane 2:** #366's re-recorded clip on its head, then Plan my day (53) on ios/plan-home; after #366 merges, the one batch in Next.
 
+**Review wording (Research 143; 11:50 AM PT Oct 16):** "1 of 6" reads "1 so far" (ReviewWeek.swift:100, 210); "A quiet day", "Wednesday open" and the "·" on empty days (:187, 206, 311) and "the week so far" (ReviewPage.swift:237) go through Design's copy pass; the hero session count stays words per Design 12 ("All six sessions in").
+
+**Session and ghost fixes (QA `qa/review-tess-processes.md`; 11:48 AM PT Oct 16; cc Builder A):** P2 high, a pin rider: drop AppModel.session when its workout is deleted (UNDO of a Home capture that started a workout; AppModel.swift:297-308, 636-648, :341). T2: a second live ask never overwrites the first ghost in pendingCaptures, and commitExpired gets a caller (AppModel.swift:238-251).
+
 **Home reads HomeLines (AI architecture, 11:45 AM PT Oct 16):** NowPage still builds its own contextLine on master. If #366 doesn't switch NowPage to HomeLines, that's the first item after it merges.
 
 **Design 71 on the recipe peek (with 69 in the post-#366 batch):** swipe-more rules 1 to 5 (`docs/design/swipe-more.md`): the left edge is back, a pan in Tess's band is hers, the rest of the page opens INGREDIENTS, and the word always works.
