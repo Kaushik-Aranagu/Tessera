@@ -12,6 +12,10 @@
 - **Lane 1:** The stuck-listening fix (refused hold leaves Tess in listening; one line plus a router test; BLOCKS the pin).
 - **Lane 2:** #366's re-recorded clip on its head, then Plan my day (53) on ios/plan-home; after #366 merges, the one batch in Next.
 
+**Shutdown (Research 148):** SH2's screen half (Shutdown on screen holds the close; draft kept until 4 am); no Shutdown prompt over a live workout, it shows after Finish.
+
+**Day marks (Research 147 DG4):** on a marked day Home drops "Legs A is a tap away." and its Start key (NowPage.swift:396-414) and shows the mark line once Design confirms the wording.
+
 **Settings Rest day row (Research 146 RG4):** a Rest day row in Settings for `restWeekday`, third person ("Rest day: Sunday."), once Core's reader lands.
 
 **Review wording (Research 143; 11:50 AM PT Oct 16):** "1 of 6" reads "1 so far" (ReviewWeek.swift:100, 210); "A quiet day", "Wednesday open" and the "·" on empty days (:187, 206, 311) and "the week so far" (ReviewPage.swift:237) go through Design's copy pass; the hero session count stays words per Design 12 ("All six sessions in").

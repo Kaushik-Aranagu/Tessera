@@ -30,6 +30,20 @@
 - T1 high: TessTools.date parses zone-less times in TessContext's calendar zone, not UTC (TessTools.swift:344-349), with a zone-less test.
 - T3: "bench 80x8 mon" never revives Monday's process or back-dates today's workout. T4: with two open workouts LogExercise picks the running one. T5 (DEBUG only): cook and shop starts read the capture clock.
 
+**Shutdown flow (Research 148 `docs/research/fixtures/shutdown-flow.md`, #448; decisions.md 11:57 AM PT Oct 16):**
+- SH1: on the first open after 10 pm, write a closed mark stamped 10:00 pm that moves no rows.
+- SH3: rows the hold keeps for tomorrow set rolledFrom and add 1 to rolls, like the 4 am roll (RollForward.swift:56-77).
+- SH2 (with Builder B): the 10 pm close waits while Shutdown is on screen, closes when he leaves, and keeps his draft for CLOSE THE DAY until 4 am.
+- A live workout: Shutdown waits for Finish; the close waits too and runs after Finish, still stamped 10:00 pm, with the workout on the day it started.
+- SH9: CL10 wins over C7 for the check-in only.
+
+**Day marks (Research 147 `docs/research/fixtures/day-marks.md`; decisions.md 11:55 AM PT Oct 16), with the restWeekday reader:**
+- DG1 a stored day mark (day, kind) that week() reads, so a marked day never shows the miss ring (WeekView.swift:89-96, ReviewPage.swift:137-140).
+- DG2 a mark rule after the live rules and before parseTask ("rest day today", "skip today", "back on today" clears).
+- DG3 (privacy, part of MU2's body screen): "feeling sick, no gym" never reaches the model or Claude; turnover memory only ever says "Fri: rest day." (TessMemory+Turnover.swift:59-87).
+- DG5 a timed session beats rest (HomeLines.swift:577-581); DG6 "today" before 4 AM is the logical day (TessGrammar.swift:586); DG7 = RG items above.
+- Past marks: today, tomorrow, and yesterday only ("was sick yesterday"), never further back.
+
 **restWeekday reader (Research 144 for Monday's 101; decisions.md 11:47 AM PT Oct 16):** `restWeekday` (settings, #258) is read by week(), restDay and NowPage on the rolling plan; fixed days (#341) ignore it. Needed if he answers Q4 "Yes, Sunday" on Monday; small, after the pin blockers.
 - Spec: Research 146 `docs/research/fixtures/rest-weekday.md` (13 rules, 27 scenarios incl. the trip and Nov 1 DST). RG1 take the rest weekday out of the pool before `spread` and set isRest (WeekView.swift:34-104, RestDay.swift:20-30); RG2 apply it even with no rhythm passed, so Plans (PlanData.swift:46, Builder A's view) and Plan my day (DayPlan+Store.swift:60) never book Sunday; RG3 "rest day Sunday" is a SetRestWeekday rule ahead of parseTask: "Sunday, rest day." with a 10 s UNDO; RG5 Now and Home agree when a session sits on the rest day (RestDay.swift:23, HomeLines.swift:578); RG7 past weeks keep their marks. First launch with the reader writes Sunday as one op with UNDO; a session trained on Sunday anyway advances the roll.
 
