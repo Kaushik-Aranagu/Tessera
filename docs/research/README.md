@@ -165,3 +165,5 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [living-colours-learning.md](living-colours-learning.md) | Core, AI architecture, Design: how Design 48's rule table bends to his day, Claude picking among the rules' candidates, 5 conflicts, 12 day-shape fixtures |
 | [ai11-week-story-eval.md](ai11-week-story-eval.md) | Core, AI architecture, QA: the AI-11 week story eval, 7 checks, truth and voice, 12 weeks with 32 probes in fixtures/week-story-eval.json |
 | [fixtures/home-lines-day.md](fixtures/home-lines-day.md) | Core, Design, Builder B: his Tuesday hour by hour through #334's HomeLines, 27 rows, 12 gaps (done cook vanishes, paused shop "at the store", record vs best, zero counts) |
+| [tess-knows-trace.md](tess-knows-trace.md) | Core, Builder B, AI, Design: What Tess knows (Design 49) traced against AI-7 to AI-9 and #350, 4 data gaps, 12 smaller, 12 test rows |
+| [next-build-script.md](next-build-script.md) | QA: phone script for the build after 7b321d2: glass tabs, Training part two, Field 18, AI-1 Home lines |
