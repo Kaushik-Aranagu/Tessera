@@ -65,6 +65,9 @@ BANNED = ["should", "must", "missed", "streak", "great", "awesome", "sorry", "oo
           "again", "only", "finally", "skipped", "still"]
 HEALTH = ["sleep", "slept", "tired", "exhausted", "fatigue", "energy", "rested", "sore", "pain", "weight", "kg", "lb",
           "money", "$", "spent"]
+WEEKDAYS = {"sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"}
+MONTHS = {"january", "february", "march", "april", "may", "june", "july", "august", "september", "october",
+          "november", "december"}
 
 
 RETRY_STATUS = {408, 409, 429, 500, 502, 503, 504, 529}
@@ -150,11 +153,17 @@ def check_line(line, item, pack_names):
     for n in re.findall(r"\d+", line):
         if int(n) not in item.get("numbers", []):
             problems.append(f"unlicensed number {n}")
-    # Capitalised words that aren't in the pack (names Claude may have invented).
-    for w in re.findall(r"\b[A-Z][a-z]+\b", line[1:]):
-        if w.lower() not in pack_names and w.lower() not in tokens[:0]:
-            if w.lower() not in {"bench", "press", "record"} and w.lower() not in pack_names:
-                problems.append(f"name not in pack: {w}")
+    # Capitalised words that aren't in the pack (names Claude may have invented). Exempt, per
+    # docs/ai/line-check-vectors.md: a sentence's first word (line start, after ". " or "? "),
+    # weekdays, months and the pack's names.
+    for m in re.finditer(r"\b[A-Z][a-z]*\b", line):
+        w = m.group(0).lower()
+        before = line[:m.start()]
+        if not before.strip() or before.endswith((". ", "? ")):
+            continue
+        if w in WEEKDAYS or w in MONTHS or w in pack_names:
+            continue
+        problems.append(f"name not in pack: {m.group(0)}")
     return problems
 
 
