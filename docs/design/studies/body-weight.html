@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Body weight</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/body-weight-page.md (Design item 29): the Body weight page redrawn under today's rules (S4 title, the context line, no dots at rest, Tess beside the soul), with m3-lines.md's copy, units from settings, both back words (‹ TRAINING, ‹ REVIEW) and D12 in a workout. Board: the page in kg, a bare "82.4" waiting, the page in lb from Review in Obsidian after a keep, and "82.4" said mid-workout as a snapped set ghost. ?play records the weigh-in: the ghost waits, a tap keeps it, the dab drops onto the stroke, the trend rolls, then UNDO takes it back. Add ?x2 for 2x. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:40px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:34px;white-space:nowrap}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;color:rgb(var(--ink));background:var(--ground)}
+.por{--ink:23,20,31;--s2:.66;--s3:.51;--ground:#fff;--tess:#2450D8;--ctx:#6A4C9C;--liveInk:#C23A22;--health:18,147,106;--train:204,63,104;--rest:.42;--sa:#2450D8;--sb:#E2432A;--sc:#F0A500}
+.obs{--ink:245,242,236;--s2:.72;--s3:.38;--ground:#000;--tess:#86B4FF;--ctx:#B7A6E0;--liveInk:#FF7A5C;--health:63,212,154;--train:255,107,146;--rest:.5;--sa:#86B4FF;--sb:#FF5B3A;--sc:#FFC23D}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap;color:rgba(var(--ink),var(--s2))}
+.b{font-size:21px;line-height:28px}
+.s2{color:rgba(var(--ink),var(--s2))}
+.vw{font-weight:600}
+.t34{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px}
+.num{font-size:80px;font-weight:300;letter-spacing:-.04em;line-height:80px;font-variant-numeric:tabular-nums}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:5}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.say{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);color:var(--tess);font-size:21px;line-height:28px;z-index:5}
+.undo{display:block;margin-top:4px;color:var(--liveInk);font-weight:700;font-size:16px;line-height:20px;letter-spacing:.08em}
+.ghost{color:var(--tess);animation:breathe 2.4s ease-in-out infinite}
+@keyframes breathe{0%,100%{opacity:.5}50%{opacity:.66}}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(23,20,31,.14);box-shadow:0 0 0 1.5px rgba(255,255,255,.8);opacity:0;z-index:20;transition:opacity .15s}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;max-width:1720px;line-height:24px}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play');
+const $=id=>document.getElementById(id),at=(t,f)=>setTimeout(f,t);
+const soul=`<div class="soul"><i style="left:0;top:4px;background:radial-gradient(closest-side,var(--sa),rgba(36,80,216,.2))"></i><i style="left:22px;top:2px;background:radial-gradient(closest-side,var(--sb),rgba(226,67,42,.2))"></i><i style="left:12px;top:20px;background:radial-gradient(closest-side,var(--sc),rgba(240,165,0,.2))"></i></div>`;
+// Sep 3 to Oct 16: 44 days, about 30 weigh-ins, the trend 79.4 to 78.2, one typo (87.4 on Sep 16)
+function rnd(i){const x=Math.sin(i*12.9898)*43758.5453;return x-Math.floor(x)}
+const DAYS=44;const ENTRIES=[];let tr=[];
+for(let d=0;d<DAYS;d++){const t=79.4-1.2*(d/(DAYS-1))+.18*Math.sin(d/5);tr.push(t);
+ if(d===DAYS-1)continue; // nothing today yet
+ if(rnd(d)<.32&&d!==13)continue;const w=d===13?87.4:t+(rnd(d+99)-.5)*1.1;ENTRIES.push([d,w])}
+tr[DAYS-1]=78.2;
+const LB=2.20462;
+const SX=d=>22+346*d/(DAYS-1);
+const Y0=330,H=230; // the stroke's box
+function sy(w,lo,hi){return Y0+H*(1-(w-lo)/(hi-lo))}
+function strokePath(lo,hi,upto){let p='';for(let d=0;d<=upto;d++){p+=(d?' L':'M')+SX(d).toFixed(1)+' '+sy(tr[d],lo,hi).toFixed(1)}return p}
+function page(L,o){
+ const u=o.unit||'kg',f=u==='lb'?LB:1;const fmt=v=>(v*f).toFixed(1);
+ const lo=Math.min(...tr)-1,hi=Math.max(...tr)+1;
+ const dabs=ENTRIES.map(([d,w])=>{const out=w>hi;const y=out?Y0:sy(w,lo,hi);
+  return `<div class="abs" style="left:${SX(d)-4}px;top:${y-3}px;width:8px;height:6px;border-radius:50%;background:rgba(var(--ink),${out?.22:.3})"></div>${out?`<div class="abs lbl" style="left:${SX(d)+10}px;top:${Y0-12}px">${fmt(w)}</div>`:''}`}).join('');
+ const g=o.state==='ghost';const kept=o.state==='kept';
+ const trendNow=kept?78.4:78.2;
+ const ctx=kept?`${fmt(82.4)} this morning, ${(4.2*f).toFixed(1)} above trend`:`${fmt(78.1)} yesterday, ${(0.3*f).toFixed(1)} ${u} less than last week`;
+ return `<div class="ph ${o.look}" id="${L}ph">
+ <div class="abs lbl" style="left:22px;top:58px">‹ ${o.back}</div>
+ <div class="abs t44" style="left:22px;top:84px">Body weight</div>
+ <div class="abs b" id="${L}ctx" style="left:22px;top:150px;width:346px;color:var(--ctx)">${ctx}</div>
+ <div class="abs num" style="left:18px;top:212px"><span id="${L}tr">${fmt(trendNow)}</span><span style="font-size:21px;font-weight:400;letter-spacing:0;margin-left:6px">${u}</span></div>
+ <div class="abs lbl" style="left:22px;top:304px">TREND</div>
+ ${dabs}
+ <svg class="abs" style="left:0;top:0;overflow:visible" width="390" height="844"><path id="${L}st" d="${strokePath(lo,hi,DAYS-1)}" fill="none" stroke="rgba(var(--ink),.55)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+ <div class="abs" id="${L}today" style="left:${SX(DAYS-1)-5}px;top:${(g?Y0-23:Y0-4)}px;width:10px;height:8px;border-radius:50%;background:${kept?'rgba(var(--ink),.3)':'var(--tess)'};opacity:${g||kept?1:0};"></div>${kept?`<div class="abs lbl" style="right:34px;top:${Y0-12}px">${fmt(82.4)}</div>`:''}<div class="abs lbl" id="${L}tl" style="right:34px;top:${Y0-12}px;opacity:0">${fmt(82.4)}</div>
+ <div class="abs lbl" style="left:22px;top:572px">SEP 3</div><div class="abs lbl" style="right:22px;top:572px">TODAY</div>
+ <div class="abs b s2" id="${L}chg" style="left:22px;top:612px">${kept?(1.0*f).toFixed(1):(1.2*f).toFixed(1)} ${u} less since Sep 3</div>
+ <div class="abs t34 ghost" id="${L}gh" style="left:22px;top:652px;display:${g?'block':'none'}">Body weight <span class="vw">${fmt(82.4)}</span> ${u}?</div>
+ <div class="abs lbl" id="${L}ghn" style="left:22px;top:700px;display:${g?'block':'none'}">${(4.2*f).toFixed(1)} ${u.toUpperCase()} ABOVE TREND</div>
+ <div class="say" id="${L}say" style="opacity:${o.say?1:0}">${o.say||''}</div>
+ ${soul}${L==='P'?'<div id="fing"></div>':''}</div>`;
+}
+// D12: "82.4" said mid-workout is a set ghost, snapped to the nearest loadable weight; no yes/no ask (Q10)
+function workout(L){
+ return `<div class="ph por" id="${L}ph">
+ <div class="abs b s2" style="left:22px;top:58px">Push A, 0:31</div><div class="abs lbl" style="right:22px;top:62px">1 / 5</div>
+ <div class="abs t34" style="left:22px;top:100px;white-space:nowrap">Bench Press</div><div class="abs t34" style="left:236px;top:100px;white-space:nowrap;color:rgba(var(--ink),.38)">Overhead</div>
+ <div class="abs" style="left:22px;top:184px;font-size:16px;color:rgba(var(--ink),var(--s2))">set 4 of 4</div>
+ <div class="abs num ghost" style="left:18px;top:212px">82.5<span style="font-size:21px;font-weight:400;letter-spacing:0;margin-left:6px">kg</span></div>
+ <div class="abs ghost" style="left:250px;top:226px;font-size:34px">×</div><div class="abs ghost" style="left:290px;top:212px;font-size:56px;font-weight:300;line-height:80px">8</div>
+ <div class="abs lbl" style="left:22px;top:300px">SNAPPED FROM 82.4</div>
+ <div class="abs" style="left:22px;top:360px;width:120px;height:150px">
+  <div class="abs" style="left:0;top:66px;width:120px;height:14px;background:rgba(23,20,31,.35);border-radius:2px"></div>
+  <div class="abs" style="left:24px;top:0;width:16px;height:150px;background:#C8392B;border-radius:2px"></div>
+  <div class="abs" style="left:42px;top:20px;width:14px;height:110px;background:#2F6FD0;border-radius:2px"></div>
+  <div class="abs" style="left:58px;top:52px;width:8px;height:46px;background:#9AA0A6;border-radius:2px"></div></div>
+ <div class="abs lbl" style="left:22px;top:524px">25 + 5 + 1.25 EACH SIDE</div>
+ <div class="abs t34" style="left:22px;top:580px">Log set<svg style="position:absolute;left:-2px;top:41px;overflow:visible" width="118" height="12"><path d="M0 6 Q 49.6 3.5 118 5.6 Q 68.4 8.5 0 6 Z" fill="rgba(204,63,104,.75)"/></svg></div><div class="abs lbl" style="left:156px;top:592px">HOLD · 82.5 × 8</div>
+ ${soul}</div>`;
+}
+const cap=(t,id)=>`<div class="cap" ${id?`id="${id}"`:''}>${t}</div>`;
+if(PLAY){
+ $('row').innerHTML=`<div>${cap('FRI 16 OCT · FROM TRAINING','cap')}${page('P',{look:'por',back:'TRAINING',state:'rest'})}</div>`;
+}else{
+ $('row').innerHTML=
+  `<div>${cap('FROM TRAINING · KG')}${page('A',{look:'por',back:'TRAINING',state:'rest'})}</div>`+
+  `<div>${cap('A BARE 82.4 WAITS')}${page('B',{look:'por',back:'TRAINING',state:'ghost',say:'Tap to keep it.'})}</div>`+
+  `<div>${cap('FROM REVIEW · LB FROM SETTINGS · KEPT')}${page('C',{look:'obs',back:'REVIEW',state:'kept',unit:'lb',say:'Body weight logged. 181.7 lb, 9.3 above trend.<span class="undo">UNDO</span>'})}</div>`+
+  `<div>${cap('82.4 MID-WORKOUT · D12')}${workout('D')}</div>`;
+ $('note').innerHTML='THE PAGE NAME TAKES THE TITLE SLOT; THE CONTEXT LINE SITS DIRECTLY ABOVE THE TREND, THE HERO. THE STROKE AND THE ENTRIES REST IN INK; COLOUR ARRIVES ONLY WITH A NEW ENTRY. KG OR LB COMES FROM SETTINGS: EVERY NUMBER AND EVERY LINE, ONE DECIMAL, THE UNIT ONCE PER LINE. MID-WORKOUT, A BARE NUMBER IS NEVER BODY WEIGHT: IT WAITS AS A SET, SNAPPED TO A LOADABLE WEIGHT, WITH NO QUESTION.';
+}
+document.fonts.ready.then(()=>{document.body.dataset.start='1';
+ if(!PLAY){setTimeout(()=>document.body.dataset.done='1',200);return}
+ const f=$('fing');const lo=Math.min(...tr)-1,hi=Math.max(...tr)+1;
+ const say=(h,d=0)=>at(d,()=>{const s=$('Psay');s.animate([{opacity:1},{opacity:0}],{duration:150,fill:'forwards'}).onfinish=()=>{s.innerHTML=h;s.animate([{opacity:0},{opacity:1}],{duration:300,fill:'forwards'})}});
+ // 1 · "82.4" written to Tess: the ghost sets in under the change line, a wet dab waits above today
+ at(1000,()=>{$('cap').textContent='"82.4" · THE GHOST WAITS, NOTHING WRITTEN';
+  const g=$('Pgh'),n=$('Pghn');g.style.display='block';n.style.display='block';
+  g.animate([{opacity:0,filter:'blur(3px)',transform:'translateY(-8px)'},{opacity:.6,filter:'blur(0)',transform:'translateY(0)'}],{duration:420,easing:'cubic-bezier(.3,1.3,.5,1)'});
+  n.animate([{opacity:0},{opacity:1}],{duration:300,delay:200,fill:'backwards'});
+  const t=$('Ptoday');t.style.top=(Y0-23)+'px';t.style.opacity=1;t.animate([{opacity:0},{opacity:1}],{duration:300});
+  say('Tap to keep it.',200);
+ });
+ // 2 · tap: the ghost dries into ink, then the dab drops onto the stroke and the trend rolls
+ at(3600,()=>{f.style.left='120px';f.style.top='672px';f.style.opacity=1});at(3780,()=>f.style.opacity=0);
+ at(3700,()=>{$('cap').textContent='TAP · IT DRIES, THE DAB DROPS, THE TREND ROLLS';
+  const g=$('Pgh');g.classList.remove('ghost');g.style.color='var(--tess)';g.animate([{color:'var(--tess)',opacity:.6},{color:'rgb(var(--ink))',opacity:1}],{duration:700,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'});
+  at(800,()=>{[g,$('Pghn')].forEach(e=>e.animate([{opacity:1,transform:'translateY(0)'},{opacity:0,transform:'translateY(-10px)'}],{duration:320,fill:'forwards'}))});
+  const t=$('Ptoday');at(800,()=>{t.style.background='rgb(var(--health))';t.animate([{transform:'translateY(0)'},{transform:'translateY(20px)'}],{duration:420,easing:'cubic-bezier(.3,1.3,.5,1)',fill:'forwards'});
+   at(900,()=>t.animate([{background:'rgb(var(--health))'},{background:'rgba(var(--ink),.3)'}],{duration:1400,fill:'forwards'}));$('Ptl').animate([{opacity:0},{opacity:1}],{duration:300,delay:300,fill:'forwards'})});
+  // the stroke's last stretch draws to the new trend (capped step: 78.2 to 78.4)
+  at(1000,()=>{const old=tr[DAYS-1];const t0=performance.now();const st=$('Pst');const step=()=>{const k=Math.min(1,(performance.now()-t0)/500);const e=1-Math.pow(1-k,3);tr[DAYS-1]=old+(78.4-old)*e;tr[DAYS-2]=tr[DAYS-2]+0;st.setAttribute('d',strokePath(lo,hi,DAYS-1));if(k<1)requestAnimationFrame(step)};requestAnimationFrame(step)});
+  at(1000,()=>{const n=$('Ptr');n.animate([{transform:'translateY(0)',opacity:1},{transform:'translateY(-18px)',opacity:0}],{duration:200,fill:'forwards'}).onfinish=()=>{n.textContent='78.4';n.animate([{transform:'translateY(18px)',opacity:0},{transform:'translateY(0)',opacity:1}],{duration:300,easing:'cubic-bezier(.3,1.3,.5,1)',fill:'forwards'})};
+   const c=$('Pctx');c.animate([{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:120,fill:'forwards'}).onfinish=()=>{c.textContent='82.4 this morning, 4.2 above trend';c.animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:220,fill:'forwards'})};
+   const ch=$('Pchg');ch.textContent='1.0 kg less since Sep 3';});
+  say('Body weight logged. 82.4 kg, 4.2 above trend.<span class="undo">UNDO</span>',1100);
+ });
+ // 3 · UNDO: the dab drains, the trend rolls back, nothing comes back
+ at(8400,()=>{f.style.left='300px';f.style.top='808px';f.style.opacity=1});at(8580,()=>f.style.opacity=0);
+ at(8500,()=>{$('cap').textContent='UNDO · TAKEN BACK, THE DAB DRAINS';
+  $('Ptoday').animate([{opacity:1},{opacity:0}],{duration:600,fill:'forwards'});$('Ptl').animate([{opacity:1},{opacity:0}],{duration:400,fill:'forwards'});
+  const t0=performance.now();const st=$('Pst');const step=()=>{const k=Math.min(1,(performance.now()-t0)/500);tr[DAYS-1]=78.4-(0.2)*k;st.setAttribute('d',strokePath(lo,hi,DAYS-1));if(k<1)requestAnimationFrame(step)};requestAnimationFrame(step);
+  const n=$('Ptr');n.animate([{transform:'translateY(0)',opacity:1},{transform:'translateY(18px)',opacity:0}],{duration:200,fill:'forwards'}).onfinish=()=>{n.textContent='78.2';n.animate([{transform:'translateY(-18px)',opacity:0},{transform:'translateY(0)',opacity:1}],{duration:300,easing:'cubic-bezier(.3,1.3,.5,1)',fill:'forwards'})};
+  const c=$('Pctx');c.textContent='78.1 yesterday, 0.3 kg less than last week';$('Pchg').textContent='1.2 kg less since Sep 3';
+  say('Body weight taken back.',0);
+ });
+ at(11600,()=>document.body.dataset.done='1');
+});
+</script>
+</body>
+</html>

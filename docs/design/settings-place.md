@@ -32,7 +32,7 @@ Research checked this sheet line by line (`research/settings-place-check.md`, it
   - With no key but a ledger that has rows: a **RECEIPTS** label word under the no-key line.
 - **Receipt rows:** today's rows read "6:12 pm · Plan my day · Sonnet · 1.2¢". Older rows read "Thu Oct 15, 6:12 pm · …", with the day and month capitalised and "pm" in lower case. [C5]
 - **"Add a Claude key"** is an `ink` 600 value word, not cobalt. Cobalt is Tess speaking, and an offer at rest isn't speech. [C27, N3]
-- **One switch, "Tess asks Claude"** (Product, 16 Oct 10:29 PM). The sentence reads "Tess asks Claude: **yes**." with the value word cycling yes ↔ no. It covers both what used to be "Misses go to Claude" and Plan my day via Claude; there's no second switch. Tess answers inline under it: "Tess stays on this phone." for no, and "Tess asks Claude when she's unsure." for yes (Design's default; Research to check). It stays on `missesGoToClaude` (the settings field), so nothing is migrated.
+- **One switch, "Tess asks Claude"** (Product, 16 Oct 10:29 PM). The sentence reads "Tess asks Claude: **yes**." with the value word cycling yes ↔ no. It covers both what used to be "Misses go to Claude" and Plan my day via Claude; there's no second switch. Tess answers inline under it: "Tess stays on this phone." for no, and "Tess asks Claude when she's unsure, and for Plan my day." for yes (Research's copy check, 16 Oct; the same switch gates plans). It stays on `missesGoToClaude` (the settings field), so nothing is migrated.
 - **Lines confirmed:**
   - "Checking it with Claude." [C12]
   - ~~"Misses stay on this phone." / "Misses go to Claude."~~ [C8] Replaced by the one switch below.

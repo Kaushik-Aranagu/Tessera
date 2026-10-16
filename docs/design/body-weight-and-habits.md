@@ -10,6 +10,8 @@ Recording: `recordings/m3-surfaces.mp4` (source `studies/m3-surfaces.html`):
 3. The habits week on Thu 15 Oct, with a Read check-in.
 
 ## 1 · Body weight
+> **Redrawn (item 29):** `body-weight-page.md` redraws this page under today's rules (Title 44 top, context line above the trend, nothing sage at rest, Tess beside the soul), with `m3-lines.md`'s copy, units from settings and D12 settled. It wins over this section.
+
 **Entry:** the Training page gets a label word **BODY WEIGHT** in its link line, so the page isn't DEBUG-only. "bw trend" asked of Tess opens it too. Its back word is **‹ TRAINING**.
 
 | y | Element |

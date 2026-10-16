@@ -25,7 +25,7 @@ Rewritten 16 Oct to Research 95 (`research/plan-my-day-flow.md`, #240) and Produ
 | 448 | START WITH in labels. **VIA CLAUDE** sits on the same line, right-aligned, in `ink` (it taps to the receipt) |
 | 474 | The first item at Title 34 in cobalt on the ink line |
 | 530 | Claude's sentence in `tess`, at most 2 lines: "Landlord reply first, then physio, then the report." |
-| under it, once | **The first time a plan comes via Claude**, one line in `inkSecondary`: "Sends your task and event titles, never notes or places." (Product, 10:29 PM). It never shows again after that plan |
+| under it, once | **The first time a plan comes via Claude**, one line in `inkSecondary`: "Sends your task and calendar titles, never notes, places or health." (Product 10:29 PM, worded by Research to match the Oct 22 list). It never shows again after that plan |
 | 600 → 720 | The plan's rows, 46pt apart, title and time only |
 - **At most 5 rows on Home, and only rows that end above y 720,** so no row ever sits under Tess's band (736 to 820). The rest wait one pull away, counted by a label word in the next slot: "2 MORE". With Claude's sentence that's 3 rows, and on the first time it's 1 row and "2 MORE".
 - **Pull up** on the plan: the column scrolls up under the fixed top until START WITH sits at about 242. Each row then shows Claude's line under it ("20 min, while the morning is quiet.") at 72pt apart. Let go and it settles back on the settle spring. **Claude's per-row lines live only in the pulled view;** on Home a row is its title and time.

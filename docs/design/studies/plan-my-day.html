@@ -81,7 +81,7 @@ function column(L,state){
  ${cl?`<div class="abs lbl" id="${L}via" style="right:22px;top:212px;color:rgb(var(--ink))">VIA CLAUDE</div>`:''}
  <div class="abs t34" style="left:22px;top:238px;color:var(--tess)" id="${L}sw">Reply to landlord<svg style="position:absolute;left:-2px;top:41px;overflow:visible" width="262" height="12"><path d="${lens(262,2.5)}" fill="rgba(36,80,216,.75)" id="${L}swl"/></svg></div>
  ${cl?`<div class="abs b" id="${L}sent" style="left:22px;top:294px;width:346px;color:var(--tess)">Landlord reply first, then physio, then the report.</div>`:''}
- ${first?`<div class="abs b s2" style="left:22px;top:360px;width:346px">Sends your task and event titles, never notes or places.</div>`:''}
+ ${first?`<div class="abs b s2" style="left:22px;top:360px;width:346px">Sends your task and calendar titles, never notes, places or health.</div>`:''}
  ${rows}
  ${state==='first'?`<div class="abs lbl" style="left:22px;top:${rowsTop+46+8}px">2 MORE</div>`:''}
  </div>`;
