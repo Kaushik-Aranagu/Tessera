@@ -105,20 +105,25 @@ public final class TessCaptureEngine: TessCapturing {
             let scheme = sets > 1 ? "\(sets) x \(TessVoice.number(reps))" : "\(TessVoice.number(reps)) reps"
             let load = TessVoice.number(weight) + (unit == .kilograms ? "" : " \(unit.symbol)")
             return (record, "\(name) \(scheme) at \(load). Added to today.")
-        case let .set(entry, kilograms, reps, kind, phrase, unit):
+        case let .set(entry, kilograms, reps, kind, phrase, unit, rpe, saidWeight):
             // Logged in the unit it was said in, so the set keeps its entered unit.
             let said = unit.fromKilograms(kilograms, rounded: false)
             let record = try engine.perform(
-                LogSet(entry: entry.id, weight: said, reps: reps, kind: kind, source: .tess,
+                LogSet(entry: entry.id, weight: said, reps: reps, rpe: rpe, kind: kind, source: .tess,
                        unit: unit == .kilograms ? nil : unit),
                 by: .tess, pending: pending
             ).record
             let number = entry.orderedChildren.count
             let weight = unit == .kilograms ? TessVoice.number(kilograms) : unit.format(kilograms: kilograms)
-            let line = switch phrase {
-            case .same: "Same again, logged."
-            case .drop: "Drop set. \(weight) x \(TessVoice.number(reps))."
-            case .repsOnly, .full: "Set \(number). \(weight) x \(TessVoice.number(reps))."
+            let effort = rpe.map { " @\(TessVoice.number($0))" } ?? ""
+            var line = switch phrase {
+            case .same: "Same again\(effort), logged."
+            case .drop: "Drop set. \(weight) x \(TessVoice.number(reps))\(effort)."
+            case .repsOnly, .full: "Set \(number). \(weight) x \(TessVoice.number(reps))\(effort)."
+            }
+            // Snapped to what the kit can load: say so ("81 isn't loadable").
+            if let saidWeight {
+                line += " \(TessVoice.number(saidWeight)) isn't loadable."
             }
             return (record, line)
         case let .task(title, startsAt):

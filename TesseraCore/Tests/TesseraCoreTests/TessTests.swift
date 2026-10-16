@@ -69,7 +69,10 @@ struct TessTests {
         try engine.perform(LogSet(entry: entry.id, weight: 80, reps: 8), by: .user)
         let grammar = TessGrammar(store: store, classes: classes)
         func set(_ phrase: String) -> String? {
-            guard case let .set(_, weight, reps, kind, how, _)? = grammar.parse(phrase, context: context(entry: entry))
+            guard case let .set(_, weight, reps, kind, how, _, _, _)? = grammar.parse(
+                phrase,
+                context: context(entry: entry)
+            )
             else { return nil }
             return "\(TessVoice.number(weight))x\(TessVoice.number(reps)) \(kind) \(how)"
         }
