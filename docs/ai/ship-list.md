@@ -1,0 +1,34 @@
+# AI ship list
+
+For: Product (take as is). Owner: AI architecture team. Date: Oct 16, 2026 (Pacific).
+Design: `docs/ai/architecture.md`. Features: `docs/ai/first-features.md`.
+
+Order is the build order. Each slice is one small PR. "Rules" slices need no key and no network.
+
+| # | Slice | Owner | Done when |
+|---|---|---|---|
+| AI-1 | **Short rules lines on Home** (feature 1a) | Core: `HomeLines` lens in TesseraCore. Builder B: Home reads it | Every Home item shows one `HomeLines` line; no `lineLimit(1)` + `truncationMode` on any Tess line (`NowPage.swift:538`, `HomeQueue.swift:346`); `WorkoutSummary.line` counts move to the Training page; unit tests for the nine rules rows; 60fps recording on the demo day. Follows Design 41's sheet |
+| AI-2 | **`ClaudeClient` and `TessJob`** | Core | One client does reserve, send, failure lines, ledger row (with a new `job` field on `TessCall`), switch and demo gates, `sk-ant-` refusal, late-reply drop; stub `URLSession` tests for every status code. Existing four callers untouched |
+| AI-3 | **Shared line checks** | Core | `TessLineCheck` (ids, word and character budget, licensed numbers, names from the pack, `TessVoice` and plan banned and health words) lifted out of `PlanProposalValidator`; plan tests still pass unchanged |
+| AI-4 | **Home lines through Claude** (feature 1b) | Core: `homeLines` job, pack, cache file, debounce. Builder B: swap-in | Lines swap in only when they pass AI-3; pack snapshot test shows no weights, reps, health or notes; offline, cap, switch off and demo show rules lines; at 80% of the month the job steps aside; max 40 calls a day. Recording of a line drying in (Design 41's motion) |
+| AI-5 | **Home lines eval** (gate for turning AI-4 on) | Research or QA, from `first-features.md` fixtures, grown to 40 | Haiku 5.5 and Sonnet 5.5 side by side, 3 runs each: 0 lines shown that fail a check, every ✗ fixture caught, median cost under $0.0004 a call. Kaushik reads 10 and says 8 sound like Tess. If Haiku fails and Sonnet passes, ship Sonnet |
+| AI-6 | **Settings copy for the switch** | Design copy, Builder B | The yes line names Home: "Tess asks Claude when she's unsure, for Plan my day, and to word Home and your week." (Design may change words.) |
+| AI-7 | **Memory store** | Core | `TessMemory` class (Catalog v6, additive): told, noticed, recent; screen for health, money and unlicensed digits; recent line written at 04:00 turnover from `DayStory`; noticed lines recomputed Sunday 04:00 on the phone (training time of day, routine order, cook days); `private` facts never packed; trim rules from architecture section 4; in backups |
+| AI-8 | **"Remember that…"** | Core: grammar phrase + `remember` tool | "remember that …" lands as a pending told fact with the 2 s dry and UNDO; Claude can call `remember` on misses; Siri and Shortcuts never write memory |
+| AI-9 | **What Tess knows page** | Builder B, on Design's m4-steers section 11 | Facts with their source line; swipe left to FORGET with 10 s UNDO; forgotten text redacted from earlier ops (Core helper); "Forget everything"; reached from Settings and "what do you know" |
+| AI-10 | **Home lines read memory** | Core | `homeLines` pack adds the last 7 recent lines and up to 10 noticed training lines; fixtures H5 and H2 pass |
+| AI-11 | **The week, told** (feature 2) | Core: `WeekFacts` lens and `weekStory` job (Sonnet). Builder B: Review top | Three lines on Review, worded Sunday after 04:00 and when week facts change; handles link; same checks; rules version (three plain count lines) when Claude is off |
+| AI-12 | **Groceries that know your recipes** (feature 3) | Recipes and groceries lead to spec with Design 47; Core job; Builder B | Proposal only from this team; done-when lives in the Groceries AI spec (board item 3, next from this team) |
+| AI-13 | **Old callers onto `ClaudeClient`** | Core, only when already in the file | Capture, plan, recipe link and key check use `ClaudeClient`; no change in behaviour or ledger rows |
+
+**First visible win:** AI-1 alone answers his "three dots" and "too much detail" notes, with no key involved.
+**First Claude win:** AI-4 after AI-5 passes.
+**Month cost when all of this is on:** about $0.70 of the $10 cap (architecture section 5.6).
+
+## Decisions taken as defaults (no question to Kaushik needed)
+
+- Home lines use the one "Tess asks Claude" switch.
+- Live workout lines stay rules-only, no network while he lifts.
+- Memory is counted on the phone; Claude never sees history, only finished lines.
+- Body facts he tells Tess stay on the phone.
+- Memory rides in backups; the key and the miss log still never do.
