@@ -4,6 +4,8 @@ Research lab, 2026-10-15. 30 pasted recipe texts with the parse we want from the
 
 Checked against `TesseraCore/Sources/TesseraCore/Kitchen/` on `origin/master` at fcad46c (`RecipeParser.swift`, `Quantities.swift`, `Recipes.swift`). That checkout predates hotfix #80 (dd8f3ca), so "2 garlic cloves" as unit-after-name is assumed fixed, as `kitchen-acceptance.md` reports.
 
+Added 2026-10-16 for Design's `docs/design/kitchen/us-shop.md` (7ac3df3): cases paste-31 to paste-35 (46 ingredient lines in US units: oz, lb, pint, fl oz, sticks, cans with pack sizes, fractions), checked by reading `origin/master` at 620878b. Each ingredient line carries a comment saying whether it passes or FAILS today. The "US merge check" section at the end checks Design's merge rows.
+
 ## Fixture format
 
 One YAML block per case.
@@ -1525,6 +1527,249 @@ notes: >
   Total is prep plus the top of the bake range.
 ```
 
+### paste-31 Weeknight turkey chili (US blog card, lb, cans with pack sizes)
+
+```yaml
+id: paste-31
+shape: us-blog-card-cans
+raw: |
+  Weeknight Turkey Chili
+  Servings: 6
+  Prep Time: 10 minutes
+  Total Time: 45 minutes
+  Ingredients
+  1 tbsp olive oil
+  1 lb ground turkey
+  1 yellow onion, diced
+  3 cloves garlic, minced
+  2 (15 oz) cans kidney beans, drained and rinsed
+  1 (14.5 oz) can fire-roasted diced tomatoes
+  1 8 oz can tomato sauce
+  2 tbsp chili powder
+  ¾ tsp ground cumin
+  1 cup low-sodium chicken broth
+  ½ cup shredded cheddar, for topping
+  Instructions
+  Heat the oil in a large pot over medium-high heat. Add the turkey and onion and cook 6-8 minutes, breaking up the meat.
+  Add the garlic, chili powder and cumin and cook 1 minute.
+  Stir in the beans, tomatoes, tomato sauce and broth. Simmer 25-30 minutes.
+  Serve topped with the cheddar.
+expect:
+  title: "Weeknight Turkey Chili"
+  serves: 6
+  activeMinutes: 10
+  totalMinutes: 45
+  ingredients:
+    - {amount: 1, unit: tbsp, name: olive oil, raw: "1 tbsp olive oil"}   # passes today
+    - {amount: 1, unit: lb, name: ground turkey, raw: "1 lb ground turkey"}   # new unit. FAILS today: no unit, name "lb ground turkey"
+    - {amount: 1, name: yellow onion, prep: diced, raw: "1 yellow onion, diced"}   # passes today
+    - {amount: 3, unit: clove, name: garlic, prep: minced, raw: "3 cloves garlic, minced"}   # passes today
+    - {amount: 2, unit: can, packSize: "15 oz", name: kidney beans, prep: drained and rinsed, raw: "2 (15 oz) cans kidney beans, drained and rinsed"}   # FAILS today: no unit, name "cans kidney beans"
+    - {amount: 1, unit: can, packSize: "14.5 oz", name: fire-roasted diced tomatoes, raw: "1 (14.5 oz) can fire-roasted diced tomatoes"}   # FAILS today: no unit, name "can fire-roasted diced tomatoes"
+    - {amount: 1, unit: can, packSize: "8 oz", name: tomato sauce, raw: "1 8 oz can tomato sauce"}   # FAILS today: amount 1, no unit, name "8 oz can tomato sauce"
+    - {amount: 2, unit: tbsp, name: chili powder, raw: "2 tbsp chili powder"}   # passes today
+    - {amount: 0.75, unit: tsp, name: ground cumin, raw: "¾ tsp ground cumin"}   # passes today
+    - {amount: 1, unit: cup, name: chicken broth, prep: low-sodium, raw: "1 cup low-sodium chicken broth"}   # amount and unit pass; name "low-sodium chicken broth" today (gap 8)
+    - {amount: 0.5, unit: cup, name: cheddar, prep: "shredded, for topping", raw: "½ cup shredded cheddar, for topping"}   # amount and unit pass; name "shredded cheddar", prep "for topping" today (gap 8)
+  steps:
+    - {text: "Heat the oil in a large pot over medium-high heat. Add the turkey and onion and cook 6-8 minutes, breaking up the meat.", durations: [[6, 8]], mentions: [], alsoMentions: [olive oil, ground turkey, yellow onion]}
+    - {text: "Add the garlic, chili powder and cumin and cook 1 minute.", durations: [[1, 1]], mentions: [garlic, chili powder], alsoMentions: [ground cumin]}
+    - {text: "Stir in the beans, tomatoes, tomato sauce and broth. Simmer 25-30 minutes.", durations: [[25, 30]], mentions: [tomato sauce], alsoMentions: [kidney beans, chicken broth]}
+    - {text: "Serve topped with the cheddar.", durations: [], mentions: [cheddar]}
+notes: >
+  The three US can shapes side by side: "2 (15 oz) cans", "1 (14.5 oz) can" and the no-parentheses "1 8 oz can".
+  Today the unit regex (`Quantities.swift:135`) needs a letter right after the amount, so "(" and "8" both stop it,
+  the parenthetical is dropped afterwards (`Quantities.swift:145`) and the pack word stays in the name. On
+  Groceries that makes an ingredient called "Can fire-roasted diced tomatoes", which the aisle guide files under
+  Produce (last word "tomato", `Aisles.swift:33`) instead of Cans and jars. "tomatoes" in step 3 is shared by the
+  diced tomatoes and the tomato sauce, so no short-form link. "mentions: [tomato sauce]" and "[cheddar]" only work
+  once the names are fixed.
+```
+
+### paste-32 TJ's sheet pan gnocchi (Notes, no headings, oz, pint, bag, half a stick)
+
+```yaml
+id: paste-32
+shape: us-notes-pack-sizes
+raw: |
+  TJ's sheet pan gnocchi
+  serves 3
+  1 (12 oz) bag frozen cauliflower gnocchi
+  2 (15 oz) cans chickpeas, drained and patted dry
+  1 pint cherry tomatoes
+  8 oz cremini mushrooms, halved
+  1/2 stick butter, melted
+  2 tbsp olive oil
+  1 1/2 tsp italian seasoning
+  4 oz goat cheese
+  fresh basil to serve
+  Toss everything except the cheese and basil on a sheet pan.
+  Roast at 425°F for 20-25 min, flipping halfway.
+  Crumble over the goat cheese and basil.
+expect:
+  title: "TJ's sheet pan gnocchi"
+  serves: 3
+  ingredients:
+    - {amount: 1, unit: bag, packSize: "12 oz", name: frozen cauliflower gnocchi, raw: "1 (12 oz) bag frozen cauliflower gnocchi"}   # "bag" is new and not in Design's unit list (open). FAILS today: no unit, name "bag frozen cauliflower gnocchi"
+    - {amount: 2, unit: can, packSize: "15 oz", name: chickpeas, prep: drained and patted dry, raw: "2 (15 oz) cans chickpeas, drained and patted dry"}   # FAILS today: no unit, name "cans chickpeas"
+    - {amount: 1, unit: pint, name: cherry tomatoes, raw: "1 pint cherry tomatoes"}   # new unit. FAILS today: no unit, name "pint cherry tomatoes"
+    - {amount: 8, unit: oz, name: cremini mushrooms, prep: halved, raw: "8 oz cremini mushrooms, halved"}   # new unit. FAILS today: no unit, name "oz cremini mushrooms"
+    - {amount: 0.5, unit: stick, name: butter, prep: melted, raw: "1/2 stick butter, melted"}   # passes today
+    - {amount: 2, unit: tbsp, name: olive oil, raw: "2 tbsp olive oil"}   # passes today
+    - {amount: 1.5, unit: tsp, name: italian seasoning, raw: "1 1/2 tsp italian seasoning"}   # passes today
+    - {amount: 4, unit: oz, name: goat cheese, raw: "4 oz goat cheese"}   # new unit. FAILS today: no unit, name "oz goat cheese"
+    - {name: basil, prep: fresh, raw: "fresh basil to serve"}   # passes today ("to serve" is dropped, `Quantities.swift:111`)
+  steps:
+    - {text: "Toss everything except the cheese and basil on a sheet pan.", durations: [], mentions: [basil], alsoMentions: [goat cheese]}
+    - {text: "Roast at 425°F for 20-25 min, flipping halfway.", durations: [[20, 25]], mentions: []}
+    - {text: "Crumble over the goat cheese and basil.", durations: [], mentions: [goat cheese, basil]}
+notes: >
+  A Trader Joe's style Notes paste with no headings, so every line goes by its shape (`RecipeParser.swift:143`).
+  "1 pint cherry tomatoes" is a dry pint, a basket, not 473 ml: the quick flip in Design's us-shop.md must not
+  turn it into millilitres. The parser can't tell a dry pint from a liquid one, so the simplest rule is that a
+  pint never flips. "bag" is how TJ's sells
+  frozen gnocchi, but Design lists only can and stick as pack words; it's an open question for Design whether bag,
+  jar and box join. "425°F" must stay in the step text as written and never start a timer.
+```
+
+### paste-33 Flaky buttermilk biscuits (cups, a stick, a split amount)
+
+```yaml
+id: paste-33
+shape: us-cups-sticks
+raw: |
+  Flaky Buttermilk Biscuits
+  Makes 8
+  Ingredients
+  2 cups all-purpose flour
+  1 tbsp baking powder
+  ½ tsp baking soda
+  1 tsp kosher salt
+  1 stick (8 tbsp) cold unsalted butter, cubed
+  ¾ cup + 2 tbsp buttermilk
+  2 tbsp butter, melted, for brushing
+  Instructions
+  Heat the oven to 450°F.
+  Whisk the flour, baking powder, baking soda and salt. Cut in the cold butter until pea-sized.
+  Stir in the buttermilk until just combined, pat to 1 inch thick and cut 8 biscuits.
+  Bake 12-15 minutes, then brush with the melted butter.
+expect:
+  title: "Flaky Buttermilk Biscuits"
+  serves: 8   # "Makes 8" reads as serves today; gap 13 proposes a separate makes field
+  ingredients:
+    - {amount: 2, unit: cup, name: all-purpose flour, raw: "2 cups all-purpose flour"}   # passes today
+    - {amount: 1, unit: tbsp, name: baking powder, raw: "1 tbsp baking powder"}   # passes today
+    - {amount: 0.5, unit: tsp, name: baking soda, raw: "½ tsp baking soda"}   # passes today
+    - {amount: 1, unit: tsp, name: kosher salt, raw: "1 tsp kosher salt"}   # passes today
+    - {amount: 1, unit: stick, name: unsalted butter, prep: "cold, cubed", raw: "1 stick (8 tbsp) cold unsalted butter, cubed"}   # amount and unit pass; name "cold unsalted butter" today (gap 8)
+    - {amount: 0.75, unit: cup, name: buttermilk, raw: "¾ cup + 2 tbsp buttermilk"}   # FAILS today: 0.75 cup, name "+ 2 tbsp buttermilk"
+    - {amount: 2, unit: tbsp, name: buttermilk, raw: "¾ cup + 2 tbsp buttermilk"}   # proposed second line; missing today
+    - {amount: 2, unit: tbsp, name: butter, prep: "melted, for brushing", raw: "2 tbsp butter, melted, for brushing"}   # passes today
+  steps:
+    - {text: "Heat the oven to 450°F.", durations: [], mentions: []}
+    - {text: "Whisk the flour, baking powder, baking soda and salt. Cut in the cold butter until pea-sized.", durations: [], mentions: [baking powder, baking soda, butter], alsoMentions: [all-purpose flour, kosher salt]}
+    - {text: "Stir in the buttermilk until just combined, pat to 1 inch thick and cut 8 biscuits.", durations: [], mentions: [buttermilk]}
+    - {text: "Bake 12-15 minutes, then brush with the melted butter.", durations: [[12, 15]], mentions: [butter]}
+notes: >
+  The US baking shape: cups and spoons, butter by the stick with its tablespoons in parentheses (dropped, as the
+  convention says for a second system), and a split amount "¾ cup + 2 tbsp". The proposal writes the split as two
+  lines with the same raw, the way several ingredients on one line are written, so Groceries shows
+  "¾ cup + 2 tbsp buttermilk" by Design's merge rule and nothing is converted. "1 inch" must not read as a
+  duration. "butter" in step 2 means the cold unsalted butter; linking the full-name "butter" line is acceptable.
+```
+
+### paste-34 Lemon ricotta pasta (Notes, fl oz, ⅓, "for 4")
+
+```yaml
+id: paste-34
+shape: us-notes-fluid-ounces
+raw: |
+  lemon ricotta pasta
+  for 4
+  1 lb rigatoni
+  1 cup whole milk ricotta
+  ½ cup grated parmesan, plus more to serve
+  1/4 cup (2 fl oz) pasta water
+  4 fl oz heavy cream
+  1 lemon, zested and juiced
+  ⅓ cup toasted pine nuts
+  ¼ tsp red pepper flakes
+  6 oz baby spinach
+  Boil the rigatoni 10-12 minutes, saving 1 cup of the cooking water.
+  Stir the ricotta, parmesan, cream, lemon and pepper flakes in a big bowl.
+  Toss in the hot pasta, spinach and a splash of pasta water until glossy. Top with the pine nuts.
+expect:
+  title: "lemon ricotta pasta"
+  serves: 4
+  ingredients:
+    - {amount: 1, unit: lb, name: rigatoni, raw: "1 lb rigatoni"}   # new unit. FAILS today: no unit, name "lb rigatoni"
+    - {amount: 1, unit: cup, name: whole milk ricotta, raw: "1 cup whole milk ricotta"}   # passes today
+    - {amount: 0.5, unit: cup, name: parmesan, prep: "grated, plus more to serve", raw: "½ cup grated parmesan, plus more to serve"}   # amount and unit pass; today name "grated parmesan", prep "plus more" (gap 8, and "to serve" is cut)
+    - {amount: 0.25, unit: cup, name: pasta water, raw: "1/4 cup (2 fl oz) pasta water"}   # passes today (the fl oz is in parentheses and dropped)
+    - {amount: 4, unit: fl oz, name: heavy cream, raw: "4 fl oz heavy cream"}   # new unit, two words. FAILS today: no unit, name "fl oz heavy cream"
+    - {amount: 1, name: lemon, prep: zested and juiced, raw: "1 lemon, zested and juiced"}   # passes today
+    - {amount: 0.333, unit: cup, name: pine nuts, prep: toasted, raw: "⅓ cup toasted pine nuts"}   # amount and unit pass; name "toasted pine nuts" today (gap 8). Shows "0.33 cup" today, Design wants "⅓ cup"
+    - {amount: 0.25, unit: tsp, name: red pepper flakes, raw: "¼ tsp red pepper flakes"}   # passes today
+    - {amount: 6, unit: oz, name: baby spinach, raw: "6 oz baby spinach"}   # new unit. FAILS today: no unit, name "oz baby spinach"
+  steps:
+    - {text: "Boil the rigatoni 10-12 minutes, saving 1 cup of the cooking water.", durations: [[10, 12]], mentions: [rigatoni]}
+    - {text: "Stir the ricotta, parmesan, cream, lemon and pepper flakes in a big bowl.", durations: [], mentions: [parmesan, lemon], alsoMentions: [whole milk ricotta, heavy cream, red pepper flakes]}
+    - {text: "Toss in the hot pasta, spinach and a splash of pasta water until glossy. Top with the pine nuts.", durations: [], mentions: [pasta water, pine nuts], alsoMentions: [baby spinach]}
+notes: >
+  Fluid ounces both ways: inside parentheses (dropped, passes) and as the unit itself. The unit regex reads one
+  word (`Quantities.swift:135`), so "fl oz" needs a two-word lookup; if Core only adds "oz", "4 fl oz" still
+  fails, and if it strips "fl" the cream becomes 4 oz of weight, which Design forbids merging with oz. "⅓" parses
+  (0.333) but `kitchenNumber` only draws ¼ ½ ¾ (`RecipeMath.swift:61-65`), so it reads "0.33 cup" on screen.
+  "1 cup of the cooking water" in step 1 is not an ingredient. Mentions of rigatoni, parmesan and pine nuts work
+  only once the names are fixed.
+```
+
+### paste-35 Sheet pan chicken and potatoes (lb, lbs, pound, 16oz, "1 lb 4 oz")
+
+```yaml
+id: paste-35
+shape: us-weights
+raw: |
+  Sheet Pan Chicken and Potatoes
+  Serves 4
+  Ingredients
+  1 1/2 lb boneless skinless chicken thighs
+  2 lbs baby potatoes, halved
+  1 pound green beans, trimmed
+  16oz broccoli florets
+  1 lb 4 oz butternut squash, cubed
+  3 tbsp olive oil
+  1 tsp garlic powder
+  ½ tsp smoked paprika
+  Instructions
+  Heat the oven to 425°F.
+  Toss everything with the oil and spices on two sheet pans.
+  Roast 35-40 minutes, stirring once, until the chicken reaches 165°F.
+expect:
+  title: "Sheet Pan Chicken and Potatoes"
+  serves: 4
+  ingredients:
+    - {amount: 1.5, unit: lb, name: chicken thighs, prep: "boneless, skinless", raw: "1 1/2 lb boneless skinless chicken thighs"}   # new unit. FAILS today: 1.5, no unit, name "lb boneless skinless chicken thighs"
+    - {amount: 2, unit: lb, name: baby potatoes, prep: halved, raw: "2 lbs baby potatoes, halved"}   # FAILS today: no unit, name "lbs baby potatoes"
+    - {amount: 1, unit: lb, name: green beans, prep: trimmed, raw: "1 pound green beans, trimmed"}   # FAILS today: no unit, name "pound green beans"
+    - {amount: 16, unit: oz, name: broccoli florets, raw: "16oz broccoli florets"}   # FAILS today: 16, no unit, name "oz broccoli florets"
+    - {amount: 1, unit: lb, name: butternut squash, prep: cubed, raw: "1 lb 4 oz butternut squash, cubed"}   # FAILS today: 1, no unit, name "lb 4 oz butternut squash"
+    - {amount: 4, unit: oz, name: butternut squash, prep: cubed, raw: "1 lb 4 oz butternut squash, cubed"}   # proposed second line; missing today
+    - {amount: 3, unit: tbsp, name: olive oil, raw: "3 tbsp olive oil"}   # passes today
+    - {amount: 1, unit: tsp, name: garlic powder, raw: "1 tsp garlic powder"}   # passes today
+    - {amount: 0.5, unit: tsp, name: smoked paprika, raw: "½ tsp smoked paprika"}   # passes today
+  steps:
+    - {text: "Heat the oven to 425°F.", durations: [], mentions: []}
+    - {text: "Toss everything with the oil and spices on two sheet pans.", durations: [], mentions: [], alsoMentions: [olive oil]}
+    - {text: "Roast 35-40 minutes, stirring once, until the chicken reaches 165°F.", durations: [[35, 40]], mentions: [], alsoMentions: [chicken thighs]}
+notes: >
+  Every way a US recipe writes a weight: "lb", "lbs", "pound", "16oz" attached, and the compound "1 lb 4 oz".
+  "lb", "lbs", "pound" and "pounds" all read as `lb`; "oz", "ounce" and "ounces" as `oz`; attached forms already
+  reach the unit check because the amount regex stops at the letters. The compound is written as two lines with
+  the same raw (as paste-33's split cup), and on Groceries they roll to "1¼ lb" under Design's merge rule.
+  "165°F" is a temperature, not a timer.
+```
+
 ## Likely parser gaps on master (for Core)
 
 Ordered by how many cases they break. Case numbers are `paste-NN`.
@@ -1546,3 +1791,38 @@ Ordered by how many cases they break. Case numbers are `paste-NN`.
 15. **Not a timer.** Relative ("2 minutes less than the packet says", 5) and counts ("3 whistles", 15, 16) should not start timers. Whistles give none today, which is right; the relative one gives 2 min.
 
 Passing today or nearly (controls): 7, 8, 16 (except mentions), 22 (except leading prep words), 28.
+
+## US merge check (2026-10-16, master 620878b)
+
+Design's merge rows from `docs/design/kitchen/us-shop.md` (commit 7ac3df3, "Merging on Groceries"), checked by reading `origin/master` at 620878b. Nothing was run (no Swift toolchain here). Where the request and Design differ, Design wins: Design keeps a volume and a weight of the same thing as **one row** joined with "+" ("1 lb + 2 cups spinach"), not two rows.
+
+How master merges, in short. A grocery item is keyed by its **Ingredient object**, found by name (`Groceries.swift:147-150`, `Ingredients.swift:20-24`), and the name comes from `IngredientLine.parse`. Each item keeps a list of shares (amount and unit), and `GroceryShare.quantity` (`Groceries.swift:78-120`) adds grams with kilos, millilitres with litres, unitless counts together, and any other unit only with itself, then joins the groups with " + ". So for a US line the parse decides everything: `oz`, `lb`, `pint` and `fl oz` are not units (`Quantities.swift:5-8`, `37-51`), the unit regex reads one word that starts right after the amount (`Quantities.swift:135`), and the unknown word stays at the front of the name ("8 oz spaghetti" is 8 of an ingredient called "oz spaghetti").
+
+| Rule (Design) | Example (typed on Groceries, or two recipes) | Today on master | Result | Evidence |
+|---|---|---|---|---|
+| (a) Same unit adds: ounces | "8 oz spaghetti" + "8 oz spaghetti" | One item called "oz spaghetti" with quantity "16" and no unit. A new Ingredient "Oz spaghetti" is made, apart from any "Spaghetti" | **FAIL** | No `oz` unit, `Quantities.swift:37-51`; unit regex `Quantities.swift:135`; unitless shares sum as a count, `Groceries.swift:92-94`, `111-112`; ingredient made from the name, `Ingredients.swift:29-38` |
+| (a) Same unit adds: pounds | "1 lb ground turkey" + "1 lb ground turkey" | Item "lb ground turkey", quantity "2", no unit | **FAIL** | As above. "lbs" and "pound" fail the same way (paste-35) |
+| (a) Cups add as cups | "1 cup rice" + "½ cup rice" | One item "rice", "1½ cups" | **PASS** | `.cup` goes to the per-unit group, `Groceries.swift:95-99`; drawn by `quantityText`, `RecipeMath.swift:46-56`, ½ glyph `RecipeMath.swift:58-68` |
+| (a) Cans add as cans | "1 can coconut milk" + "1 can coconut milk" | One item "coconut milk", "2 cans" | **PASS** | "can"/"cans"/"tin"/"tins" are `.can`, `Quantities.swift:48`; per-unit group, `Groceries.swift:95-99` |
+| (a) Cans with a pack size | "1 (13.5 oz) can coconut milk" + "1 can coconut milk" | Two items: "can coconut milk" (quantity "1") and "coconut milk" ("1 can"). "1 (14.5 oz) can diced tomatoes" also lands in Produce | **FAIL** | "(" stops the unit regex, `Quantities.swift:135`; parenthetical dropped after, `Quantities.swift:145`; aisle by last word "tomato", `Aisles.swift:28-35` |
+| (a) Sticks add as sticks | "1 stick butter" + "½ stick butter" | One item "butter", "1½ sticks" | **PASS** | `.stick` exists, `Quantities.swift:49`; per-unit group, `Groceries.swift:95-99` |
+| (b) Ounces roll into pounds from 16 oz | "8 oz spaghetti" + "8 oz spaghetti" should show "1 lb"; "12 oz" + "12 oz" should show "1½ lb" | "16" on "oz spaghetti"; no roll | **FAIL** | No oz or lb; the only rolls are grams to kilos and millilitres to litres at 1000, `Groceries.swift:103-110` |
+| (c) Volume never merges with weight (metric weight and cups) | "200 g flour" + "1 cup flour" | One item "flour", "200 g + 1 cup". Nothing converted | **PASS** | Grams in the mass group, cups in their own, joined with " + ", `Groceries.swift:86-88`, `95-99`, `119` |
+| (c) Volume never merges with weight (US) | "1 lb spinach" + "2 cups spinach" should be one row "1 lb + 2 cups spinach" | Two items: "lb spinach" ("1") and "spinach" ("2 cups"). Not converted, but split | **FAIL** (safe: no wrong sum) | Name "lb spinach" makes a second Ingredient, `Quantities.swift:135`, `Ingredients.swift:29-38`; item key is the ingredient, `Groceries.swift:147-150` |
+| (c) Fluid ounces never merge with ounces of weight | "4 fl oz heavy cream" + "4 oz heavy cream" should be one row "4 fl oz + 4 oz heavy cream" | Two items: "fl oz heavy cream" ("4") and "oz heavy cream" ("4") | **FAIL** (safe: no wrong sum) | "fl" is not a unit and the regex reads one word, `Quantities.swift:135`; "fl oz" in parentheses ("1/4 cup (2 fl oz) pasta water") is dropped and passes, `Quantities.swift:145` |
+| (c) Cups and millilitres stay apart | "1 cup milk" + "250 ml milk" | One item "milk", "250 ml + 1 cup". Not converted | **PASS** | Only ml and l join the volume group, `Groceries.swift:89-91`; cups stay in the per-unit group |
+| (d) Metric never merges with US | "500 g ground beef" + "1 lb ground beef" should be one row "500 g + 1 lb" | Two items: "ground beef" ("500 g") and "lb ground beef" ("1") | **FAIL** (safe: no wrong sum) | As (c) US: the unknown "lb" stays in the name |
+| Spoons stay apart | "1 tbsp cumin" + "1 tsp cumin" | One item "cumin", "1 tbsp + 1 tsp". Not converted | **PASS** | Each spoon is its own per-unit group, `Groceries.swift:95-99` |
+| Fractions show as fractions (½ ⅓ ⅔ ¼ ¾ ⅛) | "⅓ cup pine nuts" + "⅓ cup pine nuts" | "0.67 cup"; a single "⅓ cup" shows "0.33 cup". ½, ¼ and ¾ (and "0.5 cup") show as glyphs | **FAIL** for ⅓ ⅔ ⅛; PASS for ½ ¼ ¾ | `kitchenNumber` knows only ¼ ½ ¾, `RecipeMath.swift:61-65`, else two decimals, `RecipeMath.swift:70` |
+| "tin" and "tins" show as can | "1 tin chickpeas" + "1 can chickpeas" | One item "chickpeas", "2 cans" | **PASS** | `Quantities.swift:48`; drawn from the raw value "can", `RecipeMath.swift:52` |
+
+### For Core
+
+1. **Add the US units** (Design's gap 1): `oz` (oz, ounce, ounces) and `lb` (lb, lbs, pound, pounds) as mass, `fl oz` (fl oz, fl. oz, fluid ounce, fluid ounces) and `pint` (pint, pints, pt) as volume, and `quart` if Design keeps it. "fl oz" is two words, so the unit check after the amount must try a two-word unit before the one-word regex at `Quantities.swift:135`, or "4 fl oz" keeps failing. Every row marked FAIL above that is not about pack sizes or fractions comes from this one gap.
+2. **Keep the US units out of the metric sums.** `GroceryShare.quantity` puts every `.gram`/`.kilogram` share into one gram total through `metricFactor` (`Groceries.swift:86-88`). If oz and lb get a `metricFactor` (for the quick flip) and join that case, "500 g + 1 lb" becomes "954 g", a conversion Design forbids. Give oz and lb their own group: add oz to oz, lb to lb, and oz with lb as ounces (16 oz to 1 lb), then show pounds from 16 oz. Fluid ounces get their own group too, never the ounce group.
+3. **The roll needs a display rule for odd totals.** 16 oz is "1 lb" and 24 oz is "1½ lb", but 18 oz is 1.125 lb and `kitchenNumber` would draw "1.13 lb" (`RecipeMath.swift:70`). Proposal: roll to lb only when the total lands on a whole, ¼, ½ or ¾ pound, else keep ounces ("18 oz"). Design to confirm.
+4. **Make the item one row for mixed systems.** Once the units parse, "1 lb spinach" and "2 cups spinach" share the Ingredient and become one row with " + ", as Design wants. No extra merge code is needed; the existing join at `Groceries.swift:119` already does it.
+5. **Pack sizes** (gap 2): read "1 (14.5 oz) can X", "2 (15 oz) cans X" and "1 14.5 oz can X" into amount, `.can`, `packSize` and name. Open question for Design: do "1 can · 15 oz" and "1 can · 29 oz" of chickpeas add to "2 cans", or stay as "1 can · 15 oz + 1 can · 29 oz"? Adding them loses what to buy.
+6. **Fraction glyphs:** extend `kitchenNumber` to ⅓ ⅔ ⅛ (and decide whether ⅜ ⅝ ⅞ show as glyphs or decimals).
+7. **Rounding when a recipe is resized:** `RecipeMath.round` sends every unknown unit to whole numbers (`RecipeMath.swift:30-31`); the compiler will force a case for the new units. Proposal: oz to whole ounces, lb to a quarter, fl oz to whole, pint to a half.
+8. **Split and compound amounts** ("¾ cup + 2 tbsp buttermilk", "1 lb 4 oz squash") are read as one amount today with the rest in the name. Proposal in paste-33 and paste-35: two lines with the same raw, which the merge then shows as Design wants.
