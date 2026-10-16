@@ -239,7 +239,7 @@ struct ClaudeSection: View {
             SecureField(text: $draft, prompt: Text(prompt).foregroundStyle(Theme.Colors.inkSecondary)) {
                 Text("Claude key")
             }
-            .textRole(.body)
+            .textRole(.field)
             .foregroundStyle(Theme.Colors.ink)
             .tint(Theme.Colors.tess)
             .textInputAutocapitalization(.never)
@@ -442,9 +442,15 @@ struct ClaudeReceipts: View {
         let calls = ledger.calls().sorted { $0.createdAt > $1.createdAt }
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-                Button("< Settings") { dismiss() }
-                    .buttonStyle(.labelWord)
-                    .accessibilityLabel("Back to Settings")
+                Button { dismiss() } label: {
+                    Text("‹ Settings")
+                        .textRole(.label)
+                        .textCase(.uppercase)
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                        .frame(minHeight: 44)
+                }
+                .buttonStyle(HandleButtonStyle())
+                .accessibilityLabel("Back to Settings")
                 Text("Receipts")
                     .textRole(.title)
                     .foregroundStyle(Theme.Colors.ink)
@@ -470,6 +476,8 @@ struct ClaudeReceipts: View {
             .padding(.vertical, Theme.Spacing.l)
         }
         .background { ThemedBackground() }
+        // The system back button is hidden, so the edge swipe back is ours (QA L1 on #353).
+        .background { EdgeSwipeBack() }
         .navigationBarBackButtonHidden()
         .toolbarVisibility(.hidden, for: .navigationBar)
     }

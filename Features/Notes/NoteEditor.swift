@@ -36,7 +36,7 @@ struct NoteEditor: View {
                         .entrance(0)
                     TextField("", text: $heading, prompt: Text("First line").foregroundStyle(Theme.Colors.inkSecondary),
                               axis: .vertical)
-                        .textRole(.title)
+                        .textRole(.field)
                         .foregroundStyle(Theme.Colors.ink)
                         .focused($focus, equals: .heading)
                         .submitLabel(.next)
@@ -51,7 +51,7 @@ struct NoteEditor: View {
                         .accessibilityLabel("First line")
                         .entrance(1, hero: true)
                     TextEditor(text: $text)
-                        .textRole(.body)
+                        .textRole(.field)
                         .foregroundStyle(Theme.Colors.ink)
                         .scrollContentBackground(.hidden)
                         .scrollDisabled(true)

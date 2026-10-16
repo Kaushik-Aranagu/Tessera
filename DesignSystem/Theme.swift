@@ -65,12 +65,15 @@ struct ThemeConcept: Sendable {
         var voice: String = "Inter Tight"
     }
 
-    /// Exactly four sizes. 16 pt is the floor.
+    /// Four sizes to read, and one to type in. 16 pt is the floor.
     struct TypeScale: Sendable {
         var hero: TypeSpec
         var title: TypeSpec
         var body: TypeSpec
         var label: TypeSpec
+        /// What he types, one step under Tess's voice (calm-capture.md addendum): every field in the app.
+        var field = TypeSpec(family: .ui, size: 18, weight: .regular, tracking: 0, lineHeight: 1.33,
+                             textStyle: .callout)
         /// Weight of numbers set at hero size (workout numbers).
         var heroNumberWeight: Font.Weight
     }

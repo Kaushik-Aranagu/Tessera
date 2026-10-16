@@ -65,7 +65,7 @@ struct PasteRecipe: View {
                     .transition(.opacity)
                 } else {
                     TextEditor(text: $text)
-                        .textRole(.body)
+                        .textRole(.field)
                         .foregroundStyle(Theme.Colors.ink)
                         .scrollContentBackground(.hidden)
                         .scrollDisabled(true)

@@ -371,7 +371,8 @@ struct BottomChrome: View {
             ZStack(alignment: .bottomLeading) {
                 TextField("Ask", text: $model.commandDraft,
                           prompt: Text("Write anything").foregroundStyle(Theme.Colors.inkSecondary))
-                    .font(Theme.voice)
+                    // His typing sits one step under her voice: Field 18 (calm-capture.md addendum).
+                    .textRole(.field)
                     // The drying ghost reads in inkSecondary (calm-capture.md).
                     .foregroundStyle(ghost == nil ? Theme.Colors.ink : Theme.Colors.inkSecondary)
                     .tint(Theme.Colors.tess)
@@ -382,7 +383,7 @@ struct BottomChrome: View {
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .disabled(ghost != nil)
-                    .padding(.bottom, 8)
+                    .padding(.bottom, 6)
                     .onKeyPress(.escape) {
                         close()
                         return .handled
