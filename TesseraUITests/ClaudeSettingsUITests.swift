@@ -2,7 +2,7 @@ import XCTest
 
 /// Settings › Claude with a fake, in-memory key (`-fakeClaudeKey`): never the Keychain, never a real key.
 @MainActor
-final class ClaudeSettingsUITests: XCTestCase {
+final class ClaudeSettingsUITests: SimulatorOnlyTestCase {
     override func setUp() {
         continueAfterFailure = false
     }

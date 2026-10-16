@@ -2,7 +2,7 @@ import XCTest
 
 /// Restore-walk 3: on a fresh install (nothing done yet) Backups says a restore is possible.
 @MainActor
-final class BackupReinstallUITests: XCTestCase {
+final class BackupReinstallUITests: SimulatorOnlyTestCase {
     func testFreshInstallOffersRestore() {
         let app = XCUIApplication()
         app.launchArguments = ["-resetDemo", "-openLink", "review"]

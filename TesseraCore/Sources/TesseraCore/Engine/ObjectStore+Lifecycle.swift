@@ -50,21 +50,26 @@ public extension ObjectStore {
     }
 
     /// Wipes objects, links, the op log and user classes, keeping built-in and library classes (demo reset).
+    /// Never on a phone: on an iOS device this does nothing, whoever calls it (docs/research/debug-paths.md).
     func resetUserData() {
-        context.deleteAll(ObjectLink.self)
-        context.deleteAll(ObjectRecord.self)
-        context.deleteAll(OpRecord.self)
-        for classDef in allClasses() where classDef.systemKey == nil {
-            context.delete(classDef)
-        }
-        try? context.save()
-        invalidateCaches()
-        // The starter plan and gym kit are user data too; put them back so a reset install looks like a fresh one.
-        // The library classes survive, so its equipment objects are reinstalled explicitly.
-        if let classes = try? SystemCatalog.seed(in: context) {
-            _ = try? ExerciseLibraryInstaller.install(shape: ExerciseLibraryInstaller.chosenShape, store: self,
-                                                      classes: classes)
-        }
-        _ = try? prepareCatalog()
+        #if os(iOS) && !targetEnvironment(simulator)
+            return
+        #else
+            context.deleteAll(ObjectLink.self)
+            context.deleteAll(ObjectRecord.self)
+            context.deleteAll(OpRecord.self)
+            for classDef in allClasses() where classDef.systemKey == nil {
+                context.delete(classDef)
+            }
+            try? context.save()
+            invalidateCaches()
+            // The starter plan and gym kit are user data too; put them back so a reset install looks like a fresh one.
+            // The library classes survive, so its equipment objects are reinstalled explicitly.
+            if let classes = try? SystemCatalog.seed(in: context) {
+                _ = try? ExerciseLibraryInstaller.install(shape: ExerciseLibraryInstaller.chosenShape, store: self,
+                                                          classes: classes)
+            }
+            _ = try? prepareCatalog()
+        #endif
     }
 }

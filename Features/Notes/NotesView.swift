@@ -30,7 +30,7 @@ struct NotesView: View {
     @MainActor
     enum NotesDemo {
         static func seedIfRequested(_ model: AppModel) {
-            guard ProcessInfo.processInfo.arguments.contains("-demoNotes"),
+            guard LaunchFlags.has("-demoNotes"),
                   NoteList(store: model.store, classes: model.classes).recent().isEmpty else { return }
             for body in [
                 "Sleep is training too\nEight hours this week and the bar moved faster.",

@@ -40,7 +40,7 @@ struct ClaudeSection: View {
     @MainActor static let defaultKeys: any TessKeychain = {
         #if DEBUG
             // `-fakeClaudeKey`: an in-memory key that only looks real, for recordings. Never the Keychain.
-            if ProcessInfo.processInfo.arguments.contains("-fakeClaudeKey") {
+            if LaunchFlags.has("-fakeClaudeKey") {
                 return InMemoryKeychain("sk-ant-api03-FAKE-recording-only-a1B2")
             }
         #endif

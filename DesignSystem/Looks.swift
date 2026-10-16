@@ -200,7 +200,7 @@ final class ThemeStore {
     }
 
     /// The look the paint tokens (halo, blends, bloom, sheen, glows) resolve against: while the workout is open its
-    /// pages are forced dark, so the night look (or the pin); otherwise the look on screen (QA W8).
+    /// look is held, so its pages paint in that look; otherwise the look on screen (one base across the app).
     var paintLook: Look {
         workoutHeld ?? current
     }

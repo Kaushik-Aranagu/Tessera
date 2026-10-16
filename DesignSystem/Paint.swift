@@ -8,9 +8,12 @@ import SwiftUI
 
 // MARK: - Ground
 
-/// Soft radial washes over paper, one slow drifting wash and grain. Light on Home, dark in the workout
-/// (follows the colour scheme, so the workout's `.preferredColorScheme(.dark)` gets the dark ground).
+/// Plein's field: soft radial washes over paper, one slow drifting wash and grain, by the colour scheme (light on
+/// cream; the dark variant is Plein's old night ground, kept for Plein pinned on a dark-mode phone).
 struct PleinGround: View {
+    /// Plein's dark variant (its old workout plum), named so it isn't a stray literal.
+    static let nightGround: UInt32 = 0x1C1828
+
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -26,7 +29,7 @@ struct PleinGround: View {
         GeometryReader { proxy in
             let size = proxy.size
             ZStack {
-                Color(hex: dark ? 0x1C1828 : Look.plein.ground)
+                Color(hex: dark ? PleinGround.nightGround : Look.plein.ground)
                 ForEach(Array(washes(dark: dark).enumerated()), id: \.offset) { _, wash in
                     RadialGradient(
                         colors: [Color(hex: wash.color).opacity(wash.opacity), Color(hex: wash.color).opacity(0)],

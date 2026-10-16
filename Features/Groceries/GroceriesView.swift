@@ -743,7 +743,7 @@ enum GroceriesCopy {
         """
 
         static func seedIfRequested(_ model: AppModel) {
-            guard ProcessInfo.processInfo.arguments.contains("-demoKitchen"),
+            guard LaunchFlags.has("-demoKitchen"),
                   RecipeBook(store: model.store, classes: model.classes).recipes().isEmpty else { return }
             for text in [carbonara, dal] {
                 if let recipe = try? model.engine.perform(CreateRecipe(text: text), by: .user).output {

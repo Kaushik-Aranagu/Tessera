@@ -17,9 +17,9 @@ enum AppClock {
 
     static func configure(arguments: [String] = ProcessInfo.processInfo.arguments) {
         #if DEBUG
-            guard let index = arguments.firstIndex(of: "-demoTime"),
-                  arguments.indices.contains(index + 1) else { return }
-            let parts = arguments[index + 1].split(separator: ":").compactMap { Int($0) }
+            // Simulator only: a shifted clock on the phone would stamp logs and backups with wrong dates.
+            guard let time = LaunchFlags.value(after: "-demoTime", in: arguments) else { return }
+            let parts = time.split(separator: ":").compactMap { Int($0) }
             guard parts.count == 2 else { return }
             let real = Date()
             guard let target = Calendar.current.date(bySettingHour: parts[0], minute: parts[1], second: 0, of: real)

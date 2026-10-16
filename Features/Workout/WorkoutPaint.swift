@@ -41,7 +41,7 @@ enum WorkoutPaint {
         Theme.Colors.sheen
     }
 
-    /// The glass of sheets and panels: the ground at 82% over the material.
+    /// The glass of sheets and panels: the ground at 92% over the material.
     static var glass: Color {
         Theme.Colors.Workout.ground.opacity(0.92)
     }

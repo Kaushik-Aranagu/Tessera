@@ -306,7 +306,7 @@ private struct QueueRow: View {
         /// `-queueScript`: the first undone task row strikes itself as if dragged right; a row that is dated later
         /// in the evening then slides left to Tomorrow. Lets the motion be recorded without touch automation.
         private func playScript() async {
-            guard ProcessInfo.processInfo.arguments.contains("-queueScript"), !entry.isWorkout,
+            guard LaunchFlags.has("-queueScript"), !entry.isWorkout,
                   !QueueRow.scripted.contains(entry.id), QueueRow.scripted.count < 2 else { return }
             QueueRow.scripted.insert(entry.id)
             let first = QueueRow.scripted.count == 1
