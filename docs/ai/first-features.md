@@ -24,7 +24,7 @@ It ships in two halves so the three dots go first, without waiting on Claude:
 
 | Today | File | Becomes |
 |---|---|---|
-| "1 of 1 exercises, 2 sets, 1 record." | `WorkoutSummary.line` (`TesseraCore/Training/WorkoutSummary.swift:30`), shown by `DoneHero` (`Features/Home/NowPage.swift:356`) | "Push day done." with "Bench record." when there is one. The counts line moves to the Training page |
+| "1 of 1 exercises, 2 sets, 1 record." | `WorkoutSummary.line` (`TesseraCore/Training/WorkoutSummary.swift:30`), shown by `DoneHero` (`Features/Home/NowPage.swift:356`) | "Push day done." with "Bench best." when there is one. The counts line moves to the Training page |
 | "Bench press, set 2: 80 kg × 8, 12 min ago" with `.lineLimit(1)` and `.truncationMode(.middle)` | `WorkoutProgress.nextStep` via `LedgerRow.step` (`Features/Home/NowPage.swift:538`) | "Bench paused at set 2." Weight and reps one tap down (Resume opens them) |
 | Cook and shop process steps (`Cooking.swift:111`, `Shopping.swift:40`) | same `LedgerRow` | "Chili, on step 3." / "Groceries: 4 left." |
 | Queue rows `.lineLimit(1)` (`HomeQueue.swift:346`) | `HomeQueue` | Titles keep their own text (his words), and wrap instead of cutting |
@@ -35,7 +35,7 @@ It ships in two halves so the three dots go first, without waiting on Claude:
 
 | Fact | Rules line |
 |---|---|
-| Workout done today | "{Routine} done." + " {Exercise} record." if one |
+| Workout done today | "{Routine} done." + " {Exercise} best." if one |
 | Workout running | "{Exercise}, set {n}." |
 | Workout paused | "{Exercise} paused at set {n}." |
 | Workout done, nothing logged | "{Routine}, no sets." (matches `ProcessTable` overnight line) |
@@ -54,7 +54,7 @@ It ships in two halves so the three dots go first, without waiting on Claude:
  "items": [
   {"id": "w1", "kind": "workout", "title": "Push A", "state": "done", "endedAgoMin": 95,
    "exercisesDone": 5, "exercisesPlanned": 6, "records": ["Bench press"], "lastSameRoutineDaysAgo": 7,
-   "numbers": [5, 6, 7], "rules": "Push A done. Bench record."},
+   "numbers": [5, 6, 7], "rules": "Push A done. Bench best."},
   {"id": "k1", "kind": "cook", "title": "Chili", "state": "paused", "step": 3, "steps": 8,
    "numbers": [3, 8], "rules": "Chili, on step 3."}],
  "memory": ["Usually trains 6 to 8 pm.", "Wed: Pull A done, cooked chili."]}
@@ -83,7 +83,7 @@ You write Tessera's Home lines: one line per item, so he knows where things stan
 
 | # | Facts | Rules line | A good Claude line |
 |---|---|---|---|
-| H1 | Push A done 95 min ago, bench record | Push A done. Bench record. | Push day done, with a bench record. |
+| H1 | Push A done 95 min ago, bench best | Push A done. Bench best. | Push day done, with a bench best. |
 | H2 | Push A done, same routine last ran 9 days ago | Push A done. | Push day done, first in nine days. ✗ (number word: must be a digit from `numbers`, so "first in 9 days") |
 | H3 | Pull B paused at set 2 of row, 40 min ago | Row paused at set 2. | Rows paused at set 2. |
 | H4 | Legs running, set 3 of squat | Squat, set 3. | Squat, set 3 up. |
@@ -93,8 +93,8 @@ You write Tessera's Home lines: one line per item, so he knows where things stan
 | H8 | Chili paused at step 3 of 8 | Chili, on step 3. | Chili waiting at step 3. |
 | H9 | Groceries shop, 4 left | Groceries: 4 left. | 4 things left to grab. |
 | H10 | Workout done, nothing logged | Push A, no sets. | Push A, no sets. |
-| H11 | Push A done, 6 of 6, no record, 8:15 pm | Push A done. | Push day done. |
-| H12 | Two records, bench and OHP | Push A done. 2 records. | Push day done, two records. ✗ (digit rule: "2 records") |
+| H11 | Push A done, 6 of 6, no best, 8:15 pm | Push A done. | Push day done. |
+| H12 | Two bests, bench and OHP | Push A done. 2 bests. | Push day done, two bests. ✗ (digit rule: "2 bests") |
 
 The ✗ rows are there on purpose: the eval proves the checks catch them.
 
@@ -114,7 +114,7 @@ The ✗ rows are there on purpose: the eval proves the checks catch them.
 
 **Where it lands (Design 46, `docs/design/review-week.md`, da55bb6):** Review is the week on one page; under the bands, THE WEEK'S LINES holds three lines, so this feature's shape is three lines at the Home line caps (context: 6 words, 32 characters each), never a paragraph.
 
-**What he sees.** Review opens on three lines about his week, written once a week (Sunday after 04:00) and again only when the week's facts change: what happened, one thing noticed, and what's next. For example: "5 of 6 workouts, with records on bench and squat." / "Training moved later this week, mostly after 7 pm." / "Legs is first up Monday." Each line links to what it's about (handles, as Plan my day does). One tap down: "What Tess knows", the memory page (m4-steers section 11).
+**What he sees.** Review opens on three lines about his week, written once a week (Sunday after 04:00) and again only when the week's facts change: what happened, one thing noticed, and what's next. For example: "5 of 6 workouts, with bests on bench and squat." / "Training moved later this week, mostly after 7 pm." / "Legs is first up Monday." Each line links to what it's about (handles, as Plan my day does). One tap down: "What Tess knows", the memory page (m4-steers section 11).
 
 **Why second.** It needs the memory store (architecture section 4) and a `WeekFacts` lens, and the memory page is where he sees and deletes what Tess knows. Home lines don't need stored memory to start (1b can run with recent day lines built on the fly).
 
