@@ -132,7 +132,7 @@ The ✗ rows are there on purpose: the eval proves the checks catch them.
 | Missing ingredients for a planned meal | Phone: `AddRecipeToGroceries` (`TesseraCore/Kitchen/Groceries.swift:230`) works out a planned recipe's lines minus staples (`isStaple`, `AisleGuide.staples`) and merges through shares; the meal plan slice adds them quietly from 17:00 the day before | Already built; Claude adds nothing |
 | **Connect** rows to recipes without double-adding | **Claude**, the one real job: name matching ("scallions" and "spring onions", "tomatoes" and "cherry tomatoes") | Strict `linkItems {links: [{item, recipe, ingredient}]}`; each proposed match is a ghost row he keeps (merge, written as a `GroceryShare` row carrying the recipe, and the task once the meal plan lands) or drops. No `addGroceries` write tool for Claude |
 | Suggest what usually runs out | Phone, from `checkedAt` history | "usually have", as the Kitchen lead has it |
-| Remind | Product's call. Kitchen lead's recommendation: the planned cook's Home line carries the open count through `HomeLines` ("Tacos tonight, 2 to buy"), no notification | Count from the phone |
+| Remind | Decided (Product, Oct 16): Groceries never notify. The planned cook's Home line carries the open count through `HomeLines` ("Tacos tonight, 2 to buy.") | Count from the phone |
 
 **Pack:** ingredient titles of this week's planned recipes (never his typed lines, which carry shops and brands), current grocery item names, staples flags, told memory ("never buy cilantro"). Never quantities, prices or shops. No pantry: pantry light waits until after week one, and AI-12 doesn't wait on it.
 **Model:** Haiku 5.5, one strict `linkItems` tool, no writes except the kept ghost rows.
