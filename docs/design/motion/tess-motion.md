@@ -187,6 +187,8 @@ The rules above were written against Home. The same seven rules hold everywhere;
 | **Settings** | Never (a page of his values; `settings-place.md`) | None | Yes | |
 | **Day log, Kitchen, Groceries** | As Home rows: after a row's words, 40 pt, 6 above the baseline, 56 × 44 free | Under the rows she's reading (a pasted recipe's lines; the aisle rows when she sorts them) | Yes | Cook mode: never, like a live workout |
 
+- Recording: `recordings/tess-motion-pages.mp4` (Obsidian) and `-light` (Porcelain), 36 s: Home after 41, Training at rest, Review's week, Kitchen; each opens with a lab overlay (dashed, not in the app) of her free ground, then she goes to one allowed spot, works, Done in place, home. On Review she stays home and the readers scan THE WEEK'S LINES.
+
 Two general rules this adds:
 - **A page's free ground is the page's to declare.** Each page reports its rects through a preference (`tess-motion-build.md`); a page that reports none gets no roam and no readers, only the constellation at the dock. That's the safe default for every page not in this table.
 - **Live things own their surface.** A live workout, cook mode, the Speak layer and a flight from `task-reward.md`: she stays put and does only what she does today.
