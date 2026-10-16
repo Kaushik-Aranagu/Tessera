@@ -83,3 +83,23 @@ This sheet replaces sheet 71's "which pages get a side page" and Product's 10:00
 - **AI architecture and Research:** Tess's side line (a job with caps, fixtures and an eval), ask-about-this, and when facts Claude may fill are allowed.
 - **Motion lab:** one side motion for every screen, with Reduce Motion as a 200 ms crossfade.
 - **Builders:** adopt it per screen as Product boards it. Builder A owns Training, the live workout and the looks. Builder B owns Home, Kitchen, Review, Notes and Settings.
+
+## Two stops: the glance, then the full side (his ask, Oct 16, 2:33 PM PT)
+"Half screen, which has more concise information… if we pull it further, we get more information."
+- Board: `mockups/side-glance.png` (render `studies/every-side.html?glance`). Left to right: the front, stop 1, stop 2, and a note's glance. The recording `recordings/every-side.mp4` is now 21 s. It goes front, glance, full, glance, front, first on an ingredient and then on a note.
+- **Stop 1, the glance:** a swipe past 60 pt that's let go before half the width settles here.
+  - The glance takes the right half: from x 150, below the context line (186) to above Tess's band. Its left edge is a 34 pt fade into the ground, with no line and no card.
+  - The front stays in place under it at 30%, so its left half still reads.
+  - It holds the side's label, then the one number or name that matters at Hero 56 (with a unit at 21), then at most two more facts at Body 19. Its word sits at the foot ("ALL FACTS", "ALL LINKS").
+  - Lists in a glance follow the copy rule: a count first, then two or three named, and "and N more" from four.
+- **Stop 2, the full side:** pull on past half the width, or tap the glance's word. The glance fades into the full side, and the front leaves as in 71.
+- **Back:** a swipe right goes back one stop at a time. The left edge is still back to the page before (rule 4).
+- **Motion:** each stop settles on the house spring over 380 ms, with no haptic for the glance and one `.selection` at the full side. Under Reduce Motion, each stop is a 200 ms crossfade.
+- **Every side declares its glance:** what goes on it, by kind.
+  - FACTS: the top number.
+  - PARTS: the count and the top part.
+  - BEFORE: the last time.
+  - AHEAD: the next thing.
+  - LINKS: the count and the names.
+  - A side too small for two stops opens straight to the full side.
+- **Tess's line** shows at both stops, and it's the same line.

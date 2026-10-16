@@ -47,6 +47,14 @@ body.playing .ph{border-radius:0}
 .tl{right:71px;top:768px;width:290px;text-align:right;font-size:18px;line-height:23px;color:var(--tess)}
 .soul{left:323px;top:759px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 40%,#E2432A 0 28%,transparent 46%),radial-gradient(circle at 66% 38%,#2450D8 0 30%,transparent 50%),radial-gradient(circle at 50% 70%,#F0A500 0 28%,transparent 48%);filter:blur(2px)}
 .src{left:22px;font-size:15px;color:rgba(var(--ink),.45)}
+.gl{position:absolute;left:150px;right:0;top:186px;bottom:96px;padding:20px 22px 0 46px;background:linear-gradient(90deg,rgba(251,250,247,0),var(--bg) 34px)}
+.gl .gk{font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.55)}
+.gl .big{font-size:56px;line-height:60px;font-weight:500;letter-spacing:-.02em;margin-top:10px}
+.gl .big small{font-size:21px;font-weight:400;letter-spacing:0;margin-left:6px;color:rgba(var(--ink),.62)}
+.gl .gr{font-size:19px;line-height:26px;margin-top:14px}
+.gl .gr em{font-style:normal;color:rgba(var(--ink),.62)}
+.gl .more{position:absolute;left:46px;bottom:22px;font-weight:700;font-size:13px;letter-spacing:.08em}
+.gl .more i{display:block;height:2px;margin-top:5px;background:currentColor;width:100%}
 .finger{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(18,16,22,.16);border:1.5px solid rgba(18,16,22,.25);opacity:0;pointer-events:none;z-index:9}
 </style></head>
 <body>
@@ -86,6 +94,36 @@ const S = {
     `<div class="abs para" style="top:206px"><p>Asked about the heater. He’ll send someone Thursday. Rent stays the same through March.</p><p class="dim">Mentions Book physio.</p></div>`,
 };
 
+// The glance: the first stop, half the screen, the side's two or three facts that matter (Kaushik 2:33 PM).
+const G = {
+  ingredient: () => `<div class="gl"><div class="gk">PER 100 G</div><div class="big">215<small>kcal</small></div><div class="gr">18.6 g <em>protein</em></div><div class="gr">15 g <em>fat</em></div><div class="more">ALL FACTS<i></i></div></div>`,
+  note: () => `<div class="gl"><div class="gk">MENTIONED IN</div><div class="big">3<small>places</small></div><div class="gr">Reply to landlord</div><div class="gr">Rent, October</div><div class="gr">Shutdown, Tuesday</div><div class="more">ALL LINKS<i></i></div></div>`,
+};
+// p: 0 front, 1 glance, 2 the full side.
+function stops(el, p) {
+  const f = el.querySelector('.fb'), g = el.querySelector('.gb'), s = el.querySelector('.sb');
+  const p1 = Math.min(p, 1), p2 = Math.max(0, p - 1);
+  f.style.transform = `translateX(${-44 * p2}px)`; f.style.opacity = 1 - .7 * p1 - .3 * p2;
+  g.style.opacity = p <= 1 ? p1 : 1 - p2; g.style.transform = `translateX(${60 * (1 - p1) - 40 * p2}px)`;
+  s.style.opacity = p2; s.style.transform = `translateX(${60 * (1 - p2)}px)`;
+}
+const splitHead = html => { const d = document.createElement('div'); d.innerHTML = html; const hs = [...d.children].filter(e => e.matches('.back,.title')); const head = hs.map(e => e.outerHTML).join(''); hs.forEach(e => e.remove()); return [head, d.innerHTML]; };
+function stack(front, side) {
+  const [h, f] = splitHead(S[front]()), [, sd] = splitHead(S[side]());
+  return h + `<div class="body fb">${f}</div><div class="body gb">${G[side]()}${band(S[side]().match(/class="abs tl">([^<]*)/)?.[1] || '')}</div><div class="body sb">${sd}</div>`;
+}
+if (location.search.includes('glance')) {
+  const cell = (front, side, p, opt, h, t) => `<div><div class="ph por" data-p="${p}">${stack(front, side)}</div><div class="cap"><div class="opt">${opt}</div><h2>${h}</h2><p>${t}</p></div></div>`;
+  let b = `<div class="head"><h1>A side in two stops</h1><p>Swipe a little and the side opens halfway: a glance with the two or three facts that matter, the front still in place, dimmed, under its left half. Keep pulling, or tap the word at its foot, and the full side takes the screen. A swipe right goes back one stop at a time.</p></div><div class="grid" style="grid-template-columns:repeat(4,393px)">`;
+  b += cell('ingredientFront', 'ingredient', 0, 'THE FRONT', 'Ground beef', 'The ingredient as it is.');
+  b += cell('ingredientFront', 'ingredient', 1, 'STOP 1 · THE GLANCE', 'Half the screen', 'The number that matters, big; two more under it. ALL FACTS opens the rest.');
+  b += cell('ingredientFront', 'ingredient', 2, 'STOP 2 · THE FULL SIDE', 'Everything', 'Per 100 g, a pound, the source, Tess’s line.');
+  b += cell('noteFront', 'note', 1, 'A NOTE’S GLANCE', 'Mentioned in 3', 'Count first, then the three named. From four it names two and says “and 2 more”.');
+  b += `</div>`;
+  document.getElementById('board').innerHTML = b;
+  document.querySelectorAll('[data-p]').forEach(el => stops(el, +el.dataset.p));
+  document.fonts.ready.then(() => { document.body.dataset.done = '1'; });
+} else
 if (!play) {
   const card = (k, opt, h, p) => `<div><div class="ph por">${S[k]()}</div><div class="cap"><div class="opt">${opt}</div><h2>${h}</h2><p>${p}</p></div></div>`;
   let b = `<div class="head"><h1>Every screen has a side</h1><p>A screen is one unit: the thing you came for on the front, and the other side of the same thing one swipe away. Every screen declares its side. The front’s name stays put as the spine, the word at the context line’s right names the side, and Tess’s line at the foot says one thing she noticed. Six sides drawn, one of each kind.</p></div><div class="grid">`;
@@ -118,15 +156,13 @@ if (!play) {
   // The spine: back word and title stay; only what's under them moves (71). Split each page into head and body.
   const split = html => { const d = document.createElement('div'); d.innerHTML = html; const head = [...d.children].filter(e => e.matches('.back,.title')).map(e => e.outerHTML).join(''); [...d.children].filter(e => e.matches('.back,.title')).forEach(e => e.remove()); return [head, d.innerHTML]; };
   async function show(front, side, y) {
-    const [h1, f] = split(S[front]()), [, s] = split(S[side]());
-    a.innerHTML = h1 + `<div class="body" id="af">${f}</div>`; b.innerHTML = `<div class="body" id="bs" style="opacity:0">${s}</div>`;
-    const af = $('af'), bs = $('bs');
-    const slide = q => { af.style.transform = `translateX(${-44 * q}px)`; af.style.opacity = 1 - q; const q2 = Math.max(0, (q - .12) / .88); bs.style.transform = `translateX(${60 * (1 - q2)}px)`; bs.style.opacity = q2; };
-    slide(0); await wait(1300);
-    fg.style.opacity = 1; await tween(320, q => { fg.style.left = 310 - 190 * q + 'px'; fg.style.top = y + 'px'; slide(q); }); fg.style.opacity = 0;
-    await wait(2600);
-    fg.style.opacity = 1; await tween(320, q => { fg.style.left = 120 + 190 * q + 'px'; slide(1 - q); }); fg.style.opacity = 0;
-    await wait(1100);
+    const ph = $('ph'); a.innerHTML = stack(front, side); b.innerHTML = '';
+    const go = (from, to, ms, x0, x1) => { fg.style.opacity = 1; return tween(ms, q => { fg.style.left = x0 + (x1 - x0) * q + 'px'; fg.style.top = y + 'px'; stops(a, from + (to - from) * q); }).then(() => { fg.style.opacity = 0; }); };
+    stops(a, 0); await wait(1300);
+    await go(0, 1, 380, 320, 210); await wait(2300);     // stop 1: the glance
+    await go(1, 2, 380, 250, 90); await wait(2300);      // pull on: the full side
+    await go(2, 1, 340, 110, 230); await wait(1200);     // back one stop
+    await go(1, 0, 340, 200, 330); await wait(1000);     // and to the front
   }
   document.fonts.ready.then(async () => {
     document.body.dataset.start = '1';
