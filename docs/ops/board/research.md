@@ -5,6 +5,7 @@
 **Now:** 108 (after Core's set-loss PR), then 111, 112 and 113, then 101 on Monday. Next 3 (huddle triage) waits for the huddle answers.
 
 **Next:**
+0. AI-5, the Home lines eval (`docs/ai/ship-list.md`, fixtures in `docs/ai/first-features.md` grown to 40), when Core's AI-4 is up. Done when Haiku 5.5 and Sonnet 5.5 run 3 times each with 0 failing lines shown, every ✗ fixture caught and median cost under $0.0004 a call, plus 10 lines picked for Kaushik to read.
 1. (done) M3 slices 1 and 2 engine brief with fixtures (body weight trend line; Habit class with x-of-7 and no streaks). Done when `m3-1-2-brief.md` gives Core the smallest data shapes, 30 body-weight entries with the expected trend values, 20 habit check-in rows with the expected x-of-7, and the grammar rows ("82.4", "weighed 82.4", "meditated") checked against the grammar collision rules.
 2. (done) Upkeep and People fixtures and collision checks, like the Reading one. Done when `fixtures/upkeep.md` and `fixtures/people.md` each have 40 phrases with expected parses and flag every collision with existing grammar (tasks, groceries, sets, notes, Reading, Money), each with a proposed rule.
 3. Huddle answers to board items. Done when, right after the huddle, Kaushik's answers go through `huddle-triage.md` into one table of proposed board items per team, sent to Product. This waits on the huddle, so pull 4 first if it hasn't happened.
