@@ -55,4 +55,17 @@ struct TimeWordsTests {
         let (next, _) = TessDates.extract(from: ["call", "mom", "thu"], now: Self.at(16, 15), calendar: Self.calendar)
         #expect(try #require(next) > Self.at(21, 0))
     }
+
+    @Test @MainActor func notNowLateAtNightMovesToSevenAm() throws {
+        // Product 0ab: "Not now" at 11:20 pm on a task for 11 pm goes to 7 am, not 11 pm tomorrow.
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        let calendar = Calendar.current
+        let now = try #require(calendar.date(bySettingHour: 23, minute: 20, second: 0, of: Date()))
+        let eleven = try #require(calendar.date(bySettingHour: 23, minute: 0, second: 0, of: now))
+        let task = try engine.perform(CreateTask(title: "Stretch", startsAt: eleven), by: .user).output
+        try engine.perform(MoveTask(task: task.id, time: now), by: .user)
+        let moved = try #require(store.value("startsAt", of: task)?.dateValue)
+        #expect(calendar.component(.hour, from: moved) == 7 && moved > now && moved < now.addingTimeInterval(9 * 3600))
+    }
 }

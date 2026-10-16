@@ -107,9 +107,12 @@ public struct MoveTask: EngineAction {
     public var later: Bool?
     /// Now; the app passes its clock.
     public var time: Date?
+    /// His calendar (the device's when nil): his day and his quiet hours are read in it.
+    public var calendar: Calendar?
 
-    public init(task: UUID, to: Date? = nil, later: Bool? = nil, time: Date? = nil) {
+    public init(task: UUID, to: Date? = nil, later: Bool? = nil, time: Date? = nil, calendar: Calendar? = nil) {
         self.time = time
+        self.calendar = calendar
         self.task = task
         self.to = to
         self.later = later
@@ -126,10 +129,20 @@ public struct MoveTask: EngineAction {
         // "Not now": the same wall time on his next day. At 01:00 Saturday a Friday 23:00 task moves to Saturday 23:00
         // (his day still being Friday), not Sunday 00:00.
         let now = time ?? .now
-        let day = TesseraDay()
+        let calendar = calendar ?? .current
+        let day = TesseraDay(calendar: calendar)
         let current = store.value("startsAt", of: task)?.dateValue
         let base = max(current ?? now, day.start(of: now))
-        let target = to ?? day.adding(days: 1, to: base)
+        var target = to ?? day.adding(days: 1, to: base)
+        // "Not now" never lands in his quiet hours, 23:00 to 07:00: it moves to the next 7 am instead (Product 0ab,
+        // 2:00 PM PT). A time he picks himself (`to`) is kept.
+        if to == nil {
+            let hour = calendar.component(.hour, from: target)
+            if hour >= 23 || hour < 7 {
+                let morning = calendar.date(bySettingHour: 7, minute: 0, second: 0, of: now) ?? now
+                target = morning > now ? morning : calendar.date(byAdding: .day, value: 1, to: morning) ?? morning
+            }
+        }
         try transaction.set("startsAt", to: .date(target), on: task)
         if let due = store.value("due", of: task)?.dateValue, due < target {
             try transaction.set("due", to: .date(target), on: task)
