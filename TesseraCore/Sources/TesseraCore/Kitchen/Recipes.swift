@@ -28,6 +28,26 @@ public struct RecipeBook {
         self.classes = classes
     }
 
+    /// "Tacos" for "Sheet-pan chicken fajita tacos": the title's last word, capitalised, brackets dropped (Kitchen
+    /// lead, #389). Two recipes on the groceries list sharing a short name both read their full titles.
+    public static func shortName(of recipe: ObjectRecord, store: ObjectStore) -> String {
+        let short = shortName(ofTitle: recipe.title)
+        let onList = store.object(id: Groceries.listID)?.orderedChildren
+            .filter { !$0.isDeleted && store.value("isDone", of: $0) != .bool(true) }
+            .flatMap { GroceryShare.decode(store.value("shares", of: $0)?.stringValue).compactMap(\.recipe) } ?? []
+        let clash = Set(onList).subtracting([recipe.id]).contains { other in
+            store.object(id: other).map { shortName(ofTitle: $0.title) == short } ?? false
+        }
+        return clash ? recipe.title : short
+    }
+
+    public static func shortName(ofTitle title: String) -> String {
+        let bare = title.replacing(/\s*[\(\[][^\)\]]*[\)\]]/, with: "")
+        guard let last = bare.split(separator: " ").last else { return title }
+        let word = last.trimmingCharacters(in: .punctuationCharacters)
+        return word.prefix(1).uppercased() + word.dropFirst()
+    }
+
     public func recipes() -> [ObjectRecord] {
         guard let recipeClass = classes[.recipe] else { return [] }
         return store.objects(of: recipeClass).sorted { $0.createdAt < $1.createdAt }

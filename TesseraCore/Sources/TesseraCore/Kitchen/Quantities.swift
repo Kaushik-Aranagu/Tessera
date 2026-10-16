@@ -6,6 +6,8 @@ public enum KitchenUnit: String, Sendable, Codable, CaseIterable {
     case gram = "g", kilogram = "kg", millilitre = "ml", litre = "l"
     case teaspoon = "tsp", tablespoon = "tbsp", cup
     case clove, pinch, handful, bunch, can, slice, sprig, piece, stick, head
+    /// "1 dozen eggs": his count, kept as said (Kitchen lead on G-R2).
+    case dozen
     /// US units, kept as written (us-shop.md): never converted on save or merged with metric.
     case ounce = "oz", pound = "lb", fluidOunce = "fl oz", pint, quart
     /// Pack words beside can and stick (us-kitchen-pages.md §6).
@@ -62,7 +64,7 @@ public enum KitchenUnit: String, Sendable, Codable, CaseIterable {
         "handful": .handful, "handfuls": .handful, "bunch": .bunch, "bunches": .bunch,
         "can": .can, "cans": .can, "tin": .can, "tins": .can,
         "slice": .slice, "slices": .slice, "sprig": .sprig, "sprigs": .sprig, "stick": .stick, "sticks": .stick,
-        "head": .head, "heads": .head,
+        "head": .head, "heads": .head, "dozen": .dozen, "doz": .dozen,
         "oz": .ounce, "ounce": .ounce, "ounces": .ounce,
         "lb": .pound, "lbs": .pound, "pound": .pound, "pounds": .pound,
         "pint": .pint, "pints": .pint, "pt": .pint, "quart": .quart, "quarts": .quart, "qt": .quart,
@@ -141,11 +143,11 @@ public struct IngredientLine: Hashable, Sendable, Codable {
             toTaste = match.1.lowercased() == "to taste"
             rest.removeSubrange(match.range)
         }
-        // "(optional)", ", optional", "for serving", "for garnish", "plus more to serve": the recipe keeps the line,
-        // the list skips it (Research 123 G-R4).
+        // "(optional)", ", optional", "for serving", "for garnish": the recipe keeps the line, the list skips it
+        // (Research 123 G-R4). "plus more to serve" is not optional: the line still adds (QA F1 on #380).
         if let match = rest
             .firstMatch(
-                of: /(?i),?\s*\(?\s*(optional|for serving|for garnish|for the table|plus more(?: to serve| for serving)?)\s*\)?\s*(?:\([^)]*\))?\s*$/
+                of: /(?i),?\s*\(?\s*(optional|for serving|for garnish|for the table)\s*\)?\s*(?:\([^)]*\))?\s*$/
             )
         {
             optional = true
@@ -213,7 +215,9 @@ public struct IngredientLine: Hashable, Sendable, Codable {
         // "chopped fresh cilantro" is cilantro (Research 123 G-R5).
         var sizes: [String] = []
         // A pack's contents keep their words: "diced tomatoes" in a can is the product, not a prep.
-        let sizeWords: Set = ["large", "small", "medium", "big", "fresh", "ripe", "cooked", "extra", "extra-large"]
+        // "extra" alone stays: "extra virgin olive oil" is the oil (QA F2 on #380); "extra large" is one size word.
+        name = name.replacing(/(?i)^extra[- ]large\s+/, with: "")
+        let sizeWords: Set = ["large", "small", "medium", "big", "fresh", "ripe", "cooked", "extra-large"]
         let prepWords: Set = ["chopped", "grated", "crumbled", "shredded", "minced", "diced", "sliced", "packed",
                               "freshly", "finely", "roughly", "thinly"]
         while let space = name.firstIndex(of: " ") {

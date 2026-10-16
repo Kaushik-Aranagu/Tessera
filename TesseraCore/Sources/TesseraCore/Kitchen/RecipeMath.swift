@@ -36,7 +36,8 @@ public enum RecipeMath {
             return max(0.25, (value * 4).rounded() / 4)
         case .pint, .quart:
             return max(0.5, (value * 2).rounded() / 2)
-        case nil, .clove, .pinch, .handful, .bunch, .can, .slice, .sprig, .piece, .stick, .head, .bag, .jar, .box,
+        case nil, .clove, .pinch, .handful, .bunch, .can, .slice, .sprig, .piece, .stick, .head, .dozen, .bag, .jar,
+             .box,
              .bottle, .carton:
             return max(1, value.rounded())
         }

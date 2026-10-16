@@ -79,6 +79,8 @@ struct USKitchenTests {
         // QA S2: the size reaches the screen.
         #expect(mixed.map { book.packSize(of: $0.object) } == ["14.5 oz", "28 oz"])
         #expect(try groceries(["1 (13.5 oz) can coconut milk", "1 can coconut milk"]).count == 2)
+        // The other way round too: a sized can never joins an unsized one added first (QA F3 on #380).
+        #expect(try groceries(["1 can coconut milk", "1 (13.5 oz) can coconut milk"]).count == 2)
         // U6, and never Produce.
         let tins = try groceries(["1 can (14.5 oz) diced tomatoes", "1 can (14.5 oz) diced tomatoes"])
         #expect(tins.map(\.quantity) == ["2 cans"] && tins.first?.section == "Cans and jars")

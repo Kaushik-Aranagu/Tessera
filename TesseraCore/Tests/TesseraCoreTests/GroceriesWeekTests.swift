@@ -66,6 +66,23 @@ struct GroceriesWeekTests {
     1. Simmer 20 min.
     """
 
+    static let pasta = """
+    Sausage, white bean and spinach pasta
+    Serves 4
+    12 oz orecchiette
+    1 lb sweet Italian sausage, casings removed
+    1 tbsp extra-virgin olive oil
+    1 head garlic, cloves thinly sliced
+    1/4 tsp red pepper flakes
+    1 (15 oz) can cannellini beans, rinsed
+    1 bag baby spinach (6 oz)
+    1/2 cup heavy cream
+    1/2 cup grated parmesan, plus more to serve
+    Kosher salt and black pepper
+    Method
+    1. Boil 10 min.
+    """
+
     static let frittata = """
     Spinach and feta frittata
     Serves 4
@@ -109,6 +126,12 @@ struct GroceriesWeekTests {
         #expect(IngredientLine.parse("1/2 cup chopped fresh cilantro")?.name == "cilantro")
         #expect(IngredientLine.parse("1 tbsp grated ginger")?.name == "ginger")
         #expect(IngredientLine.parse("1/2 cup crumbled feta (2 oz)")?.name == "feta")
+        // QA F1 on #380: "plus more to serve" still adds; QA F2: "extra virgin olive oil" keeps its "extra".
+        let parmesan = try #require(IngredientLine.parse("1/2 cup grated parmesan, plus more to serve"))
+        #expect(parmesan.name == "parmesan" && !parmesan.optional && parmesan.amount == 0.5)
+        #expect(IngredientLine.parse("1 tbsp extra virgin olive oil")?.name == "extra virgin olive oil")
+        #expect(IngredientLine.parse("2 extra large eggs")?.name == "eggs")
+        #expect(AisleGuide.isStaple(IngredientLine.key(for: "extra virgin olive oil")))
         #expect(IngredientLine.key(for: "whole milk") == "milk" && IngredientLine.key(for: "yellow onion") == "onion")
         #expect(IngredientLine.key(for: "red onion") == "red onion")
         #expect(AisleGuide.isStaple("kosher salt and black pepper") && AisleGuide.isStaple("extra-virgin olive oil"))
@@ -136,7 +159,10 @@ struct GroceriesWeekTests {
         let addedTacos = try engine.perform(AddRecipeToGroceries(recipe: tacos.id), by: .user)
         // Kosher salt, olive oil and hot sauce stay off; everything else is new: 10 rows (G-R3, G-R14).
         #expect(addedTacos.output.count == 10, "\(addedTacos.output.map(\.title))")
-        #expect(addedTacos.record.summary == "Sheet-pan chicken fajita tacos, 10 added.")
+        #expect(addedTacos.record.summary == "Tacos, 10 added.") // the short name (Kitchen lead, #389)
+        #expect(RecipeBook.shortName(ofTitle: "Sausage, white bean and spinach pasta") == "Pasta")
+        #expect(RecipeBook.shortName(ofTitle: "Weeknight turkey chili") == "Chili")
+        #expect(RecipeBook.shortName(ofTitle: "Dal tadka (quick)") == "Tadka")
         #expect(row("kosher salt") == nil && row("olive oil") == nil)
         #expect(row("chili powder")?.aisle == "Spices" && row("cilantro") != nil)
 
@@ -156,18 +182,36 @@ struct GroceriesWeekTests {
         #expect(Set(items.compactMap(groceries.packSize(of:))) == ["28 oz", "14.5 oz"])
         #expect(row("limes")?.quantity == "2" || row("lime")?.quantity == "2")
 
+        // r4 at serves 4, then 2 from the recipe page: the serves-4 share comes out first, nothing doubles.
+        let pasta = try engine.perform(CreateRecipe(text: Self.pasta), by: .user).output
+        try engine.perform(AddRecipeToGroceries(recipe: pasta.id), by: .user)
+        try engine.perform(AddRecipeToGroceries(recipe: pasta.id, serves: 2), by: .user)
+        #expect(row("orecchiette")?.quantity == "6 oz" && row("orecchiette")?.aisle == "Pantry")
+        #expect(row("sweet italian sausage")?.quantity == "8 oz")
+        #expect(row("garlic")?.quantity == "7 cloves + 1 head", "\(row("garlic")?.quantity ?? "nil")")
+        #expect(row("red pepper flakes")?.quantity == "⅛ tsp" || row("red pepper flakes")?.quantity == "1/8 tsp",
+                "\(row("red pepper flakes")?.quantity ?? "nil")")
+        #expect(row("cannellini beans")?.quantity == "1 can")
+        #expect(row("baby spinach")?.quantity == "1 bag + 4 cups", "\(row("baby spinach")?.quantity ?? "nil")")
+        #expect(row("parmesan")?.quantity == "¼ cup" || row("parmesan")?.quantity == "1/4 cup")
+        #expect(row("extra virgin olive oil") == nil && row("kosher salt and black pepper") == nil)
+
         let addedFrittata = try engine.perform(AddRecipeToGroceries(recipe: frittata.id), by: .user)
         // Eggs, milk and spinach join rows already there: 3 new (butter, green onions, feta); G-R2 the bare eggs row
         // shows the recipe's amount.
         #expect(addedFrittata.output.count == 3, "\(addedFrittata.output.map(\.title))")
-        #expect(addedFrittata.record.summary == "Spinach and feta frittata, 3 added.")
+        #expect(addedFrittata.record.summary == "Frittata, 3 added.")
         #expect(row("eggs")?.quantity == "8")
         #expect(
             row("milk")?.quantity == "¼ cup" || row("milk")?.quantity == "1/4 cup",
             "\(row("milk")?.quantity ?? "nil")"
         )
         #expect(row("everything bagel seasoning") == nil && row("salt") == nil)
-        #expect(row("baby spinach")?.quantity == "6 cups")
+        #expect(row("baby spinach")?.quantity == "1 bag + 6 cups", "\(row("baby spinach")?.quantity ?? "nil")")
+        // The week: Research's 36 rows plus one, "green onions" beside his typed "scallions", until the AI-12 ask
+        // (KEEP folds them) lands; bananas, scallions and milk come from his typed rows.
+        #expect(rows().count == 37, "\(rows().count): \(rows().map(\.text))")
+        #expect(row("green onions") != nil && row("scallions") != nil)
 
         // A checked same-key row covers the line: a checked "butter" means the frittata adds no butter (G-R2).
         try engine.perform(RemoveRecipeFromGroceries(recipe: frittata.id), by: .user)
@@ -181,5 +225,24 @@ struct GroceriesWeekTests {
         }
         try engine.perform(AddRecipeToGroceries(recipe: frittata.id), by: .user)
         #expect(row("butter") == nil)
+    }
+
+    @Test func hisTypedAmountStandsAndNothingToAddWritesNothing() throws {
+        // Kitchen lead on G-R2: "1 dozen eggs" keeps its amount; the frittata's 8 eggs lands under it as a line.
+        try engine.perform(AddGroceries(lines: ["1 dozen eggs"]), by: .user)
+        let frittata = try engine.perform(CreateRecipe(text: Self.frittata), by: .user).output
+        try engine.perform(AddRecipeToGroceries(recipe: frittata.id), by: .user)
+        let eggs = try #require(groceries.list?.orderedChildren.first { $0.title == "eggs" })
+        #expect(row("eggs")?.quantity == "1 dozen",
+                "\(row("eggs")?.quantity ?? "nil") shares=\(store.value("shares", of: eggs)?.stringValue ?? "") parse=\(String(describing: IngredientLine.parse("1 dozen eggs")))")
+        #expect(groceries.recipes(for: eggs).map(\.id) == [frittata.id])
+        // Every line covered or a staple: nothing to add, no write, so no UNDO (Product e1981a39).
+        for item in try #require(groceries.list).orderedChildren where store.value("isDone", of: item) != .bool(true) {
+            try engine.perform(CheckListItem(item: item.id), by: .user)
+        }
+        try engine.perform(RemoveRecipeFromGroceries(recipe: frittata.id), by: .user)
+        let nothing = try engine.perform(AddRecipeToGroceries(recipe: frittata.id), by: .user)
+        #expect(nothing.output.isEmpty && nothing.record.ops.isEmpty)
+        #expect(nothing.record.summary == "Frittata, nothing to add.")
     }
 }
