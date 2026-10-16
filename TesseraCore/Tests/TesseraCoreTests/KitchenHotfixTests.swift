@@ -200,7 +200,7 @@ struct GrammarTraceTests {
             case .shop: "shop"
             case .reschedule: "reschedule"
             case .cookStep: "cook"
-            case .ignoredInWorkout: "nothing"
+            case .ignoredInWorkout, .ask, .askSetCount: "nothing"
             case .recipe: "recipe"
             case nil: "nothing"
             }

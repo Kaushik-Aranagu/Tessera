@@ -136,7 +136,10 @@ struct TessTests {
             tess.capture("drop to 70 for 10", context: context(entry: entry)).line,
             tess.capture("dentist thu 3pm", context: context()).line, // it is Wednesday
         ]
-        #expect(lines == ["Same again, logged.", "Set 3. 80 x 7.", "Drop set. 70 x 10.", "Dentist, tomorrow 3 pm."])
+        #expect(lines == [
+            "Set 2 logged, same again.", "Set 3 logged. 80 × 7.", "Drop set logged. 70 × 10.",
+            "Dentist, tomorrow 3 pm.",
+        ])
         await lines.append(tess.capture("blorp", context: context()).line)
         #expect(lines.last?.hasPrefix("Didn't catch that.") == true)
         #expect(lines.allSatisfy { TessVoice.violations(in: $0).isEmpty })

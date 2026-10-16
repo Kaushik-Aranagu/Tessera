@@ -110,7 +110,7 @@ public struct TessUsageLedger {
             .reduce(0) { $0 + Int64(store.number("costNano", of: $1) ?? 0) }
     }
 
-    public func canSpend(_ estimateNano: Int64, now: Date = .now, calendar: Calendar = .current) -> Bool {
+    func canSpend(_ estimateNano: Int64, now: Date = .now, calendar: Calendar = .current) -> Bool {
         monthTotal(now: now, calendar: calendar) + Self.pendingNano + estimateNano <= Self.capNano
     }
 
@@ -315,11 +315,11 @@ public struct ClaudeKeyCheck {
     static func line(_ outcome: Outcome, last4: String, now: Date, calendar: Calendar) -> String {
         switch outcome {
         case .works: return "Key saved. Ends in ...\(last4)."
-        case .badKey: return "That key didn't work. Check it, or paste it again?"
+        case .badKey: return "That key didn't work. Paste it again?"
         case .notAllowed: return "That key can't use Claude yet. Check it in the Console?"
         // No promise of a retry: nothing retries yet. The key is kept; Test again checks it.
         case .offline: return "No connection. I kept the key; test it again later."
-        case .timeout: return "Claude didn't answer in time. I kept the key."
+        case .timeout: return "Claude didn't answer in time."
         case .busy: return "Claude is busy right now. I kept the key."
         case .accountPaused: return "Key saved. Your Anthropic account is paused for now."
         case .notAKey: return "That doesn't look like a Claude key. Paste it again?"

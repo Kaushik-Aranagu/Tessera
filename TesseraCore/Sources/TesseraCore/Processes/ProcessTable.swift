@@ -109,7 +109,8 @@ public struct ProcessTable {
             }
         }
         if putAway > 0 {
-            notes.append("Put \(putAway == 1 ? "one thing" : "\(spelled(putAway)) things") away. They're in Later.")
+            let things = putAway == 1 ? "One thing" : "\(spelled(putAway).capitalized) things"
+            notes.append("\(things) moved to Later.")
         }
         return notes
     }
@@ -125,13 +126,13 @@ public struct ProcessTable {
         if !workout.orderedChildren.contains(where: { !$0.orderedChildren.isEmpty }) {
             _ = try? engine.perform(EndProcess(process: process.id, reason: .wrappedUp, time: end), by: .system)
             _ = try? engine.perform(DeleteObject(object: workout.id), by: .system)
-            return "Closed \(store.displayTitle(of: workout)), nothing was logged"
+            return "\(store.displayTitle(of: workout)), no sets, not saved."
         }
         _ = try? engine.perform(FinishWorkout(workout: workout.id, time: end), by: .system)
         _ = try? engine.perform(EndProcess(process: process.id, reason: .wrappedUp, time: end), by: .system)
         let entries = workout.orderedChildren
         let started = entries.count { !$0.orderedChildren.isEmpty }
-        return "Saved \(store.displayTitle(of: workout)), \(started) of \(entries.count) exercises"
+        return "\(store.displayTitle(of: workout)) saved. \(started) of \(entries.count) exercises."
     }
 
     private func spelled(_ number: Int) -> String {

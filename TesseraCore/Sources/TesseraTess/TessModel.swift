@@ -34,6 +34,9 @@ public enum TessResult {
     case handled(TessCapture)
     /// The route tried and didn't understand it; the next route gets a go.
     case missed
+    /// The route didn't write but has a question ("81: 81 kg, or 81 reps?"): the next route gets a go, and the
+    /// question is the answer if none understands it.
+    case asked(TessCapture)
 }
 
 /// One of Tess's routes: the grammar, the on-device model, or Claude. The router asks each in order.
@@ -53,6 +56,9 @@ public struct TessRouter {
     public let engine: ActionEngine
     public let models: [any TessModel]
 
+    /// A key typed into Ask: where it goes instead (it lives in Review, under Claude; lines audit item 4).
+    public static let keyLine = "That looks like a Claude key. It goes in Review, under Claude."
+
     public init(engine: ActionEngine, models: [any TessModel]) {
         self.engine = engine
         self.models = models
@@ -61,15 +67,21 @@ public struct TessRouter {
     public func run(_ request: TessRequest) async -> TessCapture {
         // A Claude key pasted into the Ask bar never reaches a route (it would become a note, then every backup).
         if looksLikeClaudeKey(request.text) {
-            return TessCapture(records: [], line: "That looks like a Claude key. Paste it in Settings.", source: .none)
+            return TessCapture(records: [], line: TessRouter.keyLine, source: .none)
         }
+        var asked: TessCapture?
         for model in models where model.isAvailable(for: request.use) {
             engine.attribution = (model.route, model.modelName)
             let result = await model.run(request, engine: engine)
             engine.attribution = nil
-            if case let .handled(capture) = result {
-                return capture
+            switch result {
+            case let .handled(capture): return capture
+            case let .asked(capture): asked = asked ?? capture
+            case .missed: break
             }
+        }
+        if let asked {
+            return asked
         }
         return TessCapture(records: [], line: "Didn't catch that. Try \u{201C}bench 80 x 8\u{201D}.", source: .none)
     }
@@ -97,7 +109,8 @@ public struct GrammarTessModel: TessModel {
     }
 
     public func run(_ request: TessRequest, engine _: ActionEngine) async -> TessResult {
-        capture.grammarCapture(request.text, context: request.context).map(TessResult.handled) ?? .missed
+        guard let result = capture.grammarCapture(request.text, context: request.context) else { return .missed }
+        return result.asking == .line ? .asked(result) : .handled(result)
     }
 }
 
