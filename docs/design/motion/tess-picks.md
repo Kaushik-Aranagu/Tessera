@@ -48,7 +48,7 @@ knows which things it reads or changes, so the readers go there.
 | | |
 |---|---|
 | Trigger | `firstOpenOfDay`: the first foreground after the 04:00 day boundary (`AppClock`, the same boundary as everything else). The router emits it from `foregrounded` and keeps "woke on" per day. |
-| What she does | Her eyes are closed (lids at 0.25) for 1.0 s after the page arrives, then open over 400 ms, ease-out. At 1.5 s comes one stretch: the mains spread 22% wider and 2% shorter over 600 ms, ease-in-out, then back over 700 ms on the house curve. One blink follows at 3.4 s. The mouth stays at rest. |
+| What she does | Her eyes are closed (lids at 0.25) for 1.0 s after the page arrives, then open over 400 ms, ease-out. At 1.5 s comes one stretch: the mains spread 22% wider and about 20% shorter (x × s, y × (2 − 0.98 s), s 1 → 1.22) over 600 ms, ease-in-out, then back over 700 ms on the house curve. One blink follows at 3.4 s. The mouth stays at rest. |
 | Skipped when | The first open lands in a live workout, in Speak (a notification's speak action), or with an ask waiting. In those cases his moment wins, and the day counts as woken. |
 | Eyes off | The stretch only. |
 | Reduce Motion | No stretch. The eyes open with a 200 ms crossfade. |

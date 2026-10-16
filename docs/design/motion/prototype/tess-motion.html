@@ -1654,6 +1654,90 @@ for (const [name, make] of Object.entries(IDEAS)) {
   SCENES['idea-' + name] = () => { const s = make(); s.lines = s.lines || []; s.caps = []; s.noCaption = true; return s; };
 }
 
+// 21. Reference renders for the picks (board lane 2, Oct 16): the idea scenes at tess-picks.md's values, with captions
+// that name each beat, so Builder A builds to a target and the check kit compares against it. The beat times are in
+// tess-motion-check.md. Nothing new is designed here.
+const PICKS = {};
+// 18a, idea 1: the readers go to the words the ask touches (Push A, 12:15 pm, Call the bank, 9:30 am, Book the
+// dentist), in the job's order; then gather and Done. 8 s, so the Done is in the clip.
+PICKS.wander = () => {
+  const s = IDEAS.wander(); s.duration = 8.2;
+  s.lines = [{ text: 'Moving Push A.', at: .4, until: 5.98 }, { text: 'Push A moved to 6 pm.', at: 6.5 }];
+  s.caps = [{ at: 0, text: 'An ask touches five words on the page.' }, { at: .6, text: '0.6 split.' }, { at: 1.7, text: '1.7 the readers reach Push A.' }, { at: 2.42, text: '2.42 hop to 12:15 pm.' }, { at: 3.14, text: '3.14 Call the bank; then 9:30 am, Book the dentist.' }, { at: 5.2, text: '5.2 gather.' }, { at: 5.98, text: '5.98 Done, as built.', haptic: 'success (Done’s own)' }];
+  return s;
+};
+// 18a, idea 2: the first open of the day.
+PICKS.wake = () => {
+  const s = IDEAS.wake();
+  s.caps = [{ at: 0, text: 'First open after 4 am: eyes closed.' }, { at: 1.0, text: '1.0 eyes open over 400 ms.' }, { at: 1.5, text: '1.5 one stretch: 22% wider, 600 ms.' }, { at: 2.1, text: '2.1 back over 700 ms.' }, { at: 3.4, text: '3.4 one blink. Once a day.' }];
+  return s;
+};
+// 18b, idea 3: a pan from outside her, across her, in the band.
+PICKS.stroke = () => {
+  const s = IDEAS.stroke();
+  s.caps = [{ at: 0, text: 'A pan starts in the band, off her.' }, { at: 1.4, text: '1.4 the finger enters her: one soft tick.', haptic: 'soft impact 0.3 (.soulStroke)' }, { at: 1.75, text: '1.75 it leaves; the ripple decays over 1.6 s.' }, { at: 1.8, text: '1.8 one blink.' }, { at: 3.0, text: '3.0 still again.' }];
+  return s;
+};
+// 18b, idea 4: five dones, +0.10 each, capped at +0.40; the rows stay as built (no holes: that was the idea clip only).
+PICKS.wear = () => {
+  const dones = [.8, 2.0, 3.2, 4.4, 5.6];
+  const s = IDEAS.wear(); s.duration = 7; s.page = () => ({});
+  s.soul.beat = t => {
+    let g = 0, steps = 0;
+    for (const d of dones) { if (t > d + .52) steps++; const up = ramp(t, d + .52, .18, easeOut), dn = ramp(t, d + .7, .32); g = Math.max(g, up * (1 - dn)); }
+    return { scale: 1 + .1 * g, gather: g, sat: .1 * Math.min(steps, 4) + .25 * g };
+  };
+  s.soul.eyes = t => ({ alpha: 1, blink: blinks(t, dones.map(d => d + .52)), look: { x: 0, y: 0 } });
+  s.caps = [{ at: 0, text: 'Five things done today (rows as built).' }, { at: 1.32, text: '1.32 beat; +0.10.' }, { at: 2.52, text: '2.52 beat; +0.20.' }, { at: 3.72, text: '3.72 beat; +0.30.' }, { at: 4.92, text: '4.92 beat; +0.40, the cap.' }, { at: 6.12, text: '6.12 beat; still +0.40.' }];
+  return s;
+};
+// 18c, the mouth: every row of its table in one clip, magnified in the recording (record + overlay, see check kit).
+PICKS.mouth = () => {
+  const e = (t, a, d = .25) => ramp(t, a, d, easeInOut);
+  const lis = 1, thk = 2.5, ans = 4, beat = 6.6, ask = 8, fail = 10, D = 12.4;
+  const lineOn = t => e(t, ans) * (1 - e(t, ans + 1.5, .6));
+  return {
+    duration: 15,
+    lines: [{ text: 'Call mom at 6 pm, added.', at: ans, until: 6.2 }, { text: 'Push A or Pull A?', at: ask, until: 9.6 }, { text: 'Couldn’t reach Claude.', at: fail, until: 11.6 }],
+    soul: {
+      modes: [{ mode: 'idle', at: -10 }, { mode: 'listening', at: lis }, { mode: 'thinking', at: thk }, { mode: 'idle', at: ans }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }],
+      centre: () => HOME,
+      beat: t => { const g = ramp(t, beat, .18, easeOut) * (1 - ramp(t, beat + .18, .32)); return { scale: 1 + .1 * g, gather: g, sat: .25 * g }; },
+      eyes: t => {
+        const up = e(t, lis) * (1 - e(t, thk)), aside = e(t, thk) * (1 - e(t, ans)), line = e(t, ans + .1, .3) * (1 - e(t, ans + 1.2, .3)), atAsk = e(t, ask) * (1 - e(t, ask + 1.6));
+        const alpha = (1 - ramp(t, D, .12)) + ramp(t, D + 1.8, .2);
+        return { alpha, blink: blinks(t, [.5, ans + .05, beat + .1, 11.8]), look: { x: .8 * aside - 1 * line - 1 * atAsk, y: -1 * up - .4 * aside + .6 * line + .6 * atAsk } };
+      },
+      mouth: t => {
+        const listen = e(t, lis) * (1 - e(t, thk)), think = e(t, thk) * (1 - e(t, ans)), smile = Math.max(lineOn(t), e(t, beat) * (1 - e(t, beat + .94)));
+        const waiting = e(t, ask) * (1 - e(t, ask + 1.6)), miss = e(t, fail) * (1 - e(t, fail + 1.2));
+        const alpha = (1 - ramp(t, D, .12)) + ramp(t, D + 1.8, .2);
+        return { alpha, curve: .2 + .8 * smile - .2 * listen + .1 * waiting - .55 * miss, tilt: .4 * think + .4 * waiting, open: .75 * listen };
+      },
+    },
+    caps: [{ at: 0, text: 'Rest: +0.2, a near-flat line.' }, { at: lis, text: '1.0 listening: a soft o; eyes up.' }, { at: thk, text: '2.5 thinking: +0.2, right corner up 0.4.' }, { at: ans, text: '4.0 her line: a small smile for 1.5 s.' }, { at: beat, text: '6.6 her beat: smile for 940 ms.' }, { at: ask, text: '8.0 an ask waits: +0.3, curious.' }, { at: fail, text: '10.0 her own miss: -0.35 for 1.2 s. Never at him.' }, { at: D, text: '12.4 Done: the face fades in 120 ms; back 200 ms after.', haptic: 'success (Done’s own)' }],
+  };
+};
+// 18d, idea 5: asleep in quiet hours; he opens the app at 2.6 s; the right eye first.
+PICKS.sleep = () => { const s = IDEAS.sleep(); s.caps = [{ at: 0, text: 'Quiet hours: eyes shut, slow breath, colour muted.' }, { at: 2.85, text: '2.85 the right eye opens (350 ms).' }, { at: 3.8, text: '3.8 her clock is back to 1×.' }, { at: 5.0, text: '5.0 the left eye follows (400 ms).' }]; return s; };
+// 18d, idea 6: a row lifted at 1.0, carried up, dropped at 3.6.
+PICKS.held = () => { const s = IDEAS.held(); s.caps = [{ at: 0, text: 'He lifts a row to move it.' }, { at: 1.0, text: '1.0 her eyes go to the held row.' }, { at: 2.4, text: '2.4 they follow it up.' }, { at: 3.6, text: '3.6 the drop.' }, { at: 3.8, text: '3.8 one blink; eyes back over 300 ms.' }]; return s; };
+// 18d, idea 10: eyes only (Product): no lean.
+PICKS.clock = () => {
+  const s = IDEAS.clock(); s.soul.centre = () => HOME;
+  s.caps = [{ at: 0, text: 'The last 10 s of a rest.' }, { at: 1.8, text: '1.8 eyes to the timer. No lean, no colour.' }, { at: 4.2, text: '4.2 Go: the timer owns it; eyes back.' }, { at: 4.3, text: '4.3 one blink.' }];
+  return s;
+};
+// 18e, idea 7: ten minutes before the call.
+PICKS.nudge = () => { const s = IDEAS.nudge(); s.caps = [{ at: 0, text: 'Ten minutes before a timed row.' }, { at: 1.6, text: '1.6 one 4 pt lean toward it (400 ms); eyes on it.' }, { at: 2.9, text: '2.9 back over 500 ms.' }, { at: 3.3, text: '3.3 one blink. Once per item.' }]; return s; };
+// 18e, idea 8: a pulse per finished word, at most one per 180 ms; no mouth.
+PICKS.typing = () => { const s = IDEAS.typing(); s.caps = [{ at: 0, text: 'He types to her.' }, { at: .96, text: '0.96 "call": one pulse (+0.06).' }, { at: 1.33, text: '1.33 "mom".' }, { at: 1.6, text: '1.6 "at".' }, { at: 1.96, text: '1.96 "six". No glow, no haptic.' }]; return s; };
+// 18e, idea 9: scrolled to the end.
+PICKS.peek = () => { const s = IDEAS.peek(); s.caps = [{ at: 0, text: 'He scrolls to the last row.' }, { at: 2.2, text: '2.2 she rises 5 pt (350 ms).' }, { at: 3.6, text: '3.6 one blink at the top.' }, { at: 3.9, text: '3.9 back down over 500 ms. Once per visit.' }]; return s; };
+// 18f, idea 11: the phone tilting (a stand-in sine for the attitude).
+PICKS.tilt = () => { const s = IDEAS.tilt(); s.caps = [{ at: 0, text: 'He tilts the phone: ±2 pt, the satellites 1.7×.' }, { at: 3.1, text: 'Eyes follow at ±0.6 / ±0.4. Off in Reduce Motion and Low Power.' }]; return s; };
+for (const [name, make] of Object.entries(PICKS)) SCENES['pick-' + name] = () => { const s = make(); s.lines = s.lines || []; return s; };
+
 // The work state when she's out on a row: tighter constellation, no readers.
 const _workParticles = workParticles;
 workParticles = function (t, work) {
