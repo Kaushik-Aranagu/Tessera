@@ -270,13 +270,18 @@ private struct RoutineRow: View {
     @Environment(AppModel.self) private var model
     @Environment(\.zoomNamespace) private var namespace
     @State private var pull: CGFloat = 0
+    /// A sideways drag owns the touch: the row doesn't also open on the lift (the walk showed a drop opening it).
+    @State private var swiped = false
 
     private static let arm: CGFloat = 90
 
     var body: some View {
         let slots = routine.orderedChildren
         let sets = slots.reduce(0) { $0 + Int(model.store.number("sets", of: $1) ?? 3) }
-        Button { model.open(.object(routine.id)) } label: {
+        Button {
+            guard !swiped else { return }
+            model.open(.object(routine.id))
+        } label: {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(routine.title)
@@ -312,6 +317,7 @@ private struct RoutineRow: View {
             DragGesture(minimumDistance: 20)
                 .onChanged { value in
                     guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                    swiped = true
                     pull = value.translation.width
                 }
                 .onEnded { _ in
@@ -319,6 +325,11 @@ private struct RoutineRow: View {
                         onDrop()
                     }
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { pull = 0 }
+                    // After the button has seen the lift, a tap opens the row again.
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(150))
+                        swiped = false
+                    }
                 }
         )
         .accessibilityElement(children: .combine)
