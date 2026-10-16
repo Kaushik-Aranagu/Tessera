@@ -21,6 +21,8 @@
 
 **With Themes, ahead of the audit batches: the set logger** (Kaushik, 6:45 PM PT; Design's sheet follows the rest dab). Replace the weight scale with the number editable in place (scroll on the number, like the side dial), so the scale's space goes to what matters on that screen. Make the sets round dial smaller, with more drama. This absorbs audit row 1 (the weight alert becomes edit in place).
 
+**After the set logger: Speak in the workout** (Design's `docs/design/speak.md`, 8d4cba9; owner split, 8:36 PM PT). Holding the soul in a workout speaks a set, which lands as an "80 × 7" set ghost that dries in 2 s, through the live-workout guard (S701 to S706, Q8, the dated ask) and Research's spoken-number rows. Builder B builds the Speak layer itself; this is the workout half on top of it.
+
 **Restore drill, once, after Themes** (Research #161, `../research/restore-drill.md`; QA has no simulator). Run the 10 steps and 5 edge cases on the simulator and send the results to QA and Core. Trap: don't relaunch with `-resetDemo`, because it wipes the restore. It runs again after Core's Backup batch.
 
 **Audit batches (small PRs, beside other work; decisions.md 5:14 PM PT):**
