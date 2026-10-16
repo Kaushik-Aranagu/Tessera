@@ -1,3 +1,5 @@
+> **Superseded** (Product, 7:38 PM PT Oct 15): this file uses London time and the Health cap. Use `fixtures/plan-my-day-claude.md` (#206) instead.
+
 # Plan my day: scenario fixtures (M4 slice 6)
 
 For: Core engine, Product
