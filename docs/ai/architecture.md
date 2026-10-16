@@ -196,14 +196,14 @@ No Opus or Fable. The Home lines eval (ship list AI-5) runs Haiku and Sonnet sid
 {"palette": "Lagoon", "warmth": 0.1, "weight": -0.05, "reason": "night after a push day"}
 ```
 
-`palette` must be one of Design's names (`Today`, `Kiln`, `Lagoon`, `Orchard`, `Aurora`, `Ember`, or whatever Design settles on). `warmth` and `weight` are nudges in [-0.2, 0.2] inside the palette's own room, as Design defines them (hue toward warm or cool; a touch lighter or heavier). `reason` is for the DEBUG "Last sent" view and the receipt, never shown at rest. The phone clamps the nudges and refuses an unknown name.
+`palette` must be one of the candidates the phone sent for this moment (a subset of Design 48's per-look table: `Today`, `Kiln`, `Lagoon`, `Orchard`, `Aurora`, `Ember`); any other name is rejected and the on-phone pick stands. `warmth` and `weight` are nudges in [-0.2, 0.2] inside the palette's own room, as Design defines them (hue toward warm or cool; a touch lighter or heavier). `reason` is for the DEBUG "Last sent" view and the receipt, never shown at rest. The phone clamps the nudges and refuses an unknown name.
 
 ### The UI bar holds, by construction
 
 - **Resting colour stays low-contrast.** Claude picks pigments for her moments; the phone keeps her resting state at the look's resting opacity whatever the palette. Claude cannot touch that opacity, since it isn't in the schema.
 - **Cobalt stays Tess's voice.** The voice token (`tess`) is not in the schema either. Where Design's table moves the voice to a palette's blue, that is Design's rule applied on the phone, not Claude's choice.
 - **Done never changes.** The done mode's colour and motion read from fixed tokens, outside `SoulPalette`'s living pigments.
-- **Never mid-moment.** A new palette arrives only when she is idle and no capture, ask, ghost row or workout set is in flight, and it crossfades through `MotionPolicy` over about 2.8 s, the same wash every change of hers already uses. Reduce Motion gets a plain crossfade.
+- **Never mid-moment.** A new palette arrives only when she is idle and no capture, ask, ghost row or workout set is in flight. It arrives as Design 48's pooling bloom (900 ms per dab, 2.8 s dry) through `MotionPolicy`; Reduce Motion gets the 600 ms crossfade. (Research K2 default; Design confirming.)
 
 ### Who picks, and how often (Product's rules, Oct 16 12:10 AM PT)
 
@@ -212,7 +212,7 @@ Product ruled: Tess only; the base and resting colours stay fixed per look; an o
 So there are two pickers behind one `LivingPalette`:
 
 1. **On-phone picker (always, free, offline).** Runs at the 04:00 turnover and when the day's shape changes in kind (first workout finished, evening at 18:00, look change). It reads the same inputs as the table above and maps them to a palette and nudge inside Design's bounds. It is what she wears whenever Claude is off, offline, capped, or hasn't answered yet.
-2. **Claude (optional, once a day).** Under the switch, the `soulPalette` job runs once at the 04:00 turnover with the same pack plus the recent memory lines, and may replace the on-phone pick for the day. Its answer is cached for the day; later shape changes that day are handled by the on-phone picker, nudging inside the palette Claude chose. Never on a timer, never in a workout, never mid-moment.
+2. **Claude (optional, once a day).** Under the switch, the `soulPalette` job runs once, at the first idle moment after 07:00 (Research K4; the 04:00 turnover is the on-phone picker's moment, when nothing has happened yet), with the same pack plus the recent memory lines and **the rule table's candidate set for that moment**. It may replace the on-phone pick for the day only with one of those candidates, so it can never paint Ember without a record. Its answer is cached for the day; later shape changes that day are handled by the on-phone picker, nudging inside the palette Claude chose. Never on a timer, never in a workout, never mid-moment.
 
 **Rules or Foundation Models for the on-phone picker? Recommendation: plain rules first, Foundation Models later if rules feel flat.** A few lines why:
 - The inputs are five or six small facts and the output is one of six names plus two nudges. A rule table (time of day × day state × look, with season as a nudge) covers it in about 40 lines, runs in microseconds, and is unit-testable against Design 48's bounds. Foundation Models adds a 1 to 3 s call, a model that may be unavailable (low battery, not downloaded), and output we'd still have to clamp.
@@ -239,7 +239,7 @@ Product has ruled Tess only for now; context colours reach the app only if he as
 
 ### Slice for the ship list
 
-AI-14 **Living soul colour**: Core: on-phone rules picker, `LivingPalette`, store and contrast clamp; `soulPalette` job once a day under the switch, pack snapshot test. Builder A: `SoulPalette.look(_:living:)`, the 2.8 s idle-only crossfade, FORGET pin. Design: the palette space, nudge ranges and the per-look pigment table. Gate: Design's eval of 20 day-shapes, with Kaushik saying the changes feel like weather on a recording. Lands after AI-4 and Design 48.
+AI-14 **Living soul colour**: Core: on-phone rules picker, `LivingPalette`, store and contrast clamp; `soulPalette` job once a day under the switch, pack snapshot test. Builder A: `SoulPalette.look(_:living:)`, the idle-only pooling bloom, FORGET pin. Design: the palette space, nudge ranges and the per-look pigment table. Gate: Design's eval of 20 day-shapes, with Kaushik saying the changes feel like weather on a recording. Lands after AI-4 and Design 48.
 
 ## Unverified
 
