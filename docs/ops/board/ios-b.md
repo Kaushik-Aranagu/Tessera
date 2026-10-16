@@ -1,6 +1,6 @@
 # iOS Builder B (Mac, starts once ios/ship-2 merges)
 
-**ORDER (decisions 2:49 PM PT Oct 16, daily pins):** open riders (0v, 0w, 0r, 0x band, 0t/0u, 0z if ready), then 0y (74 Today's side, landing with A 0p), ahead of all new work. Each rides the first daily 4:00 PM pin it's ready for.
+**ORDER (decisions 2:49 PM PT Oct 16, daily pins):** open riders (0v, 0w, 0r, 0x band, 0t/0u, 0z if ready), then 0y (74 Today's side, landing with A 0p), ahead of all new work. Each rides the first release it's ready for (release on merge, decisions 3:03).
 
 *Owns: Home, the Command/Ask Tess bar, RootView, and the glue that hooks Notes, Review and Kitchen into Home.*
 

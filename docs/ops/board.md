@@ -1,6 +1,6 @@
 # Tessera board (index)
 
-**DAILY PINS (decisions 2:49 PM PT Oct 16, Kaushik 2:46 PM):** a v9 pin is named at 4:00 PM PT each day something he can see has merged and passed QA, with the same gates and an in-place install by Builder A. Approved looks (A 0p, B 0y, Core 0ak) sit right after each lead's open riders and ride the first pin they're ready for. Oct 22 9:30 AM names the last v9 pin, then v10.
+**RELEASE ON MERGE (decisions 3:03 PM PT Oct 16, Kaushik 3:02 PM; replaces daily pins):** each app merge he can see becomes a release on his phone, batched up to 30 min, with the same data-safety gates and Design's walk after install. First release 56dd028 (#544). Approved looks (A 0p, B 0y, Core 0ak) sit right after each lead's open riders. Oct 22 9:30 AM checks all riders are in, then v10.
 
 **ON HIS PHONE (2:24 PM PT Oct 16): a36b161, the Catalog v9 pin.** Signing lapses Fri Oct 23 at 2:12 PM PT. Next: the riders pin, named at the Thu Oct 22 9:30 AM branch call (pin-checklist). No older build ever installs.
 
