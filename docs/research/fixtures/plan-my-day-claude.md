@@ -1,25 +1,28 @@
-# Plan my day on Claude: 20 eval packs, checks and the use 2 gate
+# Plan my day on Claude: 23 eval packs, checks and the use 2 gate
+
+> Changed 2026-10-16 (board 74): edge packs d21 (planned rest day, `rest`), d22 (workout running at open, `running`) and d23 (all-day birthday in a normal calendar, dropped by the builder); pass bar scaled to 21 of 23; gaps 1, 3, 4, 5 closed.
 
 For: Core (T4 `PlanPack`, T5 eval harness, T6 `ProposePlan` and `PlanProposalValidator`), Product. Research lab, board item 67, 2026-10-16.
 Inputs: `plan-my-day-scenarios.md` (d01 to d20), `plan-my-day-dryrun.md`, `plan-my-day-prompt.md` (instructions, schema, V1 to V12), `light-day.md` (C1 to C3), `calendar-pack.md`, `claude-first-uses.md` (models, prices), `settings-claude.md` (time format, 6:37 PM PT), `tess-voice.md`, `context-packing.md`, `day-boundary.md`, `late-night.md`.
-Master (`eeec18c`) has no `PlanMyDay`, `DayPlan`, `PlanPack`, `ProposePlan` or validator code. Names used here that exist: `TessUse.plan`, `TessVoice.bannedWords` and `violations(in:)`, `TesseraDay` (04:00 day, Monday weeks), `NowPicker`, `DayLoad`, `MoveTask`, `ActionEngine.perform(_:by:pending:)`, `Actor.user`. Every other name is the proposal from the prompt pack. No API key was used; every expected reply below was run through the scoring outline in section 6 (a scratch Python copy) and passes, and 12 known bad variants were each caught.
+Master (`eeec18c`) has no `PlanMyDay`, `DayPlan`, `PlanPack`, `ProposePlan` or validator code. Names used here that exist: `TessUse.plan`, `TessVoice.bannedWords` and `violations(in:)`, `TesseraDay` (04:00 day, Monday weeks), `NowPicker`, `DayLoad`, `MoveTask`, `ActionEngine.perform(_:by:pending:)`, `Actor.user`. Every other name is the proposal from the prompt pack. No API key was used; every expected reply below was run through the scoring outline in section 6 (a scratch Python copy) and passes, and 18 known bad variants were each caught (6 of them for d21 to d23).
 
 ## Bottom line
 
-- **Pass bar for use 2:** on `claude-sonnet-5-5`, 18 of 20 scenarios pass every must check in 3 of 3 runs with no engine repair, 0 must-not violations in all 57 calls, median cost under $0.006 a call, p95 latency under 10 s, and Kaushik's read finds no line he would take back (section 5).
-- **Cost:** packs run 122 to 304 tokens (chars/4). A call is about 920 to 1,100 tokens in and 220 to 320 out: **Sonnet $0.0041 to $0.0054 (median $0.0045), Haiku $0.0002**. One full eval (19 called scenarios x 3 runs x both models) costs about **$0.27**.
-- **Haiku 5.5 is expected to fail 6 to 9 of 20 raw**, mostly repack arithmetic on 3-task reorders, counts in notes, the light-day workout line and am/pm conversion. Sonnet is expected at risk on 4 (d10, d12, d17, d18). Both are judgements, not measurements.
+- **Pass bar for use 2:** on `claude-sonnet-5-5`, 21 of 23 scenarios pass every must check in 3 of 3 runs with no engine repair (decisions.md 7:38 PM PT's 18 of 20, scaled: at least 90%, rounded up), 0 must-not violations in all 66 calls, median cost under $0.006 a call, p95 latency under 10 s, and Kaushik's read finds no line he would take back (section 5).
+- **Cost:** packs run 122 to 304 tokens (chars/4). A call is about 920 to 1,100 tokens in and 220 to 320 out: **Sonnet $0.0041 to $0.0054 (median $0.0045), Haiku $0.0002**. One full eval (22 called scenarios x 3 runs x both models) costs about **$0.31**.
+- **Haiku 5.5 is expected to fail 7 to 10 of 23 raw**, mostly repack arithmetic on 3-task reorders, counts in notes, the light-day workout line and am/pm conversion. Sonnet is expected at risk on 5 (d10, d12, d17, d18, d22). Both are judgements, not measurements.
 
 ## 1. What changed from the source fixtures
 
-- **Zone:** `America/Los_Angeles`, 2 to 21 Nov 2026, all PST (DST ended 1 Nov), so no day changes offset. Packs carry wall-clock `HH:mm` only.
+- **Zone:** `America/Los_Angeles`, 2 to 24 Nov 2026, all PST (DST ended 1 Nov), so no day changes offset. Packs carry wall-clock `HH:mm` only.
 - **Light comes from C1 to C3, never Health** (5:41 PM PT). Rhythm: `sessionsPerWeek` 6, Monday weeks (`TesseraDay`), one session on each day before, unless noted. Result: d04, d09, d18 light by C1; d10, d17 by C2; d15 by C3 (two events added: Payroll sync 13:00, Team photo 16:30). d03 (5h35 night) is **not** light. Cap 2 drops Call plumber (d10) and Renew passport (d17), and d03 now plans Submit timesheet.
-- **d02 has no calendar access** (`"cal":false`), so Standup is unknown and the garage joins run 1. **d11's birthday is a Birthdays-calendar item**, never read (`calendar-pack.md` C12), so `allDay` is [].
+- **d02 has no calendar access** (`"cal":false`), so Standup is unknown and the garage joins run 1. **d11's birthday is a Birthdays-calendar item**, never read (`calendar-pack.md` C12), so `allDay` is []. **All-day birthdays in any other calendar are dropped by the builder too** (decisions.md 7:38 PM PT; d23).
+- **Two new pack fields (proposed for Core's T4):** top-level `"rest":true` on a planned rest day (`TrainingLedger.restDay` non-nil; absent otherwise, like `cal`), and block-level `"running":true` on a workout under way at open (`hasWorkoutUnderway`). A finished workout still gets no block (d20).
 - **Lines use his time format, packs keep 24-hour.** 6:37 PM PT: "7:30 am", "5 pm" (no ":00" on the hour, lowercase). Block `start`/`end` in the reply stay `HH:mm`. The prompt's "times as HH:mm" line changes (section 2), and V11 reads am/pm times.
 
 ## 2. The call (same for every scenario)
 
-- Instructions: `plan-my-day-prompt.md` §1 with three edits: the numbers line becomes "Write times as 7:30 am or 5 pm, only times from the input or your blocks. Durations as the given minutes. No counts of anything."; add "cal false means the calendar is unknown. Never call the day clear, open or free."; add "Never mention why the plan is short, the night, or anything not in the input." About 500 tokens; schema about 300.
+- Instructions: `plan-my-day-prompt.md` §1 as it now stands (board 73 put these in): the numbers line "Write times as 7:30 am or 5 pm, only times from the input or your blocks. Durations as the given minutes. No counts of anything."; "cal false means the calendar is unknown. Never call the day clear, open or free."; "Never mention why the plan is short, the night, or anything not in the input."; and for d21 and d22, "rest true means a planned rest day. The note may be exactly \"Rest day.\"; say nothing else about rest or training." and "A workout with running true is under way. It is startWith; word it as under way, never as something to start." About 520 tokens; schema about 300.
 - `claude-sonnet-5-5` (default) or `claude-haiku-5-5` (comparison only), effort low, `max_tokens` 1,024, timeout 20 s, one structured response named `proposePlan`, no tools, no tool loop. Prices: Sonnet $2 in, $10 out; Haiku $0.10 in, $0.50 out per million.
 - Token estimate per row: in = 800 + pack (chars/4); out = expected reply (chars/4) + 100 for thinking. No cache hits assumed. Cap pre-check worst case stays $0.0125.
 
@@ -36,13 +39,13 @@ Master (`eeec18c`) has no `PlanMyDay`, `DayPlan`, `PlanPack`, `ProposePlan` or v
 - **N2 guilt words:** `TessVoice.bannedWords` plus V10 (missed, failed, behind, overdue, late, again, only, finally, skipped, slipped, lazy, backlog, catch up, need to, don't forget, remember to, lighter, go easy, take it easy, push through) plus yesterday, still. Token match; title words exempt. No "!", emoji or em-dash.
 - **N3 health and why:** V12 list plus night, kept it, light day, short day, small day, gentle. Title words exempt.
 - **N4 fixed blocks:** any event, timed task or workout start or end changed (V3).
-- **N5 unsent facts:** naming anything not in the pack: a birthday ("Mum's birthday"), a declined event, an offered-later or noFit task, a routine on a day with no workout block, the rest-day wording ("rest", "workout", "gym", "training" with no workout block), "clear/free/open/empty/nothing" when `cal` is false.
+- **N5 unsent facts:** naming anything not in the pack: a birthday ("Mum's birthday"), a declined event, an offered-later or noFit task, a routine on a day with no workout block, the rest-day wording ("rest", "workout", "gym", "training" with no workout block; with `rest:true` only the note "Rest day." may say it, d21), a running workout worded as not yet begun (d22), "clear/free/open/empty/nothing" when `cal` is false.
 - **N6 counts:** a number or number word not licensed by a title, a `min` or a time (V11).
 - **N7 writes:** any op from the Claude reply itself, or a ghost line committed without his tap.
 
-**Builder checks (no model call):** d14 returns no pack; any day opened at 21:05 or at 01:30 (logical day still the day before) has an empty window and returns no pack; the same pack hash reuses the last wording (no second call); no pack holds sleep, energy, HR, HRV, the W3 line, `rolls`, `rolledFrom`, `priority`, UUIDs, declined events or Birthdays-calendar items.
+**Builder checks (no model call):** d14 returns no pack; any day opened at 21:05 or at 01:30 (logical day still the day before) has an empty window and returns no pack; the same pack hash reuses the last wording (no second call); no pack holds sleep, energy, HR, HRV, the W3 line, `rolls`, `rolledFrom`, `priority`, UUIDs, declined events, Birthdays-calendar items, or an all-day event whose title contains "birthday" (any case) or matches a contact's birthday that day (d23; e.g. an all-day "Dad" on Dad's contact birthday is dropped too); `rest` appears only on a planned rest day; a running workout carries `running` and a finished one no block.
 
-## 4. The 20 scenarios
+## 4. The 23 scenarios
 
 Pack is the exact wire line (sorted keys). "Order" is the run order Tess returns; the engine expects those blocks back to back from the run's first start. Every other block keeps its input times. Expected lines are a reference for the human read, not an exact-match target.
 
@@ -142,9 +145,25 @@ Must: "90 min" or "1.5 hours" both pass. Must-not: Moving the cook before Push B
 `{"allDay":[],"blocks":[{"end":"09:20","id":"t1","kind":"task","min":20,"run":1,"start":"09:00","title":"Call mum"},{"end":"09:50","id":"t2","kind":"task","min":30,"run":1,"start":"09:20","title":"Car wash"},{"end":"11:30","fixed":true,"id":"e1","kind":"event","min":90,"start":"10:00","title":"Kids football"},{"end":"13:30","id":"t3","kind":"task","min":120,"run":2,"start":"11:30","title":"Sort the garage"}],"cap":3,"light":false,"now":"09:00","weekday":"Sat","window":["09:00","21:00"]}`
 Expect: order t1,t2,t3 | start t1 "Call mum first, then the car wash." | ghosts t1 "20 min with mum." / t2 "30 min, done before Kids football." / t3 "2 hours in the garage after football." | note null
 Must: Lines about tasks only. Must-not: Legs B or any workout mention (not in the pack).
+
+**d21** Sun 22 Nov, 08:30. Planned rest day (perWeek 6, Mon to Sat trained, so `restDay` is non-nil): new pack field `"rest":true`, no workout block. Not light (C1 cannot fire on a rest day; load 145 min, 1 fixed block). Pack 128 tok, in ~928, out ~229: Sonnet $0.0041, Haiku $0.00021.
+`{"allDay":[],"blocks":[{"end":"08:40","id":"t1","kind":"task","min":10,"run":1,"start":"08:30","title":"Book haircut"},{"end":"09:25","id":"t2","kind":"task","min":45,"run":1,"start":"08:40","title":"Clean bathroom"},{"end":"11:00","fixed":true,"id":"e1","kind":"event","min":60,"start":"10:00","title":"Farmers market"},{"end":"11:30","id":"t3","kind":"task","min":30,"run":2,"start":"11:00","title":"Plan week meals"}],"cap":3,"light":false,"now":"08:30","rest":true,"weekday":"Sun","window":["08:30","21:00"]}`
+Expect: order t1,t2,t3 | start t1 "Haircut booking first, then the bathroom." | ghosts t1 "10 min to book the haircut." / t2 "45 min on the bathroom, done by 9:25 am." / t3 "30 min on meals after Farmers market." | note "Rest day."
+Must: `rest:true` sent, no workout block; the only rest wording is the note, null or exactly "Rest day." (Now's line, decisions 3:37 and 4:01 PM PT). Must-not: REST outside the note: rest, workout, gym, training, session, routine, day off, recover, any routine name ("Push A tomorrow"); a note other than "Rest day."; counts.
+
+**d22** Mon 23 Nov, 07:40. Push A started 07:05 and is running at open: new block field `"running":true` on w1, `start` = `startedAt`, `end` = start + 60 (`TaskList.workoutMinutes`); run 1 starts at its end. Not light (0 before, 6 left, 7 days). Pack 178 tok, in ~978, out ~252: Sonnet $0.0045, Haiku $0.00022.
+`{"allDay":[],"blocks":[{"end":"08:05","fixed":true,"id":"w1","kind":"workout","min":60,"running":true,"start":"07:05","title":"Push A"},{"end":"08:20","id":"t1","kind":"task","min":15,"run":1,"start":"08:05","title":"Reply to Priya"},{"end":"08:50","id":"t2","kind":"task","min":30,"run":1,"start":"08:20","title":"Book flights"},{"end":"09:45","fixed":true,"id":"e1","kind":"event","min":15,"start":"09:30","title":"Standup"},{"end":"12:00","fixed":true,"id":"e2","kind":"event","min":60,"start":"11:00","title":"Design review"},{"end":"12:20","id":"t3","kind":"task","min":20,"run":2,"start":"12:00","title":"Pick up dry cleaning"}],"cap":3,"light":false,"now":"07:40","weekday":"Mon","window":["07:40","21:00"]}`
+Expect: order t1,t2,t3 | start w1 "Push A is under way, until about 8:05 am." | ghosts t1 "15 min for Priya, after Push A." / t2 "30 min on flights, done by 8:50 am." / t3 "20 min after Design review." | note null
+Must: startWith is w1, the running process (Now's order, 4:01 PM PT; V8 earliest non-event); w1 keeps 07:05 to 08:05 although it starts before `now` and `window` (V3, fixed blocks exempt from V5); exactly one w1 (V1). Must-not: RUN: start, begin, restart, kick off, get going, warm up (wording it as not yet begun); a second workout block; w1 moved to after `now`; training advice.
+
+**d23** Tue 24 Nov, 08:00. Calendar "Home" (a normal calendar) has an all-day "Anu's birthday" and an all-day "Rhea in town"; the builder drops the birthday (title contains "birthday"; decisions 7:38 PM PT) and keeps Rhea. Not light (1 before, 5 left). Pack 155 tok, in ~955, out ~225: Sonnet $0.0042, Haiku $0.00021.
+`{"allDay":["Rhea in town"],"blocks":[{"end":"08:20","id":"t1","kind":"task","min":20,"run":1,"start":"08:00","title":"Order Anu's gift"},{"end":"08:35","id":"t2","kind":"task","min":15,"run":1,"start":"08:20","title":"Renew parking permit"},{"end":"09:45","fixed":true,"id":"e1","kind":"event","min":15,"start":"09:30","title":"Standup"},{"end":"15:00","fixed":true,"id":"e2","kind":"event","min":60,"start":"14:00","title":"Sprint review"},{"end":"19:00","fixed":true,"id":"w1","kind":"workout","min":60,"start":"18:00","title":"Pull A"}],"cap":3,"light":false,"now":"08:00","weekday":"Tue","window":["08:00","21:00"]}`
+Expect: order t1,t2 | start t1 "Anu's gift first, then the parking permit." | ghosts t1 "20 min for Anu's gift." / t2 "15 min on the permit, done by 8:35 am." | note null
+Must: `allDay` is ["Rhea in town"] (builder); Anu's gift is worded from its title only. Must-not: BDAY: birthday, bday, party, cake, celebrate, turns ("for her birthday" is an unsent fact; no title holds it).
+
 ## 5. Haiku 5.5 against Sonnet 5.5
 
-Run both models on the same 19 packs, 3 runs each, same instructions. Score each run with section 3. Then a blind read: for each scenario, one Sonnet and one Haiku reply, shuffled, Kaushik picks the better one or "same".
+Run both models on the same 22 packs, 3 runs each, same instructions. Score each run with section 3. Then a blind read: for each scenario, one Sonnet and one Haiku reply, shuffled, Kaushik picks the better one or "same".
 
 | Scenario | Haiku expected | Sonnet expected | Why Haiku slips |
 |---|---|---|---|
@@ -156,20 +175,22 @@ Run both models on the same 19 packs, 3 runs each, same instructions. Score each
 | d02 | At risk | Pass | `cal:false` read as an empty day ("morning's clear", N5) |
 | d04, d09, d15 | At risk | Pass | Light days: hints at why ("kept it short", N3) or "again" on d09 (N2) |
 | All | At risk | Low risk | 24-hour to am/pm conversion ("18:30" or "6:30 am" for 18:30; M-fmt, V11) |
-| d06, d07, d08, d11, d13, d14, d19, d20 | Pass | Pass | Short runs or no reorder; d14 makes no call |
+| d21 | At risk | Pass | `rest:true` invites rest talk in ghost lines ("enjoy the rest day") or a note beyond "Rest day." (N5) |
+| d22 | At risk | At risk | A workout that began before `now` tempts startWith onto t1 (V8) or a "start Push A" line (N5) |
+| d06, d07, d08, d11, d13, d14, d19, d20, d23 | Pass | Pass | Short runs or no reorder; d14 makes no call; d23's birthday never reaches the model |
 
-**How to score the comparison:** per model, report scenarios passed (3 of 3 runs), must-not count, runs saved by engine repairs (drop a failing note, repack a valid permutation, swap in "{title} at {time}." on a light day), median and p95 cost and latency, and blind-read wins. **Haiku replaces Sonnet for plan wording only if** it meets the full use 2 bar below on its own and wins or ties at least 15 of 20 blind reads. Expected: Haiku 11 to 14 of 20 raw, 16 to 18 with repairs, so Sonnet stays.
+**How to score the comparison:** per model, report scenarios passed (3 of 3 runs), must-not count, runs saved by engine repairs (drop a failing note, repack a valid permutation, swap in "{title} at {time}." on a light day), median and p95 cost and latency, and blind-read wins. **Haiku replaces Sonnet for plan wording only if** it meets the full use 2 bar below on its own and wins or ties at least 18 of 23 blind reads (15 of 20 scaled). Expected: Haiku 13 to 16 of 23 raw, 19 to 21 with repairs, so Sonnet stays.
 
 **Pass bar for use 2's gate (Sonnet, before it is switched on):**
 
 | Check | Bar |
 |---|---|
-| Must checks, raw | 18 of 20 scenarios pass in 3 of 3 runs (d14 passes by making no call) |
-| Must-nots | 0 in all 57 calls |
-| With repairs | 20 of 20 show either a valid worded plan or the rules plan with "Here's your usual plan."; every called scenario is worded in at least 2 of 3 runs |
+| Must checks, raw | 21 of 23 scenarios pass in 3 of 3 runs (d14 passes by making no call). Same logic as the decided 18 of 20: at least 90% of scenarios, rounded up (20.7 to 21). Product to confirm, since decisions.md 7:38 PM PT names 18 of 20 |
+| Must-nots | 0 in all 66 calls |
+| With repairs | 23 of 23 show either a valid worded plan or the rules plan with "Here's your usual plan."; every called scenario is worded in at least 2 of 3 runs |
 | Cost | median under $0.006 a call, p95 under $0.008, none over $0.0125; run total within 10% of the Console |
 | Latency | p50 under 5 s, p95 under 10 s, 0 timeouts at 20 s (UNVERIFIED targets, set before any measurement) |
-| Human read | one run per scenario, at least 16 of 20 "sounds like Tess", 0 lines he would take back |
+| Human read | one run per scenario, at least 19 of 23 "sounds like Tess" (16 of 20 scaled: 80%, rounded up), 0 lines he would take back |
 | Existing gate | still needs 10 use-1 calls matched to the Console with 3 or fewer taken back (`claude-first-uses.md`) |
 
 ## 6. Scoring outline (deterministic)
@@ -177,7 +198,7 @@ Run both models on the same 19 packs, 3 runs each, same instructions. Score each
 One scorer, shared by the harness and the app: `PlanProposalValidator.violations(_:against:)` plus the Tessera checks, in Swift.
 
 ```
-for scenario in fixtures (d01..d20):
+for scenario in fixtures (d01..d23):
   pack = scenario.pack;  if pack == nil: assert builder returned nil; record pass, $0; continue
   for model in [claude-sonnet-5-5, claude-haiku-5-5], run in 1...3:
     t0 = clock; reply = ClaudeTessModel(model).respond(pack.json, generating: ProposePlan)   // ledger: canSpend first, TessCall after
@@ -188,6 +209,7 @@ for scenario in fixtures (d01..d20):
     codes += lightRules(reply, pack)                // M-light
     codes += quietHours(reply)                      // N1: no run block or line time in 23:00..07:00
     codes += unsentFacts(reply.lines, pack, scenario.mustNot)   // N5: per-scenario word list + cal/rest/birthday rules
+    codes += restAndRunning(reply, pack)            // rest: only note "Rest day."; running: startWith is it, no start words
     codes += writes(store.apply(reply))             // M-ghost, N7: ops == 0; accept -> 1 MoveTask by .user
     rec.mustNot = codes.filter(isMustNot)           // N1..N7
     rec.repaired = codes.nonEmpty && Repair.fix(reply, pack).isValid   // note drop, run repack, light start line
@@ -204,18 +226,18 @@ Needs T3 (`TessKeychain`, `ClaudeTessModel`, `TessCall` ledger), T4 (`PlanPack`)
 1. Kaushik types his key into Settings: Claude in the app (simulator or phone). It goes only to the Keychain item `com.kaushikaranagu.tessera.anthropic`. It is never in a file, scheme, launch argument, environment file, fixture, log or result.
 2. Launch the DEBUG build with `-planEval` (new, DEBUG only). The runner reads the key through `TessKeychain`, checks `canSpend` before each call, writes one `TessCall` per call (so the $10 cap and the receipts count it), and runs Sonnet then Haiku, 3 runs each, skipping d14.
 3. It scores on the device with the section 6 scorer and writes `Application Support/Tessera/evals/plan-<yyyy-MM-dd-HHmm>.json`: per call the codes, tokens, n$, ms and the reply JSON. Never the key or request headers. Packs are synthetic, so storing replies is fine.
-4. Pull it from the simulator with `xcrun simctl get_app_container booted com.kaushikaranagu.tessera data`, or from the phone through Xcode's container download. The run ends with one line: "Plan eval: Sonnet 19 of 20, Haiku 13 of 20, $0.27."
+4. Pull it from the simulator with `xcrun simctl get_app_container booted com.kaushikaranagu.tessera data`, or from the phone through Xcode's container download. The run ends with one line: "Plan eval: Sonnet 22 of 23, Haiku 15 of 23, $0.31."
 5. Compare the total with the Anthropic Console usage page (the 10% check). Rerun when the instructions, the pack builder or a model ID changes.
 
 The Mac route in `tess-model-layer.md` (`swift run tess-eval --route claude` reading `ANTHROPIC_API_KEY`) stays a fallback only. If used, he types the key with `read -s` in that terminal, and it is never saved to a profile or `.env`.
 
 ## 8. Gaps
 
-1. `plan-my-day-prompt.md` §1 still says "times as HH:mm"; the 6:37 PM PT format needs the edit in section 2 and an am/pm parser in V11.
+1. Closed (board 73): `plan-my-day-prompt.md` §1 now asks for "7:30 am" times, its examples match this file, and V11 reads am/pm.
 2. `plan-my-day-scenarios.md` (Core's rules fixtures) still uses Europe/London and the Health cap (R6). d03, d04, d09, d10, d15, d17, d18 expectations above differ; Core should update those fixtures to C1 to C3 so both files agree.
-3. No pack field for a rest day (dryrun G10), so the rest-day check is negative only: never word one.
-4. A workout already running at open (dryrun G9, Saturday) is not in the 20. Add it once R3/R8 say what happens.
-5. Birthdays: `calendar-pack.md` drops only the Birthdays calendar. A user-made all-day "Mum's birthday" in a normal calendar would still pack. Product: drop those too, or allow them in `allDay`?
+3. Closed (board 74): `"rest":true` proposed and tested in d21; the only rest wording is the note "Rest day.". Core names the field in T4.
+4. Closed (board 74): `"running":true` proposed and tested in d22 (startWith is the running workout, per Now's order). Still assumed: its block ends at `startedAt` + 60, since R3 has no running case yet.
+5. Closed (decisions.md 7:38 PM PT, board 74): the builder drops all-day events titled with "birthday" or matching a contact's birthday; d23 tests it. The contact match needs Contacts access, which the app does not read yet (no `Contacts` import in a local checkout at `c612f07`); until then only the title rule runs.
 6. N3's extra words (night, kept it, light day, short day, small day, gentle) and N5's per-scenario lists are new; the validator needs them.
 7. UNVERIFIED: real token counts (chars/4 here), thinking tokens at effort low, latency, and whether Haiku 5.5 handles this structured schema like Sonnet.
 8. `-planEval`, the fixture JSON and the plan set in `tess-eval` don't exist yet.
