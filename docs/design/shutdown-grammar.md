@@ -53,7 +53,7 @@ The hold's writes are `shutdown.md`'s (kept rows to tomorrow, LATER rows to Late
 The slot lines stand as written, with clock times in the house form: D1 "Tomorrow starts with Standup at 9:30 am.", E3 "Closed. Your line is waiting at 8 am." The sheet's late-night label is "2 MOVING TO FRIDAY" from F2's facts.
 
 ## What goes
-The day stroke and its dashed guide (41), the Title 34 opener on the page (it is Tess's line), the Body 21 carry-over sentence (a label word now), the ink-line strike and the 50% TOMORROW (the value crossfades to LATER), "Shutdown complete" at Title 34 on the ink line (CLOSE THE DAY, a label-word key like START PUSH A), "THEN PULL A · 07:30", the `inkSecondary` hero on the closed day (his line is in ink, as every hero). The never-list stands: no evening wash, no dots, no count of what didn't happen, no "left over", no "overdue", no red, no haptic after 23:00 except under his finger, no UNDO on the 22:00 close.
+The day stroke and its dashed guide (41), the Title 34 opener on the page (it is Tess's line), the Body 21 carry-over sentence (a label word now), the ink-line strike and the 50% TOMORROW (the value crossfades to LATER), "Shutdown complete" at Title 34 on the ink line (CLOSE THE DAY, a label-word key like START PUSH A), "THEN PULL A · 07:30", the `inkSecondary` hero on the closed day (his line is in ink, as every hero). The never-list stands: no evening wash, no dots, no count of what didn't happen, no "left over", no "overdue", no red, no haptic the app raises after 23:00 (his own timers ring at any hour, Product CL9), no UNDO on the 22:00 close.
 
 ## Rules kept
 1. **One base** per look; the Obsidian phones are the same frame.

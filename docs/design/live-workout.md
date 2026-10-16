@@ -45,3 +45,8 @@ Hold LOG: the line fills (Finish grammar). At full: the number row presses (0.94
 
 ## Addendum, Oct 16: receipts and bests (Design 62, `copy-pass.md`)
 The rest hint is two lines, "DRAG RIGHT +15" / "FLING LEFT TO SKIP" (no " · ", no "TO GO"). The full table is in `copy-pass.md`; where a clip still says the old words, the sheet wins.
+
+## Addendum, Oct 16: the finish's UNDO and one place for last time (QA #381 F2 and L5, Product 3c2ea39e)
+- **AND FINISH keeps a 10 s UNDO.** The finish view shows UNDO under Tess's line; it takes back the last set and the finish together, in one op. Tess: "**Push A, back on.**" The page returns to the last set resting, the stroke un-paints, the strip's segment steps back one set.
+- **Last time is said once.** At set 1 the detail line carries it ("last time 82.5 × 8"). Progression's reason is Tess's line only when it differs from last time ("Bench press is ready for 85 today."); when the target equals last time she says nothing (the first three times still get "Hold me to tell me a set."). The context line never carries a weight.
+- **Haptics after 23:00:** the rule covers moments the app raises; his own timers ring at any hour, haptic included (Product CL9).
