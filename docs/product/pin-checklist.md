@@ -53,3 +53,5 @@
 ## 7. Rollback (decisions 12:16 PM PT Oct 16)
 
 Before the pin is on his phone, the rollback is 444e72b (v5). Once the pin is installed, the rollback is 7b321d2. It is the only older build tested on the v9 store (gate V4). 444e72b is not used after the pin, because a v5 build on a v9 store was never tested.
+
+**After v10 (decisions 1:27 PM PT Oct 16):** once the v10 build is installed, the rollback is a36b161, and only if a36b161 was on his phone first. It refuses the v10 store and runs in memory with the launch note (U3), so it does not show his data. Getting his data back means rolling forward or restoring the Step 0 copy. 7b321d2 has no newer-store check and would write to the v10 store, so 7b321d2 and 444e72b are never installed after v10. Step 0 SAVE A COPY runs on a36b161 before the v10 install. The next-build gate is `research/next-build-v10.md`: V0 becomes catalog 10 plus #403 and #407 merged, upgrade rows start from the a36b161 v9 store, V4 is retired, M1 and P14 become hard rows, and the new rows are U1-U4, E1-E4, DB1, NP1-2, HP1-3 and UW1.
