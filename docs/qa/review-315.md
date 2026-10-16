@@ -68,3 +68,10 @@ This is one commit on 078cb54.
 - **N4, closed.** `httpsOnly` is gone, and an ATS or TLS failure maps to `tooBig`.
 - **Lows closed.** `stop_reason == "max_tokens"` counts as no recipe, with its ledger outcome. 401 and 403 get their own line with outcome "badKey", and 429 or 5xx get a busy line with outcome "busy". The reader only ever calls `keys.read()`. Nothing clears the key or touches the switch.
 - **Pending:** Core's copy commit, with Research's busy and key lines. I'll check it when it lands: the two strings, the table test, and that 401/403 still never clears the key or turns off the switch.
+
+## Addendum 2: head 2e8c726 (GitHub head confirmed), PASS
+
+This is one copy commit on 9970842.
+- `badKey` is now "Claude couldn't use your key. Paste the text instead." and `claudeBusy` is "Claude's busy right now. Paste the text instead.", Research's wording as relayed. Both end the same way as the rest of the table, and the test pins both strings.
+- **401/403 never clears the key or turns off the switch: PASS by the code.** `ClaudeRecipeReader` only ever calls `keys.read()` (RecipeLinkReader.swift:350), and it only reads `allowed`. It holds no settings and no write path to the keychain.
+- Low (the test): the new check `reader(claude: true).claude?.keys.read()` builds a new reader with a new `InMemoryKeychain`, so it would pass even if the 401 had cleared the first reader's key. Keep one reader, call `read` on it, then read its own `keys`. That's a test-only change and can ride a later PR.
