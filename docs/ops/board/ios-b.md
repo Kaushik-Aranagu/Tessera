@@ -24,6 +24,7 @@
 - Undo batch: Builder B's rows in `../research/undo-lines.md` section 2, plus the capture code in `App/AppModel.swift`, to the one rule.
 
 **Later:**
+- Plan my day calendar lines (with T6, Research's `../research/calendar-pack.md`, #165): the one-time ask "Plan around your calendar? Times and titles only." and the fallback "Planned without your calendar".
 - After Build A1: a first-set timing mark (per Research's `../research/training-week-one.md` (#163)).
 - Builder B's 3 op log gaps in `../research/oplog-health.md` (#162).
 - The rest of Builder B's accessibility rows in `../research/accessibility.md`, including Tess's rows ("commits after 2 s with no cancel" for VoiceOver). The Objects rows are Core's.
