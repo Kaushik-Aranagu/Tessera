@@ -147,4 +147,12 @@
 - **Claude key entry pulled forward** (5:49 PM PT). Kaushik has his key. He types it into the phone himself, and it never goes in the repo, docs, memory, board or any thread. First version: a Claude field in Settings that stores the key in the Keychain (this device only), with a paste-once flow and a "Test" that makes one tiny call and says whether it worked. The $10 a month hard stop ships in this first version. Core builds the Keychain store, the test call and the cap ledger (T3). The screen goes to Builder B, since B owns Tess, right after the Review week fix and on Design's Settings: Claude sheet. Design draws the rest dab first, then that sheet.
 - **One ask a day** (5:56 PM PT, Research #166 `ask-lines.md`). At most one permission or one-time ask per 4 AM day, in Research's priority order, and never from a background finish, so his first workout no longer stacks the Live Activity ask and the Health ask. Core adds the missing calendar, mic, speech and camera usage keys before those features ship, and replaces the Health read string with an honest one.
 - **The 4 AM day comes first for Core after N1** (5:56 PM PT, Research #166). 28 places cut the day at midnight, and 6 of them store a wrong date. He uses the app late at night, so a public `TesseraDay` helper (DST-safe) lands first, then one-line swaps. "dentist tomorrow 3pm" at 1 AM and "Not now" after midnight go in the same PR.
+- **Grammar regression calls** (5:58 PM PT, Research #167, all defaults):
+  1. "table" is not a meal word.
+  2. "tonight" said after 8 PM means tonight, as at 4:41.
+  3. "next fri" means the Friday of next week.
+  4. The widened reschedule rules R13c, f, g, i and j are taken.
+  5. In "paid 12.50 at 12.30", 12.50 is the amount and 12.30 is the time.
+  6. "done" while a timer rings ends the timer first.
+  7. The test clock runs on Los Angeles time, his own.
 
