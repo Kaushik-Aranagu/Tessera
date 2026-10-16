@@ -34,7 +34,7 @@ The gesture is the build's: swipe right, armed at 140pt. The strike follows the 
 | t (ms) | What moves | Haptic |
 |---|---|---|
 | armed (140pt) | **The strike runs itself out** to the end of the name (160ms, house curve), so the gesture meets him halfway. Pulling back under 140 retracts it (220ms ease-out, as built) | `.selection` |
-| 0 (let go) | **The name dries to ink at 45%** (500ms) and the strike dries with it (700ms). **A fleck of the strike** (a 12pt lens in the pigment) leaves its end and arcs up to the day stroke's tip at now (520ms, house curve), shrinking from 1.2 to 0.7 | **the done pattern** (below) |
+| 0 (let go) | **The name dries to ink at 45%** (500ms) and the strike dries with it (700ms). **A fleck of the strike** (a 12pt lens in the pigment) leaves its end and arcs up to the day stroke's tip at now (520ms, house curve), shrinking from 1.2 to 0.7. *Update, item 41 (`home-first-review.md`): the day stroke leaves Home, so the fleck arcs to the day label ("Thursday night") and blooms there instead; on the Day log, where the stroke still lives, it lands on the tip as written* | **the done pattern** (below) |
 | 520 | **The tip blooms**: a pigment wash (radius 30pt) grows and fades over 900ms, and the travelled stroke brightens from 0.6 to 0.92 and back. The soul brightens once (1 to 1.12, settle spring, saturation up, no haptic of its own) | `.impact(flexibility: .soft, intensity: 0.4)` |
 | 80–400 | **The row folds** (height to 0, 320ms, house curve) and the rows below rise on the settle spring. The op writes as the fold starts, not 1.3s later as now | none |
 | 80 | **Tess's line:** "Call the bank done." with UNDO (Research M55's form) | none |
