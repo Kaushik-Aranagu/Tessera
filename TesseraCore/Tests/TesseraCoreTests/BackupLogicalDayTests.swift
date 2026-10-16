@@ -15,8 +15,61 @@ struct BackupLogicalDayTests {
         dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         store = try ObjectStore(context: TesseraContext(url: dir.appendingPathComponent("tessera.sqlite")))
-        _ = try store.prepareCatalog()
+        let classes = try store.prepareCatalog()
+        // Something he did, so the store is worth a copy (an empty one never is: restore walk, risk 1).
+        try ActionEngine(store: store, classes: classes).perform(CreateNote(body: "Bench felt heavy"), by: .user)
+        store.save()
         backups = dir.appendingPathComponent("Backups")
+    }
+
+    /// A second store in its own folder with `notes` notes, for copies with more or fewer of his actions.
+    func otherStore(notes: Int) throws -> ObjectStore {
+        let folder = dir.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let other = try ObjectStore(context: TesseraContext(url: folder.appendingPathComponent("tessera.sqlite")))
+        let engine = try ActionEngine(store: other, classes: other.prepareCatalog())
+        for index in 0 ..< notes {
+            try engine.perform(CreateNote(body: "Note \(index)"), by: .user)
+        }
+        other.save()
+        return other
+    }
+
+    @Test func anEmptyStoreIsNeverCopied() throws {
+        // Restore walk risk 1: a fresh install pointed at the folder writes nothing, so no good copy is crowded out.
+        let empty = try otherStore(notes: 0)
+        for day in 0 ..< 8 {
+            try write(at(10, 10 + day, 12))
+        }
+        #expect(files().count == 7)
+        let oldest = files().first
+        #expect(try TesseraBackup.writeRolling(from: empty.context, in: backups, now: at(10, 18, 12), calendar: la)
+            == nil)
+        #expect(try TesseraBackup.writeRolling(from: empty.context, in: backups, now: at(10, 18, 0, 30),
+                                               calendar: la) == nil)
+        #expect(files().count == 7 && files().first == oldest)
+    }
+
+    @Test func aLateCopyWithFewerActionsLeavesTheDaysCopy() throws {
+        // Between 00:00 and 04:00 the day's copy is replaced only by one holding at least as many of his actions.
+        let fuller = try otherStore(notes: 3)
+        #expect(try TesseraBackup.writeRolling(from: fuller.context, in: backups, now: at(10, 21, 7, 42), calendar: la)
+            == backups.appendingPathComponent("Tessera-2026-10-21.tessera"))
+        #expect(try write(at(10, 22, 0, 20)) == nil)
+        #expect(try TesseraBackup.userOps(at: backups.appendingPathComponent("Tessera-2026-10-21.tessera")) == 3)
+        #expect(try TesseraBackup.writeRolling(from: fuller.context, in: backups, now: at(10, 22, 0, 30), calendar: la)
+            != nil)
+    }
+
+    @Test func aRestoreRewritesTodaysCopy() throws {
+        // Restore walk risk 2: after a restore, today's copy (the store from before) is rewritten at once.
+        try write(at(10, 21, 7, 42))
+        #expect(try write(at(10, 21, 12)) == nil)
+        let marker = TesseraBackup.restoreMarker(for: dir.appendingPathComponent("tessera.sqlite"))
+        try String(at(10, 21, 11).timeIntervalSince1970).write(to: marker, atomically: true, encoding: .utf8)
+        #expect(try write(at(10, 21, 12)) == "Tessera-2026-10-21.tessera")
+        #expect(try created("Tessera-2026-10-21.tessera") == at(10, 21, 12))
+        #expect(try write(at(10, 21, 13)) == nil)
     }
 
     func at(_ month: Int, _ day: Int, _ hour: Int, _ minute: Int = 0, year: Int = 2026,

@@ -130,10 +130,21 @@ public enum TesseraBackup {
         let copies = names.filter { $0.hasPrefix("Tessera-") && $0.hasSuffix(".\(fileExtension)") }.sorted(by: >)
         let newest = copies.first.flatMap { try? inspect(folder.appendingPathComponent($0)).createdAt }
         let clockBehind = newest.map { now < $0 } ?? false
+        // A store with nothing he did (a fresh install, only the seeded catalog) is never copied: it would crowd
+        // out a good copy, or replace tonight's (restore walk, risk 1).
+        let ops = try context.database.read { try userOps(in: $0) }
+        guard ops > 0 else { return nil }
         let exists = manager.fileExists(atPath: file.path)
         if exists {
-            // After 04:00 the day's copy is made; only the late tail (00:00 to 04:00) refreshes it.
-            guard calendar.component(.hour, from: now) < TesseraDay.startHour, !clockBehind else { return nil }
+            // Restored since the day's copy was made: that copy is the store from before, so it's rewritten (risk 2).
+            let made = try? inspect(file).createdAt
+            let restored = made.flatMap { made in restoredAt(for: context.url).map { $0 > made } } ?? false
+            if !restored {
+                // After 04:00 the day's copy is made; only the late tail (00:00 to 04:00) refreshes it, and never
+                // with fewer of his actions than it holds.
+                guard calendar.component(.hour, from: now) < TesseraDay.startHour, !clockBehind,
+                      ops >= (try? userOps(at: file)) ?? 0 else { return nil }
+            }
         }
         // Stray partials from a killed write (any day) go.
         for name in names where name.hasPrefix(".") && name.hasSuffix(".partial") {
@@ -157,6 +168,20 @@ public enum TesseraBackup {
     }
 
     // MARK: Checking
+
+    /// Actions he (or Tess, or Siri) took; the seeded catalog and housekeeping don't count.
+    nonisolated static func userOps(in db: Database) throws -> Int {
+        try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM op WHERE actor != 'system'") ?? 0
+    }
+
+    /// The same count in a copy on disk, opened read-only.
+    nonisolated static func userOps(at url: URL) throws -> Int {
+        var configuration = Configuration()
+        configuration.readonly = true
+        let queue = try DatabaseQueue(path: url.path, configuration: configuration)
+        defer { try? queue.close() }
+        return try queue.read { try userOps(in: $0) }
+    }
 
     /// Opens a backup read-only and checks it: SQLite and intact, stamped as a Tessera backup, and no newer than this
     /// build's schema.
