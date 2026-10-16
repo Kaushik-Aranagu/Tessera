@@ -389,6 +389,33 @@ function drawEyes(C, scale, frame, eyes, t) {
   ctx.restore();
 }
 
+// The mouth (Kaushik, 9:55 AM PT Oct 16: "a small mouth, just a line… so it could get a little more expressive").
+// One short stroke under the eyes, in the eyes' dark pigment but lighter (70%), so the eyes still lead. It is a
+// line, never a cartoon: `curve` bends it (+1 a small smile; down only to -0.35, only for a miss of her own, never at him), `tilt` lifts one
+// corner (thinking, curious), `open` rounds it into a small soft o (listening). It rides the eyes' glance at 70%.
+function drawMouth(C, scale, frame, mouth, look) {
+  if (!mouth || mouth.alpha < .01) return;
+  const L = frame.look.scale * scale;
+  const m = frame.dabs.slice(0, 3).reduce((a, d) => ({ x: a.x + d.x / 3, y: a.y + d.y / 3 }), { x: 0, y: 0 });
+  const lx = look ? look.x : 0, ly = look ? look.y : 0;
+  const cx = C.x + L * (m.x + lx * 3 * .7), cy = C.y + L * (m.y + 2.6 + ly * 2.2 * .7);
+  const w = (mouth.width ?? 5.6) / 2, curve = Math.max(-.35, mouth.curve ?? 0), tilt = mouth.tilt ?? 0, open = mouth.open ?? 0;
+  const col = LOOK.dark ? LOOK.ground : LOOK.ink;
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  if (open > .01) {
+    ctx.fillStyle = rgba(col, .7 * mouth.alpha * open);
+    ctx.beginPath(); ctx.ellipse(cx, cy + .5 * L, lerp(w, 1.35, open) * L, lerp(.5, 1.4, open) * L, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  if (open < .99) {
+    ctx.strokeStyle = rgba(col, .7 * mouth.alpha * (1 - open)); ctx.lineWidth = 1.1 * L; ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx - w * L, cy + (tilt * .9 - curve * .5) * L);
+    ctx.quadraticCurveTo(cx, cy + (curve * 1.7) * L, cx + w * L, cy + (-tilt * .9 - curve * .5) * L);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 // MARK: - The page (a plain stand-in for Home, so the motion can be judged against real content)
 function font(size, weight = 500) { return `${weight} ${size}px "Inter Tight", system-ui, sans-serif`; }
 function text(str, x, y, size, color, weight = 500, align = 'left', alpha = 1) {
@@ -510,6 +537,7 @@ function composeSoul(t, s) {
   }
   drawSoul(parts, frame, C, scale, grade);
   if (s.eyes) drawEyes(C, scale, frame, s.eyes(t), t);
+  if (s.mouth) drawMouth(C, scale, frame, s.mouth(t), s.eyes ? s.eyes(t).look : null);
 }
 
 // MARK: - Scenes
@@ -1596,6 +1624,29 @@ IDEAS.wander = () => {
     page: t => ({ context: 'moving Push A' }),
     soul: { modes: [{ mode: 'idle', at: -10 }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }], centre: () => HOME,
       work: { split: S, scan, scanDur: 3.2, gather: G, at: { x: 336, y: 772 }, pathFn, noise: true } },
+  };
+};
+// 12. A mouth (Kaushik's addition to the board): one line under the eyes that turns with the moment. At rest a near
+// flat line with the faintest lift; listening, a small soft o, eyes up at him; thinking, one corner lifts and the eyes
+// go aside; her answer, a small smile as she glances at her line; then it relaxes back to rest.
+IDEAS.mouth = () => {
+  const lis = .9, thk = 2.2, ans = 3.4, rel = 4.9;
+  const e = (t, a, d = .25) => ramp(t, a, d, easeInOut);
+  return {
+    duration: 6,
+    lines: [{ text: 'Call mom at 6 pm, added.', at: ans, until: 6 }],
+    soul: {
+      modes: [{ mode: 'idle', at: -10 }, { mode: 'listening', at: lis }, { mode: 'thinking', at: thk }, { mode: 'idle', at: ans }],
+      centre: () => HOME,
+      eyes: t => {
+        const up = e(t, lis) * (1 - e(t, thk)), aside = e(t, thk) * (1 - e(t, ans)), line = e(t, ans + .1, .3) * (1 - e(t, ans + 1.2, .3));
+        return { alpha: 1, blink: blinks(t, [.5, ans + .05, 5.5]), look: { x: .8 * aside - 1 * line, y: -1 * up - .4 * aside + .6 * line } };
+      },
+      mouth: t => {
+        const listen = e(t, lis) * (1 - e(t, thk, .2)), think = e(t, thk) * (1 - e(t, ans, .2)), smile = e(t, ans, .3) * (1 - e(t, rel, .6));
+        return { alpha: 1, curve: .2 + .8 * smile, tilt: .7 * think, open: .75 * listen };
+      },
+    },
   };
 };
 for (const [name, make] of Object.entries(IDEAS)) {
