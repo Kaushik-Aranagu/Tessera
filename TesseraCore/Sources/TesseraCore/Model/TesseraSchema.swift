@@ -48,6 +48,13 @@ public enum TesseraSchema {
     static func open(_ storeURL: URL,
                      opener: (URL) throws -> TesseraContext) -> (TesseraContainer, OpenOutcome)
     {
+        // A store from a newer Tessera (a downgrade, or a phone restored from a newer one) is never opened, so this
+        // build can't write over what it doesn't understand (QA B5). Untouched on disk; this session runs in memory.
+        if TesseraDatabaseSchema.isNewer(at: storeURL) {
+            setLaunchNote("Your data is from a newer Tessera, so I left it untouched. Update the app to open it; "
+                + "nothing you do this time will be kept.")
+            return (TesseraContainer(memory: ()), .inMemoryFallback)
+        }
         let firstError: any Error
         do {
             return try (TesseraContainer(opener(storeURL)), .opened)

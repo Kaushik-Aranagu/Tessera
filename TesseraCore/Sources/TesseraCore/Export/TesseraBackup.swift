@@ -207,8 +207,8 @@ public enum TesseraBackup {
                 guard let row = try Row.fetchOne(db, sql: "SELECT * FROM backupInfo"),
                       row["format"] as String? == format else { throw BackupError.notABackup }
                 let migrations = try TesseraDatabaseSchema.migrator.appliedIdentifiers(db)
-                let known = Set(TesseraDatabaseSchema.migrator.migrations)
-                guard Set(migrations).isSubset(of: known) else { throw BackupError.newerSchema }
+                // A newer migration or a newer catalog (QA B6): "That copy is from a newer Tessera. Update first."
+                guard try !TesseraDatabaseSchema.isNewer(db) else { throw BackupError.newerSchema }
                 // Older copies have no restoredAt column: nil.
                 let restored = (row.hasColumn("restoredAt") ? row["restoredAt"] as Double? : nil)
                     .map { Date(timeIntervalSince1970: $0) }

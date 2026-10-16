@@ -7,6 +7,30 @@ import GRDB
 /// Tables, migrations, and the mapping between rows and models.
 /// UUIDs are stored as text, dates as seconds since 1970, values as the same JSON the export uses.
 enum TesseraDatabaseSchema {
+    /// Whether a database was written by a newer Tessera: a migration this build doesn't know, or built-in classes
+    /// from a newer catalog (QA B5/B6, backups review). This build never opens or restores one: its older code could
+    /// drop fields it doesn't know about.
+    static func isNewer(_ db: Database) throws -> Bool {
+        if try db.tableExists("grdb_migrations") {
+            let applied = try migrator.appliedIdentifiers(db)
+            guard Set(applied).isSubset(of: Set(migrator.migrations)) else { return true }
+        }
+        guard try db.tableExists("classDef") else { return false }
+        let catalog = try Int.fetchOne(db, sql: "SELECT MAX(packageVersion) FROM classDef WHERE packageID = ?",
+                                       arguments: [SystemCatalog.package.id]) ?? 0
+        return catalog > SystemCatalog.package.version
+    }
+
+    /// The same check on a file, read-only; false when there is no file or it can't be read (the open decides then).
+    static func isNewer(at url: URL) -> Bool {
+        guard FileManager.default.fileExists(atPath: url.path) else { return false }
+        var configuration = Configuration()
+        configuration.readonly = true
+        guard let queue = try? DatabaseQueue(path: url.path, configuration: configuration) else { return false }
+        defer { try? queue.close() }
+        return (try? queue.read(isNewer)) ?? false
+    }
+
     static var migrator: DatabaseMigrator {
         var migrator = DatabaseMigrator()
         migrator.registerMigration("v1") { db in

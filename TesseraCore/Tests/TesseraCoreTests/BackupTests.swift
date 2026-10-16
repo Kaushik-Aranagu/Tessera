@@ -66,6 +66,40 @@ struct BackupTests {
         #expect(throws: TesseraBackup.BackupError.newerSchema) { try TesseraBackup.inspect(newer) }
     }
 
+    @Test func aNewerCatalogIsNeverRestoredOrOpened() throws {
+        // QA B5/B6 (backups review): a copy or a store from a newer catalog (v10 on a v9 build) is refused, untouched.
+        let dir = try folder()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let storeURL = dir.appendingPathComponent("tessera.sqlite")
+        let store = try seededStore(at: storeURL)
+        let good = dir.appendingPathComponent("good.tessera")
+        try TesseraBackup.write(from: store.context, to: good)
+        #expect(throws: Never.self) { try TesseraBackup.inspect(good) }
+        #expect(!TesseraDatabaseSchema.isNewer(at: storeURL))
+
+        let newer = dir.appendingPathComponent("newer-catalog.tessera")
+        try FileManager.default.copyItem(at: good, to: newer)
+        let bump = "UPDATE classDef SET packageVersion = \(SystemCatalog.package.version + 1) WHERE packageID = 'system'"
+        let queue = try DatabaseQueue(path: newer.path)
+        try queue.write { try $0.execute(sql: bump) }
+        try queue.close()
+        #expect(throws: TesseraBackup.BackupError.newerSchema) { try TesseraBackup.inspect(newer) }
+        #expect(throws: TesseraBackup.BackupError.newerSchema) {
+            try TesseraBackup.stageRestore(from: newer, storeURL: storeURL)
+        }
+
+        // The store itself: never opened, never written; this session runs in memory and says why.
+        let newerStore = dir.appendingPathComponent("newer.sqlite")
+        try FileManager.default.copyItem(at: newer, to: newerStore)
+        let before = try Data(contentsOf: newerStore)
+        TesseraSchema.clearLaunchNote()
+        let (_, outcome) = TesseraSchema.open(newerStore) { try TesseraContext(url: $0) }
+        #expect(outcome == .inMemoryFallback)
+        #expect(TesseraSchema.launchNote?.contains("newer Tessera") == true)
+        #expect(try Data(contentsOf: newerStore) == before)
+        TesseraSchema.clearLaunchNote()
+    }
+
     @Test func rollingKeepsOnePerDayAndSeven() throws {
         let dir = try folder()
         defer { try? FileManager.default.removeItem(at: dir) }
