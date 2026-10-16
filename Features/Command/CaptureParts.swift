@@ -215,8 +215,15 @@ struct CommandInterpreter {
         session.weight = weight
         session.reps = reps
         session.logSet()
-        let e1RM = model.previewE1RM(weight: weight, reps: reps)
-            .map { " · e1RM \(Format.kilograms(($0 * 10).rounded() / 10))" } ?? ""
-        return "Logged \(exercise.name.lowercased()) \(Format.kilograms(weight)) × \(Int(reps))\(e1RM)."
+        let e1RM = model.previewE1RM(weight: weight, reps: reps).map { ($0 * 10).rounded() / 10 }
+        return Self.loggedReceipt(exercise: exercise.name, weight: weight, reps: reps, e1RM: e1RM)
+    }
+
+    /// Thing first (receipts-thing-first.md RC12): "Bench press 82.5 × 8, logged. e1RM 105.".
+    static func loggedReceipt(exercise: String, weight: Double, reps: Double, e1RM: Double?) -> String {
+        let lower = exercise.lowercased()
+        let name = lower.prefix(1).uppercased() + lower.dropFirst()
+        let line = "\(name) \(Format.kilograms(weight)) × \(Int(reps)), logged."
+        return e1RM.map { "\(line) e1RM \(Format.kilograms($0))." } ?? line
     }
 }

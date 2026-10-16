@@ -100,7 +100,7 @@ struct AppModelTests {
         DemoData.prepare(model)
         let interpreter = CommandInterpreter(model: model)
 
-        #expect(interpreter.run("log bench 82.5x8").hasPrefix("Logged bench press 82.5 × 8"))
+        #expect(interpreter.run("log bench 82.5x8").hasPrefix("Bench press 82.5 × 8, logged."))
         #expect(model.session != nil)
         #expect(interpreter.run("what's my bench best?").contains("e1RM"))
         #expect(interpreter.run("stretch at 21:00").hasPrefix("Drying"))
