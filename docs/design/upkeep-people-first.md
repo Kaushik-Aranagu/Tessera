@@ -75,6 +75,7 @@ Board `mockups/upkeep-us.png` and recording `recordings/upkeep-us.mp4` (source `
   - There's no timer and no nudge. Leaving the page leaves the ask unanswered, and it shows again on the next open inside the window.
 - **KEEP IT** writes `AddChore(Bleed the radiators, bled, 365)` with no check-in.
   - The ask blurs out, and Tess answers in its place: "Bleed the radiators, kept. Once a year." with **UNDO** (`liveInk`, 4s) under it.
+  - **UNDO** takes the chore back: Tess says "Bleed the radiators taken back." in the same place (the undo rule: name the thing, then what happened). Then the foot returns as it was, and the ask stays answered, so it isn't offered again this season.
   - When UNDO lapses, the answer fades and the foot returns, with "Bleed the radiators" setting in at the end of NO RHYTHM YET (blur 4 → 0, 420ms).
   - It doesn't drift to Now until the first "bled the radiators" (or "radiators done").
 - **NO RADIATORS** writes nothing. Tess says "Okay. I won't ask again." in the same place, and the foot returns. It's never offered again.
