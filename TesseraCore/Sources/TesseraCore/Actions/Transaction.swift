@@ -31,8 +31,10 @@ public struct Transaction {
     // MARK: Writes
 
     @discardableResult
-    public mutating func create(_ classDef: ClassDef, title: String = "", parent: ObjectRecord? = nil) -> ObjectRecord {
-        let object = store.create(classDef, title: title, parent: parent)
+    public mutating func create(_ classDef: ClassDef, title: String = "", parent: ObjectRecord? = nil,
+                                id: UUID? = nil) -> ObjectRecord
+    {
+        let object = store.create(classDef, title: title, parent: parent, id: id)
         ops.append(.create(object: object.id, classID: classDef.id, parent: parent?.id, title: title))
         return object
     }

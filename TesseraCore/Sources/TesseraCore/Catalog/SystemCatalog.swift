@@ -19,6 +19,7 @@ public enum SystemCatalog {
         case process
         case slot, plan
         case tessCall
+        case settings
 
         public var systemKey: String {
             "system.\(rawValue)"
@@ -218,6 +219,17 @@ public enum SystemCatalog {
             FieldSpec(key: "outcome", name: "Outcome", kind: .text),
             FieldSpec(key: "requestID", name: "Request", kind: .text),
         ]),
+        // His preferences that travel with a restore (docs/research/settings-object.md): one object, a fixed id, every
+        // field optional (empty = never set; readers apply defaults). Never the Claude key or the folder bookmark.
+        ClassSpec(key: .settings, name: "Settings", parent: .thing, symbol: "gearshape", colorRole: "neutral", fields: [
+            FieldSpec(key: "lookDay", name: "Look by day", kind: .text),
+            FieldSpec(key: "lookNight", name: "Look by night", kind: .text),
+            FieldSpec(key: "lookPinned", name: "Pinned look", kind: .text),
+            FieldSpec(key: "missesGoToClaude", name: "Misses go to Claude", kind: .bool),
+            FieldSpec(key: "backupFolderName", name: "Backup folder", kind: .text),
+            FieldSpec(key: "backupFolderPickedAt", name: "Folder picked", kind: .date),
+            FieldSpec(key: "restWeekday", name: "Rest day", kind: .number),
+        ]),
         // The actionable list block (groceries, packing, any list). Items are the list's children, in order.
         ClassSpec(key: .list, name: "List", parent: .thing, symbol: "list.bullet", colorRole: "planning"),
         ClassSpec(key: .listItem, name: "List Item", parent: .thing, symbol: "circle", colorRole: "planning",
@@ -297,7 +309,7 @@ public enum SystemCatalog {
 
     /// Built-in classes ship as a versioned package. Bump `version` whenever a spec changes; seeding then
     /// refreshes shipped names, symbols, units, options, defaults and formulas, except what the person edited.
-    public static let package = CatalogPackage(id: "system", version: 3, name: "Tessera built-ins",
+    public static let package = CatalogPackage(id: "system", version: 4, name: "Tessera built-ins",
                                                source: "Tessera", license: "Tessera")
 
     static let honestE1RM = "weight * (1 + (reps + 10 - coalesce(rpe, 10)) / 30)"
