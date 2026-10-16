@@ -49,22 +49,14 @@ struct ReviewWeekData {
         func past(_ day: Date) -> Bool {
             day <= today && (firstDay.map { day >= $0 } ?? true)
         }
-        // Tasks done, by the day they were done (never the day they were planned for).
-        let doneAt = TaskList(store: model.store, classes: model.classes).all().compactMap { item -> Date? in
-            guard item.isDone else { return nil }
-            return model.store.value("doneAt", of: item.task)?.dateValue
-        }
-        let tasksDone = days.map { day -> Int? in
-            past(day) ? doneAt.count { tesseraDay.day(of: $0) == day } : nil
-        }
-        let cookedAt = model.classes[.cook].map { cookClass in
-            model.store.objects(of: cookClass).compactMap { model.store.value("cookedAt", of: $0)?.dateValue }
-        } ?? []
-        let cooked = days.map { day -> Int? in
-            past(day) ? cookedAt.count { tesseraDay.day(of: $0) == day } : nil
-        }
-        // The day log's lines for each day so far (a window of history per day, never the whole log).
+        // Tasks done and cooks, by the day they happened where they happened (never the day they were planned
+        // for; a hotel Wednesday stays Wednesday at home, trip R12), read the way the week's facts read them.
         let builder = WeekFactsBuilder(engine: model.engine, calendar: calendar)
+        let dones = builder.tasksDoneByDay()
+        let cooks = builder.cooksByDay()
+        let tasksDone = days.map { day -> Int? in past(day) ? dones[day] ?? 0 : nil }
+        let cooked = days.map { day -> Int? in past(day) ? cooks[day]?.count ?? 0 : nil }
+        // The day log's lines for each day so far (a window of history per day, never the whole log).
         var lines: [Int: [DayLine]] = [:]
         for (index, day) in days.enumerated() where past(day) {
             lines[index] = builder.lines(onDay: day, now: now, isRestDay: marks[index] == .rest)
