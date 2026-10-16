@@ -47,9 +47,9 @@ so take the merged PR's wording). A fail is any Claude call, or "Saved it for Cl
 
 | # | Type in Ask Tess | Expect | Result |
 |---|---|---|---|
-| W1 | `$212.37 at Costco` (MB1) | "$212.37 at Costco?" with LOG / NOT NOW. Tap NOT NOW. | [ ] P [ ] F |
-| W2 | `paid rent 2100` (MB3) | "Rent 2100?" with LOG / NOT NOW. Tap NOT NOW. | [ ] P [ ] F |
-| W3 | `venmo sam 25 for pizza` (MB5) | A money ask on the phone, never a Claude line. NOT NOW. | [ ] P [ ] F |
+| W1 | `$212.37 at Costco` (MB1) | Merged #451: "Didn't catch that." and no Claude call (the "$212.37 at Costco?" LOG / NOT NOW ask comes later). | [ ] P [ ] F |
+| W2 | `paid rent 2100` (MB3) | As W1 (#451). | [ ] P [ ] F |
+| W3 | `venmo sam 25 for pizza` (MB5) | As W1 (#451). | [ ] P [ ] F |
 | W4 | `checking is at 3,412` (MB7) | Stays on the phone (ask or private note). Receipts count unchanged. | [ ] P [ ] F |
 | W5 | `182.4 lb this morning` (MB16) | The body weight ghost for 182.4 lb. UNDO. | [ ] P [ ] F |
 | W6 | `weighed in at 83 kg` (MB17) | Body weight 83 kg ghost. UNDO. | [ ] P [ ] F |
