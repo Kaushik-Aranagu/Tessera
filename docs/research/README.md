@@ -161,3 +161,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [settings-object.md](settings-object.md) | Core: every preference outside the database, which moves into the settings object, which never travels in a backup |
 | [settings-place-check.md](settings-place-check.md) | Design, Builder B: every line in Design's settings-place.md (231b15e) checked against tess-voice, settings-claude and #246 |
 | [debug-paths.md](debug-paths.md) | Builder A, QA: every launch flag and debug path that could touch his data on a Debug phone build, gate and 14-item checklist |
+| [ai5-home-lines-eval.md](ai5-home-lines-eval.md) | AI architecture, Core, QA: the AI-5 gate for Claude Home lines, 14 phone checks, truth and voice scores, 20 moments with 45 probes in fixtures/home-lines-eval.json |

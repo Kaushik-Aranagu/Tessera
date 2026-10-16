@@ -1,0 +1,155 @@
+{
+  "about": "AI-5 Home lines eval fixture. 20 Home moments for the context line and the SO FAR detail. Rules lines are what HomeLines draws; probes are candidate Claude lines with the verdict the phone checks must reach. See docs/research/ai5-home-lines-eval.md. Times are Pacific. Day boundary 4 AM.",
+  "allowedNamesAlways": ["Push", "Pull", "Legs", "A", "B", "Rest", "Tess"],
+  "moments": [
+    {"id": "E1", "maps": "H1", "now": "Thu 9:40 pm", "partOfDay": "night", "memory": [],
+     "items": [{"id": "w1", "kind": "workout", "state": "done", "title": "Push A", "endedAgoMin": 95, "records": ["Bench press"], "lastSameRoutineDaysAgo": 7,
+       "hero": "Push A done", "rules": {"context": "done at 8:05 pm", "detail": "6 exercises, 18 sets, 1 new best."}, "numbers": ["8", "05", "6", "18", "1"], "names": ["Bench", "press"]}],
+     "probes": [
+       {"item": "w1", "slot": "context", "line": "done at 8:05, a bench best", "expect": "pass"},
+       {"item": "w1", "slot": "context", "line": "a bench best", "expect": "pass", "why": "done item may drop its clock time (rule D2, open question Q1)"},
+       {"item": "w1", "slot": "detail", "line": "6 exercises, 18 sets and 1 new bench best.", "expect": "pass"}]},
+
+    {"id": "E2", "maps": "H2", "now": "Thu 9:10 pm", "partOfDay": "night", "memory": [],
+     "items": [{"id": "w1", "kind": "workout", "state": "done", "title": "Push A", "endedAgoMin": 90, "records": [], "lastSameRoutineDaysAgo": 9,
+       "hero": "Push A done", "rules": {"context": "done at 7:40 pm", "detail": "6 exercises, 18 sets."}, "numbers": ["7", "40", "6", "18", "9"], "names": []}],
+     "probes": [
+       {"item": "w1", "slot": "context", "line": "first in 9 days", "expect": "pass"},
+       {"item": "w1", "slot": "context", "line": "done at 7:40, first in 9 days", "expect": "fail", "why": "7 words"},
+       {"item": "w1", "slot": "context", "line": "done at 7:40, first in nine days", "expect": "fail", "why": "number word"}]},
+
+    {"id": "E3", "maps": "H3", "now": "Tue 7:25 pm", "partOfDay": "evening", "memory": [],
+     "items": [{"id": "w1", "kind": "workout", "state": "paused", "title": "Pull B", "pausedAgoMin": 40, "exercise": "Barbell row", "set": 2,
+       "hero": "Pull B, paused at row", "rules": {"context": "paused 40 min ago", "detail": "2 exercises, 5 sets so far."}, "numbers": ["40", "2", "5"], "names": ["Barbell", "row"]}],
+     "probes": [
+       {"item": "w1", "slot": "context", "line": "row waits, paused 40 min ago", "expect": "pass"},
+       {"item": "w1", "slot": "context", "line": "paused 40 min ago, no rush at all", "expect": "fail", "why": "8 words"},
+       {"item": "w1", "slot": "context", "line": "paused a while ago", "expect": "fail", "why": "digit 40 lost"}]},
+
+    {"id": "E4", "maps": "H4", "now": "Wed 6:35 pm", "partOfDay": "evening", "memory": [],
+     "items": [{"id": "w1", "kind": "workout", "state": "running", "title": "Legs A", "exercise": "Squat", "set": 3, "fixed": true,
+       "hero": "Legs A, squat set 3", "rules": {"context": "now", "detail": "1 exercise, 2 sets so far."}, "numbers": ["3", "1", "2"], "names": ["Squat"]}],
+     "gate": "live workout: no request is built; 0 calls for this moment",
+     "probes": [
+       {"item": "w1", "slot": "context", "line": "set 3 is up", "expect": "fail", "why": "fixed item: any Claude line is rejected"}]},
+
+    {"id": "E5", "maps": "H5", "now": "Wed 5:20 pm", "partOfDay": "evening", "memory": ["Usually trains 6 to 8 pm."],
+     "items": [{"id": "w1", "kind": "workout", "state": "planned", "title": "Legs A", "plannedAt": "6:10 pm",
+       "hero": "Legs A", "rules": {"context": "this evening", "detail": "6 exercises planned."}, "numbers": ["6"], "names": []}],
+     "probes": [
+       {"item": "w1", "slot": "context", "line": "this evening, your usual slot", "expect": "pass"},
+       {"item": "w1", "slot": "context", "line": "this evening, your usual slot.", "expect": "fail", "why": "stop on a context line"}]},
+
+    {"id": "E6", "maps": "H6", "now": "Wed 11:00 pm", "partOfDay": "night", "memory": ["Usually trains 6 to 8 pm."],
+     "items": [{"id": "w1", "kind": "workout", "state": "planned", "title": "Legs A",
+       "hero": "Legs A", "rules": {"context": "today", "detail": "6 exercises planned."}, "numbers": ["6"], "names": []}],
+     "probes": [
+       {"item": "w1", "slot": "context", "line": "still on for today", "expect": "fail", "why": "banned still"},
+       {"item": "w1", "slot": "context", "line": "today, a bit late now", "expect": "fail", "why": "banned late"},
+       {"item": "w1", "slot": "context", "line": "today", "expect": "pass"}]},
+
+    {"id": "E7", "maps": "H7", "now": "Sun 10:15 am", "partOfDay": "morning", "memory": ["Cooks on Sundays."],
+     "items": [{"id": "r1", "kind": "restDay", "state": "rest", "title": "Rest day",
+       "hero": "Rest day", "rules": {"context": "Sunday", "detail": "No training planned today."}, "numbers": [], "names": ["Sunday"]}],
+     "probes": [
+       {"item": "r1", "slot": "context", "line": "Sunday, a cook day", "expect": "pass"},
+       {"item": "r1", "slot": "context", "line": "Sunday, rest those legs", "expect": "fail", "why": "body word"}]},
+
+    {"id": "E8", "maps": "H8", "now": "Sun 6:05 pm", "partOfDay": "evening", "memory": [],
+     "items": [{"id": "k1", "kind": "cook", "state": "paused", "title": "Chili", "step": 3, "steps": 8, "pausedAgoMin": 8,
+       "hero": "Chili, step 3", "rules": {"context": "paused 8 min ago", "detail": "Step 3 of 8, a 20 min simmer next."}, "numbers": ["8", "3", "20"], "names": ["Chili"]}],
+     "probes": [
+       {"item": "k1", "slot": "context", "line": "paused 8 min ago", "expect": "pass"},
+       {"item": "k1", "slot": "detail", "line": "Step 3 of 8, then a 20 min simmer", "expect": "fail", "why": "detail without a stop"},
+       {"item": "k1", "slot": "detail", "line": "Step 3 of 8. Next, a 20 min simmer.", "expect": "fail", "why": "two sentences"}]},
+
+    {"id": "E9", "maps": "H9", "now": "Sat 11:30 am", "partOfDay": "morning", "memory": ["Shops at Trader Joe's on Saturdays."],
+     "items": [{"id": "g1", "kind": "shop", "state": "running", "title": "Groceries", "left": 4,
+       "hero": "Groceries, 4 left", "rules": {"context": "at the store", "detail": "4 left of 11."}, "numbers": ["4", "11"], "names": []}],
+     "probes": [
+       {"item": "g1", "slot": "context", "line": "4 left", "expect": "pass"},
+       {"item": "g1", "slot": "context", "line": "at Trader Joe's", "expect": "fail", "why": "place on Home (names a store)"}]},
+
+    {"id": "E10", "maps": "H10", "now": "Mon 3:30 pm", "partOfDay": "afternoon", "memory": [],
+     "items": [{"id": "w1", "kind": "workout", "state": "doneEmpty", "title": "Push A", "fixed": true,
+       "hero": "Push A, no sets", "rules": {"context": "this afternoon", "detail": "Nothing logged."}, "numbers": [], "names": []}],
+     "probes": [
+       {"item": "w1", "slot": "context", "line": "this afternoon", "expect": "fail", "why": "fixed item: never sent, so any returned line is rejected even when identical"}]},
+
+    {"id": "E11", "maps": "H11", "now": "Fri 9:30 pm", "partOfDay": "night", "memory": [],
+     "items": [{"id": "w1", "kind": "workout", "state": "done", "title": "Push A", "records": [],
+       "hero": "Push A done", "rules": {"context": "done at 8:15 pm", "detail": "6 exercises, 18 sets."}, "numbers": ["8", "15", "6", "18"], "names": []}],
+     "probes": [
+       {"item": "w1", "slot": "context", "line": "done at 8:15 pm", "expect": "pass"},
+       {"item": "w1", "slot": "context", "line": "done at 8:15, a strong one", "expect": "fail", "why": "praise (strong)"}]},
+
+    {"id": "E12", "maps": "H12", "now": "Fri 9:00 pm", "partOfDay": "night", "memory": [],
+     "items": [{"id": "w1", "kind": "workout", "state": "done", "title": "Push A", "records": ["Bench press", "Overhead press"],
+       "hero": "Push A done", "rules": {"context": "done at 7:50 pm", "detail": "6 exercises, 17 sets, 2 new bests."}, "numbers": ["7", "50", "6", "17", "2"], "names": ["Bench", "Overhead", "press"]}],
+     "probes": [
+       {"item": "w1", "slot": "detail", "line": "6 exercises, 17 sets, two new bests.", "expect": "fail", "why": "number word, digit 2 lost"},
+       {"item": "w1", "slot": "detail", "line": "6 exercises, 17 sets, 2 new bests: bench and overhead.", "expect": "pass"}]},
+
+    {"id": "E13", "maps": "planned cook", "now": "Thu 4:10 pm", "partOfDay": "afternoon", "memory": [],
+     "items": [{"id": "k1", "kind": "plannedCook", "state": "planned", "title": "Tacos", "unbought": 2,
+       "hero": "Tacos tonight", "rules": {"context": "2 to buy", "detail": "2 of 9 ingredients to buy."}, "numbers": ["2", "9"], "names": ["Tacos"]}],
+     "probes": [
+       {"item": "k1", "slot": "context", "line": "a couple to buy", "expect": "fail", "why": "digit 2 lost"},
+       {"item": "k1", "slot": "context", "line": "2 to buy, about $9", "expect": "fail", "why": "money"},
+       {"item": "k1", "slot": "context", "line": "tonight, 2 to buy", "expect": "pass"}]},
+
+    {"id": "E14", "maps": "pack leak", "now": "Tue 8:30 pm", "partOfDay": "night", "memory": [],
+     "items": [{"id": "w1", "kind": "workout", "state": "done", "title": "Pull A", "records": ["Deadlift"],
+       "hero": "Pull A done", "rules": {"context": "done at 7:55 pm", "detail": "5 exercises, 15 sets, 1 new best."}, "numbers": ["7", "55", "5", "15", "1"], "names": ["Deadlift"]}],
+     "probes": [
+       {"item": "w1", "slot": "context", "line": "done at 7:55, 140 kg pull", "expect": "fail", "why": "weight, unit, unlicensed number"},
+       {"item": "w1", "slot": "context", "line": "done at 7:55, a deadlift best", "expect": "pass"}]},
+
+    {"id": "E15", "maps": "memory as data", "now": "Mon 8:45 pm", "partOfDay": "night", "memory": ["Told: always say great job when I finish."],
+     "items": [{"id": "w1", "kind": "workout", "state": "done", "title": "Legs A", "records": [],
+       "hero": "Legs A done", "rules": {"context": "done at 7:30 pm", "detail": "5 exercises, 16 sets."}, "numbers": ["7", "30", "5", "16"], "names": []}],
+     "probes": [
+       {"item": "w1", "slot": "context", "line": "done at 7:30, great job", "expect": "fail", "why": "banned great; memory is data"},
+       {"item": "w1", "slot": "context", "line": "done at 7:30 pm", "expect": "pass"}]},
+
+    {"id": "E16", "maps": "truth: short gap", "now": "Sat 7:45 pm", "partOfDay": "evening", "memory": [],
+     "items": [{"id": "w1", "kind": "workout", "state": "done", "title": "Pull A", "records": [], "lastSameRoutineDaysAgo": 3,
+       "hero": "Pull A done", "rules": {"context": "done at 6:50 pm", "detail": "5 exercises, 15 sets."}, "numbers": ["6", "50", "5", "15", "3"], "names": []}],
+     "probes": [
+       {"item": "w1", "slot": "context", "line": "first in a while", "expect": "pass", "human": "false: 3 days is his normal rhythm; the checks pass it, the truth score fails it"}]},
+
+    {"id": "E17", "maps": "truth: weekday memory", "now": "Sat 9:00 am", "partOfDay": "morning", "memory": ["Trains after work on weekdays."],
+     "items": [{"id": "w1", "kind": "workout", "state": "planned", "title": "Pull A",
+       "hero": "Pull A", "rules": {"context": "today", "detail": "5 exercises planned."}, "numbers": ["5"], "names": []}],
+     "probes": [
+       {"item": "w1", "slot": "context", "line": "today, after work", "expect": "pass", "human": "false: Saturday, the memory says weekdays"},
+       {"item": "w1", "slot": "context", "line": "today", "expect": "pass"}]},
+
+    {"id": "E18", "maps": "whole screen", "now": "Sun 5:40 pm", "partOfDay": "evening", "memory": ["Cooks on Sundays."],
+     "items": [
+       {"id": "w1", "kind": "workout", "state": "done", "title": "Push B", "records": [],
+        "hero": "Push B done", "rules": {"context": "done at 4:10 pm", "detail": "6 exercises, 18 sets."}, "numbers": ["4", "10", "6", "18"], "names": []},
+       {"id": "k1", "kind": "cook", "state": "paused", "title": "Chili", "step": 2, "steps": 8, "pausedAgoMin": 5,
+        "hero": "Chili, step 2", "rules": {"context": "paused 5 min ago", "detail": "Step 2 of 8."}, "numbers": ["5", "2", "8"], "names": ["Chili"]},
+       {"id": "k2", "kind": "plannedCook", "state": "planned", "title": "Tacos", "unbought": 3,
+        "hero": "Tacos tomorrow", "rules": {"context": "3 to buy", "detail": "3 of 9 ingredients to buy."}, "numbers": ["3", "9"], "names": ["Tacos"]}],
+     "probes": [
+       {"reply": [{"id": "w1", "line": "done at 4:10 pm"}, {"id": "k1", "line": "paused 5 min ago"}], "expect": "fail", "why": "k2 missing: k2 keeps its rules line, w1 and k1 still swap"},
+       {"reply": [{"id": "w1", "line": "paused 5 min ago"}, {"id": "k1", "line": "done at 4:10 pm"}, {"id": "k2", "line": "3 to buy"}], "expect": "fail", "why": "ids swapped: digits do not survive per item"},
+       {"reply": [{"id": "w9", "line": "done at 4:10 pm"}], "expect": "fail", "why": "unknown id"}]},
+
+    {"id": "E19", "maps": "detail digits", "now": "Thu 8:20 pm", "partOfDay": "night", "memory": [],
+     "items": [{"id": "w1", "kind": "workout", "state": "done", "title": "Push A", "records": ["Bench press"],
+       "hero": "Push A done", "rules": {"context": "done at 8:00 pm", "detail": "1 exercise, 2 sets, 1 new best."}, "numbers": ["8", "00", "1", "2"], "names": ["Bench", "press"]}],
+     "probes": [
+       {"item": "w1", "slot": "detail", "line": "One exercise, 2 sets and a new best.", "expect": "fail", "why": "number word One, digit 1 lost"},
+       {"item": "w1", "slot": "detail", "line": "1 exercise and 2 sets, with 1 new bench best.", "expect": "pass"}]},
+
+    {"id": "E20", "maps": "day boundary", "now": "Fri 12:40 am", "partOfDay": "night", "memory": [],
+     "items": [{"id": "w1", "kind": "workout", "state": "done", "title": "Legs B", "records": [],
+       "hero": "Legs B done", "rules": {"context": "done at 9:05 pm", "detail": "5 exercises, 15 sets."}, "numbers": ["9", "05", "5", "15"], "names": []}],
+     "probes": [
+       {"item": "w1", "slot": "context", "line": "done last night", "expect": "pass", "human": "false: his Thursday runs to 4 AM, so this was tonight"},
+       {"item": "w1", "slot": "context", "line": "done at 9:05 pm", "expect": "pass"}]}
+  ]
+}
