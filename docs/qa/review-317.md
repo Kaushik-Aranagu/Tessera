@@ -66,3 +66,9 @@ Rebased on bb57e78; trial merge onto master 9bdc3c7 clean. Clips 33 (52.6 s) and
 `ExerciseStrip.swift:110`, the running order's "Finish here" `PaintKey`, isn't `isSilent`. Its hold completion plays the medium impact, and its `onFinish` calls `finish(early: true)`, which now plays the done pattern: two haptics for one moment. Fix: `PaintKey(paint: Paint.live, duration: 0.7, height: 64, drift: 20, isSilent: true, action: onFinish)`.
 
 **Verdict: PASS with H3 in.** No re-review needed beyond confirming that one line.
+
+## Addendum 2: 1a2472d (Oct 16 PT, just after midnight): PASS
+Only two lines changed since b6112e6, and the trial merge onto master is clean.
+- H3 closed. `ExerciseStrip.swift:110`: "Finish here" is `isSilent: true`, so `finish(early: true)` plays the done pattern alone.
+- `WorkoutParts.swift:256`: "Save set N" is `isSilent: true`. Its `onSave` bumps `saveHaptic` (WorkoutModeView.swift:615), which plays `.setLogged` (:180), so a save is one tap, not a tick plus a tap.
+**Verdict: PASS. Merge-ready.**
