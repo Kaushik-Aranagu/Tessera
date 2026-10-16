@@ -169,7 +169,7 @@
 - An account-number line makes the whole note private.
 - Lift the 200-note cap.
 0ab. (QA review-507 low; decisions 1:22 PM PT Oct 16) If an untimed task's default time (the next whole hour) falls in quiet hours (23:00-07:00), snap it to 7 am. A time he types is kept. Add a test: "call mom thu" at 1 am gives 7 am.
-0ac. (Research `fixtures/habits-weight-week.md`, 38 steps; decisions 1:23 PM PT Oct 16) NEXT BUILD FIRST:
+0ac. (Research `fixtures/habits-weight-week.md`, 38 steps; decisions 1:23 PM PT Oct 16) NEXT BUILD FIRST: HEALTH WORDS (decisions 1:36 PM PT Oct 16; Research `fixtures/private-health-words.md`, 126 phrases: 47 ok, 69 leak, 10 over-wall). Slice 1, next build first: sick and unwell, shipped together with the sick-slang mask CR1. Slice 2, next build: Research's symptom, mindWords, careWords and cycleWords lists; drug names walled with no number; drop "resting" from vitals; add bmi, calories eaten and macros; hasNumber ignores clock times; the 16 context rules. Every §7 row passes, including the 45 must-stay-plain rows.
 - HW19: add sick, unwell and feeling sick to PrivateFacts.symptoms (PrivateFacts.swift:55-58).
 - HW13, with P14: Siri saves "weighed 82.2" as private and replies "Body weight logged."
 - HW9: requiresAuthentication on both intents (Intents.swift:118,149), same as P16.
