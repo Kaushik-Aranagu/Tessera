@@ -144,6 +144,20 @@ struct DayStoryTests {
         #expect(lines(Self.at(11, 12)) == ["10:05  Shopped, 1 item"])
     }
 
+    @Test func aRecordStaysARecordAfterALaterSessionBeatsIt() throws {
+        // Product 72954ac: the set carries "was a record" from the moment it was logged.
+        try workout("Push A", start: Self.at(5, 18), sets: [(Self.at(5, 18, 5), 60, 8)], end: Self.at(5, 18, 40))
+        try workout("Push A", start: Self.at(8, 18), sets: [(Self.at(8, 18, 5), 70, 8)], end: Self.at(8, 18, 40))
+        #expect(lines(Self.at(8, 12)) == ["18:00  Push A, 40 min. Bench 70 × 8, PR."])
+        try workout("Push A", start: Self.at(12, 18), sets: [(Self.at(12, 18, 5), 80, 8)], end: Self.at(12, 18, 40))
+        #expect(lines(Self.at(8, 12)) == ["18:00  Push A, 40 min. Bench 70 × 8, PR."])
+        #expect(lines(Self.at(12, 12)) == ["18:00  Push A, 40 min. Bench 80 × 8, PR."])
+        // A set that beat nothing carries no flag; the first ever set has nothing to beat.
+        let setClass = try #require(classes[.set])
+        let sets = store.objects(of: setClass)
+        #expect(sets.count { store.value("wasRecord", of: $0) == .bool(true) } == 2)
+    }
+
     @Test func pastUnfinishedWorkoutIsMarkedUnfinished() throws {
         // K8, DL22, DL60: a past day's workout never finished is the faint row, with no words about it.
         try workout("Pull Day A", exercise: .benchPress, start: Self.at(14, 18),

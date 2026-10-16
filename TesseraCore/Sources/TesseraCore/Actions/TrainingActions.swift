@@ -60,6 +60,14 @@ public struct LogSet: EngineAction {
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
         try validateSet(weight: weightInKilograms, reps: reps, rpe: rpe, action: Self.descriptor.name)
         let entry = try transaction.object(entry, is: .exerciseEntry)
+        let setKind = isWarmup == true ? .warmup : kind ?? .working
+        let workout = try transaction.store.ancestor(of: entry, ofClass: transaction.classDef(.workout))
+        // A record at the time it was logged (against history before this workout), kept on the set for good.
+        let beatsRecord = setKind == .working && transaction.store.linkedClass("exercise", of: entry).map { exercise in
+            !TrainingLedger(store: transaction.store, classes: transaction.classes)
+                .recordsBeaten(weight: weightInKilograms, reps: reps, rpe: rpe, for: exercise,
+                               excludingWorkout: workout?.id).isEmpty
+        } ?? false
         let set = try transaction.create(transaction.classDef(.set), parent: entry)
         try transaction.set("weight", to: .mass(weightInKilograms), on: set)
         if let unit, unit != .kilograms {
@@ -68,12 +76,14 @@ public struct LogSet: EngineAction {
         try transaction.set("reps", to: .number(reps), on: set)
         try transaction.set("rpe", to: rpe.map(FieldValue.number), on: set)
         try transaction.set("loggedAt", to: .date(time ?? .now), on: set)
-        let setKind = isWarmup == true ? .warmup : kind ?? .working
         if setKind != .working {
             try transaction.set("kind", to: .choice(setKind.rawValue), on: set)
         }
+        if beatsRecord {
+            try transaction.set("wasRecord", to: .bool(true), on: set)
+        }
         try transaction.set("source", to: source.map { .choice($0.rawValue) }, on: set)
-        if let workout = try transaction.store.ancestor(of: entry, ofClass: transaction.classDef(.workout)) {
+        if let workout {
             try transaction.touchWorkoutProcess(workout, at: time ?? .now)
         }
         return set

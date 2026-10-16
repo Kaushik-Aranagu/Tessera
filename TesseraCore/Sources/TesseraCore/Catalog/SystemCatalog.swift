@@ -156,6 +156,9 @@ public enum SystemCatalog {
                       FieldSpec(key: "source", name: "Logged with", kind: .choice,
                                 options: SetSource.allCases.map(\.rawValue)),
                       FieldSpec(key: "loggedAt", name: "Logged", kind: .date),
+                      // Beat a record when it was logged (Product 72954ac): the Day log keeps saying PR after a later
+                      // session beats it. Written once by LogSet, never recomputed.
+                      FieldSpec(key: "wasRecord", name: "Record", kind: .bool),
                       // The unit the weight was entered in; the weight itself is always stored in kg.
                       FieldSpec(key: "enteredUnit", name: "Entered in", kind: .choice,
                                 options: MassUnit.allCases.map(\.rawValue)),
@@ -316,7 +319,7 @@ public enum SystemCatalog {
 
     /// Built-in classes ship as a versioned package. Bump `version` whenever a spec changes; seeding then
     /// refreshes shipped names, symbols, units, options, defaults and formulas, except what the person edited.
-    public static let package = CatalogPackage(id: "system", version: 5, name: "Tessera built-ins",
+    public static let package = CatalogPackage(id: "system", version: 6, name: "Tessera built-ins",
                                                source: "Tessera", license: "Tessera")
 
     static let honestE1RM = "weight * (1 + (reps + 10 - coalesce(rpe, 10)) / 30)"
