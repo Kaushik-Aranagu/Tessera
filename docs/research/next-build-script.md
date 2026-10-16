@@ -41,8 +41,15 @@ safety says a migration never ships untested on his device. Before the "install 
   "1 (28 oz) can crushed tomatoes" and "chopped fresh cilantro, for serving". The can shows "28 oz" on its row, and
   cilantro is on the recipe page but not on the list. On the phone, the Groceries list is unchanged until he adds a
   recipe.
-- **Rollback:** a v7 (or v8) store opened by 7b321d2 must still launch (additive fields are ignored). Never restore a v7 or v8
-  backup on the older build.
+  - **Builder A reruns the M0 gate on master with v8** (the same exact-archive run). In the same rerun, restore a v5
+    backup file into the v8 build through the app's own restore path (Review > Backups). The v5 rows come back
+    byte-identical, the v8 fields are added empty, and the app launches clean afterwards. Product's condition for
+    the next pin (ff548605).
+- **Rollback:** an older build opening a newer store is shown safe through v7 (M0: 7b321d2 opens the v7 store, the extra
+  classes are ignored). v8 is not shown yet; M4 shows it. Restoring a newer backup onto an older build stays
+  **forbidden** until someone tests it.
+- **His real backup:** nothing is asked of him about it. The install-day script opens with him tapping a fresh backup
+  in Review > Backups before the install (Product, ff548605).
 Any M row failing stops the install, and the phone stays on 444e72b or 7b321d2.
 
 Run each group only if its PR is in the install commit (QA checks with `git merge-base --is-ancestor`). A group whose PR isn't in is skipped, not failed.
