@@ -121,6 +121,7 @@ Status words: **merged**, **open PR**, **not started** (no branch and no commit 
 | R13 | SAVE A COPY warns "This is the Backups folder. Daily copies here get replaced. Save somewhere else?" when he picks the Backups folder. After R12. | Builder B | B 0t | not started | **SC2** |
 | R15 Review foot line out of Tess's band (Design v9 walk, must land) | Builder B 0x | none yet | none yet | none yet | none yet | `HomeSpatialView` HomeLinkLine. |
 | R16 Routines Tess line and "Add an exercise" out of the band, 84 pt inset (Design v9 walk, must land) | Builder A 0q | none yet | none yet | none yet | none yet | |
+| R17 Resume key progress reads "sets", not "targetSets" (decisions 2:28 pm) | Builder A 0r | none yet | none yet | none yet | none yet | `NowPage.swift:209`; every exercise counts 3 planned sets today. |
 
 ### Fixes from the Research fixtures (F1 to F12)
 
