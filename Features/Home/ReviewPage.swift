@@ -10,13 +10,15 @@ enum WeekReview {
 
     /// The last `count` days ending today, oldest first, each at the start of its day.
     static func lastDays(_ count: Int = 7, endingAt now: Date, calendar: Calendar) -> [Date] {
-        let today = calendar.startOfDay(for: now)
+        let today = TesseraDay(calendar: calendar).today(now)
         return (0 ..< count).reversed().compactMap { calendar.date(byAdding: .day, value: -$0, to: today) }
     }
 
     /// One flag per day: whether anything was trained that day.
     static func trainedDays(_ dates: [Date], on days: [Date], calendar: Calendar) -> [Bool] {
-        days.map { day in dates.contains { calendar.isDate($0, inSameDayAs: day) } }
+        let tesseraDay = TesseraDay(calendar: calendar)
+        // `days` are day keys (midnights); compare each moment's own day to them.
+        return days.map { day in dates.contains { tesseraDay.day(of: $0) == day } }
     }
 
     /// Distinct days with training among the last `days` days, today included.
@@ -68,11 +70,14 @@ enum WeekReview {
         var result: [Date: DayMark] = [:]
         var seen = Set<Date>()
         for day in days {
-            guard let start = calendar.dateInterval(of: .weekOfYear, for: day)?.start,
-                  seen.insert(start).inserted else { continue }
-            let week = model.ledger.week(containing: day, plan: plan, now: now, sessionsPerWeek: perWeek,
+            guard let start = calendar.dateInterval(of: .weekOfYear, for: calendar.date(byAdding: .hour, value: 12,
+                                                                                        to: day) ?? day)?.start,
+                seen.insert(start).inserted else { continue }
+            // Day keys are midnights, which belong to the day before in his 04:00 day: ask at noon instead.
+            let noon = calendar.date(byAdding: .hour, value: 12, to: day) ?? day
+            let week = model.ledger.week(containing: noon, plan: plan, now: now, sessionsPerWeek: perWeek,
                                          calendar: calendar)
-            let marks = Self.marks(week.map(Slot.init), perWeek: perWeek, firstUse: firstUse, restToday: restToday,
+            let marks = Self.marks(week.map(Slot.init), firstUse: firstUse, restToday: restToday,
                                    now: now, calendar: calendar)
             for (index, weekDay) in week.enumerated() {
                 result[calendar.startOfDay(for: weekDay.day)] = marks[index]
@@ -86,18 +91,18 @@ enum WeekReview {
         let day: Date
         let sessions: Int
         let isRest: Bool
-        let isPlanned: Bool
+        let wasDue: Bool
 
-        init(day: Date, sessions: Int, isRest: Bool = false, isPlanned: Bool = false) {
+        init(day: Date, sessions: Int, isRest: Bool = false, wasDue: Bool = false) {
             self.day = day
             self.sessions = sessions
             self.isRest = isRest
-            self.isPlanned = isPlanned
+            self.wasDue = wasDue
         }
 
         @MainActor
         init(_ day: WeekDay) {
-            self.init(day: day.day, sessions: day.done.count, isRest: day.isRest, isPlanned: day.planned != nil)
+            self.init(day: day.day, sessions: day.done.count, isRest: day.isRest, wasDue: day.wasDue)
         }
     }
 
@@ -108,44 +113,31 @@ enum WeekReview {
         return calendar
     }
 
-    /// The plan leaves `7 − perWeek` rest days a week. Core marks the ones still ahead; the rest of the budget
-    /// goes to empty past days, latest first, and any empty past day beyond it is open (a real miss). Days count
-    /// once however many sessions they hold. Days ahead get no ring (planned), days before first use nothing.
-    static func marks(_ week: [Slot], perWeek: Int?, firstUse: Date?, restToday: Bool, now: Date,
-                      calendar: Calendar) -> [DayMark]
-    {
-        let today = calendar.startOfDay(for: now)
-        let firstDay = firstUse.map { calendar.startOfDay(for: $0) }
-        let isRestAhead = { (slot: Slot) in
-            slot.sessions == 0 && slot.day >= today
-                && (slot.isRest || (calendar.isDate(slot.day, inSameDayAs: now) && restToday))
-        }
-        let budget = perWeek.map { max(0, 7 - $0) } ?? 0
-        var restLeft = max(0, budget - week.count(where: isRestAhead))
-        var restPast = Set<Int>()
-        for index in week.indices.reversed() {
-            let slot = week[index]
-            guard restLeft > 0, slot.sessions == 0, slot.day < today,
-                  firstDay.map({ slot.day >= $0 }) ?? true else { continue }
-            restPast.insert(index)
-            restLeft -= 1
-        }
-        return week.indices.map { index in
-            let slot = week[index]
+    /// Core's flags decide: a past empty day is rest where the plan (as it stood that morning) left it for rest, and
+    /// open (the miss ring) only where a session was due. Days count once however many sessions they hold. Today
+    /// is rest when Core says so, else unmarked; days ahead carry no mark; days before first use, nothing. His day
+    /// runs to 04:00, so at 01:00 Saturday an untrained Friday is still today (R4).
+    static func marks(_ week: [Slot], firstUse: Date?, restToday: Bool, now: Date, calendar: Calendar) -> [DayMark] {
+        let tesseraDay = TesseraDay(calendar: calendar)
+        let today = tesseraDay.today(now)
+        let firstDay = firstUse.map { tesseraDay.day(of: $0) }
+        return week.map { slot in
             if slot.sessions > 0 {
                 return .trained(slot.sessions)
             }
             if let firstDay, slot.day < firstDay {
                 return .none
             }
-            // Days after today carry no mark at all, planned training or rest (Design R3).
-            if slot.day > today, !calendar.isDate(slot.day, inSameDayAs: now) {
+            if slot.day > today {
                 return .planned
             }
-            if isRestAhead(slot) || restPast.contains(index) {
+            if slot.day == today {
+                return slot.isRest || restToday ? .rest : .planned
+            }
+            if slot.isRest {
                 return .rest
             }
-            return slot.day < today ? .open : .planned
+            return slot.wasDue ? .open : .planned
         }
     }
 
@@ -242,12 +234,11 @@ struct ReviewPage: View {
         let sessions = week.reduce(0) { $0 + $1.done.count }
         let firstUse = Self.firstUse(model)
         let firstWeek = firstUse.map { use in week.first.map { use >= $0.day } ?? false } ?? false
-        let firstUseToday = firstUse.map { calendar.isDate($0, inSameDayAs: now) } ?? false
+        let firstUseToday = firstUse.map { TesseraDay(calendar: calendar).isSameDay($0, now) } ?? false
         let restToday = NowPicker(engine: model.engine).restDay(plan: plan, at: now, sessionsPerWeek: perWeek,
                                                                 calendar: calendar) != nil
         let marks = WeekReview.marks(
             week.map(WeekReview.Slot.init),
-            perWeek: perWeek,
             firstUse: firstUse,
             restToday: restToday,
             now: now,
@@ -363,7 +354,7 @@ private struct DayDabs: View {
     var body: some View {
         HStack(spacing: 0) {
             ForEach(Array(week.enumerated()), id: \.offset) { index, day in
-                let isToday = calendar.isDate(day.day, inSameDayAs: now)
+                let isToday = day.day == TesseraDay(calendar: calendar).today(now)
                 let mark = marks[index]
                 VStack(spacing: Theme.Spacing.s) {
                     // The existing pop stagger: each mark arrives 50 ms after the one before.

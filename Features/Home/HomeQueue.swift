@@ -395,15 +395,17 @@ private struct QueueRow: View {
     /// Tomorrow (a dated row) or next week (an undated one); the row slides away and the queue closes up.
     private func move() {
         moves += 1
+        // Next week at 09:00 of his day seven days on (B1), so 01:00 Saturday still counts as Friday.
+        let tesseraDay = TesseraDay()
         let target: Date? = entry.time == nil
-            ? Calendar.current.date(byAdding: .day, value: 7, to: Calendar.current.startOfDay(for: AppClock.now))?
-            .addingTimeInterval(9 * 3600)
+            ? tesseraDay.adding(days: 7, to: tesseraDay.start(of: AppClock.now)).addingTimeInterval(5 * 3600)
             : nil
         away = true
         withTesseraAnimation(.easeIn(duration: 0.2), reduceMotion: reduceMotion) { drag = -420 }
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(200))
-            let record = try? model.engine.perform(MoveTask(task: entry.id, to: target), by: .user).record
+            let record = try? model.engine.perform(MoveTask(task: entry.id, to: target, time: AppClock.now), by: .user)
+                .record
             withTesseraAnimation(.spring(Spring(duration: 0.42, bounce: 0.12)), reduceMotion: reduceMotion) {
                 model.touch()
             }

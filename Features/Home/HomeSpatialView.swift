@@ -379,13 +379,15 @@ enum HomeData {
         }
     }
 
-    /// Yesterday, today and tomorrow, each holding the schedule items that start on that calendar day.
+    /// Yesterday, today and tomorrow, each holding the schedule items that start on that day. His day runs to
+    /// 04:00 (B2): at 01:00 the today lane is still the day that's ending.
     static func lanes(_ model: AppModel, now: Date, calendar: Calendar = .current) -> [DayLane] {
-        (-1 ... 1).compactMap { offset in
-            guard let day = calendar.date(byAdding: .day, value: offset, to: now) else { return nil }
+        let tesseraDay = TesseraDay(calendar: calendar)
+        return (-1 ... 1).compactMap { offset in
+            let day = tesseraDay.day(offset, after: now)
             let items = model.schedule(around: offset == 0 ? now : day)
-                .filter { calendar.isDate($0.start, inSameDayAs: day) }
-            let workouts = model.finishedWorkouts(on: day).compactMap { summary -> ClosedRange<Date>? in
+                .filter { tesseraDay.day(of: $0.start) == day }
+            let workouts = model.ledger.finishedWorkouts(onDay: day).compactMap { summary -> ClosedRange<Date>? in
                 guard let end = summary.endedAt else { return nil }
                 return min(summary.startedAt ?? end, end) ... end
             }
@@ -457,14 +459,13 @@ enum SpokenTime {
     /// "this evening at six", "tomorrow at half past seven", "Friday at nine".
     static func when(_ date: Date, now: Date, calendar: Calendar = .current) -> String {
         let atTime = "at \(clock(date, calendar: calendar))"
-        if calendar.isDate(date, inSameDayAs: now) {
+        // His day runs to 04:00 (B3): at 01:00 "this afternoon" means the coming afternoon only if it's still his day.
+        let tesseraDay = TesseraDay(calendar: calendar)
+        if tesseraDay.isSameDay(date, now) {
             let part = partOfDay(date, calendar: calendar)
             return part == "night" ? "tonight \(atTime)" : "this \(part) \(atTime)"
         }
-        if let tomorrow = calendar.date(byAdding: .day, value: 1, to: now), calendar.isDate(
-            date,
-            inSameDayAs: tomorrow
-        ) {
+        if tesseraDay.isSameDay(date, tesseraDay.adding(days: 1, to: now)) {
             return "tomorrow \(atTime)"
         }
         return "\(date.formatted(.dateTime.weekday(.wide))) \(atTime)"

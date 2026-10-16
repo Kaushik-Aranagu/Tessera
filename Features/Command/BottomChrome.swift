@@ -87,6 +87,13 @@ struct BottomChrome: View {
         .sensoryFeedback(.selection, trigger: opens)
         .sensoryFeedback(.success, trigger: glow) { _, lit in lit }
         .sensoryFeedback(.decrease, trigger: undos)
+        // Core's overnight lines (the 04:00 roll, a workout wrapped up while away) show once, beside the soul
+        // (late-night #13).
+        .onChange(of: model.processNotes, initial: true) { _, notes in
+            guard !notes.isEmpty else { return }
+            voice.say(notes.joined(separator: " "))
+            model.processNotes = []
+        }
     }
 
     private var restingOrIdle: TessSoul.Mode {
