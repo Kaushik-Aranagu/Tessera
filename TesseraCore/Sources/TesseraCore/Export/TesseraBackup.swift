@@ -15,7 +15,30 @@ public enum TesseraBackup {
         public var createdAt: Date
         public var appVersion: String?
         public var migrations: [String]
+        /// When the data in this copy last came from a restore: a smaller copy after a restore is expected, not a loss.
+        public var restoredAt: Date?
+
+        public init(createdAt: Date, appVersion: String?, migrations: [String], restoredAt: Date? = nil) {
+            self.createdAt = createdAt
+            self.appVersion = appVersion
+            self.migrations = migrations
+            self.restoredAt = restoredAt
+        }
     }
+
+    /// Beside the store: when the last restore was applied, carried into every later copy's `backupInfo`.
+    nonisolated static func restoreMarker(for storeURL: URL) -> URL {
+        storeURL.deletingLastPathComponent().appendingPathComponent("restored-at")
+    }
+
+    nonisolated static func restoredAt(for storeURL: URL?) -> Date? {
+        guard let storeURL, let text = try? String(contentsOf: restoreMarker(for: storeURL), encoding: .utf8),
+              let seconds = Double(text) else { return nil }
+        return Date(timeIntervalSince1970: seconds)
+    }
+
+    /// Before-restore copies kept (newest first).
+    public static let keepBeforeRestore = 3
 
     public enum BackupError: Error, Equatable {
         /// Not a Tessera backup at all.
@@ -42,11 +65,12 @@ public enum TesseraBackup {
         try copy.write { db in
             try db.execute(sql: """
             CREATE TABLE IF NOT EXISTS backupInfo(format TEXT NOT NULL, version INTEGER NOT NULL, createdAt REAL NOT NULL,
-              appVersion TEXT);
+              appVersion TEXT, restoredAt REAL);
             DELETE FROM backupInfo;
             """)
-            try db.execute(sql: "INSERT INTO backupInfo VALUES (?, ?, ?, ?)",
-                           arguments: [format, version, now.timeIntervalSince1970, appVersion])
+            try db.execute(sql: "INSERT INTO backupInfo VALUES (?, ?, ?, ?, ?)",
+                           arguments: [format, version, now.timeIntervalSince1970, appVersion,
+                                       restoredAt(for: context.url)?.timeIntervalSince1970])
         }
         try copy.close()
         for sibling in ["-wal", "-shm"] {
@@ -65,11 +89,12 @@ public enum TesseraBackup {
         try copy.write { db in
             try db.execute(sql: """
             CREATE TABLE IF NOT EXISTS backupInfo(format TEXT NOT NULL, version INTEGER NOT NULL, createdAt REAL NOT NULL,
-              appVersion TEXT);
+              appVersion TEXT, restoredAt REAL);
             DELETE FROM backupInfo;
             """)
-            try db.execute(sql: "INSERT INTO backupInfo VALUES (?, ?, ?, NULL)",
-                           arguments: [format, version, now.timeIntervalSince1970])
+            try db.execute(sql: "INSERT INTO backupInfo VALUES (?, ?, ?, NULL, ?)",
+                           arguments: [format, version, now.timeIntervalSince1970,
+                                       restoredAt(for: storeURL)?.timeIntervalSince1970])
         }
         try copy.close()
         for sibling in ["-wal", "-shm"] {
@@ -83,27 +108,50 @@ public enum TesseraBackup {
         URL.documentsDirectory.appendingPathComponent("Backups", isDirectory: true)
     }
 
-    /// Today's rolling copy in `folder`, once a day ("Tessera-2026-10-15.tessera"), keeping the newest `keep`.
-    /// Returns the file written, or nil when today's copy already exists.
+    /// The rolling copy for his day (docs/research/backup-logical-day.md): named by `TesseraDay` in the zone in force
+    /// ("Tessera-2026-10-21.tessera"), written on the first background after 04:00 and replaced by every background
+    /// between 00:00 and 04:00 that night, so day D's copy holds all of D. Written under a temporary name and swapped
+    /// in
+    /// atomically, so a kill never leaves a day without its copy. Keeps the `keep` newest days and never deletes the
+    /// file just written. If the clock reads behind the newest copy, only a missing day is written: nothing is
+    /// replaced or pruned. Returns the file written, or nil when there was nothing to do.
     @MainActor
     @discardableResult
     public static func writeRolling(from context: TesseraContext, in folder: URL, keep: Int = 7, now: Date = .now,
                                     calendar: Calendar = .current) throws -> URL?
     {
-        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let parts = calendar.dateComponents([.year, .month, .day], from: now)
+        let manager = FileManager.default
+        try manager.createDirectory(at: folder, withIntermediateDirectories: true)
+        let key = TesseraDay(calendar: calendar).day(of: now)
+        let parts = calendar.dateComponents([.year, .month, .day], from: key)
         let day = String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
         let file = folder.appendingPathComponent("Tessera-\(day).\(fileExtension)")
-        guard !FileManager.default.fileExists(atPath: file.path) else { return nil }
-        // Written under a temporary name, then renamed: a kill mid-write never leaves a partial copy.
+        let names = try manager.contentsOfDirectory(atPath: folder.path)
+        let copies = names.filter { $0.hasPrefix("Tessera-") && $0.hasSuffix(".\(fileExtension)") }.sorted(by: >)
+        let newest = copies.first.flatMap { try? inspect(folder.appendingPathComponent($0)).createdAt }
+        let clockBehind = newest.map { now < $0 } ?? false
+        let exists = manager.fileExists(atPath: file.path)
+        if exists {
+            // After 04:00 the day's copy is made; only the late tail (00:00 to 04:00) refreshes it.
+            guard calendar.component(.hour, from: now) < TesseraDay.startHour, !clockBehind else { return nil }
+        }
+        // Stray partials from a killed write (any day) go.
+        for name in names where name.hasPrefix(".") && name.hasSuffix(".partial") {
+            try? manager.removeItem(at: folder.appendingPathComponent(name))
+        }
         let partial = folder.appendingPathComponent(".\(file.lastPathComponent).partial")
         try write(from: context, to: partial, now: now)
-        try FileManager.default.moveItem(at: partial, to: file)
-        let copies = try FileManager.default.contentsOfDirectory(atPath: folder.path)
+        if exists {
+            _ = try manager.replaceItemAt(file, withItemAt: partial)
+        } else {
+            try manager.moveItem(at: partial, to: file)
+        }
+        guard !clockBehind else { return file }
+        let kept = try manager.contentsOfDirectory(atPath: folder.path)
             .filter { $0.hasPrefix("Tessera-") && $0.hasSuffix(".\(fileExtension)") }
             .sorted(by: >)
-        for old in copies.dropFirst(keep) {
-            try? FileManager.default.removeItem(at: folder.appendingPathComponent(old))
+        for old in kept.dropFirst(keep) where old != file.lastPathComponent {
+            try? manager.removeItem(at: folder.appendingPathComponent(old))
         }
         return file
     }
@@ -131,8 +179,11 @@ public enum TesseraBackup {
                 let migrations = try TesseraDatabaseSchema.migrator.appliedIdentifiers(db)
                 let known = Set(TesseraDatabaseSchema.migrator.migrations)
                 guard Set(migrations).isSubset(of: known) else { throw BackupError.newerSchema }
+                // Older copies have no restoredAt column: nil.
+                let restored = (row.hasColumn("restoredAt") ? row["restoredAt"] as Double? : nil)
+                    .map { Date(timeIntervalSince1970: $0) }
                 return Info(createdAt: Date(timeIntervalSince1970: row["createdAt"]), appVersion: row["appVersion"],
-                            migrations: migrations.sorted())
+                            migrations: migrations.sorted(), restoredAt: restored)
             }
         } catch let error as BackupError {
             throw error
@@ -205,6 +256,14 @@ public enum TesseraBackup {
             do {
                 try manager.createDirectory(at: keptFolder, withIntermediateDirectories: true)
                 try write(fromStoreAt: storeURL, to: kept, now: now)
+                // The 3 newest Before-restore copies are kept; older ones go (never the one just written).
+                let befores = (try? manager.contentsOfDirectory(atPath: keptFolder.path)) ?? []
+                for old in befores.filter({ $0.hasPrefix("Before-restore-") }).sorted(by: >)
+                    .dropFirst(keepBeforeRestore)
+                    where old != kept.lastPathComponent
+                {
+                    try? manager.removeItem(at: keptFolder.appendingPathComponent(old))
+                }
             } catch {
                 TesseraSchema.setLaunchNote("Couldn't keep a copy of your data first, so I didn't restore. "
                     + "I'll try again next time.")
@@ -233,6 +292,11 @@ public enum TesseraBackup {
             TesseraSchema.setLaunchNote("Couldn't restore that backup just now, so your data is as it was.")
             return false
         }
+        try? String(now.timeIntervalSince1970).write(
+            to: restoreMarker(for: storeURL),
+            atomically: true,
+            encoding: .utf8
+        )
         TesseraSchema.setLaunchNote("Restored from your backup. What was here before is kept in Backups, "
             + "so you can restore it again.")
         return true

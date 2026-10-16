@@ -122,8 +122,14 @@ public enum TesseraSchema {
         let manager = FileManager.default
         let folder = storeURL.deletingLastPathComponent()
         let stamp = ISO8601DateFormatter().string(from: .now).replacingOccurrences(of: ":", with: "-")
-        let backup = folder.appendingPathComponent("Backups", isDirectory: true)
-            .appendingPathComponent(stamp, isDirectory: true)
+        // Unique even for two moves in one second.
+        let parent = folder.appendingPathComponent("Backups", isDirectory: true)
+        var backup = parent.appendingPathComponent(stamp, isDirectory: true)
+        var suffix = 2
+        while manager.fileExists(atPath: backup.path) {
+            backup = parent.appendingPathComponent("\(stamp)-\(suffix)", isDirectory: true)
+            suffix += 1
+        }
         let name = storeURL.lastPathComponent
         guard let siblings = try? manager.contentsOfDirectory(atPath: folder.path) else { return nil }
         let stem = storeURL.deletingPathExtension().lastPathComponent
