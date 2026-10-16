@@ -62,3 +62,4 @@ Trial merge onto master 4011570 clean. Only TesseraCore changed (ActionEngine, D
 `TesseraTests/ExerciseAndPlansTests.swift:146` finds "today" with `Calendar.current.isDate($0.date, inSameDayAs: now)`, a midnight day. The plan's week uses his 04:00 day, so between 00:00 and 04:00 the test picks tomorrow's row (`.planned`) and fails. It isn't random: it fails every time in that window. #318 touches no app code and nothing PlanData reads (`history(from:to:)` is additive).
 Fix (Builder A, one line): match on `TesseraDay(calendar: .current).day(of: now)` the way PlanData does, or pin `AppClock` to midday.
 **Verdict: PASS.**
+- **Rebased head 1a53b91:** `git range-diff` shows both #318 commits are unchanged patches (fd9dc1d = 7591ef0, 83dd60d = 1a53b91). The PR is the same 4 TesseraCore files, and the trial merge onto master 0eac30c is clean. The PASS stands at 1a53b91.
