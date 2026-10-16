@@ -1,5 +1,7 @@
 # Review's week line with habits and weight (Design item 15)
 
+> **Superseded by `review-week.md` (item 46):** the page is now the week on one page; the clause rules and the marks here live on inside its bands.
+
 This sheet is for Builder B's Review. It's drawn to Product's 8:07 PM call ("Review with habits and weight") and Research's `fixtures/review-m3.md`, with the habit threads from `no-dots.md`.
 - One screen holds all three asks: the week line, a paused habit, and too few weigh-ins. The fixture is R10 with 2 weigh-ins added.
 - Board: `mockups/review-week-line.png` (source `studies/review-week-line.html`), in Porcelain and Obsidian on the same week.
