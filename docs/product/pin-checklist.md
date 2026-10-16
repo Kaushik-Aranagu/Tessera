@@ -4,6 +4,7 @@
 
 ## 1. Blockers (all merged on master)
 - [ ] #366 AI-1 Home lines (Builder B): Design clip pass + QA confirm.
+  - #366 must also fix its day label to use the 4 am day (HomeLineHero.swift:101; Research home-lines-day-one, 12:29 PM PT) before merge.
 - [x] The stuck-listening fix (Builder B): #446, 0eca9bbe.
 - [x] #422 secret-word wall + $50 cap (5af8f2c2, Catalog v9).
 - [x] MU2 (Core, #451 merged bf2a4bb5): money, body and health phrases never reach Claude, incl. CA6 answerQuery allow-list and CA7 screens before the offline inbox add. (decisions.md 11:35 AM PT; QA A1, Research MW1)
@@ -12,6 +13,7 @@
 ## 2. Riders (in only if merged before the last blocker)
 - B1 (QA backups, 12:12 PM PT): Notes refuses a key-shaped note (Core 0e). First rider.
 - B5/B6 (QA backups, 12:12 PM PT): the v9 build refuses a newer-catalog store or backup (Core 0e). Second rider; if it misses, #407 waits for a build that has it.
+- M1 (QA review-475, 12:29 PM PT; Core rider 2b): BackupKeeper.runDaily never runs in the in-memory fallback, so a v10 → pin rollback can't roll his 7 good copies away with empty-store backups. Goes with B5/B6. If it misses the pin, #407 waits.
 - P14 (Research privacy trace, 12:26 PM PT): Siri's Add a Task routes like the Ask bar. Body facts, and past-tense money with an amount, become a private note ("Private note, kept.", no echo). "pay rent 2100 friday" stays a task (decisions 12:11). Core 0j/0l or a tiny PR. Third rider, after B5/B6.
 - [ ] Paste/link SecretWords wall (Core).
 - [ ] One-time mark-private pass for pre-#422 notes (Core, Research 139).

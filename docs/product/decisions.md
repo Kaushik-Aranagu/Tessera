@@ -4,6 +4,38 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+**12:35 PM PT Oct 16: time words (Research time-words-sweep.md asked).** DECIDED, all six of Research's picks.
+- "early morning" is only the label; lines say "early this morning".
+- From 9 to 10 pm the label says "night", to match "tonight".
+- At 9 pm Now flips to "tomorrow, first", even before Shutdown is built.
+- Now's context line uses digits ("next, at 6:30 pm").
+- At 1 am, "tonight" means the coming evening, and Tess's receipt names the day.
+- Backup and Settings belong to Builder B.
+Also: every clock string is 12-hour with "am"/"pm", from one formatter, including the Live Activity and the Claude receipt. Every weekday comes from the 4 am day. "ago" counts round to the nearest hour everywhere, as HomeLines.ago does, with "1 hour" singular.
+
+**12:35 PM PT Oct 16: receipts name the thing first (Research receipts-thing-first.md asked).** DECIDED, all six of Research's picks.
+- RC23: Claude and the on-device fallback get one thing-first line per action. The summaries stay as log text.
+- List receipts name the list: "Rice, on Groceries."
+- A new list reads "Films, made."
+- A private health memory says "Health note, kept on this phone." It names the kind, never the value.
+- "Sent … to Claude" on the first miss is a notice and stays as is.
+- An undo with several changes names the thing: "Push A, taken back."
+
+**12:30 PM PT Oct 16: Siri parity with the Ask bar (Research siri-privacy-parity.md, #479, asked).** DECIDED, all of Research's picks:
+- Money with an amount and no day: Siri says the Ask bar's miss line and saves nothing.
+- A walled title that stays a task because a day wins: Siri says "Task added for Fri." and doesn't echo the title.
+- "buy milk" on Add a Task stays a task.
+- "reset my PIN" is a task, with the title hidden from Siri's reply.
+- A medicine reminder with a time is a private task: it keeps the 9 pm reminder and shows "Medicine" as the title.
+Two more: money phrases never go into the capture-miss log, and an empty Add a Task title asks for one instead of throwing.
+
+**12:29 PM PT Oct 16: Home lines day one (Research home-lines-day-one.md on #366's head asked).** DECIDED.
+- #366 has to fix its day label before it merges, since it's a pin blocker. The label takes its day from the 4 am day (HomeData.lanes), not the wall clock (HomeLineHero.swift:101).
+- Part-of-day words follow the line: "tonight" from 9 pm, and "early morning" from 4 to 7 am.
+- Research's other picks: after Shutdown, Now reads "tomorrow, first". A running cook or shop takes Now. Calendar events show on Home as "busy" rows only in v1. An empty day says "All quiet." once.
+- Now picks only tasks in the current 4 am day, so Sunday's 9 am task never takes Saturday night.
+- A workout planned today is never shown as an empty day.
+
 **12:27 PM PT Oct 16: Lists day-one wording (Research lists-day-one.md asked).** DECIDED.
 - With lists but nothing running, the context line reads "4 lists, nothing running".
 - The add receipt is "Charger, on Packing.", thing first, like every receipt.
