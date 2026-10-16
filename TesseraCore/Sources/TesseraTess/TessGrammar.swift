@@ -132,10 +132,11 @@ public struct TessGrammar {
         // A body fact is private before it's a dated log (Product P14/P15a, 12:30 PM PT): "slept 6 hours last night",
         // "took advil 400mg yesterday", "take advil 400mg at 9 pm". A past-tense log with a day ("watered plants
         // sat") is a note dated that day, never a future task.
-        if let log = (Self.isSomethingToDo(phrase) ? nil : parseBodyFact(phrase)) ?? parsePastLog(
-            phrase,
-            context: context
-        ) {
+        // A dated past log of money is private too ("bought a tv for 800 sat", QA F2 on #534).
+        let walledLog = Self.isSomethingToDo(phrase) ? nil
+            : parseBodyFact(phrase) ??
+            (PrivateFacts.isMoneyShaped(phrase) ? parsePrivateLog(phrase, context: context) : nil)
+        if let log = walledLog ?? parsePastLog(phrase, context: context) {
             return log
         }
         // After lifts, so "bench 80x8, 82.5x6" stays a lift.

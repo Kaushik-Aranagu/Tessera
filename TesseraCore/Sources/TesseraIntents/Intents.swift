@@ -37,8 +37,8 @@ public struct LogSetIntent: AppIntent {
 
 /// Logs the next set of the running workout exactly as prefilled (the Lock Screen's Done).
 public struct LogNextSetIntent: AppIntent {
-    /// Siri writes need Face ID (Product P14, decisions 12:26 PM PT Oct 16).
-    public static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
+    // No Face ID: the Lock Screen's Done and UNDO log or take back a set without unlocking (Product 12:26 PM PT,
+    // live-activity.md:69, lockscreen.md:20).
 
     public static let title: LocalizedStringResource = "Log Next Set"
     public static let description = IntentDescription("Logs the next set of the workout in progress, as prefilled.")
@@ -65,8 +65,8 @@ public extension Notification.Name {
 }
 
 public struct UndoLastSetIntent: AppIntent {
-    /// Siri writes need Face ID (Product P14, decisions 12:26 PM PT Oct 16).
-    public static let authenticationPolicy: IntentAuthenticationPolicy = .requiresAuthentication
+    // No Face ID: the Lock Screen's Done and UNDO log or take back a set without unlocking (Product 12:26 PM PT,
+    // live-activity.md:69, lockscreen.md:20).
 
     public static let title: LocalizedStringResource = "Undo Last Set"
     public static let description = IntentDescription("Takes back the most recently logged set, and only that set.")
@@ -197,7 +197,7 @@ public struct TellTessIntent: AppIntent {
         let capture = await runtime.tess.capture(phrase, context: TessContext(commitImmediately: true))
         // What it wrote is never read back in his words when the words are private (Product P14).
         let hidden = PrivateFacts.isPrivateTitle(phrase) && !capture.records.isEmpty
-            && capture.line != "\(SecretWords.title), kept." && !capture.line.hasPrefix("Task added")
+            && !capture.line.hasPrefix("\(SecretWords.title), kept") && !capture.line.hasPrefix("Task added")
         return .result(dialog: "\(hidden ? "Saved." : capture.line)")
     }
 }

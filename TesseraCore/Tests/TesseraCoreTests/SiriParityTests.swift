@@ -1,3 +1,4 @@
+import AppIntents
 import Foundation
 @testable import TesseraCore
 @testable import TesseraIntents
@@ -130,5 +131,15 @@ struct SiriParityTests {
             _ = try add(phrase)
         }
         #expect(nothingHolds("advil") && nothingHolds("tacocat") && nothingHolds("1,800"))
+    }
+
+    @Test func theLockScreenSetButtonsNeverAskForFaceID() {
+        // Design on #534 (Product 12:26 PM PT): the Live Activity's Done and UNDO work without unlocking.
+        for policy in [LogNextSetIntent.authenticationPolicy, UndoLastSetIntent.authenticationPolicy] {
+            guard case .alwaysAllowed = policy else {
+                Issue.record("a Lock Screen set button asks for Face ID")
+                continue
+            }
+        }
     }
 }

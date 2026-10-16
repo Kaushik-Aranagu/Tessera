@@ -137,6 +137,14 @@ struct PrivacyFollowupTests {
         #expect(PrivateFacts.isWalled("bought lemons for $4"))
     }
 
+    @Test func boughtSomethingForAnAmountIsMoney() async {
+        // QA F2 on #534: "bought … for N" is a spend; with a day it is a private note on that day.
+        #expect(PrivateFacts.isWalled("bought a tv for 800"))
+        let dated = await run("bought a tv for 800 sat")
+        #expect(dated.line == "Private note, kept." && dated.records.map(\.action) == ["createNote"], "\(dated.line)")
+        #expect(claude.heard.isEmpty)
+    }
+
     @Test func aKeySplitAcrossLinesComesOutWhole() {
         // QA R4 on #471.
         let cleaned = withoutClaudeKeys("my key sk-ant-api03-abcDEF12\nGHI345jklMNO678 then the rest")

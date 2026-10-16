@@ -35,7 +35,9 @@ public enum PrivateFacts {
         let lower = phrase.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !lower.isEmpty else { return false }
         // "paid" or "spent" with an amount is always money, even shaped like a set: "paid 20 for 2 tickets" (L3).
-        let spent = lower.firstMatch(of: /\b(?:paid|spent|spend)\b/) != nil && hasAmount(lower)
+        // "bought a tv for 800" is a spend too; "bought 2 lemons" is not (QA F2 on #534).
+        let spent = (lower.firstMatch(of: /\b(?:paid|spent|spend)\b/) != nil
+            || lower.firstMatch(of: /\bbought\b.*\bfor\s+\d/) != nil) && hasAmount(lower)
         guard spent || !isTraining(lower) else { return false }
         if spent || lower.contains(where: { "$£€₹¥".contains($0) }) {
             return true

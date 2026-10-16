@@ -250,9 +250,8 @@ struct TessTests {
         #expect(titles.contains { $0.lowercased().hasPrefix("pay rent 2100") })
         #expect(!titles.contains { $0.contains("advil") || $0.contains("212.37") || $0.contains("headache") })
         #expect(try CreateTaskIntent.add("call mom", startsAt: nil, engine: engine).lowercased().contains("call mom"))
-        // Every write needs Face ID.
-        for policy in [LogSetIntent.authenticationPolicy, LogNextSetIntent.authenticationPolicy,
-                       UndoLastSetIntent.authenticationPolicy, StartRoutineIntent.authenticationPolicy,
+        // Siri's writes need Face ID; the Lock Screen's set buttons don't (see SiriParityTests).
+        for policy in [LogSetIntent.authenticationPolicy, StartRoutineIntent.authenticationPolicy,
                        FinishWorkoutIntent.authenticationPolicy, CreateTaskIntent.authenticationPolicy,
                        TellTessIntent.authenticationPolicy]
         {
