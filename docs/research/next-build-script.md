@@ -45,6 +45,9 @@ safety says a migration never ships untested on his device. Before the "install 
     backup file into the v8 build through the app's own restore path (Review > Backups). The v5 rows come back
     byte-identical, the v8 fields are added empty, and the app launches clean afterwards. Product's condition for
     the next pin (ff548605).
+  - **The pin waits** for Core's incremental OpZones fix (the #377 S1 scale fix) as well as #380 and #366. On that
+    build, the v8 rerun **times** the v5 backup restore. A slow restore counts as a gate failure (Product,
+    06247720).
 - **Rollback:** an older build opening a newer store is shown safe through v7 (M0: 7b321d2 opens the v7 store, the extra
   classes are ignored). v8 is not shown yet; M4 shows it. Restoring a newer backup onto an older build stays
   **forbidden** until someone tests it.
