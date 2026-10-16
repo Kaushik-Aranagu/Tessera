@@ -126,3 +126,19 @@
   - "get new sheets" is a task, matching the 4:30 non-food rule.
 - **Review week fix goes next for Builder B** (4:58 PM PT, Research #155: 22 of 30 weeks flagged). Review opens with a session count, not a grade, rest days get their own dab, and the miss ring only marks a real miss. Two sessions on one day count as two. Order: Builder B's Now hookup and audit polish, then this. Core supplies the week data after the grammar hotfix, and Design draws the rest dab first.
 - **Widget and snippet copy** (5:02 PM PT Oct 15, Research #156): "All quiet." over "Nothing else is planned today."; "×" in sets; FinishWorkoutIntent uses the `WorkoutSummary.line` text; "Set 3 taken back" over "Last set removed.". Builder A makes them consistent everywhere. The expired-signing widget timeline check waits until widgets ship (none exist on master), and his phone is never allowed to lapse just to test it.
+- **One rule for undo** (5:14 PM PT Oct 15, Research #158 `undo-lines.md`). Every line names the thing, then what happened to it ("Set 3 logged", "Note deleted"). Undo answers with the same name plus "taken back" ("Set 3 taken back"), and an UNDO key always reverts the record its line names. "taken back" is the house word, so "Undone." goes.
+- **Undo open questions, on defaults** (5:14 PM PT).
+  - Siri's "Undo Last Set" removes one set, as its name promises (Builder A's hotfix).
+  - Silent writes stay silent: checking a grocery, autosaving a note, starting a workout. Each is reversed by doing it again.
+  - Undoing a finish also deletes the Health workout we wrote.
+  - The Live Activity undo strings live in Research's `widget-states.md` until Design puts `live-activity.md` on its branch.
+  - `App/Health/HealthExporter.swift` is Core's, and the capture code in `App/AppModel.swift` is Builder B's.
+  - Destructive writes (delete a note, finish the shop) keep their UNDO for 10 s, not 4.
+- **Empty-state open questions, on defaults** (5:14 PM PT, `empty-states.md`).
+  - A workout finished with zero sets is not saved. Tess says "Push day, no sets, not saved." with Undo, and it never counts as trained.
+  - Plan targets count from the plan's creation day, so a plan made mid-month reads "Session 1 of 13", not "of 26".
+  - A "good day" means trained (at least one set logged), on both Review screens.
+  - Empty states stay text only, through one shared `EmptyLine` in DesignSystem (Builder A).
+  - The PPL x2 starter plan stays.
+  - `Features/Objects/` copy is Core's.
+
