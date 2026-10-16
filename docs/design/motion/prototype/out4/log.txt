@@ -1,2 +1,0 @@
-out4/reward-obsidian.mp4: 351 frames, 5.84 s
-out4/reward-porcelain.mp4: 351 frames, 5.84 s
