@@ -47,7 +47,7 @@ This sheet replaces sheet 71's "which pages get a side page" and Product's 10:00
 | 17 | Recipe original | COOKS (BEFORE): each time cooked, how long | swipe or word | |
 | 18 | An ingredient | PER 100 G (FACTS), and where it's used | swipe or word | His calorie example. Drawn |
 | 19 | Paste a recipe | WHAT I READ (PARTS): every line, kept or ignored | swipe or word | |
-| 20 | Review tab | THE MONTH (AHEAD and BEFORE): the weeks zoomed out | word only once x moves by week (46) | |
+| 20 | Review tab | THE MONTH (AHEAD and BEFORE): the weeks zoomed out | swipe or word now; word only once x moves by week (46, not built) | |
 | 21 | The week (interim Settings) | WHAT LEAVES THE PHONE (FACTS): this month's Claude calls by job, titles and counts only | swipe or word | Controls stay on the front |
 | 22 | Notes | BY THING (LINKS): notes grouped by what they mention | swipe or word | Private notes are counted, never named |
 | 23 | A note | WHERE IT'S MENTIONED (LINKS) | swipe or word | Drawn. Its own links stay under the text |
@@ -67,7 +67,7 @@ This sheet replaces sheet 71's "which pages get a side page" and Product's 10:00
 - Shutdown: TOMORROW (AHEAD), as a peek.
 
 ## Tess on the side (AI)
-1. **Her line:** one line in the band on every side, computed by the phone ("You buy it about every 9 days.", "Moved twice. Today's the day."). When "Tess asks Claude" is on, Claude may reword it, under Home's line caps and the AI-5 rubric. The rules line shows first, and Claude's words land wet and dry.
+1. **Her line:** one line in the band on every side, computed by the phone ("You buy it about every 9 days.", "Moved twice, due today."). When "Tess asks Claude" is on, Claude may reword it, under Home's line caps and the AI-5 rubric. The rules line shows first, and Claude's words land wet and dry.
 2. **Ask about this:** opening the ask slot on a side makes this thing the subject. "What can I swap this for?" on Bench press, or "Is this enough protein?" on Ground beef. The ask carries the object's id and class, never its private fields.
 3. **Facts Claude may fill:** only public facts about a named thing, such as a food's nutrition or an exercise's muscles. They fill only when the phone's table has no row, are kept on the object with their source shown ("From Claude, Oct 16"), and are asked once. Without Claude, the side is complete without that row.
 4. **Never:** a private note's words, money, or body facts reach Claude from a side. Every side goes through the walls (SecretWords, PrivateFacts) the same way the Bar does.
@@ -155,3 +155,8 @@ Notes:
 - **No sums of body facts:** the ingredient row is per 100 g of food, never his intake.
 - **Private notes** are counted, never named.
 - **Empty values:** a small fact with no value is left out. A glance with no big fact opens straight to the full side.
+
+## Research's inventory check (#561, Oct 16, 2:55 PM PT)
+- **Four more routes, same rule:** the pages inside the live workout's cover, the generic pages inside the Recipes cover, and Paste's second stack are the same screens as above, so each keeps its own side wherever it's pushed. A side opened inside a live cover follows rule 7 (a peek).
+- **A private Tess memory on the generic object page:** the default side shows no private field and names nothing (Product 2:41: a side never shows a private fact its front hides).
+- **Tess's lines** are in `docs/research/fixtures/side-lines.md`. One sentence each: "Moved twice, due today."
