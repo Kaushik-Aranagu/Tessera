@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Shutdown</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Board and recording for docs/design/shutdown.md (Design item 34): Shutdown at 21:00 on the build's Home frame, drawn small. The three lines (Research's slots B opener, C carry-over, D tomorrow line), "Tomorrow, first" typed and said, the hold, the closed day with Tess's E line and UNDO, and UNDO taking it back. Obsidian, one base. ?play records one phone. -->
+<style>
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.row{display:flex;gap:36px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:34px;width:390px;white-space:nowrap}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;background:#000;--ink:245,242,236;--s2:.72;--tess:#86B4FF;--ctx:#B7A6E0;--liveInk:#FF7A5C;color:rgb(var(--ink))}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--s2))}
+.b{font-size:21px;line-height:28px}
+.t34{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px}
+.hero{font-size:56px;font-weight:500;letter-spacing:-.035em;line-height:58px;width:346px}
+.ctx{color:var(--ctx)}
+.q{position:absolute;left:22px;right:22px;height:28px;white-space:nowrap}
+.q .tm{position:absolute;right:0;top:4px}
+.f{transition:opacity .42s var(--house),filter .42s var(--house),transform .42s var(--house)}
+.say{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);color:var(--tess);font-size:21px;line-height:28px;z-index:6}
+.undo{display:block;margin-top:4px;color:var(--liveInk);font-weight:700;font-size:16px;line-height:20px;letter-spacing:.08em}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:7;transition:filter .8s,opacity .8s}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px);mix-blend-mode:screen}
+.soul.rest{filter:saturate(.45);opacity:.7}
+.kb{position:absolute;left:0;right:0;bottom:0;height:300px;background:#1B1B1D;z-index:8}
+.kb .k{position:absolute;height:42px;border-radius:6px;background:#46464A;color:rgba(245,242,236,.92);font-size:21px;display:flex;align-items:center;justify-content:center}
+.word{display:inline-block;white-space:pre;overflow:hidden;vertical-align:bottom;max-width:220px;transition:max-width .32s var(--house),opacity .32s}
+.word.drop{max-width:0;opacity:0}
+.caret{display:inline-block;width:2px;height:24px;vertical-align:-4px;background:var(--tess);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;max-width:1700px;line-height:24px}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(245,242,236,.22);box-shadow:0 0 0 1.5px rgba(245,242,236,.6);opacity:0;z-index:20;transition:opacity .15s}
+</style>
+</head>
+<body>
+<div class="row" id="row"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const PLAY=Q.includes('play');
+const $=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const H='cubic-bezier(.2,.8,.2,1)',SET='cubic-bezier(.3,1.3,.5,1)';
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+const X=h=>22+(h-7)/16*346;
+const soul=(id,rest)=>`<div class="soul ${rest?'rest':''}" id="${id}"><i style="left:0;top:4px;background:radial-gradient(closest-side,#86B4FF,rgba(134,180,255,.2))"></i><i style="left:22px;top:2px;background:radial-gradient(closest-side,#FF5B3A,rgba(255,91,58,.2))"></i><i style="left:12px;top:20px;background:radial-gradient(closest-side,#FFC23D,rgba(255,194,61,.2))"></i></div>`;
+// the build's Home frame: tabs at 78 with the ink line under TODAY at 104, the day label at 138, the day stroke at 182
+const tabs=`<div class="abs lbl" style="left:22px;right:22px;top:78px;display:flex;justify-content:space-between;letter-spacing:.06em"><span style="color:rgba(245,242,236,.38)">REVIEW</span><span style="position:relative">TODAY<svg style="position:absolute;left:0;top:24px;overflow:visible" width="56" height="12"><path d="${lens(54,1.2)}" fill="rgb(245,242,236)"/></svg></span><span style="color:rgba(245,242,236,.38)">TRAINING</span><span style="color:rgba(245,242,236,.38)">KITCHEN</span></div>`;
+const stroke=(L,now)=>`<svg class="abs" style="left:0;top:182px;overflow:visible" width="390" height="12">
+ <defs><linearGradient id="${L}g" gradientUnits="userSpaceOnUse" x1="22" x2="368"><stop offset="0" stop-color="#7FC8E8" stop-opacity=".55"/><stop offset=".3" stop-color="#3FD49A" stop-opacity=".55"/><stop offset=".6" stop-color="#B7A6E0" stop-opacity=".6"/><stop offset=".85" stop-color="#FFC23D" stop-opacity=".65"/><stop offset="1" stop-color="#FF5B3A" stop-opacity=".7"/></linearGradient></defs>
+ <line id="${L}std" x1="${X(now)+8}" y1="6" x2="368" y2="6" stroke="rgba(245,242,236,.25)" stroke-width="1.5" stroke-dasharray="2 6" stroke-linecap="round"/>
+ <line id="${L}stp" x1="22" y1="6" x2="${now>=23?368:X(now)}" y2="6" stroke="url(#${L}g)" stroke-width="6" stroke-linecap="round"/></svg>`;
+const ROWS=['Book the physio','Clean the oven','Return the library books'];
+const strike=(L,k)=>`<svg id="${L}x${k}" style="position:absolute;left:-3px;top:4px;overflow:visible;opacity:0" width="100" height="12"><path d="${lens(98,1.25)}" fill="rgb(245,242,236)"/></svg>`;
+// o: {line:'' | text, later:[k], caret, kb, wet, closed, say}
+function phone(L,o={}){
+ const closed=o.closed;
+ return `<div class="ph" id="${L}ph">${tabs}
+ <div class="abs b f" id="${L}day" style="left:22px;top:138px">${closed?'Thursday night':'Thursday evening'}</div>${stroke(L,closed?23:21.07)}
+ <div class="abs b ctx f" id="${L}ctx" style="left:22px;top:246px">${closed?'tomorrow, first':'this evening'}</div>
+ <div id="${L}col" class="f" style="${closed?'opacity:0':''}">
+  <div class="abs t34" id="${L}hero" style="left:22px;top:280px;width:346px">Did 4 tasks, 1 workout, cooked once.</div>
+  <div class="abs b s2" style="left:22px;top:384px;width:346px">3 moving to tomorrow.<br>Tap any to keep.</div>
+  ${ROWS.map((t,k)=>`<div class="q b" id="${L}r${k}" style="top:${458+44*k}px">${t}<span class="tm lbl s2" id="${L}w${k}" style="${(o.later||[]).includes(k)?'opacity:.5':''}">TOMORROW${strike(L,k)}</span><span class="abs lbl s2" id="${L}l${k}" style="right:118px;top:4px;opacity:0">LATER</span></div>`).join('')}
+ </div>
+ <div id="${L}wl" class="f" style="${closed?'opacity:0':''}">
+  <div class="abs lbl s2" id="${L}wlab" style="left:22px;top:594px">TOMORROW, FIRST</div>
+  <div class="abs b" id="${L}wtx" style="left:22px;top:618px;width:346px;white-space:nowrap">${o.line?o.line:`<span class="s2" id="${L}ph0">One line for tomorrow, if you want.</span>`}${o.caret?'<span class="caret"></span>':''}</div>
+  <svg class="abs" id="${L}hair" style="left:22px;top:650px" width="346" height="2"><rect width="346" height=".5" fill="rgba(245,242,236,.4)"/></svg>
+ </div>
+ <div class="abs t34 f" id="${L}sc" style="left:22px;top:670px;${closed||o.kb?'opacity:0':''}">Shutdown complete<svg id="${L}scL" style="position:absolute;left:-2px;top:41px;overflow:visible" width="290" height="12"><path d="${lens(284,2.5)}" fill="#B7A6E0" opacity=".8"/></svg><svg style="position:absolute;left:284px;top:41px;overflow:visible" width="1" height="12"><circle id="${L}bead" cx="0" cy="6" r="0" fill="#B7A6E0"/></svg></div>
+ <div class="abs hero s2 f" id="${L}ch" style="left:22px;top:280px;${closed?'':'opacity:0'}">Reply to the landlord</div>
+ <div class="abs lbl s2 f" id="${L}cm" style="left:22px;top:410px;${closed?'':'opacity:0'}">THEN PULL A · 07:30</div>
+ <div class="say" id="${L}say" style="${o.say?'':'opacity:0'}">${o.say||''}</div>
+ ${o.kb?kb(L):''}
+ ${soul(L+'s',closed)}${L==='P'?'<div id="fing"></div>':''}</div>`}
+function kb(L){const r1='qwertyuiop',r2='asdfghjkl',r3='zxcvbnm';let h=`<div class="kb" id="${L}kb">`;
+ [...r1].forEach((c,i)=>h+=`<div class="k" style="left:${4+i*38.2}px;top:12px;width:34px">${c}</div>`);
+ [...r2].forEach((c,i)=>h+=`<div class="k" style="left:${23+i*38.2}px;top:66px;width:34px">${c}</div>`);
+ [...r3].forEach((c,i)=>h+=`<div class="k" style="left:${61+i*38.2}px;top:120px;width:34px">${c}</div>`);
+ h+=`<div class="k" style="left:4px;top:120px;width:50px;background:#2C2C2E">⇧</div><div class="k" style="left:336px;top:120px;width:50px;background:#2C2C2E">⌫</div>`;
+ h+=`<div class="k" style="left:4px;top:174px;width:88px;background:#2C2C2E;font-size:16px">123</div><div class="k" style="left:96px;top:174px;width:196px">space</div><div class="k" id="${L}done" style="left:296px;top:174px;width:90px;background:#86B4FF;color:#000;font-size:18px;font-weight:600">done</div>`;
+ return h+'</div>'}
+const cap=(t,id='')=>`<div class="cap" ${id?`id="${id}"`:''}>${t}</div>`;
+if(PLAY){
+ $('row').innerHTML=`<div>${cap('21:04 · SHUTDOWN TAKES NOW','cap')}${phone('P')}</div>`;
+}else{
+ $('row').innerHTML=`<div>${cap('21:04 · THE THREE LINES, ONE ROW TO LATER')}${phone('A',{later:[1]})}</div>`+
+  `<div>${cap('TYPED · THE LINE RIDES ABOVE THE KEYS')}${phone('B',{later:[1],line:'Reply to the land',caret:1,kb:1})}</div>`+
+  `<div>${cap('SAID · “TOMORROW FIRST, REPLY TO…”')}${phone('C',{later:[1],line:'<span style="color:#86B4FF" class="wetp">Reply to the landlord</span>',say:'Tomorrow, first: reply to the landlord.'})}</div>`+
+  `<div>${cap('21:06 · CLOSED, WITH UNDO FOR 10 S')}${phone('D',{closed:1,say:'Closed. Your line is waiting at 08:00.<span class="undo">UNDO</span>'})}</div>`;
+ $('note').innerHTML='ONE BASE: OBSIDIAN GROUND, NO EVENING WASH. THE THREE LINES ARE RESEARCH\'S SLOTS: THE OPENER (B) AS A TITLE 34 HERO, THE CARRY-OVER (C) ABOVE THE ROWS, THE TOMORROW LINE (D) AS THE WRITING LINE\'S PLACEHOLDER. NO DOTS: A ROW TO LATER IS AN INK-LINE STRIKE ON TOMORROW. EVERYTHING ENDS ABOVE 720; TESS\'S BAND STAYS CLEAR.';
+ ['A','B','C'].forEach(L=>{$(L+'x1').style.opacity=1;$(L+'l1').style.opacity=1});
+ $('Bhero').parentNode.style.opacity=0;$('Bwl').style.transform='translateY(-150px)';
+}
+async function tap(x,y,hold=160){const f=$('fing');f.style.left=x+'px';f.style.top=y+'px';f.style.opacity=1;await sleep(hold);f.style.opacity=0}
+const fade=(el,o,b=0)=>{el.style.opacity=o;el.style.filter=`blur(${b}px)`};
+async function swap(el,html,cls){fade(el,0,4);await sleep(420);el.innerHTML=html;if(cls!==undefined)el.className=cls;fade(el,1,0)}
+async function say(html){const s=$('Psay');await s.animate([{opacity:getComputedStyle(s).opacity},{opacity:0}],{duration:150,fill:'forwards'}).finished;s.innerHTML=html;if(html)s.animate([{opacity:0,transform:'translate(12px,-50%)'},{opacity:1,transform:'translate(0,-50%)'}],{duration:300,easing:H,fill:'forwards'})}
+const setCap=t=>{const c=$('cap');c.animate([{opacity:1},{opacity:0}],{duration:120,fill:'forwards'}).onfinish=()=>{c.textContent=t;c.animate([{opacity:0},{opacity:1}],{duration:200,fill:'forwards'})}};
+async function later(k){$('Px'+k).animate([{opacity:0,clipPath:'inset(0 100% 0 0)'},{opacity:1,clipPath:'inset(0 0 0 0)'}],{duration:260,easing:H,fill:'forwards'});$('Pw'+k).style.transition='opacity .3s';$('Pw'+k).style.opacity=.5;
+ $('Pl'+k).animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:260,delay:120,easing:SET,fill:'forwards'})}
+async function play(){
+ const col=$('Pcol'),wl=$('Pwl'),sc=$('Psc'),tx=$('Pwtx');
+ // 0 · Shutdown sets in at 21:00: the three lines rise in, 80ms apart
+ [$('Phero'),col.children[1],col.children[2],col.children[3],col.children[4],wl,sc].forEach((e,i)=>e.animate([{opacity:0,transform:'translateY(10px)',filter:'blur(3px)'},{opacity:1,transform:'none',filter:'blur(0)'}],{duration:420,delay:300+i*80,easing:H,fill:'backwards'}));
+ await sleep(2000);
+ // 1 · a row goes to Later
+ setCap('TAP A ROW · IT GOES TO LATER');await sleep(500);tap(330,516);await sleep(120);later(1);await sleep(1500);
+ // 2 · typed: the line rides above the keys
+ setCap('TOMORROW, FIRST · TYPED');await sleep(500);await tap(180,632);
+ fade(col,0,3);fade(sc,0,3);wl.style.transform='translateY(-150px)';
+ const k=document.createElement('div');k.innerHTML=kb('P');const K=k.firstElementChild;$('Pph').appendChild(K);K.animate([{transform:'translateY(300px)'},{transform:'none'}],{duration:340,easing:H,fill:'forwards'});
+ await sleep(300);tx.innerHTML='<span id="Ptyped"></span><span class="caret"></span>';
+ const s='Reply to the landlord';for(let i=1;i<=s.length;i++){$('Ptyped').textContent=s.slice(0,i);await sleep(i===6||i===9||i===13?150:62)}
+ await sleep(500);await tap(341,822);
+ K.animate([{transform:'none'},{transform:'translateY(300px)'}],{duration:300,easing:H,fill:'forwards'}).onfinish=()=>K.remove();
+ tx.innerHTML='Reply to the landlord';wl.style.transform='none';fade(col,1,0);fade(sc,1,0);
+ await sleep(1500);
+ // 3 · the hold: 0.7s, the line empties to a trace, repaints, the bead; .success
+ setCap('HOLD SHUTDOWN COMPLETE · 0.7 S');await sleep(500);
+ tap(150,690,800);const p=$('PscL').querySelector('path');p.animate([{d:`path("${lens(284,2.5)}")`},{d:`path("${lens(284,.45)}")`,offset:.35},{d:`path("${lens(284,2.5)}")`}],{duration:700,easing:H});
+ $('Pbead').animate([{r:0},{r:4},{r:0}],{duration:360,delay:620,easing:SET});
+ await sleep(760);
+ // handoff: the stroke paints to its end, kept TOMORROWs lift toward it, the column folds, the soul plays done
+ {const l=$('Pstp'),a=X(21.07),t0=performance.now(),ez=u=>1-Math.pow(1-u,3);(function f(n){const u=Math.min(1,(n-t0)/700);l.setAttribute('x2',a+(368-a)*ez(u));if(u<1)requestAnimationFrame(f)})(t0)}
+ $('Pstd').animate([{opacity:1},{opacity:0}],{duration:500,fill:'forwards'});
+ [0,2].forEach((k,i)=>{const y=458+44*k;$('Pw'+k).animate([{transform:'none',opacity:1,filter:'blur(0)'},{transform:`translate(${20}px,${188-y}px) scale(.4)`,opacity:0,filter:'blur(2px)'}],{duration:620,delay:i*80,easing:H,fill:'forwards'})});
+ $('Ps').animate([{transform:'scale(1)'},{transform:'scale(1.35)'},{transform:'scale(.92)'},{transform:'scale(1)'}],{duration:1400,easing:SET});
+ await sleep(420);fade(col,0,3);fade(wl,0,3);fade(sc,0,3);
+ await sleep(500);
+ setCap('21:06 · THE DAY CLOSED');
+ swap($('Pday'),'Thursday night');swap($('Pctx'),'tomorrow, first');
+ await sleep(200);fade($('Pch'),1,0);await sleep(160);fade($('Pcm'),1,0);$('Ps').classList.add('rest');
+ await sleep(500);say('Closed. Your line is waiting at 08:00.<span class="undo">UNDO</span>');
+ await sleep(2600);
+ // 4 · UNDO within 10s: Shutdown comes back as it was
+ setCap('UNDO · SHUTDOWN COMES BACK AS IT WAS');await sleep(500);await tap(355,804);
+ say('Shutdown taken back.');$('Ps').classList.remove('rest');
+ fade($('Pch'),0,3);fade($('Pcm'),0,3);swap($('Pday'),'Thursday evening');swap($('Pctx'),'this evening');
+ {const l=$('Pstp'),a=X(21.07),t0=performance.now(),ez=u=>1-Math.pow(1-u,3);(function f(n){const u=Math.min(1,(n-t0)/600);l.setAttribute('x2',368-(368-a)*ez(u));if(u<1)requestAnimationFrame(f)})(t0)}
+ $('Pstd').animate([{opacity:0},{opacity:1}],{duration:500,delay:300,fill:'forwards'});
+ await sleep(420);[0,2].forEach(k=>$('Pw'+k).getAnimations().forEach(a=>a.cancel()));fade(col,1,0);fade(wl,1,0);fade(sc,1,0);
+ await sleep(2600);
+ // 5 · said instead: hold the soul, the words land in the line, "tomorrow first" squeezes out, the rest dries
+ setCap('OR SAID · HOLD THE SOUL');await say('');
+ tx.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'}).onfinish=()=>{tx.innerHTML='<span class="s2" id="Pph0">One line for tomorrow, if you want.</span>';tx.animate([{opacity:0},{opacity:1}],{duration:200,fill:'forwards'})};
+ await sleep(900);
+ const so=$('Ps'),f=$('fing');f.style.left='346px';f.style.top='779px';f.style.opacity=1;
+ so.style.transition='transform .48s '+SET;so.style.transform='scale(1.4)';
+ const br=so.animate([{transform:'scale(1.4)'},{transform:'scale(1.55)'},{transform:'scale(1.42)'},{transform:'scale(1.52)'}],{duration:900,iterations:Infinity,direction:'alternate',delay:480});
+ await sleep(500);tx.innerHTML='';
+ const words=['Tomorrow ','first, ','reply ','to ','the ','landlord'];const ws=[];
+ for(const w of words){const e=document.createElement('span');e.className='word s2';e.textContent=w;e.style.opacity=0;e.style.filter='blur(6px)';tx.appendChild(e);ws.push(e);e.animate([{opacity:0,filter:'blur(6px)'},{opacity:1,filter:'blur(0)'}],{duration:200,fill:'forwards'});await sleep(330)}
+ await sleep(500);f.style.opacity=0;br.cancel();so.style.transform='none';
+ await sleep(300);ws[0].classList.add('drop');ws[1].classList.add('drop');
+ await sleep(420);
+ await tx.animate([{opacity:1},{opacity:0}],{duration:160,fill:'forwards'}).finished;
+ tx.innerHTML='<span id="Pwet" style="color:#86B4FF">Reply to the landlord</span>';
+ tx.animate([{opacity:0},{opacity:1}],{duration:200,fill:'forwards'});
+ const wb=$('Pwet').animate([{opacity:.5},{opacity:.66}],{duration:1200,iterations:Infinity,direction:'alternate'});
+ say('Tomorrow, first: reply to the landlord.');
+ await sleep(2300);wb.cancel();
+ $('Pwet').animate([{color:'#86B4FF',clipPath:'inset(0 0 0 0)'},{color:'rgb(245,242,236)'}],{duration:700,fill:'forwards'});
+ await sleep(1800);
+ document.body.dataset.done='1';
+}
+document.fonts.ready.then(()=>{document.body.dataset.start='1';if(!PLAY){document.body.dataset.done='1';return}play()});
+</script>
+</body>
+</html>

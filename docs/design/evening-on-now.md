@@ -1,5 +1,7 @@
 # The evening on Now (Design item 17)
 
+> **Shutdown, redrawn (item 34):** §2 Shutdown, §3 the handoff and the held close are replaced by `shutdown.md` (the build's Home frame, Research's slot lines, the Title 34 opener, the tomorrow line typed or said, Tess's close line with UNDO). Where they differ, `shutdown.md` wins.
+
 This sheet covers what Now on Home shows once the day is done: the day done, Shutdown and its handoff, the closed day after 22:00, and late night until the 04:00 turn. It matches `widget-states.md` (a370ec6) word for word, and it amends `m4-steers.md` §7 for the one-base rule. It's for Builder B (Home, Now) and Builder A (the widget rows).
 - Board: `mockups/evening-on-now.png` (source `studies/evening-on-now.html`), in Obsidian, the night look. Porcelain is the same on white.
 - Recording: `recordings/evening-on-now.mp4`. It shows a row kept off tomorrow, the Shutdown hold and handoff, the closed day, then the 04:00 turn.
