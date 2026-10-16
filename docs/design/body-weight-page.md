@@ -1,6 +1,6 @@
 # The Body weight page, redrawn (Design item 29)
 
-> **The ask (item 35):** the waiting weigh-in follows `one-ask.md`: the ghost reads "Body weight **82.4** kg" with no question mark, and Tess asks "82.4 kg as today's weight?" with KEEP · NOT NOW (replacing T1's "Tap to keep it."). Tapping the ghost still keeps it.
+> **The ask (item 35):** the waiting weigh-in follows `one-ask.md`: the ghost reads "Body weight **82.4** kg" with no question mark, and Tess asks "82.4 kg as today's weight?" with LOG · NOT NOW (replacing T1's "Tap to keep it."). Tapping the ghost logs it. After LOG, Tess says "82.4 kg logged for today." with UNDO, which says "82.4 kg taken back." (these replace T3, T4 and the UNDO line below). The ghost never shows during a live workout.
 
 `body-weight-and-habits.md` §1, redrawn under today's rules: the page top (`day-seams.md` S4), one context line directly above the hero (`sweep-19.md`), nothing coloured at rest (`no-dots.md`), and Tess beside the soul (S1). Copy is Research's `m3-lines.md` §1 to §3 (master), units come from settings, and D12 follows Product's live-workout rule. Where this sheet and §1 differ, this sheet wins; §1 carries a pointer.
 - Board: `mockups/body-weight.png` (source `studies/body-weight.html`). It shows the page from Training in kg, a bare "82.4" waiting, the page from Review in lb in Obsidian just after a keep, and "82.4" said mid-workout.

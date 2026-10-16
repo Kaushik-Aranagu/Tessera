@@ -8,7 +8,7 @@ Every on-screen ask follows one pattern: the set asks, the dated lift, "81 for h
 - **Where:** Tess's line beside the soul, trailing, 270pt wide, in cobalt Body 21, at most 2 lines, ending with "?". It's the same slot on every screen: Home, a page, the live workout. Nothing on the page moves to make room, and the ask never leaves Tess's band (736 to 820).
 - **The two ink words:** under the question, where UNDO sits, trailing, 30pt apart: label words at 16/700 in `ink`. **Always exactly two.** The likelier answer comes first.
   - A **choice** names both answers: "2 SETS · 2 KG", "KG · REPS".
-  - A **yes-or-later** ask names the doing word, then the leaving word: "LOG · NOT NOW", "CONNECT · NOT NOW", "KEEP · NOT NOW". The radiators keep their own pair, "KEEP IT · NO RADIATORS", because the second answer is final.
+  - A **yes-or-later** ask names the doing word, then the leaving word: "LOG · NOT NOW", "CONNECT · NOT NOW". **Every ask that writes a record uses LOG**; KEEP means holding on to something already there. The radiators keep their own pair, "KEEP IT · NO RADIATORS", because the second answer is final.
   - An **open** ask ("81 for how many reps?", "Bench 3 × 8 at what weight?") offers its two likeliest answers, picked by Core: the last value for that lift and the plan's value, or the last value and one step from it when they're the same ("8 · 10", "80 KG · 82.5 KG").
   - No value words inside the question any more. The build's "2 × 10: **2 sets**, or **2 kg**?" with tappable words in the line becomes a plain question with the two words under it, so every ask is tapped in the same place.
 - **The words in the question** are Research's and Core's as they stand (`tess-voice.md`, the grammar's ask lines).
@@ -16,7 +16,7 @@ Every on-screen ask follows one pattern: the set asks, the dated lift, "81 for h
 ## Answering
 - **Tap a word:** the ink line draws under it (150ms, house curve) with `.selection`. The other word fades (200ms). The question blurs out and Tess's answer takes the line, with UNDO under it when it wrote something ("Logged bench 2 × 10 at 80." · UNDO).
 - **Say or type the answer** and it's the same as the tap: a word from either answer ("sets", "kilos", "log", "not now", "keep it"), or any value for an open ask ("8", "82.5").
-- **A ghost on the page is part of its ask.** The weigh-in waits as a ghost at y 652, "Body weight **82.4** kg" (no question mark now), and Tess asks "82.4 kg as today's weight?" with KEEP · NOT NOW. Tapping the ghost is KEEP, and swiping it away is NOT NOW. Tess's old "Tap to keep it." (T1) becomes this ask.
+- **A ghost on the page is part of its ask.** The weigh-in waits as a ghost at y 652, "Body weight **82.4** kg" (no question mark now), and Tess asks "82.4 kg as today's weight?" with LOG · NOT NOW. Tapping the ghost is LOG, and swiping it away is NOT NOW. After LOG, Tess says "82.4 kg logged for today." with UNDO, and UNDO says "82.4 kg taken back." Tess's old "Tap to keep it." (T1) becomes this ask. **The weigh-in ghost never shows during a live workout** (Q10): a weigh-in said mid-workout follows D12 in `body-weight-page.md`.
 
 ## The wait
 - An ask waits until it's answered or he leaves. It has no timer.

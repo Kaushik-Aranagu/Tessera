@@ -73,6 +73,8 @@ These are monochrome, in opacity tiers only. The words and the one timer carry t
 VoiceOver labels follow Research's list.
 
 ## The rest Live Activity
+> **Item 36:** `lockscreen.md` supersedes the first sentence below: every Live Activity stays **Cobalt sky in every look**, and the Island is the system's black. It also draws every Lock Screen state and notification.
+
 The Lock Screen face follows the look, and the Island is always Obsidian (`themes.md`). The faces on master stand. There are two new states:
 - **Undo after Done (C6):** "Set 3 logged." at Body 21, with **UNDO** as a label in `liveInk` at the right, and the next rest starting under it. UNDO answers "Set 3 taken back." That's Product's undo rule; it replaces `UndoLastSetIntent`'s "Last set removed."
 - **After the last set (Q4):** the face stays for 60s instead of vanishing.

@@ -88,7 +88,7 @@ if(PLAY){
   phone('LIVE WORKOUT · AN OPEN ASK, NO YES/NO',work,ask('C1','81 for how many reps?',['8','10']),'C')+
   phone('UPKEEP · ONCE A DAY UNTIL ANSWERED',upkeep,ask('D1','Radiators to bleed this autumn?',['KEEP IT','NO RADIATORS']),'D')+
   phone('PLAN MY DAY · FIRST TIME ONLY',plan,ask('E1','Plan around your calendar? Times and titles only.',['CONNECT','NOT NOW']),'E')+
-  phone('BODY WEIGHT · THE GHOST AND ITS ASK',bw,ask('F1','82.4 kg as today’s weight?',['KEEP','NOT NOW']),'F');
+  phone('BODY WEIGHT · THE GHOST AND ITS ASK',bw,ask('F1','82.4 kg as today’s weight?',['LOG','NOT NOW']),'F');
  $('note').innerHTML='ONE WAY TESS ASKS: THE QUESTION IN HER LINE BESIDE THE SOUL (COBALT, AT MOST 2 LINES), TWO INK WORDS UNDER IT WHERE UNDO SITS (16/700, INK, 30PT APART, THE LIKELIER FIRST). SAYING OR TYPING ANSWERS TOO. ONE ASK AT A TIME; LEAVING IS “NOT NOW” AND WRITES NOTHING. IN A LIVE WORKOUT, NEVER YES/NO: A CHOICE, OR AN OPEN ASK WITH THE TWO LIKELIEST ANSWERS.';
 }
 const setCap=t=>{const c=document.querySelector('.cap');c.animate([{opacity:1},{opacity:0}],{duration:120,fill:'forwards'}).onfinish=()=>{c.textContent=t;c.animate([{opacity:0},{opacity:1}],{duration:200,fill:'forwards'})}};
