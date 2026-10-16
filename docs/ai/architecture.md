@@ -15,7 +15,7 @@ Date: Oct 16, 2026 (Pacific). Builds on `docs/research/tess-model-layer.md` and 
 | Capture misses | `ClaudeTessModel.swift` (Haiku 5.5, 512 tokens, 8 s, 3 tool rounds) | Works, gated by the switch |
 | Plan my day wording | `PlanWording.swift` (Sonnet 5.5, effort low, 20 s, strict `proposePlan`, validator, cached on `PlanPack.cacheKey`) | Works |
 | Recipe link L3 | `RecipeLinkReader.swift` (Haiku) | Works |
-| Key, ledger, cap | `ClaudeKey.swift` (`TessKeychain`, `TessUsageLedger`, $10 cap today ($50 from AI-2), reserve then settle, `TessCall` row per call) | Works |
+| Key, ledger, cap | `ClaudeKey.swift` (`TessKeychain`, `TessUsageLedger`, $10 cap today ($50 proposed, raised in AI-2 after Kaushik's yes), reserve then settle, `TessCall` row per call) | Works |
 | Voice checks | `TessVoice` in `TessCapturing.swift` (under 12 words, banned words, no "!") | Works |
 | One switch | "Tess asks Claude" (`missesGoToClaude`), #320 makes it stick | In review |
 
@@ -141,7 +141,7 @@ Prices from `TessUsageLedger.prices` (Haiku 5.5 $0.10 in and $0.50 out per milli
 | Week story | Sonnet 5.5 | 2,000 / 300 | $0.007 | 8 | $0.06 |
 | Grocery connect (name matching only) | Haiku 5.5 | 1,200 / 150 | $0.0002 | 60 | $0.01 |
 | Existing (capture, plan, link, questions) | | | | | $0.44 (claude-first-uses.md) |
-| **Total** | | | | | **about $0.70** on Haiku, about $4 with Sonnet on Home lines and the week story; cap $50 (Product, Oct 16) |
+| **Total** | | | | | **about $0.70** on Haiku, about $4 with Sonnet on Home lines and the week story; cap $10, $50 proposed (Product, Oct 16) |
 
 ## 6. Model per job
 
