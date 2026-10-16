@@ -12,6 +12,8 @@ extension TessGrammar {
         if let said = rest.firstMatch(of: /(\d+) sets? of (\d+)/), let sets = Int(said.1), let reps = Double(said.2) {
             (lift.sets, lift.reps, lift.setsSaid) = (sets, reps, true)
             rest.removeSubrange(said.range)
+            // "3 sets of 8 at 7": the number after "at" is the weight, and goes through the small-"at N" check (F5).
+            lift.weightAfterAt = rest.firstMatch(of: /\b(?:at|@)\s*\d/) != nil
             rest = Substring(rest.replacing(/\b(?:at|@)\b/, with: " "))
         }
         if let scheme = rest.firstMatch(of: /(\d+(?:\.\d+)?)(?: ?x ?| by )(\d+)(?: (?:at|@) (\d+(?:\.\d+)?))?/) {
@@ -42,15 +44,24 @@ extension TessGrammar {
             // "dips 3 sets of 10", or "pull-ups 8" in focus: at bodyweight (Research on #282).
             lift.weight = 0
         }
-        // "bench 3x8": a bare N x M under the lightest load is N sets with no weight said, never N kg. The last weight
-        // in focus if there is one, else ask (QA F1, Research on #282).
-        if !bodyweight, lift.weightFromScheme, let first = lift.weight, first <= 10, first.rounded() == first,
-           let lightest = store.weightDial(for: exercise).detents.first, first < lightest, let reps = lift.reps
+        // "leg press 5x5", "curls 3x8", "bench 3x8": on any loaded kit a bare N x M (no "at", no unit) with N up to 10
+        // never writes N kg. With a last weight in focus, the set-count ask decides as SQ8 does; with none, ask
+        // (QA F1, F2, F3; Research on #282).
+        let dial = store.weightDial(for: exercise)
+        let inFocus = entry.flatMap { store.linkedClass("exercise", of: $0)?.id == exercise.id ? $0 : nil }
+        let last = inFocus.flatMap { lastSet(in: $0) }
+        if !bodyweight, lift.weightFromScheme, !lift.unitSaid, let first = lift.weight, first <= 10,
+           first.rounded() == first, let reps = lift.reps
         {
             let name = TessCaptureEngine.shortName(exercise.name)
-            if let entry, store.linkedClass("exercise", of: entry)?.id == exercise.id, let last = lastSet(in: entry) {
-                return .sets(Array(repeating: .set(entry: entry, weight: last.weight, reps: reps, kind: .working,
-                                                   phrase: .full), count: Int(first)))
+            guard let inFocus, let last else {
+                return .ask("\(name) \(Int(first)) × \(TessVoice.number(reps)) at what weight?")
+            }
+            // In focus it always asks and never reaches the weight write (QA F4): under half the last weight it may
+            // be sets ("bench 8x8" at 80); otherwise, at what weight.
+            if first < last.weight / 2 {
+                return .askSetCount(TessSetCountAsk(entry: inFocus.id, count: Int(first), reps: reps,
+                                                    bodyweight: false))
             }
             return .ask("\(name) \(Int(first)) × \(TessVoice.number(reps)) at what weight?")
         }
@@ -58,11 +69,13 @@ extension TessGrammar {
             let name = TessCaptureEngine.shortName(exercise.name)
             return .ask("\(name) \(lift.sets) × \(TessVoice.number(reps)) at what weight?")
         }
-        // "bench 3x5 at 7": 7 kg is under anything the bar can load, so it's a time, not a weight (QA on #274).
-        if lift.weightAfterAt, let at = lift.weight, at <= 12,
-           let lightest = store.weightDial(for: exercise).detents.first, at < lightest
+        // "bench 3x5 at 7", "curls 3x10 at 5": a small "at N" the kit can't load may be a time: ask, never log
+        // either (QA on #274, F3). Pounds convert first.
+        if lift.weightAfterAt, let at = lift.weight, at <= 12, (1 ... 20).contains(lift.sets),
+           !dial.detents.contains(where: { abs($0 - lift.unit.toKilograms(at)) < 0.01 })
         {
-            return nil
+            let name = TessCaptureEngine.shortName(exercise.name)
+            return .ask("\(name) \(lift.sets) × \(TessVoice.number(lift.reps ?? 0)) at what weight?")
         }
         let (sets, unit, reps, weight) = (lift.sets, lift.unit, lift.reps, lift.weight)
         guard let reps, let weight, (1 ... 20).contains(sets), reps >= 1, reps <= 100, reps.rounded() == reps,
@@ -81,6 +94,8 @@ extension TessGrammar {
         var reps: Double?
         var weight: Double?
         var words: [Substring] = []
+        /// "kg" or "lb" was said.
+        var unitSaid = false
         /// "3 sets of 8" said the sets in words.
         var setsSaid = false
         /// The weight is the first number of a bare "N x M" (no "at", no other number).
@@ -106,6 +121,7 @@ extension TessGrammar {
         mutating func read(_ token: Substring) {
             if let parsed = MassUnit(parsing: String(token)) {
                 unit = parsed
+                unitSaid = true
             } else if let value = Double(token) {
                 if weight == nil {
                     weight = value

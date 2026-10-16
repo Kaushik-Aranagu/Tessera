@@ -59,7 +59,9 @@ public struct TessGrammar {
     public func parse(_ phrase: String, context: TessContext) -> Parse? {
         // A wake word said with it ("Okay Tess, 80 for 8.") is not part of the phrase.
         // Only "Tess," / "Tess:" or "okay/hey Tess": "Tess's ideas list" and "Tess dinner fri" keep their Tess (QA W1).
-        let phrase = phrase.replacing(/^(?i)\s*(?:(?:ok(?:ay)?|hey)\s+tess(?:[,.:]\s*|\s+)|tess[,:]\s*)/, with: "")
+        // "Tess 80 for 8" (dictation dropped the comma): a bare "Tess" before a number goes too (QA L3 on #287).
+        let phrase = phrase.replacing(/^(?i)\s*(?:(?:ok(?:ay)?|hey)\s+tess(?:[,.:]\s*|\s+)|tess[,:]\s*|tess\s+(?=\d))/,
+                                      with: "")
         let text = Self.normalize(phrase)
         guard !text.isEmpty else { return nil }
         if let note = parseNote(phrase) {
