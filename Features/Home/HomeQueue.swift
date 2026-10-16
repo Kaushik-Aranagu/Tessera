@@ -201,6 +201,8 @@ private struct QueueRow: View {
     @State private var moves = 0
     @State private var away = false
     @State private var holding = false
+    /// Room for the time column; grows with Dynamic Type so titles never run under it.
+    @ScaledMetric(relativeTo: .body) private var timeRoom: CGFloat = 64
     @Environment(\.homePagerIdle) private var pagerIdle
     @Environment(\.homeRowGrab) private var grab
 
@@ -318,7 +320,7 @@ private struct QueueRow: View {
             Spacer(minLength: Theme.Spacing.s)
         }
         // Room for the time column, which sits still on the right while the title travels.
-        .padding(.trailing, entry.time == nil ? 0 : 64)
+        .padding(.trailing, entry.time == nil ? 0 : timeRoom)
         .frame(maxHeight: .infinity)
     }
 

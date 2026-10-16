@@ -127,6 +127,17 @@ struct HomeDataTests {
         #expect(WeekReview.headline(4) == "Four good days of seven")
         #expect(WeekReview.headline(1) == "One good day of seven")
         #expect(WeekReview.headline(0) == "A quiet week so far")
+        let all = WeekReview.headline(sessions: 6, perWeek: 6, firstWeek: false, firstUseToday: false)
+        #expect("\(all.lead) \(all.tail)" == "All six sessions in")
+        let four = WeekReview.headline(sessions: 4, perWeek: 6, firstWeek: false, firstUseToday: false)
+        #expect("\(four.lead) \(four.tail)" == "Four sessions this week")
+        let one = WeekReview.headline(sessions: 1, perWeek: 6, firstWeek: true, firstUseToday: false)
+        #expect("\(one.lead) \(one.tail)" == "One session in your first week")
+        let quiet = WeekReview.headline(sessions: 0, perWeek: 6, firstWeek: false, firstUseToday: false)
+        #expect("\(quiet.lead) \(quiet.tail)" == "A quiet week so far")
+        let start = WeekReview.headline(sessions: 0, perWeek: 6, firstWeek: true, firstUseToday: true)
+        #expect("\(start.lead) \(start.tail)" == "Your first week starts today")
+        #expect(WeekReview.sessionLine(sessions: 4, perWeek: 6) == "4 of 6 sessions this week")
     }
 
     // MARK: Model-backed helpers
@@ -143,7 +154,7 @@ struct HomeDataTests {
         let sets = Dictionary(uniqueKeysWithValues: trained.map { ($0.muscle.title, $0.sets) })
         #expect(sets == ["Chest": 4, "Front Delts": 3])
         #expect(volume.first?.sets == 4)
-        #expect(WeekReview.tessLine(trained) == "Front Delts is a little behind: 3 sets of 10 this week.")
+        #expect(WeekReview.tessLine(trained) == "Front Delts: 3 sets this week, toward a usual 10.")
         #expect(WeekReview.tessLine([]) == nil)
 
         // A subclass without its own profile inherits its parent's muscles.
