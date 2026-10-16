@@ -15,10 +15,15 @@ struct CarriageRail: View {
     /// 0 … titles.count − 1.
     let progress: Double
     var spread: Spread = .columns
-    var carriage = CGSize(width: 64, height: 4)
+    var carriage = CGSize(width: 40, height: 2)
     var onSelect: (Int) -> Void
 
     @State private var frames: [Int: CGRect] = [:]
+
+    /// Between pages: progress isn't on a whole page.
+    private var isPaging: Bool {
+        abs(progress - progress.rounded()) > 0.02
+    }
 
     var body: some View {
         let current = Int(progress.rounded())
@@ -27,7 +32,9 @@ struct CarriageRail: View {
                 .tesseraAnimation(Theme.Motion.snappy, value: current)
             UnevenRoundedRectangle(topLeadingRadius: 2, bottomLeadingRadius: 1.2, bottomTrailingRadius: 2.4,
                                    topTrailingRadius: 1, style: .continuous)
-                .fill(Theme.Colors.live)
+                // Ink at rest, live only while paging (no-dots.md C5, ink-line.md).
+                .fill(isPaging ? Theme.Colors.live : Theme.Colors.ink)
+                .tesseraAnimation(.easeOut(duration: 0.2), value: isPaging)
                 .frame(width: carriage.width, height: carriage.height)
                 .rotationEffect(.degrees(-1.2))
                 .blur(radius: 0.5)

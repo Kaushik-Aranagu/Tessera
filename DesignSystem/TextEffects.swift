@@ -57,7 +57,7 @@ struct StrikeRenderer: TextRenderer, Animatable {
             var path = Path()
             path.move(to: CGPoint(x: bounds.minX, y: y))
             path.addLine(to: CGPoint(x: bounds.minX + bounds.width * local, y: y))
-            context.stroke(path, with: .color(color), style: StrokeStyle(lineWidth: 4, lineCap: .round))
+            context.stroke(path, with: .color(color), style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
         }
     }
 }
