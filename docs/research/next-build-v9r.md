@@ -119,6 +119,8 @@ Status words: **merged**, **open PR**, **not started** (no branch and no commit 
 |---|---|---|---|---|---|
 | R12 | SAVE A COPY's default name becomes "Before update <day>.tessera" (today "Tessera-<day>", `Features/Backup/BackupKeeper.swift:170`), and rotation and pruning touch only the rolling prefix, with a test. | Core | Core 0af | not started | **SC1** |
 | R13 | SAVE A COPY warns "This is the Backups folder. Daily copies here get replaced. Save somewhere else?" when he picks the Backups folder. After R12. | Builder B | B 0t | not started | **SC2** |
+| R15 Review foot line out of Tess's band (Design v9 walk, must land) | Builder B 0x | none yet | none yet | none yet | none yet | `HomeSpatialView` HomeLinkLine. |
+| R16 Routines Tess line and "Add an exercise" out of the band, 84 pt inset (Design v9 walk, must land) | Builder A 0q | none yet | none yet | none yet | none yet | |
 
 ### Fixes from the Research fixtures (F1 to F12)
 
