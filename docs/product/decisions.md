@@ -4,6 +4,17 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+- **Copy pass, asks and wrong writes** (3:34 AM PT Oct 16, Design 62 `copy-pass.md` a127cbc, Research 131 to 133 #379).
+  - **Design's picks.** Accepted: digits in heroes ("3 sessions"), lower-case "pm" in heroes ("Tacos at 7 pm"), "Pull A tomorrow, first." and "Dune, set aside." Not accepted: first-person Settings lines. Settings keeps the built, decided copy ("Tess asks Claude: yes.", "Tess stays on this phone."), because the switch is named for Tess and #320 shipped it. Tess's first person stays in her own lines by the soul.
+  - **AQ6: asks hold in quiet hours.** App-raised asks hold from 23:00 to 07:00. They also hold from the moment the day is closed (Shutdown complete, or the 22:00 silent close) until 07:00. A closed day never asks.
+  - **AQ1.** The set-count ask (Q10) is a worded choice ("2 sets, or 2 kg?"), never yes/no.
+  - **AQ15: two UNDO lengths.** A new capture gets a 4 s UNDO. Anything that removes or changes something already there gets 10 s.
+  - **Wrong writes (Research 132), all fixed by Core:**
+    - "buy a birthday card" and "get gas" are tasks. A grocery row needs a food or household word.
+    - "trash night is tuesday" becomes a weekly task "Trash night" on Tuesdays.
+    - "shopping list: rice, beans" adds two grocery rows.
+  - **NE1/NE2: secret words.** A line with a secret word (password, PIN, passcode, wifi password, code) becomes a private note on the phone. It never reaches the model, Claude, memory or the miss log.
+  - **NE11: removing a list item.** List items get a remove: "remove rice from groceries", or a swipe on the row, with a 10 s UNDO ("Rice, removed.").
 - **Upkeep and People receipts** (3:33 AM PT Oct 16, Design 61, `upkeep-people-grammar.md`, 1662430; all three confirmed).
   - The done receipt is "Clean the bathroom, done. Was 21 days, usually 14."
   - The pick receipt is "4 chores, kept. Tell me when you do one."

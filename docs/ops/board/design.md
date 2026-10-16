@@ -85,8 +85,10 @@ Items 2 to 4 of the last round are done (see Done). Item 1's first pass is done;
 59. (done, cbfc1ee) Habits on the new grammar. Done when the habits page and its Today foot word (`body-weight-and-habits.md`, "0 of 5" in the creation week, a gap is not a miss, Review max 3) are redrawn under 41's one-line grammar and the one-base rule, with a recording, for Builder B.
 60. (done, f014a81) Money and Reading on the new grammar. Done when the first screens (`money-reading-first.md`) are checked against 41, 43's recut looks and the back-word map, with seams fixed and a recording, for Builder A.
 61. (done, 1662430) Upkeep and People on the new grammar. Done when `upkeep-people-first.md` is checked the same way, with the radiators ask in the one-ask pattern, for Builder B.
-62. Receipts and bests, one pass. Done when every sheet's receipt and record line follows decisions.md 3:15 AM PT ("Call mom, done.", "Tacos, 2 added.", "best" never "record"), with the changed lines listed per sheet for Builder A and Builder B.
+62. (done, a127cbc; Settings stays third person) Receipts and bests, one pass. Done when every sheet's receipt and record line follows decisions.md 3:15 AM PT ("Call mom, done.", "Tacos, 2 added.", "best" never "record"), with the changed lines listed per sheet for Builder A and Builder B.
 63. Shutdown on the new grammar. Done when the Shutdown page (`shutdown.md`: hold "Shutdown complete", "Closed. Your line is waiting at 08:00.", the 10 s UNDO, 22:00 silent close) is redrawn on 41's frame and one-line grammar, with a recording, for Builder B.
+64. The habits check-in ask (AQ12). Done when the check-in has exact words in the one-ask pattern (a cobalt line and two ink words, the likelier first), skipped on a day that already logs it, held in quiet hours and after the day closes, for Builder B and Core.
+65. Removing a list item (NE11). Done when the swipe on a Groceries or Lists row and the spoken remove are drawn ("Rice, removed." with a 10 s UNDO under the line), with a recording, for Builder B.
 
 **Later:**
 - Glyph for the Tell Tess control as an SF Symbols template, once slice 10 starts.
