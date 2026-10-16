@@ -14,7 +14,7 @@
 | Task deleted or undone | If the recipe was added, `RemoveRecipeFromGroceries` removes the open items that carry only this share, and checked items stay. If it wasn't added, nothing happens | Undo puts things back the way they were |
 | Task done or cooked early | Nothing changes. Open items stay; he may still need them | |
 | Already on the list from the recipe page | The share merges as it does today; there are no duplicate lines | |
-| Tess | **Changed 2026-10-16:** "Added 2 for tacos." with UNDO for 10 s. No notification. Rows carry "for tacos" under them; no sage dab (`no-dots.md`) | Design 47 |
+| Tess | **Changed 2026-10-16:** "Tacos, 2 added." with UNDO for 10 s. No notification. Rows carry "for tacos" under them; no sage dab (`no-dots.md`) | Design 47 |
 
 ## Acceptance script
 
@@ -26,6 +26,6 @@
 5. A task moved from Thursday to Saturday before the add is added on Friday at 17:00.
 6. If the recipe was deleted, the pass skips the task without crashing.
 
-**On the simulator, in the recording.** Capture "dal tomorrow" in the ghost row. Open Groceries: the dal items are there with "for dal" under each, Tess says "Added 3 for dal." with UNDO (Design 47 replaced the 17:00 wait and the sage dab).
+**On the simulator, in the recording.** Capture "dal tomorrow" in the ghost row. Open Groceries: the dal items are there with "for dal" under each, Tess says "Dal, 3 added." with UNDO (Design 47 replaced the 17:00 wait and the sage dab).
 
 **UI bar.** There is nothing new on screen apart from the long-press wording, so it inherits Groceries' acceptance.
