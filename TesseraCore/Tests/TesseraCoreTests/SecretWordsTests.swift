@@ -158,4 +158,12 @@ struct SecretWordsTests {
         #expect(memory.pack(.init(told: true, noticed: true, recent: true))
             .allSatisfy { !SecretWords.mentions($0.text) })
     }
+
+    @Test func aPrivateNoteIsNeverAMentionTarget() throws {
+        // Board 0ad (PN-MENTION): "@Private note" in another note links nothing.
+        let secret = try engine.perform(CreateNote(body: "door code 4417", isPrivate: true), by: .user).output
+        let other = try engine.perform(CreateNote(body: "see @[Private note] for the door"), by: .user).output
+        #expect(!store.linkedObjects("about", of: other).contains { $0.id == secret.id })
+        #expect(NoteList(store: store, classes: classes).mentions(in: "@[Private note]").isEmpty)
+    }
 }
