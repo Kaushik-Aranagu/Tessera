@@ -1,5 +1,9 @@
 # Recipes and groceries, then Lists (Kitchen lead)
 
+**Two lanes (11:25 AM PT Oct 16, Kaushik: no idle agents):** when one lane waits on a review, build, gate or answer, work the other in the same turn. Next keeps 3 or more ready items. The coordinator sweeps every 30 minutes.
+- **Lane 1:** Recipe-clock step-timing vectors for Core's 69 slice (start and end minutes, used set, one timer per timed step).
+- **Lane 2:** Demo recipes for the recipe clock (for Builder B's recordings and the walk), plus acceptance of Core's kitchen slices as they land.
+
 **Now:** accept each kitchen screen as Core lands it, in `docs/product/kitchen-acceptance.md`. Engine 1-9 and Groceries #58 done (10 fixes relayed). Recipe page and Paste #86 accepted: pass, 3 polish fixes, corpus gaps ranked for Paste hardening (#88).
 
 **Fix now (small):** in `cook-mode-acceptance.md`, a stopped timer says "Simmer stopped." (Research #175 `tess-voice.md`; decisions.md 6:37 PM PT). Check the doc for any other line that disagrees with tess-voice.

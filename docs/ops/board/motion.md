@@ -2,6 +2,10 @@
 
 *Started 2026-10-16 from Kaushik's first review (11:58 PM PT Oct 15): Tess's soul gets dot eyes, roams the screen, can be dragged, fades into subtle colours while working, splits and gathers back. "Very subtle." Product edits the Next list. Rules: Speak gestures stay (tap opens Tess, double tap in 260 ms goes Home, a hold never opens the layer, so a drag starts from a hold); nothing on a page moves for the soul; colour arrives through motion and dries; 60fps with a Reduce Motion fallback; palettes from `soul-explore.md`. Builder A builds it (TessSoul.swift, SoulParameters.swift).*
 
+**Two lanes (11:25 AM PT Oct 16, Kaushik: no idle agents):** when one lane waits on a review, build, gate or answer, work the other in the same turn. Next keeps 3 or more ready items. The coordinator sweeps every 30 minutes.
+- **Lane 1:** Reference renders for picks (a) 1 + 2 and (b) 3 + 4, as the targets Builder A's PRs are checked against.
+- **Lane 2:** Reference render for (c) the mouth (item 19), then the item 20 signals note with AI architecture.
+
 **Now:** 18 (his picks, 9:55 AM PT Oct 16: all 11 ideas, plus a mouth), then 19, then 16 again on each soul PR. 17 done.
 
 **Next:**
