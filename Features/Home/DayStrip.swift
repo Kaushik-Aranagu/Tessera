@@ -15,9 +15,11 @@ struct DayTimeline: Equatable {
         return Double(parts.hour ?? 0) + Double(parts.minute ?? 0) / 60 + Double(parts.second ?? 0) / 3600
     }
 
-    /// Where `date` sits on the day, clamped to 0 … 1.
+    /// Where `date` sits on his day, clamped to 0 … 1. His day runs to 04:00, so 01:50 is hour 25.8 of the day
+    /// that's ending (the tip stays at the evening end), not hour 1.8 of a new one.
     func fraction(of date: Date) -> Double {
-        fraction(hour: hours(of: date))
+        let hour = hours(of: date)
+        return fraction(hour: hour < Double(TesseraDay.startHour) ? hour + 24 : hour)
     }
 
     func fraction(hour: Double) -> Double {
@@ -184,7 +186,7 @@ private struct DayStroke: View {
     }
 
     private var gradient: LinearGradient {
-        LinearGradient(gradient: HomePaint.dayGradient, startPoint: .leading, endPoint: .trailing)
+        LinearGradient(gradient: HomeStroke.gradient, startPoint: .leading, endPoint: .trailing)
     }
 
     static func point(at fraction: Double, in size: CGSize) -> CGPoint {
@@ -219,7 +221,7 @@ private struct WetTip: View {
 
     var body: some View {
         Circle()
-            .fill(HomePaint.wetTip)
+            .fill(Theme.Colors.now)
             .frame(width: 26, height: 26)
             .scaleEffect(breathe ? 1.35 : 1)
             .blur(radius: breathe ? 6 : 3)

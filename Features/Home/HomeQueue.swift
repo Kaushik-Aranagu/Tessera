@@ -229,7 +229,10 @@ private struct QueueRow: View {
                 .offset(x: drag < 0 ? leftOffset : 0)
                 // Lifted while held: a soft shadow on the text itself and a slight scale, no highlight shape.
                 .scaleEffect(holding && !struck ? 1.03 : 1, anchor: .leading)
-                .shadow(color: Theme.Colors.ink.opacity(holding && !struck ? 0.18 : 0), radius: 6, y: 3)
+                // The shadow lifts on light looks only; on dark ones ink would glow (B14). Scale and haptic carry it
+                // there.
+                .shadow(color: Theme.Colors.ink.opacity(holding && !struck && !Theme.Colors.halo ? 0.18 : 0),
+                        radius: 6, y: 3)
                 .tesseraAnimation(.spring(Spring(duration: 0.25, bounce: 0.2)), value: holding)
         }
         .contentShape(Rectangle())
