@@ -4,7 +4,7 @@
 
 ## 1. Blockers (all merged on master)
 - [ ] #366 AI-1 Home lines (Builder B): Design clip pass + QA confirm.
-- [ ] The stuck-listening fix (Builder B): refused hold returns Tess to idle; router test green. (decisions.md 11:08 AM PT)
+- [x] The stuck-listening fix (Builder B): #446, 0eca9bbe.
 - [x] #422 secret-word wall + $50 cap (5af8f2c2, Catalog v9).
 - [ ] MU2 (Core): money, body and health phrases never reach Claude, incl. CA6 answerQuery allow-list and CA7 screens before the offline inbox add. (decisions.md 11:35 AM PT; QA A1, Research MW1)
 - [ ] A2 (Core): the inbox retry goes through the router walls, inside MU2 or a tiny PR beside it.
