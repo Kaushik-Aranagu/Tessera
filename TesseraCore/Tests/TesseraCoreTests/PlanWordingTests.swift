@@ -81,6 +81,10 @@ struct PlanWordingTests {
 
     /// d01: three tasks in one run, three meetings, Push A at 6 pm.
     var d01: DayPlan {
+        DayPlanner.plan(d01Input)
+    }
+
+    var d01Input: PlanInput {
         var day = PlanInput(now: now, calendar: DayPlanTests.calendar)
         let at = { DayPlanTests.at(2, $0) }
         day.events = [PlanInput.Event(title: "Standup", start: at("09:30"), end: at("09:45")),
@@ -96,12 +100,12 @@ struct PlanWordingTests {
             PlanInput.Task(title: "Expense report", due: at("17:00"), minutes: 45,
                            updatedAt: DayPlanTests.at(27, "09:00", month: 10)),
         ]
-        return DayPlanner.plan(day)
+        return day
     }
 
     var pack: PlanPack? {
         PlanPack(plan: d01, now: now, calendar: DayPlanTests.calendar, calendarKnown: true, restDay: false,
-                 otherNames: ["Sort the garage", "Mum's birthday", "Push A"])
+                 otherNames: ["Sort the garage", "Mum's birthday", "Push A", "Lunch", "Reply to landlord today"])
     }
 
     static let ideal = #"""
@@ -315,5 +319,58 @@ struct PlanWordingTests {
                                                                             with: #""stop_reason":"max_tokens""#))]
         #expect(await wording().word(d01, pack: pack) == .rules(line: nil))
         #expect(ledger.calls().last.flatMap { store.value("outcome", of: $0)?.stringValue } == "max_tokens")
+    }
+
+    @Test(arguments: [
+        "the rest of the afternoon is yours.", "before lunch.", "a quick session before Standup.",
+        "the landlord reply, before Standup.",
+    ])
+    func ordinaryWordsPassV13(_ line: String) throws {
+        // QA S1 on #303: "rest", a one-word Later task, "session", and a name overlapping a plan title.
+        let bad = Self.ideal.replacingOccurrences(of: "while the morning is quiet.", with: line)
+        #expect(try !PlanProposalValidator.violations(proposal(bad), against: #require(pack)).contains("V13"))
+    }
+
+    @Test func aMinuteLaterTheWordingIsReusedAndAFailureIsRememberedToday() async {
+        // QA S2: 08:00 then 08:07, one request; the times repack from the new start.
+        PlanStub.queue = [(200, Self.reply(Self.ideal))]
+        let wording = wording()
+        _ = await wording.word(d01, pack: pack)
+        var later = PlanInput(now: DayPlanTests.at(2, "08:07"), calendar: DayPlanTests.calendar)
+        later.events = d01Input.events
+        later.workout = d01Input.workout
+        later.today = d01Input.today
+        let plan = DayPlanner.plan(later)
+        let next = PlanPack(plan: plan, now: DayPlanTests.at(2, "08:07"), calendar: DayPlanTests.calendar,
+                            calendarKnown: true, restDay: false)
+        wording.now = { DayPlanTests.at(2, "08:07") }
+        guard case let .worded(again) = await wording.word(plan, pack: next) else {
+            Issue.record("not reused")
+            return
+        }
+        #expect(PlanStub.requests.count == 1)
+        #expect(again.plan.ghosts.first?.start == DayPlanTests.at(2, "08:10"))
+        // A rejection (or a late reply) is remembered for the day; a bad key is not.
+        let failing = self.wording()
+        PlanStub.queue = [(200, Self.reply(Self.ideal.replacingOccurrences(of: "Due 5 pm.", with: "Due 17:00.")))]
+        _ = await failing.word(d01, pack: pack, stale: { true })
+        _ = await failing.word(d01, pack: pack)
+        #expect(PlanStub.requests.count == 2)
+        let keyed = self.wording()
+        PlanStub.reply = (401, "{}")
+        _ = await keyed.word(d01, pack: pack)
+        _ = await keyed.word(d01, pack: pack)
+        #expect(PlanStub.requests.count == 4)
+    }
+
+    @Test func anAllDayTitleInThePlanIsNotSomethingElse() throws {
+        var day = d01Input
+        day.events.append(PlanInput.Event(title: "Bank holiday", start: DayPlanTests.at(2, "00:00"),
+                                          end: DayPlanTests.at(3, "00:00"), allDay: true))
+        let plan = DayPlanner.plan(day)
+        let pack = try #require(PlanPack(plan: plan, now: now, calendar: DayPlanTests.calendar, calendarKnown: true,
+                                         restDay: false, otherNames: ["Bank holiday"]))
+        let line = Self.ideal.replacingOccurrences(of: "while the morning is quiet.", with: "a Bank holiday morning.")
+        #expect(try !PlanProposalValidator.violations(proposal(line), against: pack).contains("V13"))
     }
 }

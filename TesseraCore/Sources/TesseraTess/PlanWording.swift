@@ -9,6 +9,8 @@ import TesseraCore
 public struct PlanPack: Sendable, Equatable {
     /// The exact wire line (sorted keys).
     public let json: String
+    /// The same plan at any minute of the day: what the wording is remembered by.
+    public let cacheKey: String
     /// Handle ("t1", "e2", "w1", "k1") to the plan block's index.
     public let handles: [String: Int]
     /// Handles of the run blocks (Tess's plan lines), by run.
@@ -111,6 +113,20 @@ public struct PlanPack: Sendable, Equatable {
         if restDay {
             top["rest"] = true
         }
+        // The same plan, whatever minute it is: run blocks without their times, no "now" or window (QA S2).
+        var stable = top
+        stable["now"] = nil
+        stable["window"] = nil
+        stable["blocks"] = rows.map { row in
+            var row = row
+            if row["run"] != nil {
+                row["start"] = nil
+                row["end"] = nil
+            }
+            return row
+        }
+        cacheKey = (try? JSONSerialization.data(withJSONObject: stable, options: [.sortedKeys]))
+            .flatMap { String(data: $0, encoding: .utf8) } ?? ""
         guard let data = try? JSONSerialization.data(
             withJSONObject: top,
             options: [.sortedKeys, .withoutEscapingSlashes]
@@ -128,8 +144,12 @@ public struct PlanPack: Sendable, Equatable {
         func phrase(_ text: String) -> String {
             text.lowercased().split { !$0.isLetter && !$0.isNumber && $0 != "'" }.joined(separator: " ")
         }
-        let inPack = Set(plan.blocks.map { phrase($0.title) })
-        self.otherNames = Set(otherNames.map(phrase).filter { $0.count >= 3 && !inPack.contains($0) })
+        // Multi-word names only ("Lunch" would catch "before lunch"), and never one that overlaps a title in the plan
+        // or its all-day items ("landlord" in "Reply to landlord") (QA S1 on #303).
+        let inPack = (plan.blocks.map(\.title) + plan.allDay).map(phrase)
+        self.otherNames = Set(otherNames.map(phrase).filter { name in
+            name.contains(" ") && !inPack.contains { $0.contains(name) || name.contains($0) }
+        })
         hasWorkout = plan.blocks.contains { $0.kind == .workout }
         isRestDay = restDay
         func words(_ text: String) -> [String] {
@@ -270,11 +290,11 @@ public enum PlanProposalValidator {
             // V13 (Product, 10:24 PM PT): naming a task, event or exercise that isn't in the plan, or training on a
             // day with no workout block ("Rest day." alone on a rest day).
             let padded = " " + tokens.joined(separator: " ") + " "
-            let training = ["workout", "gym", "training", "train", "lift", "session"]
+            let training = ["workout", "gym", "training"]
             if pack.otherNames.contains(where: { padded.contains(" \($0) ") })
                 || !pack.hasWorkout && tokens
                 .contains(where: { training.contains($0) && !pack.titleWords.contains($0) })
-                || !pack.hasWorkout && tokens.contains("rest") && !(pack.isRestDay && line == "Rest day.")
+                || !pack.hasWorkout && padded.contains(" rest day ") && !(pack.isRestDay && line == "Rest day.")
             {
                 codes.append("V13")
             }
@@ -392,7 +412,9 @@ public final class ClaudePlanWording {
     public var calendar: Calendar = .current
     /// The same pack today reuses its wording (no second call).
     /// The last result per pack, failures and rejections included, so reopening never pays again (merge check).
-    private var cache: (json: String, result: PlanWordingResult)?
+    private var worded: (key: String, proposal: ProposePlan, pack: PlanPack)?
+    /// A failed or rejected call is remembered for his day: reopening never pays again today (QA S2).
+    private var failed: (day: Date, result: PlanWordingResult)?
     private static let log = Logger(subsystem: "com.kaushikaranagu.tessera", category: "tess.plan")
 
     public init(keys: any TessKeychain, ledger: TessUsageLedger,
@@ -407,8 +429,15 @@ public final class ClaudePlanWording {
     /// dropped (its cost still counted).
     public func word(_ plan: DayPlan, pack: PlanPack?, stale: () -> Bool = { false }) async -> PlanWordingResult {
         guard let pack, allowed(), let key = keys.read() else { return .rules(line: nil) }
-        if let cache, cache.json == pack.json {
-            return cache.result
+        let today = TesseraDay(calendar: calendar).day(of: now())
+        if let worded, worded.key == pack.cacheKey,
+           let proposal = Self.repacked(worded.proposal, from: worded.pack, to: pack),
+           PlanProposalValidator.violations(proposal, against: pack).isEmpty
+        {
+            return .worded(plan.applying(proposal, pack: pack, calendar: calendar, now: now()))
+        }
+        if let failed, failed.day == today {
+            return failed.result
         }
         let input = (try? JSONSerialization.jsonObject(with: Data(pack.json.utf8))).map { "\($0)" } ?? pack.json
         let estimate = TessUsageLedger.estimate(text: Self.instructions + Self.schemaText + input,
@@ -429,10 +458,11 @@ public final class ClaudePlanWording {
                           latency: Date().timeIntervalSince(started), outcome: outcome, requestID: requestID,
                           at: now())
         }
-        // Paid or not, a call that reached Claude is remembered for this pack; offline never was.
+        // A call that reached Claude is remembered for today; offline, cancelled and a bad key (a new key may come)
+        // never are.
         func done(_ result: PlanWordingResult) -> PlanWordingResult {
-            if outcome != "offline" {
-                cache = (pack.json, result)
+            if !["offline", "cancelled", "badKey"].contains(outcome) {
+                failed = (today, result)
             }
             return result
         }
@@ -449,15 +479,18 @@ public final class ClaudePlanWording {
             default: nil
             }
             return done(.rules(line: line))
+        } catch is CancellationError {
+            outcome = "cancelled" // the view went away: not a call to remember (merge check)
+            return .rules(line: nil)
         } catch {
-            outcome = "other"
+            outcome = Task.isCancelled ? "cancelled" : "other"
             return done(.rules(line: nil))
         }
         usage = reply.usage
         requestID = reply.requestID
         guard !stale() else {
             outcome = "late"
-            return .rules(line: nil)
+            return done(.rules(line: nil))
         }
         // Cut off or refused: the rules plan, with its row (merge check).
         if let stop = reply.stop, ["max_tokens", "refusal"].contains(stop) {
@@ -474,7 +507,38 @@ public final class ClaudePlanWording {
             Self.log.debug("plan rejected: \(codes.joined(separator: ","), privacy: .public)")
             return done(.rules(line: nil))
         }
-        return done(.worded(plan.applying(proposal, pack: pack, calendar: calendar, now: now())))
+        worded = (pack.cacheKey, proposal, pack)
+        return .worded(plan.applying(proposal, pack: pack, calendar: calendar, now: now()))
+    }
+
+    /// The remembered reply for the same plan at a later minute: the same run order and lines, repacked from each
+    /// run's new start, fixed blocks at their new times.
+    static func repacked(_ proposal: ProposePlan, from _: PlanPack, to new: PlanPack) -> ProposePlan? {
+        func clock(_ minutes: Int) -> String {
+            String(format: "%02d:%02d", minutes / 60, minutes % 60)
+        }
+        let oldStart = Dictionary(uniqueKeysWithValues: proposal.blocks.compactMap { block in
+            block.start.firstMatch(of: /^(\d{2}):(\d{2})$/).flatMap { match in
+                Int(match.1).flatMap { hour in Int(match.2).map { (block.id, hour * 60 + $0) } }
+            }
+        })
+        var starts: [String: Int] = [:]
+        for run in new.runs {
+            var cursor = run.compactMap { new.blocks[$0]?.start }.min() ?? 0
+            for id in run.sorted(by: { (oldStart[$0] ?? 0) < (oldStart[$1] ?? 0) }) {
+                starts[id] = cursor
+                cursor += new.blocks[id]?.min ?? 0
+            }
+        }
+        let blocks = proposal.blocks.compactMap { block -> ProposePlan.Block? in
+            guard let input = new.blocks[block.id] else { return nil }
+            let start = starts[block.id] ?? input.start
+            return ProposePlan.Block(id: block.id, start: clock(start), end: clock(start + input.min),
+                                     lineText: block.lineText)
+        }
+        guard blocks.count == proposal.blocks.count else { return nil }
+        return ProposePlan(blocks: blocks, startWith: proposal.startWith, ghostLines: proposal.ghostLines,
+                           note: proposal.note)
     }
 
     /// A hard deadline: URLRequest's timeout only counts idle time, so the call races a sleep (merge check).
