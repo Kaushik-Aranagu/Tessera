@@ -135,3 +135,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [set-logger-rerun.md](set-logger-rerun.md) | Core: set-logger rerun on the live-workout guard (group K 38/0/2) |
 | [fixtures/habits-grammar.md](fixtures/habits-grammar.md) | Core: 30 habit grammar rows (suite group L) |
 | [fixtures/body-weight.md](fixtures/body-weight.md) | Core: 25 body weight rows against S701 (suite group M) |
+| [plan-my-day-blind-read.md](plan-my-day-blind-read.md) | Kaushik, Product: Plan my day Haiku vs Sonnet blind-read sheet (use 2 gate) |
