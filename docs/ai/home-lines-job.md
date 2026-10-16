@@ -43,6 +43,20 @@ word), up to 10 noticed lines (Training and Kitchen), the last 7 recent lines. N
 never a private line. Each item also carries `fits: [ruleId]`: the noticed rules today agrees with (the slot, the
 weekday), so "usual" is allowed only when `fits` is not empty (Research 124 H-M1 to H-M3).
 
+## 2a. After AI-5: the narrowed job (Oct 16, PR #488)
+
+AI-5 found Claude adds a true fact only on done workouts; everywhere else it padded ("After work, your usual slot",
+once on a Saturday). So the job narrows before anything ships:
+
+- **Packed items:** only a done workout with a best (`records` not empty) or 4 or more days since the same routine.
+  Every other item keeps its rules lines and is never packed. A Home with no such item makes no call at all.
+- **Instructions:** `scripts/ai/home_lines_eval.py` `DONE_RULES` is the text to copy. It opens with Research's rule:
+  "Return the rules line unchanged unless you add one true fact it lacks", and bans "usual", "as usual" and a
+  restated time of day.
+- **The `fits` rule in section 5 is required, not optional:** AI-5's Saturday slip is exactly a "usual" with no
+  matching weekday. The eval mirrors it as C15.
+- "Claude Home wording" stays off until the `--job done` rerun passes and Kaushik reads his 10 lines.
+
 ## 3. Cache and key
 
 - **File** (new): `Application Support/Tessera/home-lines-cache.json`, excluded from backup, complete file
