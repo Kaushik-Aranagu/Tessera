@@ -6,6 +6,7 @@ DRAFT. The v9 riders build after a36b161 has no pin yet. Every line below is mer
 - **Private notes** in the Notes list show only "Private note" and the time, and VoiceOver reads only that.
 - **Not yet fixed:** a note written before a36b161 can still show its first line in the Day log. The fix is planned but not merged yet.
 - **Not yet fixed:** a note that mentions "@Private note" can open that private note's page and show all of it. The fix is planned but not merged yet.
+- **Not yet fixed:** until the next build, type secrets only into the Ask bar, as a plain statement, not a question. Other boxes, such as the Groceries Add line and routine names, don't hide them yet.
 - **Your data:** this build is still Catalog v9, so nothing you have changes.
 - **Save a copy first:** Review, then The week, then Backups, SAVE A COPY. Save it outside the Backups folder and name it "Before" plus this build's code.
 - **The way back** is a36b161. It opens your data just as it does today.
@@ -72,7 +73,7 @@ sender).
 **To finish when the pin is named**
 - [ ] Set the first line to "Build <sha> (pin <full sha>, Catalog v9)" and drop DRAFT.
 - [ ] Rerun `git log --oneline --first-parent a36b161..<pin>` and move every planned item that merged into the merged list, with file:line read at the pin. Confirm no #407 merge and `version: 9`.
-- [ ] If N15 is in, drop the first "Not yet fixed" line; if PN-MENTION is in, drop the second. If not, keep them.
+- [ ] If N15 is in, drop the first "Not yet fixed" line; if PN-MENTION is in, drop the second; if the "?" fix (B 0v, Core 0ah) and the engine wall (Core 0ai) are in, drop the third. If not, keep them.
 - [ ] If the HW and P14 rows are in, add one top line each in his words (for example "Siri keeps a weigh-in private.").
 - [ ] If Core 0ae is in, add a top line for the trip week; the pin must be on his phone before Oct 26.
 - [ ] If Core 0af is in, the Save a copy line uses the new suggested name.
