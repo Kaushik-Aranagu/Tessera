@@ -89,3 +89,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [fixtures/cook-timer-phrases.md](fixtures/cook-timer-phrases.md) | Core and Builder A: 40 cook timer phrases (RC15) with expected parses, Tess lines and look-alike guards |
 | [fixtures/review-sentence.md](fixtures/review-sentence.md) | Builder B and Core: 30 weeks with the expected Review hero sentence and dabs, 22 guilt flags with replacement copy |
 | [widget-states.md](widget-states.md) | Builder A: exact widget, Live Activity and snippet lines for six states, drawn from NowPicker and the ranker |
+| [fixtures/people-names.md](fixtures/people-names.md) | Core: 40 names that are also words (Will, Rose, Bill, June...) through the M5 order, with 12 guards |
