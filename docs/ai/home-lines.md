@@ -39,7 +39,7 @@ The hero's form sets the pattern the context line answers:
 |---|---|---|---|
 | planned, morning | Push A | today | today, after work / today, your usual slot |
 | planned, evening | Push A | this evening | this evening, your usual slot |
-| running | Push A, bench set 3 | now | now / set 3 is up |
+| running | Push A, bench set 3 | now | now / set 3 now |
 | paused | Push A, paused at bench | paused 21 min ago | paused 21 min ago |
 | done | Push A done | done at 7:40 pm | a bench best / done at 7:40 pm / first in 9 days |
 | done, no sets | Push A, no sets | this afternoon | this afternoon (rules only; Claude never comments on an empty workout) |
@@ -56,9 +56,9 @@ Settings says, under the spend line: **"Titles and counts only. Never notes, pla
 
 Always first. The rules line draws at once on every launch and every change. Claude's words replace it only when all hold: the switch is on, online, under the cap and below its 80% line, not in a live workout, the pack hash is new (else the cached words show), and the line passes every check in section 2 on the phone. Offline, capped, switched off, in demo, or on any failed check: the rules line stays, and nothing visible happens.
 
-## 4. How a Claude line arrives (for Design)
+## 4. How a Claude line arrives (Design's ruling, Oct 16)
 
-Proposal, Design's call: the rules line is already on screen; when Claude's words differ, the line redraws as wet cobalt and dries to ink over about 700 ms through `MotionPolicy`, the same drying every Tess word already uses; identical words never redraw. No mark at rest. Reduce Motion: a crossfade.
+The rules line is on screen first. When Claude's words differ, the line redraws wet in `tess` and dries to its resting colour over the house 2 s (`Theme.Motion.dry`): `context` for the context line (the one line that rests in colour, per Design 41) and `inkSecondary` for the SO FAR sentence. Identical words never redraw. The hero never redraws for Claude. No mark at rest. Reduce Motion is a crossfade. Builder B has the same ruling for AI-1.
 
 ## 5. Fixtures
 
