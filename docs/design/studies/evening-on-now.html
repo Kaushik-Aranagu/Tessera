@@ -23,7 +23,7 @@ body.x2{transform:scale(2)}
 .q .tm{position:absolute;right:0;top:0}
 .tess{color:var(--tess)}
 .ctx{color:var(--ctx)}
-.soul{position:absolute;left:322px;top:782px;width:46px;height:40px;transition:filter .8s,transform .8s,opacity .8s}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;transition:filter .8s,transform .8s,opacity .8s}
 .soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px);mix-blend-mode:screen}
 .soul.rest{filter:saturate(.45);transform:scale(.85);opacity:.7}
 .f{transition:opacity .42s var(--house),filter .42s var(--house),transform .42s var(--house)}
@@ -72,7 +72,7 @@ function shut(L){return `<div class="ph" id="${L}ph">${head(L,'Thursday evening'
    <svg style="position:absolute;left:284px;top:41px;overflow:visible" width="1" height="12"><circle id="${L}bead" cx="0" cy="6" r="0" fill="#B7A6E0"/></svg></div>
  </div>
  <div class="abs lbl s2 f" id="${L}cl" style="left:22px;top:450px;opacity:0">CLOSE THE DAY</div>
- <div class="abs b tess f" id="${L}say" style="left:22px;right:80px;top:790px;opacity:0"></div>
+ <div class="abs b tess f" id="${L}say" style="right:71px;width:270px;text-align:right;top:765px;opacity:0"></div>
  ${soul(L+'s')}<div id="fing"></div></div>`}
 // C · day closed after Shutdown
 const C=`<div class="ph">${head('C','Thursday night',23)}
@@ -86,7 +86,7 @@ const D=`<div class="ph">${head('D','Thursday night',23)}
  <div class="abs hero s2" style="left:22px;top:258px">Pull A</div>
  <div class="abs lbl s2" style="left:22px;top:330px">07:30</div>
  <div class="abs lbl s2" style="left:22px;top:390px">CLOSE THE DAY</div>
- <div class="abs b tess" style="left:22px;right:80px;top:790px">Noted. Hotel ideas.</div>
+ <div class="abs b tess" style="right:71px;width:270px;text-align:right;top:765px">Noted. Hotel ideas.</div>
  ${soul('Ds',1)}</div>`;
 const cap=(t,id='')=>`<div class="cap" ${id?`id="${id}"`:''}>${t}</div>`;
 if(PLAY){

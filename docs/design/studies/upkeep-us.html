@@ -8,7 +8,7 @@
 <style>
 body{margin:0;background:#E9E6EE;font-family:'Inter Tight',sans-serif;transform-origin:0 0}
 body.x2{transform:scale(2)}
-.soul{position:absolute;left:322px;top:782px;width:46px;height:40px}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px}
 .soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
 .f{transition:opacity .36s cubic-bezier(.2,.8,.2,1),filter .36s cubic-bezier(.2,.8,.2,1)}
 .liveInk{color:var(--liveInk)}
@@ -46,46 +46,49 @@ function pick(){
    ['PLANTS',[['Water the plants',7,1]]],
    ['BILLS AND CHECKS',[['Pay rent',30,1],['Pay the water bill',30,1]]]];
   let y=150,h='';
-  for(const [g,items] of groups){h+=`<div class="abs lbl s2" style="left:22px;top:${y}px">${g}</div>`;y+=28;
-    for(const [n,d,on] of items){h+=`<div class="pick ${on?'on':'off'}" style="top:${y}px"><span class="n">${n}</span><span class="lbl s2">${d} DAYS</span></div>`;y+=36}
-    y+=14}
+  for(const [g,items] of groups){h+=`<div class="abs lbl s2" style="left:22px;top:${y}px">${g}</div>`;y+=26;
+    for(const [n,d,on] of items){h+=`<div class="pick ${on?'on':'off'}" style="top:${y}px"><span class="n">${n}</span><span class="lbl s2">${d} DAYS</span></div>`;y+=34}
+    y+=6}
   return `<div class="ph por">
-   <div class="abs lbl s2" style="left:22px;top:58px">UPKEEP</div>
-   <div class="abs body tess" style="left:22px;top:92px;width:340px">What do you keep up with? Pick any.</div>
+   <div class="abs lbl s2" style="left:22px;top:58px">‹ REVIEW</div>
+   <div class="abs" style="left:22px;top:84px;font-size:44px;font-weight:500;letter-spacing:-.03em;line-height:50px">Upkeep</div>
    ${h}
    <div class="abs lbl s2" style="left:22px;top:${y-4}px">15 MORE</div>
-   <div class="abs lbl s2" style="left:22px;bottom:52px">SKIP</div>
-   <div class="abs" style="right:22px;bottom:44px;width:72px;height:34px">
+   <div class="abs lbl s2" style="left:22px;top:700px">SKIP</div>
+   <div class="abs" style="right:22px;top:694px;width:72px;height:34px">
      <svg class="stroke" width="78" height="12" style="left:-2px;top:28px;position:absolute;overflow:visible"><path d="${lens(76,2.5)}" fill="rgba(240,165,0,.85)"/></svg>
      <div class="abs" style="right:0;top:0;font-size:21px;font-weight:600">Keep 8</div></div>
+   <div class="abs body tess" style="right:71px;width:270px;text-align:right;top:736px">What do you keep up with? Pick any.</div>
+   ${soul(false)}
   </div>`;
 }
 // state: 'ask' (the radiators ask at the foot), 'kept', 'declined'
 function upkeep(theme,L,state){
   const t3=theme==='obs'?.38:.51;
   const chores=[['Clean the bathroom','21 DAYS · USUALLY 14',1.5],['Water the plants','6 DAYS · USUALLY 7',6/7],['Pay the water bill','24 DAYS · USUALLY 30',.8],['Pay rent','15 DAYS · USUALLY 30',.5],['Clean the kitchen','TODAY',0]];
-  let h='',stack=190,last=110;
+  let h='',stack=200,last=128;
   for(const [n,a,s] of chores){
-    let y=s>=1?stack:640-s*450; if(s>=1)stack+=72; y=Math.max(y,last+72); last=y;
+    let y=s>=1?stack:560-s*370; if(s>=1)stack+=72; y=Math.max(y,last+72); last=y;
     const op=Math.min(1,t3+(1-t3)*Math.min(s,1));
     h+=`<div class="abs title" style="left:22px;top:${y}px;color:rgba(var(--ink),${op.toFixed(2)})">${n}</div><div class="abs lbl s2" style="left:22px;top:${y+42}px">${a}</div>`;
   }
   const kept=state==='kept';
   return `<div class="ph ${theme}" id="${L}ph">
    <div class="abs lbl s2" style="left:22px;top:58px">‹ REVIEW</div>
-   <div class="abs lbl" style="left:22px;top:132px">NOW</div>
-   <div class="hair" style="top:164px;background:rgba(var(--ink),.4)"></div>
+   <div class="abs" style="left:22px;top:84px;font-size:44px;font-weight:500;letter-spacing:-.03em;line-height:50px">Upkeep</div>
+   <div class="abs lbl" style="left:22px;top:150px">NOW</div>
+   <div class="hair" style="top:176px;background:rgba(var(--ink),.4)"></div>
    ${h}
-   <div class="f" id="${L}foot" style="opacity:${state==='kept'?1:0}">
-    <div class="hair" style="top:716px"></div>
-    <div class="abs lbl s2" style="left:22px;top:732px">NO RHYTHM YET</div>
-    <div class="abs body s2" style="left:22px;top:758px;width:290px;line-height:28px">Laundry · Take out the trash${kept?' · <span id="'+L+'new">Bleed the radiators</span>':'<span id="'+L+'new" style="opacity:0"> · Bleed the radiators</span>'}</div>
+   <div id="${L}foot">
+    <div class="hair" style="top:640px"></div>
+    <div class="abs lbl s2" style="left:22px;top:656px">NO RHYTHM YET</div>
+    <div class="abs body s2" style="left:22px;top:682px;right:22px;line-height:28px">Laundry · Take out the trash${kept?' · <span id="'+L+'new">Bleed the radiators</span>':'<span id="'+L+'new" style="opacity:0"> · Bleed the radiators</span>'}</div>
    </div>
    <div class="f" id="${L}ask" style="opacity:${state==='ask'?1:0}">
-    <div class="abs body tess" style="left:22px;top:744px">Radiators to bleed this autumn?</div>
-    <div class="abs lbl" style="left:22px;top:784px">KEEP IT<span class="s2" style="margin:0 10px">·</span>NO RADIATORS</div>
+    <div class="abs body tess" style="right:71px;width:270px;text-align:right;top:736px">Radiators to bleed this autumn?</div>
+    <div class="abs lbl" style="right:71px;top:796px">KEEP IT<span class="s2" style="margin:0 10px">·</span>NO RADIATORS</div>
    </div>
-   <div class="abs body tess f" id="${L}say" style="left:22px;right:80px;top:744px;opacity:${state==='declined'?1:0}">${state==='declined'?'Okay. I won\'t ask again.':''}</div>
+   <div class="abs body tess f" id="${L}say" style="right:71px;width:270px;text-align:right;top:765px;opacity:${state==='declined'?1:0}">${state==='declined'?'Okay. I won\'t ask again.':''}</div>
    ${soul(theme==='obs')}${L==='P'?'<div id="fing"></div>':''}
   </div>`;
 }
@@ -100,15 +103,15 @@ if(PLAY){
 }
 document.fonts.ready.then(()=>{document.body.dataset.start='1';
  if(!PLAY){setTimeout(()=>document.body.dataset.done='1',200);return}
- const f=$('fing');f.style.left='60px';f.style.top='792px';
+ const f=$('fing');f.style.left='130px';f.style.top='805px';
  at(1400,()=>f.style.opacity=1);at(1620,()=>f.style.opacity=0);
- at(1500,()=>{$('cap').textContent='KEEP IT · THE ANSWER HOLDS THE FOOT';
+ at(1500,()=>{$('cap').textContent='KEEP IT · TESS ANSWERS BESIDE THE SOUL';
   const a=$('Pask');a.style.opacity=0;a.style.filter='blur(3px)';
-  const s=$('Psay');s.innerHTML='Bleed the radiators, kept. Once a year.';s.style.top='744px';s.style.right='22px';
-  const u=document.createElement('div');u.className='abs lbl liveInk f';u.style.cssText='left:22px;top:784px;opacity:0';u.textContent='UNDO';$('Pph').appendChild(u);
+  const s=$('Psay');s.innerHTML='Bleed the radiators, kept. Once a year.';s.style.top='736px';
+  const u=document.createElement('div');u.className='abs lbl liveInk f';u.style.cssText='right:71px;top:796px;opacity:0';u.textContent='UNDO';$('Pph').appendChild(u);
   at(320,()=>{s.style.opacity=1;u.style.opacity=1});
-  at(4400,()=>{s.style.opacity=0;u.style.opacity=0;$('cap').textContent='THE FOOT RETURNS WITH IT, NEVER LOGGED'});
-  at(4800,()=>{$('Pfoot').style.opacity=1;const n=$('Pnew');n.animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:420,delay:150,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'})});
+  at(4400,()=>{s.style.opacity=0;u.style.opacity=0;$('cap').textContent='NO RHYTHM YET TAKES IT, NEVER LOGGED'});
+  at(4800,()=>{const n=$('Pnew');n.animate([{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:420,delay:150,easing:'cubic-bezier(.2,.8,.2,1)',fill:'forwards'})});
  });
  at(8200,()=>document.body.dataset.done='1');
 });

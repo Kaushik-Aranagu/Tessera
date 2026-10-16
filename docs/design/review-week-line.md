@@ -8,7 +8,7 @@ This sheet is for Builder B's Review. It's drawn to Product's 8:07 PM call ("Rev
 ## The page, top to bottom (y in pt)
 | y | Element |
 |---|---|
-| 58 | **‹ REVIEW** (`day-seams.md` S3) |
+| 78 | **The tabs row**, REVIEW on. Review is a tab page, so it has no back word (`day-seams.md` S3, `back-word.md`) |
 | 146 | "the week so far": Body 21/400 in **`context`**. It is the page's context line, the one quiet accent at rest (`no-dots.md` C3/C4, made exact in `sweep-19.md`) |
 | 180 | **Hero**, unchanged (Hero 56/500, `review-sentence.md`): "One session / this week" |
 | 310 | **The week line**: Body 21/400 in `ink`, up to 2 lines, with 2 lines reserved so nothing below jumps. "Cook 3 of 4, Read 4 of 5." **Each clause holds together** (no-break spaces inside "Read 4 of 5" and "weight down 0.2 kg"), so a wrap falls only after a comma. With no clauses, there's no line, and the space closes up. |

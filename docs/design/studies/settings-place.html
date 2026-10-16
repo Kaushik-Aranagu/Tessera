@@ -13,8 +13,8 @@ body.x2{transform:scale(2)}
 .row{display:flex;gap:40px}
 .cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:34px}
 .ph{position:relative;width:390px;height:844px;overflow:hidden}
-.P{background:#fff;--ink:23,20,31;--s2:.66;--tess:#2450D8;--now:#F0A500;--liveInk:#C23A22;--hair:rgba(23,20,31,.14)}
-.O{background:#000;--ink:245,242,236;--s2:.72;--tess:#86B4FF;--now:#FFC23D;--liveInk:#FF7A5C;--hair:rgba(245,242,236,.18)}
+.P{background:#fff;--ctx:#6A4C9C;--ink:23,20,31;--s2:.66;--tess:#2450D8;--now:#F0A500;--liveInk:#C23A22;--hair:rgba(23,20,31,.14)}
+.O{background:#000;--ctx:#B7A6E0;--ink:245,242,236;--s2:.72;--tess:#86B4FF;--now:#FFC23D;--liveInk:#FF7A5C;--hair:rgba(245,242,236,.18)}
 .pg{position:absolute;inset:0;color:rgb(var(--ink))}
 .abs{position:absolute}
 .lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap;color:rgba(var(--ink),var(--s2))}
@@ -29,7 +29,7 @@ body.x2{transform:scale(2)}
 .words i{font-style:normal;margin:0 10px}
 .flow{position:absolute;left:22px;right:22px;top:150px;display:flex;flex-direction:column;gap:16px}
 .flow .sec{position:static}
-.soul{position:absolute;left:322px;top:782px;width:46px;height:40px}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px}
 .soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
 .note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;max-width:1300px;line-height:24px}
 </style>
@@ -62,8 +62,8 @@ const settings=(L)=>`<div class="pg" id="${L}set">
   <div class="b" style="white-space:normal">Kilograms. Bar 20&nbsp;kg, plates from 1.25&nbsp;kg, dumbbells in 2&nbsp;kg steps.</div></div></div>
  ${soul}</div>`;
 const reviewFoot=(L,lift)=>`<div class="pg" id="${L}rev">
- <div class="abs lbl" style="left:22px;top:58px">‹ HOME</div>
- <div class="abs b s2" style="left:22px;top:146px">the week so far</div>
+ <div class="abs" style="left:22px;right:22px;top:78px;display:flex;justify-content:space-between;font-weight:700;font-size:16px;letter-spacing:.06em;color:rgba(var(--ink),.38)"><span style="color:rgb(var(--ink))">REVIEW</span><span style="color:rgba(var(--ink),.38)">TODAY</span><span style="color:rgba(var(--ink),.38)">TRAINING</span><span style="color:rgba(var(--ink),.38)">KITCHEN</span></div>
+ <div class="abs b" style="left:22px;top:146px;color:var(--ctx)">the week so far</div>
  <div class="abs" style="left:22px;top:180px;font-size:56px;font-weight:500;letter-spacing:-.035em;line-height:60px">All three<br>sessions in</div>
  <div class="abs b" style="left:22px;top:310px;width:346px">Gym 3 of 3, Read 4 of 5, weight down&nbsp;0.4&nbsp;kg.</div>
  <div class="abs lbl" style="left:22px;top:440px">READ · 4 OF 5</div>

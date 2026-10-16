@@ -50,7 +50,8 @@ These changes are made to `upkeep.md`, so that it meets the type tiers and the c
   - For a chore with no interval: "NEVER LOGGED" or "7 DAYS".
   - This frees the right edge, so long names like "Change the water filter" never collide.
 - **Spacing:** a name and its age take 72pt. Two chores with close staleness never overlap; the later one pushes down by 72. Past staleness 1, chores stack under the hairline, stalest first.
-- **NO RHYTHM YET** sits on a hairline at y 716, with the names in one Body line at `inkSecondary`: "Laundry · Take out the trash". The middle dot here is text, not a marker.
+- **The top (item 27, `day-seams.md` S4):** ‹ REVIEW at 58, "Upkeep" in Title 44 at 84, NOW at 150 on its hairline (176), and the chores stack from 200. The fresh end of the drift sits at y 560, so the foot is always in view above Tess's band.
+- **NO RHYTHM YET** sits on a hairline at y 640 (was 716; it moved up so Tess's band at 736–820 stays clear, and it no longer hides while the radiators ask is up), with the names in one Body line at `inkSecondary`: "Laundry · Take out the trash". The middle dot here is text, not a marker.
 - **Logging a chore done by holding it (0.6s):**
   - The name fills from left to right in `health` (sage). That's the moment.
   - It sinks to the foot on the settle spring, and the sage dries to the foot's `inkTertiary` over `Theme.Motion.dry`.

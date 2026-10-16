@@ -21,7 +21,7 @@ body.x2{transform:scale(2)}
 .tess{color:var(--tess)}
 .ttl{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px}
 .sw{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px;white-space:nowrap}
-.soul{position:absolute;width:46px;height:40px;left:322px;top:782px}
+.soul{position:absolute;width:46px;height:40px;left:323px;top:759px}
 .soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
 .row{position:absolute;left:22px;right:22px;height:56px;transition:top .52s var(--settle),opacity .32s var(--house)}
 .row .t{position:relative;font-size:21px;font-weight:500;line-height:28px;display:inline-block}
@@ -32,8 +32,8 @@ body.x2{transform:scale(2)}
 .wet{animation:wet 1.6s ease-in-out infinite}
 @keyframes wet{0%,100%{opacity:.5}50%{opacity:.66}}
 .fade{transition:opacity .42s var(--house),filter .42s var(--house),transform .52s var(--house)}
-.say{position:absolute;left:22px;right:80px;bottom:24px;font-size:21px;line-height:28px;color:var(--tess);opacity:0;transition:opacity .4s var(--house)}
-.undo{color:#C23A22;font-weight:600;font-size:16px;letter-spacing:.08em}
+.say{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);font-size:21px;line-height:28px;color:var(--tess);opacity:0;transition:opacity .4s var(--house)}
+.undo{display:block;margin-top:4px;color:#C23A22;font-weight:700;font-size:16px;line-height:20px;letter-spacing:.08em}
 .wisp{position:absolute;width:2.5px;height:30px;border-radius:2px;background:linear-gradient(to top,rgba(36,80,216,.0),rgba(36,80,216,.8) 40%,rgba(36,80,216,0));opacity:0}
 #finger1,#finger2{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(23,20,31,.14);box-shadow:0 0 0 1.5px rgba(255,255,255,.8);opacity:0;z-index:20;pointer-events:none}
 .note{position:absolute;left:30px;top:930px;width:800px;font-size:16px;font-weight:700;letter-spacing:.08em;color:rgba(var(--ink),.66)}
@@ -68,7 +68,7 @@ function startWith(id,name,w){return `<div class="abs lbl s2" style="left:22px;t
 function left(){return `
  <div class="abs lbl s2" style="left:22px;top:58px">FRIDAY 16 OCT</div>${stroke('slot1',[[9.5,9.75],[11,12],[15,15.5]])}
  <div class="abs fade" id="L_page">
-  <div class="abs b s2" style="left:22px;top:140px">this morning</div>
+  <div class="abs b" style="left:22px;top:140px;color:#6A4C9C">this morning</div>
   <div class="abs ttl" style="left:22px;top:174px;width:346px">Three meetings, four hours free</div>
   <div class="abs b s2" style="left:22px;top:282px">slept 6h40</div>
   <div class="abs b s2" style="left:22px;top:330px">Energy</div>
@@ -87,7 +87,7 @@ function left(){return `
  ${soul('L_soul')}<div id="L_w"></div><div id="finger1"></div>`}
 function right(){return `
  <div class="abs lbl s2" style="left:22px;top:58px">SUNDAY 18 OCT</div>${stroke('slot2',[])}
- <div class="abs b s2" style="left:22px;top:140px">this morning</div>
+ <div class="abs b" style="left:22px;top:140px;color:#6A4C9C">this morning</div>
  <div class="abs" style="left:22px;top:174px;font-size:56px;font-weight:500;letter-spacing:-.035em;line-height:60px">Rest day</div>
  <div class="abs b" style="left:22px;top:246px"><span class="s2">Next, </span><span style="font-weight:600">Push A</span><span class="s2"> on Monday</span></div>
  ${startWith('R_sw','Water the plants',262)}

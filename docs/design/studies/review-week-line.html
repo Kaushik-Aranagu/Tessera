@@ -21,7 +21,7 @@ body.x2{transform:scale(2)}
 .s2,.ph .s2{color:rgba(var(--ink),var(--s2))}
 .b{font-size:21px;line-height:28px}
 .ph .v{display:inline-block;color:inherit}
-.soul{position:absolute;left:322px;top:782px;width:46px;height:40px}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px}
 .soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
 .note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);margin-top:20px;max-width:1300px;line-height:24px}
 </style>
@@ -42,7 +42,7 @@ const restStroke=(i,y)=>`<svg class="abs" style="left:${X(i)-16}px;top:${y+15}px
 function page(look,o){
  const L='MTWTFSS'.split('');
  return `<div class="ph ${look}">
- <div class="abs lbl s2" style="left:22px;top:58px">‹ HOME</div>
+ <div class="abs" style="left:22px;right:22px;top:78px;display:flex;justify-content:space-between;font-weight:700;font-size:16px;letter-spacing:.06em;color:rgba(var(--ink),.38)"><span style="color:rgb(var(--ink))">REVIEW</span><span style="color:rgba(var(--ink),.38)">TODAY</span><span style="color:rgba(var(--ink),.38)">TRAINING</span><span style="color:rgba(var(--ink),.38)">KITCHEN</span></div>
  <div class="abs b" style="left:22px;top:146px;color:var(--ctx)">the week so far</div>
  <div class="abs" style="left:22px;top:180px;width:346px;font-size:56px;font-weight:500;letter-spacing:-.035em;line-height:60px">One session<br>this week</div>
  <div class="abs b" id="${look}wl" style="left:22px;top:310px;width:346px">${o.week}</div>
@@ -54,7 +54,7 @@ function page(look,o){
  <div class="abs b s2" id="${look}wt" style="left:22px;top:654px;width:346px">${o.weight}</div>
  <div class="abs b" style="left:22px;top:708px;font-weight:600">The week · Day log · Notes</div>
  <div class="abs lbl s2" style="left:22px;top:744px">SETTINGS</div>
- <div class="abs b" id="${look}say" style="left:22px;right:80px;top:790px;color:var(--tess);opacity:0"></div>
+ <div class="abs b" id="${look}say" style="right:71px;width:270px;text-align:right;top:765px;color:var(--tess);opacity:0"></div>
  ${soul}</div>`}
 const base={week:'Cook 3 of 4, Read 4 of 5.',read:'4',readDays:[1,0,0,1,0,1,1],weight:'Weight 78.2 kg, 2 weigh-ins this week.'};
 if(PLAY){

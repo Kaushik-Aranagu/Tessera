@@ -54,7 +54,7 @@ function home(){return `<div class="page" id="hp">
  <div class="abs b" id="tx" style="left:22px;top:520px;width:346px;color:rgba(var(--ink),.66)"></div>
  <div class="abs b s2" id="heard" style="left:22px;top:584px;opacity:0;transition:opacity .3s"></div>
  <div class="dry" id="hdry" style="left:20px;top:562px;opacity:0"></div>
- <div class="abs b tess" id="said" style="left:22px;right:80px;top:782px;opacity:0;transition:opacity .4s">Added oat milk and eggs to Groceries. <span style="color:#C23A22;font-weight:600;font-size:16px;letter-spacing:.08em">UNDO</span></div>
+ <div class="abs b tess" id="said" style="right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);opacity:0;transition:opacity .4s">Added oat milk and eggs to Groceries. <span style="display:block;margin-top:4px;color:#C23A22;font-weight:700;font-size:16px;line-height:20px;letter-spacing:.08em">UNDO</span></div>
  ${soulHTML('hs')}`}
 function work(){return `<div class="abs lbl s2" style="left:22px;top:58px">PUSH DAY A · 2 OF 5</div>
  <div class="abs" style="left:22px;top:110px;font-size:34px;font-weight:500;letter-spacing:-.03em">Bench press</div>
@@ -64,7 +64,7 @@ function work(){return `<div class="abs lbl s2" style="left:22px;top:58px">PUSH 
  <div class="abs" id="strokes" style="left:22px;top:380px;display:flex;gap:10px"></div>
  <div class="abs lbl s2" id="hint" style="right:86px;top:798px">HOLD ME TO TELL ME A SET</div>
  <div class="abs b" id="wtx" style="right:22px;top:740px;text-align:right;color:rgba(var(--ink),.66)"></div>
- <div class="abs b tess" id="wsaid" style="left:22px;right:80px;top:782px;opacity:0;transition:opacity .4s">Set 3 logged. 80 × 7. <span style="color:#C23A22;font-weight:600;font-size:16px;letter-spacing:.08em">UNDO</span></div>
+ <div class="abs b tess" id="wsaid" style="right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);opacity:0;transition:opacity .4s">Set 3 logged. 80 × 7. <span style="display:block;margin-top:4px;color:#C23A22;font-weight:700;font-size:16px;line-height:20px;letter-spacing:.08em">UNDO</span></div>
  ${soulHTML('ws')}`}
 const setStroke=(c,o)=>`<svg width="64" height="20"><path d="M4 12 C 18 5, 40 15, 60 7" stroke="${c}" stroke-width="5" fill="none" stroke-linecap="round" opacity="${o}"/></svg>`;
 function state(title,speakStyle,lineHTML,extra=''){return `<div class="col"><div class="cap">${title}</div><div class="ph">
@@ -72,7 +72,7 @@ function state(title,speakStyle,lineHTML,extra=''){return `<div class="col"><div
  <div class="abs" style="left:22px;top:118px;font-size:56px;font-weight:500;letter-spacing:-.035em;line-height:60px;width:340px;opacity:.12;filter:blur(1.5px)">Two things left today</div>
  <div class="abs b" style="left:22px;top:470px;width:346px">${lineHTML}</div>
  <div class="mode" style="top:594px;opacity:1;${speakStyle}">Speak${extra}</div><div class="mode" style="top:640px;opacity:1">Write</div><div class="mode" style="top:686px;opacity:1">Show</div>
- <div style="position:absolute;left:316px;top:768px">${soulHTML('x').replace('class="soul"','class="soul" style="position:relative"')}</div></div></div>`}
+ <div style="position:absolute;left:317px;top:759px">${soulHTML('x').replace('class="soul"','class="soul" style="position:relative"')}</div></div></div>`}
 if(STATES){
  document.body.classList.add('states');
  document.getElementById('pair').innerHTML=
@@ -84,7 +84,7 @@ if(STATES){
 document.getElementById('pair').innerHTML=`<div class="col"><div class="cap">SPEAK FROM THE SURFACE · HOME</div><div class="ph" id="H">${home()}</div></div><div class="col"><div class="cap">HOLD THE SOUL · LIVE WORKOUT</div><div class="ph" id="W">${work()}</div></div>`;
 const $=id=>document.getElementById(id),at=(t,f)=>setTimeout(f,t),note=t=>$('note').textContent=t;
 const place=(id,x,y)=>{$(id).style.left=x+'px';$(id).style.top=y+'px'};
-place('hs',322,768);place('ws',322,768);
+place('hs',323,759);place('ws',323,759);
 $('strokes').innerHTML=setStroke('rgb(204,63,104)',.45)+setStroke('#2450D8',.45);
 let lvl=null;
 function breathe(id,on){clearInterval(lvl);if(!on){$(id).style.transform='none';return}let t=0;lvl=setInterval(()=>{t+=.25;const a=1.4+.12*Math.abs(Math.sin(t*2.3)+Math.sin(t*3.7)*.5);$(id).style.transform=`scale(${a})`},90)}
@@ -103,7 +103,7 @@ document.fonts.ready.then(()=>{
      const inner=d.firstChild;inner.animate([{clipPath:'inset(0 0 0 0)'},{clipPath:'inset(0 100% 0 0)'}],{duration:3000,easing:'linear',fill:'forwards'});
      note('THE VOICE GHOST DRIES FOR 3 S. TOUCH IT TO EDIT INSTEAD.')});
  });
- at(7500,()=>{['tx','heard','hdry'].forEach(i=>{$(i).style.transition='opacity .22s';$(i).style.opacity=0});place('hs',322,768);$('hp').style.opacity=1;$('hp').style.filter='none';$('hw').style.opacity=0;at(260,()=>{$('said').style.opacity=1})});
+ at(7500,()=>{['tx','heard','hdry'].forEach(i=>{$(i).style.transition='opacity .22s';$(i).style.opacity=0});place('hs',323,759);$('hp').style.opacity=1;$('hp').style.filter='none';$('hw').style.opacity=0;at(260,()=>{$('said').style.opacity=1})});
  // workout
  at(9200,()=>{note('IN A WORKOUT, HOLD THE SOUL IN THE CORNER. NO SURFACE.');$('hint').style.transition='opacity .2s';$('hint').style.opacity=0;breathe('ws',true)});
  at(9700,()=>{stream($('wtx'),['eighty ','for ','seven'],300)});

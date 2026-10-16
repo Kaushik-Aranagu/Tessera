@@ -28,7 +28,12 @@ body.x2{transform:scale(2)}
 .x{font-size:21px;line-height:28px}
 .faint .x{color:rgba(var(--ink),.66)}
 .also .x{color:rgba(var(--ink),.66)}
-.soul{position:absolute;left:322px;top:782px;width:46px;height:40px}
+.obs .ph{--ink:245,242,236;background:#000;color:rgb(var(--ink))}
+.obs .ph .s2,.obs .ph .t,.obs .ph .date,.obs .ph .faint .x,.obs .ph .also .x{color:rgba(var(--ink),.72)}
+.obs .soul{--sa:#86B4FF;--sb:#FF5B3A;--sc:#FFC23D}
+.obs .ph .date.today{color:rgb(var(--ink))}
+.obs .ph .date.empty{color:rgba(var(--ink),.38)}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px}
 .soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
 .note{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(var(--ink),.66);margin-top:20px;max-width:1650px;line-height:24px}
 </style>
@@ -38,10 +43,10 @@ body.x2{transform:scale(2)}
 <div class="note" id="note"></div>
 <script>
 const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
-const soul=`<div class="soul"><i style="left:0;top:4px;background:radial-gradient(closest-side,#2450D8,rgba(36,80,216,.2))"></i><i style="left:22px;top:2px;background:radial-gradient(closest-side,#E2432A,rgba(226,67,42,.2))"></i><i style="left:12px;top:20px;background:radial-gradient(closest-side,#F0A500,rgba(240,165,0,.2))"></i></div>`;
+const soul=`<div class="soul"><i style="left:0;top:4px;background:radial-gradient(closest-side,var(--sa,#2450D8),rgba(36,80,216,.2))"></i><i style="left:22px;top:2px;background:radial-gradient(closest-side,var(--sb,#E2432A),rgba(226,67,42,.2))"></i><i style="left:12px;top:20px;background:radial-gradient(closest-side,var(--sc,#F0A500),rgba(240,165,0,.2))"></i></div>`;
 const L=(t,x,cls='')=>`<div class="ln ${cls}"><div class="t">${t||''}</div><div class="x">${x}</div></div>`;
 const D=(date,lines,cls='',id='')=>`<div class="day" ${id?`id="${id}"`:''}><div class="date ${cls}">${date}</div>${lines.join('')}</div>`;
-const phone=(cap,month,days,extra='')=>`<div><div class="cap">${cap}</div><div class="ph"><div class="abs lbl s2" style="left:22px;top:58px">‹ HOME</div><div class="abs" style="left:22px;top:84px;font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px">${month}</div><div class="win"><div class="stack">${days.join('')}</div></div>${extra}${soul}</div></div>`;
+const phone=(cap,month,days,extra='')=>`<div><div class="cap">${cap}</div><div class="ph"><div class="abs lbl s2" style="left:22px;top:58px">‹ TODAY</div><div class="abs" style="left:22px;top:84px;font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px">${month}</div><div class="win"><div class="stack">${days.join('')}</div></div>${extra}${soul}</div></div>`;
 const P1=phone('LATE NIGHT · THU 22 00:45','October',[
  D('TUE 20',[L('07:10','Added 2 tasks'),L('18:40','Cooked ramen, 40 min')]),
  D('TODAY',[L('19:05','Added 2 tasks'),L('23:20','Push Day B, 5 sets'),L('00:31','Note: flight check-in')],'today')]);
@@ -64,6 +69,8 @@ const P5=phone('THE 6-LINE CAP, SCROLLED BACK','October',[
 const P6=phone('THE FIRST DAY · NOTHING LOGGED YET','October',[
  D('TODAY',[`<div class="x" style="color:rgba(23,20,31,.55);font-weight:400">Your days write themselves here.</div>`],'today')]);
 const PLAY=Q.includes('play');
+// S7 (day-seams.md): 04:00 is night, so the turnover plays in Obsidian. ?por keeps Porcelain.
+const OBS=Q.includes('obs')||(PLAY&&!Q.includes('por'));if(OBS)document.body.classList.add('obs');
 if(PLAY){
  document.getElementById('row').innerHTML=phone('04:00 · TODAY BECOMES WED 21 IN PLACE, NOTHING MOVES','October',[
   D('TUE 20',[L('07:10','Added 2 tasks'),L('18:40','Cooked ramen, 40 min')]),
