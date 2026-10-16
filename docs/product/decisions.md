@@ -4,6 +4,13 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+- **Shutdown and kitchen copy** (3:43 AM PT Oct 16, Design 63 `shutdown-grammar.md` fdaf0d0, QA L2 on #380).
+  - **The first Shutdown ever** uses slot C once, "3 moving to tomorrow. Tap any to keep.", then slot B after that.
+  - **The said-line receipt** is "Reply to the landlord, tomorrow first."
+  - **Slot times use the house form,** "9:30 am" and "8 am". The closed line becomes "Closed. Your line is waiting at 8 am." Labels stay in caps ("THEN PULL A, 7:30 AM").
+  - **The habits check-in** is "Read today?" with DONE and NOT TODAY. It runs in Tess's band at Shutdown, before the day closes: one habit at a time, once per habit per day, never on a day a record already counts, and never during a workout.
+  - **L2: a recipe that adds nothing** reads "Tacos, nothing to add." It writes nothing, so there is no UNDO.
+  - The key-prefix wording sweep of older docs (outside docs/design) is approved after Research 134.
 - **Copy pass, asks and wrong writes** (3:34 AM PT Oct 16, Design 62 `copy-pass.md` a127cbc, Research 131 to 133 #379).
   - **Design's picks.** Accepted: digits in heroes ("3 sessions"), lower-case "pm" in heroes ("Tacos at 7 pm"), "Pull A tomorrow, first." and "Dune, set aside." Not accepted: first-person Settings lines. Settings keeps the built, decided copy ("Tess asks Claude: yes.", "Tess stays on this phone."), because the switch is named for Tess and #320 shipped it. Tess's first person stays in her own lines by the soul.
   - **AQ6: asks hold in quiet hours.** App-raised asks hold from 23:00 to 07:00. They also hold from the moment the day is closed (Shutdown complete, or the 22:00 silent close) until 07:00. A closed day never asks.
