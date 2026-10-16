@@ -52,7 +52,7 @@ enum WorkoutPaint {
 
     /// Black drop shadows only on Plein (a black shadow can't show on #000); other looks lift with `raised`.
     static var dropsShadows: Bool {
-        ThemeStore.shared.current.field == .plein
+        ThemeStore.shared.workoutLook.field == .plein
     }
 }
 

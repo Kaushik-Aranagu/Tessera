@@ -29,6 +29,7 @@ struct WorkoutModeView: View {
                     }
             }
             .environment(\.zoomNamespace, zoom)
+            .environment(\.onWorkoutGround, true)
             // The workout keeps the look it opened in until it closes (theme-schedule.md).
             .onAppear { ThemeStore.shared.holdWorkoutLook() }
             .onDisappear { ThemeStore.shared.releaseWorkoutLook() }

@@ -182,7 +182,7 @@ struct Seam: View {
 }
 
 struct ProcessSeam: View {
-    var color: Color = MachinedMaterial.aluminium.liveColor
+    var color: Color = Theme.Colors.live
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -195,7 +195,7 @@ struct ProcessSeam: View {
                 ZStack(alignment: .leading) {
                     color
                     LinearGradient(
-                        colors: [color.opacity(0), Color(hex: 0xFFE2A8), color.opacity(0)],
+                        colors: [color.opacity(0), Theme.Colors.sheen, color.opacity(0)],
                         startPoint: .leading,
                         endPoint: .trailing
                     )

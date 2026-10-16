@@ -177,14 +177,14 @@ private struct GlintOnce: ViewModifier {
                     LinearGradient(
                         stops: [
                             .init(color: .clear, location: 0),
-                            .init(color: Theme.Colors.sheen.opacity(0.95), location: 0.5),
+                            .init(color: Theme.Colors.sheen, location: 0.5),
                             .init(color: .clear, location: 1),
                         ],
                         startPoint: UnitPoint(x: sweep - 0.25, y: 0.2),
                         endPoint: UnitPoint(x: sweep + 0.25, y: 0.8)
                     )
                     .mask(content)
-                    .blendMode(.plusLighter)
+                    .blendMode(Theme.Colors.sheenBlend)
                     .allowsHitTesting(false)
                 }
             }

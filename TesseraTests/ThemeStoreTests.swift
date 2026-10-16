@@ -44,7 +44,7 @@ struct ThemeStoreTests {
         #expect(store.current == .obsidian)
         store.cycleDay() // a tap during a recording
         #expect(defaults.string(forKey: "look.pinned") == nil)
-        #expect(defaults.string(forKey: "look.day") == "Plein")
+        #expect(defaults.string(forKey: "look.day") == nil) // demo taps stay in memory (QA W4)
     }
 
     @Test func stepsGoBothWays() {
@@ -67,5 +67,26 @@ struct ThemeStoreTests {
         #expect(store.concept.workout.ground == Look.porcelain.workout.ground)
         store.releaseWorkoutLook()
         #expect(store.concept.workout.ground == Look.obsidian.workout.ground)
+    }
+
+    @Test func demoTapsStayInMemory() {
+        let (store, defaults) = fresh()
+        store.pin(.porcelain)
+        store.cyclePinned()
+        #expect(store.current == .obsidian)
+        store.togglePin(.obsidian)
+        #expect(store.pin == nil)
+        #expect(defaults.string(forKey: "look.pinned") == nil)
+        #expect(defaults.string(forKey: "look.day") == nil)
+    }
+
+    /// QA W2: the held look drives the workout field, shadows and glass edge, not the look on screen.
+    @Test func theHeldLookIsTheWorkoutsLook() {
+        let (store, _) = fresh()
+        store.cycleDay() // Plein by day
+        store.holdWorkoutLook()
+        store.systemIsDark = true
+        #expect(store.current == .obsidian)
+        #expect(store.workoutLook == .plein)
     }
 }
