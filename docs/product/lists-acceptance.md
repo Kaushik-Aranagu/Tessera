@@ -1,11 +1,11 @@
 # Lists acceptance checks
 
-*Kitchen lead, 2026-10-15; screen checks follow Design's build sheet `docs/design/kitchen/lists-9-12.md` (d134bf0). One block per slice in `ship-list-lists.md`. A Lists PR passes when every check in its block holds; the Kitchen lead runs them against the merged code and recording and posts pass or a fix list. "Undo" means one `undo` restores the exact previous state, including order and `checkedAt`.*
+*Kitchen lead, 2026-10-15; screen checks follow Design's build sheet `docs/design/kitchen/lists-9-12.md` (c8a83ff as amended) and Design 65 `list-remove.md`; rows refreshed 2026-10-16. UNDO lengths: 4 s for a new capture, 10 s for a remove or a change (Product). One block per slice in `ship-list-lists.md`. A Lists PR passes when every check in its block holds; the Kitchen lead runs them against the merged code and recording and posts pass or a fix list. "Undo" means one `undo` restores the exact previous state, including order and `checkedAt`.*
 
 ## 1. List housekeeping (engine)
 - Rename a list; undo restores the old name. Groceries can be renamed but keeps its fixed id.
-- Archive a list: it leaves `lists()` and appears in `archived()`; bring it back; undo works both ways. Groceries cannot be archived (error, no op).
-- Delete one item; undo puts it back in the same position.
+- Put a list away (the engine's `archive`; the word on every screen is "put away", never "Archive"): it leaves `lists()` and appears in `archived()`; bring it back; undo works both ways, 10 s. Groceries cannot be put away (error, no op).
+- Remove one item (`removeListItem`, the op behind the swipe and the phrase): undo within 10 s puts it back in the same position with its `checkedAt` as it was; a removed row never counts as checked.
 - Edit an item's text and quantity; an empty text is refused.
 - "Uncheck all" clears `isDone` and `checkedAt` on every item, one op, one undo.
 - `progress(of:)` gives done and total ("3 of 7") and excludes nothing hidden.
@@ -43,7 +43,7 @@
 ## 5. Run a list on Now (engine)
 - `StartListRun(packing)` makes Packing the running process; Now's line reads "Packing, 6 left" and drops as items are checked.
 - Starting another process suspends it into the ledger with "Packing, 4 left".
-- Finishing clears done items, or resets on a reusable list, and ends the process.
+- Finishing clears done items and ends the process; on a reusable list finishing does not reset, the reset is its own op behind the hold (or the ask on "done").
 - `StartShop` and `FinishShop` still pass their existing tests, now on top of the run.
 
 ## 6. Dated items reach Today (engine)
@@ -62,10 +62,10 @@
 - An unknown list name ("add charger to holiday") makes no list silently; Tess says "No list called holiday."
 
 ## 9. Lists shelf (screen)
-- No cards or grid: list names in one typographic column, sizes by last touched, Label-tier state word under each ("3 OF 7", "RUNNING", "REUSABLE").
+- No cards or grid: list names in one typographic column, sizes by last touched, Label-tier state word under each ("3 OF 7", "RUNNING · 9 LEFT", "REUSABLE", "PICK ONE", "EMPTY"; "14 TO BUY" under Groceries).
 - Groceries appears once and opens the Groceries screen.
-- Archived lists are behind one word at the bottom.
-- Pasting a block of lines on the page makes a list, with Tess's line in cobalt.
+- Put-away lists are behind one word at the bottom, "Put away".
+- Pasting a block of lines on the page makes a ghost list with the state word "12 THINGS · 2 SECTIONS" and Tess's line in cobalt with UNDO for 4 s.
 - Nothing under 16pt; Dynamic Type at AX sizes goes to one column with no clipping; recording committed.
 
 ## 10. A list page (screen)
@@ -77,13 +77,13 @@
 - The fold is pinned at the bottom: tap to open and restore, hold 0.7 s to clear done. On a reusable list it reads "N done · hold to reset" and the strikes un-paint right to left while held.
 
 ## 11. An item, opened (screen)
-- Zoom transition from the item row; dragging down zooms back into it.
+- Zoom transition from the item row; the back word returns.
 - Note editable in place; @links in cobalt and tappable.
 - Date in words; tapping it opens a day lane of day words in place (x scroll with snap), not a picker. No date shows "Add a day" at 40%. Backlinks as names under "LINKED FROM".
 - Swiping right on the hero strikes the item and zooms back to the list.
 - An empty item shows only a faint "Add a note" line; no form fields.
 
 ## 12. Pick one moment (screen)
-- Only with Pick one on: hold the hero 0.6 s (paint fills its underline). Others dim to 20%; one name lifts with matched geometry and grows to hero at the centre in about 520 ms, with the small bloom and a medium haptic.
+- Only with Pick one on: hold the hero 0.6 s (paint fills its underline). Others dim to 14% with a 2 pt blur; one name lifts with matched geometry and grows to hero at the centre in about 520 ms, with the small bloom and a medium haptic.
 - Tap opens the item; swipe left sends it back into its row and picks again.
 - Reduce Motion: a cross-fade only. Recording committed.
