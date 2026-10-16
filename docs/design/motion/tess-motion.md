@@ -120,7 +120,7 @@ Design 48 (`living-colours.md`, with its addendum) owns the palettes, the nudges
 | Beat | What happens | Values |
 |---|---|---|
 | The pool | Each dab, 120 ms after the last in the order **cool, warm, bright** (cobalt, vermilion, cadmium), pools its new pigment from its centre outward over 900 ms on the house curve. In the canvas: the new wash is drawn with its gradient radius growing from 0 to the dab's edge while the old wash thins under it (opacity 1 → 0 over the same 900 ms), so the pool's edge is as soft as the dab and nothing is ever clipped | order 1, 0, 2; stagger 120 ms; 900 ms `0.3, 0, 0.2, 1` |
-| Wet | While it pools the dab swells to 1.12 and brightens: its core and mid alpha lift by 20% (not a third: three washes screened together blow out to white at a third on dark looks). Blur unchanged | swell 1.12, lift 0.2, in over 250 ms |
+| Wet | While it pools the dab swells to 1.12 and brightens by 20% (not a third: three washes screened together blow out to white at a third on dark looks). **Light looks lift the core and mid alpha; dark looks lift only the mid, the core never** (Design 58). Kiln's dark triplet is the deepened one from `living-colours.md` d2145ec (`#7C8BF2 #EB7A5C #E9B14E`). Blur unchanged | swell 1.12, lift 0.2 (mid only on dark), in over 250 ms |
 | Dry | The swell and the lift settle back over the rest of 2.8 s from the dab's start. The halo (dark looks) takes the new warm pigment the moment that dab's pool completes | dry ends at start + 2.8 s |
 | Nothing else | No haptic, no line, no sound. Her eyes don't change. The page's text, her voice colour, UNDO, Done, the Lock Screen and the icon never follow | |
 
@@ -187,7 +187,10 @@ Two new `Haptic` cases (`.soulPickUp`, `.soulDrop`) in `DesignSystem/Haptics.swi
 - The Metal shader route (Research): this sheet works in the `Canvas` she has today. If Builder A moves her to a shader later, the values carry over unchanged.
 - The palette (`soul-explore.md`, `living-colours.md`). The spread is 65% in the app now (#330: the home offsets live in `Features/Tess/SoulFrame.swift`), and the prototype matches; a `?spread=` and `?look=` on the prototype URL show any other.
 
-## Design's review (item 51, 12:48 AM PT Oct 16)
+## Design's reviews
+**Items 5 to 7 (Design 58, 2:33 AM PT Oct 16): pass.** Two changes taken into section 7: Kiln's dark triplet deepened 8%, and on dark looks only the mid alpha lifts while wet. The two page rules (a page declares its free ground; live things own their surface) are also in `tess-motion-build.md`.
+
+**Items 1 to 4 (item 51, 12:48 AM PT Oct 16)**
 Pass, with the fixes now folded in above: eyes always the dark pigment; constellation at 0.55 with the cobalt child kept at the dock; readers kept, only under rows she reads; two docks; no row dimming on roam; Done in place only with an 80 × 80 clear; the bottom-left dock moves the whole band's words once. No second Design pass on the values, only on Builder A's recording. The build sheet is `tess-motion-build.md`.
 
 ## Where she may go on the other pages (added 1:10 AM PT Oct 16)

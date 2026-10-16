@@ -339,7 +339,8 @@ function drawSoul(parts, frame, C, scale, grade) {
       octx.globalAlpha = clamp(p.alpha);
       const r = Math.max(reveal * 1.15, .01), hex = pal.to[paint], lift = .2 * wet;
       const g = octx.createRadialGradient(0, 0, 0, 0, 0, r);
-      g.addColorStop(0, rgba(hex, Math.min(1, CORE * (1 + lift)))); g.addColorStop(.4, rgba(hex, Math.min(1, MID * (1 + lift)))); g.addColorStop(1, rgba(hex, 0));
+      // Wet: light looks lift core and mid; dark looks lift only the mid, the core never (Design 58).
+      g.addColorStop(0, rgba(hex, Math.min(1, CORE * (1 + (LOOK.dark ? 0 : lift))))); g.addColorStop(.4, rgba(hex, Math.min(1, MID * (1 + lift)))); g.addColorStop(1, rgba(hex, 0));
       octx.fillStyle = g; octx.fill(SHAPES[paint]);
     }
     octx.restore();
@@ -940,7 +941,7 @@ SCENES.reward = () => {
 // haptic, no line, no sound; the blur doesn't change; text never follows. A capture mid-repaint: work wins.
 const PALETTES = {
   today: { light: [LOOK.tess, LOOK.live, LOOK.now], dark: [LOOK.tess, LOOK.live, LOOK.now] },
-  kiln: { light: ['#2F3C9E', '#C4553B', '#D79A2B'], dark: ['#8E9BFF', '#F08A6E', '#F2C062'] },
+  kiln: { light: ['#2F3C9E', '#C4553B', '#D79A2B'], dark: ['#7C8BF2', '#EB7A5C', '#E9B14E'] }, // dark deepened 8% (Design, d2145ec)
   lagoon: { light: ['#0E8C86', '#F0624D', '#EDB730'], dark: ['#4FD8CF', '#FF8A75', '#FFD563'] },
   orchard: { light: ['#6E3A8E', '#E2557A', '#F29A5B'], dark: ['#C39BFF', '#FF86A6', '#FFBC86'] },
   aurora: { light: ['#2F6FE0', '#14A37F', '#8C5BD6'], dark: ['#7FB0FF', '#4FE0B5', '#BC97FF'] },

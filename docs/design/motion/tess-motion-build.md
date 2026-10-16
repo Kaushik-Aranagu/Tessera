@@ -18,10 +18,14 @@ The one sheet Builder A builds from. Design reviewed `tess-motion.md` (item 51, 
 | Drag: 10 pt pick-up from the hold, carry, two docks, flick, `tess.dock.<page>`; the band's line, lens, ask words and UNDO shift to x 96 on a bottom-left drop | `Features/Command/BottomChrome.swift` (`soulKey` gesture), `DesignSystem/Haptics.swift` (`.soulPickUp`, `.soulDrop`) | B (gesture), A (soul) |
 | Roam: `TessSoul.place`, free-ground rects per page, ride-and-release on scroll, the 80 × 80 clear test before Done in place | `SoulTravel` as built; each page's view reports free ground through a preference | A (Home, Training), B (Home rows, Kitchen) |
 | Reward beat: a 940 ms overlay (gather, brighten, blink) on the current mode, started by `.tesseraFeedback(.done)`'s moment at 520 ms (at 0 when the fleck leaves the soul) | `TessSoul.swift` (`beat()`), called from QueueRow / hero / habits / Groceries (B) and the workout finish (A) | A, with B's call sites |
-| Repaint (`living-colours.md`, item 7 in `tess-motion.md`): per-dab pool (new wash radius 0 → edge, old wash opacity 1 → 0, 900 ms, cool/warm/bright 120 ms apart), wet swell 1.12 and alpha lift 0.2, dry by 2.8 s; folds into the working fade when work starts | `TessSoul.repaint(to:)`, `SoulPalette.look(_:living:)`, `SoulRenderer.dab` draws two washes while a pool runs | A |
+| Repaint (`living-colours.md`, item 7 in `tess-motion.md`): per-dab pool (new wash radius 0 → edge, old wash opacity 1 → 0, 900 ms, cool/warm/bright 120 ms apart), wet swell 1.12 and alpha lift 0.2 (core and mid on light looks, mid only on dark), dry by 2.8 s; folds into the working fade when work starts | `TessSoul.repaint(to:)`, `SoulPalette.look(_:living:)`, `SoulRenderer.dab` draws two washes while a pool runs | A |
 
 ## Values
 `tess-motion.md` sections 1 to 5 and its timing table are the values; Design 51's fixes are already in them. In short: eyes 3.2 × 3.5 pt, 8.4 apart, dark pigment 82%, blink 160 ms every 3 to 8 s; working fade 500 ms to saturation 0.62, split 900 ms into twelve lights at 0.55 (readers 0.42, cobalt child stays within 8 pt of the dock), gather 820 ms, colour back over 550 ms, then Done as built; drag pick-up at 10 pt (soft 0.5), 44 pt above the finger, lag capped 14 pt, drop on the house spring (`.selection`), two docks; roam on the `SoulTravel` arc 760 ms, rows stay 100%, Done in place only with an 80 × 80 clear.
+
+## Two rules every page follows (Design 58)
+- **A page declares its free ground.** Each page reports its rects through a preference; a page that reports none gets no roam and no readers, only the constellation at the dock. That is the safe default for every page not in `tess-motion.md`'s table.
+- **Live things own their surface.** A live workout, cook mode, the Speak layer and a flight from `task-reward.md`: she stays put and does only what she does today.
 
 ## Frame and battery budget
 - 60 fps on iPhone 17 with the page scrolling under her; one `Canvas` in a `drawingGroup`; never more than 14 blurred layers a frame, blur capped at 9.
