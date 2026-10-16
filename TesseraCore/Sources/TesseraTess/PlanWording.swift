@@ -21,19 +21,28 @@ public struct PlanPack: Sendable, Equatable {
     let dues: [Int]
     /// Every title word, for the number and health checks.
     let titleWords: Set<String>
+    /// Names he has that this plan doesn't hold (V13).
+    let otherNames: Set<String>
+    let hasWorkout: Bool
+    let isRestDay: Bool
 
     public static func == (lhs: PlanPack, rhs: PlanPack) -> Bool {
         lhs.json == rhs.json
     }
 
     /// Nil when there's nothing to word: no window, or no plan lines (d14).
-    public init?(plan: DayPlan, now: Date, calendar: Calendar, calendarKnown: Bool, restDay: Bool) {
+    /// `otherNames`: what he has that isn't in this plan (tasks left out, Later, routines, skipped events), for V13.
+    /// `includesEventTitles` false (his call on Oct 22): events go as "busy", with their kind and times only.
+    public init?(plan: DayPlan, now: Date, calendar: Calendar, calendarKnown: Bool, restDay: Bool,
+                 otherNames: [String] = [], includesEventTitles: Bool = true)
+    {
         guard let window = plan.window, !plan.ghosts.isEmpty else { return nil }
+        let day = TesseraDay(calendar: calendar).day(of: now)
+        // Wall-clock minutes (plus a day after midnight), never elapsed time: DST days keep their hours (QA P1).
         func minutes(_ date: Date) -> Int {
             let parts = calendar.dateComponents([.hour, .minute], from: date)
-            let day = TesseraDay(calendar: calendar).day(of: now)
-            let base = Int(date.timeIntervalSince(day) / 60)
-            return base >= 0 && base < 28 * 60 ? base : (parts.hour ?? 0) * 60 + (parts.minute ?? 0)
+            let wall = (parts.hour ?? 0) * 60 + (parts.minute ?? 0)
+            return calendar.startOfDay(for: date) > day ? wall + 24 * 60 : wall
         }
         func clock(_ minutes: Int) -> String {
             String(format: "%02d:%02d", (minutes / 60) % 24, minutes % 60)
@@ -63,7 +72,8 @@ public struct PlanPack: Sendable, Equatable {
             let handle = "\(prefix)\(counters[block.kind] ?? 1)"
             handles[handle] = index
             let start = minutes(block.start), end = minutes(block.end)
-            var row: [String: Any] = ["id": handle, "kind": block.kind.rawValue, "title": block.title,
+            let title = block.kind == .event && !includesEventTitles ? "busy" : block.title
+            var row: [String: Any] = ["id": handle, "kind": block.kind.rawValue, "title": title,
                                       "start": clock(start), "end": clock(end), "min": block.minutes]
             if let run = runOf[index] {
                 row["run"] = run
@@ -90,7 +100,8 @@ public struct PlanPack: Sendable, Equatable {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "EEE"
         var top: [String: Any] = [
-            "allDay": plan.allDay, "blocks": rows, "cap": plan.cap, "light": plan.light, "now": clock(minutes(now)),
+            "allDay": includesEventTitles ? plan.allDay : [], "blocks": rows, "cap": plan.cap, "light": plan.light,
+            "now": clock(minutes(now)),
             "weekday": formatter.string(from: TesseraDay(calendar: calendar).day(of: now).addingTimeInterval(43200)),
             "window": [clock(minutes(window.start)), clock(minutes(window.end))],
         ]
@@ -113,10 +124,19 @@ public struct PlanPack: Sendable, Equatable {
         self.now = minutes(now)
         self.blocks = blocks
         self.dues = dues
+        // Compared as words, the way V13 reads a line ("Mum's birthday" is "mum's birthday").
+        func phrase(_ text: String) -> String {
+            text.lowercased().split { !$0.isLetter && !$0.isNumber && $0 != "'" }.joined(separator: " ")
+        }
+        let inPack = Set(plan.blocks.map { phrase($0.title) })
+        self.otherNames = Set(otherNames.map(phrase).filter { $0.count >= 3 && !inPack.contains($0) })
+        hasWorkout = plan.blocks.contains { $0.kind == .workout }
+        isRestDay = restDay
         func words(_ text: String) -> [String] {
             text.lowercased().split { !$0.isLetter && !$0.isNumber }.map(String.init)
         }
-        let titles: [String] = plan.blocks.map(\.title) + plan.allDay
+        let titles: [String] = plan.blocks.filter { includesEventTitles || $0.kind != .event }.map(\.title)
+            + (includesEventTitles ? plan.allDay : [])
         titleWords = Set(titles.flatMap(words))
     }
 }
@@ -247,6 +267,17 @@ public enum PlanProposalValidator {
             if tokens.contains(where: { healthWords.contains($0) && !pack.titleWords.contains($0) }) {
                 codes.append("V12")
             }
+            // V13 (Product, 10:24 PM PT): naming a task, event or exercise that isn't in the plan, or training on a
+            // day with no workout block ("Rest day." alone on a rest day).
+            let padded = " " + tokens.joined(separator: " ") + " "
+            let training = ["workout", "gym", "training", "train", "lift", "session"]
+            if pack.otherNames.contains(where: { padded.contains(" \($0) ") })
+                || !pack.hasWorkout && tokens
+                .contains(where: { training.contains($0) && !pack.titleWords.contains($0) })
+                || !pack.hasWorkout && tokens.contains("rest") && !(pack.isRestDay && line == "Rest day.")
+            {
+                codes.append("V13")
+            }
         }
         return Array(Set(codes)).sorted()
     }
@@ -303,7 +334,8 @@ public extension DayPlan {
             guard let index = pack.handles[block.id], let input = pack.blocks[block.id], !input.fixed,
                   let match = block.start.firstMatch(of: /^(\d{2}):(\d{2})$/), let hour = Int(match.1),
                   let minute = Int(match.2) else { continue }
-            let start = day.addingTimeInterval(TimeInterval((hour * 60 + minute) * 60))
+            let base = calendar.date(byAdding: .day, value: hour / 24, to: day) ?? day
+            let start = calendar.date(bySettingHour: hour % 24, minute: minute, second: 0, of: base) ?? base
             blocks[index].start = start
             blocks[index].end = start.addingTimeInterval(TimeInterval(input.min * 60))
         }
@@ -323,8 +355,15 @@ public extension DayPlan {
                 lines[index] = line
             }
         }
-        let plan = DayPlan(window: window, blocks: tagged.map(\.block), cap: cap, light: light, allDay: allDay,
-                           notPlanned: notPlanned)
+        let plan = DayPlan(
+            window: window,
+            blocks: tagged.map(\.block),
+            cap: cap,
+            light: light,
+            lightReason: lightReason,
+            allDay: allDay,
+            notPlanned: notPlanned
+        )
         return WordedPlan(plan: plan, lines: lines, startLine: proposal.startWith?.line, note: proposal.note)
     }
 }
@@ -347,10 +386,13 @@ public final class ClaudePlanWording {
     public let ledger: TessUsageLedger
     public let session: URLSession
     public var timeout: TimeInterval = 20
+    /// "Tess asks Claude" (`SettingsStore.read().sendsMissesToClaude`): one switch for misses and plans (Product).
+    public var allowed: () -> Bool = { true }
     public var now: () -> Date = { .now }
     public var calendar: Calendar = .current
     /// The same pack today reuses its wording (no second call).
-    private var cache: (json: String, result: WordedPlan)?
+    /// The last result per pack, failures and rejections included, so reopening never pays again (merge check).
+    private var cache: (json: String, result: PlanWordingResult)?
     private static let log = Logger(subsystem: "com.kaushikaranagu.tessera", category: "tess.plan")
 
     public init(keys: any TessKeychain, ledger: TessUsageLedger,
@@ -364,9 +406,9 @@ public final class ClaudePlanWording {
     /// `stale` is asked once the reply is back: true when he touched the plan or 20 s passed, so a late reply is
     /// dropped (its cost still counted).
     public func word(_ plan: DayPlan, pack: PlanPack?, stale: () -> Bool = { false }) async -> PlanWordingResult {
-        guard let pack, let key = keys.read() else { return .rules(line: nil) }
+        guard let pack, allowed(), let key = keys.read() else { return .rules(line: nil) }
         if let cache, cache.json == pack.json {
-            return .worded(cache.result)
+            return cache.result
         }
         let input = (try? JSONSerialization.jsonObject(with: Data(pack.json.utf8))).map { "\($0)" } ?? pack.json
         let estimate = TessUsageLedger.estimate(text: Self.instructions + Self.schemaText + input,
@@ -387,16 +429,29 @@ public final class ClaudePlanWording {
                           latency: Date().timeIntervalSince(started), outcome: outcome, requestID: requestID,
                           at: now())
         }
-        let reply: (proposal: ProposePlan?, usage: (Int, Int), requestID: String?)
+        // Paid or not, a call that reached Claude is remembered for this pack; offline never was.
+        func done(_ result: PlanWordingResult) -> PlanWordingResult {
+            if outcome != "offline" {
+                cache = (pack.json, result)
+            }
+            return result
+        }
+        let reply: (proposal: ProposePlan?, usage: (Int, Int), requestID: String?, stop: String?)
         do {
-            reply = try await send(pack.json, key: key)
+            reply = try await withDeadline(timeout) { try await self.send(pack.json, key: key) }
         } catch let failure as ClaudeTessModel.Failure {
             outcome = failure.outcome
-            return .rules(line: failure.outcome == "timeout" ? "Claude didn't answer in time. Here's your usual plan."
-                : nil)
+            // Product 10:24 PM PT: one line, then the usual plan; a rejected or late reply stays silent.
+            let line: String? = switch failure.outcome {
+            case "timeout": "Claude didn't answer in time. Here's your usual plan."
+            case "badKey": "That key didn't work. Paste it again? Here's your usual plan."
+            case "offline", "busy": "Here's your usual plan."
+            default: nil
+            }
+            return done(.rules(line: line))
         } catch {
             outcome = "other"
-            return .rules(line: nil)
+            return done(.rules(line: nil))
         }
         usage = reply.usage
         requestID = reply.requestID
@@ -404,23 +459,42 @@ public final class ClaudePlanWording {
             outcome = "late"
             return .rules(line: nil)
         }
+        // Cut off or refused: the rules plan, with its row (merge check).
+        if let stop = reply.stop, ["max_tokens", "refusal"].contains(stop) {
+            outcome = stop
+            return done(.rules(line: nil))
+        }
         guard let proposal = reply.proposal else {
             outcome = "rejected V1"
-            return .rules(line: nil)
+            return done(.rules(line: nil))
         }
         let codes = PlanProposalValidator.violations(proposal, against: pack)
         guard codes.isEmpty else {
             outcome = "rejected " + codes.joined(separator: ",")
             Self.log.debug("plan rejected: \(codes.joined(separator: ","), privacy: .public)")
-            return .rules(line: nil)
+            return done(.rules(line: nil))
         }
-        let worded = plan.applying(proposal, pack: pack, calendar: calendar, now: now())
-        cache = (pack.json, worded)
-        return .worded(worded)
+        return done(.worded(plan.applying(proposal, pack: pack, calendar: calendar, now: now())))
+    }
+
+    /// A hard deadline: URLRequest's timeout only counts idle time, so the call races a sleep (merge check).
+    private func withDeadline<T: Sendable>(_ seconds: TimeInterval,
+                                           _ work: @escaping @MainActor () async throws -> T) async throws -> T
+    {
+        try await withThrowingTaskGroup(of: T.self) { group in
+            group.addTask { try await work() }
+            group.addTask {
+                try await Task.sleep(for: .seconds(seconds))
+                throw ClaudeTessModel.Failure.timeout
+            }
+            defer { group.cancelAll() }
+            guard let first = try await group.next() else { throw ClaudeTessModel.Failure.timeout }
+            return first
+        }
     }
 
     func send(_ pack: String, key: String) async throws
-        -> (proposal: ProposePlan?, usage: (Int, Int), requestID: String?)
+        -> (proposal: ProposePlan?, usage: (Int, Int), requestID: String?, stop: String?)
     {
         var http = URLRequest(url: ClaudeKeyCheck.base, timeoutInterval: timeout)
         http.httpMethod = "POST"
@@ -437,6 +511,7 @@ public final class ClaudePlanWording {
                       "input_schema": schema,
                   ]],
                   "tool_choice": ["type": "auto"], "messages": [["role": "user", "content": pack]],
+                  "output_config": ["effort": "low"],
               ] as [String: Any]) else { throw ClaudeTessModel.Failure.other }
         http.httpBody = body
         let data: Data
@@ -467,7 +542,7 @@ public final class ClaudePlanWording {
             .first { $0["type"] as? String == "tool_use" && $0["name"] as? String == "proposePlan" }?["input"]
         let proposal = input.flatMap { try? JSONSerialization.data(withJSONObject: $0) }
             .flatMap { try? JSONDecoder().decode(ProposePlan.self, from: $0) }
-        return (proposal, usage, requestID)
+        return (proposal, usage, requestID, object["stop_reason"] as? String)
     }
 
     /// plan-my-day-prompt.md section 1, word for word (stable bytes, so it caches).

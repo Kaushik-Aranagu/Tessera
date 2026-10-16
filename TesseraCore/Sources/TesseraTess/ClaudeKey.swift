@@ -89,7 +89,7 @@ public struct TessUsageLedger {
     /// Per-token prices in nano-dollars: (input, output, cache read, cache write).
     public static let prices: [String: (input: Int64, output: Int64, cacheRead: Int64, cacheWrite: Int64)] = [
         "claude-haiku-5-5": (100, 500, 10, 125),
-        "claude-sonnet-5-5": (2000, 10000, 100, 2500),
+        "claude-sonnet-5-5": (2000, 10000, 200, 2500),
     ]
 
     public let store: ObjectStore

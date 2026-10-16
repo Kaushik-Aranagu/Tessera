@@ -79,7 +79,7 @@ extension TessGrammar {
     /// Money said, not things to buy: a currency sign or a spending verb ("spent $40 on groceries").
     static func isMoney(_ text: String) -> Bool {
         // A unit price ("chicken $1.29/lb") is a price on a thing to buy, never a spend (Research's US shop check).
-        let spent = text.replacing(/[$£€₹]\s?\d+(?:[.,]\d+)?\s?\/\s?[a-z]+/, with: "")
+        let spent = text.replacing(/(?i)[$£€₹]\s?\d+(?:[.,]\d+)?\s?\/\s?[a-z]+/, with: "")
         return spent.contains(where: { "$£€₹".contains($0) })
             || text.lowercased().firstMatch(of: /^(?:spent|spend|paid|pay|cost|bought)\b/) != nil
     }
