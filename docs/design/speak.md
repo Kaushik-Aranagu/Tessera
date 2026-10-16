@@ -55,7 +55,7 @@ Recording: `recordings/speak.mp4` (source `studies/speak.html`).
 - **Let go.** The words fade out (250ms), and the set block's numerals become the ghost: they turn wet cobalt at 62% and show **80 × 7**.
 - **After 2s they dry into ink.**
   - The new set stroke lands under the earlier ones on the settle spring, wet in its cycle colour, then dries to `restTint`.
-  - Tess says "Set 3. 80 × 7." with UNDO.
+  - Tess says "Set 3 logged. 80 × 7." with UNDO.
   - The rest horizon starts.
 - **Touching the numerals while they're wet** stops the drying, and they become the in-place editor (`set-block.md`).
 - **The workout is on the look's own base** (one base), so on Porcelain it's white with ink numerals.
