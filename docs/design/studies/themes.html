@@ -121,7 +121,7 @@ const THEMES = [
     char:'Pure white with deep aubergine ink and four saturated pigments used sparingly. It reads like a well-printed page: almost all white, with colour arriving only where something matters.',
     field:'<b>The ground</b> is flat white, with no grain and no wash. Colour pools only behind the action of the moment, as a watercolour bloom: 5% in the middle with a 10% dried edge, irregular, never moving. When nothing is running, the page is just white.',
     t:{ ground:'#FFFFFF', raised:'#F5F4F8', ink:'#17141F', context:'#6A4C9C', muted:'#B9B3C3', tess:'#2450D8', live:'#E2432A', now:'#F0A500', health:'#12936A', training:'#CC3F68', neutral:'#9C95A8',
-        wGround:'#14111A', wRaised:'#221D2C', wInk:'#F5F2EC', wSignal:'#FF5B3A', wRest:'#F0A500' },
+        wGround:'#000000', wRaised:'#141217', wInk:'#F5F2EC', wSignal:'#FF5B3A', wRest:'#FFC23D' },
     prop:[['ground',86],['raised',3],['ink',8],['accent',3]], blend:'multiply', bloom:'pigment' },
   { key:'obsidian', name:'Obsidian', mode:'dark', tag:'',
     char:'True black for the OLED screen, warm white ink, and pigments that glow. Black pixels are off, so the colour floats on nothing.',
@@ -133,19 +133,19 @@ const THEMES = [
     char:'The current look, kept as approved: warm paper, soft impressionist washes and grain, plum ink.',
     field:'<b>The ground</b> is cream paper with three soft washes and a fine grain. It is the most painterly of the five and the one the app ships with today.',
     t:{ ground:'#F2ECE3', raised:'#FAF6EF', ink:'#2B2440', context:'#7A5C8E', muted:'#A39AAE', tess:'#2E6DA4', live:'#C8452F', now:'#E0B341', health:'#6E9E6A', training:'#C8452F', neutral:'#A39AAE',
-        wGround:'#1C1828', wRaised:'#3B2D57', wInk:'#F3ECE0', wSignal:'#D9563F', wRest:'#E8BD4C' },
+        wGround:'#000000', wRaised:'#141217', wInk:'#F5F2EC', wSignal:'#FF5B3A', wRest:'#FFC23D' },
     prop:[['ground',80],['raised',2],['ink',10],['accent',8]], blend:'multiply', bloom:'wash' },
   { key:'lacquer', name:'Lacquer', mode:'dark', tag:'',
     char:'Deep plum-black lacquer, parchment ink and brass. It is dark like Obsidian, but warmer and with depth, for evenings.',
     field:'<b>The ground</b> is layered: plum-black that deepens toward the bottom, with one wide specular band lying across it at 3%, the way light sits on a lacquered tray. On the phone the band can follow the tilt by a few degrees; with Reduce Motion it stays still.',
     t:{ ground:'#140F1B', raised:'#221A2D', ink:'#F1E7D6', context:'#C3A6DE', muted:'#6C6078', tess:'#8DB2FF', live:'#F06A4C', now:'#E8B54A', health:'#8FCB9E', training:'#F07FA0', neutral:'#9A8FA6',
-        wGround:'#0C0812', wRaised:'#1C1426', wInk:'#F1E7D6', wSignal:'#F06A4C', wRest:'#E8B54A' },
+        wGround:'#000000', wRaised:'#141217', wInk:'#F5F2EC', wSignal:'#FF5B3A', wRest:'#FFC23D' },
     prop:[['ground',84],['raised',4],['ink',9],['accent',3]], blend:'screen', bloom:'glow' },
   { key:'celadon', name:'Celadon', mode:'light', tag:'',
     char:'A pale green-grey glaze with deep forest ink and white surfaces. It is calm and cool, a light theme that is not white.',
     field:'<b>The ground</b> is a flat celadon glaze. Anything lifted (a veil, a held row, the Write layer) is pure white slip on top of it. The glaze pools slightly darker at the bottom edge, the way glaze collects at the foot of a pot.',
     t:{ ground:'#E7EEE9', raised:'#FFFFFF', ink:'#0F231D', context:'#4C6B85', muted:'#97ABA2', tess:'#2C59BE', live:'#D8462C', now:'#D99A1C', health:'#23866A', training:'#C24766', neutral:'#7E918A',
-        wGround:'#0E1C17', wRaised:'#18302A', wInk:'#EEF3EF', wSignal:'#E25A3E', wRest:'#E2A93A' },
+        wGround:'#000000', wRaised:'#141217', wInk:'#F5F2EC', wSignal:'#FF5B3A', wRest:'#FFC23D' },
     prop:[['ground',82],['raised',6],['ink',9],['accent',3]], blend:'multiply', bloom:'pigment' },
 ];
 const STROKE = 'M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z';
@@ -154,7 +154,7 @@ const isDark = (T) => T.mode === 'dark';
 function vars(T, work) {
   const t = T.t, dark = isDark(T);
   const ink = work ? t.wInk : t.ink;
-  return `--ground:${work ? t.wGround : t.ground};--ink:${ink};--ink2:${hexA(ink, .6)};--context:${work ? hexA(t.wInk, .62) : t.context};--muted:${work ? hexA(t.wInk, .35) : t.muted};--tess:${t.tess};--live:${work ? t.wSignal : t.live};--blend:${work || dark ? 'screen' : 'multiply'}`;
+  return `--ground:${work ? t.wGround : t.ground};--ink:${ink};--ink2:${hexA(ink, .6)};--context:${work ? hexA(t.wInk, .62) : t.context};--muted:${work ? hexA(t.wInk, .35) : t.muted};--tess:${work ? '#86B4FF' : t.tess};--live:${work ? t.wSignal : t.live};--blend:${work || dark ? 'screen' : 'multiply'}`;
 }
 function stroke(T, word, col, w, work) {
   const glow = (isDark(T) || work) ? `filter:drop-shadow(0 0 6px ${hexA(col, .55)})` : '';
@@ -212,7 +212,7 @@ const SCREENS = {
   },
   work(T) {
     const t = T.t;
-    return `<span class="a" style="left:0;right:0;top:0;height:2px;background:var(--live);box-shadow:0 0 12px ${hexA(t.wSignal, .6)}"></span>
+    return `<span class="a" style="left:0;right:0;top:0;height:2px;background:var(--live)"></span>
       <svg class="a" style="left:0;top:14px" width="390" height="10"><line x1="22" x2="368" y1="5" y2="5" stroke="${hexA(t.wInk, .14)}" stroke-width="1.5"/><line x1="22" x2="210" y1="5" y2="5" stroke="${t.wRest}" stroke-width="2.5" stroke-linecap="round" style="filter:drop-shadow(0 0 5px ${hexA(t.wRest, .7)})"/></svg>
       <div class="a L" style="left:22px;top:30px;color:${t.wRest}">Rest 1:22</div>
       <div class="a" style="left:22px;top:76px;font-size:21px;color:var(--ink2)">Push day A</div>
