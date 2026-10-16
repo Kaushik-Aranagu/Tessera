@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Money and Reading</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Still for docs/design/money-reading-first.md (board item 8): the Money month page, its ledger, a receipt ghost on Today, and the Reading shelf. Porcelain, Thu 15 Oct 2026 18:00. Amounts as typed, no home currency, no dots. -->
+<style>
+body{margin:0;background:#E9E6EE;font-family:'Inter Tight',sans-serif;width:1760px}
+.row{display:flex;gap:40px;padding:40px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;flex:none;background:#fff;color:rgb(23,20,31);--ink:23,20,31}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),.66)} .s3{color:rgba(var(--ink),.51)}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:#4a4458;margin-bottom:12px}
+.b{font-size:21px;line-height:30px}
+.tess{color:#2450D8}
+.ctx{color:#6A4C9C;font-size:21px}
+.led{position:absolute;left:22px;right:22px;font-size:21px}
+.led .d{position:absolute;left:0;font-size:34px;font-weight:300;color:rgba(var(--ink),.51);font-variant-numeric:tabular-nums;line-height:34px}
+.led .l{position:absolute;left:58px;display:flex;gap:14px;align-items:baseline;line-height:34px}
+.led .a{width:96px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.led .w{color:rgba(var(--ink),.66)}
+.q{position:absolute;left:22px;right:22px;height:48px;display:flex;align-items:center;font-size:21px}
+.q .tm{margin-left:auto;font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(var(--ink),.66)}
+</style>
+</head>
+<body>
+<div class="row" id="r"></div>
+<script>
+const ROUGH='M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z';
+const stroke=(w,c)=>`<svg width="${w}" height="12" style="position:absolute;left:-2px;top:17px;overflow:visible"><path d="M0 6 Q ${w*.42} 3.5 ${w} 5.6 Q ${w*.58} 8.5 0 6 Z" fill="${c}"/></svg>`;
+function month(){return `<div class="ph">
+ <div class="abs lbl s2" style="left:22px;top:58px">‹ REVIEW</div>
+ <div class="abs lbl s2" style="left:22px;top:132px">MONEY</div>
+ <div class="abs" style="left:22px;top:170px;font-size:44px;font-weight:500;letter-spacing:-.03em;line-height:48px">October, logged</div>
+ <div class="abs b" style="left:22px;top:240px;width:340px"><b style="font-weight:600">7</b> spends. Most went to lunch, <b style="font-weight:600">24.80</b>, and coffee, <b style="font-weight:600">9.00</b>.</div>
+ <div class="abs b" style="left:22px;top:314px">Also <b style="font-weight:600">£38.20</b> in 1 spend.</div>
+ <div class="abs b" style="left:22px;top:346px">Also <b style="font-weight:600">€8.00</b> in 1 spend.</div>
+ <div class="led" style="top:760px;opacity:.45"><div class="d">15</div><div class="l" style="top:0"><span class="a">12.40</span><span class="w">lunch</span></div></div>
+</div>`}
+function ledger(){
+ const L=[[15,[['12.40','lunch'],['4.50','coffee']]],[13,[['12.40','lunch'],['4.50','coffee']]],[9,[['6.50','taxi'],['3.20','bus'],['2.10','milk']]]];
+ let y=0,h='';for(const [d,items] of L){h+=`<div class="d" style="top:${y}px">${d}</div>`;items.forEach(([a,w],i)=>{h+=`<div class="l" style="top:${y+i*36}px"><span class="a">${a}</span><span class="w">${w}</span></div>`});y+=items.length*36+22}
+ let e=`<div class="d" style="top:0">14</div><div class="l" style="top:0"><span class="a">£38.20</span><span class="w">groceries</span></div>`;
+ let f=`<div class="d" style="top:0">3</div><div class="l" style="top:0"><span class="a">€8.00</span><span class="w">museum</span></div>`;
+ return `<div class="ph">
+ <div class="abs lbl s2" style="left:22px;top:58px">‹ REVIEW</div>
+ <div class="abs lbl" style="left:22px;top:132px">OCTOBER · 9 SPENDS</div>
+ <div class="led" style="top:176px">${h}</div>
+ <div class="abs lbl s2" style="left:22px;top:${176+y+16}px">IN POUNDS</div>
+ <div class="led" style="top:${176+y+50}px">${e}</div>
+ <div class="abs lbl s2" style="left:22px;top:${176+y+108}px">IN EUROS</div>
+ <div class="led" style="top:${176+y+142}px">${f}</div>
+</div>`}
+function ghost(){return `<div class="ph">
+ <div class="abs lbl s2" style="left:22px;top:58px">THURSDAY 15 OCT</div>
+ <div class="abs" style="left:22px;top:118px;font-size:56px;font-weight:500;letter-spacing:-.035em;line-height:60px;width:340px">Two things left today</div>
+ <div class="abs lbl s2" style="left:22px;top:318px">NEXT</div>
+ <div class="q" style="top:352px"><span style="font-weight:500">Stretch &amp; mobility</span><span class="tm">7:15 PM</span></div>
+ <div class="q" style="top:400px"><span>Read</span><span class="tm">9:00 PM</span></div>
+ <div class="abs" style="left:22px;top:482px;font-size:34px;font-weight:500;letter-spacing:-.03em;color:rgba(36,80,216,.62)">Tesco, <b style="font-weight:600">£38.20</b>?</div>
+ <div class="abs" style="left:22px;top:536px;display:flex;gap:22px">
+   <span class="lbl" style="position:relative;color:rgb(var(--ink))">TOTAL${stroke(60,'rgba(240,165,0,.8)')}</span>
+   <span class="lbl s2">RECIPE</span><span class="lbl s2">NOTE</span></div>
+ <div class="abs b s2" style="left:22px;top:590px;width:340px">From the 5:40 shop on Groceries.</div>
+ <div class="abs" style="right:30px;bottom:44px;width:46px;height:40px">
+  <i style="position:absolute;left:0;top:4px;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px);background:radial-gradient(closest-side,#2450D8,rgba(36,80,216,.2))"></i>
+  <i style="position:absolute;left:22px;top:2px;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px);background:radial-gradient(closest-side,#E2432A,rgba(226,67,42,.2))"></i>
+  <i style="position:absolute;left:12px;top:20px;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px);background:radial-gradient(closest-side,#F0A500,rgba(240,165,0,.2))"></i></div>
+</div>`}
+function shelf(){
+ const reading=[['Dune','P 120 OF 612'],['Project Hail Mary','P 88 OF 476']];
+ const queue=['Dune Messiah','It','Atomic Habits','1984','The Sun Also Rises'];
+ let y=170,h='';
+ for(const [t,p] of reading){h+=`<div class="abs" style="left:22px;top:${y}px;font-size:44px;font-weight:500;letter-spacing:-.03em;line-height:48px;white-space:nowrap">${t}</div><div class="abs lbl s2" style="left:22px;top:${y+52}px">${p}</div>`;y+=96}
+ y+=12;h+=`<div class="abs lbl s2" style="left:22px;top:${y}px">NEXT</div>`;y+=30;
+ for(const t of queue){h+=`<div class="abs b" style="left:22px;top:${y}px;font-weight:500">${t}</div>`;y+=36}
+ y+=18;h+=`<div class="abs lbl s2" style="left:22px;top:${y}px">FINISHED</div>`;y+=30;
+ h+=`<div class="abs b s2" style="left:22px;top:${y}px">Educated</div>`;y+=48;
+ h+=`<div class="abs lbl s2" style="left:22px;top:${y}px">SET ASIDE</div>`;y+=30;
+ h+=`<div class="abs b s2" style="left:22px;top:${y}px">Catch-22 <span class="lbl" style="margin-left:10px">AT P 88</span></div>`;
+ return `<div class="ph"><div class="abs lbl s2" style="left:22px;top:58px">‹ REVIEW</div><div class="abs lbl s2" style="left:22px;top:132px">READING</div>${h}</div>`}
+document.getElementById('r').innerHTML=
+ `<div><div class="cap">MONEY · THE MONTH</div>${month()}</div>`+
+ `<div><div class="cap">MONEY · ONE SWIPE UP</div>${ledger()}</div>`+
+ `<div><div class="cap">A RECEIPT, SHOWN TO TESS</div>${ghost()}</div>`+
+ `<div><div class="cap">READING · THE SHELF</div>${shelf()}</div>`;
+document.fonts.ready.then(()=>document.body.dataset.done='1');
+</script>
+</body>
+</html>
