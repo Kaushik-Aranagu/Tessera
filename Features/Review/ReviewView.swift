@@ -59,11 +59,6 @@ struct ReviewWeek {
         let interval = DateInterval(start: start, end: max(now, start))
         let tasks = TaskList(store: model.store, classes: model.classes)
 
-        let doneDates = tasks.all().compactMap { item -> Date? in
-            guard item.isDone, let doneAt = model.store.value("doneAt", of: item.task)?.dateValue,
-                  interval.contains(doneAt) else { return nil }
-            return doneAt
-        }
         let notes = NoteList(store: model.store, classes: model.classes).recent(limit: 1000)
             .count { interval.contains($0.createdAt) }
 
@@ -92,7 +87,9 @@ struct ReviewWeek {
         }
 
         return ReviewWeek(
-            interval: interval, days: days, goodDays: goodDays, tasksDone: doneDates.count, notesWritten: notes,
+            interval: interval, days: days, goodDays: goodDays,
+            // The same count as the bands: each done on its own day where it happened (Design on #552).
+            tasksDone: days.filter { $0 <= today }.reduce(0) { $0 + (doneDays[$1] ?? 0) }, notesWritten: notes,
             putAway: putAway.values.sorted { $0.movedAt > $1.movedAt },
             workouts: workouts.sorted { ($0.endedAt ?? .distantPast) > ($1.endedAt ?? .distantPast) }
         )

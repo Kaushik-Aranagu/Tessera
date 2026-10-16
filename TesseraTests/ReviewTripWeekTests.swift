@@ -136,6 +136,14 @@ struct ReviewTripWeekTests {
         #expect(week.tasksDone[1] == 0)
     }
 
+    @Test func theWeekPageCountsLikeTheBands() throws {
+        // Design on #552, G1: at TW18 the week page says 2 tasks done, as the bands do, not 3.
+        let model = Self.makeModel()
+        try Self.writeTrip(model, through: Self.tuesdayInNewYork.now, unzoned: [])
+        let page = ReviewWeek.compute(model, now: Self.tuesdayInNewYork.now, calendar: Self.tuesdayInNewYork.calendar)
+        #expect(page.tasksDone == 2)
+    }
+
     @Test func twoAmBoardingPassStaysOnSundayInNewYork() throws {
         // TW1 at TW18: 2:00 am at home is last Sunday's, even though it is 5:00 am Monday in New York.
         let week = try Self.week(at: Self.tuesdayInNewYork)
