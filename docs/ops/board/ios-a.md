@@ -30,6 +30,18 @@
 - QA (#428) lows: `previousBest` has no callers (wire or drop); the `.target` comment (#397 L1); the three soul router tests on real time, about 12 s (#402 L4, use a test clock); `isAskWaiting` sticking (#402 L5, already on working); the demo clamp from 03:55 to 04:00 (#405 L1); `OpZones(store:)` built once per row (#391 L1); `Theme.voice(size: 21)` to a type token (#381 L4); long custom exercise names (#381 L2); the plan editor's ObjectHandle link (#359).
 
 **Next:**
+0j. (Research `post-pin-403-407.md`; decisions 12:58 PM PT) After the pin is named:
+- Rebase #403 on master, resolving BottomChrome.swift and TessSoul.swift against #453's working overlay.
+- Swap the raw withAnimation (TessSoul.swift:80,82) and .animation(.spring) (SoulEyes.swift:142) for MotionPolicy.
+- Have the eyes read the graded frame and hide while Tess is working.
+- Rerun the router and working tests for .backgrounded to rest (SoulRouter.swift:167).
+
+Then #407:
+- Keep #475's nonisolated at SystemCatalog.swift:350 and set version 10.
+- Add a test where v9 code opens a v10 store.
+- Merge it only once the pin is on his phone.
+
+After both: the app reads the showsTessEyes setting, not the launch flag.
 0i. (Research undo-windows-audit, #485; decisions 12:45 PM PT) Wire Core's UndoWindow. Plain hold-to-finish gets a 10 s UNDO, like LOG AND FINISH. Routines and the editor get windows and the line "Push A, taken back." (RoutineEditor.swift:221, RoutinesPage.swift:267). Add the missing haptics from the audit.
 0h. (Research VoiceOver fixture, 12:39 PM PT Oct 16) PaintKey's hint (DesignSystem/Paint.swift:304-307) says "Double tap to finish", not "Touch and hold". One fix covers DONE, FINISH and RESET. Recipe clock: Builder A owns the timers, Live Activity and notifications. A step timer only notifies while he's in another app.
 0g. (Research `time-words-sweep.md`, your 3 rows; decisions 12:35 PM PT) The Live Activity time uses Format.clock (RestLiveActivity.swift:243). The workout finish line takes its weekday from the 4 am day (WorkoutFinishView.swift:96). "done this night" goes (TrainingPage.swift:316). Quiet time ends at 7 am (SoulRouter.swift:67-71, with 0c).

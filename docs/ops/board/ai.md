@@ -11,6 +11,8 @@
 *Product order for the ship list (Oct 16): AI-1 → AI-7 memory store → AI-8 "remember that…" → AI-9 What Tess knows → AI-2 → AI-3 → AI-5 eval → AI-4 → AI-10 → AI-6 → AI-11 → AI-12 → AI-14 living colour (Builder A, after Design 48) (memory moved up, 12:14 AM PT; $50 cap decided 9:27 AM PT Oct 16); AI-13 when already in the file. Core owns most rows, Builder B the screens, Research AI-5, the Kitchen lead AI-12.*
 
 **Next:** (reviews against your notes, as Core's PRs land; docs only)
+0b. (Research `plan-rerun-plan.md`, 12:58 PM PT Oct 16) Build the runner `scripts/ai/plan_my_day_eval.py` for the Plan my day rerun. It follows the script rules: env-only key, api.anthropic.com only, redirects refused, bounded calls, a $1 stop, writes only under docs/. The rerun is 26 packs, 72 Sonnet calls, about $0.33. It runs only after Core G1, G4 and G9 land and he says yes in your thread.
+0a. (AI-5 verdict #488, 12:50 PM PT Oct 16) Narrow the Home-wording prompt with Research's rule: Claude only words done moments that add a best, a gap or a count change. Plan a Sonnet-only rerun with its count and cost; it runs only on his yes in your thread. The switch stays off until it passes.
 0. (Research cap-math-check.md, 12:40 PM PT Oct 16) Fix spend-projection.md: lines 44-45 should read $31.41 and $41.41, and line 69 should say $6.48 a day reaches $50 in 7.7 days. Recheck the Sonnet cache-read price on the models page; code has 200 n$/token, claude-first-uses.md has $0.10/M. Tell Core the right figure.
 1. Review Core's AI-3 small PR (TessLineCheck + SW3 wording) against `line-check-vectors.md`.
 2. Review MU2 + A2 against the money/body/health wall and the router rule (a pin blocker, so first when it opens).
