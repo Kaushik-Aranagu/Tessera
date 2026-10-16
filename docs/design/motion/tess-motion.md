@@ -1,4 +1,4 @@
-# Tess in motion (motion lab, sheet 1)
+# Tess in motion (motion lab, sheet 1, with Design 51's fixes)
 
 Kaushik (11:58 PM PT Oct 15): Tess should have life. Small dot eyes, maybe. She could move around the screen, not just the bottom; be dragged; move on her own while doing something. While working she should fade into very subtle, faded colours and split into lights that process, then come back together. Very subtle, never in the face.
 
@@ -29,14 +29,14 @@ Two ink dots on the soul, so she has somewhere to look from. They are an option 
 |---|---|
 | Place | On the mean of the three main dabs, 3 pt above it, so they ride the dabs' own idle lift |
 | Size | 3.2 × 3.5 pt ovals, 8.4 pt apart (centre to centre) |
-| Colour | The look's `ink` at 82%, normal blend, drawn over the soul (never multiplied or screened) |
+| Colour | Always the dark one (Design 51): the look's `ink` on light looks, its `ground` on dark looks (Obsidian `#000000`, Lacquer `#140F1B`), at 82%, normal blend, drawn over the soul. On Obsidian they are two dark pupils in her glow, never glints |
 | Blink | Lids close and open over 160 ms (height to 0.25 and back, ease-in-out). One blink every 3 to 8 s, random; one in five is a double (blink, 250 ms, blink) |
 | Glance | The pair moves together, up to 3 pt sideways and 2.2 pt up or down, on a short spring (300 ms, bounce 0.05) |
 | Where she looks | At her own line when she speaks (down-left for 1 s, then back). Toward a row she just changed or named (up, toward it, until the line leaves). Toward him (up, centred) while listening. Straight ahead otherwise |
 | With the modes | Idle, listening, needs you, resting: shown. Thinking and working: shown while she's whole, gone when she splits. **Done: they fade out in 120 ms as it begins and back in 200 ms after it ends**, so Done plays exactly as built |
 | Reduce Motion | No blink, no glance; the dots sit still |
 
-On Obsidian the ink is near-white and the dots sit inside her glow: at Home size they are two pinpricks, there and not there. That is the intent. If Design wants them to read more, the one dial is the 82% alpha, not the size.
+At Home size they are two pinpricks, there and not there. That is the intent. The one dial is the 82% alpha, never the size.
 
 ## 2. Idle life (as built, plus one thing)
 Idle stays the calm "needs you" lift (`SoulParameters.idle`): one dab at a time, 9 s period, satellites drifting, drawn at 0.62. The one addition: with eyes on, the glance gives idle a direction, and the lift reads as her looking up. No new idle motion; he already likes her at rest.
@@ -46,10 +46,10 @@ She goes to the thing she's about to change, works there, and comes home. She ne
 
 | Beat | What happens | Time |
 |---|---|---|
-| Go | She leaves home on the `SoulTravel` arc (x on `0.55, 0, 0.15, 1`, y on `0.3, 0, 0.25, 1`) to the row's free ground: 40 pt after the row's last word, 6 pt above its baseline. The other rows drop to 55% while she's out (the row she's on stays at 100%) | 760 ms |
+| Go | She leaves home on the `SoulTravel` arc (x on `0.55, 0, 0.15, 1`, y on `0.3, 0, 0.25, 1`) to the row's free ground: 40 pt after the row's last word, 6 pt above its baseline. The rows stay at 100% (Design 51: her being there plus the line is enough) | 760 ms |
 | Work | The working state (section 5), small: the lights orbit within 20 × 12 pt of where she sits, no readers | as long as it takes |
-| Done | Done plays in place, exactly as built, and the line lands | 1.8 s |
-| Home | The same arc back. The rows return to 100% as she lands | 760 ms |
+| Done | Done plays in place, exactly as built, only when an 80 × 80 pt clear of words is free around her spot, the rows above and below included. Otherwise she flies home first (760 ms) and Done plays at home, then the line lands (Design 51) | 1.8 s |
+| Home | The same arc back | 760 ms |
 
 Where she may go, per page:
 - **Home**: after any Next row's words; the space under the last row; the ask band. Never the hero, never the day stroke, never the nav words.
@@ -69,9 +69,9 @@ He can pick her up and put her where he wants her. It starts from a hold, so the
 | Pick up | If the finger moves 10 pt before the hold timer fires, the timer is cancelled and this is a drag, not a talk. She grows to 1.22 over 160 ms, lifts to 44 pt above the fingertip over 180 ms (so the finger never hides her), her halo brightens 12% | `.impact(flexibility: .soft, intensity: 0.5)`, once |
 | Carry | She follows the finger on `Theme.Motion.snappy`, sitting 44 pt above it. Her paint lags: each dab trails the motion by its own amount (vermilion 10 ms, cobalt 16, cadmium 22, satellites 26 to 34), capped at 14 pt, so she stretches a touch in the direction of travel and settles when the finger stops. Listening's bloom plays while carried (she's in his hand) | none |
 | Drop | She settles at the nearest dock on the house spring (420 ms, bounce 0.12) and returns to size over 300 ms. A flick (release speed over 600 pt/s) projects the throw: the dock nearest the point 0.18 s ahead along the velocity | `.selection` |
-| Docks | Bottom-right (home, 346 / 779), bottom-left (47 / 779), right edge halfway up (352 / 470), left edge halfway up (41 / 470). Her dock persists per page (`UserDefaults`, `tess.dock.<page>`) until he moves her again | |
+| Docks | Two (Design 51): bottom-right (home, 346 / 779) and bottom-left (47 / 779). Side docks come back per page only where that page declares free ground. Her dock persists per page (`UserDefaults`, `tess.dock.<page>`) until he moves her again | |
 
-The ask band's line always starts at x 24, so when she docks bottom-left the line and her two words move to the right of her (x 96). That is the only thing that moves for her, and it moves once, with her drop, not while she's carried.
+The ask band's line always starts at x 24, so when she docks bottom-left the line, its lens, the two ask words and UNDO move to the right of her (x 96). That is the only thing that moves for her, and it moves once, with her drop, not while she's carried; the band keeps 736 to 820.
 
 A press that moves less than 10 pt before 400 ms is still the hold-to-talk. A press that moves after the hold fired is still the "drag left to cancel" as built. Nothing changes for the gestures he knows.
 
@@ -81,8 +81,8 @@ What he described most. The state replaces nothing in the table: `thinking` stay
 | Beat | What happens | Time | Values |
 |---|---|---|---|
 | Fade | Her colour drains: saturation 1.45 to 0.62, contrast to 1.0, opacity to 90%, the halo to 0. She is still whole and still breathing | 500 ms, ease-in-out | `SoulLook` lerp |
-| Split | The six dabs loosen outward on short arcs into a constellation beside her line, and six hidden children (two per main dab, the parent's paint) fade up as they leave their parent, so she becomes twelve faint lights. Each light leaves 30 to 80 ms after the last (satellites first, children last) | 900 ms per light, `0.4, 0, 0.2, 1` | 12 lights, 11 to 15 pt radius, blur 5, alpha 0.42, parent's pigment, same blend as the soul |
-| Process | The constellation: each light on its own slow Lissajous loop (periods 4.4 to 9.7 s, 10 to 34 pt amplitude) round a point 10 pt left and 7 pt up of home, so they cross and mix without ever lining up. Each breathes ±14% at its own rate. **Readers:** when there is something on the page she is reading (Plan my day: the Next rows; a link: the pasted text; a photo: nothing, so no readers), three lights (cobalt leading, vermilion and cadmium 90 ms and 180 ms behind, 1.5 pt lower) leave the constellation and scan under each row, left to right then back, 13 pt under the baseline, like a finger under a line. 5.4 s for five rows, then back into the constellation. They never cross the words' own baseline | as long as it takes | |
+| Split | The six dabs loosen outward on short arcs into a constellation beside her line, and six hidden children (two per main dab, the parent's paint) fade up as they leave their parent, so she becomes twelve faint lights. Each light leaves 30 to 80 ms after the last (satellites first, children last) | 900 ms per light, `0.4, 0, 0.2, 1` | 12 lights, 11 to 15 pt radius, blur 5, alpha 0.55 (readers 0.42), parent's pigment, same blend as the soul. One light, the cobalt child, stays within 8 pt of her dock the whole time, so the corner is never empty (Design 51) |
+| Process | The constellation: each light on its own slow Lissajous loop (periods 4.4 to 9.7 s, 10 to 34 pt amplitude) round a point 10 pt left and 7 pt up of home, so they cross and mix without ever lining up. Each breathes ±14% at its own rate. **Readers:** when there is something on the page she is reading (Plan my day: the Next rows; a link: the pasted text; a photo: nothing, so no readers), three lights (cobalt leading, vermilion and cadmium 90 ms and 180 ms behind, 1.5 pt lower) leave the constellation and scan under each row, left to right then back, 13 pt under the baseline, like a finger under a line. 5.4 s for five rows, then back into the constellation. They never cross the words' own baseline. Readers only under rows she's reading (Next rows, pasted text): never under the hero, never under an ask's two words | as long as it takes | |
 | Gather | The readers fly home first (820 ms, `0.55, 0, 0.15, 1`); the constellation follows 140 ms later (680 ms), staggered 25 ms. The children fade out in the last 40% of their flight into their parent. Every light lands on its dab within the same 60 ms | 820 ms | |
 | Colour | Floods back from 300 ms into the gather over 550 ms, so she is fully herself the moment Done begins | | |
 | Done | Exactly as built, with its own `.success`. Then the line | 1.8 s | |
@@ -95,7 +95,7 @@ In a live workout: never. `LiveTessCorner` keeps thinking's pulse at its fixed s
 
 **Beside a repaint** (`living-colours.md`, `TessSoul.repaint(to:)`): a repaint only starts when she's idle, so it never starts while she works, roams, is carried, or during Done. If a repaint is in flight (the 2.8 s pool-and-dry) when work begins, the work wins: the new pigments are already hers from the pool's first frame, so the fade starts at once and the wet swell dries inside the fade's 500 ms instead of its own 2.8 s. Nothing waits on paint drying. The eyes don't change for a repaint.
 
-**On light grounds** (Porcelain, Celadon) the lights multiply, so twelve of them at 0.42 could muddy where they cross. The prototype keeps them at 11 to 15 pt so crossings stay to two lights at a time; Design should check the light recording against Porcelain and say whether 0.42 wants to be 0.36 there.
+**On light grounds** (Porcelain, Celadon) the lights multiply; at 11 to 15 pt crossings stay to two lights at a time, and Design checked Porcelain is not muddy at 0.55.
 
 ## Timing and easing, in one place
 | | Curve | Duration |
@@ -135,5 +135,5 @@ Two new `Haptic` cases (`.soulPickUp`, `.soulDrop`) in `DesignSystem/Haptics.swi
 - The Metal shader route (Research): this sheet works in the `Canvas` she has today. If Builder A moves her to a shader later, the values carry over unchanged.
 - The palette (`soul-explore.md`, `living-colours.md`). The spread is 65% in the app now (#330: the home offsets live in `Features/Tess/SoulFrame.swift`), and the prototype matches; a `?spread=` and `?look=` on the prototype URL show any other.
 
-## For Design
-Review the recordings for: the eyes' weight on each look; whether the split reads as her or as particles; whether the readers under the rows help or distract; the drag's paint lag (too much, too little); the docks. Then the build sheet goes to Builder A through the coordinator.
+## Design's review (item 51, 12:48 AM PT Oct 16)
+Pass, with the fixes now folded in above: eyes always the dark pigment; constellation at 0.55 with the cobalt child kept at the dock; readers kept, only under rows she reads; two docks; no row dimming on roam; Done in place only with an 80 × 80 clear; the bottom-left dock moves the whole band's words once. No second Design pass on the values, only on Builder A's recording. The build sheet is `tess-motion-build.md`.

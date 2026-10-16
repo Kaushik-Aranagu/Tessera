@@ -181,7 +181,7 @@ const CONSTELLATION = [
   // index, ax, ay, periodX, periodY, phase, radius
   [0, 26, 14, 6.2, 4.4, 0.0, 15], [2, 20, 18, 7.4, 5.2, 1.7, 15], [3, 34, 12, 8.6, 6.1, 3.1, 11],
   [4, 16, 20, 5.6, 7.8, 4.4, 11], [5, 10, 8, 9.2, 6.6, 2.2, 11], [7, 30, 16, 6.8, 5.7, 5.3, 12],
-  [8, 22, 10, 7.9, 4.9, 0.9, 12], [9, 12, 22, 8.3, 6.9, 3.8, 12], [11, 28, 20, 9.7, 7.3, 2.6, 12],
+  [8, 5, 4, 7.9, 4.9, 0.9, 12], [9, 12, 22, 8.3, 6.9, 3.8, 12], [11, 28, 20, 9.7, 7.3, 2.6, 12],
 ];
 const READERS = [[1, 0], [6, .09], [10, .18]]; // cobalt leads, vermilion and cadmium follow
 
@@ -191,7 +191,7 @@ function constellationPose(entry, t, W0) {
   return {
     x: W0.x + ax * Math.sin(2 * Math.PI * t / px + ph),
     y: W0.y + ay * Math.sin(2 * Math.PI * t / py + ph * 1.3),
-    rx: r * breathe, ry: r * .9 * breathe, blur: 5, alpha: .42,
+    rx: r * breathe, ry: r * .9 * breathe, blur: 5, alpha: .55,
   };
 }
 
@@ -349,7 +349,7 @@ function drawEyes(C, scale, frame, eyes, t) {
   const cx = C.x + L * (m.x + eyes.look.x * 3), cy = C.y + L * (m.y - 3 + eyes.look.y * 2.2);
   const open = eyes.blink;
   ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  ctx.fillStyle = rgba(LOOK.ink, .82 * eyes.alpha);
+  ctx.fillStyle = rgba(LOOK.dark ? LOOK.ground : LOOK.ink, .82 * eyes.alpha); // Design 51: always the dark one
   for (const s of [-1, 1]) {
     ctx.beginPath(); ctx.ellipse(cx + s * 4.2 * L, cy, 1.6 * L, Math.max(1.75 * open, .25) * L, 0, 0, Math.PI * 2); ctx.fill();
   }
@@ -542,7 +542,7 @@ SCENES.roam = () => {
   const work = { split: S, gather: G, at: spot, small: true };
   return {
     duration: scrollStart + scrollDur + 2.2,
-    page: t => ({ scroll: scroll(t), header: 'Friday morning', rowAlpha: (i) => (i === row && t > T1 && t < D + .6) ? 1 : (t > T1 && t < D + .6 ? .55 : 1) }),
+    page: t => ({ scroll: scroll(t), header: 'Friday morning' }),
     soul: {
       modes: [{ mode: 'idle', at: -10 }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }],
       centre, work: localWork(work),
@@ -567,12 +567,12 @@ function localWork(w) {
 // 4. Drag: a press that moves picks her up; she follows a little above the finger with paint lag; let go and she
 // settles at the nearest dock along the throw. A press that holds still is still "hold to talk".
 SCENES.drag = () => {
-  const DOCKS = [HOME, { x: 47, y: 779 }, { x: 352, y: 470 }];
+  const DOCKS = [HOME, { x: 47, y: 779 }]; // Design 51: two docks only
   const P = 1.5, pick = P + .12;
   // Finger path keyframes: [t, x, y]
   const F = [[P - .3, 346, 830], [P, 346, 806], [pick, 344, 800], [P + .9, 230, 640], [P + 1.6, 120, 720], [P + 2.0, 80, 770]];
   const rel1 = P + 2.0, settle1 = rel1;
-  const P2 = rel1 + 1.6, F2 = [[P2 - .3, 47, 830], [P2, 47, 806], [P2 + .5, 170, 690], [P2 + .75, 260, 600]];
+  const P2 = rel1 + 1.6, F2 = [[P2 - .3, 47, 830], [P2, 47, 806], [P2 + .5, 150, 760], [P2 + .75, 230, 780]];
   const rel2 = P2 + .75; // flick: released moving up-right, projected to the right-edge dock
   const fingerAt = (keys, t) => {
     if (t <= keys[0][0]) return { x: keys[0][1], y: keys[0][2] };
@@ -610,7 +610,7 @@ SCENES.drag = () => {
     }
     const f = fingerAt(F2, rel2), from = { x: f.x, y: f.y - 44 };
     const s = spring(t - rel2, .55, .14);
-    return { x: lerp(from.x, DOCKS[2].x, s), y: lerp(from.y, DOCKS[2].y, s) };
+    return { x: lerp(from.x, DOCKS[0].x, s), y: lerp(from.y, DOCKS[0].y, s) };
   };
   const carried = t => (t > pick && t < rel1 + .1) || (t > P2 + .12 && t < rel2 + .1);
   const scale = t => {
@@ -639,7 +639,7 @@ SCENES.drag = () => {
       { at: P + .5, text: 'She rides 44 pt above the finger; her paint lags.' },
       { at: rel1, text: 'Let go: she settles at the nearest dock.', haptic: 'selection' },
       { at: P2 + .12, text: 'A flick: the throw is projected to a dock.', haptic: 'soft impact 0.5' },
-      { at: rel2, text: 'The right edge, halfway up: in thumb reach.', haptic: 'selection' },
+      { at: rel2, text: 'Home again. Two docks: bottom-right, bottom-left.', haptic: 'selection' },
     ],
   };
 };
@@ -670,7 +670,7 @@ SCENES.eyes = () => {
     },
     lines: [{ text: 'Call the bank at 9:30?', at: 2.0, until: 5 }, { text: 'Listening.', at: 5.2, until: D }, { text: 'Bank call kept for 9:30.', at: D + .4 }],
     caps: [
-      { at: 0, text: 'Eyes (setting, off by default): two ink dots, never colour.' },
+      { at: 0, text: 'Eyes (a setting, off by default): two dark dots.' },
       { at: 1.15, text: 'A blink: 160 ms, every 3 to 8 s, now and then a double.' },
       { at: 2.2, text: 'She glances at her own line when she speaks.' },
       { at: 3.2, text: 'Then up toward the row she means.' },
