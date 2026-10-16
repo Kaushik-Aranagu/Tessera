@@ -54,7 +54,7 @@ Rules:
 
 ## Eval phrases (15)
 
-Clock: Thu 15 Oct 2026, 18:00 Europe/London, the `grammar-collisions.md` fixtures, plus chores Water plants (every 7, last done Fri 9 Oct, 6 days), Clean bathroom (every 14, last done Thu 24 Sep, 21 days), Laundry (no interval), Pay rent (every 30), and an open task "Clean the oven". A context is idle unless stated. "Model" means the grammar returns nil.
+Clock: Thu 15 Oct 2026, 18:00 in the phone's zone (America/Los_Angeles for him), the `grammar-collisions.md` fixtures, plus chores Water plants (every 7, last done Fri 9 Oct, 6 days), Clean bathroom (every 14, last done Thu 24 Sep, 21 days), Laundry (no interval), Pay rent (every 30), and an open task "Clean the oven". A context is idle unless stated. "Model" means the grammar returns nil.
 
 | # | Phrase | Context | Expected |
 |---|---|---|---|
