@@ -75,3 +75,11 @@ There are two fixes, both on the new "LOG … AND FINISH" hold, plus a re-cut of
   DemoData's `tonightWorkout()` returns nil in that hour.
 - That isn't #381's doing. The fix (pin AppClock in the DemoData tests) is waiting for Product to give it an owner.
 - QA's install-day runs avoid that hour until it lands.
+
+## Addendum: one list with Design (10:45 AM PT)
+
+- Design has #381 at FIX FIRST too.
+- Their F1 (re-record the clip) is the same as my R1.
+- Their F2: the rest countdown goes in `now`, per sheet 56 §7.
+- Their F3: the receipt reads "Set 1 logged. 82.5 × 7.".
+- Builder A gets one list: the clip, my F1 and F2, Design's F2 and F3, plus lows L1, L3, L4 and L6.
