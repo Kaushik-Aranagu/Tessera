@@ -5,6 +5,7 @@ Kaushik, Oct 15, about 8:08 PM PT:
 - He wants colour in subtler ways, and no sudden high-contrast pops.
 - He still wants action, drama and things happening.
 - What matters is that the meaning gets across. Where a dot isn't needed, remove it.
+- **Clarified at 8:19 PM PT:** Tess herself, the soul, is fine and he likes her. This is only about bullet points. The soul's colours, blends, states and motion stay exactly as they are.
 
 Recording: `recordings/no-dots.mp4` (source `studies/no-dots.html`), Porcelain, before on the left and after on the right. Stills: `mockups/no-dots-home.png` and `mockups/no-dots-review.png`.
 

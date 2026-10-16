@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Upkeep and People</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Still for docs/design/upkeep-people-first.md: Upkeep first run (pick), the Upkeep page with the shared eval store, the same in Obsidian, and the People page. Thu 15 Oct 2026, 18:00. No dots: colour only in moments. -->
+<style>
+body{margin:0;background:#E9E6EE;font-family:'Inter Tight',sans-serif;width:1760px}
+.row{display:flex;gap:40px;padding:40px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;flex:none}
+.por{--ink:23,20,31;--t2:.66;--t3:.51;--tess:#2450D8;--ground:#fff;--health:18,147,106;color:rgb(var(--ink));background:var(--ground)}
+.obs{--ink:245,242,236;--t2:.72;--t3:.38;--tess:#86B4FF;--ground:#000;--health:63,212,154;color:rgb(var(--ink));background:var(--ground)}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),var(--t2))}
+.hair{position:absolute;left:22px;right:22px;height:1px;background:rgba(var(--ink),.14)}
+.title{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px;white-space:nowrap}
+.body{font-size:21px;line-height:28px}
+.tess{color:var(--tess)}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:#4a4458;margin-bottom:12px}
+.pick{position:absolute;left:22px;right:22px;display:flex;align-items:baseline;height:36px;font-size:21px}
+.pick .n{flex:1}
+.pick.on .n{font-weight:600;color:rgb(var(--ink))}
+.pick.off .n{color:rgba(var(--ink),var(--t2))}
+.stroke{position:absolute;overflow:visible}
+</style>
+</head>
+<body>
+<div class="row" id="r"></div>
+<script>
+const ROUGH='M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z';
+function pick(){
+  const groups=[['KITCHEN',[['Clean the kitchen',7,1],['Take out the bins',4,1],['Descale the kettle',30,0]]],
+   ['FLOORS AND BATHROOM',[['Hoover the flat',7,0],['Clean the bathroom',7,1]]],
+   ['LAUNDRY',[['Laundry',7,1],['Change the bed sheets',14,0]]],
+   ['PLANTS',[['Water the plants',7,1]]],
+   ['BILLS',[['Pay rent',30,0],['Pay council tax',30,0]]]];
+  let y=150,h='';
+  for(const [g,items] of groups){h+=`<div class="abs lbl s2" style="left:22px;top:${y}px">${g}</div>`;y+=28;
+    for(const [n,d,on] of items){h+=`<div class="pick ${on?'on':'off'}" style="top:${y}px"><span class="n">${n}</span><span class="lbl s2">${d} DAYS</span></div>`;y+=36}
+    y+=14}
+  return `<div class="ph por">
+   <div class="abs lbl s2" style="left:22px;top:58px">UPKEEP</div>
+   <div class="abs body tess" style="left:22px;top:92px;width:340px">What do you keep up with? Pick any.</div>
+   ${h}
+   <div class="abs lbl s2" style="left:22px;top:${y-4}px">15 MORE</div>
+   <div class="abs lbl s2" style="left:22px;bottom:52px">SKIP</div>
+   <div class="abs" style="right:22px;bottom:44px;width:72px;height:34px">
+     <svg class="stroke" width="76" height="14" viewBox="0 0 200 14" preserveAspectRatio="none" style="left:-2px;top:22px"><path d="${ROUGH}" fill="rgba(240,165,0,.85)"/></svg>
+     <div class="abs" style="right:0;top:0;font-size:21px;font-weight:600">Keep 5</div></div>
+  </div>`;
+}
+function upkeep(theme){
+  const t3=theme==='obs'?.38:.51;
+  const chores=[['Clean the bathroom','21 DAYS · USUALLY 14',1.5],['Water the plants','6 DAYS · USUALLY 7',6/7],['Pay rent','15 DAYS · USUALLY 30',.5],['Top up the oil','9 DAYS · USUALLY 30',.3],['Clean the kitchen','TODAY',0]];
+  let h='',stack=190,last=110;
+  for(const [n,a,s] of chores){
+    let y=s>=1?stack:640-s*450; if(s>=1)stack+=72; y=Math.max(y,last+72); last=y;
+    const op=Math.min(1,t3+(1-t3)*Math.min(s,1));
+    h+=`<div class="abs title" style="left:22px;top:${y}px;color:rgba(var(--ink),${op.toFixed(2)})">${n}</div><div class="abs lbl s2" style="left:22px;top:${y+42}px">${a}</div>`;
+  }
+  return `<div class="ph ${theme}">
+   <div class="abs lbl s2" style="left:22px;top:58px">‹ REVIEW</div>
+   <div class="abs lbl" style="left:22px;top:132px">NOW</div>
+   <div class="hair" style="top:164px;background:rgba(var(--ink),.4)"></div>
+   ${h}
+   <div class="hair" style="top:716px"></div>
+   <div class="abs lbl s2" style="left:22px;top:732px">NO RHYTHM YET</div>
+   <div class="abs body s2" style="left:22px;top:758px">Laundry · Take out the bins</div>
+  </div>`;
+}
+function people(){
+  const names=[['Sam',1],['Mum',1],['Ben',1],['Will',1],['Rose',1],['Mark',1],['Bill',1],['Rosemary',0],['Ravi',0]];
+  const txt=names.map(([n,m])=>`<span style="${m?'':'font-weight:400;color:rgba(var(--ink),var(--t3))'}">${n}</span>`).join('<span style="display:inline-block;width:16px"></span>');
+  return `<div class="ph por">
+   <div class="abs lbl s2" style="left:22px;top:58px">‹ REVIEW</div>
+   <div class="abs lbl s2" style="left:22px;top:132px">PEOPLE</div>
+   <div class="abs" style="left:22px;top:170px;width:270px;font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:48px">${txt}</div>
+   <div class="abs body s2" style="right:22px;top:180px;text-align:right">Mum, Sun</div>
+   <div class="abs body tess" style="left:22px;top:620px;width:340px;opacity:0">.</div>
+  </div>`;
+}
+document.getElementById('r').innerHTML=
+ `<div><div class="cap">UPKEEP · FIRST RUN</div>${pick()}</div>`+
+ `<div><div class="cap">UPKEEP · PORCELAIN</div>${upkeep('por')}</div>`+
+ `<div><div class="cap">UPKEEP · OBSIDIAN</div>${upkeep('obs')}</div>`+
+ `<div><div class="cap">PEOPLE · PORCELAIN</div>${people()}</div>`;
+document.fonts.ready.then(()=>document.body.dataset.done='1');
+</script>
+</body>
+</html>
