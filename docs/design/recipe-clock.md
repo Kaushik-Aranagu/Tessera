@@ -3,6 +3,7 @@
 **Kaushik's principle, in one line:** C is the base, the recipe laid on time; the step he is on is lit, steps that happen at once are drawn side by side, and B's whole ingredient list is one swipe away.
 
 His pick of sheet 45 (Oct 16, 9:47 AM PT): "definitely not A"; C as the overall idea; the current step or steps highlighted with an accent and some weight; the moving mark a little cooler; B's list folded in as a peek; steps that run in parallel. This sheet replaces sheet 10's recipe page and sheet 12's cook mode: the recipe page is the cook, running. Sheet 45 C stands except where this says otherwise.
+- **This build:** one lane, lit steps, the bead, the peek. The second lane and Pantry's rows are drawn so the page has room for them; both are later.
 - Board: `mockups/recipe-clock.png` (source `studies/recipe-clock.html`). Porcelain and Obsidian: at rest, 12 min in, 32 min in with two steps live, the ingredient peek, the peek with Pantry (a later state), the last step, done.
 - Recording: `recordings/recipe-clock.mp4` (17 s, Porcelain): the peek in and out, COOK, each step lighting as the bead reaches it, the sauce forking off the roast at 30 min, the last step, hold DONE, the receipt.
 
@@ -28,7 +29,8 @@ His pick of sheet 45 (Oct 16, 9:47 AM PT): "definitely not A"; C as the overall 
 - Ahead of the bead the stroke is the 20% guide, as at rest.
 - **Reduce Motion:** the bead sits still with no breath and no ring; it moves in 1-minute steps with a 200 ms crossfade. A step still lights, without the wet landing.
 
-## Steps that run at once
+## Steps that run at once (later, not this build)
+This build is C with lit steps, the bead and the ingredient peek, one lane. He called parallel steps secondary, so the second lane waits. When it comes back, it is reconciled with the Kitchen lead's rule in #414 (cue words open a track; at most two live tracks and two timers; the model's pairs show as a faint bracket until he taps once per recipe), and that rule wins where the two differ.
 - **A step that overlaps another forks into a second lane:** the stroke curves out to x 88 over 12 pt at the step's start minute, runs beside the main stroke, and curves back in at its end. Its text sits at x 108, under the step it runs alongside. At rest the fork reads as "meanwhile" without the word.
 - **While both run, both are lit**, each with a bead and its own minutes ("13 MIN", "3 MIN"), so he sees which ends first. Tess names the new one with the old: "Sauce now, while it roasts."
 - Two lanes at most on the page. A third overlapping step goes in the second lane after the first one there ends; if they truly overlap three ways, the third sits in the second lane's text under the other with its own minute (Kitchen lead to rule how often that happens).
@@ -38,7 +40,7 @@ His pick of sheet 45 (Oct 16, 9:47 AM PT): "definitely not A"; C as the overall 
 - **Swipe the page left anywhere, or tap INGREDIENTS.** The clock slides 44 pt left and fades; its stroke stays at the left edge as a spine, with the bead on it, so he keeps his place in time. B's list slides in from the right over 320 ms on the house curve, at Body 21 (B's 16 pt was the hard-to-read part): "SERVES **4**" as a label word at 236, then one ingredient per row from 268 at 40 pt pitch, the amount as a value word ("**1½ lb** chicken thighs"). Swipe right, or tap STEPS at the right of the key row, to go back.
 - **During a cook, used ingredients dim** to 42%, so the list also says what is still to come.
 - **The key in the peek** sends the list to Groceries: "ADD 7 TO GROCERIES" (staples skipped, as Groceries already rules). The receipt is "Chicken, 7 added." with UNDO (the short-name rule from sheet 67). This replaces sheet 45's swipe-left-to-Groceries, which the peek now owns.
-- **With Pantry (later, not in this build):** each row says what he has at the right, Label 16/600: "on hand" at 42%, or "to buy" in ink. Used rows say "used". The key adds only what is missing: "ADD 2 TO GROCERIES", receipt "Chicken, 2 added." Until Pantry exists, the rows carry no value.
+- **With Pantry (later, not this build):** each row says what he has at the right, Label 16/600: "on hand" at 42%, or "to buy" in ink. Used rows say "used". The key adds only what is missing: "ADD 2 TO GROCERIES", receipt "Chicken, 2 added." Until Pantry exists, the rows carry no value.
 
 ## Swipe for more, as a house rule
 His ask was wider than recipes: a little more of a page, a swipe away. So:
@@ -54,7 +56,7 @@ Hold DONE: the line fills over 0.7 s, the last span dries, every step returns to
 The cook Live Activity stays as built (Design 54): the current step's title and its minutes left; with two lanes live it shows the one that ends first, then the other. Nothing new here for Builder A.
 
 ## For the builders
-- **Builder B:** the page as one view with a `cook` state (`RecipeClockView`); the minute map from Core's step starts with each step's line floor; lit, wet, dry and dim; the bead (`TimelineView`, 30 fps when the screen is still, the ring as an overlay); the fork as a `Path`; the peek as an offset pager with the spine pinned; INGREDIENTS / STEPS words; the receipt lines. Cook mode's screen (sheet 12) folds into this page; its timers come from the stroke.
-- **Core:** a start and end minute per step and a lane (0 or 1) from the parser; a cook process with more than one live step and one timer per timed step; the used set per minute for the peek; Claude's proposed overlaps as a ghost fork with KEEP / NOT NOW (the one-ask grammar).
-- **Kitchen lead:** the overlap rules (which words make a lane, the three-way case), which steps count as timed, and the staples skip for the peek's key.
+- **Builder B:** the page as one view with a `cook` state (`RecipeClockView`); the minute map from Core's step starts with each step's line floor; lit, wet, dry and dim; the bead (`TimelineView`, 30 fps when the screen is still, the ring as an overlay); the peek as an offset pager with the spine pinned; INGREDIENTS / STEPS words; the receipt lines. Cook mode's screen (sheet 12) folds into this page; its timers come from the stroke.
+- **Core:** a start and end minute per step from the parser; one timer per timed step; the used set per minute for the peek. Later, with lanes: a lane per step, more than one live step, and the model's pairs as #414 rules them.
+- **Kitchen lead:** which steps count as timed, and the staples skip for the peek's key. The lane rules are already #414's, for when lanes come back.
 - **Later, Product:** Pantry (his idea: a stock of what he has, feeding Groceries, Recipes and the peek's on hand / to buy). This sheet only reserves the peek's right column for it.
