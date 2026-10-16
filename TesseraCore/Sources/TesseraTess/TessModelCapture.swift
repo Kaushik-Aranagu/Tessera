@@ -41,7 +41,8 @@ public final class TessModelCapture: TessModelCapturing {
                     ? line : "Didn't catch that.", source: .none)
             }
             let safe = TessVoice.violations(in: line).isEmpty && !line.isEmpty
-            return TessCapture(records: recorder.records, line: safe ? line : recorder.records.last?.summary ?? "",
+            let receipt = recorder.records.last.map { ($0.receipt ?? $0.summary) + "." } ?? ""
+            return TessCapture(records: recorder.records, line: safe ? line : receipt,
                                source: .model)
         } catch {
             // Roll back anything a failed session started.

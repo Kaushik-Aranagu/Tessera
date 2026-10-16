@@ -430,4 +430,15 @@ public struct AddGroceries: EngineAction {
     public func summary(in _: ObjectStore) -> String {
         lines.count == 1 ? "Added \(lines[0])" : "Added \(lines.count) things"
     }
+
+    public func receipt(in _: ObjectStore) -> String? {
+        guard !lines.isEmpty else { return nil }
+        // Name the things: "Oat milk and eggs, on Groceries"; "Oat milk, eggs and 2 more, on Groceries" (Design R7).
+        let names = switch lines.count {
+        case 1: lines[0]
+        case 2: "\(lines[0]) and \(lines[1])"
+        default: "\(lines[0]), \(lines[1]) and \(lines.count - 2) more"
+        }
+        return "\(names.prefix(1).uppercased() + names.dropFirst()), on Groceries"
+    }
 }

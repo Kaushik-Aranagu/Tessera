@@ -92,6 +92,10 @@ public struct CreateList: EngineAction {
     public func summary(in _: ObjectStore) -> String {
         "New list: \(name)"
     }
+
+    public func receipt(in _: ObjectStore) -> String? {
+        "\(name), made"
+    }
 }
 
 /// Adds an item at the end of a list (or of its section).
@@ -142,6 +146,10 @@ public struct AddListItem: EngineAction {
     public func summary(in _: ObjectStore) -> String {
         "Added \(text)"
     }
+
+    public func receipt(in store: ObjectStore) -> String? {
+        "\(text.prefix(1).uppercased() + text.dropFirst()), added to \(store.object(id: list)?.title ?? "the list")"
+    }
 }
 
 /// Checks an item (or unchecks it). Checked items stay on the list until "clear done".
@@ -175,6 +183,12 @@ public struct CheckListItem: EngineAction {
     public func summary(in store: ObjectStore) -> String {
         let title = store.object(id: item)?.title ?? "it"
         return done ?? true ? "Got \(title)" : "Back on the list: \(title)"
+    }
+
+    public func receipt(in store: ObjectStore) -> String? {
+        guard let object = store.object(id: item) else { return nil }
+        let title = object.title.prefix(1).uppercased() + object.title.dropFirst()
+        return done ?? true ? "\(title), got" : "\(title), back on \(object.parent?.title ?? "the list")"
     }
 }
 
@@ -218,6 +232,12 @@ public struct MoveListItem: EngineAction {
     public func summary(in store: ObjectStore) -> String {
         "Moved \(store.object(id: item)?.title ?? "it")"
     }
+
+    public func receipt(in store: ObjectStore) -> String? {
+        guard let title = store.object(id: item)?.title else { return nil }
+        let name = title.prefix(1).uppercased() + title.dropFirst()
+        return section.map { $0.isEmpty ? "\(name), moved" : "\(name), moved to \($0)" } ?? "\(name), moved"
+    }
 }
 
 /// Renames a section on every item of a list that's in it.
@@ -250,6 +270,10 @@ public struct RenameListSection: EngineAction {
     public func summary(in _: ObjectStore) -> String {
         "Renamed \(from) to \(to)"
     }
+
+    public func receipt(in _: ObjectStore) -> String? {
+        "\(from), now \(to)"
+    }
 }
 
 /// Takes the checked items off a list (soft delete; undo puts them back).
@@ -278,5 +302,9 @@ public struct ClearDoneItems: EngineAction {
 
     public func summary(in store: ObjectStore) -> String {
         "Cleared \(store.object(id: list)?.title ?? "the list")"
+    }
+
+    public func receipt(in store: ObjectStore) -> String? {
+        "\(store.object(id: list)?.title ?? "The list"), done items cleared"
     }
 }

@@ -7,8 +7,18 @@ public protocol EngineAction: Codable, Sendable {
     static var descriptor: ActionDescriptor { get }
     /// Applies the action. Anything it writes goes through `transaction` and is logged.
     @MainActor func apply(_ transaction: inout Transaction) throws -> Output
-    /// A one-line receipt, written after `apply` succeeded: "Logged bench press 82.5 × 8".
+    /// A one-line receipt, written after `apply` succeeded: "Logged bench press 82.5 × 8". Verb first: it's log text
+    /// (the Day log, the op history), never read aloud raw (Product, 12:01 PM PT Oct 16).
     @MainActor func summary(in store: ObjectStore) -> String
+    /// What Tess says for it, thing first: "Films, made.", "Milk, on Groceries." Nil when it has no spoken form yet;
+    /// the caller then falls back (Research receipts-thing-first RC23).
+    @MainActor func receipt(in store: ObjectStore) -> String?
+}
+
+public extension EngineAction {
+    @MainActor func receipt(in _: ObjectStore) -> String? {
+        nil
+    }
 }
 
 /// The schema of an action's arguments, used for validation hints and tool definitions.
