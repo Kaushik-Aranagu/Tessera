@@ -38,6 +38,7 @@
 - Builder B's 3 op log gaps in `../research/oplog-health.md` (#162).
 - The rest of Builder B's accessibility rows in `../research/accessibility.md`, including Tess's rows ("commits after 2 s with no cancel" for VoiceOver). The Objects rows are Core's.
 - W3 recovery line and the one-time Health permission line on NowPage, after Core's rule and Health reads. Design's sheet: `docs/design/recovery-line.md` with `recovery-line.mp4` (6faa446 on Design's branch).
+- Review with habits and weight, with the M3 habits page (Research 83 `../research/fixtures/review-m3.md`, decisions.md 8:07 PM PT): one week line under the session-count hero ("Gym 3 of 3, Cook 2 of 4, weight down 0.4 kg.", weight only with 3 or more weigh-ins), a line of dots per habit under the dabs (at most 3 on Review), paused habits as "Gym, paused this week".
 - M3 habits page, after Core's M3 slice 2, with a Habits word on the Today foot line. Design's sheet: `docs/design/body-weight-and-habits.md` with `m3-surfaces.mp4` (1f17bd1 on Design's branch), drawn on Research's `../research/m3-1-2-brief.md` fixtures, with every Tess line and empty state from `../research/m3-lines.md` (#204; decisions.md 7:34 PM PT).
 - Mount BottomChrome over the Home link covers (Groceries, Recipes, Notes, The week), so Tess speaks in one place. Core then removes its Groceries mirror.
 - Lists screens 9 to 12 include Research's G1, a "Lists" HomeLink word under Groceries (`../research/lists-daily.md`), and the Kitchen lead's `lists-screens-acceptance.md`.
