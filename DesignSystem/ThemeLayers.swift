@@ -74,25 +74,8 @@ struct LookField: View {
 /// its band at 3%, every other look a flat workout ground.
 struct WorkoutField: View {
     var body: some View {
-        let look = ThemeStore.shared.workoutLook
-        switch look.field {
-        case .plein:
-            PleinGround()
-        case .lacquer:
-            Theme.Colors.Workout.ground
-                .overlay {
-                    Rectangle()
-                        .fill(Color(hex: look.fieldSpecular).opacity(0.03))
-                        .frame(height: 150)
-                        .blur(radius: 14)
-                        .rotationEffect(.degrees(-24))
-                        .scaleEffect(x: 2.2)
-                }
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
-        case .pigmentBloom, .emissive, .glaze:
-            Theme.Colors.Workout.ground.ignoresSafeArea()
-        }
+        // The same field as Home in the workout's look (one base across the app).
+        LookField(look: ThemeStore.shared.workoutLook)
     }
 }
 

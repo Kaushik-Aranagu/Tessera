@@ -7,7 +7,7 @@ import TesseraCore
 enum DemoData {
     /// Demo data exists only on the simulator: the build that goes on his phone from Xcode is a Debug build, so
     /// `#if DEBUG` alone can't keep a ticked -resetDemo from wiping his history (settings-object.md).
-    static var isAllowed: Bool {
+    nonisolated static var isAllowed: Bool {
         #if targetEnvironment(simulator)
             true
         #else

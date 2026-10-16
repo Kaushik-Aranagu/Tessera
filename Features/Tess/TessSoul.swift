@@ -44,7 +44,7 @@ struct TessSoul: View {
         // By the look, not the colour scheme (themes.md addendum); the workout is always its own dark palette.
         let store = ThemeStore.shared
         let palette = onWorkoutGround
-            ? SoulPalette.workout(store.workoutLook)
+            ? SoulPalette.look(store.workoutLook)
             : SoulPalette.look(colorScheme == .dark ? store.pair.night : store.pair.day)
         TimelineView(.animation(minimumInterval: slow ? 1 / 30 : 1 / 60, paused: reduceMotion)) { context in
             let frame = reduceMotion
@@ -126,16 +126,6 @@ struct SoulPalette {
             halo: halo(Color(hex: look.live).opacity(glow ? 0.22 : pale ? 0.08 : 0.16),
                        Color(hex: look.context).opacity(glow ? 0.14 : pale ? 0.05 : 0.10)),
             ring: ring(Color(hex: look.context).opacity(0.6))
-        )
-    }
-
-    /// Every workout is dark: signal, Workout.tess and rest, screen, halo on.
-    static func workout(_ look: Look) -> SoulPalette {
-        SoulPalette(
-            blend: .screen,
-            washes: [look.workout.signal, look.workout.tess, look.workout.rest].map { wash($0) },
-            halo: halo(Color(hex: look.workout.signal).opacity(0.22), Color(hex: look.context).opacity(0.14)),
-            ring: ring(Color(hex: look.workout.rest).opacity(0.6))
         )
     }
 

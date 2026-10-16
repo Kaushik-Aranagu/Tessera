@@ -64,9 +64,9 @@ struct ThemeStoreTests {
         let (store, _) = fresh()
         store.holdWorkoutLook()
         store.systemIsDark = true
-        #expect(store.concept.workout.ground == Look.porcelain.workout.ground)
+        #expect(store.concept.workout.ground == Look.porcelain.ground)
         store.releaseWorkoutLook()
-        #expect(store.concept.workout.ground == Look.obsidian.workout.ground)
+        #expect(store.concept.workout.ground == Look.obsidian.ground)
     }
 
     @Test func demoTapsStayInMemory() {
@@ -95,7 +95,8 @@ struct ThemeStoreTests {
         let (store, _) = fresh()
         #expect(store.paintLook == .porcelain)
         store.holdWorkoutLook()
-        #expect(store.paintLook == .obsidian)
+        // One base: the workout paints in the look it opened in.
+        #expect(store.paintLook == .porcelain)
         store.releaseWorkoutLook()
         #expect(store.paintLook == .porcelain)
     }

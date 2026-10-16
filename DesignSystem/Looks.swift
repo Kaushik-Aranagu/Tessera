@@ -20,16 +20,6 @@ struct Look: Sendable, Identifiable, Equatable {
         case glaze
     }
 
-    struct Workout: Sendable, Equatable {
-        var ground: UInt32
-        var raised: UInt32
-        var ink: UInt32
-        var signal: UInt32
-        var rest: UInt32
-        var tess: UInt32
-        var health: UInt32
-    }
-
     var name: String
     var isDark: Bool
     var field: Field
@@ -47,7 +37,6 @@ struct Look: Sendable, Identifiable, Equatable {
     var training: UInt32
     var neutral: UInt32
     var sky: UInt32
-    var workout: Workout
     /// The glint (themes.md addendum, "Sheen"): gold through the letters on white looks (normal blend, 60%),
     /// light passing over everything else (plus-lighter).
     var sheen: UInt32 = 0xFFE2A8
@@ -65,8 +54,6 @@ struct Look: Sendable, Identifiable, Equatable {
         ground: 0xFFFFFF, raised: 0xF5F4F8, ink: 0x17141F, context: 0x6A4C9C, muted: 0xB9B3C3, tess: 0x2450D8,
         live: 0xE2432A, liveInk: 0xC23A22, now: 0xF0A500, health: 0x12936A, training: 0xCC3F68, neutral: 0x9C95A8,
         sky: 0x7FB6E0,
-        workout: Workout(ground: 0x14111A, raised: 0x221D2C, ink: 0xF5F2EC, signal: 0xFF5B3A, rest: 0xF0A500,
-                         tess: 0x8FB0FF, health: 0x3FC58F),
         sheen: 0xF0A500, sheenOnLetters: true
     )
 
@@ -74,9 +61,7 @@ struct Look: Sendable, Identifiable, Equatable {
         name: "Obsidian", isDark: true, field: .emissive,
         ground: 0x000000, raised: 0x0F0E12, ink: 0xF5F2EC, context: 0xB7A6E0, muted: 0x5C5765, tess: 0x86B4FF,
         live: 0xFF5B3A, liveInk: 0xFF7A5C, now: 0xFFC23D, health: 0x3FD49A, training: 0xFF6B92, neutral: 0x8E879A,
-        sky: 0x7CC4F0,
-        workout: Workout(ground: 0x000000, raised: 0x141217, ink: 0xF5F2EC, signal: 0xFF5B3A, rest: 0xFFC23D,
-                         tess: 0x86B4FF, health: 0x3FD49A)
+        sky: 0x7CC4F0
     )
 
     static let plein = Look(
@@ -84,8 +69,6 @@ struct Look: Sendable, Identifiable, Equatable {
         ground: 0xF2ECE3, raised: 0xFAF6EF, ink: 0x2B2440, context: 0x7A5C8E, muted: 0xA39AAE, tess: 0x2A64A0,
         live: 0xC8452F, liveInk: 0xB83C28, now: 0xE0B341, health: 0x6E9E6A, training: 0x6E9E6A, neutral: 0xA39AAE,
         sky: 0x9EC3D6,
-        workout: Workout(ground: 0x1C1828, raised: 0x3B2D57, ink: 0xF3ECE0, signal: 0xD9563F, rest: 0xE8BD4C,
-                         tess: 0x9DBFE6, health: 0x7FB07A),
         sheen: 0xF7E6B8
     )
 
@@ -93,9 +76,7 @@ struct Look: Sendable, Identifiable, Equatable {
         name: "Lacquer", isDark: true, field: .lacquer,
         ground: 0x140F1B, raised: 0x221A2D, ink: 0xF1E7D6, context: 0xC3A6DE, muted: 0x6C6078, tess: 0x8DB2FF,
         live: 0xF06A4C, liveInk: 0xFF8466, now: 0xE8B54A, health: 0x8FCB9E, training: 0xF07FA0, neutral: 0x9A8FA6,
-        sky: 0x9DBCD6,
-        workout: Workout(ground: 0x0C0812, raised: 0x1C1426, ink: 0xF1E7D6, signal: 0xF06A4C, rest: 0xE8B54A,
-                         tess: 0x8DB2FF, health: 0x8FCB9E)
+        sky: 0x9DBCD6
     )
 
     static let celadon = Look(
@@ -103,8 +84,6 @@ struct Look: Sendable, Identifiable, Equatable {
         ground: 0xE7EEE9, raised: 0xFFFFFF, ink: 0x0F231D, context: 0x456680, muted: 0x97ABA2, tess: 0x2C59BE,
         live: 0xD8462C, liveInk: 0xB8361E, now: 0xD99A1C, health: 0x23866A, training: 0xC24766, neutral: 0x7E918A,
         sky: 0x8DBBD6,
-        workout: Workout(ground: 0x0E1C17, raised: 0x18302A, ink: 0xEEF3EF, signal: 0xEE7056, rest: 0xE2A93A,
-                         tess: 0x9DBBEA, health: 0x5DBE98),
         sheen: 0xD99A1C, sheenOnLetters: true
     )
 
@@ -223,7 +202,7 @@ final class ThemeStore {
     /// The look the paint tokens (halo, blends, bloom, sheen, glows) resolve against: while the workout is open its
     /// pages are forced dark, so the night look (or the pin); otherwise the look on screen (QA W8).
     var paintLook: Look {
-        workoutHeld == nil ? current : (pin ?? night)
+        workoutHeld ?? current
     }
 
     /// The workout's look: the one it opened in while it's open, else the one on screen.

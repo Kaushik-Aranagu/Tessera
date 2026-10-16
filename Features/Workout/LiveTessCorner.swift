@@ -38,7 +38,7 @@ struct LiveTessCorner: View {
                 }
                 if canUndo {
                     Button("Undo", action: onUndo)
-                        .buttonStyle(.labelWord(Paint.live))
+                        .buttonStyle(.labelWord(Theme.Colors.liveInk))
                         .accessibilityLabel("Undo the last change")
                         .transition(.opacity)
                 }

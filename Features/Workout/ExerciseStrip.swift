@@ -157,7 +157,7 @@ struct RunningOrderSheet: View {
             if isCurrent, !done {
                 Text("Set \(session.currentSetNumber) of \(session.targetSets(of: entry))")
                     .textRole(.label)
-                    .foregroundStyle(Paint.now)
+                    .foregroundStyle(Paint.cream)
             } else {
                 Text(done ? "Done" : session.scheme(of: entry))
                     .textRole(.label)

@@ -136,7 +136,8 @@ private struct WorkoutContent: View {
             .presentationDragIndicator(.hidden)
         }
         .background { WorkoutField() }
-        .preferredColorScheme(.dark)
+        // The workout stands on the look's own base, light or dark.
+        .preferredColorScheme(ThemeStore.shared.workoutLook.isDark ? .dark : .light)
         .persistentSystemOverlays(.hidden)
         .defersSystemGestures(on: .bottom)
         .onAppear { laneIndex = session.currentIndex }
@@ -414,7 +415,7 @@ extension WorkoutContent {
                         HStack(alignment: .firstTextBaseline, spacing: 10) {
                             Text(Format.duration(remaining))
                                 .font(Theme.numeral(72))
-                                .foregroundStyle(Paint.now)
+                                .foregroundStyle(Paint.cream)
                                 .contentTransition(.numericText(countsDown: true))
                                 .animation(MotionPolicy.resolve(Theme.Motion.snappy, reduceMotion: reduceMotion),
                                            value: remaining)
@@ -439,7 +440,7 @@ extension WorkoutContent {
                     if showsGo {
                         Text("Go")
                             .font(Theme.numeral(72))
-                            .foregroundStyle(Paint.now)
+                            .foregroundStyle(Paint.cream)
                             .transition(reduceMotion ? AnyTransition.opacity
                                 : AnyTransition.offset(y: 14).combined(with: AnyTransition(.blurReplace)))
                     } else {
