@@ -335,15 +335,6 @@ extension WorkoutSession {
         weight = max(0, min(400, weight + delta))
     }
 
-    /// One loadable step up or down (the plus and minus beside the dial, and the dial's one-tap twins).
-    func stepWeight(up: Bool) {
-        guard let dial, !dial.detents.isEmpty else {
-            adjustWeight(by: up ? 2.5 : -2.5)
-            return
-        }
-        weight = dial.step(from: weight, by: up ? 1 : -1)
-    }
-
     func adjustReps(by delta: Double) {
         reps = max(1, min(50, reps + delta))
     }

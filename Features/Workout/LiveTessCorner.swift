@@ -25,11 +25,13 @@ struct LiveTessCorner: View {
         HStack(alignment: .bottom, spacing: 12) {
             VStack(alignment: .trailing, spacing: 6) {
                 if let shownLine, !shownLine.isEmpty {
+                    // Beside the soul, trailing, at most 270 pt and 2 lines, UNDO under it (day-seams S1).
                     Text(shownLine)
                         .font(Theme.voice)
                         .foregroundStyle(Paint.tess)
                         .multilineTextAlignment(.trailing)
                         .lineLimit(2)
+                        .frame(maxWidth: 270, alignment: .trailing)
                         .minimumScaleFactor(0.85)
                         // A new line cross-fades in place; only an empty corner slides a line in.
                         .contentTransition(.opacity)

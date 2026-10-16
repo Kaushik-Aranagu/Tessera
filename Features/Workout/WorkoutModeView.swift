@@ -63,6 +63,13 @@ private struct WorkoutContent: View {
     @State private var swapOptions: [ExerciseSwaps.Option] = []
     /// "Go" rises in where the countdown was, just after a skip.
     @State private var showsGo = false
+    /// The weight numeral is a field (typed in place).
+    @State private var isTypingWeight = false
+    /// "81 isn't loadable; 80", for 2 s after a typed weight snaps.
+    @State private var snapNote: String?
+    /// "DRAG RIGHT +15 · FLING LEFT TO GO" shows for the first three rests only.
+    @AppStorage("restHorizonHints") private var restHintsLeft = 3
+    @State private var hintedSet: UUID?
     /// A glint sweeps the numeral once when rest ends on its own.
     @State private var restEndedGlint = false
     @State private var summaryLine: String?
@@ -204,23 +211,9 @@ private struct WorkoutContent: View {
             setArea(phase: phase)
                 .padding(.horizontal, Theme.Spacing.gutter)
             Spacer(minLength: Theme.Spacing.s)
-            HStack(spacing: 0) {
-                PlateStepKey(up: false, enabled: phase == .set && stepLabel(up: false) != "0",
-                             step: stepLabel(up: false)) { stepWeight(up: false) }
-                WeightDial(
-                    weight: $session.weight,
-                    detents: session.detents,
-                    isLocked: phase != .set,
-                    restFraction: session.isEditing ? nil : session.restFraction(at: now),
-                    onExtendRest: { extendRest() },
-                    onSkipRest: { skipRest() },
-                    spokenValue: session.spokenLoad
-                )
-                PlateStepKey(up: true, enabled: phase == .set && stepLabel(up: true) != "0",
-                             step: stepLabel(up: true)) { stepWeight(up: true) }
-            }
-            // 20 pt clear of the left edge, so the back swipe never fires from the minus key.
-            .padding(.horizontal, 20)
+            // The freed space (set-block.md): the plates, drawn, or the rest horizon in their place.
+            platesOrRest(phase: phase, now: now)
+                .padding(.horizontal, Theme.Spacing.gutter)
             Spacer(minLength: Theme.Spacing.m)
             keyRow(phase: phase)
                 .padding(.horizontal, Theme.Spacing.gutter)
@@ -410,7 +403,7 @@ extension WorkoutContent {
             if case let .rest(end) = phase {
                 let remaining = max(0, end.timeIntervalSince(now)).rounded(.up)
                 VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-                    // Tap the countdown for +15 (the one-tap twin of dragging the dial right).
+                    // Tap the countdown for +15 (the one-tap twin of dragging the horizon right).
                     Button { extendRest() } label: {
                         HStack(alignment: .firstTextBaseline, spacing: 10) {
                             Text(Format.duration(remaining))
@@ -427,12 +420,14 @@ extension WorkoutContent {
                     .buttonStyle(.plain)
                     .accessibilityLabel("Rest, \(Int(remaining)) seconds left")
                     .accessibilityHint("Adds 15 seconds")
-                    Text(session.restNote ?? "Tap or drag the dial right for 15 more. Fling it left to go.")
-                        .font(Theme.voice)
-                        .foregroundStyle(Paint.tess)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .contentTransition(.opacity)
-                        .tesseraAnimation(value: session.restNote)
+                    // Only what just happened ("+15. Drag again for more."); the how-to is the horizon's label.
+                    if let note = session.restNote {
+                        Text(note)
+                            .font(Theme.voice)
+                            .foregroundStyle(Paint.tess)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .transition(.opacity)
+                    }
                 }
                 .transition(.opacity.combined(with: .blurReplace))
             } else {
@@ -443,26 +438,40 @@ extension WorkoutContent {
                             .foregroundStyle(Paint.cream)
                             .transition(reduceMotion ? AnyTransition.opacity
                                 : AnyTransition.offset(y: 14).combined(with: AnyTransition(.blurReplace)))
+                    } else if isTypingWeight, phase == .set {
+                        WeightField(weight: $session.weight, detents: session.detents, unit: unit,
+                                    isTyping: $isTypingWeight, onSnapped: { note in showSnap(note) })
+                            .transition(.opacity)
                     } else {
-                        HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            Text(Format.kilograms(session.weight))
-                                .font(Theme.numeral(72))
-                                .foregroundStyle(Paint.cream)
-                                .contentTransition(.numericText(value: session.weight))
-                                .animation(MotionPolicy.resolve(Theme.Motion.snappy, reduceMotion: reduceMotion),
-                                           value: session.weight)
-                                .modifier(GlintIf(isOn: (phase == .set && session.isPersonalRecord)
-                                        || restEndedGlint))
-                            Text(unit).font(Theme.voice).foregroundStyle(Paint.secondary)
-                        }
-                        .accessibilityHidden(true)
+                        // The numeral is the control: drag up or down, tap to type (set-block.md).
+                        WeightReel(weight: $session.weight, detents: session.detents, unit: unit,
+                                   isLocked: phase != .set, spokenValue: session.spokenLoad,
+                                   platesPerSide: { session.dial?.platesPerSide($0) },
+                                   onType: { withTesseraAnimation(reduceMotion: reduceMotion) { isTypingWeight = true }
+                                   })
+                                   .modifier(GlintIf(isOn: (phase == .set && session.isPersonalRecord) ||
+                                           restEndedGlint))
                     }
-                    plateLine
+                    if let snapNote {
+                        Text(snapNote)
+                            .textRole(.label)
+                            .foregroundStyle(Paint.secondary)
+                            .transition(.opacity)
+                    }
                 }
                 Spacer(minLength: Theme.Spacing.s)
-                VStack(spacing: 2) {
-                    RepsDrum(reps: repsBinding, ghost: lastReps)
-                        .disabled(phase != .set)
+                VStack(alignment: .trailing, spacing: 2) {
+                    RepsRow(reps: repsBinding, ghost: lastReps, isLocked: phase != .set, onBeat: {
+                        // "One more than last time.", once per set, only while Tess isn't saying anything else.
+                        guard askReply == nil else { return }
+                        askReply = "One more than last time."
+                        Task { @MainActor in
+                            try? await Task.sleep(for: .seconds(4))
+                            if askReply == "One more than last time." {
+                                askReply = nil
+                            }
+                        }
+                    })
                     EffortHandle(isShown: session.isEffortShown, enabled: phase == .set, setShown: setEffort(shown:))
                 }
                 .transition(.opacity)
@@ -480,26 +489,42 @@ extension WorkoutContent {
         return perHand ? "kg each" : "kg"
     }
 
+    /// Under the numbers: the plates drawn large, or the estimate note after a swap; during rest, the horizon.
     @ViewBuilder
-    private var plateLine: some View {
-        if session.isEstimatedLoad, let from = session.swappedFrom {
+    private func platesOrRest(phase: WorkoutSession.Phase, now: Date) -> some View {
+        if case .rest = phase, !session.isEditing, let fraction = session.restFraction(at: now) {
+            RestHorizon(fraction: fraction, showsHint: restHintsLeft > 0, onExtend: { extendRest() },
+                        onSkip: { skipRest() })
+                .transition(.opacity)
+                .onAppear {
+                    // Count a rest once, when it starts after a new set, not when it reappears after an edit.
+                    let set = session.lastSeated?.setID
+                    if let set, set != hintedSet {
+                        hintedSet = set
+                        restHintsLeft = max(restHintsLeft - 1, 0)
+                    }
+                }
+        } else if session.isEstimatedLoad, let from = session.swappedFrom {
             Text("An estimate from \(SwapPanel.short(from).lowercased())")
                 .textRole(.label)
                 .foregroundStyle(Paint.tess)
+                .frame(maxWidth: .infinity, alignment: .leading)
         } else if let plates = session.platesPerSide {
-            PlateStack(weight: session.weight, perSide: plates)
+            PlateStack(weight: session.weight, perSide: plates, drawsPlates: true, large: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .transition(.opacity)
+        } else {
+            // Dumbbells and machines have no plates: the space stays empty.
+            Color.clear.frame(height: 1)
         }
     }
 
-    /// "2.5": what one press of plus or minus changes the weight by.
-    private func stepLabel(up: Bool) -> String {
-        guard let dial = session.dial else { return "2.5" }
-        let next = dial.step(from: session.weight, by: up ? 1 : -1)
-        return Format.kilograms(abs(next - session.weight))
-    }
-
-    private func stepWeight(up: Bool) {
-        withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { session.stepWeight(up: up) }
+    private func showSnap(_ note: String) {
+        withTesseraAnimation(reduceMotion: reduceMotion) { snapNote = note }
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(2))
+            withTesseraAnimation(reduceMotion: reduceMotion) { snapNote = nil }
+        }
     }
 
     private func setEffort(shown: Bool) {
@@ -583,21 +608,11 @@ extension WorkoutContent {
                         withTesseraAnimation(reduceMotion: reduceMotion) { session.logSet() }
                     }
                 case .rest:
-                    VStack(alignment: .leading, spacing: 4) {
-                        PaintKey(paint: Paint.now, isTap: true, height: 64) {
-                            skipRest()
-                        } label: { _ in
-                            Text("Skip rest")
-                        }
-                        // The same two words as on the Lock Screen, under the rest horizon.
-                        HStack(spacing: 30) {
-                            Button("+15") {
-                                withTesseraAnimation(reduceMotion: reduceMotion) { session.extendRest(by: 15) }
-                            }
-                            .accessibilityLabel("Add 15 seconds of rest")
-                            Button("Skip") { skipRest() }
-                        }
-                        .buttonStyle(.labelWord(Paint.cream.opacity(0.75)))
+                    // The horizon above carries +15 and the fling; the key only skips.
+                    PaintKey(paint: Paint.now, isTap: true, height: 64) {
+                        skipRest()
+                    } label: { _ in
+                        Text("Skip rest")
                     }
                 case .exerciseDone:
                     PaintKey(paint: Paint.cobalt, isTap: true, height: 64) {
