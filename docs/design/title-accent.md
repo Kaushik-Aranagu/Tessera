@@ -35,3 +35,9 @@ He liked option 1 but found it too forward, and the half-and-half split looked o
 - **Progress source:** the thing's own count (sets in a workout, steps in a cook, tasks in a run), capped at 0.85 until done so the last step still has somewhere to go.
 - **Reduce Motion:** each step lands without the tween, the strike appears whole, and the dry is a 200 ms crossfade.
 - **Kept from round 1:** each area's own colour, the contrast floor, where it applies, and the nevers.
+
+## Rulings on Research's fixture (Oct 16, 2:30 PM PT)
+- **Today's tasks don't use Tess's cobalt.** Cobalt is Tess's voice only. A run of tasks stays plain ink: it grows bolder as tasks get done, and the strike draws at done. The word that matters is ink at 700, not a colour. No new colour is added.
+- **Groceries' hold title moves to round 2.** The left-to-right vermilion split goes. The whole title grows bolder and leans to Kitchen's green, and the strike draws at done.
+- **One strike.** Round 2's 3 pt strike replaces RevealingHero's unused 2.5 pt one.
+- **The recipe title is Title 44** (sheet 69), not Hero. That's a Builder B row.
