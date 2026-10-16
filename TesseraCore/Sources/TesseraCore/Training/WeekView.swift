@@ -39,7 +39,10 @@ public extension TrainingLedger {
         let dates = tesseraDay.weekDays(containing: date)
         guard !dates.isEmpty else { return [] }
         let cycle = plan.map { store.linkedObjects("routines", of: $0) } ?? []
-        let next = plan.flatMap(nextRoutine(in:))
+        if let plan, PlanSchedule.mode(of: plan, store: store) == .fixed {
+            return fixedWeek(dates: dates, plan: plan, now: now, calendar: calendar)
+        }
+        let next = plan.flatMap { nextRoutine(in: $0, now: now, calendar: calendar) }
         var cursor = next.flatMap { routine in cycle.firstIndex { $0.id == routine.id } } ?? 0
         let today = tesseraDay.today(now)
         let done = dates.map { finishedWorkouts(onDay: $0, calendar: calendar) }
@@ -96,6 +99,26 @@ public extension TrainingLedger {
                 cursor += 1
             }
             return WeekDay(day: day, state: state, done: [], planned: planned)
+        }
+    }
+
+    /// A fixed-days plan's week: each day shows its pinned routine; a day with none is rest; a past fixed day with
+    /// nothing done was due and does not roll on (Product 1fdd1c6).
+    private func fixedWeek(dates: [Date], plan: ObjectRecord, now: Date, calendar: Calendar) -> [WeekDay] {
+        let tesseraDay = TesseraDay(calendar: calendar)
+        let today = tesseraDay.today(now)
+        return dates.map { day in
+            let done = finishedWorkouts(onDay: day, calendar: calendar)
+            if !done.isEmpty {
+                return WeekDay(day: day, state: .done, done: done, planned: nil)
+            }
+            let pinned = PlanSchedule.routine(on: day, in: plan, store: store, calendar: calendar)
+            if day < today {
+                return WeekDay(day: day, state: .past, done: [], planned: nil, isRest: pinned == nil,
+                               wasDue: pinned != nil)
+            }
+            let state: WeekDay.State = calendar.isDate(day, inSameDayAs: today) ? .today : .upcoming
+            return WeekDay(day: day, state: state, done: [], planned: pinned, isRest: pinned == nil)
         }
     }
 

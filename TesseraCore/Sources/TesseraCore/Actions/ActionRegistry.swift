@@ -99,6 +99,17 @@ public enum ActionRegistry {
         AddSlot.descriptor.name: { try decode(AddSlot.self, AddSlot.descriptor.name, $0) },
         StartRoutine.descriptor.name: { try decode(StartRoutine.self, StartRoutine.descriptor.name, $0) },
         CreatePlan.descriptor.name: { try decode(CreatePlan.self, CreatePlan.descriptor.name, $0) },
+        AddRoutineToPlan.descriptor.name: { try decode(AddRoutineToPlan.self, AddRoutineToPlan.descriptor.name, $0) },
+        MoveRoutineInPlan.descriptor.name: {
+            try decode(MoveRoutineInPlan.self, MoveRoutineInPlan.descriptor.name, $0)
+        },
+        DropRoutineFromPlan.descriptor.name: {
+            try decode(DropRoutineFromPlan.self, DropRoutineFromPlan.descriptor.name, $0)
+        },
+        SetScheduleMode.descriptor.name: { try decode(SetScheduleMode.self, SetScheduleMode.descriptor.name, $0) },
+        SetRoutineWeekdays.descriptor.name: {
+            try decode(SetRoutineWeekdays.self, SetRoutineWeekdays.descriptor.name, $0)
+        },
         LogNextSet.descriptor.name: { try decode(LogNextSet.self, LogNextSet.descriptor.name, $0) },
         MoveSlot.descriptor.name: { try decode(MoveSlot.self, MoveSlot.descriptor.name, $0) },
         EditSlot.descriptor.name: { try decode(EditSlot.self, EditSlot.descriptor.name, $0) },
