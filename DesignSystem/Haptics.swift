@@ -77,29 +77,49 @@ struct HapticCue: Equatable {
 }
 
 /// Done: three rising transient taps (0, 60 and 130 ms) through Core Haptics; `.success` when the engine can't run.
+/// The engine and the pattern are made once and warmed with `prepare()` when a surface that can finish appears, so
+/// the first beat isn't late. The engine shuts itself down when idle; `play()` restarts it if it has.
 @MainActor
 enum DonePattern {
     private static var engine: CHHapticEngine?
+    private static var isRunning = false
     private static let events: [(time: TimeInterval, intensity: Float, sharpness: Float)] = [
         (0, 0.45, 0.35), (0.06, 0.65, 0.45), (0.13, 1.0, 0.6),
     ]
+    private static let pattern: CHHapticPattern? = try? CHHapticPattern(events: events.map { beat in
+        CHHapticEvent(eventType: .hapticTransient, parameters: [
+            CHHapticEventParameter(parameterID: .hapticIntensity, value: beat.intensity),
+            CHHapticEventParameter(parameterID: .hapticSharpness, value: beat.sharpness),
+        ], relativeTime: beat.time)
+    }, parameters: [])
+
+    private static var supported: Bool {
+        CHHapticEngine.capabilitiesForHardware().supportsHaptics
+    }
+
+    /// Makes and starts the engine ahead of the moment (asynchronously, so it never holds up a frame).
+    static func prepare() {
+        guard supported, !isRunning, let engine = try? engine ?? makeEngine() else { return }
+        engine.start { @Sendable error in
+            let started = error == nil
+            Task { @MainActor in isRunning = started }
+        }
+    }
 
     /// Plays the pattern; returns false when the caller should fall back to `.success`.
     static func play() -> Bool {
-        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return false }
+        guard supported, let pattern else { return false }
         do {
             let engine = try engine ?? makeEngine()
-            try engine.start()
-            let pattern = try CHHapticPattern(events: events.map { beat in
-                CHHapticEvent(eventType: .hapticTransient, parameters: [
-                    CHHapticEventParameter(parameterID: .hapticIntensity, value: beat.intensity),
-                    CHHapticEventParameter(parameterID: .hapticSharpness, value: beat.sharpness),
-                ], relativeTime: beat.time)
-            }, parameters: [])
+            if !isRunning {
+                try engine.start()
+                isRunning = true
+            }
             try engine.makePlayer(with: pattern).start(atTime: CHHapticTimeImmediate)
             return true
         } catch {
             engine = nil
+            isRunning = false
             return false
         }
     }
@@ -107,7 +127,14 @@ enum DonePattern {
     private static func makeEngine() throws -> CHHapticEngine {
         let made = try CHHapticEngine()
         made.isAutoShutdownEnabled = true
-        made.resetHandler = { Task { @MainActor in engine = nil } }
+        // Core Haptics calls these off the main actor: they must be @Sendable, not main-actor closures.
+        made.stoppedHandler = { @Sendable _ in Task { @MainActor in isRunning = false } }
+        made.resetHandler = { @Sendable in
+            Task { @MainActor in
+                engine = nil
+                isRunning = false
+            }
+        }
         engine = made
         return made
     }

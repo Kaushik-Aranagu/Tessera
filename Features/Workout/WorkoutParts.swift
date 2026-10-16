@@ -102,10 +102,15 @@ struct ExerciseLane: View {
 /// The subline and Tess's line, in words, from the session's state.
 @MainActor
 enum WorkoutLines {
-    static func subline(_ session: WorkoutSession, phase: WorkoutSession.Phase) -> (String, Color) {
-        guard let entry = session.currentEntry else { return ("", Paint.secondary) }
+    static func subline(_ session: WorkoutSession, phase: WorkoutSession.Phase) -> (String, Color, wet: Bool) {
+        // `wet`: the line arrives in cadmium and dries to the context colour (sweep-19).
+        guard let entry = session.currentEntry else { return ("", Paint.secondary, false) }
         if let row = session.editingRow {
-            return ("set \(row.number), as logged: \(Format.kilograms(row.weight)) × \(Int(row.reps))", Paint.tess)
+            return (
+                "set \(row.number), as logged: \(Format.kilograms(row.weight)) × \(Int(row.reps))",
+                Paint.tess,
+                false
+            )
         }
         let target = session.targetSets(of: entry)
         let rows = session.setRows(of: entry)
@@ -113,26 +118,26 @@ enum WorkoutLines {
         switch phase {
         case .rest:
             if let seated = session.lastSeated, !seated.records.isEmpty, let e1RM = seated.e1RM {
-                return ("a new best: e1RM \(tenth(e1RM))", Paint.now)
+                return ("a new best: e1RM \(tenth(e1RM))", Paint.now, true)
             }
-            return ("set \(rows.count) seated", Paint.secondary)
+            return ("set \(rows.count) seated", Paint.secondary, false)
         case .exerciseDone:
-            return ("all \(target) sets in. Swipe for the next.", Paint.secondary)
+            return ("all \(target) sets in. Swipe for the next.", Paint.secondary, false)
         case .workoutDone:
-            return ("every set is in", Paint.secondary)
+            return ("every set is in", Paint.secondary, false)
         case .set:
             if let rpe = session.rpe {
-                return ("RPE \(RPEStops.formatted(rpe)), \(RPEStops.words(for: rpe))", Paint.now)
+                return ("RPE \(RPEStops.formatted(rpe)), \(RPEStops.words(for: rpe))", Paint.now, true)
             }
             if let hint = session.recordHint {
                 let previous = hint.previous.map { ", \($0)" } ?? ""
-                return ("set \(session.currentSetNumber): \(hint.text)\(previous)", Paint.now)
+                return ("set \(session.currentSetNumber): \(hint.text)\(previous)", Paint.now, true)
             }
             if session.swappedFrom != nil, rows.isEmpty {
-                return ("swapped for today, set \(session.currentSetNumber) of \(target)", Paint.tess)
+                return ("swapped for today, set \(session.currentSetNumber) of \(target)", Paint.tess, false)
             }
             let last = rows.last.map { ", last was \(Format.kilograms($0.weight)) × \(Int($0.reps))" } ?? ""
-            return ("set \(session.currentSetNumber) of \(target)\(last)", Paint.secondary)
+            return ("set \(session.currentSetNumber) of \(target)\(last)", Paint.secondary, false)
         }
     }
 

@@ -51,9 +51,8 @@ private struct WorkoutContent: View {
     /// The lane's scroll position (x). Kept in step with `session.currentIndex` both ways.
     @State private var laneIndex: Int?
     @State private var tessMode: TessSoul.Mode = .idle
-    /// Workout-level moments: rest is up on screen, or the workout finished early.
+    /// Workout-level moments: a set seated, a new best, rest up on screen, the workout finished.
     @State private var moment = HapticCue()
-    @Environment(\.self) private var environment
     /// The subline whose cadmium has dried.
     @State private var sublineDried: String?
     @State private var undoHaptic = 0
@@ -152,7 +151,11 @@ private struct WorkoutContent: View {
         .preferredColorScheme(ThemeStore.shared.workoutLook.isDark ? .dark : .light)
         .persistentSystemOverlays(.hidden)
         .defersSystemGestures(on: .bottom)
-        .onAppear { laneIndex = session.currentIndex }
+        .onAppear {
+            laneIndex = session.currentIndex
+            // The workout can finish here: warm the done pattern so its first beat isn't late.
+            DonePattern.prepare()
+        }
         .onChange(of: laneIndex) { _, index in
             guard let index, index != session.currentIndex else { return }
             withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { session.select(entryAt: index) }
@@ -163,8 +166,9 @@ private struct WorkoutContent: View {
         }
         .onChange(of: session.lastSeated) { _, seated in
             guard let seated else { return }
-            // One haptic per set: the key's rigid impact as it lands (no second "lock" after the stroke).
-            // Its haptic is the Log set key's (the set's tap, or .success for a new best).
+            // One haptic per set, played here so it survives the key leaving (Reduce Motion, VoiceOver's action):
+            // the set's tap, or .success in its place for a new best.
+            moment.play(seated.records.isEmpty ? .setLogged : .newBest)
             if seated.records.isEmpty {
                 play(.done)
             } else {
@@ -394,9 +398,8 @@ extension WorkoutContent {
     // MARK: y, in words and numbers
 
     private func subline(phase: WorkoutSession.Phase) -> some View {
-        let (text, color) = WorkoutLines.subline(session, phase: phase)
+        let (text, color, isWet) = WorkoutLines.subline(session, phase: phase)
         // A best lands in cadmium and dries to the context colour within 2 s (sweep-19).
-        let isWet = color.resolve(in: environment) == Paint.now.resolve(in: environment)
         return Text(text)
             .font(Theme.voice)
             .foregroundStyle(isWet && sublineDried == text ? Theme.Colors.context : color)
@@ -614,10 +617,8 @@ extension WorkoutContent {
                 switch phase {
                 case .set:
                     // Hold to log: 0.6 s, 20 pt of drift (docs/research/ship-now.md).
-                    // A new best plays .success in place of the set's tap, never both (task-reward.md).
-                    PaintKey(paint: Paint.live, duration: 0.6, height: 64, drift: 20,
-                             completionHaptic: session.isPersonalRecord ? .newBest : .setLogged)
-                    {
+                    // Silent: the set's haptic plays when it seats (onChange of lastSeated).
+                    PaintKey(paint: Paint.live, duration: 0.6, height: 64, drift: 20, isSilent: true) {
                         withTesseraAnimation(reduceMotion: reduceMotion) { session.logSet() }
                     } label: { _ in
                         Text("Log set")
@@ -645,7 +646,7 @@ extension WorkoutContent {
                         Text("Next exercise")
                     }
                 case .workoutDone:
-                    PaintKey(paint: Paint.live, duration: 0.8, height: 64, completionHaptic: .done) {
+                    PaintKey(paint: Paint.live, duration: 0.8, height: 64, isSilent: true) {
                         finish()
                     } label: { _ in
                         Text("Finish")
@@ -667,10 +668,8 @@ extension WorkoutContent {
     }
 
     private func finish(early: Bool = false) {
-        // The Finish key plays done itself; finishing early from the order sheet plays it here.
-        if early {
-            moment.play(.done)
-        }
+        // Done plays here for every finish (the key is silent, so it can't be lost as the key leaves).
+        moment.play(.done)
         isSwapOpen = false
         isOrderOpen = false
         withTesseraAnimation(.easeOut(duration: 0.4), reduceMotion: reduceMotion) { session.finish(early: early) }

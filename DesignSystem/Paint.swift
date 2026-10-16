@@ -241,9 +241,9 @@ struct PaintKey<Label: View, Meta: View>: View {
     var height: CGFloat = 64
     /// How far the finger may wander while holding before the hold cancels.
     var drift: CGFloat = 30
-    /// The moment the key's completion plays (task-reward.md): Log set's tap, a new best, or done for Finish.
-    /// Unset, a tap plays the selection tick and a hold the medium impact.
-    var completionHaptic: Haptic?
+    /// The owner plays the completion's haptic itself (from the state change it causes), so it isn't lost when
+    /// the key leaves in the same update (Reduce Motion, an accessibility action).
+    var isSilent = false
     let action: () -> Void
     /// Receives whether the word is being held. The word itself shouldn't change ("HOLD" lives in the meta).
     @ViewBuilder var label: (Bool) -> Label
@@ -297,11 +297,10 @@ struct PaintKey<Label: View, Meta: View>: View {
             }
         }
         .sensoryFeedback(.impact(weight: .light), trigger: isPressing) { _, new in new && !isTap }
-        .sensoryFeedback(.selection, trigger: completions) { _, _ in isTap && completionHaptic == nil }
+        .sensoryFeedback(.selection, trigger: completions) { _, _ in isTap && !isSilent }
         .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: completions) { _, _ in
-            !isTap && completionHaptic == nil
+            !isTap && !isSilent
         }
-        .tesseraFeedback(trigger: completions) { _, _ in completionHaptic }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
         .accessibilityHint(isTap ? "" : "Touch and hold")
