@@ -30,3 +30,20 @@ Fix: `guard page == .home else { return .idle }` at the top of `rest`, plus a te
 - L3 (this was on master too): the 4 s line timer (`.lineShown`) isn't cancelled when she starts listening. A hold-to-speak doesn't open the surface, so a line said just before a hold returns her to rest mid-listen. Master's `say()` had the same gap. `guard mode != .listening && mode != .thinking` in the timer would close it.
 - L4: three router tests wait on real time (2.0 s and 1.4 s, SoulRouterTests.swift:56-80). There's room on a loaded simulator, but an injected sleeper would make them exact.
 - The clip shows the capture path at 9:00 PM: open, Write, the dry, the receipt "Stretch, today 9:30 pm." with UNDO, and the soul back at rest. It doesn't show the workout corner or night rest, which is F1's case.
+
+## Addendum: re-check at `559e093`
+
+Verdict: **PASS**. One commit on cf111f8. Trial merge onto master is clean.
+
+- F1 fixed: `rest` returns `.idle` for `page = .live` (SoulRouter.swift, `rest`). The test is `theWorkoutCornerRestsAtIdleAtNight`.
+- L1 withdrawn: I had the old sum wrong. Master's Reduce Motion path was 150 + 60 + 900 ms = 1.11 s, not 0.69 s. The router now uses that exact sum (`.goHome(reduceMotion:)`).
+- L2: a failed key check emits `.claudeFailed`, which goes to rest, and Done plays only for works or capReached.
+- L3 fixed: the 4 s line timer skips listening and thinking. The test is `herLineNeverCutsHisVoice`.
+- The lab's fixes, checked for regressions:
+  - closed, heardNothing, appeared and claudeFailed now leave a Done in flight alone. Done returns through `queued ?? rest` itself, which also ends master's goHome case, where the surface's `.closed` cut the Done.
+  - sent, heard and liveAsk queue thinking behind a Done. Every queued thinking is later settled by `.committed`, `.liveAnswered` or the commit path, so none is left hanging.
+  - `.goHome` clears `isSurfaceOpen`.
+  - askWaiting and askAnswered come from one `onChange` on `setAsk != nil || liftAsk != nil` (BottomChrome.swift:103). `refusesLens` is checked in both HomeSpatialView and the router.
+- The gates still pass: no new `tessMode =` and no new soul `Task.sleep`. The `swiftlint:disable:next cyclomatic_complexity` covers only `handle(_:)`, the §14 table.
+- New low (L5): if BottomChrome leaves while an ask waits, `isAskWaiting` stays true until the next ask change, so the lens is refused until then. The workout's end clears `setAsk` (:108), so the common path is covered.
+- L4 (real-time waits, about 12 s in total) stays a low.
