@@ -190,3 +190,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [fixtures/kitchen-timer-alerts.md](fixtures/kitchen-timer-alerts.md) | Core, Builder A, QA: kitchen timers that ring (item 140, CL6), 19 rules, 26 scenarios, 8 gaps |
 | [trip-check.md](trip-check.md) | Core, QA, coordinator: the Oct 26 trip re-checked on master (item 141), go; 33 of 35 rows hold; N1 to N4 day reads still in the phone's zone |
 | [groceries-check.md](groceries-check.md) | Core, Kitchen lead, QA: merged #380 traced against 123 (item 142), 9 gaps fixed, 6 open, 1 superseded |
+| [week-two-monday.md](week-two-monday.md) | Coordinator, Product: Monday Oct 19 kit for 101 (item 144), run order, messages A (data) and B (no data), edit blocks per answer, stale week-two.md blocks; Product calls 11:47 AM PT |
