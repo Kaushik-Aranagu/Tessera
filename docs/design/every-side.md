@@ -135,11 +135,11 @@ The big fact is Hero 56 with its unit at 21. The small facts are Body 19, at mos
 | Plans: THE PLAN | "4" *days a week* | the split: "Push Pull Legs" | "on fixed days" |
 | An exercise: YOUR SETUP | the first setup word: "Third hole" | the bar: "Olympic bar, 20 kg" | "written Oct 9" |
 | A workout or finish: THE SETS | "20" *sets* | the top set: "Bench 82.5 × 7" | "5 exercises" |
-| Kitchen: THE WEEK'S COOKS | "3" *cooks* | the next: "Tacos, Friday" | "8 to buy" |
+| Kitchen: THE WEEK'S COOKS | "3" *cooks* | the next, in Home's words: "Tacos tonight, 2 to buy." | "8 to buy" this week |
 | Groceries: FOR WHAT | "7" *for 2 cooks* | the cooks: "Tacos and chili" | "3 just because" |
-| A recipe: INGREDIENTS | "12" *things* | "4 on Groceries" | the key: ADD 8 TO GROCERIES |
-| Recipe original: COOKS | "4" *times* | the last: "Sunday, 45 min" | "about 45 min" |
-| An ingredient: PER 100 G | "215" *kcal* | "18.6 g protein" | "15 g fat" |
+| A recipe: INGREDIENTS | "7" *to buy* | "4 on Groceries already" | the key: ADD 7 TO GROCERIES (one number in both places; at 0, "Nothing to buy." and no key) |
+| Recipe original: COOKS | "4" *times* | the last: "Thursday, 46 min" | "about 45 min" |
+| An ingredient: PER 100 G | "215" *kcal* | "18.6 g protein" | "15 g fat", with the source line under the glance ("USDA FoodData Central") |
 | Paste: WHAT I READ | "14" *lines kept* | "3 ignored" | the source: "nytimes.com" |
 | Review: THE MONTH | "11" *sessions* | "4 weeks" | "41 tasks done" |
 | The week: WHAT LEAVES THE PHONE | "$3.20" *this month* | "38 calls" | "Titles and counts only." |
