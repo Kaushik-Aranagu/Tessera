@@ -234,7 +234,10 @@ struct RecipeLinkTests {
     @Test func claudesKeyAndBusyAndCutOffLines() async {
         LinkStub.pages["blog.example.com"] = .init(body: Self.prose)
         LinkStub.pages["api.anthropic.com"] = .init(status: 401, body: "{}", type: "application/json")
-        #expect(await reader(claude: true).read("https://blog.example.com/beans").line == RecipeLinkLine.badKey)
+        #expect(await reader(claude: true).read("https://blog.example.com/beans").line
+            == "Claude couldn't use your key. Paste the text instead.")
+        // The key stays: a 401 never clears it or turns Claude off.
+        #expect(reader(claude: true).claude?.keys.read() == "sk-ant-TEST-link")
         LinkStub.pages["api.anthropic.com"] = .init(status: 429, body: "{}", type: "application/json")
         #expect(await reader(claude: true).read("https://blog.example.com/beans").line == RecipeLinkLine.claudeBusy)
         let cut = #"{"content":[{"type":"text","text":"Beans\nIngredients\n1 can beans\n1 onion\nMethod\n1. Cook"}],"#

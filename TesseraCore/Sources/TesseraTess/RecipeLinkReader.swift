@@ -13,9 +13,10 @@ public enum RecipeLinkLine {
     public static let tooBig = "Too big to read safely. Paste the text instead."
     public static let askingClaude = "No recipe card there. Asking Claude."
     public static let claudeRead = "Claude read it. Check it, then save."
-    /// M2, for a key Claude refused on this read.
-    public static let badKey = "That key didn't work. Paste it again?"
-    public static let claudeBusy = "Claude is busy right now. Paste the text instead."
+    /// A key Claude refused on this read. Never M2 here: "Paste it again?" would invite the key into the recipe field.
+    /// The key and the switch stay as they are.
+    public static let badKey = "Claude couldn't use your key. Paste the text instead."
+    public static let claudeBusy = "Claude's busy right now. Paste the text instead."
 
     public static func reading(_ host: String) -> String {
         "Reading \(host)…"
