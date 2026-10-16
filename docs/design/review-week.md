@@ -49,3 +49,7 @@ Each band lands 22ms after the one above (at most 700ms in all), rising 8pt on t
 ## Owners
 - **Builder B:** the page, the tap, the arrival.
 - **Core:** the week's per-day figures and the best lines.
+
+## Addendum, Oct 16: Research 120's two lines
+- **COOKED's line says cooks:** "cooked 3 times", because the band's dabs are the days he cooked and the line says what the marks show. Recipes are the Kitchen's count.
+- **The week figure mid-week is "3 SO FAR";** "3 OF 6" only once the week is whole (Sunday, or the next 04:00). Never "to go": owed reads as a shortfall by another name.

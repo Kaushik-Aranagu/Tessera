@@ -51,7 +51,7 @@ Recording: `recordings/speak.mp4` (source `studies/speak.html`). Redrawn 16 Oct 
 
 ## In a live workout ("80 for 7")
 - **Hold the soul in the corner.** No surface and no wash: the soul swells in place (×1.4) and breathes with the level.
-- **The words** stream right-aligned above the soul at Body 21 in `inkSecondary`: "eighty for seven".
+- **The words** stream right-aligned above the soul at **Field 18** in `inkSecondary` (his words, one step under her voice: `calm-capture.md` addendum; item 56): "eighty for seven".
 - **Let go.** The words fade out (250ms), and the set block's numerals become the ghost: they turn wet cobalt at 62% and show **80 × 7**.
 - **After 2s they dry into ink.**
   - The new set stroke lands under the earlier ones on the settle spring, wet in its cycle colour, then dries to `restTint`.
