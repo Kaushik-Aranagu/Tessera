@@ -294,7 +294,7 @@ struct LiveAskField: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.s) {
             TextField("log bench 80x8, or ask", text: $draft)
-                .font(InkWordType.font)
+                .textRole(.field)
                 .foregroundStyle(Paint.cream)
                 .focused($focused)
                 .submitLabel(.go)

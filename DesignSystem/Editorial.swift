@@ -5,6 +5,8 @@ import SwiftUI
 /// The four sizes of the active concept (plus numbers set at those sizes in the mono face).
 enum TextRole {
     case hero, heroNumber, title, titleNumber, body, bodyStrong, label, labelStrong
+    /// His typing: Field 18/400, one step under Tess's voice.
+    case field
     /// Label size and face, case preserved: times, numbers, units, class lines, paths in code.
     case data
 }
@@ -19,6 +21,7 @@ private struct TextRoleModifier: ViewModifier {
         case .title, .titleNumber: scale.title
         case .body, .bodyStrong: scale.body
         case .label, .labelStrong, .data: scale.label
+        case .field: scale.field
         }
         let font: Font = switch role {
         case .heroNumber: Theme.Typography.number(spec, weight: scale.heroNumberWeight)

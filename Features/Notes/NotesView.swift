@@ -130,7 +130,7 @@ private struct WritingLine: View {
                     .tesseraAnimation(Theme.Motion.house, value: focused.wrappedValue || !text.isEmpty)
                 TextField("", text: $text, prompt: Text("Write something. @ links a thing.")
                     .foregroundStyle(Theme.Colors.inkSecondary), axis: .vertical)
-                    .textRole(.body)
+                    .textRole(.field)
                     .foregroundStyle(Theme.Colors.ink)
                     .focused(focused)
                     .submitLabel(.done)
