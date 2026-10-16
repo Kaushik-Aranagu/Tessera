@@ -30,13 +30,22 @@ struct SoulDab {
     let paint: Int
 
     static let all: [SoulDab] = [
-        SoulDab(home: CGPoint(x: -14, y: -8), bloom: CGPoint(x: 18, y: -10), size: main, paint: 0),
-        SoulDab(home: CGPoint(x: 14, y: -8), bloom: CGPoint(x: -16, y: -12), size: main, paint: 1),
-        SoulDab(home: CGPoint(x: 0, y: 13), bloom: CGPoint(x: 0, y: 18), size: main, paint: 2),
-        SoulDab(home: CGPoint(x: -22, y: 10), bloom: CGPoint(x: -20, y: 14), size: satellite, paint: 0),
-        SoulDab(home: CGPoint(x: 20, y: 12), bloom: CGPoint(x: 22, y: 10), size: satellite, paint: 1),
-        SoulDab(home: CGPoint(x: 4, y: -20), bloom: CGPoint(x: 6, y: -22), size: satellite, paint: 2),
+        SoulDab(home: tightened(CGPoint(x: -14, y: -8)), bloom: CGPoint(x: 18, y: -10), size: main, paint: 0),
+        SoulDab(home: tightened(CGPoint(x: 14, y: -8)), bloom: CGPoint(x: -16, y: -12), size: main, paint: 1),
+        SoulDab(home: tightened(CGPoint(x: 0, y: 13)), bloom: CGPoint(x: 0, y: 18), size: main, paint: 2),
+        SoulDab(home: tightened(CGPoint(x: -22, y: 10)), bloom: CGPoint(x: -20, y: 14), size: satellite, paint: 0),
+        SoulDab(home: tightened(CGPoint(x: 20, y: 12)), bloom: CGPoint(x: 22, y: 10), size: satellite, paint: 1),
+        SoulDab(home: tightened(CGPoint(x: 4, y: -20)), bloom: CGPoint(x: 6, y: -22), size: satellite, paint: 2),
     ]
+    /// The spread (soul-explore.md, "After he picks"; Kaushik, 16 Oct): every home offset pulled toward the main
+    /// dabs' centre to 65% of the original, matching the icon. Each mode's paths (bloom, carry, drip) are unchanged.
+    static let spread: CGFloat = 0.65
+    private static let centre = CGPoint(x: 0, y: -1)
+
+    private static func tightened(_ home: CGPoint) -> CGPoint {
+        CGPoint(x: centre.x + (home.x - centre.x) * spread, y: centre.y + (home.y - centre.y) * spread)
+    }
+
     static let drip = SoulDab(home: .zero, bloom: .zero, size: CGSize(width: 22, height: 20), paint: 0)
     static let main = CGSize(width: 76, height: 70)
     static let satellite = CGSize(width: 46, height: 42)
