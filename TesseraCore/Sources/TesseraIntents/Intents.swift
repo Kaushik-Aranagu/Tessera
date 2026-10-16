@@ -146,7 +146,11 @@ public struct CreateTaskIntent: AppIntent {
 
     @MainActor
     public func perform() async throws -> some IntentResult & ProvidesDialog {
-        try .result(dialog: "\(Self.add(title, startsAt: startsAt, engine: runtime.engine))")
+        // Nothing said: Siri asks for the task rather than failing (Research S37).
+        guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw $title.needsValueError("What's the task?")
+        }
+        return try .result(dialog: "\(Self.add(title, startsAt: startsAt, engine: runtime.engine))")
     }
 
     /// The Bar's one privacy rule (QA I3, Product P14): a Claude key is never saved; what the Bar files as a private
@@ -158,7 +162,8 @@ public struct CreateTaskIntent: AppIntent {
             return TessRouter.keyLine
         }
         let grammar = TessGrammar(store: engine.store, classes: engine.classes)
-        switch grammar.privateParse(title, context: TessContext(commitImmediately: true)) {
+        let context = TessContext(commitImmediately: true)
+        switch grammar.privateParse(title, context: context) {
         case let .privateNote(body, _):
             try engine.perform(CreateNote(body: body, isPrivate: true), by: .intent)
             return "\(SecretWords.title), kept."
@@ -166,7 +171,8 @@ public struct CreateTaskIntent: AppIntent {
             return line
         default:
             let record = try engine.perform(CreateTask(title: title, startsAt: startsAt), by: .intent).record
-            return PrivateFacts.isPrivateTitle(title) ? "Task added." : "\(record.summary)."
+            return PrivateFacts.isPrivateTitle(title) ? TessCaptureEngine.privateTaskLine(startsAt, context: context)
+                : "\(record.summary)."
         }
     }
 }
@@ -191,7 +197,7 @@ public struct TellTessIntent: AppIntent {
         let capture = await runtime.tess.capture(phrase, context: TessContext(commitImmediately: true))
         // What it wrote is never read back in his words when the words are private (Product P14).
         let hidden = PrivateFacts.isPrivateTitle(phrase) && !capture.records.isEmpty
-            && capture.line != "\(SecretWords.title), kept."
+            && capture.line != "\(SecretWords.title), kept." && !capture.line.hasPrefix("Task added")
         return .result(dialog: "\(hidden ? "Saved." : capture.line)")
     }
 }

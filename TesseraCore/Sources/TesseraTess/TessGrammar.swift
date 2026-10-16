@@ -117,14 +117,21 @@ public struct TessGrammar {
         if Self.isMoney(phrase), phrase.lowercased().firstMatch(of: /^(?:spent|spend|paid|pay|cost)\b/) != nil
             || phrase.firstMatch(of: /^[$£€₹]\s?\d/) != nil
         {
-            return nil
+            // Something to do with a day wins over its amount (12:13 PM PT): "pay rent 1800 friday" is a task, said
+            // back without its words. "spent $23.47 at trader joe's sat" stays the miss line.
+            return Self.isSomethingToDo(phrase) ? parseTask(phrase, context: context) : nil
         }
         // A bare set with nothing in focus ("80 for 8" while shopping) is never an item or a task: the model reads it.
         if text.firstMatch(of: /^\d+(?:\.\d+)?(?: ?kg| ?lb)?(?: ?x ?| for | by )\d+(?: reps)?$/) != nil {
             return nil
         }
-        // A past-tense log with a day ("watered plants sat") is a note dated that day, never a future task.
-        if let log = parsePastLog(phrase, context: context) {
+        // A body fact is private before it's a dated log (Product P14/P15a, 12:30 PM PT): "slept 6 hours last night",
+        // "took advil 400mg yesterday", "take advil 400mg at 9 pm". A past-tense log with a day ("watered plants
+        // sat") is a note dated that day, never a future task.
+        if let log = (Self.isSomethingToDo(phrase) ? nil : parseBodyFact(phrase)) ?? parsePastLog(
+            phrase,
+            context: context
+        ) {
             return log
         }
         // After lifts, so "bench 80x8, 82.5x6" stays a lift.
@@ -502,7 +509,7 @@ public struct TessGrammar {
         return .privateNote(body: body.prefix(1).uppercased() + body.dropFirst(), remembered: remembered)
     }
 
-    private func parseTask(_ phrase: String, context: TessContext) -> Parse? {
+    func parseTask(_ phrase: String, context: TessContext) -> Parse? {
         var words = phrase.split(separator: " ").map(String.init)
         var explicit = false
         if let first = words.first?.lowercased().trimmingCharacters(in: .punctuationCharacters),

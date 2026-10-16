@@ -232,9 +232,8 @@ struct TessTests {
         let objects = store.context.objects.values
         #expect(!objects.contains { $0.title.contains("sk-ant") || $0.title.contains("4417") })
         #expect(objects.contains { $0.title == SecretWords.title })
-        // A task that only names a secret word stays a task.
-        _ = try CreateTaskIntent.add("reset my PIN", startsAt: nil, engine: engine)
-        #expect(store.context.objects.values.contains { $0.title.lowercased() == "reset my pin" })
+        // "reset my PIN" lands as the Ask bar files it: a private note, never read back (Product P14 parity).
+        #expect(try CreateTaskIntent.add("reset my PIN", startsAt: nil, engine: engine) == "Private note, kept.")
     }
 
     @Test func siriFilesPrivateThingsTheWayTheBarDoes() throws {

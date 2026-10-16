@@ -11,25 +11,30 @@ extension TessGrammar {
         ) != nil
     }
 
-    /// The Bar's privacy rule for a phrase another surface files as a task (Siri's Add a Task; Product P14, board 0l):
-    /// a secret with a value, a body fact or a money fact that isn't something to do becomes a private note, and
-    /// "remember" with a sum is refused. Nil when it's an ordinary task ("pay rent 2100 friday" stays one, W4).
+    /// The Bar's privacy rule for a phrase another surface files as a task (Siri's Add a Task; Product P14 and the
+    /// 12:30 PM PT rulings, board 0l-2): the Bar's secret-word check; a body fact is a private note; money is a private
+    /// note unless it has a day (then a task, said back without its words); "remember" with a sum is refused. Nil when
+    /// it's an ordinary task.
     public func privateParse(_ phrase: String, context: TessContext) -> Parse? {
-        if SecretWords.hasValue(phrase), let secret = parseSecret(
-            phrase,
-            text: Self.normalize(phrase),
-            context: context
-        ),
-            case .privateNote = secret
-        {
-            return secret
+        if SecretWords.mentions(phrase) {
+            switch parseSecret(phrase, text: Self.normalize(phrase), context: context) {
+            case let parse? where parse.isPrivateNoteOrAsk: return parse
+            default: return nil
+            }
         }
         if let refused = parseRememberedMoney(phrase) {
             return refused
         }
-        guard !Self.isSomethingToDo(phrase), PrivateFacts.isWalled(phrase) else { return nil }
         let body = phrase.trimmingCharacters(in: .whitespacesAndNewlines)
-        return .privateNote(body: body.prefix(1).uppercased() + body.dropFirst(), remembered: false)
+        let note = Parse.privateNote(body: body.prefix(1).uppercased() + body.dropFirst(), remembered: false)
+        if PrivateFacts.isBodyShaped(phrase) {
+            return note
+        }
+        guard PrivateFacts.isMoneyShaped(phrase) else { return nil }
+        if case let .task(_, startsAt)? = parseTask(phrase, context: context), startsAt != nil {
+            return nil
+        }
+        return note
     }
 
     /// "remember my rent is 2100": a sum of money is never kept, and never leaves the phone (v9 W10).
@@ -45,5 +50,14 @@ extension TessGrammar {
         guard PrivateFacts.isBodyShaped(phrase) else { return nil }
         let body = phrase.trimmingCharacters(in: .whitespacesAndNewlines)
         return .privateNote(body: body.prefix(1).uppercased() + body.dropFirst(), remembered: false)
+    }
+}
+
+extension TessGrammar.Parse {
+    var isPrivateNoteOrAsk: Bool {
+        switch self {
+        case .privateNote, .ask: true
+        default: false
+        }
     }
 }
