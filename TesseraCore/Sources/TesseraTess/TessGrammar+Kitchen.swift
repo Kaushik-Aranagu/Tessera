@@ -153,8 +153,8 @@ extension TessGrammar {
         return item.split(separator: " ").first.map { verbs.contains($0.lowercased()) } ?? false
     }
 
-    /// After "buy" or "get": a person ("mum a card"), a gift shape ("Olive a present"), "a/an" plus something that
-    /// isn't food ("a haircut"), a service or non-shop word ("tickets", "petrol"), or an errand verb.
+    /// After "buy" or "get": a person ("mum a card"), a gift shape ("Olive a present"), a service or non-shop word
+    /// ("haircut", "tickets", "petrol"), or an errand verb. Anything unclear stays Groceries (Product, 4:30 PM PT).
     func notGroceries(_ item: String) -> Bool {
         let lower = item.lowercased()
         let people = /^(mum|mom|dad|nan|nana|gran|granny|grandma|grandad|grandpa|sis|bro|wife|husband|partner|kids|boss|her|him|them)\b/
@@ -168,11 +168,7 @@ extension TessGrammar {
         if lower.firstMatch(of: services) != nil {
             return true
         }
-        if let rest = lower.firstMatch(of: /^(?:a|an)\s+(.+)$/)?.1 {
-            let name = String(rest)
-            return AisleGuide.aisle(for: name) == nil && IngredientBook(store: store, classes: classes)
-                .find(name) == nil
-        }
+        // "a/an" alone proves nothing ("buy a cake", "get a watermelon" stay Groceries; QA G9).
         return false
     }
 

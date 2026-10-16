@@ -151,8 +151,60 @@ struct GrammarMisfireTests {
         #expect(kind(grammar.parse(row.phrase, context: context(row.ctx))) == row.expect)
     }
 
+    @Test func qaG9G10G11() throws {
+        // G9: "a/an" plus something unknown stays Groceries.
+        #expect(kind(grammar.parse("buy a cake", context: context(.idle))) == "groceries [a cake]")
+        #expect(kind(grammar.parse("get a watermelon", context: context(.idle))) == "groceries [a watermelon]")
+        // G10: keeping the dentist's day for "3pm" said at 16:00 on Sat would be past: use the said time instead.
+        let saturday = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 17, hour: 16)))
+        let late = TessContext(now: saturday, calendar: calendar)
+        if case let .reschedule(_, to)? = grammar.parse("move dentist to 3pm", context: late) {
+            #expect(to > saturday)
+        } else {
+            Issue.record("move dentist to 3pm")
+        }
+        // G11: "tonight" at 21:10 is tonight at 22:00, not tomorrow.
+        let night = try #require(calendar.date(from: DateComponents(
+            year: 2026,
+            month: 10,
+            day: 15,
+            hour: 21,
+            minute: 10
+        )))
+        #expect(kind(grammar.parse("call mum tonight", context: TessContext(now: night, calendar: calendar)))
+            == "task Call mum Thu 15 22:00")
+    }
+
     @Test func aTypedQuestionMarkStillAsks() {
         // normalize trims the "?", so the guard reads the raw phrase.
         #expect(grammar.parse("dentist thu?", context: context(.idle)) == nil)
+    }
+}
+
+@MainActor
+struct CaptureMissLogTests {
+    @Test func missesAreKeptBesideTheDatabaseAndCut() async throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let store = try ObjectStore(context: TesseraContext(url: dir.appendingPathComponent("tessera.sqlite")))
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let capture = TessCaptureEngine(engine: engine)
+        let log = try #require(CaptureMissLog.beside(store))
+
+        let missed = await capture.capture("https://example.com/best-dal", context: TessContext())
+        #expect(!missed.understood)
+        _ = await capture.capture("bench 80x8", context: TessContext())
+        log.record(String(repeating: "x", count: 500), route: "none", source: "paste")
+
+        let misses = log.all()
+        #expect(misses.map(\.source) == ["ghost row", "paste"])
+        #expect(misses.first?.text == "https://example.com/best-dal" && misses.first?.route == "none")
+        #expect(misses.last?.text.count == CaptureMissLog.maxText)
+        // Not in the op log.
+        #expect(!engine.history().contains { $0.summary.contains("example.com") })
+        // In memory: nothing written anywhere.
+        #expect(CaptureMissLog.beside(ObjectStore.open(inMemory: true)) == nil)
     }
 }

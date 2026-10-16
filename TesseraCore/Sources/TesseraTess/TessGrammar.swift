@@ -178,6 +178,10 @@ public struct TessGrammar {
                     ?? date
             }
         }
+        // Keeping the old day or hour must not land in the past ("move dentist to 3pm" after 3 PM; QA G10).
+        if date <= context.now, let said = found.date {
+            date = said
+        }
         return .reschedule(task: task, to: date)
     }
 
@@ -489,7 +493,7 @@ enum TessDates {
         var day: Date?
         var time: (hour: Int, minute: Int, explicit: Bool)?
         var remaining: [String] = []
-        var fromWeekday = false, saidToday = false, bareColon = false
+        var fromWeekday = false, saidToday = false, bareColon = false, tonightOnly = false
         let lower = Set(words.map { $0.lowercased().trimmingCharacters(in: .punctuationCharacters) })
         func dropLead() {
             if let last = remaining.last?.lowercased(), lead.contains(last) {
@@ -504,6 +508,7 @@ enum TessDates {
                 saidToday = true
                 if word == "tonight", time == nil {
                     time = (20, 0, true)
+                    tonightOnly = true
                 }
                 dropLead()
             } else if word == "tomorrow" || word == "tmrw" {
@@ -515,9 +520,11 @@ enum TessDates {
                 dropLead()
             } else if word == "at", index + 1 < words.count, let parsed = clock(words[index + 1].lowercased()) {
                 time = parsed
+                tonightOnly = false
                 index += 1
             } else if let parsed = clock(word), word.contains(where: \.isLetter) || word.contains(":") {
                 time = parsed
+                tonightOnly = false
                 bareColon = !word.contains(where: \.isLetter)
                 dropLead()
             } else {
@@ -551,8 +558,16 @@ enum TessDates {
                 hour = time.hour + 12 // 7 to 11: the next one today (both passed: tomorrow morning)
             }
         }
-        if today, time != nil,
-           let candidate = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: base), candidate <= now
+        // "tonight" said after 20:00 stays tonight until 23:30: the next whole hour (Product, 4:41 PM PT; QA G11).
+        let lateCutoff = calendar.date(bySettingHour: 23, minute: 30, second: 0, of: now) ?? now
+        if tonightOnly, let eight = calendar.date(bySettingHour: 20, minute: 0, second: 0, of: base), eight <= now,
+           now < lateCutoff
+        {
+            hour = min(calendar.component(.hour, from: now) + 1, 23)
+            minute = hour == 23 && calendar.component(.hour, from: now) == 23 ? 59 : 0
+        } else if today, time != nil,
+                  let candidate = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: base),
+                  candidate <= now
         {
             base = calendar.date(byAdding: .day, value: 1, to: base) ?? base
         }

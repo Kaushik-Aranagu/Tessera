@@ -24,6 +24,17 @@ struct RecipePage: View {
     @State private var away = false
 
     var body: some View {
+        page.task(id: recipeID) { markOpened() }
+    }
+
+    /// Kitchen week one: when the page last opened, written straight to the store (no op, so the log isn't
+    /// flooded) and never shown.
+    private func markOpened() {
+        guard let recipe = model.store.object(id: recipeID) else { return }
+        try? model.store.set("lastOpenedAt", to: .date(AppClock.now), on: recipe)
+    }
+
+    @ViewBuilder private var page: some View {
         let _ = model.revision
         let book = RecipeBook(store: model.store, classes: model.classes)
         if let recipe = model.store.object(id: recipeID), !recipe.isDeleted {

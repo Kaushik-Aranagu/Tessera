@@ -17,13 +17,27 @@ public final class TessCaptureEngine: TessCapturing {
         self.model = model
     }
 
-    /// Runs the routes in order (grammar, then the on-device model) through `TessRouter`.
+    /// Runs the routes in order (grammar, then the on-device model) through `TessRouter`. A capture that ends with
+    /// nothing written goes into the capture-miss log (`source`: where it was said).
     public func capture(_ phrase: String, context: TessContext) async -> TessCapture {
+        await capture(phrase, context: context, source: "ghost row")
+    }
+
+    public func capture(_ phrase: String, context: TessContext, source: String) async -> TessCapture {
         var context = context
         if context.process == nil {
             context.process = ProcessTable(engine: engine).running()?.subject?.id
         }
-        return await router.run(TessRequest(text: phrase, context: context, use: .capture))
+        let result = await router.run(TessRequest(text: phrase, context: context, use: .capture))
+        if !result.understood {
+            missLog?.record(phrase, at: context.now, route: result.source.rawValue, source: source)
+        }
+        return result
+    }
+
+    /// Where misses go; nil (nothing written) for an in-memory store.
+    public var missLog: CaptureMissLog? {
+        CaptureMissLog.beside(engine.store)
     }
 
     /// The router for this engine: grammar first, then the model step if there is one.

@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import os
 import SwiftUI
 import TesseraCore
 import TesseraIntents
@@ -84,7 +85,9 @@ final class AppModel {
             // Built-in classes, the 72-exercise library and Kaushik's starter plan (cheap after the first run).
             classes = try store.prepareCatalog()
         } catch {
-            assertionFailure("Seeding failed: \(error)")
+            // Never crash on launch, DEBUG included (the phone runs DEBUG builds): log it and open with what loaded.
+            Logger(subsystem: "com.kaushikaranagu.tessera", category: "launch")
+                .error("Seeding failed: \(String(describing: error), privacy: .public)")
         }
         engine = ActionEngine(store: store, classes: classes)
         ledger = TrainingLedger(store: store, classes: classes)

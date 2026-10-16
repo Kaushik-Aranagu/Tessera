@@ -35,7 +35,8 @@ struct TaskTests {
         _ = try add("Dentist", hoursFromNow: 48)
         _ = try add("Someday: learn the cello", hoursFromNow: nil)
 
-        try engine.perform(SetTaskDone(task: morning.id), by: .user)
+        // The test's clock, not the wall clock (it failed after midnight UTC).
+        try engine.perform(SetTaskDone(task: morning.id, time: now), by: .user)
         let today = list.today(now, calendar: calendar)
         #expect(today.map(\.title) == ["Call the bank", "Groceries", "Stand-up"])
         #expect(today.first?.isCarriedOver == true && today.first?.id == yesterday.id)
