@@ -71,11 +71,12 @@ names.
 
 ## If he ever rolls back to an older build
 
-From QA's `../qa/review-225.md`. After the v3 build runs once, the phone's database is at v3 (one nullable `zone`
-column on the op table, nothing dropped). An older build (fallback b19fb4a or d0154a9) opens that v3 database fine.
-Its own restore will refuse any backup made after v3, because those copies list v3 among their migrations
-(`TesseraBackup.swift:181`); the newer build restores them fine. His data stays safe either way: roll back if needed,
-just don't restore with the old build.
+Current rule (pin-checklist §7, decisions 12:16 pm PT Oct 16; refreshed 12:55 pm PT, `pin-gate-dry-read.md` G27):
+before the Catalog v9 pin is on his phone, the rollback build is 444e72b (v5); once the pin is installed, it is
+7b321d2, the only older build tested on the v9 store (gate V4). Install the rollback over the top; never delete the
+app. A re-sign builds the exact SHA installed on his phone, never master. Never restore a copy made on a newer build
+onto an older one: the pin refuses a newer copy ("That copy is from a newer Tessera. Update first.", #475), and the
+older builds are untested for it.
 
 ## Check right after (one line each, with what he should see)
 

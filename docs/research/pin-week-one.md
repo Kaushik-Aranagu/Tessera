@@ -1,7 +1,7 @@
 # Pin week one: three evening check-ins after the Catalog v9 pin
 
 For: the coordinator, Core, Builder A, Builder B, QA. Owner: Research lab. Oct 16, 2026 (Pacific), read at master
-e10b698. Day 1 = the day of the install (not fixed yet). Builds on `next-build-script-v9.md`, `review-refresh-3.md`,
+e10b698; rows fixed 12:55 pm PT at 01b30a2 (`pin-gate-dry-read.md` G2, G15, G29). Day 1 = the day of the install (not fixed yet). Builds on `next-build-script-v9.md`, `review-refresh-3.md`,
 `oct-22-list.md`, `pin-checklist.md`, `decisions.md`. Nothing run. Every value is made up.
 
 **Quiet rule.** He already gets a 10-question morning message (`oct-22-list.md`). Each evening he gets exactly one
@@ -15,14 +15,15 @@ ask about the Claude key beyond yes/no presence; never ask him to type, show or 
   passes (`backupInfo` present, `PRAGMA quick_check` = ok, schema no newer than the pin). A failed copy shows a quiet
   note on Review > Backups.
 - **Claude receipts:** the usage ledger rides in the copy. Each call is time, use ("A capture", "A question", "Plan
-  my day", "A paste", "Key check"), model and cost; no phrase text. Month total against $50 is Settings > Claude
+  my day", "A paste", "Key check"), model and cost; no phrase text. Month total against $50 is in Review, under Claude
   ("This month $... of $50."). The S1 count from Step 0 is the baseline.
 - **Miss log:** `capture-misses.jsonl` beside the store, never in a copy or device backup, by design. It can't be
   read remotely; read it only with him at the Mac on day 3 (see below), or skip it.
 - **Money-verb rows:** the op log in the copy (tasks and notes written, with UNDO marks), against suite rows H613
-  `pay rent fri` (task), H612 `pay rent 650 fri` (task), A011 `paid rent fri` (dated note), only if Core's small
-  pin fix is in the pin; otherwise these are still misses and not a flag.
-- **Home lines:** only if #366 is in the pin (`git merge-base --is-ancestor`). Screens, so QA reads them from the
+  `pay rent fri` (task), H612 `pay rent 650 fri` (task), A011 `paid rent fri` (dated note). Core's fix is #471
+  (68c9a19, on master), so any pin carries it.
+- **Home lines:** #366 merged as 6047078 at 12:47 pm PT, so any pin named after it carries them (check with
+  `git merge-base --is-ancestor`). Screens, so QA reads them from the
   one evening answer and his own messages, not from the copy.
 
 ## Day 1 (the day of the install)
@@ -37,10 +38,10 @@ ask about the Claude key beyond yes/no presence; never ask him to type, show or 
 
 ## Day 2
 - **Look at:** day 1's full copy passes P0 and holds the same workouts, sets and bests as before the install
-  (Builder A). Receipts and spend since day 1 (expect under $1; over $2 in a day is a flag to Core). Money-verb rows
-  if the fix is in. Home lines if #366 is in.
+  (Builder A). Receipts and spend since day 1 (expect under $1; over $2 in a day is a flag to Core). Money-verb rows.
+  Home lines if #366 is in.
 - **Red flags:** no day 1 copy, or a backup failure note (Builder A). P0 fails or a row count drops (Builder A,
-  stop candidate). `pay rent fri` gives "Didn't catch that." on a pin that carries the fix (Core). Home hero cut,
+  stop candidate). `pay rent fri` gives "Didn't catch that." (Core). Home hero cut,
   ends in "...", or shows " · " (Builder B, then QA).
 - **Evening question:** with #366 in, `Did Home read right today? ★Yes / No`; expected Yes, a No goes to Builder B
   and QA. Without #366: `Did anything land wrong today? ★No / Yes`; expected No, a Yes goes to Core and QA.

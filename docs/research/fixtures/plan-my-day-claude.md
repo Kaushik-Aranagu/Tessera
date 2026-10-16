@@ -1,5 +1,7 @@
 # Plan my day on Claude: 23 eval packs, checks and the use 2 gate
 
+> Refreshed Oct 16, 12:50 pm PT (Product item AA), read at origin/master `70f37da`. All 23 packs stand as written: no title in d01 to d23 trips `SecretWords` or `PrivateFacts` on master ("Pay council tax" and "Pay electricity bill" have no amount and go as typed, decisions 12:04 and 12:06 pm PT Oct 16), every `weekday` comes from the 4 am day (`PlanWording.swift:121`), the model is Sonnet 5.5 (`PlanWording.swift:419`) and every line time is "7:30 am" or "5 pm" (12:35 pm PT). Three things move: (1) every pack sends event titles, but CA4 makes "busy" the default and Home shows events as "busy" rows only in v1 (12:29 pm PT), so whether the gate runs with titles or with "busy" is open (`plan-my-day-pack.md` Q2); (2) d22 stays a guard only: no call during a workout (8:50 pm PT Oct 15) and master still sends `running` (pack fixture G4); (3) V11 reads the lowercased line, so "5 PM" or "5:00 pm" passes and shows as written (pack fixture G12, Q5).
+
 > Changed 2026-10-16 (board 74): edge packs d21 (planned rest day, `rest`), d22 (workout running at open, `running`) and d23 (all-day birthday in a normal calendar, dropped by the builder); pass bar scaled to 21 of 23; gaps 1, 3, 4, 5 closed.
 
 For: Core (T4 `PlanPack`, T5 eval harness, T6 `ProposePlan` and `PlanProposalValidator`), Product. Research lab, board item 67, 2026-10-16.
