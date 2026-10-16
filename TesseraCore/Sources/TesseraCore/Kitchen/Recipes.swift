@@ -46,7 +46,9 @@ public struct RecipeBook {
                 amount: store.number("amount", of: object), amountMax: store.number("amountMax", of: object),
                 unit: store.value("unit", of: object)?.stringValue.flatMap(KitchenUnit.init(rawValue:)),
                 name: object.title, prep: store.value("prep", of: object)?.stringValue,
-                toTaste: store.value("toTaste", of: object) == .bool(true)
+                toTaste: store.value("toTaste", of: object) == .bool(true),
+                packSize: store.value("packSize", of: object)?.stringValue,
+                optional: store.value("optional", of: object) == .bool(true)
             )
             return Line(id: object.id, object: object, line: line, ingredient: ingredient,
                         isStaple: ingredient.map { store.value("isStaple", of: $0) == .bool(true) } ?? false)
@@ -183,6 +185,12 @@ public struct CreateRecipe: EngineAction {
             }
             if line.toTaste {
                 try transaction.set("toTaste", to: .bool(true), on: object)
+            }
+            if let packSize = line.packSize {
+                try transaction.set("packSize", to: .text(packSize), on: object)
+            }
+            if line.optional {
+                try transaction.set("optional", to: .bool(true), on: object)
             }
             try transaction.setLinks("ingredient", on: object, to: [ingredient])
             used.append((IngredientLine.key(for: ingredient.title), ingredient))

@@ -96,11 +96,16 @@ public struct IngredientLine: Hashable, Sendable, Codable {
     public var toTaste: Bool
     /// The size of one pack: "14.5 oz" in "1 (14.5 oz) can diced tomatoes" (paste-hardening gap 2).
     public var packSize: String?
+    /// "(optional)", "for serving", "for garnish": shown on the recipe page, skipped on the list like "to taste"
+    /// (Research 123 G-R4).
+    public var optional = false
 
     public init(original: String, amount: Double? = nil, amountMax: Double? = nil, unit: KitchenUnit? = nil,
-                name: String, prep: String? = nil, toTaste: Bool = false, packSize: String? = nil)
+                name: String, prep: String? = nil, toTaste: Bool = false, packSize: String? = nil,
+                optional: Bool = false)
     {
         self.packSize = packSize
+        self.optional = optional
         self.original = original
         self.amount = amount
         self.amountMax = amountMax
@@ -131,8 +136,19 @@ public struct IngredientLine: Hashable, Sendable, Codable {
         guard !rest.isEmpty else { return nil }
 
         var toTaste = false
+        var optional = false
         if let match = rest.firstMatch(of: /(?i),?\s*(to taste|as needed|to serve)\s*$/) {
             toTaste = match.1.lowercased() == "to taste"
+            rest.removeSubrange(match.range)
+        }
+        // "(optional)", ", optional", "for serving", "for garnish", "plus more to serve": the recipe keeps the line,
+        // the list skips it (Research 123 G-R4).
+        if let match = rest
+            .firstMatch(
+                of: /(?i),?\s*\(?\s*(optional|for serving|for garnish|for the table|plus more(?: to serve| for serving)?)\s*\)?\s*(?:\([^)]*\))?\s*$/
+            )
+        {
+            optional = true
             rest.removeSubrange(match.range)
         }
 
@@ -193,13 +209,18 @@ public struct IngredientLine: Hashable, Sendable, Codable {
             rest = String(rest[..<comma])
         }
         var name = rest.trimmingCharacters(in: .whitespaces)
-        // Size and freshness words describe this one, not the ingredient: "1 large onion" is an onion.
+        // Size, freshness and prep words describe this one, not the ingredient: "1 large onion" is an onion, and
+        // "chopped fresh cilantro" is cilantro (Research 123 G-R5).
         var sizes: [String] = []
-        while let match = name
-            .firstMatch(of: /(?i)^(large|small|medium|big|fresh|ripe|cooked|extra[- ]large)\s+(.+)$/)
-        {
-            sizes.append(match.1.lowercased())
-            name = String(match.2)
+        // A pack's contents keep their words: "diced tomatoes" in a can is the product, not a prep.
+        let sizeWords: Set = ["large", "small", "medium", "big", "fresh", "ripe", "cooked", "extra", "extra-large"]
+        let prepWords: Set = ["chopped", "grated", "crumbled", "shredded", "minced", "diced", "sliced", "packed",
+                              "freshly", "finely", "roughly", "thinly"]
+        while let space = name.firstIndex(of: " ") {
+            let first = name[..<space].lowercased()
+            guard sizeWords.contains(first) || (unit?.isPack != true && prepWords.contains(first)) else { break }
+            sizes.append(first)
+            name = String(name[name.index(after: space)...]).trimmingCharacters(in: .whitespaces)
         }
         if !sizes.isEmpty {
             let size = sizes.joined(separator: " ")
@@ -222,8 +243,13 @@ public struct IngredientLine: Hashable, Sendable, Codable {
             name = "pound " + name
         }
         guard !name.isEmpty else { return nil }
+        // "yellow onion" is an onion on the list too, not only in the key (G-R6).
+        if let alias = Self.aliases[Self.rawKey(for: name)] {
+            name = alias
+        }
         return IngredientLine(original: original, amount: amount, amountMax: amountMax, unit: unit, name: name,
-                              prep: prep, toTaste: toTaste, packSize: unit?.isPack == true ? packSize : nil)
+                              prep: prep, toTaste: toTaste, packSize: unit?.isPack == true ? packSize : nil,
+                              optional: optional)
     }
 
     /// "(14.5 oz) can", "(15-ounce) cans", "14.5 oz can": a size, then the pack word.
@@ -248,10 +274,23 @@ public struct IngredientLine: Hashable, Sendable, Codable {
         return "\(number) \(short)"
     }
 
-    /// The name reduced for matching: lowercased, simple plurals made singular ("tomatoes" → "tomato").
+    /// The name reduced for matching: lowercased, simple plurals made singular ("tomatoes" → "tomato"), and a few
+    /// store names folded ("whole milk" is milk, "yellow onion" is onion; red onion stays; Research 123 G-R6).
     public static func key(for name: String) -> String {
+        let key = rawKey(for: name)
+        return aliases[key] ?? key
+    }
+
+    static func rawKey(for name: String) -> String {
         name.lowercased().split(separator: " ").map { singular(String($0)) }.joined(separator: " ")
     }
+
+    static let aliases: [String: String] = [
+        "whole milk": "milk", "2% milk": "milk", "skim milk": "milk", "semi skimmed milk": "milk",
+        "semi-skimmed milk": "milk", "low-fat milk": "milk", "lowfat milk": "milk", "1% milk": "milk",
+        "yellow onion": "onion", "brown onion": "onion", "white onion": "onion",
+        "all-purpose flour": "flour", "plain flour": "flour",
+    ]
 
     static func singular(_ word: String) -> String {
         if ["cookies", "brownies", "smoothies", "veggies", "movies", "pies"].contains(word) {

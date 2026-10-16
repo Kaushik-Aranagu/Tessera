@@ -143,6 +143,12 @@ struct GroceryShare: Codable, Hashable {
             }
         }
         var parts: [String] = []
+        // Packs first: "1 can + 15 oz black beans", "1 bag + 6 cups baby spinach" (Design 47, G-R8).
+        for unit in order where unit.isPack {
+            if let amount = other[unit] {
+                parts.append(IngredientLine(original: "", amount: amount, unit: unit, name: "").quantityText ?? "")
+            }
+        }
         if hasMass {
             parts.append(mass >= 1000 ? "\(IngredientLine.kitchenNumber(mass / 1000, unit: .kilogram)) kg"
                 : "\(IngredientLine.kitchenNumber(mass, unit: .gram)) g")
@@ -164,7 +170,7 @@ struct GroceryShare: Codable, Hashable {
         if hasFluidOunces {
             parts.append("\(IngredientLine.kitchenNumber(fluidOunces, unit: .fluidOunce)) fl oz")
         }
-        for unit in order {
+        for unit in order where !unit.isPack {
             if let amount = other[unit] {
                 parts.append(IngredientLine(original: "", amount: amount, unit: unit, name: "").quantityText ?? "")
             }
@@ -207,12 +213,18 @@ extension Transaction {
         {
             return onList
         }
-        // Same ingredient and the same pack size (a sized can never joins an unsized one, U5).
+        // Same ingredient and the same pack size: two sizes of one thing are two rows (U5). A loose share (no pack
+        // size) joins a row with one pack size, pack first with "+" (Research 123 G-R8, Design 47).
         let existing = list.orderedChildren.first { item in
-            store.value("isDone", of: item) != .bool(true)
-                && store.linkedObjects("about", of: item).contains { $0.id == ingredient.id }
-                && GroceryShare.decode(store.value("shares", of: item)?.stringValue)
-                .allSatisfy { $0.packSize == share.packSize }
+            guard store.value("isDone", of: item) != .bool(true),
+                  store.linkedObjects("about", of: item).contains(where: { $0.id == ingredient.id })
+            else { return false }
+            let sizes = Set(GroceryShare.decode(store.value("shares", of: item)?.stringValue).compactMap(\.packSize))
+            if let size = share.packSize {
+                return sizes.isEmpty || sizes == [size]
+            }
+            // An unsized pack ("1 can") never joins a sized one (U5); a loose amount ("15 oz", "6 cups") does.
+            return share.unit?.isPack == true ? sizes.isEmpty : sizes.count <= 1
         }
         // A can or jar of something fresh is never filed under Produce ("1 (14.5 oz) can diced tomatoes").
         var section = aisle(of: ingredient)
@@ -273,12 +285,23 @@ public struct AddRecipeToGroceries: EngineAction {
         // Added again (a new size): take its old share out first, once, so it's replaced, never doubled, and an
         // ingredient listed twice in it ("200 g butter" and "50 g butter") still sums.
         try RemoveRecipeFromGroceries(recipe: recipe.id).apply(&transaction)
+        let list = try transaction.groceriesList()
+        let before = Set(list.orderedChildren.map(\.id))
         var items: [ObjectRecord] = []
         for line in lines {
             guard let ingredient = line.ingredient else { continue }
             let staple = transaction.store.value("isStaple", of: ingredient) == .bool(true)
-                || AisleGuide.staples.contains(IngredientLine.key(for: ingredient.title))
-            if staple || line.line.toTaste, includeStaples != true {
+                || AisleGuide.isStaple(IngredientLine.key(for: ingredient.title))
+            // Staples, "to taste" and optional lines ("for serving") stay on the recipe page (G-R3, G-R4).
+            if staple || line.line.toTaste || line.line.optional, includeStaples != true {
+                continue
+            }
+            // A same-key row already checked covers the line: nothing is added (G-R2, Kitchen lead).
+            let covered = list.orderedChildren.contains { item in
+                transaction.store.value("isDone", of: item) == .bool(true) && !item.isDeleted
+                    && transaction.store.linkedObjects("about", of: item).contains { $0.id == ingredient.id }
+            }
+            if covered {
                 continue
             }
             let share = GroceryShare(recipe: recipe.id, amount: line.line.amountMax ?? line.line.amount,
@@ -293,11 +316,20 @@ public struct AddRecipeToGroceries: EngineAction {
             }
         }
         try transaction.refreshShopLine()
-        return items
+        // New rows only: joined rows still carry the recipe line, but "Added N" counts what is new (G-R14).
+        return items.filter { !before.contains($0.id) }
     }
 
+    /// "Tacos, 10 added." (Product W12): the rows made for it in this write.
     public func summary(in store: ObjectStore) -> String {
-        "Added \(store.object(id: recipe)?.title ?? "the recipe") to groceries"
+        let title = store.object(id: recipe)?.title ?? "Recipe"
+        guard let list = store.object(id: Groceries.listID) else { return "\(title), added." }
+        // A row this recipe made has its share first; a row it joined carries an older share before it.
+        let made = list.orderedChildren.count { item in
+            !item.isDeleted && Date.now.timeIntervalSince(item.createdAt) < 60
+                && GroceryShare.decode(store.value("shares", of: item)?.stringValue).first?.recipe == recipe
+        }
+        return made == 0 ? "\(title), nothing new to buy." : "\(title), \(made) added."
     }
 }
 
