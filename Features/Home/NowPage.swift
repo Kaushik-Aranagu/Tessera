@@ -44,7 +44,7 @@ struct NowPage: View {
                     LineHero(line: HomeLines.line(for: fact, now: now)) {
                         PaintKey(paint: Theme.Colors.liveInk, isTap: true, progress: progress(of: process),
                                  action: { model.isWorkoutPresented = true }, label: { _ in
-                                     Text("Resume \(session.workout.title)")
+                                     Text("Resume \(session.workout.title)").textRole(.labelStrong)
                                  })
                                  .accessibilityLabel("Resume \(session.workout.title)")
                     }
@@ -52,7 +52,7 @@ struct NowPage: View {
                     LineHero(line: HomeLines.line(for: fact, now: now), opens: .object(fact.id ?? process.id)) {
                         PaintKey(paint: Theme.Colors.ink, isTap: true, progress: progress(of: process),
                                  action: { model.resume(process) }, label: { _ in
-                                     Text("Resume \(fact.title)")
+                                     Text("Resume \(fact.title)").textRole(.labelStrong)
                                  })
                                  .accessibilityLabel("Resume \(fact.title)")
                     }
@@ -64,7 +64,7 @@ struct NowPage: View {
                             // in ink like the planned routine's: colour comes with the moment (Design on #366).
                             if model.canStart(next) {
                                 PaintKey(paint: Theme.Colors.ink, isTap: true, action: { model.startRoutine(next) },
-                                         label: { _ in Text("Start \(next.title)") })
+                                         label: { _ in Text("Start \(next.title)").textRole(.labelStrong) })
                                     .accessibilityLabel("Start \(next.title)")
                                     .accessibilityHint("Starts \(next.title) anyway")
                             }
@@ -75,8 +75,10 @@ struct NowPage: View {
                                  opens: .object(workout.id))
                         {
                             PaintKey(paint: Theme.Colors.ink, isTap: true, action: { model.startWorkout(workout) },
-                                     label: { _ in Text("Start \(model.store.displayTitle(of: workout))") })
-                                .accessibilityLabel("Start \(model.store.displayTitle(of: workout))")
+                                     label: { _ in
+                                         Text("Start \(model.store.displayTitle(of: workout))").textRole(.labelStrong)
+                                     })
+                                     .accessibilityLabel("Start \(model.store.displayTitle(of: workout))")
                         }
                     }
                 } else {
@@ -144,7 +146,7 @@ struct NowPage: View {
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
                 LineHero(line: line, opens: .object(task.id)) {
                     PaintKey(duration: 0.7, action: { finish(task) }, label: { _ in
-                        Text("Finish")
+                        Text("Finish").textRole(.labelStrong)
                     }, meta: {
                         TimelineView(.periodic(from: .now, by: 30)) { context in
                             let lines = Self.timeLeft(task, now: AppClock.adjust(context.date))
@@ -168,7 +170,7 @@ struct NowPage: View {
             {
                 if model.canStart(routine) {
                     PaintKey(paint: Theme.Colors.ink, isTap: true, action: { model.startRoutine(routine) },
-                             label: { _ in Text("Start \(routine.title)") })
+                             label: { _ in Text("Start \(routine.title)").textRole(.labelStrong) })
                         .accessibilityLabel("Start \(routine.title)")
                 }
             }

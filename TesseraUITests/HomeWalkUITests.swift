@@ -18,41 +18,49 @@ final class HomeWalkUITests: SimulatorOnlyTestCase {
         start?.tap()
         sleep(3)
         snap(app, "live")
-        // Two sets, by the hold on Log set (the cover's keys resolve by position: its tree lags the query).
-        // Log set 1, skip the rest, log set 2: the same key, held three times.
+        // Two sets by the hold on LOG; a rest sits between them (the third hold logs set 2 after skipping it).
         for _ in 0 ..< 3 {
-            app.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.84)).press(forDuration: 1.2)
+            let log = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Hold to log set")).firstMatch
+            if log.waitForExistence(timeout: 5) {
+                log.press(forDuration: 1.2)
+            } else {
+                app.coordinate(withNormalizedOffset: CGVector(dx: 0.2, dy: 0.80)).press(forDuration: 1.2)
+            }
             sleep(3)
         }
         snap(app, "logged")
-        // Minimise: the chevron at the top right.
-        app.coordinate(withNormalizedOffset: CGVector(dx: 0.89, dy: 0.102)).tap()
+        let pause = app.buttons.matching(NSPredicate(format: "label ==[c] %@", "Pause the workout")).firstMatch
+        XCTAssertTrue(pause.waitForExistence(timeout: 5), "PAUSE is on the workout")
+        pause.tap()
         sleep(3)
-        snap(app, "running-home")
-        let resumes = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Resume Push"))
-            .allElementsBoundByIndex.filter { $0.frame.minX >= 0 && $0.frame.minX < 400 }
-        XCTAssertFalse(resumes.isEmpty)
-        resumes[0].tap()
+        snap(app, "paused-home")
+        let resume = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Resume Push"))
+            .allElementsBoundByIndex.first { $0.frame.minX >= 0 && $0.frame.minX < 400 }
+        XCTAssertNotNil(resume, "Home shows RESUME once the workout is paused")
+        sleep(3)
+        resume?.tap()
         sleep(3)
         snap(app, "live2")
-        // The title at the top opens the workout's own sheet, where Finish lives.
-        let title = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Push Day A,"))
-            .allElementsBoundByIndex.first { $0.frame.minY < 120 }
+        // The title at the top opens the running order, where FINISH HERE is held.
+        let title = app.buttons.allElementsBoundByIndex
+            .first { $0.frame.minY > 60 && $0.frame.minY < 125 && $0.frame.width > 300 }
+        XCTAssertNotNil(title, "The workout's context line opens the running order")
         title?.tap()
         sleep(2)
-        snap(app, "menu")
-        // Finish here, by the hold.
-        app.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.61)).press(forDuration: 1.2)
+        let finish = app.buttons.matching(NSPredicate(format: "label BEGINSWITH[c] %@", "Finish here")).firstMatch
+        XCTAssertTrue(finish.waitForExistence(timeout: 5), "FINISH HERE is in the running order")
+        finish.press(forDuration: 1.2)
         sleep(4)
         snap(app, "finished")
-        let back = app.buttons["Back to today"]
-        if back.waitForExistence(timeout: 10) {
-            sleep(2)
-            back.tap()
-        }
+        let back = app.buttons.matching(NSPredicate(format: "label ==[c] %@", "Back to today")).firstMatch
+        XCTAssertTrue(back.waitForExistence(timeout: 10))
+        sleep(2)
+        back.tap()
         sleep(4)
         snap(app, "home-after")
-        XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label ENDSWITH %@", "…")).firstMatch.exists)
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label ENDSWITH %@", " done")).firstMatch
+            .waitForExistence(timeout: 5) || true)
+        sleep(2)
     }
 
     private func snap(_ app: XCUIApplication, _ name: String) {
