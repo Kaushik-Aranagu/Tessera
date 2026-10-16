@@ -253,6 +253,10 @@ final class AppModel {
             table.suspendIfIdle(now: now, idleLimit: idleLimit)
         }
         processNotes = table.tidy(now: now)
+        // The 04:00 roll: unfinished tasks from earlier days move to today, after 7 rolls to Later (late-night #1).
+        if let rolled = TaskList(store: store, classes: classes).rollForward(engine: engine, now: now) {
+            processNotes.append(rolled)
+        }
         pickUpRunningWorkout(table)
         // A workout left untouched for 6 hours is wrapped up by Core; let the live session go with it.
         if let session, store.value("endedAt", of: session.workout) != nil {

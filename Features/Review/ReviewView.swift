@@ -47,8 +47,10 @@ struct ReviewWeek {
     }
 
     static func compute(_ model: AppModel, now: Date, calendar: Calendar = .current) -> ReviewWeek {
-        let today = calendar.startOfDay(for: now)
-        let start = calendar.date(byAdding: .day, value: -6, to: today) ?? today
+        // His days (04:00 to 04:00): at 01:00 Saturday the week still ends on Friday.
+        let tesseraDay = TesseraDay(calendar: calendar)
+        let firstKey = tesseraDay.day(-6, after: now)
+        let start = tesseraDay.start(of: calendar.date(byAdding: .hour, value: 12, to: firstKey) ?? firstKey)
         let interval = DateInterval(start: start, end: max(now, start))
         let tasks = TaskList(store: model.store, classes: model.classes)
 
@@ -74,17 +76,13 @@ struct ReviewWeek {
             }
         }
 
-        var workouts: [WorkoutSummary] = []
-        var day = start
-        while day <= now {
-            workouts += model.ledger.finishedWorkouts(on: day, calendar: calendar)
-            guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
-            day = next
+        // Each day's sessions belong to the day they started, as everywhere else.
+        let days = (0 ..< 7).compactMap { calendar.date(byAdding: .day, value: $0, to: firstKey) }
+        let byDay = days.map { model.ledger.finishedWorkouts(on: $0, calendar: calendar) }
+        let workouts = byDay.flatMap(\.self)
+        let goodDays = days.indices.map { index in
+            !byDay[index].isEmpty || doneDates.contains { tesseraDay.day(of: $0) == days[index] }
         }
-
-        let days = (0 ..< 7).compactMap { calendar.date(byAdding: .day, value: $0, to: start) }
-        let finished = doneDates + workouts.compactMap(\.endedAt)
-        let goodDays = days.map { day in finished.contains { calendar.isDate($0, inSameDayAs: day) } }
 
         return ReviewWeek(
             interval: interval, days: days, goodDays: goodDays, tasksDone: doneDates.count, notesWritten: notes,
@@ -128,7 +126,7 @@ enum ReviewCopy {
 
     /// The day as a short name ("Mon"), or "today".
     static func day(_ date: Date, now: Date, calendar: Calendar = .current) -> String {
-        if calendar.isDate(date, inSameDayAs: now) {
+        if TesseraDay(calendar: calendar).isSameDay(date, now) {
             return "today"
         }
         return date.formatted(.dateTime.weekday(.abbreviated))
@@ -238,7 +236,7 @@ private struct WeekDabs: View {
     var body: some View {
         HStack(spacing: 0) {
             ForEach(Array(days.enumerated()), id: \.offset) { index, day in
-                let isToday = Calendar.current.isDate(day, inSameDayAs: now)
+                let isToday = day == TesseraDay().today(now)
                 let filled = good[index] && (shown || reduceMotion)
                 VStack(spacing: Theme.Spacing.s) {
                     PaintDab(color: filled ? Theme.Colors.health : Theme.Colors.ink.opacity(0.25),

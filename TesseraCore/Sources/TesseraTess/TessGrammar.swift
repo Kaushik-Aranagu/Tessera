@@ -512,7 +512,8 @@ enum TessDates {
                 }
                 dropLead()
             } else if word == "tomorrow" || word == "tmrw" {
-                day = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now))
+                // His tomorrow: at 01:00 Saturday (still his Friday) "tomorrow" is Saturday, the coming daytime.
+                day = TesseraDay(calendar: calendar).day(1, after: now)
                 dropLead()
             } else if let weekday = weekdays[word] {
                 day = nextDate(weekday: weekday, after: now, calendar: calendar)
@@ -596,7 +597,8 @@ enum TessDates {
     /// A past day for a log: "sat" is the last Saturday (today if it's Saturday), "yesterday", "today", "last night".
     /// Nil when no day was said. The day word goes; the rest stays.
     static func pastDay(in words: [String], now: Date, calendar: Calendar) -> (Date, [String])? {
-        let today = calendar.startOfDay(for: now)
+        // His day: at 00:40 Saturday, "today" is still Friday and "yesterday" Thursday.
+        let today = TesseraDay(calendar: calendar).today(now)
         var day: Date?
         var remaining: [String] = []
         var index = 0
@@ -610,7 +612,7 @@ enum TessDates {
                 day = today
                 index += word == "this" ? 1 : 0
             } else if let weekday = weekdays[word] {
-                let back = (calendar.component(.weekday, from: now) - weekday + 7) % 7
+                let back = (calendar.component(.weekday, from: today) - weekday + 7) % 7
                 day = calendar.date(byAdding: .day, value: -back, to: today)
                 if let last = remaining.last?.lowercased(), ["on", "last"].contains(last) {
                     remaining.removeLast()

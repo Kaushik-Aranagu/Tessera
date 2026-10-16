@@ -223,7 +223,8 @@ public struct TrainingLedger {
     }
 
     private func forEachEntry(inWeekOf date: Date, calendar: Calendar, _ body: (ClassDef, Int) -> Void) {
-        guard let week = calendar.dateInterval(of: .weekOfYear, for: date) else { return }
+        // His week (04:00 edges): a Saturday-night session ending after midnight stays in Saturday's week.
+        let week = TesseraDay(calendar: calendar).week(containing: date)
         for (classID, session) in index.allSessions where week.contains(session.date) {
             guard let exercise = store.classDef(id: classID) else { continue }
             body(exercise, session.sets.count)

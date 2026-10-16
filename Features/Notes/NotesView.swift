@@ -239,13 +239,12 @@ enum NotesCopy {
         if seconds < 3600 {
             return spoken ? "\(Int(seconds / 60)) minutes ago" : "\(Int(seconds / 60)) min"
         }
-        if calendar.isDate(date, inSameDayAs: now) {
+        // His day (04:00 to 04:00): a note from 23:30 is "2 h" at 01:30, not "yesterday".
+        let tesseraDay = TesseraDay(calendar: calendar)
+        if tesseraDay.isSameDay(date, now) {
             return spoken ? "\(Int(seconds / 3600)) hours ago" : "\(Int(seconds / 3600)) h"
         }
-        if let yesterday = calendar.date(byAdding: .day, value: -1, to: now), calendar.isDate(
-            date,
-            inSameDayAs: yesterday
-        ) {
+        if tesseraDay.day(of: date) == tesseraDay.day(-1, after: now) {
             return "yesterday"
         }
         if seconds < 6 * 86400 {

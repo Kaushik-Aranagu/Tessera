@@ -90,6 +90,8 @@ final class DerivedCache {
     var sessions: [UUID: (revision: Int, sessions: [TrainingLedger.Session])] = [:]
     /// Finished workouts by the start of the day they ended, and summaries already built per day.
     var workoutDays: (revision: Int, days: [Date: [UUID]])?
+    /// The time zone `workoutDays` was keyed in.
+    var workoutDaysZone: String?
     var daySummaries: [Date: (revision: Int, summaries: [WorkoutSummary])] = [:]
     /// Objects written since derived caches were last brought up to date.
     var touched: Set<UUID> = []

@@ -121,6 +121,12 @@ public struct ProcessTable {
 
     private func wrapUp(_ process: ProcessSnapshot, workout: ObjectRecord) -> String {
         let end = process.lastTouchedAt ?? .now
+        // Opened and never logged: not a session. Close it without saving a trained day (undo brings it back).
+        if !workout.orderedChildren.contains(where: { !$0.orderedChildren.isEmpty }) {
+            _ = try? engine.perform(EndProcess(process: process.id, reason: .wrappedUp, time: end), by: .system)
+            _ = try? engine.perform(DeleteObject(object: workout.id), by: .system)
+            return "Closed \(store.displayTitle(of: workout)), nothing was logged"
+        }
         _ = try? engine.perform(FinishWorkout(workout: workout.id, time: end), by: .system)
         _ = try? engine.perform(EndProcess(process: process.id, reason: .wrappedUp, time: end), by: .system)
         let entries = workout.orderedChildren

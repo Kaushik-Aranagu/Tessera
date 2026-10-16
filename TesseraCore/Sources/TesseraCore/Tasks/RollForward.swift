@@ -4,7 +4,7 @@ import Foundation
 /// move to today at the same time of day. After 7 rolls a task goes to Later. One action, so one undo.
 public struct RollForwardTasks: EngineAction {
     /// The day changes at 04:00, so a late-night task still belongs to "today".
-    public static let dayStartHour = 4
+    public static let dayStartHour = TesseraDay.startHour
     public static let rollsBeforeLater = 7
 
     public static let descriptor = ActionDescriptor(
@@ -67,10 +67,9 @@ public struct RollForwardTasks: EngineAction {
         return outcome
     }
 
-    /// The start (04:00) of the day a moment belongs to.
-    static func logicalDay(of date: Date, calendar: Calendar) -> Date {
-        let shifted = date.addingTimeInterval(-Double(dayStartHour) * 3600)
-        return calendar.startOfDay(for: shifted)
+    /// The day (its midnight key) a moment belongs to: `TesseraDay`, the one rule (DST-safe).
+    public static func logicalDay(of date: Date, calendar: Calendar) -> Date {
+        TesseraDay(calendar: calendar).day(of: date)
     }
 
     public func summary(in _: ObjectStore) -> String {
@@ -83,11 +82,11 @@ public extension TaskList {
     /// Runs the roll-forward if anything needs it (call on launch and when the app comes to the foreground).
     /// Returns Tess's line, or nil when nothing moved; nothing is logged when nothing moved.
     @discardableResult
-    func rollForward(engine: ActionEngine, now: Date = .now) -> String? {
-        let preview = RollForwardTasks.logicalDay(of: now, calendar: .current)
-        let needed = today(now).contains { item in
+    func rollForward(engine: ActionEngine, now: Date = .now, calendar: Calendar = .current) -> String? {
+        let preview = RollForwardTasks.logicalDay(of: now, calendar: calendar)
+        let needed = today(now, calendar: calendar).contains { item in
             item.isCarriedOver || item.when
-                .map { RollForwardTasks.logicalDay(of: $0, calendar: .current) < preview } == true
+                .map { RollForwardTasks.logicalDay(of: $0, calendar: calendar) < preview } == true
         }
         guard needed, let result = try? engine.perform(RollForwardTasks(time: now), by: .system) else { return nil }
         return result.output.line

@@ -75,23 +75,29 @@ public extension TrainingLedger {
         )
     }
 
-    /// Workouts finished on the day containing `date`, newest first: today's history on Home.
-    /// Cached for the store's revision: one pass sorts workouts into days, and each day's summaries are built once.
+    /// Workouts finished on his day containing `date` (04:00 to 04:00), newest first: today's history on Home.
+    /// A workout belongs to the day it started: Push A from 22:50 to 00:40 is Friday's, and a session crossing 04:00
+    /// stays on its first day. `date` is a moment, or a day key (an exact midnight, as `week` and the day lanes pass).
+    /// Cached for the store's revision and time zone (after a flight, the old zone's keys would all miss).
     func finishedWorkouts(on date: Date, calendar: Calendar = .current) -> [WorkoutSummary] {
         guard let workoutClass = classes[.workout] else { return [] }
         let derived = store.cache.derived
         let revision = store.revision
-        let day = calendar.startOfDay(for: date)
-        if let cached = derived.daySummaries[day], cached.revision == revision {
+        let tesseraDay = TesseraDay(calendar: calendar)
+        let day = date == calendar.startOfDay(for: date) ? date : tesseraDay.day(of: date)
+        let zone = calendar.timeZone.identifier
+        if let cached = derived.daySummaries[day], cached.revision == revision, derived.workoutDaysZone == zone {
             return cached.summaries
         }
-        if derived.workoutDays?.revision != revision {
+        if derived.workoutDays?.revision != revision || derived.workoutDaysZone != zone {
             var days: [Date: [UUID]] = [:]
             for workout in store.objects(of: workoutClass) {
                 guard let ended = store.value("endedAt", of: workout)?.dateValue else { continue }
-                days[calendar.startOfDay(for: ended), default: []].append(workout.id)
+                let started = store.value("startedAt", of: workout)?.dateValue ?? ended
+                days[tesseraDay.day(of: started), default: []].append(workout.id)
             }
             derived.workoutDays = (revision, days)
+            derived.workoutDaysZone = zone
             derived.daySummaries = [:]
         }
         let summaries = (derived.workoutDays?.days[day] ?? [])
