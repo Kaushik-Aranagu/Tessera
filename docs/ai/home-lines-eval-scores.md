@@ -258,3 +258,43 @@ Sources: 1 gate E1 run 2 (Thu 9:40 pm); 2 gate E2 run 1 (Thu 9:10 pm); 3 gate E1
 If Haiku were chosen instead (one per kind it showed, then the most different): done detail "6 exercises, 18 sets, first in 9 days." (E2); paused "this evening, paused 40 min ago" (E3); planned "this evening, your usual slot" (E5); planned cook "this evening, 2 to buy" (E13); cook "Tonight, your usual cook slot" (d10m2); rest "Nothing booked, a quiet one" (d7m1, false); done detail "5 exercises, 15 sets, last Pull A 3 days ago." (E16); "at 7:50 pm, your usual slot" (E12, false, no memory); "this morning, after work" (d11m1, false); "Nothing scheduled, rest up" (d14m1, false and tells him what to do). Haiku showed no shop line (all E9 lines were caught).
 
 Scorer: AI architecture, Voice reviewed by Research.
+
+## Rerun, job done (Oct 16, 1:36 and 1:37 PM PT runs)
+
+Same rules as above, Research's Voice ruling included, and Voice scored against what master's `HomeLines` shows for the moment, not the fixture's thinner rules line (Research, Oct 16). Rules lines are the fixture's: the gate's say only "done at" a time; the memory days' already carry the best or the gap.
+
+### Gate, claude-sonnet-5-5
+
+| Run | Moment | Item | Slot | Rules | Claude | True | Plain | Not repeating | Tone | Voice | Why (fails) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | E1 | w1 | context | done at 8:05 pm | 8:05 pm, a bench best | Y | Y | Y | Y | N | Voice: the best is already in master's rules line (HomeLines.swift:248) |
+| 1 | E2 | w1 | context | done at 7:40 pm | First in 9 days | Y | Y | Y | Y | Y |  |
+| 1 | E14 | w1 | context | done at 7:55 pm | 7:55 pm, a deadlift best | Y | Y | Y | Y | N | Voice: the best is already in master's rules line (HomeLines.swift:248) |
+| 1 | E19 | w1 | context | done at 8:00 pm | at 8:00 pm, a bench best | Y | Y | Y | Y | N | Voice: the best is already in master's rules line (HomeLines.swift:248) |
+| 2 | E1 | w1 | context | done at 8:05 pm | A bench best, 8:05 pm | Y | Y | Y | Y | N | Voice: the best is already in master's rules line (HomeLines.swift:248) |
+| 2 | E2 | w1 | context | done at 7:40 pm | First in 9 days | Y | Y | Y | Y | Y |  |
+| 2 | E14 | w1 | context | done at 7:55 pm | 7:55 pm, a deadlift best | Y | Y | Y | Y | N | Voice: the best is already in master's rules line (HomeLines.swift:248) |
+| 2 | E19 | w1 | context | done at 8:00 pm | at 8:00 pm, a bench best | Y | Y | Y | Y | N | Voice: the best is already in master's rules line (HomeLines.swift:248) |
+| 3 | E1 | w1 | context | done at 8:05 pm | 8:05 pm, a bench best | Y | Y | Y | Y | N | Voice: the best is already in master's rules line (HomeLines.swift:248) |
+| 3 | E2 | w1 | context | done at 7:40 pm | First in 9 days | Y | Y | Y | Y | Y |  |
+| 3 | E12 | w1 | context | done at 7:50 pm | 7:50 pm, bench best | Y | Y | Y | Y | N | true but drops the overhead press best; Voice: the best is already in master's rules line (HomeLines.swift:248) |
+| 3 | E14 | w1 | context | done at 7:55 pm | 7:55 pm, a deadlift best | Y | Y | Y | Y | N | Voice: the best is already in master's rules line (HomeLines.swift:248) |
+| 3 | E19 | w1 | context | done at 8:00 pm | Done at 8:00 pm | Y | Y | Y | Y | N | Voice: the rules line reworded, no new fact; Voice: the best is already in master's rules line (HomeLines.swift:248) |
+
+Value against master's rules line (Research): 3 add a true fact (the gap, E2), 10 reworded (the best is already shown). Against the fixture's rules line: 12 and 1. Caught (not shown): E12 runs 1 and 2, "7:50 pm, bench and overhead bests", 33 characters (C3).
+
+### Memory, claude-sonnet-5-5
+
+| Run | Moment | Item | Slot | Rules | Claude | True | Plain | Not repeating | Tone | Voice | Why (fails) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | d9m2 | w1 | context | Push A done. Bench press best. | Push A done. Bench press best | Y | Y | Y | Y | N | Voice: the rules line minus its stop |
+| 1 | d15m2 | w1 | context | 7:40 pm, first in 4 days | First in 4 days | Y | Y | Y | Y | N | Voice: the rules line minus the time |
+| 1 | d20m2 | w1 | context | 7:40 pm, first in 5 days | First in 5 days | Y | Y | Y | Y | N | Voice: the rules line minus the time; Saturday, no "usual" (C15 trap passed) |
+| 2 | d9m2 | w1 | context | Push A done. Bench press best. | Bench press best | Y | Y | Y | Y | N | Voice: the rules line shortened |
+| 2 | d15m2 | w1 | context | 7:40 pm, first in 4 days | First in 4 days | Y | Y | Y | Y | N | Voice: the rules line minus the time |
+| 2 | d20m2 | w1 | context | 7:40 pm, first in 5 days | First in 5 days | Y | Y | Y | Y | N | Voice: the rules line minus the time |
+| 3 | d9m2 | w1 | context | Push A done. Bench press best. | Bench press best | Y | Y | Y | Y | N | Voice: the rules line shortened |
+| 3 | d15m2 | w1 | context | 7:40 pm, first in 4 days | First in 4 days | Y | Y | Y | Y | N | Voice: the rules line minus the time |
+| 3 | d20m2 | w1 | context | 7:40 pm, first in 5 days | First in 5 days | Y | Y | Y | Y | N | Voice: the rules line minus the time |
+
+Value: 0 add a fact, 9 reworded. d16m2, d17m2 and d18m2 came back equal to their rules lines in all 3 runs (9 lines, not shown).
