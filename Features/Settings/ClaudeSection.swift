@@ -333,7 +333,8 @@ struct ClaudeSection: View {
         Task { @MainActor in
             let result = await checker.test(pasted: key)
             checking = false
-            model.soul.handle(.claudeDone)
+            let passed = result.outcome == .works || result.outcome == .capReached
+            model.soul.handle(passed ? .claudeDone : .claudeFailed)
             if let previous, result.outcome != .works, result.outcome != .capReached {
                 // A new key that failed: the old one goes back and keeps working (QA C3, C4).
                 if keys.save(previous) {

@@ -99,6 +99,10 @@ struct BottomChrome: View {
                 }
             }
         }
+        // An ask beside her owns the page while it waits (tess-motion.md §8, §15).
+        .onChange(of: setAsk != nil || liftAsk != nil) { _, waiting in
+            model.soul.handle(waiting ? .askWaiting : .askAnswered)
+        }
         // A set ask belongs to the workout: it goes when the workout ends (QA C3).
         .onChange(of: model.session == nil) { _, ended in
             if ended {

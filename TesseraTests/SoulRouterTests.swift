@@ -87,6 +87,50 @@ struct SoulRouterTests {
         #expect(!soul.isPinned && soul.mode == .thinking)
     }
 
+    @Test func theWorkoutCornerRestsAtIdleAtNight() async throws {
+        var calendar = Calendar.current
+        calendar.timeZone = .current
+        let late = calendar.date(bySettingHour: 23, minute: 30, second: 0, of: .now) ?? .now
+        let soul = SoulRouter(page: .live, clock: { late })
+        soul.handle(.setLogged)
+        try await Task.sleep(for: .seconds(2.0))
+        #expect(soul.mode == .idle)
+    }
+
+    @Test func theLensIsRefusedWhileAnAskWaits() {
+        let soul = router()
+        soul.handle(.askWaiting)
+        soul.handle(.lensHeld)
+        #expect(!soul.isPinned)
+        soul.handle(.askAnswered)
+        soul.handle(.lensHeld)
+        #expect(soul.isPinned)
+    }
+
+    @Test func aLiveAskQueuesBehindDone() async throws {
+        let soul = SoulRouter(page: .live)
+        soul.handle(.setLogged)
+        soul.handle(.liveAsk)
+        #expect(soul.mode == .done)
+        try await Task.sleep(for: .seconds(2.0))
+        #expect(soul.mode == .thinking)
+    }
+
+    @Test func herLineNeverCutsHisVoice() async throws {
+        let soul = router()
+        soul.handle(.lineShown)
+        soul.handle(.speak(hold: true))
+        try await Task.sleep(for: .seconds(4.3))
+        #expect(soul.mode == .listening)
+    }
+
+    @Test func goHomeClosesTheSurface() {
+        let soul = router()
+        soul.handle(.tessOpened)
+        soul.handle(.goHome(reduceMotion: true))
+        #expect(!soul.isSurfaceOpen && soul.mode == .done)
+    }
+
     /// The one-wire gate: no view sets her mode (`tessMode =` only inside the router).
     @Test func noViewSetsHerMode() throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()

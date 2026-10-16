@@ -23,8 +23,10 @@ enum SoulEvent: Equatable {
     case speak(hold: Bool), heardNothing
     /// The workout (page .live).
     case setLogged, newBest, liveAsk, liveAnswered, swapped, topSetAccepted, workoutGathered
-    /// The double tap: Done, the flood, idle after 900 ms.
-    case goHome
+    /// The double tap: Done, the flood, idle after it (about 1.1 s under Reduce Motion).
+    case goHome(reduceMotion: Bool)
+    /// One-ask (a set-count or a dated-lift ask beside her): it owns the page while it waits.
+    case askWaiting, askAnswered
     /// The glass-tab lens (§15): she is pinned to the dock while it is held.
     case lensHeld, lensReleased
     case backgrounded, foregrounded
@@ -46,6 +48,8 @@ final class SoulRouter {
     private(set) var isPinned = false
     /// The brighten after a local capture (900 ms), drawn by the chrome.
     private(set) var isBright = false
+    /// An ask is waiting beside her (§8): no lens, no roam.
+    private(set) var isAskWaiting = false
     /// The capture surface is open (her line's 4 s doesn't return her to rest under it).
     private(set) var isSurfaceOpen = false
     /// How many Done one-shots have played (a second Done inside one becomes a beat when the beat lands).
@@ -61,18 +65,24 @@ final class SoulRouter {
         self.clock = clock
     }
 
-    /// Idle, or resting from 23:00 to 06:00 (as built).
+    /// Idle, or resting from 23:00 to 06:00 (as built). The workout's corner always rests at idle.
     var rest: TessSoul.Mode {
+        guard page == .home else { return .idle }
         let hour = Calendar.current.component(.hour, from: clock())
         return hour >= 23 || hour < 6 ? .resting : .idle
     }
 
+    /// The whole contract is this one switch (§14's table): one case per event, read top to bottom.
+    // swiftlint:disable:next cyclomatic_complexity
     func handle(_ event: SoulEvent) {
         switch event {
         case .closed, .heardNothing:
             isSurfaceOpen = false
+            // A Done in flight plays out and returns to rest itself (rule 4).
+            guard !isDoneInFlight else { return }
             settle(rest)
         case .appeared, .returnLine, .claudeFailed, .foregrounded:
+            guard !isDoneInFlight else { return }
             settle(rest)
         case .committed:
             // At rest she's small: Done would multiply her dabs into mud, so she brightens instead (as built).
@@ -83,7 +93,9 @@ final class SoulRouter {
             lineTimer?.cancel()
             lineTimer = Task { @MainActor [weak self] in
                 try? await Task.sleep(for: .seconds(4))
-                guard !Task.isCancelled, let self, !isSurfaceOpen, mode != .done else { return }
+                // Never under his voice or her thinking (rules 1, 2 and 6), nor over a Done.
+                guard !Task.isCancelled, let self, !isSurfaceOpen,
+                      mode != .done, mode != .listening, mode != .thinking else { return }
                 settle(rest)
             }
         case .tessOpened:
@@ -96,6 +108,8 @@ final class SoulRouter {
             guard mode == .listening || mode == .idle || mode == .resting else { return }
             settle(isEmpty ? .idle : .listening)
         case .sent, .heard, .liveAsk:
+            // Thinking queues behind a Done in flight (rule 4).
+            guard !isDoneInFlight else { return queue(.thinking) }
             settle(.thinking)
         case .askClaude:
             // `working` arrives with item 2 of the build sheet; until then the long asks think.
@@ -111,15 +125,28 @@ final class SoulRouter {
                 guard !Task.isCancelled else { return }
                 self?.playDone()
             }
-        case .goHome:
-            playDone(then: 0.9 + 0.54)
+        case let .goHome(reduceMotion):
+            isSurfaceOpen = false
+            // The flood (480 ms, 150 under Reduce Motion), its 60 ms settle, then 900 ms to idle (as built).
+            playDone(then: (reduceMotion ? 0.15 : 0.48) + 0.06 + 0.9)
+        case .askWaiting:
+            isAskWaiting = true
+        case .askAnswered:
+            isAskWaiting = false
         case .lensHeld:
+            // Refused while she listens or an ask waits (§15).
+            guard !refusesLens else { return }
             isPinned = true
         case .lensReleased:
             isPinned = false
         case .backgrounded:
             timer?.cancel()
         }
+    }
+
+    /// The glass-tab lens can't form while she listens, the surface is open or an ask waits (§15).
+    var refusesLens: Bool {
+        mode == .listening || isSurfaceOpen || isAskWaiting
     }
 
     private func brighten() {

@@ -255,7 +255,7 @@ struct HomeSpatialView: View {
 
     private func holdLens(_ spot: Double) {
         // Listening or an ask owns the page: the hold is refused (tess-motion.md §15); a tap still works.
-        guard model.tessMode != .listening, !model.isCommandExpanded else { return }
+        guard !model.soul.refusesLens, !model.isCommandExpanded else { return }
         model.soul.handle(.lensHeld)
         lensFrom = Int(progress.rounded())
         lensSlid = false
