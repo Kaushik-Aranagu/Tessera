@@ -52,6 +52,8 @@ final class SpeechListener {
     static let firstWord: Duration = .seconds(5)
     static let limit: Duration = .seconds(60)
 
+    private enum ListenError: Error { case noInput }
+
     private let engine = AVAudioEngine()
     private var request: SFSpeechAudioBufferRecognitionRequest?
     private var task: SFSpeechRecognitionTask?
@@ -74,7 +76,8 @@ final class SpeechListener {
             return .micOff
         }
         let speech = await withCheckedContinuation { continuation in
-            SFSpeechRecognizer.requestAuthorization { continuation.resume(returning: $0) }
+            // Speech calls back on its own queue: the handler must not be main-actor (QA S2).
+            SFSpeechRecognizer.requestAuthorization { @Sendable status in continuation.resume(returning: status) }
         }
         guard speech == .authorized else {
             state = .idle
@@ -111,8 +114,11 @@ final class SpeechListener {
         heard = ""
         endedInSilence = false
         let session = AVAudioSession.sharedInstance()
-        try session.setCategory(.record, mode: .measurement, options: .duckOthers)
+        // .duckOthers needs playAndRecord (QA S1: with .record it throws, and every listen read as "busy").
+        try session.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker])
         try session.setActive(true, options: .notifyOthersOnDeactivation)
+        // Touching inputNode with no input route aborts inside Core Audio (seen on the Simulator), so ask first.
+        guard session.isInputAvailable else { throw ListenError.noInput }
         let request = SFSpeechAudioBufferRecognitionRequest()
         request.shouldReportPartialResults = true
         request.requiresOnDeviceRecognition = true
@@ -120,15 +126,15 @@ final class SpeechListener {
         self.request = request
         let input = engine.inputNode
         let format = input.outputFormat(forBus: 0)
-        input.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
-            request.append(buffer)
-            let rms = Self.rms(buffer)
-            Task { @MainActor in self?.level = rms }
-        }
+        input.installTap(onBus: 0, bufferSize: 1024, format: format,
+                         block: Self.tap(appendingTo: request) { [weak self] rms in
+                             Task { @MainActor in self?.level = rms }
+                         })
         engine.prepare()
         try engine.start()
         state = .listening
-        task = recognizer.recognitionTask(with: request) { [weak self] result, error in
+        task = recognizer.recognitionTask(with: request) { @Sendable [weak self] result, error in
+            // Called on Speech's queue: take what's needed here, then hop to the main actor.
             let text = result?.bestTranscription.formattedString
             let done = error != nil || (result?.isFinal ?? false)
             Task { @MainActor in
@@ -182,6 +188,16 @@ final class SpeechListener {
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
+    /// The tap runs on the audio thread, so it's built outside the main actor (QA S2).
+    private nonisolated static func tap(appendingTo request: SFSpeechAudioBufferRecognitionRequest,
+                                        level: @escaping @Sendable (Double) -> Void) -> AVAudioNodeTapBlock
+    {
+        { buffer, _ in
+            request.append(buffer)
+            level(rms(buffer))
+        }
+    }
+
     private nonisolated static func rms(_ buffer: AVAudioPCMBuffer) -> Double {
         guard let data = buffer.floatChannelData?[0], buffer.frameLength > 0 else { return 0 }
         var sum: Float = 0
@@ -214,7 +230,8 @@ final class SpeechListener {
 /// What Tess does with a transcript before it's a capture: fillers squeezed out, spoken numbers made digits, and the
 /// whole phrase "undo" or "take that back" recognised as UNDO.
 enum SpokenPhrase {
-    static let fillers: Set<String> = ["um", "uh", "erm", "er", "hmm", "like"]
+    /// Not "like": "I'd like to" is a phrase (QA U1).
+    static let fillers: Set<String> = ["um", "uh", "erm", "er", "hmm"]
 
     static func clean(_ heard: String) -> String {
         let words = heard.split(separator: " ").filter {

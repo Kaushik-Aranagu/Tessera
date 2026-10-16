@@ -5,6 +5,7 @@ import Testing
 struct SpokenPhraseTests {
     @Test func fillersGoAndUndoIsRecognised() {
         #expect(SpokenPhrase.clean("um oat milk and uh eggs") == "oat milk and eggs")
+        #expect(SpokenPhrase.clean("I'd like to stretch") == "I'd like to stretch")
         #expect(SpokenPhrase.isUndo("Undo."))
         #expect(SpokenPhrase.isUndo("take that back"))
         #expect(!SpokenPhrase.isUndo("undo the bench set"))
