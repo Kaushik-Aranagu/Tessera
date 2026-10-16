@@ -36,3 +36,6 @@ A is the runner-up, the best page to read and the most "his words". B is the fal
 - Builder B and the Kitchen lead build the pick as sheet 10's replacement; the sheet gets a pointer line.
 - If C: cook mode (sheet 12) becomes C running; Design redraws the cover's timers and finish on this page.
 - If A: Core's parser change first; B needs no Core work.
+
+## His pick (Oct 16, 9:47 AM PT)
+C, deepened, with B's list as a peek: `recipe-clock.md` (Design 69) is the build sheet now. A is out.
