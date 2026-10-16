@@ -123,7 +123,7 @@ public final class TessCaptureEngine: TessCapturing {
             }
             // Snapped to what the kit can load: say so ("81 isn't loadable").
             if let saidWeight {
-                line += " \(TessVoice.number(saidWeight)) isn't loadable."
+                line += " \(String(format: "%g", saidWeight)) isn't loadable."
             }
             return (record, line)
         case let .task(title, startsAt):
