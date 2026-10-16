@@ -50,3 +50,8 @@ The rest hint is two lines, "DRAG RIGHT +15" / "FLING LEFT TO SKIP" (no " · ", 
 - **AND FINISH keeps a 10 s UNDO.** The finish view shows UNDO under Tess's line; it takes back the last set and the finish together, in one op. Tess: "**Push A, back on.**" The page returns to the last set resting, the stroke un-paints, the strip's segment steps back one set.
 - **Last time is said once.** At set 1 the detail line carries it ("last time 82.5 × 8"). Progression's reason is Tess's line only when it differs from last time ("Bench press is ready for 85 today."); when the target equals last time she says nothing (the first three times still get "Hold me to tell me a set."). The context line never carries a weight.
 - **Haptics after 23:00:** the rule covers moments the app raises; his own timers ring at any hour, haptic included (Product CL9).
+
+## Addendum, Oct 16: the finish line and a line before a best (#381 re-pass at 8758235)
+- **The finish line counts bests:** "5 of 5 exercises, 16 sets, 2 bests." Never "records" (Product 8e55cd9, `copy-pass.md` rule 2). One best: "1 best."
+- **Nothing is said before a set.** Tess's band never carries a would-be best ("Best 8-rep bench press yet, if it goes" was a cut line with an ellipsis at set 3). The detail line says what it always says, and the best is said once it is logged: "Set 3 logged. 82.5 × 8." with the best line under it as built.
+- **Said once, for the follow-up PR:** with the detail line carrying last time, the reps ghost under the reps shows the target's neighbour, not "last 7"; an exercise with no history ("first time on this one") shows no "last 12"; "Bench Press is ready for 82.5 today." is not said when the target equals last time. A skipped rest reads "Rest skipped. Set 3 is up."
