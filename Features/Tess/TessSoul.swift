@@ -42,6 +42,8 @@ struct TessSoul: View {
     /// Two ink dots (tess-motion.md §1): a setting, off by default.
     var eyes = false
     var gaze: SoulGaze = .ahead
+    /// When she began waking with him (idea 2, `SoulRouter.wake`).
+    var wake: Date?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
@@ -132,10 +134,7 @@ struct TessSoul: View {
 
     /// The frame at `date`, and the twelve lights when she works (nil draws the six dabs as built).
     private func frame(at date: Date) -> (frame: SoulFrame, lights: [SoulLight]?) {
-        let base = reduceMotion
-            ? SoulFrame.sample(mode, time: 0, elapsed: 0, still: true)
-            : SoulBlend.frame(layers, at: date, loops: loopsOneShots)
-            ?? SoulFrame.sample(mode, time: date.timeIntervalSinceReferenceDate, elapsed: 0)
+        let base = baseFrame(at: date)
         guard let work else { return (base, nil) }
         let sinceSplit = date.timeIntervalSince(work.split)
         let sinceGather = work.gather.map { date.timeIntervalSince($0) }
@@ -151,6 +150,16 @@ struct TessSoul: View {
         return (graded, lights)
     }
 
+    /// The mode's frame (blended), with the wake's stretch on it (none under Reduce Motion or Low Power).
+    private func baseFrame(at date: Date) -> SoulFrame {
+        let base = reduceMotion
+            ? SoulFrame.sample(mode, time: 0, elapsed: 0, still: true)
+            : SoulBlend.frame(layers, at: date, loops: loopsOneShots)
+            ?? SoulFrame.sample(mode, time: date.timeIntervalSinceReferenceDate, elapsed: 0)
+        guard let wake, !reduceMotion, !lowPower else { return base }
+        return SoulWake.stretched(base, amount: SoulWake.stretch(at: date.timeIntervalSince(wake)))
+    }
+
     /// The eyes ride the same frame as the dabs. Their own timeline keeps the blink under Reduce Motion (30 fps),
     /// when the soul's is paused.
     private func eyesLayer(palette _: SoulPalette, slow: Bool) -> some View {
@@ -158,12 +167,11 @@ struct TessSoul: View {
         let look = onWorkoutGround ? ThemeStore.shared.workoutLook : ThemeStore.shared.paintLook
         let dark = Color(hex: look.isDark ? look.ground : look.ink)
         return TimelineView(.animation(minimumInterval: reduceMotion || slow ? 1 / 30 : 1 / 60)) { context in
-            let frame = reduceMotion
-                ? SoulFrame.sample(mode, time: 0, elapsed: 0, still: true)
-                : SoulBlend.frame(layers, at: context.date, loops: loopsOneShots)
-                ?? SoulFrame.sample(mode, time: context.date.timeIntervalSinceReferenceDate, elapsed: 0)
+            let frame = baseFrame(at: context.date)
+            // Waking: shut, then open, then one blink (a 200 ms crossfade under Reduce Motion or Low Power).
+            let lid = wake.map { SoulWake.lid(at: context.date.timeIntervalSince($0), quiet: reduceMotion || lowPower) }
             SoulEyes(frame: frame, time: context.date.timeIntervalSinceReferenceDate, gaze: gaze, color: dark,
-                     still: reduceMotion)
+                     still: reduceMotion, lid: lid)
         }
         .opacity(eyesShown ? 1 : 0)
     }

@@ -13,6 +13,7 @@ struct NowPage: View {
     @State private var finishes = 0
     /// The current Now, passed back to the ranker so it holds against equal challengers (no flicker).
     @State private var incumbent: UUID?
+    private let planModel = HomePlanModel.shared
 
     var body: some View {
         let _ = model.revision
@@ -29,6 +30,9 @@ struct NowPage: View {
         // A session planned today is the hero (Product on L3), so it never repeats in Next (41.7).
         let heroWorkout = top?.item.kind == .rest && facts.rest(next: top?.item.object, now: now) == nil
             ? facts.plannedSession(on: now) : nil
+        // The plan takes Now only in its place (§6): never over a running workout or a timed task within 15 min.
+        let planNow = planModel.isShowing && model.session == nil && ledger.isEmpty
+            && (!(current.map { $0.start.timeIntervalSince(now) < 15 * 60 } ?? false) || Self.pullsPlan)
 
         VStack(alignment: .leading, spacing: 0) {
             // The only day word on Home (41.4): the painted stroke lives one tap down now.
@@ -62,7 +66,9 @@ struct NowPage: View {
                         LineHero(line: HomeLines.line(for: fact, now: now)) {
                             // An empty routine has nothing to start, so no key (Builder A's canStart). The key rests
                             // in ink like the planned routine's: colour comes with the moment (Design on #366).
-                            if model.canStart(next) {
+                            if planNow {
+                                planKey
+                            } else if model.canStart(next) {
                                 PaintKey(paint: Theme.Colors.ink, isTap: true, action: { model.startRoutine(next) },
                                          label: { _ in Text("Start \(next.title)").textRole(.labelStrong) })
                                     .accessibilityLabel("Start \(next.title)")
@@ -81,6 +87,8 @@ struct NowPage: View {
                                      .accessibilityLabel("Start \(model.store.displayTitle(of: workout))")
                         }
                     }
+                } else if planNow {
+                    planHero(now: now)
                 } else {
                     hero(current, now: now, facts: facts)
                 }
@@ -94,17 +102,26 @@ struct NowPage: View {
                     .transition(.offset(y: 10).combined(with: .opacity))
             }
 
-            let queue = QueueEntry.split(model: model, schedule: schedule, current: current, now: now)
-            // The running or paused thing is the hero too, and never repeats in Next (41.7).
-            let heroID = model.processes.running()?.subject?.id ?? ledger.first?.subject?.id ?? heroWorkout?.id
-            QueueWindow(next: queue.next.filter { $0.id != heroID }, later: queue.later.filter { $0.id != heroID })
-                .entrance(4)
+            if planNow {
+                PlanRows(model: planModel)
+                    .entrance(4)
+            } else {
+                let queue = QueueEntry.split(model: model, schedule: schedule, current: current, now: now)
+                // The running or paused thing is the hero too, and never repeats in Next (41.7).
+                let heroID = model.processes.running()?.subject?.id ?? ledger.first?.subject?.id ?? heroWorkout?.id
+                QueueWindow(next: queue.next.filter { $0.id != heroID }, later: queue.later.filter { $0.id != heroID })
+                    .entrance(4)
+            }
 
             Spacer(minLength: 0)
         }
         .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: finishes)
         .onChange(of: top?.id, initial: true) { _, id in
             incumbent = id
+        }
+        // The offer is read when the data or the clock moves, never on its own timer.
+        .onChange(of: model.revision, initial: true) { _, _ in
+            planModel.refresh(model: model, now: AppClock.now, calendar: .current, restDay: top?.item.kind == .rest)
         }
     }
 
@@ -129,14 +146,75 @@ struct NowPage: View {
 
     // MARK: Hero
 
+    // MARK: Plan my day
+
+    /// `-planNow` (simulator only): the plan takes Now even with a timed task close, as a pull would; the demo day
+    /// always has one running, so recordings and UI tests need it.
+    static var pullsPlan: Bool {
+        #if DEBUG
+            LaunchFlags.has("-planNow")
+        #else
+            false
+        #endif
+    }
+
+    /// The day as the hero ("Three tasks, Push A at 6"), the time above it, START WITH under it. Swipe it left to
+    /// skip the whole plan: nothing written, nothing said.
+    private func planHero(now _: Date) -> some View {
+        let calendar = Calendar.current
+        let forms = PlanWords.heroForms(tasks: planModel.rows.count, workout: planModel.workout, calendar: calendar)
+        return VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+            if let context = PlanWords.context(first: planModel.rows.first, calendar: calendar) {
+                Text(context)
+                    .font(Theme.voice(size: 21))
+                    .foregroundStyle(Theme.Colors.context)
+                    .entrance(1)
+            }
+            PlanHeroText(forms: forms)
+                .siblingParallax()
+                .entrance(2, hero: true)
+                .gesture(RowPressDrag(isEnabled: true, began: {}, changed: { _ in }, ended: { distance in
+                    if distance <= -120 {
+                        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { planModel.skipPlan() }
+                    }
+                }, cancelled: {}))
+                .accessibilityAction(named: "Skip the plan") { planModel.skipPlan() }
+            planKey
+                .entrance(3)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// START WITH and the first item, as a hold: it keeps the plan and never starts anything.
+    @ViewBuilder private var planKey: some View {
+        if let first = planModel.first {
+            PaintKey(paint: Theme.Colors.ink, duration: 0.7, hint: "Keeps the plan", action: {
+                withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+                    planModel.keepPlan(model: model)
+                }
+            }, label: { _ in
+                Text("Start with \(first.title)")
+                    .textRole(.labelStrong)
+                    .fixedSize(horizontal: false, vertical: true)
+            })
+            .accessibilityLabel("Start with \(first.title)")
+        }
+    }
+
     /// The workout's progress for the key's ink line (41.5): the share of its sets logged, nil before any.
     private func progress(of process: ProcessSnapshot) -> Double? {
         guard let workout = process.subject else { return nil }
         let entries = workout.orderedChildren.filter { !$0.isDeleted }
-        let planned = entries.reduce(0) { $0 + max(Int(model.store.number("sets", of: $1) ?? 3), 1) }
+        let planned = Self.plannedSets(entries, store: model.store)
         let done = entries.reduce(0) { $0 + $1.orderedChildren.count { !$0.isDeleted } }
         guard planned > 0, done > 0 else { return nil }
         return min(Double(done) / Double(planned), 1)
+    }
+
+    /// The sets a workout plans: each entry's "targetSets" (where the plan and the demo write it), 3 when an entry
+    /// has none (as WorkoutSession counts it), at least 1 each.
+    static func plannedSets(_ entries: [ObjectRecord], store: ObjectStore) -> Int {
+        entries.reduce(0) { $0 + max(Int(store.number("targetSets", of: $1) ?? 3), 1) }
     }
 
     @ViewBuilder
@@ -145,7 +223,7 @@ struct NowPage: View {
             let line = HomeLines.line(for: facts.fact(task: record, startsAt: task.start), now: now)
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
                 LineHero(line: line, opens: .object(task.id)) {
-                    PaintKey(duration: 0.7, action: { finish(task) }, label: { _ in
+                    PaintKey(duration: 0.7, hint: "Finishes the task", action: { finish(task) }, label: { _ in
                         Text("Finish").textRole(.labelStrong)
                     }, meta: {
                         TimelineView(.periodic(from: .now, by: 30)) { context in
@@ -155,7 +233,6 @@ struct NowPage: View {
                         }
                     })
                     .accessibilityLabel("Finish \(task.title)")
-                    .accessibilityHint("Touch and hold")
                 }
                 .id(task.id)
                 .transition(heroTransition)
@@ -456,7 +533,7 @@ private struct LedgerRow: View {
 }
 
 /// Cobalt words drying into ink: an ink copy is revealed over them left to right.
-private struct DryingWords: View {
+struct DryingWords: View {
     let text: Text
     let dried: Bool
 
@@ -470,5 +547,24 @@ private struct DryingWords: View {
                         }
                     }
             }
+    }
+}
+
+/// The plan's hero in the first form that fits: Hero 56 on one line, Title 44 on one line, then Title 44 wrapped
+/// (plan-home.md: "Three tasks, Push A at 6" sits on two lines of 44 without the calendar). Static children only
+/// (`ViewThatFits` traps on a `ForEach`).
+private struct PlanHeroText: View {
+    let forms: [String]
+
+    var body: some View {
+        let long = forms.first ?? ""
+        ViewThatFits(in: .horizontal) {
+            Text(long).textRole(.hero).lineLimit(1)
+            Text(long).textRole(.title).lineLimit(1)
+            Text(long).textRole(.title).fixedSize(horizontal: false, vertical: true)
+        }
+        .foregroundStyle(Theme.Colors.ink)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityAddTraits(.isHeader)
     }
 }

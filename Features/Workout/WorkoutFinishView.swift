@@ -1,4 +1,5 @@
 import SwiftUI
+import TesseraCore
 
 private typealias Paint = WorkoutPaint
 
@@ -93,8 +94,17 @@ struct WorkoutFinishView: View {
     }
 
     private var dayLine: String {
-        let day = endedAt.formatted(.dateTime.weekday(.wide))
-        return "\(day), \(Format.clock(startedAt)) to \(Format.clock(endedAt))"
+        Self.dayLine(startedAt: startedAt, endedAt: endedAt)
+    }
+
+    /// "Friday, 11:40 pm to 12:50 am": the weekday of his 4 am day at the start, times in the house clock.
+    static func dayLine(startedAt: Date, endedAt: Date, calendar: Calendar = .current) -> String {
+        let day = TesseraDay(calendar: calendar).day(of: startedAt)
+        var style = Date.FormatStyle.dateTime.weekday(.wide)
+        style.calendar = calendar
+        style.timeZone = calendar.timeZone
+        let weekday = day.formatted(style)
+        return "\(weekday), \(HouseClock.time(startedAt, calendar: calendar)) to \(HouseClock.time(endedAt, calendar: calendar))"
     }
 
     private var volume: String {

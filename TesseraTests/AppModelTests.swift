@@ -54,7 +54,8 @@ struct AppModelTests {
 
         // The 18 muscles come with Core's exercise library now (the demo used to make its own four).
         #expect(model.objects(of: .muscle).count == 18)
-        #expect(model.objects(of: .task).count == 8)
+        // Eight timed tasks, plus three undated ones for Plan my day to place.
+        #expect(model.objects(of: .task).count == 11)
         let schedule = model.schedule()
         #expect(schedule.count == 9)
         #expect(model.currentTask()?.title == "Groceries for the week")
@@ -100,10 +101,25 @@ struct AppModelTests {
         DemoData.prepare(model)
         let interpreter = CommandInterpreter(model: model)
 
-        #expect(interpreter.run("log bench 82.5x8").hasPrefix("Logged bench press 82.5 × 8"))
+        #expect(interpreter.run("log bench 82.5x8").hasPrefix("Bench press 82.5 × 8, logged."))
         #expect(model.session != nil)
         #expect(interpreter.run("what's my bench best?").contains("e1RM"))
         #expect(interpreter.run("stretch at 21:00").hasPrefix("Drying"))
         #expect(model.pendingCapture != nil)
+    }
+
+    @Test func commandInterpreterNeverTitlesATaskWithPrivateWords() {
+        // Board 0ah (Research AU): a "?" line skips Tess and lands here; walled text is never a task title.
+        let model = AppModel(context: container.mainContext)
+        let interpreter = CommandInterpreter(model: model)
+        #expect(interpreter.run("what's the wifi password?") == "It's in your private notes.")
+        #expect(interpreter.run("did I pay rent 2100?") == "That stays on this phone.")
+        #expect(interpreter.run("door code 4417") == "Private note, kept.")
+        // Built at run time and plainly fake: nothing key-shaped is committed (#487).
+        let key = ["sk", "ant", "TEST"].joined(separator: "-") + "-FAKE"
+        #expect(interpreter.run(key) == claudeKeyLine)
+        let titles = model.store.context.objects.values.map(\.title)
+        #expect(!titles.contains { $0.contains("4417") || $0.contains("password") || $0.contains("2100") })
+        #expect(!titles.contains { $0.contains("sk-ant") } && model.pendingCapture == nil)
     }
 }

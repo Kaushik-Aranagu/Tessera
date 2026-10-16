@@ -82,7 +82,11 @@ struct TesseraApp: App {
                 if phase == .background {
                     BackupKeeper.runDaily(model.context)
                 }
+                if phase == .background {
+                    model.soul.handle(.backgrounded)
+                }
                 if phase == .active {
+                    model.soul.handle(.foregrounded(underLive: model.isWorkoutPresented))
                     model.tidyProcesses()
                     // Siri or the Lock Screen may have taken a set back while we were away.
                     model.session?.refreshAfterExternalWrite()

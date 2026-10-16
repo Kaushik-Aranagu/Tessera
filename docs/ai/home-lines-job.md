@@ -55,7 +55,29 @@ once on a Saturday). So the job narrows before anything ships:
   restated time of day.
 - **The `fits` rule in section 5 is required, not optional:** AI-5's Saturday slip is exactly a "usual" with no
   matching weekday. The eval mirrors it as C15.
-- "Claude Home wording" stays off until the `--job done` rerun passes and Kaushik reads his 10 lines.
+- Kaushik read the rerun and chose Sonnet on Home for this job (section 2b).
+
+## 2b. Kaushik's decision (Oct 16, 2026, 2:41 PM PT): Sonnet on Home
+
+He chose "Sonnet on Home" over the recommended "App lines + gap" after reading the rerun (`home-lines-eval-results.md`, "Rerun verdict"). What ships:
+
+- **Job done only.** A finished workout with a best, or one at least 4 days after the same routine. Sonnet 5.5, prompt `SYSTEM_DONE` from `scripts/ai/home_lines_eval.py`. Every other Home moment stays on rules.
+- **Behind "Tess asks Claude"** and the monthly cap. The rules line shows first; Claude's differing words land wet and dry (section 6). A 6 s timeout, no retries, one call per finish, cached on the workout.
+- **The phone checks every line** (caps, C1 to C15 including C15 weekday_slip); a line that fails keeps the rules line.
+- **Gate:** Core's weekday check on "usual" (0t) merges first. Money and body facts are never packed (section 5).
+
+## 2c. The done job: what Core copies (settles Research BG, Oct 16 2:42 PM PT)
+
+Research's done-job fixtures (`docs/research/fixtures/home-done-job.md`, HD1 to HD24) found ten places where this page and the eval script disagree. For the done job, this section wins over sections 1 to 5 and over the script. The script is an eval harness. Core copies only its `SYSTEM_DONE` text, never its plumbing.
+
+1. **Cache by workout id only.** One call per finish, ever. The entry is keyed by the workout's id and holds the words that passed. There is no day key and no facts hash, and nothing asks again at 4 am, on the switch turning on or on FORGET (AI-4 ships with no memory). Sections 3 and 4 are for the old all-Home job and do not apply.
+2. **No `now` and no `partOfDay` in a done pack.** The pack holds the routine title, the finish clock word, the bests, `sinceLastDays` and the rules line. A "now" invites a wrong "yesterday", and part of day would change a hash that no longer exists.
+3. **6 s timeout, no retries.** The eval script's 30 s socket timeout and its retries exist only so an eval run survives a slow network. Core must not copy them. A timeout keeps the rules line, and that finish is never asked again.
+4. **C15 is a house-day check, on the phone.** Refuse any weekday name, or "yesterday", "today", "tonight" or "this morning", that doesn't match the finish's house day (4 am turnover, `HouseTime`). This replaces the eval's memory-based `weekday_slip`, which never fires with `memory: []`. "usual" and "as usual" stay banned outright. HD11 to HD13 test it.
+5. **Shape and tokens:** as section 1, with `{"lines": [{"item": "h1", "context"?, "detail"?}]}`, both slots optional, and max tokens 512. The script's `id` with both fields required, and its 1,500 tokens, are eval-only.
+6. **Step-aside at $40 holds.** `.lines` steps aside at 80% of the $50 month like every lines job, so done lines are the first thing to go quiet before the cap. That is intended.
+7. **C6 compares numbers, not digit strings.** Read each number in the line as a value ("8:05 pm" gives 8 and 5, "05" equals 5) and check it against `HomeLine.numbers`. A literal port of the script's string compare would refuse "8:05 pm, a bench best".
+8. **Field name:** `HomeFact.sinceLastDays`. `lastSameRoutineDaysAgo` in the script and `first-features.md` is the same fact under an older name.
 
 ## 3. Cache and key
 
@@ -127,8 +149,7 @@ through `onAsk` as `SoulEvent.askClaude(touched:)`.
 
 ## Where code and docs differ
 
-- **Home doesn't use the lens.** `HomeLines` is referenced only inside `TesseraCore`; `Features/Home/NowPage.swift`
-  builds its own `contextLine` and its own `ago`. Builder B moves Home onto `HomeLines` first, or there is no slot.
+- **Home uses the lens now.** `Features/Home/NowPage.swift` builds the done line from `HomeLines.line`, so the slot exists (Research BG, Oct 16).
 - **Model.** Architecture section 6 and 5.6 say Haiku; the ship list (Oct 16 reorder) says Sonnet. DECIDED (Product, decisions.md 11:45 AM PT Oct 16): Sonnet until AI-5 decides.
 - **Drying.** `home-lines.md` says the house 2 s and a crossfade under Reduce Motion; `Theme.Motion.dry` is a 1.1 s
   spring after 0.4 s and returns nil under Reduce Motion (the colour settles).

@@ -61,10 +61,10 @@ struct TimeWordsTests {
         let store = ObjectStore.open(inMemory: true)
         let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
         let calendar = Self.calendar
-        // 11:20 pm Tuesday, a task at 11 pm: tomorrow 11 pm is quiet, so Thursday 7 am.
+        // 11:20 pm Tuesday, a task at 11 pm: tomorrow 11 pm is quiet, so 7 am that Wednesday.
         let late = try engine.perform(CreateTask(title: "Stretch", startsAt: Self.at(13, 23)), by: .user).output
         try engine.perform(MoveTask(task: late.id, time: Self.at(13, 23, 20), calendar: calendar), by: .user)
-        #expect(store.value("startsAt", of: late)?.dateValue == Self.at(15, 7))
+        #expect(store.value("startsAt", of: late)?.dateValue == Self.at(14, 7))
         // 8 pm Tuesday, a task at 6:30 am Wednesday: Thursday 6:30 am is quiet, so Thursday 7 am, a full day on.
         let early = try engine.perform(CreateTask(title: "Run", startsAt: Self.at(14, 6, 30)), by: .user).output
         try engine.perform(MoveTask(task: early.id, time: Self.at(13, 20), calendar: calendar), by: .user)
@@ -88,5 +88,14 @@ struct TimeWordsTests {
             context: TessContext(now: Self.at(16, 1), calendar: Self.calendar)
         )
         #expect(early.line == "Call mom, Friday 7 am.", "\(early.line)")
+    }
+
+    @Test @MainActor func notNowOnUntimedTaskLateSnapsToSeven() throws {
+        // Research evening-quiet EQ26: "Not now" on an untimed task at Thu 11:20 pm lands Fri 7:00 am.
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        let task = try engine.perform(CreateTask(title: "Read"), by: .user).output
+        try engine.perform(MoveTask(task: task.id, time: Self.at(15, 23, 20), calendar: Self.calendar), by: .user)
+        #expect(store.value("startsAt", of: task)?.dateValue == Self.at(16, 7))
     }
 }

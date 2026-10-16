@@ -18,7 +18,7 @@ public struct TessGrammar {
         case note(body: String, on: Date? = nil)
         /// A line with a secret word: a private note on the phone, never the model, Claude, memory or the miss log.
         /// `remembered` when he said "remember …" (Tess adds "I don't keep passwords.").
-        case privateNote(body: String, remembered: Bool)
+        case privateNote(body: String, remembered: Bool, on: Date? = nil)
         /// Kitchen: "buy milk", "milk, eggs, 2 lemons".
         case groceries(lines: [String])
         /// "cook carbonara" (now, `on` nil) or "cook carbonara thu" (a dated task linking the recipe).
@@ -114,17 +114,29 @@ public struct TessGrammar {
             return nil
         }
         // Money said ("spent $23.47 at trader joe's sat") is never a task or a list until Money exists: the miss line.
-        if Self.isMoney(phrase), phrase.lowercased().firstMatch(of: /^(?:spent|spend|paid|pay|cost|bought)\b/) != nil
+        if Self.isMoney(phrase), phrase.lowercased().firstMatch(of: /^(?:spent|spend|paid|pay|cost)\b/) != nil
             || phrase.firstMatch(of: /^[$£€₹]\s?\d/) != nil
         {
-            return nil
+            // Something to do with a day wins over its amount (12:13 PM PT): "pay rent 1800 friday" is a task, said
+            // back without its words. Money said in the past with a day is a private note on that day ("paid rent
+            // 2100 fri", Product 1:15 PM PT); with no day it stays the miss line.
+            return Self.isSomethingToDo(phrase) ? parseTask(phrase, context: context) : parsePrivateLog(
+                phrase,
+                context: context
+            )
         }
         // A bare set with nothing in focus ("80 for 8" while shopping) is never an item or a task: the model reads it.
         if text.firstMatch(of: /^\d+(?:\.\d+)?(?: ?kg| ?lb)?(?: ?x ?| for | by )\d+(?: reps)?$/) != nil {
             return nil
         }
-        // A past-tense log with a day ("watered plants sat") is a note dated that day, never a future task.
-        if let log = parsePastLog(phrase, context: context) {
+        // A body fact is private before it's a dated log (Product P14/P15a, 12:30 PM PT): "slept 6 hours last night",
+        // "took advil 400mg yesterday", "take advil 400mg at 9 pm". A past-tense log with a day ("watered plants
+        // sat") is a note dated that day, never a future task.
+        // A dated past log of money is private too ("bought a tv for 800 sat", QA F2 on #534).
+        let walledLog = Self.isSomethingToDo(phrase) ? nil
+            : parseBodyFact(phrase) ??
+            (PrivateFacts.isMoneyShaped(phrase) ? parsePrivateLog(phrase, context: context) : nil)
+        if let log = walledLog ?? parsePastLog(phrase, context: context) {
             return log
         }
         // After lifts, so "bench 80x8, 82.5x6" stays a lift.
@@ -138,22 +150,14 @@ public struct TessGrammar {
         if phrase.firstMatch(of: Self.rescheduleShape) != nil {
             return nil
         }
-        return parseTask(phrase, context: context) ?? parseBodyFact(phrase)
+        return parseTaskOrBodyFact(phrase, context: context)
     }
 
-    /// "remember my rent is 2100": a sum of money is never kept, and never leaves the phone (v9 W10).
-    func parseRememberedMoney(_ phrase: String) -> Parse? {
-        guard let match = phrase.firstMatch(of: /^(?i)\s*remember(?:\s+that)?\s+(.+)$/),
-              PrivateFacts.isMoneyShaped(String(match.1)) else { return nil }
-        return .ask(TessMemoryScreen.Refusal.money("").line ?? "I don't keep sums of money.")
-    }
-
-    /// A body or health fact nothing else read stays on the phone as a private note (Product on QA L1, Research 138
-    /// W8): "knee hurts", "slept badly", "body fat 18%".
-    func parseBodyFact(_ phrase: String) -> Parse? {
-        guard PrivateFacts.isBodyShaped(phrase) else { return nil }
-        let body = phrase.trimmingCharacters(in: .whitespacesAndNewlines)
-        return .privateNote(body: body.prefix(1).uppercased() + body.dropFirst(), remembered: false)
+    /// A body fact with a day ("headache since tuesday") is a private note, not a task (QA R1 on #471), unless it
+    /// opens with something to do: "call the doctor about my knee thu" and "refill lexapro 10mg fri" stay tasks.
+    func parseTaskOrBodyFact(_ phrase: String, context: TessContext) -> Parse? {
+        Self.isSomethingToDo(phrase) ? parseTask(phrase, context: context) ?? parseBodyFact(phrase)
+            : parseBodyFact(phrase) ?? parseTask(phrase, context: context)
     }
 
     /// The live workout's rules for a phrase with an exercise in focus; nil when they don't apply (the other rules
@@ -319,6 +323,13 @@ public struct TessGrammar {
     }
 
     /// "watered plants sat", "saw mum yesterday": a note dated that day (Product, 2026-10-15).
+    /// A past-tense log of money, dated, kept private: "paid rent 2100 fri".
+    func parsePrivateLog(_ phrase: String, context: TessContext) -> Parse? {
+        guard case let .note(_, on)? = parsePastLog(phrase, context: context) else { return nil }
+        let body = phrase.trimmingCharacters(in: .whitespacesAndNewlines)
+        return .privateNote(body: body.prefix(1).uppercased() + body.dropFirst(), remembered: false, on: on)
+    }
+
     private func parsePastLog(_ phrase: String, context: TessContext) -> Parse? {
         let words = phrase.split(separator: " ").map(String.init)
         guard let first = words.first, Self.isPastVerb(first),
@@ -510,7 +521,7 @@ public struct TessGrammar {
         return .privateNote(body: body.prefix(1).uppercased() + body.dropFirst(), remembered: remembered)
     }
 
-    private func parseTask(_ phrase: String, context: TessContext) -> Parse? {
+    func parseTask(_ phrase: String, context: TessContext) -> Parse? {
         var words = phrase.split(separator: " ").map(String.init)
         var explicit = false
         if let first = words.first?.lowercased().trimmingCharacters(in: .punctuationCharacters),

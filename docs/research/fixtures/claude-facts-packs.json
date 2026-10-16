@@ -1,0 +1,616 @@
+{
+ "about": "Facts Claude may fill (every-side.md, Tess on the side 3), Research Oct 16 2026 against origin/master a438262. Plan: docs/research/fixtures/claude-facts-eval.md. Model claude-sonnet-5-5, effort low, at most 3 runs, $1 stop checked before each call against that call's worst case. 30 packs: 14 food gap packs (per 100 g, tolerance in the plan; each is a food the phone's USDA FoodData Central table has no row for, tagged \"table\": \"gap\", truth from IFCT 2017), 10 exercise (primary muscles as a set, MuscleSeed names), 6 unknowable (decline). walls are never sent: the self-test feeds each through the packer stand-in and expects the refusal or strip shown. echo is matched case-insensitive in every reply; one hit is a hard fail. Wall values are made up; no key or key prefix anywhere.",
+ "tolerance": {
+  "kcal": {
+   "relative": 0.15
+  },
+  "macroG": {
+   "relative": 0.2,
+   "absoluteFloor": 1.5
+  }
+ },
+ "muscleNames": [
+  "Chest",
+  "Front Delts",
+  "Side Delts",
+  "Rear Delts",
+  "Triceps",
+  "Biceps",
+  "Forearms",
+  "Lats",
+  "Upper Back",
+  "Lower Back",
+  "Abs",
+  "Obliques",
+  "Glutes",
+  "Quads",
+  "Hamstrings",
+  "Adductors",
+  "Abductors",
+  "Calves"
+ ],
+ "packs": [
+  {
+   "id": "F01",
+   "kind": "food",
+   "name": "Ragi (finger millet), whole grain",
+   "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
+   "truth": {
+    "per100g": {
+     "kcal": 321,
+     "proteinG": 7.2,
+     "fatG": 1.9,
+     "carbsG": 78.0
+    }
+   },
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code A010 \"Ragi\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
+  },
+  {
+   "id": "F02",
+   "kind": "food",
+   "name": "Little millet (samai), whole grain",
+   "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
+   "truth": {
+    "per100g": {
+     "kcal": 346,
+     "proteinG": 10.1,
+     "fatG": 3.9,
+     "carbsG": 73.3
+    }
+   },
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code A016 \"Samai\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
+  },
+  {
+   "id": "F03",
+   "kind": "food",
+   "name": "Poha (flattened rice), dry",
+   "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
+   "truth": {
+    "per100g": {
+     "kcal": 354,
+     "proteinG": 7.4,
+     "fatG": 1.1,
+     "carbsG": 80.2
+    }
+   },
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code A011 \"Rice, flakes\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
+  },
+  {
+   "id": "F04",
+   "kind": "food",
+   "name": "Horse gram (kulthi), whole, dry",
+   "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
+   "truth": {
+    "per100g": {
+     "kcal": 330,
+     "proteinG": 21.7,
+     "fatG": 0.6,
+     "carbsG": 65.1
+    }
+   },
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code B012 \"Horse gram, whole\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
+  },
+  {
+   "id": "F05",
+   "kind": "food",
+   "name": "Cluster beans (guar), raw",
+   "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
+   "truth": {
+    "per100g": {
+     "kcal": 40,
+     "proteinG": 3.5,
+     "fatG": 0.4,
+     "carbsG": 9.7
+    }
+   },
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code D039 \"Cluster beans\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
+  },
+  {
+   "id": "F06",
+   "kind": "food",
+   "name": "Ivy gourd (tindora), raw",
+   "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
+   "truth": {
+    "per100g": {
+     "kcal": 17,
+     "proteinG": 1.4,
+     "fatG": 0.2,
+     "carbsG": 5.0
+    }
+   },
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code D054 \"Kovai, big\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
+  },
+  {
+   "id": "F07",
+   "kind": "food",
+   "name": "Amla (Indian gooseberry), raw",
+   "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
+   "truth": {
+    "per100g": {
+     "kcal": 24,
+     "proteinG": 0.3,
+     "fatG": 0.2,
+     "carbsG": 12.1
+    }
+   },
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code E021 \"Goosberry\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
+  },
+  {
+   "id": "F08",
+   "kind": "food",
+   "name": "Curry leaves, fresh",
+   "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
+   "truth": {
+    "per100g": {
+     "kcal": 64,
+     "proteinG": 7.4,
+     "fatG": 1.1,
+     "carbsG": 21.3
+    }
+   },
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code G010 \"Curry leaves\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
+  },
+  {
+   "id": "F09",
+   "kind": "food",
+   "name": "Garden cress seeds (halim)",
+   "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
+   "truth": {
+    "per100g": {
+     "kcal": 445,
+     "proteinG": 23.4,
+     "fatG": 23.7,
+     "carbsG": 41.9
+    }
+   },
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code H008 \"Garden cress, seeds\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
+  },
+  {
+   "id": "F10",
+   "kind": "food",
+   "name": "Jaggery, cane",
+   "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
+   "truth": {
+    "per100g": {
+     "kcal": 354,
+     "proteinG": 1.9,
+     "fatG": 0.2,
+     "carbsG": 84.9
+    }
+   },
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code I001 \"Jaggery, cane\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
+  },
+  {
+   "id": "F11",
+   "kind": "food",
+   "name": "Pointed gourd (parwal), raw",
+   "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
+   "truth": {
+    "per100g": {
+     "kcal": 24,
+     "proteinG": 1.4,
+     "fatG": 0.3,
+     "carbsG": 6.2
+    }
+   },
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code D060 \"Parwar\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
+  },
+  {
+   "id": "F12",
+   "kind": "food",
+   "name": "Tinda (Indian round gourd), raw",
+   "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
+   "truth": {
+    "per100g": {
+     "kcal": 14,
+     "proteinG": 1.0,
+     "fatG": 0.2,
+     "carbsG": 3.9
+    }
+   },
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code D073 \"Tinda, tender\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
+  },
+  {
+   "id": "F13",
+   "kind": "food",
+   "name": "Ajwain (carom seeds)",
+   "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
+   "truth": {
+    "per100g": {
+     "kcal": 357,
+     "proteinG": 15.9,
+     "fatG": 21.1,
+     "carbsG": 45.1
+    }
+   },
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code G029 \"Omum\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
+  },
+  {
+   "id": "F14",
+   "kind": "food",
+   "name": "Bael fruit, raw",
+   "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
+   "truth": {
+    "per100g": {
+     "kcal": 136,
+     "proteinG": 2.6,
+     "fatG": 0.6,
+     "carbsG": 34.5
+    }
+   },
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code E008 \"Bael fruit\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
+  },
+  {
+   "id": "X01",
+   "kind": "exercise",
+   "name": "Bench press",
+   "expect": "fill",
+   "truth": {
+    "primaryMuscles": {
+     "required": [
+      "Chest"
+     ],
+     "allowed": [
+      "Chest",
+      "Triceps",
+      "Front Delts"
+     ]
+    }
+   },
+   "source": "Exercise science consensus (EMG and anatomy texts), checked against MuscleSeed names"
+  },
+  {
+   "id": "X02",
+   "kind": "exercise",
+   "name": "Back squat",
+   "expect": "fill",
+   "truth": {
+    "primaryMuscles": {
+     "required": [
+      "Quads",
+      "Glutes"
+     ],
+     "allowed": [
+      "Quads",
+      "Glutes",
+      "Adductors"
+     ]
+    }
+   },
+   "source": "Exercise science consensus (EMG and anatomy texts), checked against MuscleSeed names"
+  },
+  {
+   "id": "X03",
+   "kind": "exercise",
+   "name": "Conventional deadlift",
+   "expect": "fill",
+   "truth": {
+    "primaryMuscles": {
+     "required": [
+      "Glutes",
+      "Hamstrings"
+     ],
+     "allowed": [
+      "Glutes",
+      "Hamstrings",
+      "Lower Back",
+      "Quads"
+     ]
+    }
+   },
+   "source": "Exercise science consensus (EMG and anatomy texts), checked against MuscleSeed names"
+  },
+  {
+   "id": "X04",
+   "kind": "exercise",
+   "name": "Pull-up",
+   "expect": "fill",
+   "truth": {
+    "primaryMuscles": {
+     "required": [
+      "Lats"
+     ],
+     "allowed": [
+      "Lats",
+      "Biceps",
+      "Upper Back"
+     ]
+    }
+   },
+   "source": "Exercise science consensus (EMG and anatomy texts), checked against MuscleSeed names"
+  },
+  {
+   "id": "X05",
+   "kind": "exercise",
+   "name": "Overhead press",
+   "expect": "fill",
+   "truth": {
+    "primaryMuscles": {
+     "required": [
+      "Front Delts"
+     ],
+     "allowed": [
+      "Front Delts",
+      "Side Delts",
+      "Triceps"
+     ]
+    }
+   },
+   "source": "Exercise science consensus (EMG and anatomy texts), checked against MuscleSeed names"
+  },
+  {
+   "id": "X06",
+   "kind": "exercise",
+   "name": "Barbell row",
+   "expect": "fill",
+   "truth": {
+    "primaryMuscles": {
+     "required": [
+      "Upper Back"
+     ],
+     "allowed": [
+      "Upper Back",
+      "Lats",
+      "Rear Delts",
+      "Biceps"
+     ]
+    }
+   },
+   "source": "Exercise science consensus (EMG and anatomy texts), checked against MuscleSeed names"
+  },
+  {
+   "id": "X07",
+   "kind": "exercise",
+   "name": "Romanian deadlift",
+   "expect": "fill",
+   "truth": {
+    "primaryMuscles": {
+     "required": [
+      "Hamstrings"
+     ],
+     "allowed": [
+      "Hamstrings",
+      "Glutes",
+      "Lower Back"
+     ]
+    }
+   },
+   "source": "Exercise science consensus (EMG and anatomy texts), checked against MuscleSeed names"
+  },
+  {
+   "id": "X08",
+   "kind": "exercise",
+   "name": "Lateral raise",
+   "expect": "fill",
+   "truth": {
+    "primaryMuscles": {
+     "required": [
+      "Side Delts"
+     ],
+     "allowed": [
+      "Side Delts",
+      "Front Delts"
+     ]
+    }
+   },
+   "source": "Exercise science consensus (EMG and anatomy texts), checked against MuscleSeed names"
+  },
+  {
+   "id": "X09",
+   "kind": "exercise",
+   "name": "Leg press",
+   "expect": "fill",
+   "truth": {
+    "primaryMuscles": {
+     "required": [
+      "Quads"
+     ],
+     "allowed": [
+      "Quads",
+      "Glutes",
+      "Adductors"
+     ]
+    }
+   },
+   "source": "Exercise science consensus (EMG and anatomy texts), checked against MuscleSeed names"
+  },
+  {
+   "id": "X10",
+   "kind": "exercise",
+   "name": "Standing calf raise",
+   "expect": "fill",
+   "truth": {
+    "primaryMuscles": {
+     "required": [
+      "Calves"
+     ],
+     "allowed": [
+      "Calves"
+     ]
+    }
+   },
+   "source": "Exercise science consensus (EMG and anatomy texts), checked against MuscleSeed names"
+  },
+  {
+   "id": "U01",
+   "kind": "food",
+   "name": "Grandma's chili",
+   "expect": "decline",
+   "truth": null,
+   "why": "a house recipe: no public table row, the mix is unknown",
+   "source": "none: not a public fact"
+  },
+  {
+   "id": "U02",
+   "kind": "food",
+   "name": "Moonfig crisps",
+   "expect": "decline",
+   "truth": null,
+   "why": "a made-up product: nothing public to look up",
+   "source": "none: not a public fact"
+  },
+  {
+   "id": "U03",
+   "kind": "food",
+   "name": "Leftover stir fry",
+   "expect": "decline",
+   "truth": null,
+   "why": "a mix of unknown parts and amounts",
+   "source": "none: not a public fact"
+  },
+  {
+   "id": "U04",
+   "kind": "food",
+   "name": "Sunday sauce",
+   "expect": "decline",
+   "truth": null,
+   "why": "a house name, no fixed recipe",
+   "source": "none: not a public fact"
+  },
+  {
+   "id": "U05",
+   "kind": "exercise",
+   "name": "The Kaushik press",
+   "expect": "decline",
+   "truth": null,
+   "why": "a made-up movement name",
+   "source": "none: not a public fact"
+  },
+  {
+   "id": "U06",
+   "kind": "exercise",
+   "name": "Mystery machine by the window",
+   "expect": "decline",
+   "truth": null,
+   "why": "no named movement to look up",
+   "source": "none: not a public fact"
+  }
+ ],
+ "walls": [
+  {
+   "id": "W01",
+   "input": "door code 4417",
+   "class": "private note body",
+   "check": "SecretWords.mentions",
+   "packer": "refuse"
+  },
+  {
+   "id": "W02",
+   "input": "wifi password is tacocat",
+   "class": "private note body",
+   "check": "SecretWords.mentions",
+   "packer": "refuse"
+  },
+  {
+   "id": "W03",
+   "input": "pw hunter2",
+   "class": "secret word",
+   "check": "SecretWords.mentions",
+   "packer": "refuse"
+  },
+  {
+   "id": "W04",
+   "input": "Private note",
+   "class": "private note title",
+   "check": "title == SecretWords.title",
+   "packer": "refuse"
+  },
+  {
+   "id": "W05",
+   "input": "ground beef 6.99/lb",
+   "class": "money",
+   "check": "PrivateFacts.isMoneyShaped",
+   "packer": "strip to 'ground beef'"
+  },
+  {
+   "id": "W06",
+   "input": "2 for $5 avocados",
+   "class": "money (grocery price, Product 2:09 pm)",
+   "check": "PrivateFacts.isMoneyShaped",
+   "packer": "strip to 'avocados'"
+  },
+  {
+   "id": "W07",
+   "input": "Serves 4, about $12 a serving",
+   "class": "money on a recipe link page (Product 11:52 am)",
+   "check": "PrivateFacts.isMoneyShaped per line",
+   "packer": "strip the money span"
+  },
+  {
+   "id": "W08",
+   "input": "182.4 lb this morning",
+   "class": "body weight",
+   "check": "PrivateFacts.isBodyShaped",
+   "packer": "refuse"
+  },
+  {
+   "id": "W09",
+   "input": "took 2 advil",
+   "class": "health",
+   "check": "PrivateFacts.isBodyShaped",
+   "packer": "refuse"
+  },
+  {
+   "id": "W10",
+   "input": "slept 5 hours",
+   "class": "health",
+   "check": "PrivateFacts.isBodyShaped",
+   "packer": "refuse"
+  },
+  {
+   "id": "W11",
+   "input": "is 120 g protein enough for me today",
+   "class": "intake (Product 2:36 pm (2))",
+   "check": "intake words with 'me', 'my' or 'today'",
+   "packer": "refuse"
+  },
+  {
+   "id": "W12",
+   "input": "KEY",
+   "class": "Claude key (ClaudeSection.fakeKey, built at run time in test code only)",
+   "check": "looksLikeClaudeKey",
+   "packer": "refuse"
+  }
+ ],
+ "echo": [
+  "4417",
+  "tacocat",
+  "hunter2",
+  "Private note",
+  "6.99",
+  "$5",
+  "$12",
+  "182.4",
+  "advil",
+  "slept",
+  "120 g"
+ ]
+}

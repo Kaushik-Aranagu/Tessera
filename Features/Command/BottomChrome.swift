@@ -222,7 +222,8 @@ struct BottomChrome: View {
 
     /// The soul at 0.72, breathing 1 ↔ 1.08 over 3.2 s; tap opens, hold opens, double tap goes Home.
     private var soulKey: some View {
-        TessSoul(mode: model.tessMode, hostScale: 0.72, eyes: model.tessHasEyes, gaze: model.soul.gaze)
+        TessSoul(mode: model.tessMode, hostScale: 0.72, eyes: model.tessHasEyes, gaze: model.soul.gaze,
+                 wake: model.soul.wake)
             .scaleEffect(0.72)
             .scaleEffect(breathe ? 1.08 : 1)
             .tesseraAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true), value: breathe)
@@ -727,15 +728,18 @@ extension BottomChrome {
     /// it only when that line has its own op; a capture's line shows it for that capture.
     private var canUndo: Bool {
         if let note = voice.note {
-            return note.undo != nil
+            return note.undo != nil || note.takeBack != nil
         }
         return model.lastCapture != nil
     }
 
     /// Home's last action (done, moved) first, else the last capture.
     private func undo() {
-        if let record = voice.note?.undo {
-            _ = model.engine.undo(record)
+        if let note = voice.note, note.undo != nil || note.takeBack != nil {
+            if let record = note.undo {
+                _ = model.engine.undo(record)
+            }
+            note.takeBack?()
             model.touch()
             undos += 1
             withTesseraAnimation(reduceMotion: reduceMotion) { voice.clear() }

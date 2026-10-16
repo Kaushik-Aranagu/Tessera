@@ -138,10 +138,10 @@ public struct MoveTask: EngineAction {
         // 2:00 PM PT). A time he picks himself (`to`) is kept.
         if to == nil {
             let hour = calendar.component(.hour, from: target)
-            // The target itself moves to its next 7 am, as the grammar does (QA F1 on #553).
+            // The target itself moves to 7 am on its own calendar day (QA F1 and F2 on #553, Research EQ26): a target
+            // at 11:20 pm Friday lands at 7 am Friday, still ahead of a "Not now" said Thursday night.
             if hour >= 23 || hour < 7 {
-                let day = hour >= 23 ? calendar.date(byAdding: .day, value: 1, to: target) ?? target : target
-                target = calendar.date(bySettingHour: 7, minute: 0, second: 0, of: day) ?? target
+                target = calendar.date(bySettingHour: 7, minute: 0, second: 0, of: target) ?? target
             }
         }
         try transaction.set("startsAt", to: .date(target), on: task)
@@ -154,5 +154,23 @@ public struct MoveTask: EngineAction {
         let title = store.object(id: task)?.title ?? "it"
         // Thing first in his history (Product 2:48 PM PT): "Stretch, moved to Later".
         return later == true ? "\(title), moved to Later" : "\(title), moved"
+    }
+
+    /// "Call mom, in Later", "Call mom, tomorrow at 6:30 pm", "Call mom, Thursday at 6:30 pm" (copy-pass rule 6).
+    public func receipt(in store: ObjectStore) -> String? {
+        guard let object = store.object(id: task) else { return nil }
+        guard later != true, let at = store.value("startsAt", of: object)?.dateValue else {
+            return "\(object.title), in Later"
+        }
+        let calendar = Calendar.current
+        let day = TesseraDay(calendar: calendar)
+        let now = time ?? .now
+        let en = Locale(identifier: "en_US")
+        // Within the week, the weekday; further out, the date, so "Thursday" is never next week's (QA on #512).
+        let word = day.isSameDay(at, now) ? "today"
+            : day.isSameDay(at, day.adding(days: 1, to: now)) ? "tomorrow"
+            : at < day.adding(days: 7, to: day.day(of: now)) ? at.formatted(.dateTime.weekday(.wide).locale(en))
+            : at.formatted(.dateTime.month(.abbreviated).day().locale(en))
+        return "\(object.title), \(word) at \(DayStoryClock.sentenceTime(at, calendar: calendar))"
     }
 }

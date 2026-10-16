@@ -42,3 +42,14 @@ QA, Oct 16 2026, ~1:25 PM PT. Head **9ac58f4**, one commit, merges cleanly onto 
 ## Lows
 - **R1** At 1 am, "call mom thu" becomes a task at 2 am, inside quiet hours (23:00-07:00). This rule came before this PR (the weekday-today rule). TW29 just makes it reachable after midnight. Product may want the no-time case to snap to 7 am (the end of quiet hours) instead.
 - **R2** `hourToday` (TessGrammar.swift:642) still compares wall dates (`isDate(_:inSameDayAs: now)`), so at 1 am Friday "thu 9" doesn't get the today hour rule. It is harmless: 9 resolves to 9 am Thursday, which is past, so it lands next Thursday at 9 am. It's worth noting for the sweep.
+
+## Re-review at 90c9833 (Oct 16, ~1:45 PM PT): PASS
+
+- It merges cleanly. The only new commit is 90c9833, and it touches one file, Features/Home/HomeQueue.swift. The engine side is unchanged from 9ac58f4.
+- The fixed 64 pt `timeRoom` and the separate `timeColumn` overlay are gone.
+- The time now sits in the row's own `HStack(alignment: .firstTextBaseline)` after a `Spacer`, with `.fixedSize()`.
+  - A long title takes the rest of the row and wraps beside the time, so nothing runs under it at any Dynamic Type size.
+  - This resolves the FIX FIRST.
+- The role is `.data`. `Editorial.swift:33-38` treats `.data` as a number and skips the uppercase, so the queue reads "8:30 pm" in every look, the same as the sentences.
+- One behaviour change for Design: the time used to stay still while the title moved during a swipe. It is now part of `content`, so it moves with the title (`.offset(x:)`) and takes the hold lift and shadow. It still fades out over the first 40 pt of a drag.
+- Low: the stale doc comment "The time stays put while the title travels..." is now orphaned above `leftOffset` (HomeQueue.swift:~378). Drop it on the next touch.
