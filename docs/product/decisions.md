@@ -4,6 +4,7 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+- **Rest days keep showing while Monday's question is open** (8:52 PM PT, Research 101). NowPage and ReviewPage do not pass sessionsPerWeek 0. The PPL x2 plan at 6 sessions a week is decided, so a planned rest day is real and keeps its "Rest day" line. Which weekday it lands on is not decided yet: "Sunday" is only the pre-filled answer in Monday's question and is logged only when he answers. Until then, rest falls where the engine puts it today.
 - **Plan my day, four small calls** (8:50 PM PT, Research 98 #250, defaults taken). Nothing goes to Claude for the plan during a workout, so eval pack d22 stays only as a guard. The cap line shows once a month. The plan shows VIA CLAUDE once, an exception to the 8:28 PM cloud mark on every Claude row, matching Design's §6 row 6. The calendar ask appears in Tess's corner.
 - **Plan my day §6 settled** (8:46 PM PT, Design `docs/design/m4-steers.md` 041a17d, both departures from Research agreed). Before Health read is granted there is no sleep line at all (not "no sleep data"). A timeout says "Claude didn't answer in time. Here's your usual plan.", and tess-voice M18 changes to match.
 - **Demo and reset launch args never touch his data** (8:41 PM PT, Research 96). His phone runs Debug builds, so `#if DEBUG` is not a guard: the -demo, -resetDemo and -theme args run only in the simulator, or refuse a reset when user ops exist. Builder A ships this before any install.
