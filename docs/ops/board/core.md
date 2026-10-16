@@ -131,6 +131,24 @@
 0q. (Research `time-words-sweep.md`, 30 rows, Core 6; decisions 12:35 PM PT Oct 16) Format.clock (App/AppClock.swift:47-50) becomes the one 12-hour "6:30 pm" formatter, which closes TW10-14. Tess's "today/tonight" and weekday parsing use the 4 am day (TessGrammar.swift:609,740-744), and "tonight" at 1 am means the coming evening. Memory turnover uses the 4 am day (TessMemory.swift:90, +Turnover:186-188). One "ago" rounding to the nearest hour. With AI architecture: check model replies for 24-hour times, since prompts pass "HH:mm".
 0r. (Research `cap-math-check.md`, #482, 24 rows; decisions 12:40 PM PT Oct 16) The ClaudeKey.swift:7 and :83 comments say $50, and a test pins $50. A timed-out call writes its full hold. The VoiceOver amount rounds the way the screen does. The month resets at Pacific midnight on the 1st, and capture and Settings use the same zone. "Paused" shows from the first refused call. This month's spend also goes in a file outside the store that restore doesn't touch, and the cap takes the higher of the two. Match the Sonnet cache-read price to AI architecture's recheck.
 0s. (Research `undo-windows-audit.md`, #485; decisions 12:45 PM PT Oct 16) One shared UndoWindow constant (4 s / 10 s, 10 s for all with VoiceOver on), paused while backgrounded or locked, to replace 6 hard-coded 4 s and 5 hard-coded 10 s. Undoing a finish removes the Health workout. At 4 am, one UNDO under the wrap-up and the roll takes back both, or each line gets its own, with Builder B. Callers read a partial undo's result. The memory sweep uses the app clock.
+0t. **REQUIRED before Claude Home wording can ever turn on** (AI-5 verdict #488, decisions 12:50 PM PT Oct 16; spec in home-lines-job.md §5, #491; after M1 and the pin riders) Add a weekday check on "usual" and "after work" in TessLineCheck. A line that says them on a day they don't fit (a Saturday "after work") falls back to the rules line.
+0u. (Research plan-my-day-pack refresh; decisions 12:54 PM PT Oct 16) Before Builder B wires Plan my day, land G1 (includesEventTitles defaults to false, PlanWording.swift:52), G4 (check for a running workout, :106) and G7 (count the right text in the cost estimate, :461). Then the rest:
+- G6: event titles go only as "busy".
+- G8: no plan before 7 am (DayPlan.swift:217).
+- G9: a known drug with no dose is private (PrivateFacts.swift:74-75).
+- G10: "pins" and "combination" alone aren't secret (SecretWords.swift:11).
+- G11: no ghost line beside a private block (PlanWording.swift:379-384).
+- G12: re-render Claude's times through Format.clock (:301, :328).
+- G13: same as 0r.
+- G14: use the UndoWindow from 0s.
+0v. (QA review-494, low, 12:59 PM PT Oct 16; not a pin blocker) LogExercise.activeWorkout skips a workout with no open process, so an orphan made on 7b321d2 can't catch sets. Add a test. Also (Design on #494): the Day log page (DayStory) leaves out "Push A, no sets, not saved." per day-log-copy.md:106, while receipts and the op log keep it.
+0w. (Research `fixtures/review-week-story.md`; decisions 1:00 PM PT Oct 16) PIN RIDER, if it lands before M1: change DayStory.swift:225 from ", PR" to ", best". After the pin:
+- Week lines become three plain counts (WeekFacts.swift:152).
+- A paused session with logged sets counts as trained (WorkoutSummary.swift:102).
+- Private notes are never picked as week lines (WeekFacts.swift:157).
+- Build the week story Claude job, which skips empty or notes-only weeks.
+- The story of the week just ended holds until Tuesday 4 am.
+- Weight stays out of the story.
 0a. Recipe clock gaps for Core (#461, Kitchen lead's day-one gaps, `docs/research/fixtures/recipe-clock-day-one.md` gap table and `docs/product/cook-mode-acceptance.md` rulings 3-5; Product 12:06 PM PT Oct 16: running over HOLDS, Kitchen's call stands): G3 one source, the bead's step is the resume point and "next"/swipe move both; G4 the bead entering a timed step starts its timer, keyed by step not label; G5 parse "per side" (doubles) and "overnight" (vectors s5, s6, s11, s12); G9 `FinishCooking` line "Paprika chicken, cooked." with the DONE key (with Builder B); G10 the peek key is a dry run of `AddRecipeToGroceries`, receipt "Chicken, 7 added." (with Builder B); G11 cooks idle-suspend after 45 min, idle timer off while the clock runs (with Builder B). Ships in the 69 slice (item 0).
 0b-r. (Design on #454's clip, 12:10 PM PT Oct 16) The Recipes parser strips a leading "N." or "N)" from step text so a pasted "1. Spread…" doesn't show its number twice beside the gutter. Small; with the 69 slice.
 0b. (10:02 AM PT Oct 16) Soul signals (`docs/ai/soul-signals.md`, #418, once the motion lab passes it): the pure HomeFacts diff to at most one soul event, with its tests, no model calls. After AI-2 (see Order); Builder A wires the five new events after its pick PRs (a) and (b).

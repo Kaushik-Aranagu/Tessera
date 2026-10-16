@@ -4,6 +4,7 @@
 
 **Two lanes (Kaushik, 11:21 and 11:26 AM PT Oct 16):** this team's lead is its manager. It keeps two lanes going, pulls its next items from this board without waiting to be handed work, and splits work across subagents so it runs in parallel. When one lane waits on a review, build, gate or answer, it works the other in the same turn. The lanes below are suggestions; the lead replaces them with something better. If Next drops under 3, ask the Product lead directly. The coordinator handles cross-team blocks, merges and anything that needs Kaushik, with occasional spot checks.
 - **Lane 1:** #366's clip pass, then 66 (the next-build walk) when Builder A records it on the pin.
+- **Next 0b (Research pin-gate dry read, 12:51 PM PT Oct 16):** write the 66 walk's beats on master (what Builder A records in the 3-minute Porcelain walk, and what passes), before the pin is named.
 - **Next 0 (done 12:18 PM PT: no ghost line beside a private block) (#469 L1):** for Plan my day, decide what Claude's ghost line says beside a private block (today "Start with the task." sits next to his real title "Reset bank PIN"; safe but odd). One line for Builder B before it's wired.
 - **Lane 2:** A UI-bar audit of master: every screen against the one-line bar and the receipts rule; fix rows for each builder.
 

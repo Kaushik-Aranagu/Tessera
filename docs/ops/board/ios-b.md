@@ -51,6 +51,15 @@
 **From now on, use themed tokens** (Kaushik's themes, 6:40 PM PT): new and touched screens use Builder A's DesignSystem theme tokens, never hard-coded colours, so every theme works.
 
 **Next:**
+0l. (Research review-week-story; decisions 1:00 PM PT) Review after Core's week lines:
+- ReviewWeek.swift:130 shows the three count lines.
+- The tapped-day hero uses the thing, not the first word of the line ("Push best", :175).
+- Tapped-day times use Format.clock (:193).
+- The Tasks done and Cooked bands use the zone he was in (:58, :64).
+- Empty states don't stack.
+- Review's hero agrees with ReviewPage ("Four sessions", ReviewView.swift:104).
+0k. (decisions 12:58 PM PT) After #403 and #407: the Design 70 "Tess has eyes" row goes under LOOK in Settings, bound to tessEyes, default off.
+0j. (decisions 12:54 PM PT) Plan my day wiring waits for Core 0u's G1, G4 and G7. Fixture: `docs/research/plan-my-day-pack.md` (refreshed). One kept row reads "Plan, kept." with a 4 s UNDO.
 0i. (Research undo-windows-audit, #485; decisions 12:45 PM PT) Wire Core's UndoWindow. Fix capture UNDO undoing a Home "done" (BottomChrome.swift:728-744). Deleting a note gets an UNDO. A capture's window counts from its line (about 6 s today). Recipe paste and Recipe to Groceries get 10 s, not 2 s. Every UNDO says "X, taken back."
 0h. (Research `voiceover-recipe-clock-lists.md`, 47 rows; decisions 12:39 PM PT Oct 16) Announce Tess lines and receipts with AccessibilityNotification.Announcement (none on master; share it with Core if the receipt layer is shared). Give the recipe page's hidden gestures accessibility actions: swipe to Groceries and the metric flip (RecipePage.swift:245-275). The Recipes back word says "Back to Recipes" (RecipePage.swift:46-53, like RoutinesPage.swift:34-41). Speak units as words ("45 minutes", "425 degrees") and read serves once. Builder B owns every recipe page and cook state on that page. The calls are in decisions 12:39.
 0g. (Research `time-words-sweep.md`, your 21 rows; decisions 12:35 PM PT) Weekdays from the 4 am day in Notes (NotesView.swift:273), Review (ReviewView.swift:144), Backup (BackupView.swift:352, use its fileDay) and Recipe (RecipePage.swift:404). partOfDay: "early morning" 4-7 am, "night" from 9 pm, never "this night" (NowPage.swift:361). Now flips to "tomorrow, first" at 9 pm, and its context line uses digits. The Claude receipt uses Format.clock (ClaudeSection.swift:494). Notes: "1 hour ago".

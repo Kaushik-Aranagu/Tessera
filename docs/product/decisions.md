@@ -4,6 +4,57 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+**1:00 PM PT Oct 16: Review week story (Research review-week-story.md asked).** DECIDED, all eight of Research's picks.
+
+How the week is counted:
+- On Monday morning, the story of the week that just ended stays under the new week until Tuesday 4 am.
+- A paused session counts as trained if a set was logged.
+- An empty or notes-only week skips the Claude call.
+- With a day mark, the figure counts against the marked week ("5 of 5").
+
+How it reads:
+- Three plain count lines, such as "4 workouts, 2 new bests, 3 cooks".
+- Tapped-day times are 12-hour.
+- Trip-day times show in the zone he was in.
+- "weight down 0.4 kg" leaves the story and stays on the body page only.
+
+Pin rider (small): DayStory writes ", best" instead of ", PR" (DayStory.swift:225). It goes in if it lands before M1 merges.
+
+**12:58 PM PT Oct 16: eyes and v10 after the pin (Research post-pin-403-407.md asked).** DECIDED, all four of Research's picks.
+- The "Tess has eyes" row lives under LOOK (Design 70).
+- The eyes hide while Tess is working.
+- The .backgrounded-to-rest change ships with #403 if the router and working tests pass.
+- The v7 floor test isn't rerun, since v10 only adds a field.
+Order after the pin:
+1. #403, rebased on #453's working overlay, with MotionPolicy instead of raw animations.
+2. #407 once the pin, carrying #475 and M1, is on his phone. Add one test where v9 code opens a v10 store.
+3. Builder A swaps the launch flag for the showsTessEyes setting. Builder B adds the Design 70 row. The key name in code, tessEyes, wins over tess.eyes in the doc.
+
+**12:54 PM PT Oct 16: Plan my day before wiring (Research plan-my-day-pack refresh asked).** DECIDED, all nine of Research's picks.
+
+Before Builder B wires Plan my day:
+- Core lands G1, G4 and G7 first: includesEventTitles off by default, a check for a running workout, and a correct cost estimate.
+- AI-5 doesn't gate Plan my day. It has its own gate.
+
+What goes to Claude:
+- Event titles go to Claude as "busy" only in v1, matching Home. The 23 packs rerun with "busy" events. That's a key-using run, so it needs his yes.
+- A medicine with no dose is private when the word is a known drug. "Dentist" and "Book physio" go as "task".
+- "combination" alone isn't secret, so "Buy combination lock" stays a task.
+
+What he sees:
+- One kept row reads "Plan, kept." with a 4 s UNDO.
+- Claude's times are re-rendered through the one formatter.
+- An open at 6:40 am is silent. He can pull the plan by hand.
+- Abroad, the cap line reads "Paused until Nov 1" with no PT.
+
+**12:50 PM PT Oct 16: AI-5 verdict, Home wording stays on the rules (#488).** DECIDED.
+- Neither model ships Claude Home wording yet. The rules lines stay the default and the switch stays off.
+- Haiku fails True on both passes. Sonnet fails True and Voice on memory ("After work, your usual slot" three times on a Saturday).
+- Next steps:
+  - Core adds a weekday check on "usual" and "after work".
+  - AI architecture narrows the prompt with Research's rule, then reruns Sonnet only. The rerun needs his yes.
+- Claude wording only earns its cost on done moments that add a best, a gap or a count change.
+
 **12:45 PM PT Oct 16: undo windows (Research undo-windows-audit.md, #485, asked).** DECIDED, all six of Research's picks.
 - Undo windows pause while the app is backgrounded or the phone is locked.
 - Removing the key still commits early when the app goes to the background, because the key is safety-critical, and the line says so.
