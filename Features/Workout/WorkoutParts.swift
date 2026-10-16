@@ -5,7 +5,8 @@ private typealias Paint = WorkoutPaint
 
 // MARK: - The exercise lane (x)
 
-/// One name per page; the next peeks in. Tap the name to zoom into the exercise. Pull down on it for the swap panel:
+/// One name per page; nothing peeks (the strip says what's ahead). Tap the name to zoom into the exercise. Pull down on
+/// it for the swap panel:
 /// the name follows the finger (rubber-banded to about 10 pt). The pager keeps horizontal.
 struct ExerciseLane: View {
     let session: WorkoutSession
@@ -30,23 +31,25 @@ struct ExerciseLane: View {
                             model.open(.classDef(exercise.id), .deeper)
                         }
                     } label: {
-                        Text(name)
-                            .textRole(.title)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.45)
-                            .foregroundStyle(Paint.cream.opacity(isCurrent ? 1 : 0.28))
-                            // A long name steps down a size and keeps clear of the next one peeking in.
-                            .padding(.trailing, Theme.Spacing.m)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .id(name)
-                            .transition(reduceMotion ? .opacity
-                                : .asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity),
-                                              removal: .opacity))
-                            .contentShape(Rectangle())
+                        // Title 44 on one line, else 34 on one line, else two lines of 34. Never cut.
+                        ViewThatFits(in: .horizontal) {
+                            Text(name).textRole(.title).lineLimit(1).fixedSize()
+                            Text(name).font(Self.title34).lineLimit(1).fixedSize()
+                            Text(name).font(Self.title34).lineLimit(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .foregroundStyle(Paint.cream)
+                        .opacity(isCurrent ? 1 : 0)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .id(name)
+                        .transition(reduceMotion ? .opacity
+                            : .asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity),
+                                          removal: .opacity))
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .modifier(ZoomSource(id: exercise.map { Route.classDef($0.id) }, namespace: zoomNamespace))
-                    .containerRelativeFrame(.horizontal) { width, _ in width - Theme.Spacing.gutter - 46 }
+                    .containerRelativeFrame(.horizontal)
                     .id(index)
                     .offset(y: isCurrent ? Self.rubberBand(namePull) : 0)
                     .contextMenu {
@@ -64,11 +67,12 @@ struct ExerciseLane: View {
             .scrollTargetLayout()
         }
         .contentMargins(.leading, Theme.Spacing.gutter, for: .scrollContent)
-        .contentMargins(.trailing, 46, for: .scrollContent)
+        .contentMargins(.trailing, Theme.Spacing.gutter, for: .scrollContent)
         .scrollTargetBehavior(.viewAligned(limitBehavior: .alwaysByOne))
         .scrollPosition(id: $laneIndex, anchor: .leading)
         .scrollIndicators(.hidden)
-        .frame(height: 64)
+        .frame(minHeight: 64)
+        .fixedSize(horizontal: false, vertical: true)
         // Pull down on the name for alternatives; the pager keeps horizontal.
         .simultaneousGesture(
             DragGesture(minimumDistance: 14)
@@ -88,6 +92,13 @@ struct ExerciseLane: View {
                     }
                 }
         )
+    }
+
+    /// Title 34: the title face one step down, for names past about 16 characters.
+    private static var title34: Font {
+        var spec = Theme.concept.scale.title
+        spec.size = 34
+        return Theme.Typography.font(spec)
     }
 
     /// The name follows the finger up to about 10 pt, rubber-banded.
@@ -120,11 +131,21 @@ enum WorkoutLines {
             if let seated = session.lastSeated, !seated.records.isEmpty, let e1RM = seated.e1RM {
                 return ("a new best: e1RM \(tenth(e1RM))", Paint.now, true)
             }
-            return ("set \(rows.count) seated", Paint.secondary, false)
-        case .exerciseDone:
-            return ("all \(target) sets in. Swipe for the next.", Paint.secondary, false)
-        case .workoutDone:
-            return ("every set is in", Paint.secondary, false)
+            // The exercise's last rest sums it up: "4 sets, 82.5 × 8 best".
+            if rows.count >= target, let best = bestRow(rows) {
+                return ("\(rows.count) sets, \(best) best", Paint.secondary, false)
+            }
+            // After a set: "set 1, 82.5 × 8".
+            if let last = rows.last {
+                return ("set \(last.number), \(Format.kilograms(last.weight)) × \(Int(last.reps))", Paint.secondary,
+                        false)
+            }
+            return ("", Paint.secondary, false)
+        case .exerciseDone, .workoutDone:
+            if let best = bestRow(rows) {
+                return ("\(rows.count) sets, \(best) best", Paint.secondary, false)
+            }
+            return ("", Paint.secondary, false)
         case .set:
             if let rpe = session.rpe {
                 return ("RPE \(RPEStops.formatted(rpe)), \(RPEStops.words(for: rpe))", Paint.now, true)
@@ -136,9 +157,60 @@ enum WorkoutLines {
             if session.swappedFrom != nil, rows.isEmpty {
                 return ("swapped for today, set \(session.currentSetNumber) of \(target)", Paint.tess, false)
             }
-            let last = rows.last.map { ", last was \(Format.kilograms($0.weight)) × \(Int($0.reps))" } ?? ""
-            return ("set \(session.currentSetNumber) of \(target)\(last)", Paint.secondary, false)
+            // "last time 82.5 × 8": this set's place last session.
+            if let last = session.lastTime(setNumber: session.currentSetNumber) {
+                return ("last time \(Format.kilograms(last.weight)) × \(Int(last.reps.rounded()))", Paint.secondary,
+                        false)
+            }
+            return ("first time on this one", Paint.secondary, false)
         }
+    }
+
+    /// The heaviest set, "82.5 × 8".
+    private static func bestRow(_ rows: [WorkoutSession.SetRow]) -> String? {
+        rows.max { ($0.weight, $0.reps) < ($1.weight, $1.reps) }
+            .map { "\(Format.kilograms($0.weight)) × \(Int($0.reps))" }
+    }
+
+    /// The context line above the name (live-workout.md): "Push A, set 1 of 4"; resting "Rest, then set 2" or, on an
+    /// exercise's last rest, "Rest, then Overhead press"; the workout's last set "Push A, last set".
+    static func context(_ session: WorkoutSession, phase: WorkoutSession.Phase) -> String {
+        let title = session.workout.title
+        guard let entry = session.currentEntry else { return title }
+        let target = session.targetSets(of: entry)
+        let done = session.setRows(of: entry).count
+        switch phase {
+        case .rest:
+            if done >= target {
+                if let next = session.nextUnfinishedIndex, session.entries.indices.contains(next),
+                   let name = session.exerciseClass(of: session.entries[next])?.name
+                {
+                    return "Rest, then \(sentenceCase(name))"
+                }
+                return "Rest, then finish"
+            }
+            return "Rest, then set \(done + 1)"
+        case .exerciseDone:
+            return "\(title), \(sentenceCase(session.currentExercise?.name ?? "this one")) done"
+        case .workoutDone:
+            return "\(title), every set in"
+        case .set:
+            if session.isLastSetOfWorkout {
+                return "\(title), last set"
+            }
+            return "\(title), set \(session.currentSetNumber) of \(max(target, 1))"
+        }
+    }
+
+    /// "Overhead Press" reads "Overhead press" inside a line; all-capital words ("DB", "EZ") stay as written.
+    static func sentenceCase(_ name: String) -> String {
+        name.split(separator: " ", omittingEmptySubsequences: false).enumerated().map { index, word in
+            let text = String(word)
+            if index == 0 || (text.count > 1 && text == text.uppercased()) {
+                return text
+            }
+            return text.lowercased()
+        }.joined(separator: " ")
     }
 
     static func tess(_ session: WorkoutSession, phase: WorkoutSession.Phase, summary: String?) -> String {
@@ -152,10 +224,10 @@ enum WorkoutLines {
             return note
         }
         if case .rest = phase, let seated = session.lastSeated {
-            // tess-voice: "Set 3. 80 x 8." and "New best: 85 x 5. e1RM 99."
+            // The receipt (live-workout.md §6): "Set 3 logged. 80 × 8." and "New best: 85 × 5. e1RM 99."
             let set = "\(Format.kilograms(seated.weight)) × \(Int(seated.reps))"
             if seated.records.isEmpty {
-                return "Set \(seated.number). \(set)."
+                return "Set \(seated.number) logged. \(set)."
             }
             return "New best: \(set)." +
                 (seated.e1RM.map { " e1RM \(Format.kilograms(($0 * 10).rounded() / 10))." } ?? "")
@@ -173,17 +245,7 @@ enum WorkoutLines {
         if let from = session.swappedFrom, let entry = session.currentEntry, session.setRows(of: entry).isEmpty {
             return "\(SwapPanel.short(from)) stays in the plan."
         }
-        // The subline carries the numbers; Tess says what it would mean, once, quietly.
-        if let hint = session.recordHint {
-            let reps = hint.kinds.compactMap { kind -> Int? in
-                if case let .repMax(count) = kind {
-                    return count
-                }
-                return nil
-            }.first
-            let name = session.currentExercise?.name.lowercased() ?? "lift"
-            return reps.map { "Best \($0)-rep \(name) yet, if it goes." } ?? "Best e1RM yet, if it goes."
-        }
+        // Nothing is said about a best before the set; it's said once logged ("New best: …", 56 addendum).
         if let note = session.restNote, note.hasPrefix("Skipped") {
             return note
         }
