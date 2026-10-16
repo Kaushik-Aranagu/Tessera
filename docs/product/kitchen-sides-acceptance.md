@@ -57,4 +57,15 @@ THE WEEK'S COOKS (AHEAD, sheet 74) now, and it stays that way when Pantry arrive
 | 5.1 | The Kitchen tab's side lists the week's planned cooks by day with "N to buy" each; a day with no cook is absent |
 | 5.2 | Nothing on the Kitchen tab's side changes when Pantry ships |
 
+
+## Glances (Kaushik 2:33 PM: every side opens on a half-screen glance as stop 1)
+
+| Side | Glance | Why |
+|---|---|---|
+| FOR WHAT | "7 for 2 cooks", the two cooks named by short name | Design's draft |
+| PER 100 G | kcal big, then protein and fat; carbohydrate and fibre wait for the full side; the source line sits under the glance | Design's draft, with the source always visible since the number came from somewhere |
+| COOKS | The last cook with its day and duration: "Thursday, 46 min" | Design's draft, with the duration so the glance says something the front does not |
+| INGREDIENTS | "7 to buy" with the key ADD 7 TO GROCERIES; at 0, "Nothing to buy." and no key | Changed from "12 things": the glance's number and the key's number must be the same number, and the thing-count is already on the front |
+| THE WEEK'S COOKS | The next cook in Home's own words: "Tacos tonight, 2 to buy." | Changed from "the next cook" alone: Tess's line and Home never disagree, so the glance is Home's line for that cook |
+
 **Everywhere:** the way back is the front's name; sides never carry controls beyond the one key named above; Reduce Motion is a 200 ms crossfade; Dynamic Type at AX sizes keeps one column. Each Kitchen side lands in its own PR with a recording that starts on the front and turns it over.
