@@ -21,6 +21,8 @@ All three run with the same instructions, the same `proposeLines` tool and the s
 
 `memory-days.json`: 14 days in the demo shape (Push A, Pull A, Legs A twice through; tasks; three cooks; one rest day; one skipped day; a bench record on day 9; training drifting from 6 pm to 8 pm in week two). Each day has its facts (what the phone would know) and 1 to 3 Home moments with the item packs from `first-features.md`, 27 moments in all. Twelve moments carry an **aware target**: a memory-only fact that a good line could use (H5's "your usual slot", "first push day in 9 days", "third cook this week"). Told facts in the fixture: "Trains after work on weekdays." "Cooks on Sunday and Wednesday." "Call mom means his mother."
 
+Oct 16: Research added days 15 to 20 (39 moments) for the AI-5 `--job done` rerun. The counts above describe the 14-day run; a rerun of `memory_experiment.py` now reads 20 days, so its baselines shift.
+
 ## Scoring, per shape, 3 runs
 
 | Score | How | Bar |
