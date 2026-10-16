@@ -1,0 +1,70 @@
+# What Tess knows, redrawn for AI-9 (Design item 49)
+
+**Kaushik's principle, in one line:** he should be able to see everything Tess remembers about him, where each thing came from, and take any of it away with one gesture.
+
+Redraws `m4-steers.md` section 11 under today's rules (one base, no cards, the back word, ink actions, the fixed Tess band, no resting colour) on the AI thread's `TessMemory` store (`docs/ai/architecture.md` section 4: told, noticed and recent lines, each with `evidence`, `lastUsedAt` and `private`), for Builder B's AI-9 on the ship list. The old study (`studies/tess-knows.html`, `recordings/tess-knows.mp4`) is superseded by this sheet.
+- Board: `mockups/tess-knows.png` (source `studies/tess-knows-v2.html`): the Settings door, the page, a swipe, the forget, a new fact, the end of the page on Obsidian with FORGET EVERYTHING held, and the empty page.
+- Recording: `recordings/tess-knows-v2.mp4` (10s), Porcelain: swipe left on the shoulder line, FORGET, the line drifting into the soul and the rest closing up, Tess's line with UNDO; then "remember that I rest on Sundays" landing at the top of Training under the drying line.
+
+## Two doors
+- **Settings › TESS:** the first line reads "Tess remembers **12 things**." The number is the value word (600) and opens this page one layer down, ‹ SETTINGS. "Nothing yet." when there are none, and the words open the page the same.
+- **Asking her** ("what do you know", "what do you remember"): she answers "12 things about you." with **WHAT I KNOW** as the ink-line word under her line; it opens the page with ‹ TODAY (`back-word.md`, by the way in).
+
+## The page
+| y | Element |
+|---|---|
+| 58 | ‹ SETTINGS or ‹ TODAY. It stays while the page scrolls |
+| 84 | Title 44, two lines, in her voice: "What I know / about you". It scrolls with the page |
+| 196 | Body 21 `inkSecondary`: "12 things. 4 you told me, 8 I noticed." Recent day lines aren't counted; they're the day log's |
+| 250 on | **Group words** at Title 34 (ink 85%) in the margin: Training, Kitchen, People, then "The last 14 days". A group exists only when it has a line |
+| under each | **The lines**, 50 under the group word, at Body 21/400 in her voice, second person: "You train **after work** on weekdays." Under each its **source** at 16 `inkSecondary`, from `evidence` and `lastUsedAt`: "you said so on Oct 9, used today", "from 14 workouts, used today", "from 6 weeks". A `private` line adds "stays on this phone". One-line facts sit 72 apart, two-line ones 100; 36 between the last line and the next group word |
+| The last 14 days | The recent lines at 16, the day in 600 `inkSecondary` then the line, 26 apart: "Wed  Pull A done, 2 tasks, cooked chili." |
+| the end | **FORGET EVERYTHING**, a label word with the ink line under it, 28 under the last line. It's the end of the scroll, never pinned |
+| 736 to 820 | Tess's band, fixed, as everywhere. The page fades out over its last 50 pt above it |
+
+- **Value words** (600) only on told lines, and they're his words: "after work", "left shoulder", "Tacos". Noticed lines have none, because he can't edit a count.
+- **Nothing rests in colour.** The context colour isn't used here (there's no hero). Her voice is the one colour, and only in her line.
+- **Never on the page:** a number from health, a weight, a sum of money, a merchant, a place, a note's words (architecture section 4's screen). A line that would need one doesn't exist.
+
+## Taps
+- **A value word** on a told line: `ValueWash` touch, and the sentence becomes a writing line in place (the Write grammar, `no-buttons.md`): he changes the words, returns, the 1.5 pt cobalt line dries under it over 2 s, and the source line reads "you said so just now". UNDO under Tess's line for 10 s.
+- **A source line** on a noticed line ("from 14 workouts") opens those objects as rows one layer down, ‹ WHAT I KNOW. On a told line it does nothing.
+- **A day line** opens that day's log (`day-log-page.md`), ‹ WHAT I KNOW.
+
+## Swipe left to forget
+- The line slides with the finger; at 60 pt **FORGET** rises at the right edge in `live` (Label 16/700, on the sentence's first baseline), with `.selection` once. Let go past 96 pt and it commits; before that it springs back (`.settle`).
+- **The forget:** the sentence breaks into 24 to 28 flecks of 3 pt in her three pigments that drift to the soul on the hand-off arc reversed (760 ms, house curve, 16 ms apart, fading in the last third). The soul takes one slow breath (1 → 1.09 → 1 over 1.3 s). The source line fades (200 ms). The lines under it close up (320 ms, house) and the count line rolls.
+- **Tess:** "Left shoulder, forgotten." (the thing, then what happened) with **UNDO** under her line for 10 s. UNDO brings the line back the same way reversed. After the 10 s Core removes the object and redacts its text from earlier ops (ship list AI-9).
+- No haptic on the commit beyond the `.selection` at the threshold: one haptic per moment (`task-reward.md`).
+- Recent day lines forget the same way; forgetting one never touches the day log itself.
+
+## A new fact arriving
+"remember that I rest on Sundays" (AI-8) lands here when the page is open, and is simply there when it isn't:
+- Tess's line changes first ("Kept. You rest on Sundays." with UNDO). The lines of its group and everything under make room (72 pt, 320 ms, house).
+- The sentence arrives at the top of its group **glyph by glyph** (24 ms each) with the 1.5 pt cobalt line drawing under it over 2 s (the ghost's dry, `no-buttons.md`). When the line is dry it fades out (400 ms) and the source fades in: "you said so just now". The count line rolls.
+- Claude's `remember` on a miss lands the same way, with the source "from what you said on Oct 16".
+
+## Forget everything
+- A **hold** (600 ms) on FORGET EVERYTHING: the ink line under it fills left to right in `live` over the hold (the Finish grammar). Let go early and it drains back.
+- On commit every line drifts into the soul top to bottom, 40 ms apart, the group words fade, the count line reads "Nothing yet.", and Tess: "Everything forgotten, 12 things." with UNDO for 10 s.
+- **The empty page:** the title, "Nothing yet." at 196, and at 250 Body 21 `inkSecondary`: "Say "remember that…" and I'll keep it here." No group words, no FORGET EVERYTHING.
+
+## The 40th told line
+When a told line is dropped at the 04:00 turnover to make room (architecture section 4: the oldest not used in 90 days), the page says so once, on its next open, as Tess's line: "I let one go to make room: Tacos means the sheet-pan tacos." No UNDO (it went at the turnover); "remember that" brings it back. Default for Product.
+
+## Reduce Motion
+No flecks and no glyphs: the line crossfades out (200 ms) and the rest closes up without motion; a new line crossfades in with its source. UNDO and the haptic stay.
+
+## Accessibility
+- Each line is one element: "You train after work on weekdays. You said so on October 9, used today. Actions: Forget." Value words are custom actions ("Change after work").
+- FORGET EVERYTHING is one element with a confirm action; VoiceOver never needs the hold.
+
+## For Builder B and Core
+- Builder B: `TessKnowsPage` (new), reached from the Settings TESS line and from her WHAT I KNOW key; the swipe, the flecks (the `SoulTravel` arc reversed, 28 points), the glyph arrival on the `remember` write, the hold at the end, the empty page.
+- Core: `TessMemory` reads grouped by area with `evidence` and `lastUsedAt` read into the source line; forget (object removed, text redacted) and forget everything behind the 10 s UNDO; the 40-cap note; the "what do you know" phrase answering with the count.
+- AI thread: nothing on this page is sent anywhere; `private` lines show "stays on this phone".
+
+## Owners
+- **Builder B:** the page and its four moments.
+- **Core:** the store, the writes and the phrase.
+- **AI architecture:** the memory rules this page shows.

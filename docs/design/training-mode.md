@@ -35,6 +35,7 @@ The build's "Start workout" is a vermilion paint stroke word (`PaintKey`, the 19
 | Running (520ms on) | `PAUSE`, with a short ink line | The strip is the line now: the lit segment grows with each logged set, in `live` |
 | Paused | `RESUME PUSH A` | Filled to the sets done, dry ink, over the 22% track |
 | Done | `PULL A TOMORROW` (a label, 72%) | None. The strip stays lit, dried |
+| Done, on the eve of his rest weekday | `REST DAY TOMORROW` (QA's #337 note, 16 Oct); after a missed-day roll the label names the routine the roll lands on | None |
 
 - At the landing, the first exercise's first guide wakes from 22% to 90% and breathes (the live page's current-set guide), and Tess's line changes: "Push A running. Bench press first."
 - **Then live mode rises** (480ms, house curve) with the first exercise's name and its strokes matched from the plan row to the lane (`ZoomSource`), so the plan row becomes the set block. The rest of the plan sinks away at 0.96 and fades.

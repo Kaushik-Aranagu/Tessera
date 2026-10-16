@@ -105,6 +105,7 @@ Recording: `recordings/day-log.mp4` (source `studies/day-log.html`): reading bac
 - **Live Activity:** the rest activity's layout and Cobalt sky mood (`live-activity.md`). The left column is the task name at 21/600, then the horizon as `ProgressView(timerInterval:countsDown:)` (cream tint, 2.5pt tall) with `Text(timerInterval:)` in labels. The bottom row has one control, **Done**. No +15 or Skip. Give it a stale date at the block's end plus 15 minutes, so a forgotten block doesn't sit on the Lock Screen.
 
 ## 11 · Visible memory ("What Tess knows")
+**Superseded (16 Oct) by `tess-knows.md`**, the page redrawn under today's rules on the `TessMemory` store for AI-9. The values below are the first study's.
 Recording: `recordings/tess-knows.mp4` (source `studies/tess-knows.html`): swiping left to forget the shoulder fact, its pigment draining into the soul, the rest closing up as measured, and a new fact arriving glyph by glyph under a fading cobalt wash.
 - **Entry:** ask Tess "what do you know", or from Settings ("Tess remembers **12 things**"; the number is the link).
 - **Hero:** "What I know about you" (Title 44, in Tess's voice). Then the facts, each as **a sentence at 21/400 with its value words tappable** in ink 600, exactly as in Settings: "You train **Monday, Wednesday, Friday**." "Your **left shoulder** gets sore on overhead pressing." Under each, its source at 18 in context colour ("from 6 workouts", "you said so on Oct 9").
