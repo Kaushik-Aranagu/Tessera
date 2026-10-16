@@ -74,6 +74,20 @@ public struct TessGrammar {
         if let entry, !phrase.contains(","), let live = parseLive(phrase, text: text, entry: entry) {
             return live.parse
         }
+        // A comma in a live workout (QA Q2): every part goes through the guard ("8, 81" asks: 81 may be a weight); a
+        // comma that only split one set ("100 for 5, at 8") is read whole.
+        if let entry, phrase.contains(",") {
+            let parts = phrase.split(separator: ",").map(String.init)
+                .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+            let lives = parts.map { parseLive($0, text: Self.normalize($0), entry: entry) }
+            if parts.count >= 2, lives.allSatisfy({ $0 != nil }) {
+                let sets = lives.compactMap { $0?.parse }
+                return sets.count == parts.count ? .sets(sets) : nil
+            }
+            if let live = parseLive(parts.joined(separator: " "), text: text, entry: entry) {
+                return live.parse
+            }
+        }
         if phrase.contains(","), let sets = parseCommaSets(phrase, entry: entry) {
             guard let entry else { return sets }
             // Every part snaps to a loadable weight; one out of the kit's range sends the lot to the model.

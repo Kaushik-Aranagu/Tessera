@@ -11,8 +11,11 @@ extension TessGrammar {
 
     /// S701 to S706 (docs/research/fixtures/set-logger.md): the live-workout set rules. Nil when the phrase isn't a
     /// set phrase (the other rules then read it); `Live(parse: nil)` when it is one the grammar mustn't guess.
-    func parseLive(_ phrase: String, text: String, entry: ObjectRecord) -> Live? {
+    func parseLive(_ phrase: String, text _: String, entry: ObjectRecord) -> Live? {
+        // Dictation ends sentences: "Same at 9." (QA Q1).
         let raw = phrase.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            .replacing(/[.!]+$/, with: "").replacing(/,/, with: " ")
+            .split(whereSeparator: \.isWhitespace).joined(separator: " ")
         let model = Live(parse: nil)
         let exercise = store.linkedClass("exercise", of: entry)
         let kindOfKit = exercise.flatMap { store.equipmentKind(of: $0) }
@@ -41,8 +44,19 @@ extension TessGrammar {
         if raw.firstMatch(of: /^fail(?:ed)?(?: at)? \d+$/) != nil {
             return model
         }
-        // S705: kind words; S704: "at N" / "@N" after a set is RPE.
-        var core = text
+        // S704: "at N" / "@N" after a set is RPE (read first, so "to failure at 9" works; QA Q5). S705: kind words.
+        var core = Self.normalize(raw)
+        var rpe: Double?
+        if let match = core.firstMatch(of: /^(.+?) ?(?: at |@ ?)(\d+(?:\.\d+)?)$/),
+           Self.isSetCore(String(match.1))
+        {
+            // A set with an "at" that isn't an RPE ("same at 11", "8 at 4"): never a task here (QA Q3).
+            guard let value = Double(match.2), (5 ... 10).contains(value), (value * 2).rounded() == value * 2 else {
+                return model
+            }
+            rpe = value
+            core = String(match.1)
+        }
         var kind: SetKind?
         if let match = core.firstMatch(of: /^(.+?) to failure$/) {
             core = String(match.1)
@@ -52,26 +66,25 @@ extension TessGrammar {
             core = String(match.1)
             kind = .warmup
         }
-        var rpe: Double?
-        if let match = raw.firstMatch(of: /^(.+?) ?(?: at |@ ?)(\d+(?:\.\d+)?)$/),
-           Self.isSetCore(Self.normalize(String(match.1)))
-        {
-            guard let value = Double(match.2), (5 ... 10).contains(value), (value * 2).rounded() == value * 2 else {
-                // A set shape with an "at" that isn't an RPE: never a task here.
-                return Self.looksLikeSet(String(match.1)) ? model : nil
-            }
-            rpe = value
-            core = Self.normalize(String(match.1))
-        }
-        // S701: a bare number is reps only if it can't be a weight.
+        // S701: a bare number is reps only if it can't be a weight. "N reps" says so: only the range applies.
         if let number = Self.number(core) {
+            let saidReps = core.hasSuffix(" reps")
             guard let last = lastSet(in: entry), number.rounded() == number, (1 ... 50).contains(number),
-                  !nearLastWeight(number, last: last.weight, dial: dial) else { return model }
+                  saidReps ||
+                  // On a bodyweight move the last "weight" is 0 added: nothing to confuse reps with (QA Q4).
+                  kindOfKit == .bodyweight && last.weight == 0
+                  || !nearLastWeight(number, last: last.weight, dial: dial) else { return model }
         }
         guard let parsed = parseRelativeSet(core, entry: entry) else {
             return Self.looksLikeSet(core) || rpe != nil || kind != nil ? model : nil
         }
         guard case let .set(entry, weight, reps, setKind, how, unit, _, _) = parsed else { return Live(parse: parsed) }
+        // "3x10" with a light kit is 3 sets of 10, not 3 kg (a small number the kit can't load exactly): ask.
+        if how == .full, unit == .kilograms, weight <= 10, let dial, !dial.detents.isEmpty,
+           !dial.detents.contains(where: { abs($0 - weight) < 0.001 })
+        {
+            return model
+        }
         let withExtras = Parse.set(entry: entry, weight: weight, reps: reps, kind: kind ?? setKind, phrase: how,
                                    unit: unit, rpe: rpe)
         return Live(parse: snap(withExtras, entry: entry))
@@ -80,7 +93,7 @@ extension TessGrammar {
     /// What can carry an RPE: a set shape, "same" and its kin, or bare reps ("call mum at 7" can't).
     static func isSetCore(_ text: String) -> Bool {
         looksLikeSet(text) || ["same", "same again", "again", "repeat", "one more"].contains(text)
-            || number(text) != nil
+            || number(text) != nil || text.hasSuffix(" to failure") && looksLikeSet(text)
     }
 
     /// "80 x 8", "100 for 5", "80x8": a set shape.
@@ -104,9 +117,8 @@ extension TessGrammar {
               how == .full || how == .drop,
               let exercise = store.linkedClass("exercise", of: entry) else { return parse }
         let dial = store.weightDial(for: exercise)
-        guard let lightest = dial.detents.first, let heaviest = dial.detents.last, weight > 0 || lightest == 0 else {
-            return parse
-        }
+        // Below the lightest load ("0 x 8" on a barbell, QA Q6) or above the heaviest: the model asks.
+        guard let lightest = dial.detents.first, let heaviest = dial.detents.last else { return parse }
         guard weight >= lightest - 0.001, weight <= heaviest + 0.001 else { return nil }
         let snapped = dial.snap(weight)
         return .set(entry: entry, weight: snapped, reps: reps, kind: kind, phrase: how, unit: unit, rpe: rpe,

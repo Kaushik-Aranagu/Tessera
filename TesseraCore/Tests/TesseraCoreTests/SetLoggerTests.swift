@@ -30,10 +30,10 @@ struct SetLoggerTests {
         .init("K775", "82.5", .barbell, "nil"),
         .init("K776", "80 for 8", .barbell, "set 80x8"),
         .init("K777", "80x8", .barbell, "set 80x8"),
-        .init("K778", "same", .barbell, "set 80x8"),
-        .init("K779", "one more", .barbell, "set 80x8"),
-        .init("K780", "8 reps", .barbell, "set 80x8"),
-        .init("K781", "12", .dumbbell, "set 24x12"),
+        .init("K778", "same", .barbell, "set 80x8 same"),
+        .init("K779", "one more", .barbell, "set 80x8 same"),
+        .init("K780", "8 reps", .barbell, "set 80x8 reps"),
+        .init("K781", "12", .dumbbell, "set 24x12 reps"),
         .init("K782", "24", .dumbbell, "nil"),
         .init("K783", "81", .barbell, "nil"),
         .init("K784", "55", .machine, "nil"),
@@ -41,17 +41,17 @@ struct SetLoggerTests {
         .init("K786", "-5", .barbell, "nil"),
         .init("K787", "+2.5", .barbell, "nil"),
         .init("K788", "drop to 70 for 10", .barbell, "set 70x10 drop"),
-        .init("K789", "drop to 72 for 10", .barbell, "set 72.5x10 drop"),
-        .init("K790", "81 for 8", .barbell, "set 80x8"),
-        .init("K791", "81.25 x 8", .barbell, "set 80x8"),
-        .init("K792", "81.3 x 8", .barbell, "set 82.5x8"),
+        .init("K789", "drop to 72 for 10", .barbell, "set 72.5x10 drop (said 72)"),
+        .init("K790", "81 for 8", .barbell, "set 80x8 (said 81)"),
+        .init("K791", "81.25 x 8", .barbell, "set 80x8 (said 81.25)"),
+        .init("K792", "81.3 x 8", .barbell, "set 82.5x8 (said 81.3)"),
         .init("K793", "200 x 3", .barbell, "nil"),
-        .init("K794", "25 x 10", .dumbbell, "set 24x10"),
-        .init("K795", "57.5 x 10", .machine, "set 55x10"),
-        .init("K797", "180 lb for 5", .barbell, "set 81.6x5"),
+        .init("K794", "25 x 10", .dumbbell, "set 24x10 (said 25)"),
+        .init("K795", "57.5 x 10", .machine, "set 55x10 (said 57.5)"),
+        .init("K797", "180 lb for 5", .barbell, "set 81.6x5 lb"),
         .init("K798", "100 for 5 at 8", .barbell, "set 100x5 @8"),
-        .init("K799", "same at 9", .barbell, "set 80x8 @9"),
-        .init("K800", "8 at 9", .barbell, "set 80x8 @9"),
+        .init("K799", "same at 9", .barbell, "set 80x8 same @9"),
+        .init("K800", "8 at 9", .barbell, "set 80x8 reps @9"),
         .init("K801", "fail at 6", .barbell, "nil"),
         .init("K802", "80 x 6 to failure", .barbell, "set 80x6 failure"),
         .init("K803", "warmup 60x5", .barbell, "set 60x5 warmup"),
@@ -64,9 +64,26 @@ struct SetLoggerTests {
         .init("K813", "same", .noSets, "nil"),
         .init("K814", "8", .noSets, "nil"),
         .init("B303", "80 x 8 @8", .barbell, "set 80x8 @8"),
-        .init("B309", "8", .barbell, "set 80x8"),
+        .init("B309", "8", .barbell, "set 80x8 reps"),
         .init("A180", "100", .barbell, "nil"),
-        .init("H625", "38", .barbell, "set 80x38"),
+        .init("H625", "38", .barbell, "set 80x38 reps"),
+        // QA on #205: dictation (Q1), commas (Q2), non-RPE "at" (Q3), bodyweight reps (Q4), kind with RPE (Q5),
+        // below the bar (Q6).
+        .init("Q1a", "Same at 9.", .barbell, "set 80x8 same @9"),
+        .init("Q1b", "8 at 9.", .barbell, "set 80x8 reps @9"),
+        .init("Q1c", "Fail at 6.", .barbell, "nil"),
+        .init("Q1d", "-5.", .barbell, "nil"),
+        .init("Q1e", "+5.", .barbell, "nil"),
+        .init("Q2a", "100 for 5, at 8", .barbell, "set 100x5 @8"),
+        .init("Q2b", "8, 81", .barbell, "nil"),
+        .init("Q3a", "same at 11", .barbell, "nil"),
+        .init("Q3b", "8 at 4", .barbell, "nil"),
+        .init("Q4", "2", .bodyweight, "set 0x2 reps"),
+        .init("Q5", "80 x 6 to failure at 9", .barbell, "set 80x6 failure @9"),
+        .init("Q6", "0 x 8", .barbell, "nil"),
+        // Research's rerun: "3x10" on dumbbells is 3 sets of 10 (ask); "24 reps" says reps even at the last weight.
+        .init("R2", "3x10", .dumbbell, "nil"),
+        .init("R3", "24 reps", .dumbbell, "set 24x24 reps"),
     ]
 
     let store = ObjectStore.open(inMemory: true)
@@ -101,15 +118,25 @@ struct SetLoggerTests {
 
     func kind(_ parse: TessGrammar.Parse?) -> String {
         guard let parse else { return "nil" }
-        guard case let .set(_, weight, reps, kind, how, _, rpe, _) = parse else { return "\(parse)" }
+        guard case let .set(_, weight, reps, kind, how, unit, rpe, said) = parse else { return "\(parse)" }
         var text = "set \(TessVoice.number(weight))x\(TessVoice.number(reps))"
-        if how == .drop {
-            text += " drop"
-        } else if kind == .failure || kind == .warmup {
+        switch how {
+        case .same: text += " same"
+        case .repsOnly: text += " reps"
+        case .drop: text += " drop"
+        case .full: break
+        }
+        if kind == .failure || kind == .warmup {
             text += " \(kind.rawValue)"
+        }
+        if unit != .kilograms {
+            text += " \(unit.symbol)"
         }
         if let rpe {
             text += " @\(TessVoice.number(rpe))"
+        }
+        if let said {
+            text += " (said \(String(format: "%g", said)))"
         }
         return text
     }
@@ -127,7 +154,7 @@ struct SetLoggerTests {
             Issue.record("80 x 8, 81 x 6")
             return
         }
-        #expect(parts.map(kind) == ["set 80x8", "set 80x6"])
+        #expect(parts.map(kind) == ["set 80x8", "set 80x6 (said 81)"])
     }
 
     @Test func tessSaysWhenItSnapped() async throws {
