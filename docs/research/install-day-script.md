@@ -21,6 +21,13 @@ source as `file:line`. *Sim* says whether it runs on the Simulator: **Yes**, **P
 needs the phone) or **No** (phone only; the step says what QA checks instead). Tick **P** or **F** in the last
 column and write a few words for any F.
 
+## Step 0, on the phone, before the install (Product, Oct 16, ff548605)
+
+Before any install that carries a catalog migration (v7 onwards), Kaushik opens **Review > Backups** on the phone
+and taps **SAVE A COPY** (`Features/Backup/BackupView.swift:128`). The page shows today's copy (`:51, 349`). Nothing
+else is asked of him about his real backup. Then install. The rollback rule is that an older build opening a newer
+store is shown safe through v7; restoring a newer backup onto an older build stays forbidden until it is tested.
+
 ## Before you start (2 minutes, not timed)
 
 - Simulator: iPhone 17, iOS 27 runtime, Debug build of the `Tessera` scheme. Since #269 every launch argument is
