@@ -37,6 +37,8 @@ struct BottomChrome: View {
     @State private var refusal: SpeechListener.Refusal?
     @State private var holdTimer: Task<Void, Never>?
     @State private var holdListening = false
+    /// A first tap waiting out the double-tap window.
+    @State private var pendingTap: Task<Void, Never>?
     /// The one-time "Hold me to talk." hint: 0 not yet, 1 showing (after the first Allow), 2 done for good.
     @AppStorage("tess.holdHint") private var holdHint = 0
     /// The open dated-lift ask ("Bench 80 × 8 for Monday?"), answered with LOG or NOT NOW.
@@ -248,16 +250,17 @@ struct BottomChrome: View {
                     if holdListening {
                         holdListening = false
                         listener.stop(send: value.translation.width > -60)
+                    } else if abs(value.translation.width) < 12, abs(value.translation.height) < 12 {
+                        soulTapped()
                     }
                 })
-            .onTapGesture(count: 2) { onSoulDoubleTap() }
-            .onTapGesture { model.isCommandExpanded ? close() : open() }
             .scaleEffect(holdListening ? 1.4 + listener.level * 0.15 : 1)
             .animation(.easeOut(duration: 0.12), value: listener.level)
             .accessibilityElement()
             .accessibilityLabel("Tess")
             .accessibilityHint("Opens Tess.")
             .accessibilityAddTraits(.isButton)
+            .accessibilityAction { toggle() }
             .accessibilityAction(named: "Go home") { onSoulDoubleTap() }
             .accessibilityAction(named: "Talk to Tess") {
                 if listener.state == .idle {
@@ -517,6 +520,31 @@ struct BottomChrome: View {
 // MARK: - Speak and the asks (same file, so they reach the view's private state)
 
 extension BottomChrome {
+    /// Taps are read off the press itself: a separate tap gesture never fired beside the touch-down drag, so the
+    /// soul didn't open on a real tap. One tap opens or closes after the double-tap window; two go Home.
+    private func soulTapped() {
+        if let first = pendingTap {
+            first.cancel()
+            pendingTap = nil
+            onSoulDoubleTap()
+            return
+        }
+        pendingTap = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(260))
+            guard !Task.isCancelled else { return }
+            pendingTap = nil
+            toggle()
+        }
+    }
+
+    private func toggle() {
+        if model.isCommandExpanded {
+            close()
+        } else {
+            open()
+        }
+    }
+
     /// Touching the drying ghost stops it, and the sentence opens in the Write line to edit.
     private func editVoiceGhost() {
         guard let voiceGhost else { return }
@@ -579,10 +607,17 @@ extension BottomChrome {
         }
         if SpokenPhrase.isUndo(heard) {
             close()
-            undo()
+            if canUndo {
+                undo()
+            } else {
+                say("Nothing to undo.")
+            }
             return
         }
-        let clean = TessSpoken.numbers(SpokenPhrase.clean(heard))
+        // Spoken numbers become digits only for a set in a workout; elsewhere the words keep their case ("Call Mum
+        // at seven.") (QA S3).
+        let tidy = SpokenPhrase.clean(heard)
+        let clean = model.session != nil ? TessSpoken.numbers(tidy) : tidy
         if !model.isCommandExpanded {
             withTesseraAnimation(reduceMotion: reduceMotion) { model.isCommandExpanded = true }
         }
