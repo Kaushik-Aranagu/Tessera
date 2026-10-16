@@ -186,7 +186,7 @@ private struct WorkoutContent: View {
         // Editing a logged set takes the set block over (dial, drum, key), even during rest.
         let phase = session.isEditing ? .set : actual
         return VStack(alignment: .leading, spacing: 0) {
-            header(now: now)
+            header(phase: phase)
                 .padding(.horizontal, Theme.Spacing.gutter)
                 .padding(.top, Theme.Spacing.m)
             ExerciseLane(session: session, laneIndex: $laneIndex, isSwapOpen: isSwapOpen, setSwap: setSwap(open:))
@@ -333,38 +333,24 @@ extension WorkoutContent {
 
     // MARK: Header and lane (x)
 
-    private func header(now: Date) -> some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text("\(session.workout.title), \(Format.duration(now.timeIntervalSince(session.startedAt)))")
-                .font(Theme.voice)
-                .foregroundStyle(Paint.secondary)
-                .contentTransition(.numericText())
-                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                .contentShape(Rectangle())
-                // Pull down on the seam (or tap it) for the running order.
-                .onTapGesture { setOrder(open: true) }
-                .gesture(DragGesture(minimumDistance: 12).onEnded { drag in
-                    if drag.translation.height > 30 {
-                        setOrder(open: true)
-                    }
-                })
-                .accessibilityAddTraits(.isButton)
-                .accessibilityHint("Shows the running order")
-            Text("\((laneIndex ?? session.currentIndex) + 1) / \(session.entries.count)")
-                .textRole(.label)
-                .foregroundStyle(Paint.secondary)
-            Button {
-                model.isWorkoutPresented = false
-            } label: {
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Paint.cream)
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
-            }
-            .accessibilityLabel("Minimise workout")
-        }
-        .accessibilityElement(children: .contain)
+    /// The context line above the name (live-workout.md): "Push A, set 1 of 4", "Rest, then set 2". No count: the
+    /// strip says which exercise this is. Tap or pull down for the running order.
+    private func header(phase: WorkoutSession.Phase) -> some View {
+        Text(WorkoutLines.context(session, phase: phase))
+            .font(Theme.voice(size: 21))
+            .foregroundStyle(Theme.Colors.context)
+            .contentTransition(.opacity)
+            .tesseraAnimation(value: WorkoutLines.context(session, phase: phase))
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .contentShape(Rectangle())
+            .onTapGesture { setOrder(open: true) }
+            .gesture(DragGesture(minimumDistance: 12).onEnded { drag in
+                if drag.translation.height > 30 {
+                    setOrder(open: true)
+                }
+            })
+            .accessibilityAddTraits(.isButton)
+            .accessibilityHint("Shows the running order")
     }
 
     @ViewBuilder
@@ -616,25 +602,37 @@ extension WorkoutContent {
             } else {
                 switch phase {
                 case .set:
-                    // Hold to log: 0.6 s, 20 pt of drift (docs/research/ship-now.md).
-                    // Silent: the set's haptic plays when it seats (onChange of lastSeated).
-                    PaintKey(paint: Paint.live, duration: 0.6, height: 64, drift: 20, isSilent: true) {
+                    // The key says what it logs (live-workout.md): "LOG 82.5 × 8", a 0.7 s hold on the ink line; the
+                    // workout's last set logs and finishes in one hold. Silent: the set's haptic plays when it seats.
+                    let finishes = session.isLastSetOfWorkout
+                    PaintKey(paint: Paint.live, duration: 0.7, height: 64, drift: 20, isSilent: true) {
                         withTesseraAnimation(reduceMotion: reduceMotion) { session.logSet() }
+                        if finishes {
+                            finish()
+                        }
                     } label: { _ in
-                        Text("Log set")
+                        Text(
+                            "Log \(Format.kilograms(session.weight)) × \(Int(session.reps))\(finishes ? " and finish" : "")"
+                        )
+                        .textRole(.labelStrong)
+                        .textCase(.uppercase)
+                        .contentTransition(.numericText())
                     } meta: {
-                        Text("Hold · \(Format.kilograms(session.weight)) × \(Int(session.reps))")
+                        EmptyView()
                     }
                     .accessibilityLabel(logLabel)
                     .accessibilityAction(named: "Log set") {
                         withTesseraAnimation(reduceMotion: reduceMotion) { session.logSet() }
+                        if finishes {
+                            finish()
+                        }
                     }
                 case .rest:
                     // The horizon above carries +15 and the fling; the key only skips.
                     PaintKey(paint: Paint.now, isTap: true, height: 64) {
                         skipRest()
                     } label: { _ in
-                        Text("Skip rest")
+                        Text("Skip rest").textRole(.labelStrong).textCase(.uppercase)
                     }
                 case .exerciseDone:
                     PaintKey(paint: Paint.cobalt, isTap: true, height: 64) {
@@ -643,20 +641,31 @@ extension WorkoutContent {
                             }
                         }
                     } label: { _ in
-                        Text("Next exercise")
+                        Text("Next exercise").textRole(.labelStrong).textCase(.uppercase)
                     }
                 case .workoutDone:
                     PaintKey(paint: Paint.live, duration: 0.8, height: 64, isSilent: true) {
                         finish()
                     } label: { _ in
-                        Text("Finish")
+                        Text("Finish").textRole(.labelStrong).textCase(.uppercase)
                     } meta: {
-                        Text("Hold · \(session.summary.sets) sets")
+                        EmptyView()
                     }
                     .accessibilityAction(named: "Finish workout") { finish() }
                 }
             }
             Spacer(minLength: 0)
+            if session.finishedAt == nil {
+                // PAUSE leaves to Home, where the key reads RESUME with the progress line.
+                Button("Pause") { model.isWorkoutPresented = false }
+                    .textRole(.labelStrong)
+                    .textCase(.uppercase)
+                    .foregroundStyle(Paint.cream.opacity(0.6))
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Pause the workout")
+            }
         }
         .frame(height: 62)
     }

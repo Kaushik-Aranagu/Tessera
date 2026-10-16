@@ -227,6 +227,22 @@ final class WorkoutSession {
     }
 
     /// 1-based number of the set being dialled in the current exercise.
+    /// This set's place last session: "last time 82.5 × 8".
+    func lastTime(setNumber: Int) -> (weight: Double, reps: Double)? {
+        guard let entry = currentEntry, let exercise = exerciseClass(of: entry) else { return nil }
+        let sets = model.ledger.sessions(of: exercise, excludingWorkout: workout.id).first?.sets ?? []
+        guard !sets.isEmpty else { return nil }
+        let set = sets[min(setNumber - 1, sets.count - 1)]
+        return (set.weight, set.reps)
+    }
+
+    /// The set on the dial is the workout's last: every other exercise is done and this is its final set.
+    var isLastSetOfWorkout: Bool {
+        guard let entry = currentEntry else { return false }
+        let others = entries.filter { $0.id != entry.id }
+        return others.allSatisfy(isFinished) && setRows(of: entry).count + 1 >= targetSets(of: entry)
+    }
+
     var currentSetNumber: Int {
         guard let entry = currentEntry else { return 1 }
         return min(setRows(of: entry).count + 1, max(targetSets(of: entry), 1))
