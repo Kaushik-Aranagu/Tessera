@@ -128,3 +128,5 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [fixtures/set-logger.md](fixtures/set-logger.md) | Core, Builder A: 40 set-logger phrases (group K in the grammar suite), defaults S701-S706 |
 | [theme-schedule.md](theme-schedule.md) | Builder A, Design: when the day look switches to the night look, pins, Live Activity; 25 fixtures against master |
 | [backup-logical-day.md](backup-logical-day.md) | Core, QA: daily backup copy by the 4 AM day, 12 timelines with test names and phone steps |
+| [day-log-copy.md](day-log-copy.md) | Builder B: Day log page copy for 12 states, empty states, 4 AM day |
+| [m3-lines.md](m3-lines.md) | Design, Core: body weight and habits lines, empty states, VoiceOver (about 75 lines) |
