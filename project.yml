@@ -93,6 +93,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.kaushikaranagu.tessera.widgets
+        CODE_SIGN_ENTITLEMENTS: Widgets/TesseraWidgets.entitlements
         GENERATE_INFOPLIST_FILE: YES
         SKIP_INSTALL: YES
         SUPPORTS_MACCATALYST: NO

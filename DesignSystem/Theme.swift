@@ -25,8 +25,6 @@ struct ThemeConcept: Sendable {
         var live: (UInt32, UInt32)
         /// Training domain.
         var training: (UInt32, UInt32)
-        /// Personal records / progress.
-        var progress: (UInt32, UInt32)
         /// Time-of-day tints for backgrounds that use them: dawn, day, dusk, night.
         var sky: [[UInt32]]
         /// Tess's words and anything she changed (cobalt).
@@ -134,7 +132,6 @@ extension ThemeConcept {
             ink: (0x1D1A16, 0xEFE8DC),
             live: (0xC2502A, 0xE8774E),
             training: (0x2F5A45, 0x8CC4A4),
-            progress: (0x8A6A12, 0xE2BE5A),
             sky: [
                 [0xF2C9A0, 0xEFD9C3, 0xE9C4B4],
                 [0xE3E2D2, 0xEDE4D2, 0xD9E0DA],
@@ -188,7 +185,6 @@ extension ThemeConcept {
             ink: (0x1C1B1A, 0xECE9E3),
             live: (0xC8452F, 0xD9563F),
             training: (0xC8452F, 0xD9563F),
-            progress: (0x8A6A1C, 0xE8BD4C),
             sky: Array(repeating: [0xE7E3DC, 0xE7E3DC, 0xE7E3DC], count: 4)
         ),
         fonts: FontPairing(display: "Schibsted Grotesk", ui: "Schibsted Grotesk", mono: "Martian Mono"),
@@ -219,7 +215,6 @@ extension ThemeConcept {
             ink: (0x2B2440, 0xF3ECE0),
             live: (0xC8452F, 0xD9563F),
             training: (0x6E9E6A, 0x7FB07A),
-            progress: (0xE0A35C, 0xE8BD4C),
             sky: Array(repeating: [0xF2ECE3, 0xF2ECE3, 0xF2ECE3], count: 4)
         ),
         // Inter Tight app-wide (Kaushik, 2026-10-15); no italics. docs/design/type-and-motion.md.
@@ -253,7 +248,7 @@ extension ThemeConcept {
         concept.background = .looks
         concept.palette = Palette(
             ground: (day.ground, night.ground), ink: (day.ink, night.ink), live: (day.live, night.live),
-            training: (day.training, night.training), progress: (day.now, night.now),
+            training: (day.training, night.training),
             sky: Array(repeating: [day.ground, day.ground, day.ground], count: 4),
             tess: (day.tess, night.tess), context: (day.context, night.context), now: (day.now, night.now),
             health: (day.health, night.health), muted: (day.muted, night.muted), raised: (day.raised, night.raised),
@@ -363,30 +358,23 @@ enum Theme {
 
         /// Pigment over ground: multiply on light looks, screen on dark ones (the soul, any pigment overlay).
         static var soulBlend: BlendMode {
-            ThemeStore.shared.current.isDark ? .screen : .multiply
+            ThemeStore.shared.paintLook.isDark ? .screen : .multiply
         }
 
         /// The glint: a gold band through the letters on Porcelain and Celadon (now at 60%, normal blend), Plein's
         /// warm light on its pages, and light passing over dark looks (plus-lighter).
         static var sheen: Color {
-            let look = ThemeStore.shared.current
-            switch look.field {
-            case .pigmentBloom, .glaze: return Color(hex: look.now).opacity(0.6)
-            case .plein: return Color(hex: 0xF7E6B8)
-            case .emissive, .lacquer: return Color(hex: 0xFFE2A8)
-            }
+            let look = ThemeStore.shared.paintLook
+            return Color(hex: look.sheen).opacity(look.sheenOnLetters ? 0.6 : 1)
         }
 
         static var sheenBlend: BlendMode {
-            switch ThemeStore.shared.current.field {
-            case .pigmentBloom, .glaze: .normal
-            case .plein, .emissive, .lacquer: .plusLighter
-            }
+            ThemeStore.shared.paintLook.sheenOnLetters ? .normal : .plusLighter
         }
 
         /// Pigment glows on dark looks (strokes, dabs, the soul, numerals; never text under 34 pt).
         static var halo: Bool {
-            ThemeStore.shared.current.isDark
+            ThemeStore.shared.paintLook.isDark
         }
 
         static var hairline: Color {
@@ -399,10 +387,6 @@ enum Theme {
 
         static var training: Color {
             Color(light: concept.palette.training.0, dark: concept.palette.training.1)
-        }
-
-        static var progress: Color {
-            Color(light: concept.palette.progress.0, dark: concept.palette.progress.1)
         }
 
         static var tess: Color {

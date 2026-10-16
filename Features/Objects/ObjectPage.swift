@@ -166,7 +166,7 @@ private struct ExerciseSummary: View {
         let top = history.first?.sets.max { $0.weight * 100 + $0.reps < $1.weight * 100 + $1.reps }
         VStack(spacing: Theme.Spacing.m) {
             Stat(label: "Best e1RM", value: best.map { "\(Format.kilograms(($0.e1RM * 10).rounded() / 10))kg" } ?? "—",
-                 tint: Theme.Colors.progress)
+                 tint: Theme.Colors.ink)
             Stat(label: "Last top set", value: top.map { "\(Format.kilograms($0.weight))×\(Int($0.reps))" } ?? "—")
             Stat(label: "Sessions", value: "\(history.count)")
         }

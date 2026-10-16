@@ -133,7 +133,7 @@ struct WorkoutFinishView: View {
                 .stroke(gradient, style: StrokeStyle(lineWidth: 16, lineCap: .round))
             // The wet edge: a lighter rim along the stroke.
             Brushstroke(progress: mark)
-                .stroke(.white.opacity(0.22), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                .stroke(Theme.Colors.Workout.ink.opacity(0.22), style: StrokeStyle(lineWidth: 2, lineCap: .round))
                 .offset(y: -5)
                 .blendMode(.screen)
         }

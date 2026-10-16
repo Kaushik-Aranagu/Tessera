@@ -113,23 +113,6 @@ struct SoulPalette {
     var halo: Gradient
     var ring: Gradient
 
-    static let light = SoulPalette(
-        blend: .multiply,
-        washes: [0xC8452F, 0x2E6DA4, 0xE0B341].map(wash),
-        halo: halo(Color(hex: 0xD66046).opacity(0.16), Color(hex: 0x7A5C8E).opacity(0.10)),
-        ring: ring(Color(hex: 0x7A4A3A))
-    )
-    static let dark = SoulPalette(
-        blend: .screen,
-        washes: [0xD9563F, 0x3F7FC0, 0xE8BD4C].map(wash),
-        halo: halo(Color(hex: 0xD9563F).opacity(0.22), Color(hex: 0x3F7FC0).opacity(0.14)),
-        ring: ring(Color(hex: 0xE8BD4C))
-    )
-
-    static func forScheme(_ scheme: ColorScheme) -> SoulPalette {
-        scheme == .dark ? dark : light
-    }
-
     /// The look's live, tess and now; halo from live and context, the ring in context at 60%. Multiply on light
     /// looks, screen (and a fuller halo) on dark ones.
     static func look(_ look: Look) -> SoulPalette {

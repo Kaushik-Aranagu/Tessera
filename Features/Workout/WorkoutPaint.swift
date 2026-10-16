@@ -36,8 +36,10 @@ enum WorkoutPaint {
         Theme.Colors.Workout.ink
     }
 
-    /// The glint over a dark ground (every workout is dark).
-    static let sheen = Color(hex: 0xFFE2A8)
+    /// The glint over the workout's dark ground (the look's sheen, resolved against the workout's pages).
+    static var sheen: Color {
+        Theme.Colors.sheen
+    }
 
     /// The glass of sheets and panels: the ground at 82% over the material.
     static var glass: Color {
@@ -80,11 +82,11 @@ struct WorkoutGlass<S: InsettableShape>: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background {
-                shape.fill(.ultraThinMaterial)
+                shape.fill(Theme.Colors.Workout.raised)
                     .overlay { shape.fill(WorkoutPaint.glass) }
             }
             .overlay {
-                shape.strokeBorder(LinearGradient(stops: [.init(color: .white.opacity(0.14), location: 0),
+                shape.strokeBorder(LinearGradient(stops: [.init(color: Theme.Colors.Workout.hairline, location: 0),
                                                           .init(color: .clear, location: 0.08)],
                                                   startPoint: .top, endPoint: .bottom), lineWidth: 1)
             }

@@ -48,6 +48,13 @@ struct Look: Sendable, Identifiable, Equatable {
     var neutral: UInt32
     var sky: UInt32
     var workout: Workout
+    /// The glint (themes.md addendum, "Sheen"): gold through the letters on white looks (normal blend, 60%),
+    /// light passing over everything else (plus-lighter).
+    var sheen: UInt32 = 0xFFE2A8
+    var sheenOnLetters = false
+    /// Lacquer's field: the shade it deepens to and its specular band.
+    var fieldShade: UInt32 = 0x06030A
+    var fieldSpecular: UInt32 = 0xFFF4E6
 
     var id: String {
         name
@@ -59,7 +66,8 @@ struct Look: Sendable, Identifiable, Equatable {
         live: 0xE2432A, liveInk: 0xC23A22, now: 0xF0A500, health: 0x12936A, training: 0xCC3F68, neutral: 0x9C95A8,
         sky: 0x7FB6E0,
         workout: Workout(ground: 0x14111A, raised: 0x221D2C, ink: 0xF5F2EC, signal: 0xFF5B3A, rest: 0xF0A500,
-                         tess: 0x8FB0FF, health: 0x3FC58F)
+                         tess: 0x8FB0FF, health: 0x3FC58F),
+        sheen: 0xF0A500, sheenOnLetters: true
     )
 
     static let obsidian = Look(
@@ -77,7 +85,8 @@ struct Look: Sendable, Identifiable, Equatable {
         live: 0xC8452F, liveInk: 0xB83C28, now: 0xE0B341, health: 0x6E9E6A, training: 0x6E9E6A, neutral: 0xA39AAE,
         sky: 0x9EC3D6,
         workout: Workout(ground: 0x1C1828, raised: 0x3B2D57, ink: 0xF3ECE0, signal: 0xD9563F, rest: 0xE8BD4C,
-                         tess: 0x9DBFE6, health: 0x7FB07A)
+                         tess: 0x9DBFE6, health: 0x7FB07A),
+        sheen: 0xF7E6B8
     )
 
     static let lacquer = Look(
@@ -95,7 +104,8 @@ struct Look: Sendable, Identifiable, Equatable {
         live: 0xD8462C, liveInk: 0xB8361E, now: 0xD99A1C, health: 0x23866A, training: 0xC24766, neutral: 0x7E918A,
         sky: 0x8DBBD6,
         workout: Workout(ground: 0x0E1C17, raised: 0x18302A, ink: 0xEEF3EF, signal: 0xEE7056, rest: 0xE2A93A,
-                         tess: 0x9DBBEA, health: 0x5DBE98)
+                         tess: 0x9DBBEA, health: 0x5DBE98),
+        sheen: 0xD99A1C, sheenOnLetters: true
     )
 
     static let all: [Look] = [.porcelain, .obsidian, .plein, .lacquer, .celadon]
@@ -124,7 +134,37 @@ struct Look: Sendable, Identifiable, Equatable {
 /// `body` redraw on a switch through Observation (a colour copied into a stored `let` won't).
 @Observable
 final class ThemeStore {
-    nonisolated(unsafe) static let shared = ThemeStore()
+    nonisolated(unsafe) static let shared = ThemeStore(defaults: ThemeStore.sharedDefaults)
+
+    /// The look lives in the App Group (verified on the free Personal Team, 2026-10-16), so widgets read the same
+    /// choice. A choice saved before the group existed moves over once.
+    static let appGroup = "group.com.kaushikaranagu.tessera"
+
+    static var sharedDefaults: UserDefaults {
+        guard let group = UserDefaults(suiteName: appGroup) else { return .standard }
+        let standard = UserDefaults.standard
+        for key in ["look.day", "look.night", "look.pinned"] where group.object(forKey: key) == nil {
+            if let value = standard.string(forKey: key) {
+                group.set(value, forKey: key)
+            }
+        }
+        return group
+    }
+
+    /// Whether this phone's look was ever chosen (a restore applies a backup's look only when it wasn't).
+    var wasEverChosen: Bool {
+        defaults.object(forKey: Key.day) != nil || defaults.object(forKey: Key.night) != nil
+    }
+
+    /// A restored backup's look, applied only if this phone never chose one (theme-names.md, "backups").
+    func adoptRestored(day: String?, night: String?, pinned: String?) {
+        guard !wasEverChosen, let dayLook = day.flatMap(Look.named), let nightLook = night.flatMap(Look.named)
+        else { return }
+        self.day = dayLook
+        self.night = nightLook
+        self.pinned = pinned.flatMap(Look.named)
+        save()
+    }
 
     private(set) var day: Look
     private(set) var night: Look
@@ -178,6 +218,12 @@ final class ThemeStore {
     /// The pin in force: the demo's, else his.
     var pin: Look? {
         demoPin ?? pinned
+    }
+
+    /// The look the paint tokens (halo, blends, bloom, sheen, glows) resolve against: while the workout is open its
+    /// pages are forced dark, so the night look (or the pin); otherwise the look on screen (QA W8).
+    var paintLook: Look {
+        workoutHeld == nil ? current : (pin ?? night)
     }
 
     /// The workout's look: the one it opened in while it's open, else the one on screen.

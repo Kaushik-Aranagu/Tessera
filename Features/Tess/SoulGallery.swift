@@ -15,7 +15,7 @@ struct SoulGallery: View {
                 grid
                 Text("On a dark ground").textRole(.label).foregroundStyle(Theme.Colors.inkSecondary)
                 grid
-                    .background(Color(hex: 0x1C1826), in: .rect(cornerRadius: 18))
+                    .background(Theme.Colors.Workout.ground, in: .rect(cornerRadius: 18))
                     .environment(\.colorScheme, .dark)
                 Text("Blending, every 2.5 s").textRole(.label).foregroundStyle(Theme.Colors.inkSecondary)
                 ModeWalk(modes: Self.modes)
