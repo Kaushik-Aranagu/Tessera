@@ -20,4 +20,6 @@
 
 **After widgets ship:** the expired-signing widget timeline (Research #156) needs one look on an expired build. Signing is refreshed before it lapses, so his phone never expires for a test; letting it lapse would be a deliberate call with Kaushik.
 
+**Mon Oct 19:** the coordinator asks the three training week-one questions (`training-week-one.md`). Defaults until he answers: keep the rest timer, swap is easy enough, finish isn't forgotten.
+
 **Thursday Oct 22, end of his first kitchen week** (Groceries and Recipes reached the phone with 21566b8 on Oct 15): the three one-word questions from `kitchen-week-one.md` go on that day's morning list in one message (pantry check, saving a recipe from a website, reaching for something else). The answers go to the Kitchen lead to scope v2.
