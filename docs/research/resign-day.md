@@ -58,7 +58,8 @@ names.
 2. **Make sure today's copy exists.** Open Tessera, then go to the Home Screen (the day's copy is made on the first
    move to the background). Reopen, go to Review > Backups: it should say "Kept in two places" and "the last one
    today". Before 4:00 AM PT the copy is filed under yesterday's date (his 4 AM day); that is fine.
-3. **On the Mac.** Pull master, run `xcodegen generate`, open the project, choose his iPhone, leave the Signing tab
+3. **On the Mac.** Build the exact commit, never master: the build on his phone (7b321d2 today) for a plain re-sign, or the pin
+   SHA named in decisions.md on his "install it" (see `oct-22-list.md`). Check `git rev-parse --short HEAD` prints that SHA, run `xcodegen generate`, open the project, choose his iPhone, leave the Signing tab
    alone (team WMP2WF3P54, bundle id as is), press Cmd-R. Phone unlocked, same Wi-Fi.
 4. **If Xcode shows a signing or install error: stop. Never delete the app.** Read the error first. "Untrusted
    developer" means Settings > General > VPN & Device Management > trust. A device not paired means pair again in
