@@ -12,7 +12,8 @@ struct ShoppingTests {
         let table = ProcessTable(engine: engine)
         let lists = ListContents(store: store, classes: classes)
         try engine.perform(AddGroceries(lines: ["milk", "2 lemons", "bread", "500 g mince"]), by: .user)
-        #expect(groceries.shoppingOrder().map(\.text) == ["lemons", "bread", "mince", "milk"])
+        // US walk order: dairy and eggs before meat and seafood.
+        #expect(groceries.shoppingOrder().map(\.text) == ["lemons", "bread", "milk", "mince"])
 
         try engine.perform(StartShop(), by: .user)
         #expect(table.running()?.nextStep == "Shopping, 4 left")

@@ -2,14 +2,26 @@ import Foundation
 
 /// Where things are in a shop (kitchen slice 7), in walking order. An ingredient's aisle is learned: the guide
 /// below is the starting point, and moving an item on the groceries list teaches its ingredient.
+/// US names and walk order (us-shop.md): produce, bakery, dairy and eggs, meat and seafood, cans and jars, pantry,
+/// spices, frozen, household, other.
 public enum Aisle: String, CaseIterable, Sendable {
-    case produce = "Produce", bakery = "Bakery", meatFish = "Meat and fish", dairy = "Dairy"
-    case dryGoods = "Dry goods", tinsJars = "Tins and jars", spices = "Spices", frozen = "Frozen"
+    case produce = "Produce", bakery = "Bakery", dairy = "Dairy and eggs", meatSeafood = "Meat and seafood"
+    case cansJars = "Cans and jars", pantry = "Pantry", spices = "Spices", frozen = "Frozen"
     case household = "Household", other = "Other"
+
+    /// Names stored before the US names: they read as the new ones, so nothing is lost.
+    static let formerNames: [String: Aisle] = [
+        "Meat and fish": .meatSeafood, "Dry goods": .pantry, "Tins and jars": .cansJars, "Dairy": .dairy,
+    ]
+
+    /// A stored section name as it shows today ("Tins and jars" → "Cans and jars"); other names pass through.
+    public static func shown(_ name: String) -> String {
+        formerNames[name]?.rawValue ?? name
+    }
 
     /// The order a shop is walked in; unknown section names go last.
     public static func order(of name: String?) -> Int {
-        name.flatMap { Aisle(rawValue: $0) }.flatMap { allCases.firstIndex(of: $0) } ?? allCases.count
+        name.flatMap { Aisle(rawValue: shown($0)) }.flatMap { allCases.firstIndex(of: $0) } ?? allCases.count
     }
 }
 
@@ -53,7 +65,7 @@ public enum AisleGuide {
         beetroot, radish, fennel, asparagus, pak choi, butternut squash, pumpkin, squash
         """)
         add(.bakery, "bread, baguette, sourdough, pitta, pita, tortilla, wrap, naan, bun, roll, bagel, croissant")
-        add(.meatFish, """
+        add(.meatSeafood, """
         chicken, chicken breast, chicken thigh, beef, mince, beef mince, steak, pork, bacon, guanciale, pancetta, \
         sausage, chorizo, ham, lamb, turkey, duck, salmon, cod, tuna steak, prawn, shrimp, mussel, haddock, \
         sea bass, mackerel
@@ -63,14 +75,14 @@ public enum AisleGuide {
         greek yogurt, cheese, cheddar, parmesan, pecorino, mozzarella, feta, halloumi, ricotta, mascarpone, \
         cream cheese, egg, oat milk
         """)
-        add(.dryGoods, """
+        add(.pantry, """
         flour, plain flour, self-raising flour, bread flour, sugar, caster sugar, brown sugar, icing sugar, rice, \
         basmati rice, risotto rice, pasta, spaghetti, penne, linguine, fusilli, lasagne, noodle, egg noodle, \
         oat, couscous, quinoa, bulgur, lentil, red lentil, breadcrumb, panko, yeast, baking powder, \
         bicarbonate of soda, baking soda, cornflour, cocoa, chocolate, dark chocolate, honey, maple syrup, \
         nut, almond, walnut, peanut, cashew, pine nut, raisin, stock cube, cereal
         """)
-        add(.tinsJars, """
+        add(.cansJars, """
         chopped tomato, tinned tomato, passata, tomato puree, tomato paste, coconut milk, chickpea, kidney bean, \
         black bean, cannellini bean, baked bean, tuna, sweetcorn tin, olive, caper, anchovy, pesto, jam, \
         peanut butter, mustard, dijon mustard, mayonnaise, ketchup, soy sauce, fish sauce, \

@@ -27,7 +27,14 @@ public enum RecipeMath {
             return max(0.5, (value * 2).rounded() / 2)
         case .cup:
             return max(0.25, (value * 4).rounded() / 4)
-        case nil, .clove, .pinch, .handful, .bunch, .can, .slice, .sprig, .piece, .stick, .head:
+        case .ounce, .fluidOunce:
+            return max(1, value.rounded())
+        case .pound:
+            return max(0.25, (value * 4).rounded() / 4)
+        case .pint, .quart:
+            return max(0.5, (value * 2).rounded() / 2)
+        case nil, .clove, .pinch, .handful, .bunch, .can, .slice, .sprig, .piece, .stick, .head, .bag, .jar, .box,
+             .bottle, .carton:
             return max(1, value.rounded())
         }
     }
@@ -48,8 +55,10 @@ public extension IngredientLine {
         guard let unit else { return text }
         let plural = (amountMax ?? amount ?? 1) > 1
         let word = switch unit {
-        case .clove, .pinch, .handful, .bunch, .can, .slice, .sprig, .piece, .stick, .head, .cup:
-            plural ? (unit == .bunch || unit == .pinch ? "\(unit.rawValue)es" : "\(unit.rawValue)s") : unit.rawValue
+        case .clove, .pinch, .handful, .bunch, .can, .slice, .sprig, .piece, .stick, .head, .cup, .pint, .quart, .bag,
+             .jar, .box, .bottle, .carton:
+            plural ? ([.bunch, .pinch, .box].contains(unit) ? "\(unit.rawValue)es" : "\(unit.rawValue)s") : unit
+                .rawValue
         default: unit.rawValue
         }
         return "\(text) \(word)"
@@ -59,8 +68,11 @@ public extension IngredientLine {
         let whole = value.rounded(.down)
         let fraction = value - whole
         let glyph: String? = switch fraction {
+        case 0.12 ... 0.13: "⅛"
         case 0.24 ... 0.26: "¼"
+        case 0.32 ... 0.34: "⅓"
         case 0.49 ... 0.51: "½"
+        case 0.65 ... 0.67: "⅔"
         case 0.74 ... 0.76: "¾"
         default: nil
         }
