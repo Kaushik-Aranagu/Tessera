@@ -16,6 +16,8 @@ final class LinkStub: URLProtocol, @unchecked Sendable {
     nonisolated(unsafe) static var pages: [String: Page] = [:]
     nonisolated(unsafe) static var failure: URLError.Code?
     nonisolated(unsafe) static var requests: [URLRequest] = []
+    /// What was sent to Claude, by request, so a test can read what left the phone.
+    nonisolated(unsafe) static var bodies: [Data] = []
 
     static func session() -> URLSession {
         let configuration = URLSessionConfiguration.ephemeral
@@ -33,6 +35,18 @@ final class LinkStub: URLProtocol, @unchecked Sendable {
 
     override func startLoading() {
         Self.requests.append(request)
+        var sent = request.httpBody ?? Data()
+        if let stream = request.httpBodyStream {
+            stream.open()
+            var buffer = [UInt8](repeating: 0, count: 4096)
+            while stream.hasBytesAvailable {
+                let count = stream.read(&buffer, maxLength: buffer.count)
+                guard count > 0 else { break }
+                sent.append(buffer, count: count)
+            }
+            stream.close()
+        }
+        Self.bodies.append(sent)
         if let failure = Self.failure {
             client?.urlProtocol(self, didFailWithError: URLError(failure))
             return
@@ -69,6 +83,7 @@ struct RecipeLinkTests {
         LinkStub.pages = [:]
         LinkStub.failure = nil
         LinkStub.requests = []
+        LinkStub.bodies = []
     }
 
     static func page(_ ld: String) -> String {
@@ -174,6 +189,35 @@ struct RecipeLinkTests {
         #expect(await reader(claude: true).read("https://blog.example.com/beans").line
             == "Claude's paused until Nov 1. Paste the text instead.")
         #expect(LinkStub.requests.count == asked + 1) // the page only
+    }
+
+    @Test func privateLinesNeverReachClaude() async throws {
+        // Research 137 P9, P10, P16: a code, an account number or a wifi password on the page stays on the phone.
+        let page = """
+        <html><body><article><p>Use code CHEF4417 for 10% off.</p><p>We stirred beans into onions and tomatoes.</p>
+        <p>The cafe wifi password is tacocat24</p><div>Member account 0000 1234 5678</div>
+        <p>Then we ate it with rice.</p></article></body></html>
+        """
+        LinkStub.pages["blog.example.com"] = .init(body: page)
+        let reply = #"{"content":[{"type":"text","text":"Beans and rice\nIngredients\n1 can black beans\n1 onion\n"#
+            + #"Method\n1. Cook the onion.\n2. Add the beans.\nWifi: TacoNet / tacocat24"}],"#
+            + #""usage":{"input_tokens":300,"output_tokens":40}}"#
+        LinkStub.pages["api.anthropic.com"] = .init(body: reply, type: "application/json")
+        let read = await reader(claude: true).read("https://blog.example.com/beans?password=hunter2&utm_source=feed")
+        #expect(read.kind == .readByClaude && read.text?.contains("tacocat") == false)
+        #expect(read.sourceURL?.absoluteString == "https://blog.example.com/beans")
+        let index = try #require(LinkStub.requests.lastIndex { $0.url?.host() == "api.anthropic.com" })
+        let body = String(decoding: LinkStub.bodies[index], as: UTF8.self)
+        #expect(body.contains("stirred beans") && body.contains("with rice"))
+        for secret in ["CHEF4417", "tacocat", "1234 5678", "hunter2"] {
+            #expect(!body.contains(secret), "\(secret)")
+        }
+        // A page that is nothing but private lines: Claude is never asked.
+        LinkStub
+            .pages["codes.example.com"] = .init(body: "<html><body><p>Gift card code: X7Q2-PLMN-4417</p></body></html>")
+        let asked = LinkStub.requests.count { $0.url?.host() == "api.anthropic.com" }
+        #expect(await reader(claude: true).read("https://codes.example.com/deal").line == RecipeLinkLine.noRecipe)
+        #expect(LinkStub.requests.count { $0.url?.host() == "api.anthropic.com" } == asked)
     }
 
     @Test func videosReadTheirDescription() async {
