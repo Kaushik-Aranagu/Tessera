@@ -143,7 +143,7 @@ Prices from `TessUsageLedger.prices` (Haiku 5.5 $0.10 in and $0.50 out per milli
 | Week story | Sonnet 5.5 | 2,000 / 300 | $0.007 | 8 | $0.06 |
 | Grocery connect (name matching only) | Haiku 5.5 | 1,200 / 150 | $0.0002 | 60 | $0.01 |
 | Existing (capture, plan, link, questions) | | | | | $0.44 (claude-first-uses.md) |
-| **Total** | | | | | **about $3.20** typical, $8.55 worst (`spend-projection.md`); about $0.70 if AI-5 moves Home lines to Haiku; cap $50 |
+| **Total** | | | | | **about $3.20** typical, $8.59 worst (`spend-projection.md`); about $0.70 if AI-5 moves Home lines to Haiku; cap $50 |
 
 ## 6. Model per job
 

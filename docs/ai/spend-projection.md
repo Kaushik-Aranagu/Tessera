@@ -13,7 +13,7 @@ The 80% line is **$40**. Prices are `TessUsageLedger.prices` in code: Haiku 5.5 
 |---|---|---|---|---|---|---|
 | Home lines (AI-4) | Sonnet 5.5 | 20 / 40 | 1,500 / 150 A | $0.0045 A ($0.0018 M) | $2.70 | $5.40 |
 | Week story (AI-11) | Sonnet 5.5 | 8 a month / 2 | 2,000 / 300 A | $0.007 A ($0.01 gate) | $0.06 | $0.60 |
-| Plan my day | Sonnet 5.5 | 2 / 5 | 1,000 / 300 A (1,160 / 1,024 max) | $0.005 A ($0.0125 max) | $0.30 | $1.88 |
+| Plan my day | Sonnet 5.5 | 2 / 5 | 1,000 / 300 A (1,270 / 1,024 max) | $0.005 A ($0.0128 max) | $0.30 | $1.92 |
 | Recipe reader (L3) | Haiku 5.5 | 10 a month / 1 | 7,000 / 1,200 A (4,096 max out) | $0.0013 A ($0.0027 max) | $0.01 | $0.08 |
 | Groceries link (AI-12) | Haiku 5.5 | 2 / 4 | 1,200 / 150 A | $0.00022 M | $0.01 | $0.03 |
 | Misses (capture) | Haiku 5.5 | 5 / 20 | 5,150 / 130 A over 2 rounds | $0.0006 A | $0.09 | $0.35 |
@@ -27,7 +27,8 @@ Where each number comes from:
   40-a-day cap in architecture 5.5 and ship list AI-4. On Haiku it would be $0.0002 a call, $0.27 at worst.
 - **Week story.** Architecture 5.6 (8 a month); the AI-11 eval gate allows up to $0.01. Worst assumes it rewords twice
   a day as week facts change; no doc or code caps it.
-- **Plan my day.** `claude-first-uses.md` use 2; worst is 5 a day, all at `max_tokens` 1,024 (`PlanWording.swift`).
+- **Plan my day.** `claude-first-uses.md` use 2; worst is 5 a day, all at `max_tokens` 1,024 (`PlanWording.swift`). Max in is 1,270: a full
+  400-token pack plus the ~870-token fixed part (Research's pack fixture; Product, Oct 16 12:06 PM PT).
 - **Recipe reader.** `recipe-link-fetch.md` 2d; worst is 30 a month at `max_tokens` 4,096 (`RecipeLinkReader.swift`).
 - **Groceries link.** Measured $0.0011 for one run of 5 calls (`groceries-link-eval-results.md`); tokens from
   architecture 5.6. Worst is assumed.
@@ -39,7 +40,7 @@ Where each number comes from:
 
 | | Typical | Worst |
 |---|---|---|
-| All jobs | **$3.23** (6% of $50) | **$8.55** (17%); $9.11 with misses at their held ceiling |
+| All jobs | **$3.23** (6% of $50) | **$8.59** (17%); $9.15 with misses at their held ceiling |
 | Headroom to $40 (80%) | $36.77 | $31.45 |
 | Headroom to $50 (100%) | $46.77 | $41.45 |
 
@@ -69,7 +70,7 @@ Sonnet job. Plan my day is second. Every Haiku job together is under $0.70 even 
 - **A model missing from `prices`.** `estimate` and `cost` return 0 for an unknown model string, so a typo or an
   Opus id would spend real money that the ledger records as free and the cap never sees.
 - **Bigger packs.** Home lines on Sonnet with 5,000 tokens in costs $0.0115 a call, $13.80 at 40 a day.
-- **Plan reworded on every change.** Plan at its $0.0125 ceiling needs about 107 a day to reach $40.
+- **Plan reworded on every change.** Plan at its $0.0128 ceiling needs about 104 a day to reach $40.
 - **Untracked spend.** A call billed but killed before its `TessCall` row is written is never counted.
 
 ## Where code and docs differ
