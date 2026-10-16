@@ -6,10 +6,13 @@
 - [ ] #366 AI-1 Home lines (Builder B): Design clip pass + QA confirm.
 - [x] The stuck-listening fix (Builder B): #446, 0eca9bbe.
 - [x] #422 secret-word wall + $50 cap (5af8f2c2, Catalog v9).
-- [ ] MU2 (Core, #451 merging): money, body and health phrases never reach Claude, incl. CA6 answerQuery allow-list and CA7 screens before the offline inbox add. (decisions.md 11:35 AM PT; QA A1, Research MW1)
-- [ ] A2 (Core): the inbox retry goes through the router walls, inside MU2 or a tiny PR beside it, with a test that the inbox refuses a queued secret word and a queued money phrase (master has no readWaiting caller, so the gate's I2 alone would pass trivially).
+- [x] MU2 (Core, #451 merged bf2a4bb5): money, body and health phrases never reach Claude, incl. CA6 answerQuery allow-list and CA7 screens before the offline inbox add. (decisions.md 11:35 AM PT; QA A1, Research MW1)
+- [x] A2 (Core, in #451, merged bf2a4bb5): the inbox retry goes through the router walls, inside MU2 or a tiny PR beside it, with a test that the inbox refuses a queued secret word and a queued money phrase (master has no readWaiting caller, so the gate's I2 alone would pass trivially).
 
 ## 2. Riders (in only if merged before the last blocker)
+- B1 (QA backups, 12:12 PM PT): Notes refuses a key-shaped note (Core 0e). First rider.
+- B5/B6 (QA backups, 12:12 PM PT): the v9 build refuses a newer-catalog store or backup (Core 0e). Second rider; if it misses, #407 waits for a build that has it.
+- P14 (Research privacy trace, 12:26 PM PT): Siri's Add a Task routes like the Ask bar. Body facts, and past-tense money with an amount, become a private note ("Private note, kept.", no echo). "pay rent 2100 friday" stays a task (decisions 12:11). Core 0j/0l or a tiny PR. Third rider, after B5/B6.
 - [ ] Paste/link SecretWords wall (Core).
 - [ ] One-time mark-private pass for pre-#422 notes (Core, Research 139).
 - [ ] Siri Add a Task secret-word wall, I3 (Core, QA).
@@ -37,3 +40,7 @@
 
 ## 6. Install
 - [ ] Only after gate PASS + QA + Design 66 pass, and only on his own "install it" in the iOS build thread.
+
+## 7. Rollback (decisions 12:16 PM PT Oct 16)
+
+Before the pin is on his phone, the rollback is 444e72b (v5). Once the pin is installed, the rollback is 7b321d2. It is the only older build tested on the v9 store (gate V4). 444e72b is not used after the pin, because a v5 build on a v9 store was never tested.
