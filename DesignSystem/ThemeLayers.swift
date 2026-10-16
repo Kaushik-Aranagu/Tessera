@@ -80,9 +80,8 @@ struct WorkoutField: View {
 }
 
 extension View {
-    /// The colour of the moment, pooled behind the action's row by the look's field: a watercolour bloom on light
-    /// looks (5% centre, 10% dried edge), an emitted glow on dark ones (screen, 16%, blur 18). Plein's washes
-    /// already carry it.
+    /// The colour of the moment, pooled behind the action's row by the look's field: a soft pigment pool on light
+    /// looks (12% centre to nothing, blur 6), an emitted glow on dark ones (screen, 16%, blur 18).
     func actionBloom(_ pigment: Color) -> some View {
         modifier(ActionBloom(pigment: pigment))
     }
@@ -98,11 +97,12 @@ private struct ActionBloom: ViewModifier {
             case .plein:
                 EmptyView()
             case .pigmentBloom, .glaze:
+                // A soft pool (looks-recut.md): 12% at the centre falling to nothing, 6 pt blur, no dried edge ring.
                 Ellipse()
-                    .fill(RadialGradient(colors: [pigment.opacity(0.05), pigment.opacity(0.05), pigment.opacity(0.1),
-                                                  .clear],
+                    .fill(RadialGradient(colors: [pigment.opacity(0.12), .clear],
                                          center: .center, startRadius: 0, endRadius: 180))
                     .frame(width: 360, height: 120)
+                    .blur(radius: 6)
                     .blendMode(.multiply)
                     .allowsHitTesting(false)
             case .emissive, .lacquer:
