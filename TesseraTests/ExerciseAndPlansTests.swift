@@ -38,6 +38,18 @@ struct ExerciseAndPlansTests {
         #expect(ExerciseWords.nextTime(weight: 40, reps: 8, then: nil) == "Next time: 40 for 8.")
     }
 
+    /// R34 (trip rehearsal): a Pull A set logged Tuesday night in Honolulu reads "Tue 27" at home on Thursday 08:00
+    /// PDT, not "Yesterday" (the instant is Wednesday 05:00 PDT, but the set's own day was Tuesday there).
+    @Test func aTripSetKeepsTheDayItHadWhereItWasLogged() throws {
+        var pacific = Calendar(identifier: .gregorian)
+        pacific.timeZone = try #require(TimeZone(identifier: "America/Los_Angeles"))
+        let set = try #require(pacific.date(from: DateComponents(year: 2026, month: 10, day: 28, hour: 5)))
+        let now = try #require(pacific.date(from: DateComponents(year: 2026, month: 10, day: 29, hour: 8)))
+        let honolulu = TimeZone(identifier: "Pacific/Honolulu")
+        #expect(ExerciseWords.historyDate(set, now: now, calendar: pacific, zone: honolulu) == "Tue 27")
+        #expect(ExerciseWords.historyDate(set, now: now, calendar: pacific) == "Yesterday")
+    }
+
     @Test func historyDatesFollowTheMockup() throws {
         let now = october(15)
         #expect(ExerciseWords.historyDate(october(15, 9), now: now, calendar: calendar) == "Today")

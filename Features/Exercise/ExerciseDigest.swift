@@ -187,20 +187,23 @@ enum ExerciseWords {
         return sameMonth ? date.formatted(style.month(.abbreviated).day()) : date.formatted(style.month(.wide))
     }
 
-    /// History dates: "Today", "Mon 12" this month, "Sep 27" before.
-    static func historyDate(_ date: Date, now: Date, calendar: Calendar) -> String {
+    /// History dates: "Today", "Mon 12" this month, "Sep 27" before. A set reads on the day it had where it was
+    /// logged (the workout's stored zone, #377): a Tuesday-night set on a trip stays "Tue 27" at home (R34, T4).
+    static func historyDate(_ date: Date, now: Date, calendar: Calendar, zone: TimeZone? = nil) -> String {
         let day = TesseraDay(calendar: calendar)
-        if day.isSameDay(date, now) {
+        let key = day.day(of: date, in: zone)
+        let today = day.day(of: now)
+        if key == today {
             return "Today"
         }
-        if day.isSameDay(date, day.adding(days: -1, to: now)) {
+        if key == day.day(of: day.adding(days: -1, to: now)) {
             return "Yesterday"
         }
         var style = Date.FormatStyle.dateTime
         style.timeZone = calendar.timeZone
-        return calendar.isDate(date, equalTo: now, toGranularity: .month)
-            ? date.formatted(style.weekday(.abbreviated).day())
-            : date.formatted(style.month(.abbreviated).day())
+        return calendar.isDate(key, equalTo: today, toGranularity: .month)
+            ? key.formatted(style.weekday(.abbreviated).day())
+            : key.formatted(style.month(.abbreviated).day())
     }
 
     /// "Next time: 82.5 for 9, then 85."
