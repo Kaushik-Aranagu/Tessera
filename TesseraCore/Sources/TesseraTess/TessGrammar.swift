@@ -686,11 +686,16 @@ enum TessDates {
                 date = calendar.date(byAdding: .day, value: 7, to: resolved)
             }
         } else if day != nil, !fromWeekday, time == nil, let resolved = date, resolved <= now {
-            // "today" with no time after 09:00: the next whole hour, not this morning.
+            // "today" with no time after 09:00: the next whole hour, not this morning (after 23:00, quiet hours
+            // move it to 7 am below).
             let next = calendar.component(.hour, from: now) + 1
-            if next < 24 {
-                date = calendar.date(bySettingHour: next, minute: 0, second: 0, of: now)
-            }
+            date = next < 24 ? calendar.date(bySettingHour: next, minute: 0, second: 0, of: now)
+                : calendar.date(bySettingHour: 23, minute: 30, second: 0, of: now)
+        }
+        // A time Tess picked (none was said) never lands in his quiet hours, 23:00 to 07:00: it moves to 7 am.
+        // A time he says himself is kept (Product 0ab, 1:22 PM PT Oct 16).
+        if time == nil, let resolved = date {
+            date = Self.outOfQuietHours(resolved, calendar: calendar)
         }
         return Found(date: date, remaining: remaining, saidDay: day != nil, saidTime: time != nil,
                      bareColon: bareColon)
@@ -737,6 +742,14 @@ enum TessDates {
     }
 
     /// The next given weekday; today counts only if it hasn't passed (it's the same day, so we keep it).
+    /// 23:00 to 07:00 becomes the next 7 am.
+    static func outOfQuietHours(_ date: Date, calendar: Calendar) -> Date {
+        let hour = calendar.component(.hour, from: date)
+        guard hour >= 23 || hour < 7 else { return date }
+        let day = hour >= 23 ? calendar.date(byAdding: .day, value: 1, to: date) ?? date : date
+        return calendar.date(bySettingHour: 7, minute: 0, second: 0, of: day) ?? date
+    }
+
     /// The next date with that weekday, counted from his day: "thu" said at 1 am Friday (still his Thursday) is
     /// today, not next week (TW29).
     static func nextDate(weekday: Int, after now: Date, calendar: Calendar) -> Date? {

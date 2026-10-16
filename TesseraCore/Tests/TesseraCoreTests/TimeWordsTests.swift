@@ -32,6 +32,20 @@ struct TimeWordsTests {
         #expect(line == "on Oct 16")
     }
 
+    @Test func aTimeTessPicksNeverLandsInQuietHours() {
+        // Product 0ab: "call mom thu" typed at 1 am Friday (his Thursday) lands at 7 am, not 2 am.
+        let (date, _) = TessDates.extract(from: ["call", "mom", "thu"], now: Self.at(16, 1), calendar: Self.calendar)
+        #expect(date == Self.at(16, 7))
+        // "today" said at 23:10 would be midnight: 7 am instead.
+        let (late, _) = TessDates.extract(from: ["call", "mom", "today"], now: Self.at(15, 23, 10),
+                                          calendar: Self.calendar)
+        #expect(late == Self.at(16, 7))
+        // A time he says himself is kept.
+        let (said, _) = TessDates.extract(from: ["call", "mom", "thu", "at", "1am"], now: Self.at(14, 12),
+                                          calendar: Self.calendar)
+        #expect(said == Self.at(15, 1))
+    }
+
     @Test func aWeekdayCountsFromHisDay() throws {
         // TW29: "thu" said at 1 am Friday (still his Thursday, Oct 15) is today, not next week.
         let (date, _) = TessDates.extract(from: ["call", "mom", "thu"], now: Self.at(16, 1), calendar: Self.calendar)
