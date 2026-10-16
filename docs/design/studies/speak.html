@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Speak</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Recording for docs/design/speak.md (board item 9): left, Speak from the capture surface on Home (listening, live words, tidying, the voice ghost drying 3 s); right, holding the soul in a live workout ("eighty for seven" lands as the set). Porcelain, one base. ?states shows the state stills instead. -->
+<style>
+:root{--ink:23,20,31;--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1);--tess:#2450D8;--live:226,67,42}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;width:860px;height:960px;color:rgb(var(--ink));transform-origin:0 0}
+body.x2{transform:scale(2)}
+body.states{width:1300px}
+.pair{position:absolute;left:30px;top:36px;display:flex;gap:40px}
+.col{width:390px}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(var(--ink),.66);height:34px}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;background:#fff}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),.66)}
+.b{font-size:21px;line-height:28px}
+.tess{color:var(--tess)}
+.page{position:absolute;inset:0;transition:opacity .46s var(--house),filter .46s var(--house),transform .46s var(--house)}
+.wash{position:absolute;left:0;right:0;bottom:0;height:380px;background:linear-gradient(to top,rgba(255,255,255,.96) 78%,rgba(255,255,255,0));opacity:0;transition:opacity .46s var(--house)}
+.soul{position:absolute;width:46px;height:40px;transition:left .48s var(--settle),top .48s var(--settle),transform .26s var(--house)}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px);transition:transform .2s}
+.mode{position:absolute;right:76px;font-size:21px;font-weight:500;opacity:0;transition:opacity .3s var(--house)}
+.word{display:inline-block;opacity:0;filter:blur(6px);transition:opacity .2s,filter .2s,max-width .32s var(--house),margin .32s;max-width:200px;overflow:hidden;vertical-align:bottom;white-space:pre}
+.word.in{opacity:1;filter:none}
+.word.drop{max-width:0;opacity:0}
+.dry{position:absolute;height:12px;overflow:visible}
+.note{position:absolute;left:30px;top:930px;width:800px;font-size:16px;font-weight:700;letter-spacing:.08em;color:rgba(var(--ink),.66)}
+.num{font-size:80px;font-weight:300;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div class="pair" id="pair"></div>
+<div class="note" id="note"></div>
+<script>
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const STATES=Q.includes('states');
+const soulHTML=id=>`<div class="soul" id="${id}"><i style="left:0;top:4px;background:radial-gradient(closest-side,#2450D8,rgba(36,80,216,.2))"></i><i style="left:22px;top:2px;background:radial-gradient(closest-side,#E2432A,rgba(226,67,42,.2))"></i><i style="left:12px;top:20px;background:radial-gradient(closest-side,#F0A500,rgba(240,165,0,.2))"></i></div>`;
+const line=(w,c,o=1)=>`<svg width="${w+6}" height="12" style="overflow:visible"><path d="M0 6 Q ${w*.42} 3.5 ${w} 5.6 Q ${w*.58} 8.5 0 6 Z" fill="${c}" opacity="${o}"/></svg>`;
+function home(){return `<div class="page" id="hp">
+ <div class="abs lbl s2" style="left:22px;top:58px">THURSDAY 15 OCT</div>
+ <div class="abs" style="left:22px;top:118px;font-size:56px;font-weight:500;letter-spacing:-.035em;line-height:60px;width:340px">Two things left today</div>
+ <div class="abs lbl s2" style="left:22px;top:318px">NEXT</div>
+ <div class="abs b" style="left:22px;top:356px">Stretch &amp; mobility</div><div class="abs lbl s2" style="right:22px;top:362px">7:15 PM</div>
+ <div class="abs b" style="left:22px;top:404px">Read</div><div class="abs lbl s2" style="right:22px;top:410px">9:00 PM</div></div>
+ <div class="wash" id="hw"></div>
+ <div class="abs b tess" id="hq" style="left:22px;top:470px;opacity:0;transition:opacity .3s">What's next?</div>
+ <div class="mode" id="m0" style="top:594px">Speak</div><div class="mode" id="m1" style="top:640px">Write</div><div class="mode" id="m2" style="top:686px">Show</div>
+ <div class="abs b tess" id="lis" style="left:22px;top:470px;opacity:0;transition:opacity .3s">Listening</div>
+ <div class="abs b" id="tx" style="left:22px;top:520px;width:346px;color:rgba(var(--ink),.66)"></div>
+ <div class="abs b s2" id="heard" style="left:22px;top:584px;opacity:0;transition:opacity .3s"></div>
+ <div class="dry" id="hdry" style="left:20px;top:562px;opacity:0"></div>
+ <div class="abs b tess" id="said" style="left:22px;right:80px;top:782px;opacity:0;transition:opacity .4s">Added oat milk and eggs to Groceries. <span style="color:#C23A22;font-weight:600;font-size:16px;letter-spacing:.08em">UNDO</span></div>
+ ${soulHTML('hs')}`}
+function work(){return `<div class="abs lbl s2" style="left:22px;top:58px">PUSH DAY A · 2 OF 5</div>
+ <div class="abs" style="left:22px;top:110px;font-size:34px;font-weight:500;letter-spacing:-.03em">Bench press</div>
+ <div class="abs lbl s2" style="left:22px;top:160px">SET 3 OF 4</div>
+ <div class="abs num" id="wn" style="left:18px;top:210px">80<span style="font-size:21px;font-weight:400;margin:0 14px 0 6px">kg</span>× <span id="wr">8</span></div>
+ <div class="abs b s2" style="left:22px;top:310px">last time 80 × 8</div>
+ <div class="abs" id="strokes" style="left:22px;top:380px;display:flex;gap:10px"></div>
+ <div class="abs lbl s2" id="hint" style="right:86px;top:798px">HOLD ME TO TELL ME A SET</div>
+ <div class="abs b" id="wtx" style="right:22px;top:740px;text-align:right;color:rgba(var(--ink),.66)"></div>
+ <div class="abs b tess" id="wsaid" style="left:22px;right:80px;top:782px;opacity:0;transition:opacity .4s">Set 3. 80 × 7. <span style="color:#C23A22;font-weight:600;font-size:16px;letter-spacing:.08em">UNDO</span></div>
+ ${soulHTML('ws')}`}
+const setStroke=(c,o)=>`<svg width="64" height="20"><path d="M4 12 C 18 5, 40 15, 60 7" stroke="${c}" stroke-width="5" fill="none" stroke-linecap="round" opacity="${o}"/></svg>`;
+function state(title,speakStyle,lineHTML,extra=''){return `<div class="col"><div class="cap">${title}</div><div class="ph">
+ <div class="abs" style="left:0;right:0;bottom:0;height:380px;background:rgba(255,255,255,.96)"></div>
+ <div class="abs" style="left:22px;top:118px;font-size:56px;font-weight:500;letter-spacing:-.035em;line-height:60px;width:340px;opacity:.12;filter:blur(1.5px)">Two things left today</div>
+ <div class="abs b" style="left:22px;top:470px;width:346px">${lineHTML}</div>
+ <div class="mode" style="top:594px;opacity:1;${speakStyle}">Speak${extra}</div><div class="mode" style="top:640px;opacity:1">Write</div><div class="mode" style="top:686px;opacity:1">Show</div>
+ <div style="position:absolute;left:316px;top:768px">${soulHTML('x').replace('class="soul"','class="soul" style="position:relative"')}</div></div></div>`}
+if(STATES){
+ document.body.classList.add('states');
+ document.getElementById('pair').innerHTML=
+  state('PREPARING','',`<span class="tess">Getting speech ready. Needs a connection once.</span>`,`<span style="position:absolute;left:-2px;top:26px">${line(56,'rgba(226,67,42,.25)')}</span><span style="position:absolute;left:-2px;top:26px;clip-path:inset(0 55% 0 0)">${line(56,'rgb(226,67,42)')}</span>`)+
+  state('MIC OFF','color:rgba(23,20,31,.66);font-weight:400',`<span class="tess">Mic is off for Tessera.</span> <span style="font-weight:600">Open Settings</span>`)+
+  state('SILENCE','',`<span class="tess">Didn't hear anything.</span>`);
+ document.fonts.ready.then(()=>{document.body.dataset.start='1';document.body.dataset.done='1'});
+} else {
+document.getElementById('pair').innerHTML=`<div class="col"><div class="cap">SPEAK FROM THE SURFACE · HOME</div><div class="ph" id="H">${home()}</div></div><div class="col"><div class="cap">HOLD THE SOUL · LIVE WORKOUT</div><div class="ph" id="W">${work()}</div></div>`;
+const $=id=>document.getElementById(id),at=(t,f)=>setTimeout(f,t),note=t=>$('note').textContent=t;
+const place=(id,x,y)=>{$(id).style.left=x+'px';$(id).style.top=y+'px'};
+place('hs',322,768);place('ws',322,768);
+$('strokes').innerHTML=setStroke('rgb(204,63,104)',.45)+setStroke('#2450D8',.45);
+let lvl=null;
+function breathe(id,on){clearInterval(lvl);if(!on){$(id).style.transform='none';return}let t=0;lvl=setInterval(()=>{t+=.25;const a=1.4+.12*Math.abs(Math.sin(t*2.3)+Math.sin(t*3.7)*.5);$(id).style.transform=`scale(${a})`},90)}
+function stream(el,words,gap){words.forEach((w,i)=>at(i*gap,()=>{const s=document.createElement('span');s.className='word';s.textContent=w;s.dataset.w=w;el.appendChild(s);requestAnimationFrame(()=>s.classList.add('in'))}))}
+document.fonts.ready.then(()=>{
+ document.body.dataset.start='1';
+ note('TAP THE SOUL, TAP SPEAK: LISTENING STARTS AT ONCE.');
+ at(500,()=>{$('hp').style.opacity=.22;$('hp').style.filter='blur(3px)';$('hw').style.opacity=1;$('hq').style.opacity=1;['m0','m1','m2'].forEach((m,i)=>at(i*40,()=>$(m).style.opacity=1))});
+ at(1500,()=>{['m1','m2','hq'].forEach(m=>$(m).style.opacity=0);$('m0').style.opacity=0;place('hs',172,676);$('lis').style.opacity=1;at(300,()=>breathe('hs',true))});
+ at(2100,()=>{note('WORDS STREAM IN AS HEARD, AT BODY 21 IN INK SECONDARY.');stream($('tx'),['Oat ','milk ','and ','um ','eggs'],280)});
+ at(3900,()=>{note('A 1.2 S PAUSE ENDS IT. TIDYING DROPS THE FILLER; THE CLEAN SENTENCE SETTLES TO INK.');breathe('hs',false);$('lis').style.opacity=0;
+   [...$('tx').children].forEach(s=>{if(s.dataset.w==='um ')s.classList.add('drop')});
+   at(380,()=>{$('tx').style.transition='color .4s';$('tx').style.color='rgba(23,20,31,.45)';$('tx').innerHTML='Oat milk and eggs, on <b style="font-weight:600">Groceries</b>.';
+     $('heard').textContent='Heard: oat milk and um eggs';$('heard').style.opacity=1;
+     const d=$('hdry');d.innerHTML=`<div style="position:relative">${line(250,'rgb(226,67,42)')}</div>`;d.style.opacity=1;
+     const inner=d.firstChild;inner.animate([{clipPath:'inset(0 0 0 0)'},{clipPath:'inset(0 100% 0 0)'}],{duration:3000,easing:'linear',fill:'forwards'});
+     note('THE VOICE GHOST DRIES FOR 3 S. TOUCH IT TO EDIT INSTEAD.')});
+ });
+ at(7500,()=>{['tx','heard','hdry'].forEach(i=>{$(i).style.transition='opacity .22s';$(i).style.opacity=0});place('hs',322,768);$('hp').style.opacity=1;$('hp').style.filter='none';$('hw').style.opacity=0;at(260,()=>{$('said').style.opacity=1})});
+ // workout
+ at(9200,()=>{note('IN A WORKOUT, HOLD THE SOUL IN THE CORNER. NO SURFACE.');$('hint').style.transition='opacity .2s';$('hint').style.opacity=0;breathe('ws',true)});
+ at(9700,()=>{stream($('wtx'),['eighty ','for ','seven'],300)});
+ at(11000,()=>{note('LET GO: THE SET SHOWS AS A WET GHOST IN THE NUMERALS, THEN DRIES INTO INK.');breathe('ws',false);$('wtx').style.transition='opacity .25s';$('wtx').style.opacity=0;
+   $('wr').textContent='7';$('wn').style.transition='color .2s';$('wn').style.color='rgba(36,80,216,.62)';
+   at(2000,()=>{$('wn').style.transition='color .7s';$('wn').style.color='rgb(23,20,31)';
+     $('strokes').insertAdjacentHTML('beforeend',`<span id="ns">${setStroke('rgb(240,165,0)',1)}</span>`);$('ns').animate([{transform:'translateY(-12px)',opacity:0},{transform:'none',opacity:1}],{duration:420,easing:'cubic-bezier(.3,1.3,.5,1)'});
+     at(1300,()=>{$('ns').firstChild.firstChild.style.transition='opacity 1.1s';$('ns').firstChild.firstChild.setAttribute('opacity',.45)});
+     $('wsaid').style.opacity=1});
+ });
+ at(15800,()=>{document.body.dataset.done='1'});
+});
+}
+</script>
+</body>
+</html>
