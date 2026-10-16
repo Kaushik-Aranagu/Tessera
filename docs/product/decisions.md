@@ -4,6 +4,8 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+**10:24 AM PT Oct 16. Pasted recipes and link fetches get the secret-word wall.** QA on #422: both reach Claude with no secret-word check. One small Core PR right after MU2 runs the same SecretWords check before any Claude call. It doesn't hold the pin: the leak needs him to paste a recipe or link that holds a code, and until the pin he keeps "Tess asks Claude" on no or types no secrets. It rides the pin if it lands before #366 merges.
+
 **10:18 AM PT Oct 16. #422 (secret-word wall + $50 cap) goes in the next pin; the pin moves to v9.** The switch is not off on his phone: #320 ships "Tess asks Claude: yes" as the default, and the 7b321d2 review guide (step 2) has him type his key, so misses can reach Claude in the installed build and in the pin. Holding #422 would ship the SW2 leak. So: the pin waits on #366 and #422 (QA pass on #422 first); #422 takes Catalog v9; #407 (tessEyes) moves to v10 and merges after the pin with #403; the migration gate reruns on the pin at v9 (upgrade over the v5 backup copy, 366 rows byte-identical, the timed v5 restore against the +0.7 s before number, older-build-opens-v9 checked). Until the pin is on his phone, he keeps "Tess asks Claude" on no, or types no passwords or secrets to Tess. **Why:** a privacy wall outranks a quieter gate; a v9 gate rerun is one Builder A run.
 
 **10:02 AM PT Oct 16. 7b321d2 installed (Builder A, 9:57 AM PT).** On his iPhone over the existing app, data untouched. Carries #320, #330, #334, #337, #343 only. Signing lapses about Oct 23, 9:57 AM PT; reminder moves to Oct 22, 10 AM PT. Rollback target is now 444e72b (both v5). Everything later waits for the next pin (on #366, at v8).
