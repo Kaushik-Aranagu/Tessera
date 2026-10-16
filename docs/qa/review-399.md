@@ -32,3 +32,13 @@ That makes the result the same in any read order and equal to the old sorted res
 - L1: tie order for `bestE1RM`. The old pass walked newest-first, so on an exact e1RM tie the newest set was kept. The index is in insertion order, so now the oldest is kept. Only the "was 82.5 × 7" hint (RecordHint.swift:32-34) and Exercise's "Best set" show the set, and the text differs only when two different weight × reps have the exact same e1RM. Fine as is; worth a sentence in the comment.
 - L2: `invalidateCaches()` doesn't drop `opZonesState`. After the simulator demo reset, `seen` keeps the old ids and the count gate can skip a read once. Setting `derived.opZonesState = nil` in `resetUserData` (or in `noteChange(nil)`) closes it. That's for the demo only.
 - The 1500-history number is still to come from Core. The pin's M4 gate times the restore, not this build, so the gate doesn't depend on that number.
+
+## Addendum: re-check at `fbccf30`
+
+Verdict: **PASS**. Trial merge onto master 5ef908d is clean.
+
+- F1 fixed (OpZones.swift, `OpZonesState.set`). For ranks 0 and 2 the earliest record wins; for rank 1 the latest wins; and a higher rank always wins. The result is the same in any read order and matches the old sorted pass.
+- The test `zonesDoNotDependOnReadOrder` reads the same five records forward and backward. Both orders give the earliest start (New York) over the later LA logExercise, and the latest finish (LA). It uses `@testable import`, which reaches the internal `OpZonesState`.
+- L2 fixed: `invalidateCaches()` drops `opZonesState` (ObjectStore.swift:33). There are only a handful of callers (catalog install, starter content, demo, notes, lifecycle), so the one full re-read costs nothing that matters.
+- L1 (the tie order of the shown best set) stays a low, as before.
+- The 1500 number is still to come from Core. It isn't a QA gate.
