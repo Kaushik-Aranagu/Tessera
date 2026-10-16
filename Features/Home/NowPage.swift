@@ -188,7 +188,7 @@ struct NowPage: View {
     /// START WITH and the first item, as a hold: it keeps the plan and never starts anything.
     @ViewBuilder private var planKey: some View {
         if let first = planModel.first {
-            PaintKey(paint: Theme.Colors.ink, duration: 0.7, action: {
+            PaintKey(paint: Theme.Colors.ink, duration: 0.7, hint: "Keeps the plan", action: {
                 withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
                     planModel.keepPlan(model: model)
                 }
@@ -198,7 +198,6 @@ struct NowPage: View {
                     .fixedSize(horizontal: false, vertical: true)
             })
             .accessibilityLabel("Start with \(first.title)")
-            .accessibilityHint("Touch and hold")
         }
     }
 
@@ -206,10 +205,16 @@ struct NowPage: View {
     private func progress(of process: ProcessSnapshot) -> Double? {
         guard let workout = process.subject else { return nil }
         let entries = workout.orderedChildren.filter { !$0.isDeleted }
-        let planned = entries.reduce(0) { $0 + max(Int(model.store.number("sets", of: $1) ?? 3), 1) }
+        let planned = Self.plannedSets(entries, store: model.store)
         let done = entries.reduce(0) { $0 + $1.orderedChildren.count { !$0.isDeleted } }
         guard planned > 0, done > 0 else { return nil }
         return min(Double(done) / Double(planned), 1)
+    }
+
+    /// The sets a workout plans: each entry's "targetSets" (where the plan and the demo write it), 3 when an entry
+    /// has none (as WorkoutSession counts it), at least 1 each.
+    static func plannedSets(_ entries: [ObjectRecord], store: ObjectStore) -> Int {
+        entries.reduce(0) { $0 + max(Int(store.number("targetSets", of: $1) ?? 3), 1) }
     }
 
     @ViewBuilder
@@ -218,7 +223,7 @@ struct NowPage: View {
             let line = HomeLines.line(for: facts.fact(task: record, startsAt: task.start), now: now)
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
                 LineHero(line: line, opens: .object(task.id)) {
-                    PaintKey(duration: 0.7, action: { finish(task) }, label: { _ in
+                    PaintKey(duration: 0.7, hint: "Finishes the task", action: { finish(task) }, label: { _ in
                         Text("Finish").textRole(.labelStrong)
                     }, meta: {
                         TimelineView(.periodic(from: .now, by: 30)) { context in
@@ -228,7 +233,6 @@ struct NowPage: View {
                         }
                     })
                     .accessibilityLabel("Finish \(task.title)")
-                    .accessibilityHint("Touch and hold")
                 }
                 .id(task.id)
                 .transition(heroTransition)
