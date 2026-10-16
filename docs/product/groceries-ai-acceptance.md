@@ -76,7 +76,7 @@ The engine checks every grocery title before it is written (`AddGroceries`, the 
 
 | # | Pass when |
 |---|---|
-| W1 | "milk $4" on the Add line gives the row "milk" and the receipt "Milk, added."; the row text, the count line, the recipe dab and the backup hold no "$4" |
+| W1 | "milk $4" on the Add line gives the row "milk" and the receipt "Milk, on Groceries."; the row text, the count line, the recipe dab and the backup hold no "$4" |
 | W2 | A line that is only money ("rent 2100 fri", "$40 at costco", "paid 20 for tickets") never lands as a row: it becomes a private dated note with the receipt "Private note, kept." and Groceries is unchanged |
 | W3 | A secret (a pasted key, a door code, a line after a secret word) never lands as a row: private note, "Private note, kept.", nothing in the link ask's candidate set, nothing in Spotlight |
 | W4 | "2 lb chicken", "14 oz can tomatoes", "6 eggs", "2 for 1 crackers" keep their numbers; nothing is stripped |
