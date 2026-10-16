@@ -2,7 +2,7 @@
 
 *No simulator or Swift toolchain in this thread, so QA here is code review on master, not running the app.*
 
-**Now:** GO for install at b19fb4a (superset of d0154a9; review-183.md, U1 should-fix). Not in install: #179 PASS, #184 PASS with R1-R3 should-fix, #187 PASS (04:00 day), #190 PASS (U1 closed), #191 PASS, #193 Themes PASS, #199 closes T2 T3 T5 (T1 closed by Design; review-199.md), #195+#197 PASS, land clean (R4 should-fix; review-195-197.md), #201 PASS (Tuesday isRest change justified, R5 closed; review-201.md), #203 Themes 2a PASS with W1 should-fix (ink keys invisible in the workout on a pinned light look) + W2 (hold misses field/shadows; review-203.md). Install needs scripts/test.sh "All green" + one TesseraUITests run + phone smoke. Next: docs PR indexing reviews 124-203.
+**Now:** GO for install at b19fb4a (superset of d0154a9; review-183.md, U1 should-fix). Not in install: #179 PASS, #184 PASS with R1-R3 should-fix, #187 PASS (04:00 day), #190 PASS (U1 closed), #191 PASS, #193 Themes PASS, #199 closes T2 T3 T5 (T1 closed by Design; review-199.md), #195+#197 PASS, land clean (R4 should-fix; review-195-197.md), #201 PASS (Tuesday isRest change justified, R5 closed; review-201.md), #203 Themes 2a PASS (review-203.md); #205 set guard PASS on fixtures, Q1 trailing period + Q2 comma still reach the task rule (should-fix, review-205.md); #207 GO on W1, W2-W5 closed, new W6 low + W7 should-fix (exercise page pushed in the workout latches night; review-207.md). Install needs scripts/test.sh "All green" + one TesseraUITests run + phone smoke. Next: docs PR indexing reviews 124-207.
 
 **Next:**
 1. Keep the docs index at `docs/README.md` current.
