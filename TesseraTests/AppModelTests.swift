@@ -54,7 +54,8 @@ struct AppModelTests {
 
         // The 18 muscles come with Core's exercise library now (the demo used to make its own four).
         #expect(model.objects(of: .muscle).count == 18)
-        #expect(model.objects(of: .task).count == 8)
+        // Eight timed tasks, plus three undated ones for Plan my day to place.
+        #expect(model.objects(of: .task).count == 11)
         let schedule = model.schedule()
         #expect(schedule.count == 9)
         #expect(model.currentTask()?.title == "Groceries for the week")
