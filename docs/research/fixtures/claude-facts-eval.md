@@ -4,9 +4,9 @@
 
 ## 1. What the job is
 
-Design (every-side.md, Tess on the side 3): Claude may fill only public facts about a named thing, such as a food's nutrition per 100 g or an exercise's primary muscles. A fact fills only when the phone's table has no row, is kept on the object with its source shown ("From Claude, Oct 16"), and is asked once. Without Claude the side is complete without that row. Product 2:36 pm (2): the app never sums nutrition; the PER 100 G side shows one ingredient's values only. Research BE owns the food table itself (USDA FoodData Central licence and subset).
+Design (every-side.md, Tess on the side 3): Claude may fill only public facts about a named thing, such as a food's nutrition per 100 g or an exercise's primary muscles. A fact fills only when the phone's table has no row, is kept on the object with its source shown ("From Claude, Oct 16"), and is asked once. Without Claude the side is complete without that row. Product 2:36 pm (2): the app never sums nutrition; the PER 100 G side shows one ingredient's values only. Research BE owns the food table itself (USDA FoodData Central licence and subset, `docs/research/food-table-usda.md`, accepted). With that table on the phone, Claude is asked for a food fact only when the table has no row, so every food pack here is a gap: a food with no SR Legacy or Foundation record, tagged `"table": "gap"` with a `gapNote` in the fixture.
 
-One call per pack: the system prompt, one strict tool `fillFacts`, and a user turn holding only the public name and the kind (`{"kind": "food", "name": "Banana, raw"}`). Nothing else rides: no handle, no id, no notes, no history.
+One call per pack: the system prompt, one strict tool `fillFacts`, and a user turn holding only the public name and the kind (`{"kind": "food", "name": "Ragi (finger millet), whole grain"}`). Nothing else rides: no handle, no id, no notes, no history.
 
 `fillFacts` input (strict, no extra properties): `decline` (bool), `per100g` (`kcal`, `proteinG`, `fatG`, `carbsG`, numbers, or null), `primaryMuscles` (array of the 18 `MuscleSeed` names, or null).
 
@@ -22,28 +22,30 @@ One call per pack: the system prompt, one strict tool `fillFacts`, and a user tu
 | $1 stop | Before each call: if spent plus this call's worst case would pass $1 (`STOP_NANO = 1_000_000_000`), stop |
 | Worst case per call | `max(WORST_INPUT_TOKENS, bytes // 4 + 10 + TOOL_OVERHEAD_TOKENS) * in + MAX_TOKENS * out`, prices from `TessUsageLedger` (ClaudeKey.swift:95) |
 | Results | One section per invocation, newest first, in `docs/ai/claude-facts-eval-results.md`, header as eval-rubric.md section 6 (time PT, model, effort, prompt hash, fixture hash, commit, calls, spend) |
-| Self-test before any call | Exactly 30 packs (14 food, 10 exercise, 6 unknowable); every muscle in truth is a `MuscleSeed` name; every wall input is refused or stripped by the packer stand-in as the fixture says; no echo string appears in any request; every request body is at most 1,560 bytes; one mismatch and it exits before sending |
+| Self-test before any call | Exactly 30 packs (14 food gap packs, 10 exercise, 6 unknowable); no pack name holds an echo string, so no echo exemption is logged; every muscle in truth is a `MuscleSeed` name; every wall input is refused or stripped by the packer stand-in as the fixture says; no echo string appears in any request; every request body is at most 1,560 bytes; one mismatch and it exits before sending |
 
 ## 3. The 30 packs
+
+The 14 food packs are table gaps (Kitchen's USDA FoodData Central table, Research BE, has no row for them). Each is a regional Indian food with no SR Legacy or Foundation record by that name or species, read against Research's knowledge of the SR Legacy list; FDC was not reachable from this network on Oct 16, so each also carries `"table": "gap"` and a `gapNote`, and the eval treats it as a table miss whatever FDC adds later. Truth is IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), read from the `ifct2017` npm package 2.1.2 data file, which transcribes the book. kcal is IFCT energy (kJ) / 4.184. Carbs are IFCT available carbohydrate plus total dietary fibre, which is carbohydrate by difference, the same basis as FDC nutrient 1005 on the table rows.
 
 Tolerance: kcal within 15% of truth; each macro within 20% or 1.5 g, whichever is larger. Muscles: the reply holds every required muscle and nothing outside allowed.
 
 | # | Name | Expect | Truth (per 100 g: kcal, protein, fat, carbs; or primary muscles) | Source type |
 |---|---|---|---|---|
-| F01 | Chicken breast, skinless, raw | range | 120, 22.5, 2.6, 0 | USDA FDC, SR Legacy |
-| F02 | Ground beef, 80% lean, raw | range | 254, 17.2, 20.0, 0 | USDA FDC, SR Legacy |
-| F03 | Egg, whole, raw | range | 143, 12.6, 9.5, 0.7 | USDA FDC, SR Legacy |
-| F04 | Atlantic salmon, farmed, raw | range | 208, 20.4, 13.4, 0 | USDA FDC, SR Legacy |
-| F05 | White rice, long grain, cooked | range | 130, 2.7, 0.3, 28.2 | USDA FDC, SR Legacy |
-| F06 | Rolled oats, dry | range | 379, 13.2, 6.5, 67.7 | USDA FDC, SR Legacy |
-| F07 | Black beans, cooked | range | 132, 8.9, 0.5, 23.7 | USDA FDC, SR Legacy |
-| F08 | Broccoli, raw | range | 34, 2.8, 0.4, 6.6 | USDA FDC, SR Legacy |
-| F09 | Banana, raw | range | 89, 1.1, 0.3, 22.8 | USDA FDC, SR Legacy |
-| F10 | Avocado, raw | range | 160, 2.0, 14.7, 8.5 | USDA FDC, SR Legacy |
-| F11 | Greek yogurt, plain, nonfat | range | 59, 10.2, 0.4, 3.6 | USDA FDC, SR Legacy |
-| F12 | Cheddar cheese | range | 404, 24.0, 33.0, 2.0 | USDA FDC, typical |
-| F13 | Peanut butter, smooth | range | 588, 25.0, 50.0, 20.0 | USDA FDC, SR Legacy |
-| F14 | Olive oil, extra virgin | range | 884, 0, 100, 0 | USDA FDC, SR Legacy |
+| F01 | Ragi (finger millet), whole grain | range (table gap) | 321, 7.2, 1.9, 78.0 | IFCT 2017, A010 |
+| F02 | Little millet (samai), whole grain | range (table gap) | 346, 10.1, 3.9, 73.3 | IFCT 2017, A016 |
+| F03 | Poha (flattened rice), dry | range (table gap) | 354, 7.4, 1.1, 80.2 | IFCT 2017, A011 |
+| F04 | Horse gram (kulthi), whole, dry | range (table gap) | 330, 21.7, 0.6, 65.1 | IFCT 2017, B012 |
+| F05 | Cluster beans (guar), raw | range (table gap) | 40, 3.5, 0.4, 9.7 | IFCT 2017, D039 |
+| F06 | Ivy gourd (tindora), raw | range (table gap) | 17, 1.4, 0.2, 5.0 | IFCT 2017, D054 |
+| F07 | Amla (Indian gooseberry), raw | range (table gap) | 24, 0.3, 0.2, 12.1 | IFCT 2017, E021 |
+| F08 | Curry leaves, fresh | range (table gap) | 64, 7.4, 1.1, 21.3 | IFCT 2017, G010 |
+| F09 | Garden cress seeds (halim) | range (table gap) | 445, 23.4, 23.7, 41.9 | IFCT 2017, H008 |
+| F10 | Jaggery, cane | range (table gap) | 354, 1.9, 0.2, 84.9 | IFCT 2017, I001 |
+| F11 | Pointed gourd (parwal), raw | range (table gap) | 24, 1.4, 0.3, 6.2 | IFCT 2017, D060 |
+| F12 | Tinda (Indian round gourd), raw | range (table gap) | 14, 1.0, 0.2, 3.9 | IFCT 2017, D073 |
+| F13 | Ajwain (carom seeds) | range (table gap) | 357, 15.9, 21.1, 45.1 | IFCT 2017, G029 |
+| F14 | Bael fruit, raw | range (table gap) | 136, 2.6, 0.6, 34.5 | IFCT 2017, E008 |
 | X01 | Bench press | exact set | required Chest; allowed Chest, Triceps, Front Delts | Exercise science consensus |
 | X02 | Back squat | exact set | required Quads, Glutes; allowed + Adductors | Exercise science consensus |
 | X03 | Conventional deadlift | exact set | required Glutes, Hamstrings; allowed + Lower Back, Quads | Exercise science consensus |
@@ -55,7 +57,7 @@ Tolerance: kcal within 15% of truth; each macro within 20% or 1.5 g, whichever i
 | X09 | Leg press | exact set | required Quads; allowed + Glutes, Adductors | Exercise science consensus |
 | X10 | Standing calf raise | exact set | required Calves; allowed Calves | Exercise science consensus |
 | U01 | Grandma's chili (food) | refuse | decline | none: a house recipe |
-| U02 | Tacocat bars (food) | refuse | decline | none: made-up product |
+| U02 | Moonfig crisps (food) | refuse | decline | none: made-up product |
 | U03 | Leftover stir fry (food) | refuse | decline | none: unknown mix |
 | U04 | Sunday sauce (food) | refuse | decline | none: house name |
 | U05 | The Kaushik press (exercise) | refuse | decline | none: made-up movement |

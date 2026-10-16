@@ -1,6 +1,6 @@
 # Screens inventory check (Research BD)
 
-*Research, Oct 16. Checks Design sheet 75 (`every-side.md`) and its inventory (`screens-inventory.md`, written against master 73fa1a2) against origin/master a438262. Docs only. Rulings read: decisions 2:24 PM (on `claude/project-thread-tjn3bv`), and Product's 2:41 PM rulings as sheet 75 folds them in ("Rulings folded in", 2:45 PM). The 2:41 and 2:46 entries were not yet on master or any pushed branch when this was written, so this file follows sheet 75's summary of them. Paths are from the repo root; every line number was read on a438262.*
+*Research, Oct 16. Checks Design sheet 75 (`every-side.md`) and its inventory (`screens-inventory.md`, written against master 73fa1a2) against origin/master a438262. Docs only. Rulings read: decisions 2:24 PM (on `claude/project-thread-tjn3bv`), and Product's 2:41 PM rulings as sheet 75 folds them in ("Rulings folded in", 2:45 PM). The 2:41 and 2:37 entries were not yet on master or any pushed branch when this was written, so this file follows sheet 75's summary of them. Paths are from the repo root; every line number was read on a438262.*
 
 ## Summary
 
@@ -91,7 +91,7 @@ These are sides that would show a private fact (a private note's title or body, 
 |---|---|---|---|---|
 | PL1 | An exercise: YOUR SETUP, and its glance's "first setup word" | His free-text `notes` on the exercise. The exercise page never shows them (no `notes` read in `Features/Exercise/`; only the class page prints a prototype's notes at `ObjectPage.swift:81`). A line like "left knee sore, locker code 4471" holds a health word and a secret word. | `notes` field, `SystemCatalog.swift:57` | Screen each line of the notes with `SecretWords.mentions` (`Notes/SecretWords.swift:34`) and `PrivateFacts.isWalled` (`Tess/PrivateFacts.swift:17`). Show the lines that pass. Count the others ("1 line kept private") and never show them. Never use a walled line as the glance's big fact, and never let "Ask about this" carry it. |
 | PL2 | Any other object: the default side ("every field the front doesn't show"), and its glance's "most-used field's value" | For a bespoke front that hides fields, the default side would print them: a private note's `body` (`SystemCatalog.swift:216`, `isPrivate` :220), a private memory's `rule` (:258, :264), a cook's `note` (:320). | `PropertyList` prints every field but `notes` (`ObjectPage.swift:348`) | The default side skips any object with `isPrivate == true` or the title `SecretWords.title` (it shows the count only). For every other object it drops any value that fails `SecretWords.mentions` or `PrivateFacts.isWalled`. A Core test runs every catalog field through it. |
-| PL3 | A class page: ITS OBJECTS, and its glance's "the newest" and "the most used" | On the Note or Memory class, the newest object can be a private note or a private memory. The title reads "Private note", but the glance would name it and open it. | `ClassBody`, `ObjectPage.swift` | Private objects count but are never "the newest" or "the most used". The glance says "38 objects", then "5 private" when any are. |
+| PL3 | A class page: ITS OBJECTS, and its glance's "the newest" and "the most used" | On the Note or Memory class, the newest object can be a private note or a private memory. The title reads "Private note", but the glance would name it and open it. | `ClassBody`, `ObjectPage.swift` | Private objects count but are never "the most used". The newest slot shows the private label, never the title (Product 2:45 amended 2:55 pm, over this pick). The glance says "38 objects", then "5 private" when any are. |
 | PL4 | A note: WHERE IT'S MENTIONED, from the other side | Private notes never link from their words (`Notes/Notes.swift:111-119`; `EditNote` clears links when a note turns private, :165-166). But mention lookup resolves by title (`Notes.swift:41-43`), so "@Private note" in a plain note links to the oldest private note, and that plain note's own links (under its text) name and open it. | `NoteList.resolve`, `Notes.swift:41-43` | `resolve` skips objects with `isPrivate == true`. Then no side can reach a private note through a link. |
 
 To watch (not leaks today):
@@ -101,7 +101,7 @@ To watch (not leaks today):
 
 ## Open questions
 
-- **Q1.** Do the 2:41 and 2:46 entries land in `decisions.md` on master as sheet 75 summarizes them? This file follows the sheet's summary.
+- **Q1.** Do the 2:41 and 2:37 entries land in `decisions.md` on master as sheet 75 summarizes them? This file follows the sheet's summary.
 - **Q2.** Is a page pushed over the live workout (M1) live under rule 7, so that its side is a peek? Or does it get its full side?
 - **Q3.** Two taps down (the routine, an ingredient, receipts, backups) was outside the old rule's "one tap down". 2:24 makes it moot. Confirm that no depth limit is left.
 - **Q4.** Should Review's side (S2) take the swipe until 46 is built?
