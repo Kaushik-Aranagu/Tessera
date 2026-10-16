@@ -19,7 +19,7 @@ struct ReceiptTests {
         #expect(made.record.receipt == "Packing, made" && made.record.summary == "New list: Packing")
         let list = made.output
         let added = try engine.perform(AddListItem(list: list.id, text: "charger", section: "Cables"), by: .tess)
-        #expect(added.record.receipt == "Charger, on Packing")
+        #expect(added.record.receipt == "Charger, added to Packing")
         let item = added.output
         #expect(try engine.perform(CheckListItem(item: item.id), by: .tess).record.receipt == "Charger, got")
         #expect(try engine.perform(CheckListItem(item: item.id, done: false), by: .tess).record.receipt
@@ -38,10 +38,12 @@ struct ReceiptTests {
             == "Call mom, in Later")
         #expect(try engine.perform(SetTaskDone(task: task.id), by: .tess).record.receipt == "Call mom, done")
         #expect(try engine.perform(SetTaskDone(task: task.id, done: false), by: .tess).record.receipt
-            == "Call mom, back on")
+            == "Call mom, open again")
         #expect(try engine.perform(AddGroceries(lines: ["milk"]), by: .tess).record.receipt == "Milk, on Groceries")
+        #expect(try engine.perform(AddGroceries(lines: ["oat milk", "eggs"]), by: .tess).record.receipt
+            == "Oat milk and eggs, on Groceries")
         #expect(try engine.perform(AddGroceries(lines: ["milk", "eggs", "rice"]), by: .tess).record.receipt
-            == "3 things, on Groceries")
+            == "Milk, eggs and 1 more, on Groceries")
     }
 
     @Test func aMovedTaskSaysWhen() throws {
@@ -50,6 +52,11 @@ struct ReceiptTests {
         let tomorrow = try #require(Calendar.current.date(bySettingHour: 18, minute: 30, second: 0,
                                                           of: TesseraDay(calendar: .current).adding(days: 1, to: now)))
         let receipt = try engine.perform(MoveTask(task: task.id, to: tomorrow, time: now), by: .tess).record.receipt
-        #expect(receipt == "Call mom, tomorrow 6:30 pm", "\(receipt ?? "nil")")
+        #expect(receipt == "Call mom, tomorrow at 6:30 pm", "\(receipt ?? "nil")")
+        // Further than a week out: the date.
+        let later = try #require(Calendar.current.date(byAdding: .day, value: 12, to: tomorrow))
+        let far = try engine.perform(MoveTask(task: task.id, to: later, time: now), by: .tess).record.receipt
+        let date = later.formatted(.dateTime.month(.abbreviated).day().locale(Locale(identifier: "en_US")))
+        #expect(far == "Call mom, \(date) at 6:30 pm", "\(far ?? "nil")")
     }
 }

@@ -141,7 +141,7 @@ public struct MoveTask: EngineAction {
         return later == true ? "Moved \(title) to Later" : "Moved \(title)"
     }
 
-    /// "Call mom, in Later", "Call mom, tomorrow 6:30 pm".
+    /// "Call mom, in Later", "Call mom, tomorrow at 6:30 pm", "Call mom, Thursday at 6:30 pm" (copy-pass rule 6).
     public func receipt(in store: ObjectStore) -> String? {
         guard let object = store.object(id: task) else { return nil }
         guard later != true, let at = store.value("startsAt", of: object)?.dateValue else {
@@ -150,9 +150,12 @@ public struct MoveTask: EngineAction {
         let calendar = Calendar.current
         let day = TesseraDay(calendar: calendar)
         let now = time ?? .now
+        let en = Locale(identifier: "en_US")
+        // Within the week, the weekday; further out, the date, so "Thursday" is never next week's (QA on #512).
         let word = day.isSameDay(at, now) ? "today"
             : day.isSameDay(at, day.adding(days: 1, to: now)) ? "tomorrow"
-            : at.formatted(.dateTime.weekday(.abbreviated).locale(Locale(identifier: "en_US")))
-        return "\(object.title), \(word) \(DayStoryClock.sentenceTime(at, calendar: calendar))"
+            : at < day.adding(days: 7, to: day.day(of: now)) ? at.formatted(.dateTime.weekday(.wide).locale(en))
+            : at.formatted(.dateTime.month(.abbreviated).day().locale(en))
+        return "\(object.title), \(word) at \(DayStoryClock.sentenceTime(at, calendar: calendar))"
     }
 }

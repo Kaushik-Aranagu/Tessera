@@ -148,7 +148,7 @@ public struct AddListItem: EngineAction {
     }
 
     public func receipt(in store: ObjectStore) -> String? {
-        "\(text.prefix(1).uppercased() + text.dropFirst()), on \(store.object(id: list)?.title ?? "the list")"
+        "\(text.prefix(1).uppercased() + text.dropFirst()), added to \(store.object(id: list)?.title ?? "the list")"
     }
 }
 
