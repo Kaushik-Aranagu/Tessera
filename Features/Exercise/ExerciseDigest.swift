@@ -189,10 +189,11 @@ enum ExerciseWords {
 
     /// History dates: "Today", "Mon 12" this month, "Sep 27" before.
     static func historyDate(_ date: Date, now: Date, calendar: Calendar) -> String {
-        if calendar.isDate(date, inSameDayAs: now) {
+        let day = TesseraDay(calendar: calendar)
+        if day.isSameDay(date, now) {
             return "Today"
         }
-        if calendar.isDate(date, inSameDayAs: now.addingTimeInterval(-86400)) {
+        if day.isSameDay(date, day.adding(days: -1, to: now)) {
             return "Yesterday"
         }
         var style = Date.FormatStyle.dateTime

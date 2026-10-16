@@ -199,8 +199,9 @@ struct PlanMonth: Equatable {
     {
         guard let first = days.first?.day else { return PlanMonth(cells: [], done: 0) }
         let leading = (calendar.component(.weekday, from: first) - calendar.firstWeekday + 7) % 7
-        let today = calendar.startOfDay(for: now)
-        let byDay = Dictionary(grouping: sessions) { calendar.startOfDay(for: $0.date) }
+        let day = TesseraDay(calendar: calendar)
+        let today = day.today(now)
+        let byDay = Dictionary(grouping: sessions) { day.day(of: $0.date) }
         var cells = (0 ..< leading).map {
             Cell(id: -1 - $0, day: nil, date: nil, isToday: false, isFuture: false, weight: nil, paint: nil,
                  workoutID: nil)

@@ -66,7 +66,7 @@ private struct DaysAcross: View {
         case .today:
             if let id = day.workoutID, let workout = model.object(id) {
                 model.startWorkout(workout)
-            } else if let routine = data.cycle.first(where: { $0.title == day.routine }),
+            } else if let routine = data.cycle.first(where: { $0.title == day.routine }), model.canStart(routine),
                       let result = try? model.engine.perform(StartRoutine(routine: routine.id, time: AppClock.now),
                                                              by: .user)
             {

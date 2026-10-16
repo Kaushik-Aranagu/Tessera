@@ -32,7 +32,8 @@ struct PlanData {
         today = candidates.first { workout in
             guard store.value("endedAt", of: workout) == nil else { return false }
             let when = (store.value("startedAt", of: workout) ?? store.value("scheduledFor", of: workout))?.dateValue
-            return when.map { calendar.isDate($0, inSameDayAs: now) } ?? false
+            // His day runs 04:00 to 04:00: a session started at 23:50 is still today's at 00:30.
+            return when.map { TesseraDay(calendar: calendar).isSameDay($0, now) } ?? false
         }
         .map { (Self.routine(of: $0, store: store), $0.id) }
     }
@@ -72,7 +73,7 @@ struct PlanData {
 
     /// The routine that put the most sets on each muscle this week, so the fill wears that routine's paint.
     private func dominantPaint(model: AppModel, now: Date, calendar: Calendar) -> [UUID: RoutinePaint] {
-        guard let week = calendar.dateInterval(of: .weekOfYear, for: now) else { return [:] }
+        let week = TesseraDay(calendar: calendar).week(containing: now)
         let store = model.store
         var weights: [UUID: [String: Double]] = [:]
         for session in sessions where week.contains(session.date) {
