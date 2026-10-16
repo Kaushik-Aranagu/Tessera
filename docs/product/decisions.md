@@ -4,6 +4,7 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+- **Next phone build waits for the Claude switch and haptics** (11:51 PM PT, coordinator recommendation agreed). bb57e78 is safe but he installed 444e72b minutes ago, so the next install is the first QA-passed master carrying #320 (the "Tess asks Claude" switch) and #317 (haptics, after its fix), plus Settings: Claude's key field if it lands in time, so he can type his key. It goes on no later than the Oct 22 re-sign, and always on his own "install it".
 - **444e72b is on his phone** (11:28 PM PT, iOS build thread). Installed over the existing app with his data kept. The free signing clock restarts tonight, so it lapses around Thu Oct 22, 11:28 PM PT; re-sign before then. The next phone build waits on Builder B's #312 fixes (F1, F2), the Speak fix and Core's weightless-lift rule.
 - **An app icon** (11:23 PM PT, Kaushik). Tessera gets a real, well-designed icon. Design draws it from Tess's soul with light, dark and tinted variants; he sees it before Builder A adds it.
 - **Creating and finishing a task should feel rewarding** (11:19 PM PT Oct 15, Kaushik). Making a task and finishing one must be easy and also exciting, rewarding and satisfying: aesthetics, effects and haptics. Every interaction gets considered, custom haptics. The reps or sets dial can be a simple counter or a richer dial depending on how much it matters (Design's call), with a haptic on each step. He also said "install it", and yes to Research's Day log pack edits.
