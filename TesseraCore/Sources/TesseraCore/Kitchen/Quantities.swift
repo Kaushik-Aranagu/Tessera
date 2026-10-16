@@ -213,6 +213,11 @@ public struct IngredientLine: Hashable, Sendable, Codable {
             unit = trailing
             name = String(match.1)
         }
+        // "1 pound cake" is a cake, not a pound of one (QA on #309).
+        if unit == .pound, name.lowercased() == "cake" || name.lowercased().hasPrefix("cake ") {
+            unit = nil
+            name = "pound " + name
+        }
         guard !name.isEmpty else { return nil }
         return IngredientLine(original: original, amount: amount, amountMax: amountMax, unit: unit, name: name,
                               prep: prep, toTaste: toTaste, packSize: unit?.isPack == true ? packSize : nil)

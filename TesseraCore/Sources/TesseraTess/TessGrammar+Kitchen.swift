@@ -68,7 +68,7 @@ extension TessGrammar {
         if trimmed.contains(","), !trimmed.contains("\n") {
             let lines = Self.splitItems(trimmed)
             // At least one item reads as shopping, none is a set or an errand, and there's no day: "milk, coffee, tea"
-            // is shopping (coffee and tea land in Other); "call mum, dentist" isn't.
+            // is shopping (coffee and tea land in Other); "call mom, dentist" isn't.
             if lines.count >= 2, !hasDate, !Self.isMoney(trimmed), Self.isShoppingList(lines, looksLikeGroceries) {
                 return .groceries(lines: lines)
             }
@@ -85,7 +85,7 @@ extension TessGrammar {
     }
 
     /// A comma-list item that reads as shopping: an amount, a known aisle or a known ingredient
-    /// ("call mum, dentist" is not shopping).
+    /// ("call mom, dentist" is not shopping).
     private func looksLikeGroceries(_ item: String) -> Bool {
         // "80x8", "80 for 8" and "5x5 squats" are sets, not shopping.
         guard item.split(separator: " ").count <= 4, item.contains(where: \.isLetter),
@@ -163,7 +163,7 @@ extension TessGrammar {
         return lines.contains(where: looksLikeGroceries)
     }
 
-    /// "call mum", "email Sam", "skip lunges": things to do, not to buy.
+    /// "call mom", "email Sam", "skip lunges": things to do, not to buy.
     static func startsWithErrand(_ item: String) -> Bool {
         let verbs: Set = ["call", "email", "text", "ring", "book", "pay", "fix", "clean", "skip", "meet", "send",
                           "write", "check", "ask", "tell", "pick", "drop", "visit", "go", "do", "make", "finish"]

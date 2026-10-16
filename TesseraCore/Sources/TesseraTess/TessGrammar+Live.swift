@@ -158,14 +158,14 @@ extension TessGrammar {
                                             kind: kind, rpe: rpe))
     }
 
-    /// A169, A170: a set and an errand in one breath ("8 and call mum at 7", "same, call mum thu"). The set part goes
+    /// A169, A170: a set and an errand in one breath ("8 and call mom at 7", "same, call mom thu"). The set part goes
     /// through the live guard; the rest is read as if no workout were in front. Nil unless both parts write.
     func parseSetAndErrand(_ phrase: String, context: TessContext, entry: ObjectRecord) -> Parse? {
         parseLiftAndErrand(phrase, context: context, entry: entry)
     }
 
-    /// A lift (or a set in focus) and an errand in one phrase, either order: "bench 80x8, call mum thu" (A162),
-    /// "buy milk and bench 80x8" (A059), "bench 3x5 at 80 then call mum at 7" (A167), and with no joining word when
+    /// A lift (or a set in focus) and an errand in one phrase, either order: "bench 80x8, call mom thu" (A162),
+    /// "buy milk and bench 80x8" (A059), "bench 3x5 at 80 then call mom at 7" (A167), and with no joining word when
     /// the errand has a day: "bench 80x8 dentist fri" (A171). Nil unless both parts write.
     func parseLiftAndErrand(_ phrase: String, context: TessContext, entry: ObjectRecord?) -> Parse? {
         // A lift has a number; most phrases don't, and each try below reads its parts again.
@@ -252,7 +252,7 @@ extension TessGrammar {
         }
     }
 
-    /// What can carry an RPE: a set shape, "same" and its kin, or bare reps ("call mum at 7" can't).
+    /// What can carry an RPE: a set shape, "same" and its kin, or bare reps ("call mom at 7" can't).
     static func isSetCore(_ text: String) -> Bool {
         looksLikeSet(text) || ["same", "same again", "again", "repeat", "one more"].contains(text)
             || number(text) != nil || text.hasSuffix(" to failure") && looksLikeSet(text)

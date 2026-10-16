@@ -148,7 +148,9 @@ public struct PlanPack: Sendable, Equatable {
         // or its all-day items ("landlord" in "Reply to landlord") (QA S1 on #303).
         let inPack = (plan.blocks.map(\.title) + plan.allDay).map(phrase)
         self.otherNames = Set(otherNames.map(phrase).filter { name in
-            name.contains(" ") && !inPack.contains { $0.contains(name) || name.contains($0) }
+            // As words, not letters: "pasta" doesn't overlap "pastry bake" (QA on #306).
+            let padded = " \(name) "
+            return name.contains(" ") && !inPack.contains { padded.contains(" \($0) ") || " \($0) ".contains(padded) }
         })
         hasWorkout = plan.blocks.contains { $0.kind == .workout }
         isRestDay = restDay
@@ -461,7 +463,8 @@ public final class ClaudePlanWording {
         // A call that reached Claude is remembered for today; offline, cancelled and a bad key (a new key may come)
         // never are.
         func done(_ result: PlanWordingResult) -> PlanWordingResult {
-            if !["offline", "cancelled", "badKey"].contains(outcome) {
+            // Busy passes in minutes, so it's never remembered for the day (QA on #306).
+            if !["offline", "cancelled", "badKey", "busy"].contains(outcome) {
                 failed = (today, result)
             }
             return result
@@ -582,8 +585,12 @@ public final class ClaudePlanWording {
         let response: URLResponse
         do {
             (data, response) = try await session.data(for: http)
+        } catch let error as URLError where error.code == .cancelled {
+            throw CancellationError() // the view went away: never remembered (QA on #306)
         } catch let error as URLError {
             throw error.code == .timedOut ? ClaudeTessModel.Failure.timeout : ClaudeTessModel.Failure.offline
+        } catch is CancellationError {
+            throw CancellationError()
         } catch {
             throw ClaudeTessModel.Failure.other
         }
