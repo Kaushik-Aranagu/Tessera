@@ -2,7 +2,7 @@
 
 *Started 2026-10-16 from Kaushik's first review (11:58 PM PT Oct 15): "a new AI team for architecture: data, harness, memory." Product edits the Next list; the team's lead runs it. Rules: Claude only through the one switch "Tess asks Claude" (missesGoToClaude); reserve before sending, a ledger row for every outcome, $10 a month cap; Claude never writes the store; the key lives only in the phone's Keychain, never in any file or thread. Base: `research/tess-model-layer.md`.*
 
-**Two lanes (11:25 AM PT Oct 16, Kaushik: no idle agents):** when one lane waits on a review, build, gate or answer, work the other in the same turn. Next keeps 3 or more ready items. The coordinator sweeps every 30 minutes.
+**Two lanes (Kaushik, 11:21 and 11:26 AM PT Oct 16):** this team's lead is its manager. It keeps two lanes going, pulls its next items from this board without waiting to be handed work, and splits work across subagents so it runs in parallel. When one lane waits on a review, build, gate or answer, it works the other in the same turn. The lanes below are suggestions; the lead replaces them with something better. If Next drops under 3, ask the Product lead directly. The coordinator handles cross-team blocks, merges and anything that needs Kaushik, with occasional spot checks.
 - **Lane 1:** AI-3 test vectors for TessLineCheck (#411's exemptions: sentence-initial capitals, weekdays, months) for Core's small PR.
 - **Lane 2:** An AI-2 interface note: ClaudeClient + TessJob, per-model tool choice, .noLine, the ledger record, for Core's AI-2 PR.
 

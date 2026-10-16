@@ -2,7 +2,7 @@
 
 *Started 2026-10-16 from Kaushik's first review (11:58 PM PT Oct 15): Tess's soul gets dot eyes, roams the screen, can be dragged, fades into subtle colours while working, splits and gathers back. "Very subtle." Product edits the Next list. Rules: Speak gestures stay (tap opens Tess, double tap in 260 ms goes Home, a hold never opens the layer, so a drag starts from a hold); nothing on a page moves for the soul; colour arrives through motion and dries; 60fps with a Reduce Motion fallback; palettes from `soul-explore.md`. Builder A builds it (TessSoul.swift, SoulParameters.swift).*
 
-**Two lanes (11:25 AM PT Oct 16, Kaushik: no idle agents):** when one lane waits on a review, build, gate or answer, work the other in the same turn. Next keeps 3 or more ready items. The coordinator sweeps every 30 minutes.
+**Two lanes (Kaushik, 11:21 and 11:26 AM PT Oct 16):** this team's lead is its manager. It keeps two lanes going, pulls its next items from this board without waiting to be handed work, and splits work across subagents so it runs in parallel. When one lane waits on a review, build, gate or answer, it works the other in the same turn. The lanes below are suggestions; the lead replaces them with something better. If Next drops under 3, ask the Product lead directly. The coordinator handles cross-team blocks, merges and anything that needs Kaushik, with occasional spot checks.
 - **Lane 1:** Reference renders for picks (a) 1 + 2 and (b) 3 + 4, as the targets Builder A's PRs are checked against.
 - **Lane 2:** Reference render for (c) the mouth (item 19), then the item 20 signals note with AI architecture.
 

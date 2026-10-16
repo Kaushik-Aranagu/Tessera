@@ -4,7 +4,7 @@
 
 **Done:** #134 (WorkoutTessBar swapped for the Tess soul, 794981a). #109 (tap a logged set to edit it, 940dca2). #108 (PaintKey ink rewrite: every key is a stroke word, dead keys removed; D4, rest survives an app kill). ship-2 (#91): v1 slices 8 to 12, G1, a haptic, P2, B3, the launch note, and the mic hidden.
 
-**Two lanes (11:25 AM PT Oct 16, Kaushik: no idle agents):** when one lane waits on a review, build, gate or answer, work the other in the same turn. Next keeps 3 or more ready items. The coordinator sweeps every 30 minutes.
+**Two lanes (Kaushik, 11:21 and 11:26 AM PT Oct 16):** this team's lead is its manager. It keeps two lanes going, pulls its next items from this board without waiting to be handed work, and splits work across subagents so it runs in parallel. When one lane waits on a review, build, gate or answer, it works the other in the same turn. The lanes below are suggestions; the lead replaces them with something better. If Next drops under 3, ask the Product lead directly. The coordinator handles cross-team blocks, merges and anything that needs Kaushik, with occasional spot checks.
 - **Lane 1:** Working (motion lab item 2, fresh branch from master; the lab's compare.sh applies; fold QA lows L5/L6). It sat idle since the install, so it starts now.
 - **Lane 2:** The beat PR tests first (rules 2 and 4), then Design 60. When the pin is named: the v9 migration gate rerun and Design 66's walk come first, ahead of both lanes.
 

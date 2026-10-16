@@ -1,6 +1,6 @@
 # Planning lead (Product lead thread)
 
-**Two lanes (11:25 AM PT Oct 16, Kaushik: no idle agents):** when one lane waits on a review, build, gate or answer, work the other in the same turn. Next keeps 3 or more ready items. The coordinator sweeps every 30 minutes.
+**Two lanes (Kaushik, 11:21 and 11:26 AM PT Oct 16):** this team's lead is its manager. It keeps two lanes going, pulls its next items from this board without waiting to be handed work, and splits work across subagents so it runs in parallel. When one lane waits on a review, build, gate or answer, it works the other in the same turn. The lanes below are suggestions; the lead replaces them with something better. If Next drops under 3, ask the Product lead directly. The coordinator handles cross-team blocks, merges and anything that needs Kaushik, with occasional spot checks.
 - **Lane 1:** Boards, decisions and the index; each team's Next at 3 or more; mirror to master by small docs PRs.
 - **Lane 2:** The pin-naming checklist (`../../product/pin-checklist.md`), so the pin SHA is named the minute #366 and the stuck-listening fix merge.
 

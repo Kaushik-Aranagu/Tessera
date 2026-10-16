@@ -2,7 +2,7 @@
 
 *No simulator or Swift toolchain in this thread, so QA here is code review on master, not running the app.*
 
-**Two lanes (11:25 AM PT Oct 16, Kaushik: no idle agents):** when one lane waits on a review, build, gate or answer, work the other in the same turn. Next keeps 3 or more ready items. The coordinator sweeps every 30 minutes.
+**Two lanes (Kaushik, 11:21 and 11:26 AM PT Oct 16):** this team's lead is its manager. It keeps two lanes going, pulls its next items from this board without waiting to be handed work, and splits work across subagents so it runs in parallel. When one lane waits on a review, build, gate or answer, it works the other in the same turn. The lanes below are suggestions; the lead replaces them with something better. If Next drops under 3, ask the Product lead directly. The coordinator handles cross-team blocks, merges and anything that needs Kaushik, with occasional spot checks.
 - **Lane 1:** Reviews as PRs come: the stuck-listening fix, MU2, the paste/link wall, #366's last confirm, #407 at v10.
 - **Lane 2:** A master audit: every Claude call path (what leaves the phone, which wall guards it: secret words, money and body, paste/link) plus data safety (migrations, backups, launch flags). Findings go in docs/qa/review-master-audit.md.
 
