@@ -386,7 +386,7 @@ struct LiveAskField: View {
         .onAppear { focused = true }
     }
 
-    /// Anything holding "sk-ant-", in any case (the guard Ask uses, BottomChrome.looksLikeClaudeKey).
+    /// Anything that looks like a Claude API key, in any case (the guard Ask uses, BottomChrome.looksLikeClaudeKey).
     static func refuses(_ text: String) -> Bool {
         looksLikeClaudeKey(text)
     }
