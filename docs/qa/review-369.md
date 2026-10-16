@@ -53,3 +53,35 @@ is nil. That leaves each face to find the weekday itself.
   whether "first" (Research's first-of-the-week cue) belongs in the lens.
 - `isTimeWord` misses "this afternoon" and "this morning", which `partWord` can return for a done workout with no
   sets. A widget would print "Push A, no sets, this afternoon". That's a rare state.
+
+## Addendum: re-check at `b6ca3a5` (Oct 16, about 3:25 AM Pacific): PASS
+
+The trial merge onto master 38466f1 is clean. The delta since a5e2112 is HomeLines.swift and its tests.
+
+- **F1 closed.** `ExerciseWords.short` never drops a word now. "Dumbbell", "Barbell" and "Kettlebell" read as DB,
+  BB and KB, and the catalog's presses, rows and squats have their own rows ("Incline DB press", "Cable row",
+  "Chest-supported row", "DB bench"). A test asserts that no two catalog lifts share a short name, except the groups
+  that are meant to (pulldowns, lateral raises, leg curls, calf raises). The incline best and the overhead best stay
+  two bests in WeekFacts.
+- **F2 closed.** For `.rest`, `widgetWords` is "Rest day" and `widgetMeta` is `HomeLine.weekday`, read at line time
+  through the 04:00 day. On the tomorrow form the meta is nil.
+- **Lows taken.** `widgetMeta` is nil while something runs, and "this afternoon" and "this morning" are now time
+  words. The look ahead on a closed day says "tomorrow, first", so the widget reads "Pull A tomorrow, first." by the
+  join rule, which matches Design 54's study.
+- **Product 96db137.** `rest(next:now:)` returns nil when `plannedSession(on:)` finds a workout scheduled for, or
+  started and unfinished on, his day. `fact(scheduled:)` gives "Push A at 7 pm" over START. That closes my #366 L3,
+  where "Rest day" sat beside a Push Day A at 19:00.
+- **AI 0cc7ba2.** Under a done hero the context is the clock alone ("8:05 pm"), and the widget sentence is "Push A
+  done. Bench best." or "Push A done. 2 bests.". Caps hold, and the digits come from the fact.
+
+### Merge order (not a #369 defect)
+`HomeFacts.rest(next:)` now returns `HomeFact?`. #366 at 52a729b calls `HomeLines.line(for: facts.rest(next:
+next), now: now)` (NowPage.swift:59) with a non-optional argument, so the two won't compile together. Builder B's
+fix head for #366 should rebase onto #369, take the optional (show `fact(scheduled:)` with START when it's nil), and
+drop the `context: "today"` override. Otherwise #369 waits for #366 and Core adapts the call. Nothing on master
+calls `rest(next:)` today.
+
+### For Design
+Strings he'll see moved. The done workout's and done cook's context goes from "done at 7:40 pm" to "7:40 pm", a
+scheduled session reads "Push A at 7 pm", and the closed day's context reads "tomorrow, first". These are the AI
+thread's and Product's calls, already decided. Design may want one glance before Builder B's Home records them.
