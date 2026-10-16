@@ -109,6 +109,7 @@ struct BottomChrome: View {
                 setAsk = nil
             }
         }
+        .onDisappear(perform: askLeft)
         .onAppear {
             model.soul.handle(.appeared)
             breathe = !reduceMotion
@@ -531,6 +532,15 @@ struct BottomChrome: View {
 // MARK: - Speak and the asks (same file, so they reach the view's private state)
 
 extension BottomChrome {
+    /// An ask can't wait off screen (tess-motion.md §14 `askLeft`): leaving with one open lets it go, or the router
+    /// would keep refusing the lens. Emitted here because the ask's onChange won't run once the view is gone.
+    private func askLeft() {
+        guard setAsk != nil || liftAsk != nil else { return }
+        setAsk = nil
+        liftAsk = nil
+        model.soul.handle(.askAnswered)
+    }
+
     /// Taps are read off the press itself: a separate tap gesture never fired beside the touch-down drag, so the
     /// soul didn't open on a real tap. One tap opens or closes after the double-tap window; two go Home.
     private func soulTapped() {
