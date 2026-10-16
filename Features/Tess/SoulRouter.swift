@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import TesseraCore
 
 /// What happened, from the views' side (docs/design/motion/tess-motion.md §14). Views emit events; they never set
 /// her mode.
@@ -29,7 +30,9 @@ enum SoulEvent: Equatable {
     case askWaiting, askAnswered
     /// The glass-tab lens (§15): she is pinned to the dock while it is held.
     case lensHeld, lensReleased
-    case backgrounded, foregrounded
+    case backgrounded
+    /// The app comes forward. `underLive`: a live workout is on top (his moment wins, so no wake).
+    case foregrounded(underLive: Bool)
 }
 
 /// The one place that turns events into Tess's state, and the only timer for it (§14: "views never set a mode",
@@ -70,10 +73,18 @@ final class SoulRouter {
     @ObservationIgnored private var lineTimer: Task<Void, Never>?
     @ObservationIgnored private var glanceTimer: Task<Void, Never>?
     @ObservationIgnored private let clock: () -> Date
+    @ObservationIgnored private var wakeTimer: Task<Void, Never>?
+    /// Where "woke on" is kept, so a relaunch the same day doesn't wake her twice.
+    @ObservationIgnored private let wakeStore: UserDefaults
+    static let wokeOnKey = "tess.wokeOn"
 
-    init(page: Page = .home, clock: @escaping () -> Date = { AppClock.now }) {
+    /// When she began waking with him (idea 2), for `SoulWake.duration`; nil otherwise.
+    private(set) var wake: Date?
+
+    init(page: Page = .home, clock: @escaping () -> Date = { AppClock.now }, wakeStore: UserDefaults = .standard) {
         self.page = page
         self.clock = clock
+        self.wakeStore = wakeStore
     }
 
     /// Idle, or resting from 23:00 to 06:00 (as built). The workout's corner always rests at idle.
@@ -84,7 +95,7 @@ final class SoulRouter {
     }
 
     /// The whole contract is this one switch (§14's table): one case per event, read top to bottom.
-    // swiftlint:disable:next cyclomatic_complexity
+    // swiftlint:disable:next cyclomatic_complexity function_body_length
     func handle(_ event: SoulEvent) {
         switch event {
         case .closed, .heardNothing:
@@ -101,7 +112,11 @@ final class SoulRouter {
             // No Done for a failure: the lights gather and she rests (§5).
             guard !isWorking else { return gather(thenDone: false) }
             settle(rest)
-        case .appeared, .returnLine, .foregrounded:
+        case let .foregrounded(underLive):
+            wakeIfFirstOpen(quiet: underLive)
+            guard !isDoneInFlight, !isWorking else { return }
+            settle(rest)
+        case .appeared, .returnLine:
             guard !isDoneInFlight, !isWorking else { return }
             settle(rest)
         case .committed:
@@ -146,7 +161,8 @@ final class SoulRouter {
             // Working (§5). It queues behind a Done in flight (rule 4); a second ask joins the running one (rule 5).
             // The live workout never works: its corner keeps thinking's pulse.
             guard page == .home else { return settle(.thinking) }
-            guard !isDoneInFlight else { return queue(.working) }
+            // A new ask during the gather waits for the lights to land, so they never jump (lab note on #453).
+            guard !isDoneInFlight, mode != .gathering else { return queue(.working) }
             guard mode != .working else { return }
             settle(.working)
         case .claudeDone:
@@ -202,6 +218,28 @@ final class SoulRouter {
         mode == .done
     }
 
+    /// Idea 2: the first foreground of his day (from 04:00) wakes her, once. Under a live workout, in Speak or with
+    /// an ask waiting, his moment wins and the day still counts as woken.
+    private func wakeIfFirstOpen(quiet: Bool) {
+        guard page == .home else { return }
+        let now = clock()
+        let today = TesseraDay().day(of: now)
+        // `-freshDay` (simulator only, for recordings): every launch is the first open of the day.
+        if !LaunchFlags.has("-freshDay"), let last = wakeStore.object(forKey: Self.wokeOnKey) as? Date, last == today {
+            return
+        }
+        wakeStore.set(today, forKey: Self.wokeOnKey)
+        guard !quiet, !isAskWaiting, mode != .listening else { return }
+        // Real time, not the (demo-shiftable) clock: the view times the wake against its own frames.
+        wake = .now
+        wakeTimer?.cancel()
+        wakeTimer = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(SoulWake.duration))
+            guard !Task.isCancelled else { return }
+            self?.wake = nil
+        }
+    }
+
     /// Working or gathering home from it.
     var isWorking: Bool {
         mode == .working || mode == .gathering
@@ -216,10 +254,14 @@ final class SoulRouter {
         timer = Task { @MainActor [weak self] in
             try? await Task.sleep(for: .seconds(SoulWork.gatherDuration))
             guard !Task.isCancelled, let self else { return }
+            let next = queued
             if thenDone {
+                // Done plays as built; an ask that arrived during the gather starts when it ends.
                 playDone()
+                queued = next
             } else {
-                mode = rest
+                queued = nil
+                mode = next ?? rest
             }
         }
     }
