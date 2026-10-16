@@ -3,7 +3,9 @@
 docs/research/fixtures/memory-days.json. Writes docs/ai/memory-experiment-results.md.
 
 Key: ANTHROPIC_API_KEY from the environment only. Never printed, never written to disk.
-Usage: python3 scripts/ai/memory_experiment.py [--runs 3] [--models haiku,sonnet] [--shapes A,B,C] [--dry]
+Usage: python3 scripts/ai/memory_experiment.py [--runs 3] [--models haiku,sonnet] [--shapes A,B,C] [--dry] [--out PATH]
+--dry builds every request and runs the scoring path on a stub reply (rules lines echoed back, one good and one
+bad note), so the shapes and checks can be tested with no key and no spend. Results go to --out when given.
 """
 import argparse
 import json
@@ -12,6 +14,7 @@ import re
 import statistics
 import sys
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -64,14 +67,53 @@ HEALTH = ["sleep", "slept", "tired", "exhausted", "fatigue", "energy", "rested",
           "money", "$", "spent"]
 
 
+RETRY_STATUS = {408, 409, 429, 500, 502, 503, 504, 529}
+BACKOFF = [2, 4, 8, 16, 32]
+
+
 def post(key, body):
-    req = urllib.request.Request("https://api.anthropic.com/v1/messages", data=json.dumps(body).encode(),
-                                 headers={"x-api-key": key, "anthropic-version": "2023-06-01",
-                                          "content-type": "application/json"})
-    started = time.time()
-    with urllib.request.urlopen(req, timeout=30) as r:
-        data = json.load(r)
-    return data, time.time() - started
+    """One Messages call. Retries overload, rate limit, 5xx and network errors with backoff so one failure
+    doesn't abort a 570-call run. Other errors stop the run with the status and the API's error message only."""
+    payload = json.dumps(body).encode()
+    for attempt in range(len(BACKOFF) + 1):
+        req = urllib.request.Request("https://api.anthropic.com/v1/messages", data=payload,
+                                     headers={"x-api-key": key, "anthropic-version": "2023-06-01",
+                                              "content-type": "application/json"})
+        started = time.time()
+        try:
+            with urllib.request.urlopen(req, timeout=30) as r:
+                data = json.load(r)
+            return data, time.time() - started
+        except urllib.error.HTTPError as e:
+            try:
+                err = json.load(e).get("error", {})
+            except Exception:
+                err = {}
+            if e.code not in RETRY_STATUS or attempt == len(BACKOFF):
+                sys.exit(f"API error {e.code}: {err.get('type', '')} {err.get('message', '')}".strip())
+            wait = BACKOFF[attempt]
+            try:
+                wait = max(wait, float(e.headers.get("retry-after") or 0))
+            except ValueError:
+                pass
+            print(f"retry {attempt + 1}: HTTP {e.code}, waiting {wait:.0f} s", file=sys.stderr)
+        except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+            if attempt == len(BACKOFF):
+                sys.exit(f"network error after {attempt + 1} tries: {type(e).__name__}")
+            wait = BACKOFF[attempt]
+            print(f"retry {attempt + 1}: {type(e).__name__}, waiting {wait} s", file=sys.stderr)
+        time.sleep(wait)
+
+
+def stub_reply(body, moment=None):
+    """--dry: a reply in the API's shape. Lines echo the rules; notes are one that passes and one that must fail."""
+    if moment is not None:
+        lines = [{"id": i["id"], "line": i["rules"]} for i in moment["items"]]
+        return {"content": [{"type": "tool_use", "name": "proposeLines", "input": {"lines": lines}}],
+                "usage": {"input_tokens": len(json.dumps(body)) // 4, "output_tokens": 40}}, 0.0
+    notes = ["Likes to cook on Sundays.", "Slept badly and spent 40 dollars."]
+    return {"content": [{"type": "tool_use", "name": "noteMemory", "input": {"notes": notes}}],
+            "usage": {"input_tokens": len(json.dumps(body)) // 4, "output_tokens": 30}}, 0.0
 
 
 def cost_nano(model, usage):
@@ -185,6 +227,18 @@ def check_note(note, day):
     return problems
 
 
+def same_line(a, b):
+    return a.strip().rstrip(".") == b.strip().rstrip(".")
+
+
+def aware_pattern(target):
+    """Aware targets are regexes over the shown line. A target written as a note ("... -> keep rules") is a
+    moment where nothing is worth adding, so it never scores aware."""
+    if not target or "->" in target:
+        return None
+    return target
+
+
 def run(args, key):
     fx = json.load(open(FIXTURE))
     days = fx["days"]
@@ -210,31 +264,34 @@ def run(args, key):
                                 "system": [{"type": "text", "text": VOICE + "\n\n" + HOME_RULES,
                                             "cache_control": {"type": "ephemeral"}}],
                                 "messages": [{"role": "user", "content": user}]}
-                        if args.dry:
-                            print(f"[dry] {model} {shape} {moment['id']} mem={len(mem)} lines")
-                            continue
-                        data, secs = post(key, body)
+                        data, secs = stub_reply(body, moment) if args.dry else post(key, body)
                         scores["calls"] += 1
                         scores["cost"] += cost_nano(model, data.get("usage", {}))
                         scores["latency"].append(secs)
                         got = tool_input(data, "proposeLines") or {"lines": []}
                         names = pack_names_for(moment, mem)
                         by_id = {l["id"]: l["line"] for l in got["lines"]}
+                        aware_hit = False
                         for item in moment["items"]:
                             line = by_id.get(item["id"], "")
-                            problems = check_line(line, item, names) if line else ["no line"]
+                            unchanged = same_line(line, item["rules"])
+                            # The rules line is the fallback, so returning it unchanged is never a failure.
+                            problems = [] if unchanged else (check_line(line, item, names) if line else ["no line"])
                             shown = item["rules"] if problems else line
                             if problems:
                                 scores["failed"].append((moment["id"], item["id"], line, problems))
-                            if shown.strip().rstrip(".") == item["rules"].strip().rstrip("."):
+                            if same_line(shown, item["rules"]):
                                 scores["flat"] += 1
                             key_id = f"{moment['id']}/{item['id']}"
                             scores["lines"].setdefault(key_id, []).append(shown)
-                            if moment["id"] in targets and item["id"] == "w1" or (moment["id"] in targets and item["id"] == "k1"):
-                                pattern = targets[moment["id"]].split(" ")[0]
-                                if re.search(pattern, shown, re.I) and not problems:
-                                    scores["aware"] += 1
-                    if shape == "C" and not args.dry:
+                            pattern = aware_pattern(targets.get(moment["id"]))
+                            # Aware means Claude added the memory fact: a rules line that already says it doesn't count.
+                            if pattern and not problems and not same_line(shown, item["rules"]) \
+                                    and re.search(pattern, shown, re.I):
+                                aware_hit = True
+                        if aware_hit:
+                            scores["aware"] += 1
+                    if shape == "C":
                         # End of day: Claude writes notes from the day's facts, the phone checks them.
                         user = ("<memory>\n" + "\n".join(mem) + "\n</memory>\n<facts>\n"
                                 + json.dumps({"weekday": day["weekday"], **day["facts"]}) + "\n</facts>\nWrite the notes.")
@@ -242,7 +299,7 @@ def run(args, key):
                                 "tool_choice": {"type": "auto"}, "output_config": {"effort": "low"},
                                 "system": VOICE + "\n\n" + NOTE_RULES,
                                 "messages": [{"role": "user", "content": user}]}
-                        data, secs = post(key, body)
+                        data, secs = stub_reply(body) if args.dry else post(key, body)
                         scores["calls"] += 1
                         scores["cost"] += cost_nano(model, data.get("usage", {}))
                         for note in (tool_input(data, "noteMemory") or {"notes": []})["notes"][:3]:
@@ -260,7 +317,8 @@ def write_report(report, args):
              f"Runs: {args.runs}. Shapes: {', '.join(args.shapes)}. Written by `scripts/ai/memory_experiment.py`.", ""]
     for mk in args.models:
         model = MODELS[mk]
-        lines += [f"## {model}", "", "| Shape | Calls | Lines failed | Aware (of 12 x runs) | Flat | Notes rejected / written | Memory tokens | p50 / p95 s | Per call | Month at 20 a day |",
+        n_aware = sum(1 for t in json.load(open(FIXTURE))["awareTargets"].values() if aware_pattern(t))
+        lines += [f"## {model}", "", f"| Shape | Calls | Lines failed | Aware (of {n_aware} x {args.runs} runs) | Flat | Notes rejected / written | Memory tokens | p50 / p95 s | Per call | Month at 20 a day |",
                   "|---|---|---|---|---|---|---|---|---|---|"]
         for shape in args.shapes:
             s = report[(model, shape)]
@@ -287,8 +345,9 @@ def write_report(report, args):
                 row.append(" / ".join(sorted({x for xs in got for x in xs})) if got else "")
             lines.append(f"| {mid} | " + " | ".join(row) + " |")
         lines.append("")
-    RESULTS.write_text("\n".join(lines))
-    print(f"wrote {RESULTS}")
+    out = Path(args.out) if args.out else RESULTS
+    out.write_text("\n".join(lines))
+    print(f"wrote {out}")
 
 
 def main():
@@ -296,7 +355,8 @@ def main():
     ap.add_argument("--runs", type=int, default=3)
     ap.add_argument("--models", default="haiku,sonnet")
     ap.add_argument("--shapes", default="A,B,C")
-    ap.add_argument("--dry", action="store_true", help="build every request, send nothing")
+    ap.add_argument("--dry", action="store_true", help="build every request, score a stub reply, send nothing")
+    ap.add_argument("--out", help="results path (default docs/ai/memory-experiment-results.md)")
     args = ap.parse_args()
     args.models = args.models.split(",")
     args.shapes = args.shapes.split(",")
@@ -304,7 +364,11 @@ def main():
     if not key and not args.dry:
         sys.exit("ANTHROPIC_API_KEY is not set. Put it in the environment, never in a file or a chat.")
     report = run(args, key)
-    if not args.dry:
+    if args.dry:
+        for (model, shape), s in report.items():
+            print(f"[dry] {model} {shape}: calls={s['calls']} failed={len(s['failed'])} aware={s['aware']} "
+                  f"flat={s['flat']} notes rejected/written={s['rejectedNotes']}/{s['notes']} mem~{s['memTokens']} tok")
+    if not args.dry or args.out:
         write_report(report, args)
 
 
