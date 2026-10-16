@@ -18,6 +18,7 @@ struct BackupTests {
         let engine = ActionEngine(store: store, classes: classes)
         try engine.perform(CreateNote(body: "Bench felt heavy"), by: .user)
         try engine.perform(AddGroceries(lines: ["milk", "2 lemons"]), by: .user)
+        store.save()
         return store
     }
 
