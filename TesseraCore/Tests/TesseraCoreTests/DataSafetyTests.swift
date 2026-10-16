@@ -38,6 +38,35 @@ struct DataSafetyTests {
         _ = store
     }
 
+    /// Research's undo audit: Siri's "Undo Last Set" took back all three sets of "3x10 bench 80" and the workout
+    /// Quick Capture started for them. It takes back one set, every time, and never the workout.
+    @Test func undoLastSetNeverTakesMoreThanOneSetOrTheWorkout() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let bench = try #require(classes[.benchPress])
+        let logged = try engine.perform(LogExercise(exercise: bench.id, weight: 80, reps: 10, sets: 3), by: .tess)
+        let entry = try #require(logged.output.first?.parent)
+        let workout = try #require(entry.parent)
+
+        let first = try #require(engine.takeBackLatestSet())
+        #expect(first.number == 3)
+        #expect(entry.orderedChildren.count { !$0.isDeleted } == 2)
+        #expect(!workout.isDeleted)
+        #expect(!entry.isDeleted)
+
+        let second = try #require(engine.takeBackLatestSet())
+        #expect(second.number == 2)
+        #expect(entry.orderedChildren.count { !$0.isDeleted } == 1)
+        #expect(!workout.isDeleted)
+
+        // A single logged set is still undone through its own record, so the op log stays exact.
+        let typed = try engine.perform(LogSet(entry: entry.id, weight: 82.5, reps: 8), by: .user)
+        let undone = try #require(engine.takeBackLatestSet())
+        #expect(undone.record.id == typed.record.id)
+        #expect(entry.orderedChildren.count { !$0.isDeleted } == 1)
+    }
+
     @Test func onlyDamageMovesTheStoreAside() throws {
         #expect(TesseraSchema.isDamaged(DatabaseError(resultCode: .SQLITE_CORRUPT)))
         #expect(TesseraSchema.isDamaged(DatabaseError(resultCode: .SQLITE_NOTADB)))
