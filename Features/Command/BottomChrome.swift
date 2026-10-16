@@ -109,7 +109,7 @@ struct BottomChrome: View {
                 if LaunchFlags.has("-tessScript") {
                     playScript()
                 }
-                if ProcessInfo.processInfo.arguments.contains("-speakScript") {
+                if LaunchFlags.has("-speakScript") {
                     Task { @MainActor in
                         try? await Task.sleep(for: .seconds(2))
                         open()
@@ -539,7 +539,7 @@ extension BottomChrome {
         listener.onFinish = { heard in finishListening(heard, hold: hold) }
         #if DEBUG
             // `-speakScript`: words play in as if heard (the simulator has no mic to record).
-            if ProcessInfo.processInfo.arguments.contains("-speakScript") {
+            if LaunchFlags.has("-speakScript") {
                 listener.playScript(["um", "oat", "milk", "and", "eggs", "for", "groceries"])
                 return
             }

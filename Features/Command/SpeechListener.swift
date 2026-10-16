@@ -193,7 +193,7 @@ final class SpeechListener {
     }
 
     #if DEBUG
-        /// `-speakScript`: plays words in as if heard, for recordings on the simulator (no mic there).
+        /// `-speakScript` (read through LaunchFlags, so simulator only): plays words in as if heard, for recordings.
         func playScript(_ words: [String]) {
             state = .listening
             heard = ""

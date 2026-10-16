@@ -7,6 +7,7 @@ struct LaunchFlagsTests {
         #expect(LaunchFlags.allowed) // unit tests run on the simulator
         #expect(LaunchFlags.has("-queueScript", in: ["app", "-queueScript"]))
         #expect(!LaunchFlags.has("-queueScript", in: ["app"]))
+        #expect(LaunchFlags.has("-speakScript", in: ["app", "-speakScript"]))
         #expect(LaunchFlags.value(after: "-demoTime", in: ["app", "-demoTime", "18:10"]) == "18:10")
         #expect(LaunchFlags.value(after: "-demoTime", in: ["app", "-demoTime"]) == nil)
     }
