@@ -133,3 +133,22 @@ Builder A ran the app tests: 121 green, at 03:59 PT.
 - Decision 8e55cd9 says one word, "best", everywhere and never "record".
 - So it should read something like "2 bests". The exact wording is Product's or Design's call; the code owner is
   Core.
+
+## Addendum: light re-check at `1c2d05c` (11:16 AM PT)
+
+The trial merge onto master `abb6cec` is clean. This head adds one commit on top of 8758235. Builder A ran the
+tests: 121 app tests and WorkoutSummaryTests, all green.
+
+**Verdict: PASS.**
+
+- **"bests"**: `WorkoutSummary.line` (WorkoutSummary.swift:33) now reads "1 best" or "N bests", and
+  WorkoutSummaryTests expects "1 of 5 exercises, 3 sets, 1 best.". No app or Core test still expects
+  "record(s)." in that line. This closes the out-of-PR finding.
+- **No best said before the set**: the pre-set Tess line "Best N-rep … yet, if it goes." is removed
+  (WorkoutParts.swift:245-248). It was also the line that cut off with "…" in the first clip. `recordHint` still
+  drives the subline ("set 3: beats 8RM, was 80 × 8"), which Design keeps.
+- Design checks the two frames in parallel.
+
+**Note for the board.** `TaskTests.notNowMovesItTomorrowOrToLater` (TaskTests.swift:61) fails on a clean master
+archive at 04:13 PT. It's date-dependent, like the DemoData 03:00-04:00 failures, and Core gets it with the
+AppClock pin. QA's runs avoid 03:00-04:30 PT until it lands.

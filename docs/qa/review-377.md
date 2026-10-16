@@ -72,3 +72,13 @@ bucket exactly as they did before.
 - On the trip build: replay those rows on the Simulator with `TZ` and the clock flipped, Oct 26 build, before
   the trip.
 - R34 stays open, Builder A's T4.
+
+## Addendum: S1 measured (11:11 AM PT)
+
+- Core ran the scale test at TESSERA_SCALE=1500.
+  - The Day log read is 33 ms.
+  - The build loop of 1,500 workouts plus 1,500 tasks took **1,792 s**. At 200 it took 1.5 s.
+- The cause is the one S1 named: OpZones re-sorts the whole op log on every revision inside the write path.
+- S1 is now a must-fix for the Oct 26 build. Core's fix PR makes OpZones incremental and drops the sort, with the
+  latest finish by createdAt winning per object, and ScaleTests gets a budget for the 1,500 build. QA reviews it
+  when it lands.
