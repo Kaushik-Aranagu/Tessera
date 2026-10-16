@@ -44,23 +44,38 @@ extension TessGrammar {
         }
         // "bench 3x8": a bare N x M under the lightest load is N sets with no weight said, never N kg. The last weight
         // in focus if there is one, else ask (QA F1, Research on #282).
+        // The lightest real load: machines and cables stride from 0 (QA F2 on #287).
+        let lightest = store.weightDial(for: exercise).detents.first { $0 > 0 }
+        let kit = store.equipmentKind(of: exercise)
+        let inFocus = entry.flatMap { store.linkedClass("exercise", of: $0)?.id == exercise.id ? $0 : nil }
+        let last = inFocus.flatMap { lastSet(in: $0) }
         if !bodyweight, lift.weightFromScheme, let first = lift.weight, first <= 10, first.rounded() == first,
-           let lightest = store.weightDial(for: exercise).detents.first, first < lightest, let reps = lift.reps
+           let reps = lift.reps
         {
             let name = TessCaptureEngine.shortName(exercise.name)
-            if let entry, store.linkedClass("exercise", of: entry)?.id == exercise.id, let last = lastSet(in: entry) {
-                return .sets(Array(repeating: .set(entry: entry, weight: last.weight, reps: reps, kind: .working,
-                                                   phrase: .full), count: Int(first)))
+            // Dumbbells and kettlebells start light, so a small N may be sets too (Q8's 6): with a last weight in
+            // focus the set-count ask decides; with none, ask.
+            let light = (kit == .dumbbell || kit == .kettlebell) && first <= 6
+            if let inFocus, let last, light, first < last.weight / 2 {
+                return .askSetCount(TessSetCountAsk(entry: inFocus.id, count: Int(first), reps: reps,
+                                                    bodyweight: false))
             }
-            return .ask("\(name) \(Int(first)) × \(TessVoice.number(reps)) at what weight?")
+            if lightest.map({ first < $0 }) == true || light && last == nil {
+                if let inFocus, let last {
+                    return .sets(Array(repeating: .set(entry: inFocus, weight: last.weight, reps: reps, kind: .working,
+                                                       phrase: .full), count: Int(first)))
+                }
+                return .ask("\(name) \(Int(first)) × \(TessVoice.number(reps)) at what weight?")
+            }
         }
         if lift.setsSaid, lift.weight == nil, let reps = lift.reps {
             let name = TessCaptureEngine.shortName(exercise.name)
             return .ask("\(name) \(lift.sets) × \(TessVoice.number(reps)) at what weight?")
         }
         // "bench 3x5 at 7": 7 kg is under anything the bar can load, so it's a time, not a weight (QA on #274).
+        // Also when the kit can't load it exactly ("lat pulldown 3x8 at 7": cables go 5, 10).
         if lift.weightAfterAt, let at = lift.weight, at <= 12,
-           let lightest = store.weightDial(for: exercise).detents.first, at < lightest
+           lightest.map({ at < $0 }) == true || !store.weightDial(for: exercise).detents.contains(at)
         {
             return nil
         }

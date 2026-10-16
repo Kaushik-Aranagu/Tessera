@@ -60,6 +60,13 @@ struct SetLossTests {
         ("R1a", "add eggs for groceries", "groceries eggs"),
         ("R1b", "buy milk for groceries", "groceries milk"),
         ("R1c", "get milk for groceries", "groceries milk"),
+        // QA F2 on #287: machines and cables stride from 0, dumbbells start at 2: a bare N x M is never N kg.
+        ("F2a", "lat pulldown 3x8", "ask Lat Pulldown 3 × 8 at what weight?"),
+        ("F2b", "leg press 3x8", "ask Leg Press 3 × 8 at what weight?"),
+        ("F2c", "curls 3x8", "ask Dumbbell Curl 3 × 8 at what weight?"),
+        ("F2d", "lat pulldown 3x8 at 7", "nil"),
+        ("F2e", "lat pulldown 55x8", "lift Lat Pulldown 55x8"),
+        ("F2f", "curls 14x10", "lift Dumbbell Curl 14x10"),
         // Research's 113 re-trace and Design's Speak review.
         ("R113b", "Bench 80 kg, 8 reps only.", "lift Bench Press 80x8"),
         ("R113c", "Bench 3 sets of 8 at 80.", "lift Bench Press 3x80x8"),
@@ -88,6 +95,8 @@ struct SetLossTests {
         live.process = workout.id
         #expect(read(grammar.parse("bench 80x8 dentist fri", context: live)) == "set 80x8 + task Dentist @")
         #expect(read(grammar.parse("80 x 6 to failure at 9", context: live)) == "set 80x6")
+        // QA L3 on #287: "Tess 80 for 8" with no comma.
+        #expect(read(grammar.parse("Tess 80 for 8", context: live)) == "set 80x8")
         // R113a: a wake word and a dictated full stop, during a workout: the set, never Groceries.
         #expect(read(grammar.parse("Okay Tess, 80 for 8.", context: live)) == "set 80x8")
         #expect(read(grammar.parse("80 for 8, milk", context: live)) != "groceries 80 for 8, milk")
