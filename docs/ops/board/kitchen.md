@@ -1,0 +1,18 @@
+# Recipes and groceries, then Lists (Kitchen lead)
+
+**Now:** accept each kitchen screen as Core lands it, in `docs/product/kitchen-acceptance.md`. Engine 1-9 and Groceries #58 done (10 fixes relayed). Recipe page and Paste #86 accepted: pass, 3 polish fixes, corpus gaps ranked for Paste hardening (#88).
+
+**Fix now (small):** in `cook-mode-acceptance.md`, a stopped timer says "Simmer stopped." (Research #175 `tess-voice.md`; decisions.md 6:37 PM PT). Check the doc for any other line that disagrees with tess-voice.
+
+**Next:** (Work that needs nothing from Core. Acceptance of Core's slices still happens whenever one lands.)
+0. AI-12, Groceries that know your recipes (`docs/ai/first-features.md` feature 3). Done when the Groceries AI spec (with the AI team's board item 3 and Design 47) has done-when rows for Core and Builder B: planned recipes linked, missing ingredients offered as rows, one reminder rule.
+1. Kitchen v2 build sheets with Design, for L1 to L3 (recipe from a link) and the top 3 backlog items. Done when each has a sheet on Design's branch, ready the week v2 opens. Include slice P (pantry light) from Research's `../research/pantry-light.md`, so v2 can start on Oct 22 if he says yes.
+2. Accept cook mode when Builder A lands it (kitchen slices 12 and 12b, against #127 and `cook-mode-script.md`). Until then, the next item.
+3. (done, folded into #145) Kitchen rows for the grammar misfire sweep. Done when 40 kitchen and grocery phrases that must stay on Groceries, and 20 that look like groceries but are tasks or gifts ("get mum a card"), go to Research for `fixtures/grammar-misfires.md`, so Core's grammar fix batch can't break kitchen.
+5. Week-one data check. Done when every row of the table in `kitchen-week-one.md` has been checked against master: the op log or store actually records it (item source and actor, struck then unstruck pairs, StartShop runs, recipe views). Anything not recorded goes to Product as a small Core item before Oct 22, so the end-of-week answers rest on real counts.
+4. Paste hardening acceptance (Core Next 8). Done when `paste-hardening-acceptance.md` has a pass/fail row for each corpus gap, ready when Core's PR lands.
+
+**Done:** (#152, dad5246) Lists acceptance row 9.5 and the "< KITCHEN" back word; (#152) Design's Lists 9-12 sheet accepted, G10 taken (rows 9.1, 9.5). (#142) grammar misfire rows `kitchen-misfire-rows.md`; paste hardening acceptance `paste-hardening-acceptance.md`. Next 1 covered by Design's kitchen-v2.md §L/P/R/W (#136, #140). (#140) meal plan feeds groceries acceptance `meal-plan-groceries-acceptance.md`; (#137) cook mode phone script `cook-mode-script.md`; Lists G1-G13 decisions + screens 9-12 acceptance `lists-screens-acceptance.md`; week-one watch list `kitchen-week-one.md`; Packing starter list. Next 1 = #129, Next 5 = #136. Cook mode cut, defaults and acceptance script `cook-mode-acceptance.md` (#127; screen now Builder A's); meal plan feeds groceries defaults + script `meal-plan-groceries-acceptance.md` (#129); Lists ship list `ship-list-lists.md` (#61); Lists acceptance checks `lists-acceptance.md` and starter lists `starter-lists.md` (#62); 10 seed recipes `kitchen-seed-recipes.md`; 50-phrase test set `kitchen-phrases.md`; Kitchen v2 backlog `kitchen-v2-backlog.md` (held for a week of use); Lists aligned with Design sheet d134bf0 (#74) and Product's Copy/skip/preview (#75).
+
+**Later:**
+- Kitchen v2 scope from the backlog, after a week of use; recipe from a link is scheduled as L1-L3 (#93); Design sheet folded in, pantry/rhythm/can-cook are slices P, R, W (#136). Nutrition only if Kaushik asks.

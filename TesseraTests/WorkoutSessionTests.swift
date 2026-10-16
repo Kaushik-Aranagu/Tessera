@@ -45,7 +45,7 @@ struct WorkoutSessionTests {
         #expect(session.currentSetNumber == 1)
         // Core's prefill: set 1 opens at last time's set 1 (82.5 × 7, three days ago).
         #expect(session.weight == 82.5 && session.reps == 7)
-        #expect(session.targetReason == "Same as last time, 82.5 × 7")
+        #expect(session.targetReason == nil)
         #expect(session.isAtPrefill)
         // Bench is plate-loaded: detents and plates come from Core's weight dial.
         #expect(session.detents.first == 20)
@@ -264,7 +264,7 @@ struct WorkoutSessionTests {
         #expect(session.restNote == "+15. Drag again for more.")
         session.skipRest()
         #expect(session.phase() == .set)
-        #expect(session.restNote == "Skipped. Set 2 is up.")
+        #expect(session.restNote == "Rest skipped. Set 2 is up.")
     }
 
     @Test func aHeavyFirstSetOffersADropForTheRest() throws {
