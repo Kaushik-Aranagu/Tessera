@@ -85,12 +85,21 @@ public struct WeekFactsBuilder {
         let dones = tasksDoneByDay()
         var records: [WeekFacts.Record] = []
         var routinesDone: [String] = []
+        // Before first use, nothing was planned. A first use after 17:00 leaves that day not due either, unless he
+        // trained that evening: then the session counts and the day is due (Product 3113e2f, Research R5).
+        let firstDay = firstUse.map { tesseraDay.day(of: $0) }
+        let lateStart = firstUse.map { calendar.component(.hour, from: $0) >= 17 } ?? false
         let days = week.map { weekDay -> WeekFacts.Day in
-            let before = firstUse.map { weekDay.day < tesseraDay.day(of: $0) } ?? true
+            let before = firstDay.map { weekDay.day < $0 || (weekDay.day == $0 && lateStart && weekDay.done.isEmpty) }
+                ?? true
             for summary in weekDay.done {
                 routinesDone.append(summary.title)
-                records += summary.records.map {
-                    WeekFacts.Record(exercise: ExerciseWords.short($0.exercise), kind: Self.kindWord($0.kind))
+                // One best per exercise (Research R1): a 5RM and an e1RM on the same set are one best.
+                for record in summary.records {
+                    let short = ExerciseWords.short(record.exercise)
+                    if !records.contains(where: { $0.exercise == short }) {
+                        records.append(WeekFacts.Record(exercise: short, kind: Self.kindWord(record.kind)))
+                    }
                 }
             }
             let planned = before ? nil : weekDay.planned.map { store.displayTitle(of: $0) }
@@ -101,9 +110,16 @@ public struct WeekFactsBuilder {
             day.isToday = weekDay.state == .today
             return day
         }
-        let planLive = plan.map { !Self.hasEnded($0, store: store, now: now) } ?? false
-        let nextRoutine = planLive ? plan.flatMap { ledger.nextRoutine(in: $0) } : nil
-        let nextDay = week.first { $0.state != .past && $0.done.isEmpty && $0.planned?.id == nextRoutine?.id }?.day
+        let planLive = plan.map { !Self.hasEnded($0, store: store, now: now, calendar: calendar) } ?? false
+        let nextRoutine = planLive ? plan.flatMap { ledger.nextRoutine(in: $0, now: now, calendar: calendar) } : nil
+        // Its day is looked for over the next seven days, not just this week: on Sunday night the line can still say
+        // "first up Monday" (Research R2).
+        var nextDay = week.first { $0.state != .past && $0.done.isEmpty && $0.planned?.id == nextRoutine?.id }?.day
+        if nextDay == nil, let plan, let nextRoutine {
+            let ahead = ledger.week(containing: tesseraDay.day(7, after: now), plan: plan, now: now,
+                                    calendar: calendar)
+            nextDay = ahead.first { $0.done.isEmpty && $0.planned?.id == nextRoutine.id }?.day
+        }
         let plannedDays = days.count { day in
             !day.beforeFirstUse && (!day.trained.isEmpty || day.wasDue || (day.date >= today && day.planned != nil))
         }
@@ -120,8 +136,8 @@ public struct WeekFactsBuilder {
         DayStory.lines(engine: engine, on: moment, calendar: calendar, now: now, isRestDay: isRestDay)
     }
 
-    /// The same for a day key as `WeekFacts.Day.date` carries it (a midnight, which on its own would read as the
-    /// day before under the 04:00 rule).
+    /// The same for a day key as `WeekFacts.Day.date` carries it: a midnight key, which read as a moment would fall in
+    /// the day before under the 04:00 rule, so it is read at noon.
     public func lines(onDay key: Date, now: Date = .now, isRestDay: Bool = false) -> [DayLine] {
         lines(on: Self.noon(of: key, calendar: calendar), now: now, isRestDay: isRestDay)
     }
@@ -130,17 +146,16 @@ public struct WeekFactsBuilder {
         calendar.date(bySettingHour: 12, minute: 0, second: 0, of: key) ?? key.addingTimeInterval(12 * 3600)
     }
 
-    /// The three lines worth telling, over the week's days up to today: a record first, then a first time ("New
-    /// routine:", "Saved"), then the fullest finished thing, each at most once a day.
+    /// The three lines worth telling, over the week's days up to today: a record first, then a first time (a routine,
+    /// list or recipe made this week), then a finished workout, then the rest; each at most once a day. Ranked on the
+    /// objects behind each line, never on its wording (QA L1 on #348).
     func bestLines(for days: [Date], now: Date) -> [WeekFacts.Line] {
         let today = TesseraDay(calendar: calendar).today(now)
+        let weekStart = days.first ?? today
         var ranked: [(rank: Int, line: WeekFacts.Line)] = []
         for day in days where day <= today {
             for line in lines(onDay: day, now: now) where line.kind == .finished {
-                let rank = line.text.contains(", PR.") ? 0
-                    : line.text.hasPrefix("New ") || line.text.hasPrefix("Saved ") ? 1
-                    : line.text.contains(" min") ? 2 : 3
-                ranked.append((rank, WeekFacts.Line(day: day, line: line)))
+                ranked.append((rank(of: line, weekStart: weekStart), WeekFacts.Line(day: day, line: line)))
             }
         }
         var seenDays = Set<Date>()
@@ -149,10 +164,39 @@ public struct WeekFactsBuilder {
             .prefix(3).map(\.line)
     }
 
-    /// The first thing he did: the oldest op that isn't the system's. Nil in an empty store.
-    func firstUse() -> Date? {
-        store.context.operations.values.lazy.filter { $0.actor != .system }.map(\.createdAt).min()
+    func rank(of line: DayLine, weekStart: Date) -> Int {
+        guard let id = line.objectIDs.first, let object = store.object(id: id), let classDef = object.classDef else {
+            return 3
+        }
+        func isA(_ key: SystemCatalog.Key) -> Bool {
+            engine.classes[key].map { store.isSubclass(classDef, ofClassID: $0.id) } ?? false
+        }
+        if isA(.workout) {
+            // A record: a set flagged when it was logged (#344).
+            let hasRecord = object.orderedChildren.contains { entry in
+                entry.orderedChildren.contains { store.value("wasRecord", of: $0) == .bool(true) }
+            }
+            return hasRecord ? 0 : 2
+        }
+        if isA(.routine) || isA(.list) || isA(.recipe) || isA(.plan) {
+            return object.createdAt >= weekStart ? 1 : 3
+        }
+        return 3
     }
+
+    /// The first thing he did: the oldest op that isn't the system's. Nil in an empty store. One scan per store
+    /// revision, cached (QA L2 on #348).
+    func firstUse() -> Date? {
+        let key = ObjectIdentifier(store.context)
+        if let cached = Self.firstUseCache[key], cached.revision == store.revision {
+            return cached.date
+        }
+        let date = store.context.operations.values.lazy.filter { $0.actor != .system }.map(\.createdAt).min()
+        Self.firstUseCache[key] = (store.revision, date)
+        return date
+    }
+
+    nonisolated(unsafe) static var firstUseCache: [ObjectIdentifier: (revision: Int, date: Date?)] = [:]
 
     func cooksByDay() -> [Date: [String]] {
         guard let cookClass = engine.classes[.cook] else { return [:] }
@@ -177,11 +221,12 @@ public struct WeekFactsBuilder {
         return dones
     }
 
-    /// A plan with a start and a length has ended once its weeks are up.
-    static func hasEnded(_ plan: ObjectRecord, store: ObjectStore, now: Date) -> Bool {
+    /// A plan with a start and a length has ended once its weeks are up (counted in calendar days, so a DST change
+    /// moves nothing; QA L5 on #348).
+    static func hasEnded(_ plan: ObjectRecord, store: ObjectStore, now: Date, calendar: Calendar) -> Bool {
         guard let start = store.value("startsOn", of: plan)?.dateValue, let weeks = store.number("weeks", of: plan),
-              weeks > 0 else { return false }
-        return now >= start.addingTimeInterval(weeks * 7 * 86400)
+              weeks > 0, let end = calendar.date(byAdding: .day, value: Int(weeks) * 7, to: start) else { return false }
+        return now >= end
     }
 
     static func kindWord(_ kind: TrainingLedger.RecordKind) -> String {

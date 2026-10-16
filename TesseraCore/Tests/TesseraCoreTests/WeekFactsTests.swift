@@ -65,6 +65,7 @@ struct WeekFactsTests {
         try run(SetTaskDone(task: bank.id, time: Self.at(13, 9, 30)), at: Self.at(13, 9, 30))
         try train(routines[0], at: Self.at(13, 18), weight: 60)
         try train(routines[1], at: Self.at(15, 18), weight: 70)
+        try train(routines[0], at: Self.at(15, 19), weight: 70)
         let recipe = try run(CreateRecipe(text: RecipeParserTests.carbonara), at: Self.at(14, 17))
         let cook = try run(StartCooking(recipe: recipe.id, time: Self.at(14, 18)), at: Self.at(14, 18))
         try run(FinishCooking(cook: cook.id, time: Self.at(14, 18, 40)), at: Self.at(14, 18, 40))
@@ -75,14 +76,22 @@ struct WeekFactsTests {
         // Monday is before first use: not planned, not due, so planned counts run from Tuesday.
         #expect(facts.days[0].beforeFirstUse && facts.days[0].planned == nil && !facts.days[0].wasDue)
         #expect(!facts.days[1].beforeFirstUse)
-        #expect(facts.trainedDays == 2 && facts.routinesDone == ["Push A", "Pull A"])
-        #expect(facts.plannedDays >= 2 && facts.plannedDays <= 6)
+        #expect(facts.trainedDays == 2 && facts.routinesDone.count == 3 && Set(facts.routinesDone) == [
+            "Push A",
+            "Pull A",
+        ])
+        // Planned days are the week's own count from Tuesday on: Monday is never in it.
+        let week = TrainingLedger(store: store, classes: classes).week(containing: now, plan: plan, now: now,
+                                                                       calendar: Self.calendar)
+        let expected = week.dropFirst()
+            .count { !$0.done.isEmpty || $0.wasDue || ($0.state != .past && $0.planned != nil) }
+        #expect(facts.plannedDays == expected && expected >= 2)
         #expect(facts.tasksDone == 1 && facts.days[1].tasksDone == 1)
         #expect(facts.cookedDays == 1 && facts.recipesCooked == ["Spaghetti carbonara"] && facts.days[2].cooked
             .count == 1)
-        // Pull A's bench is the first on its own lift: a record only once there is history to beat.
-        #expect(facts.records.isEmpty || facts.records.allSatisfy { $0.exercise == ExerciseWords.short($0.exercise) })
-        #expect(facts.next?.title == "Legs A")
+        // Thursday's bench beats Tuesday's: one best for the lift, however many kinds it beat (Research R1).
+        #expect(facts.records.count == 1 && facts.records.first?.exercise == "Bench")
+        #expect(facts.next?.title == "Pull A") // rolls on from Thursday's Push A
         // Nothing about body, money or notes exists on the lens.
         let mirror = Mirror(reflecting: facts).children.compactMap(\.label)
         #expect(!mirror.contains { $0.lowercased().contains("weight") || $0.lowercased().contains("money") })
@@ -103,6 +112,30 @@ struct WeekFactsTests {
         // A day's own lines come from the Day log.
         #expect(builder.lines(on: Self.at(13), now: now).map(\.text) == ["Added 3 tasks"])
         #expect(builder.lines(onDay: facts.days[1].date, now: now).map(\.text) == ["Added 3 tasks"])
+    }
+
+    @Test func nextDayLooksIntoNextWeek() throws {
+        // Research R2: Sunday trained, Sunday night: the next routine's day is Monday, in the week after.
+        try train(routines[0], at: Self.at(18, 9), weight: 60)
+        let now = Self.at(18, 21) // Sunday
+        let facts = builder.facts(weekContaining: now, plan: plan, now: now)
+        let next = try #require(facts.next)
+        let day = try #require(next.day)
+        #expect(Self.calendar.component(.weekday, from: day) == 2 && day > now)
+    }
+
+    @Test func aLateFirstUseIsNotDueUnlessHeTrained() throws {
+        // Product 3113e2f (Research R5): first use Wednesday 18:30 with only a task leaves Wednesday not due.
+        try run(CreateTask(title: "unpack"), at: Self.at(14, 18, 30))
+        let now = Self.at(16, 12)
+        let quiet = builder.facts(weekContaining: now, plan: plan, now: now)
+        #expect(quiet.days[2].beforeFirstUse && !quiet.days[2].wasDue && quiet.days[2].planned == nil)
+        #expect(!quiet.days[3].beforeFirstUse)
+        // Trained that evening anyway: the session counts and the day is due.
+        try train(routines[0], at: Self.at(14, 19), weight: 60)
+        let trained = builder.facts(weekContaining: now, plan: plan, now: now)
+        #expect(!trained.days[2].beforeFirstUse && trained.days[2].trained == ["Push A"] && trained.trainedDays == 1)
+        #expect(trained.plannedDays >= trained.trainedDays)
     }
 
     @Test func nextIsNilOnceThePlanHasEnded() throws {
