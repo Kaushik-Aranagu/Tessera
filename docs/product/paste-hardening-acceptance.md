@@ -1,26 +1,27 @@
 # Paste hardening: acceptance (Core)
 
-*Kitchen lead, 2026-10-15. One row per gap in Research's `docs/research/fixtures/recipe-paste-corpus.md` (gaps 1-15), plus Core's board done-line. Pass means every corpus case the gap names parses as its `expect:` block in `RecipeParserTests` / `IngredientLineTests`. Controls 7, 8, 16, 22 and 28 must stay passing. No UI changes are expected; if the paste screen changes, it needs a recording.*
+*Kitchen lead, 2026-10-15; read against master 2026-10-16 (code only, no corpus run). One row per gap in Research's `docs/research/fixtures/recipe-paste-corpus.md` (gaps 1-15), plus Core's board done-line. Pass means every corpus case the gap names parses as its `expect:` block in the paste tests (`RecipeTests.swift`; pack and US cases in `USKitchenTests.swift`; lines in `IngredientLineTests.swift`). Controls 7, 8, 16, 22 and 28 must stay passing. No UI changes are expected; if the paste screen changes, it needs a recording. Names in the rows use the code's own: `ParsedRecipe` has `activeMinutes` and `totalMinutes` (no cook field); a step's ingredient links are its "about" links, built from `IngredientLine.key` plus aliases; `prepWords` and `sizeWords` are separate lists ("ripe" is a size word). The State column is what master does today; Core updates it in the PR.*
 
-| Gap | What | Cases | Pass when |
-|---|---|---|---|
-| 1 | oz, lb, pint, c, fl oz, alternates in brackets | 2, 9, 10, 12 | Units parse; "(this is about 200ml/7fl oz)" is kept out of the name |
-| 2 | Pack sizes | 3, 11, 27 | "1 (14 oz) can tomatoes" gives amount 1, `packSize` "14 oz", unit can, name tomatoes |
-| 3 | Blog noise | 1, 5, 18, 29 | "Jump to Recipe", "Print", Course/Cuisine lines and ▢ are ignored |
-| 4 | Unknown headings and section labels | 5, 13, 15, 19, 21, 23, 25, 29 | "Do it like this", "Tadka:", "*Dough*", "Notes", "Step 1" read as headings or sections. **paste-25: every step is a step**. Ingredient `section` kept |
-| 5 | Worded and fractional durations | 11, 24, 25 | "1½ hours" = 90, "2½-3 hours" = 150 (lower bound), "1 1/2 hours" = 90, "half an hour" = 30, "a minute" = 1, "twenty minutes" = 20 |
-| 6 | Recipe card times | 1, 2, 18, 24, 29, 30 | Split label lines, "Prep \| Cook \| Total", no-colon forms, "Ready in 25 minutes" all read; cook time feeds total when total is missing |
-| 7 | Short mentions, salt & pepper | 14 + most | "salt & pepper" never links peppers; "dal" links toor dal, "oil" links olive oil when unambiguous |
-| 8 | Leading prep words | 2, 9, 10, 12, 15, 21, 22, 30 | chopped, melted, softened, cold, packed, whole, thick, very ripe, full-fat move to prep |
-| 9 | Name-first and article-free | 4, 5, 19 | "Atta - 2 cups", "sugar 1 tsp", "pinch of hing", "1 onion chopped" parse |
-| 10 | Indian "to taste" | 4, 15, 19, 20 | "as per taste", "swaad anusar" read as to taste; "or to taste" leaves no stray "or" |
-| 11 | Juice of, compound lines | 2, 11, 14, 21, 24, 27, 29 | "Juice of 1 lemon" gives lemon with prep juice; "1 onion, 1 carrot and 1 celery stick" gives 3 lines |
-| 12 | List markers, full stops, ⁄ | 9, 27 | "1. 1 can" amount is 1 can; trailing full stops dropped; U+2044 converts |
-| 13 | Serves and yield variants | 9, 10, 19, 20, 30 | "Makes about 12", "yield: 24 cookies", "(makes 6)" read (a `makes` field is fine) |
-| 14 | Short steps, one-line paste | 4, 26 | "cover 2 mins on low" is a step; a one-line paste gives a recipe (or a clear Tess line), never a throw that shows nothing |
-| 15 | Not a timer | 5, 15, 16 | "2 minutes less than the packet says" and "3 whistles" start no timer |
-| New | WPRM and Archana's Kitchen | link brief §2c | "10 minutes mins" = 10; "Prep: 10 M" = 10 on a time line only |
+| Gap | What | Cases | Pass when | State on master (Oct 16) |
+|---|---|---|---|---|
+| 1 | oz, lb, pint, c, fl oz, alternates in brackets | 2, 9, 10, 12 | Units parse; "(this is about 200ml/7fl oz)" is kept out of the name | Not yet: oz, lb, pint and fl oz parse and the bracket note is stripped, but "c" has no unit word |
+| 2 | Pack sizes | 3, 11, 27 | "1 (14 oz) can tomatoes" gives amount 1, `packSize` "14 oz", unit can, name tomatoes (`packSize` is set only when the unit is a pack) | Satisfied: USKitchenTests U5/U6 and GroceriesWeekTests:147 |
+| 3 | Blog noise | 1, 5, 18, 29 | "Jump to Recipe", "Print", Course/Cuisine lines and ▢ are ignored on a paste, not only on a link (the noise list lives in `RecipeImport` today; the paste parser needs the same rule or a shared one) | Not yet: paste has no noise rule; ▢ goes only as a whole line |
+| 4 | Unknown headings and section labels | 5, 13, 15, 19, 21, 23, 25, 29 | "Do it like this", "Tadka:", "*Dough*", "Notes", "Step 1" read as headings or sections. **paste-25: every step is a step**. An ingredient keeps the section it was pasted under (a new field; the name is Core's) | Not yet: headings are a fixed list; no section on a line. "Step 1" already becomes a step |
+| 5 | Worded and fractional durations | 11, 24, 25 | "1½ hours" = 90, "2½-3 hours" = 150 (lower bound), "1 1/2 hours" = 90, "half an hour" = 30, "a minute" = 1, "twenty minutes" = 20 | Not yet: digits only; "1 1/2 hours" reads as 120 today, which is a wrong timer, not a missing one |
+| 6 | Recipe card times | 1, 2, 18, 24, 29, 30 | Split label lines, "Prep \| Cook \| Total", no-colon forms, "Ready in 25 minutes" all read; prep plus cook gives `totalMinutes` when no total line is there (the link path already does this) | Not yet: the time line needs "X time:" or "X:"; the paste path drops cook |
+| 7 | Short mentions, salt & pepper | 14 + most | A step's "about" links: "salt & pepper" never links peppers; "dal" links toor dal, "oil" links olive oil when unambiguous | Not yet: whole-key matching, no guard, no dal or oil alias |
+| 8 | Leading prep words | 2, 9, 10, 12, 15, 21, 22, 30 | chopped, melted, softened, cold, packed, whole, thick, very, full-fat move to prep (ripe stays a size word); prep words inside a pack are still skipped | Not yet: `prepWords` has chopped and packed only |
+| 9 | Name-first and article-free | 4, 5, 19 | "Atta - 2 cups", "sugar 1 tsp", "pinch of hing", "1 onion chopped" parse (prep split without a comma) | Not yet: nothing reads name-first; a unit is read only after an amount; prep splits at a comma only |
+| 10 | Indian "to taste" | 4, 15, 19, 20 | "as per taste", "swaad anusar" read as to taste; "or to taste" leaves no stray "or" | Not yet: only "to taste", "as needed", "to serve" |
+| 11 | Juice of, compound lines | 2, 11, 14, 21, 24, 27, 29 | "Juice of 1 lemon" gives lemon with prep juice; "1 onion, 1 carrot and 1 celery stick" gives 3 lines | Not yet |
+| 12 | List markers, full stops, ⁄ | 9, 27 | "1. 1 can" amount is 1 can; trailing full stops dropped; U+2044 converts | Not yet: "1. 1 can" goes to steps today |
+| 13 | Serves and yield variants | 9, 10, 19, 20, 30 | "Makes about 12", "yield: 24 cookies", "(makes 6)" read; a yield may land in the serves count or in a new field, Core's call | Not yet |
+| 14 | Short steps, one-line paste | 4, 26 | "cover 2 mins on low" is a step; a one-line paste gives a recipe (or a clear Tess line), never a throw that shows nothing | Not yet: the short step reads as an ingredient; the one-line screen case is untested |
+| 15 | Not a timer | 5, 15, 16 | "2 minutes less than the packet says" and "3 whistles" start no timer | Partial: whistles start none; the packet line still does |
+| New | WPRM and Archana's Kitchen | link brief §2c | "10 minutes mins" = 10; "Prep: 10 M" = 10 on a time line only (a bare "M" in a step starts no timer) | Partial: both values read; "10 M" in a step still makes a timer; no test |
+| Opt | Optional lines (#380) | 7, 14, 22 | "for serving", "for garnish", "optional" set `optional` on the line, the name stays clean, and Groceries skips the line | Satisfied on the line (#380); corpus cases unchecked |
 
-**Blocking for merge:** gaps 1, 2, 3, 4 and 5 (they break basic pastes and grocery merging). The rest can ride a follow-up if they're not done, listed in the PR.
+**Blocking for merge:** gaps 1, 3, 4 and 5 (they break basic pastes and grocery merging; gap 2 is already on master and must stay green). The rest can ride a follow-up if they're not done, listed in the PR with the State column updated.
 
 **Regression:** `kitchen-phrases.md` rows still pass, and the seed recipes in `kitchen-seed-recipes.md` parse unchanged.
