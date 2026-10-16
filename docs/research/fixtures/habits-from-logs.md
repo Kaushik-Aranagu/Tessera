@@ -28,7 +28,7 @@ to Sun 1 Nov, **W3** Mon 2 Nov to Sun 8 Nov, each from Monday 04:00. Every habit
 |---|---|---|---|---|
 | Gym | 3 | `workout` | a finished Workout with at least 1 logged set, on its `startedAt` day | W2 (`pausedWeeks` "2026-10-26") |
 | Cook | 4 | `cook` | a Cook with `cookedAt`, on its `cookedAt` day | none |
-| Read | 5 | none | manual check-in, or a note whose body starts "read {n} {unit}" (open rule 2) | none |
+| Read | 5 | none | manual check-in, or a note made as a note whose body starts "read {n} {unit}" (open rules 2 and 8) | none |
 
 Count rule: per habit, the number of distinct `TesseraDay` days in the week that have a manual check-in or a matching
 log. Nothing is stored for a log tick. "x of N" uses the target (decision 7:34 PM PT), never "of 7".
@@ -41,7 +41,7 @@ Times are wall clock. "After" is the count for the week the tick lands in, read 
 | Time | Log | Ticks | After | Tess says |
 |---|---|---|---|---|
 | 18:05 to 19:10 | Push A finished, 14 sets | Gym | Gym 1 of 3 | "Push A counted for Gym, 1 of 3." |
-| 21:30 | note "read 30 pages of Dune before bed" | Read (starts read + number + unit) | Read 1 of 5 | "Note counted for Read, 1 of 5." |
+| 21:30 | note "read 30 pages of Dune before bed" | Read (starts read + number + unit) | Read 1 of 5 | "Read, 1 of 5 this week." (rule 8) |
 
 ### Tue 20 Oct (W1)
 | Time | Log | Ticks | After | Tess says |
@@ -53,7 +53,7 @@ Times are wall clock. "After" is the count for the week the tick lands in, read 
 | Time | Log | Ticks | After | Tess says |
 |---|---|---|---|---|
 | 22:50 to Thu 00:40 | Pull A finished, 15 sets | Gym, on **Wed** (`startedAt` day) | Gym 2 of 3 | "Pull A counted for Gym, 2 of 3." |
-| Thu 01:10 | note "read 25 pages" | Read, on **Wed** (01:10 is before 04:00) | Read 2 of 5 | "Note counted for Read, 2 of 5." |
+| Thu 01:10 | note "read 25 pages" | Read, on **Wed** (01:10 is before 04:00) | Read 2 of 5 | "Read, 2 of 5 this week." (rule 8) |
 
 ### Thu 22 Oct (W1)
 | Time | Log | Ticks | After | Tess says |
@@ -100,7 +100,7 @@ W1 closes: Gym 3 of 3 (met), Cook 3 of 4, Read 3 of 5. At Mon 00:30 the page sti
 |---|---|---|---|---|
 | 19:30 to 20:15 | Cook pasta finished | Cook | Cook 3 of 4 | "Pasta counted for Cook, 3 of 4." |
 | 20:15 (+2 s) | UNDO on that line (`cookedAt` cleared) | Cook Sat gone | Cook 2 of 4 | "Pasta taken back. Cook 2 of 4." |
-| Sun 01:30 PST (09:30Z) | note "read 20 pages", at the second 01:30 | Read, on **Sat** (the day runs 25 h) | Read 3 of 5 | "Note counted for Read, 3 of 5." |
+| Sun 01:30 PST (09:30Z) | note "read 20 pages", at the second 01:30 | Read, on **Sat** (the day runs 25 h) | Read 3 of 5 | "Read, 3 of 5 this week." (rule 8) |
 
 ### Sun 1 Nov (W2, a tick at 03:50 Monday)
 | Time | Log | Ticks | After | Tess says |
@@ -129,7 +129,7 @@ If that finish is undone, the manual check-in keeps Monday: "Push A taken back. 
 |---|---|---|---|---|
 | 07:00 to 08:00 | Pull A finished, 15 sets | Gym, reaches target | Gym 3 of 3 | "Pull A counted for Gym, done for the week." |
 | 18:50 to 19:30 | Cook ramen finished | Cook | Cook 2 of 4 | "Ramen counted for Cook, 2 of 4." |
-| 23:10 | note "read 30 pages" | Read | Read 1 of 5 | "Note counted for Read, 1 of 5." |
+| 23:10 | note "read 30 pages" | Read | Read 1 of 5 | "Read, 1 of 5 this week." (rule 8) |
 
 ### Sat 7 Nov (W3, past the target, two cooks)
 | Time | Log | Ticks | After | Tess says |
@@ -164,7 +164,7 @@ pasta after UNDO (Sat 31 Oct). Never double: Sat 24 Oct Gym, Thu 29 Oct Read, Mo
 - 4 AM day: `workoutFrom2250To0040TicksStartDay`, `noteAt0110TicksDayBefore`, `cookFinished0030MondayCountsInWeekBefore`,
   `checkInAt0350MondayCountsInWeekBefore`, `fallBackSecond0130NoteTicksSaturday`, `weekStartsMonday0400NotMidnight`
 - Pause: `logInPausedWeekStillMarksTheDay`, `pausedWeekLeftOutOfLastWeeks` (Gym 2 of 2)
-- Notes: `noteStartingReadNumberUnitTicksRead`, `noteMentioningABookDoesNotTick`, `editingTheNoteBodyDropsTheTick`
+- Notes: `noteStartingReadNumberUnitTicksRead`, `noteMentioningABookDoesNotTick`, `editingTheNoteBodyDropsTheTick`, `noteTickSaysTheCheckInLine` (rule 8)
 - Lines: `tessLineNamesSourceThenHabitAndCount` (table of every line above), `targetReachedSaysDoneForTheWeek`,
   `pastTargetSaysNThisWeek`, `secondLogSameDayAddsNoHabitLine`, `pausedWeekLineSaysWeekStaysPaused`
 
@@ -186,6 +186,11 @@ pasta after UNDO (Sat 31 Oct). Never double: Sat 24 Oct Gym, Thu 29 Oct Read, Mo
    for Gym, 4 this week." (A4 and A5 with the source named first).
 7. **Undo with a manual check-in the same day.** Default: the count stays, and the line still carries it: "Push A taken
    back. Gym 1 of 3." (A9).
+8. **One phrase, one line** (item 109, Product 9:04 PM PT, `../habits-first-use.md` G3). "read 20 pages" typed alone in
+   capture is a check-in (m3-lines A2), not a note. Only a note made as a note (the Notes page, or "note: read 20
+   pages") ticks Read by rule 2, and it says A2's line, "Read, 3 of 5 this week.", never "Note counted for Read", so
+   one phrase never gets two lines. Every `note "..."` row above is a note made as a note. A second tick the same
+   day keeps rule 3: "Noted." only.
 
 ## Gaps on master
 

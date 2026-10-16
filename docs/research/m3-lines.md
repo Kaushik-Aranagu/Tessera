@@ -76,31 +76,41 @@ converted to one decimal ("Body weight logged. 181.7 lb."), and the bare-number 
 | H3 | Count | "**2** of 5" (the target, never 7). Paused: "paused" |
 | H4 | Count, target passed | "**6** of 5", nothing else. No "+1" badge, no colour change |
 | H5 | 0 this week | "**0** of 5", every dab empty, today in ink, no history line, no Tess line |
-| H6 | History line | "Met in 1 of the last 3 weeks." Only when at least 1 week was met; paused weeks left out ("of the last 2") |
+| H6 | History line | "Met in 1 of the last 3 weeks." Only when at least 1 week was met and 2 or more weeks count; paused weeks and the creation week left out ("of the last 2"). One counted week: H12 |
 | H7 | Rule label | "COUNTS WHEN A WORKOUT FINISHES" / "COUNTS WHEN A COOK FINISHES" |
 | H8 | Paused label | "PAUSED THIS WEEK" |
 | H9 | Monday reset | the count goes to 0 silently; no summary, no notification |
 | H10 | Habit with no check-ins ever | as H5, and no history line until a week is met |
+| H11 | Creation week (item 109, Product 9:04 PM PT) | "**0** of 5", the target he just set, as H3 and H5. The page never says "new"; only Review and the history line treat the week as new (left out of H6) |
+| H12 | History line, one counted week, met (item 109) | "Met last week." If that week is not last week (the week after was paused): "Met the week of Oct 19." Not met: no line |
 
 ## 5. Habit Tess lines
 
 | # | Moment | Tess says | UNDO, then |
 |---|---|---|---|
 | A1 | Habit created ("new habit read 5 a week"; target 3 if none said) | "Read added, 5 times a week." | 4 s: "Read taken back." |
-| A2 | Check-in: dab tap, "habit read", "✓ read", "read", "read 20 pages" | "Read, 3 of 5 this week." | 4 s: "Read check-in taken back, 2 of 5." |
+| A2 | Check-in: dab tap, "habit read", "✓ read", "read", "read 20 pages" typed alone; also a note made as a note that ticks Read (`fixtures/habits-from-logs.md` rule 8, Product 9:04 PM PT) | "Read, 3 of 5 this week." | 4 s: "Read check-in taken back, 2 of 5." |
 | A3 | "meditated" for a habit called Meditate | "Meditate, 1 of 3 this week." (the habit's name, not the phrase) | as A2 |
 | A4 | Check-in that reaches the target | "Read done for the week." | 4 s: "Read check-in taken back, 4 of 5." |
 | A5 | Check-in past the target | "Read, 6 this week." | as A2 |
 | A6 | Second check-in the same day | "Read is already in for today." | none (nothing written) |
+| A6b | Check-in for a past day this week that is already in ("meditated yesterday"; item 109, A6 form) | "Meditate is already in for Monday." | none (nothing written) |
 | A7 | Check-in in a paused week | "Read, in for today. The week stays paused." | as A2 |
 | A8 | A workout finish counts for Train | "Push A counted for Train, 2 of 3." (D7) | the finish's own |
+| A8b | A rule finish that reaches the target (item 109; A4 with the source named first) | "Legs A counted for Train, done for the week." | the finish's own |
+| A8c | A rule finish past the target (A5 with the source named first) | "Push A counted for Train, 4 this week." | the finish's own |
 | A9 | Undo of that workout's finish | "Push A taken back. Train 1 of 3." (D6) | |
 | A10 | Hold the count to pause | "Read paused this week." | 4 s: "Read pause taken back." |
 | A11 | Hold again to resume | "Read back on this week, 2 of 5." | 4 s: "Read resume taken back." |
 | A12 | Target changed | "Read now 4 times a week." | 4 s: "Read target taken back." |
 | A13 | Habit deleted (check-ins go with it; workouts stay) | "Read deleted." | 10 s: "Read is back." (D9) |
 | A14 | Rule dab tapped | "Push A, Tuesday 6:20 pm" (D4), then zooms to the workout | |
-| A15 | Unknown name ("habit sing", "meditated" with no habit) | nothing from habits; it becomes a task as usual | |
+| A15 | Unknown name (amended, item 109, to match grammar row L848) | With the word "habit" ("habit sing"): nothing from habits, nothing written, the line goes to the model; never creates a habit. A bare unknown name ("meditated", "ran 5k"): nothing from habits; it goes on as today (a note or a task) | |
+| A16 | Target of 1 (item 109): create, or change to 1 | "Call mum added, once a week." / "Call mum now once a week." Digits for 2 to 7 ("5 times a week") | as A1 / as A12 |
+| A17 | Tap a done day to clear it (item 109; Design's "tapping a done day clears it") | "Read Monday cleared, 1 of 5." Today: "Read today cleared, 1 of 5." | 10 s (a delete): "Read Monday is back, 2 of 5." |
+| A18 | "pause read" or "skip read this week" when already paused (item 109) | "Read is already paused this week." | none (nothing written) |
+| A19 | "resume read" or "unpause read" when not paused (item 109) | "Read is already on this week." | none (nothing written) |
+| A20 | "pause read next week" (item 109) | "Read paused next week." | 4 s: "Read pause taken back." |
 
 No Lock Screen, widget or Live Activity surface is in Design's sheet, and `lockscreen-lines.md` and
 `widget-states.md` have none for M3. Proposed: none in M3. Habits send no notifications in v1 (`habits.md`).
