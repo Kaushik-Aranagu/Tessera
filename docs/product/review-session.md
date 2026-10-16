@@ -6,12 +6,46 @@
 
 It adds #320 (the Tess asks Claude switch), #330 (the icon and the closer soul), #337 (Training opens on today's plan), and the haptics (#317) and Speak (#312) merged since 444e72b. It also has #343: Return now saves in Notes instead of making a new line. Home still uses the old wording. Five minutes:
 1. **The icon.** On the Home Screen, Tessera shows Tess's soul. Inside the app, the soul's dabs sit closer together.
-2. **Tess asks Claude.** In Settings, CLAUDE, the first line reads "Tess asks Claude: yes." Tap it to switch to no ("Tess stays on this phone.") and back. Then type your key yourself in "Add a Claude key", if that row is there. Never paste it into chat.
+2. **Tess asks Claude.** In Settings, CLAUDE, the first line reads "Tess asks Claude: yes." Tap it to switch to no ("Tess stays on this phone.") and back. Then just answer two yes/no questions: is a Claude key on the phone, and is "Tess asks Claude" on? Never type, show or paste the key into chat.
 3. **Finish a task.** Finish one. Expect one three-beat tap and the strike, all under a second. With System Haptics off in iPhone Settings, expect no tap at all.
 4. **Training at rest.** Open Training. It should open on today's plan, with START and the routine name as an ink-line word. On the eve of a rest day, the done label still names the next routine ("Push A tomorrow"); "Rest day tomorrow" comes in the next build.
 5. **Return in Notes.** In a note, press Return. It saves instead of starting a new line.
 6. **Speak.** Tap the soul once to open Tess; a double tap goes Home. Hold the soul to speak "call mom at 7".
 Not yet in this build: one plain line per thing on Home, the glass tabs, routines by day, recipe layouts and the week on Review. Those come in the build after, before Oct 22.
+
+## Next build: the Catalog v9 pin (SHA named when #366 merges; folded from Research's `review-refresh-3.md`, 12:10 PM PT Oct 16)
+
+Ten minutes, in the order a normal day meets them. Each item is a phrase or a tap, the expected line, and a yes or no. Product drops a rider item if `git merge-base --is-ancestor` says it isn't in the pin. Before starting, ask only two yes/no questions: is a Claude key on the phone, and is "Tess asks Claude" on? Never ask him to type, show or paste the key.
+
+| # | Try | Expect | He answers | Depends on |
+|---|---|---|---|---|
+| 1 | Open the app for the first time on the new build. | One line by the soul: "Sunday, rest day." with UNDO. Leave it. | yes / no | rider, if in (Core's rest-day reader, no PR yet) |
+| 2 | Morning, on a training day, before starting: look at Home. | The hero names the routine ("Push A") with **today** above it. No line ends in "…" and no " · ". | yes / no | blocker, open #366 (AI-1 Home lines) |
+| 3 | Tap Tess, Write: `pay rent fri` | A task "Pay rent" on Friday, with UNDO. Not "Didn't catch that." Tap UNDO. | yes / no | rider, if in (money-verb fix, no PR yet; on master today this is still a miss) |
+| 4 | Write: `wifi password is tacocat`, then `what's my wifi password?` | "Private note, kept." with UNDO, then "It's in your private notes." | yes / no | merged #422 |
+| 5 | Write: `$212.37 at Costco`, then `slept 5 hours` | Neither line mentions Claude. The money one is "Didn't catch that." on this pin (the LOG / NOT NOW ask comes later). If the receipts count was noted, it hasn't moved. | yes / no | merged #451 (MU2) |
+| 6 | Airplane Mode on. Write: `$38.20 trader joe's`, then `door code 4417`. Airplane Mode off, reopen the app. | Never "No connection. Saved it for Claude." The code one is "Private note, kept." Receipts count unchanged after reopening. | yes / no | merged #451 (A2, CA7) |
+| 7 | Settings > Claude, the month line. | "This month $… of $50." (the amount opens the receipts). Without a key, tell us what shows instead. | yes / no | merged #422 ($50 cap) |
+| 8 | Settings, the Rest day row. | "Rest day: Sunday." | yes / no | rider, if in (rest-day reader plus Builder B's row) |
+| 9 | Kitchen > Recipes, paste a recipe whose last line is `wifi: TacoNet / tacocat24`, and save. | The wifi line draws dimmed as an ignored line, and the saved recipe holds no tacocat. No "I left out 1 line" line yet. | yes / no | rider, if in (#454, QA PASS, open) |
+| 10 | "Hey Siri, add a task in Tessera", then say `door code 4417`. | Siri says "Private note, kept." and no task appears. | yes / no | merged #457 |
+| 11 | iPhone Settings > Tessera > Microphone off. Hold Tess's soul. Then hold the tab row. | "Mic is off for Tessera." beside the soul, then Tess at rest. The glass pill rises on the tab row. Mic back on after. | yes / no | merged #446 (stuck listening) |
+| 12 | Evening: start the workout, log 2 sets, tap PAUSE. | Home reads "Push A, paused at bench" with **paused just now** above. | yes / no | blocker, open #366 |
+| 13 | Finish it. | "Push A done" with **done at** the time above, for example "done at 7 pm". One tap down: "*n* exercises, *n* sets." | yes / no | blocker, open #366 |
+| 14 | One pick: Home's lines overall. | Plain line per thing reads right / too terse / too wordy. | pick | blocker, open #366 |
+
+About 10 minutes: items 1 to 11 take a minute or less each, 12 and 13 ride a workout he does anyway.
+
+**On the trip, not in the 10 minutes:**
+
+| # | Try | Expect | He answers | Depends on |
+|---|---|---|---|---|
+| T1 | In New York (Oct 27 or 28), after a workout, look at Home that evening. | "Pull A done" for that day; no second session offered. | yes / no | merged #377 (0bff60b) |
+| T2 | Back home, open that exercise's history. | The New York set reads by its own day ("Yesterday" the next day). | yes / no | merged #391 (70112f9) |
+
+Known gap, not a fail: the Review page in New York can count a task done late Monday on Tuesday (R12, `trip-check.md`).
+
+On this pin a walled money phrase gets "Didn't catch that."; the LOG / NOT NOW ask comes with Money (parked item 60, after Core's MU1).
 
 ## 10-minute short path
 

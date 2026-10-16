@@ -4,6 +4,45 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+**12:27 PM PT Oct 16: Lists day-one wording (Research lists-day-one.md asked).** DECIDED.
+- With lists but nothing running, the context line reads "4 lists, nothing running".
+- The add receipt is "Charger, on Packing.", thing first, like every receipt.
+- The back word is "< Kitchen" in source, with .textRole(.label) and .textCase(.uppercase), so it shows as < KITCHEN (Design, as RoutinesPage.swift:34). Its accessibilityLabel is "Back to Kitchen".
+
+**12:26 PM PT Oct 16: outside-the-app privacy (Research spotlight-widgets-privacy.md asked).** DECIDED, all four of Research's picks.
+- Siri writes (Tell Tess, Add a Task) need Face ID, while the rest Live Activity buttons stay usable on a locked phone.
+- The planned set may show on the locked Lock Screen, since training load isn't a body fact.
+- Titles that trip the secret-word or money/body checks are hidden from Spotlight, Siri replies and the Live Activity.
+- Every free-text field on a future widget gets .privacySensitive.
+- P14 joins the pin as a rider: Siri's Add a Task checks PrivateFacts, saves a walled title as a private note, and doesn't read it back.
+
+**12:22 PM PT Oct 16: backup and stale-ask calls (Research #474 asked).** DECIDED, all four of Research's picks.
+- B1-11: Notes refuse any text that contains the Claude-key prefix. This uses the shared guard, not only key-length text.
+- I-4: restoring an iCloud copy, which leaves out private rows, keeps the phone's private rows; it never wipes them.
+- S3: a waiting ask drops when its live line fades.
+- S6: after a long time in the background, an ask drops at the same idle limit tidyProcesses uses (rest plus 10 min).
+
+**12:21 PM PT Oct 16: past-tense logs with no amount are ordinary notes (coordinator asked on #471).** DECIDED. "paid rent fri" and "bought milk sat" are ordinary dated notes. They are not private: with no amount there's no money fact, so they can show in Spotlight and reach Claude like any note. "bought 2 lemons" is the same, since a count is not an amount. This is a small Core follow-up (0j) and doesn't hold #471.
+
+**12:16 PM PT Oct 16: rollback after the pin is 7b321d2 (Research oct-22-list asked).** DECIDED, Research's default. Once the pin is on his phone, rollback is 7b321d2, the only older build tested opening the v9 store (gate V4). 444e72b (v5) is the rollback only before the pin. On re-sign day he builds the exact commit and never pulls master.
+
+**12:13 PM PT Oct 16: Tess's wake is at 7 am (Research tess-picks-signals asked).** DECIDED, Research's default. Idea 2's wake waits for the first open outside quiet hours (7 am), not the 4 am day boundary, so resting ends at 7. Idea 4 doesn't swell in quiet hours. A stroke while she sleeps still answers his touch. The motion lab can refine the look.
+
+**12:12 PM PT Oct 16: backups (QA review-backups.md).** DECIDED.
+- B1, a Claude key pasted into Notes ending up in every backup, is the first pin rider. It doesn't block the pin, since 7b321d2 already has the gap, but it goes in if it lands before #366.
+- B5/B6: the newer-version refusal is a pin rider, second after B1 (coordinator's recommendation, 12:12 PM PT). The v9 build must refuse any store or backup from a newer catalog. If it misses the pin, #407 (v10) waits until a build with the guard is on his phone.
+- B8: private memories stay out of the iCloud copy, so "on this phone only" stays true. Local copies keep them.
+- B2: cleanup never deletes a manual "Save a copy".
+- Everything else goes on the Core and Builder B boards in QA's order.
+
+**12:12 PM PT Oct 16: background Claude jobs and the soul (Research soul-ask fixture asked).** DECIDED, Research's default. The week story shows Tess working, because he opened Review and is waiting for it. Home lines send nothing, because they run while he isn't looking (home-lines-job.md §7). askClaude fires only after the walls and the cap check pass, so a refused ask makes no event. The recipe handoff says "Asking Claude to read the recipe." (Design, G7: a line says Claude when something leaves the phone); the fetch before it stays "Reading nytimes.com.".
+
+**12:11 PM PT Oct 16: a day wins over the money guard (Research group N asked).** DECIDED. When a phrase has both an amount and a day ("pay rent 650 fri", H609, H610, A012), the day wins: it is a task (or a dated note for past tense) on the phone, never the miss line, and the amount never goes to Claude (Plan my day sends it as "task", 12:06). A money verb beats the set shape: "paid 20 for 2 tickets" is money, not a training set (PrivateFacts.isTraining). L1 already stands from 12:02: body and health facts stay on the phone with no number. "get a combination lock" is a grocery row, per the kitchen rules.
+
+**12:06 PM PT Oct 16: recipe clock, running over holds (Kitchen #461 asked).** DECIDED. When a timed step's timer ends, the bead holds at the step's end and the step stays lit until he moves on; the clock never lights the next step itself. Kitchen's ruling stands, same as the 12:05 entry. "5 more" stretches the held step and restarts its own timer; the minutes ahead shift. Gaps G1-G12 are on the Core, Builder A and Builder B boards with the 69 work.
+
+**12:06 PM PT Oct 16. What a screened plan title becomes (Research plan-my-day pack).** A screened task goes to Claude as "task", a screened event as "busy"; any older "busy" for tasks or "Private task" is superseded. Money words with no amount ("Pay electricity bill") go as typed, matching 12:04; a medicine with a dose is a health fact and is screened.
+
 **12:05 PM PT Oct 16. The recipe clock waits for him.** When a timed step runs over, the bead waits at that step's end until he moves on, and the later minutes shift; the clock never walks ahead of the pan. **Why:** the clock should match what's actually happening on the stove.
 
 **12:04 PM PT Oct 16. "pay" with no amount is a task.** The money guard fires only with an amount or a currency sign; "pay rent fri" is a task and "paid rent fri" or "bought milk sat" is a dated note for that day (the past-tense log rule), as before #298. Rides the pin if in time, since he types these weekly.
@@ -22,7 +61,7 @@
 
 **11:47 AM PT Oct 16. Monday's week-two calls (Research 144, for 101 at 8:15 AM PT Oct 19).** Q4 "Yes, Sunday": keep the rolling plan and store `restWeekday`; Core adds its reader (week(), restDay, NowPage); fixed days ignore it. Message B Q1 with no data: "Did every set you lifted this weekend get logged? ★Yes / Most / Didn't train". Q2 "No": he switches to fixed days himself on the Routines page once the next pin (catalog v6 or later) is on his phone; Builder A writes it for him only if he asks. Receipts in week-two.md go thing-first ("Sunday, rest day.", "Plates, two pairs of 25 and 20."). Install timing reads "the next pin, before the Oct 23 9:57 AM lapse".
 
-**11:45 AM PT Oct 16. AI architecture's six calls (spend projection: typical month ~$3.23, worst ~$8.55 of the $50 cap).** All six defaults taken: (1) Home lines on Sonnet until AI-5 says otherwise; (2) Home lines memory areas are Training and Kitchen; (3) a cold launch starts the day on rules lines, never yesterday's Claude lines; (4) the week story tells the week just ended, Monday 04:00; (5) its rules lines are plain counts, not best lines; (6) AI-14 clamps an out-of-range colour nudge instead of rejecting it, and FORGET means Design 48's "this palette off for 30 days". Core adds a 40-a-day Home-lines cap and keeps the forget tools out of Claude's reach.
+**11:45 AM PT Oct 16. AI architecture's six calls (spend projection: typical month ~$3.23, worst ~$8.59 of the $50 cap).** All six defaults taken: (1) Home lines on Sonnet until AI-5 says otherwise; (2) Home lines memory areas are Training and Kitchen; (3) a cold launch starts the day on rules lines, never yesterday's Claude lines; (4) the week story tells the week just ended, Monday 04:00; (5) its rules lines are plain counts, not best lines; (6) AI-14 clamps an out-of-range colour nudge instead of rejecting it, and FORGET means Design 48's "this palette off for 30 days". Core adds a 40-a-day Home-lines cap and keeps the forget tools out of Claude's reach.
 
 **11:40 AM PT Oct 16. Groceries check rulings (Research 142).** Changing a recipe's serving size updates its rows in place (same ids) and the receipt reads "Pasta, 2 servings.", never a second "added". At zero, Home shows no Groceries line rather than "nothing to buy" (one line per thing that needs him). Teaspoons get ⅜, ⅝ and ⅞. "1 (16 oz)" and "1 (1 lb)" stay two rows for now, parked until Kitchen v2 normalizes pack sizes (Kitchen lead; corrected 11:43 AM PT). Garlic (G-R15, Kitchen lead): "7 cloves + 1 head" on one row, and a checked garlic row covers later lines.
 
@@ -301,7 +340,7 @@
 - **Lists daily-use gaps** (3:53 PM PT): all 13 of Research's defaults are taken (`lists-daily.md`). The engine parts go into Core's Lists engine, and G1 (a "Lists" HomeLink under Groceries) goes to Builder B.
 - **Spreading screen work** (3:50 PM PT, from Research's breadth map). The cook mode screen moves from Core to Builder A, since its engine is merged. M5 Reading and Money screens move to Builder A, and Builder B keeps M2, capture, Lists, Upkeep and People. Every area's first screen includes a HomeLink word in HomeSpatialView, so it's never DEBUG-only.
 - **On a planned rest day, rest wins on Now** (3:37 PM PT, per QA E2 on #122). Now shows a quiet "Rest day" line, and the next routine stays one tap away (Training, or a pull on Now). Missed days still roll on, so starting it anyway is fine. Core makes this a NowPicker/ranker override, and Builder B shows the line.
-- **All times shown to Kaushik are in Pacific time** (Kaushik, 1:56 PM PT; PDT is UTC-7 today), never UTC. Earlier entries in this log are UTC (for example 19:12 UTC is 12:12 PM PT). New entries use PT.
+- **All times shown to Kaushik are in Pacific time** (Kaushik, 1:56 PM PT; PDT is UTC-7 today), never UTC. Earlier entries in this log are UTC (for example 19:12 UTC is 12:10 PM PT). New entries use PT.
 
 ## 2026-10-15 18:41 UTC, 11:41 AM PT (Kaushik)
 
