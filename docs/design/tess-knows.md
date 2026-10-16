@@ -80,3 +80,26 @@ Answers to `research/tess-knows-trace.md`, one line each. Rows not named here ar
 - **S8, her answer at zero:** "Nothing yet. Say "remember that…" and I'll keep it." with no WHAT I KNOW word under it; the Settings line reads "Nothing yet." and still opens the page (its empty state).
 - **S9, Siri and Shortcuts:** "Say that in Tessera and I'll keep it." Nothing written. Not drawn; it's a spoken line.
 - S4, S5, S10 to S12 and F1 to F3 are Core's and AI's. On S5: the value words are the capture's own words at write time (`valueRanges`), which is what the sheet already bolds.
+
+## Addendum, Oct 16: forgetting by voice, and three refusals (Research 122, V3, V9, V-R9)
+
+The swipe and the hold stay the two gestures on the page. Saying it is a third way to the same place, with the same line, the same UNDO and the same redaction. Every match is made on the phone; nothing is sent. The lines, all in Tess's voice, Body 21 in `tess`, in her band:
+
+| He says | What happens | Tess |
+|---|---|---|
+| "forget that I rest on Sundays" (one line holds every word) | that line goes, with UNDO for 10 s, then the redaction, as the swipe | "Rest on Sundays, forgotten." + **UNDO** |
+| "forget the shoulder thing" (one line, private) | the same; private lines match the same way | "Left shoulder, forgotten." + **UNDO** |
+| "forget what I said about tacos" | "what I said about", "the … thing", "that", "about" don't count toward the match | "Tacos means the sheet-pan tacos, forgotten." + **UNDO** |
+| "forget about mom" (two lines match) | nothing written; the page opens on the matching lines | "Two things match. Swipe the one to forget." + **WHAT I KNOW** |
+| "forget my gym" (no line matches) | nothing written | "I don't have that." + **WHAT I KNOW** |
+| "forget that I usually train 6 to 8" (a noticed line) | forgotten and its rule suppressed (M3), as the swipe | "Train 6 to 8, forgotten." + **UNDO** |
+| "forget everything" | never by voice; it is the hold on the page | "That takes a hold, on the page." + **WHAT I KNOW** |
+| "never mind" / "forget it" within 10 s of "Kept." | the same as UNDO | "Rest on Sundays, taken back." |
+| "remember this" | nothing written. A statement, not a question, and no ink word under it | "Say what to keep, like "remember that I rest on Sundays"." |
+| "remember my squat best is 140" | not kept; the ledger has it | "Training keeps your bests." |
+
+- **The name in her line** is the line's value words (the bold words on the page), never the whole line: "Rest on Sundays", "Left shoulder", "Train 6 to 8". A kept line that has no value words yet (a fresh told line) uses its first four words.
+- **Her words never carry a label word.** "Hold FORGET EVERYTHING on WHAT I KNOW" would put two ink words inside a sentence; she says it plainly and the one ink word sits under her line, as everywhere.
+- **The page opening on a match** is the ordinary WHAT I KNOW page with the matching lines at the top, not a filtered page: the count line and groups are all there, and the two matches sit first in their groups. Nothing is highlighted; the swipe finds them.
+- **Motion:** "forgotten" by voice uses the swipe's exit (the flecks into the soul), from the band, since the page may not be open. Reduce Motion: a fade.
+- Core: the match rule; the AI thread: nothing here is a Claude tool.

@@ -76,3 +76,19 @@ Under the context line, before EXERCISES:
 - **Builder A:** Training page, the Start mark, Routines, the DAYS line.
 - **Core:** `scheduleMode`, `fixedWeekdays`, the week with fixed days, the missed-fixed-day rule.
 - **Product:** confirm the missed-fixed-day default and the one-routine-per-day rule.
+
+## Addendum, Oct 16: skip and rest today, by voice (Research 122, V10)
+
+Research's words are kept, with one default added for what Home does after he says it.
+
+| He says | Rolling plan | Fixed days |
+|---|---|---|
+| "skip legs today" | "Legs A waits for tomorrow." | "Legs A waits for next Wednesday." |
+| "rest day today" | "Rest today. Legs A is next." | "Rest today. Legs A is next Wednesday." |
+| "Push A tomorrow" | "Pull A is tomorrow. Push A is after it." | "Pull A is tomorrow. Push A is Thursday's." |
+| "rest day Sunday" / "make Sunday my rest day" | "Sunday is your rest day." + **UNDO** (a write) | the same |
+
+- **A skip is a day mark, not a plan write.** Saying "skip legs today" or "rest day today" marks today as rested, so Home agrees with her line: the hero reads "Rest today", the context line "Legs A waits for tomorrow" (or "Legs A waits for next Wednesday"), and the Start key is gone until 04:00. Without the mark, Home would keep offering START LEGS A under a line that says it waits, so the two must move together. The mark is undoable for 10 s (**UNDO** under her line: "Legs A, back on today."), then it stands; the 04:00 turn clears it. The Training page's Start line shows the same rest state. Product to confirm; this is the default.
+- **"Push A tomorrow" writes nothing,** as Research says: the plan decides the day, and her line only says where it falls. No UNDO.
+- **In a live workout** "skip" stays the workout's own word: "Skip is on the workout screen." (decided Oct 15, 8:58 PM PT).
+- **Owners:** Core (the day mark, `WeekFacts` counts it as rest, not a miss), Builder A (Home and the Training page in the rested state), Product (confirm the mark).

@@ -47,3 +47,23 @@ Groceries never notifies. On the day of a planned cook, the cook's Home line car
 - **Builder B:** the page and the four moments.
 - **Core / Kitchen lead:** the rules and the link write.
 - **AI architecture:** the `linkItems` call and its gate.
+
+## Addendum, Oct 16: the recipe line and the " · " rule (Research 123, G-R8, G-R9, G-R15; G-R1 and G-R12 noted)
+
+What the small line under a row shows, at 16 `inkSecondary`, now that recipes keep their pack sizes (G-R1, Core):
+
+| The row | Its amount | The line under it |
+|---|---|---|
+| for one recipe, loose amount | **1½ lb** chicken thighs | "for tacos" |
+| for one recipe, a sized pack | **1 can** diced tomatoes | "for chili · 28 oz" |
+| the same thing in two pack sizes | **1 can** diced tomatoes, and a second row **1 can** diced tomatoes | "for chili · 28 oz" and "for curry · 14.5 oz". Two rows, and the size is what tells them apart, so it is never dropped on either |
+| a sized pack plus a loose share (G-R8) | **1 can + 15 oz** black beans; **1 bag + 6 cups** baby spinach | "for tacos and chili · 15 oz". The pack first, "+" between, never converted, the pack's size on the line |
+| for two recipes (G-R9) | **3** bell peppers | "for tacos and chili" |
+| for three or more (G-R9) | **1 bag + 6 cups** baby spinach | "for curry and two more", the sooner meal first, as the count line |
+| a typed bare row a recipe joins (G-R2) | **8** eggs | "for frittata". The amount simply appears with the line; no colour, since Groceries never notifies |
+| a typed row with his own words | TJ's red curry sauce | nothing. His title stays as typed on the phone and never goes to Claude (G-R12, AI) |
+| garlic (G-R15) | **7 cloves + 1 head** garlic | "for chili and two more". The "+" stays in first-added order; a head never covers cloves on the sheet, because we don't guess. Not a pack, so the pack-first rule doesn't apply |
+
+- **The " · " is only ever a pack size,** and it follows the recipe words; a row with no sized pack has no middle dot. Nothing else on the page joins two facts with a dot (41 §3).
+- **Until G-R1 lands** no recipe row shows a size; that is Core's fix, not a drawing, and the line stays "for chili" meanwhile.
+- **Owners:** Core (G-R1 with G-R8, one landing), Builder B (the line's two and three-recipe forms), the Kitchen lead (G-R2's covered rule).
