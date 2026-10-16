@@ -1,5 +1,7 @@
 # Habits: x of 7 (M3 slice 2, steer)
 
+> **Superseded.** Research's `docs/research/habits-first-use.md` (on master), with `m3-lines.md` and Product's 7:53 PM call (the week starts Monday 04:00), replaces this steer (G20). Its "Read, 3 of 7.", "three days to go" and the 168pt layout no longer hold. The motion below still guides, with one change (G8): **the "of 5" count stays in ink at rest.** Colour shows only in the moment the target is met (the count blooms in the habit's pigment, then dries back to ink over `Theme.Motion.dry`), and the **brushstroke** behind the week is the lasting reward mark.
+
 For the builder who takes the habits screen. The engine is Core's (`Habit`, counted by query, no streaks). This is drawn to `no-buttons.md`. Recording: `recordings/habits.mp4` (source `studies/habits.html`).
 
 ## The page (TODAY › HABITS, or z from a habit's name anywhere)

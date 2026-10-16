@@ -42,6 +42,7 @@ This sheet is for Builder B's Review. It's drawn to Product's 8:07 PM call ("Rev
   2. 300ms later, the count swaps like a value word in both places: "READ · 3 → 4 OF 5" and "Read 3 → 4 of 5" in the week line (blur crossfade, settle spring).
   3. Tess says "Read, 4 of 5 this week." once.
   4. The stretch dries to the rest tint over `Theme.Motion.dry`.
+- **A target met** (G8, from `habits-first-use.md`): the count is ink at rest, always. Only in the moment the target is met does it take colour: "READ · 5 OF 5" swaps as above and the "5" blooms in the habit's pigment, then dries back to `inkSecondary` over `Theme.Motion.dry`. The week's painted thread gets the **brushstroke** behind it (6pt at the rest tint, Monday to today, 700ms), and that stroke is the lasting reward. No colour stays on the count, no `.success` haptic, no confetti. Tess says "Read done for the week." once.
 - **The third weigh-in:**
   1. Tess says "Body weight logged. 78.1 kg."
   2. The weight line swaps to "Weight 78.1 kg, 3 weigh-ins this week."
@@ -49,7 +50,7 @@ This sheet is for Builder B's Review. It's drawn to Product's 8:07 PM call ("Rev
 - **Reduce Motion:** crossfades only, and the stretch appears already dry.
 
 ## Never
-Dots, a streak, red, "missed", a nudge for weigh-ins, a coloured "down", a fourth habit on this page (it goes to the full Review and the Habits page).
+Dots, a streak, red, "missed", a coloured count at rest, a nudge for weigh-ins, a coloured "down", a fourth habit on this page (it goes to the full Review and the Habits page).
 
 ## Owner
 Builder B (`ReviewPage.swift`, `ReviewView.swift`). The week line clauses, the weigh-in count and the paused flag come from Core's ledgers.
