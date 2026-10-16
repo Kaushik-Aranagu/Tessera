@@ -36,6 +36,7 @@
 - Lock Screen and intent lines (Research #159, `../research/lockscreen-lines.md`): the Undo intent's "Undo brings it back" goes, because nothing redoes it. "No set to undo." follows the undo rule. The two short titles match their intent titles.
 - Undo batch: Core's rows in `../research/undo-lines.md` section 2 (wording and behaviour), to the one rule: name the thing, then what happened; Undo says the same name plus "taken back"; UNDO always reverts the record its line names. Includes undoing a finish deleting the Health workout, and HealthExporter.
 - Empty states batch: Core's 8 rows in `../research/empty-states.md`. These cover the Review counts line and one meaning of "good day" (trained), Groceries' double "Nothing to get", the empty shop, a recipe with no lines, an empty "As pasted", the long second line in Notes, the Backups hero before the first copy, and zero-set workouts that are not saved.
+- Soul contract, Core rows (cae00df): say which asks count as "working" for the soul, and emit capture and Claude-call events through SoulEvent, once Builder A's SoulRouter lands.
 
 **Later:**
 - The evening on Now, engine part, per Design's `docs/design/evening-on-now.md` (a79ce75; decisions.md 9:17 PM PT): Now's order in the evening, the 22:00 switch, and storing his "Tomorrow, first" line.

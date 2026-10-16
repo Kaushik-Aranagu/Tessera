@@ -36,6 +36,7 @@
 - Home queue heights (Research #160, `../research/accessibility.md`): drop the fixed heights that clip text at large sizes. Normal priority.
 - Empty states batch: Builder B's 7 rows in `../research/empty-states.md`. These cover the Today empty hero and its duplicate queue line, Start on an empty routine, the Review first week and no forward line, Training's "rest day" with no plan, the Tess fast path for today's routine, "No workout today to log into." on day one, and the extra Kitchen "Paste a recipe" word. Use Builder A's shared `EmptyLine`.
 - Undo batch: Builder B's rows in `../research/undo-lines.md` section 2, plus the capture code in `App/AppModel.swift`, to the one rule.
+- Soul emitters for your screens (row B of the motion event contract, cae00df), once Builder A's SoulRouter lands: chrome and page events (capture landed, ask raised, task done, page change). Views never set a soul mode themselves.
 
 **Later:**
 - The evening on Now, Home's part, per Design's `docs/design/evening-on-now.md` (a79ce75; decisions.md 9:17 PM PT): day done, Shutdown at 21:00, the handoff, the closed day, late night until 4 AM and the 04:00 turn. The ground never changes; the evening is the day stroke reaching its vermilion end and the soul resting.
