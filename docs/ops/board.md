@@ -2,7 +2,9 @@
 
 *Only the planning lead (Product lead thread) edits this file. Each team's queue lives in its own file under `board/`, and only that team's lead edits it. Updated 2026-10-15. First phone build: PRs cut at 2:05 PM Pacific (moved from 12:45 and 1:05 PM), then the final build; review guide in `../product/review-session.md`.*
 
-**Install commit (1:09 AM PT Oct 16):** 7b321d2, on his own "install it" only. Next build: AI-1 Home, 44 part two, 42, Ask Tess sizes.
+**Installed (9:57 AM PT Oct 16):** 7b321d2 (#320, #330, #334, #337, #343), over the existing app; signing lapses ~Oct 23 9:57 AM PT, reminder Oct 22 10 AM PT. Next pin waits on #366 and #422 (secret-word wall, v9; decisions.md 10:18 AM PT); #407 becomes v10 after the pin. Next build: AI-1 Home, 44 part two, 42, Ask Tess sizes.
+
+**AI spend (9:45 AM PT Oct 16):** in-app cap $50/month (decided 9:27 AM). Dev spend from cloud runs comes out of his $200/month credits and is logged here: memory experiment ~$0.60 (570 calls; Haiku ~$0.04, Sonnet ~$0.56), Oct 16. Groceries eval ~$0.0066 plus run 0 (rerun 2, #420: 10/10 must, 0 false pairs; Kitchen verdict pending).
 
 **Themes (Kaushik, 6:40 PM PT):** Design's top job; Builder A builds the tokens and switch after the Siri hotfix; all screens use themed tokens from now on.
 

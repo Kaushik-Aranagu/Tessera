@@ -2,7 +2,7 @@
 
 *Planning lead, updated 11:30 PM Pacific, Oct 15. **Installed: 444e72b, at 11:28 PM PT Oct 15, over the existing app with your data kept.** It folds in Research's `review-refresh-2.md` (#223) and QA's review-215 smoke step. Not in this build: Settings: Claude (items 33 to 36), Speak, the ink-line keys (#278) and Plan my day, so skip those. First, pick your iCloud Drive folder in Review > Backups. If something else here isn't in the build, skip it and tell us. Late-night items only apply between midnight and 4 AM, since your day ends at 4 AM.*
 
-## Next build: 7b321d2 (install commit, pinned 1:09 AM PT Oct 16; installs only on your own "install it" in the iOS build thread)
+## On your phone: 7b321d2 (installed 9:57 AM PT Oct 16 over the existing app, data untouched; signing lapses about Oct 23, 9:57 AM PT). It carries #320, #330, #334, #337 and #343 only; later merges wait for the next pin.
 
 It adds #320 (the Tess asks Claude switch), #330 (the icon and the closer soul), #337 (Training opens on today's plan), and the haptics (#317) and Speak (#312) merged since 444e72b. It also has #343: Return now saves in Notes instead of making a new line. Home still uses the old wording. Five minutes:
 1. **The icon.** On the Home Screen, Tessera shows Tess's soul. Inside the app, the soul's dabs sit closer together.
