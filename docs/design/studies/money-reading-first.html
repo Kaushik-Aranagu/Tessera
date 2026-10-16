@@ -35,20 +35,20 @@ function month(){return `<div class="ph">
  <div class="abs lbl s2" style="left:22px;top:132px">MONEY</div>
  <div class="abs" style="left:22px;top:170px;font-size:44px;font-weight:500;letter-spacing:-.03em;line-height:48px">October, logged</div>
  <div class="abs b" style="left:22px;top:240px;width:340px"><b style="font-weight:600">7</b> spends. Most went to lunch, <b style="font-weight:600">24.80</b>, and coffee, <b style="font-weight:600">9.00</b>.</div>
- <div class="abs b" style="left:22px;top:314px">Also <b style="font-weight:600">£38.20</b> in 1 spend.</div>
+ <div class="abs b" style="left:22px;top:314px">Also <b style="font-weight:600">$38.20</b> in 1 spend.</div>
  <div class="abs b" style="left:22px;top:346px">Also <b style="font-weight:600">€8.00</b> in 1 spend.</div>
  <div class="led" style="top:760px;opacity:.45"><div class="d">15</div><div class="l" style="top:0"><span class="a">12.40</span><span class="w">lunch</span></div></div>
 </div>`}
 function ledger(){
  const L=[[15,[['12.40','lunch'],['4.50','coffee']]],[13,[['12.40','lunch'],['4.50','coffee']]],[9,[['6.50','taxi'],['3.20','bus'],['2.10','milk']]]];
  let y=0,h='';for(const [d,items] of L){h+=`<div class="d" style="top:${y}px">${d}</div>`;items.forEach(([a,w],i)=>{h+=`<div class="l" style="top:${y+i*36}px"><span class="a">${a}</span><span class="w">${w}</span></div>`});y+=items.length*36+22}
- let e=`<div class="d" style="top:0">14</div><div class="l" style="top:0"><span class="a">£38.20</span><span class="w">groceries</span></div>`;
+ let e=`<div class="d" style="top:0">14</div><div class="l" style="top:0"><span class="a">$38.20</span><span class="w">groceries</span></div>`;
  let f=`<div class="d" style="top:0">3</div><div class="l" style="top:0"><span class="a">€8.00</span><span class="w">museum</span></div>`;
  return `<div class="ph">
  <div class="abs lbl s2" style="left:22px;top:58px">‹ REVIEW</div>
  <div class="abs lbl" style="left:22px;top:132px">OCTOBER · 9 SPENDS</div>
  <div class="led" style="top:176px">${h}</div>
- <div class="abs lbl s2" style="left:22px;top:${176+y+16}px">IN POUNDS</div>
+ <div class="abs lbl s2" style="left:22px;top:${176+y+16}px">IN DOLLARS</div>
  <div class="led" style="top:${176+y+50}px">${e}</div>
  <div class="abs lbl s2" style="left:22px;top:${176+y+108}px">IN EUROS</div>
  <div class="led" style="top:${176+y+142}px">${f}</div>
@@ -59,7 +59,7 @@ function ghost(){return `<div class="ph">
  <div class="abs lbl s2" style="left:22px;top:318px">NEXT</div>
  <div class="q" style="top:352px"><span style="font-weight:500">Stretch &amp; mobility</span><span class="tm">7:15 PM</span></div>
  <div class="q" style="top:400px"><span>Read</span><span class="tm">9:00 PM</span></div>
- <div class="abs" style="left:22px;top:482px;font-size:34px;font-weight:500;letter-spacing:-.03em;color:rgba(36,80,216,.62)">Tesco, <b style="font-weight:600">£38.20</b>?</div>
+ <div class="abs" style="left:22px;top:482px;font-size:34px;font-weight:500;letter-spacing:-.03em;color:rgba(36,80,216,.62)">Trader Joe&#39;s, <b style="font-weight:600">$38.20</b>?</div>
  <div class="abs" style="left:22px;top:536px;display:flex;gap:22px">
    <span class="lbl" style="position:relative;color:rgb(var(--ink))">TOTAL${stroke(60,'rgba(240,165,0,.8)')}</span>
    <span class="lbl s2">RECIPE</span><span class="lbl s2">NOTE</span></div>
