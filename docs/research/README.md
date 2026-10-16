@@ -90,3 +90,5 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [fixtures/review-sentence.md](fixtures/review-sentence.md) | Builder B and Core: 30 weeks with the expected Review hero sentence and dabs, 22 guilt flags with replacement copy |
 | [widget-states.md](widget-states.md) | Builder A: exact widget, Live Activity and snippet lines for six states, drawn from NowPicker and the ranker |
 | [fixtures/people-names.md](fixtures/people-names.md) | Core: 40 names that are also words (Will, Rose, Bill, June...) through the M5 order, with 12 guards |
+| [undo-lines.md](undo-lines.md) | All teams: 47 write paths with their Tess line and Undo, 33 mismatches, one wording rule |
+| [empty-states.md](empty-states.md) | All teams: 14 screens with no data, what they show now and what they should say, owner per fix |
