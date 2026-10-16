@@ -170,7 +170,7 @@ struct HomeDataTests {
         #expect(!upcoming.contains { $0.id == current.id })
         #expect(upcoming.allSatisfy { !$0.isDone })
         #expect(upcoming.map(\.title) == [
-            "Push Day A", "Stretch & mobility", "Read · Designing Data-Intensive Applications",
+            "Push Day A", "Stretch & mobility", "Read Designing Data-Intensive Applications",
         ])
 
         model.finish(taskID: current.id)

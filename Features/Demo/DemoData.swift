@@ -185,7 +185,7 @@ enum DemoData {
             ("Review the sprint plan", -3 * 60 - 20, 45, true),
             ("Groceries for the week", -25, 55, false),
             ("Stretch & mobility", 140, 20, false),
-            ("Read · Designing Data-Intensive Applications", 180, 40, false),
+            ("Read Designing Data-Intensive Applications", 180, 40, false),
         ]
         for (title, offset, minutes, done) in items {
             let task = store.create(taskClass, title: title)
