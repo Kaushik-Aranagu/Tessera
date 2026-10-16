@@ -75,7 +75,7 @@ struct SoulRouterTests {
         soul.handle(.askClaude)
         #expect(soul.mode == .done)
         try await Task.sleep(for: .seconds(2.0))
-        #expect(soul.mode == .thinking)
+        #expect(soul.mode == .working)
     }
 
     @Test func theLensPinsHerAndChangesNothingElse() {
