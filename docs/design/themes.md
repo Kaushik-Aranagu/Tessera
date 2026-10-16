@@ -13,7 +13,7 @@ Preview (Home, Now, a workout and Review in each theme, with swatches and propor
 - Every existing screen works in every theme, because screens already read `Theme.Colors.*` and never hard-code a hex.
 
 ## How much of each
-A theme is mostly ground. Colour arrives only where something matters: the action of the moment, Tess, a running thing, a class dab.
+A theme is mostly ground. Colour arrives only where something matters: the action of the moment, Tess, a running thing, a data mark at rest tint. **Colour arrives through motion and moments; resting colour stays low-contrast** (`no-dots.md`).
 
 | Theme | Ground | Raised | Ink (all tiers) | Accent |
 |---|---|---|---|---|
@@ -23,7 +23,7 @@ A theme is mostly ground. Colour arrives only where something matters: the actio
 | Lacquer | 84% | 4% | 9% | 3% |
 | Celadon | 82% | 6% | 9% | 3% |
 
-- **One accent leads per screen:** the stroke under the action of the moment. Class dabs and Tess's cobalt are the only other colour.
+- **One accent leads per screen:** the stroke under the action of the moment. Data marks at rest tint and Tess's cobalt are the only other colour. No coloured dot ever sits beside text.
 - **No two strokes on one screen share a pigment,** except where the meaning is shared, such as two running things.
 
 ## The five themes
@@ -230,3 +230,10 @@ This addendum wins over everything above. The tables above already carry the new
   - Light: Porcelain white with the three soul dabs.
   - Dark: #000 with the Obsidian dabs and no halo.
   - Tinted: the dabs at clearly different greys (live 30%, tess 55%, now 85% lightness).
+
+## Third addendum: no dots (Kaushik, Oct 15, about 8:08 PM PT)
+- **The rule:** colour arrives through motion and moments; resting colour stays low-contrast. The full list of places is in `no-dots.md`.
+- **No coloured mark sits before or after a line of text,** in any look. The row dabs on Home, Now, Kitchen, Groceries, Notes, capture modes, muscles and the month key are removed.
+- **Data marks rest at `restTint`:** the pigment at 45% on light looks and 55% on dark looks and in the workout. They land wet at 100%, then dry over `Theme.Motion.dry` (1.1s on the house curve, after 0.4s).
+- **On dark looks a resting mark has no halo.** The halo belongs to the wet moment only and dries away with the colour.
+- **The themes preview** (artifact v5) drops the Home row dabs.
