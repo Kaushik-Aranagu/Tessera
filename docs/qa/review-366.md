@@ -75,3 +75,16 @@ Verdict: **PASS**. Trial merge onto master 9f91f26 is clean.
 ### Lows
 - L1: the walk ends on the next task hero, not a true rest day, as Builder B said. The rest-day path (`facts.rest(next:now:)` nil → planned session with START) has no recording. That is fine for this PR, but a still or clip belongs in the next Home PR.
 - L2 (not this PR): the finish card reads "Friday, 18:10 to 18:10" with "1 MIN" under the `-demoTime` clock. That is #381's N2, still open.
+
+## Addendum: re-check at `46dfd4d` (rebased on 5af8f2c)
+
+Verdict: **PASS** for the code and the S1 fix. Trial merge onto master is clean.
+
+- S1 fixed (HomeWalkUITests.swift):
+  - PAUSE is found by its label `"Pause the workout"` (case-insensitive), asserted to exist, and tapped.
+  - RESUME is asserted on Home before it is tapped.
+  - Finish comes from the running order's FINISH HERE.
+  - There are no coordinate taps on the old chevron; the only coordinate left is a fallback for LOG.
+- The new commit's app change is cosmetic: Home's keys get `.textRole(.labelStrong)` (NowPage.swift), and the accessibility labels are unchanged.
+- **The clip is older than this head.** At 0:12, `home-lines.mp4` (54 s) shows Tess saying "Same as last time, 82.5 × 7." before set 1. This head carries #397 (732d72f is an ancestor), where `.lastTime` returns nil (WorkoutSession+Prefill.swift:13), so the build at 46dfd4d can't say that line. The walk itself matches the test: Start, two sets with a rest, PAUSE, Home showing "Push Day A, bench set 3 / RESUME PUSH DAY A", the running order, FINISH HERE, done, Back to today. It's Design's call whether to accept it or have it re-recorded on 46dfd4d.
+- Low: the last assertion (`… .waitForExistence(timeout: 5) || true`) can never fail. Drop it, or make it a real check of the done line.
