@@ -8,7 +8,7 @@ One clip, eleven things, in the order he reviewed them on Oct 15 at 11:58 PM: Ho
 | # | Caption | Source | In to out | Length |
 |---|---|---|---|---|
 | open | "What's new", next build | card, `studies/whats-new-cards.html?k=open` | | 1.8 s |
-| 1 | Home, one plain line | Design `recordings/looks-flood.mp4` at rest (one still, 0.3 s) | still | 2.4 s |
+| 1 | Home, one plain line | Builder B `docs/recordings/home-lines.mp4` (#366 at 46dfd4d), Home at rest: "Push Day A at 7 pm", START PUSH DAY A | 0–2.4 | 2.4 s |
 | 2 | Tabs | master `docs/recordings/39-tab-lens.mp4` | 0.8 to 6.8 | 6.0 s |
 | 3 | Routines by day | master `docs/recordings/42-routines-fixed-days.mp4` | 1.0 to 8.0 | 7.0 s |
 | 4 | Training, plan first | master `docs/recordings/44-live-workout-frame.mp4` (#381: the plan page with START, "Push Day A running. Bench Press first.", set 1, the stamp, "Set 1 logged. 82.5 × 7.", the rest starting) | 0 to 4.6 | 4.6 s |
@@ -23,7 +23,7 @@ One clip, eleven things, in the order he reviewed them on Oct 15 at 11:58 PM: Ho
 Builder clips (590 × 1282) scale to 450 × 978 under the 98 pt caption; Design clips lose their own caption (crop from 84) and sit on the board grey. Hard cuts, no fades: each caption is the cut.
 
 ## To recut before it goes out
-- **1 Home** is Design's frame, not the build. When #366 (Home one plain line) lands, replace the still with 2.4 s of Builder B's clip at rest, same caption.
+- **1 Home** is now Builder B's own recording from #366 (the opening 2.4 s at rest, scaled to 450 × 978 under the same caption), replacing Design's still. That stretch is clean on the head; the clip's live-set segment is being re-recorded for a separate reason and isn't used here.
 - **4 Training** is #381's clip once it merged (c17ca66), plan page and set 1 in one look; `40-training-rise.mp4` (Obsidian, the old workout page) is out.
 - Anything else that reaches the build after this cut gets a row here and a segment at its place in his order.
 
