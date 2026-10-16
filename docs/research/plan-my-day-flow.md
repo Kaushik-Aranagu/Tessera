@@ -169,7 +169,7 @@ In every branch the rules plan from step 6 is already on screen and stays exactl
 | B4 | No answer in 20 s | Rules plan; a later reply is dropped, its cost still counts | "Claude didn't answer in time. Here's your usual plan." (M18's plan variant; M18 itself is "Claude didn't answer in time.", 8:46 PM PT; `claude-settings.md` C15) | Not built |
 | B5 | 429, 529 or 500 after one retry | Rules plan | "Claude is busy. Here's your usual plan." (M22) | Not built |
 | B6 | Reply fails V1 to V12 | Rules plan; `TessCall` logged `invalid` with codes, never the text | "Here's your usual plan." (M23). Prompt-pack repairs still apply: a failing `note` alone is dropped; a light-day workout start line becomes "{title} at {time}."; a run in Claude's order with drifted times is repacked | Not built |
-| B7 | 401 or 403 on the call | Rules plan; Use Claude switches off | "That key didn't work. Paste it again?" (M2, decisions 8:38 PM PT) | Key check maps 401 to `.badKey` (`ClaudeKey.swift:303`), but its line is "That key didn't work. Check it, or paste it again?" (`:318`). Core changes it to M2 (3b, N4) |
+| B7 | 401 or 403 on the call | Rules plan; Use Claude switches off | "That key didn't work. Paste it again?" (M2, decisions 8:38 PM PT) | Key check maps 401 to `.badKey` (`ClaudeKey.swift:303`), and since #248 (`fdcaee4`) its line is M2 (`:318`). Closed (N4) |
 | B8 | Anthropic account paused | Rules plan | "Here's your usual plan." | Key check only (`ClaudeKey.swift:305`, line `:324`) |
 | B9 | He acts before the reply lands (any swipe, edit, time change, or the hold) | His plan stays as he touched it; the reply is dropped; its cost still counts | None | Not built |
 
@@ -196,7 +196,7 @@ The timeout line is the second place Design differs from this doc's first versio
 | N1 | §6: a pull while a workout runs gets "Push A is under way, until about 8:05 am." and leaves Now alone, so no pack is built | Fixture d22 sends a pack with `running: true` to Claude, and the prompt has a rule for it. Under §6 that pack can never be sent | Keep §6. The line becomes an engine template, "{workout} is under way, until about {startedAt + 60}." (8 words, passes). Keep d22 in the eval as a guard, and add a builder check: no pack while a workout runs |
 | N2 | §6 and decisions 8:38 PM PT give the cap line, but not how often | `tess-voice.md` M10 is "once per month"; `settings-claude.md` S14 and S17 show "Here's your usual plan." on every later plan | The paused line on the first capped plan of the month, then "Here's your usual plan." (M23). Product to confirm in one line |
 | N3 | §6: VIA CLAUDE once under the start line, not on each row | Decision 8:28 PM PT: "Every Claude ghost row keeps the cloud mark" (written for use 1 captures) | Keep §6 for the plan: one label for one reply, each row's VoiceOver says "Via Claude". Product notes the plan as the exception |
-| N4 | B7 copy is M2 "That key didn't work. Paste it again?" (decisions 8:38 PM PT) | Master's key check says "That key didn't work. Check it, or paste it again?" (`ClaudeKey.swift:318`) | Core changes `:318` to M2, so Settings and the plan say the same thing |
+| N4 | B7 copy is M2 "That key didn't work. Paste it again?" (decisions 8:38 PM PT) | Closed by #248 (`fdcaee4`): `ClaudeKey.swift:318` now says M2 | None |
 | N5 | §6 doesn't show the calendar ask (step 5) or M46 "Planned without your calendar. Settings" | `ask-lines.md` A3 fires at the first Plan my day | Design adds where the ask line and CONNECT · NOT NOW sit on the first morning (default: Tess's line in her corner, the plan drawn under it with `cal: false` until he answers) |
 
 Also noted, not a disagreement: §6's page is labelled "Thu 15 Oct fixture d01", while d01 is Mon 2 Nov in the fixture. The content matches.
@@ -262,7 +262,7 @@ Voice notes:
 7. **`PlanProposalValidator`** V1 to V12 plus M-fmt and M-light, with the three soft repairs.
 8. **Keep path:** a kept row is one `MoveTask` by `.user` (`Tasks.swift:89`). START WITH is one named transaction of every untouched row's `MoveTask`, undone as one record, with a 10 s UNDO. An edited row adds a rename in the same transaction (needs a rename action; not on master).
 9. **Typed fallback outcomes** (timeout, busy, offline, cap, invalid, badKey, paused, dropped) so the UI picks the line and never parses text. The cap outcome says whether it's the first capped plan this month (N2).
-10. **Key-check copy:** change `ClaudeKey.swift:318` to M2 (N4); add "undone" to `bannedWords` (V2).
+10. **Key-check copy:** done in #248 (`fdcaee4`, N4). Still open: add "undone" to `bannedWords` (V2).
 11. **Run the eval** (`-planEval`) and the blind read before use 2 turns on; the gate is one bool the plan reads.
 
 ## 6. Open questions, each with a recommended default
