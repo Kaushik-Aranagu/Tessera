@@ -121,3 +121,37 @@ This sheet replaces sheet 71's "which pages get a side page" and Product's 10:00
   - She glances, eyes only: `sideTurned(direction)`, 0.4 toward the incoming content over 380 ms on the house spring, then back over 300 ms, with the mouth at 70%. It plays only on the move into stop 1 (right) and on the move that lands back on the front (left), never between stop 1 and stop 2. It plays only when she's idle or roaming, and never with eyes off, under Reduce Motion or in `.live`. It comes from the SideHost, not from each screen.
   - Her side line lands when stop 1 settles, at 420 ms (40 + 380).
   - There's no haptic for a side opening. Stop 2's `.selection` is the only tick.
+
+## Every glance: one big fact and two small (for Research BD2's fixtures)
+The big fact is Hero 56 with its unit at 21. The small facts are Body 19, at most two. Words follow copy-pass.
+
+| Screen | Big fact | Small fact 1 | Small fact 2 |
+|---|---|---|---|
+| Today: THE DAY | "4" *to go* | "6 done" | the next thing: "Stretch at 8:30 pm" |
+| A task: ITS STORY | "2" *moves* | "made Tuesday" | "in Plan my day" (or the linked thing) |
+| Training: THE WEEK | "3" *of 6 sessions* | the next one: "Legs A, Saturday" | the last one: "Push A, today" |
+| Routines: LAST TIMES | the routine done last: "Push A" | "today" | the next due: "Pull A, Tuesday" |
+| A routine: LAST TIMES | the last day: "Thursday" | "5 of 5, 1,072 kg moved." | "4 times this month" |
+| Plans: THE PLAN | "4" *days a week* | the split: "Push Pull Legs" | "on fixed days" |
+| An exercise: YOUR SETUP | the first setup word: "Third hole" | the bar: "Olympic bar, 20 kg" | "written Oct 9" |
+| A workout or finish: THE SETS | "20" *sets* | the top set: "Bench 82.5 × 7" | "5 exercises" |
+| Kitchen: THE WEEK'S COOKS | "3" *cooks* | the next: "Tacos, Friday" | "8 to buy" |
+| Groceries: FOR WHAT | "7" *for 2 cooks* | the cooks: "Tacos and chili" | "3 just because" |
+| A recipe: INGREDIENTS | "12" *things* | "4 on Groceries" | the key: ADD 8 TO GROCERIES |
+| Recipe original: COOKS | "4" *times* | the last: "Sunday, 45 min" | "about 45 min" |
+| An ingredient: PER 100 G | "215" *kcal* | "18.6 g protein" | "15 g fat" |
+| Paste: WHAT I READ | "14" *lines kept* | "3 ignored" | the source: "nytimes.com" |
+| Review: THE MONTH | "11" *sessions* | "4 weeks" | "41 tasks done" |
+| The week: WHAT LEAVES THE PHONE | "$3.20" *this month* | "38 calls" | "Titles and counts only." |
+| Notes: BY THING | "23" *notes* | the top thing: "Landlord, 4" | "5 private" |
+| A note: WHERE IT'S MENTIONED | "3" *places* | the first named | the second named, or "and N more" from four |
+| Claude receipts: BY JOB | the top job: "Home lines" | "$1.10" | "21 calls" |
+| Backups: WHAT'S IN ONE | "4 am" *last one* | "7 kept" | "Never your Claude key." |
+| A class page: ITS OBJECTS | "38" *objects* | the newest | the most used |
+| Any other object | its most-used field's value | its next field | "linked from N" |
+
+Notes:
+- **Money:** "$3.20" is the receipts' own Claude cost, already shown on The week, and isn't his money.
+- **No sums of body facts:** the ingredient row is per 100 g of food, never his intake.
+- **Private notes** are counted, never named.
+- **Empty values:** a small fact with no value is left out. A glance with no big fact opens straight to the full side.
