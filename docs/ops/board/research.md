@@ -146,6 +146,7 @@
 112. Settings place lines. Done when every line and state in Design's `docs/design/settings-place.md` (231b15e) is checked against tess-voice, `settings-claude.md`'s 26 states, the look sentence and the Backups lines from #246, with fixes and owners, for Builder B.
 113. Suite and spoken rows after the normaliser. Done when the suite and `fixtures/spoken-normaliser.md` are re-traced on master after #262, with the Speak-in-the-workout rows from `speak-first-use.md` added, totals recounted and any wrong write flagged to Core.
 114. (taken from Later) How the living-colour rule table learns from his day (`living-colours-learning.md`, PR after #332). Done when the five conflicts are settled with Design and the AI thread and 12 day-shape fixtures are handed to Core for AI-14.
+115. (taken) The AI-11 week story eval (`ai11-week-story-eval.md`, `fixtures/week-story-eval.json`). Done when the fixtures run like AI-5, and the four WeekFacts notes are with Core.
 
 **Later:**
 - (Moved to Builder A's Later, since it needs a Mac lead.)
