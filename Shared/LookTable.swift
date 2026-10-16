@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// The five looks' workout palettes plus `context`, for the rest Live Activity (themes.md addendum, "Live Activity").
+/// The five looks' base colours (ground, ink, live, now, tess, context) for the rest Live Activity: the Lock Screen
+/// follows the day or night look like the app; the Dynamic Island stays Obsidian (themes.md, fourth addendum).
 /// Compiled into the app and the widget extension, so the extension draws the right look from the names in the
 /// activity's content state, with no App Group.
 struct RestPalette: Hashable {
@@ -11,16 +12,16 @@ struct RestPalette: Hashable {
     var tess: UInt32
     var context: UInt32
 
-    static let porcelain = RestPalette(ground: 0x14111A, ink: 0xF5F2EC, signal: 0xFF5B3A, rest: 0xF0A500,
-                                       tess: 0x8FB0FF, context: 0x6A4C9C)
+    static let porcelain = RestPalette(ground: 0xFFFFFF, ink: 0x17141F, signal: 0xE2432A, rest: 0xF0A500,
+                                       tess: 0x2450D8, context: 0x6A4C9C)
     static let obsidian = RestPalette(ground: 0x000000, ink: 0xF5F2EC, signal: 0xFF5B3A, rest: 0xFFC23D,
                                       tess: 0x86B4FF, context: 0xB7A6E0)
-    static let plein = RestPalette(ground: 0x1C1828, ink: 0xF3ECE0, signal: 0xD9563F, rest: 0xE8BD4C,
-                                   tess: 0x9DBFE6, context: 0x7A5C8E)
-    static let lacquer = RestPalette(ground: 0x0C0812, ink: 0xF1E7D6, signal: 0xF06A4C, rest: 0xE8B54A,
+    static let plein = RestPalette(ground: 0xF2ECE3, ink: 0x2B2440, signal: 0xC8452F, rest: 0xE0B341,
+                                   tess: 0x2A64A0, context: 0x7A5C8E)
+    static let lacquer = RestPalette(ground: 0x140F1B, ink: 0xF1E7D6, signal: 0xF06A4C, rest: 0xE8B54A,
                                      tess: 0x8DB2FF, context: 0xC3A6DE)
-    static let celadon = RestPalette(ground: 0x0E1C17, ink: 0xEEF3EF, signal: 0xEE7056, rest: 0xE2A93A,
-                                     tess: 0x9DBBEA, context: 0x456680)
+    static let celadon = RestPalette(ground: 0xE7EEE9, ink: 0x0F231D, signal: 0xD8462C, rest: 0xD99A1C,
+                                     tess: 0x2C59BE, context: 0x456680)
 
     static func named(_ name: String?) -> RestPalette? {
         switch name?.lowercased() {
