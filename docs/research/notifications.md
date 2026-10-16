@@ -44,12 +44,12 @@ Shared rules:
 
 | Field | Value |
 |---|---|
-| Fires for | An undone task with `alerts = true` and a `startsAt` in the future. `alerts` is a new Task field (Core), true only when he gave a clock time ("call mum 9am", a time edited by hand) or said "remind me" (a date with no time alerts at 09:00). A plain dated task without "remind me" gets no alert and, per the 6:20 PM call, no 09:00 time (Core storage change). False for times from Plan my day, the model without "remind", roll-forward, `due`-only tasks and events |
+| Fires for | An undone task with `alerts = true` and a `startsAt` in the future. `alerts` is a new Task field (Core), true only when he gave a clock time ("call mom 9am", a time edited by hand) or said "remind me" (a date with no time alerts at 09:00). A plain dated task without "remind me" gets no alert and, per the 6:20 PM call, no 09:00 time (Core storage change). False for times from Plan my day, the model without "remind", roll-forward, `due`-only tasks and events |
 | Lead time | **0 min.** Now already lifts a timed task 15 min ahead (decision 4:01 PM PT), so a 10 min lead would be a second cue for the same thing. See Q2 |
-| Trigger | `UNCalendarNotificationTrigger(dateMatching:repeats: false)` with year, month, day, hour, minute **and `timeZone`** taken from `startsAt` in the zone at scheduling. A pinned zone makes it a fixed instant (dst-travel rule 6: "call mum tue 9am" set in LA rings at 12:00 in New York); 9:00 on 2 Nov is 9:00 PST because the components come from the stored instant. Zone behaviour on device is unverified; the reconcile on `NSSystemTimeZoneDidChange` covers it either way |
-| Title / body | Title: the task title, "Call mum". Body: "It's 9 am." With a length: "It's 9 am. 30 min." |
+| Trigger | `UNCalendarNotificationTrigger(dateMatching:repeats: false)` with year, month, day, hour, minute **and `timeZone`** taken from `startsAt` in the zone at scheduling. A pinned zone makes it a fixed instant (dst-travel rule 6: "call mom tue 9am" set in LA rings at 12:00 in New York); 9:00 on 2 Nov is 9:00 PST because the components come from the stored instant. Zone behaviour on device is unverified; the reconcile on `NSSystemTimeZoneDidChange` covers it either way |
+| Title / body | Title: the task title, "Call mom". Body: "It's 9 am." With a length: "It's 9 am. 30 min." |
 | Category `TASK` | **Done** writes `SetTaskDone(done: true)` by `.intent`. **Not now** writes `MoveTask` (same time tomorrow, keeps `alerts`) by `.intent`. Both run in the background without unlocking, like the Live Activity's Done |
-| Undo | Next foreground, Tess's line once, with UNDO for 4 s: "Call mum done." Undo: "Call mum taken back." Not now: "Call mum moved to Saturday." Undo: "Call mum taken back." (decision 5:14 PM PT) |
+| Undo | Next foreground, Tess's line once, with UNDO for 4 s: "Call mom done." Undo: "Call mom taken back." Not now: "Call mom moved to Saturday." Undo: "Call mom taken back." (decision 5:14 PM PT) |
 | Foreground | `willPresent` returns `[.banner, .list]`, no sound (Now is already showing it) |
 | Tap | Opens Home with the task as Now |
 | Removed when | Done, Later, delete, `alerts` false, rolled (rolls > 0 means flexible), or its undo. Moved: replaced at the new time. A delivered one is cleared on done |
@@ -96,7 +96,7 @@ reverses `ask-lines.md` Q5 ("rest keeps the ActivityKit alert"); Product to conf
 - **Slot used today.** Mark A7 pending in `TessAskLedger`; the timer alerts in the app and on the Live Activity; the
   task reply gets the fallback. It fires at the next trigger on a later day.
 - **Fallback (exact).** "remind me" with no permission, for any reason (pending, Not now, denied): the reply ends
-  "On Now then." ("Call mum, Saturday 9 am. On Now then."). Timer, after Not now or denied: "Timers alert in the app
+  "On Now then." ("Call mom, Saturday 9 am. On Now then."). Timer, after Not now or denied: "Timers alert in the app
   only." A plain timed task with no "remind": no extra words. Re-ask: Not now once more 7 days later at a trigger;
   denied never.
 - **Provisional: no.** `.provisional` delivers silently to Notification Center, which is useless for timers, and iOS

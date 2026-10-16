@@ -30,7 +30,7 @@
 - Grammar collision fix goes right after model layer T1/T2, ahead of Groceries polish. 11:58 AM. L43
 - Reading grammar collisions are fixed in Core's first M5 Reading engine slice. Undated, about 3:55 PM. L67
 - One M5 parse order: notes, pasted recipes, relative sets; reading, money, people; comma sets, lifts, kitchen; upkeep; tasks. 4:10 PM. L69
-- Live misfires ("watered plants sat", "get mum a card", "coffee with ravi at 7") get a Core fix batch right after the ranker. 4:10 PM. L71
+- Live misfires ("watered plants sat", "get mom a card", "coffee with ravi at 7") get a Core fix batch right after the ranker. 4:10 PM. L71
 - Past-tense logs before Upkeep/People land become a note dated that day, not a task. 4:26 PM. L79 (call 2)
 - `buy` stays Groceries and Tess names the list; non-food `get` is a task. 4:26 PM. L80 (call 3, amended by L84)
 - "is" questions ("is the gym open sat") go to the question path, never to a task. 4:26 PM. L81 (call 4)
@@ -41,7 +41,7 @@
 ## Time and day (8)
 
 - All times shown to Kaushik are Pacific, never UTC; new log entries use PT. 1:56 PM. L62
-- "call mum thu" said on a Thursday means today. 11:58 AM. L42
+- "call mom thu" said on a Thursday means today. 11:58 AM. L42
 - Bare hours: 1 to 6 are PM, 7 to 11 are the next one not yet passed today, 12 is noon; Tess never asks. 4:26 PM. L78 (call 1, partly replaced by L103)
 - A time today that has passed lands tomorrow at that time; ghost row says "Tomorrow 7 am". 4:26 PM. L82 (call 5)
 - Time forms: a named weekday said on that day after its time means next week; bare 7 to 11 on another day is PM only with a meal or evening word; "tonight" after 8 PM stays today until 11:30 PM. 4:41 PM. L103
@@ -100,7 +100,7 @@
 - One ask a day: at most one permission or one-time ask per 4 AM day, never from a background finish. 5:56 PM. L148
 - First set: timed task, rest done while closed, cook timer done; quiet hours 11 PM to 7 AM; a task with no time is never saved as 9:00. 6:20 PM. L164
 - Ask lines final: the notification ask fires only on the first "remind me", timed task or cook timer; rest notification rings and the Live Activity stays silent, never both. 6:30 PM. L171 (supersedes old Q5/A7)
-- "remind me" plus a day alerts at 9 AM; "call mum sat" gets no time and no alert. 6:30 PM. L172
+- "remind me" plus a day alerts at 9 AM; "call mom sat" gets no time and no alert. 6:30 PM. L172
 
 ## Other (16)
 

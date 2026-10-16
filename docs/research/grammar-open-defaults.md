@@ -12,7 +12,7 @@ The open questions 5, 6, 7, 9, 10 and 12 in `fixtures/grammar-regression.md`, sp
 - **Default: yes.** Pure arithmetic on a clock the grammar already has, and the most common reminder shape.
 - Rows: confirm B338, B343, C422 to C425, C438, J737 to J743, J755. Master still fails them (RELT) until Core builds it.
 
-**5b. Does a plain relative time with no "remind me" (`call mum in 2 hours`) ring? (yes/no)**
+**5b. Does a plain relative time with no "remind me" (`call mom in 2 hours`) ring? (yes/no)**
 - Yes: it names an exact instant, the same as a clock time under N620.
 - No: it is only a dated task, `alerts F`.
 - **Default: yes.** He gave the instant; at 23:30 `in 2 hours` (01:30) still rings, as `notifications.md` section 4 lets a timed task through quiet hours.
@@ -86,11 +86,11 @@ The open questions 5, 6, 7, 9, 10 and 12 in `fixtures/grammar-regression.md`, sp
 
 ## 10. People gaps
 
-**10a. Does `rang mum` count as calling Mum? (yes/no)**
-- Yes: `rang`, `rung`, `phoned` join `called` as one contact family: SetTaskDone("Call mum"), or LogTalk when the task is done.
+**10a. Does `rang mom` count as calling Mom? (yes/no)**
+- Yes: `rang`, `rung`, `phoned` join `called` as one contact family: SetTaskDone("Call mom"), or LogTalk when the task is done.
 - No: leave them to the model.
-- **Default: yes.** Same meaning as `called mum` (F517), and a UK speaker says "rang" as often.
-- Rows: F519 `nil` -> `SetTaskDone("Call mum") [People] · now: nil`. Master passes (gated).
+- **Default: yes.** Same meaning as `called mom` (F517), and a UK speaker says "rang" as often.
+- Rows: F519 `nil` -> `SetTaskDone("Call mom") [People] · now: nil`. Master passes (gated).
 
 **10b. Is `lunch with ravi` (no day, no verb) a plan or a log? (ask/model)**
 - Ask: a ghost row "Lunch with Ravi: plan or done?", plan on top (task Later, about Ravi), log second (LogTalk now); nothing is written until he taps.
@@ -98,11 +98,11 @@ The open questions 5, 6, 7, 9, 10 and 12 in `fixtures/grammar-regression.md`, sp
 - **Default: ask.** One tap, no guess and no model call; with a day or a time it stays a task (A103, E480).
 - Rows: F531 `nil` -> `ambiguous: task "Lunch with ravi" Later, about Ravi, or LogTalk(Ravi) now, waits for a tap [People] · now: nil`. Master passes (gated).
 
-**10c. Once Mum is a Person, is `buy flowers for mum` a gift task? (yes/no)**
+**10c. Once Mom is a Person, is `buy flowers for mom` a gift task? (yes/no)**
 - Yes: an unclear object `for <Person>` is a task about that person (as E495); clear food stays Groceries (E496).
 - No: unclear stays Groceries (B430) even with a person.
-- **Default: yes.** Flowers for Mum is a gift errand, not the weekly shop.
-- Rows: A070 `groceries [flowers for mum]` -> `task "Buy flowers for mum" Later, about Mum [People] · now: groceries [flowers for mum]`. Master passes (gated).
+- **Default: yes.** Flowers for Mom is a gift errand, not the weekly shop.
+- Rows: A070 `groceries [flowers for mom]` -> `task "Buy flowers for mom" Later, about Mom [People] · now: groceries [flowers for mom]`. Master passes (gated).
 
 **10d. In a shop run, is a lone `will` ignored? (yes/no)**
 - Yes: a function word alone is never a grocery line, even with Will in People.
@@ -152,7 +152,7 @@ The open questions 5, 6, 7, 9, 10 and 12 in `fixtures/grammar-regression.md`, sp
 | 9a | percent to page, else ask | yes | G579, G580 | pass (gated) |
 | 9b | `abandoned`, `gave up on`, `dnf` set aside | yes | G589 | pass (gated) |
 | 9c | bare number is the page of the book in front | yes | G561 | pass (gated) |
-| 10a | `rang mum` is a call | yes | F519 | pass (gated) |
+| 10a | `rang mom` is a call | yes | F519 | pass (gated) |
 | 10b | `lunch with ravi` | ask | F531 | pass (gated) |
 | 10c | gift task for a Person | yes | A070 | pass (gated) |
 | 10d | lone `will` in a shop run ignored | yes | none (E501) | wrong write |

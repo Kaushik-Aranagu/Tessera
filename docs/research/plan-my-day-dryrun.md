@@ -155,11 +155,11 @@ Rejected variants: "Kept it short today." (leaks why), "Go easy at Legs A." (V10
 
 ### Fri 23 Oct: the full day (Push B), carried task, three runs' worth of tasks
 
-Source: opened 07:10. Fill in visa form (rolled from Thu 20:00, `rolls` 1, `length` 2400). Book flights (`due` 16:00, `length` 1800). Sign NDA (`due` Oct 23 00:00, `length` 300, Oct 20). Update CV (`due` Oct 23 00:00, `length` 1800, Oct 22). Pick up dry cleaning (`startsAt` 12:15, 900). Call mum (`startsAt` 19:30, 1800). Push B, date-only.
+Source: opened 07:10. Fill in visa form (rolled from Thu 20:00, `rolls` 1, `length` 2400). Book flights (`due` 16:00, `length` 1800). Sign NDA (`due` Oct 23 00:00, `length` 300, Oct 20). Update CV (`due` Oct 23 00:00, `length` 1800, Oct 22). Pick up dry cleaning (`startsAt` 12:15, 900). Call mom (`startsAt` 19:30, 1800). Push B, date-only.
 Rules: tier 1 visa form; tier 2 Book flights (timed due), then Sign NDA (older); cap reached, so Update CV is `notPlanned: cap` and not sent. Not full by R7: planned 210 min (150 of tasks plus the 60-minute workout) against 770 free (07:10 to 21:00, minus the workout).
 
 ```json
-{"allDay":[],"blocks":[{"end":"07:50","id":"t1","kind":"task","min":40,"run":1,"start":"07:10","title":"Fill in visa form"},{"due":"16:00","end":"08:20","id":"t2","kind":"task","min":30,"run":1,"start":"07:50","title":"Book flights"},{"end":"08:25","id":"t3","kind":"task","min":5,"run":1,"start":"08:20","title":"Sign NDA"},{"end":"12:30","fixed":true,"id":"k1","kind":"timedTask","min":15,"start":"12:15","title":"Pick up dry cleaning"},{"end":"18:00","fixed":true,"id":"w1","kind":"workout","min":60,"start":"17:00","title":"Push B"},{"end":"20:00","fixed":true,"id":"k2","kind":"timedTask","min":30,"start":"19:30","title":"Call mum"}],"cap":3,"light":false,"now":"07:10","weekday":"Fri","window":["07:10","21:00"]}
+{"allDay":[],"blocks":[{"end":"07:50","id":"t1","kind":"task","min":40,"run":1,"start":"07:10","title":"Fill in visa form"},{"due":"16:00","end":"08:20","id":"t2","kind":"task","min":30,"run":1,"start":"07:50","title":"Book flights"},{"end":"08:25","id":"t3","kind":"task","min":5,"run":1,"start":"08:20","title":"Sign NDA"},{"end":"12:30","fixed":true,"id":"k1","kind":"timedTask","min":15,"start":"12:15","title":"Pick up dry cleaning"},{"end":"18:00","fixed":true,"id":"w1","kind":"workout","min":60,"start":"17:00","title":"Push B"},{"end":"20:00","fixed":true,"id":"k2","kind":"timedTask","min":30,"start":"19:30","title":"Call mom"}],"cap":3,"light":false,"now":"07:10","weekday":"Fri","window":["07:10","21:00"]}
 ```
 
 Privacy: pass. Size: 719 chars, **180 tokens**, the largest master-shaped pack.

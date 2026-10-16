@@ -71,7 +71,7 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [fixtures/ranker.md](fixtures/ranker.md) | Core: 40 Now-pick contexts with expected pick, why and runner-up; 13 precedence rules |
 | [m3-1-2-brief.md](m3-1-2-brief.md) | Core: M3 slices 1-2 (BodyWeight trend, Habit x-of-7), 30 weight and 20 check-in fixtures, grammar rows |
 | [fixtures/upkeep.md](fixtures/upkeep.md) | Core: 40 upkeep phrases, collisions with tasks/groceries/Reading/Money, 16 rules |
-| [fixtures/people.md](fixtures/people.md) | Core: 40 people phrases, collisions (called mum vs completeTask, names in shop runs), 18 rules |
+| [fixtures/people.md](fixtures/people.md) | Core: 40 people phrases, collisions (called mom vs completeTask, names in shop runs), 18 rules |
 | [fixtures/money.md](fixtures/money.md) | Core: 50 currency-neutral money rows, collisions with sets/groceries/tasks/Reading, rules M1-M11 |
 | [speech-test-script.md](speech-test-script.md) | Builder B, Kaushik: 5-minute Speak phone test, 30 phrases with expected Tess lines (after V1, V2) |
 | [build-a1-brief.md](build-a1-brief.md) | Core: schema ops with undo (retire/revive, rename by key), 20 fixtures, master blockers |

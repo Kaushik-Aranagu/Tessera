@@ -66,7 +66,7 @@ Notes: the warm-up (row 2) is a set in the group but is never the top set. Bench
 
 Sunday has no slot in the Push Pull Legs plan, so `RestDay.restDay(plan:at:)` answers "rest". That is a read, not a record, so nothing in the story says "rest day".
 
-Lookup: T4 "book the dentist", T5 "renew passport photo", T6 "water the plants", T7 "pay the gas bill", T0 "call mum" (created Sep 18); K1 "dal tadka"; C1 is a cook of K1; KT1 sits under C1; H1, H2, H3 under the list "Home".
+Lookup: T4 "book the dentist", T5 "renew passport photo", T6 "water the plants", T7 "pay the gas bill", T0 "call mom" (created Sep 18); K1 "dal tadka"; C1 is a cook of K1; KT1 sits under C1; H1, H2, H3 under the list "Home".
 
 | # | Time | Actor | Action | Key fields | State | Rule |
 |---|---|---|---|---|---|---|
@@ -91,7 +91,7 @@ Expected lines:
 
 ```
 08:30 Added 3 tasks
-10:05 Done: water the plants, call mum
+10:05 Done: water the plants, call mom
 12:15 Cooked dal tadka, 50 min
 18:05 Ticked 2 on Home
 ```
@@ -309,7 +309,7 @@ struct DayStoryFixtureTests {
     func restDay() throws {
         let expected = [
             "08:30 Added 3 tasks",
-            "10:05 Done: water the plants, call mum",
+            "10:05 Done: water the plants, call mom",
             "12:15 Cooked dal tadka, 50 min",
             "18:05 Ticked 2 on Home",
         ]

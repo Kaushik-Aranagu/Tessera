@@ -19,7 +19,7 @@ add what gets **stored** and what **Now** shows, plus a trip to New York. Traced
 4. **Adding days keeps wall time** (`Calendar.date(byAdding: .day)`), so "same time tomorrow" across 1 Nov is 25 h.
 5. **A repeated hour resolves to the first one.** "1:30am" on 1 Nov means 01:30 PDT (08:30Z), Foundation's default
    `repeatedTimePolicy: .first` for `date(bySettingHour:)` (worth one check on device).
-6. **A timed task is a fixed instant** (like a calendar event): "call mum tue 9am" made in LA rings at 12:00 in New
+6. **A timed task is a fixed instant** (like a calendar event): "call mom tue 9am" made in LA rings at 12:00 in New
    York. A due date without a time should be a local date (y-m-d), but master has none: Tess writes 09:00 that day.
 7. **Which zone decides on a trip (proposed default):** display and "today" use the phone's current zone at the
    moment of display. A logged item (a workout, a done task, a note) keeps the logical day it had in the zone where it
@@ -36,7 +36,7 @@ Tasks: "Pay rent" Sat 31 Oct 21:00; "bins" made Sat 23:00 for 01:30 Sunday; "sen
 
 | # | Local time, zone (UTC) | Action | Expected stored (instant; day) | Now shows | Master today (traced) | P/F |
 |---|---|---|---|---|---|---|
-| D01 | Mon 26 Oct 18:00 PDT (01:00Z Tue) | Types "call mum tue 9am" | `startsAt` 2026-10-27T16:00Z (Tue 09:00 PDT); day Tue 27 | Unchanged (task is tomorrow); on Tue in NY it reads 12:00 and takes Now from 11:45 EDT | `TessGrammar.swift:513, 559`: weekday then `bySettingHour(9)` in PDT, same instant | P |
+| D01 | Mon 26 Oct 18:00 PDT (01:00Z Tue) | Types "call mom tue 9am" | `startsAt` 2026-10-27T16:00Z (Tue 09:00 PDT); day Tue 27 | Unchanged (task is tomorrow); on Tue in NY it reads 12:00 and takes Now from 11:45 EDT | `TessGrammar.swift:513, 559`: weekday then `bySettingHour(9)` in PDT, same instant | P |
 | D02 | Mon 26 Oct 21:40 PDT (04:40Z Tue) | Starts Mobility at the gate; last set 22:15 PDT (05:15Z), boards | `startedAt` 04:40Z; day Mon 26 (LA) | "Running since 21:40" | `NowRanker.swift:113, 333-335`: clock in `Calendar.current` (PDT) | P |
 | D03 | Tue 27 Oct 06:55 EDT (10:55Z), phone now in EDT | Opens the app after landing | Process suspended at 05:15Z, not wrapped (5 h 40 real idle, under 6 h); roll-forward runs (day Tue 27 in EDT) | No running item; Mobility on the ledger row with Resume; Mon's undone tasks carried | `AppModel.swift:250` then `ProcessTable.swift:88-90, 100-101`: idle is absolute | P |
 | D04 | Tue 27 Oct 07:10 EDT (11:10Z) | Resumes at 07:00, logs the last set, finishes | `endedAt` 11:10Z; workout day **Mon 26** (start day, LA) | Done line for Mobility; Tue's routine still offered (Mon's session does not fill Tue) | `WorkoutSummary.swift:92` buckets `startOfDay(endedAt)` in EDT: **Tue**; `AppModel.swift:508` then hides Tue's routine | F |

@@ -18,10 +18,10 @@ holds). So every habit target is gated on the Habits slice, and the status judge
 ## Contexts
 
 All rows run on Thu 15 Oct 2026 18:10 America/Los_Angeles, as the suite does. The habit week is Mon 12 to Sun 18.
-- **none**: the suite's misfires store (open tasks Dentist Sat 17 10:00, Call mum, Clean the oven; five recipes;
+- **none**: the suite's misfires store (open tasks Dentist Sat 17 10:00, Call mom, Clean the oven; five recipes;
   no people), no habits.
 - **habits**: the misfires store plus seven habits. Read (target 5; Mon 12 and Wed 14 in, so 2 of 5), Meditate
-  (3; none in), Yoga (2; Tue 13 in, 1 of 2), Run (3; none in), Call mum (1; none in; the open task "Call mum" stays),
+  (3; none in), Yoga (2; Tue 13 in, 1 of 2), Run (3; none in), Call mom (1; none in; the open task "Call mom" stays),
   Milk (7, a glass before bed; none in) and Train (3, rule `workout`; the Tue 13 workout fills it, 1 of 3).
 - **read paused**: as habits, with Read's week of Mon 12 paused.
 - **live workout**, **shop run**: the suite's own (Bench Press in focus, last set 80 x 8; Groceries running).
@@ -50,8 +50,8 @@ All rows run on Thu 15 Oct 2026 18:10 America/Los_Angeles, as the suite does. Th
 | L836 | `run` | live workout, habits | nil (in a running process only `habit X` or `✓ X` checks in; a bare name goes to the model) | HP5 | nil: the workout claims only `rest`/`timer N` (TG:133); the live guard finds no set shape and lets it fall through (LV:71-72); no number (TG:311) | pass | - | - |
 | L837 | `ran 5k yesterday` | none, habits | CheckInHabit(Run) Wed 14 · now: note "Ran 5k" Wed 14 12:00 | HP3, HP4, C2 | note "Ran 5k" Wed 14 12:00: `ran` is a past verb (TG:196); `5k` is no number or unit (TG:343-345) | pass | - | Habits |
 | L838 | `run 5k sat` | none, habits | task "Run 5k" Sat 17, no time, alerts F (a future day is a plan, never a check-in) · now: task "Run 5k" Sat 17 09:00 | HP3, N620, R630 | task "Run 5k" Sat 17 09:00 (K:117 no recipe; TG:433-447) | pass | - | N1 |
-| L839 | `call mum` | none, habits | nil (a habit and an open task share the name: check-in or to-do is unclear; the model) | HP6 | nil: no day (TG:442) | pass | - | - |
-| L840 | `called mum` | none, habits | CheckInHabit(Call mum) + SetTaskDone("Call mum") in one ghost row, "Call mum done for the week." · now: nil | HP6, P434 (one ghost row), A005 | nil: a past verb with no day (TG:211); no day for a task | pass | - | Habits, People |
+| L839 | `call mom` | none, habits | nil (a habit and an open task share the name: check-in or to-do is unclear; the model) | HP6 | nil: no day (TG:442) | pass | - | - |
+| L840 | `called mom` | none, habits | CheckInHabit(Call mom) + SetTaskDone("Call mom") in one ghost row, "Call mom done for the week." · now: nil | HP6, P434 (one ghost row), A005 | nil: a past verb with no day (TG:211); no day for a task | pass | - | Habits, People |
 | L841 | `milk` | none, habits | CheckInHabit(Milk), "Milk, 1 of 7 this week." · now: nil | H734: A2, an exact name | nil: one bare word is no grocery outside a shop run (K:40-66) and no task (TG:442) | pass | - | Habits |
 | L842 | `milk` | shop run, habits | groceries [milk] (the shop owns bare input; never a check-in) | HP5, MB | groceries [milk] (TG:136-153) | pass | - | - |
 | L843 | `pause read` | none, habits | PauseHabitWeek(Read, Mon 12), "Read paused this week." | HP7: m3-lines A10 | nil: no number, no day | pass | - | Habits |
@@ -94,7 +94,7 @@ Everything else falls to the model today, which has no habit tool, so at worst n
 - **HP5 Running process.** While a workout, cook or shop run is in front, only `habit X` and `✓ X` check in; a bare
   name belongs to the process (rule 3) or the model.
 - **HP6 Shared names.** A habit name that is also an open task's title: the bare name goes to the model; a past form
-  (`called mum`) checks in and ticks the task in one ghost row, as P434 does for a chore and a spend.
+  (`called mom`) checks in and ticks the task in one ghost row, as P434 does for a chore and a spend.
 - **HP7 Pause, resume, skip, delete.** `pause X` and `skip X this week` pause this week; `pause X till <day>` pauses
   this week (the pause ends with the week); `pause X next week` pauses Mon 19. `resume X` and `unpause X` undo it.
   `skip X today` writes nothing and is never a task. `delete habit X` and `remove habit X` delete with a 10 s undo

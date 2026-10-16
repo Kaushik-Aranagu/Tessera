@@ -57,14 +57,14 @@ Key placeholder in this file: `sk-ant-…`; last four: `a1B2`. No real key appea
 - **Key exposure:** the app switcher snapshot is taken after the drain, so it can only show "...a1B2". A `SecureField` still focused when he swipes up is masked anyway.
 
 ### 7. First grammar miss goes to Claude (use 1)
-- **Does:** on Now at Thu 6:10 pm, types `call mum half 7` into Ask and taps Return (fixture A092).
+- **Does:** on Now at Thu 6:10 pm, types `call mom half 7` into Ask and taps Return (fixture A092).
 - **Master:** the router holds the grammar and on-device routes only (`TessCaptureEngine.swift:46-50`). A miss ends in "Didn't catch that. Try “bench 80 x 8”." (`TessModel.swift:74`) and goes into the miss log. Nothing reaches Claude: `ClaudeTessModel` is not on master yet.
 - **Waiting, expected:** cloud mark on the bloom while the request is out; VoiceOver "Sent to Claude" (M17). Falling back to Claude is never said in words. Master already shows the 2 s drying ghost of his text (`BottomChrome.swift:389-392`) and thinking mode; the mark sits on top of that.
-- **Ghost row, expected:** "Call mum, today 7:30 pm." built on the phone (`TessCaptureEngine.when`, `TessCaptureEngine.swift:217`), with the cloud mark and VIA CLAUDE on the row. Master's `GhostRow` draws `Text(item.title)` and `Format.clock(item.start)` (`Features/Home/NowPage.swift:292`) with VoiceOver "Proposed: \(item.title), \(Format.clock(item.start))" (`:330`). There is no slot for the mark or "via Claude", in pixels or in VoiceOver. **Flag F9.**
-- **Accept, expected:** a tap or the 2 s stroke commits; receipt "Call mum, today 7:30 pm · via Claude" (M16), then "Tess: $0.01 this month." (M7; $0.0006 rounds up to the cent). Master's reply line fades after 4 s (`BottomChrome.swift:443-447`), so M7 needs its own place.
-- **Undo, expected:** "Call mum taken back." (M34). Master's `undoLastCapture()` (`App/AppModel.swift:226`) reverts the records but sets no line, so he gets silence. **Flag F10.**
+- **Ghost row, expected:** "Call mom, today 7:30 pm." built on the phone (`TessCaptureEngine.when`, `TessCaptureEngine.swift:217`), with the cloud mark and VIA CLAUDE on the row. Master's `GhostRow` draws `Text(item.title)` and `Format.clock(item.start)` (`Features/Home/NowPage.swift:292`) with VoiceOver "Proposed: \(item.title), \(Format.clock(item.start))" (`:330`). There is no slot for the mark or "via Claude", in pixels or in VoiceOver. **Flag F9.**
+- **Accept, expected:** a tap or the 2 s stroke commits; receipt "Call mom, today 7:30 pm · via Claude" (M16), then "Tess: $0.01 this month." (M7; $0.0006 rounds up to the cent). Master's reply line fades after 4 s (`BottomChrome.swift:443-447`), so M7 needs its own place.
+- **Undo, expected:** "Call mom taken back." (M34). Master's `undoLastCapture()` (`App/AppModel.swift:226`) reverts the records but sets no line, so he gets silence. **Flag F10.**
 - **Pause rule, expected (S25):** 3 of 10 Claude ghost rows taken back in a row: "Misses on this phone today. 3 of 10 taken back." and Settings reads "Misses go to Claude: **not today**." Not on master yet.
-- **Fallbacks, expected:** offline "Kept it. I'll read it once you're online." (M12) and badge "1 waiting for Tess" (M13); busy "Claude is busy. Kept it for later." (M22); timeout "Claude timed out. Call mum?" (M18); cap "Claude paused until Nov 1. On-device until then." (M10, once a month).
+- **Fallbacks, expected:** offline "Kept it. I'll read it once you're online." (M12) and badge "1 waiting for Tess" (M13); busy "Claude is busy. Kept it for later." (M22); timeout "Claude timed out. Call mom?" (M18); cap "Claude paused until Nov 1. On-device until then." (M10, once a month).
 - **Key exposure in Ask:** the router guard runs only for text that reaches `model.ask`. `commit` sends anything with "best", a word "pr"/"prs", or a trailing "?" to `CommandInterpreter` first (`BottomChrome.swift:418-419`). A pasted key followed by "?" ("is this right sk-ant-…?") skips the guard, falls through to `model.capture(title:)` and is saved as a task titled "Is this right sk-ant-…?" (`BottomChrome.swift:637-641`). It then reaches the op log, Now, widgets, backups and exports. A key that starts the text is saved with a capital "Sk-ant-", which defeats every case-sensitive `sk-ant-` check. The leak test (`ClaudeKeyTests.swift:81-98`) only covers `TessCaptureEngine`, not this path. **Flag F11.**
 - **Key on screen in Ask:** the Ask field is a plain `TextField` (`BottomChrome.swift:278`), and the drying ghost shows the whole pasted key at 45% for 2 s (`:280`, `:392`). Any screenshot or recording in that window shows the key. **Flag F12.**
 
@@ -89,8 +89,8 @@ Key placeholder in this file: `sk-ant-…`; last four: `a1B2`. No real key appea
 9. Ledger seeded at $10: "Key saved. Claude paused until Nov 1."; key line still says "works" (F7).
 10. After Test, search a backup, the export, the op log, `UserDefaults`, `capture-misses.jsonl` and the device console for `sk-ant-` and the key: zero hits.
 11. In Ask, paste the key alone, then the key plus "?", then "pr sk-ant-…": every case answers "That looks like a Claude key. Paste it in Settings." and writes nothing (F11).
-12. First use-1 miss: cloud mark and VoiceOver "Sent to Claude" while out; ghost "Call mum, today 7:30 pm." with VIA CLAUDE; receipt then "Tess: $0.01 this month." (F9).
-13. Undo that ghost row: "Call mum taken back." (F10). Undo 3 of 10 in a row: S25 line and "not today".
+12. First use-1 miss: cloud mark and VoiceOver "Sent to Claude" while out; ghost "Call mom, today 7:30 pm." with VIA CLAUDE; receipt then "Tess: $0.01 this month." (F9).
+13. Undo that ghost row: "Call mom taken back." (F10). Undo 3 of 10 in a row: S25 line and "not today".
 14. Offline miss: "Kept it. I'll read it once you're online." and "1 waiting for Tess"; back online, next open: "Read 1 waiting. 1 to check."
 15. Every line seen above passes `TessVoice.violations`; no "!", no 24-hour times on a line (F13).
 

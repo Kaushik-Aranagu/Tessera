@@ -11,7 +11,7 @@ Reads with: `tess-voice.md` (rules and `TessVoice.violations`), `speech-capture.
 - The collapsed Bar says "Ask Tess, or log a set". The open panel's field says "log 82.5×8, or ask", and under it sit three chips ("log bench 82.5x8", "bench best?", "stretch at 21:00") drawn with a `RoundedRectangle` outline. Those outlines break the no-button-shapes rule, and a tap submits at once, so a chip can write a set he did not do. The first slice replaces them.
 - `TessVoice.violations(in:)` already checks a line for 12+ words, "!", emoji and the banned words. Every hint line goes through it in a test.
 - `OpRecord` carries an `Actor` (`.user`, `.tess`), so "done by hand" is readable from the op log. `TessCapture` has `records`, `line`, `source` but no parse kind yet; slice 2 adds one.
-- Two grammar findings from the brief's own examples. "milk eggs" with no comma does not parse (the bare list needs a comma, or "buy ... and ..."). "remind me thu to call mum" parses, but the title comes out as "To call mum", because "to" is only stripped right after "remind me". The hints below use the forms that parse cleanly: "milk, eggs, 2 lemons" and "remind me to call mum thu". A one-line grammar fix (strip a leading "to" after the date is taken) is worth a Core ticket.
+- Two grammar findings from the brief's own examples. "milk eggs" with no comma does not parse (the bare list needs a comma, or "buy ... and ..."). "remind me thu to call mom" parses, but the title comes out as "To call mom", because "to" is only stripped right after "remind me". The hints below use the forms that parse cleanly: "milk, eggs, 2 lemons" and "remind me to call mom thu". A one-line grammar fix (strip a leading "to" after the date is taken) is worth a Core ticket.
 
 ## 2. How others teach their syntax (scouting)
 
@@ -64,7 +64,7 @@ Ctx: I idle, W workout entry in focus with a last set, E evening, K recipe or co
 | 8 | G after a lift | You can also say bench 3x8 at 80. | `.lift` | 8 words |
 | 9 | G after a set in W | Next set can be just 8. | `.set` (.repsOnly) | 6 words |
 | 10 | G after a set in W | You can also say 80x8, 80x8, 80x6. | `.sets` | 7 words |
-| 11 | G after a dated task | You can also say remind me to call mum thu. | `.task` "Call mum", Thu 09:00 | 10 words; the clean form, see section 1 |
+| 11 | G after a dated task | You can also say remind me to call mom thu. | `.task` "Call mom", Thu 09:00 | 10 words; the clean form, see section 1 |
 | 12 | G after an undated task | A day works too: tonight, or fri 9am. | `.task` with `startsAt` | 7 words; "tonight" sets 20:00 |
 | 13 | G after groceries | You can also say buy milk and eggs. | `.groceries` (2 lines) | 8 words |
 | 14 | G after a timer | Rest timers count seconds: rest timer 90. | `.timer` 1.5 min | 7 words; a fact |
@@ -75,7 +75,7 @@ Ctx: I idle, W workout entry in focus with a last set, E evening, K recipe or co
 | 19 | H, best opened by hand | Next time, this works: bench best? | Question path (`CommandInterpreter`), not the grammar | 6 words; reads only, no write |
 | 20 | S, speak option | Holding the bar listens: 80 for 8. | After slices V1 and V2 (`speech-capture.md`) | 7 words; no mic glyph until V2 ships |
 
-Left out on purpose until their slice lands: "rest 90" (grammar-collisions rule 4), "bench 80 for 8 and call mum tomorrow" (rule 3 split), "milk eggs" with no comma (not planned; line 4 teaches the comma). Self-check: no line uses should, must, missed, streak, try or don't; none counts what he has not done; humour is not used, since hints are not done states.
+Left out on purpose until their slice lands: "rest 90" (grammar-collisions rule 4), "bench 80 for 8 and call mom tomorrow" (rule 3 split), "milk eggs" with no comma (not planned; line 4 teaches the comma). Self-check: no line uses should, must, missed, streak, try or don't; none counts what he has not done; humour is not used, since hints are not done states.
 
 ## 7. Smallest first slice
 

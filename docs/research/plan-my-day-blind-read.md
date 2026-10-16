@@ -41,7 +41,7 @@ State: no model has been called and no key is in. Every `{{dNN.A}}` and `{{dNN.B
 - B: {{d05.B}}
 - Sounds like Tess: A [ ] B [ ]   Better: A [ ] B [ ] same [ ]
 
-**d06** Sat 7 Nov, 8 am. Call mum, Parkrun 9 am, Legs B 11 am, lunch with Nikhil, garage after, carbonara 6 pm. Nothing to reorder.
+**d06** Sat 7 Nov, 8 am. Call mom, Parkrun 9 am, Legs B 11 am, lunch with Nikhil, garage after, carbonara 6 pm. Nothing to reorder.
 - A: {{d06.A}}
 - B: {{d06.B}}
 - Sounds like Tess: A [ ] B [ ]   Better: A [ ] B [ ] same [ ]
@@ -66,7 +66,7 @@ State: no model has been called and no key is in. Every `{{dNN.A}}` and `{{dNN.B
 - B: {{d10.B}}
 - Sounds like Tess: A [ ] B [ ]   Better: A [ ] B [ ] same [ ]
 
-**d11** Thu 12 Nov, 8 am. Flowers (due noon), photo backup; Standup; Legs A 6 pm; Call mum 7:30 pm. Mum's birthday is never sent.
+**d11** Thu 12 Nov, 8 am. Flowers (due noon), photo backup; Standup; Legs A 6 pm; Call mom 7:30 pm. Mom's birthday is never sent.
 - A: {{d11.A}}
 - B: {{d11.B}}
 - Sounds like Tess: A [ ] B [ ]   Better: A [ ] B [ ] same [ ]
@@ -108,7 +108,7 @@ State: no model has been called and no key is in. Every `{{dNN.A}}` and `{{dNN.B
 - B: {{d19.B}}
 - Sounds like Tess: A [ ] B [ ]   Better: A [ ] B [ ] same [ ]
 
-**d20** Sat 21 Nov, 9 am. Legs B already done (not sent); Call mum, car wash, Kids football 10 am, garage after.
+**d20** Sat 21 Nov, 9 am. Legs B already done (not sent); Call mom, car wash, Kids football 10 am, garage after.
 - A: {{d20.A}}
 - B: {{d20.B}}
 - Sounds like Tess: A [ ] B [ ]   Better: A [ ] B [ ] same [ ]

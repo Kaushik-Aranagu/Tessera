@@ -20,7 +20,7 @@ Instructions first (house voice, the C1 and T441 time rules, the 4 AM day, "the 
 {"use": "capture", "model": "claude-haiku-5-5", "max_tokens": 512, "effort": "low", "timeout_s": 8,
  "pack": {"zone": "America/Los_Angeles", "offset": "-07:00", "today": "Thu Oct 15, 2026", "now": "6:10 pm",
           "dayStarts": "4:00 am", "weekStarts": "Monday", "units": "kg", "screen": "now"},
- "phrase": "call mum half 7"}
+ "phrase": "call mom half 7"}
 ```
 
 Fields a row may add (the "pack adds" column), each the smallest thing that makes the phrase answerable:
@@ -40,7 +40,7 @@ Fields a row may add (the "pack adds" column), each the smallest thing that make
 
 ## 2. How to read a row
 
-- **Status:** WW wrong write, M miss, from the suite. **Context:** the suite's store, then the clock in Pacific time. Stores: none (misfires store), tasks (Dentist Sat 10:00 am, Haircut today 5:00 pm, Pay rent Fri 9:00 am, Bins out today 9:00 pm, Call mum), workout (Bench Press in focus, 80 x 8), alert (Call mum Fri 6:00 pm with an alert).
+- **Status:** WW wrong write, M miss, from the suite. **Context:** the suite's store, then the clock in Pacific time. Stores: none (misfires store), tasks (Dentist Sat 10:00 am, Haircut today 5:00 pm, Pay rent Fri 9:00 am, Bins out today 9:00 pm, Call mom), workout (Bench Press in focus, 80 x 8), alert (Call mom Fri 6:00 pm with an alert).
 - **Expected**, in short form; every time is 2026 at -07:00:
   - `task "T" @10-15 19:30` is `createTask {"title":"T","startsAt":"2026-10-15T19:30:00-07:00","about":[]}`. `(no time)` is a date-only task (N1, gap 4); until N1 lands only the day is graded. `Later` is `startsAt: null`. `+alerts` is graded once N1 adds the field.
   - `move "Dentist" @...` is `rescheduleTask`. `lift "Bench Press" 80x8` is `logSet {"exercise":"Bench Press","weight":80,"reps":8,"sets":1,"unit":"kg"}` into today's workout. `set 80x8` is a set into the entry in focus (gap 2).
@@ -48,7 +48,7 @@ Fields a row may add (the "pack adds" column), each the smallest thing that make
   - `ask "line"` and `refuse "line"`: no write call, one line of that kind; the quote is an example, not an exact match.
   - `local, zero requests`: the phrase must stay on the phone. The harness asserts no request is built; the cell gives the on-phone result.
 - **Not:** the row's likely false writes, on top of the shared must-nots.
-- **Ghost line:** built on the phone from the op (`TessCaptureEngine.when`), never by Claude: "Call mum, today 7:30 pm." with "· via Claude" on the receipt.
+- **Ghost line:** built on the phone from the op (`TessCaptureEngine.when`), never by Claude: "Call mom, today 7:30 pm." with "· via Claude" on the receipt.
 
 ## 3. Checks on every sent row
 
@@ -82,29 +82,29 @@ Fields a row may add (the "pack adds" column), each the smallest thing that make
 | A060 | `get protein and do legs` | M | none · Thu 6:10 pm | - | groceries [protein]; line offers Leg Day; task "Do legs" @10-15 also accepted | no | lift; groceries [legs] |
 | A072 | `buy sun cream sat` | WW | none · Thu 6:10 pm | - | task "Buy sun cream" @10-17 (no time) | no | groceries; 9:00 am once N1 lands; Sun |
 | A073 | `buy milk sat morning` | WW | none · Thu 6:10 pm | - | task "Buy milk" @10-17 09:00 | no | groceries |
-| A090 | `call mum at 7 pm` | WW | none · Thu 6:10 pm | - | task "Call mum" @10-15 19:00 | no | 07:00 |
-| A091 | `call mum 7 pm` | M | none · Thu 6:10 pm | - | task "Call mum" @10-15 19:00 | no | 07:00 |
-| A092 | `call mum half 7` | M | none · Thu 6:10 pm | - | task "Call mum" @10-15 19:30 | no | 07:30; 06:30 |
-| A093 | `call mum at half 7` | M | none · Thu 6:10 pm | - | task "Call mum" @10-15 19:30 | no | 07:30 |
+| A090 | `call mom at 7 pm` | WW | none · Thu 6:10 pm | - | task "Call mom" @10-15 19:00 | no | 07:00 |
+| A091 | `call mom 7 pm` | M | none · Thu 6:10 pm | - | task "Call mom" @10-15 19:00 | no | 07:00 |
+| A092 | `call mom half 7` | M | none · Thu 6:10 pm | - | task "Call mom" @10-15 19:30 | no | 07:30; 06:30 |
+| A093 | `call mom at half 7` | M | none · Thu 6:10 pm | - | task "Call mom" @10-15 19:30 | no | 07:30 |
 | A094 | `dinner at 7.30` | M | none · Thu 6:10 pm | - | task "Dinner" @10-15 19:30 | no | 07:30 |
-| A115 | `call mum sun afternoon` | WW | none · Thu 6:10 pm | - | task "Call mum" @10-18 14:00 | no | sun in title |
+| A115 | `call mom sun afternoon` | WW | none · Thu 6:10 pm | - | task "Call mom" @10-18 14:00 | no | sun in title |
 | A116 | `dentist sat morning` | WW | none · Thu 6:10 pm | - | task "Dentist" @10-17 09:00 | no | 10-24 |
 | A127 | `move dentist to 7` | M | none · Thu 6:10 pm | task: Dentist, Sat 10:00 am | move "Dentist" @10-17 07:00 | no | task; 19:00 |
 | A136 | `coffee with Pepper, then gym` | WW | none · Thu 6:10 pm | - | task "Coffee with Pepper" Later ("then gym" not graded; 8:00 PM PT) | no | groceries; "planning or done?" |
 | A137 | `lunch with Olive, Basil` | WW | none · Thu 6:10 pm | - | task "Lunch with Olive, Basil" Later (8:00 PM PT) | no | groceries [olive, basil]; "planning or done?" |
 | A138 | `drinks with Candy, Honey` | WW | none · Thu 6:10 pm | - | task "Drinks with Candy, Honey" Later (8:00 PM PT) | no | groceries; "planning or done?" |
 | A139 | `Candy, Honey and Basil are coming` | WW | none · Thu 6:10 pm | - | ask "When are they coming?" | no | groceries [candy, honey, basil] |
-| A160 | `bench 80x8 then call mum` | M | none · Thu 6:10 pm | - | lift "Bench Press" 80x8 + task "Call mum" Later | no | task holding "bench" |
-| A161 | `bench 80x8, call mum` | M | none · Thu 6:10 pm | - | lift "Bench Press" 80x8 + task "Call mum" Later | no | task holding "bench" |
-| A162 | `bench 80x8, call mum thu` | WW | none · Thu 6:10 pm | - | lift "Bench Press" 80x8 + task "Call mum" @10-15 (no time) | no | 10-22 |
-| A163 | `bench 80x8 and call mum thu` | WW | none · Thu 6:10 pm | - | lift "Bench Press" 80x8 + task "Call mum" @10-15 (no time) | no | 10-22 |
+| A160 | `bench 80x8 then call mom` | M | none · Thu 6:10 pm | - | lift "Bench Press" 80x8 + task "Call mom" Later | no | task holding "bench" |
+| A161 | `bench 80x8, call mom` | M | none · Thu 6:10 pm | - | lift "Bench Press" 80x8 + task "Call mom" Later | no | task holding "bench" |
+| A162 | `bench 80x8, call mom thu` | WW | none · Thu 6:10 pm | - | lift "Bench Press" 80x8 + task "Call mom" @10-15 (no time) | no | 10-22 |
+| A163 | `bench 80x8 and call mom thu` | WW | none · Thu 6:10 pm | - | lift "Bench Press" 80x8 + task "Call mom" @10-15 (no time) | no | 10-22 |
 | A164 | `squat 100x5 and buy milk` | M | none · Thu 6:10 pm | - | lift "Back Squat" 100x5 + groceries [milk] | no | task |
 | A165 | `leg day then dentist at 4` | WW | none · Thu 6:10 pm | - | task "Dentist" @10-16 16:00; line says Leg Day starts from the plan | no | 10-15 16:00 (past); 04:00 |
-| A166 | `pull ups then call mum tonight` | WW | none · Thu 6:10 pm | - | task "Call mum" @10-15 20:00 | no | lift Pull-Up (no reps said) |
-| A167 | `bench 3x5 at 80 then call mum at 7` | WW | none · Thu 6:10 pm | - | lift "Bench Press" 80x5, sets 3 + task "Call mum" @10-15 19:00 | no | 07:00; 80 sets |
-| A168 | `80x8 then call mum` | M | workout · Thu 6:10 pm | focus | set 80x8 + task "Call mum" Later | no | new Bench entry |
-| A169 | `8 and call mum at 7` | WW | workout · Thu 6:10 pm | focus | set 80x8 + task "Call mum" @10-15 19:00 | no | 8 kg; 07:00 |
-| A170 | `same, call mum thu` | WW | workout · Thu 6:10 pm | focus | set 80x8 + task "Call mum" @10-15 (no time) | no | 10-22 |
+| A166 | `pull ups then call mom tonight` | WW | none · Thu 6:10 pm | - | task "Call mom" @10-15 20:00 | no | lift Pull-Up (no reps said) |
+| A167 | `bench 3x5 at 80 then call mom at 7` | WW | none · Thu 6:10 pm | - | lift "Bench Press" 80x5, sets 3 + task "Call mom" @10-15 19:00 | no | 07:00; 80 sets |
+| A168 | `80x8 then call mom` | M | workout · Thu 6:10 pm | focus | set 80x8 + task "Call mom" Later | no | new Bench entry |
+| A169 | `8 and call mom at 7` | WW | workout · Thu 6:10 pm | focus | set 80x8 + task "Call mom" @10-15 19:00 | no | 8 kg; 07:00 |
+| A170 | `same, call mom thu` | WW | workout · Thu 6:10 pm | focus | set 80x8 + task "Call mom" @10-15 (no time) | no | 10-22 |
 | A171 | `bench 80x8 dentist fri` | WW | workout · Thu 6:10 pm | focus | set 80x8 + task "Dentist" @10-16 (no time) | no | 9:00 am once N1 lands |
 | A177 | `done for today` | WW | workout · Thu 6:10 pm | focus | refuse "Tap Finish to end the workout." | no | task "Done for"; any write |
 | A181 | `pull ups 3x8` | WW | none · Thu 6:10 pm | - | lift "Pull-Up" 0x8, sets 3 | no | 3 kg |
@@ -140,7 +140,7 @@ Fields a row may add (the "pack adds" column), each the smallest thing that make
 | C374 | `move dentist to 3` | M | tasks · Thu 6:10 pm | task: Dentist, Sat 10:00 am | move "Dentist" @10-17 15:00 | no | 03:00 |
 | C379 | `move dentist to today` | WW | tasks · Thu 6:10 pm | task: Dentist, Sat 10:00 am | move "Dentist" @10-15 (no time; 19:00 until N1) | no | 10:00 today (past) |
 | C380 | `move haircut to 7` | M | tasks · Thu 6:10 pm | task: Haircut, today 5:00 pm | move "Haircut" @10-15 19:00 | no | 07:00 |
-| C387 | `move call mum to 7` | M | tasks · Thu 6:10 pm | task: Call mum | move "Call mum" @10-15 19:00 | no | task (a second Call mum) |
+| C387 | `move call mom to 7` | M | tasks · Thu 6:10 pm | task: Call mom | move "Call mom" @10-15 19:00 | no | task (a second Call mom) |
 | C388 | `push dentist to next week` | M | tasks · Thu 6:10 pm | task: Dentist, Sat 10:00 am | move "Dentist" @10-24 10:00 | no | task |
 | C389 | `move dentist to next fri` | WW | tasks · Thu 6:10 pm | task: Dentist, Sat 10:00 am | move "Dentist" @10-23 10:00 | no | 10-16 |
 | C390 | `move pay rent to sat morning` | M | tasks · Thu 6:10 pm | task: Pay rent, Fri 9:00 am | move "Pay rent" @10-17 09:00 | no | task |
@@ -151,31 +151,31 @@ Fields a row may add (the "pack adds" column), each the smallest thing that make
 | C397 | `moved dentist to fri` | WW | tasks · Thu 6:10 pm | task: Dentist, Sat 10:00 am | move "Dentist" @10-16 10:00 | no | note dated Fri 9 |
 | C403 | `move haircut to 8` | M | tasks · Thu 9:00 am | task: Haircut, today 5:00 pm | move "Haircut" @10-15 20:00 | no | 08:00 |
 | C404 | `move bins out to 11` | M | tasks · Thu 11:30 pm | task: Bins out, today 9:00 pm | move "Bins out" @10-16 11:00 | no | 10-15 23:00 |
-| C406 | `call mum at 7:30 pm` | WW | none · Thu 6:10 pm | - | task "Call mum" @10-15 19:30 | no | - |
-| C407 | `call mum 7.30pm` | M | none · Thu 6:10 pm | - | task "Call mum" @10-15 19:30 | no | - |
-| C409 | `call mum at 7.30` | M | none · Thu 6:10 pm | - | task "Call mum" @10-15 19:30 | no | 07:30 |
+| C406 | `call mom at 7:30 pm` | WW | none · Thu 6:10 pm | - | task "Call mom" @10-15 19:30 | no | - |
+| C407 | `call mom 7.30pm` | M | none · Thu 6:10 pm | - | task "Call mom" @10-15 19:30 | no | - |
+| C409 | `call mom at 7.30` | M | none · Thu 6:10 pm | - | task "Call mom" @10-15 19:30 | no | 07:30 |
 | C411 | `dentist at 4.15` | M | none · Thu 6:10 pm | - | task "Dentist" @10-16 16:15 | no | 10-15 16:15 (past) |
-| C412 | `call mum half past 7` | M | none · Thu 6:10 pm | - | task "Call mum" @10-15 19:30 | no | 07:30 |
-| C413 | `call mum quarter past 7` | M | none · Thu 6:10 pm | - | task "Call mum" @10-15 19:15 | no | 07:15 |
-| C414 | `call mum half 6` | M | none · Thu 6:10 pm | - | task "Call mum" @10-15 18:30 | no | 06:30 |
-| C415 | `call mum half 5` | M | none · Thu 6:10 pm | - | task "Call mum" @10-16 17:30 | no | 10-15 17:30 (past) |
-| C416 | `call mum tonight at half 8` | WW | none · Thu 6:10 pm | - | task "Call mum" @10-15 20:30 | no | 08:30 |
-| C418 | `call mum tmrw morning` | WW | none · Thu 6:10 pm | - | task "Call mum" @10-16 09:00 | no | - |
+| C412 | `call mom half past 7` | M | none · Thu 6:10 pm | - | task "Call mom" @10-15 19:30 | no | 07:30 |
+| C413 | `call mom quarter past 7` | M | none · Thu 6:10 pm | - | task "Call mom" @10-15 19:15 | no | 07:15 |
+| C414 | `call mom half 6` | M | none · Thu 6:10 pm | - | task "Call mom" @10-15 18:30 | no | 06:30 |
+| C415 | `call mom half 5` | M | none · Thu 6:10 pm | - | task "Call mom" @10-16 17:30 | no | 10-15 17:30 (past) |
+| C416 | `call mom tonight at half 8` | WW | none · Thu 6:10 pm | - | task "Call mom" @10-15 20:30 | no | 08:30 |
+| C418 | `call mom tmrw morning` | WW | none · Thu 6:10 pm | - | task "Call mom" @10-16 09:00 | no | - |
 | C419 | `dentist sat afternoon` | WW | none · Thu 6:10 pm | - | task "Dentist" @10-17 14:00 | no | - |
-| C420 | `call mum this evening` | M | none · Thu 6:10 pm | - | task "Call mum" @10-15 19:00 | no | 18:00 (past) |
+| C420 | `call mom this evening` | M | none · Thu 6:10 pm | - | task "Call mom" @10-15 19:00 | no | 18:00 (past) |
 | C421 | `gym in the morning` | M | none · Thu 6:10 pm | - | task "Gym" @10-16 09:00 | no | 10-15 09:00 (past) |
-| C422 | `call mum in 2 hours` | M | none · Thu 6:10 pm | - | task "Call mum" @10-15 20:10 +alerts | no | - |
-| C423 | `call mum in 20 mins` | M | none · Thu 6:10 pm | - | task "Call mum" @10-15 18:30 +alerts | no | - |
-| C424 | `remind me in 2 hours to call mum` | WW | none · Thu 6:10 pm | - | task "Call mum" @10-15 20:10 +alerts | no | - |
-| C425 | `remind me to call mum in an hour` | WW | none · Thu 6:10 pm | - | task "Call mum" @10-15 19:10 +alerts | no | - |
-| C426 | `call mum at seven` | M | none · Thu 6:10 pm | - | task "Call mum" @10-15 19:00 | no | 07:00 |
+| C422 | `call mom in 2 hours` | M | none · Thu 6:10 pm | - | task "Call mom" @10-15 20:10 +alerts | no | - |
+| C423 | `call mom in 20 mins` | M | none · Thu 6:10 pm | - | task "Call mom" @10-15 18:30 +alerts | no | - |
+| C424 | `remind me in 2 hours to call mom` | WW | none · Thu 6:10 pm | - | task "Call mom" @10-15 20:10 +alerts | no | - |
+| C425 | `remind me to call mom in an hour` | WW | none · Thu 6:10 pm | - | task "Call mom" @10-15 19:10 +alerts | no | - |
+| C426 | `call mom at seven` | M | none · Thu 6:10 pm | - | task "Call mom" @10-15 19:00 | no | 07:00 |
 | C429 | `ran 5k in 22:30` | WW | none · Thu 6:10 pm | - | note ~[ran 5k, 22:30] | no | task |
-| C433 | `call mum at 7.30` | M | none · Thu 9:00 am | - | task "Call mum" @10-15 19:30 | no | 07:30 |
-| C434 | `call mum this afternoon` | M | none · Thu 9:00 am | - | task "Call mum" @10-15 14:00 | no | - |
-| C435 | `call mum in the morning` | M | none · Thu 9:00 am | - | task "Call mum" @10-16 09:00 | no | - |
-| C436 | `call mum half 11` | M | none · Thu 11:30 pm | - | task "Call mum" @10-16 11:30 | no | 10-15 23:30 |
-| C438 | `call mum in 2 hours` | M | none · Thu 11:30 pm | - | task "Call mum" @10-16 01:30 +alerts | no | - |
-| C439 | `call mum midnight` | M | none · Thu 11:30 pm | - | task "Call mum" @10-16 00:00 | no | 10-15 00:00 |
+| C433 | `call mom at 7.30` | M | none · Thu 9:00 am | - | task "Call mom" @10-15 19:30 | no | 07:30 |
+| C434 | `call mom this afternoon` | M | none · Thu 9:00 am | - | task "Call mom" @10-15 14:00 | no | - |
+| C435 | `call mom in the morning` | M | none · Thu 9:00 am | - | task "Call mom" @10-16 09:00 | no | - |
+| C436 | `call mom half 11` | M | none · Thu 11:30 pm | - | task "Call mom" @10-16 11:30 | no | 10-15 23:30 |
+| C438 | `call mom in 2 hours` | M | none · Thu 11:30 pm | - | task "Call mom" @10-16 01:30 +alerts | no | - |
+| C439 | `call mom midnight` | M | none · Thu 11:30 pm | - | task "Call mom" @10-16 00:00 | no | 10-15 00:00 |
 | D440 | `pasta 9 minutes` | M | cook · Thu 6:00 pm | - | local, zero requests: timer "Pasta" 9, linked | yes | - |
 | D441 | `9 min` | M | cook · Thu 6:00 pm | - | local, zero requests: timer "Simmer" 9, linked | yes | - |
 | D442 | `eggs 6` | M | cook · Thu 6:00 pm | - | local, zero requests: timer "Eggs" 6, linked | yes | - |
@@ -204,7 +204,7 @@ Fields a row may add (the "pack adds" column), each the smallest thing that make
 | E499 | `basil, olive and rose` | WW | people · Thu 6:10 pm | - | ask "Groceries, or Basil, Olive and Rose?" | no | groceries |
 | E501 | `will` | WW | shop · Thu 6:10 pm | - | local, zero requests: no write | yes | - |
 | F531 | `lunch with ravi` | M | people · Thu 6:10 pm | - | task "Lunch with ravi" Later, about Ravi (8:00 PM PT) | no | "planning or done?"; a talk logged; a date |
-| F540 | `buy present for mums birthday on the twentieth` | WW | people · Thu 6:10 pm | - | task "Buy present for mums birthday" @10-20 (no time) | no | groceries |
+| F540 | `buy present for moms birthday on the twentieth` | WW | people · Thu 6:10 pm | - | task "Buy present for moms birthday" @10-20 (no time) | no | groceries |
 | F544 | `buy lego for priya` | WW | people · Thu 6:10 pm | - | task "Buy lego for priya" Later | no | groceries |
 | G566 | `read the sun also rises` | WW | book · Thu 6:10 pm | - | local, zero requests: nil until Reading | yes | - |
 | H609 | `spent 30 dinner sat` | WW | none · Thu 6:10 pm | - | local, zero requests: note "Spent 30 dinner" dated Sat 10 until Money | yes | - |
@@ -218,33 +218,33 @@ Fields a row may add (the "pack adds" column), each the smallest thing that make
 | I736 | `test the smoke alarm at 7` | WW | chores · Thu 6:10 pm | - | task "Test the smoke alarm" @10-15 19:00 | no | 07:00 |
 | J737 | `remind me in 20 minutes` | WW | none · Fri 5:40 pm | - | task "Reminder" @10-16 18:00 +alerts | no | - |
 | J738 | `remind me in 20 minutes to take the chicken out` | WW | none · Fri 5:40 pm | - | task "Take the chicken out" @10-16 18:00 +alerts | no | - |
-| J739 | `remind me in an hour to call mum` | WW | none · Fri 5:40 pm | - | task "Call mum" @10-16 18:40 +alerts | no | - |
+| J739 | `remind me in an hour to call mom` | WW | none · Fri 5:40 pm | - | task "Call mom" @10-16 18:40 +alerts | no | - |
 | J740 | `remind me to stretch in half an hour` | WW | none · Fri 5:40 pm | - | task "Stretch" @10-16 18:10 +alerts | no | - |
 | J741 | `remind me in 2h to move the car` | WW | none · Fri 5:40 pm | - | task "Move the car" @10-16 19:40 +alerts | no | - |
 | J742 | `ping me in 5` | M | none · Fri 5:40 pm | - | task "Reminder" @10-16 17:45 +alerts | no | 22:40 (5 hours) |
 | J743 | `remind me in 30 minutes to lock the door` | WW | none · Fri 11:40 pm | - | task "Lock the door" @10-17 00:10 +alerts | no | 10-16 00:10 |
-| J748 | `set a reminder for 6 to call mum` | M | none · Fri 5:40 pm | - | task "Call mum" @10-16 18:00 +alerts | no | 06:00 |
-| J749 | `Remind me at 6 PM to call Mum.` | WW | none · Fri 5:40 pm | - | task "Call Mum" @10-16 18:00 +alerts | no | - |
+| J748 | `set a reminder for 6 to call mom` | M | none · Fri 5:40 pm | - | task "Call mom" @10-16 18:00 +alerts | no | 06:00 |
+| J749 | `Remind me at 6 PM to call Mom.` | WW | none · Fri 5:40 pm | - | task "Call Mom" @10-16 18:00 +alerts | no | - |
 | J751 | `remind me tonight to take my pills` | WW | none · Fri 9:15 pm | - | task "Take my pills" @10-16 22:00 +alerts | no | 10-17 |
 | J753 | `remind me next fri to pay rent` | WW | none · Fri 5:40 pm | - | task "Pay rent" @10-23 09:00 +alerts | no | 10-16 |
 | J754 | `remind me this weekend to clean the car` | WW | none · Fri 5:40 pm | - | task "Clean the car" @10-17 09:00 +alerts | no | - |
 | J755 | `remind me in 3 days to call the bank` | WW | none · Fri 5:40 pm | - | task "Call the bank" @10-19 09:00 +alerts | no | - |
-| J756 | `remind me tomorrow at 9 to call mum` | WW | none · Sat 12:30 am | - | task "Call mum" @10-17 09:00 +alerts | no | 10-18 |
+| J756 | `remind me tomorrow at 9 to call mom` | WW | none · Sat 12:30 am | - | task "Call mom" @10-17 09:00 +alerts | no | 10-18 |
 | J759 | `nudge me tomorrow` | WW | none · Fri 5:40 pm | - | task "Reminder" @10-17 09:00 +alerts | no | - |
 | J760 | `ping me at 8 about the parcel` | WW | none · Fri 5:40 pm | - | task "The parcel" @10-16 20:00 +alerts | no | 08:00 |
 | J761 | `don't let me forget to take my pills tonight` | WW | none · Fri 5:40 pm | - | task "Take my pills" @10-16 20:00 +alerts | no | - |
-| J762 | `remind me later to call mum` | WW | none · Fri 5:40 pm | - | task "Call mum" Later, alerts off | no | a date |
+| J762 | `remind me later to call mom` | WW | none · Fri 5:40 pm | - | task "Call mom" Later, alerts off | no | a date |
 | J763 | `remind me later` | WW | none · Fri 5:40 pm | - | ask "Remind you about what?" | no | task "Reminder" |
 | J764 | `remind me when I get home to take the bins out` | WW | none · Fri 5:40 pm | - | task "Take the bins out" Later | no | a time |
 | J765 | `remind me when I leave work to buy eggs` | WW | none · Fri 5:40 pm | - | groceries [eggs] | no | task |
 | J766 | `remind me every sunday to plan the week` | WW | none · Fri 5:40 pm | - | task "Plan the week" @10-18 09:00 +alerts (first only) | no | more than one task |
 | J767 | `cancel the 6pm reminder` | WW | alert · Fri 5:40 pm | - | local, zero requests: nil until N1 (SetTaskAlerts) | yes | - |
-| J768 | `move the call mum reminder to 7` | M | alert · Fri 5:40 pm | task: Call mum, Fri 6:00 pm | move "Call mum" @10-16 19:00 | no | task; 07:00 |
+| J768 | `move the call mom reminder to 7` | M | alert · Fri 5:40 pm | task: Call mom, Fri 6:00 pm | move "Call mom" @10-16 19:00 | no | task; 07:00 |
 | J769 | `remind me again in 10` | WW | alert · Fri 6:02 pm | - | local, zero requests: nil until N1 (MoveTask on the rung alert) | yes | - |
 | J770 | `remind me to buy eggs` | WW | none · Fri 5:40 pm | - | groceries [eggs] | no | task |
 | J772 | `uh remind me to um call the dentist tomorrow` | WW | none · Fri 5:40 pm | - | task "Call the dentist" @10-17 09:00 +alerts | no | uh, um in title |
-| J773 | `remind me to call mum at 6, actually 7` | WW | none · Fri 5:40 pm | - | task "Call mum" @10-16 19:00 +alerts | no | 18:00 |
-| J774 | `remind me at quarter to 7 to call mum` | WW | none · Fri 5:40 pm | - | task "Call mum" @10-16 18:45 +alerts | no | 19:00 |
+| J773 | `remind me to call mom at 6, actually 7` | WW | none · Fri 5:40 pm | - | task "Call mom" @10-16 19:00 +alerts | no | 18:00 |
+| J774 | `remind me at quarter to 7 to call mom` | WW | none · Fri 5:40 pm | - | task "Call mom" @10-16 18:45 +alerts | no | 19:00 |
 | K811 | `eighty two and a half for eight` | M | workout, spoken · Thu 6:10 pm | focus | set 82.5x8 | no | new entry |
 | K812 | `a hundred for five at eight` | M | workout, spoken · Thu 6:10 pm | focus | set 100x5, RPE 8 (RPE graded after gap 3) | no | task at 8 |
 | K874 | `bench 80 for 8, 81` | WW | workout · Thu 6:10 pm | focus | set 80x8; line asks "81 for how many reps?" | no | 80x81; 81 reps |
@@ -306,14 +306,14 @@ Per use (from `claude-first-uses.md`): two requests, about 5,150 tokens in and 1
 ## 8. Gaps on master (`1c6193a`)
 
 1. **No local stop before Claude.** `GrammarTessModel` returns `.missed` for any nil parse, and `TessRouter` then tries every later route. The 39 local rows need a "claimed, no write" result (say `TessResult.declined(line)`) or a keep-local check ahead of the Claude route. Nothing on master stops a `sk-ant-` paste either.
-2. **`logSet` ignores the entry in focus.** `TessTools.logSet` always runs `LogExercise` (a new entry in today's workout), so "8 and call mum at 7" mid-workout cannot land as set 3 of Bench Press. It also has no `rpe` or `kind`, no snap to the dial (S703) and no date (A026). `LogSet` already has `rpe` and `kind`.
+2. **`logSet` ignores the entry in focus.** `TessTools.logSet` always runs `LogExercise` (a new entry in today's workout), so "8 and call mom at 7" mid-workout cannot land as set 3 of Bench Press. It also has no `rpe` or `kind`, no snap to the dial (S703) and no date (A026). `LogSet` already has `rpe` and `kind`.
 3. **Times with no offset are read as UTC.** `args.date` falls back to an ISO parse with no time zone, so "2026-10-15T19:30" becomes 12:30 pm Pacific; a date-only string returns nil and the task quietly goes to Later. The schema should say "with offset", the parser should refuse a naive time, and date-only should be a real form.
 4. **No date-only task and no `alerts`** on `CreateTask` (N1). 38 rows carry `+alerts` or `(no time)`.
 5. **`rescheduleTask.startsAt` is required**, so "push dentist to later" (C391) can't be said (open question 8 in `claude-first-uses.md`).
 6. **No `ClaudeTessModel`, client, Keychain, `TessCall` ledger, `TessContextPack`, `TessInbox` or cloud mark**, and `TessCapture.Source` has no `.claude` (the op's `route` does). `TessModelCapture.today` writes the clock as 24-hour "HH:mm" inside the instructions; the pack wants "6:10 pm" and belongs after the stable prefix.
 7. **No onNow field in `TessContext`**, so C392's pack can't name the task on Now.
 8. **No `tess-eval` executable** and no fixture loader for this file.
-9. **Suite conflict, settled:** A162 and A163 now expect `Call mum` Thu 15 with no time (T647, Product 7:55 PM PT), gated on N1 like A170; master still writes one task, so both stay wrong write.
+9. **Suite conflict, settled:** A162 and A163 now expect `Call mom` Thu 15 with no time (T647, Product 7:55 PM PT), gated on N1 like A170; master still writes one task, so both stay wrong write.
 
 ## 9. Decisions for Product
 

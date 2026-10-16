@@ -64,7 +64,7 @@ The key is never drawn again after the drain, only its last four characters. Voi
 | States | Capture (use 1) | Plan my day (use 2) | Questions (use 3) | Marks |
 |---|---|---|---|---|
 | S1, S2, S5, S7 to S11, S13, S19, S20, S22, S23 | Grammar, then on-device, then "Didn't catch that. Try “bench 80 x 8”." Nothing queued | Rules plan with its plain lines, no fallback line | Grammar seeds, then on-device | No cloud mark, no VIA CLAUDE |
-| S6, S15, S16, S21 | Misses go to Haiku after on-device; ghost row; receipt "Call mum, Thursday 7:30 pm · via Claude" | Gated: after 10 use-1 calls checked against the Console, 3 or fewer taken back, 20 scenarios pass (6:22 PM PT). Until then as Claude off | Gated until `TessUse.question` with only `answerQuery` | Wisps while out; VIA CLAUDE on the line and the ghost row |
+| S6, S15, S16, S21 | Misses go to Haiku after on-device; ghost row; receipt "Call mom, Thursday 7:30 pm · via Claude" | Gated: after 10 use-1 calls checked against the Console, 3 or fewer taken back, 20 scenarios pass (6:22 PM PT). Until then as Claude off | Gated until `TessUse.question` with only `answerQuery` | Wisps while out; VIA CLAUDE on the line and the ghost row |
 | S12 | Line "Your Anthropic account is paused for now." then the miss line | Rules plan, "Here's your usual plan." | On-device | None |
 | S14, S17 | M10 once, then grammar and on-device; nothing queued | Rules plan, "Here's your usual plan." every time | On-device | None |
 | S24 | "Claude is busy. Kept it for later." Text to `TessInbox`, "1 waiting for Tess" | "Claude is busy. Here's your usual plan." | "Claude is busy. Ask again?" | Wisps stop |

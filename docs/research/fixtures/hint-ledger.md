@@ -50,7 +50,7 @@ From the docs, with the defaults this file had to pick marked **Default**.
 | S6 | placeholder | timer pasta 10 | 3 |
 | G7 | under ghost | You can also say **3x10 bench 80**. | 7 |
 | G10 | under ghost | You can also say **80x8, 80x8, 80x6**. | 7 |
-| G11 | under ghost | You can also say **remind me to call mum thu**. | 10 |
+| G11 | under ghost | You can also say **remind me to call mom thu**. | 10 |
 | G13 | under ghost | You can also say **buy milk and eggs**. | 8 |
 | G14 | under ghost | Rest timers count seconds: **rest timer 90**. | 7 |
 | G15 | under ghost | Lists work the same way: **list: packing**. | 7 |
@@ -68,7 +68,7 @@ Times are PDT. `[n]` is the day's running show count. Bold = a show.
 | Time | He does | Shows (exact copy) | Ledger |
 |---|---|---|---|
 | 07:05:10 | Opens Tess on Today, taps Write | **S5 placeholder "dentist thu 3pm"** [1], **S1 above the field "bench 80x8"** [2] | |
-| 07:05:40 | Types "call bank fri 10am", Return | 07:05:40.3 **G11 "You can also say remind me to call mum thu."** [3]; gone at commit 07:05:42.0 | `createTask` by `.tess`. firstCaptureDay = 1 Oct. task 1 |
+| 07:05:40 | Types "call bank fri 10am", Return | 07:05:40.3 **G11 "You can also say remind me to call mom thu."** [3]; gone at commit 07:05:42.0 | `createTask` by `.tess`. firstCaptureDay = 1 Oct. task 1 |
 | 18:30 | Opens Write on Today (evening) | S4 would be first, but cap reached. Placeholder reuses S1 "bench 80x8, or ask" (no count). No under-field phrase | |
 | 18:31 | "buy oat milk", Return | None: G13 blocked by the cap | groceries 1 |
 | 20:10 | Adds "bread" by hand in Groceries | None: cap reached. H18 queued | `addGroceries` by `.user` |
@@ -89,7 +89,7 @@ Times are PDT. `[n]` is the day's running show count. Bold = a show.
 |---|---|---|---|
 | 09:58 | Opens the app | None: H16 queued, but no entry in focus, so "80x8" does not parse as `.set` | H16 stays queued |
 | 10:00:00 | Opens Write (morning) | **S5 "dentist thu 3pm"** [1], **S1 "bench 80x8"** [2] | |
-| 10:00:30 | "dentist tue 3pm", Return | 10:00:30.3 **G11 "You can also say remind me to call mum thu."** [3]; gone at commit 10:00:32.0 | task 2. S5, G11, G12 retired (used) |
+| 10:00:30 | "dentist tue 3pm", Return | 10:00:30.3 **G11 "You can also say remind me to call mom thu."** [3]; gone at commit 10:00:32.0 | task 2. S5, G11, G12 retired (used) |
 
 ### Day 4, Sun 4 Oct
 | Time | He does | Shows | Ledger |

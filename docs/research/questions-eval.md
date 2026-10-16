@@ -69,13 +69,13 @@ Answer shape: one line with tappable handles in brackets, e.g. "92.5 x 5 [Set] o
 | 33 | what did i get done today | question | `Task[isDone=true] @today(doneAt) → list` | "5 done: dentist, ... [Tasks]" | Date field is `doneAt`, not `due` |
 | 34 | tasks i keep pushing | smart list | `Task[isDone=false, rolls>=3] → sort rolls-` | list of tasks | Uses `rolls` from RollForward |
 | 35 | how many tasks did i finish this wk | question | `Task[isDone=true] @thisWeek(doneAt) → count` | "14 tasks this week" | |
-| 36 | anything due tmrw | question | `Task[isDone=false] @tomorrow(due) → list` | "2 tomorrow: call mum, bins [Tasks]" | Empty: "Nothing due tomorrow." |
+| 36 | anything due tmrw | question | `Task[isDone=false] @tomorrow(due) → list` | "2 tomorrow: call mom, bins [Tasks]" | Empty: "Nothing due tomorrow." |
 | 37 | undated tasks | smart list | `Task[isDone=false, due=nil, startsAt=nil]` | list of tasks | Same set as `Tasks.later()` |
 | 38 | books i havent read | smart list | `ListItem[parent=Books, isDone=false]` | list of items | List order kept |
 | 39 | films we watched this month | question | `ListItem[parent=Films, isDone=true] @thisMonth(checkedAt)` | "3 films [list]" | |
 | 40 | whats on the packing list | question | `ListItem[parent=Packing] → sort order+` | "9 items, 4 packed [Packing]" | Shows done and open. Better as opening the list |
 | 41 | stuff about the dentist | smart list | `Task+Note+ListItem[about has Dentist or title~"dentist"]` | list of handles | If "Dentist" is not an object, fall back to text match only |
-| 42 | what should i do next | question | `NowPicker` (not a query) | "Next: call mum, 10 min [Task]" | Route to NowPicker, do not build an AST |
+| 42 | what should i do next | question | `NowPicker` (not a query) | "Next: call mom, 10 min [Task]" | Route to NowPicker, do not build an AST |
 | 43 | bw trend | question | `BodyWeight @last90d → trend(weight)` | "78.6 kg trend, down 0.3 kg a week [chart]" | Seed phrase. EWMA 10% per day from `body-weight-trend.md`; rate hidden before 7 days |
 | 44 | what did i weigh monday | question | `BodyWeight @date(2026-10-12) → latest(weight)` | "78.9 kg on Monday (trend 78.7) [entry]" | Raw value asked, trend shown beside it |
 | 45 | lightest ive been this year | question | `BodyWeight @thisYear → min(trend)` | "Trend low 77.8 kg, 3 Jun [chart]" | Trend low, not the raw low, per the headline rule |

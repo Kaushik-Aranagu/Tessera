@@ -36,7 +36,7 @@ End the workout before Part 2.
 | 12 | buy milk and bread | 2 things on the list. | Groceries, not "By milk" |
 | 13 | buy a dozen eggs | 12 eggs, on the list. | 12, not "a dozen" |
 | 14 | dentist saturday at three pm | Dentist, Saturday 3 pm. | 3 pm, not 3 am |
-| 15 | call mum tomorrow at seven pm | Call mum, tomorrow 7 pm. | 7 pm, "PM" not in the title |
+| 15 | call mom tomorrow at seven pm | Call mom, tomorrow 7 pm. | 7 pm, "PM" not in the title |
 | 16 | set a timer for ten minutes | Timer, 10 min. | A timer, not a task |
 | 17 | timer pasta ten | Pasta, 10 min. | A 10 min timer |
 | 18 | new list camping | New list: Camping. | A list, not a task |

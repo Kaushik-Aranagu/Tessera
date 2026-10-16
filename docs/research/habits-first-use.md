@@ -45,7 +45,7 @@ Column key: **#** step, **He** what he does or says, **Shows** the screen or Tes
 ## The walk
 
 Setup: the demo store as on Oct 16 (Push A, Pull A, Legs A starter routines; plan 3 sessions a week; an open task
-"Call mum"). Weeks: W0 Mon Oct 12 to Sun Oct 18 (the creation week), W1 Mon Oct 19 to Sun Oct 25, W2 Mon Oct 26 to
+"Call mom"). Weeks: W0 Mon Oct 12 to Sun Oct 18 (the creation week), W1 Mon Oct 19 to Sun Oct 25, W2 Mon Oct 26 to
 Sun Nov 1 (the paused week). Each day runs 04:00 to 04:00.
 
 ### Fri Oct 16 (W0, his first habit)
@@ -76,18 +76,18 @@ Sun Nov 1 (the paused week). Each day runs 04:00 to 04:00.
 | 17 | 10:00 to 11:05 | Finishes Push A, 14 sets | The finish's own line, then a mark flies in from the top and lands on Saturday; count rolls. Tess: "Push A counted for Train, 1 of 3." (taking GAP 6 as "nothing before creation") | A8; DH rule motion; HL (a set must be logged) | missing; the finish exists, no habit count |
 | 18 | 11:10 | Taps Saturday's rule dab on Train | Tess: "Push A, Saturday 10:00 am", then zooms to the workout | A14 (D4 time format) | missing |
 | 19 | 11:10 | VoiceOver on that dab; on the block | "Saturday, Push A, 10:00 am", hint "Opens the workout." Block: "Train, 1 of 3 this week, counts when a workout finishes" | V-rule, V-block | missing |
-| 20 | 12:00 | Types "new habit call mum once a week" | Tess: "Call mum added, 1 times a week." by A1's pattern | A1, HP1 (`once`); **GAP 7** (singular) | missing |
-| 21 | 12:01 | Types "call mum" | Habit and open task share the name: the model decides. Nothing from habits | HP6 (L839) | today: nil, to the model |
+| 20 | 12:00 | Types "new habit call mom once a week" | Tess: "Call mom added, 1 times a week." by A1's pattern | A1, HP1 (`once`); **GAP 7** (singular) | missing |
+| 21 | 12:01 | Types "call mom" | Habit and open task share the name: the model decides. Nothing from habits | HP6 (L839) | today: nil, to the model |
 
 ### Sun Oct 18 (W0, last day; first look at Review)
 
 | # | Time | He | Shows | Src | Master |
 |---|---|---|---|---|---|
-| 22 | 10:00 | Opens Habits | Context "Sunday, the last day". Four blocks: Read 1 of 5, Meditate 1 of 3, Train 1 of 3, Call mum 0 of 1 | H2, H3 | missing |
-| 23 | 17:00 | Types "called mum" | One ghost row: check-in plus the task ticked. Tess: "Call mum done for the week." Under the block, a brushstroke paints behind the dabs Monday to Sunday (6 pt at 55%, 700 ms). No confetti, no `.success` | HP6 (L840), A4, DH completion; **GAP 8** (DH turns "of 1" the habit's colour; Sheet and H4 keep the count in ink) | missing; today nil |
+| 22 | 10:00 | Opens Habits | Context "Sunday, the last day". Four blocks: Read 1 of 5, Meditate 1 of 3, Train 1 of 3, Call mom 0 of 1 | H2, H3 | missing |
+| 23 | 17:00 | Types "called mom" | One ghost row: check-in plus the task ticked. Tess: "Call mom done for the week." Under the block, a brushstroke paints behind the dabs Monday to Sunday (6 pt at 55%, 700 ms). No confetti, no `.success` | HP6 (L840), A4, DH completion; **GAP 8** (DH turns "of 1" the habit's colour; Sheet and H4 keep the count in ink) | missing; today nil |
 | 24 | 20:00 | Swipes to REVIEW | Hero "All three sessions in" (Push A Tue 13, Pull A Thu 15, Push A Sat 17; plan 3 a week) | `ReviewPage.swift:34-47` | exists |
 | 25 | 20:00 | Reads under the hero | Week line by RM's creation-week rule: "Train 1, new this week, Read 1, new this week, Meditate 1, new this week." | RM section 3 rule 1, section 5; **GAP 9** (unreadable when commas sit inside clauses) | missing: no week line in `ReviewPage` |
-| 26 | 20:00 | Reads the habit lines | At most 3, rule habits first then creation order: Train, Read, Meditate, each a label line over a painted thread. Call mum (fourth) is not on Review; it is on the full Review and the Habits page | RM section 2, Dec 8:07 PM; **GAP 10** (label text for "new this week" and for the cap; see also GAP 11) | missing |
+| 26 | 20:00 | Reads the habit lines | At most 3, rule habits first then creation order: Train, Read, Meditate, each a label line over a painted thread. Call mom (fourth) is not on Review; it is on the full Review and the Habits page | RM section 2, Dec 8:07 PM; **GAP 10** (label text for "new this week" and for the cap; see also GAP 11) | missing |
 | 27 | 20:01 | VoiceOver on the header | "{hero}. {sessionLine}. {week line}" | RM section 3 VoiceOver | partly: `ReviewPage.swift:263-265` reads hero plus session line only |
 
 ### Mon Oct 19 (W1, a new week)
@@ -133,9 +133,9 @@ Sun Nov 1 (the paused week). Each day runs 04:00 to 04:00.
 | 49 | 07:32 | Types "meditated last friday" | A day before Monday: to the model, no backfill. No line given | HP3, R ("no backfill"); **GAP 2** | today a note |
 | 50 | 18:00 to 19:00 | Legs A, 16 sets | Train reaches 3 of 3. Brushstroke paints Monday to Thursday behind Train's dabs. Tess: "Train done for the week." by A4, or "Legs A counted for Train, done for the week." by HL | A4, A8, DH; **GAP 15** (A4 and A8 together) | missing |
 | 51 | 19:30 | Types "delete read" | Needs the word "habit": to the model | HP7 | today nil |
-| 52 | 19:31 | Types "delete habit call mum" | Tess: "Call mum deleted." UNDO 10 s. Check-ins go with it; the "Call mum" task stays | A13, HP7 (L847) | missing; no 10 s capture UNDO (`AppModel.swift:204` is 4 s) |
-| 53 | 19:31 | Taps UNDO within 10 s | Tess: "Call mum is back." | A13 undo (D9) | missing |
-| 54 | 20:00 | Opens REVIEW | Hero "All three sessions in". Week line "Train 3 of 3, Read 4 of 5, Meditate 1 of 3." No weight clause (no weigh-ins). Habit lines Train, Read, Meditate; Call mum stays off (fourth, and 0) | `ReviewPage.swift:41`; RM sections 2 and 3; Dec 8:07 PM; **GAP 11** | hero exists; week line and habit lines missing |
+| 52 | 19:31 | Types "delete habit call mom" | Tess: "Call mom deleted." UNDO 10 s. Check-ins go with it; the "Call mom" task stays | A13, HP7 (L847) | missing; no 10 s capture UNDO (`AppModel.swift:204` is 4 s) |
+| 53 | 19:31 | Taps UNDO within 10 s | Tess: "Call mom is back." | A13 undo (D9) | missing |
+| 54 | 20:00 | Opens REVIEW | Hero "All three sessions in". Week line "Train 3 of 3, Read 4 of 5, Meditate 1 of 3." No weight clause (no weigh-ins). Habit lines Train, Read, Meditate; Call mom stays off (fourth, and 0) | `ReviewPage.swift:41`; RM sections 2 and 3; Dec 8:07 PM; **GAP 11** | hero exists; week line and habit lines missing |
 | 55 | 20:01 | VoiceOver on Read's Review line | "Read, 4 of 5 this week. Monday, Tuesday, Wednesday and Thursday done." | RM section 3 | missing |
 | 56 | 20:05 | Opens Habits | No history line yet on any habit (W0 left out, W1 not over) | H6, H10 | missing |
 
@@ -208,7 +208,7 @@ weigh-ins, Review shows no weight clause and no weight line (RM section 5).
 | 4 | H2 gives Thursday's "3 days to go" only: Saturday's "1 day to go" (plural rule) is not written. Order of blocks on the Habits page is not given (Review orders rule habits first) | "Saturday, 1 day to go". Page order: creation order, same as the habit lines' manual order, rule habits not lifted | Research (copy), Design (order) | Open |
 | 5 | No control, gesture or Tess line for giving a habit a rule ("counts when a workout finishes"). HP1 says the grammar never sets one; Sheet and DH only show the label | A label word under the name, "COUNTS BY HAND", that cycles on tap to "COUNTS WHEN A WORKOUT FINISHES" and "COUNTS WHEN A COOK FINISHES"; Tess: "Train now counts workouts." with 4 s UNDO "Train rule taken back." | Design, Research (line) | Open |
 | 6 | Conflict: a rule habit made mid-week. R says rule counts are a query over the week (Tue and Thu would count, 2 of 3); RM says days before creation draw nothing | Count only finishes after `createdAt` in the creation week; whole weeks after that count every finish | Core (HabitLedger), Product to confirm | Decided (Product 9:04 PM PT): only finishes after createdAt count in the creation week; whole weeks after count every finish (shown in fixtures/review-m3.md R13) |
-| 7 | A1 with a target of 1 gives "Call mum added, 1 times a week." A12 has the same problem ("now 1 times a week") | "once a week" for a target of 1 ("Call mum added, once a week."), digits for 2 to 7 | Research (copy) | Folded (item 109): m3-lines.md A16 |
+| 7 | A1 with a target of 1 gives "Call mom added, 1 times a week." A12 has the same problem ("now 1 times a week") | "once a week" for a target of 1 ("Call mom added, once a week."), digits for 2 to 7 | Research (copy) | Folded (item 109): m3-lines.md A16 |
 | 8 | Conflict: DH turns "of 5" the habit's colour when the target is reached; Sheet says the number is 600 ink, H4 says no colour change past the target | Keep the count in ink; the brushstroke is the only reward mark (matches no-colour-for-state and H4) | Design | Decided (Product 9:04 PM PT): to Design, with Product's lean: the count stays in ink at rest, colour only in the moment the target is met |
 | 9 | RM's creation-week clause "{Name} {n}, new this week" joined by ", " gives "Train 1, new this week, Read 1, new this week, Meditate 1, new this week." | In the creation week, one tail for all: "Train 1, Read 1, Meditate 1, all new this week." or leave habits out of the week line that week | Research (RM), Builder B | Folded (item 109): fixtures/review-m3.md R13 (section 3 rule 1) |
 | 10 | Review's habit label for a new habit and the cap: RM gives "GYM · 3 OF 3" and "Gym, paused this week" but no label for "new this week"; nothing says the fourth habit is hidden | "READ · 1, NEW THIS WEEK". No line about the hidden fourth; the full Review lists all | Research (RM), Builder B | Folded (item 109): fixtures/review-m3.md R13 ("One habit, three forms") |

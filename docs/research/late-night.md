@@ -28,7 +28,7 @@ weekly sets all count it on Friday (C11 to C13, A1 to A3, B2). The rest Live Act
   workout runs. Owner **Builder B**, `Features/Command/BottomChrome.swift:92-95`: resting only when
   `model.session == nil`.
 
-### S2. 23:10, "call mum tonight"
+### S2. 23:10, "call mom tonight"
 **Master after TesseraDay:** `TessGrammar.swift:502-507` sets today 20:00; that time has passed, so the passed-time
 rule (`:554-558`) moves it to **Sat 20:00**. Unchanged by TesseraDay ("tonight" stays calendar).
 **He expects:** tonight, soon. The 4:41 PM and 5:58 PM decisions say "tonight" said after 20:00 stays today until
@@ -36,10 +36,10 @@ rule (`:554-558`) moves it to **Sat 20:00**. Unchanged by TesseraDay ("tonight" 
 **Verdict:** still wrong. Owner **Core**, `TessGrammar.swift:502-507`: when "tonight" has no time and now is 20:00 to
 23:29, use the next whole hour today. From 23:30 to 03:59 keep master's Sat 20:00 (see S3).
 
-### S3. 01:00, "call mum tonight", "dentist today 3pm", "dentist tomorrow 3pm"
+### S3. 01:00, "call mom tonight", "dentist today 3pm", "dentist tomorrow 3pm"
 **Master after TesseraDay:** "tonight" gives Sat 20:00 (calendar today, 20:00 not passed). "today 3pm" gives Sat 15:00.
 "tomorrow 3pm" now gives Sat 15:00 too (C3: logical Friday + 1). The reply (C14) compares logical days, so all three
-read "Dentist, tomorrow 3 pm." or "Call mum, tomorrow 8 pm."
+read "Dentist, tomorrow 3 pm." or "Call mom, tomorrow 8 pm."
 **He expects:** the coming Saturday for all three. The dates are right.
 **Still wrong (low):** he said "today" and Tess answers "tomorrow". After midnight both words are ambiguous, so the
 reply should name the day. Owner **Core**, `TessCaptureEngine.swift:191-215` (`when`): when now is 00:00 to 03:59
@@ -48,15 +48,15 @@ owner **Builder B**, `HomeQueue.swift:394`: "Pay rent, Saturday 11 pm." (also me
 
 ### S4. 00:30, "remind me tomorrow at 9"
 **Master after TesseraDay:** C3 makes "tomorrow" Saturday; bare 9 on another day is AM (`TessGrammar.swift:530-552`,
-`hourToday` false), so the task is **Sat 09:00**, reply "Call mum, tomorrow 9 am." The human reading (before 04:00,
+`hourToday` false), so the task is **Sat 09:00**, reply "Call mom, tomorrow 9 am." The human reading (before 04:00,
 "tomorrow" means the coming daytime) is what master now does. Model path: C5 tells the model it is still Friday.
 **He expects:** a buzz at 9.
 **Still wrong:** master has **no notification code at all** (ask-lines A7: "Not built"). "Remind me" writes a task he
 only sees if he opens the app. Owner **Core** (notifications behind the quiet-interrupts mask) with **Builder B** for
 the ask line. Smallest honest fix until then: when the phrase starts "remind me", the reply says where it lives:
-"Call mum, Saturday 9 am. On Now then." (`TessCaptureEngine.swift:106-109`). See Q4.
+"Call mom, Saturday 9 am. On Now then." (`TessCaptureEngine.swift:106-109`). See Q4.
 
-### S5. 00:30, bare hours: "call mum at 9", "at 1", "at 12"
+### S5. 00:30, bare hours: "call mom at 9", "at 1", "at 12"
 **Master after TesseraDay:** "at 9": today is calendar Saturday, 09:00 has not passed, so **Sat 09:00**. "at 1":
 1 to 6 mean PM, **Sat 13:00**. At 23:30 Fri, "at 12" is noon, passed, so **Sat 12:00**; "at 11" at 23:10 gives
 **Sat 11:00**.

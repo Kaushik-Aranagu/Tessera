@@ -39,7 +39,7 @@ Read with: `../design/day-log-page.md` (the spec, unchanged), `day-log-first.md`
 | Cook | Cooked carbonara, 35 min | | |
 | Shop | Shopped, 1 item | Shopped, 14 items | |
 | Captures | Added 1 task | Added 3 tasks, 2 groceries | |
-| Dones | Done: call the bank | Done: water the plants, call mum | 5 tasks done |
+| Dones | Done: call the bank | Done: water the plants, call mom | 5 tasks done |
 | Ticks | Ticked 1 on Home | Ticked 6 on Lisbon packing | |
 | Notes | Note: hotel ideas | 2 notes | |
 | New thing | Saved dal tadka | New list: Lisbon packing | New routine: Push Day B |

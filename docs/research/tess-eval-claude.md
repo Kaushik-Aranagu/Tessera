@@ -95,7 +95,7 @@ Packs: P1 mid-workout, P2 cooking, P3 morning, P4 shopping, P5 Packing open, P6 
 | # | Phrase | Pack | Grammar today (inferred) | Expected |
 |---|---|---|---|---|
 | 1 | done for today | P1 | wrong (GC 11): "today" is a date cue, so task "Done for", today 09:00 | no tool, refuse: "Can't finish workouts from here yet. Tap Finish?" Not: createTask |
-| 2 | done call mum | P6 | nil (GC 12): no completion grammar | no tool, clarify: "No open Call mum task. Log it as done anyway?" Not: createTask, completeTask on another task |
+| 2 | done call mom | P6 | nil (GC 12): no completion grammar | no tool, clarify: "No open Call mom task. Log it as done anyway?" Not: createTask, completeTask on another task |
 | 3 | move dentist to friday | P6 | wrong (GC 13): task "Move dentist to", Fri | `rescheduleTask {"task":"Dentist","startsAt":"2026-10-16"}` Not: createTask (a duplicate Dentist) |
 | 4 | not today passport | P6 | wrong (GC 14): task "Not passport", today 09:00 | `rescheduleTask {"task":"Renew passport","startsAt":"2026-10-16"}` Not: createTask, completeTask |
 | 5 | i feel like rubbish today skip leg day | P6 | wrong (GC 15): task "I feel like rubbish skip leg day" | no tool, clarify: "Skip Leg Day today? Want a lighter task list?" Not: createTask |
@@ -104,10 +104,10 @@ Packs: P1 mid-workout, P2 cooking, P3 morning, P4 shopping, P5 Packing open, P6 
 | 8 | everything from tuesday | P6 | wrong (GC 18): task "Everything from", Tue | `answerQuery {"from":["Thing"],"where":[],"during":"date(2026-10-13)","group":"class","agg":"list"}` |
 | 9 | what did i get done today | P6 | wrong (GC 19): task "What did i get done", today | `answerQuery {"from":["Task"],"where":[{"field":"isDone","op":"=","value":"true"}],"during":"today(doneAt)","agg":"list"}` |
 | 10 | what did tess log today | P6 | wrong (GC 20): task "What did tess log", today | `answerQuery {"from":["OpRecord"],"where":[{"field":"actor","op":"=","value":"tess"}],"during":"today","agg":"list"}` |
-| 11 | buy present for mums birthday on the twentieth | P6 | wrong (GC 21): no ordinals, so `buy` makes groceries | `createTask {"title":~["present","mum","birthday"],"startsAt":"2026-10-20","about":[]}` Not: addGroceries |
+| 11 | buy present for moms birthday on the twentieth | P6 | wrong (GC 21): no ordinals, so `buy` makes groceries | `createTask {"title":~["present","mom","birthday"],"startsAt":"2026-10-20","about":[]}` Not: addGroceries |
 | 12 | buy sun cream | P6 | guard (GC 22): `hasDate` now skips a mid-phrase "sun", so groceries ["sun cream"] | `addGroceries {"lines":["sun cream"]}` Not: createTask |
 | 13 | buy eggs and remind me to defrost the chicken tonight | P6 | wrong (GC 23): one task, the whole line, 20:00 | `addGroceries {"lines":["eggs"]}` + `createTask {"title":~["defrost","chicken"],"startsAt":"2026-10-15T20:00","about":[]}` |
-| 14 | log bench eighty for eight and remind me to call mum tomorrow | P6 | wrong (GC 24): one task "Log bench eighty for eight and…" | `logSet {"exercise":"Bench Press","weight":80,"reps":8,"sets":1,"unit":"kg"}` + `createTask {"title":~["call","mum"],"startsAt":"2026-10-16","about":[]}` |
+| 14 | log bench eighty for eight and remind me to call mom tomorrow | P6 | wrong (GC 24): one task "Log bench eighty for eight and…" | `logSet {"exercise":"Bench Press","weight":80,"reps":8,"sets":1,"unit":"kg"}` + `createTask {"title":~["call","mom"],"startsAt":"2026-10-16","about":[]}` |
 | 15 | bench 80x8 today | P6 | wrong (GC 25): "today" kept as an exercise word, then a task | `logSet {"exercise":"Bench Press","weight":80,"reps":8,"sets":1,"unit":"kg"}` Not: createTask |
 | 16 | bench 80 x 8 at 7 | P6 | wrong (GC 26): `at 7` read as the weight, sets 80 fails, then task 07:00 | no tool, clarify: "Log bench 80 x 8 now, or plan it for 19:00?" |
 | 17 | 2 x 6 rolls | P6 | wrong (GC 27): lift Ab Wheel Rollout 2 x 6 ("roll" is a substring) | `addGroceries {"lines":["2 x 6 rolls"]}` (or "12 rolls") Not: logSet |
@@ -127,8 +127,8 @@ Packs: P1 mid-workout, P2 cooking, P3 morning, P4 shopping, P5 Packing open, P6 
 | 31 | add 2.5 | P1 | nil (GC 41): not a relative-set form | `logSet {"exercise":"Bench Press","weight":82.5,"reps":8,"sets":1,"unit":"kg"}` Not: addGroceries |
 | 32 | parmesan | P4 | nil (GC 42): the grammar can't see the running shop | `addGroceries {"lines":["parmesan"]}` |
 | 33 | idea: tess should read my log back | P6 | nil (GC 43): only `note` starts a note | `createNote {"body":~["tess","read","log back"]}` |
-| 34 | call mum thu | P6 | wrong (GC 44): next Thu 22 Oct 09:00, eval says today | `createTask {"title":~["call","mum"],"startsAt":"2026-10-15","about":[]}` (Product rule: a weekday said on that day means today) |
-| 35 | call mum at 7 | P6 | wrong (GC 45): bare `at 7` read on a 24-hour clock, tomorrow 07:00 | `createTask {"title":~["call","mum"],"startsAt":"2026-10-15T19:00","about":[]}` |
+| 34 | call mom thu | P6 | wrong (GC 44): next Thu 22 Oct 09:00, eval says today | `createTask {"title":~["call","mom"],"startsAt":"2026-10-15","about":[]}` (Product rule: a weekday said on that day means today) |
+| 35 | call mom at 7 | P6 | wrong (GC 45): bare `at 7` read on a 24-hour clock, tomorrow 07:00 | `createTask {"title":~["call","mom"],"startsAt":"2026-10-15T19:00","about":[]}` |
 | 36 | buy milk today | P6 | wrong (GC 46): task "Buy milk", today 09:00, already past | `addGroceries {"lines":["milk"]}` (alt: `createTask {"title":~["milk"],"startsAt":"2026-10-15"}`) |
 
 ### Training (8)
@@ -279,7 +279,7 @@ Each is the named pack plus what the row adds. "Leaves" is everything sent; "mus
 ## ASSUMED (for Core)
 
 1. The Claude capture use offers exactly 10 tools: the 8 from section 2, as T2's name-resolving variants (`logSet` by exercise name, not `entry`; `addToList` by list name), plus `completeTask {task}` and `rescheduleTask {task, startsAt}` (Product decision, 2026-10-15), which resolve `task` by an open task's name. `proposePlan` is not offered for capture.
-2. No tool exists yet for finishing a workout, list item tick-off, start workout, start cook, timers, rest or open list, so those rows (1, 24, 25, 28, and the tick-off part of 71) expect no tool. Rows 3 and 4 now expect `rescheduleTask`. Row 2 stays no tool: Call mum is not an open task, so `completeTask` has nothing to resolve. When more tools join the registry, the affected rows change to writes; update the cells, not the count.
+2. No tool exists yet for finishing a workout, list item tick-off, start workout, start cook, timers, rest or open list, so those rows (1, 24, 25, 28, and the tick-off part of 71) expect no tool. Rows 3 and 4 now expect `rescheduleTask`. Row 2 stays no tool: Call mom is not an open task, so `completeTask` has nothing to resolve. When more tools join the registry, the affected rows change to writes; update the cells, not the count.
 3. `logSet` by name logs into the entry in focus when it is the same exercise, else into today's workout, as `LogExercise` does. `weight` is in the unit said; `0` means bodyweight, and added load is the weight.
 4. Mixed reps are several `logSet` calls; the grader compares a multiset of single sets.
 5. `createTask` has no due field, so "before the 28th" maps to `startsAt` on or before that day. Part-of-day words: morning 09:00, after lunch 13:00, evening 18:00, tonight 20:00.

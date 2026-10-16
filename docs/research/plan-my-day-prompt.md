@@ -307,12 +307,12 @@ Checked by reading each fixture's expected plan through the pack rules, then jud
 | d03 | Light, cap 2, Arjun email + PR 412 | Gentle lines, maybe email first | Pass | Saying "easy morning" or why there are 2; "412" is licensed by the title |
 | d04 | Light, cap 2 (Example 3) | Tax first | Pass | A workout line about going lighter (V10) |
 | d05 | Run of 3; gym `movedFrom` 18:00 to 18:30 | w1 line "After Vendor call, at 6:30 pm." | Pass | Temptation to move the gym or the Vendor call back (V3) |
-| d06 | Sat; Call mum, garage, carbonara in 3 runs; Parkrun + Legs B | Neutral lines, cook "at dinner" | Pass | Training advice on Legs B after Parkrun (V10 if "go easy"); moving Call mum to 09:00 (V4, V6) |
+| d06 | Sat; Call mom, garage, carbonara in 3 runs; Parkrun + Legs B | Neutral lines, cook "at dinner" | Pass | Training advice on Legs B after Parkrun (V10 if "go easy"); moving Call mom to 09:00 (V4, V6) |
 | d07 | Sun rest day, run of 3, brunch | Short, relaxed lines | Pass | "Rest day" is fine; risk is a count ("3 small ones") |
 | d08 | No sleep data (not sent), 2 runs | Plain lines | Pass | None notable; nothing about sleep is in the pack |
 | d09 | Push A (the rolled-on workout), landlord reply | Plain lines | Pass | Would say "again" if `training.missed` or `rolls` were sent; they aren't |
 | d10 | 8 meetings, light, cap 2, 2 runs of 1 (Example 2) | Writes a note about the packed day | At risk | Note counting meetings or tasks (V11); wanting slides before noon (V4, V6); Board memo can't leak, it isn't sent |
-| d11 | `allDay` [] (birthday dropped by the builder); flowers due 12:00; Call mum fixed 19:30 | Plain flower line | Pass | Moving Call mum earlier (V3); it cannot name Mum's birthday, it isn't sent |
+| d11 | `allDay` [] (birthday dropped by the builder); flowers due 12:00; Call mom fixed 19:30 | Plain flower line | Pass | Moving Call mom earlier (V3); it cannot name Mom's birthday, it isn't sent |
 | d12 | Now 11:07, window 11:10; Design crit 11:00 to 11:30 in progress; run of 3 | "Starting after Design crit." | At risk | "late start" or "behind" (V10); a validator without the fixed-block window exemption rejects every proposal here (V5) |
 | d13 | Run of 3 of 30 min; Pull B at 17:00 | Plain lines | Pass | Wanting the gym in the morning on a Saturday (V3) |
 | d14 | Empty day | Not sent | Pass | No call: no task blocks to word, $0 |

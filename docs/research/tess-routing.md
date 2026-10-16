@@ -11,7 +11,7 @@ Grammar first, always. On-device Foundation Models only when the grammar returns
 
 1. **Free word order and fillers.** "um put down eighty kilos for like seven on bench".
 2. **Numbers as words, mixed with digits.** "eighty two and a half for six", "a dozen eggs". Fix in the grammar with a normaliser.
-3. **Run-ons with several intents.** "log bench eighty for eight and remind me to call mum tomorrow". Needs splitting into two actions.
+3. **Run-ons with several intents.** "log bench eighty for eight and remind me to call mom tomorrow". Needs splitting into two actions.
 4. **Fuzzy references.** "the heavy one", "the thing I made last week", "my usual". Needs world state, not syntax.
 5. **Self-correction.** "squat 100 for 5, no wait, 4". Grammar can learn "no wait"; looser forms ("actually make that...") are model work.
 6. **Indirect phrasing and fuzzy time.** "I'm out of eggs", "after work", "end of the month", "sometime next week".

@@ -30,7 +30,7 @@ From `../../product/decisions.md`, "Grammar sweep calls" (4:26 PM PT) and the en
 | Task | When |
 |---|---|
 | Dentist | Sat 17 Oct 10:00 |
-| Call mum | no date (Later) |
+| Call mom | no date (Later) |
 | Clean the oven | no date |
 | Haircut | Thu 15 Oct 17:00 (today, already passed at 18:10) |
 | Pay rent | Fri 16 Oct 09:00 |
@@ -67,9 +67,9 @@ From `../../product/decisions.md`, "Grammar sweep calls" (4:26 PM PT) and the en
 | A16 | move pay rent to 7pm | 18:10 | I | Time only, today 19:00 is ahead: Thu 15 19:00 | Reschedule Pay rent, Fri 16 19:00 (its own day) | R13b | wrong write |
 | A17 | move pay rent to 5pm | 18:10 | I | Today 17:00 passed, so tomorrow: Fri 16 17:00 | Same (right by accident: its own day is tomorrow) | R13b | OK |
 | A18 | move bins out to 9:30 | 18:10 | I | Today 09:30 passed: Fri 16 09:30 | Reschedule Bins out, Thu 15 21:30 (own day today; 09:30 passed, 21:30 is next) | R13b, call 1 | wrong write |
-| A19 | move call mum to fri | 18:10 | I | Reschedule Call mum, Fri 16 09:00 | Same (no time of its own, so 09:00) | R13a fallback | OK |
-| A20 | move call mum to 7 | 18:10 | I | No date. Model | Reschedule Call mum, Thu 15 19:00 (no day of its own, so today) | R13c, call 1 | miss |
-| A21 | move call to fri | 18:10 | I | Two open matches (Call mum, Call dad), nil, shape, model | Same | one match only | OK |
+| A19 | move call mom to fri | 18:10 | I | Reschedule Call mom, Fri 16 09:00 | Same (no time of its own, so 09:00) | R13a fallback | OK |
+| A20 | move call mom to 7 | 18:10 | I | No date. Model | Reschedule Call mom, Thu 15 19:00 (no day of its own, so today) | R13c, call 1 | miss |
+| A21 | move call to fri | 18:10 | I | Two open matches (Call mom, Call dad), nil, shape, model | Same | one match only | OK |
 | A22 | move call bank to fri | 18:10 | I | Call bank is done, filtered out (G:143). Model | Same | open tasks only | OK |
 | A23 | push dentist to next week | 18:10 | I | `next week` gives no date. Model | Reschedule Dentist, Sat 24 10:00 (one week on, same time) | R13f | miss (see Q3) |
 | A24 | move dentist to next fri | 18:10 | I | `next` is allowed as the rest (G:141): Fri 16 09:00 | Reschedule Dentist, Fri 16 10:00 (day per GC open question 4) | R13a | wrong write (see Q4) |
@@ -109,32 +109,32 @@ From `../../product/decisions.md`, "Grammar sweep calls" (4:26 PM PT) and the en
 
 | # | Phrase | Clock | Ctx | Master parse | Expected | Rule | Verdict |
 |---|---|---|---|---|---|---|---|
-| B1 | call mum 7 pm | 18:10 | I | `7` needs `at`; `pm` alone is not a time. Model | Task "Call mum", Thu 15 19:00 | R11a | miss |
-| B2 | call mum at 7 pm | 18:10 | I | `at 7` is 07:00, passed; `pm` stays. **Task "Call mum pm", Fri 16 07:00** | Task "Call mum", Thu 15 19:00 | R11a | wrong write |
-| B3 | call mum at 7:30 pm | 18:10 | I | **Task "Call mum pm", Fri 16 07:30** | Task "Call mum", Thu 15 19:30 | R11a | wrong write |
-| B4 | call mum 7.30pm | 18:10 | I | `7.30pm` fails the time regex (G:470). Model | Task "Call mum", Thu 15 19:30 | R11b | miss |
-| B5 | call mum 7:30pm | 18:10 | I | Task "Call mum", Thu 15 19:30 | Same | | OK |
-| B6 | call mum at 7.30 | 18:10 | I | `at 7.30` fails; no date. Model | Task "Call mum", Thu 15 19:30 | R11b, call 1 | miss |
+| B1 | call mom 7 pm | 18:10 | I | `7` needs `at`; `pm` alone is not a time. Model | Task "Call mom", Thu 15 19:00 | R11a | miss |
+| B2 | call mom at 7 pm | 18:10 | I | `at 7` is 07:00, passed; `pm` stays. **Task "Call mom pm", Fri 16 07:00** | Task "Call mom", Thu 15 19:00 | R11a | wrong write |
+| B3 | call mom at 7:30 pm | 18:10 | I | **Task "Call mom pm", Fri 16 07:30** | Task "Call mom", Thu 15 19:30 | R11a | wrong write |
+| B4 | call mom 7.30pm | 18:10 | I | `7.30pm` fails the time regex (G:470). Model | Task "Call mom", Thu 15 19:30 | R11b | miss |
+| B5 | call mom 7:30pm | 18:10 | I | Task "Call mom", Thu 15 19:30 | Same | | OK |
+| B6 | call mom at 7.30 | 18:10 | I | `at 7.30` fails; no date. Model | Task "Call mom", Thu 15 19:30 | R11b, call 1 | miss |
 | B7 | dinner at 7.30 | 18:10 | I | Model | Task "Dinner", Thu 15 19:30 | R11b, call 1 | miss |
 | B8 | dinner 7.30 | 18:10 | I | Model | Same. `H.MM` with no `at` and no am/pm stays a number (money) | R11b guard | OK |
 | B9 | dentist at 4.15 | 18:10 | I | Model | Task "Dentist", Fri 16 16:15 (4 is PM; 16:15 passed today, so tomorrow) | R11b, call 1, call 5 | miss |
-| B10 | call mum half 7 | 18:10 | I | Model | Task "Call mum", Thu 15 19:30 | R11c, call 1 | miss |
-| B11 | call mum half past 7 | 18:10 | I | Model | Task "Call mum", Thu 15 19:30 | R11c, call 1 | miss |
-| B12 | call mum quarter past 7 | 18:10 | I | Model | Task "Call mum", Thu 15 19:15 | R11c (widened) | miss |
-| B13 | call mum half 6 | 18:10 | I | Model | Task "Call mum", Thu 15 18:30 (6 is PM, still ahead) | R11c, call 1 | miss |
-| B14 | call mum half 5 | 18:10 | I | Model | Task "Call mum", Fri 16 17:30 (5 is PM, passed, so tomorrow) | R11c, call 1, call 5 | miss |
-| B15 | call mum tonight at half 8 | 18:10 | I | `tonight` gives 20:00; `at half 8` is not read. **Task "Call mum at half 8", Thu 15 20:00** | Task "Call mum", Thu 15 20:30 | R11c | wrong write |
-| B16 | call mum at 7 tonight | 18:10 | I | `at 7` is 07:00; `tonight` keeps it (G:409); a day was said, no roll. **Task "Call mum", Thu 15 07:00, in the past** | Task "Call mum", Thu 15 19:00 | call 1 (RC1 + RC9) | wrong write |
-| B17 | call mum tmrw morning | 18:10 | I | `morning` stays in the title. **Task "Call mum morning", Fri 16 09:00** | Task "Call mum", Fri 16 09:00 | R11d | wrong write |
+| B10 | call mom half 7 | 18:10 | I | Model | Task "Call mom", Thu 15 19:30 | R11c, call 1 | miss |
+| B11 | call mom half past 7 | 18:10 | I | Model | Task "Call mom", Thu 15 19:30 | R11c, call 1 | miss |
+| B12 | call mom quarter past 7 | 18:10 | I | Model | Task "Call mom", Thu 15 19:15 | R11c (widened) | miss |
+| B13 | call mom half 6 | 18:10 | I | Model | Task "Call mom", Thu 15 18:30 (6 is PM, still ahead) | R11c, call 1 | miss |
+| B14 | call mom half 5 | 18:10 | I | Model | Task "Call mom", Fri 16 17:30 (5 is PM, passed, so tomorrow) | R11c, call 1, call 5 | miss |
+| B15 | call mom tonight at half 8 | 18:10 | I | `tonight` gives 20:00; `at half 8` is not read. **Task "Call mom at half 8", Thu 15 20:00** | Task "Call mom", Thu 15 20:30 | R11c | wrong write |
+| B16 | call mom at 7 tonight | 18:10 | I | `at 7` is 07:00; `tonight` keeps it (G:409); a day was said, no roll. **Task "Call mom", Thu 15 07:00, in the past** | Task "Call mom", Thu 15 19:00 | call 1 (RC1 + RC9) | wrong write |
+| B17 | call mom tmrw morning | 18:10 | I | `morning` stays in the title. **Task "Call mom morning", Fri 16 09:00** | Task "Call mom", Fri 16 09:00 | R11d | wrong write |
 | B18 | dentist sat afternoon | 18:10 | I | `hasDate` drops `sat`, but `parseCook` and the task rule read it. **Task "Dentist afternoon", Sat 17 09:00** | Task "Dentist", Sat 17 14:00 | R11d | wrong write |
-| B19 | call mum this evening | 18:10 | I | No date word. Model | Task "Call mum", Thu 15 19:00 (evening is under way, so the next whole hour) | R11d, R11e | miss (see Q6) |
+| B19 | call mom this evening | 18:10 | I | No date word. Model | Task "Call mom", Thu 15 19:00 (evening is under way, so the next whole hour) | R11d, R11e | miss (see Q6) |
 | B20 | gym in the morning | 18:10 | I | Model | Task "Gym", Fri 16 09:00 | R11d, call 5 | miss |
-| B21 | call mum in 2 hours | 18:10 | I | Lift: weight 2, no reps. No date. Model | Task "Call mum", Thu 15 20:10 | R11f | miss |
-| B22 | call mum in 20 mins | 18:10 | I | Model (`timer` absent, K:75) | Task "Call mum", Thu 15 18:30 | R11f | miss |
-| B23 | remind me in 2 hours to call mum | 18:10 | I | Explicit task, `to` is not first, no date. **Task "In 2 hours to call mum", Later** | Task "Call mum", Thu 15 20:10 | R11f, R11g | wrong write |
-| B24 | remind me to call mum in an hour | 18:10 | I | **Task "Call mum in an hour", Later** | Task "Call mum", Thu 15 19:10 | R11f | wrong write |
-| B25 | call mum at seven | 18:10 | I | Model | Task "Call mum", Thu 15 19:00 | R11h (or the spoken normaliser) | miss |
-| B26 | call mum at noon | 18:10 | I | Noon passed: Task "Call mum", Fri 16 12:00 | Same | call 5 | OK |
+| B21 | call mom in 2 hours | 18:10 | I | Lift: weight 2, no reps. No date. Model | Task "Call mom", Thu 15 20:10 | R11f | miss |
+| B22 | call mom in 20 mins | 18:10 | I | Model (`timer` absent, K:75) | Task "Call mom", Thu 15 18:30 | R11f | miss |
+| B23 | remind me in 2 hours to call mom | 18:10 | I | Explicit task, `to` is not first, no date. **Task "In 2 hours to call mom", Later** | Task "Call mom", Thu 15 20:10 | R11f, R11g | wrong write |
+| B24 | remind me to call mom in an hour | 18:10 | I | **Task "Call mom in an hour", Later** | Task "Call mom", Thu 15 19:10 | R11f | wrong write |
+| B25 | call mom at seven | 18:10 | I | Model | Task "Call mom", Thu 15 19:00 | R11h (or the spoken normaliser) | miss |
+| B26 | call mom at noon | 18:10 | I | Noon passed: Task "Call mom", Fri 16 12:00 | Same | call 5 | OK |
 | B27 | plank 2:30 | 18:10 | I | `2:30` is a time. **Task "Plank", Fri 16 02:30** | Model (a plank hold, never a task) | R11i | wrong write |
 | B28 | rest 2:30 | 18:10 | W | Workout rule takes `rest 2…` (G:117): ignored in workout | Same | guard | OK |
 | B29 | ran 5k in 22:30 | 18:10 | I | `22:30` is a time, still ahead. **Task "Ran 5k in", Thu 15 22:30** | Note "Ran 5k in 22:30", dated today. Never a task | call 2 (RC2 past verb runs first) | wrong write |
@@ -142,13 +142,13 @@ From `../../product/decisions.md`, "Grammar sweep calls" (4:26 PM PT) and the en
 | B31 | buy 2 x 6 rolls | 18:10 | I | Lift: "buy rolls" is no exercise. Groceries ["2 x 6 rolls"] | Same | guard (GC 27) | OK |
 | B32 | buy 7up | 18:10 | I | `7up` is not a time (G:470). Groceries ["7up"] | Same | guard | OK |
 | B33 | half 7 | 18:10 | W | Lift: weight 7, word `half`, no reps. Model | Same (no title, so no task even after R11c) | guard | OK |
-| B34 | call mum at 7.30 | **09:00** | I | Model | Task "Call mum", Thu 15 19:30 (07:30 passed, 19:30 next) | R11b, call 1 | miss |
-| B35 | call mum this afternoon | **09:00** | I | Model | Task "Call mum", Thu 15 14:00 | R11d | miss |
-| B36 | call mum in the morning | **09:00** | I | Model | Task "Call mum", Fri 16 09:00 (today 09:00 is now, so passed) | R11d, call 5 | miss |
-| B37 | call mum half 11 | **23:30** | I | Model | Task "Call mum", Fri 16 11:30 (11:30 and 23:30 have passed; 23:30 is now) | R11c, call 1, call 5 | miss |
-| B38 | call mum tonight | **23:30** | I | Today 20:00; a day was said, no roll. **Task "Call mum", Thu 15 20:00, in the past** | Task "Call mum", Fri 16 20:00 | call 5 | wrong write (see Q7) |
-| B39 | call mum in 2 hours | **23:30** | I | Model | Task "Call mum", Fri 16 01:30 | R11f | miss |
-| B40 | call mum midnight | **23:30** | I | `midnight` is not a word `parseTime` knows. Model | Task "Call mum", Fri 16 00:00 | R11j | miss |
+| B34 | call mom at 7.30 | **09:00** | I | Model | Task "Call mom", Thu 15 19:30 (07:30 passed, 19:30 next) | R11b, call 1 | miss |
+| B35 | call mom this afternoon | **09:00** | I | Model | Task "Call mom", Thu 15 14:00 | R11d | miss |
+| B36 | call mom in the morning | **09:00** | I | Model | Task "Call mom", Fri 16 09:00 (today 09:00 is now, so passed) | R11d, call 5 | miss |
+| B37 | call mom half 11 | **23:30** | I | Model | Task "Call mom", Fri 16 11:30 (11:30 and 23:30 have passed; 23:30 is now) | R11c, call 1, call 5 | miss |
+| B38 | call mom tonight | **23:30** | I | Today 20:00; a day was said, no roll. **Task "Call mom", Thu 15 20:00, in the past** | Task "Call mom", Fri 16 20:00 | call 5 | wrong write (see Q7) |
+| B39 | call mom in 2 hours | **23:30** | I | Model | Task "Call mom", Fri 16 01:30 | R11f | miss |
+| B40 | call mom midnight | **23:30** | I | `midnight` is not a word `parseTime` knows. Model | Task "Call mom", Fri 16 00:00 | R11j | miss |
 
 **Count B:** 40 rows. 11 wrong writes (B2, B3, B15 to B18, B23, B24, B27, B29, B38), 21 misses (B1, B4, B6, B7, B9 to B14, B19 to B22, B25, B34 to B37, B39, B40), 8 OK guards (B5, B8, B26, B28, B30 to B33; B8 and B30 must stay OK after R11b).
 
@@ -193,7 +193,7 @@ enum Clock: Sendable { case morning0900, evening1810, late2330 } // Thu 15 Oct 2
 // 09:00 = 1_792_080_000, 18:10 = 1_792_113_000, 23:30 = 1_792_132_200 (seconds since 1970)
 struct TimeRow: Sendable { let phrase: String; let clock: Clock; let ctx: Ctx; let expect: String }
 
-/// Dentist Sat 10:00, Call mum, Clean the oven, Haircut today 17:00, Pay rent Fri 09:00,
+/// Dentist Sat 10:00, Call mom, Clean the oven, Haircut today 17:00, Pay rent Fri 09:00,
 /// Bins out today 21:00, Call dad Fri 12:00, Call bank (done).
 func makeRescheduleFixtures() throws -> (TessGrammar, ObjectStore)
 
@@ -208,11 +208,11 @@ static let rescheduleRows: [TimeRow] = [
 ]
 
 static let timeFormRows: [TimeRow] = [
-    .init("call mum 7 pm", .evening1810, .idle, "task Call mum Thu 15 19:00"),
+    .init("call mom 7 pm", .evening1810, .idle, "task Call mom Thu 15 19:00"),
     .init("dinner 7.30", .evening1810, .idle, "nil"), // guard
-    .init("call mum half 5", .evening1810, .idle, "task Call mum Fri 16 17:30"),
-    .init("remind me in 2 hours to call mum", .evening1810, .idle, "task Call mum Thu 15 20:10"),
-    .init("call mum half 11", .late2330, .idle, "task Call mum Fri 16 11:30"),
+    .init("call mom half 5", .evening1810, .idle, "task Call mom Fri 16 17:30"),
+    .init("remind me in 2 hours to call mom", .evening1810, .idle, "task Call mom Thu 15 20:10"),
+    .init("call mom half 11", .late2330, .idle, "task Call mom Fri 16 11:30"),
     // ... B1 to B40
 ]
 

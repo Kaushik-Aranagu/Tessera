@@ -26,21 +26,21 @@ This takes a few minutes. Do it once your Claude key is in, so your ticks count 
 
 ## The rows
 
-### 1. `call mum half 11`
+### 1. `call mom half 11`
 
 Thu Oct 15, 11:30 pm. Nothing running.
 
-- **A:** Task: Call mum, tomorrow 11:30 am.
+- **A:** Task: Call mom, tomorrow 11:30 am.
 - **B:** No write.
 
 Which is right?  [ ] A   [ ] B   [ ] both   [ ] neither
 
-### 2. `call mum tmrw morning`
+### 2. `call mom tmrw morning`
 
 Thu Oct 15, 6:10 pm. Nothing running.
 
-- **A:** Task: Call mum morning, tomorrow 9:00 am.
-- **B:** Task: Call mum, tomorrow 9:00 am.
+- **A:** Task: Call mom morning, tomorrow 9:00 am.
+- **B:** Task: Call mom, tomorrow 9:00 am.
 
 Which is right?  [ ] A   [ ] B   [ ] both   [ ] neither
 
@@ -62,20 +62,20 @@ Thu Oct 15, 6:10 pm. Nothing running.
 
 Which is right?  [ ] A   [ ] B   [ ] both   [ ] neither
 
-### 5. `remind me in 2 hours to call mum`
+### 5. `remind me in 2 hours to call mom`
 
 Thu Oct 15, 6:10 pm. Nothing running.
 
-- **A:** Task: Call mum, today 8:10 pm.
-- **B:** Task: In 2 hours to call mum, Later.
+- **A:** Task: Call mom, today 8:10 pm.
+- **B:** Task: In 2 hours to call mom, Later.
 
 Which is right?  [ ] A   [ ] B   [ ] both   [ ] neither
 
-### 6. `call mum 7 pm`
+### 6. `call mom 7 pm`
 
 Thu Oct 15, 6:10 pm. Nothing running.
 
-- **A:** Task: Call mum, today 7:00 pm.
+- **A:** Task: Call mom, today 7:00 pm.
 - **B:** No write.
 
 Which is right?  [ ] A   [ ] B   [ ] both   [ ] neither
@@ -98,12 +98,12 @@ Thu Oct 15, 6:10 pm. In a workout: Pull-Up (bodyweight) in focus, last set bodyw
 
 Which is right?  [ ] A   [ ] B   [ ] both   [ ] neither
 
-### 9. `8 and call mum at 7`
+### 9. `8 and call mom at 7`
 
 Thu Oct 15, 6:10 pm. In a workout: Bench Press in focus, last set 80 x 8 kg.
 
-- **A:** Bench Press set: 80 x 8 kg. Task: Call mum, today 7:00 pm.
-- **B:** Task: 8 and call mum, today 7:00 pm.
+- **A:** Bench Press set: 80 x 8 kg. Task: Call mom, today 7:00 pm.
+- **B:** Task: 8 and call mom, today 7:00 pm.
 
 Which is right?  [ ] A   [ ] B   [ ] both   [ ] neither
 
@@ -125,12 +125,12 @@ Thu Oct 15, 6:10 pm. Nothing running.
 
 Which is right?  [ ] A   [ ] B   [ ] both   [ ] neither
 
-### 12. `80x8 then call mum`
+### 12. `80x8 then call mom`
 
 Thu Oct 15, 6:10 pm. In a workout: Bench Press in focus, last set 80 x 8 kg.
 
 - **A:** No write.
-- **B:** Bench Press set: 80 x 8 kg. Task: Call mum, Later.
+- **B:** Bench Press set: 80 x 8 kg. Task: Call mom, Later.
 
 Which is right?  [ ] A   [ ] B   [ ] both   [ ] neither
 
@@ -161,12 +161,12 @@ Thu Oct 15, 6:10 pm. Nothing running.
 
 Which is right?  [ ] A   [ ] B   [ ] both   [ ] neither
 
-### 16. `call mum half 5`
+### 16. `call mom half 5`
 
 Thu Oct 15, 6:10 pm. Nothing running.
 
 - **A:** No write.
-- **B:** Task: Call mum, tomorrow 5:30 pm.
+- **B:** Task: Call mom, tomorrow 5:30 pm.
 
 Which is right?  [ ] A   [ ] B   [ ] both   [ ] neither
 
@@ -215,21 +215,21 @@ Thu Oct 15, 6:10 pm. Nothing running.
 
 Which is right?  [ ] A   [ ] B   [ ] both   [ ] neither
 
-### 22. `Remind me at 6 PM to call Mum.`
+### 22. `Remind me at 6 PM to call Mom.`
 
 Fri Oct 16, 5:40 pm. Nothing running.
 
-- **A:** Task: PM to call Mum., today 6:00 pm.
-- **B:** Task: Call Mum, today 6:00 pm.
+- **A:** Task: PM to call Mom., today 6:00 pm.
+- **B:** Task: Call Mom, today 6:00 pm.
 
 Which is right?  [ ] A   [ ] B   [ ] both   [ ] neither
 
-### 23. `call mum half 7`
+### 23. `call mom half 7`
 
 Thu Oct 15, 6:10 pm. Nothing running.
 
 - **A:** No write.
-- **B:** Task: Call mum, today 7:30 pm.
+- **B:** Task: Call mom, today 7:30 pm.
 
 Which is right?  [ ] A   [ ] B   [ ] both   [ ] neither
 
@@ -251,12 +251,12 @@ Thu Oct 15, 6:10 pm. Nothing running.
 
 Which is right?  [ ] A   [ ] B   [ ] both   [ ] neither
 
-### 26. `remind me to call mum at 6, actually 7`
+### 26. `remind me to call mom at 6, actually 7`
 
 Fri Oct 16, 5:40 pm. Nothing running.
 
-- **A:** Task: Call mum actually 7, today 6:00 pm.
-- **B:** Task: Call mum, today 7:00 pm.
+- **A:** Task: Call mom actually 7, today 6:00 pm.
+- **B:** Task: Call mom, today 7:00 pm.
 
 Which is right?  [ ] A   [ ] B   [ ] both   [ ] neither
 
@@ -278,21 +278,21 @@ Thu Oct 15, 6:10 pm. Open task: Dentist, Sat Oct 17 10:00 am.
 
 Which is right?  [ ] A   [ ] B   [ ] both   [ ] neither
 
-### 29. `buy present for mums birthday on the twentieth`
+### 29. `buy present for moms birthday on the twentieth`
 
-Thu Oct 15, 6:10 pm. Mum is one of your people.
+Thu Oct 15, 6:10 pm. Mom is one of your people.
 
-- **A:** Task: Buy present for mums birthday on the twentieth, Later.
-- **B:** Task: Buy present for mums birthday, Tue Oct 20, no time.
+- **A:** Task: Buy present for moms birthday on the twentieth, Later.
+- **B:** Task: Buy present for moms birthday, Tue Oct 20, no time.
 
 Which is right?  [ ] A   [ ] B   [ ] both   [ ] neither
 
-### 30. `bench 3x5 at 80 then call mum at 7`
+### 30. `bench 3x5 at 80 then call mom at 7`
 
 Thu Oct 15, 6:10 pm. Nothing running.
 
-- **A:** Task: Bench 3x5 at 80 then call mum, today 7:00 pm.
-- **B:** Bench Press logged: 3 sets of 5 at 80 kg. Task: Call mum, today 7:00 pm.
+- **A:** Task: Bench 3x5 at 80 then call mom, today 7:00 pm.
+- **B:** Bench Press logged: 3 sets of 5 at 80 kg. Task: Call mom, today 7:00 pm.
 
 Which is right?  [ ] A   [ ] B   [ ] both   [ ] neither
 
@@ -333,6 +333,6 @@ Seed: Python `random.Random(88)`. The 30 rows were shuffled with `shuffle`, then
 | 29 | F540 | people | phone | Claude (expected) |
 | 30 | A167 | hard | phone | Claude (expected) |
 
-**How the 30 were picked.** Every people phrase (8: rows naming a person in a plan, a group or a gift; the many "call mum" rows count as time phrases, and E497 `buy sage green paint` names no one). Every money phrase (2: H609, H610, both local in the fixture). Then the hardest (11: the fixture's named weak spots, keeping a moved task's time, two-intent splits, the set-count asks, bare half-hours across midnight, a self-correction) and the commonest (9: the call, remind, move, groceries and set shapes you say most). Nothing was left out of the people or money groups.
+**How the 30 were picked.** Every people phrase (8: rows naming a person in a plan, a group or a gift; the many "call mom" rows count as time phrases, and E497 `buy sage green paint` names no one). Every money phrase (2: H609, H610, both local in the fixture). Then the hardest (11: the fixture's named weak spots, keeping a moved task's time, two-intent splits, the set-count asks, bare half-hours across midnight, a self-correction) and the commonest (9: the call, remind, move, groceries and set shapes you say most). Nothing was left out of the people or money groups.
 
-**Where the phone side comes from.** The gate fixture has no master column, so the phone side is the hand trace in the suite's source fixtures (`grammar-misfires.md` post-hotfix check, `reschedule-time-rows.md`, `reminders.md`, `set-logger.md`, `people.md`, `money.md`), checked against `TessGrammar` on master `8fc5bd3`, whose grammar files are unchanged since the fixture's `1c6193a`. Nothing was run. F540 uses master's code over `people.md`: `present` is a non-grocery word after `buy`, so it is a Later task, not groceries. J756 (`remind me tomorrow at 9 to call mum` at 12:30 am) was left out: master's "his tomorrow" now gives Sat 9:00 am, the expected row, so both sides would match.
+**Where the phone side comes from.** The gate fixture has no master column, so the phone side is the hand trace in the suite's source fixtures (`grammar-misfires.md` post-hotfix check, `reschedule-time-rows.md`, `reminders.md`, `set-logger.md`, `people.md`, `money.md`), checked against `TessGrammar` on master `8fc5bd3`, whose grammar files are unchanged since the fixture's `1c6193a`. Nothing was run. F540 uses master's code over `people.md`: `present` is a non-grocery word after `buy`, so it is a Later task, not groceries. J756 (`remind me tomorrow at 9 to call mom` at 12:30 am) was left out: master's "his tomorrow" now gives Sat 9:00 am, the expected row, so both sides would match.

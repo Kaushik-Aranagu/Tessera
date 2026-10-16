@@ -123,14 +123,14 @@ Item fields below: `text`, `checked` (`isDone`), `note`, and `quantity` / `date`
   raw: |
     Gift ideas
 
-    Mum - silk scarf
+    Mom - silk scarf
     Dad - bird feeder
     Priya - pasta maker
   title: Gift ideas
   sections:
     - title: null
       items:
-        - {text: "Mum - silk scarf", checked: false, note: null}
+        - {text: "Mom - silk scarf", checked: false, note: null}
         - {text: "Dad - bird feeder", checked: false, note: null}
         - {text: "Priya - pasta maker", checked: false, note: null}
   notes: >-

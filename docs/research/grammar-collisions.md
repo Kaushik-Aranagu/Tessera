@@ -54,7 +54,7 @@ Columns: phrase; source (TE = `tess-eval-phrases.md` row, QE = `questions-eval.m
 | 9 | `finished Dune: slow start, great end` | RD | model | finish book with review | A future `<list>:` add rule would read "finished dune" as a list name. The comma rule is safe only because "great end" has no aisle |
 | 10 | `add project hail mary to books` | TE 165 vs RD | model | one owner: Books list or book queue | The two drafts give books two sources of truth (RD open question 3) |
 | 11 | `done for today` | TE 38 | task "Done for", today 09:00 | finish workout | "today" is a date cue, so it becomes a task (G:232) |
-| 12 | `done call mum` | TE 84 | model | complete task "Call mum" | "done" has no grammar. It could also mean the end of a workout, cook step, list item or book |
+| 12 | `done call mom` | TE 84 | model | complete task "Call mom" | "done" has no grammar. It could also mean the end of a workout, cook step, list item or book |
 | 13 | `move dentist to friday` | TE 86 | task "Move dentist to", Fri | reschedule "Dentist" | A date cue creates a new task with the verb in its title |
 | 14 | `not today passport` | TE 88 | task "Not passport", today 09:00 | reschedule "Renew passport" to Later | Same |
 | 15 | `i feel like rubbish today skip leg day` | TE 200 | task "I feel like rubbish skip leg day" | reschedule Leg Day | Same |
@@ -63,10 +63,10 @@ Columns: phrase; source (TE = `tess-eval-phrases.md` row, QE = `questions-eval.m
 | 18 | `everything from tuesday` | QE 53 | task "Everything from", Tue | question | Same |
 | 19 | `what did i get done today` | QE 33 | task "What did i get done", today | question | Same |
 | 20 | `what did tess log today` | QE 59 | task "What did tess log", today | question | Same. "did" and "log" are dropped only inside lifts |
-| 21 | `buy present for mums birthday on the twentieth` | TE 109 | groceries, 1 line | task, 20 Oct | `TessDates` misses ordinals, so the date check fails and `buy` wins (K:39) |
+| 21 | `buy present for moms birthday on the twentieth` | TE 109 | groceries, 1 line | task, 20 Oct | `TessDates` misses ordinals, so the date check fails and `buy` wins (K:39) |
 | 22 | `buy sun cream` | derived TE 111 | task "Buy cream", Sunday | groceries "sun cream" | "sun" reads as a weekday (G:258), which blocks `buy` (K:39) |
 | 23 | `buy eggs and remind me to defrost the chicken tonight` | TE 153 | one task, the whole line, 20:00 | groceries + task | No splitting. "tonight" makes the whole line a task |
-| 24 | `log bench eighty for eight and remind me to call mum tomorrow` | TE 192 | one task "Log bench eighty for eight and…" | set + task | No splitting, and spoken numbers are not normalized |
+| 24 | `log bench eighty for eight and remind me to call mom tomorrow` | TE 192 | one task "Log bench eighty for eight and…" | set + task | No splitting, and spoken numbers are not normalized |
 | 25 | `bench 80x8 today` | derived TE 1 | task "Bench 80x8", today 09:00 | set Bench 80 x 8 | "today" is kept as an exercise word, so the lift is not resolved and the date makes it a task |
 | 26 | `bench 80 x 8 at 7` | derived TE 1 | task "Bench 80 x 8", 07:00 | set, or ask | `at 7` is taken as the weight in the scheme regex (G:117), so sets = 80, which fails, and `at 7` is then a time |
 | 27 | `2 x 6 rolls` | derived KP 4 | lift: **Ab Wheel Rollout** 2 kg x 6 | groceries | "rolls" becomes "roll", a substring of "rollout" (G:206) |
@@ -86,8 +86,8 @@ Columns: phrase; source (TE = `tess-eval-phrases.md` row, QE = `questions-eval.m
 | 41 | `add 2.5` (workout live) | TE 20 | model | next set +2.5 kg | Future: `add X` to groceries would add "2.5" |
 | 42 | `parmesan` (shop running) | TE 156 | model | groceries | Bare nouns: the grammar cannot see that a shop is running |
 | 43 | `idea: tess should read my log back` | TE 96 | model | note | Future: `<name>:` adds to a list named "Idea" |
-| 44 | `call mum thu` (Thu 18:00) | TE 61 | task, **next** Thu 22 Oct 09:00 | eval says Thu 15 Oct | G:301-303 conflicts with the eval. Decide on one rule, then fix one side |
-| 45 | `call mum at 7` (18:00) | TE 100 | task tomorrow 07:00 | today 19:00 | A bare `at N` is read on a 24-hour clock (G:315-332) |
+| 44 | `call mom thu` (Thu 18:00) | TE 61 | task, **next** Thu 22 Oct 09:00 | eval says Thu 15 Oct | G:301-303 conflicts with the eval. Decide on one rule, then fix one side |
+| 45 | `call mom at 7` (18:00) | TE 100 | task tomorrow 07:00 | today 19:00 | A bare `at N` is read on a 24-hour clock (G:315-332) |
 | 46 | `buy milk today` (after 09:00) | derived KP 50 | task "Buy milk", today 09:00 (already past) | groceries, or a task with no time | A date with no time is set to 09:00 even when that is in the past (G:298) |
 
 46 collisions in total: 36 are wrong today and 10 are future (rows 2 to 10 and 40, 41 and 43 depend on grammar that is not built yet; row 3 is correct today and only needs a guard).
@@ -143,7 +143,7 @@ static let collisionRows: [CollisionRow] = [
     .init("finished Dune: slow start, great end", .idle, "book.finish Dune review"),
     .init("add project hail mary to books", .idle, "list.add Books"),
     .init("done for today", .workout, "workout.finish"),
-    .init("done call mum", .idle, "task.complete Call mum"),
+    .init("done call mom", .idle, "task.complete Call mom"),
     .init("move dentist to friday", .idle, "task.reschedule Dentist Fri"),
     .init("not today passport", .idle, "task.reschedule Renew passport later"),
     .init("i feel like rubbish today skip leg day", .idle, "nothing"),
@@ -152,7 +152,7 @@ static let collisionRows: [CollisionRow] = [
     .init("everything from tuesday", .idle, "question"),
     .init("what did i get done today", .idle, "question"),
     .init("what did tess log today", .idle, "question"),
-    .init("buy present for mums birthday on the twentieth", .idle, "task Buy present for mums birthday 20 Oct"),
+    .init("buy present for moms birthday on the twentieth", .idle, "task Buy present for moms birthday 20 Oct"),
     .init("buy sun cream", .idle, "groceries [sun cream]"),
     .init("buy eggs and remind me to defrost the chicken tonight", .idle, "groceries [eggs] + task Defrost the chicken 20:00"),
     .init("bench 80x8 today", .idle, "lift Bench Press 80x8"),
@@ -177,10 +177,10 @@ static let collisionRows: [CollisionRow] = [
     .init("add sunscreen", .idle, "groceries [sunscreen]"),
     .init("parmesan", .shopping, "groceries [parmesan]"),
     .init("idea: tess should read my log back", .idle, "note"),
-    .init("call mum thu", .idle, "task Call mum Thu 15 Oct"),
-    .init("call mum at 7", .idle, "task Call mum 19:00 today"),
+    .init("call mom thu", .idle, "task Call mom Thu 15 Oct"),
+    .init("call mom at 7", .idle, "task Call mom 19:00 today"),
     .init("buy milk today", .idle, "ambiguous groceries|task"),
-    .init("note mums birthday sat", .idle, "note"), // guard
+    .init("note moms birthday sat", .idle, "note"), // guard
     .init("todo buy bulbs", .idle, "task Buy bulbs later"), // guard
     .init("list the car on ebay sat", .idle, "task List the car on ebay Sat"), // guard
     .init("bench 80, 8", .idle, "lift Bench Press 80x8"), // guard

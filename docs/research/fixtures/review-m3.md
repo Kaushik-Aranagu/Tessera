@@ -134,11 +134,11 @@ and Sunday already holds row 5, so it adds nothing: Read is 4 of 5 in W1 and **1
 | R10 | 26 Oct, Mon 2 Nov 03:50 | One session this week | Cook 3 of 4, Read 4 of 5. | `·●–···.` | Gym, paused this week thread ` ▬     `; Cook 3 of 4 thread ` ▬ ▬  ▬`; Read 4 of 5 thread `▬  ▬ ▬▬` | (none) |
 | R11 | 2 Nov, Mon 2 Nov 04:05 | A quiet week so far | (none) | `.......` | Gym 0 of 3 thread ` ......`; Cook 0 of 4 thread ` ......`; Read 0 of 5 thread ` ......` | (none) |
 | R12 | 2 Nov, Sat 7 Nov 23:00 | Four sessions this week | Gym 4 of 3, Cook 3 of 4, Read 2 of 5. | `●–●–●●.` | Gym 4 of 3 thread `▬ ▬ ▬▬.`; Cook 3 of 4 thread `  ▬ ▬▬.`; Read 2 of 5 thread `    ▬▬.` | (none) |
-| R13 | C: 12 Oct, Sun 18 Oct 20:00, four habits made this week | All three sessions in | Train 1, Read 1, Meditate 1, all new this week. | not traced (demo store) | TRAIN · 1, NEW THIS WEEK thread `     ▬.`; READ · 1, NEW THIS WEEK thread `    ▬ .`; MEDITATE · 1, NEW THIS WEEK thread `     ▬.`. Call mum (fourth) has no line here | (none) |
+| R13 | C: 12 Oct, Sun 18 Oct 20:00, four habits made this week | All three sessions in | Train 1, Read 1, Meditate 1, all new this week. | not traced (demo store) | TRAIN · 1, NEW THIS WEEK thread `     ▬.`; READ · 1, NEW THIS WEEK thread `    ▬ .`; MEDITATE · 1, NEW THIS WEEK thread `     ▬.`. Call mom (fourth) has no line here | (none) |
 | R14 | C: 19 Oct, Thu 22 Oct 20:00 | All three sessions in | Train 3 of 3, Read 4 of 5, Meditate 1 of 3. | not traced (demo store) | TRAIN · 3 OF 3 thread `▬ ▬▬...`; READ · 4 OF 5 thread `▬▬▬▬...`; MEDITATE · 1 OF 3 thread `▬   ...` | (none) |
 
 **World C** (item 109, America/Los_Angeles): the walk in `../habits-first-use.md`. Read (5, manual) made Fri 16 Oct
-20:57, Meditate (3) Sat 09:00, Train (3, rule workout) Sat 09:30, Call mum (1) Sat 12:00 and deleted Thu 22 Oct.
+20:57, Meditate (3) Sat 09:00, Train (3, rule workout) Sat 09:30, Call mom (1) Sat 12:00 and deleted Thu 22 Oct.
 R13: Train counts only Saturday's Push A; Tuesday's and Thursday's finishes came before Train existed (Product
 9:04 PM PT, G6). Read's 00:40 Saturday "read 20 pages" is Friday's, already in. R14: Meditate is 1 of 3, Monday only;
 the walk's step 42 ("meditated yesterday" on Tuesday) lands on Monday, which step 34 already ticked, so it says
