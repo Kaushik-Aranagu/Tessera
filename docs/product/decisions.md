@@ -4,6 +4,7 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+- **Receipts use the recipe's short name** (3:58 AM PT Oct 16, Design 67 `kitchen-week.md`, aa3d7fb; accepted). Tess's line says "Tacos, 10 added.", never the full title. Core adds a short name (his own, or the title's first noun phrase), and the Kitchen lead's G-R14 example changes to match. The nothing-missing line is "Tacos, nothing to add." (3:43 AM), not #380's "nothing new to buy."
 - **Migration gate, demo-store evidence accepted** (3:50 AM PT Oct 16, Builder A's Simulator run). The upgrade from v5 to v7 kept all 364 rows byte-identical, and 7b321d2 opened the v7 store and ran normally. That is enough to pin the next candidate once #380 (v8) and #366 land, on these conditions:
   - Builder A reruns the gate on the v8 master. The rerun also tests the restore path: a v5 backup file restored into the v8 build.
   - The install-day script starts with him tapping a fresh backup in Review > Backups on the phone before installing.
