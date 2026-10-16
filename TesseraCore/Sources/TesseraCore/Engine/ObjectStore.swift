@@ -30,6 +30,7 @@ public struct ObjectStore {
     public func invalidateCaches() {
         cache.classObjects.removeAll()
         cache.classInfo.removeAll()
+        cache.derived.opZonesState = nil // a reset log is read again from the start (QA L2 on #399)
         noteChange()
     }
 

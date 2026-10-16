@@ -115,7 +115,13 @@ public struct TrainingLedger {
 
     public func records(for exercise: ClassDef, excludingWorkout excludedID: UUID? = nil) -> PersonalRecords {
         var records = PersonalRecords()
-        for session in sessions(of: exercise, excludingWorkout: excludedID) {
+        // Order doesn't matter for bests, so the index is read as it is: no sort and no filtered copy per call. Each
+        // logged set asks this (#344's flag), and a sort per set made a 5-year log quadratic (QA S1 on #377).
+        let index = index
+        let sessions = ClassResolver.descendants(of: exercise).lazy
+            .flatMap { index.sessionsByClass[$0.id] ?? [] }
+            .filter { $0.workoutID != excludedID }
+        for session in sessions {
             for set in session.sets {
                 if set.isE1RMEligible, set.e1RM > (records.bestE1RM?.e1RM ?? -.infinity) {
                     records.bestE1RM = set
