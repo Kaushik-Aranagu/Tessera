@@ -129,7 +129,7 @@ enum WorkoutLines {
         switch phase {
         case .rest:
             if let seated = session.lastSeated, !seated.records.isEmpty, let e1RM = seated.e1RM {
-                return ("a new best: e1RM \(tenth(e1RM))", Paint.now, true)
+                return ("a new best: e1RM \(tenth(e1RM))", Paint.secondary, false)
             }
             // The exercise's last rest sums it up: "4 sets, 82.5 × 8 best".
             if rows.count >= target, let best = bestRow(rows) {
@@ -148,11 +148,11 @@ enum WorkoutLines {
             return ("", Paint.secondary, false)
         case .set:
             if let rpe = session.rpe {
-                return ("RPE \(RPEStops.formatted(rpe)), \(RPEStops.words(for: rpe))", Paint.now, true)
+                return ("RPE \(RPEStops.formatted(rpe)), \(RPEStops.words(for: rpe))", Paint.secondary, false)
             }
             if let hint = session.recordHint {
                 let previous = hint.previous.map { ", \($0)" } ?? ""
-                return ("set \(session.currentSetNumber): \(hint.text)\(previous)", Paint.now, true)
+                return ("set \(session.currentSetNumber): \(hint.text)\(previous)", Paint.secondary, false)
             }
             if session.swappedFrom != nil, rows.isEmpty {
                 return ("swapped for today, set \(session.currentSetNumber) of \(target)", Paint.tess, false)
@@ -246,7 +246,7 @@ enum WorkoutLines {
             return "\(SwapPanel.short(from)) stays in the plan."
         }
         // Nothing is said about a best before the set; it's said once logged ("New best: …", 56 addendum).
-        if let note = session.restNote, note.hasPrefix("Skipped") {
+        if let note = session.restNote, note.hasPrefix("Rest skipped") {
             return note
         }
         if session.canUndo {

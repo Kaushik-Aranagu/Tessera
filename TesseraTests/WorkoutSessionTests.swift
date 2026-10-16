@@ -264,7 +264,7 @@ struct WorkoutSessionTests {
         #expect(session.restNote == "+15. Drag again for more.")
         session.skipRest()
         #expect(session.phase() == .set)
-        #expect(session.restNote == "Skipped. Set 2 is up.")
+        #expect(session.restNote == "Rest skipped. Set 2 is up.")
     }
 
     @Test func aHeavyFirstSetOffersADropForTheRest() throws {

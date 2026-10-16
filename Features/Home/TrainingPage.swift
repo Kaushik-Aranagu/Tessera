@@ -331,10 +331,11 @@ private struct TrainingAtRest: View {
         case let .routine(routine):
             guard let slot = routine.orderedChildren.first,
                   let exercise = model.store.linkedClass("exercise", of: slot) else { return nil }
-            guard let last = model.ledger.sessions(of: exercise).first?.sets.first, last.weight > 0 else {
+            guard model.ledger.sessions(of: exercise).first?.sets.first != nil else {
                 return "First time on \(exercise.name.lowercased()). Start light."
             }
-            return "\(exercise.name) is ready for \(Format.kilograms(last.weight)) today."
+            // The target is last time's: nothing to say (56 addendum).
+            return nil
         case let .scheduled(workout):
             guard let entry = workout.orderedChildren.first,
                   let exercise = model.store.linkedClass("exercise", of: entry) else { return nil }
@@ -342,7 +343,8 @@ private struct TrainingAtRest: View {
             if prefill.isFirstTime {
                 return "First time on \(exercise.name.lowercased()). Start light."
             }
-            guard let weight = prefill.weight, weight > 0 else { return nil }
+            // Only when the plan moved the target (progression); the same as last time is silence.
+            guard prefill.source == .target, let weight = prefill.weight, weight > 0 else { return nil }
             return "\(exercise.name) is ready for \(Format.kilograms(weight)) today."
         case .running:
             return nil
