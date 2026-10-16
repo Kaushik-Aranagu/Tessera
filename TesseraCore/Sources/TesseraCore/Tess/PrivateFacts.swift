@@ -3,7 +3,9 @@ import Foundation
 /// Money and body facts stay on the phone (Product 999df84, Research 129 MU2 and 138 MW1/MW7; docs/ai/architecture.md
 /// §7). One check for every Claude caller: the router skips Claude's route for a walled phrase before any
 /// `isAvailable`, Claude's own route refuses it again, and the inbox never keeps one. The grammar and the phone's own
-/// model may still read it. A money or body word with no number passes (W4: no amount means a task).
+/// model may still read it. A money or body word with no number passes (W4): "pay rent fri" is a task. In the past
+/// tense the past-tense log wins over W4: "paid rent fri" and "bought milk sat" are ordinary dated notes, not tasks
+/// and not private (Product, 12:21 PM PT Oct 16).
 public enum PrivateFacts {
     /// Whether a phrase must never reach Claude: money-shaped or body-shaped (secret words have their own wall).
     public static func isWalled(_ phrase: String) -> Bool {
@@ -15,7 +17,7 @@ public enum PrivateFacts {
     /// Currency words, spend and pay words, accounts, and the memory screen's money words (one list for both walls).
     static let moneyWords: Set<String> = TessMemoryScreen.moneyWords.union([
         "usd", "dollar", "dollars", "bucks", "buck", "gbp", "pound", "pounds", "quid", "tenner", "fiver", "eur", "euro",
-        "euros", "inr", "rs", "rupee", "rupees", "cad", "aud", "chf", "jpy", "yen", "spend", "paid", "pay", "bought",
+        "euros", "inr", "rs", "rupee", "rupees", "cad", "aud", "chf", "jpy", "yen", "spend", "paid", "pay",
         "cost", "costs", "refund", "refunded", "tip", "tipped", "venmo", "venmoed", "zelle", "zelled", "paypal", "owe",
         "owes", "balance", "checking", "savings", "salary", "paycheck", "copay", "rent",
     ])
@@ -27,7 +29,7 @@ public enum PrivateFacts {
         let lower = phrase.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !lower.isEmpty else { return false }
         // "paid" or "spent" with an amount is always money, even shaped like a set: "paid 20 for 2 tickets" (L3).
-        let spent = lower.firstMatch(of: /\b(?:paid|spent|spend|bought)\b/) != nil && hasAmount(lower)
+        let spent = lower.firstMatch(of: /\b(?:paid|spent|spend)\b/) != nil && hasAmount(lower)
         guard spent || !isTraining(lower) else { return false }
         if spent || lower.contains(where: { "$£€₹¥".contains($0) }) {
             return true

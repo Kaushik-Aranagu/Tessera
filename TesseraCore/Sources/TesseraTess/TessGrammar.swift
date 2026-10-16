@@ -114,7 +114,7 @@ public struct TessGrammar {
             return nil
         }
         // Money said ("spent $23.47 at trader joe's sat") is never a task or a list until Money exists: the miss line.
-        if Self.isMoney(phrase), phrase.lowercased().firstMatch(of: /^(?:spent|spend|paid|pay|cost|bought)\b/) != nil
+        if Self.isMoney(phrase), phrase.lowercased().firstMatch(of: /^(?:spent|spend|paid|pay|cost)\b/) != nil
             || phrase.firstMatch(of: /^[$£€₹]\s?\d/) != nil
         {
             return nil
@@ -138,7 +138,17 @@ public struct TessGrammar {
         if phrase.firstMatch(of: Self.rescheduleShape) != nil {
             return nil
         }
-        return parseTask(phrase, context: context) ?? parseBodyFact(phrase)
+        return parseTaskOrBodyFact(phrase, context: context)
+    }
+
+    /// A body fact with a day ("headache since tuesday") is a private note, not a task (QA R1 on #471), unless it
+    /// opens with something to do: "call the doctor about my knee thu" and "refill lexapro 10mg fri" stay tasks.
+    func parseTaskOrBodyFact(_ phrase: String, context: TessContext) -> Parse? {
+        let toDo = phrase.firstMatch(
+            of: /^(?i)\s*(?:call|ring|book|schedule|see|email|text|ask|refill|order|buy|get|pick up|todo|to do|remind me)\b/
+        ) != nil
+        return toDo ? parseTask(phrase, context: context) ?? parseBodyFact(phrase)
+            : parseBodyFact(phrase) ?? parseTask(phrase, context: context)
     }
 
     /// "remember my rent is 2100": a sum of money is never kept, and never leaves the phone (v9 W10).
