@@ -51,6 +51,8 @@
 - [ ] **Standing approval removes asking him, not the gates. Only the named pin SHA installs: never master, never any other commit.** Install under his standing approval (12:36 PM PT Oct 16, Builder A's thread): Builder A installs whenever the phone is reachable over Wi-Fi, with no ask. Every safety step stays: Product names the SHA, the v9 gate, QA and the Design 66 walk pass, Step 0 SAVE A COPY runs, the install goes in place over Wi-Fi, the app is never deleted, and he gets one line after.
 - [ ] **Step 0 copy name and place (decisions 1:41 PM PT Oct 16, Research AN):** save the Step 0 copy OUTSIDE the Backups folder, for example in Files > On My iPhone > Tessera Step 0, and rename it "Before a36b161" (for later installs, "Before <SHA>"). A copy left in Backups with the suggested "Tessera-<day>.tessera" name (BackupKeeper.swift:170) can be replaced or pruned by the new build. Check the copy is there BEFORE installing.
 
+**Next pins (decisions 1:43 PM PT Oct 16):** the next pin is a v9 rider build (PN-MENTION, N15, P14, HW sick words with CR1, UNDO slot, 0ae trip bands, Step 0 name), with no catalog change, so a36b161 and it read each other's store. Catalog v10 (#407 and the eyes setting) ships after that, alone, as its own pin, under the after-v10 rules in §7.
+
 ## 7. Rollback (decisions 12:16 PM PT Oct 16)
 
 Before the pin is on his phone, the rollback is 444e72b (v5). Once the pin is installed, the rollback is 7b321d2. It is the only older build tested on the v9 store (gate V4). 444e72b is not used after the pin, because a v5 build on a v9 store was never tested.
