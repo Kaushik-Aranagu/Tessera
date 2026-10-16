@@ -4,7 +4,7 @@ For: Core engine (`TessGrammar`, `TessDates`), board item 33. Research lab. Date
 
 One deduplicated table of every grammar phrase row in today's fixtures, with one expected parse per phrase under today's Product calls and its status on current master. Core runs it as a single suite after each grammar PR.
 
-**Master read:** `origin/master` at `1d0833c` (Merge PR #175), rechecked 2026-10-16 for board item 49: no file under `TesseraCore/` changed between `15fc404` and `1d0833c`, so every status below carries over. First read at `15fc404` (Merge PR #162). The 5:58 PM PT grammar regression calls were applied to rows A to I in a second pass on `1d0833c` (17 rows, marked "(5:58 call)"), then the 6:47 PM PT call (17 rows, marked "(6:47 call)"), then the 7:06 PM PT open-question calls (18 rows, marked "(7:06 call)"). The grammar files (`TessGrammar.swift`, `TessGrammar+Kitchen.swift`) last changed in `82c51d9` (the #153 hotfix), so `15fc404` parses exactly as `db049cb`, the commit the post-hotfix sections traced. No Swift toolchain here: every status is a hand trace. Nothing was run. Group K (board item 61) was traced on `0a27447` (Merge PR #189). Its set rules are unchanged since `1d0833c`; the grammar did change in between (the reschedule past guard, a late `tonight`, `tomorrow` and `pastDay` on His day, `notGroceries`), and rows A to J were not re-traced against those changes. Board item 66 reran every `live workout` row on `aec9ccd` (Merge PR #205, the live-workout guard): 28 rows flip to pass (`set-logger-rerun.md`); no other row has an entry in focus, so no other row can change. Groups L (habits, board item 70) and M (body weight, board item 71) were traced on `bf28a92` (Merge PR #208), whose grammar is `aec9ccd`'s. **Base now `dc0968f`** (Merge PR #212; the grammar of `157f882`, with Core's #210, `e75f40f`): every `live workout` row was re-traced on it; K815 to K818 and M860 flip to pass, and K874 to K883 are new. No row outside a live workout can change, since the new code runs only with an entry in focus.
+**Master read:** `origin/master` at `1d0833c` (Merge PR #175), rechecked 2026-10-16 for board item 49: no file under `TesseraCore/` changed between `15fc404` and `1d0833c`, so every status below carries over. First read at `15fc404` (Merge PR #162). The 5:58 PM PT grammar regression calls were applied to rows A to I in a second pass on `1d0833c` (17 rows, marked "(5:58 call)"), then the 6:47 PM PT call (17 rows, marked "(6:47 call)"), then the 7:06 PM PT open-question calls (18 rows, marked "(7:06 call)"). The grammar files (`TessGrammar.swift`, `TessGrammar+Kitchen.swift`) last changed in `82c51d9` (the #153 hotfix), so `15fc404` parses exactly as `db049cb`, the commit the post-hotfix sections traced. No Swift toolchain here: every status is a hand trace. Nothing was run. Group K (board item 61) was traced on `0a27447` (Merge PR #189). Its set rules are unchanged since `1d0833c`; the grammar did change in between (the reschedule past guard, a late `tonight`, `tomorrow` and `pastDay` on His day, `notGroceries`), and rows A to J were not re-traced against those changes. Board item 66 reran every `live workout` row on `aec9ccd` (Merge PR #205, the live-workout guard): 28 rows flip to pass (`set-logger-rerun.md`); no other row has an entry in focus, so no other row can change. Groups L (habits, board item 70) and M (body weight, board item 71) were traced on `bf28a92` (Merge PR #208), whose grammar is `aec9ccd`'s. **Base now `dc0968f`** (Merge PR #212; the grammar of `157f882`, with Core's #210, `e75f40f`): every `live workout` row was re-traced on it; K815 to K818 and M860 flip to pass, and K874 to K883 are new. No row outside a live workout can change, since the new code runs only with an entry in focus. **Item 93: base now `e9f4a06`** (Merge PR #233, 15 Oct 8:27 PM PT). No grammar file changed since `dc0968f`, but rows A to J were finally re-traced against the four grammar changes made after their trace base (`2537cad`: the reschedule past guard, the late `tonight` window, `a/an` alone no longer proving non-food; `7eb2b58`: `tomorrow` and `pastDay` on his 4 AM day), and every row was checked against every Product call through 8:07 PM PT Oct 15. C379, J751 and J756 flip from wrong write to pass, D473 and K817 move from pass to miss (SQ8), A026 and A027 get the 8:00 PM ask. Totals now: 883 rows, 698 pass, 110 wrong write, 75 miss (was 697, 113, 73). Every change is listed in "Changes in item 93" at the end.
 
 ## Sources and coverage
 
@@ -70,12 +70,14 @@ One deduplicated table of every grammar phrase row in today's fixtures, with one
 | T706 | 7:06 PM open-question calls (Research #188, all 20 defaults, `grammar-open-defaults.md`): the grammar reads `in N` and `day after tomorrow`, and a plain relative time rings; `N days before X` goes to the model; `remind me in 20` in a cook is a timer; RPE `@N` in a live workout only; a drop with no reps and `add 2.5` go to the model; `add X` is Groceries; M8 sends `12.40 lunch fri` to the model once Money lands; percent sets the page (asks with no page count); `abandoned`, `gave up on`, `dnf` set a book aside; a bare number is the page of the book in front; `rang mum` is a call; `lunch with ravi` asks plan or done (replaced by P800); `buy flowers for mum` is a task about Mum; a lone `will` is ignored; and-lists and training partners go to the model; a month alone is the 1st and a month is 30 days; "Bins every Thursday" keeps its title |
 | R630 | 6:30 PM: "remind me" plus a day alerts at 9 AM; a plain "call mum sat" gets no time and no alert |
 | S701 to S706 | Set-logger defaults (board item 61, `set-logger.md`), taken by Product at 7:24 PM PT and built in PR #205 (`aec9ccd`): S701 a bare whole number is reps only from 1 to 50 and not within two loads of the last weight, else the model; S702 `+N` and `-N` alone go to the model; S703 a weight in kg snaps to the dial's nearest load (a tie to the lighter), outside the dial's range goes to the model, pounds are kept as said; S704 `at N` after a set is RPE 5 to 10 in a live workout, never a time; S705 `to failure` and `warmup` set the kind, `fail at N` goes to the model; S706 `bodyweight N`, `+W for R` on a bodyweight lift and `bar for N` are read, `skip` writes nothing. Each turns a wrong write into a miss or the right write |
-| SQ8 | Decided (Product, 7:53 PM PT), QA Q8 (`qa/review-210.md`): a bare `N x M` (no unit said) asks when N is 6 or less and under half the last set's weight (QA's rule); on a bodyweight lift a bare `N x M` always asks, since added load is said `+W for R` (S706); a unit said (`4 kg x 10`) always logs as a weight. A wrong 2 kg or 5 kg set lands in the history, the e1RM and the PR ledger unasked, while a question costs one tap, and a real drop still logs at once with the unit or the dial. The ask lines are exact: "2 × 10: 2 sets, or 2 kg?" and, on a bodyweight lift, "5 × 5: 5 sets, or +5 kg?" (rows in `set-logger.md`, Q01 to Q28) |
+| SQ8 | Decided (Product, 7:53 PM PT), QA Q8 (`qa/review-210.md`): a bare `N x M` (no unit said) asks when N is 6 or less and under half the last set's weight (QA's rule); on a bodyweight lift a bare `N x M` always asks, since added load is said `+W for R` (S706); a unit said (`4 kg x 10`) always logs as a weight. A wrong 2 kg or 5 kg set lands in the history, the e1RM and the PR ledger unasked, while a question costs one tap, and a real drop still logs at once with the unit or the dial. The ask lines are exact: "2 × 10: 2 sets, or 2 kg?" and, on a bodyweight lift, "5 × 5: 5 sets, or +5 kg?" (rows in `set-logger.md`, Q01 to Q28). The rule holds in a live workout for `x` (not `for`), barbell lifts included (Q11). Edges confirmed 8:07 PM PT (Research 81): exactly half the last weight logs; with no last set only a bodyweight lift asks; N of 7 or more logs, snapped to a loadable weight (any N asks on a bodyweight lift, Q14); another phrase in the same capture drops the ask; a spoken "kilos" counts as a unit |
+| S800 | 8:00 PM PT (Research 75): a set phrase with a weekday (`bench 80x8 mon`) asks rather than logging, since `logSet` cannot date a set; the line is Research's proposal, "Log bench 80 x 8 for Monday?" |
+| R743 | 7:43 PM PT (Research 66 rerun of #205): a number followed by `reps` always logs reps, exempt from S701's near-weight test (built in #210) |
 | P800 | 8:00 PM PT people plans: people plus a coming day, with no past-tense verb, is a plan: a task for that day with UNDO, and Tess never asks "planning or done?" (with no day said, the task goes to Later). Replaces T706's `lunch with ravi` ask |
 | H734 | 7:34 PM PT M3 call, habits (Research #204, every `m3-lines.md` default taken): a habit counts "x of" its weekly target, 3 when none is said; an exact name, `habit X`, `✓ X`, the name plus a quantity and its past or -ing form check in; an unknown name falls through, never creating a habit; Core adds the rule "new habit {name} {n} a week" |
 | B734 | 7:34 PM PT M3 call, body weight: D12 settled, S701 stands (a bare number near the last set weight mid-workout goes to the model, weights snap); idle, a bare 30 to 250 kg is a ghost that waits for a tap; `weighed`, `weigh`, `i weigh`, `weight`, `bw` or a unit commit after 2 s; mid-workout only `bw X` weighs in; outside the range goes to the model; with lb chosen the range is 66 to 550 (D11); "Body weight logged. 82.4 kg." |
-| HP1 to HP7 | Proposed habit grammar defaults (board item 70, `habits-grammar.md`), awaiting Product: HP1 counts (`twice`, number words, `every day` 7; 0 or past 7 to the model; `from <day>` dropped); HP2 `new habit X` for an existing name changes its target; HP3 `today` and a past day this week check in that day, a future day is a task, before Monday the model; HP4 irregular past forms from a short table (`ran` Run); HP5 while a process runs only `habit X` and `✓ X` check in; HP6 a name shared with an open task: bare to the model, past form checks in and ticks the task in one ghost row; HP7 `pause`, `resume`, `skip X this week` pause and resume, `skip X today` writes nothing, `delete habit X` only with the word `habit`. None writes where master does not |
-| BP1 to BP6 | Proposed body weight grammar defaults (board item 71, `body-weight.md`), awaiting Product: BP1 a comma decimal (`82,4`) goes to the model, idle or mid-workout, never a list or two sets; BP2 `yesterday` or a weekday in the last 6 days dates the weigh-in and replaces that day's entry; BP3 a unit said wins over the setting; BP4 in a bodyweight entry `bw N` is reps for a whole 1 to 50, else a weigh-in; BP5 a waiting shop total and the book in front come before the weigh-in ghost; BP6 spoken numbers arrive through the normaliser. None writes where master does not |
+| HP1 to HP7 | Habit grammar defaults (board item 70, `habits-grammar.md`), confirmed by Product 7:50 PM PT (Research #212): HP1 counts (`twice`, number words, `every day` 7; 0 or past 7 to the model; `from <day>` dropped); HP2 `new habit X` for an existing name changes its target; HP3 `today` and a past day this week check in that day, a future day is a task, before Monday the model; HP4 irregular past forms from a short table (`ran` Run); HP5 while a process runs only `habit X` and `✓ X` check in; HP6 a name shared with an open task: bare to the model, past form checks in and ticks the task in one ghost row; HP7 `pause`, `resume`, `skip X this week` pause and resume, `skip X today` writes nothing, `delete habit X` only with the word `habit`. None writes where master does not |
+| BP1 to BP6 | Body weight grammar defaults (board item 71, `body-weight.md`), confirmed by Product 7:50 PM PT (Research #212): BP1 a comma decimal (`82,4`) goes to the model, idle or mid-workout, never a list or two sets; BP2 `yesterday` or a weekday in the last 6 days dates the weigh-in and replaces that day's entry; BP3 a unit said wins over the setting; BP4 in a bodyweight entry `bw N` is reps for a whole 1 to 50, else a weigh-in; BP5 a waiting shop total and the book in front come before the weigh-in ghost; BP6 spoken numbers arrive through the normaliser. None writes where master does not |
 | MB | Master behaviour the fixtures agree on; no call needed (guard rows) |
 | FX | The fixture's own expected value; no Product call covers it (see open questions where it matters) |
 
@@ -122,13 +124,13 @@ RC1 to RC20 are `grammar-misfires.md`'s. New here: **RELT** relative dates (`in 
 
 Rows no post-hotfix section covered, traced on `15fc404`:
 
-- **`move dentist to today` writes a time in the past** (C379). The hotfix's "keep what wasn't said" puts the Dentist's old 10:00 on today: Thu 15 10:00, eight hours ago. Reschedule rule R13e (never in the past) is not built.
+- **`move dentist to today` writes a time in the past** (C379). The hotfix's "keep what wasn't said" puts the Dentist's old 10:00 on today: Thu 15 10:00, eight hours ago. Reschedule rule R13e (never in the past) is not built. (Item 93: fixed by `2537cad`, the past guard at TG:202-205 puts back the said date, Thu 15 19:00; C379 passes.)
 - **`move dentist to 9:30` lands at 21:30** (C372). `TessDates` resolves the bare 9:30 against today (21:30 is next), then the reschedule moves that hour to Sat. On another day it should be 09:30 (T441).
 - **`moved dentist to fri` becomes a note dated last Friday** (C397), and **`changed the meeting to fri`** does the same (I716). The past-log rule reads `fri` as a past day even after `to`.
 - **`can you move the dentist to friday`** (C395) now goes to the question path (`can you`), so it is a miss instead of a wrong task.
 - **`test the smoke alarm at 7`** (I736) is Fri 07:00 because `alarm` is still in `amCues`.
 - **`timer 2:30` in a cook** (D450) is now the task "Timer", Fri 14:30 (was 02:30).
-- **Reminder rows** (J, traced at `2473436`, same grammar as `1d0833c`): 9 of 38 pass on the parse; none can pass on `alerts`, which master does not have (no `alerts`, no notifications, no "On Now then." anywhere in `TesseraCore`). `remind me tonight` at 21:15 rolls to Sat 20:00 (J751) and `remind me tomorrow at 9` at 00:30 lands on Sun (J756).
+- **Reminder rows** (J, traced at `2473436`, same grammar as `1d0833c`): 9 of 38 pass on the parse; none can pass on `alerts`, which master does not have (no `alerts`, no notifications, no "On Now then." anywhere in `TesseraCore`). `remind me tonight` at 21:15 rolls to Sat 20:00 (J751) and `remind me tomorrow at 9` at 00:30 lands on Sun (J756). (Item 93: both pass on `e9f4a06`, J751 through the late `tonight` window at TG:583-589, J756 through his-day `tomorrow` at TG:535-538.)
 - **`call mum at 7 tonight`** (C407 area, reschedule B16) and **`move haircut to tonight` at 23:30** (C405) now pass.
 
 ## The table
@@ -166,8 +168,8 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | A023 | `watched dune sat` | none | note "Watched dune" Sat 10 12:00 | grammar-misfires#23 | C2 | pass |
 | A024 | `walked 10k steps fri` | none | note "Walked 10k steps" Fri 9 12:00 | grammar-misfires#24 | C2 | pass |
 | A025 | `benched 80x8 mon` | none | note "Benched 80x8" Mon 12 12:00, never a task | grammar-misfires#25 | C2 | pass |
-| A026 | `bench 80x8 mon` | none | lift Bench Press 80x8 dated Mon 12, or nil; never a task | grammar-misfires#26 | FX | wrong write (RC12) |
-| A027 | `squat 100x5 tue` | none | lift Back Squat 100x5 dated Tue 13, or nil; never a task | grammar-misfires#27 | FX | wrong write (RC12) |
+| A026 | `bench 80x8 mon` | none | no write, asks "Log bench 80 x 8 for Monday?" (Mon 12; never a task, never logged today) (8:00 call; e9f4a06: no exercise named `bench mon`, so task "Bench 80x8" Mon 19 09:00) | grammar-misfires#26 | S800 | wrong write (RC12) |
+| A027 | `squat 100x5 tue` | none | no write, asks "Log squat 100 x 5 for Tuesday?" (Tue 13; never a task, never logged today) (8:00 call; e9f4a06: task "Squat 100x5" Tue 20 09:00) | grammar-misfires#27 | S800 | wrong write (RC12) |
 | A028 | `ran 5k in 22:15` | none | note "Ran 5k in 22:15" Thu 15, never a task | grammar-misfires#28 | C2 | wrong write (RC2) |
 | A029 | `slept at 11` | none | note "Slept at 11" Thu 15, never a task | grammar-misfires#29 | C2 | wrong write (RC2) |
 | A030 | `woke up at 6` | none | note "Woke up at 6" Thu 15, never a task | grammar-misfires#30 | C2 | wrong write (RC2) |
@@ -529,7 +531,7 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | C376 | `move dentist to fri at 4` | none, tasks | reschedule Dentist Fri 16 16:00 | reschedule-time-rows#A11 | C1 | pass |
 | C377 | `push the dentist to thu 3pm` | none, tasks | reschedule Dentist Thu 22 15:00 (named weekday means that weekday) | reschedule-time-rows#A12 | T441 | pass |
 | C378 | `move dentist to tonight` | none, tasks | reschedule Dentist Thu 15 20:00 | reschedule-time-rows#A13 | MB | pass |
-| C379 | `move dentist to today` | none, tasks | reschedule Dentist Thu 15, no time, alerts F (6:47 call) [N1] · now: reschedule Dentist Thu 15 19:00 (kept 10:00 has passed) | reschedule-time-rows#A14 | C5, T647, T650 | wrong write (RC13) |
+| C379 | `move dentist to today` | none, tasks | reschedule Dentist Thu 15, no time, alerts F (6:47 call) [N1] · now: reschedule Dentist Thu 15 19:00 (e9f4a06: the kept 10:00 has passed, so the past guard at TG:202-205 puts back the said date, the next whole hour) | reschedule-time-rows#A14 | C5, T647, T650 | pass |
 | C380 | `move haircut to 7` | none, tasks | reschedule Haircut Thu 15 19:00 (5:58 call) | reschedule-time-rows#A15 | C1, D558 | miss (RC13) |
 | C381 | `move pay rent to 7pm` | none, tasks | reschedule Pay rent Fri 16 19:00 | reschedule-time-rows#A16 | FX | pass |
 | C382 | `move pay rent to 5pm` | none, tasks | reschedule Pay rent Fri 16 17:00 | reschedule-time-rows#A17 | FX | pass |
@@ -628,7 +630,7 @@ Machine-readable rows sit between the two markers below. Each row is one line, s
 | D470 | `pasta 500` | cook, 18:00 | nil (over the 180 cap) | cook-timer-phrases#33 | K450 | pass |
 | D471 | `2 onions` | cook, 18:00 | nil (writes nothing mid-cook) | cook-timer-phrases#34 | K450 | pass |
 | D472 | `3x10` | cook, 18:00 | nil | cook-timer-phrases#35 | MB | pass |
-| D473 | `3x10` | live workout | nil (no weight said; never 3 kg) (dc0968f: goes to the model through the light-kit check, LV:83-86, since 3 kg is no Bench Press load; with dumbbells in focus see K817, and for set counts that are real loads K876 to K881) | cook-timer-phrases#36 | FX | pass |
+| D473 | `3x10` | live workout | ask "3 × 10: 3 sets, or 3 kg?", no write (3 is 6 or less and under half of 80; never 3 kg) (e9f4a06: the light-kit check at LV:83-86 sends it to the model, no ask; with dumbbells in focus see K817, and for set counts that are real loads K876 to K881) | cook-timer-phrases#36 | SQ8 | miss (RC12) |
 | D474 | `9 min` | none | nil | cook-timer-phrases#37 | MB | pass |
 | D475 | `9 min` | live workout | nil | cook-timer-phrases#38 | MB | pass |
 | D476 | `timer 10` | live workout | ignoredInWorkout | cook-timer-phrases#40 | MB | pass |
@@ -938,12 +940,12 @@ From `reminders.md` (R01 to R40, traced at `2473436`; grammar unchanged since `8
 | J748 | `set a reminder for 6 to call mum` | none, Fri 17:40 | task "Call mum" Fri 16 18:00, alerts T | reminders#R12 | C1, N620 | miss (LEAD) |
 | J749 | `Remind me at 6 PM to call Mum.` | none, Fri 17:40 | task "Call Mum" Fri 16 18:00, alerts T | reminders#R13 | N620 | wrong write (RC11) |
 | J750 | `remind me tonight to take my pills` | none, Fri 17:40 | task "Take my pills" Fri 16 20:00, alerts T | reminders#R15 | T441, N620 | pass |
-| J751 | `remind me tonight to take my pills` | none, Fri 21:15 | task "Take my pills" Fri 16 22:00, alerts T (after 20:00: the next whole hour, until 23:30) | reminders#R16 | T441, D558, N620, T650 | wrong write (DAY4) |
+| J751 | `remind me tonight to take my pills` | none, Fri 21:15 | task "Take my pills" Fri 16 22:00, alerts T (after 20:00: the next whole hour, until 23:30) | reminders#R16 | T441, D558, N620, T650 | pass |
 | J752 | `remind me sat to book the MOT` | none, Fri 17:40 | task "Book the MOT" Sat 17 09:00, alerts T (6:30 call) | reminders#R17 | R630 | pass |
 | J753 | `remind me next fri to pay rent` | none, Fri 17:40 | task "Pay rent" Fri 23 Oct 09:00, alerts T | reminders#R18 | D558, R630 | wrong write (RC7) |
 | J754 | `remind me this weekend to clean the car` | none, Fri 17:40 | task "Clean the car" Sat 17 09:00, alerts T ("this weekend" is Saturday) | reminders#R19 | R630, FX | wrong write (DAYW) |
 | J755 | `remind me in 3 days to call the bank` | none, Fri 17:40 | task "Call the bank" Mon 19 09:00, alerts T | reminders#R20 | R630, T706 | wrong write (RELT) |
-| J756 | `remind me tomorrow at 9 to call mum` | none, Sat 00:30 | task "Call mum" Sat 17 09:00, alerts T ("tomorrow" before 04:00 is the coming daytime) | reminders#R21 | L607, N620 | wrong write (DAY4) |
+| J756 | `remind me tomorrow at 9 to call mum` | none, Sat 00:30 | task "Call mum" Sat 17 09:00, alerts T ("tomorrow" before 04:00 is the coming daytime) (e9f4a06: TG:537 takes his day, Fri, plus one) | reminders#R21 | L607, N620 | pass |
 | J757 | `remind me at 2am to take the bread out` | none, Fri 23:30 | task "Take the bread out" Sat 17 02:00, alerts T (rings in quiet hours; reply line in reminders.md) | reminders#R22 | L607, N620 | pass |
 | J758 | `remind me tonight to call mum` | none, Sat 01:00 | task "Call mum" Sat 17 20:00, alerts T (reply line in reminders.md) | reminders#R23 | L607, T441, N620 | pass |
 | J759 | `nudge me tomorrow` | none, Fri 17:40 | task "Reminder" Sat 17 09:00, alerts T | reminders#R24 | R630, T647 | wrong write (LEAD) |
@@ -1011,8 +1013,8 @@ From `set-logger.md` (board item 61), traced at `0a27447`; the set rules are unc
 | K814 | `8` | live workout, no sets | nil (no last weight; never a weight of 8) | set-logger#K814 | S701 | pass |
 | K815 | `8 at 3` | live workout | nil (`at 3` is no RPE: the model; never a task) (dc0968f: a non-RPE `at N` after a set core goes to the model, LV:50-55) | set-logger-rerun#gap1 | S704 | pass |
 | K816 | `same at 11` | live workout | nil (`at 11` is no RPE: the model; never a task) (dc0968f: LV:50-55) | set-logger-rerun#gap1 | S704 | pass |
-| K817 | `3x10` | live workout, db | nil (sets by reps with no weight said; never 2x10) (dc0968f: 3 is no dumbbell load, so the light-kit check sends it to the model, LV:83-86) | set-logger-rerun#gap2 | S703, FX | pass |
-| K818 | `24 reps` | live workout, db | set 24x24 (reps only: the word `reps` is said) (dc0968f: `N reps` skips the near-weight test, LV:71-76, then TG:248) | set-logger-rerun#gap3 | FX | pass |
+| K817 | `3x10` | live workout, db | ask "3 × 10: 3 sets, or 3 kg?", no write (3 is under half of 24; never 2x10) (e9f4a06: 3 is no dumbbell load, so the light-kit check sends it to the model, LV:83-86, no ask) | set-logger-rerun#gap2 | SQ8 | miss (RC12) |
+| K818 | `24 reps` | live workout, db | set 24x24 (reps only: the word `reps` is said) (dc0968f: `N reps` skips the near-weight test, LV:71-76, then TG:248) | set-logger-rerun#gap3 | R743 | pass |
 | K874 | `bench 80 for 8, 81` | live workout | nil (81 may be a weight: the model) (dc0968f: the "Squat 100, 5" shortcut at TG:286-291 reads `bench 80 for 8 81` as one set, 80x8, and drops the 81) | review-210#Q7 | S701 | wrong write (REPS) |
 | K875 | `bench 80 for 8, 80 for 8, 81` | live workout | nil (81 may be a weight: the model) (dc0968f: `81` reaches the unguarded `parseRelativeSet` fallback at TG:306, so 80x8, 80x8, 80x81) | review-210#Q7 | S701 | wrong write (REPS) |
 | K876 | `2x10` | live workout, db | ask "2 × 10: 2 sets, or 2 kg?", no write (dc0968f: 2 is a dumbbell load, so the light-kit check at LV:83-86 lets 2x10 through) | review-210#Q8 | SQ8 | wrong write (RC12) |
@@ -1097,18 +1099,18 @@ From `body-weight.md` (board item 71), traced on `bf28a92` (live-workout rows re
 
 ## Totals
 
-Master `1d0833c` for rows A to J (rows A to I keep their statuses except two: no file under `TesseraCore/` changed since `15fc404`, and the 6:20 and 6:30 calls move only the target of the rows they touch, the "now" parse on master being the old expected value). The 6:47 pass changes targets only (17 rows gated on N1, statuses carry). The 5:58 pass flips A117 to pass (master already writes Sat 08:00) and C389 to wrong write (master moves the Dentist to Fri 16, not 23). The 7:06 pass flips B302 and B310 to pass (master already returns nil), gates nine rows that pass today and moves H611 from N1 to Money. Group J is new. Group K (set logger) was traced on `0a27447` and rerun on `aec9ccd` (board item 66): 28 rows flip to pass (K782 to K786, K789 to K796, K798 to K803, K806, K807, K809, A180, B303 to B306, D473), and K815 to K818 are new. Groups L (habits) and M (body weight) are new, traced on `bf28a92`. **Base now `dc0968f`** (the grammar of `157f882`, with Core's #210): every `live workout` row re-traced; K815 to K818 and M860 flip to pass, and K874 to K883 (QA's review of #210) are new.
+Master `1d0833c` for rows A to J (rows A to I keep their statuses except two: no file under `TesseraCore/` changed since `15fc404`, and the 6:20 and 6:30 calls move only the target of the rows they touch, the "now" parse on master being the old expected value). The 6:47 pass changes targets only (17 rows gated on N1, statuses carry). The 5:58 pass flips A117 to pass (master already writes Sat 08:00) and C389 to wrong write (master moves the Dentist to Fri 16, not 23). The 7:06 pass flips B302 and B310 to pass (master already returns nil), gates nine rows that pass today and moves H611 from N1 to Money. Group J is new. Group K (set logger) was traced on `0a27447` and rerun on `aec9ccd` (board item 66): 28 rows flip to pass (K782 to K786, K789 to K796, K798 to K803, K806, K807, K809, A180, B303 to B306, D473), and K815 to K818 are new. Groups L (habits) and M (body weight) are new, traced on `bf28a92`. **Base now `dc0968f`** (the grammar of `157f882`, with Core's #210): every `live workout` row re-traced; K815 to K818 and M860 flip to pass, and K874 to K883 (QA's review of #210) are new. **Item 93, base `e9f4a06`:** rows A to J re-traced against the grammar changes after `1d0833c` (`2537cad`, `7eb2b58`; nothing since `dc0968f`), and every row checked against the Product calls through 8:07 PM PT: C379, J751 and J756 flip to pass, D473 and K817 move to miss, A026 and A027 change their expected parse but stay wrong write. The `a/an` change flips nothing (every `get a` or `buy a` row that is a task names a service or a person word).
 
 ### By status
 
 | status | rows | share |
 |---|---|---|
-| pass | 697 | 78.9% |
-| wrong write | 113 | 12.8% |
-| miss | 73 | 8.3% |
+| pass | 698 | 79.0% |
+| wrong write | 110 | 12.5% |
+| miss | 75 | 8.5% |
 | **all** | **883** | |
 
-Wrong writes are the ones to fix first: each puts a wrong object, date or title into the store with no question asked. A miss only costs a model call (or, offline, a "say it another way"). Before the 8:00 PM PT call (F531 from pass to miss): 883 rows, 698 pass, 113 wrong write, 72 miss. Before the `dc0968f` pass (K815 to K818 and M860 flipped, K874 to K883 added): 873 rows, 692 pass, 109 wrong write, 72 miss. Before groups L and M and rows K815 to K818: 814 rows, 641 pass, 102 wrong write, 71 miss (the item 66 rerun alone). Before the rerun: 814 rows, 613 pass, 121 wrong write, 80 miss. Before group K: 774 rows, 597 pass, 104 wrong write, 73 miss. Before group J: 736 rows, 586 pass, 78 wrong write, 72 miss. Before the 7:06 call: 595 pass, 104 wrong write, 75 miss.
+Wrong writes are the ones to fix first: each puts a wrong object, date or title into the store with no question asked. A miss only costs a model call (or, offline, a "say it another way"). Before item 93 (C379, J751, J756 to pass; D473, K817 to miss): 883 rows, 697 pass, 113 wrong write, 73 miss. Before the 8:00 PM PT call (F531 from pass to miss): 883 rows, 698 pass, 113 wrong write, 72 miss. Before the `dc0968f` pass (K815 to K818 and M860 flipped, K874 to K883 added): 873 rows, 692 pass, 109 wrong write, 72 miss. Before groups L and M and rows K815 to K818: 814 rows, 641 pass, 102 wrong write, 71 miss (the item 66 rerun alone). Before the rerun: 814 rows, 613 pass, 121 wrong write, 80 miss. Before group K: 774 rows, 597 pass, 104 wrong write, 73 miss. Before group J: 736 rows, 586 pass, 78 wrong write, 72 miss. Before the 7:06 call: 595 pass, 104 wrong write, 75 miss.
 
 ### By group
 
@@ -1116,22 +1118,22 @@ Wrong writes are the ones to fix first: each puts a wrong object, date or title 
 |---|---|---|---|---|
 | A. Everyday, kitchen and training | 295 | 241 | 37 | 17 |
 | B. Spoken (normalised text) | 72 | 64 | 7 | 1 |
-| C. Reschedule and time | 72 | 31 | 12 | 29 |
-| D. Cook timers | 37 | 13 | 5 | 19 |
+| C. Reschedule and time | 72 | 32 | 11 | 29 |
+| D. Cook timers | 37 | 12 | 5 | 20 |
 | E. People names | 40 | 37 | 3 | 0 |
 | F. People | 34 | 31 | 2 | 1 |
 | G. Reading | 40 | 39 | 1 | 0 |
 | H. Money | 45 | 43 | 2 | 0 |
 | I. Upkeep and starters | 101 | 94 | 7 | 0 |
-| J. Reminders | 38 | 9 | 26 | 3 |
-| K. Set logger | 54 | 43 | 8 | 3 |
+| J. Reminders | 38 | 11 | 24 | 3 |
+| K. Set logger | 54 | 42 | 8 | 4 |
 | L. Habits | 30 | 27 | 3 | 0 |
 | M. Body weight | 25 | 25 | 0 | 0 |
-| **all** | **883** | **697** | **113** | **73** |
+| **all** | **883** | **698** | **110** | **75** |
 
 ### Gated and not gated
 
-A gated row is judged on its "now" parse. 296 rows are gated (waiting on a slice); 275 of them pass today, so most of the work on those rows waits for the slice, not for the grammar. On top of that, 114 rows carry an `alerts` mark whose check waits on N1 (81 rows A to I, 32 rows in J, 1 in L); none can pass it on master, and none is counted as failing for it.
+A gated row is judged on its "now" parse. 296 rows are gated (waiting on a slice); 276 of them pass today, so most of the work on those rows waits for the slice, not for the grammar. On top of that, 114 rows carry an `alerts` mark whose check waits on N1 (81 rows A to I, 32 rows in J, 1 in L); none can pass it on master, and none is counted as failing for it.
 
 | gate | rows | pass | wrong write | miss |
 |---|---|---|---|---|
@@ -1139,14 +1141,14 @@ A gated row is judged on its "now" parse. 296 rows are gated (waiting on a slice
 | People (1 also needs month dates; 8 also need N1) | 44 | 43 | 0 | 1 |
 | Money | 40 | 38 | 2 | 0 |
 | Reading | 31 | 30 | 1 | 0 |
-| N1 only (59 dated tasks and cooks with no time, J767 and J769 alert edits) | 61 | 50 | 11 | 0 |
+| N1 only (59 dated tasks and cooks with no time, J767 and J769 alert edits) | 61 | 51 | 10 | 0 |
 | Month dates (I655, also needs N1) | 1 | 1 | 0 | 0 |
 | 12b (cook pause and extend) | 4 | 3 | 0 | 1 |
 | Lists 8 | 3 | 2 | 1 | 0 |
 | Habits (M3 slice 2; L834 also needs `did` narrowed, L840 also needs People) | 22 | 20 | 2 | 0 |
 | Body weight (M3 slice 1) | 13 | 13 | 0 | 0 |
-| **gated** | **296** | **275** | **19** | **2** |
-| **not gated** | **587** | **422** | **94** | **71** |
+| **gated** | **296** | **276** | **18** | **2** |
+| **not gated** | **587** | **422** | **92** | **73** |
 
 ### By root cause (rows that do not pass)
 
@@ -1154,10 +1156,10 @@ A gated row is judged on its "now" parse. 296 rows are gated (waiting on a slice
 |---|---|---|---|---|
 | RC11 | `half 7`, `7.30`, `7 pm`, `6 PM`, `morning`/`afternoon`/`evening` not read; colon numbers always a time | 29 | 9 | 20 |
 | RC15 | cook timers need the word "timer"; `10 min`, `rice 12`, `finished cooking` not read | 27 | 5 | 22 |
-| RC13 | reschedule replaces the whole date, misses `push`/`bump`/`can you move` shapes and a bare hour after `to` | 17 | 5 | 12 |
+| RC13 | reschedule replaces the whole date, misses `push`/`bump`/`can you move` shapes and a bare hour after `to` | 16 | 4 | 12 |
 | RELT | relative dates (`in 20 min`, `in an hour`, `in 2h`, `in 3 days`, `day after tomorrow`, `N days before`) | 15 | 12 | 3 |
 | RC6 | a set and an errand in one phrase, no split | 14 | 9 | 5 |
-| RC12 | lift edge cases (day words, `at N`, bodyweight, `curls`, reps cap); a set count that is a real load logs as weight x reps (`2x10` on dumbbells, `5x5` on a stack or pull-up, K876 to K881) | 12 | 12 | 0 |
+| RC12 | lift edge cases (day words, `at N`, bodyweight, `curls`, reps cap); a set count that is a real load logs as weight x reps (`2x10` on dumbbells, `5x5` on a stack or pull-up, K876 to K881); a set count that is no load goes to the model with no ask (D473, K817) | 14 | 12 | 2 |
 | LEAD | reminder leads (`ping`, `nudge`, `don't let me forget`, `set a reminder for`), `about`/`later` after the lead, empty title | 7 | 5 | 2 |
 | RC2 | past-tense log edge cases (adjective `-ed` titles, `moved X to fri`) | 7 | 7 | 0 |
 | RC8 | comma list called groceries on one food item | 6 | 6 | 0 |
@@ -1168,7 +1170,6 @@ A gated row is judged on its "now" parse. 296 rows are gated (waiting on a slice
 | RC17 | `out of X`, `need X` not grocery phrases | 3 | 0 | 3 |
 | HABW | a habit phrase with a day word (`skip read today`, `pause read till monday`, `new habit ... from monday`) falls through to the task rule | 3 | 3 | 0 |
 | ORD | ordinal dates (`the 20th`) | 2 | 2 | 0 |
-| DAY4 | the 4 AM day (`tomorrow` at 00:30) and `tonight` after 20:00 | 2 | 2 | 0 |
 | DAYW | `this weekend`, `every <day>` | 2 | 2 | 0 |
 | PLACE | `when I get home`, `when I leave work` not stripped | 2 | 2 | 0 |
 | ALRT | alert edits (`cancel the 6pm reminder`, `again in 10`) | 2 | 2 | 0 |
@@ -1187,9 +1188,9 @@ A gated row is judged on its "now" parse. 296 rows are gated (waiting on a slice
 | UPK | upkeep verb falls through to the task rule | 1 | 1 | 0 |
 | RBUY | `remind me to buy` food with no day or time stays a task | 1 | 1 | 0 |
 | PLAN | a people plan with no day said is not read as a task (`lunch with ravi`, F531) | 1 | 0 | 1 |
-| **all** | | **186** | **113** | **73** |
+| **all** | | **185** | **110** | **75** |
 
-Four causes (RC11, RC15, RC13, RELT) hold 88 of the 186 failing rows. RC11, RC13 and RELT all sit in `TessDates.find` (return which parts were said, read the missing time forms, read `in N`), so one Core change there clears about 61 rows. For the reminder rows, `reminders.md`'s ten grammar changes map onto these codes: relative times (RELT, 7 rows in J), leads (LEAD, 7), and the `alerts` field (N1, all 114 marked rows). The live-workout guard (PR #205, with #210) cleared SNAP, LOADW, KIND, SETT and REPW; what is left in training is RC12 (the old lift cases and the SQ8 set counts), RC6 (A rows the guard does not reach), K874 and K875 (a named first part skips the guard) and K883.
+Four causes (RC11, RC15, RC13, RELT) hold 87 of the 185 failing rows. RC11, RC13 and RELT all sit in `TessDates.find` (return which parts were said, read the missing time forms, read `in N`), so one Core change there clears about 60 rows. DAY4 is gone: master's 4 AM day (`7eb2b58`) and late `tonight` window (`2537cad`) cleared J751 and J756. For the reminder rows, `reminders.md`'s ten grammar changes map onto these codes: relative times (RELT, 7 rows in J), leads (LEAD, 7), and the `alerts` field (N1, all 114 marked rows). The live-workout guard (PR #205, with #210) cleared SNAP, LOADW, KIND, SETT and REPW; what is left in training is RC12 (the old lift cases and the SQ8 set counts), RC6 (A rows the guard does not reach), K874 and K875 (a named first part skips the guard) and K883.
 
 ## How Core loads this table (Swift Testing sketch)
 
@@ -1292,7 +1293,7 @@ Notes for Core:
 ## Open questions for Product
 
 1. **Closed (5:58 call 1).** "table" is not a meal word; A117 is Sat 17 08:00.
-2. **Closed (5:58 call 2).** "tonight" after 8 PM is tonight, as T441, until 11:30 PM. The 21:00 row is J751 (21:15, master fails it, DAY4); C405 and C437 at 23:30 keep tomorrow.
+2. **Closed (5:58 call 2).** "tonight" after 8 PM is tonight, as T441, until 11:30 PM. The 21:00 row is J751 (21:15, passes on master since `2537cad`, item 93); C405 and C437 at 23:30 keep tomorrow.
 3. **Closed (5:58 call 3).** Next week's Friday, 23 Oct: A222, C389, J753, all failing on RC7.
 4. **Closed (5:58 call 4)** for R13c, f, g, i and j (12 rows, conflict 28). R13e and R13h closed by the 6:50 call (T650): never in the past, roll to the next occurrence (C379); no task named means the task on Now (C392).
 5. **Closed (7:06 call).** The grammar reads `in N` and `day after tomorrow`, and a plain relative time rings (B338, C422 to C425, C438 gain `alerts T`); `2 days before the MOT` goes to the model (B347); in a cook `remind me in 20 minutes` is a timer (D464).
@@ -1307,10 +1308,36 @@ Notes for Core:
 13. **Closed (6:30 and 6:47 calls).** Every `reminders.md` default stands as the J rows have it: "Reminder" with no subject (J737, J742, J759), `remind me to buy eggs` to Groceries (J770), place reminders to Later with no alert (J764, J765), repeats take the first one only (J766), cancel keeps the task and drops the alert (J767), `again in N` with no recent alert goes to the model.
 14. **Closed (6:47 call).** "morning" stays 09:00; the next-whole-hour default goes for a weekday that is today, `today` with no time and a cook with a day (17 rows, conflict 29).
 15. **Closed (7:24 PM PT).** Product took S701 to S706, and Core built them in PR #205 (`aec9ccd`). The item 66 rerun flips 28 rows to pass. The rerun's gaps (K815 to K818) were fixed by #210 (`e75f40f`). QA's review of #210 adds K874 to K883: a comma list that names the exercise first skips the guard (K874, K875), `warmup 60x5 @7` goes to the model (K883), and set counts that are real loads log as weight x reps (Q8, below).
-16. **Open (board item 70).** The habit grammar defaults HP1 to HP7 are proposals; until Product answers, the L rows are judged on them. Worst today: `skip read today` (L846) and `pause read till monday` (L844) become tasks.
-17. **Open (board item 71).** The body weight defaults BP1 to BP6 are proposals; until Product answers, the M rows are judged on them. M860 (`82,4` mid-workout) passes on `dc0968f`, so no M row fails today.
-18. **Closed by Core (#210).** `N reps`, with the word said, skips S701's near-weight test; K818 passes. Product can still overrule.
+16. **Closed (7:50 PM PT, Research #212).** Product confirmed HP1 to HP7 as written; the L rows were already judged on them, so none changes. Worst today: `skip read today` (L846) and `pause read till monday` (L844) become tasks.
+17. **Closed (7:50 PM PT, Research #212).** Product confirmed BP1 to BP6 as written; the M rows were already judged on them, so none changes. M860 (`82,4` mid-workout) passes on `dc0968f`, so no M row fails today.
+18. **Closed (7:43 PM PT, R743).** `N reps`, with the word said, skips S701's near-weight test, as Core built in #210; K818 passes.
 19. **Closed (7:53 PM PT).** Product took SQ8: a bare `N x M` asks when N is 6 or less and under half the last weight, always on a bodyweight lift, and a unit said always logs (K876 to K882). K876 to K881 now expect the exact ask line with no write ("2 × 10: 2 sets, or 2 kg?", on a bodyweight lift "5 × 5: 5 sets, or +5 kg?"); they stay wrong write until Core builds it. The fuller set is in `set-logger.md` (Q01 to Q28).
 20. **Closed (8:00 PM PT, P800).** People plus a coming day, with no past-tense verb, is a task for that day with UNDO, never "planning or done?". F531 now expects task "Lunch with ravi" Later and goes from pass to miss (master sends it to the model); A136 to A138 expect a task in place of nil and stay wrong write (RC8, master writes groceries).
 
 Core notes (no Product call needed): the past-log rule must move after the Upkeep rule when Upkeep lands, or every `watered plants sat` stays a note (E504); and the `did` narrowing in the question guard must ship with Upkeep, not before.
+
+## Changes in item 93
+
+Base `origin/master` at `e9f4a06` (Merge PR #233). No grammar file (`TessGrammar.swift`, `TessGrammar+Live.swift`, `TessGrammar+Kitchen.swift`) changed since `dc0968f`; rows A to J were re-traced against the four changes made after their trace base (`2537cad` and `7eb2b58`), and every row was checked against `product/decisions.md` through 8:07 PM PT Oct 15. Hand trace only; nothing was run. Totals move from 697 pass, 113 wrong write, 73 miss to 698 pass, 110 wrong write, 75 miss (883 rows, none dropped, none added).
+
+| row | old expected / status | new expected / status | call behind it (decision time) |
+|---|---|---|---|
+| J756 | Sat 17 09:00, alerts T / wrong write (DAY4) | unchanged / pass: master's `tomorrow` is his day plus one (TG:537), so Sat 09:00 | L607 (6:07 PM PT), built in `7eb2b58` |
+| J751 | Fri 16 22:00, alerts T / wrong write (DAY4) | unchanged / pass: the late `tonight` window (TG:583-589) gives the next whole hour | T441 (4:41 PM PT), D558 (5:58 PM PT), T650 (6:50 PM PT), built in `2537cad` |
+| C379 | now: Thu 15 19:00 / wrong write (RC13) | unchanged / pass: the reschedule past guard (TG:202-205) puts back the said date, Thu 15 19:00, not the passed 10:00 | T650 R13e (6:50 PM PT), built in `2537cad` |
+| A026 | lift Bench Press 80x8 dated Mon 12, or nil / wrong write (RC12) | no write, asks "Log bench 80 x 8 for Monday?" / wrong write (RC12): master writes task "Bench 80x8" Mon 19 09:00 | S800, "bench 80x8 mon" asks (8:00 PM PT) |
+| A027 | lift Back Squat 100x5 dated Tue 13, or nil / wrong write (RC12) | no write, asks "Log squat 100 x 5 for Tuesday?" / wrong write (RC12): master writes task "Squat 100x5" Tue 20 09:00 | S800 (8:00 PM PT) |
+| D473 | nil, never 3 kg / pass | ask "3 × 10: 3 sets, or 3 kg?", no write / miss (RC12): master sends it to the model with no ask | SQ8 (7:53 PM PT), barbell case as `set-logger.md` Q11, edges 8:07 PM PT |
+| K817 | nil, never 2x10 / pass | ask "3 × 10: 3 sets, or 3 kg?", no write / miss (RC12): master sends it to the model with no ask | SQ8 (7:53 PM PT), edges 8:07 PM PT |
+| K818 | set 24x24, decision FX / pass | unchanged, decision R743 / pass | "N reps" skips the near-weight test (7:43 PM PT) |
+
+By call: master behaviour (rows the code now does, statuses wrong write to pass) 3 (J751, J756, C379); S800 at 8:00 PM PT 2 (A026, A027); SQ8 at 7:53 PM PT with the 8:07 PM PT edges 2 (D473, K817); R743 at 7:43 PM PT 1 (K818, decision cell only).
+
+Checked and left as they are:
+- **P800 (8:00 PM PT).** Every row with people and a coming day already expects a task for that day with no ask (A144, A157, E477, E480, E482, F530, F533), and the no-day rows were done at 8:00 (A136 to A138, F531). Past-tense rows (A019, E509, H607) stay logs.
+- **Q8 edges (8:07 PM PT).** K876 to K881 hold: K881 (`10x6` on a bodyweight lift) still asks, since any N asks on a bodyweight lift (`set-logger.md` Q14); no row is exactly half, has no last set with a bare `N x M`, says "kilos", or puts a second phrase after an ask.
+- **Spoken numbers (7:53 PM PT).** No row holds `ten ten ten` or `a hundred, five` (they are `spoken-normaliser.md` N15 and N03, outside the 80 rows taken); K811 and K812 keep their normaliser targets.
+- **HP1 to HP7 and BP1 to BP6 (7:50 PM PT).** Confirmed as written: decision codes and open questions 16 and 17 updated, no L or M row changes.
+- **`a/an` alone no longer proves non-food (`2537cad`).** A048, A049, A050, A057 and A292 name a service word (`haircut`, `plumber`, `phone`), A293 has a day so it never reaches the kitchen rule, and B330 stays groceries: no status moves.
+- **`pastDay` on his day (`7eb2b58`).** Only J756 and J758 run before 04:00, and neither is a past log; J758 still passes (Sat 17 20:00).
+- **Other calls through 8:07 PM PT** (themes, Settings: Claude, time zone column, day log, Review, habits from logs, blind-read scoring, use 2 gate, colour) change no grammar row.
