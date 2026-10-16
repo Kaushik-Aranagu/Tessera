@@ -1,6 +1,6 @@
-# Review session: what to try on the next build
+# Review session: what to try on this build
 
-*Planning lead, updated 8:06 PM Pacific, Oct 15. For the next install (the Oct 22 re-sign, or sooner), over master after b19fb4a. It folds in Research's `review-refresh-2.md` (#223: 17 app PRs, read from code, not yet run on a phone) and QA's review-215 smoke step. If something here isn't in the build, skip it and tell us. Each item carries its PR; items marked "if merged by install" depend on Settings: Claude landing first. Late-night items only apply between midnight and 4 AM, since his day ends at 4 AM.*
+*Planning lead, updated 11:30 PM Pacific, Oct 15. **Installed: 444e72b, at 11:28 PM PT Oct 15, over the existing app with your data kept.** It folds in Research's `review-refresh-2.md` (#223) and QA's review-215 smoke step. Not in this build: Settings: Claude (items 33 to 36), Speak, the ink-line keys (#278) and Plan my day, so skip those. First, pick your iCloud Drive folder in Review > Backups. If something else here isn't in the build, skip it and tell us. Late-night items only apply between midnight and 4 AM, since your day ends at 4 AM.*
 
 ## 10-minute short path
 
