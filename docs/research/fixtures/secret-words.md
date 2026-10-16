@@ -71,3 +71,5 @@ Type S1 to S10 on the Simulator, then search each of these for the placeholder v
 ## 5. One question for Product
 
 Q1. Does a private note ride in the iCloud Drive backup? ★Yes. It's his own iCloud, and losing a door code on a reinstall is worse. The Claude key is the only thing kept out of backups by design. No: the note stays on this phone only and is gone after a delete.
+
+**Answered (Product 3c2ea39e, Oct 16):** yes. A private note goes in his iCloud backup and never into memory, recent lines, packs or the miss log. SW2 is folded into the NE1 fix.
