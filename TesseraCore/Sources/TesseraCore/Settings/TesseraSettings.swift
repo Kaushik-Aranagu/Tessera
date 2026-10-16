@@ -77,7 +77,9 @@ public struct SettingsStore {
         var settings = TesseraSettings(lookDay: text("lookDay"), lookNight: text("lookNight"),
                                        lookPinned: text("lookPinned"), backupFolderName: text("backupFolderName"),
                                        backupFolderPickedAt: store.value("backupFolderPickedAt", of: object)?.dateValue,
-                                       restWeekday: store.number("restWeekday", of: object).map { Int($0) })
+                                       // Outside 1 to 7 reads as empty: the engine places the rest day.
+                                       restWeekday: store.number("restWeekday", of: object).map { Int($0) }
+                                           .flatMap { (1 ... 7).contains($0) ? $0 : nil })
         if case let .bool(value)? = store.value("missesGoToClaude", of: object) {
             settings.missesGoToClaude = value
         }
@@ -129,8 +131,12 @@ public struct WriteSettings: EngineAction {
     }
 
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
+        // A soft-deleted one is brought back, so a write never lands where read() can't see it.
         let object = try transaction.store.object(id: SettingsStore.objectID)
             ?? transaction.create(transaction.classDef(.settings), title: "Settings", id: SettingsStore.objectID)
+        if object.isDeleted {
+            object.deletedAt = nil
+        }
         try transaction.set("lookDay", to: settings.lookDay.map(FieldValue.text), on: object)
         try transaction.set("lookNight", to: settings.lookNight.map(FieldValue.text), on: object)
         try transaction.set("lookPinned", to: settings.lookPinned.map(FieldValue.text), on: object)

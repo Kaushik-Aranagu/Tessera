@@ -353,9 +353,10 @@ public final class TessCaptureEngine: TessCapturing {
         }
     }
 
-    /// "Bench Press" reads as "Bench" in Tess's one-liners; other names stay whole.
+    /// "Bench Press" reads as "Bench" and "Back Squat" as "Squat" in Tess's one-liners, as he says them (A027);
+    /// other names stay whole.
     static func shortName(_ name: String) -> String {
-        name == "Bench Press" ? "Bench" : name
+        ["Bench Press": "Bench", "Back Squat": "Squat"][name] ?? name
     }
 
     /// "today 3 pm", "tomorrow 9 am", "Saturday 3 pm". By his day (04:00 to 04:00); after midnight and before 04:00
