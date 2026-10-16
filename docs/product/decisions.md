@@ -142,3 +142,4 @@
   - The PPL x2 starter plan stays.
   - `Features/Objects/` copy is Core's.
 - **Accessibility mostly waits** (5:25 PM PT, Research #160, 80 rows): Kaushik is the only user. Pulled forward at normal priority are Builder A's one MotionPolicy fix, so Reduce Motion really stops slides and scales, and Builder B's Home queue heights, which clip at large text. The rest goes to Later on each board. Tess's rows are Builder B's; Objects rows are Core's (as at 5:14 PM PT).
+- **A rolled-over task is flexible** (5:41 PM PT, Research #164). It lost its time when the day rolled, so Now's ranker and the planner both treat it as flexible, never timed. Core fixes the ranker in a small audit PR. The planner's pack also gains calendar events, a light-day source (plan and load, never Health), and the running workout before T4 ships.
