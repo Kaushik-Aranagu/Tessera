@@ -15,7 +15,7 @@ Sheet 71's order holds on every page: the left edge is back, Tess's band is hers
 | Today | **THE DAY**, drawn here | NOW |
 | Training | **THE WEEK**: the routines on their fixed days, with what each did last time. It's 71's LAST TIMES one level up (to draw when Builder A has LAST TIMES in) | TRAINING |
 | Kitchen | **THE WEEK'S COOKS** (Kitchen week, 67). Pantry is its own area with its own side (Kitchen lead, 2:45 PM) | KITCHEN |
-| Review | None: x already moves by week (46) | — |
+| Review | THE DAYS from the right edge (76); the middle moves by week (46) | 76 |
 
 ## THE DAY
 - **The top stays:** the name TODAY at 52, "Friday" at 138, and the context line at 186 ("6 done, 1 on now", with NOW at its right). The hero is what's left: "4 to go".

@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Depth grammar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Design item 76 (Kaushik 2:45 PM PT Oct 16): one way to show more, whether a screen is one thing, one of a run of things, or a side with several pages. Left edge goes back, right edge goes in, the middle goes along the run (or in, when there's no run), up at the top goes out to every area. ?play records Review (a run of weeks) and Bench press (a side with pages). -->
+<style>
+:root{--board:#E9E6EE}
+*{box-sizing:border-box}
+body{margin:0;background:var(--board);font-family:'Inter Tight',system-ui,sans-serif;-webkit-font-smoothing:antialiased;transform-origin:0 0;color:#1c1a20}
+body.x2{transform:scale(2)}
+.wrap{padding:34px 40px 40px}
+.head{display:flex;gap:30px;margin-bottom:22px}
+.head h1{margin:0;font-size:34px;font-weight:600;letter-spacing:-.015em;flex:none;width:420px}
+.head p{margin:0;font-size:17px;line-height:24px;color:#4a4652;max-width:900px}
+.grid{display:grid;grid-template-columns:393px repeat(3,393px);gap:22px;align-items:start}
+.cap{margin-top:12px}
+.cap .opt{font-size:13px;font-weight:700;letter-spacing:.08em;color:#6b6674}
+.cap h2{margin:4px 0 6px;font-size:22px;font-weight:600;letter-spacing:-.01em}
+.cap p{margin:0;font-size:16px;line-height:22px;color:#4a4652}
+.ph{position:relative;width:393px;height:852px;background:var(--bg);color:rgb(var(--ink));overflow:hidden;border-radius:44px}
+body.playing .ph{border-radius:0}
+.por{--ink:18,16,22;--bg:#FBFAF7;--tess:#2450D8;--ctx:#5A3DAF;--train:#C23A22;--kit:#12936A;--rev:#5A3DAF}
+.abs{position:absolute}
+.body{position:absolute;inset:0}
+.name{left:22px;top:52px;font-weight:700;font-size:15px;letter-spacing:.08em}
+.back{left:22px;top:52px;font-weight:700;font-size:15px;letter-spacing:.08em;color:rgba(var(--ink),.7)}
+.title{left:22px;top:84px;width:350px;font-size:44px;line-height:50px;font-weight:500;letter-spacing:-.02em}
+.day{left:22px;top:138px;font-size:17px;color:rgba(var(--ink),.66)}
+.ctxl{left:22px;right:22px;font-size:17px;color:var(--ctx);display:flex;justify-content:space-between}
+.ctxl b{font-weight:700;font-size:13px;letter-spacing:.08em;color:rgb(var(--ink));padding-top:2px}
+.hero{left:22px;top:212px;width:350px;font-size:44px;line-height:50px;font-weight:500;letter-spacing:-.02em}
+.lbl{left:22px;font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.55)}
+.rows{left:22px;width:350px;font-size:19px;line-height:26px}
+.rows div{display:flex;justify-content:space-between;gap:16px;margin-bottom:14px}
+.rows em{font-style:normal;color:rgba(var(--ink),.62);white-space:nowrap}
+.bands{left:22px;width:350px;font-weight:700;font-size:13px;letter-spacing:.08em}
+.bands div{display:flex;justify-content:space-between;margin-bottom:18px}
+.facets{left:22px;top:196px;display:flex;gap:20px;font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.4)}
+.facets b{color:rgb(var(--ink));font-weight:700}
+.gl{position:absolute;left:150px;right:0;top:186px;bottom:96px;padding:20px 22px 0 46px;background:linear-gradient(90deg,rgba(251,250,247,0),var(--bg) 34px)}
+.gl .gk{font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.55)}
+.gl .big{font-size:56px;line-height:62px;white-space:nowrap;font-weight:500;letter-spacing:-.02em;margin-top:10px}
+.gl .big small{font-size:21px;font-weight:400;letter-spacing:0;margin-left:6px}
+.gl .gr{font-size:19px;line-height:26px;margin-top:12px}
+.gl .gr em{font-style:normal;color:rgba(var(--ink),.62)}
+.gl .more{position:absolute;left:46px;bottom:22px;font-weight:700;font-size:13px;letter-spacing:.08em}
+.gl .more i{display:block;height:2px;margin-top:5px;background:currentColor}
+.seam{background:var(--bg);box-shadow:-14px 0 28px rgba(18,16,22,.10)}
+.soul{left:323px;top:759px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 40%,#E2432A 0 28%,transparent 46%),radial-gradient(circle at 66% 38%,#2450D8 0 30%,transparent 50%),radial-gradient(circle at 50% 70%,#F0A500 0 28%,transparent 48%);filter:blur(2px)}
+.tl{right:71px;top:768px;width:290px;text-align:right;font-size:18px;line-height:23px;color:var(--tess)}
+.finger{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(18,16,22,.16);border:1.5px solid rgba(18,16,22,.25);opacity:0;pointer-events:none;z-index:9}
+/* The map */
+.map{position:relative;width:393px;height:852px;border-radius:44px;background:#FBFAF7;overflow:hidden}
+.map .zone{position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;font-size:15px;line-height:20px;color:#36323c}
+.map .zone b{display:block;font-size:13px;letter-spacing:.08em;margin-bottom:4px}
+.map .edgeL{left:0;top:110px;bottom:116px;width:44px;background:rgba(90,61,175,.08)}
+.map .edgeR{right:0;top:110px;bottom:116px;width:44px;background:rgba(36,80,216,.12)}
+.map .topz{left:0;right:0;top:0;height:110px;background:rgba(18,147,106,.09)}
+.map .band{left:0;right:0;bottom:0;height:116px;background:rgba(36,80,216,.05)}
+.map .mid{left:44px;right:44px;top:110px;bottom:116px}
+.map svg{position:absolute;inset:0}
+.vert{writing-mode:vertical-rl;transform:rotate(180deg)}
+.vert2{writing-mode:vertical-rl}
+</style></head>
+<body>
+<div class="wrap" id="board"></div>
+<script>
+const play = location.search.includes('play');
+if (location.search.includes('x2')) document.body.classList.add('x2');
+const band = line => `<div class="abs soul"></div>${line ? `<div class="abs tl">${line}</div>` : ''}`;
+
+const week = (range, n, days) => `<div class="abs day">${range === 'Oct 12 to 18' ? 'This week' : 'Last week'}</div><div class="abs ctxl" style="top:186px"><span>${range}</span><b>THE DAYS</b></div>
+  <div class="abs hero">${n} sessions</div>
+  <div class="abs bands" style="top:300px"><div><span>TRAINING</span><span>${n} OF 6</span></div><div><span>TASKS DONE</span><span>${days}</span></div><div><span>COOK</span><span>2 OF 4</span></div></div>
+  <div class="abs lbl" style="top:440px">THE WEEK’S LINES</div><div class="abs rows" style="top:468px"><div><span>Row 70 × 8, a best.</span><em>Wed</em></div><div><span>Push Day A, 52 min.</span><em>Fri</em></div></div>`;
+const weekGlance = () => `<div class="gl"><div class="gk">THE DAYS</div><div class="big">5<small>of 7 days</small></div><div class="gr">Wednesday, <em>6 tasks</em></div><div class="gr">2 <em>to go</em></div><div class="more">ALL DAYS<i></i></div></div>`;
+const weekDays = () => `<div class="abs ctxl" style="top:186px"><span>Oct 12 to 18</span><b>THE WEEK</b></div>
+  <div class="abs lbl" style="top:226px">THE DAYS</div><div class="abs rows" style="top:254px">
+  ${[['Monday', 'Push A, 3 tasks'], ['Tuesday', '2 tasks'], ['Wednesday', 'Pull A and Row, 6 tasks'], ['Thursday', 'Legs A, 1 task'], ['Friday', 'Push Day A, 2 tasks'], ['Saturday', 'nothing yet'], ['Sunday', 'nothing yet']].map(([d, t]) => `<div><span>${d}</span><em>${t}</em></div>`).join('')}</div>`;
+const benchFront = () => `<div class="abs back">‹ PUSH DAY A</div><div class="abs title">Bench press</div><div class="abs ctxl" style="top:146px"><span>best 82.5 × 7, Oct 16</span><b>HISTORY</b></div>
+  <div class="abs lbl" style="top:206px">TODAY</div><div class="abs rows" style="top:234px"><div><span>Set 1</span><em>82.5 × 7</em></div><div><span>Set 2</span><em>80 × 8</em></div><div><span>Set 3</span><em>80 × 7</em></div><div><span>Set 4</span><em>77.5 × 8</em></div></div>`;
+const facet = (k) => {
+  const words = ['HISTORY', 'REP MAXES', 'MUSCLES', 'SETUP'];
+  const head = `<div class="abs facets">${words.map(w => w === k ? `<b>${w}</b>` : `<span>${w}</span>`).join('')}</div>`;
+  const body = {
+    'HISTORY': `<div class="abs rows" style="top:240px"><div><span>Friday</span><em>82.5 × 7, best</em></div><div><span>Monday</span><em>80 × 8</em></div><div><span>Oct 9</span><em>80 × 7</em></div><div><span>Oct 6</span><em>77.5 × 8</em></div></div>`,
+    'REP MAXES': `<div class="abs rows" style="top:240px"><div><span>1 rep</span><em>95 kg, estimated</em></div><div><span>3 reps</span><em>90 kg</em></div><div><span>5 reps</span><em>87.5 kg</em></div><div><span>8 reps</span><em>80 kg</em></div></div>`,
+    'MUSCLES': `<div class="abs rows" style="top:240px"><div><span>Chest</span><em>most</em></div><div><span>Front delts</span><em>some</em></div><div><span>Triceps</span><em>some</em></div></div>`,
+    'SETUP': `<div class="abs rows" style="top:240px"><div><span>Bench at the third hole</span><em></em></div><div><span>Grip one finger off the rings</span><em></em></div></div>`,
+  }[k];
+  return head + body;
+};
+const benchGlance = () => `<div class="gl"><div class="gk">HISTORY</div><div class="big">82.5<small>× 7</small></div><div class="gr">today, <em>a best</em></div><div class="gr">about 95 kg <em>for 1</em></div><div class="more">ALL OF IT<i></i></div></div>`;
+
+if (!play) {
+  const ph = (inner, opt, h, p) => `<div><div class="ph por">${inner}</div><div class="cap"><div class="opt">${opt}</div><h2>${h}</h2><p>${p}</p></div></div>`;
+  const map = `<div><div class="map">
+     <div class="zone topz"><div><b>PULL DOWN AT THE TOP</b>Out to every area (73)</div></div>
+     <div class="zone edgeL"><div class="vert"><b>LEFT EDGE</b>back</div></div>
+     <div class="zone edgeR"><div class="vert2"><b>RIGHT EDGE</b>in: glance, then all of it</div></div>
+     <div class="zone mid"><div><b>THE MIDDLE</b>along the run<br>(next day, week, exercise, side page)<br><br>or in, when there’s no run<br><br><b style="margin-top:18px">UP AND DOWN</b>reading, never moving</div></div>
+     <div class="zone band"><div><b>TESS’S BAND</b>hers</div></div></div>
+     <div class="cap"><div class="opt">THE MAP</div><h2>Four directions, one meaning each</h2><p>Left is out, right is in, the middle is along, the top is everything. Every screen, every time.</p></div></div>`;
+  let b = `<div class="head"><h1>One way to show more</h1><p>A screen is one thing, or one of a run of things (days, weeks, exercises in a workout), and its side can have more than one page. The right edge always goes in, a little for the glance and further for all of it. The middle goes along the run, or in when there’s no run. A swipe right always goes one step back the way you came.</p></div><div class="grid">`;
+  b += map;
+  b += ph(`<div class="abs name">REVIEW</div><div class="body" style="transform:translateX(-243px)">${week('Oct 5 to 11', 4, 11)}</div><div class="body seam" style="transform:translateX(150px)">${week('Oct 12 to 18', 5, 14)}</div><div class="finger" style="left:230px;top:380px;opacity:1"></div>${band()}`,
+    'ONE OF A RUN · THE MIDDLE', 'Along: the week before', 'Review is a run of weeks, so the middle swipes through them, 1:1, the name held.');
+  b += ph(`<div class="abs name">REVIEW</div><div class="body" style="opacity:.3">${week('Oct 12 to 18', 5, 14)}</div>${weekGlance()}<div class="finger" style="left:372px;top:420px;opacity:1"></div>${band('Wednesday was your fullest day.')}`,
+    'ONE OF A RUN · THE RIGHT EDGE', 'In: this week’s glance', 'From the right edge it goes in instead. Pull further, or tap ALL DAYS, for every day.');
+  b += ph(`<div class="abs back">‹ PUSH DAY A</div><div class="abs title">Bench press</div>${facet('REP MAXES')}${band('About 95 kg for 1, estimated.')}`,
+    'A SIDE WITH PAGES', 'Along, inside the side', 'Bench press’s side has four pages. Once in, the middle swipes through them, named in a row of words; the current one is ink.');
+  b += `</div>`;
+  document.getElementById('board').innerHTML = b;
+  document.fonts.ready.then(() => { document.body.dataset.done = '1'; });
+} else {
+  document.body.classList.add('playing');
+  const w = document.getElementById('board'); w.className = '';
+  w.innerHTML = `<div class="ph por" id="ph"></div>`;
+  const $ = id => document.getElementById(id), ph = $('ph');
+  const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const tween = (ms, f, e = ease) => new Promise(r => { const t0 = performance.now(); (function k(n) { const q = Math.min((n - t0) / ms, 1); f(e(q)); q < 1 ? requestAnimationFrame(k) : r(); })(t0); });
+  let fg;
+  const finger = (x, y, on = 1) => { fg.style.left = x + 'px'; fg.style.top = y + 'px'; fg.style.opacity = on; };
+  // Scene 1: Review, a run of weeks.
+  async function review() {
+    ph.innerHTML = `<div class="abs name">REVIEW</div><div class="body" id="cur">${week('Oct 12 to 18', 5, 14)}</div><div class="body" id="prev" style="transform:translateX(-393px)">${week('Oct 5 to 11', 4, 11)}</div>
+      <div class="body" id="gb" style="opacity:0">${weekGlance()}${band('Wednesday was your fullest day.')}</div><div class="body" id="fb" style="opacity:0">${weekDays()}${band('Wednesday was your fullest day.')}</div>${band()}<div class="finger" id="fg"></div>`;
+    fg = $('fg');
+    const cur = $('cur'), prev = $('prev'), gb = $('gb'), fb = $('fb');
+    const along = q => { cur.style.transform = `translateX(${393 * q}px)`; prev.style.transform = `translateX(${-393 + 393 * q}px)`; };
+    await wait(1300);
+    // The middle: along the run, to the week before, and back.
+    await tween(420, q => { finger(120 + 200 * q, 380); along(q); }); finger(0, 0, 0); await wait(1300);
+    await tween(420, q => { finger(320 - 200 * q, 380); along(1 - q); }); finger(0, 0, 0); await wait(900);
+    // The right edge: in. A little for the glance, then further for all of it.
+    const inn = p => { const p1 = Math.min(p, 1), p2 = Math.max(0, p - 1); cur.style.opacity = 1 - .7 * p1 - .3 * p2; cur.style.transform = `translateX(${-44 * p2}px)`;
+      gb.style.opacity = p <= 1 ? p1 : 1 - p2; gb.style.transform = `translateX(${60 * (1 - p1) - 40 * p2}px)`; fb.style.opacity = p2; fb.style.transform = `translateX(${60 * (1 - p2)}px)`; };
+    await tween(380, q => { finger(386 - 150 * q, 420); inn(q); }); finger(0, 0, 0); await wait(2000);
+    await tween(380, q => { finger(300 - 170 * q, 420); inn(1 + q); }); finger(0, 0, 0); await wait(1800);
+    await tween(340, q => { finger(120 + 160 * q, 420); inn(2 - 2 * q); }); finger(0, 0, 0); await wait(800);
+  }
+  // Scene 2: Bench press, a side with pages.
+  async function bench() {
+    const words = ['HISTORY', 'REP MAXES', 'MUSCLES', 'SETUP'];
+    ph.innerHTML = `<div class="abs back">‹ PUSH DAY A</div><div class="abs title">Bench press</div><div class="body" id="front">${benchFront().replace(/<div class="abs back">.*?<\/div><div class="abs title">.*?<\/div>/, '')}</div>
+      <div class="body" id="gb" style="opacity:0">${benchGlance()}</div>
+      <div class="body" id="fb" style="opacity:0"><div class="abs facets" id="fw">${words.map((x, i) => `<span data-i="${i}">${x}</span>`).join('')}</div><div id="pages" class="abs" style="left:0;top:0;width:${393 * 4}px;height:700px;display:flex">${words.map(k => `<div style="position:relative;width:393px;flex:none">${facet(k).replace(/<div class="abs facets">.*?<\/div>/, '')}</div>`).join('')}</div></div>
+      <div class="body" id="tess">${band('About 95 kg for 1, estimated.')}</div><div class="finger" id="fg"></div>`;
+    fg = $('fg');
+    const front = $('front'), gb = $('gb'), fb = $('fb'), pages = $('pages'), fw = [...document.querySelectorAll('#fw span')];
+    $('tess').style.opacity = 0;
+    const mark = i => fw.forEach((s, j) => { s.style.color = j === i ? 'rgb(18,16,22)' : ''; });
+    mark(0);
+    const inn = p => { const p1 = Math.min(p, 1), p2 = Math.max(0, p - 1); front.style.opacity = 1 - .7 * p1 - .3 * p2; front.style.transform = `translateX(${-44 * p2}px)`;
+      gb.style.opacity = p <= 1 ? p1 : 1 - p2; gb.style.transform = `translateX(${60 * (1 - p1) - 40 * p2}px)`; fb.style.opacity = p2; fb.style.transform = `translateX(${60 * (1 - p2)}px)`; $('tess').style.opacity = p1; };
+    await wait(1200);
+    await tween(380, q => { finger(386 - 150 * q, 430); inn(q); }); finger(0, 0, 0); await wait(1500);
+    await tween(380, q => { finger(300 - 170 * q, 430); inn(1 + q); }); finger(0, 0, 0); await wait(1200);
+    // Along, inside the side: one page per swipe, the words follow; the last page rubber-bands.
+    for (let i = 1; i < 4; i++) { await tween(380, q => { finger(320 - 200 * q, 430); pages.style.transform = `translateX(${-393 * (i - 1 + q)}px)`; }); mark(i); finger(0, 0, 0); await wait(1000); }
+    await tween(260, q => { finger(320 - 60 * Math.sin(q * Math.PI), 430); pages.style.transform = `translateX(${-393 * 3 - 30 * Math.sin(q * Math.PI)}px)`; }, x => x); finger(0, 0, 0); await wait(900);
+    // Back the way it came: a swipe right goes one step back.
+    for (let i = 2; i >= 0; i--) { await tween(300, q => { finger(120 + 200 * q, 430); pages.style.transform = `translateX(${-393 * (i + 1 - q)}px)`; }); mark(i); finger(0, 0, 0); await wait(300); }
+    await tween(340, q => { finger(120 + 160 * q, 430); inn(2 - 2 * q); }); finger(0, 0, 0); await wait(1200);
+  }
+  document.fonts.ready.then(async () => {
+    document.body.dataset.start = '1';
+    await review();
+    await bench();
+    document.body.dataset.done = '1';
+  });
+}
+</script>
+</body></html>

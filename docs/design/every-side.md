@@ -13,7 +13,7 @@ This sheet replaces sheet 71's "which pages get a side page" and Product's 10:00
 1. **A screen is a unit.** It has a **front**, the thing you came for, and a **side**, the other side of the same thing. The side is never another place. It's the same object, or the same view, turned over.
 2. **Every screen declares exactly one side.** For now this is required: a screen without one fails review. An overlay isn't a screen (the capture veil, Speak, the running order, the swap panel). The screen under it keeps its side.
 3. **The side has a kind** (below), a word, and a way-back word. The word sits at the right of the context line and names the side. On the side, the same place names the front.
-4. **The way there** follows 71's order: the left edge is back, Tess's band is hers (a pan that starts at or below 736 is always hers, tess-picks 18b, so a side swipe starts above 736), and a row's own swipe stays the row's; otherwise a left swipe past 60 pt opens the side. The word always works. **When x is already taken** (sibling views on x, the live workout's exercise lane, paging by day or week), the word is the only way, and x keeps its job.
+4. **The way there** follows 71's order: the left edge is back, Tess's band is hers (a pan that starts at or below 736 is always hers, tess-picks 18b, so a side swipe starts above 736), and a row's own swipe stays the row's; otherwise a left swipe past 60 pt opens the side. The word always works. **The right edge always goes in** (76, `depth.md`): a pan that starts in the last 32 pt opens the side on every screen. When the screen is one of a run (paging by day or week, a routine's exercises), the middle goes along the run and the right edge is the way in. The live workout's exercise lane keeps x, and its side stays a peek (rule 7).
 5. **The spine:** the back word and the title stay put, and only the body moves (71's motion). A page with a strip keeps its strip.
 6. **No controls on a side.** A side holds facts and links, plus at most its own one key when the side is about acting on its facts (ADD 4 TO GROCERIES on INGREDIENTS). Settings and money keep every control on the front, and their side only explains.
 7. **Live things don't leave their surface.** A live screen's side is a peek over it (69's INGREDIENTS during a cook), never a page that takes the live surface away.
@@ -36,8 +36,8 @@ This sheet replaces sheet 71's "which pages get a side page" and Product's 10:00
 | 4 | Training tab | THE WEEK (AHEAD), 74 | swipe or word | |
 | 5 | Routines | LAST TIMES per routine (BEFORE): one line each, "Push A, Thursday" | swipe or word | A swipe on a row stays DROP |
 | 6 | A routine | LAST TIMES (BEFORE), 71 | swipe or word | The code has no row swipe here, so the page owns the swipe |
-| 7 | Plans WEEK · MONTH | THE PLAN (FACTS): what it is, how it progresses | word only | x is the siblings |
-| 8 | An exercise | YOUR SETUP (FACTS): his notes, the bar | word only | x is HISTORY · REP MAXES · MUSCLES. Drawn |
+| 7 | Plans WEEK, MONTH | THE PLAN (FACTS): what it is, how it progresses | right edge or word | WEEK and MONTH are a run in the middle (76) |
+| 8 | An exercise | HISTORY, REP MAXES, MUSCLES, SETUP: one side with four pages (76) | right edge or word | The middle goes along the routine's exercises. Drawn in 76 |
 | 9 | A workout (finished or planned) | THE SETS (PARTS) | swipe or word | Becomes its own page, no longer the generic one. Drawn |
 | 10 | Live workout | the running order, as it is now (AHEAD) | pull down, as built | Rule 7: it's already its side |
 | 12 | Workout finish | THE SETS (PARTS) | word | Swipe down still drops into today |
@@ -47,7 +47,7 @@ This sheet replaces sheet 71's "which pages get a side page" and Product's 10:00
 | 17 | Recipe original | COOKS (BEFORE): each time cooked, how long | swipe or word | |
 | 18 | An ingredient | PER 100 G (FACTS), and where it's used | swipe or word | His calorie example. Drawn |
 | 19 | Paste a recipe | WHAT I READ (PARTS): every line, kept or ignored | swipe or word | |
-| 20 | Review tab | THE MONTH (AHEAD and BEFORE): the weeks zoomed out | swipe or word now; word only once x moves by week (46, not built) | |
+| 20 | Review tab | THE DAYS (PARTS): this week's seven days, one line each (76) | right edge or word | The middle goes along the weeks (46). THE MONTH is dropped |
 | 21 | The week (interim Settings) | WHAT LEAVES THE PHONE (FACTS): this month's Claude calls by job, titles and counts only | swipe or word | Controls stay on the front |
 | 22 | Notes | BY THING (LINKS): notes grouped by what they mention | swipe or word | Private notes are counted, never named |
 | 23 | A note | WHERE IT'S MENTIONED (LINKS) | swipe or word | Drawn. Its own links stay under the text |
@@ -133,7 +133,7 @@ The big fact is Hero 56 with its unit at 21. The small facts are Body 19, at mos
 | Routines: LAST TIMES | the routine done last: "Push A" | "today" | the next due: "Pull A, Tuesday" |
 | A routine: LAST TIMES | the last day: "Thursday" | "5 of 5, 1,072 kg moved." | "4 times this month" |
 | Plans: THE PLAN | "4" *days a week* | the split: "Push Pull Legs" | "on fixed days" |
-| An exercise: YOUR SETUP | the first setup word: "Third hole" | the bar: "Olympic bar, 20 kg" | "written Oct 9" |
+| An exercise: HISTORY (76) | "82.5" *× 7* | "today, a best" | "about 95 kg for 1" |
 | A workout or finish: THE SETS | "20" *sets* | the top set: "Bench 82.5 × 7" | "5 exercises" |
 | Kitchen: THE WEEK'S COOKS | "3" *cooks* | the next, in Home's words: "Tacos tonight, 2 to buy." | "8 to buy" this week |
 | Groceries: FOR WHAT | "7" *for 2 cooks* | the cooks: "Tacos and chili" | "3 just because" |
@@ -141,7 +141,7 @@ The big fact is Hero 56 with its unit at 21. The small facts are Body 19, at mos
 | Recipe original: COOKS | "4" *times* | the last: "Thursday, 46 min" | "about 45 min" |
 | An ingredient: PER 100 G | "215" *kcal* | "18.6 g protein" | "15 g fat", with the source line under the glance ("USDA FoodData Central") |
 | Paste: WHAT I READ | "14" *lines kept* | "3 ignored" | the source: "nytimes.com" |
-| Review: THE MONTH | "11" *sessions* | "4 weeks" | "41 tasks done" |
+| Review: THE DAYS (76) | "5" *of 7 days* | "Wednesday, 6 tasks" | "2 to go" |
 | The week: WHAT LEAVES THE PHONE | "$3.20" *this month* | "38 calls" | "Titles and counts only." |
 | Notes: BY THING | "23" *notes* | the top thing: "Landlord, 4" | "5 private" |
 | A note: WHERE IT'S MENTIONED | "3" *places* | the first named | the second named, or "and N more" from four |
