@@ -238,6 +238,7 @@ struct TessMemoryTests {
         let memoryClass = try #require(classes[.tessMemory])
         let restored = store.create(memoryClass, title: "You train after work.")
         try store.set("kind", to: .choice("told"), on: restored)
+        restored.createdAt = Self.at(1) // written before the forget, as a restored backup's line would be
         #expect(memory.lines(of: .told).count == 1)
         #expect(memory.reapplyForgets() == 1 && memory.lines(of: .told).isEmpty)
         #expect(restored.title == TessMemoryStore.redacted)
@@ -250,10 +251,21 @@ struct TessMemoryTests {
         let olderEngine = ActionEngine(store: older, classes: olderClasses)
         try olderEngine.perform(RememberFact(text: "I train after work"), by: .user)
         let olderMemory = TessMemoryStore(engine: olderEngine, calendar: Self.calendar, forgetLogURL: forgetLog)
+        // The restored line was written before the forget (an old backup), so the log catches it.
+        olderMemory.lines(of: .told).first.flatMap { older.object(id: $0.id) }?.createdAt = Self.at(1)
         #expect(olderMemory.lines(of: .told).count == 1)
         #expect(olderMemory.reapplyForgets() == 1 && olderMemory.lines(of: .told).isEmpty)
         #expect(FileManager.default.fileExists(atPath: forgetLog.path))
         #expect(try !String(contentsOf: forgetLog, encoding: .utf8).contains("train"))
+
+        // QA F6: forget, say it again, foreground: kept. Saying it again is his consent.
+        try run(RememberFact(text: "I train after work"), at: Self.at(21))
+        #expect(memory.lines(of: .told).count == 1)
+        #expect(memory.reapplyForgets() == 0 && memory.lines(of: .told).count == 1)
+        memory.turnover(now: Self.at(22, 5))
+        #expect(memory.lines(of: .told).count == 1)
+        // Only the first launch after a restore re-applies, and only once (no restore marker on an in-memory store).
+        #expect(memory.reapplyForgetsIfRestored(now: Self.at(22, 6)) == 0)
     }
 
     @Test func aPrivateLineIsKeptAsSaid() throws {
@@ -277,6 +289,9 @@ struct TessMemoryTests {
         #expect(throws: ActionError.self) {
             try engine.perform(RememberFact(text: "my resting heart rate is 52"), by: .user)
         }
+        // A number far from the health word is not a measurement: kept, private.
+        try run(RememberFact(text: "my knee hurts after 3 sets of heavy squats on leg day"), at: Self.at(9))
+        #expect(memory.lines(of: .told).first { $0.text.contains("3 sets") }?.isPrivate == true)
     }
 
     @Test func secondPersonAndTheThing() {

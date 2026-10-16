@@ -25,7 +25,6 @@ public extension TessMemoryStore {
         let yesterday = day.day(-1, after: now)
         let recent = lines(of: .recent)
         sweepForgotten(now: now)
-        reapplyForgets()
         if !recent.contains(where: { $0.day == yesterday }), let text = recentLine(for: yesterday, now: now) {
             let rule = "recent.\(Int(yesterday.timeIntervalSince1970))"
             result.wroteRecent = write(kind: .recent, area: .days, text: text, evidence: [], day: yesterday,

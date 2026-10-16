@@ -199,7 +199,16 @@ public struct RememberFact: EngineAction {
         var keepsPrivate = isPrivate ?? bodyFact
         // A measured value (a weight, a unit, a pulse) is never kept, private or not.
         // A measured value: a unit or weigh word, or a health word next to a number ("resting heart rate is 52"; S8).
-        let measured = !words.isDisjoint(with: TessMemoryScreen.healthWords) && !HomeLines.digits(in: trimmed).isEmpty
+        // "resting heart rate is 52" is measured; "my knee hurts after 3 sets" is not: the number has to sit within
+        // three words of the health word (QA low on #356).
+        let tokens = trimmed.lowercased().split { !$0.isLetter && !$0.isNumber }.map(String.init)
+        // A feeling ("hurts", "sore", "tired") is never a measurement, whatever number sits near it.
+        let feelings: Set = ["sore", "hurts", "hurt", "ache", "aches", "pain", "tight", "tired", "sleepy",
+                             "exhausted", "drained", "sick", "unwell", "rested"]
+        let measured = tokens.indices.contains { index in
+            TessMemoryScreen.healthWords.contains(tokens[index]) && !feelings.contains(tokens[index])
+                && tokens[max(0, index - 3) ... min(tokens.count - 1, index + 3)].contains { $0.allSatisfy(\.isNumber) }
+        }
         if let value = words.first(where: TessMemoryScreen.healthValueWords.contains)
             ?? (measured ? words.first(where: TessMemoryScreen.healthWords.contains) : nil)
         {
@@ -221,11 +230,17 @@ public struct RememberFact: EngineAction {
                                                reason: "refused: \(TessMemoryScreen.Refusal.capFull)")
         }
         let area = area ?? TessMemoryStore.guessArea(trimmed)
-        // Stored in the second person, as the page and the pack read it (AI thread S4).
-        let memory = try transaction.create(
-            transaction.classDef(.tessMemory),
-            title: TessMemoryStore.secondPerson(trimmed)
-        )
+        // Stored in the second person, as the page and the pack read it (AI thread S4). Saying a forgotten line again
+        // is his consent to keep it: its quiet hash object goes (QA F6), and the file's entry is older than this line.
+        let stored = TessMemoryStore.secondPerson(trimmed)
+        let hash = TessMemoryStore.hash(stored)
+        for entry in try transaction.store.objects(of: transaction.classDef(.tessMemory))
+            where transaction.store.value("kind", of: entry) == .choice(TessMemory.Kind.forgotten.rawValue)
+            && entry.title == hash
+        {
+            transaction.delete(entry)
+        }
+        let memory = try transaction.create(transaction.classDef(.tessMemory), title: stored)
         try transaction.set("kind", to: .choice(TessMemory.Kind.told.rawValue), on: memory)
         try transaction.set("area", to: .choice(area.rawValue), on: memory)
         try transaction.set("isPrivate", to: .bool(keepsPrivate), on: memory)
@@ -525,10 +540,10 @@ public struct TessMemoryStore {
     func logForgotten(_ words: String) {
         guard let memoryClass = engine.classes[.tessMemory] else { return }
         let hash = Self.hash(words)
-        var outside = Self.readForgetLog(forgetLogURL)
-        if !outside.contains(hash) {
-            outside.insert(hash)
-            Self.writeForgetLog(outside, to: forgetLogURL)
+        var log = Self.readForgetLog(forgetLogURL)
+        if log.forgotten[hash] == nil {
+            log.forgotten[hash] = .now
+            Self.writeForgetLog(log, to: forgetLogURL)
         }
         guard !storedForgottenHashes().contains(hash) else { return }
         let entry = store.create(memoryClass, title: hash)
@@ -538,7 +553,7 @@ public struct TessMemoryStore {
 
     /// Hashes from the store and the file together.
     func forgottenHashes() -> Set<String> {
-        storedForgottenHashes().union(Self.readForgetLog(forgetLogURL))
+        storedForgottenHashes().union(Self.readForgetLog(forgetLogURL).forgotten.keys)
     }
 
     func storedForgottenHashes() -> Set<String> {
@@ -548,28 +563,66 @@ public struct TessMemoryStore {
             .map(\.title))
     }
 
-    static func readForgetLog(_ url: URL?) -> Set<String> {
-        guard let url, let data = try? Data(contentsOf: url),
-              let hashes = try? JSONDecoder().decode([String].self, from: data) else { return [] }
-        return Set(hashes)
+    /// The log file: each hash with when he forgot it, and when forgets were last re-applied. Hashes only, no words.
+    /// Not cleared by a reset of the store; "erase everything" has to delete it too.
+    struct ForgetLog: Codable {
+        var forgotten: [String: Date] = [:]
+        var reappliedAt: Date?
     }
 
-    static func writeForgetLog(_ hashes: Set<String>, to url: URL?) {
-        guard let url, let data = try? JSONEncoder().encode(hashes.sorted()) else { return }
+    static func readForgetLog(_ url: URL?) -> ForgetLog {
+        guard let url, let data = try? Data(contentsOf: url) else { return ForgetLog() }
+        if let log = try? JSONDecoder().decode(ForgetLog.self, from: data) {
+            return log
+        }
+        // The first shape was a bare list of hashes; those count as forgotten long ago.
+        let hashes = (try? JSONDecoder().decode([String].self, from: data)) ?? []
+        return ForgetLog(forgotten: Dictionary(uniqueKeysWithValues: hashes.map { ($0, Date.distantPast) }))
+    }
+
+    static func writeForgetLog(_ log: ForgetLog, to url: URL?) {
+        guard let url, let data = try? JSONEncoder().encode(log) else { return }
         try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         try? data.write(to: url, options: [.atomic, .completeFileProtection])
     }
 
-    /// After a restore (the turnover runs it too), forgets again every line whose words he once forgot.
+    /// When each forgotten line was forgotten: the store's quiet objects and the file together.
+    func forgottenAt() -> [String: Date] {
+        var when = Self.readForgetLog(forgetLogURL).forgotten
+        guard let memoryClass = engine.classes[.tessMemory] else { return when }
+        for entry in store.objects(of: memoryClass)
+            where !entry.isDeleted && store.value("kind", of: entry) == .choice(TessMemory.Kind.forgotten.rawValue)
+        {
+            when[entry.title] = min(when[entry.title] ?? .distantFuture, entry.createdAt)
+        }
+        return when
+    }
+
+    /// Forgets again every line whose words he forgot after it was written: what a restored backup brings back. A
+    /// line he said again after forgetting it is newer than the forget, so it stays (QA F6 on #356).
     @discardableResult
     public func reapplyForgets() -> Int {
-        let hashes = forgottenHashes()
-        guard !hashes.isEmpty else { return 0 }
-        let back = all().filter { hashes.contains(Self.hash($0.text)) }
+        let when = forgottenAt()
+        guard !when.isEmpty else { return 0 }
+        let back = all().filter { memory in
+            when[Self.hash(memory.text)].map { memory.createdAt < $0 } ?? false
+        }
         for memory in back {
             redact(memory.id)
         }
         return back.count
+    }
+
+    /// The first launch after a backup restore re-applies the forgets, once; every other launch does nothing.
+    @discardableResult
+    public func reapplyForgetsIfRestored(now: Date = .now) -> Int {
+        guard let restored = TesseraBackup.restoredAt(for: store.context.url) else { return 0 }
+        var log = Self.readForgetLog(forgetLogURL)
+        guard (log.reappliedAt ?? .distantPast) < restored else { return 0 }
+        let count = reapplyForgets()
+        log.reappliedAt = now
+        Self.writeForgetLog(log, to: forgetLogURL)
+        return count
     }
 
     static func hash(_ words: String) -> String {
