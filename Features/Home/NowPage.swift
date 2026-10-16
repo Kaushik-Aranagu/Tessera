@@ -215,7 +215,7 @@ struct DrainBar: View {
                         .fill(Theme.Colors.ink.opacity(0.14))
                         .frame(height: 2)
                     DryStroke()
-                        .fill(HomePaint.dayAmber.opacity(0.85))
+                        .fill(Theme.Colors.now.opacity(0.85))
                         .frame(width: max(proxy.size.width * (1 - fraction), 0), height: 6)
                         .blur(radius: 0.3)
                         .tesseraAnimation(.linear(duration: 1), value: fraction)
@@ -516,7 +516,7 @@ private struct LedgerRow: View {
                             .foregroundStyle(Theme.Colors.ink)
                         Text(step)
                             .font(Theme.voice(size: 18))
-                            .foregroundStyle(Color(hex: 0x6E6480))
+                            .foregroundStyle(Theme.Colors.inkSecondary)
                             .lineLimit(1)
                             .truncationMode(.middle)
                     }
@@ -537,10 +537,8 @@ private struct LedgerRow: View {
                 .frame(height: 2)
                 .shadow(color: Theme.Colors.live.opacity(0.45), radius: 4)
         } else {
-            VStack(spacing: 0) {
-                Theme.Colors.ink.opacity(0.12).frame(height: 1 / displayScale)
-                Color.white.opacity(0.8).frame(height: 1 / displayScale)
-            }
+            // One quiet engraved rule, the same on every look (B11).
+            Theme.Colors.hairline.frame(height: 1 / displayScale)
         }
     }
 

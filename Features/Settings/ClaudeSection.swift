@@ -12,6 +12,7 @@ enum ClaudeKeyWords {
         switch outcome.flatMap(ClaudeKeyCheck.Outcome.init(rawValue:)) {
         case .works, .capReached: "works"
         case .notAllowed: "not allowed"
+        case .badKey: "didn't work"
         case .accountPaused: "account paused"
         default: "not checked"
         }
@@ -54,7 +55,12 @@ struct ClaudeSection: View {
     @State private var checking = false
     @State private var line: String?
     @State private var removed = false
+    /// Line 3: whether captures the phone can't read go to Claude. A preference, not a secret.
+    @AppStorage("tess.missesGoToClaude") private var missesGoToClaude = true
     @State private var removal: Task<Void, Never>?
+    /// The clipboard's change count when a key was pasted, so a key still sitting there can be cleared after it passes.
+    @State private var pasteChange: Int?
+    @Environment(\.scenePhase) private var scenePhase
     @FocusState private var focused: Bool
 
     private var ledger: TessUsageLedger {
@@ -96,6 +102,13 @@ struct ClaudeSection: View {
         .tesseraAnimation(value: line)
         .tesseraAnimation(value: writing)
         .onAppear(perform: load)
+        // Killed or backgrounded inside the 10 s: the removal goes through then, not never (QA C2).
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .background, removed {
+                removal?.cancel()
+                finishRemoval()
+            }
+        }
         .onDisappear {
             // Leaving with a removal pending: it goes through now, as it would after 10 s.
             if removed {
@@ -154,6 +167,19 @@ struct ClaudeSection: View {
                 }
             }
 
+            HStack(spacing: 0) {
+                Text("Misses go to Claude: ")
+                Button(missesGoToClaude ? "yes" : "no") { missesGoToClaude.toggle() }
+                    .buttonStyle(.valueWash)
+                    .fontWeight(.semibold)
+                    .contentTransition(.opacity)
+                    .accessibilityLabel("Misses go to Claude")
+                    .accessibilityValue(missesGoToClaude ? "yes" : "no")
+            }
+            .textRole(.body)
+            .foregroundStyle(Theme.Colors.ink)
+            .tesseraAnimation(.easeOut(duration: 0.18), value: missesGoToClaude)
+
             VStack(alignment: .leading, spacing: 0) {
                 Text(
                     "Key ends in \(Text("...\(last4)").fontWeight(.semibold)) · \(Text(status).foregroundStyle(Theme.Colors.inkSecondary))"
@@ -189,13 +215,13 @@ struct ClaudeSection: View {
             .textRole(.body)
             .foregroundStyle(Theme.Colors.ink)
             .tint(Theme.Colors.tess)
-            .textContentType(.password)
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled()
             .focused($focused)
             .onChange(of: draft) { old, new in
                 // A paste lands many characters at once (typing a key by hand isn't a thing): check it then.
                 if new.count - old.count >= 10 {
+                    pasteChange = UIPasteboard.general.changeCount
                     submit()
                 }
             }
@@ -266,9 +292,13 @@ struct ClaudeSection: View {
             checking = false
             model.tessMode = .done
             if let previous, result.outcome != .works, result.outcome != .capReached {
-                // A new key that failed: the old one stays, and its state's line explains why.
-                _ = keys.save(previous)
-                line = result.line
+                // A new key that failed: the old one goes back and keeps working (QA C3, C4).
+                if keys.save(previous) {
+                    line = "That key didn't pass. Your old key still works."
+                } else {
+                    line = "That key didn't pass, and I couldn't keep the old one. Add it again?"
+                    last4 = nil
+                }
                 replacing = false
                 writing = false
                 model.touch()
@@ -278,9 +308,17 @@ struct ClaudeSection: View {
                 line = result.line
                 last4 = result.last4
                 status = ClaudeKeyWords.status(result.outcome.rawValue)
-                writing = result.outcome == .badKey
+                writing = result.outcome == .badKey || result.outcome == .notSaved
                 replacing = false
             }
+            // The key passed: if the clipboard hasn't changed since the paste, it still holds the key, so clear it
+            // (QA C5). Writing the clipboard never reads it, so no paste banner.
+            if result.last4 != nil, result.outcome != .badKey, let change = pasteChange,
+               UIPasteboard.general.changeCount == change
+            {
+                UIPasteboard.general.items = []
+            }
+            pasteChange = nil
             model.touch()
         }
     }

@@ -449,27 +449,33 @@ private struct RestMark: View {
     }
 }
 
-/// Opacity noise along a stroke: thin vertical bands from 55% to 100%, seeded per day.
+/// Dry brush: bristle streaks running along the stroke (noise high in y, low in x), seeded per day, softening at the
+/// ends.
 private struct DryBreakUp: View {
     let seed: Int
 
     var body: some View {
         Canvas { context, size in
-            let bands = 16
-            let width = size.width / CGFloat(bands)
-            for band in 0 ..< bands {
-                let noise = Double((band * 7 + seed * 13) % 9) / 8
-                let rect = CGRect(x: CGFloat(band) * width, y: 0, width: width + 0.5, height: size.height)
-                context.fill(Path(rect), with: .color(.black.opacity(0.55 + 0.45 * noise)))
-                if (band + seed) % 5 == 0 {
-                    let gap = CGRect(x: CGFloat(band) * width + width * 0.3, y: size.height * 0.55,
-                                     width: width * 0.5, height: size.height * 0.45)
-                    context.blendMode = .clear
-                    context.fill(Path(gap), with: .color(.black))
-                    context.blendMode = .normal
-                }
+            let streaks = 6
+            let height = size.height / CGFloat(streaks)
+            for streak in 0 ..< streaks {
+                let noise = Double((streak * 5 + seed * 11) % 7) / 6
+                // A streak may stop short at either end, like a bristle running dry.
+                let inset = CGFloat((streak + seed) % 4) * size.width * 0.06
+                let rect = CGRect(x: inset, y: CGFloat(streak) * height,
+                                  width: size.width - inset * (streak % 2 == 0 ? 1 : 2), height: height + 0.3)
+                context.fill(Path(rect), with: .color(.black.opacity(0.5 + 0.5 * noise)))
             }
         }
+        .mask(LinearGradient(
+            stops: [.init(color: .black.opacity(0.6), location: 0), .init(color: .black, location: 0.15),
+                    .init(color: .black, location: 0.85), .init(
+                        color: .black.opacity(0.6),
+                        location: 1
+                    )],
+            startPoint: .leading,
+            endPoint: .trailing
+        ))
     }
 }
 

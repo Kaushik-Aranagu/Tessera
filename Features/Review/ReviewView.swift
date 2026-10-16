@@ -49,7 +49,12 @@ struct ReviewWeek {
     static func compute(_ model: AppModel, now: Date, calendar: Calendar = .current) -> ReviewWeek {
         // His days (04:00 to 04:00): at 01:00 Saturday the week still ends on Friday.
         let tesseraDay = TesseraDay(calendar: calendar)
-        let firstKey = tesseraDay.day(-6, after: now)
+        // The plan's week, Monday first, as on Home (Research Q2): days ahead are simply not here yet.
+        var mondayFirst = calendar
+        mondayFirst.firstWeekday = 2
+        let today = tesseraDay.today(now)
+        let weekday = (mondayFirst.component(.weekday, from: today) + 5) % 7
+        let firstKey = calendar.date(byAdding: .day, value: -weekday, to: today) ?? today
         let start = tesseraDay.start(of: calendar.date(byAdding: .hour, value: 12, to: firstKey) ?? firstKey)
         let interval = DateInterval(start: start, end: max(now, start))
         let tasks = TaskList(store: model.store, classes: model.classes)
@@ -195,7 +200,7 @@ private struct ReviewPageBody: View {
                             ForEach(week.workouts.prefix(4)) { workout in
                                 ReviewLine(title: workout.title,
                                            when: workout.endedAt.map { ReviewCopy.day($0, now: now) },
-                                           tint: Theme.Colors.training)
+                                           tint: Theme.Colors.inkSecondary)
                             }
                         }
                     }

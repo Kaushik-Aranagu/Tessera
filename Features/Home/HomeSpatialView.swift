@@ -1,19 +1,19 @@
 import SwiftUI
 import TesseraCore
 
-/// Paint used only on Home that has no Theme token yet (docs/design/home-v1.md, materials.md).
-enum HomePaint {
-    /// The day stroke runs through the day: morning sky → sage → violet → amber → vermilion evening.
-    static let daySky = Color(hex: 0x9EC3D6)
-    static let daySage = Color(hex: 0x8FB58A)
-    static let dayViolet = Color(hex: 0x7A5C8E)
-    static let dayAmber = Color(hex: 0xE0A35C)
-    static let dayVermilion = Color(hex: 0xC8452F)
-    /// The wet tip at now.
-    static let wetTip = Color(hex: 0xE0A35C)
-
-    static var dayGradient: Gradient {
-        Gradient(colors: [daySky, daySage, dayViolet, dayAmber, dayVermilion])
+/// The day stroke's colours, morning to evening, per look (themes.md, theme-contrast-fixes.md B3/B7). Dark looks
+/// use the look's own `daySpectrum`. Light looks (Porcelain, Celadon) darken the sky and amber stops to reach 3:1 on
+/// white; those two values are for this stroke only and never become text colours. Plein keeps its own stroke.
+enum HomeStroke {
+    static var gradient: Gradient {
+        let look = ThemeStore.shared.paintLook
+        if look.name == Look.plein.name {
+            return Gradient(colors: [Color(hex: 0x9EC3D6), Color(hex: 0x8FB58A), Color(hex: 0x7A5C8E),
+                                     Color(hex: 0xE0A35C), Color(hex: 0xC8452F)])
+        }
+        guard !look.isDark else { return Gradient(colors: Theme.Colors.daySpectrum) }
+        return Gradient(colors: [Color(hex: 0x509BD5), Theme.Colors.health, Theme.Colors.context,
+                                 Color(hex: 0xC58700), Theme.Colors.live])
     }
 }
 
@@ -233,7 +233,7 @@ private struct KitchenPage: View {
             ForEach([HomeLink.groceries, .recipes], id: \.self) { link in
                 Button { open(link) } label: {
                     HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
-                        PaintDab(color: link == .groceries ? HomePaint.daySage : HomePaint.dayAmber,
+                        PaintDab(color: Theme.Colors.classColor(.kitchen),
                                  seed: link == .groceries ? 2 : 5)
                         Text(link.title)
                             .textRole(.title)

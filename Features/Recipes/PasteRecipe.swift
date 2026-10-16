@@ -56,7 +56,7 @@ struct PasteRecipe: View {
                                            startPoint: .top, endPoint: .bottom)
                                 .frame(height: 80)
                                 .offset(y: band * proxy.size.height - 40)
-                                .blendMode(.multiply)
+                                .blendMode(Theme.Colors.soulBlend)
                                 .opacity(reduceMotion || band >= 1 ? 0 : 0.25)
                                 .allowsHitTesting(false)
                         }
@@ -115,7 +115,7 @@ struct PasteRecipe: View {
         }
         .onChange(of: text) { old, new in
             // A Claude key never becomes a recipe (QA on #218): clear it before anything reads it.
-            if new.contains("sk-ant-") {
+            if looksLikeClaudeKey(new) {
                 text = ""
                 refusedKey = true
                 return

@@ -393,9 +393,9 @@ struct BottomChrome: View {
     }
 
     /// Return: the text dims to a ghost and a cobalt line dries under it for 2 s (touching cancels), then it commits.
-    /// Until Core's shared helper lands: any "sk-ant-" in any case.
+    /// Core's shared guard (any "sk-ant-", any case).
     static func looksLikeClaudeKey(_ text: String) -> Bool {
-        text.lowercased().contains("sk-ant-")
+        TesseraCore.looksLikeClaudeKey(text)
     }
 
     private func refuseKey() {
