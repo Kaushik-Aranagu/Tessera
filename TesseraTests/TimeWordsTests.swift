@@ -1,5 +1,7 @@
 import Foundation
+import SwiftUI
 @testable import Tessera
+import TesseraCore
 import Testing
 
 /// Builder A's time words (docs/research/time-words-sweep.md TW5, TW13, TW16) and the hold key's VoiceOver hint.
@@ -45,8 +47,38 @@ struct TimeWordsTests {
         #expect(TrainingPage.doneWhen(date(day: 17, 1), calendar: calendar) == "done tonight")
     }
 
-    @Test func holdKeysNeverTellVoiceOverToHold() {
-        #expect(PaintKeyHint.hint(isTap: false) == "Double tap to finish")
-        #expect(PaintKeyHint.hint(isTap: true).isEmpty)
+    /// A key's VoiceOver hint says what happens, never the gesture; tap keys keep none.
+    @Test func paintKeyHintSaysWhatHappens() {
+        let hold = PaintKey(hint: "Finishes the workout", action: {}, label: { _ in Text("Finish") })
+        #expect(hold.hint == "Finishes the workout")
+        let tap = PaintKey(isTap: true, action: {}, label: { _ in Text("Skip rest") })
+        #expect(tap.hint.isEmpty)
+        let withMeta = PaintKey(isSilent: true, hint: "Restores this backup", action: {},
+                                label: { _ in Text("Replace") }, meta: { Text("Hold") })
+        #expect(withMeta.hint == "Restores this backup")
+    }
+
+    /// The house clock in Shared (the widget extension can't link TesseraCore) must read exactly as Core's.
+    @Test func houseClockMatchesCoreHouseTime() {
+        for (hour, minute) in [(0, 0), (0, 5), (9, 0), (12, 0), (12, 30), (18, 12), (23, 59)] {
+            let moment = date(hour, minute)
+            #expect(HouseClock.time(moment, calendar: calendar) == HouseTime.clock(moment, calendar: calendar))
+        }
+    }
+
+    /// Rider 0r: the Resume key's progress counts each entry's "targetSets", not a "sets" field nothing writes.
+    @Test func plannedSetsReadTargetSets() throws {
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let model = AppModel(context: container.mainContext)
+        let store = model.store
+        let workout = try store.create(#require(model.classDef(.workout)), title: "Push Day A")
+        let entries = [4.0, 3, 5].map { sets in
+            let entry = store.create(model.classDef(.exerciseEntry)!, parent: workout)
+            try? store.set("targetSets", to: .number(sets), on: entry)
+            return entry
+        }
+        #expect(NowPage.plannedSets(entries, store: store) == 12)
+        let unplanned = try store.create(#require(model.classDef(.exerciseEntry)), parent: workout)
+        #expect(NowPage.plannedSets(entries + [unplanned], store: store) == 15)
     }
 }
