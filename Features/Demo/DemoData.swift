@@ -5,7 +5,20 @@ import TesseraCore
 /// schedule and tonight's workout.
 @MainActor
 enum DemoData {
-    static func prepare(_ model: AppModel, arguments: [String] = ProcessInfo.processInfo.arguments) {
+    /// Demo data exists only on the simulator: the build that goes on his phone from Xcode is a Debug build, so
+    /// `#if DEBUG` alone can't keep a ticked -resetDemo from wiping his history (settings-object.md).
+    static var isAllowed: Bool {
+        #if targetEnvironment(simulator)
+            true
+        #else
+            false
+        #endif
+    }
+
+    static func prepare(_ model: AppModel, arguments: [String] = ProcessInfo.processInfo.arguments,
+                        allowed: Bool = DemoData.isAllowed)
+    {
+        guard allowed else { return }
         if arguments.contains("-resetDemo") {
             reset(model)
         }

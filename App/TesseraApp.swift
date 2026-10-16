@@ -27,7 +27,7 @@ struct TesseraApp: App {
         let model = AppModel(context: container.mainContext)
         // Fake history only when asked for (simulator, recordings): never on Kaushik's phone.
         let arguments = ProcessInfo.processInfo.arguments
-        if arguments.contains("-demo") || arguments.contains("-resetDemo") {
+        if DemoData.isAllowed, arguments.contains("-demo") || arguments.contains("-resetDemo") {
             DemoData.prepare(model)
         }
         _model = State(initialValue: model)
