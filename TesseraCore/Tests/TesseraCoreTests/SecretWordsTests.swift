@@ -111,6 +111,33 @@ struct SecretWordsTests {
         #expect(!SecretWords.mentions("garage 4417"))
     }
 
+    @Test func editingKeepsAPrivateNotePrivateAndAddingACodeMakesItPrivate() throws {
+        // QA F1 on #422: the editor retitles from the first line; a private note's words must never become its title.
+        let secret = try engine.perform(CreateNote(body: "wifi password is tacocat", isPrivate: true), by: .user).output
+        let edit = try engine.perform(
+            EditNote(note: secret.id, body: "wifi password is tacocat2", title: "wifi password is tacocat2"),
+            by: .user
+        )
+        #expect(secret.title == SecretWords.title && edit.record.summary == SecretWords.title)
+        #expect(store.value("body", of: secret)?.stringValue == "wifi password is tacocat2")
+        // A plain note gains a code: it becomes private, loses its title and its links.
+        let plain = try engine.perform(CreateNote(body: "router in the hall"), by: .user).output
+        #expect(store.value("isPrivate", of: plain) == nil && plain.title == "router in the hall")
+        try engine.perform(
+            EditNote(note: plain.id, body: "router in the hall, door code 4417", title: "router in the hall"),
+            by: .user
+        )
+        #expect(plain.title == SecretWords.title && store.value("isPrivate", of: plain) == .bool(true))
+        #expect(store.linkedObjects("about", of: plain).isEmpty)
+        // A plain edit stays a plain note.
+        let shopping = try engine.perform(CreateNote(body: "buy bulbs"), by: .user).output
+        try engine.perform(
+            EditNote(note: shopping.id, body: "buy bulbs and tape", title: "buy bulbs and tape"),
+            by: .user
+        )
+        #expect(shopping.title == "buy bulbs and tape" && store.value("isPrivate", of: shopping) == nil)
+    }
+
     @Test func theDayLogAndMemoryNeverCarryTheWords() async throws {
         // Committed (a ghost row commits after its grace; Siri commits at once), so the Day log reads it.
         let tess = TessCaptureEngine(engine: engine)

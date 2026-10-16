@@ -149,6 +149,23 @@ public struct EditNote: EngineAction {
 
     public func apply(_ transaction: inout Transaction) throws {
         let note = try transaction.object(note, is: .note)
+        // A private note stays private, and a code added to a plain note makes it private (QA F1 on #422): the title
+        // stays "Private note" and nothing is linked from its words.
+        let wasPrivate = transaction.store.value("isPrivate", of: note) == .bool(true)
+        let isPrivate = wasPrivate || body.map(SecretWords.mentions) == true || title.map(SecretWords.mentions) == true
+        if isPrivate {
+            if !wasPrivate {
+                try transaction.set("isPrivate", to: .bool(true), on: note)
+                try transaction.setLinks("about", on: note, to: [])
+            }
+            if let body {
+                try transaction.set("body", to: .text(body), on: note)
+            }
+            if note.title != SecretWords.title {
+                transaction.setTitle(SecretWords.title, on: note)
+            }
+            return
+        }
         if let body {
             try transaction.set("body", to: .text(body), on: note)
             try transaction.linkMentions(of: note, body: body)
@@ -158,8 +175,9 @@ public struct EditNote: EngineAction {
         }
     }
 
-    public func summary(in _: ObjectStore) -> String {
-        "Note updated"
+    public func summary(in store: ObjectStore) -> String {
+        store.object(id: note).map { store.value("isPrivate", of: $0) == .bool(true) } == true
+            ? SecretWords.title : "Note updated"
     }
 }
 
