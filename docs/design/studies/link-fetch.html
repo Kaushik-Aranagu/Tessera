@@ -2,236 +2,172 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=390">
 <title>Recipe from a link</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
-<!-- Motion study for kitchen v2 L1-L3 (docs/design/kitchen/kitchen-v2.md): a pasted link is read on the paste paint-over screen. Four takes: JSON-LD read and saved, a site that blocks, Claude reading a page with no recipe card (wet cobalt, dries on save), and a paywall that keeps the ingredients. Drawn to docs/design/no-buttons.md. Add ?x2 to render at 2x. -->
+<!-- Recording for docs/design/kitchen/link-fetch-us.md (Design item 32), redrawing kitchen-v2.md L1-L3 under today's rules: the look's ground (Porcelain), ‹ KITCHEN, the S4 title (the recipe's name takes it once read), names arriving in sage and drying to ink, Tess beside the soul, the cloud mark as three wisps, Save recipe as an ink-line word. US sites: a recipe card read (budgetbytes.com), a site that blocks (allrecipes.com), Claude reading a post with no card (a Substack), and a paywall that keeps the ingredients (cooking.nytimes.com). Add ?x2 for 2x. The board is cut from this recording's end frames. -->
 <style>
-:root{--ink:#2B2440;--ctx:#7A5C8E;--sub:#6E6480;--verm:#C8452F;--cobalt:#2E6DA4;--cad:#E0A35C;--sage:#6E9E6A}
-body{margin:0;background:#EFE7DC}
-.ph{position:relative;width:390px;height:844px;overflow:hidden;color:var(--ink);font-family:'Inter Tight',sans-serif;
- background:radial-gradient(60% 40% at 85% 6%,#F7E6B8 0%,rgba(247,230,184,0) 70%),radial-gradient(70% 45% at 0% 35%,#DCE8D2 0%,rgba(220,232,210,0) 70%),radial-gradient(80% 50% at 100% 75%,#F2D9C0 0%,rgba(242,217,192,0) 70%),#F5F0E6}
+:root{--house:cubic-bezier(.2,.8,.2,1);--settle:cubic-bezier(.3,1.3,.5,1)}
+html,body{margin:0;background:#E9E6EE}
+body{font-family:'Inter Tight',sans-serif;transform-origin:0 0;padding:28px 30px 30px}
+body.x2{transform:scale(2)}
+.cap{font-weight:700;font-size:16px;letter-spacing:.08em;color:rgba(23,20,31,.66);height:34px;white-space:nowrap}
+.ph{position:relative;width:390px;height:844px;overflow:hidden;background:#fff;--ink:23,20,31;--s2:.66;--s3:.51;--tess:#2450D8;--liveInk:#C23A22;--health:18,147,106;--paint:240,165,0;color:rgb(var(--ink))}
 .abs{position:absolute}
-.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;color:var(--sub)}
-.la .line{position:absolute;left:0;right:0;bottom:-6px;height:1.5px;transform:scaleX(0);transform-origin:left}
-.pl{position:absolute;left:30px;right:22px;font-size:21px;line-height:30px;color:rgba(43,36,64,.85);white-space:nowrap}
-.pl.g{color:rgba(46,109,164,.7)}
-.pl.title{line-height:44px}
-.amt{position:relative;display:inline-block}
-.amt i{position:absolute;left:0;bottom:3px;height:3px;width:0;border-radius:2px;background:var(--cad);opacity:.85}
-.dab{display:inline-block;width:0;height:8px;margin-right:0;border-radius:55% 45% 60% 40%/50% 60% 40% 50%;background:var(--sage);transform:scale(0);vertical-align:1px}
-.tick{color:var(--cad);font-weight:700;opacity:0;margin-left:4px}
-.num{position:absolute;left:-18px;top:0;font-size:16px;font-weight:700;color:var(--sub);opacity:0}
-.sw{font-size:34px;font-weight:500;letter-spacing:-.035em;line-height:44px;white-space:nowrap;position:relative;display:inline-block}
-.sw svg{position:absolute;left:-7px;bottom:7px;z-index:-1}
-.d{position:absolute;width:40px;height:36px;margin:-18px 0 0 -20px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;background:radial-gradient(closest-side,rgba(var(--c),.85) 0%,rgba(var(--c),.6) 42%,rgba(var(--c),0) 100%);mix-blend-mode:multiply;filter:blur(2.5px)}
-#finger{width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(43,36,64,.16);box-shadow:0 0 0 1.5px rgba(255,255,255,.7);opacity:0;z-index:30;pointer-events:none}
-.caret{display:inline-block;width:2px;height:26px;vertical-align:-5px;background:var(--cobalt);animation:blink 1s steps(1) infinite}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap;color:rgba(var(--ink),var(--s2))}
+.t44{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:50px;white-space:nowrap}
+.pl{position:absolute;left:34px;right:22px;font-size:21px;line-height:30px;white-space:nowrap;color:rgb(var(--ink))}
+.pl.meta{color:rgba(var(--ink),var(--s2))}
+.pl.g{color:var(--tess)}
+.wet{animation:breathe 2.4s ease-in-out infinite}
+@keyframes breathe{0%,100%{opacity:.5}50%{opacity:.66}}
+.amt{position:relative;display:inline-block;font-weight:600}
+.amt i{position:absolute;left:0;bottom:2px;height:3px;width:0;border-radius:2px;background:rgb(var(--paint));opacity:.85}
+.nm{transition:color .9s}
+.tick{color:rgb(var(--paint));font-weight:700;opacity:0;margin-left:4px}
+.num{position:absolute;left:-14px;top:0;font-size:16px;font-weight:700;color:rgba(var(--ink),var(--s2));opacity:0}
+.soul{position:absolute;left:323px;top:759px;width:46px;height:40px;z-index:6}
+.soul i{position:absolute;width:20px;height:17px;border-radius:52% 48% 60% 40%/55% 45% 55% 45%;filter:blur(1.2px)}
+.say{position:absolute;right:71px;width:270px;text-align:right;top:779px;transform:translateY(-50%);color:var(--tess);font-size:21px;line-height:28px;z-index:6;opacity:0}
+.undo{display:block;margin-top:4px;color:var(--liveInk);font-weight:700;font-size:16px;line-height:20px;letter-spacing:.08em}
+.wisp{position:absolute;width:10px;height:8px;border-radius:50%;background:rgba(36,80,216,.55);filter:blur(1.5px);opacity:0;z-index:7}
+.caret{display:inline-block;width:2px;height:26px;vertical-align:-5px;background:var(--tess);animation:blink 1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
-.wet{animation:wet 1.8s ease-in-out infinite}
-@keyframes wet{0%,100%{opacity:.78}50%{opacity:1}}
+#fing{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(23,20,31,.14);box-shadow:0 0 0 1.5px rgba(255,255,255,.8);opacity:0;z-index:20;transition:opacity .15s}
 </style>
 </head>
 <body>
+<div class="cap" id="cap">PASTE A LINK</div>
 <div class="ph" id="ph">
-  <svg width="390" height="844" class="abs" style="inset:0;mix-blend-mode:multiply;opacity:.3;pointer-events:none" aria-hidden="true">
-    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .45  0 0 0 .55 0"/></filter>
-    <rect width="390" height="844" filter="url(#grain)"/>
-  </svg>
-  <svg width="0" height="0" class="abs"><filter id="rough" x="-10%" y="-60%" width="120%" height="220%"><feTurbulence type="fractalNoise" baseFrequency="0.9 0.25" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter></svg>
-
-  <div class="abs lbl" style="left:22px;top:58px">RECIPES / PASTE</div>
-  <section id="stage" class="abs" style="inset:0"></section>
-  <div id="band" class="abs" style="left:0;right:0;top:140px;height:80px;background:linear-gradient(rgba(224,163,92,0),rgba(224,163,92,.55) 55%,rgba(224,163,92,0));mix-blend-mode:multiply;opacity:0;filter:blur(6px);pointer-events:none"></div>
-
-  <div id="say" class="abs" style="right:78px;bottom:43px;width:262px;font-size:21px;line-height:28px;color:var(--cobalt);text-align:right;opacity:0;z-index:12"></div>
-  <span id="undo" class="abs la lbl" style="right:78px;top:808px;color:var(--verm);opacity:0;z-index:12">UNDO<span class="line" style="background:var(--verm)"></span></span>
-  <svg id="cloud" class="abs" width="22" height="14" viewBox="0 0 22 14" style="left:358px;top:752px;opacity:0;z-index:14"><path d="M5.5 13 H17 a4 4 0 0 0 .6-7.95 A5.5 5.5 0 0 0 7 4.2 A4.4 4.4 0 0 0 5.5 13 Z" fill="none" stroke="#2E6DA4" stroke-width="1.6" stroke-linejoin="round"/></svg>
-  <div id="soul" class="abs" style="left:346px;top:788px;width:0;height:0;z-index:13">
-    <div class="d" style="--c:200,69,47;transform:translate(-10px,-6px) scale(.72)"></div><div class="d" style="--c:46,109,164;transform:translate(10px,-6px) scale(.72)"></div><div class="d" style="--c:224,179,65;transform:translate(0,9px) scale(.72)"></div>
-  </div>
-  <div id="finger" class="abs"></div>
+ <div class="abs lbl" style="left:22px;top:58px">‹ KITCHEN</div>
+ <div class="abs t44" id="title" style="left:22px;top:84px">Paste a recipe</div>
+ <section id="stage" class="abs" style="inset:0"></section>
+ <div class="say" id="say"></div>
+ <div class="soul"><i style="left:0;top:4px;background:radial-gradient(closest-side,#2450D8,rgba(36,80,216,.2))"></i><i style="left:22px;top:2px;background:radial-gradient(closest-side,#E2432A,rgba(226,67,42,.2))"></i><i style="left:12px;top:20px;background:radial-gradient(closest-side,#F0A500,rgba(240,165,0,.2))"></i></div>
+ <div id="fing"></div>
 </div>
 <script>
-const $ = (id) => document.getElementById(id);
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const HOUSE = 'cubic-bezier(.2,.8,.2,1)';
-const anim = (el, kf, o) => el.animate(kf, { fill: 'forwards', ...o }).finished;
-const rel = (r) => { const p = $('ph').getBoundingClientRect(), k = p.width / 390; return { left: (r.left - p.left) / k, top: (r.top - p.top) / k, width: r.width / k, height: r.height / k }; };
-const finger = $('finger');
-const fingerAt = (x, y) => { finger.style.left = x + 'px'; finger.style.top = y + 'px'; };
-const fingerOn = async (x, y) => { fingerAt(x, y); await anim(finger, [{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160 }); };
-const fingerOff = () => anim(finger, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 });
-const centre = (el) => { const r = rel(el.getBoundingClientRect()); return [r.left + r.width / 2, r.top + r.height / 2]; };
-const stage = $('stage');
-const dabs = [...$('soul').children];
-let pulses = [];
-function fadeTo(el, o, dur, delay = 0, extra) { const from = getComputedStyle(el).opacity; el.getAnimations().forEach((a) => a.cancel()); el.style.opacity = from; el.animate([{ opacity: from, ...(extra || {}) }, { opacity: o, transform: 'none' }], { duration: dur, delay, fill: 'forwards' }); }
-function say(t, undo) { const s = $('say'); fadeTo(s, 0, 0); s.textContent = t; fadeTo(s, 1, 300, 0, { transform: 'translateX(12px)' }); if (undo) fadeTo($('undo'), 1, 240, 120); }
-const hush = () => { fadeTo($('say'), 0, 160); fadeTo($('undo'), 0, 160); };
-const think = () => { pulses = dabs.map((d, k) => d.animate([{ opacity: 1 }, { opacity: .35 }, { opacity: 1 }], { duration: 600, delay: k * 200, iterations: Infinity })); };
-const rest = () => { pulses.forEach((p) => p.cancel()); pulses = []; };
-const add = (html) => { stage.insertAdjacentHTML('beforeend', html); return stage.lastElementChild; };
+const Q=location.search;if(Q.includes('x2'))document.body.classList.add('x2');
+const $=id=>document.getElementById(id);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const HOUSE='cubic-bezier(.2,.8,.2,1)';
+const anim=(el,kf,o)=>el.animate(kf,{fill:'forwards',...o}).finished;
+const stage=$('stage');const add=h=>{stage.insertAdjacentHTML('beforeend',h);return stage.lastElementChild};
+const cap=t=>$('cap').textContent=t;
+const lens=(w,t)=>`M0 6 Q ${(w*.42).toFixed(1)} ${6-t} ${w} 5.6 Q ${(w*.58).toFixed(1)} ${6+t} 0 6 Z`;
+const f=$('fing');
+async function tap(x,y,hold=140){f.style.left=x+'px';f.style.top=y+'px';f.style.opacity=1;await sleep(hold);f.style.opacity=0}
+async function say(html){const s=$('say');await anim(s,[{opacity:getComputedStyle(s).opacity},{opacity:0}],{duration:150});s.innerHTML=html;if(html)anim(s,[{opacity:0,transform:'translate(12px,-50%)'},{opacity:1,transform:'translate(0,-50%)'}],{duration:300,easing:HOUSE})}
+let wispT=null;
+function wisps(on){clearInterval(wispT);if(!on)return;const go=()=>{for(let k=0;k<3;k++){const w=document.createElement('div');w.className='wisp';w.style.left=(334+k*9)+'px';w.style.top='760px';$('ph').appendChild(w);
+ w.animate([{opacity:0,transform:'translate(0,0) scale(.6)'},{opacity:.8,transform:`translate(${(k-1)*6}px,-26px) scale(1)`},{opacity:0,transform:`translate(${(k-1)*10}px,-52px) scale(1.3)`}],{duration:1300,delay:k*260,easing:'ease-out'}).onfinish=()=>w.remove()}};go();wispT=setInterval(go,1300)}
+async function setTitle(t){const e=$('title');await anim(e,[{opacity:1,filter:'blur(0)'},{opacity:0,filter:'blur(4px)'}],{duration:160});e.textContent=t;e.style.fontSize='';e.style.letterSpacing='';if(e.scrollWidth>346){e.style.fontSize='34px';e.style.letterSpacing='-.03em'}anim(e,[{opacity:0,filter:'blur(4px)'},{opacity:1,filter:'blur(0)'}],{duration:300,easing:HOUSE})}
+async function clear(){await say('');await anim(stage,[{opacity:1},{opacity:0}],{duration:280});stage.innerHTML='';stage.getAnimations().forEach(a=>a.cancel());stage.style.opacity=1;await setTitle('Paste a recipe');await sleep(250)}
 
-// a line of paste text; marks are painted later by the brush pass
-function lineHTML(l, y, ghost) {
-  const g = ghost ? ' g' : '';
-  if (l.t === 'title') return `<div class="pl title${g}" style="top:${y}px">${l.s}</div>`;
-  if (l.t === 'meta' || l.t === 'head') return `<div class="pl${g}" style="top:${y}px">${l.s}</div>`;
-  if (l.t === 'ing') return `<div class="pl ing${g}" style="top:${y}px"><span class="amt">${l.a}<i></i></span> <span class="dab"></span>${l.n}</div>`;
-  return `<div class="pl step${g}" style="top:${y}px"><span class="num">${l.k}</span>${l.s}${l.d ? `<span class="amt">${l.d}<i></i></span><span class="tick">✓</span>` : ''}</div>`;
+// the empty paste page: the page's frame, one quiet line, one way in
+async function pasteLink(host,path){
+ const q=add(`<div class="abs" style="left:22px;top:150px;font-size:21px;line-height:28px;color:rgba(var(--ink),var(--s2))">A recipe's text, or its link.</div>`);
+ const k=add(`<div class="abs lbl" style="left:22px;top:196px;color:rgb(var(--ink))">PASTE<svg style="position:absolute;left:-2px;top:20px;overflow:visible" width="0" height="12"><path d="${lens(66,2)}" fill="rgb(var(--ink))"/></svg></div>`);
+ anim(q,[{opacity:0},{opacity:1}],{duration:300});anim(k,[{opacity:0},{opacity:1}],{duration:300,delay:100});
+ await sleep(900);await tap(50,206,160);
+ const svg=k.querySelector('svg');svg.setAttribute('width','70');svg.animate([{clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0 0 0)'}],{duration:150,fill:'forwards'});
+ await sleep(150);anim(q,[{opacity:1},{opacity:0}],{duration:200});anim(k,[{opacity:1},{opacity:0}],{duration:200});await sleep(160);
+ const link=add(`<div class="abs" style="left:22px;right:22px;top:150px;font-size:21px;line-height:30px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><b style="font-weight:600">${host}</b><span style="color:rgba(var(--ink),var(--s3))">${path}</span></div>`);
+ await anim(link,[{opacity:0,transform:'translateY(10px)',filter:'blur(3px)'},{opacity:1,transform:'none',filter:'blur(0)'}],{duration:300,easing:HOUSE});
+ return link;
 }
-function layout(lines) { let y = 150; return lines.map((l) => { const at = y; y += l.t === 'title' ? 46 : l.t === 'head' ? 36 : 30; return at; }); }
-
-async function paintMarks(els, lines) {
-  const band = $('band'); const last = parseFloat(els[els.length - 1].style.top);
-  band.style.top = '120px';
-  anim(band, [{ opacity: 0 }, { opacity: 1, offset: .12 }, { opacity: 1, offset: .88 }, { opacity: 0 }], { duration: 700 });
-  anim(band, [{ transform: 'translateY(0)' }, { transform: `translateY(${last - 120}px)` }], { duration: 700, easing: 'linear' });
-  els.forEach((el, k) => {
-    const at = (parseFloat(el.style.top) - 150) / Math.max(1, last - 150) * 640;
-    setTimeout(() => {
-      const l = lines[k];
-      if (l.t === 'title') anim(el, [{ fontSize: '21px', fontWeight: 400 }, { fontSize: '34px', fontWeight: 500, letterSpacing: '-.035em' }], { duration: 300, easing: HOUSE });
-      el.querySelectorAll('.amt i').forEach((i) => anim(i, [{ width: '0' }, { width: '100%' }], { duration: 180, easing: HOUSE }));
-      el.querySelectorAll('.dab').forEach((d) => anim(d, [{ width: '0', marginRight: '0', transform: 'scale(0)' }, { width: '10px', marginRight: '6px', transform: 'scale(1)' }], { duration: 220, easing: HOUSE }));
-      el.querySelectorAll('.tick').forEach((t) => anim(t, [{ opacity: 0 }, { opacity: 1 }], { duration: 180, delay: 120 }));
-      el.querySelectorAll('.num').forEach((n) => anim(n, [{ opacity: 0 }, { opacity: 1 }], { duration: 200 }));
-    }, at);
-  });
-  await sleep(820);
+// reading: a soft cadmium wash sweeps the link line and loops; no spinner
+function reading(host){
+ const w=add(`<div class="abs" style="left:0;top:148px;width:140px;height:34px;background:linear-gradient(90deg,rgba(240,165,0,0),rgba(240,165,0,.35) 50%,rgba(240,165,0,0));mix-blend-mode:multiply;filter:blur(5px)"></div>`);
+ const a=w.animate([{transform:'translateX(-140px)'},{transform:'translateX(390px)'}],{duration:1400,easing:'cubic-bezier(.45,0,.55,1)',iterations:Infinity});
+ say(`Reading ${host}…`);
+ return async()=>{a.cancel();w.remove();await say('')};
 }
-
-function strokeWord(text, colour, top) {
-  return add(`<div class="abs" style="left:22px;top:${top}px;opacity:0"><div class="sw"><span>${text}</span><svg width="190" height="19" viewBox="0 0 200 14" preserveAspectRatio="none"><path d="M0 8 C 14 4.5, 50 3, 100 4 S 176 3.5, 200 5.5 L 197 9.5 C 150 12, 80 11.5, 34 11 S 8 10.5, 0 8 Z" fill="${colour}" opacity=".82" filter="url(#rough)"/></svg></div></div>`);
+const liftLink=l=>anim(l,[{opacity:1,transform:'none'},{opacity:0,transform:'translateY(-30px) scale(.8)'}],{duration:300,easing:HOUSE});
+const source=h=>{const s=add(`<div class="abs lbl" style="left:22px;top:150px">FROM ${h.toUpperCase()}</div>`);anim(s,[{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:320,easing:HOUSE})};
+function lineHTML(l,y,g){const c=g?' g wet':'';
+ if(l.t==='head')return `<div class="pl lbl${c}" style="top:${y+4}px;font-size:16px;line-height:30px;letter-spacing:.08em${g?'':';color:rgba(var(--ink),var(--s2))'}">${l.s.toUpperCase()}</div>`;
+ if(l.t==='meta')return `<div class="pl meta${c}" style="top:${y}px">${l.s}</div>`;
+ if(l.t==='ing')return `<div class="pl${c}" style="top:${y}px"><span class="amt">${l.a}<i></i></span> <span class="nm">${l.n}</span>${l.p?`<span style="color:rgba(var(--ink),var(--s2))">${l.p}</span>`:''}</div>`;
+ return `<div class="pl${c}" style="top:${y}px"><span class="num">${l.k}</span>${l.s}${l.d?`<span class="amt" style="font-weight:400">${l.d}<i></i></span><span class="tick">✓</span>`:''}</div>`}
+function layout(lines){let y=182;return lines.map(l=>{const a=y;y+=l.t==='head'?36:30;return a})}
+async function land(lines,g,stream){const ys=layout(lines),els=[];
+ for(let k=0;k<lines.length;k++){const el=add(lineHTML(lines[k],ys[k],g));els.push(el);
+  if(stream){anim(el,[{clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0 0 0)'}],{duration:300,easing:HOUSE});await sleep(150)}
+  else anim(el,[{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:260,delay:k*30,easing:HOUSE})}
+ await sleep(stream?300:lines.length*30+280);return els}
+// the brush pass: amounts get the under-stroke (drying to 35%), names arrive in sage and dry to ink, durations a tick, steps their numeral
+async function brush(els,lines,g){
+ const last=parseFloat(els[els.length-1].style.top);
+ const band=add(`<div class="abs" style="left:0;right:0;top:160px;height:80px;background:linear-gradient(rgba(240,165,0,0),rgba(240,165,0,.4) 55%,rgba(240,165,0,0));mix-blend-mode:multiply;filter:blur(6px);opacity:0"></div>`);
+ anim(band,[{opacity:0},{opacity:1,offset:.12},{opacity:1,offset:.88},{opacity:0}],{duration:700});
+ anim(band,[{transform:'translateY(0)'},{transform:`translateY(${last-160}px)`}],{duration:700,easing:'linear'});
+ els.forEach((el,k)=>{const at=(parseFloat(el.style.top)-182)/Math.max(1,last-182)*640;setTimeout(()=>{
+  el.querySelectorAll('.amt i').forEach(i=>{anim(i,[{width:'0'},{width:'100%'}],{duration:180,easing:HOUSE});setTimeout(()=>anim(i,[{opacity:.85},{opacity:.35}],{duration:900}),900)});
+  if(!g)el.querySelectorAll('.nm').forEach(n=>{n.style.color='rgb(var(--health))';setTimeout(()=>n.style.color='rgb(var(--ink))',700)});
+  el.querySelectorAll('.tick').forEach(t=>anim(t,[{opacity:0},{opacity:1}],{duration:180,delay:120}));
+  el.querySelectorAll('.num').forEach(n=>anim(n,[{opacity:0},{opacity:1}],{duration:200}));
+ },at)});
+ await sleep(820);band.remove();
 }
-async function tapStroke(sw) {
-  const [x, y] = centre(sw); await fingerOn(x - 10, y - 4); await sleep(110); fingerOff();
-  const svg = sw.querySelector('svg'); svg.style.transformOrigin = '50% 70%';
-  await anim(svg, [{ transform: 'scaleY(1)' }, { transform: 'scaleY(1.65)' }, { transform: 'scaleY(1)' }], { duration: 420, easing: 'ease-out' });
-}
+function saveWord(top){return add(`<div class="abs" style="left:22px;top:${top}px;font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:40px;opacity:0">Save recipe<svg style="position:absolute;left:-2px;top:41px;overflow:visible" width="190" height="12"><path d="${lens(190,2.5)}" fill="rgba(18,147,106,.75)"/></svg></div>`)}
+async function tapSave(s){anim(s,[{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'none'}],{duration:380,easing:HOUSE});await sleep(1500);await tap(90,s.offsetTop+22,160);
+ const p=s.querySelector('path');anim(p,[{opacity:1},{opacity:1}],{duration:120});
+ const sh=add(`<div class="abs" style="left:${20}px;top:${s.offsetTop+44}px;width:40px;height:8px;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.85),rgba(255,255,255,0))"></div>`);
+ await anim(sh,[{transform:'translateX(0)'},{transform:'translateX(170px)'}],{duration:520,easing:HOUSE});sh.remove();anim(s,[{opacity:1},{opacity:0}],{duration:220})}
+async function writingLine(top){
+ const c=add(`<div class="abs" style="left:22px;top:${top}px"><span class="caret"></span></div>`);
+ const r=add(`<div class="abs" style="left:22px;right:22px;top:${top+36}px;height:.5px;background:var(--tess);transform-origin:left"></div>`);
+ anim(r,[{transform:'scaleX(0)'},{transform:'scaleX(1)'}],{duration:420,easing:HOUSE});anim(c,[{opacity:0},{opacity:1}],{duration:200,delay:300})}
 
-async function clearStage() { hush(); await anim(stage, [{ opacity: 1 }, { opacity: 0 }], { duration: 300 }); stage.innerHTML = ''; stage.getAnimations().forEach((a) => a.cancel()); stage.style.opacity = 1; await sleep(250); }
+const CHILI=[{t:'meta',s:'Serves 6 · 30 min'},{t:'head',s:'Ingredients'},
+ {t:'ing',a:'1 lb',n:'ground beef'},{t:'ing',a:'1',n:'yellow onion',p:', diced'},{t:'ing',a:'2 tbsp',n:'chili powder'},{t:'ing',a:'1 can',n:'diced tomatoes',p:' · 15 oz'},{t:'ing',a:'2 cups',n:'beef broth'},{t:'ing',a:'½ lb',n:'elbow macaroni'},{t:'ing',a:'1 cup',n:'shredded cheddar'},
+ {t:'head',s:'Method'},{t:'step',k:1,s:'Brown the beef and onion, ',d:'5 min'},{t:'step',k:2,s:'Add the rest, simmer ',d:'12 min'},{t:'step',k:3,s:'Stir in the cheddar.'}];
+const LEMON=[{t:'meta',s:'Serves 2 · 20 min'},{t:'head',s:'Ingredients'},
+ {t:'ing',a:'8 oz',n:'spaghetti'},{t:'ing',a:'2',n:'lemons'},{t:'ing',a:'½ cup',n:'parmesan',p:', grated'},{t:'ing',a:'4 tbsp',n:'butter'},
+ {t:'head',s:'Method'},{t:'step',k:1,s:'Boil the pasta, ',d:'10 min'},{t:'step',k:2,s:'Melt the butter, add the zest.'},{t:'step',k:3,s:'Toss with the juice and cheese.'}];
+const SHAK=[{t:'meta',s:'Serves 4 · 35 min'},{t:'head',s:'Ingredients'},
+ {t:'ing',a:'6',n:'eggs'},{t:'ing',a:'1 can',n:'crushed tomatoes',p:' · 28 oz'},{t:'ing',a:'1',n:'red bell pepper'},{t:'ing',a:'1',n:'yellow onion'},{t:'ing',a:'2 tsp',n:'paprika'},{t:'ing',a:'1 tsp',n:'cumin'},{t:'head',s:'Preparation'}];
 
-// the empty paste screen, and the pasted link landing at y 150
-async function pasteLink(host, path) {
-  const empty = add(`<div class="abs" style="left:22px;right:22px;top:150px;font-size:34px;font-weight:400;letter-spacing:-.035em;line-height:44px;color:var(--cobalt)">Paste a recipe<br>or a link.</div>`);
-  const key = add(`<span class="abs la lbl" style="left:22px;top:262px;color:var(--ink)">PASTE<span class="line" style="background:var(--ink)"></span></span>`);
-  anim(empty, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 360, easing: HOUSE });
-  anim(key, [{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 120 });
-  await sleep(1000);
-  const [x, y] = centre(key); await fingerOn(x, y);
-  anim(key.querySelector('.line'), [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 160, easing: HOUSE });
-  await sleep(120); fingerOff();
-  anim(empty, [{ opacity: 1 }, { opacity: 0, transform: 'translateY(-8px)' }], { duration: 220 });
-  anim(key, [{ opacity: 1 }, { opacity: 0 }], { duration: 220 });
-  await sleep(160);
-  const link = add(`<div class="abs" style="left:22px;right:22px;top:150px;font-size:21px;line-height:30px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><b style="font-weight:600">${host}</b><span style="opacity:.45">${path}</span></div>`);
-  await anim(link, [{ opacity: 0, transform: 'translateY(10px)', filter: 'blur(3px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }], { duration: 300, easing: HOUSE });
-  return link;
-}
-
-// reading: a slow cadmium wash breathes across the link line; Tess thinks in her corner
-function reading(link, host) {
-  const w = add(`<div class="abs" style="left:0;top:146px;width:140px;height:38px;background:linear-gradient(90deg,rgba(224,163,92,0),rgba(224,163,92,.5) 50%,rgba(224,163,92,0));mix-blend-mode:multiply;filter:blur(5px);pointer-events:none"></div>`);
-  const a = w.animate([{ transform: 'translateX(-140px)' }, { transform: 'translateX(390px)' }], { duration: 1400, easing: 'cubic-bezier(.45,0,.55,1)', iterations: Infinity });
-  think(); say(`Reading ${host}…`);
-  return async () => { a.cancel(); w.remove(); rest(); hush(); await sleep(170); };
-}
-
-async function landText(lines, ghost, stream) {
-  const ys = layout(lines); const els = [];
-  for (let k = 0; k < lines.length; k++) {
-    const el = add(lineHTML(lines[k], ys[k], ghost)); els.push(el);
-    if (stream) { anim(el, [{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: 300, easing: HOUSE }); await sleep(150); }
-    else anim(el, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 260, delay: k * 30, easing: HOUSE });
-  }
-  await sleep(stream ? 300 : lines.length * 30 + 280);
-  return els;
-}
-
-const sourceLabel = (host) => { const s = add(`<div class="abs lbl" style="left:22px;top:112px">FROM ${host.toUpperCase()}</div>`); anim(s, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: HOUSE }); };
-const liftLink = (link) => anim(link, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-30px) scale(.8)' }], { duration: 300, easing: HOUSE });
-
-async function writingLine(top) {
-  const caret = add(`<div class="abs" style="left:22px;top:${top}px"><span class="caret"></span></div>`);
-  const rule = add(`<div class="abs" style="left:22px;right:22px;top:${top + 36}px;height:.5px;background:var(--cobalt);transform-origin:left"></div>`);
-  anim(rule, [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 420, easing: HOUSE });
-  anim(caret, [{ opacity: 0 }, { opacity: 1 }], { duration: 200, delay: 300 });
-}
-
-const DAL = [{ t: 'title', s: 'Dal tadka' }, { t: 'meta', s: 'Serves 4 · 40 min' }, { t: 'head', s: 'Ingredients' },
-  { t: 'ing', a: '1 cup', n: 'toor dal' }, { t: 'ing', a: '3 cups', n: 'water' }, { t: 'ing', a: '1', n: 'onion, chopped' }, { t: 'ing', a: '2', n: 'tomatoes, chopped' }, { t: 'ing', a: '1 inch', n: 'ginger, grated' }, { t: 'ing', a: '1 tsp', n: 'cumin seeds' },
-  { t: 'head', s: 'Method' }, { t: 'step', k: 1, s: 'Rinse the dal, cook ', d: '15 min' }, { t: 'step', k: 2, s: 'Fry cumin, onion, ginger ', d: '5 min' }, { t: 'step', k: 3, s: 'Add tomatoes and the dal.' }];
-const LEMON = [{ t: 'title', s: 'Lemon pasta' }, { t: 'meta', s: 'Serves 2 · 20 min' }, { t: 'head', s: 'Ingredients' },
-  { t: 'ing', a: '200 g', n: 'spaghetti' }, { t: 'ing', a: '2', n: 'lemons' }, { t: 'ing', a: '40 g', n: 'parmesan' }, { t: 'ing', a: '50 g', n: 'butter' },
-  { t: 'head', s: 'Method' }, { t: 'step', k: 1, s: 'Boil the pasta ', d: '10 min' }, { t: 'step', k: 2, s: 'Melt the butter, add zest.' }, { t: 'step', k: 3, s: 'Toss with juice and cheese.' }];
-const SHAK = [{ t: 'title', s: 'Shakshuka' }, { t: 'meta', s: 'Serves 2 · 30 min' }, { t: 'head', s: 'Ingredients' },
-  { t: 'ing', a: '4', n: 'eggs' }, { t: 'ing', a: '400 g', n: 'tomatoes' }, { t: 'ing', a: '1', n: 'red pepper' }, { t: 'ing', a: '1', n: 'onion' }, { t: 'ing', a: '2 tsp', n: 'paprika' }, { t: 'ing', a: '1 tsp', n: 'cumin' }, { t: 'head', s: 'Method' }];
-
-(async () => {
-  if (location.search.includes('x2')) { const ph = $('ph'); ph.style.transform = 'scale(2)'; ph.style.transformOrigin = '0 0'; }
-  await document.fonts.ready; await sleep(400); document.body.dataset.start = '1';
-  await sleep(300);
-
-  // 1 · L1: the page has a recipe card (JSON-LD); it lands as plain text and is read like a paste
-  let link = await pasteLink('hebbarskitchen.com', '/dal-tadka-recipe');
-  let done = reading(link, 'hebbarskitchen.com'); await sleep(2100); await done();
-  liftLink(link); sourceLabel('hebbarskitchen.com');
-  let els = await landText(DAL, false, false);
-  await paintMarks(els, DAL);
-  say('Six ingredients, three steps, two timers.');
-  let save = strokeWord('Save recipe', '#6E9E6A', 690);
-  anim(save, [{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: HOUSE });
-  await sleep(1700);
-  hush(); await tapStroke(save);
-  anim(save, [{ opacity: 1 }, { opacity: 0 }], { duration: 220 });
-  say('Dal tadka saved.', true);
-  await sleep(1600);
-  await clearStage();
-
-  // 2 · a site that blocks the fetch: the link stays, a writing line opens under it
-  link = await pasteLink('nytimes.com', '/recipes/1021-chana-masala');
-  done = reading(link, 'nytimes.com'); await sleep(1700); await done();
-  say('That site won’t let me read it. Paste the recipe text instead.');
-  await writingLine(196);
-  await sleep(2600);
-  await clearStage();
-
-  // 3 · L3: no recipe card and the text reader fails; Claude reads it, streamed, as a wet cobalt ghost
-  link = await pasteLink('piperhaywood.com', '/lemon-pasta-notes');
-  done = reading(link, 'piperhaywood.com'); await sleep(1500); await done();
-  think(); say('No recipe card there. Asking Claude.');
-  anim($('cloud'), [{ opacity: 0, transform: 'translateY(4px)' }, { opacity: .9, transform: 'none' }], { duration: 260, easing: HOUSE });
-  await sleep(1300); hush(); await sleep(170);
-  liftLink(link); sourceLabel('piperhaywood.com');
-  els = await landText(LEMON, true, true);
-  els.forEach((el) => el.classList.add('wet'));
-  rest();
-  await paintMarks(els, LEMON);
-  say('Claude read it. Check it, then save.');
-  save = strokeWord('Save recipe', '#6E9E6A', 690);
-  anim(save, [{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'none' }], { duration: 380, easing: HOUSE });
-  await sleep(1800);
-  hush(); await tapStroke(save);
-  anim(save, [{ opacity: 1 }, { opacity: 0 }], { duration: 220 });
-  anim($('cloud'), [{ opacity: .9 }, { opacity: 0 }], { duration: 260 });
-  els.forEach((el, k) => setTimeout(() => { el.classList.remove('wet'); el.style.transition = 'color 520ms ease'; el.style.color = 'rgba(43,36,64,.85)'; }, k * 50));
-  await sleep(600);
-  say('Lemon pasta saved.', true);
-  await sleep(1700);
-  await clearStage();
-
-  // 4 · a paywall that still ships the ingredients: they are read; the steps get a writing line
-  link = await pasteLink('cooking.example.com', '/shakshuka');
-  done = reading(link, 'cooking.example.com'); await sleep(1500); await done();
-  liftLink(link); sourceLabel('cooking.example.com');
-  els = await landText(SHAK, false, false);
-  await paintMarks(els, SHAK);
-  say('Got 6 ingredients. The steps are behind the site’s paywall; paste them below.');
-  await writingLine(482);
-  await sleep(3000);
-  document.body.dataset.done = '1';
+(async()=>{
+ await document.fonts.ready;await sleep(300);document.body.dataset.start='1';await sleep(300);
+ // 1 · L1: the page has a recipe card; it lands as plain text and is read like a paste
+ cap('1 · A RECIPE CARD · BUDGETBYTES.COM');
+ let link=await pasteLink('budgetbytes.com','/one-pot-chili-mac');
+ let done=reading('budgetbytes.com');await sleep(2000);await done();
+ liftLink(link);await setTitle('One-pot chili mac');source('budgetbytes.com');
+ let els=await land(CHILI,false,false);await brush(els,CHILI,false);
+ say('Seven ingredients, three steps, two timers.');
+ let s=saveWord(624);await tapSave(s);
+ say('Chili mac saved.<span class="undo">UNDO</span>');
+ await sleep(1800);await clear();
+ // 2 · a site that blocks: the link stays at full ink, a writing line opens under it
+ cap('2 · A SITE THAT BLOCKS · ALLRECIPES.COM');
+ link=await pasteLink('allrecipes.com','/recipe/24074/alysias-basic-meat-lasagna');
+ done=reading('allrecipes.com');await sleep(1700);await done();
+ say('That site won’t let me read it. Paste the text instead.');
+ await writingLine(196);await sleep(2800);await clear();
+ // 3 · L3: no recipe card; Claude reads it, streamed in as a wet cobalt ghost; save dries it to ink
+ cap('3 · NO RECIPE CARD · CLAUDE READS IT');
+ link=await pasteLink('sundaysupper.substack.com','/p/lemon-pasta-for-two');
+ done=reading('sundaysupper.substack.com');await sleep(1500);await done();
+ say('No recipe card there. Asking Claude.');wisps(true);
+ await sleep(1500);await say('');
+ liftLink(link);await setTitle('Lemon pasta');source('sundaysupper.substack.com');
+ els=await land(LEMON,true,true);await brush(els,LEMON,true);
+ say('Claude read it.<br>Check it, then save.');
+ s=saveWord(560);await tapSave(s);wisps(false);
+ els.forEach((el,k)=>setTimeout(()=>{el.classList.remove('wet','g');el.style.transition='color .52s';el.style.color='rgb(var(--ink))';el.querySelectorAll('.nm').forEach(n=>n.style.color='rgb(var(--ink))')},k*50));
+ await sleep(600);say('Lemon pasta saved.<span class="undo">UNDO</span>');
+ await sleep(1800);await clear();
+ // 4 · a paywall that ships the ingredients: they're read; the steps get a writing line
+ cap('4 · A PAYWALL · COOKING.NYTIMES.COM');
+ link=await pasteLink('cooking.nytimes.com','/recipes/1014721-shakshuka-with-feta');
+ done=reading('cooking.nytimes.com');await sleep(1500);await done();
+ liftLink(link);await setTitle('Shakshuka with feta');source('cooking.nytimes.com');
+ els=await land(SHAK,false,false);await brush(els,SHAK,false);
+ say('The steps are paywalled. Paste them below.');
+ await writingLine(470);await sleep(3000);
+ document.body.dataset.done='1';
 })();
 </script>
 </body>

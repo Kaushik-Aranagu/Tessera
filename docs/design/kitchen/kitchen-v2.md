@@ -2,6 +2,8 @@
 
 > **US shop (item 25):** aisle names, amounts, fractions, pack sizes and merging for a US kitchen are in `us-shop.md`, which wins over this sheet's metric and UK examples.
 
+> **Link fetch, redrawn (item 32):** section L is redrawn in `link-fetch-us.md` (S4 top with the recipe's name as the title, no dots in the brush pass, wisps for Claude, Save recipe as an ink-line word, US sites, every failure line in two lines). Where they differ, `link-fetch-us.md` wins.
+
 > **Sweep 16 Oct (item 19):** parts of this sheet are amended by `sweep-19.md` (no dots, one base, the context line). Where they differ, `sweep-19.md` wins.
 
 Just enough to build. Product steer: `docs/product/kitchen-v2-backlog.md` (slices L1-L3 and the top three backlog items); research brief `docs/research/recipe-link-fetch.md` §4 for every failure line. Drawn to `../no-buttons.md`. Light ground and kitchen colours as in `13-groceries.md`; Tess speaks beside her soul (right 78, bottom 43, width 262), as everywhere since #107.
