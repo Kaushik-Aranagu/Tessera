@@ -342,7 +342,10 @@ public enum DayStory {
                                size: dones.objects.count, tail: "\(dones.objects.count) done"))
         }
         if let notes {
-            let text = notes.objects.count == 1 ? "Note: \(notes.titles[0])" : "\(notes.objects.count) notes"
+            // A private note reads "Private note" and nothing more (Research 134 SW2); its title already is that.
+            let text = notes.objects.count == 1
+                ? (notes.titles[0] == SecretWords.title ? SecretWords.title : "Note: \(notes.titles[0])")
+                : "\(notes.objects.count) notes"
             loose.append(Loose(line: DayLine(time: notes.time, text: text, objectIDs: notes.objects, kind: .finished),
                                size: notes.objects.count,
                                tail: "\(notes.objects.count) \(notes.objects.count == 1 ? "note" : "notes")"))

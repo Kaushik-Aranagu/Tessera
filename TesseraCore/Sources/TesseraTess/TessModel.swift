@@ -57,7 +57,7 @@ public struct TessRouter {
     public let models: [any TessModel]
 
     /// A key typed into Ask: where it goes instead (it lives in Review, under Claude; lines audit item 4).
-    public static let keyLine = "That looks like a Claude key. It goes in Review, under Claude."
+    public static let keyLine = claudeKeyLine
 
     public init(engine: ActionEngine, models: [any TessModel]) {
         self.engine = engine
@@ -70,7 +70,14 @@ public struct TessRouter {
             return TessCapture(records: [], line: TessRouter.keyLine, source: .none)
         }
         var asked: TessCapture?
-        for model in models where model.isAvailable(for: request.use) {
+        // A secret word never leaves the grammar (Research 134): no on-device model, no Claude, whatever the switch.
+        let secret = SecretWords.mentions(request.text)
+        // Money and body facts stay on the phone (MU2, Research 138 MW1): one the grammar didn't take goes to the
+        // on-device model or to "Didn't catch that.", never to Claude, whatever the switch says.
+        let walled = PrivateFacts.isWalled(request.text)
+        for model in models where model.isAvailable(for: request.use)
+            && !(secret && model.route != .grammar) && !(walled && model.route == .claude)
+        {
             engine.attribution = (model.route, model.modelName)
             let result = await model.run(request, engine: engine)
             engine.attribution = nil

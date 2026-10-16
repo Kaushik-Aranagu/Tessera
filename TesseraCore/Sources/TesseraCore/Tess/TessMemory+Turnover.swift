@@ -62,7 +62,9 @@ public extension TessMemoryStore {
             .filter { $0.kind == .finished }
         guard !lines.isEmpty else { return nil }
         var parts: [String] = []
-        for line in lines {
+        // Second guard (Research 134 SW2): a private note, or any older note holding a secret word, never reaches
+        // a memory line, so it can never reach a pack.
+        for line in lines where line.text != SecretWords.title && !SecretWords.mentions(line.text) {
             var text = line.text
             let workout = text.contains(" min") || text.hasSuffix(" sets.")
             if let cut = text.range(of: ", "), workout || text.hasPrefix("Cooked ") {

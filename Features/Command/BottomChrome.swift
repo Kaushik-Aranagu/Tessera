@@ -109,6 +109,7 @@ struct BottomChrome: View {
                 setAsk = nil
             }
         }
+        .onDisappear(perform: askLeft)
         .onAppear {
             model.soul.handle(.appeared)
             breathe = !reduceMotion
@@ -221,7 +222,7 @@ struct BottomChrome: View {
 
     /// The soul at 0.72, breathing 1 ↔ 1.08 over 3.2 s; tap opens, hold opens, double tap goes Home.
     private var soulKey: some View {
-        TessSoul(mode: model.tessMode, eyes: model.tessHasEyes, gaze: model.soul.gaze)
+        TessSoul(mode: model.tessMode, hostScale: 0.72, eyes: model.tessHasEyes, gaze: model.soul.gaze)
             .scaleEffect(0.72)
             .scaleEffect(breathe ? 1.08 : 1)
             .tesseraAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true), value: breathe)
@@ -531,6 +532,15 @@ struct BottomChrome: View {
 // MARK: - Speak and the asks (same file, so they reach the view's private state)
 
 extension BottomChrome {
+    /// An ask can't wait off screen (tess-motion.md §14 `askLeft`): leaving with one open lets it go, or the router
+    /// would keep refusing the lens. Emitted here because the ask's onChange won't run once the view is gone.
+    private func askLeft() {
+        guard setAsk != nil || liftAsk != nil else { return }
+        setAsk = nil
+        liftAsk = nil
+        model.soul.handle(.askAnswered)
+    }
+
     /// Taps are read off the press itself: a separate tap gesture never fired beside the touch-down drag, so the
     /// soul didn't open on a real tap. One tap opens or closes after the double-tap window; two go Home.
     private func soulTapped() {
@@ -587,7 +597,9 @@ extension BottomChrome {
             if let refused = await listener.start(hold: hold) {
                 holdListening = false
                 if hold {
-                    // From a hold the line shows beside the soul; the layer doesn't open.
+                    // From a hold the line shows beside the soul; the layer doesn't open. She goes back to rest
+                    // first: the line's 4 s never settles her while she's listening.
+                    model.soul.handle(.heardNothing)
                     say("\(refused.line) \(refused.action) still works.")
                 } else {
                     withTesseraAnimation(reduceMotion: reduceMotion) { refusal = refused }

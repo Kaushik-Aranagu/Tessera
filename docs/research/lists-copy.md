@@ -27,7 +27,7 @@ Ids: D = Design's sheet, A = acceptance file, S = shipped on master, N = a line 
 | D11 | lists-9-12 §10 the fold; A 10.4 | "**4** done" (tap restores, hold 0.7 s clears) | No line and no Undo for clearing, which deletes checked items: a destructive write (rule 8) | On clear: "4 done cleared." UNDO 10 s: "4 done taken back." |
 | D12 | lists-9-12 §10 the fold; A 10.4 | "**4** done · hold to reset" | Fine as a hint. Reset loses every `checkedAt`, so it is destructive and has no line or Undo | On reset: "Packing reset, 9 open." UNDO 10 s: "Packing reset taken back." |
 | D13 | lists-9-12 §10 running | context line "Packing, running"; Now "Packing, 9 left" | Pass. Matches master's "Shopping, 9 left." | Keep |
-| D14 | lists-9-12 §10 bare words; A G6 | "done" finishes the run (no line) | Needs a done line (principle 1, counts) | "Packing, done. 9 of 9." Reusable list: "Packing, done. Reset for next time." Undo: "Packing taken back." |
+| D14 (overruled by the Lists addendum: done asks before reset, RESET as a hold or NOT NOW) | lists-9-12 §10 bare words; A G6 | "done" finishes the run (no line) | Needs a done line (principle 1, counts) | "Packing, done. 9 of 9." Reusable list: "Packing, done. Reset for next time." Undo: "Packing taken back." |
 | D15 | lists-9-12 §10 two runs; A G11 | the first run waits in the ledger with RESUME | No line when the new run takes Now; silence is fine (rule 7) | Keep silent. The ledger word is enough |
 | D16 | lists-9-12 §10 option words; A 10.5 | "Sections · Reusable · Run it · Pick one · Archive" | Words pass. "Archive" has no line or Undo, and its foot word is "Archived" while Tess says "put away" (D8) | On Archive: "Packing archived." Undo: "Packing taken back." See disagreement 5 for the word |
 | D17 | lists-9-12 §10 x between lists | rail of list names | Pass (names only) | Keep |
@@ -39,7 +39,7 @@ Ids: D = Design's sheet, A = acceptance file, S = shipped on master, N = a line 
 | D23 | lists-9-12 §11 swipe right | strikes the item (no line) | Silent is right (checking is silent in Groceries) | Keep silent; the row's strike in the list is the receipt |
 | D24 | lists-9-12 §12; A 12.4, G13 | "That's all of them." | Passes (state line, no count, no nudge, as G13 decides) | Keep. Optional: "That's all of Films." if Kaushik wants the name |
 | D25 | lists-9-12 §12 | picks and skips (no line) | Silence rule 7: pass | Keep silent |
-| D26 | lists-9-12 §10 empty list | not given in either file | Empty rules 1 and 5: a list with no items needs one line and a fast path | Context line: "Nothing on it yet". Window: "Type a few, or paste a block." |
+| D26 (overruled by the Lists addendum: EMPTY is the state word) | lists-9-12 §10 empty list | not given in either file | Empty rules 1 and 5: a list with no items needs one line and a fast path | Context line: "Nothing on it yet". Window: "Type a few, or paste a block." |
 | D27 | lists-9-12 §10 context line | only "Packing, running" given; ship-list §10 gives "3 of 7" | Missing idle form | Idle: "3 of 7". All done, not running: "All 7 done" |
 | N1 | screens 10 and 11 | no gesture or line to delete one item (engine slice 1 has it) | Undo rule: destructive write, 10 s | "Passport deleted." UNDO 10 s: "Passport taken back." |
 | N2 | screen 11 | editing an item's text in place | Edits are silent (like Notes autosave) | No line |
@@ -72,4 +72,4 @@ Both files agree on the rest. One non-copy mismatch worth knowing: `ship-list-li
 
 1. D5 "EMPTY" or a fast-path word ("ADD ONE")? Empty rule 5 prefers what to add; a label has no tap.
 2. D12 "Packing reset taken back." reads long. The alternative is "Packing taken back.", which can read as if the list went away (same worry as X11 in tess-voice).
-3. D14: should "done" on a reusable list reset it automatically? ship-list slice 5 says finish is "reset if reusable"; the line assumes yes.
+3. D14: should "done" on a reusable list reset it automatically? ship-list slice 5 says finish is "reset if reusable"; the line assumes yes. Answered by the addendum: no, it asks first.

@@ -226,7 +226,7 @@ function along(path, s) {
 // far readers home first so every light lands together.
 function workWeight(i, t, work) {
   if (!work) return 0;
-  const reader = work.path && READERS.some(r => r[0] === i);
+  const reader = (work.path || work.pathFn) && READERS.some(r => r[0] === i);
   const outDelay = .25 + (i >= 6 ? .08 * (i - 5) : .03 * i) + (reader ? .1 : 0);
   const outDur = reader ? 1.1 : .9;
   const w = ramp(t, work.split + outDelay, outDur, splitCurve);
@@ -245,8 +245,16 @@ function workFade(t, work) {
 function workParticles(t, work) {
   const res = [];
   const W0 = work.at;
-  for (const c of CONSTELLATION) res[c[0]] = constellationPose(c, t, W0);
+  for (const c of CONSTELLATION) {
+    res[c[0]] = constellationPose(c, t, W0);
+    if (work.noise) { const n = noiseDrift(c[0], t); res[c[0]] = { ...res[c[0]], x: W0.x + c[1] * n.x, y: W0.y + c[2] * n.y }; }
+  }
   for (const [i, lag] of READERS) {
+    if (work.pathFn) {
+      const p = work.pathFn(t - work.scan - lag);
+      res[i] = { x: p.x, y: p.y + (i === 1 ? 0 : 1.5), rx: i === 1 ? 15 : 12, ry: i === 1 ? 11 : 9, blur: 5, alpha: i === 1 ? .5 : .42 };
+      continue;
+    }
     if (work.path) {
       const tau = t - work.scan - lag;
       const s = work.path.len * clamp(tau / work.scanDur);
@@ -375,7 +383,36 @@ function drawEyes(C, scale, frame, eyes, t) {
   ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.fillStyle = rgba(LOOK.dark ? LOOK.ground : LOOK.ink, .82 * eyes.alpha); // Design 51: always the dark one
   for (const s of [-1, 1]) {
-    ctx.beginPath(); ctx.ellipse(cx + s * 4.2 * L, cy, 1.6 * L, Math.max(1.75 * open, .25) * L, 0, 0, Math.PI * 2); ctx.fill();
+    const o = s < 0 ? (eyes.blinkL ?? open) : (eyes.blinkR ?? open);
+    ctx.beginPath(); ctx.ellipse(cx + s * 4.2 * L, cy, 1.6 * L, Math.max(1.75 * o, .25) * L, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+// The mouth (Kaushik, 9:55 AM PT Oct 16: "a small mouth, just a line… so it could get a little more expressive").
+// One short stroke under the eyes, in the eyes' dark pigment but lighter (70%), so the eyes still lead. It is a
+// line, never a cartoon: `curve` bends it (+1 a small smile; down only to -0.35, only for a miss of her own, never at him), `tilt` lifts one
+// corner (thinking, curious), `open` rounds it into a small soft o (listening). It rides the eyes' glance at 70%.
+function drawMouth(C, scale, frame, mouth, look) {
+  if (!mouth || mouth.alpha < .01) return;
+  const L = frame.look.scale * scale;
+  const m = frame.dabs.slice(0, 3).reduce((a, d) => ({ x: a.x + d.x / 3, y: a.y + d.y / 3 }), { x: 0, y: 0 });
+  const lx = look ? look.x : 0, ly = look ? look.y : 0;
+  const cx = C.x + L * (m.x + lx * 3 * .7), cy = C.y + L * (m.y + 2.6 + ly * 2.2 * .7);
+  const w = (mouth.width ?? 5.6) / 2, curve = Math.max(-.35, mouth.curve ?? 0), tilt = mouth.tilt ?? 0, open = mouth.open ?? 0;
+  const col = LOOK.dark ? LOOK.ground : LOOK.ink;
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  if (open > .01) {
+    ctx.fillStyle = rgba(col, .7 * mouth.alpha * open);
+    ctx.beginPath(); ctx.ellipse(cx, cy + .5 * L, lerp(w, 1.35, open) * L, lerp(.5, 1.4, open) * L, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  if (open < .99) {
+    ctx.strokeStyle = rgba(col, .7 * mouth.alpha * (1 - open)); ctx.lineWidth = 1.1 * L; ctx.lineCap = 'round';
+    ctx.beginPath();
+    // `tilt` lifts only the right corner; the left never drops, so no corner sits below the middle unless curve < 0.
+    ctx.moveTo(cx - w * L, cy + (-curve * .5) * L);
+    ctx.quadraticCurveTo(cx, cy + (curve * 1.7) * L, cx + w * L, cy + (-tilt * .9 - curve * .5) * L);
+    ctx.stroke();
   }
   ctx.restore();
 }
@@ -501,6 +538,7 @@ function composeSoul(t, s) {
   }
   drawSoul(parts, frame, C, scale, grade);
   if (s.eyes) drawEyes(C, scale, frame, s.eyes(t), t);
+  if (s.mouth) drawMouth(C, scale, frame, s.mouth(t), s.eyes ? s.eyes(t).look : null);
 }
 
 // MARK: - Scenes
@@ -1394,6 +1432,312 @@ SCENES.lens = () => {
   return { duration: at, segments: segs };
 };
 
+// 17. Ideas (board item 17): ten small ways for her to be more alive, each a clip of 6 s or less, for Kaushik to
+// pick from. Ideas, not specs: values here are first guesses, and his picks become sheets.
+const blinkAt = (t, at, dur = .16) => { const u = (t - at) / dur; return u > 0 && u < 1 ? Math.abs(1 - 2 * u) : 1; };
+const blinks = (t, list) => list.reduce((o, b) => Math.min(o, blinkAt(t, b)), 1);
+const IDEAS = {};
+// 1. Wake with him: the first open of the day; eyes closed, they open, one slow stretch, one blink.
+IDEAS.wake = () => ({
+  duration: 5,
+  page: t => ({ extra: () => { const a = 1 - ramp(t, .1, .45); if (a > 0) { ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = a; ctx.fillStyle = LOOK.ground; ctx.fillRect(0, 0, W, H); ctx.restore(); } } }),
+  soul: {
+    modes: [{ mode: 'idle', at: -10 }], centre: () => HOME,
+    wobble: (parts, t, C) => { const s = 1 + .22 * ramp(t, 1.5, .6, easeInOut) * (1 - ramp(t, 2.3, .7, houseCurve)); return parts.map(p => ({ ...p, x: C.x + (p.x - C.x) * s, y: C.y + (p.y - C.y) * (2 - s * .98) })); },
+    eyes: t => ({ alpha: 1, blink: t < 1.0 ? 0 : Math.min(ramp(t, 1.0, .4, easeOut), blinkAt(t, 3.4)), look: { x: 0, y: 0 } }),
+  },
+});
+// 2. Stroke her: a finger swipes across her; a ripple runs through the dabs, one blink, one soft tick.
+IDEAS.stroke = () => {
+  const s0 = 1.4, s1 = 1.75;
+  return {
+    duration: 5,
+    page: () => ({}),
+    finger: t => (t > s0 - .2 && t < s1 + .15) ? { x: lerp(296, 396, ramp(t, s0, s1 - s0)), y: lerp(792, 770, ramp(t, s0, s1 - s0)), alpha: ramp(t, s0 - .2, .15) * (1 - ramp(t, s1, .15)) } : null,
+    soul: {
+      modes: [{ mode: 'idle', at: -10 }], centre: () => HOME,
+      wobble: (parts, t, C) => {
+        const k = t - s0; if (k < 0 || k > 1.6) return parts;
+        const amp = 4 * Math.exp(-k * 2.6);
+        return parts.map(p => ({ ...p, x: p.x + amp * Math.sin((p.x - C.x) * .25 - k * 16), y: p.y + amp * .6 * Math.cos((p.x - C.x) * .2 - k * 14) }));
+      },
+      eyes: t => ({ alpha: 1, blink: blinks(t, [s1 + .05, 4.2]), look: { x: t > s0 && t < s1 + .4 ? 1 : 0, y: 0 } }),
+    },
+  };
+};
+// 3. She wears the day: each thing he finishes leaves her a little richer; at 04:00 she starts plain again.
+IDEAS.wear = () => {
+  const dones = [.8, 2.0, 3.2, 4.4];
+  return {
+    duration: 6,
+    page: t => ({ rowAlpha: i => { const d = dones[i]; return d === undefined ? 1 : 1 - ramp(t, d - .1, .35); } }),
+    soul: {
+      modes: [{ mode: 'idle', at: -10 }], centre: () => HOME,
+      beat: t => {
+        let g = 0, steps = 0;
+        for (const d of dones) { if (t > d + .52) steps++; const up = ramp(t, d + .52, .18, easeOut), dn = ramp(t, d + .7, .32); g = Math.max(g, up * (1 - dn)); }
+        return { scale: 1 + .1 * g, gather: g, sat: .1 * steps + .25 * g };
+      },
+      eyes: t => ({ alpha: 1, blink: blinks(t, dones.map(d => d + .52)), look: { x: 0, y: 0 } }),
+    },
+  };
+};
+// 4. Tilt: she sits a point or two deeper than the page; tilting the phone shifts her, the far lights more.
+IDEAS.tilt = () => ({
+  duration: 6,
+  page: () => ({}),
+  soul: {
+    modes: [{ mode: 'idle', at: -10 }], centre: () => HOME,
+    wobble: (parts, t, C) => { const tx = 2 * Math.sin(t * 1.3), ty = 1.4 * Math.sin(t * .9 + 1); return parts.map((p, i) => { const d = i < 3 ? 1 : 1.7; return { ...p, x: p.x + tx * d, y: p.y + ty * d }; }); },
+    eyes: t => ({ alpha: 1, blink: blinks(t, [3.1]), look: { x: .6 * Math.sin(t * 1.3), y: .4 * Math.sin(t * .9 + 1) } }),
+  },
+});
+// 5. Sleep: in quiet hours her eyes are closed and she breathes slowly; open the app late and one eye opens.
+IDEAS.sleep = () => {
+  const tap = 2.6;
+  return {
+    duration: 6,
+    page: () => ({ day: 'Thursday night', context: 'quiet till 7 am', header: 'Push A tomorrow' }),
+    timeScale: t => t < tap ? .45 : lerp(.45, 1, ramp(t, tap, 1.2)),
+    soul: {
+      modes: [{ mode: 'idle', at: -10 }], centre: () => HOME, scale: t => lerp(.92, 1, ramp(t, tap + .3, 1.5)),
+      beat: t => ({ scale: 1, gather: 0, sat: lerp(-.35, 0, ramp(t, tap + .3, 1.5)) }),
+      eyes: t => { const open = ramp(t, tap + .25, .35, easeOut) * (1 - ramp(t, tap + 1.6, .3)); const both = ramp(t, tap + 2.4, .4, easeOut); return { alpha: 1, blink: 0, blinkL: Math.max(both, open * .15), blinkR: Math.max(open, both), look: { x: -.4 * open, y: -.3 * open } }; },
+    },
+  };
+};
+// 6. She watches the clock: the last seconds of a rest, she leans 4 pt toward the timer; at Go the timer owns it.
+IDEAS.clock = () => {
+  const go = 4.2, lean = t => 4 * ramp(t, 1.8, .6, easeInOut) * (1 - ramp(t, go, .3, houseCurve));
+  return {
+    duration: 6,
+    draw: t => {
+      ground(); tabs('Training');
+      text('Push A', 24, 160, 34, LOOK.ink, 600);
+      const left = Math.max(0, Math.ceil(go - t));
+      if (t < go) text('0:0' + left, 196, 430, 64, LOOK.ink, 300, 'center');
+      else text('Go', 196, 430 + 20 * (1 - ramp(t, go, .3, easeOut)), 64, LOOK.ink, 300, 'center', ramp(t, go, .3));
+      stroke(70, 322, 470, 1.5, LOOK.ink, .14);
+      const r = clamp((go - t) / 6); if (r > 0) stroke(70, 70 + 252 * r, 470, 2.5, LOOK.now, 1);
+      text('Bench, set 4', 196, 520, 21, LOOK.inkSoft, 500, 'center');
+    },
+    soul: {
+      modes: [{ mode: 'idle', at: -10 }], centre: t => ({ x: HOME.x - lean(t) * .7, y: HOME.y - lean(t) * .7 }),
+      eyes: t => { const g = ramp(t, 1.8, .3, easeOut) * (1 - ramp(t, go, .3)); return { alpha: 1, blink: blinks(t, [go + .1]), look: { x: -1 * g, y: -1 * g } }; },
+    },
+  };
+};
+// 7. She follows what he holds: while he lifts a row to move it, her eyes follow the row; on the drop, back.
+IDEAS.held = () => {
+  const lift = 1.0, drop = 3.6, from = 2, to = 0;
+  const rowY = t => { const u = ramp(t, lift + .35, drop - lift - .5, easeInOut); return ROW_Y0 + lerp(from, to, u) * ROW_DY; };
+  return {
+    duration: 5.4,
+    draw: t => {
+      ground(); tabs('Today');
+      text('Friday morning', 24, 138, 21, LOOK.ink, 500); text('nothing due till 9:30 am', 24, 186, 21, LOOK.context, 500);
+      text('Push A at 12:15 pm', 24, 220, 34, LOOK.ink, 600); text('NEXT', 24, 290, 16, LOOK.inkSoft, 600);
+      const y = t < lift ? ROW_Y0 + from * ROW_DY : rowY(t), v = (y - ROW_Y0) / ROW_DY, lifted = ramp(t, lift, .15) * (1 - ramp(t, drop, .2));
+      // The rows above make room as the held row passes them; the rows below stay.
+      for (const i of [0, 1, 3, 4]) {
+        const yy = ROW_Y0 + (i + (i < from ? clamp(i + .5 - v + .5) : 0)) * ROW_DY;
+        text(ROWS[i].title, 24, yy, 18, LOOK.ink, 500); if (ROWS[i].when) text(ROWS[i].when, 369, yy, 16, LOOK.inkSoft, 500, 'right');
+      }
+      text(ROWS[from].title, 24 + 4 * lifted, y, 18, LOOK.ink, 500); stroke(24, 24 + width(ROWS[from].title, 18), y + 7, 2, LOOK.context, lifted * .8);
+    },
+    finger: t => (t > lift - .2 && t < drop + .15) ? { x: 120, y: rowY(t) - 6, alpha: ramp(t, lift - .2, .2) * (1 - ramp(t, drop, .15)), press: .9 } : null,
+    soul: {
+      modes: [{ mode: 'idle', at: -10 }], centre: () => HOME,
+      eyes: t => { const on = ramp(t, lift, .3, easeOut) * (1 - ramp(t, drop + .1, .3)); const dy = (rowY(t) - HOME.y) / 600; return { alpha: 1, blink: blinks(t, [drop + .2]), look: { x: -1 * on, y: clamp(dy, -1, 1) * on } }; },
+    },
+  };
+};
+// 8. She peeks at the end of a list: scrolled to the last row, she rises 5 pt as if looking over it, then settles.
+IDEAS.peek = () => {
+  const s0 = .8, s1 = 2.3, rise = t => 5 * ramp(t, s1 - .1, .35, easeOut) * (1 - ramp(t, s1 + 1.6, .5, houseCurve));
+  return {
+    duration: 5,
+    page: t => ({ scroll: 140 * ramp(t, s0, s1 - s0, bezier(.2, .7, .3, 1)), extra: () => { ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.fillStyle = LOOK.ground; ctx.fillRect(0, 0, W, 100); ctx.restore(); tabs('Today'); } }),
+    soul: {
+      modes: [{ mode: 'idle', at: -10 }], centre: t => ({ x: HOME.x, y: HOME.y - rise(t) }),
+      eyes: t => ({ alpha: 1, blink: blinks(t, [s1 + 1.3]), look: { x: -.5 * rise(t) / 5, y: -1 * rise(t) / 5 } }),
+    },
+  };
+};
+// 9. She hears him type: in Ask Tess, each finished word gives her one small pulse; no glow, no haptic.
+IDEAS.typing = () => {
+  const words = ['call', 'mom', 'at', 'six'], at = [1.0, 1.55, 2.0, 2.4];
+  return {
+    duration: 4.8,
+    draw: t => {
+      ground(); tabs('Today');
+      let typed = ''; const cps = 11;
+      const full = words.join(' '); const n = Math.min(full.length, Math.max(0, Math.floor((t - .6) * cps)));
+      typed = full.slice(0, n);
+      text(typed, 24, 506, 18, LOOK.ink, 400);
+      if (Math.floor(t * 2) % 2 === 0 || n < full.length) stroke(24 + width(typed, 18, 400) + 2, 24 + width(typed, 18, 400) + 2.1, 500, 14, LOOK.tess, .8);
+    },
+    soul: {
+      modes: [{ mode: 'listening', at: -10 }], centre: () => ({ x: 196, y: 698 }),
+      scale: t => { let p = 0; const full = words.join(' '); const ends = []; let c = 0; words.forEach(w => { c += w.length; ends.push(.6 + c / 11); c += 1; }); for (const e of ends) p = Math.max(p, ramp(t, e, .08) * (1 - ramp(t, e + .08, .25))); return 1.25 + .06 * p; },
+      eyes: t => ({ alpha: 1, blink: 1, look: { x: 0, y: -1 } }),
+    },
+  };
+};
+// 10. A nudge for the next thing: ten minutes before a timed task, she leans toward its row once and glances at it.
+IDEAS.nudge = () => {
+  const n = 1.6, lean = t => 4 * ramp(t, n, .4, easeOut) * (1 - ramp(t, n + 1.3, .5, houseCurve));
+  return {
+    duration: 5,
+    page: t => ({ context: 'call the bank in 10 min' }),
+    soul: {
+      modes: [{ mode: 'idle', at: -10 }], centre: t => ({ x: HOME.x - lean(t) * .6, y: HOME.y - lean(t) * .8 }),
+      eyes: t => { const g = ramp(t, n, .3, easeOut) * (1 - ramp(t, n + 1.4, .3)); return { alpha: 1, blink: blinks(t, [n + 1.7]), look: { x: -1 * g, y: -1 * g } }; },
+    },
+  };
+};
+// 11. Lights that follow the page (Kaushik, 8:53 AM PT: "after it spreads the pattern is very predictive"). No model:
+// the readers hop between the words on the page that matter to the ask (the ones it changed or reads), dwell on
+// each, and skip around rather than sweep; the lights at the dock drift on smooth noise instead of a loop.
+function seeded(seed) { let x = seed; return () => { x = (x * 1103515245 + 12345) % 2147483648; return x / 2147483648; }; }
+function noiseDrift(i, t) {
+  const r = seeded(97 + i * 13); const terms = [0, 1, 2].map(() => ({ p: 3.5 + r() * 6, ph: r() * 6.28, a: .4 + r() * .6 }));
+  const s = (o) => terms.reduce((acc, k, j) => acc + k.a * Math.sin(2 * Math.PI * t / (k.p * (j + 1) * .7) + k.ph + o), 0) / 1.6;
+  return { x: s(0), y: s(1.9) };
+}
+IDEAS.wander = () => {
+  const S = .6, scan = S + 1.1, G = 5.2, D = G + .78;
+  // The words this ask touches, from the page: "Push A" (moved), "12:15 pm", "Call the bank", "9:30 am", "Book the dentist".
+  const geom = rowGeom();
+  const word = (row, which) => { const g = geom[row]; return which === 'time' ? { x: 340, y: g.y + 13 } : { x: lerp(28, g.titleEnd - 4, .5), y: g.y + 13, w: g.titleEnd - 28 }; };
+  const stops = [word(1), word(1, 'time'), word(0), word(0, 'time'), word(3), word(1)];
+  const hop = .34, dwell = .38;
+  const pathFn = u => {
+    if (u <= 0) return stops[0];
+    const per = hop + dwell; const k = Math.floor(u / per), f = u - k * per;
+    const a = stops[Math.min(k, stops.length - 1)], b = stops[Math.min(k + 1, stops.length - 1)];
+    if (f < dwell) { const g = (a.w || 18) * .45; return { x: a.x + g * Math.sin(f / dwell * Math.PI - Math.PI / 2), y: a.y }; }
+    const e = houseCurve((f - dwell) / hop), g = (a.w || 18) * .45;
+    return { x: lerp(a.x + g, b.x - (b.w || 18) * .45, e), y: lerp(a.y, b.y, e) - 10 * Math.sin(e * Math.PI) };
+  };
+  return {
+    duration: 6,
+    page: t => ({ context: 'moving Push A' }),
+    soul: { modes: [{ mode: 'idle', at: -10 }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }], centre: () => HOME,
+      work: { split: S, scan, scanDur: 3.2, gather: G, at: { x: 336, y: 772 }, pathFn, noise: true } },
+  };
+};
+// 12. A mouth (Kaushik's addition to the board): one line under the eyes that turns with the moment. At rest a near
+// flat line with the faintest lift; listening, a small soft o, eyes up at him; thinking, one corner lifts and the eyes
+// go aside; her answer, a small smile as she glances at her line; then it relaxes back to rest.
+IDEAS.mouth = () => {
+  const lis = .9, thk = 2.2, ans = 3.4, rel = 4.9;
+  const e = (t, a, d = .25) => ramp(t, a, d, easeInOut);
+  return {
+    duration: 6,
+    lines: [{ text: 'Call mom at 6 pm, added.', at: ans, until: 6 }],
+    soul: {
+      modes: [{ mode: 'idle', at: -10 }, { mode: 'listening', at: lis }, { mode: 'thinking', at: thk }, { mode: 'idle', at: ans }],
+      centre: () => HOME,
+      eyes: t => {
+        const up = e(t, lis) * (1 - e(t, thk)), aside = e(t, thk) * (1 - e(t, ans)), line = e(t, ans + .1, .3) * (1 - e(t, ans + 1.2, .3));
+        return { alpha: 1, blink: blinks(t, [.5, ans + .05, 5.5]), look: { x: .8 * aside - 1 * line, y: -1 * up - .4 * aside + .6 * line } };
+      },
+      mouth: t => {
+        const listen = e(t, lis) * (1 - e(t, thk, .2)), think = e(t, thk) * (1 - e(t, ans, .2)), smile = e(t, ans, .3) * (1 - e(t, rel, .6));
+        return { alpha: 1, curve: .2 + .8 * smile, tilt: .4 * think, open: .75 * listen };
+      },
+    },
+  };
+};
+for (const [name, make] of Object.entries(IDEAS)) {
+  SCENES['idea-' + name] = () => { const s = make(); s.lines = s.lines || []; s.caps = []; s.noCaption = true; return s; };
+}
+
+// 21. Reference renders for the picks (board lane 2, Oct 16): the idea scenes at tess-picks.md's values, with captions
+// that name each beat, so Builder A builds to a target and the check kit compares against it. The beat times are in
+// tess-motion-check.md. Nothing new is designed here.
+const PICKS = {};
+// 18a, idea 1: the readers go to the words the ask touches (Push A, 12:15 pm, Call the bank, 9:30 am, Book the
+// dentist), in the job's order; then gather and Done. 8 s, so the Done is in the clip.
+PICKS.wander = () => {
+  const s = IDEAS.wander(); s.duration = 8.2;
+  s.lines = [{ text: 'Moving Push A.', at: .4, until: 5.98 }, { text: 'Push A moved to 6 pm.', at: 6.5 }];
+  s.caps = [{ at: 0, text: 'An ask touches five words on the page.' }, { at: .6, text: '0.6 split.' }, { at: 1.7, text: '1.7 the readers reach Push A.' }, { at: 2.42, text: '2.42 hop to 12:15 pm.' }, { at: 3.14, text: '3.14 Call the bank; then 9:30 am, Book the dentist.' }, { at: 5.2, text: '5.2 gather.' }, { at: 5.98, text: '5.98 Done, as built.', haptic: 'success (Done’s own)' }];
+  return s;
+};
+// 18a, idea 2: the first open of the day.
+PICKS.wake = () => {
+  const s = IDEAS.wake();
+  s.caps = [{ at: 0, text: 'First open after 4 am: eyes closed.' }, { at: 1.0, text: '1.0 eyes open over 400 ms.' }, { at: 1.5, text: '1.5 one stretch: 22% wider, 600 ms.' }, { at: 2.1, text: '2.1 back over 700 ms.' }, { at: 3.4, text: '3.4 one blink. Once a day.' }];
+  return s;
+};
+// 18b, idea 3: a pan from outside her, across her, in the band.
+PICKS.stroke = () => {
+  const s = IDEAS.stroke();
+  s.caps = [{ at: 0, text: 'A pan starts in the band, off her.' }, { at: 1.4, text: '1.4 the finger enters her: one soft tick.', haptic: 'soft impact 0.3 (.soulStroke)' }, { at: 1.75, text: '1.75 it leaves; the ripple decays over 1.6 s.' }, { at: 1.8, text: '1.8 one blink.' }, { at: 3.0, text: '3.0 still again.' }];
+  return s;
+};
+// 18b, idea 4: five dones, +0.10 each, capped at +0.40; the rows stay as built (no holes: that was the idea clip only).
+PICKS.wear = () => {
+  const dones = [.8, 2.0, 3.2, 4.4, 5.6];
+  const s = IDEAS.wear(); s.duration = 7; s.page = () => ({});
+  s.soul.beat = t => {
+    let g = 0, steps = 0;
+    for (const d of dones) { if (t > d + .52) steps++; const up = ramp(t, d + .52, .18, easeOut), dn = ramp(t, d + .7, .32); g = Math.max(g, up * (1 - dn)); }
+    return { scale: 1 + .1 * g, gather: g, sat: .1 * Math.min(steps, 4) + .25 * g };
+  };
+  s.soul.eyes = t => ({ alpha: 1, blink: blinks(t, dones.map(d => d + .52)), look: { x: 0, y: 0 } });
+  s.caps = [{ at: 0, text: 'Five things done today (rows as built).' }, { at: 1.32, text: '1.32 beat; +0.10.' }, { at: 2.52, text: '2.52 beat; +0.20.' }, { at: 3.72, text: '3.72 beat; +0.30.' }, { at: 4.92, text: '4.92 beat; +0.40, the cap.' }, { at: 6.12, text: '6.12 beat; still +0.40.' }];
+  return s;
+};
+// 18c, the mouth: every row of its table in one clip, magnified in the recording (record + overlay, see check kit).
+PICKS.mouth = () => {
+  const e = (t, a, d = .25) => ramp(t, a, d, easeInOut);
+  const lis = 1, thk = 2.5, ans = 4, beat = 6.6, ask = 8, fail = 10, D = 12.4;
+  const lineOn = t => e(t, ans) * (1 - e(t, ans + 1.5, .6));
+  return {
+    duration: 15,
+    lines: [{ text: 'Call mom at 6 pm, added.', at: ans, until: 6.2 }, { text: 'Push A or Pull A?', at: ask, until: 9.6 }, { text: 'Couldn’t reach Claude.', at: fail, until: 11.6 }],
+    soul: {
+      modes: [{ mode: 'idle', at: -10 }, { mode: 'listening', at: lis }, { mode: 'thinking', at: thk }, { mode: 'idle', at: ans }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }],
+      centre: () => HOME,
+      beat: t => { const g = ramp(t, beat, .18, easeOut) * (1 - ramp(t, beat + .18, .32)); return { scale: 1 + .1 * g, gather: g, sat: .25 * g }; },
+      eyes: t => {
+        const up = e(t, lis) * (1 - e(t, thk)), aside = e(t, thk) * (1 - e(t, ans)), line = e(t, ans + .1, .3) * (1 - e(t, ans + 1.2, .3)), atAsk = e(t, ask) * (1 - e(t, ask + 1.6));
+        const alpha = (1 - ramp(t, D, .12)) + ramp(t, D + 1.8, .2);
+        return { alpha, blink: blinks(t, [.5, ans + .05, beat + .1, 11.8]), look: { x: .8 * aside - 1 * line - 1 * atAsk, y: -1 * up - .4 * aside + .6 * line + .6 * atAsk } };
+      },
+      mouth: t => {
+        const listen = e(t, lis) * (1 - e(t, thk)), think = e(t, thk) * (1 - e(t, ans)), smile = Math.max(lineOn(t), e(t, beat) * (1 - e(t, beat + .94)));
+        const waiting = e(t, ask) * (1 - e(t, ask + 1.6)), miss = e(t, fail) * (1 - e(t, fail + 1.2));
+        const alpha = (1 - ramp(t, D, .12)) + ramp(t, D + 1.8, .2);
+        return { alpha, curve: .2 + .8 * smile - .2 * listen + .1 * waiting - .55 * miss, tilt: .4 * think + .4 * waiting, open: .75 * listen };
+      },
+    },
+    caps: [{ at: 0, text: 'Rest: +0.2, a near-flat line.' }, { at: lis, text: '1.0 listening: a soft o; eyes up.' }, { at: thk, text: '2.5 thinking: +0.2, right corner up 0.4.' }, { at: ans, text: '4.0 her line: a small smile for 1.5 s.' }, { at: beat, text: '6.6 her beat: smile for 940 ms.' }, { at: ask, text: '8.0 an ask waits: +0.3, curious.' }, { at: fail, text: '10.0 her own miss: -0.35 for 1.2 s. Never at him.' }, { at: D, text: '12.4 Done: the face fades in 120 ms; back 200 ms after.', haptic: 'success (Done’s own)' }],
+  };
+};
+// 18d, idea 5: asleep in quiet hours; he opens the app at 2.6 s; the right eye first.
+PICKS.sleep = () => { const s = IDEAS.sleep(); s.caps = [{ at: 0, text: 'Quiet hours: eyes shut, slow breath, colour muted.' }, { at: 2.85, text: '2.85 the right eye opens (350 ms).' }, { at: 3.8, text: '3.8 her clock is back to 1×.' }, { at: 5.0, text: '5.0 the left eye follows (400 ms).' }]; return s; };
+// 18d, idea 6: a row lifted at 1.0, carried up, dropped at 3.6.
+PICKS.held = () => { const s = IDEAS.held(); s.caps = [{ at: 0, text: 'He lifts a row to move it.' }, { at: 1.0, text: '1.0 her eyes go to the held row.' }, { at: 2.4, text: '2.4 they follow it up.' }, { at: 3.6, text: '3.6 the drop.' }, { at: 3.8, text: '3.8 one blink; eyes back over 300 ms.' }]; return s; };
+// 18d, idea 10: eyes only (Product): no lean.
+PICKS.clock = () => {
+  const s = IDEAS.clock(); s.soul.centre = () => HOME;
+  s.caps = [{ at: 0, text: 'The last 10 s of a rest.' }, { at: 1.8, text: '1.8 eyes to the timer. No lean, no colour.' }, { at: 4.2, text: '4.2 Go: the timer owns it; eyes back.' }, { at: 4.3, text: '4.3 one blink.' }];
+  return s;
+};
+// 18e, idea 7: ten minutes before the call.
+PICKS.nudge = () => { const s = IDEAS.nudge(); s.caps = [{ at: 0, text: 'Ten minutes before a timed row.' }, { at: 1.6, text: '1.6 one 4 pt lean toward it (400 ms); eyes on it.' }, { at: 2.9, text: '2.9 back over 500 ms.' }, { at: 3.3, text: '3.3 one blink. Once per item.' }]; return s; };
+// 18e, idea 8: a pulse per finished word, at most one per 180 ms; no mouth.
+PICKS.typing = () => { const s = IDEAS.typing(); s.caps = [{ at: 0, text: 'He types to her.' }, { at: .96, text: '0.96 "call": one pulse (+0.06).' }, { at: 1.33, text: '1.33 "mom".' }, { at: 1.6, text: '1.6 "at".' }, { at: 1.96, text: '1.96 "six". No glow, no haptic.' }]; return s; };
+// 18e, idea 9: scrolled to the end.
+PICKS.peek = () => { const s = IDEAS.peek(); s.caps = [{ at: 0, text: 'He scrolls to the last row.' }, { at: 2.2, text: '2.2 she rises 5 pt (350 ms).' }, { at: 3.6, text: '3.6 one blink at the top.' }, { at: 3.9, text: '3.9 back down over 500 ms. Once per visit.' }]; return s; };
+// 18f, idea 11: the phone tilting (a stand-in sine for the attitude).
+PICKS.tilt = () => { const s = IDEAS.tilt(); s.caps = [{ at: 0, text: 'He tilts the phone: ±2 pt, the satellites 1.7×.' }, { at: 3.1, text: 'Eyes follow at ±0.6 / ±0.4. Off in Reduce Motion and Low Power.' }]; return s; };
+for (const [name, make] of Object.entries(PICKS)) SCENES['pick-' + name] = () => { const s = make(); s.lines = s.lines || []; return s; };
+
 // The work state when she's out on a row: tighter constellation, no readers.
 const _workParticles = workParticles;
 workParticles = function (t, work) {
@@ -1427,7 +1771,13 @@ function renderAt(t) {
     composeSoul(0, { ...soul, modes: [{ mode: 'idle', at: -10 }], reduced: () => soul.reduced(t), opacityMul: () => breath, eyes: soul.eyes ? () => soul.eyes(t) : undefined });
   } else {
     // `tick` holds the soul at that frame rate (Low Power: 30 fps) while the page stays at 60.
-    composeSoul(soul.tick ? Math.floor(t * soul.tick) / soul.tick : t, soul);
+    const tt = soul.tick ? Math.floor(t * soul.tick) / soul.tick : t;
+    if (scene.timeScale) {
+      // A slower soul clock (sleep): her motion runs at a fraction of time, her eyes and overlays on real time.
+      let acc = 0; const dt = 1 / 120; for (let u = 0; u < tt; u += dt) acc += scene.timeScale(u) * dt;
+      const wrap = f => f ? (() => f(t)) : f;
+      composeSoul(acc, { ...soul, eyes: wrap(soul.eyes), beat: wrap(soul.beat), scale: wrap(soul.scale), centre: wrap(soul.centre) });
+    } else composeSoul(tt, soul);
   }
   if (scene.finger) drawFinger(scene.finger(t));
   drawCaption(scene.caps, t);

@@ -76,12 +76,14 @@ extension TessGrammar {
         return parseCook(trimmed, context: context)
     }
 
-    /// Money said, not things to buy: a currency sign or a spending verb ("spent $40 on groceries").
+    /// Money said, not things to buy: a currency sign, or a spending verb with an amount ("spent 40 on groceries").
+    /// A bare verb is not money (Product, 12:04 PM PT Oct 16): "pay rent fri" is a task, "paid rent fri" a note.
     static func isMoney(_ text: String) -> Bool {
         // A unit price ("chicken $1.29/lb") is a price on a thing to buy, never a spend (Research's US shop check).
         let spent = text.replacing(/(?i)[$£€₹]\s?\d+(?:[.,]\d+)?\s?\/\s?[a-z]+/, with: "")
         return spent.contains(where: { "$£€₹".contains($0) })
             || text.lowercased().firstMatch(of: /^(?:spent|spend|paid|pay|cost|bought)\b/) != nil
+            && PrivateFacts.hasAmount(text)
     }
 
     /// A comma-list item that reads as shopping: an amount, a known aisle or a known ingredient

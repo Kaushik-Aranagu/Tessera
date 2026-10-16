@@ -215,10 +215,13 @@ public enum SystemCatalog {
         ClassSpec(key: .note, name: "Note", parent: .thing, symbol: "note.text", colorRole: "neutral", fields: [
             FieldSpec(key: "body", name: "Body", kind: .text),
             FieldSpec(key: "about", name: "About", kind: .refList, target: .thing),
+            // A private note (secret words, Research 134 SW4): titled "Private note" everywhere outside its page,
+            // never in memory, packs or the miss log; in his backups (Q1).
+            FieldSpec(key: "isPrivate", name: "Private", kind: .bool),
         ]),
         // One call Tess made to Claude (or a key Test): tokens, cost in nano-dollars, outcome. Written without ops;
         // never
-        // holds the key. The $10 month cap is a query over these.
+        // holds the key. The month cap (TessUsageLedger.capNano) is a query over these.
         ClassSpec(key: .tessCall, name: "Tess Call", parent: .thing, symbol: "sparkle", colorRole: "neutral", fields: [
             FieldSpec(key: "use", name: "Use", kind: .text),
             FieldSpec(key: "model", name: "Model", kind: .text),
@@ -344,8 +347,8 @@ public enum SystemCatalog {
 
     /// Built-in classes ship as a versioned package. Bump `version` whenever a spec changes; seeding then
     /// refreshes shipped names, symbols, units, options, defaults and formulas, except what the person edited.
-    public static let package = CatalogPackage(id: "system", version: 8, name: "Tessera built-ins",
-                                               source: "Tessera", license: "Tessera")
+    public nonisolated static let package = CatalogPackage(id: "system", version: 9, name: "Tessera built-ins",
+                                                           source: "Tessera", license: "Tessera")
 
     static let honestE1RM = "weight * (1 + (reps + 10 - coalesce(rpe, 10)) / 30)"
 

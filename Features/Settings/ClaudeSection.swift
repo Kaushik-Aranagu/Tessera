@@ -37,11 +37,18 @@ struct ClaudeSection: View {
     /// The real Keychain in the app; previews and recordings pass an in-memory one with a fake key.
     var keys: any TessKeychain = ClaudeSection.defaultKeys
 
+    #if DEBUG
+        /// Recordings only: plainly synthetic, built at run time so no key-shaped literal sits in the app.
+        static var fakeKey: String {
+            "sk-" + "ant-" + String(repeating: "x", count: 32)
+        }
+    #endif
+
     @MainActor static let defaultKeys: any TessKeychain = {
         #if DEBUG
             // `-fakeClaudeKey`: an in-memory key that only looks real, for recordings. Never the Keychain.
             if LaunchFlags.has("-fakeClaudeKey") {
-                return InMemoryKeychain("sk-ant-api03-FAKE-recording-only-a1B2")
+                return InMemoryKeychain(fakeKey)
             }
         #endif
         return SystemKeychain()
@@ -188,18 +195,19 @@ struct ClaudeSection: View {
                         .buttonStyle(.valueWash)
                         .fontWeight(.semibold)
                         .accessibilityHint("Opens the receipts.")
-                    Text(" of $10.")
+                    Text(" of $\(TessUsageLedger.capDollars).")
                 }
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
                 MonthLine(share: share, warm: share >= 0.8)
-                    .accessibilityLabel(String(format: "%.2f of 10 dollars this month", Double(spent) / 1e9))
+                    .accessibilityLabel(String(format: "%.2f of %d dollars this month", Double(spent) / 1e9,
+                                               TessUsageLedger.capDollars))
                 if paused {
                     Text("Paused until \(Text(ClaudeKeyWords.nextMonth(AppClock.now)).fontWeight(.semibold)).")
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.ink)
                 } else if share >= 0.8 {
-                    Text("PAUSES AT $10")
+                    Text("PAUSES AT $\(TessUsageLedger.capDollars)")
                         .textRole(.labelStrong)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                 }
@@ -456,7 +464,7 @@ struct ClaudeReceipts: View {
                     .textRole(.title)
                     .foregroundStyle(Theme.Colors.ink)
                 Text(
-                    "This month \(Text(ClaudeKeyWords.dollars(ledger.monthTotal(now: AppClock.now))).fontWeight(.semibold)) of $10."
+                    "This month \(Text(ClaudeKeyWords.dollars(ledger.monthTotal(now: AppClock.now))).fontWeight(.semibold)) of $\(TessUsageLedger.capDollars)."
                 )
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)

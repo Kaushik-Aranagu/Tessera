@@ -26,7 +26,7 @@ planned for Friday dinner, and Groceries has an open "Scallions" row.
 | 20:45 | He starts "rice", 12 min, on the cook page | none | dated set | "Rice, 12 min." with UNDO (4 s) | His timer, not an ask. Ends 20:57 |
 | 20:50 | The habits check-in comes due (A12; trigger and words not set, CL10) | check-in (app ask) | dated set | nothing | He is on Kitchen. An app ask waits for an empty slot on its own page |
 | 20:57 | Rice timer ends | same | same | his timer fires (C14) | Today nothing fires at all (CL6) |
-| 21:00 | Shutdown sets in on Now | check-in | dated set | Shutdown's opener | No ask shows over the Shutdown page (C7) |
+| 21:00 | Shutdown sets in on Now | check-in | dated set | Shutdown's opener | No ask shows over the Shutdown page except the check-in Shutdown carries (C7, CL10) |
 | 21:10 | He holds "Shutdown complete" | none | dated set | "Closed. Your line is waiting at 08:00." with UNDO (10 s) | Day closed: the hold starts now (ruling). The check-in **expires**: a closed day never asks, and habits never catch up (C6) |
 | 22:30 | Claude's Groceries pass links "Scallions" to Friday's tacos | none | dated set, Groceries link (A16) | nothing | App ask on a closed day: **held**, not applied (C13) |
 | 22:33 | He types "i never train on sundays", Tess misses it, it goes to Claude, he locks the phone | none | same | nothing | |
@@ -70,7 +70,7 @@ show again when the slot is empty, after Shutdown's page is gone, and before 23:
 | C4 | A set ask (A1, A2) expires when its workout ends (finish or discard) or at the close, whichever is first. It never logs and never returns. The engine drops it, not only the view | Proposed |
 | C5 | A dated set said in a workout is held, not shown. A later phrase does not drop it. It shows on Today once the workout is finished and the slot is empty. If the day closes first, it is held to 07:00 | AQ3 plus proposed |
 | C6 | A day-bound app ask (the habits check-in, anything about "today") expires at the close. It never comes back as a catch-up | Proposed; `habits.md:57` |
-| C7 | No ask shows over the Shutdown page (21:00 until held or 22:00) or under Shutdown's 10 s UNDO | Proposed; never an ask over an UNDO |
+| C7 | No ask shows over the Shutdown page (21:00 until held or 22:00) or under Shutdown's 10 s UNDO, except the habits check-in, which Shutdown carries itself (CL10) | Ruled (Product took SH9, decisions.md 11:57 AM PT); never an ask over an UNDO |
 | C8 | At 04:00 each held ask is kept only if still true. Dated set: that exercise has no set on that day yet, and the day is 6 or fewer days back. Link: the row is still open and the recipe still planned. Remember: the fact is not already known. Anything else expires | Proposed |
 | C9 | From 07:00 nothing notifies. Held asks show on his first open, one at a time, never in a live workout | Ruled plus `one-ask.md` |
 | C10 | Return order: held asks from his own phrase first, then app asks by whose moment ends soonest, then oldest raised | Proposed |

@@ -196,7 +196,7 @@ struct GrammarTraceTests {
             case .list: "list"
             case .task: "task"
             case .lift, .set, .sets: "lift"
-            case .note: "note"
+            case .note, .privateNote: "note"
             case .shop: "shop"
             case .reschedule: "reschedule"
             case .cookStep: "cook"

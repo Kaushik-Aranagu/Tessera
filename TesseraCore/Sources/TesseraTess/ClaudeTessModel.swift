@@ -49,6 +49,9 @@ public struct ClaudeTessModel: TessModel {
     public func run(_ request: TessRequest, engine: ActionEngine) async -> TessResult {
         // Siri and Shortcuts commit at once (no ghost, no UNDO): Claude never writes for them (QA R3 on #283).
         guard !request.context.commitImmediately, let key = keys.read() else { return .missed }
+        // The second wall (MU2, Research 138 MW4 and 139): a secret, money or body phrase never leaves, even from the
+        // inbox or a direct caller. The inbox drains through here, so an old item queued before the wall is dropped.
+        guard !SecretWords.mentions(request.text), !PrivateFacts.isWalled(request.text) else { return .missed }
         // Every round resends the system prompt and the tool definitions with the phrase (QA on #283).
         let system = system(request.context, engine: engine)
         let tools = (try? TessTools.definitionsJSON()).flatMap { String(data: $0, encoding: .utf8) } ?? ""
@@ -83,7 +86,8 @@ public struct ClaudeTessModel: TessModel {
                 for call in response.toolCalls {
                     do {
                         let done = try TessTools.run(call.name, arguments: call.input, engine: engine,
-                                                     pending: true, now: request.context.now)
+                                                     pending: true, now: request.context.now,
+                                                     calendar: request.context.calendar)
                         records += done
                         results.append(["type": "tool_result", "tool_use_id": call.id, "content": "Done"])
                     } catch let answer as TessToolAnswer {

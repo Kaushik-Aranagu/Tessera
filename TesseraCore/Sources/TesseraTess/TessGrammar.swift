@@ -16,6 +16,9 @@ public struct TessGrammar {
         case task(title: String, startsAt: Date?)
         /// "note: bar felt heavy" (or "note bar felt heavy").
         case note(body: String, on: Date? = nil)
+        /// A line with a secret word: a private note on the phone, never the model, Claude, memory or the miss log.
+        /// `remembered` when he said "remember …" (Tess adds "I don't keep passwords.").
+        case privateNote(body: String, remembered: Bool)
         /// Kitchen: "buy milk", "milk, eggs, 2 lemons".
         case groceries(lines: [String])
         /// "cook carbonara" (now, `on` nil) or "cook carbonara thu" (a dated task linking the recipe).
@@ -64,6 +67,10 @@ public struct TessGrammar {
                                       with: "")
         let text = Self.normalize(phrase)
         guard !text.isEmpty else { return nil }
+        // Secret words first, before notes, recipes and questions (Research 134 R1): nothing with one leaves the phone.
+        if let secret = parseSecret(phrase, text: text, context: context) ?? parseRememberedMoney(phrase) {
+            return secret
+        }
         if let note = parseNote(phrase) {
             return note
         }
@@ -131,7 +138,22 @@ public struct TessGrammar {
         if phrase.firstMatch(of: Self.rescheduleShape) != nil {
             return nil
         }
-        return parseTask(phrase, context: context)
+        return parseTask(phrase, context: context) ?? parseBodyFact(phrase)
+    }
+
+    /// "remember my rent is 2100": a sum of money is never kept, and never leaves the phone (v9 W10).
+    func parseRememberedMoney(_ phrase: String) -> Parse? {
+        guard let match = phrase.firstMatch(of: /^(?i)\s*remember(?:\s+that)?\s+(.+)$/),
+              PrivateFacts.isMoneyShaped(String(match.1)) else { return nil }
+        return .ask(TessMemoryScreen.Refusal.money("").line ?? "I don't keep sums of money.")
+    }
+
+    /// A body or health fact nothing else read stays on the phone as a private note (Product on QA L1, Research 138
+    /// W8): "knee hurts", "slept badly", "body fat 18%".
+    func parseBodyFact(_ phrase: String) -> Parse? {
+        guard PrivateFacts.isBodyShaped(phrase) else { return nil }
+        let body = phrase.trimmingCharacters(in: .whitespacesAndNewlines)
+        return .privateNote(body: body.prefix(1).uppercased() + body.dropFirst(), remembered: false)
     }
 
     /// The live workout's rules for a phrase with an exercise in focus; nil when they don't apply (the other rules
@@ -409,6 +431,7 @@ public struct TessGrammar {
         "bench": "bench press", "bp": "bench press", "ohp": "overhead press", "press": "overhead press",
         "squat": "back squat", "squats": "back squat", "dl": "deadlift", "deads": "deadlift",
         "rdl": "romanian deadlift", "row": "barbell row", "rows": "barbell row", "pullups": "pull-up",
+        "pull-ups": "pull-up",
         "pull ups": "pull-up", "chinups": "chin-up", "curls": "dumbbell curl", "curl": "dumbbell curl", "dips": "dip",
         "lat pulldown": "lat pulldown",
     ]
@@ -458,6 +481,35 @@ public struct TessGrammar {
     // MARK: Tasks
 
     /// A task with a day or time cue ("dentist thu 3pm"), or one that says it's a task ("todo call mom").
+    /// Research 134 R1 to R7. A value after the secret word makes a private note; with no value a task shape stays a
+    /// task ("password reset email friday", "code review friday 3pm"); anything else with a secret word is a private
+    /// note too, because nothing with one goes to the model. A question about it is answered on the phone.
+    func parseSecret(_ phrase: String, text: String, context: TessContext) -> Parse? {
+        guard SecretWords.mentions(phrase) else { return nil }
+        var body = phrase.trimmingCharacters(in: .whitespacesAndNewlines)
+        var remembered = false
+        if let match = body.firstMatch(of: /^(?i)note[:\s]\s*(.+)$/) {
+            body = String(match.1)
+        } else if let match = body.firstMatch(of: /^(?i)remember(?:\s+that)?\s+(.+)$/) {
+            body = String(match.1)
+            remembered = true
+        }
+        if Self.isQuestion(text) || body.hasSuffix("?") {
+            return .ask("It's in your private notes.")
+        }
+        if !SecretWords.hasValue(body), !remembered, let task = parseTask(phrase, context: context) {
+            return task
+        }
+        // A list or kitchen shape with no value wins (Research 139): "buy pins", "get a combination lock" are
+        // groceries, read by the rules below. They still never reach a model: the router keeps them on the grammar.
+        if !SecretWords.hasValue(body), !remembered,
+           phrase.firstMatch(of: /^(?i)\s*(?:buy|get|grab|pick up|add)\s+\S/) != nil
+        {
+            return nil
+        }
+        return .privateNote(body: body.prefix(1).uppercased() + body.dropFirst(), remembered: remembered)
+    }
+
     private func parseTask(_ phrase: String, context: TessContext) -> Parse? {
         var words = phrase.split(separator: " ").map(String.init)
         var explicit = false

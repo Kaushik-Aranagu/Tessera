@@ -1,0 +1,180 @@
+<title>Tess, Next Ideas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one column of ideas, each a phone clip beside its words; Obsidian's ground, ink and Tess's pigments. */
+:root {
+  --ground: #000000;
+  --ink: #F5F2EC;
+  --ink-2: #A69FB3;
+  --line: #2A2730;
+  --tess: #86B4FF;
+  --live: #FF5B3A;
+  --now: #FFC23D;
+  --type: "Inter Tight", "SF Pro Text", system-ui, sans-serif;
+  color-scheme: dark;
+}
+body { background: var(--ground); color: var(--ink); font-family: var(--type); font-size: 16px; line-height: 1.45; }
+main { max-width: 860px; margin: 0 auto; padding-block: 48px 72px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 56px; }
+header { display: grid; gap: 14px; max-width: 34em; }
+.label { font-size: 16px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); }
+h1 { font-size: 44px; line-height: 1.05; font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+.lede { font-size: 21px; color: var(--ink-2); margin: 0; }
+.lede b { color: var(--ink); font-weight: 500; }
+.ideas { list-style: none; margin: 0; padding: 0; display: grid; gap: 48px; }
+.idea { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 28px; align-items: start; padding-top: 28px; border-top: 1px solid var(--line); }
+video { width: 200px; max-width: 100%; aspect-ratio: 393 / 852; background: #000; border-radius: 22px; display: block; }
+.words { display: grid; gap: 10px; min-width: 0; }
+.num { font-size: 16px; font-weight: 700; letter-spacing: .06em; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+h2 { font-size: 34px; line-height: 1.1; font-weight: 600; margin: 0; text-wrap: balance; }
+p { margin: 0; font-size: 18px; max-width: 34em; }
+.calm { font-size: 16px; color: var(--ink-2); }
+.calm b { font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-right: 6px; }
+.calm b.none { color: var(--tess); } .calm b.low { color: var(--now); } .calm b.some { color: var(--live); }
+.pick { font-size: 16px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--tess); }
+footer { display: grid; gap: 10px; padding-top: 28px; border-top: 1px solid var(--line); max-width: 34em; }
+footer p { color: var(--ink-2); }
+@media (max-width: 560px) {
+  .idea { grid-template-columns: 1fr; }
+  video { width: 240px; }
+  h1 { font-size: 34px; }
+}
+@media (prefers-reduced-motion: reduce) { video { animation: none; } }
+</style>
+
+<main>
+  <header>
+    <span class="label">Tess · motion ideas</span>
+    <h1>Twelve ways for her to feel more alive</h1>
+    <p class="lede">You picked <b>all eleven, plus a mouth</b>. Each now has a sheet for the builders, in the order they'll be built: 1 and 2, then 3 and 4, then the mouth, then 5, 6 and 10, then 7, 8 and 9, and 11 last.</p>
+  </header>
+
+  <ol class="ideas">
+    <li class="idea">
+      <video src="clips/tess-idea-wander.mp4" autoplay muted loop playsinline aria-label="While Tess works, her lights hop between the words the ask touches instead of sweeping every row"></video>
+      <div class="words">
+        <span class="num">1</span>
+        <h2>Lights that follow the page</h2>
+        <p>Your note on the weak link. While she works, her reading lights hop to the words the ask actually touches, rest on each, and skip around, instead of sweeping every row in order. The lights at her corner drift on slow noise instead of a loop, so no two runs look the same.</p>
+        <p class="calm"><b class="none">Calm cost: none</b>Same lights, same timing, no AI call. It is the first step toward the screen-aware Tess in your note, which is saved for later.</p>
+        <span class="pick">Picked</span>
+      </div>
+    </li>
+    <li class="idea">
+      <video src="clips/tess-idea-wake.mp4" autoplay muted loop playsinline aria-label="Tess waking: eyes open, one slow stretch"></video>
+      <div class="words">
+        <span class="num">2</span>
+        <h2>She wakes with you</h2>
+        <p>On your first open of the day, her eyes open from closed and she gives one slow stretch. It happens once a day and never again.</p>
+        <p class="calm"><b class="none">Calm cost: none</b>About a second, once a day, no sound or haptic.</p>
+        <span class="pick">Picked</span>
+      </div>
+    </li>
+    <li class="idea">
+      <video src="clips/tess-idea-stroke.mp4" autoplay muted loop playsinline aria-label="A finger strokes across Tess; a ripple runs through her and she blinks"></video>
+      <div class="words">
+        <span class="num">3</span>
+        <h2>Stroke her</h2>
+        <p>Swipe a finger across her and a ripple runs through the paint, she blinks, and you feel one soft tick. Tap and hold keep doing what they do now.</p>
+        <p class="calm"><b class="low">Calm cost: low</b>Only happens when you reach for her. The swipe needs a clear rule so it never starts a drag by accident.</p>
+        <span class="pick">Picked</span>
+      </div>
+    </li>
+    <li class="idea">
+      <video src="clips/tess-idea-wear.mp4" autoplay muted loop playsinline aria-label="Four tasks finish; Tess gets a little richer in colour with each"></video>
+      <div class="words">
+        <span class="num">4</span>
+        <h2>She wears the day</h2>
+        <p>Each thing you finish leaves her a little richer in colour. By evening she is a deeper Tess. At 4 AM she starts plain again. There is no number anywhere.</p>
+        <p class="calm"><b class="none">Calm cost: none</b>No motion of its own; the colour builds through the moments you already have. It is capped so a big day never gets loud.</p>
+        <span class="pick">Picked</span>
+      </div>
+    </li>
+    <li class="idea">
+      <video src="clips/tess-idea-sleep.mp4" autoplay muted loop playsinline aria-label="At night Tess sleeps with eyes closed; one eye opens, then both"></video>
+      <div class="words">
+        <span class="num">5</span>
+        <h2>She sleeps at night</h2>
+        <p>From 11 PM to 7 AM her eyes are closed, her colour is muted and she breathes slowly. Open the app late and one eye opens first.</p>
+        <p class="calm"><b class="none">Calm cost: none</b>She is calmer at night than she is today.</p>
+        <span class="pick">Picked</span>
+      </div>
+    </li>
+    <li class="idea">
+      <video src="clips/tess-idea-held.mp4" autoplay muted loop playsinline aria-label="A row is held and moved up; Tess's eyes follow it"></video>
+      <div class="words">
+        <span class="num">6</span>
+        <h2>She watches what you hold</h2>
+        <p>While you lift a row to move it, her eyes follow the row. When you drop it, she looks back and blinks.</p>
+        <p class="calm"><b class="none">Calm cost: none</b>Eyes only, only while your finger is on a row.</p>
+        <span class="pick">Picked</span>
+      </div>
+    </li>
+    <li class="idea">
+      <video src="clips/tess-idea-nudge.mp4" autoplay muted loop playsinline aria-label="Ten minutes before a call, Tess leans toward the list and glances at it"></video>
+      <div class="words">
+        <span class="num">7</span>
+        <h2>A nudge before the next thing</h2>
+        <p>Ten minutes before something with a time, she leans toward the list once and glances at it, then settles.</p>
+        <p class="calm"><b class="low">Calm cost: low</b>Once per timed thing, Home only. It sits close to a reminder, so it never repeats.</p>
+        <span class="pick">Picked</span>
+      </div>
+    </li>
+    <li class="idea">
+      <video src="clips/tess-idea-typing.mp4" autoplay muted loop playsinline aria-label="While text is typed to Tess, she pulses once per finished word"></video>
+      <div class="words">
+        <span class="num">8</span>
+        <h2>She hears you type</h2>
+        <p>When you type to her, each finished word gives her one tiny pulse, the way she breathes with your voice when you speak.</p>
+        <p class="calm"><b class="low">Calm cost: low</b>No glow and no haptic. Too strong and it reads as a typing indicator, so it stays tiny.</p>
+        <span class="pick">Picked</span>
+      </div>
+    </li>
+    <li class="idea">
+      <video src="clips/tess-idea-peek.mp4" autoplay muted loop playsinline aria-label="At the end of a scrolled list, Tess rises a little as if peeking"></video>
+      <div class="words">
+        <span class="num">9</span>
+        <h2>She peeks at the end of a list</h2>
+        <p>When you scroll to the bottom of a page, she rises a few points as if looking over the last row, then settles back.</p>
+        <p class="calm"><b class="low">Calm cost: low</b>Once per page visit, so a long scroll doesn't make her bob.</p>
+        <span class="pick">Picked</span>
+      </div>
+    </li>
+    <li class="idea">
+      <video src="clips/tess-idea-clock.mp4" autoplay muted loop playsinline aria-label="In the last seconds of a rest, Tess leans toward the timer; at Go she settles"></video>
+      <div class="words">
+        <span class="num">10</span>
+        <h2>She watches the rest clock</h2>
+        <p>In the last seconds of a rest her eyes move to the timer. At Go the timer owns the moment and she looks back.</p>
+        <p class="calm"><b class="low">Calm cost: low</b>Product says yes if you pick it, as eyes only: her eyes rest on the clock, with no lean, colour, sound or haptic. The clip's small lean would be cut.</p>
+        <span class="pick">Picked</span>
+      </div>
+    </li>
+    <li class="idea">
+      <video src="clips/tess-idea-tilt.mp4" autoplay muted loop playsinline aria-label="As the phone tilts, Tess shifts a point or two, her far lights more"></video>
+      <div class="words">
+        <span class="num">11</span>
+        <h2>She sits under the glass</h2>
+        <p>Tilt the phone and she shifts a point or two, her outer lights a little more, as if she sits just under the screen.</p>
+        <p class="calm"><b class="some">Calm cost: some</b>Always moving while you hold the phone, and it uses the motion sensors. Off in Reduce Motion and Low Power.</p>
+        <span class="pick">Picked</span>
+      </div>
+    </li>
+    <li class="idea">
+      <video src="clips/tess-idea-mouth.mp4" autoplay muted loop playsinline aria-label="A small line under her eyes: flat at rest, a soft o while listening, one corner up while thinking, a small smile with her answer"></video>
+      <div class="words">
+        <span class="num">12</span>
+        <h2>A mouth, just a line</h2>
+        <p>Your addition. One short line under her eyes that turns with the moment: nearly flat at rest, a small soft o while she listens, one corner up while she thinks, a small smile with her answer. It never frowns at you. The box in the clip magnifies her, because at Home size it is a pinprick, like the eyes.</p>
+        <p class="calm"><b class="none">Calm cost: none</b>It only changes when her mode changes, and it comes with the eyes setting, so with eyes off there is no face.</p>
+        <span class="pick">Picked</span>
+      </div>
+    </li>
+  </ol>
+
+  <footer>
+    <span class="label">How these were made</span>
+    <p>Each clip is the motion lab's prototype of Tess at 60 frames a second on Obsidian, 6 seconds or less. The values are first guesses. Nothing here changes the app until you pick it and it goes through Design and a builder.</p>
+  </footer>
+</main>

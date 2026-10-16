@@ -5,6 +5,8 @@ Inputs: `plan-my-day-prompt.md` (instructions, schema, V1 to V12), `plan-my-day-
 **Master read:** `origin/master` at `e9f4a06` (Merge PR #233, Oct 15 8:27 PM PT), read with `git show`. Nothing was run and no key was used.
 **m4-steers.** `design/m4-steers.md` is now in `tessera/design/` at `041a17d` ("Plan my day redrawn to Research 95 and Product's answers", Oct 15 8:45 PM PT), identical to the branch copy. Its §6 was rewritten to this doc's first version and to Product's 8:38 PM PT call. Every step below is checked against that §6.
 
+> Refreshed Oct 16, 12:50 pm PT (Product item AA): undo lines take the thing-first comma ("Reply to landlord, taken back.", "Plan, taken back.", decisions 12:35 pm PT); UNDO windows come from one shared constant, 10 s for all under VoiceOver, paused in the background (12:39 pm and 12:45 pm PT, Product's branch). Master's `HomeQueue.say` gives every UNDO line 10 s (`Features/Home/HomeQueue.swift:32-34`), so step 12's 4 s row keep is open; see `fixtures/plan-my-day-pack.md` P29, G14 and Q3.
+
 > Changed 2026-10-16 (board 98): D1 to D8 and G1 closed with Design's answers; Product's 8:38 PM PT defaults folded in (pull from 07:00, 10 s UNDO on "Plan kept", rows under "Rest day", no offer while a workout runs, a late reply dropped but its cost counted); Design's two differences taken (no sleep line at all before Health read; the timeout line is "Claude didn't answer in time. Here's your usual plan."); build list and open questions redone; 5 new small disagreements in section 3b.
 
 ## Bottom line
@@ -27,7 +29,7 @@ Inputs: `plan-my-day-prompt.md` (instructions, schema, V1 to V12), `plan-my-day-
 | Light day from C1 to C3 only, never Health or energy | decisions 5:41 and 5:48 PM PT; `light-day.md`; §6 Energy | Not built |
 | No buttons with shapes; actions are stroke words and label words | decisions 12:00 PM PT; `no-buttons.md` | `DesignSystem/InkActions.swift:4-5`, `LabelActionStyle` `:47-49`; `PaintKey` `DesignSystem/Paint.swift:225-229` |
 | No coloured dot or dab before or after a line of text | decisions 8:07 PM PT; `design/no-dots.md` rule 1; §6 rows | `GhostRow` still draws a cobalt `PaintDab` (`Features/Home/NowPage.swift:289-290`) |
-| UNDO names the thing plus "taken back"; 4 s, 10 s on destructive writes and on "Plan kept" | `tess-voice.md` principle 8, M34, M35; decisions 8:38 PM PT | `TessVoice.say` holds every note 4 s (`Features/Home/HomeQueue.swift:28-37`). No 10 s path |
+| UNDO names the thing, then ", taken back."; 4 s, 10 s on destructive writes and on "Plan kept", 10 s for all under VoiceOver, from one shared constant (decisions 12:35 pm, 12:39 pm and 12:45 pm PT Oct 16) | `tess-voice.md` principle 8, M34, M35; decisions 8:38 PM PT | `TessVoice.say` holds every note 4 s (`Features/Home/HomeQueue.swift:28-37`). No 10 s path |
 | Plan fallback: the rules plan plus one quiet line, at most one per plan | decisions 12:22 and 8:38 PM PT; M18, M22, M23; §6 | Not built |
 
 ## 2. The walk
@@ -128,7 +130,7 @@ The plan offer is a new rung in the ranker, after the rest day and before re-ent
 - **§6:** agrees (D2 closed: no dab flies).
 
 ### Step 13. He takes it back: UNDO
-- **Sees:** "Reply to landlord taken back." (M34). The row goes back to a wet cobalt ghost, still swipeable. The task's `startsAt` is what it was before.
+- **Sees:** "Reply to landlord, taken back." (M34; thing first, decisions 12:35 pm PT Oct 16). The row goes back to a wet cobalt ghost, still swipeable. The task's `startsAt` is what it was before.
 - **Writes:** `ActionEngine.undo` on that one record. Window 4 s.
 - **Master:** `ActionEngine.undo(_:)` (`ActionEngine.swift:141`); `TessVoice` carries the op for UNDO (`HomeQueue.swift:16-19`). The Ask bar's `undoLastCapture()` sets no line (`AppModel.swift:226-237`; `claude-first-run.md` F10). Not built: returning the row to a ghost.
 - **§6:** agrees.
@@ -137,7 +139,7 @@ The plan offer is a new rung in the ranker, after the rest day and before re-ent
 - **Does:** holds "Reply to landlord" for 0.7 s, the same hold as Finish. The ink line empties to a 0.9pt trace at 35%, repaints left to right, and the bead swells at the tip.
 - **Writes:** one named transaction: a `MoveTask` for each row he hasn't skipped or already kept; then the first item becomes Now. Making it Now is a ranker state, not a process start. If the first item is a workout (d18, Legs A at 8 am), it becomes Now's routine hero with its own Start word; the hold never starts a workout.
 - **Sees:** the plan's hero lifts away and "Reply to landlord" rises into the hero.
-- **Tess:** "Plan kept. Reply to landlord is up." with **UNDO for 10 s**. On UNDO: "Plan taken back." The rows and START WITH return as ghosts.
+- **Tess:** "Plan kept. Reply to landlord is up." with **UNDO for 10 s**. On UNDO: "Plan, taken back." The rows and START WITH return as ghosts.
 - **Fixture N7** now reads "never committed without his tap or hold".
 - **Master:** `PaintKey` hold (`Paint.swift:225-229`, `NowPage.swift:114-124`, 0.7 s at `:114`). Not built: the plan transaction, the lines, a 10 s window.
 - **§6:** agrees (D6, D8 closed; old Q5 answered by Product).
@@ -217,9 +219,9 @@ Checks: under 12 words (11 is the real limit, `TessCapturing.swift:91`), one lin
 | 8 | Rest day. (Claude's note, d21) | d21 | 2 | Pass, but not shown: the hero already says it |
 | 9 | Book physio, 30 min. | §6 | 4 | Pass |
 | 12 | Reply to landlord, 8 am. | §6 | 4 | Pass |
-| 13 | Reply to landlord taken back. | M34 | 4 | Pass |
+| 13 | Reply to landlord, taken back. | M34 | 4 | Pass |
 | 14 | Plan kept. Reply to landlord is up. | §6 | 7 | Pass |
-| 14 | Plan taken back. | §6, M34 form | 3 | Pass |
+| 14 | Plan, taken back. | §6, M34 form | 3 | Pass |
 | B2, B6, B8 | Here's your usual plan. | M23 | 4 | Pass |
 | B3 | Claude paused until Dec 1. Here's your usual plan. | decisions 8:38 PM PT | 8 | Pass |
 | B4 | Claude didn't answer in time. Here's your usual plan. | M18 plan variant, C15 | 9 | Pass |
@@ -246,7 +248,7 @@ Voice notes:
 6. **Pull:** the **plan** value word on the Now line from 07:00, and "plan my day" in Ask. While a workout runs, show the engine line and leave Now alone.
 7. **Re-word in place:** blur 4pt to 0 cross-fade, 420ms; rows reorder on the settle spring; drop the reply if he touched the plan (B9) or after 20 s.
 8. **Cloud mark and VIA CLAUDE:** three cobalt wisps off the soul while out (none under Reduce Motion); VIA CLAUDE once under the start line, tapping to the receipt; each row's VoiceOver ends "Via Claude".
-9. **Tess lines with UNDO:** row keep (4 s), "Plan kept" (**10 s**), edit confirm, each undo line "{name} taken back." / "Plan taken back.". Give `TessVoice.say` a duration (`HomeQueue.swift:28-37`). Also set the undo line in `undoLastCapture` (`AppModel.swift:226`).
+9. **Tess lines with UNDO:** row keep (4 s), "Plan kept" (**10 s**), edit confirm, each undo line "{name}, taken back." / "Plan, taken back.". Give `TessVoice.say` a duration (`HomeQueue.swift:28-37`). Also set the undo line in `undoLastCapture` (`AppModel.swift:226`).
 10. **Calendar ask** as Tess's line with CONNECT and NOT NOW label words, and M46 with SETTINGS (placement per N5).
 11. **Fallback lines,** one per plan: M23, M18 (new wording), M22, the cap line, M2. None for B1 and B9.
 12. **VoiceOver** labels, hints and named actions from section 4; am/pm in labels.

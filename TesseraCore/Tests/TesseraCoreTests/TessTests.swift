@@ -203,7 +203,7 @@ struct TessTests {
     @Test func modelToolCallsResolveNamesAndRunAsPendingTess() async throws {
         let recorder = TessToolRecorder()
         let tool = try CatalogTool(tool: #require(TessTools.tool(named: "logSet")), engine: engine, pending: true,
-                                   now: .now, recorder: recorder)
+                                   now: .now, calendar: .current, recorder: recorder)
         let output = try await tool.call(arguments: GeneratedContent(
             json: #"{"exercise":"bench","weight":80,"reps":8,"sets":2,"unit":"kg"}"#
         ))
@@ -222,6 +222,18 @@ struct TessTests {
         let actions = Set(ActionRegistry.descriptors.map(\.name))
         #expect(actions.subtracting(covered).isEmpty, "Missing: \(actions.subtracting(covered))")
         #expect(covered.subtracting(actions).isEmpty, "Stale: \(covered.subtracting(actions))")
+    }
+
+    @Test func siriAddATaskKeepsKeysOutAndSecretsPrivate() throws {
+        // QA I3 (#428): Siri's Add a Task never saves a Claude key and files a secret with a value as a private note.
+        #expect(try CreateTaskIntent.add("sk-ant-api03-TEST", startsAt: nil, engine: engine) == TessRouter.keyLine)
+        #expect(try CreateTaskIntent.add("door code 4417", startsAt: nil, engine: engine) == "Private note, kept.")
+        let objects = store.context.objects.values
+        #expect(!objects.contains { $0.title.contains("sk-ant") || $0.title.contains("4417") })
+        #expect(objects.contains { $0.title == SecretWords.title })
+        // A task that only names a secret word stays a task.
+        _ = try CreateTaskIntent.add("reset my PIN", startsAt: nil, engine: engine)
+        #expect(store.context.objects.values.contains { $0.title.lowercased() == "reset my pin" })
     }
 
     @Test func intentsRunTheSameTypedActions() throws {

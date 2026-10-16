@@ -141,7 +141,7 @@ Sheet map: 41 is `home-first-review.md` (091ddcd), 44 `training-mode.md` (7fcbee
 | "this morning, slept 6h40" | context | fix | Home's context never names sleep or health (home-lines §2), and the sheet itself moves sleep to the pulled view. "morning" repeats the day label (§2). Give the time: "from 8 am" |
 | "this morning" | context, no Health | fix | Same repeat: "from 8 am" |
 | "Four hours free" / "Two hours free" | hero | fix | Digits: "4 hours free", "2 hours free" (Design's call, see cross-sheet 10) |
-| "Three tasks, Push A at 6" | hero | fix | Digits: "3 tasks, Push A at 6". The bare hour stays: it is the settled hero form ("Tacos at 7", Design kitchen rule) |
+| "Three tasks, Push A at 6" | hero | fix | Digits and "pm": "3 tasks, Push A at 6 pm" (Product 11:50 AM PT Oct 16: hero times carry "pm", "Tacos at 7 pm") |
 | `START WITH REPLY TO LANDLORD`, `START WITH PUSH A` | key | ok | |
 | Plan, VIA CLAUDE, "2 MORE", "1 MORE" | words | ok | |
 | "Landlord reply first, then physio." | Tess | ok | |
@@ -205,7 +205,7 @@ Sheet map: 41 is `home-first-review.md` (091ddcd), 44 `training-mode.md` (7fcbee
 |---|---|---|---|
 | 1 | A rest day | 44 "rest day, Push A tomorrow"; 54 "Rest day."; 7d16c88 Home "Rest today" / "Legs A waits for tomorrow" but her line "Rest today. Legs A is next."; 7d16c88 "waits for next Wednesday" vs decisions "waits for Thursday" | Her line and Home: "Rest today. Legs A waits for tomorrow." Fixed days: "Legs A waits for Wednesday" (no "next"). "Push A is Thursday's." becomes "Push A is on Thursday." |
 | 2 | What leaves the phone | 50 "Titles and counts only. Never notes, places, health or money."; 53 "Sends your task and calendar titles, never notes, places or health."; decisions 10:29 PM PT "Sends your task and event titles, never notes or places." | 50's line everywhere; Product retires the 10:29 PM wording |
-| 3 | Clock times | 54 "6:00 PM", "6:00 pm", "at six"; decisions 3:05 AM PT "Push A at 7 PM"; home-lines "7:40 pm" | "6 pm", "7:40 pm" in sentences; `6 PM` only in label case. Heroes keep the bare hour ("Tacos at 7", "Push A at 6") |
+| 3 | Clock times | 54 "6:00 PM", "6:00 pm", "at six"; decisions 3:05 AM PT "Push A at 7 PM"; home-lines "7:40 pm" | "6 pm", "7:40 pm" in sentences; `6 PM` only in label case. Heroes carry "pm" too ("Tacos at 7 pm", "Push A at 6 pm"; Product 11:50 AM PT Oct 16) |
 | 4 | Deleting a note | 57 "Bar felt heavy on set 3, deleted."; tess-voice M35 "Note deleted." | 57's form; Research updates M35 to "{first line}, deleted." |
 | 5 | Memory receipts | 49 "Kept. You rest on Sundays."; "Everything forgotten, 12 things."; 7d16c88 "Rest on Sundays, forgotten." | "{value words}, kept." / "{name}, forgotten." / "12 things, forgotten." |
 | 6 | A row's recipe | 47 ask "for the tacos?" and "for the tacos."; row line "for tacos" | "for tacos" everywhere |

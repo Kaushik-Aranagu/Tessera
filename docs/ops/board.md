@@ -1,8 +1,16 @@
 # Tessera board (index)
 
+**Install rule (12:37 PM PT Oct 16):** standing approval removes asking him, not the gates. Only the named pin SHA in product/pin-checklist.md installs, never master.
+
 *Only the planning lead (Product lead thread) edits this file. Each team's queue lives in its own file under `board/`, and only that team's lead edits it. Updated 2026-10-15. First phone build: PRs cut at 2:05 PM Pacific (moved from 12:45 and 1:05 PM), then the final build; review guide in `../product/review-session.md`.*
 
-**Install commit (1:09 AM PT Oct 16):** 7b321d2, on his own "install it" only. Next build: AI-1 Home, 44 part two, 42, Ask Tess sizes.
+**Installed (9:57 AM PT Oct 16):** 7b321d2 (#320, #330, #334, #337, #343), over the existing app; signing lapses ~Oct 23 9:57 AM PT, reminder Oct 22 10 AM PT. Next pin waits on #366, MU2 and the inbox-retry fix (stuck-listening #446 merged, 0eca9bbe) (decisions.md 11:08 and 11:35 AM PT) (master at v9 since #422 merged, 5af8f2c2); the paste/link wall rides if it lands first; #407 rebased to v10, merges after the pin with #403. Next build: AI-1 Home, 44 part two, 42, Ask Tess sizes.
+
+**Frozen PRs (11:35 AM PT Oct 16):** once a lead sends a PR number for merging, that branch is frozen until it lands. New work goes in a fresh PR from master; every push to a sent PR stops its merge.
+
+**Two lanes (11:25 AM PT Oct 16, Kaushik: no idle agents):** each team lead manages its own area: two lanes, pulls from its own board, splits work across subagents, never waits to be handed work. Product keeps boards current and refills any Next under 3; leads ask Product directly. The coordinator keeps the broad view (cross-team blocks, merges, Kaushik) with spot checks, no sweep. Pin checklist: `../product/pin-checklist.md`.
+
+**AI spend (9:45 AM PT Oct 16):** in-app cap $50/month (decided 9:27 AM). Dev spend from cloud runs comes out of his $200/month credits and is logged here: memory experiment ~$0.60 (570 calls; Haiku ~$0.04, Sonnet ~$0.56), Oct 16. Groceries eval ~$0.0066 plus run 0 (rerun 2, #420: 10/10 must, 0 false pairs; Kitchen verdict pending).
 
 **Themes (Kaushik, 6:40 PM PT):** Design's top job; Builder A builds the tokens and switch after the Siri hotfix; all screens use themed tokens from now on.
 

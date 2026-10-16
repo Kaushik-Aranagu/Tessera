@@ -48,8 +48,16 @@ safety says a migration never ships untested on his device. Before the "install 
   - **The pin waits** for Core's incremental OpZones fix (the #377 S1 scale fix) as well as #380 and #366. On that
     build, the v8 rerun **times** the v5 backup restore. A slow restore counts as a gate failure (Product,
     06247720).
+  - **The rerun is at v9** (Product, decisions.md 10:18 AM PT Oct 16: #422 secret words is in the pin and takes
+    Catalog v9; #407 moves to v10 and lands after the pin). One rerun covers it: the upgrade over the v5 copy, the
+    366 rows byte-identical with the v8 and v9 fields added empty, the timed v5 restore (against +0.7 s), and an
+    older build (7b321d2) opening the v9 store.
+- **M5 (catalog v9, secret words, only if #422 is in the install commit):** on the M0 Simulator copy, "wifi password
+  is tiger42" gives "Private note, kept." and the Day log reads "Private note". "what's my wifi password?" gives
+  "It's in your private notes." Open the private note, change one word and save: its title still reads "Private
+  note" (QA F1 on #422). Asking Tess to remember a password says "Private note, kept. It stays out of my memory." and the memory page doesn't show it.
 - **Rollback:** an older build opening a newer store is shown safe through v7 (M0: 7b321d2 opens the v7 store, the extra
-  classes are ignored). v8 is not shown yet; M4 shows it. Restoring a newer backup onto an older build stays
+  classes are ignored). v8 and v9 are not shown yet; the v9 rerun shows both. Restoring a newer backup onto an older build stays
   **forbidden** until someone tests it.
 - **His real backup:** nothing is asked of him about it. The install-day script opens with him tapping a fresh backup
   in Review > Backups before the install (Product, ff548605).

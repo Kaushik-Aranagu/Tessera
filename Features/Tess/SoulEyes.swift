@@ -139,7 +139,8 @@ struct SoulEyes: View {
         .scaleEffect(scale)
         .offset(x: centre.x + glance.width * scale, y: centre.y + glance.height * scale)
         .opacity(frame.look.opacity)
-        .animation(still ? nil : .spring(duration: 0.3, bounce: 0.05), value: gaze)
+        // Reduce Motion: `still` already holds them ahead; the policy also drops the spring.
+        .tesseraAnimation(.spring(duration: 0.3, bounce: 0.05), value: gaze)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }

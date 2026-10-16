@@ -1,5 +1,7 @@
 # Claude first uses, in order
 
+> **Update Oct 16, 12:40 pm PT:** the monthly Claude cap is now **$50** (Kaushik's yes at 9:27 am). Read every "$10" cap below as $50, with amber from $40 ("PAUSES AT $50"). Model prices in this file are unchanged. See `cap-math-check.md`.
+
 For: Core (router, client, ledger), Builder B (Home and Command screens, cloud mark), Builder A (sets typed in a live workout). Research lab, board item 44, 2026-10-16.
 Turns `tess-model-layer.md` §8 into the first three things Kaushik sees Claude do once his key passes the Test (`claude-key-test.md` K1). Reads with `tess-voice.md` M1 to M22, `undo-lines.md` §3, `plan-my-day-dryrun.md`, `light-day.md`, `calendar-pack.md`, `questions-eval.md`, `tess-eval-claude.md`, `fixtures/grammar-regression.md` and `../product/decisions.md`.
 Code read on `origin/master` at `9b85986` (no Swift toolchain). Prices and model IDs fetched live on 2026-10-16 (sources at the end).
@@ -17,7 +19,7 @@ That is 4% of the $10 cap in a heavy month. The order changes §8 on purpose. Us
 
 **What master has (`9b85986`).** `TessUse` (capture, question, paste, plan), `TessModel`, `TessRouter` (routes in order, stamps `OpRoute.claude` and the model name on each op), `OpRecord.route` and `OpRecord.model`, and `TessTools` with 11 strict tools: the 10 in `tess-eval-claude.md` plus `startShop`. `answerQuery` is a first slice: `{from, during: today | this week | this month}`, a count only, answered on the phone. Not on master: `ClaudeTessModel`, any network client, the Keychain store, `TessCall` and the ledger, `proposePlan`, `TessInbox`, `NWPathMonitor`, and the cloud mark.
 
-**Prices (verified 2026-10-16).** Haiku 5.5 `claude-haiku-5-5`: $0.10 in, $0.50 out per million tokens (prompts up to 100K), cache read $0.01; the models page calls it "Fastest", for "classification, extraction, and routing". Sonnet 5.5 `claude-sonnet-5-5`: $2 in, $10 out, cache read $0.10, "the best combination of speed and intelligence". In ledger units (nano-dollars): a Haiku token costs 100 n$ in and 500 n$ out, and a Sonnet token 2,000 n$ in and 10,000 n$ out. Token counts below are estimates (chars / 4) and are priced with no cache hits, which errs high.
+**Prices (verified 2026-10-16).** Haiku 5.5 `claude-haiku-5-5`: $0.10 in, $0.50 out per million tokens (prompts up to 100K), cache read $0.01; the models page calls it "Fastest", for "classification, extraction, and routing". Sonnet 5.5 `claude-sonnet-5-5`: $2 in, $10 out, cache read $0.20 (200 n$ a token; corrected Oct 16 against the models page), "the best combination of speed and intelligence". In ledger units (nano-dollars): a Haiku token costs 100 n$ in and 500 n$ out, and a Sonnet token 2,000 n$ in and 10,000 n$ out. Token counts below are estimates (chars / 4) and are priced with no cache hits, which errs high.
 
 ## Use 1. Grammar misses, with the cloud mark
 

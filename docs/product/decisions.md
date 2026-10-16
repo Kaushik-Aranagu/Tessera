@@ -4,6 +4,225 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+**1:00 PM PT Oct 16: Review week story (Research review-week-story.md asked).** DECIDED, all eight of Research's picks.
+
+How the week is counted:
+- On Monday morning, the story of the week that just ended stays under the new week until Tuesday 4 am.
+- A paused session counts as trained if a set was logged.
+- An empty or notes-only week skips the Claude call.
+- With a day mark, the figure counts against the marked week ("5 of 5").
+
+How it reads:
+- Three plain count lines, such as "4 workouts, 2 new bests, 3 cooks".
+- Tapped-day times are 12-hour.
+- Trip-day times show in the zone he was in.
+- "weight down 0.4 kg" leaves the story and stays on the body page only.
+
+Pin rider (small): DayStory writes ", best" instead of ", PR" (DayStory.swift:225). It goes in if it lands before M1 merges.
+
+**12:58 PM PT Oct 16: eyes and v10 after the pin (Research post-pin-403-407.md asked).** DECIDED, all four of Research's picks.
+- The "Tess has eyes" row lives under LOOK (Design 70).
+- The eyes hide while Tess is working.
+- The .backgrounded-to-rest change ships with #403 if the router and working tests pass.
+- The v7 floor test isn't rerun, since v10 only adds a field.
+Order after the pin:
+1. #403, rebased on #453's working overlay, with MotionPolicy instead of raw animations.
+2. #407 once the pin, carrying #475 and M1, is on his phone. Add one test where v9 code opens a v10 store.
+3. Builder A swaps the launch flag for the showsTessEyes setting. Builder B adds the Design 70 row. The key name in code, tessEyes, wins over tess.eyes in the doc.
+
+**12:54 PM PT Oct 16: Plan my day before wiring (Research plan-my-day-pack refresh asked).** DECIDED, all nine of Research's picks.
+
+Before Builder B wires Plan my day:
+- Core lands G1, G4 and G7 first: includesEventTitles off by default, a check for a running workout, and a correct cost estimate.
+- AI-5 doesn't gate Plan my day. It has its own gate.
+
+What goes to Claude:
+- Event titles go to Claude as "busy" only in v1, matching Home. The 23 packs rerun with "busy" events. That's a key-using run, so it needs his yes.
+- A medicine with no dose is private when the word is a known drug. "Dentist" and "Book physio" go as "task".
+- "combination" alone isn't secret, so "Buy combination lock" stays a task.
+
+What he sees:
+- One kept row reads "Plan, kept." with a 4 s UNDO.
+- Claude's times are re-rendered through the one formatter.
+- An open at 6:40 am is silent. He can pull the plan by hand.
+- Abroad, the cap line reads "Paused until Nov 1" with no PT.
+
+**12:50 PM PT Oct 16: AI-5 verdict, Home wording stays on the rules (#488).** DECIDED.
+- Neither model ships Claude Home wording yet. The rules lines stay the default and the switch stays off.
+- Haiku fails True on both passes. Sonnet fails True and Voice on memory ("After work, your usual slot" three times on a Saturday).
+- Next steps:
+  - Core adds a weekday check on "usual" and "after work".
+  - AI architecture narrows the prompt with Research's rule, then reruns Sonnet only. The rerun needs his yes.
+- Claude wording only earns its cost on done moments that add a best, a gap or a count change.
+
+**12:45 PM PT Oct 16: undo windows (Research undo-windows-audit.md, #485, asked).** DECIDED, all six of Research's picks.
+- Undo windows pause while the app is backgrounded or the phone is locked.
+- Removing the key still commits early when the app goes to the background, because the key is safety-critical, and the line says so.
+- Recipe to Groceries gets 10 s.
+- A capture's window counts from when its line shows.
+- Siri undo has no window.
+- Plain hold-to-finish gets a 10 s UNDO.
+
+Also decided:
+- There is one shared window constant that knows about VoiceOver (10 s for all when VoiceOver is on).
+- Every UNDO line names the thing ("X, taken back.").
+- Deleting a note gets an UNDO.
+- Undoing a finish removes the Health workout.
+- At 4 am, an UNDO under the wrap-up and the roll takes back both or shows two UNDOs.
+
+**12:40 PM PT Oct 16: $50 cap math (Research cap-math-check.md, #482, asked).** DECIDED, all five of Research's picks:
+- The month resets at Pacific midnight on the 1st, wherever he is.
+- This month's spend is also kept in a small file outside the store, which restore never touches, like the forget log. The cap takes the higher of the two.
+- AI architecture rechecks the Sonnet cache-read price on the models page, and Core matches it.
+- "Paused" shows as soon as a call is refused.
+- A timed-out call counts its full held amount.
+
+**12:39 PM PT Oct 16: VoiceOver on the recipe clock and Lists (Research voiceover-recipe-clock-lists.md asked).** DECIDED, all six of Research's picks.
+- "425°F" is spoken as "425 degrees".
+- The lit step uses the "Now" value.
+- A step timer uses only the notification while he's in another app.
+- The pause line is "Paprika chicken, paused."
+- A finished section announces "Bathroom, all done." once.
+- With VoiceOver on, every undo window is 10 s.
+Owner: Builder B owns everything on the recipe page, including its cook states and their VoiceOver. Builder A owns the timers, the Live Activity and the notifications (G2, G7's timer, G8's line).
+
+**12:38 PM PT Oct 16: Lists phrases (Research lists-slice-8-phrases.md asked).** DECIDED, all eleven of Research's picks.
+
+How phrases route:
+- On a list page, a bare "milk" goes to that list; "buy milk" goes to Groceries.
+- "reset gym bag" resets at once, with a 10 s UNDO.
+- "new list lisbon fri" drops the day and makes a list named "Lisbon".
+- "pack" when two lists start with "Pack": ask "Packing, or Packing, Lisbon?"
+- "lisbon" finds the one list whose name holds that word.
+- "pick from films" opens the pick moment when Films is on screen; otherwise it says the pick.
+
+What he sees:
+- An item already on the list: "Socks, already on Packing." "charger" beside "phone charger" is a new row, not a duplicate.
+- A copied list: "Lisbon, copied from Packing."
+- "done" with items left: "Packing, Lisbon, done. 3 left."
+- A dated add: "Charger, on Packing, tomorrow."
+- The context line keeps each list's own case: "6 lists, Gym bag running".
+- A name with no matching list: "No list called Costco."
+
+My own calls:
+- A label before a colon ("packing:") sends the phrase to that list ahead of the food rule.
+- Plural "pins" is not a secret word.
+- In "add X to <list>", "sun" is never read as Sunday.
+
+**12:37 PM PT Oct 16: standing install approval (Kaushik, 12:36 PM PT, Builder A's thread).** DECIDED by him. Builder A may install the named pin whenever his phone is reachable over Wi-Fi, without asking. Standing approval removes asking him, not the gates. Only the named pin SHA installs, never master (master is v9 and his phone holds a v5 store). The safety steps all stay: Product names the SHA, the gate, QA and the Design walk pass, Step 0 SAVE A COPY runs, the install is in place, the app is never deleted, and he gets one line after.
+
+**12:35 PM PT Oct 16: time words (Research time-words-sweep.md asked).** DECIDED, all six of Research's picks.
+- "early morning" is only the label; lines say "early this morning".
+- From 9 to 10 pm the label says "night", to match "tonight".
+- At 9 pm Now flips to "tomorrow, first", even before Shutdown is built.
+- Now's context line uses digits ("next, at 6:30 pm").
+- At 1 am, "tonight" means the coming evening, and Tess's receipt names the day.
+- Backup and Settings belong to Builder B.
+Also: every clock string is 12-hour with "am"/"pm", from one formatter, including the Live Activity and the Claude receipt. Every weekday comes from the 4 am day. "ago" counts round to the nearest hour everywhere, as HomeLines.ago does, with "1 hour" singular.
+
+**12:35 PM PT Oct 16: receipts name the thing first (Research receipts-thing-first.md asked).** DECIDED, all six of Research's picks.
+- RC23: Claude and the on-device fallback get one thing-first line per action. The summaries stay as log text.
+- List receipts name the list: "Rice, on Groceries."
+- A new list reads "Films, made."
+- A private health memory says "Health note, kept on this phone." It names the kind, never the value.
+- "Sent … to Claude" on the first miss is a notice and stays as is.
+- An undo with several changes names the thing: "Push A, taken back."
+
+**12:30 PM PT Oct 16: Siri parity with the Ask bar (Research siri-privacy-parity.md, #479, asked).** DECIDED, all of Research's picks:
+- Money with an amount and no day: Siri says the Ask bar's miss line and saves nothing.
+- A walled title that stays a task because a day wins: Siri says "Task added for Fri." and doesn't echo the title.
+- "buy milk" on Add a Task stays a task.
+- "reset my PIN" is a task, with the title hidden from Siri's reply.
+- A medicine reminder with a time is a private task: it keeps the 9 pm reminder and shows "Medicine" as the title.
+Two more: money phrases never go into the capture-miss log, and an empty Add a Task title asks for one instead of throwing.
+
+**12:29 PM PT Oct 16: Home lines day one (Research home-lines-day-one.md on #366's head asked).** DECIDED.
+- #366 has to fix its day label before it merges, since it's a pin blocker. The label takes its day from the 4 am day (HomeData.lanes), not the wall clock (HomeLineHero.swift:101).
+- Part-of-day words follow the line: "tonight" from 9 pm, and "early morning" from 4 to 7 am.
+- Research's other picks: after Shutdown, Now reads "tomorrow, first". A running cook or shop takes Now. Calendar events show on Home as "busy" rows only in v1. An empty day says "All quiet." once.
+- Now picks only tasks in the current 4 am day, so Sunday's 9 am task never takes Saturday night.
+- A workout planned today is never shown as an empty day.
+
+**12:27 PM PT Oct 16: Lists day-one wording (Research lists-day-one.md asked).** DECIDED.
+- With lists but nothing running, the context line reads "4 lists, nothing running".
+- The add receipt is "Charger, on Packing.", thing first, like every receipt.
+- The back word is "< Kitchen" in source, with .textRole(.label) and .textCase(.uppercase), so it shows as < KITCHEN (Design, as RoutinesPage.swift:34). Its accessibilityLabel is "Back to Kitchen".
+
+**12:26 PM PT Oct 16: outside-the-app privacy (Research spotlight-widgets-privacy.md asked).** DECIDED, all four of Research's picks.
+- Siri writes (Tell Tess, Add a Task) need Face ID, while the rest Live Activity buttons stay usable on a locked phone.
+- The planned set may show on the locked Lock Screen, since training load isn't a body fact.
+- Titles that trip the secret-word or money/body checks are hidden from Spotlight, Siri replies and the Live Activity.
+- Every free-text field on a future widget gets .privacySensitive.
+- P14 joins the pin as a rider: Siri's Add a Task checks PrivateFacts, saves a walled title as a private note, and doesn't read it back.
+
+**12:22 PM PT Oct 16: backup and stale-ask calls (Research #474 asked).** DECIDED, all four of Research's picks.
+- B1-11: Notes refuse any text that contains the Claude-key prefix. This uses the shared guard, not only key-length text.
+- I-4: restoring an iCloud copy, which leaves out private rows, keeps the phone's private rows; it never wipes them.
+- S3: a waiting ask drops when its live line fades.
+- S6: after a long time in the background, an ask drops at the same idle limit tidyProcesses uses (rest plus 10 min).
+
+**12:21 PM PT Oct 16: past-tense logs with no amount are ordinary notes (coordinator asked on #471).** DECIDED. "paid rent fri" and "bought milk sat" are ordinary dated notes. They are not private: with no amount there's no money fact, so they can show in Spotlight and reach Claude like any note. "bought 2 lemons" is the same, since a count is not an amount. This is a small Core follow-up (0j) and doesn't hold #471.
+
+**12:16 PM PT Oct 16: rollback after the pin is 7b321d2 (Research oct-22-list asked).** DECIDED, Research's default. Once the pin is on his phone, rollback is 7b321d2, the only older build tested opening the v9 store (gate V4). 444e72b (v5) is the rollback only before the pin. On re-sign day he builds the exact commit and never pulls master.
+
+**12:13 PM PT Oct 16: Tess's wake is at 7 am (Research tess-picks-signals asked).** DECIDED, Research's default. Idea 2's wake waits for the first open outside quiet hours (7 am), not the 4 am day boundary, so resting ends at 7. Idea 4 doesn't swell in quiet hours. A stroke while she sleeps still answers his touch. The motion lab can refine the look.
+
+**12:12 PM PT Oct 16: backups (QA review-backups.md).** DECIDED.
+- B1, a Claude key pasted into Notes ending up in every backup, is the first pin rider. It doesn't block the pin, since 7b321d2 already has the gap, but it goes in if it lands before #366.
+- B5/B6: the newer-version refusal is a pin rider, second after B1 (coordinator's recommendation, 12:12 PM PT). The v9 build must refuse any store or backup from a newer catalog. If it misses the pin, #407 (v10) waits until a build with the guard is on his phone.
+- B8: private memories stay out of the iCloud copy, so "on this phone only" stays true. Local copies keep them.
+- B2: cleanup never deletes a manual "Save a copy".
+- Everything else goes on the Core and Builder B boards in QA's order.
+
+**12:12 PM PT Oct 16: background Claude jobs and the soul (Research soul-ask fixture asked).** DECIDED, Research's default. The week story shows Tess working, because he opened Review and is waiting for it. Home lines send nothing, because they run while he isn't looking (home-lines-job.md §7). askClaude fires only after the walls and the cap check pass, so a refused ask makes no event. The recipe handoff says "Asking Claude to read the recipe." (Design, G7: a line says Claude when something leaves the phone); the fetch before it stays "Reading nytimes.com.".
+
+**12:11 PM PT Oct 16: a day wins over the money guard (Research group N asked).** DECIDED. When a phrase has both an amount and a day ("pay rent 650 fri", H609, H610, A012), the day wins: it is a task (or a dated note for past tense) on the phone, never the miss line, and the amount never goes to Claude (Plan my day sends it as "task", 12:06). A money verb beats the set shape: "paid 20 for 2 tickets" is money, not a training set (PrivateFacts.isTraining). L1 already stands from 12:02: body and health facts stay on the phone with no number. "get a combination lock" is a grocery row, per the kitchen rules.
+
+**12:06 PM PT Oct 16: recipe clock, running over holds (Kitchen #461 asked).** DECIDED. When a timed step's timer ends, the bead holds at the step's end and the step stays lit until he moves on; the clock never lights the next step itself. Kitchen's ruling stands, same as the 12:05 entry. "5 more" stretches the held step and restarts its own timer; the minutes ahead shift. Gaps G1-G12 are on the Core, Builder A and Builder B boards with the 69 work.
+
+**12:06 PM PT Oct 16. What a screened plan title becomes (Research plan-my-day pack).** A screened task goes to Claude as "task", a screened event as "busy"; any older "busy" for tasks or "Private task" is superseded. Money words with no amount ("Pay electricity bill") go as typed, matching 12:04; a medicine with a dose is a health fact and is screened.
+
+**12:05 PM PT Oct 16. The recipe clock waits for him.** When a timed step runs over, the bead waits at that step's end until he moves on, and the later minutes shift; the clock never walks ahead of the pan. **Why:** the clock should match what's actually happening on the stove.
+
+**12:04 PM PT Oct 16. "pay" with no amount is a task.** The money guard fires only with an amount or a currency sign; "pay rent fri" is a task and "paid rent fri" or "bought milk sat" is a dated note for that day (the past-tense log rule), as before #298. Rides the pin if in time, since he types these weekly.
+
+**12:03 PM PT Oct 16. Secret words widen slightly (#454).** SecretWords now splits on newlines and knows "pw" and "pwd", so "pw for gym locker 4417" becomes a private note too. That is his rule applied, not a new one.
+
+**12:02 PM PT Oct 16. MU2's leftovers (QA lows on #451).** Body and health facts stay on the phone even with no number ("slept badly", "knee hurts") and with a percent ("body fat 18%"), and "paid N for M" is money. Both go in one small Core follow-up, a pin rider. Reading "6.30" as money fails safe and waits.
+
+**11:57 AM PT Oct 16. Shutdown and a live workout (Research 148 ★).** If a workout is live at 9 pm, Shutdown waits for Finish, and the 10 pm close waits too: it runs after Finish, stamped 10:00 pm, with the workout filed on the day it started. The close also waits while Shutdown is on screen and keeps his draft until 4 am. A first open after 10 pm writes the closed mark without moving rows. Rows kept for tomorrow count as rolls. CL10 beats C7 for the check-in only. **Why:** the live workout band stays quiet, and nothing closes under his hands.
+
+**11:55 AM PT Oct 16. Day marks reach back one day (Research 147 ★).** He can mark today, tomorrow, and yesterday ("was sick yesterday"), so Review shows rest instead of a miss for the day he just had; nothing further back, so a week can't be rewritten. Body words in a mark ("sick") stay on the phone (MU2's body screen) and memory only ever says "rest day". **Why:** a miss ring on a sick day grades him for something he couldn't help; one day back covers the real case.
+
+**11:52 AM PT Oct 16. Recipe pages and the money wall; rest-day defaults.** A recipe page's prices are not his money, but the rule "money never goes to Claude" is kept literally anyway: the recipe-link job strips money-shaped spans from the page text before sending rather than refusing the page (a recipe reads fine without prices). His own words still pass every wall. Redirects are refused for all Claude callers. Rest day (Research 146): first launch of the build with the reader writes Sunday as one op with UNDO (his Oct 15 "Sun rest"); a session trained on Sunday anyway advances the roll; changing the rest weekday never redraws past weeks.
+
+**11:50 AM PT Oct 16. Two wording conflicts (Research 143).** Times in heroes carry "pm": "Push A at 6 pm", "Tacos at 7 pm" (the Oct 15 rule "digits with a lower-case pm in heroes" stands; any older "at 6" is superseded; HomeLines.swift:272 changes). The Day log keeps its own grammar ("Done: call the bank", "Added 2 tasks"), as Design drew it in day-log-v1.md: it is a log, not a receipt, so the thing-first rule covers receipts, Siri replies and memory lines, not the Day log. The Review hero count stays in words ("All six sessions in").
+
+**11:47 AM PT Oct 16. Monday's week-two calls (Research 144, for 101 at 8:15 AM PT Oct 19).** Q4 "Yes, Sunday": keep the rolling plan and store `restWeekday`; Core adds its reader (week(), restDay, NowPage); fixed days ignore it. Message B Q1 with no data: "Did every set you lifted this weekend get logged? ★Yes / Most / Didn't train". Q2 "No": he switches to fixed days himself on the Routines page once the next pin (catalog v6 or later) is on his phone; Builder A writes it for him only if he asks. Receipts in week-two.md go thing-first ("Sunday, rest day.", "Plates, two pairs of 25 and 20."). Install timing reads "the next pin, before the Oct 23 9:57 AM lapse".
+
+**11:45 AM PT Oct 16. AI architecture's six calls (spend projection: typical month ~$3.23, worst ~$8.59 of the $50 cap).** All six defaults taken: (1) Home lines on Sonnet until AI-5 says otherwise; (2) Home lines memory areas are Training and Kitchen; (3) a cold launch starts the day on rules lines, never yesterday's Claude lines; (4) the week story tells the week just ended, Monday 04:00; (5) its rules lines are plain counts, not best lines; (6) AI-14 clamps an out-of-range colour nudge instead of rejecting it, and FORGET means Design 48's "this palette off for 30 days". Core adds a 40-a-day Home-lines cap and keeps the forget tools out of Claude's reach.
+
+**11:40 AM PT Oct 16. Groceries check rulings (Research 142).** Changing a recipe's serving size updates its rows in place (same ids) and the receipt reads "Pasta, 2 servings.", never a second "added". At zero, Home shows no Groceries line rather than "nothing to buy" (one line per thing that needs him). Teaspoons get ⅜, ⅝ and ⅞. "1 (16 oz)" and "1 (1 lb)" stay two rows for now, parked until Kitchen v2 normalizes pack sizes (Kitchen lead; corrected 11:43 AM PT). Garlic (G-R15, Kitchen lead): "7 cloves + 1 head" on one row, and a checked garlic row covers later lines.
+
+**11:35 AM PT Oct 16. MU2 and the inbox-retry fix now block the pin; audit rulings.** QA's audit (#428 A1) and Research (#431 MW1) show money, body and health phrases the grammar misses still reach Claude on master, and the switch defaults to yes; A2: the offline inbox retry calls Claude directly and skips every wall, so phrases queued on 7b321d2 would go out unscreened on the next build. His rule is that money-shaped and body facts never go to Claude, so MU2 (money, body and health screen) and the A2 fix (inside MU2 or a tiny PR beside it) block the pin. The paste/link wall stays a rider. Audit rulings: A8, the unused "Not today" pause, comes out of `isAvailable` when AI-2 lands rather than being wired (the switch already does this job). #422 L1, a false positive becoming a private note: no extra warning; the receipt "Private note, kept." is the warning. Audit items (QA #428, Design's UI-bar audit) are on each team's board for the leads to pull.
+
+**11:08 AM PT Oct 16. The refused-hold fix blocks the pin.** Builder B found that on master (#402's BottomChrome conversion) a refused hold (mic off, speech off, no on-device language, busy) leaves Tess in listening for good, and listening refuses the tab lens. #402 is not on his phone yet, so the pin would be the first build to carry it. The fix is one line plus a router test, so it can't cost the pin much. The pin waits on #366 and this fix. MU2 and the paste/link wall still ride only if they land first. **Why:** a known stuck state on a daily-use screen is worse than a short wait.
+
+**10:24 AM PT Oct 16. Pasted recipes and link fetches get the secret-word wall.** QA on #422: both reach Claude with no secret-word check. One small Core PR right after MU2 runs the same SecretWords check before any Claude call. It doesn't hold the pin: the leak needs him to paste a recipe or link that holds a code, and until the pin he keeps "Tess asks Claude" on no or types no secrets. It rides the pin if it lands before #366 merges.
+
+**10:18 AM PT Oct 16. #422 (secret-word wall + $50 cap) goes in the next pin; the pin moves to v9.** The switch is not off on his phone: #320 ships "Tess asks Claude: yes" as the default, and the 7b321d2 review guide (step 2) has him type his key, so misses can reach Claude in the installed build and in the pin. Holding #422 would ship the SW2 leak. So: the pin waits on #366 and #422 (QA pass on #422 first); #422 takes Catalog v9; #407 (tessEyes) moves to v10 and merges after the pin with #403; the migration gate reruns on the pin at v9 (upgrade over the v5 backup copy, 366 rows byte-identical, the timed v5 restore against the +0.7 s before number, older-build-opens-v9 checked). Until the pin is on his phone, he keeps "Tess asks Claude" on no, or types no passwords or secrets to Tess. **Why:** a privacy wall outranks a quieter gate; a v9 gate rerun is one Builder A run.
+
+**10:02 AM PT Oct 16. 7b321d2 installed (Builder A, 9:57 AM PT).** On his iPhone over the existing app, data untouched. Carries #320, #330, #334, #337, #343 only. Signing lapses about Oct 23, 9:57 AM PT; reminder moves to Oct 22, 10 AM PT. Rollback target is now 444e72b (both v5). Everything later waits for the next pin (on #366, at v8).
+
+**10:00 AM PT Oct 16. Recipe clock scope and "swipe for more" (Design 69, ca348ef).** This build: C with lit steps, the bead and stroke, the ingredient peek (swipe left or INGREDIENTS, ADD N TO GROCERIES with a receipt and UNDO), DONE "Paprika chicken, cooked." with a 10 s UNDO; Core gives step start and end minutes, the used set, and one timer per timed step. Parallel steps (the lane fork, several live steps, Claude's ghost overlaps with KEEP / NOT NOW) wait for Kitchen v2 under #414's rule. Pantry is reserved only. House rule: a page one tap down may have one side page; never a tab page or a live workout. **Why:** he called parallel steps secondary; the single-recipe clock and the peek are what he asked for now.
+
+**9:58 AM PT Oct 16. Tess picks: all 11, plus a mouth (his pick, motion thread).** All eleven ideas on the board ship, as small Builder A PRs in the lab's order after eyes and working: 1 + 2, 3 + 4, the mouth, 5 + 6 + 10, 7 + 8 + 9, 11 last (off in Reduce Motion and Low Power). The mouth: one short line under the eyes that rests straight and curves or opens a little with her state; never a frown at him. It sits under the eyes setting, default off: no mouth without eyes, one setting for her face. Idea 10 (rest clock) stays eyes only, mouth still, because a set's rest is the quietest moment in training. Ideas that need eyes drop their eye part when eyes are off. Tess reads only signals the app already computes, the same rules in every area; no new model calls, and the screen-aware Tess stays parked. **Why:** he said "do all of them if possible" and asked for more feeling than eyes allow, while keeping her subtle and stable.
+
+**9:52 AM PT Oct 16. Memory shape taken (AI architecture, #411).** Shape A, one profile block; Claude writes no memory; noticed lines carry no clock digits; Sonnet stays the Home model (about $1.05 a month, inside the $50 cap); Haiku is re-run in AI-5 with the tool forced. Core places two small fixes (TessLineCheck exemptions, per-model tool choice) right after secret words, and the no-digits noticed templates with AI-7. Builder B changes nothing. **Why:** best aware score (9 of 33) and fewest failed lines in the ~$0.60 experiment.
+
+**9:47 AM PT Oct 16. Recipe layout: C, plus an ingredient peek (his pick, Design thread).** Not A. C (the clock: steps in order with a marker) is the base. This build: the current step is set apart by accent and weight, the marker moves with subtly nicer motion, and an "Ingredients" label at the bottom of the cook page shows B's ingredient list on a short swipe up (Design draws whether up or sideways reads better; one gesture, not two). Later, not this build: (1) parallel steps, several threads in one cooking session; Core's step start-minute work is the ground for it, the screen comes after single-recipe C ships. (2) Pantry: his own area that knows what a recipe needs versus what he has and feeds Groceries and Recipes; it grows out of the held kitchen slices R (usually have) then P (pantry light) in kitchen-v2-backlog.md, so Pantry is where those land as a screen, still held for a week of real cooking and shopping. (3) "Swipe for more" as a general pattern for other areas: Design notes it; no screen changes until one area proves it. **Why:** he chose C for sequential cooking and wanted B's list one move away; the rest are his ideas to keep, not this build.
+
+- **The in-app Claude cap is $50 a month** (9:27 AM PT Oct 16, Kaushik: "Make it 50… start with 50 for now. We'll see how it goes"; $100 later is fine with him). This flips the 12:14 AM proposal to decided. The cap stays one constant, and the Settings line ("of $50"), the 80% step-aside and the Nov 1 paused copy follow it. Cloud development spend, like the memory experiment's roughly $2, comes from his $200 a month in credits and is not counted here. Recipe layout: he asked to see A, B and C first, and Design is showing them. C stays the default until he picks.
 - **Soul ideas: picks go in a follow-up; idea 9 is allowed as eyes only** (8:58 AM PT Oct 16, motion lab item 17, idea board https://claude.ai/artifact/9TfNx1oW6B2RGXAzLGXaMA). Builder A's soul router PR stays the §14/§15 contract and passes the item 16 check kit as specified. His picks ship in a follow-up PR right after it. If he picks idea 9 (watching the rest clock), it is allowed in a live workout only as eyes resting on the clock, with no roam, no colour change, no sound or haptic, and no ask. It is an exception to the no-glance rule, because the rest clock is his own timer.
 - **Tess's soul moves up** (8:48 AM PT Oct 16, Kaushik in the motion lab thread: "it feels like it has life… the movements, the colors, the fading, the eyes… there's only more to improve"). Builder A builds the soul router and motion sheet right after the 56 follow-up PR, ahead of its other rows, so he sees her live in a build soon. The motion lab brainstorms now (more ways to be interactive while staying subtle and stable), as ideas with short clips, not build specs. He picks, then the picks become sheets.
 - **The next pin waits for incremental OpZones** (4:11 AM PT Oct 16, Core's S1 number). Day log reads are fine: 33 ms at 1500. Writes are not: OpZones (#377) re-walks the whole op log on every revision, and a backup restore writes in a burst. So the next pin waits for #380, #366 and Core's incremental OpZones PR, which includes the 1500 build budget in ScaleTests. Builder A's v8 gate rerun times the v5 restore on that build.
@@ -76,7 +295,7 @@
   - **The glass tab strip** (Design 42) goes to Builder A, after the icon and routines, with living colour after it.
   - **Groceries "remind"** is not a notification; Groceries never notifies. The planned cook's Home line carries the open count through HomeLines, e.g. "Tacos tonight, 2 to buy." (the Kitchen lead's call).
   - **A past PR stays a PR in the Day log.** The Day log is history. A set that was a record when he logged it keeps ", PR" even after a later session beats it. Core keeps the flag as it was at that time. WorkoutSummary for today may keep showing the current best.
-- **Claude cap rises to $50 a month; memory moves up** (12:14 AM PT Oct 16, Kaushik in the AI thread: he has $200 of credits a month and wants them used well; cap number is Product's call on the coordinator's recommendation). Proposed, waiting on his yes (the AI thread asked him at 12:14 AM PT); until he answers, the cap stays $10. If he agrees, the in-app ledger cap goes from $10 to $50 a month, so there is room for memory, Home wording and the week while a runaway loop still stops. The Settings spend line ("This month $0.00 of $50."), the 80% step-aside and the Nov 1 paused copy follow the number. The cap stays a single constant. Pick models per job on quality, with AI-5's eval deciding Haiku or Sonnet. Context, profile and memory start now (AI-7 to AI-9 move up), all on the phone as `architecture.md` says.
+- **Claude cap rises to $50 a month; memory moves up** (12:14 AM PT Oct 16, Kaushik in the AI thread: he has $200 of credits a month and wants them used well; cap number is Product's call on the coordinator's recommendation). DECIDED: his yes at 9:27 AM PT Oct 16 ("start with 50"); the cap is $50, carried in #422. (Was: proposed, waiting on his yes.) If he agrees, the in-app ledger cap goes from $10 to $50 a month, so there is room for memory, Home wording and the week while a runaway loop still stops. The Settings spend line ("This month $0.00 of $50."), the 80% step-aside and the Nov 1 paused copy follow the number. The cap stays a single constant. Pick models per job on quality, with AI-5's eval deciding Haiku or Sonnet. Context, profile and memory start now (AI-7 to AI-9 move up), all on the phone as `architecture.md` says.
 - **Living colours: rules first** (12:11 AM PT Oct 16, AI architecture's recommendation, agreed). The on-phone picker is a small rule table (time, day, Tess's state and the look go in; one of Design's named soul palettes comes out). It is instant, offline and tested against Design 48's bounds, and the on-device model is not used. Under the switch, Claude may replace the pick at most once a day, sending only a named palette plus a warm-or-cool nudge, never a colour value; the phone checks and clamps it. Spec: `docs/ai/architecture.md` section 9.
 - **Tess's colours keep changing, chosen by AI** (12:08 AM PT Oct 16, Kaushik, Design thread). Tess's soul pigments change over time, picked by AI from context (time, the day, what she is doing), within each look's soul palette from `soul-explore.md`. Scope: **Tess only for now.** The app's base and resting colours stay fixed per look (one base rule; Obsidian stays as is); his "could be better" goes through Design 43 by hand. Context colours may follow later only if he asks. Rules: on-phone rules pick by default, and Claude is used only under the "Tess asks Claude" switch and cached (at most once a day). Text contrast never depends on it, and the colour changes only through motion. Design's 65% closer soul applies in the app too, not only the icon (Builder A, with the icon).
 - **Return sends in Ask Tess** (12:01 AM PT Oct 16, Kaushik). Return makes a new line with no way to send, so it becomes send. Builder B fixes it first, ahead of #320's fixes. The icon hold ends: Design re-rendered the masters at 65% (90ca9db).
@@ -260,7 +479,7 @@
 - **Lists daily-use gaps** (3:53 PM PT): all 13 of Research's defaults are taken (`lists-daily.md`). The engine parts go into Core's Lists engine, and G1 (a "Lists" HomeLink under Groceries) goes to Builder B.
 - **Spreading screen work** (3:50 PM PT, from Research's breadth map). The cook mode screen moves from Core to Builder A, since its engine is merged. M5 Reading and Money screens move to Builder A, and Builder B keeps M2, capture, Lists, Upkeep and People. Every area's first screen includes a HomeLink word in HomeSpatialView, so it's never DEBUG-only.
 - **On a planned rest day, rest wins on Now** (3:37 PM PT, per QA E2 on #122). Now shows a quiet "Rest day" line, and the next routine stays one tap away (Training, or a pull on Now). Missed days still roll on, so starting it anyway is fine. Core makes this a NowPicker/ranker override, and Builder B shows the line.
-- **All times shown to Kaushik are in Pacific time** (Kaushik, 1:56 PM PT; PDT is UTC-7 today), never UTC. Earlier entries in this log are UTC (for example 19:12 UTC is 12:12 PM PT). New entries use PT.
+- **All times shown to Kaushik are in Pacific time** (Kaushik, 1:56 PM PT; PDT is UTC-7 today), never UTC. Earlier entries in this log are UTC (for example 19:12 UTC is 12:10 PM PT). New entries use PT.
 
 ## 2026-10-15 18:41 UTC, 11:41 AM PT (Kaushik)
 

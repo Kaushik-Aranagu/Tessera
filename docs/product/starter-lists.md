@@ -37,11 +37,11 @@ Clothes:
 - socks
 - t-shirts
 - underwear
-- trousers
-- jumper
+- pants
+- sweater
 Tech:
 - phone charger
-- adaptor
+- adapter
 - headphones
 Papers:
 - passport

@@ -86,9 +86,12 @@ struct QueueWindow: View {
     /// Next's ids as last drawn, so a row that moves up into Next can bloom once (nil until the first draw).
     @State private var seenNext: Set<UUID>?
 
+    /// Each Next row's height as drawn (a wrapped title makes a taller row).
+    @State private var heights: [UUID: CGFloat] = [:]
+
     /// Where the in-flow "Later" word sits in the scroll content.
     private var laterWordY: CGFloat {
-        next.isEmpty ? 0 : CGFloat(next.count) * Self.rowHeight + Self.gap
+        next.isEmpty ? 0 : next.reduce(0) { $0 + (heights[$1.id] ?? Self.rowHeight) } + Self.gap
     }
 
     private var heading: String {
@@ -109,7 +112,8 @@ struct QueueWindow: View {
                         ForEach(Array(next.enumerated()), id: \.element.id) { index, entry in
                             QueueRow(entry: entry, isNext: true, ink: [1, 0.88, 0.76][min(index, 2)],
                                      arrives: seenNext != nil && !(seenNext ?? []).contains(entry.id))
-                                .frame(height: Self.rowHeight)
+                                .frame(minHeight: Self.rowHeight)
+                                .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { heights[entry.id] = $0 }
                                 .transition(refill)
                         }
                         if !next.isEmpty, !later.isEmpty {
@@ -123,7 +127,7 @@ struct QueueWindow: View {
                         }
                         ForEach(later) { entry in
                             QueueRow(entry: entry, isNext: false, ink: 0.62)
-                                .frame(height: Self.rowHeight)
+                                .frame(minHeight: Self.rowHeight)
                                 .transition(refill)
                         }
                     }
@@ -344,7 +348,8 @@ private struct QueueRow: View {
             Text(entry.title)
                 .font(Theme.Typography.font(Theme.concept.scale.body, weight: isNext ? .medium : .regular))
                 .foregroundStyle(Theme.Colors.ink.opacity(struck ? 0.45 : ink))
-                .lineLimit(1)
+                // A long title wraps; it never ends in "…" (41.2).
+                .fixedSize(horizontal: false, vertical: true)
                 // Finishing paints the strike wet in the row's pigment, then it dries to ink with the name.
                 .textRenderer(StrikeRenderer(progress: strike, color: dried ? Theme.Colors.ink.opacity(0.45)
                         : pigment))
@@ -372,7 +377,9 @@ private struct QueueRow: View {
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .monospacedDigit()
                 .opacity(struck ? 0 : Double(max(0, 1 - abs(drag) / 40)))
-                .frame(maxHeight: .infinity)
+                // On the first line of a wrapped title.
+                .frame(maxHeight: .infinity, alignment: .top)
+                .padding(.top, 14)
         }
     }
 

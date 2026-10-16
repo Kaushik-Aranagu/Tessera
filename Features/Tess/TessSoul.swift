@@ -13,8 +13,13 @@ struct TessSoul: View {
         case idle
         /// The bloom.
         case listening
-        /// The per-dab pulse. Also covers Tess doing things.
+        /// The per-dab pulse, for a thought under a second (a local parse).
         case thinking
+        /// Anything he waits on (Claude, Plan my day, a link, a photo): her colour drains and she splits into twelve
+        /// faint lights beside her line (§5, `SoulWork`).
+        case working
+        /// The lights fly home and her colour floods back (820 ms); the router follows it with Done or rest.
+        case gathering
         /// One-shot (1.8 s): pour, swell, splash, relax. Plays a success haptic.
         case done
         case needsYou
@@ -31,6 +36,9 @@ struct TessSoul: View {
     var mode: Mode
     /// Loops one-shot modes (for galleries); in the app they play once.
     var loopsOneShots = false
+    /// How much the host scales this view (the chrome draws her at 0.72), so the working constellation keeps the
+    /// lab's on-screen sizes.
+    var hostScale: CGFloat = 1
     /// Two ink dots (tess-motion.md §1): a setting, off by default.
     var eyes = false
     var gaze: SoulGaze = .ahead
@@ -40,29 +48,35 @@ struct TessSoul: View {
     @Environment(\.onWorkoutGround) private var onWorkoutGround
     @State private var layers: [SoulLayer] = []
     @State private var doneCount = 0
+    /// The working overlay, from its split to a second after its gather.
+    @State private var work: SoulWorkTimes?
+    /// Working ticks at 60 fps, then 30 after 20 s (the frame budget).
+    @State private var workIsLong = false
+    /// Low Power is read when a mode begins and holds until the next one (§13).
+    @State private var lowPower = false
     /// The eyes fade out in 120 ms as Done begins and back in 200 ms after it ends, so Done plays as built.
     @State private var eyesShown = true
 
     var body: some View {
-        let slow = SoulParameters.table(mode).isSlow
+        let slow = SoulParameters.table(mode).isSlow || (work != nil && workIsLong)
         let size = canvasSize
         // By the look, not the colour scheme (themes.md addendum); the workout is always its own dark palette.
         let store = ThemeStore.shared
         let palette = onWorkoutGround
             ? SoulPalette.look(store.workoutLook)
             : SoulPalette.look(colorScheme == .dark ? store.pair.night : store.pair.day)
-        TimelineView(.animation(minimumInterval: slow ? 1 / 30 : 1 / 60, paused: reduceMotion)) { context in
-            let frame = reduceMotion
-                ? SoulFrame.sample(mode, time: 0, elapsed: 0, still: true)
-                : SoulBlend.frame(layers, at: context.date, loops: loopsOneShots)
-                ?? SoulFrame.sample(mode, time: context.date.timeIntervalSinceReferenceDate, elapsed: 0)
+        TimelineView(.animation(
+            minimumInterval: slow ? 1 / 30 : 1 / 60,
+            paused: reduceMotion && work == nil
+        )) { context in
+            let drawn = frame(at: context.date)
             Canvas(rendersAsynchronously: true) { context, canvasSize in
-                SoulRenderer.draw(frame, in: &context, size: canvasSize, palette: palette)
+                SoulRenderer.draw(drawn.frame, in: &context, size: canvasSize, palette: palette, lights: drawn.lights)
             }
-            .saturation(frame.look.saturation)
-            .contrast(frame.look.contrast)
-            .brightness(frame.look.brightness)
-            .opacity(frame.look.opacity)
+            .saturation(drawn.frame.look.saturation)
+            .contrast(drawn.frame.look.contrast)
+            .brightness(drawn.frame.look.brightness)
+            .opacity(drawn.frame.look.opacity)
             // Flattened by Metal: without this the Canvas is rasterised by Core Graphics on the CPU every frame.
             .drawingGroup()
         }
@@ -74,18 +88,67 @@ struct TessSoul: View {
         }
         .frame(width: 96, height: 96)
         .onChange(of: mode, initial: true) { old, new in
-            layers = SoulBlend.push(new, onto: layers, at: .now)
+            let now = Date.now
+            layers = SoulBlend.push(new, onto: layers, at: now)
+            lowPower = ProcessInfo.processInfo.isLowPowerModeEnabled
             if new == .done {
                 doneCount += 1
-                withAnimation(.linear(duration: 0.12)) { eyesShown = false }
+            }
+            // Gone for Done and while she works (§1: the eyes are gone while she is split); back 200 ms after.
+            if new == .done || new == .working || new == .gathering {
+                withTesseraAnimation(.linear(duration: 0.12), reduceMotion: reduceMotion) { eyesShown = false }
             } else if old == .done || !eyesShown {
-                withAnimation(.linear(duration: 0.2)) { eyesShown = true }
+                withTesseraAnimation(.linear(duration: 0.2), reduceMotion: reduceMotion) { eyesShown = true }
+            }
+            if new == .working {
+                // A new ask after a gather splits her again; a second ask while she works joins the running one.
+                if work == nil || work?.gather != nil {
+                    work = SoulWorkTimes(split: now)
+                    workIsLong = false
+                }
+            } else if work != nil, work?.gather == nil {
+                // Anything that ends the work (an answer, a failure, his touch) gathers her first.
+                work?.gather = now
+            }
+        }
+        .task(id: work) {
+            guard let work else { return }
+            if let gather = work.gather {
+                // A second after the gather everything of the work is home: drop the overlay.
+                try? await Task.sleep(for: .seconds(max(0, 1 - Date.now.timeIntervalSince(gather))))
+                guard !Task.isCancelled else { return }
+                self.work = nil
+            } else {
+                try? await Task.sleep(for: .seconds(20))
+                guard !Task.isCancelled else { return }
+                workIsLong = true
             }
         }
         .sensoryFeedback(.success, trigger: doneCount)
         .accessibilityElement()
         .accessibilityLabel(accessibilityText)
         .allowsHitTesting(false)
+    }
+
+    /// The frame at `date`, and the twelve lights when she works (nil draws the six dabs as built).
+    private func frame(at date: Date) -> (frame: SoulFrame, lights: [SoulLight]?) {
+        let base = reduceMotion
+            ? SoulFrame.sample(mode, time: 0, elapsed: 0, still: true)
+            : SoulBlend.frame(layers, at: date, loops: loopsOneShots)
+            ?? SoulFrame.sample(mode, time: date.timeIntervalSinceReferenceDate, elapsed: 0)
+        guard let work else { return (base, nil) }
+        let sinceSplit = date.timeIntervalSince(work.split)
+        let sinceGather = work.gather.map { date.timeIntervalSince($0) }
+        if reduceMotion {
+            // A 200 ms crossfade to faded and loosened, and back.
+            let into = min(max(sinceSplit / 0.2, 0), 1)
+            let back = sinceGather.map { min(max($0 / 0.2, 0), 1) } ?? 0
+            return (SoulWork.reduced(base, amount: CGFloat(into * (1 - back))), nil)
+        }
+        let graded = SoulWork.grade(base, fade: SoulWork.fade(sinceSplit: sinceSplit, sinceGather: sinceGather))
+        let lights = SoulWork.lights(base, scale: base.look.scale * hostScale, sinceSplit: sinceSplit,
+                                     sinceGather: sinceGather, lowPower: lowPower)
+        return (graded, lights)
     }
 
     /// The eyes ride the same frame as the dabs. Their own timeline keeps the blink under Reduce Motion (30 fps),
@@ -119,6 +182,7 @@ struct TessSoul: View {
         case .idle: "Tess"
         case .listening: "Tess is listening"
         case .thinking: "Tess is thinking"
+        case .working, .gathering: "Tess is working"
         case .done: "Tess is done"
         case .needsYou: "Tess needs you"
         case .handOff: "Tess made a change"
@@ -189,7 +253,9 @@ struct SoulPalette {
 /// Draws a `SoulFrame`: halo and ring in normal blend, then the dabs mixing by multiply or screen, each with its
 /// own live blur. The group grade (saturation, contrast) is applied by the view around the canvas.
 enum SoulRenderer {
-    static func draw(_ frame: SoulFrame, in context: inout GraphicsContext, size: CGSize, palette: SoulPalette) {
+    static func draw(_ frame: SoulFrame, in context: inout GraphicsContext, size: CGSize, palette: SoulPalette,
+                     lights: [SoulLight]? = nil)
+    {
         context.translateBy(x: size.width / 2, y: size.height / 2)
         context.scaleBy(x: frame.look.scale, y: frame.look.scale)
 
@@ -209,6 +275,13 @@ enum SoulRenderer {
         }
 
         context.blendMode = palette.blend
+        if let lights {
+            // Working: the twelve lights instead of the six dabs (the drip and ring never show while she works).
+            for light in lights {
+                self.light(light, in: &context, palette: palette)
+            }
+            return
+        }
         for (index, pose) in frame.dabs.enumerated() {
             let opacity = index < 3 ? 1 : frame.look.satellites
             dab(pose, SoulDab.all[index], opacity: opacity, in: &context, palette: palette)
@@ -228,6 +301,19 @@ enum SoulRenderer {
             layer.scaleBy(x: dab.size.width / 2 * pose.scaleX, y: dab.size.height / 2 * pose.scaleY)
             layer.fill(shapes[dab.paint], with: .radialGradient(
                 palette.washes[dab.paint], center: .zero, startRadius: 0, endRadius: 1
+            ))
+        }
+    }
+
+    private static func light(_ light: SoulLight, in context: inout GraphicsContext, palette: SoulPalette) {
+        guard light.alpha > 0.01, light.radiusX > 0.2, light.radiusY > 0.2 else { return }
+        context.drawLayer { layer in
+            layer.opacity = min(light.alpha, 1)
+            layer.addFilter(.blur(radius: light.blur))
+            layer.translateBy(x: light.x, y: light.y)
+            layer.scaleBy(x: light.radiusX, y: light.radiusY)
+            layer.fill(shapes[light.paint], with: .radialGradient(
+                palette.washes[light.paint], center: .zero, startRadius: 0, endRadius: 1
             ))
         }
     }

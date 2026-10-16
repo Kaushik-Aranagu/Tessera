@@ -75,10 +75,45 @@ struct TessToolsTests {
         } catch let answer as TessToolAnswer {
             #expect(answer.line == "1 note.")
         }
+        // CA6 (Research 145): only allow-listed classes count; his own classes (a spend, his weight) and Tess's never.
+        store.createClass(name: "Spend", parent: nil)
+        for from in ["spend", "settings", "tess memory", "tess call"] {
+            #expect(throws: TessToolError.self, "\(from)") {
+                try call("answerQuery", #"{"from":"\#(from)","during":null}"#, engine)
+            }
+        }
         #expect(throws: TessToolError.self) {
             try call("logSet", #"{"exercise":"underwater basket weaving","weight":1,"reps":1,"sets":1,"unit":"kg"}"#,
                      engine)
         }
+    }
+
+    @Test func aTimeWithNoZoneIsReadInHisZone() throws {
+        // QA T1: "15:00" from a model with no offset is 3 pm where he is, not 3 pm UTC (8 am in Los Angeles).
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(identifier: "America/Los_Angeles"))
+        let local = try TessTools.run(
+            "createTask",
+            arguments: Data(#"{"title":"Call the bank","startsAt":"2026-10-21T15:00:00"}"#.utf8),
+            engine: engine,
+            calendar: calendar
+        )
+        let taskID = try #require(local.first?.objectIDs.first)
+        let task = try #require(store.object(id: taskID))
+        let expected = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 21, hour: 15)))
+        #expect(store.value("startsAt", of: task) == .date(expected))
+        // With an offset it reads as written.
+        let utc = try TessTools.run(
+            "createTask",
+            arguments: Data(#"{"title":"Call mom","startsAt":"2026-10-21T15:00:00Z"}"#.utf8),
+            engine: engine,
+            calendar: calendar
+        )
+        let momID = try #require(utc.first?.objectIDs.first)
+        let mom = try #require(store.object(id: momID))
+        #expect(store.value("startsAt", of: mom) == .date(Date(timeIntervalSince1970: 1_792_594_800)))
     }
 
     @Test func claudeGetsStrictSchemas() throws {

@@ -56,3 +56,50 @@ too, so this can be their call.
   height check on the long title is the useful part.
 - **L5 (pre-existing, not this PR).** The ghost row's title (NowPage.swift:324) and the paused ledger row's step line
   (NowPage.swift:401, `.truncationMode(.middle)`) are still `lineLimit(1)`.
+
+## Addendum: re-check at `a31e7ea`
+
+Verdict: **PASS**. Trial merge onto master 9f91f26 is clean.
+
+- F1 fixed: `QueueRow`'s title has `.fixedSize(horizontal: false, vertical: true)` and no line limit (HomeQueue.swift). Rows use a minimum height and measured heights, so "Read Designing Data-Intensive Applications" wraps to two lines in the clip. `HomeLinesUITests` covers it.
+- F2 fixed: the last child of `LineHero`'s context `ViewThatFits` wraps instead of truncating (HomeLineHero.swift).
+- Design F2 is in: a rest day with a next session shows "Start …" in ink. With no next session, the planned session becomes the hero with START in ink (NowPage.swift).
+- The "today" override is gone. The hero's id is filtered out of Next and Later.
+- The old Done, Rest, Routine and Running heroes are now one `LineHero`. The running or paused session shows "Resume Push Day A" with a progress key.
+- R1 closed: the 53 s clip `docs/recordings/home-lines.mp4` walks Start, Home while running ("Push Day A, bench set 3 / Resume Push Day A"), two logged sets, a skipped rest with UNDO, Finish, and Back to today. It ends on the next task ("Groceries for the week"). There is no "…" in any frame. Heroes use digits and a lower-case "pm" ("Push Day A at 7 pm").
+- Data safety: all three UI tests subclass `SimulatorOnlyTestCase`. `ProcessInfo` appears only in test code, for the snapshot folder. There is no migration. The DemoData title change only drops a "·".
+
+### S1 (should fix, next Builder B push). The walk test's minimise step is stale
+`HomeWalkUITests.swift:28-29` taps (0.89, 0.102), "the chevron at the top right". Since #381 that chevron is gone, and PAUSE ("Pause the workout", WorkoutModeView.swift:689-696) at the bottom of the screen is the way back to Home. The top right now shows the "1 / 5 ⌄" counter, which opens the running order. The `Resume Push` check at :32-34 can still pass on Home's buttons that stay in the tree under the cover, so the test may go green without ever going back to Home. Fix: tap `app.buttons["Pause the workout"]`, then assert Home's RESUME is hittable.
+
+### Lows
+- L1: the walk ends on the next task hero, not a true rest day, as Builder B said. The rest-day path (`facts.rest(next:now:)` nil → planned session with START) has no recording. That is fine for this PR, but a still or clip belongs in the next Home PR.
+- L2 (not this PR): the finish card reads "Friday, 18:10 to 18:10" with "1 MIN" under the `-demoTime` clock. That is #381's N2, still open.
+
+## Addendum: re-check at `46dfd4d` (rebased on 5af8f2c)
+
+Verdict: **PASS** for the code and the S1 fix. Trial merge onto master is clean.
+
+- S1 fixed (HomeWalkUITests.swift):
+  - PAUSE is found by its label `"Pause the workout"` (case-insensitive), asserted to exist, and tapped.
+  - RESUME is asserted on Home before it is tapped.
+  - Finish comes from the running order's FINISH HERE.
+  - There are no coordinate taps on the old chevron; the only coordinate left is a fallback for LOG.
+- The new commit's app change is cosmetic: Home's keys get `.textRole(.labelStrong)` (NowPage.swift), and the accessibility labels are unchanged.
+- **The clip is older than this head.** At 0:12, `home-lines.mp4` (54 s) shows Tess saying "Same as last time, 82.5 × 7." before set 1. This head carries #397 (732d72f is an ancestor), where `.lastTime` returns nil (WorkoutSession+Prefill.swift:13), so the build at 46dfd4d can't say that line. The walk itself matches the test: Start, two sets with a rest, PAUSE, Home showing "Push Day A, bench set 3 / RESUME PUSH DAY A", the running order, FINISH HERE, done, Back to today. It's Design's call whether to accept it or have it re-recorded on 46dfd4d.
+- Low: the last assertion (`… .waitForExistence(timeout: 5) || true`) can never fail. Drop it, or make it a real check of the done line.
+
+## Re-review at d2bbc44 (Oct 16, ~12:50 PM PT): PASS
+
+- Rebased on master, merges cleanly. `git range-diff` shows the two earlier commits are unchanged (6b0960a = 4271588, 46dfd4d = 2e03eef), so the 46dfd4d PASS carries over.
+- New commit d2bbc44:
+  - `DayLabel.words` takes the day from `TesseraDay.today` (04:00 boundary) before `DayLane.phrase` (HomeLineHero.swift:100-104).
+  - At 00:40 Sunday the label reads "Saturday night", and at 09:00 it reads "Sunday morning". `HomeDataTests.dayLabelKeepsTheDayUntilFour` pins both, in America/Los_Angeles.
+  - Only NowPage.swift:35 uses DayLabel.
+- The clip `home-lines.mp4` runs 54.00 s → 53.15 s.
+  - Frames compared by PSNR, all > 51 dB: new t = old t before 13.35 s, and new t = old t + 0.85 s after it, sampled at 5, 13, 14, 15.5, 20, 30, 45 and 52 s.
+  - So exactly 0.85 s was cut and no frames were added or changed.
+  - The stale "Same as last time, 82.5 × 7." line from the earlier finding is gone (contact sheet at 11-16 s).
+- Lines he sees: no new copy. The day word now holds the previous day from 00:00 to 03:59.
+- Low, still open: `HomeWalkUITests.swift:62` `... .waitForExistence(timeout: 5) || true` can never fail. This can go in a follow-up; it doesn't block the pin.
+- Low: `phrase` formats the weekday with the device's own calendar and zone, not the `calendar` passed in. That matches in the app, and it's only a test-portability nit.
