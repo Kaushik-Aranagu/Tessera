@@ -15,6 +15,8 @@
 - QA lows: `bestE1RM` tie keeps the newest set (#399 L1); "$10" comments in ClaudeKey.swift (#422); "wifi-password" split into words (#422 L2); OpZones and `StoreDayLookup.zones` share one rule (#377 L1); `wroteRecent` false on an in-place update (#377 L3); Groceries `summary` by op, not a 60 s window (#380 L1); plan lows L1 to L6 (#363).
 - Design receipts, thing first, one small strings PR: R7 (Claude fallback names the things), R8 Lists, R9 processes, R10 "Shopping, done", R11 training actions, R12 Siri "Push Day A, done. 3 of 5 exercises."; E1 "Reading nytimes.com."; E2 note titles cut at a whole word (Core half); E3 the full lineage; H1 paused workout context "paused"; H2 a running flight "since 5:45 pm". Sources: QA `docs/qa/audit-master-oct16.md` (#428); Design `docs/design/audit-ui-bar.md` (UI-bar audit of bb7f082).
 
+**AI-13 calls (11:52 AM PT Oct 16, #443):** the recipe-link job strips money-shaped spans (prices, costs) from the page text before sending instead of refusing the page; his own words still pass every wall. Redirects are refused (a 3xx is "offline" for capture, "unreadable" for recipe). TessJob gets a rounds field (capture's 3 rounds) and a thinking flag (key check).
+
 **CA4 (Research 145):** `PlanPack.init` defaults `includesEventTitles` to false (PlanWording.swift:39, his call per :37), before Plan my day wording gets a caller; pairs with A3/A4.
 
 **One event, one wording (Research 143 at fed2a0e, `docs/research/one-wording-check.md`; 11:50 AM PT Oct 16), with the Design receipts strings PR:**
@@ -29,6 +31,7 @@
 - T3: "bench 80x8 mon" never revives Monday's process or back-dates today's workout. T4: with two open workouts LogExercise picks the running one. T5 (DEBUG only): cook and shop starts read the capture clock.
 
 **restWeekday reader (Research 144 for Monday's 101; decisions.md 11:47 AM PT Oct 16):** `restWeekday` (settings, #258) is read by week(), restDay and NowPage on the rolling plan; fixed days (#341) ignore it. Needed if he answers Q4 "Yes, Sunday" on Monday; small, after the pin blockers.
+- Spec: Research 146 `docs/research/fixtures/rest-weekday.md` (13 rules, 27 scenarios incl. the trip and Nov 1 DST). RG1 take the rest weekday out of the pool before `spread` and set isRest (WeekView.swift:34-104, RestDay.swift:20-30); RG2 apply it even with no rhythm passed, so Plans (PlanData.swift:46, Builder A's view) and Plan my day (DayPlan+Store.swift:60) never book Sunday; RG3 "rest day Sunday" is a SetRestWeekday rule ahead of parseTask: "Sunday, rest day." with a 10 s UNDO; RG5 Now and Home agree when a session sits on the rest day (RestDay.swift:23, HomeLines.swift:578); RG7 past weeks keep their marks. First launch with the reader writes Sunday as one op with UNDO; a session trained on Sunday anyway advances the roll.
 
 **AI loop and tool guards (AI architecture `docs/ai/spend-projection.md`; 11:45 AM PT Oct 16), with AI-2:**
 - A hard cap of 40 Home-lines calls a day in code, and the pack never carries a ticking value ("21 min ago") that would change the cache key every minute (about 1,440 calls a day otherwise).
