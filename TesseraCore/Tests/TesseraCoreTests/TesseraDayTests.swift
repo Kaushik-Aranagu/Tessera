@@ -63,10 +63,12 @@ struct TesseraDayTests {
 
     @Test func aWeekEndsAtFourOnSunday() {
         let tessera = TesseraDay(calendar: Self.calendar)
-        // A session Sat 23:30 to Sun 00:20 stays in the week of 11 to 17 Oct (X8).
-        let week = tessera.week(containing: Self.at(10, 18, 0, 20))
-        #expect(week.start == Self.at(10, 11, 4) && week.end == Self.at(10, 18, 4))
-        #expect(tessera.weekDays(containing: Self.at(10, 18, 0, 20)).first == Self.key(10, 11))
+        // Monday first, whatever the locale (en_US starts on Sunday; QA R5). A session Sun 18 23:30 to Mon 00:20
+        // stays in the week of 12 to 18 Oct.
+        let week = tessera.week(containing: Self.at(10, 19, 0, 20))
+        #expect(week.start == Self.at(10, 12, 4) && week.end == Self.at(10, 19, 4))
+        #expect(tessera.weekDays(containing: Self.at(10, 19, 0, 20)).first == Self.key(10, 12))
+        #expect(tessera.weekDays(containing: Self.at(10, 19, 0, 20)).last == Self.key(10, 18))
     }
 
     @Test func springForwardIsRightToo() throws {

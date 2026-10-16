@@ -51,7 +51,8 @@ struct WeekViewTests {
         try engine.perform(FinishWorkout(workout: workout.id, time: monday.addingTimeInterval(3600)), by: .user)
 
         let week = ledger.week(containing: now, plan: plan, now: now, sessionsPerWeek: 4, calendar: calendar)
-        #expect(week.map(\.isRest) == [false, false, false, true, false, true, false])
+        // Tuesday (past): the day after Monday's session, with room in the week, was a planned rest.
+        #expect(week.map(\.isRest) == [false, true, false, true, false, true, false])
         #expect(week.compactMap { $0.planned?.title } == ["Pull A", "Legs A", "Push B"])
         #expect(week[2].state == .today && week[3].state == .upcoming)
 
@@ -101,5 +102,39 @@ struct RestDayTests {
         #expect(ledger.restDay(plan: plan, now: tuesday, calendar: calendar) == nil)
         try engine.perform(StartRoutine(routine: routines[1].id, time: tuesday), by: .user)
         #expect(ledger.restDay(plan: plan, now: tuesday, sessionsPerWeek: 4, calendar: calendar) == nil)
+    }
+}
+
+@MainActor
+struct WeekPastDayTests {
+    @Test func pastEmptyDaysSayRestOrDue() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let ledger = TrainingLedger(store: store, classes: classes)
+        let plan = try #require(store.object(id: StarterContent.planID))
+        let routines = store.linkedObjects("routines", of: plan)
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .gmt
+        calendar.firstWeekday = 2
+        func at(_ day: Int, _ hour: Int) -> Date {
+            calendar.date(from: DateComponents(year: 2026, month: 10, day: day, hour: hour))!
+        }
+        // Three a week. Trained Mon; Tue rests after a training day; Wed was due and nothing happened; now Thu.
+        let workout = try engine.perform(StartRoutine(routine: routines[0].id, time: at(12, 18)), by: .user).output
+        try engine.perform(LogSet(entry: #require(workout.orderedChildren.first).id, weight: 80, reps: 8), by: .user)
+        try engine.perform(FinishWorkout(workout: workout.id, time: at(12, 19)), by: .user)
+        let week = ledger.week(containing: at(15, 12), plan: plan, now: at(15, 12), sessionsPerWeek: 3,
+                               calendar: calendar)
+        let tuesday = week[1], wednesday = week[2]
+        #expect(tuesday.state == .past && tuesday.isRest && !tuesday.wasDue)
+        #expect(wednesday.state == .past && wednesday.wasDue && !wednesday.isRest)
+
+        // No rhythm given: the seeded plan's own (six routines run once a week = 6): Tue was due too.
+        let seeded = ledger.week(containing: at(15, 12), plan: plan, now: at(15, 12), calendar: calendar)
+        #expect(seeded[1].isRest && seeded[2].wasDue)
+        // No plan: neither (a neutral ring).
+        let none = ledger.week(containing: at(15, 12), plan: nil, now: at(15, 12), calendar: calendar)
+        #expect(!none[2].isRest && !none[2].wasDue)
     }
 }
