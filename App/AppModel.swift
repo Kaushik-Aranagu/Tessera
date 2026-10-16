@@ -93,11 +93,24 @@ final class AppModel {
         ledger = TrainingLedger(store: store, classes: classes)
         // The release that adds the settings object: the old keys move in once, as system (settings-object.md).
         // Never while a demo flag is on, so a demo can't freeze a look into his data.
-        if !["-demo", "-resetDemo", "-theme"].contains(where: { LaunchFlags.has($0) }) {
-            try? SettingsStore(engine: engine).migrate(looks: ThemeStore.sharedDefaults, standard: .standard,
-                                                       folderName: BackupKeeper.pickedFolder.map(BackupCopy.folderName))
+        let demo = ["-demo", "-resetDemo", "-theme", "-fakeClaudeKey"].contains(where: { LaunchFlags.has($0) })
+        if !demo {
+            SettingsStore(engine: engine).migrateAtLaunch(looks: ThemeStore.sharedDefaults, standard: .standard,
+                                                          folderName: BackupKeeper.pickedFolder
+                                                              .map(BackupCopy.folderName))
         }
         runtime = TesseraRuntime(engine: engine)
+        // Claude is the last capture step, gated on the one "Tess asks Claude" field, the key and the pause
+        // (it checks each at every call). Off in demos, so a fake key never goes over the network.
+        if !demo, let capture = runtime.tess as? TessCaptureEngine {
+            capture.claude = ClaudeTessModel(
+                keys: SystemKeychain(),
+                ledger: TessUsageLedger(store: store, classes: classes),
+                flags: ClaudeMissFlags()
+            ) { [engine] in
+                SettingsStore(engine: engine).read().sendsMissesToClaude
+            }
+        }
         // Core's calm note (store couldn't open, legacy migration pending) wins; else this launch's outcome.
         let outcome: String? = switch TesseraSchema.lastOpenOutcome {
         case .opened: nil
@@ -273,6 +286,8 @@ final class AppModel {
 
     /// Tess's one-liners from the last tidy (e.g. a workout wrapped up overnight).
     var processNotes: [String] = []
+    /// What UNDO beside those lines takes back: only the empty wrap-up ("Push A, no sets, not saved.") has one.
+    var processUndo: OpRecord?
 
     /// On launch and foreground: suspend a process idle past its rest plus 10 minutes, then apply the stale rules.
     func tidyProcesses(now: Date = AppClock.now) {
@@ -287,7 +302,9 @@ final class AppModel {
         } else {
             table.suspendIfIdle(now: now, idleLimit: idleLimit)
         }
-        processNotes = table.tidy(now: now)
+        let notes = table.tidyNotes(now: now)
+        processNotes = notes.map(\.line)
+        processUndo = notes.lazy.compactMap(\.undo).first
         // The 04:00 roll: unfinished tasks from earlier days move to today, after 7 rolls to Later (late-night #1).
         if let rolled = TaskList(store: store, classes: classes).rollForward(engine: engine, now: now) {
             processNotes.append(rolled)
@@ -600,5 +617,17 @@ extension AppModel {
         let setClass = classes[.set]?.id
         let ids = logs.flatMap(\.objectIDs).filter { store.object(id: $0)?.classDef?.id == setClass }
         session?.seatCaptured(setIDs: ids)
+    }
+}
+
+extension SettingsStore {
+    /// The pre-settings-object UserDefaults key for "Tess asks Claude". Read only by Core's migrate.
+    static let legacyMissesKey = "tess.missesGoToClaude"
+
+    /// Core's migrate, run on every launch, then the old misses key goes: the settings object owns "Tess asks Claude"
+    /// from here, so a "no" left in the key can never outvote a later yes on the next launch (QA M1). Idempotent.
+    func migrateAtLaunch(looks: UserDefaults, standard: UserDefaults, folderName: String?) {
+        guard (try? migrate(looks: looks, standard: standard, folderName: folderName)) != nil else { return }
+        standard.removeObject(forKey: Self.legacyMissesKey)
     }
 }

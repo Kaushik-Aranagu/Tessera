@@ -51,4 +51,18 @@ struct ProcessWiringTests {
         model.tidyProcesses(now: AppClock.now.addingTimeInterval(3700))
         #expect(model.processes.process(for: workout)?.state == .running)
     }
+
+    /// QA L2: the empty wrap-up's line carries the record its UNDO takes back.
+    @Test func anEmptyWrapUpCanBeTakenBack() throws {
+        let workout = try #require(model.tonightWorkout())
+        model.startWorkout(workout)
+        model.isWorkoutPresented = false
+        model.tidyProcesses(now: AppClock.now.addingTimeInterval(3600))
+        model.tidyProcesses(now: AppClock.now.addingTimeInterval(8 * 3600))
+        #expect(model.processNotes.contains { $0.hasSuffix("no sets, not saved.") })
+        let undo = try #require(model.processUndo)
+        #expect(model.object(workout.id)?.isDeleted ?? true)
+        _ = model.engine.undo(undo)
+        #expect(model.object(workout.id)?.isDeleted == false)
+    }
 }

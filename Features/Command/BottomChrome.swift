@@ -130,8 +130,10 @@ struct BottomChrome: View {
         // (late-night #13).
         .onChange(of: model.processNotes, initial: true) { _, notes in
             guard !notes.isEmpty else { return }
-            voice.say(notes.joined(separator: " "))
+            // The empty wrap-up's UNDO brings the workout back (QA L2).
+            voice.say(notes.joined(separator: " "), undo: model.processUndo)
             model.processNotes = []
+            model.processUndo = nil
         }
     }
 

@@ -57,7 +57,6 @@ struct ClaudeSection: View {
     @State private var removed = false
     /// Line 3: whether captures the phone can't read go to Claude. A preference, not a secret.
     /// The old preference key, still written for one release alongside Core's settings.
-    @AppStorage("tess.missesGoToClaude") private var legacyMisses = true
     @State private var missesGoToClaude = true
     @State private var removal: Task<Void, Never>?
     /// The clipboard's change count when a key was pasted, so a key still sitting there can be cleared after it passes.
@@ -263,10 +262,9 @@ struct ClaudeSection: View {
 
     // MARK: Actions
 
-    /// "Misses go to Claude" lives in Core's settings; the old key keeps being written for one release.
+    /// "Tess asks Claude" lives only in Core's settings: the same field the capture router reads (QA M1).
     private func toggleMisses() {
         missesGoToClaude.toggle()
-        legacyMisses = missesGoToClaude
         guard !LaunchFlags.has("-demo") else { return }
         let value = missesGoToClaude
         _ = try? SettingsStore(engine: model.engine).update { $0.missesGoToClaude = value }
