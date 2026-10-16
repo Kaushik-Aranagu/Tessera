@@ -1,6 +1,6 @@
 # Review: PR #303, the #298 follow-ups (head e835a61)
 
-QA thread, Oct 16 PT. Static review (no Swift toolchain here). Files: `TesseraCore/Sources/TesseraTess/PlanWording.swift`, `ClaudeKey.swift`, `TessGrammar+Kitchen.swift`, `Tests/TesseraCoreTests/PlanWordingTests.swift`.
+QA thread, Oct 15 PT. Static review (no Swift toolchain here). Files: `TesseraCore/Sources/TesseraTess/PlanWording.swift`, `ClaudeKey.swift`, `TessGrammar+Kitchen.swift`, `Tests/TesseraCoreTests/PlanWordingTests.swift`.
 
 **Verdict: FIX FIRST.** P1 passes. V13 can reject valid plans (S1). The "remembered failed pack" almost never hits, because the cache key changes every minute (S2). Both fixes are small and stay inside PlanWording.swift.
 
