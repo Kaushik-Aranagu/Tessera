@@ -29,7 +29,8 @@ public final class TessCaptureEngine: TessCapturing {
             context.process = ProcessTable(engine: engine).running()?.subject?.id
         }
         let result = await router.run(TessRequest(text: phrase, context: context, use: .capture))
-        if !result.understood {
+        // Never log a pasted Claude key, even as a miss (the router refuses it, and the miss log is a file).
+        if !result.understood, !phrase.contains("sk-ant-") {
             missLog?.record(phrase, at: context.now, route: result.source.rawValue, source: source)
         }
         return result

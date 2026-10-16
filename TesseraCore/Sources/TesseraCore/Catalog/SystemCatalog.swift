@@ -18,6 +18,7 @@ public enum SystemCatalog {
         case ingredient, recipe, recipeLine, recipeStep, cook, kitchenTimer
         case process
         case slot, plan
+        case tessCall
 
         public var systemKey: String {
             "system.\(rawValue)"
@@ -203,6 +204,19 @@ public enum SystemCatalog {
         ClassSpec(key: .note, name: "Note", parent: .thing, symbol: "note.text", colorRole: "neutral", fields: [
             FieldSpec(key: "body", name: "Body", kind: .text),
             FieldSpec(key: "about", name: "About", kind: .refList, target: .thing),
+        ]),
+        // One call Tess made to Claude (or a key Test): tokens, cost in nano-dollars, outcome. Written without ops;
+        // never
+        // holds the key. The $10 month cap is a query over these.
+        ClassSpec(key: .tessCall, name: "Tess Call", parent: .thing, symbol: "sparkle", colorRole: "neutral", fields: [
+            FieldSpec(key: "use", name: "Use", kind: .text),
+            FieldSpec(key: "model", name: "Model", kind: .text),
+            FieldSpec(key: "inputTokens", name: "Input tokens", kind: .number),
+            FieldSpec(key: "outputTokens", name: "Output tokens", kind: .number),
+            FieldSpec(key: "costNano", name: "Cost (n$)", kind: .number),
+            FieldSpec(key: "latencyMs", name: "Latency", kind: .number, unit: "ms"),
+            FieldSpec(key: "outcome", name: "Outcome", kind: .text),
+            FieldSpec(key: "requestID", name: "Request", kind: .text),
         ]),
         // The actionable list block (groceries, packing, any list). Items are the list's children, in order.
         ClassSpec(key: .list, name: "List", parent: .thing, symbol: "list.bullet", colorRole: "planning"),
