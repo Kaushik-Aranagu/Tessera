@@ -673,6 +673,7 @@ enum TessDates {
             }
         }
         // "tonight" said after 20:00 stays tonight until 23:30: the next whole hour (Product, 4:41 PM PT; QA G11).
+        var secondPass: Date?
         let lateCutoff = calendar.date(bySettingHour: 23, minute: 30, second: 0, of: now) ?? now
         if tonightOnly, let eight = calendar.date(bySettingHour: 20, minute: 0, second: 0, of: base), eight <= now,
            now < lateCutoff
@@ -683,25 +684,19 @@ enum TessDates {
                   let candidate = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: base),
                   candidate <= now
         {
-            base = calendar.date(byAdding: .day, value: 1, to: base) ?? base
+            // The fall-back night's repeated hour: "1:30am" said at 1:45 am PDT is the 1:30 am PST still ahead, not
+            // tomorrow's (Research DS8, board 0ag).
+            secondPass = Self.laterPass(hour: hour, minute: minute, of: base, after: now, calendar: calendar)
+            if secondPass == nil {
+                base = calendar.date(byAdding: .day, value: 1, to: base) ?? base
+            }
         }
-        var date = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: base)
+        var date = secondPass ?? calendar.date(bySettingHour: hour, minute: minute, second: 0, of: base)
         // "thu" said on a Thursday means today (Product, 2026-10-15). With no time, never in the past: the next
         // whole hour. With a time that's passed, next week.
-        if fromWeekday, let resolved = date, resolved <= now {
-            if time == nil {
-                let next = calendar.component(.hour, from: now) + 1
-                date = next < 24 ? calendar.date(bySettingHour: next, minute: 0, second: 0, of: now)
-                    : calendar.date(byAdding: .day, value: 7, to: resolved)
-            } else {
-                date = calendar.date(byAdding: .day, value: 7, to: resolved)
-            }
-        } else if day != nil, !fromWeekday, time == nil, let resolved = date, resolved <= now {
-            // "today" with no time after 09:00: the next whole hour, not this morning.
-            let next = calendar.component(.hour, from: now) + 1
-            if next < 24 {
-                date = calendar.date(bySettingHour: next, minute: 0, second: 0, of: now)
-            }
+        if let resolved = date, resolved <= now {
+            date = Self.ahead(resolved, now: now, fromWeekday: fromWeekday, saidDay: day != nil, saidTime: time != nil,
+                              hour: hour, minute: minute, calendar: calendar)
         }
         return Found(date: date, remaining: remaining, saidDay: day != nil, saidTime: time != nil,
                      bareColon: bareColon)
