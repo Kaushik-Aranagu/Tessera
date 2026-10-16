@@ -10,8 +10,9 @@ public struct TessGrammar {
         case lift(exercise: ClassDef, sets: Int, reps: Double, weight: Double, unit: MassUnit)
         /// A set in the entry in focus: "same", "8", "80 x 8", "drop to 70 for 10".
         /// `weight` is in kilograms; `unit` is how it was said.
+        /// `rpe` from "at 8" / "@8"; `said` is the weight as said when it was snapped to a loadable one ("81" → 80).
         case set(entry: ObjectRecord, weight: Double, reps: Double, kind: SetKind, phrase: SetPhrase,
-                 unit: MassUnit = .kilograms)
+                 unit: MassUnit = .kilograms, rpe: Double? = nil, said: Double? = nil)
         case task(title: String, startsAt: Date?)
         /// "note: bar felt heavy" (or "note bar felt heavy").
         case note(body: String, on: Date? = nil)
@@ -68,11 +69,17 @@ public struct TessGrammar {
             return bare
         }
         let entry = context.entry.flatMap { store.object(id: $0) }
-        if let entry, let parsed = parseRelativeSet(text, entry: entry) {
-            return parsed
+        // In a live workout, set phrases are guarded first (S701 to S706): a number that could be a weight, a signed
+        // change, "at N" after a set: never a wrong set and never a task.
+        if let entry, !phrase.contains(","), let live = parseLive(phrase, text: text, entry: entry) {
+            return live.parse
         }
         if phrase.contains(","), let sets = parseCommaSets(phrase, entry: entry) {
-            return sets
+            guard let entry else { return sets }
+            // Every part snaps to a loadable weight; one out of the kit's range sends the lot to the model.
+            guard case let .sets(parts) = sets else { return sets }
+            let snapped = parts.map { snap($0, entry: entry) }
+            return snapped.contains { $0 == nil } ? nil : .sets(snapped.compactMap(\.self))
         }
         if let lift = parseLift(text, entry: entry) {
             return lift
@@ -219,7 +226,7 @@ public struct TessGrammar {
 
     // MARK: Sets in focus
 
-    private func parseRelativeSet(_ text: String, entry: ObjectRecord) -> Parse? {
+    func parseRelativeSet(_ text: String, entry: ObjectRecord) -> Parse? {
         let last = lastSet(in: entry)
         if ["same", "same again", "again", "repeat", "one more"].contains(text), let last {
             return .set(entry: entry, weight: last.weight, reps: last.reps, kind: .working, phrase: .same)
@@ -244,7 +251,7 @@ public struct TessGrammar {
         return nil
     }
 
-    private func lastSet(in entry: ObjectRecord) -> (weight: Double, reps: Double)? {
+    func lastSet(in entry: ObjectRecord) -> (weight: Double, reps: Double)? {
         for set in entry.orderedChildren.reversed() {
             if let weight = store.number("weight", of: set), let reps = store.number("reps", of: set) {
                 return (weight, reps)
@@ -276,7 +283,7 @@ public struct TessGrammar {
                 parsed.append(lift)
                 switch lift {
                 case let .lift(exercise, _, _, _, _): exerciseName = exercise.name.lowercased()
-                case let .set(entry, _, _, _, _, _):
+                case let .set(entry, _, _, _, _, _, _, _):
                     exerciseName = store.linkedClass("exercise", of: entry)?.name.lowercased()
                 default: break
                 }
