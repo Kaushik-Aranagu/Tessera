@@ -66,7 +66,7 @@ Setup for the simulator rows: iPhone 17, launch with `-demoTime 18:10 -resetDemo
 
 | ID | Do | Expect | From |
 |---|---|---|---|
-| SH29 | Turn on Reduce Motion. Go front, stop 1, stop 2, stop 1, front. Grep the side files for `withAnimation(` and `.animation(`. | Each stop is a 200 ms crossfade, no spring, no slide. Tess's glance does not play. Every animation goes through `MotionPolicy` (`.tesseraAnimation`, `withTesseraAnimation`). | 2:37; every-side.md:97, :121; CLAUDE.md |
+| SH29 | Turn on Reduce Motion. Go front, stop 1, stop 2, stop 1, front. Grep the side files for `withAnimation(` and `.animation(`. | Each stop is MotionPolicy's 150 ms reduced fade (`MotionPolicy.swift:6`), no spring, no slide. Tess's glance does not play. Every animation goes through `MotionPolicy` (`.tesseraAnimation`, `withTesseraAnimation`). | 2:37; every-side.md:97, :121 (Design e9efac4: 150 ms); CLAUDE.md |
 | SH30 | VoiceOver on. From the front, use the side's accessibility action (or the context-line word) to open stop 1. | Focus lands on the glance's label. The big fact reads as one element with its unit ("4 to go"), then the small facts, then the word as a button. The dimmed front is not focusable at stop 1. Escape (two-finger scrub) goes back to the front. | 2:37; CLAUDE.md |
 | SH31 | VoiceOver on, at stop 2. | Every fact and link reads in order; Tess's line is read once. Escape goes to stop 1, then to the front: one stop at a time, as the swipe. | 2:37 |
 | SH32 | Largest accessibility text size; open both stops. | The big fact and small facts wrap or scale without clipping; the glance still fits its half or opens straight to stop 2. | CLAUDE.md |
@@ -98,8 +98,10 @@ Setup for the simulator rows: iPhone 17, launch with `-demoTime 18:10 -resetDemo
 
 ## Where master or the fixtures already disagree
 
-- **Reduce Motion length.** `MotionPolicy.reducedMotionFade` is 0.15 s (`DesignSystem/MotionPolicy.swift:6`); sheet 75 asks for a 200 ms crossfade per stop (every-side.md:97). SH29 fails unless the PR sets 200 ms for the side or Design accepts 150 ms.
+- **Reduce Motion length.** `MotionPolicy.reducedMotionFade` is 0.15 s (`DesignSystem/MotionPolicy.swift:6`); sheet 75 asks for a 200 ms crossfade per stop (every-side.md:97). Ruled by Design (e9efac4): 0ak uses MotionPolicy's 150 ms, and sheets 72 to 76 now say 150 ms.
 - **The generic front prints private fields.** `PropertyList` prints every field but `notes` (`Features/Objects/ObjectPage.swift:342-348`, used at :237 and :89), so a private memory's `rule` shows on the front. Ruled at 2:45 as Core 0ai's rider, not 0ak; SH18 checks the side holds on its own.
 - **SL-H2 is stale.** The fixture keeps a "Weigh in" habit's band empty; 2:44 (4) says count only. SH27 follows 2:44.
 - **GL-22 and Q7 are stale.** The fixture reads "most used" as the field most often set across the class; 2:44 (7) says edited most in the last 30 days. SH14 follows 2:44.
 - **PL4 is closed on master** (`Notes/Notes.swift:42-46`, 5c22981). SH20 checks it stays.
+
+**Sheet 76 (Design depth.md 1cab06a, decisions 2:59).** SideHost gets three zones: the left edge (24 pt) goes out, the right edge (32 pt) goes in, and the middle goes along a declared run, or in when there is none. A side can have up to 4 pages. The edge beats a row swipe only inside its zone, and a run's end rubber-bands and never wraps. Those rows, plus THE DAYS and HISTORY glances, are in `fixtures/depth-76.md` (Research BL), and QA runs them with this list once 0ak carries sheet 76.
