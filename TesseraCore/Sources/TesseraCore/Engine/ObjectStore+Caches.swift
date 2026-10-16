@@ -93,6 +93,8 @@ final class DerivedCache {
     /// The time zone `workoutDays` was keyed in.
     var workoutDaysZone: String?
     var daySummaries: [Date: (revision: Int, summaries: [WorkoutSummary])] = [:]
+    /// The zone each object happened in, from the op log (OpZones).
+    var opZones: (revision: Int, zones: [UUID: TimeZone])?
     /// Objects written since derived caches were last brought up to date.
     var touched: Set<UUID> = []
     var needsRebuild = false

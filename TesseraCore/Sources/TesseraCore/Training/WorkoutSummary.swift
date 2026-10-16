@@ -94,11 +94,14 @@ public extension TrainingLedger {
             return cached.summaries
         }
         if derived.workoutDays?.revision != revision || derived.workoutDaysZone != zone {
+            // Each workout files under the day it started where he was (Research 127 T1): a hotel-gym Wednesday
+            // stays Wednesday once he is home.
+            let zones = OpZones(store: store)
             var days: [Date: [UUID]] = [:]
             for workout in store.objects(of: workoutClass) {
                 guard let ended = store.value("endedAt", of: workout)?.dateValue else { continue }
                 let started = store.value("startedAt", of: workout)?.dateValue ?? ended
-                days[tesseraDay.day(of: started), default: []].append(workout.id)
+                days[zones.dayKey(of: started, for: workout.id, calendar: calendar), default: []].append(workout.id)
             }
             derived.workoutDays = (revision, days)
             derived.workoutDaysZone = zone
