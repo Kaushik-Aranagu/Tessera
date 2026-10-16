@@ -191,3 +191,5 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [trip-check.md](trip-check.md) | Core, QA, coordinator: the Oct 26 trip re-checked on master (item 141), go; 33 of 35 rows hold; N1 to N4 day reads still in the phone's zone |
 | [groceries-check.md](groceries-check.md) | Core, Kitchen lead, QA: merged #380 traced against 123 (item 142), 9 gaps fixed, 6 open, 1 superseded |
 | [week-two-monday.md](week-two-monday.md) | Coordinator, Product: Monday Oct 19 kit for 101 (item 144), run order, messages A (data) and B (no data), edit blocks per answer, stale week-two.md blocks; Product calls 11:47 AM PT |
+| [one-wording-check.md](one-wording-check.md) | Core, Builders, QA: one event, one wording on master (item 143), 9 of 28 agree, 19 split (5 wait on #366); 126's fixes, 7 landed; Product rulings 11:50 AM PT |
+| [claude-requests-audit.md](claude-requests-audit.md) | Core, AI, QA: everything that can leave the phone for Claude on master (item 145), 2 live calls, 3 latent, gaps CA4 to CA7 |
