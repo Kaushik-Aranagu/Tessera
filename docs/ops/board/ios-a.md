@@ -35,6 +35,7 @@
 - Undo batch: first, right after the Siri undo hotfix, L1 from Research #159 (`../research/lockscreen-lines.md`): Lock Screen Done logs a set with no line and no Undo, so it gets the named line and an UNDO. Then L2: Skip shows no line. Then the saveEdit bug from Research's `../research/training-week-one.md` (#163): saveEdit never sends `clearRPE`, so clearing an RPE does nothing and logs an empty editSet (also the QA E1 part of Next 4; whichever lands first closes it). Then Builder A's rows in `../research/undo-lines.md` section 2, to the one rule. That includes the routine editor's "Undone." becoming the named "taken back" line. The Siri "Undo Last Set" hotfix is already in flight, and it removes one set.
 
 **Later:**
+- With the widgets item: one widget row, "Day closed" with his "Tomorrow, first" line, per Design's `docs/design/evening-on-now.md` (a79ce75; decisions.md 9:17 PM PT).
 - Run Research's 5-line context size check from `../research/on-device-context-size.md` on Kaushik's phone (moved from Research, which has no device).
 - After Build A1: share Core's rest usage table and write to it from `persistRest`, which writes no op today (per Research's `../research/training-week-one.md` (#163)).
 - The rest of Builder A's 32 accessibility rows in `../research/accessibility.md` (VoiceOver labels and the remaining Dynamic Type rows).

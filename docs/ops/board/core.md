@@ -34,6 +34,7 @@
 - Empty states batch: Core's 8 rows in `../research/empty-states.md`. These cover the Review counts line and one meaning of "good day" (trained), Groceries' double "Nothing to get", the empty shop, a recipe with no lines, an empty "As pasted", the long second line in Notes, the Backups hero before the first copy, and zero-set workouts that are not saved.
 
 **Later:**
+- The evening on Now, engine part, per Design's `docs/design/evening-on-now.md` (a79ce75; decisions.md 9:17 PM PT): Now's order in the evening, the 22:00 switch, and storing his "Tomorrow, first" line.
 - Remove the Groceries Tess mirror once Builder B mounts BottomChrome over the Home link covers.
 - **Future T-tools:** `createRoutine` and `createPlan` (they need routine and plan names plus slot shapes beyond today's 10 tools; best paired with Build A2), and `logBodyWeight` with M3 slice 1.
 - **Tess model layer spec** (`tess-model-layer.md`; build plan = Research's `../research/tess-model-layer.md`, #83), now in Now and Next above. Full order: T1 TessModel + router + op-log route/model columns (confirm the beta Claude for Foundation Models package builds and reports usage, else the URLSession fallback), T2 shared tools, T3 Claude route + Keychain key + ledger with a $10/month hard cap, T4 + S1 Settings, T6 Plan my day wording (first visible win), T7. T1 and T2 need no key.
