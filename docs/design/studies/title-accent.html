@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Title accent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Design item 72: a subtle accent on the big type (titles and heroes), Kaushik 1:32 PM PT Oct 16. Three ways, each on Home's frame (sheet 41) in Porcelain and Obsidian: 1 ink that fills (the title's letters take the area's pigment as the thing gets done, then dry back to ink), 2 the word that matters (only the word that carries the moment takes the pigment), 3 a tint of the area (the whole title leans toward its area's colour). ?play records option 1 on a workout, Porcelain. -->
+<style>
+:root{--board:#E9E6EE}
+body{margin:0;background:var(--board);font-family:'Inter Tight',system-ui,sans-serif;-webkit-font-smoothing:antialiased;transform-origin:0 0;color:#1c1a20}
+body.x2{transform:scale(2)}
+.wrap{padding:36px 40px 40px}
+.opt{display:flex;gap:28px;align-items:flex-start;margin-bottom:34px}
+.cap{width:270px;flex:none;padding-top:8px}
+.cap h2{margin:0 0 10px;font-size:26px;font-weight:600;letter-spacing:-.01em}
+.cap .rec{display:inline-block;font-size:13px;font-weight:700;letter-spacing:.08em;color:#2450D8;margin-bottom:8px}
+.cap p{margin:0 0 10px;font-size:17px;line-height:24px;color:#4a4652}
+.ph{position:relative;width:393px;height:330px;background:var(--bg);color:rgb(var(--ink));overflow:hidden;flex:none;border-radius:28px 28px 0 0}
+.ph.full{height:852px;border-radius:0}
+.por{--ink:18,16,22;--bg:#FBFAF7;--tess:#2450D8;--train:#C23A22;--kit:#12936A;--today:#2450D8;--rev:#5A3DAF;--ctx:#5A3DAF}
+.obs{--ink:245,242,236;--bg:#121014;--tess:#86B4FF;--train:#FF7D62;--kit:#52D3A3;--today:#86B4FF;--rev:#B8A3FF;--ctx:#B8A3FF}
+.abs{position:absolute}
+.tabs{left:22px;top:46px;display:flex;gap:22px;font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.45)}
+.tabs b{color:rgb(var(--ink));font-weight:700;border-bottom:2px solid rgb(var(--ink));padding-bottom:5px}
+.day{left:22px;top:118px;font-size:17px;color:rgba(var(--ink),.66)}
+.ctxl{left:22px;top:186px;font-size:17px;color:var(--ctx)}
+.hero{left:22px;top:212px;width:350px;font-size:44px;font-weight:500;letter-spacing:-.02em;line-height:50px}
+.key{left:22px;font-weight:700;font-size:15px;letter-spacing:.08em}
+.key i{display:block;height:2px;margin-top:5px;background:currentColor;font-style:normal}
+.fill{--soft:color-mix(in oklab,var(--acc) 72%,rgb(var(--ink)));background:linear-gradient(90deg,var(--soft) 0,var(--soft) calc(var(--p)*1.08% - 4%),rgb(var(--ink)) calc(var(--p)*1.08% + 4%),rgb(var(--ink)) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.word{color:color-mix(in oklab,var(--acc) 72%,rgb(var(--ink)))}
+.tint{color:color-mix(in oklab,rgb(var(--ink)) 78%,var(--acc))}
+.lbl{left:22px;font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.55)}
+.legend{display:flex;gap:26px;margin:6px 0 0 298px;font-size:16px;color:#4a4652}
+.legend span{display:flex;align-items:center;gap:8px}
+.legend s{display:inline-block;width:14px;height:14px;border-radius:50%;text-decoration:none}
+.next{left:22px;width:350px;font-size:19px;line-height:26px}
+.next div{display:flex;justify-content:space-between;margin-bottom:12px}
+.next em{font-style:normal;color:rgba(var(--ink),.62)}
+.band{left:0;right:0;top:736px;height:84px}
+.soul{left:323px;top:759px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 40%,#E2432A 0 28%,transparent 46%),radial-gradient(circle at 66% 38%,#2450D8 0 30%,transparent 50%),radial-gradient(circle at 50% 70%,#F0A500 0 28%,transparent 48%);filter:blur(2px)}
+.tline{right:71px;top:768px;width:270px;text-align:right;font-size:18px;color:var(--tess);opacity:0;transition:opacity .4s}
+</style></head>
+<body>
+<div class="wrap" id="board"></div>
+<script>
+const play = location.search.includes('play');
+if (location.search.includes('x2')) document.body.classList.add('x2');
+
+// One Home top (sheet 41 frame): tabs, day label, context, hero, key.
+function home(look, o) {
+  const tabs = `<div class="abs tabs"><span>REVIEW</span><b>TODAY</b><span>TRAINING</span><span>KITCHEN</span></div>`;
+  let hero = o.hero;
+  if (o.mode === 'fill') hero = `<span class="fill" style="--acc:var(--${o.area});--p:${o.p}">${o.hero}</span>`;
+  if (o.mode === 'word') hero = o.hero.replace(o.word, `<span class="word" style="--acc:var(--${o.area})">${o.word}</span>`);
+  if (o.mode === 'tint') hero = `<span class="tint" style="--acc:var(--${o.area})">${o.hero}</span>`;
+  const keyTop = 212 + 50 * (o.lines || 1) + 20;
+  return `<div class="ph ${look}">${tabs}
+    <div class="abs day">Friday evening</div>
+    <div class="abs ctxl">${o.ctx}</div>
+    <div class="abs hero">${hero}</div>
+    <div class="abs key" style="top:${keyTop}px">${o.key}<i></i></div></div>`;
+}
+
+const options = [
+  { h: 'Ink that fills', rec: true,
+    p: ['The title\'s letters take its area\'s colour from the left as the thing gets done, a set, a step, a task in a run. At done it is full colour for a beat, then dries back to ink.',
+        'It shows how far along, with no bar. At rest every title is plain ink.'],
+    phones: [
+      ['por', { mode: 'fill', area: 'train', p: 40, hero: 'Push Day A', ctx: 'now, 8 of 20 sets', key: 'RESUME' }],
+      ['por', { mode: 'fill', area: 'kit', p: 70, hero: 'Paprika chicken', ctx: 'cooking, step 4 of 6', key: 'NEXT STEP' }],
+      ['obs', { mode: 'fill', area: 'train', p: 40, hero: 'Push Day A', ctx: 'now, 8 of 20 sets', key: 'RESUME' }],
+    ] },
+  { h: 'The word that matters',
+    p: ['Only the word that carries the moment takes the colour: the time, the set, the count.',
+        'It says where to look first. The rest of the title stays ink.'],
+    phones: [
+      ['por', { mode: 'word', area: 'kit', word: '7 pm', hero: 'Tacos at 7 pm', ctx: 'tonight', key: 'START COOKING' }],
+      ['por', { mode: 'word', area: 'train', word: 'set 2', hero: 'Push Day A, bench set 2', lines: 2, ctx: 'now', key: 'RESUME' }],
+      ['obs', { mode: 'word', area: 'kit', word: '7 pm', hero: 'Tacos at 7 pm', ctx: 'tonight', key: 'START COOKING' }],
+    ] },
+  { h: 'A tint of the area',
+    p: ['The whole title leans a little toward its area\'s colour, about a fifth, and never changes while you look.',
+        'It says which area the thing belongs to. It\'s the quietest of the three, and it says the least.'],
+    phones: [
+      ['por', { mode: 'tint', area: 'train', hero: 'Push Day A', ctx: 'now, 8 of 20 sets', key: 'RESUME' }],
+      ['por', { mode: 'tint', area: 'kit', hero: 'Tacos at 7 pm', ctx: 'tonight', key: 'START COOKING' }],
+      ['obs', { mode: 'tint', area: 'train', hero: 'Push Day A', ctx: 'now, 8 of 20 sets', key: 'RESUME' }],
+    ] },
+];
+
+if (!play) {
+  let html = '';
+  for (const o of options) {
+    html += `<div class="opt"><div class="cap">${o.rec ? '<span class="rec">RECOMMENDED</span>' : ''}<h2>${o.h}</h2>${o.p.map(t => `<p>${t}</p>`).join('')}</div>`
+      + o.phones.map(([look, s]) => home(look, s)).join('') + '</div>';
+  }
+  html += `<div class="legend"><span><s style="background:#C23A22"></s>Training</span><span><s style="background:#12936A"></s>Kitchen</span><span><s style="background:#2450D8"></s>Today's tasks</span><span><s style="background:#5A3DAF"></s>Review</span><span>Each area's colour already exists in its data marks; no new colours.</span></div>`;
+  document.getElementById('board').innerHTML = html;
+  document.fonts.ready.then(() => { document.body.dataset.done = '1'; });
+} else {
+  // Option 1 in motion: sets land, the ink fills from the left, Done floods it, then it dries back to ink.
+  const w = document.getElementById('board');
+  w.className = '';
+  w.innerHTML = `<div class="ph por full" id="ph">
+    <div class="abs tabs"><span>REVIEW</span><b>TODAY</b><span>TRAINING</span><span>KITCHEN</span></div>
+    <div class="abs day">Friday evening</div>
+    <div class="abs ctxl" id="ctx">now, 8 of 20 sets</div>
+    <div class="abs hero"><span class="fill" id="h" style="--acc:var(--train);--p:40">Push Day A</span></div>
+    <div class="abs key" style="top:282px">RESUME<i></i></div>
+    <div class="abs lbl" style="top:356px">NEXT</div>
+    <div class="abs next" style="top:384px"><div><span>Stretch &amp; mobility</span><em>8:30 pm</em></div><div><span>Read Designing Data-Intensive Applications</span><em>9:10 pm</em></div></div>
+    <div class="abs soul"></div>
+    <div class="abs tline" id="t">Push Day A, done. 20 of 20 sets.</div></div>`;
+  const h = document.getElementById('h'), ctx = document.getElementById('ctx'), t = document.getElementById('t');
+  const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  let p = 40;
+  function tween(from, to, ms) {
+    return new Promise(r => { const t0 = performance.now(); (function f(n) { const k = Math.min((n - t0) / ms, 1); p = from + (to - from) * ease(k); h.style.setProperty('--p', p); k < 1 ? requestAnimationFrame(f) : r(); })(t0); });
+  }
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  document.fonts.ready.then(async () => {
+    document.body.dataset.start = '1';
+    await wait(1400);
+    const steps = [[12, 60], [16, 80], [20, 100]];
+    for (const [sets, to] of steps) { ctx.textContent = `now, ${sets} of 20 sets`; await tween(p, to, 600); await wait(1100); }
+    // Done: full colour, a wet lift, then it dries back to ink over 2 s.
+    ctx.textContent = 'done, 52 min'; t.style.opacity = 1;
+    h.style.transition = 'filter .25s ease-out'; h.style.filter = 'brightness(1.12) saturate(1.15)';
+    await wait(350); h.style.filter = 'none';
+    await wait(900);
+    const dry = performance.now();
+    await new Promise(r => (function f(n) { const k = Math.min((n - dry) / 2000, 1); h.style.setProperty('--acc', `color-mix(in oklab, #C23A22 ${100 - 100 * ease(k)}%, rgb(18,16,22))`); k < 1 ? requestAnimationFrame(f) : r(); })(dry));
+    await wait(1500);
+    document.body.dataset.done = '1';
+  });
+}
+</script>
+</body></html>
