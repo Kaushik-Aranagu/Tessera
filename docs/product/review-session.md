@@ -146,6 +146,8 @@ A20. **Restore, safely.** [#120] Only if a Tessera copy is in Files: tap Restore
 
 *After any reinstall (only if the app was ever deleted): restore first, reopen, then pick the iCloud Drive folder again, and paste a fresh Claude key. A normal re-sign installs over the app and needs none of this.*
 
+*Install-day check, only once Speak is in the build: deny the mic, then turn it on in Settings > Tessera and come back. Tell us whether the app restarted or picked up where you were (Research `speak-first-use.md`, open question).*
+
 *If a calm note ever shows at launch, that's the data-safety guard protecting your data, not a crash.*
 
 *Known gaps, already queued, so no need to report them:*
