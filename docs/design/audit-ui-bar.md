@@ -41,7 +41,7 @@ The summaries in R8 to R11 matter because they reach his screen in two ways: as 
 ## Digits in heroes
 | # | Where | Now | Fix | Owner |
 |---|---|---|---|---|
-| D1 | `Features/Home/NowPage.swift:162-163` | The context above a timed block reads "now, until twenty to four" or "next, at half past five". | "now, until 3:40 pm" and "next, at 5:30 pm", using `HomeLines.shortTime`. The prefix checks in `HomeDataTests.swift:87, 90` still hold. | Builder B |
+| D1 | `Features/Home/NowPage.swift:162-163` | The context above a timed block reads "now, until twenty to four" or "next, at half past five". | "now, until 3:40 pm" and "next, at 5:30 pm", using `HomeLines.shortTime`. The prefix checks in `HomeDataTests.swift:87, 90` still hold. This replaces the spelled-out times in Design's older ink-line study (`day-seams.md` S8), which came before his Oct 15 call for digits. | Builder B |
 
 ## " · " on Home and the tab pages
 The rule comes from sheet 41 §3 and the 47 addendum: no separators inside Home's lines, except the recipe line's pack size. This audit applies it to Home and the tab pages in the rail. Pages one tap down keep the dots their sheets drew, so they don't need changing:
