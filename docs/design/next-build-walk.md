@@ -46,3 +46,24 @@ The Claude cap ($50) and Tess working aren't walked. #422 and #453 each passed o
 - **Builder A:** after the v9 gate (M0 to M4) passes on the pin, record the walk on the pin.
 - **Design:** the pass.
 - **QA:** the haptic and frame-rate rows, which stay in `next-build-script-v9.md`. This walk is the visual pass only.
+
+## Daily pins: the short walk (from Oct 16, 4 pm pin)
+
+Kaushik, 2:46 PM Oct 16: he wants what Design draws on his phone as soon as it works. A pin is named at 4 pm each day something he can see has landed, and this walk gates it. It covers only what's new since the build on his phone, so it stays short. The full walk above is for catalog pins only.
+
+- **Recording:** same build rules as above (pin SHA, iPhone 17, Porcelain, 60 fps, one take). Launch flags `-demoTime 18:10 -resetDemo -freshDay -theme porcelain`. About 60 to 90 s. Name it `docs/recordings/pin-walk-<MMDD>.mp4` and put the SHA in the message that carries it.
+- **Beats:** one per merged PR he can see, in the order he'd meet them, ending on Home. Pure engine or wall changes that already passed with tests aren't walked; list them in the message instead.
+- **Verdict:** Design answers PASS or FIX FIRST on the SHA within the hour. Known rows never fail it.
+
+### Oct 16, 4 pm pin (new since a36b161)
+| # | What to record | PR, sheet | Passes when |
+|---|---|---|---|
+| 1 | Cold launch onto Home and hold 5 s | #558, #403, motion picks idea 2 | Her eyes stay shut for 1 s, open, she stretches once and blinks once, all inside the band. Nothing else on Home moves |
+| 2 | Home at rest with the plan offered (18:10 is inside its 8 am to 9 pm window) | #529, 53, #507 | The hero is digits ("3 tasks"), the context reads "from 8 am", and every time looks like "7 pm" |
+| 3 | Skip one proposed row, then UNDO; then keep the plan | #529, 53 | The receipt names the row first, UNDO puts back exactly that row, and keeping it turns the plan into Home's day with one haptic |
+| 4 | TRAINING, ROUTINES: give Push A Monday, drop a routine and UNDO it, then edge-swipe back | #547 | "Push A on Mondays." and "Pull A, dropped." name the thing first, and UNDO restores it |
+| 5 | START, swap an exercise in the swap panel, log one set, then FINISH HERE | #547, 56 | The swap receipt names the new exercise first. Her eyes never hide (nothing here asks Claude) |
+| 6 | REVIEW: the week's lines | #504 | A best reads "best", never "record" |
+| 7 | NOTES: scroll the list past the fixture's private note and stop on Home | #508, #551 | The row reads "Private note" and nothing else on the page names its words |
+
+Not walked, covered by their tests: #534 (Siri and Lock Screen privacy), #512 (receipt text in the engine), #548 (key-guard comment). Nothing secret-shaped is typed into the simulator.
