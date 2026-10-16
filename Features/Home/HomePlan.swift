@@ -27,11 +27,13 @@ final class HomePlanModel {
     private(set) var showsPrivacy = false
     private var day: Date?
     private var wording: Task<Void, Never>?
+    /// How many times the plan went to Claude (zero while `AppModel.planWordingReady` is false).
+    private(set) var wordingCalls = 0
 
     static let spentKey = "plan.offerSpentDay"
     static let privacyKey = "plan.privacyShown"
 
-    private init() {
+    init() {
         #if DEBUG
             // `-resetDemo` (simulator only) starts the demo day fresh: the offer is open again.
             if LaunchFlags.has("-resetDemo") {
@@ -109,7 +111,9 @@ final class HomePlanModel {
 
     /// Claude words the plan when "Tess asks Claude" is on and a key is saved; the rules plan stays readable meanwhile.
     private func word(model: AppModel, now: Date, calendar: Calendar, restDay: Bool) {
-        guard let plan, model.asksClaude else { return }
+        // Claude's wording ships off until its eval passes (AI architecture): rules wording only, no call made.
+        guard let plan, model.asksClaude, AppModel.planWordingReady else { return }
+        wordingCalls += 1
         let pack = PlanPack(plan: plan, now: now, calendar: calendar, calendarKnown: false, restDay: restDay,
                             otherNames: plan.notPlanned.map(\.title), includesEventTitles: false)
         wording?.cancel()
@@ -199,7 +203,7 @@ final class HomePlanModel {
 
     /// "8:00 am" for Tess's lines.
     static func spoken(_ date: Date) -> String {
-        date.formatted(.dateTime.hour().minute()).lowercased()
+        HouseTime.clock(date)
     }
 }
 
@@ -208,22 +212,18 @@ final class HomePlanModel {
 enum PlanWords {
     /// The hero counts the tasks and the workout, never free, clear or open time (no calendar is read).
     /// Longest first; the page draws the first that fits.
-    static func heroForms(tasks: Int, workout: DayPlan.Block?, calendar _: Calendar) -> [String] {
-        let count = tasks == 1 ? "One task" : "\(SpokenTime.number(tasks).capitalized) tasks"
+    static func heroForms(tasks: Int, workout: DayPlan.Block?, calendar: Calendar) -> [String] {
+        // Digits in heroes (copy pass rows 52-55): "3 tasks", "1 task".
+        let count = tasks == 1 ? "1 task" : "\(tasks) tasks"
         guard let workout else { return [count] }
-        // Clock times in heroes carry am or pm (copy pass, Design 62): "Push A at 6 pm".
-        var clock = workout.start.formatted(.dateTime.hour().minute()).lowercased()
-        clock = clock.replacingOccurrences(of: ":00", with: "")
+        // Clock times in heroes carry am or pm, in the one house time (copy pass, Design 62): "Push A at 6 pm".
+        let clock = HouseTime.clock(workout.start, calendar: calendar)
         return ["\(count), \(workout.title) at \(clock)", count]
     }
 
-    static func context(now: Date, calendar: Calendar) -> String {
-        switch calendar.component(.hour, from: now) {
-        case ..<12: "this morning"
-        case ..<17: "this afternoon"
-        case ..<21: "this evening"
-        default: "tonight"
-        }
+    /// The plan's first time, never a part of the day under the day label (copy pass): "from 8 am".
+    static func context(first: DayPlan.Block?, calendar: Calendar) -> String? {
+        first.map { "from \(HouseTime.clock($0.start, calendar: calendar))" }
     }
 }
 
@@ -268,7 +268,7 @@ struct PlanRows: View {
                     .frame(height: QueueWindow.rowHeight, alignment: .leading)
             }
             if model.showsPrivacy {
-                Text("Sends your task and calendar titles, never notes, places or health.")
+                Text("Titles and counts only. Never notes, places, health or money.")
                     .font(Theme.voice(size: 16))
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .fixedSize(horizontal: false, vertical: true)

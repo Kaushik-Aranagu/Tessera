@@ -59,6 +59,10 @@ final class AppModel {
         settingsAreReal && SettingsStore(engine: engine).read().sendsMissesToClaude
     }
 
+    /// Plan my day's Claude wording stays off until Core's G4 and G9 land and its eval passes (AI architecture, Oct
+    /// 16). Turning it on is their one-line change.
+    static let planWordingReady = false
+
     /// Plan my day's wording through Claude: one instance for the app, so its cache holds across reopens.
     var planWording: ClaudePlanWording {
         if let wording = planWordingStore {

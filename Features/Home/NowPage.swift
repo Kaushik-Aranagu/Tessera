@@ -160,14 +160,16 @@ struct NowPage: View {
 
     /// The day as the hero ("Three tasks, Push A at 6"), the time above it, START WITH under it. Swipe it left to
     /// skip the whole plan: nothing written, nothing said.
-    private func planHero(now: Date) -> some View {
+    private func planHero(now _: Date) -> some View {
         let calendar = Calendar.current
         let forms = PlanWords.heroForms(tasks: planModel.rows.count, workout: planModel.workout, calendar: calendar)
         return VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-            Text(PlanWords.context(now: now, calendar: calendar))
-                .font(Theme.voice(size: 21))
-                .foregroundStyle(Theme.Colors.context)
-                .entrance(1)
+            if let context = PlanWords.context(first: planModel.rows.first, calendar: calendar) {
+                Text(context)
+                    .font(Theme.voice(size: 21))
+                    .foregroundStyle(Theme.Colors.context)
+                    .entrance(1)
+            }
             PlanHeroText(forms: forms)
                 .siblingParallax()
                 .entrance(2, hero: true)
