@@ -287,6 +287,16 @@ private struct QueueRow: View {
                 move()
             }
         }
+        .onAppear {
+            if arrives {
+                bloom()
+            }
+        }
+        .onChange(of: arrives) { _, now in
+            if now {
+                bloom()
+            }
+        }
         #if DEBUG
         .task { await playScript() }
         #endif
@@ -400,6 +410,16 @@ private struct QueueRow: View {
         withTesseraAnimation(.easeOut(duration: 0.22), reduceMotion: reduceMotion) {
             drag = 0
             strike = 0
+        }
+    }
+
+    /// Becoming next: one faint wash of the row's pigment blooms behind the name, then dries back to ink (QA N1).
+    private func bloom() {
+        guard !reduceMotion else { return }
+        withAnimation(.easeOut(duration: 0.5)) { washing = true }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(500))
+            withAnimation(Theme.Motion.dry(reduceMotion: reduceMotion)) { washing = false }
         }
     }
 

@@ -17,6 +17,9 @@ struct BackupView: View {
     @State private var importing = false
     @State private var saving: BackupFile?
     @State private var line: String?
+    /// A folder he just stopped using, kept in memory for its 10 s UNDO.
+    @State private var forgotten: Data?
+    @State private var forgetTimer: Task<Void, Never>?
     @State private var refresh = 0
     /// A picked backup, checked and copied in, waiting for "Replace everything".
     @State private var confirming: Picked?
@@ -61,6 +64,17 @@ struct BackupView: View {
                     .padding(.top, Theme.Spacing.xl)
                     .entrance(2)
 
+                // A fresh install with nothing done yet: say a restore is possible (restore-walk 3). Restore first,
+                // then reopen, then pick the folder again.
+                if !model.engine.history(limit: 50).contains(where: { $0.actor == .user }) {
+                    Text("Reinstalled? Restore brings back your copy from iCloud Drive.")
+                        .font(Theme.voice)
+                        .foregroundStyle(Theme.Colors.tess)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, Theme.Spacing.s)
+                        .entrance(2)
+                }
+
                 // Quiet, not an alarm: what didn't save and that it tries again.
                 ForEach(failures, id: \.place) { failure in
                     Text(BackupCopy.failure(failure, folder: folder, now: AppClock.now))
@@ -85,6 +99,16 @@ struct BackupView: View {
                     .accessibilityAction(named: "Choose the folder") { picking = true }
                     .padding(.top, Theme.Spacing.m)
                     .entrance(3)
+
+                // A way to stop using the folder: one ink word, with UNDO for 10 s (settings-object.md).
+                if folder != nil {
+                    Button("Stop using it", action: forgetFolder)
+                        .buttonStyle(.labelWord)
+                        .accessibilityHint("Copies stay on this iPhone only")
+                } else if forgotten != nil {
+                    Button("Undo", action: undoForget)
+                        .buttonStyle(InkLabelWordStyle.undo)
+                }
 
                 Text(folder == nil
                     ? "Copies on this iPhone go if the app is deleted. A folder in iCloud Drive keeps them."
@@ -161,7 +185,7 @@ struct BackupView: View {
     @ViewBuilder private var restoreSection: some View {
         if let confirming {
             VStack(alignment: .leading, spacing: Theme.Spacing.s) {
-                Text("Replace everything with the copy from \(BackupCopy.day(confirming.info.createdAt))?")
+                Text("Replace everything with the copy from \(BackupCopy.fileDay(confirming.info.createdAt))?")
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.ink)
                     .fixedSize(horizontal: false, vertical: true)
@@ -181,7 +205,7 @@ struct BackupView: View {
                 Text("A restore is waiting")
                     .textRole(.title)
                     .foregroundStyle(Theme.Colors.ink)
-                Text("The copy from \(BackupCopy.day(staged.createdAt)) replaces everything the next time "
+                Text("The copy from \(BackupCopy.fileDay(staged.createdAt)) replaces everything the next time "
                     + "Tessera opens. Close Tessera from the app switcher to restore now.")
                     .font(Theme.voice)
                     .foregroundStyle(Theme.Colors.context)
@@ -226,6 +250,9 @@ struct BackupView: View {
             }
         } catch TesseraBackup.BackupError.newerSchema {
             say("That copy is from a newer Tessera. Update first.")
+        } catch TesseraBackup.BackupError.damaged {
+            // A real copy that didn't survive (restore-walk 8): a different answer from "not a backup".
+            say("That copy is damaged. Try the day before.")
         } catch {
             say("That file isn't a Tessera backup.")
         }
@@ -248,6 +275,27 @@ struct BackupView: View {
             try? FileManager.default.removeItem(at: picked.url)
         }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { confirming = nil }
+    }
+
+    private func forgetFolder() {
+        forgotten = BackupKeeper.bookmark
+        BackupKeeper.forget()
+        say("Copies stay on this iPhone only now.")
+        forgetTimer?.cancel()
+        forgetTimer = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(10))
+            guard !Task.isCancelled else { return }
+            withTesseraAnimation(reduceMotion: reduceMotion) { forgotten = nil }
+        }
+    }
+
+    private func undoForget() {
+        forgetTimer?.cancel()
+        if let forgotten {
+            BackupKeeper.bookmark = forgotten
+        }
+        forgotten = nil
+        say("The folder is back.")
     }
 
     private func say(_ text: String) {
@@ -325,6 +373,13 @@ enum BackupCopy {
     /// "Tuesday 14 October"
     static func day(_ date: Date) -> String {
         date.formatted(.dateTime.weekday(.wide).day().month(.wide))
+    }
+
+    /// The copy's own day, his 4 AM day as in its file name (restore-walk 7): a copy made at 01:30 Wednesday is
+    /// Tuesday's.
+    static func fileDay(_ createdAt: Date) -> String {
+        let key = TesseraDay().day(of: createdAt)
+        return day(Calendar.current.date(byAdding: .hour, value: 12, to: key) ?? key)
     }
 
     /// "iCloud Drive/Tessera"

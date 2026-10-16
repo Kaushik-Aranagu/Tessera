@@ -121,7 +121,10 @@ struct ClaudeSection: View {
 
     private var noKey: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
-            Text("Tess thinks \(Text("on this phone").fontWeight(.semibold)) only.")
+            // After a reinstall or on a new phone the key doesn't come along (restore-walk 6).
+            Text(ledger.calls().isEmpty
+                ? "Tess thinks \(Text("on this phone").fontWeight(.semibold)) only."
+                : "Your key stays on the phone it was added on. Paste it again to let Tess ask Claude.")
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
             if writing {
@@ -208,7 +211,7 @@ struct ClaudeSection: View {
             } label: {
                 Text("Receipts")
                     .textRole(.body)
-                    .foregroundStyle(Theme.Colors.tess)
+                    .foregroundStyle(Theme.Colors.ink)
                     .frame(minHeight: 44)
             }
             .buttonStyle(.valueWash)
@@ -441,7 +444,8 @@ extension ClaudeKeyWords {
     /// "6:12 pm · Plan my day · Sonnet · 1.2¢".
     @MainActor
     static func receipt(_ call: ObjectRecord, store: ObjectStore) -> String {
-        let time = call.createdAt.formatted(.dateTime.hour().minute()).lowercased()
+        let time = call.createdAt.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).hour().minute())
+            .lowercased()
         let use = store.value("use", of: call)?.stringValue.flatMap(TessUse.init(rawValue:))
         let model = store.value("model", of: call)?.stringValue ?? ""
         let nano = Int64(store.number("costNano", of: call) ?? 0)
