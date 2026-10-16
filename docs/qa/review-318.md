@@ -35,3 +35,30 @@ No catalog, schema or `project.yml` change. Read-only: `DayStory` and `StoreDayL
 
 ## Checked and fine
 Kind tiers (K8) are set by the engine, never read from text; the "Also:" tail only past the cap and ranks by size then time; VoiceOver form ("7:10 am, … by …, … minutes"); every action has a fold rule, with a test that fails on a new action; no Never-list words in any line text.
+
+## Addendum: re-check at 83dd60d (Oct 16 PT, 12:1x am): PASS
+Trial merge onto master 4011570 clean. Only TesseraCore changed (ActionEngine, DayStory, two test files).
+- **S2 closed.** An unfinished workout is `.running` while `now` is 0 to 6 h after its start (`DayStory.liveFor`), whatever the day, and `.unfinished` after that. `aLiveWorkoutFromLastNightStaysOnItsDayPast0400` reads WED at 04:30 Thu. That matches DL70.
+- **S1 closed.**
+  - `ActionEngine.history(from:to:)` filters `context.operations` before sorting.
+  - The new `DayStory.lines(engine:on:…)` windows the history: day start − 14 h to day end + 20 h, plus `createNote` up to 8 days later for past-dated notes.
+  - Every root is checked once (`seenRoots.insert` runs before the day test), and roots are memoised.
+  - `StoreDayLookup` builds its zone map once in `init`.
+  - `onDay` comes first in every branch.
+  - The cook and shop finishes are paired in one pass.
+  - `topSet`'s PR is one `recordsBeaten` read.
+  - `dayLogStaysFast`: 17 ms at 200 workouts, 68 ms at 1500 (Core's numbers; there's no toolchain here).
+- **L1 closed.** The cap always leaves a slot for "Also:". Workouts are kept first, then own lines by time, then the largest counts. Own lines that spill over join the tail.
+- **L2 closed.** A done counts by its last state that day (`doneToday`), once, at its first time.
+- **L3 closed.** A shop is its start plus the finish that closes it, and a later start replaces an open one.
+- Old signature unchanged; no migrations; read-only.
+
+### Notes (not blocking)
+- The app doesn't call the Day log yet. When Builder B wires the page, it should use `lines(engine:…)`, never `history(limit: .max)`.
+- `isPR` uses `recordsBeaten(excludingWorkout:)`, which compares against every other workout, later ones included. A past day's ", PR" can drop once a later session beats it. `WorkoutSummary` behaves the same way, so this isn't a regression. If Product wants "PR at the time", both need an as-of date.
+- Overflowed workout lines in the tail carry their full text, with its own full stops ("Also: Push A, 52 min. Bench 85 × 8., …"). That only happens with five or more workouts in a day, so it's cosmetic.
+
+## The app test that failed at 00:07 PDT: a test bug, not #318
+`TesseraTests/ExerciseAndPlansTests.swift:146` finds "today" with `Calendar.current.isDate($0.date, inSameDayAs: now)`, a midnight day. The plan's week uses his 04:00 day, so between 00:00 and 04:00 the test picks tomorrow's row (`.planned`) and fails. It isn't random: it fails every time in that window. #318 touches no app code and nothing PlanData reads (`history(from:to:)` is additive).
+Fix (Builder A, one line): match on `TesseraDay(calendar: .current).day(of: now)` the way PlanData does, or pin `AppClock` to midday.
+**Verdict: PASS.**
