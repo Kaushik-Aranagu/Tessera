@@ -1,0 +1,80 @@
+# Reading first fixtures (board item 130)
+
+For: Core (`TessGrammar+Reading.swift`, the `Book` lens in `HomeLines`, `DayStory`, `WeekFacts`), Builder A (the Home row and the Review week lines), Design (copy). Owner: Research lab. Date: Oct 16, 2026 (Pacific).
+
+Traced by hand on master `2190dcf`, not run (no Swift toolchain here). These 20 rows add to `reading.md` (40 phrases, R1 to R10, F1 to F8) and never repeat it; where a row leans on one of those, it says "reading.md #n". Sources: `../../product/ship-list-m5-reading.md` (S1 to S7, Decisions 1 to 7), `../m5-money-reading.md`, `../ship-list-reading-draft.md`, `../../ai/home-lines.md`, `week-rules-lines.md`, Design 46 `review-week.md` (branch `claude/project-thread-b3tu3f`), `../day-log-copy.md`, `one-event-one-wording.md`, `habits-from-logs.md`, and Product's decisions up to 3:15 AM PT Oct 16 ("best" everywhere; a receipt is the thing, a comma, then what happened, as in "Call mom, done.").
+
+## Setup
+
+**Clock.** Fri Oct 16 2026, 20:30 Pacific. The evening slot is open (S3: from 19:00, nothing running, no timed item current), so the last touched reading book is Now's hero.
+
+**Shelf.** Each row starts from this shelf, not from the row before it.
+
+| Book | Pages | State | Page | Last touched |
+|---|---|---|---|---|
+| Project Hail Mary | 476 | reading | 98 | Thu 22:10 |
+| The Three-Body Problem | 400 | reading | 88 | Mon 21:30 |
+| Dune | 612 | queued | 0 | added Oct 2 |
+| Educated | 352 | finished Sep 2 | 352 | Sep 2 |
+| The AI tutor problem (an Atlantic article, link only) | none | queued (proposed kind: article, RF7) | none | saved Wed |
+
+**What master does with reading.** There is no `Book` class, no reading rule and no book kind in `HomeLines` (kinds are workout, cook, shop, task, rest). The parse order (`TessGrammar.swift:59-135`) is note, pasted recipe, question, process, in-focus, comma sets, lift and errand, dated lift, lift, money guard, bare-set guard, **`parsePastLog`**, kitchen, reschedule, task. `isPastVerb` (G:294) wants a word in `pastVerbs` or 5+ letters ending in "-ed": "finished", "started", "listened" pass; "read", "reread", "dnf" do not. `parsePastLog` also needs a past day word (`TessDates.pastDay`: yesterday, today, last night, a weekday). `TessDates.find` has no "yesterday". `parseTimer` needs the word "timer". `RecipeLinkReader` exists but nothing in Ask Tess calls it, so a pasted link is plain text. "Model" below means the phrase falls through every rule and the model guesses; no book can be written, because none exists.
+
+**Grammar of the lines.** Home (`home-lines.md`): hero is the thing and its state, rules only; context is time words, at most 6 words and 32 characters, no stop, and never a word the hero already shows (§2 no-repeat); detail is one sentence, at most 14 words and 80 characters, with a stop. Digits survive, no "…", rows wrap or fit. Proposed book hero: "{title}, p {page}" ("{title}" alone at p 0). Proposed context: "read at {time}" today, "read {weekday}" or "read yesterday" before. Review: THE WEEK'S LINES (Design 46) shows up to 3 Day log lines as "Fri  {line}"; `WeekFacts.rank` today gives anything that is not a workout, routine, list, recipe or plan rank 3 (RF16).
+
+## The 20 rows
+
+| # | He says | Expected record | Tess receipt (thing first) | Home row: hero / context / detail | Day log line; Review week line | Master today |
+|---|---|---|---|---|---|---|
+| R-F1 | read 30 pages of Project Hail Mary | PHM page 98 to 128 (`SetBookPage`, relative, RF1). State reading | Project Hail Mary, p 128. | Project Hail Mary, p 128 / read at 8:30 pm / 30 pages today, 476 in the book. | Project Hail Mary, p 98 to 128.; week line only if fewer than 3 better lines (rank 3) | Model. "read" is not a past verb, the lift rule finds no exercise in "read pages project hail mary", no day cue. Likely a task "Read 30 pages of Project Hail Mary" |
+| R-F2 | read 20 pages | Last touched reading book: PHM 98 to 118. Three-Body untouched | Project Hail Mary, p 118. | Project Hail Mary, p 118 / read at 8:30 pm / 20 pages today, 476 in the book. | Project Hail Mary, p 98 to 118.; rank 3 | Model. Also decided as a Read habit check-in (G3, 9:04 PM PT), not built; see RF18 |
+| R-F3 | finished project hail mary | `FinishBook(PHM)`: finished, finishedAt 20:30, page set to 476 (RF20). Process ends, reason done | Project Hail Mary, finished. One line on it? | PHM leaves Now. Hero becomes the next suspended book: The Three-Body Problem, p 88 / read Monday / no detail until he opens it | Project Hail Mary, finished.; **Fri  Project Hail Mary, finished.** (proposed rank 1, RF16) | Model. "finished" is past but no day word, so `parsePastLog` passes. The model may call `completeTask` "project hail mary", which finds no task |
+| R-F4 | started dune | `StartReading(Dune)`, the queued one: reading, suspended, p 0. Becomes last touched | Dune, started. | Dune / started at 8:30 pm / 612 pages. | Dune, started.; rank 3 | Model ("started" is past, no day word) |
+| R-F5 | page 112 | PHM (last touched) page 98 to 112. Absolute, as reading.md #1 and #6 | Project Hail Mary, p 112. | Project Hail Mary, p 112 / read at 8:30 pm / 14 pages today, 476 in the book. | Project Hail Mary, p 98 to 112.; rank 3 | Model ("page" is no exercise) |
+| R-F6 | read for 25 min | PHM: a reading log of 25 min, no page change (RF5). Last touched now | Project Hail Mary, 25 min. | Project Hail Mary, p 98 / read at 8:30 pm / 25 min today, 476 in the book. | Project Hail Mary, 25 min.; rank 3 | Model. No "timer", so no kitchen timer. reading.md #23 says no write; RF5 asks to log it |
+| R-F7 | https://www.theatlantic.com/ideas/archive/2026/10/phone-attention-span/684512/ | New article, queued, link kept, title from the slug "Phone attention span" (RF7, RF8). No fetch | Phone attention span, saved to read. | None (queued things never reach Home) | Tail count "1 article saved"; never a week line | Model. No link rule in the grammar; `RecipeLinkReader` is not called from Ask Tess |
+| R-F8 | read that atlantic piece | The one queued article whose link host has "atlantic": finished (RF2, RF7) | The AI tutor problem, read. | None | The AI tutor problem, read.; rank 3 | Model. Under S4 as written, "read X" would queue a new book "That atlantic piece" (RF2) |
+| R-F9 | halfway through dune | Dune: `StartReading`, then page 306 (612 / 2, RF9). One undo | Dune, p 306. | Dune, p 306 / read at 8:30 pm / 612 pages in all. | Dune, p 0 to 306.; rank 3 | Model |
+| R-F10 | read 30 pages yesterday | PHM page 98 to 128, the op dated Thu noon (RF3). Last touched now | Project Hail Mary, p 128, yesterday. | Project Hail Mary, p 128 / read yesterday / 476 pages in all. | On THU: Project Hail Mary, p 98 to 128.; rank 3 | Model. "read" fails `isPastVerb`; `TessDates.find` has no "yesterday", so no task either |
+| R-F11 | dnf the three body problem | `SetBookAside(The Three-Body Problem)`: dropped, page 88 kept, process ends, reason closed (reading.md #39, RF10) | The Three-Body Problem, set aside. | No change if PHM is the hero; Three-Body leaves the Next rows | The Three-Body Problem, set aside.; never a week line (RF16) | Model. Spoken: `TessSpoken` turns "three body" into "3 body" (RF11) |
+| R-F12 | reread chapter 3 | PHM: no page change, no chapter field. A note on the book, "Reread chapter 3" (RF12). Last touched now | Project Hail Mary, note added. | Project Hail Mary, p 98 / read at 8:30 pm / 476 pages in all. | Note: Reread chapter 3; rank 3 | Model ("reread" doesn't end in "-ed") |
+| R-F13 | read 40 pages of dune and 20 of project hail mary | Dune: start, page 40. PHM: page 98 to 118. PHM last touched (said last). One undo for both (RF13) | Dune, p 40. Project Hail Mary, p 118. | Project Hail Mary, p 118 / read at 8:30 pm / 20 pages today, 476 in the book.; Dune as a Next row, title only | Two lines: Dune, p 0 to 40. and Project Hail Mary, p 98 to 118.; rank 3 | Model. `parseLiftAndErrand` splits on "and" but neither side is a lift |
+| R-F14 | listened to 2 hours of project hail mary | PHM: a listening log of 120 min, no page change (RF5, RF6) | Project Hail Mary, 2 hours listened. | Project Hail Mary / listened at 8:30 pm / 2 hours today. | Project Hail Mary, 2 hours listened.; rank 3 | Model ("listened" is past, no day word) |
+| R-F15 | read thirty pages (typed); "Read thirty pages." (spoken) | As R-F2 with 30: PHM 98 to 128 | Project Hail Mary, p 128. | As R-F1 | As R-F1 | Typed: model, number words stay words. Spoken: `TessSpoken.numbers` gives "read 30 pages", then model |
+| R-F16 | finished the three body problem sunday | `FinishBook(The Three-Body Problem)` with finishedAt Sun Oct 11, noon; page 400 (RF3) | The Three-Body Problem, finished Sunday. One line on it? | No change (PHM stays the hero) | On SUN: The Three-Body Problem, finished.; **Sun  The Three-Body Problem, finished.** (rank 1) | **Misfire:** `parsePastLog` makes a note "Finished the three body problem" dated Sun noon. Day log SUN: "Note: Finished the three body problem". The book stays reading at p 88 |
+| R-F17 | read 30 pages of dune tomorrow | Task "Read 30 pages of dune", Sat. No book write (S4 rule: a day cue keeps a task) | Read 30 pages of dune, Saturday. | None today; a Next row on Saturday | Added 1 task; rank 3 | Task, Sat. **Correct today** |
+| R-F18 | read 3 articles today | No book write. A reading log with no book, kept as a note "Read 3 articles", today (RF4) | Read 3 articles, noted. | None | Note: Read 3 articles; rank 3 | **Misfire:** task "Read 3 articles" due today 9 pm ("today" with no time after 09:00 is the next whole hour, G:637). A thing he did becomes a thing to do |
+| R-F19 | rereading educated | `StartReading(Educated)` at p 0, state reading (Decision 5: p 0 only when he says "rereading", RF14) | Educated, started again. | Educated / started at 8:30 pm / 352 pages. | Educated, started again.; rank 3 | Model |
+| R-F20 | read the new yorker piece on sleep | Nothing matches. Ask, no write until a tap: top "Saved to read", second "Read it" | The New Yorker piece on sleep: read it, or save it? | None until he picks | None until he picks | Model. Under S4 as written, a queued book "The new yorker piece on sleep" |
+
+Count: 20 rows. Books 15, articles 4 (R-F7, R-F8, R-F18, R-F20), audiobook 1 (R-F14). Past days 3 (R-F10, R-F16, R-F18 today). On master: 17 go to the model, 2 misfire in the grammar (R-F16 a note, R-F18 a task), 1 is right (R-F17).
+
+**Line checks.** Every context is at most 4 words and 22 characters, has no stop, and has no word that is in its hero. Every detail is one sentence of at most 7 words with a stop. No line grades, counts books, or says "to go", "only", "still" or "finally" (Design 46 addendum, tess-voice). Every receipt names the thing before what happened.
+
+## Gaps
+
+| # | Gap | Where | Proposed default | Owner |
+|---|---|---|---|---|
+| RF1 | **Relative pages.** S4 has only absolute pages (`p 142`). "read 30 pages [of X]" is the way he talks | S4 table | "read N pages [of X]" is page + N on X, or on the last touched reading book. The op summary shows from and to | Core |
+| RF2 | **"read" is present and past.** S4 makes "read X" a queue; "read 30 pages", "read that atlantic piece" are past | S4 table, `TessGrammar+Reading` | "read" + a number and a unit, or + an already-queued article, is past. "read" + a title alone stays a queue (S4). "read the X piece" with no match asks (R-F20) | Core |
+| RF3 | **Dated reading logs.** "read" fails `isPastVerb`; "finished X sunday" becomes a note in `parsePastLog` (R-F16) | `TessGrammar.swift:120`, `:294` | The reading rule runs before `parsePastLog` (it already must, per reading.md placement) and takes a past day word: the op is dated that day, last touched stays now | Core |
+| RF4 | **A done thing with "today" becomes a task** (R-F18) | `parseTask`, `TessDates.find` | "read" + a count with "today" or "tonight" is a log, never a task. Without a book it is a note | Core |
+| RF5 | **Minutes and hours.** Book has only a page; reading.md #23 writes nothing for "reading 30 min" | S2 | One action `LogReading(book, minutes)`: an op with a summary, no new field, no timer, no stats page. "read for N min" and "listened to N hours of X" use it. Product to OK, since session timing is Later | Core, Product |
+| RF6 | **Audiobook hero.** A listen moves no page, so "p 98" on the hero is stale | `HomeLines` book lens | After a listen, the hero is the title alone and the detail names the time ("2 hours today.") | Design, Builder A |
+| RF7 | **Articles.** `Book` has no kind or link | S1 | `Book` gains `kind` (book, article) and `link`. An article has no pages; finishing says "read". On the shelf, below the queue; never on Home or Now | Core, Design |
+| RF8 | **A pasted link.** It reaches the model; kitchen v2 will read recipe links | grammar, `RecipeLinkReader` | Offline first: a bare link queues an article, titled from its slug. A recipe link ("recipe" said, or a known recipe site) stays with kitchen v2 | Core |
+| RF9 | **"halfway", "a third", "almost done"** | S4 | Fractions of a known page count, rounded down. With no count, ask "How many pages?" (as reading.md #30) | Core |
+| RF10 | **"dnf"** is not a set-aside word (reading.md OQ13) | S4 table | Add `dnf`, `abandoned`, `gave up on` | Core |
+| RF11 | **Spoken titles with number words.** "three body" arrives as "3 body"; "Catch twenty-two" as "Catch 22" | `book(named:)`, `TessSpoken` | Title match reads digits and number words as equal | Core |
+| RF12 | **Chapters.** No chapter field | S1 | No chapter field in v1. "chapter N" makes a note on the book and moves nothing | Core, Design |
+| RF13 | **Two books in one phrase** | S4 | Split on "and" when both sides read as reading; one undo; the receipt names both, in the order said | Core |
+| RF14 | **"rereading X"** is in Decision 5 but not the S4 table | S4 table | Add it: starts at p 0, receipt "Educated, started again." | Core |
+| RF15 | **Receipts in the ship list are verb first:** "Reading Dune, p 0.", "Finished Dune.", "Set Dune aside." | S4 feedback column, reading.md F1 to F8 | Thing first: "Dune, started.", "Dune, finished. One line on it?", "Dune, set aside." Undo stays "Dune taken back." | Design, Core |
+| RF16 | **Day log and week lines.** `DayStory` has no reading line; S2's "Read Dune, p 120 to 142" is verb first; `WeekFacts.rank` gives reading rank 3 | `DayStory.swift`, `WeekFacts.rank(of:)` | One line per book per day, page moves merged ("Dune, p 120 to 142."). A finish is rank 1, beside a new routine or recipe. A set-aside is never a week line. Articles saved go in the tail count | Core, Builder A |
+| RF17 | **No book on Home.** `HomeLines.Kind` has no book | `HomeLines.swift:8` | Add `.book`: hero "{title}, p {page}", context "read at {time}" or "read {day}", detail "{n} pages today, {pages} in the book." or "{pages} pages in all." Only from 19:00 as Now (S3); otherwise a Next row, title only | Core, Builder A |
+| RF18 | **The Read habit and a book page are one event.** G3 says "read 20 pages" is a habit check-in with "Read, 3 of 5 this week." | decisions 9:04 PM PT, `habits-from-logs.md` | With a book reading, the book line is the receipt and the habit ticks with no second line; Review's READ band shows it. With no book, G3 stands | Product, Design |
+| RF19 | **A finish never shows on Home.** The book leaves Now at once, unlike "Push A done" | S2, S3 | Accept for v1: the receipt and the week line carry it | Design |
+| RF20 | **Page on finish.** `FinishBook` does not set the page | S2 | Finishing sets page to the page count when known | Core |
+| RF21 | **Last touched for dated logs.** Which book does a later "p 140" go to? | S2, S3 | Last touched is when he said it, not the day it is about | Core |
+
+Gap count: 21. Top three: RF2 and RF1 (the way he actually talks, "read 30 pages", has no rule and collides with the S4 queue), RF3 and RF4 (two grammar misfires on master today), RF17 and RF16 (no book in `HomeLines`, `DayStory` or `WeekFacts`, so nothing he reads reaches Home or Review).

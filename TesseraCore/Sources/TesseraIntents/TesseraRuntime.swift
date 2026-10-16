@@ -1,0 +1,82 @@
+import AppIntents
+import Foundation
+import TesseraCore
+import TesseraTess
+
+/// What intents run against. The app registers one at launch:
+/// `AppDependencyManager.shared.add(dependency: TesseraRuntime(engine: model.engine))`.
+@MainActor
+public final class TesseraRuntime {
+    public let engine: ActionEngine
+    public let tess: any TessCapturing
+
+    public init(engine: ActionEngine, tess: (any TessCapturing)? = nil) {
+        self.engine = engine
+        self.tess = tess ?? TessCaptureEngine(engine: engine, model: TessModelCapture())
+    }
+
+    var store: ObjectStore {
+        engine.store
+    }
+
+    var ledger: TrainingLedger {
+        TrainingLedger(store: engine.store, classes: engine.classes)
+    }
+}
+
+/// Every registry action, and the App Intent that exposes it (or why it's Tess-only).
+/// One typed action is declared once; its App Intent is a thin wrapper that calls the same action.
+public enum TesseraIntentsCatalog {
+    public static let coverage: [String: String] = [
+        "logSet": "LogSetIntent (via logExercise) and the Lock Screen's Done",
+        "editSet": "in-app only: needs a specific set",
+        "addExercise": "in-app only: needs a workout",
+        "startWorkout": "StartRoutineIntent",
+        "finishWorkout": "FinishWorkoutIntent",
+        "logExercise": "LogSetIntent",
+        "createTask": "CreateTaskIntent",
+        "setTaskDone": "in-app only for now (M2 adds TaskEntity)",
+        "renameObject": "in-app only",
+        "deleteObject": "in-app only: destructive",
+        "startProcess": "kernel-internal",
+        "saveContext": "kernel-internal",
+        "suspendProcess": "kernel-internal",
+        "resumeProcess": "kernel-internal",
+        "endProcess": "kernel-internal",
+        "createRoutine": "in-app only",
+        "addSlot": "in-app only",
+        "startRoutine": "StartRoutineIntent",
+        "createPlan": "in-app only",
+        "logNextSet": "LogNextSetIntent (the Lock Screen's Done)",
+        "moveSlot": "in-app only: routine editor",
+        "editSlot": "in-app only: routine editor",
+        "removeSlot": "in-app only: routine editor",
+        "swapSlotExercise": "in-app only: routine editor",
+        "swapExercise": "in-app only: live mode swap",
+        "rollForwardTasks": "system: nightly roll-forward",
+        "startTask": "in-app only for now",
+        "waitOnTask": "in-app only for now",
+        "createNote": "Tell Tess (\"note: …\")",
+        "editNote": "in-app only: notes app",
+        "startShop": "in-app only for now (Tess \"shop\" is kitchen slice 9)",
+        "finishShop": "in-app only: groceries at the shop",
+        "startCooking": "in-app only for now (Tess \"cook carbonara\" is kitchen slice 9)",
+        "goToCookStep": "in-app only: cook mode",
+        "startKitchenTimer": "in-app only for now (Tess \"timer pasta 10\" is kitchen slice 9)",
+        "stopKitchenTimer": "in-app only: cook mode",
+        "finishCooking": "in-app only: cook mode",
+        "addRecipeToGroceries": "in-app only: recipe page swipe",
+        "removeRecipeFromGroceries": "in-app only: groceries",
+        "addGroceries": "in-app only for now (Tess \"buy milk\" is kitchen slice 9)",
+        "createRecipe": "in-app only for now: paste a recipe (Tess ghost is kitchen slice 9)",
+        "editRecipe": "in-app only: recipe page",
+        "createList": "in-app only for now (Tess \"list: …\" is kitchen slice 9)",
+        "addListItem": "in-app only for now (Tess \"buy milk\" is kitchen slice 9)",
+        "checkListItem": "in-app only: lists",
+        "moveListItem": "in-app only: lists",
+        "renameListSection": "in-app only: lists",
+        "clearDoneItems": "in-app only: lists",
+        "finishWorkoutEarly": "in-app only: live mode's finish early",
+        "moveTask": "in-app only for now (Now's \"not now\" and Later)",
+    ]
+}

@@ -1,0 +1,12 @@
+schemaVersion: 1
+enabledWorkflows:
+  - simulator
+  - ui-automation
+  - debugging
+  - utilities
+sentryDisabled: true
+sessionDefaults:
+  projectPath: Tessera.xcodeproj
+  scheme: Tessera
+  simulatorName: iPhone 17
+  bundleId: com.kaushikaranagu.tessera

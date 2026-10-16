@@ -1,0 +1,37 @@
+included:
+  - App
+  - Shared
+  - Widgets
+  - DesignSystem
+  - TesseraCore/Sources
+  - TesseraCore/Tests
+  - Features
+  - TesseraTests
+excluded:
+  - DerivedData
+  - .build
+disabled_rules:
+  - trailing_comma # SwiftFormat owns formatting
+  - opening_brace # SwiftFormat wraps multi-line conditions with the brace on its own line
+  - redundant_discardable_let # `let _ = model.revision` is required inside SwiftUI view builders
+line_length:
+  warning: 140
+  error: 180
+identifier_name:
+  excluded: [id, s, m, l, xs, xl, xxl, x, y, up, ui, kg, dx, dy, db]
+type_name:
+  min_length: 2
+large_tuple:
+  warning: 4
+  error: 5
+nesting:
+  type_level: 2
+function_body_length:
+  warning: 80
+  error: 120
+type_body_length:
+  warning: 300
+  error: 450
+file_length:
+  warning: 600
+  error: 900

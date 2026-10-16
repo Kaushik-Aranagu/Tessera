@@ -1,0 +1,9 @@
+MEDIANS over 2 runs (ms, or KB for sizeKB):
+sd.insert.oneTx median=   19366.7  runs=19059.0,19366.7
+sd.logAndRequery median=    1000.6  runs=989.0,1000.6
+sd.open median=      38.5  runs=19.9,38.5
+sd.openAndRead median=    1874.0  runs=1759.0,1874.0
+sd.read median=    1835.4  runs=1739.0,1835.4
+sd.records median=     849.6  runs=843.2,849.6
+sd.sizeKB.afterLog median=   19156.0  runs=19156.0,19156.0
+sd.sizeKB.oneTx median=   20024.0  runs=20008.0,20024.0

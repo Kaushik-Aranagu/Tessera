@@ -1,0 +1,264 @@
+import Foundation
+@testable import TesseraCore
+@testable import TesseraTess
+import Testing
+
+/// StubProtocol for ClaudeRouteTests: its own state, so the two suites can run side by side.
+final class RouteStub: URLProtocol, @unchecked Sendable {
+    nonisolated(unsafe) static var reply: (status: Int, body: String)? = (200, #"{"input_tokens": 8}"#)
+    nonisolated(unsafe) static var failure: URLError.Code?
+    nonisolated(unsafe) static var requests: [URLRequest] = []
+    /// Replies used in order before `reply` (a tool round, then the answer).
+    nonisolated(unsafe) static var queue: [(status: Int, body: String)] = []
+    /// Each request's JSON body (URLProtocol sees it as a stream).
+    nonisolated(unsafe) static var bodies: [Data] = []
+
+    static func session() -> URLSession {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [RouteStub.self]
+        return URLSession(configuration: configuration)
+    }
+
+    override class func canInit(with _: URLRequest) -> Bool {
+        true
+    }
+
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+        request
+    }
+
+    override func startLoading() {
+        Self.requests.append(request)
+        if let stream = request.httpBodyStream {
+            stream.open()
+            var data = Data()
+            var buffer = [UInt8](repeating: 0, count: 4096)
+            while stream.hasBytesAvailable {
+                let count = stream.read(&buffer, maxLength: buffer.count)
+                guard count > 0 else { break }
+                data.append(buffer, count: count)
+            }
+            stream.close()
+            Self.bodies.append(data)
+        } else {
+            Self.bodies.append(request.httpBody ?? Data())
+        }
+        if let failure = Self.failure {
+            client?.urlProtocol(self, didFailWithError: URLError(failure))
+            return
+        }
+        let (status, body) = Self.queue.isEmpty ? Self.reply ?? (200, "{}") : Self.queue.removeFirst()
+        let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil,
+                                       headerFields: ["request-id": "req_test"])!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: Data(body.utf8))
+        client?.urlProtocolDidFinishLoading(self)
+    }
+
+    override func stopLoading() {}
+}
+
+/// The Claude step of capture (tess-model-layer.md T3; Product 8:28 PM PT Oct 15): misses go to Claude when the key
+/// is saved, the switch is on, there's no "Not today" pause and money is left; tool calls land as pending ghosts.
+@Suite(.serialized) @MainActor
+struct ClaudeRouteTests {
+    static let key = "sk-ant-TEST-" + UUID().uuidString
+    let store = ObjectStore.open(inMemory: true)
+    let classes: [SystemCatalog.Key: ClassDef]
+    let engine: ActionEngine
+    let defaults: UserDefaults
+    let flags: ClaudeMissFlags
+    var ledger: TessUsageLedger {
+        TessUsageLedger(store: store, classes: classes)
+    }
+
+    /// Thursday 15 October 2026, 18:10 in Los Angeles.
+    let context = TessContext(now: TesseraDayTests.at(10, 15, 18, 10), calendar: TesseraDayTests.calendar)
+
+    init() throws {
+        classes = try store.prepareCatalog()
+        engine = ActionEngine(store: store, classes: classes)
+        defaults = try #require(UserDefaults(suiteName: "claude-route-\(UUID().uuidString)"))
+        flags = ClaudeMissFlags(defaults: defaults)
+        RouteStub.reply = (200, Self.answer("Logged."))
+        RouteStub.queue = []
+        RouteStub.failure = nil
+        RouteStub.requests = []
+        RouteStub.bodies = []
+    }
+
+    static func answer(_ text: String) -> String {
+        #"{"content":[{"type":"text","text":"\#(text)"}],"stop_reason":"end_turn","#
+            + #""usage":{"input_tokens":900,"output_tokens":20}}"#
+    }
+
+    static let logBench = #"{"content":[{"type":"tool_use","id":"toolu_1","name":"logSet","input":"#
+        + #"{"exercise":"Bench Press","weight":80,"reps":8,"sets":1,"unit":"kg"}}],"stop_reason":"tool_use","#
+        + #""usage":{"input_tokens":1200,"output_tokens":60}}"#
+
+    func tess(sends: Bool = true, key: String? = Self.key) -> TessCaptureEngine {
+        let capture = TessCaptureEngine(engine: engine)
+        var claude = ClaudeTessModel(keys: InMemoryKeychain(key), ledger: ledger, flags: flags,
+                                     session: RouteStub.session(), sendsMisses: { sends })
+        claude.now = { TesseraDayTests.at(10, 15, 18, 10) }
+        claude.calendar = TesseraDayTests.calendar
+        capture.claude = claude
+        return capture
+    }
+
+    /// A question: the grammar never writes it, and there's no on-device model in tests.
+    let miss = "could you log bench 80 for 8 from earlier?"
+
+    @Test func aMissGoesToClaudeAndLandsAsAPendingGhost() async throws {
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged."))]
+        let capture = await tess().capture(miss, context: context)
+        #expect(capture.source == .claude && capture.records.count == 1)
+        #expect(capture.records.first?.state == .pending)
+        #expect(capture.records.first?.route == .claude && capture.records.first?.model == ClaudeTessModel.model)
+        // The first miss ever sent says so, once.
+        #expect(capture.line == "Sent \u{201C}\(miss)\u{201D} to Claude. Turn this off in Settings: Claude.")
+        #expect(flags.noticeShown)
+        // Two rounds: the tool result went back.
+        #expect(RouteStub.requests.count == 2)
+        #expect(RouteStub.requests.allSatisfy { $0.value(forHTTPHeaderField: "x-api-key") == Self.key })
+        let second = try #require(String(data: RouteStub.bodies[1], encoding: .utf8))
+        #expect(second.contains("tool_result") && second.contains("toolu_1"))
+        #expect(!RouteStub.bodies.contains { $0.range(of: Data(Self.key.utf8)) != nil }) // header only
+        // One ledger row, priced.
+        #expect(ledger.calls().count == 1)
+        #expect(ledger.monthTotal(now: context.now, calendar: TesseraDayTests.calendar)
+            == TessUsageLedger.cost(model: ClaudeTessModel.model, input: 2100, output: 80))
+    }
+
+    @Test func afterTheNoticeClaudesOwnLineShowsIfItPassesTheVoiceChecks() async {
+        flags.noticeShown = true
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged."))]
+        #expect(await tess().capture(miss, context: context).line == "Bench 80 × 8 logged.")
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Great job, logged it all for you!"))]
+        let loud = await tess().capture(miss, context: context)
+        #expect(loud.records.count == 1 && TessVoice.violations(in: loud.line).isEmpty)
+    }
+
+    @Test func switchedOffPausedOrKeylessNothingIsSent() async {
+        #expect(await tess(sends: false).capture(miss, context: context).line.hasPrefix("Didn't catch that."))
+        #expect(await tess(key: nil).capture(miss, context: context).records.isEmpty)
+        flags.pauseUntilTomorrow(now: context.now, calendar: TesseraDayTests.calendar)
+        #expect(await tess().capture(miss, context: context).records.isEmpty)
+        #expect(RouteStub.requests.isEmpty)
+        // "Not today" ends at his next 04:00.
+        #expect(flags.pausedUntil(now: context.now) == TesseraDayTests.at(10, 16, 4))
+        #expect(!flags.isPaused(now: TesseraDayTests.at(10, 16, 4, 1)))
+        flags.resume()
+        #expect(!flags.isPaused(now: context.now))
+    }
+
+    @Test func atTheCapNothingIsSentAndTessSaysUntilWhen() async {
+        ledger.record(use: .capture, model: ClaudeTessModel.model, input: 0, output: 0,
+                      costNano: TessUsageLedger.capNano, latency: 0, outcome: "works", requestID: nil,
+                      at: context.now)
+        let capture = await tess().capture(miss, context: context)
+        #expect(capture.records.isEmpty && capture.line == "Claude paused until Nov 1.")
+        #expect(RouteStub.requests.isEmpty)
+    }
+
+    @Test func offlineOrSlowSaysSoAndWritesNothing() async {
+        RouteStub.failure = .notConnectedToInternet
+        let offline = await tess().capture(miss, context: context)
+        #expect(offline.records.isEmpty && offline.line == "No connection. Saved it for Claude.")
+        RouteStub.failure = .timedOut
+        #expect(await tess().capture(miss, context: context).line == "Claude didn't answer in time.")
+        #expect(ledger.calls().count == 2)
+    }
+
+    @Test func aToolThatFailsMidwayLeavesNoGhost() async throws {
+        // Claude asks for an exercise that doesn't exist, then gives up.
+        RouteStub.queue = [
+            (200, Self.logBench.replacingOccurrences(of: "Bench Press", with: "Underwater Bench")),
+            (200, Self.answer("Couldn't find that exercise.")),
+        ]
+        let capture = await tess().capture(miss, context: context)
+        #expect(capture.records.isEmpty)
+        let second = try #require(String(data: RouteStub.bodies[1], encoding: .utf8))
+        #expect(second.contains("is_error"))
+    }
+
+    @Test func everyFailedCallWritesItsRowAndAnEmptyBilledReplyCounts() async {
+        // QA R1 on #283: not JSON, and a 200 with no content but billed tokens.
+        RouteStub.queue = [(200, "not json")]
+        _ = await tess().capture(miss, context: context)
+        RouteStub.queue = [(200, #"{"usage":{"input_tokens":900,"output_tokens":5}}"#)]
+        _ = await tess().capture(miss, context: context)
+        RouteStub.queue = [(200, "{}")]
+        _ = await tess().capture(miss, context: context)
+        #expect(ledger.calls().count == 3)
+        #expect(ledger.monthTotal(now: context.now, calendar: TesseraDayTests.calendar)
+            == TessUsageLedger.cost(model: ClaudeTessModel.model, input: 900, output: 5))
+    }
+
+    @Test func siriAndShortcutsNeverReachClaude() async {
+        // QA R3 on #283: they commit at once, with no ghost and no UNDO.
+        var shortcut = context
+        shortcut.commitImmediately = true
+        let capture = await tess().capture(miss, context: shortcut)
+        #expect(capture.records.isEmpty && RouteStub.requests.isEmpty)
+    }
+
+    @Test func aCutOffOrRefusedReplyMakesNoGhost() async {
+        // QA L1 on #283.
+        for reason in ["max_tokens", "refusal"] {
+            RouteStub.queue = [(200, Self.logBench.replacingOccurrences(of: "\"tool_use\",\"usage\"",
+                                                                        with: "\"\(reason)\",\"usage\""))]
+            let capture = await tess().capture(miss, context: context)
+            #expect(capture.records.isEmpty && capture.line == "Didn't catch that.", "\(reason)")
+        }
+    }
+
+    @Test func toolErrorsGoBackAsFixedLines() async throws {
+        RouteStub.queue = [
+            (200, Self.logBench.replacingOccurrences(of: "Bench Press", with: "Underwater Bench")),
+            (200, Self.answer("Couldn't find that.")),
+        ]
+        _ = await tess().capture(miss, context: context)
+        let second = try #require(String(data: RouteStub.bodies[1], encoding: .utf8))
+        #expect(second.contains("that name or value didn't fit") && !second.contains("Underwater Bench\\u"))
+    }
+
+    @Test func whatTheGrammarReadsNeverReachesClaude() async {
+        _ = await tess().capture("buy milk", context: context)
+        #expect(RouteStub.requests.isEmpty)
+    }
+
+    // MARK: Waiting for Tess (tess-model-layer.md section 7)
+
+    @Test func anOfflineMissWaitsAndIsReadLater() async {
+        RouteStub.failure = .notConnectedToInternet
+        let tess = tess()
+        let offline = await tess.capture(miss, context: context)
+        #expect(offline.line == "No connection. Saved it for Claude." && tess.waitingCount == 1)
+        // The same phrase twice still waits once.
+        _ = await tess.capture(miss, context: context)
+        #expect(tess.waitingCount == 1)
+        // Still offline at the next open: it stays.
+        #expect(await tess.readWaiting(context: context).isEmpty && tess.waitingCount == 1)
+        // Busy on read (529): Claude never read it, so it stays (QA S1 on #305).
+        RouteStub.failure = nil
+        RouteStub.reply = (529, "{}")
+        #expect(await tess.readWaiting(context: context).isEmpty && tess.waitingCount == 1)
+        RouteStub.reply = (200, Self.answer("Logged."))
+        // Online: read as a pending ghost, and gone from the inbox.
+        RouteStub.failure = nil
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged."))]
+        let read = await tess.readWaiting(context: context)
+        #expect(read.count == 1 && read.first?.records.first?.state == .pending && tess.waitingCount == 0)
+    }
+
+    @Test func nothingWaitsForSiriAndAKeyNeverWaits() async {
+        RouteStub.failure = .notConnectedToInternet
+        let tess = tess()
+        var shortcut = context
+        shortcut.commitImmediately = true
+        _ = await tess.capture(miss, context: shortcut)
+        #expect(tess.waitingCount == 0)
+        #expect(TessInbox(store: store, classes: classes).add("sk-ant-abc", at: .now) == nil)
+    }
+}

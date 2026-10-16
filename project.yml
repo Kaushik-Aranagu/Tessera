@@ -1,0 +1,143 @@
+name: Tessera
+options:
+  bundleIdPrefix: com.kaushikaranagu
+  deploymentTarget:
+    iOS: "27.0"
+  createIntermediateGroups: true
+  developmentLanguage: en
+packages:
+  TesseraCore:
+    path: TesseraCore
+settings:
+  base:
+    # Kaushik's free Personal Team: installs on his iPhone, re-signed every 7 days.
+    DEVELOPMENT_TEAM: WMP2WF3P54
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    TARGETED_DEVICE_FAMILY: "1"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+targets:
+  Tessera:
+    type: application
+    platform: iOS
+    info:
+      path: App/Info.plist
+      properties:
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        NSSupportsLiveActivities: true
+        # Backups show in Files (On My iPhone > Tessera) and open from there.
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: com.kaushikaranagu.tessera.backup
+            UTTypeDescription: Tessera backup
+            UTTypeConformsTo: [public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [tessera]
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Tessera backup
+            LSHandlerRank: Owner
+            LSItemContentTypes: [com.kaushikaranagu.tessera.backup]
+        CFBundleURLTypes:
+          - CFBundleURLName: com.kaushikaranagu.tessera
+            CFBundleURLSchemes: [tessera]
+    sources:
+      - App
+      - Shared
+      - DesignSystem
+      - Features
+      - path: Resources
+        buildPhase: resources
+    dependencies:
+      - package: TesseraCore
+      - package: TesseraCore
+        product: TesseraLegacyStore
+      - package: TesseraCore
+        product: TesseraTess
+      - package: TesseraCore
+        product: TesseraIntents
+      - target: TesseraWidgets
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kaushikaranagu.tessera
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_CFBundleDisplayName: Tessera
+        INFOPLIST_KEY_NSHealthUpdateUsageDescription: Tessera saves your finished workouts to Apple Health.
+        INFOPLIST_KEY_NSHealthShareUsageDescription: Tessera reads your workouts, heart rate and body weight from Apple Health to show them beside your training.
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: Tess listens only while you talk to her, so you can log by voice. Audio stays on this iPhone.
+        INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: Tess turns what you say into text on this iPhone. Audio is never sent anywhere.
+        CODE_SIGN_ENTITLEMENTS: App/Tessera.entitlements
+        SUPPORTS_MACCATALYST: NO
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
+        SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO
+  TesseraWidgets:
+    type: app-extension
+    platform: iOS
+    info:
+      path: Widgets/Info.plist
+      properties:
+        CFBundleDisplayName: Tessera
+        UIAppFonts:
+          - InterTight-Variable.ttf
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    sources:
+      - Widgets
+      - Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kaushikaranagu.tessera.widgets
+        CODE_SIGN_ENTITLEMENTS: Widgets/TesseraWidgets.entitlements
+        GENERATE_INFOPLIST_FILE: YES
+        SKIP_INSTALL: YES
+        SUPPORTS_MACCATALYST: NO
+  TesseraTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - TesseraTests
+    dependencies:
+      - target: Tessera
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kaushikaranagu.tessera.tests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Tessera.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Tessera"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+  TesseraUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - TesseraUITests
+    dependencies:
+      - target: Tessera
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kaushikaranagu.tessera.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Tessera
+schemes:
+  TesseraUITests:
+    build:
+      targets:
+        Tessera: all
+        TesseraUITests: [test]
+    test:
+      targets:
+        - TesseraUITests
+  Tessera:
+    build:
+      targets:
+        Tessera: all
+        TesseraTests: [test]
+    test:
+      targets:
+        - TesseraTests
