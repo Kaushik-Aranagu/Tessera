@@ -4,6 +4,7 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+- **Live-workout statements, and the rest weekday field** (8:58 PM PT, Core #254). During a live workout, a bare yes, no or ok gets "Say the set, like 85 × 8."; a skip says "Skip is on the workout screen." Statements, not asks. The settings object carries `restWeekday` (1 to 7, Sunday = 1). Empty keeps the rest day where the engine places it today; it does not mean Sunday until he answers (8:52 PM PT).
 - **Speak's set line** (8:56 PM PT, Design b13d8b4). A spoken set says "Set 3 logged. 80 × 7.", name first, under the undo rule.
 - **Day log times print in the current zone** (8:56 PM PT, Research 104 K1). Every time in the Day log prints in the phone's current zone, as `day-log-late-night.md` says; the travel block in `day-log-copy.md` is fixed to match. Stored zones (op.zone, #225) are read later.
 - **Oct 22 install target** (8:56 PM PT, Research 103). Install at Builder A's launch-flags merge, once QA passes it and #251 and test.sh is green. If launch-flags hasn't merged by Wed Oct 21, 6 PM PT, install 92078ee with empty scheme args and no UITests on his phone.
