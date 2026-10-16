@@ -106,3 +106,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [ask-lines.md](ask-lines.md) | All teams: every permission ask, exact lines, one ask per day rule, first-week walkthrough |
 | [fixtures/grammar-regression.md](fixtures/grammar-regression.md) | Core: one deduplicated grammar regression table (736 rows) with expected parse and master status |
 | [fixtures/dst-travel.md](fixtures/dst-travel.md) | Core: 20 DST and time zone moments for TesseraDay tests |
+| [late-night.md](late-night.md) | Core + Builders: 11 PM to 3 AM use walk after the TesseraDay fix, 16 leftover bugs |
