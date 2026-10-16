@@ -36,7 +36,7 @@
 
 **Later:**
 - Review's link lines per Design's `docs/design/money-reading-first.md` (843638f, replaces the order in `upkeep-people-first.md`): "The week · Day log · Notes" and "Reading · Money · Upkeep · People". Each word appears only when its area's first screen ships, so no link leads nowhere.
-- Plan my day screen, the morning flow per Research's `../research/plan-my-day-flow.md` (#240; decisions.md 8:38 PM PT) and Design's m4-steers §6 once its conflicts list is settled: pull from 7:00 AM, no offer during a workout, plan rows under "Rest day" on a rest day, "Plan kept" with a 10 s UNDO. Plan rows wait for a tap, so they don't use master's GhostRow dab and "Saves in two seconds" line; give them their own row.
+- Plan my day screen, the morning flow per Research's `../research/plan-my-day-flow.md` (#240; decisions.md 8:38 PM PT) and Design's `docs/design/m4-steers.md` §6 rows 1 to 12 (041a17d, recording `design/recordings/plan-my-day.mp4`): the plan rung, PlanGhostRow with no dab, a VIA CLAUDE label shown once, swipe to keep or skip, a START WITH hold of 0.7 s, Shutdown with no dabs, no sleep line before Health is granted; pull from 7:00 AM, no offer during a workout, plan rows under "Rest day" on a rest day, "Plan kept" with a 10 s UNDO. Plan rows wait for a tap, so they don't use master's GhostRow dab and "Saves in two seconds" line; give them their own row.
 - Plan my day calendar lines (with T6, Research's `../research/calendar-pack.md`, #165): the one-time ask "Plan around your calendar? Times and titles only." and the fallback "Planned without your calendar".
 - After Build A1: a first-set timing mark (per Research's `../research/training-week-one.md` (#163)).
 - Builder B's 3 op log gaps in `../research/oplog-health.md` (#162).
