@@ -39,6 +39,14 @@ struct ThemeConcept: Sendable {
         var health: (UInt32, UInt32) = (0x6E9E6A, 0x7FB07A)
         /// Inactive words (sibling rail).
         var muted: (UInt32, UInt32) = (0xA39AAE, 0x6F6880)
+        /// Veils, held rows, the Write layer.
+        var raised: (UInt32, UInt32) = (0xFAF6EF, 0x221A2D)
+        /// `live` as text: UNDO and every vermilion word.
+        var liveInk: (UInt32, UInt32) = (0xB83C28, 0xFF8466)
+        /// Class colour for things with no domain colour.
+        var neutral: (UInt32, UInt32) = (0xA39AAE, 0x8E879A)
+        /// The morning end of the day stroke.
+        var morning: (UInt32, UInt32) = (0x9EC3D6, 0x7CC4F0)
     }
 
     struct WorkoutPalette: Sendable {
@@ -47,6 +55,8 @@ struct ThemeConcept: Sendable {
         var ink: UInt32
         var signal: UInt32
         var rest: UInt32
+        var tess: UInt32 = 0x9DBFE6
+        var health: UInt32 = 0x7FB07A
     }
 
     struct FontPairing: Sendable {
@@ -87,6 +97,8 @@ struct ThemeConcept: Sendable {
         case flat
         /// Plein air: soft radial washes over paper, one drifting wash and paper grain.
         case plein
+        /// The looks (themes.md): each look's own field, picked by the appearance.
+        case looks
     }
 
     enum SeparatorStyle: Sendable {
@@ -230,20 +242,52 @@ extension ThemeConcept {
                                 rest: 0xE8BD4C)
     )
 
+    /// Retired from the picker (themes.md); `-theme workshop` and `-theme machined` still reach them.
     static let all: [ThemeConcept] = [.plein, .workshop, .machined]
+
+    /// The house concept dressed in the chosen looks: day and night as the two halves of each colour, the workout in
+    /// the look on screen.
+    static func dressed(day: Look, night: Look, current: Look) -> ThemeConcept {
+        var concept = ThemeConcept.plein
+        concept.name = day == night ? day.name : "\(day.name) by day, \(night.name) by night"
+        concept.background = .looks
+        concept.palette = Palette(
+            ground: (day.ground, night.ground), ink: (day.ink, night.ink), live: (day.live, night.live),
+            training: (day.training, night.training), progress: (day.now, night.now),
+            sky: Array(repeating: [day.ground, day.ground, day.ground], count: 4),
+            tess: (day.tess, night.tess), context: (day.context, night.context), now: (day.now, night.now),
+            health: (day.health, night.health), muted: (day.muted, night.muted), raised: (day.raised, night.raised),
+            liveInk: (day.liveInk, night.liveInk), neutral: (day.neutral, night.neutral),
+            morning: (day.sky, night.sky)
+        )
+        let workout = current.workout
+        concept.workout = WorkoutPalette(ground: workout.ground, groundRaised: workout.raised, ink: workout.ink,
+                                         signal: workout.signal, rest: workout.rest, tess: workout.tess,
+                                         health: workout.health)
+        return concept
+    }
 }
 
 // MARK: - Tokens
 
 enum Theme {
-    /// The active concept. Set once at launch (`-theme <name>` in DEBUG).
-    nonisolated(unsafe) static var concept: ThemeConcept = .plein
+    /// A retired concept pinned with `-theme workshop` or `-theme machined`; nil means the looks.
+    nonisolated(unsafe) static var retired: ThemeConcept?
+
+    /// The active concept: the chosen looks (ThemeStore), read inside `body` so every view redraws on a switch.
+    static var concept: ThemeConcept {
+        retired ?? ThemeStore.shared.concept
+    }
 
     static func configure(arguments: [String] = ProcessInfo.processInfo.arguments) {
         guard let index = arguments.firstIndex(of: "-theme"), arguments.indices.contains(index + 1) else { return }
         let name = arguments[index + 1].lowercased()
-        if let match = ThemeConcept.all.first(where: { $0.name.lowercased() == name }) {
-            concept = match
+        if let look = Look.named(name) {
+            ThemeStore.shared.pin(look)
+        } else if let match = ThemeConcept.all.first(where: { $0.name.lowercased() == name }), match.name != "Plein" {
+            retired = match
+        } else if name == "plein" {
+            ThemeStore.shared.pin(.plein)
         }
     }
 
@@ -257,13 +301,67 @@ enum Theme {
             Color(light: concept.palette.ink.0, dark: concept.palette.ink.1)
         }
 
+        /// 66% on light looks, 72% on dark (themes.md, second addendum: contrast).
         static var inkSecondary: Color {
-            ink.opacity(0.6)
+            Color(light: concept.palette.ink.0, dark: concept.palette.ink.1, lightAlpha: 0.66, darkAlpha: 0.72)
         }
 
-        /// Finished / inert things only.
+        /// Text only at 34 pt and up; below that it's for marks. 51% light, 38% dark.
         static var inkTertiary: Color {
-            ink.opacity(0.38)
+            Color(light: concept.palette.ink.0, dark: concept.palette.ink.1, lightAlpha: 0.51, darkAlpha: 0.38)
+        }
+
+        /// Veils, held rows, the Write layer.
+        static var raised: Color {
+            Color(light: concept.palette.raised.0, dark: concept.palette.raised.1)
+        }
+
+        /// UNDO and every vermilion word. Fills and strokes keep `live`.
+        static var liveInk: Color {
+            Color(light: concept.palette.liveInk.0, dark: concept.palette.liveInk.1)
+        }
+
+        /// The class colour for things with no domain colour.
+        static var neutral: Color {
+            Color(light: concept.palette.neutral.0, dark: concept.palette.neutral.1)
+        }
+
+        /// The morning end of the day stroke.
+        static var sky: Color {
+            Color(light: concept.palette.morning.0, dark: concept.palette.morning.1)
+        }
+
+        /// Morning to evening along the day stroke.
+        static var daySpectrum: [Color] {
+            [sky, health, context, now, live]
+        }
+
+        /// Routine colours, in order (Pull gets violet; Tess's cobalt stays hers).
+        static var routines: [Color] {
+            [live, health, now, context]
+        }
+
+        enum ClassRole {
+            case training, planning, health, kitchen, neutral
+        }
+
+        static func classColor(_ role: ClassRole) -> Color {
+            switch role {
+            case .training: training
+            case .planning: now
+            case .health, .kitchen: health
+            case .neutral: neutral
+            }
+        }
+
+        /// Pigment over ground: multiply on light looks, screen on dark ones (the soul, any pigment overlay).
+        static var soulBlend: BlendMode {
+            ThemeStore.shared.current.isDark ? .screen : .multiply
+        }
+
+        /// Pigment glows on dark looks (strokes, dabs, the soul, numerals; never text under 34 pt).
+        static var halo: Bool {
+            ThemeStore.shared.current.isDark
         }
 
         static var hairline: Color {
@@ -322,12 +420,35 @@ enum Theme {
                 Color(hex: concept.workout.groundRaised)
             }
 
+            static var raised: Color {
+                groundRaised
+            }
+
+            /// Tess's words, the swap wash, the cobalt set stroke.
+            static var tess: Color {
+                Color(hex: concept.workout.tess)
+            }
+
+            static var health: Color {
+                Color(hex: concept.workout.health)
+            }
+
+            /// The glass outline: black 60% on Plein (today's), ink 12% elsewhere (black can't show on #000).
+            static var glassEdge: Color {
+                ThemeStore.shared.current.field == .plein ? .black.opacity(0.6) : ink.opacity(0.12)
+            }
+
+            /// Set strokes cycle through these, in order.
+            static var setCycle: [Color] {
+                [signal, tess, rest, health]
+            }
+
             static var ink: Color {
                 Color(hex: concept.workout.ink)
             }
 
             static var inkSecondary: Color {
-                ink.opacity(0.6)
+                ink.opacity(0.72)
             }
 
             static var inkTertiary: Color {
@@ -335,7 +456,7 @@ enum Theme {
             }
 
             static var hairline: Color {
-                ink.opacity(0.12)
+                ink.opacity(0.14)
             }
 
             static var signal: Color {
@@ -438,14 +559,15 @@ extension Color {
         )
     }
 
-    init(light: UInt32, dark: UInt32) {
+    init(light: UInt32, dark: UInt32, lightAlpha: CGFloat = 1, darkAlpha: CGFloat = 1) {
         self.init(uiColor: UIColor { traits in
-            let hex = traits.userInterfaceStyle == .dark ? dark : light
+            let isDark = traits.userInterfaceStyle == .dark
+            let hex = isDark ? dark : light
             return UIColor(
                 red: CGFloat((hex >> 16) & 0xFF) / 255,
                 green: CGFloat((hex >> 8) & 0xFF) / 255,
                 blue: CGFloat(hex & 0xFF) / 255,
-                alpha: 1
+                alpha: isDark ? darkAlpha : lightAlpha
             )
         })
     }

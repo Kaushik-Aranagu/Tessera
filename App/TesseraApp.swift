@@ -51,6 +51,11 @@ struct TesseraApp: App {
                         ReviewView()
                     } else if ProcessInfo.processInfo.arguments.contains("-groceries") {
                         GroceriesView()
+                    } else if ProcessInfo.processInfo.arguments.contains("-looks") {
+                        LookSentence()
+                            .padding(Theme.Spacing.gutter)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background { ThemedBackground() }
                     } else if ProcessInfo.processInfo.arguments.contains("-backup") {
                         BackupView()
                     } else if ProcessInfo.processInfo.arguments.contains("-recipe") {
