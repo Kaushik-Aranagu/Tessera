@@ -323,7 +323,7 @@ public struct TessGrammar {
             return .set(entry: entry, weight: unit.toKilograms(weight), reps: reps, kind: .drop, phrase: .drop,
                         unit: unit)
         }
-        if let match = text.firstMatch(of: /^(\d+(?:\.\d+)?)(?: ?(kg|lb))?(?: ?x ?| for )(\d+)$/),
+        if let match = text.firstMatch(of: /^(\d+(?:\.\d+)?)(?: ?(kg|lb))?(?: ?x ?| for | by )(\d+)$/),
            let weight = Double(match.1), let reps = Double(match.3)
         {
             let unit = match.2.flatMap { MassUnit(parsing: String($0)) } ?? .kilograms
@@ -395,7 +395,7 @@ public struct TessGrammar {
     private func parseLift(_ text: String, entry: ObjectRecord?) -> Parse? {
         var lift = LiftWords()
         var rest = Substring(text)
-        if let scheme = rest.firstMatch(of: /(\d+(?:\.\d+)?) ?x ?(\d+)(?: (?:at|@) (\d+(?:\.\d+)?))?/) {
+        if let scheme = rest.firstMatch(of: /(\d+(?:\.\d+)?)(?: ?x ?| by )(\d+)(?: (?:at|@) (\d+(?:\.\d+)?))?/) {
             lift.readScheme(Double(scheme.1) ?? 0, Double(scheme.2) ?? 0, at: scheme.3.flatMap { Double($0) },
                             weightElsewhere: Self.hasOtherNumber(rest, excluding: scheme.range))
             rest.removeSubrange(scheme.range)
