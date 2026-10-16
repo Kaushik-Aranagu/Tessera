@@ -134,3 +134,44 @@ can keep needing a sore word, since "back from work" is common).
 
 ### Deferred to AI-8 (agreed, not blocking)
 S5 `valueRanges`, F4 KEEP / NOT NOW, redaction of the raw capture text (M2's capture op).
+
+## Addendum: re-check at `f55bb0e` (Oct 16, about 3:05 AM Pacific): FIX FIRST (one item, plus a conflict)
+
+**The trial merge onto master e9bfef0 conflicts** in `PlanDaysTests.swift`: #363 already changed the same
+`version == 6` line and moved that test. Merge master into the branch and keep master's version of that test; #356
+needs no change there, because `>= 6` is already on master.
+
+### Closed
+- **F2b.** The forget log is also a hashes-only file, `Application Support/Tessera/tess-forgotten.json`. It's
+  written atomically with complete file protection, never inside a `.tessera`, and read together with the in-store
+  log. AppModel calls `reapplyForgets()` before the turnover at every launch and foreground. The M8 test restores
+  into a second store that shares the log file, so it catches the real case. Tests use a temp file; only the app
+  takes the default URL.
+- **F5.** A body word on its own makes a line private. "back" still needs a sore word, so "back from work" stays
+  public (S5 and S10).
+- **S8.** A health word together with a number is refused as a measured value ("resting heart rate is 52").
+- **T4/T8.** Noticed lines are now in the second person: "You usually train 6 pm to 8 pm.", "You train about 2 days
+  a week." and "You cook most on Sundays."
+- **Lows.** The `area` default is `about`. The recent line drops whole parts ("Thu: Push A done, 2 tasks.") and only
+  cuts at a word when a single part is over 80 characters.
+
+### F6 (must fix). He can never tell Tess a line again once he has forgotten it
+The hash matches the words, and nothing ever removes a hash. Here's the sequence:
+1. He forgets "You train after work."
+2. Weeks later he says "remember that I train after work" again.
+3. `RememberFact` writes it, and Tess says "Kept."
+4. The next foreground runs `reapplyForgets()`, which matches the hash and silently redacts and deletes the line.
+
+He's told it's kept, and it's gone. This existed with the in-store log, but it only bit at 04:00. Running at every
+foreground makes it immediate.
+**Fix:** a told line he says again is consent. On a successful `RememberFact`, remove its hash from both logs; the
+store side can run in the same transaction, the file side right after. Also run `reapplyForgets()` only on the
+first launch after a restore (`TesseraBackup.restoredAt`), not on every foreground. Add a test: forget, remember the
+same words, foreground, still kept.
+
+### Lows
+- **Over-refusal.** The measured check refuses any line that has a health word and any digit, so "my knee hurts
+  after 3 sets" is refused rather than kept private. Research's rule was a number *next to* the health word. Within
+  three words would do.
+- **The forget log is never cleared.** It isn't touched by a reset or by deleting the app's data from inside the
+  app. It's hashes only, so this is a note for whoever writes "erase everything".
