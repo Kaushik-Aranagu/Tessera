@@ -48,7 +48,7 @@ struct SetLossTests {
         ("A027", "squat 100x5 tue", "ask Squat 100 × 5 for Tuesday?"),
         ("KEEP1", "ohp 3x8 at 45", "lift Overhead Press 3x45x8"),
         ("A164", "squat 100x5 and buy milk", "lift Back Squat 100x5 + groceries milk"),
-        ("QA274", "bench 3x5 at 7", "nil"),
+        ("QA274", "bench 3x5 at 7", "ask Bench 3 × 5 at what weight?"),
         // QA F1, G1, W1 on #282 and Research's K901+ notes.
         ("F1a", "bench 3 sets of 8", "ask Bench 3 × 8 at what weight?"),
         ("F1b", "bench 3x8", "ask Bench 3 × 8 at what weight?"),
@@ -64,9 +64,17 @@ struct SetLossTests {
         ("F2a", "lat pulldown 3x8", "ask Lat Pulldown 3 × 8 at what weight?"),
         ("F2b", "leg press 3x8", "ask Leg Press 3 × 8 at what weight?"),
         ("F2c", "curls 3x8", "ask Dumbbell Curl 3 × 8 at what weight?"),
-        ("F2d", "lat pulldown 3x8 at 7", "nil"),
+        ("F2d", "lat pulldown 3x8 at 7", "ask Lat Pulldown 3 × 8 at what weight?"),
         ("F2e", "lat pulldown 55x8", "lift Lat Pulldown 55x8"),
         ("F2f", "curls 14x10", "lift Dumbbell Curl 14x10"),
+        // QA F3 on #289: any loaded kit, N up to 10, never N kg.
+        ("F3a", "leg press 5x5", "ask Leg Press 5 × 5 at what weight?"),
+        ("F3b", "lat pulldown 6x8", "ask Lat Pulldown 6 × 8 at what weight?"),
+        ("F3c", "lat pulldown 10x10", "ask Lat Pulldown 10 × 10 at what weight?"),
+        ("F3d", "curls 8x10", "ask Dumbbell Curl 8 × 10 at what weight?"),
+        ("F3e", "curls 3x10 at 5", "ask Dumbbell Curl 3 × 10 at what weight?"),
+        ("F3f", "leg press 5 kg x 5", "lift Leg Press 5x5"),
+        ("F3g", "kettlebell swing 3x15", "ask Kettlebell Swing 3 × 15 at what weight?"),
         // Research's 113 re-trace and Design's Speak review.
         ("R113b", "Bench 80 kg, 8 reps only.", "lift Bench Press 80x8"),
         ("R113c", "Bench 3 sets of 8 at 80.", "lift Bench Press 3x80x8"),
@@ -175,11 +183,22 @@ struct SetLossTests {
         var live = context
         live.entry = entry.id
         #expect(read(grammar.parse("pull ups 8", context: live)) == "set 0x8")
-        // QA F1 in focus: "bench 3x8" takes the last weight.
+        // QA F1, F3 in focus: "bench 3x8" with 80 kg last gets the set-count ask.
         let bench = try engine.perform(AddExercise(workout: workout.id, exercise: #require(classes[.benchPress]).id),
                                        by: .user).output
         try engine.perform(LogSet(entry: bench.id, weight: 80, reps: 8), by: .user)
         live.entry = bench.id
-        #expect(read(grammar.parse("bench 3x8", context: live)) == "set 80x8 + set 80x8 + set 80x8")
+        #expect(read(grammar.parse("bench 3x8", context: live)) == "ask 3 × 8: 3 sets, or 3 kg?")
+    }
+
+    @Test func aLastWeightInFocusLetsTheSetCountAskDecide() throws {
+        // QA F3: Leg Press at 100 kg in focus, "leg press 5x5" asks "5 sets, or 5 kg?".
+        let workout = try store.create(#require(classes[.workout]), title: "Legs")
+        let press = try #require(store.classDef(id: SystemCatalog.stableID("library.legPress")))
+        let entry = try engine.perform(AddExercise(workout: workout.id, exercise: press.id), by: .user).output
+        try engine.perform(LogSet(entry: entry.id, weight: 100, reps: 10), by: .user)
+        var live = context
+        live.entry = entry.id
+        #expect(read(grammar.parse("leg press 5x5", context: live)) == "ask 5 × 5: 5 sets, or 5 kg?")
     }
 }
