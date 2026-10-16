@@ -8,7 +8,7 @@ docs/research/fixtures/home-lines-eval.json (E1-E20 and 44 probes) and memory-da
 Two invocations, so the $1 stop can never cut the gate pass short:
   python3 scripts/ai/home_lines_eval.py --pass gate   [--models haiku,sonnet] [--runs 3] [--dry] [--out docs/...]
   python3 scripts/ai/home_lines_eval.py --pass memory [--models haiku,sonnet] [--runs 3] [--dry] [--out docs/...]
-gate scores E1-E20 (context line and detail); memory scores the 27 memory-days moments (context line only).
+gate scores E1-E20 (context line and detail); memory scores the 39 memory-days moments (context line only).
 
 --job done (the AI-5 verdict, Oct 16): Claude is asked only about done workouts with something new to say, a best or a
 gap of GAP_DAYS or more since the same routine. Every other item keeps its rules line and is never sent, and the done
@@ -567,8 +567,8 @@ def self_test():
     if done_gate != ["E1", "E2", "E12", "E14", "E19"]:
         bad.append(f"--job done sends gate moments {done_gate}, want E1, E2, E12, E14, E19")
     done_mem = [m["id"] for m in load_moments("memory") if build_body(m, MODELS["sonnet"], "memory", "done")]
-    if done_mem != ["d9m2"]:
-        bad.append(f"--job done sends memory moments {done_mem}, want d9m2")
+    if done_mem != ["d9m2", "d15m2", "d16m2", "d17m2", "d18m2", "d20m2"]:
+        bad.append(f"--job done sends memory moments {done_mem}, want d9m2, d15m2, d16m2, d17m2, d18m2, d20m2")
     weekday_mem = "<memory>\nTold:\n- You train after work on weekdays.\n</memory>"
     c15 = [("After work, your usual slot", "Saturday morning", weekday_mem, True),
            ("After work, your usual slot", "Friday morning", weekday_mem, False),
