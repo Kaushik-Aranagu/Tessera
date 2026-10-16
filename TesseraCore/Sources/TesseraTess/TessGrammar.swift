@@ -737,10 +737,12 @@ enum TessDates {
     }
 
     /// The next given weekday; today counts only if it hasn't passed (it's the same day, so we keep it).
+    /// The next date with that weekday, counted from his day: "thu" said at 1 am Friday (still his Thursday) is
+    /// today, not next week (TW29).
     static func nextDate(weekday: Int, after now: Date, calendar: Calendar) -> Date? {
-        let today = calendar.component(.weekday, from: now)
-        let offset = (weekday - today + 7) % 7
-        return calendar.date(byAdding: .day, value: offset, to: calendar.startOfDay(for: now))
+        let his = TesseraDay(calendar: calendar).day(of: now)
+        let offset = (weekday - calendar.component(.weekday, from: his) + 7) % 7
+        return calendar.date(byAdding: .day, value: offset, to: his)
     }
 
     /// "3pm", "3:30pm", "15:00", "9" (with "at"), "noon".

@@ -186,7 +186,8 @@ public extension TessMemoryStore {
         }
         if cooks.count >= 3 {
             let weekdays = cooks.compactMap { store.value("cookedAt", of: $0)?.dateValue }
-                .map { calendar.component(.weekday, from: $0) }
+                // The weekday of his day: a Friday-night cook at 12:30 am is a Friday (TW27).
+                .map { calendar.component(.weekday, from: TesseraDay(calendar: calendar).day(of: $0)) }
             if let top = Dictionary(grouping: weekdays, by: { $0 }).max(by: { $0.value.count < $1.value.count }),
                Double(top.value.count) >= Double(weekdays.count) * 0.5
             {
