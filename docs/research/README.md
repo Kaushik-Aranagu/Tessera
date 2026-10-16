@@ -195,4 +195,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [claude-requests-audit.md](claude-requests-audit.md) | Core, AI, QA: everything that can leave the phone for Claude on master (item 145), 2 live calls, 3 latent, gaps CA4 to CA7 |
 | [fixtures/rest-weekday.md](fixtures/rest-weekday.md) | Core, Builders, QA: Sunday rest on a rolling plan, the restWeekday reader (item 146), 13 rules, 27 scenarios, 7 gaps; Product 11:52 AM PT |
 | [fixtures/day-marks.md](fixtures/day-marks.md) | Core, Builder B, Design: rest, skip, sick and travel marks for yesterday, today and tomorrow (item 147), 16 rules, 26 rows, 8 gaps; Product 11:55 AM PT |
-| [fixtures/shutdown-flow.md](fixtures/shutdown-flow.md) | Core, Builder B, Design: the 9 pm Shutdown flow to the 10 pm close (item 148), 13 steps, 26 scenarios, 8 edge rules, 12 gaps |
+| [fixtures/shutdown-flow.md](fixtures/shutdown-flow.md) | Core, Builder B, Design: the 9 pm Shutdown flow to the 10 pm close (item 148), 13 steps, 27 scenarios, 8 edge rules, 12 gaps; Product 11:57 AM PT |
