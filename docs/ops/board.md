@@ -1,5 +1,7 @@
 # Tessera board (index)
 
+**DAILY PINS (decisions 2:49 PM PT Oct 16, Kaushik 2:46 PM):** a v9 pin is named at 4:00 PM PT each day something he can see has merged and passed QA, with the same gates and an in-place install by Builder A. Approved looks (A 0p, B 0y, Core 0ak) sit right after each lead's open riders and ride the first pin they're ready for. Oct 22 9:30 AM names the last v9 pin, then v10.
+
 **ON HIS PHONE (2:24 PM PT Oct 16): a36b161, the Catalog v9 pin.** Signing lapses Fri Oct 23 at 2:12 PM PT. Next: the riders pin, named at the Thu Oct 22 9:30 AM branch call (pin-checklist). No older build ever installs.
 
 **PIN (1:08 PM PT Oct 16): a36b161b7294596848a319c0cc0fc50a3b25f2ee.** Builder A runs the v9 gate, the Design walk and Step 0, then installs it under his standing approval.
