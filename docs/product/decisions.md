@@ -155,4 +155,9 @@
   5. In "paid 12.50 at 12.30", 12.50 is the amount and 12.30 is the time.
   6. "done" while a timer rings ends the timer first.
   7. The test clock runs on Los Angeles time, his own.
+- **Time zones and DST** (6:06 PM PT, Research #168 `fixtures/dst-travel.md`, all defaults):
+  1. Every log stores its zone at log time; a missing zone falls back to the current one.
+  2. A workout belongs to the day it started, so a session past 1 AM never marks the next day trained.
+  3. "1:30am" on Nov 1 means the first 1:30.
+  4. Day caches are keyed by zone, and Now refreshes when the zone changes.
 

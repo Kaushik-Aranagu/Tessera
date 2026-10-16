@@ -20,6 +20,7 @@
 **Restore drill, once, right after the Siri undo hotfix** (Research #161, `../research/restore-drill.md`; QA has no simulator). Run the 10 steps and 5 edge cases on the simulator and send the results to QA and Core. Trap: don't relaunch with `-resetDemo`, because it wipes the restore. It runs again after Core's Backup batch.
 
 **Audit batches (small PRs, beside other work; decisions.md 5:14 PM PT):**
+- DST: `ExerciseDigest.swift:195` builds "Yesterday" as now minus 86,400 seconds, which is wrong on Nov 1. Use `TesseraDay` (Research #168).
 - 4 AM day: Builder A's 4 midnight cuts in `../research/day-boundary.md` (#166), swapped to Core's `TesseraDay` helper once it lands.
 - Reduce Motion (Research #160, `../research/accessibility.md`): one DesignSystem `MotionPolicy` fix so Reduce Motion actually stops the slides and scales. It covers most of the Reduce Motion rows. Normal priority; the other accessibility rows are in Later.
 - Empty states batch, first: Builder A's 9 rows in `../research/empty-states.md`. Start with Plans on a fresh install (it reads the plan start date Core seeds, M1): "Session 1 of 26" becomes a count from the plan's creation day ("Session 1 of 13"), and the week count works the same way. Then build a shared `EmptyLine` in DesignSystem for every team. Then the zero-entry live workout, the "0 kg moved" finish (a zero-set finish isn't saved), the exercise page's triple line, the rep maxes grid and the muscles tab (one change), the all-zero "Sets per muscle", and the routine editor's "Tap one" when there are none.
