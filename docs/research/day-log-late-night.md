@@ -11,7 +11,7 @@ Traced by hand on origin/master 21f335a (15 Oct 19:33 PT). No Swift toolchain, n
   below is traced against the obvious calendar-day fold: `day-log-first.md` rule 1 written as
   `calendar.startOfDay(for: record.createdAt)` on `OpRecord`s, grouped per day, then rules 2 to 12.
 - `TesseraDay.day(of:)` (`Engine/TesseraDay.swift:22-26`) reads the wall-clock hour: hour < 4 is the day before. DST
-  is right for free. `RollForwardTasks.logicalDay` now calls it (`Tasks/RollForward.swift:71-73`), so dst-travel D17 is fixed.
+  is right for free. `RollForwardTasks.logicalDay` now calls it (`Tasks/RollForward.swift:83`), so dst-travel D17 is fixed.
 - Stored times are plain `Date`s (seconds since 2001), no zone field. `OpRecord.createdAt` is `.now` at perform
   (`Model/Models.swift:521`, `Actions/ActionEngine.swift:52-58`); set `loggedAt` `.now`, `doneAt` `time ?? .now`,
   workout `startedAt`/`endedAt` (`Actions/TrainingActions.swift:67, 420, 200-201, 230-233`).
