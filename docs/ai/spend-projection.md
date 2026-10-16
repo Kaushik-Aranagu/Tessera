@@ -12,12 +12,12 @@ The 80% line is **$40**. Prices are `TessUsageLedger.prices` in code: Haiku 5.5 
 | Job | Model | Calls/day typ / worst | Tokens in / out | Per call | Month typ | Month worst |
 |---|---|---|---|---|---|---|
 | Home lines (AI-4) | Sonnet 5.5 | 20 / 40 | 1,500 / 150 A | $0.0045 A ($0.0018 M) | $2.70 | $5.40 |
-| Week story (AI-11) | Sonnet 5.5 | 8 a month / 2 | 2,000 / 300 A | $0.007 A ($0.01 gate) | $0.06 | $0.60 |
+| Week story (AI-11) | Sonnet 5.5 | 8 a month / 2 | 2,000 / 300 A | $0.007 A ($0.01 gate) | $0.06 | $0.60 (at the $0.01 gate price) |
 | Plan my day | Sonnet 5.5 | 2 / 5 | 1,000 / 300 A (1,270 / 1,024 max) | $0.005 A ($0.0128 max) | $0.30 | $1.92 |
 | Recipe reader (L3) | Haiku 5.5 | 10 a month / 1 | 7,000 / 1,200 A (4,096 max out) | $0.0013 A ($0.0027 max) | $0.01 | $0.08 |
 | Groceries link (AI-12) | Haiku 5.5 | 2 / 4 | 1,200 / 150 A | $0.00022 M | $0.01 | $0.03 |
 | Misses (capture) | Haiku 5.5 | 5 / 20 | 5,150 / 130 A over 2 rounds | $0.0006 A | $0.09 | $0.35 |
-| Ask (log question) | Haiku 5.5 | 5 / 10 | 3,000 / 100 A | $0.00035 A ($0.00066 two turns) | $0.05 | $0.20 |
+| Ask (log question) | Haiku 5.5 | 5 / 10 | 3,000 / 100 A | $0.00035 A ($0.00066 two turns) | $0.05 | $0.20 (at the two-turn $0.00066) |
 | Living colour (AI-14) | Haiku 5.5 | 1 / 1 | 1,200 / 60 A | $0.00015 A | $0.005 | $0.005 |
 | Key check | Haiku 5.5 | rare | count_tokens, free; fallback "Hi" | about $0 | $0.00 | $0.00 |
 
@@ -41,8 +41,8 @@ Where each number comes from:
 | | Typical | Worst |
 |---|---|---|
 | All jobs | **$3.23** (6% of $50) | **$8.59** (17%); $9.15 with misses at their held ceiling |
-| Headroom to $40 (80%) | $36.77 | $31.45 |
-| Headroom to $50 (100%) | $46.77 | $41.45 |
+| Headroom to $40 (80%) | $36.77 | $31.41 |
+| Headroom to $50 (100%) | $46.77 | $41.41 |
 
 With the measured Home lines cost ($0.0018), the typical month is about $1.60. Either way the cap is about 5 to 15
 times what the planned jobs use.
@@ -66,7 +66,7 @@ Sonnet job. Plan my day is second. Every Haiku job together is under $0.70 even 
 - **A Home lines loop.** $40 from Home lines alone takes about 8,900 Sonnet calls, about 300 a day. The 40-a-day cap
   stops that, but it is not in code yet. With only the 10-minute debounce, 144 a day is $19.44 a month. If a pack
   carries a ticking value ("paused 21 min ago"), its hash changes every minute and moments skip the debounce: about
-  1,440 calls a day is about $194, past the cap in under a week.
+  1,440 calls a day is about $6.48 a day: $40 in about 6.2 days and $50 in about 7.7.
 - **A model missing from `prices`.** `estimate` and `cost` return 0 for an unknown model string, so a typo or an
   Opus id would spend real money that the ledger records as free and the cap never sees.
 - **Bigger packs.** Home lines on Sonnet with 5,000 tokens in costs $0.0115 a call, $13.80 at 40 a day.
