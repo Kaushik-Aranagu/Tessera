@@ -193,3 +193,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [week-two-monday.md](week-two-monday.md) | Coordinator, Product: Monday Oct 19 kit for 101 (item 144), run order, messages A (data) and B (no data), edit blocks per answer, stale week-two.md blocks; Product calls 11:47 AM PT |
 | [one-wording-check.md](one-wording-check.md) | Core, Builders, QA: one event, one wording on master (item 143), 9 of 28 agree, 19 split (5 wait on #366); 126's fixes, 7 landed; Product rulings 11:50 AM PT |
 | [claude-requests-audit.md](claude-requests-audit.md) | Core, AI, QA: everything that can leave the phone for Claude on master (item 145), 2 live calls, 3 latent, gaps CA4 to CA7 |
+| [fixtures/rest-weekday.md](fixtures/rest-weekday.md) | Core, Builders, QA: Sunday rest on a rolling plan, the restWeekday reader (item 146), 13 rules, 27 scenarios, 7 gaps; Product 11:52 AM PT |
