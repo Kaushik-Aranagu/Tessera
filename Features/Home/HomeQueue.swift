@@ -226,7 +226,7 @@ private struct QueueRow: View {
                 .accessibilityHidden(true)
             timeColumn
             content
-                .offset(x: drag < 0 ? leftOffset : min(drag * 0.12, 20))
+                .offset(x: drag < 0 ? leftOffset : 0)
                 // Lifted while held: a soft shadow on the text itself and a slight scale, no highlight shape.
                 .scaleEffect(holding && !struck ? 1.03 : 1, anchor: .leading)
                 .shadow(color: Theme.Colors.ink.opacity(holding && !struck ? 0.18 : 0), radius: 6, y: 3)

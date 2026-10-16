@@ -181,12 +181,13 @@ private struct RoutinePlan: View {
 
             Spacer(minLength: Theme.Spacing.xl)
 
-            PaintKey(isTap: true, action: { model.startRoutine(routine) }, label: { _ in
-                Text("Start workout")
-                    .textRole(.bodyStrong)
-            })
-            .accessibilityLabel("Start \(routine.title)")
-            .entrance(3)
+            if model.canStart(routine) {
+                PaintKey(isTap: true, action: { model.startRoutine(routine) }, label: { _ in
+                    Text("Start workout")
+                })
+                .accessibilityLabel("Start \(routine.title)")
+                .entrance(3)
+            }
 
             Text(TrainingPage.routineLine(routine, slots: slots.count))
                 .font(Theme.voice(size: 21))

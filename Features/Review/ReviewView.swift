@@ -94,9 +94,15 @@ struct ReviewWeek {
 
 @MainActor
 enum ReviewCopy {
-    /// "Four good days of seven", "A quiet week so far" (a good day = anything finished).
+    /// Anything done counts here (Research's review-sentence §4): "Something done on four days", "Something done
+    /// every day", "A quiet week so far". Never "good", never "of seven".
     static func headline(_ count: Int) -> String {
-        WeekReview.headline(count)
+        switch count {
+        case 0: "A quiet week so far"
+        case 7: "Something done every day"
+        case 1: "Something done on one day"
+        default: "Something done on \(SpokenTime.number(count)) days"
+        }
     }
 
     /// "9 tasks done, 3 workouts and 2 notes." Zeros are left out rather than counted.
@@ -106,14 +112,15 @@ enum ReviewCopy {
             (week.workouts.count, "workout", "workouts"),
             (week.notesWritten, "note", "notes"),
         ].filter { $0.0 > 0 }.map { "\($0.0) \($0.0 == 1 ? $0.1 : $0.2)" }
-        guard let last = parts.last else { return "Nothing finished yet, and that's fine." }
+        guard let last = parts.last else { return "Nothing to count this week." }
         return (parts.count == 1 ? last : parts.dropLast().joined(separator: ", ") + " and " + last) + "."
     }
 
     /// Tess's one line, looking forward: a muscle behind its weekly sets, else what's resting in Later.
     @MainActor
     static func tess(_ week: ReviewWeek, model: AppModel) -> String? {
-        if let line = WeekReview.tessLine(MuscleVolume.compute(model, in: week.interval)) {
+        // Quiet about sets on thin weeks (3 sessions or fewer): a fact there reads as a debt.
+        if week.workouts.count > 3, let line = WeekReview.tessLine(MuscleVolume.compute(model, in: week.interval)) {
             return line
         }
         switch week.putAway.count {
@@ -148,17 +155,17 @@ private struct ReviewPageBody: View {
                     .font(Theme.voice)
                     .foregroundStyle(Theme.Colors.context)
                     .entrance(0)
-                Text(ReviewCopy.headline(week.goodDayCount))
-                    .textRole(.hero)
-                    .foregroundStyle(Theme.Colors.ink)
-                    .fixedSize(horizontal: false, vertical: true)
+                ReviewHeadline(text: ReviewCopy.headline(week.goodDayCount))
+                    .accessibilityElement(children: .ignore)
                     .accessibilityAddTraits(.isHeader)
                     .accessibilityLabel("\(ReviewCopy.headline(week.goodDayCount)). "
                         + WeekReview.consistencyLine(week.goodDayCount))
                     .padding(.top, Theme.Spacing.s)
                     .entrance(1, hero: true)
 
-                WeekDabs(days: week.days, good: week.goodDays, now: now)
+                WeekDabs(days: week.days, good: week.goodDays,
+                         plan: WeekReview.planMarks(model, days: week.days, now: now, calendar: WeekReview.mondayFirst),
+                         now: now)
                     .padding(.top, Theme.Spacing.xxl)
                     .entrance(2)
 
@@ -228,34 +235,50 @@ private struct ReviewPageBody: View {
     }
 }
 
-/// Seven dabs, oldest to today: filled sage where something got done, a faint ink ring otherwise (neutral, never
-/// red). Each fills in turn the first time the page appears; with Reduce Motion they're simply there.
+/// Seven marks, oldest to today, as on Home's Review: sage where something got done, the dry rest stroke where the
+/// plan rests, the faint ring for an open day, nothing before first use. Each pops in turn the first time the page
+/// appears; with Reduce Motion they're simply there.
 private struct WeekDabs: View {
     let days: [Date]
     let good: [Bool]
+    let plan: [Date: WeekReview.DayMark]
     let now: Date
     @State private var shown = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private func mark(_ index: Int) -> WeekReview.DayMark {
+        if good[index] {
+            return .trained(1)
+        }
+        let planned = plan[Calendar.current.startOfDay(for: days[index])]
+        if planned == .rest {
+            return .rest
+        }
+        return planned ?? .open
+    }
 
     var body: some View {
         HStack(spacing: 0) {
             ForEach(Array(days.enumerated()), id: \.offset) { index, day in
                 let isToday = day == TesseraDay().today(now)
-                let filled = good[index] && (shown || reduceMotion)
+                let mark = mark(index)
                 VStack(spacing: Theme.Spacing.s) {
-                    PaintDab(color: filled ? Theme.Colors.health : Theme.Colors.ink.opacity(0.25),
-                             size: CGSize(width: 34, height: 30), seed: index + 11, filled: filled)
-                        .scaleEffect(filled || !good[index] ? 1 : 0.8)
+                    DayMarkView(mark: mark, seed: index + 11, delay: 0.1 + Double(index) * 0.05)
+                        .frame(width: 34, height: 30)
+                        .scaleEffect(shown || reduceMotion ? 1 : 0.8)
+                        .opacity(shown || reduceMotion ? 1 : 0)
                         .animation(reduceMotion ? nil : Theme.Motion.house.delay(Double(index) * 0.05),
                                    value: shown)
                     Text(day.formatted(.dateTime.weekday(.narrow)))
                         .textRole(.label)
-                        .foregroundStyle(isToday ? Theme.Colors.ink : Theme.Colors.inkSecondary)
+                        .foregroundStyle(mark == .none || mark == .planned ? Theme.Colors.inkTertiary
+                            : isToday ? Theme.Colors.ink : Theme.Colors.inkSecondary)
                 }
                 .frame(maxWidth: .infinity)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel("\(day.formatted(.dateTime.weekday(.wide)))\(isToday ? ", today" : ""), "
-                    + (good[index] ? "something done" : "quiet"))
+                    + (good[index] ? "something done" : mark == .rest ? "rest" : mark == .planned ? "planned" : "open"))
+                .accessibilityHidden(mark == .none)
             }
         }
         .accessibilityElement(children: .contain)

@@ -19,7 +19,7 @@ final class HomeQueueUITests: XCTestCase {
         from.press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.3)),
                    withVelocity: 1500, thenHoldForDuration: 0)
         sleep(1)
-        let review = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "of seven")).firstMatch
+        let review = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "the week so far")).firstMatch
         XCTAssertTrue(review.exists && review.frame.minX >= 0, "A swipe over the hero pages Home")
     }
 
@@ -41,7 +41,7 @@ final class HomeQueueUITests: XCTestCase {
                    withVelocity: 1500, thenHoldForDuration: 0)
         sleep(1)
         snap(app, "paged")
-        let review = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "of seven")).firstMatch
+        let review = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "the week so far")).firstMatch
         XCTAssertTrue(review.exists && review.frame.minX >= 0, "A swipe over the queue pages Home")
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.3))
             .press(forDuration: 0.05,

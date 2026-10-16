@@ -386,10 +386,13 @@ private struct RestHero: View {
                 .font(Theme.voice(size: 21))
                 .foregroundStyle(Theme.Colors.context)
                 .entrance(3)
-            Button("Start \(next.title)") { model.startRoutine(next) }
-                .buttonStyle(InkLabelWordStyle(color: Theme.Colors.live))
-                .accessibilityHint("Starts \(next.title) anyway")
-                .entrance(3)
+            // An empty routine has nothing to start, so no Start word (Builder A's canStart).
+            if model.canStart(next) {
+                Button("Start \(next.title)") { model.startRoutine(next) }
+                    .buttonStyle(InkLabelWordStyle(color: Theme.Colors.live))
+                    .accessibilityHint("Starts \(next.title) anyway")
+                    .entrance(3)
+            }
         }
     }
 }
@@ -421,10 +424,12 @@ private struct RoutineHero: View {
             .entrance(2, hero: true)
             .padding(.bottom, Theme.Spacing.l)
             HStack(alignment: .center, spacing: Theme.Spacing.l) {
-                PaintKey(isTap: true, action: { model.startRoutine(routine) }, label: { _ in
-                    Text("Start")
-                })
-                .accessibilityLabel("Start \(routine.title)")
+                if model.canStart(routine) {
+                    PaintKey(isTap: true, action: { model.startRoutine(routine) }, label: { _ in
+                        Text("Start")
+                    })
+                    .accessibilityLabel("Start \(routine.title)")
+                }
                 VStack(alignment: .leading, spacing: 0) {
                     Text("\(slots) EXERCISES")
                     Text("\(sets) SETS")
