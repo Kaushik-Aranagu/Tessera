@@ -4,6 +4,13 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+- **Money and reading on the phone** (3:24 AM PT Oct 16, Research 129 and 130, #376).
+  - **MU1, yes.** A money-shaped last amount after words that aren't an exercise is a spend, decided on the phone. "costco 212.37" logs $212.37 at Costco. This replaces M7's route to Claude for word-then-amount. Exercise names and the live-workout guard still win.
+  - **MU2, yes.** Anything money-shaped never goes to Claude. If the phone can't place it, Tess asks one on-phone question in the one-ask pattern, for example "$212.37 at Costco?" with LOG or NOT NOW. Ship-list eval 15's "via Claude" route is struck. A money phrase with no amount ("pay the apple card bill mon") stays a task.
+  - **Reading rule, yes.** "read 30 pages", "finished the three body problem sunday" and "yesterday" forms are read before parsePastLog and log a reading record on the right day, not a note and a task.
+  - **RF18, both, with one write.** "read 20 pages" writes one reading record, and the Read habit counts it for that day, since habits come from logs. There is no separate check-in. The habit's check-in ask is skipped on a day that already has a reading record.
+  - **RF15, thing first.** The receipt is "Dune, finished."
+  - **Row 49 (split).** It follows the decided split default, not the full amount. Core fixes it with the money rows.
 - **The next install carries migrations** (3:20 AM PT Oct 16). Master now has Catalog v6 (#341) and v7 (#356, TessMemoryStore). Before any commit after 7b321d2 is pinned, QA's install script gets a migration row. Builder A runs the v5 → v7 upgrade on the Simulator over a copy of his latest backup: it must open with every record intact, Settings kept, and no crash on launch. Rollback rule: going back to 7b321d2 from a v7 build is only safe by restoring a backup made on 7b321d2. Never restore a v7 backup onto an older build.
 - **One word for a best, one shape for a receipt, trip fixes first** (3:15 AM PT Oct 16, Research 125 to 127, #372).
   - **"Best" everywhere.** The Day log moves to "best" too ("Bench 80 × 8, best."). Review, the HomeLines lens and WorkoutSummary use the same word, never "record" or a count of records. The 12:17 AM rule still holds: a past best stays a best.
