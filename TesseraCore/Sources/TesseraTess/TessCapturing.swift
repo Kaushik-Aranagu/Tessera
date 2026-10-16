@@ -38,6 +38,8 @@ public struct TessCapture {
         case grammar
         /// The on-device language model with registry tools.
         case model
+        /// Claude, after the phone's own routes missed (shown with the cloud mark).
+        case claude
         /// Nothing understood.
         case none
     }

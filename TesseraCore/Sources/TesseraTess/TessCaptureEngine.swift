@@ -10,6 +10,8 @@ public final class TessCaptureEngine: TessCapturing {
     public let grammar: TessGrammar
     /// The model step. Nil, or unavailable on this device, means grammar only.
     public var model: (any TessModelCapturing)?
+    /// The last step: Claude, for what the phone missed. Nil until a key is saved; it checks its own switches.
+    public var claude: ClaudeTessModel?
 
     public init(engine: ActionEngine, model: (any TessModelCapturing)? = nil) {
         self.engine = engine
@@ -137,6 +139,9 @@ public final class TessCaptureEngine: TessCapturing {
         var models: [any TessModel] = [GrammarTessModel(capture: self)]
         if let model {
             models.append(OnDeviceTessModel(model))
+        }
+        if let claude {
+            models.append(claude)
         }
         return TessRouter(engine: engine, models: models)
     }
