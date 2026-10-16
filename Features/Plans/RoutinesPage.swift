@@ -239,7 +239,7 @@ struct RoutinesPage: View {
             Text(line ?? " ")
                 .font(Theme.voice(size: 21))
                 .foregroundStyle(Theme.Colors.tess)
-                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
                 .contentTransition(.opacity)
             Spacer(minLength: Theme.Spacing.s)
             if !last.isEmpty {

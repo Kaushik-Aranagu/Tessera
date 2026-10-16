@@ -10,6 +10,7 @@ struct RoutineEditor: View {
     let routine: ObjectRecord
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dismiss) private var dismiss
 
     /// The slot opened in place.
     @State private var openSlot: UUID?
@@ -86,7 +87,20 @@ struct RoutineEditor: View {
         }
         .background { ThemedBackground() }
         .toolbarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbarVisibility(.hidden, for: .navigationBar)
+        .background { EdgeSwipeBack() }
         .sensoryFeedback(.selection, trigger: haptic)
+    }
+
+    /// "Routines" when he came from the Routines page, else "Training".
+    private var cameFrom: String {
+        let stack = model.isWorkoutPresented ? model.workoutPath : model.path
+        guard stack.count >= 2 else { return "Training" }
+        if case .routines = stack[stack.count - 2] {
+            return "Routines"
+        }
+        return model.title(of: stack[stack.count - 2])
     }
 
     // MARK: Parts
@@ -94,11 +108,17 @@ struct RoutineEditor: View {
     private func header(slots: [ObjectRecord]) -> some View {
         let sets = slots.reduce(0) { $0 + Int(model.store.number("sets", of: $1) ?? 3) }
         return VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-            if let plan = model.plan {
-                ObjectHandle(title: plan.title, route: .object(plan.id), relation: .up, role: .label,
-                             color: Theme.Colors.inkSecondary)
-                    .entrance(1)
+            // The back word names the page he came from (back-word.md); no system chevron.
+            Button { dismiss() } label: {
+                Text("‹ \(cameFrom)")
+                    .textRole(.label)
+                    .textCase(.uppercase)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .frame(minHeight: 44)
             }
+            .buttonStyle(HandleButtonStyle())
+            .accessibilityLabel("Back to \(cameFrom)")
+            .entrance(1)
             HeroText(text: routine.title) { $0 }
                 .foregroundStyle(Theme.Colors.ink)
                 .accessibilityAddTraits(.isHeader)
@@ -107,8 +127,8 @@ struct RoutineEditor: View {
                 .font(Theme.voice(size: 21))
                 .foregroundStyle(Theme.Colors.context)
                 .fixedSize(horizontal: false, vertical: true)
+            // The day words play their own tick; no second haptic here (QA #359 F1).
             DaysLine(routine: routine, onChange: { record, words in
-                haptic += 1
                 withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) {
                     last = record
                     line = words
