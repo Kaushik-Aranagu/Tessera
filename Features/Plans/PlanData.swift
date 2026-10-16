@@ -18,7 +18,7 @@ struct PlanData {
         self.ledger = ledger
         plan = chosen ?? model.plan
         cycle = plan.map { store.linkedObjects("routines", of: $0) } ?? []
-        next = plan.flatMap { ledger.nextRoutine(in: $0) }
+        next = plan.flatMap { ledger.nextRoutine(in: $0, now: now) }
         perWeek = PlanRhythm.perWeek(cycleCount: cycle.count)
 
         sessions = model.objects(of: .workout).compactMap { workout in

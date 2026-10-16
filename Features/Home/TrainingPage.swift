@@ -155,9 +155,11 @@ private struct TrainingAtRest: View {
         }
         .tesseraFeedback(.made, trigger: liftTaps)
         .onDisappear {
-            // Leaving mid-START: stop it and put the page back whole.
+            // Leaving mid-START: stop it and put the page back whole. Not when the workout cover is what hid the
+            // page (the sunk lanes would come back mid-zoom); the cover's close puts it back instead.
             startTask?.cancel()
             startTask = nil
+            guard !model.isWorkoutPresented else { return }
             sinking = false
             landed = false
             isLifting = false
@@ -201,7 +203,8 @@ private struct TrainingAtRest: View {
     private var planLine: some View {
         if let planObject = model.plan {
             HStack(alignment: .firstTextBaseline) {
-                Text("\(planObject.title), rolls on")
+                let fixed = PlanSchedule.mode(of: planObject, store: model.store) == .fixed
+                Text("\(planObject.title), \(fixed ? "fixed days" : "rolls on")")
                     .textRole(.label)
                     .textCase(.uppercase)
                     .foregroundStyle(Theme.Colors.inkSecondary)
@@ -250,7 +253,9 @@ private struct TrainingAtRest: View {
         if NowPicker(engine: model.engine).restDay(plan: plan, at: tomorrow, sessionsPerWeek: perWeek) != nil {
             return "Rest day tomorrow"
         }
-        guard let next = plan.flatMap({ model.ledger.nextRoutine(in: $0) }) else { return "Done for today" }
+        guard let next = plan.flatMap({ model.ledger.nextRoutine(in: $0, now: tomorrow) }) else {
+            return "Done for today"
+        }
         return "\(next.title) tomorrow"
     }
 

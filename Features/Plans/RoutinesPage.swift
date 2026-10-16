@@ -316,6 +316,7 @@ private struct RoutineRow: View {
                 .textCase(.uppercase)
                 .foregroundStyle(Theme.Colors.liveInk)
                 .opacity(pull < -Self.arm ? 1 : Double(min(-pull / Self.arm, 1)) * 0.5)
+                .accessibilityHidden(true)
         }
         .simultaneousGesture(
             DragGesture(minimumDistance: 20)

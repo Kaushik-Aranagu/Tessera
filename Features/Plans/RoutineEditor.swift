@@ -410,10 +410,19 @@ private struct DaysLine: View {
         let fixed = plan.map { PlanSchedule.mode(of: $0, store: model.store) == .fixed } ?? false
         let chosen = PlanSchedule.weekdays(of: routine, store: model.store)
         VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+            // Tap DAYS (or leave the page) to fold the week back to "Mon, Thu".
             Text("Days")
                 .textRole(.label)
                 .textCase(.uppercase)
                 .foregroundStyle(Theme.Colors.inkSecondary)
+                .frame(minHeight: 24, alignment: .leading)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    guard open else { return }
+                    withTesseraAnimation(reduceMotion: reduceMotion) { open = false }
+                }
+                .accessibilityAddTraits(open ? .isButton : [])
+                .accessibilityHint(open ? "Folds the week" : "")
             if !fixed {
                 Text("rolls on")
                     .font(Theme.voice(size: 21).weight(.semibold))
@@ -441,6 +450,7 @@ private struct DaysLine: View {
         }
         .tesseraFeedback(.selection, trigger: ticks)
         .padding(.vertical, open ? 5 : 0)
+        .onDisappear { open = false }
     }
 
     /// The seven day words, Monday first, chosen in ink and the rest at 38%; tap away to fold.
@@ -463,10 +473,6 @@ private struct DaysLine: View {
                 .transition(.opacity.animation(.easeOut(duration: 0.2).delay(Double(order) * 0.04)))
             }
             Spacer(minLength: 0)
-            Button("Done") {
-                withTesseraAnimation(reduceMotion: reduceMotion) { open = false }
-            }
-            .buttonStyle(InkLabelWordStyle())
         }
         .tesseraAnimation(.spring(response: 0.3, dampingFraction: 0.6), value: wet)
     }
