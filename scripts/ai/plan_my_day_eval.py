@@ -595,10 +595,15 @@ def load_fixture(path):
     return fx
 
 
+# The API adds a tool-use system prompt that the request bytes don't show (a few hundred tokens); counted in the
+# worst case so the $1 stop never runs a fraction of a cent over (coordinator audit of #502).
+TOOL_OVERHEAD_TOKENS = 500
+
+
 def worst_nano(model, body):
     """The $1 stop's per-call worst case: at least 1,270 tokens in (more if this request is bigger, at 4 bytes a
-    token plus 10, as TessUsageLedger.estimate) and max_tokens out."""
-    est = len(json.dumps(body, ensure_ascii=False).encode()) // 4 + 10
+    token plus 10, as TessUsageLedger.estimate, plus the API's own tool-use system prompt) and max_tokens out."""
+    est = len(json.dumps(body, ensure_ascii=False).encode()) // 4 + 10 + TOOL_OVERHEAD_TOKENS
     i, o, _, _ = PRICES[model]
     return max(WORST_INPUT_TOKENS, est) * i + MAX_TOKENS * o
 
