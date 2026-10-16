@@ -70,9 +70,11 @@ Items 2 to 4 of the last round are done (see Done). Item 1's first pass is done;
 44. (done, 7fcbee6) Training in workout mode. Done when the workout page opens on today's plan, the Start workout mark is redrawn (no thick underline), and `routine-editor.md` covers making and editing routines and fixed days, with a recording, for Builder A.
 45. (done, 95a5e81, his pick pending; default C) Three recipe layouts. Done when three distinct recipe page layouts are drawn with a real US recipe so he can pick one, for Builder B and the Kitchen lead.
 46. (done, da55bb6) Review, the week on one page. Done when Review shows the whole week on one page (training, tasks done, habits, body weight, money, the day log's best lines) without cards, with a recording, for Builder B.
-47. Groceries with Tess. Done when the AI team's groceries spec (ai.md item 3) has its surfaces drawn: sorted aisles, the recipe link, a suggestion row and a reminder line, for Builder B.
+47. (done, `groceries-tess.md`) Groceries with Tess. Done when the AI team's groceries spec (ai.md item 3) has its surfaces drawn: sorted aisles, the recipe link, a suggestion row and a reminder line, for Builder B.
 48. Tess's changing colours (Kaushik, 12:08 AM PT Oct 16), after 41. Done when a recording shows the soul moving between AI-picked pigments within each look's palette (`soul-explore.md`): how a change arrives (through motion, then dries), how often, the ranges per look, and the fallback set, with values for Builder A and the AI team's item 5. Tess only; the app's colours stay fixed.
 49. The What Tess knows page, current rules. Done when m4-steers section 11 is redrawn for AI-9 (`docs/ai/ship-list.md`): told, noticed and recent facts with their source line, swipe-left FORGET with a 10 s UNDO, "Forget everything", reached from Settings and "what do you know", under the no-dots and one-base rules, with a recording for Builder B.
+50. The Claude switch copy for AI-6. Done when `settings-place.md` CLAUDE has the yes line naming Home and the week ("Tess asks Claude when she's unsure, for Plan my day, and to word Home and your week."), and the spend line follows the cap constant ($10 now, $50 if he says yes), for Builder B.
+51. The motion lab's soul, checked. Done when the motion lab's recordings (`ops/board/motion.md` items 1 to 3) are reviewed against the one-base, no-dots and Speak gesture rules, with fixes posted to the coordinator before Builder A builds them.
 
 **Later:**
 - Glyph for the Tell Tess control as an SF Symbols template, once slice 10 starts.
