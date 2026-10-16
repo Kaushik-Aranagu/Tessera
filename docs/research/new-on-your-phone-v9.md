@@ -1,5 +1,7 @@
 # New on your phone
 
+Build a36b161 (pin a36b161b7294596848a319c0cc0fc50a3b25f2ee, Catalog v9).
+
 - **Home** says one plain line per thing, and the day word follows your 4 am day.
 - **Review** is your week on one page. Tap a day to read it.
 - **The live workout** grows out of START, with LOG on the key and "Push A, set 1 of 4" on top.
@@ -13,7 +15,7 @@
 ## Team appendix: the full list
 
 What changes when the next build goes in, compared with build 7b321d2 (installed Oct 16, 9:57 am PT).
-Written against master on Oct 16. Lines marked *if it lands before the pin* aren't merged yet.
+Trimmed to the pin a36b161 on Oct 16 (Pacific). Every line below is in that build.
 
 ### Home
 - **Glass tabs:** hold the tab row and a glass lens forms under your finger. The pages shrink side by side, and letting go opens the one under it. A tap still works.
@@ -27,7 +29,7 @@ Written against master on Oct 16. Lines marked *if it lands before the pin* aren
 - **Routines:** make one from a writing line, hold and drag to reorder, swipe left to drop. Switch between ROLLS ON and FIXED DAYS, and give each routine its days.
 - **Bests** stay on the day you set them, even after a later session beats them.
 - **Apple Health** now gets workouts you finish early, too.
-- **Trips:** on your Oct 26 trip, each workout, task and set stays on the day it had where you were.
+- **Trips:** on your Oct 26 trip, each workout, task and set stays on the day it had where you were, and times Tess reads with no zone are taken in yours.
 
 **Tess and the Ask bar**
 - **Your typing** sits one size under Tess's voice, in the Ask bar, Notes and paste.
@@ -35,6 +37,7 @@ Written against master on Oct 16. Lines marked *if it lands before the pin* aren
 - **Holding Tess** with the mic off now settles her back to rest instead of leaving her listening.
 - **The tab lens** no longer gets stuck after you leave one of Tess's questions unanswered.
 - **"pay rent fri"** makes a task again, and "pull-ups" is known as an exercise.
+- **Undo** after an empty workout is wrapped up brings it back.
 
 **Notes**
 - **Secret words** (password, PIN, code, wifi) make a private note. The Day log just says "Private note".
@@ -50,7 +53,6 @@ Written against master on Oct 16. Lines marked *if it lands before the pin* aren
 
 **Siri**
 - **Add a Task** refuses your Claude key, and "door code" with a number becomes a private note.
-- **Add a Task** keeps body facts and money you spent as a private note too, and doesn't read them back. *If it lands before the pin.*
 
 **Privacy**
 - **Your Claude key** typed or pasted into a note is refused. Tess says it goes under Claude instead.
@@ -66,4 +68,4 @@ Written against master on Oct 16. Lines marked *if it lands before the pin* aren
 4. On Routines, switch to FIXED DAYS and give a routine its days.
 5. In Notes, type "wifi password is tacocat4417" and see it kept as a private note.
 
-Built from: #341, #342, #344, #347, #348, #352, #353, #359, #363, #367, #377, #380, #381, #391, #397, #402, #422, #446, #451, #453, #454, #457, #463, #467, #471, #475; #366 (with #369); if it lands: P14.
+Built from: #341, #342, #344, #347, #348, #352, #353, #359, #363, #367, #377, #380, #381, #391, #397, #402, #422, #446, #451, #453, #454, #457, #463, #467, #471, #475, #494, #498; #366 (with #369). Not in this build: P14 (Siri money and body facts), the ", best" wording in the day story (it still reads ", PR"), and the pass that marks older notes private.

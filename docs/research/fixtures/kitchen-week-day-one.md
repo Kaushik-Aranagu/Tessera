@@ -72,3 +72,14 @@ Builder B 16, Core 16, Kitchen lead 5.
 6. Kitchen lead: the Sunday reset. What clears: past plans, open recipe rows, the basket, nothing? (KW25)
 7. Kitchen lead: cooking a planned meal closes its task, and Home's line becomes the running cook? (KW30)
 8. Kitchen lead: leftovers stay out of v1 and v2 unless he asks? (KW19)
+
+## Rulings since this walk (Oct 16, 1:05 to 1:07 pm)
+
+- Product 1:05 pm: v1 Kitchen week is Design 67 with no page of its own. "what's for dinner" becomes a grammar rule. Move and DONE receipts use short names ("Tacos, Friday.", "Tacos, cooked."). A dated cook task adds its share to Groceries, and skipping the cook takes it back. Fixes are on Core 0x and Builder B 0m.
+- Kitchen lead (`product/meal-plan-groceries-acceptance.md`, last section):
+  1. A skip word ("skip dal") does to Groceries what delete does: open rows carrying only this share go, and checked rows stay. The task closes as skipped so Review counts the miss. The receipt is "Dal, skipped." with UNDO for 10 s.
+  2. A day away is planned like any day, and nothing is said first.
+  3. There is no Sunday reset. Uncooked plans roll like tasks until they are cooked, moved or skipped.
+  4. "cook chili" starts the planned cook, and Home's line becomes the running cook. The task closes on DONE, not at the start. Cooking on another day still closes the plan.
+  5. Leftovers are out of v1 and v2. "put 2 portions away" is a note on the cook line, with no rows and no count kept.
+- All five rest on KW2/KW3 (the share carries the plan task). AJ rechecks these rows on the 0x and 0m PRs.
