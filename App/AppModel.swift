@@ -123,6 +123,7 @@ final class AppModel {
                                                               .map(BackupCopy.folderName))
         }
         runtime = TesseraRuntime(engine: engine)
+        soul.runScript()
         // Claude is the last capture step, gated on the one "Tess asks Claude" field, the key and the pause
         // (it checks each at every call). Off in demos, so a fake key never goes over the network.
         if !demo, let capture = runtime.tess as? TessCaptureEngine {

@@ -221,7 +221,7 @@ struct BottomChrome: View {
 
     /// The soul at 0.72, breathing 1 ↔ 1.08 over 3.2 s; tap opens, hold opens, double tap goes Home.
     private var soulKey: some View {
-        TessSoul(mode: model.tessMode)
+        TessSoul(mode: model.tessMode, hostScale: 0.72)
             .scaleEffect(0.72)
             .scaleEffect(breathe ? 1.08 : 1)
             .tesseraAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true), value: breathe)

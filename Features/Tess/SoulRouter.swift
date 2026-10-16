@@ -78,8 +78,8 @@ final class SoulRouter {
         switch event {
         case .closed, .heardNothing:
             isSurfaceOpen = false
-            // A Done in flight plays out and returns to rest itself (rule 4).
-            guard !isDoneInFlight else { return }
+            // A Done in flight plays out and returns to rest itself (rule 4); work runs on under a closed surface.
+            guard !isDoneInFlight, !isWorking else { return }
             settle(rest)
         case .claudeFailed:
             // A failure answers the queued ask too: nothing is left to think about (F4).
@@ -87,21 +87,25 @@ final class SoulRouter {
                 queued = nil
                 return
             }
+            // No Done for a failure: the lights gather and she rests (§5).
+            guard !isWorking else { return gather(thenDone: false) }
             settle(rest)
         case .appeared, .returnLine, .foregrounded:
-            guard !isDoneInFlight else { return }
+            guard !isDoneInFlight, !isWorking else { return }
             settle(rest)
         case .committed:
             // At rest she's small: Done would multiply her dabs into mud, so she brightens instead (as built).
             isSurfaceOpen = false
-            settle(rest)
+            if !isWorking {
+                settle(rest)
+            }
             brighten()
         case .lineShown:
             lineTimer?.cancel()
             lineTimer = Task { @MainActor [weak self] in
                 try? await Task.sleep(for: .seconds(4))
                 // Never under his voice or her thinking (rules 1, 2 and 6), nor over a Done.
-                guard !Task.isCancelled, let self, !isSurfaceOpen,
+                guard !Task.isCancelled, let self, !isSurfaceOpen, !isWorking,
                       mode != .done, mode != .listening, mode != .thinking else { return }
                 settle(rest)
             }
@@ -112,17 +116,26 @@ final class SoulRouter {
             // His touch: cuts anything, Done included.
             settle(.listening)
         case let .draft(isEmpty):
+            // A draft never interrupts thinking or work (rules 5 and 6).
             guard mode == .listening || mode == .idle || mode == .resting else { return }
             settle(isEmpty ? .idle : .listening)
         case .sent, .heard, .liveAsk:
-            // Thinking queues behind a Done in flight (rule 4).
+            // Thinking queues behind a Done in flight (rule 4); work outranks a local thought (rule 5).
             guard !isDoneInFlight else { return queue(.thinking) }
+            guard !isWorking else { return }
             settle(.thinking)
         case .askClaude:
-            // `working` arrives with item 2 of the build sheet; until then the long asks think.
-            guard !isDoneInFlight else { return queue(.thinking) }
-            settle(.thinking)
-        case .claudeDone, .liveAnswered, .setLogged, .swapped, .topSetAccepted, .workoutGathered:
+            // Working (§5). It queues behind a Done in flight (rule 4); a second ask joins the running one (rule 5).
+            // The live workout never works: its corner keeps thinking's pulse.
+            guard page == .home else { return settle(.thinking) }
+            guard !isDoneInFlight else { return queue(.working) }
+            guard mode != .working else { return }
+            settle(.working)
+        case .claudeDone:
+            // The lights gather first; Done begins as they land (§5).
+            guard !isWorking else { return gather(thenDone: true) }
+            playDone()
+        case .liveAnswered, .setLogged, .swapped, .topSetAccepted, .workoutGathered:
             playDone()
         case .newBest:
             // Thinking 1.2 s, then Done (as built in the workout).
@@ -170,6 +183,28 @@ final class SoulRouter {
         mode == .done
     }
 
+    /// Working or gathering home from it.
+    var isWorking: Bool {
+        mode == .working || mode == .gathering
+    }
+
+    /// The gather (820 ms), then Done, or rest for a failure (§5).
+    private func gather(thenDone: Bool) {
+        guard mode != .gathering else { return }
+        timer?.cancel()
+        queued = nil
+        mode = .gathering
+        timer = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(SoulWork.gatherDuration))
+            guard !Task.isCancelled, let self else { return }
+            if thenDone {
+                playDone()
+            } else {
+                mode = rest
+            }
+        }
+    }
+
     private var queued: TessSoul.Mode?
 
     private func queue(_ next: TessSoul.Mode) {
@@ -195,6 +230,20 @@ final class SoulRouter {
             let next = queued ?? rest
             queued = nil
             mode = next
+        }
+    }
+}
+
+extension SoulRouter {
+    /// Simulator only, for recordings and the lab's `compare.sh`: `-soulScript work` plays the lab's think scene on
+    /// Home (at rest, the ask 2.4 s after launch, the answer 5.2 s later); `workFail` ends it with a failure instead.
+    func runScript() {
+        guard let script = LaunchFlags.value(after: "-soulScript"), script.hasPrefix("work") else { return }
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(2.4))
+            self?.handle(.askClaude)
+            try? await Task.sleep(for: .seconds(5.2))
+            self?.handle(script == "workFail" ? .claudeFailed : .claudeDone)
         }
     }
 }

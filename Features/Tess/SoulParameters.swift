@@ -121,13 +121,14 @@ extension SoulParameters {
     static func table(_ mode: TessSoul.Mode) -> SoulParameters {
         typealias Motion = SoulMotion
         switch mode {
-        case .idle:
+        case .idle, .working, .gathering:
             // A calm "needs you": one main dab lifts at a time; satellites drift. No drip. Small.
             return SoulParameters(
                 look: SoulLook(scale: 0.62),
                 mains: [0, -6, -3].map { SoulTrack(keys: Motion.lift, period: 9, delay: $0) },
                 satellites: [(9, -4), (11, -1), (7.5, -5)].map { SoulTrack(keys: Motion.drift, period: $0, delay: $1) },
-                isSlow: true
+                // Working is an overlay on her at rest (§5, `SoulWork`): idle's dabs underneath, at full rate.
+                isSlow: mode == .idle
             )
         case .listening:
             // The bloom: from near the centre out to each bloom target and back, staggered by thirds.
