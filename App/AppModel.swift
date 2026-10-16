@@ -87,7 +87,12 @@ final class AppModel {
     var commandDraft = ""
     var isCommandExpanded = false
     /// What Tess's soul is doing right now.
-    var tessMode: TessSoul.Mode = .idle
+    /// Tess's state, set only by the router (tess-motion.md §14); views emit `soul.handle(_:)` events.
+    let soul = SoulRouter()
+    var tessMode: TessSoul.Mode {
+        soul.mode
+    }
+
     /// Home (the launcher Tess paints in) vs Today.
     /// Where you were when Tess took you Home; tapping her again goes back.
     var homeReturnPath: [Route]?
@@ -327,6 +332,10 @@ final class AppModel {
         if let rolled = TaskList(store: store, classes: classes).rollForward(engine: engine, now: now) {
             processNotes.append(rolled)
         }
+        // Tess's memory turnover: yesterday's day line, the 14-day cut, Sunday's noticed lines (AI-7).
+        let memory = TessMemoryStore(engine: engine)
+        memory.reapplyForgetsIfRestored(now: now) // the first launch after a restore forgets again (QA F2b, F6)
+        memory.turnover(now: now)
         pickUpRunningWorkout(table)
         // A workout left untouched for 6 hours is wrapped up by Core; let the live session go with it.
         if let session, store.value("endedAt", of: session.workout) != nil {
@@ -586,7 +595,7 @@ extension AppModel {
     func todaysRoutine(now: Date = AppClock.now) -> ObjectRecord? {
         guard session == nil, tonightWorkout(around: now) == nil, finishedToday(now: now).isEmpty,
               let plan else { return nil }
-        return ledger.nextRoutine(in: plan)
+        return ledger.nextRoutine(in: plan, now: now)
     }
 
     /// Workouts finished today, newest first (Core's summaries: counts, records and Tess's line).

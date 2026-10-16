@@ -23,7 +23,10 @@ public enum RecipeMath {
             return max(step, (value / step).rounded() * step)
         case .kilogram, .litre:
             return max(0.05, (value * 20).rounded() / 20)
-        case .teaspoon, .tablespoon:
+        case .teaspoon:
+            // Teaspoons floor at ⅛ (the glyph exists), so ¼ tsp halved is ⅛, not ½ (Research 123 G-R16).
+            return max(0.125, (value * 8).rounded() / 8)
+        case .tablespoon:
             return max(0.5, (value * 2).rounded() / 2)
         case .cup:
             return max(0.25, (value * 4).rounded() / 4)
@@ -33,7 +36,8 @@ public enum RecipeMath {
             return max(0.25, (value * 4).rounded() / 4)
         case .pint, .quart:
             return max(0.5, (value * 2).rounded() / 2)
-        case nil, .clove, .pinch, .handful, .bunch, .can, .slice, .sprig, .piece, .stick, .head, .bag, .jar, .box,
+        case nil, .clove, .pinch, .handful, .bunch, .can, .slice, .sprig, .piece, .stick, .head, .dozen, .bag, .jar,
+             .box,
              .bottle, .carton:
             return max(1, value.rounded())
         }

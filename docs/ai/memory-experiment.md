@@ -40,4 +40,4 @@ The script writes `docs/ai/memory-experiment-results.md`: one table per model wi
 
 ## Where the key comes from
 
-The script reads `ANTHROPIC_API_KEY` from the environment only. It refuses to run if the variable is missing, never prints it, and writes no request bodies to disk. On a Mac that is `ANTHROPIC_API_KEY=... python3 scripts/ai/memory_experiment.py`; in a cloud session it is the environment's Network secret. The key is never in the repo, the results file, a thread or memory.
+The script reads `TESSERA_CLAUDE_KEY` from the environment first and falls back to `ANTHROPIC_API_KEY` (cloud sessions never see a variable by that second name, so the cloud environment holds the key as `TESSERA_CLAUDE_KEY`). It checks only whether the key is present, refuses to run if it is missing, never prints any part of it, and writes no request bodies to disk. The fallback reader lands with the run thread's branch. The key is never in the repo, the results file, a thread or memory.

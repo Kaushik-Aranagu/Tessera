@@ -110,6 +110,9 @@ public enum ActionRegistry {
         SetRoutineWeekdays.descriptor.name: {
             try decode(SetRoutineWeekdays.self, SetRoutineWeekdays.descriptor.name, $0)
         },
+        RememberFact.descriptor.name: { try decode(RememberFact.self, RememberFact.descriptor.name, $0) },
+        ForgetMemory.descriptor.name: { try decode(ForgetMemory.self, ForgetMemory.descriptor.name, $0) },
+        ForgetAllMemory.descriptor.name: { try decode(ForgetAllMemory.self, ForgetAllMemory.descriptor.name, $0) },
         LogNextSet.descriptor.name: { try decode(LogNextSet.self, LogNextSet.descriptor.name, $0) },
         MoveSlot.descriptor.name: { try decode(MoveSlot.self, MoveSlot.descriptor.name, $0) },
         EditSlot.descriptor.name: { try decode(EditSlot.self, EditSlot.descriptor.name, $0) },

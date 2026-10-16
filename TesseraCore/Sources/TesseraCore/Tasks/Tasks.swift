@@ -38,11 +38,15 @@ public struct TaskList {
         // His day: 04:00 to 04:00 (TesseraDay), so a 23:00 task is still today at 01:00.
         let day = TesseraDay(calendar: calendar)
         let start = day.start(of: now), end = day.end(of: now)
+        let today = day.day(of: now)
+        // A task done where he was files under that day (Research 127 T2).
+        let zones = OpZones(store: store)
         let items = store.objects(of: taskClass).compactMap { task -> Item? in
             let item = item(task, today: start, calendar: calendar)
             if item.isDone {
                 let doneAt = store.value("doneAt", of: task)?.dateValue
-                return doneAt.map { $0 >= start && $0 < end } == true ? item : nil
+                return doneAt.map { zones.dayKey(of: $0, for: task.id, calendar: calendar) == today } == true ? item
+                    : nil
             }
             guard let when = item.when else { return nil }
             return when < end ? item : nil

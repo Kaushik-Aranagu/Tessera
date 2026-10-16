@@ -66,6 +66,8 @@ final class WorkoutSession {
     var lastSeated: Seated?
     /// The last logged set, undoable until the next set is logged. Shares the op log with the Lock Screen.
     var undoable: Undoable?
+    /// LOG … AND FINISH: the finish and the set it came with, taken back together for 10 s ("Push A, back on.").
+    private(set) var finishedWithSet: (finish: OpRecord, set: Undoable, at: Date)?
 
     enum Phase: Equatable {
         /// Dialling the next set.
@@ -224,6 +226,22 @@ final class WorkoutSession {
 
     func isFinished(_ entry: ObjectRecord) -> Bool {
         setRows(of: entry).count >= targetSets(of: entry)
+    }
+
+    /// This set's place last session: "last time 82.5 × 8".
+    func lastTime(setNumber: Int) -> (weight: Double, reps: Double)? {
+        guard let entry = currentEntry, let exercise = exerciseClass(of: entry) else { return nil }
+        let sets = model.ledger.sessions(of: exercise, excludingWorkout: workout.id).first?.sets ?? []
+        guard !sets.isEmpty else { return nil }
+        let set = sets[min(setNumber - 1, sets.count - 1)]
+        return (set.weight, set.reps)
+    }
+
+    /// The set on the dial is the workout's last: every other exercise is done and this is its final set.
+    var isLastSetOfWorkout: Bool {
+        guard let entry = currentEntry else { return false }
+        let others = entries.filter { $0.id != entry.id }
+        return others.allSatisfy(isFinished) && setRows(of: entry).count + 1 >= targetSets(of: entry)
     }
 
     /// 1-based number of the set being dialled in the current exercise.
@@ -409,6 +427,23 @@ extension WorkoutSession {
         loadDefaults()
     }
 
+    /// The 10 s after LOG … AND FINISH.
+    func canTakeBackFinish(at now: Date = AppClock.now) -> Bool {
+        guard let finishedWithSet else { return false }
+        return now.timeIntervalSince(finishedWithSet.at) < 10
+    }
+
+    /// Takes back the finish and its set together: the workout runs again with the set's numbers on the dial.
+    func takeBackFinish() {
+        guard canTakeBackFinish(), let finishedWithSet else { return }
+        model.engine.undo(finishedWithSet.finish)
+        self.finishedWithSet = nil
+        finishedAt = nil
+        undoable = finishedWithSet.set
+        undoLastSet()
+        model.touch()
+    }
+
     var canUndo: Bool {
         guard let undoable else { return false }
         return undoable.record.state != .undone && finishedAt == nil
@@ -452,9 +487,9 @@ extension WorkoutSession {
         guard restEndsAt != nil else { return }
         restEndsAt = nil
         if let entry = currentEntry, !isFinished(entry) {
-            restNote = "Skipped. Set \(currentSetNumber) is up."
+            restNote = "Rest skipped. Set \(currentSetNumber) is up."
         } else {
-            restNote = "Skipped."
+            restNote = "Rest skipped."
         }
         lastTouchedAt = AppClock.now
         persistRest()
@@ -576,14 +611,17 @@ extension WorkoutSession {
 
     /// Hold to finish: ends the workout through the engine. The view then plays the gather.
     /// Early (from the running order): Core's FinishWorkoutEarly marks the unstarted exercises skipped, one undo.
-    func finish(early: Bool = false) {
+    func finish(early: Bool = false, withSet: Bool = false) {
         guard finishedAt == nil else { return }
         endEditing()
         let now = AppClock.now
-        if early, !entries.allSatisfy(isFinished) {
-            _ = try? model.engine.perform(FinishWorkoutEarly(workout: workout.id, time: now), by: .user)
+        let record: OpRecord? = if early, !entries.allSatisfy(isFinished) {
+            try? model.engine.perform(FinishWorkoutEarly(workout: workout.id, time: now), by: .user).record
         } else {
-            _ = try? model.engine.perform(FinishWorkout(workout: workout.id, time: now), by: .user)
+            try? model.engine.perform(FinishWorkout(workout: workout.id, time: now), by: .user).record
+        }
+        if withSet, let record, let undoable {
+            finishedWithSet = (record, undoable, now)
         }
         finishedAt = now
         restEndsAt = nil

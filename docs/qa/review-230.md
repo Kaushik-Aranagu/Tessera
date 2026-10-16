@@ -8,7 +8,7 @@ Core. 6 files, +108/-23, all in TesseraCore. Static review (no Swift toolchain h
 - **Header:** `x-api-key` only, no `Authorization` (ClaudeKey.swift:287; tested). Anthropic's auth page: Bearer is the main method, "the legacy `x-api-key` header is still supported". Either works.
 - **401 keeps the key:** the `keys.delete()` is gone; every outcome keeps it (tested across the outcome table). `last4` is now returned for `.badKey` too.
 - **Shared guard:** `looksLikeClaudeKey` (Diagnostics/ClaudeKeyGuard.swift), `.caseInsensitive` range. Now used by TessRouter.run, TessCaptureEngine's miss-log check and `CaptureMissLog.record`. Tested with mixed case end to end through the capture engine.
-- **Wrapped paste:** all whitespace removed, then `hasPrefix("sk-ant-")` and length > 12. Tested ("sk-ant-TEST-abc\n def-1234" → joined).
+- **Wrapped paste:** all whitespace removed, then `hasPrefix("<key prefix>")` and length > 12. Tested ("<key prefix>TEST-abc\n def-1234" → joined).
 - **F4 `.notSaved`:** a refused Keychain save returns before any request. Tested (no request sent).
 - **F6:** offline/timeout/busy lines no longer promise a retry; they say "I kept the key". Matches the code now.
 - **K12:** empty path posts to `base` itself; the test now asserts both absolute URLs. Closed.

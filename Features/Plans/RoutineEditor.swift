@@ -10,6 +10,7 @@ struct RoutineEditor: View {
     let routine: ObjectRecord
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dismiss) private var dismiss
 
     /// The slot opened in place.
     @State private var openSlot: UUID?
@@ -86,7 +87,20 @@ struct RoutineEditor: View {
         }
         .background { ThemedBackground() }
         .toolbarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbarVisibility(.hidden, for: .navigationBar)
+        .background { EdgeSwipeBack() }
         .sensoryFeedback(.selection, trigger: haptic)
+    }
+
+    /// "Routines" when he came from the Routines page, else "Training".
+    private var cameFrom: String {
+        let stack = model.isWorkoutPresented ? model.workoutPath : model.path
+        guard stack.count >= 2 else { return "Training" }
+        if case .routines = stack[stack.count - 2] {
+            return "Routines"
+        }
+        return model.title(of: stack[stack.count - 2])
     }
 
     // MARK: Parts
@@ -94,11 +108,17 @@ struct RoutineEditor: View {
     private func header(slots: [ObjectRecord]) -> some View {
         let sets = slots.reduce(0) { $0 + Int(model.store.number("sets", of: $1) ?? 3) }
         return VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-            if let plan = model.plan {
-                ObjectHandle(title: plan.title, route: .object(plan.id), relation: .up, role: .label,
-                             color: Theme.Colors.inkSecondary)
-                    .entrance(1)
+            // The back word names the page he came from (back-word.md); no system chevron.
+            Button { dismiss() } label: {
+                Text("‹ \(cameFrom)")
+                    .textRole(.label)
+                    .textCase(.uppercase)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .frame(minHeight: 44)
             }
+            .buttonStyle(HandleButtonStyle())
+            .accessibilityLabel("Back to \(cameFrom)")
+            .entrance(1)
             HeroText(text: routine.title) { $0 }
                 .foregroundStyle(Theme.Colors.ink)
                 .accessibilityAddTraits(.isHeader)
@@ -107,6 +127,14 @@ struct RoutineEditor: View {
                 .font(Theme.voice(size: 21))
                 .foregroundStyle(Theme.Colors.context)
                 .fixedSize(horizontal: false, vertical: true)
+            // The day words play their own tick; no second haptic here (QA #359 F1).
+            DaysLine(routine: routine, onChange: { record, words in
+                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) {
+                    last = record
+                    line = words
+                }
+                model.touch()
+            })
             tessLine
         }
     }
@@ -379,5 +407,128 @@ struct ExerciseLibraryList: View {
                 return (pattern, leaves.sorted { $0.name < $1.name })
             }
             .filter { !$0.1.isEmpty }
+    }
+}
+
+// MARK: - Days
+
+/// DAYS (training-mode.md, "A routine's days"): on a rolling plan "rolls on", not tappable; on fixed days the chosen
+/// days ("Mon, Thu"). Tap it and the week unfolds in place at 49 pt pitch, Monday first; tap a day to pick or unpick
+/// it. A day another routine had moves here, and Tess says so. One routine per day.
+private struct DaysLine: View {
+    let routine: ObjectRecord
+    var onChange: (OpRecord, String) -> Void
+    @Environment(AppModel.self) private var model
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var open = false
+    /// The day just picked, wet in tess until it dries (900 ms).
+    @State private var wet: Int?
+    @State private var ticks = 0
+
+    var body: some View {
+        let plan = model.plan
+        let fixed = plan.map { PlanSchedule.mode(of: $0, store: model.store) == .fixed } ?? false
+        let chosen = PlanSchedule.weekdays(of: routine, store: model.store)
+        VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+            // Tap DAYS (or leave the page) to fold the week back to "Mon, Thu".
+            Text("Days")
+                .textRole(.label)
+                .textCase(.uppercase)
+                .foregroundStyle(Theme.Colors.inkSecondary)
+                .frame(minHeight: 24, alignment: .leading)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    guard open else { return }
+                    withTesseraAnimation(reduceMotion: reduceMotion) { open = false }
+                }
+                .accessibilityAddTraits(open ? .isButton : [])
+                .accessibilityHint(open ? "Folds the week" : "")
+            if !fixed {
+                Text("rolls on")
+                    .font(Theme.voice(size: 21).weight(.semibold))
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+            } else if open {
+                week(chosen)
+                    .transition(.opacity)
+            } else {
+                Button {
+                    withTesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.32), reduceMotion: reduceMotion) {
+                        open = true
+                    }
+                } label: {
+                    // Fixed days with none picked gives no next routine: steer him to pick one.
+                    Text(chosen.isEmpty ? "Pick a day" : Weekdays.ordered(chosen).map { Weekdays.short[$0 - 1] }
+                        .joined(separator: ", "))
+                        .font(Theme.voice(size: 21).weight(.semibold))
+                        .foregroundStyle(chosen.isEmpty ? Theme.Colors.ink.opacity(0.7) : Theme.Colors.ink)
+                        .frame(minHeight: 44, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(HandleButtonStyle())
+                .accessibilityHint("Shows the week to pick days")
+            }
+        }
+        .tesseraFeedback(.selection, trigger: ticks)
+        .padding(.vertical, open ? 5 : 0)
+        .onDisappear { open = false }
+    }
+
+    /// The seven day words, Monday first, chosen in ink and the rest at 38%; tap away to fold.
+    private func week(_ chosen: Set<Int>) -> some View {
+        HStack(spacing: 0) {
+            ForEach(Array([2, 3, 4, 5, 6, 7, 1].enumerated()), id: \.element) { order, weekday in
+                let picked = chosen.contains(weekday)
+                Button { toggle(weekday, in: chosen) } label: {
+                    Text(Weekdays.short[weekday - 1])
+                        .font(Theme.voice(size: 21).weight(.semibold))
+                        .foregroundStyle(wet == weekday ? Theme.Colors.tess
+                            : Theme.Colors.ink.opacity(picked ? 1 : 0.38))
+                        .scaleEffect(wet == weekday && !reduceMotion ? 1.08 : 1)
+                        .frame(width: 49, height: 44, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Weekdays.name(weekday))
+                .accessibilityAddTraits(picked ? .isSelected : [])
+                .transition(.opacity.animation(.easeOut(duration: 0.2).delay(Double(order) * 0.04)))
+            }
+            Spacer(minLength: 0)
+        }
+        .tesseraAnimation(.spring(response: 0.3, dampingFraction: 0.6), value: wet)
+    }
+
+    private func toggle(_ weekday: Int, in chosen: Set<Int>) {
+        var next = chosen
+        if next.contains(weekday) {
+            next.remove(weekday)
+        } else {
+            next.insert(weekday)
+        }
+        guard let result = try? model.engine.perform(
+            SetRoutineWeekdays(routine: routine.id, weekdays: Weekdays.ordered(next)), by: .user
+        ) else { return }
+        ticks += 1
+        let picked = next.contains(weekday)
+        if picked {
+            wet = weekday
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(900))
+                if wet == weekday {
+                    wet = nil
+                }
+            }
+        }
+        // "Thursday was Pull A's. Push A has it now." else "Push A on Mondays and Thursdays."
+        let words = result.output.first.map { $0.line(to: routine.title) } ?? Self.receipt(routine.title, next)
+        onChange(result.record, words)
+    }
+
+    static func receipt(_ title: String, _ days: Set<Int>) -> String {
+        let words = Weekdays.ordered(days).map { Weekdays.name($0) + "s" }
+        switch words.count {
+        case 0: return "\(title) has no fixed day."
+        case 1: return "\(title) on \(words[0])."
+        default: return "\(title) on \(words.dropLast().joined(separator: ", ")) and \(words[words.count - 1])."
+        }
     }
 }

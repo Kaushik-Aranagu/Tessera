@@ -21,7 +21,7 @@ That is 4% of the $10 cap in a heavy month. The order changes §8 on purpose. Us
 
 ## Use 1. Grammar misses, with the cloud mark
 
-**Triggers when** `TessGrammar.parse` returns nil, the on-device model gives no tool call that passes validation within 3 s, and all of these hold: Use Claude is on, the key is present, the network is usable, `ledger.canSpend(.capture)` is true, and the text has no `sk-ant-` in it. A grammar wrong write never reaches Claude, because the grammar claims the phrase.
+**Triggers when** `TessGrammar.parse` returns nil, the on-device model gives no tool call that passes validation within 3 s, and all of these hold: Use Claude is on, the key is present, the network is usable, `ledger.canSpend(.capture)` is true, and the text has no the Claude key prefix in it. A grammar wrong write never reaches Claude, because the grammar claims the phrase.
 
 **What it can fix today.** `grammar-regression.md` has 72 miss rows out of 736. With the 11 tools on master, Claude could fully fix 44 of them (61%): 19 task times ("call mom half 7"), 3 relative times ("in 20 mins"), 11 reschedules ("move dentist to 7"), 4 split phrases ("squat 100x5 and buy milk"), 3 "out of milk" rows, "3 lemons" in a workout, a drop set and "add 2.5". It could partly fix 5: the 4 RPE rows, where `logSet` has no `rpe` field, and "get protein and do legs", where no tool starts a workout. It can't fix 23: 22 cook timer and step rows (no timer or step tool) and "push dentist to later" (`rescheduleTask` needs a date). The 78 wrong writes are for Core's grammar batch, not for Claude.
 
@@ -125,7 +125,7 @@ The month runs from 00:00 on the 1st, Los Angeles time (`claude-key-test.md` §4
 
 | Piece | Owner |
 |---|---|
-| `ClaudeTessModel` behind `TessRouter`, `TessUse.question` with one tool, the plan use with `ProposePlan` validation, context packs and their snapshot tests, `TessCall` ledger in n$, `canSpend` with worst-case estimates, `TessInbox`, `NWPathMonitor`, the `sk-ant-` guard, `answerQuery` counting finished workouts by `endedAt` | Core (T3, T4, T6, T7) |
+| `ClaudeTessModel` behind `TessRouter`, `TessUse.question` with one tool, the plan use with `ProposePlan` validation, context packs and their snapshot tests, `TessCall` ledger in n$, `canSpend` with worst-case estimates, `TessInbox`, `NWPathMonitor`, the key-prefix guard, `answerQuery` counting finished workouts by `endedAt` | Core (T3, T4, T6, T7) |
 | Cloud mark on the bloom (M17), "· via Claude" receipts (M16), M7 to M10 lines, the worded plan in place, the question reply line, the "1 waiting for Tess" badge | Builder B |
 | Claude sets in a live workout: an Undo he can reach (B6) and "Set 3 taken back." | Builder A |
 

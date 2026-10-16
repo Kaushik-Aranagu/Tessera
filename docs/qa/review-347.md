@@ -55,3 +55,22 @@ RoutinesPage.
 build:
 - T3 expects "Rest day tomorrow" on a rest eve.
 - Add "edge-swipe back from Routines" to T2.
+
+## Addendum: re-check at `64097c5` (Oct 16, about 1:50 AM Pacific): PASS
+
+The delta is three files, +11 / -1.
+
+- **F1 closed (K1).** `RoutinesPage` adds `.background { EdgeSwipeBack() }` (`RoutinesPage.swift:58-59`), the same
+  pattern Backup uses, so the edge swipe back works again under "‹ TRAINING".
+- **L1 closed.** `onDisappear` cancels the start task and puts `sinking`, `landed`, `isLifting` and `lift` back
+  (`TrainingPage.swift:157-165`), so leaving mid-START can't strand the plan.
+- **L2 closed.** Tess's line wraps (`fixedSize(horizontal: false, vertical: true)`, no line limit), so there is no
+  "…". The slot is still a two-line reservation (the hidden "Tess\nTess" in the same ZStack). For a line of one or
+  two lines, which covers every line at default type, nothing moves. Only a line that needs three lines at large
+  Dynamic Type grows the slot, and then the plan line rises by that line. That's the right trade against "…".
+- **L3 closed.** `isWorkoutPresented`'s `didSet` clears `workoutRisesFromLane` whenever the cover closes
+  (`AppModel.swift:80-83`).
+
+Device check, not a block: if presenting the full-screen cover fires Training's `onDisappear`, the new reset could
+bring the sunk lanes back while the cover is still zooming up. Design should look at the zoom on the phone, or on
+a fresh recording at this head.

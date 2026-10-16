@@ -76,12 +76,7 @@ struct RepsRow: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .tesseraAnimation(.spring(response: 0.32, dampingFraction: 0.62), value: reps)
             Color.clear.frame(height: 8)
-            if let ghost, !beatsLast {
-                Text("last \(ghost)")
-                    .font(Theme.voice)
-                    .foregroundStyle(Paint.cream.opacity(0.55))
-                    .transition(.opacity)
-            }
+            // Last time is said once, in the detail line (56 addendum); the ghost only drives the beat.
         }
         .frame(width: 112, alignment: .trailing)
         .contentShape(Rectangle().inset(by: -12))

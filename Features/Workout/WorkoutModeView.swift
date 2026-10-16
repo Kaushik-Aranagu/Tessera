@@ -50,7 +50,8 @@ private struct WorkoutContent: View {
 
     /// The lane's scroll position (x). Kept in step with `session.currentIndex` both ways.
     @State private var laneIndex: Int?
-    @State private var tessMode: TessSoul.Mode = .idle
+    /// The corner soul runs the same router as Home's, with page .live (tess-motion.md §14).
+    @State private var soul = SoulRouter(page: .live)
     /// Workout-level moments: a set seated, a new best, rest up on screen, the workout finished.
     @State private var moment = HapticCue()
     /// The subline whose cadmium has dried.
@@ -94,19 +95,32 @@ private struct WorkoutContent: View {
                             endedAt: finished,
                             summary: session.summary,
                             onGathered: {
-                                // Tess's count line from Core's summary: "5 of 5 exercises, 16 sets, 1 record."
+                                // A take-back inside the gather leaves nothing to sum up.
+                                guard session.finishedAt != nil else { return }
+                                // Tess's count line from Core's summary: "5 of 5 exercises, 16 sets, 1 best."
                                 summaryLine = model.ledger.summary(of: session.workout).line
-                                play(.done)
+                                soul.handle(.workoutGathered)
                             },
                             onDone: leaveFinished
                         )
                         LiveTessCorner(
                             line: WorkoutLines.tess(session, phase: phase, summary: summaryLine),
-                            mode: tessMode,
-                            canUndo: session.canUndo && session.finishedAt == nil,
+                            mode: soul.mode,
+                            // LOG … AND FINISH keeps a 10 s UNDO that takes back the set and the finish together.
+                            canUndo: session.canTakeBackFinish(at: now),
+                            // The line (and its UNDO) stays for the whole 10 s window.
+                            holdsLine: session.canTakeBackFinish(at: now),
                             onUndo: {
-                                withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLastSet() }
+                                withTesseraAnimation(reduceMotion: reduceMotion) { session.takeBackFinish() }
+                                let back = "\(session.workout.title), back on."
+                                askReply = back
                                 undoHaptic += 1
+                                Task { @MainActor in
+                                    try? await Task.sleep(for: .seconds(4))
+                                    if askReply == back {
+                                        askReply = nil
+                                    }
+                                }
                             }
                         )
                         .padding(.leading, Theme.Spacing.gutter)
@@ -155,6 +169,21 @@ private struct WorkoutContent: View {
             laneIndex = session.currentIndex
             // The workout can finish here: warm the done pattern so its first beat isn't late.
             DonePattern.prepare()
+            #if DEBUG
+                // `-workoutNearEnd` (simulator only, recordings): every set but the workout's last is logged.
+                if LaunchFlags.has("-workoutNearEnd"), session.setRows(of: session.entries[0]).isEmpty {
+                    let all = session.entries
+                    for (index, entry) in all.enumerated() {
+                        session.select(entryAt: index)
+                        let keep = index == all.count - 1 ? 1 : 0
+                        while session.setRows(of: entry).count < session.targetSets(of: entry) - keep {
+                            session.logSet()
+                            session.skipRest()
+                        }
+                    }
+                    laneIndex = session.currentIndex
+                }
+            #endif
         }
         .onChange(of: laneIndex) { _, index in
             guard let index, index != session.currentIndex else { return }
@@ -165,15 +194,12 @@ private struct WorkoutContent: View {
             withTesseraAnimation(.snappy(duration: 0.3), reduceMotion: reduceMotion) { laneIndex = index }
         }
         .onChange(of: session.lastSeated) { _, seated in
-            guard let seated else { return }
+            // A set that finished the workout plays its haptic in finish(), once.
+            guard let seated, session.finishedAt == nil else { return }
             // One haptic per set, played here so it survives the key leaving (Reduce Motion, VoiceOver's action):
             // the set's tap, or .success in its place for a new best.
             moment.play(seated.records.isEmpty ? .setLogged : .newBest)
-            if seated.records.isEmpty {
-                play(.done)
-            } else {
-                play(.thinking, then: .done, after: 1.2)
-            }
+            soul.handle(seated.records.isEmpty ? .setLogged : .newBest)
         }
         .tesseraFeedback(.undo, trigger: undoHaptic)
         .tesseraFeedback(.selection, trigger: editHaptic)
@@ -186,7 +212,7 @@ private struct WorkoutContent: View {
         // Editing a logged set takes the set block over (dial, drum, key), even during rest.
         let phase = session.isEditing ? .set : actual
         return VStack(alignment: .leading, spacing: 0) {
-            header(now: now)
+            header(phase: phase)
                 .padding(.horizontal, Theme.Spacing.gutter)
                 .padding(.top, Theme.Spacing.m)
             ExerciseLane(session: session, laneIndex: $laneIndex, isSwapOpen: isSwapOpen, setSwap: setSwap(open:))
@@ -228,7 +254,7 @@ private struct WorkoutContent: View {
             keyRow(phase: phase)
                 .padding(.horizontal, Theme.Spacing.gutter)
             LiveTessCorner(line: askReply ?? WorkoutLines.tess(session, phase: phase, summary: summaryLine),
-                           mode: tessMode,
+                           mode: soul.mode,
                            canUndo: session.canUndoLast && !session.isEditing,
                            holdsLine: askReply == nil && phase == .workoutDone,
                            onUndo: {
@@ -247,27 +273,15 @@ private struct WorkoutContent: View {
     private func ask(_ phrase: String) {
         // Refused again before any interpreter sees it.
         guard !LiveAskField.refuses(phrase) else { return }
-        play(.thinking)
+        soul.handle(.liveAsk)
         Task { @MainActor in
             let reply = await model.ask(phrase)
             askReply = reply
-            play(.done)
+            soul.handle(.liveAnswered)
             try? await Task.sleep(for: .seconds(4))
             if askReply == reply {
                 askReply = nil
             }
-        }
-    }
-
-    private func play(_ mode: TessSoul.Mode, then next: TessSoul.Mode? = nil, after delay: Double = 0) {
-        tessMode = mode
-        Task { @MainActor in
-            if let next {
-                try? await Task.sleep(for: .seconds(delay))
-                tessMode = next
-            }
-            try? await Task.sleep(for: .seconds(1.8))
-            tessMode = .idle
         }
     }
 }
@@ -333,38 +347,25 @@ extension WorkoutContent {
 
     // MARK: Header and lane (x)
 
-    private func header(now: Date) -> some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text("\(session.workout.title), \(Format.duration(now.timeIntervalSince(session.startedAt)))")
-                .font(Theme.voice)
-                .foregroundStyle(Paint.secondary)
-                .contentTransition(.numericText())
-                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                .contentShape(Rectangle())
-                // Pull down on the seam (or tap it) for the running order.
-                .onTapGesture { setOrder(open: true) }
-                .gesture(DragGesture(minimumDistance: 12).onEnded { drag in
-                    if drag.translation.height > 30 {
-                        setOrder(open: true)
-                    }
-                })
-                .accessibilityAddTraits(.isButton)
-                .accessibilityHint("Shows the running order")
-            Text("\((laneIndex ?? session.currentIndex) + 1) / \(session.entries.count)")
-                .textRole(.label)
-                .foregroundStyle(Paint.secondary)
-            Button {
-                model.isWorkoutPresented = false
-            } label: {
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Paint.cream)
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
-            }
-            .accessibilityLabel("Minimise workout")
-        }
-        .accessibilityElement(children: .contain)
+    /// The context line above the name (live-workout.md): "Push A, set 1 of 4", "Rest, then set 2". No count: the
+    /// strip says which exercise this is. Tap or pull down for the running order.
+    private func header(phase: WorkoutSession.Phase) -> some View {
+        let line = WorkoutLines.context(session, phase: phase)
+        return Text(line)
+            .font(Theme.voice)
+            .foregroundStyle(Theme.Colors.context)
+            .contentTransition(.opacity)
+            .tesseraAnimation(value: line)
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .contentShape(Rectangle())
+            .onTapGesture { setOrder(open: true) }
+            .gesture(DragGesture(minimumDistance: 12).onEnded { drag in
+                if drag.translation.height > 30 {
+                    setOrder(open: true)
+                }
+            })
+            .accessibilityAddTraits(.isButton)
+            .accessibilityHint("Shows the running order")
     }
 
     @ViewBuilder
@@ -375,7 +376,7 @@ extension WorkoutContent {
                 withTesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.5), reduceMotion: reduceMotion) {
                     session.swap(to: option)
                 }
-                play(.done)
+                soul.handle(.swapped)
             }
             .padding(.horizontal, Theme.Spacing.s)
             .offset(y: 64 + Theme.Spacing.m)
@@ -428,9 +429,10 @@ extension WorkoutContent {
                         extendRest()
                     } label: {
                         HStack(alignment: .firstTextBaseline, spacing: 10) {
+                            // The countdown is the one thing in colour at rest, and it moves (live-workout.md §7).
                             Text(Format.duration(remaining))
                                 .font(Theme.numeral(72))
-                                .foregroundStyle(Paint.cream)
+                                .foregroundStyle(Paint.now)
                                 .contentTransition(.numericText(countsDown: true))
                                 .animation(MotionPolicy.resolve(Theme.Motion.snappy, reduceMotion: reduceMotion),
                                            value: remaining)
@@ -566,7 +568,7 @@ extension WorkoutContent {
             if let check = session.topSetCheck, check.entryID == session.currentEntry?.id {
                 TopSetCheckLine(check: check) {
                     withTesseraAnimation(reduceMotion: reduceMotion) { session.acceptTopSetCheck() }
-                    play(.done)
+                    soul.handle(.topSetAccepted)
                 }
                 .transition(.opacity)
             }
@@ -616,25 +618,37 @@ extension WorkoutContent {
             } else {
                 switch phase {
                 case .set:
-                    // Hold to log: 0.6 s, 20 pt of drift (docs/research/ship-now.md).
-                    // Silent: the set's haptic plays when it seats (onChange of lastSeated).
-                    PaintKey(paint: Paint.live, duration: 0.6, height: 64, drift: 20, isSilent: true) {
+                    // The key says what it logs (live-workout.md): "LOG 82.5 × 8", a 0.7 s hold on the ink line; the
+                    // workout's last set logs and finishes in one hold. Silent: the set's haptic plays when it seats.
+                    let finishes = session.isLastSetOfWorkout
+                    PaintKey(paint: Paint.live, duration: 0.7, height: 64, drift: 20, isSilent: true) {
                         withTesseraAnimation(reduceMotion: reduceMotion) { session.logSet() }
+                        if finishes {
+                            finish(withSet: true)
+                        }
                     } label: { _ in
-                        Text("Log set")
+                        Text(
+                            "Log \(Format.kilograms(session.weight)) × \(Int(session.reps))\(finishes ? " and finish" : "")"
+                        )
+                        .textRole(.labelStrong)
+                        .textCase(.uppercase)
+                        .contentTransition(.numericText())
                     } meta: {
-                        Text("Hold · \(Format.kilograms(session.weight)) × \(Int(session.reps))")
+                        EmptyView()
                     }
                     .accessibilityLabel(logLabel)
                     .accessibilityAction(named: "Log set") {
                         withTesseraAnimation(reduceMotion: reduceMotion) { session.logSet() }
+                        if finishes {
+                            finish(withSet: true)
+                        }
                     }
                 case .rest:
                     // The horizon above carries +15 and the fling; the key only skips.
                     PaintKey(paint: Paint.now, isTap: true, height: 64) {
                         skipRest()
                     } label: { _ in
-                        Text("Skip rest")
+                        Text("Skip rest").textRole(.labelStrong).textCase(.uppercase)
                     }
                 case .exerciseDone:
                     PaintKey(paint: Paint.cobalt, isTap: true, height: 64) {
@@ -643,20 +657,31 @@ extension WorkoutContent {
                             }
                         }
                     } label: { _ in
-                        Text("Next exercise")
+                        Text("Next exercise").textRole(.labelStrong).textCase(.uppercase)
                     }
                 case .workoutDone:
                     PaintKey(paint: Paint.live, duration: 0.8, height: 64, isSilent: true) {
                         finish()
                     } label: { _ in
-                        Text("Finish")
+                        Text("Finish").textRole(.labelStrong).textCase(.uppercase)
                     } meta: {
-                        Text("Hold · \(session.summary.sets) sets")
+                        EmptyView()
                     }
                     .accessibilityAction(named: "Finish workout") { finish() }
                 }
             }
             Spacer(minLength: 0)
+            if session.finishedAt == nil {
+                // PAUSE leaves to Home, where the key reads RESUME with the progress line.
+                Button("Pause") { model.isWorkoutPresented = false }
+                    .textRole(.labelStrong)
+                    .textCase(.uppercase)
+                    .foregroundStyle(Paint.secondary)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Pause the workout")
+            }
         }
         .frame(height: 62)
     }
@@ -667,12 +692,15 @@ extension WorkoutContent {
         session.entries.flatMap { entry in session.setRows(of: entry).map { Paint.set($0.number) } }
     }
 
-    private func finish(early: Bool = false) {
-        // Done plays here for every finish (the key is silent, so it can't be lost as the key leaves).
-        moment.play(.done)
+    /// One haptic for the moment: done, or .success when the set it finished with was a best.
+    private func finish(early: Bool = false, withSet: Bool = false) {
+        let best = withSet && session.lastSeated?.records.isEmpty == false
+        moment.play(best ? .newBest : .done)
         isSwapOpen = false
         isOrderOpen = false
-        withTesseraAnimation(.easeOut(duration: 0.4), reduceMotion: reduceMotion) { session.finish(early: early) }
+        withTesseraAnimation(.easeOut(duration: 0.4), reduceMotion: reduceMotion) {
+            session.finish(early: early, withSet: withSet)
+        }
     }
 
     /// The workout is already finished (FinishWorkout ran on the hold); leaving drops it into today on Home.

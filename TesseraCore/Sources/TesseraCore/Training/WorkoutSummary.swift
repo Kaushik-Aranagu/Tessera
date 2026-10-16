@@ -26,11 +26,11 @@ public struct WorkoutSummary: Identifiable {
         return endedAt.timeIntervalSince(startedAt)
     }
 
-    /// Tess's line: "6 of 6 exercises, 22 sets, 1 record." Counts, never judgement.
+    /// Tess's line: "6 of 6 exercises, 22 sets, 1 best." Counts, never judgement ("best", not "record": Product).
     public var line: String {
         var parts = ["\(exercisesDone) of \(exercisesPlanned) exercises", "\(sets) \(sets == 1 ? "set" : "sets")"]
         if !records.isEmpty {
-            parts.append("\(records.count) \(records.count == 1 ? "record" : "records")")
+            parts.append("\(records.count) \(records.count == 1 ? "best" : "bests")")
         }
         return parts.joined(separator: ", ") + "."
     }
@@ -94,11 +94,14 @@ public extension TrainingLedger {
             return cached.summaries
         }
         if derived.workoutDays?.revision != revision || derived.workoutDaysZone != zone {
+            // Each workout files under the day it started where he was (Research 127 T1): a hotel-gym Wednesday
+            // stays Wednesday once he is home.
+            let zones = OpZones(store: store)
             var days: [Date: [UUID]] = [:]
             for workout in store.objects(of: workoutClass) {
                 guard let ended = store.value("endedAt", of: workout)?.dateValue else { continue }
                 let started = store.value("startedAt", of: workout)?.dateValue ?? ended
-                days[tesseraDay.day(of: started), default: []].append(workout.id)
+                days[zones.dayKey(of: started, for: workout.id, calendar: calendar), default: []].append(workout.id)
             }
             derived.workoutDays = (revision, days)
             derived.workoutDaysZone = zone

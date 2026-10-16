@@ -50,3 +50,41 @@ lead. The hero already does it right with `ViewThatFits`.
   ("Still ahead"). One or the other should change.
 - **L4.** If even the shortest hero form doesn't fit, `ViewThatFits` falls back to the last form, which is
   `fixedSize` and would clip rather than wrap. That's unlikely with routine titles.
+
+## Addendum: re-check at `d7870f0` (Oct 16, about 1:50 AM Pacific): PASS
+
+The delta is one modifier. WeekLines' row text drops `.lineLimit(1)` for `.fixedSize(horizontal: false, vertical:
+true)` (`ReviewWeek.swift:329-330`). A long line now wraps under its own column, hanging beside the lead in the
+first-baseline HStack, and nothing on the page ends in "…". F1 is closed. L1 and L3 fold into the WeekFacts swap
+after #348.
+
+Device check, not a block: with three wrapped lines at large Dynamic Type, the page grows taller. Confirm that the
+Review page in Home's pager still shows the last line above Tess's slot (band 736-820) and doesn't run under it.
+
+## Addendum: re-check at `b05d3ff` (Oct 16, about 2:40 AM Pacific): PASS
+
+Head `b05d3ffae36a733706d3e62c733f35e94a9a017d`, rebased on master; trial merge clean. 5 files, +520/-93
+(ReviewPage, ReviewWeek, DemoData, new ReviewWeekUITests, re-cut clip).
+
+- **Hero.** `FittingHero` (ReviewPage.swift:526) is static children inside `ViewThatFits`: each form at Title 44
+  one line, then each at 34 (`InkWordType.font`, 34/500) one line, then the last form at 34 with
+  `fixedSize(horizontal: false, vertical: true)`. It never ends in "…", never clips and never widens the column.
+  The week hero is the count alone ("Four sessions", "All six sessions", "A quiet week", "Your first week"). This
+  closes L4.
+- **WeekFacts swap.** `lines(onDay:)` per past day and `facts(weekContaining:).bestLines` for the week
+  (ReviewWeek.swift:70, :82), with the session fallback only where the log has no words. L2 closed.
+- **Day hero** = best fact plus task count ("Bench best, 3 done"), then title plus count, then title; duplicates
+  dropped. Matches Design 46.
+- **Data safety.** `-homePage` goes through `LaunchFlags.value(after:)` (HomeSpatialView.swift:55); the UI test
+  subclasses `SimulatorOnlyTestCase`, and its `ProcessInfo` read is test-side only (snapshot dir). The DemoData
+  `doneAt` write is demo-only. No catalog or migration change. One selection haptic per tap (:312).
+
+Still standing (lows, none block):
+- **L1, now heavier.** `compute` runs on every body pass and each write bumps `model.revision`; it now also builds
+  7 `lines(onDay:)` windows plus `facts(weekContaining:)`, which likely re-reads the same days. Cache per revision.
+- **L3.** `read(_:)`'s comment (ReviewPage.swift:320) still says a day ahead returns to the week; the code reads it.
+- **L5 (new).** The day hero's best word takes the first word of a ", PR." line (ReviewWeek.swift:175-176), so
+  "Incline bench 30 × 8, PR." gives "Incline best"; the fallback uses `ExerciseWords.short`. Use `short` for both.
+- **L6 (new).** The `bestLines` doc comment ("Until then…") is stale now that Core's pick is in.
+
+The device check from the d7870f0 addendum (wrapped lines at large Dynamic Type stay above Tess's slot) still applies.

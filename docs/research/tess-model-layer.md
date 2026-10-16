@@ -73,7 +73,7 @@ Plus one non-writing tool for plan wording, `proposePlan {lines: [{objectID: str
 
 - Keychain generic password, service `com.kaushikaranagu.tessera.anthropic`, `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly` (not synced, not in backups to other devices).
 - Entered once: Settings (M3 slice 12) has a "Claude" row. Paste key, Tessera makes one tiny Haiku call to check it, shows "Key saved. Ends in ...a1B2." The key is never shown again, only Replace or Remove.
-- Never in the repo, `Info.plist`, `UserDefaults`, the op log, exports or logs. A unit test greps exports and the database file for `sk-ant-`.
+- Never in the repo, `Info.plist`, `UserDefaults`, the op log, exports or logs. A unit test greps exports and the database file for the Claude key prefix.
 
 ## 4. Cost
 
@@ -253,7 +253,7 @@ public enum TessTools {
 | Usage missing on a failed or cancelled call | Record a `TessCall` with outcome `failed` and an estimate (input tokens from text length over 4 plus `maxTokens`); the cap errs high |
 | Month boundary for the cap | Month total is a query over `TessCall` dates in the phone's calendar and time zone; the reset line reads that same calendar; the Console spend limit is the server-side backstop |
 | Testing without spending money | `swift test` and the app tests inject a stub `LanguageModel` returning scripted tool calls; live calls only via `swift run tess-eval --route claude` with an env key |
-| Context pack leaks more than intended | Snapshot test per use (section 9); a test greps exports and the database for `sk-ant-` |
+| Context pack leaks more than intended | Snapshot test per use (section 9); a test greps exports and the database for the Claude key prefix |
 | Keychain and cap tests touch real state | Behind protocols (`TessKeychain`, `TessUsageLedger`) with in-memory fakes in tests |
 
 Extra unverified items from these two sections: what the package caches and where it places breakpoints; how a 529 surfaces in the package; Keychain survival on iOS 27 under Personal Team signing.

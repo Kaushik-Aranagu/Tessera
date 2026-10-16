@@ -20,6 +20,8 @@ struct TaskTests {
     init() throws {
         classes = try store.prepareCatalog()
         engine = ActionEngine(store: store, classes: classes)
+        // The test's zone, not the device's: a task is filed under the day it was done where he was (Research 127).
+        engine.zone = { .gmt }
         list = TaskList(store: store, classes: classes)
     }
 
@@ -54,7 +56,8 @@ struct TaskTests {
 
     @Test func notNowMovesItTomorrowOrToLater() throws {
         let task = try add("Stretch", hoursFromNow: 2)
-        let moved = try engine.perform(MoveTask(task: task.id), by: .user)
+        // The test's clock, not the wall clock: "tomorrow" is counted from `now` (it failed once his day turned).
+        let moved = try engine.perform(MoveTask(task: task.id, time: now), by: .user)
         let startsAt = try #require(store.value("startsAt", of: task)?.dateValue)
         #expect(calendar.dateComponents([.day, .hour], from: startsAt) == DateComponents(day: 16, hour: 12))
         #expect(!list.today(now, calendar: calendar).contains { $0.id == task.id })

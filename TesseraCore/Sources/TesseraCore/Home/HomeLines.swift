@@ -39,12 +39,15 @@ public struct HomeFact: Equatable, Sendable {
     public let lastTouchedAt: Date?
     /// A timed task's start, or a planned thing's slot when it has one.
     public let startsAt: Date?
+    /// A planned thing for tomorrow ("Pull A tomorrow", "Rest day tomorrow"; Design 44, Research G12).
+    public var tomorrow = false
 
     public init(id: UUID?, kind: Kind, title: String, state: State, exercise: String? = nil, step: Int? = nil,
                 steps: Int? = nil, sets: Int = 0, exercisesDone: Int = 0, exercisesPlanned: Int = 0,
                 records: [String] = [], toBuy: Int? = nil, sinceLastDays: Int? = nil, startedAt: Date? = nil,
-                endedAt: Date? = nil, lastTouchedAt: Date? = nil, startsAt: Date? = nil)
+                endedAt: Date? = nil, lastTouchedAt: Date? = nil, startsAt: Date? = nil, tomorrow: Bool = false)
     {
+        self.tomorrow = tomorrow
         self.id = id
         self.kind = kind
         self.title = title
@@ -89,7 +92,7 @@ public struct HomeLine: Equatable, Sendable {
     public let text: String
     /// The hero, rules only: "Push A done", "Push A, paused at bench", "Chili, step 3". No stop; the type carries it.
     public let hero: String
-    /// The time words above the hero: "paused 21 min ago", "this evening", "done at 7:40 pm". At most 6 words and
+    /// The time words above the hero: "paused 21 min ago", "this evening", "7:40 pm". At most 6 words and
     /// 32 characters, no stop. Nil when there is nothing to say.
     public let context: String?
     /// The context when the full one doesn't fit its width: "paused 21 min". Words shorten, never the type.
@@ -108,9 +111,55 @@ public struct HomeLine: Equatable, Sendable {
     /// The fact behind it, for the Claude pack (AI-4).
     public let fact: HomeFact
 
+    /// One sentence for a widget or the Lock Screen (Design 54): the hero, then the context. A bare time word joins
+    /// without a comma ("Push A today."); a fact joins after a comma ("Tacos tonight, 2 to buy."); a context that
+    /// repeats the hero's state drops and its clock becomes `widgetMeta`. "Push A done, a bench best."
+    public var widgetLine: String {
+        widgetWords + "."
+    }
+
+    /// The inline Lock Screen face takes the line without its stop. A rest day is "Rest day" alone: widgets have no
+    /// day label, so the weekday is the meta (home-lines.md §2, Design 54).
+    public var widgetWords: String {
+        let records = fact.records
+        if fact.kind == .rest {
+            return hero
+        }
+        if fact.kind == .workout, fact.state == .done, fact.sets > 0, !records.isEmpty {
+            return records.count == 1 ? "\(hero). \(records[0]) best" : "\(hero). \(records.count) bests"
+        }
+        guard let context, !HomeLines.repeatsState(context, hero: hero) else { return hero }
+        // "tomorrow, first": the bare time word joins without a comma, the fact after one (Design 54 rule 2).
+        if let comma = context.firstIndex(of: ","), HomeLines.isTimeWord(String(context[..<comma])) {
+            return "\(hero) \(context)"
+        }
+        return HomeLines.isTimeWord(context) ? "\(hero) \(context)" : "\(hero), \(context)"
+    }
+
+    /// The widget's meta, a time only: the clock of a context the line dropped ("8:05 pm"), the weekday on a rest day,
+    /// how long a paused thing has waited ("40 min"); nil while something runs.
+    public var widgetMeta: String? {
+        if fact.kind == .rest {
+            return fact.tomorrow ? nil : weekday
+        }
+        guard let context, context != "now", HomeLines.repeatsState(context, hero: hero) else { return nil }
+        return context.firstMatch(of: /\d{1,2}(:\d{2})? ?(am|pm)/).map { String($0.output.0) }
+            ?? (contextShort.map { $0.replacingOccurrences(of: "paused ", with: "").replacingOccurrences(
+                of: "done ",
+                with: ""
+            ) })
+    }
+
+    /// His day's weekday when the line was read ("Thursday"), for the rest day's widget meta.
+    public let weekday: String
+
+    /// Nothing on Home: "All quiet."
+    public static let quiet = "All quiet."
+
     init(text: String, hero: String, context: String?, contextShort: String?, detail: String?, fixed: Bool,
-         fact: HomeFact)
+         fact: HomeFact, weekday: String)
     {
+        self.weekday = weekday
         self.text = text
         self.hero = hero
         self.context = context
@@ -156,7 +205,7 @@ public enum HomeLines {
         return HomeLine(text: text(for: fact, now: now, calendar: calendar),
                         hero: hero(for: fact, now: now, calendar: calendar),
                         context: when.full, contextShort: when.short, detail: detail(for: fact), fixed: fixed,
-                        fact: fact)
+                        fact: fact, weekday: weekday(now: now, calendar: calendar))
     }
 
     public static func lines(for facts: [HomeFact], now: Date = .now, calendar: Calendar = .current) -> [HomeLine] {
@@ -173,7 +222,10 @@ public enum HomeLines {
             return workoutText(for: fact, now: now, calendar: calendar)
         case .cook:
             if fact.state == .planned {
-                return "\(fact.title) \(dayWord(now, calendar: calendar)), \(toBuy(fact))."
+                return "\(cookWhen(fact, now: now, calendar: calendar)), \(toBuy(fact))."
+            }
+            if fact.state == .done {
+                return "\(fact.title) done."
             }
             guard let step = fact.step else { return "\(fact.title), cooking." }
             return "\(fact.title), on step \(step)."
@@ -189,40 +241,64 @@ public enum HomeLines {
     static func workoutText(for fact: HomeFact, now: Date, calendar: Calendar) -> String {
         switch fact.state {
         case .done:
-            // "Push A done. Bench record." A finished workout with nothing logged is no session.
+            // "Push A done. Bench best." (never "record" in a line; Design G3). No sets logged is no session.
             guard fact.sets > 0 else { return "\(fact.title), no sets." }
             switch fact.records.count {
             case 0: return "\(fact.title) done."
-            case 1: return "\(fact.title) done. \(fact.records[0]) record."
-            default: return "\(fact.title) done. \(fact.records.count) records."
+            case 1: return "\(fact.title) done. \(fact.records[0]) best."
+            default: return "\(fact.title) done. \(fact.records.count) bests."
             }
         case .running:
-            guard let exercise = fact.exercise, let step = fact.step else { return "\(fact.title), under way." }
+            // Every set logged, finish not tapped: "Push A, all sets in." (Design G5).
+            guard let exercise = fact.exercise, let step = fact.step else { return "\(fact.title), all sets in." }
             return "\(exercise), set \(step)."
         case .paused:
             guard let exercise = fact.exercise, let step = fact.step else { return "\(fact.title) paused." }
             return "\(exercise) paused at set \(step)."
         case .planned:
-            return "\(fact.title) \(dayWord(now, calendar: calendar))."
+            if let at = fact.startsAt, !fact.tomorrow {
+                return "\(fact.title) at \(DayStoryClock.sentenceTime(at, calendar: calendar))."
+            }
+            return "\(fact.title) \(fact.tomorrow ? "tomorrow" : dayWord(now, calendar: calendar))."
         }
+    }
+
+    /// "Tacos tonight" (a cook is an evening thing until it has a time), "Tacos at 7" with one (Kitchen lead, G8).
+    static func cookWhen(_ fact: HomeFact, now: Date, calendar: Calendar) -> String {
+        if fact.tomorrow {
+            return "\(fact.title) tomorrow"
+        }
+        if let at = fact.startsAt {
+            return "\(fact.title) at \(DayStoryClock.shortTime(at, calendar: calendar))"
+        }
+        let evening: Set<DayPart> = [.evening, .shutdown, .late]
+        let word = evening.contains(DayPart(hour: calendar.component(.hour, from: now))) ? "tonight" : "today"
+        return "\(fact.title) \(word)"
     }
 
     // MARK: The hero (home-lines.md section 2, rules only)
 
     static func hero(for fact: HomeFact, now: Date, calendar: Calendar) -> String {
         switch (fact.kind, fact.state) {
-        case (.rest, _): RestDay.line
+        case (.rest, _): fact.tomorrow ? "\(RestDay.line) tomorrow" : RestDay.line
         case (.workout, .done): fact.sets > 0 ? "\(fact.title) done" : "\(fact.title), no sets"
         case (.workout, .running):
             if let exercise = fact.exercise, let step = fact.step {
                 "\(fact.title), \(exercise.lowercased()) set \(step)"
             } else {
-                fact.title
+                "\(fact.title), all sets in"
             }
         case (.workout, .paused): fact.exercise.map { "\(fact.title), paused at \($0.lowercased())" }
             ?? "\(fact.title), paused"
-        case (.workout, .planned), (.task, _): fact.title
-        case (.cook, .planned): "\(fact.title) \(dayWord(now, calendar: calendar))"
+        case (.workout, .planned):
+            if let at = fact.startsAt, !fact.tomorrow {
+                "\(fact.title) at \(DayStoryClock.sentenceTime(at, calendar: calendar))"
+            } else {
+                fact.title
+            }
+        case (.task, _): fact.title
+        case (.cook, .planned): cookWhen(fact, now: now, calendar: calendar)
+        case (.cook, .done): "\(fact.title) done"
         case (.cook, _): fact.step.map { "\(fact.title), step \($0)" } ?? fact.title
         case (.shop, _): fact.step.map { $0 > 0 ? "\(fact.title), \($0) left" : "\(fact.title), all in the basket" }
             ?? fact.title
@@ -246,24 +322,35 @@ public enum HomeLines {
         }
         switch (fact.kind, fact.state) {
         case (.rest, _), (.task, _):
-            // His day's weekday: at 01:00 Friday it is still Thursday (QA on #334).
-            let day = TesseraDay(calendar: calendar).day(of: now)
-            return same(Self.weekdays[calendar.component(.weekday, from: day) - 1])
+            // The day label above the hero already names the day, so the rest line says "today" (Builder B's #366);
+            // the weekday lives on as the widget's meta through `weekday(now:calendar:)`.
+            return same(fact.tomorrow ? "tomorrow" : "today")
         case (.workout, .done):
-            // "done at 7:40 pm"; a workout with no sets only says when: "this afternoon".
+            // "7:40 pm" alone: the hero already says done (home-lines.md §2, no repeats); a workout with no sets only
+            // says when: "this afternoon".
             guard let ended = fact.endedAt else { return (nil, nil) }
             guard fact.sets > 0 else { return same(partWord(ended, calendar: calendar)) }
-            return same("done at \(DayStoryClock.sentenceTime(ended, calendar: calendar))")
-        case (.workout, .paused), (.cook, .paused):
+            return same(DayStoryClock.sentenceTime(ended, calendar: calendar))
+        case (.workout, .paused), (.cook, .paused), (.shop, .paused):
+            // A paused shop is him at home, not at the store (Research G2).
             return since("paused", fact.lastTouchedAt ?? fact.startedAt)
-        case (.workout, .running), (.cook, .running), (.cook, .done):
+        case (.workout, .running), (.cook, .running):
             return same("now")
         case (.workout, .planned):
-            return same(dayWord(now, calendar: calendar))
-        case (.cook, .planned):
-            return same(toBuy(fact))
-        case (.shop, _):
-            return same("at the store")
+            // The closed day's look ahead: "tomorrow, first" (m4-steers §7), so Now and the widget agree.
+            return same(fact.tomorrow ? "tomorrow, first" : dayWord(now, calendar: calendar))
+        default:
+            return kitchenContext(for: fact, calendar: calendar).map { ($0, $0) } ?? (nil, nil)
+        }
+    }
+
+    /// The done cook's clock, the planned cook's count, the shop's place.
+    static func kitchenContext(for fact: HomeFact, calendar: Calendar) -> String? {
+        switch (fact.kind, fact.state) {
+        case (.cook, .done): fact.endedAt.map { DayStoryClock.sentenceTime($0, calendar: calendar) }
+        case (.cook, .planned): toBuy(fact)
+        case (.shop, _): "at the store"
+        default: nil
         }
     }
 
@@ -271,13 +358,14 @@ public enum HomeLines {
 
     static func detail(for fact: HomeFact) -> String? {
         switch fact.kind {
-        case .workout where fact.state != .planned:
+        case .workout where fact.state != .planned && fact.sets > 0:
+            // A zero count reads as grading, so there is no SO FAR until a set is in (Research G4).
             var parts = [count(fact.exercisesDone, "exercise"), count(fact.sets, "set")]
             if !fact.records.isEmpty {
                 parts.append(fact.records.count == 1 ? "1 new best" : "\(fact.records.count) new bests")
             }
             return parts.joined(separator: ", ") + "."
-        case .cook where fact.state != .planned:
+        case .cook where fact.state == .running || fact.state == .paused:
             guard let step = fact.step else { return nil }
             return fact.steps.map { "Step \(step) of \($0)." } ?? "Step \(step)."
         case .shop:
@@ -319,20 +407,41 @@ public enum HomeLines {
     /// His weekdays, in words Tess uses (a bare calendar has no locale, so no symbols of its own).
     static let weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
+    /// His day's weekday: at 01:00 Friday it is still Thursday (QA on #334). The widget's meta on a rest day.
+    public static func weekday(now: Date, calendar: Calendar = .current) -> String {
+        let day = TesseraDay(calendar: calendar).day(of: now)
+        return weekdays[calendar.component(.weekday, from: day) - 1]
+    }
+
     static func count(_ number: Int, _ word: String) -> String {
         "\(number) \(word)\(number == 1 ? "" : "s")"
     }
 
-    /// "just now", "21 min ago", "2 h ago" (never a mm:ss duration).
+    /// "just now" up to 2 min, "21 min ago", "2 h ago" from 60 min rounded to the nearest hour (Research G6, G11).
     public static func ago(_ seconds: TimeInterval) -> String {
         let minutes = Int(seconds / 60)
-        if minutes < 1 {
+        if minutes < 2 {
             return "just now"
         }
         if minutes < 60 {
             return "\(minutes) min ago"
         }
-        return "\(minutes / 60) h ago"
+        return "\(max(1, Int((Double(minutes) / 60).rounded()))) h ago"
+    }
+
+    /// Time words that join a hero without a comma in a widget line.
+    static func isTimeWord(_ context: String) -> Bool {
+        ["today", "tonight", "this evening", "this afternoon", "this morning", "tomorrow", "now"].contains(context)
+            || weekdays.contains(context)
+    }
+
+    /// Whether a context only repeats the hero's state ("8:05 pm" under "Push A done"; "paused 21 min ago"
+    /// under "Push A, paused at incline"; "now" under a running hero).
+    static func repeatsState(_ context: String, hero: String) -> Bool {
+        let lower = hero.lowercased()
+        let clock = context.wholeMatch(of: /\d{1,2}(:\d{2})? ?(am|pm)/) != nil
+        return (context.hasPrefix("done") && lower.contains("done")) || (clock && lower.contains("done"))
+            || (context.hasPrefix("paused") && lower.contains("paused")) || context == "now"
     }
 
     /// Every run of digits in some words, in order: "done at 7:40 pm" gives [7, 40].
@@ -344,6 +453,14 @@ public enum HomeLines {
 
 /// "6:12 pm", "11:20 pm", "12 pm", shared with the Day log.
 enum DayStoryClock {
+    /// "7" or "7:30", for "Tacos at 7".
+    static func shortTime(_ date: Date, calendar: Calendar) -> String {
+        let parts = calendar.dateComponents([.hour, .minute], from: date)
+        let hour = parts.hour ?? 0, minute = parts.minute ?? 0
+        let twelve = hour % 12 == 0 ? 12 : hour % 12
+        return minute == 0 ? "\(twelve)" : String(format: "%d:%02d", twelve, minute)
+    }
+
     static func sentenceTime(_ date: Date, calendar: Calendar) -> String {
         let parts = calendar.dateComponents([.hour, .minute], from: date)
         let hour = parts.hour ?? 0, minute = parts.minute ?? 0
@@ -413,10 +530,33 @@ public struct HomeFacts {
         return nil
     }
 
-    /// The routine the plan says comes next, not started yet.
-    public func fact(planned routine: ObjectRecord, at startsAt: Date? = nil, now: Date = .now) -> HomeFact {
+    /// The routine the plan says comes next, not started yet; `tomorrow` for the evening's look ahead (Design 44).
+    public func fact(planned routine: ObjectRecord, at startsAt: Date? = nil, now: Date = .now,
+                     tomorrow: Bool = false) -> HomeFact
+    {
         HomeFact(id: routine.id, kind: .workout, title: store.displayTitle(of: routine), state: .planned,
-                 sinceLastDays: daysSinceLastRun(of: routine, before: now), startsAt: startsAt)
+                 sinceLastDays: daysSinceLastRun(of: routine, before: now), startsAt: startsAt, tomorrow: tomorrow)
+    }
+
+    /// A cook finished today stays on Home like a done workout, until 04:00 (Research G1).
+    public func fact(doneCook cook: ObjectRecord) -> HomeFact {
+        HomeFact(id: cook.id, kind: .cook, title: store.displayTitle(of: cook), state: .done,
+                 startedAt: store.value("startedAt", of: cook)?.dateValue,
+                 endedAt: store.value("cookedAt", of: cook)?.dateValue)
+    }
+
+    /// Cooks finished on his day containing `now`, newest first.
+    public func cooksFinished(on now: Date) -> [ObjectRecord] {
+        guard let cookClass = engine.classes[.cook] else { return [] }
+        let day = TesseraDay(calendar: calendar)
+        return store.objects(of: cookClass).filter { cook in
+            guard !cook.isDeleted, let at = store.value("cookedAt", of: cook)?.dateValue else { return false }
+            return day.isSameDay(at, now)
+        }
+        .sorted {
+            (store.value("cookedAt", of: $0)?.dateValue ?? .distantPast) >
+                (store.value("cookedAt", of: $1)?.dateValue ?? .distantPast)
+        }
     }
 
     /// A cook planned for today ("cook tacos thu": a task about the recipe), with what's still to buy for it.
@@ -431,9 +571,33 @@ public struct HomeFacts {
         HomeFact(id: task.id, kind: .task, title: store.displayTitle(of: task), state: .planned, startsAt: startsAt)
     }
 
-    /// The quiet "Rest day." line; `next` is the routine one tap away.
-    public func rest(next: ObjectRecord?) -> HomeFact {
-        HomeFact(id: next?.id, kind: .rest, title: RestDay.line, state: .planned)
+    /// The quiet "Rest day." line; `next` is the routine one tap away. `tomorrow` for "Rest day tomorrow". Nil when a
+    /// session is planned for the day: the planned session wins, and "Rest day" never sits beside a START key
+    /// (Product 96db137).
+    public func rest(next: ObjectRecord?, tomorrow: Bool = false, now: Date = .now) -> HomeFact? {
+        if !tomorrow, plannedSession(on: now) != nil {
+            return nil
+        }
+        return HomeFact(id: next?.id, kind: .rest, title: RestDay.line, state: .planned, tomorrow: tomorrow)
+    }
+
+    /// A workout scheduled for his day containing `now`, or started from a routine and not finished (the app's
+    /// "tonight's workout"); nil when nothing is planned.
+    public func plannedSession(on now: Date) -> ObjectRecord? {
+        guard let workoutClass = engine.classes[.workout] else { return nil }
+        let day = TesseraDay(calendar: calendar)
+        return store.objects(of: workoutClass).first { workout in
+            guard !workout.isDeleted, store.value("endedAt", of: workout) == nil,
+                  let date = store.value("scheduledFor", of: workout)?.dateValue
+                  ?? store.value("startedAt", of: workout)?.dateValue else { return false }
+            return day.isSameDay(date, now)
+        }
+    }
+
+    /// A scheduled session, not started: "Push A at 7 pm" over the START key.
+    public func fact(scheduled workout: ObjectRecord) -> HomeFact {
+        HomeFact(id: workout.id, kind: .workout, title: store.displayTitle(of: workout), state: .planned,
+                 startsAt: store.value("scheduledFor", of: workout)?.dateValue)
     }
 
     /// Whole days since this routine was last finished before `before`; nil when it never was.
@@ -452,8 +616,37 @@ public struct HomeFacts {
 
 /// Exercise names as Tess says them in a line: "Bench", not "Bench Press".
 public enum ExerciseWords {
+    static let table = ["Bench Press": "Bench", "Back Squat": "Squat", "Barbell Row": "Row",
+                        "Incline Bench Press": "Incline", "Overhead Press": "Press", "Deadlift": "Deadlift",
+                        "Romanian Deadlift": "RDL", "Lat Pulldown": "Pulldown", "Close-Grip Pulldown": "Pulldown",
+                        "Straight-Arm Pulldown": "Pulldown", "Dumbbell Lateral Raise": "Lateral raise",
+                        "Cable Lateral Raise": "Lateral raise", "Face Pull": "Face pull", "Lying Leg Curl": "Leg curl",
+                        "Seated Leg Curl": "Leg curl", "Standing Calf Raise": "Calf raise",
+                        "Seated Calf Raise": "Calf raise", "Leg Extension": "Leg extension", "Leg Press": "Leg press",
+                        "Hip Thrust": "Hip thrust", "Pull-Up": "Pull-up", "Chin-Up": "Chin-up", "Push-Up": "Push-up",
+                        "Incline Dumbbell Press": "Incline DB press", "Dumbbell Bench Press": "DB bench",
+                        "Close-Grip Bench Press": "Close-grip bench", "Seated Cable Row": "Cable row",
+                        "Chest-Supported Row": "Chest-supported row", "One-Arm Dumbbell Row": "One-arm row",
+                        "T-Bar Row": "T-bar row", "Front Squat": "Front squat", "Goblet Squat": "Goblet squat",
+                        "Hack Squat": "Hack squat", "Smith Machine Squat": "Smith squat",
+                        "Bulgarian Split Squat": "Split squat", "Sumo Deadlift": "Sumo deadlift",
+                        "Dumbbell Romanian Deadlift": "DB RDL", "Seated Dumbbell Shoulder Press": "DB shoulder press",
+                        "Machine Shoulder Press": "Machine press", "Machine Chest Press": "Chest press"]
+    /// Words that only say the kit: shortened, never dropped, so two lifts never share a name (QA F1 on #369).
+    static let kitShort = ["Dumbbell": "DB", "Barbell": "BB", "Kettlebell": "KB", "Machine": "machine",
+                           "Smith Machine": "Smith"]
+
+    /// "Bench" for "Bench Press"; a name with no row keeps every word, with "Dumbbell" as "DB" and "Barbell" as "BB"
+    /// ("Incline DB press", "Chest-Supported row"), the first word capitalised and the rest lowercased.
     public static func short(_ name: String) -> String {
-        ["Bench Press": "Bench", "Back Squat": "Squat", "Barbell Row": "Row", "Incline Bench Press": "Incline",
-         "Overhead Press": "Press"][name] ?? name
+        if let known = table[name] {
+            return known
+        }
+        var words = name.replacingOccurrences(of: "Smith Machine", with: "Smith").split(separator: " ").map(String.init)
+        guard words.count > 1 else { return name }
+        words = words.map { kitShort[$0] ?? $0 }
+        return words.enumerated().map { index, word in
+            index == 0 || ["DB", "BB", "KB"].contains(word) ? word : word.lowercased()
+        }.joined(separator: " ")
     }
 }

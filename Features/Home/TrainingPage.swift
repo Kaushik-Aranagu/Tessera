@@ -155,9 +155,11 @@ private struct TrainingAtRest: View {
         }
         .tesseraFeedback(.made, trigger: liftTaps)
         .onDisappear {
-            // Leaving mid-START: stop it and put the page back whole.
+            // Leaving mid-START: stop it and put the page back whole. Not when the workout cover is what hid the
+            // page (the sunk lanes would come back mid-zoom); the cover's close puts it back instead.
             startTask?.cancel()
             startTask = nil
+            guard !model.isWorkoutPresented else { return }
             sinking = false
             landed = false
             isLifting = false
@@ -201,7 +203,8 @@ private struct TrainingAtRest: View {
     private var planLine: some View {
         if let planObject = model.plan {
             HStack(alignment: .firstTextBaseline) {
-                Text("\(planObject.title), rolls on")
+                let fixed = PlanSchedule.mode(of: planObject, store: model.store) == .fixed
+                Text("\(planObject.title), \(fixed ? "fixed days" : "rolls on")")
                     .textRole(.label)
                     .textCase(.uppercase)
                     .foregroundStyle(Theme.Colors.inkSecondary)
@@ -250,7 +253,9 @@ private struct TrainingAtRest: View {
         if NowPicker(engine: model.engine).restDay(plan: plan, at: tomorrow, sessionsPerWeek: perWeek) != nil {
             return "Rest day tomorrow"
         }
-        guard let next = plan.flatMap({ model.ledger.nextRoutine(in: $0) }) else { return "Done for today" }
+        guard let next = plan.flatMap({ model.ledger.nextRoutine(in: $0, now: tomorrow) }) else {
+            return "Done for today"
+        }
         return "\(next.title) tomorrow"
     }
 
@@ -326,10 +331,11 @@ private struct TrainingAtRest: View {
         case let .routine(routine):
             guard let slot = routine.orderedChildren.first,
                   let exercise = model.store.linkedClass("exercise", of: slot) else { return nil }
-            guard let last = model.ledger.sessions(of: exercise).first?.sets.first, last.weight > 0 else {
+            guard model.ledger.sessions(of: exercise).first?.sets.first != nil else {
                 return "First time on \(exercise.name.lowercased()). Start light."
             }
-            return "\(exercise.name) is ready for \(Format.kilograms(last.weight)) today."
+            // The target is last time's: nothing to say (56 addendum).
+            return nil
         case let .scheduled(workout):
             guard let entry = workout.orderedChildren.first,
                   let exercise = model.store.linkedClass("exercise", of: entry) else { return nil }
@@ -337,7 +343,9 @@ private struct TrainingAtRest: View {
             if prefill.isFirstTime {
                 return "First time on \(exercise.name.lowercased()). Start light."
             }
-            guard let weight = prefill.weight, weight > 0 else { return nil }
+            // Only from the plan's own target (raised by progression, or a weight set in the plan); opening at last
+            // time's weight is silence.
+            guard prefill.source == .target, let weight = prefill.weight, weight > 0 else { return nil }
             return "\(exercise.name) is ready for \(Format.kilograms(weight)) today."
         case .running:
             return nil

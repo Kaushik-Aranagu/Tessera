@@ -14,6 +14,47 @@ The script follows the install-day script's shape: one row per step, and one exp
 | Ask Tess sizes | #353 | open |
 | AI-1 Home lines | Builder B's Home PR on `HomeLines` | no PR yet |
 
+## Catalog v7/v8 gate (QA, Oct 16, before anything else)
+
+Master 38466f1 carries **#356 (Tess memory, catalog v6 → v7)**, so the next candidate ships a migration. Data
+safety says a migration never ships untested on his device. Before the "install it" ask:
+- **M0 (Mac, Simulator):** install 7b321d2, add a set, a task and a recipe, then install the candidate over it without
+  deleting the app. It opens with no crash, everything is still there, and Settings shows "What Tess knows" with
+  "Nothing kept yet.".
+  - **Result (Builder A, Oct 16, Simulator; exact archives of 444e72b, 7b321d2 and master before v8):** run over 444e72b's
+    seeded v5 demo store, because his real backup isn't on that Mac.
+    - Upgrade to v7: launched clean. All 364 original rows are byte-identical, none are missing, and 2 TessMemoryStore
+      rows were added. Class definitions went from 122 to 124 and links from 395 to 445; the GRDB schema is still
+      v1-v3.
+    - Rollback: 7b321d2 over the v7 store opens, runs and draws Home. Rows are unchanged, the extra classes are
+      ignored, and nothing crashes.
+    - **M0 passes on demo data.** Not covered: his real store, the export/import restore path, and v8 (that's M4,
+      re-run once #380 merges). Product decides whether demo data satisfies the gate; until then M1-M3 on the phone
+      carry the real-store check.
+- **M1 (phone, first launch):** the app opens straight to Home with no crash, and the last workout, today's tasks and
+  the Groceries list are all as they were.
+- **M2 (phone):** Settings → Backups writes a new copy, and its size is about the same as yesterday's.
+- **M3 (phone):** "remember that I train after work" gives "Kept. You train after work." FORGET it, wait 10 s, and the
+  page no longer shows it.
+- **M4 (catalog v8, only if #380 is in the install commit):** the gate now spans v5 → v8. On the M0 Simulator copy,
+  the recipe that was added before the upgrade still opens with every line. Re-paste one recipe with
+  "1 (28 oz) can crushed tomatoes" and "chopped fresh cilantro, for serving". The can shows "28 oz" on its row, and
+  cilantro is on the recipe page but not on the list. On the phone, the Groceries list is unchanged until he adds a
+  recipe.
+  - **Builder A reruns the M0 gate on master with v8** (the same exact-archive run). In the same rerun, restore a v5
+    backup file into the v8 build through the app's own restore path (Review > Backups). The v5 rows come back
+    byte-identical, the v8 fields are added empty, and the app launches clean afterwards. Product's condition for
+    the next pin (ff548605).
+  - **The pin waits** for Core's incremental OpZones fix (the #377 S1 scale fix) as well as #380 and #366. On that
+    build, the v8 rerun **times** the v5 backup restore. A slow restore counts as a gate failure (Product,
+    06247720).
+- **Rollback:** an older build opening a newer store is shown safe through v7 (M0: 7b321d2 opens the v7 store, the extra
+  classes are ignored). v8 is not shown yet; M4 shows it. Restoring a newer backup onto an older build stays
+  **forbidden** until someone tests it.
+- **His real backup:** nothing is asked of him about it. The install-day script opens with him tapping a fresh backup
+  in Review > Backups before the install (Product, ff548605).
+Any M row failing stops the install, and the phone stays on 444e72b or 7b321d2.
+
 Run each group only if its PR is in the install commit (QA checks with `git merge-base --is-ancestor`). A group whose PR isn't in is skipped, not failed.
 
 ## Glass tabs (#342, Design 42)

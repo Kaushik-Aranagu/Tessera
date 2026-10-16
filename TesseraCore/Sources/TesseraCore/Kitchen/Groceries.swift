@@ -97,6 +97,9 @@ struct GroceryShare: Codable, Hashable {
     var unit: KitchenUnit?
     /// One pack's size: part of the merge key, so a 14.5 oz and a 28 oz can never add up (Research U5).
     var packSize: String?
+    /// False when the share rides a row he typed with his own amount ("1 dozen eggs"): the recipe line lands under
+    /// the row, but his amount stands and nothing sums (Kitchen lead, G-R2). Nil means it counts.
+    var counts: Bool?
 
     static func decode(_ text: String?) -> [GroceryShare] {
         guard let data = text?.data(using: .utf8) else { return [] }
@@ -115,7 +118,7 @@ struct GroceryShare: Codable, Hashable {
         var other: [KitchenUnit: Double] = [:]
         var order: [KitchenUnit] = []
         var hasMass = false, hasVolume = false, hasCount = false
-        for share in shares {
+        for share in shares where share.counts != false {
             guard let amount = share.amount else { continue }
             switch share.unit {
             case .gram?, .kilogram?:
@@ -143,6 +146,12 @@ struct GroceryShare: Codable, Hashable {
             }
         }
         var parts: [String] = []
+        // Packs first: "1 can + 15 oz black beans", "1 bag + 6 cups baby spinach" (Design 47, G-R8).
+        for unit in order where unit.isPack {
+            if let amount = other[unit] {
+                parts.append(IngredientLine(original: "", amount: amount, unit: unit, name: "").quantityText ?? "")
+            }
+        }
         if hasMass {
             parts.append(mass >= 1000 ? "\(IngredientLine.kitchenNumber(mass / 1000, unit: .kilogram)) kg"
                 : "\(IngredientLine.kitchenNumber(mass, unit: .gram)) g")
@@ -164,7 +173,7 @@ struct GroceryShare: Codable, Hashable {
         if hasFluidOunces {
             parts.append("\(IngredientLine.kitchenNumber(fluidOunces, unit: .fluidOunce)) fl oz")
         }
-        for unit in order {
+        for unit in order where !unit.isPack {
             if let amount = other[unit] {
                 parts.append(IngredientLine(original: "", amount: amount, unit: unit, name: "").quantityText ?? "")
             }
@@ -207,12 +216,21 @@ extension Transaction {
         {
             return onList
         }
-        // Same ingredient and the same pack size (a sized can never joins an unsized one, U5).
+        // Same ingredient and the same pack size: two sizes of one thing are two rows (U5). A loose share (no pack
+        // size) joins a row with one pack size, pack first with "+" (Research 123 G-R8, Design 47).
         let existing = list.orderedChildren.first { item in
-            store.value("isDone", of: item) != .bool(true)
-                && store.linkedObjects("about", of: item).contains { $0.id == ingredient.id }
-                && GroceryShare.decode(store.value("shares", of: item)?.stringValue)
-                .allSatisfy { $0.packSize == share.packSize }
+            guard store.value("isDone", of: item) != .bool(true),
+                  store.linkedObjects("about", of: item).contains(where: { $0.id == ingredient.id })
+            else { return false }
+            let shares = GroceryShare.decode(store.value("shares", of: item)?.stringValue)
+            let sizes = Set(shares.compactMap(\.packSize))
+            let unsizedPack = shares.contains { $0.packSize == nil && $0.unit?.isPack == true }
+            if let size = share.packSize {
+                // A sized can joins its own size, or a row with no size and no unsized can (U5 both ways; QA F3).
+                return sizes == [size] || (sizes.isEmpty && !unsizedPack)
+            }
+            // An unsized pack ("1 can") never joins a sized one (U5); a loose amount ("15 oz", "6 cups") does.
+            return share.unit?.isPack == true ? sizes.isEmpty : sizes.count <= 1
         }
         // A can or jar of something fresh is never filed under Produce ("1 (14.5 oz) can diced tomatoes").
         var section = aisle(of: ingredient)
@@ -225,6 +243,11 @@ extension Transaction {
             try AddListItem(list: list.id, text: text, section: section).apply(&self)
         }
         var shares = GroceryShare.decode(store.value("shares", of: item)?.stringValue)
+        var share = share
+        // His typed amount stands: a recipe's share under "1 dozen eggs" is a line, not a sum (G-R2).
+        if share.recipe != nil, shares.contains(where: { $0.recipe == nil && $0.amount != nil }) {
+            share.counts = false
+        }
         shares.append(share)
         try writeShares(shares, on: item, ingredient: ingredient)
         return item
@@ -272,13 +295,41 @@ public struct AddRecipeToGroceries: EngineAction {
         let lines = serves.map { book.scaledLines(of: recipe, serves: $0) } ?? book.lines(of: recipe)
         // Added again (a new size): take its old share out first, once, so it's replaced, never doubled, and an
         // ingredient listed twice in it ("200 g butter" and "50 g butter") still sums.
+        let list = try transaction.groceriesList()
+        // Nothing to add (every line a staple, optional or covered) and nothing of it on the list: no write, so no
+        // UNDO (Product e1981a39).
+        let wanted = lines.filter { line in
+            guard let ingredient = line.ingredient else { return false }
+            let staple = transaction.store.value("isStaple", of: ingredient) == .bool(true)
+                || AisleGuide.isStaple(IngredientLine.key(for: ingredient.title))
+            let covered = list.orderedChildren.contains { item in
+                transaction.store.value("isDone", of: item) == .bool(true) && !item.isDeleted
+                    && transaction.store.linkedObjects("about", of: item).contains { $0.id == ingredient.id }
+            }
+            return !((staple || line.line.toTaste || line.line.optional) && includeStaples != true) && !covered
+        }
+        let alreadyOn = Groceries(store: transaction.store, classes: transaction.classes).share(of: recipe).count
+        if wanted.isEmpty, alreadyOn == 0 {
+            Self.lastAdded[recipe.id] = 0
+            return []
+        }
         try RemoveRecipeFromGroceries(recipe: recipe.id).apply(&transaction)
+        let before = Set(list.orderedChildren.map(\.id))
         var items: [ObjectRecord] = []
         for line in lines {
             guard let ingredient = line.ingredient else { continue }
             let staple = transaction.store.value("isStaple", of: ingredient) == .bool(true)
-                || AisleGuide.staples.contains(IngredientLine.key(for: ingredient.title))
-            if staple || line.line.toTaste, includeStaples != true {
+                || AisleGuide.isStaple(IngredientLine.key(for: ingredient.title))
+            // Staples, "to taste" and optional lines ("for serving") stay on the recipe page (G-R3, G-R4).
+            if staple || line.line.toTaste || line.line.optional, includeStaples != true {
+                continue
+            }
+            // A same-key row already checked covers the line: nothing is added (G-R2, Kitchen lead).
+            let covered = list.orderedChildren.contains { item in
+                transaction.store.value("isDone", of: item) == .bool(true) && !item.isDeleted
+                    && transaction.store.linkedObjects("about", of: item).contains { $0.id == ingredient.id }
+            }
+            if covered {
                 continue
             }
             let share = GroceryShare(recipe: recipe.id, amount: line.line.amountMax ?? line.line.amount,
@@ -293,11 +344,22 @@ public struct AddRecipeToGroceries: EngineAction {
             }
         }
         try transaction.refreshShopLine()
-        return items
+        // New rows only: joined rows still carry the recipe line, but "Added N" counts what is new (G-R14). The
+        // receipt reads the same set, so the two never disagree (QA L1, Kitchen lead).
+        let made = items.filter { !before.contains($0.id) }
+        Self.lastAdded[recipe.id] = made.count
+        return made
     }
 
+    /// New rows by recipe from the last `apply` in this process, for the receipt written right after it.
+    nonisolated(unsafe) static var lastAdded: [UUID: Int] = [:]
+
+    /// "Tacos, 10 added." (Product W12); "Tacos, nothing to add." when nothing was new (Product e1981a39). The short
+    /// name, unless another recipe on the list shares it (Kitchen lead, #389).
     public func summary(in store: ObjectStore) -> String {
-        "Added \(store.object(id: recipe)?.title ?? "the recipe") to groceries"
+        let name = store.object(id: recipe).map { RecipeBook.shortName(of: $0, store: store) } ?? "Recipe"
+        let made = Self.lastAdded[recipe] ?? 0
+        return made == 0 ? "\(name), nothing to add." : "\(name), \(made) added."
     }
 }
 

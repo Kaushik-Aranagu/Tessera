@@ -19,23 +19,23 @@
 Design 47 lands the rows when the meal is planned, not at 17:00 the day before. That replaces the **When** and **Tess** rows of `meal-plan-groceries-acceptance.md`; everything else there (only once, moved, deleted, undone, cooked early, merging) stands.
 
 - **When:** the moment the cook task is captured or its recipe set, for any date. No tidy pass is needed for the add itself; the pass still catches a recipe linked to a task later.
-- **What:** the recipe's lines at its own serves, skipping staples (`isStaple`, `AisleGuide.staples`) and "to taste" lines, and skipping any ingredient already **covered**: an open or checked item that carries this ingredient's key, or a row kept for it through the ask (section 2).
-- **How it shows:** wet cobalt ghost rows in their aisles with "for tacos" under each, drying over 1.4 s. Tess: "Added 2 for tacos." with UNDO for 10 s. UNDO removes exactly those rows (`RemoveRecipeFromGroceries`). No sage dab anywhere any more (`no-dots.md`); the recipe line replaces it on every recipe-sourced row, including rows from the recipe page's swipe.
-- **Nothing to add** (everything covered): no rows, no Tess line.
+- **What:** the recipe's lines at its own serves, skipping staples (`isStaple`, `AisleGuide.staples`), "to taste" lines and optional lines ("optional", "for serving", "for garnish": skipped on the list, still shown on the recipe page; Research G-R4). An ingredient already on the list is **covered**, two ways (G-R2): a same-key **open** row takes the share and gets the recipe line (a bare row shows the recipe's amount, "8 eggs"; a row he typed with an amount keeps it, "1 dozen eggs" stays "1 dozen" with "for frittata" under it, because the list never changes an amount he typed; only two recipes' shares sum, as today); a same-key **checked** row covers the line and nothing is added, and it keeps covering every later plan until the shop clears it (`ClearDoneItems` at the end of the shop); after that a new plan adds the line again. He just bought it, so the list stays quiet; whether what he bought is enough for a second meal is pantry light's question (slice P), not the list's (QA review 380, L3). A row kept for it through the ask (section 2) covers it too.
+- **How it shows:** wet cobalt ghost rows in their aisles with "for tacos" under each, drying over 1.4 s. Tess: "Tacos, 2 added." with UNDO for 10 s (thing first, like every receipt; Product 8e55cd9). The thing is the recipe's **short name** (Design 67): the title's last word, capitalised, with any bracket dropped ("Sheet-pan chicken fajita tacos" gives "Tacos", "Sausage, white bean and spinach pasta" gives "Pasta"); when two planned recipes share a short name both use their full titles. One function on the recipe gives it, and the same word, lower-cased, is the recipe line ("for tacos"), the count line and the Home line, so no two surfaces disagree; the op's summary carries the short name too, so Review reads what Tess said. A stored short name he can edit waits for recipe edit in place (v2). The count is new rows only, and joined rows still get the recipe line (G-R14). A row two meals share reads "for tacos and chili"; three or more, "for curry and two more", sooner meal first (G-R9). A pack size sits after the meals: "for chili · 28 oz". Two different pack sizes of one thing stay separate rows; a loose amount joins the pack's row with "+", pack first (G-R8, Design to confirm). UNDO removes exactly those rows (`RemoveRecipeFromGroceries`). No sage dab anywhere any more (`no-dots.md`); the recipe line replaces it on every recipe-sourced row, including rows from the recipe page's swipe.
+- **Nothing to add** (everything covered): no rows, and Tess says "Tacos, nothing to add." with no UNDO (Product e1981a39; the count line does not move).
 - **Several meals in one capture** ("tacos tue, dal wed"): one Tess line per meal, in order, each with its own UNDO.
-- The line under the title counts open items and names the meals: "9 to get, for tacos and two more" (one meal: "for tacos"; none: "9 to get").
+- The line under the title counts open items and names the meals: "9 to get, for tacos and 2 more" (digits, Product's hero rule; one meal: "for tacos"; none: "9 to get").
 
 ## 2 · The link ask
 
 **What the phone tries first, with no Claude.** For every typed row (a share with no recipe) and every planned recipe's uncovered ingredient:
-1. Same key (`IngredientLine.key`, which already folds plurals and "semi skimmed milk" into "milk"): link silently, no ask. This is a merge the list already does.
+1. Same key (`IngredientLine.key`): link silently, no ask. On master the key only lowercases and singularises; the alias fold (whole, 2%, skim and semi skimmed milk to milk; yellow onion to onion, red onion apart) is Core's G-R6. Until it lands, "whole milk" against a typed "milk" is a Claude candidate.
 2. Everything else is a candidate for Claude, at most 12 rows and the week's planned recipes per call.
 
 **When Claude is asked.** On planning (before the missing rows land, with an 8 s wait; on timeout the rows land anyway and the asks come when the reply does) and when a typed row is added while a meal is planned (debounced 10 minutes). Never while shopping (hold-the-title mode), never in a live workout, never with the switch off, offline, at the cap or in demo: then the list works without asks, and nothing is queued for later except the next natural trigger.
 
 **Pack** (everything that leaves the phone for this job, snapshot-tested):
 - Planned recipes this week: handle, title, and each uncovered ingredient's handle and title.
-- Candidate rows: handle and the **ingredient's title**, never the typed text (it can carry brands and shops), never the amount, never `checkedAt`.
+- Candidate rows: handle and the **ingredient's title**, never the typed text, never the amount, never `checkedAt`. A new ingredient is titled as typed, so a candidate whose title holds a shop or brand name (Trader Joe's, TJ's, Costco, Kirkland, Whole Foods, 365) stays out of the pack altogether (G-R12).
 - Told memory lines that mention food ("coriander means cilantro").
 - Nothing else: no quantities bought, prices, shops, notes, history, other lists.
 
@@ -53,7 +53,7 @@ Design 47 lands the rows when the meal is planned, not at 17:00 the day before. 
 **KEEP** writes, as one undoable op by `.tess`:
 - A recipe share on the kept row, flagged as a link only: the row's amount stays as typed, and the recipe line under it reads "for tacos".
 - If the recipe's own ghost row for that ingredient is open and unchecked, it folds into the kept row (its share moves; the row leaves). The list never shows the same thing twice.
-- The ingredient's learned aisle, when the kept row's ingredient has none and the recipe's does. The row moves on the next add, with no line.
+- The aisle, when the kept row sits in Other: the recipe ingredient's aisle as shown (learned, else the guide) is written as the kept ingredient's learned aisle, and the row moves (G-R11).
 - Tess: "Scallions, for the tacos." with UNDO for 10 s. UNDO puts all three back.
 
 **NOT NOW** writes nothing to the list. The pair (row ingredient key, recipe) is remembered on the phone until the planned week ends, applied before packing, never sent. Tess says nothing.
@@ -77,10 +77,11 @@ The only reminder is the planned cook's Home row through `HomeLines`: context "2
 2. A typed "spring onions" before planning is linked silently (same key); "scallions" is not, and appears in the pack as a candidate with its ingredient title, not the typed text.
 3. KEEP on (scallions, spring onions) moves the recipe share onto scallions, removes the open spring onions ghost row, keeps the typed amount, sets the learned aisle, and UNDO reverses all of it. NOT NOW writes nothing and the pair is filtered from the next pack until the task's date passes.
 4. The five checks drop bad pairs: an unknown handle, a linked row, a NOT NOW pair, a same-key pair, a staple.
-5. Pack snapshot for the fixture week holds no amounts, typed text, prices, shops, notes or `checkedAt`; a pack containing `sk-ant-` is refused.
+5. Pack snapshot for the fixture week holds no amounts, typed text, prices, shops, notes or `checkedAt`; a candidate titled with a shop name is absent; a pack holding anything shaped like an API key prefix is refused.
 6. No call while a shop process runs, in a live workout, with the switch off, offline, at the cap or in demo; in each, planning still adds the rows.
 7. `usuallyOutOf()` passes Research's 20-week fixture row by row with the cap at 4.
-8. `HomeLines` gives "2 to buy" / "Tacos tonight" for a planned cook with two open items, and "tonight" / COOK at zero.
+8. `HomeLines` gives "2 to buy" / "Tacos today" before 17:00 and "Tacos tonight" after, the time when the task has one, for a planned cook with two open items; at zero the context is the day word and the key is COOK (G-R13).
+9. Research's five-meal week (`docs/research/fixtures/groceries-recipes.md`) gives 36 rows, the 28 oz and 14.5 oz tomato cans apart, kosher salt and the optional lines absent, "Tacos, 10 added." and "Frittata, 3 added.", and its 13 `linkItems` probes pass with the gate fixture. Before the link ask exists the week is 37 rows, "green onions" beside his typed "scallions" (#380 at 6b4553b asserts 37); the ask's KEEP folds them and the count becomes 36, asserted with row 3.
 
 **Match eval (gate, AI thread runs it with `docs/research/fixtures/groceries-link-eval.md`).** Four planned seed recipes, 24 typed rows, 3 runs: the 10 must rows (scallions / spring onions, capsicum and bell pepper / red pepper, ground beef / beef mince, tinned tomatoes / chopped tomatoes, tomato paste / tomato puree, parmigiano / parmesan, beef stock cube / beef stock, cherry toms / cherry tomatoes) pair correctly in every run; the never rows (coriander, lemongrass, lemons, spring greens, sour cream, chilli flakes, sweet potatoes, coconut milk, rocket, veg stock cubes) get no pair in any run; 0 false pairs in all 72 row-runs. A pair the model can't be sure of is better left out: a missed link costs one duplicate row he can delete, a wrong link puts the wrong thing in his basket.
 
@@ -89,7 +90,7 @@ The only reminder is the planned cook's Home row through `HomeLines`: context "2
 **Builder B** (recording at 60fps, `docs/recordings/groceries-tess.mp4` beats)
 1. ‹ KITCHEN back word, Title 44, the count line "9 to get, for tacos and two more", aisle window fading over its last 50pt.
 2. Recipe line "for tacos" at 16 `inkSecondary` under every recipe-sourced row; no trailing dab anywhere on the page.
-3. Planning a meal: rows fly in from Tess's corner 60 ms apart, rows below make room in 320 ms, rows dry over 1.4 s; "Added 2 for tacos." with UNDO; the count line rolls.
+3. Planning a meal: rows fly in from Tess's corner 60 ms apart, rows below make room in 320 ms, rows dry over 1.4 s; "Tacos, 2 added." with UNDO; the count line rolls.
 4. The ask: "Scallions, for the tacos?" with KEEP then NOT NOW as ink words; the wet "for tacos?" line under the row; KEEP dries it over 900 ms and the spring onions row leaves; NOT NOW fades it in 300 ms. Only one ask on screen; none while shopping.
 5. USUALLY: Label 16 and words at 21/600 at 70%; a tapped word flies to its aisle in 520 ms and the line closes up; gone when nothing qualifies.
 6. Home: "2 to buy" over "Tacos tonight" with GROCERIES as the key, opening Groceries; "tonight" and COOK once everything is in.
