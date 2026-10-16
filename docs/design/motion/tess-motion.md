@@ -114,6 +114,22 @@ In a live workout: never. `LiveTessCorner` keeps thinking's pulse at its fixed s
 - **Reduce Motion:** no gather and no glance; the brighten is a 200 ms crossfade; the blink stays. The haptics stay, beat for beat, as `task-reward.md` says.
 - Recording: `recordings/tess-motion-reward.mp4` (and `-light`): swipe right on "Call the bank", armed, let go, the fleck to "Thursday night", the bloom, her beat; the caption names each haptic and whose it is.
 
+## 7. Living colour in motion (board item 7, added 1:50 AM PT Oct 16)
+Design 48 (`living-colours.md`, with its addendum) owns the palettes, the nudges, the cadence and how a change arrives. This section records it beside her other motion and settles the values Builder A needs for `TessSoul.repaint(to:)`.
+
+| Beat | What happens | Values |
+|---|---|---|
+| The pool | Each dab, 120 ms after the last in the order **cool, warm, bright** (cobalt, vermilion, cadmium), pools its new pigment from its centre outward over 900 ms on the house curve. In the canvas: the new wash is drawn with its gradient radius growing from 0 to the dab's edge while the old wash thins under it (opacity 1 → 0 over the same 900 ms), so the pool's edge is as soft as the dab and nothing is ever clipped | order 1, 0, 2; stagger 120 ms; 900 ms `0.3, 0, 0.2, 1` |
+| Wet | While it pools the dab swells to 1.12 and brightens: its core and mid alpha lift by 20% (not a third: three washes screened together blow out to white at a third on dark looks). Blur unchanged | swell 1.12, lift 0.2, in over 250 ms |
+| Dry | The swell and the lift settle back over the rest of 2.8 s from the dab's start. The halo (dark looks) takes the new warm pigment the moment that dab's pool completes | dry ends at start + 2.8 s |
+| Nothing else | No haptic, no line, no sound. Her eyes don't change. The page's text, her voice colour, UNDO, Done, the Lock Screen and the icon never follow | |
+
+- **Only when idle**, as Design 48 says, so a repaint never starts while she works, roams, is carried, or during Done. The one overlap is a repaint in flight when work begins, and **work wins**: the pigments are hers from the pool's first frame, the pool finishes inside the fade's 500 ms, and the wet swell dries in the same 500 ms. The recording shows it: a capture lands 600 ms into the return to Today.
+- **Done's colour is fixed.** The pour, the splash ring (`context`) and its haptic never take a palette. A Done after a repaint plays in the new pigments only because the dabs are the new pigments; nothing in Done itself changes.
+- **Drag and roam after a repaint:** nothing special; she carries whatever pigments she has.
+- **Reduce Motion:** a 600 ms crossfade of the three pigments (Design 48), no swell.
+- Recordings: `recordings/tess-motion-colour.mp4` (Obsidian) and `-porcelain`, `-plein`, `-lacquer`, `-celadon`: Today → Lagoon (morning) → Kiln (evening) → Ember (a best, with "Bench best today." staying cobalt) → Today, then the capture mid-pool and Done. She is drawn at 1.35× so the pool can be seen; the values are the same at Home size.
+
 ## Timing and easing, in one place
 | | Curve | Duration |
 |---|---|---|
@@ -125,6 +141,7 @@ In a live workout: never. `LiveTessCorner` keeps thinking's pulse at its fixed s
 | Drop | house spring 0.42 s, bounce 0.12 (flick: 0.55 s, bounce 0.14) | |
 | Eyes blink / glance | ease-in-out / spring 0.3 s, bounce 0.05 | 160 ms / 300 ms |
 | Reward beat (gather in / out) | ease-out / settle spring | 180 / 320 ms, dry 900 ms |
+| Repaint pool / wet / dry | house curve / ease-out / house | 900 ms per dab, 120 ms apart / 250 ms / 2.8 s in all |
 | Mode blends | `SoulBlend` 400 ms, as built | |
 
 ## Haptics (under `task-reward.md`'s rule)

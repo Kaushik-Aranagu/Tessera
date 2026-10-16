@@ -18,7 +18,7 @@ The one sheet Builder A builds from. Design reviewed `tess-motion.md` (item 51, 
 | Drag: 10 pt pick-up from the hold, carry, two docks, flick, `tess.dock.<page>`; the band's line, lens, ask words and UNDO shift to x 96 on a bottom-left drop | `Features/Command/BottomChrome.swift` (`soulKey` gesture), `DesignSystem/Haptics.swift` (`.soulPickUp`, `.soulDrop`) | B (gesture), A (soul) |
 | Roam: `TessSoul.place`, free-ground rects per page, ride-and-release on scroll, the 80 × 80 clear test before Done in place | `SoulTravel` as built; each page's view reports free ground through a preference | A (Home, Training), B (Home rows, Kitchen) |
 | Reward beat: a 940 ms overlay (gather, brighten, blink) on the current mode, started by `.tesseraFeedback(.done)`'s moment at 520 ms (at 0 when the fleck leaves the soul) | `TessSoul.swift` (`beat()`), called from QueueRow / hero / habits / Groceries (B) and the workout finish (A) | A, with B's call sites |
-| Repaint beside working | `TessSoul.repaint(to:)` folds its swell into the fade when work starts | A |
+| Repaint (`living-colours.md`, item 7 in `tess-motion.md`): per-dab pool (new wash radius 0 → edge, old wash opacity 1 → 0, 900 ms, cool/warm/bright 120 ms apart), wet swell 1.12 and alpha lift 0.2, dry by 2.8 s; folds into the working fade when work starts | `TessSoul.repaint(to:)`, `SoulPalette.look(_:living:)`, `SoulRenderer.dab` draws two washes while a pool runs | A |
 
 ## Values
 `tess-motion.md` sections 1 to 5 and its timing table are the values; Design 51's fixes are already in them. In short: eyes 3.2 × 3.5 pt, 8.4 apart, dark pigment 82%, blink 160 ms every 3 to 8 s; working fade 500 ms to saturation 0.62, split 900 ms into twelve lights at 0.55 (readers 0.42, cobalt child stays within 8 pt of the dock), gather 820 ms, colour back over 550 ms, then Done as built; drag pick-up at 10 pt (soft 0.5), 44 pt above the finger, lag capped 14 pt, drop on the house spring (`.selection`), two docks; roam on the `SoulTravel` arc 760 ms, rows stay 100%, Done in place only with an 80 × 80 clear.
@@ -40,6 +40,7 @@ As `tess-motion.md`: nothing travels; 200 ms crossfades; eyes still; haptics sta
 - Drag: only two docks; a bottom-left drop moves the line, lens, ask words and UNDO to x 96 in one step and the band stays 736 to 820.
 - Haptics: exactly one per pick-up and one per drop; none for split, gather, roam or eyes; working done plays only Done's `.success`.
 - Reward: the beat ends within 940 ms of its start; no haptic from `TessSoul` during it; Done's one-shot never starts from a task's done; in a live workout the beat has no glance.
+- Repaint: pool order is cobalt, vermilion, cadmium 120 ms apart; each dab's pool is complete at start + 900 ms and dry at start + 2.8 s; Done's ring colour is unchanged after a repaint; Reduce Motion crossfades in 600 ms.
 - Repaint: a repaint in flight when `.working` begins dries within 500 ms; no repaint starts while working, roaming, carried or in Done.
 
 ## Recording for QA

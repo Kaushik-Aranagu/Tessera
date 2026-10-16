@@ -337,7 +337,7 @@ function drawSoul(parts, frame, C, scale, grade) {
     octx.fillStyle = wash(oldHex, 0); octx.fill(SHAPES[paint]);
     if (reveal > 0) {
       octx.globalAlpha = clamp(p.alpha);
-      const r = Math.max(reveal * 1.15, .01), hex = pal.to[paint], lift = .33 * wet;
+      const r = Math.max(reveal * 1.15, .01), hex = pal.to[paint], lift = .2 * wet;
       const g = octx.createRadialGradient(0, 0, 0, 0, 0, r);
       g.addColorStop(0, rgba(hex, Math.min(1, CORE * (1 + lift)))); g.addColorStop(.4, rgba(hex, Math.min(1, MID * (1 + lift)))); g.addColorStop(1, rgba(hex, 0));
       octx.fillStyle = g; octx.fill(SHAPES[paint]);
