@@ -22,7 +22,7 @@ The "master today" column is a hand trace of master 0bff60b. Nothing was run, an
 | R4 | **No value** | The ordinary rules read it: a task shape (a day, a time, "todo") becomes a task. With no task shape, it's a private note **without** going to the model. Nothing with a secret word ever leaves the phone, value or not |
 | R5 | **The private note** | Title "Private note" everywhere outside the note itself: Day log, Review, Home, widgets, the Lock Screen, Spotlight, the recent memory line. Never in a pack. The body opens only on the Notes page |
 | R6 | **Tess's line** | "Private note, kept." with UNDO for 4 s (a new capture, Product's AQ15). She never repeats the value |
-| R7 | **Memory** | "remember the wifi password is …" is never a memory line. It becomes the private note (R5), and Tess says "Private note, kept. I don't keep passwords." |
+| R7 | **Memory** | "remember the wifi password is …" is never a memory line. It becomes the private note (R5), and Tess says "Private note, kept. It stays out of my memory." (Design's catch, Oct 16: the old line contradicted itself) |
 
 ## 2. Twenty lines
 
@@ -35,7 +35,7 @@ The "master today" column is a hand trace of master 0bff60b. Nothing was run, an
 | S5 | my PIN is 0420 | Private note | same | Router |
 | S6 | Spoken: "my passcode is one two three four" | Private note. The value is the spoken digits | same, and the speech transcript buffer | Router |
 | S7 | note: wifi password is tacocat | Private note (R1 runs before `parseNote`) | same | **A plain note titled with the password.** Day log "Note: wifi password is tacocat", tomorrow's recent memory line, Claude packs |
-| S8 | remember the wifi password is tacocat | Private note, "I don't keep passwords." (R7) | memory above all | Router. `TessMemory.refusal` only refuses the Claude key prefix (`TessMemory.swift:133`) |
+| S8 | remember the wifi password is tacocat | Private note, "Private note, kept. It stays out of my memory." (R7) | memory above all | Router. `TessMemory.refusal` only refuses the Claude key prefix (`TessMemory.swift:133`) |
 | S9 | netflix password hunter2 | Private note | same | Router |
 | S10 | alarm code 9 9 1 2 | Private note | same | Router |
 | S11 | what's the wifi password? | Opens the private note it matches, read on the phone. Nothing to the model | model, Claude | Question rule, then the model with the text |
@@ -64,7 +64,7 @@ Type S1 to S10 on the Simulator, then search each of these for the placeholder v
 |---|---|---|---|---|
 | SW1 | No secret rule. Every row reaches the router | `TessGrammar.parse`, `TessCaptureEngine.capture:46-58` | R1 to R4. The engine skips the router and the miss log for a private note | Core |
 | SW2 | A note's title flows into memory and Claude packs | `DayStory.swift:345`, `TessMemory+Turnover.swift:61` | Private notes read "Private note" in DayStory. As a second guard, the turnover drops any line holding a secret word | Core |
-| SW3 | Memory refuses only the key prefix | `TessMemory.refusal` | Add `.secret`, line "I don't keep passwords." (the same list as R2) | Core (AI-8) |
+| SW3 | Memory refuses only the key prefix | `TessMemory.refusal` | Add `.secret`, line "Private note, kept. It stays out of my memory." (the same list as R2) | Core (AI-8) |
 | SW4 | A private-note flag doesn't exist | `SystemCatalog` note class | An additive `isPrivate` field on note (catalog bump, additive only, per the data-safety rules) | Core |
 | SW5 | The op summary holds the text | `CreateNote.summary` | The summary of a private note is "Private note" | Core |
 
