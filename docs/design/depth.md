@@ -18,11 +18,13 @@ Horizontal moves between things and goes deeper. Vertical only reads. Each part 
 | **Pull down at the top** | **Everything**: the index of areas (73) | Every page but a live one, which keeps its own pull (rule 7 in 75) |
 | **Tess's band** (736 and below) | Hers | Every screen |
 
+**The order, when zones overlap** (motion lab, on 1cab06a): Tess's band wins first. A pan that starts at 736 or below is hers, even inside an edge zone, because the right edge's last 32 pt (x 361 to 393) overlaps her home at (346, 779) and her 64 pt hit area. The edges come next, then the middle. The edge zones stop at 736.
+
 **Swipe right always goes one step back the way you came.** From the full side it goes to the glance, and from the glance to the front. On a side's second page it goes to the first. Along a run, it goes to the one before. The left edge skips all of that and leaves.
 
 ## Collections: one of a run
 A screen that's one of a run (a week in Review, an exercise in a routine, a day) doesn't lose its side. The side is about *this* member: this week's days, this exercise's history. So the run takes the middle, and the side takes the right edge.
-- **Along keeps the name.** The area name or back word and the title's place hold still. Only the body moves, 1:1 under the thumb, and it settles on the house spring over 380 ms. The leaving page keeps a soft shadow on its edge, so the two pages read as paper, not as a cut.
+- **Along keeps the name.** The area name or back word and the title's place hold still. Only the body moves, 1:1 under the thumb, and it settles on the house spring over 380 ms. The leaving page keeps a soft shadow on its edge, so the two pages read as paper, not as a cut. The shadow stops above 736, so it never darkens her band.
 - **The ends of a run** rubber-band. There's no dot row and no counter: the context line already names where you are ("Oct 12 to 18").
 - **The run is the parent's order.** Days run by day, weeks by week, and exercises in the routine's order. A run never wraps around.
 - **Live surfaces keep theirs.** The live workout's exercise lane is its own run, and its side is still a peek (75, rule 7).
@@ -33,6 +35,7 @@ A side can hold up to four pages, when one page would be too long or mixes kinds
 - **Inside the side, the middle moves through the pages,** 1:1 with a rubber band at the ends. The run outside (the next exercise) waits until you're back on the front. Only the nearest run moves.
 - **The glance** shows the first page's big fact and two small ones. Its word at the foot is ALL OF IT.
 - **Each page keeps 75's rules:** no controls, one kind, and Tess's line in the band.
+- **Ends:** hitting the end of a run or of a side's pages rubber-bands and tells Tess nothing. Her `reachedEnd` peek comes only from scrolling to a page's last row.
 - **Haptics:** one `.selection` on landing on the full side (75), and none between pages. The facet word's change is the signal.
 
 ## What changes on the built screens
@@ -51,7 +54,7 @@ Every other row of 75 is unchanged. A screen with no run keeps both ways in, the
 - **Dynamic Type:** facet words wrap to a second row before they shrink. The glance's big fact drops to Title 44 when it won't fit on one line at Hero 56.
 
 ## For each team
-- **Core (0ak SideHost):** the host owns the three horizontal zones. It needs the left edge (24 pt), the right edge (32 pt) and the middle, which is along when the screen declares a run, else in. The edge zones win over a row's own swipe only when the pan starts inside them. A screen declares `run` (its parent's ordered ids, or none) and `side` (one or more pages, each with a kind and a word).
+- **Core (0ak SideHost):** the host owns the three horizontal zones. It needs the left edge (24 pt), the right edge (32 pt) and the middle, which is along when the screen declares a run, else in. The edge zones win over a row's own swipe only when the pan starts inside them. The edge zones stop at 736: below that, the pan is Tess's. A screen declares `run` (its parent's ordered ids, or none) and `side` (one or more pages, each with a kind and a word).
 - **Builder A:** the exercise page's sibling views move into its side's pages, and x goes to the routine's run. Plans' WEEK and MONTH become a run.
 - **Builder B:** Review pages by week in the middle (46) and gets THE DAYS on the right edge. It replaces the Review row in 74 ("None") and THE MONTH in 75.
 - **Product:** board it with 0ak. The Review and exercise rows ride after 0ak like the other drawn sides.
