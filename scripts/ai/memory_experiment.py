@@ -3,7 +3,7 @@
 docs/research/fixtures/memory-days.json. Writes docs/ai/memory-experiment-results.md.
 
 Key: TESSERA_CLAUDE_KEY (or ANTHROPIC_API_KEY on a Mac) from the environment only. Never printed, never written to disk.
-Usage: python3 scripts/ai/memory_experiment.py [--runs 3] [--models haiku,sonnet] [--shapes A,B,C] [--dry] [--out PATH]
+Usage: python3 scripts/ai/memory_experiment.py [--runs 3] [--models haiku,sonnet] [--shapes A,B,C] [--dry] [--out PATH under docs/]
 --dry builds every request and runs the scoring path on a stub reply (rules lines echoed back, one good and one
 bad note), so the shapes and checks can be tested with no key and no spend. Results go to --out when given.
 """
@@ -21,6 +21,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURE = ROOT / "docs/research/fixtures/memory-days.json"
 RESULTS = ROOT / "docs/ai/memory-experiment-results.md"
+STOP_NANO = 1_000_000_000  # $1 across the whole run
+MAX_RUNS = 5
+SPENT = [0]
 MODELS = {"haiku": "claude-haiku-5-5", "sonnet": "claude-sonnet-5-5"}
 # Nano-dollars per token: input, output, cache read, cache write (TessUsageLedger.prices).
 PRICES = {"claude-haiku-5-5": (100, 500, 10, 125), "claude-sonnet-5-5": (2000, 10000, 200, 2500)}
@@ -74,6 +77,16 @@ RETRY_STATUS = {408, 409, 429, 500, 502, 503, 504, 529}
 BACKOFF = [2, 4, 8, 16, 32]
 
 
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Refuse every redirect, so the key header never follows a 3xx to another address."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise urllib.error.HTTPError(req.full_url, code, "redirect refused", headers, fp)
+
+
+OPENER = urllib.request.build_opener(NoRedirect)
+
+
 def post(key, body):
     """One Messages call. Retries overload, rate limit, 5xx and network errors with backoff so one failure
     doesn't abort a 570-call run. Other errors stop the run with the status and the API's error message only."""
@@ -84,7 +97,7 @@ def post(key, body):
                                               "content-type": "application/json"})
         started = time.time()
         try:
-            with urllib.request.urlopen(req, timeout=30) as r:
+            with OPENER.open(req, timeout=30) as r:
                 data = json.load(r)
             return data, time.time() - started
         except urllib.error.HTTPError as e:
@@ -248,6 +261,15 @@ def aware_pattern(target):
     return target
 
 
+def spend(model, data):
+    """Adds one call's cost to the run total and stops the run once it reaches $1."""
+    nano = cost_nano(model, data.get("usage", {}))
+    SPENT[0] += nano
+    if SPENT[0] >= STOP_NANO:
+        sys.exit("stopped at the $1 ceiling")
+    return nano
+
+
 def run(args, key):
     fx = json.load(open(FIXTURE))
     days = fx["days"]
@@ -275,7 +297,7 @@ def run(args, key):
                                 "messages": [{"role": "user", "content": user}]}
                         data, secs = stub_reply(body, moment) if args.dry else post(key, body)
                         scores["calls"] += 1
-                        scores["cost"] += cost_nano(model, data.get("usage", {}))
+                        scores["cost"] += spend(model, data)
                         scores["latency"].append(secs)
                         got = tool_input(data, "proposeLines") or {"lines": []}
                         names = pack_names_for(moment, mem)
@@ -310,7 +332,7 @@ def run(args, key):
                                 "messages": [{"role": "user", "content": user}]}
                         data, secs = stub_reply(body) if args.dry else post(key, body)
                         scores["calls"] += 1
-                        scores["cost"] += cost_nano(model, data.get("usage", {}))
+                        scores["cost"] += spend(model, data)
                         for note in (tool_input(data, "noteMemory") or {"notes": []})["notes"][:3]:
                             scores["notes"] += 1
                             if check_note(note, day):
@@ -367,6 +389,10 @@ def main():
     ap.add_argument("--dry", action="store_true", help="build every request, score a stub reply, send nothing")
     ap.add_argument("--out", help="results path (default docs/ai/memory-experiment-results.md)")
     args = ap.parse_args()
+    if not 1 <= args.runs <= MAX_RUNS:
+        sys.exit(f"--runs must be 1 to {MAX_RUNS}")
+    if args.out and not Path(args.out).resolve().is_relative_to((ROOT / "docs").resolve()):
+        sys.exit("--out must be under docs/")
     args.models = args.models.split(",")
     args.shapes = args.shapes.split(",")
     # Cloud sessions withhold ANTHROPIC_API_KEY, so the Tess environment carries

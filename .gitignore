@@ -50,3 +50,7 @@ fastlane/test_output
 
 # Raw simulator recordings (large); trimmed clips/GIFs in docs/recordings are kept
 docs/recordings/raw-*.mp4
+
+# Python
+__pycache__/
+*.pyc
