@@ -68,7 +68,7 @@ public struct TessGrammar {
         let text = Self.normalize(phrase)
         guard !text.isEmpty else { return nil }
         // Secret words first, before notes, recipes and questions (Research 134 R1): nothing with one leaves the phone.
-        if let secret = parseSecret(phrase, text: text, context: context) {
+        if let secret = parseSecret(phrase, text: text, context: context) ?? parseRememberedMoney(phrase) {
             return secret
         }
         if let note = parseNote(phrase) {
@@ -138,7 +138,22 @@ public struct TessGrammar {
         if phrase.firstMatch(of: Self.rescheduleShape) != nil {
             return nil
         }
-        return parseTask(phrase, context: context)
+        return parseTask(phrase, context: context) ?? parseBodyFact(phrase)
+    }
+
+    /// "remember my rent is 2100": a sum of money is never kept, and never leaves the phone (v9 W10).
+    func parseRememberedMoney(_ phrase: String) -> Parse? {
+        guard let match = phrase.firstMatch(of: /^(?i)\s*remember(?:\s+that)?\s+(.+)$/),
+              PrivateFacts.isMoneyShaped(String(match.1)) else { return nil }
+        return .ask(TessMemoryScreen.Refusal.money("").line ?? "I don't keep sums of money.")
+    }
+
+    /// A body or health fact nothing else read stays on the phone as a private note (Product on QA L1, Research 138
+    /// W8): "knee hurts", "slept badly", "body fat 18%".
+    func parseBodyFact(_ phrase: String) -> Parse? {
+        guard PrivateFacts.isBodyShaped(phrase) else { return nil }
+        let body = phrase.trimmingCharacters(in: .whitespacesAndNewlines)
+        return .privateNote(body: body.prefix(1).uppercased() + body.dropFirst(), remembered: false)
     }
 
     /// The live workout's rules for a phrase with an exercise in focus; nil when they don't apply (the other rules
@@ -416,6 +431,7 @@ public struct TessGrammar {
         "bench": "bench press", "bp": "bench press", "ohp": "overhead press", "press": "overhead press",
         "squat": "back squat", "squats": "back squat", "dl": "deadlift", "deads": "deadlift",
         "rdl": "romanian deadlift", "row": "barbell row", "rows": "barbell row", "pullups": "pull-up",
+        "pull-ups": "pull-up",
         "pull ups": "pull-up", "chinups": "chin-up", "curls": "dumbbell curl", "curl": "dumbbell curl", "dips": "dip",
         "lat pulldown": "lat pulldown",
     ]
@@ -483,6 +499,13 @@ public struct TessGrammar {
         }
         if !SecretWords.hasValue(body), !remembered, let task = parseTask(phrase, context: context) {
             return task
+        }
+        // A list or kitchen shape with no value wins (Research 139): "buy pins", "get a combination lock" are
+        // groceries, read by the rules below. They still never reach a model: the router keeps them on the grammar.
+        if !SecretWords.hasValue(body), !remembered,
+           phrase.firstMatch(of: /^(?i)\s*(?:buy|get|grab|pick up|add)\s+\S/) != nil
+        {
+            return nil
         }
         return .privateNote(body: body.prefix(1).uppercased() + body.dropFirst(), remembered: remembered)
     }
