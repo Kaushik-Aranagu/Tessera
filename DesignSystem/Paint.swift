@@ -226,9 +226,10 @@ struct Brushstroke: Shape {
 // MARK: - Keys
 
 /// The stroke word (docs/design/no-buttons.md): the one primary action on a screen, shown as a word sitting in a
-/// dry brushstroke of the action's paint. No container, no corners, no shadow. Tap actions wet the stroke on touch
-/// and fire on release; hold actions empty to a trace, repaint left to right under the thumb over `duration`, then
-/// bloom at the tip and fire. `height` is the hit height; the hit area spans the full width.
+/// fine ink line of the action's paint (docs/design/ink-line.md). No container, no corners, no shadow. Tap actions
+/// wet the line on touch and fire on release; hold actions empty to a trace, repaint left to right under the thumb
+/// over `duration`, then a bead swells at the tip and they fire. `height` is the hit height; the hit area spans
+/// the full width.
 struct PaintKey<Label: View, Meta: View>: View {
     enum Finish { case ink, cream }
 
@@ -251,9 +252,8 @@ struct PaintKey<Label: View, Meta: View>: View {
     @State private var wet = false
     @State private var drawnIn = false
     @State private var dried = false
-    @State private var sheen: CGFloat = 0
-    @State private var bead: CGFloat = 0
-    @State private var beadOpacity: Double = 0
+    /// Each release runs the sheen once (keyframes).
+    @State private var releases = 0
     @State private var completions = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
@@ -313,7 +313,6 @@ struct PaintKey<Label: View, Meta: View>: View {
             ZStack(alignment: .leading) {
                 InkLine(thickness: thickness)
                     .fill(paint.opacity(holding ? 0.35 : (wet || !dried ? 1 : 0.75)))
-                    .opacity(holding ? 1 : 1)
                 if holding {
                     InkLine(thickness: reduceMotion ? 2.5 : 2.5 + 1.1 * fill)
                         .fill(paint)
@@ -325,21 +324,45 @@ struct PaintKey<Label: View, Meta: View>: View {
                 }
                 if !reduceMotion {
                     // The release sheen: a band running along the line, left to right.
+                    // Keyframes, so the run plays even though its start and end values are set together.
                     GeometryReader { proxy in
                         LinearGradient(colors: [.clear, sheenColor, .clear], startPoint: .leading,
                                        endPoint: .trailing)
                             .frame(width: proxy.size.width * 0.35)
-                            .offset(x: proxy.size.width * (sheen * 1.35 - 0.35))
-                            .opacity(sheen > 0 && sheen < 1 ? 1 : 0)
+                            .keyframeAnimator(initialValue: Sheen(), trigger: releases) { band, value in
+                                band.offset(x: proxy.size.width * (value.travel * 1.35 - 0.35)).opacity(value.alpha)
+                            } keyframes: { _ in
+                                KeyframeTrack(\.travel) {
+                                    LinearKeyframe(0, duration: 0)
+                                    LinearKeyframe(1, duration: 0.52, timingCurve: .easeInOut)
+                                }
+                                KeyframeTrack(\.alpha) {
+                                    LinearKeyframe(1, duration: 0.04)
+                                    LinearKeyframe(1, duration: 0.4)
+                                    LinearKeyframe(0, duration: 0.08)
+                                }
+                            }
                     }
                     .mask { InkLine(thickness: thickness) }
-                    // The completion bead at the tip.
+                    // The completion bead at the tip: r 0 → 5 → 7 as it fades (520 ms).
                     Circle()
                         .fill(paint)
-                        .frame(width: bead * 2, height: bead * 2)
-                        .opacity(beadOpacity)
+                        .keyframeAnimator(initialValue: Bead(), trigger: completions) { dot, value in
+                            dot.frame(width: max(value.radius, 0) * 2, height: max(value.radius, 0) * 2)
+                                .opacity(isTap ? 0 : value.alpha)
+                                .offset(x: value.radius)
+                        } keyframes: { _ in
+                            KeyframeTrack(\.radius) {
+                                LinearKeyframe(0, duration: 0)
+                                LinearKeyframe(5, duration: 0.2, timingCurve: .easeOut)
+                                LinearKeyframe(7, duration: 0.32, timingCurve: .easeOut)
+                            }
+                            KeyframeTrack(\.alpha) {
+                                LinearKeyframe(1, duration: 0.2)
+                                LinearKeyframe(0, duration: 0.32)
+                            }
+                        }
                         .frame(maxWidth: .infinity, alignment: .trailing)
-                        .offset(x: bead)
                 }
             }
             .mask(alignment: .leading) {
@@ -402,25 +425,20 @@ struct PaintKey<Label: View, Meta: View>: View {
     private func complete() {
         completions += 1
         completionsSnapshot = completions
-        if !isTap, !reduceMotion {
-            // A bead swells at the tip, r 0 → 5 → 7 as it fades (520 ms).
-            bead = 0
-            beadOpacity = 1
-            withAnimation(.easeOut(duration: 0.2)) { bead = 5 }
-            withAnimation(.easeOut(duration: 0.32).delay(0.2)) {
-                bead = 7
-                beadOpacity = 0
-            }
-        }
         fill = 1
-        action()
+        // A hold's bead and haptic land at once, and the action follows 200 ms later so the page doesn't swallow
+        // the bead (Design M1). Taps fire straight away.
+        guard !isTap, !reduceMotion else { return action() }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(200))
+            action()
+        }
     }
 
     /// The sheen runs along the line once, then it dries back.
     private func runSheen() {
         guard !reduceMotion else { return }
-        sheen = 0
-        withAnimation(Theme.Motion.house.speed(0.42 / 0.52)) { sheen = 1 }
+        releases += 1
     }
 }
 
@@ -442,8 +460,8 @@ enum InkWordType {
 }
 
 extension EnvironmentValues {
-    /// True on the workout's ground, which is dark in every look: ink there is `Theme.Colors.Workout.ink` (a pinned
-    /// light look would otherwise draw its dark ink on the dark ground).
+    /// True on the workout's ground. Ink there is `Theme.Colors.Workout.ink`, which is the look's own ink (one base
+    /// across the app), held for as long as the workout is open.
     @Entry var onWorkoutGround = false
 }
 
@@ -469,4 +487,16 @@ struct InkLine: Shape {
         path.closeSubpath()
         return path
     }
+}
+
+/// The release sheen's run along the ink line: hidden at rest.
+private struct Sheen {
+    var travel: CGFloat = 0
+    var alpha: Double = 0
+}
+
+/// The hold's completion bead: hidden at rest.
+private struct Bead {
+    var radius: CGFloat = 0
+    var alpha: Double = 0
 }
