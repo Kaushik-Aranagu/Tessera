@@ -33,8 +33,8 @@ The key is never drawn again after the drain, only its last four characters. Voi
 | S1 | No key | First run, nothing in the Keychain | Tess thinks on this phone only. | No month, key or receipts lines | **Add a Claude key** (cobalt, 21) |
 | S2 | Pasting | Add tapped; 0.5pt cobalt writing line opens in place | (none; VoiceOver label "Claude key") | `SecureField`, no autocorrect, no `textContentType`, never in `@AppStorage` | Long-press paste. Tapping away with the line empty closes it |
 | S3 | Pasted with whitespace | Spaces, tabs or line breaks anywhere in the text | (none; strip all whitespace, keys have none, then go on) | As S4 | |
-| S4 | Testing | Trimmed text starts `sk-ant-`. Key saved to Keychain first, then one count_tokens call (10 s) | Checking it with Claude. | Key drains to its last four; cloud wisps on the soul, soul in thinking mode | None until it answers |
-| S5 | Not a key (K9) | Trimmed text doesn't start `sk-ant-`; nothing sent, nothing saved | That doesn't look like a Claude key. Paste it again? | Writing line stays open, emptied | Paste again |
+| S4 | Testing | Trimmed text starts with the Claude key prefix. Key saved to Keychain first, then one count_tokens call (10 s) | Checking it with Claude. | Key drains to its last four; cloud wisps on the soul, soul in thinking mode | None until it answers |
+| S5 | Not a key (K9) | Trimmed text doesn't start with the Claude key prefix; nothing sent, nothing saved | That doesn't look like a Claude key. Paste it again? | Writing line stays open, emptied | Paste again |
 | S6 | Works (K1) | 200 | Key saved. Ends in ...a1B2. | `...a1B2 · works`; switch turns to **Claude**; month, misses and receipts lines unfold (40 ms stagger) | TEST · REPLACE · REMOVE |
 | S7 | Bad key (K2) | 401 at Test | That key didn't work. Paste it again? | Keychain item deleted at once (no UNDO: not his write, and a 401 key can't come back); back to S2 | Paste again |
 | S8 | Not allowed (K3) | 403 | That key can't use Claude yet. Check it in the Console? | `...a1B2 · not allowed`; switch stays **only this phone** | CONSOLE (opens the Claude Console in Safari) · TEST · REMOVE |
@@ -55,7 +55,7 @@ The key is never drawn again after the drain, only its last four characters. Voi
 | S23 | Key missing | Switch was on but the Keychain item is gone (reinstall) | No key yet. Paste one to use Claude. (M4) | S1 with this line; ledger rows stay | Add a Claude key |
 | S24 | Rate limited or overloaded in use | 429 with `retry-after` or 529 or 500, after one retry | Per use, at the use (M22): "Claude is busy. Kept it for later." | Settings unchanged; the key stays `works` | |
 | S25 | Misses paused for today | 3 of 10 Claude ghost rows in a row taken back (first-uses pause rule) | Misses on this phone today. 3 of 10 taken back. | Misses sentence reads "Misses go to Claude: **not today**."; back at the 4 AM day | Value word **yes** turns it back on |
-| S26 | Key pasted into Ask | Ask text holds `sk-ant-` | That looks like a Claude key. Paste it in Settings. (M24) | Nothing written anywhere | |
+| S26 | Key pasted into Ask | Ask text holds the Claude key prefix | That looks like a Claude key. Paste it in Settings. (M24) | Nothing written anywhere | |
 
 26 states. S3, S8, S10 to S14 and S20 to S26 are the ones missing from the board list.
 

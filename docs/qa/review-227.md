@@ -9,7 +9,7 @@ Builder B. Static review against review-218.md (app notes) and research/claude-f
 - **Storage:** Core's device-only Keychain item (#218). No op, no object, no backup, no export. REMOVE with UNDO is in-memory state only (`removed` flag + a 10 s Task); the Keychain item stays until `finishRemoval()` (:312). This is exactly review-218's app note.
 - **Check:** free `count_tokens` with `Authorization: Bearer`, which is Anthropic's documented header (x-api-key is legacy). A good key won't 401, so Core's "delete on first 401" can't bite a good key. If it ever did, the cost is a re-paste; nothing leaks.
 - **Ask bar:** `looksLikeClaudeKey` is case-insensitive and runs on the draft (BottomChrome.swift:297), in `dry()` (:410) and `commit()` (:441). Before any interpreter, no ghost row, no task.
-- **Workout LiveAskField (Builder A's guard still queued):** it goes through AppModel.ask to `TessRouter.run`, which refuses `sk-ant-` before any route. Real keys are lowercase `sk-ant-`, so the router's case-sensitive check catches a real paste. Only a hand-uppercased key would slip, which won't happen by accident.
+- **Workout LiveAskField (Builder A's guard still queued):** it goes through AppModel.ask to `TessRouter.run`, which refuses the Claude key prefix before any route. Real keys start with the Claude key prefix in lowercase, so the router's case-sensitive check catches a real paste. Only a hand-uppercased key would slip, which won't happen by accident.
 - **Recipe paste:** cleared on arrival with a line pointing to Settings (PasteRecipe.swift:118).
 - **Spend:** today only the Test spends (free, or a 1-token fallback). K11 (cap under concurrent calls) still has to land before planner/Ask use Claude, not before he types the key.
 
@@ -40,7 +40,7 @@ So the Core hardening PR is good tidying but not a safety gate for the key.
 - **C3 (F4):** `keys.save(previous)` result is ignored on a failed Replace (:270). If the save fails, the old key is gone and the line still implies it's kept. Rare (Keychain write while unlocked).
 - **C4 (F6):** a failed Replace that was offline or busy (not a bad key) restores the old key, and the line is the new key's outcome line. Wording only; the state is right.
 - **C5:** the key stays on the clipboard after paste. Suggest clearing `UIPasteboard.general` when it holds the pasted key, or a Tess line "You can clear it from your clipboard."
-- **C6:** PasteRecipe's guard is case-sensitive (`contains("sk-ant-")`); BottomChrome's is not. Use the same helper.
+- **C6:** PasteRecipe's guard is case-sensitive (`contains("<key prefix>")`); BottomChrome's is not. Use the same helper.
 
 ## Phone smoke for the install
 1. Review > Claude: paste the key. Expect "Checking it with Claude." then works, `...last4` only, no Save Password sheet.

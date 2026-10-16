@@ -14,7 +14,7 @@ PR #325 at 6240a52, from 0167046. Trial merge onto master 4011570 clean. Tessera
 - Low: "1 pound cake mix" now reads as a pound of cake mix, because the name is "cake mix". The old `hasPrefix("cake ")` caught it. It's harmless on a list ("cake mix · 1 lb"); leave it unless he says it.
 
 ## The 401 key test: closed
-`RecipeLinkTests.swift:237-243` now uses one reader for both the call and the check, and confirms the request reached `api.anthropic.com`. So it does prove that a 401 leaves the key in place. The test key is the `sk-ant-TEST-link` fixture, and the secret check pattern doesn't match it as a real key.
+`RecipeLinkTests.swift:237-243` now uses one reader for both the call and the check, and confirms the request reached `api.anthropic.com`. So it does prove that a 401 leaves the key in place. The test key is the `<key prefix>TEST-link` fixture, and the secret check pattern doesn't match it as a real key.
 
 ## Data safety
 No LaunchFlags, ProcessInfo, UI tests, or `project.yml` changes. The engine writes nothing new.

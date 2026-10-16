@@ -17,7 +17,7 @@ QA thread, Oct 15 PT. Static review (no Swift toolchain here). Files: `TesseraCo
 - Queueing happens only inside `ClaudeTessModel.run`, in the offline catch (ClaudeTessModel.swift:110-113). The router only calls a model whose `isAvailable` is true (TessModel.swift:73). `isAvailable` (ClaudeTessModel.swift:45-46) needs a key, `sendsMisses()` (the "Tess asks Claude" switch, read at each call) and no pause. So with the switch off nothing is queued.
 - `readWaiting` (TessInbox.swift:55) checks `claude.isAvailable(for: .capture)` before every item. If he turns the switch off after a phrase was saved, the phrase stays on the phone and is never sent.
 - Siri and Shortcuts: `readWaiting` returns early on `commitImmediately` (:52), `run` refuses them (ClaudeTessModel.swift:51), and each request is forced to `commitImmediately = false`. Tested in `nothingWaitsForSiriAndAKeyNeverWaits`.
-- Key: `add` refuses any text containing "sk-ant-", anywhere in the phrase and in any case (ClaudeKeyGuard.swift:5-6). Tested.
+- Key: `add` refuses any text containing "<key prefix>", anywhere in the phrase and in any case (ClaudeKeyGuard.swift:5-6). Tested.
 - Duplicates: the same phrase waits once (tested).
 - Each read is a normal `run`: it reserves against the $10 cap, writes a ledger row, and the result comes back as pending ghosts that he has to keep (tested: `state == .pending`).
 
