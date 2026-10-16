@@ -130,6 +130,23 @@ Design 48 (`living-colours.md`, with its addendum) owns the palettes, the nudges
 - **Reduce Motion:** a 600 ms crossfade of the three pigments (Design 48), no swell.
 - Recordings: `recordings/tess-motion-colour.mp4` (Obsidian) and `-porcelain`, `-plein`, `-lacquer`, `-celadon`: Today → Lagoon (morning) → Kiln (evening) → Ember (a best, with "Bench best today." staying cobalt) → Today, then the capture mid-pool and Done. She is drawn at 1.35× so the pool can be seen; the values are the same at Home size.
 
+## 8. While she listens or asks (board item 8, added 2:45 AM PT Oct 16)
+`speak.md` and `one-ask.md` own these moments; Design 41's band rule holds (nothing on a page moves for her slot, 736 to 820). This records how the new vocabulary sits inside them, with the values Builder B needs in `BottomChrome` and Builder A in `TessSoul`.
+
+| Moment | As built (`speak.md`, `one-ask.md`) | What the lab adds |
+|---|---|---|
+| **Speak from the surface** | Tap her, tap Speak; she travels to (196, 698) on the settle spring and becomes the listening bloom (×1.4), breathing with the mic level between ×1.4 and ×1.55; "Listening" at 470 in cobalt; the words as heard rise out of a 6 pt blur; a 1.2 s pause ends it; the ghost dries 3 s on the surface; then everything gathers back into the soul (220 ms) and the page comes forward | Eyes up, toward him, from the moment she blooms; **no blink while she listens** (a blink reads as a missed word). One blink as the pause ends. No roam, no drag, no repaint, no split while she listens: he is talking |
+| **Hold her at rest** (the fast path) | After 400 ms she swells in place to ×1.4 and breathes with the level; the words stream right-aligned above her; let go sends; drag left cancels | The same eyes as above. The 10 pt drag threshold (section 4) only counts **before** the 400 ms; after the hold fires, movement is `speak.md`'s cancel, never a drag |
+| **A Claude call out** (a miss, `missesGoToClaude`) | "Asking Claude." in her line | She gathers to the corner first (220 ms, as built) and only then fades and splits: **the work state never starts from the bloom**. No readers (there is nothing on the page to read; the words have gone). Done, then the line with UNDO |
+| **The wait beside a one-ask** | The question in her line, the two ink words under it; her breath slows from 3.2 s to 4.8 s and she leans 4 pt toward her line; no glow, no colour, no haptic | Eyes on the two words (glance x −3, y +1.3 at soul scale 1) for the whole wait. **No roam, no split, no repaint while an ask waits**; a drag is allowed and the ask's words move with her dock, once, as section 4 says. On the tap: the ask's own `.selection`, one blink, the lean and the breath return over 300 ms |
+| **Leaving an ask** | The ask folds; Tess says nothing | The lean and breath return the same 300 ms; no blink (nothing was answered) |
+| **In a live workout** | The hold in `LiveTessCorner`, swell in place; asks are a choice or open only | No eyes glance in the corner; the same breath and lean are the whole wait |
+
+- **Breath while listening is the mic, not time.** The ×1.4 to ×1.55 range maps the level (0 to 1) directly, smoothed over 120 ms (`.animation(.easeOut(duration: 0.12), value: listener.level)` as built). Nothing else of hers moves with the level; the eyes hold still.
+- **One slot, one thing:** the ask, UNDO, the Heard line and the hint never share the band; the vocabulary adds nothing to the band.
+- Reduce Motion: no travel to the bloom (she blooms in the corner), no lean, crossfades as built; the eyes hold.
+- Recording: `recordings/tess-motion-ask.mp4` (Obsidian) and `-light`: Speak from the surface, the hold then a Claude call, and a one-ask wait answered by a tap.
+
 ## Timing and easing, in one place
 | | Curve | Duration |
 |---|---|---|

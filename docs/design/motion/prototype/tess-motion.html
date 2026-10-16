@@ -992,6 +992,115 @@ SCENES.colour = () => {
   };
 };
 
+
+// 10. Listening and asking (board item 8): the soul from the Speak surface, the hold in the corner, a Claude call
+// out, and the wait beside a one-ask line. Nothing on the page moves for her slot (band 736 to 820).
+function level(t) { return .5 + .5 * Math.sin(t * 9.1) * Math.sin(t * 4.3) * Math.sin(t * 1.7 + 1); }
+function veil(a) {
+  if (a < .01) return;
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = Math.min(a * .5, .8); ctx.fillStyle = LOOK.ground; ctx.fillRect(0, 0, W, H); ctx.restore();
+}
+function wordsStream(words, x, y, at, align = 'left', color = LOOK.inkSoft) {
+  // Each word rises out of a 6 pt blur, 180 ms apart.
+  let cx = x; const ws = words.map(w => width(w + ' ', 21)); if (align === 'right') cx = x - ws.reduce((a, b) => a + b, 0);
+  words.forEach((w, i) => {
+    const a = ramp(at, i * .18, .26); if (a <= 0) return;
+    ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.filter = `blur(${((1 - a) * 6 * DPR).toFixed(2)}px)`; ctx.globalAlpha = a; ctx.font = font(21, 400); ctx.fillStyle = color; ctx.textAlign = 'left'; ctx.fillText(w, cx, y); ctx.restore();
+    cx += ws[i];
+  });
+}
+SCENES.ask = () => {
+  const segs = [];
+  // (a) Speak from the surface: tap the soul, the words rise, tap Speak, she travels to (196, 698) and blooms.
+  segs.push((() => {
+    const tap = .8, speak = tap + 1.3, end = speak + 3.6, dry = end + .4, D = dry + 3.0;
+    const LISTEN = { x: 196, y: 698 };
+    const goes = (t, from, to, at) => { const u = spring(t - at, .42, .12); return t < at ? from : { x: lerp(from.x, to.x, u), y: lerp(from.y, to.y, u) }; };
+    const back = D + .05; // the ghost dries on the surface; then she gathers back and the page comes forward
+    const centre = t => t < speak ? HOME : t < back ? goes(t, HOME, LISTEN, speak) : goes(t, LISTEN, HOME, back);
+    return {
+      duration: D + 2.6,
+      draw: t => {
+        HOME41.draw();
+        const open = ramp(t, tap, .32) * (1 - ramp(t, back, .42));
+        veil(open * 1.6);
+        const col = ['Speak', 'Write', 'Show'];
+        col.forEach((w, i) => { const a = open * (t > speak ? 1 - ramp(t, speak, .2) : 1) * (i === 0 && t > speak - .02 ? 1 : 1); if (a > 0) text(w, 300, 560 + 48 * i, 21, LOOK.ink, 500, 'left', a); });
+        if (t > speak - .02 && t < end + .22) { // the ink line under Speak, then the listening block
+          text('Listening', 24, 470, 21, LOOK.tess, 500, 'left', ramp(t, speak, .3) * (1 - ramp(t, end, .2)));
+          wordsStream(['oat', 'milk', 'and', 'um', 'eggs'], 24, 506, t - speak - .9, 'left');
+        }
+        if (t > end) { // tidy into the clean sentence, the ghost at 45 %, the Heard line, the cobalt line draining
+          const a = ramp(t, end, .3) * (1 - ramp(t, D - .1, .25));
+          text('Oat milk and eggs, on Groceries.', 24, 506, 21, LOOK.ink, 500, 'left', a * .45);
+          text('Heard: oat milk and um eggs', 24, 536, 16, LOOK.inkSoft, 500, 'left', a);
+          const drain = 1 - ramp(t, dry, 3.0, x => x);
+          stroke(24, 24 + 300 * drain, 520, 2.5, LOOK.tess, a);
+        }
+        if (t > D + .25) { const a = ramp(t, D + .25, .3); text('UNDO', 24, 812, 16, LOOK.ink, 700, 'left', a * .9); stroke(24, 24 + width('UNDO', 16), 818, 1.5, LOOK.ink, a); }
+      },
+      finger: t => (t > tap - .15 && t < tap + .2) ? { x: HOME.x, y: HOME.y, alpha: 1 - ramp(t, tap, .2) } : (t > speak - .15 && t < speak + .2) ? { x: 322, y: 552, alpha: 1 - ramp(t, speak, .2) } : null,
+      soul: {
+        modes: [{ mode: 'idle', at: -10 }, { mode: 'listening', at: speak }, { mode: 'idle', at: end + .1 }],
+        centre, scale: t => t > speak && t < back ? lerp(1, t < end ? 1.4 + .15 * level(t) : 1.2, ramp(t, speak, .3)) : 1,
+        eyes: t => ({ alpha: 1, blink: t > end && t < end + .16 ? Math.abs(1 - 2 * (t - end) / .16) : 1, look: { x: 0, y: t > speak && t < end ? -1 : 0 } }),
+      },
+      lines: [{ text: 'Added oat milk and eggs to Groceries.', at: D + .25 }],
+      caps: [{ at: 0, text: 'Speak from the surface: tap her, then Speak.' }, { at: speak, text: 'She travels to the bloom and breathes with the mic.' }, { at: speak + .5, text: 'Eyes up, toward him. No blink while listening.' }, { at: end, text: 'A pause ends it; one blink; the ghost dries 3 s.' }, { at: D + .05, text: 'Dry: she gathers back to the corner, the page comes forward.' }, { at: D + .25, text: 'Her line, with UNDO. No haptic of hers.', haptic: 'soft impact 0.6 (the made, the row’s)' }],
+    };
+  })());
+  // (b) The hold in the corner, then a Claude call out: work state, no readers, Done, the line.
+  segs.push((() => {
+    const press = .6, hold = press + .4, rel = hold + 2.4, CUT = rel + .55, G = CUT + 3.4, D = G + .78;
+    return {
+      duration: D + 3,
+      draw: t => {
+        HOME41.draw();
+        if (t > hold && t < rel + .25) wordsStream(['remind', 'me', 'to', 'call', 'mom', 'at', 'six'], 330, 720, t - hold - .3, 'right');
+        if (t > D + .25) { const a = ramp(t, D + .25, .3); text('UNDO', 24, 812, 16, LOOK.ink, 700, 'left', a * .9); stroke(24, 24 + width('UNDO', 16), 818, 1.5, LOOK.ink, a); }
+      },
+      finger: t => (t > press - .15 && t < rel + .2) ? { x: HOME.x, y: HOME.y + 6, alpha: ramp(t, press - .15, .15) * (1 - ramp(t, rel, .2)), press: 1 - .1 * ramp(t, press, .1) } : null,
+      soul: {
+        modes: [{ mode: 'idle', at: -10 }, { mode: 'listening', at: hold }, { mode: 'idle', at: rel + .22 }, { mode: 'done', at: D }, { mode: 'idle', at: D + 1.8 }],
+        centre: () => HOME, work: { split: CUT, gather: G, at: { x: 336, y: 772 } },
+        scale: t => t > press && t < hold ? 1.06 : t >= hold && t < rel + .22 ? lerp(1.06, 1.4 + .15 * level(t), ramp(t, hold, .25)) : 1,
+        eyes: t => ({ alpha: 1, blink: 1, look: { x: 0, y: t > hold && t < rel ? -1 : 0 } }),
+      },
+      lines: [{ text: 'Asking Claude.', at: CUT - .1, until: D }, { text: 'Call mom, today 6 pm.', at: D + .25 }],
+      caps: [{ at: 0, text: 'The fast path: hold her at rest.' }, { at: hold, text: 'After 400 ms she swells in place and listens.' }, { at: rel, text: 'Let go sends it. A miss goes to Claude:' }, { at: CUT, text: 'Work: fade and split, no readers (nothing to read).' }, { at: G, text: 'Gather.' }, { at: D, text: 'Done, as built.', haptic: 'success' }],
+    };
+  })());
+  // (c) The wait beside a one-ask line: breath slows to 4.8 s, she leans 4 pt toward her line, eyes on the words.
+  segs.push((() => {
+    const askAt = .8, tapAt = askAt + 3.4, ans = tapAt + .35;
+    const lean = t => 4 * ramp(t, askAt, .5) * (1 - ramp(t, tapAt, .3));
+    return {
+      duration: ans + 3.2,
+      draw: t => {
+        HOME41.draw();
+        if (t > askAt && t < ans) {
+          const a = ramp(t, askAt, .3) * (1 - ramp(t, tapAt + .1, .2));
+          const w1 = '2 SETS', w2 = '2 KG';
+          text(w1, 24, 812, 16, LOOK.ink, 700, 'left', a); text(w2, 24 + width(w1, 16) + 30, 812, 16, LOOK.ink, 700, 'left', a * (t > tapAt ? 1 - ramp(t, tapAt, .2) : 1));
+          if (t > tapAt) stroke(24, 24 + width(w1, 16) * ramp(t, tapAt, .15, houseCurve), 818, 1.5, LOOK.ink, 1);
+        }
+        if (t > ans + .25) { const a = ramp(t, ans + .25, .3); text('UNDO', 24, 812, 16, LOOK.ink, 700, 'left', a * .9); stroke(24, 24 + width('UNDO', 16), 818, 1.5, LOOK.ink, a); }
+      },
+      finger: t => (t > tapAt - .15 && t < tapAt + .2) ? { x: 48, y: 806, alpha: 1 - ramp(t, tapAt, .2) } : null,
+      soul: {
+        modes: [{ mode: 'idle', at: -10 }], centre: t => ({ x: HOME.x - lean(t), y: HOME.y }),
+        // The breath slows from 3.2 s to 4.8 s while the ask waits (chromeBreath is 3.2 s; the slow one is drawn here).
+        scale: t => { const w = ramp(t, askAt, .5) * (1 - ramp(t, tapAt, .3)); return lerp(1, (1 + .08 * easeInOut(1 - Math.abs(2 * ((t % 9.6) / 9.6) - 1))) / chromeBreath(t), w); },
+        eyes: t => ({ alpha: 1, blink: t > tapAt && t < tapAt + .16 ? Math.abs(1 - 2 * (t - tapAt) / .16) : 1, look: { x: t > askAt && t < ans ? -1 : 0, y: t > askAt && t < ans ? .6 : 0 } }),
+      },
+      lines: [{ text: '2 × 10: 2 sets, or 2 kg?', at: askAt, until: tapAt + .1 }, { text: 'Logged bench 2 × 10 at 80.', at: ans + .25 }],
+      caps: [{ at: 0, text: 'One ask: his phrase raised a choice.' }, { at: askAt, text: 'The wait: breath slows to 4.8 s, a 4 pt lean to her line.' }, { at: askAt + 1, text: 'Eyes on the two words. No glow, no colour, no split.' }, { at: tapAt, text: 'A tap: the ink line draws; one blink; she settles back.', haptic: 'selection (the ask’s)' }, { at: ans + .25, text: 'Her answer with UNDO. Nothing on the page moved.' }],
+    };
+  })());
+  let at = 0; for (const s of segs) { s.start = at; at += s.duration; }
+  return { duration: at, segments: segs };
+};
+
 // The work state when she's out on a row: tighter constellation, no readers.
 const _workParticles = workParticles;
 workParticles = function (t, work) {
@@ -1012,7 +1121,7 @@ function renderAt(t) {
   if (scene.segments) {
     const seg = scene.segments.findLast(x => x.start <= t) || scene.segments[0];
     const u = t - seg.start;
-    seg.draw(u); drawLine(seg.lines, u); composeSoul(u, seg.soul); drawCaption(seg.caps, u);
+    seg.draw(u); drawLine(seg.lines, u); composeSoul(u, seg.soul); if (seg.finger) drawFinger(seg.finger(u)); drawCaption(seg.caps, u);
     return;
   }
   if (scene.draw) scene.draw(t); else drawPage(scene.page ? scene.page(t) : {});

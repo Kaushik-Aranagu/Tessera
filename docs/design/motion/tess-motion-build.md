@@ -40,6 +40,7 @@ As `tess-motion.md`: nothing travels; 200 ms crossfades; eyes still; haptics sta
 - Drag: only two docks; a bottom-left drop moves the line, lens, ask words and UNDO to x 96 in one step and the band stays 736 to 820.
 - Haptics: exactly one per pick-up and one per drop; none for split, gather, roam or eyes; working done plays only Done's `.success`.
 - Reward: the beat ends within 940 ms of its start; no haptic from `TessSoul` during it; Done's one-shot never starts from a task's done; in a live workout the beat has no glance.
+- Listening and asks: no blink while `listener.state != .idle`; no roam, split or repaint while an ask waits or she listens; the work state after a send starts only after the 220 ms gather; the eyes return from the ask words within 300 ms of the tap or the fold.
 - Repaint: pool order is cobalt, vermilion, cadmium 120 ms apart; each dab's pool is complete at start + 900 ms and dry at start + 2.8 s; Done's ring colour is unchanged after a repaint; Reduce Motion crossfades in 600 ms.
 - Repaint: a repaint in flight when `.working` begins dries within 500 ms; no repaint starts while working, roaming, carried or in Done.
 
