@@ -101,7 +101,7 @@ These are not gradients or textures pasted on. Each field is how the material wo
   - This is the Settings page's existing value-word pattern, so there are no new controls.
 - **The default** is Porcelain by day and Obsidian by night. Anyone already on Plein keeps "**Plein** by day" until they change it.
 - **The change:** the new ground floods in from Tess's soul (`PaintFlood`, 700ms, house curve), with the ink crossfading inside it. Reduce Motion makes it a 250ms crossfade.
-- Changing the system appearance swaps the same way.
+- **When the phone flips Light/Dark, pages swap at once,** with no flood, because iOS swaps the system chrome instantly. Only a tap on the Look sentence floods. A running workout keeps its palette until it closes (Research `theme-schedule.md`, #200).
 - A running Live Activity follows on its next update. Widgets follow on their next timeline.
 - **Never** switch mid-gesture, and never during a running workout's set entry: a swap that lands then waits for the page to settle.
 - `-theme <name>` (DEBUG) still pins one, for the demo and recordings.
