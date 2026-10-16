@@ -51,6 +51,24 @@ struct DatedLiftAskTests {
         #expect(TesseraDay(calendar: TesseraDayTests.calendar).day(of: logged) == TesseraDayTests.at(10, 12, 0))
     }
 
+    @Test func twoWorkoutsThatDayPreferTheOneWithTheExercise() async throws {
+        // QA P1, P2: Monday had a morning bench and an evening pull session; a dated bench joins the morning one, and
+        // its set is stamped at that workout's end.
+        let workoutClass = try #require(classes[.workout])
+        let morning = try store.create(workoutClass, title: "Push")
+        try engine.perform(AddExercise(workout: morning.id, exercise: #require(classes[.benchPress]).id), by: .user)
+        try store.set("startedAt", to: .date(TesseraDayTests.at(10, 12, 7)), on: morning)
+        try store.set("endedAt", to: .date(TesseraDayTests.at(10, 12, 8)), on: morning)
+        let evening = try store.create(workoutClass, title: "Pull")
+        try store.set("startedAt", to: .date(TesseraDayTests.at(10, 12, 18)), on: evening)
+        try store.set("endedAt", to: .date(TesseraDayTests.at(10, 12, 19)), on: evening)
+        _ = await tess.capture("bench 80x8 mon", context: context)
+        _ = tess.answer(TessDatedLiftAsk.Choice.log, context: context)
+        #expect(morning.orderedChildren.count == 1 && evening.orderedChildren.isEmpty)
+        let set = try #require(morning.orderedChildren.first?.orderedChildren.last)
+        #expect(store.value("loggedAt", of: set)?.dateValue == TesseraDayTests.at(10, 12, 8))
+    }
+
     @Test func notNowWritesNothing() async {
         _ = await tess.capture("squat 100x5 tue", context: context)
         let skipped = tess.answer(TessDatedLiftAsk.Choice.notNow, context: context)
