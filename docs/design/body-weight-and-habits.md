@@ -1,6 +1,6 @@
 # Body weight and habits (build sheet, M3 slices 1 and 2)
 
-Just enough to build the two screens on Core's engine in `docs/research/m3-1-2-brief.md` (`BodyWeight`, `Habit`, `HabitCheckIn`, `BodyWeightLedger`, `HabitLedger`, and the grammar rows). It deepens `m3-steers.md` §1 and `habits.md`. Where they differ, this sheet wins: the hero is the trend, not a 7-day average, and the count reads "of 5", the target, not "of 7". Every line of copy below is exact and uses the brief's fixture values. Drawn to `no-buttons.md`.
+Just enough to build the two screens on Core's engine in `docs/research/m3-1-2-brief.md` (`BodyWeight`, `Habit`, `HabitCheckIn`, `BodyWeightLedger`, `HabitLedger`, and the grammar rows). It deepens `m3-steers.md` §1 and `habits.md`. Where they differ, this sheet wins: the hero is the trend, not a 7-day average, and the count reads "of 5", the target, not "of 7". Every Tess line and empty state is in Research's `docs/research/m3-lines.md` (#204), and that file wins on copy. This sheet places the lines and gives them their motion. Drawn to `no-buttons.md`.
 
 Recording: `recordings/m3-surfaces.mp4` (source `studies/m3-surfaces.html`):
 1. The body weight page paints its trend.
@@ -18,22 +18,30 @@ Recording: `recordings/m3-surfaces.mp4` (source `studies/m3-surfaces.html`):
 | 230 | **TREND** in labels |
 | 270 to 530 | **The stroke:** the last 90 days of the trend as one painted sage stroke (5pt, rough edge, `PaintedTrend`). The y range fits the trend plus 1 kg each side; there are no axes, gridlines or goal line. Each entry is a small sage dab (11×9, 70%) at its weight. An entry outside the range (the 87.4 typo) sits pinned at the top edge at 45%, with its value in labels beside it. It's still never red |
 | 548 | The first day in labels on the left ("SEP 3") and **TODAY** on the right |
-| 590 | **The change line** (21/400, context colour): "1.2 kg less since 3 September", from the stroke's first point. Gaining reads "0.8 kg more since 3 September", and no change reads "The same as on 3 September" |
+| 590 | **The change line** (21/400, context colour): "1.2 kg less since Sep 3", from the stroke's first point. Gaining reads "0.8 kg more since Sep 3", and no change reads "The same as on Sep 3". With one entry it reads "The trend starts here." |
 
 **Copy rules:** past tense and digits, kg once per line. Change is "less" or "more", never "lost", "gained", "down", "up", "good" or "bad". There's no goal, no BMI, no colour for direction, and no praise.
 
 ### Logging (the weigh-in ghost row)
 - **"82.4" with nothing running** (a bare number from 30 to 250): Tess's Write closes and the page (or Now, if he's elsewhere) shows a **ghost that waits**. A wet cobalt dab drops above today on the stroke, and the ghost line sits under the change line at Title 34, 45%: "Body weight **82.4** kg?". The number is a value word in 600. Under it in labels: "4.2 KG ABOVE TREND", shown only when the entry is more than 3 kg off the trend. Tess says "Tap to keep it." There is **no drying line and no 2s commit**: it waits.
-  - **Tap the ghost:** it inks, the dab dries from cobalt to sage, and the stroke re-draws its last stretch to the new trend. The step is capped at 2 kg, so 82.4 moves the trend from 78.2 to only 78.4. The numeral rolls, and the context line swaps to "82.4 this morning, 4.2 above trend". Tess says "82.4 kg, 4.2 kg above trend." with **UNDO**. `.impact(.light)`.
+  - **Tap the ghost:** it inks, the dab dries from cobalt to sage, and the stroke re-draws its last stretch to the new trend. The step is capped at 2 kg, so 82.4 moves the trend from 78.2 to only 78.4. The numeral rolls, and the context line swaps to "82.4 this morning, 4.2 above trend". Tess says "Body weight logged. 82.4 kg, 4.2 above trend." with **UNDO** (4s, "Body weight taken back."). Without the note it says "Body weight logged. 82.4 kg." `.impact(.light)`.
   - **Tap the value word** to open the weight dial (`WeightDial`, 0.1 kg detents, starting on the ghost's value) and fix a typo before keeping.
   - **Swipe the ghost away:** nothing is written and Tess says nothing.
-- **"weighed 82.4", "82.4 kg" or "bw 82.4":** these are clear, so they commit straight away with the usual 2s drying line. Tess says "Body weight 82.4 kg." with **UNDO**, adding ", 4.2 kg above trend" only when it's more than 3 kg off.
+- **"weighed 82.4", "82.4 kg" or "bw 82.4":** these are clear, so they commit straight away with the usual 2s drying line. Tess says "Body weight logged. 82.4 kg." with **UNDO**, adding ", 4.2 above trend" only when it's more than 3 kg off. The unit is said once per line.
 - **A second entry the same day** replaces the first. Tess says "Body weight now 78.5 kg." and UNDO puts the old value back.
-- **In a workout,** "82.4" or "82.4 kg" is the next set's weight ("82.4 × 8" as the set ghost), never body weight. Only "bw 82.4" logs body weight mid-workout.
+- **In a workout (the 7:24 PM S701 call):** a bare number never becomes body weight, and it never writes the next set by itself.
+  - Only "bw 82.4" logs body weight mid-workout.
+  - A bare number counts as reps only from 1 to 50, and only when it isn't close to the last weight.
+  - Anything else ("82.4", or "8" right after a set at 8 kg) goes to the model.
+  - What comes back is a **set ghost that waits**, never one that dries by itself: "**82.5** × 8?" at Title 34, 45%, in the set slot.
+  - A spoken weight snaps to the nearest loadable weight, ties going lighter. When it snapped, a label sits under the ghost: "SNAPPED FROM 82.4".
+  - Tap to keep it. Then the line reads "Set 4 logged. 82.5 × 8." with the set's own UNDO.
+  - Swipe the ghost away to drop it.
+  - The value word opens the weight reel at the ghost's value.
 - **The living moment:** today's dab drops onto the stroke (fall 20pt, settle spring, 420ms), and the stroke's last stretch draws to it (500ms, house curve).
 
 ## 2 · Habits, x of the target
-**Entry:** the Today page's foot line gains the word **Habits** (Body 21/600, `HomeLinkLine`), and a habit's name anywhere zooms in. The back word is **‹ TODAY**. The page keeps `habits.md`'s layout: hero "This week", context line "Thursday, three days to go", and one block per habit 196pt apart from y 226.
+**Entry:** the Today page's foot line gains the word **Habits** (Body 21/600, `HomeLinkLine`), and a habit's name anywhere zooms in. The back word is **‹ TODAY**. The page keeps `habits.md`'s layout: hero "This week", context line "Thursday, 3 days to go" ("Monday, a new week", "Sunday, the last day"), and one block per habit 196pt apart from y 226.
 
 **On 15 Oct with the fixtures:**
 | Habit | Name line | Count (right) | Under the name | Week row | Under the row |
@@ -52,13 +60,13 @@ Recording: `recordings/m3-surfaces.mp4` (source `studies/m3-surfaces.html`):
 | Tap today's dab, or "habit read", "✓ read", "read", "read 20 pages", "meditated" (for a habit called Meditate) | "Read, 3 of 5 this week." | yes |
 | The check-in that reaches the target | "Read done for the week." (the stroke paints behind the dabs, per `habits.md`) | the check-in's own |
 | A second check-in the same day | "Read is already in for today." (nothing new is counted) | no |
-| A finished workout counts for Train | "Push day A counted for Train." | yes, the count only |
-| Undo of a workout's finish | "Train, back to 1 of 3." | no |
+| A finished workout counts for Train | "Push A counted for Train, 2 of 3." | the finish's own |
+| Undo of a workout's finish | "Push A taken back. Train 1 of 3." | no |
 | Hold the count to pause the week | "Read paused this week." | yes |
 | A habit name Tess doesn't know ("habit sing") | nothing: it falls through to a task | |
 
 - **Holding the count** (0.7s, a label-word hold) pauses or resumes this week. It's the only pause control, and it's rare enough to sit behind a hold.
-- **A rule-counted dab**, tapped, says "Push day A, Tue 18:20" and zooms to the workout.
+- **A rule-counted dab**, tapped, says "Push A, Tuesday 6:20 pm" and zooms to the workout.
 
 ### Never
 Streaks, flames, chains, "best", "missed", "only", red, rings on missed days, percentages, or a history chart.
@@ -69,3 +77,28 @@ Streaks, flames, chains, "best", "missed", "only", red, rings on missed days, pe
 | Classes, actions, ledgers, the grammar rows (ghost that waits for a bare number, explicit prefixes, habit names) | `TesseraCore`, `TesseraTess` | Core |
 | Body weight page, its ghost and the BODY WEIGHT link word | `Features/BodyWeight/`, `TrainingPage` | Builder A |
 | Habits page and the Habits link word | `Features/Habits/`, `HomeLinkLine` on Today | Builder B |
+
+## Empty states, firsts and VoiceOver (from `m3-lines.md`)
+- **Body weight with no entries:**
+  - The context line reads "No weigh-ins yet."
+  - There's no hero, no TREND label and no stroke. The writing placeholder is "bw 78.4".
+- **One entry:**
+  - The hero shows that weight.
+  - One sage dab sits above TODAY, with no stroke.
+  - Tess says "Body weight logged. 78.1 kg, the trend starts here."
+- **The second weigh-in** says the trend once: "Body weight logged. 78.3 kg, trend 78.1."
+- **A gap of more than 30 days:**
+  - The stroke breaks.
+  - The lines count from the reseed day, with "The trend starts again here."
+- **Habits with no habits:**
+  - "No habits yet." sits under the hero.
+  - The placeholder is "new habit read 5 a week".
+  - Creating one says "Read added, 5 times a week."
+- **Past the target:** it reads "**6** of 5", with no badge and no colour change.
+- **Deleting a habit:**
+  - Tess says "Read deleted." with a 10s UNDO.
+  - The UNDO says "Read is back."
+- **VoiceOver:**
+  - Use `m3-lines.md` §6 as written. The stroke gets an `AXChartDescriptor`.
+  - The ghost has Keep, Change weight and Dismiss actions.
+  - The count has Pause this week and Resume this week actions.
