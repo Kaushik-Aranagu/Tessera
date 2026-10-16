@@ -101,3 +101,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [speak-first-use.md](speak-first-use.md) | Builder B: Speak first-use script, permission paths and lines (draft, copy proposed until the Design sheet lands) |
 | [plan-my-day-dryrun.md](plan-my-day-dryrun.md) | Core: 7 real-shaped days with the exact Plan my day context pack, privacy and size checks, expected wording |
 | [light-day.md](light-day.md) | Core: on-phone rule for the Plan my day "light day" flag, 20 fixture days |
+| [calendar-pack.md](calendar-pack.md) | Core + Builder B: smallest EventKit read for Plan my day, permission line, 10 fixture days |
