@@ -128,10 +128,12 @@ private struct WorkoutContent: View {
         // The set block keeps its layout; the ask field rides on the keyboard in a short sheet.
         .ignoresSafeArea(.keyboard)
         .sheet(isPresented: $isAsking) {
-            LiveAskField(isShown: $isAsking) { phrase in ask(phrase) }
-                .presentationDetents([.height(84)])
-                .presentationBackground(Theme.Colors.Workout.ground)
-                .presentationDragIndicator(.hidden)
+            LiveAskField(isShown: $isAsking, onAsk: { phrase in ask(phrase) }, onRefuse: {
+                askReply = "That looks like a Claude key. It goes in Review, under Claude."
+            })
+            .presentationDetents([.height(84)])
+            .presentationBackground(Theme.Colors.Workout.ground)
+            .presentationDragIndicator(.hidden)
         }
         .background { WorkoutField() }
         .preferredColorScheme(.dark)

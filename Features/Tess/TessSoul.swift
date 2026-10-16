@@ -117,11 +117,14 @@ struct SoulPalette {
     /// looks, screen (and a fuller halo) on dark ones.
     static func look(_ look: Look) -> SoulPalette {
         let glow = look.isDark
+        // Only on Porcelain and Celadon's pale grounds: three multiplied washes at 0.8 burn to a dark hole, so
+        // lighter stops and a fainter halo leave the warm mixing he knows from Plein. Every other look is unchanged.
+        let pale = look.field == .pigmentBloom || look.field == .glaze
         return SoulPalette(
             blend: glow ? .screen : .multiply,
-            washes: [look.live, look.tess, look.now].map(wash),
-            halo: halo(Color(hex: look.live).opacity(glow ? 0.22 : 0.16),
-                       Color(hex: look.context).opacity(glow ? 0.14 : 0.10)),
+            washes: [look.live, look.tess, look.now].map { pale ? wash($0, core: 0.58, mid: 0.42) : wash($0) },
+            halo: halo(Color(hex: look.live).opacity(glow ? 0.22 : pale ? 0.08 : 0.16),
+                       Color(hex: look.context).opacity(glow ? 0.14 : pale ? 0.05 : 0.10)),
             ring: ring(Color(hex: look.context).opacity(0.6))
         )
     }
@@ -130,17 +133,17 @@ struct SoulPalette {
     static func workout(_ look: Look) -> SoulPalette {
         SoulPalette(
             blend: .screen,
-            washes: [look.workout.signal, look.workout.tess, look.workout.rest].map(wash),
+            washes: [look.workout.signal, look.workout.tess, look.workout.rest].map { wash($0) },
             halo: halo(Color(hex: look.workout.signal).opacity(0.22), Color(hex: look.context).opacity(0.14)),
             ring: ring(Color(hex: look.workout.rest).opacity(0.6))
         )
     }
 
-    private static func wash(_ hex: UInt32) -> Gradient {
+    private static func wash(_ hex: UInt32, core: Double = 0.8, mid: Double = 0.6) -> Gradient {
         let color = Color(hex: hex)
         return Gradient(stops: [
-            .init(color: color.opacity(0.8), location: 0),
-            .init(color: color.opacity(0.6), location: 0.4),
+            .init(color: color.opacity(core), location: 0),
+            .init(color: color.opacity(mid), location: 0.4),
             .init(color: color.opacity(0), location: 1),
         ])
     }

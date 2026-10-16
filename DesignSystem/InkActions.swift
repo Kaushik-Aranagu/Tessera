@@ -124,7 +124,8 @@ private struct Veil: ViewModifier {
         content
             .background {
                 Rectangle()
-                    .fill(Theme.Colors.raised)
+                    .fill(.ultraThinMaterial)
+                    .overlay { Rectangle().fill(Theme.Colors.raised.opacity(0.82)) }
                     .mask {
                         LinearGradient(
                             stops: edge == .top

@@ -80,7 +80,7 @@ struct WorkoutGlass<S: InsettableShape>: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background {
-                shape.fill(Theme.Colors.Workout.raised)
+                shape.fill(.ultraThinMaterial)
                     .overlay { shape.fill(WorkoutPaint.glass) }
             }
             .overlay {

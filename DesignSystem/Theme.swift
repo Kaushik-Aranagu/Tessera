@@ -333,6 +333,12 @@ enum Theme {
             Color(light: concept.palette.morning.0, dark: concept.palette.morning.1)
         }
 
+        /// A pigment at rest (docs/design/no-dots.md): low contrast, 45% on light looks and 55% on dark, so colour
+        /// only arrives in a moment and then dries back to this.
+        static func restTint(_ pigment: Color) -> Color {
+            pigment.opacity(ThemeStore.shared.paintLook.isDark ? 0.55 : 0.45)
+        }
+
         /// Morning to evening along the day stroke.
         static var daySpectrum: [Color] {
             [sky, health, context, now, live]
@@ -551,6 +557,12 @@ enum Theme {
         static let house = Animation.spring(Spring(duration: 0.42, bounce: 0.12))
         /// Direct manipulation: drags, swipes, toggles under the finger.
         static let snappy = Animation.snappy(duration: 0.25)
+        /// Ink drying: the colour of a moment fading back to rest, 1.1 s on the house curve after 0.4 s. Nil under
+        /// Reduce Motion (the colour simply settles).
+        static func dry(reduceMotion: Bool) -> Animation? {
+            reduceMotion ? nil : Animation.spring(Spring(duration: 1.1, bounce: 0.12)).delay(0.4)
+        }
+
         /// Rare celebrations only.
         static let celebrate = Animation.bouncy(duration: 0.5)
         /// Per-glyph text reveals.
