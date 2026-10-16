@@ -198,7 +198,8 @@ public struct WeekFactsBuilder {
 
     nonisolated(unsafe) static var firstUseCache: [ObjectIdentifier: (revision: Int, date: Date?)] = [:]
 
-    func cooksByDay() -> [Date: [String]] {
+    /// Recipes cooked, by his day where each was cooked (its own zone; trip R12).
+    public func cooksByDay() -> [Date: [String]] {
         guard let cookClass = engine.classes[.cook] else { return [:] }
         let zones = OpZones(store: store)
         var cooks: [Date: [String]] = [:]
@@ -210,7 +211,8 @@ public struct WeekFactsBuilder {
         return cooks
     }
 
-    func tasksDoneByDay() -> [Date: Int] {
+    /// Tasks done, by his day where each was done (its own zone; trip R12).
+    public func tasksDoneByDay() -> [Date: Int] {
         guard let taskClass = engine.classes[.task] else { return [:] }
         let zones = OpZones(store: store)
         var dones: [Date: Int] = [:]
