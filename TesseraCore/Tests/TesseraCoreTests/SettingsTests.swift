@@ -222,7 +222,7 @@ struct SettingsFollowUpTests {
         let newer = try JSONEncoder().encode(settings.read())
         let olderRead = try JSONDecoder().decode(OlderSettings.self, from: newer)
         #expect(olderRead.lookDay == "Porcelain" && olderRead.restWeekday == nil)
-        // In the store, an older catalog (v8) reseeded at v9 gains the field and keeps the value.
+        // In the store, an older catalog (v8) reseeded at v10 gains the field and keeps the value.
         for classDef in store.context.all(ClassDef.self) where classDef.systemKey != nil {
             classDef.packageVersion = 8
         }
