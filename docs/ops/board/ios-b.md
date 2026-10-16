@@ -12,9 +12,13 @@
 - **Lane 1:** The stuck-listening fix (refused hold leaves Tess in listening; one line plus a router test; BLOCKS the pin).
 - **Lane 2:** #366's re-recorded clip on its head, then Plan my day (53) on ios/plan-home; after #366 merges, the one batch in Next.
 
-**Shutdown (Research 148):** SH2's screen half (Shutdown on screen holds the close; draft kept until 4 am); no Shutdown prompt over a live workout, it shows after Finish.
+**House copy sweep, Builder B's 9 (Research `docs/research/house-copy-sweep.md` (37 misses at 0eca9bb; 12:04 PM PT Oct 16)):** with the receipts and labels PR: ReviewWeek.swift:175 names the lift ("Bench best"); Home times read "6:30 pm", never "18:30" (NowPage.swift:294, HomeQueue.swift:370; Home is not a log, only the Day log keeps its 24-hour column); R1/R2 already listed; the rest per the file.
 
-**Day marks (Research 147 DG4):** on a marked day Home drops "Legs A is a tap away." and its Start key (NowPage.swift:396-414) and shows the mark line once Design confirms the wording.
+**Claude soul emitters (12:00 PM PT Oct 16), after Core's askClaude routing lands:** emit .askClaude, .claudeDone and .claudeFailed through `model.soul.handle` from ClaudeTessModel, Plan my day, and the link and photo reads, so Builder A's working state fires on real asks, not only the Settings key check.
+
+**Shutdown (Research 148):** SH2's screen half (Shutdown on screen holds the close; draft kept until 4 am); no Shutdown prompt over a live workout, it shows after Finish. Slot C and F2 read "… Tap any for later." (Design f0c71e7).
+
+**Day marks (Research 147 DG4):** on a marked day Home drops "Legs A is a tap away." and its Start key (NowPage.swift:396-414) and shows Design's mark line (f0c71e7: "Rest today. Legs A waits for tomorrow.").
 
 **Settings Rest day row (Research 146 RG4):** a Rest day row in Settings for `restWeekday`, third person ("Rest day: Sunday."), once Core's reader lands.
 

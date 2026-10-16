@@ -7,7 +7,7 @@
 - [x] The stuck-listening fix (Builder B): #446, 0eca9bbe.
 - [x] #422 secret-word wall + $50 cap (5af8f2c2, Catalog v9).
 - [ ] MU2 (Core): money, body and health phrases never reach Claude, incl. CA6 answerQuery allow-list and CA7 screens before the offline inbox add. (decisions.md 11:35 AM PT; QA A1, Research MW1)
-- [ ] A2 (Core): the inbox retry goes through the router walls, inside MU2 or a tiny PR beside it.
+- [ ] A2 (Core): the inbox retry goes through the router walls, inside MU2 or a tiny PR beside it, with a test that the inbox refuses a queued secret word and a queued money phrase (master has no readWaiting caller, so the gate's I2 alone would pass trivially).
 
 ## 2. Riders (in only if merged before the last blocker)
 - [ ] Paste/link SecretWords wall (Core).
@@ -23,6 +23,7 @@
 - [ ] CI green on the pin commit.
 
 ## 4. Tell everyone (one message each, through the coordinator)
+- Script: `../research/next-build-script-v9.md` (Research 44 steps, run in order). Gate numbers (12:02 PM PT Oct 16): the v5 copy has 366 rows (the 8:56 AM gate read); any other count stops the gate until Builder A explains it. The timed v5 restore fails above 3.23 s (the 2.23 s before-restore time + 1 s).
 - [ ] Builder A: run the gate on the pin (`../research/next-build-script.md`, M0 to M4): upgrade over the v5 backup copy, 366 v5 rows byte-identical, timed v5 restore against the +0.7 s before number (slow = gate failure), an older build opening the v9 store. Then record Design 66's 3-minute Porcelain walk.
 - [ ] QA: read the gate run. Design: pass the 66 walk.
 - [ ] Coordinator: merge #403 and #407 (re-check heads), Builder B's post-#366 batch goes out.

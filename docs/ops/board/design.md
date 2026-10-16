@@ -12,7 +12,7 @@
 
 **After Kaushik's phone review (build cut 2:05 PM Pacific):** his look-and-feel feedback goes ahead of everything in Next. Watch-points sent to Product for `review-session.md`.
 
-**Confirm (Research 147, day marks):** "Today, rest day. Legs A waits for tomorrow." on Home, "Rest today." on the widget, "back on today" clears the mark; plus the yesterday mark's receipt ("Yesterday, rest day.").
+**Rule (Research house-copy sweep):** Home's "next, at half past six" (already D1: digits, "5:30 pm") and the Review hero: "All six sessions in" or "All six sessions". Tell Research and Builder B.
 
 **Next (Oct 16, 11:45 AM PT):** the numbered list below is done through 32 (22 = day-reel.md, 23 = empty-states.md, 27 = day-seams.md closed). Design is ahead of the builders, so lane 2 now takes only build-ready work: recordings of each builder PR as it lands, the audit's follow-ups as owners ask, and his own asks (Pantry and parallel steps stay later, per Product).
 
