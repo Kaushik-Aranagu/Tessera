@@ -30,6 +30,7 @@
 - QA (#428) lows: `previousBest` has no callers (wire or drop); the `.target` comment (#397 L1); the three soul router tests on real time, about 12 s (#402 L4, use a test clock); `isAskWaiting` sticking (#402 L5, already on working); the demo clamp from 03:55 to 04:00 (#405 L1); `OpZones(store:)` built once per row (#391 L1); `Theme.voice(size: 21)` to a type token (#381 L4); long custom exercise names (#381 L2); the plan editor's ObjectHandle link (#359).
 
 **Next:**
+0k. (Research shutdown-evening; decisions 1:06 PM PT) Shutdown and the 10 pm close wait for Finish on a live or paused workout, with Core 0y. The finish view uses Format.clock (WorkoutFinishView.swift:97). The 7 am wake is SoulRouter.swift:72 (0c).
 0j. (Research `post-pin-403-407.md`; decisions 12:58 PM PT) After the pin is named:
 - Rebase #403 on master, resolving BottomChrome.swift and TessSoul.swift against #453's working overlay.
 - Swap the raw withAnimation (TessSoul.swift:80,82) and .animation(.spring) (SoulEyes.swift:142) for MotionPolicy.

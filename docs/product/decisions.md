@@ -4,6 +4,54 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+**1:08 PM PT Oct 16: PIN NAMED, a36b161b7294596848a319c0cc0fc50a3b25f2ee** (master after M1 #498, 1:07 PM PT). DECIDED.
+
+Checked on the SHA:
+- Catalog v9 (SystemCatalog.swift:350).
+- 0bff60b, 70112f9 and 7b321d2 are ancestors.
+- No #403 or #407 merge.
+
+It carries:
+- #366 Home lines, with the 4 am day label.
+- #451 MU2 + A2.
+- #422 secret words and the $50 cap.
+- #446 stuck listening.
+- #454 paste/link wall and #457 Siri I3.
+- #471 B1 and the privacy follow-ups.
+- #475 B5/B6 newer-catalog refusal.
+- #494 T1/P1.
+- #498 M1.
+- The trip rows.
+
+Not in: P14 (Siri PrivateFacts), ", best" in DayStory (it still says ", PR" at :225), and the pre-#422 note pass. These ride the next build.
+
+Next steps: Builder A runs the v9 gate (V1-V6, test.sh "All green") and Design's 9-beat walk, then Step 0, then installs in place over Wi-Fi under his standing approval. After that:
+- #403 rebased.
+- #407 once the pin is on his phone.
+
+**1:06 PM PT Oct 16: Shutdown evening (Research shutdown-evening.md asked).** DECIDED, all six of Research's picks.
+
+The 9 to 10 pm hero:
+- Once Shutdown is built, the hero from 9 to 10 pm is Shutdown.
+- Until then, Now shows "tomorrow, first" (12:35).
+- shutdown-flow.md and Design m4 §7 change "evening" to "night".
+
+What holds Shutdown:
+- A paused workout, the same as a live one.
+- A running cook, until DONE or the clock ends.
+
+Wording:
+- A secret-word task shows as "Private task" on the hero, the widget and the Lock Screen.
+- The first-Shutdown line is "Tap any for later."
+
+Trips: the 10 pm close uses the phone's local time.
+
+**1:05 PM PT Oct 16: Kitchen week v1 (Research kitchen-week-day-one.md asked).** DECIDED, all three of Research's picks.
+- Kitchen week v1 is Design 67 inside Groceries and Home, with no page of its own.
+- "what's for dinner" becomes a grammar rule (Core).
+- Move and DONE receipts use short names: "Tacos, Friday." and "Tacos, cooked."
+Also decided: a dated cook task ("cook tacos tuesday") adds that recipe's share to Groceries once, and skipping or deleting the meal takes the share back.
+
 **1:00 PM PT Oct 16: Review week story (Research review-week-story.md asked).** DECIDED, all eight of Research's picks.
 
 How the week is counted:

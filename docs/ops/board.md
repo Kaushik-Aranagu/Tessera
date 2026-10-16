@@ -1,5 +1,7 @@
 # Tessera board (index)
 
+**PIN (1:08 PM PT Oct 16): a36b161b7294596848a319c0cc0fc50a3b25f2ee.** Builder A runs the v9 gate, the Design walk and Step 0, then installs it under his standing approval.
+
 **Install rule (12:37 PM PT Oct 16):** standing approval removes asking him, not the gates. Only the named pin SHA in product/pin-checklist.md installs, never master.
 
 *Only the planning lead (Product lead thread) edits this file. Each team's queue lives in its own file under `board/`, and only that team's lead edits it. Updated 2026-10-15. First phone build: PRs cut at 2:05 PM Pacific (moved from 12:45 and 1:05 PM), then the final build; review guide in `../product/review-session.md`.*
