@@ -227,6 +227,10 @@ public enum TessTools {
         }
     }
 
+    /// What answerQuery may count: training, tasks, notes, lists and the kitchen. Never a money or body class.
+    static let countable: [SystemCatalog.Key] = [.workout, .exerciseEntry, .set, .routine, .exercise, .task, .note,
+                                                 .list, .listItem, .recipe, .cook, .ingredient]
+
     /// Read-only: counts of things over a span, answered on the phone. (The full query AST is M3 slice 4; this is
     /// the first slice of it: count, from one class, during today / this week / this month.)
     static var answerQuery: Tool {
@@ -236,8 +240,11 @@ public enum TessTools {
                  ("during", .nullable(.choice(["today", "this week", "this month"], "When"))),
              ])) { args, call in
             let from = try args.string("from")
+            // Only the classes on the allow-list (Research 145 CA6): money, body and his own classes are never
+            // counted for Claude, and neither are Tess's own records.
+            let countable = Set(Self.countable.compactMap { call.engine.classes[$0]?.id })
             guard let classDef = call.store.allClasses().first(where: {
-                IngredientLine.key(for: $0.name) == IngredientLine.key(for: from)
+                countable.contains($0.id) && IngredientLine.key(for: $0.name) == IngredientLine.key(for: from)
             }) else { throw TessToolError("nothing called \(from)") }
             let objects = call.store.objects(of: classDef)
             let calendar = Calendar.current

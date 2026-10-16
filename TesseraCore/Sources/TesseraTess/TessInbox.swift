@@ -24,9 +24,10 @@ public struct TessInbox {
     @discardableResult
     func add(_ phrase: String, at date: Date) -> ObjectRecord? {
         let text = phrase.trimmingCharacters(in: .whitespacesAndNewlines)
-        // Never a key, never money (it would go to Claude later; MU2), never the same phrase twice.
+        // Never a key, a secret, money or a body fact (it would go to Claude later; MU2, Research 138 MW4 and 139),
+        // never the same phrase twice.
         guard let waitingClass = classes[.tessWaiting], !text.isEmpty, !looksLikeClaudeKey(text),
-              !TessMoneyScreen.isMoneyShaped(text),
+              !SecretWords.mentions(text), !PrivateFacts.isWalled(text),
               !waiting().contains(where: { $0.title == text }) else { return nil }
         let item = store.create(waitingClass, title: text)
         item.createdAt = date
@@ -60,6 +61,11 @@ public extension TessCaptureEngine {
         let inbox = TessInbox(store: engine.store, classes: engine.classes)
         var captures: [TessCapture] = []
         for item in inbox.waiting() where claude.isAvailable(for: .capture) {
+            // Queued before the walls (Research 139): a secret, money or body phrase leaves the inbox unread.
+            if SecretWords.mentions(item.title) || PrivateFacts.isWalled(item.title) {
+                inbox.remove(item)
+                continue
+            }
             var request = TessRequest(text: item.title, context: context, use: .capture)
             request.context.commitImmediately = false
             engine.attribution = (claude.route, claude.modelName)

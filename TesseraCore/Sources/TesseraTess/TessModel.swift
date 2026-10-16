@@ -72,11 +72,11 @@ public struct TessRouter {
         var asked: TessCapture?
         // A secret word never leaves the grammar (Research 134): no on-device model, no Claude, whatever the switch.
         let secret = SecretWords.mentions(request.text)
-        // Money stays on the phone (MU2): a money-shaped phrase the grammar didn't take goes to the on-device model or
-        // to "Didn't catch that.", never to Claude, whatever the switch says.
-        let money = TessMoneyScreen.isMoneyShaped(request.text)
+        // Money and body facts stay on the phone (MU2, Research 138 MW1): one the grammar didn't take goes to the
+        // on-device model or to "Didn't catch that.", never to Claude, whatever the switch says.
+        let walled = PrivateFacts.isWalled(request.text)
         for model in models where model.isAvailable(for: request.use)
-            && !(secret && model.route != .grammar) && !(money && model.route == .claude)
+            && !(secret && model.route != .grammar) && !(walled && model.route == .claude)
         {
             engine.attribution = (model.route, model.modelName)
             let result = await model.run(request, engine: engine)

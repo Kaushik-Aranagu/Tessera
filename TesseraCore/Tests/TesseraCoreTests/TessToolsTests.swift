@@ -75,6 +75,13 @@ struct TessToolsTests {
         } catch let answer as TessToolAnswer {
             #expect(answer.line == "1 note.")
         }
+        // CA6 (Research 145): only allow-listed classes count; his own classes (a spend, his weight) and Tess's never.
+        store.createClass(name: "Spend", parent: nil)
+        for from in ["spend", "settings", "tess memory", "tess call"] {
+            #expect(throws: TessToolError.self, "\(from)") {
+                try call("answerQuery", #"{"from":"\#(from)","during":null}"#, engine)
+            }
+        }
         #expect(throws: TessToolError.self) {
             try call("logSet", #"{"exercise":"underwater basket weaving","weight":1,"reps":1,"sets":1,"unit":"kg"}"#,
                      engine)
