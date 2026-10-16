@@ -192,6 +192,9 @@ enum DemoData {
             try? store.set("startsAt", to: .date(anchor.addingTimeInterval(offset * 60)), on: task)
             try? store.set("length", to: .duration(minutes * 60), on: task)
             try? store.set("isDone", to: .bool(done), on: task)
+            if done {
+                try? store.set("doneAt", to: .date(anchor.addingTimeInterval((offset + minutes) * 60)), on: task)
+            }
         }
 
         let workout = store.create(workoutClass, title: "Push Day A")
