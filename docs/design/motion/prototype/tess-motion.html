@@ -1126,7 +1126,7 @@ function drawLockScreen(go, t, alpha = 1) {
   ctx.fillStyle = wall; ctx.fillRect(0, 0, W, H);
   ctx.restore();
   const cream = SKY.cream;
-  text('Thursday 16 October', 196, 92, 16, cream, 500, 'center', .8 * alpha);
+  text('Thursday, October 16', 196, 92, 16, cream, 500, 'center', .8 * alpha);
   text('7:42', 196, 212, 88, cream, 300, 'center', alpha);
   // The face: the system's material, clipped, with the two washes.
   const F = { x: 16, y: 300, w: 361, h: 160, r: 24 };
@@ -1199,10 +1199,11 @@ SCENES.outside = () => {
         text('running now', 24, 186, 21, LOOK.context, 500);
         text('Push A, bench set 5', 24, 268, 34, LOOK.ink, 600);
         text('RESUME PUSH A', 24, 296, 16, LOOK.ink, 700);
-        stroke(24, 369, 304, 1.5, LOOK.ink, .22); stroke(24, 24 + 345 * .48, 304, 1.5, LOOK.ink, 1);
+        // Running, not paused: the key's fill is liveInk (41.5), and UNDO under her line is liveInk too.
+        stroke(24, 369, 304, 1.5, LOOK.ink, .22); stroke(24, 24 + 345 * .48, 304, 1.5, LOOK.live, 1);
         text('NEXT', 24, 388, 16, LOOK.inkSoft, 600);
         HOME41.rows.forEach((r, i) => { const y = 440 + 46 * i; text(r[0], 24, y, 21, LOOK.ink, 500); if (r[1]) text(r[1], 369, y, 16, LOOK.inkSoft, 500, 'right'); });
-        if (t > line) { const a = ramp(t, line, .3); text('UNDO', 24, 812, 16, LOOK.ink, 700, 'left', a * .9); stroke(24, 24 + width('UNDO', 16), 818, 1.5, LOOK.ink, a); }
+        if (t > line) { const a = ramp(t, line, .3); text('UNDO', 24, 812, 16, LOOK.live, 700, 'left', a * .9); stroke(24, 24 + width('UNDO', 16), 818, 1.5, LOOK.live, a); }
         const cover = 1 - ramp(t, fwd, .38, houseCurve); // the Lock Screen gives way to the app (the system's transition)
         if (cover > 0) drawLockScreen(3.0, t + 7, cover);
       },
