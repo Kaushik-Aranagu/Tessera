@@ -24,3 +24,19 @@ PR head 1bc173f on base f867f50. Three files: TessGrammar+Lift.swift, TessGramma
 - **Same hole, low:** a custom equipment `increment` (FixedLoads strides from 0, so the lightest is the increment, often 2.5) and the band or no-kit default (2.5 steps). There, "3x8" logs 3 kg. No built-in exercise uses bands, so the rule above covers this if it applies to every kit except bodyweight.
 
 Not data-unsafe: each case is one visible set with a receipt and UNDO.
+
+## Addendum: new head f687e16 (F3 follow-up, rebased on 620878b)
+Re-reviewed f687e16 (TessGrammar+Lift.swift, SetLossTests.swift). The rule the coordinator gave Core: on any non-bodyweight kit, a bare N×M with N ≤ 10 and no "at" or unit never writes N kg. It asks, or Q8's set-count ask decides when a last weight is in focus.
+
+**Verdict: PASS with nothing in focus. One should-fix remains with a last weight in focus (F4).**
+- **Nothing in focus: closed for every kit.** The block at TessGrammar+Lift.swift:51-61 no longer looks at detents or kit. Any non-bodyweight lift with a bare N ≤ 10, no unit and no last weight asks "at what weight?" (:55-57). That covers barbell, machine, cable, dumbbell, kettlebell, band, no kit and custom increments. Tested by F3a-F3d and F3g.
+- **A unit said logs:** "leg press 5 kg x 5" logs 5 kg (`unitSaid`, set in `read` before the check; F3f).
+- **"at N" off the kit's loads:** a small "at N" (≤ 12) that matches no detent, after converting pounds, now asks instead of going to the model as a time (:69-73). So "curls 3x10 at 5" asks (F3e) and "bench 3x5 at 7" asks (QA274, now an ask).
+- **In focus, N ≤ 6 and under half the last weight:** the set-count ask, as in Q8 (:58-61). Tested for Bench at 80 and Leg Press at 100.
+
+### F4 (should-fix): in focus, N from 7 to 10 still logs N kg
+With a last weight in focus, the only ask is `first <= 6, first < last.weight / 2` (:58). Anything else falls through to the normal parse. So with Bench at 80 kg in focus, "bench 8x8" logs **8 kg × 8**, below the 20 kg bar. With Lat Pulldown at 55 in focus, "lat pulldown 10x10" logs 10 kg. The previous head caught the barbell case with its lightest-load check, so this is a regression for N from 7 to 10 below the bar.
+**Fix:** inside the in-focus branch, ask for the set count whenever `first < last.weight / 2`, for any N ≤ 10 (drop `first <= 6` for a named lift; Q8's 6 stays for a bare "10x8"). If N is close to the last weight, it logs, which is right ("curls 8x10" at 10 kg last). Add rows: Bench at 80 in focus + "bench 8x8" gives the set-count ask; Lat Pulldown at 55 in focus + "lat pulldown 10x10" gives the set-count ask.
+
+### Low
+- **F5:** "bench 3 sets of 8 at 7" logs 3×8 at 7 kg. The sets-said path removes "at" (:12-16), so `weightAfterAt` is never set, and the small-"at N" ask at :69 doesn't apply. Set `weightAfterAt` when the "sets of" phrase is followed by "at N".
