@@ -47,14 +47,14 @@ knows which things it reads or changes, so the readers go there.
 ### Idea 2: she wakes with you
 | | |
 |---|---|
-| Trigger | `firstOpenOfDay`: the first foreground after the 04:00 day boundary (`AppClock`, the same boundary as everything else). The router emits it from `foregrounded` and keeps "woke on" per day. |
+| Trigger | `firstOpenOfDay`: the first foreground of the day (`AppClock`'s 04:00 boundary) that lands outside quiet hours (23:00 to 07:00). The router emits it from `foregrounded` and keeps "woke on" per day. A foreground in quiet hours is idea 5's wake, not this one, and doesn't count the day as woken. |
 | What she does | Her eyes are closed (lids at 0.25) for 1.0 s after the page arrives, then open over 400 ms, ease-out. At 1.5 s comes one stretch: the mains spread 22% wider and about 20% shorter (x × s, y × (2 − 0.98 s), s 1 → 1.22) over 600 ms, ease-in-out, then back over 700 ms on the house curve. One blink follows at 3.4 s. The mouth stays at rest. |
 | Skipped when | The first open lands in a live workout, in Speak (a notification's speak action), or with an ask waiting. In those cases his moment wins, and the day counts as woken. |
 | Eyes off | The stretch only. |
 | Reduce Motion | No stretch. The eyes open with a 200 ms crossfade. |
 | Low Power | The same as Reduce Motion. |
 | Haptic | None. |
-| Test | Two foregrounds on one day give one wake. A foreground at 03:59 and another at 04:01 give one wake, at 04:01. |
+| Test | Two foregrounds on one day give one wake. Foregrounds at 03:59, 05:30 and 07:01 give one wake, at 07:01. |
 
 ## 18b. Stroke her (idea 3) and she wears the day (idea 4)
 
