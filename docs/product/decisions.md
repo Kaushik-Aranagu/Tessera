@@ -4,6 +4,14 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+- **Nights, timers and private notes** (3:46 AM PT Oct 16, Research 134 and 135, #384; QA F2 on #381).
+  - **CL9: his own timers ring at any hour, haptic included.** "No haptic after 23:00" covers moments the app raises, not a kitchen timer he set.
+  - **CL6: the kitchen timer must fire.** It is a bug that StartKitchenTimer schedules no notification. Core schedules a local notification when the timer starts and cancels it on stop or UNDO.
+  - **CL10: the habits check-in** trigger is Shutdown, as drawn in Design 64: "Read today?" with DONE or NOT TODAY.
+  - **CL11: "A closed day never asks"** covers only asks the app raises. His own captures still get receipts, and his own timers still ring.
+  - **CL1, CL2, CL3, yes.** A pending set ask expires with its workout or at the day's close, so a "2 sets" said at 00:42 never lands in a finished workout. The closed-day state and the quiet-hours gate ship before the first app ask does.
+  - **Q1: a private note rides in his iCloud Drive backup,** since the folder is his. It never enters memory, recent lines, packs or the miss log. The NE1 fix includes SW2: the 04:00 turnover skips private notes, so "note: wifi password is …" is private too.
+  - **F2: finishing with the last set gets a 10 s UNDO.** AND FINISH shows UNDO on the finish view, and it takes back the set and the finish together ("Push A, back on.").
 - **Shutdown and kitchen copy** (3:43 AM PT Oct 16, Design 63 `shutdown-grammar.md` fdaf0d0, QA L2 on #380).
   - **The first Shutdown ever** uses slot C once, "3 moving to tomorrow. Tap any to keep.", then slot B after that.
   - **The said-line receipt** is "Reply to the landlord, tomorrow first."
