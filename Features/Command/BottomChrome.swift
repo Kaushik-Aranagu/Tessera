@@ -587,7 +587,9 @@ extension BottomChrome {
             if let refused = await listener.start(hold: hold) {
                 holdListening = false
                 if hold {
-                    // From a hold the line shows beside the soul; the layer doesn't open.
+                    // From a hold the line shows beside the soul; the layer doesn't open. She goes back to rest
+                    // first: the line's 4 s never settles her while she's listening.
+                    model.soul.handle(.heardNothing)
                     say("\(refused.line) \(refused.action) still works.")
                 } else {
                     withTesseraAnimation(reduceMotion: reduceMotion) { refusal = refused }
