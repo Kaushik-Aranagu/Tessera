@@ -27,7 +27,7 @@ final class WorkoutSession {
     var rpe: Double?
     /// The effort stop-slider is hidden until you pull up on the reps.
     var isEffortShown = false
-    var restEndsAt: Date?
+    private(set) var restEndsAt: Date?
     private(set) var restTotal: TimeInterval = 0
     /// Increments on every change to the session's shape (a set logged or undone, a swap, a reorder). Drives the
     /// seat animation, haptics and the Live Activity.
@@ -37,7 +37,7 @@ final class WorkoutSession {
     /// Why the dial opened where it did ("Same weight; aim for 8 reps on every set"), from the ledger.
     private(set) var targetReason: String?
     /// The line under the countdown after a rest drag ("+15. Drag again for more.").
-    var restNote: String?
+    private(set) var restNote: String?
     /// The top-set check, when the first working set ran heavy.
     private(set) var topSetCheck: TopSetCheck?
     /// When the workout was finished (the gather plays; FinishWorkout has been performed).
@@ -152,7 +152,30 @@ final class WorkoutSession {
     /// Skips the planned set (e.g. Skip on the Lock Screen once rest is over): the exercise needs one set fewer.
     /// Something outside the live screen wrote to this workout (Tess, an intent): re-read sets and defaults.
     func refreshAfterExternalWrite() {
+        dropWhatHungOnGoneSets()
         loggedCount += 1
+    }
+
+    /// A set taken back from outside (Siri, the Lock Screen, Tess) takes its rest, Undo and best with it.
+    private func dropWhatHungOnGoneSets() {
+        let gone = { (id: UUID) in self.model.store.object(id: id).map(\.isDeleted) ?? true }
+        var changed = false
+        if let seated = lastSeated, gone(seated.setID) {
+            if restEndsAt != nil {
+                endRest()
+            }
+            lastSeated = nil
+            changed = true
+        }
+        if let undoable, gone(undoable.setID) {
+            self.undoable = nil
+            changed = true
+        }
+        let before = bests.count
+        bests.removeAll { gone($0.setID) }
+        if changed || bests.count != before {
+            persistRest()
+        }
     }
 
     func skipSet() {
@@ -423,6 +446,12 @@ extension WorkoutSession {
     }
 
     // MARK: Rest
+
+    /// Ends the rest without a skip note (its set was taken back).
+    func endRest() {
+        restEndsAt = nil
+        restNote = nil
+    }
 
     func skipRest() {
         guard restEndsAt != nil else { return }

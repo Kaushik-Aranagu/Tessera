@@ -54,8 +54,7 @@ extension WorkoutSession {
             editNote = "Set \(row.number) removed."
             // The rest that is running belongs to the latest set; removing that set ends it, as Undo does.
             if undoable?.setID == row.id || lastSeated?.setID == row.id {
-                restEndsAt = nil
-                restNote = nil
+                endRest()
             }
             if undoable?.setID == row.id {
                 undoable = nil

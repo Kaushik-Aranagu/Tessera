@@ -1,6 +1,7 @@
 import AppIntents
 import SwiftUI
 import TesseraCore
+import TesseraIntents
 import TesseraLegacyStore
 
 @main
@@ -76,11 +77,17 @@ struct TesseraApp: App {
                 }
                 if phase == .active {
                     model.tidyProcesses()
+                    // Siri or the Lock Screen may have taken a set back while we were away.
+                    model.session?.refreshAfterExternalWrite()
                 }
                 if phase == .active, !didWarmUp {
                     didWarmUp = true
                     Task { await model.ledger.warmUp() }
                 }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .tesseraSetTakenBack)) { _ in
+                model.session?.refreshAfterExternalWrite()
+                model.touch()
             }
             .onOpenURL { url in
                 if url.host() == "workout", model.session != nil {

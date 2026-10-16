@@ -435,6 +435,30 @@ struct WorkoutRestRelaunchTests {
         #expect(WorkoutSession(workout: session.workout, model: model).restEndsAt == endsAt)
     }
 
+    /// Research's op-log check: undoing a set must leave no rest countdown behind, not even after a relaunch.
+    @Test func anUndoneSetLeavesNoRestAfterARelaunch() throws {
+        let (model, session) = try startedSession()
+        session.logSet()
+        #expect(session.restEndsAt != nil)
+        session.undoLastSet()
+        let process = try #require(ProcessTable(engine: model.engine).process(for: session.workout))
+        #expect(process.resumePoint?.extras[WorkoutSession.RestKey.endsAt] == nil)
+        #expect(WorkoutSession(workout: session.workout, model: model).restEndsAt == nil)
+    }
+
+    /// Siri's "Undo Last Set" takes the set back from outside; the open workout drops the rest, Undo and best.
+    @Test func aSetTakenBackBySiriTakesItsRestAndUndo() throws {
+        let (model, session) = try startedSession()
+        session.logSet()
+        #expect(session.restEndsAt != nil)
+        let taken = try #require(model.engine.takeBackLatestSet(by: .intent))
+        #expect(taken.number == 1)
+        session.refreshAfterExternalWrite()
+        #expect(session.restEndsAt == nil)
+        #expect(!session.canUndo)
+        #expect(WorkoutSession(workout: session.workout, model: model).restEndsAt == nil)
+    }
+
     @Test func aRestThatEndedWhileTheAppWasGoneIsOver() throws {
         let (model, session) = try startedSession()
         session.logSet()

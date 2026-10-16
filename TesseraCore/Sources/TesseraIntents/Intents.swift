@@ -53,9 +53,14 @@ public struct LogNextSetIntent: AppIntent {
 }
 
 /// Undoes the most recent set, from anywhere (the Lock Screen's Live Activity uses it).
+public extension Notification.Name {
+    /// Posted after an intent takes a set back, so a running workout can drop the rest and best that hung on it.
+    static let tesseraSetTakenBack = Notification.Name("TesseraSetTakenBack")
+}
+
 public struct UndoLastSetIntent: AppIntent {
     public static let title: LocalizedStringResource = "Undo Last Set"
-    public static let description = IntentDescription("Removes the most recently logged set. Undo brings it back.")
+    public static let description = IntentDescription("Takes back the most recently logged set, and only that set.")
 
     @Dependency private var runtime: TesseraRuntime
 
@@ -63,10 +68,12 @@ public struct UndoLastSetIntent: AppIntent {
 
     @MainActor
     public func perform() async throws -> some IntentResult & ProvidesDialog {
-        guard runtime.engine.undoLatestSet() != nil else {
+        guard let taken = runtime.engine.takeBackLatestSet(by: .intent) else {
             return .result(dialog: "No set to undo.")
         }
-        return .result(dialog: "Last set removed.")
+        // The open workout screen, its rest and the Live Activity follow the store, not this intent.
+        NotificationCenter.default.post(name: .tesseraSetTakenBack, object: nil)
+        return .result(dialog: "Set \(taken.number) taken back.")
     }
 }
 

@@ -162,23 +162,48 @@ public final class ActionEngine {
         return record
     }
 
-    /// Undoes the newest action that logged a set (typed, the prefill hold, the Lock Screen's Done, Tess) in the
-    /// workout that's still going. Never reaches into a finished workout.
+    /// A set taken back by `takeBackLatestSet()`: the record that undid it and its number in its exercise.
+    public struct TakenBackSet {
+        public let record: OpRecord
+        /// 1-based, counted among the exercise's sets before it went.
+        public let number: Int
+    }
+
+    /// Takes back exactly one set: the newest one logged (typed, the prefill hold, the Lock Screen's Done, Tess) in
+    /// the workout that's still going. Never reaches into a finished workout, and never takes more than that set:
+    /// when the action that logged it also made other things (Quick Capture's "3x10 bench 80" logs three sets and
+    /// may start the workout), only the newest of its sets is deleted, through the op log, and the rest stays.
     @discardableResult
-    public func undoLatestSet() -> OpRecord? {
+    public func takeBackLatestSet(by actor: Actor = .intent) -> TakenBackSet? {
         guard let setClass = classes[.set], let workoutClass = classes[.workout] else { return nil }
         for record in history(limit: 300) where record.state != .undone {
+            var created = 0
+            var newest: ObjectRecord?
             for op in record.ops {
-                guard case let .create(objectID, classID, _, _) = op,
-                      let classDef = store.classDef(id: classID), store.isSubclass(classDef, ofClassID: setClass.id),
-                      let set = store.object(id: objectID), !set.isDeleted,
-                      let workout = store.ancestor(of: set, ofClass: workoutClass) else { continue }
-                guard store.value("endedAt", of: workout) == nil else { return nil }
-                undo(record)
-                return record
+                guard case let .create(objectID, classID, _, _) = op else { continue }
+                created += 1
+                guard let classDef = store.classDef(id: classID), store.isSubclass(classDef, ofClassID: setClass.id),
+                      let set = store.object(id: objectID), !set.isDeleted else { continue }
+                newest = set
             }
+            guard let set = newest, let workout = store.ancestor(of: set, ofClass: workoutClass) else { continue }
+            guard store.value("endedAt", of: workout) == nil else { return nil }
+            let siblings = set.parent?.orderedChildren.filter { !$0.isDeleted } ?? [set]
+            let number = (siblings.firstIndex { $0.id == set.id } ?? siblings.count - 1) + 1
+            if created == 1 {
+                undo(record)
+                return TakenBackSet(record: record, number: number)
+            }
+            guard let deletion = try? perform(DeleteObject(object: set.id), by: actor) else { return nil }
+            return TakenBackSet(record: deletion.record, number: number)
         }
         return nil
+    }
+
+    /// `takeBackLatestSet()`, returning only the record.
+    @discardableResult
+    public func undoLatestSet() -> OpRecord? {
+        takeBackLatestSet()?.record
     }
 
     // MARK: History
