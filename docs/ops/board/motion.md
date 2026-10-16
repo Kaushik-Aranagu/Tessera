@@ -2,7 +2,7 @@
 
 *Started 2026-10-16 from Kaushik's first review (11:58 PM PT Oct 15): Tess's soul gets dot eyes, roams the screen, can be dragged, fades into subtle colours while working, splits and gathers back. "Very subtle." Product edits the Next list. Rules: Speak gestures stay (tap opens Tess, double tap in 260 ms goes Home, a hold never opens the layer, so a drag starts from a hold); nothing on a page moves for the soul; colour arrives through motion and dries; 60fps with a Reduce Motion fallback; palettes from `soul-explore.md`. Builder A builds it (TessSoul.swift, SoulParameters.swift).*
 
-**Now:** 5. Done: 1 to 4 (sheet, build sheet, nine recordings with Design's fixes; repaint-vs-roam rule in `tess-motion.md` §5).
+**Now:** 8. Done: 1 to 7 (5 `tess-motion-pages.mp4`, 6 `tess-motion-reward.mp4`, 7 `tess-motion-colour.mp4` per look, with Design for review).
 
 **Next:**
 1. Dot eyes and idle life. Done when a recording shows the soul with two dot eyes that blink, look toward a new row and rest, in every look, subtle enough to ignore, with values for Builder A.
@@ -12,3 +12,6 @@
 5. The soul on every page. Done when the roam rules from item 2 are recorded on each tab page as it is now (Home after Design 41, Training at rest, Review's week, Kitchen), with where it rests and where it never goes, for Builder A.
 6. The soul's part in a reward. Done when the done pattern from `task-reward.md` (fleck to the day label after Design 41) has the soul's own beat (eyes, a small gather), under 1 s with one haptic, as a recording.
 7. Living colour in motion. Done when Design 48's palette changes (AI-14) are recorded as the soul moves between them in each look: how a change arrives, dries and never touches text, with values for Builder A.
+8. The soul while Tess listens and asks. Done when recordings show the soul in Speak's listening state, while a Claude call is out (pending ghost rows), and beside a one-ask line (`one-ask.md`: cobalt line, two ink words), without moving anything on the page or sharing the slot with UNDO.
+9. The soul outside the app. Done when the soul's still and subtle forms are drawn for the widgets, the Lock Screen rest card (Cobalt sky) and the Live Activity, with what may animate there under Apple's limits, for Builder A.
+10. Build check kit. Done when a short guide lets Builder A compare its build against each recording frame by frame (timings, eyes, roam bounds) and measure frame rate and battery with Instruments, with pass lines for QA.
