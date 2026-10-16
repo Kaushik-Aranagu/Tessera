@@ -92,3 +92,5 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [fixtures/people-names.md](fixtures/people-names.md) | Core: 40 names that are also words (Will, Rose, Bill, June...) through the M5 order, with 12 guards |
 | [undo-lines.md](undo-lines.md) | All teams: 47 write paths with their Tess line and Undo, 33 mismatches, one wording rule |
 | [empty-states.md](empty-states.md) | All teams: 14 screens with no data, what they show now and what they should say, owner per fix |
+| [starter-content.md](starter-content.md) | Core and Builder A: everything a fresh install seeds, checked against the decisions, 3 mismatches |
+| [lockscreen-lines.md](lockscreen-lines.md) | Builder A and Core: 72 Live Activity, Siri and Shortcuts strings checked against Tess voice and the undo rule |
