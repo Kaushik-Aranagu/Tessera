@@ -7,7 +7,7 @@
 
 **Shape.** One message, one word per answer, the recommended answer marked with ★. Replying "defaults" takes every ★.
 Kitchen first (it is about his week, so it reads warmest), then Money (it is about how the next slice behaves), then
-whatever Monday left open.
+Claude (item 9, written by Product, added 10:29 PM PT Oct 15), then whatever Monday left open.
 
 **Before sending (coordinator, 5 minutes).**
 - Kitchen Q2 can be read from data now: `CaptureMissLog` is on master
@@ -18,14 +18,14 @@ whatever Monday left open.
   out).
 - Fill "Still open from Monday" from his Monday reply. If he answered all five on Monday, delete the whole section and
   its line in the opener.
-- If nothing is still open, the message has 8 questions; if Monday is untouched, 13. Above 10, keep Monday's in a
-  second short message at 6:00 PM PT instead, so the morning one stays light. Change "8 quick ones" in the opener to
+- If nothing is still open, the message has 9 questions; if Monday is untouched, 14. Above 10, keep Monday's in a
+  second short message at 6:00 PM PT instead, so the morning one stays light. Change "9 quick ones" in the opener to
   the real count.
 
 ## The message (ready to paste)
 
 ```
-Morning! 8 quick ones, one word each. Reply "defaults" to take every ★. Nothing changes until you answer.
+Morning! 9 quick ones, one word each. Reply "defaults" to take every ★. Nothing changes until you answer.
 
 Kitchen, after your first week:
 1. Did you ever want to know if you already had something at home? Yes / ★No
@@ -39,8 +39,11 @@ Money, before it's built:
 7. Does "paid 650 rent" work like "spent"? ★Yes / No
 8. "Split 60 with Sam": log your half or the full 60? ★Half / Full
 
+Claude:
+9. Plan my day sends Claude your task and calendar titles (never notes, places or health). OK? ★Yes / Leave calendar out
+
 Still open from Monday:
-[paste the unanswered ones here, same wording and ★ as Monday's message, numbered on from 9]
+[paste the unanswered ones here, same wording and ★ as Monday's message, numbered on from 10]
 ```
 
 **Q2 "seen" wording** (use only if the capture-miss log shows a pasted link):
@@ -50,13 +53,13 @@ the data already says he tried. Quote only the day, never the link itself.
 
 **"Still open from Monday" lines, in Monday's wording** (copy only the ones he did not answer):
 ```
-9. Sat Push A: 17 sets. All of them? ★All / Most / Few
-10. If you miss a day, pick up where you left off? ★Yes / No
-11. When you say "2 x 10", I ask "sets or kg?". Keep asking? ★Keep / Less / Never
-12. Rest day: Sunday? ★Yes / another day / Any
-13. Do the app's weights match your gym? ★Yes / Dumbbells / Plates
+10. Sat Push A: 17 sets. All of them? ★All / Most / Few
+11. If you miss a day, pick up where you left off? ★Yes / No
+12. When you say "2 x 10", I ask "sets or kg?". Keep asking? ★Keep / Less / Never
+13. Rest day: Sunday? ★Yes / another day / Any
+14. Do the app's weights match your gym? ★Yes / Dumbbells / Plates
 ```
-Use Monday's filled-in wording for 9 and 10 (the routine name and set count from his copy) if it went out that way.
+Use Monday's filled-in wording for 10 and 11 (the routine name and set count from his copy) if it went out that way.
 Q1 about the warm-up weekend is stale by Thursday: drop it unless Monday's copy showed fewer sets than he trained.
 
 **Note on "defaults".** Replying "defaults" accepts every ★ in this message, including any of Monday's lines pasted in.
@@ -87,8 +90,10 @@ the plan as it is (a missed day rolls on, Now never says "Rest day").
 | 7 | No | "paid" stays upkeep only; no change to slice 4 | Core (no change) |
 | 8 | **Half** (★) | "split 60 with Sam" logs 30, with "split, 60 total" kept in the text | Core |
 | 8 | Full | Logs 60, with "split with Sam" in the text | Core |
-| 9-13 | Monday's | As in `training-week-one-questions.md`, Q1 to Q5 tables | As listed there |
-| 12 | **Yes** (★) or "defaults" | Logged as a new decision: Sunday off, 6 sessions a week, Now shows "Rest day" | Product logs; Core; Builder B (the line) |
+| 9 | **Yes** (★) | Nothing. Plan my day sends Claude task and calendar titles only, never notes, places or health | Product logs it; Core builds the plan request that way |
+| 9 | Leave calendar out | Plan my day sends task titles only; calendar titles never leave the phone | Product logs it; Core (the plan request); Builder B (the VIA CLAUDE line, if it names calendar) |
+| 10-14 | Monday's | As in `training-week-one-questions.md`, Q1 to Q5 tables | As listed there |
+| 13 | **Yes** (★) or "defaults" | Logged as a new decision: Sunday off, 6 sessions a week, Now shows "Rest day" | Product logs; Core; Builder B (the line) |
 
 **After he replies.**
 - "defaults": log one line in `decisions.md` with the time (PT), naming each question it covered, and the Sunday rest
