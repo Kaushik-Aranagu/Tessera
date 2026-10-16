@@ -1,0 +1,829 @@
+{
+ "told": [
+  "Trains after work on weekdays.",
+  "Cooks on Sunday and Wednesday.",
+  "Call mom means his mother."
+ ],
+ "days": [
+  {
+   "day": 1,
+   "weekday": "Mon",
+   "restDay": false,
+   "facts": {
+    "trained": true,
+    "routine": "Push A",
+    "startHour": 18,
+    "exercisesDone": 3,
+    "exercisesPlanned": 3,
+    "records": [],
+    "cook": null,
+    "tasksDone": 3
+   },
+   "moments": [
+    {
+     "id": "d1m1",
+     "now": "Mon 8:10 am",
+     "partOfDay": "morning",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Push A",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Push A today."
+      }
+     ]
+    },
+    {
+     "id": "d1m2",
+     "now": "Mon 8:40 pm",
+     "partOfDay": "night",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Push A",
+       "state": "done",
+       "endedAgoMin": 95,
+       "exercisesDone": 3,
+       "exercisesPlanned": 3,
+       "records": [],
+       "lastSameRoutineDaysAgo": null,
+       "numbers": [
+        3,
+        3
+       ],
+       "rules": "Push A done."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "day": 2,
+   "weekday": "Tue",
+   "restDay": false,
+   "facts": {
+    "trained": true,
+    "routine": "Pull A",
+    "startHour": 18,
+    "exercisesDone": 3,
+    "exercisesPlanned": 3,
+    "records": [],
+    "cook": null,
+    "tasksDone": 2
+   },
+   "moments": [
+    {
+     "id": "d2m1",
+     "now": "Tue 8:10 am",
+     "partOfDay": "morning",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Pull A",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Pull A today."
+      }
+     ]
+    },
+    {
+     "id": "d2m2",
+     "now": "Tue 8:40 pm",
+     "partOfDay": "night",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Pull A",
+       "state": "done",
+       "endedAgoMin": 95,
+       "exercisesDone": 3,
+       "exercisesPlanned": 3,
+       "records": [],
+       "lastSameRoutineDaysAgo": null,
+       "numbers": [
+        3,
+        3
+       ],
+       "rules": "Pull A done."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "day": 3,
+   "weekday": "Wed",
+   "restDay": false,
+   "facts": {
+    "trained": true,
+    "routine": "Legs A",
+    "startHour": 18,
+    "exercisesDone": 3,
+    "exercisesPlanned": 3,
+    "records": [],
+    "cook": "Chili",
+    "tasksDone": 4
+   },
+   "moments": [
+    {
+     "id": "d3m1",
+     "now": "Wed 8:10 am",
+     "partOfDay": "morning",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Legs A",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Legs A today."
+      },
+      {
+       "id": "k1",
+       "kind": "cook",
+       "title": "Chili",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Chili tonight."
+      }
+     ]
+    },
+    {
+     "id": "d3m2",
+     "now": "Wed 8:40 pm",
+     "partOfDay": "night",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Legs A",
+       "state": "done",
+       "endedAgoMin": 95,
+       "exercisesDone": 3,
+       "exercisesPlanned": 3,
+       "records": [],
+       "lastSameRoutineDaysAgo": null,
+       "numbers": [
+        3,
+        3
+       ],
+       "rules": "Legs A done."
+      },
+      {
+       "id": "k1",
+       "kind": "cook",
+       "title": "Chili",
+       "state": "done",
+       "numbers": [],
+       "rules": "Chili cooked."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "day": 4,
+   "weekday": "Thu",
+   "restDay": false,
+   "facts": {
+    "trained": true,
+    "routine": "Push A",
+    "startHour": 18,
+    "exercisesDone": 3,
+    "exercisesPlanned": 3,
+    "records": [],
+    "cook": null,
+    "tasksDone": 1
+   },
+   "moments": [
+    {
+     "id": "d4m1",
+     "now": "Thu 8:10 am",
+     "partOfDay": "morning",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Push A",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Push A today."
+      }
+     ]
+    },
+    {
+     "id": "d4m2",
+     "now": "Thu 8:40 pm",
+     "partOfDay": "night",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Push A",
+       "state": "done",
+       "endedAgoMin": 95,
+       "exercisesDone": 3,
+       "exercisesPlanned": 3,
+       "records": [],
+       "lastSameRoutineDaysAgo": 3,
+       "numbers": [
+        3,
+        3,
+        3
+       ],
+       "rules": "Push A done."
+      }
+     ]
+    },
+    {
+     "id": "d4m3",
+     "now": "Thu 6:50 pm",
+     "partOfDay": "evening",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Push A",
+       "state": "paused",
+       "exercise": "Overhead press",
+       "set": 2,
+       "targetSets": 3,
+       "pausedAgoMin": 40,
+       "numbers": [
+        2,
+        3
+       ],
+       "rules": "Overhead press paused at set 2."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "day": 5,
+   "weekday": "Fri",
+   "restDay": false,
+   "facts": {
+    "trained": false,
+    "routine": null,
+    "startHour": null,
+    "exercisesDone": 0,
+    "exercisesPlanned": 3,
+    "records": [],
+    "cook": null,
+    "tasksDone": 1
+   },
+   "moments": [
+    {
+     "id": "d5m1",
+     "now": "Fri 8:10 am",
+     "partOfDay": "morning",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Pull A",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Pull A today."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "day": 6,
+   "weekday": "Sat",
+   "restDay": false,
+   "facts": {
+    "trained": true,
+    "routine": "Pull A",
+    "startHour": 18,
+    "exercisesDone": 3,
+    "exercisesPlanned": 3,
+    "records": [],
+    "cook": null,
+    "tasksDone": 1
+   },
+   "moments": [
+    {
+     "id": "d6m1",
+     "now": "Sat 8:10 am",
+     "partOfDay": "morning",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Pull A",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Pull A today."
+      }
+     ]
+    },
+    {
+     "id": "d6m2",
+     "now": "Sat 8:40 pm",
+     "partOfDay": "night",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Pull A",
+       "state": "done",
+       "endedAgoMin": 95,
+       "exercisesDone": 3,
+       "exercisesPlanned": 3,
+       "records": [],
+       "lastSameRoutineDaysAgo": 3,
+       "numbers": [
+        3,
+        3,
+        3
+       ],
+       "rules": "Pull A done."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "day": 7,
+   "weekday": "Sun",
+   "restDay": true,
+   "facts": {
+    "trained": false,
+    "routine": null,
+    "startHour": null,
+    "exercisesDone": 0,
+    "exercisesPlanned": 3,
+    "records": [],
+    "cook": "Dal",
+    "tasksDone": 3
+   },
+   "moments": [
+    {
+     "id": "d7m1",
+     "now": "Sun 8:10 am",
+     "partOfDay": "morning",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "rest",
+       "title": "Rest day",
+       "state": "rest",
+       "numbers": [],
+       "rules": "Rest day."
+      },
+      {
+       "id": "k1",
+       "kind": "cook",
+       "title": "Dal",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Dal tonight."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "day": 8,
+   "weekday": "Mon",
+   "restDay": false,
+   "facts": {
+    "trained": true,
+    "routine": "Legs A",
+    "startHour": 20,
+    "exercisesDone": 3,
+    "exercisesPlanned": 3,
+    "records": [],
+    "cook": null,
+    "tasksDone": 1
+   },
+   "moments": [
+    {
+     "id": "d8m1",
+     "now": "Mon 8:10 am",
+     "partOfDay": "morning",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Legs A",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Legs A today."
+      }
+     ]
+    },
+    {
+     "id": "d8m2",
+     "now": "Mon 10:40 pm",
+     "partOfDay": "night",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Legs A",
+       "state": "done",
+       "endedAgoMin": 95,
+       "exercisesDone": 3,
+       "exercisesPlanned": 3,
+       "records": [],
+       "lastSameRoutineDaysAgo": 3,
+       "numbers": [
+        3,
+        3,
+        3
+       ],
+       "rules": "Legs A done."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "day": 9,
+   "weekday": "Tue",
+   "restDay": false,
+   "facts": {
+    "trained": true,
+    "routine": "Push A",
+    "startHour": 20,
+    "exercisesDone": 3,
+    "exercisesPlanned": 3,
+    "records": [
+     "Bench press"
+    ],
+    "cook": null,
+    "tasksDone": 2
+   },
+   "moments": [
+    {
+     "id": "d9m1",
+     "now": "Tue 8:10 am",
+     "partOfDay": "morning",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Push A",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Push A today."
+      }
+     ]
+    },
+    {
+     "id": "d9m2",
+     "now": "Tue 10:40 pm",
+     "partOfDay": "night",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Push A",
+       "state": "done",
+       "endedAgoMin": 95,
+       "exercisesDone": 3,
+       "exercisesPlanned": 3,
+       "records": [
+        "Bench press"
+       ],
+       "lastSameRoutineDaysAgo": 3,
+       "numbers": [
+        3,
+        3,
+        3
+       ],
+       "rules": "Push A done. Bench press record."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "day": 10,
+   "weekday": "Wed",
+   "restDay": false,
+   "facts": {
+    "trained": true,
+    "routine": "Pull A",
+    "startHour": 20,
+    "exercisesDone": 3,
+    "exercisesPlanned": 3,
+    "records": [],
+    "cook": "Chili",
+    "tasksDone": 1
+   },
+   "moments": [
+    {
+     "id": "d10m1",
+     "now": "Wed 8:10 am",
+     "partOfDay": "morning",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Pull A",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Pull A today."
+      },
+      {
+       "id": "k1",
+       "kind": "cook",
+       "title": "Chili",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Chili tonight."
+      }
+     ]
+    },
+    {
+     "id": "d10m2",
+     "now": "Wed 10:40 pm",
+     "partOfDay": "night",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Pull A",
+       "state": "done",
+       "endedAgoMin": 95,
+       "exercisesDone": 3,
+       "exercisesPlanned": 3,
+       "records": [],
+       "lastSameRoutineDaysAgo": 3,
+       "numbers": [
+        3,
+        3,
+        3
+       ],
+       "rules": "Pull A done."
+      },
+      {
+       "id": "k1",
+       "kind": "cook",
+       "title": "Chili",
+       "state": "done",
+       "numbers": [],
+       "rules": "Chili cooked."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "day": 11,
+   "weekday": "Thu",
+   "restDay": false,
+   "facts": {
+    "trained": true,
+    "routine": "Legs A",
+    "startHour": 20,
+    "exercisesDone": 3,
+    "exercisesPlanned": 3,
+    "records": [],
+    "cook": null,
+    "tasksDone": 1
+   },
+   "moments": [
+    {
+     "id": "d11m1",
+     "now": "Thu 8:10 am",
+     "partOfDay": "morning",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Legs A",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Legs A today."
+      }
+     ]
+    },
+    {
+     "id": "d11m2",
+     "now": "Thu 10:40 pm",
+     "partOfDay": "night",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Legs A",
+       "state": "done",
+       "endedAgoMin": 95,
+       "exercisesDone": 3,
+       "exercisesPlanned": 3,
+       "records": [],
+       "lastSameRoutineDaysAgo": 3,
+       "numbers": [
+        3,
+        3,
+        3
+       ],
+       "rules": "Legs A done."
+      }
+     ]
+    },
+    {
+     "id": "d11m3",
+     "now": "Thu 6:50 pm",
+     "partOfDay": "evening",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Legs A",
+       "state": "paused",
+       "exercise": "Romanian deadlift",
+       "set": 2,
+       "targetSets": 3,
+       "pausedAgoMin": 40,
+       "numbers": [
+        2,
+        3
+       ],
+       "rules": "Romanian deadlift paused at set 2."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "day": 12,
+   "weekday": "Fri",
+   "restDay": false,
+   "facts": {
+    "trained": true,
+    "routine": "Push A",
+    "startHour": 20,
+    "exercisesDone": 3,
+    "exercisesPlanned": 3,
+    "records": [],
+    "cook": null,
+    "tasksDone": 4
+   },
+   "moments": [
+    {
+     "id": "d12m1",
+     "now": "Fri 8:10 am",
+     "partOfDay": "morning",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Push A",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Push A today."
+      }
+     ]
+    },
+    {
+     "id": "d12m2",
+     "now": "Fri 10:40 pm",
+     "partOfDay": "night",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Push A",
+       "state": "done",
+       "endedAgoMin": 95,
+       "exercisesDone": 3,
+       "exercisesPlanned": 3,
+       "records": [],
+       "lastSameRoutineDaysAgo": 3,
+       "numbers": [
+        3,
+        3,
+        3
+       ],
+       "rules": "Push A done."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "day": 13,
+   "weekday": "Sat",
+   "restDay": false,
+   "facts": {
+    "trained": true,
+    "routine": "Pull A",
+    "startHour": 20,
+    "exercisesDone": 3,
+    "exercisesPlanned": 3,
+    "records": [],
+    "cook": null,
+    "tasksDone": 4
+   },
+   "moments": [
+    {
+     "id": "d13m1",
+     "now": "Sat 8:10 am",
+     "partOfDay": "morning",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Pull A",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Pull A today."
+      }
+     ]
+    },
+    {
+     "id": "d13m2",
+     "now": "Sat 10:40 pm",
+     "partOfDay": "night",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "workout",
+       "title": "Pull A",
+       "state": "done",
+       "endedAgoMin": 95,
+       "exercisesDone": 3,
+       "exercisesPlanned": 3,
+       "records": [],
+       "lastSameRoutineDaysAgo": 3,
+       "numbers": [
+        3,
+        3,
+        3
+       ],
+       "rules": "Pull A done."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "day": 14,
+   "weekday": "Sun",
+   "restDay": true,
+   "facts": {
+    "trained": false,
+    "routine": null,
+    "startHour": null,
+    "exercisesDone": 0,
+    "exercisesPlanned": 3,
+    "records": [],
+    "cook": "Tacos",
+    "tasksDone": 1
+   },
+   "moments": [
+    {
+     "id": "d14m1",
+     "now": "Sun 8:10 am",
+     "partOfDay": "morning",
+     "items": [
+      {
+       "id": "w1",
+       "kind": "rest",
+       "title": "Rest day",
+       "state": "rest",
+       "numbers": [],
+       "rules": "Rest day."
+      },
+      {
+       "id": "k1",
+       "kind": "cook",
+       "title": "Tacos",
+       "state": "planned",
+       "numbers": [],
+       "rules": "Tacos tonight."
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "awareTargets": {
+  "d2m1": "usual",
+  "d3m1": "Sunday|Wednesday|cook day",
+  "d6m2": "day 5 skipped -> first in 2 days? no; keep rules",
+  "d8m1": "after a rest day",
+  "d9m2": "record|first",
+  "d10m1": "later|8",
+  "d11m2": "later",
+  "d12m1": "after work|usual",
+  "d13m2": "third|3",
+  "d14m1": "Sunday|cook",
+  "d7m1": "rest",
+  "d4m3": "paused"
+ },
+ "note": "Synthetic 14 days in the demo shape. Facts are what the phone knows; moments are Home packs. Numbers in each item's 'numbers' are the only digits a line may use."
+}

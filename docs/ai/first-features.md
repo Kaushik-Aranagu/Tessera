@@ -124,9 +124,17 @@ The ✗ rows are there on purpose: the eval proves the checks catch them.
 
 **His words:** "I think here also AI could sort them and connect them and suggest or remind."
 
-**What he sees.** On Groceries, items that belong to a planned meal show the meal one tap down ("for Tacos, Tuesday"). When a planned recipe needs something that isn't on the list or in the pantry, Tess offers it as ghost rows under the list: "Limes, for Tacos." He keeps or drops each one, as with any capture. Aisle sorting already works on the phone (`Aisles.swift`) and stays there.
+**Corrected Oct 16, 12:17 AM PT with the Kitchen lead.** Most of this is already a phone rule, so Claude's job is narrower than first written:
 
-**Pack:** planned meals this week (recipe titles and ingredient names), current grocery item names, pantry item names, told memory ("never buy cilantro"). Never quantities he bought, prices or shops.
-**Model:** Haiku 5.5, one write tool `addGroceries` (pending ghost rows) and one strict `linkItems {links: [{item, recipe}]}`. Links are stored as object links, written by `.tess` with undo.
-**Owner note:** Groceries belongs to the Recipes and groceries lead and Builder B; this is a proposal for their queue, not something this team builds.
-**Done when:** for the kitchen fixtures, every suggested item is a real ingredient of a planned recipe and not already on the list or in the pantry (0 false suggestions in 3 runs); nothing is written until he keeps it.
+| Ask | Who does it | How |
+|---|---|---|
+| Sort into aisles | Phone (`Aisles.swift`) | As today. A match Claude proposes may write the ingredient's learned aisle field |
+| Missing ingredients for a planned meal | Phone: `AddRecipeToGroceries` (`TesseraCore/Kitchen/Groceries.swift:230`) works out a planned recipe's lines minus staples (`isStaple`, `AisleGuide.staples`) and merges through shares; the meal plan slice adds them quietly from 17:00 the day before | Already built; Claude adds nothing |
+| **Connect** rows to recipes without double-adding | **Claude**, the one real job: name matching ("scallions" and "spring onions", "tomatoes" and "cherry tomatoes") | Strict `linkItems {links: [{item, recipe, ingredient}]}`; each proposed match is a ghost row he keeps (merge, written as a `GroceryShare` row carrying the recipe, and the task once the meal plan lands) or drops. No `addGroceries` write tool for Claude |
+| Suggest what usually runs out | Phone, from `checkedAt` history | "usually have", as the Kitchen lead has it |
+| Remind | Product's call. Kitchen lead's recommendation: the planned cook's Home line carries the open count through `HomeLines` ("Tacos tonight, 2 to buy"), no notification | Count from the phone |
+
+**Pack:** ingredient titles of this week's planned recipes (never his typed lines, which carry shops and brands), current grocery item names, staples flags, told memory ("never buy cilantro"). Never quantities, prices or shops. No pantry: pantry light waits until after week one, and AI-12 doesn't wait on it.
+**Model:** Haiku 5.5, one strict `linkItems` tool, no writes except the kept ghost rows.
+**Owner note:** Groceries belongs to the Recipes and groceries lead and Builder B; this is a proposal for their queue.
+**Done when:** on the kitchen fixtures every proposed link joins a real ingredient of a planned recipe to a real list row with 0 wrong matches in 3 runs; nothing is written until he keeps it; no typed line text leaves the phone (pack snapshot test).

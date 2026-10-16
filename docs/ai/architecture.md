@@ -15,7 +15,7 @@ Date: Oct 16, 2026 (Pacific). Builds on `docs/research/tess-model-layer.md` and 
 | Capture misses | `ClaudeTessModel.swift` (Haiku 5.5, 512 tokens, 8 s, 3 tool rounds) | Works, gated by the switch |
 | Plan my day wording | `PlanWording.swift` (Sonnet 5.5, effort low, 20 s, strict `proposePlan`, validator, cached on `PlanPack.cacheKey`) | Works |
 | Recipe link L3 | `RecipeLinkReader.swift` (Haiku) | Works |
-| Key, ledger, cap | `ClaudeKey.swift` (`TessKeychain`, `TessUsageLedger`, $10 cap, reserve then settle, `TessCall` row per call) | Works |
+| Key, ledger, cap | `ClaudeKey.swift` (`TessKeychain`, `TessUsageLedger`, $10 cap today ($50 from AI-2), reserve then settle, `TessCall` row per call) | Works |
 | Voice checks | `TessVoice` in `TessCapturing.swift` (under 12 words, banned words, no "!") | Works |
 | One switch | "Tess asks Claude" (`missesGoToClaude`), #320 makes it stick | In review |
 
@@ -43,7 +43,7 @@ A **lens** turns objects into a short list of facts for one surface, each with a
 | **Home** (Now, ledger, queue) | Weekday, part of day ("Thursday night"), rest day yes/no. Per item: handle, kind (workout, cook, shop, task, habit), title, state (running, paused, done, next, planned), set number and target, exercises done of planned, record yes/no and the exercise it was on, minutes since last touched, start time. Recent memory lines (section 4). | Weights, reps, volume, body weight, notes, list item text, money, health |
 | **Live workout** | Nothing during sets. Lines in a live workout stay rules-only: no network in the moment he's lifting, and decisions say no asks in a live workout. Capture misses typed there still go to Claude, as today. | Everything |
 | **Workout done** (Home hero, Training) | Routine title, exercises done of planned, set count, records (exercise and kind: weight, reps, e1RM), the last time this routine ran (days ago), noticed lines about training | Weights and reps (the line may say "Bench record." but never "82.5 kg"), RPE, health |
-| **Kitchen** | Recipe titles, grocery item names and aisles, the week's planned meals, the list names | Prices, shops, quantities he bought, notes |
+| **Kitchen** | Recipe and ingredient titles, grocery item names and aisles, staples flags, the week's planned meals, the list names | His typed lines (they carry shops and brands), prices, quantities he bought, notes |
 | **Review** (the week) | Week facts: days trained of planned, routines done, records by exercise, habits as "n of m", tasks done count, cooked recipes, all from on-phone aggregates. Noticed and told memory | Health, body weight numbers, money, notes, people's details |
 | **Capture** (unchanged) | The phrase, now, screen, running process, last set, names of exercises, routines, recipes, lists, open task titles; plus told memory aliases ("mom" means his mother's contact name) | Health, notes, history |
 | **Plan my day** (unchanged) | As decided Oct 15 10:29 PM PT: task titles, times, workout name, calendar event titles | Notes, attendees, locations, health |
@@ -139,9 +139,9 @@ Prices from `TessUsageLedger.prices` (Haiku 5.5 $0.10 in and $0.50 out per milli
 | Home lines | Haiku 5.5 | 1,500 / 150 | $0.0002 | 600 (20 a day) | $0.14 |
 | Workout done line (part of Home lines) | Haiku 5.5 | included | | | |
 | Week story | Sonnet 5.5 | 2,000 / 300 | $0.007 | 8 | $0.06 |
-| Grocery connect | Haiku 5.5 | 1,500 / 300 | $0.0003 | 60 | $0.02 |
+| Grocery connect (name matching only) | Haiku 5.5 | 1,200 / 150 | $0.0002 | 60 | $0.01 |
 | Existing (capture, plan, link, questions) | | | | | $0.44 (claude-first-uses.md) |
-| **Total** | | | | | **about $0.70**, $10 cap |
+| **Total** | | | | | **about $0.70** on Haiku, about $4 with Sonnet on Home lines and the week story; cap $50 (Product, Oct 16) |
 
 ## 6. Model per job
 
