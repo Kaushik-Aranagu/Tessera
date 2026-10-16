@@ -4,6 +4,7 @@
 
 ## 2026-10-15, 1:56 PM to 6:44 PM Pacific (newest first)
 
+- **The next install carries migrations** (3:20 AM PT Oct 16). Master now has Catalog v6 (#341) and v7 (#356, TessMemoryStore). Before any commit after 7b321d2 is pinned, QA's install script gets a migration row. Builder A runs the v5 → v7 upgrade on the Simulator over a copy of his latest backup: it must open with every record intact, Settings kept, and no crash on launch. Rollback rule: going back to 7b321d2 from a v7 build is only safe by restoring a backup made on 7b321d2. Never restore a v7 backup onto an older build.
 - **One word for a best, one shape for a receipt, trip fixes first** (3:15 AM PT Oct 16, Research 125 to 127, #372).
   - **"Best" everywhere.** The Day log moves to "best" too ("Bench 80 × 8, best."). Review, the HomeLines lens and WorkoutSummary use the same word, never "record" or a count of records. The 12:17 AM rule still holds: a past best stays a best.
   - **One task receipt.** It is the thing, a comma, then what happened: "Call mom, done." Never "Done. Next one is up." or "Done. Call the dentist." The next task shows on its own row, not in the receipt.
