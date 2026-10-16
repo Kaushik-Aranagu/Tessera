@@ -31,7 +31,7 @@ No screen on master has a "side page" in sheet 69/71/74's sense yet: no INGREDIE
 | # | Screen | Files | How you reach it | Object / class | x / side today | Design sheet(s) |
 |---|---|---|---|---|---|---|
 | 4 | Training tab (workout at rest, running with RESUME, done, empty) | `Features/Home/TrainingPage.swift` | Tab page | Workout, Routine, Plan | none (the lanes are vertical; tap an exercise to open its page with `.jump`, :678) | training-mode (44), live-workout (56) |
-| 5 | Routines (a plan's routines) | `Features/Plans/RoutinesPage.swift` | "Routines" word on the Training tab (`TrainingPage.swift:214`) | Plan to Routine | **ROW**: swipe a row left = **DROP** (`RoutinesPage.swift:310-335`). Hold 0.35 s to reorder (:193-205). Edge swipe back | training-mode (44, "Routines"), swipe-more (71) |
+| 5 | Routines (a plan's routines) | `Features/Plans/RoutinesPage.swift` | "Routines" word on the Training tab (`TrainingPage.swift:214`) | Plan to Routine | **ROW**: swipe a row left = **DROP** (`RoutinesPage.swift:281-343`). Hold 0.35 s to reorder (:193-205). Edge swipe back | training-mode (44, "Routines"), swipe-more (71) |
 | 6 | Routine page / editor | `Features/Plans/RoutineEditor.swift` (+ the inline `ExerciseLibraryList`, :366) | Tap a routine row, or the Training title for today's routine | Routine to Slot to Exercise | **none**. There is no row swipe here: you drop a slot by tapping to open it and choosing "take it out". Edge swipe back only. LAST TIMES is design-only | routine-editor, training-mode (44), **swipe-more (71, LAST TIMES: not built)** |
 | 7 | Plans: WEEK · MONTH | `Features/Plans/PlansView.swift`, `WeekPage.swift`, `MonthPage.swift`, `PlanData.swift`, `Features/Exercise/CarriageRail.swift` | `ObjectPage` routes a Plan object or the Plan class here (`ExerciseRouting.plan`). In practice you reach it through the class tree (path or Subclasses on a generic page). No Home word opens it | Plan, Workout | **X-SIB**: WEEK / MONTH paged with a carriage (`PlansView.swift:38-55`). **Missing from sheet 71's map** | plans, sweep-19 |
 | 8 | Exercise page | `Features/Exercise/ExercisePage.swift`, `ExerciseViews.swift`, `ExerciseDigest.swift`, `ExercisePaint.swift` | Tap an exercise on the Training lanes, the live-workout name (`WorkoutParts.swift:31`), or a class row | Exercise (a ClassDef subclass, e.g. Bench Press) | **X-SIB**: HISTORY · REP MAXES · MUSCLES (`ExerciseViews.swift:36-50`) | exercise-page, swipe-more (71: "already on x") |
@@ -107,7 +107,7 @@ Lock Screen and widgets are left out, as asked (`Widgets/RestLiveActivity.swift`
 - **Total: 29**, plus the pager.
 
 ## Where sheet 71's swipe map and master disagree
-1. **DROP** lives on the **Routines page** rows (`RoutinesPage.swift:310-335`), not on the routine editor. On master, the routine editor has no row swipe, so LAST TIMES there would not collide with a row swipe at all.
+1. **DROP** lives on the **Routines page** rows (`RoutinesPage.swift:281-343`), not on the routine editor. On master, the routine editor has no row swipe, so LAST TIMES there would not collide with a row swipe at all.
 2. **Groceries' REMOVE (65)** is not on master; Groceries rows are tap-only.
 3. **The recipe page already uses a left swipe**: the ingredient column swipes to Groceries. Sheet 71 says it has "no row swipe yet", so the INGREDIENTS side page must resolve this.
 4. **Review has no week paging** and there is **no Day log**, so the "x already moves by day or week" rows describe design, not code.
@@ -154,3 +154,12 @@ Declaring "side" views through the model would therefore need:
 - a registry that maps a ViewDef to a SwiftUI renderer.
 
 The table and relationship are already there to carry this.
+
+## Added from Research's check (#561, Oct 16, 3:00 PM PT)
+- **M1. Pages pushed inside the live workout cover.** The live stack routes every route through `ObjectPage` (`WorkoutModeView.swift:22-23`), so a class page, a workout page or a routine page can sit over the live lane. **Ruling (Q2):** a page pushed over the live surface is not live. It has already left the live surface, so it carries its normal side, glance and full side. Rule 7's peek is only for the live surface itself.
+- **M2. Generic pages (#26, #27) inside the Recipes cover,** through `RecipeDepth` (`RecipePage.swift:298-311`) and "Linked from" (`ObjectPage.swift:254-263`). They're the same screens with the same side. SideHost's tests cover this stack too.
+- **M3. Paste to a saved recipe** pushes #16 in a second stack (`RecipesEntry.swift:36-38`). #16's side has to work in both stacks.
+- **M4. A private Tess memory on the generic object page** (`SystemCatalog.swift:254-265`, `isPrivate` at :264). The default side never shows a private field. The front, though, prints every field today (`PropertyList`, `ObjectPage.swift:342-360`), including a private memory's rule. That's a front privacy row for Product, and it's not the side's to fix.
+- **S1.** The DROP lines are now `RoutinesPage.swift:281-343` (fixed above).
+- **S2.** Review has no week paging on master, so row 20 is swipe or word until 46 lands (sheet 75 says so).
+- **S3.** `HomeSpatialView.swift:27`'s doc comment says three sibling pages, while `Page` has four. It's a stale comment for Builder B.
