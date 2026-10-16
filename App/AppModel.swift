@@ -71,6 +71,8 @@ final class AppModel {
     @ObservationIgnored private var visited: Set<Route> = []
     var hasRevealedGreeting = false
     var session: WorkoutSession?
+    /// The workout cover zooms out of Training's first lane (set by START; cleared when the cover goes).
+    var workoutRisesFromLane = false
     var isWorkoutPresented = false {
         didSet {
             if isWorkoutPresented {

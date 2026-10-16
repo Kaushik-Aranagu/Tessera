@@ -9,18 +9,26 @@ struct TrainingPage: View {
 
     var body: some View {
         let _ = model.revision
-        if let session = model.session {
-            // Running (or paused under Home): the plan with what's done, RESUME.
-            TrainingAtRest(plan: .running(session))
-        } else if let workout = model.tonightWorkout() {
-            TrainingAtRest(plan: .scheduled(workout))
-        } else if let routine = model.todaysRoutine() {
-            TrainingAtRest(plan: .routine(routine))
-        } else if let done = model.finishedToday().first {
-            TrainingAtRest(plan: .done(done))
+        // One view for every state, so START's flight and the sinking plan survive the switch to running.
+        if let source {
+            TrainingAtRest(plan: source)
         } else {
             EmptyTraining()
         }
+    }
+
+    private var source: TrainingSource? {
+        if let session = model.session {
+            // Running (or paused under Home): the plan with what's done, RESUME.
+            return .running(session)
+        }
+        if let workout = model.tonightWorkout() {
+            return .scheduled(workout)
+        }
+        if let routine = model.todaysRoutine() {
+            return .routine(routine)
+        }
+        return model.finishedToday().first.map { .done($0) }
     }
 }
 
@@ -58,6 +66,10 @@ private struct TrainingAtRest: View {
     @State private var liftTaps = 0
     @State private var markLine: CGRect = .zero
     @State private var firstSegment: CGRect = .zero
+    /// The START sequence, cancelled if he leaves the page inside it.
+    @State private var startTask: Task<Void, Never>?
+    /// As live mode rises out of the first lane, the rest of the plan sinks to 0.96 and fades.
+    @State private var sinking = false
 
     private static let space = "training"
 
@@ -98,6 +110,10 @@ private struct TrainingAtRest: View {
                 ForEach(Array(lanes.prefix(5).enumerated()), id: \.element.id) { index, lane in
                     LaneRow(lane: lane, wakes: landed && index == 0, dried: isDone)
                         .frame(height: 72, alignment: .top)
+                        // Live mode rises out of the first lane; the others sink away.
+                        .modifier(ZoomSource(id: index == 0 ? WorkoutRise.sourceID : "lane-\(lane.id)",
+                                             namespace: namespace))
+                        .modifier(Sinking(isOn: sinking && index > 0))
                 }
             }
             .accessibilityElement(children: .contain)
@@ -105,18 +121,29 @@ private struct TrainingAtRest: View {
 
             Spacer(minLength: Theme.Spacing.m)
 
-            planLine
-                .entrance(4)
+            Group {
+                planLine
+                    .entrance(4)
 
-            if let line = tessLine(lanes) {
-                Text(line)
-                    .font(Theme.voice(size: 21))
-                    .foregroundStyle(Theme.Colors.tess)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .contentTransition(.opacity)
-                    .padding(.top, Theme.Spacing.m)
-                    .entrance(5)
+                // Tess's slot keeps two lines' height with or without a line, so the plan line never moves.
+                ZStack(alignment: .topLeading) {
+                    Text(verbatim: "Tess\nTess")
+                        .font(Theme.voice(size: 21))
+                        .hidden()
+                        .accessibilityHidden(true)
+                    if let line = tessLine(lanes) {
+                        Text(line)
+                            .font(Theme.voice(size: 21))
+                            .foregroundStyle(Theme.Colors.tess)
+                            .lineLimit(2)
+                            .contentTransition(.opacity)
+                            .transition(.opacity)
+                    }
+                }
+                .padding(.top, Theme.Spacing.m)
+                .entrance(5)
             }
+            .modifier(Sinking(isOn: sinking))
         }
         .coordinateSpace(.named(Self.space))
         .overlay(alignment: .topLeading) {
@@ -127,6 +154,16 @@ private struct TrainingAtRest: View {
             }
         }
         .tesseraFeedback(.made, trigger: liftTaps)
+        .onDisappear {
+            startTask?.cancel()
+            startTask = nil
+        }
+        .onChange(of: model.isWorkoutPresented) { _, presented in
+            guard !presented else { return }
+            // Back from live mode: the page is whole again.
+            sinking = false
+            model.workoutRisesFromLane = false
+        }
     }
 
     // MARK: Parts
@@ -195,11 +232,21 @@ private struct TrainingAtRest: View {
             let done = session.entries.reduce(0) { $0 + session.setRows(of: $1).count }
             return .paused("Resume \(session.workout.title)", total > 0 ? Double(done) / Double(total) : 0)
         case .done:
-            if let next = model.plan.flatMap({ model.ledger.nextRoutine(in: $0) }) {
-                return .label("\(next.title) tomorrow")
-            }
-            return .label("Done for today")
+            return .label(tomorrowLine)
         }
+    }
+
+    /// What tomorrow holds, from the same rest-day reading Now and Review use, so they never disagree: "Rest day
+    /// tomorrow", else the routine the plan lands on ("Pull A tomorrow").
+    private var tomorrowLine: String {
+        let plan = model.plan
+        let tomorrow = TesseraDay().day(1, after: AppClock.now).addingTimeInterval(12 * 3600)
+        let perWeek = NowPage.sessionsPerWeek(model: model, plan: plan)
+        if NowPicker(engine: model.engine).restDay(plan: plan, at: tomorrow, sessionsPerWeek: perWeek) != nil {
+            return "Rest day tomorrow"
+        }
+        guard let next = plan.flatMap({ model.ledger.nextRoutine(in: $0) }) else { return "Done for today" }
+        return "\(next.title) tomorrow"
     }
 
     private func stripState(_ lanes: [TrainingLane]) -> [TrainingStrip.Segment] {
@@ -299,22 +346,34 @@ private struct TrainingAtRest: View {
     private func tapMark() {
         switch markState {
         case .ready:
-            guard !isLifting else { return }
+            guard !isLifting, startTask == nil else { return }
             liftTaps += 1
+            // Reduce Motion: nothing flies, so nothing waits; live mode crossfades in.
+            guard !reduceMotion else {
+                start()
+                return
+            }
             isLifting = true
             lift = 0
             // The house curve over 520 ms.
             withTesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.52), reduceMotion: reduceMotion) {
                 lift = 1
             }
-            Task { @MainActor in
+            startTask = Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(520))
+                guard !Task.isCancelled else { return reset() }
                 withTesseraAnimation(.easeOut(duration: 0.24), reduceMotion: reduceMotion) {
                     landed = true
                     isLifting = false
                 }
-                // The page has woken: live mode rises on the first exercise.
-                try? await Task.sleep(for: .milliseconds(420))
+                // The page has woken: the plan starts to sink, and live mode rises out of the first lane.
+                try? await Task.sleep(for: .milliseconds(300))
+                guard !Task.isCancelled else { return reset() }
+                withTesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.48), reduceMotion: reduceMotion) {
+                    sinking = true
+                }
+                try? await Task.sleep(for: .milliseconds(160))
+                guard !Task.isCancelled else { return reset() }
                 start()
             }
         case .paused:
@@ -325,13 +384,39 @@ private struct TrainingAtRest: View {
     }
 
     private func start() {
+        model.workoutRisesFromLane = !reduceMotion
         switch plan {
         case let .routine(routine): model.startRoutine(routine)
         case let .scheduled(workout): model.startWorkout(workout)
         case .running, .done: model.isWorkoutPresented = true
         }
+        reset()
+    }
+
+    private func reset() {
+        if startTask?.isCancelled == true {
+            sinking = false
+        }
         landed = false
+        isLifting = false
         lift = 0
+        startTask = nil
+    }
+}
+
+/// The source the workout cover zooms out of when START wakes the page.
+enum WorkoutRise {
+    static let sourceID = "training-first-lane"
+}
+
+/// The rest of the plan sinking away under the rising workout: 0.96 and transparent.
+private struct Sinking: ViewModifier {
+    let isOn: Bool
+
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(isOn ? 0.96 : 1)
+            .opacity(isOn ? 0 : 1)
     }
 }
 
