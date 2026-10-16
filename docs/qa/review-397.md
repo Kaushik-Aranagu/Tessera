@@ -35,3 +35,13 @@ up.".
   comment, or key the line off a real progression signal when one exists.
 - **L2, for Design.** At set 1, Tess still says "Same as last time, 82.5 × 7." under the detail line "last time
   82.5 × 7". That is the last place the fact is said twice, and it's Design's call.
+
+## Addendum: re-check at `7937f15`
+
+Verdict: **PASS**. There is one commit on top of 96d0617, and only these four files change: WorkoutParts.swift, WorkoutSession+Prefill.swift, WorkoutSessionTests.swift, and the still docs/recordings/46-set1-quiet-band.png.
+
+- `.lastTime` reasons now return nil (WorkoutSession+Prefill.swift:12-13). `setLine` drops "Last best was …" and "Set N. W × R" and returns "" (WorkoutParts.swift:258-259). Before a set, the band speaks only for a swap, "Rest skipped", "Logged.", a first time, or "From the plan". This closes L2 (Design's repeat).
+- Readers: nothing else reads those strings. `WorkoutLines.tess` feeds only the two `LiveTessCorner`s (WorkoutModeView.swift:105, :259), and `LiveTessCorner` shows nothing and no UNDO for an empty line (LiveTessCorner.swift:51, :66). There are no Live Activity, Watch, Day log, UI test or doc readers. The core `Progression` reason "Same as last time" (Progression.swift:61) is a different string and isn't shown here. The test at WorkoutSessionTests.swift:48 now expects nil; the tests at :39, :76, :114 and :118 are unchanged.
+- The still shows set 1 with "last time 82.5 × 7" once and the corner silent. A still is fine for an absence.
+- L1 (the `.target` comment, now at Features/Home/TrainingPage.swift:345-347) is not in. It stays a low.
+- New low: `previousBest` (WorkoutSession+Prefill.swift:42) has no callers now and can go in a later push.
