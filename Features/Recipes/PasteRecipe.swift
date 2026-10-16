@@ -18,6 +18,8 @@ struct PasteRecipe: View {
     @State private var band: CGFloat = -0.2
     @State private var corrections: [Int: String] = [:]
     @State private var saved: (id: UUID, record: OpRecord)?
+    /// A Claude key pasted here by mistake: refused on the spot, never read, saved or shown.
+    @State private var refusedKey = false
     @FocusState private var editing: Bool
 
     private var savedTitle: String {
@@ -28,7 +30,8 @@ struct PasteRecipe: View {
         let lines = CreateRecipe.lines(of: text, corrections: corrections)
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text(reading && revealed >= lines.count ? PasteCopy.tess(lines) : "Paste a recipe and I'll read it.")
+                Text(refusedKey ? "That looks like a Claude key. It goes in Settings, not a recipe."
+                    : reading && revealed >= lines.count ? PasteCopy.tess(lines) : "Paste a recipe and I'll read it.")
                     .font(Theme.voice)
                     .foregroundStyle(Theme.Colors.tess)
                     .contentTransition(.opacity)
@@ -111,6 +114,15 @@ struct PasteRecipe: View {
             }
         }
         .onChange(of: text) { old, new in
+            // A Claude key never becomes a recipe (QA on #218): clear it before anything reads it.
+            if new.contains("sk-ant-") {
+                text = ""
+                refusedKey = true
+                return
+            }
+            if !new.isEmpty {
+                refusedKey = false
+            }
             // A paste lands as one big change: read it straight away.
             if new.count - old.count > 40 {
                 read()

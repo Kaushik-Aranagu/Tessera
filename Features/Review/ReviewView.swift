@@ -216,6 +216,10 @@ private struct ReviewPageBody: View {
                 LookSentence()
                     .padding(.top, Theme.Spacing.section)
 
+                // Claude, until Settings exists: the key, the month and what Tess may send.
+                ClaudeSection()
+                    .padding(.top, Theme.Spacing.xxl)
+
                 // The quiet way in to backups: a label word at the foot of the week.
                 NavigationLink {
                     BackupView()
