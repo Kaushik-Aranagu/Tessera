@@ -164,7 +164,7 @@ struct ClaudeRouteTests {
     @Test func offlineOrSlowSaysSoAndWritesNothing() async {
         RouteStub.failure = .notConnectedToInternet
         let offline = await tess().capture(miss, context: context)
-        #expect(offline.records.isEmpty && offline.line == "No connection, so Claude didn't see that.")
+        #expect(offline.records.isEmpty && offline.line == "No connection. Saved it for Claude.")
         RouteStub.failure = .timedOut
         #expect(await tess().capture(miss, context: context).line == "Claude didn't answer in time.")
         #expect(ledger.calls().count == 2)
@@ -226,5 +226,34 @@ struct ClaudeRouteTests {
     @Test func whatTheGrammarReadsNeverReachesClaude() async {
         _ = await tess().capture("buy milk", context: context)
         #expect(RouteStub.requests.isEmpty)
+    }
+
+    // MARK: Waiting for Tess (tess-model-layer.md section 7)
+
+    @Test func anOfflineMissWaitsAndIsReadLater() async {
+        RouteStub.failure = .notConnectedToInternet
+        let tess = tess()
+        let offline = await tess.capture(miss, context: context)
+        #expect(offline.line == "No connection. Saved it for Claude." && tess.waitingCount == 1)
+        // The same phrase twice still waits once.
+        _ = await tess.capture(miss, context: context)
+        #expect(tess.waitingCount == 1)
+        // Still offline at the next open: it stays.
+        #expect(await tess.readWaiting(context: context).isEmpty && tess.waitingCount == 1)
+        // Online: read as a pending ghost, and gone from the inbox.
+        RouteStub.failure = nil
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged."))]
+        let read = await tess.readWaiting(context: context)
+        #expect(read.count == 1 && read.first?.records.first?.state == .pending && tess.waitingCount == 0)
+    }
+
+    @Test func nothingWaitsForSiriAndAKeyNeverWaits() async {
+        RouteStub.failure = .notConnectedToInternet
+        let tess = tess()
+        var shortcut = context
+        shortcut.commitImmediately = true
+        _ = await tess.capture(miss, context: shortcut)
+        #expect(tess.waitingCount == 0)
+        #expect(TessInbox(store: store, classes: classes).add("sk-ant-abc", at: .now) == nil)
     }
 }
