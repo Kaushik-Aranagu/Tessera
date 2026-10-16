@@ -142,3 +142,5 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [theme-contrast-fixes.md](theme-contrast-fixes.md) | Design, Builder A, Builder B: proposed contrast values for the Obsidian misses and Best e1RM |
 | [fixtures/grammar-miss-claude.md](fixtures/grammar-miss-claude.md) | Core, QA: use 1 gate, 185 grammar misses on Haiku |
 | [review-refresh-2.md](review-refresh-2.md) | Product: next-install review items since b19fb4a |
+| [claude-first-run.md](claude-first-run.md) | Builder B, QA: Claude first-run walk with key-leak flags |
+| [training-week-one-questions.md](training-week-one-questions.md) | Coordinator: Mon Oct 19 training check-in questions |
