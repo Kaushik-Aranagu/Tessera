@@ -31,7 +31,7 @@ Expected for every refused row: no note made or changed, no op written, the key 
 | B1-8 | Empty store | Create "wifi password is tacocat KEY" | Refused, never saved as a private note | fail: Notes.swift:107 makes it private and saves it |
 | B1-9 | Private note "door code 4417" | `EditNote(body: "door code 4417 KEY")` | Refused, body unchanged | fail: Notes.swift:156-167 |
 | B1-10 | Empty store | Create "PART" and "bought PART today" | Allowed, note saved as said | pass (no guard; the shared guard also lets it through) |
-| B1-11 | Empty store | Create "SHORT" | Allowed, note saved (only starts the same way, too short) | pass on notes today; **would fail** if notes reuse `looksLikeClaudeKey`, which refuses any prefix (ClaudeKeyGuard.swift:6); key store uses `count > 12` (ClaudeKey.swift:212) |
+| B1-11 | Empty store | Create "SHORT" | Refused, nothing saved (Product 12:22 pm: notes use the shared key-prefix guard, no length floor) | fails on master (no guard); passes on #471 by reading |
 | B1-12 | Empty store | Ask bar "note: KEY" | Refused, key line, no route runs | pass: TessModel.swift:69-71, ClaudeKeyTests.swift:103 |
 | B1-13 | B1-1 to B1-9 run | Write a copy, scan bytes for KEY and the prefix | Neither found | fail on the note path (follows B1-1); pass for the Ask bar (ClaudeKeyTests.swift:88-115) |
 
@@ -92,3 +92,40 @@ Fix note: mark daily copies by something cleanup can trust (a `kind` column in `
 
 39 cases: 16 pass (4 of them by reading only: F-2, F-4, K-2, K-3), 18 fail or likely fail (B1 10, B6 3, B2 3, iCloud 2),
 4 not built (B5-1, B5-3, B5-4, I-4), 1 unsure (K-4).
+
+## B1 re-run on Core #471 (6a5db77)
+
+How: read with the #471 head. No Swift toolchain in this container, so nothing was run. "Pass (test)" means a test on #471 asserts it; "pass by reading" means the code path refuses or allows it but no test checks that exact case.
+
+What changed: `CreateNote.apply` and `EditNote.apply` now throw `invalidArguments(reason: "refused: looksLikeKey")` before any write (Notes.swift:107-109, 156-158). `ActionEngine.perform` rolls back and inserts no `OpRecord` on a throw (ActionEngine.swift:49-54), so a refused row writes no op. The guard is the shared `looksLikeClaudeKey` (ClaudeKeyGuard.swift:13-15): case-insensitive "contains the Claude key prefix", no length check. The core action does not return the key line; the line comes from the app views (NotesView, NoteEditor), the Ask bar router (TessModel.swift:69-71) and the Siri intent (Intents.swift:137-138).
+
+| # | #471 | Evidence | Test in PrivacyFollowupTests |
+|---|---|---|---|
+| B1-1 | pass (test) | Notes.swift:107-109 | yes, :85-87 |
+| B1-2 | pass (test) | Notes.swift:156-158 | yes, :91-96 (body checked unchanged) |
+| B1-3 | pass by reading | Notes.swift:156 checks `title` too | no (only body edit tested) |
+| B1-4 | pass (test) | Notes.swift:102, 107 (whole trimmed text searched) | yes, :88-90 ("my key\nKEY", not the gym bag text) |
+| B1-5 | pass by reading | Notes.swift:107 (substring match) | partly: :92-95 tests KEY inside text on the edit path, not create |
+| B1-6 | pass by reading | Notes.swift:102 trims, :107 still finds the prefix | no |
+| B1-7 | pass by reading | ClaudeKeyGuard.swift:14 `.caseInsensitive` | no |
+| B1-8 | pass by reading | key guard Notes.swift:107 runs before the private-note branch at :111, so "wifi password is tacocat KEY" is refused, never saved as a private note | no |
+| B1-9 | pass by reading | Notes.swift:156 runs before `wasPrivate` at :161 | no (no private-note edit case) |
+| B1-10 | pass by reading | PART is only the first 3 chars of the prefix; :14 needs the whole prefix | no |
+| B1-11 | pass by reading (row flipped to refuse by Product 12:22 pm) | SHORT holds the whole prefix, so ClaudeKeyGuard.swift:14 matches and Notes.swift:107 refuses it. The key store's rule is `hasPrefix && count > 12` (ClaudeKey.swift:212); the notes guard has no length floor. The app paths also eat it: NotesView.swift onChange clears the draft, NoteEditor.swift:132-136 strips it with `withoutClaudeKeys` | no |
+| B1-12 | pass (test) | TessModel.swift:69-71; `keyLine` is now `claudeKeyLine` (TessModel.swift:60) | yes, :99 (line identity); flow in ClaudeKeyTests.swift:101-103 |
+| B1-13 | pass by reading | nothing is written for B1-1 to B1-9 (throw before set, rollback in perform); Ask bar byte scan in ClaudeKeyTests.swift:105-116 | partly: :97 checks no title holds the prefix; no backup byte scan for the note path |
+
+Counts: 13 rows, all pass under the 12:22 pm ruling (4 with a test: B1-1, B1-2, B1-4, B1-12; 9 by reading only). Tests Core should add: title edit, upper case, surrounding spaces, tacocat plus KEY, edit of a private note, PART allowed, SHORT refused, and a backup byte scan after the note path.
+
+### App paths (Features/ on #471)
+Every note write goes through `CreateNote` or `EditNote`:
+- Notes writing line: NotesView.swift:121 `CreateNote(body:)`; before that, onChange of `draft` clears the whole draft and shows `claudeKeyLine` when it holds the prefix (NotesView.swift:81-88). Note: it clears the whole line, so "wifi password is tacocat KEY" loses the tacocat text too, unlike the editor.
+- Note editor: NoteEditor.swift:163-166 `EditNote(body:title:)`; `noteEdit()` strips keys from heading and body first (:131-138) and shows the line.
+- Demo seed NotesView.swift:40 and Review demo ReviewView.swift:335: fixed strings.
+- Tess capture TessCaptureEngine.swift:298/302 and Claude tool TessTools.swift:184: behind the router guard (TessModel.swift:69) and now also the action guard.
+- Siri add intent Intents.swift:137-141: own guard returns the key line before `CreateNote`.
+- Adjacent gap, by reading: `RenameObject` (TrainingActions.swift:487-503) sets any object's title with no key guard. No Features or TessTools call site uses it on notes on #471, so it is not reachable today.
+
+### Minor
+- ClaudeKeyGuard.swift:3-6: the doc comment for `looksLikeClaudeKey` now sits above `claudeKeyLine`, so the function lost its doc and the constant has two.
+- Thrown reason is "refused: looksLikeKey", not the key line; any caller that shows errors gets the reason, not Tess's line.
