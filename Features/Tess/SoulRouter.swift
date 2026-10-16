@@ -81,7 +81,14 @@ final class SoulRouter {
             // A Done in flight plays out and returns to rest itself (rule 4).
             guard !isDoneInFlight else { return }
             settle(rest)
-        case .appeared, .returnLine, .claudeFailed, .foregrounded:
+        case .claudeFailed:
+            // A failure answers the queued ask too: nothing is left to think about (F4).
+            guard !isDoneInFlight else {
+                queued = nil
+                return
+            }
+            settle(rest)
+        case .appeared, .returnLine, .foregrounded:
             guard !isDoneInFlight else { return }
             settle(rest)
         case .committed:
@@ -178,6 +185,8 @@ final class SoulRouter {
     /// Done's one-shot (1.8 s), then whatever was queued behind it, else rest.
     private func playDone(then seconds: Double = 1.8) {
         timer?.cancel()
+        // A Done answers whatever thinking was queued behind the last one (F4).
+        queued = nil
         mode = .done
         doneCount += 1
         timer = Task { @MainActor [weak self] in

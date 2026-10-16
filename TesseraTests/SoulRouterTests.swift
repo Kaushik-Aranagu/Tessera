@@ -116,6 +116,20 @@ struct SoulRouterTests {
         #expect(soul.mode == .thinking)
     }
 
+    @Test func anAnswerEndsTheQueuedThinking() async throws {
+        let live = SoulRouter(page: .live)
+        live.handle(.setLogged)
+        live.handle(.liveAsk)
+        live.handle(.liveAnswered)
+        let home = router()
+        home.handle(.claudeDone)
+        home.handle(.askClaude)
+        home.handle(.claudeFailed)
+        try await Task.sleep(for: .seconds(2.0))
+        #expect(live.mode == .idle)
+        #expect(home.mode == .idle)
+    }
+
     @Test func herLineNeverCutsHisVoice() async throws {
         let soul = router()
         soul.handle(.lineShown)
