@@ -313,7 +313,7 @@ private struct TrainingAtRest: View {
     private func context(_ lanes: [TrainingLane]) -> String {
         if case let .done(summary) = plan {
             guard let end = summary.endedAt else { return "done today" }
-            return "done this \(SpokenTime.partOfDay(end))"
+            return TrainingPage.doneWhen(end)
         }
         if case .running = plan {
             return "running now"
@@ -656,6 +656,18 @@ extension TrainingPage {
     static func about(sets: Int) -> String {
         let minutes = max(5, Int((Double(sets) * 2.5 / 5).rounded()) * 5)
         return minutes >= 60 && minutes % 60 == 0 ? "about \(minutes / 60) h" : "about \(minutes) min"
+    }
+
+    /// The finished workout's context word (docs/research/time-words-sweep.md TW5; decisions 12:35 PM PT Oct 16):
+    /// "done early this morning" from 4 to 7 am, "done tonight" from 9 pm to the 4 am edge, never "this night".
+    static func doneWhen(_ end: Date, calendar: Calendar = .current) -> String {
+        switch calendar.component(.hour, from: end) {
+        case 4 ..< 7: "done early this morning"
+        case 7 ..< 12: "done this morning"
+        case 12 ..< 17: "done this afternoon"
+        case 17 ..< 21: "done this evening"
+        default: "done tonight"
+        }
     }
 }
 

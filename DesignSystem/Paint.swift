@@ -225,6 +225,14 @@ struct Brushstroke: Shape {
 
 // MARK: - Keys
 
+/// VoiceOver's hint on a stroke word. A hold key's default action completes on a double tap, so the hint never says
+/// hold (docs/research/fixtures/voiceover-recipe-clock-lists.md VO19; one fix for DONE, FINISH and RESET).
+enum PaintKeyHint {
+    static func hint(isTap: Bool) -> String {
+        isTap ? "" : "Double tap to finish"
+    }
+}
+
 /// The stroke word (docs/design/no-buttons.md): the one primary action on a screen, shown as a word sitting in a
 /// fine ink line of the action's paint (docs/design/ink-line.md). No container, no corners, no shadow. Tap actions
 /// wet the line on touch and fire on release; hold actions empty to a trace, repaint left to right under the thumb
@@ -306,7 +314,7 @@ struct PaintKey<Label: View, Meta: View>: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
-        .accessibilityHint(isTap ? "" : "Touch and hold")
+        .accessibilityHint(PaintKeyHint.hint(isTap: isTap))
         .accessibilityAction { complete() }
     }
 
