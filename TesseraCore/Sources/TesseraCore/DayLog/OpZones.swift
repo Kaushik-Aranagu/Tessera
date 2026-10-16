@@ -76,7 +76,10 @@ struct OpZonesState {
 
     mutating func set(_ zone: TimeZone, for id: UUID, rank: Int, at: Date) {
         if let current = ranks[id] {
-            guard rank > current.rank || (rank == current.rank && rank == 1 && at >= current.at) else { return }
+            // The earliest start and create win, the latest finish wins: the same zones whatever order the log is
+            // read in (QA F1 on #399; logExercise also counts as a start and can come from another zone).
+            let wins = rank == 1 ? at >= current.at : at < current.at
+            guard rank > current.rank || (rank == current.rank && wins) else { return }
         }
         zones[id] = zone
         ranks[id] = (rank, at)
