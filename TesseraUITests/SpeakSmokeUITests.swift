@@ -3,7 +3,7 @@ import XCTest
 /// QA's first-Speak check (#273): tap Speak with no script. The app must not crash, and the line must not be "The mic
 /// is busy with a call." (that meant the audio session refused its category).
 @MainActor
-final class SpeakSmokeUITests: XCTestCase {
+final class SpeakSmokeUITests: SimulatorOnlyTestCase {
     func testFirstSpeakNeitherCrashesNorReadsBusy() {
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "-demoTime", "18:10", "-resetDemo"]

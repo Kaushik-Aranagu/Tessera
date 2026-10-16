@@ -37,6 +37,8 @@ struct BottomChrome: View {
     @State private var refusal: SpeechListener.Refusal?
     @State private var holdTimer: Task<Void, Never>?
     @State private var holdListening = false
+    /// The hold timer fired on this press, so letting go is never a tap (even after a refused listen).
+    @State private var holdFired = false
     /// A first tap waiting out the double-tap window.
     @State private var pendingTap: Task<Void, Never>?
     /// The one-time "Hold me to talk." hint: 0 not yet, 1 showing (after the first Allow), 2 done for good.
@@ -230,6 +232,7 @@ struct BottomChrome: View {
                 .onChanged { _ in
                     guard !pressed else { return }
                     pressed = true
+                    holdFired = false
                     opens += 1
                     if !reduceMotion {
                         withAnimation(.easeOut(duration: 0.13)) { swell = true }
@@ -238,6 +241,7 @@ struct BottomChrome: View {
                     holdTimer = Task { @MainActor in
                         try? await Task.sleep(for: .milliseconds(400))
                         guard !Task.isCancelled, pressed, !model.isCommandExpanded else { return }
+                        holdFired = true
                         holdListening = true
                         speak(hold: true)
                     }
@@ -250,7 +254,7 @@ struct BottomChrome: View {
                     if holdListening {
                         holdListening = false
                         listener.stop(send: value.translation.width > -60)
-                    } else if abs(value.translation.width) < 12, abs(value.translation.height) < 12 {
+                    } else if !holdFired, abs(value.translation.width) < 12, abs(value.translation.height) < 12 {
                         soulTapped()
                     }
                 })
