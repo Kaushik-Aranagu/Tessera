@@ -73,3 +73,24 @@ release without a slide, settle back to `lensFrom`, with no page change.
 - Hold TODAY, slide to REVIEW, and let go: Review opens.
 - Hold TRAINING from Today without sliding, and let go: Today stays (F2).
 - Hold the tab row and pull down Notification Center, then come back: Home is normal and taps work (F1).
+
+## Addendum: re-check at `9281b0d` (Oct 16, about 1:25 AM Pacific): PASS
+
+The delta is one commit to `Features/Home/HomeSpatialView.swift` (+47 / -4), plus the clip re-recorded (18.4 s).
+
+- **F1 closed.**
+  - A `@GestureState touching` is set by `.updating` on the row's DragGesture. When it drops while `pressedAt` is
+    still set, the touch ended without `onEnded`, which is a system cancel. It then cancels the hold task, clears
+    `pressedAt`, and calls `onCancel` if the lens is up.
+  - Normal ends never reach it, because `onEnded` clears `pressedAt` first.
+  - `scenePhase` leaving `.active` and Home's `onDisappear` also cancel.
+  - `cancelLens` returns to `lensFrom` through the same release path, so the deck, scale and lens all reset.
+- **F2 closed.** `lensSlid` is set only when the lens crosses a word (`slideLens`). Release opens the word under the
+  lens only if it slid; otherwise it settles on `lensFrom`, with no page change.
+- **Design's must-fix.** The deck's `spot` is rounded, so one page sits in one place, and each word crossed springs
+  the lens.
+- The clip shows a hold from TODAY, a slide through REVIEW and KITCHEN, and a release on TRAINING that opens
+  Training; then a hold from Training that ends back on Training.
+- Data safety is unchanged.
+
+Device check, not a block: confirm a pull of Control Center from the tab row mid-hold brings Home back whole.
