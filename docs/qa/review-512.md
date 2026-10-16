@@ -39,3 +39,20 @@ The spoken or shown line after a Tess or Claude miss now leads with the thing. T
 ## Lows
 - **R1:** `MoveTask.receipt` uses `Calendar.current` and `TesseraDay()` (Tasks.swift:150-156), not the context calendar. That matches `apply`, which also uses `TesseraDay()`, so it's consistent. Thread the calendar through when MoveTask gets one.
 - **R2:** A move more than 6 days out says only the weekday ("Call mom, Thu 3 pm"). That reads as this coming Thursday. Rare, since moves are usually days, not weeks.
+
+## Re-review at 04eda7c (Oct 16, ~1:50 PM PT): PASS
+
+The fix is one commit, 04eda7c, on top of dd21e5c, and it merges cleanly. It is a string-only delta:
+- SetTaskDone reopen: "Call mom, open again".
+- AddListItem: "Dune, added to Packing".
+- AddGroceries now names the things:
+  - one: "Oat milk, on Groceries"
+  - two: "Oat milk and eggs, on Groceries"
+  - three or more: "Oat milk, eggs and 2 more, on Groceries"
+  - An empty `lines` now returns nil, so the line falls back to the summary.
+- MoveTask: "today at 6:30 pm" and "tomorrow at 6:30 pm".
+  - Within his week it uses the full weekday: "Thursday at 6:30 pm".
+  - From day 7 on it uses the date: "Oct 29 at 6:30 pm". The cutoff is `day.day(of: now)` plus 7 days, so it counts from his day.
+  - This closes R2.
+
+Nothing changed for data safety or privacy: the receipt still isn't stored, and each line names only what its summary already did. For Design, these are the four strings plus the far-date form above. R1 (`Calendar.current`, which matches apply) stays as a low.
