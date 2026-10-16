@@ -55,7 +55,7 @@ safety says a migration never ships untested on his device. Before the "install 
 - **M5 (catalog v9, secret words, only if #422 is in the install commit):** on the M0 Simulator copy, "wifi password
   is tiger42" gives "Private note, kept." and the Day log reads "Private note". "what's my wifi password?" gives
   "It's in your private notes." Open the private note, change one word and save: its title still reads "Private
-  note" (QA F1 on #422). Remember-ing a password says "I don't keep passwords." and the memory page doesn't show it.
+  note" (QA F1 on #422). Asking Tess to remember a password says "Private note, kept. It stays out of my memory." and the memory page doesn't show it.
 - **Rollback:** an older build opening a newer store is shown safe through v7 (M0: 7b321d2 opens the v7 store, the extra
   classes are ignored). v8 and v9 are not shown yet; the v9 rerun shows both. Restoring a newer backup onto an older build stays
   **forbidden** until someone tests it.
