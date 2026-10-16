@@ -41,6 +41,12 @@ struct NoteEditor: View {
                         .focused($focus, equals: .heading)
                         .submitLabel(.next)
                         .onSubmit { focus = .rest }
+                        .onChange(of: heading) { _, new in
+                            // Return in a vertical-axis field types a newline: take it as "next line".
+                            guard new.contains("\n") else { return }
+                            heading = new.replacing("\n", with: " ").trimmingCharacters(in: .whitespaces)
+                            focus = .rest
+                        }
                         .padding(.top, Theme.Spacing.l)
                         .accessibilityLabel("First line")
                         .entrance(1, hero: true)
@@ -50,6 +56,7 @@ struct NoteEditor: View {
                         .scrollContentBackground(.hidden)
                         .scrollDisabled(true)
                         .focused($focus, equals: .rest)
+                        .keyboardDoneWord { focus = nil }
                         .frame(minHeight: 180, alignment: .topLeading)
                         .padding(.top, Theme.Spacing.s)
                         .padding(.horizontal, -5) // TextEditor's built-in inset, so text aligns with the first line

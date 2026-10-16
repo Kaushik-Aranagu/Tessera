@@ -370,7 +370,7 @@ struct BottomChrome: View {
                     .tint(Theme.Colors.tess)
                     .textFieldStyle(.plain)
                     .focused($focused)
-                    .submitLabel(.go)
+                    .submitLabel(.send)
                     .onSubmit(dry)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
