@@ -143,7 +143,9 @@ struct ExerciseAndPlansTests {
         model.touch()
         let now = AppClock.now
         let week = PlanData(model: model, plan: nil, now: now).week(now: now)
-        let today = try #require(week.days.first { Calendar.current.isDate($0.date, inSameDayAs: now) })
+        // The plan's day turns at 04:00, so between midnight and 4 AM today is still yesterday's date.
+        let tesseraToday = TesseraDay(calendar: .current).day(of: now)
+        let today = try #require(week.days.first { Calendar.current.isDate($0.date, inSameDayAs: tesseraToday) })
         #expect(today.state == .done && today.routine == "Push A" && today.workoutID == session.workout.id)
         let next = week.days.first { $0.date > today.date }
         if let next {
