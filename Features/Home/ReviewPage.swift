@@ -212,9 +212,15 @@ struct MuscleVolume: Identifiable, Equatable {
 
 // MARK: - Page
 
-/// REVIEW: "the week so far", a sentence instead of a chart, seven day dabs and one line from Tess.
+/// REVIEW as the week on one page (review-week.md): the day letters, one band per thing with its week figure at the
+/// right and a mark per day under it, then the week's best lines. Tap a day and the page reads that day: the other
+/// columns recede, the hero and the lines become the day's. No rules, no boxes: the columns align by the letters.
 struct ReviewPage: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// The column being read, if any.
+    @State private var reading: Int?
+    @State private var taps = 0
 
     /// When Tessera was first used: the starter plan is seeded on first launch; older history (an import) wins.
     static func firstUse(_ model: AppModel) -> Date? {
@@ -224,61 +230,102 @@ struct ReviewPage: View {
 
     var body: some View {
         let _ = model.revision
-        let now = AppClock.now
-        let calendar = WeekReview.mondayFirst
-        // The plan's week from Core: done days carry their workouts, days ahead carry the plan or a rest day.
-        let plan = model.plan
-        let perWeek = NowPage.sessionsPerWeek(model: model, plan: plan)
-        let week = model.ledger.week(containing: now, plan: plan, now: now, sessionsPerWeek: perWeek,
-                                     calendar: calendar)
-        let sessions = week.reduce(0) { $0 + $1.done.count }
-        let firstUse = Self.firstUse(model)
-        let firstWeek = firstUse.map { use in week.first.map { use >= $0.day } ?? false } ?? false
-        let firstUseToday = firstUse.map { TesseraDay(calendar: calendar).isSameDay($0, now) } ?? false
-        let restToday = NowPicker(engine: model.engine).restDay(plan: plan, at: now, sessionsPerWeek: perWeek,
-                                                                calendar: calendar) != nil
-        let marks = WeekReview.marks(
-            week.map(WeekReview.Slot.init),
-            firstUse: firstUse,
-            restToday: restToday,
-            now: now,
-            calendar: calendar
-        )
-        let headline = WeekReview.headline(sessions: sessions, perWeek: perWeek, firstWeek: firstWeek,
-                                           firstUseToday: firstUseToday)
-        let window = week.first.map { DateInterval(start: $0.day, end: now) }
-        let volume = window.map { MuscleVolume.compute(model, in: $0) } ?? []
+        let week = ReviewWeekData.compute(model, now: AppClock.now, calendar: WeekReview.mondayFirst)
+        let day = reading.map { week.day($0) }
 
         VStack(alignment: .leading, spacing: 0) {
-            Text("the week so far")
+            Text(day?.name ?? "the week so far")
                 .font(Theme.voice(size: 21))
                 .foregroundStyle(Theme.Colors.context)
                 .padding(.bottom, Theme.Spacing.m)
+                .contentTransition(.opacity)
                 .entrance(0)
 
-            ReviewHeadline(text: "\(headline.lead) \(headline.tail)")
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .accessibilityElement(children: .ignore)
-                .accessibilityAddTraits(.isHeader)
-                .accessibilityLabel(
-                    "\(headline.lead) \(headline.tail). \(WeekReview.sessionLine(sessions: sessions, perWeek: perWeek))."
-                )
-                .siblingParallax()
-                .entrance(1, hero: true)
-                .padding(.bottom, Theme.Spacing.xxl)
+            // Title 44, one line: the session count, or the day's own line in the longest form that fits.
+            ViewThatFits(in: .horizontal) {
+                ForEach(day?.heroForms ?? [week.headline], id: \.self) { form in
+                    Text(form).lineLimit(1).fixedSize(horizontal: true, vertical: false)
+                }
+            }
+            .textRole(.title)
+            .foregroundStyle(Theme.Colors.ink)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityAddTraits(.isHeader)
+            .accessibilityLabel(day?.hero ?? "\(week.headline). \(week.sessionLine).")
+            .contentTransition(.opacity)
+            .siblingParallax()
+            .entrance(1, hero: true)
+            .padding(.bottom, Theme.Spacing.l)
 
-            DayDabs(week: week, marks: marks, now: now, calendar: calendar)
-                .padding(.bottom, Theme.Spacing.xxl)
+            DayLetters(week: week, reading: reading, read: read)
+                .padding(.bottom, Theme.Spacing.s)
+                .entrance(2)
 
-            if sessions > 3, let line = WeekReview.tessLine(volume) {
-                Text(line)
-                    .font(Theme.voice(size: 21))
-                    .foregroundStyle(Theme.Colors.tess)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .entrance(3)
+            WeekBand(label: "Training", figure: week.trainingFigure, height: 58, reading: reading, read: read,
+                     spoken: week.trainingSpoken)
+            { index in
+                DayMarkView(mark: week.marks[index], seed: index, delay: 0.1 + Double(index) * 0.03)
+                    .frame(width: 34, height: 30)
+                    // A dab opens its session once the day is being read; the first tap reads the day.
+                    .onTapGesture {
+                        if reading == index, let workout = week.sessions[index].first {
+                            model.open(.object(workout.id))
+                        } else {
+                            read(index)
+                        }
+                    }
+            }
+            .entrance(3)
+
+            WeekBand(
+                label: "Tasks done",
+                figure: String(week.tasksDone.compactMap(\.self).reduce(0, +)),
+                height: 54,
+                reading: reading,
+                read: read,
+                spoken: week.tasksSpoken
+            ) { index in
+                WeekNumeral(value: week.tasksDone[index].map(String.init), muted: !week.isPast(index))
+            }
+            .entrance(4)
+
+            if week.cooked.contains(where: { ($0 ?? 0) > 0 }) {
+                WeekBand(label: "Cooked", figure: String(week.cooked.compactMap(\.self).reduce(0, +)), height: 54,
+                         reading: reading, read: read, spoken: week.cookedSpoken)
+                { index in
+                    if (week.cooked[index] ?? 0) > 0 {
+                        PaintDab(color: Theme.Colors.restTint(Theme.Colors.now), size: CGSize(width: 30, height: 26),
+                                 seed: index + 7)
+                    }
+                }
+                .transition(.opacity)
+                .entrance(5)
             }
 
+            WeekLines(title: day?.name.uppercased() ?? "The week’s lines",
+                      rows: day?.lines ?? week.bestLines, calendar: WeekReview.mondayFirst)
+                .id(day?.name ?? "week")
+                .transition(.opacity)
+                .padding(.top, Theme.Spacing.m)
+                .entrance(6)
+
             Spacer(minLength: 0)
+        }
+        .tesseraAnimation(Theme.Motion.house, value: reading)
+        .sensoryFeedback(.selection, trigger: taps)
+        .contentShape(Rectangle())
+        // Tap anywhere else and the week comes back.
+        .onTapGesture {
+            guard reading != nil else { return }
+            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { reading = nil }
+        }
+    }
+
+    /// Reads a day; the same day again, or a day still ahead, returns to the week.
+    private func read(_ index: Int) {
+        taps += 1
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+            reading = reading == index ? nil : index
         }
     }
 }
@@ -337,57 +384,6 @@ private struct BlurFade: ViewModifier {
 
     func body(content: Content) -> some View {
         content.blur(radius: blur).opacity(opacity)
-    }
-}
-
-/// The week, one mark a day in a 34×30 slot with the letter under it: trained is the sage dab (a second small dab
-/// for a second session), rest is a short dry ink stroke on the rest-timer horizon, open is the faint 25% ring,
-/// and days before first use stay empty. Never red, never a score.
-private struct DayDabs: View {
-    let week: [WeekDay]
-    let marks: [WeekReview.DayMark]
-    let now: Date
-    let calendar: Calendar
-    @State private var shown = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(Array(week.enumerated()), id: \.offset) { index, day in
-                let isToday = day.day == TesseraDay(calendar: calendar).today(now)
-                let mark = marks[index]
-                VStack(spacing: Theme.Spacing.s) {
-                    // The existing pop stagger: each mark arrives 50 ms after the one before.
-                    DayMarkView(mark: mark, seed: index, delay: 0.1 + Double(index) * 0.05)
-                        .frame(width: 34, height: 30)
-                        .scaleEffect(shown || reduceMotion ? 1 : 0.8)
-                        .opacity(shown || reduceMotion ? 1 : 0)
-                        .animation(reduceMotion ? nil : Theme.Motion.house.delay(Double(index) * 0.05),
-                                   value: shown)
-                    Text(day.day.formatted(.dateTime.weekday(.narrow)))
-                        .textRole(.label)
-                        .foregroundStyle(mark == .none || mark == .planned ? Theme.Colors.inkTertiary
-                            : isToday ? Theme.Colors.ink : Theme.Colors.inkSecondary)
-                }
-                .frame(maxWidth: .infinity)
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(label(day, mark: mark))
-                .accessibilityHidden(mark == .none)
-            }
-        }
-        .accessibilityElement(children: .contain)
-        .onAppear { shown = true }
-    }
-
-    private func label(_ day: WeekDay, mark: WeekReview.DayMark) -> String {
-        let name = day.day.formatted(.dateTime.weekday(.wide))
-        return switch mark {
-        case .trained(1): "\(name), trained"
-        case let .trained(count): "\(name), trained, \(count) sessions"
-        case .rest: "\(name), rest"
-        case .planned: "\(name), planned"
-        case .open, .none: "\(name), open"
-        }
     }
 }
 
