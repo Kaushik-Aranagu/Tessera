@@ -7,7 +7,7 @@ Corrected to sheet 84 (docs/design/errors-84.md); where they differ, the sheet w
 
 ## What it is
 When a save fails, the notice **replaces Tess's line in the UNDO slot** (sentence at y 785). Nothing else on the page
-moves, and she (the soul) does nothing: no beat, no colour, no mouth. The failure line is **ink** (17 pt Inter Tight 500),
+moves, and she (the soul) does nothing: no beat, no colour, no mouth. The failure line is **ink** (Body 19 (Inter Tight 500), right-aligned beside the soul where her line sits (use the token name Body, not a pt number)),
 not cobalt: cobalt is only what Tess herself says. No coloured word. There is no "TRY AGAIN" word: the sentence is the
 instruction, and the whole band is the tap target (44 pt minimum).
 

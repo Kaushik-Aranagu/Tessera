@@ -1952,15 +1952,16 @@ PICKS.accent = () => {
 // M1 (board 9:50 refill, sheet 84): the error notice. It replaces Tess's line in the UNDO slot; a tap dims it to 60%
 // with a 0.5 pt ink line over 150 ms; success crossfades to the receipt. Reduce Motion (?rm=1): crossfades only.
 PICKS['error-notice'] = () => {
-  // Sheet 84: ink sentence (17/500), no button word; the sentence is the instruction. Reduce Motion: no rise, no ink line.
+  // Sheet 84: ink sentence (Body 19/500, right-aligned beside her), no button word; the sentence is the instruction. Reduce Motion: no rise, no ink line.
   const ERR = .6, TAP = 3.2, OK = 5.0, D = 7.4, CF = .15;
+  const RX = HOME.x - 30; // right edge: beside the soul, where her line sits
   const err = 'Set 4 didn’t save. Try again.', rcpt = 'Set 4 logged.';
   const blurText = (str, y, a, col, blur, b = a) => {
     if (a < .01) return;
     ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     ctx.filter = blur ? `blur(${((1 - b) * 4 * DPR).toFixed(2)}px)` : 'none';
-    ctx.globalAlpha = a; ctx.font = font(17, 500); ctx.fillStyle = col; ctx.textAlign = 'left';
-    ctx.fillText(str, 24, y); ctx.restore();
+    ctx.globalAlpha = a; ctx.font = font(19, 500); ctx.fillStyle = col; ctx.textAlign = 'right';
+    ctx.fillText(str, RX, y); ctx.restore();
   };
   return {
     duration: D,
@@ -1972,8 +1973,8 @@ PICKS['error-notice'] = () => {
       const a = inA * outA;
       blurText(err, 785, a * dim, LOOK.ink, !RM, inA);
       if (!RM && a * dim > .01) {
-        const lw = width(err, 17) * ramp(t, TAP, .15, houseCurve);
-        if (lw > .5) stroke(24, 24 + lw, 794, .5, LOOK.ink, outA);
+        const lw = width(err, 19) * ramp(t, TAP, .15, houseCurve);
+        if (lw > .5) stroke(RX - width(err, 19), RX - width(err, 19) + lw, 794, .5, LOOK.ink, outA);
       }
       const rA = ramp(t, OK, CF);
       blurText(rcpt, 785, rA, LOOK.ink, false);
