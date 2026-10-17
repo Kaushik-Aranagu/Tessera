@@ -59,3 +59,82 @@ Total misses: 15 (excluding watch items).
 - "Private note" / "Private task" / "Private memory" labels
 - One UNDO wording (Taken back / is back)
 - Money only with an amount or sign (no literal found; verify at run time)
+
+## Recheck on master ab7d3bf
+
+Recheck of the 15 misses above against origin/master ab7d3bf (read through a fetched worktree; no checkout or commit in the repo). Result: 0 fixed, 0 gone, 15 still open. Line numbers below are the current ones.
+
+| # | Status | Evidence on master (file:line) |
+|---|---|---|
+| 1 | Still there | TesseraCore/Sources/TesseraCore/Home/HomeLines.swift:260, `"\(fact.title) at \(DayStoryClock.sentenceTime(...))."` |
+| 2 | Still there | HomeLines.swift:273 `"\(fact.title) at \(HouseTime.clock(...))"`; the comment at :272 still teaches "Tacos at 7 pm" |
+| 3 | Still there | HomeLines.swift:296 `"\(fact.title) at \(DayStoryClock.sentenceTime(...))"` |
+| 4 | Still there | TesseraCore/Sources/TesseraCore/Tasks/Tasks.swift:174, `"\(object.title), \(word) at \(...)"` |
+| 5 | Still there | Features/Home/HomePlan.swift:221, `"\(count), \(workout.title) at \(clock)"` |
+| 6 | Still there | Features/Home/NowPage.swift:286, `"next, at \(SpokenTime.clock(task.start))"` |
+| 7 | Still there | TesseraCore/Sources/TesseraCore/Actions/TrainingActions.swift:90, `"Logged \(name) \(shown) × \(count(reps))"` |
+| 8 | Still there | TrainingActions.swift:397, `"Logged \(name) ... at \(kilograms(weight)) ..."` |
+| 9 | Still there | TesseraCore/Sources/TesseraIntents/Intents.swift:34, :57, :175, `"\(record.summary)."`; these inherit the text from rows 7 and 8 |
+| 10 | Still there | TesseraCore/Sources/TesseraTess/TessCaptureEngine.swift:274, `"\(name) \(scheme) at \(load). Added to today."` |
+| 11 | Still there | Features/Workout/WorkoutParts.swift:245, `?? "Logged."` (the numbered case is already "Set N logged.") |
+| 12 | Still there | TesseraCore/Sources/TesseraIntents/Intents.swift:201, `hidden ? "Saved." : capture.line` |
+| 13 | Still there | Features/Backup/BackupView.swift:184, `say("Saved.")` |
+| 14 | Still there | Features/Command/CaptureParts.swift:243, `"\(line) e1RM \(Format.kilograms($0))."` |
+| 15 | Still there | Features/Workout/SwapPanel.swift:102, `return "<U+2014>"` (U+2014 as the no-load value) |
+
+### New hits on master (not in rows 1 to 15)
+
+Scope: Features/, App/ and TesseraCore/Sources/ on origin/master ab7d3bf. Comments, tests and docs skipped. The original recount covered only the 55 changed files, so these are new relative to it. Strings that build a time from several pieces at run time are not caught by grep.
+
+**(a) "at" before a clock time**
+
+| File:line | String | Owner | Note |
+|---|---|---|---|
+| Features/Home/HomeSpatialView.swift:691 | `"at \(clock(...))"`, used in "tonight at ...", "this \(part) at ..." | Builder B | Shown text, same ruling as rows 1 to 6 |
+| TesseraCore/Sources/TesseraCore/Tasks/NowRanker.swift:281, :284 | `why.append("at \(clock(start, calendar))")` | Core | Shown only if the "why" list reaches the screen; not verified |
+
+Not counted (not a clock time): TessSetCountAsk.swift:96 "at \(load)" (same class as row 10, Core); Intents.swift:26 Summary "at \(weight) kg" (Core); TessGrammar+Live.swift:134 "Fail at \(match.1)" (Core). Watch item BottomChrome.swift:703 unchanged.
+
+**(b) Verb-first receipts as a whole string**
+
+Clear receipts (should move to thing first):
+
+| File:line | String | Owner |
+|---|---|---|
+| Features/Backup/BackupView.swift:168 | "Saved a copy there. One a day from now on." | Builder B |
+| Features/Groceries/GroceriesView.swift:260 | "Cleared \(count) from the basket." | Builder B |
+| Features/Home/NowPage.swift:319 | "Done. Next one is up." | Builder B |
+| App/AppModel.swift:170 | "Started fresh; your old data is saved in Backups." | App (no owner listed) |
+| TesseraCore/Sources/TesseraIntents/Intents.swift:129 | "Finished. \(n) of \(m) exercises." (Siri dialog) | Core |
+| TesseraCore/Sources/TesseraCore/Training/Prefill.swift:102, :103 | "Logged a set" / "Logged \(weight) × \(reps)" | Core |
+| TesseraCore/Sources/TesseraTess/ClaudeTessModel.swift:136 | "Sent “…” to Claude. Turn this off in Settings: Claude." | Core |
+| TesseraCore/Sources/TesseraCore/Actions/TrainingActions.swift:196, :227, :258, :295, :445, :535 | "Added ...", "Started ...", "Finished ...", "Finished ... early", "Added “…”", "Deleted ..." | Core |
+| TesseraCore/Sources/TesseraCore/Actions/PlanActions.swift:25, :93, :143, :183 | "Created ...", "Added ... to the routine", "Started ...", "Created ..." | Core |
+| TesseraCore/Sources/TesseraCore/Actions/PlanEditing.swift:117 | "Moved ..." | Core |
+| TesseraCore/Sources/TesseraCore/Actions/RoutineEditing.swift:37, :142 | "Moved \(name) to \(n)", "Removed \(name)" | Core |
+| TesseraCore/Sources/TesseraCore/Lists/Lists.swift:147, :233, :304 | "Added \(text)", "Moved ...", "Cleared ..." | Core |
+| TesseraCore/Sources/TesseraCore/Kitchen/Groceries.swift:431 | "Added \(lines[0])" / "Added N things" | Core |
+| TesseraCore/Sources/TesseraCore/Kitchen/Recipes.swift:247 | "Saved \(title)" | Core |
+| TesseraCore/Sources/TesseraCore/Processes/ProcessActions.swift:54, :85, :187, :188 | "Started ...", "Saved your place", "Finished ...", "Closed ..." | Core |
+| TesseraCore/Sources/TesseraCore/Tasks/TaskProcesses.swift:28 | "Started ..." | Core |
+| TesseraCore/Sources/TesseraCore/DayLog/DayStory.swift:338 | "Added \(...)" (day-log line) | Core |
+
+Borderline (state labels, not receipts; confirm): Features/Home/TrainingPage.swift:257 "Done for today"; Features/Home/ReviewPage.swift:146 "Done N of the last N days"; TesseraCore/Sources/TesseraCore/Kitchen/Shopping.swift:70 "Finished shopping".
+
+**(c) Em-dash glyph (U+2014) as a placeholder in shown text**
+
+| File:line | String | Owner |
+|---|---|---|
+| Features/Exercise/ExercisePage.swift:144, :146 | `?? "<U+2014>"` (stat value) | Builder A (Training domain; confirm) |
+| Features/Exercise/ExerciseViews.swift:188 | `?? "<U+2014>"` (rep max value) | Builder A (Training domain; confirm) |
+| Features/Objects/ObjectPage.swift:172, :174, :410, :418 | `?? "<U+2014>"` and `Text("<U+2014>")` | Not in the A or B lists; needs an owner |
+
+Watch item unchanged: TesseraCore/Sources/TesseraCore/Actions/EngineAction.swift:68 (model-facing, not on screen).
+
+**(d) Uppercase AM/PM**
+
+None in shown text. Every hit is in a comment.
+
+### Counts on master ab7d3bf
+
+Rows 1 to 15: 0 fixed, 0 gone, 15 still open. New hits: 2 for (a), about 35 lines for (b) (of which 4 borderline), 8 lines for (c) (2 files at Builder A to confirm, 1 file with no owner), 0 for (d).
