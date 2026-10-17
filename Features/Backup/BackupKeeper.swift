@@ -167,7 +167,7 @@ enum BackupKeeper {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyy-MM-dd"
         let day = formatter.string(from: AppClock.now)
-        let url = URL.temporaryDirectory.appendingPathComponent("Tessera-\(day).\(TesseraBackup.fileExtension)")
+        let url = URL.temporaryDirectory.appendingPathComponent(TesseraBackup.savedCopyName(day: day))
         try TesseraBackup.write(from: context, to: url, now: AppClock.now)
         return url
     }
