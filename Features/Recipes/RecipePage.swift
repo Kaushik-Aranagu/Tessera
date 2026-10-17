@@ -416,8 +416,9 @@ private struct RecipeOriginal: View {
 
 @MainActor
 enum RecipeCopy {
-    /// What Tess says when the Cook key can't start a cook: the engine's "Workout running." while a workout runs
-    /// (G56), "Didn't save that. Try again." for any other refusal, nil when it started.
+    /// What Tess says when a write that starts or resumes something is refused: the engine's "Workout running."
+    /// while a workout runs (G56; the Cook key and Resume), "Didn't save that. Try again." for any other refusal, nil
+    /// when it went through.
     static func startCook(_ perform: () throws -> some Any) -> String? {
         do {
             _ = try perform()
