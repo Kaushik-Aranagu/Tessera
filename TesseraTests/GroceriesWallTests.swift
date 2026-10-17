@@ -74,8 +74,14 @@ struct GroceriesAddWallTests {
         #expect(outcome.voice == "Milk and eggs, on Groceries.")
     }
 
-    @Test func aWalledLineHoldsTheDraftWithNoUndo() {
+    @Test func aMixedBatchKeepsTheReceiptAndUndoWithTheWallLineAfter() {
         let outcome = GroceriesWall.add("eggs, rent $1200", engine: model.engine, store: model.store)
+        #expect(outcome.draft == "rent $1200" && outcome.undo != nil)
+        #expect(outcome.voice == "Eggs, on Groceries. That stays on this phone.")
+    }
+
+    @Test func onlyWalledLinesHaveNoUndo() {
+        let outcome = GroceriesWall.add("rent $1200", engine: model.engine, store: model.store)
         #expect(outcome.draft == "rent $1200" && outcome.undo == nil)
         #expect(outcome.voice == "That stays on this phone.")
     }
@@ -84,5 +90,12 @@ struct GroceriesAddWallTests {
         let fake = "sk-" + "ant-" + String(repeating: "x", count: 32)
         let outcome = GroceriesWall.add("\(fake), wifi password hunter2", engine: model.engine, store: model.store)
         #expect(outcome.draft == "wifi password hunter2" && outcome.voice == claudeKeyLine && outcome.undo == nil)
+    }
+
+    @Test func aRefusedWriteKeepsTheDraftButNeverTheKey() {
+        let fake = "sk-" + "ant-" + String(repeating: "x", count: 32)
+        let outcome = GroceriesWall.add("milk, \(fake), rent $1200", store: model.store) { _ in nil }
+        #expect(outcome.draft == "milk, rent $1200" && !looksLikeClaudeKey(outcome.draft))
+        #expect(outcome.voice == "Didn't save that. Try again." && outcome.undo == nil)
     }
 }
