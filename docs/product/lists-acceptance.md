@@ -84,7 +84,7 @@
 
 ## 11. An item, opened (screen)
 - Zoom transition from the item row; the back word returns.
-- Note editable in place; @links in cobalt and tappable.
+- Note editable in place; @links ink underlined (never cobalt) and tappable.
 - Date in words; tapping it opens a day lane of day words in place (x scroll with snap), not a picker. No date shows "Add a day" at 40%. Backlinks as names under "LINKED FROM".
 - Swiping right on the hero strikes the item and zooms back to the list.
 - An empty item shows only a faint "Add a note" line; no form fields.

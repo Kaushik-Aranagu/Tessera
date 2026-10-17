@@ -53,7 +53,7 @@
 | # | Pass when |
 |---|---|
 | 11.1 | The item zooms open from its row, and its text is the hero at 56, up to 3 lines; back word "‹ PACKING" (the list's name). No remove from here: the strike (11.5) is the hero's only swipe |
-| 11.2 | The note can be edited in place. @links are cobalt and open their object with one tap, at first sight. An empty note shows "Add a note" at 40% |
+| 11.2 | The note can be edited in place. @links are ink with an underline (never cobalt, decisions 10:06) and open their object with one tap, at first sight. An empty note shows "Add a note" at 40% |
 | 11.3 | The date word at 21/600; tapping it opens the day lane (one row of day words, snapping on x). "Add a day" shows when there is no date |
 | 11.4 | LINKED FROM lists the backlinks at the bottom at 21/500 |
 | 11.5 | Swiping right on the hero strikes the item, following the finger, then zooms back |

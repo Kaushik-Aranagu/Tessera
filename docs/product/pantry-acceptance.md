@@ -63,12 +63,12 @@ Unknown is the state of every ingredient until one of these happens. State never
 | S2 | Hero | Digits: "4 out, 2 low". It is also Pantry's line on the index and Home, the same string. 1 out reads "1 out", never "1 outs" |
 | S3 | Out line | One Body 21 line, 40 pt pitch: name in ink, state word "out" at the right (700, pantry colour mixed 72% with ink), the faint ring (11 pt, 1.3 pt stroke, ink 42%) at x 6. The recipe page's out line uses the same ring |
 | S4 | Low line | Same line with "low" (600) and no ring |
-| S5 | USUALLY HAVE, 1 to 3 names | The names as is on one line ("Rice, coffee, eggs"). Under it nothing else. Tapping a name joins Groceries: "Milk, in Groceries." with UNDO 4 s (a new add); a left swipe skips it until its next gap (`usualSkippedAt`) |
+| S5 | USUALLY HAVE, 1 to 3 names | The names as is on one line ("Rice, coffee, eggs"). Under it nothing else. Tapping a name joins Groceries: "Milk, on Groceries." with UNDO 4 s (a new add); a left swipe skips it until its next gap (`usualSkippedAt`) |
 | S6 | USUALLY HAVE, 4 or more | "Rice, coffee and 2 more": two named, then the count; "and 2 more" at 55%. Cap 4 holds (Research rules 1-9) |
 | S7 | State-word tap | Cycles in, low, out, in. One `.selection`, one op, one UNDO of 10 s (a change; 10 s under VoiceOver). The receipt names the thing first, "Limes, in.", in the one app-wide UNDO slot, replacing Tess's line for its window; UNDO restores the row and her line returns. The hero's digits just change, nothing counts up. The line closes up in 320 ms |
 | S8 | Row leaves and joins | A line that becomes in leaves the front (in things are the long tail and show only on their Ingredient page). A line that becomes low or out joins that group. A group with no lines is not drawn, not even its label |
 | S9 | Tap a name | Opens that ingredient's page (state sentence, cycle, PER 100 G side). Back lands on the same scroll position |
-| S10 | Left swipe on an out or low line | Adds it to Groceries as a ghost row, receipt "Milk, in Groceries." with UNDO 4 s (a new add). A line already on Groceries is not added twice; the receipt then reads "Milk, already on Groceries." and there is no UNDO. In and USUALLY HAVE names are not swiped here (S5) |
+| S10 | Left swipe on an out or low line | Adds it to Groceries as a ghost row, receipt "Milk, on Groceries." with UNDO 4 s (a new add). A line already on Groceries is not added twice; the receipt then reads "Milk, already on Groceries." and there is no UNDO. In and USUALLY HAVE names are not swiped here (S5) |
 | S11 | Nothing out | Known state, none out or low: hero "Nothing out". Groups OUT and LOW are not drawn; USUALLY HAVE still shows if it has names. The side reads "Nothing out." with no key (row 6.4) |
 | S12 | Nothing known | Hero "Nothing yet" and, under it at 55%, "Clear a shop or finish a cook and this fills in." No art. Tess: `Say "out of milk" and I'll keep it.` Index line "Nothing yet". Never "0 out, 0 low" |
 | S13 | Tess's line | The only thing in 736 to 820. After a cook it is the phone's fact, "Tacos took the cilantro and limes." (the names `FinishCooking` set out or low). Never a notification, a badge, a Home offer, "running out" or any forecast. Tess's line and Home never disagree: Home's Pantry line is the hero verbatim |
@@ -86,3 +86,5 @@ Unknown is the state of every ingredient until one of these happens. State never
 1. Does "in" expire (milk bought three weeks ago)? DEFAULT: no; a state only changes on an event, and USUALLY already says what is probably gone.
 2. Does cooking set low or out for pantry goods (rice, pasta)? DEFAULT: low; only produce and herbs go out.
 3. Is a planned recipe's in line skipped or shown as covered? DEFAULT: skipped silently, like a staple; the peek still shows it as "have".
+
+*Receipt preposition ruled by Product (decisions 10:06, Oct 16): "on" everywhere, "Milk, on Groceries." Design sheet 78's "in Groceries" is superseded; Builder B matches the rows above.*
