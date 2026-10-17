@@ -29,6 +29,8 @@ struct PasteRecipe: View {
     @State private var readingLink = false
     /// The next change to the box is the link reader's, not his, so its line stays up.
     @State private var fromLink = false
+    /// The shelf's links, read when the page shows and after each read.
+    @State private var waitingLinks: [URL] = []
 
     /// The saved line's name: a private recipe is only "Private recipe" here too, spoken or drawn (G53).
     private var savedTitle: String {
@@ -49,6 +51,18 @@ struct PasteRecipe: View {
                     .contentTransition(.opacity)
                     .fixedSize(horizontal: false, vertical: true)
                     .entrance(0)
+
+                // Links kept for later (K86.7): read only on his tap, oldest first, never by themselves.
+                if !reading, text.isEmpty, !readingLink, let waiting = waitingLinks.first {
+                    Button(PasteCopy.readWaiting(waitingLinks.count)) {
+                        text = waiting.absoluteString
+                        readLink(waiting)
+                    }
+                    .buttonStyle(.labelWord)
+                    .padding(.top, Theme.Spacing.m)
+                    .accessibilityHint("Reads the oldest link kept for later")
+                    .entrance(1)
+                }
 
                 if reading {
                     VStack(alignment: .leading, spacing: Theme.Spacing.s) {
@@ -131,6 +145,12 @@ struct PasteRecipe: View {
             }
         }
         .onDisappear(perform: closeUndo)
+        .onAppear { waitingLinks = RecipeLinkShelf.beside(model.store)?.waiting() ?? [] }
+        .onChange(of: readingLink) { _, isReading in
+            if !isReading {
+                waitingLinks = RecipeLinkShelf.beside(model.store)?.waiting() ?? []
+            }
+        }
         .onChange(of: text) { old, new in
             // A link with a name or password in it is refused whole: never read, kept, saved or printed back (#810).
             // The same inside a longer paste: a recipe holding one is never painted or saveable (Kitchen on #821).
@@ -510,6 +530,11 @@ struct PasteKeyFilter {
 }
 
 enum PasteCopy {
+    /// "Read 1 waiting" / "Read 3 waiting": the links kept for later.
+    static func readWaiting(_ count: Int) -> String {
+        "Read \(count) waiting"
+    }
+
     /// Whether any word of the paste is a link with a user or password before its host.
     static func hasSecretLink(_ text: String) -> Bool {
         // Brackets, quotes and sentence marks around a link don't hide it: "(https://u:p@host)." (QA on #821).

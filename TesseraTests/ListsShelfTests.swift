@@ -105,4 +105,19 @@ struct ListsShelfTests {
         #expect(shown.title == "Private list" && shown.nextStep == "1 left")
         #expect(!shown.title.contains("Rent") && !(shown.nextStep ?? "").contains("Rent"))
     }
+
+    /// G9: a finished trip list leaves the shelf for the foot's Put away.
+    @Test func aFinishedTripListIsPutAway() throws {
+        let trip = try model.engine.perform(CreateList(name: "Lisbon"), by: .user).output
+        try model.engine.perform(AddListItem(list: trip.id, text: "passport"), by: .user)
+        try model.engine.perform(StartListRun(list: trip.id), by: .user)
+        let contents = ListContents(store: model.store, classes: model.classes)
+        for item in contents.open(in: trip) {
+            try model.engine.perform(CheckListItem(item: item.id), by: .user)
+        }
+        let done = try model.engine.perform(FinishListRun(list: trip.id), by: .user).output
+        #expect(done.putAway)
+        let shelf = ListsShelf(store: model.store, classes: model.classes, lastWeightKg: nil, engine: model.engine)
+        #expect(!shelf.rows.contains { $0.id == trip.id } && shelf.awayCount == 1)
+    }
 }

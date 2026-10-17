@@ -60,6 +60,12 @@ enum ListsCopy {
         "Reusable, \(isOn ? "on" : "off")"
     }
 
+    /// Put away, thing first, with the basket when there is one: "Packing put away." / "Packing put away. 3 in the
+    /// basket." (G9; Product 8:40 AM).
+    static func putAway(_ list: String, basket: Int) -> String {
+        basket > 0 ? "\(list) put away. \(basket) in the basket." : "\(list) put away."
+    }
+
     /// The ask after "done" on a reusable list (10.11): "Packing, done. Reset it for next time?"
     static func resetAsk(_ list: String) -> String {
         "\(list), done. Reset it for next time?"

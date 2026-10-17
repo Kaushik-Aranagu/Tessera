@@ -89,8 +89,10 @@ public final class RecipeLinkShelf {
     }
 
     public func keep(_ link: URL) {
+        // A link that came with a user or password is refused whole, before anything is stripped from it.
+        guard !RecipeLinkReader.hasCredentials(link.absoluteString) else { return }
         let text = RecipeLinkReader.stripTracking(link).absoluteString
-        guard !RecipeLinkReader.hasCredentials(text), var links = loadForWrite(), !links.contains(text) else { return }
+        guard var links = loadForWrite(), !links.contains(text) else { return }
         links.append(text)
         save(Array(links.suffix(Self.limit)))
     }

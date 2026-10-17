@@ -52,4 +52,9 @@ struct PasteCycleTests {
         #expect(PasteCopy.hasSecretLink("from \"\(link)\","))
         #expect(!PasteCopy.hasSecretLink("Dal (https://example.com/dal)."))
     }
+
+    @Test func waitingLinksReadAsACount() {
+        #expect(PasteCopy.readWaiting(1) == "Read 1 waiting")
+        #expect(PasteCopy.readWaiting(3) == "Read 3 waiting")
+    }
 }
