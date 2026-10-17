@@ -37,13 +37,15 @@ struct PlateWashTests {
 
     @Test func aPrivatePlateHasNoPigmentAndAMaskedLabel() {
         var looked = false
-        let plate = ObjectPlate(objectID: UUID(), isPrivate: true, pigments: {
-            looked = true
-            return [0xC0392B]
-        }())
+        let plate = ObjectPlate(objectID: UUID(), isPrivate: true, title: "Rent 1200 stew", site: "example.com",
+                                pigments: {
+                                    looked = true
+                                    return [0xC0392B]
+                                }())
         #expect(plate.pigments.isEmpty && !looked, "a private plate never looks up pigments")
-        #expect(ObjectPlate.photoLabel(title: "Rent 1200 stew", isPrivate: true, site: "example.com")
-            == "Photo of Private recipe, from example.com")
+        #expect(plate.photoLabel == "Photo of Private recipe", "no title and no site for a private plate")
+        #expect(ObjectPlate.photoLabel(title: "Tacos", isPrivate: false, site: "example.com")
+            == "Photo of Tacos, from example.com")
         #expect(ObjectPlate.photoLabel(title: "Tacos", isPrivate: false, site: nil) == "Photo of Tacos")
     }
 }
