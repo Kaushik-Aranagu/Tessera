@@ -1,5 +1,7 @@
 # Made and done (Design item 38)
 
+**Decision on the done fleck (Oct 16, 7:20 PM PT, Product D3): it stays.** The fleck is the one thing that ties a finished row to the day stroke, so finishing a task shows where the time went; it is the reward Kaushik asked for, and it costs one 520 ms arc plus one soft haptic. It is only drawn, never added to: the strike, the bloom and the fleck are the whole done pattern. Cheaper forms already exist and stay: under Reduce Motion there is no flight or fleck (the words crossfade 150 ms, the tip blooms in place, the row fades), and Done from anywhere with the row off screen leaves the fleck from the soul. Builder B D6 does not shrink. If the fleck proves heavy in the first release walk, drop its arc to a straight 300 ms slide before dropping the fleck.
+
 **Kaushik's principle, in one line:** making a task and finishing one should take one easy gesture and feel like a small win, with motion, colour that arrives only in the moment, and a haptic on every beat. It's over in under a second and never in the way.
 
 This sheet redraws both moments across Tess capture, Home's Next and the Day log. It also sets the haptics map for the whole app and makes the call on the set block's reps control. It builds on what's on master (`HomeQueue.swift` QueueRow, `BottomChrome` commit, `day-log-v1.md` DL58) and changes only the moments, not the layout.
@@ -56,7 +58,7 @@ The gesture is the build's: swipe right, armed at 140pt. The strike follows the 
 - **No haptic.** Nothing gets one on appear.
 
 ## Reduce Motion
-- There's no flight, fleck or fold slide. The words crossfade at their slot (200ms), the tip blooms in place, and the row fades out.
+- There's no flight, fleck or fold slide. The words crossfade at their slot (150ms), the tip blooms in place, and the row fades out.
 - Dry phases are instant.
 - **The haptics stay**, beat for beat, so the reward is still felt.
 
