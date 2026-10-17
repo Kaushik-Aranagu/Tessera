@@ -57,7 +57,7 @@ This sheet replaces sheet 71's "which pages get a side page" and Product's 10:00
 | 27 | Any other object | **the default side**: LINKS plus every field the front doesn't show (FACTS) | swipe or word | Every new class gets a side for free, and a class can declare its own |
 
 **Designed but not built:** each gets its side when it's built.
-- Habits: HOW IT COUNTS (FACTS). Only this week shows, with no history (Product's rule).
+- Habits: LATELY (BEFORE) and HOW IT COUNTS (FACTS), two pages (sheet 85, ruled 8:33 PM): past weeks show as plain days, never a score, streak or miss mark; glance "3 habits".
 - Body weight: HOW IT'S MEASURED (FACTS). It stays on the phone.
 - Money: WHERE IT CAME FROM (LINKS), the receipts. Controls stay on the front.
 - A book: YOUR NOTES (LINKS).

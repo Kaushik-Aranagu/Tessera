@@ -34,7 +34,7 @@ No streak count or run length, no "missed", no miss mark, no red, no percentage,
 - **Glance:** label LATELY, big "3" with "habits" (how many he keeps), small "Read today" and "Train Tuesday" (the two latest marks, in words), foot ALL OF IT. Empty: no big fact, so the right edge opens straight to the full side, "No habits yet", "Nothing to look back on yet."
 - **Page 1, LATELY (BEFORE):** per habit a label, then "Last marked" with today / Tue / Oct 4, then "Last week" with "4 days". A week with no marks is not listed and a habit with none last week shows only its last mark. The habit's own page carries the same page scoped to it, with up to six past weeks as "Week of Oct 5, 3 days", empty weeks left out.
 - **Page 2, HOW IT COUNTS (FACTS, every-side.md row):** per habit "5 a week, by hand" / "3 a week, workouts"; THE WEEK: "A week runs Monday to Sunday.", "A day starts at 4 am.", "Going past the number keeps counting." No controls (the rule and pause live one tap down).
-- **Tess's line** on both stops: "Read goes back to Sep 3." (the phone's fact, empty with no habits).
+- **Tess's line** on both stops: "Read, 3 of 5 this week." (RULED 8:33 PM: a start date read as a streak, so it is dropped) (the phone's fact, empty with no habits).
 - A habit page (one tap down) declares the same two pages for its own habit.
 
 ## Differences from earlier sketches
@@ -62,4 +62,4 @@ No streak count or run length, no "missed", no miss mark, no red, no percentage,
 ## Unresolved (Product rules)
 1. May the side show past weeks as plain days (difference 2)?
 2. Is "habits kept" the right big fact for the glance, or should it be the latest mark alone?
-3. Is "Read goes back to Sep 3." acceptable, or does a start date read as a streak?
+3. RULED 8:33 PM: dropped; Tess says "Read, 3 of 5 this week." on the side. Questions 1 and 2 also ruled yes.
