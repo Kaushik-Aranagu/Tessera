@@ -149,6 +149,23 @@ struct TessMemoryTests {
 
     // MARK: The turnover
 
+    @Test func twoWeeksAcrossTheFallBackNightAreTwo() throws {
+        // Research dst-nov-1 DS36 (board 0ag): Sun Oct 18 to Sun Nov 1 is 14 of his days, 2 weeks, so 12 sessions
+        // read "about 6 days a week" (seconds said 2.006 weeks, rounded up to 3, "about 4").
+        var day = Self.at(18, 18)
+        var sessions = 0
+        while sessions < 12 {
+            if Self.calendar.component(.weekday, from: day) != 7 {
+                try train(at: day)
+                sessions += 1
+            }
+            day = try #require(Self.calendar.date(byAdding: .day, value: 1, to: day))
+        }
+        _ = memory.turnover(now: Self.at(1, 19, month: 11))
+        let noticed = memory.lines(of: .noticed).map(\.text)
+        #expect(noticed.contains("You train about 6 days a week."), "\(noticed)")
+    }
+
     @Test func theTurnoverWritesYesterdayFoldsOldDaysAndNoticesTraining() throws {
         // Six weeks of evening training, Mondays and Thursdays, and Sunday cooks.
         for week in 0 ..< 6 {

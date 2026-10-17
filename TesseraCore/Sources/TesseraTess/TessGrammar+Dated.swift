@@ -25,7 +25,8 @@ extension TessGrammar {
             return .lift(exercise: exercise, sets: sets, reps: reps, weight: weight, unit: unit)
         }
         guard let day = calendar.date(byAdding: .day, value: -back, to: today),
-              let noon = calendar.date(byAdding: .hour, value: 12, to: day) else { return nil }
+              // Noon on the wall, not 12 hours on: the fall-back Sunday's noon (Research DS29, board 0ag).
+              let noon = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: day) else { return nil }
         let formatter = DateFormatter()
         formatter.calendar = calendar
         formatter.locale = Locale(identifier: "en_US_POSIX")

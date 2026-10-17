@@ -89,6 +89,31 @@ struct TripZonesTests {
             .contains { $0.id == task.id })
     }
 
+    @Test func aCookFilesOnTheDayItWasFinished() throws {
+        // Product G2 (trip-week TW4): oats started Monday 9:00 pm at home, finished Tuesday 6:55 am in New York. The
+        // Day log line goes on Tuesday, read in the finish's zone, and keeps its start time and its length.
+        let recipe = try engine.perform(
+            CreateRecipe(text: "overnight oats\nIngredients\n1 cup oats\n1 cup milk\nMethod\n1. Soak overnight."),
+            by: .system
+        ).output
+        let start = Self.at(26, 21)
+        let finish = Self.at(27, 6, 55, in: Self.newYork)
+        let cook = try run(StartCooking(recipe: recipe.id, time: start), at: start, zone: Self.la).output
+        try run(FinishCooking(cook: cook.id, time: finish), at: finish, zone: Self.newYork)
+
+        for zone in [Self.la, Self.newYork] {
+            let calendar = Self.calendar(zone)
+            let monday = DayStory.lines(engine: engine, on: Self.at(26, 12, in: zone), calendar: calendar,
+                                        now: Self.at(29, 12))
+            let tuesday = DayStory.lines(engine: engine, on: Self.at(27, 12, in: zone), calendar: calendar,
+                                         now: Self.at(29, 12))
+            #expect(!monday.contains { $0.objectIDs == [cook.id] })
+            let line = try #require(tuesday.first { $0.objectIDs == [cook.id] })
+            #expect(line.text.hasPrefix("Cooked ") && line.text.hasSuffix(", 6 h 55 min"), "\(line.text)")
+            #expect(line.time == finish)
+        }
+    }
+
     @Test func opZonesReadsOnlyWhatIsNew() throws {
         // QA S1 on #377: the op log only grows, so each read walks the new records, never the whole log again.
         for index in 0 ..< 20 {

@@ -159,7 +159,11 @@ public extension TessMemoryStore {
                                                          (best + 2) % 12 == 0 ? 12 : (best + 2) % 12],
                                      rule: "training.hours"))
             }
-            let weeks = max(1, Int((now.timeIntervalSince(starts.min() ?? now) / (7 * 86400)).rounded(.up)))
+            // Weeks from his days, not elapsed seconds: two weeks across the fall-back night are 2, not 3 (DS36).
+            let tesseraDay = TesseraDay(calendar: calendar)
+            let days = calendar.dateComponents([.day], from: tesseraDay.day(of: starts.min() ?? now),
+                                               to: tesseraDay.day(of: now)).day ?? 0
+            let weeks = max(1, Int((Double(days) / 7).rounded(.up)))
             if weeks >= 2 {
                 let perWeek = Int((Double(starts.count) / Double(weeks)).rounded())
                 if perWeek >= 1 {

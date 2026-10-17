@@ -1,6 +1,26 @@
 # Area index: each area's live line, by day shape (Research BA, Design 73)
 
-Design sheet 73 (A, his pick at 2:06 PM PT Oct 16) puts all areas on one glass sheet, each word with one live line
+> **Checked against (Research BJ, Fri Oct 16, 2026, about 3:05 pm PT):** Design branch
+> `origin/claude/project-thread-b3tu3f` at `1cab06a`. Sheet 73 `docs/design/area-index.md` is last touched at
+> `585fa19` (the context cap named), after `b3acdbf` (lines inside the cap), `ce3a321` (his pick: A, x freed) and
+> `36ca6d6` (the sheet). `studies/area-index.html` is at `b3acdbf`. The copy in `/mnt/project-files/tessera/design/`
+> is identical to `585fa19`. Option A only: C is dropped for good (his pick, 2:06 pm) and B's spine went to sheet 74.
+> Product: decisions.md 2:23 pm (all of BA's picks), 2:12 pm, 2:24 pm and the daily pins entry (0p rides the first
+> daily pin it is ready for). Code refs re-pinned to origin/master `56dd028` where they moved.
+>
+> **Rows changed in this pass, and why:**
+> - **New section 1b, the index itself:** the sheet's copy, sizes and colors by token, so 0p has one table to test
+>   against (the name word, the rows, the hint, VoiceOver, the picked colors). TODAY's picked color is open question 13.
+> - **Section 4, cap check:** Design fixed both 7-word examples (`b3acdbf`, `585fa19`): TODAY "Push Day A, 13 sets
+>   left" and KITCHEN "Tacos at 7 pm", and the sheet now names the context cap. Home's planned-cook row is still 7 words.
+> - **Section 5, item 10:** closed by the same commits.
+> - **Section 7:** all 12 questions decided by Product at 2:23 pm as recommended; marked so.
+> - **D10 TODAY, D02 and D13 REVIEW:** the data marks now say "decided 2:23 pm, not built" (still not on master).
+> - **New open question 14:** the sheet's TODAY example vs the decided `widgetWords` source.
+> - **Section 2 REVIEW ref:** `ReviewWeek.swift:45` is now `:44` (`sessionCount`) on master.
+> - **Times:** lowercase am/pm throughout.
+
+Design sheet 73 (A, his pick at 2:06 pm PT Oct 16) puts all areas on one glass sheet, each word with one live line
 at Body 17, "from the same grammar as Home's context line, under the caps". This file gives that line for REVIEW,
 TODAY, TRAINING and KITCHEN across 15 day shapes (60 cells, plus 3 variant rows and 1 fifth-area row), names the
 source on master for each, and says whether the data exists today. All values are made up. Read against
@@ -12,16 +32,36 @@ source on master for each, and says whether the data exists today. All values ar
 |---|---|
 | The **context cap** applies: at most 6 words and 32 characters, no stop. A line that fails is refused, never cut | `HomeLines.contextWords = 6, contextCharacters = 32` and `fitsContext(_:)`, `HomeLines.swift:183, 187-191` |
 | The detail cap (14 words, 80 characters, one sentence with its stop) does **not** apply to the line. It applies to the VoiceOver row "Training, Push Day A is on", which must pass `fitsDetail` without the stop | `HomeLines.swift:184, 194-199`; sheet 73 VoiceOver |
-| Thing first: the routine, recipe, list, task or week leads. Quiet lines ("Nothing cooking tonight", "All quiet") are the only exception, as Design drew them | sheet 73 live lines; decisions 11:50 AM |
-| Never a private title. A private task reads "Private task", a private note never appears (notes are not an area). A medicine reminder keeps "Medicine" | decisions 1:06 PM, 1:48 PM, 12:30 PM (medicine); `SecretWords.title`, `SecretWords.swift:8` |
-| No money and no body values. None of the four areas owns money or body facts, so no line carries an amount, a body weight or a lift weight. kg appears only on the pages one tap down | decisions 1:23 PM (Siri never says the weight), 12:02 PM, 1:00 PM ("weight down 0.4 kg" stays on the body page) |
+| Thing first: the routine, recipe, list, task or week leads. Quiet lines ("Nothing cooking tonight", "All quiet") are the only exception, as Design drew them | sheet 73 live lines; decisions 11:50 am |
+| Never a private title. A private task reads "Private task", a private note never appears (notes are not an area). A medicine reminder keeps "Medicine" | decisions 1:06 pm, 1:48 pm, 12:30 pm (medicine); `SecretWords.title`, `SecretWords.swift:8` |
+| No money and no body values. None of the four areas owns money or body facts, so no line carries an amount, a body weight or a lift weight. kg appears only on the pages one tap down | decisions 1:23 pm (Siri never says the weight), 12:02 pm, 1:00 pm ("weight down 0.4 kg" stays on the body page) |
 | "best" for lifts, never "record" or "PR" | decisions "Best everywhere"; `HomeLines.swift:244` |
-| Clock: 12-hour, lowercase, with a space: "8:30 pm", "7 pm" | `HouseTime.clock`, `HouseTime.swift:7`; decisions 11:50 AM |
-| Trip days: clocks print in the phone's current zone; a thing files under the day of the zone it happened in | decisions 1:00 PM, trip-week.md §1 |
+| Clock: 12-hour, lowercase, with a space: "8:30 pm", "7 pm" | `HouseTime.clock`, `HouseTime.swift:7`; decisions 11:50 am |
+| Trip days: clocks print in the phone's current zone; a thing files under the day of the zone it happened in | decisions 1:00 pm, trip-week.md §1 |
 | Plain US English, digits in the line (the Review hero keeps its words; the index line is not the hero) | sheet 73 live lines |
 
 **Fallback when a line fails the cap** (proposal, Q3): full line, then the Home hero alone, then the object's title,
 then the area's quiet line. Never an ellipsis.
+
+## 1b. The index itself (sheet 73 A at `585fa19`, as tokens)
+
+| What | Sheet value | Token or source |
+|---|---|---|
+| The name at the top of a tab page | The area's name, one word, Label 15/700, 0.08 em, at y 52 (where the back word sits one page down) | `ThemeConcept.label` at weight 700, `Theme.Colors.ink`. NEW `AreaName`; it is a button |
+| Name changes on a side swipe | **None now.** x on a tab page opens that screen's side page (his pick, 2:06 pm; sheet 74), so the name only changes after the index. If 0p ever ships without Builder B's 0y, x stays the rail and the name rolls over 420 ms (2:12 pm); the daily pins entry lands them together | Replaces the sheet's own "x is still the rail" row |
+| The sheet | One Liquid Glass sheet from the top to y 580, 40 pt bottom corners; replaces 42's lens | The one navigation layer (Liquid Glass) |
+| Rows | From y 96, 104 pt apart: REVIEW, TODAY, TRAINING, KITCHEN (past at the top). A fifth row reaches 616 | NEW `AreaIndex` |
+| Row word | 40/600, minus 0.02 em; shown in sentence case in the study ("Training") | Title-size role at 600 |
+| Row line | Body 17, the live lines of section 3, context cap | `ThemeConcept.body`; `HomeLines.fitsContext` |
+| Row color, the area you're in | ink | `Theme.Colors.ink` |
+| Row color, the others | 42% ink | `Theme.Colors.ink` at 0.42 |
+| Row color, under the finger | The area's color at the 72% mix (sheet 72's `wordMix`), scale 1.06: REVIEW `Theme.Colors.context`, TRAINING `Theme.Colors.liveInk`, KITCHEN `Theme.Colors.health`, TODAY see open question 13 | NEW `Theme.TitleAccent.wordMix` shared with 72 |
+| Pull | Index forms from 20 to 90 pt (page to 0.9, 6 pt blur, drops 40 pt; glass comes down 40 pt; rows stagger 40 ms). Past 90 pt it holds and picks; `.selection` once per row (on in quiet hours, 2:23 pm) | `MotionPolicy` only |
+| Hint at y 528 | "Let go to open" while pulling; "Tap one to open" after a tap | Copy, no stop |
+| Let go | The word flies to the name's place, scale 0.38 over 460 ms; one `.impact(.soft)` on arrival. Above the first row or on the current one: closes | |
+| Reduce Motion | The index crossfades in 200 ms; the word swaps without flying | `Theme.Motion.dry(reduceMotion:)` path |
+| VoiceOver, the name | "Today, area. Double tap to show all areas" | Button label and hint |
+| VoiceOver, a row | "Training, Push Day A is on" (detail cap, no stop) | Rotor Headings jump between areas |
 
 ## 2. Where each line comes from
 
@@ -33,7 +73,7 @@ Tess's line, Home and the index must never disagree. Each area reuses one existi
 | TODAY | Now's top pick, `NowPage.swift:23` (`rank(now:).first`) and the heroes at `NowPage.swift:43-74`, worded by `HomeLine.widgetWords`, `HomeLines.swift:123-137`, with a bare "today" context dropped (the index row already says Today). Empty: `HomeLine.quiet`, `HomeLines.swift:157`, without its stop | **Yes, the Home line source.** Same `HomeLine` Tess's band, the widget and the Lock Screen use |
 | TRAINING | The page's plan state, `TrainingPage.swift:229-244` (`markState`), `tomorrowLine` `:249-260`, done and target sets `:239-240`; rest day and the next routine from `NowPicker.restDay`, pick text `NowRanker.swift:124-128` | Partly: a scheduled or paused session reuses `HomeLines.hero`, `HomeLines.swift:282-307` |
 | KITCHEN | `HomeFacts.fact(plannedCook:recipe:)` `HomeLines.swift:552-556` with `cookWhen` `:267-278` and `toBuy` `:400-406`; a running cook or shop, `fact(process:)` `:507-517`; list count `Shopping.swift:8` (`shoppingOrder`), per recipe `Groceries.swift:59` | **Yes** for cook and shop: the line is `HomeLines.text` without its stop, or the hero. The Kitchen page itself has no live line today (`HomeSpatialView.swift:357-363`, a fixed sentence) |
-| REVIEW | `ReviewWeek` session count and plan rhythm, `ReviewWeek.swift:32, 45`; first-week words `ReviewPage.swift:34-47`; the plain count `sessionLine`, `ReviewPage.swift:50-52` | Same numbers as the Review hero and its VoiceOver `sessionLine`; reordered thing first |
+| REVIEW | `ReviewWeek` session count and plan rhythm, `ReviewWeek.swift:32, 44`; first-week words `ReviewPage.swift:34-47`; the plain count `sessionLine`, `ReviewPage.swift:50-52` | Same numbers as the Review hero and its VoiceOver `sessionLine`; reordered thing first |
 
 Data marks: **Y** exists on master with these words or a direct reorder; **D** data exists, the words are new;
 **N** not built yet (named in the notes).
@@ -58,7 +98,7 @@ Bench, set 3. 7 of 20 sets logged, 13 left. No cook tonight.
 
 | Area | Line | Source | Data |
 |---|---|---|---|
-| REVIEW | `This week, 4 of 6 sessions` | ReviewWeek count, a session with a logged set counts (Q2) | N: counts done only (`ReviewWeek.swift:45`) |
+| REVIEW | `This week, 4 of 6 sessions` | ReviewWeek count, a session with a logged set counts (Q2) | N: decided 2:23 pm, not built; counts done only (`ReviewWeek.swift:44`) |
 | TODAY | `Push Day A, bench set 3` | widgetWords (context "now" drops) | Y |
 | TRAINING | `Push Day A, 13 sets left` | markState `.running`, total minus done | D: counted in the view only |
 | KITCHEN | `Nothing cooking tonight` | quiet line | D |
@@ -88,7 +128,7 @@ Flew in last night. "Client lunch" at 12:30 pm local. Last week's story still st
 
 | Area | Line | Source | Data |
 |---|---|---|---|
-| REVIEW | `Last week, 5 of 6 sessions` | ReviewWeek, previous week until Tue 4 am | N: the Monday carry-over (decisions 1:00 PM) isn't on master |
+| REVIEW | `Last week, 5 of 6 sessions` | ReviewWeek, previous week until Tue 4 am | N: the Monday carry-over (decisions 1:00 pm) isn't on master |
 | TODAY | `Client lunch, 12:30 pm` | widgetWords (timed task), clock in the phone's zone | Y |
 | TRAINING | `Push Day A is on` | markState `.routine` | D |
 | KITCHEN | `Nothing cooking today` | quiet line, morning word | D |
@@ -119,7 +159,7 @@ Only two private notes and one private task at 9 pm. Week already full.
 | Area | Line | Source | Data |
 |---|---|---|---|
 | REVIEW | `This week, 6 of 6 sessions` | ReviewWeek count (notes never counted) | Y |
-| TODAY | `Private task, 9 pm` | widgetWords, title replaced | N: no "Private task" title in Sources (decisions 1:06 PM) |
+| TODAY | `Private task, 9 pm` | widgetWords, title replaced | N: no "Private task" title in Sources (decisions 1:06 pm) |
 | TRAINING | `Rest day, Push Day A next` | NowPicker.restDay | D |
 | KITCHEN | `Nothing cooking today` | quiet line | D |
 
@@ -141,7 +181,7 @@ Push Day A done with a bench best. Tacos at 8 pm, 6 to buy.
 | Area | Line | Source | Data |
 |---|---|---|---|
 | REVIEW | `This week, 4 of 6 sessions` | ReviewWeek count; unchanged by the UNDO, the sets stay | Y |
-| TODAY | `Push Day A done, bench best` | widgetWords, comma form (Q1) | D: code says "Push Day A done. Bench best" |
+| TODAY | `Push Day A done, bench best` | widgetWords, comma form (Q1) | D: decided 2:23 pm, not built; code says "Push Day A done. Bench best" |
 | TRAINING | `Pull A tomorrow` | tomorrowLine | Y |
 | KITCHEN | `Tacos at 8 pm` | fallback: hero alone (Q12) | Y |
 
@@ -177,7 +217,7 @@ Push Day A paused at incline 25 min ago, 12 of 20 sets in.
 
 | Area | Line | Source | Data |
 |---|---|---|---|
-| REVIEW | `This week, 4 of 6 sessions` | a paused session with a set counts (decisions 1:00 PM) | N: counts done only |
+| REVIEW | `This week, 4 of 6 sessions` | a paused session with a set counts (decisions 1:00 pm) | N: decided, not built; counts done only |
 | TODAY | `Push Day A, paused at incline` | widgetWords (paused context drops) | Y |
 | TRAINING | `Push Day A, 8 sets left` | markState `.running` (paused session) | D |
 | KITCHEN | `Nothing cooking tonight` | quiet line | D |
@@ -208,10 +248,11 @@ Last week had 4 sessions. Pull A is next. 9 rows on Groceries.
 tomorrow` (30). The VoiceOver row "Training, Push Day A, 13 sets left" is 7 words and 34 characters, within the
 detail cap. Refused on purpose: the full D12 Kitchen line (33 characters).
 
-Two of Design 73's own examples break the word cap: "Tacos at 7 pm, 6 to buy" and "Push Day A, 7 of 20 sets"
-are 7 words each (the comma counts no word, "pm," and "A," do). So a planned cook with a time falls back to its hero
-(D01, D10, Q12), and a live session says what is left ("Push Day A, 13 sets left"). The same planned-cook row on Home,
-`HomeLines.text` "Tacos at 7 pm, 6 to buy.", is 7 words against `rowWords = 6` (`HomeLines.swift:182, 225`).
+Design 73's own examples now fit (`b3acdbf`, `585fa19`): the sheet reads TODAY "Push Day A, 13 sets left" and
+KITCHEN "Tacos at 7 pm", and says every line keeps the context cap. (They were "Push Day A, 7 of 20 sets" and
+"Tacos at 7 pm, 6 to buy", 7 words each.) A planned cook with a time falls back to its hero (D01, D10, Q12). Still
+open: the same planned-cook row on Home, `HomeLines.text` "Tacos at 7 pm, 6 to buy.", is 7 words against
+`rowWords = 6` (`HomeLines.swift:182, 225`); Product gave it to Design at 2:23 pm.
 
 ## 5. Data not on master yet
 
@@ -224,7 +265,7 @@ are 7 words each (the comma counts no word, "pm," and "A," do). So a planned coo
 7. Comma form for a done workout with a best: D10.
 8. Kitchen has no live line at all; every KITCHEN cell is new wiring from existing Home facts.
 9. A fifth area row: D07.
-10. Design 73's own example lines over the word cap (section 4).
+10. ~~Design 73's own example lines over the word cap~~ Fixed in sheet 73 at `b3acdbf` and `585fa19`.
 
 ## 6. Swift Testing names for Builder A
 
@@ -248,6 +289,8 @@ and the made-up values above):
 
 ## 7. Open questions for Product (recommended answer first)
 
+Questions 1 to 12 were **all decided by Product at 2:23 pm as recommended**. 13 and 14 are new from Research BJ.
+
 1. **Done with a best.** `widgetWords` gives "Push Day A done. Bench best", a stop inside a context-capped line.
    Recommend one shared comma form, "Push Day A done, bench best", for the index and the widget both, so they still
    agree (the comment at `HomeLines.swift:116` already writes it that way).
@@ -256,7 +299,7 @@ and the made-up values above):
 3. **Over-cap fallback.** Recommend full line, then hero, then title, then the quiet line; never cut.
 4. **"is on" vs "today".** Recommend "is on" on TRAINING only (Design's words) and the bare hero on TODAY.
 5. **Quiet hours.** Recommend the same lines after 11 pm and keep the `.selection` haptic, since he is touching it
-   (a stroke while she sleeps still answers him, 12:13 PM).
+   (a stroke while she sleeps still answers him, 12:13 pm).
 6. **Private task wording.** Recommend "Private task" for every walled task, "Medicine" for a medicine reminder (as
    decided), and private notes never on the index.
 7. **A new empty area.** Recommend "Nothing here yet" until it has a source of its own.
@@ -268,3 +311,12 @@ and the made-up values above):
 12. **A timed cook with a count.** "Tacos at 7 pm, 6 to buy" is 7 words. Recommend the hero alone on the index
     ("Tacos at 7 pm") with the count one tap down; a cook with no time keeps it ("Tacos tonight, 6 to buy", 5 words).
     The Home row line has the same 7-word overflow, so Core should check `rowWords` there too.
+13. **TODAY's color under the finger (new).** The sheet says the picked row takes "its area's colour", and the study
+    gives TODAY Tess's cobalt (`--today` = `--tess`, `studies/area-index.html:25-26`). That contradicts Design's own
+    2:30 pm ruling on sheet 72 and Product's 2:28 pm ("Tess's colour is hers alone"; Today's tasks take no color).
+    **Pick:** TODAY under the finger stays `Theme.Colors.ink`, at 700 instead of 600, with the same 1.06 scale, the
+    way ruling 1 marks the tasks' word. No new color. **Ruled by Design (f3c67e9): ink at weight 700, scaled 1.06, never cobalt. area-index.md and the study token are fixed, and where the old board and clip still show cobalt, the sheet line wins.**
+14. **TODAY's example line (new).** The sheet's TODAY example "Push Day A, 13 sets left" is TRAINING's D02 wording,
+    while Product decided at 2:23 pm that TODAY reuses Home's `widgetWords` ("Push Day A, bench set 3" in D02).
+    **Pick:** the decision. TODAY keeps `widgetWords`, so the index, Home, the widget and Tess never disagree; "13 sets
+    left" stays on TRAINING. Design to confirm the example is only an example. **Ruled by Design (BJ calls): TODAY uses Home's widgetWords (Product 2:23 pm), and the sheet line is only an example.**
