@@ -74,6 +74,9 @@ final class LinkStub: URLProtocol, @unchecked Sendable {
 /// table, L3 behind the switch and the cap, and the safety rules.
 @Suite(.serialized) @MainActor
 struct RecipeLinkTests {
+    /// Built from pieces: a key shape never sits in a source file.
+    static let fakeKey = ["sk", "ant", "TEST", "link"].joined(separator: "-")
+
     let store = ObjectStore.open(inMemory: true)
     let classes: [SystemCatalog.Key: ClassDef]
     var ledger: TessUsageLedger {
@@ -105,7 +108,7 @@ struct RecipeLinkTests {
     func reader(claude: Bool = false, allowed: Bool = true) -> RecipeLinkReader {
         var reader = RecipeLinkReader(session: LinkStub.session())
         if claude {
-            var claudeReader = ClaudeRecipeReader(keys: InMemoryKeychain("sk-ant-TEST-link"), ledger: ledger,
+            var claudeReader = ClaudeRecipeReader(keys: InMemoryKeychain(Self.fakeKey), ledger: ledger,
                                                   session: LinkStub.session(), allowed: { allowed })
             claudeReader.now = { DayPlanTests.at(15, "18:00", month: 10) }
             claudeReader.calendar = DayPlanTests.calendar
@@ -181,7 +184,7 @@ struct RecipeLinkTests {
         let read = await reader(claude: true).read("https://blog.example.com/beans")
         #expect(read.kind == .readByClaude && read.line == RecipeLinkLine.claudeRead)
         let call = try #require(LinkStub.requests.last { $0.url?.host() == "api.anthropic.com" })
-        #expect(call.value(forHTTPHeaderField: "x-api-key") == "sk-ant-TEST-link")
+        #expect(call.value(forHTTPHeaderField: "x-api-key") == Self.fakeKey)
         #expect(ledger.calls().count == 1)
         // G31: the receipt names the job, not "a paste".
         let use = ledger.calls().first.flatMap { ledger.store.value("use", of: $0)?.stringValue }
@@ -301,7 +304,7 @@ struct RecipeLinkTests {
             == "Claude couldn't use your key. Paste the text instead.")
         // The key stays: a 401 never clears it or turns Claude off.
         #expect(LinkStub.requests.contains { $0.url?.host() == "api.anthropic.com" })
-        #expect(keyed.claude?.keys.read() == "sk-ant-TEST-link")
+        #expect(keyed.claude?.keys.read() == Self.fakeKey)
         LinkStub.pages["api.anthropic.com"] = .init(status: 429, body: "{}", type: "application/json")
         #expect(await reader(claude: true).read("https://blog.example.com/beans").line == RecipeLinkLine.claudeBusy)
         let cut = #"{"content":[{"type":"text","text":"Beans\nIngredients\n1 can beans\n1 onion\nMethod\n1. Cook"}],"#
@@ -357,7 +360,7 @@ struct RecipeLinkTests {
         LinkStub.pages["api.anthropic.com"] = .init(body: #"{"content":[{"type":"text","text":"x"}]}"#,
                                                     type: "application/json")
         let before = LinkStub.requests.count
-        let step = ClaudeRecipeReader(keys: InMemoryKeychain("sk-ant-TEST-link"), ledger: ledger,
+        let step = ClaudeRecipeReader(keys: InMemoryKeychain(Self.fakeKey), ledger: ledger,
                                       session: LinkStub.session(), allowed: { false })
         let result = await step.read("Beans and rice\n1 can black beans\n2 tomatoes",
                                      source: try #require(URL(string: "https://blog.example.com/beans")))
