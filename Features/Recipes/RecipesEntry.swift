@@ -7,6 +7,9 @@ import TesseraCore
 struct RecipeView: View {
     let recipeID: UUID?
     @Environment(AppModel.self) private var model
+    /// The recipe this visit opened, kept: if it's deleted while showing, its page says "Recipe gone." rather than
+    /// jumping to another recipe (Kitchen on G3/G51).
+    @State private var opened: UUID?
 
     var body: some View {
         let _ = model.revision
@@ -16,8 +19,13 @@ struct RecipeView: View {
                     .filter { !$0.isDeleted }
                     .map { Row(id: $0.id, lastOpenedAt: model.store.value("lastOpenedAt", of: $0)?.dateValue,
                                createdAt: $0.createdAt) }
-                if let id = Self.opening(requested: recipeID, rows: rows) {
+                if let id = opened ?? Self.opening(requested: recipeID, rows: rows) {
                     RecipePage(recipeID: id)
+                        .onAppear {
+                            if opened == nil {
+                                opened = id
+                            }
+                        }
                 } else {
                     PasteRecipe()
                 }

@@ -119,4 +119,19 @@ struct PantryLedgerTests {
         try cook(recipe, at: saturday)
         #expect(ledger.lastCookUsedUp() == nil, "even \"Private recipe took ...\" would name what was in it")
     }
+
+    @Test func aPrivateCookStillMovesThePantryHero() throws {
+        let recipe = try model.engine.perform(CreateRecipe(text: """
+        Wifi code lasagna
+        2 limes
+        1 lb ground beef
+
+        Bake it.
+        """), by: .user).output
+        #expect(PantryLedger.hero(ledger.entries()) == "Nothing yet")
+        try cook(recipe, at: saturday)
+        // No Tess line names it, but what it used is still out or low (Kitchen on #758).
+        #expect(ledger.lastCookUsedUp() == nil)
+        #expect(PantryLedger.hero(ledger.entries()) == "1 out, 1 low")
+    }
 }
