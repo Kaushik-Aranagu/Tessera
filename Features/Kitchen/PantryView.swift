@@ -104,21 +104,24 @@ private struct PantryPage: View {
 
     /// A left swipe: onto Groceries as a new line, "Milk, on Groceries." with UNDO 4 s (a new add; 10 s under
     /// VoiceOver). The line stays on the page: buying it is what makes it in.
-    private func add(_ entry: PantryLedger.Entry) {
+    /// Whether it landed: the swipe's haptic plays only for a real add (Design on #727).
+    @discardableResult
+    private func add(_ entry: PantryLedger.Entry) -> Bool {
         let name = model.store.displayTitle(of: entry.ingredient)
         guard let record = try? model.engine.perform(AddGroceries(lines: [name]), by: .user).record else {
             TessVoice.shared.say("Didn't save that. Try again.")
-            return
+            return false
         }
         model.touch()
         TessVoice.shared.say(PantryCopy.added(entry.label), undo: record, holds: .seconds(4))
+        return true
     }
 }
 
 /// One thing: the name in ink, its state word at the right (out heavier than low), the faint ring on out lines.
 struct PantryLine: View {
     let entry: PantryLedger.Entry
-    var onAdd: () -> Void = {}
+    var onAdd: () -> Bool = { false }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var pull: CGFloat = 0
     @State private var added = 0
@@ -142,7 +145,7 @@ struct PantryLine: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(name), \(entry.state.word)")
-        .accessibilityAction(named: "Add to Groceries", onAdd)
+        .accessibilityAction(named: "Add to Groceries") { _ = onAdd() }
         .offset(x: pull)
         // The ghost row behind the swipe: where the line is going (Design on #727).
         .background(alignment: .trailing) {
@@ -161,8 +164,9 @@ struct PantryLine: View {
                 }
                 .onEnded { _ in
                     if pull <= -72 {
-                        added += 1
-                        onAdd()
+                        if onAdd() {
+                            added += 1
+                        }
                     }
                     withTesseraAnimation(reduceMotion: reduceMotion) { pull = 0 }
                 }
