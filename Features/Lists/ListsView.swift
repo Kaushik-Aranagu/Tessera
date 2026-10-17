@@ -11,6 +11,7 @@ struct ListsView: View {
         NavigationStack {
             ListsShelfPage()
                 .navigationDestination(for: UUID.self) { ListPage(listID: $0) }
+                .navigationDestination(for: PutAwayShelf.self) { _ in PutAwayShelf.Page() }
                 .toolbar(.hidden, for: .navigationBar)
         }
         .environment(\.animateEntrance, true)
@@ -54,6 +55,19 @@ private struct ListsShelfPage: View {
                         .font(Theme.voice)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                         .padding(.top, Theme.Spacing.xxl)
+                }
+                // The foot: "Put away" at 21/400, 45%, only once something has been (9.6, 10.12). Never "Archived".
+                if shelf.awayCount > 0 {
+                    NavigationLink(value: PutAwayShelf()) {
+                        Text("Put away")
+                            .font(Theme.voice(size: 21))
+                            .foregroundStyle(Theme.Colors.ink.opacity(0.45))
+                            .frame(minHeight: 44, alignment: .leading)
+                    }
+                    .buttonStyle(HandleButtonStyle())
+                    .accessibilityLabel("Put away, \(shelf.awayCount)")
+                    .accessibilityHint("Lists set aside for later")
+                    .padding(.top, Theme.Spacing.xxl)
                 }
             }
             .padding(.horizontal, Theme.Spacing.gutter)
@@ -371,6 +385,17 @@ private struct ListPage: View {
             }
             .buttonStyle(HandleButtonStyle())
             .accessibilityHint(running ? "Finishes the run" : "Runs the list")
+            if running {
+                Button { putAwayRun(name: name) } label: {
+                    Text("Put away")
+                        .textRole(.labelStrong)
+                        .textCase(.uppercase)
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                        .frame(minHeight: 44)
+                }
+                .buttonStyle(HandleButtonStyle())
+                .accessibilityHint("Sets the run aside for later")
+            }
             Button {
                 setReusable(!reusable, was: reusable, name: name)
             } label: {
@@ -442,7 +467,29 @@ private struct ListPage: View {
             }
             return
         }
+        // A plain list with everything done is put away, rows kept (G9): back to the shelf, where it sinks to the foot.
+        if result.output.putAway {
+            TessVoice.shared.say(ListsCopy.putAway(name, basket: 0), undo: result.record)
+            dismiss()
+            return
+        }
         TessVoice.shared.say(ListsCopy.runDone(name, left: result.output.left), undo: result.record)
+    }
+
+    /// The Put away option word: the run goes to Later with its basket, "Packing put away. 3 in the basket." with
+    /// UNDO 10 s; running it again brings it back.
+    private func putAwayRun(name: String) {
+        guard let result = try? model.engine.perform(PutAwayListRun(list: listID, time: AppClock.now), by: .user)
+        else {
+            TessVoice.shared.say("Didn't save that. Try again.")
+            return
+        }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+            optionsOpen = false
+            model.touch()
+        }
+        TessVoice.shared.say(ListsCopy.putAway(name, basket: result.output), undo: result.record)
+        dismiss()
     }
 
     /// "Packing, done. Reset it for next time?" with RESET (a 0.7 s hold, the ink line filling) and NOT NOW (10.11).
@@ -569,5 +616,46 @@ struct BackWord: View {
         }
         .buttonStyle(HandleButtonStyle())
         .accessibilityLabel("Back to \(title)")
+    }
+}
+
+/// The lists put away (G9, 9.6): plain names, newest first; one opens its page, and running it again brings it back.
+struct PutAwayShelf: Hashable {
+    struct Page: View {
+        @Environment(AppModel.self) private var model
+        @Environment(\.dismiss) private var dismiss
+
+        var body: some View {
+            let _ = model.revision
+            let away = ListContents(store: model.store, classes: model.classes).putAway()
+            let last = BodyWeight.lastKg(in: model.store)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    BackWord(title: "Lists") { dismiss() }
+                    Text("Put away")
+                        .textRole(.title)
+                        .foregroundStyle(Theme.Colors.ink)
+                        .accessibilityAddTraits(.isHeader)
+                    VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+                        ForEach(away, id: \.id) { list in
+                            NavigationLink(value: list.id) {
+                                Text(ListsShelf.shownName(model.store.displayTitle(of: list), lastWeightKg: last))
+                                    .textRole(.body)
+                                    .foregroundStyle(Theme.Colors.ink.opacity(0.75))
+                                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                            }
+                            .buttonStyle(HandleButtonStyle())
+                            .accessibilityHint("Opens the list")
+                        }
+                    }
+                    .padding(.top, Theme.Spacing.xl)
+                }
+                .padding(.horizontal, Theme.Spacing.gutter)
+                .padding(.vertical, Theme.Spacing.l)
+            }
+            .scrollIndicators(.hidden)
+            .background { ThemedBackground() }
+            .toolbar(.hidden, for: .navigationBar)
+        }
     }
 }
