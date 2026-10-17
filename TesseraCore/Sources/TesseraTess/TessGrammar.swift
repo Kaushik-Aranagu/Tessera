@@ -61,6 +61,27 @@ public struct TessGrammar {
         self.classes = classes
     }
 
+    /// The rules ahead of every process and task rule: a note, a pasted recipe, a question (no write at all:
+    /// `.some(nil)`) and a rest weekday. Nil when none of them applies.
+    func parseBeforeTasks(_ phrase: String, text: String) -> Parse?? {
+        if let note = parseNote(phrase) {
+            return .some(note)
+        }
+        if let recipe = parsePastedRecipe(phrase) {
+            return .some(recipe)
+        }
+        // Rule 2: a question never writes; it goes to the model's read-only answer. The raw phrase, so a typed "?"
+        // still counts (normalize trims it).
+        if Self.isQuestion(text) || phrase.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix("?") {
+            return .some(nil)
+        }
+        // A rest weekday is a setting, not a task called "Rest day" (RG3): ahead of every task rule.
+        if let rest = parseSetRestWeekday(text: text) {
+            return .some(rest)
+        }
+        return nil
+    }
+
     public func parse(_ phrase: String, context: TessContext) -> Parse? {
         // A wake word said with it ("Okay Tess, 80 for 8.") is not part of the phrase.
         // Only "Tess," / "Tess:" or "okay/hey Tess": "Tess's ideas list" and "Tess dinner fri" keep their Tess (QA W1).
@@ -73,20 +94,10 @@ public struct TessGrammar {
         if let secret = parseSecret(phrase, text: text, context: context) ?? parseRememberedMoney(phrase) {
             return secret
         }
-        if let note = parseNote(phrase) {
-            return note
-        }
-        if let recipe = parsePastedRecipe(phrase) {
-            return recipe
-        }
-        // Rule 2: a question never writes; it goes to the model's read-only answer. The raw phrase, so a typed "?"
-        // still counts (normalize trims it).
-        if Self.isQuestion(text) || phrase.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix("?") {
-            return nil
-        }
-        // A rest weekday is a setting, not a task called "Rest day" (RG3): ahead of every task rule.
-        if let rest = parseSetRestWeekday(text: text) {
-            return rest
+        switch parseBeforeTasks(phrase, text: text) {
+        case let .some(.some(early)): return early
+        case .some(.none): return nil
+        case .none: break
         }
         // Rule 3: the process in front decides bare input.
         if let bare = parseForProcess(text, context: context) {
