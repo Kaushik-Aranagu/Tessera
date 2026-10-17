@@ -351,6 +351,12 @@ def self_test():
         check("Grocery items: 3 (0 from recipes, 3 typed, 0 typed staples)" in plain, "grocery items counted, none named (PF6)")
         check("$" not in plain + with_titles, "no $ in output (PF10)")
         check(before == after, "store file unchanged (PF12)")
+        swift = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "TesseraCore", "Sources", "TesseraCore",
+                             "Notes", "SecretWords.swift")
+        decl = re.search(r"public\s+static\s+let\s+words\s*:\s*Set<String>\s*=\s*\[(.*?)\]", open(swift).read(), re.S)
+        core = set(re.findall(r'"([^"]+)"', decl.group(1))) if decl else set()
+        check(bool(core), f"found {len(core)} words in Core's SecretWords.words")
+        check(core == SECRET_WORDS, f"word list matches Core (missing {sorted(core - SECRET_WORDS)}, extra {sorted(SECRET_WORDS - core)})")
         link = os.path.join(tmp, "Application Support", "Tessera")
         os.makedirs(link)
         shutil.copy(path, os.path.join(link, "tessera.sqlite"))
