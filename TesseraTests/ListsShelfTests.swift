@@ -90,4 +90,19 @@ struct ListsShelfTests {
         try model.engine.perform(SetListReusable(list: gym.id), by: .user)
         #expect(shelf.rows.first { $0.id == gym.id }?.state == "REUSABLE")
     }
+
+    /// QA on #814: a set-aside run of a walled list shows on Now's ledger as Private list, never its title.
+    @Test func aPausedPrivateRunNeverShowsItsName() throws {
+        let title = "Rent 1200 stuff"
+        let list = try model.engine.perform(CreateList(name: title), by: .user).output
+        try model.engine.perform(AddListItem(list: list.id, text: "boxes"), by: .user)
+        try model.engine.perform(StartListRun(list: list.id), by: .user)
+        let table = ProcessTable(engine: model.engine)
+        let run = try #require(table.all().first { $0.subject?.id == list.id })
+        try model.engine.perform(SuspendProcess(process: run.id), by: .user)
+        let paused = try #require(table.all().first { $0.id == run.id })
+        let shown = LedgerRow.shown(paused, store: model.store, classes: model.classes, lastWeightKg: nil)
+        #expect(shown.title == "Private list" && shown.nextStep == "Private list, 1 left")
+        #expect(!shown.title.contains("Rent") && !(shown.nextStep ?? "").contains("Rent"))
+    }
 }

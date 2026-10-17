@@ -168,7 +168,7 @@ struct ListRunTests {
         try fixture.engine.perform(StartListRun(list: fixture.packing.id, time: start), by: .user)
         try check(fixture, 3, at: start + 60)
         let finished = try fixture.engine.perform(FinishListRun(list: fixture.packing.id, time: start + 600), by: .user)
-        #expect(finished.output == FinishListRun.Outcome(cleared: 3, left: 3, wasReusable: false))
+        #expect(finished.output == FinishListRun.Outcome(cleared: 3, left: 3, wasReusable: false, putAway: false))
         #expect(fixture.lists.items(of: fixture.packing).map(\.text) == ["Adapter", "Shirt", "Book"])
         #expect(fixture.table.running() == nil)
         let process = try #require(fixture.table.all().first)
@@ -178,13 +178,15 @@ struct ListRunTests {
         #expect(finished.record.summary == "Finished Packing")
     }
 
-    @Test func finishingWithNothingOpenSaysJustDone() throws {
-        let fixture = try setUp(texts: ["Socks", "Charger"])
+    @Test func finishingAReusableListWithNothingOpenSaysJustDone() throws {
+        let fixture = try setUp(name: "Gym bag", texts: ["Towel", "Belt"])
+        try fixture.engine.perform(SetListReusable(list: fixture.packing.id), by: .user)
         try fixture.engine.perform(StartListRun(list: fixture.packing.id, time: start), by: .user)
         try check(fixture, 2)
         let finished = try fixture.engine.perform(FinishListRun(list: fixture.packing.id, time: start + 60), by: .user)
-        #expect(finished.record.receipt == "Packing, done")
-        #expect(finished.output.left == 0)
+        #expect(finished.record.receipt == "Gym bag, done")
+        #expect(finished.output.left == 0 && !finished.output.putAway)
+        #expect(fixture.lists.done(in: fixture.packing).count == 2)
     }
 
     @Test func finishingAReusableListKeepsEveryStrikeAndDoesNotReset() throws {
@@ -195,7 +197,7 @@ struct ListRunTests {
         let before = fixture.engine.history(limit: 500).count
         let finished = try fixture.engine.perform(FinishListRun(list: fixture.packing.id, time: start + 60), by: .user)
         #expect(fixture.engine.history(limit: 500).count == before + 1)
-        #expect(finished.output == FinishListRun.Outcome(cleared: 0, left: 1, wasReusable: true))
+        #expect(finished.output == FinishListRun.Outcome(cleared: 0, left: 1, wasReusable: true, putAway: false))
         #expect(fixture.lists.done(in: fixture.packing).count == 3)
         #expect(fixture.lists.items(of: fixture.packing).count == 4)
         #expect(fixture.table.running() == nil)

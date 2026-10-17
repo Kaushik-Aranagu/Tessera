@@ -81,7 +81,7 @@ public extension IngredientLine {
         default: nil
         }
         if unit != .kilogram, unit != .litre, let glyph {
-            return whole == 0 ? glyph : "\(Int(whole))\(glyph)"
+            return whole == 0 ? glyph : RecipeLimits.whole(whole).map { "\($0)\(glyph)" } ?? glyph
         }
         return value.formatted(.number.precision(.fractionLength(0 ... 2)))
     }

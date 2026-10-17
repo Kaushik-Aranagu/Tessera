@@ -124,6 +124,7 @@ private struct ListPage: View {
     @State private var removed = 0
     @State private var reset = 0
     @State private var runChanged = 0
+    @State private var runStarted = 0
     /// The open reset ask after "done" on a reusable list; nil when none.
     @State private var resetAsk: UUID?
     /// Private rows: "Private item" until tapped, masked again on leaving (as Groceries, B11).
@@ -192,7 +193,7 @@ private struct ListPage: View {
                                         .accessibilityAddTraits(.isHeader)
                                 }
                                 ForEach(section.items) { item in
-                                    row(item)
+                                    row(item, running: run != nil)
                                         .swipeToRemove { remove(item, from: name) }
                                 }
                                 .padding(.leading, section.name == nil ? 0 : 42)
@@ -228,6 +229,7 @@ private struct ListPage: View {
                 }
             }
             .tesseraFeedback(.done, trigger: runChanged)
+            .tesseraFeedback(.made, trigger: runStarted)
             .toolbar(.hidden, for: .navigationBar)
             .tesseraFeedback(.notNow, trigger: removed)
             // A cleared run (Design on #806); .done is for finishing.
@@ -263,14 +265,8 @@ private struct ListPage: View {
         rows.label(for: item, name: item.text, lastWeightKg: BodyWeight.lastKg(in: model.store))
     }
 
-    /// Whether this list has a run open: rows grow to 64 pt (10.7).
-    private var running: Bool {
-        model.store.object(id: listID).flatMap {
-            ListContents(store: model.store, classes: model.classes).run(of: $0, in: model.engine)
-        } != nil
-    }
-
-    private func row(_ item: ListContents.Item) -> some View {
+    /// A row; with a run open it grows to 64 pt (10.7). The run is read once in `body` and passed down (QA on #814).
+    private func row(_ item: ListContents.Item, running: Bool) -> some View {
         let shown = label(item)
         return Button { tap(item) } label: {
             (Text(item.quantity.map { "\($0) " } ?? "").fontWeight(.semibold) + Text(shown))
@@ -374,7 +370,7 @@ private struct ListPage: View {
                     .frame(minHeight: 44)
             }
             .buttonStyle(HandleButtonStyle())
-            .accessibilityHint(running ? "Finishes the run" : "Runs the list on Now")
+            .accessibilityHint(running ? "Finishes the run" : "Runs the list")
             Button {
                 setReusable(!reusable, was: reusable, name: name)
             } label: {
@@ -409,7 +405,8 @@ private struct ListPage: View {
             optionsOpen = false
             model.touch()
         }
-        runChanged += 1
+        // A run starting is a thing landing (Design on #814); only Done plays .done.
+        runStarted += 1
         let left = model.store.object(id: listID).map { ListContents(store: model.store, classes: model.classes)
             .open(in: $0).count
         } ?? 0

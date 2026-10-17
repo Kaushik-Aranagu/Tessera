@@ -33,9 +33,11 @@ struct ListsShelf {
     {
         let contents = ListContents(store: store, classes: classes)
         let lists = contents.lists().filter { !$0.isDeleted }
-        let runs = Dictionary(uniqueKeysWithValues: lists.compactMap { list in
-            engine.flatMap { contents.run(of: list, in: $0) }.map { (list.id, $0.startedAt ?? .distantPast) }
-        })
+        // One read of the process table for the whole shelf, not one per list (QA on #814).
+        let open = (engine.map { ProcessTable(engine: $0).all() } ?? []).filter(\.state.isOpen)
+        let runs = Dictionary(open.compactMap { process in
+            process.subject.map { ($0.id, process.startedAt ?? .distantPast) }
+        }, uniquingKeysWith: max)
         // Running lists first, the newer run first (9.2, G11); then by last touched.
         let ordered = lists.sorted { lhs, rhs in
             switch (runs[lhs.id], runs[rhs.id]) {
