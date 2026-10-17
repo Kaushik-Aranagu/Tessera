@@ -5,9 +5,9 @@
 | # | Do | Pass when | S |
 |---|---|---|---|
 | 1 | Open Weeknight dal and tap **Cook** | A dark full-screen page rises, showing step 1 large, its amounts under it and the screen not dimming. Home's Now reads "Weeknight dal" when you come back to it | S01 |
-| 2 | Swipe up | Step 2 arrives and step 1 stays as a dim line above it | |
+| 2 | Tap the Next key | Step 2 arrives and step 1 stays as a dim line above it | |
 | 3 | Hold the cadmium **8 minutes** key | A line across the top starts burning down, labelled "Soften, 8 min" or similar. There's no button-shaped key or pill | S01 |
-| 4 | Swipe to step 3 and hold its **20 minutes** key | Two stacked lines appear, the sooner one on top | S02 |
+| 4 | Tap Next to step 3 and hold its **20 minutes** key | Two stacked lines appear, the sooner one on top | S02 |
 | 5 | Lock the phone | The Lock Screen shows Weeknight dal with the soonest timer and "+1" | S04 |
 | 6 | Wait for the 8-minute timer with the phone locked | It flips to done on its own and a notification arrives once, "Soften is done", with no double alert | S04 |
 | 7 | Tap the notification | Cook mode opens on this cook. The finished line flares and step 2 slides back in with a haptic. The current step doesn't change | S03 |
