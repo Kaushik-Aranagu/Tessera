@@ -148,7 +148,7 @@ const MX = [
  ['REVIEW', "Didn't save. Try again.<br><i>habit tick, weigh-in</i>", "<span class=\"n\">Week line falls back to the phone's own, no line</span>", '<span class="n">Same, no line</span>', '<span class="n">Same, no line</span>'],
  ['SETTINGS', "Didn't save. Try again.<br><i>the value word springs back</i>", "Standing, inline: <i>Key ends in ...a1B2, not checked.</i>", "Standing, inline: <i>not checked</i>", "Standing, inline: <i>Tess thinks on this phone only.</i>"],
  ["TESS'S ASK SLOT", "Didn't save. Try again.", "Claude is busy. Kept it for later.<br>Claude didn't answer in time. Kept it for later.", "Kept it for later.", "<b>No Claude key yet.</b> <b>Claude is off.</b><br><b>Claude paused until Nov 1.</b>"],
- ['WIDGETS, LOCK SCREEN', "Live Activity or Siri: Set 4 didn't save. Try again.<br><i>Home Screen widgets show the last good line, never an error</i>", '<span class="n">Never calls Claude</span>', '<span class="n">Nothing: reads the phone</span>', '<span class="n">Nothing</span>'],
+ ['WIDGETS, LOCK SCREEN', "Live Activity, Siri and widgets show nothing: the last good line stays<br><i>The failure shows as "Didn't save. Try again." in Tess's band on next open</i>", '<span class="n">Never calls Claude</span>', '<span class="n">Nothing: reads the phone</span>', '<span class="n">Nothing</span>'],
 ];
 const matrix = `<div class="mx"><table><tr><th>AREA</th><th>DIDN'T SAVE</th><th>CLAUDE BUSY OR SLOW</th><th>OFFLINE</th><th>NO KEY OR CLAUDE OFF</th></tr>${MX.map(r => '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('')}</table></div>`;
 

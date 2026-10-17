@@ -36,7 +36,7 @@ No raw errors (error text, codes, 401, 429, 529), no model name, no request id, 
 - **Cap and bad key** keep Settings' lines ("Claude paused until Nov 1.", "That key didn't work. Paste it again?"), Tess's, cobalt.
 
 ## Widgets and Lock Screen
-Home Screen and Lock Screen widgets never show an error: they keep the last good timeline (widget-states.md) and never call Claude. The rest Live Activity and a Siri snippet can fail a set log: the line under the rest reads "Set 4 didn't save. Try again." in ink in the place UNDO takes after a good log; tap retries. Island: nothing.
+Home Screen and Lock Screen widgets never show an error: they keep the last good timeline (widget-states.md) and never call Claude. A failed set log from the rest Live Activity or a Siri snippet shows nothing there (ruled 8:26 PM): the last good timeline stays, and the failure appears as "Didn't save. Try again." in Tess's band the next time the app opens. Island: nothing.
 
 ## Access
 - **VoiceOver:** the slot is one live region. A failure is announced once at high priority as its words; a kept receipt at default priority. The failure is a button, label the line, hint "Opens to try again"; custom action "Try again". Focus doesn't move. Window 10 s. The failed row reads its stored state ("Set 4, not logged"). Tess's cobalt lines are buttons with the hint "Opens Claude settings".
@@ -56,4 +56,4 @@ Home Screen and Lock Screen widgets never show an error: they keep the last good
 1. Whether Tess's key and off lines opening Settings from a slot line fits "no controls on a line" (proposed yes, a tap on her line).
 2. "Set 4 didn't save." naming the set (the one named exception).
 3. "Claude is off." and "No Claude key yet." as proposed words for Product to rule.
-4. Core: do widget intents report a failed write to the Live Activity?
+4. RULED 8:26 PM: a failed widget or Live Activity write shows nothing there; the failure appears in Tess's band on next open. Core stores the failed write so the band can say it.
