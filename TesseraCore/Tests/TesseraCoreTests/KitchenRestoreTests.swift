@@ -65,7 +65,9 @@ struct KitchenRestoreTests {
         let classes = try store.prepareCatalog()
         let engine = ActionEngine(store: store, classes: classes)
         // His own list, made by createList and named by him.
-        let his = try engine.perform(CreateList(name: "Groceries"), by: .user).output
+        // (CreateList("Groceries") opens the built-in now, G40, so his is made the way a Shortcut would.)
+        var transaction = Transaction(store: store, classes: classes)
+        let his = try transaction.create(transaction.classDef(.list), title: "Groceries")
         try engine.perform(AddListItem(list: his.id, text: "his own row"), by: .user)
         #expect(Groceries.installIfNeeded(store: store, classes: classes) == 0)
         #expect(!his.isDeleted && his.orderedChildren.count == 1)

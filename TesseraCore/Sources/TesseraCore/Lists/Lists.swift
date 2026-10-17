@@ -69,7 +69,9 @@ public struct ListContents {
 
 // MARK: - Actions
 
-/// Makes a new list.
+/// Makes a new list. A name that is already a list (case and spaces aside) opens that list instead of making a second
+/// (G40): no `.create` op, and the receipt says it was already there. Deleted lists don't count, and "Groceries" is
+/// the built-in.
 public struct CreateList: EngineAction {
     public static let descriptor = ActionDescriptor(name: "createList", summary: "Make a new list", parameters: [
         .init("name", .string, "What the list is, e.g. Packing"),
@@ -77,14 +79,57 @@ public struct CreateList: EngineAction {
 
     public var name: String
 
+    /// Whether the last `apply` found the list already there. Not part of the action's encoding.
+    private let outcome = Outcome()
+
+    private final class Outcome: @unchecked Sendable {
+        var wasRepeat = false
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case name
+    }
+
     public init(name: String) {
         self.name = name
+    }
+
+    /// The live list with this name (case and spaces aside), oldest first; nil when there is none.
+    @MainActor
+    public static func existing(named name: String, in store: ObjectStore,
+                                classes: [SystemCatalog.Key: ClassDef]) -> ObjectRecord?
+    {
+        let key = name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !key.isEmpty else { return nil }
+        if key == "groceries", let built = store.object(id: Groceries.listID), !built.isDeleted {
+            return built
+        }
+        return ListContents(store: store, classes: classes).lists()
+            .first { $0.title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == key }
+    }
+
+    /// Whether a record from `CreateList` found its list already there (it made nothing).
+    @MainActor
+    public static func wasRepeat(_ record: OpRecord) -> Bool {
+        guard record.action == descriptor.name else { return false }
+        let made = record.ops.contains {
+            if case .create = $0 { true } else { false }
+        }
+        return !made
     }
 
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
         let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "the list needs a name")
+        }
+        outcome.wasRepeat = false
+        if let existing = Self.existing(named: name, in: transaction.store, classes: transaction.classes) {
+            outcome.wasRepeat = true
+            return existing
+        }
+        if name.lowercased() == "groceries" {
+            return try transaction.groceriesList()
         }
         return try transaction.create(transaction.classDef(.list), title: name)
     }
@@ -94,7 +139,8 @@ public struct CreateList: EngineAction {
     }
 
     public func receipt(in _: ObjectStore) -> String? {
-        "\(name), made"
+        let shown = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return outcome.wasRepeat ? "\(shown), already a list" : "\(shown), made"
     }
 }
 

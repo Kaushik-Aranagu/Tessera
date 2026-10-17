@@ -208,8 +208,12 @@ public enum TessTools {
         Tool(name: "createList", description: "Make a new list, with items if given",
              input: .object([("name", .string("What the list is")), ("items", .array(item))]))
         { args, call in
-            let record = try call.perform(CreateList(name: args.string("name")))
-            guard let list = call.store.object(id: record.objectIDs.first ?? UUID()) else { return [record] }
+            let name = try args.string("name")
+            // A name that is already a list opens it: the items go onto that one (G40).
+            let record = try call.perform(CreateList(name: name))
+            guard let list = CreateList.existing(named: name, in: call.store, classes: call.engine.classes) else {
+                return [record]
+            }
             let items = args["items"] as? [[String: Any]] ?? []
             // "new list packing" with nothing in it yet is fine.
             return items.isEmpty ? [record] : try [record] + call.addItems(items, to: list)
@@ -320,15 +324,34 @@ extension TessTools.Call {
         return match.task
     }
 
-    /// A list by name ("groceries" is the groceries list).
+    /// A list by name ("groceries" is the groceries list). An exact name wins only when exactly one list has it; else
+    /// a prefix of three letters or more, when exactly one list starts with it. Two matches write nothing and ask
+    /// which (G40). A one- or two-letter prefix never matches.
     func list(named name: String) throws -> ObjectRecord {
-        let query = name.lowercased().trimmingCharacters(in: .whitespaces)
+        let query = name.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         let lists = ListContents(store: store, classes: engine.classes).lists()
-        guard let list = lists.first(where: { $0.title.lowercased() == query })
-            ?? lists.first(where: { $0.title.lowercased().hasPrefix(query) })
-        else { throw TessToolError("no list called \(name)") }
+        func title(_ list: ObjectRecord) -> String {
+            list.title.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        // A private word is never echoed back, even as his own query.
+        let shown = ObjectPrivacy.isPrivateWord(name, in: store) ? "that" : name
+        let exact = lists.filter { title($0) == query }
+        if exact.count == 1, let list = exact.first {
+            return list
+        }
+        if exact.count > 1 {
+            throw TessToolError(ListLookupLine.moreThanOne(shown))
+        }
+        let prefixed = query.count >= Self.listPrefixMinimum ? lists.filter { title($0).hasPrefix(query) } : []
+        if prefixed.count > 1 {
+            throw TessToolError(ListLookupLine.moreThanOne(shown))
+        }
+        guard let list = prefixed.first else { throw TessToolError("no list called \(shown)") }
         return list
     }
+
+    /// The fewest letters that count as a prefix of a list's name.
+    static let listPrefixMinimum = 3
 
     /// Any thing by name, recipes first ("about" links).
     func object(named name: String) -> ObjectRecord? {
@@ -362,6 +385,13 @@ extension TessTools.Call {
         }
         guard !records.isEmpty else { throw TessToolError("no items to add") }
         return records
+    }
+}
+
+/// The line for a name that matches two lists (G40), for the app to say the same words.
+public enum ListLookupLine {
+    public static func moreThanOne(_ name: String) -> String {
+        "More than one list like \(name)."
     }
 }
 
