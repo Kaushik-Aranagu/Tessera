@@ -55,8 +55,8 @@ Input: groups in order, each with a word and a row count. Output: pages, each wi
 | TN06 | a focused text field, vertical swipe | does not turn the page | `focusedFieldNeverTurnsPage` |
 | TN07 | the lead changes page (a shop item is checked) | the page turns by itself to the new lead, once, with the chosen turn | `leadChangeTurnsOnce` |
 | TN08 | the lead changes page twice quickly | at most one turn per change, no stacking; ends on the lead's page | `quickLeadChangesDoNotStack` |
-| TN09 | the lead lands | exactly one `.selection` cue, no other haptic; checking the item keeps its own finish haptic, so the counts per moment are written in `haptic-moments.md` | `leadLandingFiresOneSelection` |
-| TN10 | a user turn (swipe or tap), Rotate included | no haptic (R2 ruled); only the automatic lead turn (TN09) plays `.selection` | `userTurnPlaysNoHaptic` |
+| TN09 | the lead lands (the page turns by itself) | no `.selection` and no other haptic from the turn (Product, 5:30 PM Oct 17: one haptic per moment; a check keeps its own finish haptic alone) | `leadLandingTurnPlaysNoHaptic` |
+| TN10 | a user turn (swipe or tap), Rotate included | no haptic (R2 ruled); the automatic lead turn (TN09) is silent too | `userTurnPlaysNoHaptic` |
 | TN11 | a slow drag in Rotate | rows follow the finger; lifting early settles back or forward by the same rule as a swipe | `rotateDragFollowsFinger` |
 | TN12 | VoiceOver on | each page is one container read "Produce, page 1 of 2"; the rotor scroll action turns the page; the peek word is hidden | `pageContainerLabelsReadPageNumbers` |
 
