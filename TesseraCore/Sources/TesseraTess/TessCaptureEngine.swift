@@ -57,7 +57,7 @@ public final class TessCaptureEngine: TessCapturing {
         // Nor a line with a secret word (Research 134): the miss log is a file.
         // Nor money or a body fact (Product P14, 12:30 PM PT).
         if !result.understood, !looksLikeClaudeKey(phrase), !SecretWords.mentions(phrase),
-           !PrivateFacts.isWalled(phrase)
+           !PrivateFacts.isWalled(phrase, lastWeightKg: TessRequest.lastWeightKg(context, engine: engine))
         {
             missLog?.record(phrase, at: context.now, route: result.source.rawValue, source: source)
         }
@@ -301,13 +301,21 @@ public final class TessCaptureEngine: TessCapturing {
             }
             return (record, line)
         case let .task(title, startsAt):
-            let record = try engine.perform(CreateTask(title: title, startsAt: startsAt), by: .tess, pending: pending)
-                .record
-            // A private title is never said back (Product P14, 12:30 PM PT): "Task added for Fri."
-            if PrivateFacts.isPrivateTitle(title) {
+            let made = try engine.perform(CreateTask(title: title, startsAt: startsAt), by: .tess, pending: pending)
+            let record = made.record
+            // Said as the engine wall stored it (Product 8:09 PM PT): "pay rent 2100 fri" is "Pay rent, Fri.", its
+            // amount gone. A stored title that is still private is never said back (P14, Research S18): "Task added
+            // for Fri."
+            let stored = made.output.title
+            if stored == SecretWords.title {
+                return (record, "\(SecretWords.title), kept.")
+            }
+            if stored == ObjectPrivacy.taskLabel
+                || PrivateFacts.isPrivateTitle(stored, lastWeightKg: BodyWeight.lastKg(in: engine.store))
+            {
                 return (record, Self.privateTaskLine(startsAt, context: context))
             }
-            return (record, startsAt.map { "\(title), \(Self.when($0, context: context))." } ?? "\(title), in Later.")
+            return (record, startsAt.map { "\(stored), \(Self.when($0, context: context))." } ?? "\(stored), in Later.")
         case let .setRestWeekday(weekday):
             var settings = SettingsStore(engine: engine).read()
             settings.restWeekday = weekday

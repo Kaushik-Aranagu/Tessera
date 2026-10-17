@@ -3,7 +3,8 @@ import Foundation
 extension TessDates {
     /// A resolved time that has already passed, moved ahead. "thu" said on a Thursday means today (Product,
     /// 2026-10-15): with no time, never in the past (the next whole hour); with a time that's passed, next week, unless
-    /// the fall-back night's second pass is still ahead (DS8). "today" with no time after 09:00: the next whole hour (23:30 after 11 pm).
+    /// the fall-back night's second pass is still ahead (DS8). "today" with no time after 09:00: the next whole hour
+    /// (23:30 after 11 pm).
     static func ahead(_ resolved: Date, now: Date, fromWeekday: Bool, saidDay: Bool, saidTime: Bool, hour: Int,
                       minute: Int, calendar: Calendar) -> Date?
     {

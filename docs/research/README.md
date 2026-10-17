@@ -276,3 +276,8 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [fixtures/pantry-78.md](fixtures/pantry-78.md) | Builder B, Core, Kitchen lead: Pantry rows against sheet 78, the BV rows reconciled, 25 new rows and 10 flagged conflicts |
 | [week-two-plan.md](week-two-plan.md) | Mon Oct 19 run order, pull list P0-P10, messages A and B, board edits per answer |
 | [fixtures/home-pack-walls.md](fixtures/home-pack-walls.md) | Home done pack walls W1-W14 with the 7:31 rulings |
+| [fixtures/cook-duration-median.md](fixtures/cook-duration-median.md) | Cook duration median, overnight cutoff (CD1-CD9) |
+| [fixtures/daylog-side-line.md](fixtures/daylog-side-line.md) | Day log side line, 3 of 4 came after 6 pm (DL1-DL30) |
+| [fixtures/review-fullest-day.md](fixtures/review-fullest-day.md) | Review first-week side line, fullest day (FD1-FD45) |
+| [fixtures/ingredient-colours.md](fixtures/ingredient-colours.md) | Ingredient color table for sheet 88 (62 foods) |
+| [fixtures/exercise-muscles.md](fixtures/exercise-muscles.md) | Exercise to muscles for sheet 88 (72 exercises, edge rows) |

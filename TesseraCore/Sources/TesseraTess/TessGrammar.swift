@@ -140,7 +140,7 @@ public struct TessGrammar {
         // sat") is a note dated that day, never a future task.
         // A dated past log of money is private too ("bought a tv for 800 sat", QA F2 on #534).
         let walledLog = Self.isSomethingToDo(phrase) ? nil
-            : parseBodyFact(phrase) ??
+            : parseBodyFact(phrase, context: context) ??
             (PrivateFacts.isMoneyShaped(phrase) ? parsePrivateLog(phrase, context: context) : nil)
         if let log = walledLog ?? parsePastLog(phrase, context: context) {
             return log
@@ -162,8 +162,8 @@ public struct TessGrammar {
     /// A body fact with a day ("headache since tuesday") is a private note, not a task (QA R1 on #471), unless it
     /// opens with something to do: "call the doctor about my knee thu" and "refill lexapro 10mg fri" stay tasks.
     func parseTaskOrBodyFact(_ phrase: String, context: TessContext) -> Parse? {
-        Self.isSomethingToDo(phrase) ? parseTask(phrase, context: context) ?? parseBodyFact(phrase)
-            : parseBodyFact(phrase) ?? parseTask(phrase, context: context)
+        Self.isSomethingToDo(phrase) ? parseTask(phrase, context: context) ?? parseBodyFact(phrase, context: context)
+            : parseBodyFact(phrase, context: context) ?? parseTask(phrase, context: context)
     }
 
     /// The live workout's rules for a phrase with an exercise in focus; nil when they don't apply (the other rules

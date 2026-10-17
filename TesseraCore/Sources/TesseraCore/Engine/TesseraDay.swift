@@ -7,6 +7,16 @@ import Foundation
 /// Keys (buckets, "is this cell today") use `day(of:)`, the midnight of the date a moment belongs to. Range filters
 /// use `start(of:)` and `end(of:)`, the 04:00 edges.
 public struct TesseraDay: Sendable {
+    /// "Sunday": always US English, whatever the device or calendar locale (Product 8:30 PM PT).
+    public static func weekdayName(of date: Date, calendar: Calendar) -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = calendar
+        formatter.timeZone = calendar.timeZone
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "EEEE"
+        return formatter.string(from: date)
+    }
+
     public static let startHour = 4
 
     public var calendar: Calendar

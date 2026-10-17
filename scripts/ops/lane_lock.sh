@@ -22,5 +22,5 @@ case "${1:-}" in
    sleep 15; done;;
  release) if [ "$(field lane)" = "${2:-}" ]; then drop; echo released; else echo "not held by ${2:-}" >&2; exit 1; fi;;
  status) if [ -d "$L" ]; then cat "$F"; echo "age_s=$((now - $(field start)))"; else echo free; fi;;
- *) echo "usage: acquire|release|status" >&2; exit 2;;
+ *) echo "usage: acquire|wait|release|status" >&2; exit 2;;
 esac

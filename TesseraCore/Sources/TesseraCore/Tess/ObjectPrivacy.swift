@@ -22,6 +22,10 @@ public enum ObjectPrivacy {
             classes[key].map { ClassResolver.isSubclass(classDef, of: $0) } ?? false
         }
         let flagged = store.value("isPrivate", of: object) == .bool(true)
+        let last = BodyWeight.lastKg(in: store)
+        func isPrivateText(_ text: String) -> Bool {
+            Self.isPrivateText(text, lastWeightKg: last)
+        }
         if isA(.note) {
             let body = store.value("body", of: object)?.stringValue ?? ""
             return flagged || object.title == noteLabel || isPrivateText(object.title) || isPrivateText(body)
@@ -32,7 +36,8 @@ public enum ObjectPrivacy {
             return flagged || isPrivateText(object.title) || isPrivateText(rule) ? memoryLabel : nil
         }
         if isA(.task) {
-            return object.title == taskLabel || PrivateFacts.isPrivateTitle(object.title) ? taskLabel : nil
+            return object.title == taskLabel || PrivateFacts
+                .isPrivateTitle(object.title, lastWeightKg: last) ? taskLabel : nil
         }
         return nil
     }
@@ -44,7 +49,18 @@ public enum ObjectPrivacy {
         return ClassResolver.isSubclass(classDef, of: workout)
     }
 
-    static func isPrivateText(_ text: String) -> Bool {
-        !text.isEmpty && (SecretWords.mentions(text) || PrivateFacts.isWalled(text))
+    /// The notes line an object page shows: nil when there are none (only spaces is none; Research PM26), "Note kept
+    /// private" for a workout's.
+    @MainActor
+    public static func notesLine(of object: ObjectRecord, in store: ObjectStore,
+                                 classes: [SystemCatalog.Key: ClassDef]) -> String?
+    {
+        guard let notes = store.value("notes", of: object)?.stringValue,
+              !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+        return hidesNotes(of: object, classes: classes) ? keptNoteLabel : notes
+    }
+
+    static func isPrivateText(_ text: String, lastWeightKg: Double?) -> Bool {
+        !text.isEmpty && (SecretWords.mentions(text) || PrivateFacts.isWalled(text, lastWeightKg: lastWeightKg))
     }
 }
