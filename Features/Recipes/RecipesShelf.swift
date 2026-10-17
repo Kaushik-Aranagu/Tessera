@@ -52,6 +52,10 @@ struct RecipesShelf {
     }
 
     static func tess(_ rows: [Row]) -> String? {
+        // An empty shelf says how one gets in (K30.1, lists-acceptance 13.12).
+        if rows.isEmpty {
+            return "Paste a link or a page and I'll read it."
+        }
         // Names by their short name, so a long title never makes a long line (QA on #765).
         if rows.count == 1, let only = rows.first, only.cooks > 0 {
             return "\(RecipeCopy.shortName(only.name)), cooked \(only.cooks) time\(only.cooks == 1 ? "" : "s")."
