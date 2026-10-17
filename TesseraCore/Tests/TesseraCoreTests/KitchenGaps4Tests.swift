@@ -54,4 +54,18 @@ struct KitchenGaps4Tests {
         let done = try #require(facts.cooksFinished(on: .now).first)
         #expect(HomeLines.line(for: facts.fact(doneCook: done)).text == "Private recipe done.")
     }
+
+    // MARK: G22
+
+    @Test func aTimerOverTwentyFourHoursGivesTheLongTimerLine() async throws {
+        let engine = try engine()
+        let tess = TessCaptureEngine(engine: engine)
+        let long = await tess.capture("timer rise 25 hours", context: context)
+        #expect(long.line == "Didn't save that. A timer runs up to 24 hours.", "\(long.line)")
+        let bare = await tess.capture("timer bread 1500", context: context)
+        #expect(bare.line == "Didn't save that. A timer runs up to 24 hours.", "\(bare.line)")
+        #expect(CookLog(store: store, classes: engine.classes).timers().isEmpty)
+        let ok = await tess.capture("timer rise 24 hours", context: context)
+        #expect(ok.line == "Rise, 1440 min." || ok.line.hasPrefix("Rise,"), "\(ok.line)")
+    }
 }
