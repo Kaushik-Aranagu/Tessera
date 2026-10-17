@@ -12,7 +12,10 @@ struct BackupKeeperTests {
     init() throws {
         defaults = try #require(UserDefaults(suiteName: "backup-keeper-\(UUID().uuidString)"))
         BackupKeeper.defaults = defaults
-        let store = ObjectStore.open(inMemory: true)
+        // On disk: a store in memory is never copied (QA M1 on #475).
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("keeper-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let store = try ObjectStore(context: TesseraContext(url: folder.appendingPathComponent("tessera.sqlite")))
         let classes = try store.prepareCatalog()
         try ActionEngine(store: store, classes: classes).perform(CreateNote(body: "Bench felt heavy"), by: .user)
         context = store.context

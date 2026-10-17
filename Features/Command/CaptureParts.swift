@@ -181,9 +181,25 @@ struct CommandInterpreter {
             return "Your best \(exercise.name.lowercased()): \(Format.kilograms(best.weight)) × \(Int(best.reps)), "
                 + "e1RM \(Format.kilograms((best.e1RM * 10).rounded() / 10)) kg."
         }
+        // Never a task titled with a key, a secret, money or a body fact (board 0ah, Research AU): a question about
+        // one is answered on the phone and saves nothing; anything else is a private note, as the Bar files it.
+        if looksLikeClaudeKey(text) {
+            return claudeKeyLine
+        }
+        let secret = SecretWords.mentions(text)
+        if secret || PrivateFacts.isWalled(text) {
+            if text.hasSuffix("?") {
+                return secret ? "It's in your private notes." : "That stays on this phone."
+            }
+            guard (try? model.engine.perform(CreateNote(body: text, isPrivate: true), by: .user)) != nil else {
+                return "Couldn't save that."
+            }
+            model.touch()
+            return "\(SecretWords.title), kept."
+        }
         let title = text.prefix(1).uppercased() + text.dropFirst()
         guard model.capture(title: title, startsAt: AppClock.now.addingTimeInterval(4 * 3600)) != nil else {
-            return "Couldn’t save that."
+            return "Couldn't save that."
         }
         return "Drying. Swipe to drop it."
     }
@@ -215,8 +231,15 @@ struct CommandInterpreter {
         session.weight = weight
         session.reps = reps
         session.logSet()
-        let e1RM = model.previewE1RM(weight: weight, reps: reps)
-            .map { " · e1RM \(Format.kilograms(($0 * 10).rounded() / 10))" } ?? ""
-        return "Logged \(exercise.name.lowercased()) \(Format.kilograms(weight)) × \(Int(reps))\(e1RM)."
+        let best = model.session?.lastSeated?.records.isEmpty == false
+        return Self.loggedReceipt(exercise: exercise.name, weight: weight, reps: reps, best: best)
+    }
+
+    /// Thing first (receipts-thing-first.md RC12): "Bench press 82.5 × 8, logged.", or "…, logged, best." for a new
+    /// best. No e1RM in the receipt; the estimate lives on the exercise page (Product, 2:29 PM PT Oct 16).
+    static func loggedReceipt(exercise: String, weight: Double, reps: Double, best: Bool) -> String {
+        let lower = exercise.lowercased()
+        let name = lower.prefix(1).uppercased() + lower.dropFirst()
+        return "\(name) \(Format.kilograms(weight)) × \(Int(reps)), logged\(best ? ", best" : "")."
     }
 }

@@ -59,6 +59,7 @@ public final class ActionEngine {
             ops: transaction.ops,
             state: pending ? .pending : .committed
         )
+        record.receipt = action.receipt(in: store)
         if let attribution, actor == .tess {
             record.routeRaw = attribution.route.rawValue
             record.model = attribution.model

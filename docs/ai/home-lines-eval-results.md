@@ -2,6 +2,179 @@
 
 Written by `scripts/ai/home_lines_eval.py`, one section per invocation, newest first. Rubric: `docs/ai/eval-rubric.md`. Research's verdict goes above the first section.
 
+## Rerun verdict, job done (Oct 16, 2026, AI architecture; Research signed off)
+
+**Kaushik chose Sonnet on Home (Oct 16, 2:41 PM PT).** The recommendation below stands as the record; what ships is in `home-lines-job.md` section 2b.
+
+**Claude adds one fact on Home that the rules lines don't already show: the gap since the same routine ("First in 9 days"). The phone can say that itself for free, so the recommendation is rules lines plus the gap, and Claude Home wording stays off.** Scores per line are in `home-lines-eval-scores.md` ("Rerun, job done").
+
+| Row | Gate (13 shown) | Memory (9 shown) |
+|---|---|---|
+| Hard fails shown (0) | 0 | 0 |
+| Caught by checks (15% or fewer) | 2 of 30 (7%), both C3 over 32 characters | 0 of 18 |
+| True to the pack (100%) | 13/13 | 9/9 |
+| Plain (90%+) | 13/13 | 9/9 |
+| Not repeating (95%+) | 13/13 | 9/9 |
+| Tone (0) | 0 | 0 |
+| Voice (80%+), against master's rules line | 3/13 (23%) FAIL; 12/13 against the fixture's rules line | 0/9 FAIL |
+| Median cost a call | $0.00183 | $0.00206 |
+| p95 latency (under 6 s) | 5.2 s | 8.1 s FAIL (1 call over 6 s) |
+
+- **The narrowing worked.** No "usual", no Saturday slip (d20m2, the C15 trap, came back "First in 5 days"), no untrue line. Against the fixture's thin rules line, 12 of 13 shown gate lines add a best or a gap.
+- **But the best is already on Home.** The app's rules line for a done workout already names it ("Push A done. Bench best.", `HomeLines.swift` `workoutText`, line 248 on master); the gate fixture's older "done at 8:05 pm" rules line hides that. Scored against what master would show, only the 3 gap lines (E2, "First in 9 days") add anything: Voice 3/13 (Research). The memory fixture's rules lines carry both the best and the gap, and there Claude only shortened them, so Voice is 0/9 by Research's rule.
+- **That leaves the gap.** `HomeFact.sinceLastDays` already exists, so the rules can say "First in 9 days" at no cost, every time, with no key and no wait. The latency fail on memory (8.1 s p95) is one more reason not to wait on a call for a line.
+- **Recommendation:** Core adds the gap to the done rules line (4 days or more, via Product); Home stays on rules; Claude's Home budget goes to nothing. Kaushik reads his 10 below, each beside the line the app already shows, and decides.
+
+## Oct 16, 2026 01:37 PM PT: memory pass (job done), claude-sonnet-5-5, 3 run(s)
+
+| Field | Value |
+|---|---|
+| Pass | memory (memory-days, context line only) |
+| Models | claude-sonnet-5-5 |
+| Tool choice | claude-sonnet-5-5: auto |
+| Effort | low |
+| Job | done |
+| Runs | 3 |
+| Prompt hash | f797e6ae4bb4 |
+| Tool schema hash | fe9de502df36 |
+| Fixture hash | memory-days.json a8cc5faec46e |
+| Checker | home_lines_eval.py TessLineCheck 2 |
+| Self-test | 61 vectors, 44 probes, all expected verdicts |
+| Commit | 2bcc0b4 |
+| Calls | 18 |
+| Spend | $0.0432 |
+
+### claude-sonnet-5-5
+
+Calls 18; moments that built no request: d1m1, d1m2, d2m1, d2m2, d3m1, d3m2, d4m1, d4m2, d4m3, d5m1, d6m1, d6m2, d7m1, d8m1, d8m2, d9m1, d10m1, d10m2, d11m1, d11m2, d11m3, d12m1, d12m2, d13m1, d13m2, d14m1, d15m1, d16m1, d17m1, d18m1, d19m1, d19m2, d20m1. Memory block hashes: 6 distinct.
+
+| Row | Bar | Result |
+|---|---|---|
+| Probes and vectors | 100% before any call | 61/61 vectors, 44/44 probes |
+| Hard fails shown | 0 | 0 (every failing line is caught and falls back) |
+| Caught by checks | 15% or fewer of returned lines | 0 of 18 (0%) |
+| Tool called | 90% of items get a line | 18 of 18 (100%); replies with no tool call 0 |
+| Returned equal to the rules line | report only | 9 |
+| True to the pack | 100% | (person) |
+| Tone: scolds or greets | 0 shown | (person) |
+| Plain | 90% or more | (person) |
+| Not repeating the page | 95% or more | (person) |
+| Voice (Research V) | 80% or more | (person) |
+| Cost per call, median | under $0.006 (not gated on this pass) | $0.00206 |
+| Latency p95 | under 6 s | 8.1 s; over 6 s: 1 |
+| Kaushik reads 10 | 8 or more | (Kaushik) |
+
+#### Catches by code
+
+- none
+
+#### Shown lines (a person scores each)
+
+| Run | Moment | Item | Slot | Rules | Claude | True | Plain | Not repeating | Tone | Voice | Why (fails) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | d9m2 | w1 | context | Push A done. Bench press best. | Push A done. Bench press best |  |  |  |  |  |  |
+| 1 | d15m2 | w1 | context | 7:40 pm, first in 4 days | First in 4 days |  |  |  |  |  |  |
+| 1 | d20m2 | w1 | context | 7:40 pm, first in 5 days | First in 5 days |  |  |  |  |  |  |
+| 2 | d9m2 | w1 | context | Push A done. Bench press best. | Bench press best |  |  |  |  |  |  |
+| 2 | d15m2 | w1 | context | 7:40 pm, first in 4 days | First in 4 days |  |  |  |  |  |  |
+| 2 | d20m2 | w1 | context | 7:40 pm, first in 5 days | First in 5 days |  |  |  |  |  |  |
+| 3 | d9m2 | w1 | context | Push A done. Bench press best. | Bench press best |  |  |  |  |  |  |
+| 3 | d15m2 | w1 | context | 7:40 pm, first in 4 days | First in 4 days |  |  |  |  |  |  |
+| 3 | d20m2 | w1 | context | 7:40 pm, first in 5 days | First in 5 days |  |  |  |  |  |  |
+
+### The 10 for Kaushik
+
+| # | Rules line | Claude's line | Sounds like Tess? |
+|---|---|---|---|
+| 1 | Push A done. Bench press best. | 8:05 pm, a bench best |  |
+| 2 | Push A done. Bench press best. | A bench best, 8:05 pm |  |
+| 3 | Push A done. | First in 9 days |  |
+| 4 | Pull A done. Deadlift best. | 7:55 pm, a deadlift best |  |
+| 5 | Push A done. Bench press best. | at 8:00 pm, a bench best |  |
+| 6 | Push A done. Bench press best. | Done at 8:00 pm |  |
+| 7 | Push A done. 2 bests. | 7:50 pm, bench best |  |
+| 8 | Push A done. Bench press best. | Bench press best |  |
+| 9 | 7:40 pm, first in 4 days | First in 4 days |  |
+| 10 | 7:40 pm, first in 5 days (a Saturday) | First in 5 days |  |
+
+Rules line = what the app shows today for that moment (master's `HomeLines.workoutText` for 1 to 7; the fixture's for 8 to 10). All 10 are from the job done rerun (1 to 7 gate, 8 to 10 memory). Only #3 says something the app doesn't; #6 drops the best; #7 drops one of two bests; #10 is the Saturday trap, passed.
+
+Scorer: AI architecture, Voice for Research to review (scores in `home-lines-eval-scores.md`).
+
+## Oct 16, 2026 01:36 PM PT: gate pass (job done), claude-sonnet-5-5, 3 run(s)
+
+| Field | Value |
+|---|---|
+| Pass | gate (E1-E20, context and detail) |
+| Models | claude-sonnet-5-5 |
+| Tool choice | claude-sonnet-5-5: auto |
+| Effort | low |
+| Job | done |
+| Runs | 3 |
+| Prompt hash | f797e6ae4bb4 |
+| Tool schema hash | fe9de502df36 |
+| Fixture hash | home-lines-eval.json eb0290252328 |
+| Checker | home_lines_eval.py TessLineCheck 2 |
+| Self-test | 61 vectors, 44 probes, all expected verdicts |
+| Commit | 2bcc0b4 |
+| Calls | 15 |
+| Spend | $0.0393 |
+
+### claude-sonnet-5-5
+
+Calls 15; moments that built no request: E3, E4, E5, E6, E7, E8, E9, E10, E11, E13, E15, E16, E17, E18, E20. Memory block hashes: f8d9644fedf7.
+
+| Row | Bar | Result |
+|---|---|---|
+| Probes and vectors | 100% before any call | 61/61 vectors, 44/44 probes |
+| Hard fails shown | 0 | 0 (every failing line is caught and falls back) |
+| Caught by checks | 15% or fewer of returned lines | 2 of 30 (7%) |
+| Tool called | 90% of items get a line | 15 of 15 (100%); replies with no tool call 0 |
+| Returned equal to the rules line | report only | 15 |
+| True to the pack | 100% | (person) |
+| Tone: scolds or greets | 0 shown | (person) |
+| Plain | 90% or more | (person) |
+| Not repeating the page | 95% or more | (person) |
+| Voice (Research V) | 80% or more | (person) |
+| Cost per call, median | under $0.006 | $0.00183 |
+| Latency p95 | under 6 s | 5.2 s; over 6 s: 0 |
+| Kaushik reads 10 | 8 or more | (Kaushik) |
+
+#### Catches by code
+
+- C3: 2
+
+#### Caught lines
+
+| Run | Moment | Item | Slot | Claude | Codes |
+|---|---|---|---|---|---|
+| 1 | E12 | w1 | context | 7:50 pm, bench and overhead bests | C3 |
+| 2 | E12 | w1 | context | 7:50 pm, bench and overhead bests | C3 |
+
+#### Shown lines (a person scores each)
+
+| Run | Moment | Item | Slot | Rules | Claude | True | Plain | Not repeating | Tone | Voice | Why (fails) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | E1 | w1 | context | done at 8:05 pm | 8:05 pm, a bench best |  |  |  |  |  |  |
+| 1 | E2 | w1 | context | done at 7:40 pm | First in 9 days |  |  |  |  |  |  |
+| 1 | E14 | w1 | context | done at 7:55 pm | 7:55 pm, a deadlift best |  |  |  |  |  |  |
+| 1 | E19 | w1 | context | done at 8:00 pm | at 8:00 pm, a bench best |  |  |  |  |  |  |
+| 2 | E1 | w1 | context | done at 8:05 pm | A bench best, 8:05 pm |  |  |  |  |  |  |
+| 2 | E2 | w1 | context | done at 7:40 pm | First in 9 days |  |  |  |  |  |  |
+| 2 | E14 | w1 | context | done at 7:55 pm | 7:55 pm, a deadlift best |  |  |  |  |  |  |
+| 2 | E19 | w1 | context | done at 8:00 pm | at 8:00 pm, a bench best |  |  |  |  |  |  |
+| 3 | E1 | w1 | context | done at 8:05 pm | 8:05 pm, a bench best |  |  |  |  |  |  |
+| 3 | E2 | w1 | context | done at 7:40 pm | First in 9 days |  |  |  |  |  |  |
+| 3 | E12 | w1 | context | done at 7:50 pm | 7:50 pm, bench best |  |  |  |  |  |  |
+| 3 | E14 | w1 | context | done at 7:55 pm | 7:55 pm, a deadlift best |  |  |  |  |  |  |
+| 3 | E19 | w1 | context | done at 8:00 pm | Done at 8:00 pm |  |  |  |  |  |  |
+
+### The 10 for Kaushik
+
+See the 10 under the memory pass (job done) above; they cover both passes.
+
+Scorer: AI architecture, Voice for Research to review (scores in `home-lines-eval-scores.md`).
+
 ## Verdict (Oct 16, 2026, AI architecture; Research signed off)
 
 **Neither model ships Claude wording on Home yet. Rules lines stay the Home default, and "Claude Home wording" stays off.** Person scores for every shown line are in `home-lines-eval-scores.md`.

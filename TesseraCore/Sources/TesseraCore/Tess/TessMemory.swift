@@ -87,7 +87,10 @@ public struct TessMemory: Identifiable, Equatable, Sendable {
         if day.isSameDay(date, day.adding(days: -1, to: now)) {
             return "yesterday"
         }
-        return "on " + date.formatted(.dateTime.month(.abbreviated).day().locale(Locale(identifier: "en_US")))
+        // His day, not the wall date: a cook at 12:30 am Oct 17 was on his Oct 16 (TW26).
+        var style = Date.FormatStyle.dateTime.month(.abbreviated).day().locale(Locale(identifier: "en_US"))
+        style.timeZone = calendar.timeZone
+        return "on " + day.day(of: date).formatted(style)
     }
 }
 

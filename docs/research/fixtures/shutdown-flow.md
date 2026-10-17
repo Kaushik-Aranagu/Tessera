@@ -11,7 +11,7 @@ All names, counts and times below are made up.
 
 ## The flow (words quoted from Design 63/64; "Default proposed" marks a gap)
 
-1. **9 pm, Shutdown sets in on Home.** Day label "Thursday evening", context line "9:04 pm", hero "Shutdown". From 11 pm the label is "Thursday night".
+1. **9 pm, Shutdown sets in on Home.** Day label "Thursday night" (night from 9 pm, Product 1:06 pm Oct 16), context line "9:04 pm", hero "Shutdown" once Shutdown is built; until then "tomorrow, first".
 2. **The carry-over label:** "3 MOVING TO TOMORROW" (past midnight "2 MOVING TO FRIDAY"). Absent when nothing rolls.
 3. **One line per rolling row**, value TOMORROW at the right, at most 3; with 4 or more the third place reads "5 MORE" and a pull shows the rest.
 4. **Tess's band says the opener**, slot B, no UNDO: "Did 4 tasks, 1 workout, cooked once." Quiet day: "A quiet one. Want a line for tomorrow?" Late night: "Filed under Thursday. Did 3 tasks, cooked once." **First Shutdown ever:** slot C instead, once: "3 moving to tomorrow. Tap any for later."

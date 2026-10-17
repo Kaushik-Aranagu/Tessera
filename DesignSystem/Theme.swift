@@ -279,9 +279,9 @@ enum Theme {
     }
 
     /// `-theme <name>` pins a look in memory for demos and recordings, on the simulator only (like the demo data).
-    static func configure(arguments: [String] = ProcessInfo.processInfo.arguments) {
+    static func configure() {
         // -theme pins a look in memory for demos and recordings, on the simulator only.
-        guard let name = LaunchFlags.value(after: "-theme", in: arguments)?.lowercased() else { return }
+        guard let name = LaunchFlags.value(after: "-theme")?.lowercased() else { return }
         if name == "plein-washes" {
             // The retired Plein washes and grain, kept until he's lived with the flat Plein (looks-recut.md).
             var washes = Look.plein

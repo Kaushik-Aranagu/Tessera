@@ -98,11 +98,15 @@ struct SecretWordsTests {
     @Test func nearMissesStayTasksAndQuestionsStayOnThePhone() async {
         let claude = Spy(route: .claude)
         let reset = await run("password reset email friday", spies: [claude])
-        #expect(reset.line.hasPrefix("Password reset email,"), "\(reset.line)")
+        // A task with a secret word is said back without its title (Product P14, 12:30 PM PT).
+        #expect(
+            reset.records.map(\.action) == ["createTask"] && reset.line == "Task added for tomorrow.",
+            "\(reset.line)"
+        )
         let review = await run("code review friday 3pm", spies: [claude])
-        #expect(review.line.hasPrefix("Code review,"), "\(review.line)")
+        #expect(review.records.map(\.action) == ["createTask"] && review.line == "Task added for tomorrow.")
         let todo = await run("todo: reset my PIN", spies: [claude])
-        #expect(todo.line.hasPrefix("Reset my PIN"), "\(todo.line)")
+        #expect(todo.records.map(\.action) == ["createTask"] && todo.line == "Task added.", "\(todo.line)")
         let ask = await run("what's the wifi password?", spies: [claude])
         #expect(ask.line == "It's in your private notes." && ask.records.isEmpty)
         #expect(claude.heard.isEmpty && notes().isEmpty)
@@ -157,5 +161,13 @@ struct SecretWordsTests {
         #expect(recent?.contains("tacocat") != true && recent?.contains("password") != true)
         #expect(memory.pack(.init(told: true, noticed: true, recent: true))
             .allSatisfy { !SecretWords.mentions($0.text) })
+    }
+
+    @Test func aPrivateNoteIsNeverAMentionTarget() throws {
+        // Board 0ad (PN-MENTION): "@Private note" in another note links nothing.
+        let secret = try engine.perform(CreateNote(body: "door code 4417", isPrivate: true), by: .user).output
+        let other = try engine.perform(CreateNote(body: "see @[Private note] for the door"), by: .user).output
+        #expect(!store.linkedObjects("about", of: other).contains { $0.id == secret.id })
+        #expect(NoteList(store: store, classes: classes).mentions(in: "@[Private note]").isEmpty)
     }
 }

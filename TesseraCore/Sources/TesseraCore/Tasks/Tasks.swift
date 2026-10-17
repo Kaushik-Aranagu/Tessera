@@ -89,6 +89,45 @@ public struct TaskList {
     }
 }
 
+/// Plan my day's keep: the same move as `MoveTask`, under its own name so a task's story can tell a keep
+/// ("planned") from a hand move ("moved") in the op log (Research drawn-sides-acceptance Q4). Not offered to Tess or
+/// Siri.
+public struct KeepPlannedTask: EngineAction {
+    public static let descriptor = ActionDescriptor(
+        name: "keepPlannedTask",
+        summary: "Keep a task at the time Plan my day proposed",
+        parameters: MoveTask.descriptor.parameters
+    )
+
+    public var task: UUID
+    public var to: Date?
+    public var time: Date?
+    public var calendar: Calendar?
+
+    public init(task: UUID, to: Date? = nil, time: Date? = nil, calendar: Calendar? = nil) {
+        self.task = task
+        self.to = to
+        self.time = time
+        self.calendar = calendar
+    }
+
+    public func apply(_ transaction: inout Transaction) throws {
+        try move.apply(&transaction)
+    }
+
+    public func summary(in store: ObjectStore) -> String {
+        move.summary(in: store)
+    }
+
+    public func receipt(in store: ObjectStore) -> String? {
+        move.receipt(in: store)
+    }
+
+    private var move: MoveTask {
+        MoveTask(task: task, to: to, time: time, calendar: calendar)
+    }
+}
+
 /// Moves a task: to another time (default: the same time tomorrow, "not now"), or to Later (no date). Undoable.
 public struct MoveTask: EngineAction {
     public static let descriptor = ActionDescriptor(
@@ -107,9 +146,12 @@ public struct MoveTask: EngineAction {
     public var later: Bool?
     /// Now; the app passes its clock.
     public var time: Date?
+    /// His calendar (the device's when nil): his day and his quiet hours are read in it.
+    public var calendar: Calendar?
 
-    public init(task: UUID, to: Date? = nil, later: Bool? = nil, time: Date? = nil) {
+    public init(task: UUID, to: Date? = nil, later: Bool? = nil, time: Date? = nil, calendar: Calendar? = nil) {
         self.time = time
+        self.calendar = calendar
         self.task = task
         self.to = to
         self.later = later
@@ -126,10 +168,21 @@ public struct MoveTask: EngineAction {
         // "Not now": the same wall time on his next day. At 01:00 Saturday a Friday 23:00 task moves to Saturday 23:00
         // (his day still being Friday), not Sunday 00:00.
         let now = time ?? .now
-        let day = TesseraDay()
+        let calendar = calendar ?? .current
+        let day = TesseraDay(calendar: calendar)
         let current = store.value("startsAt", of: task)?.dateValue
         let base = max(current ?? now, day.start(of: now))
-        let target = to ?? day.adding(days: 1, to: base)
+        var target = to ?? day.adding(days: 1, to: base)
+        // "Not now" never lands in his quiet hours, 23:00 to 07:00: it moves to the next 7 am instead (Product 0ab,
+        // 2:00 PM PT). A time he picks himself (`to`) is kept.
+        if to == nil {
+            let hour = calendar.component(.hour, from: target)
+            // The target itself moves to 7 am on its own calendar day (QA F1 and F2 on #553, Research EQ26): a target
+            // at 11:20 pm Friday lands at 7 am Friday, still ahead of a "Not now" said Thursday night.
+            if hour >= 23 || hour < 7 {
+                target = calendar.date(bySettingHour: 7, minute: 0, second: 0, of: target) ?? target
+            }
+        }
         try transaction.set("startsAt", to: .date(target), on: task)
         if let due = store.value("due", of: task)?.dateValue, due < target {
             try transaction.set("due", to: .date(target), on: task)
@@ -138,6 +191,25 @@ public struct MoveTask: EngineAction {
 
     public func summary(in store: ObjectStore) -> String {
         let title = store.object(id: task)?.title ?? "it"
-        return later == true ? "Moved \(title) to Later" : "Moved \(title)"
+        // Thing first in his history (Product 2:48 PM PT): "Stretch, moved to Later".
+        return later == true ? "\(title), moved to Later" : "\(title), moved"
+    }
+
+    /// "Call mom, in Later", "Call mom, tomorrow at 6:30 pm", "Call mom, Thursday at 6:30 pm" (copy-pass rule 6).
+    public func receipt(in store: ObjectStore) -> String? {
+        guard let object = store.object(id: task) else { return nil }
+        guard later != true, let at = store.value("startsAt", of: object)?.dateValue else {
+            return "\(object.title), in Later"
+        }
+        let calendar = Calendar.current
+        let day = TesseraDay(calendar: calendar)
+        let now = time ?? .now
+        let en = Locale(identifier: "en_US")
+        // Within the week, the weekday; further out, the date, so "Thursday" is never next week's (QA on #512).
+        let word = day.isSameDay(at, now) ? "today"
+            : day.isSameDay(at, day.adding(days: 1, to: now)) ? "tomorrow"
+            : at < day.adding(days: 7, to: day.day(of: now)) ? at.formatted(.dateTime.weekday(.wide).locale(en))
+            : at.formatted(.dateTime.month(.abbreviated).day().locale(en))
+        return "\(object.title), \(word) at \(DayStoryClock.sentenceTime(at, calendar: calendar))"
     }
 }

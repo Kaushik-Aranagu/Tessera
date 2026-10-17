@@ -15,10 +15,10 @@ enum AppClock {
         date.addingTimeInterval(offset)
     }
 
-    static func configure(arguments: [String] = ProcessInfo.processInfo.arguments) {
+    static func configure() {
         #if DEBUG
             // Simulator only: a shifted clock on the phone would stamp logs and backups with wrong dates.
-            guard let time = LaunchFlags.value(after: "-demoTime", in: arguments) else { return }
+            guard let time = LaunchFlags.value(after: "-demoTime") else { return }
             let parts = time.split(separator: ":").compactMap { Int($0) }
             guard parts.count == 2 else { return }
             let real = Date()
@@ -44,9 +44,9 @@ enum Format {
         value.formatted(.number.precision(.fractionLength(0 ... 2)))
     }
 
+    /// "6:30 pm": the one house time (TW9 closes TW10 to TW14's 24-hour times).
     static func clock(_ date: Date) -> String {
-        let parts = Calendar.current.dateComponents([.hour, .minute], from: date)
-        return String(format: "%02d:%02d", parts.hour ?? 0, parts.minute ?? 0)
+        HouseTime.clock(date)
     }
 
     /// 3:00, 12:05, 1:02:03

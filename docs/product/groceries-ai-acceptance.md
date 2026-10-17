@@ -70,6 +70,19 @@ Unchanged: one shop run each (shown and not bought when the shop clears, or swip
 
 The only reminder is the planned cook's Home row through `HomeLines`: context "2 to buy" over "Tacos tonight", key GROCERIES, which opens this page. The count is the open, unchecked items carrying that cook's share. At 0 the context is the time again and the key is COOK. It appears on the cook's day, as the task already does. No notification, badge, dot, Live Activity or Tess line, ever, for groceries.
 
+## 6 · The wall on the Add line (Core 0ai, Builder B 0w; Product 2:06 PM Oct 16)
+
+The engine checks every grocery title before it is written (`AddGroceries`, the ghost row, a paste, the Add line), with the same PrivateFacts plus secret-words check as tasks and list items. Prices are the Kitchen lead's rule: **a price on an item is stripped and dropped, and the item stays.** "milk $4", "milk 4.99", "2 for $5 avocados" give the rows milk and avocados, with no price kept anywhere (not on the row, not in a note, not in the receipt). The reason is that the price is a money fact and the list is a shopping list: a row name can reach Claude through the link ask (section 2), backups and Spotlight, and the shop does not need the number. A pack or an amount is not a price: "2 lb chicken", "14 oz can tomatoes", "6 eggs" keep their numbers as today.
+
+| # | Pass when |
+|---|---|
+| W1 | "milk $4" on the Add line gives the row "milk" and the receipt "Milk, on Groceries."; the row text, the count line, the recipe dab and the backup hold no "$4" |
+| W2 | A line that is only money ("rent 2100 fri", "$40 at costco", "paid 20 for tickets") never lands as a row: it becomes a private dated note with the receipt "Private note, kept." and Groceries is unchanged |
+| W3 | A secret (a pasted key, a door code, a line after a secret word) never lands as a row: private note, "Private note, kept.", nothing in the link ask's candidate set, nothing in Spotlight |
+| W4 | "2 lb chicken", "14 oz can tomatoes", "6 eggs", "2 for 1 crackers" keep their numbers; nothing is stripped |
+| W5 | A pasted block of lines runs the check per line: the money and secret lines drop out as private notes, the rest land, and the receipt counts only the rows that landed ("Tacos, 9 added. 1 private note, kept.") |
+| W6 | UNDO after W1 removes the row; UNDO after W2 or W3 removes the private note. Nothing from a walled line is ever written to a row and then deleted |
+
 ## Done when
 
 **Core**
@@ -101,3 +114,18 @@ The only reminder is the planned cook's Home row through `HomeLines`: context "2
 1. Rows land on planning for any date, not 17:00 the day before. DEFAULT: on planning (Design 47); he can delete a row he won't need yet.
 2. A kept row keeps its typed amount even when the recipe wants more. DEFAULT: yes; the ask never changes an amount.
 3. USUALLY cap. DEFAULT: 4 (Design 47), over R's 3.
+
+## 7 · The recipe-link money strip (Builder B 0z; decisions 2:40 PM and 11:52 AM Oct 16)
+
+*Before `ClaudeRecipeReader` sends a fetched page's text to Claude, money-shaped spans are cut from it, using the 2:22 money test (`PrivateFacts.isMoneyShaped`): a currency sign, a decimal or 3+ digit amount, or a money verb next to a bare number. Recipe quantities ("2 cups", "350 degrees", "1 1/2 tsp") are not money and stay. A rider only if merged and QA'd by Oct 22 9:30.*
+
+| # | Pass when |
+|---|---|
+| M1 | A fixture page (`docs/fixtures/recipe-link-prices.html`, Research or Builder B adds it) holds a recipe plus ads, shop widgets and a footer with prices ("$4.99", "USD 12", "12.50 EUR", "save 20%", "only 3 left at 5.99", "costs 15"); the text handed to the Claude call contains none of them |
+| M2 | The same page's recipe is read in full: every ingredient quantity (2 cups, 350 degrees, 1 1/2 tsp, 400 g, 3 cloves) and every step survives the strip, with the ingredient count and step count equal to the same page without the ads |
+| M3 | A page where the only money-shaped text is inside the recipe body ("a $5 bag of flour") is stripped of the span and the recipe still parses; the stripped span is never replaced with a marker that says money was there |
+| M4 | The strip runs before the call, not after: a test with a stub model records the exact text sent and finds no money-shaped span; there is no code path to ClaudeRecipeReader that skips it |
+| M5 | A page that is mostly prices (a shop listing) sends nothing useful: the reader returns "No recipe found." and the call is skipped if the stripped text has no ingredient lines |
+| M6 | `asksClaude` off or a secret word on the page: nothing is sent at all, and the strip is not the guard (the wall and the gate still run first) |
+| M7 | Money-shaped text is also never stored from the fetch: the saved recipe's notes and source fields carry no price span |
+

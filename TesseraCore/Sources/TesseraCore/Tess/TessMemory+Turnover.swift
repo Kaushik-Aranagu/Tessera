@@ -159,7 +159,11 @@ public extension TessMemoryStore {
                                                          (best + 2) % 12 == 0 ? 12 : (best + 2) % 12],
                                      rule: "training.hours"))
             }
-            let weeks = max(1, Int((now.timeIntervalSince(starts.min() ?? now) / (7 * 86400)).rounded(.up)))
+            // Weeks from his days, not elapsed seconds: two weeks across the fall-back night are 2, not 3 (DS36).
+            let tesseraDay = TesseraDay(calendar: calendar)
+            let days = calendar.dateComponents([.day], from: tesseraDay.day(of: starts.min() ?? now),
+                                               to: tesseraDay.day(of: now)).day ?? 0
+            let weeks = max(1, Int((Double(days) / 7).rounded(.up)))
             if weeks >= 2 {
                 let perWeek = Int((Double(starts.count) / Double(weeks)).rounded())
                 if perWeek >= 1 {
@@ -186,7 +190,8 @@ public extension TessMemoryStore {
         }
         if cooks.count >= 3 {
             let weekdays = cooks.compactMap { store.value("cookedAt", of: $0)?.dateValue }
-                .map { calendar.component(.weekday, from: $0) }
+                // The weekday of his day: a Friday-night cook at 12:30 am is a Friday (TW27).
+                .map { calendar.component(.weekday, from: TesseraDay(calendar: calendar).day(of: $0)) }
             if let top = Dictionary(grouping: weekdays, by: { $0 }).max(by: { $0.value.count < $1.value.count }),
                Double(top.value.count) >= Double(weekdays.count) * 0.5
             {

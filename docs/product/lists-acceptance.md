@@ -61,6 +61,12 @@
 - Rows 1-40 still pass (kitchen phrases keep priority for groceries).
 - An unknown list name ("add charger to holiday") makes no list silently; Tess says "No list called holiday."
 
+## 8b. The wall on list items (Core 0ai; Product 2:06 PM Oct 16)
+- Adding an item by the ghost row, a phrase ("add charger to packing") or a paste runs PrivateFacts plus secret words before the title is written. A secret or a money-shaped line never becomes an item: it becomes a private note, receipt "Private note, kept.", and the list is unchanged.
+- A price on an item is stripped and the item stays ("gift for mum $30" on Errands gives "gift for mum"), the same rule as Groceries section 6, so a list item never carries money.
+- A paste runs the check per line; the ghost list's count and "Twelve things, two sections." count only the lines that landed, and the receipt adds "1 private note, kept." when any dropped out.
+- Body and health lines ("ibuprofen 400 mg") on a list are items as typed (a packing list needs its meds); they are walled only from Claude, never from the list.
+
 ## 9. Lists shelf (screen)
 - No cards or grid: list names in one typographic column, sizes by last touched, Label-tier state word under each ("3 OF 7", "RUNNING · 9 LEFT", "REUSABLE", "PICK ONE", "EMPTY"; "14 TO BUY" under Groceries).
 - Groceries appears once and opens the Groceries screen.

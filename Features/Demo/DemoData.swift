@@ -16,7 +16,7 @@ enum DemoData {
     {
         // A caller can narrow it (tests), never widen it: off the simulator nothing here runs.
         guard allowed, LaunchFlags.allowed else { return }
-        if arguments.contains("-resetDemo") {
+        if LaunchFlags.has("-resetDemo", in: arguments) {
             reset(model)
         }
         // Kaushik's starter plan is always installed; the demo adds its own plan and history once.
@@ -195,6 +195,13 @@ enum DemoData {
             if done {
                 try? store.set("doneAt", to: .date(anchor.addingTimeInterval((offset + minutes) * 60)), on: task)
             }
+        }
+
+        // Undated tasks, for Plan my day to place (plan-home.md).
+        for (title, minutes) in [("Reply to landlord", 20.0), ("Book physio", 15.0), ("Write the report", 60.0)] {
+            let task = store.create(taskClass, title: title)
+            try? store.set("length", to: .duration(minutes * 60), on: task)
+            try? store.set("isDone", to: .bool(false), on: task)
         }
 
         let workout = store.create(workoutClass, title: "Push Day A")

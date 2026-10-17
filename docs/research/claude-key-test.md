@@ -106,7 +106,7 @@ Engine tests (`swift test`) use an in-memory `TessKeychain` fake. One app-target
 
 ```swift
 @Suite(.serialized) @MainActor struct ClaudeKeyLeakTests {
-    static let key = "sk-ant-TEST-" + UUID().uuidString          // unique, so a hit can only be ours
+    static let key = "<the Claude key prefix>-TEST-" + UUID().uuidString          // unique, so a hit can only be ours
 
     @Test func keyNeverLeavesTheKeychain() async throws {
         let since = Date.now
@@ -135,7 +135,7 @@ Engine tests (`swift test`) use an in-memory `TessKeychain` fake. One app-target
         ]
         for (name, bytes) in haystacks {
             #expect(bytes.range(of: Data(Self.key.utf8)) == nil, "key found in \(name)")
-            #expect(bytes.range(of: Data("sk-ant-".utf8)) == nil, "key prefix found in \(name)")
+            #expect(bytes.range(of: Data("<the Claude key prefix>-".utf8)) == nil, "key prefix found in \(name)")
         }
         #expect(context.all(TessCall.self).count == 1)                          // the Test counted
         #expect(context.all(TessCall.self).first?.costNano == 0)
