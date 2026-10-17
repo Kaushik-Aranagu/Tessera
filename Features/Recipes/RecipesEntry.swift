@@ -12,7 +12,8 @@ struct RecipeView: View {
         let _ = model.revision
         NavigationStack {
             Group {
-                if let id = recipeID ?? RecipeBook(store: model.store, classes: model.classes).recipes().first?.id {
+                let recipes = RecipeBook(store: model.store, classes: model.classes).recipes().map(\.id)
+                if let id = Self.opening(requested: recipeID, last: Self.lastOpened, recipes: recipes) {
                     RecipePage(recipeID: id)
                 } else {
                     PasteRecipe()
@@ -24,6 +25,28 @@ struct RecipeView: View {
         #if DEBUG
             .task { KitchenDemo.seedIfRequested(model) }
         #endif
+    }
+}
+
+extension RecipeView {
+    /// The recipe "Recipes" opens (G51, Product): the one asked for, else the last one opened if it's still there,
+    /// else the first.
+    static func opening(requested: UUID?, last: UUID?, recipes: [UUID]) -> UUID? {
+        if let requested {
+            return requested
+        }
+        if let last, recipes.contains(last) {
+            return last
+        }
+        return recipes.first
+    }
+
+    private static let lastOpenedKey = "recipes.lastOpened"
+
+    /// The last recipe page shown, kept on this phone only.
+    static var lastOpened: UUID? {
+        get { UserDefaults.standard.string(forKey: lastOpenedKey).flatMap(UUID.init(uuidString:)) }
+        set { UserDefaults.standard.set(newValue?.uuidString, forKey: lastOpenedKey) }
     }
 }
 
