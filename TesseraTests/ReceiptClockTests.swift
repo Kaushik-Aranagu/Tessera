@@ -16,11 +16,11 @@ struct ReceiptClockTests {
     }
 
     @Test func onTheHourDropsTheMinutes() {
-        #expect(ClaudeKeyWords.receiptTime(at(12, 0), calendar: calendar) == "Thu Oct 16, 12 pm")
-        #expect(ClaudeKeyWords.receiptTime(at(9, 0), calendar: calendar) == "Thu Oct 16, 9 am")
+        #expect(ClaudeKeyWords.receiptTime(at(12, 0), calendar: calendar) == "Fri Oct 16, 12 pm")
+        #expect(ClaudeKeyWords.receiptTime(at(9, 0), calendar: calendar) == "Fri Oct 16, 9 am")
     }
 
     @Test func minutesStayWhenTheyArentZero() {
-        #expect(ClaudeKeyWords.receiptTime(at(19, 5), calendar: calendar) == "Thu Oct 16, 7:05 pm")
+        #expect(ClaudeKeyWords.receiptTime(at(19, 5), calendar: calendar) == "Fri Oct 16, 7:05 pm")
     }
 }

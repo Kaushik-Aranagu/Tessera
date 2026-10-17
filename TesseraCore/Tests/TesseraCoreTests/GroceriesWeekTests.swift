@@ -257,8 +257,20 @@ struct GroceriesWeekTests {
         // Kitchen K34.8, ruling A: serves 4, then 8, replaces the share (24 oz, never 36 oz); back to 4 adds nothing.
         let pasta = try engine.perform(CreateRecipe(text: Self.pasta), by: .user).output
         try engine.perform(AddRecipeToGroceries(recipe: pasta.id), by: .user)
+        let atFour = row("orecchiette")?.quantity
         let bigger = try engine.perform(AddRecipeToGroceries(recipe: pasta.id, serves: 8), by: .user)
         #expect(!bigger.record.ops.isEmpty)
+        // The rows it already had were rebuilt, not added (G66): none is new, the changed ones are "updated"
+        // (Product 11:20 PM ruling), and UNDO puts the old amounts back.
+        #expect(bigger.output.isEmpty, "\(bigger.record.summary)")
+        let summary = bigger.record.summary
+        #expect(
+            summary.hasPrefix("Pasta, ") && summary.hasSuffix(" updated.") && !summary.contains("added"),
+            "\(summary)"
+        )
+        engine.undo(bigger.record)
+        #expect(row("orecchiette")?.quantity == atFour)
+        try engine.perform(AddRecipeToGroceries(recipe: pasta.id, serves: 8), by: .user)
         let quantity = row("orecchiette")?.quantity
         #expect(quantity == "24 oz" || quantity == "1.5 lb" || quantity == "1½ lb", "\(quantity ?? "nil")")
         #expect(try engine.perform(AddRecipeToGroceries(recipe: pasta.id), by: .user).record.ops.isEmpty)

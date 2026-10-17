@@ -21,15 +21,26 @@ struct RecipePage: View {
     @Namespace private var zoom
     @State private var serves: Int?
     @State private var sent: (line: String, record: OpRecord)?
+    /// When the receipt went up, so a hand-off keeps what is left of its window rather than a fresh 10 s (QA on #819).
+    @State private var sentAt: Date?
     @State private var drag: CGFloat = 0
     @State private var columnWidth: CGFloat = 260
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var away = false
     /// A private recipe's title, tapped open for this visit; leaving or locking masks it again (G53).
     @State private var titleShown = false
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
-        page.task(id: recipeID) { markOpened() }
+        // At accessibility sizes the whole page is one scroll, so nothing is clipped (G69).
+        if typeSize.isAccessibilitySize {
+            ScrollView { page }
+                .scrollIndicators(.hidden)
+                .background { ThemedBackground() }
+                .task(id: recipeID) { markOpened() }
+        } else {
+            page.task(id: recipeID) { markOpened() }
+        }
     }
 
     /// Kitchen week one: when the page last opened, written straight to the store (no op, so the log isn't
@@ -85,18 +96,27 @@ struct RecipePage: View {
                     .entrance(2)
 
                 ZStack(alignment: .topLeading) {
-                    HStack(alignment: .top, spacing: Theme.Spacing.m) {
-                        ScrollView {
-                            IngredientColumn(lines: lines, zoom: zoom) { send(recipe: recipe.id, serves: size) }
-                                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { columnWidth = $0 }
+                    let column = IngredientColumn(lines: lines, zoom: zoom) { send(recipe: recipe.id, serves: size) }
+                        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { columnWidth = $0 }
+                    let drum = PortionDrum(serves: Binding(get: { min(max(size ?? 2, 1), 48) }, set: { serves = $0 }),
+                                           isEnabled: own != nil, range: PortionDrum.range(written: own))
+                    if typeSize.isAccessibilitySize {
+                        // The page scrolls as one, the drum above the list (G69).
+                        VStack(alignment: .leading, spacing: Theme.Spacing.l) {
+                            drum
+                            column
+                                .offset(x: away ? -columnWidth * 1.4 : min(0, drag))
+                                .simultaneousGesture(sendGesture(recipe: recipe.id, serves: size))
                         }
-                        .scrollIndicators(.hidden)
-                        .scrollBounceBehavior(.basedOnSize)
-                        .offset(x: away ? -columnWidth * 1.4 : min(0, drag))
-                        .simultaneousGesture(sendGesture(recipe: recipe.id, serves: size))
-                        PortionDrum(serves: Binding(get: { min(max(size ?? 2, 1), 48) }, set: { serves = $0 }),
-                                    isEnabled: own != nil,
-                                    range: PortionDrum.range(written: own))
+                    } else {
+                        HStack(alignment: .top, spacing: Theme.Spacing.m) {
+                            ScrollView { column }
+                                .scrollIndicators(.hidden)
+                                .scrollBounceBehavior(.basedOnSize)
+                                .offset(x: away ? -columnWidth * 1.4 : min(0, drag))
+                                .simultaneousGesture(sendGesture(recipe: recipe.id, serves: size))
+                            drum
+                        }
                     }
                     if let sent {
                         SentLine(line: sent.line) { undoSend(sent.record) }
@@ -160,7 +180,8 @@ struct RecipePage: View {
                 // Leaving inside the window hands the receipt and its UNDO to Tess's shared line, so the UNDO
                 // follows him (G67).
                 if let sent {
-                    TessVoice.shared.say(sent.line, undo: sent.record)
+                    TessVoice.shared.say(sent.line, undo: sent.record,
+                                         holds: RecipeCopy.holdLeft(since: sentAt, now: .now))
                     self.sent = nil
                     away = false
                 }
@@ -192,8 +213,9 @@ struct RecipePage: View {
             .textRole(.hero)
             .foregroundStyle(Theme.Colors.ink)
             .multilineTextAlignment(.leading)
-            .lineLimit(3)
-            .minimumScaleFactor(0.6)
+            // At accessibility sizes the name wraps in full rather than shrinking (G69).
+            .lineLimit(typeSize.isAccessibilitySize ? nil : 3)
+            .minimumScaleFactor(typeSize.isAccessibilitySize ? 1 : 0.6)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -242,6 +264,8 @@ struct RecipePage: View {
     /// engine's "Tacos, 7 added." stands in its place with UNDO 10 s. Nothing new: the column stays, one line
     /// "Tacos, nothing to add.", no UNDO. Refused: the column springs back and Tess says so.
     private func send(recipe: UUID, serves: Int?) {
+        // One add at a time: a second (VoiceOver's action) never replaces the first's UNDO (QA on #819).
+        guard sent == nil else { return }
         let title = model.store.object(id: recipe)?.title ?? ""
         let outcome = RecipeCopy.send(isPrivate: RecipeCopy.isPrivate(title, model: model)) {
             let result = try model.engine.perform(AddRecipeToGroceries(recipe: recipe, serves: serves), by: .user)
@@ -260,6 +284,7 @@ struct RecipePage: View {
             away = true
             drag = 0
             sent = (line, record)
+            sentAt = .now
             model.touch()
         }
         UIAccessibility.post(notification: .announcement, argument: line)
@@ -308,6 +333,8 @@ private struct SentLine: View {
 private struct IngredientColumn: View {
     let lines: [RecipeBook.Line]
     let zoom: Namespace.ID
+    /// "1 1/2 tbsp" fits at every text size (G69).
+    @ScaledMetric(relativeTo: .body) private var amountWidth: CGFloat = 92
     /// The same add as the swipe, for VoiceOver and Switch Control (G58).
     var onAdd: () -> Void = {}
     @State private var metric: UUID?
@@ -326,7 +353,7 @@ private struct IngredientColumn: View {
                         .contentTransition(.numericText())
                         .animation(reduceMotion ? nil : .smooth(duration: 0.22).delay(Double(index) * 0.015),
                                    value: line.line.amount)
-                        .frame(width: 92, alignment: .leading)
+                        .frame(width: amountWidth, alignment: .leading)
                         .onTapGesture { flip(line) }
                     NavigationLink(value: Route.object(line.ingredient?.id ?? line.id)) {
                         (Text(line.line.name)
@@ -334,7 +361,6 @@ private struct IngredientColumn: View {
                             + Text(line.line.prep.map { ", \($0)" } ?? "")
                             .foregroundStyle(Theme.Colors.inkSecondary))
                             .textRole(.body)
-                            .lineLimit(2)
                             .multilineTextAlignment(.leading)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
@@ -459,6 +485,12 @@ private struct RecipeOriginal: View {
 
 @MainActor
 enum RecipeCopy {
+    /// What is left of the add's 10 s UNDO window, at least 1 s (VoiceOver keeps its flat 10 s in TessVoice).
+    static func holdLeft(since start: Date?, now: Date) -> Duration {
+        let elapsed = start.map { now.timeIntervalSince($0) } ?? 0
+        return .milliseconds(Int(max(1, 10 - elapsed) * 1000))
+    }
+
     /// VoiceOver's action on the ingredients as a whole: it adds every line, so it says "all" (G68).
     static let addAllAction = "Add all to Groceries"
 

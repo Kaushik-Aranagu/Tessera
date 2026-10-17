@@ -59,7 +59,7 @@ public enum RecipeLinkLine {
     }
 
     public static func takenBack(_ title: String) -> String {
-        "\(title) taken back."
+        "\(title), taken back."
     }
 }
 
@@ -212,8 +212,12 @@ public struct RecipeLinkReader {
             (bytes, response) = try await session.bytes(for: request, delegate: redirects)
         } catch let error as URLError {
             switch error.code {
-            case .notConnectedToInternet, .networkConnectionLost,
-                 .dataNotAllowed: return .offline
+            // No way through to the page (a Wi-Fi with no internet, a timeout, DNS): kept for later (ER5, G63).
+            case .notConnectedToInternet, .networkConnectionLost, .dataNotAllowed, .timedOut, .cannotFindHost,
+                 .dnsLookupFailed, .cannotConnectToHost, .internationalRoamingOff, .callIsActive:
+                return .offline
+            case .cancelled where Task.isCancelled:
+                return .offline // the 15 s cap ran out before the page answered
             case .secureConnectionFailed, .appTransportSecurityRequiresSecureConnection:
                 return .failed(RecipeLinkLine.tooBig) // https only: Design's "too big or odd" row (QA N4)
             default: return .failed(RecipeLinkLine.blocked)
@@ -242,7 +246,8 @@ public struct RecipeLinkReader {
                 }
             }
         } catch {
-            return .failed(Task.isCancelled ? RecipeLinkLine.tooBig : RecipeLinkLine.blocked)
+            // The 15 s cap cut a slow page mid-stream: that is the network, not the page (G63).
+            return Task.isCancelled ? .offline : .failed(RecipeLinkLine.blocked)
         }
         let text = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .isoLatin1) ?? ""
         // A bot check is a block, whatever its status.
@@ -309,16 +314,34 @@ public struct RecipeLinkReader {
             .contains { host == $0 || host.hasSuffix(".\($0)") }
     }
 
+    /// Any query name holding one of these is dropped: "x_signature", "id_token", "user_email" (G64).
+    static let secretQueryParts = ["pass", "pwd", "token", "secret", "sig", "auth", "session", "jwt", "email", "key",
+                                   "code", "sid", "otp", "nonce", "credential"]
+
+    /// A value that is an email address or a long opaque string (a token in a harmless-looking name).
+    static func looksSensitive(_ value: String) -> Bool {
+        value.contains("@") || looksLikeClaudeKey(value)
+            || (value.count >= 24 && value.allSatisfy { $0.isLetter || $0.isNumber || "-_.~%".contains($0) }
+                && value.contains(where: \.isNumber) && value.contains(where: \.isLetter))
+    }
+
     static let secretQueryItems: Set<String> = ["password", "pass", "pwd", "token", "key", "auth", "sig", "session",
                                                 "access_token", "apikey", "api_key"]
 
     /// The final URL with `utm_*`, other tracking items and secret items removed.
     static func stripTracking(_ url: URL) -> URL {
         guard var parts = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return url }
-        parts.queryItems = parts.queryItems?.filter {
-            !$0.name.lowercased().hasPrefix("utm_") && !["fbclid", "gclid", "mc_cid", "mc_eid"].contains($0.name)
-                // Secrets in a link never reach the saved source (Research 137 PL5).
-                && !Self.secretQueryItems.contains($0.name.lowercased())
+        // A fragment can hold a token and never names the recipe (G64).
+        parts.fragment = nil
+        parts.user = nil
+        parts.password = nil
+        parts.queryItems = parts.queryItems?.filter { item in
+            let name = item.name.lowercased()
+            return !name.hasPrefix("utm_") && !["fbclid", "gclid", "mc_cid", "mc_eid"].contains(name)
+                // Secrets in a link never reach the saved source (Research 137 PL5, G64).
+                && !Self.secretQueryItems.contains(name)
+                && !Self.secretQueryParts.contains(where: name.contains)
+                && !(item.value.map(Self.looksSensitive) ?? false)
         }
         if parts.queryItems?.isEmpty == true {
             parts.queryItems = nil
@@ -456,8 +479,9 @@ public struct ClaudeRecipeReader {
         let titleOK = (1 ... 80).contains(recipe.title.count)
         let lines = recipe.ingredients.map(\.original).allSatisfy { (1 ... 200).contains($0.count) }
         let steps = recipe.steps.map(\.text).allSatisfy { (1 ... 600).contains($0.count) }
-        let serves = recipe.serves.map { (1 ... 100).contains($0) } ?? true
-        let minutes = recipe.totalMinutes.map { (1 ... 1440).contains($0) } ?? true
+        // The one set of limits every source shares (G62).
+        let serves = recipe.serves.map { RecipeLimits.serves.contains($0) } ?? true
+        let minutes = recipe.totalMinutes.map { RecipeLimits.minutes.contains($0) } ?? true
         return !(titleOK && lines && steps && serves && minutes)
     }
 

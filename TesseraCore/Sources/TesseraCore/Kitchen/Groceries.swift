@@ -129,6 +129,26 @@ public struct Groceries {
         GroceryShare.decode(store.value("shares", of: item)?.stringValue).lazy.compactMap(\.packSize).first
     }
 
+    /// A shop put away with things in its basket counts them as bought (Product 9:45 AM PT, ruling 5): each checked
+    /// row's ingredient, on the day it was checked, while the shop's latest process is in Later. Pantry reads this
+    /// beside the rows a shop clear took off.
+    public func putAwayBasket() -> [(ingredient: ObjectRecord, at: Date)] {
+        guard let list, let processClass = classes[.process] else { return [] }
+        let latest = store.backlinks(to: list).filter { $0.classDef?.id == processClass.id }
+            .max { (store.value("startedAt", of: $0)?.dateValue ?? .distantPast)
+                < (store.value("startedAt", of: $1)?.dateValue ?? .distantPast)
+            }
+        guard let latest, store.value("state", of: latest)?.stringValue == ProcessState.putAway.rawValue else {
+            return []
+        }
+        return list.orderedChildren.compactMap { item in
+            guard store.value("isDone", of: item) == .bool(true),
+                  let when = store.value("checkedAt", of: item)?.dateValue,
+                  let ingredient = ingredient(of: item) else { return nil }
+            return (ingredient, when)
+        }
+    }
+
     /// The recipes an item is for.
     public func recipes(for item: ObjectRecord) -> [ObjectRecord] {
         guard let recipeClass = classes[.recipe] else { return [] }
@@ -141,6 +161,36 @@ public struct Groceries {
         return ListContents(store: store, classes: classes).open(in: list).filter { item in
             GroceryShare.decode(store.value("shares", of: item.object)?.stringValue).contains { $0.recipe == recipe.id }
         }
+    }
+
+    /// Checked items a shop clear took off Groceries, with the day each was checked (G45). A row that was deleted
+    /// another way (Tess "delete milk", the objects browser, a swipe remove) is not buying, and one whose clear was
+    /// undone is back on the list; neither counts. Pantry reads this instead of every deleted checked row.
+    public func shopClears() -> [(ingredient: ObjectRecord, at: Date)] {
+        guard let list else { return [] }
+        let cleared = clearedIDs()
+        return (list.children ?? []).compactMap { item in
+            guard item.isDeleted, cleared.contains(item.id), store.value("isDone", of: item) == .bool(true),
+                  let when = store.value("checkedAt", of: item)?.dateValue, let ingredient = ingredient(of: item)
+            else { return nil }
+            return (ingredient, when)
+        }
+    }
+
+    private func clearedIDs() -> Set<UUID> {
+        let context = store.context
+        if let cached = context.shopClearedCache, cached.revision == context.revision {
+            return cached.ids
+        }
+        let actions: Set = [ClearDoneItems.descriptor.name, FinishShop.descriptor.name]
+        var ids: Set<UUID> = []
+        for record in context.all(OpRecord.self) where actions.contains(record.action) && record.state != .undone {
+            for case let .softDelete(object) in record.ops {
+                ids.insert(object)
+            }
+        }
+        context.shopClearedCache = (context.revision, ids)
+        return ids
     }
 
     public func ingredient(of item: ObjectRecord) -> ObjectRecord? {
@@ -389,14 +439,25 @@ public struct AddRecipeToGroceries: EngineAction {
         let alreadyOn = Groceries(store: transaction.store, classes: transaction.classes).share(of: recipe).count
         if wanted.isEmpty, alreadyOn == 0 {
             Self.lastAdded[recipe.id] = 0
+            Self.lastUpdated[recipe.id] = 0
             return []
         }
         // Added again at the same or a smaller size: its share already covers every line, so nothing is added and the
         // list is never halved (Kitchen K34.8: an add is not reversed by a size change). A bigger size replaces it.
         if alreadyOn > 0, wanted.allSatisfy({ Self.isCovered($0, by: recipe, on: list, in: transaction.store) }) {
             Self.lastAdded[recipe.id] = 0
+            Self.lastUpdated[recipe.id] = 0
             return []
         }
+        // Ingredients this recipe already had a row for: a bigger size rebuilds them, they are not new (G66).
+        let groceries = Groceries(store: transaction.store, classes: transaction.classes)
+        var oldAmounts: [UUID: [String]] = [:]
+        for row in groceries.share(of: recipe) {
+            if let id = groceries.ingredient(of: row.object)?.id {
+                oldAmounts[id, default: []].append(row.quantity ?? "")
+            }
+        }
+        let known = Set(oldAmounts.keys)
         try RemoveRecipeFromGroceries(recipe: recipe.id).apply(&transaction)
         let before = Set(list.orderedChildren.map(\.id))
         var items: [ObjectRecord] = []
@@ -430,8 +491,18 @@ public struct AddRecipeToGroceries: EngineAction {
         try transaction.refreshShopLine()
         // New rows only: joined rows still carry the recipe line, but "Added N" counts what is new (G-R14). The
         // receipt reads the same set, so the two never disagree (QA L1, Kitchen lead).
-        let made = items.filter { !before.contains($0.id) }
+        let made = items.filter { item in
+            !before.contains(item.id) && !(groceries.ingredient(of: item).map { known.contains($0.id) } ?? false)
+        }
         Self.lastAdded[recipe.id] = made.count
+        // Rows it already had come back at the new size: a changed amount is "updated", an equal one nothing.
+        var newAmounts: [UUID: [String]] = [:]
+        for item in items {
+            if let id = groceries.ingredient(of: item)?.id, known.contains(id) {
+                newAmounts[id, default: []].append(transaction.store.value("quantity", of: item)?.stringValue ?? "")
+            }
+        }
+        Self.lastUpdated[recipe.id] = known.filter { oldAmounts[$0]?.sorted() != newAmounts[$0]?.sorted() }.count
         return made
     }
 
@@ -455,6 +526,8 @@ public struct AddRecipeToGroceries: EngineAction {
 
     /// New rows by recipe from the last `apply` in this process, for the receipt written right after it.
     nonisolated(unsafe) static var lastAdded: [UUID: Int] = [:]
+    /// Rows of a recipe already on the list whose amount changed at a bigger size, from the last `apply`.
+    nonisolated(unsafe) static var lastUpdated: [UUID: Int] = [:]
 
     /// "Tacos, 10 added." (Product W12); "Tacos, nothing to add." when nothing was new (Product e1981a39). The short
     /// name, unless another recipe on the list shares it (Kitchen lead, #389).
@@ -468,7 +541,13 @@ public struct AddRecipeToGroceries: EngineAction {
         let name = isPrivate ? ObjectPrivacy.recipeLabel
             : object.map { RecipeBook.shortName(of: $0, store: store) } ?? "Recipe"
         let made = Self.lastAdded[recipe] ?? 0
-        return made == 0 ? "\(name), nothing to add." : "\(name), \(made) added."
+        let updated = Self.lastUpdated[recipe] ?? 0
+        switch (made, updated) {
+        case (0, 0): return "\(name), nothing to add."
+        case (_, 0): return "\(name), \(made) added."
+        case (0, _): return "\(name), \(updated) updated."
+        default: return "\(name), \(made) added, \(updated) updated."
+        }
     }
 }
 

@@ -27,12 +27,16 @@ struct ListsShelf {
     let context: String
     /// Tess's line for the newest run: "Packing has 9 left." (13.3); nil with nothing running.
     let tess: String?
+    /// Lists put away; the foot's word shows only once something has been (10.12).
+    let awayCount: Int
 
     init(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef], lastWeightKg: Double?,
          engine: ActionEngine? = nil)
     {
         let contents = ListContents(store: store, classes: classes)
-        let lists = contents.lists().filter { !$0.isDeleted }
+        // Put-away lists leave the shelf for the foot's "Put away" (G9, 9.6).
+        let lists = contents.shelf().filter { !$0.isDeleted }
+        awayCount = contents.putAway().count
         // One read of the process table for the whole shelf, not one per list (QA on #814).
         let open = (engine.map { ProcessTable(engine: $0).all() } ?? []).filter(\.state.isOpen)
         let runs = Dictionary(open.compactMap { process in

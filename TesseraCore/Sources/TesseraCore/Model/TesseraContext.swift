@@ -24,6 +24,8 @@ public final class TesseraContext {
     /// background backup walks the graph once per change, not once per copy.
     var privateLabelsCache: (revision: Int, labels: [UUID: String])?
     var pastPrivateCache: (revision: Int, labels: [UUID: String])?
+    /// Items a shop clear or a finished shop took off Groceries, at a revision (`Groceries.shopClears`).
+    var shopClearedCache: (revision: Int, ids: Set<UUID>)?
     var decodedOps: [UUID: (data: Data, ops: [Op])] = [:]
 
     /// Saves automatically shortly after a change. Turn off for bulk work, then call `save()`.

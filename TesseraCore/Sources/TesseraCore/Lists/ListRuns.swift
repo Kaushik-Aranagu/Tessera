@@ -8,7 +8,16 @@ public extension ListContents {
     /// item's words never go into it.
     static func runLine(of list: ObjectRecord, in store: ObjectStore) -> String {
         let left = list.orderedChildren.count { store.value("isDone", of: $0) != .bool(true) }
-        return left == 0 ? "\(list.title), nothing left" : "\(list.title), \(left) left"
+        let name = shownName(of: list, in: store)
+        return left == 0 ? "\(name), nothing left" : "\(name), \(left) left"
+    }
+
+    /// A list's name wherever a run shows it (Now, Home, a Live Activity, the ledger): "Private list" for a walled
+    /// name (QA on #801, as the put-away note).
+    static let privateListLabel = "Private list"
+
+    static func shownName(of list: ObjectRecord, in store: ObjectStore) -> String {
+        ObjectPrivacy.isPrivateWord(list.title, in: store) ? privateListLabel : list.title
     }
 
     func runLine(of list: ObjectRecord) -> String {
@@ -54,17 +63,26 @@ public struct StartListRun: EngineAction {
         }
         let line = ListContents.runLine(of: list, in: transaction.store)
         // A put-away list comes back by running it again: the same process leaves Later, rows and all.
+        let process: ObjectRecord
         if transaction.openProcess(for: list) == nil, let away = transaction.putAwayProcess(for: list) {
             let now = time ?? .now
             try transaction.makeRunning(away, at: now)
             try transaction.saveContext(away, resumePoint: nil, nextStep: line, at: now)
-            return away
+            process = away
+        } else {
+            process = try StartProcess(subject: list.id, ownerApp: "Lists", nextStep: line, time: time)
+                .apply(&transaction)
         }
-        return try StartProcess(subject: list.id, ownerApp: "Lists", nextStep: line, time: time).apply(&transaction)
+        // The ledger row reads the process's title: a walled list's name never lands there.
+        let shown = ListContents.shownName(of: list, in: transaction.store)
+        if process.title != shown {
+            transaction.setTitle(shown, on: process)
+        }
+        return process
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "Started \(store.object(id: list)?.title ?? "the list")"
+        "Started \(store.object(id: list).map { ListContents.shownName(of: $0, in: store) } ?? "the list")"
     }
 
     /// Thing first, the same words as Now's line: "Packing, 6 left".
@@ -113,7 +131,8 @@ public struct FinishListRun: EngineAction {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "Groceries finishes as the shop")
         }
         guard let process = transaction.openProcess(for: list) else {
-            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "\(list.title) isn't running")
+            throw ActionError.invalidArguments(action: Self.descriptor.name,
+                                               reason: Self.notRunningLine(list, in: transaction.store))
         }
         let reusable = ListNoteTags.isReusable(list, in: transaction.store)
         // A finished trip list is put away whole, so bringing it back brings every item with it (G9).
@@ -133,9 +152,16 @@ public struct FinishListRun: EngineAction {
             && list.orderedChildren.allSatisfy { store.value("isDone", of: $0) == .bool(true) }
     }
 
+    /// Done on a list that isn't running (Product 9:45 AM PT, ruling 3): "Packing isn't running."
+    @MainActor
+    public static func notRunningLine(_ list: ObjectRecord, in store: ObjectStore) -> String {
+        "\(ListContents.shownName(of: list, in: store)) isn't running."
+    }
+
     public func summary(in store: ObjectStore) -> String {
         guard let object = store.object(id: list) else { return "Finished the list" }
-        return Self.putsAway(object, in: store) ? "Put \(object.title) away" : "Finished \(object.title)"
+        let name = ListContents.shownName(of: object, in: store)
+        return Self.putsAway(object, in: store) ? "Put \(name) away" : "Finished \(name)"
     }
 
     /// "Packing, done", "Packing, Lisbon, done. 3 left" with items open (Product, Oct 16 12:38 PM), and "Packing,
@@ -143,10 +169,11 @@ public struct FinishListRun: EngineAction {
     public func receipt(in store: ObjectStore) -> String? {
         guard let object = store.object(id: list) else { return nil }
         if Self.putsAway(object, in: store) {
-            return "\(object.title) put away"
+            return "\(ListContents.shownName(of: object, in: store)) put away"
         }
         let left = object.orderedChildren.count { store.value("isDone", of: $0) != .bool(true) }
-        return left > 0 ? "\(object.title), done. \(left) left" : "\(object.title), done"
+        let name = ListContents.shownName(of: object, in: store)
+        return left > 0 ? "\(name), done. \(left) left" : "\(name), done"
     }
 }
 
@@ -215,21 +242,23 @@ public struct PutAwayListRun: EngineAction {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "Groceries can't be put away")
         }
         guard let process = transaction.openProcess(for: list) else {
-            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "\(list.title) isn't running")
+            throw ActionError.invalidArguments(action: Self.descriptor.name,
+                                               reason: FinishListRun.notRunningLine(list, in: transaction.store))
         }
         try transaction.end(process, reason: .putAway, at: time ?? .now)
         return ListContents.basketCount(of: list, in: transaction.store)
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "Put \(store.object(id: list)?.title ?? "the list") away"
+        "Put \(store.object(id: list).map { ListContents.shownName(of: $0, in: store) } ?? "the list") away"
     }
 
     /// Thing first, with the basket when there is one: "Packing put away. 3 in the basket".
     public func receipt(in store: ObjectStore) -> String? {
         guard let object = store.object(id: list) else { return nil }
         let basket = ListContents.basketCount(of: object, in: store)
-        return basket > 0 ? "\(object.title) put away. \(basket) in the basket" : "\(object.title) put away"
+        let name = ListContents.shownName(of: object, in: store)
+        return basket > 0 ? "\(name) put away. \(basket) in the basket" : "\(name) put away"
     }
 }
 

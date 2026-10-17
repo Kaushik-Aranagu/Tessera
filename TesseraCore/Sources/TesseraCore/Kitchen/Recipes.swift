@@ -62,12 +62,12 @@ public struct RecipeBook {
         RecipeLimits.serves(store.number("serves", of: recipe))
     }
 
-    /// The recipe's total time in minutes, inside 1 to 1440 (G62).
+    /// The recipe's total time in minutes, inside `RecipeLimits.minutes` (G62).
     public func totalMinutes(_ recipe: ObjectRecord) -> Double? {
         RecipeLimits.minutes(store.number("totalMinutes", of: recipe))
     }
 
-    /// The recipe's active time in minutes, inside 1 to 1440 (G62).
+    /// The recipe's active time in minutes, inside `RecipeLimits.minutes` (G62).
     public func activeMinutes(_ recipe: ObjectRecord) -> Double? {
         RecipeLimits.minutes(store.number("activeMinutes", of: recipe))
     }
