@@ -107,12 +107,12 @@
       "expectPrivate": false,
       "expectNoClaude": true,
       "expectNotInMissLog": true,
-      "expectLine": "Password reset email, ",
+      "expectLine": "Task added for ",
       "lineMatch": "prefix",
       "passesOnMaster": true,
       "masterEvidence": "TessGrammar.swift:500-502 (no value, task shape wins); TessModel.swift:74-79 still keeps it off Claude; handled, so no miss log",
       "pending": null,
-      "notes": "Control: a secret word with no value stays a task, and still never reaches Claude."
+      "notes": "Control: a secret word with no value stays a task (title stays on Home), still never reaches Claude, and Tess never speaks the title: \"Task added for Fri.\" (TessCaptureEngine.swift:310-317, P14). Builder B probe Oct 16 read an empty line; re-run pending."
     },
     {
       "id": "A09",
