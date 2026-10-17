@@ -8,7 +8,8 @@
 - **Cobalt is Tess's voice only.** No focus ring, button or timer takes cobalt. Vermilion is for "running" only.
 - **Never sums.** Nutrition is never added up. No row in this file speaks or draws a meal total, a day total or a "calories left" figure. A step or a recipe may read its own per-serving figure only.
 - **UNDO.** 4 s for a new capture, 10 s for a change or a remove, and a flat 10 s under VoiceOver (`decisions.md` 1:48 PM Oct 16, C3).
-- **Setup for all rows.** Weeknight dal (6 steps, step 2 timed "8 minutes") on iPhone 17, Porcelain, unless a row says otherwise. Existing UI bar still holds: every target at least 64 pt, no text under 16 pt, no cards, pills or modals, screen stays awake.
+- **Rulings, Product, Oct 17, 4:52.** Accepted as final copy, no longer proposed: the timer line "Simmer is done." (K84.22), the UNDO announcement "Simmer, back." (K84.24), the hint "Hold to finish" (K84.6, K84.14, K84.26) and the VoiceOver action "Finish" (K84.26). The Next key is the way to move on, and there is no step swipe in cook mode; a swipe from the side belongs to the screen's side (K84.13). Cook mode targets are 64 pt (88 pt from AX1); every other screen is 44 pt. (This file held no "proposed" tags on these four lines when the ruling came in; the lines are unchanged.)
+- **Setup for all rows.** Weeknight dal (6 steps, step 2 timed "8 minutes") on iPhone 17, Porcelain, unless a row says otherwise. Existing UI bar still holds: every cook mode target at least 64 pt (88 pt from AX1 up; 44 pt on every other screen), no text under 16 pt, no cards, pills or modals, screen stays awake.
 
 ## A. Dynamic Type (up to the largest accessibility sizes)
 
@@ -29,11 +30,11 @@ Reach zone: the bottom 60% of the screen is the thumb zone for a right or left h
 
 | # | Given / When / Then |
 |---|---|
-| K84.9 | **Given** any step, any text size. **When** the screen is measured. **Then** the Next target is a full-width bar anchored to the bottom safe area, at least 64 pt tall (88 pt from AX1 up), labelled "NEXT" and with the hint "Next step". One tap moves one step. It is reachable with one thumb from either hand with no reach to the top half. |
+| K84.9 | **Given** any step, any text size. **When** the screen is measured. **Then** the Next target is a full-width bar anchored to the bottom safe area, at least 64 pt tall (88 pt from AX1 up), labelled "NEXT" and with the hint "Next step". One tap moves one step. It is the only way to move on: there is no step swipe (K84.13). It is reachable with one thumb from either hand with no reach to the top half. |
 | K84.10 | **Given** a step with a timer key row. **When** the controls are laid out. **Then** the hold-to-start timer key sits above the Next bar and inside the bottom 60%; no timer start, stop, extend or Next control lives only in a top corner. |
 | K84.11 | **Given** cook mode is open. **When** every control is listed. **Then** each has a thumb-zone path: Next (bottom bar), timer keys (above it), stop a timer (drag its line left, or the Stop action in K84.20), Done (the bottom bar on the last step). The close of the cover is also reachable by dragging the cover down from anywhere on the step view, not only from a top-corner control. |
 | K84.12 | **Given** the cover's top-left or top-right corner. **When** a control is drawn there (for example the back word). **Then** it is an extra and never the only exit; remove it in a test build and every action in K84.11 still works. |
-| K84.13 | **Given** the swipe-up gesture in the cook-mode acceptance script step 2. **When** the same phone is used one-handed. **Then** Next does the same job as swiping up: step 2 arrives and step 1 stays as a dim line above it. Swiping up stays; the bottom bar is the large target alongside it, not a replacement. The two never both fire from one touch (one touch, one step). |
+| K84.13 | **Given** cook mode on step 1 (cook-mode acceptance script step 2). **When** the same phone is used one-handed, and a finger swipes up, down, left or right across the step view. **Then** the Next key is the way to move on: pressing it brings step 2 and leaves step 1 as a dim line above it. No step swipe exists in cook mode, so none of those swipes changes the step; a swipe from the side edge is the screen's side, not a step control. Nothing else moves on by touch (one touch, one step). |
 | K84.14 | **Given** the last step. **When** the bottom bar is held. **Then** the bar's label changes from "NEXT" to "DONE" with no layout shift (same height, same place), the hold fills left to right, and release before it completes does nothing. A single tap on DONE gives a short haptic and the hint "Hold to finish", and never finishes by accident. There is no confirm and no note field. |
 | K84.15 | **Given** a running timer's line near the top of the screen. **When** it is stopped one-handed. **Then** a drag left anywhere on its line stops it (the line is at least 64 pt tall); the receipt "Simmer stopped." with UNDO appears in the bottom Tess band, in thumb reach. |
 | K84.16 | **Given** a left-handed or right-handed grip. **When** the Next bar is touched at its left end and at its right end. **Then** both advance one step; the bar has no dead zone and no side-weighted label. |
@@ -42,7 +43,7 @@ Reach zone: the bottom 60% of the screen is the thumb zone for a right or left h
 
 | # | Given / When / Then |
 |---|---|
-| K84.17 | **Given** Reduce Motion on. **When** a step advances (Next, swipe up, or "next" by voice). **Then** the slide is a 150 ms crossfade in place; the dim line above still shows; the order of steps is unchanged. |
+| K84.17 | **Given** Reduce Motion on. **When** a step advances (the Next key, or "next" by voice). **Then** the slide is a 150 ms crossfade in place; the dim line above still shows; the order of steps is unchanged. |
 | K84.18 | **Given** Reduce Motion on and a timer ends. **When** the flare would play. **Then** the line turns cadmium and the step returns as a 150 ms fade, with the haptic still given; no pulse, no loop. The flare stays until the timer is stopped (cook-mode default 8). |
 | K84.19 | **Given** Reduce Motion on. **When** the cover opens and closes, a horizon line burns down, and Finish completes. **Then** the cover fades (no rise), the horizon line steps down once a minute instead of burning continuously, and Finish fades the cover out; Tess's line appears with a 150 ms fade ("Weeknight dal, first time."). Color and wording are the same as with motion. |
 
@@ -64,6 +65,6 @@ Reach zone: the bottom 60% of the screen is the thumb zone for a right or left h
 
 ## Notes for the build
 
-1. **Two defaults overlap here and need a ruling.** The cook-mode cut says "Swiping is the only way to change step" (default 4) while the first-use sheet (section 6) says the one action is the "Next" key and the voice command "next". K84.9 and K84.13 hold both: the bottom bar and swipe up. Product can overrule; if the bar is dropped, K84.9, K84.11, K84.13, K84.16, K84.21 and K84.29 change (VoiceOver would need "Next" as a custom action on the step instead).
-2. **Target height.** The first-use sheet says the key is at least 44 pt; the cook-mode UI bar says at least 64 pt. These rows use 64 pt (88 pt from AX1), the stricter bar.
+1. **Ruled, Product, Oct 17, 4:52: Next, not swiping.** The cook mode cut ("Swiping is the only way to change step", default 4) is replaced. The Next key and the voice command "next" are the way to move on, and there is no step swipe in cook mode; the side swipe is the screen's side. K84.9, K84.13 and K84.17 are written to that. VoiceOver keeps "Next" as the last stop (K84.20).
+2. **Target height. Ruled, Product, Oct 17, 4:52.** Cook mode targets are 64 pt, and 88 pt from AX1 up. Every other screen is 44 pt. The first-use sheet's 44 pt (section 6) is read as the rest of the app and does not apply to the cook mode key; these rows use 64 pt (88 pt from AX1).
 3. **Not repeated.** The 10 s UNDO window itself, the receipt grammar and the nutrition rule are unchanged; the never-sums rule is why no row speaks a total.

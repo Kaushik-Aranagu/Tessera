@@ -84,7 +84,7 @@
 | **A recipe with no steps** | The cook key is not drawn and no empty step view opens. On the recipe page, one quiet line under the ingredients: "No steps yet. Paste them below." (proposed, Product to rule; matches the paste family "Paste the text instead."). |
 | **The one action** | Move to the next step by the key or by saying "next". Finish by holding DONE; the finish line for the first cook is "Tacos, first time this month." (`Cooking.swift:63-67`) and the receipt "Tacos, cooked." |
 | **VoiceOver** | Step "Step 1 of 6" then the step's words, then "Next", a button. A timer, when it exists, reads "Rice, 8 minutes." (durations in words). Tess's first-cook line is her own stop after the step. |
-| **Dynamic Type** | AX5: the step words wrap in full at the largest size; the key stays at least 44 pt tall and never scrolls away. |
+| **Dynamic Type** | AX5: the step words wrap in full at the largest size; the Next key stays at least 64 pt tall (88 pt from AX1) and never scrolls away. |
 
 ## 7. Kitchen widget
 
