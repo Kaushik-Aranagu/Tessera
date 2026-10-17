@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Habits front and side</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Design item 85 (E5): the Habits front (first use by speaking to Tess, one habit, a new week, three habits with one done today, the check-in, a long list) and its proposed side LATELY and HOW IT COUNTS. Board by default; ?play records (x2 sets data-start/data-done): speak a habit, swipe it done, right edge to the glance, the full side, the second page, back. -->
+<style>
+:root{--board:#E9E6EE}
+*{box-sizing:border-box}
+body{margin:0;background:var(--board);font-family:'Inter Tight',system-ui,sans-serif;-webkit-font-smoothing:antialiased;transform-origin:0 0;color:#1c1a20}
+body.x2{transform:scale(2)}
+.wrap{padding:34px 40px 40px}
+.head{display:flex;gap:30px;margin-bottom:22px}
+.head h1{margin:0;font-size:34px;font-weight:600;letter-spacing:-.015em;flex:none;width:420px}
+.head p{margin:0;font-size:17px;line-height:24px;color:#4a4652;max-width:1000px}
+.grid{display:grid;grid-template-columns:repeat(4,393px);gap:22px 22px;align-items:start}
+.cap{margin-top:12px}
+.cap .opt{font-size:13px;font-weight:700;letter-spacing:.08em;color:#6b6674}
+.cap h2{margin:4px 0 6px;font-size:22px;font-weight:600;letter-spacing:-.01em}
+.cap p{margin:0;font-size:16px;line-height:22px;color:#4a4652}
+.ph{position:relative;width:393px;height:852px;background:var(--bg);color:rgb(var(--ink));overflow:hidden;border-radius:44px}
+body.playing .ph{border-radius:0}
+.por{--ink:18,16,22;--bg:#FBFAF7;--bg0:rgba(251,250,247,0);--tess:#2450D8;--ctx:#5A3DAF;--now:#D98A00;--train:#C23A22;--cook:#12936A}
+.obs{--ink:245,242,236;--bg:#121014;--bg0:rgba(18,16,20,0);--tess:#86B4FF;--ctx:#B8A3FF;--now:#F0A500;--train:#FF7D62;--cook:#52D3A3}
+.abs{position:absolute}
+.lbl{font-weight:700;font-size:16px;letter-spacing:.08em;white-space:nowrap}
+.s2{color:rgba(var(--ink),.66)}
+.t44{font-size:44px;line-height:50px;font-weight:500;letter-spacing:-.035em;white-space:nowrap}
+.ctx{left:22px;font-size:21px;line-height:28px;color:var(--ctx);white-space:nowrap}
+.sw{right:22px;font-weight:700;font-size:13px;letter-spacing:.08em;line-height:28px}
+.wl{left:22px;top:200px;width:346px;font-size:18px;line-height:24px;color:rgba(var(--ink),.66)}
+.hair{left:22px;top:232px;width:346px;height:1.5px;background:rgba(var(--ink),.12)}
+.quiet{left:22px;top:280px;font-size:21px;line-height:28px;color:rgba(var(--ink),.66)}
+.hn{left:22px;font-size:21px;line-height:28px;white-space:nowrap}
+.hc{right:22px;font-size:21px;line-height:28px;white-space:nowrap;color:rgba(var(--ink),.66)}
+.hc b{font-weight:600;color:rgb(var(--ink))}
+.sk{height:12px;width:40px;border-radius:6px 8px 6px 7px/7px 5px 7px 6px}
+.sk.g{border:1.5px dashed rgba(var(--ink),.14)}
+.sk.g.t{border-color:rgba(var(--ink),.38)}
+.sk.d{opacity:.62}
+.sk.w{opacity:1;transform:scale(1.25);filter:blur(1.5px)}
+.sk.j{height:12px;border-radius:6px;opacity:.62}
+.dl{width:40px;text-align:center;font-weight:600;font-size:16px;line-height:20px;color:rgba(var(--ink),.38)}
+.dl.t{color:rgb(var(--ink))}
+.pin{left:0;right:0;top:0;height:104px;background:linear-gradient(var(--bg) 78%,var(--bg0))}
+.clip{left:0;right:0;top:0;height:736px;overflow:hidden;-webkit-mask-image:linear-gradient(#000 calc(100% - 40px),transparent);mask-image:linear-gradient(#000 calc(100% - 40px),transparent)}
+.soul{left:323px;top:759px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 40%,#E2432A 0 28%,transparent 46%),radial-gradient(circle at 66% 38%,#2450D8 0 30%,transparent 50%),radial-gradient(circle at 50% 70%,#F0A500 0 28%,transparent 48%);filter:blur(2px)}
+.tl{position:absolute;right:71px;width:270px;top:779px;transform:translateY(-50%);text-align:right;font-size:19px;line-height:25px;color:var(--tess)}
+.tl .u{display:block;font-weight:700;font-size:15px;letter-spacing:.08em;line-height:20px;margin-top:4px;color:rgb(var(--ink))}
+.finger{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(18,16,22,.16);border:1.5px solid rgba(18,16,22,.25);opacity:0;pointer-events:none;z-index:9}
+.fleck{position:absolute;width:12px;height:8px;border-radius:5px;background:var(--now);z-index:8}
+.gl{position:absolute;left:150px;right:0;top:186px;bottom:96px;padding:20px 22px 0 46px;background:linear-gradient(90deg,var(--bg0),var(--bg) 34px)}
+.gl .gk{font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.55)}
+.gl .big{font-size:56px;line-height:62px;white-space:nowrap;font-weight:500;letter-spacing:-.02em;margin-top:10px}
+.gl .big small{font-size:21px;font-weight:400;letter-spacing:0;margin-left:6px}
+.gl .gr{font-size:19px;line-height:26px;margin-top:12px}
+.gl .gr em{font-style:normal;color:rgba(var(--ink),.62)}
+.gl .more{position:absolute;left:46px;bottom:22px;font-weight:700;font-size:13px;letter-spacing:.08em}
+.gl .more i{display:block;height:2px;margin-top:5px;background:currentColor}
+.facets{left:22px;top:196px;display:flex;gap:20px;font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.4)}
+.facets b{color:rgb(var(--ink));font-weight:700}
+.sl{left:22px;width:350px;font-size:21px;line-height:28px;height:34px;display:flex;justify-content:space-between;align-items:center}
+.sl em{font-style:normal;font-size:19px;color:rgba(var(--ink),.62)}
+.glab{font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.55)}
+.fact{left:22px;width:340px;font-size:19px;line-height:26px;color:rgba(var(--ink),.66)}
+.ax .hn{font-size:34px;line-height:42px;white-space:normal;width:346px}
+.vo{left:22px;width:350px;font-size:17px;line-height:22px}
+.vo b{display:inline-block;width:26px;font-weight:700;font-size:13px;letter-spacing:.04em;color:rgba(var(--ink),.5)}
+.vo i{font-style:normal;color:rgba(var(--ink),.62)}
+.veil{inset:0;background:rgba(var(--bg-rgb,251,250,247),.0)}
+.bloom{left:116px;top:620px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle at 35% 40%,#E2432A 0 26%,transparent 54%),radial-gradient(circle at 66% 38%,#2450D8 0 30%,transparent 56%),radial-gradient(circle at 50% 70%,#F0A500 0 26%,transparent 54%);filter:blur(7px)}
+</style></head>
+<body>
+<div class="wrap" id="board"></div>
+<script>
+const play = location.search.includes('play');
+if (location.search.includes('x2')) document.body.classList.add('x2');
+const band = line => `<div class="abs soul"></div>${line ? `<div class="tl">${line}</div>` : ''}`;
+const LET = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const PIG = { now: 'var(--now)', train: 'var(--train)', cook: 'var(--cook)' };
+// A habit: {n, goal, marks:[day idx], pig, wet:idx, joined:true}. Today is Thursday (3).
+const TODAY = 3;
+const countOf = h => h.marks.length ? `<b>${h.marks.length}</b> of ${h.goal}` : `${h.goal} a week`;
+const strokes = (h, y) => {
+  let s = '';
+  const first = Math.min(...h.marks), last = Math.max(...h.marks);
+  for (let i = 0; i < 7; i++) {
+    const x = 22 + 48 * i;
+    const done = h.marks.includes(i);
+    if (h.joined && done) { if (i === first) s += `<div class="abs sk j" style="left:${x}px;top:${y}px;width:${48 * (last - first) + 40}px;background:${PIG[h.pig]}"></div>`; }
+    else if (done) s += `<div class="abs sk ${h.wet === i ? 'w' : 'd'}" style="left:${x}px;top:${y}px;background:${PIG[h.pig]}" ${h.wet === i ? 'data-wet="1"' : ''}></div>`;
+    else s += `<div class="abs sk g${i === TODAY ? ' t' : ''}" style="left:${x}px;top:${y}px"></div>`;
+    s += `<div class="abs dl${i === TODAY ? ' t' : ''}" style="left:${x}px;top:${y + 20}px">${LET[i]}</div>`;
+  }
+  return s;
+};
+const line = (h, y, id) => `<div ${id ? `id="${id}"` : ''}><div class="abs hn" style="top:${y}px">${h.n}</div><div class="abs hc" style="top:${y}px">${countOf(h)}</div>${strokes(h, y + 40)}</div>`;
+const rows = (list, y0 = 280) => list.map((h, k) => line(h, y0 + 112 * k)).join('');
+const frame = (ctx, inner, o = {}) => `<div class="abs lbl s2" style="left:22px;top:58px">‹ REVIEW</div><div class="abs t44" style="left:22px;top:84px">Habits</div>
+  <div class="abs ctx" style="top:146px">${ctx}</div><div class="abs sw" style="top:146px">LATELY</div>
+  <div class="abs wl" style="${o.hot ? 'color:rgb(var(--ink))' : ''}">${o.wl || 'new habit read 5 a week'}</div><div class="abs hair" style="${o.hot ? 'background:rgba(var(--ink),.6)' : ''}"></div>${inner}`;
+const READ0 = { n: 'Read', goal: 5, marks: [], pig: 'now' };
+const READ3 = { n: 'Read', goal: 5, marks: [0, 2, 3], pig: 'now', wet: 3 };
+const READ3d = { n: 'Read', goal: 5, marks: [0, 2, 3], pig: 'now' };
+const TRAIN1 = { n: 'Train', goal: 3, marks: [1], pig: 'train' };
+const MED0 = { n: 'Meditate', goal: 4, marks: [], pig: 'now' };
+const THREE = [READ3d, TRAIN1, MED0];
+const LONG = [READ3d, { n: 'Stretch', goal: 4, marks: [0, 1, 2, 3], pig: 'now', joined: true }, TRAIN1, MED0,
+  { n: 'Walk', goal: 5, marks: [1, 3], pig: 'now' }, { n: 'Journal', goal: 3, marks: [2], pig: 'now' }, { n: 'Cook', goal: 2, marks: [1], pig: 'cook' },
+  { n: 'Practice', goal: 4, marks: [], pig: 'now' }, { n: 'Floss', goal: 7, marks: [0, 1, 2, 3], pig: 'now' }];
+const CTX = 'Thursday, 3 days to go';
+const scrolled = (list, dy) => `<div class="abs clip"><div class="abs" id="pg" style="left:0;top:0;width:393px;height:1500px;transform:translateY(${-dy}px)">${frame(CTX, rows(list)).replace(/<div class="abs lbl s2"[^>]*>‹ REVIEW<\/div>/, '')}</div></div><div class="abs pin"></div><div class="abs lbl s2" style="left:22px;top:58px">‹ REVIEW</div>`;
+const page = list => `<div class="abs clip">${frame(CTX, rows(list))}</div>`;
+// The side. Spine: back word and title stay; context and word change; facets at 196 (76).
+const sideHead = (ctx, on) => `<div class="abs lbl s2" style="left:22px;top:58px">‹ REVIEW</div><div class="abs t44" style="left:22px;top:84px">Habits</div>
+  <div class="abs ctx" style="top:146px">${ctx}</div><div class="abs sw" style="top:146px">HABITS</div>
+  <div class="abs facets">${['LATELY', 'HOW IT COUNTS'].map(w => w === on ? `<b>${w}</b>` : `<span>${w}</span>`).join('')}</div>`;
+const LATELY = [['Read', [['Last marked', 'today'], ['Last week', '4 days']]], ['Train', [['Last marked', 'Tue'], ['Last week', '2 days']]], ['Meditate', [['Last marked', 'Oct 4']]]];
+const sideLately = () => { let y = 252, h = sideHead('3 habits', 'LATELY');
+  LATELY.forEach(([n, ls]) => { h += `<div class="abs glab" style="left:22px;top:${y}px">${n.toUpperCase()}</div>`; y += 28; ls.forEach(([a, b]) => { h += `<div class="abs sl" style="top:${y}px"><span>${a}</span><em>${b}</em></div>`; y += 36; }); y += 20; });
+  return h; };
+const sideCounts = () => sideHead('3 habits', 'HOW IT COUNTS') + `<div class="abs glab" style="left:22px;top:252px">EACH ONE</div>
+  ${[['Read', '5 a week, by hand'], ['Train', '3 a week, workouts'], ['Meditate', '4 a week, by hand']].map(([n, v], i) => `<div class="abs sl" style="top:${280 + i * 40}px"><span>${n}</span><em>${v}</em></div>`).join('')}
+  <div class="abs glab" style="left:22px;top:430px">THE WEEK</div>
+  <div class="abs fact" style="top:458px">A week runs Monday to Sunday.</div><div class="abs fact" style="top:490px">A day starts at 4 am.</div><div class="abs fact" style="top:522px">Going past the number keeps counting.</div>`;
+const sideGlance = () => `<div class="gl"><div class="gk">LATELY</div><div class="big">3<small>habits</small></div><div class="gr">Read <em>today</em></div><div class="gr">Train <em>Tuesday</em></div><div class="more">ALL OF IT<i></i></div></div>`;
+const sideEmpty = () => `<div class="abs lbl s2" style="left:22px;top:58px">‹ REVIEW</div><div class="abs t44" style="left:22px;top:84px">Habits</div><div class="abs ctx" style="top:146px">No habits yet</div><div class="abs sw" style="top:146px">HABITS</div><div class="abs quiet" style="top:210px">Nothing to look back on yet.</div>`;
+const T_EMPTY = 'Say “new habit read 5 a week” and I’ll keep it.';
+const T_ADD = 'Read added, 5 times a week.<span class="u">UNDO</span>';
+const T_CHECK = 'Read, 3 of 5 this week.<span class="u">UNDO</span>';
+const T_LONG = 'Read and Stretch are done for the week.';
+const T_SIDE = 'Read goes back to Sep 3.';
+const dim = (inner, o = .3) => `<div class="abs" style="inset:0;opacity:${o}">${inner}</div>`;
+const axPage = () => `<div class="abs lbl s2" style="left:22px;top:58px">‹ REVIEW</div><div class="abs" style="left:22px;top:84px;font-size:58px;line-height:64px;font-weight:500;letter-spacing:-.035em">Habits</div>
+  <div class="abs ctx" style="top:158px;font-size:30px;line-height:38px;white-space:normal;width:340px">Thursday, 3 days to go</div><div class="abs sw" style="top:236px;font-size:20px">LATELY</div>
+  ${[READ3d, TRAIN1].map((h, k) => { const y = 304 + k * 190; return `<div class="abs hn" style="top:${y}px;font-size:34px;line-height:42px">${h.n}</div><div class="abs hc" style="top:${y + 44}px;left:22px;right:auto;font-size:26px;line-height:32px">${countOf(h)}</div>${strokes(h, y + 90).replace(/font-size:16px/g, '')}`; }).join('')}`;
+const voice = () => `<div class="abs lbl s2" style="left:22px;top:58px">VOICEOVER, IN ORDER</div>
+  ${[['1', 'Back, REVIEW, button'], ['2', 'Habits, heading'], ['3', 'Thursday, 3 days to go'], ['4', 'Lately, button. Swipes right too.'], ['5', 'New habit read 5 a week. Text field'], ['6', 'Read, 3 of 5 this week, marked today. Actions: Mark today, Mark another day, Open'], ['7', 'Train, 1 of 3 this week, counts workouts'], ['8', 'Meditate, 4 a week, nothing marked yet'], ['9', 'Tess: Read, 3 of 5 this week. Undo'], ].map(([n, t], i) => `<div class="abs vo" style="top:${104 + i * 58 + (i > 5 ? 24 : 0)}px"><b>${n}</b>${t}</div>`).join('')}
+  <div class="abs vo" style="top:670px;font-size:15px;line-height:20px;color:rgba(var(--ink),.62)"><i>Marking says “Read marked.” UNDO waits 10 s. REDUCE MOTION: the stroke fades in place (150 ms), no fall, no fleck, the count crossfades, a joined stroke appears whole. The done haptic still plays.</i></div>`;
+const listening = () => `<div class="abs bloom"></div>
+  <div class="abs" style="left:22px;top:170px;width:350px;font-size:34px;line-height:40px;font-weight:500;letter-spacing:-.02em;color:rgba(var(--ink),.55)">new habit read 5 a week</div>
+  <div class="abs" style="left:22px;top:100px;font-size:21px;color:var(--tess)">Listening</div>`;
+const ph = (cls, inner, opt, h, p) => `<div><div class="ph ${cls}">${inner}</div><div class="cap"><div class="opt">${opt}</div><h2>${h}</h2><p>${p}</p></div></div>`;
+if (!play) {
+  let b = `<div class="head"><h1>Sheet 85: the Habits front and its side</h1><p>A habit is a name, a count and seven strokes; a day without a mark is just a guide, the same as a day to come. No streak, no run length, no miss mark, no percentage, and no sentence about what he did not do. He makes one by speaking to Tess, and finishes a day with one swipe or one tap and one haptic, with the fleck. The side is proposed in two pages, LATELY (what it has been, in plain days and dates) and HOW IT COUNTS (facts). Product rules; this is the proposal.</p></div><div class="grid">`;
+  b += ph('por', frame(CTX, '<div class="abs quiet">No habits yet.</div>') + band(T_EMPTY), 'FIRST USE', 'No habits yet.', 'The frame of 59, one quiet line where the first habit goes, no art. The writing line shows the example. Tess says how to make one by speaking.');
+  b += ph('por', listening(), 'SPEAKING IT', 'Hold the soul and say it', 'Speak\'s listening bloom, the words as heard at 55% ink. Letting go sends it; nothing is saved until it lands. The writing line takes the same words typed.');
+  b += ph('por', frame(CTX, rows([READ0])) + band(T_ADD), 'ONE HABIT', 'Read, 5 a week', 'It rises in (10 pt, 360 ms) with seven guides. Nothing marked, so the count says the target, "5 a week", not "0 of 5". Tess: "Read added, 5 times a week." with UNDO.');
+  b += ph('por', frame('Monday, a new week', rows([{ ...READ0 }, { ...TRAIN1, marks: [] }, MED0])) .replace(/ t"/g, '"') + band(), 'A NEW WEEK, AFTER A GAP', 'Nothing carried, nothing said', 'Monday: every stroke a guide, counts say the target. No "again", no "back", no last week\'s result, and Tess says nothing. A gap is just guides.');
+  b += ph('por', frame(CTX, rows(THREE)) + band(T_CHECK), 'THREE HABITS, ONE DONE TODAY', 'Read, 3 of 5', 'Thursday\'s stroke has just landed (wet, then it dries to the rest tint). Train\'s Tuesday was counted by a workout, in the training pigment. Meditate has no mark and nothing is drawn for that.');
+  b += ph('por', frame(CTX, rows([{ ...READ3, wet: 3 }, TRAIN1, MED0])) + `<div class="fleck" style="left:150px;top:560px;transform:rotate(-24deg) scale(1.1)"></div><div class="fleck" style="left:206px;top:520px;transform:rotate(-8deg) scale(.9);opacity:.5"></div><div class="finger" style="left:260px;top:294px;opacity:1"></div>` + band(T_CHECK), 'THE CHECK-IN', 'One swipe, one haptic, the fleck', 'Swipe the line right past 140 pt (.selection when armed) or tap a stroke. On release the stroke falls 26 pt and lands wet, a fleck of it arcs to the soul (520 ms), the count rolls and the done pattern plays once.');
+  b += ph('por', scrolled(LONG, 330) + band(T_LONG), 'A LONG LIST', 'Nine habits, it scrolls', 'One sheet under the pinned back word, rows melting into Tess\'s band at 736. Stretch has met its 4: its strokes joined into one. Tess names two ("Read and Stretch"); the "and N more" rule is for names in a sentence, never a row.');
+  b += ph('por', dim(page(THREE)) + sideGlance() + '<div class="finger" style="left:372px;top:420px;opacity:1"></div>' + band(T_SIDE), 'THE SIDE, STOP 1', 'LATELY: 3 habits', 'The right edge, or the word LATELY at the right of the context line. The big fact is how many habits there are; the two small are the latest marks, in words. Foot word ALL OF IT.');
+  b += ph('por', sideLately() + band(T_SIDE), 'THE SIDE, PAGE 1 · BEFORE', 'What it has been', 'Per habit, the last mark and last week\'s days. A week with nothing is not listed, a habit with no last week shows only its last mark. No score, no "of", no streak.');
+  b += ph('por', sideCounts() + band(T_SIDE), 'THE SIDE, PAGE 2 · FACTS', 'HOW IT COUNTS', 'The target and the rule per habit, and how a week runs. No controls: the rule and pause live one tap down on the habit. The middle swipe moves between the two pages, the facet words are buttons.');
+  b += ph('obs', frame(CTX, rows(THREE)) + band(T_CHECK), 'OBSIDIAN', 'Front', 'Pigments lift (now #F0A500, training #FF7D62); guides stay ink at 14% and 38%. The count stays ink.');
+  b += ph('obs', sideLately() + band(T_SIDE), 'OBSIDIAN', 'Side, LATELY', 'Same frame; the facet row, ink and 40%.');
+  b += ph('obs ax', axPage() + band('Read, 3 of 5 this week.'), 'DYNAMIC TYPE, ACCESSIBILITY 3', 'One column, nothing cut', 'The count drops under its name; the strokes keep their size (they are the data, not text) and the letters stay at 16. LATELY drops under the context line. Tess\'s line stays inside the band.');
+  b += ph('por', voice(), 'VOICEOVER AND REDUCE MOTION', 'Reads in this order', 'A habit line is one stop with custom actions, not eight; the seven day toggles live on the habit page ("Thursday, Read, not done"). The side is also an action, "Show lately".');
+  b += `</div>`;
+  document.getElementById('board').innerHTML = b;
+  document.fonts.ready.then(() => { document.body.dataset.start = '1'; document.body.dataset.done = '1'; });
+} else {
+  document.body.classList.add('playing');
+  const w = document.getElementById('board'); w.className = '';
+  w.innerHTML = `<div class="ph por" id="ph">
+    <div class="abs" style="inset:0" id="front"><div id="fe">${frame(CTX, '<div class="abs quiet">No habits yet.</div>')}</div>
+      <div id="hr" style="opacity:0">${line(READ0, 280)}</div></div>
+    <div class="abs" style="inset:0;opacity:0" id="lis">${listening()}</div>
+    <div class="abs" style="inset:0;opacity:0" id="gb">${sideGlance()}</div>
+    <div class="abs" style="inset:0;opacity:0" id="fb"><div class="abs" style="inset:0;background:var(--bg)"></div><div id="p1">${sideLately()}</div><div id="p2" style="opacity:0">${sideCounts()}</div></div>
+    <div class="abs soul"></div>
+    <div class="tl" id="t1">${T_EMPTY}</div><div class="tl" id="t2" style="opacity:0">${T_ADD}</div><div class="tl" id="t3" style="opacity:0">Read, 1 of 5 this week.<span class="u">UNDO</span></div><div class="tl" id="t4" style="opacity:0">${T_SIDE}</div>
+    <div class="fleck" id="fk" style="opacity:0"></div><div class="finger" id="fg"></div></div>`;
+  const $ = id => document.getElementById(id);
+  const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const tween = (ms, f, e = ease) => new Promise(r => { const t0 = performance.now(); (function k(n) { const q = Math.min((n - t0) / ms, 1); f(e(q)); q < 1 ? requestAnimationFrame(k) : r(); })(t0); });
+  const fg = $('fg');
+  const finger = (x, y, on = 1) => { fg.style.left = x + 'px'; fg.style.top = y + 'px'; fg.style.opacity = on; };
+  const show = (id, v) => { $(id).style.transition = 'opacity .25s'; $(id).style.opacity = v; };
+  const tess = id => ['t1', 't2', 't3', 't4'].forEach(i => { $(i).style.transition = 'opacity .25s'; $(i).style.opacity = i === id ? 1 : 0; });
+  const inn = p => { const p1 = Math.min(p, 1), p2 = Math.max(0, p - 1);
+    $('front').style.opacity = 1 - .7 * p1 - .3 * p2; $('front').style.transform = `translateX(${-44 * p2}px)`;
+    $('gb').style.opacity = p <= 1 ? p1 : 1 - p2; $('gb').style.transform = `translateX(${60 * (1 - p1) - 40 * p2}px)`;
+    $('fb').style.opacity = p2; $('fb').style.transform = `translateX(${60 * (1 - p2)}px)`;
+    $('t3').style.opacity = 0; $('t2').style.opacity = 0; $('t1').style.opacity = 0; $('t4').style.opacity = p1; };
+  document.fonts.ready.then(async () => {
+    document.body.dataset.start = '1';
+    await wait(1400);
+    // 1. Hold the soul and say it.
+    finger(342, 778); await wait(300); show('lis', 1); show('t1', 0); await wait(2800); finger(0, 0, 0); show('lis', 0); await wait(400);
+    // 2. It lands: Read rises in with seven guides.
+    $('fe').querySelector('.quiet').style.opacity = 0; $('hr').style.opacity = 0;
+    await tween(360, q => { $('hr').style.opacity = q; $('hr').style.transform = `translateY(${10 * (1 - q)}px)`; }); tess('t2'); await wait(2400);
+    // 3. Swipe the line right: armed, release, stroke falls wet, fleck to the soul, count rolls.
+    finger(80, 294); await tween(520, q => finger(80 + 180 * q, 294)); await wait(120); finger(0, 0, 0);
+    const hr = $('hr'); const strokes = hr.querySelectorAll('.sk'); const s = strokes[TODAY];
+    s.style.cssText += ';background:var(--now);border:none;opacity:1;transform:translateY(-26px) scale(1.25);filter:blur(2px)';
+    await tween(460, q => { s.style.transform = `translateY(${-26 * (1 - q)}px) scale(${1.25 - .0 * q})`; });
+    const fk = $('fk'); fk.style.opacity = 1; const x0 = 22 + 48 * TODAY + 40, y0 = 326;
+    tess('t3'); hr.querySelector('.hc').innerHTML = '<b>1</b> of 5';
+    await tween(520, q => { fk.style.left = (x0 + (330 - x0) * q) + 'px'; fk.style.top = (y0 + (764 - y0) * q - 120 * Math.sin(Math.PI * q)) + 'px'; fk.style.transform = `scale(${1.2 - .5 * q})`; if (q > .95) fk.style.opacity = 0; });
+    s.style.transition = 'opacity 2s, filter 2s, transform .4s'; s.style.opacity = .62; s.style.filter = 'blur(0)'; s.style.transform = 'scale(1)';
+    await wait(2800);
+    // 4. The right edge: glance, then the full side; the middle to the second page; the left edge back.
+    await tween(380, q => { finger(386 - 150 * q, 420); inn(q); }); finger(0, 0, 0); await wait(2200);
+    await tween(380, q => { finger(300 - 170 * q, 420); inn(1 + q); }); finger(0, 0, 0); await wait(2200);
+    await tween(380, q => { finger(300 - 170 * q, 520); $('p1').style.opacity = 1 - q; $('p2').style.opacity = q; }); finger(0, 0, 0); await wait(2600);
+    await tween(420, q => { finger(6 + 220 * q, 420); inn(2 - 2 * q); }); finger(0, 0, 0); tess('t3'); await wait(1500);
+    document.body.dataset.done = '1';
+  });
+}
+</script>
+</body></html>
