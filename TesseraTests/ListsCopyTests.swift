@@ -88,4 +88,9 @@ struct ListsCopyTests {
         #expect(ListsCopy.resetAsk("Packing") == "Packing, done. Reset it for next time?")
         #expect(ListsCopy.resetAsk("Private list") == "Private list, done. Reset it for next time?")
     }
+
+    @Test func putAwayReadsThingFirst() {
+        #expect(ListsCopy.putAway("Packing", basket: 0) == "Packing put away.")
+        #expect(ListsCopy.putAway("Packing", basket: 3) == "Packing put away. 3 in the basket.")
+    }
 }
