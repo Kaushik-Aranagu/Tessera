@@ -54,4 +54,41 @@ struct GroceriesFinishTests {
         #expect(GroceriesCopy.toggleShop(groceries, engine: model.engine) == nil)
         #expect(groceries.shop(in: model.engine)?.state == .suspended)
     }
+
+    /// G43: UNDO after a finish puts Pantry back as it was before the shop.
+    @Test func undoAfterFinishPutsPantryBack() throws {
+        _ = try basket()
+        let pantry = PantryLedger(store: model.store, classes: model.classes)
+        let before = pantry.entries().map { "\($0.label) \($0.state)" }
+        let record = try #require(GroceriesCopy.finish(engine: model.engine).undo)
+        #expect(pantry.entries().map { "\($0.label) \($0.state)" } != before)
+        _ = model.engine.undo(record)
+        #expect(pantry.entries().map { "\($0.label) \($0.state)" } == before)
+    }
+
+    /// G43: the finish line names no item, so a private one in the basket never shows.
+    @Test func finishLineNamesNoItem() throws {
+        try model.engine.perform(AddGroceries(lines: ["condoms"]), by: .user)
+        try model.engine.perform(StartShop(), by: .user)
+        for item in Groceries(store: model.store, classes: model.classes).shoppingOrder() {
+            try model.engine.perform(CheckListItem(item: item.id), by: .user)
+        }
+        let outcome = GroceriesCopy.finish(engine: model.engine)
+        #expect(outcome.line == "Shopping, finished." && !outcome.line.lowercased().contains("condom"))
+    }
+
+    /// ER11: a refused clear says so, gives no UNDO, and the View keeps the basket open.
+    @Test func aRefusedClearSaysSoWithNoUndo() {
+        let outcome = GroceriesCopy.clear(count: 3) { nil }
+        #expect(outcome.line == "Didn't save that. Try again." && outcome.undo == nil)
+        #expect(GroceriesCopy.didntSave == "Didn't save that. Try again.")
+    }
+
+    @Test func aClearSaysHowManyWithUndo() throws {
+        _ = try basket()
+        let outcome = GroceriesCopy.clear(count: 1) {
+            try? model.engine.perform(ClearDoneItems(list: Groceries.listID), by: .user).record
+        }
+        #expect(outcome.line == "Cleared 1 from the basket." && outcome.undo != nil)
+    }
 }

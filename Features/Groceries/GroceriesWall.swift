@@ -81,7 +81,10 @@ enum GroceriesWall {
             guard let added = perform(split.kept) else {
                 // A key never stays visible, even when the add fails (QA on #769).
                 let kept = (split.kept + split.walled.filter { $0.reason != .key }.map(\.line)).joined(separator: ", ")
-                return AddOutcome(draft: kept, voice: "Didn't save that. Try again.", undo: nil)
+                // The walled siblings still get their line after the failure (Kitchen on #791).
+                let voice = ["Didn't save that. Try again.", spoken(split.walled)].compactMap(\.self)
+                    .joined(separator: " ")
+                return AddOutcome(draft: kept, voice: voice, undo: nil)
             }
             record = added
         }
