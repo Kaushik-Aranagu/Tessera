@@ -77,4 +77,27 @@ struct PantryLedgerTests {
         #expect(after.allSatisfy { $0.state == .have && $0.lastBoughtAt == monday })
         #expect(PantryLedger.countsLine(after) == "nothing out")
     }
+
+    @Test func aWalledThingReadsPrivateItem() throws {
+        let recipe = try model.engine.perform(CreateRecipe(text: "Rest\n2 advil\n1 cup tea\n\nTake them."), by: .user)
+            .output
+        try cook(recipe, at: saturday)
+        let entries = ledger.entries()
+        #expect(entries.contains { $0.isPrivate && $0.label == "Private item" })
+        #expect(!entries.contains { $0.label.lowercased().contains("advil") }, "the name never shows")
+    }
+
+    @Test func optionalAndToTasteLinesArentUsed() throws {
+        let recipe = try model.engine.perform(CreateRecipe(text: """
+        Toast
+        2 slices bread
+        butter, to taste
+        jam (optional)
+
+        Toast the bread.
+        """), by: .user).output
+        try cook(recipe, at: saturday)
+        let names = ledger.entries().map(\.label)
+        #expect(names == ["Bread"], "butter to taste and the optional jam aren't used up")
+    }
 }
