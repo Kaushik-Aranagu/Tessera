@@ -181,8 +181,9 @@ public struct ProcessTable {
         _ = try? engine.perform(EndProcess(process: process.id, reason: .wrappedUp, time: end), by: .system)
         let entries = workout.orderedChildren
         let started = entries.count { !$0.orderedChildren.isEmpty }
+        let noun = entries.count == 1 ? "exercise" : "exercises"
         return Note(
-            line: "\(store.displayTitle(of: workout)) saved. \(started) of \(entries.count) exercises.",
+            line: "\(store.displayTitle(of: workout)) saved. \(started) of \(entries.count) \(noun).",
             undo: nil
         )
     }

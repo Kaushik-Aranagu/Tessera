@@ -52,4 +52,22 @@ struct WorkoutSummaryTests {
         let line = TrainingLedger(store: store, classes: classes).summary(of: workout).doneLine(in: store)
         #expect(line.hasPrefix("Private workout done,") && !line.lowercased().contains("rehab"), "\(line)")
     }
+
+    @Test func theDoneLineAgreesInNumberAndSaysNothingOfZeroPlanned() throws {
+        // QA on #781: "1 of 1 exercise", and a workout with nothing planned says "done." with no "0 of 0".
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let plan = try #require(store.object(id: StarterContent.planID))
+        let routine = try #require(store.linkedObjects("routines", of: plan).first)
+        let workout = try engine.perform(StartRoutine(routine: routine.id), by: .user).output
+        let base = TrainingLedger(store: store, classes: classes).summary(of: workout)
+        func line(done: Int, planned: Int) -> String {
+            WorkoutSummary(id: base.id, workout: workout, title: "Push Day A", startedAt: nil, endedAt: nil,
+                           exercisesDone: done, exercisesPlanned: planned, sets: 1, volume: 0, records: []).doneLine
+        }
+        #expect(line(done: 1, planned: 1) == "Push Day A done, 1 of 1 exercise.")
+        #expect(line(done: 2, planned: 5) == "Push Day A done, 2 of 5 exercises.")
+        #expect(line(done: 0, planned: 0) == "Push Day A done.")
+    }
 }
