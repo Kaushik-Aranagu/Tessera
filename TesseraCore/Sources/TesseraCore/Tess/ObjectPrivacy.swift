@@ -13,6 +13,14 @@ public enum ObjectPrivacy {
     public static let recipeLabel = "Private recipe"
     /// What a workout's notes read on the generic page (Product 5:20 PM PT).
     public static let keptNoteLabel = "Note kept private"
+    /// What the Done hero shows for a routine whose title is private (Product, decisions 12:20 PM on #849).
+    public static let routineLabel = "Private routine"
+
+    /// A routine's title for the Done hero: "Private routine" when the title is private, else the title as it is.
+    @MainActor
+    public static func routineTitle(_ title: String, in store: ObjectStore) -> String {
+        PrivateWords.isPrivateTitle(title, lastWeightKg: BodyWeight.lastKg(in: store)) ? routineLabel : title
+    }
 
     /// The label to show in place of the object, or nil when it isn't private.
     @MainActor

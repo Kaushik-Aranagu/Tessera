@@ -97,6 +97,8 @@ struct WorkoutFinishView: View {
     /// words together with no-break spaces, so the line breaks only between "A," and "done" (or scales). A longer
     /// name glues just its last two words and ", done", so it wraps at the earlier spaces instead of one huge unit.
     static func heroText(title: String) -> String {
+        let title = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !title.isEmpty else { return "Workout done" }
         let glue = "\u{00A0}"
         if title.count <= 16 {
             return title.replacingOccurrences(of: " ", with: glue) + ", done"

@@ -38,4 +38,9 @@ struct V9WalkLowsTests {
         #expect(sixteen == "Pull\u{00A0}Day\u{00A0}Heavy\u{00A0}A, done")
         #expect(WorkoutFinishView.heroText(title: "Extraordinarilylongname") == "Extraordinarilylongname, done")
     }
+
+    @Test func anEmptyTitleReadsWorkoutDone() {
+        #expect(WorkoutFinishView.heroText(title: "") == "Workout done")
+        #expect(WorkoutFinishView.heroText(title: "  ") == "Workout done")
+    }
 }

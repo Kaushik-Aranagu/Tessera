@@ -70,4 +70,11 @@ struct WorkoutSummaryTests {
         #expect(line(done: 2, planned: 5) == "Push Day A done, 2 of 5 exercises.")
         #expect(line(done: 0, planned: 0) == "Push Day A done.")
     }
+
+    @Test func theDoneHeroMasksAPrivateRoutineTitle() {
+        // Product on #849: the hero reads "Private routine" like the count line under it masks the title.
+        let store = ObjectStore.open(inMemory: true)
+        #expect(ObjectPrivacy.routineTitle("Knee rehab day", in: store) == "Private routine")
+        #expect(ObjectPrivacy.routineTitle("Push Day A", in: store) == "Push Day A")
+    }
 }
