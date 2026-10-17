@@ -698,6 +698,11 @@ enum TessDates {
             date = Self.ahead(resolved, now: now, fromWeekday: fromWeekday, saidDay: day != nil, saidTime: time != nil,
                               hour: hour, minute: minute, calendar: calendar)
         }
+        // A time Tess picked (none was said) never lands in his quiet hours, 23:00 to 07:00: it moves to 7 am.
+        // A time he says himself is kept (Product 0ab, 1:22 PM PT Oct 16).
+        if time == nil, let resolved = date {
+            date = Self.outOfQuietHours(resolved, calendar: calendar)
+        }
         return Found(date: date, remaining: remaining, saidDay: day != nil, saidTime: time != nil,
                      bareColon: bareColon)
     }
@@ -743,6 +748,14 @@ enum TessDates {
     }
 
     /// The next given weekday; today counts only if it hasn't passed (it's the same day, so we keep it).
+    /// 23:00 to 07:00 becomes the next 7 am.
+    static func outOfQuietHours(_ date: Date, calendar: Calendar) -> Date {
+        let hour = calendar.component(.hour, from: date)
+        guard hour >= 23 || hour < 7 else { return date }
+        let day = hour >= 23 ? calendar.date(byAdding: .day, value: 1, to: date) ?? date : date
+        return calendar.date(bySettingHour: 7, minute: 0, second: 0, of: day) ?? date
+    }
+
     /// The next date with that weekday, counted from his day: "thu" said at 1 am Friday (still his Thursday) is
     /// today, not next week (TW29).
     static func nextDate(weekday: Int, after now: Date, calendar: Calendar) -> Date? {

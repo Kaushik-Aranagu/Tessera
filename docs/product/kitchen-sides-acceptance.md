@@ -25,7 +25,8 @@ Accepted. The side groups the open rows under the cook each is for, in short nam
 
 | # | Pass when |
 |---|---|
-| 2.1 | Chicken thigh shows 121 kcal, 19.7 g protein, 0 g carbohydrate, 4.12 g fat, 0 g fibre per 100 g with "USDA FoodData Central" under them (fixture row, FDC 173627); the other 19 fixture keys match their rows |
+| 2.1 | Chicken thigh shows "121 kcal", "19.7 g protein", "0 g carbohydrate", "4.1 g fat", "0 g fibre" per 100 g with "USDA FoodData Central" under them (fixture row, FDC 173627, stored fat 4.12); the other 19 fixture keys match their rows |
+| 2.1c | The side rounds for display only: kcal as a whole number, grams to one decimal ("4.1 g fat", "0 g fibre", never "0.0 g"); the bundled row keeps the FDC value unrounded and tests compare the stored value, not the shown one. The side shows one ingredient's values, never a sum (Research SA-P100, `drawn-sides-acceptance.md`) |
 | 2.1b | No bundled row carries energy from 2047 or 2048; every row's FDC id resolves to a record of the stated data type |
 | 2.2 | An ingredient with no row and Claude off shows only where it's used; nothing says the row is missing |
 | 2.3 | With Claude on, the first open of a rowless ingredient asks once; KEEP writes the row with "From Claude, Oct 16"; NOT NOW is remembered; the request body holds the key only |
