@@ -461,7 +461,7 @@ public struct ClaudeRecipeReader {
         var outcome = "other"
         var usage = (input: 0, output: 0)
         defer {
-            ledger.record(use: .paste, model: Self.model, input: usage.input, output: usage.output,
+            ledger.record(use: .recipeLink, model: Self.model, input: usage.input, output: usage.output,
                           costNano: TessUsageLedger.cost(model: Self.model, input: usage.input, output: usage.output),
                           latency: Date().timeIntervalSince(started), outcome: outcome, requestID: nil, at: now())
         }

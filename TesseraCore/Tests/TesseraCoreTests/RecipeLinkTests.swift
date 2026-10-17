@@ -183,6 +183,9 @@ struct RecipeLinkTests {
         let call = try #require(LinkStub.requests.last { $0.url?.host() == "api.anthropic.com" })
         #expect(call.value(forHTTPHeaderField: "x-api-key") == "sk-ant-TEST-link")
         #expect(ledger.calls().count == 1)
+        // G31: the receipt names the job, not "a paste".
+        let use = ledger.calls().first.flatMap { ledger.store.value("use", of: $0)?.stringValue }
+        #expect(use == TessUse.recipeLink.rawValue && use != TessUse.paste.rawValue)
         // At the cap: the paused line, Claude never asked.
         ledger.record(use: .paste, model: ClaudeRecipeReader.model, input: 0, output: 0,
                       costNano: TessUsageLedger.capNano, latency: 0, outcome: "works", requestID: nil,
