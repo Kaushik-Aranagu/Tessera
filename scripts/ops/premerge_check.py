@@ -97,7 +97,7 @@ def check(files, kind):
                     break
             else:
                 pass
-        if p.endswith(".py") and p.startswith("scripts/"):
+        if p.endswith(".py") and p.startswith("scripts/") and p != "scripts/ops/premerge_check.py":  # its own rule text names the banned calls
             if f["status"] == "D":
                 continue
             for n, text in f["added"]:
