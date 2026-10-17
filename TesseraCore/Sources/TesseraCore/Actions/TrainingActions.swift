@@ -565,6 +565,10 @@ public struct DeleteObject: EngineAction {
                 reason: "Groceries stays. Clear it instead"
             )
         }
+        // A recipe takes its share of the groceries list with it, in the same step, so one undo brings both back (G7).
+        if let recipeClass = transaction.classes[.recipe], target.classDef?.id == recipeClass.id {
+            try RemoveRecipeFromGroceries(recipe: target.id).apply(&transaction)
+        }
         transaction.delete(target)
     }
 
