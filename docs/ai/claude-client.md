@@ -67,7 +67,7 @@ Every wall refuses with no network call and before any money is held.
    recipe-link job strips money-shaped spans (prices, costs) from the page text before sending and never refuses
    the page (Product, decisions.md 11:52 AM PT Oct 16); his own words still pass every wall unchanged. Use the same word and currency
    list as `TessMemoryScreen.moneyWords` and the currency signs. Body and health facts are never packed: that is
-   the pack builder's job, and its snapshot test proves it. For capture, the first wall is new in `TessRouter.run`:
+   the pack builder's job, and its snapshot test proves it. For capture, the first wall was new in `TessRouter.run` (Oct 17 2:33 AM: his tap "All but the key" removed it for a capture miss; the key-shape refusal stays, and every other job keeps this wall):
    a money screen next to the existing `SecretWords.mentions` check, before any `isAvailable`, so a money-shaped
    phrase never reaches `ClaudeTessModel`, whatever the switch says.
 3. **SecretWords wall.** A pack where `SecretWords.mentions` is true, or that holds the Claude key prefix
