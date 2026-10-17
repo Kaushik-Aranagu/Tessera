@@ -1,11 +1,12 @@
 import Foundation
 
 /// The sizes a recipe may hold, from any source (paste, link, Claude, an edit, a stored value; Kitchen gap hunt 9,
-/// G62): serves 1 to 100, times 1 to 1440 minutes. Every conversion to `Int` goes through here, so a huge, NaN or
+/// G62): serves 1 to 100, times 1 to 4320 minutes (3 days: a 48 h ferment reads as written; Kitchen 10:50 AM PT). Every
+/// conversion to `Int` goes through here, so a huge, NaN or
 /// infinite value can never crash a page; it is clamped, or read as nothing.
 public enum RecipeLimits {
     public static let serves: ClosedRange<Int> = 1 ... 100
-    public static let minutes: ClosedRange<Double> = 1 ... 1440
+    public static let minutes: ClosedRange<Double> = 1 ... 4320
 
     /// A serving size inside 1 to 100; nil for nothing, zero or less, NaN or infinity.
     public static func serves(_ value: Double?) -> Int? {
@@ -18,7 +19,7 @@ public enum RecipeLimits {
         return min(value, serves.upperBound)
     }
 
-    /// A time inside 1 to 1440 minutes; nil for nothing, zero or less, NaN or infinity.
+    /// A time inside 1 to 4320 minutes; nil for nothing, zero or less, NaN or infinity.
     public static func minutes(_ value: Double?) -> Double? {
         guard let value, value.isFinite, value > 0 else { return nil }
         return min(max(value, minutes.lowerBound), minutes.upperBound)
