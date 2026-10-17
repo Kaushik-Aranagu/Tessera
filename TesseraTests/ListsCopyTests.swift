@@ -49,4 +49,17 @@ struct ListsCopyTests {
         let attempt = ListsCopy.add("   \n") { _ in wrote = true; return nil }
         #expect(!wrote && attempt.draft.isEmpty && attempt.line == nil)
     }
+
+    @Test func aRemoveNamesTheThingFirstAndUndoSaysWhereItWent() {
+        #expect(ListsCopy.removed("Rice") == "Rice, removed.")
+        #expect(ListsCopy.backOn("Rice", list: "Packing") == "Rice, back on Packing.")
+        #expect(ListsCopy.removed(ShopTrip.privateLabel) == "Private item, removed.")
+    }
+
+    @Test func removeRisesFrom60AndIsWholeAt96() {
+        #expect(SwipeToRemove.reveal(-40) == 0)
+        #expect(SwipeToRemove.reveal(-60) == 0)
+        #expect(SwipeToRemove.reveal(-78) == 0.5)
+        #expect(SwipeToRemove.reveal(-96) == 1 && SwipeToRemove.reveal(-120) == 1)
+    }
 }
