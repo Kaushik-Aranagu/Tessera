@@ -4,7 +4,7 @@ import TesseraTess
 
 // Settings › Claude (docs/design/claude-settings.md, Research's settings-claude.md). The key lives only in the
 // Keychain: it passes through the SecureField's text once, goes straight to Core's ClaudeKeyCheck, and the field is
-// cleared at once. After that only "...a1B2" is ever drawn. Nothing here reads the clipboard by itself.
+// cleared at once. After that the screen says only whether a key is saved. Nothing here reads the clipboard by itself.
 
 /// The words for the key's state after a check: "works", "not allowed", "not checked", "account paused".
 enum ClaudeKeyWords {
@@ -54,7 +54,8 @@ struct ClaudeSection: View {
         return SystemKeychain()
     }()
 
-    @State private var last4: String?
+    /// Whether a key is saved: yes or no only. No part of the key is kept or shown (Product 9:53).
+    @State private var hasKey = false
     @State private var status = "not checked"
     @State private var writing = false
     @State private var replacing = false
@@ -84,8 +85,8 @@ struct ClaudeSection: View {
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .accessibilityAddTraits(.isHeader)
 
-            if let last4, !removed {
-                withKey(last4)
+            if hasKey, !removed {
+                withKey
                     .transition(.opacity)
             } else {
                 noKey
@@ -106,7 +107,7 @@ struct ClaudeSection: View {
                 .transition(.opacity.combined(with: .offset(y: 6)))
             }
         }
-        .tesseraAnimation(value: last4)
+        .tesseraAnimation(value: hasKey)
         .tesseraAnimation(value: removed)
         .tesseraAnimation(value: line)
         .tesseraAnimation(value: writing)
@@ -157,7 +158,7 @@ struct ClaudeSection: View {
     // MARK: With a key
 
     @ViewBuilder
-    private func withKey(_ last4: String) -> some View {
+    private var withKey: some View {
         let spent = ledger.monthTotal(now: AppClock.now)
         let share = min(Double(spent) / Double(TessUsageLedger.capNano), 1)
         let paused = spent >= TessUsageLedger.capNano
@@ -214,12 +215,10 @@ struct ClaudeSection: View {
             }
 
             VStack(alignment: .leading, spacing: 0) {
-                Text(
-                    "Key ends in \(Text("...\(last4)").fontWeight(.semibold)) · \(Text(status).foregroundStyle(Theme.Colors.inkSecondary))"
-                )
-                .textRole(.body)
-                .foregroundStyle(Theme.Colors.ink)
-                .accessibilityLabel("Claude key, ends in \(last4), \(status)")
+                Text("Key saved · \(Text(status).foregroundStyle(Theme.Colors.inkSecondary))")
+                    .textRole(.body)
+                    .foregroundStyle(Theme.Colors.ink)
+                    .accessibilityLabel("Claude key saved, \(status)")
                 HStack(spacing: 0) {
                     Button("Test") { retest() }
                     Text(" · ").textRole(.labelStrong).foregroundStyle(Theme.Colors.inkSecondary)
@@ -296,11 +295,8 @@ struct ClaudeSection: View {
 
     private func load() {
         missesGoToClaude = model.asksClaude
-        guard let key = keys.read() else {
-            last4 = nil
-            return
-        }
-        last4 = String(key.suffix(4))
+        hasKey = keys.read() != nil
+        guard hasKey else { return }
         let lastCheck = ledger.calls()
             .filter { model.store.value("use", of: $0)?.stringValue == TessUse.keyCheck.rawValue }
             .max { $0.createdAt < $1.createdAt }
@@ -349,7 +345,7 @@ struct ClaudeSection: View {
                     line = "That key didn't pass. Your old key still works."
                 } else {
                     line = "That key failed, and the old one is gone. Add one?"
-                    last4 = nil
+                    hasKey = false
                 }
                 replacing = false
                 writing = false
@@ -357,8 +353,9 @@ struct ClaudeSection: View {
                 return
             }
             withTesseraAnimation(reduceMotion: reduceMotion) {
-                line = result.line
-                last4 = result.last4
+                // Core's line for a working key still names its last four; the screen says only that it's saved.
+                line = result.outcome == .works ? "Key saved." : result.line
+                hasKey = result.last4 != nil
                 status = ClaudeKeyWords.status(result.outcome.rawValue)
                 writing = result.outcome == .badKey || result.outcome == .notSaved
                 replacing = false
@@ -402,7 +399,7 @@ struct ClaudeSection: View {
     private func finishRemoval() {
         keys.delete()
         removed = false
-        last4 = nil
+        hasKey = false
         status = "not checked"
         withTesseraAnimation(reduceMotion: reduceMotion) { line = nil }
         model.touch()
