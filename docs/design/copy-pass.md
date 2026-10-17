@@ -87,3 +87,7 @@ Build the "Now" column. Where a clip still says the old words, the sheet wins. T
 - **Shutdown's slot C** reads "3 moving to tomorrow. Tap any for later." A tap sends a row to LATER, so "keep" read both ways (`shutdown.md`, `shutdown-grammar.md`; the clips keep the old words until re-cut).
 - **The hold's writes** are "one undoable step", not "record". SH8's "best" lines live only in Research's `shutdown-daylog-copy.md` B2 and E2, already fixed; no Design sheet or clip ever drew them.
 - **The recipe link's working lines** (Research G7, #465): the fetch says "Reading nytimes.com." (audit E1), and when the page has no recipe in it and she asks Claude, she says "Asking Claude to read the recipe." It replaces both "No recipe card there. Asking Claude." (he never sees a recipe card, and the reason doesn't help him) and the motion sheet's "Reading the recipe.". When something goes to Claude, the line says Claude.
+
+## Receipts say "on", links are ink (Product decisions 10:06 PM PT Oct 16)
+- A receipt for adding to a list says "on": "Milk, on Groceries.", "Lemons, on Groceries.", "Private item, on Errands." Never "in Groceries" or "added to". Swept through sheets 78, the Pantry briefs and kitchen-v2.
+- A list-item link (a name that opens its page) is ink with the house underline (the ink line of ui-bar, 1.5 pt at a 4 pt offset), never cobalt: cobalt is Tess's voice only.

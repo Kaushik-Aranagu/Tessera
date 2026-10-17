@@ -3,7 +3,7 @@
 One brief per Mac lead, drawn only from sheets 76 (`depth.md`), 77 (`sides-77.md`) and 78 (`pantry.md`). Nothing here is new design; where a sheet and this page differ, the sheet wins.
 
 ## Rules every lead holds
-- Receipts name the thing first, then what happened ("Limes, in.", "Milk, in Groceries.", "Pantry, 6 added.").
+- Receipts name the thing first, then what happened ("Limes, in.", "Milk, on Groceries.", "Pantry, 6 added.").
 - No "…" anywhere. Times read "7 pm", never "at 7 pm" before a time. Digits for counts. " · " only inside a pack size.
 - UNDO is 4 s for a new add or entry, 10 s for a change; both 10 s under VoiceOver (one app-wide UNDO slot).
 - No controls on a side (Pantry's one key is the only exception). Cobalt is Tess's voice only. Tess's one line is the same at glance and full.

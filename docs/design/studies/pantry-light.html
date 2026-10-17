@@ -150,7 +150,7 @@ function strokeWord(text, colour, left, top, w) {
   setTimeout(() => { $('rest').getAnimations().forEach((a) => a.cancel()); milk.remove(); }, 490);
   await anim(mfly, [{ transform: 'none', color: 'rgba(43,36,64,.55)' }, { transform: `translate(${64 - mr.left}px,${488 + 9 - mr.top}px)`, color: 'rgba(43,36,64,1)' }], { duration: 520, easing: 'cubic-bezier(.3,0,.25,1)' });
   swapText(gctx, '5 to get, for dal and one more');
-  say('Milk, in Groceries.', true);
+  say('Milk, on Groceries.', true);
   await sleep(2300);
   await clearStage();
 
@@ -188,7 +188,7 @@ function strokeWord(text, colour, left, top, w) {
   await sleep(1800);
   await tap(lines[0].querySelector('.vw'));
   await swapText(lines[0], '<span style="color:var(--sage)">cilantro is on the list</span>');
-  say('Cilantro, in Groceries.', true);
+  say('Cilantro, on Groceries.', true);
   await sleep(2400);
   document.body.dataset.done = '1';
 })();

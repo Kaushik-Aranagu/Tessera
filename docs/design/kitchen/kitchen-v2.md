@@ -90,14 +90,14 @@ In every case: no modal, no error code, and nothing written. The link stays wher
 ## R · Usually have (foot of Groceries)
 The first pantry step, ahead of pantry state: it reads existing Groceries history (3+ typed buys in 56 days), per the Kitchen lead.
 - The last thing in the aisle window, after the last aisle, never pinned. One line at 21/400 and 55%: "Usually have: milk, eggs, rice", with "Usually have:" in the context colour and the names in ink. Three at most. (The recording still shows the earlier "USUALLY BY NOW" label above the names; the copy is now this one line, and the look and motion are unchanged.)
-- **Tap a name** and it joins its aisle. The aisles below open by one row on the settle spring (420ms). The name flies to its new row on the y arc (`cubic-bezier(.3,0,.25,1)`, 520ms), inking from 55% to 100%. The rest of the line closes up behind it (360ms, house curve). The context count rolls up by one. Tess: "Milk, in Groceries." with **UNDO**.
+- **Tap a name** and it joins its aisle. The aisles below open by one row on the settle spring (420ms). The name flies to its new row on the y arc (`cubic-bezier(.3,0,.25,1)`, 520ms), inking from 55% to 100%. The rest of the line closes up behind it (360ms, house curve). The context count rolls up by one. Tess: "Milk, on Groceries." with **UNDO**.
 - **Swipe a name left** to skip it until its next gap. Nothing is ever added on its own.
 - When there's nothing due, the line takes no space.
 
 ## W · What can I cook (shelf filter word, sheet 14)
 - **CAN COOK** replaces FROM THE BASKET as the third filter word when slice W lands (v1's shelf keeps FROM THE BASKET until pantry state exists): QUICK · NOT LATELY · CAN COOK. It's off by default and gets the vermilion carriage when on.
 - **On:** names missing two or more drop (fade down 10pt, 180ms). The rest re-sort on the settle spring (460ms), keeping their sizes: nothing missing first (ties go to the one not cooked lately), then one missing. The context line swaps to "3 you can cook now".
-- **One missing:** a line under the name unrolls left to right (360ms, 80ms apart) at 21/400 in the context colour, "1 missing: **lemons**", with the ingredient as a value word. Tap it to put it on the list: the line turns sage, "lemons is on the list", and Tess says "Lemons, in Groceries." with **UNDO**.
+- **One missing:** a line under the name unrolls left to right (360ms, 80ms apart) at 21/400 in the context colour, "1 missing: **lemons**", with the ingredient as a value word. Tap it to put it on the list: the line turns sage, "lemons is on the list", and Tess says "Lemons, on Groceries." with **UNDO**.
 - **Unknown counts as missing**, as the research says, but the line says so honestly: "1 to check: **lemons**". Tapping it opens the Ingredient page instead of adding it.
 - **Nothing cookable:** the context line reads "Nothing without a shop", and the one-missing names remain.
 

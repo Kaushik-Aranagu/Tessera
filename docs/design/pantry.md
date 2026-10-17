@@ -8,9 +8,9 @@ Board `mockups/pantry.png`, recording `recordings/pantry.mp4` (18 s, Porcelain, 
 - **Frame:** the area frame of 73. The name PANTRY at 52 (Label 15/700), "Friday" at 138, the context line at 186 with the side's word OUT AND LOW at its right, the hero at 212. (146 is the frame of a page one tap down; Pantry is a tab-level area, so it has no title and no back word.)
 - **Context** "since Saturday's shop" (21 characters). **Hero** in digits: "4 out, 2 low". Quiet forms: "Nothing out" (known, none out or low), "Nothing yet" (nothing known).
 - **Groups,** from 296: OUT, LOW, USUALLY HAVE, labels at 13/700. One plain Body 21 line per thing, 40 pt apart, the name in ink and its state word at the right (out 700, low 600, in the pantry colour mixed 72% with ink). Out lines carry the faint ring from the recipe page (11 pt, 1.3 pt stroke, ink 42%, at x 6), low lines nothing. Nothing is red.
-- **USUALLY HAVE** is one line of names (Research R, cap 4): up to three names as is, and from four "Rice, coffee and 2 more" (two named, then the count). Names in ink, "and 2 more" at 55%. A tap on a name joins Groceries ("Milk, in Groceries.", UNDO), as on Groceries; a left swipe skips it until its next gap.
+- **USUALLY HAVE** is one line of names (Research R, cap 4): up to three names as is, and from four "Rice, coffee and 2 more" (two named, then the count). Names in ink, "and 2 more" at 55%. A tap on a name joins Groceries ("Milk, on Groceries.", UNDO), as on Groceries; a left swipe skips it until its next gap.
 - **Tap a state word** to cycle in, low, out, in (kitchen-v2 P). One `.selection`, the line closes up (320 ms), the digits just change (nothing counts up), and the receipt names the thing first: "Limes, in." with UNDO in the one app-wide UNDO slot, replacing Tess's line for its window; UNDO brings the row back and her line returns. A line that becomes in leaves the page (in things are the long tail and show on their Ingredient page). A line that becomes low or out joins that group.
-- **Tap a name** opens its Ingredient page. A left swipe on an out or low line adds it to Groceries as a ghost row ("Milk, in Groceries.", UNDO).
+- **Tap a name** opens its Ingredient page. A left swipe on an out or low line adds it to Groceries as a ghost row ("Milk, on Groceries.", UNDO).
 - **Empty:** "Nothing yet", then "Clear a shop or finish a cook and this fills in." at 55%; Tess: `Say "out of milk" and I'll keep it.`
 - **Tess's line** is the only thing in 736 to 820: "Tacos took the cilantro and limes." (the phone's fact: what the last cook used up). Never a notification, a badge, a Home offer or "running out".
 
@@ -28,7 +28,7 @@ Board `mockups/pantry.png`, recording `recordings/pantry.mp4` (18 s, Porcelain, 
 - The KITCHEN line is "Tacos, 7 pm": Product's 6:32 PM ruling drops "at" before any time, app-wide (copy-pass rule 6). This replaces the earlier "Tacos at 7 pm" of sheets 73 and 78.
 
 ## Copy rules the sheet follows
-Digits for counts ("4 out", "6 to buy"); "best", never "record" (no best on Pantry); no "…"; times as "7 pm", with no "at" before a time (decisions 5:11); cobalt is Tess's voice only; receipts name the thing first ("Limes, in.", "Milk, in Groceries.", "Pantry, 6 added."); a private note is only ever "Private note" and no money or body fact appears here.
+Digits for counts ("4 out", "6 to buy"); "best", never "record" (no best on Pantry); no "…"; times as "7 pm", with no "at" before a time (decisions 5:11); cobalt is Tess's voice only; receipts name the thing first ("Limes, in.", "Milk, on Groceries.", "Pantry, 6 added."); a private note is only ever "Private note" and no money or body fact appears here.
 
 ## Rows for Kitchen's acceptance
 1. The front shows a counts hero, OUT then LOW then USUALLY HAVE, one line per thing, a ring on out lines only, nothing under 16 pt, no cards or pills.
