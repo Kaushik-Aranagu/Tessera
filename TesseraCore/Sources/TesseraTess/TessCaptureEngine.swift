@@ -459,13 +459,13 @@ public final class TessCaptureEngine: TessCapturing {
         ["Bench Press": "Bench", "Back Squat": "Squat"][name] ?? name
     }
 
-    /// What Tess says for a task whose title is private: its day, never its words.
     /// A list's name as Tess says it: "Private list" for a walled name (QA on #771).
     @MainActor
     static func listName(_ name: String, store: ObjectStore) -> String {
         ObjectPrivacy.isPrivateWord(name, in: store) ? "Private list" : name
     }
 
+    /// What Tess says for a task whose title is private: its day, never its words.
     public static func privateTaskLine(_ startsAt: Date?, context: TessContext) -> String {
         guard let startsAt, let day = when(startsAt, context: context).split(separator: " ").first else {
             return "Task added."
