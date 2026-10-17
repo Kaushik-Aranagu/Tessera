@@ -221,23 +221,29 @@ private struct InstanceBody: View {
         let lineage = object.classDef.map(ClassResolver.lineage(of:)) ?? []
         let backlinks = model.store.backlinks(to: object)
         let children = object.orderedChildren
+        // A private object shows only its label: no title, fields, notes or contents (board 0ai mask).
+        let privateLabel = ObjectPrivacy.label(of: object, in: model.store, classes: model.classes)
 
         Header(
             path: lineage.map { ($0.name, Route.classDef($0.id)) },
-            title: object.title.isEmpty ? "Untitled" : object.title,
-            classLine: "object \(Format.identifier(object.title, upperFirst: false)) : "
+            title: privateLabel ?? (object.title.isEmpty ? "Untitled" : object.title),
+            classLine: privateLabel == nil
+                ? "object \(Format.identifier(object.title, upperFirst: false)) : "
                 + Format.identifier(object.classDef?.name ?? "Thing", upperFirst: true)
+                : Format.identifier(object.classDef?.name ?? "Thing", upperFirst: true)
         )
 
-        if let notes = model.store.value("notes", of: object)?.stringValue {
+        if privateLabel == nil, !ObjectPrivacy.hidesNotes(of: object, classes: model.classes),
+           let notes = model.store.value("notes", of: object)?.stringValue
+        {
             Text(notes).textRole(.body).foregroundStyle(Theme.Colors.inkSecondary).entrance(4)
         }
 
-        if let classDef = object.classDef {
+        if privateLabel == nil, let classDef = object.classDef {
             PropertyList(classDef: classDef, object: object).entrance(5)
         }
 
-        if !children.isEmpty {
+        if privateLabel == nil, !children.isEmpty {
             MarginSection(label: "Contents") {
                 VStack(spacing: 0) {
                     ForEach(Array(children.enumerated()), id: \.element.id) { index, child in
@@ -258,7 +264,8 @@ private struct InstanceBody: View {
                         if let classDef = source.classDef, model.prototype(of: classDef)?.id == source.id {
                             ObjectRow(title: classDef.name, route: .classDef(classDef.id))
                         } else {
-                            ObjectRow(title: source.title, route: .object(source.id))
+                            ObjectRow(title: ObjectPrivacy.label(of: source, in: model.store, classes: model.classes)
+                                ?? source.title, route: .object(source.id))
                         }
                     }
                 }
@@ -285,7 +292,8 @@ private struct ChildRow: View {
             }
         } else {
             ObjectRow(
-                title: child.title.isEmpty ? child.classDef?.name ?? "Item" : child.title,
+                title: ObjectPrivacy.label(of: child, in: model.store, classes: model.classes)
+                    ?? (child.title.isEmpty ? child.classDef?.name ?? "Item" : child.title),
                 route: .object(child.id)
             )
         }
