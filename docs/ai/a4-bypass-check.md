@@ -34,7 +34,7 @@ Paths under /home/claude/Tessera. Rulings: docs/ai/home-pack-walls-audit.md, doc
 
 ## No bypass found, with evidence
 
-- **Walls before the call (capture).** *Superseded Oct 17 2:33 AM for the capture phrase only: his tap "All but the key" lets a phrase the grammar can't read go whole; the key-shape guard stays. The rows below still hold for every other job. His tap does not cover a capture's other pack fields (exercise name, last set): those stay walled (path 1, closed).* `SecretWords.mentions` and `PrivateFacts.isWalled` run at
+- **Walls before the call (capture).** *Superseded Oct 17 (Core #860, d3b58b4) for the capture phrase only: a phrase the grammar can't read goes whole, walled words included; the key-shape refusal runs first in `TessRouter` and again in the Claude route, a walled phrase the grammar answered stays on the phone, and Siri and Shortcuts never send. The rows below still hold for every other job. His tap does not cover a capture's other pack fields (exercise name, last set): those stay walled (path 1, closed).* `SecretWords.mentions` and `PrivateFacts.isWalled` run at
   TessModel.swift:74-79 (router skips Claude on either) and again inside `run`, ClaudeTessModel.swift:54,
   before the key is used, the ledger reserved or any request built. The inbox checks twice: on add
   (TessInbox.swift:30) and on drain (:65).
