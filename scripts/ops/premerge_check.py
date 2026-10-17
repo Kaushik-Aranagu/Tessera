@@ -72,6 +72,8 @@ def check(files, kind):
                 stops.append((f["path"], 0, "docs-only: file outside docs/"))
     for f in files:
         p = f["path"]
+        if p.endswith(".pyc") and f["status"] != "D":
+            stops.append((p, 0, "bytecode: .pyc file must not be committed"))
         for n, text in f["added"]:
             if KEY_RE.search(text) or KEY_ASSIGN_RE.search(text):
                 stops.append((p, n, "secret: key-like value"))
