@@ -5,8 +5,14 @@ import TesseraCore
 /// and why the rest stay in the draft. Core decides what is kept (`AddListItem.kept`); this only names the reason.
 @MainActor
 enum GroceriesWall {
-    enum Reason: Equatable {
+    /// Strongest last: the line spoken is the strongest reason in a batch, key, then secret, then money (Product,
+    /// decisions 8:55 AM).
+    enum Reason: Int, Comparable {
         case money, secret, key
+
+        static func < (lhs: Reason, rhs: Reason) -> Bool {
+            lhs.rawValue < rhs.rawValue
+        }
     }
 
     struct Walled: Equatable {
@@ -35,6 +41,17 @@ enum GroceriesWall {
             return .secret
         }
         return .money
+    }
+
+    /// What the draft holds after an add: money and secret lines stay as typed; a key-shaped line is cleared and
+    /// never shown again (Product 8:55 AM).
+    static func heldDraft(_ walled: [Walled]) -> String {
+        walled.filter { $0.reason != .key }.map(\.line).joined(separator: ", ")
+    }
+
+    /// The one line to say: the strongest reason's.
+    static func spoken(_ walled: [Walled]) -> String? {
+        walled.map(\.reason).max().map(line)
     }
 
     /// The line beside the held draft; none of them offers UNDO, since nothing was written.
