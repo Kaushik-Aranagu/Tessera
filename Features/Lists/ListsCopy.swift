@@ -40,13 +40,24 @@ enum ListsCopy {
 
     /// A line that starts with the thing starts with a capital, whatever was stored: "rice" reads "Rice, removed."
     /// (Kitchen row 10.9 on #786).
+    /// A word that already has a capital after its first letter is left as typed: "iPhone" never reads "IPhone"
+    /// (QA on #805).
     static func leading(_ thing: String) -> String {
-        thing.prefix(1).uppercased() + thing.dropFirst()
+        let firstWord = thing.prefix { !$0.isWhitespace }
+        if firstWord.dropFirst().contains(where: \.isUppercase) {
+            return thing
+        }
+        return thing.prefix(1).uppercased() + thing.dropFirst()
     }
 
     /// The reusable option's receipt, with the shown (maybe masked) name: "Packing, reusable."
     static func reusable(_ list: String, isOn: Bool) -> String {
         "\(list), \(isOn ? "reusable" : "not reusable")."
+    }
+
+    /// The option word with its state, so it never rests on colour: "Reusable, on" / "Reusable, off".
+    static func reusableWord(isOn: Bool) -> String {
+        "Reusable, \(isOn ? "on" : "off")"
     }
 
     /// A reset's receipt: "Packing, reset." (10.4, 10.11).
@@ -59,6 +70,21 @@ enum ListsCopy {
     }
 
     /// A running list's state word: "RUNNING, 2 LEFT" (comma, never a dot or " · ").
+    /// The page's context line while a run is open: "Packing, running" (10.7).
+    static func running(_ list: String) -> String {
+        "\(list), running"
+    }
+
+    /// A run's start, with the shown name: "Packing, 6 left." / "Packing, nothing left."
+    static func runStarted(_ list: String, left: Int) -> String {
+        left == 0 ? "\(list), nothing left." : "\(list), \(left) left."
+    }
+
+    /// A run's finish: "Packing, done." or "Packing, done. 3 left." (Product, Oct 16 12:38 PM).
+    static func runDone(_ list: String, left: Int) -> String {
+        left > 0 ? "\(list), done. \(left) left." : "\(list), done."
+    }
+
     static func runState(left: Int) -> String {
         "RUNNING, \(left) LEFT"
     }

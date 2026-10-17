@@ -530,22 +530,24 @@ private struct GhostRow: View {
 
 /// One ledger row: the subject, the next step stated as time (never judgement) and a text-only Resume. Its state
 /// is the seam 6 pt above it: suspended = 2 pt vermilion, lit and still; waiting = an engraved hairline.
-private struct LedgerRow: View {
+struct LedgerRow: View {
     let process: ProcessSnapshot
     let now: Date
     @Environment(AppModel.self) private var model
     @Environment(\.displayScale) private var displayScale
 
     var body: some View {
+        let shown = Self.shown(process, store: model.store, classes: model.classes,
+                               lastWeightKg: BodyWeight.lastKg(in: model.store))
         VStack(alignment: .leading, spacing: 6) {
             seam
             Button { model.resume(process) } label: {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(process.subject?.title ?? process.object.title)
+                        Text(shown.title)
                             .textRole(.bodyStrong)
                             .foregroundStyle(Theme.Colors.ink)
-                        Text(step)
+                        Text(step(shown.nextStep))
                             .font(Theme.voice(size: 18))
                             .foregroundStyle(Theme.Colors.inkSecondary)
                             .lineLimit(1)
@@ -559,7 +561,7 @@ private struct LedgerRow: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("\(process.subject?.title ?? process.object.title), \(step). Resume")
+            .accessibilityLabel("\(shown.title), \(step(shown.nextStep)). Resume")
         }
     }
 
@@ -568,9 +570,22 @@ private struct LedgerRow: View {
         Theme.Colors.hairline.frame(height: process.state == .suspended ? 1 : 1 / displayScale)
     }
 
-    private var step: String {
+    private func step(_ nextStep: String?) -> String {
         let ago = process.lastTouchedAt.map { Self.ago(now.timeIntervalSince($0)) }
-        return [process.nextStep, ago].compactMap(\.self).joined(separator: ", ")
+        return [nextStep, ago].compactMap(\.self).joined(separator: ", ")
+    }
+
+    /// The row's name and next step. A list run never shows a walled name: its title is the shelf's shown name and
+    /// its step is built from that and the live count, never the engine's stored "<title>, 6 left" (QA on #814).
+    static func shown(_ process: ProcessSnapshot, store: ObjectStore, classes: [SystemCatalog.Key: ClassDef],
+                      lastWeightKg: Double?) -> (title: String, nextStep: String?)
+    {
+        guard let subject = process.subject, let listClass = classes[.list], let subjectClass = subject.classDef,
+              ClassResolver.isSubclass(subjectClass, of: listClass), subject.id != Groceries.listID
+        else { return (process.subject?.title ?? process.object.title, process.nextStep) }
+        let name = ListsShelf.shownName(store.displayTitle(of: subject), lastWeightKg: lastWeightKg)
+        let left = ListContents(store: store, classes: classes).open(in: subject).count
+        return (name, left == 0 ? "\(name), nothing left" : "\(name), \(left) left")
     }
 
     /// "just now", "21 min ago", "2 h ago" (never a mm:ss duration).
