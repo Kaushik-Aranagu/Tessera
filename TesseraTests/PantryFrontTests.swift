@@ -64,4 +64,20 @@ struct PantryFrontTests {
         #expect(PantryFront.swipe(limes, groceries: groceries, store: model.store)
             == .already(receipt: "Limes, in the basket."))
     }
+
+    @Test func aWalledThingAlreadyListedStaysPrivateItemOnBothLines() throws {
+        let recipe = try model.engine.perform(CreateRecipe(text: "Rest\n2 advil\n1 cup tea\n\nTake them."), by: .user)
+            .output
+        let cook = try model.engine.perform(StartCooking(recipe: recipe.id, time: saturday), by: .user).output
+        try model.engine.perform(FinishCooking(cook: cook.id, time: saturday.addingTimeInterval(1800)), by: .user)
+        let advil = try #require(ledger.entries().first { $0.isPrivate })
+        let groceries = Groceries(store: model.store, classes: model.classes)
+        try model.engine.perform(AddGroceries(lines: [model.store.displayTitle(of: advil.ingredient)]), by: .user)
+        #expect(PantryFront.swipe(advil, groceries: groceries, store: model.store)
+            == .already(receipt: "Private item, already on Groceries."))
+        let row = try #require(groceries.list?.orderedChildren.first)
+        try model.engine.perform(CheckListItem(item: row.id, time: saturday), by: .user)
+        #expect(PantryFront.swipe(advil, groceries: groceries, store: model.store)
+            == .already(receipt: "Private item, in the basket."))
+    }
 }
