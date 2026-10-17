@@ -53,7 +53,7 @@ This sheet replaces sheet 71's "which pages get a side page" and Product's 10:00
 | 23 | A note | WHERE IT'S MENTIONED (LINKS) | swipe or word | Drawn. Its own links stay under the text |
 | 24 | Claude receipts | BY JOB (FACTS): the month split by job | swipe or word | |
 | 25 | Backups | WHAT'S IN ONE (FACTS) | swipe or word | Drawn. Restore stays on the front |
-| 26 | A class page | ITS OBJECTS (PARTS) | swipe or word | |
+| 26 | A class page | ITS OBJECTS (PARTS; the Recipes class page is LINKS, sheets 77 and 87) | swipe or word | |
 | 27 | Any other object | **the default side**: LINKS plus every field the front doesn't show (FACTS) | swipe or word | Every new class gets a side for free, and a class can declare its own |
 
 **Designed but not built:** each gets its side when it's built.
