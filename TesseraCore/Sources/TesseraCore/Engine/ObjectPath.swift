@@ -64,14 +64,18 @@ public extension ObjectStore {
     /// mask at the source). The op log, the editor's text field and the engine's walls use `rawTitle(of:)`.
     func displayTitle(of object: ObjectRecord) -> String {
         let title = rawTitle(of: object)
-        return isWorkoutOrRoutine(object) ? ObjectPrivacy.routineTitle(title, in: self) : title
+        if isWorkoutOrRoutine(object) { return ObjectPrivacy.routineTitle(title, in: self) }
+        if isA(.list, object) { return ListContents.shownName(of: object, in: self) }
+        return title
+    }
+
+    private func isA(_ key: SystemCatalog.Key, _ object: ObjectRecord) -> Bool {
+        guard let classDef = object.classDef else { return false }
+        return lineage(of: classDef).contains { $0.systemKey == key.systemKey }
     }
 
     private func isWorkoutOrRoutine(_ object: ObjectRecord) -> Bool {
-        guard let classDef = object.classDef else { return false }
-        return lineage(of: classDef).contains {
-            $0.systemKey == SystemCatalog.Key.workout.systemKey || $0.systemKey == SystemCatalog.Key.routine.systemKey
-        }
+        isA(.workout, object) || isA(.routine, object)
     }
 
     /// The object's title as stored, or a stand-in for untitled objects such as sets and entries.

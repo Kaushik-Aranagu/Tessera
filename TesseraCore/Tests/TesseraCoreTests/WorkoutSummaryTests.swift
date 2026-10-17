@@ -110,4 +110,15 @@ struct WorkoutSummaryTests {
                                    exercisesDone: 0, exercisesPlanned: 0, sets: 0, volume: 0, records: [])
         #expect(empty.line == "0 sets.")
     }
+
+    @Test func aListNameTheWallsCallPrivateReadsPrivateList() throws {
+        // QA on #881/#883: the object page, the Day log and the op summaries read lists through the source.
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let plain = try engine.perform(CreateList(name: "Packing"), by: .user).output
+        #expect(store.displayTitle(of: plain) == "Packing")
+        try engine.perform(RenameObject(object: plain.id, title: "Lexapro refills"), by: .user)
+        #expect(store.displayTitle(of: plain) == "Private list" && store.rawTitle(of: plain) == "Lexapro refills")
+    }
 }
