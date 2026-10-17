@@ -91,10 +91,20 @@ struct MoneyWallTests {
         #expect(claude.heard == [phrase])
     }
 
-    @Test(arguments: [
-        "sk-" + "ant-" + "api03-" + String(repeating: "Ab3x", count: 8),
-        "my key is sk-" + "ant-" + "api03-abcdefghijklmnop"
-    ])
+    /// A key-shaped run, built from pieces so no key-shaped text sits in the source.
+    nonisolated static func fakeKey(_ unit: String, _ count: Int) -> String {
+        let marker = ["sk", "ant", "api03", ""].joined(separator: "-")
+        return marker + String(repeating: unit, count: count)
+    }
+
+    nonisolated static let keyPhrases: [String] = [
+        fakeKey("Ab3x", 8),
+        "my key is " + fakeKey("Ab3x", 4),
+        "please save this\n" + fakeKey("Qw7z", 8) + "\nthanks",
+        "key:  " + fakeKey("Mn4p", 8) + "  for later",
+    ]
+
+    @Test(arguments: keyPhrases)
     func aKeyStillNeverLeaves(_ phrase: String) async {
         let device = Spy(route: .onDevice), claude = Spy(route: .claude)
         let result = await TessRouter(engine: engine, models: [device, claude])
