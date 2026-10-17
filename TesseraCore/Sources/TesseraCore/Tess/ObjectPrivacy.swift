@@ -16,6 +16,8 @@ public enum ObjectPrivacy {
     /// What a private routine's title reads wherever a workout shows its name: the Done hero and line, the UNDO line,
     /// the Live Activity and the live workout's context line (Product, decisions 12:35 PM on #849).
     public static let routineLabel = "Private workout"
+    /// What a walled list name reads (the same word `ListContents.privateListLabel` carries).
+    public static let listLabel = "Private list"
 
     /// A routine's title wherever it shows: "Private workout" when the title is private, else the title as it is.
     @MainActor
@@ -49,6 +51,12 @@ public enum ObjectPrivacy {
         if isA(.task) {
             return object.title == taskLabel || PrivateFacts
                 .isPrivateTitle(object.title, lastWeightKg: last) ? taskLabel : nil
+        }
+        if isA(.listItem) {
+            return isPrivateWord(object.title, in: store) ? "Private item" : nil
+        }
+        if isA(.list) {
+            return isPrivateWord(object.title, in: store) ? listLabel : nil
         }
         if isA(.workout) || isA(.routine) {
             return PrivateWords.isPrivateTitle(object.title, lastWeightKg: last) ? routineLabel : nil

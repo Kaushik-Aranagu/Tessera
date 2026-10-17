@@ -188,10 +188,10 @@ struct HomeDonePackTests {
         let engine = ActionEngine(store: store, classes: classes)
         let (_, summary) = try finish(routineTitle: "Gym pin 1234 day", engine: engine, store: store, classes: classes)
         let fact = HomeFacts(engine: engine, calendar: Self.calendar).fact(done: summary)
-        // The fact's title is masked at the source now ("Private workout"); the raw title still never passes the wall.
+        // The fact carries the masked "Private workout" now; the pack wall refuses that label (QA on #895).
         #expect(fact.title == "Private workout")
         // A first session has no best to beat, so give it one: the wall, not the gate, must stop it.
-        #expect(Self.pack(Self.done("Gym pin 1234 day", bests: ["Squat"])) == .failure(.walled))
+        #expect(Self.pack(Self.done(fact.title, bests: ["Squat"])) == .failure(.walled))
     }
 
     /// Starts and finishes the starter plan's first routine with one set; renames the routine first when asked.

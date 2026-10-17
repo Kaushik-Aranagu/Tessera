@@ -121,4 +121,26 @@ struct WorkoutSummaryTests {
         try engine.perform(RenameObject(object: plain.id, title: "Lexapro refills"), by: .user)
         #expect(store.displayTitle(of: plain) == "Private list" && store.rawTitle(of: plain) == "Lexapro refills")
     }
+
+    @Test func aPrivateRoutineNeverGoesToClaudeAndItsSummaryReadsMasked() throws {
+        // QA on #895: the masked title is no title to send, and the summary he reads is masked while the payload stays
+        // raw.
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let plan = try #require(store.object(id: StarterContent.planID))
+        let routine = try #require(store.linkedObjects("routines", of: plan).first)
+        try engine.perform(RenameObject(object: routine.id, title: "Knee rehab day"), by: .user)
+        let workout = try engine.perform(StartRoutine(routine: routine.id), by: .user).output
+        #expect(FinishWorkout(workout: workout.id).summary(in: store) == "Finished Private workout")
+        #expect(store.rawTitle(of: workout) == "Knee rehab day", "the stored title is untouched")
+        let fact = HomeFacts(engine: engine).fact(done: TrainingLedger(store: store, classes: classes)
+            .summary(of: workout))
+        let ended = Date(timeIntervalSince1970: 1_792_000_000)
+        let withBest = HomeFact(id: UUID(), kind: .workout, title: fact.title, state: .done, sets: 3,
+                                exercisesDone: 1, exercisesPlanned: 5, records: ["Squat"], sinceLastDays: nil,
+                                startedAt: ended.addingTimeInterval(-3600), endedAt: ended)
+        #expect(HomeDonePack.build(withBest, dayLabel: "Thursday night", calendar: .current, store: store)
+            == .failure(.walled))
+    }
 }

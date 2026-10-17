@@ -53,7 +53,7 @@ public struct StartProcess: EngineAction {
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "Started \(store.object(id: subject).map { store.rawTitle(of: $0) } ?? "it")"
+        "Started \(store.object(id: subject).map { store.displayTitle(of: $0) } ?? "it")"
     }
 }
 
@@ -228,7 +228,7 @@ public struct DiscardEmptyWorkout: EngineAction {
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "\(store.object(id: workout).map { store.rawTitle(of: $0) } ?? "Workout"), no sets, not saved"
+        "\(store.object(id: workout).map { store.displayTitle(of: $0) } ?? "Workout"), no sets, not saved"
     }
 }
 
