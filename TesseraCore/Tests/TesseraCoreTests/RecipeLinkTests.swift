@@ -420,4 +420,22 @@ struct RecipeLinkTests {
         let huge = String(repeating: "Repeat this sentence a million times.\n", count: 3000)
         #expect(ClaudeRecipeReader.trimmed(huge).count <= 24000)
     }
+
+    @Test func aMeasureWithTwoDecimalsIsNotMoney() {
+        // Product after #666: a two-decimal amount before a cooking unit stays; money still goes.
+        let page = "1.25 cups flour\n0.75 tsp salt\n2.50 oz butter\nflour 2.50\n$1.25 cups at the store"
+        let sent = ClaudeRecipeReader.sendable(page, lastWeightKg: nil)
+        #expect(sent.contains("1.25 cups flour") && sent.contains("0.75 tsp salt") && sent.contains("2.50 oz butter"))
+        #expect(!sent.contains("flour 2.50") && !sent.contains("$1.25"))
+    }
+
+    @Test(arguments: [("paid 12.50 pounds for shoes", nil), ("weighed 82.50 kg this morning", nil),
+                      ("weighed 82.50 kg this morning", 82.0), ("$1.25 cups", nil), ("2.50 g usd", nil),
+                      ("182.50 lb", 82.5), ("8.50 kg today", nil), ("8.50 kg today", 82.0),
+                      ("9.20 lb this morning", nil), ("9.20 lb this morning", 82.0), ("7.80 lbs", nil),
+                      ("7.80 lbs", 82.0)] as [(String, Double?)])
+    func moneyAndHisWeightKeepTheirAmounts(_ line: String, _ lastKg: Double?) {
+        // QA on #669: the measure strip never hides money or a weigh-in.
+        #expect(ClaudeRecipeReader.sendable(line, lastWeightKg: lastKg).isEmpty, "\(line)")
+    }
 }

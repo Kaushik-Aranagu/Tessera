@@ -368,8 +368,30 @@ public struct ClaudeRecipeReader {
     /// dough", so secret words go by the pasted-line cut, not the capture one.
     static func sendable(_ text: String, lastWeightKg: Double?) -> String {
         SecretWords.cut(text).text.components(separatedBy: .newlines).filter { line in
-            !looksLikeClaudeKey(line) && !PrivateFacts.isWalled(line, lastWeightKg: lastWeightKg)
+            !looksLikeClaudeKey(line) && !PrivateFacts.isWalled(withoutMeasures(line), lastWeightKg: lastWeightKg)
         }.joined(separator: "\n")
+    }
+
+    /// A recipe amount with two decimals right before a cooking unit is a measure, not money (Product, after #666):
+    /// "1.25 cups flour" reads as "cups flour" to the money wall. Only recipe-sized amounts (10 or less, under 1000
+    /// for g and ml), never a body unit ("8.50 kg today" is someone's weight), and never on a line with a currency
+    /// sign, a money word or a weigh word, so "paid 12.50 pounds", "$1.25 cups", "2.50 g usd" and "weighed 82.50 kg"
+    /// keep their amounts and stay walled (QA on #669).
+    static func withoutMeasures(_ line: String) -> String {
+        let lower = line.lowercased()
+        let words = Set(lower.split { !$0.isLetter }.map(String.init))
+        let money = TessMemoryScreen.moneyWords.union(["usd", "eur", "gbp", "quid", "cad", "aud", "inr", "rs"])
+        let weigh: Set = ["weigh", "weighs", "weighed", "weighing", "weight", "bw", "scale", "bmi"]
+        guard words.isDisjoint(with: money), words.isDisjoint(with: weigh),
+              !line.contains(where: { "$£€₹¥".contains($0) }) else { return line }
+        return line.replacing(
+            /(?i)\b(\d+)[.,](\d{2})\s*(cups?|tbsps?|tablespoons?|tsps?|teaspoons?|g|grams?|ml|l|liters?|litres?|oz|ounces?)\b/
+        ) { match in
+            let amount = Double("\(match.output.1).\(match.output.2)") ?? .infinity
+            let unit = match.output.3.lowercased()
+            let small = ["g", "gram", "grams", "ml"].contains(unit) ? amount < 1000 : amount <= 10
+            return small ? String(match.output.3) : String(match.output.0)
+        }
     }
 
     /// The output check (injection audit item 1; docs/research/fixtures/recipe-link-us-25.md "Output check"): what
