@@ -93,10 +93,7 @@ public extension TrainingLedger {
             }
         }
         return WorkoutSummary(
-            id: workout.id, workout: workout, title: ObjectPrivacy.routineTitle(
-                store.displayTitle(of: workout),
-                in: store
-            ),
+            id: workout.id, workout: workout, title: store.displayTitle(of: workout),
             startedAt: store.value("startedAt", of: workout)?.dateValue,
             endedAt: store.value("endedAt", of: workout)?.dateValue,
             exercisesDone: done, exercisesPlanned: entries.count, sets: sets, volume: volume, records: records
