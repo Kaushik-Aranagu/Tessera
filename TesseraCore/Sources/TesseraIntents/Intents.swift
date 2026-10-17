@@ -105,7 +105,7 @@ public struct StartRoutineIntent: AppIntent {
     public func perform() async throws -> some IntentResult & ProvidesDialog {
         let result = try runtime.engine.perform(StartRoutine(routine: routine.id), by: .intent)
         let count = result.output.orderedChildren.count
-        let title = ObjectPrivacy.routineTitle(routine.title, in: runtime.store)
+        let title = routine.title // the entity already carries the masked title
         return .result(dialog: "\(title) started. \(count) \(count == 1 ? "exercise" : "exercises").")
     }
 }

@@ -220,7 +220,7 @@ private struct ExerciseMethods: View {
         let routines = model.objects(of: .routine)
         Menu {
             ForEach(routines) { routine in
-                Button(routine.title) { add(to: routine) }
+                Button(model.store.displayTitle(of: routine)) { add(to: routine) }
             }
             Button("Ask Tess for a new routine") {
                 model.commandDraft = "add \(exercise.name.lowercased()) to a new routine "

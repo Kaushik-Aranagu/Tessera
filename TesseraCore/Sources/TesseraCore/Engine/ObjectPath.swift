@@ -60,8 +60,22 @@ public extension ObjectStore {
         return path
     }
 
-    /// The object's title, or a stand-in for untitled objects such as sets and entries.
+    /// The title anything he reads shows: a workout's or routine's private title reads "Private workout" (Product:
+    /// mask at the source). The op log, the editor's text field and the engine's walls use `rawTitle(of:)`.
     func displayTitle(of object: ObjectRecord) -> String {
+        let title = rawTitle(of: object)
+        return isWorkoutOrRoutine(object) ? ObjectPrivacy.routineTitle(title, in: self) : title
+    }
+
+    private func isWorkoutOrRoutine(_ object: ObjectRecord) -> Bool {
+        guard let classDef = object.classDef else { return false }
+        return lineage(of: classDef).contains {
+            $0.systemKey == SystemCatalog.Key.workout.systemKey || $0.systemKey == SystemCatalog.Key.routine.systemKey
+        }
+    }
+
+    /// The object's title as stored, or a stand-in for untitled objects such as sets and entries.
+    func rawTitle(of object: ObjectRecord) -> String {
         if !object.title.isEmpty {
             return object.title
         }

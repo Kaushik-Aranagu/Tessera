@@ -224,7 +224,7 @@ public struct StartWorkout: EngineAction {
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "Started \(store.object(id: workout).map { store.displayTitle(of: $0) } ?? "the workout")"
+        "Started \(store.object(id: workout).map { store.rawTitle(of: $0) } ?? "the workout")"
     }
 }
 
@@ -255,7 +255,7 @@ public struct FinishWorkout: EngineAction {
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "Finished \(store.object(id: workout).map { store.displayTitle(of: $0) } ?? "the workout")"
+        "Finished \(store.object(id: workout).map { store.rawTitle(of: $0) } ?? "the workout")"
     }
 }
 
@@ -292,7 +292,7 @@ public struct FinishWorkoutEarly: EngineAction {
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "Finished \(store.object(id: workout).map { store.displayTitle(of: $0) } ?? "the workout") early"
+        "Finished \(store.object(id: workout).map { store.rawTitle(of: $0) } ?? "the workout") early"
     }
 }
 
@@ -585,7 +585,7 @@ public struct DeleteObject: EngineAction {
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "Deleted \(store.object(id: object).map { store.displayTitle(of: $0) } ?? "it")"
+        "Deleted \(store.object(id: object).map { store.rawTitle(of: $0) } ?? "it")"
     }
 }
 

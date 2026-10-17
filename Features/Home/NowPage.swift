@@ -299,8 +299,10 @@ struct NowPage: View {
             {
                 if model.canStart(routine) {
                     PaintKey(paint: Theme.Colors.ink, isTap: true, action: { model.startRoutine(routine) },
-                             label: { _ in Text("Start \(routine.title)").textRole(.labelStrong) })
-                        .accessibilityLabel("Start \(routine.title)")
+                             label: { _ in
+                                 Text("Start \(model.store.displayTitle(of: routine))").textRole(.labelStrong)
+                             })
+                             .accessibilityLabel("Start \(model.store.displayTitle(of: routine))")
                 }
             }
         } else if let done = model.finishedToday(now: now).first {

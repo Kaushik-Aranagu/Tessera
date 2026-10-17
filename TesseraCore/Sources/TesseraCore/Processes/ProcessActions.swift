@@ -53,7 +53,7 @@ public struct StartProcess: EngineAction {
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "Started \(store.object(id: subject).map { store.displayTitle(of: $0) } ?? "it")"
+        "Started \(store.object(id: subject).map { store.rawTitle(of: $0) } ?? "it")"
     }
 }
 
@@ -147,8 +147,11 @@ public struct ResumeProcess: EngineAction {
     public func apply(_ transaction: inout Transaction) throws {
         let process = try transaction.object(process, is: .process)
         let now = time ?? .now
-        try transaction.refuseWhileWorkoutRuns(except: process.id, for: transaction.store.linkedObjects("subject", of: process).first,
-                                               action: Self.descriptor.name)
+        try transaction.refuseWhileWorkoutRuns(
+            except: process.id,
+            for: transaction.store.linkedObjects("subject", of: process).first,
+            action: Self.descriptor.name
+        )
         try transaction.makeRunning(process, at: now)
         try transaction.set("lastTouchedAt", to: .date(now), on: process)
     }
@@ -225,7 +228,7 @@ public struct DiscardEmptyWorkout: EngineAction {
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "\(store.object(id: workout).map { store.displayTitle(of: $0) } ?? "Workout"), no sets, not saved"
+        "\(store.object(id: workout).map { store.rawTitle(of: $0) } ?? "Workout"), no sets, not saved"
     }
 }
 

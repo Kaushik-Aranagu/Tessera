@@ -50,6 +50,9 @@ public enum ObjectPrivacy {
             return object.title == taskLabel || PrivateFacts
                 .isPrivateTitle(object.title, lastWeightKg: last) ? taskLabel : nil
         }
+        if isA(.workout) || isA(.routine) {
+            return PrivateWords.isPrivateTitle(object.title, lastWeightKg: last) ? routineLabel : nil
+        }
         if isA(.recipe) {
             return isPrivateRecipeTitle(object.title, lastWeightKg: last) ? recipeLabel : nil
         }

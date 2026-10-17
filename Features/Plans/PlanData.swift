@@ -99,7 +99,8 @@ struct PlanData {
     // MARK: Helpers
 
     static func routine(of workout: ObjectRecord, store: ObjectStore) -> String {
-        store.linkedObjects("routine", of: workout).first?.title ?? workout.title
+        store.linkedObjects("routine", of: workout).first.map { store.displayTitle(of: $0) } ?? store
+            .displayTitle(of: workout)
     }
 
     static func volume(of workout: ObjectRecord, ledger: TrainingLedger) -> Double {

@@ -118,7 +118,7 @@ struct RoutineEditor: View {
             .buttonStyle(HandleButtonStyle())
             .accessibilityLabel("Back to \(cameFrom)")
             .entrance(1)
-            HeroText(text: routine.title) { $0 }
+            HeroText(text: model.store.displayTitle(of: routine)) { $0 }
                 .foregroundStyle(Theme.Colors.ink)
                 .accessibilityAddTraits(.isHeader)
                 .entrance(2, hero: true)
@@ -136,7 +136,7 @@ struct RoutineEditor: View {
 
     private func libraryTitle(_ mode: LibraryMode, slots: [ObjectRecord]) -> String {
         switch mode {
-        case .add: return "Add to \(routine.title)"
+        case .add: return "Add to \(model.store.displayTitle(of: routine))"
         case let .swap(id):
             let name = slots.first { $0.id == id }.flatMap { model.store.linkedClass("exercise", of: $0)?.name }
             return "Instead of \(name ?? "this")"
@@ -185,7 +185,7 @@ struct RoutineEditor: View {
     /// Tess says the change in her band (`TessVoice`, read by `BottomChrome`); its UNDO takes the op back, then she
     /// says so ("Push A, taken back.").
     private func say(_ words: String, undo record: OpRecord) {
-        let title = routine.title
+        let title = model.store.displayTitle(of: routine)
         TessVoice.shared.say(words, takeBack: { [model] in
             model.engine.undo(record)
             // The band clears its line right after UNDO runs; her receipt for the undo follows it.
@@ -489,7 +489,8 @@ private struct DaysLine: View {
             }
         }
         // "Thursday was Pull A's. Push A has it now." else "Push A on Mondays and Thursdays."
-        let words = result.output.first.map { $0.line(to: routine.title) } ?? Self.receipt(routine.title, next)
+        let shown = model.store.displayTitle(of: routine)
+        let words = result.output.first.map { $0.line(to: shown) } ?? Self.receipt(shown, next)
         onChange(result.record, words)
     }
 
