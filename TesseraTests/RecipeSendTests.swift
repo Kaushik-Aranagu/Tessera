@@ -65,10 +65,11 @@ struct RecipeSendTests {
         }
         guard case let .added(line, _) = outcome else { Issue.record("expected an add"); return }
         #expect(line == "Private recipe, 2 added." && !line.contains("stew") && !line.contains("Rent"))
-        let nothing = RecipeCopy.send(isPrivate: true) { try (0, model.engine.perform(
-            AddRecipeToGroceries(recipe: stew.id), by: .user
-        ).record) }
-        #expect(nothing == .nothing("Private recipe, nothing to add."))
+        let again = RecipeCopy.send(isPrivate: true) {
+            let result = try model.engine.perform(AddRecipeToGroceries(recipe: stew.id), by: .user)
+            return (result.output.count, result.record)
+        }
+        #expect(again == .nothing("Private recipe, nothing to add."))
     }
 
     /// G68: the add is named for what it does, the whole recipe.
@@ -82,5 +83,29 @@ struct RecipeSendTests {
         #expect(RecipeCopy.holdLeft(since: start, now: start.addingTimeInterval(3)) == .seconds(7))
         #expect(RecipeCopy.holdLeft(since: start, now: start.addingTimeInterval(30)) == .seconds(1))
         #expect(RecipeCopy.holdLeft(since: nil, now: start) == .seconds(10))
+    }
+
+    /// Product 11:20 (#836): a bigger-size re-add changes amounts, "Tacos, 3 updated.", with UNDO that puts them back.
+    @Test func aBiggerReAddSaysUpdatedWithUndo() throws {
+        let tacos = try model.engine.perform(CreateRecipe(text: """
+        Tacos
+        Serves 2
+        1 lb ground beef
+        2 limes
+        8 corn tortillas
+
+        Brown the beef.
+        """), by: .user).output
+        func add(_ serves: Int?) -> RecipeCopy.SendOutcome {
+            RecipeCopy.send {
+                let result = try model.engine.perform(AddRecipeToGroceries(recipe: tacos.id, serves: serves), by: .user)
+                return (result.output.count, result.record)
+            }
+        }
+        _ = add(nil)
+        guard case let .added(line, record) = add(4) else { Issue.record("expected an update"); return }
+        #expect(line.hasPrefix("Tacos, ") && line.hasSuffix("updated."))
+        _ = model.engine.undo(record)
+        #expect(add(2) == .nothing("Tacos, nothing to add."))
     }
 }
