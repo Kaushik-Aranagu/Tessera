@@ -6,6 +6,8 @@ import TesseraCore
 /// art; a long name wraps, never cut. The side (ITS OBJECTS) waits on SideHost.
 struct RecipesShelfView: View {
     @State private var path = NavigationPath()
+    /// The stack depth with Paste on top, set as Paste appears.
+    @State private var pasteDepth: Int?
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -14,7 +16,10 @@ struct RecipesShelfView: View {
                 // Paste from the shelf stays in the shelf, so back lands here, not Home (QA on #774). A save swaps
                 // Paste for the new recipe, so back from it is the shelf, never Paste again (#774 walk).
                 .navigationDestination(for: ShelfPaste.self) { _ in
-                    ShelfPaste.Page { id in
+                    ShelfPaste.Page(onTop: { pasteDepth = path.count }) { id in
+                        // Only while Paste is still on top: if he already went back, the save stays on the shelf
+                        // and nothing is popped (QA on #790).
+                        guard !path.isEmpty, path.count == pasteDepth else { return }
                         path.removeLast()
                         path.append(id)
                     }
@@ -115,6 +120,7 @@ private struct RecipesShelfPage: View {
 struct ShelfPaste: Hashable {
     /// Paste under a "‹ RECIPES" back word, with the bar hidden like the shelf.
     struct Page: View {
+        var onTop: () -> Void = {}
         let onSaved: (UUID) -> Void
         @Environment(\.dismiss) private var dismiss
 
@@ -127,6 +133,7 @@ struct ShelfPaste: Hashable {
                         .background { ThemedBackground() }
                 }
                 .toolbar(.hidden, for: .navigationBar)
+                .onAppear(perform: onTop)
         }
     }
 }
