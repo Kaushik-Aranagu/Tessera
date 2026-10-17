@@ -60,7 +60,8 @@ struct StarterListsTests {
         let said = await tess.capture("copy trip for lisbon", context: TessContext())
         #expect(said.line == "More than one list like trip." && said.records.isEmpty, "\(said.line)")
         let none = await tess.capture("copy costco for lisbon", context: TessContext())
-        #expect(none.line == "no list called costco" && none.records.isEmpty, "\(none.line)")
+        // Not one of his lists: not a list phrase, so it is read as before (never "no list called ...").
+        #expect(!none.line.contains("no list called"), "\(none.line)")
         #expect(ListContents(store: store, classes: classes).lists().count == before)
     }
 
@@ -99,5 +100,38 @@ struct StarterListsTests {
             #expect(throws: ActionError.self) { try engine.perform(CreateList(name: name), by: .user) }
         }
         #expect(ListContents(store: store, classes: classes).lists().map(\.title) == ["Groceries"])
+    }
+
+    @Test func aListHeAlreadyMadeIsNotDoubledAndIsNotRetried() async throws {
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        try engine.perform(CreateList(name: "packing"), by: .user)
+        #expect(try StarterLists.installIfNeeded(store: store, classes: classes) == 2)
+        let lists = ListContents(store: store, classes: classes)
+        #expect(lists.lists().filter { $0.title.lowercased() == "packing" }.count == 1)
+        // Handled for good: even once his own is deleted, the starter does not come back.
+        let hers = try #require(lists.lists().first { $0.title == "packing" })
+        try engine.perform(DeleteObject(object: hers.id), by: .user)
+        #expect(try StarterLists.installIfNeeded(store: store, classes: classes) == 0)
+        #expect(!lists.lists().contains { $0.title.lowercased() == "packing" })
+        // And his own list copies cleanly, with no "More than one".
+        try engine.perform(CreateList(name: "Gym bag"), by: .user)
+        let tess = TessCaptureEngine(engine: engine)
+        let said = await tess.capture("copy gym bag for away", context: TessContext())
+        #expect(said.line == "Gym bag, Away, new list.", "\(said.line)")
+    }
+
+    @Test func copyIsAListPhraseOnlyWhenItNamesAList() async throws {
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        try StarterLists.installIfNeeded(store: store, classes: classes)
+        let tess = TessCaptureEngine(engine: engine)
+        // Not a list: it falls through to what it was before (a task or a miss), never "no list called report".
+        let task = await tess.capture("copy the report to dad", context: TessContext())
+        #expect(!task.line.contains("no list called"), "\(task.line)")
+        // Siri and Shortcuts never copy a list.
+        let siri = await tess.capture("copy packing for lisbon", context: TessContext(commitImmediately: true))
+        #expect(!siri.line.contains("new list"), "\(siri.line)")
+        #expect(!ListContents(store: store, classes: classes).lists().contains { $0.title == "Packing, Lisbon" })
     }
 }

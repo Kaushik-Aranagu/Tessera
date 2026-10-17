@@ -39,7 +39,17 @@ public enum StarterLists {
     public static func installIfNeeded(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) throws -> Int {
         guard let listClass = classes[.list], let itemClass = classes[.listItem] else { return 0 }
         var made = 0
+        let taken = Set(ListContents(store: store, classes: classes).lists()
+            .map { $0.title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() })
         for starter in all where store.object(id: id(starter.key)) == nil {
+            // A list he already made with this name is his: no second one, and the starter is marked handled (a
+            // deleted placeholder under its id) so it is never tried again.
+            if taken.contains(starter.title.lowercased()) {
+                let placeholder = store.create(listClass, title: starter.title)
+                placeholder.id = id(starter.key)
+                store.softDelete(placeholder)
+                continue
+            }
             let list = store.create(listClass, title: starter.title)
             list.id = id(starter.key)
             var index = 0
