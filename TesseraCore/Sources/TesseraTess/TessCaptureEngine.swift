@@ -411,7 +411,7 @@ public final class TessCaptureEngine: TessCapturing {
         case let .recipe(text):
             let record = try engine.perform(CreateRecipe(text: text), by: .tess, pending: pending).record
             let parsed = RecipeParser.parse(text)
-            let timers = parsed?.steps.flatMap(\.timers).count ?? 0
+            let timers = parsed?.steps.flatMap(\.offeredTimers).count ?? 0
             let parts = [
                 "\(parsed?.ingredients.count ?? 0) ingredients", "\(parsed?.steps.count ?? 0) steps",
             ] + (timers > 0 ? ["\(timers) \(timers == 1 ? "timer" : "timers")"] : [])

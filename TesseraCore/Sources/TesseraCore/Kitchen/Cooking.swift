@@ -187,8 +187,11 @@ public struct StartKitchenTimer: EngineAction {
     }
 
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
-        guard minutes > 0, minutes <= 24 * 60 else {
+        guard minutes > 0 else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "a timer needs a length")
+        }
+        guard minutes <= RecipeParser.maxTimerMinutes else {
+            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "a timer runs up to 24 hours")
         }
         let start = time ?? .now
         let name = label.trimmingCharacters(in: .whitespaces).isEmpty ? "Timer" : label
