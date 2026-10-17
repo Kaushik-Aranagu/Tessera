@@ -66,4 +66,11 @@ struct ListsCopyTests {
         #expect(SwipeToRemove.reveal(-78) == 0.5)
         #expect(SwipeToRemove.reveal(-96) == 1 && SwipeToRemove.reveal(-120) == 1)
     }
+
+    @Test func reusableAndResetReadThingFirst() {
+        #expect(ListsCopy.reusable("Packing", isOn: true) == "Packing, reusable.")
+        #expect(ListsCopy.reusable("Packing", isOn: false) == "Packing, not reusable.")
+        #expect(ListsCopy.reset("Packing") == "Packing, reset.")
+        #expect(ListsCopy.reset("Private list") == "Private list, reset.")
+    }
 }

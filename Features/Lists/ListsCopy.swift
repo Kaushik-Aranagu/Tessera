@@ -50,6 +50,16 @@ enum ListsCopy {
         return thing.prefix(1).uppercased() + thing.dropFirst()
     }
 
+    /// The reusable option's receipt, with the shown (maybe masked) name: "Packing, reusable."
+    static func reusable(_ list: String, isOn: Bool) -> String {
+        "\(list), \(isOn ? "reusable" : "not reusable")."
+    }
+
+    /// A reset's receipt: "Packing, reset." (10.4, 10.11).
+    static func reset(_ list: String) -> String {
+        "\(list), reset."
+    }
+
     static func cleared(_ count: Int) -> String {
         "\(count) done, cleared."
     }
