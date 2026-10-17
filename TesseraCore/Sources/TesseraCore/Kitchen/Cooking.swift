@@ -61,7 +61,12 @@ public struct CookLog {
 
     /// "Carbonara, third time this month." Counts, never judgement.
     public func finishLine(for recipe: ObjectRecord, at now: Date, calendar: Calendar = .current) -> String {
-        let thisMonth = cooks(of: recipe).count { calendar.isDate($0.at, equalTo: now, toGranularity: .month) }
+        // The month of his day, which turns at 4 am (gap hunt G23): a 1:30 am cook on the 1st is the last month's.
+        let day = TesseraDay(calendar: calendar)
+        let month = calendar.dateComponents([.year, .month], from: day.day(of: now))
+        let thisMonth = cooks(of: recipe).count {
+            calendar.dateComponents([.year, .month], from: day.day(of: $0.at)) == month
+        }
         return "\(recipe.title), \(Self.ordinal(thisMonth)) time this month."
     }
 
@@ -266,9 +271,40 @@ public struct FinishCooking: EngineAction {
         {
             try transaction.set("isStopped", to: .bool(true), on: timer.object)
         }
+        try closePlanTask(for: cook, at: end, in: &transaction)
+    }
+
+    /// The same write closes the plan task dated for this recipe on the same house day (4 am turnover): the earliest
+    /// open one. No task, nothing else changes.
+    @MainActor
+    private func closePlanTask(for cook: ObjectRecord, at end: Date, in transaction: inout Transaction) throws {
+        guard let recipe = transaction.store.linkedObjects("recipe", of: cook).first,
+              let taskClass = transaction.classes[.task] else { return }
+        let store = transaction.store
+        let day = TesseraDay()
+        let candidates = store.objects(of: taskClass).compactMap { task -> (task: ObjectRecord, when: Date)? in
+            guard !task.isDeleted, store.value("isDone", of: task) != .bool(true),
+                  store.linkedObjects("about", of: task).contains(where: { $0.id == recipe.id }),
+                  let when = (store.value("startsAt", of: task) ?? store.value("due", of: task))?.dateValue,
+                  day.isSameDay(when, end) else { return nil }
+            return (task, when)
+        }
+        guard let chosen = candidates.min(by: { $0.when < $1.when }) else { return }
+        try transaction.set("isDone", to: .bool(true), on: chosen.task)
+        try transaction.set("doneAt", to: .date(end), on: chosen.task)
+        try transaction.endTaskProcess(chosen.task, done: true)
     }
 
     public func summary(in store: ObjectStore) -> String {
         "Cooked \(store.object(id: cook)?.title ?? "it")"
+    }
+
+    public func receipt(in store: ObjectStore) -> String? {
+        guard let object = store.object(id: cook) else { return nil }
+        let recipe = store.linkedObjects("recipe", of: object).first ?? object
+        if ObjectPrivacy.isPrivateRecipeTitle(recipe.title, lastWeightKg: BodyWeight.lastKg(in: store)) {
+            return "\(ObjectPrivacy.recipeLabel) done."
+        }
+        return "\(object.title), done."
     }
 }
