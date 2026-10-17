@@ -144,13 +144,14 @@ public extension TesseraExport {
                     route: record.routeRaw, model: record.model, zone: record.zone)
         }
         if maskingPrivate {
-            mask(PrivateWords.labels(in: context), context: context)
+            let current = PrivateWords.labels(in: context)
+            mask(current, past: PrivateWords.historyLabels(in: context, current: current), context: context)
         }
     }
 
     /// Replaces what the private objects hold with their label; only done flags and dates stay.
-    private mutating func mask(_ labels: [UUID: String], context: TesseraContext) {
-        guard !labels.isEmpty || operations.contains(where: { PrivateWords.summaryIsPrivate($0.summary, context: context) })
+    private mutating func mask(_ labels: [UUID: String], past: [UUID: String], context: TesseraContext) {
+        guard !labels.isEmpty || !past.isEmpty || operations.contains(where: { PrivateWords.summaryIsPrivate($0.summary, context: context) })
         else { return }
         objects = objects.map { entry in
             guard let label = labels[entry.id] else { return entry }
@@ -159,6 +160,8 @@ public extension TesseraExport {
             masked.values = entry.values.filter { PrivateWords.structural($0.value) }
             return masked
         }
+        // The op log also masks what was private once and is plain now.
+        let labels = labels.merging(past) { current, _ in current }
         operations = operations.map { entry in
             let touched = entry.ops.compactMap { labels[$0.objectID] }
             let wordy = PrivateWords.summaryIsPrivate(entry.summary, context: context)

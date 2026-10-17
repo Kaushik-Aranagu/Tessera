@@ -55,6 +55,18 @@ struct PrivateWordsTests {
         #expect(Self.secrets.allSatisfy { whole.contains($0) })
     }
 
+    @Test func anExportMasksTheOpLogOfAnObjectThatWasPrivateOnce() throws {
+        let dir = try folder()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let store = try storeWithEverything(at: dir.appendingPathComponent("tessera.sqlite"))
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        let task = try engine.perform(CreateTask(title: "Buy lemons3"), by: .user).output
+        try engine.perform(RenameObject(object: task.id, title: "Pay Dr Zed77"), by: .user)
+        try engine.perform(RenameObject(object: task.id, title: "Buy lemons2"), by: .user)
+        let json = try text(of: TesseraExport(context: store.context).encoded())
+        #expect(!json.contains("Zed77") && !json.contains("Pay Dr Zed") && json.contains("Buy lemons2"))
+    }
+
     @Test func aDefaultExportMasks() throws {
         let dir = try folder()
         defer { try? FileManager.default.removeItem(at: dir) }
@@ -127,8 +139,12 @@ struct PrivateWordsTests {
         let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
         try engine.perform(CreateRecipe(text: "Stew\nIngredients\n1 onion\nMethod\n1. Cook it.",
                                         title: "Wifi password zebra99 stew"), by: .user)
+        // Private once, plain now: the old words still sit in the op log.
+        let renamed = try engine.perform(CreateTask(title: "Buy lemons3"), by: .user).output
+        try engine.perform(RenameObject(object: renamed.id, title: "Pay Dr Zed77"), by: .user)
+        try engine.perform(RenameObject(object: renamed.id, title: "Buy lemons2"), by: .user)
         store.save()
-        let words = ["hunter2zebra", "zebra99", "Dr Lee", "120.50", "82.4", "Wifi password", "router zebra99"]
+        let words = ["Zed77", "hunter2zebra", "zebra99", "Dr Lee", "120.50", "82.4", "Wifi password", "router zebra99"]
         let iCloud = dir.appendingPathComponent("iCloud")
         let direct = dir.appendingPathComponent("direct.tessera")
         try TesseraBackup.write(from: store.context, to: direct, leavingOutPrivate: true)
@@ -145,6 +161,7 @@ struct PrivateWordsTests {
                 }
             }
             #expect(bytes(of: file).range(of: Data("Bench felt heavy".utf8)) != nil) // ordinary words stay
+            #expect(bytes(of: file).range(of: Data("Buy lemons2".utf8)) != nil) // the plain object itself stays
         }
         // Nothing but the finished copy ever sits in the iCloud folder.
         #expect(try FileManager.default.contentsOfDirectory(atPath: iCloud.path).count == 1)

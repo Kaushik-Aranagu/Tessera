@@ -23,28 +23,73 @@ enum PrivateWords {
             || ObjectPrivacy.isPrivateText(text, lastWeightKg: lastWeightKg)
     }
 
-    /// Private object id → the label it shows as.
-    static func labels(in context: TesseraContext) -> [UUID: String] {
-        let store = ObjectStore(context: context)
+    static func systemClasses(in context: TesseraContext) -> [SystemCatalog.Key: ClassDef] {
         var classes: [SystemCatalog.Key: ClassDef] = [:]
         for classDef in context.all(ClassDef.self) {
             if let key = SystemCatalog.Key.allCases.first(where: { $0.systemKey == classDef.systemKey }) {
                 classes[key] = classDef
             }
         }
+        return classes
+    }
+
+    static func genericLabel(_ object: ObjectRecord, classes: [SystemCatalog.Key: ClassDef]) -> String {
+        guard let classDef = object.classDef else { return SecretWords.title }
+        func isA(_ key: SystemCatalog.Key) -> Bool {
+            classes[key].map { ClassResolver.isSubclass(classDef, of: $0) } ?? false
+        }
+        if isA(.listItem) { return "Private item" }
+        if isA(.recipe) || isA(.recipeLine) || isA(.recipeStep) || isA(.cook) { return "Private recipe" }
+        if isA(.task) { return ObjectPrivacy.taskLabel }
+        if isA(.tessMemory) { return ObjectPrivacy.memoryLabel }
+        return SecretWords.title
+    }
+
+    /// Objects that were private at any point in the op history but are plain now (a note made private and later
+    /// plain, a title edited): their old words still sit in the op log, so the ops are masked or dropped with the
+    /// rest. Marked by an isPrivate set to true, or a private word, label or walled title in a create, rename or
+    /// text value. Only ones not already in `current`.
+    static func historyLabels(in context: TesseraContext, current: [UUID: String]) -> [UUID: String] {
+        let classes = systemClasses(in: context)
+        let last = BodyWeight.lastKg(in: ObjectStore(context: context))
+        let flagFields = Set(context.all(FieldDef.self).filter { $0.key == "isPrivate" }.map(\.id))
+        func wordy(_ text: String) -> Bool {
+            isPrivateText(text, lastWeightKg: last) || HomeDonePack.isWalled(text, lastWeightKg: last)
+        }
+        var found = Set<UUID>()
+        for record in context.all(OpRecord.self) {
+            for op in record.ops where current[op.objectID] == nil {
+                switch op {
+                case let .create(object, _, _, title): if wordy(title) { found.insert(object) }
+                case let .setTitle(object, old, new): if wordy(old) || wordy(new) { found.insert(object) }
+                case let .setValue(object, field, old, new):
+                    if flagFields.contains(field), old == .bool(true) || new == .bool(true) {
+                        found.insert(object)
+                    }
+                    for value in [old, new] {
+                        switch value {
+                        case let .text(text), let .richText(text): if wordy(text) { found.insert(object) }
+                        default: break
+                        }
+                    }
+                default: break
+                }
+            }
+        }
+        return Dictionary(uniqueKeysWithValues: found.map { id in
+            (id, context.objects[id].map { genericLabel($0, classes: classes) } ?? SecretWords.title)
+        })
+    }
+
+    /// Private object id → the label it shows as.
+    static func labels(in context: TesseraContext) -> [UUID: String] {
+        let store = ObjectStore(context: context)
+        let classes = systemClasses(in: context)
         let last = BodyWeight.lastKg(in: store)
         let records = context.all(ObjectRecord.self).filter { !$0.isClassObject }
 
         func genericLabel(_ object: ObjectRecord) -> String {
-            guard let classDef = object.classDef else { return SecretWords.title }
-            func isA(_ key: SystemCatalog.Key) -> Bool {
-                classes[key].map { ClassResolver.isSubclass(classDef, of: $0) } ?? false
-            }
-            if isA(.listItem) { return "Private item" }
-            if isA(.recipe) || isA(.recipeLine) || isA(.recipeStep) || isA(.cook) { return "Private recipe" }
-            if isA(.task) { return ObjectPrivacy.taskLabel }
-            if isA(.tessMemory) { return ObjectPrivacy.memoryLabel }
-            return SecretWords.title
+            Self.genericLabel(object, classes: classes)
         }
         func words(_ object: ObjectRecord) -> [String] {
             [object.title] + object.values.storage.values.compactMap { value in
@@ -105,6 +150,8 @@ enum PrivateWords {
 extension TesseraBackup {
     /// Removes private objects, their links and the ops that touched them from a copy that is leaving the phone.
     static func leaveOutPrivate(_ ids: [UUID: String], from copy: DatabaseQueue, context: TesseraContext) throws {
+        // Objects that were private once but are plain now stay; their ops, which hold the old words, go.
+        let past = PrivateWords.historyLabels(in: context, current: ids)
         let lastKg = BodyWeight.lastKg(in: ObjectStore(context: context))
         // Deleted rows must not linger in free pages: overwrite on delete, then rebuild the file below.
         try copy.writeWithoutTransaction { try $0.execute(sql: "PRAGMA secure_delete = ON") }
@@ -112,6 +159,9 @@ extension TesseraBackup {
             for id in ids.keys.map(\.uuidString) {
                 try db.execute(sql: "DELETE FROM object WHERE id = ?", arguments: [id])
                 try db.execute(sql: "DELETE FROM link WHERE fromID = ? OR toObjectID = ?", arguments: [id, id])
+                try db.execute(sql: "DELETE FROM op WHERE instr(objectIDs, ?) > 0", arguments: [id])
+            }
+            for id in past.keys.map(\.uuidString) {
                 try db.execute(sql: "DELETE FROM op WHERE instr(objectIDs, ?) > 0", arguments: [id])
             }
             // An action whose own summary holds a private word goes too ("Pay Dr Lee 120").
