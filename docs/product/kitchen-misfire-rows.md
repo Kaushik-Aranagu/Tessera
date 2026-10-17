@@ -76,7 +76,7 @@
 
 ## C. Prices, walls and receipts (added 2026-10-17, Kitchen K3)
 
-*Against decisions 2:09 (price strip), 2:22 (money test), 8:13 ("Private item") and the thing-first receipts (#538, #541, #638). A price never stays on a row, in a note or in a receipt; packs and amounts keep their numbers. "Groceries receipt" is "<Thing>, on Groceries." and a list receipt is "<Thing>, added to <List>".*
+*Against decisions 2:09 (price strip), 2:22 (money test), 8:13 ("Private item") and the thing-first receipts (#538, #541, #638). A price never stays on a row, in a note or in a receipt; packs and amounts keep their numbers. "Groceries receipt" is "<Thing>, on Groceries." and a list receipt is "<Thing>, on <List>." (RULED, Product Oct 17 8:40 AM, matching lists-acceptance 13.8; earlier "added to" withdrawn).*
 
 | # | Phrase | Expected |
 |---|---|---|
