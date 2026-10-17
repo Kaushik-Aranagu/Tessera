@@ -2,8 +2,8 @@
 
 For: AI architecture, Core, Product. Date: Oct 16, 2026 (Pacific). No calls were made to write this.
 
-The cap is `TessUsageLedger.capNano = 50_000_000_000` n$ ($50 a month, Kaushik's yes Oct 16, `ClaudeKey.swift`).
-The 80% line is **$40**. Prices are `TessUsageLedger.prices` in code: Haiku 5.5 100 n$ in and 500 n$ out per token
+The in-app Claude cap is $50 a month, a hard stop; it resets on the 1st (`TessUsageLedger.capNano = 50_000_000_000` n$,
+Product's 8:16 ruling). Dev credits ($200 a month) are not counted in the cap. The 80% line is **$40**. Prices are `TessUsageLedger.prices` in code: Haiku 5.5 100 n$ in and 500 n$ out per token
 ($0.10 and $0.50 per million), Sonnet 5.5 2,000 and 10,000 n$ ($2 and $10 per million), no cache hits. A month is
 30 days. **M** = measured on real calls; **A** = assumed (character-count estimates from the docs named).
 
@@ -52,10 +52,10 @@ The cap is more than 7 times the worst month of the planned jobs.
 
 ## At 80% and at 100%
 
-- **At $40 (80%).** Settings' month line turns warm (`ClaudeSection`, `share >= 0.8`, in code). After AI-2, jobs with
-  `priority == .lines` step aside before reserve (`claude-client.md` step 4): Home lines, and per architecture 5.5
-  and section 9, the week story and living colour. They show rules lines and today's colours. Misses, plan my day,
-  recipe reader and ask keep running. Groceries link has no stated priority (see below).
+- **At $40 (80%).** Settings' month line turns warm (`ClaudeSection`, `share >= 0.8`, in code). After AI-2, these
+  step aside before reserve (`claude-client.md` step 4): Home lines (`.lines`), the week story and living colour (the
+  word jobs). They show rules lines and today's colours. Capture, plan, recipe and questions keep running to $50.
+  Groceries link has no stated priority (see below).
 - **At $50 (100%).** `reserve` returns nil when month total + pending + this call's estimate would pass the cap, so a
   call is refused a little before $50 exactly. Every job gets `.refused(.cap)` with "Claude paused until <date>.";
   nothing is sent and no row is written. The key check's fallback also stops. Grammar, rules lines and on-device
@@ -75,16 +75,17 @@ The cap is more than 7 times the worst month of the planned jobs.
 
 ## Where code and docs differ
 
-- **The cap.** Code is $50. `ClaudeKey.swift`'s ledger comment still says "The $10 month";
+- **The cap.** Settled: $50 (Product's 8:16 ruling). The "$10 month" text is retired. `ClaudeKey.swift`'s ledger
+  comment still says "The $10 month" (a Swift fix, not made here);
   `claude-first-uses.md`, `recipe-link-fetch.md` and AI-5 Q2 still measure against $10.
 - **Home lines model.** Ship list (Oct 16 reorder) says Sonnet 5.5; architecture section 6 and the 5.6 table say
   Haiku. DECIDED (Product, decisions.md 11:45 AM PT Oct 16): Sonnet until AI-5 decides. This page assumes Sonnet, the costlier case.
-- **Month total.** Architecture 5.6 and the ship list say about $4 with Sonnet; this page gets $3.23 typical
-  because it adds no extra rows and uses $0.0045, not $0.007, for Home lines.
+- **Month total.** This page's totals are the source: $0.79 typical, $6.90 worst, after the Home narrowing. Older
+  figures ($3.23 and $8.59) are retired.
 - **The 40-a-day cap, 10-minute debounce and 80% step-aside.** Docs only. No `homeLines` job and no day cap exist in
   `TesseraCore/` today; only the Settings warm line at 80% is in code.
-- **Who steps aside at 80%.** `claude-client.md` says `.lines` priority only; architecture 5.5 names lines and the
-  week story; section 9 adds living colour; groceries link is in none of them.
+- **Who steps aside at 80%.** Settled: Home lines, the week story and living colour (Product's 8:16 ruling).
+  Capture, plan, recipe and questions keep running. Groceries link is in none of them.
 - **What is live.** Only misses (`ClaudeTessModel`) and the key check are wired in the app. Plan wording and the
   recipe reader exist in Core but run only in tests, so today's real spend is a few cents.
 - **Recipe retry.** `recipe-link-fetch.md` prices a Sonnet retry at $0.026; the code has Haiku only.
