@@ -199,7 +199,7 @@ private struct TrainingAtRest: View {
         case let .routine(routine): (shown(routine.title), .object(routine.id))
         case let .scheduled(workout): (shown(workout.title), .object(workout.id))
         case let .running(session): (session.shownTitle, .object(session.workout.id))
-        case let .done(summary): ("\(summary.title) done", .object(summary.workout.id))
+        case let .done(summary): ("\(shown(summary.title)) done", .object(summary.workout.id))
         }
     }
 

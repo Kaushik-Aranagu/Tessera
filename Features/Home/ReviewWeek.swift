@@ -69,7 +69,7 @@ struct ReviewWeekData {
             "\(headline.lead) \(sessionCount == 1 ? "session" : "sessions")"
         }
         return ReviewWeekData(now: now, calendar: calendar, days: days, today: today, marks: marks,
-                              sessions: week.map(\.done), perWeek: perWeek,
+                              sessions: week.map { $0.done.map { $0.masked(in: model.store) } }, perWeek: perWeek,
                               headline: "\(headline.lead) \(headline.tail)", hero: hero,
                               coreBestLines: builder.facts(weekContaining: now, plan: plan, now: now).bestLines,
                               tasksDone: tasksDone, cooked: cooked, lines: lines)

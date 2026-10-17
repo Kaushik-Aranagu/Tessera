@@ -46,6 +46,15 @@ public struct WorkoutSummary: Identifiable {
         return Self.doneLine(title: shown, done: exercisesDone, planned: exercisesPlanned)
     }
 
+    /// The same summary with a private routine title shown as "Private workout", for any screen the room can see.
+    /// The raw title stays on `title` for the engine's own walls (the pack wall reads it).
+    @MainActor
+    public func masked(in store: ObjectStore) -> WorkoutSummary {
+        WorkoutSummary(id: id, workout: workout, title: ObjectPrivacy.routineTitle(title, in: store),
+                       startedAt: startedAt, endedAt: endedAt, exercisesDone: exercisesDone,
+                       exercisesPlanned: exercisesPlanned, sets: sets, volume: volume, records: records)
+    }
+
     /// Tess's line: "6 of 6 exercises, 22 sets, 1 best." Counts, never judgement ("best", not "record": Product).
     public var line: String {
         var parts: [String] = []

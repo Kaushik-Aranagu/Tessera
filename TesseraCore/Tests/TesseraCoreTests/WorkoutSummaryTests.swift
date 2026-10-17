@@ -78,7 +78,7 @@ struct WorkoutSummaryTests {
         #expect(ObjectPrivacy.routineTitle("Push Day A", in: store) == "Push Day A")
     }
 
-    @Test func theSummaryTitleItselfIsMaskedSoReviewTrainingAndHomeNeverPrintIt() throws {
+    @Test func aMaskedSummaryCarriesPrivateWorkoutForReviewAndTraining() throws {
         // QA on #856: Review's day lines, the Training page and the plan hero read summary.title.
         let store = ObjectStore.open(inMemory: true)
         let classes = try store.prepareCatalog()
@@ -89,7 +89,8 @@ struct WorkoutSummaryTests {
         let workout = try engine.perform(StartRoutine(routine: routine.id), by: .user).output
         try engine.perform(FinishWorkout(workout: workout.id), by: .user)
         let summary = TrainingLedger(store: store, classes: classes).summary(of: workout)
-        #expect(summary.title == "Private workout")
+        #expect(summary.title == "Knee rehab day", "the raw title stays for the pack wall")
+        #expect(summary.masked(in: store).title == "Private workout")
     }
 
     @Test func aWorkoutWithNothingPlannedSaysNoZeroOfZero() throws {
