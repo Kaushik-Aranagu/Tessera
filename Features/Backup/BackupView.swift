@@ -125,7 +125,7 @@ struct BackupView: View {
                     .entrance(4)
 
                 HStack(spacing: Theme.Spacing.xl) {
-                    Button("Save a copy", action: saveCopy)
+                    Button("Save a copy") { Task { await saveCopy() } }
                         .buttonStyle(.labelWord)
                     Button("Restore") { importing = true }
                         .buttonStyle(.labelWord)
@@ -233,12 +233,18 @@ struct BackupView: View {
         }
     }
 
-    private func saveCopy() {
-        guard let url = try? BackupKeeper.copyForSaving(model.context), let data = try? Data(contentsOf: url) else {
+    private func saveCopy() async {
+        do {
+            // Face ID first when the copy holds private words; not passing it saves nothing and says nothing.
+            guard let copy = try await BackupKeeper.savedCopy(model.context) else { return }
+            let data = try Data(contentsOf: copy.url)
+            if let notice = copy.line {
+                say(notice)
+            }
+            saving = BackupFile(data: data, name: copy.url.deletingPathExtension().lastPathComponent)
+        } catch {
             say("Couldn't make a copy just now.")
-            return
         }
-        saving = BackupFile(data: data, name: url.deletingPathExtension().lastPathComponent)
     }
 
     /// Checks the picked file and copies it in while access lasts; nothing is staged until "Replace" is held.

@@ -60,6 +60,28 @@ struct KitchenRestoreTests {
         #expect(Groceries(store: store, classes: restoredClasses).list?.orderedChildren.count == 3)
     }
 
+    @Test func aListHeTitledGroceriesIsLeftAloneAndOnlyTheAppMadeStrayFolds() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        // His own list, made by createList and named by him.
+        let his = try engine.perform(CreateList(name: "Groceries"), by: .user).output
+        try engine.perform(AddListItem(list: his.id, text: "his own row"), by: .user)
+        #expect(Groceries.installIfNeeded(store: store, classes: classes) == 0)
+        #expect(!his.isDeleted && his.orderedChildren.count == 1)
+        // Then the app makes a stray while the built-in is gone: that one folds, his does not.
+        store.softDelete(try #require(store.object(id: Groceries.listID)))
+        try engine.perform(AddGroceries(lines: ["oatmilk"]), by: .user)
+        let before = try groceryLists(store, classes).filter { !$0.isDeleted }.count
+        #expect(before == 2) // his and the app's stray (the built-in is deleted)
+        #expect(Groceries.installIfNeeded(store: store, classes: classes) == 1)
+        let lists = try groceryLists(store, classes).filter { !$0.isDeleted }
+        #expect(Set(lists.map(\.id)) == [his.id, Groceries.listID])
+        #expect(his.orderedChildren.count == 1)
+        #expect(Groceries(store: store, classes: classes).list?.orderedChildren.count == 1)
+        #expect(Groceries.mergedReceipt == "Groceries lists, merged.")
+    }
+
     @Test func aCookRunningWhenTheCopyWasMadeIsClosedAfterTheRestore() throws {
         let dir = try folder()
         defer { try? FileManager.default.removeItem(at: dir) }

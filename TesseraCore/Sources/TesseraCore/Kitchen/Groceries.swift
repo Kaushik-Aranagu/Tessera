@@ -20,11 +20,16 @@ public struct Groceries {
         store.object(id: Self.listID).flatMap { $0.isDeleted ? nil : $0 }
     }
 
+    /// The receipt when strays were folded in.
+    public static let mergedReceipt = "Groceries lists, merged."
+
     /// Makes the one groceries list with its fixed id. Called when the catalog is prepared.
     /// Exactly one built-in Groceries list after this runs (G29): a copy made while it was deleted brings it back with
-    /// its rows, and a second "Groceries" made by `groceriesList()` while it was gone folds into it.
-    static func installIfNeeded(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) {
-        guard let listClass = classes[.list] else { return }
+    /// its rows, and a second "Groceries" made by `groceriesList()` while it was gone folds into it. Only a list the
+    /// app itself made folds; a list he made and named "Groceries" is his and stays. Returns how many strays folded.
+    @discardableResult
+    static func installIfNeeded(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) -> Int {
+        guard let listClass = classes[.list] else { return 0 }
         let fixed: ObjectRecord
         if let existing = store.object(id: listID) {
             if existing.isDeleted {
@@ -35,12 +40,36 @@ public struct Groceries {
             fixed = store.create(listClass, title: "Groceries")
             fixed.id = listID
         }
-        foldStrays(into: fixed, store: store, listClass: listClass)
+        let folded = foldStrays(into: fixed, store: store, listClass: listClass)
+        // Said once, calmly, at launch; never over a note that is already waiting (a restore's, say).
+        if folded > 0, TesseraSchema.launchNote == nil {
+            TesseraSchema.setLaunchNote(mergedReceipt)
+        }
+        return folded
     }
 
-    /// A stray list with the built-in's name and no fixed id: its rows move across, then it goes.
-    private static func foldStrays(into fixed: ObjectRecord, store: ObjectStore, listClass: ClassDef) {
-        let strays = store.objects(of: listClass).filter { $0.id != listID && $0.title == "Groceries" }
+    /// Marker for an app-made stray: its create op was recorded by an action other than `createList`, because only
+    /// `groceriesList()` (inside an add-to-groceries action) makes a "Groceries" list without him asking for a list.
+    /// A list he made himself, by `createList` (a tap or Tess), has a `createList` create op and is never a stray.
+    private static func appMade(_ candidates: [ObjectRecord], store: ObjectStore) -> Set<UUID> {
+        let ids = Set(candidates.map(\.id))
+        var made: Set<UUID> = []
+        var his: Set<UUID> = []
+        for record in store.context.all(OpRecord.self) {
+            for op in record.ops {
+                guard case let .create(object, _, _, _) = op, ids.contains(object) else { continue }
+                if record.action == CreateList.descriptor.name { his.insert(object) } else { made.insert(object) }
+            }
+        }
+        return made.subtracting(his)
+    }
+
+    /// A stray list the app made with the built-in's name and no fixed id: its rows move across, then it goes.
+    private static func foldStrays(into fixed: ObjectRecord, store: ObjectStore, listClass: ClassDef) -> Int {
+        let named = store.objects(of: listClass).filter { $0.id != listID && $0.title == "Groceries" }
+        guard !named.isEmpty else { return 0 }
+        let made = appMade(named, store: store)
+        let strays = named.filter { made.contains($0.id) }
         for stray in strays {
             var next = (fixed.orderedChildren.map(\.sortIndex).max() ?? -1) + 1
             for row in stray.orderedChildren {
@@ -51,6 +80,7 @@ public struct Groceries {
             }
             store.softDelete(stray)
         }
+        return strays.count
     }
 
     /// Sections in walking order, each with its open items.
