@@ -7,7 +7,7 @@ const [scene = 'work', look = 'obsidian', out = `${scene}-${look}.mp4`, dpr = '2
 const FPS = 60;
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 393, height: 916 } });
-const url = pathToFileURL(path.resolve('tess-motion.html')).href + `?record&scene=${scene}&look=${look}&dpr=${dpr}`;
+const url = pathToFileURL(path.resolve('tess-motion.html')).href + `?record&scene=${scene}&look=${look}&dpr=${dpr}${process.env.RM ? '&rm=1' : ''}`;
 await page.goto(url);
 await page.evaluate(() => window.ready);
 const duration = await page.evaluate(() => window.sceneDuration());
