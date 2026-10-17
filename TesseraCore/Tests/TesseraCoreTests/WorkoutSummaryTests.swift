@@ -72,9 +72,9 @@ struct WorkoutSummaryTests {
     }
 
     @Test func theDoneHeroMasksAPrivateRoutineTitle() {
-        // Product on #849: the hero reads "Private routine" like the count line under it masks the title.
+        // Product on #849: the hero reads "Private workout" like the count line under it masks the title.
         let store = ObjectStore.open(inMemory: true)
-        #expect(ObjectPrivacy.routineTitle("Knee rehab day", in: store) == "Private routine")
+        #expect(ObjectPrivacy.routineTitle("Knee rehab day", in: store) == "Private workout")
         #expect(ObjectPrivacy.routineTitle("Push Day A", in: store) == "Push Day A")
     }
 }

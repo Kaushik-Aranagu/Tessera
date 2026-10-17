@@ -42,7 +42,7 @@ public struct WorkoutSummary: Identifiable {
     @MainActor
     public func doneLine(in store: ObjectStore) -> String {
         let lastKg = BodyWeight.lastKg(in: store)
-        let shown = PrivateWords.isPrivateTitle(title, lastWeightKg: lastKg) ? "Private workout" : title
+        let shown = PrivateWords.isPrivateTitle(title, lastWeightKg: lastKg) ? ObjectPrivacy.routineLabel : title
         return Self.doneLine(title: shown, done: exercisesDone, planned: exercisesPlanned)
     }
 

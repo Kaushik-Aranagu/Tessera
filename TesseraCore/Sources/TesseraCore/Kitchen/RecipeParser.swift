@@ -50,7 +50,7 @@ public enum RecipeParser {
                 result.append((line, .heading))
             } else if servesCount(in: line) != nil || timeLine(line) != nil {
                 result.append((line, .meta))
-            } else if index == 0, !startsWithAmount(line) {
+            } else if index == 0, !startsWithAmount(line), !isSentence(line) {
                 result.append((line, .title))
             } else {
                 let isIngredient = switch mode {
@@ -67,6 +67,13 @@ public enum RecipeParser {
             }
         }
         return result
+    }
+
+    /// A sentence is not a title (G59): it ends with a stop or runs past 8 words ("Heat the oven to 200C." as a paste's
+    /// first line is the first step; the recipe is then "Untitled recipe" until he names it).
+    static func isSentence(_ line: String) -> Bool {
+        let trimmed = line.trimmingCharacters(in: CharacterSet(charactersIn: "#*: ").union(.whitespaces))
+        return trimmed.hasSuffix(".") || trimmed.split(separator: " ").count > 8
     }
 
     /// Splits on "Ingredients" / "Method" headings when there are any, else by line shape: amounts and short

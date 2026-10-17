@@ -175,7 +175,7 @@ enum WorkoutLines {
     /// The context line above the name (live-workout.md): "Push A, set 1 of 4"; resting "Rest, then set 2" or, on an
     /// exercise's last rest, "Rest, then Overhead press"; the workout's last set "Push A, last set".
     static func context(_ session: WorkoutSession, phase: WorkoutSession.Phase) -> String {
-        let title = session.workout.title
+        let title = session.shownTitle
         guard let entry = session.currentEntry else { return title }
         let target = session.targetSets(of: entry)
         let done = session.setRows(of: entry).count
