@@ -58,6 +58,13 @@ public struct RecipeBook {
         return store.objects(of: recipeClass).sorted { $0.createdAt < $1.createdAt }
     }
 
+    /// The saved recipe whose pasted text is exactly this one (the paste screen and Tess check before a second is
+    /// written, G59). Private lines are cut the way `CreateRecipe` stores them.
+    public func recipe(pastedAs text: String) -> ObjectRecord? {
+        let wanted = SecretWords.cut(text).text
+        return recipes().first { store.value("sourceText", of: $0)?.stringValue == wanted }
+    }
+
     public func serves(_ recipe: ObjectRecord) -> Int? {
         RecipeLimits.serves(store.number("serves", of: recipe))
     }
@@ -183,6 +190,19 @@ public struct CreateRecipe: EngineAction {
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
         guard let parsed = RecipeParser.parse(text, lines: Self.lines(of: text, corrections: corrections)) else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "no ingredients or steps found")
+        }
+        // The same paste twice is one recipe: nothing is written, and the refusal names the one he has (G59).
+        let book = RecipeBook(store: transaction.store, classes: transaction.classes)
+        if let existing = book.recipe(pastedAs: parsed.source) {
+            let walled = transaction.store.value("isPrivate", of: existing) == .bool(true)
+                || ObjectPrivacy.isPrivateRecipeTitle(
+                    existing.title,
+                    lastWeightKg: BodyWeight.lastKg(in: transaction.store)
+                )
+            throw ActionError.invalidArguments(
+                action: Self.descriptor.name,
+                reason: "\(walled ? ObjectPrivacy.recipeLabel : existing.title) is already on Recipes."
+            )
         }
         let recipe = try transaction.create(transaction.classDef(.recipe), title: title ?? parsed.title)
         // The original text keeps every line but the private ones (Research 137 PR1).
