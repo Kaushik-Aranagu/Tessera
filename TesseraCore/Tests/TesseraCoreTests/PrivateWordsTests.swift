@@ -193,3 +193,35 @@ struct SavedCopyGateTests {
         #expect(gate.requiresAuth && gate.line == TesseraBackup.SavedCopyGate.privateWordsLine)
     }
 }
+
+/// The Home pack's loose-number and off-limits rules are for what is sent to Claude, not for backups and exports:
+/// plate weights ("25, 20, 15, 1.25") made every seeded Equipment object "Private note", and "Day 100" read as money.
+@MainActor
+struct PrivateWordsFalsePositiveTests {
+    @Test func aFreshlySeededStoreHasNoPrivateLabels() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        _ = try ExerciseLibraryInstaller.installIfNeeded(store: store, classes: classes)
+        let labels = PrivateWords.labels(in: store.context)
+        #expect(labels.isEmpty, "\(labels.values)")
+        #expect(PrivateWords.historyLabels(in: store.context, current: labels).isEmpty)
+    }
+
+    @Test func gymWordsAndPlainNumbersAreNotPrivate() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        try engine.perform(CreateTask(title: "Day 100 of the plan"), by: .user)
+        let items = try engine.perform(CreateList(name: "Gym kit"), by: .user).output
+        try engine.perform(AddListItem(list: items.id, text: "Smith Machine, EZ Bar, Barbell"), by: .user)
+        let labels = PrivateWords.labels(in: store.context)
+        #expect(labels.isEmpty, "\(labels.values)")
+    }
+
+    @Test func moneyAndBodyTitlesStayPrivate() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        try engine.perform(CreateTask(title: "Pay Dr Lee 120"), by: .user)
+        try engine.perform(CreateTask(title: "weighed 82.4 kg"), by: .user)
+        #expect(PrivateWords.labels(in: store.context).count == 2)
+    }
+}

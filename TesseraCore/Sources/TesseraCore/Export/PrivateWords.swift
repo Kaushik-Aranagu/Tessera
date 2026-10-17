@@ -23,6 +23,23 @@ enum PrivateWords {
             || ObjectPrivacy.isPrivateText(text, lastWeightKg: lastWeightKg)
     }
 
+    /// Medical and care words that make a bare title private even with no number (Product: money and body titles are
+    /// private in an export). Not the Home pack's rules for what goes to Claude (loose numbers, places, people).
+    static let titleWords: Set<String> = PrivateFacts.moneyWords.union(TessMemoryScreen.healthWords)
+        .union(["rehab", "physio", "physiotherapy", "therapy", "therapist", "surgery", "doctor", "dr", "dentist",
+                "clinic", "hospital"])
+
+    /// A title is private by the usual rule, or when it holds a money or health word.
+    static func isPrivateTitle(_ title: String, lastWeightKg: Double?) -> Bool {
+        isPrivateText(title, lastWeightKg: lastWeightKg)
+            || PrivateFacts.words(title.lowercased()).contains(where: titleWords.contains)
+    }
+
+    /// A list of numbers ("25, 20, 15, 1.25": the plates an equipment object holds) is not a spend or a weigh-in.
+    static func isNumberList(_ text: String) -> Bool {
+        text.allSatisfy { "0123456789,. /x".contains($0) }
+    }
+
     static func systemClasses(in context: TesseraContext) -> [SystemCatalog.Key: ClassDef] {
         var classes: [SystemCatalog.Key: ClassDef] = [:]
         for classDef in context.all(ClassDef.self) {
@@ -54,14 +71,17 @@ enum PrivateWords {
         let last = BodyWeight.lastKg(in: ObjectStore(context: context))
         let flagFields = Set(context.all(FieldDef.self).filter { $0.key == "isPrivate" }.map(\.id))
         func wordy(_ text: String) -> Bool {
-            isPrivateText(text, lastWeightKg: last) || HomeDonePack.isWalled(text, lastWeightKg: last)
+            !isNumberList(text) && isPrivateText(text, lastWeightKg: last)
+        }
+        func wordyTitle(_ title: String) -> Bool {
+            !isNumberList(title) && isPrivateTitle(title, lastWeightKg: last)
         }
         var found = Set<UUID>()
         for record in context.all(OpRecord.self) {
             for op in record.ops where current[op.objectID] == nil {
                 switch op {
-                case let .create(object, _, _, title): if wordy(title) { found.insert(object) }
-                case let .setTitle(object, old, new): if wordy(old) || wordy(new) { found.insert(object) }
+                case let .create(object, _, _, title): if wordyTitle(title) { found.insert(object) }
+                case let .setTitle(object, old, new): if wordyTitle(old) || wordyTitle(new) { found.insert(object) }
                 case let .setValue(object, field, old, new):
                     if flagFields.contains(field), old == .bool(true) || new == .bool(true) {
                         found.insert(object)
@@ -105,9 +125,8 @@ enum PrivateWords {
             if let label = ObjectPrivacy.label(of: object, in: store, classes: classes) {
                 result[object.id] = label
             } else if store.value("isPrivate", of: object) == .bool(true)
-                || words(object).contains(where: { isPrivateText($0, lastWeightKg: last) })
-                // A title also goes by the wider Home wall: money, health, places and people ("Pay Dr Lee").
-                || HomeDonePack.isWalled(object.title, lastWeightKg: last)
+                || isPrivateTitle(object.title, lastWeightKg: last)
+                || words(object).contains(where: { !isNumberList($0) && isPrivateText($0, lastWeightKg: last) })
             {
                 result[object.id] = genericLabel(object)
             }
