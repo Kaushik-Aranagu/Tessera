@@ -146,7 +146,8 @@ final class HomePlanModel {
     func keep(_ block: DayPlan.Block, model: AppModel) {
         guard let id = block.object, kept[id] == nil else { return }
         touched = true
-        guard let record = try? model.engine.perform(MoveTask(task: id, to: block.start), by: .user).record else {
+        guard let record = try? model.engine.perform(KeepPlannedTask(task: id, to: block.start), by: .user).record
+        else {
             return
         }
         kept[id] = record
@@ -174,7 +175,7 @@ final class HomePlanModel {
         var records: [UUID: OpRecord] = [:]
         for block in rows {
             guard let id = block.object, kept[id] == nil,
-                  let record = try? model.engine.perform(MoveTask(task: id, to: block.start), by: .user).record
+                  let record = try? model.engine.perform(KeepPlannedTask(task: id, to: block.start), by: .user).record
             else { continue }
             records[id] = record
         }

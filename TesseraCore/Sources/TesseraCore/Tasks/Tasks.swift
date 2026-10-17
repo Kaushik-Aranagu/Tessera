@@ -89,6 +89,45 @@ public struct TaskList {
     }
 }
 
+/// Plan my day's keep: the same move as `MoveTask`, under its own name so a task's story can tell a keep
+/// ("planned") from a hand move ("moved") in the op log (Research drawn-sides-acceptance Q4). Not offered to Tess or
+/// Siri.
+public struct KeepPlannedTask: EngineAction {
+    public static let descriptor = ActionDescriptor(
+        name: "keepPlannedTask",
+        summary: "Keep a task at the time Plan my day proposed",
+        parameters: MoveTask.descriptor.parameters
+    )
+
+    public var task: UUID
+    public var to: Date?
+    public var time: Date?
+    public var calendar: Calendar?
+
+    public init(task: UUID, to: Date? = nil, time: Date? = nil, calendar: Calendar? = nil) {
+        self.task = task
+        self.to = to
+        self.time = time
+        self.calendar = calendar
+    }
+
+    public func apply(_ transaction: inout Transaction) throws {
+        try move.apply(&transaction)
+    }
+
+    public func summary(in store: ObjectStore) -> String {
+        move.summary(in: store)
+    }
+
+    public func receipt(in store: ObjectStore) -> String? {
+        move.receipt(in: store)
+    }
+
+    private var move: MoveTask {
+        MoveTask(task: task, to: to, time: time, calendar: calendar)
+    }
+}
+
 /// Moves a task: to another time (default: the same time tomorrow, "not now"), or to Later (no date). Undoable.
 public struct MoveTask: EngineAction {
     public static let descriptor = ActionDescriptor(
