@@ -206,7 +206,7 @@ public struct AddListItem: EngineAction {
         let last = BodyWeight.lastKg(in: store)
         // A measure is never money: "1.25 cups flour" (a cooking unit right after two places; never kg or lb).
         let measured = bare.replacing(
-            /(?i)\b\d+[.,]\d{2}\s*(?:cups?|tbsps?|tablespoons?|tsps?|teaspoons?|g|grams?|ml|cl|dl|l|liters?|litres?|oz|ounces?|pints?|pt|quarts?|qt|gallons?|gal|sticks?)\s+[a-z]/,
+            /(?i)\b\d+[.,]\d{2}\s*(?:cups?|tbsps?|tablespoons?|tsps?|teaspoons?|g|grams?|ml|cl|dl|l|liters?|litres?|oz|ounces?|pints?|pt|quarts?|qt|gallons?|gal|sticks?)\s+(?!(?:at|for|from|on)\b)[a-z]/,
             // Only with the thing after it (QA on #776): "1.25 cups flour" is a measure; "milk 3.49 gallon" is a price.
             with: "1 x"
         )
@@ -229,7 +229,21 @@ public struct AddListItem: EngineAction {
         }
         let word = String(match.output.1)
         // Words that read as a weigh-in, never a food (QA on #770): "82.4 kg fasted", "after run", "lighter".
-        let neverFood: Set = ["after", "before", "fasted", "post", "pre", "up", "down", "lighter", "heavier"]
+        let neverFood: Set = [
+            "after",
+            "before",
+            "fasted",
+            "post",
+            "pre",
+            "up",
+            "down",
+            "lighter",
+            "heavier",
+            "at",
+            "for",
+            "from",
+            "on",
+        ]
         return !PrivateFacts.dayWords.contains(word) && !PrivateFacts.bodyWords.contains(word)
             && !PrivateFacts.weighWords.contains(word) && !neverFood.contains(word)
     }

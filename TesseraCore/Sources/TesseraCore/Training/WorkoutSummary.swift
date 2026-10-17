@@ -31,6 +31,14 @@ public struct WorkoutSummary: Identifiable {
         "\(title) done, \(exercisesDone) of \(exercisesPlanned) exercises."
     }
 
+    /// The done line with a private routine title masked (QA on #781): "Private workout done, 1 of 5 exercises."
+    @MainActor
+    public func doneLine(in store: ObjectStore) -> String {
+        let lastKg = BodyWeight.lastKg(in: store)
+        let shown = PrivateWords.isPrivateTitle(title, lastWeightKg: lastKg) ? "Private workout" : title
+        return "\(shown) done, \(exercisesDone) of \(exercisesPlanned) exercises."
+    }
+
     /// Tess's line: "6 of 6 exercises, 22 sets, 1 best." Counts, never judgement ("best", not "record": Product).
     public var line: String {
         var parts = ["\(exercisesDone) of \(exercisesPlanned) exercises", "\(sets) \(sets == 1 ? "set" : "sets")"]
