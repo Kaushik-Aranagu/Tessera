@@ -36,7 +36,8 @@ public enum SideFacts {
     }
 
     /// The default side's fields (PL2): nil for a private object, which shows its count only; otherwise every field
-    /// with a value, minus `hidden` (what the front already shows) and any value a side may not print.
+    /// with a value, minus `hidden` (what the front already shows) and any field a side may not print. A field is
+    /// judged as "<name>: <value>", so a number in a field named "Door code" or "Rent" is held back like the words are.
     public static func defaultFields(of object: ObjectRecord, in store: ObjectStore,
                                      classes: [SystemCatalog.Key: ClassDef],
                                      except hidden: Set<String> = []) -> [(key: String, name: String, value: String)]?
@@ -49,7 +50,7 @@ public enum SideFacts {
         return ClassResolver.effectiveFields(of: classDef).compactMap { field in
             guard !hidden.contains(field.key), field.key != "notes", field.key != "isPrivate",
                   let value = store.value(field.key, of: object), let text = describe(value),
-                  isShowable(text, lastWeightKg: lastKg) else { return nil }
+                  isShowable("\(field.name): \(text)", lastWeightKg: lastKg) else { return nil }
             return (field.key, field.name, text)
         }
     }
@@ -96,13 +97,31 @@ public enum SideFacts {
                            mostUsedID: mostUsed?.key)
     }
 
-    static func describe(_ value: FieldValue) -> String? {
+    /// A value as a side prints it, in house words: a date with its day and clock ("Oct 17, 6:30 pm"), a duration in
+    /// minutes or, under a minute, seconds, a mass in kg. Nil for an empty value or a zero duration.
+    static func describe(_ value: FieldValue, calendar: Calendar = .current) -> String? {
         switch value {
         case let .text(text), let .choice(text), let .richText(text): text.isEmpty ? nil : text
-        case let .number(number), let .mass(number): String(format: "%g", number)
+        case let .number(number): String(format: "%g", number)
+        case let .mass(number): String(format: "%g kg", number)
         case let .bool(flag): flag ? "Yes" : "No"
-        case let .date(date): HouseTime.clock(date, calendar: .current)
-        case let .duration(seconds): "\(Int(seconds / 60)) min"
+        case let .date(date): "\(day(of: date, calendar: calendar)), \(HouseTime.clock(date, calendar: calendar))"
+        case let .duration(seconds):
+            if seconds < 1 {
+                nil
+            } else if seconds < 60 {
+                "\(Int(seconds)) sec"
+            } else {
+                "\(Int(seconds / 60)) min"
+            }
         }
+    }
+
+    private static let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+    /// "Oct 17": US-English, whatever the phone's language.
+    private static func day(of date: Date, calendar: Calendar) -> String {
+        let parts = calendar.dateComponents([.month, .day], from: date)
+        return "\(months[((parts.month ?? 1) - 1) % 12]) \(parts.day ?? 1)"
     }
 }
