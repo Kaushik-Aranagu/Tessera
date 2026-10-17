@@ -5,6 +5,15 @@ Format follows `docs/research/fixtures/lists-fixtures.md` and `docs/research/fix
 
 Sources read: `TesseraCore/Sources/TesseraCore/Lists/ListReuse.swift` (CopyList, lines 120-224), `ListRuns.swift`, `Lists.swift` (CreateList, AddListItem), `Actions/ActionRegistry.swift`, `Actions/Transaction.swift`, `TesseraTess/TessTools.swift` (`list(named:)`, `ListLookupLine`), `TesseraTess/TessCaptureEngine.swift`, `DayLog/DayStory.swift`, tests `ListReuseTests.swift` (`CopyListTests`), `ListLookupTests.swift`, `DayStoryTests.swift`; docs `product/kitchen-v2-scope.md`, `product/ship-list-kitchen.md` (neither says anything about copying or starters; the Lists slices are in `ship-list-lists.md`, `lists-acceptance.md` 4c, `starter-lists.md`), `research/fixtures/lists-fixtures.md`, `lists-slice-8-phrases.md` (L8-22), `lists-day-one.md` (R1, R15), `product/decisions.md` (UNDO slot 1:35 PM Oct 16, copied-list line 12:38 PM Oct 16, G40 refusal 8:40 AM Oct 17), `product/kitchen-test-specs-wall-g40-g43-g44-oct17.md`.
 
+## Rulings applied (Product, decisions 3:50 PM Oct 17)
+
+These replace the earlier open questions; every row below is read with them.
+1. **The copy's name** is "<source>, <typed name>": copying Packing as Lisbon makes "Packing, Lisbon". The old receipt "Lisbon, copied from Packing." is retired. The receipt is "Packing, Lisbon, new list." A copy of that copy typed Porto is "Packing, Lisbon, Porto" (receipt "Packing, Lisbon, Porto, new list."; confirm with Kitchen lead that names do not collapse).
+2. **Ambiguity** wording is the engine line "More than one list like pack." The Bar question "Packing, or Packing, Lisbon?" is retired (closes G4003).
+3. **Op log payload and `DayStory.title(of:)` mask a private list**: both show "Private list". This turns PV11 and PV13 from open questions into **Core build items**, with tests `copy_opLogPayloadMasksPrivateTitle` and `dayStory_privateListTitleIsMasked`. The op payload for a copied private row follows the same mask.
+4. **Starters** install with Core's next Lists PR (closes the "not installed" gap on ST01 to ST05; the rows stay as acceptance for that PR).
+5. Receipt and summary strings in the rows and the Swift skeleton were updated by search to these rulings. Rows where a name is private (PV07 to PV09) read "Private list, new list." and need the Kitchen lead to confirm the exact private form.
+
 ## How to read the status column
 
 - **traced**: I read the code path (and the test, where one exists) and master does this today. "traced, test" means a test on master already pins it; "traced, code" means the code does it but no test asserts it.
@@ -17,7 +26,7 @@ Sources read: `TesseraCore/Sources/TesseraCore/Lists/ListReuse.swift` (CopyList,
 2. It takes the source by id (`transaction.object(list, is: .list)`), so the engine itself never has a name ambiguity. A deleted or non-list id throws.
 3. Order of checks in `apply`: empty trimmed name throws "the copy needs a name"; source is Groceries or name lowercases to "groceries" throws "Groceries can't be copied"; then `CreateList.existing(named:)` (trim, lowercase, live lists only, oldest first, built-in Groceries counts); a hit returns that list with nothing written ("already a list"); otherwise create the list, copy the reusable flag only when the source has it, then each child in order with `quantity` and `section` (only values the item owns) and its notes with the `#reusable`, `#pick-one` and `picked:` lines removed.
 4. Not copied: checked state and `checkedAt` (the new rows are open), links such as `about`, the source's run state or process, the pick stamp, the source's own other note lines (they are not copied at all, only flags decide `reusable`; the list-level notes are never copied).
-5. Words: summary "Copied Packing to Lisbon"; receipt "Lisbon, copied from Packing"; repeat receipt "Lisbon, already a list". The typed name is shown as "Private list" when `ObjectPrivacy.isPrivateWord` says so; the source name goes through `ListContents.shownName` ("Private list" for a walled source). The voice layer adds the period (Bar lines in `TessCaptureEngine` end with one). `decisions.md` 12:38 PM Oct 16 rules "Lisbon, copied from Packing."
+5. Words: summary "Copied Packing to Packing, Lisbon"; receipt "Packing, Lisbon, new list."; repeat receipt "Lisbon, already a list". The typed name is shown as "Private list" when `ObjectPrivacy.isPrivateWord` says so; the source name goes through `ListContents.shownName` ("Private list" for a walled source). The voice layer adds the period (Bar lines in `TessCaptureEngine` end with one). `decisions.md` 12:38 PM Oct 16 rules "Packing, Lisbon, new list.."
 6. Item titles are stored in the user's words. The mask is applied when a line is printed (`AddListItem.shownTitle` gives "Private item" for a medicine or body fact). Money and secret lines never become items (they reroute to a private note at `AddListItem.apply`), so the only private rows a source can hold are medicine and body-fact items.
 7. The op log: `Transaction.create` appends `.create(object:classID:parent:title:)` with the raw title (`Transaction.swift:34-38`), for the new list and for every copied row. `OpRecord.summary` and `.receipt` are separate strings and are masked.
 8. The Day log: `copyList` has the line "New list:" and `DayStory.title(of:)` returns `object.title` for a list (no list mask; only cook and recipe titles are masked).
@@ -36,7 +45,7 @@ Sources read: `TesseraCore/Sources/TesseraCore/Lists/ListReuse.swift` (CopyList,
 | CP06 | Source is a plain list | The copy is plain | traced, test (same test, `Errands 2`) | same | none |
 | CP07 | Source item has a note with a user line plus `#pick-one` and a `picked:` stamp | The copy keeps only the user line | traced, test (same test; note equals "the blue one") | same | none |
 | CP08 | Source has an item with `about` links (a recipe or a dated item) | Links and dates do not carry to the copy; the copy's rows are plain | traced, code (only `quantity`, `section`, `notes` are copied) | `copy_doesNotCarryLinksOrDates` | Kitchen lead to confirm that a dated item's date should not copy (rule not found in docs) |
-| CP09 | Copy an empty list (no rows) | A new empty list is made, receipt "X, copied from Y" | inferred (loop runs zero times; no guard) | `copy_ofEmptyListMakesEmptyList` | Core adds test; Kitchen lead to say if "copied" is right for an empty one |
+| CP09 | Copy an empty list (no rows) | A new empty list is made, receipt "Y, X, new list." | inferred (loop runs zero times; no guard) | `copy_ofEmptyListMakesEmptyList` | Core adds test; Kitchen lead to say if "copied" is right for an empty one |
 | CP10 | Section names with no rows left | Sections exist only as an item field, so a section with no item has nothing to copy | traced, code | `copy_sectionsFollowItems` | none |
 | CP11 | Copy keeps the source's row order after items were moved or reordered | Same visible order | traced, code (`orderedChildren`, `setSortIndex` from 0) | `copy_preservesOrderAfterMoves` | Core adds test |
 | CP12 | Copy a list that holds a checked-and-cleared history | Cleared rows (deleted) are not copied | traced, code (`orderedChildren` skips deleted) | `copy_skipsDeletedRows` | Core adds test |
@@ -52,12 +61,12 @@ Test inputs here are described in words so no private text sits in this file. Wh
 | PV01 | Source has one medicine-with-dose item; copy it | The copy has that row; `AddListItem.shownTitle` gives "Private item" | traced, test (`aPrivateRowStillReadsPrivateItemInTheCopy`) | `copy_privateRowReadsPrivateItem` (exists) | none |
 | PV02 | Check the copied private row | The check receipt does not contain the medicine word | traced, test (same test) | same | none |
 | PV03 | Uncheck the copied private row | Receipt "Private item, back on Lisbon" with no medicine word | inferred (`CheckListItem` masks through `shownTitle` per `aPrivateItemsWordsNeverReachAResetLine` and G41; the copy path is the same class of row) | `copy_privateRowUncheckReceiptIsMasked` | Core adds test |
-| PV04 | Copy receipt and summary for a source that holds a private item | "Lisbon, copied from Packing" and "Copied Packing to Lisbon"; no item word anywhere in either (they never print items) | traced, code (neither string reads children) | `copy_receiptAndSummaryNameNoItems` | Core adds test |
+| PV04 | Copy receipt and summary for a source that holds a private item | "Packing, Lisbon, new list." and "Copied Packing to Packing, Lisbon"; no item word anywhere in either (they never print items) | traced, code (neither string reads children) | `copy_receiptAndSummaryNameNoItems` | Core adds test |
 | PV05 | Reset or clear-done on the copy | Receipt says "Lisbon, reset" or "Lisbon, done items cleared", no item word | traced, test for the source path (`aPrivateItemsWordsNeverReachAResetLine`); the copy is an ordinary list | `copy_thenResetNamesNoItems` | Core adds test |
 | PV06 | Run the copy (StartListRun) | Now line is "Lisbon, 3 left" (counts only) | traced, code (`runLine` prints counts) | `copy_runLineHasNoItemWords` | none |
-| PV07 | Source list is itself private-named; copy to a plain name | Receipt "Lisbon, copied from Private list"; summary "Copied Private list to Lisbon" | traced, code (`sourceName` uses `shownName`); no test | `copy_privateSourceNameIsMaskedInReceipt` | Core adds test |
-| PV08 | Typed copy name is private (a medicine or a rent amount in the name) | Receipt "Private list, copied from Packing"; summary has no walled word | traced, test (`aPrivateNameIsNeverInTheLine`) | `copy_privateNameIsNeverInTheLine` (exists) | none |
-| PV09 | Both source and typed name private | "Private list, copied from Private list" | inferred (both go through the same two masks) | `copy_bothNamesPrivateBothMasked` | Core adds test |
+| PV07 | Source list is itself private-named; copy to a plain name | Receipt "Private list, Lisbon, new list."; summary "Copied Private list to Private list, Lisbon" | traced, code (`sourceName` uses `shownName`); no test | `copy_privateSourceNameIsMaskedInReceipt` | Core adds test |
+| PV08 | Typed copy name is private (a medicine or a rent amount in the name) | Receipt "Private list, new list."; summary has no walled word | traced, test (`aPrivateNameIsNeverInTheLine`) | `copy_privateNameIsNeverInTheLine` (exists) | none |
+| PV09 | Both source and typed name private | "Private list, new list." | inferred (both go through the same two masks) | `copy_bothNamesPrivateBothMasked` | Core adds test |
 | PV10 | Repeat of a private-named existing list | "Private list, already a list", from the existing list's title, not the typed one | traced, code (`receipt(in:output:)` uses `shownName(of: output)`) | `copy_repeatOfPrivateListIsMasked` | Core adds test |
 | PV11 | Op log payload: `.create(title:)` for the copied private row and for a private-named copy | The raw words appear in the op payload, as they already do for the original `AddListItem` | traced, code (`Transaction.create` stores the raw title). Whether this counts as a leak is not ruled: the words are on the phone either way | `copy_opPayloadHoldsRawTitleAsTheSourceDoes` (assert the current truth; `.disabled("op-log payload ruling")` for the strict version) | Kitchen lead to rule: "op log" means summary and receipt only, or also the payload; Core builds whichever is ruled |
 | PV12 | Op record strings (`summary`, `receipt`) never hold a private row title or a private name | Pass for item words; pass for names via masks | traced, test for names (PV08), traced, code for items | `copy_opRecordStringsAreClean` (loop `engine.history` and assert no walled word, as `everyListLineMasksAPrivateListName` does) | Core adds test |
@@ -81,7 +90,7 @@ Test inputs here are described in words so no private text sits in this file. Wh
 | NC08 | Whitespace-only name, and a newline-only name | Same as NC07 | traced, code | `copy_blankNamesRefuse` | Core adds test for the newline |
 | NC09 | Copy named "Groceries" in any case or spacing ("  GROCERIES ") | Throws "Groceries can't be copied"; nothing written | traced, test for exact case; traced, code for the rest | `copy_groceriesNameRefusesInAnyCase` | Core adds test |
 | NC10 | Source is Groceries | Throws; nothing written | traced, test | `copy_groceriesSourceRefuses` (exists) | none |
-| NC11 | Copy of a copy (Packing to Lisbon, then Lisbon to Porto) | Porto has Lisbon's rows, all open; source chain untouched; receipt "Porto, copied from Lisbon" | inferred (a copy is an ordinary list; nothing records parentage) | `copy_ofACopyIsAnOrdinaryCopy` | Core adds test |
+| NC11 | Copy of a copy (Packing to Lisbon, then Lisbon to Porto) | Porto has Lisbon's rows, all open; source chain untouched; receipt "Packing, Lisbon, Porto, new list." | inferred (a copy is an ordinary list; nothing records parentage) | `copy_ofACopyIsAnOrdinaryCopy` | Core adds test |
 | NC12 | Copy named like its own source | "Packing, already a list"; no new list | traced, code (the source is found by `existing`) | `copy_namedLikeSourceReturnsSource` | Core adds test |
 | NC13 | Name matches a deleted list | A new list is made; the deleted one does not count | traced, test for CreateList (`deletedListNameCanBeMadeAgain`); traced, code for CopyList (same lookup) | `copy_deletedListNameIsFree` | Core adds test |
 | NC14 | Two live lists already share a title (older data, or a rename) and a copy is named like them | The oldest is returned, "already a list" | traced, code (`first` on oldest-first) | `copy_duplicateTitlesReturnTheOldest` | Kitchen lead: is the oldest right, or should it refuse like `list(named:)`? Core builds the ruling |
@@ -109,7 +118,7 @@ G40 (`kitchen-gap-hunt-7.md`, `kitchen-lists-screen-walk-oct17.md` section 9, `d
 | G4012 | Typed source name is a private word | The refusal never echoes it ("that") | resolver traced, test (`refusalNamesNoPrivateWord`) | `copyPhrase_refusalEchoesNoPrivateWord` | Core |
 | G4013 | Source id of a deleted list (a stale screen) | Throws `objectNotFound`; nothing written | traced, code (`Transaction.object` checks `isDeleted`) | `copy_staleSourceIdRefuses` | Core adds test |
 | G4014 | Source id of a non-list object | Throws `wrongClass` | traced, code | `copy_nonListSourceRefuses` | Core adds test |
-| G4015 | Naming of the copy from "copy packing for lisbon": "Lisbon" or "Packing, Lisbon" | Not decided in code. `decisions.md` 12:38 PM says the receipt is "Lisbon, copied from Packing."; `lists-slice-8-phrases.md` L8-22 and `lists-day-one.md` R15 expect the new list to be named "Packing, Lisbon". These disagree | gap: no grammar | `copyPhrase_namesTheCopyPerRuling` (disabled until ruled) | Kitchen lead to rule; Core builds |
+| G4015 | Naming of the copy from "copy packing for lisbon": "Lisbon" or "Packing, Lisbon" | Not decided in code. `decisions.md` 12:38 PM says the receipt is "Packing, Lisbon, new list.."; `lists-slice-8-phrases.md` L8-22 and `lists-day-one.md` R15 expect the new list to be named "Packing, Lisbon". These disagree | gap: no grammar | `copyPhrase_namesTheCopyPerRuling` (disabled until ruled) | Kitchen lead to rule; Core builds |
 
 ## E. The three starter lists
 
@@ -158,8 +167,8 @@ Only literals found in source or in rulings are quoted. Periods are added by the
 
 | Row | Case | Expected | On master | Swift Testing name | Gap owner |
 |---|---|---|---|---|---|
-| RW01 | Made | Thing first: the new list, then "copied from" and the source ("Lisbon, copied from Packing") | traced, test | `copy_receiptIsThingFirst` (exists, same test as CP01) | none |
-| RW02 | Summary string (the history and Day log feed) | "Copied Packing to Lisbon" (verb first; the summary is the one non-thing-first form) | traced, test | same | Kitchen lead to confirm summary may stay verb first like "Reset Gym bag" |
+| RW01 | Made | Thing first: the new list, then "new list." ("Packing, Lisbon, new list.") | traced, test | `copy_receiptIsThingFirst` (exists, same test as CP01) | none |
+| RW02 | Summary string (the history and Day log feed) | "Copied Packing to Packing, Lisbon" (verb first; the summary is the one non-thing-first form) | traced, test | same | Kitchen lead to confirm summary may stay verb first like "Reset Gym bag" |
 | RW03 | Repeat | "<existing title>, already a list" | traced, test | `copy_repeatReceipt` (exists as part of NC01) | none |
 | RW04 | Repeat prints the existing list's own title, not the typed one ("lisbon" typed, "Lisbon" shown) | Existing title (Design on #866) | traced, code (`receipt(in:output:)`) | `copy_repeatPrintsTheExistingTitle` | Core adds test (current test uses the typed-case path for the id and the receipt via `record`) |
 | RW05 | Bar line for a copy | The Bar prints "X, new list." for create and "X, already a list." for a repeat; a copy has no Bar wiring | gap: no grammar case, no `TessCaptureEngine` branch for copy | `bar_copyLineIsThingFirst` | Core (grammar), Kitchen lead (words for the copy line) |
@@ -200,7 +209,7 @@ struct CopyListFixtureTests {
         let lisbon = try engine.perform(CopyList(list: packing.id, name: "Lisbon"), by: .user).output
         let porto = try engine.perform(CopyList(list: lisbon.id, name: "Porto"), by: .user)
         #expect(lists.items(of: porto.output).map(\.text) == ["Socks", "Charger", "Passport"])
-        #expect(porto.record.receipt == "Porto, copied from Lisbon")
+        #expect(porto.record.receipt == "Packing, Lisbon, Porto, new list.")
     }
 
     @Test func starters_copyPackingTwiceSameNameDoesNotDouble() throws {
