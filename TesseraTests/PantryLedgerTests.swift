@@ -47,7 +47,7 @@ struct PantryLedgerTests {
 
     @Test func aShopMakesThingsInThenACookMakesThemLowAndProduceOut() throws {
         let recipe = try tacos()
-        #expect(PantryLedger.countsLine(ledger.entries()) == "nothing known yet")
+        #expect(PantryLedger.hero(ledger.entries()) == "Nothing yet")
 
         try shop(recipe, at: saturday)
         let shopped = ledger.entries()
@@ -63,7 +63,11 @@ struct PantryLedgerTests {
         ])
         #expect(cooked.map(\.state) == [.out, .low, .low])
         #expect(cooked.allSatisfy { $0.lastBoughtAt == saturday }, "a cook never moves the bought date")
-        #expect(PantryLedger.countsLine(cooked) == "1 out, 2 low")
+        #expect(PantryLedger.hero(cooked) == "1 out, 2 low")
+        // Tess's line names what that cook used up; the context line reads from the last shop.
+        let used = ledger.lastCookUsedUp()
+        #expect(used?.recipe == "Tacos" && used?.names == ["limes", "corn tortillas", "ground beef"])
+        #expect(ledger.lastShop() == saturday)
     }
 
     @Test func staplesNeverMoveByCookingAndTheNextShopWins() throws {
@@ -75,7 +79,7 @@ struct PantryLedgerTests {
         try shop(recipe, at: monday)
         let after = ledger.entries()
         #expect(after.allSatisfy { $0.state == .have && $0.lastBoughtAt == monday })
-        #expect(PantryLedger.countsLine(after) == "nothing out")
+        #expect(PantryLedger.hero(after) == "Nothing out")
     }
 
     @Test func aWalledThingReadsPrivateItem() throws {

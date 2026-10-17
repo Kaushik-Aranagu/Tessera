@@ -66,14 +66,39 @@ struct PantryLedger {
         facts()[ingredient.id] ?? make(ingredient, state: .unknown, lastBoughtAt: nil)
     }
 
-    /// "4 out, 2 low", or "nothing known yet". In is never counted on the line.
-    static func countsLine(_ entries: [Entry]) -> String {
+    /// The hero, in digits: "4 out, 2 low"; "Nothing out" when things are known but none is out or low; "Nothing yet"
+    /// when nothing is known (sheet 78). In is never counted.
+    static func hero(_ entries: [Entry]) -> String {
         let out = entries.count { $0.state == .out }, low = entries.count { $0.state == .low }
         let parts = [out > 0 ? "\(out) out" : nil, low > 0 ? "\(low) low" : nil].compactMap(\.self)
         if !parts.isEmpty {
             return parts.joined(separator: ", ")
         }
-        return entries.isEmpty ? "nothing known yet" : "nothing out"
+        return entries.isEmpty ? "Nothing yet" : "Nothing out"
+    }
+
+    /// The day of the last shop clear, if there was one.
+    func lastShop() -> Date? {
+        shopClears().map(\.1).max()
+    }
+
+    /// What the last finished cook used up, as it stands now (out or low; private things left out): the recipe's
+    /// title and the names, for Tess's line.
+    func lastCookUsedUp() -> (recipe: String, names: [String])? {
+        guard let cookClass = classes[.cook],
+              let cook = store.objects(of: cookClass)
+              .filter({ store.value("cookedAt", of: $0)?.dateValue != nil })
+              .max(by: { (store.value("cookedAt", of: $0)?.dateValue ?? .distantPast)
+                      < (store.value("cookedAt", of: $1)?.dateValue ?? .distantPast)
+              }),
+              let recipe = store.linkedObjects("recipe", of: cook).first, !recipe.isDeleted
+        else { return nil }
+        let title = store.displayTitle(of: recipe)
+        guard !EngineWall.isHealth(title, lastWeightKg: BodyWeight.lastKg(in: store)) else { return nil }
+        let used = Set(RecipeBook(store: store, classes: classes).lines(of: recipe).compactMap(\.ingredient?.id))
+        let names = entries().filter { used.contains($0.id) && $0.state != .have && !$0.isPrivate }
+            .map { $0.label.lowercased() }
+        return names.isEmpty ? nil : (title, names)
     }
 
     // MARK: - Facts

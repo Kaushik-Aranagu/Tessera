@@ -1,10 +1,15 @@
 import SwiftUI
 import TesseraCore
 
-/// Pantry (pantry-acceptance.md, kitchen v2): what he has, as the phone has seen it. The counts line is the hero's
-/// voice; then OUT, LOW and IN in the margin, each ingredient one plain line in the shop's walk order, and IN says
-/// when it was bought. A line opens its ingredient. It's a view, not a list: nothing to tick, nothing to remove, no
-/// badge, and nothing leaves the phone. Unknown ingredients (the long tail) aren't listed.
+/// Pantry's front (sheet 78; pantry-acceptance.md): what is out and what is low, and nothing else. The page frame
+/// (Title 44, then the context, then the hero in digits) until Product rules the area entry. OUT, then LOW, each
+/// thing one plain line with its state word at the right; out lines carry the recipe page's faint ring. A thing that
+/// becomes in leaves the page. A name opens its ingredient (a private one opens nothing); a left swipe on a line
+/// adds it to Groceries. Tess's band carries what the last cook used up. Never a badge, a notification or a total,
+/// and nothing leaves the phone.
+///
+/// Waiting on Core: USUALLY HAVE (Research R), the tap-to-cycle state words (a stored `Ingredient.state`), and the
+/// OUT AND LOW side (SideHost).
 struct PantryView: View {
     var body: some View {
         NavigationStack {
@@ -17,39 +22,55 @@ struct PantryView: View {
 
 private struct PantryPage: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var ledger: PantryLedger {
+        PantryLedger(store: model.store, classes: model.classes)
+    }
 
     var body: some View {
         let _ = model.revision
-        let entries = PantryLedger(store: model.store, classes: model.classes).entries()
-        let now = AppClock.now
+        let entries = ledger.entries().filter { $0.state != .have }
+        let known = !ledger.entries().isEmpty
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 Text("Pantry")
-                    .textRole(.hero)
+                    .textRole(.title)
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
                     .entrance(0)
-                Text(PantryLedger.countsLine(entries))
-                    .font(Theme.voice(size: 21))
-                    .foregroundStyle(Theme.Colors.context)
+                if let context = PantryCopy.context(lastShop: ledger.lastShop(), now: AppClock.now) {
+                    Text(context)
+                        .font(Theme.voice(size: 21))
+                        .foregroundStyle(Theme.Colors.context)
+                        .padding(.top, Theme.Spacing.s)
+                        .entrance(1)
+                }
+                Text(PantryLedger.hero(known ? ledger.entries() : []))
+                    .textRole(.hero)
+                    .foregroundStyle(Theme.Colors.ink)
+                    .contentTransition(.identity)
                     .padding(.top, Theme.Spacing.xs)
                     .entrance(1)
-                if entries.isEmpty {
-                    Text("Clear a shop or finish a cook and this fills in.")
+                if !known {
+                    Text(PantryCopy.emptyBody)
                         .font(Theme.voice)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                         .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, Theme.Spacing.xxl)
+                        .padding(.top, Theme.Spacing.l)
                         .entrance(2)
                 }
-                ForEach([PantryLedger.State.out, .low, .have], id: \.self) { state in
+                ForEach([PantryLedger.State.out, .low], id: \.self) { state in
                     let lines = entries.filter { $0.state == state }
                     if !lines.isEmpty {
-                        MarginSection(label: state.word.capitalized) {
-                            VStack(alignment: .leading, spacing: 0) {
-                                ForEach(lines) { entry in
-                                    PantryLine(entry: entry, now: now)
-                                }
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text(state.word.uppercased())
+                                .textRole(.labelStrong)
+                                .foregroundStyle(Theme.Colors.inkSecondary)
+                                .accessibilityAddTraits(.isHeader)
+                                .padding(.bottom, Theme.Spacing.s)
+                            ForEach(lines) { entry in
+                                PantryLine(entry: entry, onAdd: { add(entry) })
                             }
                         }
                         .padding(.top, Theme.Spacing.xxl)
@@ -59,18 +80,43 @@ private struct PantryPage: View {
             }
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.vertical, Theme.Spacing.l)
+            .tesseraAnimation(value: entries.map(\.id))
         }
         .scrollIndicators(.hidden)
         .background { ThemedBackground() }
         .background { EdgeSwipeBack() }
         .toolbar(.hidden, for: .navigationBar)
+        .onAppear(perform: speak)
+    }
+
+    /// Her band: what the last cook used up, or how to start on an empty page.
+    private func speak() {
+        if ledger.entries().isEmpty {
+            TessVoice.shared.say(PantryCopy.empty)
+        } else if let used = ledger.lastCookUsedUp() {
+            TessVoice.shared.say(PantryCopy.tess(recipe: used.recipe, names: used.names))
+        }
+    }
+
+    /// A left swipe: onto Groceries as a new line, "Milk, on Groceries." with UNDO 4 s (a new add; 10 s under
+    /// VoiceOver). The line stays on the page: buying it is what makes it in.
+    private func add(_ entry: PantryLedger.Entry) {
+        let name = model.store.displayTitle(of: entry.ingredient)
+        guard let record = try? model.engine.perform(AddGroceries(lines: [name]), by: .user).record else {
+            TessVoice.shared.say("Didn't save that. Try again.")
+            return
+        }
+        model.touch()
+        TessVoice.shared.say(PantryCopy.added(entry.label), undo: record, holds: .seconds(4))
     }
 }
 
-/// One ingredient: its name in ink (in sits back a step), and for in, when it was bought.
+/// One thing: the name in ink, its state word at the right (out heavier than low), the faint ring on out lines.
 struct PantryLine: View {
     let entry: PantryLedger.Entry
-    let now: Date
+    var onAdd: () -> Void = {}
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var pull: CGFloat = 0
 
     /// A private row opens nothing: its page would show the name (pantry-acceptance S15, K26.16; QA on #724).
     static func opens(_ entry: PantryLedger.Entry) -> Bool {
@@ -80,39 +126,57 @@ struct PantryLine: View {
     var body: some View {
         // Never the name of a walled thing: "Private item" (QA M1 on #722).
         let name = entry.label
-        if Self.opens(entry) {
-            NavigationLink(value: Route.object(entry.ingredient.id)) { row(name) }
-                .buttonStyle(HandleButtonStyle())
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(label(name))
-                .accessibilityHint("Opens \(name)")
-        } else {
-            row(name)
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(label(name))
+        Group {
+            if Self.opens(entry) {
+                NavigationLink(value: Route.object(entry.ingredient.id)) { row(name) }
+                    .buttonStyle(HandleButtonStyle())
+                    .accessibilityHint("Opens \(name)")
+            } else {
+                row(name)
+            }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(name), \(entry.state.word)")
+        .accessibilityAction(named: "Add to Groceries", onAdd)
+        .offset(x: pull)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 24)
+                .onChanged { value in
+                    guard value.translation.width < 0, abs(value.translation.width) > abs(value.translation.height)
+                    else { return }
+                    pull = max(value.translation.width, -96)
+                }
+                .onEnded { _ in
+                    if pull <= -72 {
+                        onAdd()
+                    }
+                    withTesseraAnimation(reduceMotion: reduceMotion) { pull = 0 }
+                }
+        )
     }
 
     private func row(_ name: String) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.s) {
             Text(name)
                 .textRole(.body)
-                .foregroundStyle(entry.state == .have ? Theme.Colors.inkSecondary : Theme.Colors.ink)
-            if entry.state == .have, let bought = entry.lastBoughtAt {
-                Text(PantryDayWord.bought(bought, now: now))
-                    .textRole(.label)
-                    .foregroundStyle(Theme.Colors.inkSecondary)
+                .foregroundStyle(Theme.Colors.ink)
+            Spacer(minLength: Theme.Spacing.m)
+            Text(entry.state.word)
+                .textRole(.body)
+                .fontWeight(entry.state == .out ? .bold : .semibold)
+                .foregroundStyle(Theme.Colors.ink)
+        }
+        .padding(.leading, 24)
+        .overlay(alignment: .leading) {
+            if entry.state == .out {
+                Circle()
+                    .stroke(Theme.Colors.ink.opacity(0.42), lineWidth: 1.3)
+                    .frame(width: 11, height: 11)
+                    .padding(.leading, 6)
+                    .accessibilityHidden(true)
             }
-            Spacer(minLength: 0)
         }
-        .frame(minHeight: 44)
+        .frame(minHeight: 40)
         .contentShape(Rectangle())
-    }
-
-    private func label(_ name: String) -> String {
-        if entry.state == .have, let bought = entry.lastBoughtAt {
-            return "\(name), in, \(PantryDayWord.spoken(bought, now: now))"
-        }
-        return "\(name), \(entry.state.word)"
     }
 }
