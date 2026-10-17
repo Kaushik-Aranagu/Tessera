@@ -4,6 +4,8 @@
 
 ## What it is
 
+*Status on master (Oct 17, checked by Kitchen): `EditRecipe` changes the title and serves only (`Recipes.swift:252`); everything below that edits text, lines or steps is not built yet, so no row is stale.*
+
 Fix a saved recipe without pasting it again: a line read as a step that is an ingredient (or the reverse), a line to ignore, a typo in an amount or a name, a step to split in two or join, two steps in the wrong order, the title, the serves. The recipe keeps its identity: the same object, the same cook log, the same planned tasks, the same learned aisles, the same `lastOpenedAt`, the same links from notes.
 
 ## Defaults taken

@@ -11,7 +11,7 @@
 | 5 | Worded and fractional durations | 11, 24, 25 | "1½ hours" = 90, "2½-3 hours" = 150 (lower bound), "1 1/2 hours" = 90, "half an hour" = 30, "a minute" = 1, "twenty minutes" = 20 | Not yet: digits only; "1 1/2 hours" reads as 120 today, which is a wrong timer, not a missing one |
 | 6 | Recipe card times | 1, 2, 18, 24, 29, 30 | Split label lines, "Prep \| Cook \| Total", no-colon forms, "Ready in 25 minutes" all read; prep plus cook gives `totalMinutes` when no total line is there (the link path already does this) | Not yet: the time line needs "X time:" or "X:"; the paste path drops cook |
 | 7 | Short mentions, salt & pepper | 14 + most | A step's "about" links: "salt & pepper" never links peppers; "dal" links toor dal, "oil" links olive oil when unambiguous | Not yet: whole-key matching, no guard, no dal or oil alias |
-| 8 | Leading prep words | 2, 9, 10, 12, 15, 21, 22, 30 | chopped, melted, softened, cold, packed, whole, thick, very, full-fat move to prep (ripe stays a size word); prep words inside a pack are still skipped | Not yet: `prepWords` has chopped and packed only |
+| 8 | Leading prep words | 2, 9, 10, 12, 15, 21, 22, 30 | chopped, melted, softened, cold, packed, whole, thick, very, full-fat move to prep (ripe stays a size word); prep words inside a pack are still skipped | Partly: `prepWords` holds chopped, grated, crumbled, shredded, minced, diced, sliced, packed, freshly, finely, roughly, thinly (Quantities.swift:221); melted, softened, cold, whole, thick, very, full-fat are still missing |
 | 9 | Name-first and article-free | 4, 5, 19 | "Atta - 2 cups", "sugar 1 tsp", "pinch of hing", "1 onion chopped" parse (prep split without a comma) | Not yet: nothing reads name-first; a unit is read only after an amount; prep splits at a comma only |
 | 10 | Indian "to taste" | 4, 15, 19, 20 | "as per taste", "swaad anusar" read as to taste; "or to taste" leaves no stray "or" | Not yet: only "to taste", "as needed", "to serve" |
 | 11 | Juice of, compound lines | 2, 11, 14, 21, 24, 27, 29 | "Juice of 1 lemon" gives lemon with prep juice; "1 onion, 1 carrot and 1 celery stick" gives 3 lines | Not yet |
@@ -25,3 +25,5 @@
 **Blocking for merge:** gaps 1, 3, 4 and 5 (they break basic pastes and grocery merging; gap 2 is already on master and must stay green). The rest can ride a follow-up if they're not done, listed in the PR with the State column updated.
 
 **Regression:** `kitchen-phrases.md` rows still pass, and the seed recipes in `kitchen-seed-recipes.md` parse unchanged.
+
+*Re-checked against master on Oct 17 (Kitchen): gaps 2 and Optional are closed; gaps 1 (no "c" unit), 3, 4, 5, 6, 9 and 10 are still open; gap 8 is partly closed (see its row). Gaps 7 and 11-15 were not re-read and keep their State.*
