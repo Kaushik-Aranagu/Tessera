@@ -71,4 +71,38 @@ struct ListsShelfTests {
         #expect(ListsCopy.pageContext(open: 0, all: 0) == "nothing on it yet")
         #expect(ListsCopy.pageContext(open: 4, all: 7) == "3 of 7")
     }
+
+    /// 9.2, 9.3, 13.3: a run is first, reads RUNNING, N LEFT, counts in the context line, and is Tess's line.
+    @Test func aRunningListLeadsTheShelf() throws {
+        let packing = try model.engine.perform(CreateList(name: "Packing"), by: .user).output
+        try model.engine.perform(AddListItem(list: packing.id, text: "socks"), by: .user)
+        try model.engine.perform(CreateList(name: "Books"), by: .user)
+        try model.engine.perform(StartListRun(list: packing.id), by: .user)
+        let shelf = ListsShelf(store: model.store, classes: model.classes, lastWeightKg: nil, engine: model.engine)
+        let first = try #require(shelf.rows.first)
+        #expect(first.name == "Packing" && first.isRunning && first.state == "RUNNING, 1 LEFT")
+        #expect(shelf.context.hasSuffix(", 1 running"))
+        #expect(shelf.tess == "Packing has 1 left.")
+    }
+
+    @Test func aReusableListReadsReusable() throws {
+        let gym = try model.engine.perform(CreateList(name: "Gym bag"), by: .user).output
+        try model.engine.perform(SetListReusable(list: gym.id), by: .user)
+        #expect(shelf.rows.first { $0.id == gym.id }?.state == "REUSABLE")
+    }
+
+    /// QA on #814: a set-aside run of a walled list shows on Now's ledger as Private list, never its title.
+    @Test func aPausedPrivateRunNeverShowsItsName() throws {
+        let title = "Rent 1200 stuff"
+        let list = try model.engine.perform(CreateList(name: title), by: .user).output
+        try model.engine.perform(AddListItem(list: list.id, text: "boxes"), by: .user)
+        try model.engine.perform(StartListRun(list: list.id), by: .user)
+        let table = ProcessTable(engine: model.engine)
+        let run = try #require(table.all().first { $0.subject?.id == list.id })
+        try model.engine.perform(SuspendProcess(process: run.id), by: .user)
+        let paused = try #require(table.all().first { $0.id == run.id })
+        let shown = LedgerRow.shown(paused, store: model.store, classes: model.classes, lastWeightKg: nil)
+        #expect(shown.title == "Private list" && shown.nextStep == "1 left")
+        #expect(!shown.title.contains("Rent") && !(shown.nextStep ?? "").contains("Rent"))
+    }
 }

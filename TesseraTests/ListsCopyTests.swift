@@ -75,4 +75,17 @@ struct ListsCopyTests {
         #expect(ListsCopy.reusableWord(isOn: false) == "Reusable, off")
         #expect(ListsCopy.reset("Private list") == "Private list, reset.")
     }
+
+    @Test func runLinesUseTheShownName() {
+        #expect(ListsCopy.running("Packing") == "Packing, running")
+        #expect(ListsCopy.runStarted("Packing", left: 6) == "Packing, 6 left.")
+        #expect(ListsCopy.runStarted("Private list", left: 0) == "Private list, nothing left.")
+        #expect(ListsCopy.runDone("Packing", left: 0) == "Packing, done.")
+        #expect(ListsCopy.runDone("Packing", left: 3) == "Packing, done. 3 left.")
+    }
+
+    @Test func theResetAskNamesTheListFirst() {
+        #expect(ListsCopy.resetAsk("Packing") == "Packing, done. Reset it for next time?")
+        #expect(ListsCopy.resetAsk("Private list") == "Private list, done. Reset it for next time?")
+    }
 }
