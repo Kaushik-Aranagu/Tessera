@@ -13,6 +13,8 @@ public enum TessUse: String, Sendable, CaseIterable {
     case plan
     /// Checking a pasted Claude key (Settings: Claude).
     case keyCheck
+    /// Home's done job: a finished workout's two slots (board 0al).
+    case lines
 }
 
 /// One request through the routes.

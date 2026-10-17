@@ -279,11 +279,11 @@ struct NowPage: View {
         }
     }
 
-    /// "now, until twenty to four" or "next, at half past five".
+    /// "now, until twenty to four" or "next, half past five".
     static func contextLine(_ task: ScheduleItem, now: Date) -> String {
         task.start <= now
             ? "now, until \(SpokenTime.clock(task.end))"
-            : "next, at \(SpokenTime.clock(task.start))"
+            : "next, \(SpokenTime.clock(task.start))"
     }
 
     /// ("14 MIN", "LEFT") while it runs, ("IN", "25 MIN") before it starts.

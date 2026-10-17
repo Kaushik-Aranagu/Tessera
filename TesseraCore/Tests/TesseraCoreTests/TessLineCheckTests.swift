@@ -480,4 +480,35 @@ extension TessLineCheckTests {
         #expect(Self.codes(Self.done("3 exercises, 12 sets, 1 new best, bp 120/80.")).contains("C12"))
         #expect(Self.done("3 exercises, 12 sets, 1 new bench best.") == .pass)
     }
+
+    // MARK: QA lows on #655
+
+    @Test(arguments: ["promising", "surprising", "praising", "supervised"])
+    func moreAmericanWordsPass(_ word: String) {
+        #expect(!TessLineCheck.isBritish(word), "\(word)")
+    }
+
+    @Test(arguments: ["A midnight bench best.", "A bench best by dinner.", "Bench best of the year, this year.",
+                      "A bench best before bedtime."])
+    func moreTimesTheFactsCantShow(_ line: String) {
+        #expect(Self.codes(Self.done(line)).contains("C15"), "\(line)")
+    }
+
+    @Test func eachDigitCountsWhatItSays() {
+        // 3 exercises and 9 days since: "first in 3 days" borrows the wrong 3.
+        let check = { (line: String) in
+            TessLineCheck.check(line, slot: .context, numbers: [3, 9, 12, 7, 40, 1], names: ["Push A", "Bench"],
+                                rulesLine: "7:40 pm", isDone: true, dayLabel: "Thursday evening", hero: "Push A done",
+                                counts: ["days": [9], "exercises": [3], "sets": [12], "bests": [1]])
+        }
+        #expect(Self.codes(check("first in 3 days")).contains("C6"))
+        #expect(check("first in 9 days") == .pass)
+    }
+
+    @Test func theBeltKnowsHisWeight() {
+        let line = "A bench best, 82 this morning."
+        #expect(Self.codes(TessLineCheck.check(line, slot: .detail, numbers: [82], names: ["Push A", "Bench"],
+                                               rulesLine: nil, isDone: false, dayLabel: nil, hero: nil,
+                                               lastWeightKg: 82)).contains("C12"))
+    }
 }
