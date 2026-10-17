@@ -20,11 +20,67 @@ public struct Groceries {
         store.object(id: Self.listID).flatMap { $0.isDeleted ? nil : $0 }
     }
 
+    /// The receipt when strays were folded in.
+    public static let mergedReceipt = "Groceries lists, merged."
+
     /// Makes the one groceries list with its fixed id. Called when the catalog is prepared.
-    static func installIfNeeded(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) {
-        guard store.object(id: listID) == nil, let listClass = classes[.list] else { return }
-        let list = store.create(listClass, title: "Groceries")
-        list.id = listID
+    /// Exactly one built-in Groceries list after this runs (G29): a copy made while it was deleted brings it back with
+    /// its rows, and a second "Groceries" made by `groceriesList()` while it was gone folds into it. Only a list the
+    /// app itself made folds; a list he made and named "Groceries" is his and stays. Returns how many strays folded.
+    @discardableResult
+    static func installIfNeeded(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) -> Int {
+        guard let listClass = classes[.list] else { return 0 }
+        let fixed: ObjectRecord
+        if let existing = store.object(id: listID) {
+            if existing.isDeleted {
+                store.restore(existing)
+            }
+            fixed = existing
+        } else {
+            fixed = store.create(listClass, title: "Groceries")
+            fixed.id = listID
+        }
+        let folded = foldStrays(into: fixed, store: store, listClass: listClass)
+        // Said once, calmly, at launch; never over a note that is already waiting (a restore's, say).
+        if folded > 0, TesseraSchema.launchNote == nil {
+            TesseraSchema.setLaunchNote(mergedReceipt)
+        }
+        return folded
+    }
+
+    /// Marker for an app-made stray: its create op was recorded by an action other than `createList`, because only
+    /// `groceriesList()` (inside an add-to-groceries action) makes a "Groceries" list without him asking for a list.
+    /// A list he made himself, by `createList` (a tap or Tess), has a `createList` create op and is never a stray.
+    private static func appMade(_ candidates: [ObjectRecord], store: ObjectStore) -> Set<UUID> {
+        let ids = Set(candidates.map(\.id))
+        var made: Set<UUID> = []
+        var his: Set<UUID> = []
+        for record in store.context.all(OpRecord.self) {
+            for op in record.ops {
+                guard case let .create(object, _, _, _) = op, ids.contains(object) else { continue }
+                if record.action == CreateList.descriptor.name { his.insert(object) } else { made.insert(object) }
+            }
+        }
+        return made.subtracting(his)
+    }
+
+    /// A stray list the app made with the built-in's name and no fixed id: its rows move across, then it goes.
+    private static func foldStrays(into fixed: ObjectRecord, store: ObjectStore, listClass: ClassDef) -> Int {
+        let named = store.objects(of: listClass).filter { $0.id != listID && $0.title == "Groceries" }
+        guard !named.isEmpty else { return 0 }
+        let made = appMade(named, store: store)
+        let strays = named.filter { made.contains($0.id) }
+        for stray in strays {
+            var next = (fixed.orderedChildren.map(\.sortIndex).max() ?? -1) + 1
+            for row in stray.orderedChildren {
+                store.noteChange(row)
+                row.parent = fixed
+                row.sortIndex = next
+                next += 1
+            }
+            store.softDelete(stray)
+        }
+        return strays.count
     }
 
     /// Sections in walking order, each with its open items.
@@ -427,14 +483,24 @@ public struct AddGroceries: EngineAction {
         return items
     }
 
-    public func summary(in _: ObjectStore) -> String {
+    /// A medicine or body line is never said back (#688): it reads "Private item".
+    @MainActor
+    private func shown(_ line: String, in store: ObjectStore) -> String {
+        EngineWall.isHealth(line, lastWeightKg: BodyWeight.lastKg(in: store)) ? "Private item" : line
+    }
+
+    @MainActor
+    public func summary(in store: ObjectStore) -> String {
         // Thing first, the list by name (lists copy sweep, Product 10:06 PM PT).
-        lines.count == 1 ? "\(lines[0].prefix(1).uppercased() + lines[0].dropFirst()), on Groceries"
+        let first = lines.first.map { shown($0, in: store) } ?? ""
+        return lines.count == 1 ? "\(first.prefix(1).uppercased() + first.dropFirst()), on Groceries"
             : "\(lines.count) things on Groceries"
     }
 
-    public func receipt(in _: ObjectStore) -> String? {
+    @MainActor
+    public func receipt(in store: ObjectStore) -> String? {
         guard !lines.isEmpty else { return nil }
+        let lines = lines.map { shown($0, in: store) }
         // Name the things: "Oat milk and eggs, on Groceries"; "Oat milk, eggs and 2 more, on Groceries" (Design R7).
         let names = switch lines.count {
         case 1: lines[0]

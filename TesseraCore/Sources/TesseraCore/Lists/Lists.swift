@@ -150,7 +150,7 @@ public struct AddListItem: EngineAction {
     }
 
     /// What the wall keeps as the item: nil when the line becomes a private note.
-    @MainActor static func kept(_ given: String, store: ObjectStore) -> String? {
+    @MainActor public static func kept(_ given: String, store: ObjectStore) -> String? {
         let bare = EngineWall.withoutPrice(given)
         let last = BodyWeight.lastKg(in: store)
         let isNote = bare.isEmpty || SecretWords.isSecretListLine(given) || PrivateFacts.isMoneyShaped(bare)
@@ -326,14 +326,13 @@ public struct ClearDoneItems: EngineAction {
     @discardableResult
     public func apply(_ transaction: inout Transaction) throws -> Int {
         let list = try transaction.object(list, is: .list)
-        let done = list.orderedChildren.filter { transaction.store.value("isDone", of: $0) == .bool(true) }
-        for item in done {
-            transaction.delete(item)
+        // Nothing checked: nothing to clear, so no op and no receipt (G15). Like AddGroceries with nothing to add, it
+        // throws, and `perform` rolls back and logs nothing.
+        let cleared = try transaction.clearDone(in: list)
+        guard cleared > 0 else {
+            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "nothing checked on \(list.title)")
         }
-        if list.id == Groceries.listID {
-            try transaction.refreshShopLine()
-        }
-        return done.count
+        return cleared
     }
 
     public func summary(in store: ObjectStore) -> String {
@@ -342,5 +341,19 @@ public struct ClearDoneItems: EngineAction {
 
     public func receipt(in store: ObjectStore) -> String? {
         "\(store.object(id: list)?.title ?? "The list"), done items cleared"
+    }
+}
+
+extension Transaction {
+    /// Soft-deletes the checked items of a list and returns how many; writes nothing when there are none.
+    mutating func clearDone(in list: ObjectRecord) throws -> Int {
+        let done = list.orderedChildren.filter { store.value("isDone", of: $0) == .bool(true) }
+        for item in done {
+            delete(item)
+        }
+        if !done.isEmpty, list.id == Groceries.listID {
+            try refreshShopLine()
+        }
+        return done.count
     }
 }

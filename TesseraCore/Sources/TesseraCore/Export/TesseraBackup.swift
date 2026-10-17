@@ -49,17 +49,51 @@ public enum TesseraBackup {
         case newerSchema
     }
 
+    /// What SAVE A COPY must do before the share sheet: the copy stays whole (every word, as the local backup does), so
+    /// the app always asks for Face ID first, and says so when the copy holds private words (G28, QA on #707).
+    public struct SavedCopyGate: Equatable, Sendable {
+        public var requiresAuth: Bool
+        public var line: String?
+
+        public static let privateWordsLine = "This copy has your private words."
+    }
+
+    /// Whether a saved copy of this store holds private words, now or in its op history.
+    @MainActor
+    public static func savedCopyGate(for context: TesseraContext) -> SavedCopyGate {
+        let labels = PrivateWords.labels(in: context)
+        let has = !labels.isEmpty || !PrivateWords.historyLabels(in: context, current: labels).isEmpty
+        return SavedCopyGate(requiresAuth: true, line: has ? SavedCopyGate.privateWordsLine : nil)
+    }
+
     // MARK: Writing
 
     /// Writes a consistent copy of the store to `url` (replacing anything there) and stamps it.
     @MainActor
     public static func write(from context: TesseraContext, to url: URL, now: Date = .now,
-                             appVersion: String? = nil) throws
+                             appVersion: String? = nil, leavingOutPrivate: Bool = false) throws
     {
         try context.save()
-        try? FileManager.default.removeItem(at: url)
-        let copy = try DatabaseQueue(path: url.path)
+        // A copy for iCloud Drive is built and masked in the app's own temporary folder (never beside the destination,
+        // which may be a file-provider folder), then moved in: the whole copy never sits there (G28, QA on #707).
+        let work = leavingOutPrivate ? privateWorkURL() : url
+        defer {
+            if leavingOutPrivate {
+                try? FileManager.default.removeItem(at: work.deletingLastPathComponent())
+            }
+        }
+        try? FileManager.default.removeItem(at: work)
+        if leavingOutPrivate {
+            try FileManager.default.createDirectory(at: work.deletingLastPathComponent(),
+                                                    withIntermediateDirectories: true)
+        }
+        let copy = try DatabaseQueue(path: work.path)
         try context.database.backup(to: copy)
+        // The copy for iCloud Drive leaves private notes, recipes, items and secret-word lines out (G28). The local
+        // copy on the phone keeps every word.
+        if leavingOutPrivate {
+            try leaveOutPrivate(PrivateWords.labels(in: context), from: copy, context: context)
+        }
         // One self-contained file: the copy inherits WAL mode from the store, which would leave -wal/-shm siblings.
         try copy.writeWithoutTransaction { try $0.execute(sql: "PRAGMA journal_mode = DELETE") }
         try copy.write { db in
@@ -74,8 +108,18 @@ public enum TesseraBackup {
         }
         try copy.close()
         for sibling in ["-wal", "-shm"] {
-            try? FileManager.default.removeItem(atPath: url.path + sibling)
+            try? FileManager.default.removeItem(atPath: work.path + sibling)
         }
+        if leavingOutPrivate {
+            try? FileManager.default.removeItem(at: url)
+            try FileManager.default.moveItem(at: work, to: url)
+        }
+    }
+
+    /// A fresh path inside a new UUID folder in the temporary directory; the caller removes the folder.
+    nonisolated static func privateWorkURL() -> URL {
+        FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+            .appendingPathComponent("private.tessera")
     }
 
     /// A stamped copy of the store file at `storeURL` (closed, at launch), for keeping what's replaced by a restore.
@@ -108,6 +152,20 @@ public enum TesseraBackup {
         URL.documentsDirectory.appendingPathComponent("Backups", isDirectory: true)
     }
 
+    /// Rolling backups are named "Tessera-<day>.tessera"; rotation and pruning touch only these names.
+    public nonisolated static let rollingPrefix = "Tessera-"
+
+    /// True for a rolling backup's file name. A SAVE A COPY file ("Before update <day>.tessera") is not one, so it is
+    /// never rotated or pruned.
+    public nonisolated static func isRollingName(_ name: String) -> Bool {
+        name.hasPrefix(rollingPrefix) && name.hasSuffix(".\(fileExtension)")
+    }
+
+    /// The default name of a SAVE A COPY file for `day` ("yyyy-MM-dd").
+    public nonisolated static func savedCopyName(day: String) -> String {
+        "Before update \(day).\(fileExtension)"
+    }
+
     /// The rolling copy for his day (docs/research/backup-logical-day.md): named by `TesseraDay` in the zone in force
     /// ("Tessera-2026-10-21.tessera"), written on the first background after 04:00 and replaced by every background
     /// between 00:00 and 04:00 that night, so day D's copy holds all of D. Written under a temporary name and swapped
@@ -118,7 +176,7 @@ public enum TesseraBackup {
     @MainActor
     @discardableResult
     public static func writeRolling(from context: TesseraContext, in folder: URL, keep: Int = 7, now: Date = .now,
-                                    calendar: Calendar = .current) throws -> URL?
+                                    calendar: Calendar = .current, leavingOutPrivate: Bool = false) throws -> URL?
     {
         // A store with no file (this session fell back to memory: a damaged open, or data from a newer Tessera) is
         // never copied: a week of empty copies would roll his seven good ones away (QA M1 on #475).
@@ -128,9 +186,9 @@ public enum TesseraBackup {
         let key = TesseraDay(calendar: calendar).day(of: now)
         let parts = calendar.dateComponents([.year, .month, .day], from: key)
         let day = String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
-        let file = folder.appendingPathComponent("Tessera-\(day).\(fileExtension)")
+        let file = folder.appendingPathComponent("\(rollingPrefix)\(day).\(fileExtension)")
         let names = try manager.contentsOfDirectory(atPath: folder.path)
-        let copies = names.filter { $0.hasPrefix("Tessera-") && $0.hasSuffix(".\(fileExtension)") }.sorted(by: >)
+        let copies = names.filter(isRollingName).sorted(by: >)
         let newest = copies.first.flatMap { try? inspect(folder.appendingPathComponent($0)).createdAt }
         // A newest copy more than 2 days ahead is a clock that was set forward once, not one running behind: it
         // doesn't stop pruning or the late-night refresh for weeks (QA B10).
@@ -157,7 +215,7 @@ public enum TesseraBackup {
             try? manager.removeItem(at: folder.appendingPathComponent(name))
         }
         let partial = folder.appendingPathComponent(".\(file.lastPathComponent).partial")
-        try write(from: context, to: partial, now: now)
+        try write(from: context, to: partial, now: now, leavingOutPrivate: leavingOutPrivate)
         if exists {
             _ = try manager.replaceItemAt(file, withItemAt: partial)
         } else {
@@ -165,7 +223,7 @@ public enum TesseraBackup {
         }
         guard !clockBehind else { return file }
         let kept = try manager.contentsOfDirectory(atPath: folder.path)
-            .filter { $0.hasPrefix("Tessera-") && $0.hasSuffix(".\(fileExtension)") }
+            .filter(isRollingName)
             .sorted(by: >)
         for old in kept.dropFirst(keep) where old != file.lastPathComponent {
             try? manager.removeItem(at: folder.appendingPathComponent(old))
@@ -225,6 +283,52 @@ public enum TesseraBackup {
         } catch {
             throw BackupError.damaged
         }
+    }
+
+    // MARK: What a restore would change (G26)
+
+    private nonisolated static let recipeCountSQL = """
+    SELECT COUNT(*) FROM object WHERE deletedAt IS NULL AND isClassObject = 0 AND classID IN
+      (SELECT id FROM classDef WHERE systemKey = ?)
+    """
+
+    /// Recipes in a backup file, Private ones included (counts only; names never leave the file).
+    public nonisolated static func recipeCount(at url: URL) -> Int? {
+        var configuration = Configuration()
+        configuration.readonly = true
+        guard let queue = try? DatabaseQueue(path: url.path, configuration: configuration) else { return nil }
+        defer { try? queue.close() }
+        return try? queue.read {
+            try Int.fetchOne($0, sql: recipeCountSQL, arguments: [SystemCatalog.Key.recipe.systemKey])
+        }
+    }
+
+    /// Recipes in the store he has now.
+    @MainActor
+    public static func recipeCount(in context: TesseraContext) -> Int? {
+        try? context.save()
+        return try? context.database.read {
+            try Int.fetchOne($0, sql: recipeCountSQL, arguments: [SystemCatalog.Key.recipe.systemKey])
+        }
+    }
+
+    /// The quiet line under "Replace everything with the copy from <day>?" when the Kitchen weight differs:
+    /// "That copy has 6 recipes. The 9 you have now are kept in Backups." Nil when the counts match or he has none
+    /// (proposed wording, Product to rule).
+    @MainActor
+    public static func restoreWeightLine(copyAt url: URL, replacing context: TesseraContext) -> String? {
+        guard let copy = recipeCount(at: url), let now = recipeCount(in: context), copy != now, now > 0 else {
+            return nil
+        }
+        return restoreWeightLine(copyRecipes: copy, nowRecipes: now)
+    }
+
+    public nonisolated static func restoreWeightLine(copyRecipes: Int, nowRecipes: Int) -> String {
+        func recipes(_ count: Int) -> String {
+            count == 1 ? "1 recipe" : "\(count) recipes"
+        }
+        return "That copy has \(recipes(copyRecipes)). The \(nowRecipes) you have now "
+            + (nowRecipes == 1 ? "is" : "are") + " kept in Backups."
     }
 
     // MARK: Restoring

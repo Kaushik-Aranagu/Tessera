@@ -220,6 +220,10 @@ private struct ReviewPageBody: View {
                 LookSentence()
                     .padding(.top, Theme.Spacing.section)
 
+                // His rest day, until Settings exists (RG4).
+                RestDaySentence()
+                    .padding(.top, Theme.Spacing.xxl)
+
                 // Claude, until Settings exists: the key, the month and what Tess may send.
                 ClaudeSection()
                     .padding(.top, Theme.Spacing.xxl)

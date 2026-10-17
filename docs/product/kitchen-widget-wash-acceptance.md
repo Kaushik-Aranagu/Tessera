@@ -22,11 +22,11 @@ Sources: sheet 88 (Widgets row; wash kind c), recipe-plate-acceptance P6-P8, P11
 | KW-W14 | Text size | No text under 16 pt at any size. Default taken: no text sits on the wash band | brief |
 | KW-W15 | Dynamic Type | Wash stays 10 pt (points, not scaled); text moves down and clips cleanly at AX3, nothing overlaps the band | sheet 88 |
 | KW-W16 | Reduce Transparency | Wash drawn as an opaque 34% flat mix on the ground, no blur or blend, no grain. Default taken | brief |
-| KW-W17 | VoiceOver | Wash hidden; the widget reads the recipe title and time only | sheet 88 |
+| KW-W17 | VoiceOver | Wash hidden; the widget reads the recipe title and time only ("Private recipe, 7 pm." for a private cook, KW-W8) | sheet 88 |
 | KW-W18 | Scope | No other Kitchen widget, Lock Screen or Live Activity carries a wash (P12) | P12 |
 
 ## Open, defaults taken
-- Empty copy "Nothing planned" and private copy "Private": no code to match yet.
+- Empty copy "Nothing planned" and private copy "Private recipe, 7 pm." (KW-W7, KW-W8, ruled): no code to match yet.
 - Reduce Transparency flat mix: sheet 88 is silent.
 - "Done" means KW-W1 to W4 and W7 captured as light, dark and empty screenshots, with W5, W6 and W8 plain.
 - Obsidian screen blend may not render in widgets; if not, use a pre-blended colour at 26%. Default taken.

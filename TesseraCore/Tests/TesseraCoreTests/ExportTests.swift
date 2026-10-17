@@ -22,7 +22,8 @@ struct ExportTests {
         try engine.perform(FinishWorkout(workout: workout.id), by: .user)
         try source.mainContext.save()
 
-        let data = try TesseraExport(context: source.mainContext).encoded()
+        // Test-only lossless export (maskingPrivate: false); the app never does this.
+        let data = try TesseraExport(context: source.mainContext, maskingPrivate: false).encoded()
         let text = try #require(String(data: data, encoding: .utf8))
         #expect(text.contains("\"format\" : \"tessera-export\""))
         #expect(text.contains("Paused Bench Press"))
@@ -46,7 +47,8 @@ struct ExportTests {
         restoredEngine.undo(logged)
         #expect(ledger.records(for: restoredBench).isEmpty)
         // Re-exporting gives the same content.
-        let again = try TesseraExport(context: target.mainContext)
+        // Test-only lossless export (maskingPrivate: false); the app never does this.
+        let again = try TesseraExport(context: target.mainContext, maskingPrivate: false)
         let original = try TesseraExport.decode(data)
         #expect(again.objects.count == original.objects.count && again.links.count == original.links.count)
     }
@@ -54,7 +56,8 @@ struct ExportTests {
     @Test func restoreRefusesANonEmptyStoreOrAForeignFile() throws {
         let container = TesseraSchema.makeContainer(inMemory: true)
         try SystemCatalog.seed(in: container.mainContext)
-        let export = try TesseraExport(context: container.mainContext)
+        // Test-only lossless export (maskingPrivate: false); the app never does this.
+        let export = try TesseraExport(context: container.mainContext, maskingPrivate: false)
         #expect(throws: ExportError.storeNotEmpty) { try export.restore(into: container.mainContext) }
         #expect(throws: ExportError.notAnExport) { try TesseraExport.decode(Data("{}".utf8)) }
         var future = export

@@ -533,7 +533,19 @@ public struct RenameObject: EngineAction {
     }
 
     public func apply(_ transaction: inout Transaction) throws {
-        try transaction.setTitle(title, on: transaction.object(object))
+        let target = try transaction.object(object)
+        // Two ingredients never share a key: `find` returns the first, so the second would be unreachable (G11).
+        if let ingredientClass = transaction.classes[.ingredient], target.classDef?.id == ingredientClass.id {
+            let key = IngredientLine.key(for: title)
+            if !key.isEmpty,
+               let other = IngredientBook(store: transaction.store, classes: transaction.classes).all()
+               .first(where: { $0.id != target.id && IngredientLine.key(for: $0.title) == key })
+            {
+                throw ActionError.invalidArguments(action: Self.descriptor.name,
+                                                   reason: "\(other.title) is already an ingredient")
+            }
+        }
+        transaction.setTitle(title, on: target)
     }
 
     public func summary(in _: ObjectStore) -> String {
@@ -557,7 +569,19 @@ public struct DeleteObject: EngineAction {
     }
 
     public func apply(_ transaction: inout Transaction) throws {
-        try transaction.delete(transaction.object(object))
+        let target = try transaction.object(object)
+        // The built-in Groceries list stays: deleting it would orphan every later add (G6).
+        if target.id == Groceries.listID {
+            throw ActionError.invalidArguments(
+                action: Self.descriptor.name,
+                reason: "Groceries stays. Clear it instead"
+            )
+        }
+        // A recipe takes its share of the groceries list with it, in the same step, so one undo brings both back (G7).
+        if let recipeClass = transaction.classes[.recipe], target.classDef?.id == recipeClass.id {
+            try RemoveRecipeFromGroceries(recipe: target.id).apply(&transaction)
+        }
+        transaction.delete(target)
     }
 
     public func summary(in store: ObjectStore) -> String {

@@ -215,9 +215,6 @@ extension TessGrammar {
 
     /// "milk, eggs and 2 lemons" → ["milk", "eggs", "2 lemons"].
     static func splitItems(_ text: String) -> [String] {
-        text.replacing(/\s+and\s+/, with: ",")
-            .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty }
+        GroceryLines.split(text)
     }
 }

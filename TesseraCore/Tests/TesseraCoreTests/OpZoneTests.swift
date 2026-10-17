@@ -108,7 +108,8 @@ struct OpZoneTests {
         let engine = try engine(store)
         engine.zone = { TimeZone(identifier: "Europe/London")! }
         try engine.perform(CreateNote(body: "London"), by: .user)
-        let export = try TesseraExport(context: store.context)
+        // Test-only lossless export (maskingPrivate: false); the app never does this.
+        let export = try TesseraExport(context: store.context, maskingPrivate: false)
         #expect(export.operations.contains { $0.zone == "Europe/London" })
         let json = try String(data: export.encoded(), encoding: .utf8) ?? ""
         #expect(json.contains("\"zone\":\"Europe\\/London\"") || json.contains("\"zone\" : \"Europe\\/London\""))
@@ -117,7 +118,8 @@ struct OpZoneTests {
     @Test func anOlderExportWithoutZonesStillDecodes() throws {
         let store = try ObjectStore(context: TesseraContext(url: url))
         _ = try engine(store)
-        var export = try TesseraExport(context: store.context)
+        // Test-only lossless export (maskingPrivate: false); the app never does this.
+        var export = try TesseraExport(context: store.context, maskingPrivate: false)
         export.operations = export.operations.map { var entry = $0; entry.zone = nil; return entry }
         let decoded = try TesseraExport.decode(export.encoded())
         #expect(decoded.operations.allSatisfy { $0.zone == nil })

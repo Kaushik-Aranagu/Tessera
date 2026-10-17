@@ -372,13 +372,18 @@ public final class TessCaptureEngine: TessCapturing {
             }
             return (record, lines.count == 1 ? "\(name), on Groceries." : "\(lines.count) things on Groceries.")
         case let .cook(recipe, date?):
+            // A private recipe never lends its name to the task title or the receipt (gap hunt G21).
+            let hidden = ObjectPrivacy.label(of: recipe, in: engine.store, classes: engine.classes)
             let record = try engine.perform(
-                CreateTask(title: "Cook \(recipe.title.lowercased())", startsAt: date, about: [recipe.id]),
+                CreateTask(title: hidden ?? "Cook \(recipe.title.lowercased())", startsAt: date, about: [recipe.id]),
                 by: .tess, pending: pending
             ).record
-            return (record, "\(recipe.title), \(Self.when(date, context: context)).")
+            return (record, "\(hidden ?? recipe.title), \(Self.when(date, context: context)).")
         case let .cook(recipe, nil):
             let record = try engine.perform(StartCooking(recipe: recipe.id), by: .tess, pending: pending).record
+            if let hidden = ObjectPrivacy.label(of: recipe, in: engine.store, classes: engine.classes) {
+                return (record, "\(hidden), cooking.")
+            }
             return (record, "Cooking \(recipe.title.lowercased()).")
         case let .timer(label, minutes):
             let cook = ProcessTable(engine: engine).running()?.subject
@@ -411,7 +416,7 @@ public final class TessCaptureEngine: TessCapturing {
         case let .recipe(text):
             let record = try engine.perform(CreateRecipe(text: text), by: .tess, pending: pending).record
             let parsed = RecipeParser.parse(text)
-            let timers = parsed?.steps.flatMap(\.timers).count ?? 0
+            let timers = parsed?.steps.flatMap(\.offeredTimers).count ?? 0
             let parts = [
                 "\(parsed?.ingredients.count ?? 0) ingredients", "\(parsed?.steps.count ?? 0) steps",
             ] + (timers > 0 ? ["\(timers) \(timers == 1 ? "timer" : "timers")"] : [])

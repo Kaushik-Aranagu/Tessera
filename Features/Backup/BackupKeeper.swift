@@ -1,4 +1,5 @@
 import Foundation
+import LocalAuthentication
 import os
 import TesseraCore
 import UniformTypeIdentifiers
@@ -97,7 +98,7 @@ enum BackupKeeper {
             }
         }
         do {
-            _ = try TesseraBackup.writeRolling(from: context, in: folder, now: now)
+            _ = try TesseraBackup.writeRolling(from: context, in: folder, now: now, leavingOutPrivate: true)
             note(.folder, error: nil, now: now)
         } catch {
             note(.folder, error: error, now: now)
@@ -128,7 +129,7 @@ enum BackupKeeper {
             }
         }
         try defaults.set(url.bookmarkData(), forKey: bookmarkKey)
-        _ = try TesseraBackup.writeRolling(from: context, in: url, now: AppClock.now)
+        _ = try TesseraBackup.writeRolling(from: context, in: url, now: AppClock.now, leavingOutPrivate: true)
         // The folder's display name goes in the database (Core's settings), so after a restore Backups can say
         // where the copies were kept (restore-walk 3b). Never while a demo is running.
         if !LaunchFlags.has("-demo") {
@@ -160,6 +161,41 @@ enum BackupKeeper {
             .max()
     }
 
+    /// Whether the phone has a passcode (so Face ID or the passcode can ask); tests pass a fake.
+    static var hasPasscode: () -> Bool = {
+        LAContext().canEvaluatePolicy(.deviceOwnerAuthentication, error: nil)
+    }
+
+    /// Asks for Face ID (or the passcode); tests pass a fake.
+    static var authenticate: () async -> Bool = {
+        let context = LAContext()
+        return await (try? context.evaluatePolicy(.deviceOwnerAuthentication,
+                                                  localizedReason: "Save a copy with your private words")) ?? false
+    }
+
+    /// What SAVE A COPY comes to (B7, Product): the copy stays whole, so it leaves the phone only past Face ID.
+    enum SavedCopy {
+        /// No passcode on the phone: nothing runs, and he's told why.
+        case needsPasscode
+        /// He didn't pass Face ID: nothing is saved and nothing is said.
+        case declined
+        /// The copy, and the line to carry beside the share sheet (nil when it holds no private words).
+        case copy(URL, line: String?)
+    }
+
+    /// "Set a passcode first, this copy has your private words."
+    static let passcodeLine = "Set a passcode first. This copy has your private words."
+
+    /// SAVE A COPY: a passcode first, then Face ID, then the share sheet. Local backup writes never come here.
+    static func savedCopy(_ context: TesseraContext) async throws -> SavedCopy {
+        let gate = TesseraBackup.savedCopyGate(for: context)
+        if gate.requiresAuth {
+            guard hasPasscode() else { return .needsPasscode }
+            guard await authenticate() else { return .declined }
+        }
+        return try .copy(copyForSaving(context), line: gate.line)
+    }
+
     /// A fresh copy to hand to the share/export sheet.
     static func copyForSaving(_ context: TesseraContext) throws -> URL {
         // Local date in the name, not UTC (a copy saved at 21:00 is today's).
@@ -167,7 +203,7 @@ enum BackupKeeper {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "yyyy-MM-dd"
         let day = formatter.string(from: AppClock.now)
-        let url = URL.temporaryDirectory.appendingPathComponent("Tessera-\(day).\(TesseraBackup.fileExtension)")
+        let url = URL.temporaryDirectory.appendingPathComponent(TesseraBackup.savedCopyName(day: day))
         try TesseraBackup.write(from: context, to: url, now: AppClock.now)
         return url
     }

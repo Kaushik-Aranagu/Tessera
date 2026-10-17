@@ -344,6 +344,16 @@ extension TessTools.Call {
         var records: [OpRecord] = []
         for item in items {
             guard let text = item["text"] as? String, !text.isEmpty else { continue }
+            // Groceries goes through the Add line's path: one row per ingredient, linked, in its aisle (G16). A line
+            // the wall turns into a private note takes the plain path, which makes that note.
+            if list.id == Groceries.listID, let kept = AddListItem.kept(text, store: store) {
+                let result = try engine.perform(AddGroceries(lines: [kept]), by: .tess, pending: pending)
+                records.append(result.record)
+                if item["done"] as? Bool == true, let row = result.output.first {
+                    try records.append(perform(CheckListItem(item: row.id)))
+                }
+                continue
+            }
             let record = try perform(AddListItem(list: list.id, text: text, section: item["section"] as? String))
             records.append(record)
             if item["done"] as? Bool == true, let id = record.objectIDs.first {

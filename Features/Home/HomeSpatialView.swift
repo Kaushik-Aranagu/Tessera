@@ -328,9 +328,9 @@ struct HomeSpatialView: View {
 
 // MARK: - Entry points
 
-/// The screens Home reaches that are not objects: Notes, Review, Groceries and Recipes.
+/// The screens Home reaches that are not objects: Notes, Review, Groceries, Pantry and Recipes.
 enum HomeLink: Hashable, CaseIterable, Identifiable {
-    case groceries, recipes, pasteRecipe, notes, review
+    case groceries, pantry, recipes, pasteRecipe, notes, review
 
     var id: Self {
         self
@@ -339,6 +339,7 @@ enum HomeLink: Hashable, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .groceries: "Groceries"
+        case .pantry: "Pantry"
         case .recipes: "Recipes"
         case .pasteRecipe: "Paste a recipe"
         case .notes: "Notes"
@@ -350,6 +351,7 @@ enum HomeLink: Hashable, CaseIterable, Identifiable {
     var destination: some View {
         switch self {
         case .groceries: GroceriesView()
+        case .pantry: PantryView()
         case .recipes: RecipeView(recipeID: nil)
         case .pasteRecipe: PasteRecipeView()
         case .notes: NotesView()
@@ -368,7 +370,8 @@ private struct KitchenPage: View {
             Text("What we eat, and what we need.")
                 .font(Theme.voice(size: 21))
                 .foregroundStyle(Theme.Colors.inkSecondary)
-            ForEach([HomeLink.groceries, .recipes], id: \.self) { link in
+            // Pantry sits under Groceries: what we need, then what we have (pantry-acceptance.md).
+            ForEach([HomeLink.groceries, .pantry, .recipes], id: \.self) { link in
                 Button { open(link) } label: {
                     // The words alone, in ink (no-dots.md).
                     Text(link.title)

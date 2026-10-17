@@ -7,6 +7,8 @@ public enum RecipeLinkLine {
     public static let stepsPaywalled = "The steps are paywalled. Paste them below."
     public static let paywalled = "That page is paywalled. Paste the text instead."
     public static let noRecipe = "No recipe on that page. Paste the text instead."
+    /// "Tess asks Claude" is off: a link read stays on the phone (G32).
+    public static let claudeOff = "Claude is off. Paste the text instead."
     public static let claudeTimeout = "Claude didn't answer in time. Paste the text instead."
     public static let videoNoRecipe = "No written recipe in that video. Paste the text instead."
     public static let offline = "You're offline. I'll read it when you're back."
@@ -28,7 +30,7 @@ public enum RecipeLinkLine {
 
     /// "7 ingredients, 3 steps, 2 timers."
     public static func found(_ recipe: ParsedRecipe) -> String {
-        let timers = recipe.steps.reduce(0) { $0 + $1.timers.count }
+        let timers = recipe.steps.reduce(0) { $0 + $1.offeredTimers.count }
         var parts = ["\(recipe.ingredients.count) \(recipe.ingredients.count == 1 ? "ingredient" : "ingredients")",
                      "\(recipe.steps.count) \(recipe.steps.count == 1 ? "step" : "steps")"]
         if timers > 0 {
@@ -430,9 +432,12 @@ public struct ClaudeRecipeReader {
         func failed(_ line: String) -> RecipeLinkResult {
             RecipeLinkResult(kind: .failed, line: line, text: nil, sourceURL: source)
         }
+        // The wall (G32): with "Tess asks Claude" off nothing below runs, so no key is read, no request is built and
+        // no receipt is written. Checked here, not by the caller, so no caller can forget it.
+        guard allowed() else { return failed(RecipeLinkLine.claudeOff) }
         // A private line never leaves the phone; a page that is only private lines is never sent (Research 137).
         let page = Self.trimmed(Self.sendable(pageText, lastWeightKg: lastWeightKg()))
-        guard allowed(), !page.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, let key = keys.read() else {
+        guard !page.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, let key = keys.read() else {
             return failed(RecipeLinkLine.noRecipe)
         }
         let estimate = TessUsageLedger.estimate(text: Self.instructions + page, maxTokens: Self.maxTokens,
@@ -456,7 +461,7 @@ public struct ClaudeRecipeReader {
         var outcome = "other"
         var usage = (input: 0, output: 0)
         defer {
-            ledger.record(use: .paste, model: Self.model, input: usage.input, output: usage.output,
+            ledger.record(use: .recipeLink, model: Self.model, input: usage.input, output: usage.output,
                           costNano: TessUsageLedger.cost(model: Self.model, input: usage.input, output: usage.output),
                           latency: Date().timeIntervalSince(started), outcome: outcome, requestID: nil, at: now())
         }

@@ -10,6 +10,7 @@ struct NowPage: View {
     @Environment(AppModel.self) private var model
     @Environment(\.zoomNamespace) private var namespace
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.openHomeLink) private var openLink
     @State private var finishes = 0
     /// The current Now, passed back to the ranker so it holds against equal challengers (no flicker).
     @State private var incumbent: UUID?
@@ -217,22 +218,53 @@ struct NowPage: View {
         entries.reduce(0) { $0 + max(Int(store.number("targetSets", of: $1) ?? 3), 1) }
     }
 
+    /// The hold that finishes a timed task, with its time left.
+    private func finishKey(_ task: ScheduleItem) -> some View {
+        PaintKey(duration: 0.7, hint: "Finishes the task", action: { finish(task) }, label: { _ in
+            Text("Finish").textRole(.labelStrong)
+        }, meta: {
+            TimelineView(.periodic(from: .now, by: 30)) { context in
+                let lines = Self.timeLeft(task, now: AppClock.adjust(context.date))
+                Text("Hold · \(lines.0) \(lines.1)")
+                    .monospacedDigit()
+            }
+        })
+        .accessibilityLabel("Finish \(task.title)")
+    }
+
+    /// A planned cook's GROCERIES key shows only while something is left to buy (Design on #700).
+    static func showsGroceriesKey(toBuy: Int?) -> Bool {
+        (toBuy ?? 0) > 0
+    }
+
+    /// The recipe a planned cook task is about ("cook tacos thu" links it through `about`), nil for any other task.
+    private func cookRecipe(of task: ObjectRecord) -> ObjectRecord? {
+        guard let recipeClass = model.classDef(.recipe) else { return nil }
+        return model.store.linkedObjects("about", of: task).first { object in
+            !object.isDeleted && object.classDef.map { ClassResolver.isSubclass($0, of: recipeClass) } == true
+        }
+    }
+
     @ViewBuilder
     private func hero(_ task: ScheduleItem?, now: Date, facts: HomeFacts) -> some View {
         if let task, let record = model.object(task.id) {
-            let line = HomeLines.line(for: facts.fact(task: record, startsAt: task.start), now: now)
+            // A planned cook ("cook tacos thu") reads as the cook, with what's left to buy and a GROCERIES key
+            // (kitchen gap hunt G19); any other task as his words.
+            let recipe = cookRecipe(of: record)
+            let fact = recipe.map { facts.fact(plannedCook: record, recipe: $0) }
+                ?? facts.fact(task: record, startsAt: task.start)
+            let line = HomeLines.line(for: fact, now: now)
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-                LineHero(line: line, opens: .object(task.id)) {
-                    PaintKey(duration: 0.7, hint: "Finishes the task", action: { finish(task) }, label: { _ in
-                        Text("Finish").textRole(.labelStrong)
-                    }, meta: {
-                        TimelineView(.periodic(from: .now, by: 30)) { context in
-                            let lines = Self.timeLeft(task, now: AppClock.adjust(context.date))
-                            Text("Hold · \(lines.0) \(lines.1)")
-                                .monospacedDigit()
+                LineHero(line: line, opens: .object(recipe?.id ?? task.id)) {
+                    if recipe != nil {
+                        if Self.showsGroceriesKey(toBuy: fact.toBuy) {
+                            PaintKey(paint: Theme.Colors.ink, isTap: true, action: { openLink(.groceries) },
+                                     label: { _ in Text("Groceries").textRole(.labelStrong) })
+                                .accessibilityHint("Opens Groceries")
                         }
-                    })
-                    .accessibilityLabel("Finish \(task.title)")
+                    } else {
+                        finishKey(task)
+                    }
                 }
                 .id(task.id)
                 .transition(heroTransition)
@@ -254,6 +286,11 @@ struct NowPage: View {
         } else if let done = model.finishedToday(now: now).first {
             // The counts live one tap down (41.1, 41.6).
             LineHero(line: HomeLines.line(for: facts.fact(done: done), now: now), opens: .object(done.workout.id)) {
+                EmptyView()
+            }
+        } else if let cook = facts.cooksFinished(on: now).first {
+            // "Tacos done." stays until his day ends at 4 AM, like a done workout (G19).
+            LineHero(line: HomeLines.line(for: facts.fact(doneCook: cook), now: now), opens: .object(cook.id)) {
                 EmptyView()
             }
         } else {
