@@ -83,7 +83,6 @@ public struct ResetList: EngineAction {
     public func apply(_ transaction: inout Transaction) throws -> Int {
         let list = try transaction.object(list, is: .list)
         let done = list.orderedChildren.filter { transaction.store.value("isDone", of: $0) == .bool(true) }
-        Self.lastReset[list.id] = done.count
         guard !done.isEmpty else { return 0 }
         for item in done {
             try transaction.set("isDone", to: .bool(false), on: item)
@@ -93,22 +92,27 @@ public struct ResetList: EngineAction {
         return done.count
     }
 
-    /// Items unchecked by list in the last `apply`, for the receipt written right after it.
-    nonisolated(unsafe) static var lastReset: [UUID: Int] = [:]
-
     public func summary(in store: ObjectStore) -> String {
-        let name = store.object(id: list).map { ListContents.shownName(of: $0, in: store) } ?? "the list"
-        return Self.lastReset[list] == 0 ? "\(name), nothing to reset." : "Reset \(name)"
+        "Reset \(store.object(id: list).map { ListContents.shownName(of: $0, in: store) } ?? "the list")"
     }
 
-    /// Thing first (Product, screens 10.11): "Packing, reset", or "Packing, nothing to reset." with nothing checked.
+    /// "Packing, nothing to reset." when nothing was checked (Product ruling 2), from this run's own count.
+    public func summary(in store: ObjectStore, output: Int) -> String {
+        output == 0 ? Self.receipt(for: list, unchecked: 0, in: store) : summary(in: store)
+    }
+
+    /// Thing first (Product, screens 10.11): "Packing, reset".
     public func receipt(in store: ObjectStore) -> String? {
-        Self.receipt(for: list, in: store)
+        Self.receipt(for: list, unchecked: 1, in: store)
+    }
+
+    public func receipt(in store: ObjectStore, output: Int) -> String? {
+        Self.receipt(for: list, unchecked: output, in: store)
     }
 
     @MainActor
-    static func receipt(for list: UUID, in store: ObjectStore) -> String {
+    static func receipt(for list: UUID, unchecked: Int, in store: ObjectStore) -> String {
         let name = store.object(id: list).map { ListContents.shownName(of: $0, in: store) } ?? "The list"
-        return lastReset[list] == 0 ? "\(name), nothing to reset." : "\(name), reset"
+        return unchecked == 0 ? "\(name), nothing to reset." : "\(name), reset"
     }
 }

@@ -138,12 +138,19 @@ public struct CreateList: EngineAction {
         return try transaction.create(transaction.classDef(.list), title: name)
     }
 
-    public func summary(in _: ObjectStore) -> String {
-        "New list: \(name)"
+    /// A walled name never lands in the op log or the receipt (QA on #826): "Private list".
+    @MainActor
+    private func shownName(in store: ObjectStore) -> String {
+        let shown = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return ObjectPrivacy.isPrivateWord(shown, in: store) ? ListContents.privateListLabel : shown
     }
 
-    public func receipt(in _: ObjectStore) -> String? {
-        let shown = name.trimmingCharacters(in: .whitespacesAndNewlines)
+    public func summary(in store: ObjectStore) -> String {
+        "New list: \(shownName(in: store))"
+    }
+
+    public func receipt(in store: ObjectStore) -> String? {
+        let shown = shownName(in: store)
         return outcome.wasRepeat ? "\(shown), already a list" : "\(shown), made"
     }
 }
@@ -280,14 +287,14 @@ public struct AddListItem: EngineAction {
             return SecretWords.title
         }
         // Thing first, the list by name (Product 10:06 PM PT lists copy sweep): "Rice, on Packing".
-        let listTitle = store.object(id: list)?.title ?? "the list"
+        let listTitle = store.object(id: list).map { ListContents.shownName(of: $0, in: store) } ?? "the list"
         let thing = Self.isPrivateItem(kept, store: store) ? Self.privateItemLabel : kept.prefix(1).uppercased() + kept
             .dropFirst()
         return "\(thing), on \(listTitle)"
     }
 
     public func receipt(in store: ObjectStore) -> String? {
-        let listTitle = store.object(id: list)?.title ?? "the list"
+        let listTitle = store.object(id: list).map { ListContents.shownName(of: $0, in: store) } ?? "the list"
         guard let kept = Self.kept(text.trimmingCharacters(in: .whitespacesAndNewlines), store: store) else {
             return "\(SecretWords.title), kept"
         }
@@ -346,7 +353,7 @@ public struct CheckListItem: EngineAction {
         // A medicine's words print only where he added it (G41): checked off, it is "Private item".
         let shown = AddListItem.shownTitle(object.title, store: store)
         let title = shown.prefix(1).uppercased() + shown.dropFirst()
-        return done ?? true ? "\(title), got" : "\(title), back on \(object.parent?.title ?? "the list")"
+        return done ?? true ? "\(title), got" : "\(title), back on \(object.parent.map { ListContents.shownName(of: $0, in: store) } ?? "the list")"
     }
 }
 
@@ -457,21 +464,29 @@ public struct ClearDoneItems: EngineAction {
         // throws, and `perform` rolls back and logs nothing.
         let cleared = try transaction.clearDone(in: list)
         guard cleared > 0 else {
-            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "nothing checked on \(list.title)")
+            throw ActionError.invalidArguments(
+                action: Self.descriptor.name,
+                reason: "nothing checked on \(ListContents.shownName(of: list, in: transaction.store))"
+            )
         }
         return cleared
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "Cleared \(store.object(id: list)?.title ?? "the list")"
+        "Cleared \(store.object(id: list).map { ListContents.shownName(of: $0, in: store) } ?? "the list")"
     }
 
     public func receipt(in store: ObjectStore) -> String? {
-        let title = store.object(id: list)?.title ?? "The list"
-        // A reusable list was reset, not cleared: its items are all still there.
+        receipt(in: store, output: 1)
+    }
+
+    /// From this run's own count (QA on #826): a reusable list was reset, not cleared, and its items are all still
+    /// there; with nothing checked it says so.
+    public func receipt(in store: ObjectStore, output: Int) -> String? {
         if let object = store.object(id: list), ListNoteTags.isReusable(object, in: store) {
-            return ResetList.receipt(for: list, in: store)
+            return ResetList.receipt(for: list, unchecked: output, in: store)
         }
+        let title = store.object(id: list).map { ListContents.shownName(of: $0, in: store) } ?? "The list"
         return "\(title), done items cleared"
     }
 }

@@ -64,7 +64,8 @@ public struct SetListPickOne: EngineAction {
         guard ListNoteTags.has(ListNoteTags.pickOne, in: notes) != isOn else {
             throw ActionError.invalidArguments(
                 action: Self.descriptor.name,
-                reason: "Pick one is already \(isOn ? "on" : "off") for \(ListContents.shownName(of: list, in: transaction.store))"
+                reason: "Pick one is already \(isOn ? "on" : "off") for "
+                    + ListContents.shownName(of: list, in: transaction.store)
             )
         }
         let updated = ListNoteTags.setting(ListNoteTags.pickOne, to: isOn, in: notes)

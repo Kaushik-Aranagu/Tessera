@@ -285,4 +285,21 @@ struct ListPickTests {
         let notes = ListNoteTags.setting(stamp: ListNoteTags.pickedPrefix, to: nil, in: "picked: up at 5\n\(stamp)")
         #expect(notes == "picked: up at 5")
     }
+
+    @Test func acceptingAPickKeepsHisPickedNoteAndMasksAPrivateList() throws {
+        // Kitchen on #802 (#827): a typed "picked: ..." line is his; a walled list reads "Private list".
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let list = try engine.perform(CreateList(name: "Rent 2100"), by: .user).output
+        let item = try engine.perform(AddListItem(list: list.id, text: "Heat"), by: .user).output
+        try store.set("notes", to: .richText("picked: up at 5"), on: item)
+        let accepted = try engine.perform(AcceptPick(item: item.id, time: Date(timeIntervalSinceReferenceDate: 800_000_000)),
+                                          by: .user)
+        let notes = store.value("notes", of: item)?.stringValue ?? ""
+        #expect(notes.hasPrefix("picked: up at 5\n") && ListContents(store: store, classes: classes).pickedAt(item) != nil, "\(notes)")
+        #expect(accepted.record.receipt == "Heat, from Private list" && accepted.record.summary == "Picked Heat from Private list")
+        let flag = try engine.perform(SetListPickOne(list: list.id), by: .user).record
+        #expect(flag.receipt == "Private list, pick one on" && flag.summary == "Turned Pick one on for Private list")
+    }
 }
