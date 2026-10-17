@@ -34,4 +34,16 @@ struct GroceryRowTests {
         #expect(row.classDef?.name == classes[.listItem]?.name)
         _ = engine
     }
+
+    @Test func aRecipesPinsStayPins() throws {
+        // The typed-line rule for recipe rows too: a thing to buy that shares a secret word stays itself.
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let recipe = try engine.perform(CreateRecipe(text: "Roast\nIngredients\n4 pins\n1 chicken\nMethod\n1. Roast."),
+                                        by: .user).output
+        try engine.perform(AddRecipeToGroceries(recipe: recipe.id), by: .user)
+        let rows = Groceries(store: store, classes: classes).shoppingOrder().map(\.text)
+        #expect(!rows.contains("Private item"), "\(rows)")
+    }
 }
