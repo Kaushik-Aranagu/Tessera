@@ -1,5 +1,5 @@
 #!/bin/sh
-# Usage: lane_lock.sh acquire <lane> <purpose> | wait <lane> <purpose> [max_s] | beat <lane> | run <lane> <purpose> -- cmd... | release <lane> | status   (see docs/ops/lane-lock.md)
+# Usage: lane_lock.sh acquire <lane> <purpose> | wait <lane> <purpose> [max_s] | beat <lane> | run <lane> <purpose> -- cmd... (waits while the Mac screen is locked) | release <lane> | status   (see docs/ops/lane-lock.md)
 # The lock is always the directory /tmp/tessera-mac-lock.d (no override, so nothing else can be removed). A hold is abandoned (freed with a log line) when its pid is dead, it is older than 2h, or it has had no heartbeat for 10 min.
 set -eu
 L=/tmp/tessera-mac-lock.d; F="$L/info"; MAX=7200; BEAT=600; LEGACY=2700; LOG=/tmp/tessera-mac-lock.log; now=$(date +%s); Q=/tmp/tessera-mac-lock.q
@@ -7,6 +7,15 @@ field() { sed -n "s/^$1=//p" "$F" 2>/dev/null || true; }
 drop() { rm -f "$L/info" "$L/beat"; rmdir "$L"; }
 lastbeat() { b=$(cat "$L/beat" 2>/dev/null || true); echo "${b:-$(field start)}"; }
 beat() { date +%s > "$L/beat"; }
+# True when the Mac screen is locked (simulator UI runs stall then). Reads ioreg only (no python, so no developer-tools prompt). Unknown or non-macOS counts as unlocked.
+# LANE_LOCK_SCREEN=locked|unlocked forces the answer (tests); LANE_LOCK_SCREEN_OK=1 skips the check (package-only jobs).
+screen_locked() {
+  [ "${LANE_LOCK_SCREEN_OK:-}" = 1 ] && return 1
+  case "${LANE_LOCK_SCREEN:-}" in locked) return 0;; unlocked) return 1;; esac
+  [ "$(uname)" = Darwin ] || return 1
+  ioreg -n Root -d1 -a 2>/dev/null | grep -A1 -E 'CGSSessionScreenIsLocked|IOConsoleLocked' | grep -q '<true/>' && return 0
+  return 1
+}
 case "${1:-}" in
  acquire) [ -n "${2:-}" ] && [ -n "${3:-}" ] || { echo "need lane and purpose" >&2; exit 2; }
   if [ -d "$L" ]; then s=$(field start); pid=$(field pid)
@@ -29,7 +38,15 @@ case "${1:-}" in
  beat) if [ "$(field lane)" = "${2:-}" ]; then beat; else echo "not held by ${2:-}" >&2; exit 1; fi;;
  run) [ -n "${2:-}" ] && [ -n "${3:-}" ] && [ "${4:-}" = "--" ] && [ -n "${5:-}" ] || { echo "usage: run <lane> <purpose> -- cmd..." >&2; exit 2; }
   # Holds the lock for the life of cmd, beating every 60 s, and always releases. Waits in the queue if busy.
-  lane=$2; purpose=$3; shift 4; "$0" wait "$lane" "$purpose" 3600 || exit 1
+  lane=$2; purpose=$3; shift 4; limit=$(( $(date +%s) + 3600 ))
+  # Never start (or keep a fresh hold) while the screen is locked: UI runs stall and would sit on the lock.
+  while :; do
+   while screen_locked; do echo "$(date -u +%FT%TZ) screen locked, waiting ($lane)" | tee -a "$LOG"; [ "$(date +%s)" -lt "$limit" ] || { echo "TIMEOUT: screen still locked" >&2; exit 1; }; sleep 60; done
+   "$0" wait "$lane" "$purpose" 3600 || exit 1
+   screen_locked || break
+   # Known limit: the hand-back drops our queue ticket, so after the screen unlocks this job rejoins at the back of the line.
+   echo "$(date -u +%FT%TZ) screen locked after queueing, giving the lock back ($lane)" | tee -a "$LOG"; "$0" release "$lane" || true
+  done
   ( while sleep 60; do "$0" beat "$lane" || break; done ) & hb=$!
   rc=0; "$@" || rc=$?; kill "$hb" 2>/dev/null || true; "$0" release "$lane" || true; exit $rc;;
  release) if [ "$(field lane)" = "${2:-}" ]; then drop; echo released; else echo "not held by ${2:-}" >&2; exit 1; fi;;

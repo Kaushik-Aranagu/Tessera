@@ -105,6 +105,7 @@ struct HomeDoneWordingTests {
         // The deadline races the main actor, which the full suite keeps busy for long stretches; it isn't under test
         // here (the 6 s deadline is the app's).
         job.timeout = 600
+        job.fileProtection = [] // a locked Mac refuses protected writes
         return job
     }
 
@@ -170,6 +171,32 @@ struct HomeDoneWordingTests {
         #expect(HomeStub.requests.isEmpty)
     }
 
+    @Test func homeLinesStopAtFortyCallsInAHouseDay() async throws {
+        HomeStub.reply = (200, Self.reply(context: "7:40 pm, a bench best", detail: nil))
+        func record(_ count: Int, at time: Date, use: TessUse = .lines) {
+            for _ in 0 ..< count {
+                ledger.record(use: use, model: ClaudeHomeDone.model, input: 0, output: 0, costNano: 1, latency: 0,
+                              outcome: "works", requestID: nil, at: time)
+            }
+        }
+        let now = Self.ended.addingTimeInterval(600) // 7:50 pm Thursday
+        // Yesterday's calls (before 04:00 today), other jobs' and a fortieth of nothing do not count.
+        try record(40, at: #require(Self.calendar.date(from: DateComponents(year: 2026, month: 10, day: 15, hour: 3))))
+        record(40, at: now, use: .capture)
+        record(39, at: now)
+        #expect(job().callsToday() == 39)
+        #expect(await job().words(for: Self.line(), dayLabel: "Thursday evening", store: store) != nil)
+        #expect(HomeStub.requests.count == 1)
+        // That call made forty. The next finish waits for tomorrow.
+        #expect(job().callsToday() == ClaudeHomeDone.dailyCeiling)
+        #expect(await job().words(for: Self.line("Pull B"), dayLabel: "Thursday evening", store: store) == nil)
+        #expect(HomeStub.requests.count == 1)
+        // The next house day opens again.
+        let next = job()
+        next.now = { Self.ended.addingTimeInterval(86400) }
+        #expect(next.callsToday() == 0)
+    }
+
     @Test func offlineTriesAgainButATimeoutNever() async throws {
         HomeStub.failure = .notConnectedToInternet
         let job = job()
@@ -210,5 +237,13 @@ struct HomeDoneWordingTests {
         #expect(values.isExcludedFromBackup == true)
         let again = await job(cache: url).words(for: line, dayLabel: "Thursday evening", store: store)
         #expect(again == HomeDoneWords(context: "7:40 pm, a bench best") && HomeStub.requests.count == 1)
+    }
+
+    @Test func theAppsStoresWriteWithCompleteProtection() {
+        // Tests opt out only because a locked Mac refuses protected writes; the phone's default never drifts.
+        let job = ClaudeHomeDone(keys: InMemoryKeychain(nil), ledger: ledger, cacheURL: nil) { false }
+        #expect(job.fileProtection == .completeFileProtection)
+        let memory = TessMemoryStore(engine: ActionEngine(store: store, classes: classes), forgetLogURL: nil)
+        #expect(memory.fileProtection == .completeFileProtection)
     }
 }
