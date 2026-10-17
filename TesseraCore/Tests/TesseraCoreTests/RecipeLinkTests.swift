@@ -428,4 +428,12 @@ struct RecipeLinkTests {
         #expect(sent.contains("1.25 cups flour") && sent.contains("0.75 tsp salt") && sent.contains("2.50 oz butter"))
         #expect(!sent.contains("flour 2.50") && !sent.contains("$1.25"))
     }
+
+    @Test(arguments: [("paid 12.50 pounds for shoes", nil), ("weighed 82.50 kg this morning", nil),
+                      ("weighed 82.50 kg this morning", 82.0), ("$1.25 cups", nil), ("2.50 g usd", nil),
+                      ("182.50 lb", 82.5)] as [(String, Double?)])
+    func moneyAndHisWeightKeepTheirAmounts(_ line: String, _ lastKg: Double?) {
+        // QA on #669: the measure strip never hides money or a weigh-in.
+        #expect(ClaudeRecipeReader.sendable(line, lastWeightKg: lastKg).isEmpty, "\(line)")
+    }
 }
