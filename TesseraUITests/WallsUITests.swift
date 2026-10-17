@@ -52,8 +52,11 @@ final class WallsUITests: SimulatorOnlyTestCase {
         continueAfterFailure = true // one row's fail must not hide the rest
     }
 
+    /// `TEST_RUNNER_WALLS_ONLY=A08,A17` runs just those rows (for chasing one row; never set in a gate run).
     static func rows(_ surface: String) throws -> [WallRow] {
-        try allRows().filter { $0.surface == surface }
+        let only = ProcessInfo.processInfo.environment["WALLS_ONLY"]
+            .map { Set($0.split(separator: ",").map(String.init)) }
+        return try allRows().filter { row in row.surface == surface && only.map { $0.contains(row.id) } ?? true }
     }
 
     static func allRows() throws -> [WallRow] {
@@ -106,13 +109,31 @@ final class WallsUITests: SimulatorOnlyTestCase {
         let found = row.lineMatch == "prefix"
             ? texts.matching(NSPredicate(format: "label BEGINSWITH %@", line)).firstMatch
             : texts.matching(NSPredicate(format: "label == %@", line)).firstMatch
-        XCTAssertTrue(found.waitForExistence(timeout: 6), "\(row.id): the line reads \(line)")
+        let shown = app.staticTexts.matching(identifier: "tess.line").firstMatch
+        XCTAssertTrue(
+            found.waitForExistence(timeout: 6),
+            "\(row.id): the line reads \(line) (Tess's line: \(shown.exists ? shown.label : "none"))"
+        )
+        if !found.exists, let word = line.split(separator: " ").first {
+            // Where the words are instead, by identifier and label, for Research.
+            let elsewhere = app.descendants(matching: .any).matching(NSPredicate(
+                format: "label CONTAINS[c] %@",
+                String(word)
+            ))
+            .allElementsBoundByIndex.prefix(4).map { "[\($0.identifier)] \($0.label)" }
+            XCTContext.runActivity(named: "\(row.id) shown: \(elsewhere.joined(separator: " | "))") { _ in }
+        }
     }
 
     private func assertNoValue(_ row: WallRow, in app: XCUIApplication, also: [String] = []) {
         for value in also + Self.fakeValues + [String(repeating: "x", count: 8)] {
             XCTAssertFalse(shows(value, in: app), "\(row.id): \(value) shows on screen (Home leak)")
         }
+    }
+
+    /// How many elements in the whole tree hold the text (case-insensitive).
+    private func count(_ text: String, in app: XCUIApplication) -> Int {
+        app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS[c] %@", text)).count
     }
 
     /// The whole tree, any element whose label holds the text (case-insensitive).
@@ -204,6 +225,8 @@ final class WallsUITests: SimulatorOnlyTestCase {
                 continue
             }
             let before = probe(app)
+            // An earlier row may already have put the number on Home (a pending row's task): count, don't look.
+            let shownBefore = (row.mustNotShow ?? []).map { count($0, in: app) }
             type(text(for: row), in: app, paste: row.build == "KEY")
             check(row) {
                 assertLine(row, in: app, tessLine: true)
@@ -212,11 +235,10 @@ final class WallsUITests: SimulatorOnlyTestCase {
                 let privateRow = row.expectPrivate || row.build == "KEY" || ["A06", "A07", "A20", "A21"]
                     .contains(row.id)
                 if privateRow {
-                    assertNoValue(row, in: app, also: row.mustNotShow ?? [])
-                } else {
-                    for value in row.mustNotShow ?? [] {
-                        XCTAssertFalse(shows(value, in: app), "\(row.id): \(value) shows on screen (Home leak)")
-                    }
+                    assertNoValue(row, in: app)
+                }
+                for (value, was) in zip(row.mustNotShow ?? [], shownBefore) {
+                    XCTAssertEqual(count(value, in: app), was, "\(row.id): \(value) shows on screen (Home leak)")
                 }
                 assertCounts(row, before: before, in: app)
             }
