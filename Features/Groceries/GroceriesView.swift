@@ -217,19 +217,26 @@ private struct GroceriesPage: View {
                              lastWeightKg: BodyWeight.lastKg(in: model.store))
     }
 
+    /// The Add line through the wall (Product 8:40 AM PT Oct 17): kept lines go on the list; a walled line stays in
+    /// the draft with its line ("That stays on this phone.", "That one stays out of Groceries." or the key line) and
+    /// no UNDO, never a silent clear.
     private func add() {
         let lines = GroceriesCopy.lines(in: draft)
         guard !lines.isEmpty else { return }
-        // Keep what was typed if it couldn't be added.
-        guard (try? model.engine.perform(AddGroceries(lines: lines), by: .user)) != nil else { return }
+        let split = GroceriesWall.split(lines, store: model.store)
+        if !split.kept.isEmpty {
+            // Keep what was typed if it couldn't be added.
+            guard (try? model.engine.perform(AddGroceries(lines: split.kept), by: .user)) != nil else { return }
+        }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
-            draft = ""
+            draft = split.walled.map(\.line).joined(separator: ", ")
             model.touch()
+        }
+        if let reason = split.walled.first?.reason {
+            TessVoice.shared.say(GroceriesWall.line(reason))
         }
     }
 
-    /// The ink strike runs through first (light tap when it ends), then the item folds into a sage dab that arcs
-    /// into the basket, and the count rolls up.
     /// What a row reads, in the list and in SHOP mode: "Private item" until it's tapped open (B8, B11).
     private func rowLabel(_ item: ListContents.Item) -> String {
         trip.label(for: item, name: GroceriesCopy.name(item), lastWeightKg: BodyWeight.lastKg(in: model.store))
@@ -248,6 +255,8 @@ private struct GroceriesPage: View {
         }
     }
 
+    /// The ink strike runs through first (light tap when it ends), then the item folds into a sage dab that arcs
+    /// into the basket, and the count rolls up.
     private func check(_ item: ListContents.Item) {
         guard !striking.contains(item.id) else { return }
         withTesseraAnimation(.smooth(duration: 0.32), reduceMotion: reduceMotion) { _ = striking.insert(item.id) }
