@@ -87,4 +87,47 @@ struct GroceriesWallTests {
         #expect(EngineWall.withoutPrice("1.5 kg rice") == "1.5 kg rice")
         #expect(EngineWall.withoutPrice("1.25 cups flour") == "1.25 cups flour")
     }
+
+    // MARK: QA lows on #763
+
+    @Test func aSecondMedicineIsStillAPrivateItem() async {
+        let first = await TessCaptureEngine(engine: engine).capture("buy lexapro", context: TessContext())
+        let second = await TessCaptureEngine(engine: engine).capture("buy lexapro", context: TessContext())
+        #expect(first.line == "Private item, on Groceries.")
+        #expect(second.line == "Private item, already on Groceries.", "\(second.line)")
+    }
+
+    @Test func aWalledIngredientHeAlreadyHasGoesBackOn() throws {
+        // A Pantry swipe on an ingredient he already has, whose name the wall would refuse as a new line: the wall
+        // keeps it (nothing new is written by its name) and the receipt says "Private item".
+        try store.create(#require(classes[.ingredient]), title: "Wifi password")
+        #expect(AddListItem.kept("Wifi password", store: store) == nil)
+        #expect(AddGroceries.kept(["Wifi password"], store: store) == ["Wifi password"])
+        #expect(AddGroceries(lines: ["Wifi password"]).summary(in: store) == "Private item, on Groceries")
+        #expect(AddGroceries.kept(["Wifi password"], store: ObjectStore.open(inMemory: true)).isEmpty)
+    }
+
+    @Test(arguments: [("milk 4.99.", "milk"), ("1.50 lb apples", "1.50 lb apples"), ("2 kg rice", "2 kg rice")])
+    func moreAmountsLand(_ line: String, _ kept: String) throws {
+        try engine.perform(AddGroceries(lines: [line]), by: .user)
+        #expect(rows().count == 1, "\(line)")
+        #expect(AddListItem.kept(line, store: store) == kept)
+    }
+
+    @Test func aWeighInIsStillWalled() {
+        #expect(AddListItem.kept("82.4 kg this morning", store: store) == nil)
+    }
+
+    @Test func checkingOrMovingAMedicineNeverNamesIt() throws {
+        // G41: only the add shows his words.
+        let list = try engine.perform(CreateList(name: "Errands"), by: .user).output
+        let item = try engine.perform(AddListItem(list: list.id, text: "lexapro"), by: .user).output
+        let check = try engine.perform(CheckListItem(item: item.id), by: .user).record
+        let move = try engine.perform(MoveListItem(item: item.id, section: "Pharmacy"), by: .user).record
+        for record in [check, move] {
+            #expect(!record.summary.lowercased().contains("lexapro") && !(record.receipt ?? "").lowercased()
+                .contains("lexapro"))
+        }
+        #expect(check.receipt == "Private item, got")
+    }
 }
