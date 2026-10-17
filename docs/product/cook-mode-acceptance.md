@@ -47,7 +47,7 @@ These wait because the scenarios that need them (S08, S09) are edge cases in a f
 6. Lock the phone. The cook Live Activity shows the soonest timer and "+1". When it ends, the Done face flips on its own and the notification arrives.
 7. Background the app for more than 13 min with a timer running (fixture or clock shift), then return. The cook is still running and still Now.
 7b. Drag a running timer's line left. It fades, and Tess says "Simmer stopped." with UNDO. Tapping the flared stack stops a finished timer.
-8. Hold Finish on the last step. The cover closes, the Cook entry is written, and Tess's line appears ("Weeknight dal, first time.").
+8. Hold Finish on the last step. The cover closes, the Cook entry is written, and Tess's line appears. The line is true to the history (Product, Oct 17 4:57): "Weeknight dal, first time." when it is the first cook ever; "Weeknight dal, first time this month." when it is the first in a month; "Weeknight dal, second time this month." from the second. Cooking.swift picks the form by fact.
 
 **UI bar.**
 - Every target is at least 64 pt.
