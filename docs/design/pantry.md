@@ -9,7 +9,7 @@ Board `mockups/pantry.png`, recording `recordings/pantry.mp4` (18 s, Porcelain, 
 - **Context** "since Saturday's shop" (21 characters). **Hero** in digits: "4 out, 2 low". Quiet forms: "Nothing out" (known, none out or low), "Nothing yet" (nothing known).
 - **Groups,** from 296: OUT, LOW, USUALLY HAVE, labels at 13/700. One plain Body 21 line per thing, 40 pt apart, the name in ink and its state word at the right (out 700, low 600, in the pantry colour mixed 72% with ink). Out lines carry the faint ring from the recipe page (11 pt, 1.3 pt stroke, ink 42%, at x 6), low lines nothing. Nothing is red.
 - **USUALLY HAVE** is one line of names (Research R, cap 4): up to three names as is, and from four "Rice, coffee and 2 more" (two named, then the count). Names in ink, "and 2 more" at 55%. A tap on a name joins Groceries ("Milk, in Groceries.", UNDO), as on Groceries; a left swipe skips it until its next gap.
-- **Tap a state word** to cycle in, low, out, in (kitchen-v2 P). One `.selection`, the line closes up (320 ms), the count rolls (260 ms), and the receipt names the thing first: "Limes, in." with UNDO in the one app-wide UNDO slot, replacing Tess's line for its window; UNDO brings the row back and her line returns. A line that becomes in leaves the page (in things are the long tail and show on their Ingredient page). A line that becomes low or out joins that group.
+- **Tap a state word** to cycle in, low, out, in (kitchen-v2 P). One `.selection`, the line closes up (320 ms), the digits just change (nothing counts up), and the receipt names the thing first: "Limes, in." with UNDO in the one app-wide UNDO slot, replacing Tess's line for its window; UNDO brings the row back and her line returns. A line that becomes in leaves the page (in things are the long tail and show on their Ingredient page). A line that becomes low or out joins that group.
 - **Tap a name** opens its Ingredient page. A left swipe on an out or low line adds it to Groceries as a ghost row ("Milk, in Groceries.", UNDO).
 - **Empty:** "Nothing yet", then "Clear a shop or finish a cook and this fills in." at 55%; Tess: `Say "out of milk" and I'll keep it.`
 - **Tess's line** is the only thing in 736 to 820: "Tacos took the cilantro and limes." (the phone's fact: what the last cook used up). Never a notification, a badge, a Home offer or "running out".
@@ -32,7 +32,7 @@ Digits for counts ("4 out", "6 to buy"); "best", never "record" (no best on Pant
 
 ## Rows for Kitchen's acceptance
 1. The front shows a counts hero, OUT then LOW then USUALLY HAVE, one line per thing, a ring on out lines only, nothing under 16 pt, no cards or pills.
-2. Tapping a state word cycles in, low, out; one op and one UNDO per tap; "Limes, in." names the thing first; the count rolls.
+2. Tapping a state word cycles in, low, out; one op and one UNDO per tap; "Limes, in." names the thing first; the digits change, nothing counts up.
 3. USUALLY HAVE names up to three, and from four "A, B and N more".
 4. The side's glance reads "4 out" big with "2 low" and "6 to buy"; the key's N equals the glance's "to buy" number; at 0 the side reads "Nothing out." with no key.
 5. Out lines come before low lines on the side, each with "bought Sat" from `lastBoughtAt`; no sum and no nutrition anywhere.
