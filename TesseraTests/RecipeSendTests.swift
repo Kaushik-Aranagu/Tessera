@@ -116,4 +116,12 @@ struct RecipeSendTests {
         }
         #expect(outcome == .failed("Didn't save that. Private recipe."))
     }
+
+    /// Product and Design 12:45: one warning per failure, never twice within a second.
+    @Test func theWarningPlaysOncePerFailure() {
+        let start = Date(timeIntervalSince1970: 1000)
+        #expect(RecipeCopy.playsNotSaved(last: nil, now: start))
+        #expect(!RecipeCopy.playsNotSaved(last: start, now: start.addingTimeInterval(0.4)))
+        #expect(RecipeCopy.playsNotSaved(last: start, now: start.addingTimeInterval(1.2)))
+    }
 }

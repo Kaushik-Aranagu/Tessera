@@ -26,6 +26,9 @@ struct RecipePage: View {
     /// A refused add's line, a tap on which tries again (ER14); clears on its own after 10 s.
     @State private var failed: String?
     @State private var failedID: String?
+    /// Bumped once per failed add, never twice within a second.
+    @State private var notSaved = 0
+    @State private var notSavedAt: Date?
     @State private var drag: CGFloat = 0
     @State private var columnWidth: CGFloat = 260
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -200,6 +203,8 @@ struct RecipePage: View {
                     .navigationTransition(.zoom(sourceID: routeID(route), in: zoom))
             }
             .tesseraFeedback(.made, trigger: sent?.line)
+            // The one soft warning for a write that didn't save, once per failure (Product and Design 12:45).
+            .tesseraFeedback(.notSaved, trigger: notSaved)
             .onDisappear {
                 titleShown = false
                 // Leaving inside the window hands the receipt and its UNDO to Tess's shared line, so the UNDO
@@ -304,6 +309,10 @@ struct RecipePage: View {
                 let shown = UUID().uuidString
                 failedID = shown
                 withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { failed = line }
+                if RecipeCopy.playsNotSaved(last: notSavedAt, now: .now) {
+                    notSaved += 1
+                    notSavedAt = .now
+                }
                 // VoiceOver hears it too, as the success path does (Design on #889).
                 UIAccessibility.post(notification: .announcement, argument: line)
                 Task { @MainActor in
@@ -537,6 +546,11 @@ private struct RecipeOriginal: View {
 
 @MainActor
 enum RecipeCopy {
+    /// Whether a failed add plays the warning: not again within a second of the last one.
+    static func playsNotSaved(last: Date?, now: Date) -> Bool {
+        last.map { now.timeIntervalSince($0) >= 1 } ?? true
+    }
+
     /// What is left of the add's 10 s UNDO window, at least 1 s (VoiceOver keeps its flat 10 s in TessVoice).
     static func holdLeft(since start: Date?, now: Date) -> Duration {
         let elapsed = start.map { now.timeIntervalSince($0) } ?? 0
