@@ -219,7 +219,8 @@ struct PasteRecipe: View {
         }
         let id = result.output.id
         Task { @MainActor in
-            try? await Task.sleep(for: .seconds(2))
+            // The receipt's UNDO holds 4 s (10 s under VoiceOver) before the page moves on (K87.2).
+            try? await Task.sleep(for: TessVoice.hold(undo: true, holds: .seconds(4)))
             if saved?.id == id {
                 onSaved(id)
             }
