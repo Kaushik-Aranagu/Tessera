@@ -13,7 +13,7 @@ An image appears only where it carries **information** (the muscle map) or **ide
 ## The plate (kinds a and c)
 - **Geometry:** 393 x 56 at the top edge, full bleed, 6.6% of the height, opaque to y 34 and melting into the ground by 56. It is page content and scrolls away with the page. The back word at 58 and the title at 84 are untouched; no text ever sits on it. Never a hero banner.
 - **Loading:** the wash is there at first paint (it is drawn, not fetched). A photo is already on the phone by then, so it dries in over the wash in **380 ms** on the house curve (opacity 0 to 1, blur 5 to 0, saturation .6 to 1); Reduce Motion is a 150 ms crossfade (MotionPolicy). No spinner, no grey box, no placeholder icon, no "add a photo" prompt. A failed or missing og-image is silence: the wash stays.
-- **Private and wall rule:** a "Private" recipe or note shows no photo and no pigment (plain ground). Photos and the muscle table's drawing stay on the phone and are in a copy (Settings 80: a copy holds everything). A progress photo (body fact) is never drawn on any page in this sheet, never on Home, Review, a widget, or in any prompt.
+- **Private and wall rule:** a "Private" recipe or note shows no photo and no pigment (plain ground). The fetched image stays on the phone and out of backups (Product 8:37: it is re-fetchable; never for private items, never to Claude); the muscle table's drawing is app content. A progress photo (body fact) is never drawn on any page in this sheet, never on Home, Review, a widget, or in any prompt.
 - **VoiceOver:** a wash is hidden. A photo is one image labelled "Photo of Sheet-pan paprika chicken, from budgetbytes.com", read right after the title.
 - **Dynamic Type:** a plate is in points, not scaled; the title and rows move down under it as they grow. **Tess:** nothing here enters 686 to 820; the page's own fade (50 pt from 686) and her band work as before.
 
@@ -35,10 +35,10 @@ An image appears only where it carries **information** (the muscle map) or **ide
 Original vector, viewBox 120 x 260, left half drawn and mirrored. Front: traps, delts, chest, arms, forearms, abs, obliques, hips, quads, calves; back: traps, rear delts, lats, arms (triceps), forearms, low back, glutes, hamstrings, calves. Each region is a closed path with a 0.8 stroke at ink 28% and a fill at ink 4.5%. The muscle table is the phone's (Research's fixtures); a Claude-filled row keeps "From Claude, Oct 16" (every-side.md rule) and the figure reads the same table. Obsidian: ink 245,242,236, fill the dark train colour at 72%. VoiceOver reads one element ("Bench Press works chest, front shoulders and triceps. Chest is primary.") and the rows below carry the detail; regions are not separate stops. At AX3 the figures shrink to 220 tall, the context becomes "Chest and 2 more", rows stack name over role, and the page scrolls under its fade.
 
 ## Asks per builder team
-- **Builder B:** `ObjectPlate` (wash, photo layer, mask, grain), the og-image read at Save, hold-the-plate for camera or library, the Kitchen widget wash.
+- **Builder B:** `ObjectPlate` (wash, photo layer, mask, grain), the og-image read at Save, the Kitchen widget wash.
 - **Builder A:** `MuscleFigure` (front and back, worked map, row tap) on the MUSCLES page and the Routine title.
 - **Core:** `Recipe.photo` as a file on the object, `Ingredient.colour` field and the colour table, Private objects skip the plate.
 - **Research:** the muscle fixtures for the 30 exercises he uses; the ingredient colour table.
 
 ## Unresolved
-Whether he wants a Routine mini map or the title alone; whether the plate may also carry his camera photo of a finished cook (proposed: hold the plate, yes).
+RULED 8:37: Routine mini map yes; his own camera photo on the plate WAITS (a new stored data type; Product decides after he sees the plate), so hold-the-plate is not built in v1; Research supplies the ingredient colour table and muscle fixtures.
