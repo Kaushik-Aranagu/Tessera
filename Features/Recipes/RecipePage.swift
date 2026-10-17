@@ -94,7 +94,8 @@ struct RecipePage: View {
                         .scrollBounceBehavior(.basedOnSize)
                         .offset(x: away ? -columnWidth * 1.4 : min(0, drag))
                         .simultaneousGesture(sendGesture(recipe: recipe.id, serves: size))
-                        PortionDrum(serves: Binding(get: { size ?? 2 }, set: { serves = $0 }), isEnabled: own != nil,
+                        PortionDrum(serves: Binding(get: { min(max(size ?? 2, 1), 48) }, set: { serves = $0 }),
+                                    isEnabled: own != nil,
                                     range: PortionDrum.range(written: own))
                     }
                     if let sent {
@@ -594,7 +595,9 @@ enum RecipeCopy {
 
     /// Hours and minutes, as the cook log says them (O2, G60): "1 h 35 min", "1 h", "45 min". Never "1.6 h".
     static func duration(_ minutes: Double) -> String {
-        let total = Int(minutes.rounded())
+        // NaN, infinity or an absurd stored value never traps the page (G62): at most 99 h 59 min.
+        guard minutes.isFinite else { return "0 min" }
+        let total = Int(min(max(minutes, 0), 5999).rounded())
         let (hours, rest) = (total / 60, total % 60)
         if hours == 0 {
             return "\(rest) min"
