@@ -57,10 +57,18 @@ enum PrivateWords {
         func isA(_ key: SystemCatalog.Key) -> Bool {
             classes[key].map { ClassResolver.isSubclass(classDef, of: $0) } ?? false
         }
-        if isA(.listItem) { return "Private item" }
-        if isA(.recipe) || isA(.recipeLine) || isA(.recipeStep) || isA(.cook) { return "Private recipe" }
-        if isA(.task) { return ObjectPrivacy.taskLabel }
-        if isA(.tessMemory) { return ObjectPrivacy.memoryLabel }
+        if isA(.listItem) {
+            return "Private item"
+        }
+        if isA(.recipe) || isA(.recipeLine) || isA(.recipeStep) || isA(.cook) {
+            return "Private recipe"
+        }
+        if isA(.task) {
+            return ObjectPrivacy.taskLabel
+        }
+        if isA(.tessMemory) {
+            return ObjectPrivacy.memoryLabel
+        }
         return SecretWords.title
     }
 
@@ -102,15 +110,21 @@ enum PrivateWords {
         for record in context.all(OpRecord.self) {
             for op in ops(of: record, in: context) where current[op.objectID] == nil {
                 switch op {
-                case let .create(object, _, _, title): if wordyTitle(title) { found.insert(object) }
-                case let .setTitle(object, old, new): if wordyTitle(old) || wordyTitle(new) { found.insert(object) }
+                case let .create(object, _, _, title): if wordyTitle(title) {
+                        found.insert(object)
+                    }
+                case let .setTitle(object, old, new): if wordyTitle(old) || wordyTitle(new) {
+                        found.insert(object)
+                    }
                 case let .setValue(object, field, old, new):
                     if flagFields.contains(field), old == .bool(true) || new == .bool(true) {
                         found.insert(object)
                     }
                     for value in [old, new] {
                         switch value {
-                        case let .text(text), let .richText(text): if wordy(text) { found.insert(object) }
+                        case let .text(text), let .richText(text): if wordy(text) {
+                                found.insert(object)
+                            }
                         default: break
                         }
                     }
@@ -176,10 +190,22 @@ enum PrivateWords {
                 } else if titles.contains(object.title.lowercased()) {
                     result[object.id] = genericLabel(object)
                     changed = true
+                } else if let ingredientClass = classes[.ingredient], object.classDef?.id == ingredientClass.id,
+                          Self.onlyPrivateUse(of: object, private: result)
+                {
+                    // An ingredient only private recipes or items use gives their words away (G37).
+                    result[object.id] = genericLabel(object)
+                    changed = true
                 }
             }
         }
         return result
+    }
+
+    /// Whether something links to the ingredient and every object that does is private (deleted ones count).
+    private static func onlyPrivateUse(of ingredient: ObjectRecord, private result: [UUID: String]) -> Bool {
+        let users = (ingredient.incomingLinks ?? []).compactMap(\.from)
+        return !users.isEmpty && users.allSatisfy { result[$0.id] != nil }
     }
 
     /// An op summary or any line of text that holds a private word.
