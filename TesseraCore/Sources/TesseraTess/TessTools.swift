@@ -45,13 +45,46 @@ public enum TessTools {
 
     /// Runs a tool call from its JSON arguments. Returns what was logged; throws `TessToolError` with a line the
     /// model can read and correct.
+    /// Most ghost rows one phrase may leave (injection audit gap 2): a page or a pasted line that coaxes "add 50
+    /// tasks" gets this many and then a plain refusal. Claude's capture and the on-device model both stop here.
+    public static let maxRecordsPerPhrase = 10
+
+    /// What a tool call answers once a phrase is at its cap.
+    static let capLine = "Error: that is enough for one phrase."
+
+    /// `budget`: how many more ghosts this phrase may leave (QA on #666). A list of lines or items is cut to it before
+    /// the tool runs, and anything past it is taken back after, on both the on-device and the Claude path.
     public static func run(_ name: String, arguments: Data, engine: ActionEngine, pending: Bool = true,
-                           now: Date = .now, calendar: Calendar = .current) throws -> [OpRecord]
+                           now: Date = .now, calendar: Calendar = .current,
+                           budget: Int = maxRecordsPerPhrase) throws -> [OpRecord]
     {
         guard let tool = tool(named: name) else { throw TessToolError("no tool called \(name)") }
-        guard let object = try? JSONSerialization.jsonObject(with: arguments) as? [String: Any] else {
+        guard budget > 0 else { throw TessToolError(capLine) }
+        guard var object = try? JSONSerialization.jsonObject(with: arguments) as? [String: Any] else {
             throw TessToolError("unreadable arguments")
         }
+        for key in ["lines", "items"] {
+            if let list = object[key] as? [Any], list.count > budget {
+                object[key] = Array(list.prefix(budget))
+            }
+        }
+        var records = try runChecked(tool, object, engine: engine, pending: pending, now: now, calendar: calendar)
+        if records.count > budget {
+            for record in records[budget...].reversed() {
+                if record.state == .pending {
+                    _ = try? engine.discard(record)
+                } else {
+                    engine.undo(record)
+                }
+            }
+            records.removeLast(records.count - budget)
+        }
+        return records
+    }
+
+    private static func runChecked(_ tool: Tool, _ object: [String: Any], engine: ActionEngine, pending: Bool,
+                                   now: Date, calendar: Calendar) throws -> [OpRecord]
+    {
         let call = Call(engine: engine, grammar: TessGrammar(store: engine.store, classes: engine.classes),
                         pending: pending, now: now, calendar: calendar)
         // A tool that fails part-way takes back what it already did, so no half-done ghost is left behind.
@@ -175,8 +208,12 @@ public enum TessTools {
         Tool(name: "createList", description: "Make a new list, with items if given",
              input: .object([("name", .string("What the list is")), ("items", .array(item))]))
         { args, call in
-            let record = try call.perform(CreateList(name: args.string("name")))
-            guard let list = call.store.object(id: record.objectIDs.first ?? UUID()) else { return [record] }
+            let name = try args.string("name")
+            // A name that is already a list opens it: the items go onto that one (G40).
+            let record = try call.perform(CreateList(name: name))
+            guard let list = CreateList.existing(named: name, in: call.store, classes: call.engine.classes) else {
+                return [record]
+            }
             let items = args["items"] as? [[String: Any]] ?? []
             // "new list packing" with nothing in it yet is fine.
             return items.isEmpty ? [record] : try [record] + call.addItems(items, to: list)
@@ -287,15 +324,34 @@ extension TessTools.Call {
         return match.task
     }
 
-    /// A list by name ("groceries" is the groceries list).
+    /// A list by name ("groceries" is the groceries list). An exact name wins only when exactly one list has it; else
+    /// a prefix of three letters or more, when exactly one list starts with it. Two matches write nothing and ask
+    /// which (G40). A one- or two-letter prefix never matches.
     func list(named name: String) throws -> ObjectRecord {
-        let query = name.lowercased().trimmingCharacters(in: .whitespaces)
+        let query = name.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         let lists = ListContents(store: store, classes: engine.classes).lists()
-        guard let list = lists.first(where: { $0.title.lowercased() == query })
-            ?? lists.first(where: { $0.title.lowercased().hasPrefix(query) })
-        else { throw TessToolError("no list called \(name)") }
+        func title(_ list: ObjectRecord) -> String {
+            list.title.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        // A private word is never echoed back, even as his own query.
+        let shown = ObjectPrivacy.isPrivateWord(name, in: store) ? "that" : name
+        let exact = lists.filter { title($0) == query }
+        if exact.count == 1, let list = exact.first {
+            return list
+        }
+        if exact.count > 1 {
+            throw TessToolError(ListLookupLine.moreThanOne(shown))
+        }
+        let prefixed = query.count >= Self.listPrefixMinimum ? lists.filter { title($0).hasPrefix(query) } : []
+        if prefixed.count > 1 {
+            throw TessToolError(ListLookupLine.moreThanOne(shown))
+        }
+        guard let list = prefixed.first else { throw TessToolError("no list called \(shown)") }
         return list
     }
+
+    /// The fewest letters that count as a prefix of a list's name.
+    static let listPrefixMinimum = 3
 
     /// Any thing by name, recipes first ("about" links).
     func object(named name: String) -> ObjectRecord? {
@@ -311,6 +367,16 @@ extension TessTools.Call {
         var records: [OpRecord] = []
         for item in items {
             guard let text = item["text"] as? String, !text.isEmpty else { continue }
+            // Groceries goes through the Add line's path: one row per ingredient, linked, in its aisle (G16). A line
+            // the wall turns into a private note takes the plain path, which makes that note.
+            if list.id == Groceries.listID, let kept = AddListItem.kept(text, store: store) {
+                let result = try engine.perform(AddGroceries(lines: [kept]), by: .tess, pending: pending)
+                records.append(result.record)
+                if item["done"] as? Bool == true, let row = result.output.first {
+                    try records.append(perform(CheckListItem(item: row.id)))
+                }
+                continue
+            }
             let record = try perform(AddListItem(list: list.id, text: text, section: item["section"] as? String))
             records.append(record)
             if item["done"] as? Bool == true, let id = record.objectIDs.first {
@@ -319,6 +385,13 @@ extension TessTools.Call {
         }
         guard !records.isEmpty else { throw TessToolError("no items to add") }
         return records
+    }
+}
+
+/// The line for a name that matches two lists (G40), for the app to say the same words.
+public enum ListLookupLine {
+    public static func moreThanOne(_ name: String) -> String {
+        "More than one list like \(name)."
     }
 }
 

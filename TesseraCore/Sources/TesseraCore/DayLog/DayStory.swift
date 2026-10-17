@@ -90,6 +90,8 @@ public enum DayStory {
     /// Edits, reorders, plumbing: never a line (day-log-first.md, the 26 drops).
     static let dropped: Set = [
         "editSet", "editRecipe", "editNote", "renameObject", "renameListSection", "moveListItem", "clearDoneItems",
+        "setListReusable", "resetList", "startListRun", "finishListRun", "putAwayListRun", "setListPickOne",
+        "acceptPick",
         "addSlot", "moveSlot", "editSlot", "removeSlot", "swapSlotExercise", "deleteObject",
         "removeRecipeFromGroceries", "moveTask", "keepPlannedTask", "rollForwardTasks", "waitOnTask", "startTask",
         "goToCookStep",
@@ -464,7 +466,14 @@ public struct StoreDayLookup: DayLookup {
     }
 
     public func title(of id: UUID) -> String? {
-        store.object(id: id).map(\.title)
+        guard let object = store.object(id: id) else { return nil }
+        // A private recipe's cook reads "Private recipe" in the story, old cooks included (G21b).
+        if let cook = classes[.cook], let recipe = classes[.recipe], let classDef = object.classDef,
+           ClassResolver.isSubclass(classDef, of: cook) || ClassResolver.isSubclass(classDef, of: recipe)
+        {
+            return ObjectPrivacy.cookTitle(object, in: store)
+        }
+        return object.title
     }
 
     public func kind(of id: UUID) -> String? {

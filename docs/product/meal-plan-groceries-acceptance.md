@@ -39,3 +39,23 @@
 3. **The Sunday reset (KW25).** There is none. Nothing clears on Sunday: open rows stay until bought or removed, the basket clears only on DONE, and a planned meal that went uncooked rolls forward like any task (never "overdue") until he cooks, moves or skips it. A week strip with its own reset is Kitchen v2; no reset op is built before it.
 4. **Cooking a planned meal (KW30).** "cook chili" with a chili planned for today or earlier starts that plan's cook: the running cook links to the plan task, Home's line becomes the running cook ("Chili, step 2") in place of "Chili tonight, 2 to buy.", and the task closes when he holds DONE (`FinishCooking`), not at start, so an abandoned cook leaves the plan open. Cooking a planned meal on a different day than planned still closes that plan. "cook chili" with no plan starts a plain cook as today.
 5. **Leftovers (KW19).** Out of v1 and v2 unless he asks (`kitchen-v2-scope.md`). "put 2 portions away" captures as a note on the cook's log line, adds no rows and touches nothing in Groceries; no portion count is kept anywhere.
+
+## Private recipe on the plan (ruled Oct 17)
+
+A planned private recipe is spoken and shown as "Private recipe, 7 pm." on the widget, in Siri and in notifications: lowercase time, no "at", never the name. With no time it reads "Private recipe, today." or "Private recipe, tonight." The bare word "Private" is retired for recipes. Its Groceries rows are masked as "Private item" like any walled thing. Rows: `kitchen-refill5-acceptance.md` K32.5 to K32.13 and `kitchen-widget-wash-acceptance.md` KW-W8.
+
+## Finishing a cook completes its plan task (ruled Oct 17, Kitchen lead, from the chief of staff's gap)
+
+Finishing a cook of a recipe on the day its plan task is dated completes that linked plan task in the same operation (one write, so one UNDO restores both). Today the cook process ends (`Cooking.swift`, finish) but the task such as "Cook tacos" stays open, keeps winning Home's hero, and stays open in Tasks. Core builds it in the engine, in the finish path, not in a screen.
+
+| # | Action | Expected |
+|---|---|---|
+| MP-F1 | Plan Tacos for today at 7 pm; start the cook from the plan task; tap DONE | The cook ends and the plan task is done in the same operation. Home's line reads "Tacos done." (house copy, K62); the task is gone from Tasks' open list; the receipt names the thing first: "Tacos, done." |
+| MP-F2 | Tap UNDO inside 10 s of MP-F1 | Both come back: the cook is running again and the plan task is open again; Home reads as it did before DONE |
+| MP-F3 | Cook Tacos on a day other than the task's day (plan is for tomorrow) | The cook ends; tomorrow's plan task stays open. Only a task dated the same day (day starts 4 AM) is completed |
+| MP-F4 | Two plan tasks for the same recipe on the same day, finish one cook | Only the earliest open task is completed (ruled Oct 17: a cook cannot tell which task it started from without a new stored field, a catalog v10 change, so it is not built); the other stays open |
+| MP-F5 | Start a cook with no plan task (typed "cook chili") and finish it | No task exists, nothing else changes; Home shows "Chili done." |
+| MP-F6 | Private recipe planned for today, finish its cook | The task completes; every surface reads "Private recipe done." and never the name |
+| MP-F7 | Skip a planned meal (KW20), then finish a cook of that recipe the same day | The skipped task is not reopened or completed twice; the cook ends alone |
+
+Fails today on master (the task is not closed); until Core lands it, Home skips a planned cook line once a cook of that recipe has finished today (Builder B follow-up to G19).

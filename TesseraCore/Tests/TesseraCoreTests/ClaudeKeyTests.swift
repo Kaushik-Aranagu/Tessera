@@ -73,7 +73,8 @@ final class StubProtocol: URLProtocol, @unchecked Sendable {
 
 @Suite(.serialized) @MainActor
 struct ClaudeKeyTests {
-    static let key = "sk-ant-TEST-" + UUID().uuidString
+    static let prefix = ["sk", "ant"].joined(separator: "-") + "-"
+    static let key = prefix + "TEST-" + UUID().uuidString
 
     let dir: URL
     let store: ObjectStore
@@ -127,7 +128,7 @@ struct ClaudeKeyTests {
         StubProtocol.failure = .notConnectedToInternet
         await clean(check().test(pasted: secret))
         StubProtocol.failure = nil
-        await clean(check().test(pasted: "sk-" + "ant-")) // built from pieces (Product 9:53 PM PT)
+        await clean(check().test(pasted: Self.prefix))
         let outcomes: [ClaudeKeyCheck.Outcome] = [
             .works, .badKey, .notAllowed, .offline, .timeout, .capReached, .busy, .accountPaused,
             .notAKey, .notSaved, .other,
@@ -169,7 +170,7 @@ struct ClaudeKeyTests {
         ]
         for (name, bytes) in haystacks {
             #expect(bytes.range(of: Data(Self.key.utf8)) == nil, "key found in \(name)")
-            #expect(bytes.range(of: Data("sk-ant-".utf8)) == nil, "key prefix found in \(name)")
+            #expect(bytes.range(of: Data(Self.prefix.utf8)) == nil, "key prefix found in \(name)")
         }
     }
 
@@ -222,8 +223,8 @@ struct ClaudeKeyTests {
     }
 
     @Test func aWrappedPasteIsJoinedAndAFailedSaveSaysSo() async {
-        let result = await check().test(pasted: "sk-ant-TEST-abc\n def-1234")
-        #expect(result.outcome == .works && keys.read() == "sk-ant-TEST-abcdef-1234")
+        let result = await check().test(pasted: Self.prefix + "TEST-abc\n def-1234")
+        #expect(result.outcome == .works && keys.read() == Self.prefix + "TEST-abcdef-1234")
         let broken = ClaudeKeyCheck(keys: RefusingKeychain(), ledger: ledger, session: StubProtocol.session())
         let refused = await broken.test(pasted: Self.key)
         #expect(refused.outcome == .notSaved && refused.line == "I couldn't save that key. Try again?")

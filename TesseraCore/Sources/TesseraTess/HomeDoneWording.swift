@@ -29,6 +29,10 @@ public final class ClaudeHomeDone {
     static let maxTokens = 512
     /// Lines jobs step aside at 80% of the month ($40 of $50; §2c item 6).
     static let stepAsideNano = TessUsageLedger.capNano * 8 / 10
+    /// Home lines calls in one house day (04:00 to 04:00), counted from the ledger (architecture §5.5; injection
+    /// audit). The 10-minute debounce in the same section is for the pack-changed case; this job asks once per
+    /// finish, so it has none (see `callsToday`).
+    static let dailyCeiling = 40
 
     public let keys: any TessKeychain
     public let ledger: TessUsageLedger
@@ -40,6 +44,8 @@ public final class ClaudeHomeDone {
     public var calendar: Calendar = .current
     /// The file the asked workouts are kept in; nil keeps them in memory only (tests, demo).
     public let cacheURL: URL?
+    /// How the cache is written: complete protection on the phone; tests on a locked Mac pass `[]`.
+    public var fileProtection: Data.WritingOptions = .completeFileProtection
     /// Asked workouts: their words that passed, or empty when nothing did. A key here is never asked again.
     private var asked: [UUID: HomeDoneWords]
     /// False while a cache file exists that couldn't be read (a locked device): nothing is written over it.
@@ -97,7 +103,8 @@ public final class ClaudeHomeDone {
             return words.isEmpty ? nil : words
         }
         guard !inFlight.contains(id), let key = keys.read(),
-              ledger.monthTotal(now: now(), calendar: calendar) < Self.stepAsideNano else { return nil }
+              ledger.monthTotal(now: now(), calendar: calendar) < Self.stepAsideNano,
+              callsToday() < Self.dailyCeiling else { return nil }
         inFlight.insert(id)
         defer { inFlight.remove(id) }
         let body = Self.facts(pack, line: line)
@@ -148,6 +155,16 @@ public final class ClaudeHomeDone {
         return words.isEmpty ? nil : words
     }
 
+    /// Home lines calls written to the ledger in the current house day, whatever their outcome: a failed call
+    /// counts, because it was made. Asked workouts never ask twice, so this is a ceiling for a bug or a burst, not a
+    /// pacing rule.
+    func callsToday() -> Int {
+        let day = TesseraDay(calendar: calendar).interval(of: now())
+        return ledger.calls().count { call in
+            day.contains(call.createdAt) && ledger.store.value("use", of: call)?.stringValue == TessUse.lines.rawValue
+        }
+    }
+
     private func checked(_ words: HomeDoneWords, line: HomeLine, pack: HomeDonePack, ended: Date,
                          lastKg: Double?) -> HomeDoneWords
     {
@@ -193,7 +210,7 @@ public final class ClaudeHomeDone {
         // Complete protection and never in a backup (§3): the words are his day.
         try? FileManager.default.createDirectory(at: cacheURL.deletingLastPathComponent(),
                                                  withIntermediateDirectories: true)
-        try? data.write(to: cacheURL, options: [.atomic, .completeFileProtection])
+        try? data.write(to: cacheURL, options: [.atomic, fileProtection])
         var url = cacheURL
         var values = URLResourceValues()
         values.isExcludedFromBackup = true

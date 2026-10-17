@@ -23,7 +23,8 @@ struct BackupTests {
     }
 
     func json(_ context: TesseraContext) throws -> Data {
-        var export = try TesseraExport(context: context, now: Date(timeIntervalSince1970: 0))
+        // Test-only lossless export (maskingPrivate: false); the app never does this.
+        var export = try TesseraExport(context: context, now: Date(timeIntervalSince1970: 0), maskingPrivate: false)
         export.exportedAt = Date(timeIntervalSince1970: 0)
         return try export.encoded()
     }

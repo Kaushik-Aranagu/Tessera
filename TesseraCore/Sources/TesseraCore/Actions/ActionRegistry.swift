@@ -18,7 +18,9 @@ public enum ActionRegistry {
         AddRecipeToGroceries.descriptor, RemoveRecipeFromGroceries.descriptor, AddGroceries.descriptor,
         CreateRecipe.descriptor, EditRecipe.descriptor,
         CreateList.descriptor, AddListItem.descriptor, CheckListItem.descriptor, MoveListItem.descriptor,
-        RenameListSection.descriptor, ClearDoneItems.descriptor,
+        RenameListSection.descriptor, ClearDoneItems.descriptor, SetListReusable.descriptor, ResetList.descriptor,
+        StartListRun.descriptor, FinishListRun.descriptor, PutAwayListRun.descriptor,
+        SetListPickOne.descriptor, AcceptPick.descriptor,
         FinishWorkoutEarly.descriptor,
         RollForwardTasks.descriptor, StartTask.descriptor,
         WaitOnTask.descriptor, KeepPlannedTask.descriptor,
@@ -80,6 +82,13 @@ public enum ActionRegistry {
         RenameListSection.descriptor
             .name: { try decode(RenameListSection.self, RenameListSection.descriptor.name, $0) },
         ClearDoneItems.descriptor.name: { try decode(ClearDoneItems.self, ClearDoneItems.descriptor.name, $0) },
+        SetListReusable.descriptor.name: { try decode(SetListReusable.self, SetListReusable.descriptor.name, $0) },
+        ResetList.descriptor.name: { try decode(ResetList.self, ResetList.descriptor.name, $0) },
+        StartListRun.descriptor.name: { try decode(StartListRun.self, StartListRun.descriptor.name, $0) },
+        FinishListRun.descriptor.name: { try decode(FinishListRun.self, FinishListRun.descriptor.name, $0) },
+        PutAwayListRun.descriptor.name: { try decode(PutAwayListRun.self, PutAwayListRun.descriptor.name, $0) },
+        SetListPickOne.descriptor.name: { try decode(SetListPickOne.self, SetListPickOne.descriptor.name, $0) },
+        AcceptPick.descriptor.name: { try decode(AcceptPick.self, AcceptPick.descriptor.name, $0) },
         FinishWorkoutEarly.descriptor.name: {
             try decode(FinishWorkoutEarly.self, FinishWorkoutEarly.descriptor.name, $0)
         },

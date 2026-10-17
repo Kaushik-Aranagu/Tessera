@@ -34,8 +34,17 @@ public struct PlanPack: Sendable, Equatable {
 
     /// A title with a secret word, money or a body fact never goes to Claude (QA A4, Research 138 W7 and 139): a task
     /// goes as "task" and an event as "busy", with its kind and times only.
+    /// The Home pack's wall (QA audit of d6fd9ca): health, money, places, care and people words too, so "Physio at 5"
+    /// or "Pay Dr Lee" goes as "task".
+    static let privateLabels: Set<String> = Set([
+        "Private recipe", "Private task", "Private note", "Private item", "Private memory",
+        ObjectPrivacy.noteLabel, ObjectPrivacy.taskLabel, ObjectPrivacy.memoryLabel, ObjectPrivacy.keptNoteLabel,
+    ].map { $0.lowercased() })
+
     static func isPrivate(_ title: String, lastWeightKg: Double?) -> Bool {
-        SecretWords.mentions(title) || PrivateFacts.isWalled(title, lastWeightKg: lastWeightKg)
+        // A walled thing already shows as its label ("Private recipe"): the label is no title to send (KC13).
+        privateLabels.contains(title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()) ||
+            SecretWords.mentions(title) || HomeDonePack.isWalled(title, lastWeightKg: lastWeightKg)
     }
 
     static func packTitle(_ block: DayPlan.Block, includesEventTitles: Bool, lastWeightKg: Double?) -> String {
@@ -163,7 +172,10 @@ public struct PlanPack: Sendable, Equatable {
         // Multi-word names only ("Lunch" would catch "before lunch"), and never one that overlaps a title in the plan
         // or its all-day items ("landlord" in "Reply to landlord") (QA S1 on #303).
         let inPack = (plan.blocks.map(\.title) + plan.allDay).map(phrase)
-        self.otherNames = Set(otherNames.filter(isOpen).map(phrase).filter { name in
+        // V13 never sends these; it checks a reply against them. So only the old narrow wall applies here: a people or
+        // care word ("Mum's birthday") still catches a reply that names it.
+        let checkable = { !SecretWords.mentions($0) && !PrivateFacts.isWalled($0, lastWeightKg: lastWeightKg) }
+        self.otherNames = Set(otherNames.filter(checkable).map(phrase).filter { name in
             // As words, not letters: "pasta" doesn't overlap "pastry bake" (QA on #306).
             let padded = " \(name) "
             return name.contains(" ") && !inPack.contains { padded.contains(" \($0) ") || " \($0) ".contains(padded) }

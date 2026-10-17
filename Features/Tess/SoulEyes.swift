@@ -8,6 +8,8 @@ enum SoulGaze: Equatable {
     case atLine
     /// Up and centred, at him, while she listens.
     case atHim
+    /// Along his finger while it strokes across her (idea 3).
+    case alongStroke
 
     /// The pair's offset at soul scale 1: up to 3 pt sideways and 2.2 pt up or down.
     var offset: CGSize {
@@ -15,6 +17,7 @@ enum SoulGaze: Equatable {
         case .ahead: .zero
         case .atLine: CGSize(width: -3, height: 2.2)
         case .atHim: CGSize(width: 0, height: -2.2)
+        case .alongStroke: CGSize(width: 3, height: 0)
         }
     }
 }
@@ -85,6 +88,12 @@ enum SoulBlink {
             time += step
         }
         return result
+    }
+
+    /// One blink `since` seconds after it began (a moment's own blink, outside the schedule); nil when it's over.
+    static func once(since: Double) -> CGFloat? {
+        guard since >= 0, since <= duration else { return nil }
+        return shape(since / duration)
     }
 
     /// Down to 0.25 and back up, ease-in-out.

@@ -62,8 +62,7 @@ public struct TessGrammar {
     }
 
     /// The rules ahead of every process and task rule: a note, a pasted recipe, a question (no write at all:
-    /// `.some(nil)`)
-    /// and a rest weekday. Nil when none of them applies.
+    /// `.some(nil)`) and a rest weekday. Nil when none of them applies.
     func parseBeforeTasks(_ phrase: String, text: String) -> Parse?? {
         if let note = parseNote(phrase) {
             return .some(note)

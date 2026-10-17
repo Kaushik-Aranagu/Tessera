@@ -43,7 +43,7 @@ public struct CookLog {
 
     /// The serving size a cook used.
     public func serves(of cook: ObjectRecord) -> Int? {
-        store.number("serves", of: cook).map(Int.init)
+        RecipeLimits.serves(store.number("serves", of: cook))
     }
 
     /// Timers still counting (not stopped), soonest first. A timer past its end stays until stopped, at 0.
@@ -61,20 +61,55 @@ public struct CookLog {
 
     /// "Carbonara, third time this month." Counts, never judgement.
     public func finishLine(for recipe: ObjectRecord, at now: Date, calendar: Calendar = .current) -> String {
-        let thisMonth = cooks(of: recipe).count { calendar.isDate($0.at, equalTo: now, toGranularity: .month) }
-        let ordinals = ["", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth"]
-        let times = thisMonth < ordinals.count ? ordinals[thisMonth] : "\(thisMonth)th"
-        return "\(recipe.title), \(times) time this month."
+        // The month of his day, which turns at 4 am (gap hunt G23): a 1:30 am cook on the 1st is the last month's.
+        let day = TesseraDay(calendar: calendar)
+        let month = calendar.dateComponents([.year, .month], from: day.day(of: now))
+        let thisMonth = cooks(of: recipe).count {
+            calendar.dateComponents([.year, .month], from: day.day(of: $0.at)) == month
+        }
+        return "\(recipe.title), \(Self.ordinal(thisMonth)) time this month."
+    }
+
+    /// "first" to "ninth", then "10th", "11th", "12th", "13th", "21st", "22nd", "23rd", "31st".
+    static func ordinal(_ number: Int) -> String {
+        let words = ["", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth"]
+        if number > 0, number < words.count {
+            return words[number]
+        }
+        let suffix = switch (number % 100 / 10 == 1, number % 10) {
+        case (false, 1): "st"
+        case (false, 2): "nd"
+        case (false, 3): "rd"
+        default: "th"
+        }
+        return "\(number)\(suffix)"
     }
 }
 
 /// Starts cooking a recipe at a size: a Cook object becomes the running process (Now), resuming at step 0.
+extension ObjectPrivacy {
+    /// What a cook or recipe is called in an op summary, the day story and the cook's own title: its title, or
+    /// "Private recipe" when the recipe is private by the recipe rule (G21b).
+    @MainActor
+    static func cookTitle(_ object: ObjectRecord, in store: ObjectStore) -> String {
+        let recipe = store.linkedObjects("recipe", of: object).first ?? object
+        let isPrivate = isPrivateRecipeTitle(recipe.title, lastWeightKg: BodyWeight.lastKg(in: store))
+            || isPrivateRecipeTitle(object.title, lastWeightKg: BodyWeight.lastKg(in: store))
+        return isPrivate ? recipeLabel : object.title
+    }
+}
+
 public struct StartCooking: EngineAction {
     public static let descriptor = ActionDescriptor(name: "startCooking", summary: "Start cooking a recipe",
                                                     parameters: [
                                                         .init("recipe", .object, "The recipe"),
                                                         .init("serves", .integer, "At what size", required: false),
                                                     ])
+
+    /// The refusal line while a workout is running (gap hunt G56, Product 8:16): the Cook key never suspends one.
+    public static let workoutRunningLine = "Workout running."
+    /// The `ActionError.invalidArguments` reason of that refusal.
+    public static let workoutRunningReason = workoutRunningLine
 
     public var recipe: UUID
     public var serves: Int?
@@ -88,6 +123,16 @@ public struct StartCooking: EngineAction {
 
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
         let recipe = try transaction.object(recipe, is: .recipe)
+        // A running workout is never suspended by a cook: refuse, and write nothing.
+        if let workoutClass = transaction.classes[.workout], let processClass = transaction.classes[.process],
+           transaction.store.objects(of: processClass).contains(where: { process in
+               transaction.processState(process) == .running
+                   && transaction.store.linkedObjects("subject", of: process).first?.classDef
+                   .map { ClassResolver.isSubclass($0, of: workoutClass) } == true
+           })
+        {
+            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: Self.workoutRunningReason)
+        }
         let book = RecipeBook(store: transaction.store, classes: transaction.classes)
         // Already cooking this (running or set aside)? Pick that cook back up rather than starting a second one.
         if let cookClass = transaction.classes[.cook],
@@ -96,15 +141,16 @@ public struct StartCooking: EngineAction {
                    && transaction.store.value("cookedAt", of: cook) == nil && transaction.openProcess(for: cook) != nil
            })
         {
-            if let serves {
+            if let serves = RecipeLimits.serves(serves) {
                 try transaction.set("serves", to: .number(Double(serves)), on: open)
             }
             try StartProcess(subject: open.id, ownerApp: "Kitchen", time: time).apply(&transaction)
             return open
         }
-        let cook = try transaction.create(transaction.classDef(.cook), title: recipe.title)
+        let cook = try transaction.create(transaction.classDef(.cook),
+                                          title: ObjectPrivacy.cookTitle(recipe, in: transaction.store))
         try transaction.setLinks("recipe", on: cook, to: [recipe])
-        if let size = serves ?? book.serves(recipe) {
+        if let size = RecipeLimits.serves(serves) ?? book.serves(recipe) {
             try transaction.set("serves", to: .number(Double(size)), on: cook)
         }
         let first = book.steps(of: recipe).first?.text
@@ -114,7 +160,7 @@ public struct StartCooking: EngineAction {
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "Cooking \(store.object(id: recipe)?.title ?? "")"
+        "Cooking \(store.object(id: recipe).map { ObjectPrivacy.cookTitle($0, in: store) } ?? "")"
     }
 }
 
@@ -174,8 +220,11 @@ public struct StartKitchenTimer: EngineAction {
     }
 
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
-        guard minutes > 0, minutes <= 24 * 60 else {
+        guard minutes > 0 else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "a timer needs a length")
+        }
+        guard minutes <= RecipeParser.maxTimerMinutes else {
+            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "a timer runs up to 24 hours")
         }
         let start = time ?? .now
         let name = label.trimmingCharacters(in: .whitespaces).isEmpty ? "Timer" : label
@@ -250,9 +299,78 @@ public struct FinishCooking: EngineAction {
         {
             try transaction.set("isStopped", to: .bool(true), on: timer.object)
         }
+        try closePlanTask(for: cook, at: end, in: &transaction)
+    }
+
+    /// The same write closes the plan task dated for this recipe on the same house day (4 am turnover): the earliest
+    /// open one. No task, nothing else changes.
+    @MainActor
+    private func closePlanTask(for cook: ObjectRecord, at end: Date, in transaction: inout Transaction) throws {
+        guard let recipe = transaction.store.linkedObjects("recipe", of: cook).first,
+              let taskClass = transaction.classes[.task] else { return }
+        let store = transaction.store
+        let day = TesseraDay()
+        let candidates = store.objects(of: taskClass).compactMap { task -> (task: ObjectRecord, when: Date)? in
+            guard !task.isDeleted, store.value("isDone", of: task) != .bool(true),
+                  store.linkedObjects("about", of: task).contains(where: { $0.id == recipe.id }),
+                  let when = (store.value("startsAt", of: task) ?? store.value("due", of: task))?.dateValue,
+                  day.isSameDay(when, end) else { return nil }
+            return (task, when)
+        }
+        guard let chosen = candidates.min(by: { $0.when < $1.when }) else { return }
+        try transaction.set("isDone", to: .bool(true), on: chosen.task)
+        try transaction.set("doneAt", to: .date(end), on: chosen.task)
+        try transaction.endTaskProcess(chosen.task, done: true)
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "Cooked \(store.object(id: cook)?.title ?? "it")"
+        "Cooked \(store.object(id: cook).map { ObjectPrivacy.cookTitle($0, in: store) } ?? "it")"
+    }
+
+    public func receipt(in store: ObjectStore) -> String? {
+        guard let object = store.object(id: cook) else { return nil }
+        let recipe = store.linkedObjects("recipe", of: object).first ?? object
+        if ObjectPrivacy.isPrivateRecipeTitle(recipe.title, lastWeightKg: BodyWeight.lastKg(in: store)) {
+            return "\(ObjectPrivacy.recipeLabel) done."
+        }
+        return "\(object.title), done."
+    }
+}
+
+/// Closes the cooks that were open when a restored copy was made, as not finished (G27): no `cookedAt`, so no COOKS
+/// count, no "cooked" fact and no day-log row; their timers stop without ringing. Run by the launch after a restore,
+/// as the system; not offered to Tess.
+public struct CloseStaleCooks: EngineAction {
+    public static let descriptor = ActionDescriptor(name: "closeStaleCooks",
+                                                    summary: "Close cooks left open in a restored copy",
+                                                    parameters: [.init("madeAt", .date, "When the copy was made")])
+
+    public var madeAt: Date
+    public var time: Date
+
+    public init(madeAt: Date, at time: Date = .now) {
+        self.madeAt = madeAt
+        self.time = time
+    }
+
+    public func apply(_ transaction: inout Transaction) throws {
+        guard let cookClass = transaction.classes[.cook] else { return }
+        for cook in transaction.store.objects(of: cookClass)
+            where transaction.store.value("cookedAt", of: cook) == nil
+        {
+            guard let process = transaction.openProcess(for: cook) else { continue }
+            let started = transaction.store.value("startedAt", of: process)?.dateValue ?? process.createdAt
+            guard started <= madeAt else { continue }
+            try transaction.end(process, reason: .closed, at: time)
+            for timer in CookLog(store: transaction.store, classes: transaction.classes).timers()
+                where timer.cook?.id == cook.id
+            {
+                try transaction.set("isStopped", to: .bool(true), on: timer.object)
+            }
+        }
+    }
+
+    public func summary(in _: ObjectStore) -> String {
+        "Closed cooks left open in a restored copy"
     }
 }

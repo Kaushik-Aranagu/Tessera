@@ -31,9 +31,25 @@ struct WorkoutSummaryTests {
         #expect(summary.sets == 3 && summary.volume == 82.5 * 8 + 80 * 16)
         #expect(summary.records.count == 1 && summary.records.first?.kind == .e1RM)
         #expect(summary.line == "1 of 5 exercises, 3 sets, 1 best.")
+        #expect(summary.doneLine == "\(summary.title) done, 1 of 5 exercises.")
+        #expect(summary.doneLine(in: store) == "\(summary.title) done, 1 of 5 exercises.")
         #expect(summary.duration == 3600)
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = .gmt
         #expect(ledger.finishedWorkouts(on: start, calendar: calendar).map(\.id) == [today.id])
+    }
+
+    @Test func aPrivateRoutineTitleNeverPrintsInTheDoneLine() throws {
+        // QA on #781: "Physio rehab" is a care word; Tess's done line says "Private workout".
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let plan = try #require(store.object(id: StarterContent.planID))
+        let routine = try #require(store.linkedObjects("routines", of: plan).first)
+        try engine.perform(RenameObject(object: routine.id, title: "Knee rehab day"), by: .user)
+        let workout = try engine.perform(StartRoutine(routine: routine.id), by: .user).output
+        try engine.perform(FinishWorkout(workout: workout.id), by: .user)
+        let line = TrainingLedger(store: store, classes: classes).summary(of: workout).doneLine(in: store)
+        #expect(line.hasPrefix("Private workout done,") && !line.lowercased().contains("rehab"), "\(line)")
     }
 }

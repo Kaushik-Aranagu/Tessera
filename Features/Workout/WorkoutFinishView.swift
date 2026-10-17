@@ -36,7 +36,7 @@ struct WorkoutFinishView: View {
                 Text(dayLine)
                     .font(Theme.voice)
                     .foregroundStyle(Paint.secondary)
-                Text("\(title), done")
+                Text(Self.heroText(title: title))
                     .font(Theme.numeral(56, weight: .medium))
                     .foregroundStyle(Paint.cream)
                     .lineLimit(2)
@@ -91,6 +91,12 @@ struct WorkoutFinishView: View {
             }
         })
         .task { await play() }
+    }
+
+    /// "Push Day A, done" with the routine's name held together: no-break spaces inside the name, so the line
+    /// breaks only between "A," and "done" (or scales), never inside "Push Day / A".
+    static func heroText(title: String) -> String {
+        title.replacingOccurrences(of: " ", with: "\u{00A0}") + ", done"
     }
 
     private var dayLine: String {

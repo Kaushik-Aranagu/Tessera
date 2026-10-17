@@ -162,11 +162,19 @@ struct HomeLinesTests {
         #expect(line.widgetLine == "Tacos tonight, 2 to buy.")
         let timed = HomeFact(id: UUID(), kind: .cook, title: "Tacos", state: .planned, toBuy: 2,
                              startsAt: Self.at(19))
-        #expect(HomeLines.line(for: timed, now: Self.at(9), calendar: Self.calendar).hero == "Tacos at 7 pm")
+        #expect(HomeLines.line(for: timed, now: Self.at(9), calendar: Self.calendar).hero == "Tacos, 7 pm")
         #expect(line.context == "2 to buy" && line.detail == nil && line.numbers == [2])
         #expect(text(tacos, now: Self.at(21, 30)) == "Tacos tonight, 2 to buy.")
         let stocked = HomeFact(id: UUID(), kind: .cook, title: "Tacos", state: .planned, toBuy: 0)
-        #expect(HomeLines.line(for: stocked, now: Self.at(9), calendar: Self.calendar).context == "nothing to buy")
+        // At zero the context is the day word again; the row keeps "nothing to buy" (Kitchen K87, C8 and B6).
+        let zero = HomeLines.line(for: stocked, now: Self.at(9), calendar: Self.calendar)
+        #expect(zero.context == HomeLines.dayWord(Self.at(9), calendar: Self.calendar), "\(zero.context ?? "-")")
+        #expect(zero.text.hasSuffix("nothing to buy."), "\(zero.text)")
+        #expect(zero.context != "nothing to buy")
+        // Tomorrow's stocked cook says tomorrow, never today's word (QA on #780).
+        var ahead = stocked
+        ahead.tomorrow = true
+        #expect(HomeLines.line(for: ahead, now: Self.at(21), calendar: Self.calendar).context == "tomorrow")
     }
 
     @Test func theCapsTheCheckerEnforces() {
@@ -248,9 +256,9 @@ struct HomeLinesTests {
         #expect(HomeLines.line(for: running).widgetMeta == nil)
         let timed = HomeFact(id: UUID(), kind: .workout, title: "Push A", state: .planned, startsAt: Self.at(19))
         let planned = HomeLines.line(for: timed, now: Self.at(18, 10), calendar: Self.calendar)
-        #expect(planned.hero == "Push A at 7 pm" && planned.text == "Push A at 7 pm." && planned
+        #expect(planned.hero == "Push A, 7 pm" && planned.text == "Push A, 7 pm." && planned
             .context == "this evening")
-        #expect(planned.widgetLine == "Push A at 7 pm this evening." || planned.widgetLine == "Push A at 7 pm.")
+        #expect(planned.widgetLine == "Push A, 7 pm this evening." || planned.widgetLine == "Push A, 7 pm.")
         #expect(ExerciseWords.short("Deadlift") == "Deadlift" && ExerciseWords.short("Face Pull") == "Face pull")
         // Design 54: a paused hero drops its paused context into the meta.
         let paused = HomeFact(id: UUID(), kind: .workout, title: "Push A", state: .paused, exercise: "Incline", step: 2,
@@ -312,6 +320,18 @@ struct HomeLinesTests {
         #expect(tonight.kind == .cook && tonight.state == .planned && (tonight.toBuy ?? 0) > 0)
         #expect(HomeLines.line(for: tonight, now: Self.at(18), calendar: Self.calendar).text
             == "\(recipe.title) tonight, \(tonight.toBuy ?? 0) to buy.")
+        // A captured cook carries startsAt and about, never due: the hero keeps its time (#700).
+        let timed = try engine.perform(CreateTask(title: "Cook tacos", startsAt: Self.at(19), about: [recipe.id]),
+                                       by: .tess).output
+        let timedFact = facts.fact(plannedCook: timed, recipe: recipe)
+        #expect(timedFact.startsAt == Self.at(19))
+        #expect(HomeLines.line(for: timedFact, now: Self.at(9), calendar: Self.calendar).hero
+            == "\(recipe.title), 7 pm")
+        // A date-only due (midnight) never prints a clock.
+        let midnight = Self.calendar.startOfDay(for: Self.at(9))
+        let dateOnly = try engine.perform(CreateTask(title: "Cook tacos", due: midnight, about: [recipe.id]),
+                                          by: .tess).output
+        #expect(facts.fact(plannedCook: dateOnly, recipe: recipe).startsAt == nil)
         // A finished cook from the store.
         try engine.perform(FinishCooking(cook: cook.id), by: .user)
         let finished = facts.cooksFinished(on: .now)
@@ -328,7 +348,7 @@ struct HomeLinesTests {
         #expect(facts.rest(next: next, now: quietDay) == nil)
         #expect(facts.plannedSession(on: quietDay)?.id == scheduled.id)
         #expect(HomeLines.line(for: facts.fact(scheduled: scheduled), now: quietDay, calendar: Self.calendar).hero
-            == "Push A at 7 pm")
+            == "Push A, 7 pm")
     }
 
     @Test func aFinishedWorkoutFromTheStoreNamesItsRecord() throws {

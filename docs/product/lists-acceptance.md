@@ -117,3 +117,5 @@
 | 13.15 | Copy sweep: no "at" before a time, no "…", cobalt only for Tess's voice, digits for counts |
 
 **Open, defaults taken:** 13.2's receipt "Packing, new list." is Kitchen's wording; the ON THEM kind and word (13.5) and the phrase "new list: packing" are Design's proposals pending Product, as sheet 87 says.
+
+*List receipt ruling (Kitchen, from decisions 10:06 "on <list>"): a list add reads "Rice, on Packing." and a private one "Private item, on Packing.". Master's `Lists.swift` still says "<thing>, added to <list>" on two paths; Builder B changes it to match.*

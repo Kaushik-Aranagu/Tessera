@@ -9,6 +9,8 @@ public enum ObjectPrivacy {
     public static let noteLabel = SecretWords.title
     public static let taskLabel = "Private task"
     public static let memoryLabel = "Private memory"
+    /// A recipe has no flag on master; the title rule decides (kitchen-week-one-private-filter PF4, gap hunt G21).
+    public static let recipeLabel = "Private recipe"
     /// What a workout's notes read on the generic page (Product 5:20 PM PT).
     public static let keptNoteLabel = "Note kept private"
 
@@ -39,7 +41,16 @@ public enum ObjectPrivacy {
             return object.title == taskLabel || PrivateFacts
                 .isPrivateTitle(object.title, lastWeightKg: last) ? taskLabel : nil
         }
+        if isA(.recipe) {
+            return isPrivateRecipeTitle(object.title, lastWeightKg: last) ? recipeLabel : nil
+        }
         return nil
+    }
+
+    /// Whether a recipe's title is private (a secret word, money, a body fact or a medicine).
+    public static func isPrivateRecipeTitle(_ title: String, lastWeightKg: Double?) -> Bool {
+        title == recipeLabel || PrivateFacts.isPrivateTitle(title, lastWeightKg: lastWeightKg)
+            || EngineWall.isHealth(title, lastWeightKg: lastWeightKg)
     }
 
     /// A field that is always private on its class: a workout's notes are a body fact (Product 5:07 PM PT).
@@ -58,6 +69,14 @@ public enum ObjectPrivacy {
         guard let notes = store.value("notes", of: object)?.stringValue,
               !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
         return hidesNotes(of: object, classes: classes) ? keptNoteLabel : notes
+    }
+
+    /// Whether a word he typed is one Tess never says back (a secret, a medicine or a body fact), so a line that would
+    /// echo it says "that" instead.
+    @MainActor
+    public static func isPrivateWord(_ text: String, in store: ObjectStore) -> Bool {
+        let last = BodyWeight.lastKg(in: store)
+        return isPrivateText(text, lastWeightKg: last) || EngineWall.isHealth(text, lastWeightKg: last)
     }
 
     static func isPrivateText(_ text: String, lastWeightKg: Double?) -> Bool {

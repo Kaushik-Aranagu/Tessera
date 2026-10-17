@@ -8,6 +8,14 @@ struct PortionDrum: View {
     var isEnabled = true
     var range: ClosedRange<Int> = 1 ... 12
 
+    /// From 1 to twice the written size, never less than 12, so "Makes 24" sits centred and highlighted (G57, K87.7).
+    /// Capped at 48, so a misread "serves 5000" never builds thousands of rows (QA on #803).
+    static func range(written: Int?) -> ClosedRange<Int> {
+        // Clamped before doubling, so an absurd size can never overflow and trap (G62).
+        let size = min(max(written ?? 0, 0), 24)
+        return 1 ... max(12, 2 * size)
+    }
+
     @State private var scrolled: Int?
     @State private var tick = 0
 
@@ -42,7 +50,8 @@ struct PortionDrum: View {
                 scrolled = new
             }
         }
-        .sensoryFeedback(.selection, trigger: tick)
+        // A detent is the house .selection (Haptics.swift: each weight detent); never a raw sensoryFeedback.
+        .tesseraFeedback(.selection, trigger: tick)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Serves")
         .accessibilityValue(isEnabled ? "\(serves)" : "not given")

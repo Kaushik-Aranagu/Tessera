@@ -37,6 +37,9 @@ private struct GroceriesPage: View {
     @State private var basketTarget: CGPoint = .zero
     @State private var breathe = false
     @State private var landed = 0
+    /// SHOP mode's private rows (B8): masked until tapped, masked again when the trip ends.
+    @State private var trip = ShopTrip()
+    @Environment(\.scenePhase) private var scenePhase
     @FocusState private var writing: Bool
 
     private var groceries: Groceries {
@@ -70,7 +73,9 @@ private struct GroceriesPage: View {
                 // cross-fade of two whole layouts).
                 ZStack(alignment: .topLeading) {
                     if shopping {
-                        AtTheShop(aisles: aisles, striking: striking, recipes: recipes(for:), onTap: check)
+                        AtTheShop(aisles: aisles, striking: striking, recipes: recipes(for:),
+                                  label: rowLabel,
+                                  onTap: shopTap)
                             .padding(.top, Theme.Spacing.m)
                             .transition(AisleHandoff.transition(reduceMotion: reduceMotion))
                     } else {
@@ -91,7 +96,7 @@ private struct GroceriesPage: View {
                                 VStack(alignment: .leading, spacing: 24) {
                                     ForEach(Array(aisles.enumerated()), id: \.element.aisle) { index, aisle in
                                         AisleSection(name: aisle.aisle, items: aisle.items, striking: striking,
-                                                     recipes: recipes(for:), onTap: check)
+                                                     recipes: recipes(for:), label: rowLabel, onTap: shopTap)
                                             .entrance(3 + min(index, 3))
                                             .transition(.opacity)
                                     }
@@ -108,6 +113,19 @@ private struct GroceriesPage: View {
             .padding(.bottom, Theme.Spacing.section)
             .tesseraAnimation(Theme.Motion.house, value: aisles.map(\.aisle))
             .tesseraAnimation(Theme.Motion.house, value: shopping)
+            .onChange(of: shopping) { _, now in
+                if !now {
+                    trip.end()
+                }
+            }
+            // Leaving the page masks every opened row again (B11).
+            .onDisappear { trip.end() }
+            // A lock or an app switch masks every opened row again (QA F1 on #732).
+            .onChange(of: scenePhase) { _, phase in
+                if phase != .active {
+                    trip.end()
+                }
+            }
             .opacity(basketOpen && !shopping ? 0.5 : 1)
             .tesseraAnimation(Theme.Motion.house, value: basketOpen)
         }
@@ -138,7 +156,8 @@ private struct GroceriesPage: View {
                     .accessibilityHint("Clears the basket and ends the shop")
                 }
                 if !basket.isEmpty, !shopping {
-                    BasketFold(items: basket, isOpen: $basketOpen, breathe: breathe, onTap: uncheck,
+                    BasketFold(items: basket, isOpen: $basketOpen, breathe: breathe, label: basketLabel,
+                               onTap: uncheck,
                                onClear: { clearBasket(count: basket.count) })
                         .onGeometryChange(for: CGPoint.self) { proxy in
                             let frame = proxy.frame(in: .named("groceries"))
@@ -188,22 +207,49 @@ private struct GroceriesPage: View {
         }
         .onPreferenceChange(RowCenters.self) { rowCenters = $0 }
         .sensoryFeedback(.impact(weight: .light), trigger: landed)
+        // The shop finished is .done in the house map; never a raw sensoryFeedback (Haptics.swift).
+        .tesseraFeedback(.done, trigger: finished)
     }
 
     @State private var rowCenters: [UUID: CGPoint] = [:]
 
     private func recipes(for item: ListContents.Item) -> [String] {
-        groceries.recipes(for: item.object).map(\.title)
+        // A private recipe is only ever "Private recipe", here too (QA F2 on #732).
+        ShopTrip.recipeNames(groceries.recipes(for: item.object).map(\.title),
+                             lastWeightKg: BodyWeight.lastKg(in: model.store))
     }
 
+    /// The Add line through the wall (Product 8:40 AM PT Oct 17): kept lines go on the list; a walled line stays in
+    /// the draft with its line ("That stays on this phone.", "That one stays out of Groceries." or the key line) and
+    /// no UNDO, never a silent clear.
     private func add() {
-        let lines = GroceriesCopy.lines(in: draft)
-        guard !lines.isEmpty else { return }
-        // Keep what was typed if it couldn't be added.
-        guard (try? model.engine.perform(AddGroceries(lines: lines), by: .user)) != nil else { return }
+        guard !GroceriesCopy.lines(in: draft).isEmpty else { return }
+        let outcome = GroceriesWall.add(draft, engine: model.engine, store: model.store)
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
-            draft = ""
+            draft = outcome.draft
             model.touch()
+        }
+        if let voice = outcome.voice {
+            // A new add's UNDO holds 4 s (10 s under VoiceOver); a walled line or a failure has none.
+            TessVoice.shared.say(voice, undo: outcome.undo, holds: outcome.undo == nil ? nil : .seconds(4))
+        }
+    }
+
+    /// What a row reads, in the list and in SHOP mode: "Private item" until it's tapped open (B8, B11).
+    private func rowLabel(_ item: ListContents.Item) -> String {
+        trip.label(for: item, name: GroceriesCopy.name(item), lastWeightKg: BodyWeight.lastKg(in: model.store))
+    }
+
+    /// The basket never opens a row: a private item there is always "Private item".
+    private func basketLabel(_ item: ListContents.Item) -> String {
+        trip.maskedLabel(for: item, name: GroceriesCopy.name(item), lastWeightKg: BodyWeight.lastKg(in: model.store))
+    }
+
+    /// A masked private row opens on its first tap, in the list or in SHOP mode; any other tap strikes.
+    private func shopTap(_ item: ListContents.Item) {
+        switch trip.tap(item, lastWeightKg: BodyWeight.lastKg(in: model.store)) {
+        case .reveal: break
+        case .strike: check(item)
         }
     }
 
@@ -229,10 +275,14 @@ private struct GroceriesPage: View {
                     }
                 }
             }
+            let checked = try? model.engine.perform(CheckListItem(item: item.id, time: AppClock.now), by: .user)
             withTesseraAnimation(.smooth(duration: 0.28), reduceMotion: reduceMotion) {
-                _ = try? model.engine.perform(CheckListItem(item: item.id, time: AppClock.now), by: .user)
                 striking.remove(item.id)
                 model.touch()
+            }
+            // A refused check: the row stays on the list and Tess says so (ER11).
+            if checked == nil {
+                GroceriesCopy.sayDidntSave()
             }
             try? await Task.sleep(for: .milliseconds(520))
             sinking.removeAll { $0.id == item.id }
@@ -243,42 +293,50 @@ private struct GroceriesPage: View {
     }
 
     private func uncheck(_ item: ListContents.Item) {
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
-            _ = try? model.engine.perform(CheckListItem(item: item.id, done: false), by: .user)
-            model.touch()
+        let unchecked = try? model.engine.perform(CheckListItem(item: item.id, done: false), by: .user)
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
+        if unchecked == nil {
+            GroceriesCopy.sayDidntSave()
         }
     }
 
     /// Tess says it beside her soul, with Undo (the same reply line as everywhere else).
     private func clearBasket(count: Int) {
         guard let list = groceries.list else { return }
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
-            let result = try? model.engine.perform(ClearDoneItems(list: list.id), by: .user)
-            basketOpen = false
-            model.touch()
-            if let result {
-                TessVoice.shared.say("Cleared \(count) from the basket.", undo: result.record)
-            }
+        let cleared = GroceriesCopy.clear(count: count) {
+            try? model.engine.perform(ClearDoneItems(list: list.id), by: .user).record
         }
+        // A refused clear keeps the basket open with its rows and says so (Kitchen on #793).
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+            if cleared.undo != nil {
+                basketOpen = false
+            }
+            model.touch()
+        }
+        TessVoice.shared.say(cleared.line, undo: cleared.undo)
     }
 
     private func toggleShop() {
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
-            if let shop = groceries.shop(in: model.engine), shop.state == .running {
-                _ = try? model.engine.perform(SuspendProcess(process: shop.id), by: .user)
-            } else {
-                _ = try? model.engine.perform(StartShop(), by: .user)
-            }
-            model.touch()
+        let refusal = GroceriesCopy.toggleShop(groceries, engine: model.engine)
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
+        if let refusal {
+            TessVoice.shared.say(refusal)
         }
     }
 
+    /// "Shopping, finished." with a 10 s UNDO that brings the basket and the shop back (G43). A failed write keeps
+    /// the basket open, says so, and plays no finish haptic.
     private func finishShop() {
+        let outcome = GroceriesCopy.finish(engine: model.engine)
+        guard let record = outcome.undo else {
+            TessVoice.shared.say(outcome.line)
+            return
+        }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
-            _ = try? model.engine.perform(FinishShop(), by: .user)
             basketOpen = false
             model.touch()
         }
+        TessVoice.shared.say(outcome.line, undo: record, holds: .seconds(10))
         finished += 1
     }
 
@@ -386,6 +444,8 @@ private struct AisleSection: View {
     let items: [ListContents.Item]
     let striking: Set<UUID>
     let recipes: (ListContents.Item) -> [String]
+    /// What each row reads (a private one: "Private item" until tapped).
+    let label: (ListContents.Item) -> String
     let onTap: (ListContents.Item) -> Void
     @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -398,7 +458,7 @@ private struct AisleSection: View {
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(items) { item in
                     GroceryRow(item: item, isStriking: striking.contains(item.id), recipes: recipes(item),
-                               height: 48) { onTap(item) }
+                               height: 48, name: label(item)) { onTap(item) }
                         .transition(.asymmetric(insertion: .push(from: .top).combined(with: .opacity),
                                                 removal: .opacity.combined(with: .scale(scale: 1, anchor: .top))))
                 }
@@ -416,6 +476,8 @@ private struct GroceryRow: View {
     let isStriking: Bool
     let recipes: [String]
     var height: CGFloat = 48
+    /// The words to show in place of the item's own (SHOP mode's "Private item").
+    var name: String?
     let onTap: () -> Void
     @State private var showsRecipes = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -425,11 +487,11 @@ private struct GroceryRow: View {
             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                 HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.s) {
                     (Text(item.quantity.map { "\($0) " } ?? "").fontWeight(.semibold)
-                        + Text(GroceriesCopy.name(item)).fontWeight(.regular))
+                        + Text(name ?? GroceriesCopy.name(item)).fontWeight(.regular))
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.ink)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
+                        // A long name wraps, never cut (K36.19, the AX rule).
+                        .fixedSize(horizontal: false, vertical: true)
                         .textRenderer(StrikeRenderer(progress: isStriking ? 1 : 0, color: Theme.Colors.ink))
                     Spacer(minLength: Theme.Spacing.s)
                     if !recipes.isEmpty {
@@ -461,7 +523,7 @@ private struct GroceryRow: View {
             withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { showsRecipes.toggle() }
         })
         .accessibilityElement(children: .combine)
-        .accessibilityHint("Puts it in the basket")
+        .accessibilityHint(name == ShopTrip.privateLabel ? "Shows it" : "Puts it in the basket")
         .accessibilityAction(named: "Which recipes") { showsRecipes.toggle() }
     }
 }
@@ -472,6 +534,8 @@ private struct AtTheShop: View {
     let aisles: [(aisle: String, items: [ListContents.Item])]
     let striking: Set<UUID>
     let recipes: (ListContents.Item) -> [String]
+    /// What each row reads (a private one: "Private item" until tapped).
+    let label: (ListContents.Item) -> String
     let onTap: (ListContents.Item) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -488,7 +552,7 @@ private struct AtTheShop: View {
                         VStack(alignment: .leading, spacing: 0) {
                             ForEach(current.items) { item in
                                 GroceryRow(item: item, isStriking: striking.contains(item.id), recipes: recipes(item),
-                                           height: 64) { onTap(item) }
+                                           height: 64, name: label(item)) { onTap(item) }
                                     .transition(.opacity)
                             }
                         }
@@ -569,6 +633,8 @@ private struct BasketFold: View {
     let items: [ListContents.Item]
     @Binding var isOpen: Bool
     let breathe: Bool
+    /// What each basket row reads (a private one stays "Private item"; a tap here takes it back out).
+    let label: (ListContents.Item) -> String
     let onTap: (ListContents.Item) -> Void
     let onClear: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -594,7 +660,7 @@ private struct BasketFold: View {
                     ForEach(items) { item in
                         Button { onTap(item) } label: {
                             (Text(item.quantity.map { "\($0) " } ?? "").fontWeight(.semibold)
-                                + Text(GroceriesCopy.name(item)).fontWeight(.regular))
+                                + Text(label(item)).fontWeight(.regular))
                                 .textRole(.body)
                                 .foregroundStyle(Theme.Colors.inkSecondary)
                                 .textRenderer(StrikeRenderer(progress: 1, color: Theme.Colors.inkSecondary))
@@ -671,6 +737,41 @@ private struct GroceriesEmpty: View {
 }
 
 enum GroceriesCopy {
+    static let didntSave = "Didn't save that. Try again."
+
+    /// Starts or sets aside the shop. A refused start says why: "Workout running." while a workout runs (QA on
+    /// #792), else "Didn't save that. Try again." Nil when it went through.
+    @MainActor static func toggleShop(_ groceries: Groceries, engine: ActionEngine) -> String? {
+        if let shop = groceries.shop(in: engine), shop.state == .running {
+            return RecipeCopy.startCook { try engine.perform(SuspendProcess(process: shop.id), by: .user) }
+        }
+        return RecipeCopy.startCook { try engine.perform(StartShop(), by: .user) }
+    }
+
+    /// A refused write on Groceries says so; nothing scolds, so there is no warning haptic (ER11, Haptics.swift).
+    @MainActor static func sayDidntSave() {
+        TessVoice.shared.say(didntSave)
+    }
+
+    /// Clearing the basket: "Cleared 3 from the basket." with UNDO, or the failure line with nothing to undo.
+    static func clear(count: Int, _ perform: () -> OpRecord?) -> (line: String, undo: OpRecord?) {
+        guard let record = perform() else { return (didntSave, nil) }
+        return ("Cleared \(count) from the basket.", record)
+    }
+
+    /// Finishing the shop: the engine's receipt and its record, or the failure line with nothing to undo.
+    @MainActor static func finish(engine: ActionEngine) -> (line: String, undo: OpRecord?) {
+        finish { try? engine.perform(FinishShop(), by: .user).record }
+    }
+
+    @MainActor static func finish(_ perform: () -> OpRecord?) -> (line: String, undo: OpRecord?) {
+        guard let record = perform() else {
+            return (didntSave, nil)
+        }
+        let receipt = record.receipt ?? "Shopping, finished"
+        return (receipt.hasSuffix(".") ? receipt : receipt + ".", record)
+    }
+
     /// The name as it should read beside its amount: "3 eggs", not "3 egg" (a plain count above one, no unit).
     static func name(_ item: ListContents.Item) -> String {
         guard let quantity = item.quantity, let count = Double(quantity), count > 1,
@@ -697,10 +798,7 @@ enum GroceriesCopy {
 
     /// "eggs, milk and 2 lemons" → three lines.
     static func lines(in text: String) -> [String] {
-        text.replacing(/\s+and\s+/, with: ",")
-            .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
+        GroceryLines.split(text)
     }
 }
 

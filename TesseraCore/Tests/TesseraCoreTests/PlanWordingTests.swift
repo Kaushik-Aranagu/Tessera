@@ -145,11 +145,12 @@ struct PlanWordingTests {
     }
 
     @Test func thePackIsTheFixtureLine() throws {
-        // fixtures/plan-my-day-claude.md d01, byte for byte: handles, no ids, no notes or health.
+        // fixtures/plan-my-day-claude.md d01, byte for byte: handles, no ids, no notes or health. "Book physio" goes as
+        // "task" since the Home wall (QA audit of d6fd9ca).
         let expected = #"{"allDay":[],"blocks":[{"end":"08:15","id":"t1","kind":"task","min":15,"run":1,"#
             + #""start":"08:00","title":"Reply to landlord"},{"due":"17:00","end":"09:00","id":"t2","kind":"task","#
             + #""min":45,"run":1,"start":"08:15","title":"Expense report"},{"end":"09:20","id":"t3","kind":"task","#
-            + #""min":20,"run":1,"start":"09:00","title":"Book physio"},{"end":"09:45","fixed":true,"id":"e1","#
+            + #""min":20,"run":1,"start":"09:00","title":"task"},{"end":"09:45","fixed":true,"id":"e1","#
             + #""kind":"event","min":15,"start":"09:30","title":"Standup"},{"end":"12:00","fixed":true,"id":"e2","#
             + #""kind":"event","min":60,"start":"11:00","title":"Design review"},{"end":"15:30","fixed":true,"#
             + #""id":"e3","kind":"event","min":30,"start":"15:00","title":"1:1 Priya"},{"end":"19:00","fixed":true,"#
@@ -428,5 +429,28 @@ struct PlanWordingTests {
                                          restDay: false, otherNames: ["Bank holiday"], lastWeightKg: nil))
         let line = Self.ideal.replacingOccurrences(of: "while the morning is quiet.", with: "a Bank holiday morning.")
         #expect(try !PlanProposalValidator.violations(proposal(line), against: pack).contains("V13"))
+    }
+
+    @Test(arguments: ["Private recipe", "Private task", "Private note", "Private item", "private recipe "])
+    func privateLabelsAreNeverATitle(_ title: String) throws {
+        // KC13: the label itself is private, so a walled cook goes as "task", never as "Private recipe".
+        #expect(PlanPack.isPrivate(title, lastWeightKg: nil), "\(title)")
+        var input = PlanInput(now: now, calendar: DayPlanTests.calendar)
+        input.later = [PlanInput.Task(title: title, minutes: 20, updatedAt: now)]
+        let pack = try #require(PlanPack(plan: DayPlanner.plan(input), now: now, calendar: DayPlanTests.calendar,
+                                         calendarKnown: true, restDay: false, lastWeightKg: nil))
+        #expect(!pack.json.localizedCaseInsensitiveContains("Private"), "\(pack.json)")
+    }
+
+    @Test(arguments: ["Physio at 5", "Call mom about the lawyer", "Pay Dr Lee"])
+    func careMoneyAndPeopleTitlesGoAsTask(_ title: String) throws {
+        // QA's walls audit of d6fd9ca: the plan pack uses the Home pack's wall.
+        #expect(PlanPack.isPrivate(title, lastWeightKg: nil), "\(title)")
+        var input = PlanInput(now: now, calendar: DayPlanTests.calendar)
+        input.later = [PlanInput.Task(title: title, minutes: 20, updatedAt: now)]
+        let pack = try #require(PlanPack(plan: DayPlanner.plan(input), now: now, calendar: DayPlanTests.calendar,
+                                         calendarKnown: true, restDay: false, lastWeightKg: nil))
+        #expect(!pack.json.contains(title), "\(pack.json)")
+        #expect(!PlanPack.isPrivate("Fix bike light", lastWeightKg: nil))
     }
 }

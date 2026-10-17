@@ -20,11 +20,71 @@ public struct Groceries {
         store.object(id: Self.listID).flatMap { $0.isDeleted ? nil : $0 }
     }
 
+    /// The receipt when strays were folded in.
+    public static let mergedReceipt = "Groceries lists, merged."
+
     /// Makes the one groceries list with its fixed id. Called when the catalog is prepared.
-    static func installIfNeeded(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) {
-        guard store.object(id: listID) == nil, let listClass = classes[.list] else { return }
-        let list = store.create(listClass, title: "Groceries")
-        list.id = listID
+    /// Exactly one built-in Groceries list after this runs (G29): a copy made while it was deleted brings it back with
+    /// its rows, and a second "Groceries" made by `groceriesList()` while it was gone folds into it. Only a list the
+    /// app itself made folds; a list he made and named "Groceries" is his and stays. Returns how many strays folded.
+    @discardableResult
+    static func installIfNeeded(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) -> Int {
+        guard let listClass = classes[.list] else { return 0 }
+        let fixed: ObjectRecord
+        if let existing = store.object(id: listID) {
+            if existing.isDeleted {
+                store.restore(existing)
+            }
+            fixed = existing
+        } else {
+            fixed = store.create(listClass, title: "Groceries")
+            fixed.id = listID
+        }
+        let folded = foldStrays(into: fixed, store: store, listClass: listClass)
+        // Said once, calmly, at launch; never over a note that is already waiting (a restore's, say).
+        if folded > 0, TesseraSchema.launchNote == nil {
+            TesseraSchema.setLaunchNote(mergedReceipt)
+        }
+        return folded
+    }
+
+    /// Marker for an app-made stray: its create op was recorded by an action other than `createList`, because only
+    /// `groceriesList()` (inside an add-to-groceries action) makes a "Groceries" list without him asking for a list.
+    /// A list he made himself, by `createList` (a tap or Tess), has a `createList` create op and is never a stray.
+    private static func appMade(_ candidates: [ObjectRecord], store: ObjectStore) -> Set<UUID> {
+        let ids = Set(candidates.map(\.id))
+        var made: Set<UUID> = []
+        var his: Set<UUID> = []
+        for record in store.context.all(OpRecord.self) {
+            for op in record.ops {
+                guard case let .create(object, _, _, _) = op, ids.contains(object) else { continue }
+                if record.action == CreateList.descriptor.name {
+                    his.insert(object)
+                } else {
+                    made.insert(object)
+                }
+            }
+        }
+        return made.subtracting(his)
+    }
+
+    /// A stray list the app made with the built-in's name and no fixed id: its rows move across, then it goes.
+    private static func foldStrays(into fixed: ObjectRecord, store: ObjectStore, listClass: ClassDef) -> Int {
+        let named = store.objects(of: listClass).filter { $0.id != listID && $0.title == "Groceries" }
+        guard !named.isEmpty else { return 0 }
+        let made = appMade(named, store: store)
+        let strays = named.filter { made.contains($0.id) }
+        for stray in strays {
+            var next = (fixed.orderedChildren.map(\.sortIndex).max() ?? -1) + 1
+            for row in stray.orderedChildren {
+                store.noteChange(row)
+                row.parent = fixed
+                row.sortIndex = next
+                next += 1
+            }
+            store.softDelete(stray)
+        }
+        return strays.count
     }
 
     /// Sections in walking order, each with its open items.
@@ -240,7 +300,14 @@ extension Transaction {
         let item: ObjectRecord = if let existing {
             existing
         } else {
-            try AddListItem(list: list.id, text: text, section: section).apply(&self)
+            // A row for an ingredient he already has: its name was walled (or not) where he typed it, so the row is
+            // made directly. AddListItem's wall would turn a walled name into a note and the share write below would
+            // throw (unknownField "shares").
+            // A secret word never sits on the list in his words, from any path (QA on #773): the row is titled
+            // "Private item", the way a typed secret line is refused.
+            // One rule with a typed line (QA on #775): "pins" and "combination" stay; "wifi password" doesn't.
+            try createGroceryRow(SecretWords.isSecretListLine(text) ? "Private item" : text,
+                                 section: section, in: list)
         }
         var shares = GroceryShare.decode(store.value("shares", of: item)?.stringValue)
         var share = share
@@ -250,6 +317,17 @@ extension Transaction {
         }
         shares.append(share)
         try writeShares(shares, on: item, ingredient: ingredient)
+        return item
+    }
+
+    mutating func createGroceryRow(_ text: String, section: String?, in list: ObjectRecord) throws -> ObjectRecord {
+        let last = list.orderedChildren.last?.sortIndex ?? -1
+        let item = try create(classDef(.listItem), title: text.trimmingCharacters(in: .whitespacesAndNewlines),
+                              parent: list)
+        setSortIndex(last + 1, on: item)
+        if let section, !section.isEmpty {
+            try set("section", to: .text(section), on: item)
+        }
         return item
     }
 
@@ -313,6 +391,12 @@ public struct AddRecipeToGroceries: EngineAction {
             Self.lastAdded[recipe.id] = 0
             return []
         }
+        // Added again at the same or a smaller size: its share already covers every line, so nothing is added and the
+        // list is never halved (Kitchen K34.8: an add is not reversed by a size change). A bigger size replaces it.
+        if alreadyOn > 0, wanted.allSatisfy({ Self.isCovered($0, by: recipe, on: list, in: transaction.store) }) {
+            Self.lastAdded[recipe.id] = 0
+            return []
+        }
         try RemoveRecipeFromGroceries(recipe: recipe.id).apply(&transaction)
         let before = Set(list.orderedChildren.map(\.id))
         var items: [ObjectRecord] = []
@@ -351,13 +435,38 @@ public struct AddRecipeToGroceries: EngineAction {
         return made
     }
 
+    /// Whether an open row already holds this recipe's share of the line, at least as much of it.
+    @MainActor
+    static func isCovered(_ line: RecipeBook.Line, by recipe: ObjectRecord, on list: ObjectRecord,
+                          in store: ObjectStore) -> Bool
+    {
+        guard let ingredient = line.ingredient else { return true }
+        let wanted = line.line.amountMax ?? line.line.amount
+        return list.orderedChildren.contains { item in
+            guard !item.isDeleted, store.value("isDone", of: item) != .bool(true),
+                  store.linkedObjects("about", of: item).contains(where: { $0.id == ingredient.id })
+            else { return false }
+            return GroceryShare.decode(store.value("shares", of: item)?.stringValue).contains { share in
+                share.recipe == recipe.id && share.unit == line.line.unit && share.packSize == line.line.packSize
+                    && (share.amount ?? 0) >= (wanted ?? 0)
+            }
+        }
+    }
+
     /// New rows by recipe from the last `apply` in this process, for the receipt written right after it.
     nonisolated(unsafe) static var lastAdded: [UUID: Int] = [:]
 
     /// "Tacos, 10 added." (Product W12); "Tacos, nothing to add." when nothing was new (Product e1981a39). The short
     /// name, unless another recipe on the list shares it (Kitchen lead, #389).
+    /// A private recipe lends no word of its title (QA on #807's run): "Private recipe, 3 added.".
     public func summary(in store: ObjectStore) -> String {
-        let name = store.object(id: recipe).map { RecipeBook.shortName(of: $0, store: store) } ?? "Recipe"
+        let object = store.object(id: recipe)
+        let isPrivate = object.map { recipe in
+            store.value("isPrivate", of: recipe) == .bool(true)
+                || ObjectPrivacy.isPrivateRecipeTitle(recipe.title, lastWeightKg: BodyWeight.lastKg(in: store))
+        } ?? false
+        let name = isPrivate ? ObjectPrivacy.recipeLabel
+            : object.map { RecipeBook.shortName(of: $0, store: store) } ?? "Recipe"
         let made = Self.lastAdded[recipe] ?? 0
         return made == 0 ? "\(name), nothing to add." : "\(name), \(made) added."
     }
@@ -414,7 +523,9 @@ public struct AddGroceries: EngineAction {
 
     public func apply(_ transaction: inout Transaction) throws -> [ObjectRecord] {
         var items: [ObjectRecord] = []
-        for text in lines {
+        // The wall, for every caller (Add line, Bar, Siri, tools; Product 8:40 AM PT Oct 17): a price comes off, and a
+        // line that is only money, a secret or a key writes nothing.
+        for text in Self.kept(lines, store: transaction.store) {
             guard let line = IngredientLine.parse(text) else { continue }
             let ingredient = try transaction.ingredient(named: line.name)
             let share = GroceryShare(recipe: nil, amount: line.amount, unit: line.unit, packSize: line.packSize)
@@ -427,11 +538,44 @@ public struct AddGroceries: EngineAction {
         return items
     }
 
-    public func summary(in _: ObjectStore) -> String {
-        lines.count == 1 ? "Added \(lines[0])" : "Added \(lines.count) things"
+    /// A medicine or body line is never said back (#688): it reads "Private item".
+    @MainActor
+    private func shown(_ line: String, in store: ObjectStore) -> String {
+        EngineWall.isHealth(line, lastWeightKg: BodyWeight.lastKg(in: store)) || AddListItem
+            .kept(line, store: store) == nil
+            ? "Private item" : line
     }
 
-    public func receipt(in _: ObjectStore) -> String? {
+    /// The lines as the wall keeps them: price off, walled lines gone.
+    @MainActor
+    public static func kept(_ lines: [String], store: ObjectStore) -> [String] {
+        let book = IngredientBook(store: store, classes: PrivateWords.systemClasses(in: store.context))
+        return lines.compactMap { line in
+            let given = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            // An ingredient he already has goes through whatever its name (a Pantry swipe; QA on #763): nothing new
+            // is written, and it is said as "Private item".
+            if let existing = book.find(given),
+               IngredientLine.key(for: existing.title) == IngredientLine.key(for: given),
+               !looksLikeClaudeKey(given)
+            {
+                return AddListItem.kept(given, store: store) ?? given
+            }
+            return AddListItem.kept(given, store: store)
+        }
+    }
+
+    @MainActor
+    public func summary(in store: ObjectStore) -> String {
+        // Thing first, the list by name (lists copy sweep, Product 10:06 PM PT); only what the wall kept.
+        let lines = Self.kept(lines, store: store)
+        let first = lines.first.map { shown($0, in: store) } ?? ""
+        return lines.count == 1 ? "\(first.prefix(1).uppercased() + first.dropFirst()), on Groceries"
+            : "\(lines.count) things on Groceries"
+    }
+
+    @MainActor
+    public func receipt(in store: ObjectStore) -> String? {
+        let lines = Self.kept(lines, store: store).map { shown($0, in: store) }
         guard !lines.isEmpty else { return nil }
         // Name the things: "Oat milk and eggs, on Groceries"; "Oat milk, eggs and 2 more, on Groceries" (Design R7).
         let names = switch lines.count {

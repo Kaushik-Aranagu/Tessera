@@ -54,7 +54,9 @@ public struct HomeDonePack: Equatable, Sendable {
         guard fact.kind == .workout, fact.state == .done, let ended = fact.endedAt else { return .failure(.notDone) }
         guard fact.sets > 0 else { return .failure(.noSets) }
         guard !fact.records.isEmpty || (fact.sinceLastDays ?? 0) >= 4 else { return .failure(.nothingToAdd) }
-        guard !([fact.title] + fact.records).contains(where: { isWalled($0, lastWeightKg: lastWeightKg) }) else {
+        guard !([fact.title] + fact.records).contains(where: {
+            isWalled($0, lastWeightKg: lastWeightKg) || PromptSteering.mentions($0)
+        }) else {
             return .failure(.walled)
         }
         let finish = HouseTime.clock(ended, calendar: calendar)

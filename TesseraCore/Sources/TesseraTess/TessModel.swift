@@ -9,6 +9,8 @@ public enum TessUse: String, Sendable, CaseIterable {
     case question
     /// Pasted text the deterministic parsers couldn't read.
     case paste
+    /// Reading a recipe link's page (his own READ tap). Receipts say "Recipe link", never "A paste" (G31).
+    case recipeLink
     /// Rewording the rules' plan for the day.
     case plan
     /// Checking a pasted Claude key (Settings: Claude).

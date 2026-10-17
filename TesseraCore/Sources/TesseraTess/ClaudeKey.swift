@@ -4,7 +4,7 @@ import Foundation
 #endif
 import TesseraCore
 
-// The Claude key: kept in the Keychain only, checked with one free call, and counted against the $10 month
+// The Claude key: kept in the Keychain only, checked with one free call, and counted against the $50 month
 // (docs/research/claude-key-test.md). The key is read once per call into a local and put only in that request's
 // Authorization header. It never reaches UserDefaults, the op log, objects, backups, exports, logs or errors.
 
@@ -80,7 +80,7 @@ public final class InMemoryKeychain: TessKeychain, @unchecked Sendable {
 
 // MARK: - Ledger
 
-/// The $10 month, in nano-dollars (one Haiku input token is 100 n$). The month starts at 00:00 on the 1st in the
+/// The $50 month, in nano-dollars (one Haiku input token is 100 n$). The month starts at 00:00 on the 1st in the
 /// phone's calendar, not his 4 AM day and not Anthropic's UTC.
 @MainActor
 public struct TessUsageLedger {

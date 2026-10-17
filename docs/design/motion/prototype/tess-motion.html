@@ -20,6 +20,8 @@
 const W = 393, H = 852, CAP = 64;
 const params = new URLSearchParams(location.search);
 const SCENE = params.get('scene') || 'work';
+// ?rm=1: Reduce Motion preview of any scene (tess-quiet-versions.md). Default output is unchanged without it.
+const RM = params.get('rm') === '1';
 // MARK: - Looks (DesignSystem/Looks.swift; inkSoft is each look's `neutral`)
 const LOOKS_BY_NAME = {
   // Recut tables (#367, Design 43). `pale` is SoulPalette.look's rule on master: field pigmentBloom or glaze
@@ -1947,6 +1949,53 @@ PICKS.accent = () => {
     ],
   };
 };
+// M1 (board 9:50 refill, sheet 84): the error notice. It replaces Tess's line in the UNDO slot; a tap dims it to 60%
+// with a 0.5 pt ink line over 150 ms; success crossfades to the receipt. Reduce Motion (?rm=1): crossfades only.
+PICKS['error-notice'] = () => {
+  const ERR = .6, TAP = 3.2, OK = 5.0, D = 7.4, CF = .22;
+  const err = 'Couldn’t save bench 2 × 10 at 80.', rcpt = 'Logged bench 2 × 10 at 80.';
+  const fadeIn = (t, at, d) => ramp(t, at, d);
+  const blurText = (str, y, a, col, blur, b = a) => {
+    if (a < .01) return;
+    ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.filter = blur ? `blur(${((1 - b) * 4 * DPR).toFixed(2)}px)` : 'none';
+    ctx.globalAlpha = a; ctx.font = font(17, 500); ctx.fillStyle = col; ctx.textAlign = 'left';
+    ctx.fillText(str, 24, y); ctx.restore();
+  };
+  return {
+    duration: D,
+    draw: t => {
+      HOME41.draw();
+      // Arrival: 300 ms blur-in (house line), or a 150 ms crossfade in Reduce Motion. Leaves in 220 ms at OK.
+      const inA = RM ? fadeIn(t, ERR, .15) : fadeIn(t, ERR, .3);
+      const dim = 1 - .4 * ramp(t, TAP, .15, houseCurve);
+      const outA = 1 - ramp(t, OK, CF);
+      const a = inA * outA;
+      blurText(err, 785, a * dim, LOOK.tess, !RM, inA);
+      const sa = a * dim;
+      if (sa > .01) {
+        text('TRY AGAIN', 24, 812, 16, LOOK.ink, 700, 'left', sa * .9);
+        stroke(24, 24 + width('TRY AGAIN', 16), 818, 1.5, LOOK.ink, sa);
+        // The 0.5 pt ink line draws under her line over 150 ms, left to right.
+        const lw = width(err, 17) * ramp(t, TAP, .15, houseCurve);
+        if (lw > .5) stroke(24, 24 + lw, 794, .5, LOOK.ink, outA);
+      }
+      // Success: the receipt and UNDO crossfade in the same slot.
+      const rA = ramp(t, OK, CF);
+      blurText(rcpt, 785, rA, LOOK.tess, false);
+      if (rA > .01) { text('UNDO', 24, 812, 16, LOOK.ink, 700, 'left', rA * .9); stroke(24, 24 + width('UNDO', 16), 818, 1.5, LOOK.ink, rA); }
+    },
+    finger: t => (t > TAP - .2 && t < TAP + .25) ? { x: 70, y: 806, alpha: 1 - ramp(t, TAP, .25) } : null,
+    soul: { modes: [{ mode: 'idle', at: -10 }], centre: () => ({ x: HOME.x, y: HOME.y }) },
+    caps: [
+      { at: 0, text: 'A save fails. Her line is the only thing that changes.' },
+      { at: ERR, text: RM ? '0.6 the notice crossfades in (150 ms), in her slot.' : '0.6 the notice blurs in (300 ms), in the UNDO slot.', haptic: '.warning (the notice’s one)' },
+      { at: TAP, text: '3.2 tap: dims to 60%, a 0.5 pt line draws (150 ms).' },
+      { at: TAP + 1, text: '4.2 waiting. The page has not moved.' },
+      { at: OK, text: '5.0 success: 220 ms crossfade to the receipt. No haptic.' },
+    ],
+  };
+};
 for (const [name, make] of Object.entries(PICKS)) SCENES['pick-' + name] = () => { const s = make(); s.lines = s.lines || []; return s; };
 
 // The work state when she's out on a row: tighter constellation, no readers.
@@ -1974,7 +2023,12 @@ function renderAt(t) {
   }
   if (scene.draw) scene.draw(t); else drawPage(scene.page ? scene.page(t) : {});
   drawLine(scene.lines, t);
-  const soul = scene.soul;
+  let soul = scene.soul;
+  if (RM && !soul.frozen) {
+    // Soul at idle's still frame: opacity breath and blink only. The look offset, ripple, lean, stretch and beats are dropped.
+    const eyes = soul.eyes;
+    soul = { modes: [{ mode: 'idle', at: -10 }], centre: soul.centre, frozen: true, reduced: () => 0, eyes: eyes ? t2 => { const e = eyes(t2); return { ...e, look: { x: 0, y: 0 } }; } : undefined };
+  }
   if (soul.frozen) {
     // Reduce Motion: the soul's frame is frozen at idle's still phase (no TimelineView ticking).
     // Design (11-13 pass): the breath is opacity only, 0.85 to 1 over 3.2 s, and the blink stays.

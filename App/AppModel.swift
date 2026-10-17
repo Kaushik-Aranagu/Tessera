@@ -128,6 +128,8 @@ final class AppModel {
         didSet {
             if isWorkoutPresented {
                 session?.touch()
+                // A launch straight into the live workout (the Live Activity, Resume): his moment wins the wake.
+                soul.handle(.liveOpened)
             } else {
                 // Whoever closed the cover, the next one (Resume, the seam) is a plain one.
                 workoutRisesFromLane = false
@@ -182,7 +184,7 @@ final class AppModel {
                                                               .map(BackupCopy.folderName))
             // The first launch with the restWeekday reader: Sunday, as one op with UNDO ("Sunday, rest day.";
             // Research 146). Once; an UNDO or a later "Any" leaves a record, so it is never written twice.
-            SettingsStore(engine: engine).writeFirstRestWeekday(defaults: launchDefaults)
+            restReceipt = SettingsStore(engine: engine).writeFirstRestWeekday(defaults: launchDefaults)
         }
         runtime = TesseraRuntime(engine: engine)
         soul.runScript()
@@ -210,6 +212,8 @@ final class AppModel {
 
     /// One calm line in Tess's voice when launch didn't go normally (a failed migration). Shown in the Ask bar.
     var launchNote: String?
+    /// The first launch's "Sunday, rest day." op, shown once in Tess's band with UNDO, then cleared.
+    var restReceipt: OpRecord?
 
     /// Tess's capture engine and the App Intents runtime (Core's TesseraTess / TesseraIntents).
     @ObservationIgnored private(set) var runtime: TesseraRuntime!
@@ -411,8 +415,16 @@ final class AppModel {
     }
 
     /// Resume lands on the process's resume point: for a workout, the live cover at its set with the dial preset.
-    func resume(_ process: ProcessSnapshot) {
-        _ = try? engine.perform(ResumeProcess(process: process.id, time: AppClock.now), by: .user)
+    /// Picks a set-aside process back up. While a workout runs the engine refuses anything else, so Tess says
+    /// "Workout running." and nothing changes (G56, QA on #792); the line is returned for tests.
+    @discardableResult
+    func resume(_ process: ProcessSnapshot) -> String? {
+        if let refusal = RecipeCopy.startCook({
+            try engine.perform(ResumeProcess(process: process.id, time: AppClock.now), by: .user)
+        }) {
+            TessVoice.shared.say(refusal)
+            return refusal
+        }
         if let workout = process.subject, workout.classDef?.id == classes[.workout]?.id {
             if session?.workout.id != workout.id {
                 session = WorkoutSession(workout: workout, model: self)
@@ -423,6 +435,7 @@ final class AppModel {
             isWorkoutPresented = true
         }
         touch()
+        return nil
     }
 
     // MARK: Navigation
@@ -604,45 +617,6 @@ final class AppModel {
         isWorkoutPresented = false
         self.session = nil
         touch()
-    }
-
-    // MARK: Training stats
-
-    struct LoggedSet {
-        let weight: Double
-        let reps: Double
-        let e1RM: Double
-    }
-
-    struct SessionSummary: Identifiable {
-        let id: UUID
-        let workout: ObjectRecord
-        let date: Date
-        let sets: [LoggedSet]
-    }
-
-    /// Completed sessions for an exercise class (and its subclasses), newest first.
-    /// Completed sessions for an exercise class (and its subclasses), newest first. Reads Core's training index
-    /// (milliseconds even with years of history) instead of walking backlinks.
-    func history(of exercise: ClassDef) -> [SessionSummary] {
-        _ = revision
-        return ledger.sessions(of: exercise).map { session in
-            SessionSummary(id: session.id, workout: session.workout, date: session.date,
-                           sets: session.sets.map { LoggedSet(weight: $0.weight, reps: $0.reps, e1RM: $0.e1RM) })
-        }
-    }
-
-    func bestSet(of exercise: ClassDef, excludingWorkout excludedID: UUID? = nil) -> LoggedSet? {
-        _ = revision
-        return ledger.bestSet(of: exercise, excludingWorkout: excludedID)
-            .map { LoggedSet(weight: $0.weight, reps: $0.reps, e1RM: $0.e1RM) }
-    }
-
-    /// Evaluates the Set class's own `e1rm` expression for values that aren't logged yet.
-    func previewE1RM(weight: Double, reps: Double) -> Double? {
-        guard let setClass = classes[.set], let source = ClassResolver.field("e1rm", of: setClass)?.expression,
-              let expression = try? Formula.parse(source) else { return nil }
-        return expression.evaluate { ["weight": weight, "reps": reps][$0] }
     }
 }
 

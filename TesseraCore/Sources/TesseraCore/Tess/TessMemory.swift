@@ -344,11 +344,17 @@ public struct TessMemoryStore {
     /// The forget log outside the store (Application Support, never inside a .tessera backup), so a restored backup
     /// from before a forget still forgets it (QA F2b on #356). Nil keeps the log in the store only (tests).
     public var forgetLogURL: URL?
+    /// How the forget log is written: complete protection on the phone. Tests on a locked Mac pass `[]`, because
+    /// macOS refuses a protected write while the screen is locked.
+    public var fileProtection: Data.WritingOptions = .completeFileProtection
 
-    public init(engine: ActionEngine, calendar: Calendar = .current, forgetLogURL: URL? = Self.defaultForgetLogURL) {
+    public init(engine: ActionEngine, calendar: Calendar = .current, forgetLogURL: URL? = Self.defaultForgetLogURL,
+                fileProtection: Data.WritingOptions = .completeFileProtection)
+    {
         self.engine = engine
         self.calendar = calendar
         self.forgetLogURL = forgetLogURL
+        self.fileProtection = fileProtection
     }
 
     /// Application Support/Tessera/tess-forgotten.json: hashes only, no words.
@@ -560,7 +566,7 @@ public struct TessMemoryStore {
         var log = Self.readForgetLog(forgetLogURL)
         if log.forgotten[hash] == nil {
             log.forgotten[hash] = .now
-            Self.writeForgetLog(log, to: forgetLogURL)
+            Self.writeForgetLog(log, to: forgetLogURL, protection: fileProtection)
         }
         guard !storedForgottenHashes().contains(hash) else { return }
         let entry = store.create(memoryClass, title: hash)
@@ -597,10 +603,10 @@ public struct TessMemoryStore {
         return ForgetLog(forgotten: Dictionary(uniqueKeysWithValues: hashes.map { ($0, Date.distantPast) }))
     }
 
-    static func writeForgetLog(_ log: ForgetLog, to url: URL?) {
+    static func writeForgetLog(_ log: ForgetLog, to url: URL?, protection: Data.WritingOptions) {
         guard let url, let data = try? JSONEncoder().encode(log) else { return }
         try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try? data.write(to: url, options: [.atomic, .completeFileProtection])
+        try? data.write(to: url, options: [.atomic, protection])
     }
 
     /// When each forgotten line was forgotten: the store's quiet objects and the file together.
@@ -638,7 +644,7 @@ public struct TessMemoryStore {
         guard (log.reappliedAt ?? .distantPast) < restored else { return 0 }
         let count = reapplyForgets()
         log.reappliedAt = now
-        Self.writeForgetLog(log, to: forgetLogURL)
+        Self.writeForgetLog(log, to: forgetLogURL, protection: fileProtection)
         return count
     }
 

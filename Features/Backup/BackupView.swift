@@ -30,7 +30,8 @@ struct BackupView: View {
         let _ = refresh
         let folder = BackupKeeper.pickedFolder
         let failures = BackupKeeper.failures
-        let latest = BackupKeeper.latestLocal
+        let copies = BackupKeeper.localDates
+        let latest = copies.max()
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 if isPresented {
@@ -57,7 +58,7 @@ struct BackupView: View {
                     .padding(.top, Theme.Spacing.s)
                     .entrance(1, hero: true)
 
-                Text(BackupCopy.local(latest, now: AppClock.now))
+                Text(BackupCopy.local(latest, kept: copies.count, now: AppClock.now))
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.ink)
                     .fixedSize(horizontal: false, vertical: true)
@@ -124,8 +125,14 @@ struct BackupView: View {
                     .padding(.top, Theme.Spacing.s)
                     .entrance(4)
 
+                // EXPORT sits by the folder line, apart from SAVE A COPY (G38); hidden until Core's masked export.
+                if ExportFile.ready {
+                    ExportRow(onExport: {})
+                        .padding(.top, Theme.Spacing.l)
+                }
+
                 HStack(spacing: Theme.Spacing.xl) {
-                    Button("Save a copy", action: saveCopy)
+                    Button("Save a copy") { Task { await saveCopy() } }
                         .buttonStyle(.labelWord)
                     Button("Restore") { importing = true }
                         .buttonStyle(.labelWord)
@@ -181,7 +188,7 @@ struct BackupView: View {
         }),
         document: saving, contentType: .tesseraBackup, defaultFilename: saving?.name) { result in
             if case .success = result {
-                say("Saved.")
+                say("Copy saved.")
             }
         }
     }
@@ -194,6 +201,12 @@ struct BackupView: View {
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.ink)
                     .fixedSize(horizontal: false, vertical: true)
+                if let weight = confirming.weight {
+                    Text(weight)
+                        .textRole(.label)
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 PaintKey(paint: Theme.Colors.live, hint: "Restores this backup", action: confirmRestore) { _ in
                     Text("Replace")
                 } meta: {
@@ -227,12 +240,24 @@ struct BackupView: View {
         }
     }
 
-    private func saveCopy() {
-        guard let url = try? BackupKeeper.copyForSaving(model.context), let data = try? Data(contentsOf: url) else {
+    private func saveCopy() async {
+        do {
+            // A passcode, then Face ID: no passcode says why; not passing Face ID saves nothing and says nothing.
+            switch try await BackupKeeper.savedCopy(model.context) {
+            case .needsPasscode:
+                say(BackupKeeper.passcodeLine)
+            case .declined:
+                return
+            case let .copy(url, notice):
+                let data = try Data(contentsOf: url)
+                if let notice {
+                    say(notice)
+                }
+                saving = BackupFile(data: data, name: url.deletingPathExtension().lastPathComponent)
+            }
+        } catch {
             say("Couldn't make a copy just now.")
-            return
         }
-        saving = BackupFile(data: data, name: url.deletingPathExtension().lastPathComponent)
     }
 
     /// Checks the picked file and copies it in while access lasts; nothing is staged until "Replace" is held.
@@ -251,7 +276,8 @@ struct BackupView: View {
             dropPicked()
             withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
                 line = nil
-                confirming = Picked(url: copy, info: info)
+                confirming = Picked(url: copy, info: info,
+                                    weight: TesseraBackup.restoreWeightLine(copyAt: copy, replacing: model.context))
             }
         } catch TesseraBackup.BackupError.newerSchema {
             say("That copy is from a newer Tessera. Update first.")
@@ -315,6 +341,8 @@ struct BackupView: View {
 private struct Picked {
     let url: URL
     let info: TesseraBackup.Info
+    /// "That copy has 6 recipes. The 9 you have now are kept in Backups." when the Kitchen differs (G26).
+    let weight: String?
 }
 
 /// A backup file for the export sheet.
@@ -342,7 +370,7 @@ struct BackupFile: FileDocument {
 
 enum BackupCopy {
     /// "A copy is made every day. The last one was today." / "The first copy is made when you leave the app today."
-    static func local(_ latest: Date?, now: Date) -> String {
+    static func local(_ latest: Date?, kept: Int, now: Date) -> String {
         guard let latest else { return "The first copy is made when you leave the app today." }
         let calendar = Calendar.current
         // His day (04:00 to 04:00): a 23:55 copy read at 01:15 is today's.
@@ -350,7 +378,9 @@ enum BackupCopy {
         let when = tesseraDay.isSameDay(latest, now) ? "today"
             : tesseraDay.day(of: latest) == tesseraDay.day(-1, after: now) ? "yesterday"
             : latest.formatted(.dateTime.weekday(.wide))
-        return "A copy is made every day, the last one \(when). Seven are kept."
+        // The real count, in digits (copy sweep): "and 3 are kept." / "and 1 is kept." Never more than the 7 it keeps.
+        let count = max(kept, 1)
+        return "A copy is made every day, the last one \(when), and \(count) \(count == 1 ? "is" : "are") kept."
     }
 
     /// "Also keep them in a folder you choose." with the folder as a tappable value word in 600.
