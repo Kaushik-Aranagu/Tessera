@@ -244,10 +244,12 @@ struct TessTests {
             == "Private note, kept.")
         #expect(try CreateTaskIntent.add("remember my rent is 2100", startsAt: nil, engine: engine)
             == "I don't keep sums of money.")
-        // Something to do stays a task (W4), read back without its amount.
+        // Something to do stays a task (W4), read back without its amount, and stored without it (board 0ai, Product
+        // 2:22 PM PT: "Pay rent").
         #expect(try CreateTaskIntent.add("pay rent 2100 friday", startsAt: nil, engine: engine) == "Task added.")
         let titles = store.context.objects.values.map(\.title)
-        #expect(titles.contains { $0.lowercased().hasPrefix("pay rent 2100") })
+        #expect(titles.contains { $0.lowercased().hasPrefix("pay rent") })
+        #expect(!titles.contains { $0.contains("2100") })
         #expect(!titles.contains { $0.contains("advil") || $0.contains("212.37") || $0.contains("headache") })
         #expect(try CreateTaskIntent.add("call mom", startsAt: nil, engine: engine).lowercased().contains("call mom"))
         // Siri's writes need Face ID; the Lock Screen's set buttons don't (see SiriParityTests).
