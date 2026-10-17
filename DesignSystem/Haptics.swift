@@ -78,7 +78,9 @@ struct HapticCue: Equatable {
 
     mutating func play(_ haptic: Haptic) {
         // The warning never repeats back to back: a second failure with nothing else played in between stays quiet.
-        if haptic == .notSaved, self.haptic == .notSaved, count > 0 { return }
+        if haptic == .notSaved, self.haptic == .notSaved, count > 0 {
+            return
+        }
         self.haptic = haptic
         count += 1
     }
