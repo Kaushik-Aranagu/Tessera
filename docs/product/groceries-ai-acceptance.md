@@ -114,3 +114,18 @@ The engine checks every grocery title before it is written (`AddGroceries`, the 
 1. Rows land on planning for any date, not 17:00 the day before. DEFAULT: on planning (Design 47); he can delete a row he won't need yet.
 2. A kept row keeps its typed amount even when the recipe wants more. DEFAULT: yes; the ask never changes an amount.
 3. USUALLY cap. DEFAULT: 4 (Design 47), over R's 3.
+
+## 7 · The recipe-link money strip (Builder B 0z; decisions 2:40 PM and 11:52 AM Oct 16)
+
+*Before `ClaudeRecipeReader` sends a fetched page's text to Claude, money-shaped spans are cut from it, using the 2:22 money test (`PrivateFacts.isMoneyShaped`): a currency sign, a decimal or 3+ digit amount, or a money verb next to a bare number. Recipe quantities ("2 cups", "350 degrees", "1 1/2 tsp") are not money and stay. A rider only if merged and QA'd by Oct 22 9:30.*
+
+| # | Pass when |
+|---|---|
+| M1 | A fixture page (`docs/fixtures/recipe-link-prices.html`, Research or Builder B adds it) holds a recipe plus ads, shop widgets and a footer with prices ("$4.99", "USD 12", "12.50 EUR", "save 20%", "only 3 left at 5.99", "costs 15"); the text handed to the Claude call contains none of them |
+| M2 | The same page's recipe is read in full: every ingredient quantity (2 cups, 350 degrees, 1 1/2 tsp, 400 g, 3 cloves) and every step survives the strip, with the ingredient count and step count equal to the same page without the ads |
+| M3 | A page where the only money-shaped text is inside the recipe body ("a $5 bag of flour") is stripped of the span and the recipe still parses; the stripped span is never replaced with a marker that says money was there |
+| M4 | The strip runs before the call, not after: a test with a stub model records the exact text sent and finds no money-shaped span; there is no code path to ClaudeRecipeReader that skips it |
+| M5 | A page that is mostly prices (a shop listing) sends nothing useful: the reader returns "No recipe found." and the call is skipped if the stripped text has no ingredient lines |
+| M6 | `asksClaude` off or a secret word on the page: nothing is sent at all, and the strip is not the guard (the wall and the gate still run first) |
+| M7 | Money-shaped text is also never stored from the fetch: the saved recipe's notes and source fields carry no price span |
+
