@@ -109,9 +109,12 @@ private struct ListPage: View {
     @State private var draft = ""
     @State private var striking: Set<UUID> = []
     @State private var foldOpen = false
+    /// The option words under the context line (10.5): unfolded in place by a tap, no sheet.
+    @State private var optionsOpen = false
     /// Bumped by a real remove; the haptic lives here because the removed row leaves in the same update. It's
     /// .notNow, the row leaving (Design on #786); UNDO plays its own.
     @State private var removed = 0
+    @State private var reset = 0
     /// Private rows: "Private item" until tapped, masked again on leaving (as Groceries, B11).
     @State private var rows = ShopTrip()
     @FocusState private var writing: Bool
@@ -126,10 +129,29 @@ private struct ListPage: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     BackWord(title: "Lists") { dismiss() }
-                    Text(ListsCopy.pageContext(open: open.count, all: open.count + done.count))
-                        .font(Theme.voice(size: 21))
-                        .foregroundStyle(Theme.Colors.context)
-                        .entrance(0)
+                    Button {
+                        withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { optionsOpen.toggle() }
+                    } label: {
+                        // The visible cue that it opens (Design on #806): a small mark that turns as it unfolds.
+                        HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.xs) {
+                            Text(ListsCopy.pageContext(open: open.count, all: open.count + done.count))
+                                .font(Theme.voice(size: 21))
+                                .foregroundStyle(Theme.Colors.context)
+                            Text("›")
+                                .font(Theme.voice(size: 21))
+                                .foregroundStyle(Theme.Colors.inkSecondary)
+                                .rotationEffect(.degrees(optionsOpen ? 90 : 0))
+                                .accessibilityHidden(true)
+                        }
+                        .frame(minHeight: 44, alignment: .leading)
+                    }
+                    .buttonStyle(HandleButtonStyle())
+                    .accessibilityHint(optionsOpen ? "Hides the list's options" : "Shows the list's options")
+                    .entrance(0)
+                    if optionsOpen, list.id != Groceries.listID {
+                        options(list, name: name, reusable: contents.isReusable(list))
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
                     Text(name)
                         .textRole(.hero)
                         .foregroundStyle(Theme.Colors.ink)
@@ -165,13 +187,15 @@ private struct ListPage: View {
             .scrollIndicators(.hidden)
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if !done.isEmpty {
-                    fold(done, list: list)
+                    fold(done, name: name, reusable: contents.isReusable(list))
                 }
             }
             .background { ThemedBackground() }
             .background { EdgeSwipeBack() }
             .toolbar(.hidden, for: .navigationBar)
             .tesseraFeedback(.notNow, trigger: removed)
+            // A cleared run (Design on #806); .done is for finishing.
+            .tesseraFeedback(.aisleCleared, trigger: reset)
             .onDisappear { rows.end() }
             .onChange(of: scenePhase) { _, phase in
                 if phase != .active {
@@ -291,7 +315,60 @@ private struct ListPage: View {
     }
 
     /// The fold: "4 done". Tap shows them (a tap on one takes it back out); hold 0.7 s clears them.
-    private func fold(_ done: [ListContents.Item], list _: ObjectRecord) -> some View {
+    /// The option words, ink words with no shape: Reusable now; Run it, Pick one and Put away arrive with their
+    /// engine actions. The on word is ink at full weight, the off word secondary ink.
+    private func options(_: ObjectRecord, name: String, reusable: Bool) -> some View {
+        HStack(spacing: Theme.Spacing.l) {
+            Button {
+                setReusable(!reusable, was: reusable, name: name)
+            } label: {
+                // The state in words, not colour alone (Design on #806).
+                Text(ListsCopy.reusableWord(isOn: reusable))
+                    .textRole(.labelStrong)
+                    .textCase(.uppercase)
+                    .foregroundStyle(reusable ? Theme.Colors.ink : Theme.Colors.inkSecondary)
+                    .contentTransition(.opacity)
+                    .frame(minHeight: 44)
+            }
+            .buttonStyle(HandleButtonStyle())
+            .accessibilityLabel("Reusable")
+            .accessibilityValue(reusable ? "On" : "Off")
+            .accessibilityHint(reusable ? "Done items stay, to reset" : "Keeps its items for next time")
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { optionsOpen = false } }
+    }
+
+    /// "Packing, reusable." / "Packing, not reusable." with UNDO 10 s, a change.
+    private func setReusable(_ isOn: Bool, was: Bool, name: String) {
+        // A fast double tap sends the same value twice; the second is ignored, never "Didn't save" (QA on #806).
+        let now = ListContents(store: model.store, classes: model.classes)
+        guard let list = model.store.object(id: listID), now.isReusable(list) == was else { return }
+        guard let record = try? model.engine.perform(SetListReusable(list: listID, reusable: isOn), by: .user).record
+        else {
+            TessVoice.shared.say("Didn't save that. Try again.")
+            return
+        }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
+        TessVoice.shared.say(ListsCopy.reusable(name, isOn: isOn), undo: record)
+    }
+
+    /// Hold on a reusable list's fold: every item comes back unchecked, "Packing, reset." with UNDO 10 s (10.4).
+    private func reset(name: String) {
+        guard let record = try? model.engine.perform(ResetList(list: listID, time: AppClock.now), by: .user).record
+        else {
+            TessVoice.shared.say("Didn't save that. Try again.")
+            return
+        }
+        withTesseraAnimation(reduceMotion ? Theme.Motion.house : .smooth(duration: 0.48), reduceMotion: reduceMotion) {
+            foldOpen = false
+            model.touch()
+        }
+        reset += 1
+        TessVoice.shared.say(ListsCopy.reset(name), undo: record)
+    }
+
+    private func fold(_ done: [ListContents.Item], name: String, reusable: Bool) -> some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
             if foldOpen {
                 ForEach(done) { item in
@@ -313,17 +390,20 @@ private struct ListPage: View {
                     .accessibilityHint("Takes it back out")
                 }
             }
-            (Text("\(done.count)").fontWeight(.semibold) + Text(" done"))
+            // A reusable list's fold resets rather than clears: "4 done. Hold to reset." (10.4).
+            (Text("\(done.count)").fontWeight(.semibold) + Text(reusable ? " done. Hold to reset." : " done"))
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
                 .contentTransition(.numericText(value: Double(done.count)))
                 .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                 .contentShape(Rectangle())
                 .onTapGesture { withTesseraAnimation(reduceMotion: reduceMotion) { foldOpen.toggle() } }
-                .onLongPressGesture(minimumDuration: 0.7) { clear(done.count) }
+                .onLongPressGesture(minimumDuration: 0.7) { reusable ? reset(name: name) : clear(done.count) }
                 .accessibilityAddTraits(.isButton)
-                .accessibilityHint("Shows them; hold to clear them")
-                .accessibilityAction(named: "Clear them") { clear(done.count) }
+                .accessibilityHint(reusable ? "Shows them; hold to reset the list" : "Shows them; hold to clear them")
+                .accessibilityAction(named: reusable ? "Reset the list" : "Clear them") {
+                    reusable ? reset(name: name) : clear(done.count)
+                }
         }
         .padding(.horizontal, Theme.Spacing.gutter)
         .padding(.bottom, Theme.Spacing.m)
@@ -331,7 +411,11 @@ private struct ListPage: View {
     }
 
     private func clear(_ count: Int) {
-        guard let record = try? model.engine.perform(ClearDoneItems(list: listID), by: .user).record else { return }
+        guard let record = try? model.engine.perform(ClearDoneItems(list: listID), by: .user).record else {
+            // A refused clear says so; the fold and its items stay (QA on #806).
+            TessVoice.shared.say("Didn't save that. Try again.")
+            return
+        }
         model.touch()
         foldOpen = false
         // A change, so UNDO keeps 10 s (Design on #760).

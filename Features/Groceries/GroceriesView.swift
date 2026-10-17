@@ -303,29 +303,24 @@ private struct GroceriesPage: View {
     /// Tess says it beside her soul, with Undo (the same reply line as everywhere else).
     private func clearBasket(count: Int) {
         guard let list = groceries.list else { return }
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
-            let result = try? model.engine.perform(ClearDoneItems(list: list.id), by: .user)
-            basketOpen = false
-            model.touch()
-            if let result {
-                TessVoice.shared.say("Cleared \(count) from the basket.", undo: result.record)
-            } else {
-                GroceriesCopy.sayDidntSave()
-            }
+        let cleared = GroceriesCopy.clear(count: count) {
+            try? model.engine.perform(ClearDoneItems(list: list.id), by: .user).record
         }
+        // A refused clear keeps the basket open with its rows and says so (Kitchen on #793).
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+            if cleared.undo != nil {
+                basketOpen = false
+            }
+            model.touch()
+        }
+        TessVoice.shared.say(cleared.line, undo: cleared.undo)
     }
 
     private func toggleShop() {
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
-            let wrote = if let shop = groceries.shop(in: model.engine), shop.state == .running {
-                (try? model.engine.perform(SuspendProcess(process: shop.id), by: .user)) != nil
-            } else {
-                (try? model.engine.perform(StartShop(), by: .user)) != nil
-            }
-            model.touch()
-            if !wrote {
-                GroceriesCopy.sayDidntSave()
-            }
+        let refusal = GroceriesCopy.toggleShop(groceries, engine: model.engine)
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
+        if let refusal {
+            TessVoice.shared.say(refusal)
         }
     }
 
@@ -744,9 +739,24 @@ private struct GroceriesEmpty: View {
 enum GroceriesCopy {
     static let didntSave = "Didn't save that. Try again."
 
+    /// Starts or sets aside the shop. A refused start says why: "Workout running." while a workout runs (QA on
+    /// #792), else "Didn't save that. Try again." Nil when it went through.
+    @MainActor static func toggleShop(_ groceries: Groceries, engine: ActionEngine) -> String? {
+        if let shop = groceries.shop(in: engine), shop.state == .running {
+            return RecipeCopy.startCook { try engine.perform(SuspendProcess(process: shop.id), by: .user) }
+        }
+        return RecipeCopy.startCook { try engine.perform(StartShop(), by: .user) }
+    }
+
     /// A refused write on Groceries says so; nothing scolds, so there is no warning haptic (ER11, Haptics.swift).
     @MainActor static func sayDidntSave() {
         TessVoice.shared.say(didntSave)
+    }
+
+    /// Clearing the basket: "Cleared 3 from the basket." with UNDO, or the failure line with nothing to undo.
+    static func clear(count: Int, _ perform: () -> OpRecord?) -> (line: String, undo: OpRecord?) {
+        guard let record = perform() else { return (didntSave, nil) }
+        return ("Cleared \(count) from the basket.", record)
     }
 
     /// Finishing the shop: the engine's receipt and its record, or the failure line with nothing to undo.
