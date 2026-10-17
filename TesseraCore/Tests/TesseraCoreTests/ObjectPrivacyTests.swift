@@ -67,6 +67,7 @@ struct ObjectPrivacyTests {
         // Product 5:07 PM PT: a workout's notes are a body fact, never printed on the generic page.
         let workout = try store.create(#require(classes[.workout]), title: "Push A")
         #expect(ObjectPrivacy.hidesNotes(of: workout, classes: classes))
+        #expect(ObjectPrivacy.keptNoteLabel == "Note kept private")
         #expect(!ObjectPrivacy.hidesNotes(of: plain, classes: classes))
     }
 }

@@ -233,10 +233,10 @@ private struct InstanceBody: View {
                 : Format.identifier(object.classDef?.name ?? "Thing", upperFirst: true)
         )
 
-        if privateLabel == nil, !ObjectPrivacy.hidesNotes(of: object, classes: model.classes),
-           let notes = model.store.value("notes", of: object)?.stringValue
-        {
-            Text(notes).textRole(.body).foregroundStyle(Theme.Colors.inkSecondary).entrance(4)
+        if privateLabel == nil, let notes = model.store.value("notes", of: object)?.stringValue {
+            // A workout's notes are a body fact: they read "Note kept private" (Product 5:20 PM PT).
+            Text(ObjectPrivacy.hidesNotes(of: object, classes: model.classes) ? ObjectPrivacy.keptNoteLabel : notes)
+                .textRole(.body).foregroundStyle(Theme.Colors.inkSecondary).entrance(4)
         }
 
         if privateLabel == nil, let classDef = object.classDef {
@@ -257,7 +257,8 @@ private struct InstanceBody: View {
             .entrance(6)
         }
 
-        if !backlinks.isEmpty {
+        // A private object lists nothing that links to it either (Design on #580).
+        if privateLabel == nil, !backlinks.isEmpty {
             MarginSection(label: "Linked from") {
                 VStack(spacing: 0) {
                     ForEach(backlinks) { source in

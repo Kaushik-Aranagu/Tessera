@@ -9,6 +9,8 @@ public enum ObjectPrivacy {
     public static let noteLabel = SecretWords.title
     public static let taskLabel = "Private task"
     public static let memoryLabel = "Private memory"
+    /// What a workout's notes read on the generic page (Product 5:20 PM PT).
+    public static let keptNoteLabel = "Note kept private"
 
     /// The label to show in place of the object, or nil when it isn't private.
     @MainActor
