@@ -123,9 +123,6 @@ struct DayLabel: View {
 }
 
 extension LineHero {
-    /// A finished workout's context from Claude (docs/ai/home-lines-job.md §6): the rules line draws first; words
-    /// that differ redraw wet in Tess's ink and dry on `Theme.Motion.dry`. Words already kept from an earlier ask
-    /// come back at once and draw at rest, since they aren't news. Reduce Motion: a crossfade.
     /// Claude's context words, only when they differ from the rules line: identical words never redraw (§6).
     static func claudeContext(_ words: HomeDoneWords?, rules: String?) -> String? {
         guard let new = words?.context, new != rules else { return nil }
@@ -137,6 +134,9 @@ extension LineHero {
         askedFor != nil && askedFor != current
     }
 
+    /// A finished workout's context from Claude (docs/ai/home-lines-job.md §6): the rules line draws first; words
+    /// that differ redraw wet in Tess's ink and dry on `Theme.Motion.dry`. Words already kept from an earlier ask
+    /// come back at once and draw at rest, since they aren't news. Reduce Motion: a crossfade.
     private func askClaude() async {
         if Self.isStale(askedFor: askedFor, current: line.objectID) {
             claudeContext = nil
@@ -144,8 +144,12 @@ extension LineHero {
         }
         askedFor = line.objectID
         guard context == nil else { return }
-        let asked = ContinuousClock.now
-        guard let new = await Self.claudeContext(model.homeDoneWords(for: line), rules: line.context) else { return }
+        let asked = ContinuousClock.now, object = line.objectID
+        let words = await model.homeDoneWords(for: line)
+        // The line may have moved to another workout while Claude answered: late words never land on it (QA on #745).
+        guard object == askedFor, object == line.objectID,
+              let new = Self.claudeContext(words, rules: line.context)
+        else { return }
         let kept = ContinuousClock.now - asked < .milliseconds(150)
         guard !kept, let dry = Theme.Motion.dry(reduceMotion: reduceMotion) else {
             withTesseraAnimation(reduceMotion: reduceMotion) { claudeContext = new }
