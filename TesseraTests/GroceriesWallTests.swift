@@ -67,4 +67,22 @@ struct GroceriesAddWallTests {
         )
         #expect(again.kept.isEmpty && again.walled.map(\.line) == split.walled.map(\.line))
     }
+
+    @Test func keptLinesSpeakTheEnginesReceiptWithUndo() {
+        let outcome = GroceriesWall.add("milk, eggs", engine: model.engine, store: model.store)
+        #expect(outcome.draft.isEmpty && outcome.undo != nil)
+        #expect(outcome.voice == "Milk and eggs, on Groceries.")
+    }
+
+    @Test func aWalledLineHoldsTheDraftWithNoUndo() {
+        let outcome = GroceriesWall.add("eggs, rent $1200", engine: model.engine, store: model.store)
+        #expect(outcome.draft == "rent $1200" && outcome.undo == nil)
+        #expect(outcome.voice == "That stays on this phone.")
+    }
+
+    @Test func aKeyIsClearedAndNeverComesBack() {
+        let fake = "sk-" + "ant-" + String(repeating: "x", count: 32)
+        let outcome = GroceriesWall.add("\(fake), wifi password hunter2", engine: model.engine, store: model.store)
+        #expect(outcome.draft == "wifi password hunter2" && outcome.voice == claudeKeyLine && outcome.undo == nil)
+    }
 }

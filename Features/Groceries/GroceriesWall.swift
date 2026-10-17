@@ -54,6 +54,40 @@ enum GroceriesWall {
         walled.map(\.reason).max().map(line)
     }
 
+    /// What the Add line does with a draft, out of the view so it tests (Kitchen on #766).
+    struct AddOutcome {
+        /// What stays typed: walled money and secret lines; never a key.
+        let draft: String
+        /// What Tess says.
+        let voice: String?
+        /// The add to take back, with the 4 s UNDO, only when nothing was walled.
+        let undo: OpRecord?
+    }
+
+    /// Kept lines go on and Tess reads the engine's own receipt ("Milk, on Groceries.") with its UNDO. A walled line
+    /// stays in the draft with the strongest reason's line and no UNDO. If the engine refuses, the draft stays, minus
+    /// any key, and she says so.
+    static func add(_ draft: String, engine: ActionEngine, store: ObjectStore) -> AddOutcome {
+        let lines = GroceryLines.split(draft)
+        guard !lines.isEmpty else { return AddOutcome(draft: draft, voice: nil, undo: nil) }
+        let split = split(lines, store: store)
+        var record: OpRecord?
+        if !split.kept.isEmpty {
+            guard let added = try? engine.perform(AddGroceries(lines: split.kept), by: .user).record else {
+                // A key never stays visible, even when the add fails (QA on #769).
+                let kept = (split.kept + split.walled.filter { $0.reason != .key }.map(\.line)).joined(separator: ", ")
+                return AddOutcome(draft: kept, voice: "Didn't save that. Try again.", undo: nil)
+            }
+            record = added
+        }
+        let held = heldDraft(split.walled)
+        if let walledLine = spoken(split.walled) {
+            return AddOutcome(draft: held, voice: walledLine, undo: nil)
+        }
+        let receipt = record?.receipt.map { $0.hasSuffix(".") ? $0 : $0 + "." }
+        return AddOutcome(draft: held, voice: receipt, undo: record)
+    }
+
     /// The line beside the held draft; none of them offers UNDO, since nothing was written.
     static func line(_ reason: Reason) -> String {
         switch reason {
