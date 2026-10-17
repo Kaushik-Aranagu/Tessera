@@ -9,6 +9,8 @@ import TesseraCore
 /// One gesture away, never on screen by default: tap an ingredient to zoom into it; tap the name for the original
 /// text and cook history; swipe the ingredient column left to send it to Groceries.
 struct RecipePage: View {
+    /// Turned on in the PR that lands cook mode (screen 12): until then there is no Cook key (G55).
+    static let cookModeReady = false
     let recipeID: UUID
     /// What Cook opens. Until cook mode (screen 12) lands, the page starts the cook itself and shows it running.
     var onCook: ((UUID, Int?) -> Void)?
@@ -114,19 +116,22 @@ struct RecipePage: View {
                         .transition(.opacity)
                 }
 
-                Text(steps.count == 1 ? "1 step" : "\(steps.count) steps")
-                    .textRole(.label)
+                Text(RecipeCopy.stepCount(steps.count))
+                    .textRole(steps.isEmpty ? .body : .label)
                     .foregroundStyle(Theme.Colors.inkSecondary)
                     .padding(.top, Theme.Spacing.m)
                 let cooking = RecipeCopy.cookStep(of: recipe, model: model)
                 HStack(spacing: Theme.Spacing.l) {
-                    PaintKey(finish: .ink, paint: Theme.Colors.now, isTap: true,
-                             action: { cook(recipe.id, size) })
-                    { _ in
-                        Text(cooking == nil ? "Cook" : "Cooking")
+                    // No Cook key until cook mode lands: a cook nobody can see is worse than none (G55, Product).
+                    if Self.cookModeReady {
+                        PaintKey(finish: .ink, paint: Theme.Colors.now, isTap: true,
+                                 action: { cook(recipe.id, size) })
+                        { _ in
+                            Text(cooking == nil ? "Cook" : "Cooking")
+                        }
+                        .frame(maxWidth: 220)
+                        .accessibilityHint(cooking == nil ? "Starts cooking at this size" : "It's cooking now")
                     }
-                    .frame(maxWidth: 220)
-                    .accessibilityHint(cooking == nil ? "Starts cooking at this size" : "It's cooking now")
                     if let cooking {
                         Text(cooking)
                             .font(Theme.voice)
@@ -449,12 +454,21 @@ enum RecipeCopy {
         return parts.joined(separator: ", ")
     }
 
-    /// "Step 1 of 4" while this recipe is cooking, else nil.
+    /// "Step 1 of 4" while this recipe is cooking, else nil; never "Step 1 of 0" (G55).
     static func cookStep(of recipe: ObjectRecord, model: AppModel) -> String? {
         guard let running = ProcessTable(engine: model.engine).running(), let cook = running.subject,
               model.store.linkedObjects("recipe", of: cook).first?.id == recipe.id else { return nil }
         let steps = RecipeBook(store: model.store, classes: model.classes).steps(of: recipe).count
-        return "Step \((running.resumePoint?.index ?? 0) + 1) of \(steps)"
+        return steps > 0 ? "Step \((running.resumePoint?.index ?? 0) + 1) of \(steps)" : nil
+    }
+
+    /// "4 steps", "1 step", and with none, "No steps yet. Paste them below." (G55, Product).
+    static func stepCount(_ count: Int) -> String {
+        switch count {
+        case 0: "No steps yet. Paste them below."
+        case 1: "1 step"
+        default: "\(count) steps"
+        }
     }
 
     static func hours(_ minutes: Double) -> String {

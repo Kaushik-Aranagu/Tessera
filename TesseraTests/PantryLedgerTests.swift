@@ -108,7 +108,7 @@ struct PantryLedgerTests {
         #expect(names == ["Bread"], "butter to taste and the optional jam aren't used up")
     }
 
-    @Test func aPrivateRecipeIsOnlyPrivateRecipeInTessLine() throws {
+    @Test func aPrivateRecipeGetsNoCookLineAtAll() throws {
         let recipe = try model.engine.perform(CreateRecipe(text: """
         Wifi code lasagna
         2 limes
@@ -117,8 +117,6 @@ struct PantryLedgerTests {
         Bake it.
         """), by: .user).output
         try cook(recipe, at: saturday)
-        let used = try #require(ledger.lastCookUsedUp())
-        #expect(used.recipe == "Private recipe")
-        #expect(PantryCopy.tess(recipe: used.recipe, names: used.names).hasPrefix("Private recipe took the "))
+        #expect(ledger.lastCookUsedUp() == nil, "even \"Private recipe took ...\" would name what was in it")
     }
 }

@@ -5,14 +5,32 @@ import SwiftUI
 /// dries in over it in 380 ms (Reduce Motion: a 150 ms crossfade). A private object gets plain ground: no photo and
 /// no pigment. No text ever sits on it, and it scrolls away with the page.
 struct ObjectPlate: View {
-    /// The wash's pigments (hex); Kitchen green until Core's colour table lands.
-    var pigments: [UInt32] = [PlateWash.kitchenGreen]
-    /// Seeds the wash so the same object draws the same plate every time.
-    var seed: UInt64
-    var photo: Image?
-    /// VoiceOver for a photo: "Photo of Sheet-pan paprika chicken, from budgetbytes.com".
-    var photoLabel: String?
-    var isPrivate = false
+    /// Required, so a caller that forgets it never fails open (QA on #754).
+    let isPrivate: Bool
+    /// The wash's pigments (hex), looked up only for an object that isn't private; Kitchen green until Core's colour
+    /// table lands.
+    let pigments: [UInt32]
+    /// Seeds the wash from the object's id, so the same object draws the same plate every time.
+    let seed: UInt64
+    let photo: Image?
+    /// VoiceOver for a photo, through the masked title: "Photo of Sheet-pan paprika chicken, from budgetbytes.com".
+    let photoLabel: String?
+
+    init(objectID: UUID, isPrivate: Bool, pigments: @autoclosure () -> [UInt32] = [PlateWash.kitchenGreen],
+         photo: Image? = nil, photoLabel: String? = nil)
+    {
+        self.isPrivate = isPrivate
+        self.pigments = isPrivate ? [] : pigments()
+        seed = PlateWash.seed(objectID)
+        self.photo = isPrivate ? nil : photo
+        self.photoLabel = photoLabel
+    }
+
+    /// "Photo of Sheet-pan paprika chicken, from budgetbytes.com", with a private title only "Private recipe".
+    static func photoLabel(title: String, isPrivate: Bool, site: String?) -> String {
+        let name = isPrivate ? "Private recipe" : title
+        return site.map { "Photo of \(name), from \($0)" } ?? "Photo of \(name)"
+    }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var dried = false
