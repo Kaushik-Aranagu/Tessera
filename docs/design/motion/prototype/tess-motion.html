@@ -1955,10 +1955,10 @@ PICKS['error-notice'] = () => {
   const ERR = .6, TAP = 3.2, OK = 5.0, D = 7.4, CF = .22;
   const err = 'Couldn’t save bench 2 × 10 at 80.', rcpt = 'Logged bench 2 × 10 at 80.';
   const fadeIn = (t, at, d) => ramp(t, at, d);
-  const blurText = (str, y, a, col, blur) => {
+  const blurText = (str, y, a, col, blur, b = a) => {
     if (a < .01) return;
     ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    ctx.filter = blur ? `blur(${((1 - a) * 4 * DPR).toFixed(2)}px)` : 'none';
+    ctx.filter = blur ? `blur(${((1 - b) * 4 * DPR).toFixed(2)}px)` : 'none';
     ctx.globalAlpha = a; ctx.font = font(17, 500); ctx.fillStyle = col; ctx.textAlign = 'left';
     ctx.fillText(str, 24, y); ctx.restore();
   };
@@ -1971,7 +1971,7 @@ PICKS['error-notice'] = () => {
       const dim = 1 - .4 * ramp(t, TAP, .15, houseCurve);
       const outA = 1 - ramp(t, OK, CF);
       const a = inA * outA;
-      blurText(err, 785, a * dim, LOOK.tess, !RM);
+      blurText(err, 785, a * dim, LOOK.tess, !RM, inA);
       const sa = a * dim;
       if (sa > .01) {
         text('TRY AGAIN', 24, 812, 16, LOOK.ink, 700, 'left', sa * .9);
@@ -1989,10 +1989,10 @@ PICKS['error-notice'] = () => {
     soul: { modes: [{ mode: 'idle', at: -10 }], centre: () => ({ x: HOME.x, y: HOME.y }) },
     caps: [
       { at: 0, text: 'A save fails. Her line is the only thing that changes.' },
-      { at: ERR, text: RM ? '0.6 the notice crossfades in over 150 ms, in her slot.' : '0.6 the notice blurs in over 300 ms, in the UNDO slot.', haptic: '.warning (the notice’s one)' },
-      { at: TAP, text: '3.2 tap: dims to 60% over 150 ms; a 0.5 pt ink line draws under it.' },
+      { at: ERR, text: RM ? '0.6 the notice crossfades in (150 ms), in her slot.' : '0.6 the notice blurs in (300 ms), in the UNDO slot.', haptic: '.warning (the notice’s one)' },
+      { at: TAP, text: '3.2 tap: dims to 60%, a 0.5 pt line draws (150 ms).' },
       { at: TAP + 1, text: '4.2 waiting. The page has not moved.' },
-      { at: OK, text: '5.0 success: a 220 ms crossfade to the receipt and UNDO. No second haptic.' },
+      { at: OK, text: '5.0 success: 220 ms crossfade to the receipt. No haptic.' },
     ],
   };
 };
