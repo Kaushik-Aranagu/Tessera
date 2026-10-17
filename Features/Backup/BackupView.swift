@@ -57,7 +57,7 @@ struct BackupView: View {
                     .padding(.top, Theme.Spacing.s)
                     .entrance(1, hero: true)
 
-                Text(BackupCopy.local(latest, now: AppClock.now))
+                Text(BackupCopy.local(latest, kept: BackupKeeper.localCount, now: AppClock.now))
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.ink)
                     .fixedSize(horizontal: false, vertical: true)
@@ -369,7 +369,7 @@ struct BackupFile: FileDocument {
 
 enum BackupCopy {
     /// "A copy is made every day. The last one was today." / "The first copy is made when you leave the app today."
-    static func local(_ latest: Date?, now: Date) -> String {
+    static func local(_ latest: Date?, kept: Int, now: Date) -> String {
         guard let latest else { return "The first copy is made when you leave the app today." }
         let calendar = Calendar.current
         // His day (04:00 to 04:00): a 23:55 copy read at 01:15 is today's.
@@ -377,7 +377,9 @@ enum BackupCopy {
         let when = tesseraDay.isSameDay(latest, now) ? "today"
             : tesseraDay.day(of: latest) == tesseraDay.day(-1, after: now) ? "yesterday"
             : latest.formatted(.dateTime.weekday(.wide))
-        return "A copy is made every day, the last one \(when). Seven are kept."
+        // The real count, in digits (copy sweep): "and 3 are kept." / "and 1 is kept." Never more than the 7 it keeps.
+        let count = max(kept, 1)
+        return "A copy is made every day, the last one \(when), and \(count) \(count == 1 ? "is" : "are") kept."
     }
 
     /// "Also keep them in a folder you choose." with the folder as a tappable value word in 600.

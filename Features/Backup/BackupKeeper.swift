@@ -154,11 +154,19 @@ enum BackupKeeper {
 
     /// The newest copy on this iPhone, if any.
     static var latestLocal: Date? {
+        localDates.max()
+    }
+
+    /// The daily copies on this phone right now (up to 7), so Backups says the real count (QA low).
+    static var localCount: Int {
+        localDates.count
+    }
+
+    private static var localDates: [Date] {
         let files = (try? FileManager.default.contentsOfDirectory(at: localFolder, includingPropertiesForKeys: nil))
             ?? []
         return files.filter { $0.pathExtension == TesseraBackup.fileExtension }
             .compactMap { try? TesseraBackup.inspect($0).createdAt }
-            .max()
     }
 
     /// Whether the phone has a passcode (so Face ID or the passcode can ask); tests pass a fake.
