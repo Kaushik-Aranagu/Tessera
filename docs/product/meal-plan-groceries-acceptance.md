@@ -53,7 +53,7 @@ Finishing a cook of a recipe on the day its plan task is dated completes that li
 | MP-F1 | Plan Tacos for today at 7 pm; start the cook from the plan task; tap DONE | The cook ends and the plan task is done in the same operation. Home's line reads "Tacos done." (house copy, K62); the task is gone from Tasks' open list; the receipt names the thing first: "Tacos, done." |
 | MP-F2 | Tap UNDO inside 10 s of MP-F1 | Both come back: the cook is running again and the plan task is open again; Home reads as it did before DONE |
 | MP-F3 | Cook Tacos on a day other than the task's day (plan is for tomorrow) | The cook ends; tomorrow's plan task stays open. Only a task dated the same day (day starts 4 AM) is completed |
-| MP-F4 | Two plan tasks for the same recipe on the same day, finish one cook | Only the task the cook was started from (or the earliest open one if started elsewhere) is completed; the other stays open |
+| MP-F4 | Two plan tasks for the same recipe on the same day, finish one cook | Only the earliest open task is completed (ruled Oct 17: a cook cannot tell which task it started from without a new stored field, a catalog v10 change, so it is not built); the other stays open |
 | MP-F5 | Start a cook with no plan task (typed "cook chili") and finish it | No task exists, nothing else changes; Home shows "Chili done." |
 | MP-F6 | Private recipe planned for today, finish its cook | The task completes; every surface reads "Private recipe done." and never the name |
 | MP-F7 | Skip a planned meal (KW20), then finish a cook of that recipe the same day | The skipped task is not reopened or completed twice; the cook ends alone |
