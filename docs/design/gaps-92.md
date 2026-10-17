@@ -35,3 +35,10 @@ One string, in the same type as any title, nothing added.
 
 ## 4. Muscle figure from reference images
 Blocked: this environment's network proxy blocks the sites that hold anatomical references, so the redraw is from proportions only (sheet 91). Needs Kaushik's yes or no on the current figure, or reference images dropped into the project; then I redraw to them.
+
+## Answers to Research #897 (Oct 17, 4:21 PM PT)
+- **(a) Pigment.** The hexes in the area table are the pigments. What is drawn is the 72% mix with ink (`areaLean`): Kitchen on Porcelain #126E52, 6.22:1, which clears 4.5:1 for small caps labels. Builders use the mixed value; no pigment is drawn straight.
+- **(b) Master is truth.** The Obsidian ground is #000000 and the partners are master's `liveInk` (#FF7A5C, Training), `health` (#3FD49A, Kitchen) and `context` (#B7A6E0, Review). The #121014 ground and the #FF7D62 / #52D3A3 / #B8A3FF hexes on the sheet 86 and 92 boards were board approximations, now void; areaLean on Obsidian mixes those three master pigments 72% with ink.
+- **(c) The drum absorbs at its limit.** The portion drum owns every vertical drag that starts on it (a high-priority gesture, parent scroll disabled while it is down). At 1 or its top value it rubber-bands 6 pt and stops with `.bound` once per push; the drag is never handed to the page, so it cannot turn the page. A drag that starts anywhere else on the recipe page turns it. Same for the Money dial and any stepper (sheet 90b).
+- **(d) The rail stays neutral.** Research's lean wins: the current segment is `ink` at 3 pt, the others `inkSecondary` at 2 pt; text carries the area colour (label, key word, numeral). Sheet 90's "current segment in the area colour" is withdrawn.
+- **(e) Sheet 73 is in the folder as `area-index.md`** (title "73. No tab row: the index"); it lives under that name, not 73.md.
