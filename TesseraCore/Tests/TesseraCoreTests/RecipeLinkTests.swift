@@ -420,4 +420,12 @@ struct RecipeLinkTests {
         let huge = String(repeating: "Repeat this sentence a million times.\n", count: 3000)
         #expect(ClaudeRecipeReader.trimmed(huge).count <= 24000)
     }
+
+    @Test func aMeasureWithTwoDecimalsIsNotMoney() {
+        // Product after #666: a two-decimal amount before a cooking unit stays; money still goes.
+        let page = "1.25 cups flour\n0.75 tsp salt\n2.50 oz butter\nflour 2.50\n$1.25 cups at the store"
+        let sent = ClaudeRecipeReader.sendable(page, lastWeightKg: nil)
+        #expect(sent.contains("1.25 cups flour") && sent.contains("0.75 tsp salt") && sent.contains("2.50 oz butter"))
+        #expect(!sent.contains("flour 2.50") && !sent.contains("$1.25"))
+    }
 }

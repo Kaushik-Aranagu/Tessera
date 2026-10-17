@@ -368,8 +368,17 @@ public struct ClaudeRecipeReader {
     /// dough", so secret words go by the pasted-line cut, not the capture one.
     static func sendable(_ text: String, lastWeightKg: Double?) -> String {
         SecretWords.cut(text).text.components(separatedBy: .newlines).filter { line in
-            !looksLikeClaudeKey(line) && !PrivateFacts.isWalled(line, lastWeightKg: lastWeightKg)
+            !looksLikeClaudeKey(line) && !PrivateFacts.isWalled(withoutMeasures(line), lastWeightKg: lastWeightKg)
         }.joined(separator: "\n")
+    }
+
+    /// A recipe amount with two decimals right before a cooking unit is a measure, not money (Product, after #666):
+    /// "1.25 cups flour" reads as "cups flour" to the money wall. A currency sign anywhere still walls the line.
+    static func withoutMeasures(_ line: String) -> String {
+        line.replacing(
+            /(?i)\b\d+[.,]\d{2}\s*(?:cups?|tbsps?|tablespoons?|tsps?|teaspoons?|g|grams?|kg|ml|l|liters?|litres?|oz|ounces?|lbs?|pounds?)\b/,
+            with: { match in String(match.output.split(separator: " ").last ?? "") }
+        )
     }
 
     /// The output check (injection audit item 1; docs/research/fixtures/recipe-link-us-25.md "Output check"): what

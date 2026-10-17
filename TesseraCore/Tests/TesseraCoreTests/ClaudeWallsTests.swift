@@ -126,6 +126,14 @@ extension ClaudeRouteTests {
         #expect(throws: (any Error).self) {
             try TessTools.run("addGroceries", arguments: json, engine: engine, budget: 0)
         }
+        // The items case (QA low on #668): one addToList call with 15 items.
+        try engine.perform(CreateList(name: "Packing"), by: .user)
+        let before = engine.history(limit: 200).count { $0.state == .pending }
+        let items = (1 ... 15).map { ["text": "item \($0)"] }
+        let listJSON = try JSONSerialization.data(withJSONObject: ["list": "Packing", "items": items])
+        let listed = try TessTools.run("addToList", arguments: listJSON, engine: engine)
+        #expect(listed.count <= TessTools.maxRecordsPerPhrase)
+        #expect(engine.history(limit: 200).count { $0.state == .pending } - before == listed.count)
     }
 
     @Test func captureInjectionNeverCallsDestructiveTool() {
