@@ -44,4 +44,12 @@ struct PasteCycleTests {
         #expect(!PasteCopy.hasSecretLink("Dal\nfrom https://example.com/dal\n1 cup lentils"))
         #expect(RecipeLinkLine.secretLink == "That link has a password in it. Paste the text instead.")
     }
+
+    /// QA on #821: a credential link wrapped in punctuation inside a longer paste is still caught.
+    @Test func aWrappedPasswordLinkIsCaught() {
+        let link = "https://name:" + "hunter" + "2@example.com/dal"
+        #expect(PasteCopy.hasSecretLink("Dal (\(link)).\n1 cup lentils"))
+        #expect(PasteCopy.hasSecretLink("from \"\(link)\","))
+        #expect(!PasteCopy.hasSecretLink("Dal (https://example.com/dal)."))
+    }
 }

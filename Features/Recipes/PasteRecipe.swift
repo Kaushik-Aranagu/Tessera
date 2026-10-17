@@ -502,7 +502,11 @@ struct PasteKeyFilter {
 enum PasteCopy {
     /// Whether any word of the paste is a link with a user or password before its host.
     static func hasSecretLink(_ text: String) -> Bool {
-        text.split(whereSeparator: \.isWhitespace).contains { RecipeLinkReader.hasCredentials(String($0)) }
+        // Brackets, quotes and sentence marks around a link don't hide it: "(https://u:p@host)." (QA on #821).
+        let wrapping = CharacterSet(charactersIn: "()[]{}<>\"'“”‘’.,;:!?")
+        return text.split(whereSeparator: \.isWhitespace).contains { word in
+            RecipeLinkReader.hasCredentials(String(word).trimmingCharacters(in: wrapping))
+        }
     }
 
     /// Tess's line when no link line is up: the count once the brush has read, the link nudge for a bare link (a

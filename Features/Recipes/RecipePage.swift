@@ -21,6 +21,8 @@ struct RecipePage: View {
     @Namespace private var zoom
     @State private var serves: Int?
     @State private var sent: (line: String, record: OpRecord)?
+    /// When the receipt went up, so a hand-off keeps what is left of its window rather than a fresh 10 s (QA on #819).
+    @State private var sentAt: Date?
     @State private var drag: CGFloat = 0
     @State private var columnWidth: CGFloat = 260
     @State private var away = false
@@ -160,7 +162,8 @@ struct RecipePage: View {
                 // Leaving inside the window hands the receipt and its UNDO to Tess's shared line, so the UNDO
                 // follows him (G67).
                 if let sent {
-                    TessVoice.shared.say(sent.line, undo: sent.record)
+                    TessVoice.shared.say(sent.line, undo: sent.record,
+                                         holds: RecipeCopy.holdLeft(since: sentAt, now: .now))
                     self.sent = nil
                     away = false
                 }
@@ -260,6 +263,7 @@ struct RecipePage: View {
             away = true
             drag = 0
             sent = (line, record)
+            sentAt = .now
             model.touch()
         }
         UIAccessibility.post(notification: .announcement, argument: line)
@@ -459,6 +463,12 @@ private struct RecipeOriginal: View {
 
 @MainActor
 enum RecipeCopy {
+    /// What is left of the add's 10 s UNDO window, at least 1 s (VoiceOver keeps its flat 10 s in TessVoice).
+    static func holdLeft(since start: Date?, now: Date) -> Duration {
+        let elapsed = start.map { now.timeIntervalSince($0) } ?? 0
+        return .milliseconds(Int(max(1, 10 - elapsed) * 1000))
+    }
+
     /// VoiceOver's action on the ingredients as a whole: it adds every line, so it says "all" (G68).
     static let addAllAction = "Add all to Groceries"
 
