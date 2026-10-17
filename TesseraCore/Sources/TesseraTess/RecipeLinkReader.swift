@@ -24,7 +24,7 @@ public enum RecipeLinkLine {
     public static let claudeBusy = "Claude's busy right now. Paste the text instead."
 
     public static func reading(_ host: String) -> String {
-        "Reading \(host)…"
+        "Reading \(host)."
     }
 
     public static func paused(until reset: String) -> String {
