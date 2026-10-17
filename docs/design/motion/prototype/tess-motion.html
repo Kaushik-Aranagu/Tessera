@@ -1952,9 +1952,9 @@ PICKS.accent = () => {
 // M1 (board 9:50 refill, sheet 84): the error notice. It replaces Tess's line in the UNDO slot; a tap dims it to 60%
 // with a 0.5 pt ink line over 150 ms; success crossfades to the receipt. Reduce Motion (?rm=1): crossfades only.
 PICKS['error-notice'] = () => {
-  const ERR = .6, TAP = 3.2, OK = 5.0, D = 7.4, CF = .22;
-  const err = 'Couldn’t save bench 2 × 10 at 80.', rcpt = 'Logged bench 2 × 10 at 80.';
-  const fadeIn = (t, at, d) => ramp(t, at, d);
+  // Sheet 84: ink sentence (17/500), no button word; the sentence is the instruction. Reduce Motion: no rise, no ink line.
+  const ERR = .6, TAP = 3.2, OK = 5.0, D = 7.4, CF = .15;
+  const err = 'Set 4 didn’t save. Try again.', rcpt = 'Set 4 logged.';
   const blurText = (str, y, a, col, blur, b = a) => {
     if (a < .01) return;
     ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -1966,33 +1966,27 @@ PICKS['error-notice'] = () => {
     duration: D,
     draw: t => {
       HOME41.draw();
-      // Arrival: 300 ms blur-in (house line), or a 150 ms crossfade in Reduce Motion. Leaves in 220 ms at OK.
-      const inA = RM ? fadeIn(t, ERR, .15) : fadeIn(t, ERR, .3);
+      const inA = RM ? ramp(t, ERR, .15) : ramp(t, ERR, .3);
       const dim = 1 - .4 * ramp(t, TAP, .15, houseCurve);
       const outA = 1 - ramp(t, OK, CF);
       const a = inA * outA;
-      blurText(err, 785, a * dim, LOOK.tess, !RM, inA);
-      const sa = a * dim;
-      if (sa > .01) {
-        text('TRY AGAIN', 24, 812, 16, LOOK.ink, 700, 'left', sa * .9);
-        stroke(24, 24 + width('TRY AGAIN', 16), 818, 1.5, LOOK.ink, sa);
-        // The 0.5 pt ink line draws under her line over 150 ms, left to right.
+      blurText(err, 785, a * dim, LOOK.ink, !RM, inA);
+      if (!RM && a * dim > .01) {
         const lw = width(err, 17) * ramp(t, TAP, .15, houseCurve);
         if (lw > .5) stroke(24, 24 + lw, 794, .5, LOOK.ink, outA);
       }
-      // Success: the receipt and UNDO crossfade in the same slot.
       const rA = ramp(t, OK, CF);
-      blurText(rcpt, 785, rA, LOOK.tess, false);
+      blurText(rcpt, 785, rA, LOOK.ink, false);
       if (rA > .01) { text('UNDO', 24, 812, 16, LOOK.ink, 700, 'left', rA * .9); stroke(24, 24 + width('UNDO', 16), 818, 1.5, LOOK.ink, rA); }
     },
-    finger: t => (t > TAP - .2 && t < TAP + .25) ? { x: 70, y: 806, alpha: 1 - ramp(t, TAP, .25) } : null,
+    finger: t => (t > TAP - .2 && t < TAP + .25) ? { x: 120, y: 790, alpha: 1 - ramp(t, TAP, .25) } : null,
     soul: { modes: [{ mode: 'idle', at: -10 }], centre: () => ({ x: HOME.x, y: HOME.y }) },
     caps: [
-      { at: 0, text: 'A save fails. Her line is the only thing that changes.' },
-      { at: ERR, text: RM ? '0.6 the notice crossfades in (150 ms), in her slot.' : '0.6 the notice blurs in (300 ms), in the UNDO slot.', haptic: '.warning (the notice’s one)' },
-      { at: TAP, text: '3.2 tap: dims to 60%, a 0.5 pt line draws (150 ms).' },
+      { at: 0, text: 'A set does not save. Her line is the only thing that changes.' },
+      { at: ERR, text: RM ? '0.6 the notice crossfades in (150 ms), in ink.' : '0.6 the notice blurs in (300 ms), in ink.', haptic: '.warning (the notice’s one)' },
+      { at: TAP, text: RM ? '3.2 tap the band: dims to 60% (150 ms), no line.' : '3.2 tap the band: dims to 60%, a 0.5 pt line draws (150 ms).' },
       { at: TAP + 1, text: '4.2 waiting. The page has not moved.' },
-      { at: OK, text: '5.0 success: 220 ms crossfade to the receipt. No haptic.' },
+      { at: OK, text: '5.0 success: 150 ms crossfade to the area’s receipt. No second haptic.' },
     ],
   };
 };
