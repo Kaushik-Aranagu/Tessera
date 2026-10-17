@@ -2,7 +2,7 @@
 
 For: Core (engine), Builder B (screens), Product (open questions at the end). Research lab. Docs only; nothing was built or run (no Swift toolchain here). Date: 2026-10-17. Updated for the 4:50 PM PT answers (decisions.md line 963); every changed row carries the stamp "4:50 PM PT".
 
-Read on: `origin/master` at `0d81f1a3` (PrivateWords.swift unchanged by #890 there) and PR #890's head `cb360086` (fetched as `refs/pull/890/head`; the GitHub MCP is limited to this repo's slug, so I read the head with `git fetch`). #890 holds ONLY the first trim; the 4:35 PM second trim and the 4:50 PM third trim (slept, sleepy, drained) are not in it. Rows cite `master:file:line` or `pr890:file:line`.
+Read on: `origin/master` at `0d81f1a3` (PrivateWords.swift unchanged by #890 there) and PR #890's head `cb360086` (fetched as `refs/pull/890/head`; the GitHub MCP is limited to this repo's slug, so I read the head with `git fetch`). #890 (head `398090688939`, in the Release 14 queue, not yet merged) already has the 4:35 PM second trim; only the 4:50 PM third trim (slept, sleepy, drained) is not in it. Rows cite `master:file:line` or `pr890:file:line`.
 
 Rulings, in `/mnt/project-files/tessera/product/decisions.md` (stamps are already Pacific): 4:20 PM PT line 951, 4:22 PM PT line 953, 4:25 PM PT line 955, 4:33 PM PT line 959, 4:35 PM PT line 961, 4:50 PM PT line 963 ("Research #899 title-words-trim, answers; corrects 4:20 #3"). QA: `/mnt/project-files/tessera/qa/review-890.md` (verdict at `5052707f`, re-verdict at `cb360086`, whose last paragraph lists the unit/pain/recovery/weight collisions that the 4:35 PM trim then removed).
 
@@ -49,7 +49,7 @@ KEEP per the ruling text: "bpm, sore, hurt, sick, plus dentist, therapy, rehab, 
 
 What does NOT change: the other three layers of the one check. `isPrivateTitle` still ORs the title-word lookup with the secret and body-fact wall and `EngineWall.isHealth` (`pr890:ObjectPrivacy.swift:64-69`; `master:PrivateWords.swift:33-38`). So a number plus a unit on a body line, a weigh-in, a medicine and money with an amount all still mask (T20 to T24).
 
-Current state to compare: master = a1. #890 head = a2 (kg, lb, lbs, kcal, calories, pain, recovery, weight are STILL title words there, and so are slept, sleepy, drained). The second trim (T10 to T17) is a boarded Core gap on #890; the 4:50 PM PT third trim (T17a to T17c) is a Core gap on both.
+Current state to compare: master = a1. #890 head `398090688939` = a2 plus the 4:35 PM second trim (kg, lb, lbs, kcal, calories, pain, recovery, weight are already subtracted there; slept, sleepy, drained are still title words). The 4:50 PM PT third trim (T17a to T17c) is a Core gap on both.
 
 ### a4. Scope (4:20 (3), 4:22, 4:25 N2/N3, 4:33)
 
@@ -79,14 +79,14 @@ Second-trim words (4:35). The ruling's five rows plus one per word.
 
 | Id | Word | Input (must stay raw) | Why it would mask on #890 head | Swift Testing name | Status | Owner |
 |---|---|---|---|---|---|---|
-| T10 | kg | "flour 5 kg" (ruling row), "5 kg rice" | `kg` in `healthWords` (`TessMemory.swift:104`) so the title lookup hits | `titleWords_kgStaysRaw` | gap on #890 head (word still in set). After the trim: traced, see T20 for why the body-fact rule does not catch it (integer, no decimal) | Core |
-| T11 | lb | "ground beef 2 lb" (ruling row), "2 lb bag of rice" | `lb` in set (`TessMemory.swift:104`) | `titleWords_lbStaysRaw` | gap on #890 head; raw after trim (T21) | Core |
-| T12 | lbs | "10 lbs potatoes" | `lbs` in set (`:104`) | `titleWords_lbsStaysRaw` | gap on #890 head | Core |
-| T13 | kcal | "500 kcal bowl" | `kcal` in set (`:105`). Body path already ignores it: `kcal` is in `otherUnits` (`master:PrivateFacts.swift:73-75`) | `titleWords_kcalStaysRaw` | gap on #890 head | Core |
-| T14 | calories | "Low calories soup" | `calories` in set (`:105`) | `titleWords_caloriesStaysRaw` | gap on #890 head | Core |
-| T15 | pain | "pain au chocolat" (ruling row) | `pain` in set (`:104`) | `titleWords_painStaysRaw` | gap on #890 head. `pain` is not in `symptoms` (`PrivateFacts.swift:84-87`), so nothing else catches it | Core |
-| T16 | recovery | "recovery shake" (ruling row) | `recovery` in set (`:102`) | `titleWords_recoveryStaysRaw` | gap on #890 head | Core |
-| T17 | weight | "Weight Watchers chili" (ruling row), "Weight Watchers" | `weight` in set (`:104`). Body path needs a number (`PrivateFacts.swift:121` `guard hasNumber`) so no number means raw | `titleWords_weightStaysRaw` | gap on #890 head | Core |
+| T10 | kg | "flour 5 kg" (ruling row), "5 kg rice" | `kg` in `healthWords` (`TessMemory.swift:104`) so the title lookup hits | `titleWords_kgStaysRaw` | traced on #890 head `398090688939` (4:35 trim already there; on master the word is still in the set). See T20 for why the body-fact rule does not catch it (integer, no decimal) | Core |
+| T11 | lb | "ground beef 2 lb" (ruling row), "2 lb bag of rice" | `lb` in set (`TessMemory.swift:104`) | `titleWords_lbStaysRaw` | raw on #890 head `398090688939` (4:35 trim already there; T21) | Core |
+| T12 | lbs | "10 lbs potatoes" | `lbs` in set (`:104`) | `titleWords_lbsStaysRaw` | raw on #890 head `398090688939` (4:35 trim already there) | Core |
+| T13 | kcal | "500 kcal bowl" | `kcal` in set (`:105`). Body path already ignores it: `kcal` is in `otherUnits` (`master:PrivateFacts.swift:73-75`) | `titleWords_kcalStaysRaw` | raw on #890 head `398090688939` (4:35 trim already there) | Core |
+| T14 | calories | "Low calories soup" | `calories` in set (`:105`) | `titleWords_caloriesStaysRaw` | raw on #890 head `398090688939` (4:35 trim already there) | Core |
+| T15 | pain | "pain au chocolat" (ruling row) | `pain` in set (`:104`) | `titleWords_painStaysRaw` | raw on #890 head `398090688939` (4:35 trim already there). `pain` is not in `symptoms` (`PrivateFacts.swift:84-87`), so nothing else catches it | Core |
+| T16 | recovery | "recovery shake" (ruling row) | `recovery` in set (`:102`) | `titleWords_recoveryStaysRaw` | raw on #890 head `398090688939` (4:35 trim already there) | Core |
+| T17 | weight | "Weight Watchers chili" (ruling row), "Weight Watchers" | `weight` in set (`:104`). Body path needs a number (`PrivateFacts.swift:121` `guard hasNumber`) so no number means raw | `titleWords_weightStaysRaw` | raw on #890 head `398090688939` (4:35 trim already there) | Core |
 
 Third-trim words (4:50 PM PT (2)). Ruled: REMOVE slept, sleepy, drained; keep tired, burnout.
 
@@ -231,12 +231,12 @@ These pin what must STILL mask once the eight 4:35 words leave. The ruling says 
 | Traced, with a test on #890 head | T01 (A), T02 (A), T03, T04, T08 (A), T09 ("Rent car"), T40, T41, T27, T28 (two of three) |
 | Traced in code, no test | T05, T06, T07, T09 (six other words), T42 to T52, T60, T62, T70 to T75, T78 to T80, T20, T21, T25 to T26, T29, T22a, T35, T17d, matrix rows |
 | Inferred | T02 (B), T77, T81, Groceries screen row, Home routine line |
-| Gap | T10 to T17 (second trim not in #890, boarded Core gap), T17a to T17c (third trim, 4:50 PM PT), T22 and T30 (grocery unit amounts, 4:50 PM PT), T76 (plurals, 4:50 PM PT), T33, T34, T36 (Dr phrase rule, ruled 4:50 PM PT), Siri read-backs (Intents, 4:50 PM PT (7)), Spotlight index (not built) |
+| Gap | T17a to T17c (third trim, 4:50 PM PT), T22 and T30 (grocery unit amounts, 4:50 PM PT), T76 (plurals, 4:50 PM PT), T33, T34, T36 (Dr phrase rule, ruled 4:50 PM PT), Siri read-backs (Intents, 4:50 PM PT (7)), Spotlight index (not built) |
 
 ## Gaps by owner
 
 **Core**
-1. Land the 4:35 PM second trim in `ObjectPrivacy.titleWords` (`pr890:ObjectPrivacy.swift:76-79`): subtract kg, lb, lbs, kcal, calories, pain, recovery, weight (T10 to T17; boarded gap, #890 does not have it). Add the five test rows from the ruling ("flour 5 kg", "ground beef 2 lb", "pain au chocolat", "recovery shake", "Weight Watchers chili") to `PrivacyParityTests.plain` (`:14-17`), plus "500 kcal bowl".
+1. Land the 4:35 PM second trim in `ObjectPrivacy.titleWords` (`pr890:ObjectPrivacy.swift:76-79`): subtract kg, lb, lbs, kcal, calories, pain, recovery, weight (T10 to T17; #890 head `398090688939` already has it, so this lands with #890). Add the five test rows from the ruling ("flour 5 kg", "ground beef 2 lb", "pain au chocolat", "recovery shake", "Weight Watchers chili") to `PrivacyParityTests.plain` (`:14-17`), plus "500 kcal bowl".
 2. 4:50 PM PT third trim: also subtract slept, sleepy, drained; keep tired and burnout (T17a to T17d). Rows "Drained tuna" and "Sleepy time tea" stay raw.
 3. 4:50 PM PT matching: tolerate a plural of a KEPT word ("dentists" masks, T76); do not match joined words ("dentist-appt" stays raw, T75); "sick" keeps masking including slang (T52).
 4. 4:50 PM PT phrase rule: "Dr. Patel" and "Dr Patel" mask (a "dr" token with a period, or followed by a capitalized name other than Pepper); "Dr Pepper" stays raw (T33 to T36). Needs the original-case title, not the lowercased one.
