@@ -106,16 +106,17 @@ struct RecipePage: View {
                         // The page scrolls as one, the drum above the list (G69).
                         VStack(alignment: .leading, spacing: Theme.Spacing.l) {
                             drum
-                            column
-                                .offset(x: away ? -columnWidth * 1.4 : min(0, drag))
-                                .simultaneousGesture(sendGesture(recipe: recipe.id, serves: size))
-                                // The sent line stands where the column was, never over the drum (Kitchen on #829).
-                                .overlay(alignment: .topLeading) {
-                                    if let sent {
-                                        SentLine(line: sent.line) { undoSend(sent.record) }
-                                            .transition(.opacity)
-                                    }
+                            // The sent line stands where the column was, never over the drum (Kitchen on #829), and
+                            // outside the column's offset so it stays while the column leaves (QA on #843).
+                            ZStack(alignment: .topLeading) {
+                                column
+                                    .offset(x: away ? -columnWidth * 1.4 : min(0, drag))
+                                    .simultaneousGesture(sendGesture(recipe: recipe.id, serves: size))
+                                if let sent {
+                                    SentLine(line: sent.line) { undoSend(sent.record) }
+                                        .transition(.opacity)
                                 }
+                            }
                         }
                     } else {
                         HStack(alignment: .top, spacing: Theme.Spacing.m) {
@@ -332,9 +333,6 @@ private struct SentLine: View {
     }
 }
 
-/// The ingredients: amount in 600 in a fixed tabular column (so nothing jumps when it rolls), name in 400, prep in
-/// secondary ink; staples at 45% with their amounts at 400. Tap a row to zoom into the ingredient; tap a spoon or
-/// cup amount to see it in metric for a moment.
 /// Whether an ingredient row stacks its amount over its name: at the accessibility sizes (G69).
 enum IngredientColumnLayout {
     static func stacks(_ size: DynamicTypeSize) -> Bool {
@@ -342,6 +340,9 @@ enum IngredientColumnLayout {
     }
 }
 
+/// The ingredients: amount in 600 in a fixed tabular column (so nothing jumps when it rolls), name in 400, prep in
+/// secondary ink; staples at 45% with their amounts at 400. Tap a row to zoom into the ingredient; tap a spoon or
+/// cup amount to see it in metric for a moment.
 private struct IngredientColumn: View {
     let lines: [RecipeBook.Line]
     let zoom: Namespace.ID
@@ -640,7 +641,7 @@ enum RecipeCopy {
 
     /// Hours and minutes, as the cook log says them (O2, G60): "1 h 35 min", "1 h", "45 min". Never "1.6 h".
     static func duration(_ minutes: Double) -> String {
-        // NaN, infinity or an absurd stored value never traps the page (G62): at most 99 h 59 min.
+        // NaN, infinity or an absurd stored value never traps the page (G62): Core's cap, at most 72 h (#832).
         guard let clamped = RecipeLimits.minutes(minutes), let total = RecipeLimits.whole(clamped.rounded()) else {
             return "0 min"
         }
