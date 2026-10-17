@@ -39,6 +39,8 @@ enum Haptic: Equatable, Sendable {
     case aisleCleared
     /// A look is pinned.
     case pinned
+    /// His finger strokes across Tess (tess-picks.md idea 3): one soft tick as it comes onto her.
+    case soulStroke
 
     /// The system feedback for the moment; `nil` for `.done`, which plays the three-beat pattern.
     var feedback: SensoryFeedback? {
@@ -60,6 +62,7 @@ enum Haptic: Equatable, Sendable {
         case .timeUp: .impact(weight: .heavy, intensity: 0.9)
         case .aisleCleared: .impact(weight: .medium)
         case .pinned: .impact(weight: .medium)
+        case .soulStroke: .impact(flexibility: .soft, intensity: 0.3)
         }
     }
 }

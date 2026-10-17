@@ -1,4 +1,5 @@
 import Foundation
+import TesseraCore
 
 /// Lists' words (K86.12, K86.13; accepted by Product, Oct 17 4:57), as a pure formatter for the Lists screen.
 enum ListsCopy {
@@ -40,5 +41,20 @@ enum ListsCopy {
     /// left." (Product, Oct 17).
     static func tess(list: String, left: Int) -> String {
         left > 0 ? "\(list) has \(left) left." : "\(list), nothing left."
+    }
+
+    /// What the Add line does with a draft. Blank clears. A Claude key is never written or kept: the field clears and
+    /// Tess says where a key goes (Product 8:55, as on Groceries). Any other failure keeps the typed text and says so
+    /// (Kitchen on #760).
+    static func add(_ draft: String,
+                    perform: (String) -> OpRecord?) -> (draft: String, line: String?, record: OpRecord?)
+    {
+        let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return ("", nil, nil) }
+        if looksLikeClaudeKey(text) {
+            return ("", claudeKeyLine, nil)
+        }
+        guard let record = perform(text) else { return (draft, "Didn't save that. Try again.", nil) }
+        return ("", nil, record)
     }
 }

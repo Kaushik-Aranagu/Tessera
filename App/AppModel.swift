@@ -128,6 +128,8 @@ final class AppModel {
         didSet {
             if isWorkoutPresented {
                 session?.touch()
+                // A launch straight into the live workout (the Live Activity, Resume): his moment wins the wake.
+                soul.handle(.liveOpened)
             } else {
                 // Whoever closed the cover, the next one (Resume, the seam) is a plain one.
                 workoutRisesFromLane = false

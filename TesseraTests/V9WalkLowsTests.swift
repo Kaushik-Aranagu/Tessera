@@ -1,0 +1,32 @@
+import Foundation
+@testable import Tessera
+import Testing
+
+/// Design's v9 walk lows (board 0q): the routine detail line and the Done hero.
+@MainActor
+struct V9WalkLowsTests {
+    @Test func rollingPlanHasNoDayPrefix() {
+        #expect(RoutineRow.detail(slots: 5, about: "about 40 min", fixedDays: nil) == "5 exercises, about 40 min")
+    }
+
+    @Test func fixedDaysWithNoneRead_NoDays() {
+        #expect(RoutineRow
+            .detail(slots: 5, about: "about 40 min", fixedDays: []) == "No days. 5 exercises, about 40 min")
+    }
+
+    @Test func fixedDaysListDaysThenPeriod() {
+        #expect(RoutineRow.detail(slots: 5, about: "about 40 min", fixedDays: [1, 4])
+            == "Mon, Thu. 5 exercises, about 40 min")
+        #expect(RoutineRow.detail(slots: 1, about: "about 8 min", fixedDays: [2]) == "Tue. 1 exercise, about 8 min")
+    }
+
+    @Test func fixedEmptyRoutineKeepsTheWords() {
+        #expect(RoutineRow.detail(slots: 0, about: "", fixedDays: []) == "No days. No exercises yet")
+    }
+
+    @Test func heroKeepsTheNameTogether() {
+        let text = WorkoutFinishView.heroText(title: "Push Day A")
+        #expect(text == "Push\u{00A0}Day\u{00A0}A, done")
+        #expect(text.split(separator: " ").count == 2)
+    }
+}

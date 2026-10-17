@@ -44,6 +44,14 @@ struct TessSoul: View {
     var gaze: SoulGaze = .ahead
     /// When she began waking with him (idea 2, `SoulRouter.wake`).
     var wake: Date?
+    /// A stroke's ripple and the blink after it (idea 3, `SoulRouter.stroke` / `strokeBlink`).
+    var stroke: Date?
+    var strokeBlink: Date?
+    /// Her beat (§6, `SoulRouter.beat`) and the colour she wears for his day (idea 4, `SoulRouter.wear(at:)`).
+    var beat: Date?
+    var wear: (Date) -> CGFloat = { _ in 0 }
+    /// Told her centre on screen (global) when she's drawn at the dock, so a band pan can find her.
+    var onDock: ((CGPoint) -> Void)?
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
@@ -89,6 +97,12 @@ struct TessSoul: View {
             }
         }
         .frame(width: 96, height: 96)
+        .onGeometryChange(for: CGPoint.self) { proxy in
+            let frame = proxy.frame(in: .global)
+            return CGPoint(x: frame.midX, y: frame.midY)
+        } action: { centre in
+            onDock?(centre)
+        }
         .onChange(of: mode, initial: true) { old, new in
             let now = Date.now
             layers = SoulBlend.push(new, onto: layers, at: now)
@@ -156,8 +170,19 @@ struct TessSoul: View {
             ? SoulFrame.sample(mode, time: 0, elapsed: 0, still: true)
             : SoulBlend.frame(layers, at: date, loops: loopsOneShots)
             ?? SoulFrame.sample(mode, time: date.timeIntervalSinceReferenceDate, elapsed: 0)
-        guard let wake, !reduceMotion, !lowPower else { return base }
-        return SoulWake.stretched(base, amount: SoulWake.stretch(at: date.timeIntervalSince(wake)))
+        // The day's colour is paint, not motion: it stays under Reduce Motion and Low Power (idea 4).
+        let gather = reduceMotion ? 0 : beat.map { SoulBeat.gather(date.timeIntervalSince($0)) } ?? 0
+        var frame = SoulBeat.beating(base, gather: gather, wear: wear(date), swells: mode != .resting)
+        guard !reduceMotion else { return frame }
+        if let wake, !lowPower {
+            frame = SoulWake.stretched(frame, amount: SoulWake.stretch(at: date.timeIntervalSince(wake)))
+        }
+        if let stroke {
+            // Low Power keeps the ripple (at idle's 30 fps); Reduce Motion has none.
+            let scale = frame.look.scale * hostScale
+            frame = SoulRipple.rippled(frame, elapsed: date.timeIntervalSince(stroke), scale: scale)
+        }
+        return frame
     }
 
     /// The eyes ride the same frame as the dabs. Their own timeline keeps the blink under Reduce Motion (30 fps),
@@ -169,7 +194,10 @@ struct TessSoul: View {
         return TimelineView(.animation(minimumInterval: reduceMotion || slow ? 1 / 30 : 1 / 60)) { context in
             let frame = baseFrame(at: context.date)
             // Waking: shut, then open, then one blink (a 200 ms crossfade under Reduce Motion or Low Power).
-            let lid = wake.map { SoulWake.lid(at: context.date.timeIntervalSince($0), quiet: reduceMotion || lowPower) }
+            // A moment's own blink (the beat's landing, a stroke's leaving), else the wake's lids, else the schedule.
+            let lid = beat.flatMap { SoulBlink.once(since: context.date.timeIntervalSince($0)) }
+                ?? strokeBlink.flatMap { SoulBlink.once(since: context.date.timeIntervalSince($0)) }
+                ?? wake.map { SoulWake.lid(at: context.date.timeIntervalSince($0), quiet: reduceMotion || lowPower) }
             SoulEyes(frame: frame, time: context.date.timeIntervalSinceReferenceDate, gaze: gaze, color: dark,
                      still: reduceMotion, lid: lid)
         }

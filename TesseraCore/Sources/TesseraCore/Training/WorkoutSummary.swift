@@ -26,6 +26,11 @@ public struct WorkoutSummary: Identifiable {
         return endedAt.timeIntervalSince(startedAt)
     }
 
+    /// What Tess says when the workout is done, the thing first: "Push Day A done, 1 of 5 exercises."
+    public var doneLine: String {
+        "\(title) done, \(exercisesDone) of \(exercisesPlanned) exercises."
+    }
+
     /// Tess's line: "6 of 6 exercises, 22 sets, 1 best." Counts, never judgement ("best", not "record": Product).
     public var line: String {
         var parts = ["\(exercisesDone) of \(exercisesPlanned) exercises", "\(sets) \(sets == 1 ? "set" : "sets")"]
