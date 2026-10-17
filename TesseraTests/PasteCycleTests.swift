@@ -35,4 +35,13 @@ struct PasteCycleTests {
         #expect(PasteCopy.idleLine(link: false, reading: false, read: false, lines: []) ==
             "Paste a recipe and I'll read it.")
     }
+
+    /// #810: a link with a password is refused whole, and a longer paste holding one never reaches the miss log.
+    @Test func aLinkWithAPasswordIsNeverKept() {
+        let link = "https://name:" + "hunter" + "2@example.com/dal"
+        #expect(RecipePasteLink.isSecretLink(link))
+        #expect(PasteCopy.hasSecretLink("Dal\nfrom \(link)\n1 cup lentils"))
+        #expect(!PasteCopy.hasSecretLink("Dal\nfrom https://example.com/dal\n1 cup lentils"))
+        #expect(RecipeLinkLine.secretLink == "That link has a password in it. Paste the text instead.")
+    }
 }
