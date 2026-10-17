@@ -83,11 +83,28 @@ struct PrivateWordsTests {
         defer { try? FileManager.default.removeItem(at: dir) }
         let store = try ObjectStore(context: TesseraContext(url: dir.appendingPathComponent("tessera.sqlite")))
         let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
-        try engine.perform(CreateRecipe(text: "Stew\nIngredients\n1 onion\nMethod\n1. Cook it.", title: "Wifi password zebra99 stew"), by: .user)
+        try engine.perform(
+            CreateRecipe(text: "Stew\nIngredients\n1 onion\nMethod\n1. Cook it.", title: "Wifi password zebra99 stew"),
+            by: .user
+        )
         let json = try text(of: TesseraExport(context: store.context, maskingPrivate: true).encoded())
         #expect(!json.contains("zebra99"))
         #expect(json.contains("Private recipe"))
         #expect(!json.contains("stew") && !json.contains("onion")) // what is inside it is private with it
+    }
+
+    @Test func anIngredientOnlyAPrivateRecipeUsesIsMasked() throws {
+        let dir = try folder()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let store = try ObjectStore(context: TesseraContext(url: dir.appendingPathComponent("tessera.sqlite")))
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        try engine.perform(CreateRecipe(text: "Stew\nIngredients\n1 pinch saffron\n2 tsp cumin\nMethod\n1. Cook it.",
+                                        title: "Wifi password zebra99 stew"), by: .user)
+        try engine.perform(CreateRecipe(text: "Rice\nIngredients\n1 cup rice\n1 tsp cumin\nMethod\n1. Cook it.",
+                                        title: "Plain rice"), by: .user)
+        let json = try text(of: TesseraExport(context: store.context, maskingPrivate: true).encoded()).lowercased()
+        #expect(!json.contains("saffron"), "an ingredient only a private recipe uses leaked")
+        #expect(json.contains("cumin") && json.contains("rice")) // one ordinary recipe also uses it
     }
 
     @Test func theLocalBackupKeepsEveryWordAndNeverAKey() throws {
@@ -130,7 +147,8 @@ struct PrivateWordsTests {
         let rolled = try #require(try TesseraBackup.writeRolling(from: store.context, in: iCloud, now: .now,
                                                                  leavingOutPrivate: true))
         // Test-only lossless export (maskingPrivate: false); the app never does this.
-        let rolledBlob = try text(of: TesseraExport(context: TesseraContext(url: rolled), maskingPrivate: false).encoded())
+        let rolledBlob = try text(of: TesseraExport(context: TesseraContext(url: rolled), maskingPrivate: false)
+            .encoded())
         #expect(Self.secrets.allSatisfy { !rolledBlob.contains($0) })
     }
 
