@@ -29,13 +29,24 @@ public enum RecipePasteLink {
         return trimmed
     }
 
+    /// The line for a link that waits after a retryable failure (offline already says its own).
+    private static func keptLine(_ retry: RecipeLinkResult.Retry) -> String {
+        switch retry {
+        case .busySite, .claudeBusy, .claudeTimeout: RecipeLinkLine.offline
+        case .claudePaused: RecipeLinkLine.keptUntilClaude
+        case .badKey: RecipeLinkLine.keptCheckKey
+        }
+    }
+
     /// What reading the pasted link gave. `kept` means it is on the shelf for a later tap.
     public struct Outcome: Sendable, Equatable {
         public let result: RecipeLinkResult
         public let kept: Bool
+        let keptLine: String?
 
+        /// What Tess says: a kept link says it is kept, never "Paste the text instead." while it waits.
         public var line: String {
-            result.line
+            keptLine ?? result.line
         }
     }
 
@@ -50,15 +61,15 @@ public enum RecipePasteLink {
             reader.claude?.allowed = { false }
         }
         let result = await reader.read(link.absoluteString)
-        // Offline, or a failure that may pass (a busy site, Claude busy, paused or off): the link waits. A read, or a
-        // firm refusal, takes it off the shelf.
+        // Offline, or a failure that may pass (a busy site, Claude busy, timed out, paused, a bad key): the link waits,
+        // with a line that says so. A read, or a firm refusal (including "Claude is off"), takes it off the shelf.
         let waits = result.isOffline || result.isRetryable
         if waits {
             shelf?.keep(link)
         } else {
             shelf?.remove(link)
         }
-        return Outcome(result: result, kept: waits)
+        return Outcome(result: result, kept: waits, keptLine: result.retry.flatMap(Self.keptLine))
     }
 }
 

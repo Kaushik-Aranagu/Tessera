@@ -22,6 +22,10 @@ public enum RecipeLinkLine {
     /// The key and the switch stay as they are.
     public static let badKey = "Claude couldn't use your key. Paste the text instead."
     public static let claudeBusy = "Claude's busy right now. Paste the text instead."
+    /// A kept link says one of these once, with no UNDO (Kitchen ruling on #845). "Paste the text instead." shows only
+    /// when a link is dropped.
+    public static let keptUntilClaude = "Recipe link, kept until Claude is back."
+    public static let keptCheckKey = "Recipe link, kept. Check the Claude key in Settings."
 
     public static func reading(_ host: String) -> String {
         "Reading \(host)."
@@ -86,9 +90,17 @@ public struct RecipeLinkResult: Sendable, Equatable {
     public let sourceURL: URL?
     /// No connection, to the page or to Claude: the reason, typed, so nothing matches on the line's words.
     public var isOffline = false
-    /// A failure that may pass (a busy site, Claude busy, paused, off or timing out): the link stays on the shelf so he
-    /// can try again. A firm refusal (no recipe, paywalled, too big, a block) is not one.
-    public var isRetryable = false
+    /// Why a failure may pass, so the link stays on the shelf for another tap (Kitchen ruling on #845). A firm refusal
+    /// (no recipe, paywalled, too big, a block, "Claude is off") has none.
+    public enum Retry: Sendable, Equatable {
+        case busySite, claudeBusy, claudeTimeout, claudePaused, badKey
+    }
+
+    public var retry: Retry?
+
+    public var isRetryable: Bool {
+        retry != nil
+    }
 }
 
 /// Reads a recipe link on the phone (docs/research/recipe-link-fetch.md §1 to §4): one ephemeral https GET with an
@@ -120,7 +132,7 @@ public struct RecipeLinkReader {
             text: result.text.map { SecretWords.cut($0).text },
             sourceURL: result.sourceURL,
             isOffline: result.isOffline,
-            isRetryable: result.isRetryable
+            retry: result.retry
         )
     }
 
@@ -139,7 +151,7 @@ public struct RecipeLinkReader {
         case let .failed(line):
             return RecipeLinkResult(kind: .failed, line: line, text: nil, sourceURL: url)
         case let .busy(line):
-            return RecipeLinkResult(kind: .failed, line: line, text: nil, sourceURL: url, isRetryable: true)
+            return RecipeLinkResult(kind: .failed, line: line, text: nil, sourceURL: url, retry: .busySite)
         case .offline:
             return RecipeLinkResult(kind: .failed, line: RecipeLinkLine.offline, text: nil, sourceURL: url,
                                     isOffline: true)
@@ -330,60 +342,25 @@ public struct RecipeLinkReader {
             .contains { host == $0 || host.hasSuffix(".\($0)") }
     }
 
-    /// Any query name holding one of these is dropped: "x_signature", "id_token", "user_email" (G64).
-    static let secretQueryParts = ["pass", "pwd", "token", "secret", "sig", "auth", "session", "jwt", "email", "key",
-                                   "code", "sid", "otp", "nonce", "credential"]
-
-    /// Whether a query name is a secret by its words, not by letters inside a word: "x_signature", "idToken",
-    /// "user_email" go; "author", "design" and "turkey" stay.
+    /// Whether a (lowercased) query name is a secret: a long unambiguous part anywhere in it ("x_signature",
+    /// "idtoken", "jsessionid", "oauth_verifier"), a short word as a whole word only ("sig", "sid", "auth", "key",
+    /// "code",
+    /// "otp", "pass", "email": so "author", "design" and "turkey" stay), or a name that ends in a key word
+    /// ("accesskey").
     static func isSecretQueryName(_ name: String) -> Bool {
-        var words: [String] = []
-        var current = ""
-        var previous: Character?
-        for character in name {
-            if !(character.isLetter || character.isNumber) {
-                words.append(current)
-                current = ""
-            } else {
-                if character.isUppercase, previous?.isLowercase == true {
-                    words.append(current)
-                    current = ""
-                }
-                current.append(Character(character.lowercased()))
-            }
-            previous = character
+        let long = ["token", "secret", "passw", "pwd", "session", "sessid", "jwt", "nonce", "credential", "oauth",
+                    "signature"]
+        if long.contains(where: name.contains) {
+            return true
         }
-        words.append(current)
-        let whole: Set = [
-            "pass",
-            "password",
-            "passwd",
-            "passcode",
-            "pwd",
-            "token",
-            "tokens",
-            "secret",
-            "secrets",
-            "sig",
-            "signature",
-            "auth",
-            "authorization",
-            "session",
-            "sessionid",
-            "jwt",
-            "email",
-            "key",
-            "apikey",
-            "code",
-            "sid",
-            "otp",
-            "nonce",
-            "credential",
-            "credentials",
-        ]
-        return words.contains { word in
-            whole.contains(word) || ["token", "secret", "password", "signature"].contains { word.hasSuffix($0) }
+        let short: Set = ["sig", "sid", "auth", "key", "code", "otp", "pass", "email"]
+        if name.split(whereSeparator: { !($0.isLetter || $0.isNumber) })
+            .contains(where: { short.contains(String($0)) })
+        {
+            return true
         }
+        return ["apikey", "accesskey", "privatekey", "authkey", "signingkey", "sessionkey"]
+            .contains(where: name.hasSuffix)
     }
 
     /// A value that is an email address or a long opaque string (a token in a harmless-looking name).
@@ -554,9 +531,9 @@ public struct ClaudeRecipeReader {
     }
 
     public func read(_ pageText: String, source: URL) async -> RecipeLinkResult {
-        func failed(_ line: String, offline: Bool = false, retry: Bool = false) -> RecipeLinkResult {
+        func failed(_ line: String, offline: Bool = false, retry: RecipeLinkResult.Retry? = nil) -> RecipeLinkResult {
             RecipeLinkResult(kind: .failed, line: line, text: nil, sourceURL: source, isOffline: offline,
-                             isRetryable: retry)
+                             retry: retry)
         }
         // The wall (G32): with "Tess asks Claude" off nothing below runs, so no key is read, no request is built and
         // no receipt is written. Checked here, not by the caller, so no caller can forget it.
@@ -571,7 +548,7 @@ public struct ClaudeRecipeReader {
         guard let reservation = ledger.reserve(estimate, now: now(), calendar: calendar) else {
             let reset = (calendar.dateInterval(of: .month, for: now())?.end ?? now())
                 .formatted(.dateTime.month(.abbreviated).day())
-            return failed(RecipeLinkLine.paused(until: reset), retry: true)
+            return failed(RecipeLinkLine.paused(until: reset), retry: .claudePaused)
         }
         defer { ledger.settle(reservation) }
         let started = Date()
@@ -597,7 +574,7 @@ public struct ClaudeRecipeReader {
             (data, response) = try await session.data(for: request, delegate: NoRedirects.shared)
         } catch let error as URLError {
             outcome = error.code == .timedOut ? "timeout" : "offline"
-            return error.code == .timedOut ? failed(RecipeLinkLine.claudeTimeout, retry: true)
+            return error.code == .timedOut ? failed(RecipeLinkLine.claudeTimeout, retry: .claudeTimeout)
                 : failed(RecipeLinkLine.offline, offline: true)
         } catch {
             return failed(RecipeLinkLine.noRecipe)
@@ -605,11 +582,11 @@ public struct ClaudeRecipeReader {
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         if status == 401 || status == 403 {
             outcome = "badKey"
-            return failed(RecipeLinkLine.badKey, retry: true)
+            return failed(RecipeLinkLine.badKey, retry: .badKey)
         }
         if status == 429 || status >= 500 {
             outcome = "busy"
-            return failed(RecipeLinkLine.claudeBusy, retry: true)
+            return failed(RecipeLinkLine.claudeBusy, retry: .claudeBusy)
         }
         guard status == 200, let body = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
         else { return failed(RecipeLinkLine.noRecipe) }

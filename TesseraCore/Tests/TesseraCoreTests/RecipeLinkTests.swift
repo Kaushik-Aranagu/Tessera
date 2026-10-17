@@ -18,6 +18,8 @@ final class LinkStub: URLProtocol, @unchecked Sendable {
     nonisolated(unsafe) static var requests: [URLRequest] = []
     /// A page that never answers, and one that sends its headers and a little body, then stalls (the 15 s cap).
     nonisolated(unsafe) static var hangs: Set<String> = []
+    /// A failure for one host only (Claude timing out while the page reads).
+    nonisolated(unsafe) static var hostFailures: [String: URLError.Code] = [:]
     nonisolated(unsafe) static var stalls: Set<String> = []
     /// What was sent to Claude, by request, so a test can read what left the phone.
     nonisolated(unsafe) static var bodies: [Data] = []
@@ -52,6 +54,10 @@ final class LinkStub: URLProtocol, @unchecked Sendable {
         Self.bodies.append(sent)
         if let failure = Self.failure {
             client?.urlProtocol(self, didFailWithError: URLError(failure))
+            return
+        }
+        if let code = Self.hostFailures[request.url?.host() ?? ""] {
+            client?.urlProtocol(self, didFailWithError: URLError(code))
             return
         }
         if Self.hangs.contains(request.url?.host() ?? "") {
@@ -101,6 +107,7 @@ struct RecipeLinkTests {
         LinkStub.pages = [:]
         LinkStub.failure = nil
         LinkStub.hangs = []
+        LinkStub.hostFailures = [:]
         LinkStub.stalls = []
         LinkStub.requests = []
         LinkStub.bodies = []

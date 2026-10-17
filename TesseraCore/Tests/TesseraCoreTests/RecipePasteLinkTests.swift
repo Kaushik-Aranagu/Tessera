@@ -222,4 +222,74 @@ extension RecipeLinkTests {
             "\(result.sourceURL?.absoluteString ?? "nil")"
         )
     }
+
+    /// Kitchen's ruling on #845: a link that waits says so once, and "Paste the text instead." shows only when it is
+    /// dropped.
+    @Test func eachRetryableFailureKeepsTheLinkWithItsOwnLine() async throws {
+        let waiting = "Recipe link, kept for later."
+        let link = try #require(RecipePasteLink.bareLink("https://blog.example.com/beans"))
+        func run(_ prepare: () -> Void) async -> (RecipePasteLink.Outcome, RecipeLinkShelf) {
+            let made = shelf()
+            LinkStub.pages = ["blog.example.com": .init(body: Self.prose)]
+            LinkStub.hostFailures = [:]
+            prepare()
+            return await (RecipePasteLink.read(link, reader: reader(claude: true), asksClaude: true, shelf: made), made)
+        }
+        // A busy site (503): the page itself.
+        var (outcome, box) = await run { LinkStub.pages["blog.example.com"] = .init(status: 503, body: "") }
+        #expect(outcome.kept && outcome.line == waiting && box.waiting().count == 1, "\(outcome.line)")
+        // Claude busy (429).
+        (outcome, box) = await run { LinkStub.pages["api.anthropic.com"] = .init(status: 429, body: "{}") }
+        #expect(outcome.kept && outcome.line == waiting && box.waiting().count == 1, "\(outcome.line)")
+        // Claude timing out.
+        (outcome, box) = await run { LinkStub.hostFailures["api.anthropic.com"] = .timedOut }
+        #expect(outcome.kept && outcome.line == waiting && box.waiting().count == 1, "\(outcome.line)")
+        // A bad key (401).
+        (outcome, box) = await run { LinkStub.pages["api.anthropic.com"] = .init(status: 401, body: "{}") }
+        #expect(
+            outcome.kept && outcome.line == RecipeLinkLine.keptCheckKey && box.waiting().count == 1,
+            "\(outcome.line)"
+        )
+        // Firm refusals drop the link and keep their own line: no recipe on the page, and "Claude is off".
+        (outcome, box) = await run { LinkStub.pages["blog.example.com"] = .init(body: "<html><body>Hi</body></html>") }
+        #expect(!outcome.kept && box.waiting().isEmpty && outcome.line.hasSuffix("Paste the text instead."))
+        let off = await RecipePasteLink.read(link, reader: reader(claude: true), asksClaude: false, shelf: box)
+        #expect(!off.kept && off.line == RecipeLinkLine.claudeOff && box.waiting().isEmpty)
+        // Last, because the cap stays on the ledger.
+        // Claude paused at the cap.
+        (outcome, box) = await run {
+            ledger.record(use: .paste, model: ClaudeRecipeReader.model, input: 0, output: 0,
+                          costNano: TessUsageLedger.capNano, latency: 0, outcome: "works", requestID: nil,
+                          at: DayPlanTests.at(15, "18:00", month: 10))
+        }
+        #expect(
+            outcome.kept && outcome.line == RecipeLinkLine.keptUntilClaude && box.waiting().count == 1,
+            "\(outcome.line)"
+        )
+    }
+
+    @Test(arguments: [
+        "jsessionid",
+        "phpsessid",
+        "accesskey",
+        "secretkey",
+        "privatekey",
+        "authkey",
+        "oauth_token",
+        "x-sig",
+        "api_key",
+        "user_email",
+        "idtoken",
+        "signature",
+    ])
+    func glueAndShortSecretNamesAreStripped(_ name: String) throws {
+        let url = try #require(URL(string: "https://x.com/r?\(name)=1&keep=2"))
+        #expect(RecipeLinkReader.stripTracking(url).absoluteString == "https://x.com/r?keep=2", "\(name)")
+    }
+
+    @Test(arguments: ["author", "design", "turkey", "monkey", "recipeid", "page"])
+    func harmlessNamesStay(_ name: String) throws {
+        let url = try #require(URL(string: "https://x.com/r?\(name)=1"))
+        #expect(RecipeLinkReader.stripTracking(url).absoluteString == url.absoluteString, "\(name)")
+    }
 }
