@@ -368,6 +368,14 @@ struct WallsBypassTests {
         #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil) == phrase.contains("kg"), "\(phrase)")
     }
 
+    @Test func theLowsFromQAOn644() {
+        // "Push B 5x5 80 for 8" is one set at 82; "bench day 82.4 kg this morning" is his weight.
+        #expect(!PrivateFacts.isWalled("Push B 5x5 80 for 8", lastWeightKg: 82))
+        #expect(PrivateFacts.isWalled("bench day 82.4 kg this morning", lastWeightKg: 82))
+        #expect(PrivateFacts.isWalled("bench day 82.4 kg this morning", lastWeightKg: nil))
+        #expect(!PrivateFacts.isWalled("82 kg squat", lastWeightKg: 82))
+    }
+
     @Test func forDaysIsNotASet() {
         // QA low on #644: "for 3 days" keeps the number.
         #expect(PrivateFacts.withoutNotation("weighed 82 kg for 3 days").contains("82"))
