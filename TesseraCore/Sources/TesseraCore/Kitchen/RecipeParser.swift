@@ -168,10 +168,27 @@ public enum RecipeParser {
         return words <= 5 && !clean.hasSuffix(".")
     }
 
+    /// A quantity is a number or fraction followed by a unit word or a lowercase noun ("2 eggs", "1/2 cup", "200g
+    /// flour"). "30-Minute Dal" and "7 Layer Dip" are names, so they stay titles (G94).
     static func startsWithAmount(_ line: String) -> Bool {
         let clean = IngredientLine.clean(line)
-        return clean.first?.isNumber == true
-            || clean.firstMatch(of: /(?i)^an?\s+(pinch|handful|bunch|clove|can|tin|slice|sprig)/) != nil
+        if clean.firstMatch(of: /(?i)^an?\s+(pinch|handful|bunch|clove|can|tin|slice|sprig)/) != nil {
+            return true
+        }
+        guard clean.first?.isNumber == true else { return false }
+        let tokens = clean.split(separator: " ", maxSplits: 2).map(String.init)
+        guard let first = tokens.first else { return false }
+        // "30-Minute": a number glued to a capitalised word is a name; "200g" or "2-3" is an amount.
+        if first.firstMatch(of: /^[\d.,\/½¼¾⅓⅔⅛]+(?:[-–][\d.,\/½¼¾⅓⅔⅛]+)?$/) == nil {
+            return first.firstMatch(of: /^[\d.,\/½¼¾⅓⅔⅛]+(?:[-–][\d.,\/½¼¾⅓⅔⅛]+)?\p{Ll}/) != nil
+        }
+        guard tokens.count > 1 else { return true }
+        let next = tokens[1]
+        if next.first?.isLowercase == true {
+            return true
+        }
+        // A capitalised word is a name ("7 Layer Dip") unless it is a unit ("2 Tbsp butter").
+        return IngredientLine.parse(clean)?.unit != nil
     }
 
     static func stripNumbering(_ line: String) -> String {

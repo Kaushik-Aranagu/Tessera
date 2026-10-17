@@ -142,6 +142,26 @@ struct RecipeTitleTests {
         #expect(try #require(RecipeParser.parse("A pinch of salt\nMethod\n1. Whisk.")).title == "Untitled recipe")
     }
 
+    @Test(arguments: ["30-Minute Dal", "7 Layer Dip", "5 Spice Chicken", "3 Cheese Pasta Bake"])
+    func aNameThatStartsWithANumberStaysATitle(_ first: String) throws {
+        let parsed = try #require(RecipeParser.parse("\(first)\n2 eggs\n1 cup flour\nBake it for 20 minutes."))
+        #expect(parsed.title == first)
+    }
+
+    @Test(arguments: [
+        "2 eggs",
+        "1/2 cup flour",
+        "200g flour",
+        "1½ cups milk",
+        "2-3 cloves garlic",
+        "2 Tbsp butter",
+        "3",
+    ])
+    func aQuantityIsNeverTheTitle(_ first: String) throws {
+        let parsed = try #require(RecipeParser.parse("\(first)\nMethod\n1. Whisk it."))
+        #expect(parsed.title == "Untitled recipe", "\(first)")
+    }
+
     @Test func theSamePasteTwiceIsOneRecipe() throws {
         let store = ObjectStore.open(inMemory: true)
         let classes = try store.prepareCatalog()
