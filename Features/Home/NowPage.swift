@@ -232,9 +232,18 @@ struct NowPage: View {
         .accessibilityLabel("Finish \(task.title)")
     }
 
-    /// A planned cook's GROCERIES key shows only while something is left to buy (Design on #700).
-    static func showsGroceriesKey(toBuy: Int?) -> Bool {
-        (toBuy ?? 0) > 0
+    /// A planned cook's key: GROCERIES while something is left to buy (Design on #700); at zero it becomes COOK
+    /// (K87 "5 At zero", C8, B6), but only once cook mode exists, since a Cook key with no cook mode behind it is
+    /// worse than none (G55). Until then the hero carries no key at zero.
+    enum CookKey: Equatable {
+        case groceries, cook, none
+    }
+
+    static func cookKey(toBuy: Int?, cookModeReady: Bool = RecipePage.cookModeReady) -> CookKey {
+        if (toBuy ?? 0) > 0 {
+            return .groceries
+        }
+        return cookModeReady ? .cook : .none
     }
 
     /// The recipe a planned cook task is about ("cook tacos thu" links it through `about`), nil for any other task.
@@ -257,10 +266,18 @@ struct NowPage: View {
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
                 LineHero(line: line, opens: .object(recipe?.id ?? task.id)) {
                     if recipe != nil {
-                        if Self.showsGroceriesKey(toBuy: fact.toBuy) {
+                        switch Self.cookKey(toBuy: fact.toBuy) {
+                        case .groceries:
                             PaintKey(paint: Theme.Colors.ink, isTap: true, action: { openLink(.groceries) },
                                      label: { _ in Text("Groceries").textRole(.labelStrong) })
                                 .accessibilityHint("Opens Groceries")
+                        case .cook:
+                            PaintKey(paint: Theme.Colors.now, isTap: true,
+                                     action: { model.open(.object(recipe?.id ?? task.id)) },
+                                     label: { _ in Text("Cook").textRole(.labelStrong) })
+                                .accessibilityHint("Opens the recipe to cook")
+                        case .none:
+                            EmptyView()
                         }
                     } else {
                         finishKey(task)

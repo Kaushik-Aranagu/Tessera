@@ -44,6 +44,10 @@ struct RecipesShelf {
     }
 
     static func tess(_ rows: [Row]) -> String? {
+        // An empty shelf says how one gets in (K30.1, lists-acceptance 13.12).
+        if rows.isEmpty {
+            return "Paste a link or a page and I'll read it."
+        }
         if rows.count == 1, let only = rows.first, only.cooks > 0 {
             return "\(only.name), cooked \(only.cooks) time\(only.cooks == 1 ? "" : "s")."
         }

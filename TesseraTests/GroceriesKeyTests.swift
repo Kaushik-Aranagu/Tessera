@@ -1,15 +1,21 @@
 @testable import Tessera
 import Testing
 
-/// Design on #700: a planned cook's GROCERIES key shows only while something is left to buy.
+/// A planned cook's key on Home: GROCERIES while something is left to buy (Design on #700); at zero COOK (K87, C8,
+/// B6), held back while cook mode isn't built (G55).
 @MainActor
 struct GroceriesKeyTests {
-    @Test func showsWhileThereIsSomethingToBuy() {
-        #expect(NowPage.showsGroceriesKey(toBuy: 2))
+    @Test func groceriesWhileThereIsSomethingToBuy() {
+        #expect(NowPage.cookKey(toBuy: 2, cookModeReady: true) == .groceries)
+        #expect(NowPage.cookKey(toBuy: 2, cookModeReady: false) == .groceries)
     }
 
-    @Test func hiddenAtNothingToBuy() {
-        #expect(!NowPage.showsGroceriesKey(toBuy: 0))
-        #expect(!NowPage.showsGroceriesKey(toBuy: nil))
+    @Test func cookAtNothingToBuy() {
+        #expect(NowPage.cookKey(toBuy: 0, cookModeReady: true) == .cook)
+        #expect(NowPage.cookKey(toBuy: nil, cookModeReady: true) == .cook)
+    }
+
+    @Test func noKeyAtZeroUntilCookModeLands() {
+        #expect(NowPage.cookKey(toBuy: 0, cookModeReady: false) == .none)
     }
 }

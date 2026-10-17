@@ -207,6 +207,7 @@ private struct GroceriesPage: View {
         }
         .onPreferenceChange(RowCenters.self) { rowCenters = $0 }
         .sensoryFeedback(.impact(weight: .light), trigger: landed)
+        .sensoryFeedback(.success, trigger: finished)
     }
 
     @State private var rowCenters: [UUID: CGPoint] = [:]
@@ -317,12 +318,19 @@ private struct GroceriesPage: View {
         }
     }
 
+    /// "Shopping, finished." with a 10 s UNDO that brings the basket and the shop back (G43). A failed write keeps
+    /// the basket open, says so, and plays no finish haptic.
     private func finishShop() {
+        let outcome = GroceriesCopy.finish(engine: model.engine)
+        guard let record = outcome.undo else {
+            TessVoice.shared.say(outcome.line)
+            return
+        }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
-            _ = try? model.engine.perform(FinishShop(), by: .user)
             basketOpen = false
             model.touch()
         }
+        TessVoice.shared.say(outcome.line, undo: record, holds: .seconds(10))
         finished += 1
     }
 
@@ -723,6 +731,19 @@ private struct GroceriesEmpty: View {
 }
 
 enum GroceriesCopy {
+    /// Finishing the shop: the engine's receipt and its record, or the failure line with nothing to undo.
+    @MainActor static func finish(engine: ActionEngine) -> (line: String, undo: OpRecord?) {
+        finish { try? engine.perform(FinishShop(), by: .user).record }
+    }
+
+    @MainActor static func finish(_ perform: () -> OpRecord?) -> (line: String, undo: OpRecord?) {
+        guard let record = perform() else {
+            return ("Didn't save that. Try again.", nil)
+        }
+        let receipt = record.receipt ?? "Shopping, finished"
+        return (receipt.hasSuffix(".") ? receipt : receipt + ".", record)
+    }
+
     /// The name as it should read beside its amount: "3 eggs", not "3 egg" (a plain count above one, no unit).
     static func name(_ item: ListContents.Item) -> String {
         guard let quantity = item.quantity, let count = Double(quantity), count > 1,

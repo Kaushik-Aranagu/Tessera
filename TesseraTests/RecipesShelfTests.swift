@@ -28,7 +28,8 @@ struct RecipesShelfTests {
     }
 
     @Test func emptyIsNoneYet() {
-        #expect(shelf.context == "None yet" && shelf.rows.isEmpty && shelf.tess == nil)
+        #expect(shelf.context == "None yet" && shelf.rows.isEmpty)
+        #expect(shelf.tess == "Paste a link or a page and I'll read it.")
     }
 
     @Test func aPrivateRecipeIsOnlyPrivateRecipeAndCounted() throws {

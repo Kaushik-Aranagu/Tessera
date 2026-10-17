@@ -118,6 +118,7 @@ struct PasteRecipe: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+        .onDisappear(perform: closeUndo)
         .onChange(of: text) { old, new in
             // A Claude key never becomes a recipe (QA on #218): cut it out before anything reads it, keeping the rest
             // of the paste (Product 8:20 AM, K87.11). It's never echoed; the line says where a key goes.
@@ -232,8 +233,19 @@ struct PasteRecipe: View {
             try? await Task.sleep(for: TessVoice.hold(undo: true, holds: .seconds(4)))
             if saved?.id == id {
                 onSaved(id)
+                closeUndo()
             }
         }
+    }
+
+    /// Leaving Paste closes the UNDO window: back from the recipe finds a fresh page, never a live UNDO (G52c).
+    private func closeUndo() {
+        guard saved != nil else { return }
+        saved = nil
+        text = ""
+        reading = false
+        revealed = 0
+        corrections = [:]
     }
 
     private func undo(_ record: OpRecord) {
