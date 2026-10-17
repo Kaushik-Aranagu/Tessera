@@ -71,6 +71,11 @@ enum ListsCopy {
         "\(list), done. Reset it for next time?"
     }
 
+    /// A reset with nothing checked: "Packing, nothing to reset.", no UNDO (the engine's line).
+    static func nothingToReset(_ list: String) -> String {
+        "\(list), nothing to reset."
+    }
+
     /// A reset's receipt: "Packing, reset." (10.4, 10.11).
     static func reset(_ list: String) -> String {
         "\(list), reset."

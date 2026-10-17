@@ -93,4 +93,9 @@ struct ListsCopyTests {
         #expect(ListsCopy.putAway("Packing", basket: 0) == "Packing put away.")
         #expect(ListsCopy.putAway("Packing", basket: 3) == "Packing put away. 3 in the basket.")
     }
+
+    /// Kitchen on #823: a reset with nothing checked says so, with no UNDO.
+    @Test func nothingToResetReadsThingFirst() {
+        #expect(ListsCopy.nothingToReset("Packing") == "Packing, nothing to reset.")
+    }
 }

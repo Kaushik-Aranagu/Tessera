@@ -131,6 +131,8 @@ private struct ListPage: View {
     @State private var draft = ""
     @State private var striking: Set<UUID> = []
     @State private var foldOpen = false
+    /// The reset's moment: the fold's strikes drain before the items rise back.
+    @State private var unpainting = false
     /// The option words under the context line (10.5): unfolded in place by a tap, no sheet.
     @State private var optionsOpen = false
     /// Bumped by a real remove; the haptic lives here because the removed row leaves in the same update. It's
@@ -229,6 +231,18 @@ private struct ListPage: View {
                 }
                 .padding(.horizontal, Theme.Spacing.gutter)
                 .padding(.vertical, Theme.Spacing.l)
+                // A tap anywhere outside the option words folds them (10.5); rows and words take their own taps first.
+                .background {
+                    if optionsOpen {
+                        Color.clear
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) {
+                                    optionsOpen = false
+                                }
+                            }
+                    }
+                }
             }
             .scrollIndicators(.hidden)
             .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -325,8 +339,11 @@ private struct ListPage: View {
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(reduceMotion ? 150 : 420))
             _ = try? model.engine.perform(CheckListItem(item: item.id), by: .user)
-            striking.remove(item.id)
-            model.touch()
+            // In one animation, so a section whose last row this was folds away (10.7; Kitchen on #823).
+            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+                striking.remove(item.id)
+                model.touch()
+            }
         }
     }
 
@@ -537,18 +554,41 @@ private struct ListPage: View {
     }
 
     /// Hold on a reusable list's fold: every item comes back unchecked, "Packing, reset." with UNDO 10 s (10.4).
+    /// The strikes un-paint right to left and the items rise back (10.4). Nothing checked (strikes taken back while
+    /// the ask was open, or an empty list): "Packing, nothing to reset." with no UNDO (Kitchen on #823).
     private func reset(name: String) {
-        guard let record = try? model.engine.perform(ResetList(list: listID, time: AppClock.now), by: .user).record
-        else {
-            TessVoice.shared.say("Didn't save that. Try again.")
+        let checked = model.store.object(id: listID).map {
+            ListContents(store: model.store, classes: model.classes).done(in: $0).count
+        } ?? 0
+        guard checked > 0 else {
+            TessVoice.shared.say(ListsCopy.nothingToReset(name))
             return
         }
-        withTesseraAnimation(reduceMotion ? Theme.Motion.house : .smooth(duration: 0.48), reduceMotion: reduceMotion) {
-            foldOpen = false
-            model.touch()
+        withTesseraAnimation(
+            reduceMotion ? Theme.Motion.house : .easeInOut(duration: 0.36),
+            reduceMotion: reduceMotion
+        ) {
+            foldOpen = true
+            unpainting = true
         }
-        reset += 1
-        TessVoice.shared.say(ListsCopy.reset(name), undo: record)
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(reduceMotion ? 0 : 380))
+            unpainting = false
+            guard let record = try? model.engine.perform(ResetList(list: listID, time: AppClock.now), by: .user)
+                .record
+            else {
+                TessVoice.shared.say("Didn't save that. Try again.")
+                return
+            }
+            withTesseraAnimation(reduceMotion ? Theme.Motion.house : .smooth(duration: 0.48),
+                                 reduceMotion: reduceMotion)
+            {
+                foldOpen = false
+                model.touch()
+            }
+            reset += 1
+            TessVoice.shared.say(ListsCopy.reset(name), undo: record)
+        }
     }
 
     private func fold(_ done: [ListContents.Item], name: String, reusable: Bool) -> some View {
@@ -566,7 +606,8 @@ private struct ListPage: View {
                         ))
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.inkSecondary)
-                        .strikethrough()
+                        // The strike as paint, so a reset drains it right to left (10.4).
+                        .textRenderer(StrikeRenderer(progress: unpainting ? 0 : 1, color: Theme.Colors.inkSecondary))
                         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                     }
                     .buttonStyle(HandleButtonStyle())
