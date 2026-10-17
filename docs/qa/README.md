@@ -7,3 +7,151 @@ One static review per merged PR (no Swift toolchain on the QA side, so every rev
 - `regression.md`, `grammar-trace.md`, `*-flow.md`: standing checklists and traces.
 
 From #251 on, reviews land here in the repo as well as in the project's shared folder, so the Mac sessions can read them.
+
+## More docs (index added by Ops, Oct 17)
+
+- [audit-master-oct16.md](audit-master-oct16.md): QA audit of master at bb7f0820 (Oct 16, 2026)
+- [audit-no-at-copy-oct17.md](audit-no-at-copy-oct17.md): Audit: no "at" before a clock time (Oct 17)
+- [audit-test-gaps-oct17.md](audit-test-gaps-oct17.md): Test-gap audit, last 15 merges to origin/master (ab7d3bf, detached)
+- [gate-row-r14.md](gate-row-r14.md): Gate row for R14 (DST, Core 0ag), ready for the first release that has #576
+- [prereview-engine-wall.md](prereview-engine-wall.md): QA pre-review: core/engine-wall (0ai part 2), head 31a8a8c
+- [review-124.md](review-124.md): QA: Groceries and Backups design pass, PR #124 (master 5258866, head dda6990)
+- [review-132.md](review-132.md): QA: rest day on Now, PR #132 (master b4c4682, head 6fdc973)
+- [review-134.md](review-134.md): QA: live workout, soul in the corner, PR #134 (master 794981a, head 5abd1cb)
+- [review-141.md](review-141.md): QA: Now ranker, PR #141 (master 1a9c218, head 4c0bd2b)
+- [review-146.md](review-146.md): Review #146 (merged 5b0262e, head b483655) — PASS
+- [review-147.md](review-147.md): Review #147 (master 70dbddd, head ed6298e) — PASS
+- [review-151.md](review-151.md): Review #151 (merged 927608d) — Home swipe hotfix: Q1/Q2 CLOSED, GO for the build
+- [review-153.md](review-153.md): Review #153 (merged 65a6598) — Core grammar hotfix: PASS with should-fixes
+- [review-174.md](review-174.md): Review #174 (merged dc1285a) — Now rest-day hookup: E5 CLOSED, GO for install at dc1285a
+- [review-177.md](review-177.md): Review #177 (merged d0154a9) — capture-miss log, lastOpenedAt, G9-G11: PASS, GO for instal
+- [review-179.md](review-179.md): Review #179 (merged cc9cb3b) — Today queue polish: PASS (not in tonight's install)
+- [review-183.md](review-183.md): Review #183 (merged b19fb4a) — Siri "Undo Last Set" hotfix + B1: PASS, GO for install at b
+- [review-184.md](review-184.md): Review #184 (merged ab45919) — Review week: PASS with two should-fix (not in tonight's ins
+- [review-187.md](review-187.md): Review #187 (merged dc8d1d2) — Core's 04:00 day: PASS (not in tonight's install)
+- [review-190.md](review-190.md): Review #190 (merged 71c9dac) — Builder A: U1, A1-A4, late-night #12, canStart: PASS (not i
+- [review-191.md](review-191.md): Review #191 (merged 966636f) — backup failures, D1, D3, D5: PASS (not in tonight's install
+- [review-193.md](review-193.md): Review #193 (merged 30aa845) — Themes part 1 (Builder A): PASS with should-fixes (not in t
+- [review-195-197.md](review-195-197.md): Review #195 (b273a41) and #197 (d9411a5): both PASS, and they land cleanly together
+- [review-199.md](review-199.md): Review #199 (merged 0532d73) — Themes follow-up: PASS
+- [review-201.md](review-201.md): Review #201 — past-day flags (fbe074a)
+- [review-203.md](review-203.md): Review #203: Themes part 2a, the workout follows the look (68cee3a)
+- [review-205.md](review-205.md): Review #205: live-workout set guard, S701 to S706 (aec9ccd)
+- [review-207.md](review-207.md): Review #207: Themes, fixes for W1-W5 (df856c6)
+- [review-210.md](review-210.md): Review #210: set guard dictation follow-up (e75f40f, head eb0835c)
+- [review-211.md](review-211.md): Review #211: backups by his 4 AM day (157f882, head 8dcfd23)
+- [review-215.md](review-215.md): Review #215 — Themes 2b (862ed68, head 838fee2)
+- [review-218.md](review-218.md): Review #218: Claude key store (2892ac1, head 5a24f54)
+- [review-219.md](review-219.md): Review #219: day boundary for Builder B (15f2d86, head bc9731b)
+- [review-221.md](review-221.md): Review #221: look storage, sheen, leftovers (87bd157, head 29fcaaf)
+- [review-225.md](review-225.md): Review #225: v3 zone column on op (3c9278a, head e1a2826)
+- [review-227.md](review-227.md): Review #227: Settings, Claude key field (8fc5bd3, head c884384)
+- [review-228-229.md](review-228-229.md): Review #228 + #229 (0dfe108, 3ccd3be)
+- [review-230.md](review-230.md): Review #230: Claude key hardening (419d6de, head 466b0bb)
+- [review-231.md](review-231.md): Review #231: Looks tokens, soul wash, glass back (f4ab565, head 570ef7c)
+- [review-234.md](review-234.md): Review #234: Home on theme tokens + Claude field fixes (c76d735, head 1683a26)
+- [review-239.md](review-239.md): Review #239: backup data risks from the restore walk (fc31605, head 186e9c8)
+- [review-241.md](review-241.md): Review #241: no dots, ink line, Receipts (feb2ba7, head bacec65)
+- [review-244.md](review-244.md): Review #244: demo guard (806b085, head 0443e6b)
+- [review-246.md](review-246.md): Review #246: Backups after a reinstall, plus #241 fixes (c2fd7ad, head cb68c1f)
+- [review-248.md](review-248.md): Review #248: Core set guard, SQ8 ask (fdcaee4, head bf5a704)
+- [review-251.md](review-251.md): Review #251: dated lift ask (247150e, head d1edf4c)
+- [review-254.md](review-254.md): Review #254: Q9, Q10, D1, D2 and typed "by" (e7a5be4, head cfec50d)
+- [review-258.md](review-258.md): Review #258: settings object, catalog v4 (67442a1, head 5455f14)
+- [review-262.md](review-262.md): QA review 262: spoken numbers normaliser (#262)
+- [review-264.md](review-264.md): QA review 264: calm capture (#264)
+- [review-266.md](review-266.md): QA review 266: one base for the workout (#266)
+- [review-269.md](review-269.md): QA review 269: launch flags (#269), the Oct 22 install target
+- [review-273.md](review-273.md): QA review 273: Speak (#273)
+- [review-274.md](review-274.md): QA review 274: set-loss rows (#274)
+- [review-278.md](review-278.md): QA review 278: the ink line on PaintKey (#278)
+- [review-282.md](review-282.md): QA review 282: grammar follow-up (#282)
+- [review-283.md](review-283.md): QA review 283: the Claude router (#283)
+- [review-287.md](review-287.md): QA review 287: grammar fixes, router follow-ups, backups, settings migration (#287)
+- [review-289.md](review-289.md): QA review 289: F2 follow-up, weightless N×M on every kit (#289)
+- [review-290.md](review-290.md): QA review 290: the rules plan engine, Plan my day (M4 slice 6, #290)
+- [review-292.md](review-292.md): QA review 292: ink line sheen and bead fix (#292)
+- [review-297.md](review-297.md): QA review 297: the set block (#297)
+- [review-298.md](review-298.md): QA review 298: Plan my day through Claude (#298)
+- [review-303.md](review-303.md): Review: PR #303, the #298 follow-ups (head e835a61)
+- [review-305.md](review-305.md): Review: PR #305, TessInbox "Waiting for Tess" (head 803f6da)
+- [review-306.md](review-306.md): Review: PR #306, S1/S2 fixes on #303 (head 5615a83)
+- [review-309.md](review-309.md): Review: PR #309, US shop units (head 10bede5)
+- [review-312.md](review-312.md): Review: PR #312, Builder B's Speak fix (head dbf74be), the install gate
+- [review-315.md](review-315.md): Review: PR #315, recipe link-fetch L1-L3 (head 078cb54)
+- [review-316.md](review-316.md): Review: PR #316, lows from #305, #306 and #309, plus the bare add (head 06ebf46)
+- [review-317.md](review-317.md): Review: PR #317, haptics and reward (head c9f32a9)
+- [review-318.md](review-318.md): Review 318: Day log engine (DayStory)
+- [review-320.md](review-320.md): Review 320: SettingsStore wiring, "Tess asks Claude" (M1), empty wrap-up UNDO (L2)
+- [review-325.md](review-325.md): Review 325: Core lows (#316 S1, "1 lb cake flour", the 401 key test)
+- [review-330.md](review-330.md): Review 330: app icon, soul at 0.65, the 04:00 test fix
+- [review-334.md](review-334.md): Review 334: HomeLines lens (AI-1)
+- [review-337.md](review-337.md): Review 337: Training page at rest, START lift, RESUME, Routines (Design 44 part one)
+- [review-341.md](review-341.md): QA review 341: Design 44 plan actions (Core)
+- [review-342.md](review-342.md): QA review 342: Design 42 glass tab lens (Builder A)
+- [review-343.md](review-343.md): QA review 343: Return finishes what's typed (Builder B)
+- [review-344.md](review-344.md): QA review 344: "PR at the time" flag on the set (Core)
+- [review-347.md](review-347.md): QA review 347: Training matched rise, plus Design's #337 fixes (Builder A)
+- [review-348.md](review-348.md): QA review 348: WeekFacts lens for Design 46 (Core)
+- [review-352.md](review-352.md): QA review 352: Design 46 Review as the week on one page (Builder B)
+- [review-353.md](review-353.md): QA review 353: Field 18 for his typing (Builder B)
+- [review-354.md](review-354.md): QA review 354: scripts/kitchen-week-one.py (Kitchen lead)
+- [review-356.md](review-356.md): QA review 356: AI-7 Tess's memory store (Core)
+- [review-359.md](review-359.md): QA review: PR #359, Design 44 part two (routines on fixed days)
+- [review-363.md](review-363.md): QA review: PR #363, plan days and WeekFacts lows (Core)
+- [review-366.md](review-366.md): QA review: PR #366, AI-1 Home lines (Builder B)
+- [review-367.md](review-367.md): QA review: PR #367, Design 43 looks recut (Builder A)
+- [review-369.md](review-369.md): QA review: PR #369, HomeLines follow-up (Core)
+- [review-377.md](review-377.md): QA review: #377 trip zone fixes (Core, core/trip-zones)
+- [review-380.md](review-380.md): QA review: #380 Kitchen slice (Core, core/kitchen-week)
+- [review-381.md](review-381.md): QA review: #381 live workout on the new frame (Builder A, ios/live-workout, Design 56)
+- [review-391.md](review-391.md): QA review: #391 history dates in the workout's zone (Builder A, ios/history-zone, R34 / T4
+- [review-397.md](review-397.md): QA review: #397 live-workout follow-ups (Builder A, ios/live-followups)
+- [review-399.md](review-399.md): QA review: #399 Core incremental OpZones and bests without a sort
+- [review-402.md](review-402.md): QA review: #402 Builder A's soul router
+- [review-403.md](review-403.md): QA review: #403 Tess's eyes
+- [review-405.md](review-405.md): QA review: #405 Core DemoData clamp (03:00 to 04:00 failures)
+- [review-407.md](review-407.md): QA review: #407 Core tessEyes setting (Catalog v9)
+- [review-422.md](review-422.md): QA review: #422 Core secret words (Research 134) and the cap constant
+- [review-446.md](review-446.md): QA review: #446 a refused hold settles Tess to rest (Builder B)
+- [review-451.md](review-451.md): QA review: #451 MU2 money and body wall, plus A2, CA6, CA7 (Core)
+- [review-453.md](review-453.md): QA review: #453 Tess working, tess-motion.md §5 (Builder A)
+- [review-454.md](review-454.md): QA review: #454 paste/link secret wall (Core, Research 137)
+- [review-457.md](review-457.md): QA review: #457 Siri "Add a Task" secret guard (Core, QA I3)
+- [review-463.md](review-463.md): QA review: #463 finish-early workouts reach Apple Health (Builder A, QA H1)
+- [review-467.md](review-467.md): QA review: #467 a waiting ask goes when the chrome leaves (Builder A, QA #402 L5)
+- [review-469.md](review-469.md): QA review: #469 Plan my day guards (Core, QA audit A3, A4, A6)
+- [review-471.md](review-471.md): Review: #471 core/privacy-followups (B1, L1, L3, W10, bare-verb isMoney, buy pins, pull-up
+- [review-475.md](review-475.md): Review: #475 core/catalog-version-guard (B5/B6) + ledger flake fix
+- [review-487.md](review-487.md): Review: #487 ios/fake-key-hygiene (Builder B)
+- [review-494.md](review-494.md): Review: #494 core/tess-riders (QA T1, P1)
+- [review-498.md](review-498.md): Review: #498 core/no-backup-in-memory (QA M1 and R2 on #475, Design copy)
+- [review-504.md](review-504.md): Review: #504 core/best-word (Core 0w)
+- [review-507.md](review-507.md): Review: #507 core/clock-format (board 0q, time-words sweep)
+- [review-508.md](review-508.md): Review: #508 N13, a private note's row (Builder B)
+- [review-512.md](review-512.md): Review: #512 core/thing-first-lines (board 0p, Research RC23-RC32)
+- [review-529.md](review-529.md): Review: #529 ios/plan-home, Plan my day on Home (Builder B, Design 53)
+- [review-534.md](review-534.md): QA review: #534 privacy parity, P14 + 0j + 0ac slice 1 (Core)
+- [review-544.md](review-544.md): QA review: #544 0ah, command interpreter walls (Core)
+- [review-546.md](review-546.md): QA review: #546 0h + 0g, VoiceOver hint and time words (Builder A)
+- [review-547.md](review-547.md): QA review: #547 0f, receipts name the thing first (Builder A)
+- [review-548.md](review-548.md): QA review: #548, key-prefix comment in words (Builder A)
+- [review-551.md](review-551.md): QA review: #551 0ad PN-MENTION (Core)
+- [review-552.md](review-552.md): QA review: #552 0ae Review bands by zone (Core)
+- [review-553.md](review-553.md): QA review: #553 0ab quiet-hours default (Core)
+- [review-558.md](review-558.md): QA review: #558 motion idea 2 "she wakes with him" + gather queue (Builder A)
+- [review-564.md](review-564.md): QA review: #564 0v question walls + WallsUITests (Builder B)
+- [review-576.md](review-576.md): QA review: #576 0ag DST night (Core)
+- [review-580.md](review-580.md): QA review: #580 Core 0ai part 1, private-field mask on the object page
+- [review-583.md](review-583.md): QA review: #583 Builder B R1, Review foot line above Tess's band
+- [review-597.md](review-597.md): QA review: #597 Builder B 0r, a note opens in NoteEditor only when it is not private
+- [review-601.md](review-601.md): QA review: #601 Builder A R2 (release 1 walk row R2)
+- [review-602.md](review-602.md): QA review: #602 Builder A, launch flags only through LaunchFlags (DATA SAFETY)
+- [review-605.md](review-605.md): QA review: #605 Core 0am (keepPlannedTask, TaskStory, BuyCadence)
+- [review-606.md](review-606.md): QA review: #606 Builder A 0n, exercise span counts calendar days (DS35, DS18 pins)
+- [review-624.md](review-624.md): QA review: #624 Research, fixtures/home-pack-walls.md (W1 to W14)
+- [review-backups.md](review-backups.md): Backups and restore review (origin/master, static)
+- [review-intents-health.md](review-intents-health.md): Review: App Intents and HealthKit on master (bb7f082)
+- [review-master-21566b8-43c7ddb.md](review-master-21566b8-43c7ddb.md): QA: master 21566b8 (#107, #110) and 43c7ddb (#106 with T2-1)
+- [review-tess-processes.md](review-tess-processes.md): Review: Tess capture engine + processes (origin/master 5601a24, static only)
+- [spec-d1-d2-house-rules-lint.md](spec-d1-d2-house-rules-lint.md): D1 + D2 spec: HouseRulesTests lint and perform fault-injection plan

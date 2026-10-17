@@ -23,6 +23,25 @@ enum PrivateWords {
             || ObjectPrivacy.isPrivateText(text, lastWeightKg: lastWeightKg)
     }
 
+    /// Medical and care words that make a bare title private even with no number (Product: money and body titles are
+    /// private in an export). Not the Home pack's rules for what goes to Claude (loose numbers, places, people).
+    static let titleWords: Set<String> = PrivateFacts.moneyWords.union(TessMemoryScreen.healthWords)
+        .union(["rehab", "physio", "physiotherapy", "therapy", "therapist", "surgery", "doctor", "dr", "dentist",
+                "clinic", "hospital"])
+
+    /// A title is private by the usual rule, or when it holds a money or health word.
+    static func isPrivateTitle(_ title: String, lastWeightKg: Double?) -> Bool {
+        isPrivateText(title, lastWeightKg: lastWeightKg)
+            || PrivateFacts.words(title.lowercased()).contains(where: titleWords.contains)
+            // A bare medicine is a health fact (QA on #710): "lexapro", "advil", "take melatonin".
+            || EngineWall.isHealth(title, lastWeightKg: lastWeightKg)
+    }
+
+    /// A list of numbers ("25, 20, 15, 1.25": the plates an equipment object holds) is not a spend or a weigh-in.
+    static func isNumberList(_ text: String) -> Bool {
+        text.allSatisfy { "0123456789,. /x".contains($0) }
+    }
+
     static func systemClasses(in context: TesseraContext) -> [SystemCatalog.Key: ClassDef] {
         var classes: [SystemCatalog.Key: ClassDef] = [:]
         for classDef in context.all(ClassDef.self) {
@@ -50,18 +69,41 @@ enum PrivateWords {
     /// rest. Marked by an isPrivate set to true, or a private word, label or walled title in a create, rename or
     /// text value. Only ones not already in `current`.
     static func historyLabels(in context: TesseraContext, current: [UUID: String]) -> [UUID: String] {
+        if let cache = context.pastPrivateCache, cache.revision == context.revision {
+            return cache.labels
+        }
+        let result = computeHistoryLabels(in: context, current: current)
+        context.pastPrivateCache = (context.revision, result)
+        return result
+    }
+
+    /// An op record's ops, decoded once (the JSON decode dominates the walk) and kept while its data is unchanged.
+    private static func ops(of record: OpRecord, in context: TesseraContext) -> [Op] {
+        guard let data = record.opsData else { return [] }
+        if let hit = context.decodedOps[record.id], hit.data == data {
+            return hit.ops
+        }
+        let ops = record.ops
+        context.decodedOps[record.id] = (data, ops)
+        return ops
+    }
+
+    private static func computeHistoryLabels(in context: TesseraContext, current: [UUID: String]) -> [UUID: String] {
         let classes = systemClasses(in: context)
         let last = BodyWeight.lastKg(in: ObjectStore(context: context))
         let flagFields = Set(context.all(FieldDef.self).filter { $0.key == "isPrivate" }.map(\.id))
         func wordy(_ text: String) -> Bool {
-            isPrivateText(text, lastWeightKg: last) || HomeDonePack.isWalled(text, lastWeightKg: last)
+            !isNumberList(text) && isPrivateText(text, lastWeightKg: last)
+        }
+        func wordyTitle(_ title: String) -> Bool {
+            !isNumberList(title) && isPrivateTitle(title, lastWeightKg: last)
         }
         var found = Set<UUID>()
         for record in context.all(OpRecord.self) {
-            for op in record.ops where current[op.objectID] == nil {
+            for op in ops(of: record, in: context) where current[op.objectID] == nil {
                 switch op {
-                case let .create(object, _, _, title): if wordy(title) { found.insert(object) }
-                case let .setTitle(object, old, new): if wordy(old) || wordy(new) { found.insert(object) }
+                case let .create(object, _, _, title): if wordyTitle(title) { found.insert(object) }
+                case let .setTitle(object, old, new): if wordyTitle(old) || wordyTitle(new) { found.insert(object) }
                 case let .setValue(object, field, old, new):
                     if flagFields.contains(field), old == .bool(true) || new == .bool(true) {
                         found.insert(object)
@@ -83,6 +125,15 @@ enum PrivateWords {
 
     /// Private object id → the label it shows as.
     static func labels(in context: TesseraContext) -> [UUID: String] {
+        if let cache = context.privateLabelsCache, cache.revision == context.revision {
+            return cache.labels
+        }
+        let result = computeLabels(in: context)
+        context.privateLabelsCache = (context.revision, result)
+        return result
+    }
+
+    private static func computeLabels(in context: TesseraContext) -> [UUID: String] {
         let store = ObjectStore(context: context)
         let classes = systemClasses(in: context)
         let last = BodyWeight.lastKg(in: store)
@@ -105,9 +156,8 @@ enum PrivateWords {
             if let label = ObjectPrivacy.label(of: object, in: store, classes: classes) {
                 result[object.id] = label
             } else if store.value("isPrivate", of: object) == .bool(true)
-                || words(object).contains(where: { isPrivateText($0, lastWeightKg: last) })
-                // A title also goes by the wider Home wall: money, health, places and people ("Pay Dr Lee").
-                || HomeDonePack.isWalled(object.title, lastWeightKg: last)
+                || isPrivateTitle(object.title, lastWeightKg: last)
+                || words(object).contains(where: { !isNumberList($0) && isPrivateText($0, lastWeightKg: last) })
             {
                 result[object.id] = genericLabel(object)
             }
@@ -151,6 +201,9 @@ extension TesseraBackup {
     /// Removes private objects, their links and the ops that touched them from a copy that is leaving the phone.
     static func leaveOutPrivate(_ ids: [UUID: String], from copy: DatabaseQueue, context: TesseraContext) throws {
         // Objects that were private once but are plain now stay; their ops, which hold the old words, go.
+        // Accepted for now (Product, QA on #707): ops of anything that ever hit the Home wall are over-dropped from the
+        // iCloud copy, even when the object was never really private. Losing a plain history line is cheaper than
+        // keeping an old private word.
         let past = PrivateWords.historyLabels(in: context, current: ids)
         let lastKg = BodyWeight.lastKg(in: ObjectStore(context: context))
         // Deleted rows must not linger in free pages: overwrite on delete, then rebuild the file below.
@@ -166,9 +219,13 @@ extension TesseraBackup {
             }
             // An action whose own summary holds a private word goes too ("Pay Dr Lee 120").
             let summaries = try Row.fetchAll(db, sql: "SELECT id, summary FROM op")
+            // Summaries repeat ("Logged bench press 82.5 × 8"): each distinct line is judged once.
+            var judged: [String: Bool] = [:]
             for row in summaries {
                 let summary: String = row["summary"]
-                if PrivateWords.isPrivateText(summary, lastWeightKg: lastKg) {
+                let isPrivate = judged[summary] ?? PrivateWords.isPrivateText(summary, lastWeightKg: lastKg)
+                judged[summary] = isPrivate
+                if isPrivate {
                     try db.execute(sql: "DELETE FROM op WHERE id = ?", arguments: [row["id"] as String])
                 }
             }

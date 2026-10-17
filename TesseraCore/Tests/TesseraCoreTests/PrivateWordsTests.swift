@@ -7,7 +7,7 @@ import Testing
 @MainActor
 struct PrivateWordsTests {
     /// Words that must never leave the phone, and words that may.
-    static let secrets = ["hunter2zebra", "82.4", "120.50", "Dr Lee", "zebra99"]
+    static let secrets = ["hunter2zebra", "82.4", "120.50", "Dr Lee", "zebra99", "lexapro", "advil", "melatonin"]
     static let ordinary = ["Bench felt heavy", "Buy lemons", "Pasta night"]
 
     func folder() throws -> URL {
@@ -29,6 +29,9 @@ struct PrivateWordsTests {
         let list = try engine.perform(CreateList(name: "Packing"), by: .user).output
         try engine.perform(AddListItem(list: list.id, text: "Pasta night"), by: .user)
         try engine.perform(AddListItem(list: list.id, text: "reset router zebra99 pin"), by: .user) // a secret line
+        try engine.perform(AddListItem(list: list.id, text: "lexapro"), by: .user) // a bare medicine (QA on #710)
+        try engine.perform(AddListItem(list: list.id, text: "take melatonin"), by: .user)
+        try engine.perform(AddGroceries(lines: ["advil"]), by: .user)
         store.save()
         return store
     }
@@ -144,7 +147,8 @@ struct PrivateWordsTests {
         try engine.perform(RenameObject(object: renamed.id, title: "Pay Dr Zed77"), by: .user)
         try engine.perform(RenameObject(object: renamed.id, title: "Buy lemons2"), by: .user)
         store.save()
-        let words = ["Zed77", "hunter2zebra", "zebra99", "Dr Lee", "120.50", "82.4", "Wifi password", "router zebra99"]
+        let words = ["Zed77", "hunter2zebra", "zebra99", "Dr Lee", "120.50", "82.4", "Wifi password", "router zebra99",
+                     "lexapro", "advil", "melatonin"]
         let iCloud = dir.appendingPathComponent("iCloud")
         let direct = dir.appendingPathComponent("direct.tessera")
         try TesseraBackup.write(from: store.context, to: direct, leavingOutPrivate: true)
@@ -169,5 +173,71 @@ struct PrivateWordsTests {
 
     func bytes(of url: URL) -> Data {
         FileManager.default.contents(atPath: url.path) ?? Data()
+    }
+}
+
+/// SAVE A COPY stays whole; Face ID comes first when it holds private words (QA on #707).
+@MainActor
+struct SavedCopyGateTests {
+    @Test func aCopyAlwaysAsksForFaceIDAndSaysWhenItHoldsPrivateWords() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        try engine.perform(CreateNote(body: "wifi password is hunter2zebra"), by: .user)
+        let gate = TesseraBackup.savedCopyGate(for: store.context)
+        #expect(gate.requiresAuth)
+        #expect(gate.line == "This copy has your private words.")
+    }
+
+    @Test func aWordPrivateOnlyInHistoryStillAsks() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        let note = try engine.perform(CreateNote(body: "wifi password is hunter2zebra"), by: .user).output
+        try engine.perform(EditNote(note: note.id, body: "plain now"), by: .user)
+        let gate = TesseraBackup.savedCopyGate(for: store.context)
+        #expect(gate.requiresAuth && gate.line == TesseraBackup.SavedCopyGate.privateWordsLine)
+    }
+}
+
+/// The Home pack's loose-number and off-limits rules are for what is sent to Claude, not for backups and exports:
+/// plate weights ("25, 20, 15, 1.25") made every seeded Equipment object "Private note", and "Day 100" read as money.
+@MainActor
+struct PrivateWordsFalsePositiveTests {
+    @Test func aFreshlySeededStoreHasNoPrivateLabels() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        _ = try ExerciseLibraryInstaller.installIfNeeded(store: store, classes: classes)
+        let labels = PrivateWords.labels(in: store.context)
+        #expect(labels.isEmpty, "\(labels.values)")
+        #expect(PrivateWords.historyLabels(in: store.context, current: labels).isEmpty)
+    }
+
+    @Test func gymWordsAndPlainNumbersAreNotPrivate() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        try engine.perform(CreateTask(title: "Day 100 of the plan"), by: .user)
+        let items = try engine.perform(CreateList(name: "Gym kit"), by: .user).output
+        try engine.perform(AddListItem(list: items.id, text: "Smith Machine, EZ Bar, Barbell"), by: .user)
+        let labels = PrivateWords.labels(in: store.context)
+        #expect(labels.isEmpty, "\(labels.values)")
+    }
+
+    @Test func theLabelsCacheFollowsTheRevision() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        #expect(PrivateWords.labels(in: store.context).isEmpty)
+        try engine.perform(CreateNote(body: "wifi password is hunter2zebra"), by: .user)
+        #expect(PrivateWords.labels(in: store.context).count == 1)
+        let note = try #require(PrivateWords.labels(in: store.context).keys.first)
+        try engine.perform(EditNote(note: note, body: "plain now"), by: .user)
+        #expect(PrivateWords.historyLabels(in: store.context, current: PrivateWords.labels(in: store.context)).count
+            + PrivateWords.labels(in: store.context).count >= 1)
+    }
+
+    @Test func moneyAndBodyTitlesStayPrivate() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        try engine.perform(CreateTask(title: "Pay Dr Lee 120"), by: .user)
+        try engine.perform(CreateTask(title: "weighed 82.4 kg"), by: .user)
+        #expect(PrivateWords.labels(in: store.context).count == 2)
     }
 }

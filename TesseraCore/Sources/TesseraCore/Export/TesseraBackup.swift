@@ -49,6 +49,23 @@ public enum TesseraBackup {
         case newerSchema
     }
 
+    /// What SAVE A COPY must do before the share sheet: the copy stays whole (every word, as the local backup does), so
+    /// the app always asks for Face ID first, and says so when the copy holds private words (G28, QA on #707).
+    public struct SavedCopyGate: Equatable, Sendable {
+        public var requiresAuth: Bool
+        public var line: String?
+
+        public static let privateWordsLine = "This copy has your private words."
+    }
+
+    /// Whether a saved copy of this store holds private words, now or in its op history.
+    @MainActor
+    public static func savedCopyGate(for context: TesseraContext) -> SavedCopyGate {
+        let labels = PrivateWords.labels(in: context)
+        let has = !labels.isEmpty || !PrivateWords.historyLabels(in: context, current: labels).isEmpty
+        return SavedCopyGate(requiresAuth: true, line: has ? SavedCopyGate.privateWordsLine : nil)
+    }
+
     // MARK: Writing
 
     /// Writes a consistent copy of the store to `url` (replacing anything there) and stamps it.
@@ -57,10 +74,19 @@ public enum TesseraBackup {
                              appVersion: String? = nil, leavingOutPrivate: Bool = false) throws
     {
         try context.save()
-        // A copy for iCloud Drive is built and masked in a temporary folder on the same volume, then moved in: the
-        // whole copy never sits in the destination, not even as a hidden partial (G28, QA on #707).
-        let work = leavingOutPrivate ? try privateWorkURL(near: url) : url
+        // A copy for iCloud Drive is built and masked in the app's own temporary folder (never beside the destination,
+        // which may be a file-provider folder), then moved in: the whole copy never sits there (G28, QA on #707).
+        let work = leavingOutPrivate ? privateWorkURL() : url
+        defer {
+            if leavingOutPrivate {
+                try? FileManager.default.removeItem(at: work.deletingLastPathComponent())
+            }
+        }
         try? FileManager.default.removeItem(at: work)
+        if leavingOutPrivate {
+            try FileManager.default.createDirectory(at: work.deletingLastPathComponent(),
+                                                    withIntermediateDirectories: true)
+        }
         let copy = try DatabaseQueue(path: work.path)
         try context.database.backup(to: copy)
         // The copy for iCloud Drive leaves private notes, recipes, items and secret-word lines out (G28). The local
@@ -87,17 +113,13 @@ public enum TesseraBackup {
         if leavingOutPrivate {
             try? FileManager.default.removeItem(at: url)
             try FileManager.default.moveItem(at: work, to: url)
-            try? FileManager.default.removeItem(at: work.deletingLastPathComponent())
         }
     }
 
-    /// A fresh path in a temporary folder on the destination's volume (an item replacement folder), never in the
-    /// destination folder itself.
-    @MainActor
-    static func privateWorkURL(near url: URL) throws -> URL {
-        let folder = try FileManager.default.url(for: .itemReplacementDirectory, in: .userDomainMask,
-                                                 appropriateFor: url, create: true)
-        return folder.appendingPathComponent("private-\(UUID().uuidString).tessera")
+    /// A fresh path inside a new UUID folder in the temporary directory; the caller removes the folder.
+    nonisolated static func privateWorkURL() -> URL {
+        FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+            .appendingPathComponent("private.tessera")
     }
 
     /// A stamped copy of the store file at `storeURL` (closed, at launch), for keeping what's replaced by a restore.
