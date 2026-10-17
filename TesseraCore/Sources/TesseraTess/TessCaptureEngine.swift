@@ -232,13 +232,6 @@ public final class TessCaptureEngine: TessCapturing {
                 return TessCapture(records: [], line: ask.line, source: .grammar, asking: .datedLift(ask))
             default: break
             }
-            // The rest weekday already set changes nothing: the line, no new op, no UNDO (S17).
-            if case let .setRestWeekday(weekday) = parse,
-               RestWeekday.current(in: engine.store) == weekday
-            {
-                return TessCapture(records: [], line: RestWeekday.receipt(for: weekday), source: .grammar,
-                                   asking: .line)
-            }
             // A bare thing already on Groceries changes nothing: the line, with no ghost and no UNDO (QA S1 on #316).
             if case let .groceries(lines) = parse, lines.count == 1, let line = IngredientLine.parse(lines[0]),
                line.amount == nil, line.unit == nil,
@@ -303,24 +296,19 @@ public final class TessCaptureEngine: TessCapturing {
         case let .task(title, startsAt):
             let made = try engine.perform(CreateTask(title: title, startsAt: startsAt), by: .tess, pending: pending)
             let record = made.record
-            // Said as the engine wall stored it (Product 8:09 PM PT): "pay rent 2100 fri" is "Pay rent, Fri.", its
-            // amount gone. A stored title that is still private is never said back (P14, Research S18): "Task added
-            // for Fri."
+            // A line the engine wall made a private note says so (QA low on 0ai). A private title is never said back,
+            // not even without its amount (Product P14, 12:30 PM PT; Research S18): "Task added for Fri."
             let stored = made.output.title
             if stored == SecretWords.title {
                 return (record, "\(SecretWords.title), kept.")
             }
-            if stored == ObjectPrivacy.taskLabel
-                || PrivateFacts.isPrivateTitle(stored, lastWeightKg: BodyWeight.lastKg(in: engine.store))
+            let last = BodyWeight.lastKg(in: engine.store)
+            if stored == ObjectPrivacy.taskLabel || PrivateFacts.isPrivateTitle(title, lastWeightKg: last)
+                || PrivateFacts.isPrivateTitle(stored, lastWeightKg: last)
             {
                 return (record, Self.privateTaskLine(startsAt, context: context))
             }
             return (record, startsAt.map { "\(stored), \(Self.when($0, context: context))." } ?? "\(stored), in Later.")
-        case let .setRestWeekday(weekday):
-            var settings = SettingsStore(engine: engine).read()
-            settings.restWeekday = weekday
-            let record = try engine.perform(WriteSettings(settings: settings), by: .tess, pending: pending).record
-            return (record, RestWeekday.receipt(for: weekday))
         case let .privateNote(body, remembered, on):
             let record = try engine.perform(
                 CreateNote(body: body, on: on, isPrivate: true),

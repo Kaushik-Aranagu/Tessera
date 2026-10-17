@@ -35,8 +35,6 @@ public struct TessGrammar {
         case sets([Parse])
         /// "move dentist to friday": an open task, to a new time.
         case reschedule(task: ObjectRecord, to: Date)
-        /// "rest day Sunday": the rest weekday, 1 (Sunday) to 7. Never a task (RG3).
-        case setRestWeekday(weekday: Int)
         /// "next" / "done" while cooking.
         case cookStep(cook: ObjectRecord, next: Bool)
         /// Bare input the running workout owns but Tess doesn't act on (a rest timer is the workout screen's).
@@ -83,10 +81,6 @@ public struct TessGrammar {
         // still counts (normalize trims it).
         if Self.isQuestion(text) || phrase.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix("?") {
             return nil
-        }
-        // A rest weekday is a setting, not a task called "Rest day" (RG3): ahead of every task rule.
-        if let rest = parseSetRestWeekday(text: text) {
-            return rest
         }
         // Rule 3: the process in front decides bare input.
         if let bare = parseForProcess(text, context: context) {

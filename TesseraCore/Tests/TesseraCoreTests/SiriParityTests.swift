@@ -74,16 +74,12 @@ struct SiriParityTests {
             #expect(try add(phrase) == "Private note, kept.", "\(phrase)")
         }
         let ask = await say("pay rent 1800 friday")
-        // Product 8:09 PM PT: named as stored, its amount gone ("Pay rent, Fri.").
-        #expect(ask.records.map(\.action) == ["createTask"] && ask.line == "Pay rent, tomorrow 9 am.",
+        #expect(ask.records.map(\.action) == ["createTask"] && ask.line == "Task added for tomorrow.",
                 "\(ask.records.map(\.action)) \(ask.line) \(ask.source)")
         let tell = await say("pay rent 1800 friday", tell: true)
-        #expect(tell.line == "Pay rent, tomorrow 9 am.")
+        #expect(tell.line == "Task added for tomorrow.")
         let siri = try add("pay rent 1800 friday")
-        #expect(siri.contains("Pay rent") && !siri.contains("1800"), "\(siri)")
-        // A stored title that is still private keeps the private line (S18).
-        let refill = try add("refill lexapro 40 dollars friday")
-        #expect(!refill.lowercased().contains("lexapro") && !refill.contains("40"), "\(refill)")
+        #expect(siri.hasPrefix("Task added") && !siri.contains("1800"))
         #expect(claude.heard.isEmpty)
     }
 

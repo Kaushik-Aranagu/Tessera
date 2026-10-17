@@ -55,10 +55,9 @@ public enum EngineWall {
             || lower.firstMatch(of: /\d\s*(?:mg|mcg)\b/) != nil
     }
 
-    /// A medicine reminder is a private task, with a time or not: the wall masks the label, not the kind (Product 8:28
-    /// PM PT). Anything else of his body is a private note.
-    static func health(_ phrase: String, startsAt _: Date?) -> TaskOutcome {
-        isMedicine(phrase) ? .privateTask : .privateNote
+    /// A medicine reminder with a time is a private task; anything else of his body is a private note.
+    static func health(_ phrase: String, startsAt: Date?) -> TaskOutcome {
+        isMedicine(phrase) && startsAt != nil ? .privateTask : .privateNote
     }
 
     /// "pay rent fri" is stored and said as "Pay rent fri".

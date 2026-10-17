@@ -56,7 +56,7 @@ call is `.noLine` (claude-client.md section 2). No write tools: the story is wor
 - **Rules lines (new, always there).** Three plain count lines from the same lens: "4 of 5 sessions." / "Bests
   on Bench and Squat." (or "3 tasks done, 2 cooks.") / "Legs is first up Monday." (or nothing next: "Plan ends
   this week.").
-- **80%, offline, switch off, demo.** At 80% of the month ($40) the week story steps aside before reserve, with Home lines and living colour; capture, plan, recipe and questions keep running to $50.
+- **80%, offline, switch off, demo.** At 80% of the month the `.lines` priority steps aside before reserve.
   Offline, busy, bad key, capped, switch off, no key, demo flags: rules lines at once, no queue.
 
 ### 1.6 Touched ids, links and Review
@@ -105,7 +105,7 @@ f80c08c):
 - **The cap line** reads `TessUsageLedger.capDollars`, never a typed number: "This month **$x.xx** of $50."
   today, and the paused line "Paused until **Nov 1**."
 - **The 80% line.** The meter turns amber at 80% and "PAUSES AT $" + `capDollars` shows. Architecture 5.5 says
-  this same line also tells him word jobs (Today, your week) step aside (settled by Product's 8:16 ruling); Design says nothing else changes.
+  this same line also tells him word jobs (Today, your week) step aside; Design says nothing else changes.
 - **The privacy line,** from AI-4 on, under the spend line, with the switch on or off: "Titles and counts only.
   Never notes, places, health or money."
 
@@ -116,7 +116,7 @@ f80c08c):
 - Code says "Paused until Nov 1."; settings-place says "Claude paused until 1 Nov." and, later, "...Nov 1.".
 - The 80% state shows "PAUSES AT $50" only; no line says word jobs stepped aside.
 - No privacy line is built. The comment on `missesGoToClaude` (line 58) still says "misses and Plan my day".
-- `ClaudeKey.swift` still opens the ledger with "The $10 month" though the cap is $50 (Swift, not changed here).
+- `ClaudeKey.swift` still opens the ledger with "The $10 month" though `capNano` is $50.
 
 ## Part 3. AI-14 check: ship-list row against architecture section 9
 

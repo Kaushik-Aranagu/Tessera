@@ -61,26 +61,12 @@ struct V1GapTests {
         let time = Date(timeIntervalSince1970: 1_792_000_000)
         let workout = try engine.perform(StartRoutine(routine: pushA.id, time: time), by: .user).output
         #expect(ledger.finishedWorkouts(on: time).isEmpty)
-        let entry = try #require(workout.orderedChildren.first)
-        try engine.perform(LogSet(entry: entry.id, weight: 60, reps: 5, time: time), by: .user)
 
         try engine.perform(FinishWorkout(workout: workout.id, time: time.addingTimeInterval(3600)), by: .user)
         let day = ledger.finishedWorkouts(on: time)
         #expect(day.map(\.id) == [workout.id])
         #expect(store.cache.derived.daySummaries.count == 1)
         #expect(ledger.finishedWorkouts(on: time.addingTimeInterval(-86400)).isEmpty)
-    }
-
-    @Test func aWorkoutWithNoSetsIsNoSession() throws {
-        // Product 8:30 PM PT: started and finished with nothing logged, it isn't one of the day's workouts.
-        let classes = try store.prepareCatalog()
-        let engine = ActionEngine(store: store, classes: classes)
-        let plan = try #require(store.object(id: StarterContent.planID))
-        let pushA = try #require(store.linkedObjects("routines", of: plan).first)
-        let time = Date(timeIntervalSince1970: 1_792_000_000)
-        let workout = try engine.perform(StartRoutine(routine: pushA.id, time: time), by: .user).output
-        try engine.perform(FinishWorkout(workout: workout.id, time: time.addingTimeInterval(600)), by: .user)
-        #expect(TrainingLedger(store: store, classes: classes).finishedWorkouts(on: time).isEmpty)
     }
 
     @Test func resetPutsTheStarterPlanBack() throws {

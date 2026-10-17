@@ -64,7 +64,7 @@
 - The rule is Research's rules 1-9. An item qualifies after 3 or more typed buys within 56 days at a steady interval U. It is due from **0.85 × U to 2 × U** days after the last buy; the backlog's 1.5× would show weekly milk a week late. Recipe-only items like lemons never qualify.
 - At most **4 names** (Design 47 on 2026-10-16; was 3), the most overdue first. Each is offered for **one shop run**: if it's shown and not bought when the shop clears, it goes quiet until the next buy resets it. Swiping left does the same (`SkipUsual`).
 - **The surface is Design 47's USUALLY label and a line of ink words** (2026-10-16; this replaced "Usually have: milk, eggs", which had replaced USUALLY BY NOW). It states a fact about him with no deadline feel. It keeps Design's §R look: the label at 55% and the names at 21/400 at 55%, as the last thing in the aisle window and in at-the-shop mode, never pinned, taking no space when empty.
-- Tapping a name adds it to its aisle, and Tess says "Milk, on Groceries." with Undo. Long-pressing gives the reason: "Bought 6 times in 8 weeks, about weekly." On the Ingredient page it reads "Usually every 7 days. Last bought 9 days ago."
+- Tapping a name adds it to its aisle, and Tess says "Milk, in Groceries." with Undo. Long-pressing gives the reason: "Bought 6 times in 8 weeks, about weekly." On the Ingredient page it reads "Usually every 7 days. Last bought 9 days ago."
 - It never notifies, never shows a badge, never makes a Home offer, never adds anything on its own, and never uses red.
 - *Accept against* Research's 20-week fixture (§7), every row.
 

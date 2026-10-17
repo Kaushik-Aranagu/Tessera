@@ -398,7 +398,7 @@ public struct ClaudeRecipeReader {
         let data: Data
         let response: URLResponse
         do {
-            (data, response) = try await session.data(for: request, delegate: NoRedirects.shared)
+            (data, response) = try await session.data(for: request)
         } catch let error as URLError {
             outcome = error.code == .timedOut ? "timeout" : "offline"
             return failed(error.code == .timedOut ? RecipeLinkLine.claudeTimeout : RecipeLinkLine.offline)

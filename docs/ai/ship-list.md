@@ -29,7 +29,7 @@ Order is the build order. Each slice is one small PR. "Rules" slices need no key
 
 **First visible win:** AI-1 alone answers his "three dots" and "too much detail" notes, with no key involved.
 **First Claude win:** AI-4 after AI-5 passes, now with memory (AI-7) already in its pack.
-**Month cost when all of this is on:** $0.79 typical, $6.90 worst, with Sonnet on Home lines and the week story (`docs/ai/spend-projection.md`, architecture section 5.6), against the $50 cap.
+**Month cost when all of this is on:** about $3.20 typical, $8.59 worst, with Sonnet on Home lines and the week story (`docs/ai/spend-projection.md`, architecture section 5.6), against the $50 cap.
 
 ## Decisions taken as defaults (no question to Kaushik needed)
 

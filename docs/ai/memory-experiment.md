@@ -53,7 +53,7 @@ Results: `docs/ai/memory-experiment-results.md` (#410; 570 calls, about $0.60). 
 - **Noticed lines carry no clock digits.** "You usually train after work.", not "6 to 8 pm". Words the slot can use as they are, and no digit to leak.
 - **Sonnet 5.5 stays the Home model for now.** Haiku answered without calling the line tool for 118 items, because the run let it choose (`tool_choice` auto). That says nothing about its wording. AI-5 re-runs Haiku with the tool forced before the model is settled; Sonnet refuses a forced tool, so it keeps auto, and a reply with no tool call means the rules line stays.
 - **Most failures were the old frame, not untruth.** The run asked for a whole line ("Push A done, 3 of 3 exercises.", 7 words). Under Design 41 the hero and its counts are the phone's and Claude words only the context line, so that class of failure goes away by construction. AI-5 scores the context line alone.
-- **Cost holds.** Sonnet at 20 Home calls a day is about $1.05 a month on shape A, p95 at most 4.8 s, inside the $50 cap.
+- **Cost holds.** Sonnet at 20 Home calls a day is about $1.05 a month on shape A, p95 at most 4.8 s, inside the $10 cap.
 
 ## Fixes this asks for
 

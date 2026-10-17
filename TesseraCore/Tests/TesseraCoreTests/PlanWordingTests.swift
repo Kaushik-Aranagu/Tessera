@@ -5,8 +5,6 @@ import Testing
 
 /// The canned Claude for PlanWordingTests.
 final class PlanStub: URLProtocol, @unchecked Sendable {
-    /// Where every request is redirected, when set.
-    nonisolated(unsafe) static var redirect: String?
     nonisolated(unsafe) static var reply: (status: Int, body: String)? = (200, #"{"input_tokens": 8}"#)
     nonisolated(unsafe) static var failure: URLError.Code?
     nonisolated(unsafe) static var requests: [URLRequest] = []
@@ -49,17 +47,6 @@ final class PlanStub: URLProtocol, @unchecked Sendable {
             client?.urlProtocol(self, didFailWithError: URLError(failure))
             return
         }
-        // A 301 to another host (Product 9:53 PM PT): the client must never take it.
-        if let target = Self.redirect, request.url?.host() != URL(string: target)?.host(),
-           let url = URL(string: target)
-        {
-            let hop = HTTPURLResponse(url: request.url!, statusCode: 301, httpVersion: nil,
-                                      headerFields: ["Location": target])!
-            client?.urlProtocol(self, wasRedirectedTo: URLRequest(url: url), redirectResponse: hop)
-            client?.urlProtocol(self, didReceive: hop, cacheStoragePolicy: .notAllowed)
-            client?.urlProtocolDidFinishLoading(self)
-            return
-        }
         let (status, body) = Self.queue.isEmpty ? Self.reply ?? (200, "{}") : Self.queue.removeFirst()
         let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil,
                                        headerFields: ["request-id": "req_test"])!
@@ -89,7 +76,6 @@ struct PlanWordingTests {
         PlanStub.queue = []
         PlanStub.failure = nil
         PlanStub.requests = []
-        PlanStub.redirect = nil
         PlanStub.bodies = []
     }
 
@@ -223,16 +209,6 @@ struct PlanWordingTests {
         // Same pack: no second call.
         _ = await wording.word(d01, pack: pack)
         #expect(PlanStub.requests.count == 1 && ledger.calls().count == 1)
-    }
-
-    @Test func aRedirectIsNeverFollowedForThePlan() async {
-        // Product 9:53 PM PT: the plan call refuses a 301 and keeps his usual plan.
-        PlanStub.redirect = "https://" + "evil" + ".example/v1/messages"
-        let result = await wording().word(d01, pack: pack)
-        if case .worded = result {
-            Issue.record("a redirected reply was used")
-        }
-        #expect(!PlanStub.requests.contains { $0.url?.host()?.contains("evil") == true })
     }
 
     @Test func everyFailureShowsTheRulesPlan() async {

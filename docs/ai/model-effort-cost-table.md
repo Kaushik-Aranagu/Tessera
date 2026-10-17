@@ -40,12 +40,13 @@ the doc's rows; they round differently by a cent or two.
 
 ## Contradictions and risks
 
-- $50 cap: the in-app Claude cap is $50 a month, a hard stop; it resets on the 1st (Product's 8:16 ruling). Worst
-  month of every planned job is about $6.90 (14%), so the cap holds with more than 7x room. Stale text still saying
-  $10: `ClaudeKey.swift` comment (Swift, not changed here), claude-first-uses.md, recipe-link-fetch.md.
-- $40 step-aside: at 80% ($40), Home lines, the week story and living colour step aside before the reserve; capture,
-  plan, recipe and questions keep running to $50 (settled). linkItems is in none. Only the Settings warm line at 80%
-  exists in code; the step-aside itself is docs only. At worst spend ($6.90) it never fires, so it guards only loops.
+- $50 cap: code is $50 (`capNano`). Worst month of every planned job is about $6.90 (14%), so the cap holds with
+  more than 7x room. Stale text: `ClaudeKey.swift` comment, claude-first-uses.md, recipe-link-fetch.md still say $10.
+  Totals disagree across docs: spend-projection "Month total" note says $3.23 typical, architecture says about $3.20
+  typical and $8.59 worst, the table above says $0.79 and $6.90. The $3.23 and $8.59 predate the Home narrowing.
+- $40 step-aside: only `.lines` priority steps aside per claude-client.md. Architecture 5.5 adds week story, section 9
+  adds living colour, and linkItems is in none. Only the Settings warm line at 80% exists in code; the step-aside
+  itself is docs only. At worst spend ($6.90) it never fires, so it guards only loops.
 - The 40-a-day Home cap and 10-minute debounce are docs only. Without them a ticking pack value could hit about
   1,440 calls a day, $6.48 a day, so $40 in 6.2 days and $50 in 7.7 days. No caps exist in code for plan, week story
   or askSubject beyond the 20 a day written in the doc.
@@ -56,5 +57,6 @@ the doc's rows; they round differently by a cent or two.
 - Week story max_tokens is 400 but the cost uses 300 out; worst per call at 400 out is $0.008 for 2,000 in, inside
   the $0.01 gate.
 - $200 a month dev credits: this pays for cloud development and eval runs (memory experiment about $0.60 so far),
-  logged separately in the board. Dev credits are not counted in the $50 cap (settled); the cap is the phone's own
-  key spend.
+  logged separately in the board. The in-app $50 cap is the phone's own key spend. The docs never say whether the
+  app key bills to the same credits. If it does, $50 cap plus dev runs is 25% of $200 and not a conflict; if it does
+  not, no doc ties them together. Needs Product to state it.

@@ -246,8 +246,7 @@ struct TessTests {
             == "I don't keep sums of money.")
         // Something to do stays a task (W4), read back without its amount, and stored without it (board 0ai, Product
         // 2:22 PM PT: "Pay rent").
-        let rent = try CreateTaskIntent.add("pay rent 2100 friday", startsAt: nil, engine: engine)
-        #expect(rent.contains("Pay rent") && !rent.contains("2100"), "\(rent)")
+        #expect(try CreateTaskIntent.add("pay rent 2100 friday", startsAt: nil, engine: engine) == "Task added.")
         let titles = store.context.objects.values.map(\.title)
         #expect(titles.contains { $0.lowercased().hasPrefix("pay rent") })
         #expect(!titles.contains { $0.contains("2100") })

@@ -101,7 +101,7 @@ The engine checks every grocery title before it is written (`AddGroceries`, the 
 **Shared ingredients.** An ingredient two planned recipes use is one handle in the pack listing both recipes; the ask names the sooner recipe; KEEP covers both.
 
 **Builder B** (recording at 60fps, `docs/recordings/groceries-tess.mp4` beats)
-1. ‹ KITCHEN back word, Title 44, the count line "9 to get, for tacos and 2 more", aisle window fading over its last 50pt.
+1. ‹ KITCHEN back word, Title 44, the count line "9 to get, for tacos and two more", aisle window fading over its last 50pt.
 2. Recipe line "for tacos" at 16 `inkSecondary` under every recipe-sourced row; no trailing dab anywhere on the page.
 3. Planning a meal: rows fly in from Tess's corner 60 ms apart, rows below make room in 320 ms, rows dry over 1.4 s; "Tacos, 2 added." with UNDO; the count line rolls.
 4. The ask: "Scallions, for the tacos?" with KEEP then NOT NOW as ink words; the wet "for tacos?" line under the row; KEEP dries it over 900 ms and the spring onions row leaves; NOT NOW fades it in 300 ms. Only one ask on screen; none while shopping.

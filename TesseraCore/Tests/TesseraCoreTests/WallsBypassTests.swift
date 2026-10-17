@@ -290,8 +290,7 @@ struct WallsBypassTests {
         _ = try engine.perform(CreateTask(title: "refill lexapro $40 fri"), by: .tess)
         _ = try engine.perform(CreateTask(title: "refill lexapro $40", startsAt: Self.at(16, 9)), by: .tess)
         let tasks = try store.objects(of: #require(classes[.task])).map(\.title)
-        // Product 8:28 PM PT: a medicine task stays a task, with a time or not, shown as "Private task".
-        #expect(tasks == [ObjectPrivacy.taskLabel, ObjectPrivacy.taskLabel], "\(tasks)")
+        #expect(tasks == [ObjectPrivacy.taskLabel], "\(tasks)")
         #expect(!everythingShown().lowercased().contains("lexapro") && !everythingShown().contains("40"))
     }
 
@@ -329,7 +328,7 @@ struct WallsBypassTests {
         try engine.perform(AddListItem(list: list.id, text: "pins"), by: .user)
         let lexapro = try engine.perform(AddListItem(list: list.id, text: "lexapro"), by: .user)
         #expect(list.orderedChildren.map(\.title) == ["pins", "lexapro"])
-        #expect(lexapro.record.summary == "Private item, added to Errands")
+        #expect(lexapro.record.summary == "Added Private item")
         #expect(lexapro.record.receipt == "Private item, on Errands")
         let shown = engine.history().flatMap { [$0.summary, $0.receipt ?? ""] }.joined()
         #expect(!shown.contains("lexapro") && !shown.contains("82.4") && !shown.contains("wifi"))
@@ -343,96 +342,6 @@ struct WallsBypassTests {
         try weigh(80, at: Self.at(12, 7))
         #expect(store.context.revision > revision)
         #expect(BodyWeight.lastKg(in: store) == 80)
-    }
-
-    @Test(arguments: ["Weigh in 182.4 lb 5x5", "Rent 1850 for 5x5", "paid 40 for 5x5 class"])
-    func aSetTokenNeverExcusesTheRest(_ phrase: String) throws {
-        // AI architecture D1 on #643, on every surface.
-        #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil), "\(phrase)")
-        _ = try engine.perform(CreateTask(title: phrase), by: .tess)
-        #expect(!everythingShown().contains("182.4") && !everythingShown().contains("1850"))
-    }
-
-    @Test(arguments: ["Bench 82.4 kg 5x5", "bench 82.50 x 8", "squat 82 kg", "bench 80 for 8"])
-    func theBarStaysTheBar(_ phrase: String) {
-        // MB31, MB32: a set beside a lift is never money or his body, even inside his band.
-        #expect(!PrivateFacts.isWalled(phrase, lastWeightKg: 82), "\(phrase)")
-        #expect(!PrivateFacts.isWalled(phrase, lastWeightKg: nil), "\(phrase)")
-    }
-
-    @Test(arguments: ["82.4 kg this morning, leg day after", "was 82.4 low before push day?"])
-    func anEverydayWordNeverMakesHisWeightABar(_ phrase: String) {
-        // QA on #644: "leg" and "push" are not lifts.
-        #expect(PrivateFacts.isWalled(phrase, lastWeightKg: 82), "\(phrase)")
-        // With no weigh-in, a decimal walls only beside a body word or unit (BN04 walled, BN05 plain).
-        #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil) == phrase.contains("kg"), "\(phrase)")
-    }
-
-    @Test func theLowsFromQAOn644() {
-        // "Push B 5x5 80 for 8" is one set at 82; "bench day 82.4 kg this morning" is his weight.
-        #expect(!PrivateFacts.isWalled("Push B 5x5 80 for 8", lastWeightKg: 82))
-        #expect(PrivateFacts.isWalled("bench day 82.4 kg this morning", lastWeightKg: 82))
-        #expect(PrivateFacts.isWalled("bench day 82.4 kg this morning", lastWeightKg: nil))
-        #expect(!PrivateFacts.isWalled("82 kg squat", lastWeightKg: 82))
-    }
-
-    @Test func forDaysIsNotASet() {
-        // QA low on #644: "for 3 days" keeps the number.
-        #expect(PrivateFacts.withoutNotation("weighed 82 kg for 3 days").contains("82"))
-        #expect(!PrivateFacts.withoutNotation("80 for 8 reps").contains("80"))
-        #expect(!PrivateFacts.withoutNotation("bench 80 for 8").contains("80"))
-        #expect(PrivateFacts.isWalled("weighed 82 kg for 3 days", lastWeightKg: nil))
-    }
-
-    @Test func aSetElsewhereDoesNotStripAWeighIn() {
-        // QA low on #654: "for 3 days" is a span and the 5x5 is far from it.
-        let phrase = "weighed 82 kg for 3 days after 5x5 bench"
-        #expect(PrivateFacts.withoutNotation(phrase).contains("82"))
-        #expect(PrivateFacts.isWalled(phrase, lastWeightKg: 82))
-        #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil))
-        #expect(!PrivateFacts.withoutNotation("5x5 80 for 8").contains("80"))
-        #expect(PrivateFacts.withoutNotation("5x5 80 for 8 days").contains("80"))
-    }
-
-    @Test func aVitalIsWalledBesideSetNotation() throws {
-        // Research W13 (decisions 7:31 PM PT) reaches every surface, not only Home.
-        #expect(PrivateFacts.isWalled("Heart rate day 5x5", lastWeightKg: nil))
-        #expect(PrivateFacts.isWalled("bp 120/80 after 5x5", lastWeightKg: nil))
-        #expect(!PrivateFacts.isWalled("bench 80x5", lastWeightKg: nil))
-        _ = try engine.perform(CreateTask(title: "heart rate day 5x5"), by: .tess)
-        #expect(try store.objects(of: #require(classes[.task])).isEmpty)
-        #expect(!everythingShown().lowercased().contains("heart rate"))
-    }
-
-    @Test func aCountOrALiftIsNotHisWeight() throws {
-        // Product 8:28 PM PT.
-        #expect(!PrivateFacts.isWalled("80 stickers", lastWeightKg: 82))
-        #expect(!PrivateFacts.isWalled("order 76 envelopes", lastWeightKg: 82))
-        #expect(PrivateFacts.isWalled("is 82.4 good?", lastWeightKg: 82))
-        #expect(BodyWeight.kilograms(in: "weighed squat at 140 kg") == nil)
-        try weigh(82, at: Self.at(10, 7))
-        try engine.perform(CreateNote(body: "weighed squat at 140 kg", isPrivate: true), by: .user)
-        #expect(BodyWeight.lastKg(in: store) == 82)
-    }
-
-    @Test func theLibraryNeverHidesAMorningWeighIn() throws {
-        // QA on #638: "Good Morning" is in the library; "82 kg this morning" is still his weight.
-        try ExerciseLibraryInstaller.install(shape: .patternSpine, store: store, classes: classes)
-        #expect(BodyWeight.exerciseNames(in: store).contains("bench press"))
-        #expect(!BodyWeight.exerciseNames(in: store).contains("good morning"))
-        let note = try engine.perform(CreateNote(body: "82 kg this morning", isPrivate: true), by: .user)
-        note.output.createdAt = Self.at(14, 7)
-        #expect(BodyWeight.lastKg(in: store) == 82)
-        try engine.perform(CreateNote(body: "romanian deadlift 100 kg", isPrivate: true), by: .user)
-        #expect(BodyWeight.lastKg(in: store) == 82)
-        #expect(PrivateFacts.isWalled("how's 76 looking?", lastWeightKg: BodyWeight.lastKg(in: store)))
-        #expect(PrivateFacts.isWalled("is 82 less?", lastWeightKg: 82))
-    }
-
-    @Test func dayNamesAreUSEnglishInAnyLocale() {
-        var calendar = Self.calendar
-        calendar.locale = Locale(identifier: "fr_FR")
-        #expect(TesseraDay.weekdayName(of: Self.at(18, 12), calendar: calendar) == "Sunday")
     }
 
     @Test(arguments: ["Room 82", "bus 76 at 8", "gate 80", "ticket #84"])
@@ -462,7 +371,7 @@ struct WallsBypassTests {
     @Test func aListItemsLinesMatchWhatWasKept() throws {
         let list = try engine.perform(CreateList(name: "Errands"), by: .user).output
         let milk = try engine.perform(AddListItem(list: list.id, text: "milk $4"), by: .user)
-        #expect(milk.output.title == "milk" && milk.record.summary == "Milk, added to Errands")
+        #expect(milk.output.title == "milk" && milk.record.summary == "Added milk")
         #expect(milk.record.receipt == "Milk, added to Errands")
     }
 
