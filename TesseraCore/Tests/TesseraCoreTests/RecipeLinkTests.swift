@@ -172,7 +172,7 @@ struct RecipeLinkTests {
         LinkStub.pages["blog.example.com"] = .init(body: Self.prose)
         // Off: never asked.
         #expect(await reader(claude: true, allowed: false).read("https://blog.example.com/beans").line
-            == RecipeLinkLine.noRecipe)
+            == RecipeLinkLine.claudeOff)
         #expect(!LinkStub.requests.contains { $0.url?.host() == "api.anthropic.com" })
         // On: Claude's text, as a ghost to check; no tools on the wire, the page marked as data.
         let reply = #"{"content":[{"type":"text","text":"Beans and rice\nIngredients\n1 can black beans\n1 onion\n2 tomatoes\n"#
@@ -345,8 +345,22 @@ struct RecipeLinkTests {
         LinkStub.pages["api.anthropic.com"] = .init(body: #"{"content":[{"type":"text","text":"no recipe"}]}"#,
                                                     type: "application/json")
         let result = await reader(claude: true, allowed: false).read("https://blog.example.com/beans")
-        #expect(result.line == RecipeLinkLine.noRecipe)
+        #expect(result.line == RecipeLinkLine.claudeOff && result.kind == .failed)
         #expect(!LinkStub.requests.contains { $0.url?.host() == "api.anthropic.com" } && ledger.calls().isEmpty)
+    }
+
+    /// G32: the Claude step itself refuses with the switch off, even called directly with a good key and a clean page.
+    @Test func theClaudeStepChecksTheSwitchItself() async throws {
+        LinkStub.pages["api.anthropic.com"] = .init(body: #"{"content":[{"type":"text","text":"x"}]}"#,
+                                                    type: "application/json")
+        let before = LinkStub.requests.count
+        let step = ClaudeRecipeReader(keys: InMemoryKeychain("sk-ant-TEST-link"), ledger: ledger,
+                                      session: LinkStub.session(), allowed: { false })
+        let result = await step.read("Beans and rice\n1 can black beans\n2 tomatoes",
+                                     source: try #require(URL(string: "https://blog.example.com/beans")))
+        #expect(result.kind == .failed && result.line == RecipeLinkLine.claudeOff)
+        #expect(LinkStub.requests.count == before && ledger.calls().isEmpty)
+        #expect(RecipeLinkLine.claudeOff.hasSuffix("Paste the text instead."))
     }
 
     @Test func aPageOfOnlyWalledLinesIsNeverSent() async {
