@@ -146,6 +146,15 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
    - No default rounded rectangle or pill buttons and cards; more elegant, subtle controls (Oct 15, 12:00 PM PT) (cmsg_01VTPva3JGXrfvetgUvAWE7M8AkTjBBbEgur6vod4tmgHM)
    - UI carries 50% of the weight of the backend; be as creative and innovative in UI (Oct 15, 12:47 AM PT) (cmsg_01VTPva3JGXrfvetgUvAWE7MDdEf7HFeA7JuuPy9ZKPyLt)
 
+### Tess motion lab
+- Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7M6sP74VaZtcGZHEKYPWaqrp; old session cse_01DRmRTCUkFkcxiqBGpsU9Jw.
+- Fresh thread (moved Oct 17, 2:15 PM PT, per Product): cmsg_01VTPva3JGXrfvetgUvAWE7MFM6C5LmJuscgTzpa8hF8Tv; session session_01HhkZiRUzaM6tsigSeaJYcY.
+- Read the old chat with fetch_thread (oldest_first) or list_events on the old session; read a rule's exact words with fetch_messages on its id.
+- Handoff note: ops/rotation-handoffs.md, section "Tess motion lab"; board ops/board/motion.md.
+- Rules for Motion lab (plus G):
+   - Motion: all 11 ideas plus the mouth, the same in every area; picks in docs/design/motion/tess-picks.md (Oct 16, 9:55 AM PT) (cmsg_01VTPva3JGXrfvetgUvAWE7MJPLyya4ray7YyPPbJKfYjr)
+   - Never a diffused or faded Tess as imagery; he likes Tess as she is (Oct 17, 12:46 PM PT) (cmsg_01VTPva3JGXrfvetgUvAWE7MNEpdWKZTk52xHoonWPt9wC)
+
 ## Not included on purpose
 
 - Rules with a secret or from the key-check threads (see the Secret rule above); the memory file's Key and privacy section is the pointer.
