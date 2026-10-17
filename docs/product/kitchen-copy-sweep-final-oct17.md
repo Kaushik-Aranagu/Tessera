@@ -27,6 +27,8 @@
 | `kitchen-refill5-acceptance.md`, `kitchen-widget-wash-acceptance.md`, `meal-plan-groceries-acceptance.md`, `kitchen-refill7-acceptance.md` K45.14 | K32.x, KW-W8, line 45 | "Private recipe, 7 pm."; no-time "Private recipe, today." / "tonight." | Matches. No change. |
 | All 52 files | grep for bare "Private", "Saved." as expected copy, "in <list>" and "added to <list>" receipts, uppercase AM/PM clocks in app copy | | No other hit in expected app copy. "Saved." appears only as the quoted bad current behaviour (G34). |
 
+**Rulings applied Oct 17 (4:35):** Open 1 (G11 copy "Didn't save that. Already an ingredient."), Open 2 (G34 "proposed" tag dropped), Open 3 (private "Didn't save" variants keep the form, kind only), and the two carried items in Open 5 (merge lines are ink, cobalt is Tess's band only; backup file names use a 4-digit year) are closed. Open 4 (log G6 and G11 in `decisions.md`) is Product's. The 10 missing groups are now in `kitchen-phrases-2.md`.
+
 ## Open
 
 1. **G11 wording.** "Already an ingredient. Pick another name." (`kitchen-gap-hunt-2.md` line 39) against "Didn't save that. Already an ingredient." (master, and the 3:40 follow-up as cited in `kitchen-gap-status-oct17.md`). Product to write the winner into `decisions.md`; then edit line 39 only.
