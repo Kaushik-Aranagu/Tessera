@@ -171,7 +171,12 @@ public struct CreateTaskIntent: AppIntent {
             return line
         default:
             let record = try engine.perform(CreateTask(title: title, startsAt: startsAt), by: .intent).record
-            return PrivateFacts.isPrivateTitle(title, lastWeightKg: BodyWeight.lastKg(in: engine.store)) ? TessCaptureEngine.privateTaskLine(startsAt, context: context)
+            return PrivateFacts
+                .isPrivateTitle(title, lastWeightKg: BodyWeight.lastKg(in: engine.store)) ? TessCaptureEngine
+                .privateTaskLine(
+                    startsAt,
+                    context: context
+                )
                 : "\(record.summary)."
         }
     }

@@ -115,7 +115,8 @@ public struct PlanPack: Sendable, Equatable {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "EEE"
         var top: [String: Any] = [
-            "allDay": includesEventTitles ? plan.allDay.filter { !Self.isPrivate($0, lastWeightKg: lastWeightKg) } : [], "blocks": rows,
+            "allDay": includesEventTitles ? plan.allDay.filter { !Self.isPrivate($0, lastWeightKg: lastWeightKg) } : [],
+            "blocks": rows,
             "cap": plan.cap, "light": plan.light,
             "now": clock(minutes(now)),
             "weekday": formatter.string(from: TesseraDay(calendar: calendar).day(of: now).addingTimeInterval(43200)),
@@ -161,19 +162,26 @@ public struct PlanPack: Sendable, Equatable {
         // Multi-word names only ("Lunch" would catch "before lunch"), and never one that overlaps a title in the plan
         // or its all-day items ("landlord" in "Reply to landlord") (QA S1 on #303).
         let inPack = (plan.blocks.map(\.title) + plan.allDay).map(phrase)
-        self.otherNames = Set(otherNames.filter { !Self.isPrivate($0, lastWeightKg: lastWeightKg) }.map(phrase).filter { name in
-            // As words, not letters: "pasta" doesn't overlap "pastry bake" (QA on #306).
-            let padded = " \(name) "
-            return name.contains(" ") && !inPack.contains { padded.contains(" \($0) ") || " \($0) ".contains(padded) }
-        })
+        self
+            .otherNames = Set(otherNames.filter { !Self.isPrivate($0, lastWeightKg: lastWeightKg) }.map(phrase)
+                .filter { name in
+                    // As words, not letters: "pasta" doesn't overlap "pastry bake" (QA on #306).
+                    let padded = " \(name) "
+                    return name.contains(" ") && !inPack
+                        .contains { padded.contains(" \($0) ") || " \($0) ".contains(padded) }
+                })
         hasWorkout = plan.blocks.contains { $0.kind == .workout }
         isRestDay = restDay
         func words(_ text: String) -> [String] {
             text.lowercased().split { !$0.isLetter && !$0.isNumber }.map(String.init)
         }
-        let titles: [String] = plan.blocks.map { Self.packTitle($0, includesEventTitles: includesEventTitles, lastWeightKg: lastWeightKg) }
-            .filter { $0 != "busy" && $0 != "task" } +
-            (includesEventTitles ? plan.allDay.filter { !Self.isPrivate($0, lastWeightKg: lastWeightKg) } : [])
+        let titles: [String] = plan.blocks.map { Self.packTitle(
+            $0,
+            includesEventTitles: includesEventTitles,
+            lastWeightKg: lastWeightKg
+        ) }
+        .filter { $0 != "busy" && $0 != "task" } +
+        (includesEventTitles ? plan.allDay.filter { !Self.isPrivate($0, lastWeightKg: lastWeightKg) } : [])
         titleWords = Set(titles.flatMap(words))
     }
 }

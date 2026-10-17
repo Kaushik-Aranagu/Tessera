@@ -60,7 +60,9 @@ public enum PrivateFacts {
         /\bsick\s+(?:set|lift|pr|workout|session|pump|song|view|beat|car|shot|play|trick)\b/,
     ]
 
-    static let weighWords: Set<String> = ["weigh", "weighs", "weighed", "weighing", "weigh-in", "bw", "scale"]
+    /// "log my weight 82.4" is his weight (Research, Siri BX): Siri would speak the number back.
+    static let weighWords: Set<String> = ["weigh", "weighs", "weighed", "weighing", "weigh-in", "weight", "bw",
+                                          "scale"]
     static let bodyUnits: Set<String> = ["lb", "lbs", "kg", "kgs", "pounds", "kilos"]
     static let dayWords: Set<String> = ["this", "morning", "today", "tonight", "evening", "night", "am", "pm", "at",
                                         "yesterday", "now", "in", "me", "i", "my", "was", "is"]
@@ -74,9 +76,10 @@ public enum PrivateFacts {
     static let vitals: Set<String> = ["bp", "hr", "hrv", "spo2", "pulse", "resting", "temp", "temperature", "glucose",
                                       "bpm", "systolic", "diastolic"]
     public static let medicines: Set<String> = ["advil", "tylenol", "ibuprofen", "acetaminophen", "aspirin", "aleve",
-                                         "lexapro", "zoloft", "sertraline", "prozac", "adderall", "xanax", "melatonin",
-                                         "benadryl", "claritin", "zyrtec", "pill", "pills", "tablet", "tablets",
-                                         "capsule", "capsules", "dose", "meds", "medication"]
+                                                "lexapro", "zoloft", "sertraline", "prozac", "adderall", "xanax",
+                                                "melatonin",
+                                                "benadryl", "claritin", "zyrtec", "pill", "pills", "tablet", "tablets",
+                                                "capsule", "capsules", "dose", "meds", "medication"]
     /// Symptoms and hurts: walled with no number (Product on QA L1): "knee hurts", "headache", "slept badly".
     static let symptoms: Set<String> = ["migraine", "nausea", "nauseous", "fever", "rash", "headache", "vomiting",
                                         "vomited", "dizzy", "diarrhea", "cramps", "insomnia", "symptoms", "hurts",

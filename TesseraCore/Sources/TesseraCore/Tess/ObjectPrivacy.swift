@@ -36,7 +36,8 @@ public enum ObjectPrivacy {
             return flagged || isPrivateText(object.title) || isPrivateText(rule) ? memoryLabel : nil
         }
         if isA(.task) {
-            return object.title == taskLabel || PrivateFacts.isPrivateTitle(object.title, lastWeightKg: last) ? taskLabel : nil
+            return object.title == taskLabel || PrivateFacts
+                .isPrivateTitle(object.title, lastWeightKg: last) ? taskLabel : nil
         }
         return nil
     }
@@ -46,6 +47,17 @@ public enum ObjectPrivacy {
     public static func hidesNotes(of object: ObjectRecord, classes: [SystemCatalog.Key: ClassDef]) -> Bool {
         guard let classDef = object.classDef, let workout = classes[.workout] else { return false }
         return ClassResolver.isSubclass(classDef, of: workout)
+    }
+
+    /// The notes line an object page shows: nil when there are none (only spaces is none; Research PM26), "Note kept
+    /// private" for a workout's.
+    @MainActor
+    public static func notesLine(of object: ObjectRecord, in store: ObjectStore,
+                                 classes: [SystemCatalog.Key: ClassDef]) -> String?
+    {
+        guard let notes = store.value("notes", of: object)?.stringValue,
+              !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+        return hidesNotes(of: object, classes: classes) ? keptNoteLabel : notes
     }
 
     static func isPrivateText(_ text: String, lastWeightKg: Double?) -> Bool {

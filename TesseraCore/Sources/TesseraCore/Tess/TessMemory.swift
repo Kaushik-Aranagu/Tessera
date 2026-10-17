@@ -231,6 +231,11 @@ public struct RememberFact: EngineAction {
             default: throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "refused: \(refusal)")
             }
         }
+        // The engine wall (board 0ai): his weight is never kept, whoever asked, even as a bare number ("82.4"). Money
+        // was refused by the screen above with its own line; a health line he tells stays private (Research F3).
+        if PrivateFacts.isBareWeight(trimmed.lowercased(), lastWeightKg: BodyWeight.lastKg(in: transaction.store)) {
+            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "refused: health(\"walled\")")
+        }
         // At the cap nothing is written (addendum S7).
         let told = TessMemoryStore.records(store: transaction.store, classes: transaction.classes)
             .count { transaction.store.value("kind", of: $0) == .choice(TessMemory.Kind.told.rawValue) }
@@ -278,6 +283,9 @@ public struct RememberFact: EngineAction {
         }
         if reason.contains("place") {
             return TessMemoryScreen.Refusal.place("").line
+        }
+        if reason.contains("secret") {
+            return TessMemoryScreen.Refusal.secret.line // Research BM11: "I don't keep passwords."
         }
         if reason.contains("capFull") {
             return TessMemory.capLine

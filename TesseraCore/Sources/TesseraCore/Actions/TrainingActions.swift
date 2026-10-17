@@ -465,7 +465,9 @@ public struct CreateTask: EngineAction {
     }
 
     public func receipt(in store: ObjectStore) -> String? {
-        switch EngineWall.task(title.trimmingCharacters(in: .whitespacesAndNewlines), startsAt: startsAt, store: store) {
+        switch EngineWall
+            .task(title.trimmingCharacters(in: .whitespacesAndNewlines), startsAt: startsAt, store: store)
+        {
         case .privateNote: "\(SecretWords.title), kept"
         case .privateTask: "\(ObjectPrivacy.taskLabel), added"
         case .withoutAmount, .keep: nil

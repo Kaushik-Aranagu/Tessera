@@ -69,5 +69,14 @@ struct ObjectPrivacyTests {
         #expect(ObjectPrivacy.hidesNotes(of: workout, classes: classes))
         #expect(ObjectPrivacy.keptNoteLabel == "Note kept private")
         #expect(!ObjectPrivacy.hidesNotes(of: plain, classes: classes))
+        // PM26: notes of only spaces are no notes; nothing reads "Note kept private".
+        let notes = { ObjectPrivacy.notesLine(of: workout, in: store, classes: classes) }
+        #expect(notes() == nil)
+        try store.set("notes", to: .richText("  \n "), on: workout)
+        #expect(notes() == nil)
+        try store.set("notes", to: .richText("left knee felt off"), on: workout)
+        #expect(notes() == "Note kept private")
+        try store.set("notes", to: .richText("Bring the blue bag"), on: plain)
+        #expect(ObjectPrivacy.notesLine(of: plain, in: store, classes: classes) == "Bring the blue bag")
     }
 }

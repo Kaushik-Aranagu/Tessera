@@ -8,11 +8,11 @@ public enum EngineWall {
     public enum TaskOutcome: Equatable, Sendable {
         /// Nothing private: the title as given.
         case keep(String)
-        /// Something to do with money and a day: the task without its amount ("pay rent 2100 fri" is "Pay rent").
+        /// Something to do with money: the task without its amount ("pay rent 2100 fri" is "Pay rent fri").
         case withoutAmount(String)
         /// A medicine reminder with a time: a task titled "Private task".
         case privateTask
-        /// A secret with a value, money with no day or a body fact: a private note, dated when it had a day.
+        /// A secret with a value, money that isn't something to do, or a body fact: a private note.
         case privateNote
     }
 
@@ -27,7 +27,9 @@ public enum EngineWall {
         }
         if PrivateFacts.isMoneyShaped(title) {
             let bare = withoutAmounts(title)
-            return isSomethingToDo(title) && startsAt != nil && !bare.isEmpty ? .withoutAmount(bare) : .privateNote
+            // An imperative is ahead of him whether or not a time came with it (Research BM02: the model's write has
+            // no startsAt); "paid rent 2100" is a fact, so a private note.
+            return isSomethingToDo(title) && !bare.isEmpty ? .withoutAmount(bare) : .privateNote
         }
         if PrivateFacts.isBodyShaped(title, lastWeightKg: BodyWeight.lastKg(in: store)) {
             let medicine = PrivateFacts.medicines.contains { title.lowercased().contains($0) }

@@ -62,7 +62,10 @@ public extension TessCaptureEngine {
         var captures: [TessCapture] = []
         for item in inbox.waiting() where claude.isAvailable(for: .capture) {
             // Queued before the walls (Research 139): a secret, money or body phrase leaves the inbox unread.
-            if SecretWords.mentions(item.title) || PrivateFacts.isWalled(item.title, lastWeightKg: BodyWeight.lastKg(in: engine.store)) {
+            if SecretWords.mentions(item.title) || PrivateFacts.isWalled(
+                item.title,
+                lastWeightKg: BodyWeight.lastKg(in: engine.store)
+            ) {
                 inbox.remove(item)
                 continue
             }

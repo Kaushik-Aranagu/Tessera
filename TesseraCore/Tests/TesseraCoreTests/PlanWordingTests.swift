@@ -105,7 +105,8 @@ struct PlanWordingTests {
 
     var pack: PlanPack? {
         PlanPack(plan: d01, now: now, calendar: DayPlanTests.calendar, calendarKnown: true, restDay: false,
-                 otherNames: ["Sort the garage", "Mum's birthday", "Push A", "Lunch", "Reply to landlord today"], lastWeightKg: nil)
+                 otherNames: ["Sort the garage", "Mum's birthday", "Push A", "Lunch", "Reply to landlord today"],
+                 lastWeightKg: nil)
     }
 
     static let ideal = #"""
@@ -310,10 +311,16 @@ struct PlanWordingTests {
         for title in ["Coffee 6.25", "Pay Sam back $40", "Refill lexapro 10mg", "Reset my PIN",
                       "Password reset email"]
         {
-            #expect(PlanPack.packTitle(block(.task, title), includesEventTitles: true, lastWeightKg: nil) == "task", "\(title)")
+            #expect(
+                PlanPack.packTitle(block(.task, title), includesEventTitles: true, lastWeightKg: nil) == "task",
+                "\(title)"
+            )
         }
-        #expect(PlanPack.packTitle(block(.event, "Dentist, copay $35"), includesEventTitles: true, lastWeightKg: nil) == "busy")
-        #expect(PlanPack.packTitle(block(.task, "Reply to landlord"), includesEventTitles: true, lastWeightKg: nil) == "Reply to landlord")
+        #expect(PlanPack
+            .packTitle(block(.event, "Dentist, copay $35"), includesEventTitles: true, lastWeightKg: nil) == "busy")
+        #expect(PlanPack
+            .packTitle(block(.task, "Reply to landlord"), includesEventTitles: true, lastWeightKg: nil) ==
+            "Reply to landlord")
         #expect(PlanPack.packTitle(block(.event, "Standup"), includesEventTitles: true, lastWeightKg: nil) == "Standup")
     }
 
