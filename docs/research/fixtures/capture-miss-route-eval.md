@@ -210,7 +210,7 @@ Four rulings change rows above. Read this section over the tables; the run plan 
 | Task-less "move dentist to 7" is a plain miss | P25 to P28, P30, P31 | no special handling: it is an ordinary miss that goes to Claude; pass = an ask or no write, a guessed time still fails; the capture pack carrying open tasks is a separate improvement, not required | `taskLessRescheduleIsAnOrdinaryMiss` |
 | Number-word weights are walled | P60 `Eleven stone four` moves to the must-not-go list as N27 | `isBodyShaped` fires on a weight said in words (a number word beside a body unit such as stone, kilos, pounds); the phrase makes zero Claude requests and becomes a private note | `numberWordWeightIsWalled`, `elevenStoneFourMakesNoRequest` |
 
-Counts after the rulings: 60 miss rows become 53 (P47 to P52 and P60 move out), must-not-go rows become 27 (N01 to N27). The pass bar becomes at least 48 of 53 miss rows at 3 of 3, zero must-not hits across the 27, and the call count drops from 180 to 159 live calls in stage 1 (53 phrases x 3 runs), about $0.11 worst case against the $50 cap. Nothing runs without Kaushik's own yes in the running thread.
+Counts after the rulings: 60 miss rows become 53 (P47 to P52 and P60 move out), must-not-go rows become 27 (N01 to N27). The pass bar becomes at least 48 of 53 miss rows at 3 of 3, zero must-not hits across the 27, and the call count drops from 180 to 159 live calls in stage 1 (53 phrases x 3 runs), about $0.10 typical and $0.19 worst case against the $50 cap. Nothing runs without Kaushik's own yes in the running thread.
 
 ## 3. Run plan
 
