@@ -164,7 +164,7 @@ private func utc(_ text: String) -> Date { try! Date(text, strategy: .iso8601) }
 | `dayLogWindowEndsAtFourPST()` DS27 | day `2026-10-31T19:00:00Z` | end `2026-11-01T12:00:00Z` |
 | `spendMonthOpensAtMidnightPDT()` DS31 | call at `2026-11-01T07:30:00Z`, now `2026-11-01T20:00:00Z` | counted in `monthTotal` |
 | `pauseUntilTomorrowEndsAtFourPST()` DS32 | now `2026-11-01T06:30:00Z` | `2026-11-01T12:00:00Z` |
-| `noticedWeeksSameClockIsTwo()` DS36 (fails on master) | starts from `2026-10-19T01:00:00Z`, now `2026-11-02T02:00:00Z` | weeks `2` |
+| `twoWeeksAcrossTheFallBackNightAreTwo()` DS36 (fails on master) | starts from `2026-10-19T01:00:00Z`, now `2026-11-02T02:00:00Z` | weeks `2` |
 | `cookCountUsesHisMonth()` DS22 (fails on master) | 3 cooks in October, 4th at `2026-11-01T07:30:00Z` | "fourth time this month" |
 
 `TesseraCore/Tests/TesseraTessTests/TessGrammarFallBackTests.swift` (`struct TessGrammarFallBackTests`):
@@ -174,7 +174,7 @@ private func utc(_ text: String) -> Date { try! Date(text, strategy: .iso8601) }
 | `tomorrowAtElevenThirtyIsSundayNine()` DS4 | "call mom tomorrow", now `2026-11-01T06:30:00Z` | `2026-11-01T17:00:00Z` |
 | `tomorrowInSecondOneAMIsSunday()` DS5 | same, now `2026-11-01T09:20:00Z` | `2026-11-01T17:00:00Z` |
 | `sunOneThirtyBeforeIsFirstPass()` DS7 | "bins sun 1:30am", now `2026-11-01T06:00:00Z` | `2026-11-01T08:30:00Z` |
-| `oneThirtyInFirstPassIsSecondPass(now:)` DS8 (fails on master) | "bins 1:30am" at `08:45Z` and `09:10Z`; "bins sun 1:30am" at `09:10Z` | `2026-11-01T09:30:00Z` |
+| `oneThirtyInTheRepeatedHourIsTheSecondPass(now:)` DS8 (fails on master) | "bins 1:30am" at `08:45Z` and `09:10Z`; "bins sun 1:30am" at `09:10Z` | `2026-11-01T09:30:00Z` |
 | `datedLiftSundayIsNoon()` DS29 (fails on master) | "bench 80x8 sun", now `2026-11-02T20:00:00Z` | ask `day == 2026-11-01T20:00:00Z` |
 
 `TesseraTests/FallBackNightAppTests.swift` (`@MainActor struct FallBackNightAppTests`). Three of these need a calendar
