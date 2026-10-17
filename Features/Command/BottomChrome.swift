@@ -744,8 +744,25 @@ extension BottomChrome {
             model.touch()
             undos += 1
             withTesseraAnimation(reduceMotion: reduceMotion) { voice.clear() }
+            // UNDO says what it took back, thing first: "Tacos, taken back." (K36.2, Product 10:55). A take-back
+            // closure speaks its own line.
+            if note.undo != nil, note.takeBack == nil {
+                let line = UndoCopy.takenBack(after: note.text)
+                Task { @MainActor in voice.say(line) }
+            }
         } else {
             model.undoLastCapture()
         }
+    }
+}
+
+/// What UNDO says once it has taken something back.
+enum UndoCopy {
+    /// The receipt's thing, then "taken back": "Tacos, 7 added." → "Tacos, taken back."; "Private item, on
+    /// Groceries." → "Private item, taken back.". A line with no thing first reads "Taken back."
+    static func takenBack(after receipt: String) -> String {
+        guard let comma = receipt.range(of: ", ") else { return "Taken back." }
+        let thing = receipt[..<comma.lowerBound].trimmingCharacters(in: .whitespaces)
+        return thing.isEmpty ? "Taken back." : "\(thing), taken back."
     }
 }
