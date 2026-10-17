@@ -39,7 +39,6 @@ private struct GroceriesPage: View {
     @State private var landed = 0
     /// SHOP mode's private rows (B8): masked until tapped, masked again when the trip ends.
     @State private var trip = ShopTrip()
-    @Environment(\.scenePhase) private var scenePhase
     @FocusState private var writing: Bool
 
     private var groceries: Groceries {
@@ -113,19 +112,6 @@ private struct GroceriesPage: View {
             .padding(.bottom, Theme.Spacing.section)
             .tesseraAnimation(Theme.Motion.house, value: aisles.map(\.aisle))
             .tesseraAnimation(Theme.Motion.house, value: shopping)
-            .onChange(of: shopping) { _, now in
-                if !now {
-                    trip.end()
-                }
-            }
-            // Leaving the page masks every opened row again (B11).
-            .onDisappear { trip.end() }
-            // A lock or an app switch masks every opened row again (QA F1 on #732).
-            .onChange(of: scenePhase) { _, phase in
-                if phase != .active {
-                    trip.end()
-                }
-            }
             .opacity(basketOpen && !shopping ? 0.5 : 1)
             .tesseraAnimation(Theme.Motion.house, value: basketOpen)
         }
@@ -235,7 +221,7 @@ private struct GroceriesPage: View {
         }
     }
 
-    /// What a row reads, in the list and in SHOP mode: "Private item" until it's tapped open (B8, B11).
+    /// What a row reads, in the list and in SHOP mode: a private item is always "Private item" (G102).
     private func rowLabel(_ item: ListContents.Item) -> String {
         trip.label(for: item, name: GroceriesCopy.name(item), lastWeightKg: BodyWeight.lastKg(in: model.store))
     }
@@ -245,12 +231,9 @@ private struct GroceriesPage: View {
         trip.maskedLabel(for: item, name: GroceriesCopy.name(item), lastWeightKg: BodyWeight.lastKg(in: model.store))
     }
 
-    /// A masked private row opens on its first tap, in the list or in SHOP mode; any other tap strikes.
+    /// One tap strikes any row, a private one included; nothing opens (G102).
     private func shopTap(_ item: ListContents.Item) {
-        switch trip.tap(item, lastWeightKg: BodyWeight.lastKg(in: model.store)) {
-        case .reveal: break
-        case .strike: check(item)
-        }
+        check(item)
     }
 
     /// The ink strike runs through first (light tap when it ends), then the item folds into a sage dab that arcs
@@ -523,7 +506,7 @@ private struct GroceryRow: View {
             withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { showsRecipes.toggle() }
         })
         .accessibilityElement(children: .combine)
-        .accessibilityHint(name == ShopTrip.privateLabel ? "Shows it" : "Puts it in the basket")
+        .accessibilityHint("Puts it in the basket")
         .accessibilityAction(named: "Which recipes") { showsRecipes.toggle() }
     }
 }
