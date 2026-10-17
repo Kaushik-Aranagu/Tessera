@@ -30,4 +30,24 @@ struct ShopClearsTests {
         engine.undo(cleared.record)
         #expect(groceries.shopClears().isEmpty)
     }
+
+    @Test func theCachedReadFollowsTheList() throws {
+        // QA on #862: read, add one more shop, read again: the cache moves with the revision.
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let groceries = Groceries(store: store, classes: classes)
+        func shop(_ name: String, at time: Date) throws {
+            try engine.perform(AddGroceries(lines: [name]), by: .user)
+            for row in groceries.shoppingOrder() {
+                try engine.perform(CheckListItem(item: row.id, time: time), by: .user)
+            }
+            try engine.perform(ClearDoneItems(list: Groceries.listID), by: .user)
+        }
+        try shop("milk", at: t0)
+        #expect(groceries.shopClears().count == 1)
+        #expect(groceries.shopClears().count == 1) // warm
+        try shop("eggs", at: t0 + 3600)
+        #expect(groceries.shopClears().count == 2)
+    }
 }

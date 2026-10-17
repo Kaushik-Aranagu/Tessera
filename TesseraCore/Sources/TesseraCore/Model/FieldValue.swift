@@ -53,13 +53,16 @@ public enum FieldValue: Codable, Hashable, Sendable {
         }
     }
 
-    /// Numeric view used by formulas.
+    /// Numeric view used by formulas. A NaN, an infinity or a value past 1e15 reads as no value, so no caller's
+    /// `Int(...)` or `addTimeInterval` can trap on a number that came in through a restore, a file or a model.
     public var numericValue: Double? {
-        switch self {
+        let value: Double? = switch self {
         case let .number(value), let .duration(value), let .mass(value): value
         case let .bool(value): value ? 1 : 0
         case .text, .date, .choice, .richText: nil
         }
+        guard let value, value.isFinite, abs(value) < 1e15 else { return nil }
+        return value
     }
 
     public var stringValue: String? {
