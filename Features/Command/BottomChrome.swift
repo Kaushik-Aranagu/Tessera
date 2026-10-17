@@ -718,7 +718,7 @@ extension BottomChrome {
         replyCount += 1
         let shown = replyCount
         Task { @MainActor in
-            try? await Task.sleep(for: .seconds(4))
+            try? await Task.sleep(for: TessVoice.hold(undo: canUndo, holds: .seconds(4)))
             guard replyCount == shown else { return }
             withTesseraAnimation(reduceMotion: reduceMotion) { reply = nil }
         }
