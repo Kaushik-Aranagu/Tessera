@@ -1,0 +1,80 @@
+import Foundation
+@testable import Tessera
+import TesseraCore
+import Testing
+
+/// pantry-acceptance.md §P, derived app-side: a shop clear makes things in, a finished cook makes them low (Produce
+/// out), staples never move by cooking, and nothing touched stays unknown.
+@MainActor
+struct PantryLedgerTests {
+    let container = TesseraSchema.makeContainer(inMemory: true)
+    let model: AppModel
+    let saturday = Date(timeIntervalSince1970: 1_792_000_000)
+
+    init() {
+        model = AppModel(context: container.mainContext)
+    }
+
+    private var ledger: PantryLedger {
+        PantryLedger(store: model.store, classes: model.classes)
+    }
+
+    private func tacos() throws -> ObjectRecord {
+        try model.engine.perform(CreateRecipe(text: """
+        Tacos
+        1 lb ground beef
+        2 limes
+        8 corn tortillas
+        salt
+
+        Brown the beef.
+        Warm the tortillas.
+        """), by: .user).output
+    }
+
+    private func shop(_ recipe: ObjectRecord, at date: Date) throws {
+        try model.engine.perform(AddRecipeToGroceries(recipe: recipe.id), by: .user)
+        for item in model.store.object(id: Groceries.listID)?.orderedChildren ?? [] {
+            try model.engine.perform(CheckListItem(item: item.id, time: date), by: .user)
+        }
+        try model.engine.perform(ClearDoneItems(list: Groceries.listID), by: .user)
+    }
+
+    private func cook(_ recipe: ObjectRecord, at date: Date) throws {
+        let cook = try model.engine.perform(StartCooking(recipe: recipe.id, time: date), by: .user).output
+        try model.engine.perform(FinishCooking(cook: cook.id, time: date.addingTimeInterval(1800)), by: .user)
+    }
+
+    @Test func aShopMakesThingsInThenACookMakesThemLowAndProduceOut() throws {
+        let recipe = try tacos()
+        #expect(PantryLedger.countsLine(ledger.entries()) == "nothing known yet")
+
+        try shop(recipe, at: saturday)
+        let shopped = ledger.entries()
+        #expect(shopped.count == 3)
+        #expect(shopped.allSatisfy { $0.state == .have && $0.lastBoughtAt == saturday })
+
+        try cook(recipe, at: saturday.addingTimeInterval(2 * 86400))
+        let cooked = ledger.entries()
+        #expect(cooked.map { model.store.displayTitle(of: $0.ingredient) } == [
+            "Limes",
+            "Corn tortillas",
+            "Ground beef",
+        ])
+        #expect(cooked.map(\.state) == [.out, .low, .low])
+        #expect(cooked.allSatisfy { $0.lastBoughtAt == saturday }, "a cook never moves the bought date")
+        #expect(PantryLedger.countsLine(cooked) == "1 out, 2 low")
+    }
+
+    @Test func staplesNeverMoveByCookingAndTheNextShopWins() throws {
+        let recipe = try tacos()
+        try cook(recipe, at: saturday)
+        #expect(!ledger.entries().contains { model.store.displayTitle(of: $0.ingredient) == "Salt" })
+
+        let monday = saturday.addingTimeInterval(2 * 86400)
+        try shop(recipe, at: monday)
+        let after = ledger.entries()
+        #expect(after.allSatisfy { $0.state == .have && $0.lastBoughtAt == monday })
+        #expect(PantryLedger.countsLine(after) == "nothing out")
+    }
+}
