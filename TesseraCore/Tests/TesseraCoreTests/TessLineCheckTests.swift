@@ -188,7 +188,9 @@ struct TessLineCheckTests {
         }
         #expect(codes.contains("C6"))
     }
+}
 
+extension TessLineCheckTests {
     // MARK: HD1 to HD24
 
     struct Done: Sendable, CustomStringConvertible {
@@ -360,7 +362,7 @@ struct TessLineCheckTests {
         }
         #expect(bare("On Thursday, 1 new best.") == .pass)
         #expect(bare("Today, 1 new best.") != .pass && bare("On Friday, 1 new best.") != .pass)
-        for banned in ["Your usual, 1 new best.", "Usually this one, 1 new best.", "As usual, 1 new best.",
+        for banned in ["Your usual, 1 new best.", "Usually this, 1 new best.", "As usual, 1 new best.",
                        "After work, 1 new best.", "Before work, 1 new best."]
         {
             guard case let .fail(codes) = bare(banned) else {
