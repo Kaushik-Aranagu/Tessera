@@ -261,3 +261,5 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [fixtures/depth-76.md](fixtures/depth-76.md) | Core 0ak, Builders A and B, QA: sheet 76 depth fixtures (BL), 79 rows: THE DAYS and HISTORY glances, run ends with no wrap, the step-back swipe, the three edge zones |
 | [oct-22-riders-checklist.md](oct-22-riders-checklist.md) | Product, QA, Builder A: every-rider-in checklist for the Thu Oct 22 9:30 am check (BN), R1 to R19 with release, gate row and a one-line check; #407 merges only when every row is on his phone |
 | [drawn-sides-acceptance.md](drawn-sides-acceptance.md) | Builders A and B, QA: acceptance rows for each drawn side after Core 0ak (BQ), 87 rows across THE SETS, PER 100 G, the exercise side, WHERE IT'S MENTIONED, ITS STORY, WHAT'S IN ONE and THE DAYS |
+| [oct-22-qa-page.md](oct-22-qa-page.md) | Product, QA: one-page rider check for the Thu Oct 22 call (BT), 28 lines, one open rider per line, with a 5-minute call script |
+| [string-sweep-recount.md](string-sweep-recount.md) | Core, Builders A and B: string sweep recount (BS), 15 misses against the "no at before a time", receipt-order and bare-fallback rules |
