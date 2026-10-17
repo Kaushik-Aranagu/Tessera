@@ -66,7 +66,7 @@ THE WEEK'S COOKS (AHEAD, sheet 74) now, and it stays that way when Pantry arrive
 
 | Side | Glance | Why |
 |---|---|---|
-| FOR WHAT | "7 for 2 cooks", the two cooks named by short name | Design's draft |
+| FOR WHAT | "7 for 2 cooks", then "Tacos and chili" and "3 just because" (sheet 77); foot ALL LINKS | Drawn in sheet 77: the cooks named, the leftovers counted, so the three lines add up to the front |
 | PER 100 G | kcal big, then protein and fat; carbohydrate and fibre wait for the full side; the source line sits under the glance | Design's draft, with the source always visible since the number came from somewhere |
 | COOKS | The last cook with its day and duration: "Thursday, 46 min" | Design's draft, with the duration so the glance says something the front does not |
 | INGREDIENTS | "7 to buy" with the key ADD 7 TO GROCERIES; at 0, "Nothing to buy." and no key | Changed from "12 things": the glance's number and the key's number must be the same number, and the thing-count is already on the front |
@@ -90,4 +90,19 @@ THE WEEK'S COOKS (AHEAD, sheet 74) now, and it stays that way when Pantry arrive
 | 6.6 | Pantry's side is its own: the Kitchen tab's side stays THE WEEK'S COOKS before and after Pantry ships (row 5.2) |
 | 6.7 | Nothing in Pantry or its side is sent to Claude; the AI-12 pack snapshot carries no state and no bought date (`pantry-acceptance.md` Core 7) |
 | 6.8 | Reduce Motion is a 200 ms crossfade; Dynamic Type at AX sizes keeps one column; no pill, card or badge anywhere, and no notification (`pantry-acceptance.md`, Defaults taken) |
+
+## 7. Sheet 77 rows: Groceries FOR WHAT, Recipe COOKS, Paste WHAT I READ
+
+*From Design `sides-77.md`. Tess's line sits in her band at the glance and the full side, the same line at both stops. Digits, "and N more" from four, no controls, Reduce Motion a 150 ms crossfade.*
+
+| # | Pass when |
+|---|---|
+| 7.1 | FOR WHAT groups name the cook and the day in capitals with a comma: "TACOS, SUNDAY", "CHILI, TUESDAY", soonest first, then JUST BECAUSE and one USUALLY line; " · " appears only in a pack size |
+| 7.2 | A row for two cooks shows once, under the sooner cook, with "also chili" on it; the glance counts it once ("7 for 2 cooks" never counts a shared row twice) |
+| 7.3 | Tess says "7 for 2 cooks, 3 just because." at both stops; with no just-because rows she says "7 for 2 cooks."; with no plan she says nothing and the side opens on JUST BECAUSE alone |
+| 7.4 | Recipe COOKS lists each cook newest first with how long it took ("46 min", "1 h 1 min"); the glance reads "N times", the last cook's day and duration, and "about N min" |
+| 7.5 | The "about" figure and Tess's "Cooked 4 times, about 45 min." use the median of the recorded durations; with fewer than 2 cooks Tess says nothing and the glance shows no "about" line |
+| 7.6 | A cook with no recorded duration is listed by day only and left out of the median |
+| 7.7 | Paste WHAT I READ lists all lines in order: kept lines plain, a plain ignored line with its words dim and "ignored"; a private or secret-looking line shows only a bar and "ignored", never its words (the wall also stops it reaching Claude); the glance counts kept and ignored ("14 lines kept", "3 ignored") and Tess says "14 of 17 lines kept." |
+| 7.8 | None of these sides shows nutrition or any total of food values (`never-sums-audit.md`) |
 
