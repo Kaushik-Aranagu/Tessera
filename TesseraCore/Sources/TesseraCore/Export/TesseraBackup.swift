@@ -241,6 +241,52 @@ public enum TesseraBackup {
         }
     }
 
+    // MARK: What a restore would change (G26)
+
+    private nonisolated static let recipeCountSQL = """
+    SELECT COUNT(*) FROM object WHERE deletedAt IS NULL AND isClassObject = 0 AND classID IN
+      (SELECT id FROM classDef WHERE systemKey = ?)
+    """
+
+    /// Recipes in a backup file, Private ones included (counts only; names never leave the file).
+    public nonisolated static func recipeCount(at url: URL) -> Int? {
+        var configuration = Configuration()
+        configuration.readonly = true
+        guard let queue = try? DatabaseQueue(path: url.path, configuration: configuration) else { return nil }
+        defer { try? queue.close() }
+        return try? queue.read {
+            try Int.fetchOne($0, sql: recipeCountSQL, arguments: [SystemCatalog.Key.recipe.systemKey])
+        }
+    }
+
+    /// Recipes in the store he has now.
+    @MainActor
+    public static func recipeCount(in context: TesseraContext) -> Int? {
+        try? context.save()
+        return try? context.database.read {
+            try Int.fetchOne($0, sql: recipeCountSQL, arguments: [SystemCatalog.Key.recipe.systemKey])
+        }
+    }
+
+    /// The quiet line under "Replace everything with the copy from <day>?" when the Kitchen weight differs:
+    /// "That copy has 6 recipes. The 9 you have now are kept in Backups." Nil when the counts match or he has none
+    /// (proposed wording, Product to rule).
+    @MainActor
+    public static func restoreWeightLine(copyAt url: URL, replacing context: TesseraContext) -> String? {
+        guard let copy = recipeCount(at: url), let now = recipeCount(in: context), copy != now, now > 0 else {
+            return nil
+        }
+        return restoreWeightLine(copyRecipes: copy, nowRecipes: now)
+    }
+
+    public nonisolated static func restoreWeightLine(copyRecipes: Int, nowRecipes: Int) -> String {
+        func recipes(_ count: Int) -> String {
+            count == 1 ? "1 recipe" : "\(count) recipes"
+        }
+        return "That copy has \(recipes(copyRecipes)). The \(nowRecipes) you have now "
+            + (nowRecipes == 1 ? "is" : "are") + " kept in Backups."
+    }
+
     // MARK: Restoring
 
     /// Where a checked backup waits for the next launch.

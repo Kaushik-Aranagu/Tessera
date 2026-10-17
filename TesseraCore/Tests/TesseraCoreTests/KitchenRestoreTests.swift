@@ -102,3 +102,31 @@ struct KitchenRestoreTests {
         #expect(store.value("state", of: process)?.stringValue == ProcessState.running.rawValue)
     }
 }
+
+@MainActor
+struct RestoreWeightLineTests {
+    @Test func theConfirmLineNamesWhatTheKitchenWillLose() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        func store(_ name: String, recipes: Int) throws -> ObjectStore {
+            let store = try ObjectStore(context: TesseraContext(url: dir.appendingPathComponent(name)))
+            let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+            for index in 0 ..< recipes {
+                try engine.perform(CreateRecipe(text: "Dish \(index)\nIngredients\n1 onion\nMethod\n1. Cook it."), by: .user)
+            }
+            store.save()
+            return store
+        }
+        let tuesday = try store("tuesday.sqlite", recipes: 6)
+        let thursday = try store("thursday.sqlite", recipes: 9)
+        let copy = dir.appendingPathComponent("tuesday.tessera")
+        try TesseraBackup.write(from: tuesday.context, to: copy)
+        #expect(TesseraBackup.restoreWeightLine(copyAt: copy, replacing: thursday.context)
+            == "That copy has 6 recipes. The 9 you have now are kept in Backups.")
+        // Same weight, no line; the line never holds a recipe's name.
+        #expect(TesseraBackup.restoreWeightLine(copyAt: copy, replacing: tuesday.context) == nil)
+        #expect(TesseraBackup.restoreWeightLine(copyRecipes: 1, nowRecipes: 1)
+            == "That copy has 1 recipe. The 1 you have now is kept in Backups.")
+    }
+}
