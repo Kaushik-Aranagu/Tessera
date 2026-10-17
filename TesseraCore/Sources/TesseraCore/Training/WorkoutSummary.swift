@@ -29,7 +29,13 @@ public struct WorkoutSummary: Identifiable {
     /// What Tess says when the workout is done, the thing first: "Push Day A done, 1 of 5 exercises." Unmasked, so
     /// internal: the app only reaches the masked `doneLine(in:)` (QA on #787).
     var doneLine: String {
-        "\(title) done, \(exercisesDone) of \(exercisesPlanned) exercises."
+        Self.doneLine(title: title, done: exercisesDone, planned: exercisesPlanned)
+    }
+
+    /// "Push Day A done, 1 of 1 exercise." and, when nothing was planned, just "Push Day A done." (never "0 of 0").
+    private static func doneLine(title: String, done: Int, planned: Int) -> String {
+        guard planned > 0 else { return "\(title) done." }
+        return "\(title) done, \(done) of \(planned) \(planned == 1 ? "exercise" : "exercises")."
     }
 
     /// The done line with a private routine title masked (QA on #781): "Private workout done, 1 of 5 exercises."
@@ -37,12 +43,13 @@ public struct WorkoutSummary: Identifiable {
     public func doneLine(in store: ObjectStore) -> String {
         let lastKg = BodyWeight.lastKg(in: store)
         let shown = PrivateWords.isPrivateTitle(title, lastWeightKg: lastKg) ? "Private workout" : title
-        return "\(shown) done, \(exercisesDone) of \(exercisesPlanned) exercises."
+        return Self.doneLine(title: shown, done: exercisesDone, planned: exercisesPlanned)
     }
 
     /// Tess's line: "6 of 6 exercises, 22 sets, 1 best." Counts, never judgement ("best", not "record": Product).
     public var line: String {
-        var parts = ["\(exercisesDone) of \(exercisesPlanned) exercises", "\(sets) \(sets == 1 ? "set" : "sets")"]
+        let exercises = exercisesPlanned == 1 ? "exercise" : "exercises"
+        var parts = ["\(exercisesDone) of \(exercisesPlanned) \(exercises)", "\(sets) \(sets == 1 ? "set" : "sets")"]
         if !records.isEmpty {
             parts.append("\(records.count) \(records.count == 1 ? "best" : "bests")")
         }
