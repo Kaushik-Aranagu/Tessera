@@ -1,4 +1,5 @@
 import Foundation
+import GRDB
 
 /// Everything the app needs from storage, through the engine. The app should not import SwiftData or touch a
 /// TesseraContext directly (docs/engine/grdb-migration.md).
@@ -13,12 +14,27 @@ public extension ObjectStore {
 
     /// Seeds the built-in classes, the exercise library and the starter plan if needed. Call once at launch.
     @discardableResult
-    func prepareCatalog() throws -> [SystemCatalog.Key: ClassDef] {
+    func prepareCatalog(now: Date = .now, calendar: Calendar = .current) throws -> [SystemCatalog.Key: ClassDef] {
         let classes = try SystemCatalog.seed(in: context)
         try ExerciseLibraryInstaller.installIfNeeded(store: self, classes: classes)
         try StarterContent.installIfNeeded(store: self, classes: classes)
         Groceries.installIfNeeded(store: self, classes: classes)
+        closeStaleCooksAfterRestore(classes: classes, now: now, calendar: calendar)
         return classes
+    }
+
+    /// A cook found running in a store restored from an earlier day's copy was left open by that day, not by him now
+    /// (G27): it closes as not finished, silently, with its timers stopped. Only cooks that were already running when
+    /// the copy was made; a cook started after the restore is live.
+    @MainActor
+    private func closeStaleCooksAfterRestore(classes: [SystemCatalog.Key: ClassDef], now: Date, calendar: Calendar) {
+        guard let url = context.url, let restored = TesseraBackup.restoredAt(for: url),
+              let madeSeconds = try? context.database.read({ try Double.fetchOne($0, sql: "SELECT createdAt FROM backupInfo") })
+        else { return }
+        let made = Date(timeIntervalSince1970: madeSeconds)
+        let day = TesseraDay(calendar: calendar)
+        guard day.day(of: made) < day.day(of: restored) else { return }
+        _ = try? ActionEngine(store: self, classes: classes).perform(CloseStaleCooks(madeAt: made, at: now), by: .system)
     }
 
     /// Persists pending writes now (they also save automatically).

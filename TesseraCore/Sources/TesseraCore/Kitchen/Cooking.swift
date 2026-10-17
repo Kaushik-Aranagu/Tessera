@@ -272,3 +272,41 @@ public struct FinishCooking: EngineAction {
         "Cooked \(store.object(id: cook)?.title ?? "it")"
     }
 }
+
+/// Closes the cooks that were open when a restored copy was made, as not finished (G27): no `cookedAt`, so no COOKS
+/// count, no "cooked" fact and no day-log row; their timers stop without ringing. Run by the launch after a restore,
+/// as the system; not offered to Tess.
+public struct CloseStaleCooks: EngineAction {
+    public static let descriptor = ActionDescriptor(name: "closeStaleCooks",
+                                                    summary: "Close cooks left open in a restored copy",
+                                                    parameters: [.init("madeAt", .date, "When the copy was made")])
+
+    public var madeAt: Date
+    public var time: Date
+
+    public init(madeAt: Date, at time: Date = .now) {
+        self.madeAt = madeAt
+        self.time = time
+    }
+
+    public func apply(_ transaction: inout Transaction) throws {
+        guard let cookClass = transaction.classes[.cook] else { return }
+        for cook in transaction.store.objects(of: cookClass)
+            where transaction.store.value("cookedAt", of: cook) == nil
+        {
+            guard let process = transaction.openProcess(for: cook) else { continue }
+            let started = transaction.store.value("startedAt", of: process)?.dateValue ?? process.createdAt
+            guard started <= madeAt else { continue }
+            try transaction.end(process, reason: .closed, at: time)
+            for timer in CookLog(store: transaction.store, classes: transaction.classes).timers()
+                where timer.cook?.id == cook.id
+            {
+                try transaction.set("isStopped", to: .bool(true), on: timer.object)
+            }
+        }
+    }
+
+    public func summary(in _: ObjectStore) -> String {
+        "Closed cooks left open in a restored copy"
+    }
+}

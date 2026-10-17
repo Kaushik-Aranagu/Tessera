@@ -59,4 +59,46 @@ struct KitchenRestoreTests {
         #expect(lists.count == 1 && lists.first?.id == Groceries.listID)
         #expect(Groceries(store: store, classes: restoredClasses).list?.orderedChildren.count == 3)
     }
+
+    @Test func aCookRunningWhenTheCopyWasMadeIsClosedAfterTheRestore() throws {
+        let dir = try folder()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let source = try ObjectStore(context: TesseraContext(url: dir.appendingPathComponent("source.sqlite")))
+        let classes = try source.prepareCatalog()
+        let engine = ActionEngine(store: source, classes: classes)
+        let recipe = try engine.perform(CreateRecipe(text: "Tacos\nIngredients\n1 lb beef\n8 tortillas\nMethod\n1. Brown the beef.\n2. Fill."),
+                                        by: .user).output
+        let tuesday = TesseraDayTests.at(10, 14, 18, 20)
+        let cook = try engine.perform(StartCooking(recipe: recipe.id, time: tuesday), by: .user).output
+        let timer = try engine.perform(StartKitchenTimer(label: "beef", minutes: 10, cook: cook.id, time: tuesday),
+                                       by: .user).output
+        let (store, restoredClasses) = try restored(source, in: dir, madeAt: TesseraDayTests.at(10, 14, 19))
+        let book = CookLog(store: store, classes: restoredClasses)
+        let restoredCook = try #require(store.object(id: cook.id))
+        let process = try #require(store.backlinks(to: restoredCook).first { $0.classDef?.id == restoredClasses[.process]?.id })
+        #expect(store.value("state", of: process)?.stringValue == ProcessState.closed.rawValue)
+        // Not finished: no cookedAt, so no COOKS count and no "cooked" fact.
+        #expect(store.value("cookedAt", of: restoredCook) == nil)
+        let restoredTimer = try #require(store.object(id: timer.id))
+        #expect(book.timers().isEmpty && store.value("isStopped", of: restoredTimer) == .bool(true))
+        // The system closed it: nothing in the day log.
+        #expect(store.context.all(OpRecord.self).filter { $0.action == "closeStaleCooks" }.allSatisfy { $0.actor == .system })
+    }
+
+    @Test func aCookStartedAfterTheRestoreIsLive() throws {
+        let dir = try folder()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let source = try ObjectStore(context: TesseraContext(url: dir.appendingPathComponent("source.sqlite")))
+        let classes = try source.prepareCatalog()
+        let engine = ActionEngine(store: source, classes: classes)
+        let recipe = try engine.perform(CreateRecipe(text: "Tacos\nIngredients\n1 lb beef\nMethod\n1. Brown the beef."),
+                                        by: .user).output
+        let (store, restoredClasses) = try restored(source, in: dir, madeAt: TesseraDayTests.at(10, 14, 19))
+        let now = ActionEngine(store: store, classes: restoredClasses)
+        let cook = try now.perform(StartCooking(recipe: recipe.id), by: .user).output
+        // A later launch over the same store leaves the new cook running.
+        _ = try store.prepareCatalog(now: .now, calendar: Self.calendar)
+        let process = try #require(store.backlinks(to: cook).first { $0.classDef?.id == restoredClasses[.process]?.id })
+        #expect(store.value("state", of: process)?.stringValue == ProcessState.running.rawValue)
+    }
 }
