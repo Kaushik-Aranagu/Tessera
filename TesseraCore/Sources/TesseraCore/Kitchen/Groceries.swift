@@ -163,6 +163,36 @@ public struct Groceries {
         }
     }
 
+    /// Checked items a shop clear took off Groceries, with the day each was checked (G45). A row that was deleted
+    /// another way (Tess "delete milk", the objects browser, a swipe remove) is not buying, and one whose clear was
+    /// undone is back on the list; neither counts. Pantry reads this instead of every deleted checked row.
+    public func shopClears() -> [(ingredient: ObjectRecord, at: Date)] {
+        guard let list else { return [] }
+        let cleared = clearedIDs()
+        return (list.children ?? []).compactMap { item in
+            guard item.isDeleted, cleared.contains(item.id), store.value("isDone", of: item) == .bool(true),
+                  let when = store.value("checkedAt", of: item)?.dateValue, let ingredient = ingredient(of: item)
+            else { return nil }
+            return (ingredient, when)
+        }
+    }
+
+    private func clearedIDs() -> Set<UUID> {
+        let context = store.context
+        if let cached = context.shopClearedCache, cached.revision == context.revision {
+            return cached.ids
+        }
+        let actions: Set = [ClearDoneItems.descriptor.name, FinishShop.descriptor.name]
+        var ids: Set<UUID> = []
+        for record in context.all(OpRecord.self) where actions.contains(record.action) && record.state != .undone {
+            for case let .softDelete(object) in record.ops {
+                ids.insert(object)
+            }
+        }
+        context.shopClearedCache = (context.revision, ids)
+        return ids
+    }
+
     public func ingredient(of item: ObjectRecord) -> ObjectRecord? {
         guard let ingredientClass = classes[.ingredient] else { return nil }
         return store.linkedObjects("about", of: item).first { $0.classDef?.id == ingredientClass.id }
