@@ -26,8 +26,7 @@ background word jobs (week story, living colour) and Home lines (.lines) step as
 3. askSubject: claude-client and the retry table say .asks steps aside at $40 after .lines. The ruling says it keeps
    running. Update both docs. Cost impact is small (worst $2.77 a month at 20 a day).
 4. answerQuery ("Questions"): ruled a tap that runs to $50. It is in spend-projection (Haiku, 5 a day) but in no job list yet; add it to the cost and retry tables.
-5. living colour and linkItems have no priority class in the docs. Living colour should join .lines (or a new
-   background class) so the $40 rule has something to key on. linkItems needs a named class that never steps aside.
+5. living colour has no priority class in the docs. It should join .lines (or a new background class) so the $40 rule has something to key on. linkItems runs to $50 and never steps aside (Product 8:21); give it a named class that says so.
 6. Where the docs differ from the ruling: claude-client says only .lines steps aside; architecture 5.5 adds week
    story; spend-projection adds living colour. The ruling matches the last two plus .lines, so claude-client needs
    the edit.

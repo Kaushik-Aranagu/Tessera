@@ -329,7 +329,7 @@ struct WallsBypassTests {
         try engine.perform(AddListItem(list: list.id, text: "pins"), by: .user)
         let lexapro = try engine.perform(AddListItem(list: list.id, text: "lexapro"), by: .user)
         #expect(list.orderedChildren.map(\.title) == ["pins", "lexapro"])
-        #expect(lexapro.record.summary == "Private item, added to Errands")
+        #expect(lexapro.record.summary == "Private item, on Errands")
         #expect(lexapro.record.receipt == "Private item, on Errands")
         let shown = engine.history().flatMap { [$0.summary, $0.receipt ?? ""] }.joined()
         #expect(!shown.contains("lexapro") && !shown.contains("82.4") && !shown.contains("wifi"))
@@ -462,8 +462,8 @@ struct WallsBypassTests {
     @Test func aListItemsLinesMatchWhatWasKept() throws {
         let list = try engine.perform(CreateList(name: "Errands"), by: .user).output
         let milk = try engine.perform(AddListItem(list: list.id, text: "milk $4"), by: .user)
-        #expect(milk.output.title == "milk" && milk.record.summary == "Milk, added to Errands")
-        #expect(milk.record.receipt == "Milk, added to Errands")
+        #expect(milk.output.title == "milk" && milk.record.summary == "Milk, on Errands")
+        #expect(milk.record.receipt == "Milk, on Errands")
     }
 
     @Test func theWallSortsTaskTitles() {

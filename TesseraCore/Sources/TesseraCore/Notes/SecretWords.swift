@@ -8,7 +8,7 @@ public enum SecretWords {
     public static let title = "Private note"
 
     /// Whole words only: "pin" never catches "pinch" or "spinach".
-    static let words: Set<String> = ["password", "passwords", "passcode", "passcodes", "pin", "pins", "code", "codes",
+    public static let words: Set<String> = ["password", "passwords", "passcode", "passcodes", "pin", "pins", "code", "codes",
                                      "combo", "combination", "passphrase", "pw", "pwd"]
 
     /// The words of a line, lowercased, punctuation off, ":" kept as its own word.

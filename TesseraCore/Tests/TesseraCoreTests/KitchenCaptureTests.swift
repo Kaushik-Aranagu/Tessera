@@ -5,6 +5,14 @@ import Testing
 
 @MainActor
 struct KitchenCaptureTests {
+    @Test func aMedicineOnGroceriesIsNeverSaidBack() async throws {
+        // Product 8:13 and 10:06 PM PT: a medicine on the list is a health fact.
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        let advil = await TessCaptureEngine(engine: engine).capture("buy advil", context: TessContext())
+        #expect(!advil.line.lowercased().contains("advil"), "\(advil.line)")
+    }
+
     @Test func kitchenPhrasesFromTheBar() async throws {
         let store = ObjectStore.open(inMemory: true)
         let classes = try store.prepareCatalog()
@@ -22,9 +30,9 @@ struct KitchenCaptureTests {
         let recipe = try #require(RecipeBook(store: store, classes: classes).recipes().first)
 
         let milk = await tess.capture("buy milk", context: context)
-        #expect(milk.line == "Milk, on the list.")
+        #expect(milk.line == "Milk, on Groceries.")
         let list = await tess.capture("eggs, bread and 2 lemons", context: context)
-        #expect(list.line == "3 things on the list.")
+        #expect(list.line == "3 things on Groceries.")
         #expect(groceries.shoppingOrder().map(\.text) == ["lemons", "bread", "milk", "eggs"])
 
         let planned = await tess.capture("cook carbonara thu", context: context)
