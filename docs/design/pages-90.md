@@ -6,7 +6,7 @@ Board `mockups/pages-90.png`, recording `recordings/pages-90.mp4` (24 s: Groceri
 
 ## The rules
 1. **A page holds six rows or fewer** (the lead counts). Past six the list continues on the next page.
-2. **A page follows the data's groups.** One group is one page and its name is the page's one word (aisle, week, workout date). A group of more than six splits at the nearest even break; the second page keeps the word. Small neighbouring groups may share a page, at most two groups, so two section words, one hairline (sheet 89's budget).
+2. **A page follows the data's groups.** One group is one page and its name is the page's one word (aisle, week, workout date). A group of more than six splits at the nearest even break (10 = 5+5, never 6+4); odd splits put the larger pages first (7 = 4+3, 13 = 5+4+4); the later pages keep the word. Small neighbouring groups may share a page, at most two groups, so two section words, one hairline (sheet 89's budget).
 3. **Turn with a vertical swipe or a tap on the foot.** Sideways stays the screen's side page (sheet 75), so paging and the side swipe never compete. A page never rubber-bands past its first or last.
 4. **One page is drawn at a time.** At the foot a hair of the next page's word at 30% ink over a 14 pt hairline says there is more; no scroll bar, no "1 of 5" text, no dots.
 5. **The rail:** a 2 pt vertical rule on the right edge, one segment per page, the current one in the area colour at 3 pt. It is the only page indicator. A list of one page draws no rail and no peek.
@@ -26,7 +26,7 @@ Board `mockups/pages-90.png`, recording `recordings/pages-90.mp4` (24 s: Groceri
 ## How the three screens read paged
 | Screen | Pages | Pinned | Notes |
 |---|---|---|---|
-| Groceries, 24 | PRODUCE 6, PRODUCE 4, DAIRY 5, PANTRY 6, FROZEN 3 | add field | the lead is Bananas; amounts stay in the side FOR WHAT |
+| Groceries, 24 | PRODUCE 5, PRODUCE 5, DAIRY 5, PANTRY 6, FROZEN 3 | add field | the lead is Bananas; amounts stay in the side FOR WHAT |
 | Notes, 20 | THIS WEEK 5, THIS WEEK 2 with EARLIER 3, EARLIER 5, EARLIER 5 | the writing line | a private note reads "Private note" |
 | Set history, 12 | THU OCT 16 (6, best set leads), MON OCT 13 (6) | none | Obsidian shown |
 
@@ -41,3 +41,10 @@ A vertical swipe on a thing that owns one does that thing's own action, defined 
 
 ## Open question
 None blocking: all four turns ship. Say if Turn should not be the default.
+
+## Calls settled Oct 17 (Research #879 fixtures)
+- **R1** The written rule wins: the nearest even break; boards redrawn (PRODUCE is 5+5).
+- **R2** A user page turn plays no haptic. Turning is navigation, not a moment; Rotate included.
+- **R3** Low Power Mode behaves like Reduce Motion for the page turn (the 150 ms crossfade).
+- **R4** Re-picking the word already chosen in Settings does not replay the preview.
+- **Odd splits** put the larger pages first (7 = 4+3, 13 = 5+4+4).
