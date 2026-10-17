@@ -46,3 +46,4 @@ Nothing here exists yet; Core builds it behind the opt-in. It is a catalog versi
 - **Table wins.** A table row, when it lands later, replaces a Claude fill and clears `factsSource`.
 - **Checks before a write:** every number is non-negative and under a per-field ceiling, macros do not sum above 100 g, and the walls pass on the name.
 - **Never summed.** The app shows one ingredient's values only (Product 2:36 pm).
+- **Walls (Product 2:40 and 2:45 pm).** Only public per-100 g food facts and exercise muscles are stored. A measured body value, an intake or an amount is never stored, sent or filled by Claude.

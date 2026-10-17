@@ -21,7 +21,7 @@ public enum ActionRegistry {
         RenameListSection.descriptor, ClearDoneItems.descriptor,
         FinishWorkoutEarly.descriptor,
         RollForwardTasks.descriptor, StartTask.descriptor,
-        WaitOnTask.descriptor,
+        WaitOnTask.descriptor, KeepPlannedTask.descriptor,
     ]
 
     /// The compact catalog for the on-device model's instructions, one action per line.
@@ -44,6 +44,7 @@ public enum ActionRegistry {
 
     private static let decoders: [String: @Sendable (Data) throws -> any EngineAction] = [
         MoveTask.descriptor.name: { try decode(MoveTask.self, MoveTask.descriptor.name, $0) },
+        KeepPlannedTask.descriptor.name: { try decode(KeepPlannedTask.self, KeepPlannedTask.descriptor.name, $0) },
         CreateNote.descriptor.name: { try decode(CreateNote.self, CreateNote.descriptor.name, $0) },
         EditNote.descriptor.name: { try decode(EditNote.self, EditNote.descriptor.name, $0) },
         StartShop.descriptor.name: { try decode(StartShop.self, StartShop.descriptor.name, $0) },

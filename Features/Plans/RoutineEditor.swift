@@ -5,7 +5,7 @@ import TesseraCore
 /// open it in place: sets and the rep range on bare − / + keys, move it earlier or later, swap it for another
 /// exercise, or take it out. "Add an exercise" opens the library under the list, grouped by movement pattern.
 /// Every change is a Core action (EditSlot, MoveSlot, SwapSlotExercise, AddSlot, DeleteObject) in the op log, and
-/// the last one can be undone from Tess's line at the bottom.
+/// the last one can be undone from Tess's line in her band beside the soul (`TessVoice`).
 struct RoutineEditor: View {
     let routine: ObjectRecord
     @Environment(AppModel.self) private var model
@@ -16,9 +16,6 @@ struct RoutineEditor: View {
     @State private var openSlot: UUID?
     /// The library under the list: adding a new exercise, or choosing a swap for a slot.
     @State private var library: LibraryMode?
-    /// The last change, for Undo and Tess's line.
-    @State private var last: OpRecord?
-    @State private var line: String?
     @State private var haptic = 0
 
     enum LibraryMode: Equatable {
@@ -84,6 +81,8 @@ struct RoutineEditor: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .scrollIndicators(.hidden)
+            // Tess's band (her line and UNDO beside the soul) is never a place a row comes to rest.
+            .contentMargins(.bottom, 84, for: .scrollContent)
         }
         .background { ThemedBackground() }
         .toolbarTitleDisplayMode(.inline)
@@ -129,36 +128,9 @@ struct RoutineEditor: View {
                 .fixedSize(horizontal: false, vertical: true)
             // The day words play their own tick; no second haptic here (QA #359 F1).
             DaysLine(routine: routine, onChange: { record, words in
-                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) {
-                    last = record
-                    line = words
-                }
                 model.touch()
+                say(words, undo: record)
             })
-            tessLine
-        }
-    }
-
-    @ViewBuilder
-    private var tessLine: some View {
-        if let line {
-            HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
-                Text(line)
-                    .font(Theme.voice(size: 21))
-                    .foregroundStyle(Theme.Colors.tess)
-                    .lineLimit(2)
-                Spacer(minLength: Theme.Spacing.s)
-                if last != nil {
-                    Button("Undo") { undo() }
-                        .textRole(.labelStrong)
-                        .foregroundStyle(Theme.Colors.ink)
-                        .frame(minWidth: 60, minHeight: 44)
-                        .contentShape(Rectangle())
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("Undo the last change")
-                }
-            }
-            .transition(.opacity)
         }
     }
 
@@ -190,11 +162,8 @@ struct RoutineEditor: View {
         let exercise = Receipt.exercise(of: action, in: model.store)
         guard let record = run(action) else { return }
         haptic += 1
-        withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) {
-            last = record
-            line = Receipt.routineEdit(action, exercise: exercise, summary: action.summary(in: model.store))
-        }
         model.touch()
+        say(Receipt.routineEdit(action, exercise: exercise, summary: action.summary(in: model.store)), undo: record)
     }
 
     private func run(_ action: some EngineAction) -> OpRecord? {
@@ -213,15 +182,15 @@ struct RoutineEditor: View {
         setLibrary(nil)
     }
 
-    private func undo() {
-        guard let last else { return }
-        model.engine.undo(last)
-        haptic += 1
-        withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) {
-            self.last = nil
-            line = Receipt.takenBack(routine.title)
-        }
-        model.touch()
+    /// Tess says the change in her band (`TessVoice`, read by `BottomChrome`); its UNDO takes the op back, then she
+    /// says so ("Push A, taken back.").
+    private func say(_ words: String, undo record: OpRecord) {
+        let title = routine.title
+        TessVoice.shared.say(words, takeBack: { [model] in
+            model.engine.undo(record)
+            // The band clears its line right after UNDO runs; her receipt for the undo follows it.
+            Task { @MainActor in TessVoice.shared.say(Receipt.takenBack(title)) }
+        })
     }
 }
 
