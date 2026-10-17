@@ -190,4 +190,17 @@ struct GroceriesWallTests {
         #expect(EngineWall.withoutPrice(line) == shown)
         #expect(AddListItem.kept(line, store: store) == shown)
     }
+
+    @Test(arguments: ["1.25 lb for dinner", "1.25 lb on sale", "1.25 lb from costco", "2.50 kg at the store"])
+    func aStopWordIsNeverTheThingAfterAnAmount(_ line: String) {
+        // Kitchen on #792: "for", "on", "from" and "at" after an amount name no food, so the line stays walled.
+        #expect(AddListItem.kept(line, store: store) == nil, "\(line)")
+    }
+
+    @Test(arguments: [("eggs 4.99 at costco on the way home", "eggs"), ("milk 3.49 for the week, maybe two", "milk"),
+                      ("bread $3 from the bakery by the station", "bread")])
+    func thePlacePhraseGoesToTheEndOfTheLine(_ line: String, _ shown: String) {
+        // Kitchen on #792: everything after the price's "at", "for", "from" or "on" goes, to the end of the line.
+        #expect(AddListItem.kept(line, store: store) == shown)
+    }
 }

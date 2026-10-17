@@ -54,6 +54,9 @@ struct ListsCopyTests {
         #expect(ListsCopy.removed("Rice") == "Rice, removed.")
         #expect(ListsCopy.backOn("Rice", list: "Packing") == "Rice, back on Packing.")
         #expect(ListsCopy.removed(ShopTrip.privateLabel) == "Private item, removed.")
+        // Stored text is often lowercase; the line still leads with a capital (Kitchen 10.9 on #786).
+        #expect(ListsCopy.removed("rice") == "Rice, removed.")
+        #expect(ListsCopy.backOn("rice", list: "Packing") == "Rice, back on Packing.")
     }
 
     @Test func removeRisesFrom60AndIsWholeAt96() {
@@ -61,5 +64,12 @@ struct ListsCopyTests {
         #expect(SwipeToRemove.reveal(-60) == 0)
         #expect(SwipeToRemove.reveal(-78) == 0.5)
         #expect(SwipeToRemove.reveal(-96) == 1 && SwipeToRemove.reveal(-120) == 1)
+    }
+
+    @Test func reusableAndResetReadThingFirst() {
+        #expect(ListsCopy.reusable("Packing", isOn: true) == "Packing, reusable.")
+        #expect(ListsCopy.reusable("Packing", isOn: false) == "Packing, not reusable.")
+        #expect(ListsCopy.reset("Packing") == "Packing, reset.")
+        #expect(ListsCopy.reset("Private list") == "Private list, reset.")
     }
 }

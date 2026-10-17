@@ -94,7 +94,8 @@ struct RecipePage: View {
                         .scrollBounceBehavior(.basedOnSize)
                         .offset(x: away ? -columnWidth * 1.4 : min(0, drag))
                         .simultaneousGesture(sendGesture(recipe: recipe.id, serves: size))
-                        PortionDrum(serves: Binding(get: { size ?? 2 }, set: { serves = $0 }), isEnabled: own != nil)
+                        PortionDrum(serves: Binding(get: { size ?? 2 }, set: { serves = $0 }), isEnabled: own != nil,
+                                    range: PortionDrum.range(written: own))
                     }
                     if let sent {
                         SentLine(count: sent.count) { undoSend(sent.record) }
@@ -416,8 +417,9 @@ private struct RecipeOriginal: View {
 
 @MainActor
 enum RecipeCopy {
-    /// What Tess says when the Cook key can't start a cook: the engine's "Workout running." while a workout runs
-    /// (G56), "Didn't save that. Try again." for any other refusal, nil when it started.
+    /// What Tess says when a write that starts or resumes something is refused: the engine's "Workout running."
+    /// while a workout runs (G56; the Cook key and Resume), "Didn't save that. Try again." for any other refusal, nil
+    /// when it went through.
     static func startCook(_ perform: () throws -> some Any) -> String? {
         do {
             _ = try perform()
@@ -481,7 +483,7 @@ enum RecipeCopy {
             parts.append("serves \(serves)")
         }
         if let total = model.store.number("totalMinutes", of: recipe) {
-            parts.append(total >= 60 ? "\(hours(total)) h" : "\(Int(total)) min")
+            parts.append(duration(total))
         }
         if let last = CookLog(store: model.store, classes: model.classes).lastCooked(recipe) {
             parts.append("cooked \(relative(last, now: now))")
@@ -511,10 +513,17 @@ enum RecipeCopy {
         }
     }
 
-    static func hours(_ minutes: Double) -> String {
-        (minutes / 60).formatted(.number.precision(.fractionLength(0 ... 1)))
+    /// Hours and minutes, as the cook log says them (O2, G60): "1 h 35 min", "1 h", "45 min". Never "1.6 h".
+    static func duration(_ minutes: Double) -> String {
+        let total = Int(minutes.rounded())
+        let (hours, rest) = (total / 60, total % 60)
+        if hours == 0 {
+            return "\(rest) min"
+        }
+        return rest == 0 ? "\(hours) h" : "\(hours) h \(rest) min"
     }
 
+    /// "today", "yesterday", "40 days ago", then months ("3 months ago"), then "last year" / "2 years ago" (G60).
     static func relative(_ date: Date, now: Date) -> String {
         let tesseraDay = TesseraDay()
         let days = Calendar.current.dateComponents([.day], from: tesseraDay.day(of: date),
@@ -522,7 +531,10 @@ enum RecipeCopy {
         return switch days {
         case ..<1: "today"
         case 1: "yesterday"
-        default: "\(days) days ago"
+        case ..<60: "\(days) days ago"
+        case ..<365: "\(days / 30) months ago"
+        case ..<730: "last year"
+        default: "\(days / 365) years ago"
         }
     }
 
@@ -532,8 +544,16 @@ enum RecipeCopy {
         return line.prep.map { "\(line.name), \($0)" + taste } ?? line.name + taste
     }
 
-    static func cookLine(_ cook: ObjectRecord, at date: Date, model: AppModel) -> String {
+    static func cookLine(_ cook: ObjectRecord, at date: Date, model: AppModel, now: Date = AppClock.now) -> String {
         let size = CookLog(store: model.store, classes: model.classes).serves(of: cook).map { ", for \($0)" } ?? ""
-        return date.formatted(.dateTime.weekday(.wide).day().month(.wide)) + size
+        return cookDay(date, now: now) + size
+    }
+
+    /// "Tuesday, October 14, 9:05 am"; a date outside this year adds it: "Tuesday, October 14, 2025, 9:05 am" (G60).
+    static func cookDay(_ date: Date, now: Date, calendar: Calendar = .current) -> String {
+        let sameYear = calendar.component(.year, from: date) == calendar.component(.year, from: now)
+        let day = sameYear ? date.formatted(.dateTime.weekday(.wide).day().month(.wide))
+            : date.formatted(.dateTime.weekday(.wide).day().month(.wide).year())
+        return "\(day), \(HouseTime.clock(date, calendar: calendar))"
     }
 }

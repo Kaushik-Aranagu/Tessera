@@ -30,12 +30,28 @@ enum ListsCopy {
     /// Clearing the fold: "3 done, cleared." (Design on #760).
     /// A swipe's receipt, thing first: "Rice, removed." (13.6).
     static func removed(_ thing: String) -> String {
-        "\(thing), removed."
+        "\(leading(thing)), removed."
     }
 
     /// What UNDO says after a remove: "Rice, back on Packing."
     static func backOn(_ thing: String, list: String) -> String {
-        "\(thing), back on \(list)."
+        "\(leading(thing)), back on \(list)."
+    }
+
+    /// A line that starts with the thing starts with a capital, whatever was stored: "rice" reads "Rice, removed."
+    /// (Kitchen row 10.9 on #786).
+    static func leading(_ thing: String) -> String {
+        thing.prefix(1).uppercased() + thing.dropFirst()
+    }
+
+    /// The reusable option's receipt, with the shown (maybe masked) name: "Packing, reusable."
+    static func reusable(_ list: String, isOn: Bool) -> String {
+        "\(list), \(isOn ? "reusable" : "not reusable")."
+    }
+
+    /// A reset's receipt: "Packing, reset." (10.4, 10.11).
+    static func reset(_ list: String) -> String {
+        "\(list), reset."
     }
 
     static func cleared(_ count: Int) -> String {
