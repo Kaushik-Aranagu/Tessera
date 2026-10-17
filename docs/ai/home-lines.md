@@ -10,7 +10,7 @@ Design 41 fixed the frame: a thing gets one hero line (the thing and its state),
 | Slot | Form | Who writes it | Budget |
 |---|---|---|---|
 | **Hero** | the thing and its state: "Push A, paused at bench", "Push A done", "Push A", "Chili, step 3", "Rest day" | **Rules only, always.** It names the object and must be exact | Hero 56 on one line, else Title 44, else Title 44 on two lines (Design 41 rule 2) |
-| **Context line** (above the hero) | the time, in words: "paused 21 min ago", "this evening", "today", "done at 7:40 pm" | Rules write it; **Claude may reword it** when the switch is on | Body 21, one line, 6 words, 32 characters; if the rules line doesn't fit, its words shorten ("paused 21 min") |
+| **Context line** (above the hero) | the time, in words: "paused 21 min ago", "this evening", "today", "7:40 pm" | Rules write it; **Claude may reword it** when the switch is on | Body 21, one line, 6 words, 32 characters; if the rules line doesn't fit, its words shorten ("paused 21 min") |
 | **SO FAR** (one tap down, the thing's page) | one sentence of prose: "1 exercise, 2 sets, 1 new best." | Rules write it; **Claude may reword it** | one sentence, 14 words, 80 characters; wraps, never cuts |
 | **Next rows** | title as he wrote it, time on the right | Rules only; titles are his words and wrap to two lines | Design 41 rule 2 |
 | **Day label** | "Thursday night" | Rules only | fixed |
@@ -21,7 +21,7 @@ So Claude touches two slots on Home: the context line and the SO FAR sentence. E
 
 The context line is the time, with room for one aware touch when it earns its place. Claude may:
 
-- keep the time and add what the facts or memory say (memory lines come in the second person, as the store holds them, and any line read for Home counts as "used today" on the What Tess knows page): "paused 21 min ago", "this evening, your usual slot", "done at 7:40, a bench best", "first push day in 9 days", "tonight, a cook day";
+- keep the time and add what the facts or memory say (memory lines come in the second person, as the store holds them, and any line read for Home counts as "used today" on the What Tess knows page): "paused 21 min ago", "this evening, your usual slot", "7:40 pm, a bench best", "first push day in 9 days", "tonight, a cook day";
 - drop the time only when the state makes it plain ("Rest day" needs no time; a done workout may say "a bench best" alone if "done" is in the hero). **Digit rule (AI-5 C-checks):** the clock time may drop on a done item; every other digit in the rules context survives, and no digit appears that isn't in the item's `numbers`.
 
 It may not:
@@ -32,6 +32,7 @@ It may not:
 - mention sleep, energy, health, body, money, people or places;
 - use "!" or emoji, greet, praise or apologise;
 - exceed 6 words or 32 characters; at Dynamic Type sizes the slot wraps, never cuts.
+- repeat a word the page already shows above or below it. **No-repeat rule:** the day label and the hero are read before the context line is written, on the phone and in Claude's check alike. A word in either (the weekday, the routine name, "done", "paused"), and the house word is "best", never "record" (Research 125 W1-W3) may not appear in the context line; the rules line says "today" where it would have said the weekday, and `HomeLines` returns "today" itself whenever a day word is on the page, so the app never overrides the lens. Claude's line fails the check if it carries a day-label or hero word, and the rules line stays. Widgets have no day label, so Design 54's widget line keeps "Rest day." with the weekday as its meta; the rule is about what is on the same surface.
 
 The hero's form sets the pattern the context line answers:
 
@@ -41,12 +42,16 @@ The hero's form sets the pattern the context line answers:
 | planned, evening | Push A | this evening | this evening, your usual slot |
 | running | Push A, bench set 3 | now | now / set 3 now |
 | paused | Push A, paused at bench | paused 21 min ago | paused 21 min ago |
-| done | Push A done | done at 7:40 pm | a bench best / done at 7:40 pm / first in 9 days |
+| done | Push A done | 7:40 pm (the hero already says done; no-repeat rule, Research 125 W7) | a bench best / 7:40 pm / first in 9 days |
 | done, no sets | Push A, no sets | this afternoon | this afternoon (rules only; Claude never comments on an empty workout) |
-| rest day | Rest day | Sunday | Sunday / Sunday, a cook day |
+| rest day | Rest day | today (the day label already says Sunday; no-repeat rule) | today / today, a cook day |
 | cooking | Chili, step 3 | paused 8 min ago | paused 8 min ago |
 | shopping | Groceries, 4 left | at the store | 4 left / at the store |
 | planned cook | Tacos tonight | 2 to buy | 2 to buy (count from the phone; see Kitchen's note in `first-features.md` section 3) |
+| reading (Design 60, Product 999df84) | Dune, page 140 of 300 (title and position only; the position is a licensed number) | tonight / 3 days ago | tonight / tonight, your usual slot (never a word about the book's content) |
+| book finished | Dune, finished | today | today (rules only; the receipt is "Dune, finished.") |
+
+**Week-line rank.** When `WeekFacts` ranks the week's lines (AI-11), reading takes the rank after training and cooking and before tasks: a finished book outranks pages read, and pages read appear only when no training or cook line is missing. The book line is title and count only ("Dune, finished." or "Dune, 120 pages."), never what it is about.
 
 ## 2a. The promise on Settings
 

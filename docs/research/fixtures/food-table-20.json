@@ -1,0 +1,455 @@
+{
+  "source": "USDA FoodData Central",
+  "licence": "CC0 1.0 Universal (public domain), per fdc.nal.usda.gov/api-guide, read 2026-10-16",
+  "basis": "per 100 g, edible portion, as published; no per-serving fields",
+  "read": "2026-10-16 via https://fdc.nal.usda.gov/portal-data/external/<fdcId>",
+  "nutrients": {
+    "kcal": 1008,
+    "protein_g": 1003,
+    "carbohydrate_g": 1005,
+    "fat_g": 1004,
+    "fibre_g": 1079
+  },
+  "rows": [
+    {
+      "key": "chicken thigh",
+      "aisle": "meatSeafood",
+      "fdcId": 173627,
+      "dataType": "SR Legacy",
+      "fdcDescription": "Chicken, broilers or fryers, dark meat, thigh, meat only, raw",
+      "per100g": {
+        "kcal": 121.0,
+        "protein_g": 19.7,
+        "carbohydrate_g": 0.0,
+        "fat_g": 4.12,
+        "fibre_g": 0.0
+      },
+      "published": {
+        "1008": "121",
+        "1003": "19.7",
+        "1005": "0.00",
+        "1004": "4.12",
+        "1079": "0.0"
+      },
+      "fromFDC": true
+    },
+    {
+      "key": "salmon",
+      "aisle": "meatSeafood",
+      "fdcId": 175167,
+      "dataType": "SR Legacy",
+      "fdcDescription": "Fish, salmon, Atlantic, farmed, raw",
+      "per100g": {
+        "kcal": 208.0,
+        "protein_g": 20.4,
+        "carbohydrate_g": 0.0,
+        "fat_g": 13.4,
+        "fibre_g": 0.0
+      },
+      "published": {
+        "1008": "208",
+        "1003": "20.4",
+        "1005": "0.00",
+        "1004": "13.4",
+        "1079": "0.0"
+      },
+      "fromFDC": true
+    },
+    {
+      "key": "onion",
+      "aisle": "produce",
+      "fdcId": 170000,
+      "dataType": "SR Legacy",
+      "fdcDescription": "Onions, raw",
+      "per100g": {
+        "kcal": 40.0,
+        "protein_g": 1.1,
+        "carbohydrate_g": 9.34,
+        "fat_g": 0.1,
+        "fibre_g": 1.7
+      },
+      "published": {
+        "1008": "40",
+        "1003": "1.10",
+        "1005": "9.34",
+        "1004": "0.10",
+        "1079": "1.7"
+      },
+      "fromFDC": true
+    },
+    {
+      "key": "carrot",
+      "aisle": "produce",
+      "fdcId": 170393,
+      "dataType": "SR Legacy",
+      "fdcDescription": "Carrots, raw",
+      "per100g": {
+        "kcal": 41.0,
+        "protein_g": 0.93,
+        "carbohydrate_g": 9.58,
+        "fat_g": 0.24,
+        "fibre_g": 2.8
+      },
+      "published": {
+        "1008": "41",
+        "1003": "0.93",
+        "1005": "9.58",
+        "1004": "0.24",
+        "1079": "2.8"
+      },
+      "fromFDC": true
+    },
+    {
+      "key": "spinach",
+      "aisle": "produce",
+      "fdcId": 168462,
+      "dataType": "SR Legacy",
+      "fdcDescription": "Spinach, raw",
+      "per100g": {
+        "kcal": 23.0,
+        "protein_g": 2.86,
+        "carbohydrate_g": 3.63,
+        "fat_g": 0.39,
+        "fibre_g": 2.2
+      },
+      "published": {
+        "1008": "23",
+        "1003": "2.86",
+        "1005": "3.63",
+        "1004": "0.39",
+        "1079": "2.2"
+      },
+      "fromFDC": true
+    },
+    {
+      "key": "tomato",
+      "aisle": "produce",
+      "fdcId": 170457,
+      "dataType": "SR Legacy",
+      "fdcDescription": "Tomatoes, red, ripe, raw, year round average",
+      "per100g": {
+        "kcal": 18.0,
+        "protein_g": 0.88,
+        "carbohydrate_g": 3.89,
+        "fat_g": 0.2,
+        "fibre_g": 1.2
+      },
+      "published": {
+        "1008": "18",
+        "1003": "0.88",
+        "1005": "3.89",
+        "1004": "0.20",
+        "1079": "1.2"
+      },
+      "fromFDC": true
+    },
+    {
+      "key": "avocado",
+      "aisle": "produce",
+      "fdcId": 171705,
+      "dataType": "SR Legacy",
+      "fdcDescription": "Avocados, raw, all commercial varieties",
+      "per100g": {
+        "kcal": 160.0,
+        "protein_g": 2.0,
+        "carbohydrate_g": 8.53,
+        "fat_g": 14.7,
+        "fibre_g": 6.7
+      },
+      "published": {
+        "1008": "160",
+        "1003": "2.00",
+        "1005": "8.53",
+        "1004": "14.7",
+        "1079": "6.7"
+      },
+      "fromFDC": true
+    },
+    {
+      "key": "broccoli",
+      "aisle": "produce",
+      "fdcId": 170379,
+      "dataType": "SR Legacy",
+      "fdcDescription": "Broccoli, raw",
+      "per100g": {
+        "kcal": 34.0,
+        "protein_g": 2.82,
+        "carbohydrate_g": 6.64,
+        "fat_g": 0.37,
+        "fibre_g": 2.6
+      },
+      "published": {
+        "1008": "34",
+        "1003": "2.82",
+        "1005": "6.64",
+        "1004": "0.37",
+        "1079": "2.6"
+      },
+      "fromFDC": true
+    },
+    {
+      "key": "egg",
+      "aisle": "dairy",
+      "fdcId": 171287,
+      "dataType": "SR Legacy",
+      "fdcDescription": "Egg, whole, raw, fresh",
+      "per100g": {
+        "kcal": 143.0,
+        "protein_g": 12.6,
+        "carbohydrate_g": 0.72,
+        "fat_g": 9.51,
+        "fibre_g": 0.0
+      },
+      "published": {
+        "1008": "143",
+        "1003": "12.6",
+        "1005": "0.72",
+        "1004": "9.51",
+        "1079": "0.0"
+      },
+      "fromFDC": true
+    },
+    {
+      "key": "milk",
+      "aisle": "dairy",
+      "fdcId": 171265,
+      "dataType": "SR Legacy",
+      "fdcDescription": "Milk, whole, 3.25% milkfat, with added vitamin D",
+      "per100g": {
+        "kcal": 61.0,
+        "protein_g": 3.15,
+        "carbohydrate_g": 4.8,
+        "fat_g": 3.25,
+        "fibre_g": 0.0
+      },
+      "published": {
+        "1008": "61",
+        "1003": "3.15",
+        "1005": "4.80",
+        "1004": "3.25",
+        "1079": "0.0"
+      },
+      "fromFDC": true
+    },
+    {
+      "key": "cheddar",
+      "aisle": "dairy",
+      "fdcId": 173414,
+      "dataType": "SR Legacy",
+      "fdcDescription": "Cheese, cheddar (Includes foods for USDA's Food Distribution Program)",
+      "per100g": {
+        "kcal": 403.0,
+        "protein_g": 22.9,
+        "carbohydrate_g": 3.37,
+        "fat_g": 33.3,
+        "fibre_g": 0.0
+      },
+      "published": {
+        "1008": "403",
+        "1003": "22.9",
+        "1005": "3.37",
+        "1004": "33.3",
+        "1079": "0.0"
+      },
+      "fromFDC": true
+    },
+    {
+      "key": "greek yogurt",
+      "aisle": "dairy",
+      "fdcId": 170903,
+      "dataType": "SR Legacy",
+      "fdcDescription": "Yogurt, Greek, plain, lowfat",
+      "per100g": {
+        "kcal": 73.0,
+        "protein_g": 9.95,
+        "carbohydrate_g": 3.94,
+        "fat_g": 1.92,
+        "fibre_g": 0.0
+      },
+      "published": {
+        "1008": "73",
+        "1003": "9.95",
+        "1005": "3.94",
+        "1004": "1.92",
+        "1079": "0.0"
+      },
+      "fromFDC": true
+    },
+    {
+      "key": "rice",
+      "aisle": "pantry",
+      "fdcId": 169756,
+      "dataType": "SR Legacy",
+      "fdcDescription": "Rice, white, long-grain, regular, raw, unenriched",
+      "per100g": {
+        "kcal": 365.0,
+        "protein_g": 7.13,
+        "carbohydrate_g": 80.0,
+        "fat_g": 0.66,
+        "fibre_g": 1.3
+      },
+      "published": {
+        "1008": "365",
+        "1003": "7.13",
+        "1005": "80.0",
+        "1004": "0.66",
+        "1079": "1.3"
+      },
+      "fromFDC": true
+    },
+    {
+      "key": "pasta",
+      "aisle": "pantry",
+      "fdcId": 169736,
+      "dataType": "SR Legacy",
+      "fdcDescription": "Pasta, dry, enriched",
+      "per100g": {
+        "kcal": 371.0,
+        "protein_g": 13.0,
+        "carbohydrate_g": 74.7,
+        "fat_g": 1.51,
+        "fibre_g": 3.2
+      },
+      "published": {
+        "1008": "371",
+        "1003": "13.0",
+        "1005": "74.7",
+        "1004": "1.51",
+        "1079": "3.2"
+      },
+      "fromFDC": true
+    },
+    {
+      "key": "oat",
+      "aisle": "pantry",
+      "fdcId": 173904,
+      "dataType": "SR Legacy",
+      "fdcDescription": "Cereals, oats, regular and quick, not fortified, dry",
+      "per100g": {
+        "kcal": 379.0,
+        "protein_g": 13.2,
+        "carbohydrate_g": 67.7,
+        "fat_g": 6.52,
+        "fibre_g": 10.1
+      },
+      "published": {
+        "1008": "379",
+        "1003": "13.2",
+        "1005": "67.7",
+        "1004": "6.52",
+        "1079": "10.1"
+      },
+      "fromFDC": true
+    },
+    {
+      "key": "lentil",
+      "aisle": "pantry",
+      "fdcId": 172420,
+      "dataType": "SR Legacy",
+      "fdcDescription": "Lentils, raw",
+      "per100g": {
+        "kcal": 352.0,
+        "protein_g": 24.6,
+        "carbohydrate_g": 63.4,
+        "fat_g": 1.06,
+        "fibre_g": 10.7
+      },
+      "published": {
+        "1008": "352",
+        "1003": "24.6",
+        "1005": "63.4",
+        "1004": "1.06",
+        "1079": "10.7"
+      },
+      "fromFDC": true
+    },
+    {
+      "key": "chickpea",
+      "aisle": "cansJars",
+      "fdcId": 173756,
+      "dataType": "SR Legacy",
+      "fdcDescription": "Chickpeas (garbanzo beans, bengal gram), mature seeds, raw",
+      "per100g": {
+        "kcal": 378.0,
+        "protein_g": 20.5,
+        "carbohydrate_g": 63.0,
+        "fat_g": 6.04,
+        "fibre_g": 12.2
+      },
+      "published": {
+        "1008": "378",
+        "1003": "20.5",
+        "1005": "63.0",
+        "1004": "6.04",
+        "1079": "12.2"
+      },
+      "fromFDC": true
+    },
+    {
+      "key": "olive oil",
+      "aisle": "cansJars",
+      "fdcId": 171413,
+      "dataType": "SR Legacy",
+      "fdcDescription": "Oil, olive, salad or cooking",
+      "per100g": {
+        "kcal": 884.0,
+        "protein_g": 0.0,
+        "carbohydrate_g": 0.0,
+        "fat_g": 100.0,
+        "fibre_g": 0.0
+      },
+      "published": {
+        "1008": "884",
+        "1003": "0.00",
+        "1005": "0.00",
+        "1004": "100",
+        "1079": "0.0"
+      },
+      "fromFDC": true
+    },
+    {
+      "key": "honey",
+      "aisle": "pantry",
+      "fdcId": 169640,
+      "dataType": "SR Legacy",
+      "fdcDescription": "Honey",
+      "per100g": {
+        "kcal": 304.0,
+        "protein_g": 0.3,
+        "carbohydrate_g": 82.4,
+        "fat_g": 0.0,
+        "fibre_g": 0.2
+      },
+      "published": {
+        "1008": "304",
+        "1003": "0.30",
+        "1005": "82.4",
+        "1004": "0.00",
+        "1079": "0.2"
+      },
+      "fromFDC": true
+    },
+    {
+      "key": "peanut butter",
+      "aisle": "cansJars",
+      "fdcId": 172470,
+      "dataType": "SR Legacy",
+      "fdcDescription": "Peanut butter, smooth style, without salt",
+      "per100g": {
+        "kcal": 598.0,
+        "protein_g": 22.2,
+        "carbohydrate_g": 22.3,
+        "fat_g": 51.4,
+        "fibre_g": 5.0
+      },
+      "published": {
+        "1008": "598",
+        "1003": "22.2",
+        "1005": "22.3",
+        "1004": "51.4",
+        "1079": "5.0"
+      },
+      "fromFDC": true
+    }
+  ]
+}

@@ -53,6 +53,8 @@ private struct NotesIndex: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var draft = ""
     @State private var justWritten: UUID?
+    /// A Claude key typed or pasted into the writing line: cleared at once, and Tess says where it goes (QA B1).
+    @State private var refusedKey = false
     @FocusState private var writing: Bool
 
     var body: some View {
@@ -60,9 +62,11 @@ private struct NotesIndex: View {
         let notes = NoteList(store: model.store, classes: model.classes).recent(limit: 200)
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text(NotesCopy.context(count: notes.count, latest: notes.first?.updatedAt, now: AppClock.now))
+                Text(refusedKey ? claudeKeyLine
+                    : NotesCopy.context(count: notes.count, latest: notes.first?.updatedAt, now: AppClock.now))
                     .font(Theme.voice)
-                    .foregroundStyle(Theme.Colors.context)
+                    .foregroundStyle(refusedKey ? Theme.Colors.tess : Theme.Colors.context)
+                    .contentTransition(.opacity)
                     .entrance(0)
                 Text("Notes")
                     .textRole(.hero)
@@ -74,6 +78,14 @@ private struct NotesIndex: View {
                 WritingLine(text: $draft, focused: $writing, onSubmit: write)
                     .padding(.top, Theme.Spacing.xxl)
                     .entrance(2)
+                    .onChange(of: draft) { _, new in
+                        if looksLikeClaudeKey(new) {
+                            draft = ""
+                            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { refusedKey = true }
+                        } else if !new.isEmpty, refusedKey {
+                            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { refusedKey = false }
+                        }
+                    }
 
                 if notes.isEmpty {
                     NotesEmpty()
@@ -171,7 +183,7 @@ private struct NoteRow: View {
 
     var body: some View {
         let body = model.store.value("body", of: note)?.stringValue ?? ""
-        let rest = NotesCopy.rest(of: body)
+        let rest = NotesCopy.preview(of: body, isPrivate: model.store.value("isPrivate", of: note) == .bool(true))
         Button(action: open) {
             HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.l) {
                 VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
@@ -272,6 +284,11 @@ enum NotesCopy {
             attributed[lower ..< upper].foregroundColor = Theme.Colors.tess
         }
         return attributed
+    }
+
+    /// The row's second line. A private note shows only "Private note": no preview, nothing for VoiceOver to read.
+    static func preview(of body: String, isPrivate: Bool) -> String {
+        isPrivate ? "" : rest(of: body)
     }
 
     /// Everything after the first line, joined into one line.

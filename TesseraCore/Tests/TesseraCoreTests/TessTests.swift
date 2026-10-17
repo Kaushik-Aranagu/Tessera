@@ -1,3 +1,4 @@
+import AppIntents
 import Foundation
 import FoundationModels
 @testable import TesseraCore
@@ -203,7 +204,7 @@ struct TessTests {
     @Test func modelToolCallsResolveNamesAndRunAsPendingTess() async throws {
         let recorder = TessToolRecorder()
         let tool = try CatalogTool(tool: #require(TessTools.tool(named: "logSet")), engine: engine, pending: true,
-                                   now: .now, recorder: recorder)
+                                   now: .now, calendar: .current, recorder: recorder)
         let output = try await tool.call(arguments: GeneratedContent(
             json: #"{"exercise":"bench","weight":80,"reps":8,"sets":2,"unit":"kg"}"#
         ))
@@ -222,6 +223,43 @@ struct TessTests {
         let actions = Set(ActionRegistry.descriptors.map(\.name))
         #expect(actions.subtracting(covered).isEmpty, "Missing: \(actions.subtracting(covered))")
         #expect(covered.subtracting(actions).isEmpty, "Stale: \(covered.subtracting(actions))")
+    }
+
+    @Test func siriAddATaskKeepsKeysOutAndSecretsPrivate() throws {
+        // QA I3 (#428): Siri's Add a Task never saves a Claude key and files a secret with a value as a private note.
+        #expect(try CreateTaskIntent.add("sk-ant-api03-TEST", startsAt: nil, engine: engine) == TessRouter.keyLine)
+        #expect(try CreateTaskIntent.add("door code 4417", startsAt: nil, engine: engine) == "Private note, kept.")
+        let objects = store.context.objects.values
+        #expect(!objects.contains { $0.title.contains("sk-ant") || $0.title.contains("4417") })
+        #expect(objects.contains { $0.title == SecretWords.title })
+        // "reset my PIN" lands as the Ask bar files it: a private note, never read back (Product P14 parity).
+        #expect(try CreateTaskIntent.add("reset my PIN", startsAt: nil, engine: engine) == "Private note, kept.")
+    }
+
+    @Test func siriFilesPrivateThingsTheWayTheBarDoes() throws {
+        // Product P14 (board 0l): one rule for the Bar and Siri; nothing private is read back in his words.
+        #expect(try CreateTaskIntent.add("took advil 400mg", startsAt: nil, engine: engine) == "Private note, kept.")
+        #expect(try CreateTaskIntent.add("$212.37 at Costco", startsAt: nil, engine: engine) == "Private note, kept.")
+        #expect(try CreateTaskIntent.add("headache since tuesday", startsAt: nil, engine: engine)
+            == "Private note, kept.")
+        #expect(try CreateTaskIntent.add("remember my rent is 2100", startsAt: nil, engine: engine)
+            == "I don't keep sums of money.")
+        // Something to do stays a task (W4), read back without its amount.
+        #expect(try CreateTaskIntent.add("pay rent 2100 friday", startsAt: nil, engine: engine) == "Task added.")
+        let titles = store.context.objects.values.map(\.title)
+        #expect(titles.contains { $0.lowercased().hasPrefix("pay rent 2100") })
+        #expect(!titles.contains { $0.contains("advil") || $0.contains("212.37") || $0.contains("headache") })
+        #expect(try CreateTaskIntent.add("call mom", startsAt: nil, engine: engine).lowercased().contains("call mom"))
+        // Siri's writes need Face ID; the Lock Screen's set buttons don't (see SiriParityTests).
+        for policy in [LogSetIntent.authenticationPolicy, StartRoutineIntent.authenticationPolicy,
+                       FinishWorkoutIntent.authenticationPolicy, CreateTaskIntent.authenticationPolicy,
+                       TellTessIntent.authenticationPolicy]
+        {
+            guard case .requiresAuthentication = policy else {
+                Issue.record("a write intent doesn't need Face ID")
+                continue
+            }
+        }
     }
 
     @Test func intentsRunTheSameTypedActions() throws {

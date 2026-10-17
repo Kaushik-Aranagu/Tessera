@@ -1,5 +1,6 @@
 import SwiftUI
 import TesseraCore
+import TesseraTess
 
 // Today on Home (docs/design/today-on-home.md, M2 slices 8 and 9): the queue window under Now. Next, then Later,
 // in one bounded surface with a heading that rolls; swipe right to finish (the strike follows the finger), swipe
@@ -17,6 +18,8 @@ final class TessVoice {
         let id = UUID()
         let text: String
         let undo: OpRecord?
+        /// What UNDO runs besides (or instead of) undoing the op: several ops, or state that isn't an op.
+        var takeBack: (() -> Void)?
 
         static func == (lhs: Note, rhs: Note) -> Bool {
             lhs.id == rhs.id
@@ -26,12 +29,12 @@ final class TessVoice {
     private(set) var note: Note?
 
     /// Shows `text` for 4 s (with UNDO when there's an op to undo).
-    func say(_ text: String, undo: OpRecord? = nil) {
-        let note = Note(text: text, undo: undo)
+    func say(_ text: String, undo: OpRecord? = nil, takeBack: (() -> Void)? = nil) {
+        let note = Note(text: text, undo: undo, takeBack: takeBack)
         self.note = note
         Task { @MainActor in
             // A line with something to take back stays 10 s (M37); a plain line, 4 s.
-            try? await Task.sleep(for: .seconds(undo == nil ? 4 : 10))
+            try? await Task.sleep(for: .seconds(undo == nil && takeBack == nil ? 4 : 10))
             if self.note?.id == note.id {
                 self.note = nil
             }
@@ -86,9 +89,12 @@ struct QueueWindow: View {
     /// Next's ids as last drawn, so a row that moves up into Next can bloom once (nil until the first draw).
     @State private var seenNext: Set<UUID>?
 
+    /// Each Next row's height as drawn (a wrapped title makes a taller row).
+    @State private var heights: [UUID: CGFloat] = [:]
+
     /// Where the in-flow "Later" word sits in the scroll content.
     private var laterWordY: CGFloat {
-        next.isEmpty ? 0 : CGFloat(next.count) * Self.rowHeight + Self.gap
+        next.isEmpty ? 0 : next.reduce(0) { $0 + (heights[$1.id] ?? Self.rowHeight) } + Self.gap
     }
 
     private var heading: String {
@@ -109,7 +115,8 @@ struct QueueWindow: View {
                         ForEach(Array(next.enumerated()), id: \.element.id) { index, entry in
                             QueueRow(entry: entry, isNext: true, ink: [1, 0.88, 0.76][min(index, 2)],
                                      arrives: seenNext != nil && !(seenNext ?? []).contains(entry.id))
-                                .frame(height: Self.rowHeight)
+                                .frame(minHeight: Self.rowHeight)
+                                .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) { heights[entry.id] = $0 }
                                 .transition(refill)
                         }
                         if !next.isEmpty, !later.isEmpty {
@@ -123,7 +130,7 @@ struct QueueWindow: View {
                         }
                         ForEach(later) { entry in
                             QueueRow(entry: entry, isNext: false, ink: 0.62)
-                                .frame(height: Self.rowHeight)
+                                .frame(minHeight: Self.rowHeight)
                                 .transition(refill)
                         }
                     }
@@ -213,8 +220,6 @@ private struct QueueRow: View {
     /// Set by the window when this row has just moved up into Next.
     var arrives = false
     @State private var holding = false
-    /// Room for the time column; grows with Dynamic Type so titles never run under it.
-    @ScaledMetric(relativeTo: .body) private var timeRoom: CGFloat = 64
     @Environment(\.homePagerIdle) private var pagerIdle
     @Environment(\.homeRowGrab) private var grab
 
@@ -236,7 +241,6 @@ private struct QueueRow: View {
                 .opacity(Double(min(max((-drag - 110) / 20, 0), 1)))
                 .offset(y: drag < -110 ? 0 : 6)
                 .accessibilityHidden(true)
-            timeColumn
             content
                 .offset(x: drag < 0 ? leftOffset : 0)
                 // Lifted while held: a soft shadow on the text itself and a slight scale, no highlight shape.
@@ -340,11 +344,14 @@ private struct QueueRow: View {
     }
 
     private var content: some View {
-        HStack(spacing: Theme.Spacing.m) {
+        // The time sits on the title's first baseline at its own width, so a long title takes the rest of the row and
+        // wraps beside it: nothing cut, nothing under it (Design on #507).
+        HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
             Text(entry.title)
                 .font(Theme.Typography.font(Theme.concept.scale.body, weight: isNext ? .medium : .regular))
                 .foregroundStyle(Theme.Colors.ink.opacity(struck ? 0.45 : ink))
-                .lineLimit(1)
+                // A long title wraps; it never ends in "…" (41.2).
+                .fixedSize(horizontal: false, vertical: true)
                 // Finishing paints the strike wet in the row's pigment, then it dries to ink with the name.
                 .textRenderer(StrikeRenderer(progress: strike, color: dried ? Theme.Colors.ink.opacity(0.45)
                         : pigment))
@@ -358,24 +365,20 @@ private struct QueueRow: View {
                         .allowsHitTesting(false)
                 }
             Spacer(minLength: Theme.Spacing.s)
+            if let time = entry.time {
+                // Lowercase like the sentences and the hero: "8:30 pm" (Design picked .data over .label).
+                Text(Format.clock(time))
+                    .textRole(.data)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .monospacedDigit()
+                    .fixedSize()
+                    .opacity(struck ? 0 : Double(max(0, 1 - abs(drag) / 40)))
+            }
         }
-        // Room for the time column, which sits still on the right while the title travels.
-        .padding(.trailing, entry.time == nil ? 0 : timeRoom)
         .frame(maxHeight: .infinity)
     }
 
     /// The time stays put while the title travels, and fades out over the first 40 pt of a drag.
-    @ViewBuilder private var timeColumn: some View {
-        if let time = entry.time {
-            Text(Format.clock(time))
-                .textRole(.label)
-                .foregroundStyle(Theme.Colors.inkSecondary)
-                .monospacedDigit()
-                .opacity(struck ? 0 : Double(max(0, 1 - abs(drag) / 40)))
-                .frame(maxHeight: .infinity)
-        }
-    }
-
     /// 1:1 to 150 pt, then rubber-banded at 35%.
     private var leftOffset: CGFloat {
         let pull = -drag
@@ -470,7 +473,11 @@ private struct QueueRow: View {
             withTesseraAnimation(.spring(Spring(duration: 0.42, bounce: 0.12)), reduceMotion: reduceMotion) {
                 model.touch()
             }
-            voice.say(entry.time == nil ? "Moved to next week." : "Moved to tomorrow.", undo: record)
+            // Thing first with where it went, the way Tess says it (Design on #553): "Stretch, tomorrow 7 am."
+            let moved = model.store.object(id: entry.id).flatMap { model.store.value("startsAt", of: $0)?.dateValue }
+            let when = entry.time == nil ? "next week"
+                : moved.map { TessCaptureEngine.when($0, context: TessContext(now: AppClock.now)) } ?? "tomorrow"
+            voice.say("\(entry.title), \(when).", undo: record)
         }
     }
 }
@@ -486,7 +493,7 @@ extension EnvironmentValues {
 /// Press for 0.2 s without moving, then drag: reports the horizontal travel since the press landed. Built on
 /// `UILongPressGestureRecognizer`, which fails as soon as the finger moves before the press, so it never competes
 /// with a scroll view's pan.
-private struct RowPressDrag: UIGestureRecognizerRepresentable {
+struct RowPressDrag: UIGestureRecognizerRepresentable {
     var isEnabled: Bool
     var began: () -> Void
     var changed: (CGFloat) -> Void

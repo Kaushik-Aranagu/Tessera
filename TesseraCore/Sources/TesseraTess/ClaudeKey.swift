@@ -84,7 +84,10 @@ public final class InMemoryKeychain: TessKeychain, @unchecked Sendable {
 /// phone's calendar, not his 4 AM day and not Anthropic's UTC.
 @MainActor
 public struct TessUsageLedger {
-    public static let capNano: Int64 = 10_000_000_000
+    /// The month's cap: $50 (Kaushik, decisions.md Oct 16). Settings' spend line and the paused copy read this.
+    public static let capNano: Int64 = 50_000_000_000
+    /// The cap in whole dollars, for the words ("of 50 dollars this month").
+    public static let capDollars = Int(capNano / 1_000_000_000)
 
     /// Per-token prices in nano-dollars: (input, output, cache read, cache write).
     public static let prices: [String: (input: Int64, output: Int64, cacheRead: Int64, cacheWrite: Int64)] = [
@@ -112,11 +115,17 @@ public struct TessUsageLedger {
     }
 
     func canSpend(_ estimateNano: Int64, now: Date = .now, calendar: Calendar = .current) -> Bool {
-        monthTotal(now: now, calendar: calendar) + Self.pendingNano + estimateNano <= Self.capNano
+        monthTotal(now: now, calendar: calendar) + pendingNano + estimateNano <= Self.capNano
     }
 
-    /// Money promised to calls still in flight (a call's row is only written after its response).
-    private static var pendingNano: Int64 = 0
+    /// Money promised to calls still in flight (a call's row is only written after its response), per store: every
+    /// ledger on the app's one store shares it, and a test's own store never sees another test's calls in flight.
+    private static var pending: [ObjectIdentifier: Int64] = [:]
+
+    private var pendingNano: Int64 {
+        get { Self.pending[ObjectIdentifier(store.context)] ?? 0 }
+        nonmutating set { Self.pending[ObjectIdentifier(store.context)] = newValue }
+    }
 
     /// A hold on part of the month, taken before a call and released after it.
     public struct Reservation: Sendable {
@@ -126,14 +135,15 @@ public struct TessUsageLedger {
     /// Checks and holds `estimateNano` in one step on the main actor, so two concurrent calls can't both fit under
     /// the cap. Nil when it doesn't fit. Estimate from `max_tokens` (Haiku 5.5 may think).
     public func reserve(_ estimateNano: Int64, now: Date = .now, calendar: Calendar = .current) -> Reservation? {
-        guard canSpend(estimateNano, now: now, calendar: calendar) else { return nil }
-        Self.pendingNano += estimateNano
+        // A model with no price row estimates 0: refused, so it can never spend outside the cap (QA A6).
+        guard estimateNano > 0, canSpend(estimateNano, now: now, calendar: calendar) else { return nil }
+        pendingNano += estimateNano
         return Reservation(nano: estimateNano)
     }
 
     /// Releases a hold once the call's own row (its real cost) is written.
     public func settle(_ reservation: Reservation) {
-        Self.pendingNano = max(0, Self.pendingNano - reservation.nano)
+        pendingNano = max(0, pendingNano - reservation.nano)
     }
 
     /// Before a call: bytes / 4 + 10 tokens in, `maxTokens` out.

@@ -108,6 +108,7 @@ private struct WorkoutContent: View {
                             mode: soul.mode,
                             // LOG … AND FINISH keeps a 10 s UNDO that takes back the set and the finish together.
                             canUndo: session.canTakeBackFinish(at: now),
+                            eyes: model.tessHasEyes,
                             // The line (and its UNDO) stays for the whole 10 s window.
                             holdsLine: session.canTakeBackFinish(at: now),
                             onUndo: {
@@ -256,6 +257,7 @@ private struct WorkoutContent: View {
             LiveTessCorner(line: askReply ?? WorkoutLines.tess(session, phase: phase, summary: summaryLine),
                            mode: soul.mode,
                            canUndo: session.canUndoLast && !session.isEditing,
+                           eyes: model.tessHasEyes,
                            holdsLine: askReply == nil && phase == .workoutDone,
                            onUndo: {
                                withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLast() }
@@ -621,7 +623,9 @@ extension WorkoutContent {
                     // The key says what it logs (live-workout.md): "LOG 82.5 × 8", a 0.7 s hold on the ink line; the
                     // workout's last set logs and finishes in one hold. Silent: the set's haptic plays when it seats.
                     let finishes = session.isLastSetOfWorkout
-                    PaintKey(paint: Paint.live, duration: 0.7, height: 64, drift: 20, isSilent: true) {
+                    PaintKey(paint: Paint.live, duration: 0.7, height: 64, drift: 20, isSilent: true,
+                             hint: finishes ? "Logs the set and finishes the workout" : "Logs the set")
+                    {
                         withTesseraAnimation(reduceMotion: reduceMotion) { session.logSet() }
                         if finishes {
                             finish(withSet: true)
@@ -660,7 +664,9 @@ extension WorkoutContent {
                         Text("Next exercise").textRole(.labelStrong).textCase(.uppercase)
                     }
                 case .workoutDone:
-                    PaintKey(paint: Paint.live, duration: 0.8, height: 64, isSilent: true) {
+                    PaintKey(paint: Paint.live, duration: 0.8, height: 64, isSilent: true,
+                             hint: "Finishes the workout")
+                    {
                         finish()
                     } label: { _ in
                         Text("Finish").textRole(.labelStrong).textCase(.uppercase)

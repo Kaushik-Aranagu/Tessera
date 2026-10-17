@@ -148,10 +148,10 @@ struct DayStoryTests {
         // Product 72954ac: the set carries "was a record" from the moment it was logged.
         try workout("Push A", start: Self.at(5, 18), sets: [(Self.at(5, 18, 5), 60, 8)], end: Self.at(5, 18, 40))
         try workout("Push A", start: Self.at(8, 18), sets: [(Self.at(8, 18, 5), 70, 8)], end: Self.at(8, 18, 40))
-        #expect(lines(Self.at(8, 12)) == ["18:00  Push A, 40 min. Bench 70 × 8, PR."])
+        #expect(lines(Self.at(8, 12)) == ["18:00  Push A, 40 min. Bench 70 × 8, best."])
         try workout("Push A", start: Self.at(12, 18), sets: [(Self.at(12, 18, 5), 80, 8)], end: Self.at(12, 18, 40))
-        #expect(lines(Self.at(8, 12)) == ["18:00  Push A, 40 min. Bench 70 × 8, PR."])
-        #expect(lines(Self.at(12, 12)) == ["18:00  Push A, 40 min. Bench 80 × 8, PR."])
+        #expect(lines(Self.at(8, 12)) == ["18:00  Push A, 40 min. Bench 70 × 8, best."])
+        #expect(lines(Self.at(12, 12)) == ["18:00  Push A, 40 min. Bench 80 × 8, best."])
         // Every working set carries the decision; the first ever set had nothing to beat.
         let setClass = try #require(classes[.set])
         let sets = store.objects(of: setClass)
@@ -171,7 +171,7 @@ struct DayStoryTests {
         #expect(lines(Self.at(8, 12)) == ["18:00  Push A, 40 min. Bench 50 × 8."])
         try run(EditSet(set: typo.id, weight: 80), at: Self.at(8, 19, 30))
         #expect(store.value("wasRecord", of: typo) == .bool(true))
-        #expect(lines(Self.at(8, 12)) == ["18:00  Push A, 40 min. Bench 80 × 8, PR."])
+        #expect(lines(Self.at(8, 12)) == ["18:00  Push A, 40 min. Bench 80 × 8, best."])
     }
 
     @Test func pastUnfinishedWorkoutIsMarkedUnfinished() throws {

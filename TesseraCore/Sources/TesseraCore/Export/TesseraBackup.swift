@@ -120,6 +120,9 @@ public enum TesseraBackup {
     public static func writeRolling(from context: TesseraContext, in folder: URL, keep: Int = 7, now: Date = .now,
                                     calendar: Calendar = .current) throws -> URL?
     {
+        // A store with no file (this session fell back to memory: a damaged open, or data from a newer Tessera) is
+        // never copied: a week of empty copies would roll his seven good ones away (QA M1 on #475).
+        guard context.url != nil else { return nil }
         let manager = FileManager.default
         try manager.createDirectory(at: folder, withIntermediateDirectories: true)
         let key = TesseraDay(calendar: calendar).day(of: now)
@@ -207,8 +210,8 @@ public enum TesseraBackup {
                 guard let row = try Row.fetchOne(db, sql: "SELECT * FROM backupInfo"),
                       row["format"] as String? == format else { throw BackupError.notABackup }
                 let migrations = try TesseraDatabaseSchema.migrator.appliedIdentifiers(db)
-                let known = Set(TesseraDatabaseSchema.migrator.migrations)
-                guard Set(migrations).isSubset(of: known) else { throw BackupError.newerSchema }
+                // A newer migration or a newer catalog (QA B6): "That copy is from a newer Tessera. Update first."
+                guard try !TesseraDatabaseSchema.isNewer(db) else { throw BackupError.newerSchema }
                 // Older copies have no restoredAt column: nil.
                 let restored = (row.hasColumn("restoredAt") ? row["restoredAt"] as Double? : nil)
                     .map { Date(timeIntervalSince1970: $0) }
@@ -267,11 +270,16 @@ public enum TesseraBackup {
         let manager = FileManager.default
         let pending = pendingURL(for: storeURL)
         guard manager.fileExists(atPath: pending.path) else { return false }
-        guard (try? inspect(pending)) != nil else {
+        do {
+            _ = try inspect(pending)
+        } catch {
             let rejected = storeURL.deletingLastPathComponent().appendingPathComponent("restore-rejected.sqlite")
             try? manager.removeItem(at: rejected)
             try? manager.moveItem(at: pending, to: rejected)
-            TesseraSchema.setLaunchNote("That backup couldn't be read, so your data is as it was.")
+            // A copy staged by a newer Tessera (or one later downgraded) says so (QA R2 on #475, Design).
+            TesseraSchema.setLaunchNote(error as? BackupError == .newerSchema
+                ? "That backup is from a newer Tessera, so your data is as it was. Update the app first."
+                : "That backup couldn't be read, so your data is as it was.")
             return false
         }
         let hasStore = manager.fileExists(atPath: storeURL.path)

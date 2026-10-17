@@ -75,7 +75,7 @@ struct SoulRouterTests {
         soul.handle(.askClaude)
         #expect(soul.mode == .done)
         try await Task.sleep(for: .seconds(2.0))
-        #expect(soul.mode == .thinking)
+        #expect(soul.mode == .working)
     }
 
     @Test func theLensPinsHerAndChangesNothingElse() {
@@ -161,5 +161,33 @@ struct SoulRouterTests {
             }
         }
         #expect(offenders.isEmpty, "\(offenders)")
+    }
+
+    /// A hold the mic refuses: BottomChrome emits .heardNothing before her line, so she's at rest, never stuck
+    /// listening behind the line's 4 s.
+    @Test func aRefusedHoldSettlesToRest() {
+        let soul = router()
+        soul.handle(.speak(hold: true))
+        #expect(soul.mode == .listening)
+        soul.handle(.heardNothing)
+        soul.handle(.lineShown)
+        #expect(soul.mode == .idle && !soul.isSurfaceOpen)
+    }
+
+    /// A tap-started Speak the mic refuses keeps the surface open with the refusal line: nothing settles it.
+    @Test func aRefusedTapKeepsTheSurfaceOpen() {
+        let soul = router()
+        soul.handle(.tessOpened)
+        soul.handle(.speak(hold: false))
+        #expect(soul.isSurfaceOpen && soul.mode == .listening)
+    }
+
+    /// Without the settle, the line's 4 s leaves a refused hold listening: the bug the chrome now avoids.
+    @Test func theLineAloneNeverSettlesAListen() async throws {
+        let soul = router()
+        soul.handle(.speak(hold: true))
+        soul.handle(.lineShown)
+        try await Task.sleep(for: .seconds(4.3))
+        #expect(soul.mode == .listening)
     }
 }

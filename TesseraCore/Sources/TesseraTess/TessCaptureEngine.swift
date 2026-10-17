@@ -54,7 +54,11 @@ public final class TessCaptureEngine: TessCapturing {
         default: break
         }
         // Never log a pasted Claude key, even as a miss (the router refuses it, and the miss log is a file).
-        if !result.understood, !looksLikeClaudeKey(phrase) {
+        // Nor a line with a secret word (Research 134): the miss log is a file.
+        // Nor money or a body fact (Product P14, 12:30 PM PT).
+        if !result.understood, !looksLikeClaudeKey(phrase), !SecretWords.mentions(phrase),
+           !PrivateFacts.isWalled(phrase)
+        {
             missLog?.record(phrase, at: context.now, route: result.source.rawValue, source: source)
         }
         return result
@@ -292,7 +296,20 @@ public final class TessCaptureEngine: TessCapturing {
         case let .task(title, startsAt):
             let record = try engine.perform(CreateTask(title: title, startsAt: startsAt), by: .tess, pending: pending)
                 .record
+            // A private title is never said back (Product P14, 12:30 PM PT): "Task added for Fri."
+            if PrivateFacts.isPrivateTitle(title) {
+                return (record, Self.privateTaskLine(startsAt, context: context))
+            }
             return (record, startsAt.map { "\(title), \(Self.when($0, context: context))." } ?? "\(title), in Later.")
+        case let .privateNote(body, remembered, on):
+            let record = try engine.perform(
+                CreateNote(body: body, on: on, isPrivate: true),
+                by: .tess,
+                pending: pending
+            )
+            .record
+            // She never repeats the value (R6).
+            return (record, remembered ? "Private note, kept. I don't keep passwords." : "Private note, kept.")
         case let .note(body, on):
             let record = try engine.perform(CreateNote(body: body, on: on), by: .tess, pending: pending).record
             if let on, !context.calendar.isDate(on, inSameDayAs: context.now) {
@@ -386,9 +403,17 @@ public final class TessCaptureEngine: TessCapturing {
         ["Bench Press": "Bench", "Back Squat": "Squat"][name] ?? name
     }
 
+    /// What Tess says for a task whose title is private: its day, never its words.
+    public static func privateTaskLine(_ startsAt: Date?, context: TessContext) -> String {
+        guard let startsAt, let day = when(startsAt, context: context).split(separator: " ").first else {
+            return "Task added."
+        }
+        return "Task added for \(day)."
+    }
+
     /// "today 3 pm", "tomorrow 9 am", "Saturday 3 pm". By his day (04:00 to 04:00); after midnight and before 04:00
-    /// "today" and "tomorrow" are ambiguous, so the weekday is named (late-night #9).
-    static func when(_ date: Date, context: TessContext) -> String {
+    /// "today" and "tomorrow" are ambiguous, so the weekday is named (late-night #9). Home's Not now says it too.
+    public static func when(_ date: Date, context: TessContext) -> String {
         let calendar = context.calendar
         let tessera = TesseraDay(calendar: calendar)
         let small = calendar.component(.hour, from: context.now) < TesseraDay.startHour

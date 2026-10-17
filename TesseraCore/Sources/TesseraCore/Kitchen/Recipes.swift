@@ -158,6 +158,10 @@ public struct CreateRecipe: EngineAction {
                 lines[index].kind = .ignored
             }
         }
+        // A line with a secret and a value never becomes an ingredient or a step (Research 137 PR1, PR7).
+        for index in lines.indices where SecretWords.isPrivateLine(lines[index].line) {
+            lines[index].kind = .ignored
+        }
         return lines
     }
 
@@ -166,7 +170,8 @@ public struct CreateRecipe: EngineAction {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "no ingredients or steps found")
         }
         let recipe = try transaction.create(transaction.classDef(.recipe), title: title ?? parsed.title)
-        try transaction.set("sourceText", to: .text(parsed.source), on: recipe)
+        // The original text keeps every line but the private ones (Research 137 PR1).
+        try transaction.set("sourceText", to: .text(SecretWords.cut(parsed.source).text), on: recipe)
         if let serves = parsed.serves {
             try transaction.set("serves", to: .number(Double(serves)), on: recipe)
         }

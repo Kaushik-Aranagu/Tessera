@@ -518,6 +518,9 @@ public final class OpRecord: TesseraModel, AttachableModel {
         didSet { didChange() }
     }
 
+    /// The thing-first line Tess says for this action ("Films, made"), set when it ran. Spoken only: never stored.
+    public var receipt: String?
+
     public var createdAt: Date = .now {
         didSet { didChange() }
     }

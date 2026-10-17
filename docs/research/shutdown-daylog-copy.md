@@ -14,7 +14,7 @@ Checked against: `tess-voice.md` (2026-10-16). Context: `day-log.md`, `sticking-
 - **Gap** means no op of any kind for 3 or more days, the same trigger as the re-entry state on Now.
 - **Busy** means 8 or more counted items, or headlines from 3 or more apps.
 - **Quiet** means 1 or 2 counted items and no finished process.
-- Numbers are digits. Units appear once. Times use 24 h ("08:00"), sleep uses "7h10" as in the Day log.
+- Numbers are digits. Units appear once. Times on screen use the house form ("8 am", "9:30 am"; Product: heroes carry "pm"), sleep uses "7h10" as in the Day log.
 
 ## Slot A: Day log, Tess line (slice 5)
 
@@ -23,7 +23,7 @@ One line under the date, above the assembled lines. Your own `DayNote` always si
 | # | Template | Filled example | Picked when |
 |---|---|---|---|
 | A1 | Back in. {headline}. | Back in. Push day · 2 tasks. | First day with any op after a gap |
-| A2 | {lift} PR, plus {n} more things. | Bench PR, plus 5 more things. | Any PR or first ever that day |
+| A2 | {lift} best, plus {n} more things. | Bench best, plus 5 more things. | Any best or first ever that day |
 | A3 | Travel day. {n} things logged on the move. | Travel day. 3 things logged on the move. | A calendar event that day looks like travel (flight, train, hotel), or the phone sat in a different time zone |
 | A4 | {workout} and {recipe}. Fed and trained. | Push day and carbonara. Fed and trained. | A finished workout and a finished cook on the same day |
 | A5 | Full one. {n} things across {apps} apps. | Full one. 11 things across 4 apps. | Busy |
@@ -33,7 +33,7 @@ One line under the date, above the assembled lines. Your own `DayNote` always si
 | A9 | Rest day. Slept {sleep}. | Rest day. Slept 8h05. | No counted items, but a Health sleep fact exists |
 | A10 | Fills itself as you go. | Fills itself as you go. | Today only, nothing logged yet, before Shutdown |
 
-Silent cases: a past day with nothing logged shows only the date (empty runs collapse to "Oct 3 to 6", as `day-log.md` says), and a day with a `DayNote` and nothing else shows only the note. In A2, A6 and A7, the "{n} more/other things" clause drops when {n} is 0, so "Bench PR." stands alone.
+Silent cases: a past day with nothing logged shows only the date (empty runs collapse to "Oct 3 to 6", as `day-log.md` says), and a day with a `DayNote` and nothing else shows only the note. In A2, A6 and A7, the "{n} more/other things" clause drops when {n} is 0, so "Bench best." stands alone.
 
 **Selection rule A:** check A1 to A10 in order; the first match wins. Today's line is recomputed when an op lands; a past day's line is frozen at its Shutdown, or at 04:00 the next day if there was no Shutdown.
 
@@ -44,7 +44,7 @@ The first line of the 21:00 Now card. Counts only, past tense, never what didn't
 | # | Template | Filled example | Picked when |
 |---|---|---|---|
 | B1 | Back in. Did {counts} today. | Back in. Did 2 tasks, 1 workout today. | First day back after a gap |
-| B2 | Did {counts}. Plus a {lift} PR. | Did 1 workout, 3 tasks. Plus a bench PR. | A PR or first ever that day |
+| B2 | Did {counts}. Plus a best on {lift}. | Did 1 workout, 3 tasks. Plus a best on bench. | A best or first ever that day |
 | B3 | {n} things done. Full day. | 12 things done. Full day. | Busy |
 | B4 | Did {counts}. | Did 4 tasks, 1 workout, cooked once. | 2 or more counted items (the default) |
 | B5 | {name}, done. That counts. | Pull day, done. That counts. | Exactly 1 counted item |
@@ -64,7 +64,7 @@ Shown above the preselected items that roll to tomorrow. Moving is the default a
 | C1 | {n} going to Later. Still there, just quieter. | 2 going to Later. Still there, just quieter. | Some open items are 7 or more days untouched (auto-age rule) |
 | C2 | {n} rolling over. Plan my day picks up to 3. | 7 rolling over. Plan my day picks up to 3. | 6 or more items roll |
 | C3 | {task} moves to tomorrow. Tap to keep it. | Call the bank moves to tomorrow. Tap to keep it. | Exactly 1 item rolls |
-| C4 | {n} moving to tomorrow. Tap any to keep. | 3 moving to tomorrow. Tap any to keep. | 2 to 5 items roll |
+| C4 | {n} moving to tomorrow. Tap any for later. | 3 moving to tomorrow. Tap any for later. | 2 to 5 items roll |
 
 Silent case: nothing rolls, so the section is hidden. If {task} is longer than 4 words, C3 uses the C4 form with n = 1 ("1 moving to tomorrow. Tap to keep it.") so the line stays under 12 words.
 
@@ -76,7 +76,7 @@ The optional line for tomorrow. It is a ghost-row placeholder, never a question 
 
 | # | Template | Filled example | Picked when |
 |---|---|---|---|
-| D1 | Tomorrow starts with {event} at {time}. | Tomorrow starts with Standup at 09:30. | Tomorrow has a timed calendar event before 12:00 |
+| D1 | Tomorrow starts with {event} at {time}. | Tomorrow starts with Standup at 9:30 am. | Tomorrow has a timed calendar event before 12:00 |
 | D2 | One line for tomorrow, if you want. | One line for tomorrow, if you want. | Otherwise |
 
 **Selection rule D:** D1 if it matches, else D2. B7 already offers the line, so on a B7 day D2's placeholder shows empty (no second offer).
@@ -88,8 +88,8 @@ Shown for about 2 seconds after "Shutdown complete", as the card folds into the 
 | # | Template | Filled example | Picked when |
 |---|---|---|---|
 | E1 | Closed. Tomorrow picks up from here. | Closed. Tomorrow picks up from here. | First day back after a gap |
-| E2 | Closed. {lift} PR filed under {weekday}. | Closed. Bench PR filed under Tuesday. | A PR that day |
-| E3 | Closed. Your line is waiting at 08:00. | Closed. Your line is waiting at 08:00. | You wrote a tomorrow line |
+| E2 | Closed. {lift} best filed under {weekday}. | Closed. Bench best filed under Tuesday. | A best that day |
+| E3 | Closed. Your line is waiting at 8 am. | Closed. Your line is waiting at 8 am. | You wrote a tomorrow line |
 | E4 | Closed. {n} things in {weekday}'s log. | Closed. 6 things in Tuesday's log. | 1 or more counted items |
 | E5 | Day closed. Nothing waiting tonight. | Day closed. Nothing waiting tonight. | No counted items |
 
@@ -102,7 +102,7 @@ Late night means Shutdown is opened at or after 23:00, or between 00:00 and 04:0
 | # | Template | Filled example | Picked when |
 |---|---|---|---|
 | F1 | Filed under {weekday}. Did {counts}. | Filed under Tuesday. Did 3 tasks, cooked once. | Late night, 1 or more counted items (replaces B) |
-| F2 | {n} moving to {nextWeekday}. Tap any to keep. | 2 moving to Wednesday. Tap any to keep. | Past 00:00 and 1 or more items roll (replaces C2 to C4) |
+| F2 | {n} moving to {nextWeekday}. Tap any for later. | 2 moving to Wednesday. Tap any for later. | Past 00:00 and 1 or more items roll (replaces C2 to C4) |
 | F3 | Closed. Sleep is also training. | Closed. Sleep is also training. | Late night and a workout finished that day (replaces E) |
 | F4 | Saved to {weekday}. Pick up tomorrow. | Saved to Tuesday. Pick up tomorrow. | Late night, any other case (replaces E) |
 
@@ -110,7 +110,7 @@ Late night with no counted items falls back to B6 or B7 for the opener.
 
 ## Selection rule (engine summary)
 
-1. Work out the inputs once per render: the attributed date (04:00 boundary), counted items, finished processes, PRs, rolled items, Health and calendar facts, gap flag, late-night flag. All are derived from the op log and the mounts; no model call.
+1. Work out the inputs once per render: the attributed date (04:00 boundary), counted items, finished processes, bests, rolled items, Health and calendar facts, gap flag, late-night flag. All are derived from the op log and the mounts; no model call.
 2. For each slot, if the late-night flag is set and the slot has an F row, use the matching F row.
 3. Otherwise walk the slot's rows top to bottom and take the first whose condition holds.
 4. If none holds, render nothing for that slot.
@@ -126,7 +126,7 @@ Run over all 32 filled examples above (word count by spaces, banned-word list fr
 | 1. Done, then the number | Pass | Openers and closes lead with the done thing in past tense (B2 to B5, E2, E4, F1). Headlines name the thing, then one count. |
 | 2. Counts, not streaks | Pass | Only counts and "{n} things". No run lengths, no "in a row", no reset. |
 | 3. One line, under 12 words | Pass | Longest filled example is 10 words (C2, C3); C3 has a short form for long task names. Templates with lists cap {counts} at 3 items. No greeting, no sign-off, no praise word. |
-| 4. The user decides | Pass | Carry-over is "Tap any to keep", the tomorrow line is "if you want", B7 asks "Want...?". No "should" or "don't forget". |
+| 4. The user decides | Pass | Carry-over is "Tap any for later", the tomorrow line is "if you want", B7 asks "Want...?". No "should" or "don't forget". |
 | 5. Dry, rarely | Pass | 3 dry lines of 32 (A4 "Fed and trained", E2 "filed under", F3 "Sleep is also training"), all on done states, about 1 in 10. |
 | 6. Honest about limits | Pass | Travel day (A3) only fires on a calendar title or time-zone change, never on a guess. Missing Health data drops the clause instead of inventing a number. |
 | 7. Silence is fine | Pass | Empty past days, note-only days, nothing rolling, and no-match slots all render nothing. |
@@ -141,7 +141,7 @@ Run over all 32 filled examples above (word count by spaces, banned-word list fr
 |---|---|---|
 | Good to see you. Here is today. (from `sticking-past-week-3.md`) | Rule 3, a greeting | Back in. Did {counts} today. (B1) |
 | Nothing logged today. | Points at an absence on a past day | Silence on past days; A10 for today only |
-| 3 tasks left over. Moving them to tomorrow. | Guilt ("left over") | {n} moving to tomorrow. Tap any to keep. (C4) |
+| 3 tasks left over. Moving them to tomorrow. | Guilt ("left over") | {n} moving to tomorrow. Tap any for later. (C4) |
 | Only 2 tasks today, and that's fine. | "Only" grades the day | Quiet day. {counts}. (A8) |
 | Great work. Day closed. Rest well. | Praise word, sign-off | Closed. {n} things in {weekday}'s log. (E4) |
 | You've had a big day of training and cooking. | 10 words but no count, and narrates | {workout} and {recipe}. Fed and trained. (A4) |

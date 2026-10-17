@@ -1,8 +1,8 @@
 import SwiftUI
 import TesseraCore
 
-/// TODAY: the day stroke, the one current thing as the hero, hold to finish, a short "Later" window and, when a
-/// workout is running, one quiet line to get back to it. Grouping is by space and type alone.
+/// TODAY: the day word, one plain line per thing (the time above, the thing and its state as the hero, one key),
+/// a short "Next" window. Nothing is ever cut (home-first-review.md 41). Grouping is by space and type alone.
 struct NowPage: View {
     /// Pages Home to a sibling (used by the empty state).
     var onShow: (HomeSpatialView.Page) -> Void = { _ in }
@@ -13,11 +13,11 @@ struct NowPage: View {
     @State private var finishes = 0
     /// The current Now, passed back to the ranker so it holds against equal challengers (no flicker).
     @State private var incumbent: UUID?
+    private let planModel = HomePlanModel.shared
 
     var body: some View {
         let _ = model.revision
         let now = AppClock.now
-        let lanes = HomeData.lanes(model, now: now)
         let schedule = model.schedule(around: now)
         // Now comes from Core's ranker (rest day, the 15-minute override, re-entry, the scored rank). It re-runs
         // when the data changes (revision) and as the clock moves, never on its own timer.
@@ -25,39 +25,103 @@ struct NowPage: View {
         let ranked = top?.item.kind == .task ? schedule.first { $0.id == top?.item.id } : nil
         let current = ranked ?? model.currentTask(around: now)
 
+        let facts = HomeFacts(engine: model.engine)
+        let ledger = model.processes.ledger(now: now)
+        // A session planned today is the hero (Product on L3), so it never repeats in Next (41.7).
+        let heroWorkout = top?.item.kind == .rest && facts.rest(next: top?.item.object, now: now) == nil
+            ? facts.plannedSession(on: now) : nil
+        // The plan takes Now only in its place (§6): never over a running workout or a timed task within 15 min.
+        let planNow = planModel.isShowing && model.session == nil && ledger.isEmpty
+            && (!(current.map { $0.start.timeIntervalSince(now) < 15 * 60 } ?? false) || Self.pullsPlan)
+
         VStack(alignment: .leading, spacing: 0) {
-            HomeDayStrip(lanes: lanes)
+            // The only day word on Home (41.4): the painted stroke lives one tap down now.
+            DayLabel(now: now)
                 .entrance(0)
-                .padding(.bottom, Theme.Spacing.l)
+                .padding(.bottom, Theme.Spacing.xl)
 
             Group {
-                // A running process is Now (docs/product/whats-running.md).
-                if let session = model.session, model.processes.running()?.subject?.id == session.workout.id {
-                    RunningHero(session: session)
+                // A running process is Now (docs/product/whats-running.md); a paused one is Now too (41.7).
+                if let session = model.session, let process = model.processes.running(),
+                   process.subject?.id == session.workout.id, let fact = facts.fact(process: process)
+                {
+                    LineHero(line: HomeLines.line(for: fact, now: now)) {
+                        PaintKey(paint: Theme.Colors.liveInk, isTap: true, progress: progress(of: process),
+                                 action: { model.isWorkoutPresented = true }, label: { _ in
+                                     Text("Resume \(session.workout.title)").textRole(.labelStrong)
+                                 })
+                                 .accessibilityLabel("Resume \(session.workout.title)")
+                    }
+                } else if let process = ledger.first, let fact = facts.fact(process: process) {
+                    LineHero(line: HomeLines.line(for: fact, now: now), opens: .object(fact.id ?? process.id)) {
+                        PaintKey(paint: Theme.Colors.ink, isTap: true, progress: progress(of: process),
+                                 action: { model.resume(process) }, label: { _ in
+                                     Text("Resume \(fact.title)").textRole(.labelStrong)
+                                 })
+                                 .accessibilityLabel("Resume \(fact.title)")
+                    }
                 } else if let top, top.item.kind == .rest {
-                    RestHero(next: top.item.object)
+                    let next = top.item.object
+                    if let fact = facts.rest(next: next, now: now) {
+                        LineHero(line: HomeLines.line(for: fact, now: now)) {
+                            // An empty routine has nothing to start, so no key (Builder A's canStart). The key rests
+                            // in ink like the planned routine's: colour comes with the moment (Design on #366).
+                            if planNow {
+                                planKey
+                            } else if model.canStart(next) {
+                                PaintKey(paint: Theme.Colors.ink, isTap: true, action: { model.startRoutine(next) },
+                                         label: { _ in Text("Start \(next.title)").textRole(.labelStrong) })
+                                    .accessibilityLabel("Start \(next.title)")
+                                    .accessibilityHint("Starts \(next.title) anyway")
+                            }
+                        }
+                    } else if let workout = facts.plannedSession(on: now) {
+                        // A session planned today wins over the rest day (Product on L3): "Push A at 7 pm", START.
+                        LineHero(line: HomeLines.line(for: facts.fact(scheduled: workout), now: now),
+                                 opens: .object(workout.id))
+                        {
+                            PaintKey(paint: Theme.Colors.ink, isTap: true, action: { model.startWorkout(workout) },
+                                     label: { _ in
+                                         Text("Start \(model.store.displayTitle(of: workout))").textRole(.labelStrong)
+                                     })
+                                     .accessibilityLabel("Start \(model.store.displayTitle(of: workout))")
+                        }
+                    }
+                } else if planNow {
+                    planHero(now: now)
                 } else {
-                    hero(current, now: now)
+                    hero(current, now: now, facts: facts)
                 }
             }
             .padding(.bottom, Theme.Spacing.xl)
 
-            // The ledger: suspended processes (v1: a workout left idle), at most three, state in the seam above.
-            ForEach(model.processes.ledger(now: now)) { process in
+            // Anything else left paused (a cook under a paused workout) keeps its ledger row.
+            ForEach(Array(ledger.dropFirst())) { process in
                 LedgerRow(process: process, now: now)
                     .padding(.bottom, Theme.Spacing.l)
                     .transition(.offset(y: 10).combined(with: .opacity))
             }
 
-            let queue = QueueEntry.split(model: model, schedule: schedule, current: current, now: now)
-            QueueWindow(next: queue.next, later: queue.later)
-                .entrance(4)
+            if planNow {
+                PlanRows(model: planModel)
+                    .entrance(4)
+            } else {
+                let queue = QueueEntry.split(model: model, schedule: schedule, current: current, now: now)
+                // The running or paused thing is the hero too, and never repeats in Next (41.7).
+                let heroID = model.processes.running()?.subject?.id ?? ledger.first?.subject?.id ?? heroWorkout?.id
+                QueueWindow(next: queue.next.filter { $0.id != heroID }, later: queue.later.filter { $0.id != heroID })
+                    .entrance(4)
+            }
 
             Spacer(minLength: 0)
         }
         .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: finishes)
         .onChange(of: top?.id, initial: true) { _, id in
             incumbent = id
+        }
+        // The offer is read when the data or the clock moves, never on its own timer.
+        .onChange(of: model.revision, initial: true) { _, _ in
+            planModel.refresh(model: model, now: AppClock.now, calendar: .current, restDay: top?.item.kind == .rest)
         }
     }
 
@@ -82,37 +146,85 @@ struct NowPage: View {
 
     // MARK: Hero
 
-    @ViewBuilder
-    private func hero(_ task: ScheduleItem?, now: Date) -> some View {
-        if let task {
-            VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-                Text(Self.contextLine(task, now: now))
+    // MARK: Plan my day
+
+    /// `-planNow` (simulator only): the plan takes Now even with a timed task close, as a pull would; the demo day
+    /// always has one running, so recordings and UI tests need it.
+    static var pullsPlan: Bool {
+        #if DEBUG
+            LaunchFlags.has("-planNow")
+        #else
+            false
+        #endif
+    }
+
+    /// The day as the hero ("Three tasks, Push A at 6"), the time above it, START WITH under it. Swipe it left to
+    /// skip the whole plan: nothing written, nothing said.
+    private func planHero(now _: Date) -> some View {
+        let calendar = Calendar.current
+        let forms = PlanWords.heroForms(tasks: planModel.rows.count, workout: planModel.workout, calendar: calendar)
+        return VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+            if let context = PlanWords.context(first: planModel.rows.first, calendar: calendar) {
+                Text(context)
                     .font(Theme.voice(size: 21))
                     .foregroundStyle(Theme.Colors.context)
-                    .contentTransition(.opacity)
                     .entrance(1)
-
-                ZStack(alignment: .topLeading) {
-                    Button {
-                        model.open(.object(task.id))
-                    } label: {
-                        HeroText(text: task.title) { $0 }
-                            .foregroundStyle(Theme.Colors.ink)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(HandleButtonStyle())
-                    .modifier(ZoomSource(id: Route.object(task.id), namespace: namespace))
-                    .accessibilityHint("Opens \(task.title)")
-                    .id(task.id)
-                    .transition(heroTransition)
-                }
+            }
+            PlanHeroText(forms: forms)
                 .siblingParallax()
                 .entrance(2, hero: true)
-                .padding(.bottom, Theme.Spacing.l)
+                .gesture(RowPressDrag(isEnabled: true, began: {}, changed: { _ in }, ended: { distance in
+                    if distance <= -120 {
+                        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { planModel.skipPlan() }
+                    }
+                }, cancelled: {}))
+                .accessibilityAction(named: "Skip the plan") { planModel.skipPlan() }
+            planKey
+                .entrance(3)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
 
-                HStack(alignment: .center, spacing: Theme.Spacing.l) {
-                    PaintKey(duration: 0.7, action: { finish(task) }, label: { _ in
-                        Text("Finish")
+    /// START WITH and the first item, as a hold: it keeps the plan and never starts anything.
+    @ViewBuilder private var planKey: some View {
+        if let first = planModel.first {
+            PaintKey(paint: Theme.Colors.ink, duration: 0.7, hint: "Keeps the plan", action: {
+                withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+                    planModel.keepPlan(model: model)
+                }
+            }, label: { _ in
+                Text("Start with \(first.title)")
+                    .textRole(.labelStrong)
+                    .fixedSize(horizontal: false, vertical: true)
+            })
+            .accessibilityLabel("Start with \(first.title)")
+        }
+    }
+
+    /// The workout's progress for the key's ink line (41.5): the share of its sets logged, nil before any.
+    private func progress(of process: ProcessSnapshot) -> Double? {
+        guard let workout = process.subject else { return nil }
+        let entries = workout.orderedChildren.filter { !$0.isDeleted }
+        let planned = Self.plannedSets(entries, store: model.store)
+        let done = entries.reduce(0) { $0 + $1.orderedChildren.count { !$0.isDeleted } }
+        guard planned > 0, done > 0 else { return nil }
+        return min(Double(done) / Double(planned), 1)
+    }
+
+    /// The sets a workout plans: each entry's "targetSets" (where the plan and the demo write it), 3 when an entry
+    /// has none (as WorkoutSession counts it), at least 1 each.
+    static func plannedSets(_ entries: [ObjectRecord], store: ObjectStore) -> Int {
+        entries.reduce(0) { $0 + max(Int(store.number("targetSets", of: $1) ?? 3), 1) }
+    }
+
+    @ViewBuilder
+    private func hero(_ task: ScheduleItem?, now: Date, facts: HomeFacts) -> some View {
+        if let task, let record = model.object(task.id) {
+            let line = HomeLines.line(for: facts.fact(task: record, startsAt: task.start), now: now)
+            VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+                LineHero(line: line, opens: .object(task.id)) {
+                    PaintKey(duration: 0.7, hint: "Finishes the task", action: { finish(task) }, label: { _ in
+                        Text("Finish").textRole(.labelStrong)
                     }, meta: {
                         TimelineView(.periodic(from: .now, by: 30)) { context in
                             let lines = Self.timeLeft(task, now: AppClock.adjust(context.date))
@@ -121,18 +233,29 @@ struct NowPage: View {
                         }
                     })
                     .accessibilityLabel("Finish \(task.title)")
-                    .accessibilityHint("Touch and hold")
                 }
-                .entrance(3)
+                .id(task.id)
+                .transition(heroTransition)
                 // The countdown as time you can see: a wash that drains while the item runs.
                 DrainBar(start: task.start, end: task.end)
                     .padding(.top, Theme.Spacing.s)
                     .entrance(4)
             }
         } else if let routine = model.todaysRoutine(now: now) {
-            RoutineHero(routine: routine)
+            LineHero(line: HomeLines.line(for: facts.fact(planned: routine, now: now), now: now),
+                     opens: .object(routine.id))
+            {
+                if model.canStart(routine) {
+                    PaintKey(paint: Theme.Colors.ink, isTap: true, action: { model.startRoutine(routine) },
+                             label: { _ in Text("Start \(routine.title)").textRole(.labelStrong) })
+                        .accessibilityLabel("Start \(routine.title)")
+                }
+            }
         } else if let done = model.finishedToday(now: now).first {
-            DoneHero(summary: done, onShow: onShow)
+            // The counts live one tap down (41.1, 41.6).
+            LineHero(line: HomeLines.line(for: facts.fact(done: done), now: now), opens: .object(done.workout.id)) {
+                EmptyView()
+            }
         } else {
             VStack(alignment: .leading, spacing: Theme.Spacing.l) {
                 Text("Nothing else is planned today.")
@@ -351,171 +474,6 @@ private struct GhostRow: View {
     }
 }
 
-/// Trained today and nothing else on: the workout, saved, with Tess's one count line.
-private struct DoneHero: View {
-    let summary: WorkoutSummary
-    var onShow: (HomeSpatialView.Page) -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-            Text(summary.endedAt.map { "trained this \(SpokenTime.partOfDay($0))" } ?? "trained today")
-                .font(Theme.voice(size: 21))
-                .foregroundStyle(Theme.Colors.context)
-                .entrance(1)
-            Button {
-                onShow(.training)
-            } label: {
-                HeroText(text: summary.title) { $0 }
-                    .foregroundStyle(Theme.Colors.ink)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(HandleButtonStyle())
-            .accessibilityLabel("\(summary.title), done")
-            .accessibilityHint("Shows today's training")
-            .siblingParallax()
-            .entrance(2, hero: true)
-            Text(summary.line)
-                .font(Theme.voice(size: 21))
-                .foregroundStyle(Theme.Colors.tess)
-                .fixedSize(horizontal: false, vertical: true)
-                .entrance(3)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-/// Nothing else on: the plan's next routine is Now, with one key into live mode.
-/// A planned rest day: one quiet line, no guilt, and the next routine one tap away as a label word.
-private struct RestHero: View {
-    let next: ObjectRecord
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-            // The one context line directly above a hero rests in context (sweep-19).
-            Text("today")
-                .font(Theme.voice(size: 21))
-                .foregroundStyle(Theme.Colors.context)
-                .entrance(1)
-            HeroText(text: RestDay.line) { $0 }
-                .foregroundStyle(Theme.Colors.ink)
-                .siblingParallax()
-                .entrance(2, hero: true)
-            Text("\(next.title) is a tap away.")
-                .font(Theme.voice(size: 21))
-                .foregroundStyle(Theme.Colors.inkSecondary)
-                .entrance(3)
-            // An empty routine has nothing to start, so no Start word (Builder A's canStart).
-            if model.canStart(next) {
-                Button("Start \(next.title)") { model.startRoutine(next) }
-                    .buttonStyle(InkLabelWordStyle(color: Theme.Colors.live))
-                    .accessibilityHint("Starts \(next.title) anyway")
-                    .entrance(3)
-            }
-        }
-    }
-}
-
-private struct RoutineHero: View {
-    let routine: ObjectRecord
-    @Environment(AppModel.self) private var model
-    @Environment(\.zoomNamespace) private var namespace
-
-    var body: some View {
-        let slots = routine.orderedChildren.count
-        let sets = routine.orderedChildren.reduce(0) { $0 + Int(model.store.number("sets", of: $1) ?? 3) }
-        VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-            Text("today's training")
-                .font(Theme.voice(size: 21))
-                .foregroundStyle(Theme.Colors.context)
-                .entrance(1)
-            Button {
-                model.open(.object(routine.id))
-            } label: {
-                HeroText(text: routine.title) { $0 }
-                    .foregroundStyle(Theme.Colors.ink)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(HandleButtonStyle())
-            .modifier(ZoomSource(id: Route.object(routine.id), namespace: namespace))
-            .accessibilityHint("Opens \(routine.title)")
-            .siblingParallax()
-            .entrance(2, hero: true)
-            .padding(.bottom, Theme.Spacing.l)
-            HStack(alignment: .center, spacing: Theme.Spacing.l) {
-                if model.canStart(routine) {
-                    PaintKey(isTap: true, action: { model.startRoutine(routine) }, label: { _ in
-                        Text("Start")
-                    })
-                    .accessibilityLabel("Start \(routine.title)")
-                }
-                VStack(alignment: .leading, spacing: 0) {
-                    Text("\(slots) EXERCISES")
-                    Text("\(sets) SETS")
-                }
-                .textRole(.label)
-                .foregroundStyle(Theme.Colors.inkSecondary)
-                .accessibilityElement(children: .combine)
-            }
-            .entrance(3)
-        }
-    }
-}
-
-/// The live workout as Now: "running now, Push Day A", the resume point as the hero and one vermilion Resume key
-/// (docs/design/home-v1.md, "What's running").
-private struct RunningHero: View {
-    let session: WorkoutSession
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-            Text("running now, \(session.workout.title)")
-                .font(Theme.voice(size: 21))
-                .foregroundStyle(Theme.Colors.context)
-            HeroText(text: resumePoint) { $0 }
-                .foregroundStyle(Theme.Colors.ink)
-                .siblingParallax()
-                .padding(.bottom, Theme.Spacing.l)
-            HStack(alignment: .center, spacing: Theme.Spacing.l) {
-                PaintKey(finish: .ink, paint: Theme.Colors.live, isTap: true,
-                         action: { model.isWorkoutPresented = true }, label: { _ in
-                             Text("Resume")
-                         })
-                         .tint(Theme.Colors.live)
-                         .accessibilityLabel("Resume \(session.workout.title), \(resumePoint)")
-                TimelineView(.periodic(from: .now, by: 1)) { context in
-                    let lines = state(now: AppClock.adjust(context.date))
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(lines.0)
-                        Text(lines.1).contentTransition(.numericText(countsDown: true))
-                    }
-                    .textRole(.label)
-                    .foregroundStyle(Theme.Colors.inkSecondary)
-                    .monospacedDigit()
-                    .accessibilityElement(children: .combine)
-                }
-            }
-        }
-        .accessibilityElement(children: .contain)
-    }
-
-    private var resumePoint: String {
-        let exercise = session.currentExercise?.name ?? "Workout"
-        guard let entry = session.currentEntry else { return exercise }
-        return "\(exercise), set \(session.currentSetNumber) of \(session.targetSets(of: entry))"
-    }
-
-    private func state(now: Date) -> (String, String) {
-        switch session.phase(at: now) {
-        case let .rest(end): ("Resting", Format.duration(max(0, end.timeIntervalSince(now)).rounded(.up)))
-        case .set: ("Set \(session.currentSetNumber)", "is up")
-        case .exerciseDone: ("Next", "exercise")
-        case .workoutDone: ("Ready", "to finish")
-        }
-    }
-}
-
 /// One ledger row: the subject, the next step stated as time (never judgement) and a text-only Resume. Its state
 /// is the seam 6 pt above it: suspended = 2 pt vermilion, lit and still; waiting = an engraved hairline.
 private struct LedgerRow: View {
@@ -575,7 +533,7 @@ private struct LedgerRow: View {
 }
 
 /// Cobalt words drying into ink: an ink copy is revealed over them left to right.
-private struct DryingWords: View {
+struct DryingWords: View {
     let text: Text
     let dried: Bool
 
@@ -589,5 +547,24 @@ private struct DryingWords: View {
                         }
                     }
             }
+    }
+}
+
+/// The plan's hero in the first form that fits: Hero 56 on one line, Title 44 on one line, then Title 44 wrapped
+/// (plan-home.md: "Three tasks, Push A at 6" sits on two lines of 44 without the calendar). Static children only
+/// (`ViewThatFits` traps on a `ForEach`).
+private struct PlanHeroText: View {
+    let forms: [String]
+
+    var body: some View {
+        let long = forms.first ?? ""
+        ViewThatFits(in: .horizontal) {
+            Text(long).textRole(.hero).lineLimit(1)
+            Text(long).textRole(.title).lineLimit(1)
+            Text(long).textRole(.title).fixedSize(horizontal: false, vertical: true)
+        }
+        .foregroundStyle(Theme.Colors.ink)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityAddTraits(.isHeader)
     }
 }

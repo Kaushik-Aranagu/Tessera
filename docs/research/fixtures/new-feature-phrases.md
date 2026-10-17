@@ -89,8 +89,8 @@ The words are Design 44's own lines, so a spoken change lands exactly like the t
 | V-T11 | swap bench for dumbbell press in Push A | SwapSlotExercise. "Dumbbell press, in for bench press." | Model |
 | V-T12 | rest day Sunday | restWeekday = 1. "Sunday is your rest day." This is his answer to the Oct 22 list's question 12, so Product logs it | **Task "Rest day", Sunday** |
 | V-T13 | make Sunday my rest day | The same as V-T12 | **Task "Make my rest day", Sunday** |
-| V-T14 | skip legs today | No write. A rolling plan already rolls a missed day on: "Legs A waits for tomorrow." On fixed days: "Legs A waits for next Wednesday." | **Task "Skip legs", today at the next hour** |
-| V-T15 | rest day today | No write, as V-T14: "Rest today. Legs A is next." | **Task "Rest day", today** |
+| V-T14 | skip legs today | Superseded: writes a day mark with UNDO. See [`day-marks.md`](day-marks.md) D6 | **Task "Skip legs", today at the next hour** |
+| V-T15 | rest day today | Superseded: writes a day mark with UNDO. See [`day-marks.md`](day-marks.md) D1 | **Task "Rest day", today** |
 | V-T16 | skip, in a live workout | "Skip is on the workout screen." (decided, 8:58 PM PT Oct 15) | ✓ |
 | V-T17 | Push A tomorrow | No write: the plan, not a date, decides the day. "Pull A is tomorrow. Push A is after it." | **Task "Push A", tomorrow** |
 
@@ -107,7 +107,7 @@ The words are Design 44's own lines, so a spoken change lands exactly like the t
 | V7 | **Plural weekdays.** "Mondays" isn't in `weekdays`, which is right for memory but needed for V-T1 | `TessDates.weekdays` | Read plurals only inside the routine rule, never as a date | Core |
 | V8 | **Rest day by voice before Oct 22.** V-T12 answers the list's question 12 | `oct-22-list.md` | If he says it first, Product logs it and drops question 12 | Product |
 | V9 | **Bests as memory** (V-R10) | Design 49, arch 4 | Not kept: "Training keeps your bests." | Design (copy), the AI thread |
-| V10 | **"skip" and "rest today" lines** aren't drawn (V-T14, V-T15, V-T17) | Design 44 | The words above. They are statements, with no UNDO since nothing is written | Design (copy) |
+| V10 | **"skip" and "rest today" lines** aren't drawn (V-T14, V-T15, V-T17) | Design 44 | The words above. V-T14 and V-T15 now write a day mark with UNDO ([`day-marks.md`](day-marks.md)); V-T17 stays a statement | Design (copy) |
 
 ## 6. For the grammar regression fixture
 

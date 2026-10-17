@@ -134,9 +134,18 @@ struct ScaleTests {
         // The app warms the ledger at launch; the Day log reads after that.
         await TrainingLedger(store: store, classes: classes).warmUp()
         var story: [DayLine] = []
-        let read = clock.measure {
-            story = DayStory.lines(engine: engine, on: last, calendar: calendar, now: last.addingTimeInterval(86400))
-        }
+        // The median of five reads, so one stall on a busy Mac doesn't fail the budget (QA on #422).
+        let reads = (0 ..< 5).map { _ in
+            clock.measure {
+                story = DayStory.lines(
+                    engine: engine,
+                    on: last,
+                    calendar: calendar,
+                    now: last.addingTimeInterval(86400)
+                )
+            }
+        }.sorted()
+        let read = reads[2]
         print("SCALE \(Self.workouts) workouts: dayLogBuild=\(Self.milliseconds(build))ms "
             + "dayLog=\(Self.milliseconds(read))ms")
         #expect(story.contains { $0.text.hasPrefix("Day \(Self.workouts - 1), 60 min") })

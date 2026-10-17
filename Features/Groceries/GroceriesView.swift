@@ -129,7 +129,7 @@ private struct GroceriesPage: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 0) {
                 if shopping {
-                    PaintKey(paint: Theme.Colors.health, action: finishShop) { _ in
+                    PaintKey(paint: Theme.Colors.health, hint: "Finishes the shop", action: finishShop) { _ in
                         Text("Done")
                     } meta: {
                         Text("Hold")
@@ -604,7 +604,7 @@ private struct BasketFold: View {
                         .buttonStyle(HandleButtonStyle())
                         .accessibilityHint("Puts it back on the list")
                     }
-                    PaintKey(paint: Theme.Colors.health, action: onClear) { _ in
+                    PaintKey(paint: Theme.Colors.health, hint: "Clears the basket", action: onClear) { _ in
                         Text("Clear the basket")
                     } meta: {
                         Text("Hold")

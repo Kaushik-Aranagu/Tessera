@@ -87,7 +87,10 @@ public struct TessMemory: Identifiable, Equatable, Sendable {
         if day.isSameDay(date, day.adding(days: -1, to: now)) {
             return "yesterday"
         }
-        return "on " + date.formatted(.dateTime.month(.abbreviated).day().locale(Locale(identifier: "en_US")))
+        // His day, not the wall date: a cook at 12:30 am Oct 17 was on his Oct 16 (TW26).
+        var style = Date.FormatStyle.dateTime.month(.abbreviated).day().locale(Locale(identifier: "en_US"))
+        style.timeZone = calendar.timeZone
+        return "on " + day.day(of: date).formatted(style)
     }
 }
 
@@ -113,12 +116,15 @@ public enum TessMemoryScreen {
 
     public enum Refusal: Equatable, Sendable {
         case empty, tooLong, health(String), money(String), place(String), unlicensedNumber(Int), looksLikeKey, capFull
+        /// A password, PIN or code: "I don't keep passwords." (Research 134 SW3).
+        case secret
 
         /// Tess's line when she won't keep it (Design 49 addendum S6, S7); nil for a shape problem.
         public var line: String? {
             switch self {
             case .money: "I don't keep sums of money."
             case .place: "I don't keep places."
+            case .secret: "I don't keep passwords."
             case .capFull: TessMemory.capLine
             default: nil
             }
@@ -132,6 +138,9 @@ public enum TessMemoryScreen {
         guard trimmed.count <= TessMemory.maxTextLength else { return .tooLong }
         if trimmed.contains("sk-ant-") {
             return .looksLikeKey
+        }
+        if SecretWords.mentions(trimmed) {
+            return .secret
         }
         let lower = trimmed.lowercased()
         let tokens = lower.split { !$0.isLetter && $0 != "$" && $0 != "£" && $0 != "€" }.map(String.init)

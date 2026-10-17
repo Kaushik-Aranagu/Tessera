@@ -1,5 +1,7 @@
 # Settings: Claude, every state and its line
 
+> **Update Oct 16, 12:40 pm PT:** the monthly Claude cap is now **$50** (Kaushik's yes at 9:27 am). Read every "$10" cap below as $50, with amber from $40 ("PAUSES AT $50"). Model prices in this file are unchanged. See `cap-math-check.md`.
+
 For: Design (Settings: Claude sheet), Builder B (the screen), Core (key store, `ClaudeKeyCheck`, ledger). Research lab, board item 59, 2026-10-16.
 Read with `claude-key-test.md` (K1 to K10), `claude-first-uses.md`, `tess-voice.md` (M1 to M58), `tess-model-layer.md` §3, §4, §7, and decisions 5:14, 5:49, 6:22 and 6:37 PM PT.
 Design's sheet is `docs/design/claude-settings.md` on branch `claude/project-thread-b3tu3f` (f1a12e1); there is no copy in the shared `design/` folder, only `claude-settings.mp4`, so this file read the branch copy.

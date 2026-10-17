@@ -39,7 +39,11 @@ public struct NoteList {
             return classObject?(classDef) ?? store.classObject(of: classDef)
         }
         return store.context.all(ObjectRecord.self)
-            .filter { !$0.isDeleted && !$0.isClassObject && $0.title.lowercased() == needle }
+            // A private note is never a mention's target: "@Private note" links nothing (board 0ad, PN-MENTION).
+            .filter {
+                !$0.isDeleted && !$0.isClassObject && $0.title.lowercased() == needle
+                    && store.value("isPrivate", of: $0) != .bool(true)
+            }
             .min { $0.createdAt < $1.createdAt }
     }
 
@@ -88,11 +92,14 @@ public struct CreateNote: EngineAction {
     public var title: String?
     /// The day it's about, for a log said afterwards ("watered plants sat"); nil is now.
     public var on: Date?
+    /// A private note: its title is "Private note", its words stay in the body (secret words, Research 134).
+    public var isPrivate: Bool?
 
-    public init(body: String, title: String? = nil, on: Date? = nil) {
+    public init(body: String, title: String? = nil, on: Date? = nil, isPrivate: Bool? = nil) {
         self.body = body
         self.title = title
         self.on = on
+        self.isPrivate = isPrivate
     }
 
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
@@ -100,9 +107,20 @@ public struct CreateNote: EngineAction {
         guard !text.isEmpty else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "the note is empty")
         }
-        let note = try transaction.create(transaction.classDef(.note), title: title ?? Self.firstLine(text))
+        // A Claude key never becomes a note (QA B1, backups review): it would ride in every backup and iCloud copy.
+        guard !looksLikeClaudeKey(text), !(title.map(looksLikeClaudeKey) ?? false) else {
+            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "refused: looksLikeKey")
+        }
+        // A line with a secret word is private whoever writes it: the model and Claude never get to title it.
+        let isPrivate = isPrivate == true || SecretWords.mentions(text)
+        let note = try transaction.create(transaction.classDef(.note),
+                                          title: isPrivate ? SecretWords.title : title ?? Self.firstLine(text))
         try transaction.set("body", to: .text(text), on: note)
-        try transaction.linkMentions(of: note, body: text)
+        if isPrivate {
+            try transaction.set("isPrivate", to: .bool(true), on: note)
+        } else {
+            try transaction.linkMentions(of: note, body: text)
+        }
         if let on {
             note.createdAt = on
         }
@@ -115,7 +133,7 @@ public struct CreateNote: EngineAction {
     }
 
     public func summary(in _: ObjectStore) -> String {
-        "Noted"
+        isPrivate == true || SecretWords.mentions(body) ? SecretWords.title : "Noted"
     }
 }
 
@@ -139,6 +157,26 @@ public struct EditNote: EngineAction {
 
     public func apply(_ transaction: inout Transaction) throws {
         let note = try transaction.object(note, is: .note)
+        guard !(body.map(looksLikeClaudeKey) ?? false), !(title.map(looksLikeClaudeKey) ?? false) else {
+            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "refused: looksLikeKey")
+        }
+        // A private note stays private, and a code added to a plain note makes it private (QA F1 on #422): the title
+        // stays "Private note" and nothing is linked from its words.
+        let wasPrivate = transaction.store.value("isPrivate", of: note) == .bool(true)
+        let isPrivate = wasPrivate || body.map(SecretWords.mentions) == true || title.map(SecretWords.mentions) == true
+        if isPrivate {
+            if !wasPrivate {
+                try transaction.set("isPrivate", to: .bool(true), on: note)
+                try transaction.setLinks("about", on: note, to: [])
+            }
+            if let body {
+                try transaction.set("body", to: .text(body), on: note)
+            }
+            if note.title != SecretWords.title {
+                transaction.setTitle(SecretWords.title, on: note)
+            }
+            return
+        }
         if let body {
             try transaction.set("body", to: .text(body), on: note)
             try transaction.linkMentions(of: note, body: body)
@@ -148,8 +186,9 @@ public struct EditNote: EngineAction {
         }
     }
 
-    public func summary(in _: ObjectStore) -> String {
-        "Note updated"
+    public func summary(in store: ObjectStore) -> String {
+        store.object(id: note).map { store.value("isPrivate", of: $0) == .bool(true) } == true
+            ? SecretWords.title : "Note updated"
     }
 }
 

@@ -109,6 +109,7 @@ struct BottomChrome: View {
                 setAsk = nil
             }
         }
+        .onDisappear(perform: askLeft)
         .onAppear {
             model.soul.handle(.appeared)
             breathe = !reduceMotion
@@ -221,7 +222,8 @@ struct BottomChrome: View {
 
     /// The soul at 0.72, breathing 1 ↔ 1.08 over 3.2 s; tap opens, hold opens, double tap goes Home.
     private var soulKey: some View {
-        TessSoul(mode: model.tessMode)
+        TessSoul(mode: model.tessMode, hostScale: 0.72, eyes: model.tessHasEyes, gaze: model.soul.gaze,
+                 wake: model.soul.wake)
             .scaleEffect(0.72)
             .scaleEffect(breathe ? 1.08 : 1)
             .tesseraAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true), value: breathe)
@@ -453,7 +455,7 @@ struct BottomChrome: View {
     }
 
     /// Return: the text dims to a ghost and a cobalt line dries under it for 2 s (touching cancels), then it commits.
-    /// Core's shared guard (any "sk-ant-", any case).
+    /// Core's shared guard (anything that starts like a Claude key, in any case).
     static func looksLikeClaudeKey(_ text: String) -> Bool {
         TesseraCore.looksLikeClaudeKey(text)
     }
@@ -531,6 +533,15 @@ struct BottomChrome: View {
 // MARK: - Speak and the asks (same file, so they reach the view's private state)
 
 extension BottomChrome {
+    /// An ask can't wait off screen (tess-motion.md §14 `askLeft`): leaving with one open lets it go, or the router
+    /// would keep refusing the lens. Emitted here because the ask's onChange won't run once the view is gone.
+    private func askLeft() {
+        guard setAsk != nil || liftAsk != nil else { return }
+        setAsk = nil
+        liftAsk = nil
+        model.soul.handle(.askAnswered)
+    }
+
     /// Taps are read off the press itself: a separate tap gesture never fired beside the touch-down drag, so the
     /// soul didn't open on a real tap. One tap opens or closes after the double-tap window; two go Home.
     private func soulTapped() {
@@ -587,7 +598,9 @@ extension BottomChrome {
             if let refused = await listener.start(hold: hold) {
                 holdListening = false
                 if hold {
-                    // From a hold the line shows beside the soul; the layer doesn't open.
+                    // From a hold the line shows beside the soul; the layer doesn't open. She goes back to rest
+                    // first: the line's 4 s never settles her while she's listening.
+                    model.soul.handle(.heardNothing)
                     say("\(refused.line) \(refused.action) still works.")
                 } else {
                     withTesseraAnimation(reduceMotion: reduceMotion) { refusal = refused }
@@ -715,15 +728,18 @@ extension BottomChrome {
     /// it only when that line has its own op; a capture's line shows it for that capture.
     private var canUndo: Bool {
         if let note = voice.note {
-            return note.undo != nil
+            return note.undo != nil || note.takeBack != nil
         }
         return model.lastCapture != nil
     }
 
     /// Home's last action (done, moved) first, else the last capture.
     private func undo() {
-        if let record = voice.note?.undo {
-            _ = model.engine.undo(record)
+        if let note = voice.note, note.undo != nil || note.takeBack != nil {
+            if let record = note.undo {
+                _ = model.engine.undo(record)
+            }
+            note.takeBack?()
             model.touch()
             undos += 1
             withTesseraAnimation(reduceMotion: reduceMotion) { voice.clear() }

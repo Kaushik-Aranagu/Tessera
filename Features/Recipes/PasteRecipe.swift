@@ -201,7 +201,11 @@ struct PasteRecipe: View {
             CreateRecipe(text: text, corrections: corrections.isEmpty ? nil : corrections), by: .user
         ) else {
             // Nothing written (a link, say): kept on the phone for week one, never in the op log.
-            CaptureMissLog.beside(model.store)?.record(text, at: AppClock.now, route: "none", source: "paste")
+            // Never a pasted line with a secret word in it (Research 134; QA F3 on #422).
+            // Nor money or a body fact (board 0ah).
+            if !SecretWords.mentions(text), !PrivateFacts.isWalled(text) {
+                CaptureMissLog.beside(model.store)?.record(text, at: AppClock.now, route: "none", source: "paste")
+            }
             return
         }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {

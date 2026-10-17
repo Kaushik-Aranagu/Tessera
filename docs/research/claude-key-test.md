@@ -1,5 +1,7 @@
 # Claude key Test call
 
+> **Update Oct 16, 12:40 pm PT:** the monthly Claude cap is now **$50** (Kaushik's yes at 9:27 am). Read every "$10" cap below as $50, with amber from $40 ("PAUSES AT $50"). Model prices in this file are unchanged. See `cap-math-check.md`.
+
 For: Core (key store, ledger, client), Builder B (the key field on the Settings: Claude sheet). Research lab, board item 40, 2026-10-16.
 Read with `tess-model-layer.md` §3 to §4 and §12, `tess-voice.md` M1 to M18, and decisions 5:49 PM PT ("Claude key entry pulled forward").
 Code traced on `origin/master` at `3f124ee` (no Swift toolchain). API facts fetched live from platform.claude.com on 2026-10-16 (sources at the end).
@@ -104,7 +106,7 @@ Engine tests (`swift test`) use an in-memory `TessKeychain` fake. One app-target
 
 ```swift
 @Suite(.serialized) @MainActor struct ClaudeKeyLeakTests {
-    static let key = "sk-ant-TEST-" + UUID().uuidString          // unique, so a hit can only be ours
+    static let key = "<the Claude key prefix>-TEST-" + UUID().uuidString          // unique, so a hit can only be ours
 
     @Test func keyNeverLeavesTheKeychain() async throws {
         let since = Date.now
@@ -133,7 +135,7 @@ Engine tests (`swift test`) use an in-memory `TessKeychain` fake. One app-target
         ]
         for (name, bytes) in haystacks {
             #expect(bytes.range(of: Data(Self.key.utf8)) == nil, "key found in \(name)")
-            #expect(bytes.range(of: Data("sk-ant-".utf8)) == nil, "key prefix found in \(name)")
+            #expect(bytes.range(of: Data("<the Claude key prefix>-".utf8)) == nil, "key prefix found in \(name)")
         }
         #expect(context.all(TessCall.self).count == 1)                          // the Test counted
         #expect(context.all(TessCall.self).first?.costNano == 0)

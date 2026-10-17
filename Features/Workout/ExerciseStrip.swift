@@ -109,7 +109,7 @@ struct RunningOrderSheet: View {
                 // Done for today with exercises left: what's logged is saved, the rest is simply not done.
                 // Silent: finish(early:) plays the done pattern, the moment's one haptic.
                 PaintKey(paint: Paint.live, duration: 0.7, height: 64, drift: 20, isSilent: true,
-                         action: onFinish)
+                         hint: "Finishes the workout", action: onFinish)
                 { _ in
                     Text("Finish here")
                 } meta: {

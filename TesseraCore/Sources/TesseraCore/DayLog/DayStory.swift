@@ -36,7 +36,7 @@ public struct DayLine: Equatable, Sendable {
         time.map { DayStory.clock($0, calendar: calendar) }
     }
 
-    /// "7:10 am, Push Day A, 52 minutes. Bench 82.5 by 8, PR." for VoiceOver.
+    /// "7:10 am, Push Day A, 52 minutes. Bench 82.5 by 8, best." for VoiceOver.
     public func spoken(_ calendar: Calendar) -> String {
         let words = text.replacingOccurrences(of: " × ", with: " by ")
             .replacing(/(\d+) min\b/) { "\($0.1) minutes" }
@@ -222,7 +222,7 @@ public enum DayStory {
                       workout.sets > 0 // a 0-set workout is no session
                 else { continue }
                 let top = lookup.topSet(inWorkout: root)
-                let topText = top.map { ". \($0.text)\($0.isPR ? ", PR" : "")." } ?? "."
+                let topText = top.map { ". \($0.text)\($0.isPR ? ", best" : "")." } ?? "."
                 if let ended = workout.endedAt {
                     let minutes = Int((ended.timeIntervalSince(started) / 60).rounded())
                     lines.append((DayLine(time: started, text: "\(workout.title), \(minutes) min\(topText)",
@@ -239,13 +239,18 @@ public enum DayStory {
             }
             switch action {
             case "startCooking":
-                guard onDay(record.createdAt, zone: zone(of: record)),
-                      let cook = record.objectIDs.first(where: { lookup.kind(of: $0) == "cook" }),
-                      let finish = cookFinish[cook], seenRoots.insert(cook).inserted
+                // A cook files on the day it was finished, read in the finish's zone, like a done task (Product G2,
+                // trip-week TW4). The row shows the finish time and its length, an hour or more in h and min
+                // ("9:05 am Cooked overnight oats, 6 h 55 min"; Product 2:48 PM PT).
+                guard let cook = record.objectIDs.first(where: { lookup.kind(of: $0) == "cook" }),
+                      let finish = cookFinish[cook], onDay(finish.createdAt, zone: zone(of: finish)),
+                      seenRoots.insert(cook).inserted
                 else { continue }
                 let minutes = Int((finish.createdAt.timeIntervalSince(record.createdAt) / 60).rounded())
-                lines.append((DayLine(time: record.createdAt,
-                                      text: "Cooked \(lookup.title(of: cook) ?? "it"), \(minutes) min",
+                let length = minutes < 60 ? "\(minutes) min"
+                    : minutes % 60 == 0 ? "\(minutes / 60) h" : "\(minutes / 60) h \(minutes % 60) min"
+                lines.append((DayLine(time: finish.createdAt,
+                                      text: "Cooked \(lookup.title(of: cook) ?? "it"), \(length)",
                                       objectIDs: [cook], kind: .finished), false))
             case "startShop":
                 guard onDay(record.createdAt, zone: zone(of: record)), let finish = shopFinish[record.id] else {
@@ -342,7 +347,10 @@ public enum DayStory {
                                size: dones.objects.count, tail: "\(dones.objects.count) done"))
         }
         if let notes {
-            let text = notes.objects.count == 1 ? "Note: \(notes.titles[0])" : "\(notes.objects.count) notes"
+            // A private note reads "Private note" and nothing more (Research 134 SW2); its title already is that.
+            let text = notes.objects.count == 1
+                ? (notes.titles[0] == SecretWords.title ? SecretWords.title : "Note: \(notes.titles[0])")
+                : "\(notes.objects.count) notes"
             loose.append(Loose(line: DayLine(time: notes.time, text: text, objectIDs: notes.objects, kind: .finished),
                                size: notes.objects.count,
                                tail: "\(notes.objects.count) \(notes.objects.count == 1 ? "note" : "notes")"))
@@ -410,11 +418,7 @@ extension DayStory {
 
     /// "6:12 pm", "11:20 pm", "12 pm".
     static func sentenceTime(_ date: Date, calendar: Calendar) -> String {
-        let parts = calendar.dateComponents([.hour, .minute], from: date)
-        let hour = parts.hour ?? 0, minute = parts.minute ?? 0
-        let twelve = hour % 12 == 0 ? 12 : hour % 12
-        let half = hour < 12 ? "am" : "pm"
-        return minute == 0 ? "\(twelve) \(half)" : String(format: "%d:%02d %@", twelve, minute, half)
+        HouseTime.clock(date, calendar: calendar)
     }
 }
 

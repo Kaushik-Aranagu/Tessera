@@ -1,5 +1,7 @@
 # Tess voice guide
 
+> **Update Oct 16, 12:40 pm PT:** the monthly Claude cap is now **$50** (Kaushik's yes at 9:27 am). Read every "$10" cap below as $50, with amber from $40 ("PAUSES AT $50"). Model prices in this file are unchanged. See `cap-math-check.md`.
+
 For: Tess AI (future team), Design studio (copy), Product lead
 Date: 2026-10-16
 

@@ -14,13 +14,18 @@ final class HealthExporter {
     init(engine: ActionEngine) {
         ledger = TrainingLedger(store: engine.store, classes: engine.classes)
         engine.observe { [weak self] record in
-            guard record.action == FinishWorkout.descriptor.name, let self else { return }
+            guard Self.exports(record.action), let self else { return }
             let workouts = record.objectIDs.compactMap { engine.store.object(id: $0) }
             for workout in workouts where workout.classDef.map({ self.isWorkout($0, engine: engine) }) == true {
                 let summary = ledger.summary(of: workout)
                 Task { await self.save(summary) }
             }
         }
+    }
+
+    /// The actions that finish a workout: a normal finish, and finish early from the running order.
+    nonisolated static func exports(_ action: String) -> Bool {
+        action == FinishWorkout.descriptor.name || action == FinishWorkoutEarly.descriptor.name
     }
 
     private func isWorkout(_ classDef: ClassDef, engine: ActionEngine) -> Bool {

@@ -16,6 +16,9 @@ public struct TessGrammar {
         case task(title: String, startsAt: Date?)
         /// "note: bar felt heavy" (or "note bar felt heavy").
         case note(body: String, on: Date? = nil)
+        /// A line with a secret word: a private note on the phone, never the model, Claude, memory or the miss log.
+        /// `remembered` when he said "remember …" (Tess adds "I don't keep passwords.").
+        case privateNote(body: String, remembered: Bool, on: Date? = nil)
         /// Kitchen: "buy milk", "milk, eggs, 2 lemons".
         case groceries(lines: [String])
         /// "cook carbonara" (now, `on` nil) or "cook carbonara thu" (a dated task linking the recipe).
@@ -64,6 +67,10 @@ public struct TessGrammar {
                                       with: "")
         let text = Self.normalize(phrase)
         guard !text.isEmpty else { return nil }
+        // Secret words first, before notes, recipes and questions (Research 134 R1): nothing with one leaves the phone.
+        if let secret = parseSecret(phrase, text: text, context: context) ?? parseRememberedMoney(phrase) {
+            return secret
+        }
         if let note = parseNote(phrase) {
             return note
         }
@@ -107,17 +114,29 @@ public struct TessGrammar {
             return nil
         }
         // Money said ("spent $23.47 at trader joe's sat") is never a task or a list until Money exists: the miss line.
-        if Self.isMoney(phrase), phrase.lowercased().firstMatch(of: /^(?:spent|spend|paid|pay|cost|bought)\b/) != nil
+        if Self.isMoney(phrase), phrase.lowercased().firstMatch(of: /^(?:spent|spend|paid|pay|cost)\b/) != nil
             || phrase.firstMatch(of: /^[$£€₹]\s?\d/) != nil
         {
-            return nil
+            // Something to do with a day wins over its amount (12:13 PM PT): "pay rent 1800 friday" is a task, said
+            // back without its words. Money said in the past with a day is a private note on that day ("paid rent
+            // 2100 fri", Product 1:15 PM PT); with no day it stays the miss line.
+            return Self.isSomethingToDo(phrase) ? parseTask(phrase, context: context) : parsePrivateLog(
+                phrase,
+                context: context
+            )
         }
         // A bare set with nothing in focus ("80 for 8" while shopping) is never an item or a task: the model reads it.
         if text.firstMatch(of: /^\d+(?:\.\d+)?(?: ?kg| ?lb)?(?: ?x ?| for | by )\d+(?: reps)?$/) != nil {
             return nil
         }
-        // A past-tense log with a day ("watered plants sat") is a note dated that day, never a future task.
-        if let log = parsePastLog(phrase, context: context) {
+        // A body fact is private before it's a dated log (Product P14/P15a, 12:30 PM PT): "slept 6 hours last night",
+        // "took advil 400mg yesterday", "take advil 400mg at 9 pm". A past-tense log with a day ("watered plants
+        // sat") is a note dated that day, never a future task.
+        // A dated past log of money is private too ("bought a tv for 800 sat", QA F2 on #534).
+        let walledLog = Self.isSomethingToDo(phrase) ? nil
+            : parseBodyFact(phrase) ??
+            (PrivateFacts.isMoneyShaped(phrase) ? parsePrivateLog(phrase, context: context) : nil)
+        if let log = walledLog ?? parsePastLog(phrase, context: context) {
             return log
         }
         // After lifts, so "bench 80x8, 82.5x6" stays a lift.
@@ -131,7 +150,14 @@ public struct TessGrammar {
         if phrase.firstMatch(of: Self.rescheduleShape) != nil {
             return nil
         }
-        return parseTask(phrase, context: context)
+        return parseTaskOrBodyFact(phrase, context: context)
+    }
+
+    /// A body fact with a day ("headache since tuesday") is a private note, not a task (QA R1 on #471), unless it
+    /// opens with something to do: "call the doctor about my knee thu" and "refill lexapro 10mg fri" stay tasks.
+    func parseTaskOrBodyFact(_ phrase: String, context: TessContext) -> Parse? {
+        Self.isSomethingToDo(phrase) ? parseTask(phrase, context: context) ?? parseBodyFact(phrase)
+            : parseBodyFact(phrase) ?? parseTask(phrase, context: context)
     }
 
     /// The live workout's rules for a phrase with an exercise in focus; nil when they don't apply (the other rules
@@ -297,6 +323,13 @@ public struct TessGrammar {
     }
 
     /// "watered plants sat", "saw mum yesterday": a note dated that day (Product, 2026-10-15).
+    /// A past-tense log of money, dated, kept private: "paid rent 2100 fri".
+    func parsePrivateLog(_ phrase: String, context: TessContext) -> Parse? {
+        guard case let .note(_, on)? = parsePastLog(phrase, context: context) else { return nil }
+        let body = phrase.trimmingCharacters(in: .whitespacesAndNewlines)
+        return .privateNote(body: body.prefix(1).uppercased() + body.dropFirst(), remembered: false, on: on)
+    }
+
     private func parsePastLog(_ phrase: String, context: TessContext) -> Parse? {
         let words = phrase.split(separator: " ").map(String.init)
         guard let first = words.first, Self.isPastVerb(first),
@@ -409,6 +442,7 @@ public struct TessGrammar {
         "bench": "bench press", "bp": "bench press", "ohp": "overhead press", "press": "overhead press",
         "squat": "back squat", "squats": "back squat", "dl": "deadlift", "deads": "deadlift",
         "rdl": "romanian deadlift", "row": "barbell row", "rows": "barbell row", "pullups": "pull-up",
+        "pull-ups": "pull-up",
         "pull ups": "pull-up", "chinups": "chin-up", "curls": "dumbbell curl", "curl": "dumbbell curl", "dips": "dip",
         "lat pulldown": "lat pulldown",
     ]
@@ -458,7 +492,36 @@ public struct TessGrammar {
     // MARK: Tasks
 
     /// A task with a day or time cue ("dentist thu 3pm"), or one that says it's a task ("todo call mom").
-    private func parseTask(_ phrase: String, context: TessContext) -> Parse? {
+    /// Research 134 R1 to R7. A value after the secret word makes a private note; with no value a task shape stays a
+    /// task ("password reset email friday", "code review friday 3pm"); anything else with a secret word is a private
+    /// note too, because nothing with one goes to the model. A question about it is answered on the phone.
+    func parseSecret(_ phrase: String, text: String, context: TessContext) -> Parse? {
+        guard SecretWords.mentions(phrase) else { return nil }
+        var body = phrase.trimmingCharacters(in: .whitespacesAndNewlines)
+        var remembered = false
+        if let match = body.firstMatch(of: /^(?i)note[:\s]\s*(.+)$/) {
+            body = String(match.1)
+        } else if let match = body.firstMatch(of: /^(?i)remember(?:\s+that)?\s+(.+)$/) {
+            body = String(match.1)
+            remembered = true
+        }
+        if Self.isQuestion(text) || body.hasSuffix("?") {
+            return .ask("It's in your private notes.")
+        }
+        if !SecretWords.hasValue(body), !remembered, let task = parseTask(phrase, context: context) {
+            return task
+        }
+        // A list or kitchen shape with no value wins (Research 139): "buy pins", "get a combination lock" are
+        // groceries, read by the rules below. They still never reach a model: the router keeps them on the grammar.
+        if !SecretWords.hasValue(body), !remembered,
+           phrase.firstMatch(of: /^(?i)\s*(?:buy|get|grab|pick up|add)\s+\S/) != nil
+        {
+            return nil
+        }
+        return .privateNote(body: body.prefix(1).uppercased() + body.dropFirst(), remembered: remembered)
+    }
+
+    func parseTask(_ phrase: String, context: TessContext) -> Parse? {
         var words = phrase.split(separator: " ").map(String.init)
         var explicit = false
         if let first = words.first?.lowercased().trimmingCharacters(in: .punctuationCharacters),
@@ -610,6 +673,7 @@ enum TessDates {
             }
         }
         // "tonight" said after 20:00 stays tonight until 23:30: the next whole hour (Product, 4:41 PM PT; QA G11).
+        var secondPass: Date?
         let lateCutoff = calendar.date(bySettingHour: 23, minute: 30, second: 0, of: now) ?? now
         if tonightOnly, let eight = calendar.date(bySettingHour: 20, minute: 0, second: 0, of: base), eight <= now,
            now < lateCutoff
@@ -620,25 +684,24 @@ enum TessDates {
                   let candidate = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: base),
                   candidate <= now
         {
-            base = calendar.date(byAdding: .day, value: 1, to: base) ?? base
+            // The fall-back night's repeated hour: "1:30am" said at 1:45 am PDT is the 1:30 am PST still ahead, not
+            // tomorrow's (Research DS8, board 0ag).
+            secondPass = Self.laterPass(hour: hour, minute: minute, of: base, after: now, calendar: calendar)
+            if secondPass == nil {
+                base = calendar.date(byAdding: .day, value: 1, to: base) ?? base
+            }
         }
-        var date = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: base)
+        var date = secondPass ?? calendar.date(bySettingHour: hour, minute: minute, second: 0, of: base)
         // "thu" said on a Thursday means today (Product, 2026-10-15). With no time, never in the past: the next
         // whole hour. With a time that's passed, next week.
-        if fromWeekday, let resolved = date, resolved <= now {
-            if time == nil {
-                let next = calendar.component(.hour, from: now) + 1
-                date = next < 24 ? calendar.date(bySettingHour: next, minute: 0, second: 0, of: now)
-                    : calendar.date(byAdding: .day, value: 7, to: resolved)
-            } else {
-                date = calendar.date(byAdding: .day, value: 7, to: resolved)
-            }
-        } else if day != nil, !fromWeekday, time == nil, let resolved = date, resolved <= now {
-            // "today" with no time after 09:00: the next whole hour, not this morning.
-            let next = calendar.component(.hour, from: now) + 1
-            if next < 24 {
-                date = calendar.date(bySettingHour: next, minute: 0, second: 0, of: now)
-            }
+        if let resolved = date, resolved <= now {
+            date = Self.ahead(resolved, now: now, fromWeekday: fromWeekday, saidDay: day != nil, saidTime: time != nil,
+                              hour: hour, minute: minute, calendar: calendar)
+        }
+        // A time Tess picked (none was said) never lands in his quiet hours, 23:00 to 07:00: it moves to 7 am.
+        // A time he says himself is kept (Product 0ab, 1:22 PM PT Oct 16).
+        if time == nil, let resolved = date {
+            date = Self.outOfQuietHours(resolved, calendar: calendar)
         }
         return Found(date: date, remaining: remaining, saidDay: day != nil, saidTime: time != nil,
                      bareColon: bareColon)
@@ -685,10 +748,20 @@ enum TessDates {
     }
 
     /// The next given weekday; today counts only if it hasn't passed (it's the same day, so we keep it).
+    /// 23:00 to 07:00 becomes the next 7 am.
+    static func outOfQuietHours(_ date: Date, calendar: Calendar) -> Date {
+        let hour = calendar.component(.hour, from: date)
+        guard hour >= 23 || hour < 7 else { return date }
+        let day = hour >= 23 ? calendar.date(byAdding: .day, value: 1, to: date) ?? date : date
+        return calendar.date(bySettingHour: 7, minute: 0, second: 0, of: day) ?? date
+    }
+
+    /// The next date with that weekday, counted from his day: "thu" said at 1 am Friday (still his Thursday) is
+    /// today, not next week (TW29).
     static func nextDate(weekday: Int, after now: Date, calendar: Calendar) -> Date? {
-        let today = calendar.component(.weekday, from: now)
-        let offset = (weekday - today + 7) % 7
-        return calendar.date(byAdding: .day, value: offset, to: calendar.startOfDay(for: now))
+        let his = TesseraDay(calendar: calendar).day(of: now)
+        let offset = (weekday - calendar.component(.weekday, from: his) + 7) % 7
+        return calendar.date(byAdding: .day, value: offset, to: his)
     }
 
     /// "3pm", "3:30pm", "15:00", "9" (with "at"), "noon".

@@ -23,6 +23,22 @@ For Builder A (before the PR) and QA (the review): how to tell whether the built
 | Minute | `tess-motion-minute.mp4` | none by frame: count and cadence (7 to 15 blinks, gaps 3 to 8 s, one double, 160 ms each); soul-crop SSIM over any 10 s window ≥ 0.92; nothing outside the crop changes | Home at rest, eyes on, 60 s, no touch |
 | Low Power | `tess-motion-low-power.mp4` | 1.8 (fade), 2.5 (split: six lights), 5.6 (gather), 6.4 (Done) | the same Plan my day ask with Low Power on (device) or `-lowPower` (simulator); no readers in any frame |
 | Lens | `tess-motion-lens.mp4` | 0.8 (hold: lens forms, pages shrink), 2.2 (the tick), 3.4 (release), 7.0 (hold while reading: readers home by 7.36) | hold the tab row on TODAY 260 ms, slide one word right over 800 ms, let go; then a Plan my day ask and the same hold at 1.4 s into the scan |
+| Pick 1, lights follow the page (18a) | `picks/tess-pick-wander.mp4` | 0.6 (split), 1.7 (readers on Push A), 2.42 (12:15 pm), 3.14 (Call the bank), 5.2 (gather), 5.98 (Done) | an ask whose `touched` is [Push A, 12:15 pm, Call the bank, 9:30 am, Book the dentist]; the dock lights are seeded, so compare the readers, not the dock |
+| Pick 2, she wakes with you (18a) | `picks/tess-pick-wake.mp4` | 1.0 (eyes start opening), 1.4 (open), 1.5 (stretch), 2.1 (widest, back), 3.4 (blink) | the first foreground after 04:00 (`-demoTime 07:42`, fresh day) |
+| Pick 3, stroke her (18b) | `picks/tess-pick-stroke.mp4` | 1.4 (finger enters, the tick), 1.75 (leaves), 1.8 (blink), 3.0 (still) | a pan from (296, 792) to (396, 770) over 350 ms, starting at 1.4 s |
+| Pick 4, she wears the day (18b) | `picks/tess-pick-wear.mp4` | 1.32 / 2.52 / 3.72 / 4.92 (beats, +0.10 each), 6.12 (fifth beat, still +0.40) | five `taskDone`s at 0.8, 2.0, 3.2, 4.4, 5.6 s; the eye checks the saturation steps, the cap and that the rows stay as built |
+| Mouth (18c) | `picks/tess-pick-mouth.mp4` (with a 5× magnifier over the page) | 1.0 (soft o), 2.5 (thinking: right corner up), 4.0 (smile with her line), 6.6 (beat smile), 8.0 (ask waiting), 10.0 (her miss: −0.35), 12.4 (face out 120 ms), 14.4 (back 200 ms) | a tap, a Speak, a local capture, a `taskDone`, a set ask, a failed Claude call, then a Done; the magnifier crop is 140 × 140 px at (622, 1488) of the 2× frame, also in `picks/*-beats.png` |
+| Pick 5, she sleeps at night (18d) | `picks/tess-pick-sleep.mp4` | 1.0 (asleep: lids shut, slow), 2.85 (right eye opens), 3.8 (her clock back to 1×), 5.0 (left eye follows) | open the app at 23:30 (`-demoTime 23:30`) at 2.6 s |
+| Pick 6, she watches what you hold (18d) | `picks/tess-pick-held.mp4` | 1.0 (eyes to the row), 2.4 (following it up), 3.6 (drop), 3.8 (blink, eyes back) | lift row 3 at 1.0 s, move it to the top, drop at 3.6 s |
+| Pick 10, the rest clock (18d) | `picks/tess-pick-clock.mp4` | 1.8 (eyes to the timer; no lean), 4.2 (Go: eyes back), 4.3 (blink) | a 6 s rest in the live workout; check nothing but the eyes moves |
+| Pick 7, the nudge (18e) | `picks/tess-pick-nudge.mp4` | 1.6 (4 pt lean, eyes on the row), 2.9 (back), 3.3 (blink) | an item timed 10 min after `-demoTime` |
+| Pick 8, she hears you type (18e) | `picks/tess-pick-typing.mp4` | 0.96, 1.33, 1.6, 1.96 (one pulse per word) | type "call mom at six" at 11 characters a second; the beat strip's crop is at (312, 1316) px |
+| Pick 9, the peek (18e) | `picks/tess-pick-peek.mp4` | 2.2 (rise 5 pt), 3.6 (blink at the top), 3.9 (back down) | scroll 140 pt to the last row over 1.5 s from 0.8 s |
+| Pick 11, under the glass (18f) | `picks/tess-pick-tilt.mp4` | none by frame: ±2 pt mains, satellites 1.7×, eyes ±0.6 / ±0.4 | the prototype tilts on a sine; on the simulator, drive the attitude from a test hook; on the device, tilt by hand and check only the bounds |
+| Side turn, every screen (sheet 75) | `picks/tess-pick-side.mp4` | 1.0 eyes 0.4 right (380 ms); 1.42 her line; 2.8 stop 2, she's still; 4.6 back to stop 1, still; 6.2 eyes 0.4 left; 6.88 ahead | swipe left above 736 to stop 1, pull on to stop 2, swipe right twice; her centre and the band never move with the body (compare the soul crop over the whole clip) |
+
+**One command per picks PR:** `docs/design/motion/prototype/check-pick.sh <pick> <candidate.mp4> [out-dir]` (picks: wander, wake, stroke, wear, mouth, sleep, held, clock, nudge, typing, peek, tilt, side). It runs `compare.sh` at that pick's beat times against `recordings/picks/tess-pick-<pick>.mp4` and prints the mean SSIM, the worst beat frame and PASS or FIX FIRST. Timing is still read by eye from the `beats.png` it names.
+
 
 ## 2. Compare frame by frame
 `docs/design/motion/prototype/compare.sh <reference> <candidate> <out-dir> "<beats>" [crop]` (needs ffmpeg). It brings both clips to 393 × 852 pt at 60 fps, crops the soul (default the bottom-right 160 × 160 pt; pass `x:y:w:h` in points for roam, drag and the pages), and writes:
@@ -44,7 +60,7 @@ What the eye checks that SSIM can't: the order of the lights leaving and landing
 
 ## 5. The run sheet
 1. `scripts/test.sh` green (the new tests in `tess-motion-build.md`).
-2. Record the fourteen scenes on the simulator, Obsidian and Porcelain.
+2. Record the fourteen scenes on the simulator, Obsidian and Porcelain, plus the pick rows for the PR at hand (references in `recordings/picks/`, `-light` for Porcelain; `picks/tess-pick-*-beats.png` holds the soul crop at each beat, for a quick look before `compare.sh`).
 3. `compare.sh` on each; attach `beats.png` and `ssim.txt` to the PR, with the worst frames looked at.
 4. Frame rate and the three Energy Log runs on the device, numbers in the PR.
 5. Design reviews the simulator recordings beat for beat (its item after 58).
