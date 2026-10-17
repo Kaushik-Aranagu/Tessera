@@ -510,6 +510,7 @@ extension ClaudeKeyWords {
         switch use {
         case .keyCheck: "Key check"
         case .plan: "Plan my day"
+        case .lines: "Home"
         case .capture: "A capture"
         case .question: "A question"
         case .paste: "A paste"

@@ -36,6 +36,8 @@ public struct HomeDonePack: Equatable, Sendable {
     public let numbers: [Int]
     /// The names a returned line may use: the title and the bests.
     public let names: [String]
+    /// What each counted noun may be (TessLineCheck's `counts`): days since, exercises, sets, bests.
+    public var counts: [String: Set<Int>] = [:]
 
     /// The pack for a done workout, or why there is none.
     /// His last weight is read from the store here, so no caller can leave the bare-number wall without it.
@@ -63,7 +65,12 @@ public struct HomeDonePack: Equatable, Sendable {
             title: fact.title, finish: finish, dayLabel: dayLabel, bests: fact.records,
             sinceLastDays: fact.sinceLastDays,
             rulesLine: HomeLines.workoutText(for: fact, now: ended, calendar: calendar),
-            numbers: numbers, names: [fact.title] + fact.records
+            numbers: numbers, names: [fact.title] + fact.records,
+            counts: [
+                "days": Set([fact.sinceLastDays].compactMap(\.self)),
+                "exercises": [fact.exercisesDone, fact.exercisesPlanned], "sets": [fact.sets],
+                "bests": [fact.records.count],
+            ]
         ))
     }
 

@@ -108,7 +108,8 @@ struct HomeDonePackTests {
         // W3, W11: the pack's fields are exactly these; a note, weight, rep or place has nowhere to go.
         let pack = try Self.pack(Self.done("Push B", bests: ["Press"])).get()
         let fields = Mirror(reflecting: pack).children.compactMap(\.label)
-        #expect(fields == ["title", "finish", "dayLabel", "bests", "sinceLastDays", "rulesLine", "numbers", "names"])
+        #expect(fields == ["title", "finish", "dayLabel", "bests", "sinceLastDays", "rulesLine", "numbers", "names",
+                           "counts"])
     }
 
     @Test func homeDonePackControlCaseSendsTitleAndBests() throws {
