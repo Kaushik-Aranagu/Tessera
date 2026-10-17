@@ -7,7 +7,7 @@ Several lanes share one Mac, one iOS simulator and one Xcode. Two concurrent `xc
 - **Lock**: the directory `/tmp/tessera-mac-lock.d` on the Mac (`mkdir` is atomic, so only one lane wins). There is no override. A stale or foreign directory is removed with `rm -f info; rmdir`, so a directory holding any other file is left alone and the helper stops with an error.
 - **Queue**: the directory `/tmp/tessera-mac-lock.q` holds one ticket file per waiting lane (`<epoch>-<lane>`, containing the waiter's pid), used only by `wait`.
 - **Content** (file `info` inside it, `key=value` lines): `lane` (lane name), `pid` (the holder's long-lived shell pid), `start` (epoch seconds), `start_iso` (UTC), `purpose` (short text, e.g. `app tests for PR 312`).
-- **Stale after 2 hours** (7200 s), or when the pid is no longer alive. A stale lock may be taken over by the next lane; the helper says so when it does.
+- **Abandoned holds free themselves.** A hold is stale when its pid is dead, it is older than 2 hours (7200 s), or it has had **no heartbeat for 10 minutes**. The heartbeat is the epoch in `/tmp/tessera-mac-lock.d/beat`, written at acquire and by `beat`. The next `acquire`, `wait` or `run` frees a stale hold, prints the reason and appends it to `/tmp/tessera-mac-lock.log`. A live shell that sits on the lock without beating is freed too. A stale lock may be taken over by the next lane; the helper says so when it does.
 - **Package-only runs** (`swift test` in `TesseraCore/`, no simulator, no Xcode) do not need the lock.
 - **Never `pkill`/`killall` by pattern** (xcodebuild, Simulator, Xcode, swift). That kills other lanes' work. Kill only a pid you started and recorded yourself. If the lock holder looks hung, ask that lane or the coordinator; do not kill it.
 - Always release in the same shell that acquired (`trap '...lane_lock.sh release <lane>' EXIT`). Release only works for the lane named in the lock.
@@ -19,8 +19,10 @@ Several lanes share one Mac, one iOS simulator and one Xcode. Two concurrent `xc
 ```sh
 scripts/ops/lane_lock.sh acquire <lane> "<purpose>"   # exit 0 acquired, 1 busy
 scripts/ops/lane_lock.sh wait <lane> "<purpose>" [max_s]  # queue in order, take the lock when it is your turn (default 1800 s), exit 1 on timeout
+scripts/ops/lane_lock.sh beat <lane>                  # heartbeat; a manual hold must beat at least every 10 minutes
+scripts/ops/lane_lock.sh run <lane> "<purpose>" -- cmd...   # wait in line, hold while cmd runs (beats every 60 s), always release, return cmd's exit code
 scripts/ops/lane_lock.sh release <lane>               # exit 1 if not held by that lane
-scripts/ops/lane_lock.sh status                       # prints the lock content and age_s, or "free"
+scripts/ops/lane_lock.sh status                       # prints the holder, age_s and beat_age_s, or "free"
 ```
 
 Typical use:
@@ -36,3 +38,7 @@ The recorded pid is the helper's parent (`$PPID`), so call the helper directly f
 ## Waiting in line
 
 Use `wait` instead of `acquire` when the lock is busy. Waiters queue first-come-first-served in `/tmp/tessera-mac-lock.q` (one ticket per waiter, holding its pid; a ticket whose shell has died is skipped). The next waiter takes the lock within 15 seconds of the holder's release, so the simulator hands off with no relay through the coordinator. The same shell rule applies: call `wait` from the long-lived shell, and release with the same trap.
+
+## Who holds it
+
+`status` and the busy message name the holder, how long it has held the lock and when it last beat. A waiting `wait` prints that line about once a minute. Prefer `run` for builds and tests: it beats for you and releases even when the command fails. A manual `acquire` needs `beat` at least every 10 minutes (a 60-second loop is plenty).
