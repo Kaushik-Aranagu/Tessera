@@ -13,7 +13,8 @@ struct PrivacyParityTests {
     ]
     nonisolated static let plain: [String] = [
         "Weeknight dal", "milk", "socks", "Push A", "blood orange", "hearts of palm", "energy drink", "sleep tea",
-        "Dr Pepper", "Rent car",
+        "Dr Pepper", "Rent car", "flour 5 kg", "ground beef 2 lb", "pain au chocolat", "recovery shake",
+        "Weight Watchers chili",
     ]
 
     @Test(arguments: PrivacyParityTests.walled)
@@ -44,5 +45,10 @@ struct PrivacyParityTests {
         #expect(PrivateWords.labels(in: store.context)[cake.id] != nil)
         let line = try engine.perform(AddRecipeToGroceries(recipe: cake.id), by: .user).record.summary
         #expect(!line.lowercased().contains("dentist"), "\(line)")
+    }
+
+    @Test(arguments: ["weighed 82.4 kg", "82.4 kg this morning", "my weight is 82.4", "weigh in 183 lb"])
+    func aRealWeighInIsStillCaught(_ phrase: String) {
+        #expect(ObjectPrivacy.isPrivateTitle(phrase, lastWeightKg: 82), "\(phrase)")
     }
 }

@@ -74,7 +74,8 @@ public enum ObjectPrivacy {
     /// raw). Words that are also food or plain English are out: "blood orange", "hearts of palm", "energy drink",
     /// "sleep tea", "Dr Pepper".
     static let titleWords: Set<String> = TessMemoryScreen.healthWords
-        .subtracting(["blood", "heart", "energy", "sleep", "tight", "tip", "pepper", "dr"])
+        .subtracting(["blood", "heart", "energy", "sleep", "tight", "tip", "pepper", "dr", "kg", "lb", "lbs", "kcal",
+                      "calories", "pain", "recovery", "weight"])
         .union(["rehab", "physio", "physiotherapy", "therapy", "therapist", "surgery", "doctor", "dentist", "clinic",
                 "hospital"])
 
