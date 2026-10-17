@@ -45,7 +45,7 @@ Reach zone: the bottom 60% of the screen is the thumb zone for a right or left h
 |---|---|
 | K84.17 | **Given** Reduce Motion on. **When** a step advances (the Next key, or "next" by voice). **Then** the slide is a 150 ms crossfade in place; the dim line above still shows; the order of steps is unchanged. |
 | K84.18 | **Given** Reduce Motion on and a timer ends. **When** the flare would play. **Then** the line turns cadmium and the step returns as a 150 ms fade, with the haptic still given; no pulse, no loop. The flare stays until the timer is stopped (cook-mode default 8). |
-| K84.19 | **Given** Reduce Motion on. **When** the cover opens and closes, a horizon line burns down, and Finish completes. **Then** the cover fades (no rise), the horizon line steps down once a minute instead of burning continuously, and Finish fades the cover out; Tess's line appears with a 150 ms fade ("Weeknight dal, first time."). Color and wording are the same as with motion. |
+| K84.19 | **Given** Reduce Motion on. **When** the cover opens and closes, a horizon line burns down, and Finish completes. **Then** the cover fades (no rise), the horizon line steps down once a minute instead of burning continuously, and Finish fades the cover out; Tess's line appears with a 150 ms fade ("Weeknight dal, first time." for the first cook ever; "Weeknight dal, first time this month." for the first cook in a month; the form is picked by fact, Product Oct 17 4:57). Color and wording are the same as with motion. |
 
 ## D. VoiceOver (labels, order, UNDO, receipts)
 

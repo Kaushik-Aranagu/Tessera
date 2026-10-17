@@ -82,7 +82,7 @@
 | **Words (first cook ever)** | The step view is the screen. No coaching card, no spotlight, no "Swipe to continue" overlay. Tess, once, after the first step is shown, in her band: `Say "timer 8 minutes" and I'll keep it.` (proposed, Product to rule). It goes when the first timer is made or the cook ends, and is never repeated. |
 | **No timers** | The timer line under the key row is not drawn when no timer runs (W7). No "0 timers". |
 | **A recipe with no steps** | The cook key is not drawn and no empty step view opens. On the recipe page, one quiet line under the ingredients: "No steps yet. Paste them below." (proposed, Product to rule; matches the paste family "Paste the text instead."). |
-| **The one action** | Move to the next step by the key or by saying "next". Finish by holding DONE; the finish line for the first cook is "Tacos, first time this month." (`Cooking.swift:63-67`) and the receipt "Tacos, cooked." |
+| **The one action** | Move to the next step by the key or by saying "next". Finish by holding DONE; the finish line is true to the history (Product, Oct 17 4:57): "Tacos, first time." for the first cook ever, "Tacos, first time this month." for the first cook in a month, then "Tacos, second time this month." and so on (`Cooking.swift` `finishLine` picks by fact; master prints the "this month" form every time today). The receipt is "Tacos, cooked." |
 | **VoiceOver** | Step "Step 1 of 6" then the step's words, then "Next", a button. A timer, when it exists, reads "Rice, 8 minutes." (durations in words). Tess's first-cook line is her own stop after the step. |
 | **Dynamic Type** | AX5: the step words wrap in full at the largest size; the Next key stays at least 64 pt tall (88 pt from AX1) and never scrolls away. |
 
