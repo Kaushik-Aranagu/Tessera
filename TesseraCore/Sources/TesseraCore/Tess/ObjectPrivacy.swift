@@ -71,6 +71,14 @@ public enum ObjectPrivacy {
         return hidesNotes(of: object, classes: classes) ? keptNoteLabel : notes
     }
 
+    /// Whether a word he typed is one Tess never says back (a secret, a medicine or a body fact), so a line that would
+    /// echo it says "that" instead.
+    @MainActor
+    public static func isPrivateWord(_ text: String, in store: ObjectStore) -> Bool {
+        let last = BodyWeight.lastKg(in: store)
+        return isPrivateText(text, lastWeightKg: last) || EngineWall.isHealth(text, lastWeightKg: last)
+    }
+
     static func isPrivateText(_ text: String, lastWeightKg: Double?) -> Bool {
         !text.isEmpty && (SecretWords.mentions(text) || PrivateFacts.isWalled(text, lastWeightKg: lastWeightKg))
     }

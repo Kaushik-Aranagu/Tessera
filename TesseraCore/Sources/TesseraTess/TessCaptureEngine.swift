@@ -232,12 +232,8 @@ public final class TessCaptureEngine: TessCapturing {
                 return TessCapture(records: [], line: ask.line, source: .grammar, asking: .datedLift(ask))
             default: break
             }
-            // The rest weekday already set changes nothing: the line, no new op, no UNDO (S17).
-            if case let .setRestWeekday(weekday) = parse,
-               RestWeekday.current(in: engine.store) == weekday
-            {
-                return TessCapture(records: [], line: RestWeekday.receipt(for: weekday), source: .grammar,
-                                   asking: .line)
+            if let unchanged = unchangedCapture(parse) {
+                return unchanged
             }
             // A bare thing already on Groceries changes nothing: the line, with no ghost and no UNDO (QA S1 on #316).
             if case let .groceries(lines) = parse, lines.count == 1, let line = IngredientLine.parse(lines[0]),
@@ -351,6 +347,20 @@ public final class TessCaptureEngine: TessCapturing {
         }
     }
 
+    /// A parse that would change nothing: the line, with no new op and no UNDO. The rest weekday already set (S17);
+    /// a list name that is already a list (G40).
+    private func unchangedCapture(_ parse: TessGrammar.Parse) -> TessCapture? {
+        if case let .setRestWeekday(weekday) = parse, RestWeekday.current(in: engine.store) == weekday {
+            return TessCapture(records: [], line: RestWeekday.receipt(for: weekday), source: .grammar, asking: .line)
+        }
+        if case let .list(name) = parse,
+           CreateList.existing(named: name, in: engine.store, classes: engine.classes) != nil
+        {
+            return TessCapture(records: [], line: "\(name), already a list.", source: .grammar, asking: .line)
+        }
+        return nil
+    }
+
     private func performKitchen(_ parse: TessGrammar.Parse, pending: Bool,
                                 context: TessContext) throws -> (OpRecord, String)
     {
@@ -404,7 +414,11 @@ public final class TessCaptureEngine: TessCapturing {
             return (record, "\(label), \(TessVoice.number(minutes)) min.")
         case let .list(name):
             let record = try engine.perform(CreateList(name: name), by: .tess, pending: pending).record
-            return (record, "New list: \(name).")
+            // A repeat name opens the list that is there: nothing was made (G40).
+            if CreateList.wasRepeat(record) {
+                return (record, "\(name), already a list.")
+            }
+            return (record, "\(name), new list.")
         case .shop:
             let record = try engine.perform(StartShop(), by: .tess, pending: pending).record
             let line = Groceries(store: engine.store, classes: engine.classes).shoppingLine()

@@ -53,7 +53,7 @@ struct KitchenCaptureTests {
         #expect(timers.allSatisfy { $0.cook != nil }) // they belong to the cook in progress
 
         let packing = await tess.capture("list: packing", context: context)
-        #expect(packing.line == "New list: Packing.")
+        #expect(packing.line == "Packing, new list.")
 
         // Ordinary phrases still go where they did.
         let call = await tess.capture("call mum thu", context: context)
