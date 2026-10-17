@@ -36,4 +36,22 @@ struct GroceriesFinishTests {
         let outcome = GroceriesCopy.finish { nil }
         #expect(outcome.line == "Didn't save that. Try again." && outcome.undo == nil)
     }
+
+    @Test func aShopStartDuringAWorkoutSaysWorkoutRunning() throws {
+        try model.engine.perform(AddGroceries(lines: ["milk"]), by: .user)
+        let workout = try model.store.create(#require(model.classes[.workout]), title: "Push day")
+        try model.engine.perform(StartWorkout(workout: workout.id), by: .user)
+        let groceries = Groceries(store: model.store, classes: model.classes)
+        #expect(GroceriesCopy.toggleShop(groceries, engine: model.engine) == "Workout running.")
+        #expect(groceries.shop(in: model.engine)?.state != .running)
+    }
+
+    @Test func aShopStartsAndSetsAsideSilently() throws {
+        try model.engine.perform(AddGroceries(lines: ["milk"]), by: .user)
+        let groceries = Groceries(store: model.store, classes: model.classes)
+        #expect(GroceriesCopy.toggleShop(groceries, engine: model.engine) == nil)
+        #expect(groceries.shop(in: model.engine)?.state == .running)
+        #expect(GroceriesCopy.toggleShop(groceries, engine: model.engine) == nil)
+        #expect(groceries.shop(in: model.engine)?.state == .suspended)
+    }
 }

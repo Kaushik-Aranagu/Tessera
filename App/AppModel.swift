@@ -413,8 +413,16 @@ final class AppModel {
     }
 
     /// Resume lands on the process's resume point: for a workout, the live cover at its set with the dial preset.
-    func resume(_ process: ProcessSnapshot) {
-        _ = try? engine.perform(ResumeProcess(process: process.id, time: AppClock.now), by: .user)
+    /// Picks a set-aside process back up. While a workout runs the engine refuses anything else, so Tess says
+    /// "Workout running." and nothing changes (G56, QA on #792); the line is returned for tests.
+    @discardableResult
+    func resume(_ process: ProcessSnapshot) -> String? {
+        if let refusal = RecipeCopy.startCook({
+            try engine.perform(ResumeProcess(process: process.id, time: AppClock.now), by: .user)
+        }) {
+            TessVoice.shared.say(refusal)
+            return refusal
+        }
         if let workout = process.subject, workout.classDef?.id == classes[.workout]?.id {
             if session?.workout.id != workout.id {
                 session = WorkoutSession(workout: workout, model: self)
@@ -425,6 +433,7 @@ final class AppModel {
             isWorkoutPresented = true
         }
         touch()
+        return nil
     }
 
     // MARK: Navigation

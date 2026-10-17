@@ -316,16 +316,10 @@ private struct GroceriesPage: View {
     }
 
     private func toggleShop() {
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
-            let wrote = if let shop = groceries.shop(in: model.engine), shop.state == .running {
-                (try? model.engine.perform(SuspendProcess(process: shop.id), by: .user)) != nil
-            } else {
-                (try? model.engine.perform(StartShop(), by: .user)) != nil
-            }
-            model.touch()
-            if !wrote {
-                GroceriesCopy.sayDidntSave()
-            }
+        let refusal = GroceriesCopy.toggleShop(groceries, engine: model.engine)
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
+        if let refusal {
+            TessVoice.shared.say(refusal)
         }
     }
 
@@ -745,6 +739,15 @@ enum GroceriesCopy {
     static let didntSave = "Didn't save that. Try again."
 
     /// A refused write on Groceries says so; nothing scolds, so there is no warning haptic (ER11, Haptics.swift).
+    /// Starts or sets aside the shop. A refused start says why: "Workout running." while a workout runs (QA on
+    /// #792), else "Didn't save that. Try again." Nil when it went through.
+    @MainActor static func toggleShop(_ groceries: Groceries, engine: ActionEngine) -> String? {
+        if let shop = groceries.shop(in: engine), shop.state == .running {
+            return RecipeCopy.startCook { try engine.perform(SuspendProcess(process: shop.id), by: .user) }
+        }
+        return RecipeCopy.startCook { try engine.perform(StartShop(), by: .user) }
+    }
+
     @MainActor static func sayDidntSave() {
         TessVoice.shared.say(didntSave)
     }
