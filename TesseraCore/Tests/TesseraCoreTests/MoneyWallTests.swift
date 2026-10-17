@@ -45,10 +45,12 @@ struct MoneyWallTests {
     func aMoneyMissReachesClaudeWhole(_ phrase: String) async {
         #expect(PrivateFacts.isMoneyShaped(phrase), "\(phrase)")
         let device = Spy(route: .onDevice), claude = Spy(route: .claude)
-        let router = TessRouter(engine: engine, models: [device, claude])
+        let router = TessRouter(engine: engine, models: [GrammarTessModel(capture: TessCaptureEngine(engine: engine)),
+                                                         device, claude])
         _ = await router.run(TessRequest(text: phrase, context: TessContext(), use: .capture))
-        #expect(claude.heard == [phrase]) // the grammar and the phone's model could not read it: Claude gets it whole
-        #expect(device.heard == [phrase])
+        // One rule for both wall tests: what the grammar answers stays on the phone; what it cannot read goes whole.
+        let claimed = TessCaptureEngine(engine: engine).grammarCapture(phrase, context: TessContext()) != nil
+        #expect(claude.heard == (claimed ? [] : [phrase]), "\(phrase)")
     }
 
     @Test(arguments: ["80 x5", "bench 82.50 x 8", "80 for 8", "5 reps", "call mom", "pay the apple card bill mon",
@@ -72,9 +74,11 @@ struct MoneyWallTests {
     func aMoneyOrBodyMissReachesClaudeWhole(_ phrase: String) async {
         #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil), "\(phrase)")
         let device = Spy(route: .onDevice), claude = Spy(route: .claude)
-        _ = await TessRouter(engine: engine, models: [device, claude])
+        _ = await TessRouter(engine: engine, models: [GrammarTessModel(capture: TessCaptureEngine(engine: engine)),
+                                                      device, claude])
             .run(TessRequest(text: phrase, context: TessContext(), use: .capture))
-        #expect(claude.heard == [phrase] && device.heard == [phrase])
+        let claimed = TessCaptureEngine(engine: engine).grammarCapture(phrase, context: TessContext()) != nil
+        #expect(claude.heard == (claimed ? [] : [phrase]), "\(phrase)")
     }
 
     /// The pass rows MB31 to MB40: lifts, food, distance, plans and money or body words with no amount.
@@ -117,5 +121,32 @@ struct MoneyWallTests {
         #expect(inbox.add("costco 212.37", at: .now) == nil)
         #expect(inbox.add("ring the gym about chalk", at: .now) != nil)
         #expect(inbox.waiting().map(\.title) == ["ring the gym about chalk"])
+    }
+
+    @Test(arguments: ["set a timer for the pasta ten minutes", "how long on the pasta timer", "timer"])
+    func aCookTimerPhraseNeverReachesClaude(_ phrase: String) async {
+        let claude = Spy(route: .claude)
+        _ = await TessRouter(engine: engine, models: [claude])
+            .run(TessRequest(text: phrase, context: TessContext(), use: .capture))
+        #expect(claude.heard.isEmpty, "\(phrase)")
+    }
+
+    @Test func aClockIsNotMoneyAndStoneIsABodyFact() {
+        #expect(!PrivateFacts.isMoneyShaped("dinner at 7.30") && !PrivateFacts.isWalled(
+            "dinner at 7.30",
+            lastWeightKg: nil
+        ))
+        #expect(PrivateFacts.isMoneyShaped("coffee 7.30 today")) // not "at": still a price
+        #expect(PrivateFacts.isMoneyShaped("rent at 7.30")) // a money word keeps it money
+        for phrase in ["Eleven stone four", "eleven stone", "12 st 3", "I'm 11 stone 4"] {
+            #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil), "\(phrase)")
+        }
+        #expect(!PrivateFacts.isWalled("bring a stone for the wall", lastWeightKg: nil))
+    }
+
+    @Test func aTaskLessMoveIsAPlainMiss() async {
+        let tess = TessCaptureEngine(engine: engine)
+        let said = await tess.capture("move dentist to 7", context: TessContext())
+        #expect(said.records.isEmpty && said.line.hasPrefix("Didn't catch that"), "\(said.line)")
     }
 }

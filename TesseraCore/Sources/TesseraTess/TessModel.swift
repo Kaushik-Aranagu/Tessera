@@ -94,8 +94,11 @@ public struct TessRouter {
         // or a refusal ("I don't keep sums of money.", "$212.37 at Costco?") is its own, and stays on the phone.
         let secret = SecretWords.mentions(request.text)
         let walled = PrivateFacts.isWalled(request.text, lastWeightKg: request.lastWeightKg(engine))
+        // A cook timer never leaves the phone (Research #880): a phrase about a timer is read here or not at all.
+        let aboutATimer = request.text.lowercased().split { !$0.isLetter }.contains("timer")
         for model in models where model.isAvailable(for: request.use)
             && !((secret || walled) && model.route == .claude && asked?.source == .grammar)
+            && !(aboutATimer && model.route == .claude)
         {
             engine.attribution = (model.route, model.modelName)
             let result = await model.run(request, engine: engine)
