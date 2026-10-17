@@ -25,6 +25,12 @@ final class WorkoutSession {
     var weight: Double = 20
     var reps: Double = 8
     var rpe: Double?
+    /// The routine's title as the room may see it: "Private workout" when the title is private (the wall follows
+    /// what the room can see, so the Done hero, UNDO line, Live Activity and context line all use this).
+    var shownTitle: String {
+        ObjectPrivacy.routineTitle(workout.title, in: model.store)
+    }
+
     /// The effort stop-slider is hidden until you pull up on the reps.
     var isEffortShown = false
     private(set) var restEndsAt: Date?

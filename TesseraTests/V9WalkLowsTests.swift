@@ -40,7 +40,7 @@ struct V9WalkLowsTests {
     }
 
     @Test func anEmptyTitleReadsWorkoutDone() {
-        #expect(WorkoutFinishView.heroText(title: "") == "Workout done")
-        #expect(WorkoutFinishView.heroText(title: "  ") == "Workout done")
+        #expect(WorkoutFinishView.heroText(title: "") == "Workout, done")
+        #expect(WorkoutFinishView.heroText(title: "  ") == "Workout, done")
     }
 }

@@ -20,6 +20,23 @@ struct WorkoutSessionTests {
         return try (model, #require(model.session))
     }
 
+    /// QA on #856: a private routine's title never reaches the Lock Screen, the UNDO line or the context line.
+    @Test func aPrivateTitleIsMaskedInTheLiveActivityAndTheSessionsTitle() throws {
+        let routine = try #require(model.todaysRoutine())
+        try model.engine.perform(RenameObject(object: routine.id, title: "Knee rehab day"), by: .user)
+        model.startRoutine(routine)
+        let session = try #require(model.session)
+        #expect(session.shownTitle == "Private workout")
+        #expect(RestActivityController.attributes(for: session).workoutTitle == "Private workout")
+        #expect(!WorkoutLines.context(session, phase: session.phase()).lowercased().contains("rehab"))
+        model.endWorkout()
+
+        try model.engine.perform(RenameObject(object: routine.id, title: "Push Day A"), by: .user)
+        model.startRoutine(routine)
+        let plain = try #require(model.session)
+        #expect(RestActivityController.attributes(for: plain).workoutTitle == "Push Day A")
+    }
+
     /// Gym day: after every set hit the top of the range, the live dial opens at the raised weight, not last week's.
     @Test func aRaisedTargetOpensTheLiveDial() throws {
         let routine = try #require(model.todaysRoutine())
