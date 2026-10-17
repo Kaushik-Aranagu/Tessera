@@ -443,6 +443,10 @@ public struct ClearDoneItems: EngineAction {
     @discardableResult
     public func apply(_ transaction: inout Transaction) throws -> Int {
         let list = try transaction.object(list, is: .list)
+        // A reusable list never loses an item: clearing what is done unchecks it instead (slice 4).
+        if ListContents(store: transaction.store, classes: transaction.classes).isReusable(list) {
+            return try ResetList(list: list.id).apply(&transaction)
+        }
         // Nothing checked: nothing to clear, so no op and no receipt (G15). Like AddGroceries with nothing to add, it
         // throws, and `perform` rolls back and logs nothing.
         let cleared = try transaction.clearDone(in: list)
@@ -457,7 +461,12 @@ public struct ClearDoneItems: EngineAction {
     }
 
     public func receipt(in store: ObjectStore) -> String? {
-        "\(store.object(id: list)?.title ?? "The list"), done items cleared"
+        let title = store.object(id: list)?.title ?? "The list"
+        // A reusable list was reset, not cleared: its items are all still there.
+        if let object = store.object(id: list), ListNoteTags.isReusable(object, in: store) {
+            return "\(title), reset"
+        }
+        return "\(title), done items cleared"
     }
 }
 
