@@ -115,7 +115,7 @@ struct HomeDonePackTests {
         // W10: the wall must not be over-eager; the pack is the title, the bests and counts only.
         let pack = try Self.pack(Self.done("Push B", bests: ["Press"], sinceLastDays: 3)).get()
         #expect(pack.json == #"{"bests":["Press"],"dayLabel":"Thursday night","finish":"7:40 pm","item":"h1","#
-            + #""names":["Push B","Press"],"numbers":[3,4,5,7,12,40],"rules":"Push B done. Press best.","#
+            + #""names":["Push B","Press"],"numbers":[1,3,4,5,7,12,40],"rules":"Push B done. Press best.","#
             + #""sinceLastDays":3,"title":"Push B"}"#, "\(pack.json)")
     }
 
