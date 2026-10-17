@@ -312,6 +312,18 @@ struct HomeLinesTests {
         #expect(tonight.kind == .cook && tonight.state == .planned && (tonight.toBuy ?? 0) > 0)
         #expect(HomeLines.line(for: tonight, now: Self.at(18), calendar: Self.calendar).text
             == "\(recipe.title) tonight, \(tonight.toBuy ?? 0) to buy.")
+        // A captured cook carries startsAt and about, never due: the hero keeps its time (#700).
+        let timed = try engine.perform(CreateTask(title: "Cook tacos", startsAt: Self.at(19), about: [recipe.id]),
+                                       by: .tess).output
+        let timedFact = facts.fact(plannedCook: timed, recipe: recipe)
+        #expect(timedFact.startsAt == Self.at(19))
+        #expect(HomeLines.line(for: timedFact, now: Self.at(9), calendar: Self.calendar).hero
+            == "\(recipe.title), 7 pm")
+        // A date-only due (midnight) never prints a clock.
+        let midnight = Self.calendar.startOfDay(for: Self.at(9))
+        let dateOnly = try engine.perform(CreateTask(title: "Cook tacos", due: midnight, about: [recipe.id]),
+                                          by: .tess).output
+        #expect(facts.fact(plannedCook: dateOnly, recipe: recipe).startsAt == nil)
         // A finished cook from the store.
         try engine.perform(FinishCooking(cook: cook.id), by: .user)
         let finished = facts.cooksFinished(on: .now)

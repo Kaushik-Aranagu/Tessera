@@ -550,9 +550,16 @@ public struct HomeFacts {
 
     /// A cook planned for today ("cook tacos thu": a task about the recipe), with what's still to buy for it.
     public func fact(plannedCook task: ObjectRecord, recipe: ObjectRecord) -> HomeFact {
-        HomeFact(id: task.id, kind: .cook, title: store.displayTitle(of: recipe), state: .planned,
-                 toBuy: Groceries(store: store, classes: engine.classes).toBuy(for: recipe.id),
-                 startsAt: store.value("due", of: task)?.dateValue)
+        // The planned time first (a captured cook has startsAt, never due); a date-only due (midnight) has no clock.
+        var at = store.value("startsAt", of: task)?.dateValue
+        if at == nil, let due = store.value("due", of: task)?.dateValue,
+           calendar.dateComponents([.hour, .minute], from: due) != DateComponents(hour: 0, minute: 0)
+        {
+            at = due
+        }
+        return HomeFact(id: task.id, kind: .cook, title: store.displayTitle(of: recipe), state: .planned,
+                        toBuy: Groceries(store: store, classes: engine.classes).toBuy(for: recipe.id),
+                        startsAt: at)
     }
 
     /// A timed task on Now or Next: his words, with its time.
