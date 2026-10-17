@@ -110,6 +110,8 @@ public extension TrainingLedger {
         let summaries = (derived.workoutDays?.days[day] ?? [])
             .compactMap { store.object(id: $0) }
             .map(summary)
+            // A workout finished with no sets is not a session he did (Product 8:30 PM PT).
+            .filter { $0.sets > 0 }
             .sorted { ($0.endedAt ?? .distantPast) > ($1.endedAt ?? .distantPast) }
         derived.daySummaries[day] = (revision, summaries)
         return summaries

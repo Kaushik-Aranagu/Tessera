@@ -5,6 +5,8 @@ import Testing
 
 /// The canned Claude for PlanWordingTests.
 final class PlanStub: URLProtocol, @unchecked Sendable {
+    /// Where every request is redirected, when set.
+    nonisolated(unsafe) static var redirect: String?
     nonisolated(unsafe) static var reply: (status: Int, body: String)? = (200, #"{"input_tokens": 8}"#)
     nonisolated(unsafe) static var failure: URLError.Code?
     nonisolated(unsafe) static var requests: [URLRequest] = []
@@ -47,6 +49,17 @@ final class PlanStub: URLProtocol, @unchecked Sendable {
             client?.urlProtocol(self, didFailWithError: URLError(failure))
             return
         }
+        // A 301 to another host (Product 9:53 PM PT): the client must never take it.
+        if let target = Self.redirect, request.url?.host() != URL(string: target)?.host(),
+           let url = URL(string: target)
+        {
+            let hop = HTTPURLResponse(url: request.url!, statusCode: 301, httpVersion: nil,
+                                      headerFields: ["Location": target])!
+            client?.urlProtocol(self, wasRedirectedTo: URLRequest(url: url), redirectResponse: hop)
+            client?.urlProtocol(self, didReceive: hop, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocolDidFinishLoading(self)
+            return
+        }
         let (status, body) = Self.queue.isEmpty ? Self.reply ?? (200, "{}") : Self.queue.removeFirst()
         let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil,
                                        headerFields: ["request-id": "req_test"])!
@@ -76,6 +89,7 @@ struct PlanWordingTests {
         PlanStub.queue = []
         PlanStub.failure = nil
         PlanStub.requests = []
+        PlanStub.redirect = nil
         PlanStub.bodies = []
     }
 
@@ -105,7 +119,8 @@ struct PlanWordingTests {
 
     var pack: PlanPack? {
         PlanPack(plan: d01, now: now, calendar: DayPlanTests.calendar, calendarKnown: true, restDay: false,
-                 otherNames: ["Sort the garage", "Mum's birthday", "Push A", "Lunch", "Reply to landlord today"])
+                 otherNames: ["Sort the garage", "Mum's birthday", "Push A", "Lunch", "Reply to landlord today"],
+                 lastWeightKg: nil)
     }
 
     static let ideal = #"""
@@ -145,9 +160,9 @@ struct PlanWordingTests {
         var empty = PlanInput(now: now, calendar: DayPlanTests.calendar)
         empty.workout = PlanInput.Workout(title: "Push A", scheduledFor: DayPlanTests.at(2, "18:00"))
         #expect(PlanPack(plan: DayPlanner.plan(empty), now: now, calendar: DayPlanTests.calendar, calendarKnown: true,
-                         restDay: false) == nil)
+                         restDay: false, lastWeightKg: nil) == nil)
         let unknown = PlanPack(plan: d01, now: now, calendar: DayPlanTests.calendar, calendarKnown: false,
-                               restDay: true)
+                               restDay: true, lastWeightKg: nil)
         #expect(unknown?.json.contains(#""cal":false"#) == true && unknown?.json.contains(#""rest":true"#) == true)
     }
 
@@ -210,6 +225,16 @@ struct PlanWordingTests {
         #expect(PlanStub.requests.count == 1 && ledger.calls().count == 1)
     }
 
+    @Test func aRedirectIsNeverFollowedForThePlan() async {
+        // Product 9:53 PM PT: the plan call refuses a 301 and keeps his usual plan.
+        PlanStub.redirect = "https://" + "evil" + ".example/v1/messages"
+        let result = await wording().word(d01, pack: pack)
+        if case .worded = result {
+            Issue.record("a redirected reply was used")
+        }
+        #expect(!PlanStub.requests.contains { $0.url?.host()?.contains("evil") == true })
+    }
+
     @Test func everyFailureShowsTheRulesPlan() async {
         PlanStub.queue = [(200, Self.reply(Self.ideal.replacingOccurrences(of: "Due 5 pm.", with: "Due 17:00.")))]
         #expect(await wording().word(d01, pack: pack) == .rules(line: nil))
@@ -252,7 +277,7 @@ struct PlanWordingTests {
         input.later = [PlanInput.Task(title: "Fix bike light", minutes: 20, updatedAt: open)]
         let plan = DayPlanner.plan(input)
         let pack = try #require(PlanPack(plan: plan, now: open, calendar: calendar, calendarKnown: true,
-                                         restDay: false))
+                                         restDay: false, lastWeightKg: nil))
         #expect(pack.json.contains(#""window":["07:00","21:00"]"#) && pack.json.contains(#""start":"07:00""#))
         let reply = try JSONDecoder().decode(ProposePlan.self, from: Data(#"""
         {"blocks":[{"id":"t1","start":"07:00","end":"07:20","lineText":""}],"startWith":{"id":"t1",
@@ -269,7 +294,7 @@ struct PlanWordingTests {
         input.later = [PlanInput.Task(title: "Fix bike light", minutes: 20, updatedAt: now)]
         let plan = DayPlanner.plan(input)
         let rest = try #require(PlanPack(plan: plan, now: now, calendar: DayPlanTests.calendar, calendarKnown: true,
-                                         restDay: true))
+                                         restDay: true, lastWeightKg: nil))
         func reply(_ note: String) throws -> ProposePlan {
             let json = #"{"blocks":[{"id":"t1","start":"08:00","end":"08:20","lineText":""}],"#
                 + #""startWith":{"id":"t1","line":"Bike light first."},"#
@@ -295,7 +320,7 @@ struct PlanWordingTests {
 
     @Test func eventTitlesCanStayOnThePhone() throws {
         let pack = try #require(PlanPack(plan: d01, now: now, calendar: DayPlanTests.calendar, calendarKnown: true,
-                                         restDay: false, includesEventTitles: false))
+                                         restDay: false, includesEventTitles: false, lastWeightKg: nil))
         #expect(!pack.json.contains("Standup") && !pack.json.contains("Priya"))
         #expect(pack.json.contains(#""kind":"event","min":15,"start":"09:30","title":"busy""#))
         #expect(pack.json.contains("Reply to landlord") && pack.json.contains("Push A"))
@@ -310,11 +335,17 @@ struct PlanWordingTests {
         for title in ["Coffee 6.25", "Pay Sam back $40", "Refill lexapro 10mg", "Reset my PIN",
                       "Password reset email"]
         {
-            #expect(PlanPack.packTitle(block(.task, title), includesEventTitles: true) == "task", "\(title)")
+            #expect(
+                PlanPack.packTitle(block(.task, title), includesEventTitles: true, lastWeightKg: nil) == "task",
+                "\(title)"
+            )
         }
-        #expect(PlanPack.packTitle(block(.event, "Dentist, copay $35"), includesEventTitles: true) == "busy")
-        #expect(PlanPack.packTitle(block(.task, "Reply to landlord"), includesEventTitles: true) == "Reply to landlord")
-        #expect(PlanPack.packTitle(block(.event, "Standup"), includesEventTitles: true) == "Standup")
+        #expect(PlanPack
+            .packTitle(block(.event, "Dentist, copay $35"), includesEventTitles: true, lastWeightKg: nil) == "busy")
+        #expect(PlanPack
+            .packTitle(block(.task, "Reply to landlord"), includesEventTitles: true, lastWeightKg: nil) ==
+            "Reply to landlord")
+        #expect(PlanPack.packTitle(block(.event, "Standup"), includesEventTitles: true, lastWeightKg: nil) == "Standup")
     }
 
     @Test func everyClaudeModelHasAPriceAndAnUnknownOneNeverSpends() {
@@ -367,7 +398,7 @@ struct PlanWordingTests {
         later.today = d01Input.today
         let plan = DayPlanner.plan(later)
         let next = PlanPack(plan: plan, now: DayPlanTests.at(2, "08:07"), calendar: DayPlanTests.calendar,
-                            calendarKnown: true, restDay: false)
+                            calendarKnown: true, restDay: false, lastWeightKg: nil)
         wording.now = { DayPlanTests.at(2, "08:07") }
         guard case let .worded(again) = await wording.word(plan, pack: next) else {
             Issue.record("not reused")
@@ -394,7 +425,7 @@ struct PlanWordingTests {
                                           end: DayPlanTests.at(3, "00:00"), allDay: true))
         let plan = DayPlanner.plan(day)
         let pack = try #require(PlanPack(plan: plan, now: now, calendar: DayPlanTests.calendar, calendarKnown: true,
-                                         restDay: false, otherNames: ["Bank holiday"]))
+                                         restDay: false, otherNames: ["Bank holiday"], lastWeightKg: nil))
         let line = Self.ideal.replacingOccurrences(of: "while the morning is quiet.", with: "a Bank holiday morning.")
         #expect(try !PlanProposalValidator.violations(proposal(line), against: pack).contains("V13"))
     }

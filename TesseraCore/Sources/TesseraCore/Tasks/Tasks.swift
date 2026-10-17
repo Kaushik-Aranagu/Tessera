@@ -96,7 +96,8 @@ public struct KeepPlannedTask: EngineAction {
     public static let descriptor = ActionDescriptor(
         name: "keepPlannedTask",
         summary: "Keep a task at the time Plan my day proposed",
-        parameters: MoveTask.descriptor.parameters
+        parameters: MoveTask.descriptor.parameters,
+        isOfferedToModel: false
     )
 
     public var task: UUID
@@ -195,7 +196,7 @@ public struct MoveTask: EngineAction {
         return later == true ? "\(title), moved to Later" : "\(title), moved"
     }
 
-    /// "Call mom, in Later", "Call mom, tomorrow at 6:30 pm", "Call mom, Thursday at 6:30 pm" (copy-pass rule 6).
+    /// "Call mom, in Later", "Call mom, tomorrow 6:30 pm", "Call mom, Thursday 6:30 pm" (copy-pass rule 6).
     public func receipt(in store: ObjectStore) -> String? {
         guard let object = store.object(id: task) else { return nil }
         guard later != true, let at = store.value("startsAt", of: object)?.dateValue else {
@@ -210,6 +211,6 @@ public struct MoveTask: EngineAction {
             : day.isSameDay(at, day.adding(days: 1, to: now)) ? "tomorrow"
             : at < day.adding(days: 7, to: day.day(of: now)) ? at.formatted(.dateTime.weekday(.wide).locale(en))
             : at.formatted(.dateTime.month(.abbreviated).day().locale(en))
-        return "\(object.title), \(word) at \(DayStoryClock.sentenceTime(at, calendar: calendar))"
+        return "\(object.title), \(word) \(DayStoryClock.sentenceTime(at, calendar: calendar))"
     }
 }

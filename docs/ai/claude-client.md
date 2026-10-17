@@ -75,7 +75,8 @@ Every wall refuses with no network call and before any money is held.
 4. **Reserve.** `TessUsageLedger.estimate` from instructions, tools and pack text, times rounds for write jobs,
    then `ledger.reserve`. Nil means `.refused(.cap)` with today's "Claude paused until <date>." line. The cap is
    the one constant `TessUsageLedger.capNano`, $50 in code today (see the list at the end). New: at 80% of the
-   month, a job whose `priority` is `.lines` steps aside before reserve. `defer { ledger.settle(reservation) }`.
+   month ($40), Home lines (`.lines`), the week story and living colour step aside before reserve; capture, plan,
+   recipe and questions keep running to $50. `defer { ledger.settle(reservation) }`.
 5. **Send.** One `URLRequest` to `ClaudeKeyCheck.base`, headers as today (`x-api-key`, `anthropic-version:
    2023-06-01`, `content-type`). The key is read into a local and goes only in that header. Body order per
    section 5.2: system, tools, then the pack.
@@ -134,13 +135,12 @@ Stub `URLSession` with a `URLProtocol`, as `StubProtocol` in `ClaudeKeyTests.swi
 7. A Sonnet reply with no tool call, and a reply that fails the check, give `.noLine` and a row that says so.
 8. `touched` ids never appear in the request body (decode the stub's captured body and search it).
 9. A reply after the deadline is dropped and its row says "late", with its cost.
-10. At 80% of the month a `.lines` job steps aside; a `.capture` job still runs.
+10. At 80% of the month a `.lines` job (and the week story and living colour) steps aside; capture, plan, recipe and questions still run.
 
 ## Where code and docs differ
 
-- **The cap.** The brief and `ship-list.md` say $10 today, $50 proposed. The code has `capNano = 50_000_000_000`
-  ("$50 (Kaushik, decisions.md Oct 16)"), and `docs/product/decisions.md` records his yes at 9:27 AM PT Oct 16.
-  No raise is left for AI-2.
+- **The cap.** Settled: $50 a month, a hard stop, resets on the 1st (Product's 8:16 ruling). The old "$10 month" text
+  is retired. The code has `capNano = 50_000_000_000`. No raise is left for AI-2.
 - **The money screen.** `architecture.md` section 7 says `TessRouter` runs one before `isAvailable`. It doesn't
   yet: `TessRouter.run` checks only `looksLikeClaudeKey` and `SecretWords.mentions`. Ship list AI-2 adds it.
 - **The 80% step-aside.** Described in section 5.5; no code for it yet.

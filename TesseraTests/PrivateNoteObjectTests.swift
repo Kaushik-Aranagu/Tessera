@@ -22,4 +22,18 @@ struct PrivateNoteObjectTests {
         let plain = try model.engine.perform(CreateNote(body: "Garage gym\nRubber floor"), by: .user).output
         #expect(ObjectPage.opensAsNote(plain, model: model))
     }
+
+    @Test func aNoteWhoseBodyAloneIsWalledRoutesByItsLabel() throws {
+        for body in ["paid 40 for lunch", "slept 5 hours"] {
+            let note = try model.engine.perform(CreateNote(body: "Misc\n\(body)"), by: .user).output
+            let label = ObjectPrivacy.label(of: note, in: model.store, classes: model.classes)
+            #expect(ObjectPage.opensAsNote(note, model: model) == (label == nil))
+        }
+    }
+
+    @Test func theLatchedChoiceWinsOverTheLiveCheck() {
+        #expect(ObjectPage.resolveOpensAsNote(latched: true, live: { false }))
+        #expect(!ObjectPage.resolveOpensAsNote(latched: false, live: { true }))
+        #expect(ObjectPage.resolveOpensAsNote(latched: nil, live: { true }))
+    }
 }

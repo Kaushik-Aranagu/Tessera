@@ -35,6 +35,16 @@ public enum SecretWords {
         !secretIndexes(tokens(text)).isEmpty
     }
 
+    /// Secret words that are also things to buy ("buy pins", "a combination lock"; Research 139).
+    static let goodsWords: Set<String> = ["pin", "pins", "code", "codes", "combo", "combination"]
+
+    /// Whether a list line is a secret: one with a value, or a secret word that is never a thing to buy ("reset wifi
+    /// password"; AI architecture on #627). "buy pins" stays on the list (Research 139).
+    public static func isSecretListLine(_ text: String) -> Bool {
+        let tokens = tokens(text)
+        return hasValue(text) || secretIndexes(tokens).contains { !goodsWords.contains(tokens[$0]) }
+    }
+
     /// Whether the line carries a value after a secret word: the next word with a digit, letters mixed with digits or
     /// symbols, three or more spoken digits, or any word after "is" or ":" that follows the secret word (R3).
     public static func hasValue(_ text: String) -> Bool {

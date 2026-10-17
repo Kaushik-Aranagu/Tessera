@@ -3,6 +3,16 @@
 For: Product, Core, Builder A, Builder B, QA. Owner: Research lab. Fri Oct 16, 2026 (Pacific).
 Read by hand on `origin/master` at `5984f40` (Merge #523). Nothing was built or run. Every value is a placeholder.
 
+**Changes since last refresh (Sat Oct 17, 8:00 pm PT, master c19328b, Merge #625; last refresh was Fri 5:41 pm PT at ab7d3bf):**
+- R8 is whole: the Builder B half is merged (#597, eca3c83, QA and Design PASS d25e88d), in release 6 (eca3c834).
+- R15 is merged (#583, ab7d3bf, QA and Design PASS 36927f3), in release 5 (ab7d3bfe).
+- R16 is merged (#601, fd555e6, QA and Design PASS 2ee37fe), in release 7 (26dde994).
+- R14 (#576) is in release 3 (4757aefb), installed 5:57 pm Fri. It is on his phone ahead of Oct 31. DS1 is written (`qa/gate-row-r14.md`); only the Simulator Nov 1 run is left.
+- R18 part 1 (#580) is in release 4 (553ad19e), and releases 5 to 7 contain it. Part 2 and R19 still have no merged PR; #564 (R19) is open, conflicts with master, and its head moved to aaa64dc after QA PASS bf0ba93.
+- DS35 is merged (#606, bfb1a26, QA PASS), in release 7. DS18 and DS37 still have no PR.
+- First rider with no PR is now R6 (N15, Core 0aa). Still no PR: R6, R12, R13, and F1 to F12.
+- Releases 2 to 7 are named (648d9d0b, 4757aefb, 553ad19e, ab7d3bfe, eca3c834, 26dde994). Release 3 is the last install logged; 4 to 7 are named, with no install logged.
+
 **The ruling (Product item AT, 1:43 pm).** The next pin after a36b161 carries the v9 riders only. The Catalog stays
 v9. v10 (#407 `tessEyes`, then flag to setting, then the Design 70 LOOK row) ships alone in a later pin, written up
 in `next-build-v10.md`. This page is the riders pin: its list, its gate and its rollback.
@@ -18,20 +28,20 @@ decides whether the pin goes without it (the trip week then reads wrong in Revie
 
 **Releases are now per merge (decisions 3:03 pm): every app merge he can see goes to his phone, and 56dd028 (56dd02889727e2dec8adf249eda7e9fb320e363e, master at #544) is release 1. Each row below says whether it is in 56dd028 (read Fri 4:50 pm PT).**
 
-Refreshed Fri 5:41 pm PT against master ab7d3bf (Merge #583).
+Refreshed Sat 8:00 pm PT against master c19328b (Merge #625). Rows that did not change keep the Fri 5:41 pm reading.
 
 **Order (Product, decisions 1:56 pm).** Merged rows first, then the open riders in build order. Core: 0ad, 0ae, 0ag,
 HW19 with CR1, N15, P14 with HW13, HW9, 0af (HW11 rides with the 0ac work). Builder B: 0r, then 0t and 0u. Builder A:
 0n first. The UNDO slot (F1 to F3) goes in only if it is already done by Oct 22.
 
-**First rider in order with no PR: R8 PN-MENTION (Core 0ad, Builder B 0r).**
+**First rider in order with no PR: R6 N15 (Core 0aa).**
 
 **The rule (Product, 1:51 pm).** The riders pin carries whatever has merged and passed QA by the branch call. It does
 not wait for any single rider. At the call, the pin SHA is the newest first-parent merge on master at or after the
 last row below that reads "merged" with a QA PASS. A rider still open at 9:30 am goes to the next pin.
 
-How this was filled: `git log --first-parent a36b161..origin/master` (28 merges), open PRs on GitHub (four open: #407,
-#525, #527, #528; none is a rider), `git branch -r --no-merged origin/master` (no rider branch exists), QA verdicts
+How this was filled: `git log --first-parent a36b161..origin/master` (126 merges), open PRs on GitHub (three open: #407,
+#564, #618; only #564 is a rider, R19), `git branch -r --no-merged origin/master` (no rider branch exists), QA verdicts
 from the QA board and `docs/qa/review-*.md` on master. "none yet" means nothing was found; nothing is guessed.
 
 | Rider | Owner / board item | PR (state) | QA verdict | Merged SHA on master | Gate row | Note |
@@ -39,9 +49,9 @@ from the QA board and `docs/qa/review-*.md` on master. "none yet" means nothing 
 | R5 | **N13**: private note rows. | Builder B | B 0p | **merged** (#508, e1e3e37), **in 56dd028** | **NP1** |
 | R9 | **", best"** | Core | Core 0w | **merged** (#504, 134759f), **in 56dd028** | **DB1** |
 | R10 | **#403 eyes, inert**: in the build, off, nothing on the phone turns them on. | Builder A | A 0j | **merged** (#403, a88a1ed), inert, **in 56dd028** | **EY0** |
-| R8 | **PN-MENTION**: an "@Private note" mention never resolves to a private note (Core half: `NoteList.resolve`, `Notes.swift:35-43`, has no `isPrivate` filter today), and the object page never shows a private note's body (Builder B half: `InstanceBody`, `ObjectPage.swift:348`). | Core, Builder B | Core 0ad, B 0r | Core half **in 56dd028** (#551, b7ea747; `Notes.swift:42-46`, QA PASS 5c22981); Builder B half (`ObjectPage.swift` InstanceBody) **not in 56dd028**; it rides with R18, whose part 1 is merged (#580, 553ad19). Links saved before 56dd028 stay (`Notes.swift:118-122`). | **MN1** |
+| R8 | **PN-MENTION**: an "@Private note" mention never resolves to a private note (Core half: `NoteList.resolve`, `Notes.swift:35-43`, has no `isPrivate` filter today), and the object page never shows a private note's body (Builder B half: `InstanceBody`, `ObjectPage.swift:348`). | Core, Builder B | Core 0ad, B 0r | Core half **in 56dd028** (#551, b7ea747; `Notes.swift:42-46`, QA PASS 5c22981); Builder B half **merged** (#597, eca3c83; `ObjectPage.swift:27-29` opens a plain note in `NoteEditor`, a private note stays on the masked page; QA and Design PASS d25e88d), **in release 6** (eca3c834), not in 56dd028. R18 part 1 (#580) masks the page too. Links saved before 56dd028 stay (`Notes.swift:118-122`). | **MN1** |
 | R11 | **Trip bands**: Review's task and cooking bands count by each item's own op zone (`OpZones`), not the phone's zone (`ReviewWeek.swift:53-65` today). Rides along: G1, The week page (`ReviewView.swift:62-90`); G2, a cook files on its finish day everywhere, so the Day log changes (`DayStory.swift:241-249`, decisions 1:40 pm). Spec: `fixtures/trip-week.md`, 13 `ReviewTripWeekTests` names. | Core | Core 0ae | **in 56dd028** (#552, aed5c24; `ReviewWeek.swift:55-58`, `ReviewView.swift:83-92`, `DayStory.swift:242-253`; QA PASS 4af772e) | **TB1** |
-| R14 DST: DS8 repeated 1:30 am, with DS29, DS36 (new, 1:52 pm) | Core 0ag | **merged** (#576), **not in 56dd028**: merged in master, not yet in a release on his phone | QA PASS e068e14 (merged-head check pending) | 4757aef | **DS1** (fixture DS8, DS29, DS36) | `TessGrammar.swift:672-677` `bySettingHour` picks the PDT 1:30. Due before Oct 31 night. |
+| R14 DST: DS8 repeated 1:30 am, with DS29, DS36 (new, 1:52 pm) | Core 0ag | **merged** (#576), **not in 56dd028**; **in release 3** (4757aefb), installed Fri 5:57 pm PT | QA PASS e068e14 (Design: no surface) | 4757aef | **DS1** (fixture DS8, DS29, DS36) | `TessGrammar.swift:672-677` `bySettingHour` picks the PDT 1:30. Due before Oct 31 night: met, it has been on his phone since Fri 5:57 pm. DS1's Simulator Nov 1 run is still to do. |
 | R1 | **HW19**: "sick", "unwell" and "feeling sick" walled in `PrivateFacts.symptoms` (`PrivateFacts.swift:55-58` has none of them today). Ships only with the CR1 sick-slang mask (decisions 1:36 pm), so "sick of this" stays plain. | Core | Core 0ac, slice 1 | **in 56dd028** (#534, 86bdca0; `PrivateFacts.swift:55-59`, `:72-75`, `:86-88`; QA PASS dfe5801) | **HP1** |
 | R6 | **N15**: a one-time launch pass marks notes from before #422 private when they hold a secret word with a value. Today `DayStory.swift:345-347` still prints "Note:" and an old note's title; no such pass exists in `App/` or `TesseraCore/Sources/`. | Core | Core 0aa | **not in 56dd028** (`DayStory.swift:349-353` still prints "Note:" and the title) | **NP2** |
 | R7 | **P14**: Siri's Add a Task checks `PrivateFacts.isWalled(title)`. Master's `Intents.swift` still checks only `SecretWords.hasValue`. "pay rent 2100 friday" stays a task. | Core | Core 0l (tests 0l-2) | **in 56dd028** (#534; `Intents.swift:156-176`) | **P14**, now required |
@@ -50,10 +60,13 @@ from the QA board and `docs/qa/review-*.md` on master. "none yet" means nothing 
 | R4 | **HW11** (with N18): the body check runs before `parsePastLog`, so "weighed 82.3 yesterday" is private. | Core | Core 0ac "Then", 0l-2, notes half 0aa | **in 56dd028** (#534; `TessGrammar.swift:132-139`) | **HP3** |
 | R12 | SAVE A COPY's default name becomes "Before update <day>.tessera" (today "Tessera-<day>", `Features/Backup/BackupKeeper.swift:170`), and rotation and pruning touch only the rolling prefix, with a test. | Core | Core 0af | **not in 56dd028** (`BackupKeeper.swift:170` still "Tessera-<day>") | **SC1** |
 | R13 | SAVE A COPY warns "This is the Backups folder. Daily copies here get replaced. Save somewhere else?" when he picks the Backups folder. After R12. | Builder B | B 0t | **not in 56dd028** | **SC2** |
-| R18 Private-field mask: any object flagged private shows only its class's private label ("Private note", "Private task", "Private memory") with its fields hidden, on the generic page, `PropertyList` and the class page's "newest" row (decisions 2:45 pm); a workout's notes are a body fact, so its front shows "Note kept private" with no words, whatever the note says (decisions 5:07 pm) | Core 0ai | **part 1 merged** (#580), **not in 56dd028**: merged in master, not yet in a release on his phone. PM7, PM18 and PM19 deferred; part 2 has no PR on master | none yet | 553ad19 (part 1) | **PF1** (fixture PM1 to PM20, plus workout notes PM21 to PM36, `fixtures/private-field-mask.md`) | `ObjectPage.swift:227-228` prints a memory's or task's title as hero and class line, `:342-360` prints every field (a note's Body, a memory's Rule), `:261` names a private memory in Linked from. No "newest" row on master yet (0ak). Closes R8's Builder B half too. `:232-234` prints a workout's notes ("left knee sore") on its front. |
-| R19 Bare-number body wall: a bare number within 10% of his last logged weight is a body fact with no day word ("is 82.4 good?"); with no weight logged, a bare decimal is walled only next to a body word (weight, weigh, kg, lb, body fat, BMI) (decisions 2:56 pm) | Core 0ai | **open, not merged**: PR #564 is held (Builder B's UI suite). BN01, BN02 and BN04 wait for 0ai part 2 | QA PASS bf0ba93 on #564 (Design FIX FIRST) | none yet | **BW1** (walls-ui rows BN01 to BN11) | `PrivateFacts.swift:104-108` walls a decimal only when every other word is a day word, and has no last-weight check. Traps that stay plain: "is 3.5 good?", "is 120 good?", "rate this 8.5", "bench 82.5 x 5 good?". |
+| R18 Private-field mask: any object flagged private shows only its class's private label ("Private note", "Private task", "Private memory") with its fields hidden, on the generic page, `PropertyList` and the class page's "newest" row (decisions 2:45 pm); a workout's notes are a body fact, so its front shows "Note kept private" with no words, whatever the note says (decisions 5:07 pm) | Core 0ai | **part 1 merged** (#580; QA PASS and Design PASS e54cbdd), **not in 56dd028**; **in release 4** (553ad19e) and every release after it. PM7, PM18 and PM19 deferred; part 2 has no PR on master | none yet | 553ad19 (part 1) | **PF1** (fixture PM1 to PM20, plus workout notes PM21 to PM36, `fixtures/private-field-mask.md`) | `ObjectPage.swift:227-228` prints a memory's or task's title as hero and class line, `:342-360` prints every field (a note's Body, a memory's Rule), `:261` names a private memory in Linked from. No "newest" row on master yet (0ak). R8's Builder B half is closed by #597. `:232-234` prints a workout's notes ("left knee sore") on its front. |
+| R19 Bare-number body wall: a bare number within 10% of his last logged weight is a body fact with no day word ("is 82.4 good?"); with no weight logged, a bare decimal is walled only next to a body word (weight, weigh, kg, lb, body fat, BMI) (decisions 2:56 pm) | Core 0ai | **open, not merged**: PR #564 is held (Builder B's UI suite); it conflicts with master and its head is now aaa64dc, so bf0ba93's PASS needs a recheck. BN01, BN02 and BN04 wait for 0ai part 2 | QA PASS bf0ba93 on #564 (Design FIX FIRST) | none yet | **BW1** (walls-ui rows BN01 to BN11) | `PrivateFacts.swift:104-108` walls a decimal only when every other word is a day word, and has no last-weight check. Traps that stay plain: "is 3.5 good?", "is 120 good?", "rate this 8.5", "bench 82.5 x 5 good?". |
+| R15 Review foot line out of Tess's band (Design v9 walk, must land) | Builder B 0x | **merged** (#583), **in release 5** (ab7d3bfe), not in 56dd028 | QA PASS and Design PASS 36927f3 | ab7d3bf | **FB1** | `HomeSpatialView.swift:51` `footLift` 56, `:199`. |
+| R16 Routines Tess line and "Add an exercise" out of the band (Design v9 walk, must land) | Builder A 0q | **merged** (#601), **in release 7** (26dde994), not in 56dd028 | QA PASS and Design PASS 2ee37fe | fd555e6 | **FB2** | Design wants a clip of drop and UNDO, not blocking. |
+| R17 Resume key progress reads targetSets | Builder A 0r | **merged** (#546), **in 56dd028** | QA PASS 84ad7dc | 8ccb150 | **RK1** | `NowPage.swift:208`, `:214-218`. |
 | Possible: DS37 | Builder B 0u | none yet | none yet | none yet | none yet | Rider only if Product names it. `NotesView.swift:272`. |
-| Possible: DS18, DS35 | Builder A 0n | none yet | none yet | none yet | none yet | Rider only if Product names it. `WorkoutFinishView.swift:96`, `ExerciseDigest.swift:106`. |
+| Possible: DS18, DS35 | Builder A 0n | DS35 **merged** (#606, bfb1a26, `ExerciseDigest.swift`), **in release 7** (26dde994); DS18 none yet | DS35 QA PASS bfb1a26; DS18 none yet | DS35 bfb1a26; DS18 none yet | none yet | Rider only if Product names it. DS18 is `WorkoutFinishView.swift:96`. |
 
 **Realistic F fixes**
 
@@ -70,7 +83,7 @@ from the QA board and `docs/qa/review-*.md` on master. "none yet" means nothing 
 | F10 pasted key stripped | B 0p | none yet | none yet | none yet | N21, N22 | |
 | F12 Backups "Stop using it" | B 0o | none yet | none yet | none yet | S59, S60, X18 | |
 
-**Counts at 5:41 pm PT Fri Oct 16** (master ab7d3bf). Riders R1 to R14: 8 on his phone in 56dd028 (R1, R3, R4, R5, R7, R9, R10, R11), 1 merged in master and not in a release (R14, #576), 2 partly (R2, R8), 3 with no PR (R6, R12, R13). R18 is partly merged (#580); R19 is open (#564 held). F fixes:
+**Counts at 8:00 pm PT Sat Oct 17** (master c19328b). Riders R1 to R14: 8 in 56dd028 (R1, R3, R4, R5, R7, R9, R10, R11), 2 merged since and in later releases (R8 with #597, R14 with #576), 1 partly (R2), 3 with no PR (R6, R12, R13). R15, R16 and R17 are merged. R18 is partly merged (#580); R19 is open (#564 held, conflicts). F fixes:
 0 merged, 0 open PR, 10 not started. Also merged since a36b161 and QA PASS but not riders: #507 (a5f9787, PASS at
 90c9833) and #512 (fbede70, PASS at 04eda7c). Both ride in any pin cut from master now.
 
@@ -123,8 +136,8 @@ Status words: **merged**, **open PR**, **not started** (no branch and no commit 
 |---|---|---|---|---|---|
 | R12 | SAVE A COPY's default name becomes "Before update <day>.tessera" (today "Tessera-<day>", `Features/Backup/BackupKeeper.swift:170`), and rotation and pruning touch only the rolling prefix, with a test. | Core | Core 0af | not started | **SC1** |
 | R13 | SAVE A COPY warns "This is the Backups folder. Daily copies here get replaced. Save somewhere else?" when he picks the Backups folder. After R12. | Builder B | B 0t | not started | **SC2** |
-| R15 Review foot line out of Tess's band (Design v9 walk, must land) | Builder B 0x | **not in 56dd028** (no PR) | none yet | none yet | **FB1** | `HomeSpatialView` HomeLinkLine. |
-| R16 Routines Tess line and "Add an exercise" out of the band, 84 pt inset (Design v9 walk, must land) | Builder A 0q | **not in 56dd028** (no PR) | none yet | none yet | **FB2** | |
+| R15 Review foot line out of Tess's band (Design v9 walk, must land) | Builder B 0x | **merged** (#583, ab7d3bf), **in release 5** (ab7d3bfe), not in 56dd028 | QA PASS and Design PASS 36927f3 | ab7d3bf | **FB1** | `HomeSpatialView` HomeLinkLine. |
+| R16 Routines Tess line and "Add an exercise" out of the band, 84 pt inset (Design v9 walk, must land) | Builder A 0q | **merged** (#601, fd555e6), **in release 7** (26dde994), not in 56dd028 | QA PASS and Design PASS 2ee37fe | fd555e6 | **FB2** | |
 | R17 Resume key progress reads targetSets, with 3 for an entry with no plan; nothing writes "sets" (decisions 2:28 pm) | Builder A 0r | **in 56dd028** (#546, 8ccb150; `NowPage.swift:208`, `:214-218` read targetSets; QA PASS 84ad7dc) | none yet | none yet | **RK1** | `NowPage.swift:209`; every exercise counts 3 planned sets today. |
 
 ### Fixes from the Research fixtures (F1 to F12)

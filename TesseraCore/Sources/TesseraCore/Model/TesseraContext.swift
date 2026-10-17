@@ -16,6 +16,10 @@ public final class TesseraContext {
     public private(set) var links: [UUID: ObjectLink] = [:]
     public private(set) var views: [UUID: ViewDef] = [:]
     public private(set) var operations: [UUID: OpRecord] = [:]
+    /// Bumped on every insert, change and delete, so a reader can cache what it worked out from the graph.
+    public private(set) var revision = 0
+    /// His last weight and the revision it was read at (`BodyWeight.lastKg`; QA W2 on 0ai: it runs per list row).
+    var lastWeightCache: (revision: Int, kilograms: Double?)?
 
     /// Saves automatically shortly after a change. Turn off for bulk work, then call `save()`.
     public var autosaveEnabled = true
@@ -98,6 +102,7 @@ public final class TesseraContext {
     /// subclasses and objects are detached; an object's children and links go with it.
     public func delete(_ model: some TesseraModel) {
         guard model.context === self else { return }
+        revision += 1
         switch model {
         case let classDef as ClassDef:
             classDef.ownFields?.forEach(delete)
@@ -180,6 +185,7 @@ public final class TesseraContext {
 
     func markDirty(_ model: some TesseraModel) {
         guard !isLoading, model.context === self else { return }
+        revision += 1
         dirty[ObjectIdentifier(model)] = model
         scheduleAutosave()
     }

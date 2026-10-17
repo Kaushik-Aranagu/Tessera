@@ -299,7 +299,7 @@ public struct ClaudeKeyCheck {
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         request.setValue("application/json", forHTTPHeaderField: "content-type")
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await session.data(for: request, delegate: NoRedirects.shared)
         let http = response as? HTTPURLResponse
         return (http?.statusCode ?? 0, data, http?.value(forHTTPHeaderField: "request-id"))
     }
