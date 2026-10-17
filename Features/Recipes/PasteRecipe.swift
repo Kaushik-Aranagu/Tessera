@@ -1,5 +1,6 @@
 import SwiftUI
 import TesseraCore
+import TesseraTess
 
 /// Paste a recipe (kitchen screen 11). The raw text stays exactly where it lands, in body type, and the parser
 /// paints over it as it reads, top to bottom like a brush passing: amounts get a cadmium under-stroke, ingredient
@@ -23,6 +24,9 @@ struct PasteRecipe: View {
     /// The key line's filter: it cuts a key out and keeps the line up across the cut's own change (QA on #767).
     @State private var keys = PasteKeyFilter()
     @FocusState private var editing: Bool
+    /// Tess's line while a pasted link is read, and what reading it gave (G54, K87.4). Never the link itself.
+    @State private var linkLine: String?
+    @State private var readingLink = false
 
     /// The saved line's name: a private recipe is only "Private recipe" here too, spoken or drawn (G53).
     private var savedTitle: String {
@@ -35,7 +39,8 @@ struct PasteRecipe: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 Text(refusedKey ? claudeKeyLine
-                    : reading && revealed >= lines.count ? PasteCopy.tess(lines) : "Paste a recipe and I'll read it.")
+                    : linkLine ?? PasteCopy.idleLine(link: RecipePasteLink.bareLink(text) != nil, reading: reading,
+                                                     read: revealed >= lines.count, lines: lines))
                     .font(Theme.voice)
                     .foregroundStyle(Theme.Colors.tess)
                     .contentTransition(.opacity)
@@ -104,6 +109,9 @@ struct PasteRecipe: View {
                 SaveBar(
                     saved: saved != nil,
                     canSave: PasteCopy.canSave(lines),
+                    // A bare link: Read it, on his tap only (K86.7); never Save on a link.
+                    readLink: RecipePasteLink.bareLink(text).map { link in { readLink(link) } },
+                    readingLink: readingLink,
                     title: savedTitle,
                     onSave: save,
                     onUndo: {
@@ -192,7 +200,40 @@ struct PasteRecipe: View {
         }
     }
 
+    /// Reads the pasted link once. Read: the recipe's text lands in the box and the brush paints it, with the
+    /// reader's line. Offline: "Recipe link, kept for later." and the box clears, the link on the shelf. Claude (L3)
+    /// only while "Tess asks Claude" is on (G32).
+    private func readLink(_ link: URL) {
+        guard !readingLink else { return }
+        readingLink = true
+        linkLine = RecipeLinkLine.reading(link.host() ?? "the page")
+        let store = model.store
+        var claude = ClaudeRecipeReader(keys: SystemKeychain(), ledger: TessUsageLedger(store: store,
+                                                                                        classes: model.classes))
+        { [model] in model.asksClaude }
+        claude.lastWeightKg = { BodyWeight.lastKg(in: store) }
+        let reader = RecipeLinkReader(claude: claude)
+        Task { @MainActor in
+            let outcome = await RecipePasteLink.read(link, reader: reader, asksClaude: model.asksClaude,
+                                                     shelf: RecipeLinkShelf.beside(store))
+            readingLink = false
+            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+                linkLine = outcome.line
+                if let recipe = outcome.result.text {
+                    // Painted like a paste: the box takes the recipe's text and the brush reads it.
+                    reading = false
+                    corrections = [:]
+                    text = recipe
+                } else if outcome.kept {
+                    reading = false
+                    text = ""
+                }
+            }
+        }
+    }
+
     private func edit() {
+        linkLine = nil
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
             reading = false
             corrections = [:]
@@ -265,6 +306,8 @@ private struct SaveBar: View {
     let saved: Bool
     /// Nothing read (no ingredient, no step; a bare link, say): Save isn't drawn, so no tap ends in silence (G54).
     let canSave: Bool
+    var readLink: (() -> Void)?
+    var readingLink = false
     let title: String
     let onSave: () -> Void
     let onUndo: () -> Void
@@ -287,6 +330,12 @@ private struct SaveBar: View {
                     PaintKey(paint: Theme.Colors.health, isTap: true, action: onSave) { _ in
                         Text("Save recipe")
                     }
+                } else if let readLink {
+                    PaintKey(paint: Theme.Colors.ink, isTap: true, action: readLink) { _ in
+                        Text(readingLink ? "Reading" : "Read it")
+                    }
+                    .disabled(readingLink)
+                    .accessibilityHint("Reads the recipe from the page")
                 }
                 Button("Edit", action: onEdit)
                     .textRole(.label)
@@ -437,6 +486,17 @@ struct PasteKeyFilter {
 }
 
 enum PasteCopy {
+    /// Tess's line when no link line is up: the count once the brush has read, the link nudge for a bare link (a
+    /// proposal; the read lines themselves are Core's), else the invitation.
+    static func idleLine(link: Bool, reading: Bool, read: Bool,
+                         lines: [(line: String, kind: RecipeParser.LineKind)]) -> String
+    {
+        if link {
+            return "A link. Tap Read it and I'll read the page."
+        }
+        return reading && read ? tess(lines) : "Paste a recipe and I'll read it."
+    }
+
     static let didntSave = "Didn't save that. Try again."
 
     /// Save is drawn only when the parser found something to keep: an ingredient or a step (G54).
