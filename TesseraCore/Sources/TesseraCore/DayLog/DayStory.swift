@@ -85,8 +85,13 @@ public enum DayStory {
     /// Workout actions that fold into the workout's one line.
     static let workoutActions: Set = ["startWorkout", "startRoutine", "logSet", "logNextSet", "logExercise",
                                       "addExercise", "swapExercise", "finishWorkout", "finishWorkoutEarly"]
-    static let ownLines: [String: String] = ["createRecipe": "Saved", "createList": "New list:",
-                                             "createRoutine": "New routine:", "createPlan": "New plan:"]
+    static let ownLines: [String: String] = [
+        "createRecipe": "Saved",
+        "createList": "New list:",
+        "copyList": "New list:",
+        "createRoutine": "New routine:",
+        "createPlan": "New plan:",
+    ]
     /// Edits, reorders, plumbing: never a line (day-log-first.md, the 26 drops).
     static let dropped: Set = [
         "editSet", "editRecipe", "editNote", "renameObject", "renameListSection", "moveListItem", "clearDoneItems",

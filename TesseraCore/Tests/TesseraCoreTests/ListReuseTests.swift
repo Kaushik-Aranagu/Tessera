@@ -265,3 +265,76 @@ struct ListReuseTests {
         }
     }
 }
+
+/// 4c: CopyList ("copy packing for lisbon", "Lisbon, copied from Packing.").
+@MainActor
+struct CopyListTests {
+    let store = ObjectStore.open(inMemory: true)
+
+    @Test func aCopyHasTheSameItemsAllOpenAndTheOriginalStays() throws {
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let packing = try engine.perform(CreateList(name: "Packing"), by: .user).output
+        let socks = try engine.perform(AddListItem(list: packing.id, text: "Socks", quantity: "3"), by: .user).output
+        try engine.perform(AddListItem(list: packing.id, text: "Charger", section: "Tech"), by: .user)
+        try engine.perform(CheckListItem(item: socks.id), by: .user)
+        let copied = try engine.perform(CopyList(list: packing.id, name: "Lisbon"), by: .user)
+        let lists = ListContents(store: store, classes: classes)
+        let rows = lists.items(of: copied.output)
+        #expect(rows.map(\.text) == ["Socks", "Charger"] && rows.allSatisfy { !$0.isDone })
+        #expect(rows.first?.quantity == "3" && rows.last?.section == "Tech")
+        #expect(copied.record.receipt == "Lisbon, copied from Packing" && copied.record
+            .summary == "Copied Packing to Lisbon")
+        // One op record, and the original is untouched (Socks still checked).
+        #expect(lists.items(of: packing).first?.isDone == true && lists.items(of: packing).count == 2)
+        engine.undo(copied.record)
+        #expect(!lists.lists().map(\.title).contains("Lisbon"))
+    }
+
+    @Test func aTakenNameOpensThatListAndGroceriesCannotBeCopied() throws {
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let packing = try engine.perform(CreateList(name: "Packing"), by: .user).output
+        let lisbon = try engine.perform(CreateList(name: "Lisbon"), by: .user).output
+        let again = try engine.perform(CopyList(list: packing.id, name: "lisbon"), by: .user)
+        #expect(again.output.id == lisbon.id && again.record.ops.isEmpty && again.record
+            .receipt == "lisbon, already a list")
+        #expect(throws: ActionError.self) {
+            try engine.perform(CopyList(list: packing.id, name: "Groceries"), by: .user)
+        }
+        #expect(throws: ActionError.self) {
+            try engine.perform(CopyList(list: Groceries.listID, name: "Trip"), by: .user)
+        }
+        #expect(throws: ActionError.self) { try engine.perform(CopyList(list: packing.id, name: "  "), by: .user) }
+    }
+
+    @Test func flagsDoNotCopyExceptReusable() throws {
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let bag = try engine.perform(CreateList(name: "Gym bag"), by: .user).output
+        let towel = try engine.perform(AddListItem(list: bag.id, text: "Towel"), by: .user).output
+        let stamp = ListNoteTags.pickedPrefix + Date(timeIntervalSinceReferenceDate: 800_000_000).formatted(.iso8601)
+        try store.set("notes", to: .richText("#pick-one\n\(stamp)\nthe blue one"), on: towel)
+        try engine.perform(SetListReusable(list: bag.id), by: .user)
+        let copy = try engine.perform(CopyList(list: bag.id, name: "Away bag"), by: .user).output
+        #expect(ListNoteTags.isReusable(copy, in: store))
+        let row = try #require(copy.orderedChildren.first)
+        #expect(
+            store.value("notes", of: row)?.stringValue == "the blue one",
+            "\(String(describing: store.value("notes", of: row))) \(String(describing: store.value("notes", of: towel)))"
+        )
+        // A plain source makes a plain copy.
+        let plain = try engine.perform(CreateList(name: "Errands"), by: .user).output
+        let plainCopy = try engine.perform(CopyList(list: plain.id, name: "Errands 2"), by: .user).output
+        #expect(!ListNoteTags.isReusable(plainCopy, in: store))
+    }
+
+    @Test func aPrivateNameIsNeverInTheLine() throws {
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let packing = try engine.perform(CreateList(name: "Packing"), by: .user).output
+        let copied = try engine.perform(CopyList(list: packing.id, name: "Lexapro refills"), by: .user)
+        #expect(copied.record.receipt == "Private list, copied from Packing")
+        #expect(!copied.record.summary.lowercased().contains("lexapro"))
+    }
+}
