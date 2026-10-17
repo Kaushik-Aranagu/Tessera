@@ -372,6 +372,43 @@ public struct ClaudeRecipeReader {
         }.joined(separator: "\n")
     }
 
+    /// Phrases a page uses to steer a model. A reply that repeats one is the page talking, not a recipe.
+    static let steering = [
+        "ignore all", "ignore the previous", "ignore previous", "ignore your", "previous instructions",
+        "previous rules", "disregard", "you are now", "admin mode", "system note", "system:", "new rule",
+        "your instructions", "system prompt", "call every tool", "call the tool",
+    ]
+
+    /// The output check (injection audit item 1; docs/research/fixtures/recipe-link-us-25.md "Output check"): what
+    /// Claude wrote from a page must be a plain recipe inside the limits. A reply that fails is dropped whole, never
+    /// trimmed: no link, address, markup, money, phone number, login line or steering sentence, and every field in
+    /// range.
+    static func outputIsUnsafe(_ reply: String, recipe: ParsedRecipe) -> Bool {
+        let lower = reply.lowercased()
+        if steering.contains(where: { lower.contains($0) }) { return true }
+        if lower.firstMatch(of: /https?:|www\.|\b[a-z0-9-]+\.(?:com|org|net|io|co|app|test|example)\b/) != nil
+            || lower.firstMatch(of: /[a-z0-9._%+-]+@[a-z0-9-]+\./) != nil
+        {
+            return true
+        }
+        if reply.contains(where: { "[]<>`*".contains($0) }) || reply.firstMatch(of: /&#?\w{2,8};/) != nil
+            || reply.firstMatch(of: /(?m)^\s*#/) != nil
+        {
+            return true
+        }
+        if reply.firstMatch(of: /[$£€₹¥]\s?\d|\d\s?(?:dollars|bucks|usd)\b|\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}/) != nil
+            || SecretWords.cut(reply).cut > 0 || lower.firstMatch(of: /\b(?:login|log in|password|passcode)\b/) != nil
+        {
+            return true
+        }
+        let titleOK = (1 ... 80).contains(recipe.title.count)
+        let lines = recipe.ingredients.map(\.original).allSatisfy { (1 ... 200).contains($0.count) }
+        let steps = recipe.steps.map(\.text).allSatisfy { (1 ... 600).contains($0.count) }
+        let serves = recipe.serves.map { (1 ... 100).contains($0) } ?? true
+        let minutes = recipe.totalMinutes.map { (1 ... 1440).contains($0) } ?? true
+        return !(titleOK && lines && steps && serves && minutes)
+    }
+
     public func read(_ pageText: String, source: URL) async -> RecipeLinkResult {
         func failed(_ line: String) -> RecipeLinkResult {
             RecipeLinkResult(kind: .failed, line: line, text: nil, sourceURL: source)
@@ -438,7 +475,7 @@ public struct ClaudeRecipeReader {
             .compactMap { $0["type"] as? String == "text" ? $0["text"] as? String : nil }.joined(separator: "\n")
         guard reply.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() != "no recipe",
               let recipe = RecipeParser.parse(reply), recipe.ingredients.count >= 2, !recipe.steps.isEmpty,
-              recipe.ingredients.count <= 80, recipe.steps.count <= 60
+              recipe.ingredients.count <= 80, recipe.steps.count <= 60, !Self.outputIsUnsafe(reply, recipe: recipe)
         else {
             outcome = "nothing"
             return failed(RecipeLinkLine.noRecipe)
