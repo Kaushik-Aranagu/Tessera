@@ -44,8 +44,11 @@ PRs 864, 866 and 867 are merged and already on master. PRs 564, 868, 871, 884 an
 - **A pasted recipe that cannot be read** no longer puts a money or body line in the miss log.
 - **Too long (if merged, #884).** A phrase over 600 characters says "That's too long to send. Say it shorter." and
   never leaves the phone.
-- **Timers stay home (if merged, #884).** A phrase about a timer, or anything said while a cook is running ("8 mins",
-  "step 3", "stop the rice"), is never sent to Claude.
+- **Timers stay home (if merged, #884).** A phrase about a timer, or a cook phrase said while a cook is running
+  ("8 mins", "step 3", "stop the rice"), is never sent to Claude. The gate is narrowed to cook phrases only
+  (decisions 3:38 PM PT and 4:20 PM PT (6), Core's next PR); an unrelated phrase mid-cook ("call mom half 7") goes
+  the normal route, and a dropped cook phrase keeps the line "Didn't catch that." and is not logged. This bullet
+  and row W27 describe #884 as built until that PR lands, then change.
 - **Clocks are not money (if merged, #884).** "dinner at 7.30" is a time. "rent at 7.30" is still money.
 - **Stone is a body fact (if merged, #884).** "Eleven stone four" and "12 st 3" stay private.
 
@@ -91,7 +94,7 @@ Merged rows are on master now. Open rows carry "if merged" and the head SHA read
 | W24 | #564 | Phone build, any launch | No `-wallsSpy`, no `walls.probe`, no seeded private note | Any of them | traced (all behind `#if DEBUG` and `LaunchFlags`) | none |
 | W25 | #868 open (b574dec), if merged | Paste "Ibuprofen tea" twice on Recipes | "Private recipe is already on Recipes." | The word "Ibuprofen"; a miss log line | traced (PasteCycleTests); a non-medicine title still reads "<title> is already on Recipes." | none |
 | W26 | #884 open (5665c60), if merged | Ask bar: a phrase over 600 characters | "That's too long to send. Say it shorter." and no Claude call | The phrase logged as a miss | traced (ClaudeRouteTests) | none |
-| W27 | #884 | Timer phrases; any phrase while a cook runs | Handled on the phone only | A Claude call (Receipts row) | traced (MoneyWallTests) | none |
+| W27 | #884 | Timer phrases; cook phrases while a cook runs (any phrase, as #884 is built; narrowed to cook phrases by 3:38 PM PT) | Handled on the phone only | A Claude call (Receipts row) | traced (MoneyWallTests) | none |
 | W28 | #884 | "dinner at 7.30" vs "rent at 7.30" vs "coffee 7.30 today" | Clock; money; money | "dinner at 7.30" walled as money | traced | none |
 | W29 | #884 | "Eleven stone four", "12 st 3", "I'm 11 stone 4"; "bring a stone for the wall" | First three walled as body; last plain | Stone words sent to Claude | traced | R19 is the bare-number case, a different rule: do not tick |
 | W30 | #884 | "move dentist to 7" with no such task | "Didn't catch that" prefix, no records | A guessed task | traced | none |
