@@ -286,6 +286,15 @@ struct HomeLinesTests {
         #expect(line.context == "Packing" && line.detail == "6 left." && line.text == "Packing: 6 left.")
         let context = try #require(line.context), detail = try #require(line.detail)
         #expect(HomeLines.fitsContext(context) && HomeLines.fitsDetail(detail))
+        // Paused it reads paused, not the same as running (QA on #850).
+        try engine.perform(SuspendProcess(process: process.id), by: .user)
+        let pausedProcess = try #require(ProcessTable(engine: engine).process(for: list))
+        let pausedFact = try #require(HomeFacts(engine: engine).fact(process: pausedProcess))
+        let pausedLine = HomeLines.line(for: pausedFact)
+        #expect(pausedFact.state == .paused && pausedLine.hero == "Packing, paused" && pausedLine.text
+            .contains("paused"))
+        #expect(pausedLine.context?.hasPrefix("paused") == true, "\(pausedLine.context ?? "nil")")
+        try engine.perform(ResumeProcess(process: process.id), by: .user)
         // A walled name reads "Private list", never the words.
         let secret = try engine.perform(CreateList(name: "Lexapro refills"), by: .user).output
         try engine.perform(AddListItem(list: secret.id, text: "pills"), by: .user)
