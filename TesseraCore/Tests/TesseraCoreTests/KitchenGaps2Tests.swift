@@ -53,4 +53,33 @@ struct KitchenGaps2Tests {
         #expect(groceries.aisles().flatMap(\.items).count == 2)
     }
 
+    // MARK: G8
+
+    @Test func ordinalsAreEnglish() {
+        let expected = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "10th",
+                        "11th", "12th", "13th", "14th", "15th", "16th", "17th", "18th", "19th", "20th", "21st",
+                        "22nd", "23rd", "24th", "25th", "26th", "27th", "28th", "29th", "30th", "31st"]
+        for (index, word) in expected.enumerated() {
+            #expect(CookLog.ordinal(index + 1) == word)
+        }
+    }
+
+    @Test func finishLineUsesTheOrdinal() throws {
+        let engine = try engine()
+        let log = CookLog(store: store, classes: engine.classes)
+        let recipe = try engine.perform(CreateRecipe(text: RecipeParserTests.carbonara), by: .user).output
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .gmt
+        let first = Date(timeIntervalSince1970: 1_791_986_400) // 14 Oct 2026
+        var last = first
+        for day in 0 ..< 21 {
+            let at = first.addingTimeInterval(Double(day) * 60)
+            let cook = try engine.perform(StartCooking(recipe: recipe.id, time: at), by: .user).output
+            try engine.perform(FinishCooking(cook: cook.id, time: at), by: .user)
+            last = at
+        }
+        #expect(log.finishLine(for: recipe, at: last, calendar: calendar) ==
+            "Spaghetti carbonara, 21st time this month.")
+    }
+
 }

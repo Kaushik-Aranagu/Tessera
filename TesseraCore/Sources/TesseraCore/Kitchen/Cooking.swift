@@ -62,9 +62,22 @@ public struct CookLog {
     /// "Carbonara, third time this month." Counts, never judgement.
     public func finishLine(for recipe: ObjectRecord, at now: Date, calendar: Calendar = .current) -> String {
         let thisMonth = cooks(of: recipe).count { calendar.isDate($0.at, equalTo: now, toGranularity: .month) }
-        let ordinals = ["", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth"]
-        let times = thisMonth < ordinals.count ? ordinals[thisMonth] : "\(thisMonth)th"
-        return "\(recipe.title), \(times) time this month."
+        return "\(recipe.title), \(Self.ordinal(thisMonth)) time this month."
+    }
+
+    /// "first" to "ninth", then "10th", "11th", "12th", "13th", "21st", "22nd", "23rd", "31st".
+    static func ordinal(_ number: Int) -> String {
+        let words = ["", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth"]
+        if number > 0, number < words.count {
+            return words[number]
+        }
+        let suffix = switch (number % 100 / 10 == 1, number % 10) {
+        case (false, 1): "st"
+        case (false, 2): "nd"
+        case (false, 3): "rd"
+        default: "th"
+        }
+        return "\(number)\(suffix)"
     }
 }
 
