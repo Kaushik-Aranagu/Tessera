@@ -116,3 +116,45 @@ struct PasteCorrectionTests {
         #expect(Groceries(store: store, classes: classes).share(of: recipe).isEmpty)
     }
 }
+
+/// G59: a sentence is not a title, and the same paste twice is one recipe.
+@MainActor
+struct RecipeTitleTests {
+    @Test func aStepAsTheFirstLineIsNotTheTitle() throws {
+        let parsed = try #require(RecipeParser
+            .parse("Heat the oven to 200C.\n2 eggs\n1 cup flour\nBake it for 20 minutes."))
+        #expect(parsed.title == "Untitled recipe")
+        #expect(parsed.steps.first?.text == "Heat the oven to 200C.")
+        let long = try #require(RecipeParser
+            .parse("Stir the onions slowly in the pan until they turn golden and sweet\n2 onions\nSalt"))
+        #expect(long.title == "Untitled recipe")
+        // A name stays a name.
+        let name = try #require(RecipeParser.parse("Weeknight dal\n1 cup lentils\nSimmer 20 minutes."))
+        #expect(name.title == "Weeknight dal")
+    }
+
+    @Test func theSamePasteTwiceIsOneRecipe() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let text = "Weeknight dal\nIngredients\n1 cup lentils\nMethod\n1. Simmer 20 minutes."
+        let first = try engine.perform(CreateRecipe(text: text), by: .user).output
+        let book = RecipeBook(store: store, classes: classes)
+        #expect(book.recipe(pastedAs: text)?.id == first.id)
+        do {
+            try engine.perform(CreateRecipe(text: text), by: .user)
+            Issue.record("a second copy was written")
+        } catch {
+            #expect("\(error)".contains("Weeknight dal is already on Recipes."), "\(error)")
+        }
+        #expect(book.recipes().count == 1)
+        // A private title is never named.
+        let secret = "Lexapro stew\nIngredients\n1 cup lentils\nMethod\n1. Simmer."
+        try engine.perform(CreateRecipe(text: secret), by: .user)
+        do {
+            try engine.perform(CreateRecipe(text: secret), by: .user)
+        } catch {
+            #expect(!"\(error)".lowercased().contains("lexapro") && "\(error)".contains("Private recipe"), "\(error)")
+        }
+    }
+}
