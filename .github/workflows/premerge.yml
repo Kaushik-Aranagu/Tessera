@@ -1,0 +1,18 @@
+name: premerge
+# Runs the merge recipe's mechanical checks. No Swift here: the build check stays with QA and test.sh on the Mac.
+on:
+  pull_request:
+    branches: [master]
+permissions:
+  contents: read
+jobs:
+  premerge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Stale-tree check
+        run: scripts/ops/tree_check.sh "origin/${{ github.base_ref }}" "${{ github.event.pull_request.head.sha }}"
+      - name: Diff scans (secrets, data safety, pin lines, scripts rules)
+        run: git diff --unified=0 --no-color "origin/${{ github.base_ref }}...${{ github.event.pull_request.head.sha }}" | python3 -I scripts/ops/premerge_check.py
