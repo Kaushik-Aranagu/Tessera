@@ -178,11 +178,19 @@ public enum RecipeParser {
         guard clean.first?.isNumber == true else { return false }
         let tokens = clean.split(separator: " ", maxSplits: 2).map(String.init)
         guard let first = tokens.first else { return false }
+        // "1. Preheat the oven", "2) Whisk the eggs": a step number is never a title.
+        if first.firstMatch(of: /^\d+[.)]$/) != nil {
+            return true
+        }
         // "30-Minute": a number glued to a capitalised word is a name; "200g" or "2-3" is an amount.
         if first.firstMatch(of: /^[\d.,\/½¼¾⅓⅔⅛]+(?:[-–][\d.,\/½¼¾⅓⅔⅛]+)?$/) == nil {
             return first.firstMatch(of: /^[\d.,\/½¼¾⅓⅔⅛]+(?:[-–][\d.,\/½¼¾⅓⅔⅛]+)?\p{Ll}/) != nil
         }
         guard tokens.count > 1 else { return true }
+        // Two words, number first ("2 Eggs"): an amount of a thing; a name that starts with a number has more words.
+        if tokens.count == 2, tokens[1].allSatisfy(\.isLetter) {
+            return true
+        }
         let next = tokens[1]
         if next.first?.isLowercase == true {
             return true

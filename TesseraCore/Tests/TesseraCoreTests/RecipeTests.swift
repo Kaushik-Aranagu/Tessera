@@ -162,6 +162,12 @@ struct RecipeTitleTests {
         #expect(parsed.title == "Untitled recipe", "\(first)")
     }
 
+    @Test(arguments: ["1. Preheat the oven", "2) Whisk the eggs", "10. Rest it"])
+    func aNumberedFirstStepIsAStepNotATitle(_ first: String) throws {
+        let parsed = try #require(RecipeParser.parse("\(first)\n2 eggs\n1 cup flour"))
+        #expect(parsed.title == "Untitled recipe" && parsed.steps.first?.text.isEmpty == false, "\(first)")
+    }
+
     @Test func theSamePasteTwiceIsOneRecipe() throws {
         let store = ObjectStore.open(inMemory: true)
         let classes = try store.prepareCatalog()
