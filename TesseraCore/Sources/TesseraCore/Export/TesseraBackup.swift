@@ -108,6 +108,20 @@ public enum TesseraBackup {
         URL.documentsDirectory.appendingPathComponent("Backups", isDirectory: true)
     }
 
+    /// Rolling backups are named "Tessera-<day>.tessera"; rotation and pruning touch only these names.
+    public nonisolated static let rollingPrefix = "Tessera-"
+
+    /// True for a rolling backup's file name. A SAVE A COPY file ("Before update <day>.tessera") is not one, so it is
+    /// never rotated or pruned.
+    public nonisolated static func isRollingName(_ name: String) -> Bool {
+        name.hasPrefix(rollingPrefix) && name.hasSuffix(".\(fileExtension)")
+    }
+
+    /// The default name of a SAVE A COPY file for `day` ("yyyy-MM-dd").
+    public nonisolated static func savedCopyName(day: String) -> String {
+        "Before update \(day).\(fileExtension)"
+    }
+
     /// The rolling copy for his day (docs/research/backup-logical-day.md): named by `TesseraDay` in the zone in force
     /// ("Tessera-2026-10-21.tessera"), written on the first background after 04:00 and replaced by every background
     /// between 00:00 and 04:00 that night, so day D's copy holds all of D. Written under a temporary name and swapped
@@ -128,9 +142,9 @@ public enum TesseraBackup {
         let key = TesseraDay(calendar: calendar).day(of: now)
         let parts = calendar.dateComponents([.year, .month, .day], from: key)
         let day = String(format: "%04d-%02d-%02d", parts.year ?? 0, parts.month ?? 0, parts.day ?? 0)
-        let file = folder.appendingPathComponent("Tessera-\(day).\(fileExtension)")
+        let file = folder.appendingPathComponent("\(rollingPrefix)\(day).\(fileExtension)")
         let names = try manager.contentsOfDirectory(atPath: folder.path)
-        let copies = names.filter { $0.hasPrefix("Tessera-") && $0.hasSuffix(".\(fileExtension)") }.sorted(by: >)
+        let copies = names.filter(isRollingName).sorted(by: >)
         let newest = copies.first.flatMap { try? inspect(folder.appendingPathComponent($0)).createdAt }
         // A newest copy more than 2 days ahead is a clock that was set forward once, not one running behind: it
         // doesn't stop pruning or the late-night refresh for weeks (QA B10).
@@ -165,7 +179,7 @@ public enum TesseraBackup {
         }
         guard !clockBehind else { return file }
         let kept = try manager.contentsOfDirectory(atPath: folder.path)
-            .filter { $0.hasPrefix("Tessera-") && $0.hasSuffix(".\(fileExtension)") }
+            .filter(isRollingName)
             .sorted(by: >)
         for old in kept.dropFirst(keep) where old != file.lastPathComponent {
             try? manager.removeItem(at: folder.appendingPathComponent(old))
