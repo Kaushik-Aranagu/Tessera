@@ -4,6 +4,8 @@
 
 **The ruling this fixture tests (gaps-92 section 3).** "Private workout" reads in the hero's own place and weight. The context line is the time or the day word as usual. No lock glyph, no dimming, no asterisks. Same pattern for "Private recipe", "Private list", "Private note", "Private item". Receipts and Tess's line use the same string, thing first ("Private workout done").
 
+**Product rulings, [ruled 4:33 PM PT Oct 17] (decisions.md, Research #898).** (1) `HomeDonePack.build` keeps refusing for a private routine or workout: no Claude call is ever made for it, the rules wording is used. (2) The private recipe row drops the count: `Private recipe, 7 pm.` (the caps are law: row at most 6 words, context at most 6 words and 32 characters, no runtime exception). (3) A Claude-reworded context over 32 characters falls back to the rules context. (4) `PlanWording.privateLabels` gains "Private workout" and "Private list". (5) NowPage Resume and Start keys and their accessibility labels read the masked twin (`WorkoutSession.shownTitle`), never the object's raw title.
+
 Files named below (all `TesseraCore/Sources/TesseraCore/...` unless a full path is given): `HomeLines.swift` is `Home/HomeLines.swift`; `ObjectPrivacy.swift` is `Tess/ObjectPrivacy.swift`.
 
 ## 1. Inventory: every Home line that prints a title
@@ -69,12 +71,12 @@ The 15 title-printing lines the brief expected are L1 to L18 minus the shop and 
 | ID | file:line | What it prints | Source | Today for a private-titled thing |
 |---|---|---|---|---|
 | U1 | `Features/Home/HomeLineHero.swift:53` | accessibility hint `Opens <title>` | `line.fact.title` | Follows F1 to F7 |
-| U2 | `Features/Home/NowPage.swift:52`, :54 | key `Resume <title>` and its label (the running session) | `session.workout.title` | **Raw** (`WorkoutSession.shownTitle`, `Features/Workout/WorkoutSession.swift:30`, is the masked twin and is not used here) |
+| U2 | `Features/Home/NowPage.swift:52`, :54 | key `Resume <title>` and its label (the running session) | `session.workout.title` | **Raw** today. Ruled [ruled 4:33 PM PT Oct 17]: reads `WorkoutSession.shownTitle` (`Features/Workout/WorkoutSession.swift:30`, the masked twin), never the raw title |
 | U3 | `Features/Home/NowPage.swift:60`, :62 | key `Resume <title>` and its label (a suspended process) | `fact.title` | Follows F2 to F4 |
-| U4 | `Features/Home/NowPage.swift:74`, :75, and the hint on the next line | `Start <title>` (rest-day key), `Starts <title> anyway` | `next.title` | **Raw** (a routine's own title field) |
-| U5 | `Features/Home/NowPage.swift:86`, :88 | key `Start <title>` and its label (the scheduled session) | `model.store.displayTitle(of: workout)` | **Raw** |
-| U6 | `Features/Home/NowPage.swift:299`, :300 | key `Start <title>` and its label (the planned routine) | `routine.title` | **Raw** |
-| U7 | `TesseraCore/.../Home/HomeDonePack.swift:57`, :67, :70 | the Claude pack: refuses a walled title, else sends `title` and `names` | `fact.title` | Refuses a raw private title today (see O1) |
+| U4 | `Features/Home/NowPage.swift:74`, :75, and the hint on the next line | `Start <title>` (rest-day key), `Starts <title> anyway` | `next.title` | **Raw** today (a routine's own title field). Ruled [ruled 4:33 PM PT Oct 17]: reads the masked twin (`shownTitle`) |
+| U5 | `Features/Home/NowPage.swift:86`, :88 | key `Start <title>` and its label (the scheduled session) | `model.store.displayTitle(of: workout)` | **Raw** today. Ruled [ruled 4:33 PM PT Oct 17]: reads the masked twin (`shownTitle`) |
+| U6 | `Features/Home/NowPage.swift:299`, :300 | key `Start <title>` and its label (the planned routine) | `routine.title` | **Raw** today. Ruled [ruled 4:33 PM PT Oct 17]: reads the masked twin (`shownTitle`) |
+| U7 | `TesseraCore/.../Home/HomeDonePack.swift:57`, :67, :70 | the Claude pack: refuses a walled title, else sends `title` and `names` | `fact.title` | Refuses a raw private title today. Ruled [ruled 4:33 PM PT Oct 17]: keeps refusing for a private routine or workout (guard: refuse when the title equals the label, or is private); no Claude call is ever made for it, the rules wording is used |
 
 ## 2. Rows: exact strings
 
@@ -104,14 +106,14 @@ Each private row is run once per title of its class; the expected strings do not
 | HH10 | planned today, 7 pm (scheduled, F7) | `Private workout, 7 pm.` | `Private workout, 7 pm` | `this evening` | none | `Push Day A, 7 pm.` | `Push Day A, 7 pm` |
 | HH11 | planned tomorrow (routine, F5) | `Private workout tomorrow.` | `Private workout` | `tomorrow, first` | none | `Push Day A tomorrow.` | `Push Day A` |
 
-Routes: HH1 to HH4 come from F1, HH5 to HH8 from F2, HH9 and HH11 from F5, HH10 from F7. The key under the hero (U2 to U6) reads `Resume Private workout` or `Start Private workout`; the control reads `Resume Push Day A` or `Start Push Day A`.
+Routes: HH1 to HH4 come from F1, HH5 to HH8 from F2, HH9 and HH11 from F5, HH10 from F7. The key under the hero (U2 to U6) reads `Resume Private workout` or `Start Private workout` from the masked twin (`shownTitle`) [ruled 4:33 PM PT Oct 17]; the control reads `Resume Push Day A` or `Start Push Day A`.
 
 ### 2b. Recipe (cook) and list
 
 | ID | Class and fact | Private text | hero | ctx | detail | Control text | hero |
 |---|---|---|---|---|---|---|---|
 | HH12 | cook planned today, 2 to buy | `Private recipe tonight, 2 to buy.` | `Private recipe tonight` | `2 to buy` | none | `Tacos tonight, 2 to buy.` | `Tacos tonight` |
-| HH13 | cook planned 7 pm, 2 to buy | `Private recipe, 7 pm, 2 to buy.` | `Private recipe, 7 pm` | `2 to buy` | none | `Tacos, 7 pm, 2 to buy.` | `Tacos, 7 pm` |
+| HH13 | cook planned 7 pm, 2 to buy | `Private recipe, 7 pm.` (count dropped; context carries it) [ruled 4:33 PM PT Oct 17] | `Private recipe, 7 pm` | `2 to buy` | none | `Tacos, 7 pm, 2 to buy.` | `Tacos, 7 pm` |
 | HH14 | cook planned tomorrow, nothing to buy | `Private recipe tomorrow, nothing to buy.` | `Private recipe tomorrow` | `tomorrow` | none | `Tacos tomorrow, nothing to buy.` | `Tacos tomorrow` |
 | HH15 | cook running, step 3 of 12 | `Private recipe, on step 3.` | `Private recipe, step 3` | `now` | `Step 3 of 12.` | `Tacos, on step 3.` | `Tacos, step 3` |
 | HH16 | cook done 7:40 pm | `Private recipe done.` | `Private recipe done` | `7:40 pm` | none | `Tacos done.` | `Tacos done` |
@@ -119,7 +121,7 @@ Routes: HH1 to HH4 come from F1, HH5 to HH8 from F2, HH9 and HH11 from F5, HH10 
 | HH18 | list running, all done | `Private list: all done.` | `Private list, all done` | `Private list` | `All done.` | `Packing: all done.` | `Packing, all done` |
 | HH19 | list paused, 3 left | `Private list: paused, 3 left.` | `Private list, paused` | `paused 21 min ago` | `3 left.` | `Packing: paused, 3 left.` | `Packing, paused` |
 
-HH12 to HH16 are masked today (F3). HH17 to HH19 are masked today (F4). They are rows so a refactor to one shared function cannot regress them.
+HH13's row drops the count for a private recipe only [ruled 4:33 PM PT Oct 17]; the control keeps `Tacos, 7 pm, 2 to buy.` (6 words). HH12 to HH16 are masked today (F3). HH17 to HH19 are masked today (F4). They are rows so a refactor to one shared function cannot regress them.
 
 ### 2c. Task, note, item (guards)
 
@@ -142,7 +144,7 @@ Labels: "Private workout" is 15 characters, 2 words; "Private recipe" 14, 2; "Pr
 | CAP2 | ctx a reworded `Private workout, 7:40 pm` (Claude may use `names`, `HomeLine.names`) | 4 / 24 | 6 / 32 | yes |
 | CAP3 | ctx reworded `Private workout this evening` | 4 / 28 | 6 / 32 | yes |
 | CAP4 | ctx reworded `Private workout tomorrow, first` | 4 / 31 | 6 / 32 | yes (1 character to spare) |
-| CAP5 | ctx reworded `Private workout, paused 21 min ago` | 6 / 34 | 6 / 32 | **no**: 34 characters. `Private workout, paused 2 h ago` is 6 / 31 and fits. The checker refuses it, so Claude's line falls back to the rules context, which is correct (a line that fails is refused, not cut) |
+| CAP5 | ctx reworded `Private workout, paused 21 min ago` | 6 / 34 | 6 / 32 | **no**: 34 characters. `Private workout, paused 2 h ago` is 6 / 31 and fits. Ruled [ruled 4:33 PM PT Oct 17]: a Claude-reworded context over 32 characters falls back to the rules context (a line that fails is refused, not cut); no exception |
 | CAP6 | detail reworded `Private workout, 6 exercises, 22 sets, 3 new bests.` | 9 / 51 | 14 / 80 | yes |
 | CAP7 | detail reworded with days since: `Private workout, 6 exercises, 22 sets, 3 new bests, 4 days since.` | 12 / 65 | 14 / 80 | yes |
 | CAP8 | row `Private workout done. Bench best.` (L12) | 5 / 33 | 6 words | yes |
@@ -150,7 +152,7 @@ Labels: "Private workout" is 15 characters, 2 words; "Private recipe" 14, 2; "Pr
 | CAP10 | row `Private workout, all sets in.` (L14) | 5 / 29 | 6 words | yes |
 | CAP11 | row `Private workout this evening.` (L17) | 4 / 29 | 6 words | yes |
 | CAP12 | row `Private recipe tonight, nothing to buy.` (L18) | 6 / 39 | 6 words | yes, at the cap exactly |
-| CAP13 | row `Private recipe, 7 pm, 2 to buy.` (HH13) | 7 / 31 | 6 words | **no**: 7 words. The control `Tacos, 7 pm, 2 to buy.` is 6. A two-word title costs one word of room. No runtime check enforces `rowWords`; only the test does, and it does not seed this case (O3) |
+| CAP13 | row `Private recipe, 7 pm.` (HH13) | 4 / 21 | 6 words | yes. Ruled [ruled 4:33 PM PT Oct 17]: the private-recipe row drops the count (`Private recipe, 7 pm, 2 to buy.` was 7 words); the context `2 to buy` keeps it. The control `Tacos, 7 pm, 2 to buy.` stays at 6. No runtime exception to `rowWords`; the test seeds this row |
 | CAP14 | row `Private recipe tomorrow, nothing to buy.` (HH14) | 6 / 40 | 6 words | yes, at the cap exactly |
 | CAP15 | row `Private list: paused, 12 left.` (L7) | 5 / 30 | 6 words | yes |
 | CAP16 | the 15 longest template outputs for a workout (HH1 to HH11, text and hero) | all at most 5 words | 6 words | yes; "Private workout" is no longer than a typical title (the control "Incline Push Day B" is 4 words, longer) |
@@ -198,12 +200,12 @@ The raw title must appear in no `accessibilityLabel`, `accessibilityHint` or `ac
 | F1, F2, F5, F7, L-rows for a workout, HH1 to HH11 | **traced**: the builders read `displayTitle`/`summary.title` raw (read at the lines named) | Core: one `ObjectPrivacy.shownTitle(of:)` (section 4A of `private-title-masks.md`) at `WorkoutSummary.swift:92`, :518, :558, :647 |
 | F3, F4, HH12 to HH19 | **traced**: masked today at :593 and :547 | Core (guard rows) |
 | F6, HH20, HH21 | **traced** at the builder (raw); **inferred** end to end (the upstream task source is not read) | Core |
-| U2, U4, U5, U6, VO2, VO4 to VO6 | **traced**: raw reads at the lines named | Home UI builder (Product to name A or B) |
+| U2, U4, U5, U6, VO2, VO4 to VO6 | **traced**: raw reads at the lines named; ruled [ruled 4:33 PM PT Oct 17] to read the masked twin (`shownTitle`) | Home UI builder |
 | U1, U3, VO1, VO3 | **traced**: follow the fact | Home UI builder (test only) |
 | HH22, HH23 | **traced**: no kind exists | Core (guard) |
 | CAP1 to CAP16 | **computed** from the templates; lengths counted by script | Core |
 | NG1 to NG3 | **inferred**: needs the view tree or a snapshot; not read | Home UI builder |
-| O1 (Claude pack) | **inferred**: `isWalled("Private workout")` was not run | Core |
+| U7 (Claude pack guard) | ruled [ruled 4:33 PM PT Oct 17]: keeps refusing; **inferred** that `isWalled("Private workout")` is false, so the explicit guard is needed (not run) | Core |
 
 ### 6b. Swift Testing names
 
@@ -217,7 +219,7 @@ Core (in `TesseraCore/Tests/TesseraCoreTests/HomeLinesTests.swift`, new `@Suite(
 - `plannedTaskFactForPrivateTitleReadsPrivateTask` (HH20, HH21)
 - `privateRecipeAndListLinesStayMasked` (HH12 to HH19)
 - `noteAndItemNeverReachAHomeLine` (HH22, HH23)
-- `privateWorkoutFitsEveryHomeSlot` (CAP1 to CAP16, with CAP5 and CAP13 as the two known edges)
+- `privateWorkoutFitsEveryHomeSlot` (CAP1 to CAP16, with CAP5 as the known edge: a reworded context over 32 characters falls back to the rules context; CAP13 now passes)
 - `homeRowLinesStayWithinSixWordsForMaskedTitles` (extends the existing six-word test to HH12 to HH19)
 - `controlTitleLinesAreUnchanged` (NG7)
 - `noHomeLineLeaksARawPrivateTitle` (NG5, runs T1 to T5 and T7)
@@ -225,6 +227,9 @@ Core (in `TesseraCore/Tests/TesseraCoreTests/HomeLinesTests.swift`, new `@Suite(
 - `homeFactTitleIsMaskedAtTheSource` (NG9)
 - `noHomeStringHasLockDimOrAsterisk` (NG3, NG4, NG8)
 - `widgetLineForPrivateWorkoutUsesTheLabel` (W1)
+- `homeDonePackRefusesPrivateWorkoutTitle` (U7: no Claude call for a title equal to the label or private)
+- `rewordedContextOver32CharsFallsBackToRules` (CAP5)
+- `planWordingPrivateLabelsHoldWorkoutAndList` (G4)
 
 Home UI builder (in `TesseraTests/`):
 
@@ -238,18 +243,19 @@ Home UI builder (in `TesseraTests/`):
 - G1: `fact(done:)` copies `summary.title` raw (:505 from `WorkoutSummary.swift:92`). Mask once at :92 and F1 follows. Keep the raw title in a second property only if a caller needs it.
 - G2: F2, F5, F7 (:518, :558, :647) each need the same mask. One `shownTitle(of:)`, not three copies. Note that :518 also feeds the cook, list and shop branches, which already mask their own; the new function must be class-aware and must not turn "Groceries" or a masked cook into something else.
 - G3: F6 (:619) prints a task's raw title; `ObjectPrivacy.label` already has "Private task" for it.
-- G4: `PlanWording.swift:39` (`privateLabels`) lists "Private recipe", "Private task", "Private note", "Private item", "Private memory" but not "Private workout" or "Private list". A masked title that reaches the plan pack as a title is not recognised as a label (the Home done pack does not read this set, the plan pack does).
+- G4 [ruled 4:33 PM PT Oct 17]: `PlanWording.swift:39` (`privateLabels`) lists "Private recipe", "Private task", "Private note", "Private item", "Private memory" but not "Private workout" or "Private list". Ruled: add both (Core build item). Until then a masked title that reaches the plan pack as a title is not recognised as a label (the Home done pack does not read this set, the plan pack does).
+- G8 [ruled 4:33 PM PT Oct 17]: `HomeDonePack.build` (:57) needs an explicit guard: refuse (no Claude call, rules wording) when `fact.title` equals the label (`ObjectPrivacy.routineLabel`, "Private workout") or the title is private, because the masked label is not a care, money or medicine word and `isWalled` would not catch it. Keeps Tess's line and Home from disagreeing (NG6).
 - G5: no test seeds a private routine title through `HomeFacts`. `WorkoutSummaryTests.swift:75` tests `routineTitle` alone.
 
 **Home UI builder**
-- G6: U2, U4, U5, U6 read the title from the object (`session.workout.title`, `next.title`, `routine.title`, `displayTitle(of: workout)`), not from the fact. After Core masks the fact, these keys still print the raw title unless they take the fact's title or `shownTitle(of:)`. `WorkoutSession.shownTitle` (`WorkoutSession.swift:30`) exists for U2.
+- G6 [ruled 4:33 PM PT Oct 17]: U2, U4, U5, U6 read the title from the object (`session.workout.title`, `next.title`, `routine.title`, `displayTitle(of: workout)`), not from the fact. After Core masks the fact, these keys still print the raw title unless they read the masked twin. Ruled: Resume and Start keys and their accessibility labels (`NowPage.swift` :52, :54, :74, :75, :86, :88, :299, :300) read `WorkoutSession.shownTitle` (`WorkoutSession.swift:30`), never the object's raw title.
 - G7: the second hint at the rest-day key ("Starts <title> anyway") is the same read as U4.
 
 ### 6d. Open questions
 
-- **O1 (Product and Core).** After the mask, `HomeDonePack.build` (:57) sees the title "Private workout", which is not a care, money or medicine word, so it is likely not walled, and the pack would build and a Claude call would go out for a private routine, where it refuses today (the raw title trips the wall). Should the pack still refuse when the title is the label? Suggest yes: refuse when `fact.title == ObjectPrivacy.routineLabel`, so the private done line stays the rules line and Tess's line and Home cannot disagree (NG6). Not run.
+O1 and O3 were answered [ruled 4:33 PM PT Oct 17] and are folded into the rows above (U7, G8, HH13, CAP13). O2, O4, O5, O6 stay open.
+
 - **O2 (Core).** Does anything upstream of `fact(task:)` (:619) already swap a private task for its label? Not traced. If yes, F6 is a non-issue and HH20 and HH21 are guards.
-- **O3 (Product).** A two-word label costs a word in `Private recipe, 7 pm, 2 to buy.` (CAP13, 7 words). Allow 7 words for this one row, drop the count when the time is present, or shorten to `Private recipe, 7 pm.` with the count in the context (which already says "2 to buy")? Suggest the last; the context line carries the count, so the row loses nothing.
 - **O4 (Product).** The widget sentence for a running list prints the name twice: hero `Private list, 3 left` plus ctx `Private list` gives `Private list, 3 left, Private list` (`widgetWords`, :133 to :138). The same happens for a plain list ("Packing, 3 left, Packing"), so it is not a privacy bug, but the masked version is the one most likely to be screenshotted. Drop the context when it repeats the name?
 - **O5 (Product).** Should the masked label also stop counting as a "name" in `HomeLine.names` (Claude may reword with it)? Suggest keep it: it lets Claude say "Private workout, 7:40 pm" within the caps (CAP2), the same string Home prints.
 - **O6 (Core).** A workout created from a routine carries the routine's title (`PlanActions.swift:124`, from `private-title-masks.md`). If he renames the routine later, an old workout keeps the old private title; the mask is by the title at read time, so a title that stops being private un-masks old Home facts. Acceptable?
@@ -258,6 +264,6 @@ Home UI builder (in `TesseraTests/`):
 
 - Whether the upstream of `fact(task:)` swaps a private task (O2), and `PlanWording` consumers of `privateLabels` beyond :39 to :43.
 - The view tree for NG1 and NG2: no snapshot or render was read; those rows are inferred from the code reading above (no lock or opacity branch on privacy in `HomeLineHero.swift`, but I read only the context, hero and key parts).
-- Whether `isWalled("Private workout")` is false (O1): read the word lists in `HomeDonePack.swift:115-120` and `PrivateWords.swift:28-30`, which hold no "private" or "workout", but did not run it.
+- Whether `isWalled("Private workout")` is false (the G8 guard): read the word lists in `HomeDonePack.swift:115-120` and `PrivateWords.swift:28-30`, which hold no "private" or "workout", but did not run it.
 - The widget extension and Lock Screen consumers of `HomeLine.widgetLine` outside the lines read here (`git grep` found no use in `Widgets/`; the extension may take its words another way).
 - No test was run; no test name above is confirmed to compile.
