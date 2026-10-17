@@ -3,7 +3,8 @@ import TesseraCore
 
 /// A plan's routines (docs/design/training-mode.md, "Routines"): the back word, Title 44, the context line, one 62 pt
 /// row per routine in cycle order, "Make a routine" as a writing line, and the plan's mode as two value words.
-/// Hold a row to move it in the cycle; swipe it left to drop it. Tess says each change with UNDO.
+/// Hold a row to move it in the cycle; swipe it left to drop it. Tess says each change in her band beside the soul,
+/// with UNDO (`TessVoice`), like every other page's receipt.
 struct RoutinesPage: View {
     let plan: ObjectRecord
     @Environment(AppModel.self) private var model
@@ -13,11 +14,6 @@ struct RoutinesPage: View {
     @State private var making = false
     @State private var draft = ""
     @FocusState private var draftFocused: Bool
-    /// The last change, for UNDO (making a routine is two ops).
-    @State private var last: [OpRecord] = []
-    /// What the last change touched, named on its UNDO line ("Push A, taken back.").
-    @State private var lastThing = ""
-    @State private var line: String?
     @State private var haptic = HapticCue()
     /// The row being moved by a hold-and-drag, and how far it has travelled.
     @State private var moving: UUID?
@@ -75,9 +71,6 @@ struct RoutinesPage: View {
                 modeWords(mode)
                     .padding(.top, Theme.Spacing.xl)
                     .entrance(4)
-
-                tessLine
-                    .padding(.top, Theme.Spacing.l)
             }
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.top, Theme.Spacing.s)
@@ -150,7 +143,14 @@ struct RoutinesPage: View {
         }
         draft = ""
         making = false
-        said("\(title) made.", thing: title, records: [made.record, added.record], haptic: .made)
+        // Making a routine is two ops; UNDO takes both back and leaves the new routine's page if he's on it.
+        let route = Route.object(made.output.id)
+        said("\(title) made.", records: [made.record, added.record], haptic: .made) { [model] in
+            if model.path.last == route {
+                model.path.removeLast()
+            }
+            return Receipt.takenBack(title)
+        }
         // The new routine opens empty, "Add an exercise" ready.
         model.open(.object(made.output.id))
     }
@@ -185,10 +185,9 @@ struct RoutinesPage: View {
         }
         said(
             "\(plan.title) \(mode == .fixed ? "on fixed days" : "rolls on").",
-            thing: plan.title,
             records: [result.record],
             haptic: .selection
-        )
+        ) { Receipt.takenBack(plan.title) }
     }
 
     // MARK: Reorder and drop
@@ -215,7 +214,9 @@ struct RoutinesPage: View {
                       let result = try? model.engine.perform(MoveRoutineInPlan(plan: plan.id, routine: routine.id,
                                                                                to: target), by: .user)
                 else { return }
-                said("\(routine.title) moved.", thing: routine.title, records: [result.record], haptic: .selection)
+                said("\(routine.title) moved.", records: [result.record], haptic: .selection) {
+                    Receipt.takenBack(routine.title)
+                }
             }
     }
 
@@ -235,45 +236,27 @@ struct RoutinesPage: View {
     private func drop(_ routine: ObjectRecord) {
         guard let result = try? model.engine.perform(DropRoutineFromPlan(plan: plan.id, routine: routine.id),
                                                      by: .user) else { return }
-        said("\(routine.title) dropped.", thing: routine.title, records: [result.record], haptic: .notNow)
+        let title = routine.title
+        said(Receipt.dropped(title), records: [result.record], haptic: .notNow) { Receipt.backOnPlan(title) }
     }
 
     // MARK: Tess
 
-    private var tessLine: some View {
-        HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.m) {
-            Text(line ?? " ")
-                .font(Theme.voice(size: 21))
-                .foregroundStyle(Theme.Colors.tess)
-                .fixedSize(horizontal: false, vertical: true)
-                .contentTransition(.opacity)
-            Spacer(minLength: Theme.Spacing.s)
-            if !last.isEmpty {
-                Button("Undo") { undo() }
-                    .buttonStyle(InkLabelWordStyle.undo)
-                    .accessibilityLabel("Undo the last change")
-                    .transition(.opacity)
-            }
-        }
-        .tesseraAnimation(value: line)
-    }
-
-    private func said(_ words: String, thing: String, records: [OpRecord], haptic moment: Haptic) {
-        last = records
-        lastThing = thing
-        line = words
+    /// Tess says the change in her band beside the soul (`TessVoice`, read by `BottomChrome`), with UNDO. UNDO takes
+    /// back every op of the change, newest first, then she says what came back (`undone` runs after the ops).
+    private func said(_ words: String, records: [OpRecord], haptic moment: Haptic,
+                      undone: @escaping @MainActor () -> String)
+    {
         haptic.play(moment)
         model.touch()
-    }
-
-    private func undo() {
-        for record in last.reversed() {
-            model.engine.undo(record)
-        }
-        last = []
-        line = Receipt.takenBack(lastThing)
-        haptic.play(.undo)
-        model.touch()
+        TessVoice.shared.say(words, takeBack: { [model] in
+            for record in records.reversed() {
+                model.engine.undo(record)
+            }
+            let back = undone()
+            // The band clears its line right after UNDO runs; her receipt for the undo follows it.
+            Task { @MainActor in TessVoice.shared.say(back) }
+        })
     }
 }
 
@@ -287,13 +270,18 @@ private struct RoutineRow: View {
     @Environment(AppModel.self) private var model
     @Environment(\.zoomNamespace) private var namespace
     @State private var pull: CGFloat = 0
+    /// A sideways drag owns the touch: the row doesn't also open on the lift (the walk showed a drop opening it).
+    @State private var swiped = false
 
     private static let arm: CGFloat = 90
 
     var body: some View {
         let slots = routine.orderedChildren
         let sets = slots.reduce(0) { $0 + Int(model.store.number("sets", of: $1) ?? 3) }
-        Button { model.open(.object(routine.id)) } label: {
+        Button {
+            guard !swiped else { return }
+            model.open(.object(routine.id))
+        } label: {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(routine.title)
@@ -329,6 +317,7 @@ private struct RoutineRow: View {
             DragGesture(minimumDistance: 20)
                 .onChanged { value in
                     guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                    swiped = true
                     pull = value.translation.width
                 }
                 .onEnded { _ in
@@ -336,6 +325,11 @@ private struct RoutineRow: View {
                         onDrop()
                     }
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { pull = 0 }
+                    // After the button has seen the lift, a tap opens the row again.
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(150))
+                        swiped = false
+                    }
                 }
         )
         .accessibilityElement(children: .combine)

@@ -78,5 +78,6 @@ public enum TesseraIntentsCatalog {
         "clearDoneItems": "in-app only: lists",
         "finishWorkoutEarly": "in-app only: live mode's finish early",
         "moveTask": "in-app only for now (Now's \"not now\" and Later)",
+        "keepPlannedTask": "in-app only: Plan my day's keep",
     ]
 }
