@@ -20,8 +20,10 @@ import io
 import json
 import os
 import re
+import shutil
 import sqlite3
 import tempfile
+import urllib.parse
 import contextlib
 import sys
 import uuid
@@ -36,6 +38,12 @@ SECRET_WORDS = {"password", "passwords", "passcode", "passcodes", "pin", "pins",
                 "combination", "passphrase", "pw", "pwd"}
 PRIVATE_RECIPE = "Private recipe"
 PRIVATE_ITEM = "Private item"
+# Mirrors PrivateFacts.moneyWords (Tess/PrivateFacts.swift) plus TessMemoryScreen.moneyWords.
+MONEY_WORDS = {"usd", "dollar", "dollars", "bucks", "buck", "gbp", "pound", "pounds", "quid", "tenner", "fiver", "eur",
+               "euro", "euros", "inr", "rs", "rupee", "rupees", "cad", "aud", "chf", "jpy", "yen", "spend", "spent",
+               "paid", "pay", "cost", "costs", "price", "refund", "refunded", "tip", "tipped", "venmo", "venmoed",
+               "zelle", "zelled", "paypal", "owe", "owes", "balance", "checking", "savings", "salary", "paycheck",
+               "copay", "rent", "invoice"}
 BODY_UNIT = re.compile(r"\d\s*(kg|kgs|lb|lbs|cm|bpm|kcal|%)(\W|$)", re.I)
 
 
@@ -50,7 +58,12 @@ def is_private_title(text):
     for i, t in enumerate(tokens):
         if t in SECRET_WORDS or (t == "wifi" and i + 1 < len(tokens) and tokens[i + 1] in (":", "is")):
             return True
-    if re.search(r"[$\u20ac\u00a3\u00a5]", text or "") or BODY_UNIT.search(text or ""):
+    lower = (text or "").lower()
+    no_times = re.sub(r"\b\d{1,2}:\d{2}\s*(?:am|pm)?|\b\d{1,2}\s*(?:am|pm)\b", " ", lower)
+    words = [w.strip(".,-") for w in re.split(r"[^\w.,-]+", no_times) if w.strip(".,-")]
+    if any(w[0].isdigit() for w in words) and any(w in MONEY_WORDS for w in words):  # "Paid 40", "spent 12"
+        return True
+    if re.search(r"[$\u20b9\u20ac\u00a3\u00a5]", text or "") or BODY_UNIT.search(text or ""):
         return True
     return any(re.fullmatch(r"\d[\d,.]{2,}", t) for t in tokens)  # "Rent 1200": a 3+ digit amount
 
@@ -110,7 +123,7 @@ def main():
         print(__doc__)
         sys.exit(2)
     path = args[0]
-    if "application support" in os.path.abspath(path).lower():  # PF12
+    if "application support" in os.path.realpath(path).lower():  # PF12
         sys.exit("Refusing a store under Application Support: copy the file somewhere else and point the script at the copy.")
     with_titles = "--titles" in sys.argv
     since = None
@@ -118,7 +131,7 @@ def main():
         # Midnight Pacific on that date (his day), not UTC.
         since = datetime.fromisoformat(sys.argv[sys.argv.index("--since") + 1]).replace(tzinfo=PACIFIC)
 
-    db = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+    db = sqlite3.connect(f"file:{urllib.parse.quote(os.path.abspath(path))}?mode=ro", uri=True)
     db.row_factory = sqlite3.Row
 
     # systemKey is stored as "system.recipe"; the script speaks in bare keys.
@@ -338,13 +351,31 @@ def self_test():
         check("Grocery items: 3 (0 from recipes, 3 typed, 0 typed staples)" in plain, "grocery items counted, none named (PF6)")
         check("$" not in plain + with_titles, "no $ in output (PF10)")
         check(before == after, "store file unchanged (PF12)")
+        link = os.path.join(tmp, "Application Support", "Tessera")
+        os.makedirs(link)
+        shutil.copy(path, os.path.join(link, "tessera.sqlite"))
+        elsewhere = os.path.join(tmp, "innocent.sqlite")
+        os.symlink(os.path.join(link, "tessera.sqlite"), elsewhere)
+        try:
+            sys.argv = ["x", elsewhere]
+            main()
+            check(False, "symlink into Application Support refused")
+        except SystemExit as e:
+            check("Application Support" in str(e), "symlink into Application Support refused (realpath)")
+        for t in ["Paid 40", "spent 12", "Lunch \u20b9250", "Dinner 6.25"]:
+            check(is_private_title(t), f"{t!r} is money-shaped")
+        check(not is_private_title("Tacos 3pm") and not is_private_title("Pizza"), "plain titles stay plain")
         try:
             sys.argv = ["x", "/Users/someone/Library/Application Support/Tessera/tessera.sqlite"]
             main()
             check(False, "live path refused")
         except SystemExit as e:
             check("Application Support" in str(e), "live Application Support path refused (PF12)")
-        check(not re.search(r"FROM object[^\"]*\bnote\b", open(__file__).read().replace("system.note", "")), "no query on note")
+        code = open(__file__).read().split("def self_test")[0]
+        tables = {t.lower() for t in re.findall(r"\b(?:FROM|JOIN)\s+(\w+)", code)}
+        check(tables <= {"classdef", "fielddef", "object", "link", "op"}, f"queries touch only known tables: {sorted(tables)}")
+        check(re.search(r"FROM object WHERE[^\n]*classID IN", code) is not None, "object query is limited by classID IN")
+        check(not re.search(r"""["'](?:note|event|training|bodyWeight)["']""", code), "no note/event/training class named in code")
         print("\n--- sample output with --titles ---\n" + with_titles)
         sys.exit(1 if failures else 0)
 
