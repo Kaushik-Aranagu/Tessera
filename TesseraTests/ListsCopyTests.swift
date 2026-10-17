@@ -57,6 +57,7 @@ struct ListsCopyTests {
         // Stored text is often lowercase; the line still leads with a capital (Kitchen 10.9 on #786).
         #expect(ListsCopy.removed("rice") == "Rice, removed.")
         #expect(ListsCopy.backOn("rice", list: "Packing") == "Rice, back on Packing.")
+        #expect(ListsCopy.removed("iPhone charger") == "iPhone charger, removed.")
     }
 
     @Test func removeRisesFrom60AndIsWholeAt96() {
@@ -70,6 +71,16 @@ struct ListsCopyTests {
         #expect(ListsCopy.reusable("Packing", isOn: true) == "Packing, reusable.")
         #expect(ListsCopy.reusable("Packing", isOn: false) == "Packing, not reusable.")
         #expect(ListsCopy.reset("Packing") == "Packing, reset.")
+        #expect(ListsCopy.reusableWord(isOn: true) == "Reusable, on")
+        #expect(ListsCopy.reusableWord(isOn: false) == "Reusable, off")
         #expect(ListsCopy.reset("Private list") == "Private list, reset.")
+    }
+
+    @Test func runLinesUseTheShownName() {
+        #expect(ListsCopy.running("Packing") == "Packing, running")
+        #expect(ListsCopy.runStarted("Packing", left: 6) == "Packing, 6 left.")
+        #expect(ListsCopy.runStarted("Private list", left: 0) == "Private list, nothing left.")
+        #expect(ListsCopy.runDone("Packing", left: 0) == "Packing, done.")
+        #expect(ListsCopy.runDone("Packing", left: 3) == "Packing, done. 3 left.")
     }
 }

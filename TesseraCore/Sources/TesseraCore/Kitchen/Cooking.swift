@@ -43,7 +43,7 @@ public struct CookLog {
 
     /// The serving size a cook used.
     public func serves(of cook: ObjectRecord) -> Int? {
-        store.number("serves", of: cook).map(Int.init)
+        RecipeLimits.serves(store.number("serves", of: cook))
     }
 
     /// Timers still counting (not stopped), soonest first. A timer past its end stays until stopped, at 0.
@@ -141,7 +141,7 @@ public struct StartCooking: EngineAction {
                    && transaction.store.value("cookedAt", of: cook) == nil && transaction.openProcess(for: cook) != nil
            })
         {
-            if let serves {
+            if let serves = RecipeLimits.serves(serves) {
                 try transaction.set("serves", to: .number(Double(serves)), on: open)
             }
             try StartProcess(subject: open.id, ownerApp: "Kitchen", time: time).apply(&transaction)
@@ -150,7 +150,7 @@ public struct StartCooking: EngineAction {
         let cook = try transaction.create(transaction.classDef(.cook),
                                           title: ObjectPrivacy.cookTitle(recipe, in: transaction.store))
         try transaction.setLinks("recipe", on: cook, to: [recipe])
-        if let size = serves ?? book.serves(recipe) {
+        if let size = RecipeLimits.serves(serves) ?? book.serves(recipe) {
             try transaction.set("serves", to: .number(Double(size)), on: cook)
         }
         let first = book.steps(of: recipe).first?.text

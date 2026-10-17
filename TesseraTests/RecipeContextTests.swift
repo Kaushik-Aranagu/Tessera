@@ -11,6 +11,7 @@ struct RecipeContextTests {
         #expect(PortionDrum.range(written: 14) == 1 ... 28)
         #expect(PortionDrum.range(written: 2) == 1 ... 12)
         #expect(PortionDrum.range(written: nil) == 1 ... 12)
+        #expect(PortionDrum.range(written: 5000) == 1 ... 48)
     }
 
     @Test func durationsAreHoursAndMinutes() {
@@ -48,5 +49,15 @@ struct RecipeContextTests {
         #expect(!RecipeCopy.cookDay(thisYear, now: now, calendar: calendar).contains("2026"))
         #expect(RecipeCopy.cookDay(lastYear, now: now, calendar: calendar).contains("2025"))
         #expect(RecipeCopy.cookDay(lastYear, now: now, calendar: calendar).hasSuffix(", 9 pm"))
+    }
+
+    /// G62: absurd stored values never trap the page.
+    @Test func absurdValuesNeverCrash() {
+        #expect(PortionDrum.range(written: Int.max) == 1 ... 48)
+        #expect(PortionDrum.range(written: Int.min) == 1 ... 12)
+        #expect(RecipeCopy.duration(.infinity) == "0 min")
+        #expect(RecipeCopy.duration(.nan) == "0 min")
+        #expect(RecipeCopy.duration(1e300) == "99 h 59 min")
+        #expect(RecipeCopy.duration(-5) == "0 min")
     }
 }
