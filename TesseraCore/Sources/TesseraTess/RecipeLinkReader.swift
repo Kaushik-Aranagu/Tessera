@@ -479,8 +479,9 @@ public struct ClaudeRecipeReader {
         let titleOK = (1 ... 80).contains(recipe.title.count)
         let lines = recipe.ingredients.map(\.original).allSatisfy { (1 ... 200).contains($0.count) }
         let steps = recipe.steps.map(\.text).allSatisfy { (1 ... 600).contains($0.count) }
-        let serves = recipe.serves.map { (1 ... 100).contains($0) } ?? true
-        let minutes = recipe.totalMinutes.map { (1 ... 1440).contains($0) } ?? true
+        // The one set of limits every source shares (G62).
+        let serves = recipe.serves.map { RecipeLimits.serves.contains($0) } ?? true
+        let minutes = recipe.totalMinutes.map { RecipeLimits.minutes.contains($0) } ?? true
         return !(titleOK && lines && steps && serves && minutes)
     }
 

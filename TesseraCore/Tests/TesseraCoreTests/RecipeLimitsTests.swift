@@ -11,7 +11,7 @@ struct RecipeLimitsTests {
         #expect(RecipeLimits.serves(1e300) == 100 && RecipeLimits.serves(.infinity) == nil)
         #expect(RecipeLimits.serves(.nan) == nil && RecipeLimits.serves(-3.0) == nil && RecipeLimits.serves(0.0) == nil)
         #expect(RecipeLimits.serves(4.0) == 4 && RecipeLimits.serves(Int.max) == 100 && RecipeLimits.serves(0) == nil)
-        #expect(RecipeLimits.minutes(1e300) == 1440 && RecipeLimits.minutes(.nan) == nil)
+        #expect(RecipeLimits.minutes(1e300) == RecipeLimits.minutes.upperBound && RecipeLimits.minutes(.nan) == nil)
         #expect(RecipeLimits.minutes(-.infinity) == nil && RecipeLimits.minutes(0.2) == 1)
         #expect(RecipeLimits.whole(1e300) == nil && RecipeLimits.whole(.nan) == nil && RecipeLimits.whole(12.7) == 12)
         #expect(IngredientLine.kitchenNumber(1e300 + 0.5, unit: .cup).isEmpty == false)
@@ -26,7 +26,8 @@ struct RecipeLimitsTests {
         let recipe = try engine.perform(CreateRecipe(text: text), by: .user).output
         let book = RecipeBook(store: store, classes: classes)
         #expect((book.serves(recipe) ?? 1) <= 100)
-        #expect((book.totalMinutes(recipe) ?? 1) <= 1440 && (book.activeMinutes(recipe) ?? 1) <= 1440)
+        #expect(RecipeLimits.minutes.contains(book.totalMinutes(recipe) ?? 1)
+            && RecipeLimits.minutes.contains(book.activeMinutes(recipe) ?? 1))
     }
 
     @Test func aStoredHugeValueReadsInsideTheLimits() throws {
@@ -56,6 +57,20 @@ struct RecipeLimitsTests {
         let parsed = ParsedRecipe(title: "Chili", serves: Int.max, activeMinutes: nil, totalMinutes: 1e300,
                                   ingredients: [], steps: [], source: "")
         let text = RecipeImport.text(of: parsed)
-        #expect(text.contains("Serves 100") && text.contains("Total time: 1440 min"), "\(text)")
+        #expect(text.contains("Serves 100") && text.contains("Total time: 4320 min"), "\(text)")
+    }
+
+    @Test func aTwoDayFermentKeepsItsTime() throws {
+        // Kitchen 10:50 AM PT: the cap is 3 days, so 48 h reads as written; over 3 days reads as the cap.
+        #expect(RecipeLimits.minutes == 1 ... 4320)
+        #expect(RecipeLimits.minutes(2880) == 2880 && RecipeLimits.minutes(5000) == 4320)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let text = "Sourdough\nTotal time: 48 hours\nIngredients\n500 g flour\n350 g water\nMethod\n1. Mix and wait."
+        let recipe = try engine.perform(CreateRecipe(text: text), by: .user).output
+        let minutes = RecipeBook(store: store, classes: classes).totalMinutes(recipe)
+        #expect(minutes == nil || minutes == 2880, "\(minutes ?? -1)")
+        try store.set("totalMinutes", to: .number(2880), on: recipe)
+        #expect(RecipeBook(store: store, classes: classes).totalMinutes(recipe) == 2880)
     }
 }
