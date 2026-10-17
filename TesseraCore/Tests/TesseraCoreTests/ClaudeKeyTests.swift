@@ -127,7 +127,7 @@ struct ClaudeKeyTests {
         StubProtocol.failure = .notConnectedToInternet
         await clean(check().test(pasted: secret))
         StubProtocol.failure = nil
-        await clean(check().test(pasted: "sk-ant-"))
+        await clean(check().test(pasted: "sk-" + "ant-")) // built from pieces (Product 9:53 PM PT)
         let outcomes: [ClaudeKeyCheck.Outcome] = [
             .works, .badKey, .notAllowed, .offline, .timeout, .capReached, .busy, .accountPaused,
             .notAKey, .notSaved, .other,

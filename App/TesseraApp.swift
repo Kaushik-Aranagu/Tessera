@@ -26,6 +26,10 @@ struct TesseraApp: App {
         }
         let model = AppModel(context: container.mainContext)
         // Fake history only when asked for (simulator, recordings): never on Kaushik's phone.
+        // -resetDemo starts the first-launch rest day over too (QA low on #641); LaunchFlags is simulator-only.
+        if LaunchFlags.has("-resetDemo") {
+            UserDefaults.standard.removeObject(forKey: SettingsStore.firstLaunchKey)
+        }
         if LaunchFlags.has("-demo") || LaunchFlags.has("-resetDemo") {
             DemoData.prepare(model)
         }
