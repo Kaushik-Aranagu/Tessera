@@ -557,7 +557,15 @@ public struct DeleteObject: EngineAction {
     }
 
     public func apply(_ transaction: inout Transaction) throws {
-        try transaction.delete(transaction.object(object))
+        let target = try transaction.object(object)
+        // The built-in Groceries list stays: deleting it would orphan every later add (G6).
+        if target.id == Groceries.listID {
+            throw ActionError.invalidArguments(
+                action: Self.descriptor.name,
+                reason: "Groceries stays. Clear it instead"
+            )
+        }
+        transaction.delete(target)
     }
 
     public func summary(in store: ObjectStore) -> String {
