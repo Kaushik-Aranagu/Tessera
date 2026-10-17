@@ -156,7 +156,9 @@ final class AppModel {
     /// Where you were when Tess took you Home; tapping her again goes back.
     var homeReturnPath: [Route]?
 
-    init(context: TesseraContext) {
+    /// `launchDefaults`: where once-per-install launch decisions are kept; the app tests pass a throwaway suite (QA on
+    /// #665), so a test run never decides for an install.
+    init(context: TesseraContext, launchDefaults: UserDefaults = .standard) {
         self.context = context
         store = ObjectStore(context: context)
         do {
@@ -182,7 +184,7 @@ final class AppModel {
                                                               .map(BackupCopy.folderName))
             // The first launch with the restWeekday reader: Sunday, as one op with UNDO ("Sunday, rest day.";
             // Research 146). Once; an UNDO or a later "Any" leaves a record, so it is never written twice.
-            restReceipt = SettingsStore(engine: engine).writeFirstRestWeekday()
+            restReceipt = SettingsStore(engine: engine).writeFirstRestWeekday(defaults: launchDefaults)
         }
         runtime = TesseraRuntime(engine: engine)
         soul.runScript()

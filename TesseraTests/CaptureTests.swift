@@ -9,7 +9,7 @@ struct CaptureTests {
     let model: AppModel
 
     init() {
-        model = AppModel(context: container.mainContext)
+        model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         DemoData.prepare(model)
     }
 
@@ -62,7 +62,7 @@ struct CaptureTests {
 
     @Test func aSetTypedOnHomeStartsAWorkoutThatShowsAsRunning() async throws {
         let other = TesseraSchema.makeContainer(inMemory: true)
-        let fresh = AppModel(context: other.mainContext)
+        let fresh = AppModel(context: other.mainContext, launchDefaults: .testSuite())
         _ = await fresh.ask("log bench 80x8")
         fresh.commitCapture()
         let session = try #require(fresh.session)

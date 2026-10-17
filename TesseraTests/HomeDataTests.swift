@@ -156,7 +156,7 @@ struct HomeDataTests {
     // MARK: Model-backed helpers
 
     @Test func setsPerMuscleWalkWorkoutsEntriesAndClasses() throws {
-        let model = AppModel(context: container.mainContext)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         DemoData.prepare(model)
         // Demo history: Push Day A three days ago with 4 bench sets and 3 overhead press sets. Primary muscles come
         // from Core's library: bench is chest, overhead press is front delts.
@@ -178,7 +178,7 @@ struct HomeDataTests {
     }
 
     @Test func upcomingSkipsTheHeroAndFinishedItems() throws {
-        let model = AppModel(context: container.mainContext)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         DemoData.prepare(model)
         let now = AppClock.now
         let current = try #require(model.currentTask(around: now))
@@ -194,7 +194,7 @@ struct HomeDataTests {
     }
 
     @Test func lanesHoldOnlyTheirOwnDay() {
-        let model = AppModel(context: container.mainContext)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         DemoData.prepare(model)
         let now = AppClock.now
         let lanes = HomeData.lanes(model, now: now)
