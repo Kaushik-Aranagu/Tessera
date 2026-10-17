@@ -161,7 +161,8 @@ struct ExerciseAndPlansTests {
         let tesseraToday = TesseraDay(calendar: .current).day(of: now)
         let today = try #require(week.days.first { Calendar.current.isDate($0.date, inSameDayAs: tesseraToday) })
         #expect(today.state == .done && today.routine == "Push A" && today.workoutID == session.workout.id)
-        let next = week.days.first { $0.date > today.date }
+        // The next day with a routine: on a Saturday the day after is the rest day the first launch writes.
+        let next = week.days.first { $0.date > today.date && $0.routine != nil }
         if let next {
             #expect(next.state == .planned && next.routine == "Pull A")
         }
