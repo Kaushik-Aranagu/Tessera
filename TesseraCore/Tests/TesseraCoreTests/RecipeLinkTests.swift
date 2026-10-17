@@ -362,8 +362,8 @@ struct RecipeLinkTests {
         let before = LinkStub.requests.count
         let step = ClaudeRecipeReader(keys: InMemoryKeychain(Self.fakeKey), ledger: ledger,
                                       session: LinkStub.session(), allowed: { false })
-        let result = await step.read("Beans and rice\n1 can black beans\n2 tomatoes",
-                                     source: try #require(URL(string: "https://blog.example.com/beans")))
+        let result = try await step.read("Beans and rice\n1 can black beans\n2 tomatoes",
+                                         source: #require(URL(string: "https://blog.example.com/beans")))
         #expect(result.kind == .failed && result.line == RecipeLinkLine.claudeOff)
         #expect(LinkStub.requests.count == before && ledger.calls().isEmpty)
         #expect(RecipeLinkLine.claudeOff.hasSuffix("Paste the text instead."))
@@ -457,5 +457,17 @@ struct RecipeLinkTests {
     func moneyAndHisWeightKeepTheirAmounts(_ line: String, _ lastKg: Double?) {
         // QA on #669: the measure strip never hides money or a weigh-in.
         #expect(ClaudeRecipeReader.sendable(line, lastWeightKg: lastKg).isEmpty, "\(line)")
+    }
+
+    @Test(arguments: ["1.50 pints milk", "0.75 pt cream", "1.25 quarts stock", "2.50 qt broth", "1.25 gallons water",
+                      "0.50 gal juice", "2.50 dl cream", "33.00 cl beer", "1.50 sticks butter"])
+    func moreRecipeMeasuresAreNotMoney(_ line: String) {
+        // Board item (a): US and metric volumes and butter sticks are measures; kg and lb stay walled.
+        #expect(ClaudeRecipeReader.sendable(line, lastWeightKg: nil) == line, "\(line)")
+    }
+
+    @Test(arguments: ["8.50 kg today", "9.20 lb this morning"])
+    func bodyUnitsStayWalled(_ line: String) {
+        #expect(ClaudeRecipeReader.sendable(line, lastWeightKg: nil).isEmpty, "\(line)")
     }
 }

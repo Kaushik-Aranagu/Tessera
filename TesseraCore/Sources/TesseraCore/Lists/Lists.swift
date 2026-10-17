@@ -206,7 +206,7 @@ public struct AddListItem: EngineAction {
         let last = BodyWeight.lastKg(in: store)
         // A measure is never money: "1.25 cups flour" (a cooking unit right after two places; never kg or lb).
         let measured = bare.replacing(
-            /(?i)\b\d+[.,]\d{2}\s*(?:cups?|tbsps?|tablespoons?|tsps?|teaspoons?|g|grams?|ml|l|liters?|litres?|oz|ounces?)\b/,
+            /(?i)\b\d+[.,]\d{2}\s*(?:cups?|tbsps?|tablespoons?|tsps?|teaspoons?|g|grams?|ml|cl|dl|l|liters?|litres?|oz|ounces?|pints?|pt|quarts?|qt|gallons?|gal|sticks?)\b/,
             with: "1"
         )
         // A unit then a thing is an amount to buy, not money or his weight: "1.50 lb apples" (QA on #763).

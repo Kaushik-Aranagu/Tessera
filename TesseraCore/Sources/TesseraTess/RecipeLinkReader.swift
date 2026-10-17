@@ -387,11 +387,11 @@ public struct ClaudeRecipeReader {
         guard words.isDisjoint(with: money), words.isDisjoint(with: weigh),
               !line.contains(where: { "$£€₹¥".contains($0) }) else { return line }
         return line.replacing(
-            /(?i)\b(\d+)[.,](\d{2})\s*(cups?|tbsps?|tablespoons?|tsps?|teaspoons?|g|grams?|ml|l|liters?|litres?|oz|ounces?)\b/
+            /(?i)\b(\d+)[.,](\d{2})\s*(cups?|tbsps?|tablespoons?|tsps?|teaspoons?|g|grams?|ml|cl|dl|l|liters?|litres?|oz|ounces?|pints?|pt|quarts?|qt|gallons?|gal|sticks?)\b/
         ) { match in
             let amount = Double("\(match.output.1).\(match.output.2)") ?? .infinity
             let unit = match.output.3.lowercased()
-            let small = ["g", "gram", "grams", "ml"].contains(unit) ? amount < 1000 : amount <= 10
+            let small = ["g", "gram", "grams", "ml", "cl"].contains(unit) ? amount < 1000 : amount <= 10
             return small ? String(match.output.3) : String(match.output.0)
         }
     }
