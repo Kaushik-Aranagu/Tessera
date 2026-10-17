@@ -14,6 +14,8 @@ public enum RecipeLinkLine {
     /// Offline: the link waits on the shelf and reads only on his tap, never by itself (ER1, K86.7, FG7).
     public static let offline = "Recipe link, kept for later."
     public static let tooBig = "Too big to read safely. Paste the text instead."
+    /// A link with a name or password in it ("name:secret@host"): never read, kept or shown (QA on #807).
+    public static let secretLink = "That link has a password in it. Paste the text instead."
     public static let askingClaude = "No recipe card there. Asking Claude."
     public static let claudeRead = "Claude read it. Check it, then save."
     /// A key Claude refused on this read. Never M2 here: "Paste it again?" would invite the key into the recipe field.
@@ -82,6 +84,8 @@ public struct RecipeLinkResult: Sendable, Equatable {
     public let text: String?
     /// The final https URL, tracking stripped, for the recipe's source.
     public let sourceURL: URL?
+    /// No connection, to the page or to Claude: the reason, typed, so nothing matches on the line's words.
+    public var isOffline = false
 }
 
 /// Reads a recipe link on the phone (docs/research/recipe-link-fetch.md §1 to §4): one ephemeral https GET with an
@@ -109,11 +113,15 @@ public struct RecipeLinkReader {
             kind: result.kind,
             line: result.line,
             text: result.text.map { SecretWords.cut($0).text },
-            sourceURL: result.sourceURL
+            sourceURL: result.sourceURL,
+            isOffline: result.isOffline
         )
     }
 
     func readUnscreened(_ link: String) async -> RecipeLinkResult {
+        if Self.hasCredentials(link) {
+            return RecipeLinkResult(kind: .failed, line: RecipeLinkLine.secretLink, text: nil, sourceURL: nil)
+        }
         guard let url = Self.safeURL(link) else {
             return RecipeLinkResult(kind: .failed, line: RecipeLinkLine.tooBig, text: nil, sourceURL: nil)
         }
@@ -124,6 +132,9 @@ public struct RecipeLinkReader {
             (html, finalURL) = (text, final)
         case let .failed(line):
             return RecipeLinkResult(kind: .failed, line: line, text: nil, sourceURL: url)
+        case .offline:
+            return RecipeLinkResult(kind: .failed, line: RecipeLinkLine.offline, text: nil, sourceURL: url,
+                                    isOffline: true)
         }
         let source = Self.stripTracking(finalURL)
         // Video pages: the description only.
@@ -171,6 +182,7 @@ public struct RecipeLinkReader {
     enum Fetched: Sendable {
         case page(String, URL)
         case failed(String)
+        case offline
     }
 
     func fetch(_ url: URL) async -> Fetched {
@@ -201,7 +213,7 @@ public struct RecipeLinkReader {
         } catch let error as URLError {
             switch error.code {
             case .notConnectedToInternet, .networkConnectionLost,
-                 .dataNotAllowed: return .failed(RecipeLinkLine.offline)
+                 .dataNotAllowed: return .offline
             case .secureConnectionFailed, .appTransportSecurityRequiresSecureConnection:
                 return .failed(RecipeLinkLine.tooBig) // https only: Design's "too big or odd" row (QA N4)
             default: return .failed(RecipeLinkLine.blocked)
@@ -257,8 +269,22 @@ public struct RecipeLinkReader {
 
     // MARK: Safety
 
-    /// https only (http is upgraded), no private or local hosts, no other ports.
+    /// Whether the link carries a user or a password before its host ("https://name:secret@site.com/"): refused
+    /// whole, never fetched or kept (QA on #807).
+    public nonisolated static func hasCredentials(_ link: String) -> Bool {
+        let text = link.trimmingCharacters(in: .whitespacesAndNewlines)
+        let full = text.lowercased().hasPrefix("http") ? text : "https://" + text
+        // Anything before an "@" ahead of the path is a user, parsed or not ("name:se cret@host" fails URL()).
+        if full.firstMatch(of: /^(?i)[a-z][a-z0-9+.-]*:\/\/[^\/?#]*@/) != nil {
+            return true
+        }
+        guard let url = URL(string: full) else { return false }
+        return url.user() != nil || url.password() != nil
+    }
+
+    /// https only (http is upgraded), no private or local hosts, no other ports, no user or password.
     public nonisolated static func safeURL(_ link: String) -> URL? {
+        guard !hasCredentials(link) else { return nil }
         var text = link.trimmingCharacters(in: .whitespacesAndNewlines)
         if text.lowercased().hasPrefix("http://") {
             text = "https://" + text.dropFirst(7)
@@ -436,8 +462,8 @@ public struct ClaudeRecipeReader {
     }
 
     public func read(_ pageText: String, source: URL) async -> RecipeLinkResult {
-        func failed(_ line: String) -> RecipeLinkResult {
-            RecipeLinkResult(kind: .failed, line: line, text: nil, sourceURL: source)
+        func failed(_ line: String, offline: Bool = false) -> RecipeLinkResult {
+            RecipeLinkResult(kind: .failed, line: line, text: nil, sourceURL: source, isOffline: offline)
         }
         // The wall (G32): with "Tess asks Claude" off nothing below runs, so no key is read, no request is built and
         // no receipt is written. Checked here, not by the caller, so no caller can forget it.
@@ -478,7 +504,8 @@ public struct ClaudeRecipeReader {
             (data, response) = try await session.data(for: request, delegate: NoRedirects.shared)
         } catch let error as URLError {
             outcome = error.code == .timedOut ? "timeout" : "offline"
-            return failed(error.code == .timedOut ? RecipeLinkLine.claudeTimeout : RecipeLinkLine.offline)
+            return error.code == .timedOut ? failed(RecipeLinkLine.claudeTimeout)
+                : failed(RecipeLinkLine.offline, offline: true)
         } catch {
             return failed(RecipeLinkLine.noRecipe)
         }

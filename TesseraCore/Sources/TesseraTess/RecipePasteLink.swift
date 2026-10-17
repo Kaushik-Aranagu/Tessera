@@ -7,14 +7,26 @@ import TesseraCore
 /// (L3) runs only while "Tess asks Claude" is on; with it off the on-phone reader alone reads the page (G32).
 @MainActor
 public enum RecipePasteLink {
-    /// The paste as a link, when it is exactly one: "https://…", "http://…" or "www.…", nothing else around it.
+    /// The paste as a link, when it is exactly one: "https://…", "http://…" or "www.…", nothing else around it. A
+    /// link with a user or password in it is never one (`isSecretLink`).
     public static func bareLink(_ text: String) -> URL? {
+        guard let trimmed = linkShaped(text) else { return nil }
+        return RecipeLinkReader.safeURL(trimmed)
+    }
+
+    /// A pasted link with a name or password before its host: say `RecipeLinkLine.secretLink`, and read, keep and
+    /// save nothing (QA on #807).
+    public static func isSecretLink(_ text: String) -> Bool {
+        linkShaped(text).map(RecipeLinkReader.hasCredentials) ?? false
+    }
+
+    private static func linkShaped(_ text: String) -> String? {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         let lower = trimmed.lowercased()
         guard !trimmed.isEmpty, !trimmed.contains(where: \.isWhitespace),
               lower.hasPrefix("https://") || lower.hasPrefix("http://") || lower.hasPrefix("www."),
               !looksLikeClaudeKey(trimmed) else { return nil }
-        return RecipeLinkReader.safeURL(trimmed)
+        return trimmed
     }
 
     /// What reading the pasted link gave. `kept` means it is on the shelf for a later tap.
@@ -38,7 +50,7 @@ public enum RecipePasteLink {
             reader.claude?.allowed = { false }
         }
         let result = await reader.read(link.absoluteString)
-        let offline = result.kind == .failed && result.line == RecipeLinkLine.offline
+        let offline = result.isOffline
         if offline {
             shelf?.keep(link)
         } else {
@@ -54,6 +66,10 @@ public enum RecipePasteLink {
 @MainActor
 public final class RecipeLinkShelf {
     public let fileURL: URL
+    /// The file's name beside the store, for anything that erases everything (QA on #807).
+    public static let fileName = "recipe-links.json"
+    /// The most links kept; the oldest goes first (QA on #807).
+    public static let limit = 50
     /// Tests on a locked Mac turn this off; the app never does.
     public var fileProtection: Data.WritingOptions = .completeFileProtection
 
@@ -64,7 +80,7 @@ public final class RecipeLinkShelf {
     /// The shelf for a store's folder: `recipe-links.json` beside `tessera.sqlite`.
     public static func beside(_ store: ObjectStore) -> RecipeLinkShelf? {
         guard let folder = store.context.url?.deletingLastPathComponent() else { return nil }
-        return RecipeLinkShelf(fileURL: folder.appending(path: "recipe-links.json"))
+        return RecipeLinkShelf(fileURL: folder.appending(path: fileName))
     }
 
     /// Oldest first; empty when there is no file or it can't be read.
@@ -74,9 +90,9 @@ public final class RecipeLinkShelf {
 
     public func keep(_ link: URL) {
         let text = RecipeLinkReader.stripTracking(link).absoluteString
-        guard var links = loadForWrite(), !links.contains(text) else { return }
+        guard !RecipeLinkReader.hasCredentials(text), var links = loadForWrite(), !links.contains(text) else { return }
         links.append(text)
-        save(links)
+        save(Array(links.suffix(Self.limit)))
     }
 
     public func remove(_ link: URL) {
@@ -84,6 +100,11 @@ public final class RecipeLinkShelf {
         guard var links = loadForWrite(), links.contains(text) else { return }
         links.removeAll { $0 == text }
         save(links)
+    }
+
+    /// Takes the shelf off the phone: its file goes.
+    public func erase() {
+        try? FileManager.default.removeItem(at: fileURL)
     }
 
     private func load() -> [String]? {
