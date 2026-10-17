@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pages</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@100..900&display=swap" rel="stylesheet">
+<!-- Design item 90: Pages. Kaushik Oct 17 12:29 PM PT on sheet 89: still too much information; fewer items per page, and instead of one continuous scroll a page that transitions to the next. Board by default (click a phone's lower half, scroll, or press arrow keys to turn its page); ?play runs every phone by itself for the recording. -->
+<style>
+:root{--board:#E9E6EE}
+*{box-sizing:border-box}
+body{margin:0;background:var(--board);font-family:'Inter Tight',system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#1c1a20;font-variant-numeric:tabular-nums}
+.wrap{padding:34px 40px 40px;width:1340px}
+.head{display:flex;gap:30px;margin-bottom:26px}
+.head h1{margin:0;font-size:34px;font-weight:650;letter-spacing:-.02em;flex:none;width:300px;line-height:38px}
+.head p{margin:0;font-size:17px;line-height:24px;color:#4a4652;max-width:960px}
+.grid{display:grid;grid-template-columns:repeat(3,393px);gap:0 22px;align-items:start}
+.colh{border-top:2px solid #1c1a20;padding-top:10px;margin-bottom:22px}
+.colh .opt{font-size:13px;font-weight:750;letter-spacing:.1em;color:#6b6674}
+.colh h2{margin:4px 0 6px;font-size:24px;font-weight:650;letter-spacing:-.02em;line-height:28px}
+.colh p{margin:0;font-size:16px;line-height:22px;color:#4a4652}
+.rowh{grid-column:1/-1;display:flex;gap:22px;align-items:baseline;margin:34px 0 16px;border-top:1px solid rgba(28,26,32,.2);padding-top:12px}
+.rowh .opt{font-size:13px;font-weight:750;letter-spacing:.1em;color:#6b6674;flex:none;width:130px}
+.rowh p{margin:0;font-size:16px;line-height:22px;color:#4a4652;max-width:1000px}
+.cap{margin-top:8px;font-size:13px;font-weight:750;letter-spacing:.1em;color:#6b6674}
+.mini{width:275px;height:596px;position:relative}
+.mini .ph{transform:scale(.7);transform-origin:0 0;position:absolute;left:0;top:0}
+.three{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,275px);gap:0 60px;padding-left:0}
+.three .colh{margin-bottom:14px}
+
+.ph{position:relative;width:393px;height:852px;overflow:hidden;border-radius:44px;color:rgb(var(--ink));
+  background:color-mix(in srgb,rgb(var(--area)) calc(var(--tint)*100%),var(--bg));--tint:.045;user-select:none;cursor:default}
+body.playing .ph{border-radius:0}
+.por{--ink:18,16,22;--bg:#FBFAF7;--ctx:#5A3DAF;--do:.62}
+.obs{--ink:245,242,236;--bg:#121014;--ctx:#B8A3FF;--do:.62}
+.kit{--area:176,112,16}.not{--area:90,61,175}.trn{--area:194,58,34}
+.obs.trn{--area:255,125,98}
+.ttl{position:absolute;left:22px;top:112px;margin:0;font-size:52px;font-weight:650;letter-spacing:-.02em;line-height:56px;white-space:nowrap}
+.ctx{position:absolute;left:22px;top:176px;font-size:18px;font-weight:430;line-height:24px;color:var(--ctx);white-space:nowrap}
+.back{position:absolute;left:22px;top:58px;font-size:13px;font-weight:750;letter-spacing:.1em;text-transform:uppercase;color:rgb(var(--area))}
+.pin{position:absolute;left:22px;right:22px;top:222px;font-size:22px;font-weight:560;line-height:28px;padding:9px 0;color:rgba(var(--ink),var(--do));border-bottom:1px solid rgba(var(--ink),.12)}
+.stage{position:absolute;left:0;right:0;top:238px;height:520px}
+.stage.low{top:290px;height:468px}
+.pgc{position:absolute;inset:0;padding:0 22px}
+.sw{font-size:13px;font-weight:750;letter-spacing:.1em;text-transform:uppercase;line-height:40px;color:rgb(var(--area));margin-top:6px}
+.sw.second{margin-top:14px;border-top:1px solid color-mix(in srgb,rgb(var(--area)) 34%,transparent);padding-top:6px}
+.r{position:relative;font-size:22px;font-weight:560;letter-spacing:-.005em;line-height:28px;padding:8px 0;white-space:nowrap;overflow:hidden;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+.r.done{opacity:.46}
+.r.lead{font-size:28px;font-weight:650;letter-spacing:-.012em;line-height:34px;padding:8px 0 4px}
+.r.lead:before{content:"";position:absolute;left:-13px;top:10px;bottom:6px;width:3px;border-radius:1.5px;background:rgb(var(--area));opacity:.72}
+.r .d{display:block;font-size:18px;font-weight:430;line-height:24px;color:rgba(var(--ink),var(--do))}
+.rail{position:absolute;right:9px;top:0;bottom:0;width:3px}
+.rail i{position:absolute;left:0;width:2px;border-radius:1px;background:rgba(var(--ink),.2);transition:none}
+.rail i.on{background:rgb(var(--area));width:3px;left:-.5px}
+.peek{position:absolute;left:22px;bottom:58px;font-size:13px;font-weight:750;letter-spacing:.1em;text-transform:uppercase;color:rgba(var(--ink),.3);line-height:16px}
+.peek:after{content:"";display:block;width:1px;height:14px;background:rgba(var(--ink),.25);margin-top:6px}
+.hint{position:absolute;left:22px;right:22px;bottom:96px;font-size:18px;font-weight:430;line-height:24px;color:var(--ctx);opacity:0}
+.mode{position:fixed;right:20px;bottom:14px;font-size:13px;font-weight:750;letter-spacing:.1em;color:#6b6674;display:none}
+body.playing .wrap{padding:0}
+</style></head><body>
+<div class="wrap" id="wrap">
+<div class="head" id="head"><h1>90. Pages</h1><p>Kaushik on sheet 89 (Oct 17, 12:29 PM PT): still too much information; show fewer items per page, and instead of one continuous page a multi-page effect where one page transitions to the next. <b>The rule:</b> a page holds six rows or fewer and follows the data's own groups; you turn it with a vertical swipe; the page you are on is the only thing drawn, with a hair of the next page's name at the foot. Sideways is still the screen's side page, so the two never fight.</p></div>
+<div class="grid" id="grid">
+ <div><div class="colh"><div class="opt">GROCERIES, 24 ROWS</div><h2>An aisle a page</h2><p>Five pages. The aisle is the page's one word. Produce splits in two because it has ten.</p></div><div id="p1"></div></div>
+ <div><div class="colh"><div class="opt">NOTES, 20 ROWS</div><h2>The writing line stays</h2><p>Pinned above every page, so writing is never a page away. Pages of five below it.</p></div><div id="p2"></div></div>
+ <div><div class="colh"><div class="opt">SET HISTORY, 12 ROWS, OBSIDIAN</div><h2>A workout a page</h2><p>Two pages. The best set leads page 1.</p></div><div id="p3"></div></div>
+ <div class="rowh"><div class="opt">THE TURN</div><p><b>Three ways one page becomes the next</b>, same Groceries, same moment. <b>Recommended: B Turn.</b> The rows lift away from the top down, the next page's rows rise in the same order, the rail grows. It keeps the eye on the rows instead of sliding the whole screen. Reduce Motion: A, B and C all become one 150 ms crossfade.</p></div>
+ <div class="three">
+  <div><div class="colh"><div class="opt">A</div><h2>Push</h2><p>The whole page slides up.</p></div><div class="mini"><div id="pa"></div></div></div>
+  <div><div class="colh"><div class="opt">B · RECOMMENDED</div><h2>Turn</h2><p>Rows lift and rise in a ripple.</p></div><div class="mini"><div id="pb"></div></div></div>
+  <div><div class="colh"><div class="opt">C</div><h2>Dissolve</h2><p>The page softens into the next.</p></div><div class="mini"><div id="pc"></div></div></div>
+ </div>
+</div>
+</div>
+<div class="mode" id="mode"></div>
+<script>
+const play = location.search.includes('play');
+if (play) document.body.classList.add('playing');
+const ease = 'cubic-bezier(.22,.8,.2,1)';
+const reduce = location.search.includes('reduce');
+
+/* Pages: each is one or two groups of rows. {w: section word, rows: [text | [text, detail] | {t,d,lead,done}]} */
+const G = [
+  [{ w: 'Produce', rows: [{ t: 'Bananas', d: 'Next in the shop walk', lead: 1 }, 'Limes', 'Spinach', 'Cherry tomatoes', 'Avocados', 'Red onions'] }],
+  [{ w: 'Produce', rows: ['Ginger', 'Cilantro', 'Garlic', 'Sweet potatoes'] }],
+  [{ w: 'Dairy', rows: ['Greek yogurt', 'Butter', 'Feta', 'Oat milk', 'Eggs'] }],
+  [{ w: 'Pantry', rows: ['Black beans', 'Corn tortillas', 'Rice', 'Olive oil', 'Chili flakes', 'Tahini'] }],
+  [{ w: 'Frozen', rows: ['Peas', 'Dumplings', 'Berries'] }],
+];
+const N = [
+  [{ w: 'This week', rows: [{ t: 'Sleep is training too', d: 'Yesterday', lead: 1 }, 'Try a narrower grip on Bench press', 'Call Mum on Sunday', 'Passport expires in March', 'Fix the bike light'] }],
+  [{ w: 'This week', rows: ['Ideas for the balcony', 'Rent due on the 1st'] }, { w: 'Earlier', second: 1, rows: ['Book the dentist', 'Pasta sauce, less salt', 'Gym playlist'] }],
+  [{ w: 'Earlier', rows: ['Ask Sam about the trip', 'Try the new bakery', 'Deadlift form, hips first', 'Private note', 'Hotel near the station'] }],
+  [{ w: 'Earlier', rows: ['Tell Dan about the race', 'Learn the Turkish get-up', 'Private note', 'Rice cooker manual', 'Gift for Mum, April'] }],
+];
+const S = [
+  [{ w: 'Thu Oct 16', rows: [{ t: '120 × 3', d: 'A best.', lead: 1 }, '110 × 5', '110 × 5', '100 × 8', '100 × 8', '90 × 10'] }],
+  [{ w: 'Mon Oct 13', rows: ['115 × 3', '105 × 5', '105 × 5', '95 × 8', '95 × 8', '85 × 10'] }],
+];
+
+class Pager {
+  constructor(host, o) {
+    this.o = o; this.i = 0; this.busy = false;
+    const ph = document.createElement('div');
+    ph.className = `ph ${o.theme || 'por'} ${o.area}`;
+    ph.innerHTML = `<div class="back">‹ ${o.back}</div><h1 class="ttl">${o.title}</h1><div class="ctx">${o.ctx}</div>` +
+      (o.pin ? `<div class="pin">${o.pin}</div>` : '') +
+      `<div class="stage${o.pin ? ' low' : ''}"></div><div class="rail"></div><div class="peek"></div>`;
+    host.appendChild(ph); this.ph = ph;
+    this.stage = ph.querySelector('.stage'); this.rail = ph.querySelector('.rail'); this.peek = ph.querySelector('.peek');
+    this.pgs = o.pages.map(p => {
+      const d = document.createElement('div'); d.className = 'pgc';
+      d.innerHTML = p.map(g => `<div class="sw${g.second ? ' second' : ''}">${g.w}</div>` + g.rows.map(r => {
+        const x = typeof r === 'string' ? { t: r } : r;
+        return `<div class="r${x.lead ? ' lead' : ''}${x.done ? ' done' : ''}">${x.t}${x.d ? `<span class="d">${x.d}</span>` : ''}</div>`;
+      }).join('')).join('');
+      d.style.visibility = 'hidden'; this.stage.appendChild(d); return d;
+    });
+    const n = this.pgs.length, H = 190, gap = 5, seg = (H - gap * (n - 1)) / n;
+    const top = (ph.querySelector('.stage').offsetTop + 40);
+    this.rail.style.top = top + 'px'; this.rail.style.bottom = 'auto'; this.rail.style.height = H + 'px';
+    this.segs = [...Array(n)].map((_, k) => { const s = document.createElement('i'); s.style.top = k * (seg + gap) + 'px'; s.style.height = seg + 'px'; this.rail.appendChild(s); return s; });
+    this.pgs[0].style.visibility = 'visible'; this.mark();
+    ph.addEventListener('click', e => { const r = ph.getBoundingClientRect(); const y = (e.clientY - r.top) / (r.height || 1); this.go(y > .5 ? 1 : -1); });
+    ph.addEventListener('wheel', e => { e.preventDefault(); if (!this.busy && Math.abs(e.deltaY) > 8) this.go(e.deltaY > 0 ? 1 : -1); }, { passive: false });
+  }
+  mark() {
+    this.segs.forEach((s, k) => s.classList.toggle('on', k === this.i));
+    const nx = this.o.pages[this.i + 1];
+    this.peek.style.display = nx ? 'block' : 'none';
+    if (nx) this.peek.firstChild ? this.peek.firstChild.nodeValue = nx[0].w : this.peek.insertBefore(document.createTextNode(nx[0].w), this.peek.firstChild);
+  }
+  async go(dir) {
+    const to = this.i + dir; if (this.busy || to < 0 || to >= this.pgs.length) return;
+    this.busy = true;
+    const a = this.pgs[this.i], b = this.pgs[to], mode = reduce ? 'rm' : this.o.mode;
+    const rows = el => [...el.children];
+    const up = dir > 0 ? 1 : -1, ms = k => k;
+    b.style.visibility = 'visible';
+    const run = (el, kf, opt) => el.animate(kf, { fill: 'both', easing: ease, ...opt }).finished;
+    const jobs = [];
+    if (mode === 'rm') {
+      jobs.push(run(a, [{ opacity: 1 }, { opacity: 0 }], { duration: 150, easing: 'linear' }), run(b, [{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: 'linear' }));
+    } else if (mode === 'push') {
+      const h = this.stage.offsetHeight;
+      jobs.push(run(a, [{ transform: 'translateY(0)' }, { transform: `translateY(${-up * h}px)` }], { duration: 520 }),
+        run(b, [{ transform: `translateY(${up * h}px)` }, { transform: 'translateY(0)' }], { duration: 520 }));
+    } else if (mode === 'dissolve') {
+      jobs.push(run(a, [{ opacity: 1, filter: 'blur(0)' }, { opacity: 0, filter: 'blur(6px)' }], { duration: 340, easing: 'ease-in-out' }),
+        run(b, [{ opacity: 0, filter: 'blur(6px)' }, { opacity: 1, filter: 'blur(0)' }], { duration: 400, delay: 160, easing: 'ease-in-out' }));
+    } else {
+      /* turn: rows of the old page lift away top to bottom, rows of the new page rise in the same order */
+      rows(a).forEach((r, k) => jobs.push(run(r, [{ transform: 'translateY(0)', opacity: 1 }, { transform: `translateY(${-up * 18}px)`, opacity: 0 }], { duration: 260, delay: (dir > 0 ? k : rows(a).length - k) * 24, easing: 'cubic-bezier(.5,0,.9,.4)' })));
+      rows(b).forEach((r, k) => jobs.push(run(r, [{ transform: `translateY(${up * 34}px)`, opacity: 0 }, { transform: 'translateY(0)', opacity: 1 }], { duration: 440, delay: 190 + (dir > 0 ? k : rows(b).length - k) * 38 })));
+    }
+    this.i = to; this.mark();
+    await Promise.all(jobs);
+    a.style.visibility = 'hidden'; a.getAnimations?.().forEach(x => x.cancel()); rows(a).forEach(r => r.getAnimations().forEach(x => x.cancel()));
+    this.busy = false;
+  }
+}
+document.addEventListener('keydown', e => { const k = e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1 : 0; if (k) pagers.forEach(p => p.go(k)); });
+
+const base = { mode: 'turn' };
+const pagers = [];
+const mk = (id, o) => { const p = new Pager(document.getElementById(id), { ...base, ...o }); pagers.push(p); return p; };
+const p1 = mk('p1', { area: 'kit', back: 'Kitchen', title: 'Groceries', ctx: '24 to get', pages: G });
+const p2 = mk('p2', { area: 'not', back: 'Home', title: 'Notes', ctx: '<b style="font-weight:650">20</b> notes, latest yesterday', pin: 'Write something', pages: N });
+const p3 = mk('p3', { area: 'trn', theme: 'obs', back: 'Bench press', title: 'Sets', ctx: '12 sets, in lb', pages: S });
+const pa = mk('pa', { area: 'kit', back: 'Kitchen', title: 'Groceries', ctx: '24 to get', pages: G, mode: 'push' });
+const pb = mk('pb', { area: 'kit', back: 'Kitchen', title: 'Groceries', ctx: '24 to get', pages: G, mode: 'turn' });
+const pc = mk('pc', { area: 'kit', back: 'Kitchen', title: 'Groceries', ctx: '24 to get', pages: G, mode: 'dissolve' });
+
+if (play) {
+  document.getElementById('head').style.display = 'none';
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  /* each pager walks to its last page and back, on its own beat; the three turns run together */
+  const walk = async (p, start, beat) => {
+    await wait(start);
+    for (let k = 0; k < 2; k++) {
+      for (let s = 0; s < p.pgs.length - 1; s++) { await p.go(1); await wait(beat); }
+      for (let s = 0; s < p.pgs.length - 1; s++) { await p.go(-1); await wait(beat / 1.6); }
+      await wait(beat);
+    }
+  };
+  document.fonts.ready.then(async () => {
+    document.body.dataset.start = '1';
+    await Promise.all([walk(p1, 1200, 1500), walk(p2, 1700, 1700), walk(p3, 2200, 1900), walk(pa, 1200, 1500), walk(pb, 1200, 1500), walk(pc, 1200, 1500)].map(x => x.catch(() => {})));
+    document.body.dataset.done = '1';
+  });
+}
+</script>
+</body></html>
