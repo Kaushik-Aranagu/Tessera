@@ -34,9 +34,21 @@ struct PantryFront {
     }
 
     static func swipe(_ entry: PantryLedger.Entry, groceries: Groceries, store: ObjectStore) -> Swipe {
-        if groceries.isOn(store.displayTitle(of: entry.ingredient)) {
+        if isListed(entry.ingredient, groceries: groceries, store: store) {
             return .already(receipt: "\(entry.label), already on Groceries.")
         }
         return .add(receipt: PantryCopy.added(entry.label))
+    }
+
+    /// On the list, open or checked: a row in the basket (checked, Done not yet held) covers the add, as it does for a
+    /// planned recipe (gap hunt G47). `Groceries.isOn` counts open rows only.
+    static func isListed(_ ingredient: ObjectRecord, groceries: Groceries, store: ObjectStore) -> Bool {
+        if groceries.isOn(store.displayTitle(of: ingredient)) {
+            return true
+        }
+        guard let list = groceries.list else { return false }
+        return ListContents(store: store, classes: groceries.classes).done(in: list).contains { item in
+            groceries.ingredient(of: item.object)?.id == ingredient.id
+        }
     }
 }
