@@ -32,18 +32,48 @@ struct RestDaySentence: View {
             .textRole(.body)
             .foregroundStyle(Theme.Colors.ink)
             if choosing {
-                HStack(spacing: Theme.Spacing.m) {
-                    ForEach(1 ... 7, id: \.self) { weekday in
-                        Button(Self.short[weekday - 1]) { pick(weekday) }
-                            .accessibilityLabel(RestWeekday.name(of: weekday))
+                // One row of eight words, or two at large type (Design). Static children: ViewThatFits must not be
+                // handed a ForEach.
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: Theme.Spacing.m) {
+                        day(1)
+                        day(2)
+                        day(3)
+                        day(4)
+                        day(5)
+                        day(6)
+                        day(7)
+                        any
                     }
-                    Button("Any") { pick(nil) }
-                        .accessibilityLabel("Any day")
+                    VStack(alignment: .leading, spacing: Theme.Spacing.s) {
+                        HStack(spacing: Theme.Spacing.m) {
+                            day(1)
+                            day(2)
+                            day(3)
+                            day(4)
+                        }
+                        HStack(spacing: Theme.Spacing.m) {
+                            day(5)
+                            day(6)
+                            day(7)
+                            any
+                        }
+                    }
                 }
                 .buttonStyle(.labelWord)
                 .transition(.opacity)
             }
         }
+    }
+
+    private func day(_ weekday: Int) -> some View {
+        Button(Self.short[weekday - 1]) { pick(weekday) }
+            .accessibilityLabel(RestWeekday.name(of: weekday))
+    }
+
+    private var any: some View {
+        Button("Any") { pick(nil) }
+            .accessibilityLabel("Any day")
     }
 
     /// "Sunday", or "any day" when he has no fixed rest day.
@@ -66,6 +96,6 @@ struct RestDaySentence: View {
             return
         }
         model.touch()
-        TessVoice.shared.say(weekday.map(RestWeekday.receipt(for:)) ?? "Any day, rest day.", undo: record)
+        TessVoice.shared.say(weekday.map(RestWeekday.receipt(for:)) ?? "Rest day, any day.", undo: record)
     }
 }
