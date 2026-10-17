@@ -40,11 +40,11 @@ public enum PrivateFacts {
         // "bought a tv for 800" is a spend too; "bought 2 lemons" is not (QA F2 on #534).
         let spent = (lower.firstMatch(of: /\b(?:paid|spent|spend)\b/) != nil
             || lower.firstMatch(of: /\bbought\b.*\bfor\s+\d/) != nil) && hasAmount(lower)
-        guard spent || !isTraining(lower) else { return false }
         if spent || lower.contains(where: { "$£€₹¥".contains($0) }) {
             return true
         }
-        let words = words(withoutTimes(lower))
+        // Only the set itself is the bar (AI architecture D1 on #643): "Rent 1850 for 5x5" is still money.
+        let words = words(withoutTimes(withoutNotation(lower)))
         if words.contains(where: isAmount), words.contains(where: moneyWords.contains) {
             return true
         }
@@ -98,7 +98,13 @@ public enum PrivateFacts {
         {
             return true
         }
-        guard !lower.isEmpty, !isTraining(lower) else { return false }
+        guard !lower.isEmpty else { return false }
+        // Only the set itself is the bar, not the whole phrase (AI architecture D1 on #643): "Weigh in 182.4 lb 5x5"
+        // is still his weight.
+        return isBodyShaped(rest: withoutNotation(lower), lastWeightKg: lastWeightKg)
+    }
+
+    static func isBodyShaped(rest lower: String, lastWeightKg: Double?) -> Bool {
         if isBareWeight(lower, lastWeightKg: lastWeightKg) {
             return true
         }
@@ -167,6 +173,15 @@ public enum PrivateFacts {
             return value
         }
         guard !numbers.isEmpty else { return false }
+        // A number right beside a real lift name, with no weigh word, is the bar ("bench 82.4 kg", "82 kg squat"),
+        // even inside his band. Only those numbers; "82.4 kg this morning, leg day after" is still his weight (QA on
+        // #644).
+        let named = words(text)
+        if !named.contains(where: weighWords.contains), numbersBesideALift(named) == named.count(where: isNumberWord),
+           named.contains(where: isNumberWord)
+        {
+            return false
+        }
         if let last = lastWeightKg, last > 0, numbers.contains(where: { abs($0 - last) <= last * 0.1 }) {
             return true
         }
@@ -197,6 +212,38 @@ public enum PrivateFacts {
     static func isAmount(_ word: String) -> Bool {
         word.first?.isNumber == true && word.wholeMatch(of: /\d{1,2}(?:am|pm)/) == nil
     }
+
+    /// The phrase with its set notation taken out ("82.5 x 8", "5x5", "80 for 8", "5 reps"), so the rest is still
+    /// read for money and his body. "for" and "by" need a bar-sized number (up to 3 digits) and a rep count (up to 2):
+    /// "4417 by 2" is no set.
+    static func withoutNotation(_ lower: String) -> String {
+        let crossed = lower.replacing(/\d+(?:[.,]\d+)?\s*(?:kg|kgs|lb|lbs)?\s*[x×]\s*\d+(?:\s*reps?\b)?/, with: " ")
+        // "for" and "by" are a set only with reps after, or a lift named: "bench 80 for 8", "80 for 8 reps".
+        // "weighed 82 kg for 3 days" is not (QA on #644).
+        let lifted = words(crossed).contains(where: liftNames.contains)
+        let forms = lifted ? crossed.replacing(
+            /\b\d{1,3}(?:[.,]\d+)?\s*(?:kg|kgs|lb|lbs)?\s*(?:for|by)\s*\d{1,2}\b(?:\s*reps?\b)?/,
+            with: " "
+        ) : crossed.replacing(/\b\d{1,3}(?:[.,]\d+)?\s*(?:kg|kgs|lb|lbs)?\s*(?:for|by)\s*\d{1,2}\s*reps?\b/, with: " ")
+        return forms.replacing(/\b\d{1,2}\s*reps?\b/, with: " ")
+    }
+
+    static func isNumberWord(_ word: String) -> Bool {
+        word.first?.isNumber == true
+    }
+
+    /// How many numbers sit within two words of a real lift name.
+    static func numbersBesideALift(_ words: [String]) -> Int {
+        words.indices.count { index in
+            isNumberWord(words[index]) && words[max(0, index - 2) ... min(words.count - 1, index + 2)]
+                .contains(where: liftNames.contains)
+        }
+    }
+
+    /// Real lift names only: everyday words ("leg", "push", "bar") never make a number the bar (QA on #644).
+    static let liftNames: Set<String> = ["squat", "squats", "bench", "deadlift", "deadlifts", "ohp", "press", "row",
+                                         "rows", "curl", "curls", "lunge", "lunges", "rdl", "snatch", "pullup",
+                                         "pullups", "dip", "dips", "thrust"]
 
     /// Set notation: a weight by reps is the bar, never money or his body.
     static func isTraining(_ lower: String) -> Bool {

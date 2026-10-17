@@ -37,8 +37,16 @@ public struct HomeDonePack: Equatable, Sendable {
     public let names: [String]
 
     /// The pack for a done workout, or why there is none.
+    /// His last weight is read from the store here, so no caller can leave the bare-number wall without it.
+    @MainActor
     public static func build(_ fact: HomeFact, dayLabel: String, calendar: Calendar,
-                             lastWeightKg: Double?) -> Result<HomeDonePack, Skip>
+                             store: ObjectStore) -> Result<HomeDonePack, Skip>
+    {
+        build(fact, dayLabel: dayLabel, calendar: calendar, lastWeightKg: BodyWeight.lastKg(in: store))
+    }
+
+    static func build(_ fact: HomeFact, dayLabel: String, calendar: Calendar,
+                      lastWeightKg: Double?) -> Result<HomeDonePack, Skip>
     {
         guard fact.kind == .workout, fact.state == .done, let ended = fact.endedAt else { return .failure(.notDone) }
         guard fact.sets > 0 else { return .failure(.noSets) }
@@ -67,8 +75,21 @@ public struct HomeDonePack: Equatable, Sendable {
         ) {
             return true
         }
-        let looseNumber = lower.firstMatch(of: /\d+[.,]\d+|\d{3,}/) != nil
-        return looseNumber && !PrivateFacts.isTraining(lower)
+        // Set notation never excuses a weigh-in (AI architecture on #643): a weigh word or bmi with a number, or a
+        // decimal with no lift named, is his body even beside "5x5". "Bench 82.4 kg 5x5" is the bar (MB31, MB32).
+        let words = PrivateFacts.words(lower)
+        let hasNumber = words.contains { $0.first?.isNumber == true }
+        let weighs = words.contains { PrivateFacts.weighWords.contains($0) || $0 == "bmi" }
+        if weighs, hasNumber {
+            return true
+        }
+        // Only the set itself is the bar (D1): the rest is read for a decimal or a long number. A bar weight right
+        // before its sets, with a lift named, is the set's own ("Bench 82.4 kg 5x5"); with no lift it is not
+        // ("Morning 82.4 5x5"), and nor is one standing alone (W9: "Bench 182.4").
+        let lifted = words.contains(where: PrivateFacts.liftNames.contains)
+        let barOfASet = /\d+(?:[.,]\d+)?\s*(?:kg|kgs|lb|lbs)?\s+\d+\s*[x×]\s*\d+/
+        let rest = PrivateFacts.withoutNotation(lifted ? lower.replacing(barOfASet, with: " ") : lower)
+        return rest.firstMatch(of: /\d+[.,]\d+|\d{3,}/) != nil
     }
 
     /// The `<facts>` item as JSON, keys sorted, for the request body.
