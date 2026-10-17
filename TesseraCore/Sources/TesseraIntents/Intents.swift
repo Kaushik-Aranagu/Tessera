@@ -82,7 +82,7 @@ public struct UndoLastSetIntent: AppIntent {
         }
         // The open workout screen, its rest and the Live Activity follow the store, not this intent.
         NotificationCenter.default.post(name: .tesseraSetTakenBack, object: nil)
-        return .result(dialog: "Set \(taken.number) taken back.")
+        return .result(dialog: "Set \(taken.number), taken back.")
     }
 }
 
