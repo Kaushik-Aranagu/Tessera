@@ -92,7 +92,7 @@
 | C10 | paid rent 2100 fri | private dated note (past tense), not a task |
 | C11 | buy lemons 3 | groceries, the 3 kept as a count ("lemons 3" or "3 lemons"); never money (no sign, under 3 digits, no money verb) |
 | C12 | bought shoes 120 | private note (money verb next to a bare number), not a task and not groceries |
-| C13 | errands: ibuprofen | list Errands ["ibuprofen"] stays an item (meds stay items on lists); the Bar line is "Private item, added to Errands"; never sent to Claude |
+| C13 | errands: ibuprofen | list Errands ["ibuprofen"] stays an item (meds stay items on lists); the Bar line is "Private item, on Errands."; never sent to Claude |
 | C14 | packing: passport 1234567 | list Packing; the line shows "Private item", the number never appears in any text, receipt or Home line |
 | C15 | buy milk, door code 4417 | the whole phrase goes to the walls first: private note, "Private note"; no grocery row, nothing sent to Claude |
 | C16 | out of milk $4 | groceries ["milk"] with state out; the price is stripped as in C1; receipt "Milk, out. On Groceries." |
