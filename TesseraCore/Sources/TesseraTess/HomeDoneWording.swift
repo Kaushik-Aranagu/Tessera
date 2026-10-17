@@ -44,6 +44,8 @@ public final class ClaudeHomeDone {
     public var calendar: Calendar = .current
     /// The file the asked workouts are kept in; nil keeps them in memory only (tests, demo).
     public let cacheURL: URL?
+    /// How the cache is written: complete protection on the phone; tests on a locked Mac pass `[]`.
+    public var fileProtection: Data.WritingOptions = .completeFileProtection
     /// Asked workouts: their words that passed, or empty when nothing did. A key here is never asked again.
     private var asked: [UUID: HomeDoneWords]
     /// False while a cache file exists that couldn't be read (a locked device): nothing is written over it.
@@ -208,7 +210,7 @@ public final class ClaudeHomeDone {
         // Complete protection and never in a backup (§3): the words are his day.
         try? FileManager.default.createDirectory(at: cacheURL.deletingLastPathComponent(),
                                                  withIntermediateDirectories: true)
-        try? data.write(to: cacheURL, options: [.atomic, .completeFileProtection])
+        try? data.write(to: cacheURL, options: [.atomic, fileProtection])
         var url = cacheURL
         var values = URLResourceValues()
         values.isExcludedFromBackup = true

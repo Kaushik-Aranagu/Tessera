@@ -105,6 +105,7 @@ struct HomeDoneWordingTests {
         // The deadline races the main actor, which the full suite keeps busy for long stretches; it isn't under test
         // here (the 6 s deadline is the app's).
         job.timeout = 600
+        job.fileProtection = [] // a locked Mac refuses protected writes
         return job
     }
 
@@ -236,5 +237,13 @@ struct HomeDoneWordingTests {
         #expect(values.isExcludedFromBackup == true)
         let again = await job(cache: url).words(for: line, dayLabel: "Thursday evening", store: store)
         #expect(again == HomeDoneWords(context: "7:40 pm, a bench best") && HomeStub.requests.count == 1)
+    }
+
+    @Test func theAppsStoresWriteWithCompleteProtection() {
+        // Tests opt out only because a locked Mac refuses protected writes; the phone's default never drifts.
+        let job = ClaudeHomeDone(keys: InMemoryKeychain(nil), ledger: ledger, cacheURL: nil) { false }
+        #expect(job.fileProtection == .completeFileProtection)
+        let memory = TessMemoryStore(engine: ActionEngine(store: store, classes: classes), forgetLogURL: nil)
+        #expect(memory.fileProtection == .completeFileProtection)
     }
 }
