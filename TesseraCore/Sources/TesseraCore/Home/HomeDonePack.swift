@@ -30,7 +30,8 @@ public struct HomeDonePack: Equatable, Sendable {
     public let sinceLastDays: Int?
     /// The phone's own line, which shows first and stays unless Claude's words pass every check.
     public let rulesLine: String
-    /// The numbers a returned line may hold: the facts' counts and the finish clock's digits only, never digits from
+    /// The numbers a returned line may hold: the facts' counts, the rules detail's and the finish clock's digits only,
+    /// never digits from
     /// the title (W14: "Push B 5x5 80 for 8" licenses no 5, 80 or 8).
     public let numbers: [Int]
     /// The names a returned line may use: the title and the bests.
@@ -47,7 +48,9 @@ public struct HomeDonePack: Equatable, Sendable {
             return .failure(.walled)
         }
         let finish = HouseTime.clock(ended, calendar: calendar)
-        let numbers = Array(Set(fact.factNumbers + HomeLines.digits(in: finish))).sorted()
+        // The rules detail's counts too ("1 new best"; 0t's HD1), which are facts, never the title's digits.
+        let detail = HomeLines.digits(in: HomeLines.detail(for: fact))
+        let numbers = Array(Set(fact.factNumbers + detail + HomeLines.digits(in: finish))).sorted()
         return .success(HomeDonePack(
             title: fact.title, finish: finish, dayLabel: dayLabel, bests: fact.records,
             sinceLastDays: fact.sinceLastDays,
