@@ -281,3 +281,13 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [fixtures/review-fullest-day.md](fixtures/review-fullest-day.md) | Review first-week side line, fullest day (FD1-FD45) |
 | [fixtures/ingredient-colours.md](fixtures/ingredient-colours.md) | Ingredient color table for sheet 88 (62 foods) |
 | [fixtures/exercise-muscles.md](fixtures/exercise-muscles.md) | Exercise to muscles for sheet 88 (72 exercises, edge rows) |
+
+## More docs (index added by Ops, Oct 17)
+
+- [fixtures/capture-all-but-key.md](fixtures/capture-all-but-key.md): Capture misses go to Claude whole: what moves, what stays, and key-shape rows for TessRout
+- [fixtures/discovery-crosscheck.md](fixtures/discovery-crosscheck.md): Discovery gaps against the boards
+- [fixtures/groceries-link-eval.md](fixtures/groceries-link-eval.md): Groceries link eval: the `linkItems` gate fixture (AI-12)
+- [fixtures/recipe-clock-steps.md](fixtures/recipe-clock-steps.md): Recipe clock: step-timing vectors and demo recipes (Design 69)
+- [fixtures/recipe-link-us-25.md](fixtures/recipe-link-us-25.md): Recipe link fixtures: 20 pages and 5 injection pages (K8)
+- [fixtures/walls-recipe-measures-and-cap.md](fixtures/walls-recipe-measures-and-cap.md): Walls fixtures: recipe measures and the 10-ghost cap
+- [new-on-your-phone-r10.md](new-on-your-phone-r10.md): New on your phone: release f8bb516e

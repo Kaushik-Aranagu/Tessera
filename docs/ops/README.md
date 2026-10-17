@@ -12,3 +12,14 @@ How the team works, and the tools that keep it cheap. Scripts are in `scripts/op
 - [relay-batch.md](relay-batch.md): one relay message per Mac lead.
 - [test-sh-audit.md](test-sh-audit.md): where `scripts/test.sh` spends its time.
 - [discovery-gaps.md](discovery-gaps.md): gaps found by the discovery lane.
+
+## More docs (index added by Ops, Oct 17)
+
+- [board/ai.md](board/ai.md): AI architecture team
+- [board/core.md](board/core.md): Core engine (Mac)
+- [board/design.md](board/design.md): Design studio
+- [board/ios-a.md](board/ios-a.md): iOS Builder A (Mac, current iOS build thread)
+- [board/ios-b.md](board/ios-b.md): iOS Builder B (Mac, starts once ios/ship-2 merges)
+- [board/product.md](board/product.md): Planning lead (Product lead thread)
+- [board/qa.md](board/qa.md): QA (Repo maintainer)
+- [board/research.md](board/research.md): Research lab
