@@ -28,13 +28,13 @@ final class TessVoice {
 
     private(set) var note: Note?
 
-    /// Shows `text` for 4 s (with UNDO when there's an op to undo).
-    func say(_ text: String, undo: OpRecord? = nil, takeBack: (() -> Void)? = nil) {
+    /// Shows `text` for 4 s (with UNDO when there's an op to undo). `holds` overrides how long it stays.
+    func say(_ text: String, undo: OpRecord? = nil, holds: Duration? = nil, takeBack: (() -> Void)? = nil) {
         let note = Note(text: text, undo: undo, takeBack: takeBack)
         self.note = note
         Task { @MainActor in
             // A line with something to take back stays 10 s (M37); a plain line, 4 s.
-            try? await Task.sleep(for: .seconds(undo == nil && takeBack == nil ? 4 : 10))
+            try? await Task.sleep(for: holds ?? .seconds(undo == nil && takeBack == nil ? 4 : 10))
             if self.note?.id == note.id {
                 self.note = nil
             }
