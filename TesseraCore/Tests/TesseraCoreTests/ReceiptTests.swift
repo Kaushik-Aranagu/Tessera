@@ -52,11 +52,11 @@ struct ReceiptTests {
         let tomorrow = try #require(Calendar.current.date(bySettingHour: 18, minute: 30, second: 0,
                                                           of: TesseraDay(calendar: .current).adding(days: 1, to: now)))
         let receipt = try engine.perform(MoveTask(task: task.id, to: tomorrow, time: now), by: .tess).record.receipt
-        #expect(receipt == "Call mom, tomorrow at 6:30 pm", "\(receipt ?? "nil")")
+        #expect(receipt == "Call mom, tomorrow 6:30 pm", "\(receipt ?? "nil")")
         // Further than a week out: the date.
         let later = try #require(Calendar.current.date(byAdding: .day, value: 12, to: tomorrow))
         let far = try engine.perform(MoveTask(task: task.id, to: later, time: now), by: .tess).record.receipt
         let date = later.formatted(.dateTime.month(.abbreviated).day().locale(Locale(identifier: "en_US")))
-        #expect(far == "Call mom, \(date) at 6:30 pm", "\(far ?? "nil")")
+        #expect(far == "Call mom, \(date) 6:30 pm", "\(far ?? "nil")")
     }
 }
