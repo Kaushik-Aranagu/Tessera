@@ -109,7 +109,7 @@ private struct ClassBody: View {
             ExerciseSummary(history: history).entrance(4)
         }
 
-        if let notes = prototype.flatMap({ model.store.value("notes", of: $0)?.stringValue }) {
+        if let notes = ObjectNotes.shown(prototype.flatMap { model.store.value("notes", of: $0)?.stringValue }) {
             Text(notes)
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.inkSecondary)
@@ -265,11 +265,12 @@ private struct InstanceBody: View {
         )
 
         // A workout's notes are a body fact: they read "Note kept private" (Product 5:20 PM PT).
-        if privateLabel == nil, let notes = ObjectPrivacy.notesLine(
+        // The list engine's flag lines ("#reusable", "#pick-one", "picked: …") are the engine's, never shown (QA, K88).
+        if privateLabel == nil, let notes = ObjectNotes.shown(ObjectPrivacy.notesLine(
             of: object,
             in: model.store,
             classes: model.classes
-        ) {
+        )) {
             Text(notes)
                 .textRole(.body).foregroundStyle(Theme.Colors.inkSecondary).entrance(4)
         }
@@ -532,5 +533,18 @@ struct FlowLayout: Layout {
             rows.append(current)
         }
         return rows
+    }
+}
+
+/// The notes an object page prints: his words only. The list engine keeps small flags on the same notes line (the
+/// catalog is frozen, so no new field): a whole "#reusable" or "#pick-one" line, or a "picked: <date>" stamp. Those
+/// lines never show; nil when nothing else is left.
+enum ObjectNotes {
+    static func shown(_ notes: String?) -> String? {
+        let kept = (notes ?? "").split(separator: "\n", omittingEmptySubsequences: false).filter { line in
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            return trimmed != "#reusable" && trimmed != "#pick-one" && !trimmed.hasPrefix("picked: ")
+        }.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+        return kept.isEmpty ? nil : kept
     }
 }
