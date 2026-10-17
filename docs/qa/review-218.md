@@ -15,7 +15,7 @@ Core. 6 files, +522/-2. Static review: I read the code but couldn't build or run
   - Backups copy the SQLite file. A device-only Keychain item isn't in any backup or export.
 - **Errors:** the outcome is mapped from the status, `error_code` and one documented message prefix. Nothing from the response body is shown or stored, and caught errors aren't logged.
 - **Paste screen:** `notAKey` returns before saving or sending. A 401 deletes the key. `last4` is the only part kept for display.
-- **Ask bar:** `TessRouter.run` refuses any text containing the Claude key prefix before any route runs, so it never becomes a note and so never reaches a backup.
+- **Ask bar:** `TessRouter.run` refuses any text containing `the Claude key prefix` before any route runs, so it never becomes a note and so never reaches a backup.
   - The miss log is guarded twice: in TessCaptureEngine, and inside `CaptureMissLog.record`.
 
 ## K11 (should-fix before T3/T4): the cap isn't a hard stop when calls run at the same time
@@ -39,7 +39,7 @@ Core. 6 files, +522/-2. Static review: I read the code but couldn't build or run
   - Clear the in-memory copy when the window closes.
   - The field shows `...last4` only.
 - **Tess Call rows** are ordinary `.thing` objects with no hidden flag. Any page that lists all objects (search, recents, an "everything" view) must exclude the Tess Call class, or every key Test shows up as a "keyCheck call" item.
-- **Other free-text inputs** don't go through the router guard: the recipe paste screen, and typing inside a note. Pasting a key there would store it. That's low risk, since he'd have to paste it on purpose. The same key-prefix refusal could go in PasteRecipe's parse.
+- **Other free-text inputs** don't go through the router guard: the recipe paste screen, and typing inside a note. Pasting a key there would store it. That's low risk, since he'd have to paste it on purpose. The same `the Claude key prefix` refusal could go in PasteRecipe's parse.
 
 ## Product calls
 - **$10 fixed cap:** done, `capNano` is a constant. At the cap a working key reads "Key saved. Claude paused until Nov 1." (the 1st of next month, local midnight). Tested.

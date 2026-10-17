@@ -1,0 +1,3 @@
+# Review #734 at 98a61df1 (Builder B, tidy: #730 and #727 lows)
+Static, merges clean, three files. passcodeLine now "Set a passcode first. This copy has your private words." (test updated; one stale doc comment above it still has the comma, harmless). New SaveCopyGateTests case adds a private note (CreateNote(isPrivate: true), signature exists) and asserts the .copy line equals SavedCopyGate.privateWordsLine: closes my #730 L2. Pantry: add(_:) returns Bool (false on failure, which still says the failure line), PantryLine.onAdd is () -> Bool, the haptic counter bumps only when it returns true; the VoiceOver action discards it. Only call site updated. Closes #727 L4. No behavior change otherwise.
+PASS.

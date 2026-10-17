@@ -44,3 +44,22 @@ Recording 30 never logs a set and never rests. So it doesn't show:
 - **L2:** `RepsRow.onBeat` is never passed (WorkoutModeView builds `RepsRow(reps:ghost:isLocked:)`), so Tess's "One more than last time." doesn't fire. The stroke and haptic do. Wire it, or drop the parameter.
 - **L3:** `WorkoutSession.stepWeight(up:)` has no caller now that the step keys are gone. Delete it, or keep it for a hardware-key path.
 - **L4:** `@AppStorage("restHorizonHints")` counts down on every `onAppear`, including a rest that reappears after an edit. That's harmless; the hint just goes a rest early.
+
+## Addendum: head a9a6db8 (GitHub head confirmed), PASS
+
+This head adds two commits on top of 095c3df. 3effbf3 adds clip 31, the H1 stress run. a9a6db8 adds Design's fixes and clip 32. The branch base is still 620878b. A trial merge onto current master (f274252 and later) is clean, and none of master's 27 changed files touch `Features/Workout`. The removed `stepWeight` has no caller on master outside the files this PR changes.
+
+- **R1, closed by clip 32** (`docs/recordings/32-set-block-porcelain.mp4`: 590×1282, 60 fps, 6526 frames, 108.8 s, Porcelain). Contact sheet at one frame every 3 s:
+  - Typing 81 shows "Goes to the nearest weight the gym can load." and lands on 80.
+  - Dragging reps to 11 shows the cadmium stroke and "One more than last time."
+  - The Log set hold leads to rest 3:00 with the horizon label "DRAG RIGHT +15 · FLING LEFT TO GO" and UNDO.
+  - UNDO brings back set 1 at 80 × 11, and logging again starts rest 3:00.
+  - Dragging right shows "+15. Drag again for more."
+  - A fling skips to "set 2 of 4, last was 80 × 11".
+- **L1, closed.** RestHorizon now reads the drag in global coordinates and ignores any drag that starts within 20 pt of the screen's left edge (RestHorizon.swift, `startLocation.x > 20` in both onChanged and onEnded). So +15 never competes with the back swipe.
+- **L2, closed.** `onBeat` now sets "One more than last time." in Tess's corner for 4 s, only when no other reply is showing, and clears it only if it's still that line (WorkoutModeView.swift:465-475). The line appears in clip 32.
+  - Low: the comment says "once per set", but dragging back to last time and up again fires it again. Harmless.
+- **L3, closed.** `stepWeight(up:)` and its test are removed. The test for detents and plates per side stays.
+- **L4, closed.** The hint counts down once per seated set (`hintedSet` against `session.lastSeated?.setID`), not on every reappearance.
+- Rest controls: the "+15" and "Skip" words under the horizon are gone. +15 is still a tap on the countdown (with a VoiceOver label and hint) or the horizon's drag and its accessibility action. Skip rest is still the PaintKey or a fling. Nothing is lost.
+- **Note for Design, not a QA blocker.** `RepsRow` no longer dries the stroke to ink after 1.2 s. It stays cadmium for as long as reps beat last time, which is what set-block.md:32 says. That's resting colour, against no-dots.md and colour-at-rest. The "a new best: e1RM 109.3" line during rest is also cadmium for the whole rest in clip 32. Design should confirm both.

@@ -1,0 +1,3 @@
+# Review #738 at b23e260d (Builder B, B14 ListsCopy)
+Static, merges clean, two new files; a pure formatter that nothing calls yet, so the phone is unchanged. Strings match the accepted K86.12/K86.13: "2 lists" (count only, "1 list"), "RUNNING, 2 LEFT" with a comma, "Packing has 2 left." The two forms marked proposed ("2 lists, 1 running", "has nothing left.") are labelled as such in the code. No ellipsis, em dash or "at".
+PASS. Low for the Lists view PR: `tess(list:left:)` prints the list name as given, so the caller must pass the masked name for a list whose name is walled (secret word, money, body, medicine: ObjectPrivacy.isPrivateRecipeTitle or the Lists equivalent, reading "Private list") before the line reaches Tess.

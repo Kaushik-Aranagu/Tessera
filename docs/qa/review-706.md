@@ -1,0 +1,8 @@
+# Review #706 (head 38e4748f): PASS (static; package only), with one named follow-up
+- G20: "at <time>" removed from the cook and workout planned lines ("Tacos, 7 pm", "Push A, 7 pm"); the only "at" left in HomeLines is "paused at <exercise>", not a time. Tests updated.
+- plannedCook fix (#700 finding): startsAt first, else due only when it has a clock (hour or minute not 0:00); tests cover timed (7 pm), untimed, and a midnight date-only due (startsAt nil).
+- G21 answer: cookTitle runs the title through ObjectPrivacy.label (recipe class), then PrivateFacts.isPrivateTitle (which includes SecretWords.mentions, money and body walls) and EngineWall.isHealth, so a secret-word title is covered. "Private recipe" is used on Home (planned, running, done), the cook receipt, the planned-cook task title and receipt, and "Private recipe, cooking." on the start path. #700 may merge once this lands.
+- One UNDO: closePlanTask runs inside FinishCooking.apply (same transaction), setting isDone, doneAt and ending the task process exactly as CompleteTask does; one op, one UNDO. Picks the earliest open task about the recipe on the same house day (4 am), nothing if none.
+- G23: month of his day via TesseraDay (1:30 am on the 1st counts to last month). G22 test-only. AddGroceries summary and receipt show "Private item" for health lines (my #698 low closed); summary names only line one.
+## Follow-up (low, G21b)
+Op summaries and the day story still carry a private recipe's title: StartCooking.summary "Cooking <title>", FinishCooking.summary "Cooked <title>", DayStory "Cooked <title>" (DayLookup.title is the raw object title), and the cook object is titled with the recipe name. Same label rule should apply there; check whether any Claude pack reads the day story.
