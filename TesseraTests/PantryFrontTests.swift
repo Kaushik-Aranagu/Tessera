@@ -62,6 +62,6 @@ struct PantryFrontTests {
         let row = try #require(groceries.list?.orderedChildren.first)
         try model.engine.perform(CheckListItem(item: row.id, time: saturday), by: .user)
         #expect(PantryFront.swipe(limes, groceries: groceries, store: model.store)
-            == .already(receipt: "Limes, already on Groceries."))
+            == .already(receipt: "Limes, in the basket."))
     }
 }
