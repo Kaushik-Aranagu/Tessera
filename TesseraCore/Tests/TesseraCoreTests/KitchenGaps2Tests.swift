@@ -21,7 +21,7 @@ struct KitchenGaps2Tests {
         }
         #expect(Groceries(store: store, classes: engine.classes).list != nil)
         try engine.perform(AddGroceries(lines: ["milk", "eggs"]), by: .user)
-        let lists = store.objects(of: engine.classes[.list]!).filter { $0.title == "Groceries" }
+        let lists = try store.objects(of: #require(engine.classes[.list])).filter { $0.title == "Groceries" }
         #expect(lists.count == 1)
         // Renaming stays allowed.
         try engine.perform(RenameObject(object: Groceries.listID, title: "Food"), by: .user)
@@ -123,4 +123,14 @@ struct KitchenGaps2Tests {
         #expect(book.all().count == 2)
     }
 
+    // MARK: G1
+
+    @Test func knownPairsStayOneRow() {
+        #expect(GroceryLines.split("mac and cheese") == ["mac and cheese"])
+        #expect(GroceryLines.split("Salt and pepper") == ["Salt and pepper"])
+        #expect(GroceryLines.split("eggs, bread and 2 lemons") == ["eggs", "bread", "2 lemons"])
+        #expect(GroceryLines.split("milk, mac and cheese and 2 lemons") == ["milk", "mac and cheese", "2 lemons"])
+        #expect(GroceryLines.split("milk and eggs") == ["milk", "eggs"])
+        #expect(TessGrammar.splitItems("buy mac and cheese") == ["buy mac and cheese"])
+    }
 }
