@@ -69,6 +69,16 @@ of R8. R19's code is in (the bare-number wall in `PrivateFacts`), but its proof,
 R12, R13. R2 still waits on the "Body weight logged." wording. The 9:30 AM Thu call therefore has R2, R6, R12, R13 and
 R19 left, plus the DS29 and DS36 re-read.
 
+## Release 13 (bbadf141), prepared before its install
+
+Not ticked until Builder A logs the install on his phone. Read from the git history between e149e66 and bbadf141;
+nothing was run. When it lands, tick R12 (SAVE A COPY is named "Before update <day>", apart from the rolling backups,
+and pruning goes through `isRollingName`; commit 183966a, board 0af). Still not in it: R13 (no "This is the Backups
+folder" warning in the tree), R6 (no N15 launch pass found), R2 (no "Body weight logged." reply) and R19's proof
+(no `WallsUITests` BN rows in the tree; the code wall is in since release 8). Also still to do before Oct 31: re-read
+DS29 and DS36 for R14. The call on Thu Oct 22 9:30 AM therefore has R2, R6, R13 and R19 left if bbadf141 installs, and
+the DS29/DS36 re-read.
+
 ## The rule
 
 **#407 merges only when every row above is in a release on his phone.** Then the v10 gate and the v10 rollback drill
