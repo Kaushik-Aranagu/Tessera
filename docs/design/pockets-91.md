@@ -1,4 +1,6 @@
-# 91. Pockets: small, faded images where the page has room (replaces 88's top plate)
+# 91. Pockets, round 2: crisp drawings and a real figure (replaces 88's top plate)
+
+**Round 2 (Kaushik, 12:46 PM Oct 17):** the muscle figure "looks super bad ... not nice or accurate" (redrawn below, in proportion, from anatomical charts) and the soft colour patches "look like a diffused, dead Tess". Nothing is blurred any more: **Tess is the only soft, blurred thing in the app.** A pocket is now a crisp drawing (fine line, one flat colour) or his own photo. No pocket on Groceries (sheet 88 said none; round 1 added it wrongly). The figure's source is `studies/muscle-figure.js` (front and back, one path per stored muscle, left half drawn and mirrored). Everything below about size, strength, place and loading still stands, with "patch" read as "drawing".
 
 **Kaushik on sheet 88 (Oct 17, 12:31 PM PT):** "I don't want like a band at the top ... very faded images in small section which make it look good, especially where it doesn't feel too cluttered ... I don't like the banner thing."
 
@@ -21,8 +23,7 @@ The 393 x 56 plate at the top edge is **withdrawn** everywhere. Sheet 88's rule 
 |---|---|
 | Recipe | his photo, or a patch of its first three ingredients' colours, at the foot of the ingredient list, bleeding off the right edge |
 | Ingredient | its own colour (the phone's colour table), right of the quiet lines |
-| Exercise MUSCLES | the figure, small (116 x 252 at most), under the rows, right |
-| Groceries (with pages) | one patch per aisle page in the aisle's colour (Produce green, Dairy cream-blue, Pantry ochre, Frozen blue) |
+| Exercise MUSCLES | front and back figures, each 166 wide (166 x 365), under the rows, at full strength: it is information, not decoration |
 | Routine | the same small figure as before (sheet 88), not drawn if the title wraps past x 280 |
 
 ## For builders (not built; Product boards it, Builder B for `ObjectPlate`)

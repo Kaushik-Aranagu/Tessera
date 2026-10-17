@@ -14,11 +14,13 @@ Board `mockups/pages-90.png`, recording `recordings/pages-90.mp4` (24 s: Groceri
 7. **The lead row** is drawn on the page that holds it; when the lead changes page (a shop item checked) the page turns by itself to the new lead with the same turn, once, and the one soft haptic in the map (.selection) plays on landing.
 8. **Copy:** nothing added. The context line still says the count ("24 to get"); the page is its own proof.
 
-## The turn (pick A, B or C; recommended B)
-- **A Push:** the whole page slides up 520 ms. Familiar, and it moves the whole screen.
+## The turn: four options, a Settings choice (Kaushik, 12:46 PM: he likes A, B and C as options, and added D)
+- **A Slide:** the whole page slides up 520 ms. Familiar, and it moves the whole screen.
 - **B Turn (recommended):** rows of the old page lift 18 pt and fade top to bottom (260 ms, 24 ms stagger), rows of the new page rise 34 pt into place in the same order (440 ms, 38 ms stagger, starting at 190 ms). The section word crossfades with its rows. The eye stays on the rows. Total 0.6 s. Going back runs bottom to top.
-- **C Dissolve:** 340 ms blur-out and 400 ms blur-in, overlapped. Calm, but nothing says which way you went.
-- **Reduce Motion:** all three become one 150 ms crossfade.
+- **C Soften:** 340 ms blur-out and 400 ms blur-in, overlapped. Calm, but nothing says which way you went.
+- **D Rotate (his idea):** the list defines N row slots up front; a swipe up rotates the rows through those slots (top rows leave first, the next page's rows arrive from the foot with the same ripple, 480 ms, 34 ms stagger) while the title, context, section word and rail never move, so it feels like turning a page and stays one page. A slow drag follows the finger.
+- **Default is B Turn.** All four are a Settings choice (below).
+- **Reduce Motion:** every option becomes one 150 ms crossfade.
 - Motion goes through `MotionPolicy` as a new `Theme.Motion.pageTurn` (curve .22, .8, .2, 1), never a literal.
 
 ## How the three screens read paged
@@ -31,5 +33,11 @@ Board `mockups/pages-90.png`, recording `recordings/pages-90.mp4` (24 s: Groceri
 ## For builders (not built; Product boards it)
 `PagedRun(groups:, pinned:)` replaces `RunList` for any run of 7 or more rows; a run of 6 or fewer is one page and draws no rail. Page build is a pure function of the groups (testable, no UI): split groups over six, merge small neighbours up to two groups, return pages. `PageTurn` is the one transition, with the A, B or C option behind `ThemeConcept`. VoiceOver: each page is one container, "Produce, page 1 of 2", and the rotor's scroll action turns the page; the peek word is hidden from VoiceOver.
 
-## Open question for Kaushik (answer with a picture)
-Which turn: **A Push, B Turn, C Dissolve?** I recommend B; clip `pages-90.mp4`, bottom row.
+## Settings: Page turn
+One row in Settings, four words (Slide, Turn, Soften, Rotate); the chosen one in ink with "on" after it ("Turn, on"), the rest in secondary ink, like Reusable. Picking one plays that turn once on a preview line ("Groceries, 24 to get.") so he can feel it. Default Turn.
+
+## Whose swipe it is (Kaushik, 12:46 PM)
+A vertical swipe on a thing that owns one does that thing's own action, defined by what the thing is: a number that steps (weight, reps, a quantity) adds or takes one step; a dial or slider moves its own value. A swipe on anything else (plain text, a section word, the empty page) turns the page. A row that opens or removes keeps its horizontal swipe (sheets 75 and 86), so vertical turns the page there. A focused field never turns the page. Builders: a screen declares its page slots (N rows) and, per element, an optional vertical action; the page-turn recogniser only starts if no such action claims the touch. Nothing declares a vertical swipe by default.
+
+## Open question
+None blocking: all four turns ship. Say if Turn should not be the default.
