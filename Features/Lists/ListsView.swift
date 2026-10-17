@@ -147,6 +147,7 @@ private struct ListPage: View {
                                 }
                                 ForEach(section.items) { item in
                                     row(item)
+                                        .swipeToRemove { remove(item, from: name) }
                                 }
                                 .padding(.leading, section.name == nil ? 0 : 42)
                             }
@@ -211,6 +212,24 @@ private struct ListPage: View {
         }
         .buttonStyle(HandleButtonStyle())
         .accessibilityHint(shown == ShopTrip.privateLabel ? "Shows it" : "Checks it off")
+    }
+
+    /// "Rice, removed." with UNDO 10 s; UNDO puts it back where it was and says "Rice, back on Packing." A private
+    /// row is "Private item" in both (13.8). The rows close up as it goes.
+    private func remove(_ item: ListContents.Item, from list: String) -> Bool {
+        let thing = rows.maskedLabel(for: item, name: item.text, lastWeightKg: BodyWeight.lastKg(in: model.store))
+        guard let record = try? model.engine.perform(DeleteObject(object: item.id), by: .user).record else {
+            TessVoice.shared.say("Didn't save that. Try again.")
+            return false
+        }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
+        TessVoice.shared.say(ListsCopy.removed(thing), takeBack: { [model] in
+            model.engine.undo(record)
+            model.touch()
+            // The band clears its line right after UNDO runs; the back-on line follows it.
+            Task { @MainActor in TessVoice.shared.say(ListsCopy.backOn(thing, list: list)) }
+        })
+        return true
     }
 
     private func tap(_ item: ListContents.Item) {

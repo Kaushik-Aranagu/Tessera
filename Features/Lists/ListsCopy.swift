@@ -28,6 +28,16 @@ enum ListsCopy {
     }
 
     /// Clearing the fold: "3 done, cleared." (Design on #760).
+    /// A swipe's receipt, thing first: "Rice, removed." (13.6).
+    static func removed(_ thing: String) -> String {
+        "\(thing), removed."
+    }
+
+    /// What UNDO says after a remove: "Rice, back on Packing."
+    static func backOn(_ thing: String, list: String) -> String {
+        "\(thing), back on \(list)."
+    }
+
     static func cleared(_ count: Int) -> String {
         "\(count) done, cleared."
     }
