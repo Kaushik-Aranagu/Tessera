@@ -99,7 +99,7 @@ struct RecipePage: View {
                 // Already on the list (and not just sent): how much of it is still to buy.
                 let onList = Groceries(store: model.store, classes: model.classes).share(of: recipe).count
                 if sent == nil, onList > 0 {
-                    (Text("\(onList)").fontWeight(.semibold) + Text(" to buy, in Groceries"))
+                    (Text("\(onList)").fontWeight(.semibold) + Text(" to buy, on Groceries"))
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.ink)
                         .padding(.top, Theme.Spacing.s)
@@ -217,14 +217,14 @@ struct RecipePage: View {
     }
 }
 
-/// "12 to buy, in Groceries" where the column was, with Undo.
+/// "12 to buy, on Groceries" where the column was, with Undo.
 private struct SentLine: View {
     let count: Int
     let undo: () -> Void
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
-            (Text("\(count)").fontWeight(.semibold) + Text(" to buy, in Groceries"))
+            (Text("\(count)").fontWeight(.semibold) + Text(" to buy, on Groceries"))
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
             Spacer()
