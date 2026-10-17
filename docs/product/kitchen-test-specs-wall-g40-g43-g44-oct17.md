@@ -14,7 +14,7 @@ Copy rules held throughout: thing first with "on"; no "at" before a clock; lower
 - Only `TessTools.addItems` (`TessTools.swift:345`) calls `kept`. `AddGroceries.apply` (`Kitchen/Groceries.swift:471`) parses each line with `IngredientLine.parse` and writes it. The Add line (`Features/Groceries/GroceriesView.swift` `add()`, `GroceriesCopy.lines(in:)`) and the Bar (`TessCaptureEngine.performKitchen`, `case .groceries`) both hand raw lines to it.
 - **Fix point (Core).** Put the wall inside `AddGroceries.apply` so every caller gets it: per line, run `AddListItem.kept(line, store:)`; nil means skip the row (and see A3 for the note); otherwise parse `kept`. Then `summary` and `receipt` use the same kept text (they currently print `lines` raw). Because the wall is inside the action, Add line, Bar, Siri and the tool all pass the same tests, and Builder B only wires the outcome text.
 - **Two gaps in `kept` itself that the table below will hit** (confirm on the Mac, then fix in `kept`, not in the callers):
-  1. `withoutPrice` strips only a currency sign or the words dollars, bucks, usd, quid. "milk 4.99" has neither, so it stays "milk 4.99". Proposed rule for Product to confirm: a trailing bare decimal with exactly two places (`\s\d+\.\d{2}$`) is a price. "6 eggs", "2 lb chicken", "14 oz can tomatoes", "2 for 1 crackers", "1.5 kg rice" (one place) keep their numbers.
+  1. `withoutPrice` strips only a currency sign or the words dollars, bucks, usd, quid. "milk 4.99" has neither, so it stays "milk 4.99". RULED (Product 8:40 AM): a trailing bare decimal with exactly two places (`\s\d+\.\d{2}$`) is a price. "6 eggs", "2 lb chicken", "14 oz can tomatoes", "2 for 1 crackers", "1.5 kg rice" (one place) keep their numbers.
   2. "$40 at costco" strips to "at costco" (not empty), and `isMoneyShaped(bare)` is false for it. The sum-only test must also run on `given` (before the strip): `isMoneyShaped(given)` with nothing else that is a thing. If `isMoneyShaped("$40 at costco")` is false today, extend the sum-only check, do not special-case the string.
 
 ### A1. TesseraCore unit tests (Swift Testing)
@@ -46,7 +46,7 @@ File: `TesseraCore/Tests/TesseraCoreTests/GroceriesWallTests.swift` (same struct
 |---|---|---|---|---|---|---|
 | `barBuyMilkWithPrice` | "buy milk $4" | `.groceries(["milk $4"])` (grammar may keep raw; the action strips) | "milk" | "Milk, on Groceries." | one undo removes the row | no "$4" anywhere |
 | `barBuyMilkBareDecimal` | "buy milk 4.99" | groceries | "milk" | "Milk, on Groceries." | removes the row | no "4.99" |
-| `barBareMilkPrice` | "milk $4" | per walk C1 the expected parse is groceries `["milk"]`; today nil. Core decides: build it, or record C1 as ruled out in the walk. Test is written to the C1 expectation and marked `.disabled("C1 not ruled")` until then | "milk" | "Milk, on Groceries." | | |
+| `barBareMilkPrice` | "milk $4" | RULED (Product Oct 17 8:40 AM, C1): the price strips, "milk" lands, the price stays on the phone. Groceries `["milk"]` (today nil: build it). No `.disabled` | "milk" | "Milk, on Groceries." | | no "$4" anywhere |
 | `barSumOnlyIsNotARow` | "$40 at costco"; "rent 2100 fri" | not `.groceries`; miss line, not a note (bare, not past tense) | none | the existing miss line | none | no row, no note |
 | `barPastTenseSumIsAPrivateNote` | "spent $40 at costco"; "paid rent 2100" | `.privateNote` | none | "Private note, kept." | one undo removes the note | no row; the note body is never repeated in the line |
 | `barSecretIsRefusedBeforeAnything` | "buy wifi password is tacocat12" | secret check runs first (`TessGrammar.swift:73-75`) | none | "Private note, kept. I don't keep passwords." when remembered, else "Private note, kept." | note undoable | no row |
@@ -56,7 +56,7 @@ File: `TesseraCore/Tests/TesseraCoreTests/GroceriesWallTests.swift` (same struct
 
 ### A3. Who writes the note when a line is walled (needs Product's yes, default given)
 
-`AddListItem` writes a private note for a walled line (`CreateNote(isPrivate: true)`); `AddGroceries` has no such branch. Default for this spec: `AddGroceries` writes nothing for a walled line (matches W2, W3, W6: "nothing walled is written"). The Bar already turns a past-tense sum into a note through `.privateNote`. The Add line, for a sum-only or secret line, keeps the draft in the field and says one line through `TessVoice` (no UNDO, nothing to undo). Proposed wording, not ruled: "That one isn't a grocery." for a sum-only line; the key case uses `claudeKeyLine`; a secret with a value uses "Private note, kept." only if Product wants the note kept (then the Add line performs `CreateNote` itself and that op is undoable). Product to rule which. The tests in A1 hold under either answer because they assert only the `AddGroceries` outcome.
+`AddListItem` writes a private note for a walled line (`CreateNote(isPrivate: true)`); `AddGroceries` has no such branch. Default for this spec: `AddGroceries` writes nothing for a walled line (matches W2, W3, W6: "nothing walled is written"). The Bar already turns a past-tense sum into a note through `.privateNote`. The Add line, for a sum-only or secret line, keeps the draft in the field and says one line through `TessVoice` (no UNDO, nothing to undo). RULED wording (Product 8:40 AM): a sum-only line says "That stays on this phone."; a secret says "That one stays out of Groceries."; the key case uses `claudeKeyLine`. No note is kept and nothing is written. The tests in A1 hold under either answer because they assert only the `AddGroceries` outcome.
 
 ### A4. App tests (TesseraTests, `@testable import Tessera`)
 
@@ -80,7 +80,7 @@ Done when: every test in A1, A2 and A4 is green on the Mac, `scripts/test.sh` en
 
 ### B1. G40, list lookup and repeat name (Core resolver, Builder B for create)
 
-Intent (hunt 7 row G40, ruling in the walk section 9 and "next steps" 3): a name that matches two lists writes nothing and Tess asks which: "More than one list like trip." (proposed, Product to rule; it follows `task(named:)`'s "more than one task like ..."). An exact name wins only when it is one list. A one- or two-letter prefix never matches. The receipt names the list so a wrong landing is visible. `CreateList` on a repeat name opens the existing list instead of making a second.
+Intent (hunt 7 row G40, ruling in the walk section 9 and "next steps" 3): a name that matches two lists writes nothing and Tess asks which: "More than one list like trip." (RULED, Product 8:40 AM; it follows `task(named:)`'s "more than one task like ..."). An exact name wins only when it is one list. A one- or two-letter prefix never matches. The receipt names the list so a wrong landing is visible. `CreateList` on a repeat name opens the existing list instead of making a second.
 
 Code today: `TessTools.Call.list(named:)` (`TessTools.swift:324`) takes the first exact title, else the first prefix match, oldest first. `CreateList.apply` (`Lists/Lists.swift:84`) checks only an empty name.
 
@@ -110,7 +110,7 @@ CreateList repeat name (same file, second section):
 
 App test (Builder B): in `TesseraTests/ListsCopyTests.swift` add `repeatListLineNamesTheList`, asserting the copy helper's line for the repeat case and that no UNDO is offered.
 
-Done when: all of the above green; G40 row in `kitchen-gap-status-oct17.md` closed with the two proposed lines either ruled or marked; the walk's 13.2 row re-run.
+Done when: all of the above green; G40 row in `kitchen-gap-status-oct17.md` closed (the refusal line is ruled; the repeat-list line is still unruled and stays marked); the walk's 13.2 row re-run.
 
 ### B2. G43, Done shopping has no UNDO and no failure line (Builder B, words from Core)
 
@@ -141,7 +141,7 @@ Done when: the Core and app tests above are green; the Finish key on Groceries s
 
 ### B3. G44, a shop never goes idle (Core idle rule, Builder B Home read)
 
-Intent (hunt 7 row G44): a shop untouched overnight stops saying "at the store": it pauses as the system and Home reads "paused" with the day. If a paused shop is put away with a basket in it, the note says so (proposed: "Shopping moved to Later. 12 in the basket."), and the checked rows stay Pantry's to learn from, not dropped. Idle length and the note are Product's to rule (hunt 7 section, owner table line 43); this spec takes the idle length as a named constant, `ProcessTable.Limits.idleShop`, proposed 12 hours (overnight), so the tests assert against the constant, not a literal.
+Intent (hunt 7 row G44): a shop untouched overnight stops saying "at the store": it pauses as the system and Home reads "paused" with the day. If a paused shop is put away with a basket in it, the note says so (ruled, Product 8:40 AM: "Shopping moved to Later. 12 in the basket."), and the checked rows stay Pantry's to learn from, not dropped. Idle length and the note are Product's to rule (hunt 7 section, owner table line 43); this spec takes the idle length as a named constant, `ProcessTable.Limits.idleShop`, ruled 12 hours (Product 8:40 AM), so the tests assert against the constant, not a literal.
 
 Code today: `ProcessTable.suspendIfIdle` (`ProcessTable.swift:87`) returns nil unless the subject is a workout. `tidyNotes` (`:109`) puts away any suspended process idle for `Limits.putAway` (7 days) with the generic note "One thing moved to Later." and never mentions the basket. `HomeLines.swift:335-353` reads a running shop as "at the store" and a paused one as "him at home".
 
@@ -155,7 +155,7 @@ Core tests, `TesseraCore/Tests/TesseraCoreTests/ShoppingIdleTests.swift` (new), 
 | `idleShopKeepsItsBasket` | | after suspend | the 12 rows are still checked and not deleted (`isDeleted == false`); `shoppingLine()` unchanged |
 | `idleShopResumesWithStartShop` | | `StartShop()` after suspend | same process id running again (existing behaviour, `ShoppingTests`) |
 | `workoutIdleRuleUnchanged` | a running workout past `idleLimit` | | still suspended exactly as before (regression) |
-| `putAwayShopNoteCountsTheBasket` | suspended shop with 12 checked rows, idle 7 days | `tidyNotes(now:)` | one note whose `line` is "Shopping moved to Later. 12 in the basket." (proposed); with 0 checked the generic "One thing moved to Later." stays; the line contains no item name |
+| `putAwayShopNoteCountsTheBasket` | suspended shop with 12 checked rows, idle 7 days | `tidyNotes(now:)` | one note whose `line` is "Shopping moved to Later. 12 in the basket." (ruled); with 0 checked the generic "One thing moved to Later." stays; the line contains no item name |
 | `putAwayShopKeepsRowsForPantry` | as above | after the tidy | the 12 rows are not deleted; they are still checked; `PantryLedger` input (rows carrying `checkedAt`) is intact. Ruling needed on whether a put-away basket counts as bought; the spec asserts only "not dropped" |
 | `putAwayShopNoteHasUndoOrIsSilentByRule` | | the note's `undo` field | Product rules; default nil as for other put-aways, test pins it |
 
@@ -168,7 +168,7 @@ App tests, `TesseraTests/HomeDataTests.swift` (existing file, add):
 | `idleShopLineNamesNoPrivateItem` | with a Private item in the basket, no item word in the hero, context or accessibility label |
 | `idleCheckRunsOnForegroundAndLaunch` | the foreground/launch hook that already calls `tidy` also calls `suspendIfIdle` with the shop limit (assert in `ProcessWiringTests.swift` that the caller passes the shop limit, not the rest-based workout limit) |
 
-Done when: all green; Product has ruled the idle length and the put-away note (both marked "proposed" above); the G44 row records the constant and the line; Home on the simulator with `-demoTime` shifted past the limit shows the paused read.
+Done when: all green; the idle length (12 h) and the put-away note are ruled (Product 8:40 AM); the G44 row records the constant and the line; Home on the simulator with `-demoTime` shifted past the limit shows the paused read.
 
 ---
 
@@ -177,4 +177,4 @@ Done when: all green; Product has ruled the idle length and the put-away note (b
 - **TesseraCore unit tests (run with `swift test` in `TesseraCore/`):** all of A1, A2, B1 (both tables), B2 Core table, B3 Core table, plus the `withoutPrice` assertion in `WallsBypassTests.swift`.
 - **App tests (TesseraTests, simulator):** A4, B1 app test, B2 app table, B3 app table.
 - **Owners:** Core builds the wall inside `AddGroceries`, the two `kept` gaps, `CreateList` repeat rule, the `list(named:)` refusal, `FinishShop.receipt`, the shop idle rule and constant, and the put-away basket note. Builder B moves `add()` and `finishShop()` bodies into testable functions, wires the lines and UNDO, and does the Home read.
-- **Rulings still needed from Product (all marked proposed above):** bare two-place decimal counts as a price; what the Add line says for a held sum-only or secret line (A3); "More than one list like trip."; the repeat-list line; whether the user's own "Groceries" can be reached by name; "Shopping, finished."; the shop idle length; "Shopping moved to Later. 12 in the basket."; bare "milk $4" in the Bar (C1).
+- **Rulings (Product, decisions.md Oct 17 8:40 AM), folded in:** a bare two-place decimal is a price (strips, never stored); A3: `AddGroceries` writes nothing for a walled line, the Add line keeps the draft with no UNDO, a sum-only line says "That stays on this phone.", a secret says "That one stays out of Groceries.", a key uses `claudeKeyLine`; G40 "More than one list like trip."; shop idle 12 h and the put-away note "Shopping moved to Later. 12 in the basket."; bare "milk $4" in the Bar lands "milk" (C1). **Still not ruled:** the repeat-list line ("Packing, already a list."), whether his own "Groceries" can be reached by name, and "Shopping, finished." for G43.

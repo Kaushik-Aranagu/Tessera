@@ -112,7 +112,7 @@ Decision (board, 2:40): offline recipe-link retry rows, and the retry inbox (Tes
 | # | Action | Expected |
 |---|---|---|
 | K33.1 | Offline, paste a recipe link on the Paste screen | Tess (cobalt, in the UNDO slot at her band): "Recipe link, kept for later." Never the URL. The link waits as one TessInbox item; typed text stays in the box. No UNDO, no tap, no error colour. No haptic |
-| K33.2 | Go back online with the app open | The link reads itself once (a single page GET through the link-fetch guard: https only, at most 3 redirects, no private-network addresses, 10 s timeout). It lands as a ghost recipe and never commits alone. Receipt: "Read 1 waiting. 1 to check." |
+| K33.2 | Go back online with the app open | The link reads itself once (a single page GET through the link-fetch guard: https only, at most 5 redirects (ruled Oct 17 8:40 AM), no private-network addresses, 10 s timeout). It lands as a ghost recipe and never commits alone. Receipt: "Read 1 waiting. 1 to check." |
 | K33.3 | Relaunch the app offline, then online | The waiting item survives the relaunch; on the next online open it is read exactly once (no duplicate ghost recipe if the app foregrounds twice) |
 | K33.4 | Retry fails again (timeout, 8 s per request, 15 s whole) | Same line "Recipe link, kept for later."; the item stays queued; there is no loop and no tap; it retries when the app next comes to the foreground, not in the background |
 | K33.5 | Retry returns a page that is too big or odd (3 MB, wrong content type, more than 5 redirects, non-https hop, private host) | The item leaves the queue; line "That page is too big or odd to read safely. Paste the text instead." The link stays in the box; nothing is stored |
