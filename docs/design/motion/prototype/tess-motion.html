@@ -1949,6 +1949,60 @@ PICKS.accent = () => {
     ],
   };
 };
+// Board item 23, sheet 72 round 2 (studies/title-progress.html) at sheet 86 option C's title token (52 pt, weight 650, tracking -3%).
+// The study's values: p steps .2125 / .425 / .6375 / .85 (600 ms), done p 1 in 300 ms, strike 420 ms, one brighten 260 ms, hold 900 ms, dry 2 s.
+// Reduce Motion (?rm=1): every change is a 150 ms crossfade, the strike appears by crossfade (no draw-in), no lift.
+PICKS['title-progress'] = () => {
+  const STEPS = [1.4, 3.0, 4.6, 6.2], PV = [.2125, .425, .6375, .85], TW = RM ? .15 : .6;
+  const DONE = 7.8, DONE_D = RM ? .15 : .3, STRIKE = RM ? .15 : .42, LIFT = .26, DRY_AT = 1.56, DRY = RM ? .15 : 2;
+  const SIZE = 52, Y0 = 250, LH = 56, W0 = 500, W1 = 650, KEY = 90, TRK = -.03;
+  const seg = (t, a, d) => (RM ? clamp01((t - a) / d) : ramp(t, a, d, houseCurve));
+  const pAt = t => {
+    if (t >= DONE) return lerp(PV[3], 1, seg(t, DONE, DONE_D));
+    let p = 0; STEPS.forEach((s, k) => { if (t >= s) p = lerp(k ? PV[k - 1] : 0, PV[k], seg(t, s, TW)); });
+    return p;
+  };
+  const dryU = t => (RM ? clamp01((t - (DONE + DRY_AT)) / DRY) : ramp(t, DONE + DRY_AT, DRY, easeInOut));
+  const strikeU = t => (RM ? clamp01((t - (DONE + DONE_D)) / STRIKE) : ramp(t, DONE + DONE_D, STRIKE, easeOut));
+  const lift = t => (RM ? 0 : ramp(t, DONE + DONE_D + STRIKE, LIFT, easeOut) * (1 - ramp(t, DONE + DONE_D + STRIKE + LIFT, LIFT, easeOut)));
+  const wordU = t => seg(t, STEPS[0], TW);
+  const WORDS = ['bench set 1', 'bench set 4', 'squat set 2', 'fly set 1', 'fly set 4'];
+  const CTXS = ['now, 0 of 20 sets', 'now, 5 of 20 sets', 'now, 10 of 20 sets', 'now, 15 of 20 sets', 'now, 20 of 20 sets'];
+  const idx = t => STEPS.filter(s => t >= s).length;
+  const LINES = t => [['Push Day A,', 0], [t >= DONE ? 'done' : WORDS[idx(t)], 1]];
+  return {
+    duration: 12.6, lines: [],
+    draw: t => {
+      ground();
+      tx('TRAINING', 24, 52, 15, LOOK.ink, 700, 'left', 1, .08);
+      tx('Friday evening', 24, 138, 21, LOOK.ink, 500);
+      tx(t >= DONE ? 'done, 52 min' : CTXS[idx(t)], 24, 186, 21, LOOK.live, 500);
+      const p = pAt(t), d = dryU(t), fade = lerp(1, .5, d), stroke = strikeU(t), lf = lift(t);
+      const base = lerp(lerp(W0, W1, p), W0, d), trk = lerp(TRK - .012 * p, TRK, d);
+      const colOf = isKey => mixHex(LOOK.ink, LOOK.live, ((isKey ? .72 * wordU(t) : .6 * p) + .12 * lf) * (1 - d));
+      const lines = LINES(t);
+      const wOf = k => base + (k ? KEY * (1 - d) : 0);
+      const lw = lines.map(([s, k]) => txw(s, SIZE, wOf(k), trk));
+      lines.forEach(([s, k], li) => {
+        const y = Y0 + li * LH;
+        tx(s, 24, y, SIZE, colOf(k), wOf(k), 'left', fade, trk);
+        const reach = RM ? 1 : clamp01((stroke * (lw[0] + lw[1]) - (li ? lw[0] : 0)) / lw[li]);
+        const a = RM ? stroke : 1;
+        if (reach > 0 && a > 0) { ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = a * fade; ctx.fillStyle = mixHex(LOOK.ink, LOOK.live, .72 * (1 - d)); ctx.fillRect(24, y - SIZE * .27 - 1.5, lw[li] * reach, 3); ctx.restore(); }
+      });
+      tx('NEXT', 24, 400, 16, LOOK.inkSoft, 600);
+      tx('Stretch & mobility', 24, 436, 19, LOOK.ink, 500); tx('8:30 pm', 369, 436, 17, LOOK.inkSoft, 500, 'right');
+      tx(`p ${p.toFixed(2)}`, 369, 186, 16, LOOK.inkSoft, 500, 'right');
+    },
+    soul: calmSoul([]),
+    caps: [
+      { at: 0, text: 'At rest: plain ink, weight 500. p 0.' },
+      ...STEPS.map((s, k) => ({ at: s, text: `${s.toFixed(1)} ${5 * (k + 1)} of 20 sets: p ${PV[k]}; ${RM ? '150 ms crossfade' : '600 ms'}.` })),
+      { at: DONE, text: `${DONE} done: p 1; ${RM ? 'the strike crossfades in (150 ms)' : 'the strike draws in 420 ms'}.`, haptic: '.success (the one)' },
+      { at: DONE + DRY_AT, text: `${(DONE + DRY_AT).toFixed(2)} ${RM ? 'dries in 150 ms' : 'dries over 2 s'} to ink at 50%, weight 500; the strike stays.` },
+    ],
+  };
+};
 // M1 (board 9:50 refill, sheet 84): the error notice. It replaces Tess's line in the UNDO slot; a tap dims it to 60%
 // with a 0.5 pt ink line over 150 ms; success crossfades to the receipt. Reduce Motion (?rm=1): crossfades only.
 PICKS['error-notice'] = () => {
