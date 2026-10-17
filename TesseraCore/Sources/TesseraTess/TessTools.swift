@@ -45,13 +45,46 @@ public enum TessTools {
 
     /// Runs a tool call from its JSON arguments. Returns what was logged; throws `TessToolError` with a line the
     /// model can read and correct.
+    /// Most ghost rows one phrase may leave (injection audit gap 2): a page or a pasted line that coaxes "add 50
+    /// tasks" gets this many and then a plain refusal. Claude's capture and the on-device model both stop here.
+    public static let maxRecordsPerPhrase = 10
+
+    /// What a tool call answers once a phrase is at its cap.
+    static let capLine = "Error: that is enough for one phrase."
+
+    /// `budget`: how many more ghosts this phrase may leave (QA on #666). A list of lines or items is cut to it before
+    /// the tool runs, and anything past it is taken back after, on both the on-device and the Claude path.
     public static func run(_ name: String, arguments: Data, engine: ActionEngine, pending: Bool = true,
-                           now: Date = .now, calendar: Calendar = .current) throws -> [OpRecord]
+                           now: Date = .now, calendar: Calendar = .current,
+                           budget: Int = maxRecordsPerPhrase) throws -> [OpRecord]
     {
         guard let tool = tool(named: name) else { throw TessToolError("no tool called \(name)") }
-        guard let object = try? JSONSerialization.jsonObject(with: arguments) as? [String: Any] else {
+        guard budget > 0 else { throw TessToolError(capLine) }
+        guard var object = try? JSONSerialization.jsonObject(with: arguments) as? [String: Any] else {
             throw TessToolError("unreadable arguments")
         }
+        for key in ["lines", "items"] {
+            if let list = object[key] as? [Any], list.count > budget {
+                object[key] = Array(list.prefix(budget))
+            }
+        }
+        var records = try runChecked(tool, object, engine: engine, pending: pending, now: now, calendar: calendar)
+        if records.count > budget {
+            for record in records[budget...].reversed() {
+                if record.state == .pending {
+                    _ = try? engine.discard(record)
+                } else {
+                    engine.undo(record)
+                }
+            }
+            records.removeLast(records.count - budget)
+        }
+        return records
+    }
+
+    private static func runChecked(_ tool: Tool, _ object: [String: Any], engine: ActionEngine, pending: Bool,
+                                   now: Date, calendar: Calendar) throws -> [OpRecord]
+    {
         let call = Call(engine: engine, grammar: TessGrammar(store: engine.store, classes: engine.classes),
                         pending: pending, now: now, calendar: calendar)
         // A tool that fails part-way takes back what it already did, so no half-done ghost is left behind.

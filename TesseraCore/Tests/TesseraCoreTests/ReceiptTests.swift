@@ -48,7 +48,9 @@ struct ReceiptTests {
 
     @Test func aMovedTaskSaysWhen() throws {
         let task = try engine.perform(CreateTask(title: "Call mom"), by: .tess).output
-        let now = Date.now
+        // A fixed noon, not the clock: between midnight and 4 am "tomorrow" is two calendar days away (his day turns
+        // at 4), so a run then went red.
+        let now = try #require(Calendar.current.date(from: DateComponents(year: 2026, month: 10, day: 15, hour: 12)))
         let tomorrow = try #require(Calendar.current.date(bySettingHour: 18, minute: 30, second: 0,
                                                           of: TesseraDay(calendar: .current).adding(days: 1, to: now)))
         let receipt = try engine.perform(MoveTask(task: task.id, to: tomorrow, time: now), by: .tess).record.receipt

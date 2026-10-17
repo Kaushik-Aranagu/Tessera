@@ -44,7 +44,7 @@ the doc's rows; they round differently by a cent or two.
   month of every planned job is about $6.90 (14%), so the cap holds with more than 7x room. Stale text still saying
   $10: `ClaudeKey.swift` comment (Swift, not changed here), claude-first-uses.md, recipe-link-fetch.md.
 - $40 step-aside: at 80% ($40), Home lines, the week story and living colour step aside before the reserve; capture,
-  plan, recipe and questions keep running to $50 (settled). linkItems is in none. Only the Settings warm line at 80%
+  plan, recipe and questions keep running to $50 (settled). linkItems runs to $50 (Product 8:21) and never steps aside. Only the Settings warm line at 80%
   exists in code; the step-aside itself is docs only. At worst spend ($6.90) it never fires, so it guards only loops.
 - The 40-a-day Home cap and 10-minute debounce are docs only. Without them a ticking pack value could hit about
   1,440 calls a day, $6.48 a day, so $40 in 6.2 days and $50 in 7.7 days. No caps exist in code for plan, week story
