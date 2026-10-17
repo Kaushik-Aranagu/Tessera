@@ -365,6 +365,25 @@ extension Transaction {
     }
 }
 
+/// What one add of a recipe did: the new rows (it reads as a list of them) and how many it already had that now
+/// hold a different amount.
+public struct GroceryAdd: RandomAccessCollection {
+    public let added: [ObjectRecord]
+    public let updated: Int
+
+    public var startIndex: Int {
+        added.startIndex
+    }
+
+    public var endIndex: Int {
+        added.endIndex
+    }
+
+    public subscript(position: Int) -> ObjectRecord {
+        added[position]
+    }
+}
+
 /// Puts a recipe's ingredients on the groceries list at a size, skipping staples and "to taste" lines unless asked.
 public struct AddRecipeToGroceries: EngineAction {
     public static let descriptor = ActionDescriptor(
@@ -387,7 +406,7 @@ public struct AddRecipeToGroceries: EngineAction {
         self.includeStaples = includeStaples
     }
 
-    public func apply(_ transaction: inout Transaction) throws -> [ObjectRecord] {
+    public func apply(_ transaction: inout Transaction) throws -> GroceryAdd {
         let recipe = try transaction.object(recipe, is: .recipe)
         let book = RecipeBook(store: transaction.store, classes: transaction.classes)
         let lines = serves.map { book.scaledLines(of: recipe, serves: $0) } ?? book.lines(of: recipe)
@@ -408,16 +427,12 @@ public struct AddRecipeToGroceries: EngineAction {
         }
         let alreadyOn = Groceries(store: transaction.store, classes: transaction.classes).share(of: recipe).count
         if wanted.isEmpty, alreadyOn == 0 {
-            Self.lastAdded[recipe.id] = 0
-            Self.lastUpdated[recipe.id] = 0
-            return []
+            return GroceryAdd(added: [], updated: 0)
         }
         // Added again at the same or a smaller size: its share already covers every line, so nothing is added and the
         // list is never halved (Kitchen K34.8: an add is not reversed by a size change). A bigger size replaces it.
         if alreadyOn > 0, wanted.allSatisfy({ Self.isCovered($0, by: recipe, on: list, in: transaction.store) }) {
-            Self.lastAdded[recipe.id] = 0
-            Self.lastUpdated[recipe.id] = 0
-            return []
+            return GroceryAdd(added: [], updated: 0)
         }
         // Ingredients this recipe already had a row for: a bigger size rebuilds them, they are not new (G66).
         let groceries = Groceries(store: transaction.store, classes: transaction.classes)
@@ -464,7 +479,6 @@ public struct AddRecipeToGroceries: EngineAction {
         let made = items.filter { item in
             !before.contains(item.id) && !(groceries.ingredient(of: item).map { known.contains($0.id) } ?? false)
         }
-        Self.lastAdded[recipe.id] = made.count
         // Rows it already had come back at the new size: a changed amount is "updated", an equal one nothing.
         var newAmounts: [UUID: [String]] = [:]
         for item in items {
@@ -472,8 +486,10 @@ public struct AddRecipeToGroceries: EngineAction {
                 newAmounts[id, default: []].append(transaction.store.value("quantity", of: item)?.stringValue ?? "")
             }
         }
-        Self.lastUpdated[recipe.id] = known.filter { oldAmounts[$0]?.sorted() != newAmounts[$0]?.sorted() }.count
-        return made
+        return GroceryAdd(
+            added: made,
+            updated: known.filter { oldAmounts[$0]?.sorted() != newAmounts[$0]?.sorted() }.count
+        )
     }
 
     /// Whether an open row already holds this recipe's share of the line, at least as much of it.
@@ -494,15 +510,15 @@ public struct AddRecipeToGroceries: EngineAction {
         }
     }
 
-    /// New rows by recipe from the last `apply` in this process, for the receipt written right after it.
-    nonisolated(unsafe) static var lastAdded: [UUID: Int] = [:]
-    /// Rows of a recipe already on the list whose amount changed at a bigger size, from the last `apply`.
-    nonisolated(unsafe) static var lastUpdated: [UUID: Int] = [:]
-
     /// "Tacos, 10 added." (Product W12); "Tacos, nothing to add." when nothing was new (Product e1981a39). The short
     /// name, unless another recipe on the list shares it (Kitchen lead, #389).
     /// A private recipe lends no word of its title (QA on #807's run): "Private recipe, 3 added.".
     public func summary(in store: ObjectStore) -> String {
+        summary(in: store, output: GroceryAdd(added: [], updated: 0))
+    }
+
+    /// Counted from this run's own output, never from shared state (QA on #826).
+    public func summary(in store: ObjectStore, output: GroceryAdd) -> String {
         let object = store.object(id: recipe)
         let isPrivate = object.map { recipe in
             store.value("isPrivate", of: recipe) == .bool(true)
@@ -510,8 +526,8 @@ public struct AddRecipeToGroceries: EngineAction {
         } ?? false
         let name = isPrivate ? ObjectPrivacy.recipeLabel
             : object.map { RecipeBook.shortName(of: $0, store: store) } ?? "Recipe"
-        let made = Self.lastAdded[recipe] ?? 0
-        let updated = Self.lastUpdated[recipe] ?? 0
+        let made = output.added.count
+        let updated = output.updated
         switch (made, updated) {
         case (0, 0): return "\(name), nothing to add."
         case (_, 0): return "\(name), \(made) added."
