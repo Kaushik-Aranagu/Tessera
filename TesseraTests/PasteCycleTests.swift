@@ -1,3 +1,4 @@
+import Foundation
 @testable import Tessera
 import TesseraCore
 import TesseraTess
@@ -60,5 +61,41 @@ struct PasteCycleTests {
     @Test func waitingLinksReadAsACount() {
         #expect(PasteCopy.readWaiting(1) == "Read 1 waiting")
         #expect(PasteCopy.readWaiting(3) == "Read 3 waiting")
+    }
+
+    /// G59 (#854): a paste already saved says which, never "Didn't save that", and a walled title stays masked.
+    @Test func aDuplicatePasteNamesTheRecipe() throws {
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let model = AppModel(context: container.mainContext)
+        let dal = "Weeknight dal\n1 cup red lentils\nSimmer 20 minutes."
+        #expect(PasteCopy.duplicateLine(dal, store: model.store, classes: model.classes) == nil)
+        try model.engine.perform(CreateRecipe(text: dal), by: .user)
+        let line = try #require(PasteCopy.duplicateLine(dal, store: model.store, classes: model.classes))
+        #expect(line == "Weeknight dal is already on Recipes." && PasteCopy.isRefusal(line))
+        let stew = "Rent 1200 stew\n2 carrots\n1 onion\n\nSimmer."
+        try model.engine.perform(CreateRecipe(text: stew), by: .user)
+        #expect(PasteCopy.duplicateLine(stew, store: model.store, classes: model.classes) ==
+            "Private recipe is already on Recipes.")
+    }
+
+    /// #854 release condition: a private duplicate is refused by name ("Private recipe") and never reaches the miss
+    /// log; a plain refusal still does.
+    @Test func aPrivateDuplicateNeverReachesTheMissLog() throws {
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let model = AppModel(context: container.mainContext)
+        let folder = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let log = CaptureMissLog(url: folder.appending(path: "misses.jsonl"))
+        let stew = "Rent 1200 stew\n2 carrots\n1 onion\n\nSimmer."
+        func save(_ text: String) -> PasteCopy.SaveOutcome {
+            PasteCopy.save(text, corrections: [:], engine: model.engine, store: model.store, classes: model.classes,
+                           missLog: log)
+        }
+        guard case .saved = save(stew) else { Issue.record("expected the first paste to save"); return }
+        guard case let .duplicate(line) = save(stew) else { Issue.record("expected a duplicate"); return }
+        #expect(line == "Private recipe is already on Recipes." && !line.contains("stew"))
+        #expect(log.all().isEmpty)
+        guard case .failed = save("https://example.com/dal") else { Issue.record("a bare link writes nothing"); return }
+        #expect(log.all().count == 1)
     }
 }
