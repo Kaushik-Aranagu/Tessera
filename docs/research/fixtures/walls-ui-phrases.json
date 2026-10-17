@@ -1,5 +1,5 @@
 {
-  "about": "Walls UI fixture (Product item AU). Every value is made up: hunter2, tacocat and 4417 are placeholders, and the fake store is not a real shop. WallsUITests reads these rows so no session types secret-shaped phrases by hand. Surfaces: askBar (Ask Tess, Write), notesPage (Notes writing line), siriAddTask (CreateTaskIntent.add in a unit test; Siri can't be driven from a UI test), paste (Kitchen, Paste a recipe). The key rows have phrase null and build KEY: the test takes its value from ClaudeSection.fakeKey in test code, so nothing key-shaped is in this file. lineMatch is exact or prefix; expectLine null means no line check. passesOnMaster and masterEvidence were read on origin/master fbede70 (Oct 16, 2026). pending names the owner of a known fail; the test wraps those rows in XCTExpectFailure. Spec: docs/research/walls-ui-test-spec.md.",
+  "about": "Walls UI fixture (Product item AU). Every value is made up: hunter2, tacocat and 4417 are placeholders, and the fake store is not a real shop. WallsUITests reads these rows so no session types secret-shaped phrases by hand. Surfaces: askBar (Ask Tess, Write), notesPage (Notes writing line), siriAddTask (CreateTaskIntent.add in a unit test; Siri can't be driven from a UI test), paste (Kitchen, Paste a recipe), objectPage (the generic object page, its PropertyList, Linked from and the class page's newest row; Core 0ai private-field mask, rows PM01 to PM20, seeded with -wallsSeedPrivate; fixture docs/research/fixtures/private-field-mask.md, read on origin/master 64ffb93). Rows BN01 to BN11 (decisions 2:56, Core 0ai) seed lastWeightKg (null means no weight logged) and check the bare-number body wall; expectNoClaude true means walled, false means the phrase stays plain. The key rows have phrase null and build KEY: the test takes its value from ClaudeSection.fakeKey in test code, so nothing key-shaped is in this file. lineMatch is exact or prefix; expectLine null means no line check. passesOnMaster and masterEvidence were read on origin/master fbede70 (Oct 16, 2026). pending names the owner of a known fail; the test wraps those rows in XCTExpectFailure. Spec: docs/research/walls-ui-test-spec.md. Rows BM01 to BM31 (decisions 4:46 pm, Core 0ai rider, read on origin/master 6f9b639) cover the five paths that bypassed PrivateFacts: modelWrite, toolWrite, rememberFact, memoryTurnover and planMyDay run as package tests (seed.write says what the test writes), plus the bar trap on liveWorkoutAsk and askBar (seed.focus is the set in focus; null means a live workout with no set in focus). For package rows, mustNotShow lists strings no stored title, memory line, receipt or Claude pack may hold.",
   "master": "fbede70",
   "rows": [
     {
@@ -509,6 +509,1249 @@
       "masterEvidence": "PasteRecipe.swift:205",
       "pending": null,
       "notes": "Paste alone, Done, SAVE: nothing written and nothing logged."
+    },
+    {
+      "id": "PM01",
+      "phrase": null,
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "Private memory",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:227 hero is the title; :228 class line is the title as an identifier",
+      "pending": "Core 0ai: private-field mask (R18)",
+      "seed": "O1",
+      "route": "generic: Push A, Linked from, the memory",
+      "mustNotShow": [
+        "4417",
+        "door",
+        "code"
+      ],
+      "notes": "Private memory with rule \"door code is 4417\", seeded through the store (a told line with a secret word is refused, TessMemory.swift:142-143)."
+    },
+    {
+      "id": "PM02",
+      "phrase": null,
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "Private memory",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:348-360 lists every field; :397-399 Rule value; :417 Stays on this phone yes; :387 From handle",
+      "pending": "Core 0ai: private-field mask (R18)",
+      "seed": "O1",
+      "route": "propertyList: same page",
+      "mustNotShow": [
+        "Properties",
+        "Rule",
+        "Stays on this phone",
+        "From",
+        "Push A"
+      ],
+      "notes": "No Properties section on a masked page."
+    },
+    {
+      "id": "PM03",
+      "phrase": null,
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "Private memory",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:261 row titled source.title; ObjectHandle.swift:77 hint Opens <title>",
+      "pending": "Core 0ai: private-field mask (R18)",
+      "seed": "O1",
+      "route": "linkedFrom: Push A page row",
+      "mustNotShow": [
+        "4417",
+        "door"
+      ],
+      "notes": "The row and its hint read the label."
+    },
+    {
+      "id": "PM04",
+      "phrase": null,
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:62-147 ClassBody has no object list and no newest row; :89 prototype PropertyList only",
+      "pending": null,
+      "seed": "O1",
+      "route": "classPage: breadcrumb Memory",
+      "mustNotShow": [
+        "4417",
+        "door"
+      ],
+      "notes": "Class tree today: no instance values. Newest row is PM18."
+    },
+    {
+      "id": "PM05",
+      "phrase": "wifi password is hunter2",
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "Private note",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:348 filters only notes, so :397-399 and :419 print Body; :417 Private yes. Route ReviewWeek.swift:358-362",
+      "pending": "Core 0ai: private-field mask (R18)",
+      "seed": "O3",
+      "route": "generic: Review, today, the Private note line",
+      "mustNotShow": [
+        "hunter2",
+        "wifi",
+        "Body"
+      ],
+      "notes": "Typed on the Notes line; SecretWords forces it private (Notes.swift:115-121)."
+    },
+    {
+      "id": "PM06",
+      "phrase": "took advil 400mg",
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "Private note",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:397-399 Body row prints the body; :417 Private yes. Note saved by CreateTaskIntent.add (Intents.swift:168)",
+      "pending": "Core 0ai: private-field mask (R18)",
+      "seed": "O4",
+      "route": "generic: Review, today, the Private note line",
+      "mustNotShow": [
+        "advil",
+        "400"
+      ],
+      "notes": "Private by flag only, no secret word: the mask must key on the flag."
+    },
+    {
+      "id": "PM07",
+      "phrase": "take advil 8 am",
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "Private task",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:227 hero \"Take Advil\"; :228 class line; :417-418 Starts and Done rows. Task has no isPrivate field (SystemCatalog.swift:201-212)",
+      "pending": "Core 0ai, plus Core 0ac slice 2 (bare medicine names) or the 2:22 pm \"Private task\" title",
+      "seed": "O5",
+      "route": "generic: Home queue row (HomeQueue.swift:263) or Now hero (NowPage.swift:220)",
+      "mustNotShow": [
+        "advil"
+      ],
+      "notes": "The queue row title itself is F7, not this row."
+    },
+    {
+      "id": "PM08",
+      "phrase": "Gym bag in the car",
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:397-399 Body row shows the body",
+      "pending": null,
+      "seed": "O6",
+      "route": "generic: Review, today, the note line",
+      "mustNotShow": [],
+      "notes": "Control: Body shows \"Gym bag in the car\"; no \"Private note\" text."
+    },
+    {
+      "id": "PM09",
+      "phrase": "pick up dry cleaning 5 pm",
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:227 hero; :418 Starts row",
+      "pending": null,
+      "seed": "O7",
+      "route": "generic: Home queue row",
+      "mustNotShow": [],
+      "notes": "Control: hero and Starts show; no \"Private task\" text."
+    },
+    {
+      "id": "PM10",
+      "phrase": null,
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:261 row; :397-399 Rule \"training.hours\"; TessMemory.swift:671 writes noticed lines public",
+      "pending": null,
+      "seed": "O8",
+      "route": "linkedFrom then generic: Push A page, tap the memory",
+      "mustNotShow": [],
+      "notes": "Control: row, hero and Rule show; no \"Private memory\" text."
+    },
+    {
+      "id": "PM11",
+      "phrase": "gate code 4417",
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "Private note",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "Notes.swift:163-177 makes it private and retitles it; Features/Objects/ObjectPage.swift:397-399 Body still prints both lines",
+      "pending": "Core 0ai: private-field mask (R18)",
+      "seed": "O6 then edited",
+      "route": "generic: Notes, add the line to O6, back to Review, tap the note",
+      "mustNotShow": [
+        "4417",
+        "gym"
+      ],
+      "notes": "Made private after creation. Masked on the next model.revision (ObjectPage.swift:11); no stale field."
+    },
+    {
+      "id": "PM12",
+      "phrase": null,
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "Private memory",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:261, :397-399 print as PM10; master has no toggle, so the seed flips isPrivate",
+      "pending": "Core 0ai: private-field mask (R18)",
+      "seed": "O8 flipped to private",
+      "route": "linkedFrom then generic",
+      "mustNotShow": [
+        "evening",
+        "training.hours"
+      ],
+      "notes": "Memory made private after creation."
+    },
+    {
+      "id": "PM13",
+      "phrase": null,
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:397-399 Rule row shows",
+      "pending": null,
+      "seed": "O8 flipped back to public",
+      "route": "linkedFrom then generic",
+      "mustNotShow": [],
+      "notes": "Public again: fields show. The mask follows the stored value, never a cache."
+    },
+    {
+      "id": "PM14",
+      "phrase": "wifi password is hunter2",
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "Private note",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "Notes.swift:117 sets the title; Features/Objects/ObjectPage.swift:397-399 Body prints",
+      "pending": "Core 0ai: private-field mask (R18)",
+      "seed": "O3",
+      "route": "generic, after a generic rename attempt",
+      "mustNotShow": [
+        "hunter2",
+        "wifi"
+      ],
+      "notes": "SecretWords-forced note; the hero never reads its first line (decisions 2:22 pm, a generic rename must not retitle it)."
+    },
+    {
+      "id": "PM15",
+      "phrase": "remember my left shoulder gets sore after presses",
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "Private memory",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "TessMemory.swift:206-208 and :255 store it private; Features/Objects/ObjectPage.swift:227-228 print the title; :348-360 defaults",
+      "pending": "Core 0ai: private-field mask (R18)",
+      "seed": "O2",
+      "route": "generic: direct route from the seed flag",
+      "mustNotShow": [
+        "shoulder",
+        "sore",
+        "Properties"
+      ],
+      "notes": "The title is the only stored content: no Properties heading, no empty-state text, no field count."
+    },
+    {
+      "id": "PM16",
+      "phrase": "wifi password is hunter2",
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "Private note",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:227 hero is the first line; :228 class line; :397-399 Body. No launch pass yet (R6)",
+      "pending": "Core 0ai: private-field mask (R18)",
+      "seed": "pre-#422 note, no isPrivate",
+      "route": "generic: Review, today, the note line",
+      "mustNotShow": [
+        "hunter2",
+        "wifi"
+      ],
+      "notes": "Masked whether or not R6 has run: the check also reads SecretWords.mentions."
+    },
+    {
+      "id": "PM17",
+      "phrase": null,
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "Private memory",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "TessMemory.swift:558-560 title is a hash, isPrivate true; Features/Objects/ObjectPage.swift:227 prints it",
+      "pending": "Core 0ai: private-field mask (R18)",
+      "seed": "forgotten hash entry",
+      "route": "generic: direct route from the seed flag",
+      "mustNotShow": [],
+      "notes": "No static text matches [0-9a-f]{16,}."
+    },
+    {
+      "id": "PM18",
+      "phrase": null,
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "Private memory",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:62-147 no newest row on master",
+      "pending": "Core 0ak SideHost glance (PL3), then Core 0ai",
+      "seed": "O1 newest",
+      "route": "classPage newest row: Memory",
+      "mustNotShow": [
+        "4417",
+        "door"
+      ],
+      "notes": "If Product keeps PL3 (never the newest), the check becomes: no row names O1."
+    },
+    {
+      "id": "PM19",
+      "phrase": null,
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "Private note",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:62-147 no newest row on master",
+      "pending": "Core 0ak SideHost glance (PL3), then Core 0ai",
+      "seed": "O3 newest, then O6",
+      "route": "classPage newest row: Note",
+      "mustNotShow": [
+        "hunter2",
+        "wifi"
+      ],
+      "notes": "After O6 is added, the row reads \"Gym bag in the car\"."
+    },
+    {
+      "id": "PM20",
+      "phrase": null,
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": false,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:329-330 hero is a heading with the title; ObjectHandle.swift:35 and :77 hints Opens <title>",
+      "pending": "Core 0ai: private-field mask (R18)",
+      "seed": "O1, O3, O5",
+      "route": "voiceOver: PM1, PM3, PM5, PM7, PM18 pages and rows",
+      "mustNotShow": [
+        "4417",
+        "door",
+        "hunter2",
+        "wifi",
+        "advil",
+        "shoulder",
+        "Rule",
+        "Body",
+        "Stays on this phone"
+      ],
+      "notes": "Every label and hint, read with CONTAINS[c], holds none of mustNotShow."
+    },
+    {
+      "id": "BN01",
+      "phrase": "is 82.4 good?",
+      "surface": "askBar",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "That stays on this phone.",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "PrivateFacts.swift:104-108 walls a decimal or body unit only when every other word is a day word; master has no last-weight check (\"good\" is not a day word)",
+      "pending": "Core 0ai (bare-number wall, lastWeightKg with no default)",
+      "seed": {
+        "lastWeightKg": 82.0
+      },
+      "notes": "Within 10% of his last weight (73.8 to 90.2 kg): a body fact with no day word. Today it becomes the Home task with the number (CaptureParts.swift:200-201). Decisions 4:46 pm (5): on the Ask bar a walled \"?\" phrase answers \"That stays on this phone.\" and makes no Home task; the test checks the line and that no Home row holds the number. The line is already on master through CommandInterpreter (CaptureParts.swift:190-192); #564 brings the suite.",
+      "mustNotShow": [
+        "82.4",
+        "76"
+      ]
+    },
+    {
+      "id": "BN02",
+      "phrase": "how's 76 looking?",
+      "surface": "askBar",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "That stays on this phone.",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "PrivateFacts.swift:104-108 walls a decimal or body unit only when every other word is a day word; master has no last-weight check; a bare whole number is never walled",
+      "pending": "Core 0ai (bare-number wall, lastWeightKg with no default)",
+      "seed": {
+        "lastWeightKg": 82.0
+      },
+      "notes": "A whole number inside the 10% band is walled too. Today it becomes the Home task with the number (CaptureParts.swift:200-201). Decisions 4:46 pm (5): on the Ask bar a walled \"?\" phrase answers \"That stays on this phone.\" and makes no Home task; the test checks the line and that no Home row holds the number. The line is already on master through CommandInterpreter (CaptureParts.swift:190-192); #564 brings the suite.",
+      "mustNotShow": [
+        "76"
+      ]
+    },
+    {
+      "id": "BN03",
+      "phrase": "82.4?",
+      "surface": "askBar",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "That stays on this phone.",
+      "lineMatch": "exact",
+      "passesOnMaster": true,
+      "masterEvidence": "PrivateFacts.swift:104-108: a lone decimal with no other words is already walled",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0
+      },
+      "notes": "Control: already walled on master (a lone decimal), must stay walled once the weight is passed in. Decisions 4:46 pm (5): on the Ask bar a walled \"?\" phrase answers \"That stays on this phone.\" and makes no Home task; the test checks the line and that no Home row holds the number. Both already hold on master: CommandInterpreter answers the line and saves nothing (CaptureParts.swift:190-192); #564 brings the suite.",
+      "mustNotShow": [
+        "82.4"
+      ]
+    },
+    {
+      "id": "BN04",
+      "phrase": "my weight is 82.4, good?",
+      "surface": "askBar",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "That stays on this phone.",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "PrivateFacts.swift:104-108 walls a decimal or body unit only when every other word is a day word; master has no last-weight check (\"good\" is not a day word)",
+      "pending": "Core 0ai (body-word list, \"weight\" out of dayWords)",
+      "seed": {
+        "lastWeightKg": null
+      },
+      "notes": "No weight logged: a bare decimal next to a body word is walled. Decisions 4:46 pm (4): Core adds the body-word list (weight, weigh, weighed, kg, lb, lbs, body fat, BMI) and \"weight\" leaves dayWords (PrivateFacts.swift:63-64), which is what lets this row pass. Today it becomes the Home task with the number (CaptureParts.swift:200-201). Decisions 4:46 pm (5): on the Ask bar a walled \"?\" phrase answers \"That stays on this phone.\" and makes no Home task; the test checks the line and that no Home row holds the number. The line is already on master through CommandInterpreter (CaptureParts.swift:190-192); #564 brings the suite.",
+      "mustNotShow": [
+        "82.4"
+      ]
+    },
+    {
+      "id": "BN05",
+      "phrase": "is 82.4 good?",
+      "surface": "askBar",
+      "expectPrivate": false,
+      "expectNoClaude": false,
+      "expectNotInMissLog": false,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "PrivateFacts.swift:104-108 returns false",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": null
+      },
+      "notes": "No weight logged and no body word: plain."
+    },
+    {
+      "id": "BN06",
+      "phrase": "is 3.5 good?",
+      "surface": "askBar",
+      "expectPrivate": false,
+      "expectNoClaude": false,
+      "expectNotInMissLog": false,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "PrivateFacts.swift:104-108 returns false",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0
+      },
+      "notes": "Trap: 3.5 is far outside the 10% band. Stays plain."
+    },
+    {
+      "id": "BN07",
+      "phrase": "is 120 good?",
+      "surface": "askBar",
+      "expectPrivate": false,
+      "expectNoClaude": false,
+      "expectNotInMissLog": false,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "PrivateFacts.swift:104-108 returns false",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0
+      },
+      "notes": "Trap: 120 is outside the band (73.8 to 90.2). Stays plain."
+    },
+    {
+      "id": "BN08",
+      "phrase": "rate this 8.5",
+      "surface": "askBar",
+      "expectPrivate": false,
+      "expectNoClaude": false,
+      "expectNotInMissLog": false,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "PrivateFacts.swift:104-108 returns false",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0
+      },
+      "notes": "Trap from decisions 2:56: a rating, not a weight."
+    },
+    {
+      "id": "BN09",
+      "phrase": "is 91 good?",
+      "surface": "askBar",
+      "expectPrivate": false,
+      "expectNoClaude": false,
+      "expectNotInMissLog": false,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "PrivateFacts.swift:104-108 returns false",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0
+      },
+      "notes": "Edge: 91 is just above 90.2 (10% over 82). Stays plain."
+    },
+    {
+      "id": "BN10",
+      "phrase": "bench 82.5 x 5 good?",
+      "surface": "askBar",
+      "expectPrivate": false,
+      "expectNoClaude": false,
+      "expectNotInMissLog": false,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "PrivateFacts.swift:83 isTraining returns early",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0
+      },
+      "notes": "Trap: set notation is the bar, never his body, even inside the band."
+    },
+    {
+      "id": "BN11",
+      "phrase": "is 82.4 good?",
+      "surface": "liveWorkoutAsk",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": false,
+      "masterEvidence": "WorkoutModeView.swift:280 sends the live workout ask to the model; PrivateFacts.swift:104-108 does not wall it",
+      "pending": "Core 0ai: bare-number body wall (decisions 2:56)",
+      "seed": {
+        "lastWeightKg": 82.0,
+        "focus": null
+      },
+      "notes": "The one path where a question really reaches Claude today (Research BK), and the path decisions 4:46 pm (5) names for the Claude check. Run with no set in focus: with a set in focus the number is the bar and stays plain (4:46 pm (3), rows BM26 and BM27); BM31 is this phrase with the focus pinned."
+    },
+    {
+      "id": "BM01",
+      "phrase": "wifi password is hunter2",
+      "surface": "modelWrite",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": false,
+      "masterEvidence": "TessTools.swift:118 performs CreateTask with the model's title and no wall; TessModelCapture.swift:151-156 (CatalogTool.perform) is a thin wrapper over TessTools.run; TessModel.swift:77-79 lets the on-device model read money and body phrases",
+      "pending": "Core 0ai: engine wall on on-device model writes (rider, decisions 4:46 pm (2))",
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "createTask(title: phrase), called by a fake on-device model"
+      },
+      "notes": "The model writes a secret-shaped title. After 0ai the engine makes it a private note (decisions 2:06 pm), and the record's receipt reads \"Private note, kept.\". No task title holds hunter2.",
+      "mustNotShow": [
+        "hunter2"
+      ]
+    },
+    {
+      "id": "BM02",
+      "phrase": "pay rent 2100 fri",
+      "surface": "modelWrite",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": false,
+      "masterEvidence": "TessTools.swift:118 performs CreateTask with the model's title and no wall; TessModelCapture.swift:151-156 (CatalogTool.perform) is a thin wrapper over TessTools.run; TessModel.swift:77-79 lets the on-device model read money and body phrases",
+      "pending": "Core 0ai: engine wall on on-device model writes (rider, decisions 4:46 pm (2))",
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "createTask(title: phrase), called by a fake on-device model"
+      },
+      "notes": "Imperative future money stays a task with the amount dropped (decisions 2:22 pm (1)): \"Pay rent\". No title, receipt or Claude pack holds 2100. Whether the wall reads \"fri\" from a title when startsAt is null is Core's call; the row checks the amount only.",
+      "mustNotShow": [
+        "2100"
+      ]
+    },
+    {
+      "id": "BM03",
+      "phrase": "82.4",
+      "surface": "modelWrite",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": false,
+      "masterEvidence": "TessTools.swift:118 performs CreateTask with the model's title and no wall; TessModelCapture.swift:151-156 (CatalogTool.perform) is a thin wrapper over TessTools.run; TessModel.swift:77-79 lets the on-device model read money and body phrases",
+      "pending": "Core 0ai: engine wall on on-device model writes (rider, decisions 4:46 pm (2))",
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "createTask(title: phrase), called by a fake on-device model"
+      },
+      "notes": "Inside the band for a last weight of 82 kg (73.8 to 90.2): becomes a private note, never a task titled 82.4.",
+      "mustNotShow": [
+        "82.4"
+      ]
+    },
+    {
+      "id": "BM04",
+      "phrase": "is 82.4 good?",
+      "surface": "modelWrite",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": false,
+      "masterEvidence": "TessTools.swift:118 performs CreateTask with the model's title and no wall; TessModelCapture.swift:151-156 (CatalogTool.perform) is a thin wrapper over TessTools.run; TessModel.swift:77-79 lets the on-device model read money and body phrases",
+      "pending": "Core 0ai: engine wall on on-device model writes (rider, decisions 4:46 pm (2))",
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "createTask(title: phrase), called by a fake on-device model"
+      },
+      "notes": "The 2:56 pm bare-number case, written by the model instead of typed: a private note, never a task titled with the number.",
+      "mustNotShow": [
+        "82.4"
+      ]
+    },
+    {
+      "id": "BM05",
+      "phrase": "call the gym about chalk",
+      "surface": "modelWrite",
+      "expectPrivate": false,
+      "expectNoClaude": false,
+      "expectNotInMissLog": false,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "TessTools.swift:118 writes the task as titled",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "createTask(title: phrase), called by a fake on-device model"
+      },
+      "notes": "Control: a plain task stays the task \"Call the gym about chalk\" (or as the model titles it). No private note."
+    },
+    {
+      "id": "BM06",
+      "phrase": "wifi password is hunter2",
+      "surface": "toolWrite",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": false,
+      "masterEvidence": "ClaudeTessModel.swift:54 walls the request text only; :88 runs TessTools.run on Claude's tool call, and TessTools.swift:118 performs CreateTask with no wall",
+      "pending": "Core 0ai: engine wall on Claude tool writes (rider, decisions 4:46 pm (2))",
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "createTask(title: phrase), a Claude tool_use reply from RouteStub; the request text is \"ring the gym about chalk\", which passes the Claude wall"
+      },
+      "notes": "Claude's reply names a secret-shaped title for an innocent request. The engine wall must still make it a private note; nothing Claude says is trusted as clean.",
+      "mustNotShow": [
+        "hunter2"
+      ]
+    },
+    {
+      "id": "BM07",
+      "phrase": "pay rent 2100 fri",
+      "surface": "toolWrite",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": false,
+      "masterEvidence": "ClaudeTessModel.swift:54 walls the request text only; :88 runs TessTools.run on Claude's tool call, and TessTools.swift:118 performs CreateTask with no wall",
+      "pending": "Core 0ai: engine wall on Claude tool writes (rider, decisions 4:46 pm (2))",
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "createTask(title: phrase), a Claude tool_use reply from RouteStub; the request text is \"ring the gym about chalk\", which passes the Claude wall"
+      },
+      "notes": "As BM02, from Claude: the task is \"Pay rent\" with the amount dropped (decisions 2:22 pm (1)).",
+      "mustNotShow": [
+        "2100"
+      ]
+    },
+    {
+      "id": "BM08",
+      "phrase": "82.4",
+      "surface": "toolWrite",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": false,
+      "masterEvidence": "ClaudeTessModel.swift:54 walls the request text only; :88 runs TessTools.run on Claude's tool call, and TessTools.swift:118 performs CreateTask with no wall",
+      "pending": "Core 0ai: engine wall on Claude tool writes (rider, decisions 4:46 pm (2))",
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "createTask(title: phrase), a Claude tool_use reply from RouteStub; the request text is \"ring the gym about chalk\", which passes the Claude wall"
+      },
+      "notes": "Inside the band: a private note, never a task titled 82.4.",
+      "mustNotShow": [
+        "82.4"
+      ]
+    },
+    {
+      "id": "BM09",
+      "phrase": "is 82.4 good?",
+      "surface": "toolWrite",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": false,
+      "masterEvidence": "ClaudeTessModel.swift:54 walls the request text only; :88 runs TessTools.run on Claude's tool call, and TessTools.swift:118 performs CreateTask with no wall",
+      "pending": "Core 0ai: engine wall on Claude tool writes (rider, decisions 4:46 pm (2))",
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "createTask(title: phrase), a Claude tool_use reply from RouteStub; the request text is \"ring the gym about chalk\", which passes the Claude wall"
+      },
+      "notes": "Inside the band: a private note. The tool_result sent back to Claude is \"Done\" and never repeats the title.",
+      "mustNotShow": [
+        "82.4"
+      ]
+    },
+    {
+      "id": "BM10",
+      "phrase": "call the gym about chalk",
+      "surface": "toolWrite",
+      "expectPrivate": false,
+      "expectNoClaude": false,
+      "expectNotInMissLog": false,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "ClaudeRouteTests.swift:112-122 shows a stubbed tool call landing as a pending ghost",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "createTask(title: phrase), a Claude tool_use reply from RouteStub; the request text is \"ring the gym about chalk\", which passes the Claude wall"
+      },
+      "notes": "Control: the task lands as Claude titled it, pending, with UNDO."
+    },
+    {
+      "id": "BM11",
+      "phrase": "wifi password is hunter2",
+      "surface": "rememberFact",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "I don't keep passwords.",
+      "lineMatch": "exact",
+      "passesOnMaster": true,
+      "masterEvidence": "TessMemory.swift:142-143 refuses a secret word (Refusal.secret, line :127); SecretWordsTests.swift:94",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "engine.perform(named: \"rememberFact\", arguments: {\"text\": phrase}, by: .tess, pending: true)"
+      },
+      "notes": "Refused; no memory line is written.",
+      "mustNotShow": [
+        "hunter2"
+      ]
+    },
+    {
+      "id": "BM12",
+      "phrase": "pay rent 2100 fri",
+      "surface": "rememberFact",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "I don't keep sums of money.",
+      "lineMatch": "exact",
+      "passesOnMaster": true,
+      "masterEvidence": "TessMemory.swift:150-155 refuses the money word \"rent\" (line :125); TessMemoryTests.swift:97-99",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "engine.perform(named: \"rememberFact\", arguments: {\"text\": phrase}, by: .tess, pending: true)"
+      },
+      "notes": "Refused; no memory line is written.",
+      "mustNotShow": [
+        "2100"
+      ]
+    },
+    {
+      "id": "BM13",
+      "phrase": "82.4",
+      "surface": "rememberFact",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": false,
+      "masterEvidence": "TessMemory.swift:196-233: no health or money word, and HomeLines.digits licenses the line's own numbers, so \"82.4\" is kept as a line that can leave the phone",
+      "pending": "Core 0ai: RememberFact calls PrivateFacts (rider, decisions 4:46 pm (2))",
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "engine.perform(named: \"rememberFact\", arguments: {\"text\": phrase}, by: .tess, pending: true)"
+      },
+      "notes": "Inside the band: his weight is a measured value, and a measured value is never kept, private or not (TessMemory.swift:209). Expected: refused, no memory line. The refusal has no line of its own today (Refusal.health, :128).",
+      "mustNotShow": [
+        "82.4"
+      ]
+    },
+    {
+      "id": "BM14",
+      "phrase": "is 82.4 good?",
+      "surface": "rememberFact",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": false,
+      "masterEvidence": "TessMemory.swift:196-233: no health word, own digits licensed, so the line is kept and is not private",
+      "pending": "Core 0ai: RememberFact calls PrivateFacts (rider, decisions 4:46 pm (2))",
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "engine.perform(named: \"rememberFact\", arguments: {\"text\": phrase}, by: .tess, pending: true)"
+      },
+      "notes": "As BM13: refused, no memory line.",
+      "mustNotShow": [
+        "82.4"
+      ]
+    },
+    {
+      "id": "BM15",
+      "phrase": "I train after work on weekdays",
+      "surface": "rememberFact",
+      "expectPrivate": false,
+      "expectNoClaude": false,
+      "expectNotInMissLog": false,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "TessMemoryTests.swift:78 keeps this line",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "engine.perform(named: \"rememberFact\", arguments: {\"text\": phrase}, by: .tess, pending: true)"
+      },
+      "notes": "Control: kept as a told line, not private."
+    },
+    {
+      "id": "BM16",
+      "phrase": "wifi password is hunter2",
+      "surface": "memoryTurnover",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "TessMemory+Turnover.swift:67 skips a Day log line with a secret word",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "a task titled with the phrase, done yesterday, written straight to the ObjectStore (not through CreateTask, which 0ai would retitle), then TessMemoryStore.turnover(now:) at 5:00 am"
+      },
+      "notes": "No recent line holds hunter2; the rest of the day's line is kept.",
+      "mustNotShow": [
+        "hunter2"
+      ]
+    },
+    {
+      "id": "BM17",
+      "phrase": "pay rent 2100 fri",
+      "surface": "memoryTurnover",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "TessMemory+Turnover.swift:104: the money word \"rent\" makes TessMemoryScreen refuse the whole day line",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "a task titled with the phrase, done yesterday, written straight to the ObjectStore (not through CreateTask, which 0ai would retitle), then TessMemoryStore.turnover(now:) at 5:00 am"
+      },
+      "notes": "Passes today by dropping the whole day line. After 0ai the money part is skipped like a secret one (decisions 2:06 pm) and the rest may stay; the row checks only that no recent line holds 2100.",
+      "mustNotShow": [
+        "2100"
+      ]
+    },
+    {
+      "id": "BM18",
+      "phrase": "82.4",
+      "surface": "memoryTurnover",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": false,
+      "masterEvidence": "TessMemory+Turnover.swift:104: the line's own digits are licensed, so \"Wed: done 82.4.\" is kept",
+      "pending": "Core 0ai: turnover calls PrivateFacts on each Day log line (rider, decisions 4:46 pm (2))",
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "a task titled with the phrase, done yesterday, written straight to the ObjectStore (not through CreateTask, which 0ai would retitle), then TessMemoryStore.turnover(now:) at 5:00 am"
+      },
+      "notes": "Inside the band: the part is skipped and no recent line holds 82.4.",
+      "mustNotShow": [
+        "82.4"
+      ]
+    },
+    {
+      "id": "BM19",
+      "phrase": "is 82.4 good?",
+      "surface": "memoryTurnover",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": false,
+      "masterEvidence": "TessMemory+Turnover.swift:67-104: \"done is 82.4 good\" passes the secret check and the screen (Research BK23)",
+      "pending": "Core 0ai: turnover calls PrivateFacts on each Day log line (rider, decisions 4:46 pm (2))",
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "a task titled with the phrase, done yesterday, written straight to the ObjectStore (not through CreateTask, which 0ai would retitle), then TessMemoryStore.turnover(now:) at 5:00 am"
+      },
+      "notes": "The task BK1 makes on master today becomes a memory line tomorrow; after 0ai it is skipped.",
+      "mustNotShow": [
+        "82.4"
+      ]
+    },
+    {
+      "id": "BM20",
+      "phrase": "call the gym about chalk",
+      "surface": "memoryTurnover",
+      "expectPrivate": false,
+      "expectNoClaude": false,
+      "expectNotInMissLog": false,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "TessMemory+Turnover.swift:78-84 lowercases \"Done: \" lines into the day line",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "a task titled with the phrase, done yesterday, written straight to the ObjectStore (not through CreateTask, which 0ai would retitle), then TessMemoryStore.turnover(now:) at 5:00 am"
+      },
+      "notes": "Control: the recent line reads \"<weekday>: done call the gym about chalk.\"."
+    },
+    {
+      "id": "BM21",
+      "phrase": "wifi password is hunter2",
+      "surface": "planMyDay",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "PlanWording.swift:37-39 isPrivate: SecretWords.mentions; :45 sends \"task\"",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "a DayPlan with one task block titled with the phrase, and the same title in otherNames; PlanPack(plan:..., lastWeightKg: 82)"
+      },
+      "notes": "The block goes as \"task\", and otherNames (:164) leaves it out.",
+      "mustNotShow": [
+        "hunter2",
+        "wifi"
+      ]
+    },
+    {
+      "id": "BM22",
+      "phrase": "pay rent 2100 fri",
+      "surface": "planMyDay",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "PlanWording.swift:38 PrivateFacts.isWalled: \"rent\" with 2100 is money (PrivateFacts.swift:46)",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "a DayPlan with one task block titled with the phrase, and the same title in otherNames; PlanPack(plan:..., lastWeightKg: 82)"
+      },
+      "notes": "A task already titled with the amount (made before 0ai) goes as \"task\". A task made after 0ai is \"Pay rent\" and goes by name.",
+      "mustNotShow": [
+        "2100"
+      ]
+    },
+    {
+      "id": "BM23",
+      "phrase": "82.4",
+      "surface": "planMyDay",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "PlanWording.swift:38: a lone decimal is already body-shaped (PrivateFacts.swift:104-108)",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "a DayPlan with one task block titled with the phrase, and the same title in otherNames; PlanPack(plan:..., lastWeightKg: 82)"
+      },
+      "notes": "Control for the band: walled today, must stay walled once the weight is passed in.",
+      "mustNotShow": [
+        "82.4"
+      ]
+    },
+    {
+      "id": "BM24",
+      "phrase": "Is 82.4 good?",
+      "surface": "planMyDay",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": false,
+      "masterEvidence": "PlanWording.swift:38: \"good\" is not a day word, so the title goes to Claude as written",
+      "pending": "Core 0ai: PlanPack takes lastWeightKg (PlanWording.swift:37-39 threading, rider, decisions 4:46 pm (2))",
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "a DayPlan with one task block titled with the phrase, and the same title in otherNames; PlanPack(plan:..., lastWeightKg: 82)"
+      },
+      "notes": "BK1 makes this task on master today. Inside the band it must go as \"task\". Wording is off today (HomePlan.swift:115, planWordingReady), so no call carries it yet.",
+      "mustNotShow": [
+        "82.4"
+      ]
+    },
+    {
+      "id": "BM25",
+      "phrase": "Call the gym about chalk",
+      "surface": "planMyDay",
+      "expectPrivate": false,
+      "expectNoClaude": false,
+      "expectNotInMissLog": false,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "PlanWording.swift:45 sends a plain title as written",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "a DayPlan with one task block titled with the phrase, and the same title in otherNames; PlanPack(plan:..., lastWeightKg: 82)"
+      },
+      "notes": "Control: the title goes by name."
+    },
+    {
+      "id": "BM26",
+      "phrase": "is 80 good?",
+      "surface": "liveWorkoutAsk",
+      "expectPrivate": false,
+      "expectNoClaude": false,
+      "expectNotInMissLog": false,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "PrivateFacts.swift:104-108: a whole number with no unit is never walled",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0,
+        "focus": {
+          "exercise": "Bench Press",
+          "lastSet": "80 × 8"
+        }
+      },
+      "notes": "Trap (decisions 4:46 pm (3)): 80 is inside the band, but with a set in focus the number is the bar. Stays plain; the spy may count a Claude call."
+    },
+    {
+      "id": "BM27",
+      "phrase": "80 for 8 felt heavy",
+      "surface": "liveWorkoutAsk",
+      "expectPrivate": false,
+      "expectNoClaude": false,
+      "expectNotInMissLog": false,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "PrivateFacts.swift:83 and :136-137: set notation returns early",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0,
+        "focus": {
+          "exercise": "Bench Press",
+          "lastSet": "80 × 8"
+        }
+      },
+      "notes": "Trap: set notation with bench in focus. Stays plain, and the grammar may read it as a set."
+    },
+    {
+      "id": "BM28",
+      "phrase": "80 min walk",
+      "surface": "askBar",
+      "expectPrivate": false,
+      "expectNoClaude": false,
+      "expectNotInMissLog": false,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "PrivateFacts.swift:104-108: no decimal and no body unit",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0
+      },
+      "notes": "Trap (4:46 pm (3)): 80 is inside the band but carries another unit. Stays plain. Core's unit list needs min, mins, minutes, h, hr, km, mi, g, %, cal, reps and sets."
+    },
+    {
+      "id": "BM29",
+      "phrase": "75 g oats",
+      "surface": "askBar",
+      "expectPrivate": false,
+      "expectNoClaude": false,
+      "expectNotInMissLog": false,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "PrivateFacts.swift:104-108: no decimal and no body unit; g is a kitchen unit (:77)",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0
+      },
+      "notes": "Trap: 75 is inside the band (73.8 to 90.2), but grams are food. Stays plain."
+    },
+    {
+      "id": "BM30",
+      "phrase": "85% done",
+      "surface": "askBar",
+      "expectPrivate": false,
+      "expectNoClaude": false,
+      "expectNotInMissLog": false,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "PrivateFacts.swift:104-108: no decimal and no body unit",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0
+      },
+      "notes": "Trap: 85 is inside the band, but a percent. Note PrivateFacts.words (:114-118) drops \"%\", so the unit check must read the raw phrase or 85 looks bare. Stays plain."
+    },
+    {
+      "id": "BM31",
+      "phrase": "is 82.4 good?",
+      "surface": "liveWorkoutAsk",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": false,
+      "masterEvidence": "WorkoutModeView.swift:280 to AppModel.ask (AppModel.swift:236-241); TessModel.swift:77 does not wall it, so the router can send it to Claude",
+      "pending": "Core 0ai: bare-number body wall (decisions 2:56 pm and 4:46 pm)",
+      "seed": {
+        "lastWeightKg": 82.0,
+        "focus": null
+      },
+      "notes": "A live workout with no set in focus (a workout started with no exercise, so session.currentEntry is nil, WorkoutSession.swift:120-123): no bar context, so the band applies and the phrase is walled. Same phrase as BN11, with the focus pinned.",
+      "mustNotShow": [
+        "82.4"
+      ]
     }
   ]
 }

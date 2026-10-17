@@ -216,7 +216,7 @@ time counts as a number because `isBodyShaped` never strips times).
 | BW125 | `weigh the flour 500 g` | no | MB34 pass row | false: weigh word with no number | ok | plain |
 | BW126 | `bench 80 x 8` | no | MB31 pass row | false: set notation (`isTraining`) | ok | plain |
 
-**Bare medicine names (decisions 2:52 pm, Core 0ac slice 2).** A medicine name alone, or with only a buy or list verb, is walled. Today `medicines` needs a number beside the word, so every row below leaks.
+**Bare medicine names (decisions 2:40 pm, Core 0ac slice 2).** A medicine name alone, or with only a buy or list verb, is walled. Today `medicines` needs a number beside the word, so every row below leaks.
 
 | ID | Phrase | Wall? | Why | Master today | Result | Proposed |
 |---|---|---|---|---|---|---|

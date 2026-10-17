@@ -1,7 +1,9 @@
 # WallsUITests: the walls, typed by a test instead of a person
 
 For: Builder B (writes the test and the App-side seam). Owner: Research lab. Product item AU. Oct 16, 2026, read on
-origin/master fbede70. Fixture: [`fixtures/walls-ui-phrases.json`](fixtures/walls-ui-phrases.json) (36 rows).
+origin/master fbede70. Fixture: [`fixtures/walls-ui-phrases.json`](fixtures/walls-ui-phrases.json) (98 rows: 36 typed, 20
+objectPage rows for the Core 0ai private-field mask in section 11, 11 bare-number body rows in section 12, and 31
+rows for the five bypass paths in the 0ai rider plus the bar trap in section 13).
 
 **Why.** The v9 gate's V5 and the Design walk's beats 7 and 8 need secret-shaped, money and body phrases typed on the
 Simulator. Builder A's safety check blocks a session from typing secret-shaped phrases, so those beats were covered by
@@ -19,7 +21,11 @@ takes its value from `ClaudeSection.fakeKey` in test code.
 | notesPage | 7 | 3 | N02 (no Notes receipt), N04, N05, N06 (Notes checks secret words only) |
 | siriAddTask | 5 | 3 | S03, S04 (P14 not on master) |
 | paste | 5 | 4 | P04 (money in the miss log) |
-| **Total** | **36** | **23** | **13** |
+| objectPage (section 11, read on 64ffb93) | 20 | 5 | PM01 to PM03, PM05 to PM07, PM11, PM12, PM14 to PM20 (no private-field mask; PM18 and PM19 have no newest row yet) |
+| askBar and live workout ask, bare-number body wall (section 12) | 11 | 7 | BN01, BN02, BN04, BN11 (no last-weight check, decisions 2:56) |
+| Five bypass paths, package tests (section 13, read on 6f9b639) | 25 | 12 | BM01 to BM04, BM06 to BM09 (no engine wall on model or Claude writes), BM13, BM14 (RememberFact keeps a bare weight), BM18, BM19 (turnover keeps it), BM24 (Plan my day sends it) |
+| Bar trap, live workout ask and askBar (section 13) | 6 | 5 | BM31 (no last-weight check) |
+| **Total** | **98** | **52** | **46** |
 
 Two findings matter for the gate itself:
 
@@ -262,6 +268,9 @@ assertion message starts with the row id.
 | `testPasteWalls` | P01 to P05 |
 | `testDayLogShowsNoValue` | the Day log, after the three above (runs last by name order; or set the order in the scheme) |
 | `WallsSiriTests.addATaskWalls` (package) | S01 to S05, one `@Test(arguments:)` row each, so Swift Testing names each row |
+| `testObjectPageMask` | PM01 to PM20 (section 11), its own launch with `-wallsSeedPrivate` |
+| `testLiveWorkoutWalls` | BN11, BM26, BM27, BM31 (section 13), launches with `-wallsLiveWorkout` |
+| `WallsBypassTests` (package) | BM01 to BM25 (section 13), one `@Test(arguments:)` per surface |
 
 **Run:** `xcodebuild -scheme TesseraUITests -destination 'platform=iOS Simulator,name=iPhone 17' -only-testing:TesseraUITests/WallsUITests test | xcbeautify`.
 The Tessera scheme doesn't run UI tests (`project.yml:127-143`) and `scripts/test.sh` doesn't either, so Builder A
@@ -290,3 +299,168 @@ The Wall rows W1 to W14 and Inbox I1 to I4 could move into the same fixture late
 ## 10. One line for Kaushik after the install (optional)
 
 In Notes, type "wifi password is tacocat4417" and check it shows as Private note.
+
+## 11. The private-field mask rows (Core 0ai, rider R18)
+
+Product, 2:45 pm: any object flagged private shows only its class's private label ("Private note", "Private task",
+"Private memory") on the generic object page, in `PropertyList` and in the class page's "newest" row. Rows PM01 to
+PM20 are the fixture's PM1 to PM20 ([`fixtures/private-field-mask.md`](fixtures/private-field-mask.md)), with
+`surface` `objectPage`. Read on origin/master 64ffb93.
+
+**New fields.** These rows add `seed` (which fixture object), `route` (how the test gets to the page) and
+`mustNotShow` (strings no label or hint may contain). `WallRow` gains `let seed: String?`, `let route: String?` and
+`let mustNotShow: [String]?`; the typed rows don't have them, so all three are optional. `expectLine` is the label
+the page or row must show ("Private memory"); null means no label check (the controls, which instead assert that no
+private label appears).
+
+**Seeding (App only, no Core change).** Builder B adds `-wallsSeedPrivate`, read through `LaunchFlags` (simulator
+only) inside `#if DEBUG`, beside `-wallsSpy`. After `-resetDemo` it writes the fixture's objects O1 to O8 through
+`ObjectStore` with fixed ids, plus the pre-#422 note (PM16) and a forgotten hash entry (PM17). O1 is written straight
+to the store, since `RememberFact` refuses a secret word (`TessMemory.swift:142-143`). `-openObject <row id>` pushes
+that row's object page for the two rows with no tap route (PM15, PM17), through `model.open(_:_:)` like `-openLink`.
+
+**Routes the test taps.** Notes: Review, today's weekday button, the note's line (`ReviewWeek.swift:358-362`). Tasks:
+the Home queue row (`HomeQueue.swift:263`). Memories: Review, Push A (`ReviewPage.swift:269`), then its Linked from
+row (`ObjectPage.swift:254-262`). Class pages: the breadcrumb (`ObjectPage.swift:312-326`).
+
+**What it asserts, per row.**
+
+| Check | How | Rows |
+|---|---|---|
+| The label | `app.staticTexts[expectLine]` exists (the hero, or the row) | `expectLine` set |
+| Nothing leaks | No static text, button label or `accessibilityHint` contains any `mustNotShow` string (`CONTAINS[c]`) | every row with `mustNotShow` |
+| No fields | No static text "Properties" on a masked page | every `expectPrivate` row with a generic route |
+| Not masked | No "Private note", "Private task" or "Private memory" text for this object; its field row shows | PM08 to PM10, PM13 |
+| Hash | No static text matches `[0-9a-f]{16,}` | PM17 |
+
+PM18 and PM19 wait on Core 0ak's newest row and PM07 on Core 0ac slice 2 (or the 2:22 pm "Private task" title):
+their `pending` says so, and they run under `XCTExpectFailure` like any other pending row (section 8). About 1 minute
+in all: one launch, twenty pages at about 3 s each.
+
+**In the riders gate:** row PF1 in `next-build-v9r.md` section 3 runs `testObjectPageMask` with the run line in
+section 8 (`-only-testing:TesseraUITests/WallsUITests/testObjectPageMask`).
+
+## 12. The bare-number body wall (Core 0ai, rider R19)
+
+Product, 2:56 pm: "is 82.4 good?" is walled. A bare number within 10% of his last logged weight is a body fact even
+with no day word. With no weight logged, a bare decimal is walled only next to a body word (weight, weigh, kg, lb,
+body fat, BMI). Rows BN01 to BN11, surface `askBar` (BN11: `liveWorkoutAsk`), read on origin/master aed5c24.
+
+**New field.** `seed` here is an object, `{"lastWeightKg": 82.0}` or `{"lastWeightKg": null}` for no weight logged.
+Builder B's `-wallsSeedPrivate` seam writes one body weight entry with that value (or none) before the row runs.
+`WallRow.seed` becomes an enum that decodes either a string (section 11) or this object.
+
+**What it asserts.** `expectNoClaude` true: the `-wallsSpy` call log stays empty and the miss log gains nothing.
+`expectNoClaude` false: the phrase is not walled, so the spy may log a call when "Tess asks Claude" is on. On the
+Ask bar a "?" phrase never reaches Claude today (`BottomChrome.swift:509-510`, Research BK), so BN01, BN02 and BN04
+also check the line "That stays on this phone." (#564) and that no Home row holds the number (today "is 82.4 good?"
+becomes the task "Is 82.4 good?", `CaptureParts.swift:200-201`). BN11 runs the same phrase in the live workout ask
+(`WorkoutModeView.swift:280`) with no set in focus, the one path where a question reaches Claude today. Decisions
+4:46 pm adds the bar trap, the body-word list and the five bypass paths: section 13.
+
+| Row | Phrase | Last weight | Walled | Master today |
+|---|---|---|---|---|
+| BN01 | is 82.4 good? | 82 kg | yes | plain ("good" is not a day word, `PrivateFacts.swift:104-108`) |
+| BN02 | how's 76 looking? | 82 kg | yes | plain (a whole number is never walled) |
+| BN03 | 82.4? | 82 kg | yes | walled (control) |
+| BN04 | my weight is 82.4, good? | none | yes, body word | plain |
+| BN05 | is 82.4 good? | none | no | plain |
+| BN06 | is 3.5 good? | 82 kg | no (trap) | plain |
+| BN07 | is 120 good? | 82 kg | no (trap) | plain |
+| BN08 | rate this 8.5 | 82 kg | no (trap) | plain |
+| BN09 | is 91 good? | 82 kg | no (just over 90.2) | plain |
+| BN10 | bench 82.5 x 5 good? | 82 kg | no (set notation) | plain (`isTraining`, `PrivateFacts.swift:83`) |
+| BN11 | is 82.4 good? (live workout ask) | 82 kg | yes | reaches the model (`WorkoutModeView.swift:280`) |
+
+The band is inclusive: 73.8 to 90.2 kg for a last weight of 82. Gate row **BW1** in `next-build-v9r.md`.
+
+Builder B's seam: master stores no weight as a number (a weigh-in is a private note, `TessCaptureEngine.swift:304-310`), so until M3 `-wallsSeedPrivate` seeds the last weight as a weigh-in private note ("82 this morning"). Full path list: `body-number-sweep.md` (Research BK).
+
+## 13. The five bypass paths and the bar trap (Core 0ai rider, decisions 4:46 pm)
+
+Product, 4:46 pm: of the 12 paths in `body-number-sweep.md` (Research BK) that never reach PrivateFacts, five are IN
+the 0ai rider because they feed Tess or Claude: the on-device model's writes, tool writes, RememberFact, memory
+turnover, and Plan my day (`PlanWording.swift:37-39`). Each must call PrivateFacts with the new `lastWeightKg`
+parameter, which has no default. With a set in focus mid-workout a number is the bar; a number with another unit stays
+plain; Core adds a body-word list (weight, weigh, weighed, kg, lb, lbs, body fat, BMI) and "weight" leaves `dayWords`.
+Rows BM01 to BM31, read on origin/master 6f9b639.
+
+**Rows.** Each path gets five rows with a last weight of 82 kg (band 73.8 to 90.2): a secret ("wifi password is
+hunter2"), money ("pay rent 2100 fri"), a bare weight ("82.4"), the 2:56 pm question ("is 82.4 good?") and a plain
+control. Then six bar-trap rows.
+
+| Rows | Surface | Path (BK row) | Pass on master | Fails |
+|---|---|---|---|---|
+| BM01 to BM05 | modelWrite | On-device model writes (BK15) | 1 | BM01 to BM04: `TessTools.swift:118` performs CreateTask with any title |
+| BM06 to BM10 | toolWrite | Claude tool writes (BK24) | 1 | BM06 to BM09: same write, reached from `ClaudeTessModel.swift:88` |
+| BM11 to BM15 | rememberFact | RememberFact (BK22) | 3 | BM13, BM14: no health word, own digits licensed, so the line is kept and can leave the phone |
+| BM16 to BM20 | memoryTurnover | Memory turnover (BK23) | 3 | BM18, BM19: "done is 82.4 good" passes `TessMemory+Turnover.swift:67` and `:104` |
+| BM21 to BM25 | planMyDay | Plan my day (BK13) | 4 | BM24: "good" isn't a day word, so the title goes as written |
+| BM26, BM27 | liveWorkoutAsk, bench in focus | Bar context | 2 | none (traps for after 0ai) |
+| BM28 to BM30 | askBar | Other units | 3 | none (traps for after 0ai) |
+| BM31 | liveWorkoutAsk, no set in focus | Bare-number wall | 0 | BM31 |
+
+The secret and money rows pass today on RememberFact, turnover and Plan my day (each has its own secret and money
+check), and fail on the two write paths, which have no check at all. They stay in so a 0ai change that swaps in
+PrivateFacts can't lose a wall that already holds. Expected outcomes after 0ai:
+
+- **modelWrite, toolWrite:** a secret or a body number becomes a private note ("Private note, kept." on the OpRecord's
+  receipt; decisions 2:06 pm). "pay rent 2100 fri" stays the task "Pay rent" with the amount dropped (2:22 pm (1)).
+  The control lands as titled.
+- **rememberFact:** secret and money are refused with their lines ("I don't keep passwords.", "I don't keep sums of
+  money."). A bare weight inside the band is a measured value, and RememberFact never keeps one, private or not
+  (`TessMemory.swift:209`), so BM13 and BM14 expect a refusal and no memory line. That's Research's reading of the
+  existing rule; there's no refusal line for health today (`Refusal.health`, `:128`), so `expectLine` is null.
+- **memoryTurnover:** the walled part of the day line is skipped (2:06 pm), and no recent line holds the value. Today
+  a money word drops the whole day line, which passes BM17; the row checks only the value.
+- **planMyDay:** a walled title goes as "task" and `otherNames` (`PlanWording.swift:164`) leaves it out.
+
+**The bar trap.** BM26 "is 80 good?" and BM27 "80 for 8 felt heavy" run in the live workout ask with Bench Press in
+focus at 80 kg: plain, though 80 is inside the band (4:46 pm (3)). BM28 "80 min walk", BM29 "75 g oats" and BM30 "85%
+done" run on the Ask bar with no focus, so only the unit rule keeps them plain. `PrivateFacts.words`
+(`PrivateFacts.swift:114-118`) drops "%", so the unit check has to read the raw phrase or "85" looks bare. BM31 "is
+82.4 good?" runs in a live workout with no set in focus: no bar context, so it is walled. All five plain rows pass
+today because master never walls a whole number with no unit; they are there to catch an over-wall once the band lands.
+How Core skips the band when `context.entry` is set (`AppModel.swift:238-239` fills it for the live ask and for the Ask
+bar while a workout runs) is Core's call; the rows pin only the outcome.
+
+**New fields.** `seed` stays an object with `lastWeightKg`, and gains `write` (package rows: what the test writes,
+in words) and `focus` (live rows: `{"exercise": "Bench Press", "lastSet": "80 × 8"}`, or null for a workout with no
+set in focus). `WallRow`'s seed object becomes a struct with all three optional. For package rows, `mustNotShow` lists
+strings no stored title, memory line, receipt or Claude pack may hold, and `expectNoClaude` means the value never
+reaches a Claude request or pack.
+
+### Seams and tests, per path
+
+None of the five paths can be typed in the app (no screen reaches them with a phrase), so they run as package tests in
+`TesseraCore/Tests/TesseraCoreTests/WallsBypassTests.swift`, one `@Test(arguments:)` per surface reading the same JSON
+by `#filePath` as `WallsSiriTests` does (section 6). Every package test seeds the last weight as a weigh-in private
+note ("82 kg this morning", `CreateNote(body:, isPrivate: true)`) until M3's body weight entry exists, so
+`BodyWeight.lastKg(in:)` (4:46 pm (1)) reads 82 from the store.
+
+| Surface | Test | Seam needed | What changes in 0ai |
+|---|---|---|---|
+| modelWrite | Package, through `TessCaptureEngine.capture` | None new. A fake `TessModelCapturing` (the pattern at `TessTests.swift:164-180`) whose `capture` calls `TessTools.run("createTask", arguments: {"title": <phrase>, "startsAt": null, "about": []}, engine:, pending: true)`, the same call `CatalogTool.perform` makes (`TessModelCapture.swift:151-156`). The request is "ring the gym about chalk", which the grammar misses (`TessTests.swift:178`), so the router runs the fake with the model's attribution. The real `TessModelCapture` can't run in a test: whether the on-device model is there depends on the Mac | The engine wall on CreateTask (and CreateList, AddListItem, CreateNote, CreateRecipe) calls `isPrivateTitle(_:lastWeightKg:)` with `BodyWeight.lastKg(in: transaction.store)` |
+| toolWrite | Package, `ClaudeTessModel.run` | None new. `RouteStub` (`ClaudeRouteTests.swift:7-59`) queues a `tool_use` reply calling `createTask` with the row's phrase as title, then an `end_turn` answer, as `aMissGoesToClaudeAndLandsAsAPendingGhost` does (`:112-122`). The request text "ring the gym about chalk" passes the wall at `ClaudeTessModel.swift:54`, so the test proves the write itself is walled, whatever Claude says | Same engine wall; nothing in `ClaudeTessModel` |
+| rememberFact | Package, `engine.perform(named: "rememberFact", ...)` | None. The registry path (`ActionEngine.swift:78-83`, `ActionRegistry.swift:113`) is how a model, Claude or an intent would call it. It isn't in `TessTools.all` (`TessTools.swift:37-40`) and no screen calls it on master, so it has no UI path | `RememberFact.apply` (`TessMemory.swift:195-233`) calls PrivateFacts with the store's last weight beside its own screen |
+| memoryTurnover | Package, `TessMemoryStore(engine:).turnover(now:)` as `TessMemoryTests.swift:167` does | A task written straight to the `ObjectStore`, titled with the phrase and done yesterday, then turnover at 5:00 am. Not through CreateTask: after 0ai the engine would retitle it, and the row stands for a task made before 0ai or by an exempt path | `recentLine` (`TessMemory+Turnover.swift:67`, `:104`) calls PrivateFacts per line with the engine's last weight |
+| planMyDay | Package, `PlanPack(...)` as `PlanWordingTests.swift:107` does | The new `lastWeightKg:` parameter on `PlanPack.init` and a static `isPrivate(_:lastWeightKg:)` (the one threading path, BK13). `HomePlan.swift:117` passes `BodyWeight.lastKg(in: model.store)`. No UI test: wording is off (`HomePlan.swift:115`, `planWordingReady`), so the app makes no call to watch | `PlanWording.swift:37-39`, `:45`, `:164` |
+| liveWorkoutAsk | UI, `testLiveWorkoutWalls` under `-wallsSpy` (section 5), plus the same rows as a package test through `TessCaptureEngine.capture` with `TessContext(entry:)` | App: a `-wallsLiveWorkout bench80` flag (a workout with Bench Press in focus and one set 80 × 8) and `-wallsLiveWorkout empty` (a workout with no exercise, so `session.currentEntry` is nil, `WorkoutSession.swift:120-123`), read through `LaunchFlags` inside `#if DEBUG`. The field is `app.textFields["log bench 80x8, or ask"]` (`WorkoutParts.swift:361`). This is the one surface where the spy's Claude count really moves (4:46 pm (5)); BN11 and BM31 are the Claude check | The set-context rule in `TessCaptureEngine.capture` |
+| askBar (BM28 to BM30) | UI, appended to `testAskBarWalls` | The `-wallsSeedPrivate` weight from section 12 | The unit rule inside `isBodyShaped` |
+
+**Runtime.** The package rows take under a second. The live rows need two launches (bench80 and empty), about 40 s,
+and the three Ask bar rows add about 20 s, so the suite stays under the 6-minute cap. **Gate:** row BW1 in
+`next-build-v9r.md` grows to BN01 to BN11 plus BM01 to BM31; that file belongs to another worker, so Product or its
+owner makes the edit.
+
+**BN01 to BN04 (4:46 pm (5)).** On the Ask bar a walled "?" phrase answers "That stays on this phone." and makes no
+Home task. BN01, BN02 and BN04 already checked that; BN03 now checks the line too (it passes on master, since
+CommandInterpreter answers it and saves nothing, `CaptureParts.swift:190-192`). The line is already on master, so their
+`pending` names Core 0ai only, and BN04 names the body-word list. BN11 now pins no set in focus (`seed.focus` null).
+
+**After the rider, Core 0an.** Three more bypass paths get the same check in a follow-up, not in 0ai: the Groceries
+Add line (`GroceriesView.swift:365`, with the 2:09 pm price strip), Routines' Name it (`RoutinesPage.swift:110`) and
+what a pasted recipe saves (`PasteRecipe.swift:200-202` to `CreateRecipe`). Their rows come with 0an.
+
+**Exempt (4:46 pm (2)):** the Notes page and editor, "note:", backup restore and RenameObject are his own words in his
+own place, kept on the phone and never sent, so they get no rows here.

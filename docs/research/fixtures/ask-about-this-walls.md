@@ -26,7 +26,7 @@ So "Is this enough protein?" on Ground beef ends in "?" and stays on the phone t
 Input: the side's object, the typed question, the "Tess asks Claude" switch. Output: one payload per route, or a refusal line with no payload.
 
 - **On-device payload:** `{"subject": {"id", "class", "name"}, "fields": {...}, "question"}`. Fields are only the ones marked on-device yes in section 3.
-- **Claude payload:** `{"subject": {"handle": "s1", "class", "name"}, "fields": {...}, "question"}`. The real id stays on the phone; Claude sees a handle the phone maps back (the same way groceries-link-eval uses `i1`). `name` goes only for a public-name class (Exercise, Muscle, Equipment, Ingredient, Recipe) and only when it passes both walls; for every other class `name` is the class word in lower case ("task", "note"), as PlanWording does.
+- **Claude payload:** `{"subject": {"handle": "s1", "class", "name"}, "fields": {...}, "question"}`. The real id stays on the phone; Claude sees a handle the phone maps back (the same way groceries-link-eval uses `i1`). `name` goes only for a public-name class, Ingredient or Exercise (Product 2:40 pm), and only when it passes both walls; for every other class, Recipe, Muscle and Equipment included, `name` is the class word in lower case ("recipe", "muscle", "equipment", "task", "note"), as PlanWording does.
 - **Order of checks:** key shape, then a secret word in the question, then money or body in the question, then the switch, then the cap. A refused ask makes no Claude event (Product 12:12 pm).
 - **Hard fail (any pack):** a private field, a note's words, an amount of money, a body fact, a secret word or value, or anything key-shaped in either payload.
 
@@ -39,12 +39,14 @@ Rule sources are SystemCatalog.swift line ranges on master unless named. "Name" 
 | Any | id | yes | no (handle only) | every-side.md, Tess 2 | proposed `idNeverLeavesOnlyAHandle` |
 | Any | class name | yes | yes | every-side.md, Tess 2 | proposed `classAlwaysRides` |
 | Any (Thing) | notes (his rich text) | no | no | SystemCatalog:56-58; every-side.md Tess 2 | proposed `freeTextFieldsNeverRide` |
-| Exercise | name, aliases | yes | yes, if it passes walls | 82-107 | proposed `publicNamesRide` |
+| Exercise | name, aliases | yes | yes, if it passes walls (a public-name class, Product 2:40 pm) | 82-107 | proposed `onlyIngredientAndExerciseNamesRide` |
 | Exercise | primaryMuscles, secondaryMuscles, equipment, pattern, mechanic, family | yes | yes (catalog facts, not his) | 84-102 | proposed `catalogFactsRide` |
 | Exercise | restSeconds, repMin, repMax, progression, logType | yes | no (his setup) | 87-105 | proposed `hisSetupStaysOnThePhone` |
-| Muscle | name, group | yes | yes | 59-69 | proposed `publicNamesRide` |
+| Muscle | name | yes | "muscle" (not a public-name class, Product 2:40 pm) | 59-69 | proposed `recipeMuscleEquipmentSendTheClassWord` |
+| Muscle | group | yes | yes (catalog fact) | 59-69 | proposed `catalogFactsRide` |
 | Muscle | weeklySetsMin, weeklySetsMax | yes | no | 62-68 | proposed `hisSetupStaysOnThePhone` |
-| Equipment | name, kind | yes | yes | 70-80 | proposed `catalogFactsRide` |
+| Equipment | name | yes | "equipment" (not a public-name class, Product 2:40 pm) | 70-80 | proposed `recipeMuscleEquipmentSendTheClassWord` |
+| Equipment | kind | yes | yes (catalog fact) | 70-80 | proposed `catalogFactsRide` |
 | Equipment | barWeight, plates, loads, increment | yes | no | 74-79 | proposed `hisSetupStaysOnThePhone` |
 | Workout | name, scheduledFor, startedAt, endedAt, routine | yes | class only | 127-133; ClaudeTessModel:151 (never history) | proposed `historyStaysOnThePhone` |
 | Exercise Entry | exercise (public name), targets, skipped | yes | exercise name only | 134-143 | proposed `historyStaysOnThePhone` |
@@ -62,13 +64,14 @@ Rule sources are SystemCatalog.swift line ranges on master unless named. "Name" 
 | List | name | yes | "list" | 268 | proposed `ownWordsGoAsClassWord` |
 | List Item | name | yes; a price is already stripped (Product 2:09 pm) | name only if it passes both walls; body and health items are walled (Product 2:09 pm) | 269-279 | proposed `listItemPassesWallsOrGoesAsClassWord` |
 | List Item | quantity, section, shares, about | yes | no | 271-277 | proposed `ownWordsGoAsClassWord` |
-| Ingredient | name | yes | yes, if it passes walls | 280-284 | proposed `publicNamesRide` |
+| Ingredient | name | yes | yes, if it passes walls (a public-name class, Product 2:40 pm) | 280-284 | proposed `onlyIngredientAndExerciseNamesRide` |
 | Ingredient | aisle, isStaple | yes | no (his kitchen) | 282-283 | proposed `hisSetupStaysOnThePhone` |
 | Ingredient | PER 100 G row (food table, later) | yes | yes (public table value, one ingredient, never a sum) | Product 2:36 pm (2) | proposed `oneIngredientNeverASum` |
-| Recipe | name | yes | yes, if it passes walls | 286-293 | proposed `publicNamesRide` |
+| Recipe | name | yes | "recipe" (not a public-name class, Product 2:40 pm) | 286-293 | proposed `recipeMuscleEquipmentSendTheClassWord` |
 | Recipe | sourceText | yes, secret lines already cut | no | 290; Recipes.swift:174; RecipeLinkReader.swift:108 | existing `RecipeLinkTests.privateLinesNeverReachClaude` |
 | Recipe | serves, activeMinutes, totalMinutes | yes | yes | 287-289 | proposed `catalogFactsRide` |
-| Recipe Line | ingredient name, amount, unit, prep | yes | yes, if it passes walls; money spans stripped | 294-308; Product 11:52 am, 2:09 pm | proposed `recipeLinesStripMoney` |
+| Recipe Line | ingredient name | yes | "recipe line" (the line is not a public-name class; the linked Ingredient's own side sends its name, Product 2:40 pm) | 294-308; Product 2:40 pm | proposed `recipeMuscleEquipmentSendTheClassWord` |
+| Recipe Line | amount, unit, prep | yes | yes, money spans stripped | 294-308; Product 11:52 am, 2:09 pm | proposed `recipeLinesStripMoney` |
 | Recipe Line | original (as written) | yes | no (pasted text) | 301 | proposed `freeTextFieldsNeverRide` |
 | Recipe Step | text | yes | no | 309-315 | proposed `freeTextFieldsNeverRide` |
 | Cook | cookedAt, serves, note | yes | no (history and his words) | 316-321 | proposed `historyStaysOnThePhone` |
@@ -111,17 +114,17 @@ Made-up values only. Each pack lists the object, the question, and both expected
 | AW12 | e1, Exercise, "Bench Press" | KEY (from `ClaudeSection.fakeKey` in test code) | nothing; draft cleared | no call; the key line |
 | AW13 | c1, Settings, missesGoToClaude yes | What does this do? | id c1, Settings, fields | no call (Product 2:41 pm (a)) |
 | AW14 | k1, Tess Call, use capture, costNano 1200000 | Why did this cost that? | id k1, fields | no call (money) |
-| AW15 | r1, Recipe, "Paprika chicken", serves 4; sourceText with "about $12 a serving" | What can I make instead? | id r1, Recipe, name, serves, sourceText with secret lines cut | handle s1, Recipe, Paprika chicken, serves 4, question. No sourceText, no "$12" |
+| AW15 | r1, Recipe, "Paprika chicken", serves 4; sourceText with "about $12 a serving" | What can I make instead? | id r1, Recipe, name, serves, sourceText with secret lines cut | handle s1, "recipe", serves 4, question. No name (Recipe is not a public-name class, Product 2:40 pm), no sourceText, no "$12" |
 | AW16 | g2, Ingredient, "door code 4417" (a bad title) | What is this? | id g2, Ingredient, name as typed (no private-title rule for ingredients yet) | no call: the name fails SecretWords, so it never goes as a name |
 | AW17 | l1, List Item, "Advil" on Packing | Where do I buy this? | id l1, List Item, Advil, quantity | handle s1, "list item", question. "Advil" alone passes `PrivateFacts.isWalled` (medicines need a number, PrivateFacts:94-95), so the packer needs its own list-item health check to meet Product 2:09 pm |
 | AW18 | e1, Exercise, "Bench Press", switch off | What can I swap this for? | yes | no call; the phone's answer |
 | AW19 | w1, Workout, "Push A", Thursday, 6 sets | How did this go? | id w1, fields | handle s1, "workout", question. No sets, no dates |
 | AW20 | m1, Memory, isPrivate yes | Why do you think this? | id m1, rule | no call |
 
-**Dry-run pass:** all 20 packs match exactly; any payload holding "4417", "hunter2", "tacocat" as a value, "6.99", "182.4", "$12", "Advil", a set's weight or reps, a note's body or KEY is a hard fail.
+**Dry-run pass:** all 20 packs match exactly; any payload holding "4417", "hunter2", "tacocat" as a value, "6.99", "182.4", "$12", "Advil", a set's weight or reps, a note's body or KEY is a hard fail. A Claude payload holding a Recipe, Muscle or Equipment name (AW15: "Paprika chicken") fails the pack: only Ingredient and Exercise send a name.
 
 ## 6. Open for Product
 
-1. Every-side says "id and class"; a Claude answer about Ground beef needs the name. This sheet sends the public name for five public-name classes only. Confirm or narrow.
+1. Settled, Product 2:40 pm: only Ingredient and Exercise send their public name (after both walls). Recipe, Muscle and Equipment send the class word, as every other class does. The tables and AW15 above follow it.
 2. Product 2:41 pm (a) "nothing on a side goes to Claude" is read here as Habits, Settings and money sides only. If it means every side, every Claude column above becomes "no" and Tess on the side 2 is on-device only.
 3. Recipe-link money stripping (11:52 am) is not in master's code: RecipeLinkReader cuts secret lines only (RecipeLinkReader.swift:108, 369). Packs AW15 and the facts eval assume the strip lands first.

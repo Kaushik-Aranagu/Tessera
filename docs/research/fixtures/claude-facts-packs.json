@@ -1,5 +1,5 @@
 {
- "about": "Facts Claude may fill (every-side.md, Tess on the side 3), Research Oct 16 2026 against origin/master a438262. Plan: docs/research/fixtures/claude-facts-eval.md. Model claude-sonnet-5-5, effort low, at most 3 runs, $1 stop checked before each call against that call's worst case. 30 packs: 14 food (per 100 g, tolerance in the plan), 10 exercise (primary muscles as a set, MuscleSeed names), 6 unknowable (decline). walls are never sent: the self-test feeds each through the packer stand-in and expects the refusal or strip shown. echo is matched case-insensitive in every reply; one hit is a hard fail. Made-up values only; no key or key prefix anywhere.",
+ "about": "Facts Claude may fill (every-side.md, Tess on the side 3), Research Oct 16 2026 against origin/master a438262. Plan: docs/research/fixtures/claude-facts-eval.md. Model claude-sonnet-5-5, effort low, at most 3 runs, $1 stop checked before each call against that call's worst case. 30 packs: 14 food gap packs (per 100 g, tolerance in the plan; each is a food the phone's USDA FoodData Central table has no row for, tagged \"table\": \"gap\", truth from IFCT 2017), 10 exercise (primary muscles as a set, MuscleSeed names), 6 unknowable (decline). walls are never sent: the self-test feeds each through the packer stand-in and expects the refusal or strip shown. echo is matched case-insensitive in every reply; one hit is a hard fail. Wall values are made up; no key or key prefix anywhere.",
  "tolerance": {
   "kcal": {
    "relative": 0.15
@@ -33,212 +33,240 @@
   {
    "id": "F01",
    "kind": "food",
-   "name": "Chicken breast, skinless, raw",
+   "name": "Ragi (finger millet), whole grain",
    "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
    "truth": {
     "per100g": {
-     "kcal": 120,
-     "proteinG": 22.5,
-     "fatG": 2.6,
-     "carbsG": 0
+     "kcal": 321,
+     "proteinG": 7.2,
+     "fatG": 1.9,
+     "carbsG": 78.0
     }
    },
-   "source": "USDA FoodData Central (SR Legacy), typical value"
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code A010 \"Ragi\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
   },
   {
    "id": "F02",
    "kind": "food",
-   "name": "Ground beef, 80% lean, raw",
+   "name": "Little millet (samai), whole grain",
    "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
    "truth": {
     "per100g": {
-     "kcal": 254,
-     "proteinG": 17.2,
-     "fatG": 20.0,
-     "carbsG": 0
+     "kcal": 346,
+     "proteinG": 10.1,
+     "fatG": 3.9,
+     "carbsG": 73.3
     }
    },
-   "source": "USDA FoodData Central (SR Legacy), typical value"
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code A016 \"Samai\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
   },
   {
    "id": "F03",
    "kind": "food",
-   "name": "Egg, whole, raw",
+   "name": "Poha (flattened rice), dry",
    "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
    "truth": {
     "per100g": {
-     "kcal": 143,
-     "proteinG": 12.6,
-     "fatG": 9.5,
-     "carbsG": 0.7
+     "kcal": 354,
+     "proteinG": 7.4,
+     "fatG": 1.1,
+     "carbsG": 80.2
     }
    },
-   "source": "USDA FoodData Central (SR Legacy), typical value"
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code A011 \"Rice, flakes\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
   },
   {
    "id": "F04",
    "kind": "food",
-   "name": "Atlantic salmon, farmed, raw",
+   "name": "Horse gram (kulthi), whole, dry",
    "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
    "truth": {
     "per100g": {
-     "kcal": 208,
-     "proteinG": 20.4,
-     "fatG": 13.4,
-     "carbsG": 0
+     "kcal": 330,
+     "proteinG": 21.7,
+     "fatG": 0.6,
+     "carbsG": 65.1
     }
    },
-   "source": "USDA FoodData Central (SR Legacy), typical value"
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code B012 \"Horse gram, whole\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
   },
   {
    "id": "F05",
    "kind": "food",
-   "name": "White rice, long grain, cooked",
+   "name": "Cluster beans (guar), raw",
    "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
    "truth": {
     "per100g": {
-     "kcal": 130,
-     "proteinG": 2.7,
-     "fatG": 0.3,
-     "carbsG": 28.2
+     "kcal": 40,
+     "proteinG": 3.5,
+     "fatG": 0.4,
+     "carbsG": 9.7
     }
    },
-   "source": "USDA FoodData Central (SR Legacy), typical value"
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code D039 \"Cluster beans\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
   },
   {
    "id": "F06",
    "kind": "food",
-   "name": "Rolled oats, dry",
+   "name": "Ivy gourd (tindora), raw",
    "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
    "truth": {
     "per100g": {
-     "kcal": 379,
-     "proteinG": 13.2,
-     "fatG": 6.5,
-     "carbsG": 67.7
+     "kcal": 17,
+     "proteinG": 1.4,
+     "fatG": 0.2,
+     "carbsG": 5.0
     }
    },
-   "source": "USDA FoodData Central (SR Legacy), typical value"
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code D054 \"Kovai, big\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
   },
   {
    "id": "F07",
    "kind": "food",
-   "name": "Black beans, cooked",
+   "name": "Amla (Indian gooseberry), raw",
    "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
    "truth": {
     "per100g": {
-     "kcal": 132,
-     "proteinG": 8.9,
-     "fatG": 0.5,
-     "carbsG": 23.7
+     "kcal": 24,
+     "proteinG": 0.3,
+     "fatG": 0.2,
+     "carbsG": 12.1
     }
    },
-   "source": "USDA FoodData Central (SR Legacy), typical value"
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code E021 \"Goosberry\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
   },
   {
    "id": "F08",
    "kind": "food",
-   "name": "Broccoli, raw",
+   "name": "Curry leaves, fresh",
    "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
    "truth": {
     "per100g": {
-     "kcal": 34,
-     "proteinG": 2.8,
-     "fatG": 0.4,
-     "carbsG": 6.6
+     "kcal": 64,
+     "proteinG": 7.4,
+     "fatG": 1.1,
+     "carbsG": 21.3
     }
    },
-   "source": "USDA FoodData Central (SR Legacy), typical value"
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code G010 \"Curry leaves\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
   },
   {
    "id": "F09",
    "kind": "food",
-   "name": "Banana, raw",
+   "name": "Garden cress seeds (halim)",
    "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
    "truth": {
     "per100g": {
-     "kcal": 89,
-     "proteinG": 1.1,
-     "fatG": 0.3,
-     "carbsG": 22.8
+     "kcal": 445,
+     "proteinG": 23.4,
+     "fatG": 23.7,
+     "carbsG": 41.9
     }
    },
-   "source": "USDA FoodData Central (SR Legacy), typical value"
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code H008 \"Garden cress, seeds\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
   },
   {
    "id": "F10",
    "kind": "food",
-   "name": "Avocado, raw",
+   "name": "Jaggery, cane",
    "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
    "truth": {
     "per100g": {
-     "kcal": 160,
-     "proteinG": 2.0,
-     "fatG": 14.7,
-     "carbsG": 8.5
+     "kcal": 354,
+     "proteinG": 1.9,
+     "fatG": 0.2,
+     "carbsG": 84.9
     }
    },
-   "source": "USDA FoodData Central (SR Legacy), typical value"
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code I001 \"Jaggery, cane\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
   },
   {
    "id": "F11",
    "kind": "food",
-   "name": "Greek yogurt, plain, nonfat",
+   "name": "Pointed gourd (parwal), raw",
    "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
    "truth": {
     "per100g": {
-     "kcal": 59,
-     "proteinG": 10.2,
-     "fatG": 0.4,
-     "carbsG": 3.6
+     "kcal": 24,
+     "proteinG": 1.4,
+     "fatG": 0.3,
+     "carbsG": 6.2
     }
    },
-   "source": "USDA FoodData Central (SR Legacy), typical value"
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code D060 \"Parwar\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
   },
   {
    "id": "F12",
    "kind": "food",
-   "name": "Cheddar cheese",
+   "name": "Tinda (Indian round gourd), raw",
    "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
    "truth": {
     "per100g": {
-     "kcal": 404,
-     "proteinG": 24.0,
-     "fatG": 33.0,
-     "carbsG": 2.0
+     "kcal": 14,
+     "proteinG": 1.0,
+     "fatG": 0.2,
+     "carbsG": 3.9
     }
    },
-   "source": "USDA FoodData Central (SR Legacy), typical value"
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code D073 \"Tinda, tender\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
   },
   {
    "id": "F13",
    "kind": "food",
-   "name": "Peanut butter, smooth",
+   "name": "Ajwain (carom seeds)",
    "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
    "truth": {
     "per100g": {
-     "kcal": 588,
-     "proteinG": 25.0,
-     "fatG": 50.0,
-     "carbsG": 20.0
+     "kcal": 357,
+     "proteinG": 15.9,
+     "fatG": 21.1,
+     "carbsG": 45.1
     }
    },
-   "source": "USDA FoodData Central (SR Legacy), typical value"
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code G029 \"Omum\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
   },
   {
    "id": "F14",
    "kind": "food",
-   "name": "Olive oil, extra virgin",
+   "name": "Bael fruit, raw",
    "expect": "fill",
+   "table": "gap",
+   "gapNote": "No row on the phone: no SR Legacy or Foundation record for this food (Research's reading of the SR Legacy list; FDC was not reachable from this network to re-check), so the eval treats it as a table miss and Claude is asked once.",
    "truth": {
     "per100g": {
-     "kcal": 884,
-     "proteinG": 0,
-     "fatG": 100.0,
-     "carbsG": 0
+     "kcal": 136,
+     "proteinG": 2.6,
+     "fatG": 0.6,
+     "carbsG": 34.5
     }
    },
-   "source": "USDA FoodData Central (SR Legacy), typical value"
+   "source": "IFCT 2017 (Indian Food Composition Tables, ICMR-National Institute of Nutrition, Hyderabad), code E008 \"Bael fruit\", per 100 g edible portion; kcal is IFCT energy in kJ / 4.184; carbsG is IFCT available carbohydrate plus total dietary fibre, so it matches FDC's carbohydrate by difference (nutrient 1005)"
   },
   {
    "id": "X01",
@@ -443,7 +471,7 @@
   {
    "id": "U02",
    "kind": "food",
-   "name": "Tacocat bars",
+   "name": "Moonfig crisps",
    "expect": "decline",
    "truth": null,
    "why": "a made-up product: nothing public to look up",
