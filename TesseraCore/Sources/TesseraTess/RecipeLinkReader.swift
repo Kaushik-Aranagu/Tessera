@@ -332,6 +332,8 @@ public struct ClaudeRecipeReader {
     public let ledger: TessUsageLedger
     public let session: URLSession
     public var allowed: () -> Bool
+    /// His last weigh-in, for the bare-number wall (nil with none logged). Read at each call.
+    public var lastWeightKg: () -> Double? = { nil }
     public var timeout: TimeInterval = 20
     public var now: () -> Date = { .now }
     public var calendar: Calendar = .current
@@ -361,12 +363,53 @@ public struct ClaudeRecipeReader {
         return String(text[start...].prefix(24000))
     }
 
+    /// The page text that may leave the phone: every line with a secret, money, a body fact or a Claude key cut (a4-2;
+    /// the same two checks capture runs, one line at a time). Recipes are full of small numbers and "PIN the
+    /// dough", so secret words go by the pasted-line cut, not the capture one.
+    static func sendable(_ text: String, lastWeightKg: Double?) -> String {
+        SecretWords.cut(text).text.components(separatedBy: .newlines).filter { line in
+            !looksLikeClaudeKey(line) && !PrivateFacts.isWalled(line, lastWeightKg: lastWeightKg)
+        }.joined(separator: "\n")
+    }
+
+    /// The output check (injection audit item 1; docs/research/fixtures/recipe-link-us-25.md "Output check"): what
+    /// Claude wrote from a page must be a plain recipe inside the limits. A reply that fails is dropped whole, never
+    /// trimmed: no link, address, markup, money, phone number, login line or steering sentence, and every field in
+    /// range.
+    static func outputIsUnsafe(_ reply: String, recipe: ParsedRecipe) -> Bool {
+        let lower = reply.lowercased()
+        if PromptSteering.mentions(reply) {
+            return true
+        }
+        if lower.firstMatch(of: /https?:|www\.|\b[a-z0-9-]+\.(?:com|org|net|io|co|app|test|example)\b/) != nil
+            || lower.firstMatch(of: /[a-z0-9._%+-]+@[a-z0-9-]+\./) != nil
+        {
+            return true
+        }
+        if reply.contains(where: { "[]<>`*".contains($0) }) || reply.firstMatch(of: /&#?\w{2,8};/) != nil
+            || reply.firstMatch(of: /(?m)^\s*#/) != nil
+        {
+            return true
+        }
+        if reply.firstMatch(of: /[$£€₹¥]\s?\d|\d\s?(?:dollars|bucks|usd)\b|\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}/) != nil
+            || SecretWords.cut(reply).cut > 0 || lower.firstMatch(of: /\b(?:login|log in|password|passcode)\b/) != nil
+        {
+            return true
+        }
+        let titleOK = (1 ... 80).contains(recipe.title.count)
+        let lines = recipe.ingredients.map(\.original).allSatisfy { (1 ... 200).contains($0.count) }
+        let steps = recipe.steps.map(\.text).allSatisfy { (1 ... 600).contains($0.count) }
+        let serves = recipe.serves.map { (1 ... 100).contains($0) } ?? true
+        let minutes = recipe.totalMinutes.map { (1 ... 1440).contains($0) } ?? true
+        return !(titleOK && lines && steps && serves && minutes)
+    }
+
     public func read(_ pageText: String, source: URL) async -> RecipeLinkResult {
         func failed(_ line: String) -> RecipeLinkResult {
             RecipeLinkResult(kind: .failed, line: line, text: nil, sourceURL: source)
         }
         // A private line never leaves the phone; a page that is only private lines is never sent (Research 137).
-        let page = Self.trimmed(SecretWords.cut(pageText).text)
+        let page = Self.trimmed(Self.sendable(pageText, lastWeightKg: lastWeightKg()))
         guard allowed(), !page.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, let key = keys.read() else {
             return failed(RecipeLinkLine.noRecipe)
         }
@@ -427,7 +470,7 @@ public struct ClaudeRecipeReader {
             .compactMap { $0["type"] as? String == "text" ? $0["text"] as? String : nil }.joined(separator: "\n")
         guard reply.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() != "no recipe",
               let recipe = RecipeParser.parse(reply), recipe.ingredients.count >= 2, !recipe.steps.isEmpty,
-              recipe.ingredients.count <= 80, recipe.steps.count <= 60
+              recipe.ingredients.count <= 80, recipe.steps.count <= 60, !Self.outputIsUnsafe(reply, recipe: recipe)
         else {
             outcome = "nothing"
             return failed(RecipeLinkLine.noRecipe)

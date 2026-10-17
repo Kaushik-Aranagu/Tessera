@@ -81,13 +81,16 @@ public enum TessLineCheck {
         let words = tokens(text)
         let padded = pad(words)
         let titleText = title ?? names.first ?? ""
-        let titleWords = Set(tokens(titleText))
+        // The names a line may use are his free text, so they are untrusted: a walled name, or one that talks to a
+        // model, never licenses a capitalised word in Claude's line (injection audit gap 3).
+        let usable = names.filter { !unusable($0, lastWeightKg: lastWeightKg) }
+        let titleWords = unusable(titleText, lastWeightKg: lastWeightKg) ? [] : Set(tokens(titleText))
         var codes = shapeCodes(text, raw: line, slot: slot)
         codes += digitCodes(text, numbers: numbers, rulesLine: rulesLine, clockMayDrop: slot == .context && isDone)
         if !countsHold(text, counts: counts) {
             codes.append("C6")
         }
-        codes += wordCodes(text, words: words, padded: padded, names: names, titleWords: titleWords, kind: kind,
+        codes += wordCodes(text, words: words, padded: padded, names: usable, titleWords: titleWords, kind: kind,
                            lastWeightKg: lastWeightKg)
         if slot == .context,
            repeats(
@@ -111,6 +114,11 @@ public enum TessLineCheck {
         var seen = Set<String>()
         codes = codes.filter { seen.insert($0).inserted }
         return codes.isEmpty ? .pass : .fail(codes)
+    }
+
+    /// Whether a name must stay out of the C9 allowlist: walled (`HomeDonePack.isWalled`) or steering text.
+    static func unusable(_ name: String, lastWeightKg: Double?) -> Bool {
+        HomeDonePack.isWalled(name, lastWeightKg: lastWeightKg) || PromptSteering.mentions(name)
     }
 
     /// C2 to C5: the slot's caps, its stop, and its marks.
