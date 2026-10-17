@@ -88,6 +88,7 @@ struct BottomChrome: View {
             }
             resting
         }
+        .tesseraFeedback(voice.failureCue)
         .onChange(of: model.isCommandExpanded) { _, expanded in
             if expanded {
                 opened()

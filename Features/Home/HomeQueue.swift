@@ -28,10 +28,29 @@ final class TessVoice {
 
     private(set) var note: Note?
 
+    /// The one line that means a write did not save; saying it plays `Haptic.notSaved`. Information lines that start
+    /// the same way ("Didn't save that. A timer runs up to 24 hours.") do not.
+    static let didntSaveLine = "Didn't save that. Try again."
+    /// Bumped once per failure; `BottomChrome` plays it.
+    private(set) var failureCue = HapticCue()
+    private var lastFailure: Date?
+
+    /// Plays the warning for a failure, once: a second failure inside the line's own 4 s stays quiet.
+    func noteFailure(at date: Date = .now) {
+        if let lastFailure, date.timeIntervalSince(lastFailure) < 4 {
+            return
+        }
+        lastFailure = date
+        failureCue.play(.notSaved)
+    }
+
     /// Shows `text` for 4 s (with UNDO when there's an op to undo). `holds` overrides how long it stays.
     func say(_ text: String, undo: OpRecord? = nil, holds: Duration? = nil, takeBack: (() -> Void)? = nil) {
         let note = Note(text: text, undo: undo, takeBack: takeBack)
         self.note = note
+        if text.hasPrefix(Self.didntSaveLine) {
+            noteFailure()
+        }
         Task { @MainActor in
             try? await Task.sleep(for: Self.hold(undo: undo != nil || takeBack != nil, holds: holds))
             if self.note?.id == note.id {

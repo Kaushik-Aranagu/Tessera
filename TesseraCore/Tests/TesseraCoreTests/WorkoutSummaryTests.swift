@@ -77,4 +77,31 @@ struct WorkoutSummaryTests {
         #expect(ObjectPrivacy.routineTitle("Knee rehab day", in: store) == "Private workout")
         #expect(ObjectPrivacy.routineTitle("Push Day A", in: store) == "Push Day A")
     }
+
+    @Test func theSummaryTitleItselfIsMaskedSoReviewTrainingAndHomeNeverPrintIt() throws {
+        // QA on #856: Review's day lines, the Training page and the plan hero read summary.title.
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let plan = try #require(store.object(id: StarterContent.planID))
+        let routine = try #require(store.linkedObjects("routines", of: plan).first)
+        try engine.perform(RenameObject(object: routine.id, title: "Knee rehab day"), by: .user)
+        let workout = try engine.perform(StartRoutine(routine: routine.id), by: .user).output
+        try engine.perform(FinishWorkout(workout: workout.id), by: .user)
+        let summary = TrainingLedger(store: store, classes: classes).summary(of: workout)
+        #expect(summary.title == "Private workout")
+    }
+
+    @Test func aWorkoutWithNothingPlannedSaysNoZeroOfZero() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let plan = try #require(store.object(id: StarterContent.planID))
+        let routine = try #require(store.linkedObjects("routines", of: plan).first)
+        let workout = try engine.perform(StartRoutine(routine: routine.id), by: .user).output
+        let base = TrainingLedger(store: store, classes: classes).summary(of: workout)
+        let empty = WorkoutSummary(id: base.id, workout: workout, title: "Push Day A", startedAt: nil, endedAt: nil,
+                                   exercisesDone: 0, exercisesPlanned: 0, sets: 0, volume: 0, records: [])
+        #expect(empty.line == "0 sets.")
+    }
 }
