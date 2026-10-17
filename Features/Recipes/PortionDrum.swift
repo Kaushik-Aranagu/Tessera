@@ -19,11 +19,10 @@ struct PortionDrum: View {
     @State private var scrolled: Int?
     @State private var tick = 0
 
-    private enum Metrics {
-        static let width: CGFloat = 72
-        static let pitch: CGFloat = 52
-        static let rows: CGFloat = 3
-    }
+    /// The drum grows with the text size (G69): width and row pitch scale with Dynamic Type; three rows show.
+    @ScaledMetric(relativeTo: .title) private var width: CGFloat = 72
+    @ScaledMetric(relativeTo: .title) private var pitch: CGFloat = 52
+    private let rows: CGFloat = 3
 
     var body: some View {
         VStack(spacing: Theme.Spacing.xs) {
@@ -33,7 +32,7 @@ struct PortionDrum: View {
                 Text("–")
                     .textRole(.titleNumber)
                     .foregroundStyle(Theme.Colors.inkTertiary)
-                    .frame(width: Metrics.width, height: Metrics.pitch * Metrics.rows)
+                    .frame(width: width, height: pitch * rows)
             }
             Text("serves")
                 .font(Theme.voice(size: 18))
@@ -73,7 +72,7 @@ struct PortionDrum: View {
                     Text("\(value)")
                         .textRole(isCurrent ? .titleNumber : .body)
                         .foregroundStyle(isCurrent ? Theme.Colors.ink : Theme.Colors.inkTertiary)
-                        .frame(width: Metrics.width, height: Metrics.pitch)
+                        .frame(width: width, height: pitch)
                         .animation(.easeOut(duration: 0.16), value: isCurrent)
                 }
             }
@@ -82,8 +81,8 @@ struct PortionDrum: View {
         .scrollIndicators(.hidden)
         .scrollTargetBehavior(.viewAligned(limitBehavior: .never))
         .scrollPosition(id: $scrolled, anchor: .center)
-        .contentMargins(.vertical, Metrics.pitch * (Metrics.rows - 1) / 2, for: .scrollContent)
-        .frame(width: Metrics.width, height: Metrics.pitch * Metrics.rows)
+        .contentMargins(.vertical, pitch * (rows - 1) / 2, for: .scrollContent)
+        .frame(width: width, height: pitch * rows)
         .mask {
             LinearGradient(stops: [
                 .init(color: .clear, location: 0), .init(color: .black, location: 0.3),
