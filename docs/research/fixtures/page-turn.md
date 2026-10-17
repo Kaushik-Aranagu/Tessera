@@ -13,8 +13,8 @@ Input: groups in order, each with a word and a row count. Output: pages, each wi
 | PG01 | one group of 6 | 1 page, no rail, no peek | 6 or fewer is one page (rule 1) | `sixRowsIsOnePage` |
 | PG02 | one group of 7 | 2 pages, the second keeps the word | past 6 it continues (rules 1, 2) | `sevenRowsSplitInTwo` |
 | PG03 | one group of 0 | no page | an empty group draws nothing | `emptyGroupDrawsNoPage` |
-| PG04 | PRODUCE 10 | PRODUCE 6, PRODUCE 4 (the sheet's board) | **conflicts with rule 2 "nearest even break"**, which would give 5 and 5 | `produceTenSplitMatchesBoard` (blocked on R1) |
-| PG05 | THIS WEEK 7, EARLIER 13 | THIS WEEK 5, THIS WEEK 2 with EARLIER 3, EARLIER 5, EARLIER 5 (the board, 20 notes) | the board splits 7 as 5+2 and 13 as 3+5+5, neither greedy nor even | `notesTwentyMatchesBoard` (blocked on R1) |
+| PG04 | PRODUCE 10 | PRODUCE 5, PRODUCE 5 | rule 2 "nearest even break" stands (R1 ruled); the board's 6+4 is redrawn by Design | `produceTenSplitsFiveFive` |
+| PG05 | THIS WEEK 7, EARLIER 13 | THIS WEEK 4, THIS WEEK 3, EARLIER 5, EARLIER 4, EARLIER 4 (5 pages, 20 notes) | even split: 7 as 4+3, 13 as 5+4+4; none of the pages can merge (3+5 is over 6 only if two groups share, and 3+5 is 8) | `notesTwentySplitsEvenly` |
 | PG06 | Set history: THU OCT 16 6, MON OCT 13 6 | 2 pages of 6 | exact fits never split (the board) | `twoFullGroupsTwoPages` |
 | PG07 | A 2, B 3 | 1 page, two words, one hairline | small neighbours share, at most two groups (rule 2) | `smallNeighboursShareAPage` |
 | PG08 | A 2, B 2, C 2 | A+B on page 1, C on page 2 | never three groups on a page | `neverThreeGroupsOnAPage` |
@@ -26,7 +26,7 @@ Input: groups in order, each with a word and a row count. Output: pages, each wi
 | PG14 | a run of 6 rows, then one is added | becomes 2 pages without losing the reader's place | the rail appears at 7 | `addingSeventhRowAddsRail` |
 | PG15 | page build run twice on the same input | identical output | pure function | `pageBuildIsDeterministic` |
 
-**R1 (Design):** the written rule ("nearest even break") and the boards disagree (PG04, PG05). Say which one builders implement. Recommendation: the written rule, and redraw the two boards.
+**R1 (ruled, decisions 3:55 PM):** the written rule stands: a group over 6 splits into the fewest pages and the sizes differ by at most one, larger pages first (PRODUCE 10 is 5+5; 7 is 4+3; 13 is 5+4+4). Design redraws the 6+4 boards. The "larger first" tie order is my reading of the examples; confirm with Design for odd splits.
 
 ## 2. Rail, peek and pinned things
 
@@ -56,11 +56,11 @@ Input: groups in order, each with a word and a row count. Output: pages, each wi
 | TN07 | the lead changes page (a shop item is checked) | the page turns by itself to the new lead, once, with the chosen turn | `leadChangeTurnsOnce` |
 | TN08 | the lead changes page twice quickly | at most one turn per change, no stacking; ends on the lead's page | `quickLeadChangesDoNotStack` |
 | TN09 | the lead lands | exactly one `.selection` cue, no other haptic; checking the item keeps its own finish haptic, so the counts per moment are written in `haptic-moments.md` | `leadLandingFiresOneSelection` |
-| TN10 | a user turn (swipe or tap) | one `.selection` cue? **Open (R2)**: the sheet gives the haptic only for the automatic turn | `userTurnHaptic` (blocked on R2) |
+| TN10 | a user turn (swipe or tap), Rotate included | no haptic (R2 ruled); only the automatic lead turn (TN09) plays `.selection` | `userTurnPlaysNoHaptic` |
 | TN11 | a slow drag in Rotate | rows follow the finger; lifting early settles back or forward by the same rule as a swipe | `rotateDragFollowsFinger` |
 | TN12 | VoiceOver on | each page is one container read "Produce, page 1 of 2"; the rotor scroll action turns the page; the peek word is hidden | `pageContainerLabelsReadPageNumbers` |
 
-**R2 (Design):** does a swipe or tap turn play a haptic? The map says one haptic per moment; the sheet only names the automatic turn. Recommendation: none for a user turn (the finger is the feedback).
+**R2 (ruled, decisions 3:55 PM):** no haptic on a user page turn, Rotate included.
 
 ## 4. The four turns and Reduce Motion
 
@@ -71,11 +71,11 @@ Input: groups in order, each with a word and a row count. Output: pages, each wi
 | TM03 | Soften | 340 ms blur-out, 400 ms blur-in, overlapped | `softenTurnTiming` |
 | TM04 | Rotate | rows rotate through N slots; top rows leave first, next rows arrive from the foot (480 ms, 34 ms stagger); title, context, section word and rail never move | `rotateKeepsChromeStill` |
 | TM05 | Reduce Motion, any option | one 150 ms crossfade | `reduceMotionIsOneCrossfade` |
-| TM06 | Low Power Mode | **not ruled**: same as normal unless Design says otherwise | `lowPowerTurn` (blocked on R3) |
+| TM06 | Low Power Mode | behaves as Reduce Motion: one 150 ms crossfade, whatever option is picked (R3 ruled); the Settings choice is kept | `lowPowerIsReduceMotion` |
 | TM07 | Soften and the Tess line | Tess is never blurred even when the rows are; this conflicts with a full-screen blur if built carelessly | `softenNeverBlursTess` |
 | TM08 | a turn interrupted by another turn | the second starts from the current state; no jump | `interruptedTurnContinues` |
 
-**R3 (Design):** Low Power Mode and the four turns. Recommendation: no change.
+**R3 (ruled, decisions 3:55 PM):** Low Power Mode = Reduce Motion.
 
 ## 5. The Settings row "Page turn"
 
@@ -83,14 +83,14 @@ Input: groups in order, each with a word and a row count. Output: pages, each wi
 |---|---|---|---|
 | ST01 | fresh install | Turn is chosen; the row reads "Turn, on" with the other three in secondary ink | `defaultPageTurnIsTurn` |
 | ST02 | pick Soften | the row reads "Soften, on"; the preview line "Groceries, 24 to get." plays the Soften turn once | `pickingPlaysPreviewOnce` |
-| ST03 | pick the same word again | preview plays again? **Open (R4)**; recommendation: yes, once, so he can feel it | `repickPlaysPreview` (blocked on R4) |
+| ST03 | pick the same word again | the preview does not replay (R4 ruled) | `repickDoesNotReplayPreview` |
 | ST04 | the choice | stored as a setting; survives restart; included in backups; not in the op log as user text | `pageTurnSettingPersists` |
 | ST05 | pick Rotate on a screen with no row slots | falls back to Turn on that screen, no error line | `rotateWithoutSlotsFallsBackToTurn` |
 | ST06 | Reduce Motion on, pick any word | the choice is kept; the preview is the 150 ms crossfade | `reduceMotionPreviewIsCrossfade` |
 | ST07 | the row's words | US English, capitalized once, no quotes, no em-dash | `pageTurnRowCopy` |
 | ST08 | migration | no catalog change; additive setting only | `pageTurnIsAdditiveSetting` |
 
-**R4 (Design):** does re-picking the same word replay the preview?
+**R4 (ruled, decisions 3:55 PM):** re-picking the same word does not replay the preview.
 
 ## 6. Whose swipe it is (decisions 12:46 PM)
 
@@ -126,6 +126,6 @@ Rule: a vertical swipe on a thing that owns one does that thing's action; anywhe
 ## 8. Gaps and owners
 
 - **Nothing is built.** Core: `PageBuild` (pure, section 1) and its tests. Builder B: `PagedRun` for Groceries, Notes, Lists. Builder A: Set history. Motion lab: the page-turn motion spec is on its board (item 26); the builders read it when it lands.
-- **Design rulings:** R1 (even split vs the boards), R2 (user-turn haptic), R3 (Low Power), R4 (re-pick preview).
+- **Design rulings:** R1 to R4 are ruled (decisions 3:55 PM) and applied above. Open: the tie order for odd splits.
 - **Not ruled and not in the sheet:** what a page does when a row is removed or added while it is showing (PG14 covers add; remove is open), and the "Rotate" slot count per screen (the sheet says the list defines N).
 - **Checks that need the simulator later:** TM02 timing, TN11 drag feel, WS09 mid-drag ownership, VoiceOver rotor (TN12).
