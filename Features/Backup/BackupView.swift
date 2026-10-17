@@ -181,7 +181,7 @@ struct BackupView: View {
         }),
         document: saving, contentType: .tesseraBackup, defaultFilename: saving?.name) { result in
             if case .success = result {
-                say("Saved.")
+                say("Copy saved.")
             }
         }
     }
