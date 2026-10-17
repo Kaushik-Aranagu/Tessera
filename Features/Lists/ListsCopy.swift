@@ -14,6 +14,18 @@ enum ListsCopy {
         "\(thing), on \(list)."
     }
 
+    /// The Add line's spoken receipt is the engine's own (QA on #760): a secret or money-only line went to a private
+    /// note, a price was stripped, a medicine is "Private item". With a stop, and a private list name masked.
+    static func spoken(receipt: String, listTitle: String, shownList: String) -> String {
+        let named = listTitle == shownList ? receipt : receipt.replacingOccurrences(of: listTitle, with: shownList)
+        return named.hasSuffix(".") ? named : named + "."
+    }
+
+    /// A list page's count line: "3 of 7"; with nothing on it, "nothing on it yet" (QA on #760).
+    static func pageContext(open: Int, all: Int) -> String {
+        all == 0 ? "nothing on it yet" : "\(all - open) of \(all)"
+    }
+
     /// Clearing the fold: "3 done, cleared." (Design on #760).
     static func cleared(_ count: Int) -> String {
         "\(count) done, cleared."

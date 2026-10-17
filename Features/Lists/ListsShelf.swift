@@ -27,7 +27,7 @@ struct ListsShelf {
     init(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef], lastWeightKg: Double?) {
         let contents = ListContents(store: store, classes: classes)
         let lists = contents.lists().filter { !$0.isDeleted }
-        let ordered = lists.sorted { $0.updatedAt > $1.updatedAt }
+        let ordered = lists.sorted { Self.touched($0) > Self.touched($1) }
         rows = ordered.enumerated().map { index, list in
             let isGroceries = list.id == Groceries.listID
             let open = contents.open(in: list).count, all = contents.items(of: list).count
@@ -41,6 +41,12 @@ struct ListsShelf {
         let others = rows.filter { !$0.isGroceries }.count
         context = others == 0 && rows.contains(where: \.isGroceries) ? "Just Groceries" : ListsCopy
             .context(lists: rows.count)
+    }
+
+    /// When a list was last touched: the list itself, or any of its items (adding and checking touch only the item;
+    /// QA on #760).
+    static func touched(_ list: ObjectRecord) -> Date {
+        ([list.updatedAt] + (list.children ?? []).map(\.updatedAt)).max() ?? list.updatedAt
     }
 
     /// The state word under a name: Groceries counts what's left to buy; any other list its done of all.

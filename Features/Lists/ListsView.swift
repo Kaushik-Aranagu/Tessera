@@ -20,6 +20,7 @@ struct ListsView: View {
 private struct ListsShelfPage: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openHomeLink) private var openLink
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         let _ = model.revision
@@ -27,6 +28,8 @@ private struct ListsShelfPage: View {
                                lastWeightKg: BodyWeight.lastKg(in: model.store))
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
+                BackWord(title: "Kitchen") { dismiss() }
+                    .entrance(0)
                 Text("Lists")
                     .textRole(.title)
                     .foregroundStyle(Theme.Colors.ink)
@@ -102,6 +105,7 @@ private struct ListPage: View {
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dismiss) private var dismiss
     @State private var draft = ""
     @State private var striking: Set<UUID> = []
     @State private var foldOpen = false
@@ -118,8 +122,8 @@ private struct ListPage: View {
                                             lastWeightKg: BodyWeight.lastKg(in: model.store))
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(ListsShelf.state(open: open.count, all: open.count + done.count, isGroceries: false)
-                        .lowercased())
+                    BackWord(title: "Lists") { dismiss() }
+                    Text(ListsCopy.pageContext(open: open.count, all: open.count + done.count))
                         .font(Theme.voice(size: 21))
                         .foregroundStyle(Theme.Colors.context)
                         .entrance(0)
@@ -253,11 +257,11 @@ private struct ListPage: View {
             return
         }
         model.touch()
-        let weight = BodyWeight.lastKg(in: model.store)
-        let thing = ShopTrip.isPrivate(text, lastWeightKg: weight) ? ShopTrip.privateLabel : text.prefix(1).uppercased()
-            + text.dropFirst()
-        let listName = ListsShelf.shownName(model.store.displayTitle(of: list), lastWeightKg: weight)
-        TessVoice.shared.say(ListsCopy.added(thing, to: listName), undo: record, holds: .seconds(4))
+        let title = model.store.displayTitle(of: list)
+        let shown = ListsShelf.shownName(title, lastWeightKg: BodyWeight.lastKg(in: model.store))
+        guard let receipt = record.receipt else { return }
+        TessVoice.shared.say(ListsCopy.spoken(receipt: receipt, listTitle: title, shownList: shown), undo: record,
+                             holds: .seconds(4))
     }
 
     /// The fold: "4 done". Tap shows them (a tap on one takes it back out); hold 0.7 s clears them.
@@ -306,5 +310,24 @@ private struct ListPage: View {
         foldOpen = false
         // A change, so UNDO keeps 10 s (Design on #760).
         TessVoice.shared.say(ListsCopy.cleared(count), undo: record)
+    }
+}
+
+/// The back word at the top of a page ("‹ KITCHEN", "‹ LISTS"): with the bar hidden, VoiceOver and Switch Control need
+/// a way back (QA on #760).
+private struct BackWord: View {
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text("‹ \(title)")
+                .textRole(.label)
+                .textCase(.uppercase)
+                .foregroundStyle(Theme.Colors.inkSecondary)
+                .frame(minHeight: 44)
+        }
+        .buttonStyle(HandleButtonStyle())
+        .accessibilityLabel("Back to \(title)")
     }
 }
