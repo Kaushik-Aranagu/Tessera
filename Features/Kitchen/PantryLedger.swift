@@ -135,17 +135,11 @@ struct PantryLedger {
         }
     }
 
-    /// Checked items a shop clear took off Groceries: soft-deleted, done, with the date they were checked.
+    /// What was bought, as Core reads it (G45): the rows a shop clear took off Groceries (never a row deleted
+    /// another way, nor a clear that was undone), plus a basket put away to Later (Product 9:45 AM, ruling 5).
     private func shopClears() -> [(ObjectRecord, Date)] {
-        guard let list = store.object(id: Groceries.listID) else { return [] }
         let groceries = Groceries(store: store, classes: classes)
-        return (list.children ?? []).compactMap { item in
-            guard item.isDeleted, store.value("isDone", of: item) == .bool(true),
-                  let when = store.value("checkedAt", of: item)?.dateValue,
-                  let ingredient = groceries.ingredient(of: item)
-            else { return nil }
-            return (ingredient, when)
-        }
+        return (groceries.shopClears() + groceries.putAwayBasket()).map { ($0.ingredient, $0.at) }
     }
 
     /// What finished cooks used: each non-staple ingredient low, Produce out.

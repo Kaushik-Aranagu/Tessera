@@ -134,4 +134,30 @@ struct PantryLedgerTests {
         #expect(ledger.lastCookUsedUp() == nil)
         #expect(PantryLedger.hero(ledger.entries()) == "1 out, 1 low")
     }
+
+    /// G45: a checked row removed another way (a swipe, "delete milk") is not buying; only a shop clear is.
+    @Test func aRemovedCheckedRowIsNotBought() throws {
+        try model.engine.perform(AddGroceries(lines: ["milk"]), by: .user)
+        let milk = try #require(model.store.object(id: Groceries.listID)?.orderedChildren.first)
+        try model.engine.perform(CheckListItem(item: milk.id, time: saturday), by: .user)
+        try model.engine.perform(DeleteObject(object: milk.id), by: .user)
+        #expect(ledger.entries().allSatisfy { $0.state != .have })
+        #expect(ledger.lastShop() == nil)
+    }
+
+    /// Product 9:45 (ruling 5): a shop put away with a basket counts the basket as bought.
+    @Test func aPutAwayBasketIsBought() throws {
+        try model.engine.perform(AddGroceries(lines: ["milk", "eggs"]), by: .user)
+        try model.engine.perform(StartShop(time: saturday), by: .user)
+        let milk = try #require(Groceries(store: model.store, classes: model.classes).shoppingOrder()
+            .first { $0.text == "milk" })
+        try model.engine.perform(CheckListItem(item: milk.id, time: saturday), by: .user)
+        // Untouched past the idle limit, then past the put-away limit: the shop goes to Later with its basket.
+        let table = ProcessTable(engine: model.engine)
+        let idle = ProcessTable.Limits.idleShop
+        _ = table.suspendIfIdle(now: saturday + idle + 60, idleLimit: idle)
+        _ = table.tidyNotes(now: saturday + ProcessTable.Limits.putAway + 60)
+        let bought = ledger.entries().filter { $0.state == .have }
+        #expect(bought.count == 1 && bought.first?.lastBoughtAt == saturday)
+    }
 }
