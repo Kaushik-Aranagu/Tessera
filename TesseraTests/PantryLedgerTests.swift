@@ -107,4 +107,18 @@ struct PantryLedgerTests {
         let names = ledger.entries().map(\.label)
         #expect(names == ["Bread"], "butter to taste and the optional jam aren't used up")
     }
+
+    @Test func aPrivateRecipeIsOnlyPrivateRecipeInTessLine() throws {
+        let recipe = try model.engine.perform(CreateRecipe(text: """
+        Wifi code lasagna
+        2 limes
+        1 lb ground beef
+
+        Bake it.
+        """), by: .user).output
+        try cook(recipe, at: saturday)
+        let used = try #require(ledger.lastCookUsedUp())
+        #expect(used.recipe == "Private recipe")
+        #expect(PantryCopy.tess(recipe: used.recipe, names: used.names).hasPrefix("Private recipe took the "))
+    }
 }

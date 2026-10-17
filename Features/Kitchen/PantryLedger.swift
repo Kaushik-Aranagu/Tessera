@@ -35,7 +35,8 @@ struct PantryLedger {
         /// The last shop clear that had it checked; nil when it was never bought through Groceries.
         let lastBoughtAt: Date?
         let aisle: Aisle?
-        /// A walled thing (a medicine, a body fact): every surface reads `label`, never the name (QA M1 on #722).
+        /// A walled thing (a secret word, money, a body fact, a medicine): every surface reads `label`, never the name
+        /// (QA M1 on #722).
         let isPrivate: Bool
         /// What any view, Tess line, widget or Spotlight shows: the name, or "Private item".
         let label: String
@@ -93,8 +94,10 @@ struct PantryLedger {
               }),
               let recipe = store.linkedObjects("recipe", of: cook).first, !recipe.isDeleted
         else { return nil }
-        let title = store.displayTitle(of: recipe)
-        guard !EngineWall.isHealth(title, lastWeightKg: BodyWeight.lastKg(in: store)) else { return nil }
+        // A private recipe is only ever "Private recipe" (QA on #727): the full recipe wall, not health alone.
+        let title = ObjectPrivacy.isPrivateRecipeTitle(store.displayTitle(of: recipe),
+                                                       lastWeightKg: BodyWeight.lastKg(in: store))
+            ? ObjectPrivacy.recipeLabel : store.displayTitle(of: recipe)
         let used = Set(RecipeBook(store: store, classes: classes).lines(of: recipe).compactMap(\.ingredient?.id))
         let names = entries().filter { used.contains($0.id) && $0.state != .have && !$0.isPrivate }
             .map { $0.label.lowercased() }
@@ -165,7 +168,8 @@ struct PantryLedger {
 
     private func make(_ ingredient: ObjectRecord, state: State, lastBoughtAt: Date?) -> Entry {
         let title = store.displayTitle(of: ingredient)
-        let walled = EngineWall.isHealth(title, lastWeightKg: BodyWeight.lastKg(in: store))
+        // The same full wall as a recipe title: secret words, money, body facts and medicines (QA L1 on #727).
+        let walled = ObjectPrivacy.isPrivateRecipeTitle(title, lastWeightKg: BodyWeight.lastKg(in: store))
         return Entry(id: ingredient.id, ingredient: ingredient, state: state, lastBoughtAt: lastBoughtAt,
                      aisle: aisle(of: ingredient), isPrivate: walled, label: walled ? "Private item" : title)
     }

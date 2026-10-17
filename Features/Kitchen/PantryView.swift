@@ -91,6 +91,10 @@ private struct PantryPage: View {
 
     /// Her band: what the last cook used up, or how to start on an empty page.
     private func speak() {
+        // Never over an open UNDO: that line keeps its window (QA L2 on #727).
+        if let note = TessVoice.shared.note, note.undo != nil || note.takeBack != nil {
+            return
+        }
         if ledger.entries().isEmpty {
             TessVoice.shared.say(PantryCopy.empty)
         } else if let used = ledger.lastCookUsedUp() {
@@ -117,6 +121,7 @@ struct PantryLine: View {
     var onAdd: () -> Void = {}
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var pull: CGFloat = 0
+    @State private var added = 0
 
     /// A private row opens nothing: its page would show the name (pantry-acceptance S15, K26.16; QA on #724).
     static func opens(_ entry: PantryLedger.Entry) -> Bool {
@@ -139,6 +144,14 @@ struct PantryLine: View {
         .accessibilityLabel("\(name), \(entry.state.word)")
         .accessibilityAction(named: "Add to Groceries", onAdd)
         .offset(x: pull)
+        // The ghost row behind the swipe: where the line is going (Design on #727).
+        .background(alignment: .trailing) {
+            Text("Groceries")
+                .textRole(.labelStrong)
+                .foregroundStyle(Theme.Colors.ink.opacity(min(abs(pull) / 72, 1) * 0.42))
+                .accessibilityHidden(true)
+        }
+        .tesseraFeedback(.made, trigger: added)
         .simultaneousGesture(
             DragGesture(minimumDistance: 24)
                 .onChanged { value in
@@ -148,6 +161,7 @@ struct PantryLine: View {
                 }
                 .onEnded { _ in
                     if pull <= -72 {
+                        added += 1
                         onAdd()
                     }
                     withTesseraAnimation(reduceMotion: reduceMotion) { pull = 0 }
