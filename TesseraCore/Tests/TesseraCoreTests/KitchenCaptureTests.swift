@@ -22,9 +22,12 @@ struct KitchenCaptureTests {
         let recipe = try #require(RecipeBook(store: store, classes: classes).recipes().first)
 
         let milk = await tess.capture("buy milk", context: context)
-        #expect(milk.line == "Milk, on the list.")
+        #expect(milk.line == "Milk, on Groceries.")
         let list = await tess.capture("eggs, bread and 2 lemons", context: context)
-        #expect(list.line == "3 things on the list.")
+        #expect(list.line == "3 things on Groceries.")
+        // A medicine on the list is a health fact: never said back (Product 8:13 and 10:06 PM PT).
+        let advil = await tess.capture("buy advil", context: context)
+        #expect(advil.line == "Private item, on Groceries." || !advil.line.lowercased().contains("advil"), "\(advil.line)")
         #expect(groceries.shoppingOrder().map(\.text) == ["lemons", "bread", "milk", "eggs"])
 
         let planned = await tess.capture("cook carbonara thu", context: context)
