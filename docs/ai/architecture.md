@@ -130,7 +130,7 @@ Lines never truncate. The budget is checked on the phone, so a line that wouldn'
 - **Result cache.** Each job hashes its pack. Same hash, same words: no call. Home keeps the last good set of lines in memory and in a small JSON file in Application Support (not backed up), keyed by day, so a cold launch shows rules lines and a new day starts on them (Product, decisions.md 11:45 AM PT Oct 16). Ticking values ("paused 21 min ago") never go in the pack or its hash.
 - **Debounce.** Home lines call when the pack changes, at most once per 10 minutes, except for moments (a workout finishes, a process pauses), and at most 40 calls a day. The 40-a-day count (on `TessCall.job`) and dropping ticking values ride AI-2; `home-lines-job.md` section 4 owns what asks and what doesn't.
 - **Offline, capped, switch off, demo.** The rules line, at once. No queue for lines: a line worded later would describe a moment that's gone. Capture keeps its `TessInbox` queue as today.
-- **Near the cap.** At 80% of the month, word-only jobs (lines, week story) step aside so captures and plans keep the money. Settings says so in the existing amber line.
+- **Near the cap.** The in-app Claude cap is $50 a month, a hard stop; it resets on the 1st. At 80% ($40), word-only jobs (Home lines, the week story, living colour) step aside before the reserve so capture, plan, recipe and questions keep running to $50. Settings says so in the existing amber line.
 
 ### 5.6 Cost
 
@@ -143,7 +143,7 @@ Prices from `TessUsageLedger.prices` (Haiku 5.5 $0.10 in and $0.50 out per milli
 | Week story | Sonnet 5.5 | 2,000 / 300 | $0.007 | 8 | $0.06 |
 | Grocery connect (name matching only) | Haiku 5.5 | 1,200 / 150 | $0.0002 | 60 | $0.01 |
 | Existing (capture, plan, link, questions) | | | | | $0.44 (claude-first-uses.md) |
-| **Total** | | | | | **about $3.20** typical, $8.59 worst (`spend-projection.md`); about $0.70 if AI-5 moves Home lines to Haiku; cap $50 |
+| **Total** | | | | | **$0.79** typical, $6.90 worst (`spend-projection.md`); about $0.70 if AI-5 moves Home lines to Haiku; cap $50 |
 
 ## 6. Model per job
 
@@ -230,7 +230,7 @@ So there are two pickers behind one `LivingPalette`:
 
 ### Cost and cache
 
-Haiku 5.5, effort low, about 1,200 tokens in (mostly the stable palette space, which is the cacheable prefix) and 60 out: about $0.0002 a call, 31 calls a month at most, **under $0.01 a month**. The result caches on the pack hash in the same small JSON file as the Home lines; a cold launch paints the last chosen palette at once. Word-only jobs, this one included, step aside at 80% of the month.
+Haiku 5.5, effort low, about 1,200 tokens in (mostly the stable palette space, which is the cacheable prefix) and 60 out: about $0.0002 a call, 31 calls a month at most, **under $0.01 a month**. The result caches on the pack hash in the same small JSON file as the Home lines; a cold launch paints the last chosen palette at once. Word-only jobs, this one included, step aside at 80% of the month ($40).
 
 ### Fallback
 

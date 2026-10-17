@@ -110,6 +110,6 @@ Callers used only in tests: `ClaudePlanWording`, `ClaudeRecipeReader`, `TessInbo
 - **Cost.** Capture prices cache tokens; plan and recipe price input and output only. Same today (no cache
   control is sent), but a shared parser must not start pricing cache tokens on those rows.
 - **Priorities.** `TessJob.priority` lists `.capture > .plan > .recipe > .lines`; nothing reads it until the 80%
-  step-aside lands, so none of these four moves changes order.
+  step-aside lands (Home lines, the week story and living colour step aside at $40; the four callers here keep running), so none of these four moves changes order.
 - **Key check as a job.** Section 6 says it uses "only the headers, the status mapping and the row"; the status
   mapping must stay its own.

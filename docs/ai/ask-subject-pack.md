@@ -27,7 +27,7 @@ Opening the ask slot on a side makes this thing the subject. `AskSubjectPack.bui
 2. A secret word in the question: "It's in your private notes."
 3. Money or a body fact in the question: "That stays on this phone."
 4. The switch off, the class not opted in, a demo launch or no key: the phone's own answer only, no Claude event.
-5. At the monthly cap or stepped aside: the phone's answer, "Claude paused until Nov 1." only at the cap.
+5. At the monthly cap: the phone's answer, "Claude paused until Nov 1."
 6. Otherwise: pack for Claude.
 
 His intake ("is this enough protein for me") answers with one ingredient's table value on the phone and never goes to Claude (Product 2:36 pm).
@@ -38,7 +38,7 @@ His intake ("is this enough protein for me") answers with one ingredient's table
 - **Body cap:** 1,200 bytes. The worst-case input is `1,200 / 4 + 10 + 500` (tool overhead) = 810 tokens.
 - **Worst case per ask (Sonnet 5.5):** 810 x 2,000 + 300 x 10,000 n$ = 4,620,000 n$ = **$0.0046**.
 - **Per day:** 20 asks a day, counted in the ledger (job "askSubject"), is $0.092 worst case. At the 21st the phone answers alone. This stays well inside the $50 month: 30 days of the worst case is $2.77.
-- **Step-aside:** `.asks` priority steps aside at 80% of the month like other jobs, after `.lines`.
+- **Step-aside:** none. Questions keep running at 80% ($40) up to the $50 cap (Product's 8:16 ruling); only Home lines, the week story and living colour step aside.
 
 ## 6. Tests Core writes
 
