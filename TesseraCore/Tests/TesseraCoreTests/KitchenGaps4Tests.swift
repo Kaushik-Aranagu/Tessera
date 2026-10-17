@@ -68,4 +68,33 @@ struct KitchenGaps4Tests {
         let ok = await tess.capture("timer rise 24 hours", context: context)
         #expect(ok.line == "Rise, 1440 min." || ok.line.hasPrefix("Rise,"), "\(ok.line)")
     }
+
+    // MARK: G23
+
+    @Test func theMonthTurnsAtFourAm() throws {
+        let engine = try engine()
+        let log = CookLog(store: store, classes: engine.classes)
+        let recipe = try engine.perform(CreateRecipe(text: "Overnight oats\nIngredients\n1 cup oats\nMethod\nSoak."),
+                                        by: .user).output
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .gmt
+        func at(_ month: Int, _ day: Int, _ hour: Int, _ minute: Int) -> Date {
+            calendar.date(from: DateComponents(year: 2026, month: month, day: day, hour: hour, minute: minute))!
+        }
+        func cook(_ time: Date) throws {
+            let started = try engine.perform(StartCooking(recipe: recipe.id, time: time), by: .user).output
+            try engine.perform(FinishCooking(cook: started.id, time: time), by: .user)
+        }
+        try cook(at(10, 31, 21, 5))
+        #expect(log.finishLine(for: recipe, at: at(10, 31, 21, 5), calendar: calendar)
+            == "Overnight oats, first time this month.")
+        // 1:30 am on Nov 1 is still his Oct 31: the second time this month.
+        try cook(at(11, 1, 1, 30))
+        #expect(log.finishLine(for: recipe, at: at(11, 1, 1, 30), calendar: calendar)
+            == "Overnight oats, second time this month.")
+        // 4:10 am on Nov 1 starts November.
+        try cook(at(11, 1, 4, 10))
+        #expect(log.finishLine(for: recipe, at: at(11, 1, 4, 10), calendar: calendar)
+            == "Overnight oats, first time this month.")
+    }
 }

@@ -61,7 +61,12 @@ public struct CookLog {
 
     /// "Carbonara, third time this month." Counts, never judgement.
     public func finishLine(for recipe: ObjectRecord, at now: Date, calendar: Calendar = .current) -> String {
-        let thisMonth = cooks(of: recipe).count { calendar.isDate($0.at, equalTo: now, toGranularity: .month) }
+        // The month of his day, which turns at 4 am (gap hunt G23): a 1:30 am cook on the 1st is the last month's.
+        let day = TesseraDay(calendar: calendar)
+        let month = calendar.dateComponents([.year, .month], from: day.day(of: now))
+        let thisMonth = cooks(of: recipe).count {
+            calendar.dateComponents([.year, .month], from: day.day(of: $0.at)) == month
+        }
         return "\(recipe.title), \(Self.ordinal(thisMonth)) time this month."
     }
 
