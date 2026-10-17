@@ -1,12 +1,12 @@
-# titleWords after the two trims (4:22 PM PT and 4:35 PM PT): fixture rows
+# titleWords after the three trims (4:22, 4:35 and 4:50 PM PT): fixture rows
 
-For: Core (engine), Builder B (screens), Product (open questions at the end). Research lab. Docs only; nothing was built or run (no Swift toolchain here). Date: 2026-10-17.
+For: Core (engine), Builder B (screens), Product (open questions at the end). Research lab. Docs only; nothing was built or run (no Swift toolchain here). Date: 2026-10-17. Updated for the 4:50 PM PT answers (decisions.md line 963); every changed row carries the stamp "4:50 PM PT".
 
-Read on: `origin/master` at `0d81f1a3` (PrivateWords.swift unchanged by #890 there) and PR #890's head `cb360086` (fetched as `refs/pull/890/head`; the GitHub MCP is limited to this repo's slug, so I read the head with `git fetch`). #890 holds ONLY the first trim; the 4:35 PM second trim is not in it. Rows cite `master:file:line` or `pr890:file:line`.
+Read on: `origin/master` at `0d81f1a3` (PrivateWords.swift unchanged by #890 there) and PR #890's head `cb360086` (fetched as `refs/pull/890/head`; the GitHub MCP is limited to this repo's slug, so I read the head with `git fetch`). #890 holds ONLY the first trim; the 4:35 PM second trim and the 4:50 PM third trim (slept, sleepy, drained) are not in it. Rows cite `master:file:line` or `pr890:file:line`.
 
-Rulings, in `/mnt/project-files/tessera/product/decisions.md` (stamps are already Pacific): 4:20 PM PT line 951, 4:22 PM PT line 953, 4:25 PM PT line 955, 4:33 PM PT line 959, 4:35 PM PT line 961. QA: `/mnt/project-files/tessera/qa/review-890.md` (verdict at `5052707f`, re-verdict at `cb360086`, whose last paragraph lists the unit/pain/recovery/weight collisions that the 4:35 PM trim then removed).
+Rulings, in `/mnt/project-files/tessera/product/decisions.md` (stamps are already Pacific): 4:20 PM PT line 951, 4:22 PM PT line 953, 4:25 PM PT line 955, 4:33 PM PT line 959, 4:35 PM PT line 961, 4:50 PM PT line 963 ("Research #899 title-words-trim, answers; corrects 4:20 #3"). QA: `/mnt/project-files/tessera/qa/review-890.md` (verdict at `5052707f`, re-verdict at `cb360086`, whose last paragraph lists the unit/pain/recovery/weight collisions that the 4:35 PM trim then removed).
 
-This file does NOT repeat `decisions-328-332-338.md` (branch `origin/claude/research-decfix`) rows P01 to P28. It EXTENDS P24 to P28: P24 has the six 4:22 phrases, P26 the money words as a group, P27 the kept words as a group, P28 "Dr. Patel". Here: the exact sets, one row per removed word, one per kept word, spelling variants, the surface matrix and the 4:35 rows P24 does not have. Where I disagree with a P row I say so (see T05 and T33).
+This file does NOT repeat `decisions-328-332-338.md` (branch `origin/claude/research-decfix`) rows P01 to P28. It EXTENDS P24 to P28: P24 has the six 4:22 phrases, P26 the money words as a group, P27 the kept words as a group, P28 "Dr. Patel". Here: the exact sets, one row per removed word, one per kept word, spelling variants, the surface matrix and the 4:35 rows P24 does not have. Where I disagree with a P row I say so (see T05). 4:50 PM PT corrects P16 (notes) and settles P28 ("Dr. Patel": a phrase rule, Core builds it) in the `research-decfix` branch; this file carries the same answers.
 
 Row format follows `decisions-328-332-338.md` and `engine-wall.md`: id, plain-words input, exact expected output, Swift Testing name, status, owner. Statuses: **traced** (I read the code path and it does this today; "test" if a test pins it), **inferred** (reasoned from neighbouring code), **gap** (the code does not do this; owner named). "Today" means master and #890 head unless a row says which. Inputs are made-up words; no secret-shaped text appears.
 
@@ -27,32 +27,33 @@ Row format follows `decisions-328-332-338.md` and `engine-wall.md`: id, plain-wo
 
 Note the subtraction list has two no-ops: "tip" is a money word and "pepper" and "dr" were never in `healthWords`, so `.subtracting` does nothing for them; they leave simply because the union no longer includes `moneyWords` or the explicit "dr" (confirmed by `qa/review-890.md` re-verdict, first bullet). Harmless.
 
-### a3. After trim 2 (4:35 PM, line 961): REMOVE also kg, lb, lbs, kcal, calories, pain, recovery, weight
+### a3. After trim 2 (4:35 PM, line 961): REMOVE also kg, lb, lbs, kcal, calories, pain, recovery, weight. After trim 3 (4:50 PM, line 963): REMOVE also slept, sleepy, drained (keep tired, burnout)
 
-KEEP per the ruling text: "bpm, sore, hurt, sick, plus dentist, therapy, rehab, physio, surgery, doctor, clinic, hospital and the non-food health words." The ruling names only 4 of the remaining health words explicitly; the rest follow from "non-food health words" and from "REMOVE ... also" naming eight words only. So the kept set is the a2 set minus those eight.
+KEEP per the ruling text: "bpm, sore, hurt, sick, plus dentist, therapy, rehab, physio, surgery, doctor, clinic, hospital and the non-food health words." The ruling names only 4 of the remaining health words explicitly; the rest follow from "non-food health words" and from "REMOVE ... also" naming eight words only. So the kept set is the a2 set minus those eight. 4:50 PM PT (2) names three more to remove (slept, sleepy, drained) and two to keep (tired, burnout), so the kept set below is minus eleven.
 
-**Kept set after both trims (derived, 31 words):**
+**Kept set after all three trims (derived, 28 words; 4:50 PM PT):**
 
 | Group | Words |
 |---|---|
 | Added care words (`ObjectPrivacy.swift:78-79` on #890) | rehab, physio, physiotherapy, therapy, therapist, surgery, doctor, dentist, clinic, hospital |
-| Health words still in `healthWords` (`TessMemory.swift:101-105` minus the 13 removed) | slept, sleepy, tired, exhausted, fatigue, rested, recover, hrv, sore, sick, unwell, drained, burnout, hurts, hurt, ache, aches, weigh, weighed, bpm, bmi |
+| Health words still in `healthWords` (`TessMemory.swift:101-105` minus the 16 removed: 5 + 8 + 3) | tired, exhausted, fatigue, rested, recover, hrv, sore, sick, unwell, burnout, hurts, hurt, ache, aches, weigh, weighed, bpm, bmi (18) |
 
-**Removed set, 21 health/everyday words across both trims, plus all money words:**
+**Removed set across the three trims, plus all money words:**
 
 | Trim | Words (source set) |
 |---|---|
 | 4:22 | blood, heart, energy, sleep, tight (all `healthWords`); tip (money), pepper (never in a set), dr (was explicit at `master:PrivateWords.swift:29`) |
 | 4:22 | all money words: pay, cost, price, balance, checking, savings, rent named by the ruling; "ALL money words" also covers the other 60-odd in a1 (pound, pounds, dollar, dollars, bucks, euro, yen, owe, spend, paid, refund, venmo, salary and so on) |
 | 4:35 | kg, lb, lbs, kcal, calories, pain, recovery, weight |
+| 4:50 PM PT | slept, sleepy, drained ("drained tuna", "sleepy time tea" stay raw); tired and burnout are KEPT |
 
 What does NOT change: the other three layers of the one check. `isPrivateTitle` still ORs the title-word lookup with the secret and body-fact wall and `EngineWall.isHealth` (`pr890:ObjectPrivacy.swift:64-69`; `master:PrivateWords.swift:33-38`). So a number plus a unit on a body line, a weigh-in, a medicine and money with an amount all still mask (T20 to T24).
 
-Current state to compare: master = a1. #890 head = a2 (kg, lb, lbs, kcal, calories, pain, recovery, weight are STILL title words there). The second trim is a Core gap on #890 (T10 to T17).
+Current state to compare: master = a1. #890 head = a2 (kg, lb, lbs, kcal, calories, pain, recovery, weight are STILL title words there, and so are slept, sleepy, drained). The second trim (T10 to T17) is a boarded Core gap on #890; the 4:50 PM PT third trim (T17a to T17c) is a Core gap on both.
 
 ### a4. Scope (4:20 (3), 4:22, 4:25 N2/N3, 4:33)
 
-Apply `titleWords`: list items, list NAMES (N2), recipes, workouts/routines. Do NOT apply: tasks (`pr890:ObjectPrivacy.swift:49-52` calls `PrivateFacts.isPrivateTitle`, no title words), notes (always "Private note", N3), memory (its own wall). "Dr. Patel" stays private (4:22), but see T33: the code has no path that does it once bare "dr" leaves.
+Apply `titleWords`: list items, list NAMES (N2), recipes, workouts/routines. Do NOT apply: tasks (`pr890:ObjectPrivacy.swift:49-52` calls `PrivateFacts.isPrivateTitle`, no title words), notes (4:50 PM PT corrects 4:20 (3) and 4:25 N3: a note is "Private note" only when flagged private or it holds secret, money or body words, NOT always, and never by a title word), memory (its own wall). "Dr. Patel" and "Dr Patel" mask through a phrase rule that Core builds (4:50 PM PT (5)); see T33 to T36.
 
 ---
 
@@ -71,7 +72,7 @@ First-trim words (4:22). P24 already holds the six phrases; this is one row per 
 | T05 | tight | "Tight shoes" | "Tight hips stretch" (routine) | everyday word. Caution: a routine "Tight hips stretch" is a stretch routine, not a symptom; ruling says never mask on the word alone | `titleWords_tightStaysRaw` | traced (removed from the set at `ObjectPrivacy.swift:77`); no test | Core |
 | T06 | tip | "Tip jar" | "Tip calculator" (list name) | `tip` was a money word (`PrivateFacts.swift:29`) | `titleWords_tipStaysRaw` | traced (money words not unioned, `ObjectPrivacy.swift:76`); no test | Core |
 | T07 | pepper | "Pepper" (grocery) | "Stuffed pepper" (recipe) | never in a set; guard against someone adding it | `titleWords_pepperStaysRaw` | traced (not in any set) | Core |
-| T08 | dr | "Dr Pepper" | "Dr Oetker pizza" | bare "dr" gone | `titleWords_bareDrStaysRaw` | traced, test (`PrivacyParityTests.swift:16`) for A | Core |
+| T08 | dr | "Dr Pepper" | "Dr Oetker pizza" (4:50 PM PT: ruled only for Pepper; the phrase rule masks "dr" plus a capitalized name other than Pepper, so Oetker is an open edge, see Q3) | bare "dr" gone | `titleWords_bareDrStaysRaw` | traced, test (`PrivacyParityTests.swift:16`) for A | Core |
 | T09 | pay, cost, price, balance, checking, savings, rent (one row each in the test via arguments) | "Pay phone list", "Cost plus", "Price check", "Balance bike", "Checking account", "Savings bonds", "Rent car" | same word with another noun | money masks only with an amount or sign (4:22) | `titleWords_moneyWordAloneStaysRaw` (`@Test(arguments:)` over the seven) | traced for "Rent car" only (`PrivacyParityTests.swift:16`); the other six inferred | Core |
 
 Second-trim words (4:35). The ruling's five rows plus one per word.
@@ -86,6 +87,15 @@ Second-trim words (4:35). The ruling's five rows plus one per word.
 | T15 | pain | "pain au chocolat" (ruling row) | `pain` in set (`:104`) | `titleWords_painStaysRaw` | gap on #890 head. `pain` is not in `symptoms` (`PrivateFacts.swift:84-87`), so nothing else catches it | Core |
 | T16 | recovery | "recovery shake" (ruling row) | `recovery` in set (`:102`) | `titleWords_recoveryStaysRaw` | gap on #890 head | Core |
 | T17 | weight | "Weight Watchers chili" (ruling row), "Weight Watchers" | `weight` in set (`:104`). Body path needs a number (`PrivateFacts.swift:121` `guard hasNumber`) so no number means raw | `titleWords_weightStaysRaw` | gap on #890 head | Core |
+
+Third-trim words (4:50 PM PT (2)). Ruled: REMOVE slept, sleepy, drained; keep tired, burnout.
+
+| Id | Word | Input (must stay raw) | Why it would mask on #890 head | Swift Testing name | Status | Owner |
+|---|---|---|---|---|---|---|
+| T17a | slept | "Slept-in brunch list", "slept" as a list name | `slept` in `healthWords` (`TessMemory.swift:101`) | `titleWords_sleptStaysRaw` | gap on #890 head and master (word still in set); 4:50 PM PT | Core |
+| T17b | sleepy | "Sleepy time tea" (ruling row), "Sleepy Joe's pizza" | `sleepy` in set (`:101`) | `titleWords_sleepyStaysRaw` | gap on #890 head and master; 4:50 PM PT | Core |
+| T17c | drained | "Drained tuna" (ruling row), "Drained chickpeas" | `drained` in set (`:103`) | `titleWords_drainedStaysRaw` | gap on #890 head and master; 4:50 PM PT | Core |
+| T17d | tired, burnout (KEPT, must still mask) | "Tired legs stretch" (routine), "Burnout playlist" (list name) | kept by ruling | `titleWords_tiredAndBurnoutStillMask` | traced (stay in set); 4:50 PM PT | Core |
 
 Looks-alikes decided per ruling:
 
@@ -116,15 +126,15 @@ Surfaces for the first column of every row below: **list item, list name, recipe
 | T49 | bpm | "bpm zones" | `titleWords_bpmMasks` | traced (kept in `healthWords`, `TessMemory.swift:105`) | Core |
 | T50 | sore | "sore throat lozenges" | `titleWords_soreMasks` | traced | Core |
 | T51 | hurt, hurts | "hurt locker" (a film; accepted over-mask) | `titleWords_hurtMasks` | traced | Core |
-| T52 | sick | "sick day soup" (see T66: slang is not exempted on this path) | `titleWords_sickMasks` | traced | Core |
-| T53 | the other non-food health words (not named by the ruling, kept by derivation): slept, sleepy, tired, exhausted, fatigue, rested, recover, hrv, unwell, burnout, ache, aches, weigh, weighed, bmi | one input each, e.g. "bmi chart", "tired legs stretch" | `titleWords_remainingHealthWordsMask` (`@Test(arguments:)`) | traced (set) / inferred as the ruling's intent; Product to confirm (Q1) | Core |
+| T52 | sick | "sick day soup", "Sick beat" (playlist). 4:50 PM PT (4): "sick" keeps masking, slang included (no exemption in titleWords; the safe side) | `titleWords_sickMasksIncludingSlang` | traced (set has no slang exemption; the body wall exempts slang at `PrivateFacts.swift:57-61` but titleWords does not use it); 4:50 PM PT | Core |
+| T53 | the other non-food health words (kept by derivation, and by the 4:50 PM PT ruling for tired and burnout): tired, exhausted, fatigue, rested, recover, hrv, unwell, burnout, ache, aches, weigh, weighed, bmi. slept, sleepy and drained are NOT here any more (T17a to T17c) | one input each, e.g. "bmi chart", "tired legs stretch", "burnout playlist" | `titleWords_remainingHealthWordsMask` (`@Test(arguments:)`) | traced (set); tired and burnout ruled 4:50 PM PT; "rested" still open (Q1) | Core |
 
 Reach rows (the NOT paths), all must hold after the change:
 
 | Id | Input | Expected | Swift Testing name | Status | Owner |
 |---|---|---|---|---|---|
 | T60 | A task "dentist" (via `CreateTask` and the label) | task label path unchanged: reads "Dentist" on Home and receipts, no title-word check. QA already measured this: `qa/review-890.md` section 1, NOT CHANGED, first bullet | `task_titleWordDoesNotMask` | traced (`pr890:ObjectPrivacy.swift:49-52` uses `PrivateFacts.isPrivateTitle`) | Core |
-| T61 | A note "dentist friday" | 4:25 N3: "a note is always 'Private note' regardless of words ('dentist friday' is a note, no per-word check)". On code today a plain note is NOT always private: `label(of:)` returns the label only when flagged, titled so, or `isPrivateText` (secret, money, body) (`pr890:ObjectPrivacy.swift:40-44`). So "dentist friday" shows its words | `note_titleWordIsNotACheck` | traced for "no per-word check"; the "always Private note" half is **unclear, see Q2** | Product, Core |
+| T61 | A note "dentist friday" (4:50 PM PT (1), CORRECTION of 4:20 (3) and 4:25 N3 "always Private note") | A note reads "Private note" only when flagged private, or when its text holds secret, money or body words (the standing decision). It is NOT always private, and no title word is ever checked on a note. So "dentist friday" shows its words; a flagged note, a note with a money amount and a note with a body fact read "Private note" | `note_privateOnlyWhenFlaggedOrWalledNeverByTitleWord` | traced: `label(of:)` returns the label only when flagged, titled so, or `isPrivateText` (`pr890:ObjectPrivacy.swift:40-44`). Risk after Core composes the one function: the note branch must NOT call the title-word version. 4:50 PM PT | Core |
 | T62 | Memory with "dentist" | memory keeps its own wall (4:22): `isPrivateText` only (`ObjectPrivacy.swift:45-48`) | `memory_titleWordDoesNotMask` | traced | Core |
 
 ---
@@ -142,8 +152,8 @@ Rows use "dentist" (kept) and "rent" or "blood" (removed). Expected is for a lis
 | T72 | "dentist.", "dentist!", "(dentist)", "dentist:" | mask | trailing punctuation trimmed or split | `titleWordVariants_punctuationIgnored` | traced | Core |
 | T73 | "dentist's cake", "dentist’s cake" (curly) | mask | apostrophe is not a letter, splits to "dentist" and "s" | `titleWordVariants_possessiveMasks` | traced | Core |
 | T74 | "dentist/pharmacy", "dentist_appt", "dentist\u{00A0}cake" | mask | slash, underscore, nbsp split | `titleWordVariants_separatorsSplit` | traced (inferred for nbsp: `isLetter` false) | Core |
-| T75 | "dentist-appt", "dentist,flowers" | stays raw (no mask) | hyphen and comma stay inside the token, so the token is "dentist-appt" | `titleWordVariants_hyphenAndCommaJoin` | traced; **likely unwanted**, see Q3 | Core, Product |
-| T76 | "dentists", "doctors", "surgeries", "therapies", "clinics", "hospitals" | stays raw today | no plural stemming; set holds singular forms only (a few exceptions: hurts, aches, physiotherapy) | `titleWordVariants_pluralsDecided` | traced; Product to decide, see Q3 | Core, Product |
+| T75 | "dentist-appt", "dentist,flowers" | stays raw (no mask). 4:50 PM PT (3): joined words are NOT matched ("dentist-appt" stays raw). The comma case is the same class by the same tokenizer rule (my reading) | hyphen and comma stay inside the token, so the token is "dentist-appt" | `titleWordVariants_joinedWordsStayRaw` | traced (exact-token match does this today); ruled 4:50 PM PT, so no longer "likely unwanted"; Core must keep it when it adds plural tolerance | Core |
+| T76 | "dentists" (ruling row), "doctors", "surgeries", "therapies", "clinics", "hospitals" | MASK. 4:50 PM PT (3): matching tolerates a plural. Plural tolerance applies to KEPT words only, so "hearts of palm" and "bloods" stay raw because the word is out of the set (T02) | today no plural stemming; set holds singular forms only (a few exceptions: hurts, aches, physiotherapy) | `titleWordVariants_pluralMasks` | gap (today these stay raw); Core adds s / es / ies tolerance (the ruling says "a plural"; the y to ies pair "surgeries", "therapies" is my reading of it). 4:50 PM PT | Core |
 | T77 | "Dentist" as a second item in "Milk, dentist" (a pasted comma line) | per the AddGroceries splitter, each item is judged alone. Not traced here | `titleWordVariants_commaSplitItems` | inferred | Core |
 | T78 | "dent ist", "dentistry" | raw | not the word | `titleWordVariants_notTheWord` | traced | Core |
 | T79 | Removed words in every variant: "BLOOD ORANGE", "Blood-orange", "blood orange.", "Rent car!", "  rent car " | raw | removed words are not tokens of the set, so no variant can hit | `titleWordVariants_removedWordsStayRaw` | traced after trim | Core |
@@ -168,8 +178,8 @@ Columns follow the ask: **Groceries**, **Lists**, **Recipes**, **Routines/workou
 | Home line | cook line | mask "Private recipe" | raw | `Home/HomeLines.swift:593-600` `cookTitle` -> `ObjectPrivacy.isPrivateTitle` | traced | Core |
 | Home line | routine / workout line | mask "Private workout" | raw | `WorkoutSummary.swift:45`; the 4:33 ruling (line 959) says NowPage Resume/Start keys read the masked twin (`shownTitle`); not in #890 | inferred (Builder B scope, #898) | Builder B |
 | Home line | task line | raw (task keeps its rules) | raw | `ObjectPrivacy.swift:49-52` | traced | Core |
-| Siri / Spotlight label | Siri task read-back | raw (tasks do not use title words) | raw | `TesseraIntents/Intents.swift:180,205` use `PrivateFacts.isPrivateTitle`, no title words | traced | Core |
-| Siri / Spotlight label | Siri add-to-list or grocery read-back | **ruling is silent**; the echo goes through `TessCaptureEngine` `:244,:384` (`isPrivateWord`, masks) but the Intents file's own checks at `Intents.swift:180,205` do not | gap / question (Q4) | Core, Product |
+| Siri / Spotlight label | Siri task read-back | raw (tasks keep their own rules; 4:50 PM PT (7) does not change them) | raw | `TesseraIntents/Intents.swift:180,205` use `PrivateFacts.isPrivateTitle`, no title words | traced | Core |
+| Siri / Spotlight label | Siri read-back of a routine, workout or list NAME (and a list item or recipe where Siri reads one) | 4:50 PM PT (7): Siri read-backs at `TesseraIntents/Intents.swift:180,205` go through the one check too. Tasks keep their own rules, so for tasks nothing changes; the new work is the title mask ("Private workout", "Private list", "Private item", "Private recipe") for a kept title word. The capture echo already masks (`TessCaptureEngine` `:244,:384`, `isPrivateWord`); the Intents file's own checks do not | gap (Intents call `PrivateFacts.isPrivateTitle`, no title words); ruled 4:50 PM PT, no longer a question | Core |
 | Siri / Spotlight label | Spotlight index entry for a list item or recipe | no `CSSearchable` code found in `*.swift` outside tests, so there is nothing to mask today. The pantry doc comment says "what any view, Tess line, widget or Spotlight shows: the name, or 'Private item'" (`Features/Kitchen/PantryLedger.swift:41`) | gap (not built); expected "Private item" | Core |
 | Export | all of the above | mask (same function) | raw | `PrivateWords.swift:33-35`, `:104`, `:170` | traced | Core |
 
@@ -183,7 +193,8 @@ These pin what must STILL mask once the eight 4:35 words leave. The ruling says 
 |---|---|---|---|---|---|---|
 | T20 | "flour 5 kg" with a last weight of 78.0 kg | raw | `isBareWeight`: number 5 not within 10% of 78; `bodyWord` (kg) true but needs a decimal `\d[.,]\d` (`PrivateFacts.swift:188-189`), none. Words path: no weigh word; `rest` = ["flour"] is not all day words (`:135`) so false | `bodyWall_integerKgGroceryStaysRaw` | traced (code) | Core |
 | T21 | "ground beef 2 lb" | raw | same as T20 (no decimal, rest not day words) | `bodyWall_integerLbGroceryStaysRaw` | traced (code) | Core |
-| T22 | "rice 2.5 kg", "chicken 1.5 lb" | **masks** today (after the trim too) | `bodyWord` true plus decimal (`PrivateFacts.swift:188-189`); the title-word trim does not touch it. This is a real grocery. The ruling's test rows use integers; decimals are untested | `bodyWall_decimalKgGroceryDecision` | traced (code); **Q5** | Core, Product |
+| T22 | "rice 2.5 kg", "chicken 1.5 lb" as a grocery or list item, or a recipe line | RAW. 4:50 PM PT (6): body-fact and money rules never mask a grocery item or recipe because of a unit amount (decimal kg included); they apply to body/money lines only. The one-check words and secret words still apply | `bodyWord` true plus decimal (`PrivateFacts.swift:188-189`) masks it today; the title-word trim does not touch that | `bodyWall_decimalKgGroceryStaysRaw` | gap (masks today, even after both trims); ruled 4:50 PM PT, Q5 deleted. Core: skip the body-shaped and money-shaped tests on the grocery, list-item and recipe surfaces when the text is an amount of a thing | Core |
+| T22a | "weighed 82.4 kg this morning" typed as a NOTE or a task | still masks (a body line) | `weighWords` branch | `bodyWall_decimalKgOnABodyLineStillMasks` | traced; 4:50 PM PT guard row so the grocery exemption is not too wide | Core |
 | T23 | "my weight is 82.4", "weighed 82.4 kg this morning" | mask | `weighWords` branch (`PrivateFacts.swift:128-130`) | `bodyWall_realWeighInStillMasks` | traced | Core |
 | T24 | "log weight 78" with a last weight near 78 | mask | within 10% of the last weight (`:185`) | `bodyWall_bareWeightInBandStillMasks` | traced | Core |
 | T25 | "weighed flour 500 g" | raw | kitchen unit exemption (`:129`) | `bodyWall_kitchenWeighStaysRaw` | traced | Core |
@@ -198,18 +209,18 @@ These pin what must STILL mask once the eight 4:35 words leave. The ruling says 
 
 | Id | Input | Expected today | Swift Testing name | Status | Owner |
 |---|---|---|---|---|---|
-| T30 | "1 pound butter", "2 pounds apples", "pound cake 2" | masks (amount 1 plus money word "pound") | `moneyWall_poundGroceryDecision` | traced (code); the 4:22/4:35 rulings do not mention it; **Q6** | Core, Product |
-| T31 | "2 tip jars", "3 balance bikes" | masks (amount plus "tip"/"balance") | `moneyWall_amountPlusEverydayWord` | traced (code); same question | Core, Product |
-| T32 | "Euro trip 2" | masks | same | traced | Core, Product |
+| T30 | "1 pound butter", "2 pounds apples" as a grocery or list item | RAW. 4:50 PM PT (6): the money rule never masks a grocery item for a unit amount ("1 pound butter") | `moneyWall_poundUnitGroceryStaysRaw` | gap (masks today: amount 1 plus money word "pound", `PrivateFacts.swift:47-50`); ruled 4:50 PM PT | Core |
+| T31 | "2 tip jars", "3 balance bikes", "pound cake 2" | masks today (amount plus "tip"/"balance"/"pound"). These are not unit amounts, so 4:50 PM PT (6) does not reach them | `moneyWall_amountPlusEverydayWord` | traced (code); still open, see Q2 | Core, Product |
+| T32 | "Euro trip 2" | masks | same | traced; still open, see Q2 | Core, Product |
 
 ### Dr. as a title prefix
 
 | Id | Input | Expected per 4:22 | Trace | Swift Testing name | Status | Owner |
 |---|---|---|---|---|---|---|
-| T33 | "Dr. Patel" | PRIVATE ("still masks via the doctor/clinic phrases") | `PrivateFacts.words("dr. patel")` gives ["dr","patel"]; "dr" is not in the new set (`ObjectPrivacy.swift:77`); no other part of the one check reads "dr". I found no "phrase" code in `ObjectPrivacy.swift` or `PrivateWords.swift`; the only other "dr" in `TesseraCore/Sources` is in `Home/HomeDonePack.swift:118` (a Claude-bound off-limits list, not the screen wall). So today "Dr. Patel" is **raw** on #890 head, and master masked it only because bare "dr" was a title word (`master:PrivateWords.swift:29`). P28 in `decisions-328-332-338.md` calls this "inferred"; I trace it as a **gap** | `drPrefix_drDotPatelMasks` | gap | Core (needs a phrase rule: "dr" token followed by a name, not "dr pepper" and not "dr oetker") |
-| T34 | "Dr Patel" (no dot) | private, same ruling intent | same trace | `drPrefix_drPatelMasks` | gap | Core |
-| T35 | "Dr Pepper", "Dr Oetker" | raw | no rule | `drPrefix_drPepperStaysRaw` | traced, test for "Dr Pepper" | Core |
-| T36 | "Dr. Patel" as a list name | private | same as T33 | `drPrefix_listNameMasks` | gap | Core |
+| T33 | "Dr. Patel" | PRIVATE. 4:50 PM PT (5): a "dr" token with a period, or a "dr" token followed by a capitalized name other than Pepper, masks. It is a phrase rule and Core builds it. (Product's 4:22 wording "via the doctor/clinic phrases" is replaced by this) | `PrivateFacts.words("dr. patel")` gives ["dr","patel"]; "dr" is not in the new set (`ObjectPrivacy.swift:77`); no other part of the one check reads "dr". I found no "phrase" code in `ObjectPrivacy.swift` or `PrivateWords.swift`; the only other "dr" in `TesseraCore/Sources` is in `Home/HomeDonePack.swift:118` (a Claude-bound off-limits list, not the screen wall). So today "Dr. Patel" is **raw** on #890 head, and master masked it only because bare "dr" was a title word (`master:PrivateWords.swift:29`). P28 in `decisions-328-332-338.md` called this "inferred"; I trace it as a **gap**, now ruled | `drPrefix_drDotPatelMasks` | gap, ruled 4:50 PM PT | Core builds the phrase rule. The lookup lowercases first (`ObjectPrivacy.swift:66`), so the rule must read the original-case title to see a capitalized name |
+| T34 | "Dr Patel" (no dot) | PRIVATE (a "dr" token followed by a capitalized name other than Pepper), 4:50 PM PT (5) | same trace | `drPrefix_drPatelMasks` | gap, ruled 4:50 PM PT | Core |
+| T35 | "Dr Pepper" | raw. 4:50 PM PT (5): the phrase rule excludes Pepper. ("Dr Oetker" and "Dr. Pepper" with a period are not ruled, see Q3.) | no rule yet; must stay raw once the phrase rule lands | `drPrefix_drPepperStaysRaw` | traced today, test (`PrivacyParityTests.swift:16`); keeps holding after the phrase rule | Core |
+| T36 | "Dr. Patel" as a list name, a recipe title and a routine title | private on every title-word surface ("Private list", "Private recipe", "Private workout"); not on tasks or notes | same as T33 | `drPrefix_listNameMasks` | gap, ruled 4:50 PM PT | Core |
 
 ---
 
@@ -218,20 +229,22 @@ These pin what must STILL mask once the eight 4:35 words leave. The ruling says 
 | Bucket | Rows |
 |---|---|
 | Traced, with a test on #890 head | T01 (A), T02 (A), T03, T04, T08 (A), T09 ("Rent car"), T40, T41, T27, T28 (two of three) |
-| Traced in code, no test | T05, T06, T07, T09 (six other words), T42 to T52, T60, T62, T70 to T76, T78 to T80, T20, T21, T25 to T26, T29, T29, matrix rows |
-| Inferred | T02 (B), T53 (Product intent), T77, T81, Groceries screen row, Home routine line |
-| Gap | T10 to T17 (second trim not in #890), T33, T34, T36 (Dr prefix), Siri add-to-list read-back, Spotlight index (not built) |
+| Traced in code, no test | T05, T06, T07, T09 (six other words), T42 to T52, T60, T62, T70 to T75, T78 to T80, T20, T21, T25 to T26, T29, T22a, T35, T17d, matrix rows |
+| Inferred | T02 (B), T77, T81, Groceries screen row, Home routine line |
+| Gap | T10 to T17 (second trim not in #890, boarded Core gap), T17a to T17c (third trim, 4:50 PM PT), T22 and T30 (grocery unit amounts, 4:50 PM PT), T76 (plurals, 4:50 PM PT), T33, T34, T36 (Dr phrase rule, ruled 4:50 PM PT), Siri read-backs (Intents, 4:50 PM PT (7)), Spotlight index (not built) |
 
 ## Gaps by owner
 
 **Core**
-1. Land the 4:35 PM second trim in `ObjectPrivacy.titleWords` (`pr890:ObjectPrivacy.swift:76-79`): subtract kg, lb, lbs, kcal, calories, pain, recovery, weight. T10 to T17. Add the five test rows from the ruling ("flour 5 kg", "ground beef 2 lb", "pain au chocolat", "recovery shake", "Weight Watchers chili") to `PrivacyParityTests.plain` (`:14-17`), plus "500 kcal bowl".
-2. The two no-ops in the subtraction list ("pepper", "dr", and "tip" which only left because the money union left) are harmless, but a test per word (T05 to T09) is what actually keeps them out. Add them; `PrivacyParityTests` has only 6 of the 22 removed words as rows.
-3. "Dr. Patel" has no masking path now that bare "dr" is gone (T33 to T36). 4:22 says it "still masks via the doctor/clinic phrases"; no such phrase code exists. Needs a small rule (a "dr" token followed by a capitalised name, not Pepper/Oetker) or a Product change to the ruling.
-4. T22 and T30 to T32: decimal-weight groceries ("2.5 kg rice") and "pound"-as-unit groceries ("1 pound butter") still mask through the body and money walls, which the title-word trims do not touch.
-5. `Intents.swift:180,205` use `PrivateFacts.isPrivateTitle` (no title words). Decide with Product whether Siri read-backs for list items and recipes go through the one check (Q4).
-6. T61: note "always Private note" vs the code (Q2).
-7. Tests for the surfaces not covered: list NAME shelf (`ListsShelf.swift:97`), routine title (`ObjectPrivacy.routineTitle`), Home cook line (`HomeLines.swift:599`).
+1. Land the 4:35 PM second trim in `ObjectPrivacy.titleWords` (`pr890:ObjectPrivacy.swift:76-79`): subtract kg, lb, lbs, kcal, calories, pain, recovery, weight (T10 to T17; boarded gap, #890 does not have it). Add the five test rows from the ruling ("flour 5 kg", "ground beef 2 lb", "pain au chocolat", "recovery shake", "Weight Watchers chili") to `PrivacyParityTests.plain` (`:14-17`), plus "500 kcal bowl".
+2. 4:50 PM PT third trim: also subtract slept, sleepy, drained; keep tired and burnout (T17a to T17d). Rows "Drained tuna" and "Sleepy time tea" stay raw.
+3. 4:50 PM PT matching: tolerate a plural of a KEPT word ("dentists" masks, T76); do not match joined words ("dentist-appt" stays raw, T75); "sick" keeps masking including slang (T52).
+4. 4:50 PM PT phrase rule: "Dr. Patel" and "Dr Patel" mask (a "dr" token with a period, or followed by a capitalized name other than Pepper); "Dr Pepper" stays raw (T33 to T36). Needs the original-case title, not the lowercased one.
+5. 4:50 PM PT (6): body-fact and money rules never mask a grocery item, list item or recipe because of a unit amount: "5 kg flour", "1 pound butter", "rice 2.5 kg", "chicken 1.5 lb" stay raw (T20 to T22, T30). Body and money lines (notes, "weighed 82.4 kg") still mask (T22a, T23, T28).
+6. 4:50 PM PT (7): Siri read-backs at `Intents.swift:180,205` go through the one check for routine, workout and list names (and items, recipes); tasks keep their own rules.
+7. 4:50 PM PT (1): notes are NOT always "Private note"; only flagged, or secret, money or body words, and no title-word check (T61). Make sure the composed one function is not called from the note branch.
+8. The two no-ops in the subtraction list ("pepper", "dr", and "tip" which only left because the money union left) are harmless, but a test per word (T05 to T09) is what actually keeps them out. Add them; `PrivacyParityTests` has only 6 of the removed words as rows.
+9. Tests for the surfaces not covered: list NAME shelf (`ListsShelf.swift:97`), routine title (`ObjectPrivacy.routineTitle`), Home cook line (`HomeLines.swift:599`).
 
 **Builder B**
 1. Screens: the ShopTrip/Lists/RecipePage/Groceries calls already go through the core function (`ShopTrip.swift:18-20`, `ListsShelf.swift:97`, `RecipePage.swift:584`, `RecipesShelf.swift:39`). Verify the visible `GroceriesView` row text and the Done/Resume keys (4:33) on a phone check after Core lands: one grocery row ("Blood orange" raw), one list name ("Dentist" private), one routine. `qa/review-890.md` also asks for this phone check.
@@ -240,11 +253,8 @@ These pin what must STILL mask once the eight 4:35 words leave. The ruling says 
 
 ## Open questions for Product
 
-- **Q1.** The 4:35 PM ruling names only bpm, sore, hurt, sick as kept health words. After both trims 15 more `healthWords` remain by derivation: slept, sleepy, tired, exhausted, fatigue, rested, recover, hrv, unwell, drained, burnout, ache, aches, weigh, weighed, bmi (16 counting both ache forms). Some collide with food or everyday titles: "drained" ("Drained tuna", "Drained chickpeas"), "rested" ("Rested dough"), "tired" ("Tired legs stretch"), "burnout" (a game or playlist list), "sleepy" ("Sleepy time tea", sibling of the removed "sleep tea"). Keep all, or trim "drained", "rested", "sleepy", "tired", "burnout" too?
-- **Q2.** 4:20 (3) and 4:25 N3 say "notes are always 'Private note'" and also "no per-word check". On code a note shows its words unless flagged or it has a secret, money or a body fact (`ObjectPrivacy.swift:40-44`). Does "always" mean every note displays as "Private note" (a bigger change than any trim), or only that titleWords never decide a note?
-- **Q3.** Variants: should "dentists", "doctors", "therapies", "hospitals" (plurals) and "dentist-appt" or "dentist,flowers" mask? Today they do not, because matching is exact-token (T75, T76).
-- **Q4.** Siri and Spotlight: should a Siri add to a list or recipe read back "Private item" for a kept title word? `Intents.swift:180,205` do not ask the one check, and no Spotlight index exists yet. 4:20 (3) names only items, recipes, workouts, and list names.
-- **Q5.** "rice 2.5 kg" and "chicken 1.5 lb": a grocery with a decimal weight masks through the body-fact rule even after the 4:35 trim. The ruling said the body rule "still catches real weigh-ins and numbers with units on body lines", but a grocery line is not a body line. Exempt grocery items (or list items with a food word) from the decimal-plus-unit path, or accept?
-- **Q6.** "1 pound butter", "2 pounds apples": the money wall (not titleWords) masks an amount beside "pound" (T30). "All money words leave titleWords" does not reach `isMoneyShaped`. Should `pound(s)` count as money only beside a currency sign, "gbp" or "quid"?
-- **Q7.** "sick": the body wall exempts slang ("sick of rice", "sick beat", `PrivateFacts.swift:57-61`) but the title-word lookup does not, so "sick beat" playlist or "Sick day soup" masks. Intended?
-- **Q8.** "Dr. Patel" (T33): Product wrote "still masks via the doctor/clinic phrases" but no such phrase rule exists. Is a new rule wanted, or should the ruling read "Dr Patel stays raw unless a doctor/clinic word is also in the title"?
+Answered at 4:50 PM PT (line 963) and deleted: notes "always Private note" (corrected, T61), plurals and joined words (T75, T76), the Siri and Spotlight read-back question for Siri (T-matrix; Spotlight has no index yet), decimal-weight groceries, "pound" as a unit, "sick" slang, "Dr. Patel", and the drained, sleepy, slept, tired, burnout part of the old Q1. Still open:
+
+- **Q1.** "rested" ("Rested dough") and the other kept words the 4:50 PM PT ruling did not name (exhausted, fatigue, recover, unwell, ache, aches, weigh, weighed, hrv, bmi): keep all (this file's reading), or trim "rested" too?
+- **Q2.** Money wall beside everyday words that are NOT unit amounts: "2 tip jars", "3 balance bikes", "pound cake 2", "Euro trip 2" mask through the money wall (T31, T32). 4:50 PM PT (6) covers only unit amounts. Accept?
+- **Q3.** The "Dr" phrase rule as worded (a "dr" token with a period, or followed by a capitalized name other than Pepper) also masks "Dr Oetker pizza" and "Dr. Pepper" with a period. Intended, or add Oetker and "Dr. Pepper" to the exclusions? (T08, T35.)
