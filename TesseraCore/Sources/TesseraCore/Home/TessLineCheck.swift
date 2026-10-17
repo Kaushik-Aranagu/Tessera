@@ -70,7 +70,8 @@ public enum TessLineCheck {
     /// is the only Claude Home job; line-check-vectors L1, L2 and L52 keep "usual" and a weekday on planned items).
     public static func check(_ line: String?, slot: Slot, numbers: [Int], names: [String], rulesLine: String?,
                              isDone: Bool, dayLabel: String?, hero: String?, title: String? = nil,
-                             kind: HomeFact.Kind? = nil, fixed: Bool = false, house: HouseDay? = nil) -> Verdict
+                             kind: HomeFact.Kind? = nil, fixed: Bool = false, house: HouseDay? = nil,
+                             counts: [String: Set<Int>] = [:], lastWeightKg: Double? = nil) -> Verdict
     {
         guard let line, !line.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return .noLine }
         if fixed {
@@ -80,10 +81,17 @@ public enum TessLineCheck {
         let words = tokens(text)
         let padded = pad(words)
         let titleText = title ?? names.first ?? ""
-        let titleWords = Set(tokens(titleText))
+        // The names a line may use are his free text, so they are untrusted: a walled name, or one that talks to a
+        // model, never licenses a capitalised word in Claude's line (injection audit gap 3).
+        let usable = names.filter { !unusable($0, lastWeightKg: lastWeightKg) }
+        let titleWords = unusable(titleText, lastWeightKg: lastWeightKg) ? [] : Set(tokens(titleText))
         var codes = shapeCodes(text, raw: line, slot: slot)
         codes += digitCodes(text, numbers: numbers, rulesLine: rulesLine, clockMayDrop: slot == .context && isDone)
-        codes += wordCodes(text, words: words, padded: padded, names: names, titleWords: titleWords, kind: kind)
+        if !countsHold(text, counts: counts) {
+            codes.append("C6")
+        }
+        codes += wordCodes(text, words: words, padded: padded, names: usable, titleWords: titleWords, kind: kind,
+                           lastWeightKg: lastWeightKg)
         if slot == .context,
            repeats(
                words,
@@ -106,6 +114,11 @@ public enum TessLineCheck {
         var seen = Set<String>()
         codes = codes.filter { seen.insert($0).inserted }
         return codes.isEmpty ? .pass : .fail(codes)
+    }
+
+    /// Whether a name must stay out of the C9 allowlist: walled (`HomeDonePack.isWalled`) or steering text.
+    static func unusable(_ name: String, lastWeightKg: Double?) -> Bool {
+        HomeDonePack.isWalled(name, lastWeightKg: lastWeightKg) || PromptSteering.mentions(name)
     }
 
     /// C2 to C5: the slot's caps, its stop, and its marks.
@@ -152,6 +165,25 @@ public enum TessLineCheck {
         return codes
     }
 
+    /// Each digit counts what the facts say it counts (QA on #655): with 3 exercises and 9 days since, "first in 3
+    /// days" fails. `counts` maps a counted noun ("days", "exercises", "sets", "bests") to the values it may take.
+    static func countsHold(_ text: String, counts: [String: Set<Int>]) -> Bool {
+        guard !counts.isEmpty else { return true }
+        let lower = text.lowercased()
+        for match in lower.matches(of: /(\d+)\s+(?:new\s+|more\s+)?([a-z]+)/) {
+            // "4 of 5 exercises": the 5 is the plan, licensed by `numbers`, not a count of what he did.
+            guard let value = Int(match.output.1), !lower[..<match.range.lowerBound].hasSuffix("of ") else { continue }
+            var noun = String(match.output.2)
+            if !noun.hasSuffix("s") {
+                noun += "s"
+            }
+            if let allowed = counts[noun], !allowed.contains(value) {
+                return false
+            }
+        }
+        return true
+    }
+
     /// Every clock reads "7:40 pm" or "7 pm": 12-hour, a space, then "am" or "pm" (CLOCK). "7:40pm", "19:40",
     /// "7.40 pm" and "7:4 pm" are refused.
     static func clockShapeHolds(_ text: String) -> Bool {
@@ -183,7 +215,7 @@ public enum TessLineCheck {
 
     /// C8 to C13, the house word, and greetings.
     private static func wordCodes(_ text: String, words: [String], padded: String, names: [String],
-                                  titleWords: Set<String>, kind: HomeFact.Kind?) -> [String]
+                                  titleWords: Set<String>, kind: HomeFact.Kind?, lastWeightKg: Double?) -> [String]
     {
         var codes: [String] = []
         let numberWord = words.enumerated().contains { index, word in
@@ -216,8 +248,8 @@ public enum TessLineCheck {
         }
         if (words.contains("legs") && !titleWords.contains("legs")) || words.contains(where: off.contains)
             || moneyMarks.contains(where: text.contains) || placePhrases.contains(where: { padded.contains(" \($0) ") })
-            // The engine's own walls, last (QA on #652).
-            || PrivateFacts.isWalled(text, lastWeightKg: nil)
+            // The engine's own walls, last (QA on #652), with his weight.
+            || PrivateFacts.isWalled(text, lastWeightKg: lastWeightKg)
         {
             codes.append("C12")
         }
@@ -356,7 +388,9 @@ public enum TessLineCheck {
     }
 
     static let unverifiable = ["last week", "this week", "next week", "weekend", "the other day", "recently",
-                               "lately", "earlier", "a while", "these days", "this month", "last month"]
+                               "lately", "earlier", "a while", "these days", "this month", "last month", "midnight",
+                               "dawn", "dusk", "sunrise", "sunset", "lunch", "dinner", "breakfast", "bedtime",
+                               "this year", "last year"]
 
     /// Bare part-of-day words and the part each means; "early" and "late" can never be checked.
     private static let partWords: [String: Part?] = [
@@ -477,7 +511,8 @@ extension TessLineCheck {
                                         "demise", "chastise", "excise", "incise", "franchise", "disguise", "bruise",
                                         "bruised", "concise", "circumcise", "improvise", "improvised", "advertise",
                                         "advertised", "comprise", "comprised", "treatise", "turquoise", "tortoise",
-                                        "porpoise", "mortise", "anise", "valise", "reprise", "apprise"]
+                                        "porpoise", "mortise", "anise", "valise", "reprise", "apprise", "promising",
+                                        "surprising", "praising", "supervised", "supervising", "advising"]
 
     /// British spellings (C13): the house list, "-ise" and "-isation" stems, and "-our" stems.
     static func isBritish(_ word: String) -> Bool {

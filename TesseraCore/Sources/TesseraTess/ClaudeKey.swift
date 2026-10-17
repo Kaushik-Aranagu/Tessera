@@ -192,8 +192,8 @@ public struct ClaudeKeyCheck {
     public struct Result: Sendable {
         public let outcome: Outcome
         public let line: String
-        /// "a1B2", for the field's "...a1B2 · works"; nil when nothing was kept.
-        public let last4: String?
+        /// Whether a key was kept. No part of the key travels in a result.
+        public let saved: Bool
     }
 
     public static let model = "claude-haiku-5-5"
@@ -217,12 +217,11 @@ public struct ClaudeKeyCheck {
         // A key pasted from a wrapped line can carry spaces or breaks inside it: a key never has any.
         let key = String(pasted.filter { !$0.isWhitespace })
         guard key.hasPrefix("sk-ant-"), key.count > 12 else {
-            return Result(outcome: .notAKey, line: "That doesn't look like a Claude key. Paste it again?", last4: nil)
+            return Result(outcome: .notAKey, line: "That doesn't look like a Claude key. Paste it again?", saved: false)
         }
-        let last4 = String(key.suffix(4))
         // Only say "saved" when it was.
         guard keys.save(key) else {
-            return Result(outcome: .notSaved, line: "I couldn't save that key. Try again?", last4: nil)
+            return Result(outcome: .notSaved, line: "I couldn't save that key. Try again?", saved: false)
         }
         let started = Date.now
         var outcome: Outcome
@@ -240,7 +239,7 @@ public struct ClaudeKeyCheck {
                 let estimate = TessUsageLedger.estimate(text: "Hi", maxTokens: 1, model: Self.model)
                 // Reserve before the await, so two calls can't both pass the cap (QA K11).
                 guard let reservation = ledger.reserve(estimate, now: now(), calendar: calendar) else {
-                    return finish(.capReached, last4: last4, started: started, requestID: id, cost: 0, used: used)
+                    return finish(.capReached, started: started, requestID: id, cost: 0, used: used)
                 }
                 defer { ledger.settle(reservation) }
                 (status, body, id) = try await send(key: key, path: "", body: [
@@ -274,17 +273,17 @@ public struct ClaudeKeyCheck {
         {
             outcome = .capReached
         }
-        return finish(outcome, last4: last4, started: started, requestID: requestID, cost: cost, used: used)
+        return finish(outcome, started: started, requestID: requestID, cost: cost, used: used)
     }
 
-    private func finish(_ outcome: Outcome, last4: String, started: Date, requestID: String?, cost: Int64,
+    private func finish(_ outcome: Outcome, started: Date, requestID: String?, cost: Int64,
                         used: (input: Int, output: Int)) -> Result
     {
         ledger.record(use: .keyCheck, model: Self.model, input: used.input, output: used.output, costNano: cost,
                       latency: Date.now.timeIntervalSince(started), outcome: outcome.rawValue, requestID: requestID,
                       at: now())
-        return Result(outcome: outcome, line: Self.line(outcome, last4: last4, now: now(), calendar: calendar),
-                      last4: last4)
+        return Result(outcome: outcome, line: Self.line(outcome, now: now(), calendar: calendar),
+                      saved: true)
     }
 
     /// One request; the key goes only into this request's header.
@@ -323,9 +322,9 @@ public struct ClaudeKeyCheck {
     }
 
     /// Tess's line for each outcome (tess-voice.md: one line, under 12 words, no "!").
-    static func line(_ outcome: Outcome, last4: String, now: Date, calendar: Calendar) -> String {
+    static func line(_ outcome: Outcome, now: Date, calendar: Calendar) -> String {
         switch outcome {
-        case .works: return "Key saved. Ends in ...\(last4)."
+        case .works: return "Key saved."
         case .badKey: return "That key didn't work. Paste it again?"
         case .notAllowed: return "That key can't use Claude yet. Check it in the Console?"
         // No promise of a retry: nothing retries yet. The key is kept; Test again checks it.

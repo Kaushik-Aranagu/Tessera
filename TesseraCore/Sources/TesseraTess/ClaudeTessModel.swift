@@ -49,6 +49,9 @@ public struct ClaudeTessModel: TessModel {
     public func run(_ request: TessRequest, engine: ActionEngine) async -> TessResult {
         // Siri and Shortcuts commit at once (no ghost, no UNDO): Claude never writes for them (QA R3 on #283).
         guard !request.context.commitImmediately, let key = keys.read() else { return .missed }
+        // The switch and the key shape are checked here too, not only in `isAvailable` and the router: a direct
+        // caller must not skip them (a4-bypass item 3).
+        guard sendsMisses(), !looksLikeClaudeKey(request.text) else { return .missed }
         // The second wall (MU2, Research 138 MW4 and 139): a secret, money or body phrase never leaves, even from the
         // inbox or a direct caller. The inbox drains through here, so an old item queued before the wall is dropped.
         guard !SecretWords.mentions(request.text), !PrivateFacts.isWalled(
@@ -56,7 +59,8 @@ public struct ClaudeTessModel: TessModel {
             lastWeightKg: request.lastWeightKg(engine)
         ) else { return .missed }
         // Every round resends the system prompt and the tool definitions with the phrase (QA on #283).
-        let system = system(request.context, engine: engine)
+        let system = system(request.context, engine: engine, lastWeightKg: request.lastWeightKg(engine))
+        guard !looksLikeClaudeKey(system) else { return .missed }
         let tools = (try? TessTools.definitionsJSON()).flatMap { String(data: $0, encoding: .utf8) } ?? ""
         let estimate = TessUsageLedger.estimate(text: request.text + system + tools,
                                                 maxTokens: Self.maxTokens, model: Self.model) * Int64(Self.maxRounds)
@@ -87,11 +91,19 @@ public struct ClaudeTessModel: TessModel {
                 conversation.append(["role": "assistant", "content": response.content])
                 var results: [[String: Any]] = []
                 for call in response.toolCalls {
+                    // One phrase leaves at most `maxRecordsPerPhrase` ghosts, however many calls Claude makes.
+                    guard records.count < TessTools.maxRecordsPerPhrase else {
+                        results.append(["type": "tool_result", "tool_use_id": call.id, "content": TessTools.capLine,
+                                        "is_error": true])
+                        continue
+                    }
                     do {
                         let done = try TessTools.run(call.name, arguments: call.input, engine: engine,
                                                      pending: true, now: request.context.now,
-                                                     calendar: request.context.calendar)
+                                                     calendar: request.context.calendar,
+                                                     budget: TessTools.maxRecordsPerPhrase - records.count)
                         records += done
+                        trim(&records, engine: engine)
                         results.append(["type": "tool_result", "tool_use_id": call.id, "content": "Done"])
                     } catch let answer as TessToolAnswer {
                         results.append(["type": "tool_result", "tool_use_id": call.id, "content": answer.line])
@@ -141,6 +153,13 @@ public struct ClaudeTessModel: TessModel {
         return .handled(TessCapture(records: records, line: line, source: .claude))
     }
 
+    /// Takes back any ghost past the per-phrase cap (a single call may write several).
+    private func trim(_ records: inout [OpRecord], engine: ActionEngine) {
+        guard records.count > TessTools.maxRecordsPerPhrase else { return }
+        discard(Array(records[TessTools.maxRecordsPerPhrase...]), engine: engine)
+        records.removeLast(records.count - TessTools.maxRecordsPerPhrase)
+    }
+
     private func discard(_ records: [OpRecord], engine: ActionEngine) {
         for record in records.reversed() {
             if record.state == .pending {
@@ -152,10 +171,22 @@ public struct ClaudeTessModel: TessModel {
     }
 
     /// The capture pack: today, the workout and last set in focus, and Tess's rules. Never notes, health or history.
-    func system(_ context: TessContext, engine: ActionEngine) -> String {
-        TessVoice.instructions(today: TessModelCapture.today(context),
-                               currentWorkout: TessModelCapture.workout(context, engine: engine),
-                               lastSet: TessModelCapture.lastSet(context, engine: engine))
+    /// The exercise name is his free text: a name that trips the wall (a secret word, money, a body fact, a key) sends
+    /// "no workout in focus" and no last set (a4-bypass item 1).
+    func system(_ context: TessContext, engine: ActionEngine, lastWeightKg: Double?) -> String {
+        let walled = Self.exerciseIsWalled(context, engine: engine, lastWeightKg: lastWeightKg)
+        return TessVoice.instructions(
+            today: TessModelCapture.today(context),
+            currentWorkout: walled ? "no workout in focus" : TessModelCapture.workout(context, engine: engine),
+            lastSet: walled ? "no last set" : TessModelCapture.lastSet(context, engine: engine)
+        )
+    }
+
+    /// Whether the exercise in focus has a name that must not leave the phone.
+    static func exerciseIsWalled(_ context: TessContext, engine: ActionEngine, lastWeightKg: Double?) -> Bool {
+        guard let entry = context.entry.flatMap({ engine.store.object(id: $0) }),
+              let exercise = engine.store.linkedClass("exercise", of: entry) else { return false }
+        return HomeDonePack.isWalled(exercise.name, lastWeightKg: lastWeightKg)
     }
 
     // MARK: The request

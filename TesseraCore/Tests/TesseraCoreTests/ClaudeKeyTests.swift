@@ -107,9 +107,42 @@ struct ClaudeKeyTests {
         #expect(!StubProtocol.requests.contains { $0.url?.host()?.contains("evil") == true })
     }
 
+    @Test func noResultOrLineCarriesAnyPartOfTheKey() async {
+        // Built at run time from pieces; no 4-character run of it may show in any field or line.
+        let secret = "sk-" + "ant-" + "Qz9w" + "Kv3m" + "Xt6r" + "Hb2n"
+        let runs = (0 ... secret.count - 4).map { index -> String in
+            let start = secret.index(secret.startIndex, offsetBy: index)
+            return String(secret[start ..< secret.index(start, offsetBy: 4)])
+        }.filter { $0 != "sk-a" && $0 != "k-an" && $0 != "-ant" && $0 != "ant-" }
+        func clean(_ result: ClaudeKeyCheck.Result) {
+            let text = "\(result)"
+            for run in runs {
+                #expect(!text.contains(run), "\(run) in \(text)")
+            }
+        }
+        for row in [(200, #"{"input_tokens": 8}"#), (401, "{}"), (403, "{}"), (429, "{}"), (500, "{}")] {
+            StubProtocol.reply = (row.0, row.1)
+            await clean(check().test(pasted: secret))
+        }
+        StubProtocol.failure = .notConnectedToInternet
+        await clean(check().test(pasted: secret))
+        StubProtocol.failure = nil
+        await clean(check().test(pasted: "sk-ant-"))
+        let outcomes: [ClaudeKeyCheck.Outcome] = [
+            .works, .badKey, .notAllowed, .offline, .timeout, .capReached, .busy, .accountPaused,
+            .notAKey, .notSaved, .other,
+        ]
+        for outcome in outcomes {
+            let line = ClaudeKeyCheck.line(outcome, now: .now, calendar: .current)
+            for run in runs {
+                #expect(!line.contains(run))
+            }
+        }
+    }
+
     @Test func aWorkingKeyIsSavedCheckedForFreeAndNeverLeaves() async throws {
         let result = await check().test(pasted: "  \(Self.key)\n")
-        #expect(result.outcome == .works && result.line == "Key saved. Ends in ...\(Self.key.suffix(4)).")
+        #expect(result.outcome == .works && result.line == "Key saved.")
         #expect(keys.read() == Self.key)
         let request = try #require(StubProtocol.requests.last)
         #expect(request.url?.path == "/v1/messages/count_tokens")

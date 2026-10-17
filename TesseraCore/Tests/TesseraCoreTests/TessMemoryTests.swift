@@ -32,7 +32,8 @@ struct TessMemoryTests {
         engine.zone = { Self.la }
         forgetLog = FileManager.default.temporaryDirectory
             .appendingPathComponent("tess-forgotten-\(UUID().uuidString).json")
-        memory = TessMemoryStore(engine: engine, calendar: Self.calendar, forgetLogURL: forgetLog)
+        memory = TessMemoryStore(engine: engine, calendar: Self.calendar, forgetLogURL: forgetLog,
+                                 fileProtection: [])
     }
 
     @discardableResult
@@ -267,7 +268,8 @@ struct TessMemoryTests {
         let olderClasses = try older.prepareCatalog()
         let olderEngine = ActionEngine(store: older, classes: olderClasses)
         try olderEngine.perform(RememberFact(text: "I train after work"), by: .user)
-        let olderMemory = TessMemoryStore(engine: olderEngine, calendar: Self.calendar, forgetLogURL: forgetLog)
+        let olderMemory = TessMemoryStore(engine: olderEngine, calendar: Self.calendar, forgetLogURL: forgetLog,
+                                          fileProtection: [])
         // The restored line was written before the forget (an old backup), so the log catches it.
         olderMemory.lines(of: .told).first.flatMap { older.object(id: $0.id) }?.createdAt = Self.at(1)
         #expect(olderMemory.lines(of: .told).count == 1)

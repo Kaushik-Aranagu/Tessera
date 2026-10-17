@@ -80,6 +80,36 @@ final class AppModel {
 
     @ObservationIgnored private var planWordingStore: ClaudePlanWording?
 
+    /// A demo flag is on: Claude's Home words are never read or written (home-lines-job.md §5).
+    static var isDemo: Bool {
+        ["-demo", "-resetDemo", "-theme", "-fakeClaudeKey"].contains(where: { LaunchFlags.has($0) })
+    }
+
+    /// Home's done job through Claude (board 0al): one instance, so its per-workout cache holds.
+    var homeDone: ClaudeHomeDone {
+        if let job = homeDoneStore {
+            return job
+        }
+        let job = ClaudeHomeDone(keys: SystemKeychain(), ledger: TessUsageLedger(store: store, classes: classes),
+                                 cacheURL: Self.isDemo ? nil : ClaudeHomeDone.defaultCacheURL)
+        {
+            [weak self] in self?.asksClaude ?? false
+        }
+        homeDoneStore = job
+        return job
+    }
+
+    @ObservationIgnored private var homeDoneStore: ClaudeHomeDone?
+
+    /// Claude's words for a finished workout's Home slots, or nil: the rules words stand (Kaushik's "Sonnet on
+    /// Home", 2:41 PM PT Oct 16). Show the rules line first; a returned slot replaces its rules words.
+    func homeDoneWords(for line: HomeLine) async -> HomeDoneWords? {
+        guard !Self.isDemo, line.fact.kind == .workout, line.fact.state == .done, let ended = line.fact.endedAt
+        else { return nil }
+        let label = HomeDonePack.dayLabel(finish: ended, calendar: homeDone.calendar)
+        return await homeDone.words(for: line, dayLabel: label, store: store)
+    }
+
     /// Bumped after writes so views re-read derived data.
     private(set) var revision = 0
     /// Pages above Home.
@@ -145,7 +175,7 @@ final class AppModel {
         settingsAreReal = TesseraSchema.lastOpenOutcome == .opened && classes[.settings] != nil
         // The release that adds the settings object: the old keys move in once, as system (settings-object.md).
         // Never while a demo flag is on, so a demo can't freeze a look into his data.
-        let demo = ["-demo", "-resetDemo", "-theme", "-fakeClaudeKey"].contains(where: { LaunchFlags.has($0) })
+        let demo = Self.isDemo
         if !demo, settingsAreReal {
             SettingsStore(engine: engine).migrateAtLaunch(looks: ThemeStore.sharedDefaults, standard: .standard,
                                                           folderName: BackupKeeper.pickedFolder
