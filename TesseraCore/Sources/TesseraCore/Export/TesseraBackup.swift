@@ -54,12 +54,20 @@ public enum TesseraBackup {
     /// Writes a consistent copy of the store to `url` (replacing anything there) and stamps it.
     @MainActor
     public static func write(from context: TesseraContext, to url: URL, now: Date = .now,
-                             appVersion: String? = nil) throws
+                             appVersion: String? = nil, leavingOutPrivate: Bool = false) throws
     {
         try context.save()
-        try? FileManager.default.removeItem(at: url)
-        let copy = try DatabaseQueue(path: url.path)
+        // A copy for iCloud Drive is built and masked in a temporary folder on the same volume, then moved in: the
+        // whole copy never sits in the destination, not even as a hidden partial (G28, QA on #707).
+        let work = leavingOutPrivate ? try privateWorkURL(near: url) : url
+        try? FileManager.default.removeItem(at: work)
+        let copy = try DatabaseQueue(path: work.path)
         try context.database.backup(to: copy)
+        // The copy for iCloud Drive leaves private notes, recipes, items and secret-word lines out (G28). The local
+        // copy on the phone keeps every word.
+        if leavingOutPrivate {
+            try leaveOutPrivate(PrivateWords.labels(in: context), from: copy, context: context)
+        }
         // One self-contained file: the copy inherits WAL mode from the store, which would leave -wal/-shm siblings.
         try copy.writeWithoutTransaction { try $0.execute(sql: "PRAGMA journal_mode = DELETE") }
         try copy.write { db in
@@ -74,8 +82,22 @@ public enum TesseraBackup {
         }
         try copy.close()
         for sibling in ["-wal", "-shm"] {
-            try? FileManager.default.removeItem(atPath: url.path + sibling)
+            try? FileManager.default.removeItem(atPath: work.path + sibling)
         }
+        if leavingOutPrivate {
+            try? FileManager.default.removeItem(at: url)
+            try FileManager.default.moveItem(at: work, to: url)
+            try? FileManager.default.removeItem(at: work.deletingLastPathComponent())
+        }
+    }
+
+    /// A fresh path in a temporary folder on the destination's volume (an item replacement folder), never in the
+    /// destination folder itself.
+    @MainActor
+    static func privateWorkURL(near url: URL) throws -> URL {
+        let folder = try FileManager.default.url(for: .itemReplacementDirectory, in: .userDomainMask,
+                                                 appropriateFor: url, create: true)
+        return folder.appendingPathComponent("private-\(UUID().uuidString).tessera")
     }
 
     /// A stamped copy of the store file at `storeURL` (closed, at launch), for keeping what's replaced by a restore.
@@ -132,7 +154,7 @@ public enum TesseraBackup {
     @MainActor
     @discardableResult
     public static func writeRolling(from context: TesseraContext, in folder: URL, keep: Int = 7, now: Date = .now,
-                                    calendar: Calendar = .current) throws -> URL?
+                                    calendar: Calendar = .current, leavingOutPrivate: Bool = false) throws -> URL?
     {
         // A store with no file (this session fell back to memory: a damaged open, or data from a newer Tessera) is
         // never copied: a week of empty copies would roll his seven good ones away (QA M1 on #475).
@@ -171,7 +193,7 @@ public enum TesseraBackup {
             try? manager.removeItem(at: folder.appendingPathComponent(name))
         }
         let partial = folder.appendingPathComponent(".\(file.lastPathComponent).partial")
-        try write(from: context, to: partial, now: now)
+        try write(from: context, to: partial, now: now, leavingOutPrivate: leavingOutPrivate)
         if exists {
             _ = try manager.replaceItemAt(file, withItemAt: partial)
         } else {
@@ -239,6 +261,52 @@ public enum TesseraBackup {
         } catch {
             throw BackupError.damaged
         }
+    }
+
+    // MARK: What a restore would change (G26)
+
+    private nonisolated static let recipeCountSQL = """
+    SELECT COUNT(*) FROM object WHERE deletedAt IS NULL AND isClassObject = 0 AND classID IN
+      (SELECT id FROM classDef WHERE systemKey = ?)
+    """
+
+    /// Recipes in a backup file, Private ones included (counts only; names never leave the file).
+    public nonisolated static func recipeCount(at url: URL) -> Int? {
+        var configuration = Configuration()
+        configuration.readonly = true
+        guard let queue = try? DatabaseQueue(path: url.path, configuration: configuration) else { return nil }
+        defer { try? queue.close() }
+        return try? queue.read {
+            try Int.fetchOne($0, sql: recipeCountSQL, arguments: [SystemCatalog.Key.recipe.systemKey])
+        }
+    }
+
+    /// Recipes in the store he has now.
+    @MainActor
+    public static func recipeCount(in context: TesseraContext) -> Int? {
+        try? context.save()
+        return try? context.database.read {
+            try Int.fetchOne($0, sql: recipeCountSQL, arguments: [SystemCatalog.Key.recipe.systemKey])
+        }
+    }
+
+    /// The quiet line under "Replace everything with the copy from <day>?" when the Kitchen weight differs:
+    /// "That copy has 6 recipes. The 9 you have now are kept in Backups." Nil when the counts match or he has none
+    /// (proposed wording, Product to rule).
+    @MainActor
+    public static func restoreWeightLine(copyAt url: URL, replacing context: TesseraContext) -> String? {
+        guard let copy = recipeCount(at: url), let now = recipeCount(in: context), copy != now, now > 0 else {
+            return nil
+        }
+        return restoreWeightLine(copyRecipes: copy, nowRecipes: now)
+    }
+
+    public nonisolated static func restoreWeightLine(copyRecipes: Int, nowRecipes: Int) -> String {
+        func recipes(_ count: Int) -> String {
+            count == 1 ? "1 recipe" : "\(count) recipes"
+        }
+        return "That copy has \(recipes(copyRecipes)). The \(nowRecipes) you have now "
+            + (nowRecipes == 1 ? "is" : "are") + " kept in Backups."
     }
 
     // MARK: Restoring

@@ -120,7 +120,8 @@ struct DataSafetyTests {
         let sourceClasses = try source.prepareCatalog()
         let sourceEngine = ActionEngine(store: source, classes: sourceClasses)
         try sourceEngine.perform(CreateNote(body: "History from before"), by: .user)
-        let data = try TesseraExport(context: source.context).encoded()
+        // Test-only lossless export (maskingPrivate: false); the app never does this.
+        let data = try TesseraExport(context: source.context, maskingPrivate: false).encoded()
 
         let seeded = ObjectStore.open(inMemory: true)
         _ = try seeded.prepareCatalog()
@@ -141,7 +142,8 @@ struct DataSafetyTests {
         let engine = ActionEngine(store: store, classes: classes)
         let note = try engine.perform(CreateNote(body: "A"), by: .user).output
         note.createdAt = Date(timeIntervalSince1970: 1_792_000_000.123)
-        let data = try TesseraExport(context: store.context).encoded()
+        // Test-only lossless export (maskingPrivate: false); the app never does this.
+        let data = try TesseraExport(context: store.context, maskingPrivate: false).encoded()
         let restored = ObjectStore.open(inMemory: true)
         try TesseraExport.decode(data).restore(into: restored.context)
         let copy = try #require(restored.object(id: note.id))
@@ -241,7 +243,8 @@ struct MergeRetryTests {
         let source = ObjectStore.open(inMemory: true)
         let sourceClasses = try source.prepareCatalog()
         try ActionEngine(store: source, classes: sourceClasses).perform(CreateNote(body: "Old note"), by: .user)
-        let data = try TesseraExport(context: source.context).encoded()
+        // Test-only lossless export (maskingPrivate: false); the app never does this.
+        let data = try TesseraExport(context: source.context, maskingPrivate: false).encoded()
 
         let seeded = ObjectStore.open(inMemory: true)
         _ = try seeded.prepareCatalog()

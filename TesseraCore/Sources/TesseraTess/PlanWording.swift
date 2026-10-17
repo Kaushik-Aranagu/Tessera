@@ -36,8 +36,15 @@ public struct PlanPack: Sendable, Equatable {
     /// goes as "task" and an event as "busy", with its kind and times only.
     /// The Home pack's wall (QA audit of d6fd9ca): health, money, places, care and people words too, so "Physio at 5"
     /// or "Pay Dr Lee" goes as "task".
+    static let privateLabels: Set<String> = Set([
+        "Private recipe", "Private task", "Private note", "Private item", "Private memory",
+        ObjectPrivacy.noteLabel, ObjectPrivacy.taskLabel, ObjectPrivacy.memoryLabel, ObjectPrivacy.keptNoteLabel,
+    ].map { $0.lowercased() })
+
     static func isPrivate(_ title: String, lastWeightKg: Double?) -> Bool {
-        SecretWords.mentions(title) || HomeDonePack.isWalled(title, lastWeightKg: lastWeightKg)
+        // A walled thing already shows as its label ("Private recipe"): the label is no title to send (KC13).
+        privateLabels.contains(title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()) ||
+            SecretWords.mentions(title) || HomeDonePack.isWalled(title, lastWeightKg: lastWeightKg)
     }
 
     static func packTitle(_ block: DayPlan.Block, includesEventTitles: Bool, lastWeightKg: Double?) -> String {

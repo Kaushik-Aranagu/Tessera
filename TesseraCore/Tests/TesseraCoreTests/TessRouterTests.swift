@@ -71,7 +71,8 @@ struct TessRouterTests {
         let record = try #require(reopened.all(OpRecord.self).first { $0.id == id })
         #expect(record.route == .claude && record.model == "claude-haiku-5-5")
 
-        let data = try TesseraExport(context: reopened).encoded()
+        // Test-only lossless export (maskingPrivate: false); the app never does this.
+        let data = try TesseraExport(context: reopened, maskingPrivate: false).encoded()
         let copy = try TesseraContext(url: nil)
         try TesseraExport.decode(data).restore(into: copy)
         #expect(copy.all(OpRecord.self).first { $0.id == id }?.model == "claude-haiku-5-5")

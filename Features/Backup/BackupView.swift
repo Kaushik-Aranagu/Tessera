@@ -194,6 +194,12 @@ struct BackupView: View {
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.ink)
                     .fixedSize(horizontal: false, vertical: true)
+                if let weight = confirming.weight {
+                    Text(weight)
+                        .textRole(.label)
+                        .foregroundStyle(Theme.Colors.inkSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 PaintKey(paint: Theme.Colors.live, hint: "Restores this backup", action: confirmRestore) { _ in
                     Text("Replace")
                 } meta: {
@@ -251,7 +257,8 @@ struct BackupView: View {
             dropPicked()
             withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
                 line = nil
-                confirming = Picked(url: copy, info: info)
+                confirming = Picked(url: copy, info: info,
+                                    weight: TesseraBackup.restoreWeightLine(copyAt: copy, replacing: model.context))
             }
         } catch TesseraBackup.BackupError.newerSchema {
             say("That copy is from a newer Tessera. Update first.")
@@ -315,6 +322,8 @@ struct BackupView: View {
 private struct Picked {
     let url: URL
     let info: TesseraBackup.Info
+    /// "That copy has 6 recipes. The 9 you have now are kept in Backups." when the Kitchen differs (G26).
+    let weight: String?
 }
 
 /// A backup file for the export sheet.

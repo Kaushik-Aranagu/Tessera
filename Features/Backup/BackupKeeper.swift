@@ -97,7 +97,7 @@ enum BackupKeeper {
             }
         }
         do {
-            _ = try TesseraBackup.writeRolling(from: context, in: folder, now: now)
+            _ = try TesseraBackup.writeRolling(from: context, in: folder, now: now, leavingOutPrivate: true)
             note(.folder, error: nil, now: now)
         } catch {
             note(.folder, error: error, now: now)
@@ -128,7 +128,7 @@ enum BackupKeeper {
             }
         }
         try defaults.set(url.bookmarkData(), forKey: bookmarkKey)
-        _ = try TesseraBackup.writeRolling(from: context, in: url, now: AppClock.now)
+        _ = try TesseraBackup.writeRolling(from: context, in: url, now: AppClock.now, leavingOutPrivate: true)
         // The folder's display name goes in the database (Core's settings), so after a restore Backups can say
         // where the copies were kept (restore-walk 3b). Never while a demo is running.
         if !LaunchFlags.has("-demo") {

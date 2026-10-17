@@ -97,8 +97,12 @@ public enum ExportError: Error, Equatable {
 
 @MainActor
 public extension TesseraExport {
-    /// Reads the whole store.
-    init(context: TesseraContext, now: Date = .now) throws {
+    /// Reads the whole store. With `maskingPrivate` (the shared file, G28) every private note, item, recipe or secret
+    /// line reads "Private note", "Private item" or "Private recipe": title and field values both, and the op log's
+    /// summaries and values for it. Money and body words count as private. Not lossless then, and there is no opt-in in
+    /// v1. It defaults to true, so every export masks. `false` is test-only, for lossless round trips; the app never does it. Anything the person
+    /// can send elsewhere must pass `maskingPrivate: true`.
+    init(context: TesseraContext, now: Date = .now, maskingPrivate: Bool = true) throws {
         let classDefs = context.all(ClassDef.self).sorted { $0.createdAt < $1.createdAt }
         let records = context.all(ObjectRecord.self).sorted { $0.createdAt < $1.createdAt }
         let objectLinks = context.all(ObjectLink.self).sorted { $0.createdAt < $1.createdAt }
@@ -138,6 +142,44 @@ public extension TesseraExport {
             OpEntry(id: record.id, action: record.action, actor: record.actor, state: record.state,
                     summary: record.summary, createdAt: record.createdAt, updatedAt: record.updatedAt, ops: record.ops,
                     route: record.routeRaw, model: record.model, zone: record.zone)
+        }
+        if maskingPrivate {
+            let current = PrivateWords.labels(in: context)
+            mask(current, past: PrivateWords.historyLabels(in: context, current: current), context: context)
+        }
+    }
+
+    /// Replaces what the private objects hold with their label; only done flags and dates stay.
+    private mutating func mask(_ labels: [UUID: String], past: [UUID: String], context: TesseraContext) {
+        guard !labels.isEmpty || !past.isEmpty || operations.contains(where: { PrivateWords.summaryIsPrivate($0.summary, context: context) })
+        else { return }
+        objects = objects.map { entry in
+            guard let label = labels[entry.id] else { return entry }
+            var masked = entry
+            masked.title = label
+            masked.values = entry.values.filter { PrivateWords.structural($0.value) }
+            return masked
+        }
+        // The op log also masks what was private once and is plain now.
+        let labels = labels.merging(past) { current, _ in current }
+        operations = operations.map { entry in
+            let touched = entry.ops.compactMap { labels[$0.objectID] }
+            let wordy = PrivateWords.summaryIsPrivate(entry.summary, context: context)
+            guard !touched.isEmpty || wordy else { return entry }
+            var masked = entry
+            masked.summary = touched.first ?? SecretWords.title
+            masked.ops = entry.ops.map { op in
+                guard let label = labels[op.objectID] else { return op }
+                switch op {
+                case let .create(object, classID, parent, _): return .create(object: object, classID: classID, parent: parent, title: label)
+                case let .setTitle(object, _, _): return .setTitle(object: object, old: label, new: label)
+                case let .setValue(object, field, old, new):
+                    return .setValue(object: object, field: field, old: old.flatMap { PrivateWords.structural($0) ? $0 : nil },
+                                     new: new.flatMap { PrivateWords.structural($0) ? $0 : nil })
+                default: return op
+                }
+            }
+            return masked
         }
     }
 
