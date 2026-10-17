@@ -30,8 +30,8 @@ One brief per Mac lead, drawn only from sheets 76 (`depth.md`), 77 (`sides-77.md
 
 **Not in scope:** the individual screens' side content (Builders A and B), Tess's `sideTurned` motion beyond 75's, VoiceOver beyond the custom action named by the side's word.
 
-## Builder B: Kitchen, Settings, Plans, Pantry
-**Scope:** Groceries FOR WHAT; Recipe original COOKS; Paste WHAT I READ; The week WHAT LEAVES THE PHONE; Plans THE PLAN (sheet 77 lists Plans under Builder A; this brief follows the coordinator's split, so confirm with Builder A before starting); Pantry front and side; the fifth index row.
+## Builder B: Kitchen, Settings, Pantry
+**Scope:** Groceries FOR WHAT; Recipe original COOKS; Paste WHAT I READ; The week WHAT LEAVES THE PHONE; Pantry front and side; the fifth index row.
 
 **Read:** `sides-77.md` rows Groceries, Recipe original, Paste, The week, Plans, Copy notes; `pantry.md` The front, The side, The index, Rows for Kitchen's acceptance, UNDO lengths; `depth.md` Collections (Plans WEEK and MONTH as a run).
 
@@ -53,7 +53,7 @@ One brief per Mac lead, drawn only from sheets 76 (`depth.md`), 77 (`sides-77.md
 **Not in scope:** Core's host and the default/class sides, Ingredient.state and lastBoughtAt model work (Core), Review paging and THE DAYS (separate Builder B item in 76), the recipe peek, nutrition anywhere.
 
 ## Builder A: Training
-**Scope:** Routines LAST TIMES (BEFORE); the exercise page's side with four pages (HISTORY, REP MAXES, MUSCLES, SETUP) and the routine's exercises as the run.
+**Scope:** Routines LAST TIMES (BEFORE); the exercise page's side with four pages (HISTORY, REP MAXES, MUSCLES, SETUP) and the routine's exercises as the run. Plans: THE PLAN side, and WEEK and MONTH as a run (sheets 76 and 77).
 
 **Read:** `sides-77.md` row Routines, For each builder team; `depth.md` Collections, A side with pages, What changes (An exercise row), Research BL calls (bench numbers, HISTORY's "a best").
 
@@ -71,4 +71,4 @@ One brief per Mac lead, drawn only from sheets 76 (`depth.md`), 77 (`sides-77.md
 - ExerciseDigest flags any best, not only the top e1RM.
 - The exercise window no longer takes every horizontal pan.
 
-**Not in scope:** Plans THE PLAN and WEEK/MONTH run (see Builder B note), live workout lane (keeps its own run and peek), SideHost itself, Review.
+**Not in scope:** live workout lane (keeps its own run and peek), SideHost itself, Review.
