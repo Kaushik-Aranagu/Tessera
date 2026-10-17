@@ -529,8 +529,10 @@ enum RecipeCopy {
 
         static func == (lhs: Self, rhs: Self) -> Bool {
             switch (lhs, rhs) {
-            case let (.added(a, x), .added(b, y)): a == b && x === y
-            case let (.nothing(a), .nothing(b)), let (.failed(a), .failed(b)): a == b
+            case let (.added(lhsLine, lhsRecord), .added(rhsLine, rhsRecord)):
+                lhsLine == rhsLine && lhsRecord === rhsRecord
+            case let (.nothing(lhsLine), .nothing(rhsLine)), let (.failed(lhsLine), .failed(rhsLine)):
+                lhsLine == rhsLine
             default: false
             }
         }

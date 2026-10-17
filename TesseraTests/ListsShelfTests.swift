@@ -120,4 +120,20 @@ struct ListsShelfTests {
         let shelf = ListsShelf(store: model.store, classes: model.classes, lastWeightKg: nil, engine: model.engine)
         #expect(!shelf.rows.contains { $0.id == trip.id } && shelf.awayCount == 1)
     }
+
+    /// 9.3: a list with Pick one on reads PICK ONE; a pick reads an open item and writes nothing.
+    @Test func pickOneReadsPickOneAndPickingWritesNothing() throws {
+        let films = try model.engine.perform(CreateList(name: "Films"), by: .user).output
+        for film in ["Heat", "Ran"] {
+            try model.engine.perform(AddListItem(list: films.id, text: film), by: .user)
+        }
+        try model.engine.perform(SetListPickOne(list: films.id), by: .user)
+        #expect(shelf.rows.first { $0.id == films.id }?.state == "PICK ONE")
+        let contents = ListContents(store: model.store, classes: model.classes)
+        let first = try #require(contents.pick(from: films))
+        let second = try #require(contents.pick(from: films, excluding: [first.id]))
+        #expect(first.id != second.id)
+        #expect(contents.pick(from: films, excluding: [first.id, second.id]) == nil)
+        #expect(contents.done(in: films).isEmpty)
+    }
 }

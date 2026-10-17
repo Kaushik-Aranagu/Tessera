@@ -16,7 +16,7 @@ struct ListsShelf {
         let name: String
         let isGroceries: Bool
         let tier: Tier
-        /// "3 OF 7", "EMPTY", "14 TO GET", "RUNNING, 9 LEFT", "REUSABLE".
+        /// "3 OF 7", "EMPTY", "14 TO GET", "RUNNING, 9 LEFT", "PICK ONE", "REUSABLE" (9.3).
         let state: String
         /// A run is open (running, or waiting in the ledger): the state word is vermilion (9.3).
         var isRunning = false
@@ -61,6 +61,7 @@ struct ListsShelf {
                        isGroceries: isGroceries,
                        tier: index == 0 ? .hero : index < 3 ? .title : .body,
                        state: isRunning ? ListsCopy.runState(left: open)
+                           : !isGroceries && contents.isPickOne(list) ? "PICK ONE"
                            : !isGroceries && contents.isReusable(list) ? "REUSABLE"
                            : Self.state(open: open, all: all, isGroceries: isGroceries),
                        isRunning: isRunning)
