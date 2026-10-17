@@ -168,13 +168,19 @@ public struct Groceries {
     /// undone is back on the list; neither counts. Pantry reads this instead of every deleted checked row.
     public func shopClears() -> [(ingredient: ObjectRecord, at: Date)] {
         guard let list else { return [] }
+        let context = store.context
+        if let cached = context.shopClearsCache, cached.revision == context.revision {
+            return cached.rows
+        }
         let cleared = clearedIDs()
-        return (list.children ?? []).compactMap { item in
+        let rows: [(ingredient: ObjectRecord, at: Date)] = (list.children ?? []).compactMap { item in
             guard item.isDeleted, cleared.contains(item.id), store.value("isDone", of: item) == .bool(true),
                   let when = store.value("checkedAt", of: item)?.dateValue, let ingredient = ingredient(of: item)
             else { return nil }
             return (ingredient, when)
         }
+        context.shopClearsCache = (context.revision, rows)
+        return rows
     }
 
     private func clearedIDs() -> Set<UUID> {
