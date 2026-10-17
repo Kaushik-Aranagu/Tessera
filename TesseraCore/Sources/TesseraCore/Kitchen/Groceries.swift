@@ -391,6 +391,12 @@ public struct AddRecipeToGroceries: EngineAction {
             Self.lastAdded[recipe.id] = 0
             return []
         }
+        // Added again at the same or a smaller size: its share already covers every line, so nothing is added and the
+        // list is never halved (Kitchen K34.8: an add is not reversed by a size change). A bigger size replaces it.
+        if alreadyOn > 0, wanted.allSatisfy({ Self.isCovered($0, by: recipe, on: list, in: transaction.store) }) {
+            Self.lastAdded[recipe.id] = 0
+            return []
+        }
         try RemoveRecipeFromGroceries(recipe: recipe.id).apply(&transaction)
         let before = Set(list.orderedChildren.map(\.id))
         var items: [ObjectRecord] = []
@@ -427,6 +433,23 @@ public struct AddRecipeToGroceries: EngineAction {
         let made = items.filter { !before.contains($0.id) }
         Self.lastAdded[recipe.id] = made.count
         return made
+    }
+
+    /// Whether an open row already holds this recipe's share of the line, at least as much of it.
+    @MainActor
+    static func isCovered(_ line: RecipeBook.Line, by recipe: ObjectRecord, on list: ObjectRecord,
+                          in store: ObjectStore) -> Bool
+    {
+        guard let ingredient = line.ingredient else { return true }
+        let wanted = line.line.amountMax ?? line.line.amount
+        return list.orderedChildren.contains { item in
+            guard !item.isDeleted, store.value("isDone", of: item) != .bool(true),
+                  store.linkedObjects("about", of: item).contains(where: { $0.id == ingredient.id }) else { return false }
+            return GroceryShare.decode(store.value("shares", of: item)?.stringValue).contains { share in
+                share.recipe == recipe.id && share.unit == line.line.unit && share.packSize == line.line.packSize
+                    && (share.amount ?? 0) >= (wanted ?? 0)
+            }
+        }
     }
 
     /// New rows by recipe from the last `apply` in this process, for the receipt written right after it.
