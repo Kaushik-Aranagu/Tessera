@@ -45,6 +45,13 @@ public enum TessTools {
 
     /// Runs a tool call from its JSON arguments. Returns what was logged; throws `TessToolError` with a line the
     /// model can read and correct.
+    /// Most ghost rows one phrase may leave (injection audit gap 2): a page or a pasted line that coaxes "add 50
+    /// tasks" gets this many and then a plain refusal. Claude's capture and the on-device model both stop here.
+    public static let maxRecordsPerPhrase = 10
+
+    /// What a tool call answers once a phrase is at its cap.
+    static let capLine = "Error: that is enough for one phrase."
+
     public static func run(_ name: String, arguments: Data, engine: ActionEngine, pending: Bool = true,
                            now: Date = .now, calendar: Calendar = .current) throws -> [OpRecord]
     {

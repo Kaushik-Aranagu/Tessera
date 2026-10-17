@@ -91,11 +91,21 @@ public struct ClaudeTessModel: TessModel {
                 conversation.append(["role": "assistant", "content": response.content])
                 var results: [[String: Any]] = []
                 for call in response.toolCalls {
+                    // One phrase leaves at most `maxRecordsPerPhrase` ghosts, however many calls Claude makes.
+                    guard records.count < TessTools.maxRecordsPerPhrase else {
+                        results.append(["type": "tool_result", "tool_use_id": call.id, "content": TessTools.capLine,
+                                        "is_error": true])
+                        continue
+                    }
                     do {
                         let done = try TessTools.run(call.name, arguments: call.input, engine: engine,
                                                      pending: true, now: request.context.now,
                                                      calendar: request.context.calendar)
                         records += done
+                        if records.count > TessTools.maxRecordsPerPhrase {
+                            discard(Array(records[TessTools.maxRecordsPerPhrase...]), engine: engine)
+                            records.removeLast(records.count - TessTools.maxRecordsPerPhrase)
+                        }
                         results.append(["type": "tool_result", "tool_use_id": call.id, "content": "Done"])
                     } catch let answer as TessToolAnswer {
                         results.append(["type": "tool_result", "tool_use_id": call.id, "content": answer.line])

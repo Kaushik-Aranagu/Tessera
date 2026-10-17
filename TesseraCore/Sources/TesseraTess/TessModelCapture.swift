@@ -149,6 +149,7 @@ struct CatalogTool: Tool {
 
     @MainActor
     private func perform(_ json: String) -> String {
+        guard recorder.records.count < TessTools.maxRecordsPerPhrase else { return TessTools.capLine }
         do {
             let records = try TessTools.run(name, arguments: Data(json.utf8), engine: engine, pending: pending,
                                             now: now, calendar: calendar)
