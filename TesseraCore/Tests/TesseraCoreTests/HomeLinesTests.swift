@@ -162,7 +162,7 @@ struct HomeLinesTests {
         #expect(line.widgetLine == "Tacos tonight, 2 to buy.")
         let timed = HomeFact(id: UUID(), kind: .cook, title: "Tacos", state: .planned, toBuy: 2,
                              startsAt: Self.at(19))
-        #expect(HomeLines.line(for: timed, now: Self.at(9), calendar: Self.calendar).hero == "Tacos at 7 pm")
+        #expect(HomeLines.line(for: timed, now: Self.at(9), calendar: Self.calendar).hero == "Tacos, 7 pm")
         #expect(line.context == "2 to buy" && line.detail == nil && line.numbers == [2])
         #expect(text(tacos, now: Self.at(21, 30)) == "Tacos tonight, 2 to buy.")
         let stocked = HomeFact(id: UUID(), kind: .cook, title: "Tacos", state: .planned, toBuy: 0)
@@ -248,9 +248,9 @@ struct HomeLinesTests {
         #expect(HomeLines.line(for: running).widgetMeta == nil)
         let timed = HomeFact(id: UUID(), kind: .workout, title: "Push A", state: .planned, startsAt: Self.at(19))
         let planned = HomeLines.line(for: timed, now: Self.at(18, 10), calendar: Self.calendar)
-        #expect(planned.hero == "Push A at 7 pm" && planned.text == "Push A at 7 pm." && planned
+        #expect(planned.hero == "Push A, 7 pm" && planned.text == "Push A, 7 pm." && planned
             .context == "this evening")
-        #expect(planned.widgetLine == "Push A at 7 pm this evening." || planned.widgetLine == "Push A at 7 pm.")
+        #expect(planned.widgetLine == "Push A, 7 pm this evening." || planned.widgetLine == "Push A, 7 pm.")
         #expect(ExerciseWords.short("Deadlift") == "Deadlift" && ExerciseWords.short("Face Pull") == "Face pull")
         // Design 54: a paused hero drops its paused context into the meta.
         let paused = HomeFact(id: UUID(), kind: .workout, title: "Push A", state: .paused, exercise: "Incline", step: 2,
@@ -328,7 +328,7 @@ struct HomeLinesTests {
         #expect(facts.rest(next: next, now: quietDay) == nil)
         #expect(facts.plannedSession(on: quietDay)?.id == scheduled.id)
         #expect(HomeLines.line(for: facts.fact(scheduled: scheduled), now: quietDay, calendar: Self.calendar).hero
-            == "Push A at 7 pm")
+            == "Push A, 7 pm")
     }
 
     @Test func aFinishedWorkoutFromTheStoreNamesItsRecord() throws {

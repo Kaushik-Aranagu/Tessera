@@ -257,20 +257,20 @@ public enum HomeLines {
             return "\(exercise) paused at set \(step)."
         case .planned:
             if let at = fact.startsAt, !fact.tomorrow {
-                return "\(fact.title) at \(DayStoryClock.sentenceTime(at, calendar: calendar))."
+                return "\(fact.title), \(DayStoryClock.sentenceTime(at, calendar: calendar))."
             }
             return "\(fact.title) \(fact.tomorrow ? "tomorrow" : dayWord(now, calendar: calendar))."
         }
     }
 
-    /// "Tacos tonight" (a cook is an evening thing until it has a time), "Tacos at 7" with one (Kitchen lead, G8).
+    /// "Tacos tonight" (a cook is an evening thing until it has a time), "Tacos, 7 pm" with one (Kitchen lead, G8).
     static func cookWhen(_ fact: HomeFact, now: Date, calendar: Calendar) -> String {
         if fact.tomorrow {
             return "\(fact.title) tomorrow"
         }
         if let at = fact.startsAt {
-            // Hero times carry "pm" (TW17, Product): "Tacos at 7 pm".
-            return "\(fact.title) at \(HouseTime.clock(at, calendar: calendar))"
+            // Hero times carry "pm" (TW17, Product): "Tacos, 7 pm".
+            return "\(fact.title), \(HouseTime.clock(at, calendar: calendar))"
         }
         let evening: Set<DayPart> = [.evening, .shutdown, .late]
         let word = evening.contains(DayPart(hour: calendar.component(.hour, from: now))) ? "tonight" : "today"
@@ -293,7 +293,7 @@ public enum HomeLines {
             ?? "\(fact.title), paused"
         case (.workout, .planned):
             if let at = fact.startsAt, !fact.tomorrow {
-                "\(fact.title) at \(DayStoryClock.sentenceTime(at, calendar: calendar))"
+                "\(fact.title), \(DayStoryClock.sentenceTime(at, calendar: calendar))"
             } else {
                 fact.title
             }
