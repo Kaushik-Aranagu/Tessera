@@ -241,13 +241,19 @@ struct BackupView: View {
 
     private func saveCopy() async {
         do {
-            // Face ID first when the copy holds private words; not passing it saves nothing and says nothing.
-            guard let copy = try await BackupKeeper.savedCopy(model.context) else { return }
-            let data = try Data(contentsOf: copy.url)
-            if let notice = copy.line {
-                say(notice)
+            // A passcode, then Face ID: no passcode says why; not passing Face ID saves nothing and says nothing.
+            switch try await BackupKeeper.savedCopy(model.context) {
+            case .needsPasscode:
+                say(BackupKeeper.passcodeLine)
+            case .declined:
+                return
+            case let .copy(url, notice):
+                let data = try Data(contentsOf: url)
+                if let notice {
+                    say(notice)
+                }
+                saving = BackupFile(data: data, name: url.deletingPathExtension().lastPathComponent)
             }
-            saving = BackupFile(data: data, name: copy.url.deletingPathExtension().lastPathComponent)
         } catch {
             say("Couldn't make a copy just now.")
         }
