@@ -28,7 +28,7 @@
 - **Evidence.** `Features/Recipes/RecipesEntry.swift:15` (`recipeID ?? RecipeBook(...).recipes().first?.id`); `TesseraCore/.../Kitchen/Recipes.swift:56-59` (`recipes()` sorts oldest first); `Features/Home/HomeSpatialView.swift:355` (`.recipes: RecipeView(recipeID: nil)`) and `:163-175` (the cover and its Close word); `Features/Recipes/RecipePage.swift:46-53` and `:144-150`.
 - **Why it matters.** Day two he has three recipes and can open one. The ingredient page's backlinks are the only other door. "Back to the list" on a deleted recipe names a list that is not there. The shelf is a build target (`kitchen-first-use-empty-states.md` section 1, K30.1) but nothing says what Recipes does until it lands, and nothing says the top-left word.
 - **Owner.** Builder B (shelf, slice 14).
-- **Proposed row (K87.1).** *Given* three saved recipes. *When* he taps Recipes on the Kitchen page. *Then* the shelf opens with all three, newest first, and tapping a row opens that recipe's page. Top-left on the recipe page reads "Recipes" and returns to the shelf, not to Home; Close stays the only exit to Home. A deleted recipe's page reads "Recipe gone." with "Back to the list" returning to the shelf. Interim (until the shelf lands): Recipes with more than one recipe opens the most recently opened one (`lastOpenedAt` is already written), not the oldest.
+- **Proposed row (K87.1).** *Given* three saved recipes. *When* he taps Recipes on the Kitchen page. *Then* the shelf opens with all three, newest first, and tapping a row opens that recipe's page. Top-left on the recipe page reads "Recipes" and returns to the shelf, not to Home; Close stays the only exit to Home. A deleted recipe's page reads "Recipe gone." with "Back to the list" returning to the shelf. Interim (until the shelf lands): **RULED (Product, decisions.md 8:20 AM Oct 17):** Recipes opens the last opened recipe (`lastOpenedAt` is already written), not the oldest.
 
 ### G52. Paste: the saved line and UNDO are wrong in both paths
 
@@ -60,7 +60,7 @@
 - **Evidence.** `Features/Recipes/RecipePage.swift:160-169` (`cook`, `try?`), `:109` (`"\(steps.count) steps"`), `:113-128` (key and hint), `:391-396` (`"Step \(index + 1) of \(steps)"`); `rg onCook Features App` finds only the property and the call; `TesseraCore/.../Kitchen/Cooking.swift:123-134` (an open cook is resumed, not shown), `:141-143` (`first` step is nil for a recipe with no steps); `kitchen-first-use-empty-states.md` the "A recipe with no steps" row (line 84) ("The cook key is not drawn ... 'No steps yet. Paste them below.'").
 - **Why it matters.** Until slice 12 lands this is the whole Cook experience, and the phone can be left holding an open cook that Home shows as running with no door to finish it.
 - **Owner.** Builder B (key, line), Core (a cook with no steps).
-- **Proposed row (K87.5).** *Given* the build before cook mode. *When* he taps Cook. *Then* either the key is not drawn until the cook screen can open it, or it opens a minimal step view with Next and a held DONE; it never starts a cook with nothing to read. A recipe with no steps shows no Cook key and, under the ingredients, "No steps yet. Paste them below." (proposed, Product to rule, as in the empty-states doc); the peek line is omitted rather than "0 steps". "Step 1 of 0" is never drawn.
+- **Proposed row (K87.5).** *Given* the build before cook mode. *When* he taps Cook. *Then* **RULED (Product 8:20 AM):** the key is not drawn until cook mode lands; it never starts a cook with nothing to read. A recipe with no steps shows no Cook key and, under the ingredients, "No steps yet. Paste them below." (ruled, as in the empty-states doc); the peek line is omitted rather than "0 steps". "Step 1 of 0" is never drawn.
 
 ### G56. The Cook key silently suspends a running workout
 
@@ -68,7 +68,7 @@
 - **Evidence.** `TesseraCore/.../Processes/ProcessActions.swift:43` and `:241-249` (every other running process is suspended); `Kitchen/Cooking.swift:135-144` (a new cook goes through `StartProcess`); `Features/Recipes/RecipePage.swift:160-169`. Whether Home then reads the workout as resumable is inferred.
 - **Why it matters.** He taps Cook on his rest between sets and the rest timer, the Live Activity and Now stop belonging to the workout. A set logged next may not find its process.
 - **Owner.** Core (refuse or keep both), Builder B (the line).
-- **Proposed row (K87.6).** *Given* a workout running. *When* he taps Cook or says "cook carbonara". *Then* the workout is not suspended; the cook starts as a second open process and Home shows the workout as the running one (default, Product to rule), or the key reads "Workout running." and starts nothing. Either way one UNDO slot, 4 s, and no change to the workout's rest timer or Live Activity.
+- **Proposed row (K87.6).** *Given* a workout running. *When* he taps Cook or says "cook carbonara". *Then* **RULED (Product 8:20 AM): refuse.** The key reads "Workout running." and starts nothing; the workout is not suspended and its rest timer and Live Activity do not change. No UNDO (nothing was done).
 
 ### G57. The portion drum stops at 12
 
@@ -84,7 +84,7 @@
 - **Evidence.** `Features/Recipes/RecipePage.swift:192-193` (`guard let result = try? ...  else { return }`), `:194-199`, `:227` (`"\(count) to buy, on Groceries"`), `:283` (hint), `:262` (`onTapGesture`); `grep accessibilityAction Features/Recipes` finds nothing; `TesseraCore/.../Kitchen/Groceries.swift:355-371`.
 - **Why it matters.** A stuck column with no words, a receipt for nothing with an UNDO that undoes nothing, and a feature a VoiceOver user cannot reach.
 - **Owner.** Builder B.
-- **Proposed row (K87.8).** *Given* the recipe page. *When* the add fails: the column springs back and Tess says "Didn't save. Try again." *When* nothing is left to add: no column move, no UNDO, one line "Nothing to add, on Groceries." (words proposed, Product to rule). *With VoiceOver*: the ingredient list carries the custom action "Add to Groceries" that runs the same add and speaks "Tacos, 7 added." (K84.25 form); each row reads as one stop ("2 cups flour, chopped") with the action "Show in metric" where a metric form exists.
+- **Proposed row (K87.8).** *Given* the recipe page. *When* the add fails: the column springs back and Tess says "Didn't save. Try again." *When* nothing is left to add: no column move, no UNDO, one line "Tacos, nothing to add." (**RULED, Product 8:20 AM**; the recipe's short name first, no UNDO). *With VoiceOver*: the ingredient list carries the custom action "Add to Groceries" that runs the same add and speaks "Tacos, 7 added." (K84.25 form); each row reads as one stop ("2 cups flour, chopped") with the action "Show in metric" where a metric form exists.
 
 ### G59. Title, "Untitled recipe" and the same paste twice
 
@@ -108,7 +108,7 @@
 - **Evidence.** `Features/Recipes/PasteRecipe.swift:33` and `:117-123`; `TesseraCore/.../Diagnostics/ClaudeKeyGuard.swift:4` (`claudeKeyLine`) and `:18-20`; `Features/Command/BottomChrome.swift:467`; `Features/Review/ReviewView.swift:228` (`ClaudeSection()`); `PasteRecipe.swift:166-167` via `CreateRecipe.lines` (private lines already become ignored).
 - **Why it matters.** Wrong directions on a safety line, and a recipe lost to a stray string. Whether to keep the rest of the paste is a ruling, so the second half is inferred as a gap, not a bug.
 - **Owner.** Builder B (use `claudeKeyLine`), Core (a cut that removes the key line only), Product (keep or wipe).
-- **Proposed row (K87.11).** *Given* a key-shaped string alone in the paste box. *Then* Tess says the shared line (`claudeKeyLine`: "That looks like a Claude key. It goes in Review, under Claude.") and the box clears. *Given* the same string inside a 20-line recipe. *Then* default: the key line alone is removed, the rest is kept and read, and the same line shows; Product may rule the whole-text clear instead. The key is never shown, saved, logged, copied into a capture-miss row or placed in the original text. No row, fixture or log holds key-shaped text; test with a built string that is assembled at run time.
+- **Proposed row (K87.11).** *Given* a key-shaped string alone in the paste box. *Then* Tess says the shared line (`claudeKeyLine`: "That looks like a Claude key. It goes in Review, under Claude.") and the box clears. *Given* the same string inside a 20-line recipe. *Then* **RULED (Product 8:20 AM):** the rest of the paste is kept, the save is held, the string is never echoed, and the line says Review (the shared line above). The key is never shown, saved, logged, copied into a capture-miss row or placed in the original text. No row, fixture or log holds key-shaped text; test with a built string that is assembled at run time.
 
 ## Order of work
 
@@ -118,10 +118,12 @@
 4. G56 needs a Product ruling (keep both or refuse) before Core changes `StartProcess`.
 5. G57, G58 and G60 are Builder B polish with exact rows above.
 
-## Rulings Product may need
+## Rulings (Product, decisions.md 8:20 AM Oct 17)
 
-- G51 interim: which recipe Recipes opens before the shelf lands (the last opened one is proposed).
-- G55: hide the Cook key until cook mode lands, or ship a minimal step view.
-- G56: keep the workout running with a second open cook, or refuse the cook with a line.
-- G58: the words for "nothing to add".
-- G61: keep the rest of a paste that holds a key-shaped string, or clear it all.
+All five asked rulings are in and folded into the rows above.
+
+- G51 interim: Recipes opens the last opened recipe until the shelf lands.
+- G55: hide the Cook key until cook mode lands; a recipe with no steps shows "No steps yet. Paste them below."
+- G56: refuse; the key reads "Workout running." and starts nothing.
+- G58: "Tacos, nothing to add." with no UNDO.
+- G61: keep the rest of the paste, hold the save, never echo the string, the line says Review. Open reading for Builder B: "hold the save" is taken here as the save waits until the key-shaped line is gone from the box.
