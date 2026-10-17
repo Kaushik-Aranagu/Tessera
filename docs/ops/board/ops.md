@@ -1,6 +1,6 @@
 # Ops board
 
-Lead: Ops thread. Mission (Kaushik, Oct 16 5:43 PM PT): keep improving the infrastructure and the way the team works, and run a second lane that improves the work itself. Owns the usage governor ledger ([usage-governor.md](../usage-governor.md)). Proposals that change another team's workflow go to the coordinator first.
+Lead: Ops thread. Mission (Kaushik, Oct 16 5:43 PM PT): keep improving the infrastructure and the way the team works, and run a second lane that improves the work itself. Owns the usage governor ledger (usage-governor.md (in the project files under tessera/ops/, not mirrored in the repo)). Proposals that change another team's workflow go to the coordinator first.
 
 **Lane 1 (infrastructure):** cheaper, safer merges. **Lane 2 (work quality):** stale boards, verdict lines, relay friction.
 
