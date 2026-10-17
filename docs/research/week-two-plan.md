@@ -139,6 +139,8 @@ breaks in `fixtures/trip-rehearsal.md` (T1 to T3) do not touch it. The Nov 2 rea
 
 1. **Which build to write against.** Decisions log release 7 (`26dde994`). Confirm the newest installed release and that it
    carries no change to the set ask or the Plans week, or section 5 needs a re-read on that head.
-2. **Is Core's `restWeekday` reader on a release yet?** I could not confirm it from the files here. If it is not, Q4 "Yes"
-   writes a value nothing reads, so the same-morning receipt should wait for the reader's merge.
-3. **Thursday's 6:00 pm message.** Do Q4 and any unanswered Monday question both ride it, or does Q4 get a Tuesday nudge?
+2. **Is Core's `restWeekday` reader on a release yet?** Ruled (decisions 7:21): no reader is in any release. A Q4 "Yes" is
+   recorded, but nothing writes until Core's settings-object PR with the reader lands. It must be in the Oct 22 release
+   for Sunday Oct 25. Hold the same-morning receipt until the reader merges.
+3. **Thursday's 6:00 pm message.** Ruled (decisions 7:21): no separate Tuesday nudge. Q4 stays with the Monday questions.
+   Unanswered means Sunday at the Oct 22 check.
