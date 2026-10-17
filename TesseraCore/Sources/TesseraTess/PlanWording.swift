@@ -602,7 +602,7 @@ public final class ClaudePlanWording {
         let data: Data
         let response: URLResponse
         do {
-            (data, response) = try await session.data(for: http)
+            (data, response) = try await session.data(for: http, delegate: NoRedirects.shared)
         } catch let error as URLError where error.code == .cancelled {
             throw CancellationError() // the view went away: never remembered (QA on #306)
         } catch let error as URLError {

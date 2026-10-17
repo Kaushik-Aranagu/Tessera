@@ -228,7 +228,7 @@ public struct ClaudeTessModel: TessModel {
         let data: Data
         let response: URLResponse
         do {
-            (data, response) = try await session.data(for: http)
+            (data, response) = try await session.data(for: http, delegate: NoRedirects.shared)
         } catch let error as URLError {
             throw error.code == .timedOut ? Failure.timeout : Failure.offline
         } catch {
