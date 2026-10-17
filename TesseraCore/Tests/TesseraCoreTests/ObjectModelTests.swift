@@ -217,6 +217,16 @@ struct ObjectModelTests {
 /// The Training `Int.init` sweep: a stored number a screen turns into an Int can never be a trap.
 @MainActor
 struct StoredNumberTests {
+    @Test func everyNumericKindReadsSafely() {
+        // QA on #863: callers that read `numericValue` off a FieldValue (Progression, Prefill, RestWeekday, the routine
+        // editor, a task's length) are covered by the one guard.
+        for bad in [Double.nan, .infinity, -.infinity, 1e300] {
+            #expect(FieldValue.number(bad).numericValue == nil && FieldValue.duration(bad).numericValue == nil
+                && FieldValue.mass(bad).numericValue == nil, "\(bad)")
+        }
+        #expect(FieldValue.number(12).numericValue == 12 && FieldValue.bool(true).numericValue == 1)
+    }
+
     @Test func nonFiniteAndHugeNumbersReadAsNoValue() throws {
         let store = ObjectStore.open(inMemory: true)
         _ = try store.prepareCatalog()
