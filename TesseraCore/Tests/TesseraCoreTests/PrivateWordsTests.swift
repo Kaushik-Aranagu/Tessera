@@ -118,4 +118,39 @@ struct PrivateWordsTests {
         let rolledBlob = try text(of: TesseraExport(context: TesseraContext(url: rolled), maskingPrivate: false).encoded())
         #expect(Self.secrets.allSatisfy { !rolledBlob.contains($0) })
     }
+
+    /// QA on #707: SQLite keeps deleted rows in free pages, so the file's raw bytes are read, not its objects.
+    @Test func theICloudCopyHoldsNoPrivateWordInItsRawBytes() throws {
+        let dir = try folder()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let store = try storeWithEverything(at: dir.appendingPathComponent("tessera.sqlite"))
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        try engine.perform(CreateRecipe(text: "Stew\nIngredients\n1 onion\nMethod\n1. Cook it.",
+                                        title: "Wifi password zebra99 stew"), by: .user)
+        store.save()
+        let words = ["hunter2zebra", "zebra99", "Dr Lee", "120.50", "82.4", "Wifi password", "router zebra99"]
+        let iCloud = dir.appendingPathComponent("iCloud")
+        let direct = dir.appendingPathComponent("direct.tessera")
+        try TesseraBackup.write(from: store.context, to: direct, leavingOutPrivate: true)
+        let rolled = try #require(try TesseraBackup.writeRolling(from: store.context, in: iCloud, now: .now,
+                                                                 leavingOutPrivate: true))
+        for file in [direct, rolled] {
+            for path in [file.path, file.path + "-wal", file.path + "-shm"] {
+                guard let bytes = FileManager.default.contents(atPath: path) else {
+                    #expect(path != file.path, "the copy is missing")
+                    continue
+                }
+                for word in words {
+                    #expect(bytes.range(of: Data(word.utf8)) == nil, "\(word) in the bytes of \(path)")
+                }
+            }
+            #expect(bytes(of: file).range(of: Data("Bench felt heavy".utf8)) != nil) // ordinary words stay
+        }
+        // Nothing but the finished copy ever sits in the iCloud folder.
+        #expect(try FileManager.default.contentsOfDirectory(atPath: iCloud.path).count == 1)
+    }
+
+    func bytes(of url: URL) -> Data {
+        FileManager.default.contents(atPath: url.path) ?? Data()
+    }
 }

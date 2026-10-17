@@ -57,8 +57,11 @@ public enum TesseraBackup {
                              appVersion: String? = nil, leavingOutPrivate: Bool = false) throws
     {
         try context.save()
-        try? FileManager.default.removeItem(at: url)
-        let copy = try DatabaseQueue(path: url.path)
+        // A copy for iCloud Drive is built and masked in a temporary folder on the same volume, then moved in: the
+        // whole copy never sits in the destination, not even as a hidden partial (G28, QA on #707).
+        let work = leavingOutPrivate ? try privateWorkURL(near: url) : url
+        try? FileManager.default.removeItem(at: work)
+        let copy = try DatabaseQueue(path: work.path)
         try context.database.backup(to: copy)
         // The copy for iCloud Drive leaves private notes, recipes, items and secret-word lines out (G28). The local
         // copy on the phone keeps every word.
@@ -79,8 +82,22 @@ public enum TesseraBackup {
         }
         try copy.close()
         for sibling in ["-wal", "-shm"] {
-            try? FileManager.default.removeItem(atPath: url.path + sibling)
+            try? FileManager.default.removeItem(atPath: work.path + sibling)
         }
+        if leavingOutPrivate {
+            try? FileManager.default.removeItem(at: url)
+            try FileManager.default.moveItem(at: work, to: url)
+            try? FileManager.default.removeItem(at: work.deletingLastPathComponent())
+        }
+    }
+
+    /// A fresh path in a temporary folder on the destination's volume (an item replacement folder), never in the
+    /// destination folder itself.
+    @MainActor
+    static func privateWorkURL(near url: URL) throws -> URL {
+        let folder = try FileManager.default.url(for: .itemReplacementDirectory, in: .userDomainMask,
+                                                 appropriateFor: url, create: true)
+        return folder.appendingPathComponent("private-\(UUID().uuidString).tessera")
     }
 
     /// A stamped copy of the store file at `storeURL` (closed, at launch), for keeping what's replaced by a restore.

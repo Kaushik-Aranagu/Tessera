@@ -106,6 +106,8 @@ extension TesseraBackup {
     /// Removes private objects, their links and the ops that touched them from a copy that is leaving the phone.
     static func leaveOutPrivate(_ ids: [UUID: String], from copy: DatabaseQueue, context: TesseraContext) throws {
         let lastKg = BodyWeight.lastKg(in: ObjectStore(context: context))
+        // Deleted rows must not linger in free pages: overwrite on delete, then rebuild the file below.
+        try copy.writeWithoutTransaction { try $0.execute(sql: "PRAGMA secure_delete = ON") }
         try copy.write { db in
             for id in ids.keys.map(\.uuidString) {
                 try db.execute(sql: "DELETE FROM object WHERE id = ?", arguments: [id])
@@ -120,6 +122,10 @@ extension TesseraBackup {
                     try db.execute(sql: "DELETE FROM op WHERE id = ?", arguments: [row["id"] as String])
                 }
             }
+        }
+        try copy.writeWithoutTransaction { db in
+            try db.execute(sql: "PRAGMA journal_mode = DELETE")
+            try db.execute(sql: "VACUUM")
         }
     }
 }
