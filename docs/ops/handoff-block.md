@@ -59,7 +59,7 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
 
 ### Product
 - Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7M9buvsufEBhXZqJtov6ZY72; old session cse_013bC75Wtuv4sc7B2EmqcXVZ.
-- Fresh thread: cmsg_01VTPva3JGXrfvetgUvAWE7MRLK2oiTKs6EG9Uu5qfT6M1; session cse_01STY2yX8fnVksnqnnPkcBQG.
+- Fresh thread (rotated about 4:30 PM PT Oct 17, per the coordinator): cmsg_01VTPva3JGXrfvetgUvAWE7M4PS458UQbE4cTCBrUUs8ZG; session session_01RBgnhXvCZZhM8wDwJqs5Rx. Retired: thread cmsg_01VTPva3JGXrfvetgUvAWE7MRLK2oiTKs6EG9Uu5qfT6M1, session cse_01STY2yX8fnVksnqnnPkcBQG.
 - Read the old chat with fetch_thread (oldest_first) or list_events on the old session; read a rule's exact words with fetch_messages on its id.
 - Handoff note: ops/rotation-handoffs.md, section "Product" if present; if not, ask the coordinator for the note the outgoing lead sent.
 - Rules for Product (plus G):
@@ -82,7 +82,7 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
 
 ### QA
 - Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7M3cdnVjUDBstQ8XtwdEoetT (Repo maintainer, resolved Oct 17 7:21 AM PT); old session cse_016hxroCB7KSo9FQG2RL5PdR.
-- Fresh thread (moved Oct 17, 2:05 PM PT, per Product): cmsg_01VTPva3JGXrfvetgUvAWE7MCGo649SeUBPdKzkV1rnwTw (QA); session session_011G5V3Hxc6iNaYxFTxRs5Eg. Retired: thread cmsg_01VTPva3JGXrfvetgUvAWE7MGRpS7oj5KfU9dSEo1Piu6j, session cse_01SPUv55gtzktZjCda2KjMoW (and the earlier cmsg_01VTPva3JGXrfvetgUvAWE7M5h3w4owqhDYuba8C5nBymK, cse_01M6UTgTZa2bJBa8bLiyL3rv).
+- Fresh thread (rotated about 4:30 PM PT Oct 17, per the coordinator): cmsg_01VTPva3JGXrfvetgUvAWE7MCy1jQu1AAK4DaoaMNk6LTX (QA); session session_01LivGht4DsiiWp8zDyRGFtz. Retired: thread cmsg_01VTPva3JGXrfvetgUvAWE7MCGo649SeUBPdKzkV1rnwTw, session session_011G5V3Hxc6iNaYxFTxRs5Eg; and thread cmsg_01VTPva3JGXrfvetgUvAWE7MGRpS7oj5KfU9dSEo1Piu6j, session cse_01SPUv55gtzktZjCda2KjMoW (and the earlier cmsg_01VTPva3JGXrfvetgUvAWE7M5h3w4owqhDYuba8C5nBymK, cse_01M6UTgTZa2bJBa8bLiyL3rv).
 - Read the old chat with fetch_thread (oldest_first) or list_events on the old session; read a rule's exact words with fetch_messages on its id.
 - Handoff note: ops/rotation-handoffs.md, section "QA" if present; if not, ask the coordinator for the note the outgoing lead sent.
 - Rules for QA (plus G):
