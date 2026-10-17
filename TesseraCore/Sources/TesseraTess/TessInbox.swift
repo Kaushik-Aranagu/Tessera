@@ -27,7 +27,7 @@ public struct TessInbox {
         // Never a key, a secret, money or a body fact (it would go to Claude later; MU2, Research 138 MW4 and 139),
         // never the same phrase twice.
         guard let waitingClass = classes[.tessWaiting], !text.isEmpty, !looksLikeClaudeKey(text),
-              !SecretWords.mentions(text), !PrivateFacts.isWalled(text),
+              !SecretWords.mentions(text), !PrivateFacts.isWalled(text, lastWeightKg: BodyWeight.lastKg(in: store)),
               !waiting().contains(where: { $0.title == text }) else { return nil }
         let item = store.create(waitingClass, title: text)
         item.createdAt = date
@@ -62,7 +62,7 @@ public extension TessCaptureEngine {
         var captures: [TessCapture] = []
         for item in inbox.waiting() where claude.isAvailable(for: .capture) {
             // Queued before the walls (Research 139): a secret, money or body phrase leaves the inbox unread.
-            if SecretWords.mentions(item.title) || PrivateFacts.isWalled(item.title) {
+            if SecretWords.mentions(item.title) || PrivateFacts.isWalled(item.title, lastWeightKg: BodyWeight.lastKg(in: engine.store)) {
                 inbox.remove(item)
                 continue
             }

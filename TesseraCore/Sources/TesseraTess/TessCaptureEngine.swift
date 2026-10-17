@@ -57,7 +57,7 @@ public final class TessCaptureEngine: TessCapturing {
         // Nor a line with a secret word (Research 134): the miss log is a file.
         // Nor money or a body fact (Product P14, 12:30 PM PT).
         if !result.understood, !looksLikeClaudeKey(phrase), !SecretWords.mentions(phrase),
-           !PrivateFacts.isWalled(phrase)
+           !PrivateFacts.isWalled(phrase, lastWeightKg: TessRequest.lastWeightKg(context, engine: engine))
         {
             missLog?.record(phrase, at: context.now, route: result.source.rawValue, source: source)
         }
@@ -297,7 +297,7 @@ public final class TessCaptureEngine: TessCapturing {
             let record = try engine.perform(CreateTask(title: title, startsAt: startsAt), by: .tess, pending: pending)
                 .record
             // A private title is never said back (Product P14, 12:30 PM PT): "Task added for Fri."
-            if PrivateFacts.isPrivateTitle(title) {
+            if PrivateFacts.isPrivateTitle(title, lastWeightKg: BodyWeight.lastKg(in: engine.store)) {
                 return (record, Self.privateTaskLine(startsAt, context: context))
             }
             return (record, startsAt.map { "\(title), \(Self.when($0, context: context))." } ?? "\(title), in Later.")

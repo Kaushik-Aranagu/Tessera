@@ -22,6 +22,10 @@ public enum ObjectPrivacy {
             classes[key].map { ClassResolver.isSubclass(classDef, of: $0) } ?? false
         }
         let flagged = store.value("isPrivate", of: object) == .bool(true)
+        let last = BodyWeight.lastKg(in: store)
+        func isPrivateText(_ text: String) -> Bool {
+            Self.isPrivateText(text, lastWeightKg: last)
+        }
         if isA(.note) {
             let body = store.value("body", of: object)?.stringValue ?? ""
             return flagged || object.title == noteLabel || isPrivateText(object.title) || isPrivateText(body)
@@ -32,7 +36,7 @@ public enum ObjectPrivacy {
             return flagged || isPrivateText(object.title) || isPrivateText(rule) ? memoryLabel : nil
         }
         if isA(.task) {
-            return object.title == taskLabel || PrivateFacts.isPrivateTitle(object.title) ? taskLabel : nil
+            return object.title == taskLabel || PrivateFacts.isPrivateTitle(object.title, lastWeightKg: last) ? taskLabel : nil
         }
         return nil
     }
@@ -44,7 +48,7 @@ public enum ObjectPrivacy {
         return ClassResolver.isSubclass(classDef, of: workout)
     }
 
-    static func isPrivateText(_ text: String) -> Bool {
-        !text.isEmpty && (SecretWords.mentions(text) || PrivateFacts.isWalled(text))
+    static func isPrivateText(_ text: String, lastWeightKg: Double?) -> Bool {
+        !text.isEmpty && (SecretWords.mentions(text) || PrivateFacts.isWalled(text, lastWeightKg: lastWeightKg))
     }
 }

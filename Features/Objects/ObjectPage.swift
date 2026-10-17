@@ -393,7 +393,11 @@ private struct PropertyList: View {
                 dash
             } else {
                 VStack(alignment: .trailing, spacing: Theme.Spacing.s) {
-                    ForEach(targets) { target in ObjectHandle(title: target.title, route: .object(target.id)) }
+                    // A private target shows its label, never its words (QA on #580).
+                    ForEach(targets) { target in
+                        ObjectHandle(title: ObjectPrivacy.label(of: target, in: model.store, classes: model.classes)
+                            ?? target.title, route: .object(target.id))
+                    }
                 }
             }
         case .classRef:

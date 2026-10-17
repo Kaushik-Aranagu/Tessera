@@ -26,6 +26,18 @@ public struct TessRequest: Sendable {
         self.context = context
         self.use = use
     }
+
+    /// His last weight for the bare-number wall, or nil with a set in focus (a number is then the bar; Product 4:46 PM
+    /// PT).
+    @MainActor
+    func lastWeightKg(_ engine: ActionEngine) -> Double? {
+        Self.lastWeightKg(context, engine: engine)
+    }
+
+    @MainActor
+    static func lastWeightKg(_ context: TessContext, engine: ActionEngine) -> Double? {
+        context.entry == nil ? BodyWeight.lastKg(in: engine.store) : nil
+    }
 }
 
 /// What a route did with a request.
@@ -74,7 +86,7 @@ public struct TessRouter {
         let secret = SecretWords.mentions(request.text)
         // Money and body facts stay on the phone (MU2, Research 138 MW1): one the grammar didn't take goes to the
         // on-device model or to "Didn't catch that.", never to Claude, whatever the switch says.
-        let walled = PrivateFacts.isWalled(request.text)
+        let walled = PrivateFacts.isWalled(request.text, lastWeightKg: request.lastWeightKg(engine))
         for model in models where model.isAvailable(for: request.use)
             && !(secret && model.route != .grammar) && !(walled && model.route == .claude)
         {

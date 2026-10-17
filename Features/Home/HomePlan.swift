@@ -115,7 +115,8 @@ final class HomePlanModel {
         guard let plan, model.asksClaude, AppModel.planWordingReady else { return }
         wordingCalls += 1
         let pack = PlanPack(plan: plan, now: now, calendar: calendar, calendarKnown: false, restDay: restDay,
-                            otherNames: plan.notPlanned.map(\.title), includesEventTitles: false)
+                            otherNames: plan.notPlanned.map(\.title), includesEventTitles: false,
+                            lastWeightKg: BodyWeight.lastKg(in: model.store))
         wording?.cancel()
         wording = Task { @MainActor [weak self] in
             let result = await model.planWording.word(plan, pack: pack) { self?.touched ?? true }
