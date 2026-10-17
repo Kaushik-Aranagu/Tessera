@@ -9,6 +9,8 @@ struct RecipesShelfView: View {
         NavigationStack {
             RecipesShelfPage()
                 .navigationDestination(for: UUID.self) { RecipePage(recipeID: $0) }
+                // Paste from the shelf stays in the shelf, so back lands here, not Home (QA on #774).
+                .navigationDestination(for: ShelfPaste.self) { _ in ShelfPaste.Page() }
                 .toolbar(.hidden, for: .navigationBar)
         }
         .environment(\.animateEntrance, true)
@@ -18,6 +20,8 @@ struct RecipesShelfView: View {
 private struct RecipesShelfPage: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    /// Tess speaks once per visit, not each time the shelf reappears (QA on #765).
+    @State private var spoke = false
 
     var body: some View {
         let _ = model.revision
@@ -50,6 +54,11 @@ private struct RecipesShelfPage: View {
                         .foregroundStyle(Theme.Colors.ink.opacity(0.66))
                         .padding(.top, Theme.Spacing.xxl)
                         .entrance(2)
+                    // The way in from an empty shelf (QA on #765).
+                    NavigationLink("Paste a recipe", value: ShelfPaste())
+                        .buttonStyle(.labelWord)
+                        .padding(.top, Theme.Spacing.m)
+                        .entrance(3)
                 }
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(shelf.rows) { row in
@@ -85,9 +94,24 @@ private struct RecipesShelfPage: View {
         .scrollIndicators(.hidden)
         .background { ThemedBackground() }
         .onAppear {
+            guard !spoke else { return }
+            spoke = true
             if let tess = shelf.tess {
                 TessVoice.shared.say(tess)
             }
+        }
+    }
+}
+
+/// The Paste path pushed inside the shelf's stack; a save moves on to the new recipe.
+struct ShelfPaste: Hashable {
+    struct Page: View {
+        @State private var saved: UUID?
+
+        var body: some View {
+            PasteRecipe { saved = $0 }
+                .navigationDestination(item: $saved) { RecipePage(recipeID: $0) }
+                .toolbarTitleDisplayMode(.inline)
         }
     }
 }

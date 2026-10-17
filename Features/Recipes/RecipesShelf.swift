@@ -24,14 +24,22 @@ struct RecipesShelf {
 
     init(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef], now: Date, calendar: Calendar = .current) {
         let weight = BodyWeight.lastKg(in: store)
-        let log = CookLog(store: store, classes: classes)
+        // Every cook read once, grouped by recipe, rather than once per row (QA on #765).
+        var cooked: [UUID: [Date]] = [:]
+        if let cookClass = classes[.cook] {
+            for cook in store.objects(of: cookClass) where !cook.isDeleted {
+                guard let when = store.value("cookedAt", of: cook)?.dateValue,
+                      let recipe = store.linkedObjects("recipe", of: cook).first else { continue }
+                cooked[recipe.id, default: []].append(when)
+            }
+        }
         let recipes = RecipeBook(store: store, classes: classes).recipes().filter { !$0.isDeleted }
         rows = recipes.sorted { $0.createdAt > $1.createdAt }.map { recipe in
             let title = store.displayTitle(of: recipe)
             let isPrivate = ObjectPrivacy.isPrivateRecipeTitle(title, lastWeightKg: weight)
-            let cooks = log.cooks(of: recipe)
+            let cooks = cooked[recipe.id] ?? []
             return Row(id: recipe.id, name: isPrivate ? ObjectPrivacy.recipeLabel : title, isPrivate: isPrivate,
-                       day: cooks.first.map { Self.day($0.at, now: now, calendar: calendar) }, cooks: cooks.count)
+                       day: cooks.max().map { Self.day($0, now: now, calendar: calendar) }, cooks: cooks.count)
         }
         context = Self.context(count: rows.count, privateCount: rows.count(where: \.isPrivate))
         tess = Self.tess(rows)
@@ -44,13 +52,14 @@ struct RecipesShelf {
     }
 
     static func tess(_ rows: [Row]) -> String? {
+        // Names by their short name, so a long title never makes a long line (QA on #765).
         if rows.count == 1, let only = rows.first, only.cooks > 0 {
-            return "\(only.name), cooked \(only.cooks) time\(only.cooks == 1 ? "" : "s")."
+            return "\(RecipeCopy.shortName(only.name)), cooked \(only.cooks) time\(only.cooks == 1 ? "" : "s")."
         }
         guard let top = rows.max(by: { $0.cooks < $1.cooks }), top.cooks > 1,
               rows.count(where: { $0.cooks == top.cooks }) == 1
         else { return nil }
-        return "\(top.name) is the one you cook most."
+        return "\(RecipeCopy.shortName(top.name)) is the one you cook most."
     }
 
     /// His day (4 AM): within the week the short weekday, then "Oct 3" (US month first).
@@ -68,7 +77,9 @@ struct RecipesShelf {
         formatter.calendar = calendar
         formatter.timeZone = calendar.timeZone
         formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "MMM d"
+        // The year only when it isn't this year: "Oct 3", "Oct 3, 2025" (QA on #765).
+        let sameYear = calendar.component(.year, from: then) == calendar.component(.year, from: now)
+        formatter.dateFormat = sameYear ? "MMM d" : "MMM d, yyyy"
         return formatter.string(from: then)
     }
 }
