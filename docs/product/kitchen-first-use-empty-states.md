@@ -141,5 +141,6 @@
 
 1. **Only 2 of the 9 are on master and correct** (Groceries and the Settings section); Recipes is the one most users meet first, so its empty state (section 1) is the first build.
 2. **New copy in this file, all proposed**: "Tell me “milk, eggs” and I'll keep the list."; "Packing, on Lists."; `Say "timer 8 minutes" and I'll keep it.`; "No steps yet. Paste them below."; "Recipe links and grocery matches stay on this phone.". Everything else is cited from a ruled row.
-3. **First-use lines run once.** The rule "once per screen, per install" needs one flag per screen, kept in the settings object so a restore does not teach a new phone the same lesson twice. Product to say whether a restore resets them (default taken: it does not).
-4. **No card, no coach mark, no illustration anywhere.** If a screen needs more than one quiet line and one Tess line to explain itself, the screen's own words are wrong.
+3. **Oct 17 (decisions 3:55): no Kitchen switch exists in Settings** (gap hunt 5, G30 is a non-goal), so no first-use line here depends on one. The Kitchen wording line in section 9 stays proposed.
+4. **First-use lines run once.** The rule "once per screen, per install" needs one flag per screen, kept in the settings object so a restore does not teach a new phone the same lesson twice. Product to say whether a restore resets them (default taken: it does not).
+5. **No card, no coach mark, no illustration anywhere.** If a screen needs more than one quiet line and one Tess line to explain itself, the screen's own words are wrong.

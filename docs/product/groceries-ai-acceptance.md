@@ -64,7 +64,7 @@ The engine is slice R as decided on Oct 15 (`kitchen-v2-backlog.md`, Research's 
 - **At most 4 names** (was 3), most overdue first.
 - The surface is the USUALLY label and a line of ink words, replacing "Usually have: milk, eggs". The words are the names; no verb, no plus.
 
-Unchanged: one shop run each (shown and not bought when the shop clears, or swiped away, goes quiet until the next buy); never notifies, never badges, never a Home offer, never red, never Claude. Tap: the word flies to its aisle as a ghost row, Tess: "Oat milk, in Dairy and eggs." with UNDO. Long-press: "Bought 6 times in 8 weeks, about weekly."
+Unchanged: one shop run each (shown and not bought when the shop clears, or swiped away, goes quiet until the next buy); never notifies, never badges, never a Home offer, never red, never Claude. Tap: the word flies to its aisle as a ghost row, Tess: "Oat milk, on Groceries." with UNDO (ruled Oct 17, decisions 3:55: a save reads "on <list>."; an aisle change reads "Oat milk, moved to Dairy and eggs."). Long-press: "Bought 6 times in 8 weeks, about weekly."
 
 ## 5 · The reminder
 

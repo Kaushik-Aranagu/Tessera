@@ -54,7 +54,7 @@ Where a row says "zero calls", the stub's list is empty and the sent log gains n
 | KC16 | Photo recipe read (K43; on device) | Read a photo of a recipe | No image leaves the phone (K55). Zero Claude calls from the photo; any text step that goes to Claude is the recipe text only, as KC9 | Build target |
 | KC17 | Pantry (K28.13, K58.19) | Open Pantry, cycle states, tap ADD 3 TO GROCERIES | Zero calls. The sent log gains no row. The pack snapshot holds no state and no bought date | Build target |
 | KC18 | Tess answers a **question** that touches the Kitchen ("how many times did I cook tacos?") | Ask with "Tess asks Claude" yes | The phone answers from the ledger: "Tacos, 4 times." The question goes to Claude only if the phone cannot read it, and then the body carries the question text only, no log, no counts of other recipes. A question naming the stew gets the phone's answer ("Private recipe, 3 times.") and no call | Yes for the stew; ordinary path is as today |
-| KC19 | "Tess asks Claude" **no** | Switch to no; repeat KC11, KC12, KC13 | Zero calls on all three. The link-read tap is the one open case (G32, Product to rule). The sent log gains no row | Per G32 |
+| KC19 | "Tess asks Claude" **no** | Switch to no; repeat KC11, KC12, KC13 | Zero calls on all three. The link-read tap is covered too (G32, ruled Oct 17, decisions 3:55): READ does not go to Claude and shows the ER6 line, "Couldn't find a recipe on that page. Paste the text instead." The sent log gains no row | Fails today: the reader ignores the switch (G32) |
 
 ## C. The pairs (one number, two audiences)
 
