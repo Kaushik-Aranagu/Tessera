@@ -354,6 +354,8 @@ public final class TessCaptureEngine: TessCapturing {
         switch parse {
         case let .groceries(lines):
             let record = try engine.perform(AddGroceries(lines: lines), by: .tess, pending: pending).record
+            // Said as the wall kept them: "buy milk 4.99" is "Milk, on Groceries." (Product 8:40 AM PT Oct 17).
+            let lines = AddGroceries.kept(lines, store: engine.store)
             let name = lines.first.map { $0.prefix(1).uppercased() + $0.dropFirst() } ?? ""
             // One bare thing already on: nothing new was made ("Chickpeas, already on Groceries.").
             let made = record.ops.contains {

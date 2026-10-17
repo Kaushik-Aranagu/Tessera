@@ -151,11 +151,31 @@ public struct AddListItem: EngineAction {
 
     /// What the wall keeps as the item: nil when the line becomes a private note.
     @MainActor public static func kept(_ given: String, store: ObjectStore) -> String? {
+        guard !looksLikeClaudeKey(given) else { return nil }
         let bare = EngineWall.withoutPrice(given)
         let last = BodyWeight.lastKg(in: store)
-        let isNote = bare.isEmpty || SecretWords.isSecretListLine(given) || PrivateFacts.isMoneyShaped(bare)
-            || PrivateFacts.isBareWeight(bare.lowercased(), lastWeightKg: last)
+        // A measure is never money: "1.25 cups flour" (a cooking unit right after two places; never kg or lb).
+        let measured = bare.replacing(
+            /(?i)\b\d+[.,]\d{2}\s*(?:cups?|tbsps?|tablespoons?|tsps?|teaspoons?|g|grams?|ml|l|liters?|litres?|oz|ounces?)\b/,
+            with: "1"
+        )
+        let isNote = bare.isEmpty || SecretWords.isSecretListLine(given) || PrivateFacts.isMoneyShaped(measured)
+            || PrivateFacts.isBareWeight(bare.lowercased(), lastWeightKg: last) || isSumOnly(given, bare: bare)
         return isNote ? nil : bare
+    }
+
+    /// A line that was only a sum, judged on what was typed (Kitchen on #759): "$40 at costco" strips to "at costco",
+    /// which names no thing to buy.
+    static func isSumOnly(_ given: String, bare: String) -> Bool {
+        guard PrivateFacts.isMoneyShaped(given) || bare != given.trimmingCharacters(in: .whitespacesAndNewlines) else {
+            return false
+        }
+        let filler: Set = ["at", "for", "from", "in", "on", "to", "the", "a", "an", "and", "of"]
+        let words = PrivateFacts.words(bare.lowercased()).filter { word in
+            !filler.contains(word) && !TessMemoryScreen.placeWords.contains(word)
+                && !TessMemoryScreen.moneyWords.contains(word)
+        }
+        return words.isEmpty
     }
 
     /// A kept item that is a medicine or a body fact: his list shows it, nothing else names it.
