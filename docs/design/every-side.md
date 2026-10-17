@@ -127,7 +127,7 @@ The big fact is Hero 56 with its unit at 21. The small facts are Body 19, at mos
 
 | Screen | Big fact | Small fact 1 | Small fact 2 |
 |---|---|---|---|
-| Today: THE DAY | "4" *to go* | "6 done" | the next thing: "Stretch at 8:30 pm" |
+| Today: THE DAY | "4" *to go* | "6 done" | the next thing: "Stretch, 8:30 pm" |
 | A task: ITS STORY | "2" *moves* | "made Tuesday" | "in Plan my day" (or the linked thing) |
 | Training: THE WEEK | "3" *of 6 sessions* | the next one: "Legs A, Saturday" | the last one: "Push A, today" |
 | Routines: LAST TIMES | the routine done last: "Push A" | "today" | the next due: "Pull A, Tuesday" |

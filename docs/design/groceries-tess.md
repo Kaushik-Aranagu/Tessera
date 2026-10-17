@@ -69,4 +69,4 @@ What the small line under a row shows, at 16 `inkSecondary`, now that recipes ke
 - **Owners:** Core (G-R1 with G-R8, one landing), Builder B (the line's two and three-recipe forms), the Kitchen lead (G-R2's covered rule).
 
 ## Addendum, Oct 16: receipts and bests (Design 62, `copy-pass.md`)
-"9 to get, for tacos and 2 more"; the ask and its receipt "Scallions, for tacos?" / "Scallions, for tacos."; the landing receipt is "Tacos, 2 added." with UNDO (Product 3:15 AM, replacing "Added 2 for tacos."); Home context under "Tacos tonight" is "at 7 pm"; "for curry and 2 more". The full table is in `copy-pass.md`; where a clip still says the old words, the sheet wins.
+"9 to get, for tacos and 2 more"; the ask and its receipt "Scallions, for tacos?" / "Scallions, for tacos."; the landing receipt is "Tacos, 2 added." with UNDO (Product 3:15 AM, replacing "Added 2 for tacos."); Home context under "Tacos tonight" is "7 pm"; "for curry and 2 more". The full table is in `copy-pass.md`; where a clip still says the old words, the sheet wins.

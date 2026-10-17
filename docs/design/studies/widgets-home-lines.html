@@ -67,7 +67,7 @@ if(!PLAY){
  S.forEach(s=>{h+=`<div class="cap" style="margin-top:10px">${s.n}</div><div class="grid">${LOOKS.map(([k])=>medium(s,k)).join('')}</div>`});
  h+=`<div class="cap">SMALL: THE LINE ALONE (26 WHEN IT’S LONGER THAN 18 CHARACTERS); RESTING IS THE TIMER OVER THE HORIZON</div><div class="sg">${S.map(s=>small(s,'P')).join('')}${S.slice(0,4).map(s=>small(s,'O')).join('')}</div>`;
  h+=`<div class="cap">LOCK SCREEN ACCESSORIES: THE LINE, THEN THE TIME; THE CIRCULAR IS ONE WORD, NO RING, NO TICK</div><div class="lockbg">`;
- const rect=[['Push A today.','6:00 pm'],['Push A, bench set 4.',''],['Push A, bench set 4.','Resting 1:32'],['Call landlord at six.','In 10 min'],['Rest day.',''],['All quiet.',''],['Push A done, a bench best.','7:40 pm'],['Pull A tomorrow, first.','7:30 am']];
+ const rect=[['Push A today.','6:00 pm'],['Push A, bench set 4.',''],['Push A, bench set 4.','Resting 1:32'],['Call landlord, 6 pm.','In 10 min'],['Rest day.',''],['All quiet.',''],['Push A done, a bench best.','7:40 pm'],['Pull A tomorrow, first.','7:30 am']];
  const circ=['Push A','Set 4','1:32','10 min','Rest','Quiet','Done','7:30'];
  h+=rect.map(([a,b],i)=>`<div><div class="rect"><b>${a}</b>${b?`<span>${b}</span>`:''}</div><div style="display:flex;gap:16px;align-items:center;margin-top:12px"><div class="circ">${circ[i]}</div><div class="inl">${a.replace(/\.$/,'')}</div></div></div>`).join('');
  h+=`</div>`;

@@ -67,7 +67,7 @@ function home(side){
   <div class="abs lbl sec" style="left:22px;top:318px">NEXT</div>`;
   ROWS.forEach(([t,tm,c],i)=>{h+=`<div class="row" id="${side}r${i}" style="top:${352+i*48}px">${dots?`<div class="dab" style="background:radial-gradient(closest-side,${C[c]},${C[c]} 55%,transparent)"></div>`:''}<div class="t" style="font-weight:${i===0?500:400}">${!dots&&i===1?'<div class="wash"></div>':''}${t}</div><div class="tm">${tm}</div></div>`});
   h+=`<div class="row" id="${side}ghost" style="top:${352+3*48}px">${dots?`<div class="dab" id="${side}gd" style="background:radial-gradient(closest-side,var(--tess),var(--tess) 55%,transparent);filter:blur(1.5px)"></div>`:''}<div class="t" style="color:var(--tess)"><span>Call Mom</span>${dots?'':'<span class="ink-over">Call Mom</span>'}</div><div class="tm" id="${side}gt" style="color:var(--tess)">9:30 PM</div></div>`;
-  h+=`<div class="abs tessline" id="${side}said" style="left:22px;top:600px;width:330px;opacity:0;transform:translateY(10px)">Added Call Mom at 9:30.</div>`;
+  h+=`<div class="abs tessline" id="${side}said" style="left:22px;top:600px;width:330px;opacity:0;transform:translateY(10px)">Added Call Mom, 9:30 am.</div>`;
   return h+SOUL+`</div>`;
 }
 // review

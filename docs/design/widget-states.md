@@ -32,7 +32,7 @@ These use Research's running example (Thu 18:10, Push A).
 |---|---|---|---|---|
 | Running | running now, Push A | Bench, set 4 of 5 | SET 4 IS UP (NEXT EXERCISE, READY TO FINISH as the set changes) | Resume |
 | Resting | running now, Push A | Bench, set 4 of 5 | RESTING **1:32** (21/600 timer), with the seam draining as the horizon. Flips to SET 4 IS UP at 18:12:30 (a second timeline entry). | Resume |
-| Timed task within 15 min | next, at six | Call landlord | IN 10 MIN | none |
+| Timed task within 15 min | next, 6 pm | Call landlord | IN 10 MIN | none |
 | Rest day | Rest day | Pull A is a tap away | none | Pull A |
 | All quiet | none | All quiet. (`inkSecondary`) | none | none |
 | Day done | trained this evening | Push A | 6 OF 6 · 22 SETS · 1 RECORD | none |
@@ -62,7 +62,7 @@ These are monochrome, in opacity tiers only. The words and the one timer carry t
 |---|---|---|---|
 | Running | Push A / Bench, set 4 of 5 / Set 4 is up | Ring at 3 of 5, "4/5" | Bench, set 4 of 5 |
 | Resting | Push A / Bench, set 4 of 5 / Resting 1:32 | `ProgressView(timerInterval:)` gauge, "1:32" | Resting 1:32 |
-| Timed task | Call landlord / next, at six / In 10 min | Ring, "10 min" | Call landlord at six |
+| Timed task | Call landlord / next, 6 pm / In 10 min | Ring, "10 min" | Call landlord, 6 pm |
 | Rest day | Rest day / Pull A is a tap away | "Rest" | Rest day |
 | All quiet | All quiet. | "Quiet" (not a tick: a tick would say done) | All quiet. |
 | Day done | Push A / trained this evening / 6 of 6 exercises, 22 sets | Full ring, tick, "22" | Push A, done |
@@ -117,7 +117,7 @@ Every widget's hero is **Home's line** (`docs/ai/home-lines.md`): the hero, then
 
 ### The line (Core: `HomeLines.widgetLine`)
 1. Start with the hero as Home has it: "Push A", "Push A, bench set 4", "Push A done", "Tacos tonight", "Rest day", "All quiet".
-2. Add the context line: a bare time word joins without a comma ("Push A today.", "Push A this evening."); a fact joins after a comma ("Push A done, a bench best.", "Tacos tonight, 2 to buy."); a context that repeats the hero's state word ("done at 7:40 pm" under "Push A done") drops, and its clock time becomes the meta ("7:40 PM").
+2. Add the context line: a bare time word joins without a comma ("Push A today.", "Push A this evening."); a fact joins after a comma ("Push A done, a bench best.", "Tacos tonight, 2 to buy."); a context that repeats the hero's state word ("done, 7:40 pm" under "Push A done") drops, and its clock time becomes the meta ("7:40 PM").
 3. End with a stop. Title 34, up to two lines on the medium and large; the small drops to 26 past 18 characters.
 
 ### Home Screen, every state, redrawn
@@ -126,7 +126,7 @@ Every widget's hero is **Home's line** (`docs/ai/home-lines.md`): the hero, then
 | Planned | Push A today. | 6:00 PM | Push A (`training` line; opens the routine) |
 | Running | Push A, bench set 4. | none | Resume |
 | Resting | Push A, bench set 4. | **1:32** (21/600) on the horizon seam, draining | Resume |
-| Timed task within 15 min | Call landlord at six. | IN 10 MIN | none |
+| Timed task within 15 min | Call landlord, 6 pm. | IN 10 MIN | none |
 | Rest day | Rest day. | none | Pull A |
 | All quiet | All quiet. (`inkSecondary`) | none | none |
 | Day done | Push A done, a bench best. / Push A done. | 7:40 PM | none |
@@ -144,7 +144,7 @@ Every widget's hero is **Home's line** (`docs/ai/home-lines.md`): the hero, then
 | Planned | Push A today. / 6:00 pm | Push A | Push A today |
 | Running | Push A, bench set 4. | Set 4 | Push A, bench set 4 |
 | Resting | Push A, bench set 4. / Resting 1:32 | 1:32 (`Text(timerInterval:)`, no gauge) | Push A, bench set 4 |
-| Timed task | Call landlord at six. / In 10 min | 10 min | Call landlord at six |
+| Timed task | Call landlord, 6 pm. / In 10 min | 10 min | Call landlord, 6 pm |
 | Rest day | Rest day. | Rest | Rest day |
 | All quiet | All quiet. | Quiet | All quiet |
 | Day done | Push A done, a bench best. / 7:40 pm | Done | Push A done, a bench best |
@@ -162,4 +162,4 @@ The third (dim) line goes. The inline widget drops the stop (it sits next to the
 - Everything else on this sheet stands.
 
 ## Addendum, Oct 16: receipts and bests (Design 62, `copy-pass.md`)
-Times "6 pm" / `6 PM`; "Push A" (not "Resume") while running; "Call landlord at 6 pm."; a planned rest day carries meta `SUNDAY`, a marked one "Rest today, Legs A waits for tomorrow."; the Log a set snippet reads "Set 22 logged." with UNDO, and "Push A done." has none; "Pull A tomorrow, first." stays. The full table is in `copy-pass.md`; where a clip still says the old words, the sheet wins.
+Times "6 pm" / `6 PM`; "Push A" (not "Resume") while running; "Call landlord, 6 pm."; a planned rest day carries meta `SUNDAY`, a marked one "Rest today, Legs A waits for tomorrow."; the Log a set snippet reads "Set 22 logged." with UNDO, and "Push A done." has none; "Pull A tomorrow, first." stays. The full table is in `copy-pass.md`; where a clip still says the old words, the sheet wins.

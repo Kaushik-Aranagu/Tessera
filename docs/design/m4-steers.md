@@ -33,7 +33,7 @@ Rewritten 16 Oct to Research 95 (`research/plan-my-day-flow.md`, #240) and Produ
 
 **The page (Porcelain, Thu 15 Oct fixture d01).**
 - **Now line:** "this morning".
-- **Hero**, the day in one sentence, Title 44/500. With the calendar read, it may count meetings and free time: "Three meetings, four hours free". **Without the calendar, it counts tasks and the workout only:** "Three tasks, Push A at 6 pm". It never says free, clear or open then.
+- **Hero**, the day in one sentence, Title 44/500. With the calendar read, it may count meetings and free time: "Three meetings, four hours free". **Without the calendar, it counts tasks and the workout only:** "Three tasks, Push A, 6 pm". It never says free, clear or open then.
 - **The context line** is sleep, and only once Health read has been granted from its own ask: "slept 6h40" at 21/400 `inkSecondary`. Before that there's no line at all, and the plan never asks for Health.
 - **The day stroke** (6pt, `ink-line.md`) shows meetings as short ink segments at their times, at 55%, **only when the calendar is read.** Otherwise the stroke is as on any morning.
 - **Energy (10b)** is one optional line under the context line: "Energy" at 21/400 `inkSecondary`, then the rep drum (`RepsDrum`, 1 to 5, numeral 48 Light) with its word under it as a label (FLAT · LOW · OKAY · GOOD · BRIGHT). It's logged for the Day log only. **It never changes the plan, and Tess says nothing about it.** Light days come from C1 to C3 (`light-day.md`), never from sleep or energy.

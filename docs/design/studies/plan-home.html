@@ -68,7 +68,7 @@ const CLAUDE={...OFFER,key:'START WITH REPLY TO LANDLORD',rows:PLAN,via:1};
 const FIRST={...CLAUDE,rows:PLAN.slice(0,3),more:2,moreY:578,first:1,firstY:636};
 const KEPT={day:'Friday morning',ctx:'this morning, 8 am',hero:'Reply to landlord',key:'START PUSH A',rows:PLAN.slice(1)};
 const PAUSED={day:'Friday evening',ctx:'paused 21 min ago',hero:'Push A, paused at bench',two:1,key:'RESUME PUSH A',fill:.22,rows:[['Read Designing Data-Intensive Applications','21:10',1],['Call mom','tomorrow']]};
-const NOCAL={day:'Friday morning',ctx:'this morning',hero:'Three tasks, Push A at 6',two:1,key:'START WITH WRITE THE REPORT',sec:'Plan',rows:RULES.slice(0,4),ghost:1,more:1,moreY:624};
+const NOCAL={day:'Friday morning',ctx:'this morning',hero:'Three tasks, Push A, 6 pm',two:1,key:'START WITH WRITE THE REPORT',sec:'Plan',rows:RULES.slice(0,4),ghost:1,more:1,moreY:624};
 const phone=(c,inner,opt={})=>`<div><div class="cap">${c}</div><div class="ph${(opt.por??POR)?' por':''}" ${opt.id?`id="${opt.id}"`:''}>${tabs()}${inner}${opt.line?`<div class="tl">${opt.line}${opt.undo?'<span class="u">UNDO</span>':''}</div>`:''}${soul(opt.id?'S':'s'+Math.random().toString(36).slice(2,6))}${opt.fing?'<div id="fing"></div>':''}</div></div>`;
 
 if(!PLAY){

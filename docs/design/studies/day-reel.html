@@ -67,8 +67,8 @@ const startKey=(word,fill,y=296,id='sk')=>`<div class="abs lbl" id="${id}" style
 const next=(y0,rows)=>`<div class="abs t34" style="left:22px;top:${y0}px">Next</div>${rows.map(([t,h,w],k,a)=>{const y=y0+52+a.slice(0,k).reduce((s,r)=>s+(r[2]?74:46),0);return `<div class="abs b" style="left:22px;top:${y}px;width:${h?280:346}px">${t}</div>${h?`<div class="abs lbl s2" style="right:22px;top:${y+4}px">${h}</div>`:''}`}).join('')}`;
 const home=(o)=>`<div class="abs b nw" id="day" style="left:22px;top:138px">${o.day}</div><div class="abs b ctx nw" id="ctxl" style="left:22px;top:186px">${o.ctx}</div><div class="abs hero" id="hero" style="left:22px;top:220px">${o.hero}</div>${o.key?startKey(o.key,o.fill??1):''}${next(o.key?388:326,o.rows)}`;
 const MORNING={day:'Thursday morning',ctx:'today',hero:'Push A',key:'START PUSH A',rows:[['Call the bank','15:00'],['Groceries at Trader Joe’s','17:30'],['Stretch and mobility','20:30'],['Read Designing Data-Intensive Applications','21:10',1]]};
-const EVENING={day:'Thursday evening',ctx:'done at 7:40 pm',hero:'Push A done',rows:[['Stretch and mobility','20:30'],['Read Designing Data-Intensive Applications','21:10',1],['Call mom','tomorrow']]};
-const NIGHT={day:'Thursday night',ctx:'done at 7:40 pm',hero:'Push A done',rows:[['Call mom','tomorrow'],['Pull A','tomorrow']]};
+const EVENING={day:'Thursday evening',ctx:'done, 7:40 pm',hero:'Push A done',rows:[['Stretch and mobility','20:30'],['Read Designing Data-Intensive Applications','21:10',1],['Call mom','tomorrow']]};
+const NIGHT={day:'Thursday night',ctx:'done, 7:40 pm',hero:'Push A done',rows:[['Call mom','tomorrow'],['Pull A','tomorrow']]};
 const FRIDAY={day:'Friday morning',ctx:'today',hero:'Pull A',key:'START PULL A',rows:[['Call mom','12:30'],['Stretch and mobility','20:30']]};
 // 44: Training at rest. The strip (one segment per exercise, its length its sets), the plan as lanes, the Start mark.
 const PLAN=[['Bench press',4,'82.5 × 8'],['Overhead press',3,'47.5 × 8'],['Incline dumbbell',3,'28 × 10'],['Lateral raise',3,'10 × 12'],['Triceps pushdown',3,'30 × 12']];

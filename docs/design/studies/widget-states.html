@@ -53,7 +53,7 @@ const keyW=(word,w,paint,colour,top)=>`<div class="key" style="top:${top}px;colo
 const S=[
  {k:'RUNNING',ctx:'running now, Push A',hero:'Bench, set 4 of 5',meta:'SET 4 IS UP',key:['Resume',74,'var(--live)','var(--liveInk)'],small:['running now','Bench, set 4 of 5']},
  {k:'RESTING',ctx:'running now, Push A',hero:'Bench, set 4 of 5',meta:'RESTING',timer:'1:32',horizon:.38,key:['Resume',74,'var(--live)','var(--liveInk)'],small:['resting',null,'1:32']},
- {k:'TIMED TASK<br>WITHIN 15 MIN',ctx:'next, at six',hero:'Call landlord',meta:'IN 10 MIN',small:['next, at six','Call landlord']},
+ {k:'TIMED TASK<br>WITHIN 15 MIN',ctx:'next, 6 pm',hero:'Call landlord',meta:'IN 10 MIN',small:['next, 6 pm','Call landlord']},
  {k:'REST DAY',ctx:'Rest day',hero:'Pull A is a tap away',key:['Pull A',62,'var(--tr)','rgb(var(--ink))'],small:['Rest day','Pull A is a tap away']},
  {k:'ALL QUIET',hero:'All quiet.',quiet:1,small:[null,'All quiet.']},
  {k:'DAY DONE',ctx:'trained this evening',hero:'Push A',meta:'6 OF 6 · 22 SETS · 1 RECORD',small:['trained','Push A']},
@@ -103,7 +103,7 @@ if(mode==='lock'){
  const rect=[
   ['<b>Push A</b>','Bench, set 4 of 5','<span class="d">Set 4 is up</span>'],
   ['<b>Push A</b>','Bench, set 4 of 5','<span class="d">Resting</span> 1:32'],
-  ['<b>Call landlord</b>','next, at six','<span class="d">In 10 min</span>'],
+  ['<b>Call landlord</b>','next, 6 pm','<span class="d">In 10 min</span>'],
   ['<b>Rest day</b>','Pull A is a tap away',''],
   ['<b>All quiet.</b>','',''],
   ['<b>Push A</b>','trained this evening','<span class="d">6 of 6 exercises, 22 sets</span>'],
@@ -113,7 +113,7 @@ if(mode==='lock'){
  ];
  const ring=(f,txt,sub='')=>`<div class="circ"><svg width="76" height="76" style="position:absolute;left:0;top:0"><circle cx="38" cy="38" r="33" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="4"/>${f?`<circle cx="38" cy="38" r="33" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-dasharray="${207*f} 207" transform="rotate(-90 38 38)"/>`:''}</svg><span style="position:relative">${txt}</span>${sub?`<span style="position:relative;font-size:16px;font-weight:600;opacity:.66">${sub}</span>`:''}</div>`;
  const circ=[ring(.6,'4/5'),ring(.38,'1:32'),ring(0,'10<br><span style=\'font-weight:600\'>min</span>'),`<div class="circ">Rest</div>`,`<div class="circ">Quiet</div>`,ring(1,'✓','22'),`<div class="circ" style="opacity:.66">7:30</div>`,`<div class="circ">Rest</div>`,`<div class="circ" style="opacity:.66">Paused</div>`];
- const inl=['Bench, set 4 of 5','Resting 1:32','Call landlord at six','Rest day','All quiet.','Push A, done','Pull A at 7:30','Rest day','Tessera paused'];
+ const inl=['Bench, set 4 of 5','Resting 1:32','Call landlord, 6 pm','Rest day','All quiet.','Push A, done','Pull A, 7:30 pm','Rest day','Tessera paused'];
  let g=`<h2>LOCK SCREEN ACCESSORIES · MONOCHROME, OPACITY TIERS ONLY · WORDS AND ONE TIMER CARRY THE STATE</h2><div style="display:flex;gap:40px;align-items:flex-start"><div class="lockbg"><div class="grid" style="grid-template-columns:170px 172px 76px 200px;gap:18px 22px">
   <div></div><div class="colh" style="color:rgba(255,255,255,.5)">RECTANGULAR</div><div class="colh" style="color:rgba(255,255,255,.5)">CIRCULAR</div><div class="colh" style="color:rgba(255,255,255,.5)">INLINE</div>`;
  S.forEach((s,i)=>{g+=`<div class="rowlbl" style="color:rgba(255,255,255,.66)">${s.k}</div><div class="acc rect">${rect[i].filter(Boolean).join('<br>')}</div>${circ[i]}<div class="acc inl" style="padding-top:8px">${inl[i]}</div>`});

@@ -32,7 +32,7 @@ Sheet 71's order holds on every page: the left edge is back, Tess's band is hers
 - **Tap a mark** to open its thing (the zoom, as from the Day log).
 - **Motion:** the page moves as in 71 (the body goes 44 pt left; the side page comes in from 60 pt, 40 ms behind, 320 ms on the house curve). The strands then draw down the day to now over 1.1 s, ease-out, and what's ahead tints in last. The running stroke breathes as the soul does.
 - **Reduce Motion:** a 150 ms crossfade (MotionPolicy), with the strands already drawn.
-- **VoiceOver:** each strand is one element: "Tasks, 3 of 5 done. Next, Stretch at 8:30 pm."
+- **VoiceOver:** each strand is one element: "Tasks, 3 of 5 done. Next, Stretch, 8:30 pm."
 
 ## For the builders
 - **Builder B (Home is his):** the THE DAY word on Home's context line and the side page. The data is today's records by area from the existing day reads (the Day log already has them); there are no new reads.

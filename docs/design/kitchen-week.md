@@ -26,7 +26,7 @@ Checks Core's Kitchen slice (#380 at 79475ed: Research 123's five meals with the
 ‹ RECIPES at 58; the title at Title 44 in the fitting form (two lines for "Sheet-pan chicken fajita tacos", the context line moving to 186); the context line "Thursday, 35 min, serves 4" (the planned day first, when planned; else "35 min, serves 4"); y is time: the ink stroke from the first step to the last, each step at its minute with the lines it uses under it at 16; **optional and "for serving" lines sit on the page at 38% ink, marked as written ("cheddar, optional", "hot sauce, for serving"), and never on the list.** PLAN THURSDAY as the ink-line word (a tap plans it; a planned page reads COOK first); the clock, the shopping swipe and Core's start-minutes are `recipe-layouts.md` §C. When he picks A or B, only this page changes; nothing on Groceries does.
 
 ## Home (47 §5, 62)
-The planned cook's Home line carries the open count: context "2 to buy" over the hero "Tacos tonight" with GROCERIES as the key; at zero the context is the time ("at 7 pm") and the key reads COOK. Never a badge, a dot or a notification.
+The planned cook's Home line carries the open count: context "2 to buy" over the hero "Tacos tonight" with GROCERIES as the key; at zero the context is the time ("7 pm") and the key reads COOK. Never a badge, a dot or a notification.
 
 ## For Builder B and the Kitchen lead
 - Builder B: the ghost-row landing and dry (47 §3) with #380's rows; the count line's roll; the receipt from the short name; "nothing new to buy" as a line with no UNDO; the joined row's amount turning wet; the fold's "N done" covering; the recipe page's optional lines at 38%.

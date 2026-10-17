@@ -74,7 +74,7 @@ A capture is wet paint until it is committed.
 4. **Drop:** swiping the ghost sideways throws it away. Nothing is written.
 
 ## TRAINING
-- **Context line:** "this evening at six".
+- **Context line:** "this evening, 6 pm".
 - **Hero:** "Push Day A".
 - **Plan:** five rows of 50pt, e.g. "Bench press" with "4 × 8" in labels.
 - **Start workout:** an ink key that raises the workout as a full-screen cover.

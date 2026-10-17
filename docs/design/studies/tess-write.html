@@ -148,7 +148,7 @@ async function say(text, undo) {
   ['typed', 'wline', 'dry2', 'ask'].forEach((id) => anim($(id), [{ opacity: getComputedStyle($(id)).opacity }, { opacity: 0 }], { duration: 200 }));
   D.B.getAnimations().forEach((a) => a.cancel()); pos.B = [0, -40, .3]; D.B.style.transform = 'translate(0px,-40px) scale(.3)';
   await close();
-  say('Call mom, today at 6.', true);
+  say('Call mom, today, 6 pm.', true);
   await sleep(2400);
   document.body.dataset.done = '1';
 })();

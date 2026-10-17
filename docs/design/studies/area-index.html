@@ -84,7 +84,7 @@ const AREAS = [
   { k: 'review', w: 'REVIEW', word: 'Review', a: 'var(--rev)', line: 'This week, 3 of 6 sessions', f: '50%' },
   { k: 'today', w: 'TODAY', word: 'Today', a: 'var(--today)', line: 'Push Day A, 13 sets left', f: '40%' },
   { k: 'train', w: 'TRAINING', word: 'Training', a: 'var(--train)', line: 'Push Day A is on', f: '35%' },
-  { k: 'kit', w: 'KITCHEN', word: 'Kitchen', a: 'var(--kit)', line: 'Tacos at 7 pm', f: '25%' },
+  { k: 'kit', w: 'KITCHEN', word: 'Kitchen', a: 'var(--kit)', line: 'Tacos, 7 pm', f: '25%' },
 ];
 
 // The four tab pages, simplified to their tops (41, 44, 46, 47).
@@ -97,8 +97,8 @@ function page(k) {
     <div class="abs hero">Push Day A is on</div><div class="abs key" style="top:282px;color:var(--train)">RESUME<i></i></div>
     <div class="abs lbl" style="top:350px">ROUTINES</div>
     <div class="abs next" style="top:378px"><div><span>Push Day A</span><em>Mon, Thu</em></div><div><span>Pull Day A</span><em>Tue</em></div><div><span>Legs A</span><em>Sat</em></div><div><span>Mobility</span><em>any day</em></div></div>`;
-  if (k === 'kit') return `<div class="abs day">Tonight</div><div class="abs ctxl">cook at 6:30 pm</div>
-    <div class="abs hero">Tacos at 7 pm</div><div class="abs key" style="top:282px">START COOKING<i></i></div>
+  if (k === 'kit') return `<div class="abs day">Tonight</div><div class="abs ctxl">cook, 6:30 pm</div>
+    <div class="abs hero">Tacos, 7 pm</div><div class="abs key" style="top:282px">START COOKING<i></i></div>
     <div class="abs lbl" style="top:350px">LISTS</div>
     <div class="abs next" style="top:378px"><div><span>Groceries</span><em>6 to buy</em></div><div><span>Packing</span><em>11 to pack</em></div><div><span>Recipes</span><em>24</em></div></div>`;
   return `<div class="abs day">This week</div><div class="abs ctxl">Oct 12 to Oct 18</div>
@@ -130,7 +130,7 @@ if (!play) {
      <div class="abs arc g" style="left:184px;top:470px;color:var(--rev)">REVIEW<small>3 of 6 this week</small></div>
      <div class="abs arc g" style="left:120px;top:560px;color:var(--today)">TODAY<small>7 of 20 sets</small></div>
      <div class="abs arc g" style="left:96px;top:650px;color:var(--train);transform:scale(1.1);transform-origin:100% 50%">TRAINING<small>Push Day A is on</small></div>
-     <div class="abs arc g" style="left:40px;top:744px;color:var(--kit)">KITCHEN<small>Tacos at 7 pm</small></div>
+     <div class="abs arc g" style="left:40px;top:744px;color:var(--kit)">KITCHEN<small>Tacos, 7 pm</small></div>
      ${band()}<div class="finger" style="left:200px;top:680px;opacity:1"></div></div>`;
 
   const col = (ph, opt, h, ps, rec) => `<div class="col">${ph}<div class="cap"><div class="opt${rec ? ' rec' : ''}">${opt}</div><h2>${h}</h2>${ps.map(p => `<p>${p}</p>`).join('')}</div></div>`;

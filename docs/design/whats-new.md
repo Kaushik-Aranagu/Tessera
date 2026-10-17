@@ -8,7 +8,7 @@ One clip, eleven things, in the order he reviewed them on Oct 15 at 11:58 PM: Ho
 | # | Caption | Source | In to out | Length |
 |---|---|---|---|---|
 | open | "What's new", next build | card, `studies/whats-new-cards.html?k=open` | | 1.8 s |
-| 1 | Home, one plain line | Builder B `docs/recordings/home-lines.mp4` (#366 at 46dfd4d), Home at rest: "Push Day A at 7 pm", START PUSH DAY A | 0–2.4 | 2.4 s |
+| 1 | Home, one plain line | Builder B `docs/recordings/home-lines.mp4` (#366 at 46dfd4d), Home at rest: "Push Day A, 7 pm", START PUSH DAY A | 0–2.4 | 2.4 s |
 | 2 | Tabs | master `docs/recordings/39-tab-lens.mp4` | 0.8 to 6.8 | 6.0 s |
 | 3 | Routines by day | master `docs/recordings/42-routines-fixed-days.mp4` | 1.0 to 8.0 | 7.0 s |
 | 4 | Training, plan first | master `docs/recordings/44-live-workout-frame.mp4` (#381: the plan page with START, "Push Day A running. Bench Press first.", set 1, the stamp, "Set 1 logged. 82.5 × 7.", the rest starting) | 0 to 4.6 | 4.6 s |

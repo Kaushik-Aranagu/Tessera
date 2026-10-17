@@ -4,8 +4,8 @@
 
 Redraws `shutdown.md` (item 34; which keeps Research's slot lines B to F, the lead-phrase grammar, the hold's writes and the never-list) on sheet 41's Home frame under the one-line grammar, `no-dots.md`, the one-base rule, `copy-pass.md` (62) and `back-word.md`. Where this sheet and `shutdown.md` differ, this one wins; `evening-on-now.md` §4 (the 22:00 close by itself) and the 04:00 turn stand.
 
-- Board: `mockups/shutdown-grammar.png` (source `studies/shutdown-grammar.html`): Shutdown at 9:04 pm, a row to Later with the line typed above the keys, the line said (Obsidian), the closed day (Obsidian), late night (Obsidian), a quiet one.
-- Recording: `recordings/shutdown-grammar.mp4` (11 s), Porcelain: tap Clean the oven (TOMORROW becomes LATER, the value crossfades), tap the line (the keyboard rises, the line rides up above the keys, "Reply to the landlord" typed, DONE), hold CLOSE THE DAY 0.7 s (the ink line empties to a trace and repaints), the handoff (each TOMORROW lifts away, the column folds), the closed day (his line as the hero, THEN PULL A, 7:30 AM, Tess "Closed. Your line is waiting at 8 am." with UNDO).
+- Board: `mockups/shutdown-grammar.png` (source `studies/shutdown-grammar.html`): Shutdown, 9:04 pm, a row to Later with the line typed above the keys, the line said (Obsidian), the closed day (Obsidian), late night (Obsidian), a quiet one.
+- Recording: `recordings/shutdown-grammar.mp4` (11 s), Porcelain: tap Clean the oven (TOMORROW becomes LATER, the value crossfades), tap the line (the keyboard rises, the line rides up above the keys, "Reply to the landlord" typed, DONE), hold CLOSE THE DAY 0.7 s (the ink line empties to a trace and repaints), the handoff (each TOMORROW lifts away, the column folds), the closed day (his line as the hero, THEN PULL A, 7:30 AM, Tess "Closed. Your line is set for 8 am." with UNDO).
 
 ## Shutdown, on Home at 21:00
 | y | Element |
@@ -17,7 +17,7 @@ Redraws `shutdown.md` (item 34; which keeps Research's slot lines B to F, the le
 | 296 | **The carry-over as a label word:** "3 MOVING TO TOMORROW" (Label 16/700 `inkSecondary`); past 00:00 "2 MOVING TO FRIDAY" (slot F2's facts). Absent when nothing rolls |
 | 328 + 40k | **One Body 21 line per row that rolls**, the name in ink at the left, **TOMORROW** at the right as its value (Label 16/600 `inkSecondary`). At most 3; with 4 or more the third place reads "5 MORE" and a pull shows the rest. **Tap a row:** the value crossfades to **LATER** (blur 4, 160/360 ms) and the name drops to `inkSecondary`; tap again to bring it back. No strike, no colour: the value is the state |
 | rows + 8 | **TOMORROW, FIRST** as a label word |
-| + 32 | **The tomorrow line**, a writing line at Field 18: slot D's placeholder in `inkSecondary` ("Tomorrow starts with Standup at 9:30 am.", "One line for tomorrow, if you want."); his words in ink. A hairline 32 under it; the ink line fills under his words as he types |
+| + 32 | **The tomorrow line**, a writing line at Field 18: slot D's placeholder in `inkSecondary` ("Tomorrow starts with Standup, 9:30 am.", "One line for tomorrow, if you want."); his words in ink. A hairline 32 under it; the ink line fills under his words as he types |
 | + 120 | **CLOSE THE DAY**, the ink-line key (Label 16/700 ink with the lens under it). A hold of 0.7 s: the ink line empties to a trace at 35%, repaints, then the bead; `.success` (the one exception, before quiet hours) |
 | 686 to 736 | The fade |
 | 736 to 820 | **Tess's band.** At 21:00 she says the opener, slot B: "Did 4 tasks, 1 workout, cooked once." No UNDO. On a quiet day, B7 "A quiet one. Want a line for tomorrow?" and the writing line shows no placeholder (Research's rule D). Late at night, F1 "Filed under Thursday. Did 3 tasks, cooked once." |
@@ -43,14 +43,14 @@ The hold's writes are `shutdown.md`'s (kept rows to tomorrow, LATER rows to Late
 | 186 | "tomorrow, first" in `context` |
 | 220 | **His line as the hero** in the fitting form (Hero 56; else Title 44 on one line; else Title 44 on two, 100 tall): "Reply to the landlord". With no line, tomorrow's first timed thing: "Pull A" |
 | 296 (346 under a two-line hero) | **THEN PULL A, 7:30 AM** as a label word (`inkSecondary`); with no line, "7:30 AM" alone. No " · " |
-| 736 to 820 | **Tess's close**, slot E (or F3/F4 late at night): "Closed. Your line is waiting at 8 am." with **UNDO** under it for 10 s |
+| 736 to 820 | **Tess's close**, slot E (or F3/F4 late at night): "Closed. Your line is set for 8 am." with **UNDO** under it for 10 s |
 
 **UNDO:** "Shutdown, taken back." Everything reverses: Shutdown returns as he left it, his line still written, each row's TOMORROW or LATER as it was; the day label and clock come back; the soul wakes. No `.success`.
 
 **From 22:00 without a hold** the day closes by itself (`evening-on-now.md` §4): a crossfade, no Tess line, no UNDO, and CLOSE THE DAY brings Shutdown back until 04:00.
 
 ## Research's slot lines, with 62's times
-The slot lines stand as written, with clock times in the house form: D1 "Tomorrow starts with Standup at 9:30 am.", E3 "Closed. Your line is waiting at 8 am." The sheet's late-night label is "2 MOVING TO FRIDAY" from F2's facts.
+The slot lines stand as written, with clock times in the house form: D1 "Tomorrow starts with Standup, 9:30 am.", E3 "Closed. Your line is set for 8 am." The sheet's late-night label is "2 MOVING TO FRIDAY" from F2's facts.
 
 ## What goes
 The day stroke and its dashed guide (41), the Title 34 opener on the page (it is Tess's line), the Body 21 carry-over sentence (a label word now), the ink-line strike and the 50% TOMORROW (the value crossfades to LATER), "Shutdown complete" at Title 34 on the ink line (CLOSE THE DAY, a label-word key like START PUSH A), "THEN PULL A · 07:30", the `inkSecondary` hero on the closed day (his line is in ink, as every hero). The never-list stands: no evening wash, no dots, no count of what didn't happen, no "left over", no "overdue", no red, no haptic the app raises after 23:00 (his own timers ring at any hour, Product CL9), no UNDO on the 22:00 close.
