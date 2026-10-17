@@ -296,15 +296,15 @@ public final class TessCaptureEngine: TessCapturing {
         case let .task(title, startsAt):
             let made = try engine.perform(CreateTask(title: title, startsAt: startsAt), by: .tess, pending: pending)
             let record = made.record
-            // A line the engine wall made a private note says so (QA low on 0ai). A private title is never said back,
-            // not even without its amount (Product P14, 12:30 PM PT; Research S18): "Task added for Fri."
+            // Said as the engine wall stored it (Product 8:09 PM PT): "pay rent 2100 fri" is "Pay rent, Fri.", its
+            // amount
+            // gone. A stored title that is still private is never said back (P14, Research S18): "Task added for Fri."
             let stored = made.output.title
             if stored == SecretWords.title {
                 return (record, "\(SecretWords.title), kept.")
             }
-            let last = BodyWeight.lastKg(in: engine.store)
-            if stored == ObjectPrivacy.taskLabel || PrivateFacts.isPrivateTitle(title, lastWeightKg: last)
-                || PrivateFacts.isPrivateTitle(stored, lastWeightKg: last)
+            if stored == ObjectPrivacy.taskLabel
+                || PrivateFacts.isPrivateTitle(stored, lastWeightKg: BodyWeight.lastKg(in: engine.store))
             {
                 return (record, Self.privateTaskLine(startsAt, context: context))
             }

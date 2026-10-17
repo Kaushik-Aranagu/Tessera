@@ -96,8 +96,9 @@ struct ReviewWeekData {
         WeekReview.sessionLine(sessions: sessionCount, perWeek: perWeek)
     }
 
+    /// Always US English, like every other line Tess writes (Product 8:30 PM PT).
     func dayName(_ index: Int) -> String {
-        days[index].formatted(.dateTime.weekday(.wide))
+        days[index].formatted(.dateTime.weekday(.wide).locale(Locale(identifier: "en_US_POSIX")))
     }
 
     func letter(_ index: Int) -> String {
