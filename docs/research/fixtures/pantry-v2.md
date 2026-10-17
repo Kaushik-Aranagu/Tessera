@@ -2,6 +2,8 @@
 
 For: Core (state, events, grammar, missing), Builder B (Pantry and Recipes screens), Design and Product (questions at the end), QA. Docs only; nothing was built or run (no Swift toolchain). Written Sat Oct 17 from `docs/product/kitchen-gap-hunt-12-pantry-v2-spec-oct17.md` (the spec, 410 lines, merged by #896), `qa/review-896.md`, the decisions entry "4:30 PM PT Oct 17 (Kitchen #896 gap hunt 12, Pantry v2 spec: R1-R20)" (decisions.md line 957), and origin/master at `0d81f1a3` (read with `git show origin/master:<path>`; the worktree's own checkout is one merge older and no Pantry file differs).
 
+Revision 2 (Oct 17, after QA's PASS WITH NOTES on #902): QA's four notes fixed and Product's 4:32 PM rulings applied (tie rule, `pantryBackfilled`, Egg/Eggs fold, 118 names, test rewrite). No receipt, hero or other user-facing expected string changed; only the logic and marker wording of rows PB06, PB08, PB09, PB13, PE15, PE19 moved. The new boundary row PP17 and the new rows PD31, PD32, PB19, PB20 are additions.
+
 Status words: **traced** means I read the master line and it does what the row says; **inferred** means the row follows from the spec or from code I did not read in full; **gap** means master has nothing for it (not built) or contradicts it. Owners: **Core**, **Builder B**, **Design**, **Product**, **QA**. All names, amounts and dates are made up. No key-shaped value appears in this file; where a secret tail is needed the row says "a Claude-key-shaped tail" and the test builds it at run time.
 
 ## 0. What the rows rest on
@@ -19,11 +21,12 @@ Status words: **traced** means I read the master line and it does what the row s
 | `parseKitchen` has no out-of, low-on, have or pantry rule; the task guard is at line 34, the for-groceries rule at 43, buy/get at 49. | `TesseraCore/Sources/TesseraTess/TessGrammar+Kitchen.swift:17-76` |
 | The ochre is still in the app: `light = 0xA4601A`, `dark = 0xE3A857`, `stateWord = ochre.mix(with: ink, by: 0.28)`, used at the state word. `areaLean` does not exist on master. | `Features/Kitchen/PantryColour.swift:8-18`; `PantryView.swift:196`; swipe-lean fixtures section 4 (AL15, AL16, AN08) |
 | `ShopTrip` still has `revealed`, and "Shows it" hints remain on Groceries, Lists and the recipe page. G102 (ruled, decisions 4:25 PM) removes them everywhere; Pantry never had a reveal. | `Features/Groceries/ShopTrip.swift:15,24,43`; `GroceriesView.swift:526`; `ListsView.swift:364`; `RecipePage.swift:81,471` |
+| Product's 4:32 PM Oct 17 rulings on this file (decisions.md, line 965), applied here: (1) tie rule, one rule for backfill and live writes: at an equal timestamp the surer state wins (out over low over in), and an older timestamp never overwrites a newer one; the spec's "neither overwrites an equal timestamp" line is replaced. (2) The backfill marker is the Settings key `pantryBackfilled`, set when the one-time backfill finishes, never inferred from "any ingredient has state". (3) Duplicate keys (Egg/Eggs) fold to one key through the normalizer Groceries uses (`IngredientLine.key(for:)`, `Quantities.swift:283`); the latest timestamp wins, ties by rule (1). (4) 118 distinct test names, not 124. (5) `PantryLedgerTests`, `PantryFrontTests` and `GroceriesFinishTests.undoAfterFinishPutsPantryBack` are rewritten for stored state when Core builds it; no test hard-codes a catalog number. | decisions.md:965 |
 | Pantry's own wall is `ObjectPrivacy.isPrivateRecipeTitle(title, lastWeightKg:)`, the call the ledger makes for labels. | `PantryLedger.swift:166`; composed text rule `Export/PrivateWords.swift:21` |
 
-Cross-reference: the swipe-lean file is not in this worktree's `docs/research/fixtures/` yet (not merged); the copy read is `/mnt/project-files/tessera/research/fixtures/gaps-92-swipe-lean.md`. Row-id prefixes: **PD** derivation, **PB** backfill, **PG** grammar, **PW** state words, **PP** private items, **PO** ochre, **PR** ruling index, **PE** edge cases. They never collide with the spec's clause ids (S, E, V, U, M, C, F, P) or `pantry-78.md` (P1 to P14).
+Cross-reference: the swipe-lean fixtures are merged (#897) at `docs/research/fixtures/gaps-92-swipe-lean.md`. Row-id prefixes: **PD** derivation, **PB** backfill, **PG** grammar, **PW** state words, **PP** private items, **PO** ochre, **PR** ruling index, **PE** edge cases. They never collide with the spec's clause ids (S, E, V, U, M, C, F, P) or `pantry-78.md` (P1 to P14).
 
-**Reading the last column.** #896 is docs only (4 files: the spec, a Lists walk, and one-line edits to two acceptance docs; no Swift test code). "The 124 tests" are names the spec lists in its section (e) for Core to write. So "named" below means the spec already gives this row a test name (Core still writes it) and **NEW** means the spec has no name for it, so Core adds one. "Existing" means a test already on master. I count 118 distinct names in section (e), not 124; see Q1.
+**Reading the last column.** #896 is docs only (4 files: the spec, a Lists walk, and one-line edits to two acceptance docs; no Swift test code). "The 124 tests" are names the spec lists in its section (e) for Core to write. So "named" below means the spec already gives this row a test name (Core still writes it) and **NEW** means the spec has no name for it, so Core adds one. "Existing" means a test already on master. Product ruled at 4:32 PM Oct 17 that the count is 118 distinct names, not 124 (Q1); the spec's count is corrected and Core writes those 118.
 
 Columns: id | input in plain words | exact expected output | master today (file:line) | status | owner | Swift Testing name | PR #896 spec (clause, named or NEW).
 
@@ -44,7 +47,7 @@ The v2 pantry stores state, so "derivation" means what each event writes. After 
 | PD09 | Finish cooking the tacos (chicken, onion, tortillas, cilantro, limes, salt, "parsley for serving", "pepper to taste") | chicken, onion, tortillas `low`; cilantro, limes `out` (Produce); salt, parsley, pepper untouched; `stateAt = cookedAt` | ledger: `PantryLedger.swift:146-161`; test `PantryLedgerTests.swift:48` | gap (write) | Core | `finishingTheTacosSetsLowAndOut` | E6, named |
 | PD10 | Cook whose only non-staple line is an Aisle-guide staple ("olive oil"), ingredient field `isStaple` false | untouched (one helper: field OR `AisleGuide.isStaple`) | ledger uses both: `PantryLedger.swift:155-156,172-175` | traced (ledger) | Core | `aStapleIsNeverMadeLowByCooking` | E6, named |
 | PD11 | Optional line ("jam, optional") and to-taste line in a finished cook | not used up | `PantryLedger.swift:155`; test `PantryLedgerTests.swift:97` | traced (ledger) | Core | `anOptionalLineIsNotUsedUp` | E6, named |
-| PD12 | Limes already `out` from a phrase at 20:00; a cook finished at 19:00 is recorded later | limes stay `out`; the older cook does not write | ledger latest wins | gap | Core | `anOlderCookDoesNotOverrideANewerPhrase` | NEW |
+| PD12 | Limes already `out` from a phrase at 20:00; a cook finished at 19:00 is recorded later | limes stay `out`; the older cook does not write (an older timestamp never overwrites a newer one, ruling 1) | ledger latest wins | gap | Core | `anOlderCookDoesNotOverrideANewerPhrase` | NEW |
 | PD13 | Cook, then edit the recipe (remove limes) or delete it | stored states unchanged | ledger re-derives from recipe lines, so today an edit CHANGES Pantry (G46): `PantryLedger.swift:149-153` | gap | Core | `editingARecipeDoesNotRewritePantry` | E7, named |
 | PD14 | Private recipe finished | state still written; Tess says nothing | read side: `PantryLedgerTests.swift:123`, `PantryLedger.swift:97-100` | traced (read) / gap (write) | Core | `aPrivateCookWritesStateAndSaysNothing` | E8, named |
 | PD15 | Cook whose recipe link was deleted | nothing written | `cookUses` skips a deleted recipe: `PantryLedger.swift:151` | inferred | Core | `aCookWithADeletedRecipeWritesNothing` | NEW |
@@ -63,6 +66,8 @@ The v2 pantry stores state, so "derivation" means what each event writes. After 
 | PD28 | A line that is both in and covered by a checked row | skipped once; the in-rule sits after the covered and checked-row rules | `Groceries.swift:458-462` | gap | Core | `theInRuleComesAfterTheCheckedRowRule` | F2, named |
 | PD29 | CAN COOK with 3 recipes scoring 0, 0, 2 | `2 you can cook now` (score 0 only) | none | gap | Core | `theCanCookCountIsScoreZero` | C2, named |
 | PD30 | CAN COOK sort: A one unknown (never cooked), B one out (cooked last week), C one out (never cooked) | order A, C, B: (score, out.count, oldest cook; never cooked first) | none; no `lastCooked` helper | gap | Core | `oneUnknownOutranksOneOut`, `neverCookedComesFirstInATie`, `canCookRanksByMissingThenNotCookedLately` | C1, named |
+| PD31 | Live write on an equal timestamp: milk is `in` at Saturday 10:00 (a clear), a cook or phrase says `out` at Saturday 10:00; and the reverse order | milk is `out` both ways; at an equal instant the surer state wins (out over low over in), whatever the arrival order; `stateAt` unchanged | live writes were "nil or earlier" in the spec (neither overwrites an equal time); ledger `PantryLedger.swift:131-133` already gives the surer state | gap | Core | `anEqualTimestampGoesToTheSurerStateInAnyOrder` | NEW (4:32 ruling 1; replaces the spec E3 equal-time line) |
+| PD32 | Live write that is surer but older: milk `low` at Sunday 18:00, a clear checked Saturday 10:00 says `in` | milk stays `low`; the older timestamp never overwrites the newer, even when the older state would be surer (a backdated `out` over a newer `in` also does not write) | idea mirrored at `Shopping.swift:93-94` | gap | Core | `anOlderTimestampNeverOverwritesANewerState` | NEW (4:32 ruling 1) |
 
 ## 2. Backfill: existing data at first launch of v2
 
@@ -77,19 +82,21 @@ Fixture "tacos week" (the same facts as `PantryLedgerTests.swift:48-70`): Saturd
 | PB03 | An older build opens a store at the new catalog number | refused, nothing dropped (`MAX(packageVersion)` check) | `TesseraDatabaseSchema.swift:10-23`; pattern `BackupTests.swift:83` | gap | Core | `anOlderBuildRefusesTheNewCatalog` | S3, named |
 | PB04 | First launch of v2 on tacos week | limes `out` (stateAt Oct 11 18:30), tortillas and ground beef `low`, salt `in` (stateAt Oct 10 10:00; the cook skips staples); `lastBoughtAt` Oct 10 10:00 on all four; hero `1 out, 2 low` equals the ledger's | none | gap | Core | `theBackfillMatchesTheLedgerOnTheTacosFixture` | S4, named |
 | PB05 | Parity | `PantryBook` (the lifted reader) gives the same entries, order and labels as the app `PantryLedger` on the same fixture | `PantryLedger.swift:49-63` | gap | Core | `theLiftedLedgerGivesTheAppLedgersAnswers` | S10, named |
-| PB06 | Second launch | nothing runs again; no extra op | none | gap | Core | `theBackfillRunsOnce` | S4, named |
+| PB06 | Second launch | the Settings key `pantryBackfilled` is set, so nothing runs again; no extra op | none | gap | Core | `theBackfillRunsOnce` | S4, named |
 | PB07 | Milk tapped to out after v2, then restart | milk stays `out`; the backfill never overwrites a later change | none | gap | Core | `theBackfillKeepsALaterStateIntact` | S4, named |
-| PB08 | The backfill op | one `.system` op; no receipt, nothing spoken, no UNDO | none | gap | Core | `theBackfillIsNotUndoable` | S4, named |
-| PB09 | Phone with no shops and no cooks | no state written, yet the marker is set, so a later first shop is a live event, not a backfill | ledger says `Nothing yet`: `PantryLedger.swift:78` | gap | Core | `anEmptyBackfillStillSetsTheMarker` | NEW (spec leaves the marker open, Q2) |
+| PB08 | The backfill op | one `.system` op that also sets the Settings key `pantryBackfilled` when the backfill finishes; no receipt, nothing spoken, no UNDO | none | gap | Core | `theBackfillIsNotUndoable` | S4, named |
+| PB09 | Phone with no shops and no cooks | no state written, yet the Settings key `pantryBackfilled` is set, so a later first shop is a live event, not a backfill (an empty Pantry never reruns it) | ledger says `Nothing yet`: `PantryLedger.swift:78` | gap | Core | `anEmptyBackfillStillSetsTheMarker` | NEW (marker ruled at 4:32 PM, Q2) |
 | PB10 | Same fresh phone | Pantry reads `Nothing yet`; CAN COOK greyed | `PantryLedger.swift:78` | gap | Core | `backfillOnAFreshStoreWritesNothing` | NEW |
 | PB11 | Private recipe cook in history | its ingredients get state; no Tess line | ledger `:97-100` | gap | Core | `backfillIncludesAPrivateCook` | NEW |
 | PB12 | Undone clear and a checked row deleted another way in history | neither counts (G45) | `Groceries.swift:166-181` | traced (read) | Core | `backfillIgnoresUndoneClearsAndOtherDeletes` | NEW |
-| PB13 | A shop clear and a cook at the same instant on one ingredient | the surer state wins (out, then low, then in), as the ledger does | `PantryLedger.swift:132` | traced (read) | Core | `backfillTieGoesToTheSurerState` | NEW (the live rule differs, Q4) |
+| PB13 | A shop clear and a cook at the same instant on one ingredient | the surer state wins (out, then low, then in), as the ledger does; the live writes use the same rule (PD31) | `PantryLedger.swift:132` | traced (read) | Core | `backfillTieGoesToTheSurerState` | NEW (one rule for backfill and live, ruled at 4:32 PM, Q4) |
 | PB14 | After the backfill, a cook's note is edited or its recipe deleted | stored state unchanged | derived today (G46) | gap | Core | `historyEditsNoLongerRewritePantry` | E7 covers recipe edit only; NEW for cook edits |
 | PB15 | `usualSkippedAt` after the backfill | empty; the R slice's quiet rule starts clean | field not on master (grep) | gap | Core | `usualSkippedAtStartsEmpty` | NEW |
 | PB16 | Shared export of a backfilled store; full backup of the same | shared: none of `state`, `stateAt`, `lastBoughtAt` (R18); backup keeps them | export masks by object only: `TesseraExport.swift:158-171` | gap | Core | `theSharedExportHoldsNoPantryState`, `theBackupKeepsPantryState` | S7, named |
 | PB17 | AI packs (Kitchen, Capture, Home) after v2 | no state, no `lastBoughtAt`, no Pantry ingredient names | no pack mentions Pantry today (grep) | traced (today) | Core | `thePackSnapshotsCarryNoPantryFields` | S8, named |
 | PB18 | Backfill on the 5-year scale fixture | inside the read budget the existing scale test uses | `GroceryScaleTests.swift:12` | inferred | Core | `backfillOnTheScaleFixtureStaysFast` | NEW |
+| PB19 | Marker is not inferred: one store where the backfill found nothing and no ingredient has state, one where the key is unset but an ingredient already has state | the first has the Settings key `pantryBackfilled` set and does not rerun; the second (key unset) still runs the backfill, which never overwrites a newer state (PB07) | none | gap | Core | `theBackfillMarkerIsTheSettingsKeyNotIngredientState` | NEW (4:32 ruling 2) |
+| PB20 | History holds both `Egg` and `Eggs` with states (Egg `in` from a clear Saturday 10:00, Eggs `out` from a cook Sunday 18:30) | folded to one key through the Groceries normalizer; the later timestamp wins (`out`, stateAt Sunday 18:30); at an equal instant the surer state wins; Pantry lists one line | `IngredientBook.find` returns the first match: `Ingredients.swift:23` | gap | Core | `backfillFoldsEggAndEggsToOneKey` | NEW (4:32 ruling 3) |
 
 ## 3. Grammar rows: phrases, exact parses and receipts
 
@@ -209,8 +216,9 @@ Rules: the ledger label is `Private item` whenever `ObjectPrivacy.isPrivateRecip
 | PP11 | Tess cook line where one used ingredient is walled | the walled name is left out of the names | `!$0.isPrivate` filter `PantryLedger.swift:102` | traced | Builder B | `aCookLineLeavesOutAPrivateIngredient` | NEW |
 | PP12 | Receipts, Tess lines, hero, VoiceOver labels, widgets, log summaries | none carries a walled name, a price or a body word | partial | gap | Core | `noPantrySurfaceCarriesAWalledName` | P1, named |
 | PP13 | Op summaries for pantry ops | thing first and masked (`Private item, out`), also in the export's op rewrite | `TesseraExport.swift:169-171` masks by touched object | gap | Core | `pantryOpSummariesAreMasked` | P2, named |
-| PP14 | Boundaries from decisions 4:22 and 4:35 | `blood orange`, `hearts of palm`, `energy drink`, `sleep tea`, `Dr Pepper`, `Rent car`, `flour 5 kg`, `ground beef 2 lb`, `pain au chocolat`, `recovery shake`, `Weight Watchers chili` stay raw, no `Private item` | whether code has the trims is not read here | inferred | Core | `foodWordsAreNeverMaskedOnPantry` | NEW |
+| PP14 | Boundaries from decisions 4:22, 4:35 and the 4:50 trim | `blood orange`, `hearts of palm`, `energy drink`, `sleep tea`, `drained tuna`, `sleepy time tea`, `Dr Pepper`, `Rent car`, `flour 5 kg`, `ground beef 2 lb`, `pain au chocolat`, `recovery shake`, `Weight Watchers chili` stay raw, no `Private item` (`slept`, `sleepy`, `drained` left titleWords at 4:50) | whether code has the trims is not read here | inferred | Core | `foodWordsAreNeverMaskedOnPantry` | NEW |
 | PP15 | A real medicine or body ingredient (`Advil`, `insulin`) | masks | `ObjectPrivacy.isPrivateRecipeTitle` | inferred | Core | `medicineIngredientsMask` | NEW |
+| PP17 | A name with a plural masking word (4:50 ruling 3) | `dentists` masks (matching tolerates a plural) and reads `Private item`; `dentist-appt` (joined words) stays raw | whether code has the trim is not read here | inferred | Core | `aPluralMaskingWordMasksOnPantry` | NEW (QA note 2 on #902) |
 | PP16 | Shared export | pantry state left out (R18), so no private fact rides on it | see PB16 | gap | Core | `theSharedExportHoldsNoPantryState` | S7, named |
 
 ## 6. The pre-existing ochre removal
@@ -219,18 +227,18 @@ Decision (Product and Design, Oct 17; sheet 92): the Pantry ochre is removed; th
 
 | Id | Input | Expected | Master today | Status | Owner | Test | PR #896 |
 |---|---|---|---|---|---|---|---|
-| PO01 | Pantry state word, Porcelain | equals `areaLean(.kitchen)` for the look (A `#12936A`, B `#126E52`) | `ochre.mix(with: ink, by: 0.28)`: `PantryColour.swift:16-18`, used `PantryView.swift:196` | gap | Builder B | `pantryStateWordIsKitchenLean` (AL15) | not in the 124 |
+| PO01 | Pantry state word, Porcelain | equals `areaLean(.kitchen)` for the look (A `#12936A`, B `#126E52`) | `ochre.mix(with: ink, by: 0.28)`: `PantryColour.swift:16-18`, used `PantryView.swift:196` | gap | Builder B | `pantryStateWordIsKitchenLean` (AL15) | not in the 118 |
 | PO02 | Pantry state word, Obsidian | Kitchen Obsidian lean (A `#52D3A3`, B `#80DCB7`) | same | gap | Builder B | `pantryStateWordIsKitchenLeanOnObsidian` | NEW |
 | PO03 | Search the app target for the old values | `0xA4601A` and `0xE3A857` appear nowhere; `PantryColour.swift` is deleted or holds no ochre | `PantryColour.swift:8-9` | gap | Builder B | `noOchreLiteralRemains` (AN08) | NEW |
 | PO04 | Weights | out stays 700, low 600; colour change only | `PantryView.swift:195` | traced | Builder B | `stateWordKeepsItsWeights` | NEW |
 | PO05 | Where lean may appear | resting colour of text only, never a fill, ring or ground; the out ring stays ink at 42% | ring `PantryView.swift:202` | traced (ring) | Builder B | `leanIsNeverAFill` (AN03) | NEW |
 | PO06 | The index line "Pantry" | ink unless Design says otherwise (the ochre was also for the index line) | `PantryColour.swift:3-5` | inferred | Design | `pantryIndexLineColourFollowsSheet92` | NEW (Q6) |
-| PO07 | Small state word against the ground, every look | at least 4.5:1 | no check | gap | Core | `areaLeanLabelContrastAtLeastFourPointFive` (AL11) | not in the 124 |
+| PO07 | Small state word against the ground, every look | at least 4.5:1 | no check | gap | Core | `areaLeanLabelContrastAtLeastFourPointFive` (AL11) | not in the 118 |
 | PO08 | Low versus out | still told apart by weight and position, not by colour alone | `PantryView.swift:195` | traced | Builder B | `stateWordsDifferByWeightNotColourAlone` | NEW |
 
 ## 7. One row per ruling (R1 to R20)
 
-Each accepted at decisions.md line 957 "as written". "Row" is where the detail lives.
+R1 to R20 were accepted at decisions.md line 957 "as written"; PR21 to PR25 are Product's 4:32 PM rulings (line 965). "Row" is where the detail lives.
 
 | Id | Ruling | Input | Expected | Row | Status | Owner | Test | PR #896 |
 |---|---|---|---|---|---|---|---|---|
@@ -254,6 +262,11 @@ Each accepted at decisions.md line 957 "as written". "Row" is where the detail l
 | PR18 | R18 pantry state out of the shared export, in the backup | export both ways | as stated | PB16 | gap | Core | `theSharedExportHoldsNoPantryState`, `theBackupKeepsPantryState` | S7, named |
 | PR19 | R19 in-cover on a bigger-size re-add still skips in lines | planned at 4, re-added at 8, chicken in | chicken still skipped (amounts never compared) | PE05 | gap | Core | `aBiggerSizeStillSkipsInLines` | F2, named |
 | PR20 | R20 `out of milk` with milk checked in the basket | said | no write; `Milk, in the basket.` | PG22 | gap | Core | `anItemInTheBasketIsLeftAlone` | V7, named |
+| PR21 | 4:32 (1) tie rule, backfill and live | equal timestamp; older versus newer | surer state wins (out, low, in); older never overwrites newer | PD31, PD32, PB13, PE15, PE16 | gap | Core | `anEqualTimestampGoesToTheSurerStateInAnyOrder`, `anOlderTimestampNeverOverwritesANewerState` | NEW |
+| PR22 | 4:32 (2) backfill marker | an empty Pantry, a restart | Settings key `pantryBackfilled`, set when the backfill finishes; never inferred from ingredient state | PB06, PB08, PB09, PB19 | gap | Core | `theBackfillMarkerIsTheSettingsKeyNotIngredientState` | NEW |
+| PR23 | 4:32 (3) duplicate keys | `Egg` and `Eggs` | one key via the Groceries normalizer; latest timestamp wins, ties by rule (1) | PB20, PE19 | gap | Core | `backfillFoldsEggAndEggsToOneKey`, `duplicateKeyIngredientsFoldToOneKey` | NEW |
+| PR24 | 4:32 (4) test count | the spec's section (e) | 118 distinct names; the spec count is corrected | section 9, Q1 | ruled | Core | n/a | spec corrected |
+| PR25 | 4:32 (5) existing app tests | `PantryLedgerTests`, `PantryFrontTests`, `GroceriesFinishTests.undoAfterFinishPutsPantryBack` | rewritten for stored state when Core builds it; no catalog number hard-coded | section 9, Q3 | ruled | Core | n/a | n/a |
 
 ## 8. Edge cases
 
@@ -273,29 +286,29 @@ Each accepted at decisions.md line 957 "as written". "Row" is where the detail l
 | PE12 | `out of half-and-half`, `out of ketchup!` | admitted via key; punctuation trimmed | key rules | inferred | Core | `outOfHalfAndHalfIsAdmitted` | NEW |
 | PE13 | `out of the really good extra virgin olive oil` (more than 4 words after stripping) | not claimed | n/a | gap | Core | `outOfFiveWordsIsNotClaimed` | NEW |
 | PE14 | `out of`, `out of the` | not claimed | n/a | gap | Core | `outOfWithNoThingIsNotClaimed` | NEW |
-| PE15 | A shop clear and a phrase on the same instant | one defined answer (see Q4); live rule "stateAt nil or earlier" lets neither overwrite an equal time | spec E3 vs `PantryLedger.swift:132` | gap | Core | `aTieBetweenAClearAndAPhraseHasOneAnswer` | NEW |
-| PE16 | A backdated check older than the stored `stateAt` | state kept; `lastBoughtAt` only moves forward | idea mirrored at `Shopping.swift:93-94` | inferred | Core | `aBackdatedCheckNeverWinsOverANewerState` | NEW |
+| PE15 | A shop clear and a phrase on the same instant | the surer state wins (out over low over in), the same rule as the backfill (PD31, PB13); the spec's "neither overwrites an equal timestamp" line is replaced (4:32 ruling 1, Q4) | spec E3 vs `PantryLedger.swift:132` | gap | Core | `aTieBetweenAClearAndAPhraseGoesToTheSurerState` | NEW |
+| PE16 | A backdated check older than the stored `stateAt` | state kept (an older timestamp never overwrites a newer one, PD32); `lastBoughtAt` only moves forward | idea mirrored at `Shopping.swift:93-94` | inferred | Core | `aBackdatedCheckNeverWinsOverANewerState` | NEW |
 | PE17 | A clear at 02:30 (small hours, DST day) | `lastBoughtAt` and the context word belong to the day before | `PantryDayWordTests.swift:18` | traced | Core | `aSmallHoursCheckBelongsToTheDayBefore` | existing |
 | PE18 | Ingredient renamed (Milk to Whole milk) | state and `lastBoughtAt` stay on the object | field on the record | inferred | Core | `renamingAnIngredientKeepsItsState` | NEW |
-| PE19 | Both `Egg` and `Eggs` exist | `find` returns the first; the phrase writes that one (Q7) | `Ingredients.swift:23` | traced (find) | Core | `duplicateKeyIngredientsWriteTheFirstMatch` | NEW |
+| PE19 | Both `Egg` and `Eggs` exist | fold to one key through the Groceries normalizer; the latest timestamp wins, ties by the surer state; a phrase, clear or cook reads and writes the folded key (4:32 ruling 3, Q7) | `find` returns the first today: `Ingredients.swift:23`; normalizer `Quantities.swift:283` | gap | Core | `duplicateKeyIngredientsFoldToOneKey` | NEW |
 | PE20 | UNDO of a phrase after a newer clear | restores the values the op captured; the newer clear is not clobbered (Q8) | engine undo | inferred | Core | `undoingAPhraseAfterANewerClearKeepsTheClear` | NEW |
 | PE21 | `out` becomes `in` while the page is open | the line leaves with `.tesseraAnimation` | `PantryView.swift:81` | traced | Builder B | `aLineLeavesWhenItGoesIn` | NEW |
 | PE22 | Reduce Motion on the swipe and the leave | no spring; value just changes | `PantryView.swift:175` | traced | Builder B | `pantryHonoursReduceMotion` | NEW |
 | PE23 | 400 pantry lines | hero and list inside the read budget | `GroceryScaleTests.swift:12` | inferred | Core | `fourHundredIngredientsStayFast` | NEW |
 | PE24 | A shop clear touching 50 items | one op, one UNDO, one summary `Finished shopping` | `Shopping.swift:72-79` | traced (receipt) | Core | `aBigClearIsOneOp` | NEW |
 
-## 9. What the 124 already cover, and what is new
+## 9. What the 118 already cover, and what is new
 
 - Section (e) of the spec names tests by clause: S1 to S12, E1 to E9, V1 to V11, U1 to U5, M1 to M8, C1 to C5, F1 to F4, P1 and P2. Rows marked "named" are covered by a spec name (Core still writes the code).
-- NEW rows (no spec name) cluster in: finish-shop as its own op (PD02), the live tie (PE15), the backfill marker (PB09), grammar shapes the spec lists but does not name (`no X left`, `X is out`, filler words, IN admission, `what do i have` with trailing words), state-word screen behaviour (R12, R14, R15, VoiceOver, sentences), and the ochre removal (not in the spec at all).
-- Existing master tests that stay valid: `PantryCopyTests`, `PantryDayWordTests`, `PantryFrontTests`, `PantryLedgerTests` (all derive-at-read, Q3), `ShopClearsTests`, `GroceriesWallTests.aPantrySwipeOnAWalledIngredientMakesARowNotANote`. `ShoppingTests.finishShopUndoRestoresPantryStates` checks rows only and needs a state assertion; `GroceriesFinishTests.undoAfterFinishPutsPantryBack` reads the ledger.
+- NEW rows (no spec name) cluster in: finish-shop as its own op (PD02), the tie and older-versus-newer rules (PD31, PD32, PE15), the backfill marker (PB09, PB19), duplicate-key folding (PB20, PE19), grammar shapes the spec lists but does not name (`no X left`, `X is out`, filler words, IN admission, `what do i have` with trailing words), state-word screen behaviour (R12, R14, R15, VoiceOver, sentences), and the ochre removal (not in the spec at all).
+- Existing master tests that stay valid: `PantryCopyTests`, `PantryDayWordTests`, `PantryFrontTests`, `PantryLedgerTests` (all derive-at-read; the three derive-at-read tests below are rewritten for stored state when Core builds it, ruled at 4:32 PM, Q3), `ShopClearsTests`, `GroceriesWallTests.aPantrySwipeOnAWalledIngredientMakesARowNotANote`. `ShoppingTests.finishShopUndoRestoresPantryStates` checks rows only and needs a state assertion; `GroceriesFinishTests.undoAfterFinishPutsPantryBack` reads the ledger. The rewrite of `PantryLedgerTests`, `PantryFrontTests` and `undoAfterFinishPutsPantryBack` rides Core's build; the new tests hard-code no catalog number.
 
 ## 10. Gaps by owner
 
 **Core**
 - Stored fields `state`, `stateAt`, `lastBoughtAt`, `usualSkippedAt` and the catalog bump after v10 (PB01 to PB03, PR02); no test hard-codes the number.
 - Event writes inside the causing op: clear, finish shop, cook, phrase, cycle tap (PD01 to PD15, PW01 to PW03).
-- The backfill with a marker and a once-only guarantee (PB04 to PB15); delete the app `PantryLedger` derivation or reduce it to a wrapper; parity test PB05.
+- The backfill with the Settings key `pantryBackfilled` and a once-only guarantee (PB04 to PB15, PB19, PB20); the tie rule (surer wins, older never overwrites newer) for backfill and live writes (PD31, PD32); the Egg/Eggs fold through `IngredientLine.key(for:)`; rewrite `PantryLedgerTests`, `PantryFrontTests` and `GroceriesFinishTests.undoAfterFinishPutsPantryBack`; delete the app `PantryLedger` derivation or reduce it to a wrapper; parity test PB05.
 - `PantryBook`, `PantryState` (`unknown, inStock, low, out`), `hasAnyState`, `RecipeMath.missing`, `RecipeBook.lastCooked`, the one staple helper (PD21 to PD30).
 - Grammar rules for out, low, in and open-Pantry with the M-rules, admission, stoplist, price stripping, wall order and receipts (section 3).
 - Export: filter the three fields from the shared export, keep them in the backup (PB16); packs carry none (PB17).
@@ -310,20 +323,20 @@ Each accepted at decisions.md line 957 "as written". "Row" is where the detail l
 - Reading A or B for `areaLean` (Kitchen Porcelain fails 4.5:1 under A); whether the index line stays ochre or goes to ink; the Ingredient-page sentences marked proposed (PW16).
 
 **Product**
-- The live tie rule (Q4); the backfill marker (Q2); duplicate-key and rename behaviour (Q7).
+- Nothing open from the 4:32 PM rulings (Q1 to Q4, Q7 are ruled). Still open: what a phrase receipt says when an equal-instant tie leaves the state unchanged (PD31), and rename behaviour (PE18).
 
 **QA**
 - Dash and ellipsis audit of every pantry string (PG57); split the sixteen not-ours "out of X" phrases (PG40) into separate rows if a regression needs it.
 
 ## 11. Open questions
 
-1. **124 versus 118.** Section (e) names 118 distinct tests by my count; the task says 124. #896 has no Swift, so there is no PR-side file to count. Which six are the others (existing tests re-run, extensions to `UndoHoldTests` and `UndoCopyTests`)? Core should reconcile before boarding.
-2. **Backfill marker.** A Settings key, or "any ingredient already has `state`"? The second runs again on a phone where the backfill found nothing, and after a restore of an older backup. Needs a ruling.
-3. **Existing app tests.** `PantryLedgerTests`, `PantryFrontTests` and `GroceriesFinishTests.undoAfterFinishPutsPantryBack` assert derive-at-read behaviour. Once the derivation is deleted they must be rewritten against stored state. Who owns that?
-4. **Tie at the same instant.** The ledger gives the surer state (out, low, in) at equal times (`PantryLedger.swift:132`). The spec's live writes use "only when `stateAt` is nil or earlier than the event time", so at an equal instant neither a clear nor a cook overwrites. A phrase and a clear in the same second therefore behave differently from the backfill of the same facts. Keep the live rule, or write "equal wins if surer" into the events?
+1. **124 versus 118. Ruled 4:32 PM:** 118 distinct names; the spec's count is corrected to 118 and Core writes those.
+2. **Backfill marker. Ruled 4:32 PM:** the Settings key `pantryBackfilled`, set when the backfill finishes; never inferred from ingredient state (PB09, PB19).
+3. **Existing app tests.** `PantryLedgerTests`, `PantryFrontTests` and `GroceriesFinishTests.undoAfterFinishPutsPantryBack` assert derive-at-read behaviour. **Ruled 4:32 PM:** they are rewritten for stored state when Core builds it, and hard-code no catalog number.
+4. **Tie at the same instant. Ruled 4:32 PM:** one rule for backfill and live writes: the surer state wins (out over low over in) and an older timestamp never overwrites a newer one; the spec's equal-timestamp line is replaced (PD31, PD32). Left open for Product: when the tie leaves the state unchanged (a phrase says `in`, the state stays `low`), the receipt wording is not yet fixed, so no expected string is written for it.
 5. **Catalog number.** The ruling says v11 after v10; master is still 9. Does the Habit/imagery work land first, or does Core write the bump now and risk a renumber ("never a renumber")?
 6. **Ochre on the index line.** `PantryColour` also served "the index line"; the sheet 92 decision names only the state word. Ink or Kitchen lean?
-7. **Duplicate ingredient keys.** `IngredientBook.find` returns the first match (`Ingredients.swift:23`). If `Egg` and `Eggs` both exist, which gets the state? Merge them, or first by creation date?
+7. **Duplicate ingredient keys. Ruled 4:32 PM:** `Egg` and `Eggs` fold to one key through the Groceries normalizer; the latest timestamp wins, ties by rule 4 (PB20, PE19).
 8. **Undoing an older phrase after a newer event.** The one-slot UNDO makes it rare, but "What Tess did" can undo older ops. Per-op capture (PE20) or recompute?
 9. **All lines low.** Low is not counted as missing (R5), so a recipe whose every line is low is "can cook now". Intended, but worth Product's eyes.
 10. **Peek word `used`.** Shown "during a cook" but nothing stores it; is it derived from the open Cook process, and does it need its own row?
@@ -331,4 +344,4 @@ Each accepted at decisions.md line 957 "as written". "Row" is where the detail l
 
 ## 12. Sources read
 
-Spec lines 1 to 330 (Part 1 in full; Part 2, the paste and scale edge cases, is out of scope here), `qa/review-896.md` (all), decisions.md lines 940 to 1000, `research/fixtures/gaps-92-swipe-lean.md` (the Pantry and areaLean sections), `docs/research/fixtures/pantry-78.md` (style and P-rows), origin/master files named in the evidence columns, the four `TesseraTests/Pantry*Tests.swift`, and the PR file list from the GitHub MCP (4 files, all docs).
+Spec lines 1 to 330 (Part 1 in full; Part 2, the paste and scale edge cases, is out of scope here), `qa/review-896.md` (all), decisions.md lines 940 to 1000, `research/fixtures/gaps-92-swipe-lean.md` (the Pantry and areaLean sections), `qa/review-902.md`, decisions.md line 965 (the 4:32 PM rulings), `docs/research/fixtures/pantry-78.md` (style and P-rows), origin/master files named in the evidence columns, the four `TesseraTests/Pantry*Tests.swift`, and the PR file list from the GitHub MCP (4 files, all docs).
