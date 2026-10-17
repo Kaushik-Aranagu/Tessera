@@ -67,6 +67,26 @@ enum PrivateWords {
     /// rest. Marked by an isPrivate set to true, or a private word, label or walled title in a create, rename or
     /// text value. Only ones not already in `current`.
     static func historyLabels(in context: TesseraContext, current: [UUID: String]) -> [UUID: String] {
+        if let cache = context.pastPrivateCache, cache.revision == context.revision {
+            return cache.labels
+        }
+        let result = computeHistoryLabels(in: context, current: current)
+        context.pastPrivateCache = (context.revision, result)
+        return result
+    }
+
+    /// An op record's ops, decoded once (the JSON decode dominates the walk) and kept while its data is unchanged.
+    private static func ops(of record: OpRecord, in context: TesseraContext) -> [Op] {
+        guard let data = record.opsData else { return [] }
+        if let hit = context.decodedOps[record.id], hit.data == data {
+            return hit.ops
+        }
+        let ops = record.ops
+        context.decodedOps[record.id] = (data, ops)
+        return ops
+    }
+
+    private static func computeHistoryLabels(in context: TesseraContext, current: [UUID: String]) -> [UUID: String] {
         let classes = systemClasses(in: context)
         let last = BodyWeight.lastKg(in: ObjectStore(context: context))
         let flagFields = Set(context.all(FieldDef.self).filter { $0.key == "isPrivate" }.map(\.id))
@@ -78,7 +98,7 @@ enum PrivateWords {
         }
         var found = Set<UUID>()
         for record in context.all(OpRecord.self) {
-            for op in record.ops where current[op.objectID] == nil {
+            for op in ops(of: record, in: context) where current[op.objectID] == nil {
                 switch op {
                 case let .create(object, _, _, title): if wordyTitle(title) { found.insert(object) }
                 case let .setTitle(object, old, new): if wordyTitle(old) || wordyTitle(new) { found.insert(object) }
@@ -103,6 +123,15 @@ enum PrivateWords {
 
     /// Private object id → the label it shows as.
     static func labels(in context: TesseraContext) -> [UUID: String] {
+        if let cache = context.privateLabelsCache, cache.revision == context.revision {
+            return cache.labels
+        }
+        let result = computeLabels(in: context)
+        context.privateLabelsCache = (context.revision, result)
+        return result
+    }
+
+    private static func computeLabels(in context: TesseraContext) -> [UUID: String] {
         let store = ObjectStore(context: context)
         let classes = systemClasses(in: context)
         let last = BodyWeight.lastKg(in: store)

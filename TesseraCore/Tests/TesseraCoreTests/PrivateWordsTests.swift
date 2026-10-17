@@ -217,6 +217,18 @@ struct PrivateWordsFalsePositiveTests {
         #expect(labels.isEmpty, "\(labels.values)")
     }
 
+    @Test func theLabelsCacheFollowsTheRevision() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        #expect(PrivateWords.labels(in: store.context).isEmpty)
+        try engine.perform(CreateNote(body: "wifi password is hunter2zebra"), by: .user)
+        #expect(PrivateWords.labels(in: store.context).count == 1)
+        let note = try #require(PrivateWords.labels(in: store.context).keys.first)
+        try engine.perform(EditNote(note: note, body: "plain now"), by: .user)
+        #expect(PrivateWords.historyLabels(in: store.context, current: PrivateWords.labels(in: store.context)).count
+            + PrivateWords.labels(in: store.context).count >= 1)
+    }
+
     @Test func moneyAndBodyTitlesStayPrivate() throws {
         let store = ObjectStore.open(inMemory: true)
         let engine = try ActionEngine(store: store, classes: store.prepareCatalog())

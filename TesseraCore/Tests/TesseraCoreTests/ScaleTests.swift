@@ -241,10 +241,15 @@ struct ICloudCopyScaleTests {
         let historyTime = clock.measure { past = PrivateWords.historyLabels(in: store.context, current: labels) }
         let file = folder.appendingPathComponent("icloud.tessera")
         let write = try clock.measure { try TesseraBackup.write(from: store.context, to: file, leavingOutPrivate: true) }
+        // The next background after one more action: the graph changed, the decoded ops are reused.
+        try engine.perform(CreateNote(body: "wifi password is hunter0zebra"), by: .user)
+        store.save()
+        let second = try clock.measure { try TesseraBackup.write(from: store.context, to: file, leavingOutPrivate: true) }
         let ops = store.context.all(OpRecord.self).count
         print("ICLOUD \(workouts) workouts, \(ops) op records: labels=\(ScaleTests.milliseconds(labelsTime))ms "
             + "(\(labels.count)) historyLabels=\(ScaleTests.milliseconds(historyTime))ms (\(past.count)) "
-            + "iCloudWrite=\(ScaleTests.milliseconds(write))ms")
+            + "iCloudWrite(warm labels)=\(ScaleTests.milliseconds(write))ms "
+            + "secondBackupAfterAChange=\(ScaleTests.milliseconds(second))ms")
         #expect(ScaleTests.milliseconds(write) < 20000)
     }
 }
