@@ -1,0 +1,74 @@
+import Foundation
+@testable import Tessera
+import TesseraCore
+import Testing
+
+/// Screen 9's shelf as data: order by last touched, tiers, state words, the context line.
+@MainActor
+struct ListsShelfTests {
+    let container = TesseraSchema.makeContainer(inMemory: true)
+    let model: AppModel
+
+    init() {
+        model = AppModel(context: container.mainContext)
+    }
+
+    private var shelf: ListsShelf {
+        ListsShelf(store: model.store, classes: model.classes, lastWeightKg: nil)
+    }
+
+    @Test func stateWords() {
+        #expect(ListsShelf.state(open: 4, all: 7, isGroceries: false) == "3 OF 7")
+        #expect(ListsShelf.state(open: 0, all: 0, isGroceries: false) == "EMPTY")
+        #expect(ListsShelf.state(open: 14, all: 20, isGroceries: true) == "14 TO GET")
+        #expect(ListsShelf.state(open: 0, all: 3, isGroceries: true) == "NOTHING TO GET")
+    }
+
+    @Test func theNewestTouchedTakesTheHeroAndTheNextTwoTheTitle() throws {
+        for name in ["Packing", "Gym bag", "Books", "Gifts"] {
+            try model.engine.perform(CreateList(name: name), by: .user)
+        }
+        let rows = shelf.rows.filter { !$0.isGroceries }
+        #expect(rows.count == 4)
+        #expect(shelf.rows.first?.tier == .hero)
+        #expect(shelf.rows.filter { $0.tier == .title }.count == min(2, shelf.rows.count - 1))
+        #expect(shelf.context == "\(shelf.rows.count) lists")
+    }
+
+    @Test func aWalledListNameReadsPrivateList() {
+        #expect(ListsShelf.shownName("Rent 1200 bills", lastWeightKg: nil) == "Private list")
+        #expect(ListsShelf.shownName("Packing", lastWeightKg: nil) == "Packing")
+    }
+
+    @Test func addingToAnOlderListMakesItTheHero() throws {
+        let packing = try model.engine.perform(CreateList(name: "Packing"), by: .user).output
+        try model.engine.perform(CreateList(name: "Books"), by: .user)
+        try model.engine.perform(AddListItem(list: packing.id, text: "charger"), by: .user)
+        #expect(shelf.rows.first?.name == "Packing")
+    }
+
+    /// The Add line speaks the engine's receipt: a secret or money-only line went to a private note, a price was
+    /// stripped, a medicine is "Private item" (QA on #760).
+    @Test func theAddReceiptIsTheEnginesAndNeverEchoesAWalledLine() throws {
+        let packing = try model.engine.perform(CreateList(name: "Packing"), by: .user).output
+        func spoken(_ text: String) throws -> String {
+            let record = try model.engine.perform(AddListItem(list: packing.id, text: text), by: .user).record
+            return ListsCopy.spoken(receipt: record.receipt ?? "", listTitle: "Packing", shownList: "Packing")
+        }
+        #expect(try spoken("rice") == "Rice, on Packing.")
+        #expect(try spoken("advil") == "Private item, on Packing.")
+        let secret = try spoken("wifi password hunter2")
+        #expect(!secret.contains("hunter2") && !secret.contains("on Packing"))
+        let money = try spoken("rent $1200")
+        #expect(!money.contains("$") && !money.contains("1200"))
+        let price = try spoken("milk $4")
+        #expect(!price.contains("$") && price.hasPrefix("Milk"))
+    }
+
+    @Test func aPrivateListNameIsMaskedInTheReceiptAndAnEmptyPageSaysSo() {
+        #expect(ListsCopy.spoken(receipt: "Rice, on Rent 1200 bills", listTitle: "Rent 1200 bills",
+                                 shownList: "Private list") == "Rice, on Private list.")
+        #expect(ListsCopy.pageContext(open: 0, all: 0) == "nothing on it yet")
+        #expect(ListsCopy.pageContext(open: 4, all: 7) == "3 of 7")
+    }
+}

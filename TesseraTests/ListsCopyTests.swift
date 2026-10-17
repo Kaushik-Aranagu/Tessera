@@ -24,4 +24,10 @@ struct ListsCopyTests {
         #expect(ListsCopy.tess(list: "Packing", left: 1) == "Packing has 1 left.")
         #expect(ListsCopy.tess(list: "Packing", left: 0) == "Packing, nothing left.")
     }
+
+    @Test func theAddReceiptNamesTheThingFirst() {
+        #expect(ListsCopy.added("Rice", to: "Packing") == "Rice, on Packing.")
+        #expect(ListsCopy.added("Private item", to: "Packing") == "Private item, on Packing.")
+        #expect(ListsCopy.cleared(3) == "3 done, cleared.")
+    }
 }

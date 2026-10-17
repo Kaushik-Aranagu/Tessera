@@ -197,11 +197,48 @@ public struct AddListItem: EngineAction {
 
     /// What the wall keeps as the item: nil when the line becomes a private note.
     @MainActor public static func kept(_ given: String, store: ObjectStore) -> String? {
+        guard !looksLikeClaudeKey(given) else { return nil }
         let bare = EngineWall.withoutPrice(given)
         let last = BodyWeight.lastKg(in: store)
-        let isNote = bare.isEmpty || SecretWords.isSecretListLine(given) || PrivateFacts.isMoneyShaped(bare)
-            || PrivateFacts.isBareWeight(bare.lowercased(), lastWeightKg: last)
+        // A measure is never money: "1.25 cups flour" (a cooking unit right after two places; never kg or lb).
+        let measured = bare.replacing(
+            /(?i)\b\d+[.,]\d{2}\s*(?:cups?|tbsps?|tablespoons?|tsps?|teaspoons?|g|grams?|ml|l|liters?|litres?|oz|ounces?)\b/,
+            with: "1"
+        )
+        // A unit then a thing is an amount to buy, not money or his weight: "1.50 lb apples" (QA on #763).
+        let amount = isAmountOfAThing(bare)
+        let isNote = bare.isEmpty || SecretWords.isSecretListLine(given)
+            || (!amount && PrivateFacts.isMoneyShaped(measured))
+            || (!amount && PrivateFacts.isBareWeight(bare.lowercased(), lastWeightKg: last)) || isSumOnly(
+                given,
+                bare: bare
+            )
         return isNote ? nil : bare
+    }
+
+    /// "1.50 lb apples", "2 kg rice": a number, a unit, then a word that isn't a day or body word.
+    static func isAmountOfAThing(_ line: String) -> Bool {
+        let lower = line.lowercased()
+        guard let match = lower.firstMatch(of: /\b\d+(?:[.,]\d+)?\s*(?:kg|kgs|lb|lbs|g|oz|ml|l)\s+([a-z]+)/) else {
+            return false
+        }
+        let word = String(match.output.1)
+        return !PrivateFacts.dayWords.contains(word) && !PrivateFacts.bodyWords.contains(word)
+            && !PrivateFacts.weighWords.contains(word)
+    }
+
+    /// A line that was only a sum, judged on what was typed (Kitchen on #759): "$40 at costco" strips to "at costco",
+    /// which names no thing to buy.
+    static func isSumOnly(_ given: String, bare: String) -> Bool {
+        guard PrivateFacts.isMoneyShaped(given) || bare != given.trimmingCharacters(in: .whitespacesAndNewlines) else {
+            return false
+        }
+        let filler: Set = ["at", "for", "from", "in", "on", "to", "the", "a", "an", "and", "of"]
+        let words = PrivateFacts.words(bare.lowercased()).filter { word in
+            !filler.contains(word) && !TessMemoryScreen.placeWords.contains(word)
+                && !TessMemoryScreen.moneyWords.contains(word)
+        }
+        return words.isEmpty
     }
 
     /// A kept item that is a medicine or a body fact: his list shows it, nothing else names it.
@@ -232,6 +269,11 @@ public struct AddListItem: EngineAction {
     }
 
     static let privateItemLabel = "Private item"
+
+    /// An item's title as a receipt may print it: "Private item" for a medicine or body fact (G41).
+    @MainActor static func shownTitle(_ title: String, store: ObjectStore) -> String {
+        isPrivateItem(title, store: store) ? privateItemLabel : title
+    }
 }
 
 /// Checks an item (or unchecks it). Checked items stay on the list until "clear done".
@@ -263,13 +305,15 @@ public struct CheckListItem: EngineAction {
     }
 
     public func summary(in store: ObjectStore) -> String {
-        let title = store.object(id: item)?.title ?? "it"
+        let title = store.object(id: item).map { AddListItem.shownTitle($0.title, store: store) } ?? "it"
         return done ?? true ? "Got \(title)" : "Back on the list: \(title)"
     }
 
     public func receipt(in store: ObjectStore) -> String? {
         guard let object = store.object(id: item) else { return nil }
-        let title = object.title.prefix(1).uppercased() + object.title.dropFirst()
+        // A medicine's words print only where he added it (G41): checked off, it is "Private item".
+        let shown = AddListItem.shownTitle(object.title, store: store)
+        let title = shown.prefix(1).uppercased() + shown.dropFirst()
         return done ?? true ? "\(title), got" : "\(title), back on \(object.parent?.title ?? "the list")"
     }
 }
@@ -312,11 +356,12 @@ public struct MoveListItem: EngineAction {
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "Moved \(store.object(id: item)?.title ?? "it")"
+        "Moved \(store.object(id: item).map { AddListItem.shownTitle($0.title, store: store) } ?? "it")"
     }
 
     public func receipt(in store: ObjectStore) -> String? {
-        guard let title = store.object(id: item)?.title else { return nil }
+        guard let title = store.object(id: item).map({ AddListItem.shownTitle($0.title, store: store) })
+        else { return nil }
         let name = title.prefix(1).uppercased() + title.dropFirst()
         return section.map { $0.isEmpty ? "\(name), moved" : "\(name), moved to \($0)" } ?? "\(name), moved"
     }

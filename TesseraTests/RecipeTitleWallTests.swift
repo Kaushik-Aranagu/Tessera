@@ -1,3 +1,4 @@
+import Foundation
 @testable import Tessera
 import TesseraCore
 import Testing
@@ -38,5 +39,17 @@ struct RecipeTitleWallTests {
             #expect(RecipeCopy.maskedSource("\(line)\nSimmer.", title: "Rent 1200 stew", masked: true)
                 == "Private recipe\nSimmer.", "\(line)")
         }
+    }
+
+    @Test func pastesReceiptNamesTheThingFirst() {
+        #expect(RecipeCopy.saved("Carbonara") == "Carbonara, on Recipes.")
+        let title = RecipeCopy.shownTitle("Rent 1200 stew", isPrivate: true, shown: false)
+        #expect(RecipeCopy.saved(title) == "Private recipe, on Recipes.")
+    }
+
+    @Test func theRecipeOpenedStaysChosenSoAGoneOneSaysSo() {
+        // `RecipeView` keeps the id it opened; with a request the pick never moves to another recipe.
+        let shown = UUID()
+        #expect(RecipeView.opening(requested: shown, rows: []) == shown)
     }
 }

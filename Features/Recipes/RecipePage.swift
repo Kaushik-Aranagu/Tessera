@@ -428,6 +428,11 @@ enum RecipeCopy {
         }.joined(separator: "\n")
     }
 
+    /// Paste's receipt, thing first: "Carbonara, on Recipes."; a private one "Private recipe, on Recipes." (K87.3).
+    static func saved(_ shownTitle: String) -> String {
+        "\(shownTitle), on Recipes."
+    }
+
     /// The title a surface shows: "Private recipe" for a private one unless it's been tapped open.
     static func shownTitle(_ title: String, isPrivate: Bool, shown: Bool) -> String {
         isPrivate && !shown ? ObjectPrivacy.recipeLabel : title
