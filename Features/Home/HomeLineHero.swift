@@ -20,6 +20,8 @@ struct LineHero<Key: View>: View {
     @State private var claudeContext: String?
     /// True while Claude's words are fresh on the page: drawn in Tess's ink, then dry to the context colour.
     @State private var wet = false
+    /// The object Claude's words were asked for: another line's words never stay on this one (QA on #745).
+    @State private var askedFor: UUID?
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.m) {
@@ -130,7 +132,17 @@ extension LineHero {
         return new
     }
 
+    /// Whether held words belong to another object than the line now shown.
+    static func isStale(askedFor: UUID?, current: UUID?) -> Bool {
+        askedFor != nil && askedFor != current
+    }
+
     private func askClaude() async {
+        if Self.isStale(askedFor: askedFor, current: line.objectID) {
+            claudeContext = nil
+            wet = false
+        }
+        askedFor = line.objectID
         guard context == nil else { return }
         let asked = ContinuousClock.now
         guard let new = await Self.claudeContext(model.homeDoneWords(for: line), rules: line.context) else { return }
