@@ -300,7 +300,10 @@ extension Transaction {
         let item: ObjectRecord = if let existing {
             existing
         } else {
-            try AddListItem(list: list.id, text: text, section: section).apply(&self)
+            // A row for an ingredient he already has: its name was walled (or not) where he typed it, so the row is
+            // made directly. AddListItem's wall would turn a walled name into a note and the share write below would
+            // throw (unknownField "shares").
+            try createGroceryRow(text, section: section, in: list)
         }
         var shares = GroceryShare.decode(store.value("shares", of: item)?.stringValue)
         var share = share
@@ -310,6 +313,17 @@ extension Transaction {
         }
         shares.append(share)
         try writeShares(shares, on: item, ingredient: ingredient)
+        return item
+    }
+
+    mutating func createGroceryRow(_ text: String, section: String?, in list: ObjectRecord) throws -> ObjectRecord {
+        let last = list.orderedChildren.last?.sortIndex ?? -1
+        let item = try create(classDef(.listItem), title: text.trimmingCharacters(in: .whitespacesAndNewlines),
+                              parent: list)
+        setSortIndex(last + 1, on: item)
+        if let section, !section.isEmpty {
+            try set("section", to: .text(section), on: item)
+        }
         return item
     }
 
