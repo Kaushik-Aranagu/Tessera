@@ -6,6 +6,8 @@ import Foundation
 public struct HomeFact: Equatable, Sendable {
     public enum Kind: String, Sendable {
         case workout, cook, shop, task, rest
+        /// A running list that is not Groceries ("Packing").
+        case list
     }
 
     public enum State: String, Sendable {
@@ -232,6 +234,12 @@ public enum HomeLines {
         case .shop:
             guard let left = fact.step, left > 0 else { return "\(fact.title): all in the basket." }
             return "\(fact.title): \(left) left."
+        case .list:
+            guard let left = fact.step, left > 0 else { return "\(fact.title): all done." }
+            if fact.state == .paused {
+                return "\(fact.title): paused, \(left) left."
+            }
+            return "\(fact.title): \(left) left."
         case .task:
             // His own words; the time sits at the right, drawn by the page.
             return fact.title
@@ -298,6 +306,9 @@ public enum HomeLines {
                 fact.title
             }
         case (.task, _): fact.title
+        case (.list, .paused): "\(fact.title), paused"
+        case (.list, _): fact.step.map { $0 > 0 ? "\(fact.title), \($0) left" : "\(fact.title), all done" } ?? fact
+            .title
         case (.cook, .planned): cookWhen(fact, now: now, calendar: calendar)
         case (.cook, .done): "\(fact.title) done"
         case (.cook, _): fact.step.map { "\(fact.title), step \($0)" } ?? fact.title
@@ -322,6 +333,13 @@ public enum HomeLines {
             return fact.startsAt.map { same(DayStoryClock.sentenceTime($0, calendar: calendar)) } ?? (nil, nil)
         }
         switch (fact.kind, fact.state) {
+        case (.list, .paused):
+            // A paused list is him away from it, like a paused shop (QA on #850).
+            return since("paused", fact.lastTouchedAt ?? fact.startedAt)
+        case (.list, _):
+            // A running list names itself in the context and counts in the detail; a name that does not fit says
+            // nothing, never a cut one ("Packing" and "6 left", within the caps).
+            return fitsContext(fact.title) ? same(fact.title) : (nil, nil)
         case (.rest, _), (.task, _):
             // The day label above the hero already names the day, so the rest line says "today" (Builder B's #366);
             // the weekday lives on as the widget's meta through `weekday(now:calendar:)`.
@@ -375,6 +393,8 @@ public enum HomeLines {
             return fact.steps.map { "Step \(step) of \($0)." } ?? "Step \(step)."
         case .shop:
             return fact.step.map { $0 == 0 ? "All in the basket." : "\(count($0, "item")) left." }
+        case .list:
+            return fact.step.map { $0 == 0 ? "All done." : "\($0) left." }
         default:
             return nil
         }
@@ -520,6 +540,13 @@ public struct HomeFacts {
             let left = Groceries(store: store, classes: classes).shoppingOrder().count
             return HomeFact(id: subject.id, kind: .shop, title: title, state: state, step: left,
                             startedAt: process.startedAt, lastTouchedAt: process.lastTouchedAt)
+        }
+        // A running list that is not Groceries: its name (masked when walled) and the items left.
+        if let list = engine.classes[.list], store.isSubclass(classDef, ofClassID: list.id) {
+            let left = ListContents(store: store, classes: classes).open(in: subject).count
+            return HomeFact(id: subject.id, kind: .list, title: ListContents.shownName(of: subject, in: store),
+                            state: state, step: left, startedAt: process.startedAt,
+                            lastTouchedAt: process.lastTouchedAt)
         }
         return nil
     }

@@ -1,5 +1,6 @@
 import Foundation
 @testable import TesseraCore
+@testable import TesseraTess
 import Testing
 
 /// Kitchen gap hunt 9, G62: a huge serves or time never crashes a recipe, from any source.
@@ -69,8 +70,22 @@ struct RecipeLimitsTests {
         let text = "Sourdough\nTotal time: 48 hours\nIngredients\n500 g flour\n350 g water\nMethod\n1. Mix and wait."
         let recipe = try engine.perform(CreateRecipe(text: text), by: .user).output
         let minutes = RecipeBook(store: store, classes: classes).totalMinutes(recipe)
-        #expect(minutes == nil || minutes == 2880, "\(minutes ?? -1)")
+        #expect(minutes == 2880, "\(minutes ?? -1)")
         try store.set("totalMinutes", to: .number(2880), on: recipe)
         #expect(RecipeBook(store: store, classes: classes).totalMinutes(recipe) == 2880)
+    }
+
+    @Test func claudesReplyLimitsAreTheSharedOnes() {
+        /// The output check reads RecipeLimits, so the edges are the same everywhere (G62): 100 serves and 4320 minutes
+        /// pass; one more of either drops the reply.
+        func unsafe(serves: Int, minutes: Double) -> Bool {
+            let parsed = ParsedRecipe(title: "Chili", serves: serves, activeMinutes: nil, totalMinutes: minutes,
+                                      ingredients: [], steps: [], source: "")
+            return ClaudeRecipeReader.outputIsUnsafe("Chili", recipe: parsed)
+        }
+        #expect(!unsafe(serves: 100, minutes: 4320))
+        #expect(unsafe(serves: 101, minutes: 60))
+        #expect(unsafe(serves: 4, minutes: 4321))
+        #expect(unsafe(serves: 4, minutes: 0))
     }
 }

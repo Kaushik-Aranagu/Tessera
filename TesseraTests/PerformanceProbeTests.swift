@@ -7,7 +7,7 @@ import Testing
 struct PerformanceProbeTests {
     @Test func todayQueriesAreCheap() {
         let container = TesseraSchema.makeContainer(inMemory: true)
-        let model = AppModel(context: container.mainContext)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         DemoData.prepare(model)
         let start = Date()
         for _ in 0 ..< 20 {

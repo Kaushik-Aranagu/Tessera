@@ -113,8 +113,11 @@ struct TripWeekBandsTests {
             try run(SetTaskDone(task: task.id, time: row.start), at: row.start, zone: row.startZone)
             return task
         case .cook:
-            let recipe = try engine.perform(CreateRecipe(text: "oats\nIngredients\n1 cup oats\nMethod\n1. Soak."),
-                                            by: .system).output
+            // A different text per cook: the same paste twice is one recipe (G59).
+            let recipe = try engine.perform(
+                CreateRecipe(text: "oats\nIngredients\n1 cup oats\nMethod\n1. Soak (\(row.start))."),
+                by: .system
+            ).output
             let cook = try run(StartCooking(recipe: recipe.id, time: row.start), at: row.start, zone: row.startZone)
             try run(FinishCooking(cook: cook.id, time: row.end), at: row.end, zone: row.endZone)
             return cook

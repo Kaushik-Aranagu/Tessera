@@ -529,8 +529,10 @@ enum RecipeCopy {
 
         static func == (lhs: Self, rhs: Self) -> Bool {
             switch (lhs, rhs) {
-            case let (.added(a, x), .added(b, y)): a == b && x === y
-            case let (.nothing(a), .nothing(b)), let (.failed(a), .failed(b)): a == b
+            case let (.added(lhsLine, lhsRecord), .added(rhsLine, rhsRecord)):
+                lhsLine == rhsLine && lhsRecord === rhsRecord
+            case let (.nothing(lhsLine), .nothing(rhsLine)), let (.failed(lhsLine), .failed(rhsLine)):
+                lhsLine == rhsLine
             default: false
             }
         }
@@ -543,10 +545,15 @@ enum RecipeCopy {
                      _ perform: () throws -> (count: Int, record: OpRecord)) -> SendOutcome
     {
         guard let result = try? perform() else { return .failed("Didn't save that. Try again.") }
-        let line = isPrivate
-            ? "Private recipe, \(result.count == 0 ? "nothing to add" : "\(result.count) added")."
-            : result.record.receipt ?? result.record.summary
-        return result.count == 0 ? .nothing(line) : .added(line, result.record)
+        // The engine's own line, masked for a private recipe since #836: "Tacos, 3 updated.", "Tacos, 2 added, 3
+        // updated.", "Private recipe, 2 added.". A write of any kind (new rows or changed amounts) is an add with
+        // its 10 s change UNDO; only a write of nothing is "nothing to add" (Product 11:20, QA on #836).
+        var line = result.record.receipt ?? result.record.summary
+        if isPrivate, !line.hasPrefix(ObjectPrivacy.recipeLabel) {
+            // Belt and braces: never a private title, whatever the engine said.
+            line = "\(ObjectPrivacy.recipeLabel), \(result.record.ops.isEmpty ? "nothing to add" : "added")."
+        }
+        return result.record.ops.isEmpty ? .nothing(line) : .added(line, result.record)
     }
 
     /// One VoiceOver stop per ingredient row: "2 cups flour, chopped".

@@ -10,7 +10,7 @@ struct HomeRestDayTests {
     let container = TesseraSchema.makeContainer(inMemory: true)
 
     @Test func seededPlanHasARestDayEveryWeek() throws {
-        let model = AppModel(context: container.mainContext)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         let plan = try #require(model.plan)
         let perWeek = try #require(NowPage.sessionsPerWeek(model: model, plan: plan))
         #expect(perWeek < 7)

@@ -277,6 +277,22 @@ struct GroceriesWeekTests {
         #expect(row("orecchiette")?.quantity == quantity)
     }
 
+    @Test func aBiggerSizeThatAlsoNeedsANewIngredientSaysBoth() throws {
+        // One of the recipe's rows is gone from the list (he deleted it): at a bigger size it comes back as added, the
+        // rest are updated. The line reads from this run's own output (carried per op).
+        let pasta = try engine.perform(CreateRecipe(text: Self.pasta), by: .user).output
+        try engine.perform(AddRecipeToGroceries(recipe: pasta.id), by: .user)
+        let spinach = try #require(groceries.list?.orderedChildren.first { $0.title.lowercased() == "baby spinach" })
+        try engine.perform(DeleteObject(object: spinach.id), by: .user)
+        let bigger = try engine.perform(AddRecipeToGroceries(recipe: pasta.id, serves: 8), by: .user)
+        let summary = bigger.record.summary
+        #expect(bigger.output.count == 1 && bigger.output.updated > 0)
+        #expect(summary.contains(", 1 added, ") && summary.hasSuffix(" updated."), "\(summary)")
+        // A second add with nothing changed does not carry the first one's counts.
+        let again = try engine.perform(AddRecipeToGroceries(recipe: pasta.id, serves: 8), by: .user)
+        #expect(again.record.summary.hasSuffix("nothing to add."), "\(again.record.summary)")
+    }
+
     @Test func aPrivateRecipeIsNeverNamedInItsAddLine() throws {
         // QA: the short name is the title's last word, so a private recipe would leak part of it.
         let text = Self.pasta.replacingOccurrences(of: "Sausage, white bean and spinach pasta", with: "Lexapro pasta")

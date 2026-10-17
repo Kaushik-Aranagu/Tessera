@@ -76,6 +76,19 @@ enum ListsCopy {
         "\(list), nothing to reset."
     }
 
+    /// The Pick one option word with its state: "Pick one, on" / "Pick one, off".
+    static func pickOneWord(isOn: Bool) -> String {
+        "Pick one, \(isOn ? "on" : "off")"
+    }
+
+    /// "Films, pick one on." / "Films, pick one off."
+    static func pickOne(_ list: String, isOn: Bool) -> String {
+        "\(list), pick one \(isOn ? "on" : "off")."
+    }
+
+    /// After the last skip in a pick (12.4, G13).
+    static let allPicked = "That's all of them."
+
     /// A reset's receipt: "Packing, reset." (10.4, 10.11).
     static func reset(_ list: String) -> String {
         "\(list), reset."

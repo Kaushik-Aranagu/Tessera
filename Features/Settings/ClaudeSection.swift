@@ -4,7 +4,7 @@ import TesseraTess
 
 // Settings › Claude (docs/design/claude-settings.md, Research's settings-claude.md). The key lives only in the
 // Keychain: it passes through the SecureField's text once, goes straight to Core's ClaudeKeyCheck, and the field is
-// cleared at once. After that only "...a1B2" is ever drawn. Nothing here reads the clipboard by itself.
+// cleared at once. After that the screen says only whether a key is saved. Nothing here reads the clipboard by itself.
 
 /// The words for the key's state after a check: "works", "not allowed", "not checked", "account paused".
 enum ClaudeKeyWords {
@@ -54,7 +54,8 @@ struct ClaudeSection: View {
         return SystemKeychain()
     }()
 
-    @State private var last4: String?
+    /// Whether a key is saved: yes or no only. No part of the key is kept or shown (Product 9:53).
+    @State private var hasKey = false
     @State private var status = "not checked"
     @State private var writing = false
     @State private var replacing = false
@@ -67,6 +68,8 @@ struct ClaudeSection: View {
     /// Tess's answer to the last flip of the switch, shown under it.
     @State private var switchLine: String?
     @State private var removal: Task<Void, Never>?
+    /// The key between REMOVE and the end of its 10 s: out of the Keychain, held only here for UNDO.
+    @State private var held: KeyRemoval?
     /// The clipboard's change count when a key was pasted, so a key still sitting there can be cleared after it passes.
     @State private var pasteChange: Int?
     @Environment(\.scenePhase) private var scenePhase
@@ -84,8 +87,8 @@ struct ClaudeSection: View {
                 .foregroundStyle(Theme.Colors.inkSecondary)
                 .accessibilityAddTraits(.isHeader)
 
-            if let last4, !removed {
-                withKey(last4)
+            if hasKey, !removed {
+                withKey
                     .transition(.opacity)
             } else {
                 noKey
@@ -106,7 +109,7 @@ struct ClaudeSection: View {
                 .transition(.opacity.combined(with: .offset(y: 6)))
             }
         }
-        .tesseraAnimation(value: last4)
+        .tesseraAnimation(value: hasKey)
         .tesseraAnimation(value: removed)
         .tesseraAnimation(value: line)
         .tesseraAnimation(value: writing)
@@ -157,7 +160,7 @@ struct ClaudeSection: View {
     // MARK: With a key
 
     @ViewBuilder
-    private func withKey(_ last4: String) -> some View {
+    private var withKey: some View {
         let spent = ledger.monthTotal(now: AppClock.now)
         let share = min(Double(spent) / Double(TessUsageLedger.capNano), 1)
         let paused = spent >= TessUsageLedger.capNano
@@ -214,12 +217,10 @@ struct ClaudeSection: View {
             }
 
             VStack(alignment: .leading, spacing: 0) {
-                Text(
-                    "Key ends in \(Text("...\(last4)").fontWeight(.semibold)) · \(Text(status).foregroundStyle(Theme.Colors.inkSecondary))"
-                )
-                .textRole(.body)
-                .foregroundStyle(Theme.Colors.ink)
-                .accessibilityLabel("Claude key, ends in \(last4), \(status)")
+                Text("Key saved · \(Text(status).foregroundStyle(Theme.Colors.inkSecondary))")
+                    .textRole(.body)
+                    .foregroundStyle(Theme.Colors.ink)
+                    .accessibilityLabel("Claude key saved, \(status)")
                 HStack(spacing: 0) {
                     Button("Test") { retest() }
                     Text(" · ").textRole(.labelStrong).foregroundStyle(Theme.Colors.inkSecondary)
@@ -296,11 +297,8 @@ struct ClaudeSection: View {
 
     private func load() {
         missesGoToClaude = model.asksClaude
-        guard let key = keys.read() else {
-            last4 = nil
-            return
-        }
-        last4 = String(key.suffix(4))
+        hasKey = keys.read() != nil
+        guard hasKey else { return }
         let lastCheck = ledger.calls()
             .filter { model.store.value("use", of: $0)?.stringValue == TessUse.keyCheck.rawValue }
             .max { $0.createdAt < $1.createdAt }
@@ -349,7 +347,7 @@ struct ClaudeSection: View {
                     line = "That key didn't pass. Your old key still works."
                 } else {
                     line = "That key failed, and the old one is gone. Add one?"
-                    last4 = nil
+                    hasKey = false
                 }
                 replacing = false
                 writing = false
@@ -358,7 +356,7 @@ struct ClaudeSection: View {
             }
             withTesseraAnimation(reduceMotion: reduceMotion) {
                 line = result.line
-                last4 = result.saved ? keys.read().map { String($0.suffix(4)) } : nil
+                hasKey = result.saved
                 status = ClaudeKeyWords.status(result.outcome.rawValue)
                 writing = result.outcome == .badKey || result.outcome == .notSaved
                 replacing = false
@@ -375,9 +373,10 @@ struct ClaudeSection: View {
         }
     }
 
-    /// One tap, no confirm: everything folds away and S1 shows, with UNDO for 10 s. The Keychain item goes only
-    /// when the 10 s are up.
+    /// One tap, no confirm: everything folds away and S1 shows, with UNDO for 10 s. The key leaves the Keychain at
+    /// once, so no Claude job due in the window can send (kitchen gap hunt G10); UNDO puts it back.
     private func remove() {
+        held = KeyRemoval.take(from: keys)
         withTesseraAnimation(.easeInOut(duration: 0.22), reduceMotion: reduceMotion) {
             removed = true
             writing = false
@@ -393,16 +392,20 @@ struct ClaudeSection: View {
 
     private func undoRemove() {
         removal?.cancel()
+        let back = held?.restore(to: keys) ?? false
+        held = nil
         withTesseraAnimation(reduceMotion: reduceMotion) {
             removed = false
-            line = "Claude key is back."
+            hasKey = back
+            line = back ? "Claude key is back." : "I couldn't bring the key back. Add it again?"
         }
     }
 
     private func finishRemoval() {
+        held = nil
         keys.delete()
         removed = false
-        last4 = nil
+        hasKey = false
         status = "not checked"
         withTesseraAnimation(reduceMotion: reduceMotion) { line = nil }
         model.touch()
@@ -535,5 +538,23 @@ extension ClaudeKeyWords {
     static func cents(_ nano: Int64) -> String {
         guard nano > 0 else { return "free" }
         return String(format: "%.1f¢", (Double(nano) / 1_000_000).rounded(.up) / 10)
+    }
+}
+
+/// A removed key's 10 s of UNDO. Taking it deletes it from the Keychain at once and keeps it only in this value;
+/// restoring writes it back. Nothing here logs or shows any part of it.
+struct KeyRemoval {
+    private let key: String
+
+    /// Takes the key out of the Keychain; nil when there was none.
+    static func take(from keys: any TessKeychain) -> KeyRemoval? {
+        guard let key = keys.read() else { return nil }
+        keys.delete()
+        return KeyRemoval(key: key)
+    }
+
+    /// Puts the key back; false if the Keychain wouldn't take it.
+    func restore(to keys: any TessKeychain) -> Bool {
+        keys.save(key)
     }
 }

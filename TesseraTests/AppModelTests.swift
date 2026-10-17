@@ -8,7 +8,7 @@ struct AppModelTests {
     let container = TesseraSchema.makeContainer(inMemory: true)
 
     @Test func withoutDemoHomeTrainsFromHisPlan() throws {
-        let model = AppModel(context: container.mainContext)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         // Fresh install: no history, no workout object, just the PPL×2 plan.
         #expect(model.tonightWorkout() == nil)
         let routine = try #require(model.todaysRoutine())
@@ -25,7 +25,7 @@ struct AppModelTests {
     }
 
     @Test func aFinishedWorkoutIsSavedIntoTodayOnHome() throws {
-        let model = AppModel(context: container.mainContext)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         let routine = try #require(model.todaysRoutine())
         model.startRoutine(routine)
         let session = try #require(model.session)
@@ -49,7 +49,7 @@ struct AppModelTests {
     }
 
     @Test func demoDataProducesALivedInDay() throws {
-        let model = AppModel(context: container.mainContext)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         DemoData.prepare(model)
 
         // The 18 muscles come with Core's exercise library now (the demo used to make its own four).
@@ -71,7 +71,7 @@ struct AppModelTests {
     }
 
     @Test func workoutSessionLogsSetsThroughTheModel() throws {
-        let model = AppModel(context: container.mainContext)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         DemoData.prepare(model)
         let workout = try #require(model.tonightWorkout())
         model.startWorkout(workout)
@@ -97,7 +97,7 @@ struct AppModelTests {
     }
 
     @Test func commandInterpreterLogsAndAnswers() {
-        let model = AppModel(context: container.mainContext)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         DemoData.prepare(model)
         let interpreter = CommandInterpreter(model: model)
 
@@ -113,7 +113,7 @@ struct AppModelTests {
 
     @Test func commandInterpreterNeverTitlesATaskWithPrivateWords() {
         // Board 0ah (Research AU): a "?" line skips Tess and lands here; walled text is never a task title.
-        let model = AppModel(context: container.mainContext)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         let interpreter = CommandInterpreter(model: model)
         #expect(interpreter.run("what's the wifi password?") == "It's in your private notes.")
         #expect(interpreter.run("did I pay rent 2100?") == "That stays on this phone.")

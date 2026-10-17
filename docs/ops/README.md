@@ -13,6 +13,7 @@ How the team works, and the tools that keep it cheap. Scripts are in `scripts/op
 - [test-sh-audit.md](test-sh-audit.md): where `scripts/test.sh` spends its time.
 - [discovery-gaps.md](discovery-gaps.md): gaps found by the discovery lane.
 - [idle-detector.md](idle-detector.md): when a team is below its pace line, what it pulls and who it asks.
+- [handoff-block.md](handoff-block.md): the block every fresh thread's brief carries, plus breadcrumbs for the leads that moved on Oct 17.
 
 ## More docs (index added by Ops, Oct 17)
 

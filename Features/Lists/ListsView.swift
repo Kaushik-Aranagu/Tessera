@@ -131,6 +131,11 @@ private struct ListPage: View {
     @State private var draft = ""
     @State private var striking: Set<UUID> = []
     @State private var foldOpen = false
+    /// The pick moment, while it's up.
+    @State private var picking: PickState?
+    @State private var picked = 0
+    /// The name's underline while the hold fills it (0 to 1).
+    @State private var pickHold: CGFloat = 0
     /// The reset's moment: the fold's strikes drain before the items rise back.
     @State private var unpainting = false
     /// The drain's paint: nil at rest (a plain strike at full secondary ink, readable at every size and in dark mode),
@@ -185,7 +190,8 @@ private struct ListPage: View {
                     .accessibilityHint(optionsOpen ? "Hides the list's options" : "Shows the list's options")
                     .entrance(0)
                     if optionsOpen, list.id != Groceries.listID {
-                        options(list, name: name, reusable: contents.isReusable(list), running: run != nil)
+                        options(list, name: name, reusable: contents.isReusable(list), running: run != nil,
+                                pickOne: contents.isPickOne(list))
                             .transition(.opacity.combined(with: .move(edge: .top)))
                     }
                     Text(name)
@@ -193,6 +199,34 @@ private struct ListPage: View {
                         .foregroundStyle(Theme.Colors.ink)
                         .accessibilityAddTraits(.isHeader)
                         .padding(.top, Theme.Spacing.xs)
+                        // Pick one: a 0.6 s hold on the name fills its underline, then one item lifts out (12.1).
+                        .overlay(alignment: .bottomLeading) {
+                            if contents.isPickOne(list) {
+                                GeometryReader { proxy in
+                                    Rectangle()
+                                        .fill(Theme.Colors.ink)
+                                        .frame(width: proxy.size.width * pickHold, height: Theme.Stroke.hairline * 2)
+                                        .frame(maxHeight: .infinity, alignment: .bottom)
+                                }
+                                .accessibilityHidden(true)
+                            }
+                        }
+                        .onLongPressGesture(minimumDuration: 0.6) {
+                            guard contents.isPickOne(list) else { return }
+                            startPick(list)
+                        } onPressingChanged: { pressing in
+                            guard contents.isPickOne(list) else { return }
+                            withAnimation(pressing && !reduceMotion ? .linear(duration: 0.6) :
+                                .easeOut(duration: 0.15))
+                            {
+                                pickHold = pressing ? 1 : 0
+                            }
+                        }
+                        .accessibilityAction(named: "Pick one") {
+                            if contents.isPickOne(list) {
+                                startPick(list)
+                            }
+                        }
                         .entrance(1)
                     if resetAsk != nil {
                         resetAskView(name: name)
@@ -236,6 +270,11 @@ private struct ListPage: View {
                 .padding(.vertical, Theme.Spacing.l)
             }
             .scrollIndicators(.hidden)
+            // While a pick is up the page dims to 14% with a 2 pt blur (12.2); Reduce Motion keeps the dim, drops the
+            // blur.
+            .opacity(picking == nil ? 1 : 0.14)
+            .blur(radius: picking == nil || reduceMotion ? 0 : 2)
+            .allowsHitTesting(picking == nil)
             // A tap anywhere outside the option words folds them (10.5), down to the foot of a short list too (QA on
             // #844); rows and words take their own taps first.
             .background {
@@ -255,6 +294,13 @@ private struct ListPage: View {
             }
             .background { ThemedBackground() }
             .background { EdgeSwipeBack() }
+            // The pick moment over the page: the rest dims to 14% with a 2 pt blur (12.2).
+            .overlay {
+                if picking != nil {
+                    PickMoment(listID: listID, picking: $picking, picked: $picked, rows: rows)
+                }
+            }
+            .tesseraFeedback(.pickedUp, trigger: picked)
             // A run lights the page: the vermilion seam at the top, as the shop does (10.7).
             .overlay(alignment: .top) {
                 if run?.state == .running {
@@ -391,54 +437,110 @@ private struct ListPage: View {
         TessVoice.shared.say(ListsCopy.spoken(receipt: receipt, listTitle: title, shownList: shown), undo: record,
                              holds: .seconds(4))
     }
+}
 
-    /// The fold: "4 done". Tap shows them (a tap on one takes it back out); hold 0.7 s clears them.
-    /// The option words, ink words with no shape: Reusable now; Run it, Pick one and Put away arrive with their
-    /// engine actions. The on word is ink at full weight, the off word secondary ink.
-    private func options(_: ObjectRecord, name: String, reusable: Bool, running: Bool) -> some View {
-        HStack(spacing: Theme.Spacing.l) {
-            // Run it starts (or picks back up) a run; while one is open the word is Done (10.5, 10.11).
-            Button {
-                running ? finishRun(name: name) : startRun(name: name)
-            } label: {
-                Text(running ? "Done" : "Run it")
-                    .textRole(.labelStrong)
-                    .textCase(.uppercase)
-                    .foregroundStyle(running ? Theme.Colors.live : Theme.Colors.ink)
-                    .contentTransition(.opacity)
-                    .frame(minHeight: 44)
-            }
-            .buttonStyle(HandleButtonStyle())
-            .accessibilityHint(running ? "Finishes the run" : "Runs the list")
-            if running {
-                Button { putAwayRun(name: name) } label: {
-                    Text("Put away")
-                        .textRole(.labelStrong)
-                        .textCase(.uppercase)
-                        .foregroundStyle(Theme.Colors.inkSecondary)
-                        .frame(minHeight: 44)
-                }
-                .buttonStyle(HandleButtonStyle())
-                .accessibilityHint("Sets the run aside for later")
-            }
-            Button {
-                setReusable(!reusable, was: reusable, name: name)
-            } label: {
-                // The state in words, not colour alone (Design on #806).
-                Text(ListsCopy.reusableWord(isOn: reusable))
-                    .textRole(.labelStrong)
-                    .textCase(.uppercase)
-                    .foregroundStyle(reusable ? Theme.Colors.ink : Theme.Colors.inkSecondary)
-                    .contentTransition(.opacity)
-                    .frame(minHeight: 44)
-            }
-            .buttonStyle(HandleButtonStyle())
-            .accessibilityLabel("Reusable")
-            .accessibilityValue(reusable ? "On" : "Off")
-            .accessibilityHint(reusable ? "Done items stay, to reset" : "Keeps its items for next time")
+// MARK: - The option words, runs, the reset and the fold
+
+/// Out of `ListPage`'s body so the type stays inside swiftlint's type_body_length (the release build needs it clean).
+extension ListPage {
+    /// The option words, ink words with no shape: Run it (or Done and Put away while running), Reusable and Pick one.
+    /// The on word is ink at full weight, the off word secondary ink; each says its state in words.
+    private func options(_ list: ObjectRecord, name: String, reusable: Bool, running: Bool,
+                         pickOne: Bool) -> some View
+    {
+        // The words wrap to a second line rather than squeeze (four of them at larger sizes).
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: Theme.Spacing.l) { optionWords(list, name: name, reusable: reusable, running: running,
+                                                           pickOne: pickOne) }
+            VStack(alignment: .leading, spacing: 0) { optionWords(list, name: name, reusable: reusable,
+                                                                  running: running, pickOne: pickOne) }
         }
         .contentShape(Rectangle())
         .onTapGesture { withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { optionsOpen = false } }
+    }
+
+    @ViewBuilder
+    private func optionWords(_: ObjectRecord, name: String, reusable: Bool, running: Bool,
+                             pickOne: Bool) -> some View
+    {
+        Button {
+            running ? finishRun(name: name) : startRun(name: name)
+        } label: {
+            Text(running ? "Done" : "Run it")
+                .textRole(.labelStrong)
+                .textCase(.uppercase)
+                .foregroundStyle(running ? Theme.Colors.live : Theme.Colors.ink)
+                .contentTransition(.opacity)
+                .frame(minHeight: 44)
+        }
+        .buttonStyle(HandleButtonStyle())
+        .accessibilityHint(running ? "Finishes the run" : "Runs the list")
+        if running {
+            Button { putAwayRun(name: name) } label: {
+                Text("Put away")
+                    .textRole(.labelStrong)
+                    .textCase(.uppercase)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+                    .frame(minHeight: 44)
+            }
+            .buttonStyle(HandleButtonStyle())
+            .accessibilityHint("Sets the run aside for later")
+        }
+        Button {
+            setReusable(!reusable, was: reusable, name: name)
+        } label: {
+            // The state in words, not colour alone (Design on #806).
+            Text(ListsCopy.reusableWord(isOn: reusable))
+                .textRole(.labelStrong)
+                .textCase(.uppercase)
+                .foregroundStyle(reusable ? Theme.Colors.ink : Theme.Colors.inkSecondary)
+                .contentTransition(.opacity)
+                .frame(minHeight: 44)
+        }
+        .buttonStyle(HandleButtonStyle())
+        .accessibilityLabel("Reusable")
+        .accessibilityValue(reusable ? "On" : "Off")
+        .accessibilityHint(reusable ? "Done items stay, to reset" : "Keeps its items for next time")
+        Button {
+            setPickOne(!pickOne, name: name)
+        } label: {
+            Text(ListsCopy.pickOneWord(isOn: pickOne))
+                .textRole(.labelStrong)
+                .textCase(.uppercase)
+                .foregroundStyle(pickOne ? Theme.Colors.ink : Theme.Colors.inkSecondary)
+                .contentTransition(.opacity)
+                .frame(minHeight: 44)
+        }
+        .buttonStyle(HandleButtonStyle())
+        .accessibilityLabel("Pick one")
+        .accessibilityValue(pickOne ? "On" : "Off")
+        .accessibilityHint(pickOne ? "Hold the name to pick an item" : "Lets the list pick an item for you")
+    }
+
+    /// "Films, pick one on." with UNDO 10 s.
+    private func setPickOne(_ isOn: Bool, name: String) {
+        guard let list = model.store.object(id: listID),
+              ListContents(store: model.store, classes: model.classes).isPickOne(list) != isOn else { return }
+        guard let record = try? model.engine.perform(SetListPickOne(list: listID, on: isOn), by: .user).record
+        else {
+            TessVoice.shared.say("Didn't save that. Try again.")
+            return
+        }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
+        TessVoice.shared.say(ListsCopy.pickOne(name, isOn: isOn), undo: record)
+    }
+
+    /// The pick moment (12.2 to 12.5): the page dims, one open item lifts out to the centre.
+    private func startPick(_ list: ObjectRecord) {
+        pickHold = 0
+        let contents = ListContents(store: model.store, classes: model.classes)
+        let first = contents.pick(from: list, now: AppClock.now)
+        withTesseraAnimation(reduceMotion ? .easeInOut(duration: 0.2) : .spring(duration: 0.52, bounce: 0.18),
+                             reduceMotion: reduceMotion)
+        {
+            picking = PickState(item: first, skipped: [])
+        }
+        picked += 1
     }
 
     /// "Packing, 6 left." with UNDO 4 s, a new run; the page lights (10.7). While a workout runs the engine refuses:
@@ -599,6 +701,7 @@ private struct ListPage: View {
         }
     }
 
+    /// The fold: "4 done". Tap shows them (a tap on one takes it back out); hold 0.7 s clears them.
     private func fold(_ done: [ListContents.Item], name: String, reusable: Bool) -> some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
             if foldOpen {
@@ -726,4 +829,11 @@ private struct FoldStrike: ViewModifier {
             content.strikethrough()
         }
     }
+}
+
+/// One pick moment: the item lifted out (nil after the last skip, or between two picks), and what was skipped.
+struct PickState: Equatable {
+    var item: ListContents.Item?
+    var skipped: Set<UUID>
+    var between = false
 }

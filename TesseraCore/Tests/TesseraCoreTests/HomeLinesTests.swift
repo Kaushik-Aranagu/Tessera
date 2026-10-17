@@ -270,6 +270,40 @@ struct HomeLinesTests {
 
     // MARK: From the store
 
+    @Test func aRunningListReachesHomeWithItsNameAndCount() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let list = try engine.perform(CreateList(name: "Packing"), by: .user).output
+        for text in ["Socks", "Charger", "Passport", "Adapter", "Shirt", "Book"] {
+            try engine.perform(AddListItem(list: list.id, text: text), by: .user)
+        }
+        try engine.perform(StartListRun(list: list.id), by: .user)
+        let process = try #require(ProcessTable(engine: engine).running())
+        let fact = try #require(HomeFacts(engine: engine).fact(process: process))
+        #expect(fact.kind == .list && fact.state == .running && fact.step == 6)
+        let line = HomeLines.line(for: fact)
+        #expect(line.context == "Packing" && line.detail == "6 left." && line.text == "Packing: 6 left.")
+        let context = try #require(line.context), detail = try #require(line.detail)
+        #expect(HomeLines.fitsContext(context) && HomeLines.fitsDetail(detail))
+        // Paused it reads paused, not the same as running (QA on #850).
+        try engine.perform(SuspendProcess(process: process.id), by: .user)
+        let pausedProcess = try #require(ProcessTable(engine: engine).process(for: list))
+        let pausedFact = try #require(HomeFacts(engine: engine).fact(process: pausedProcess))
+        let pausedLine = HomeLines.line(for: pausedFact)
+        #expect(pausedFact.state == .paused && pausedLine.hero == "Packing, paused" && pausedLine.text
+            .contains("paused"))
+        #expect(pausedLine.context?.hasPrefix("paused") == true, "\(pausedLine.context ?? "nil")")
+        try engine.perform(ResumeProcess(process: process.id), by: .user)
+        // A walled name reads "Private list", never the words.
+        let secret = try engine.perform(CreateList(name: "Lexapro refills"), by: .user).output
+        try engine.perform(AddListItem(list: secret.id, text: "pills"), by: .user)
+        try engine.perform(StartListRun(list: secret.id), by: .user)
+        let other = try #require(ProcessTable(engine: engine).running())
+        let masked = try #require(HomeFacts(engine: engine).fact(process: other))
+        #expect(masked.title == "Private list")
+    }
+
     @Test func factsFromTheStore() throws {
         // A paused Push A at bench set 2, a cook on step 1, and a shop with 2 left, read as Home would.
         let store = ObjectStore.open(inMemory: true)

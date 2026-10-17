@@ -118,3 +118,18 @@ After both: the app reads the showsTessEyes setting, not the launch flag.
 - 8:26 WIDGET FAILED WRITE (decisions 8:26): a widget or Live Activity intent that fails to write shows nothing on the widget (last good timeline stays) and queues a 'Didn't save. Try again.' line for Tess's band on next open. Done when a test fails a write from a widget intent and the line appears.
 
 - 8:37 MUSCLE MAP (decisions 8:37, sheet 88): drawn original vector muscle map (front and back) on the exercise MUSCLES page and a small union map on a Routine; Kitchen medium widget 10 pt wash. Data from Research's muscle fixtures. Done when each exercise shows its muscles and the Routine shows the union.
+
+- 12:55 MORNING ORDER (Product): Builder A starts on 0p (Design 72 title accent), then keeps the rest of Next in order. The #662 strip fix has no item on this board yet, so the lead adds it ahead of 0p. Next holds well over 5 open items, so nothing was added.
+
+- 3:10 AM (Kitchen gap hunt 3, docs/product/kitchen-gap-hunt-3.md; place after #662's fix, in Features/Plans/): (G12) PlanData.swift:46 is missing the weekly rhythm, so there is no rest day; done when a rest day shows. (G13) PlanDigest.swift:92-103 leaves the rest-day caption blank; done when it reads a plain line. (G14) two sessions in one day count as one; done when the week counts both. Core has G1, G6-G9, G11, G15, G16; Builder B #693 covers G10 and #694 covers G3.
+
+- 3:26 AM (Kitchen gap hunt 4, G25, docs/product/kitchen-gap-hunt-4.md; for the 7 AM session): build the Kitchen medium widget quoting Home's lines: "Tacos, 7 pm" + "2 to buy", "Tacos, on step 2.", "Tacos done." until 4:00 am then "Nothing planned"; private cook "Private recipe, 7 pm.", "Private recipe, on step 2.", "Private recipe done."; rows KW-W1..W18. Done when the widget shows each state.
+
+- 5:12 AM (Pantry screen walk #736 Need list, decisions 5:12; app-side, after #662 and G12-G14): five-row KITCHEN index (Groceries, Pantry, Recipes, ...) and Home's Pantry line; peek have/low/out words; Ingredient page state sentence and the state cycle tap. Done when the walk's rows for each pass.
+- 8:05 AM (Product, from Kitchen walk PR #747 K87/K88): .lists door (Lists entry point).
+
+- 12:15 PM (Product, Design PASS on #846 done-line plural): low for Builder A: a workout with nothing planned can still say '0 of 0 exercises' in the saved line in ProcessTable and in Tess's summary (WorkoutSummary.line); give them the same fix as doneLine, which now reads 'Push Day A done.', in a later PR.
+
+- 12:17 PM (Product, QA PASS on #842/#846; qa/review-842.md, review-846.md): Builder A, two more, fold with the '0 of 0 exercises' low above: (1) Int(Double) trap sweep: the same trap is still at WorkoutModeView 582/594/635, WorkoutSession+Prefill:25, ObjectPage 205/235, LiveSetStrokes:48 and WorkoutSession+Types:56. (2) The Siri lines in TesseraIntents/Intents.swift:108 and :129 still say '1 exercises' / '1 of 1 exercises' (plural fix).
+
+- 12:20 PM (Product, QA PASS on #849; decisions 12:20): Builder A: the Done hero uses the masked title (ObjectPrivacy.label(of:)) instead of raw session.workout.title (WorkoutModeView.swift:93) so a private routine shows 'Private routine'; an empty title reads 'Workout done.' not ', done'; walk a 24-letter single-word name at the largest Dynamic Type.

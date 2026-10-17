@@ -93,10 +93,20 @@ struct WorkoutFinishView: View {
         .task { await play() }
     }
 
-    /// "Push Day A, done" with the routine's name held together: no-break spaces inside the name, so the line
-    /// breaks only between "A," and "done" (or scales), never inside "Push Day / A".
+    /// "Push Day A, done" with the routine's name held together: a short name (16 characters or fewer) keeps its
+    /// words together with no-break spaces, so the line breaks only between "A," and "done" (or scales). A longer
+    /// name glues just its last two words and ", done", so it wraps at the earlier spaces instead of one huge unit.
     static func heroText(title: String) -> String {
-        title.replacingOccurrences(of: " ", with: "\u{00A0}") + ", done"
+        let title = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !title.isEmpty else { return "Workout done" }
+        let glue = "\u{00A0}"
+        if title.count <= 16 {
+            return title.replacingOccurrences(of: " ", with: glue) + ", done"
+        }
+        let words = title.split(separator: " ", omittingEmptySubsequences: true)
+        guard words.count > 2 else { return title + ", done" }
+        let head = words.dropLast(2).joined(separator: " ")
+        return head + " " + words.suffix(2).joined(separator: glue) + ", done"
     }
 
     private var dayLine: String {
