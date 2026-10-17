@@ -55,6 +55,8 @@ struct PasteRecipe: View {
                 // Links kept for later (K86.7): read only on his tap, oldest first, never by themselves.
                 if !reading, text.isEmpty, !readingLink, let waiting = waitingLinks.first {
                     Button(PasteCopy.readWaiting(waitingLinks.count)) {
+                        // The reader's own fill: its "Reading <host>." line stays up (QA on #830).
+                        fromLink = true
                         text = waiting.absoluteString
                         readLink(waiting)
                     }
@@ -157,6 +159,7 @@ struct PasteRecipe: View {
             if RecipePasteLink.isSecretLink(new) || PasteCopy.hasSecretLink(new) {
                 linkLine = RecipeLinkLine.secretLink
                 reading = false
+                fromLink = false
                 text = ""
                 return
             }
@@ -265,7 +268,8 @@ struct PasteRecipe: View {
                     // Painted like a paste: the box takes the recipe's text and the brush reads it.
                     reading = false
                     corrections = [:]
-                    fromLink = true
+                    // Only a real change fires onChange; an unchanged box would leave the flag set.
+                    fromLink = recipe != text
                     text = recipe
                 } else if outcome.kept {
                     reading = false
@@ -539,8 +543,15 @@ enum PasteCopy {
     static func hasSecretLink(_ text: String) -> Bool {
         // Brackets, quotes and sentence marks around a link don't hide it: "(https://u:p@host)." (QA on #821).
         let wrapping = CharacterSet(charactersIn: "()[]{}<>\"'“”‘’.,;:!?")
+        // Only link-shaped words are checked, as the bare-link rule reads them: an email (chef@bakery.com), an @handle
+        // or "4 @ 350" is a recipe's ordinary text, never a password link (QA on #830).
         return text.split(whereSeparator: \.isWhitespace).contains { word in
-            RecipeLinkReader.hasCredentials(String(word).trimmingCharacters(in: wrapping))
+            let trimmed = String(word).trimmingCharacters(in: wrapping)
+            let lower = trimmed.lowercased()
+            guard lower.hasPrefix("https://") || lower.hasPrefix("http://") || lower.hasPrefix("www.") else {
+                return false
+            }
+            return RecipeLinkReader.hasCredentials(trimmed)
         }
     }
 

@@ -51,6 +51,10 @@ struct PasteCycleTests {
         #expect(PasteCopy.hasSecretLink("Dal (\(link)).\n1 cup lentils"))
         #expect(PasteCopy.hasSecretLink("from \"\(link)\","))
         #expect(!PasteCopy.hasSecretLink("Dal (https://example.com/dal)."))
+        // QA on #830: an email, an @handle or a bare "@" is ordinary recipe text.
+        #expect(!PasteCopy.hasSecretLink("Questions to chef@bakery.com"))
+        #expect(!PasteCopy.hasSecretLink("Recipe by @dalqueen"))
+        #expect(!PasteCopy.hasSecretLink("Bake 4 @ 350 for 20 minutes"))
     }
 
     @Test func waitingLinksReadAsACount() {
