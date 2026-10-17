@@ -127,6 +127,23 @@ struct HomeDoneWordingTests {
         #expect(!body.contains("weight") || body.contains("No weights")) // only the instructions name weights
     }
 
+    @Test func sonnetIsNeverForcedToATool() async throws {
+        // AI architecture on #658: Sonnet 5.5 refuses a forced tool, so the choice is auto.
+        _ = await job().words(for: Self.line(), dayLabel: "Thursday evening", store: store)
+        let body = try #require(HomeStub.bodies.first)
+        let object = try #require(try JSONSerialization.jsonObject(with: body) as? [String: Any])
+        #expect((object["tool_choice"] as? [String: Any])?["type"] as? String == "auto")
+    }
+
+    @Test func aDetailWithItsNewBestCountPasses() async {
+        // HD1 through words(): "1 new best" is a count the pack licenses.
+        let line = Self.line()
+        let detail = "3 exercises, 12 sets, 1 new bench best."
+        HomeStub.reply = (200, Self.reply(context: nil, detail: detail))
+        #expect(await job().words(for: line, dayLabel: "Thursday evening", store: store)
+            == HomeDoneWords(detail: detail), "\(line.detail ?? "-")")
+    }
+
     @Test func aLineThatFailsLeavesTheRulesAndIsNeverAskedAgain() async {
         // C15: "after work" is banned outright; the rules words stand.
         HomeStub.reply = (200, Self.reply(context: "after work, a bench best", detail: nil))

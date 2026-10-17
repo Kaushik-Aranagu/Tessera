@@ -148,7 +148,9 @@ public final class ClaudeHomeDone {
         var failures: [String] = []
         func slot(_ text: String?, _ slot: TessLineCheck.Slot, rules: String?) -> String? {
             guard let text, text != rules else { return nil }
-            let verdict = TessLineCheck.check(text, slot: slot, numbers: line.numbers, names: pack.names,
+            // The digits Claude was given (the pack's) and the line's own, together (AI architecture on #658).
+            let verdict = TessLineCheck.check(text, slot: slot, numbers: Array(Set(line.numbers + pack.numbers)),
+                                              names: pack.names,
                                               rulesLine: rules, isDone: true, dayLabel: pack.dayLabel,
                                               hero: line.hero, title: pack.title, kind: .workout, house: house,
                                               counts: pack.counts, lastWeightKg: lastKg)
@@ -220,7 +222,9 @@ public final class ClaudeHomeDone {
                       "description": "The context line and the SO FAR detail for each Home item.",
                       "strict": true, "input_schema": schema,
                   ]],
-                  "tool_choice": ["type": "tool", "name": "proposeLines"],
+                  // Sonnet 5.5 refuses a forced tool (scripts/ai/home_lines_eval.py:637-640); a reply with no tool
+                  // lands as C1 and keeps the rules line.
+                  "tool_choice": ["type": "auto"],
                   "messages": [["role": "user", "content": facts]],
               ] as [String: Any]) else { throw ClaudeTessModel.Failure.other }
         http.httpBody = body
