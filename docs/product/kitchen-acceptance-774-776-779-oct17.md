@@ -117,3 +117,12 @@ What it actually changes (9 files, app side only, no Core): (1) the Lists Add li
 - Delete the recipe you are looking at (from another door or a Shortcut): the page stays and reads "Recipe gone." with "Back to the list" returning to the shelf.
 - Recipe link read with a page that has "1.50 pints" and "33.00 cl" lines: they go to Claude as measures; "8.50 kg today" never leaves the phone.
 - Reduce Motion, Dynamic Type AX3 and VoiceOver on the shelf rows and the Add line (13.14).
+
+## Since this read (coordinator note, Oct 17, 9:40 am PT)
+
+Not re-read in code; these are reported by the coordinator and need their own acceptance when each merges.
+
+- The #779 open low (a price before at, for, from or on) is fixed in Core's #787: those words are stripped after a price and never count as the thing, with five test lines. One remainder is with Core: "eggs 4.99 at costco" keeps "at costco" in the item. The recipe-path guard raised on #776 is also with Core.
+- The kept-line receipt and UNDO on Groceries is in Builder B's next PR.
+- The empty-shelf Tess line (K30.1) is in #782.
+- G56 is #783 plus Builder B's app half.
