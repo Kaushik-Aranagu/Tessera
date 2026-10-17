@@ -11,7 +11,8 @@ public enum RecipeLinkLine {
     public static let claudeOff = "Claude is off. Paste the text instead."
     public static let claudeTimeout = "Claude didn't answer in time. Paste the text instead."
     public static let videoNoRecipe = "No written recipe in that video. Paste the text instead."
-    public static let offline = "You're offline. I'll read it when you're back."
+    /// Offline: the link waits on the shelf and reads only on his tap, never by itself (ER1, K86.7, FG7).
+    public static let offline = "Recipe link, kept for later."
     public static let tooBig = "Too big to read safely. Paste the text instead."
     public static let askingClaude = "No recipe card there. Asking Claude."
     public static let claudeRead = "Claude read it. Check it, then save."
