@@ -17,6 +17,7 @@ Several lanes share one Mac, one iOS simulator and one Xcode. Two concurrent `xc
 
 ```sh
 scripts/ops/lane_lock.sh acquire <lane> "<purpose>"   # exit 0 acquired, 1 busy
+scripts/ops/lane_lock.sh wait <lane> "<purpose>" [max_s]  # queue in order, take the lock when it is your turn (default 1800 s), exit 1 on timeout
 scripts/ops/lane_lock.sh release <lane>               # exit 1 if not held by that lane
 scripts/ops/lane_lock.sh status                       # prints the lock content and age_s, or "free"
 ```
@@ -30,3 +31,7 @@ scripts/test.sh --app-only
 ```
 
 The recorded pid is the helper's parent (`$PPID`), so call the helper directly from the long-lived shell, not through a throwaway `sh -c`, or the lock looks dead immediately and is taken over.
+
+## Waiting in line
+
+Use `wait` instead of `acquire` when the lock is busy. Waiters queue first-come-first-served in `/tmp/tessera-mac-lock.q` (one ticket per waiter, holding its pid; a ticket whose shell has died is skipped). The next waiter takes the lock within 15 seconds of the holder's release, so the simulator hands off with no relay through the coordinator. The same shell rule applies: call `wait` from the long-lived shell, and release with the same trap.
