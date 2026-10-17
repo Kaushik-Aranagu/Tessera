@@ -8,10 +8,13 @@ struct PrivacyParityTests {
     let store = ObjectStore.open(inMemory: true)
 
     nonisolated static let walled: [String] = [
-        "Dentist cake", "dentist", "therapy ideas", "lexapro", "rent", "take melatonin", "wifi password zebra99",
+        "Dentist cake", "dentist", "therapy ideas", "lexapro", "rent 2100", "take melatonin", "wifi password zebra99",
         "paid 40 for gas",
     ]
-    nonisolated static let plain: [String] = ["Weeknight dal", "milk", "socks", "Push A"]
+    nonisolated static let plain: [String] = [
+        "Weeknight dal", "milk", "socks", "Push A", "blood orange", "hearts of palm", "energy drink", "sleep tea",
+        "Dr Pepper", "Rent car",
+    ]
 
     @Test(arguments: PrivacyParityTests.walled)
     func everySurfaceMasksIt(_ title: String) {

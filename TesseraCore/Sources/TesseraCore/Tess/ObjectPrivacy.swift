@@ -70,9 +70,13 @@ public enum ObjectPrivacy {
 
     /// Medical and care words that make a bare title private even with no number (Product: money and body titles are
     /// private in an export, and on a screen alike).
-    static let titleWords: Set<String> = PrivateFacts.moneyWords.union(TessMemoryScreen.healthWords)
-        .union(["rehab", "physio", "physiotherapy", "therapy", "therapist", "surgery", "doctor", "dr", "dentist",
-                "clinic", "hospital"])
+    /// Money words are not here: money masks only with an amount or a sign (Product, 4:22 PM PT: "Rent car" stays
+    /// raw). Words that are also food or plain English are out: "blood orange", "hearts of palm", "energy drink",
+    /// "sleep tea", "Dr Pepper".
+    static let titleWords: Set<String> = TessMemoryScreen.healthWords
+        .subtracting(["blood", "heart", "energy", "sleep", "tight", "tip", "pepper", "dr"])
+        .union(["rehab", "physio", "physiotherapy", "therapy", "therapist", "surgery", "doctor", "dentist", "clinic",
+                "hospital"])
 
     /// Whether a recipe's title is private: the one check above.
     public static func isPrivateRecipeTitle(_ title: String, lastWeightKg: Double?) -> Bool {
