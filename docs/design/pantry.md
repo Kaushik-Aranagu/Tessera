@@ -54,3 +54,6 @@ Digits for counts ("4 out", "6 to buy"); "best", never "record" (no best on Pant
 
 ## Unresolved
 Sheet number: the 5:47 PM decision called Pantry 78 and the rest of the sides 77; this sheet is 78. Section 6 of `kitchen-sides-acceptance.md` was not on master yet, so the side follows the coordinator's summary of it.
+
+## UNDO lengths (Kitchen, Oct 16)
+The ADD 6 TO GROCERIES receipt ("Pantry, 6 added.") is a new add, so its UNDO is 4 s. The state-word tap ("Limes, in.") is a change, so its UNDO is 10 s. Both are 10 s under VoiceOver (house rule, one app-wide UNDO slot).
