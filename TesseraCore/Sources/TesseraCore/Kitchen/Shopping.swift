@@ -90,6 +90,8 @@ extension Transaction {
     mutating func refreshShopLine(at now: Date = .now) throws {
         guard let list = store.object(id: Groceries.listID), let process = openProcess(for: list) else { return }
         let line = Groceries(store: store, classes: classes).shoppingLine()
-        try saveContext(process, resumePoint: nil, nextStep: line, at: now)
+        // A backdated check never moves the idle clock back (QA on #771): the later of the last touch and now.
+        let touched = max(store.value("lastTouchedAt", of: process)?.dateValue ?? now, now)
+        try saveContext(process, resumePoint: nil, nextStep: line, at: touched)
     }
 }
