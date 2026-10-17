@@ -39,7 +39,7 @@ Source: `spend-projection.md` and `model-effort-cost-table.md`, with these chang
 
 Design source: `side-jobs.md` section 3. This is the storage contract Core builds from.
 
-- **Fields (additive, next catalog number, v11 if v10 is #407).** Ingredient: `kcalPer100g`, `proteinPer100g`, `fatPer100g`, `carbsPer100g` (optional numbers), `factsSource` (text), `factsAsked` (date). Exercise: `primaryMuscles`, `secondaryMuscles` (optional text lists), `factsSource`, `factsAsked`.
+- **Fields (additive, next catalog number, v11 if v10 is #407).** Ingredient: `kcalPer100g`, `proteinPer100g`, `fatPer100g`, `carbsPer100g` (optional numbers), `factsSource` (text), `factsAsked` (date). Exercise: `factsSource`, `factsAsked`; the muscles use the existing `primaryMuscles` and `secondaryMuscles` links to Muscle objects (corrected in part 2).
 - **Source text.** Empty for a table value. "From Claude, Oct 16" for a fill: house date style, written by the phone, never by Claude.
 - **Asked once.** Any answer, including a decline or a refusal, sets `factsAsked`; nothing asks about that thing again. A decline writes nothing else.
 - **Table wins.** A table row that lands later replaces a fill and clears `factsSource`.
