@@ -86,7 +86,7 @@ public struct HomeDonePack: Equatable, Sendable {
         // Only the set itself is the bar (D1): the rest is read for a decimal or a long number. A bar weight right
         // before its sets, with a lift named, is the set's own ("Bench 82.4 kg 5x5"); with no lift it is not
         // ("Morning 82.4 5x5"), and nor is one standing alone (W9: "Bench 182.4").
-        let lifted = words.contains(where: PrivateFacts.liftWords.contains)
+        let lifted = words.contains(where: PrivateFacts.liftNames.contains)
         let barOfASet = /\d+(?:[.,]\d+)?\s*(?:kg|kgs|lb|lbs)?\s+\d+\s*[x×]\s*\d+/
         let rest = PrivateFacts.withoutNotation(lifted ? lower.replacing(barOfASet, with: " ") : lower)
         return rest.firstMatch(of: /\d+[.,]\d+|\d{3,}/) != nil

@@ -352,10 +352,27 @@ struct WallsBypassTests {
         #expect(!everythingShown().contains("182.4") && !everythingShown().contains("1850"))
     }
 
-    @Test(arguments: ["Bench 82.4 kg 5x5", "bench 82.50 x 8", "Push B 5x5 80 for 8", "80 for 8"])
+    @Test(arguments: ["Bench 82.4 kg 5x5", "bench 82.50 x 8", "squat 82 kg", "bench 80 for 8"])
     func theBarStaysTheBar(_ phrase: String) {
-        // MB31, MB32: a set is never money or his body, even inside his band.
+        // MB31, MB32: a set beside a lift is never money or his body, even inside his band.
         #expect(!PrivateFacts.isWalled(phrase, lastWeightKg: 82), "\(phrase)")
+        #expect(!PrivateFacts.isWalled(phrase, lastWeightKg: nil), "\(phrase)")
+    }
+
+    @Test(arguments: ["82.4 kg this morning, leg day after", "was 82.4 low before push day?"])
+    func anEverydayWordNeverMakesHisWeightABar(_ phrase: String) {
+        // QA on #644: "leg" and "push" are not lifts.
+        #expect(PrivateFacts.isWalled(phrase, lastWeightKg: 82), "\(phrase)")
+        // With no weigh-in, a decimal walls only beside a body word or unit (BN04 walled, BN05 plain).
+        #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil) == phrase.contains("kg"), "\(phrase)")
+    }
+
+    @Test func forDaysIsNotASet() {
+        // QA low on #644: "for 3 days" keeps the number.
+        #expect(PrivateFacts.withoutNotation("weighed 82 kg for 3 days").contains("82"))
+        #expect(!PrivateFacts.withoutNotation("80 for 8 reps").contains("80"))
+        #expect(!PrivateFacts.withoutNotation("bench 80 for 8").contains("80"))
+        #expect(PrivateFacts.isWalled("weighed 82 kg for 3 days", lastWeightKg: nil))
     }
 
     @Test func aVitalIsWalledBesideSetNotation() throws {
