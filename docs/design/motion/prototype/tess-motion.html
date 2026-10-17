@@ -1785,6 +1785,168 @@ PICKS.side = () => {
     caps: [{ at: 0, text: 'The front. A swipe left above 736.' }, { at: in1, text: '1.0 stop 1: eyes 0.4 right over 380 ms.' }, { at: in1 + .42, text: '1.42 her line lands as stop 1 settles.' }, { at: in2, text: '2.8 stop 2: she stays still.', haptic: '.selection (the side’s own)' }, { at: out2, text: '4.6 back to stop 1: still.' }, { at: out1, text: '6.2 back to the front: eyes 0.4 left.' }, { at: out1 + .68, text: '6.88 eyes ahead. She never moves with the body.' }],
   };
 };
+// Sheet 73 A (the area index) and sheet 72 round 2 (the title accent): reference renders at the sheets' values.
+// Values the sheets don't give are marked ASSUMED in the code and listed in tess-motion-check.md.
+const clamp01 = v => Math.max(0, Math.min(1, v));
+function tx(str, x, y, size, color, weight = 500, align = 'left', alpha = 1, trackEm = 0) {
+  ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = alpha;
+  ctx.font = font(size, weight); ctx.letterSpacing = (trackEm * size) + 'px'; ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = 'alphabetic';
+  ctx.fillText(str, x, y); ctx.restore();
+}
+function txw(str, size, weight, trackEm = 0) { ctx.save(); ctx.font = font(size, weight); ctx.letterSpacing = (trackEm * size) + 'px'; const w = ctx.measureText(str).width; ctx.restore(); return w; }
+const scratch = document.createElement('canvas');
+const calmSoul = extra => ({ modes: [{ mode: 'idle', at: -10 }], centre: () => HOME, eyes: t => ({ alpha: 1, blink: blinks(t, extra), look: { x: 0, y: 0 } }), mouth: () => ({ alpha: 1, curve: .2, tilt: 0, open: 0 }) });
+
+// ---- 73 A, the index
+PICKS.index = () => {
+  const AREAS = ['REVIEW', 'TODAY', 'TRAINING', 'KITCHEN'];
+  const LIVE = ['This week, 3 of 6 sessions', 'Push Day A, 13 sets left', 'Push Day A is on', 'Tacos at 7 pm'];
+  const ROW0 = 96, ROWDY = 104, GLASS_H = 580, HINT_Y = 528, FLY = .46, STAG = .04;
+  const REL1 = 3.6, TAP = 5.45, REL2 = 6.9, T0 = 1.0, PULLD = 1.0;
+  const pull = t => 100 * easeInOut(clamp01((t - T0) / PULLD));
+  const pullP = t => clamp01((pull(t) - 20) / 70);
+  const Pf = t => t < REL1 ? pullP(t) : t < TAP ? 1 - ramp(t, REL1, FLY, houseCurve) : t < REL2 ? ramp(t, TAP, FLY, houseCurve) : 1 - ramp(t, REL2, FLY, houseCurve);
+  const areaAt = t => (t >= REL2 + FLY ? 1 : t >= REL1 + FLY ? 2 : 1);
+  const fy = t => t < 2.3 ? 300 + pull(t) : t < 2.6 ? lerp(400, 250, ramp(t, 2.3, .3)) : t < 2.9 ? 250 : t < 3.2 ? lerp(250, 340, ramp(t, 2.9, .3)) : 340;
+  const bandAt = y => clamp01Idx(Math.floor((y - ROW0) / ROWDY));
+  const clamp01Idx = i => Math.max(0, Math.min(3, i));
+  const pickedAt = t => { if (t >= T0 && t < REL1) return pull(t) >= 90 ? bandAt(fy(t)) : -1; if (t >= 6.75 && t < REL2 + .1) return 1; return -1; };
+  const pickSm = (i, t) => { let s = 0; for (let k = 0; k < 6; k++) s += pickedAt(t - k * .02) === i ? 1 : 0; return s / 6; };
+  const areaCol = i => (i === 2 ? mixHex(LOOK.ink, LOOK.live, .72) : i === 0 ? mixHex(LOOK.ink, LOOK.context, .72) : LOOK.ink);
+  const fly = (t, a, i) => { const u = ramp(t, a, FLY, houseCurve); return u; };
+  const flightOf = t => (t >= REL1 && t < REL1 + FLY ? { i: 2, u: ramp(t, REL1, FLY, houseCurve), top: ROW0 + ROWDY * 2 + 36 } : t >= REL2 && t < REL2 + FLY ? { i: 1, u: ramp(t, REL2, FLY, houseCurve), top: ROW0 + ROWDY + 36 } : null);
+  const pageToday = nameA => {
+    tx('TODAY', 24, 52, 15, LOOK.ink, 700, 'left', nameA, .08);
+    tx('Friday morning', 24, 138, 21, LOOK.ink, 500); tx('nothing due till 9:30 am', 24, 186, 21, LOOK.context, 500);
+    tx('Push A at 12:15 pm', 24, 220, 34, LOOK.ink, 600); tx('NEXT', 24, 290, 16, LOOK.inkSoft, 600);
+    ROWS.forEach((r, i) => { const y = ROW_Y0 + i * ROW_DY; tx(r.title, 24, y, 18, LOOK.ink, 500); if (r.when) tx(r.when, 369, y, 16, LOOK.inkSoft, 500, 'right'); });
+  };
+  const pageTraining = nameA => {
+    tx('TRAINING', 24, 52, 15, LOOK.ink, 700, 'left', nameA, .08);
+    tx('Friday morning', 24, 138, 21, LOOK.ink, 500); tx('Push Day A is on', 24, 186, 21, LOOK.live, 500);
+    tx('Push Day A', 24, 220, 34, LOOK.ink, 600); tx('13 SETS LEFT', 24, 290, 16, LOOK.inkSoft, 600);
+    ['Bench press', 'Incline press', 'Cable fly', 'Triceps pushdown', 'Lateral raise'].forEach((r, i) => tx(r, 24, ROW_Y0 + i * ROW_DY, 18, LOOK.ink, 500));
+  };
+  const tapFinger = (t, a, x, y) => t > a - .1 && t < a + .35 ? { x, y, alpha: ramp(t, a - .1, .1) * (1 - ramp(t, a + .2, .15)), press: ramp(t, a, .08) } : null;
+  // beat times, found from the curves so the captions can't drift
+  const find = (f, lo, hi) => { for (let t = lo; t < hi; t += .001) if (f(t)) return +t.toFixed(2); return null; };
+  const t20 = find(t => pull(t) >= 20, 1, 3), t90 = find(t => pull(t) >= 90, 1, 3), tPickT = find(t => pickedAt(t) === 2, 1, 3), tPickToday = find(t => pickedAt(t) === 1, 2.2, 3.6), tPickT2 = find(t => t > 2.7 && pickedAt(t) === 2, 2.7, 3.6);
+  return {
+    duration: 8.6,
+    lines: [],
+    draw: t => {
+      const P = Pf(t), fl = flightOf(t), ar = areaAt(t);
+      const nameA = fl ? 0 : 1 - P;
+      ground(); (ar === 2 ? pageTraining : pageToday)(nameA);
+      if (P > .001) {
+        scratch.width = canvas.width; scratch.height = canvas.height; scratch.getContext('2d').drawImage(canvas, 0, 0);
+        ground();
+        ctx.save(); const s = 1 - .1 * P, ty = 40 * P;
+        ctx.setTransform(DPR * s, 0, 0, DPR * s, DPR * (W / 2 - s * W / 2), DPR * (H / 2 - s * H / 2 + ty));
+        ctx.filter = `blur(${6 * P * DPR}px)`; ctx.drawImage(scratch, 0, 0, W, H + CAP); ctx.restore();
+        // ASSUMED: glass fill (the sheet names Liquid Glass but no values)
+        ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); const gy = -40 * (1 - P);
+        ctx.beginPath(); ctx.roundRect(0, gy - 60, W, GLASS_H + 60, [0, 0, 40, 40]);
+        ctx.fillStyle = rgba(LOOK.ground, .92 * P); ctx.fill(); ctx.fillStyle = rgba(LOOK.ink, .07 * P); ctx.fill();
+        ctx.lineWidth = 1; ctx.strokeStyle = rgba(LOOK.ink, .14 * P); ctx.stroke(); ctx.restore();
+        AREAS.forEach((a, i) => {
+          const Pi = Pf(t - STAG * i), top = ROW0 + ROWDY * i + gy * 0 - 40 * (1 - Pi) * 0, pk = pickSm(i, t);
+          const here = i === ar, isFly = fl && fl.i === i;
+          const baseA = here ? 1 : .42, col = pk > 0 ? (i === 1 ? LOOK.ink : areaCol(i)) : LOOK.ink;
+          const alpha = Pi * (isFly ? 0 : lerp(baseA, 1, pk));
+          const sc = 1 + .06 * pk, w = i === 1 && pk > 0 ? lerp(600, 700, pk) : 600, y = top + 36 - 40 * (1 - Pi);
+          ctx.save(); ctx.translate(24, y); ctx.scale(sc, sc); ctx.translate(-24, -y);
+          tx(a, 24, y, 40, col, w, 'left', alpha, -.02); ctx.restore();
+          tx(LIVE[i], 24, y + 30, 17, LOOK.ink, 500, 'left', alpha * .7);
+        });
+        const hint = t >= TAP - .1 ? 'Tap one to open' : 'Let go to open';
+        tx(hint, 24, HINT_Y, 15, LOOK.inkSoft, 500, 'left', P);
+      }
+      if (fl) {
+        const sz = lerp(40, 15.2, fl.u), w = lerp(600, 700, fl.u), y = lerp(fl.top, 52, fl.u), trk = lerp(-.02, .08, fl.u);
+        tx(AREAS[fl.i], 24, y, sz, fl.i === 2 ? mixHex(LOOK.ink, LOOK.live, .72 * (1 - fl.u)) : LOOK.ink, w, 'left', 1, trk);
+      }
+    },
+    finger: t => {
+      if (t > .9 && t < REL1 + .2) return { x: 200, y: fy(Math.min(t, REL1)), alpha: ramp(t, .9, .1) * (1 - ramp(t, REL1, .2)), press: .9 };
+      return tapFinger(t, TAP - .15, 52, 48) || tapFinger(t, 6.75, 220, 250);
+    },
+    soul: calmSoul([]),
+    caps: [
+      { at: 0, text: 'A tab page at rest: the name, one word at 52.' },
+      { at: T0, text: '1.0 pull down at offset 0; the page follows.' },
+      { at: t20, text: `${t20} 20 pt: index forms (page 0.9, blur 6, down 40).` },
+      { at: t90, text: `${t90} 90 pt: held; the row under the finger is picked.`, haptic: '.selection, once per row' },
+      { at: tPickToday, text: `${tPickToday} over TODAY: ink at 700, 1.06×.`, haptic: '.selection' },
+      { at: tPickT2, text: `${tPickT2} back on TRAINING: area colour 72%, 1.06×.`, haptic: '.selection' },
+      { at: REL1, text: `${REL1} let go: it flies to the name, 0.38× in 460 ms.` },
+      { at: REL1 + FLY, text: `${(REL1 + FLY).toFixed(2)} lands as the name; page full size, sharp.`, haptic: '.impact(.soft)' },
+      { at: TAP, text: `${TAP} tap the name: the same index. "Tap one to open".` },
+      { at: 6.75, text: '6.75 tap TODAY.' },
+      { at: REL2, text: `${REL2} TODAY flies up (460 ms); the index closes.` },
+      { at: REL2 + FLY, text: `${(REL2 + FLY).toFixed(2)} lands. Tess never moved.`, haptic: '.impact(.soft)' },
+    ],
+  };
+};
+
+// ---- 72 round 2, the title moves
+PICKS.accent = () => {
+  const SETS = [1.0, 2.2, 3.4], DONE = 4.6, STEP = .6, STRIKE = .42, LIFT = .25, DRY_AT = .9, DRY = 2;
+  const pAt = t => { // the thing's count, capped at .85 until done
+    let p = 0; SETS.forEach((s, k) => { p = Math.max(p, lerp(.85 * k / 4, .85 * (k + 1) / 4, ramp(t, s, STEP, houseCurve)) * (t >= s ? 1 : 0)); });
+    return t >= DONE ? lerp(.85 * 3 / 4, 1, ramp(t, DONE, STEP, houseCurve)) : p;
+  };
+  const dryU = t => ramp(t, DONE + DRY_AT, DRY, easeInOut);
+  const lift = t => ramp(t, DONE + STRIKE, LIFT, easeOut) ;
+  const strikeU = t => ramp(t, DONE, STRIKE, easeOut);
+  const wordU = t => ramp(t, SETS[0], STEP, houseCurve);
+  const LINES = [[['Push A', 0]], [['at ', 0], ['12:15 pm', 1]]];
+  const SIZE = 56, Y0 = 250, LH = 64;
+  const amt = (t, isWord) => { const p = pAt(t), d = dryU(t); return (isWord ? .72 * wordU(t) : lerp(.6 * p, .72, lift(t))) * (1 - d); };
+  return {
+    duration: 9.4, lines: [],
+    draw: t => {
+      ground();
+      tx('TRAINING', 24, 52, 15, LOOK.ink, 700, 'left', 1, .08);
+      tx('Friday morning', 24, 138, 21, LOOK.ink, 500);
+      const p = pAt(t), d = dryU(t), wgt = lerp(500, 640, p) , trk = -.012 * p, fade = lerp(1, .5, d);
+      const doneW = lerp(wgt, 500, d) , doneT = lerp(trk, 0, d);
+      const stroke = strikeU(t);
+      // total width for the strike, which wraps with the lines
+      const lw = LINES.map(l => l.reduce((s, [str]) => s + txw(str, SIZE, doneW, doneT), 0));
+      const tot = lw[0] + lw[1];
+      LINES.forEach((line, li) => {
+        let x = 24; const y = Y0 + li * LH;
+        line.forEach(([str, isWord]) => {
+          tx(str, x, y, SIZE, mixHex(LOOK.ink, LOOK.live, amt(t, isWord)), doneW, 'left', fade, doneT); x += txw(str, SIZE, doneW, doneT);
+        });
+        // the 3 pt strike through the x-height, left to right across both lines
+        const from = li === 0 ? 0 : lw[0], to = from + lw[li];
+        const reach = clamp01((stroke * tot - from) / lw[li]);
+        if (reach > 0) {
+          ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.globalAlpha = fade;
+          ctx.fillStyle = mixHex(LOOK.ink, LOOK.live, .72 * (1 - d)); ctx.fillRect(24, y - SIZE * .27 - 1.5, lw[li] * reach, 3); ctx.restore();
+        }
+      });
+      tx('SETS', 24, 380, 16, LOOK.inkSoft, 600);
+      const done = SETS.filter(s => t >= s).length + (t >= DONE ? 1 : 0);
+      tx(`${done} of 4`, 24, 420, 21, LOOK.ink, 500);
+      for (let k = 0; k < 4; k++) { ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.beginPath(); ctx.arc(32 + k * 30, 452, 8, 0, 7); ctx.fillStyle = k < done ? LOOK.ink : rgba(LOOK.ink, .18); ctx.fill(); ctx.restore(); }
+      tx(`p ${pAt(t).toFixed(2)}`, 369, 420, 16, LOOK.inkSoft, 500, 'right');
+    },
+    soul: calmSoul([]),
+    caps: [
+      { at: 0, text: 'At rest: plain ink, weight 500. p 0.' },
+      { at: SETS[0], text: '1.0 set 1: p 0.21; weight, lean, the word move (600 ms).' },
+      { at: SETS[1], text: '2.2 set 2: p 0.43 (weight 500 to 640, lean to 60%).' },
+      { at: SETS[2], text: '3.4 set 3: p 0.64. Capped at 0.85 until done.' },
+      { at: DONE, text: '4.6 done: p 1; the 3 pt strike draws in 420 ms.' },
+      { at: DONE + STRIKE, text: '5.02 one 250 ms lift to the area colour.' },
+      { at: DONE + DRY_AT, text: '5.5 900 ms later: dries over 2 s to ink at 50%.' },
+      { at: DONE + DRY_AT + DRY, text: '7.5 dried. The strike stays.' },
+    ],
+  };
+};
 for (const [name, make] of Object.entries(PICKS)) SCENES['pick-' + name] = () => { const s = make(); s.lines = s.lines || []; return s; };
 
 // The work state when she's out on a row: tighter constellation, no readers.

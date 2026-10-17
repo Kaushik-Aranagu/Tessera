@@ -23,9 +23,19 @@ struct ObjectPage: View {
         {
             // A routine's page is its editor (Features/Plans/RoutineEditor).
             RoutineEditor(routine: routine)
+        } else if case let .object(id) = route, let note = model.object(id), Self.opensAsNote(note, model: model) {
+            // A note opens as itself, as from Notes, never as a property list of its text (PN-MENTION).
+            NoteEditor(noteID: note.id)
         } else {
             generic
         }
+    }
+
+    /// A plain note opens in the note editor. A private note stays on the generic page, where Core's mask
+    /// shows only the label "Private note" and none of its text.
+    static func opensAsNote(_ note: ObjectRecord, model: AppModel) -> Bool {
+        note.classDef?.id == model.classDef(.note)?.id
+            && ObjectPrivacy.label(of: note, in: model.store, classes: model.classes) == nil
     }
 
     private var generic: some View {

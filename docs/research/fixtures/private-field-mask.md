@@ -172,3 +172,31 @@ Run on the riders pin, Simulator, iPhone 17, after `scripts/test.sh` ends "All g
 6. Workout notes by hand, VoiceOver on: Review, today, Push A (PM21, PM34). Expect "Note kept private" under the hero and the workout's fields, Contents and Linked from as before (PM27). Then Review, yesterday, the legs line (PM22) and the pull day (PM23, the plain-note trap). Expect the same marker and no note words.
 7. Home: tap the 7:00 pm planned line (W5), check the marker, tap Start workout, log a set, lock the phone during rest (PM33). Expect no note words on the front, the live screen, the Lock Screen or the Dynamic Island.
 8. Pass: every row without `pending` passes, every pending row reports its expected failure, and no screen in steps 2 to 7 shows 4417, hunter2, Advil, "door", "shoulder", "knee", "sore", "82.4", "weighed" or "felt strong".
+
+## 6. Status on master 553ad19
+
+*Research, Sat Oct 17, 2026. Re-read by hand on origin/master ab7d3bf, which holds Core 0ai part 1 (#580, merge 553ad19). Nothing was built or run. Paths are under `Features/Objects/ObjectPage.swift` unless named; `OP` is `TesseraCore/Sources/TesseraCore/Tess/ObjectPrivacy.swift`.*
+
+The mask is `OP:17-38` (`label(of:)`), called by the generic page at `:225`. A private object gets the class label as its hero (`:229`), a class line of the class name only (`:230-233`), and no notes, `PropertyList`, Contents or Linked from (`:236`, `:242`, `:246`, `:261`). A Linked from or Contents row names the label (`:268`, `:296`), and the hint reads "Opens <title>" from that title (`ObjectHandle.swift:35`, `:77`).
+
+- **PM1, PM2, PM3 (memory O1): pass.** Flag true gives "Private memory" (`OP:30-33`, `:24`). Hero `:229`; no Properties (`:242`); Linked from row and hint use the label (`:268`, `ObjectHandle.swift:77`). Note: the class line reads "Memory", not `object privateMemory : Memory` as the "After" column says (`:230-233`). The pass check does not test the class line.
+- **PM4 (Memory class page): pass.** Unchanged, defaults only (`:89`).
+- **PM5, PM6, PM14 (notes O3, O4): pass.** Flag, "Private note" title, or a secret word in the title or body (`OP:25-28`). `ObjectPrivacyTests.swift:45-50` covers it.
+- **PM7 (task O5): deferred, and fails on master.** A bare "Take Advil" has no number, so `PrivateFacts.isBodyShaped` returns false (`PrivateFacts.swift:94`) and `OP:35` gives no label.
+- **PM8, PM9, PM10, PM13 (controls): pass.** "Gym bag in the car", "Pick up dry cleaning" and the evening memory hit no flag, secret word or wall (`OP:24-35`, `PrivateFacts.swift:34-50`, `:81-108`). `ObjectPrivacyTests.swift:36-42`, `:55-56`.
+- **PM11 (note made private by an edit): pass.** "code" is a secret word (`SecretWords.swift:11-12`), so `OP:27` masks it on the next read; `EditNote` also retitles (`Notes.swift:166-176`). `ObjectPrivacyTests.swift:57-58`.
+- **PM12 (memory flipped private): pass.** `OP:24`, `:32`; the label is computed on every read, no cache. `ObjectPrivacyTests.swift:39-42`.
+- **PM15 (O2, title only): pass.** Flag true (`OP:32`).
+- **PM16 (pre-#422 note): pass.** Title "wifi password is hunter2" holds a secret word (`OP:27`, `:48`). `ObjectPrivacyTests.swift:51-53`.
+- **PM17 (forgotten hash): pass.** Entry is flagged private (`TessMemory.swift:558-560`), so the label replaces the hash (`OP:32`, `:229`).
+- **PM18, PM19 (newest rows): deferred.** No newest row exists on master (no such row in `ObjectPage.swift:62-147`); needs Core 0ak.
+- **PM20 (VoiceOver): pass.** Hero, class line, breadcrumb class names, and the label-based row and hint (`:229-233`, `:268`, `ObjectHandle.swift:77`).
+- **PM21, PM22, PM23, PM24, PM33, PM34 (workout notes on the front): pass.** `hidesNotes` is true for any Workout or subclass (`OP:42-45`), and the front prints "Note kept private" in place of the notes whatever they say (`:236-239`). One marker, no line count, no word screening. `ObjectPrivacyTests.swift:67-71`.
+- **PM25 (no notes): pass.** `value("notes")` is nil, so no marker (`:236`).
+- **PM26 (two spaces only): fails.** The check is `let notes = ...stringValue` with no trim and no empty test (`:236`), so a two-space note prints "Note kept private". The fixture expects no marker. Core needs to skip a whitespace-only note.
+- **PM27, PM28 (workout otherwise unchanged): pass.** The workout is not masked (`OP:42-45` touches only the notes line), and `PropertyList` still drops `notes` (`:357`).
+- **PM29, PM30, PM31, PM32, PM35, PM36 (surfaces that never read workout notes): pass.** The only readers of the `notes` key in app code are `ObjectPage.swift:81`, `:236` and `:357` (plus the exercise cue, `ExerciseLibraryInstaller.swift:87-88`); `git grep '"notes"'` finds none in `DayStory`, `WeekFacts`, `TesseraTess` or the Live Activity.
+
+**Totals, PM1 to PM36:** 32 pass, 1 fails (PM26), 3 deferred (PM7, PM18, PM19). No row that the fixture expects to pass today fails except PM26.
+
+**Bypass rows BM01 to BM31 on master.** Part 2 is not in master (`git grep lastWeightKg` finds nothing), so each BM row keeps the status in `walls-ui-phrases.json`. `CreateTask` has no wall (`TrainingActions.swift:403`, `TessTools.swift:118`, `ClaudeTessModel.swift:88`), `RememberFact`, turnover and `PlanWording` take no last weight (`TessMemory.swift:142`, `TessMemory+Turnover.swift:67`, `PlanWording.swift:38`), and `PrivateFacts.isBodyShaped` is unchanged (`PrivateFacts.swift:81-108`). 17 pass and 14 fail by those readings (BM01 to BM04, BM06 to BM09, BM13, BM14, BM18, BM19, BM24 and BM31 fail; the JSON already says so). No BM row changed, so the JSON is untouched.
