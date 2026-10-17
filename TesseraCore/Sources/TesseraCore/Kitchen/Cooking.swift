@@ -87,6 +87,18 @@ public struct CookLog {
 }
 
 /// Starts cooking a recipe at a size: a Cook object becomes the running process (Now), resuming at step 0.
+extension ObjectPrivacy {
+    /// What a cook or recipe is called in an op summary, the day story and the cook's own title: its title, or
+    /// "Private recipe" when the recipe is private by the recipe rule (G21b).
+    @MainActor
+    static func cookTitle(_ object: ObjectRecord, in store: ObjectStore) -> String {
+        let recipe = store.linkedObjects("recipe", of: object).first ?? object
+        let private_ = isPrivateRecipeTitle(recipe.title, lastWeightKg: BodyWeight.lastKg(in: store))
+            || isPrivateRecipeTitle(object.title, lastWeightKg: BodyWeight.lastKg(in: store))
+        return private_ ? recipeLabel : object.title
+    }
+}
+
 public struct StartCooking: EngineAction {
     public static let descriptor = ActionDescriptor(name: "startCooking", summary: "Start cooking a recipe",
                                                     parameters: [
@@ -120,7 +132,8 @@ public struct StartCooking: EngineAction {
             try StartProcess(subject: open.id, ownerApp: "Kitchen", time: time).apply(&transaction)
             return open
         }
-        let cook = try transaction.create(transaction.classDef(.cook), title: recipe.title)
+        let cook = try transaction.create(transaction.classDef(.cook),
+                                          title: ObjectPrivacy.cookTitle(recipe, in: transaction.store))
         try transaction.setLinks("recipe", on: cook, to: [recipe])
         if let size = serves ?? book.serves(recipe) {
             try transaction.set("serves", to: .number(Double(size)), on: cook)
@@ -132,7 +145,7 @@ public struct StartCooking: EngineAction {
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "Cooking \(store.object(id: recipe)?.title ?? "")"
+        "Cooking \(store.object(id: recipe).map { ObjectPrivacy.cookTitle($0, in: store) } ?? "")"
     }
 }
 
@@ -296,7 +309,7 @@ public struct FinishCooking: EngineAction {
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "Cooked \(store.object(id: cook)?.title ?? "it")"
+        "Cooked \(store.object(id: cook).map { ObjectPrivacy.cookTitle($0, in: store) } ?? "it")"
     }
 
     public func receipt(in store: ObjectStore) -> String? {
