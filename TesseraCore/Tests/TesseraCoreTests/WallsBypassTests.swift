@@ -248,6 +248,61 @@ struct WallsBypassTests {
         #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil), "\(phrase)")
     }
 
+    @Test func onlyAWeightReadsAsHisWeight() throws {
+        // QA W1 on 0ai: a later blood pressure or dose is never his weight; a unit or a weigh word is needed.
+        #expect(BodyWeight.kilograms(in: "bp 120/80") == nil)
+        #expect(BodyWeight.kilograms(in: "ibuprofen 200 mg") == nil)
+        #expect(BodyWeight.kilograms(in: "182.4 this morning") == nil)
+        #expect(BodyWeight.kilograms(in: "weighed 181") == 181)
+        #expect(BodyWeight.kilograms(in: "slept 7h, 82.4 kg") == 82.4)
+        try weigh(82, at: Self.at(10, 7))
+        for line in ["bp 120/80", "ibuprofen 200 mg"] {
+            try engine.perform(CreateNote(body: line, isPrivate: true), by: .user)
+        }
+        #expect(BodyWeight.lastKg(in: store) == 82)
+    }
+
+    @Test func hisWeightIsReadOncePerChange() throws {
+        // QA W2 on 0ai: every list row asks; the graph is read again only after it changes.
+        try weigh(82, at: Self.at(10, 7))
+        let revision = store.context.revision
+        #expect(BodyWeight.lastKg(in: store) == 82 && store.context.lastWeightCache?.revision == revision)
+        try weigh(80, at: Self.at(12, 7))
+        #expect(store.context.revision > revision)
+        #expect(BodyWeight.lastKg(in: store) == 80)
+    }
+
+    @Test(arguments: ["Room 82", "bus 76 at 8", "gate 80", "ticket #84"])
+    func aNumberThatNamesSomethingIsNotHisWeight(_ phrase: String) {
+        #expect(!PrivateFacts.isWalled(phrase, lastWeightKg: 82), "\(phrase)")
+    }
+
+    @Test func eachOutcomeHasItsReceipt() throws {
+        // What CreateTask stores is what its summary and receipt say (QA low on 0ai).
+        try weigh(82)
+        let cases: [(String, Date?, String, String, String?)] = [
+            ("call the gym about chalk", nil, "call the gym about chalk", "Added “call the gym about chalk”", nil),
+            ("pay rent 2100 fri", nil, "Pay rent fri", "Added “Pay rent fri”", nil),
+            ("wifi password is hunter2", nil, SecretWords.title, SecretWords.title, "Private note, kept"),
+            ("take advil 400mg", Self.at(16, 9), ObjectPrivacy.taskLabel, "Added “Private task”",
+             "Private task, added"),
+            ("82.4", nil, SecretWords.title, SecretWords.title, "Private note, kept"),
+        ]
+        for (title, startsAt, stored, summary, receipt) in cases {
+            let made = try engine.perform(CreateTask(title: title, startsAt: startsAt), by: .tess)
+            #expect(made.output.title == stored, "\(title)")
+            #expect(made.record.summary == summary, "\(title): \(made.record.summary)")
+            #expect(made.record.receipt == receipt, "\(title): \(made.record.receipt ?? "nil")")
+        }
+    }
+
+    @Test func aListItemsLinesMatchWhatWasKept() throws {
+        let list = try engine.perform(CreateList(name: "Errands"), by: .user).output
+        let milk = try engine.perform(AddListItem(list: list.id, text: "milk $4"), by: .user)
+        #expect(milk.output.title == "milk" && milk.record.summary == "Added milk")
+        #expect(milk.record.receipt == "Milk, added to Errands")
+    }
+
     @Test func theWallSortsTaskTitles() {
         func outcome(_ title: String, _ startsAt: Date? = nil) -> EngineWall.TaskOutcome {
             EngineWall.task(title, startsAt: startsAt, store: store)

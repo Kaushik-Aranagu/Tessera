@@ -439,7 +439,7 @@ public struct CreateTask: EngineAction {
         case .privateTask:
             title = ObjectPrivacy.taskLabel
         case let .withoutAmount(bare):
-            title = bare.prefix(1).uppercased() + bare.dropFirst()
+            title = EngineWall.capitalized(bare)
         case let .keep(given):
             title = given
         }
@@ -459,7 +459,7 @@ public struct CreateTask: EngineAction {
         switch EngineWall.task(trimmed, startsAt: startsAt, store: store) {
         case .privateNote: return SecretWords.title
         case .privateTask: return "Added “\(ObjectPrivacy.taskLabel)”"
-        case let .withoutAmount(bare): return "Added “\(bare)”"
+        case let .withoutAmount(bare): return "Added “\(EngineWall.capitalized(bare))”"
         case .keep: return "Added “\(trimmed)”"
         }
     }

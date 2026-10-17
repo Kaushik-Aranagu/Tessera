@@ -170,14 +170,16 @@ public struct CreateTaskIntent: AppIntent {
         case let .ask(line):
             return line
         default:
-            let record = try engine.perform(CreateTask(title: title, startsAt: startsAt), by: .intent).record
-            return PrivateFacts
-                .isPrivateTitle(title, lastWeightKg: BodyWeight.lastKg(in: engine.store)) ? TessCaptureEngine
-                .privateTaskLine(
-                    startsAt,
-                    context: context
-                )
-                : "\(record.summary)."
+            let made = try engine.perform(CreateTask(title: title, startsAt: startsAt), by: .intent)
+            // A line the engine wall made a private note says so (QA low on 0ai); a private title is never read back.
+            let stored = made.output.title
+            if stored == SecretWords.title {
+                return "\(SecretWords.title), kept."
+            }
+            let last = BodyWeight.lastKg(in: engine.store)
+            let isPrivate = stored == ObjectPrivacy.taskLabel || PrivateFacts.isPrivateTitle(title, lastWeightKg: last)
+                || PrivateFacts.isPrivateTitle(stored, lastWeightKg: last)
+            return isPrivate ? TessCaptureEngine.privateTaskLine(startsAt, context: context) : "\(made.record.summary)."
         }
     }
 }

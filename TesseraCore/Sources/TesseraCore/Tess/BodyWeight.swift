@@ -6,6 +6,17 @@ import Foundation
 public enum BodyWeight {
     @MainActor
     public static func lastKg(in store: ObjectStore) -> Double? {
+        let context = store.context
+        if let cache = context.lastWeightCache, cache.revision == context.revision {
+            return cache.kilograms
+        }
+        let kilograms = read(in: store)
+        context.lastWeightCache = (context.revision, kilograms)
+        return kilograms
+    }
+
+    @MainActor
+    static func read(in store: ObjectStore) -> Double? {
         let notes = store.allClasses().filter { $0.systemKey == SystemCatalog.Key.note.systemKey }
         guard let noteClass = notes.first else { return nil }
         let weighIns = store.objects(of: noteClass).filter { note in
@@ -19,14 +30,17 @@ public enum BodyWeight {
         return nil
     }
 
-    /// "82 kg this morning", "weighed 181 lb", "182.4 this morning": the weight a line holds, in kg.
+    /// "82 kg this morning", "weighed 181", "bw 182.4 lb": the weight a line holds, in kg. It needs a weight unit or a
+    /// weigh word (QA W1 on 0ai): "bp 120/80" and "ibuprofen 200 mg" are never his weight.
     static func kilograms(in text: String) -> Double? {
         let lower = text.lowercased()
-        guard let match = lower.firstMatch(of: /(\d+(?:[.,]\d+)?)\s*(kg|kgs|kilos|lb|lbs|pounds)?/),
-              let value = Double(match.output.1.replacingOccurrences(of: ",", with: ".")) else { return nil }
-        let unit = match.output.2.map(String.init)
+        let number = /(\d+(?:[.,]\d+)?)/
+        let withUnit = lower.firstMatch(of: /(\d+(?:[.,]\d+)?)\s*(kg|kgs|kilos|lb|lbs|pounds)\b/)
         let weighs = lower.firstMatch(of: /\b(?:weigh|weighs|weighed|weigh-in|weight|bw)\b/) != nil
-        guard unit != nil || weighs || PrivateFacts.isBodyShaped(lower, lastWeightKg: nil) else { return nil }
+        let unit = withUnit.map { String($0.output.2) }
+        guard let digits = withUnit.map({ String($0.output.1) }) ?? (weighs ? lower.firstMatch(of: number)
+            .map { String($0.output.1) } : nil),
+            let value = Double(digits.replacingOccurrences(of: ",", with: ".")) else { return nil }
         let kg = ["lb", "lbs", "pounds"].contains(unit ?? "") ? value * 0.453_592 : value
         return (25 ... 300).contains(kg) ? kg : nil
     }

@@ -3,7 +3,8 @@ import Foundation
 /// One privacy wall in the engine (board 0ai, Product 2:06 to 2:22 and 4:46 PM PT; Research engine-wall and
 /// walls-ui §13): every writer that titles something from words it was handed (the on-device model's and Claude's
 /// tool writes, Siri, the grammar) runs them through here before a title is stored. His own words in his own place
-/// (the Notes page, "note:", restore, RenameObject) are exempt.
+/// (the Notes page, "note:", restore, RenameObject) are kept as he wrote them, never retitled; a note that holds money,
+/// a secret or a body fact is still marked private (`CreateNote`), so it shows only its label.
 public enum EngineWall {
     public enum TaskOutcome: Equatable, Sendable {
         /// Nothing private: the title as given.
@@ -37,6 +38,11 @@ public enum EngineWall {
             return medicine && startsAt != nil ? .privateTask : .privateNote
         }
         return .keep(title)
+    }
+
+    /// "pay rent fri" is stored and said as "Pay rent fri".
+    static func capitalized(_ bare: String) -> String {
+        bare.prefix(1).uppercased() + bare.dropFirst()
     }
 
     /// A list or grocery line with its price taken off (Kitchen 2:09 PM PT): "milk $4" is milk; packs and amounts keep

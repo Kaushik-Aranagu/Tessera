@@ -123,12 +123,22 @@ public enum PrivateFacts {
         return unitOrDecimal && rest.allSatisfy(dayWords.contains)
     }
 
+    /// Words before a number that make it a name, not an amount ("room 82", "bus 76").
+    static let namingWords = ["room", "rm", "gate", "bus", "route", "line", "flat", "apt", "apartment", "unit", "suite",
+                              "platform", "table", "seat", "row", "floor", "level", "page", "chapter", "exit", "highway",
+                              "hwy", "no", "number", "order", "ticket", "flight"]
+    nonisolated(unsafe) static let namedNumber = try! Regex( // swiftlint:disable:this force_try
+        #"\b(?:"# + namingWords.joined(separator: "|") + #")\s*#?\s*\d+\b|#\s*\d+\b"#
+    )
+
     /// A bare number that is his weight (Product 2:56 and 4:46 PM PT): within 10% of his last logged weight, with or
     /// without a day word ("is 82.4 good?", "how's 76 looking?"); with none logged, a decimal beside a body word
     /// ("my weight is 82.4"). A number with another unit after it stays plain, read on the raw phrase ("85% done").
     static func isBareWeight(_ lower: String, lastWeightKg: Double?) -> Bool {
-        // A price is never his weight, per pound or not ("chicken $1.29/lb"; Research US3).
+        // A price is never his weight, per pound or not ("chicken $1.29/lb"; Research US3), and nor is a number that
+        // names something ("room 82", "bus 76", "#80"; QA low on 0ai).
         let text = withoutTimes(lower).replacing(/[$£€₹¥]\s?\d[\d,]*(?:\.\d+)?(?:\s*\/\s*[a-z]+)?/, with: " ")
+            .replacing(namedNumber, with: " ")
         let numbers = text.matches(of: /(\d+(?:[.,]\d+)?)\s*(%|×|[a-z]+)?/).compactMap { match -> Double? in
             let unit = match.output.2.map(String.init)
             guard unit.map({ !otherUnits.contains($0) }) ?? true,

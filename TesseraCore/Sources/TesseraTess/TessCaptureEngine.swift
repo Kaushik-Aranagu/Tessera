@@ -294,13 +294,21 @@ public final class TessCaptureEngine: TessCapturing {
             }
             return (record, line)
         case let .task(title, startsAt):
-            let record = try engine.perform(CreateTask(title: title, startsAt: startsAt), by: .tess, pending: pending)
-                .record
-            // A private title is never said back (Product P14, 12:30 PM PT): "Task added for Fri."
-            if PrivateFacts.isPrivateTitle(title, lastWeightKg: BodyWeight.lastKg(in: engine.store)) {
+            let made = try engine.perform(CreateTask(title: title, startsAt: startsAt), by: .tess, pending: pending)
+            let record = made.record
+            // A line the engine wall made a private note says so (QA low on 0ai). A private title is never said back,
+            // not even without its amount (Product P14, 12:30 PM PT; Research S18): "Task added for Fri."
+            let stored = made.output.title
+            if stored == SecretWords.title {
+                return (record, "\(SecretWords.title), kept.")
+            }
+            let last = BodyWeight.lastKg(in: engine.store)
+            if stored == ObjectPrivacy.taskLabel || PrivateFacts.isPrivateTitle(title, lastWeightKg: last)
+                || PrivateFacts.isPrivateTitle(stored, lastWeightKg: last)
+            {
                 return (record, Self.privateTaskLine(startsAt, context: context))
             }
-            return (record, startsAt.map { "\(title), \(Self.when($0, context: context))." } ?? "\(title), in Later.")
+            return (record, startsAt.map { "\(stored), \(Self.when($0, context: context))." } ?? "\(stored), in Later.")
         case let .privateNote(body, remembered, on):
             let record = try engine.perform(
                 CreateNote(body: body, on: on, isPrivate: true),
