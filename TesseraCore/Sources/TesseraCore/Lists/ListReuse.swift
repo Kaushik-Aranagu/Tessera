@@ -149,6 +149,19 @@ public struct CopyList: EngineAction {
         self.name = name
     }
 
+    /// Whether a copy's record found its name already a list (it made nothing), for the screen.
+    @MainActor
+    public static func wasRepeat(_ record: OpRecord) -> Bool {
+        guard record.action == descriptor.name else { return false }
+        return !record.ops.contains {
+            if case .create = $0 {
+                true
+            } else {
+                false
+            }
+        }
+    }
+
     /// An item's notes without the list flags and the pick stamp: those do not copy.
     private static func plainNotes(_ text: String?) -> String? {
         let kept = ListNoteTags.lines(text).filter { line in
@@ -165,6 +178,10 @@ public struct CopyList: EngineAction {
         let action = Self.descriptor.name
         guard !name.isEmpty else {
             throw ActionError.invalidArguments(action: action, reason: "the copy needs a name")
+        }
+        // A name with a secret word in it, or a key, is never a list name: it would sit on screen and in the log.
+        guard !looksLikeClaudeKey(name), !SecretWords.mentions(name) else {
+            throw ActionError.invalidArguments(action: action, reason: "that can't be a list name")
         }
         guard source.id != Groceries.listID, name.lowercased() != "groceries" else {
             throw ActionError.invalidArguments(action: action, reason: "Groceries can't be copied")
