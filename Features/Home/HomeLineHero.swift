@@ -1,5 +1,6 @@
 import SwiftUI
 import TesseraCore
+import TesseraTess
 
 /// Home says one plain line per thing (home-first-review.md 41): the time words above, the thing and its state as
 /// the hero, and at most one key under it. The words come from Core's HomeLines lens; nothing else about the thing
@@ -14,19 +15,28 @@ struct LineHero<Key: View>: View {
 
     @Environment(AppModel.self) private var model
     @Environment(\.zoomNamespace) private var namespace
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// Claude's context words for a finished workout, when they passed the phone's checks and differ (0al).
+    @State private var claudeContext: String?
+    /// True while Claude's words are fresh on the page: drawn in Tess's ink, then dry to the context colour.
+    @State private var wet = false
+    /// The object Claude's words were asked for: another line's words never stay on this one (QA on #745).
+    @State private var askedFor: UUID?
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.m) {
-            if let context = context ?? line.context {
-                // The words shorten when the full line doesn't fit; the type never does.
+            if let shown = context ?? claudeContext ?? line.context {
+                // The words shorten when the full line doesn't fit; the type never does. Claude's words have no
+                // short form: they passed the length checks, so they only wrap.
+                let short = context == nil && claudeContext != nil ? shown : line.contextShort ?? shown
                 ViewThatFits(in: .horizontal) {
-                    Text(context).lineLimit(1).fixedSize()
-                    Text(line.contextShort ?? context).lineLimit(1).fixedSize()
+                    Text(shown).lineLimit(1).fixedSize()
+                    Text(short).lineLimit(1).fixedSize()
                     // At large type even the short words wrap rather than cut (QA F2 on #366).
-                    Text(line.contextShort ?? context).fixedSize(horizontal: false, vertical: true)
+                    Text(short).fixedSize(horizontal: false, vertical: true)
                 }
                 .font(Theme.voice(size: 21))
-                .foregroundStyle(Theme.Colors.context)
+                .foregroundStyle(wet ? Theme.Colors.tess : Theme.Colors.context)
                 .contentTransition(.opacity)
                 .entrance(1)
             }
@@ -50,6 +60,7 @@ struct LineHero<Key: View>: View {
             key()
                 .entrance(3)
         }
+        .task(id: line.objectID) { await askClaude() }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
@@ -108,5 +119,42 @@ struct DayLabel: View {
             .textRole(.body)
             .foregroundStyle(Theme.Colors.ink)
             .accessibilityAddTraits(.isHeader)
+    }
+}
+
+extension LineHero {
+    /// A finished workout's context from Claude (docs/ai/home-lines-job.md §6): the rules line draws first; words
+    /// that differ redraw wet in Tess's ink and dry on `Theme.Motion.dry`. Words already kept from an earlier ask
+    /// come back at once and draw at rest, since they aren't news. Reduce Motion: a crossfade.
+    /// Claude's context words, only when they differ from the rules line: identical words never redraw (§6).
+    static func claudeContext(_ words: HomeDoneWords?, rules: String?) -> String? {
+        guard let new = words?.context, new != rules else { return nil }
+        return new
+    }
+
+    /// Whether held words belong to another object than the line now shown.
+    static func isStale(askedFor: UUID?, current: UUID?) -> Bool {
+        askedFor != nil && askedFor != current
+    }
+
+    private func askClaude() async {
+        if Self.isStale(askedFor: askedFor, current: line.objectID) {
+            claudeContext = nil
+            wet = false
+        }
+        askedFor = line.objectID
+        guard context == nil else { return }
+        let asked = ContinuousClock.now
+        guard let new = await Self.claudeContext(model.homeDoneWords(for: line), rules: line.context) else { return }
+        let kept = ContinuousClock.now - asked < .milliseconds(150)
+        guard !kept, let dry = Theme.Motion.dry(reduceMotion: reduceMotion) else {
+            withTesseraAnimation(reduceMotion: reduceMotion) { claudeContext = new }
+            return
+        }
+        wet = true
+        withTesseraAnimation(reduceMotion: reduceMotion) { claudeContext = new }
+        // Let the wet words reach the screen before they start to dry.
+        try? await Task.sleep(for: .milliseconds(250))
+        withAnimation(dry) { wet = false }
     }
 }
