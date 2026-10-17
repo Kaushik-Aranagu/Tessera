@@ -167,4 +167,17 @@ struct GroceriesWallTests {
         #expect(AddListItem.kept("2 gallons milk", store: store) == "2 gallons milk")
         #expect(AddListItem.kept("1.25 cups flour", store: store) == "1.25 cups flour")
     }
+
+    @Test(arguments: [
+        "eggs 4.99 at costco",
+        "milk 3.49 for the week",
+        "bread 2.50 from the bakery",
+        "rice 5.99 on sale",
+        "milk 3.49 gallon at costco"
+    ])
+    func aWordAfterAPriceIsNeverTheThing(_ line: String) {
+        // QA on #779: "at", "for", "from" and "on" never make a price a measure.
+        let kept = AddListItem.kept(line, store: store) ?? ""
+        #expect(kept.firstMatch(of: /\d+[.,]\d{2}/) == nil, "\(line) kept as \(kept)")
+    }
 }
