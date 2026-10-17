@@ -100,8 +100,32 @@ extension RecipeLinkTests {
         LinkStub.failure = .notConnectedToInternet
         let result = await reader().read("https://budgetbytes.com/")
         #expect(result.isOffline && result.kind == .failed)
-        LinkStub.failure = .cannotFindHost
+        LinkStub.failure = .badServerResponse
         #expect(await !reader().read("https://budgetbytes.com/").isOffline)
+    }
+
+    @Test(arguments: [URLError.Code.timedOut, .cannotFindHost, .dnsLookupFailed, .cannotConnectToHost])
+    func aBadNetworkKeepsTheLink(_ code: URLError.Code) async throws {
+        // G63, ER5: a timeout or DNS failure is the network, never "won't let me read it", and the link stays.
+        let shelf = shelf()
+        let link = try #require(RecipePasteLink.bareLink("https://budgetbytes.com/chili-mac/"))
+        shelf.keep(link)
+        LinkStub.failure = code
+        let outcome = await RecipePasteLink.read(link, reader: reader(), asksClaude: true, shelf: shelf)
+        #expect(outcome.kept && outcome.line == "Recipe link, kept for later.", "\(code)")
+        #expect(shelf.waiting().count == 1)
+    }
+
+    @Test func aKeptLinkLosesItsFragmentAndSensitiveItems() throws {
+        // G64: nothing the link's owner meant to hide is written beside the store.
+        let shelf = shelf()
+        let token = String(repeating: "a1B2", count: 8)
+        let raw = "https://budgetbytes.com/chili-mac/?p=42&email=me%40example.com&x_signature=abc&id_token=\(token)"
+            + "&ref=\(token)&utm_source=pin#access=\(token)"
+        try shelf.keep(#require(URL(string: raw)))
+        let saved = try String(contentsOf: shelf.fileURL, encoding: .utf8)
+        #expect(shelf.waiting().map(\.absoluteString) == ["https://budgetbytes.com/chili-mac/?p=42"], "\(saved)")
+        #expect(!saved.contains(token) && !saved.contains("example.com") && !saved.contains("#"))
     }
 
     @Test func theShelfHoldsFiftyAndErases() throws {
