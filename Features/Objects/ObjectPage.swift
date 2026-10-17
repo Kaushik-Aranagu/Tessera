@@ -23,14 +23,19 @@ struct ObjectPage: View {
         {
             // A routine's page is its editor (Features/Plans/RoutineEditor).
             RoutineEditor(routine: routine)
-        } else if case let .object(id) = route, let note = model.object(id),
-                  note.classDef?.id == model.classDef(.note)?.id
-        {
+        } else if case let .object(id) = route, let note = model.object(id), Self.opensAsNote(note, model: model) {
             // A note opens as itself, as from Notes, never as a property list of its text (PN-MENTION).
             NoteEditor(noteID: note.id)
         } else {
             generic
         }
+    }
+
+    /// A plain note opens in the note editor. A private note stays on the generic page, where Core's mask
+    /// shows only the label "Private note" and none of its text.
+    static func opensAsNote(_ note: ObjectRecord, model: AppModel) -> Bool {
+        note.classDef?.id == model.classDef(.note)?.id
+            && ObjectPrivacy.label(of: note, in: model.store, classes: model.classes) == nil
     }
 
     private var generic: some View {
@@ -353,13 +358,13 @@ private struct Header: View {
     }
 }
 
-struct PropertyList: View {
+private struct PropertyList: View {
     let classDef: ClassDef
     let object: ObjectRecord?
     @Environment(AppModel.self) private var model
 
     var body: some View {
-        let fields = Self.shownFields(of: classDef, object: object, store: model.store)
+        let fields = ClassResolver.effectiveFields(of: classDef).filter { $0.key != "notes" }
         if !fields.isEmpty {
             MarginSection(label: "Properties") {
                 VStack(spacing: 0) {
@@ -371,15 +376,6 @@ struct PropertyList: View {
                     }
                 }
             }
-        }
-    }
-
-    /// The fields a property list shows. A private note's text and its privacy flag never show or speak here.
-    @MainActor
-    static func shownFields(of classDef: ClassDef, object: ObjectRecord?, store: ObjectStore) -> [ResolvedField] {
-        let isPrivate = object.map { store.value("isPrivate", of: $0) == .bool(true) } ?? false
-        return ClassResolver.effectiveFields(of: classDef).filter { field in
-            field.key != "notes" && !(isPrivate && ["body", "isPrivate", "title"].contains(field.key))
         }
     }
 

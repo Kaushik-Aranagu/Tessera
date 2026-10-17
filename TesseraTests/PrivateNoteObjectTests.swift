@@ -3,7 +3,7 @@ import Foundation
 import TesseraCore
 import Testing
 
-/// PN-MENTION: a private note reached through a link never shows its text on an object page.
+/// PN-MENTION: a plain note opens as the note editor; a private note stays on the masked object page.
 @MainActor
 struct PrivateNoteObjectTests {
     let container = TesseraSchema.makeContainer(inMemory: true)
@@ -13,15 +13,13 @@ struct PrivateNoteObjectTests {
         model = AppModel(context: container.mainContext)
     }
 
-    @Test func aPrivateNotesFieldsHideItsText() throws {
-        let note = try model.engine.perform(CreateNote(body: "Spare key\nUnder the blue pot", isPrivate: true),
-                                            by: .user).output
-        let classDef = try #require(note.classDef)
-        let keys = PropertyList.shownFields(of: classDef, object: note, store: model.store).map(\.key)
-        #expect(!keys.contains("body") && !keys.contains("isPrivate") && !keys.contains("title"))
+    @Test func aPrivateNoteStaysOnTheMaskedPage() throws {
+        let secret = try model.engine.perform(CreateNote(body: "Spare key\nUnder the blue pot", isPrivate: true),
+                                              by: .user).output
+        #expect(!ObjectPage.opensAsNote(secret, model: model))
+        #expect(ObjectPrivacy.label(of: secret, in: model.store, classes: model.classes) == "Private note")
 
         let plain = try model.engine.perform(CreateNote(body: "Garage gym\nRubber floor"), by: .user).output
-        let plainKeys = PropertyList.shownFields(of: classDef, object: plain, store: model.store).map(\.key)
-        #expect(plainKeys.contains("body"))
+        #expect(ObjectPage.opensAsNote(plain, model: model))
     }
 }
