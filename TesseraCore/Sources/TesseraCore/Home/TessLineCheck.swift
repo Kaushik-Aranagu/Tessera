@@ -120,7 +120,7 @@ public enum TessLineCheck {
             if text.count > HomeLines.contextCharacters {
                 codes.append("C3")
             }
-            if text.hasSuffix(".") || text.hasSuffix(":") || text.hasSuffix(";") {
+            if text.hasSuffix(".") || text.hasSuffix(":") || text.hasSuffix(";") || text.hasSuffix("?") {
                 codes.append("C4")
             }
         case .detail:
@@ -137,12 +137,34 @@ public enum TessLineCheck {
                 codes.append("C4")
             }
         }
+        // House copy (QA on #652): no em or en dash, never "at" before a time, "pm" in lowercase, no "a.m.".
         if text.contains("!") || text.contains("…") || text.contains(" · ") || raw.contains("\n")
-            || text.unicodeScalars.contains(where: isEmoji)
+            || text.unicodeScalars.contains(where: isEmoji) || text.contains("\u{2014}") || text.contains("\u{2013}")
+            || text.firstMatch(of: /(?i)\bat\s+(?:\d|noon\b|midnight\b)/) != nil
+            || text.firstMatch(of: /\d\s*(?:AM|PM|Am|Pm)\b/) != nil
+            || text.firstMatch(of: /(?i)\b[ap]\.m\./) != nil
         {
             codes.append("C5")
         }
+        if !clockShapeHolds(text) {
+            codes.append("CLOCK")
+        }
         return codes
+    }
+
+    /// Every clock reads "7:40 pm" or "7 pm": 12-hour, a space, then "am" or "pm" (CLOCK). "7:40pm", "19:40",
+    /// "7.40 pm" and "7:4 pm" are refused.
+    static func clockShapeHolds(_ text: String) -> Bool {
+        let lower = text.lowercased()
+        if lower.firstMatch(of: /\d(?:am|pm)\b/) != nil || lower.firstMatch(of: /\d\.\d{2}\s*(?:am|pm)\b/) != nil {
+            return false
+        }
+        for match in lower.matches(of: /(\d+):(\d+)(\s*(?:am|pm)\b)?/) {
+            guard let hour = Int(match.output.1), (1 ... 12).contains(hour), match.output.2.count == 2,
+                  let minute = Int(match.output.2), minute < 60, let suffix = match.output.3,
+                  suffix.hasPrefix(" "), suffix.count == 3 else { return false }
+        }
+        return true
     }
 
     /// C6, C7: digits read as values ("8:05" gives 8 and 5; "05" is 5).
@@ -171,7 +193,11 @@ public enum TessLineCheck {
         if numberWord {
             codes.append("C8")
         }
-        if !namesAreKnown(text, names: names, titleWords: titleWords) {
+        // A lift named in lowercase is a name too ("squat best" when he did no squat; QA on #652).
+        let allowed = Set(names.flatMap(tokens)).union(titleWords)
+        if !namesAreKnown(text, names: names, titleWords: titleWords)
+            || words.contains(where: { PrivateFacts.liftNames.contains($0) && !allowed.contains($0) })
+        {
             codes.append("C9")
         }
         if words.contains(where: grading.contains) || gradingPhrases.contains(where: { padded.contains(" \($0) ") }) {
@@ -190,10 +216,12 @@ public enum TessLineCheck {
         }
         if (words.contains("legs") && !titleWords.contains("legs")) || words.contains(where: off.contains)
             || moneyMarks.contains(where: text.contains) || placePhrases.contains(where: { padded.contains(" \($0) ") })
+            // The engine's own walls, last (QA on #652).
+            || PrivateFacts.isWalled(text, lastWeightKg: nil)
         {
             codes.append("C12")
         }
-        if words.contains(where: british.contains) {
+        if words.contains(where: isBritish) {
             codes.append("C13")
         }
         if let first = words.first, greetings.contains(first) {
@@ -310,7 +338,34 @@ public enum TessLineCheck {
         for phrase in relativeDayWords where padded.contains(" \(phrase) ") && !rulesPadded.contains(" \(phrase) ") {
             guard let house, relativeDaySupported(phrase, house: house) else { return false }
         }
+        // A time the facts can't show: "last week", "recently" (QA on #652).
+        if unverifiable.contains(where: { padded.contains(" \($0) ") && !rulesPadded.contains(" \($0) ") }) {
+            return false
+        }
+        // A bare part of day must be the finish's ("Thursday morning" on an evening finish is refused).
+        let expected = house.map { part(of: $0.calendar.component(.hour, from: $0.finish)) } ?? labelPart(dayLabel)
+        // Words inside a relative-day phrase ("last night", "this morning") were judged above.
+        var bare = padded
+        for phrase in relativeDayWords {
+            bare = bare.replacingOccurrences(of: " \(phrase) ", with: " ")
+        }
+        for word in tokens(bare) where partWords[word] != nil && !rulesWords.contains(word) {
+            guard let expected, partWords[word] == expected else { return false }
+        }
         return true
+    }
+
+    static let unverifiable = ["last week", "this week", "next week", "weekend", "the other day", "recently",
+                               "lately", "earlier", "a while", "these days", "this month", "last month"]
+
+    /// Bare part-of-day words and the part each means; "early" and "late" can never be checked.
+    private static let partWords: [String: Part?] = [
+        "morning": .morning, "afternoon": .afternoon, "noon": .afternoon, "midday": .afternoon,
+        "evening": .evening, "night": .night, "early": nil, "late": nil,
+    ]
+
+    private static func labelPart(_ dayLabel: String?) -> Part? {
+        tokens(dayLabel ?? "").compactMap { partWords[$0] ?? nil }.first
     }
 
     /// The weekday of the finish's house day ("thursday" for 12:30 am Friday), else the day label's own.
@@ -405,6 +460,40 @@ extension TessLineCheck {
     static let placePhrases = ["lives at", "live at", "whole foods"]
     static let british: Set<String> = ["mum", "apologise", "apologised", "colour", "favourite", "realise",
                                        "organise", "centre", "programme", "flavour", "honour", "behaviour"]
+    static let britishMore: Set<String> = ["metre", "metres", "litre", "litres", "centres", "theatre", "grey", "greys",
+                                           "whilst", "amongst", "programmes", "cheque", "tyre", "tyres", "kerb",
+                                           "maths",
+                                           "aluminium", "travelled", "travelling", "jewellery", "mould", "plough",
+                                           "pyjamas", "sceptical", "fibre", "calibre", "manoeuvre", "catalogue",
+                                           "dialogue", "analyse", "analysed", "paralyse", "defence", "offence",
+                                           "licence", "practise", "practised", "enrol", "fulfil", "storey"]
+    /// "-ise" words that are US English too ("exercise", "raise").
+    static let iseWords: Set<String> = ["rise", "rises", "risen", "arise", "wise", "otherwise", "likewise", "raise",
+                                        "raised", "raises", "raising", "praise", "praised", "exercise", "exercised",
+                                        "exercises", "exercising", "advise", "advised", "surprise", "surprised",
+                                        "promise", "promised", "noise", "poise", "cruise", "premise", "compromise",
+                                        "revise", "revised", "devise", "despise", "supervise", "televise",
+                                        "merchandise", "enterprise", "precise", "concise", "paradise", "expertise",
+                                        "demise", "chastise", "excise", "incise", "franchise", "disguise", "bruise",
+                                        "bruised", "concise", "circumcise", "improvise", "improvised", "advertise",
+                                        "advertised", "comprise", "comprised", "treatise", "turquoise", "tortoise",
+                                        "porpoise", "mortise", "anise", "valise", "reprise", "apprise"]
+
+    /// British spellings (C13): the house list, "-ise" and "-isation" stems, and "-our" stems.
+    static func isBritish(_ word: String) -> Bool {
+        if british.contains(word) || britishMore.contains(word) {
+            return true
+        }
+        if word.firstMatch(of: /(?:is(?:e|ed|es|ing)|isation|isations)$/) != nil, word.count > 5,
+           !iseWords.contains(word)
+        {
+            return true
+        }
+        return word.firstMatch(
+            of: /^(?:col|fav|flav|hon|behavi|neighb|lab|harb|hum|rum|vap|arm|endeav|sav|od|parl|splend|vig|ferv|rig)our/
+        ) != nil
+    }
+
     static let greetings: Set<String> = ["hi", "hello", "hey"]
     static let apologies: Set<String> = ["sorry", "oops", "apologize", "apologise", "apologies"]
     static let numberWords: Set<String> = ["two", "three", "four", "five", "six", "seven", "eight", "nine",

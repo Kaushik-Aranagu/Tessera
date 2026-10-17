@@ -32,6 +32,11 @@ struct TessLineCheckTests {
         static let planned = Item()
         static let done = Item(numbers: [3, 12, 7, 40, 1], names: ["Push A", "Bench"], contextRules: "7:40 pm",
                                detailRules: "3 exercises, 12 sets, 1 new best.", isDone: true, hero: "Push A done")
+        /// L41 and L42 test the cap; the lifts they name are the workout's own, so C9 has them (QA on #652).
+        static let doneWithLifts = Item(numbers: [3, 12, 7, 40, 1],
+                                        names: ["Push A", "Bench", "Incline Barbell Press", "Cable Crossover"],
+                                        contextRules: "7:40 pm", detailRules: "3 exercises, 12 sets, 1 new best.",
+                                        isDone: true, hero: "Push A done")
         static func groceries(_ count: Int) -> Item {
             Item(numbers: [count], names: ["Groceries"], contextRules: "\(count) to buy",
                  hero: "Groceries, \(count) left")
@@ -112,9 +117,9 @@ struct TessLineCheckTests {
         Row(id: "L40", line: "You got through all 3 exercises and 12 sets, with 1 new bench best today.",
             slot: .detail, item: .done, expect: "C2"),
         Row(id: "L41", line: "Bench, incline barbell press, cable crossover: 3 exercises, 12 sets, 1 new best.",
-            slot: .detail, item: .done, expect: "pass"),
+            slot: .detail, item: .doneWithLifts, expect: "pass"),
         Row(id: "L42", line: "Bench, incline barbell press, cable crossovers: 3 exercises, 12 sets, 1 new best.",
-            slot: .detail, item: .done, expect: "C3"),
+            slot: .detail, item: .doneWithLifts, expect: "C3"),
         Row(id: "L43", line: "3 exercises, 12 sets, 1 new best", slot: .detail, item: .done, expect: "C4"),
         Row(id: "L44", line: "3 exercises, 12 sets. 1 new best.", slot: .detail, item: .done, expect: "C4"),
         Row(id: "L45", line: "3 exercises and 1 new best.", slot: .detail, item: .done, expect: "C7"),
@@ -181,7 +186,8 @@ struct TessLineCheckTests {
                                 hero: "Push A done")
         }
         #expect(call("8:05 pm, a bench best") == .pass)
-        #expect(call("8:5 pm, a bench best") == .pass)
+        // "8:5 pm" holds the licensed 5, but is no clock shape (QA on #652).
+        #expect(call("8:5 pm, a bench best") == .fail(["CLOCK"]))
         guard case let .fail(codes) = call("8:05 pm, 99999999999999999999") else {
             Issue.record("long number")
             return
@@ -406,5 +412,72 @@ extension TessLineCheckTests {
         #expect(line.fixed && line.context == "this afternoon")
         #expect(TessLineCheck.check(line.context, slot: .context, for: line, dayLabel: "Friday afternoon")
             == .fail(["C14"]))
+    }
+
+    // MARK: QA on #652, before Claude Home wording turns on
+
+    static func done(_ line: String, slot: TessLineCheck.Slot = .detail, label: String = "Thursday evening")
+        -> TessLineCheck.Verdict
+    {
+        TessLineCheck.check(line, slot: slot, numbers: [3, 12, 7, 40, 1], names: ["Push A", "Bench"],
+                            rulesLine: slot == .detail ? "3 exercises, 12 sets, 1 new best." : "7:40 pm",
+                            isDone: true, dayLabel: label, hero: "Push A done")
+    }
+
+    static func codes(_ verdict: TessLineCheck.Verdict) -> [String] {
+        if case let .fail(codes) = verdict {
+            return codes
+        }
+        return []
+    }
+
+    @Test(arguments: ["Thursday morning, a bench best.", "A morning bench best, 12 sets.", "An early bench best."])
+    func aBarePartOfDayMustBeTheFinishes(_ line: String) {
+        #expect(Self.codes(Self.done(line)).contains("C15"), "\(line)")
+    }
+
+    @Test func thePartOfDayTheLabelHoldsPasses() {
+        #expect(Self.done("An evening of 3 exercises, 12 sets, 1 new best.") == .pass)
+    }
+
+    @Test(arguments: ["Best bench this week, 12 sets.", "Best bench in a while, 12 sets.", "A bench best lately.",
+                      "The other day, 12 sets.", "Recently, a bench best.", "Last week, 12 sets."])
+    func aTimeTheFactsCantShowIsRefused(_ line: String) {
+        #expect(Self.codes(Self.done(line)).contains("C15"), "\(line)")
+    }
+
+    @Test(arguments: ["3 exercises \u{2014} 12 sets, 1 new best.", "3 exercises \u{2013} 12 sets, 1 new best.",
+                      "Done at 7:40 pm, 1 new best.", "Done 7:40 PM, 1 new best.", "Done 7:40 p.m., 1 new best."])
+    func houseCopyRulesHold(_ line: String) {
+        #expect(Self.codes(Self.done(line)).contains("C5"), "\(line)")
+    }
+
+    @Test(arguments: ["7:40pm, a bench best", "19:40, a bench best", "7.40 pm, a bench best"])
+    func aClockHasOneShape(_ line: String) {
+        #expect(Self.codes(Self.done(line, slot: .context)).contains("CLOCK"), "\(line)")
+    }
+
+    @Test func theRightClockPasses() {
+        #expect(Self.done("7:40 pm, a bench best", slot: .context) == .pass)
+    }
+
+    @Test(arguments: ["organised", "realised", "colours", "favourites", "metre", "litre", "grey", "whilst",
+                      "flavours", "honoured", "neighbours", "analyse", "practised"])
+    func britishSpellingsAreCaught(_ word: String) {
+        #expect(TessLineCheck.isBritish(word), "\(word)")
+    }
+
+    @Test(arguments: ["exercises", "raised", "surprise", "promise", "otherwise", "praise", "our", "hour", "four",
+                      "pour", "your", "tour", "rise"])
+    func americanWordsPassC13(_ word: String) {
+        #expect(!TessLineCheck.isBritish(word), "\(word)")
+    }
+
+    @Test func theLowsHold() {
+        // A lowercase lift he didn't do, a question in context, and the engine's own walls on the line.
+        #expect(Self.codes(Self.done("3 exercises, 12 sets, 1 new squat best.")).contains("C9"))
+        #expect(Self.codes(Self.done("A bench best?", slot: .context)).contains("C4"))
+        #expect(Self.codes(Self.done("3 exercises, 12 sets, 1 new best, bp 120/80.")).contains("C12"))
+        #expect(Self.done("3 exercises, 12 sets, 1 new bench best.") == .pass)
     }
 }
