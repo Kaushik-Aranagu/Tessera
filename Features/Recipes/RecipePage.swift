@@ -154,7 +154,16 @@ struct RecipePage: View {
                     .navigationTransition(.zoom(sourceID: routeID(route), in: zoom))
             }
             .tesseraFeedback(.made, trigger: sent?.line)
-            .onDisappear { titleShown = false }
+            .onDisappear {
+                titleShown = false
+                // Leaving inside the window hands the receipt and its UNDO to Tess's shared line, so the UNDO
+                // follows him (G67).
+                if let sent {
+                    TessVoice.shared.say(sent.line, undo: sent.record)
+                    self.sent = nil
+                    away = false
+                }
+            }
             .onChange(of: scenePhase) { _, phase in
                 if phase != .active {
                     titleShown = false
@@ -228,7 +237,7 @@ struct RecipePage: View {
             }
     }
 
-    /// The add, from the swipe or VoiceOver's "Add to Groceries" (G58, K87.8). Added: the column leaves and the
+    /// The add, from the swipe or VoiceOver's "Add all to Groceries" (G58, K87.8). Added: the column leaves and the
     /// engine's "Tacos, 7 added." stands in its place with UNDO 10 s. Nothing new: the column stays, one line
     /// "Tacos, nothing to add.", no UNDO. Refused: the column springs back and Tess says so.
     private func send(recipe: UUID, serves: Int?) {
@@ -338,16 +347,16 @@ private struct IngredientColumn: View {
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel(RecipeCopy.spokenRow(amount(line), line.line))
                 .accessibilityActions {
+                    // Only the row's own action here; adding the recipe lives on the list as a whole (G68).
                     if line.line.metricText != nil {
                         Button("Show in metric") { flip(line) }
                     }
-                    Button("Add to Groceries", action: onAdd)
                 }
             }
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Ingredients")
-        .accessibilityAction(named: "Add to Groceries", onAdd)
+        .accessibilityAction(named: Text(RecipeCopy.addAllAction), onAdd)
     }
 
     private func amount(_ line: RecipeBook.Line) -> String {
@@ -449,6 +458,9 @@ private struct RecipeOriginal: View {
 
 @MainActor
 enum RecipeCopy {
+    /// VoiceOver's action on the ingredients as a whole: it adds every line, so it says "all" (G68).
+    static let addAllAction = "Add all to Groceries"
+
     /// What the recipe page's add came to.
     enum SendOutcome: Equatable {
         /// New rows: the engine's "Tacos, 7 added." with UNDO.
