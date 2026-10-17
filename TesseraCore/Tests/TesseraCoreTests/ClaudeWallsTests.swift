@@ -113,6 +113,21 @@ extension ClaudeRouteTests {
             .count == 3)
     }
 
+    @Test func oneListCallNeverWritesPastTheCap() throws {
+        // QA on #666: one addGroceries or addToList call carries a whole array; it is cut to what the phrase has left.
+        let lines = (1 ... 15).map { "thing \($0)" }
+        let json = try JSONSerialization.data(withJSONObject: ["lines": lines])
+        let records = try TessTools.run("addGroceries", arguments: json, engine: engine)
+        #expect(records.count <= TessTools.maxRecordsPerPhrase)
+        let groceries = engine.history(limit: 100).filter { $0.state == .pending }
+        #expect(groceries.count == records.count)
+        let left = try TessTools.run("addGroceries", arguments: json, engine: engine, budget: 2)
+        #expect(left.count <= 2)
+        #expect(throws: (any Error).self) {
+            try TessTools.run("addGroceries", arguments: json, engine: engine, budget: 0)
+        }
+    }
+
     @Test func captureInjectionNeverCallsDestructiveTool() {
         let names = TessTools.all.map(\.name)
         let banned = ["delete", "remove", "send", "email", "share", "export", "fetch", "open", "forget", "erase"]

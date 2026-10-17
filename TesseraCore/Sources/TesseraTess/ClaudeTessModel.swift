@@ -100,7 +100,8 @@ public struct ClaudeTessModel: TessModel {
                     do {
                         let done = try TessTools.run(call.name, arguments: call.input, engine: engine,
                                                      pending: true, now: request.context.now,
-                                                     calendar: request.context.calendar)
+                                                     calendar: request.context.calendar,
+                                                     budget: TessTools.maxRecordsPerPhrase - records.count)
                         records += done
                         trim(&records, engine: engine)
                         results.append(["type": "tool_result", "tool_use_id": call.id, "content": "Done"])
