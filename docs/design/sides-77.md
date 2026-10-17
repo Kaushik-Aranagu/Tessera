@@ -12,7 +12,7 @@ Sheet 75 declared a side for every screen and drew some. This sheet draws the ei
 | Routines | LAST TIMES (BEFORE) | One line each, newest first: "Push A, today" with how long, "Legs A, Wednesday  1 h 1 min" | Push A / "today" / "Pull A, Tuesday" / THE WHOLE STORY | "Push A, 4 times this month." |
 | Recipe original | COOKS (BEFORE) | Each time cooked, newest first, with how long ("46 min", "6 h 55 min" from 60 min) | 4 *times* / "Thursday, 46 min" / "about 45 min" / THE WHOLE STORY | "Cooked 4 times, about 45 min." (median; none under 2) |
 | Paste a recipe | WHAT I READ (PARTS) | All 17 lines in order. Kept lines plain; a plain ignored line shows its words dim with "ignored"; a private or secret-looking line shows only a bar and "ignored", never its words | 14 *lines kept* / "3 ignored" / "nytimes.com" / ALL OF IT | "14 of 17 lines kept." |
-| The week (Settings) | WHAT LEAVES THE PHONE (FACTS) | This month's Claude calls by job (Today's lines 21, Plan my day 9, Your week 5, Recipe reading 3), each with what it sends in titles and counts; then rule 10's line. No money of his | $3.20 *this month* (the receipts' own Claude cost) / "38 calls" / "Titles and counts only." / ALL FACTS | "Today's lines made 21 of 38 calls." |
+| The week (Settings) | WHAT LEAVES THE PHONE (FACTS) | The last 30 days' Claude calls by job (Today's lines 21, Plan my day 9, Your week 5, Recipe reading 3), each with what it sends in titles and counts; then rule 10's line. No money of his | "38 calls" *in 30 days* / "Today's lines, 21" / "Titles, counts, recipe text" (sheet 80) / ALL FACTS | "Today's lines made 21 of 38 calls." |
 | Plans | THE PLAN (FACTS) | What it is (split, 4 a week, fixed days) and how it progresses (rolls on, primary 1 and secondary ½, under a range stays neutral) | 4 *days a week* / "Push Pull Legs" / "on fixed days" / ALL FACTS | "Session 11 of 26 this month." |
 | A class page (Recipes) | ITS OBJECTS (LINKS) | Newest (3 named, "and 35 more"), most used (3), the fields every one has | 38 *objects* / "Newest, Dal" / "Most used, Chili" / ALL LINKS | "Chili is the one you cook most." |
 | Any other object (Dune) | DETAILS, the default side (LINKS + FACTS) | Where it is linked from, then every field the front doesn't show (pages, started, added, from). No private field, none named | Reading / "412 pages" / "linked from 3" / ALL FACTS | "Reading since Oct 2." |
@@ -20,7 +20,7 @@ Sheet 75 declared a side for every screen and drew some. This sheet draws the ei
 ## Copy notes and calls for Product
 - **Group names** read "TACOS, SUNDAY", not "Tacos · Thursday": copy-pass rule 8 bans " · " outside a pack size. Say if the Kitchen ruling should win.
 - **Foot words** use the Research BQ set: THE WHOLE STORY for the two BEFORE sides, ALL OF IT for Paste (no ALL LINES in the set), ALL FACTS for the default object. DETAILS (the default side's word) is a proposal.
-- **$3.20** is on the glance as in 75's table (the receipts' cost, not his money); the full side shows counts only. Say if the glance should drop it too.
+- **No money on the glance** (sheet 80, decisions 7:28): the big fact is "38 calls" in 30 days; the receipts' cost stays on the spend line only.
 - Dune and Recipes are examples of an object and a class; the fixtures should vary them.
 
 ## For each builder team

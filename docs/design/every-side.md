@@ -48,7 +48,7 @@ This sheet replaces sheet 71's "which pages get a side page" and Product's 10:00
 | 18 | An ingredient | PER 100 G (FACTS), and where it's used | swipe or word | His calorie example. Drawn |
 | 19 | Paste a recipe | WHAT I READ (PARTS): every line, kept or ignored | swipe or word | |
 | 20 | Review tab | THE DAYS (PARTS): this week's seven days, one line each (76) | right edge or word | The middle goes along the weeks (46). THE MONTH is dropped |
-| 21 | The week (interim Settings) | WHAT LEAVES THE PHONE (FACTS): this month's Claude calls by job, titles and counts only | swipe or word | Controls stay on the front |
+| 21 | The week (interim Settings) | WHAT LEAVES THE PHONE (FACTS): the last 30 days' Claude calls by job (sheet 80) | swipe or word | Controls stay on the front |
 | 22 | Notes | BY THING (LINKS): notes grouped by what they mention | swipe or word | Private notes are counted, never named |
 | 23 | A note | WHERE IT'S MENTIONED (LINKS) | swipe or word | Drawn. Its own links stay under the text |
 | 24 | Claude receipts | BY JOB (FACTS): the month split by job | swipe or word | |
@@ -142,7 +142,7 @@ The big fact is Hero 56 with its unit at 21. The small facts are Body 19, at mos
 | An ingredient: PER 100 G | "215" *kcal* | "18.6 g protein" | "15 g fat", with the source line under the glance ("USDA FoodData Central") |
 | Paste: WHAT I READ | "14" *lines kept* | "3 ignored" | the source: "nytimes.com" |
 | Review: THE DAYS (76) | "5" *of 7 days* | "Wednesday, 6 tasks" | "2 to go" |
-| The week: WHAT LEAVES THE PHONE | "$3.20" *this month* | "38 calls" | "Titles and counts only." |
+| The week: WHAT LEAVES THE PHONE | "38 calls" *in 30 days* | "Today's lines, 21" | "Titles, counts, recipe text" (sheet 80) |
 | Notes: BY THING | "23" *notes* | the top thing: "Landlord, 4" | "5 private" |
 | A note: WHERE IT'S MENTIONED | "3" *places* | the first named | the second named, or "and N more" from four |
 | Claude receipts: BY JOB | the top job: "Home lines" | "$1.10" | "21 calls" |
