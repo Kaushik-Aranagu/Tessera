@@ -86,6 +86,9 @@ public struct RecipeLinkResult: Sendable, Equatable {
     public let sourceURL: URL?
     /// No connection, to the page or to Claude: the reason, typed, so nothing matches on the line's words.
     public var isOffline = false
+    /// A failure that may pass (a busy site, Claude busy, paused, off or timing out): the link stays on the shelf so he
+    /// can try again. A firm refusal (no recipe, paywalled, too big, a block) is not one.
+    public var isRetryable = false
 }
 
 /// Reads a recipe link on the phone (docs/research/recipe-link-fetch.md §1 to §4): one ephemeral https GET with an
@@ -99,6 +102,8 @@ public struct RecipeLinkReader {
     public let session: URLSession
     /// Claude for L3; nil means L3 never runs.
     public var claude: ClaudeRecipeReader?
+    /// The hard cap on a page read; tests shorten it.
+    var pageLimit: Duration = .seconds(15)
 
     public init(session: URLSession = URLSession(configuration: .ephemeral), claude: ClaudeRecipeReader? = nil) {
         self.session = session
@@ -114,7 +119,8 @@ public struct RecipeLinkReader {
             line: result.line,
             text: result.text.map { SecretWords.cut($0).text },
             sourceURL: result.sourceURL,
-            isOffline: result.isOffline
+            isOffline: result.isOffline,
+            isRetryable: result.isRetryable
         )
     }
 
@@ -132,6 +138,8 @@ public struct RecipeLinkReader {
             (html, finalURL) = (text, final)
         case let .failed(line):
             return RecipeLinkResult(kind: .failed, line: line, text: nil, sourceURL: url)
+        case let .busy(line):
+            return RecipeLinkResult(kind: .failed, line: line, text: nil, sourceURL: url, isRetryable: true)
         case .offline:
             return RecipeLinkResult(kind: .failed, line: RecipeLinkLine.offline, text: nil, sourceURL: url,
                                     isOffline: true)
@@ -182,6 +190,8 @@ public struct RecipeLinkReader {
     enum Fetched: Sendable {
         case page(String, URL)
         case failed(String)
+        /// The site answered with a busy or server error: may pass, so the link is kept.
+        case busy(String)
         case offline
     }
 
@@ -191,11 +201,12 @@ public struct RecipeLinkReader {
         request.setValue("text/html,application/xhtml+xml", forHTTPHeaderField: "Accept")
         // A hard 15 s for the whole read (URLRequest's timeout only counts idle time; QA N2).
         let session = session
+        let limit = pageLimit
         let read = Task { () -> Fetched in
             await Self.download(request, session: session)
         }
         let deadline = Task {
-            try await Task.sleep(for: .seconds(15))
+            try await Task.sleep(for: limit)
             read.cancel()
         }
         let result = await read.value
@@ -227,7 +238,12 @@ public struct RecipeLinkReader {
         }
         guard let http = response as? HTTPURLResponse else { return .failed(RecipeLinkLine.blocked) }
         guard (200 ..< 300).contains(http.statusCode) else {
-            return .failed(redirects.refused ? RecipeLinkLine.tooBig : RecipeLinkLine.blocked)
+            if redirects.refused {
+                return .failed(RecipeLinkLine.tooBig)
+            }
+            // Busy or broken for now (429, 5xx) is not a refusal: the link waits (G63).
+            return http.statusCode == 429 || http.statusCode >= 500
+                ? .busy(RecipeLinkLine.blocked) : .failed(RecipeLinkLine.blocked)
         }
         let type = http.value(forHTTPHeaderField: "Content-Type")?.lowercased() ?? "text/html"
         guard type.contains("html"), http.expectedContentLength <= Int64(maxBytes) else {
@@ -318,6 +334,58 @@ public struct RecipeLinkReader {
     static let secretQueryParts = ["pass", "pwd", "token", "secret", "sig", "auth", "session", "jwt", "email", "key",
                                    "code", "sid", "otp", "nonce", "credential"]
 
+    /// Whether a query name is a secret by its words, not by letters inside a word: "x_signature", "idToken",
+    /// "user_email" go; "author", "design" and "turkey" stay.
+    static func isSecretQueryName(_ name: String) -> Bool {
+        var words: [String] = []
+        var current = ""
+        var previous: Character?
+        for character in name {
+            if !(character.isLetter || character.isNumber) {
+                words.append(current)
+                current = ""
+            } else {
+                if character.isUppercase, previous?.isLowercase == true {
+                    words.append(current)
+                    current = ""
+                }
+                current.append(Character(character.lowercased()))
+            }
+            previous = character
+        }
+        words.append(current)
+        let whole: Set = [
+            "pass",
+            "password",
+            "passwd",
+            "passcode",
+            "pwd",
+            "token",
+            "tokens",
+            "secret",
+            "secrets",
+            "sig",
+            "signature",
+            "auth",
+            "authorization",
+            "session",
+            "sessionid",
+            "jwt",
+            "email",
+            "key",
+            "apikey",
+            "code",
+            "sid",
+            "otp",
+            "nonce",
+            "credential",
+            "credentials",
+        ]
+        return words.contains { word in
+            whole.contains(word) || ["token", "secret", "password", "signature"].contains { word.hasSuffix($0) }
+        }
+    }
+
     /// A value that is an email address or a long opaque string (a token in a harmless-looking name).
     static func looksSensitive(_ value: String) -> Bool {
         value.contains("@") || looksLikeClaudeKey(value)
@@ -340,7 +408,7 @@ public struct RecipeLinkReader {
             return !name.hasPrefix("utm_") && !["fbclid", "gclid", "mc_cid", "mc_eid"].contains(name)
                 // Secrets in a link never reach the saved source (Research 137 PL5, G64).
                 && !Self.secretQueryItems.contains(name)
-                && !Self.secretQueryParts.contains(where: name.contains)
+                && !Self.isSecretQueryName(name)
                 && !(item.value.map(Self.looksSensitive) ?? false)
         }
         if parts.queryItems?.isEmpty == true {
@@ -486,8 +554,9 @@ public struct ClaudeRecipeReader {
     }
 
     public func read(_ pageText: String, source: URL) async -> RecipeLinkResult {
-        func failed(_ line: String, offline: Bool = false) -> RecipeLinkResult {
-            RecipeLinkResult(kind: .failed, line: line, text: nil, sourceURL: source, isOffline: offline)
+        func failed(_ line: String, offline: Bool = false, retry: Bool = false) -> RecipeLinkResult {
+            RecipeLinkResult(kind: .failed, line: line, text: nil, sourceURL: source, isOffline: offline,
+                             isRetryable: retry)
         }
         // The wall (G32): with "Tess asks Claude" off nothing below runs, so no key is read, no request is built and
         // no receipt is written. Checked here, not by the caller, so no caller can forget it.
@@ -502,7 +571,7 @@ public struct ClaudeRecipeReader {
         guard let reservation = ledger.reserve(estimate, now: now(), calendar: calendar) else {
             let reset = (calendar.dateInterval(of: .month, for: now())?.end ?? now())
                 .formatted(.dateTime.month(.abbreviated).day())
-            return failed(RecipeLinkLine.paused(until: reset))
+            return failed(RecipeLinkLine.paused(until: reset), retry: true)
         }
         defer { ledger.settle(reservation) }
         let started = Date()
@@ -528,7 +597,7 @@ public struct ClaudeRecipeReader {
             (data, response) = try await session.data(for: request, delegate: NoRedirects.shared)
         } catch let error as URLError {
             outcome = error.code == .timedOut ? "timeout" : "offline"
-            return error.code == .timedOut ? failed(RecipeLinkLine.claudeTimeout)
+            return error.code == .timedOut ? failed(RecipeLinkLine.claudeTimeout, retry: true)
                 : failed(RecipeLinkLine.offline, offline: true)
         } catch {
             return failed(RecipeLinkLine.noRecipe)
@@ -536,11 +605,11 @@ public struct ClaudeRecipeReader {
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         if status == 401 || status == 403 {
             outcome = "badKey"
-            return failed(RecipeLinkLine.badKey)
+            return failed(RecipeLinkLine.badKey, retry: true)
         }
         if status == 429 || status >= 500 {
             outcome = "busy"
-            return failed(RecipeLinkLine.claudeBusy)
+            return failed(RecipeLinkLine.claudeBusy, retry: true)
         }
         guard status == 200, let body = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
         else { return failed(RecipeLinkLine.noRecipe) }

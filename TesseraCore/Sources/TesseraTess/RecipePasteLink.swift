@@ -50,13 +50,15 @@ public enum RecipePasteLink {
             reader.claude?.allowed = { false }
         }
         let result = await reader.read(link.absoluteString)
-        let offline = result.isOffline
-        if offline {
+        // Offline, or a failure that may pass (a busy site, Claude busy, paused or off): the link waits. A read, or a
+        // firm refusal, takes it off the shelf.
+        let waits = result.isOffline || result.isRetryable
+        if waits {
             shelf?.keep(link)
         } else {
             shelf?.remove(link)
         }
-        return Outcome(result: result, kept: offline)
+        return Outcome(result: result, kept: waits)
     }
 }
 
@@ -92,16 +94,27 @@ public final class RecipeLinkShelf {
         // A link that came with a user or password is refused whole, before anything is stripped from it.
         guard !RecipeLinkReader.hasCredentials(link.absoluteString) else { return }
         let text = RecipeLinkReader.stripTracking(link).absoluteString
-        guard var links = loadForWrite(), !links.contains(text) else { return }
+        guard var links = loadForWrite(), !links.contains(where: { Self.sameLink($0, text) }) else { return }
         links.append(text)
         save(Array(links.suffix(Self.limit)))
     }
 
+    /// Takes one waiting link off, whichever way it was kept: links kept before tracking was stripped on the way in
+    /// are matched by their stripped form too, so an old one can be removed.
     public func remove(_ link: URL) {
         let text = RecipeLinkReader.stripTracking(link).absoluteString
-        guard var links = loadForWrite(), links.contains(text) else { return }
-        links.removeAll { $0 == text }
-        save(links)
+        guard var links = loadForWrite() else { return }
+        let before = links.count
+        links.removeAll { Self.sameLink($0, text) }
+        if links.count != before {
+            save(links)
+        }
+    }
+
+    /// A stored link is the same link when it matches as kept, or once stripped (old ones kept their tracking).
+    private static func sameLink(_ stored: String, _ stripped: String) -> Bool {
+        stored == stripped
+            || URL(string: stored).map { RecipeLinkReader.stripTracking($0).absoluteString == stripped } ?? false
     }
 
     /// Takes the shelf off the phone: its file goes.

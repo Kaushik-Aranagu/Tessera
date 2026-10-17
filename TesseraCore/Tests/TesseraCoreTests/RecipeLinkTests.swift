@@ -16,6 +16,9 @@ final class LinkStub: URLProtocol, @unchecked Sendable {
     nonisolated(unsafe) static var pages: [String: Page] = [:]
     nonisolated(unsafe) static var failure: URLError.Code?
     nonisolated(unsafe) static var requests: [URLRequest] = []
+    /// A page that never answers, and one that sends its headers and a little body, then stalls (the 15 s cap).
+    nonisolated(unsafe) static var hangs: Set<String> = []
+    nonisolated(unsafe) static var stalls: Set<String> = []
     /// What was sent to Claude, by request, so a test can read what left the phone.
     nonisolated(unsafe) static var bodies: [Data] = []
 
@@ -51,7 +54,17 @@ final class LinkStub: URLProtocol, @unchecked Sendable {
             client?.urlProtocol(self, didFailWithError: URLError(failure))
             return
         }
+        if Self.hangs.contains(request.url?.host() ?? "") {
+            return
+        }
         let page = Self.pages[request.url?.host() ?? ""] ?? Page(status: 404, body: "")
+        if Self.stalls.contains(request.url?.host() ?? "") {
+            let head = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil,
+                                       headerFields: ["Content-Type": page.type])!
+            client?.urlProtocol(self, didReceive: head, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: Data("<html>".utf8))
+            return
+        }
         if let target = page.redirect, let url = URL(string: target), let from = request.url {
             let hop = HTTPURLResponse(url: from, statusCode: 302, httpVersion: nil, headerFields: ["Location": target])!
             client?.urlProtocol(self, wasRedirectedTo: URLRequest(url: url), redirectResponse: hop)
@@ -87,6 +100,8 @@ struct RecipeLinkTests {
         classes = try store.prepareCatalog()
         LinkStub.pages = [:]
         LinkStub.failure = nil
+        LinkStub.hangs = []
+        LinkStub.stalls = []
         LinkStub.requests = []
         LinkStub.bodies = []
     }

@@ -140,4 +140,86 @@ extension RecipeLinkTests {
         #expect(shelf.waiting().isEmpty && !FileManager.default
             .fileExists(atPath: shelf.fileURL.path(percentEncoded: false)))
     }
+
+    // MARK: - The 15 s cap, a busy site, old links, "@" in a path, the saved source
+
+    @Test func aPageThatNeverAnswersReadsAsOfflineAtTheCap() async throws {
+        let shelf = shelf()
+        LinkStub.hangs = ["slow.example.com"]
+        var reader = reader()
+        reader.pageLimit = .milliseconds(200)
+        let link = try #require(RecipePasteLink.bareLink("https://slow.example.com/chili"))
+        let outcome = await RecipePasteLink.read(link, reader: reader, asksClaude: false, shelf: shelf)
+        #expect(outcome.result.isOffline && outcome.kept && outcome.line == RecipeLinkLine.offline)
+        #expect(shelf.waiting().map(\.absoluteString) == ["https://slow.example.com/chili"])
+    }
+
+    @Test func aPageThatStallsMidStreamReadsAsOfflineAtTheCap() async throws {
+        let shelf = shelf()
+        LinkStub.stalls = ["stall.example.com"]
+        LinkStub.pages["stall.example.com"] = .init(body: "<html>")
+        var reader = reader()
+        reader.pageLimit = .milliseconds(200)
+        let link = try #require(RecipePasteLink.bareLink("https://stall.example.com/chili"))
+        let outcome = await RecipePasteLink.read(link, reader: reader, asksClaude: false, shelf: shelf)
+        #expect(outcome.result.isOffline && outcome.kept)
+    }
+
+    @Test func aBusySiteKeepsTheLinkAndAFirmRefusalDropsIt() async throws {
+        let shelf = shelf()
+        let link = try #require(RecipePasteLink.bareLink("https://busy.example.com/chili"))
+        // 503: may pass, so it waits on the shelf for another tap.
+        LinkStub.pages["busy.example.com"] = .init(status: 503, body: "")
+        let busy = await RecipePasteLink.read(link, reader: reader(), asksClaude: false, shelf: shelf)
+        #expect(busy.result.isRetryable && busy.kept && shelf.waiting().count == 1)
+        // A page with no recipe is a firm refusal: it leaves the shelf.
+        LinkStub.pages["busy.example.com"] = .init(body: "<html><body>Hello</body></html>")
+        let none = await RecipePasteLink.read(link, reader: reader(), asksClaude: false, shelf: shelf)
+        #expect(!none.result.isRetryable && !none.kept && shelf.waiting().isEmpty)
+    }
+
+    @Test func aLinkKeptBeforeTrackingWasStrippedCanStillBeRemoved() throws {
+        let shelf = shelf()
+        try FileManager.default.createDirectory(at: shelf.fileURL.deletingLastPathComponent(),
+                                                withIntermediateDirectories: true)
+        let old = "https://budgetbytes.com/chili-mac/?utm_source=pin&fbclid=abc"
+        try JSONEncoder().encode([old, "https://other.com/x"]).write(to: shelf.fileURL)
+        #expect(shelf.waiting().count == 2)
+        try shelf.remove(#require(URL(string: "https://budgetbytes.com/chili-mac/")))
+        #expect(shelf.waiting().map(\.absoluteString) == ["https://other.com/x"])
+        // And keeping it again does not double it.
+        try shelf.keep(#require(URL(string: "https://other.com/x?utm_source=a")))
+        #expect(shelf.waiting().count == 1)
+        shelf.erase()
+        #expect(shelf.waiting().isEmpty)
+    }
+
+    @Test func anAtSignOnlyInThePathOrQueryIsNotACredential() throws {
+        let medium = "https://medium.com/@chef/pie"
+        #expect(!RecipeLinkReader.hasCredentials(medium))
+        #expect(!RecipeLinkReader.hasCredentials("www.medium.com/@chef/pie"))
+        #expect(!RecipeLinkReader.hasCredentials("https://site.com/r?by=@chef"))
+        #expect(!RecipeLinkReader.hasCredentials("https://site.com/r#@chef"))
+        #expect(RecipePasteLink.bareLink(medium)?.absoluteString == medium)
+        #expect(!RecipePasteLink.isSecretLink(medium))
+        // Only a user or password before the host counts.
+        #expect(RecipeLinkReader.hasCredentials("https://chef@medium.com/pie"))
+        #expect(RecipeLinkReader.hasCredentials("https://chef:pw@medium.com/pie"))
+        let shelf = shelf()
+        try shelf.keep(#require(URL(string: medium)))
+        #expect(shelf.waiting().map(\.absoluteString) == [medium])
+    }
+
+    @Test func theSavedSourceDropsSecretsButKeepsHarmlessWords() async throws {
+        let raw = "https://x.com/r?author=ana&design=b&turkey=1&utm_source=z&x_signature=1&idToken=2&user_email=e"
+        let kept = try RecipeLinkReader.stripTracking(#require(URL(string: raw)))
+        #expect(kept.absoluteString == "https://x.com/r?author=ana&design=b&turkey=1")
+        // Through a read: the recipe's source is the stripped final URL.
+        LinkStub.pages["x.com"] = .init(body: Self.page(Self.chiliMac))
+        let result = await reader().read(raw)
+        #expect(
+            result.kind == .read && result.sourceURL?.absoluteString == "https://x.com/r?author=ana&design=b&turkey=1",
+            "\(result.sourceURL?.absoluteString ?? "nil")"
+        )
+    }
 }
