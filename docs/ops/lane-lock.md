@@ -42,3 +42,9 @@ Use `wait` instead of `acquire` when the lock is busy. Waiters queue first-come-
 ## Who holds it
 
 `status` and the busy message name the holder, how long it has held the lock and when it last beat. A waiting `wait` prints that line about once a minute. Prefer `run` for builds and tests: it beats for you and releases even when the command fails. A manual `acquire` needs `beat` at least every 10 minutes (a 60-second loop is plenty).
+
+## Locked screen
+
+When the Mac screen is locked, simulator UI runs stall (XCUITest waits 60 s for idle on every step, `simctl spawn` hangs) while still holding the lock and beating. So `run` checks first: while the screen is locked it prints and logs `screen locked, waiting (<lane>)` once a minute and does not queue or start (it gives up after an hour). If the screen locks while it is queued, it hands the lock back and waits again. Detection uses `ioreg` (the console user's `CGSSessionScreenIsLocked`, then `Quartz` if the system python has it); if it cannot tell, it counts as unlocked.
+
+Package-only jobs (`swift test` in `TesseraCore/`) do not use the lock and run on a locked Mac. If one goes through `run` anyway, set `LANE_LOCK_SCREEN_OK=1` to skip the screen check. `LANE_LOCK_SCREEN=locked|unlocked` forces the answer for tests.
