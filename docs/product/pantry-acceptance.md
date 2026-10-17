@@ -53,6 +53,34 @@ Unknown is the state of every ingredient until one of these happens. State never
 3. The peek on three seed recipes reads have / low / out per line and the key's count matches.
 4. "nothing known yet" state; Reduce Motion crossfades; Dynamic Type one column.
 
+## Screen rows: the Pantry front and index (Design sheet 78, Kitchen lead 2026-10-17)
+
+*Rows for Builder B, one per state of the front. Where this page's Defaults table above and sheet 78 differ, the sheet wins: the front groups OUT, LOW, USUALLY HAVE (not an IN group); "bought Sat" lives on the side's lines; the empty and quiet words are "Nothing yet" and "Nothing out". The side (OUT AND LOW) is `kitchen-sides-acceptance.md` section 6, rows 6.1-6.8. Nothing here shows or sums nutrition (`never-sums-audit.md` N6).*
+
+| # | State | Pass when |
+|---|---|---|
+| S1 | Front, things known | Frame as the other areas: PANTRY at 52, the weekday at 138, the context line "since Saturday's shop" at 186 with the side word OUT AND LOW at its right, the hero at 212. No title and no back word (a tab-level area). Groups OUT, LOW, USUALLY HAVE from 296, labels at 13/700. No card, pill or badge, nothing under 16 pt, nothing red |
+| S2 | Hero | Digits: "4 out, 2 low". It is also Pantry's line on the index and Home, the same string. 1 out reads "1 out", never "1 outs" |
+| S3 | Out line | One Body 21 line, 40 pt pitch: name in ink, state word "out" at the right (700, pantry colour mixed 72% with ink), the faint ring (11 pt, 1.3 pt stroke, ink 42%) at x 6. The recipe page's out line uses the same ring |
+| S4 | Low line | Same line with "low" (600) and no ring |
+| S5 | USUALLY HAVE, 1 to 3 names | The names as is on one line ("Rice, coffee, eggs"). Under it nothing else. Tapping a name joins Groceries: "Milk, in Groceries." with UNDO 4 s (a new add); a left swipe skips it until its next gap (`usualSkippedAt`) |
+| S6 | USUALLY HAVE, 4 or more | "Rice, coffee and 2 more": two named, then the count; "and 2 more" at 55%. Cap 4 holds (Research rules 1-9) |
+| S7 | State-word tap | Cycles in, low, out, in. One `.selection`, one op, one UNDO of 10 s (a change; 10 s under VoiceOver). The receipt names the thing first, "Limes, in.", in the one app-wide UNDO slot, replacing Tess's line for its window; UNDO restores the row and her line returns. The hero's digits just change, nothing counts up. The line closes up in 320 ms |
+| S8 | Row leaves and joins | A line that becomes in leaves the front (in things are the long tail and show only on their Ingredient page). A line that becomes low or out joins that group. A group with no lines is not drawn, not even its label |
+| S9 | Tap a name | Opens that ingredient's page (state sentence, cycle, PER 100 G side). Back lands on the same scroll position |
+| S10 | Left swipe on an out or low line | Adds it to Groceries as a ghost row, receipt "Milk, in Groceries." with UNDO 4 s (a new add). A line already on Groceries is not added twice; the receipt then reads "Milk, already on Groceries." and there is no UNDO. In and USUALLY HAVE names are not swiped here (S5) |
+| S11 | Nothing out | Known state, none out or low: hero "Nothing out". Groups OUT and LOW are not drawn; USUALLY HAVE still shows if it has names. The side reads "Nothing out." with no key (row 6.4) |
+| S12 | Nothing known | Hero "Nothing yet" and, under it at 55%, "Clear a shop or finish a cook and this fills in." No art. Tess: `Say "out of milk" and I'll keep it.` Index line "Nothing yet". Never "0 out, 0 low" |
+| S13 | Tess's line | The only thing in 736 to 820. After a cook it is the phone's fact, "Tacos took the cilantro and limes." (the names `FinishCooking` set out or low). Never a notification, a badge, a Home offer, "running out" or any forecast. Tess's line and Home never disagree: Home's Pantry line is the hero verbatim |
+| S14 | Index, five rows | REVIEW, TODAY, TRAINING, KITCHEN, PANTRY at a 104 pt pitch from 96; glass 700 tall, hint at 652, ending above Tess's band at 736. KITCHEN's line reads "Tacos, 7 pm" (no "at" before a time). Under the finger Pantry's word takes the pantry colour, scaled 1.06 |
+| S15 | Walls | A private or secret-looking ingredient name never appears: the line reads "Private item" and is not tappable into its words (`product-decisions-walls.md`). No Pantry fact is sent to Claude (Core row 7) and no receipt, line or widget carries money or body words |
+| S16 | Reduce Motion, Dynamic Type, VoiceOver | Reduce Motion: a 150 ms crossfade through MotionPolicy for the side and the index, no spring. AX sizes: one column, the state word under the name, nothing clipped. VoiceOver (proposed wording): "Limes, out", the cycle as the default action and "Add to Groceries" as a custom action in place of the swipe |
+| S17 | Pantry colour | Ochre (Porcelain #A4601A, Obsidian #E3A857) appears only on state words and the index row. Cobalt stays Tess's voice only; a test or grep of the theme tokens finds no other use |
+
+**Recording:** `docs/recordings/pantry.mp4` shows a shop clear moving lines to in, a finished cook adding out and low lines, a state-word tap with UNDO, and the nothing-yet state (as in Builder B's done-when 1-4 above).
+
+**Open, default taken:** S10's "already on Groceries" receipt wording is Kitchen's; Design confirms it with the next copy pass. Sheet 78 says nothing on it.
+
 ## Open questions, defaults taken
 
 1. Does "in" expire (milk bought three weeks ago)? DEFAULT: no; a state only changes on an event, and USUALLY already says what is probably gone.
