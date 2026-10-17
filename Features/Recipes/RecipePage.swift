@@ -345,12 +345,15 @@ private struct RecipeOriginal: View {
                         }
                     }
                 }
-                MarginSection(label: "As pasted") {
-                    Text(model.store.value("sourceText", of: recipe)?.stringValue ?? "")
-                        .font(Theme.voice)
-                        .foregroundStyle(Theme.Colors.inkSecondary)
-                        .textSelection(.enabled)
-                        .fixedSize(horizontal: false, vertical: true)
+                // Only when there's text he pasted: a recipe made another way has no AS PASTED (gap hunt G4).
+                if let source = RecipeCopy.pasted(model.store.value("sourceText", of: recipe)?.stringValue) {
+                    MarginSection(label: "As pasted") {
+                        Text(source)
+                            .font(Theme.voice)
+                            .foregroundStyle(Theme.Colors.inkSecondary)
+                            .textSelection(.enabled)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
             .padding(.horizontal, Theme.Spacing.gutter)
@@ -363,6 +366,12 @@ private struct RecipeOriginal: View {
 
 @MainActor
 enum RecipeCopy {
+    /// The text he pasted, or nil when there is none or only blank space.
+    static func pasted(_ source: String?) -> String? {
+        guard let source, !source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+        return source
+    }
+
     /// "serves 2, 25 min, cooked 12 days ago" (each part only when known; never "never cooked").
     static func context(_ recipe: ObjectRecord, serves: Int?, model: AppModel, now: Date) -> String {
         var parts: [String] = []
