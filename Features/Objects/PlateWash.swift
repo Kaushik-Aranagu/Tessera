@@ -43,6 +43,14 @@ enum PlateWash {
         var pigment: Int
     }
 
+    /// A wash seed from an object's id: the same object, the same plate.
+    static func seed(_ id: UUID) -> UInt64 {
+        withUnsafeBytes(of: id.uuid) { bytes in
+            bytes.prefix(8).enumerated().reduce(UInt64(0)) { $0 | UInt64($1.element) << (8 * UInt64($1.offset)) }
+                ^ bytes.suffix(8).enumerated().reduce(UInt64(0)) { $0 | UInt64($1.element) << (8 * UInt64($1.offset)) }
+        }
+    }
+
     /// Three to five ellipses seeded by the object, the same every time it draws.
     static func blobs(seed: UInt64, pigments: Int) -> [Blob] {
         var state = seed | 1

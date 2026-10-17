@@ -1,3 +1,4 @@
+import Foundation
 @testable import Tessera
 import Testing
 
@@ -26,5 +27,23 @@ struct PlateWashTests {
         #expect(PlateWash.blobs(seed: 42, pigments: 3) == PlateWash.blobs(seed: 42, pigments: 3))
         let count = PlateWash.blobs(seed: 42, pigments: 3).count
         #expect((3 ... 5).contains(count))
+    }
+
+    @Test func theSeedComesFromTheObjectID() {
+        let id = UUID()
+        #expect(PlateWash.seed(id) == PlateWash.seed(id))
+        #expect(PlateWash.seed(id) != PlateWash.seed(UUID()))
+    }
+
+    @Test func aPrivatePlateHasNoPigmentAndAMaskedLabel() {
+        var looked = false
+        let plate = ObjectPlate(objectID: UUID(), isPrivate: true, pigments: {
+            looked = true
+            return [0xC0392B]
+        }())
+        #expect(plate.pigments.isEmpty && !looked, "a private plate never looks up pigments")
+        #expect(ObjectPlate.photoLabel(title: "Rent 1200 stew", isPrivate: true, site: "example.com")
+            == "Photo of Private recipe, from example.com")
+        #expect(ObjectPlate.photoLabel(title: "Tacos", isPrivate: false, site: nil) == "Photo of Tacos")
     }
 }

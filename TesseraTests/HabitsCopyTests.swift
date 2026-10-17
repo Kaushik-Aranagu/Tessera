@@ -15,6 +15,7 @@ struct HabitsCopyTests {
         #expect(HabitsCopy.added("Stretch", target: 1) == "Stretch added, 1 time a week.")
         #expect(HabitsCopy.checkIn("Read", done: 3, target: 5) == "Read, 3 of 5 this week.")
         #expect(HabitsCopy.alreadyIn("Read") == "Read is already in for today.")
+        #expect(HabitsCopy.checkIn("Read", done: 0, target: 5) == "Read, 5 a week.")
         #expect(HabitsCopy.doneForWeek(["Read", "Stretch"]) == "Read and Stretch are done for the week.")
         #expect(HabitsCopy.doneForWeek(["Read"]) == "Read is done for the week.")
         #expect(HabitsCopy.doneForWeek(["A", "B", "C", "D"]) == "A, B and 2 more are done for the week.")
@@ -24,6 +25,8 @@ struct HabitsCopyTests {
     @Test func contextAndRules() {
         #expect(HabitsCopy.context(weekday: "Thursday", daysLeft: 3) == "Thursday, 3 days to go")
         #expect(HabitsCopy.context(weekday: "Monday", daysLeft: 6) == "Monday, a new week")
+        #expect(HabitsCopy.context(weekday: "Saturday", daysLeft: 1) == "Saturday, 1 day to go")
+        #expect(HabitsCopy.context(weekday: "Sunday", daysLeft: 0) == "Sunday, the last day")
         #expect(HabitsCopy.rule(target: 5, source: "by hand") == "5 a week, by hand")
         #expect(HabitsCopy.weekLines.contains("A day starts 4 am."))
     }
@@ -41,9 +44,7 @@ struct HabitsCopyTests {
         for done in 0 ... 7 {
             lines.append(HabitsCopy.count(done: done, target: 5))
             lines.append(HabitsCopy.voiceOver("Read", done: done, target: 5, markedToday: done > 0))
-            if done > 0 {
-                lines.append(HabitsCopy.checkIn("Read", done: done, target: 5))
-            }
+            lines.append(HabitsCopy.checkIn("Read", done: done, target: 5))
         }
         for daysLeft in 0 ... 6 {
             lines.append(HabitsCopy.context(weekday: "Wednesday", daysLeft: daysLeft))

@@ -83,8 +83,8 @@ struct PantryLedger {
         shopClears().map(\.1).max()
     }
 
-    /// What the last finished cook used up, as it stands now (out or low; private things left out): the recipe's
-    /// title and the names, for Tess's line.
+    /// What the last finished cook used up, as it stands now (out or low; private things left out; nil for a private
+    /// recipe): the recipe's title and the names, for Tess's line.
     func lastCookUsedUp() -> (recipe: String, names: [String])? {
         guard let cookClass = classes[.cook],
               let cook = store.objects(of: cookClass)
@@ -94,10 +94,10 @@ struct PantryLedger {
               }),
               let recipe = store.linkedObjects("recipe", of: cook).first, !recipe.isDeleted
         else { return nil }
-        // A private recipe is only ever "Private recipe" (QA on #727): the full recipe wall, not health alone.
-        let title = ObjectPrivacy.isPrivateRecipeTitle(store.displayTitle(of: recipe),
-                                                       lastWeightKg: BodyWeight.lastKg(in: store))
-            ? ObjectPrivacy.recipeLabel : store.displayTitle(of: recipe)
+        // A private recipe gets no cook line at all: even "Private recipe took ..." names what was in it (Kitchen
+        // K89.1, FG9).
+        let title = store.displayTitle(of: recipe)
+        guard !ObjectPrivacy.isPrivateRecipeTitle(title, lastWeightKg: BodyWeight.lastKg(in: store)) else { return nil }
         let used = Set(RecipeBook(store: store, classes: classes).lines(of: recipe).compactMap(\.ingredient?.id))
         let names = entries().filter { used.contains($0.id) && $0.state != .have && !$0.isPrivate }
             .map { $0.label.lowercased() }

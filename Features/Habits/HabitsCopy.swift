@@ -14,9 +14,10 @@ enum HabitsCopy {
         "\(name) added, \(target) time\(target == 1 ? "" : "s") a week."
     }
 
-    /// A check-in, and Tess's line on both stops of the side: "Read, 3 of 5 this week."
+    /// A check-in, and Tess's line on both stops of the side: "Read, 3 of 5 this week."; at zero (an UNDO back to
+    /// none) the target, "Read, 5 a week." (never "0 of", QA on #753).
     static func checkIn(_ name: String, done: Int, target: Int) -> String {
-        "\(name), \(done) of \(target) this week."
+        done > 0 ? "\(name), \(done) of \(target) this week." : "\(name), \(target) a week."
     }
 
     /// A second swipe the same day: nothing happens, and she says so.
@@ -47,6 +48,7 @@ enum HabitsCopy {
             return "Monday, a new week"
         }
         switch daysLeft {
+        // Design, Oct 17: "Sunday, the last day" and "Saturday, 1 day to go".
         case 0: return "\(weekday), the last day"
         case 1: return "\(weekday), 1 day to go"
         default: return "\(weekday), \(daysLeft) days to go"
