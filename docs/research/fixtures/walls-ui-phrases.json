@@ -1,5 +1,5 @@
 {
-  "about": "Walls UI fixture (Product item AU). Every value is made up: hunter2, tacocat and 4417 are placeholders, and the fake store is not a real shop. WallsUITests reads these rows so no session types secret-shaped phrases by hand. Surfaces: askBar (Ask Tess, Write), notesPage (Notes writing line), siriAddTask (CreateTaskIntent.add in a unit test; Siri can't be driven from a UI test), paste (Kitchen, Paste a recipe), objectPage (the generic object page, its PropertyList, Linked from and the class page's newest row; Core 0ai private-field mask, rows PM01 to PM20, seeded with -wallsSeedPrivate; fixture docs/research/fixtures/private-field-mask.md, read on origin/master 64ffb93). Rows BN01 to BN11 (decisions 2:56, Core 0ai) seed lastWeightKg (null means no weight logged) and check the bare-number body wall; expectNoClaude true means walled, false means the phrase stays plain. The key rows have phrase null and build KEY: the test takes its value from ClaudeSection.fakeKey in test code, so nothing key-shaped is in this file. lineMatch is exact or prefix; expectLine null means no line check. passesOnMaster and masterEvidence were read on origin/master fbede70 (Oct 16, 2026). pending names the owner of a known fail; the test wraps those rows in XCTExpectFailure. Spec: docs/research/walls-ui-test-spec.md. Rows BM01 to BM31 (decisions 4:46 pm, Core 0ai rider, read on origin/master 6f9b639) cover the five paths that bypassed PrivateFacts: modelWrite, toolWrite, rememberFact, memoryTurnover and planMyDay run as package tests (seed.write says what the test writes), plus the bar trap on liveWorkoutAsk and askBar (seed.focus is the set in focus; null means a live workout with no set in focus). For package rows, mustNotShow lists strings no stored title, memory line, receipt or Claude pack may hold.",
+  "about": "Walls UI fixture (Product item AU). Every value is made up: hunter2, tacocat and 4417 are placeholders, and the fake store is not a real shop. WallsUITests reads these rows so no session types secret-shaped phrases by hand. Surfaces: askBar (Ask Tess, Write), notesPage (Notes writing line), siriAddTask (CreateTaskIntent.add in a unit test; Siri can't be driven from a UI test), paste (Kitchen, Paste a recipe), objectPage (the generic object page, its PropertyList, Linked from and the class page's newest row; Core 0ai private-field mask, rows PM01 to PM20, seeded with -wallsSeedPrivate; fixture docs/research/fixtures/private-field-mask.md, read on origin/master 64ffb93; rows PM21 to PM36 mask a workout's notes (decisions 5:07 pm, Core 0ai), with W1 to W7 added to the same seed, read on origin/master b41695d; PM35 runs as a planMyDay package row and PM36 as a liveWorkoutAsk row). Rows BN01 to BN11 (decisions 2:56, Core 0ai) seed lastWeightKg (null means no weight logged) and check the bare-number body wall; expectNoClaude true means walled, false means the phrase stays plain. The key rows have phrase null and build KEY: the test takes its value from ClaudeSection.fakeKey in test code, so nothing key-shaped is in this file. lineMatch is exact or prefix; expectLine null means no line check. passesOnMaster and masterEvidence were read on origin/master fbede70 (Oct 16, 2026). pending names the owner of a known fail; the test wraps those rows in XCTExpectFailure. Spec: docs/research/walls-ui-test-spec.md. Rows BM01 to BM31 (decisions 4:46 pm, Core 0ai rider, read on origin/master 6f9b639) cover the five paths that bypassed PrivateFacts: modelWrite, toolWrite, rememberFact, memoryTurnover and planMyDay run as package tests (seed.write says what the test writes), plus the bar trap on liveWorkoutAsk and askBar (seed.focus is the set in focus; null means a live workout with no set in focus). For package rows, mustNotShow lists strings no stored title, memory line, receipt or Claude pack may hold.",
   "master": "fbede70",
   "rows": [
     {
@@ -928,6 +928,308 @@
       "notes": "Every label and hint, read with CONTAINS[c], holds none of mustNotShow."
     },
     {
+      "id": "PM21",
+      "phrase": "left knee sore",
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "Note kept private",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:232-234 prints the workout's notes under the hero",
+      "pending": "Core 0ai: workout notes mask (decisions 5:07)",
+      "seed": "W1 notes \"left knee sore\"",
+      "route": "generic: Review, today, the Push A line (ReviewWeek.swift:353)",
+      "mustNotShow": [
+        "knee",
+        "sore"
+      ],
+      "notes": "Symptom note. One static text equals \"Note kept private\"; the workout's own fields still show (PM27)."
+    },
+    {
+      "id": "PM22",
+      "phrase": "weighed 82.4 before",
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "Note kept private",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:232-234 prints the workout's notes under the hero",
+      "pending": "Core 0ai: workout notes mask (decisions 5:07)",
+      "seed": "W2 notes \"weighed 82.4 before\"",
+      "route": "generic: Review, yesterday, the legs line",
+      "mustNotShow": [
+        "82.4",
+        "weighed"
+      ],
+      "notes": "Weight note. One \"Note kept private\"."
+    },
+    {
+      "id": "PM23",
+      "phrase": "felt strong",
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "Note kept private",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:232-234 prints the workout's notes under the hero",
+      "pending": "Core 0ai: workout notes mask (decisions 5:07)",
+      "seed": "W3 notes \"felt strong\"",
+      "route": "generic: Review, the pull day, the pull line",
+      "mustNotShow": [
+        "felt",
+        "strong"
+      ],
+      "notes": "Trap: a plain note with no health, body or secret word is masked too (5:07 pm names the field, not the words). A word-list screen fails this row."
+    },
+    {
+      "id": "PM24",
+      "phrase": "felt strong / left knee sore / locker 4417",
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "Note kept private",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:232-234 prints all three lines",
+      "pending": "Core 0ai: workout notes mask (decisions 5:07)",
+      "seed": "W6 notes, three lines",
+      "route": "generic: -openObject W6",
+      "mustNotShow": [
+        "felt",
+        "knee",
+        "4417",
+        "lines"
+      ],
+      "notes": "One marker for the whole note, no line or character count. Exactly one \"Note kept private\"; no static text contains \"3\" in the notes slot."
+    },
+    {
+      "id": "PM25",
+      "phrase": null,
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:232 no notes value, so no line",
+      "pending": null,
+      "seed": "W4 no notes",
+      "route": "generic: -openObject W4",
+      "mustNotShow": [],
+      "notes": "Control: no \"Note kept private\" text."
+    },
+    {
+      "id": "PM26",
+      "phrase": "  ",
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:233 prints an invisible two-space text",
+      "pending": null,
+      "seed": "W7 notes two spaces",
+      "route": "generic: -openObject W7",
+      "mustNotShow": [],
+      "notes": "Edge: a note with no words gets no marker. No \"Note kept private\" text."
+    },
+    {
+      "id": "PM27",
+      "phrase": null,
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "Push A",
+      "lineMatch": "exact",
+      "passesOnMaster": true,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:227-228 hero and class line; :348 PropertyList filters notes; :240-267 Contents and Linked from",
+      "pending": null,
+      "seed": "W1",
+      "route": "generic: as PM21",
+      "mustNotShow": [],
+      "notes": "Field mask, not object mask: hero \"Push A\" and a \"Started\" row show; no \"Private note\", \"Private task\" or \"Private memory\" names W1; no static text equals \"Notes\" (exact, since CONTAINS would match the marker)."
+    },
+    {
+      "id": "PM28",
+      "phrase": null,
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:254-267 and :387 name the workout by title only",
+      "pending": null,
+      "seed": "W1, O8",
+      "route": "linkedFrom: W1's Linked from, then O8's page (From row)",
+      "mustNotShow": [
+        "knee",
+        "sore"
+      ],
+      "notes": "Linked from and a ref to the workout carry its title, never its notes. O1's row reads \"Private memory\" (PM3)."
+    },
+    {
+      "id": "PM29",
+      "phrase": null,
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "TesseraCore/Sources/TesseraCore/DayLog/DayStory.swift:224-229 title, minutes, top set; DayLog/WeekFacts.swift:3-5 never notes",
+      "pending": null,
+      "seed": "W1, W2, W3",
+      "route": "review: today, yesterday, the pull day, then the week",
+      "mustNotShow": [
+        "knee",
+        "sore",
+        "82.4",
+        "weighed",
+        "felt",
+        "strong"
+      ],
+      "notes": "Day log lines and the Review week stay clean."
+    },
+    {
+      "id": "PM30",
+      "phrase": null,
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "Features/Home/NowPage.swift:254-256 and Home/HomeLines.swift:479-488 done line; Features/Workout/WorkoutFinishView.swift:36-71; Training/WorkoutSummary.swift:30-36",
+      "pending": null,
+      "seed": "W1, W5",
+      "route": "summary: Home's done line, then the finish screen after PM33",
+      "mustNotShow": [
+        "knee",
+        "sore"
+      ],
+      "notes": "Workout summary, finish screen and Now's done line: counts, minutes, kg moved, best names only."
+    },
+    {
+      "id": "PM31",
+      "phrase": null,
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "Features/Exercise/ExerciseDigest.swift:13-19 and ExerciseViews.swift:98-150 date, sets, top set; Features/Objects/ObjectPage.swift:196-208 class page History",
+      "pending": null,
+      "seed": "W1, W2",
+      "route": "exerciseHistory: Bench Press, then Back Squat",
+      "mustNotShow": [
+        "knee",
+        "sore",
+        "82.4",
+        "weighed"
+      ],
+      "notes": "After Core 0ak the exercise side's HISTORY page and THE SETS also show no note words (SA-SETS-8, SA-EX-12, DP22)."
+    },
+    {
+      "id": "PM32",
+      "phrase": null,
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "Features/Home/TrainingPage.swift plan, lanes and targets; Features/Home/NowPage.swift lines from HomeLines",
+      "pending": null,
+      "seed": "W1, W2, W3",
+      "route": "home: Now, then the Training page",
+      "mustNotShow": [
+        "knee",
+        "sore",
+        "82.4",
+        "weighed",
+        "felt",
+        "strong"
+      ],
+      "notes": "Training page and Home lines stay clean."
+    },
+    {
+      "id": "PM33",
+      "phrase": "left knee sore",
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "Note kept private",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:232-234 prints it on the planned workout's front; live screen and Live Activity read no notes (Shared/RestActivityAttributes.swift:6-30, Widgets/RestLiveActivity.swift; the bundle holds only RestLiveActivity, Widgets/TesseraWidgetsBundle.swift:5-8)",
+      "pending": "Core 0ai: workout notes mask (decisions 5:07)",
+      "seed": "W5 planned 7:00 pm, notes \"left knee sore\"",
+      "route": "live: Now's planned line (NowPage.swift:78-81), Start workout (ObjectPage.swift:269-274), log a set",
+      "mustNotShow": [
+        "knee",
+        "sore"
+      ],
+      "notes": "Front shows the marker and Start workout. The live screen shows no note words; the Lock Screen and Dynamic Island are checked by hand (run list step 7)."
+    },
+    {
+      "id": "PM34",
+      "phrase": null,
+      "build": null,
+      "surface": "objectPage",
+      "expectPrivate": true,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": "Note kept private",
+      "lineMatch": "exact",
+      "passesOnMaster": false,
+      "masterEvidence": "Features/Objects/ObjectPage.swift:233 the notes Text is read by VoiceOver as body text",
+      "pending": "Core 0ai: workout notes mask (decisions 5:07)",
+      "seed": "W1, W2, W3, W6, W5",
+      "route": "voiceOver: PM21 to PM24 and PM33's front",
+      "mustNotShow": [
+        "knee",
+        "sore",
+        "82.4",
+        "weighed",
+        "felt",
+        "strong",
+        "4417"
+      ],
+      "notes": "Every label and hint, read with CONTAINS[c], holds none of mustNotShow; the marker reads \"Note kept private\"."
+    },
+    {
       "id": "BN01",
       "phrase": "is 82.4 good?",
       "surface": "askBar",
@@ -1751,6 +2053,54 @@
       "notes": "A live workout with no set in focus (a workout started with no exercise, so session.currentEntry is nil, WorkoutSession.swift:120-123): no bar context, so the band applies and the phrase is walled. Same phrase as BN11, with the focus pinned.",
       "mustNotShow": [
         "82.4"
+      ]
+    },
+    {
+      "id": "PM35",
+      "phrase": null,
+      "surface": "planMyDay",
+      "expectPrivate": false,
+      "expectNoClaude": true,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "TesseraCore/Sources/TesseraTess/PlanWording.swift:8 titles and handles only, never notes",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0,
+        "write": "W5 (a workout titled Pull Day A, notes \"left knee sore\") scheduled 7:00 pm, and a DayPlan with its workout block; PlanPack(plan:..., lastWeightKg: 82)"
+      },
+      "notes": "Never packed for Claude: the pack's JSON holds no note words.",
+      "mustNotShow": [
+        "knee",
+        "sore"
+      ]
+    },
+    {
+      "id": "PM36",
+      "phrase": "how did that set go?",
+      "surface": "liveWorkoutAsk",
+      "expectPrivate": false,
+      "expectNoClaude": false,
+      "expectNotInMissLog": true,
+      "expectLine": null,
+      "lineMatch": null,
+      "passesOnMaster": true,
+      "masterEvidence": "TesseraCore/Sources/TesseraTess/TessModelCapture.swift:70-83 and ClaudeTessModel.swift:151-155 send the exercise and last set only",
+      "pending": null,
+      "seed": {
+        "lastWeightKg": 82.0,
+        "focus": {
+          "exercise": "Bench Press",
+          "lastSet": "80 × 8"
+        },
+        "write": "the live workout carries notes \"left knee sore\" (W5)"
+      },
+      "notes": "Never packed for Claude: under -wallsSpy, no Claude request body or pack, and no on-device model prompt, holds note words. The phrase itself may go to Claude.",
+      "mustNotShow": [
+        "knee",
+        "sore"
       ]
     }
   ]

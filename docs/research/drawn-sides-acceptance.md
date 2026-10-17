@@ -228,3 +228,11 @@ These are SideHost's own rows. A drawn side passes only when they pass on that s
 - **Plan my day's keep is a `.user` `moveTask`** (`HomePlan.swift:149`, `:177`), the same as a hand move (Q4).
 - **Backups' `Info` has no counts** (`TesseraBackup.swift:14-27`), and the front always says "Seven are kept." (`BackupView.swift:353`).
 - PL4 stays closed (`Notes/Notes.swift:41-46`). Review still computes only the current week (`ReviewPage.swift:233`).
+
+## Rulings (Design 97a140e; Product 5:07 pm)
+
+- **Q1 foot words:** ALL SETS; ALL FACTS (PER 100 G and Backups); ALL LINKS; ALL DAYS; ALL OF IT (the exercise's four pages). ITS STORY's foot word is **THE WHOLE STORY**, because ALL OF IT reads vague on a task.
+- **Q16 empty lines:** "Not in a recipe yet." and "Nothing mentions it yet." as written.
+- **Q7 REP MAXES:** the 1-rep row is the e1RM itself, to the whole kg ("1 rep, 102 kg, estimated"), matching the glance. Every other estimate rounds to 2.5 kg.
+- **Product 5:07:** THE SETS goes to Builder A; PER 100 G goes to Builder B after the food table; the keep action name goes to Core 0am; a private task's side shows the move count only (Q6); workout notes are a body fact, masked in Core 0ai (rows in private-field-mask.md, Research BR); the Backups "Seven are kept." count is a Builder B low.
+- **Q8 PER 100 G rounding (Kitchen lead, kitchen-sides-acceptance.md row 2.1c, PR #575):** kcal whole numbers, grams to one decimal ("4.1 g fat"), a zero reads "0 g fiber", never "0.0 g"; the bundled row keeps the FDC value unrounded and tests compare the stored value; one ingredient only, never a sum.
