@@ -272,3 +272,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [fixtures/siri-new-intents.md](fixtures/siri-new-intents.md) | Core, Builder A: CB, 49 rows for "What's next" and "Add a grocery" Siri intents with private and money traps; Product rulings 5:58 applied |
 | [fixtures/sides-77-lines.md](fixtures/sides-77-lines.md) | Core 0ak, Builders A and B: CD, side lines and glances for the eight sheet 77 sides, with empty and private cases; rulings 6:01 applied |
 | [discovery-check.md](discovery-check.md) | Product: CC, the 14 discovery gaps against the boards, five missed gaps and six sharper done-whens |
+| [week-two-stale-check.md](week-two-stale-check.md) | Product: 25 stale lines in the week-two kit against what has merged, and a 5-line Monday order for the Oct 19 plan |
