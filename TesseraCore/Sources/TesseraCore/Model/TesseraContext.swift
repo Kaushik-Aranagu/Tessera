@@ -26,6 +26,8 @@ public final class TesseraContext {
     var pastPrivateCache: (revision: Int, labels: [UUID: String])?
     /// Items a shop clear or a finished shop took off Groceries, at a revision (`Groceries.shopClears`).
     var shopClearedCache: (revision: Int, ids: Set<UUID>)?
+    /// What Pantry reads: the bought rows at a revision (`Groceries.shopClears`).
+    var shopClearsCache: (revision: Int, rows: [(ingredient: ObjectRecord, at: Date)])?
     var decodedOps: [UUID: (data: Data, ops: [Op])] = [:]
 
     /// Saves automatically shortly after a change. Turn off for bulk work, then call `save()`.
