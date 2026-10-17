@@ -157,8 +157,11 @@ public struct ObjectStore {
         return value(of: field, in: object, fields: fields, depth: 0)
     }
 
+    /// A stored number a screen can use: finite and small enough for `Int(...)` (under 1e15). A NaN, an infinity or a
+    /// huge value from a restore, a file or a model reads as no value, never as a trap in a screen's `Int(number)`.
     public func number(_ key: String, of object: ObjectRecord) -> Double? {
-        value(key, of: object)?.numericValue
+        guard let number = value(key, of: object)?.numericValue, number.isFinite, abs(number) < 1e15 else { return nil }
+        return number
     }
 
     /// Whether the object stores its own value (rather than inheriting or defaulting). The object page marks the rest
