@@ -1,6 +1,6 @@
 # The private-field mask: fixture rows PM1 to PM36 (Core 0ai rider, Research BH and BR)
 
-*Research, Fri Oct 16, 2026. For Core 0ai (the one engine wall), Builder B (the page), QA (the riders gate). Read by hand on origin/master 64ffb93 (Merge #558). Nothing was built or run. Every value is made up: hunter2, tacocat and 4417 are placeholders. Rows PM21 to PM36 (workout notes, decisions 5:07 pm) added Oct 17 by Research BR, read on origin/master b41695d (section 3b).*
+*Research, Fri Oct 16, 2026. For Core 0ai (the one engine wall), Builder B (the page), QA (the riders gate). Read by hand on origin/master 64ffb93 (Merge #558). Nothing was built or run. Every value is made up: hunter2, tacocat and 4417 are placeholders. Rows PM21 to PM36 (workout notes, decisions 5:20 pm) added Oct 17 by Research BR, read on origin/master b41695d (section 3b).*
 
 **The ruling (Product, 2:45 pm, decisions.md line 7).** The generic object page prints every field (`ObjectPage.swift:342-360`, `PropertyList`), so a private Tess memory's words show in plain text. Core 0ai adds a private-field mask: any object flagged private shows its class's private label ("Private note", "Private task", "Private memory") with its fields hidden. It covers the generic page, `PropertyList` and the class page's "newest" row. Research writes these rows; QA runs them in the riders gate.
 
@@ -78,11 +78,13 @@ Seeded on the Simulator over `-demo -demoTime 18:10 -resetDemo` (see `walls-ui-t
 
 **Count.** 20 rows: 13 leak on master today (PM1 to PM3, PM5 to PM7, PM11, PM12, PM14 to PM17, PM20), 7 don't (the controls PM8 to PM10 and PM13, the class page PM4, and the newest rows PM18 and PM19, which don't exist yet). Every row needs 0ai. PM7 also needs the task check (0ac slice 2 or the 2:22 "Private task" title); PM16 also covers R6; PM18 and PM19 need 0ak's glance.
 
-## 3b. Workout notes: rows PM21 to PM36 (decisions 5:07 pm, item 4)
+## 3b. Workout notes: rows PM21 to PM36 (decisions 5:20 pm, item 4)
 
 *Added by Research BR, Sat Oct 17, 2026, read by hand on origin/master b41695d (Merge #573). Nothing was built or run.*
 
-**The ruling (Product, 5:07 pm, item 4).** The generic workout front prints the workout's notes (`ObjectPage.swift:232-234`), so "left knee sore" shows on the front. Workout notes count as a body fact, so the 0ai rider masks them on the front, the same as other private fields. The 2:45 mask covered private objects only; this one masks one field on an object that is not private.
+**Scope of the label (decisions 5:20 pm).** "Note kept private" is the workout's notes FIELD only. A private note OBJECT stays "Private note", never its words. PM21 to PM24, PM33 and PM34 use the field label; every private-object row keeps "Private note".
+
+**The ruling (Product, 5:20 pm, item 4).** The generic workout front prints the workout's notes (`ObjectPage.swift:232-234`), so "left knee sore" shows on the front. Workout notes count as a body fact, so the 0ai rider masks them on the front, the same as other private fields. The 2:45 mask covered private objects only; this one masks one field on an object that is not private.
 
 **Where a workout's notes live and show on master.** `notes` is a rich-text field on Thing (`SystemCatalog.swift:56-58`), so Workout inherits it (Workout's own fields are Scheduled, Started, Ended and Routine, `SystemCatalog.swift:127-133`). Nothing in the app writes a workout's notes on master: no screen edits it, no action sets it (`git grep '"notes"'` finds only `ObjectPage.swift:81`, `:232`, `:348` and the exercise library cue at `ExerciseLibraryInstaller.swift:87-88`). A workout gets notes from the old SwiftData store (`TesseraLegacyStore` copies every value), a restored backup (`TesseraExport.swift:130` keeps every value), or the seed flag. So the rows seed them through `ObjectStore`, as PM1 does.
 
@@ -110,7 +112,7 @@ Seeded on the Simulator over `-demo -demoTime 18:10 -resetDemo` (see `walls-ui-t
 
 So the front is the one leak today. The other rows pin that each surface stays clean once the mask lands, and the drawn sides (Core 0ak: THE SETS, the exercise side's HISTORY page) carry their own rows (SA-SETS-8, SA-EX-12, DP22).
 
-**Research's pick: mask every workout note, whatever it says.** The 5:07 ruling names the field, not the words, so "felt strong" is masked like "left knee sore". Screening by word list (SecretWords, PrivateFacts) would let "felt strong" through and then has to decide line by line for "felt strong, left knee sore". One rule for the field is simpler to build and to test, and a note about how a session felt is about his body anyway. PM23 is the trap: a builder who screens by words fails it.
+**Research's pick: mask every workout note, whatever it says.** The 5:20 ruling names the field, not the words, so "felt strong" is masked like "left knee sore". Screening by word list (SecretWords, PrivateFacts) would let "felt strong" through and then has to decide line by line for "felt strong, left knee sore". One rule for the field is simpler to build and to test, and a note about how a session felt is about his body anyway. PM23 is the trap: a builder who screens by words fails it.
 
 **What shows instead.** On the generic front, one muted line "Note kept private" in the notes slot, no words, no count of lines or characters, and the same line whatever the note says. Everywhere else, nothing, as today. Research picks the marker over a blank because nothing else on master shows the note, so a blank would make it look lost; the marker says it is kept without saying what it is. Product can pick a blank instead (Q4); then `expectLine` becomes null and the checks become "no notes slot". The marker is not "Private note" (the Note class's label, which PM8 and PM19 look for), and the workout itself is not masked: hero, class line, Properties, Contents, Linked from and Start workout all show as today (PM27).
 
@@ -156,7 +158,7 @@ So the front is the one leak today. The other rows pin that each surface stays c
 - **Q1. The newest row (PL3 vs 2:45 pm).** The 2:44 pm decision adopted screens-inventory-check PL3: "Private objects count but are never the newest or the most used." The 2:45 pm rider says the newest row shows the private label. Ruled in the 2:45 amendment (2:55 pm): 2:45 wins, so the newest slot shows the private label. PM18 and PM19 hold. The title never shows.
 - **Q2. The task flag.** Master's Task has no `isPrivate`, and the riders pin can't add one (Catalog v9). Until Core 0ac slice 2 walls bare medicine names, "Take Advil" with no number is not private by title. PM7 is pending on that, not on 0ai. Ruled 2:55 pm: 0ai uses a computed check with no new field, so v9 holds.
 - **Q3. R8's Builder B half.** R8 (PN-MENTION) has "the object page never shows a private note's body" (`InstanceBody`). 0ai's mask closes it for every class, so MN1's second half and PM5 are one fix, checked twice. Ruled 2:55 pm: the heading, InstanceBody and Linked from are all masked on Core 0ai with PF1/R18.
-- **Q4. Marker or blank (workout notes, 5:07 pm).** Research picks one muted "Note kept private" line in the front's notes slot (section 3b), so the note doesn't look lost, since nothing else on master shows it. If Product wants a blank, PM21 to PM24, PM33 and PM34 drop `expectLine` and check that no notes slot shows. Either way no note words and no line count show, and "felt strong" is masked like the rest.
+- **Q4. Marker or blank (workout notes, 5:20 pm).** Research picks one muted "Note kept private" line in the front's notes slot (section 3b), so the note doesn't look lost, since nothing else on master shows it. If Product wants a blank, PM21 to PM24, PM33 and PM34 drop `expectLine` and check that no notes slot shows. Either way no note words and no line count show, and "felt strong" is masked like the rest.
 
 ## 5. QA riders gate: run list
 
