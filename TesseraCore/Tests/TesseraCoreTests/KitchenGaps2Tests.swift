@@ -134,3 +134,36 @@ struct KitchenGaps2Tests {
         #expect(TessGrammar.splitItems("buy mac and cheese") == ["buy mac and cheese"])
     }
 }
+
+// MARK: Gap hunt 3
+
+@MainActor
+struct KitchenGaps3Tests {
+    let store = ObjectStore.open(inMemory: true)
+
+    /// G15
+    @Test func clearingAnEmptyBasketLogsNothing() throws {
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        try engine.perform(AddGroceries(lines: ["milk"]), by: .user)
+        let before = store.context.all(OpRecord.self).count
+        #expect(throws: ActionError.self) {
+            try engine.perform(ClearDoneItems(list: Groceries.listID), by: .user)
+        }
+        #expect(store.context.all(OpRecord.self).count == before)
+        // A shop finished with an empty basket still ends.
+        try engine.perform(StartShop(), by: .user)
+        try engine.perform(FinishShop(), by: .user)
+        #expect(ProcessTable(engine: engine).running() == nil)
+    }
+
+    @Test func clearingCheckedRowsKeepsItsReceipt() throws {
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        let rows = try engine.perform(AddGroceries(lines: ["milk", "eggs"]), by: .user).output
+        for row in rows {
+            try engine.perform(CheckListItem(item: row.id), by: .user)
+        }
+        let record = try engine.perform(ClearDoneItems(list: Groceries.listID), by: .user).record
+        #expect(record.receipt == "Groceries, done items cleared")
+        #expect(Groceries(store: store, classes: engine.classes).aisles().isEmpty)
+    }
+}

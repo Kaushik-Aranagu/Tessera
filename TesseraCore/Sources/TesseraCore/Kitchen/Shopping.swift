@@ -59,7 +59,7 @@ public struct FinishShop: EngineAction {
     @discardableResult
     public func apply(_ transaction: inout Transaction) throws -> Int {
         let list = try transaction.groceriesList()
-        let cleared = try ClearDoneItems(list: list.id).apply(&transaction)
+        let cleared = try transaction.clearDone(in: list)
         if let process = transaction.openProcess(for: list) {
             try transaction.end(process, reason: .done, at: time ?? .now)
         }
