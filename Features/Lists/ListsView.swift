@@ -109,6 +109,9 @@ private struct ListPage: View {
     @State private var draft = ""
     @State private var striking: Set<UUID> = []
     @State private var foldOpen = false
+    /// Bumped by a real remove; the haptic lives here because the removed row leaves in the same update. It's
+    /// .notNow, the row leaving (Design on #786); UNDO plays its own.
+    @State private var removed = 0
     /// Private rows: "Private item" until tapped, masked again on leaving (as Groceries, B11).
     @State private var rows = ShopTrip()
     @FocusState private var writing: Bool
@@ -168,6 +171,7 @@ private struct ListPage: View {
             .background { ThemedBackground() }
             .background { EdgeSwipeBack() }
             .toolbar(.hidden, for: .navigationBar)
+            .tesseraFeedback(.notNow, trigger: removed)
             .onDisappear { rows.end() }
             .onChange(of: scenePhase) { _, phase in
                 if phase != .active {
@@ -223,6 +227,7 @@ private struct ListPage: View {
             return false
         }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
+        removed += 1
         TessVoice.shared.say(ListsCopy.removed(thing), takeBack: { [model] in
             model.engine.undo(record)
             model.touch()
