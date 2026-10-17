@@ -403,8 +403,6 @@ public final class TessCaptureEngine: TessCapturing {
         ["Bench Press": "Bench", "Back Squat": "Squat"][name] ?? name
     }
 
-    /// "today 3 pm", "tomorrow 9 am", "Saturday 3 pm". By his day (04:00 to 04:00); after midnight and before 04:00
-    /// "today" and "tomorrow" are ambiguous, so the weekday is named (late-night #9).
     /// What Tess says for a task whose title is private: its day, never its words.
     public static func privateTaskLine(_ startsAt: Date?, context: TessContext) -> String {
         guard let startsAt, let day = when(startsAt, context: context).split(separator: " ").first else {
@@ -413,7 +411,9 @@ public final class TessCaptureEngine: TessCapturing {
         return "Task added for \(day)."
     }
 
-    static func when(_ date: Date, context: TessContext) -> String {
+    /// "today 3 pm", "tomorrow 9 am", "Saturday 3 pm". By his day (04:00 to 04:00); after midnight and before 04:00
+    /// "today" and "tomorrow" are ambiguous, so the weekday is named (late-night #9). Home's Not now says it too.
+    public static func when(_ date: Date, context: TessContext) -> String {
         let calendar = context.calendar
         let tessera = TesseraDay(calendar: calendar)
         let small = calendar.component(.hour, from: context.now) < TesseraDay.startHour

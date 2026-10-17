@@ -35,6 +35,7 @@ For Builder A (before the PR) and QA (the review): how to tell whether the built
 | Pick 8, she hears you type (18e) | `picks/tess-pick-typing.mp4` | 0.96, 1.33, 1.6, 1.96 (one pulse per word) | type "call mom at six" at 11 characters a second; the beat strip's crop is at (312, 1316) px |
 | Pick 9, the peek (18e) | `picks/tess-pick-peek.mp4` | 2.2 (rise 5 pt), 3.6 (blink at the top), 3.9 (back down) | scroll 140 pt to the last row over 1.5 s from 0.8 s |
 | Pick 11, under the glass (18f) | `picks/tess-pick-tilt.mp4` | none by frame: ±2 pt mains, satellites 1.7×, eyes ±0.6 / ±0.4 | the prototype tilts on a sine; on the simulator, drive the attitude from a test hook; on the device, tilt by hand and check only the bounds |
+| Side turn, every screen (sheet 75) | `picks/tess-pick-side.mp4` | 1.0 eyes 0.4 right (380 ms); 1.42 her line; 2.8 stop 2, she's still; 4.6 back to stop 1, still; 6.2 eyes 0.4 left; 6.88 ahead | swipe left above 736 to stop 1, pull on to stop 2, swipe right twice; her centre and the band never move with the body (compare the soul crop over the whole clip) |
 
 ## 2. Compare frame by frame
 `docs/design/motion/prototype/compare.sh <reference> <candidate> <out-dir> "<beats>" [crop]` (needs ffmpeg). It brings both clips to 393 × 852 pt at 60 fps, crops the soul (default the bottom-right 160 × 160 pt; pass `x:y:w:h` in points for roam, drag and the pages), and writes:

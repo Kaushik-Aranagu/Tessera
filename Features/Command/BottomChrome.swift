@@ -222,7 +222,8 @@ struct BottomChrome: View {
 
     /// The soul at 0.72, breathing 1 ↔ 1.08 over 3.2 s; tap opens, hold opens, double tap goes Home.
     private var soulKey: some View {
-        TessSoul(mode: model.tessMode, hostScale: 0.72, eyes: model.tessHasEyes, gaze: model.soul.gaze)
+        TessSoul(mode: model.tessMode, hostScale: 0.72, eyes: model.tessHasEyes, gaze: model.soul.gaze,
+                 wake: model.soul.wake)
             .scaleEffect(0.72)
             .scaleEffect(breathe ? 1.08 : 1)
             .tesseraAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true), value: breathe)
@@ -454,7 +455,7 @@ struct BottomChrome: View {
     }
 
     /// Return: the text dims to a ghost and a cobalt line dries under it for 2 s (touching cancels), then it commits.
-    /// Core's shared guard (any "sk-ant-", any case).
+    /// Core's shared guard (anything that starts like a Claude key, in any case).
     static func looksLikeClaudeKey(_ text: String) -> Bool {
         TesseraCore.looksLikeClaudeKey(text)
     }

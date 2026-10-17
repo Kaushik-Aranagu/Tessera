@@ -247,6 +247,10 @@ struct PaintKey<Label: View, Meta: View>: View {
     /// The ink line as progress (home-first-review.md 41.5): a 22% track the full width, filled to this share.
     /// Nil is the plain full line.
     var progress: Double?
+    /// VoiceOver's hint: what the key does ("Finishes the workout"), never the gesture. A hold key's default action
+    /// completes on a double tap (docs/research/fixtures/voiceover-recipe-clock-lists.md VO19), so naming "hold" or
+    /// "double tap" would be wrong or redundant. Tap keys keep "": the word already says what they do.
+    var hint = ""
     let action: () -> Void
     /// Receives whether the word is being held. The word itself shouldn't change ("HOLD" lives in the meta).
     @ViewBuilder var label: (Bool) -> Label
@@ -306,7 +310,7 @@ struct PaintKey<Label: View, Meta: View>: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
-        .accessibilityHint(isTap ? "" : "Touch and hold")
+        .accessibilityHint(hint)
         .accessibilityAction { complete() }
     }
 
@@ -465,11 +469,11 @@ struct PaintKey<Label: View, Meta: View>: View {
 
 extension PaintKey where Meta == EmptyView {
     init(finish: Finish = .ink, paint: Color = Theme.Colors.live, duration: Double = Theme.Motion.holdDuration,
-         isTap: Bool = false, height: CGFloat = 64, drift: CGFloat = 30, progress: Double? = nil,
+         isTap: Bool = false, height: CGFloat = 64, drift: CGFloat = 30, progress: Double? = nil, hint: String = "",
          action: @escaping () -> Void, @ViewBuilder label: @escaping (Bool) -> Label)
     {
         self.init(finish: finish, paint: paint, duration: duration, isTap: isTap, height: height, drift: drift,
-                  progress: progress, action: action, label: label, meta: { EmptyView() })
+                  progress: progress, hint: hint, action: action, label: label, meta: { EmptyView() })
     }
 }
 
