@@ -43,6 +43,11 @@ enum ListsCopy {
         "\(list), \(isOn ? "reusable" : "not reusable")."
     }
 
+    /// The option word with its state, so it never rests on colour: "Reusable, on" / "Reusable, off".
+    static func reusableWord(isOn: Bool) -> String {
+        "Reusable, \(isOn ? "on" : "off")"
+    }
+
     /// A reset's receipt: "Packing, reset." (10.4, 10.11).
     static func reset(_ list: String) -> String {
         "\(list), reset."
