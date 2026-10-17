@@ -1,5 +1,6 @@
 import SwiftUI
 import TesseraCore
+import TesseraTess
 
 /// Home says one plain line per thing (home-first-review.md 41): the time words above, the thing and its state as
 /// the hero, and at most one key under it. The words come from Core's HomeLines lens; nothing else about the thing
@@ -123,11 +124,16 @@ extension LineHero {
     /// A finished workout's context from Claude (docs/ai/home-lines-job.md §6): the rules line draws first; words
     /// that differ redraw wet in Tess's ink and dry on `Theme.Motion.dry`. Words already kept from an earlier ask
     /// come back at once and draw at rest, since they aren't news. Reduce Motion: a crossfade.
+    /// Claude's context words, only when they differ from the rules line: identical words never redraw (§6).
+    static func claudeContext(_ words: HomeDoneWords?, rules: String?) -> String? {
+        guard let new = words?.context, new != rules else { return nil }
+        return new
+    }
+
     private func askClaude() async {
         guard context == nil else { return }
         let asked = ContinuousClock.now
-        guard let words = await model.homeDoneWords(for: line), let new = words.context, new != line.context
-        else { return }
+        guard let new = await Self.claudeContext(model.homeDoneWords(for: line), rules: line.context) else { return }
         let kept = ContinuousClock.now - asked < .milliseconds(150)
         guard !kept, let dry = Theme.Motion.dry(reduceMotion: reduceMotion) else {
             withTesseraAnimation(reduceMotion: reduceMotion) { claudeContext = new }
