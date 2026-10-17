@@ -59,6 +59,23 @@ struct SideFactsTests {
         #expect(!SideFacts.isShowable("Door code: 4417", lastWeightKg: nil))
     }
 
+    @Test func aSetWeightPrintsButABodyWeightFieldNever() throws {
+        // QA on #785: a training load is the bar's; "Weight: 82.4" on a class of his own is still his body.
+        let set = try store.create(#require(classes[.set]), title: "Bench set")
+        try store.set("weight", to: .mass(60), on: set)
+        try store.set("reps", to: .number(8), on: set)
+        let fields = try #require(SideFacts.defaultFields(of: set, in: store, classes: classes))
+        #expect(fields.contains { $0.key == "weight" }, "\(fields.map(\.name))")
+        let me = ClassDef(name: "Check-in")
+        store.context.insert(me)
+        let field = FieldDef(name: "Weight", key: "bodyWeight", kind: .number)
+        field.owner = me
+        store.context.insert(field)
+        let checkIn = store.create(me, title: "Sunday")
+        try store.set("bodyWeight", to: .number(82.4), on: checkIn)
+        #expect(SideFacts.defaultFields(of: checkIn, in: store, classes: classes)?.isEmpty == true)
+    }
+
     @Test func noCatalogObjectPrintsAKnownPrivateWord() throws {
         // Fixed private words, not the code's own predicate: seed private values into the plain classes and every
         // field of every object on every class must come out without them.
