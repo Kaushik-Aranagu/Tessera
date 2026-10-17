@@ -335,7 +335,8 @@ struct RecipeLinkTests {
             #expect(!body.contains(walled), "\(walled)")
         }
         // The wall also reads his last weigh-in: a bare number beside it is his weight.
-        #expect(ClaudeRecipeReader.sendable("Today the scale said 82.4\nAdd 1 onion", lastWeightKg: 82.4) == "Add 1 onion")
+        #expect(ClaudeRecipeReader
+            .sendable("Today the scale said 82.4\nAdd 1 onion", lastWeightKg: 82.4) == "Add 1 onion")
         #expect(ClaudeRecipeReader.sendable("Add 1 onion", lastWeightKg: 82.4) == "Add 1 onion")
     }
 
@@ -362,16 +363,16 @@ struct RecipeLinkTests {
         + "1 tbsp butter\nMethod\n1. Simmer the tomatoes 10 minutes.\n2. Add the broth and butter."
 
     func claudeReplying(_ text: String) async -> RecipeLinkResult {
-        let reply = try! JSONSerialization.data(withJSONObject: [
+        let reply = (try? JSONSerialization.data(withJSONObject: [
             "content": [["type": "text", "text": text]], "usage": ["input_tokens": 300, "output_tokens": 80],
-        ])
+        ])) ?? Data()
         LinkStub.pages["blog.example.com"] = .init(body: Self.prose)
         LinkStub.pages["api.anthropic.com"] = .init(body: String(decoding: reply, as: UTF8.self),
                                                     type: "application/json")
         return await reader(claude: true).read("https://blog.example.com/beans")
     }
 
-    @Test func recipeReaderIgnoresPageInstructions() async throws {
+    @Test func recipeReaderIgnoresPageInstructions() async {
         // I01: the clean recipe is kept; the same recipe carrying the page's order is dropped whole.
         let clean = await claudeReplying(Self.soup)
         #expect(clean.kind == .readByClaude && clean.text?.contains("Tomato Soup") == true)

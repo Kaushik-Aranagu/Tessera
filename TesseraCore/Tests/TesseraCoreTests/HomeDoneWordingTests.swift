@@ -180,7 +180,7 @@ struct HomeDoneWordingTests {
         }
         let now = Self.ended.addingTimeInterval(600) // 7:50 pm Thursday
         // Yesterday's calls (before 04:00 today), other jobs' and a fortieth of nothing do not count.
-        record(40, at: Self.calendar.date(from: DateComponents(year: 2026, month: 10, day: 15, hour: 3))!)
+        try record(40, at: #require(Self.calendar.date(from: DateComponents(year: 2026, month: 10, day: 15, hour: 3))))
         record(40, at: now, use: .capture)
         record(39, at: now)
         #expect(job().callsToday() == 39)

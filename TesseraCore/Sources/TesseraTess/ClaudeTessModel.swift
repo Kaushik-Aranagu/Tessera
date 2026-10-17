@@ -102,10 +102,7 @@ public struct ClaudeTessModel: TessModel {
                                                      pending: true, now: request.context.now,
                                                      calendar: request.context.calendar)
                         records += done
-                        if records.count > TessTools.maxRecordsPerPhrase {
-                            discard(Array(records[TessTools.maxRecordsPerPhrase...]), engine: engine)
-                            records.removeLast(records.count - TessTools.maxRecordsPerPhrase)
-                        }
+                        trim(&records, engine: engine)
                         results.append(["type": "tool_result", "tool_use_id": call.id, "content": "Done"])
                     } catch let answer as TessToolAnswer {
                         results.append(["type": "tool_result", "tool_use_id": call.id, "content": answer.line])
@@ -153,6 +150,13 @@ public struct ClaudeTessModel: TessModel {
             line = "Sent \u{201C}\(request.text)\u{201D} to Claude. Turn this off in Settings: Claude."
         }
         return .handled(TessCapture(records: records, line: line, source: .claude))
+    }
+
+    /// Takes back any ghost past the per-phrase cap (a single call may write several).
+    private func trim(_ records: inout [OpRecord], engine: ActionEngine) {
+        guard records.count > TessTools.maxRecordsPerPhrase else { return }
+        discard(Array(records[TessTools.maxRecordsPerPhrase...]), engine: engine)
+        records.removeLast(records.count - TessTools.maxRecordsPerPhrase)
     }
 
     private func discard(_ records: [OpRecord], engine: ActionEngine) {

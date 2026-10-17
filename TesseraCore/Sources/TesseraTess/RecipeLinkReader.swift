@@ -378,7 +378,9 @@ public struct ClaudeRecipeReader {
     /// range.
     static func outputIsUnsafe(_ reply: String, recipe: ParsedRecipe) -> Bool {
         let lower = reply.lowercased()
-        if PromptSteering.mentions(reply) { return true }
+        if PromptSteering.mentions(reply) {
+            return true
+        }
         if lower.firstMatch(of: /https?:|www\.|\b[a-z0-9-]+\.(?:com|org|net|io|co|app|test|example)\b/) != nil
             || lower.firstMatch(of: /[a-z0-9._%+-]+@[a-z0-9-]+\./) != nil
         {
