@@ -27,3 +27,19 @@
 3. **G15 and G16 are Lists/Kitchen seams**: the list tool and the clear action each write through plain list actions where the Groceries rules (ingredient link, aisle, empty-write check) are not applied. G16 wants one routing check (is the list Groceries) in the tool, not in `AddListItem`, so Packing and Errands are unchanged. G15 wants the same no-write path as "nothing to add".
 4. **G17 and G18 are rules to rule before the Pantry build starts**, not bugs. G17 needs the merge order for state and date; G18 needs the staple exception (explicit phrase wins, cooking never touches a staple). Both are listed in `pantry-acceptance.md` terms so Builder can add them as rows without a new screen.
 5. **New copy in this file, all proposed**: G13 "Friday, no session"; G14 "Tuesday, Push and Legs, done"; G15 "Nothing checked on Groceries." and "Shopping, finished."; G17 the merge order. Everything else reuses lines already in `kitchen-phrases.md`, `receipts-thing-first.md` or `pantry-acceptance.md`.
+
+---
+
+## Triage (K59, Oct 17)
+
+*Per Product, Oct 17. A "wall" is a row that touches privacy or money; none of G12 to G18 does, so none is a wall. G16 keeps the walled-item and price-strip behavior it already states (a medicine is still "Private item, on Groceries."), but the fix is a routing check, not a new wall.*
+
+| # | Owner | Board | Wall? | Note |
+|---|---|---|---|---|
+| G12 | Builder A (training week) | Builder A's board, after #662 | No | Week passes the same weekly rhythm as Now and Review. |
+| G13 | Builder A (training week) | Builder A's board, after #662 | No | Week reads `isRest`; the past-due VoiceOver line is proposed copy. |
+| G14 | Builder A (training week) | Builder A's board, after #662 | No | Sessions counted, not days; the VoiceOver naming is proposed copy. |
+| G15 | Builder B | Builder B's board, Lists | No | Empty clear writes nothing and offers no UNDO; the engine seam is small, Builder B owns the row. |
+| G16 | Core | Core's board, tool duplicates | No | The list tool routes Groceries lines through `AddGroceries`; Packing and Errands unchanged. |
+| G17 | Builder B (build target), Core for the merge order | Builder B's board, Pantry | No | G11 is ruled as refuse (no merge in v1), so the merge scenario does not arise in v1; Core still settles the merge order for state and date before Builder B builds the Pantry hero. |
+| G18 | Builder B (build target), Core for the merge order | Builder B's board, Pantry | No | Core settles the staple exception (explicit phrase wins) in the same merge order; no money or private words involved. |
