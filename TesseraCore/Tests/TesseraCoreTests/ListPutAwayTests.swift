@@ -102,7 +102,7 @@ struct ListPutAwayTests {
         let before = fixture.engine.history(limit: 500).count
         #expect(throws: ActionError.invalidArguments(
             action: "putAwayListRun",
-            reason: "Packing, Lisbon isn't running"
+            reason: "Packing, Lisbon isn't running."
         )) {
             try fixture.engine.perform(PutAwayListRun(list: fixture.trip.id), by: .user)
         }

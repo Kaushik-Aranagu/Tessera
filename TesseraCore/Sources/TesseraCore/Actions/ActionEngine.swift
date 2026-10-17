@@ -55,11 +55,11 @@ public final class ActionEngine {
         let record = OpRecord(
             action: A.descriptor.name,
             actor: actor,
-            summary: action.summary(in: store),
+            summary: action.summary(in: store, output: output),
             ops: transaction.ops,
             state: pending ? .pending : .committed
         )
-        record.receipt = action.receipt(in: store)
+        record.receipt = action.receipt(in: store, output: output)
         if let attribution, actor == .tess {
             record.routeRaw = attribution.route.rawValue
             record.model = attribution.model

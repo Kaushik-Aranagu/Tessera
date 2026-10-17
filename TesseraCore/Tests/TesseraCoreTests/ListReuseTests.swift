@@ -114,11 +114,38 @@ struct ListReuseTests {
         #expect(lists.open(in: bag).count == 4)
     }
 
-    @Test func resetWithNothingCheckedWritesNothing() throws {
-        let (engine, _, bag, _) = try setUp()
-        let before = engine.history(limit: 500).count
-        #expect(throws: ActionError.self) { try engine.perform(ResetList(list: bag.id), by: .user) }
-        #expect(engine.history(limit: 500).count == before)
+    @Test func resetWithNothingCheckedIsAQuietNoOp() throws {
+        // Product 9:45 AM PT, ruling 2: no throw, no write (so no UNDO), and "Gym bag, nothing to reset."
+        let (engine, _, bag, items) = try setUp()
+        let reset = try engine.perform(ResetList(list: bag.id), by: .user)
+        #expect(reset.output == 0 && reset.record.ops.isEmpty)
+        #expect(reset.record.receipt == "Gym bag, nothing to reset." && reset.record
+            .summary == "Gym bag, nothing to reset.")
+        // The next real reset still says reset.
+        try check(items, 2, engine: engine)
+        #expect(try engine.perform(ResetList(list: bag.id), by: .user).record.receipt == "Gym bag, reset")
+    }
+
+    @Test func flagsAreExactWholeLines() throws {
+        // Product ruling 1: only "#reusable" on its own line counts; his note text never does.
+        let (engine, lists, bag, _) = try setUp()
+        for note in [" #reusable", "#reusable!", "pack #reusable bags", "#Reusable"] {
+            try store.set("notes", to: .richText(note), on: bag)
+            #expect(!lists.isReusable(bag), "\(note)")
+        }
+        try store.set("notes", to: .richText("Pack the night before\n#reusable"), on: bag)
+        #expect(lists.isReusable(bag))
+    }
+
+    @Test func aPrivateListIsNeverNamedInAResetOrFlag() throws {
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let list = try engine.perform(CreateList(name: "Rent 2100 stuff"), by: .user).output
+        let item = try engine.perform(AddListItem(list: list.id, text: "Lease"), by: .user).output
+        let flag = try engine.perform(SetListReusable(list: list.id), by: .user).record
+        #expect(flag.receipt == "Private list, reusable")
+        try engine.perform(CheckListItem(item: item.id, time: start), by: .user)
+        #expect(try engine.perform(ResetList(list: list.id), by: .user).record.receipt == "Private list, reset")
     }
 
     @Test func resetOnlyTouchesItsOwnList() throws {
@@ -185,5 +212,38 @@ struct ListReuseTests {
         try check(items, 1, engine: engine)
         try engine.perform(named: "resetList", arguments: Data(#"{"list":"\#(bag.id.uuidString)"}"#.utf8), by: .user)
         #expect(lists.done(in: bag).isEmpty)
+    }
+
+    @Test func everyListLineMasksAPrivateListName() throws {
+        // QA on #826: add, un-check and clear never print a walled list's name, in the summary or the receipt.
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let list = try engine.perform(CreateList(name: "Rent 2100"), by: .user).output
+        let added = try engine.perform(AddListItem(list: list.id, text: "Lease"), by: .user)
+        #expect(added.record.summary == "Lease, on Private list" && added.record.receipt == "Lease, on Private list")
+        try engine.perform(CheckListItem(item: added.output.id, time: start), by: .user)
+        let back = try engine.perform(CheckListItem(item: added.output.id, done: false, time: start + 60), by: .user)
+        #expect(back.record.receipt == "Lease, back on Private list", "\(back.record.receipt ?? "-")")
+        try engine.perform(CheckListItem(item: added.output.id, time: start + 120), by: .user)
+        let cleared = try engine.perform(ClearDoneItems(list: list.id), by: .user)
+        #expect(cleared.record.summary == "Cleared Private list" && cleared.record.receipt == "Private list, done items cleared")
+        #expect(throws: ActionError.invalidArguments(action: "clearDoneItems", reason: "nothing checked on Private list")) {
+            try engine.perform(ClearDoneItems(list: list.id), by: .user)
+        }
+        for record in engine.history(limit: 50) {
+            #expect(!record.summary.contains("2100") && !(record.receipt ?? "").contains("2100"), "\(record.summary)")
+        }
+    }
+
+    @Test func aRealClearAfterANoOpResetSaysReset() throws {
+        // QA on #826: the count is carried per op, so a no-op never colours the next line.
+        let (engine, _, bag, items) = try setUp()
+        try engine.perform(SetListReusable(list: bag.id), by: .user)
+        #expect(try engine.perform(ResetList(list: bag.id), by: .user).record.receipt == "Gym bag, nothing to reset.")
+        try check(items, 2, engine: engine)
+        let clear = try engine.perform(ClearDoneItems(list: bag.id), by: .user)
+        #expect(clear.output == 2 && clear.record.receipt == "Gym bag, reset")
+        let none = try engine.perform(ClearDoneItems(list: bag.id), by: .user)
+        #expect(none.record.receipt == "Gym bag, nothing to reset." && none.record.ops.isEmpty)
     }
 }

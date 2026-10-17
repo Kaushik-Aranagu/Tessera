@@ -208,7 +208,7 @@ struct ListRunTests {
     @Test func finishingAListThatIsNotRunningWritesNothing() throws {
         let fixture = try setUp()
         let before = fixture.engine.history(limit: 500).count
-        #expect(throws: ActionError.invalidArguments(action: "finishListRun", reason: "Packing isn't running")) {
+        #expect(throws: ActionError.invalidArguments(action: "finishListRun", reason: "Packing isn't running.")) {
             try fixture.engine.perform(FinishListRun(list: fixture.packing.id), by: .user)
         }
         #expect(fixture.engine.history(limit: 500).count == before)
@@ -310,5 +310,16 @@ struct ListRunTests {
         #expect(fixture.table.running()?.subject?.id == fixture.packing.id)
         try fixture.engine.perform(named: "finishListRun", arguments: Data(#"{"list":"\#(id)"}"#.utf8), by: .user)
         #expect(fixture.table.running() == nil)
+    }
+
+    @Test func aPrivateListRunShowsOnlyItsLabel() throws {
+        // QA carry on #801: Now, Home, a Live Activity and the ledger never print a walled list's name.
+        let fixture = try setUp(name: "Rent 2100 stuff")
+        let process = try fixture.engine.perform(StartListRun(list: fixture.packing.id, time: start), by: .user)
+        #expect(process.record.receipt == "Private list, 6 left")
+        #expect(fixture.table.running()?.nextStep == "Private list, 6 left")
+        #expect(fixture.table.running()?.object.title == "Private list")
+        let done = try fixture.engine.perform(FinishListRun(list: fixture.packing.id, time: start + 60), by: .user)
+        #expect(done.record.receipt?.hasPrefix("Private list") == true, "\(done.record.receipt ?? "-")")
     }
 }

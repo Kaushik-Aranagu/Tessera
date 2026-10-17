@@ -59,7 +59,7 @@ public enum RecipeLinkLine {
     }
 
     public static func takenBack(_ title: String) -> String {
-        "\(title) taken back."
+        "\(title), taken back."
     }
 }
 

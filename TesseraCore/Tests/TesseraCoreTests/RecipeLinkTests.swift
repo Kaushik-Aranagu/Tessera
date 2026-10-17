@@ -275,7 +275,7 @@ struct RecipeLinkTests {
 
     @Test func theLinesAreTheTable() {
         #expect(RecipeLinkLine.saved("Chili mac") == "Chili mac saved.")
-        #expect(RecipeLinkLine.takenBack("Chili mac") == "Chili mac taken back.")
+        #expect(RecipeLinkLine.takenBack("Chili mac") == "Chili mac, taken back.")
         #expect(RecipeLinkLine.reading("budgetbytes.com") == "Reading budgetbytes.com.")
         #expect([RecipeLinkLine.blocked, RecipeLinkLine.paywalled, RecipeLinkLine.noRecipe, RecipeLinkLine.tooBig,
                  RecipeLinkLine.claudeTimeout, RecipeLinkLine.videoNoRecipe]
