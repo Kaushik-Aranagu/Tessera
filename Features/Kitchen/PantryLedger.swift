@@ -35,6 +35,10 @@ struct PantryLedger {
         /// The last shop clear that had it checked; nil when it was never bought through Groceries.
         let lastBoughtAt: Date?
         let aisle: Aisle?
+        /// A walled thing (a medicine, a body fact): every surface reads `label`, never the name (QA M1 on #722).
+        let isPrivate: Bool
+        /// What any view, Tess line, widget or Spotlight shows: the name, or "Private item".
+        let label: String
     }
 
     let store: ObjectStore
@@ -53,14 +57,13 @@ struct PantryLedger {
                 if left != right {
                     return left < right
                 }
-                return store.displayTitle(of: lhs.ingredient) < store.displayTitle(of: rhs.ingredient)
+                return lhs.label < rhs.label
             }
     }
 
     /// One ingredient's state; unknown when nothing has touched it.
     func entry(for ingredient: ObjectRecord) -> Entry {
-        facts()[ingredient.id] ?? Entry(id: ingredient.id, ingredient: ingredient, state: .unknown, lastBoughtAt: nil,
-                                        aisle: aisle(of: ingredient))
+        facts()[ingredient.id] ?? make(ingredient, state: .unknown, lastBoughtAt: nil)
     }
 
     /// "4 out, 2 low", or "nothing known yet". In is never counted on the line.
@@ -100,8 +103,7 @@ struct PantryLedger {
             let last = (events[ingredient.id] ?? []).max { lhs, rhs in
                 lhs.when != rhs.when ? lhs.when < rhs.when : lhs.state > rhs.state
             }
-            return Entry(id: ingredient.id, ingredient: ingredient, state: last?.state ?? .unknown,
-                         lastBoughtAt: bought[ingredient.id], aisle: aisle(of: ingredient))
+            return make(ingredient, state: last?.state ?? .unknown, lastBoughtAt: bought[ingredient.id])
         }
     }
 
@@ -124,13 +126,23 @@ struct PantryLedger {
         let book = RecipeBook(store: store, classes: classes)
         return store.objects(of: cookClass).flatMap { cook -> [(ObjectRecord, State, Date)] in
             guard let when = store.value("cookedAt", of: cook)?.dateValue,
-                  let recipe = store.linkedObjects("recipe", of: cook).first
+                  let recipe = store.linkedObjects("recipe", of: cook).first, !recipe.isDeleted
             else { return [] }
             return book.lines(of: recipe).compactMap { line in
-                guard let ingredient = line.ingredient, !line.isStaple, !isStaple(ingredient) else { return nil }
+                // Optional and to-taste lines aren't counted as used (QA on #722).
+                guard let ingredient = line.ingredient, !line.isStaple, !line.line.optional, !line.line.toTaste,
+                      !isStaple(ingredient)
+                else { return nil }
                 return (ingredient, aisle(of: ingredient) == .produce ? .out : .low, when)
             }
         }
+    }
+
+    private func make(_ ingredient: ObjectRecord, state: State, lastBoughtAt: Date?) -> Entry {
+        let title = store.displayTitle(of: ingredient)
+        let walled = EngineWall.isHealth(title, lastWeightKg: BodyWeight.lastKg(in: store))
+        return Entry(id: ingredient.id, ingredient: ingredient, state: state, lastBoughtAt: lastBoughtAt,
+                     aisle: aisle(of: ingredient), isPrivate: walled, label: walled ? "Private item" : title)
     }
 
     /// Staples are never low or out by cooking: the ingredient's own flag, or the shop guide's staples (as Groceries).
