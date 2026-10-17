@@ -90,7 +90,7 @@ This sheet replaces sheet 71's "which pages get a side page" and Product's 10:00
 - **Stop 1, the glance:** a swipe past 60 pt that's let go before half the width settles here.
   - The glance takes the right half: from x 150, below the context line (186) to above Tess's band. Its left edge is a 34 pt fade into the ground, with no line and no card.
   - The front stays in place under it at 30%, so its left half still reads.
-  - It holds the side's label, then the one number or name that matters at Hero 56 (with a unit at 21), then at most two more facts at Body 19. Its word sits at the foot ("ALL FACTS", "ALL LINKS").
+  - It holds the side's label, then the one number or name that matters at Hero 56 (with a unit at 21), then at most two more facts at Body 19. Its word sits at the foot: ALL FACTS (PER 100 G, Backups), ALL LINKS, ALL SETS, ALL DAYS, THE WHOLE STORY (a task), and ALL OF IT for a side with pages (Research BQ). Empty lines: "Not in a recipe yet." and "Nothing mentions it yet."
   - Lists in a glance follow the copy rule: a count first, then two or three named, and "and N more" from four.
 - **Stop 2, the full side:** pull on past half the width, or tap the glance's word. The glance fades into the full side, and the front leaves as in 71.
 - **Back:** a swipe right goes back one stop at a time. The left edge is still back to the page before (rule 4).
