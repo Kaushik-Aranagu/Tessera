@@ -62,7 +62,7 @@ Sheet 77 itself is still unread. Sheet 78 is the Pantry sheet and answers every 
 
 ## 3. Conflicts with standing rulings, and what I assumed
 
-1. **Time with "at".** Sheet 78 keeps the index line "Tacos at 7 pm" (thing plus time, copy-pass rule 6), while the briefs say never "at 7 pm" before a time. Assumed: no Pantry row asserts the KITCHEN line; Kitchen lead to rule.
+1. **Time with "at".** Sheet 78 drew the index line "Tacos at 7 pm". Product ruled (decisions 6:32) "Tacos, 7 pm": no "at" before a time anywhere in the app, and Design is redrawing to match. No Pantry row asserts the KITCHEN line.
 2. **Never sums.** "6 to buy" and "4 out, 2 low" are counts of lines and states. Assumed allowed as counts, not amounts; no amount, weight, money or nutrition sum anywhere. "Every 7 days" is a rhythm, not a total.
 3. **Count rolls 260 ms** (briefs, Builder B acceptance) versus "the digits just change (nothing counts up)" (sheet). Assumed the sheet wins, as the briefs state.
 4. **Receipts.** BV used "Milk, on Groceries."; sheet uses "Milk, in Groceries." Both are thing-first. Assumed the sheet.
