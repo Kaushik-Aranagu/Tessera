@@ -35,6 +35,8 @@ public struct TessGrammar {
         case sets([Parse])
         /// "move dentist to friday": an open task, to a new time.
         case reschedule(task: ObjectRecord, to: Date)
+        /// "rest day Sunday": the rest weekday, 1 (Sunday) to 7. Never a task (RG3).
+        case setRestWeekday(weekday: Int)
         /// "next" / "done" while cooking.
         case cookStep(cook: ObjectRecord, next: Bool)
         /// Bare input the running workout owns but Tess doesn't act on (a rest timer is the workout screen's).
@@ -81,6 +83,10 @@ public struct TessGrammar {
         // still counts (normalize trims it).
         if Self.isQuestion(text) || phrase.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix("?") {
             return nil
+        }
+        // A rest weekday is a setting, not a task called "Rest day" (RG3): ahead of every task rule.
+        if let rest = parseSetRestWeekday(text: text) {
+            return rest
         }
         // Rule 3: the process in front decides bare input.
         if let bare = parseForProcess(text, context: context) {
@@ -134,7 +140,7 @@ public struct TessGrammar {
         // sat") is a note dated that day, never a future task.
         // A dated past log of money is private too ("bought a tv for 800 sat", QA F2 on #534).
         let walledLog = Self.isSomethingToDo(phrase) ? nil
-            : parseBodyFact(phrase) ??
+            : parseBodyFact(phrase, context: context) ??
             (PrivateFacts.isMoneyShaped(phrase) ? parsePrivateLog(phrase, context: context) : nil)
         if let log = walledLog ?? parsePastLog(phrase, context: context) {
             return log
@@ -156,8 +162,8 @@ public struct TessGrammar {
     /// A body fact with a day ("headache since tuesday") is a private note, not a task (QA R1 on #471), unless it
     /// opens with something to do: "call the doctor about my knee thu" and "refill lexapro 10mg fri" stay tasks.
     func parseTaskOrBodyFact(_ phrase: String, context: TessContext) -> Parse? {
-        Self.isSomethingToDo(phrase) ? parseTask(phrase, context: context) ?? parseBodyFact(phrase)
-            : parseBodyFact(phrase) ?? parseTask(phrase, context: context)
+        Self.isSomethingToDo(phrase) ? parseTask(phrase, context: context) ?? parseBodyFact(phrase, context: context)
+            : parseBodyFact(phrase, context: context) ?? parseTask(phrase, context: context)
     }
 
     /// The live workout's rules for a phrase with an exercise in focus; nil when they don't apply (the other rules

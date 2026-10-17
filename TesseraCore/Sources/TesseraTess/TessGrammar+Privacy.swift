@@ -27,7 +27,7 @@ extension TessGrammar {
         }
         let body = phrase.trimmingCharacters(in: .whitespacesAndNewlines)
         let note = Parse.privateNote(body: body.prefix(1).uppercased() + body.dropFirst(), remembered: false)
-        if PrivateFacts.isBodyShaped(phrase) {
+        if PrivateFacts.isBodyShaped(phrase, lastWeightKg: lastWeightKg(context)) {
             return note
         }
         guard PrivateFacts.isMoneyShaped(phrase) else { return nil }
@@ -49,10 +49,16 @@ extension TessGrammar {
 
     /// A body or health fact nothing else read stays on the phone as a private note (Product on QA L1, Research 138
     /// W8): "knee hurts", "slept badly", "body fat 18%".
-    func parseBodyFact(_ phrase: String) -> Parse? {
-        guard PrivateFacts.isBodyShaped(phrase) else { return nil }
+    func parseBodyFact(_ phrase: String, context: TessContext) -> Parse? {
+        guard PrivateFacts.isBodyShaped(phrase, lastWeightKg: lastWeightKg(context)) else { return nil }
         let body = phrase.trimmingCharacters(in: .whitespacesAndNewlines)
         return .privateNote(body: body.prefix(1).uppercased() + body.dropFirst(), remembered: false)
+    }
+
+    /// His last weight for the bare-number wall, or nil with a set in focus: mid-workout a number is the bar (Product
+    /// 4:46 PM PT).
+    func lastWeightKg(_ context: TessContext) -> Double? {
+        context.entry == nil ? BodyWeight.lastKg(in: store) : nil
     }
 }
 

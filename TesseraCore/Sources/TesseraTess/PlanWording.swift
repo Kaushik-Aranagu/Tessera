@@ -34,24 +34,26 @@ public struct PlanPack: Sendable, Equatable {
 
     /// A title with a secret word, money or a body fact never goes to Claude (QA A4, Research 138 W7 and 139): a task
     /// goes as "task" and an event as "busy", with its kind and times only.
-    static func isPrivate(_ title: String) -> Bool {
-        SecretWords.mentions(title) || PrivateFacts.isWalled(title)
+    static func isPrivate(_ title: String, lastWeightKg: Double?) -> Bool {
+        SecretWords.mentions(title) || PrivateFacts.isWalled(title, lastWeightKg: lastWeightKg)
     }
 
-    static func packTitle(_ block: DayPlan.Block, includesEventTitles: Bool) -> String {
-        if block.kind == .event, !includesEventTitles || isPrivate(block.title) {
+    static func packTitle(_ block: DayPlan.Block, includesEventTitles: Bool, lastWeightKg: Double?) -> String {
+        if block.kind == .event, !includesEventTitles || isPrivate(block.title, lastWeightKg: lastWeightKg) {
             return "busy"
         }
-        return isPrivate(block.title) ? "task" : block.title
+        return isPrivate(block.title, lastWeightKg: lastWeightKg) ? "task" : block.title
     }
 
     /// Nil when there's nothing to word: no window, or no plan lines (d14).
     /// `otherNames`: what he has that isn't in this plan (tasks left out, Later, routines, skipped events), for V13.
     /// `includesEventTitles` false (his call on Oct 22): events go as "busy", with their kind and times only.
     public init?(plan: DayPlan, now: Date, calendar: Calendar, calendarKnown: Bool, restDay: Bool,
-                 otherNames: [String] = [], includesEventTitles: Bool = true)
+                 otherNames: [String] = [], includesEventTitles: Bool = true, lastWeightKg: Double?)
     {
         guard let window = plan.window, !plan.ghosts.isEmpty else { return nil }
+        let isOpen = { !Self.isPrivate($0, lastWeightKg: lastWeightKg) }
+        let packTitle = { Self.packTitle($0, includesEventTitles: includesEventTitles, lastWeightKg: lastWeightKg) }
         let day = TesseraDay(calendar: calendar).day(of: now)
         // Wall-clock minutes (plus a day after midnight), never elapsed time: DST days keep their hours (QA P1).
         func minutes(_ date: Date) -> Int {
@@ -87,7 +89,7 @@ public struct PlanPack: Sendable, Equatable {
             let handle = "\(prefix)\(counters[block.kind] ?? 1)"
             handles[handle] = index
             let start = minutes(block.start), end = minutes(block.end)
-            let title = Self.packTitle(block, includesEventTitles: includesEventTitles)
+            let title = packTitle(block)
             var row: [String: Any] = ["id": handle, "kind": block.kind.rawValue, "title": title,
                                       "start": clock(start), "end": clock(end), "min": block.minutes]
             if let run = runOf[index] {
@@ -115,7 +117,7 @@ public struct PlanPack: Sendable, Equatable {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "EEE"
         var top: [String: Any] = [
-            "allDay": includesEventTitles ? plan.allDay.filter { !Self.isPrivate($0) } : [], "blocks": rows,
+            "allDay": includesEventTitles ? plan.allDay.filter(isOpen) : [], "blocks": rows,
             "cap": plan.cap, "light": plan.light,
             "now": clock(minutes(now)),
             "weekday": formatter.string(from: TesseraDay(calendar: calendar).day(of: now).addingTimeInterval(43200)),
@@ -161,7 +163,7 @@ public struct PlanPack: Sendable, Equatable {
         // Multi-word names only ("Lunch" would catch "before lunch"), and never one that overlaps a title in the plan
         // or its all-day items ("landlord" in "Reply to landlord") (QA S1 on #303).
         let inPack = (plan.blocks.map(\.title) + plan.allDay).map(phrase)
-        self.otherNames = Set(otherNames.filter { !Self.isPrivate($0) }.map(phrase).filter { name in
+        self.otherNames = Set(otherNames.filter(isOpen).map(phrase).filter { name in
             // As words, not letters: "pasta" doesn't overlap "pastry bake" (QA on #306).
             let padded = " \(name) "
             return name.contains(" ") && !inPack.contains { padded.contains(" \($0) ") || " \($0) ".contains(padded) }
@@ -171,9 +173,8 @@ public struct PlanPack: Sendable, Equatable {
         func words(_ text: String) -> [String] {
             text.lowercased().split { !$0.isLetter && !$0.isNumber }.map(String.init)
         }
-        let titles: [String] = plan.blocks.map { Self.packTitle($0, includesEventTitles: includesEventTitles) }
-            .filter { $0 != "busy" && $0 != "task" } +
-            (includesEventTitles ? plan.allDay.filter { !Self.isPrivate($0) } : [])
+        let titles: [String] = plan.blocks.map(packTitle).filter { $0 != "busy" && $0 != "task" } +
+            (includesEventTitles ? plan.allDay.filter(isOpen) : [])
         titleWords = Set(titles.flatMap(words))
     }
 }
@@ -601,7 +602,7 @@ public final class ClaudePlanWording {
         let data: Data
         let response: URLResponse
         do {
-            (data, response) = try await session.data(for: http)
+            (data, response) = try await session.data(for: http, delegate: NoRedirects.shared)
         } catch let error as URLError where error.code == .cancelled {
             throw CancellationError() // the view went away: never remembered (QA on #306)
         } catch let error as URLError {

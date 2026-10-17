@@ -66,7 +66,7 @@ else. On a rolling plan the rest day floats: `week()` spreads 6 sessions over th
 | S18 | Mon Oct 19, 9:00 am | Plans page week | Sun drawn as rest | Mon to Sat routines | Sun shows Push A: no rhythm passed (`PlanData.swift:46`; `WeekView.swift:53-55`) |
 | S19 | Sun Oct 25, 7:00 am | Plan my day | Pack `rest: true`; "Rest day." row first | Push A, Monday | Workout block on Sunday: no rhythm passed (`DayPlan+Store.swift:60`) |
 | S20 | Wed Oct 21, 8:00 pm | Mon to Wed done; Settings to Saturday (7) | Wed unchanged | Thu, Fri, Sun train; Sat rest | No Settings row; no reader |
-| S21 | Wed Oct 21, 8:00 pm | Mon to Wed done; Settings "Any" | Wed unchanged | Floating: Thu rest, Fri to Sun train | Already floating |
+| S21 | Wed Oct 21, 8:00 pm | Mon to Wed done; Settings "Any" | Wed unchanged | Same as a store that never had a rest day (the spread decides which day floats; Thu rest is the expected spread, 3 left over Thu to Sun) | Already floating |
 | S22 | Mon Oct 19, 7:00 am | FIXED DAYS Mon Push A to Sat Legs B; `restWeekday` 5 | Push A (Thu still Push B) | Sun rest (unpinned) | Same (`WeekView.swift:42-45`) |
 | S23 | Sun Oct 25, 11:00 pm EDT (8:00 pm PDT) | In New York, Mon to Sat done | "Rest day" | Push A, Monday | Same, by accident |
 | S24 | Mon Oct 26, 4:30 am EDT (1:30 am PDT) | In New York | Monday where he is: Push A | Push A | Push A (zone now, `Calendar.current`) |

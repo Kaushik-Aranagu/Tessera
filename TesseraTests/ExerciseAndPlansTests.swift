@@ -134,11 +134,13 @@ struct ExerciseAndPlansTests {
     @Test func weekComesFromCoreAndRollsOnFromToday() throws {
         // Fresh install: his PPL×2, nothing done. Today is Push A and the days after roll on in order.
         let model = AppModel(context: container.mainContext)
-        let now = AppClock.now
+        // A pinned Monday, so the test never lands on the Sunday the first launch makes a rest day.
+        let now = try #require(Calendar.current.date(from: DateComponents(year: 2026, month: 10, day: 19, hour: 12)))
         let week = PlanData(model: model, plan: nil, now: now).week(now: now)
         let todayIndex = try #require(week.days.firstIndex { $0.state == .today })
+        // The first launch writes Sunday as the rest day (Research 146): it has no routine, so the days after skip it.
         #expect(week.days[todayIndex].routine == "Push A")
-        let after = week.days[(todayIndex + 1)...].map(\.routine)
+        let after = week.days[(todayIndex + 1)...].compactMap(\.routine)
         #expect(Array(after) == Array(["Pull A", "Legs A", "Push B", "Pull B", "Legs B", "Push A"].prefix(after.count)))
         #expect(week.days[..<todayIndex].allSatisfy { $0.state == .open }) // past days are never "missed"
         #expect(week.headline == "0 of 6\nsessions")

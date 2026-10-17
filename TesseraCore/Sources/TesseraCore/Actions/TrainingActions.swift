@@ -431,7 +431,19 @@ public struct CreateTask: EngineAction {
         if let minutes, minutes <= 0 {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "minutes must be positive")
         }
-        let task = try transaction.create(transaction.classDef(.task), title: trimmed)
+        // The engine wall (board 0ai): nothing private is ever stored as a task's title.
+        let title: String
+        switch EngineWall.task(trimmed, startsAt: startsAt, store: transaction.store) {
+        case .privateNote:
+            return try CreateNote(body: trimmed, on: startsAt, isPrivate: true).apply(&transaction)
+        case .privateTask:
+            title = ObjectPrivacy.taskLabel
+        case let .withoutAmount(bare):
+            title = EngineWall.capitalized(bare)
+        case let .keep(given):
+            title = given
+        }
+        let task = try transaction.create(transaction.classDef(.task), title: title)
         try transaction.set("startsAt", to: startsAt.map(FieldValue.date), on: task)
         try transaction.set("length", to: minutes.map { .duration($0 * 60) }, on: task)
         try transaction.set("due", to: due.map(FieldValue.date), on: task)
@@ -441,8 +453,25 @@ public struct CreateTask: EngineAction {
         return task
     }
 
-    public func summary(in _: ObjectStore) -> String {
-        "Added “\(title.trimmingCharacters(in: .whitespacesAndNewlines))”"
+    public func summary(in store: ObjectStore) -> String {
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        // The log never holds the words the wall kept off the title.
+        switch EngineWall.task(trimmed, startsAt: startsAt, store: store) {
+        case .privateNote: return SecretWords.title
+        case .privateTask: return "Added “\(ObjectPrivacy.taskLabel)”"
+        case let .withoutAmount(bare): return "Added “\(EngineWall.capitalized(bare))”"
+        case .keep: return "Added “\(trimmed)”"
+        }
+    }
+
+    public func receipt(in store: ObjectStore) -> String? {
+        switch EngineWall
+            .task(title.trimmingCharacters(in: .whitespacesAndNewlines), startsAt: startsAt, store: store)
+        {
+        case .privateNote: "\(SecretWords.title), kept"
+        case .privateTask: "\(ObjectPrivacy.taskLabel), added"
+        case .withoutAmount, .keep: nil
+        }
     }
 }
 

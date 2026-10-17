@@ -51,7 +51,10 @@ public struct ClaudeTessModel: TessModel {
         guard !request.context.commitImmediately, let key = keys.read() else { return .missed }
         // The second wall (MU2, Research 138 MW4 and 139): a secret, money or body phrase never leaves, even from the
         // inbox or a direct caller. The inbox drains through here, so an old item queued before the wall is dropped.
-        guard !SecretWords.mentions(request.text), !PrivateFacts.isWalled(request.text) else { return .missed }
+        guard !SecretWords.mentions(request.text), !PrivateFacts.isWalled(
+            request.text,
+            lastWeightKg: request.lastWeightKg(engine)
+        ) else { return .missed }
         // Every round resends the system prompt and the tool definitions with the phrase (QA on #283).
         let system = system(request.context, engine: engine)
         let tools = (try? TessTools.definitionsJSON()).flatMap { String(data: $0, encoding: .utf8) } ?? ""
@@ -225,7 +228,7 @@ public struct ClaudeTessModel: TessModel {
         let data: Data
         let response: URLResponse
         do {
-            (data, response) = try await session.data(for: http)
+            (data, response) = try await session.data(for: http, delegate: NoRedirects.shared)
         } catch let error as URLError {
             throw error.code == .timedOut ? Failure.timeout : Failure.offline
         } catch {

@@ -69,7 +69,7 @@ struct MoneyWallTests {
         "migraine since noon",
     ])
     func moneyAndBodyRowsNeverReachClaude(_ phrase: String) async {
-        #expect(PrivateFacts.isWalled(phrase), "\(phrase)")
+        #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil), "\(phrase)")
         let device = Spy(route: .onDevice), claude = Spy(route: .claude)
         _ = await TessRouter(engine: engine, models: [device, claude])
             .run(TessRequest(text: phrase, context: TessContext(), use: .capture))
@@ -83,7 +83,7 @@ struct MoneyWallTests {
         "Tacos at 7", "dune page 140",
     ])
     func passRowsStillReachClaude(_ phrase: String) async {
-        #expect(!PrivateFacts.isWalled(phrase), "\(phrase)")
+        #expect(!PrivateFacts.isWalled(phrase, lastWeightKg: nil), "\(phrase)")
         let claude = Spy(route: .claude)
         _ = await TessRouter(engine: engine, models: [claude])
             .run(TessRequest(text: phrase, context: TessContext(), use: .capture))

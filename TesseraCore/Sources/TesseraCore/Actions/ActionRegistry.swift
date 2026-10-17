@@ -24,16 +24,21 @@ public enum ActionRegistry {
         WaitOnTask.descriptor, KeepPlannedTask.descriptor,
     ]
 
+    /// The actions Tess and the model's tool list may call; unoffered ones stay in `descriptors` for decoding.
+    public static var offered: [ActionDescriptor] {
+        descriptors.filter(\.isOfferedToModel)
+    }
+
     /// The compact catalog for the on-device model's instructions, one action per line.
     public static var catalog: String {
-        descriptors.map(\.catalogLine).joined(separator: "\n")
+        offered.map(\.catalogLine).joined(separator: "\n")
     }
 
     /// Tool definitions as JSON, ready for a Claude request's `tools` array.
     public static func toolDefinitionsJSON() throws -> Data {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
-        return try encoder.encode(descriptors.map(\.toolDefinition))
+        return try encoder.encode(offered.map(\.toolDefinition))
     }
 
     /// Decodes a tool call's JSON arguments into a typed action. Dates are ISO 8601.

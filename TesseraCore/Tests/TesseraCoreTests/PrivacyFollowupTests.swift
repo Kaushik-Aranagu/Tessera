@@ -37,7 +37,7 @@ struct PrivacyFollowupTests {
     @Test(arguments: ["slept badly", "knee hurts", "headache", "body fat 18%", "resting heart rate 58", "feeling sick",
                       "feeling sick, no gym", "sick today", "i'm sick, skip push", "feeling unwell"])
     func healthWithNoNumberIsAPrivateNote(_ phrase: String) async {
-        #expect(PrivateFacts.isWalled(phrase), "\(phrase)")
+        #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil), "\(phrase)")
         let result = await run(phrase)
         #expect(result.line == "Private note, kept.", "\(phrase): \(result.line)")
         #expect(claude.heard.isEmpty)
@@ -59,14 +59,14 @@ struct PrivacyFollowupTests {
         "pay rent fri 7:30"
     ])
     func nearMissesStayUnwalled(_ phrase: String) {
-        #expect(!PrivateFacts.isWalled(phrase), "\(phrase)")
+        #expect(!PrivateFacts.isWalled(phrase, lastWeightKg: nil), "\(phrase)")
     }
 
     @Test(arguments: ["paid 20 for 2 tickets", "spent 40 for 2 of us", "$212.37 at Costco", "paid rent 2100",
                       "venmo sam 25 for pizza", "checking is at 3,412", "182.4 lb this morning",
                       "weighed in at 83 kg", "bp 128/82", "slept 5 hours", "took 2 advil"])
     func theV9WallRowsNeverReachClaude(_ phrase: String) async {
-        #expect(PrivateFacts.isWalled(phrase), "\(phrase)")
+        #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil), "\(phrase)")
         _ = await run(phrase)
         #expect(claude.heard.isEmpty)
     }
@@ -133,13 +133,13 @@ struct PrivacyFollowupTests {
 
     @Test func boughtWithACountIsNotMoney() {
         // QA R2 on #471: "bought" is shopping said after the fact; only paid or spent with an amount is money.
-        #expect(!PrivateFacts.isWalled("bought 2 lemons") && !TessGrammar.isMoney("bought 2 lemons"))
-        #expect(PrivateFacts.isWalled("bought lemons for $4"))
+        #expect(!PrivateFacts.isWalled("bought 2 lemons", lastWeightKg: nil) && !TessGrammar.isMoney("bought 2 lemons"))
+        #expect(PrivateFacts.isWalled("bought lemons for $4", lastWeightKg: nil))
     }
 
     @Test func boughtSomethingForAnAmountIsMoney() async {
         // QA F2 on #534: "bought … for N" is a spend; with a day it is a private note on that day.
-        #expect(PrivateFacts.isWalled("bought a tv for 800"))
+        #expect(PrivateFacts.isWalled("bought a tv for 800", lastWeightKg: nil))
         let dated = await run("bought a tv for 800 sat")
         #expect(dated.line == "Private note, kept." && dated.records.map(\.action) == ["createNote"], "\(dated.line)")
         #expect(claude.heard.isEmpty)

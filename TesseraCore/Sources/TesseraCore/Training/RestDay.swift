@@ -20,7 +20,9 @@ public extension TrainingLedger {
     func restDay(plan: ObjectRecord?, now: Date = .now, sessionsPerWeek: Int? = nil,
                  calendar: Calendar = .current) -> RestDay?
     {
-        guard let plan, !hasWorkoutUnderway(on: now, calendar: calendar) else { return nil }
+        // A planned session beats rest (Product 3:05 AM; RG5): Now and Home agree, no "Rest day" beside a START key.
+        guard let plan, !hasWorkoutUnderway(on: now, calendar: calendar),
+              !hasPlannedSession(on: now, calendar: calendar) else { return nil }
         let week = week(containing: now, plan: plan, now: now, sessionsPerWeek: sessionsPerWeek, calendar: calendar)
         guard let today = week.firstIndex(where: { $0.state == .today }), week[today].isRest else { return nil }
         if let ahead = week[(today + 1)...].first(where: { $0.planned != nil }), let routine = ahead.planned {
@@ -32,6 +34,19 @@ public extension TrainingLedger {
 
 @MainActor
 extension TrainingLedger {
+    /// A workout scheduled for his day containing `now` and not finished or started (a time set on a rest day).
+    /// The same test as Home's `plannedSession(on:)`, so Now and Home agree (RG5).
+    func hasPlannedSession(on now: Date, calendar: Calendar) -> Bool {
+        guard let workoutClass = classes[.workout] else { return false }
+        let day = TesseraDay(calendar: calendar)
+        return store.objects(of: workoutClass).contains { workout in
+            guard !workout.isDeleted, store.value("endedAt", of: workout) == nil,
+                  let date = store.value("scheduledFor", of: workout)?.dateValue
+                  ?? store.value("startedAt", of: workout)?.dateValue else { return false }
+            return day.isSameDay(date, now)
+        }
+    }
+
     /// A workout started today and not finished: today is in use, not a rest day. One that is only scheduled (a gym
     /// nudge on a rest day) doesn't count. A started, unfinished workout is always a process (running or set aside),
     /// so only the process table is read: cheap at any history size, and nothing made ahead of time is missed

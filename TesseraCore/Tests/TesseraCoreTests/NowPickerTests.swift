@@ -80,18 +80,18 @@ struct NowPickerTests {
 
     @Test func r01RestDayBeatsADueTaskAndDropsTheGymNudge() throws {
         try restThursday()
-        let nudge = try scheduled("Pull A", at: at(15, 18, 30))
+        // A session scheduled with a time is not a rest day any more (RG5, decisions 3:05 AM): see
+        // RestWeekdayTests.s16. The rest day here has nothing scheduled, so no nudge is on the plan.
         try task("Renew passport", due: at(15, 9))
         let picks = rank(at(15, 7, 20)) { $0.plan = plan; $0.sessionsPerWeek = 3 }
         #expect(picks.first?.item.kind == .rest && picks.first?.item.title == "Rest day")
         #expect(picks.first?.why.hasPrefix("Rest day. ") == true && picks.first?.why.hasSuffix("is a tap away") == true)
         #expect(picks.dropFirst().first?.item.title == "Renew passport" && picks[1].score == 20)
-        #expect(!picks.contains { $0.id == nudge.id })
+        #expect(!picks.contains { $0.item.title == "Pull A" && $0.item.kind != .rest })
     }
 
     @Test func r02RestBeatsTheStrongestGymNudge() throws {
         try restThursday()
-        try scheduled("Pull A", at: at(15, 18, 30))
         let picks = rank(at(15, 18, 10)) {
             $0.plan = plan
             $0.sessionsPerWeek = 3

@@ -6,8 +6,22 @@ import TesseraCore
 struct ObjectPage: View {
     let route: Route
     @Environment(AppModel.self) private var model
+    /// Whether this note opens in the editor, decided once per appearance so typing a walled word into a plain
+    /// note cannot swap the editor for the masked page mid-sentence.
+    @State private var noteLatch: Bool?
 
     var body: some View {
+        content
+            .onAppear { latchNoteChoice() }
+            .onChange(of: route) { noteLatch = nil; latchNoteChoice() }
+    }
+
+    private func latchNoteChoice() {
+        guard noteLatch == nil, case let .object(id) = route, let note = model.object(id) else { return }
+        noteLatch = Self.opensAsNote(note, model: model)
+    }
+
+    @ViewBuilder private var content: some View {
         let _ = model.revision
         // Exercises and plans have their own object pages (Features/Exercise, Features/Plans).
         if case let .classDef(id) = route, let classDef = model.classDef(id: id),
@@ -23,7 +37,9 @@ struct ObjectPage: View {
         {
             // A routine's page is its editor (Features/Plans/RoutineEditor).
             RoutineEditor(routine: routine)
-        } else if case let .object(id) = route, let note = model.object(id), Self.opensAsNote(note, model: model) {
+        } else if case let .object(id) = route, let note = model.object(id),
+                  Self.resolveOpensAsNote(latched: noteLatch, live: { Self.opensAsNote(note, model: model) })
+        {
             // A note opens as itself, as from Notes, never as a property list of its text (PN-MENTION).
             NoteEditor(noteID: note.id)
         } else {
@@ -36,6 +52,11 @@ struct ObjectPage: View {
     static func opensAsNote(_ note: ObjectRecord, model: AppModel) -> Bool {
         note.classDef?.id == model.classDef(.note)?.id
             && ObjectPrivacy.label(of: note, in: model.store, classes: model.classes) == nil
+    }
+
+    /// The latched choice once made; the live check only before the first appearance.
+    static func resolveOpensAsNote(latched: Bool?, live: () -> Bool) -> Bool {
+        latched ?? live()
     }
 
     private var generic: some View {
@@ -243,9 +264,13 @@ private struct InstanceBody: View {
                 : Format.identifier(object.classDef?.name ?? "Thing", upperFirst: true)
         )
 
-        if privateLabel == nil, let notes = model.store.value("notes", of: object)?.stringValue {
-            // A workout's notes are a body fact: they read "Note kept private" (Product 5:20 PM PT).
-            Text(ObjectPrivacy.hidesNotes(of: object, classes: model.classes) ? ObjectPrivacy.keptNoteLabel : notes)
+        // A workout's notes are a body fact: they read "Note kept private" (Product 5:20 PM PT).
+        if privateLabel == nil, let notes = ObjectPrivacy.notesLine(
+            of: object,
+            in: model.store,
+            classes: model.classes
+        ) {
+            Text(notes)
                 .textRole(.body).foregroundStyle(Theme.Colors.inkSecondary).entrance(4)
         }
 
@@ -403,7 +428,11 @@ private struct PropertyList: View {
                 dash
             } else {
                 VStack(alignment: .trailing, spacing: Theme.Spacing.s) {
-                    ForEach(targets) { target in ObjectHandle(title: target.title, route: .object(target.id)) }
+                    // A private target shows its label, never its words (QA on #580).
+                    ForEach(targets) { target in
+                        ObjectHandle(title: ObjectPrivacy.label(of: target, in: model.store, classes: model.classes)
+                            ?? target.title, route: .object(target.id))
+                    }
                 }
             }
         case .classRef:

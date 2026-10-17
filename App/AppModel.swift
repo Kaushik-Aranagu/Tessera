@@ -148,6 +148,9 @@ final class AppModel {
             SettingsStore(engine: engine).migrateAtLaunch(looks: ThemeStore.sharedDefaults, standard: .standard,
                                                           folderName: BackupKeeper.pickedFolder
                                                               .map(BackupCopy.folderName))
+            // The first launch with the restWeekday reader: Sunday, as one op with UNDO ("Sunday, rest day.";
+            // Research 146). Once; an UNDO or a later "Any" leaves a record, so it is never written twice.
+            SettingsStore(engine: engine).writeFirstRestWeekday()
         }
         runtime = TesseraRuntime(engine: engine)
         soul.runScript()

@@ -64,7 +64,11 @@ public extension TessMemoryStore {
         var parts: [String] = []
         // Second guard (Research 134 SW2): a private note, or any older note holding a secret word, never reaches
         // a memory line, so it can never reach a pack.
-        for line in lines where line.text != SecretWords.title && !SecretWords.mentions(line.text) {
+        // Third guard (board 0ai): a money or body-weight line never reaches memory either.
+        let lastKg = BodyWeight.lastKg(in: engine.store)
+        for line in lines where line.text != SecretWords.title && !SecretWords.mentions(line.text)
+            && !PrivateFacts.isWalled(line.text, lastWeightKg: lastKg)
+        {
             var text = line.text
             let workout = text.contains(" min") || text.hasSuffix(" sets.")
             if let cut = text.range(of: ", "), workout || text.hasPrefix("Cooked ") {
