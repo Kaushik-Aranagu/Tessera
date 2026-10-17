@@ -76,9 +76,9 @@ struct HomeDataTests {
         #expect(SpokenTime.clock(thursday(11, 45), calendar: calendar) == "quarter to noon")
         #expect(SpokenTime.clock(thursday(15, 17), calendar: calendar) == "seventeen minutes past three")
         #expect(SpokenTime.clock(thursday(15, 58), calendar: calendar) == "two minutes to four")
-        #expect(SpokenTime.when(thursday(18), now: thursday(15), calendar: calendar) == "this evening at six")
+        #expect(SpokenTime.when(thursday(18), now: thursday(15), calendar: calendar) == "this evening, six")
         #expect(SpokenTime.when(thursday(7, 30, dayOffset: 1), now: thursday(15), calendar: calendar)
-            == "tomorrow at half past seven")
+            == "tomorrow, half past seven")
     }
 
     @Test func nowLineAndTimeLeft() {
@@ -87,7 +87,23 @@ struct HomeDataTests {
         #expect(NowPage.contextLine(task, now: thursday(15, 26)).hasPrefix("now, until "))
         #expect(NowPage.timeLeft(task, now: thursday(15, 26)) == ("14 MIN", "LEFT"))
         #expect(NowPage.timeLeft(task, now: thursday(14, 35)) == ("IN", "25 MIN"))
-        #expect(NowPage.contextLine(task, now: thursday(14, 35)).hasPrefix("next, at "))
+        #expect(NowPage.contextLine(task, now: thursday(14, 35)).hasPrefix("next, "))
+    }
+
+    /// Copy rule: never "at" before a time.
+    @Test func timeCopyHasNoAtBeforeAClock() {
+        let task = ScheduleItem(id: UUID(), title: "Groceries", start: thursday(15), end: thursday(15, 40),
+                                isDone: false, isWorkout: false)
+        let lines = [
+            NowPage.contextLine(task, now: thursday(14, 35)),
+            SpokenTime.when(thursday(18), now: thursday(15), calendar: calendar),
+            SpokenTime.when(thursday(7, 30, dayOffset: 1), now: thursday(15), calendar: calendar),
+            SpokenTime.when(thursday(9, dayOffset: 3), now: thursday(15), calendar: calendar),
+        ]
+        for line in lines {
+            #expect(!line.contains(" at "), "\(line)")
+            #expect(line.range(of: #"\bat \d"#, options: .regularExpression) == nil, "\(line)")
+        }
     }
 
     // MARK: Week consistency

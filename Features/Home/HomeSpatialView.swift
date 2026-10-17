@@ -686,19 +686,19 @@ enum SpokenTime {
         }
     }
 
-    /// "this evening at six", "tomorrow at half past seven", "Friday at nine".
+    /// "this evening, six", "tomorrow, half past seven", "Friday, nine".
     static func when(_ date: Date, now: Date, calendar: Calendar = .current) -> String {
-        let atTime = "at \(clock(date, calendar: calendar))"
+        let atTime = ", \(clock(date, calendar: calendar))"
         // His day runs to 04:00 (B3): at 01:00 "this afternoon" means the coming afternoon only if it's still his day.
         let tesseraDay = TesseraDay(calendar: calendar)
         if tesseraDay.isSameDay(date, now) {
             let part = partOfDay(date, calendar: calendar)
-            return part == "night" ? "tonight \(atTime)" : "this \(part) \(atTime)"
+            return part == "night" ? "tonight\(atTime)" : "this \(part)\(atTime)"
         }
         if tesseraDay.isSameDay(date, tesseraDay.adding(days: 1, to: now)) {
-            return "tomorrow \(atTime)"
+            return "tomorrow\(atTime)"
         }
-        return "\(date.formatted(.dateTime.weekday(.wide))) \(atTime)"
+        return "\(date.formatted(.dateTime.weekday(.wide)))\(atTime)"
     }
 }
 
