@@ -98,4 +98,10 @@ struct ListsCopyTests {
     @Test func nothingToResetReadsThingFirst() {
         #expect(ListsCopy.nothingToReset("Packing") == "Packing, nothing to reset.")
     }
+
+    @Test func pickOneWords() {
+        #expect(ListsCopy.pickOneWord(isOn: true) == "Pick one, on")
+        #expect(ListsCopy.pickOne("Films", isOn: true) == "Films, pick one on.")
+        #expect(ListsCopy.allPicked == "That's all of them.")
+    }
 }
