@@ -496,14 +496,22 @@ extension ClaudeKeyWords {
     /// "6:12 pm · Plan my day · Sonnet · 1.2¢".
     @MainActor
     static func receipt(_ call: ObjectRecord, store: ObjectStore) -> String {
-        // "Thu 16 Oct, 6:12 pm": names keep their capitals; only am/pm is lower case.
-        let day = call.createdAt.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
-        let clock = call.createdAt.formatted(.dateTime.hour().minute()).lowercased()
-        let time = "\(day), \(clock)"
+        let time = receiptTime(call.createdAt)
         let use = store.value("use", of: call)?.stringValue.flatMap(TessUse.init(rawValue:))
         let model = store.value("model", of: call)?.stringValue ?? ""
         let nano = Int64(store.number("costNano", of: call) ?? 0)
         return [time, useName(use), modelName(model), cents(nano)].joined(separator: " · ")
+    }
+
+    /// "Thu 16 Oct, 12 pm": the house clock (HouseTime), never "12:00 pm" or a 24-hour time, whatever the phone's
+    /// clock setting (kitchen gap hunt G39). The day is fixed English too, so the receipt reads the same everywhere.
+    static func receiptTime(_ date: Date, calendar: Calendar = .current) -> String {
+        let day = DateFormatter()
+        day.locale = Locale(identifier: "en_US_POSIX")
+        day.calendar = calendar
+        day.timeZone = calendar.timeZone
+        day.dateFormat = "EEE d MMM"
+        return "\(day.string(from: date)), \(HouseTime.clock(date, calendar: calendar))"
     }
 
     static func useName(_ use: TessUse?) -> String {
