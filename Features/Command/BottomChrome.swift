@@ -494,7 +494,7 @@ struct BottomChrome: View {
         // "It's in your private notes.", never a plain task (Research AU, A06 and A07). A money or body question
         // gets "That stays on this phone." and nothing is saved (Product's 2:30 ruling, A20 and A21).
         let secret = SecretWords.mentions(text)
-        let walled = secret || PrivateFacts.isWalled(text)
+        let walled = secret || PrivateFacts.isWalled(text, lastWeightKg: BodyWeight.lastKg(in: model.store))
         let factQuestion = walled && !secret && lowered.hasSuffix("?")
         let isQuestion = !walled
             && (lowered.contains("best") || lowered.contains(/\bprs?\b/) || lowered.hasSuffix("?"))
