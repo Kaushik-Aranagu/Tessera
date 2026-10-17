@@ -119,7 +119,7 @@ struct HouseRulesTests {
         source.components(separatedBy: .newlines).enumerated().compactMap { index, line in
             guard line.contains("fileProtection"),
                   line.firstMatch(of: /fileProtection\s*[=:]/) != nil else { return nil }
-            let allowed = line.contains(".completeFileProtection") || line
+            let allowed = line.firstMatch(of: /\.completeFileProtection\b(?!\w)/) != nil || line
                 .contains("self.fileProtection = fileProtection")
             return allowed ? nil : index + 1
         }
@@ -136,6 +136,10 @@ struct HouseRulesTests {
 
     @Test func theProtectionScanSeesAnOptOut() {
         #expect(Self.protectionViolations(in: "job.fileProtection = []") == [1])
+        // The exact token only (QA on #778).
+        #expect(Self.protectionViolations(in: "x.fileProtection = .completeFileProtectionUnlessOpen") == [1])
+        #expect(Self.protectionViolations(in: "x.fileProtection = .completeFileProtectionUntilFirstUserAuthentication")
+            == [1])
         #expect(Self.protectionViolations(in: "TessMemoryStore(engine: e, fileProtection: [])") == [1])
         #expect(Self
             .protectionViolations(in: "public var fileProtection: Data.WritingOptions = .completeFileProtection")

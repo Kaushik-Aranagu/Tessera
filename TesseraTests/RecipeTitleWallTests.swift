@@ -51,9 +51,14 @@ struct RecipeTitleWallTests {
         #expect(RecipeCopy.saved(title) == "Private recipe, on Recipes.")
     }
 
-    @Test func theRecipeOpenedStaysChosenSoAGoneOneSaysSo() {
-        // `RecipeView` keeps the id it opened; with a request the pick never moves to another recipe.
-        let shown = UUID()
-        #expect(RecipeView.opening(requested: shown, rows: []) == shown)
+    @Test func deletingTheShownRecipeKeepsItsPageWhichSaysRecipeGone() throws {
+        let shown = try model.engine.perform(CreateRecipe(text: "Tacos\n2 limes\n\nCook."), by: .user).output
+        let other = try model.engine.perform(CreateRecipe(text: "Dal\n1 cup lentils\n\nSimmer."), by: .user).output
+        model.store.softDelete(shown)
+        let rows = [RecipeView.Row(id: other.id, lastOpenedAt: nil, createdAt: other.createdAt)]
+        // The visit opened Tacos: it stays on screen rather than jumping to Dal, and the page reads "Recipe gone."
+        #expect(RecipeView.shown(opened: shown.id, requested: nil, rows: rows) == shown.id)
+        #expect(RecipeCopy.isGone(shown.id, store: model.store))
+        #expect(!RecipeCopy.isGone(other.id, store: model.store))
     }
 }
