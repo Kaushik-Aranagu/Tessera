@@ -54,12 +54,17 @@ public enum TesseraBackup {
     /// Writes a consistent copy of the store to `url` (replacing anything there) and stamps it.
     @MainActor
     public static func write(from context: TesseraContext, to url: URL, now: Date = .now,
-                             appVersion: String? = nil) throws
+                             appVersion: String? = nil, leavingOutPrivate: Bool = false) throws
     {
         try context.save()
         try? FileManager.default.removeItem(at: url)
         let copy = try DatabaseQueue(path: url.path)
         try context.database.backup(to: copy)
+        // The copy for iCloud Drive leaves private notes, recipes, items and secret-word lines out (G28). The local
+        // copy on the phone keeps every word.
+        if leavingOutPrivate {
+            try leaveOutPrivate(PrivateWords.labels(in: context), from: copy, context: context)
+        }
         // One self-contained file: the copy inherits WAL mode from the store, which would leave -wal/-shm siblings.
         try copy.writeWithoutTransaction { try $0.execute(sql: "PRAGMA journal_mode = DELETE") }
         try copy.write { db in
@@ -132,7 +137,7 @@ public enum TesseraBackup {
     @MainActor
     @discardableResult
     public static func writeRolling(from context: TesseraContext, in folder: URL, keep: Int = 7, now: Date = .now,
-                                    calendar: Calendar = .current) throws -> URL?
+                                    calendar: Calendar = .current, leavingOutPrivate: Bool = false) throws -> URL?
     {
         // A store with no file (this session fell back to memory: a damaged open, or data from a newer Tessera) is
         // never copied: a week of empty copies would roll his seven good ones away (QA M1 on #475).
@@ -171,7 +176,7 @@ public enum TesseraBackup {
             try? manager.removeItem(at: folder.appendingPathComponent(name))
         }
         let partial = folder.appendingPathComponent(".\(file.lastPathComponent).partial")
-        try write(from: context, to: partial, now: now)
+        try write(from: context, to: partial, now: now, leavingOutPrivate: leavingOutPrivate)
         if exists {
             _ = try manager.replaceItemAt(file, withItemAt: partial)
         } else {
