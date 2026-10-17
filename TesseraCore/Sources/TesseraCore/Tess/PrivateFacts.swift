@@ -125,7 +125,8 @@ public enum PrivateFacts {
 
     /// Words before a number that make it a name, not an amount ("room 82", "bus 76").
     static let namingWords = ["room", "rm", "gate", "bus", "route", "line", "flat", "apt", "apartment", "unit", "suite",
-                              "platform", "table", "seat", "row", "floor", "level", "page", "chapter", "exit", "highway",
+                              "platform", "table", "seat", "row", "floor", "level", "page", "chapter", "exit",
+                              "highway",
                               "hwy", "no", "number", "order", "ticket", "flight"]
     nonisolated(unsafe) static let namedNumber = try! Regex( // swiftlint:disable:this force_try
         #"\b(?:"# + namingWords.joined(separator: "|") + #")\s*#?\s*\d+\b|#\s*\d+\b"#

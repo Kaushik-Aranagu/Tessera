@@ -2,7 +2,7 @@ import Foundation
 
 /// His last logged body weight, for the bare-number wall (board 0ai, Product 2:56 and 4:46 PM PT). There is no
 /// weight entry yet (M3), so a weigh-in lives as a private note ("82 kg this morning"): the newest private note that
-/// reads as a weight gives it. Pounds are turned into kilograms. Nil with none logged.
+/// reads as a weigh-in gives it. Pounds are turned into kilograms. Nil with none logged.
 public enum BodyWeight {
     @MainActor
     public static func lastKg(in store: ObjectStore) -> Double? {
@@ -30,18 +30,27 @@ public enum BodyWeight {
         return nil
     }
 
-    /// "82 kg this morning", "weighed 181", "bw 182.4 lb": the weight a line holds, in kg. It needs a weight unit or a
-    /// weigh word (QA W1 on 0ai): "bp 120/80" and "ibuprofen 200 mg" are never his weight.
+    /// "82 kg this morning", "weighed 181", "weighed in at 7:30, 81.8": the weight a weigh-in line holds, in kg. Only a
+    /// weigh-in counts (QA W1, AI architecture on #627): a weigh word, or a weight unit with nothing but day words
+    /// beside it. "bp 120/80", "ibuprofen 200 mg" and "squat 140 kg" are never his weight, and a clock time is never a
+    /// number to read.
     static func kilograms(in text: String) -> Double? {
-        let lower = text.lowercased()
-        let number = /(\d+(?:[.,]\d+)?)/
-        let withUnit = lower.firstMatch(of: /(\d+(?:[.,]\d+)?)\s*(kg|kgs|kilos|lb|lbs|pounds)\b/)
+        let lower = PrivateFacts.withoutTimes(text.lowercased())
+        let words = PrivateFacts.words(lower)
+        let units: Set = ["kg", "kgs", "kilos", "lb", "lbs", "pounds"]
         let weighs = lower.firstMatch(of: /\b(?:weigh|weighs|weighed|weigh-in|weight|bw)\b/) != nil
-        let unit = withUnit.map { String($0.output.2) }
-        guard let digits = withUnit.map({ String($0.output.1) }) ?? (weighs ? lower.firstMatch(of: number)
-            .map { String($0.output.1) } : nil),
-            let value = Double(digits.replacingOccurrences(of: ",", with: ".")) else { return nil }
-        let kg = ["lb", "lbs", "pounds"].contains(unit ?? "") ? value * 0.453_592 : value
-        return (25 ... 300).contains(kg) ? kg : nil
+        let rest = words
+            .filter { $0.first?.isNumber != true && !units.contains($0) && $0.wholeMatch(of: /\d.*/) == nil }
+        guard weighs || (words.contains(where: units.contains) || lower.firstMatch(of: /\d\s*(?:kg|lb)/) != nil)
+            && rest.allSatisfy(PrivateFacts.dayWords.contains) else { return nil }
+        for match in lower.matches(of: /(\d+(?:[.,]\d+)?)\s*(kg|kgs|kilos|lb|lbs|pounds)?\b/) {
+            guard let value = Double(match.output.1.replacingOccurrences(of: ",", with: ".")) else { continue }
+            let pounds = match.output.2.map { ["lb", "lbs", "pounds"].contains(String($0)) } ?? false
+            let kg = pounds ? value * 0.453_592 : value
+            if (25 ... 300).contains(kg) {
+                return kg
+            }
+        }
+        return nil
     }
 }

@@ -129,9 +129,9 @@ public struct AddListItem: EngineAction {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "the item is empty")
         }
         // The engine wall (board 0ai, Kitchen 2:09 PM PT): a price comes off and the item stays ("milk $4" is milk); a
-        // line that was only money, or holds a secret, is a private note instead. Medicines stay items.
-        let text = EngineWall.withoutPrice(given)
-        if text.isEmpty || SecretWords.hasValue(given) || PrivateFacts.isMoneyShaped(text) {
+        // line that was only money, holds a secret or is his weight is a private note instead, by CreateNote's rule.
+        // A medicine or body fact stays on his list in his words but is never said or logged (Product 8:13 PM PT).
+        guard let text = Self.kept(given, store: transaction.store) else {
             return try CreateNote(body: given, isPrivate: true).apply(&transaction)
         }
         let last = list.orderedChildren.last?.sortIndex ?? -1
@@ -149,21 +149,39 @@ public struct AddListItem: EngineAction {
         return item
     }
 
-    /// What the wall kept: nil when the line became a private note.
-    var kept: String? {
-        let given = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    /// What the wall keeps as the item: nil when the line becomes a private note.
+    @MainActor static func kept(_ given: String, store: ObjectStore) -> String? {
         let bare = EngineWall.withoutPrice(given)
-        return bare.isEmpty || SecretWords.hasValue(given) || PrivateFacts.isMoneyShaped(bare) ? nil : bare
+        let last = BodyWeight.lastKg(in: store)
+        let isNote = bare.isEmpty || SecretWords.isSecretListLine(given) || PrivateFacts.isMoneyShaped(bare)
+            || PrivateFacts.isBareWeight(bare.lowercased(), lastWeightKg: last)
+        return isNote ? nil : bare
     }
 
-    public func summary(in _: ObjectStore) -> String {
-        kept.map { "Added \($0)" } ?? SecretWords.title
+    /// A kept item that is a medicine or a body fact: his list shows it, nothing else names it.
+    @MainActor static func isPrivateItem(_ kept: String, store: ObjectStore) -> Bool {
+        EngineWall.isHealth(kept, lastWeightKg: BodyWeight.lastKg(in: store))
+    }
+
+    public func summary(in store: ObjectStore) -> String {
+        guard let kept = Self.kept(text.trimmingCharacters(in: .whitespacesAndNewlines), store: store) else {
+            return SecretWords.title
+        }
+        return Self.isPrivateItem(kept, store: store) ? "Added \(Self.privateItemLabel)" : "Added \(kept)"
     }
 
     public func receipt(in store: ObjectStore) -> String? {
-        guard let kept else { return "\(SecretWords.title), kept" }
-        return "\(kept.prefix(1).uppercased() + kept.dropFirst()), added to \(store.object(id: list)?.title ?? "the list")"
+        let listTitle = store.object(id: list)?.title ?? "the list"
+        guard let kept = Self.kept(text.trimmingCharacters(in: .whitespacesAndNewlines), store: store) else {
+            return "\(SecretWords.title), kept"
+        }
+        if Self.isPrivateItem(kept, store: store) {
+            return "\(Self.privateItemLabel), on \(listTitle)"
+        }
+        return "\(kept.prefix(1).uppercased() + kept.dropFirst()), added to \(listTitle)"
     }
+
+    static let privateItemLabel = "Private item"
 }
 
 /// Checks an item (or unchecks it). Checked items stay on the list until "clear done".

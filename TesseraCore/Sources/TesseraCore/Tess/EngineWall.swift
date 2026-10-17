@@ -26,18 +26,38 @@ public enum EngineWall {
         if SecretWords.hasValue(title) {
             return .privateNote
         }
+        let last = BodyWeight.lastKg(in: store)
         if PrivateFacts.isMoneyShaped(title) {
             let bare = withoutAmounts(title)
+            // The rest is judged as it would be stored (AI architecture on #627): "refill lexapro $40 fri" is still a
+            // medicine with its price gone.
+            if isHealth(bare, lastWeightKg: last) {
+                return health(bare, startsAt: startsAt)
+            }
             // An imperative is ahead of him whether or not a time came with it (Research BM02: the model's write has
             // no startsAt); "paid rent 2100" is a fact, so a private note.
             return isSomethingToDo(title) && !bare.isEmpty ? .withoutAmount(bare) : .privateNote
         }
-        if PrivateFacts.isBodyShaped(title, lastWeightKg: BodyWeight.lastKg(in: store)) {
-            let medicine = PrivateFacts.medicines.contains { title.lowercased().contains($0) }
-                || title.lowercased().firstMatch(of: /\d\s*(?:mg|mcg)\b/) != nil
-            return medicine && startsAt != nil ? .privateTask : .privateNote
+        if isHealth(title, lastWeightKg: last) {
+            return health(title, startsAt: startsAt)
         }
         return .keep(title)
+    }
+
+    /// A medicine, a dose or a body fact (Product 8:13 PM PT: a medicine name is a health fact everywhere).
+    static func isHealth(_ phrase: String, lastWeightKg: Double?) -> Bool {
+        isMedicine(phrase) || PrivateFacts.isBodyShaped(phrase, lastWeightKg: lastWeightKg)
+    }
+
+    static func isMedicine(_ phrase: String) -> Bool {
+        let lower = phrase.lowercased()
+        return PrivateFacts.words(lower).contains(where: PrivateFacts.medicines.contains)
+            || lower.firstMatch(of: /\d\s*(?:mg|mcg)\b/) != nil
+    }
+
+    /// A medicine reminder with a time is a private task; anything else of his body is a private note.
+    static func health(_ phrase: String, startsAt: Date?) -> TaskOutcome {
+        isMedicine(phrase) && startsAt != nil ? .privateTask : .privateNote
     }
 
     /// "pay rent fri" is stored and said as "Pay rent fri".

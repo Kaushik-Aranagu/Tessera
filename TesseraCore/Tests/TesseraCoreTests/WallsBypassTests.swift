@@ -254,12 +254,84 @@ struct WallsBypassTests {
         #expect(BodyWeight.kilograms(in: "ibuprofen 200 mg") == nil)
         #expect(BodyWeight.kilograms(in: "182.4 this morning") == nil)
         #expect(BodyWeight.kilograms(in: "weighed 181") == 181)
-        #expect(BodyWeight.kilograms(in: "slept 7h, 82.4 kg") == 82.4)
+        #expect(BodyWeight.kilograms(in: "82.4 kg this morning") == 82.4)
+        // AI architecture on #627: only a weigh-in, and never a clock time.
+        #expect(BodyWeight.kilograms(in: "squat 140 kg") == nil)
+        #expect(BodyWeight.kilograms(in: "deadlift 140 kg, rent 2100") == nil)
+        #expect(BodyWeight.kilograms(in: "weighed in at 7:30, 81.8") == 81.8)
+        #expect(BodyWeight.kilograms(in: "weigh-in at 7 am 82.4") == 82.4)
         try weigh(82, at: Self.at(10, 7))
         for line in ["bp 120/80", "ibuprofen 200 mg"] {
             try engine.perform(CreateNote(body: line, isPrivate: true), by: .user)
         }
         #expect(BodyWeight.lastKg(in: store) == 82)
+    }
+
+    @Test func aLiftOrARentNeverMovesHisBaseline() throws {
+        try weigh(82, at: Self.at(10, 7))
+        for line in ["squat 140 kg", "deadlift 140 kg, rent 2100"] {
+            try engine.perform(CreateNote(body: line, isPrivate: true), by: .user)
+        }
+        #expect(BodyWeight.lastKg(in: store) == 82)
+        #expect(PrivateFacts.isWalled("82.4", lastWeightKg: BodyWeight.lastKg(in: store)))
+    }
+
+    @Test func aNewWeighInIsReadWithNoOtherWrite() throws {
+        // AI architecture on #627: an insert alone bumps the revision, so the cache never hides a new weigh-in.
+        #expect(BodyWeight.lastKg(in: store) == nil)
+        let revision = store.context.revision
+        try engine.perform(CreateNote(body: "81 kg", isPrivate: true), by: .user)
+        #expect(store.context.revision > revision)
+        #expect(BodyWeight.lastKg(in: store) == 81)
+    }
+
+    @Test func aMedicineWithItsPriceGoneIsStillPrivate() throws {
+        // AI architecture on #627, Product 8:13 PM PT: "refill lexapro $40 fri" never stores "lexapro".
+        _ = try engine.perform(CreateTask(title: "refill lexapro $40 fri"), by: .tess)
+        _ = try engine.perform(CreateTask(title: "refill lexapro $40", startsAt: Self.at(16, 9)), by: .tess)
+        let tasks = try store.objects(of: #require(classes[.task])).map(\.title)
+        #expect(tasks == [ObjectPrivacy.taskLabel], "\(tasks)")
+        #expect(!everythingShown().lowercased().contains("lexapro") && !everythingShown().contains("40"))
+    }
+
+    @Test func aSecretTitleIsInNoOpButItsNotesBody() throws {
+        // AI architecture on #627: the op log holds the secret only as the private note's own body.
+        let made = try engine.perform(CreateTask(title: "wifi password is hunter2"), by: .tess)
+        #expect(made.output.title == SecretWords.title)
+        for record in engine.history() {
+            for op in record.ops {
+                switch op {
+                case let .create(_, _, _, title): #expect(!title.contains("hunter2"))
+                case let .setTitle(_, old, new): #expect(!old.contains("hunter2") && !new.contains("hunter2"))
+                case let .setValue(object, _, _, new):
+                    // Only the private note's own value may hold it.
+                    if case let .richText(text)? = new, text.contains("hunter2") {
+                        #expect(object == made.output.id)
+                    }
+                    if case let .text(text)? = new, text.contains("hunter2") {
+                        #expect(object == made.output.id)
+                    }
+                default: break
+                }
+            }
+        }
+    }
+
+    @Test func aListLineIsWalledLikeANote() throws {
+        // AI architecture on #627 and Product 8:13 PM PT.
+        let list = try engine.perform(CreateList(name: "Errands"), by: .user).output
+        for line in ["weigh in 82.4 kg", "reset wifi password"] {
+            let made = try engine.perform(AddListItem(list: list.id, text: line), by: .user)
+            #expect(made.record.summary == SecretWords.title, "\(line)")
+        }
+        // Research 139: a secret word that is also a thing to buy, with no value, stays an item.
+        try engine.perform(AddListItem(list: list.id, text: "pins"), by: .user)
+        let lexapro = try engine.perform(AddListItem(list: list.id, text: "lexapro"), by: .user)
+        #expect(list.orderedChildren.map(\.title) == ["pins", "lexapro"])
+        #expect(lexapro.record.summary == "Added Private item")
+        #expect(lexapro.record.receipt == "Private item, on Errands")
+        let shown = engine.history().flatMap { [$0.summary, $0.receipt ?? ""] }.joined()
+        #expect(!shown.contains("lexapro") && !shown.contains("82.4") && !shown.contains("wifi"))
     }
 
     @Test func hisWeightIsReadOncePerChange() throws {
