@@ -71,6 +71,8 @@ public enum EngineWall {
     public static func withoutPrice(_ line: String) -> String {
         let stripped = line.replacing(/(?i)\s*(?:for\s+)?[$£€₹¥]\s?\d[\d,]*(?:\.\d+)?/, with: "")
             .replacing(/(?i)\s*(?:for\s+)?\b\d[\d,]*(?:\.\d+)?\s?(?:dollars?|bucks|usd|quid)\b/, with: "")
+            // A bare amount with exactly two places at the end is a price (Product 8:40 AM PT Oct 17): "milk 4.99".
+            .replacing(/\s+\d+[.,]\d{2}[.!]?\s*$/, with: "")
         return stripped.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
     }
 

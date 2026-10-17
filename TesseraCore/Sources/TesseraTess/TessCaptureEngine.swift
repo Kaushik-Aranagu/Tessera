@@ -244,7 +244,10 @@ public final class TessCaptureEngine: TessCapturing {
                line.amount == nil, line.unit == nil,
                Groceries(store: engine.store, classes: engine.classes).isOn(line.name)
             {
-                let name = lines[0].prefix(1).uppercased() + lines[0].dropFirst()
+                // The wall first (QA on #763): a second "lexapro" is "Private item, already on Groceries."
+                let hidden = EngineWall.isHealth(lines[0], lastWeightKg: BodyWeight.lastKg(in: engine.store))
+                    || AddListItem.kept(lines[0], store: engine.store) == nil
+                let name = hidden ? "Private item" : lines[0].prefix(1).uppercased() + lines[0].dropFirst()
                 return TessCapture(records: [], line: "\(name), already on Groceries.", source: .grammar,
                                    asking: .line)
             }
@@ -354,7 +357,15 @@ public final class TessCaptureEngine: TessCapturing {
         switch parse {
         case let .groceries(lines):
             let record = try engine.perform(AddGroceries(lines: lines), by: .tess, pending: pending).record
-            let name = lines.first.map { $0.prefix(1).uppercased() + $0.dropFirst() } ?? ""
+            // Said as the wall kept them: "buy milk 4.99" is "Milk, on Groceries." (Product 8:40 AM PT Oct 17).
+            let lines = AddGroceries.kept(lines, store: engine.store)
+            // The wall before the already-on line (QA on #763): a second "lexapro" is a "Private item" too.
+            let hidden = lines.count == 1 && (EngineWall.isHealth(
+                lines[0],
+                lastWeightKg: BodyWeight.lastKg(in: engine.store)
+            )
+                || AddListItem.kept(lines[0], store: engine.store) == nil)
+            let name = hidden ? "Private item" : lines.first.map { $0.prefix(1).uppercased() + $0.dropFirst() } ?? ""
             // One bare thing already on: nothing new was made ("Chickpeas, already on Groceries.").
             let made = record.ops.contains {
                 if case .create = $0 {
@@ -367,7 +378,7 @@ public final class TessCaptureEngine: TessCapturing {
                 return (record, "\(name), already on Groceries.")
             }
             // The list by name (Product 10:06 PM PT, lists copy sweep); a medicine or body line is never said back.
-            if lines.count == 1, EngineWall.isHealth(lines[0], lastWeightKg: BodyWeight.lastKg(in: engine.store)) {
+            if hidden {
                 return (record, "Private item, on Groceries.")
             }
             return (record, lines.count == 1 ? "\(name), on Groceries." : "\(lines.count) things on Groceries.")
