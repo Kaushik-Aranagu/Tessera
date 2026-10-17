@@ -585,7 +585,8 @@ struct LedgerRow: View {
         else { return (process.subject?.title ?? process.object.title, process.nextStep) }
         let name = ListsShelf.shownName(store.displayTitle(of: subject), lastWeightKg: lastWeightKg)
         let left = ListContents(store: store, classes: classes).open(in: subject).count
-        return (name, left == 0 ? "\(name), nothing left" : "\(name), \(left) left")
+        // The step under the name doesn't repeat it: "1 left" (Design on #814).
+        return (name, left == 0 ? "nothing left" : "\(left) left")
     }
 
     /// "just now", "21 min ago", "2 h ago" (never a mm:ss duration).

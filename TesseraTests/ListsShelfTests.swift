@@ -102,7 +102,7 @@ struct ListsShelfTests {
         try model.engine.perform(SuspendProcess(process: run.id), by: .user)
         let paused = try #require(table.all().first { $0.id == run.id })
         let shown = LedgerRow.shown(paused, store: model.store, classes: model.classes, lastWeightKg: nil)
-        #expect(shown.title == "Private list" && shown.nextStep == "Private list, 1 left")
+        #expect(shown.title == "Private list" && shown.nextStep == "1 left")
         #expect(!shown.title.contains("Rent") && !(shown.nextStep ?? "").contains("Rent"))
     }
 }
