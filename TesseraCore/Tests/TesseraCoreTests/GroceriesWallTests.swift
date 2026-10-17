@@ -180,4 +180,14 @@ struct GroceriesWallTests {
         let kept = AddListItem.kept(line, store: store) ?? ""
         #expect(kept.firstMatch(of: /\d+[.,]\d{2}/) == nil, "\(line) kept as \(kept)")
     }
+
+    @Test(arguments: [("eggs 4.99 at costco", "eggs"), ("milk 3.49 for the week", "milk"),
+                      ("bread 2.50 from the bakery", "bread"), ("rice 5.99 on sale", "rice"),
+                      ("milk $4 from target", "milk"), ("eggs 6 dollars at costco", "eggs"),
+                      ("eggs at costco", "eggs at costco"), ("2 lemons for the tacos", "2 lemons for the tacos")])
+    func thePlaceAfterAPriceGoesWithIt(_ line: String, _ shown: String) {
+        // QA on #787: the place never rides in the item once its price is cut.
+        #expect(EngineWall.withoutPrice(line) == shown)
+        #expect(AddListItem.kept(line, store: store) == shown)
+    }
 }

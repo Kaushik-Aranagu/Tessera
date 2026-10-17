@@ -502,6 +502,10 @@ public final class TessCaptureEngine: TessCapturing {
 
     static func line(for error: any Error) -> String {
         if case let ActionError.invalidArguments(_, reason) = error {
+            // A running workout is never suspended from the Bar: the refusal is the line itself (G56, QA on #788).
+            if reason == StartCooking.workoutRunningReason {
+                return StartCooking.workoutRunningLine
+            }
             return "Didn't save that. \(reason.prefix(1).uppercased() + reason.dropFirst())."
         }
         return "Didn't save that. Tap to retry."

@@ -13,6 +13,22 @@ struct KitchenCaptureTests {
         #expect(!advil.line.lowercased().contains("advil"), "\(advil.line)")
     }
 
+    @Test func cookingFromTheBarWhileAWorkoutRunsSaysSo() async throws {
+        // QA on #788 (G56): the Bar's refusal is "Workout running.", not a generic failure, and nothing is written.
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let tess = TessCaptureEngine(engine: engine)
+        _ = try engine.perform(CreateRecipe(text: RecipeParserTests.carbonara), by: .user)
+        let workout = try store.create(#require(classes[.workout]), title: "Push day")
+        try engine.perform(StartWorkout(workout: workout.id), by: .user)
+        let ops = engine.history(from: .distantPast, to: .distantFuture).count
+        let cooking = await tess.capture("cook carbonara", context: TessContext())
+        #expect(cooking.line == "Workout running." && cooking.records.isEmpty, "\(cooking.line)")
+        #expect(engine.history(from: .distantPast, to: .distantFuture).count == ops)
+        #expect(ProcessTable(engine: engine).running()?.subject?.id == workout.id)
+    }
+
     @Test func kitchenPhrasesFromTheBar() async throws {
         let store = ObjectStore.open(inMemory: true)
         let classes = try store.prepareCatalog()

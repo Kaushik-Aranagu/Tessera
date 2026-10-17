@@ -69,12 +69,17 @@ public enum EngineWall {
     /// A list or grocery line with its price taken off (Kitchen 2:09 PM PT): "milk $4" is milk; packs and amounts keep
     /// their numbers ("2 lemons", "500 g flour"). Empty when the line was only money.
     public static func withoutPrice(_ line: String) -> String {
-        let stripped = line.replacing(/(?i)\s*(?:for\s+)?[$£€₹¥]\s?\d[\d,]*(?:\.\d+)?/, with: "")
+        // The place or deal after a price goes with it (QA on #787): "eggs 4.99 at costco" is eggs, never "eggs at
+        // costco"; "milk $4 from target" is milk.
+        let stripped = line
+            .replacing(/(?i)\s*(?:for\s+)?[$£€₹¥]\s?\d[\d,]*(?:\.\d+)?\s+(?:at|for|from|on)\b.*$/, with: "")
+            .replacing(/(?i)\s*(?:for\s+)?[$£€₹¥]\s?\d[\d,]*(?:\.\d+)?/, with: "")
+            .replacing(/(?i)\s*(?:for\s+)?\b\d[\d,]*(?:\.\d+)?\s?(?:dollars?|bucks|usd|quid)\s+(?:at|for|from|on)\b.*$/,
+                       with: "")
             .replacing(/(?i)\s*(?:for\s+)?\b\d[\d,]*(?:\.\d+)?\s?(?:dollars?|bucks|usd|quid)\b/, with: "")
-            // A bare amount with exactly two places at the end is a price (Product 8:40 AM PT Oct 17): "milk 4.99".
-            .replacing(/\s+\d+[.,]\d{2}[.!]?\s*$/, with: "")
-            // A price before "at", "for", "from" or "on" is a price too (QA on #779): "eggs 4.99 at costco".
-            .replacing(/(?i)\s+\d+[.,]\d{2}(?=\s+(?:at|for|from|on)\b)/, with: "")
+            // A bare amount with exactly two places at the end is a price (Product 8:40 AM PT Oct 17): "milk 4.99";
+            // so is one before "at", "for", "from" or "on" (QA on #779), and the phrase goes with it.
+            .replacing(/(?i)\s+\d+[.,]\d{2}(?:[.!]?|\s+(?:at|for|from|on)\b.*)\s*$/, with: "")
         return stripped.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
     }
 

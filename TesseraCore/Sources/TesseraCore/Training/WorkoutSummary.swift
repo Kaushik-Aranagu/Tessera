@@ -26,8 +26,9 @@ public struct WorkoutSummary: Identifiable {
         return endedAt.timeIntervalSince(startedAt)
     }
 
-    /// What Tess says when the workout is done, the thing first: "Push Day A done, 1 of 5 exercises."
-    public var doneLine: String {
+    /// What Tess says when the workout is done, the thing first: "Push Day A done, 1 of 5 exercises." Unmasked, so
+    /// internal: the app only reaches the masked `doneLine(in:)` (QA on #787).
+    var doneLine: String {
         "\(title) done, \(exercisesDone) of \(exercisesPlanned) exercises."
     }
 

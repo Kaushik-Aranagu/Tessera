@@ -378,7 +378,8 @@ public struct ClaudeRecipeReader {
     /// "1.25 cups flour" reads as "cups flour" to the money wall. Only recipe-sized amounts (10 or less, under 1000
     /// for g and ml), never a body unit ("8.50 kg today" is someone's weight), and never on a line with a currency
     /// sign, a money word or a weigh word, so "paid 12.50 pounds", "$1.25 cups", "2.50 g usd" and "weighed 82.50 kg"
-    /// keep their amounts and stay walled (QA on #669).
+    /// keep their amounts and stay walled (QA on #669). Only with a thing after the unit, as on the groceries path
+    /// (Kitchen on #776): "3.49 gallon" and "4.99 oz at the store" are prices.
     static func withoutMeasures(_ line: String) -> String {
         let lower = line.lowercased()
         let words = Set(lower.split { !$0.isLetter }.map(String.init))
@@ -387,7 +388,12 @@ public struct ClaudeRecipeReader {
         guard words.isDisjoint(with: money), words.isDisjoint(with: weigh),
               !line.contains(where: { "$£€₹¥".contains($0) }) else { return line }
         return line.replacing(
-            /(?i)\b(\d+)[.,](\d{2})\s*(cups?|tbsps?|tablespoons?|tsps?|teaspoons?|g|grams?|ml|cl|dl|l|liters?|litres?|oz|ounces?|pints?|pt|quarts?|qt|gallons?|gal|sticks?)\b/
+            #/
+            (?i) \b (\d+) [.,] (\d{2}) \s*
+            ( cups? | tbsps? | tablespoons? | tsps? | teaspoons? | g | grams? | ml | cl | dl | l | liters? | litres?
+              | oz | ounces? | pints? | pt | quarts? | qt | gallons? | gal | sticks? )
+            (?= \s+ (?! (?: at | for | from | on ) \b ) [a-z] )
+            /#
         ) { match in
             let amount = Double("\(match.output.1).\(match.output.2)") ?? .infinity
             let unit = match.output.3.lowercased()

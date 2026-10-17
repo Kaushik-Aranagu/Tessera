@@ -342,8 +342,8 @@ public enum HomeLines {
             return same(fact.tomorrow ? "tomorrow, first" : dayWord(now, calendar: calendar))
         case (.cook, .planned) where (fact.toBuy ?? 0) == 0:
             // Nothing left to buy: the context goes back to the day word; the row keeps "nothing to buy" (Kitchen K87,
-            // rulings C8 and B6).
-            return same(dayWord(now, calendar: calendar))
+            // rulings C8 and B6). Tomorrow's cook keeps "tomorrow" (QA on #780).
+            return same(fact.tomorrow ? "tomorrow" : dayWord(now, calendar: calendar))
         default:
             return kitchenContext(for: fact, calendar: calendar).map { ($0, $0) } ?? (nil, nil)
         }

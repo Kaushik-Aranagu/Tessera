@@ -35,6 +35,19 @@ public enum SideFacts {
         )
     }
 
+    /// A training load ("Weight: 60 kg" on a set, a target weight, a bar) is the bar's, not his body (QA on #785):
+    /// checked for secrets, keys and money, never read as a weigh-in. Every other field is read whole.
+    static func isShowable(_ field: ResolvedField, _ text: String, of classDef: ClassDef,
+                           classes: [SystemCatalog.Key: ClassDef], lastWeightKg: Double?) -> Bool
+    {
+        let line = "\(field.name): \(text)"
+        let load = field.kind == .mass && [SystemCatalog.Key.set, .exerciseEntry, .equipment].contains { key in
+            classes[key].map { ClassResolver.isSubclass(classDef, of: $0) } == true
+        }
+        guard load else { return isShowable(line, lastWeightKg: lastWeightKg) }
+        return !SecretWords.mentions(line) && !looksLikeClaudeKey(line) && !PrivateFacts.isMoneyShaped(line)
+    }
+
     /// The default side's fields (PL2): nil for a private object, which shows its count only; otherwise every field
     /// with a value, minus `hidden` (what the front already shows) and any field a side may not print. A field is
     /// judged as "<name>: <value>", so a number in a field named "Door code" or "Rent" is held back like the words are.
@@ -50,7 +63,7 @@ public enum SideFacts {
         return ClassResolver.effectiveFields(of: classDef).compactMap { field in
             guard !hidden.contains(field.key), field.key != "notes", field.key != "isPrivate",
                   let value = store.value(field.key, of: object), let text = describe(value),
-                  isShowable("\(field.name): \(text)", lastWeightKg: lastKg) else { return nil }
+                  isShowable(field, text, of: classDef, classes: classes, lastWeightKg: lastKg) else { return nil }
             return (field.key, field.name, text)
         }
     }
