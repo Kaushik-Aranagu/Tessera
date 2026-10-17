@@ -124,6 +124,12 @@ struct BackupView: View {
                     .padding(.top, Theme.Spacing.s)
                     .entrance(4)
 
+                // EXPORT sits by the folder line, apart from SAVE A COPY (G38); hidden until Core's masked export.
+                if ExportFile.ready {
+                    ExportRow(onExport: {})
+                        .padding(.top, Theme.Spacing.l)
+                }
+
                 HStack(spacing: Theme.Spacing.xl) {
                     Button("Save a copy") { Task { await saveCopy() } }
                         .buttonStyle(.labelWord)
