@@ -91,7 +91,8 @@ public enum DayStory {
     static let dropped: Set = [
         "editSet", "editRecipe", "editNote", "renameObject", "renameListSection", "moveListItem", "clearDoneItems",
         "addSlot", "moveSlot", "editSlot", "removeSlot", "swapSlotExercise", "deleteObject",
-        "removeRecipeFromGroceries", "moveTask", "rollForwardTasks", "waitOnTask", "startTask", "goToCookStep",
+        "removeRecipeFromGroceries", "moveTask", "keepPlannedTask", "rollForwardTasks", "waitOnTask", "startTask",
+        "goToCookStep",
         "startKitchenTimer", "stopKitchenTimer", "startProcess", "saveContext", "suspendProcess", "resumeProcess",
         "endProcess", "writeSettings",
     ]
