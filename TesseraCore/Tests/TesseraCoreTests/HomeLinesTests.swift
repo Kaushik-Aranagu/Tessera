@@ -270,6 +270,31 @@ struct HomeLinesTests {
 
     // MARK: From the store
 
+    @Test func aRunningListReachesHomeWithItsNameAndCount() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let list = try engine.perform(CreateList(name: "Packing"), by: .user).output
+        for text in ["Socks", "Charger", "Passport", "Adapter", "Shirt", "Book"] {
+            try engine.perform(AddListItem(list: list.id, text: text), by: .user)
+        }
+        try engine.perform(StartListRun(list: list.id), by: .user)
+        let process = try #require(ProcessTable(engine: engine).running())
+        let fact = try #require(HomeFacts(engine: engine).fact(process: process))
+        #expect(fact.kind == .list && fact.state == .running && fact.step == 6)
+        let line = HomeLines.line(for: fact)
+        #expect(line.context == "Packing" && line.detail == "6 left." && line.text == "Packing: 6 left.")
+        let context = try #require(line.context), detail = try #require(line.detail)
+        #expect(HomeLines.fitsContext(context) && HomeLines.fitsDetail(detail))
+        // A walled name reads "Private list", never the words.
+        let secret = try engine.perform(CreateList(name: "Lexapro refills"), by: .user).output
+        try engine.perform(AddListItem(list: secret.id, text: "pills"), by: .user)
+        try engine.perform(StartListRun(list: secret.id), by: .user)
+        let other = try #require(ProcessTable(engine: engine).running())
+        let masked = try #require(HomeFacts(engine: engine).fact(process: other))
+        #expect(masked.title == "Private list")
+    }
+
     @Test func factsFromTheStore() throws {
         // A paused Push A at bench set 2, a cook on step 1, and a shop with 2 left, read as Home would.
         let store = ObjectStore.open(inMemory: true)
