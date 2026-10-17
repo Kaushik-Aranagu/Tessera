@@ -70,6 +70,7 @@ public enum TesseraIntentsCatalog {
         "addGroceries": "in-app only for now (Tess \"buy milk\" is kitchen slice 9)",
         "createRecipe": "in-app only for now: paste a recipe (Tess ghost is kitchen slice 9)",
         "editRecipe": "in-app only: recipe page",
+        "copyList": "in-app only for now (Tess \"copy packing for lisbon\" is lists slice 8)",
         "createList": "in-app only for now (Tess \"list: …\" is kitchen slice 9)",
         "addListItem": "in-app only for now (Tess \"buy milk\" is kitchen slice 9)",
         "checkListItem": "in-app only: lists",
