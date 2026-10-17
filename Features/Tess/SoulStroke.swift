@@ -117,25 +117,11 @@ struct SoulStrokeGesture: ViewModifier {
     }
 
     func body(content: Content) -> some View {
+        // Simultaneous on the whole Home container (QA on #662): it never takes a touch from the page (the Home
+        // swipe, the foot link, a row's pan); the tracker only counts a pan that starts in her band beside her. Off
+        // Home, or when she wouldn't take a stroke, it isn't attached at all.
         content
-            // The band beside her is empty ground on Home, so a finger there would fall through to the page: a
-            // clear strip over the band catches it. Placed from her dock (so it follows the safe area), and only
-            // when the band is hers and she'd take a stroke.
-            // Behind the chrome's own words (her line and UNDO stay tappable), above the page.
-            .background {
-                if isHome, !soul.refusesStroke, let centre = soul.dockCentre {
-                    GeometryReader { proxy in
-                        let frame = proxy.frame(in: .global)
-                        let above = SoulStrokeTracker.bandAbove, below = SoulStrokeTracker.bandBelow
-                        Color.clear
-                            .frame(width: frame.width, height: above + below)
-                            .contentShape(Rectangle())
-                            .gesture(drag)
-                            .position(x: frame.width / 2, y: centre.y - frame.minY + (below - above) / 2)
-                    }
-                    .accessibilityHidden(true)
-                }
-            }
+            .simultaneousGesture(drag, including: isHome && !soul.refusesStroke ? .all : .subviews)
             .tesseraFeedback(.soulStroke, trigger: soul.strokeTicks)
     }
 }
