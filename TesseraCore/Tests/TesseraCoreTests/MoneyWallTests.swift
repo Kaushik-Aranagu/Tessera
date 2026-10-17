@@ -3,8 +3,9 @@ import Foundation
 @testable import TesseraTess
 import Testing
 
-/// MU2 (Research 129, Product 999df84): money stays on the phone. Money-shaped phrases never reach Claude, from the
-/// router, from Claude's own route or from the inbox.
+/// MU2 (Research 129, Product 999df84), amended by his tap "All but the key" (Oct 17 2:32 AM PT, confirmed 12:32 PM):
+/// a capture the grammar cannot read goes whole to Claude, money and body included; only a key stays. What the grammar
+/// claimed with a question or a refusal, and the inbox, stay on the phone.
 @MainActor
 struct MoneyWallTests {
     final class Spy: TessModel {
@@ -41,13 +42,13 @@ struct MoneyWallTests {
         "spent 12.40 lunch", "$4.99/lb", "2 for $5", "£12.50 lunch", "paid rent 650", "450 rs auto",
         "lunch with sam was 23 quid", "refund 19.99 amazon", "12,40 lunch",
     ])
-    func moneyNeverReachesClaude(_ phrase: String) async {
+    func aMoneyMissReachesClaudeWhole(_ phrase: String) async {
         #expect(PrivateFacts.isMoneyShaped(phrase), "\(phrase)")
         let device = Spy(route: .onDevice), claude = Spy(route: .claude)
         let router = TessRouter(engine: engine, models: [device, claude])
         _ = await router.run(TessRequest(text: phrase, context: TessContext(), use: .capture))
-        #expect(claude.heard.isEmpty)
-        #expect(device.heard == [phrase]) // the phone's own model may still read it
+        #expect(claude.heard == [phrase]) // the grammar and the phone's model could not read it: Claude gets it whole
+        #expect(device.heard == [phrase])
     }
 
     @Test(arguments: ["80 x5", "bench 82.50 x 8", "80 for 8", "5 reps", "call mom", "pay the apple card bill mon",
@@ -68,12 +69,12 @@ struct MoneyWallTests {
         "weighed in at 83 kg", "bp 128/82", "resting hr 58", "slept 5 hours", "took 2 advil", "10mg lexapro",
         "migraine since noon",
     ])
-    func moneyAndBodyRowsNeverReachClaude(_ phrase: String) async {
+    func aMoneyOrBodyMissReachesClaudeWhole(_ phrase: String) async {
         #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil), "\(phrase)")
         let device = Spy(route: .onDevice), claude = Spy(route: .claude)
         _ = await TessRouter(engine: engine, models: [device, claude])
             .run(TessRequest(text: phrase, context: TessContext(), use: .capture))
-        #expect(claude.heard.isEmpty && device.heard == [phrase])
+        #expect(claude.heard == [phrase] && device.heard == [phrase])
     }
 
     /// The pass rows MB31 to MB40: lifts, food, distance, plans and money or body words with no amount.
@@ -88,6 +89,17 @@ struct MoneyWallTests {
         _ = await TessRouter(engine: engine, models: [claude])
             .run(TessRequest(text: phrase, context: TessContext(), use: .capture))
         #expect(claude.heard == [phrase])
+    }
+
+    @Test(arguments: [
+        "sk-" + "ant-" + "api03-" + String(repeating: "Ab3x", count: 8),
+        "my key is sk-" + "ant-" + "api03-abcdefghijklmnop"
+    ])
+    func aKeyStillNeverLeaves(_ phrase: String) async {
+        let device = Spy(route: .onDevice), claude = Spy(route: .claude)
+        let result = await TessRouter(engine: engine, models: [device, claude])
+            .run(TessRequest(text: phrase, context: TessContext(), use: .capture))
+        #expect(claude.heard.isEmpty && device.heard.isEmpty && result.line == TessRouter.keyLine)
     }
 
     @Test func theInboxNeverHoldsMoney() {
