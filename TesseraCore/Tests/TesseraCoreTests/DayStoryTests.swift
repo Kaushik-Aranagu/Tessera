@@ -285,6 +285,14 @@ struct DayStoryTests {
         ])
     }
 
+    @Test func aCopiedListIsANewListLine() throws {
+        // QA on #866: copyList reads "New list:" like createList.
+        let packing = try run(CreateList(name: "Packing"), at: Self.at(13, 9)).output
+        try run(AddListItem(list: packing.id, text: "socks"), at: Self.at(13, 9, 5))
+        try run(CopyList(list: packing.id, name: "Lisbon"), at: Self.at(13, 13, 15))
+        #expect(lines(Self.at(13, 12)).contains("13:15  New list: Lisbon"), "\(lines(Self.at(13, 12)))")
+    }
+
     @Test func donesCountFromThree() throws {
         let titles = ["water the plants", "call mom", "pay rent", "bins", "post"]
         let tasks = try titles.map { try task($0, at: Self.at(10, 9)) }

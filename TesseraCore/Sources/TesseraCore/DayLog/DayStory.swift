@@ -316,7 +316,8 @@ public enum DayStory {
                 }
             default:
                 if let lead = ownLines[action], onDay(record.createdAt, zone: zone(of: record)) {
-                    let key = String(action.dropFirst("create".count)).lowercased()
+                    // A copy is a new list (copyList does not start with "create").
+                    let key = action == "copyList" ? "list" : String(action.dropFirst("create".count)).lowercased()
                     for object in created(record, kind: key) where !deletedToday.contains(object) {
                         lines.append((DayLine(time: record.createdAt,
                                               text: "\(lead) \(lookup.title(of: object) ?? "")",

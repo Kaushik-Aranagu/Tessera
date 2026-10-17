@@ -298,7 +298,7 @@ struct CopyListTests {
         let lisbon = try engine.perform(CreateList(name: "Lisbon"), by: .user).output
         let again = try engine.perform(CopyList(list: packing.id, name: "lisbon"), by: .user)
         #expect(again.output.id == lisbon.id && again.record.ops.isEmpty && again.record
-            .receipt == "lisbon, already a list")
+            .receipt == "Lisbon, already a list")
         #expect(throws: ActionError.self) {
             try engine.perform(CopyList(list: packing.id, name: "Groceries"), by: .user)
         }
@@ -327,6 +327,18 @@ struct CopyListTests {
         let plain = try engine.perform(CreateList(name: "Errands"), by: .user).output
         let plainCopy = try engine.perform(CopyList(list: plain.id, name: "Errands 2"), by: .user).output
         #expect(!ListNoteTags.isReusable(plainCopy, in: store))
+    }
+
+    @Test func aPrivateRowStillReadsPrivateItemInTheCopy() throws {
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let packing = try engine.perform(CreateList(name: "Packing"), by: .user).output
+        try engine.perform(AddListItem(list: packing.id, text: "ibuprofen 400 mg"), by: .user)
+        let copy = try engine.perform(CopyList(list: packing.id, name: "Lisbon"), by: .user).output
+        let row = try #require(copy.orderedChildren.first)
+        #expect(AddListItem.shownTitle(row.title, store: store) == "Private item")
+        let checked = try engine.perform(CheckListItem(item: row.id), by: .user)
+        #expect(!(checked.record.receipt ?? "").lowercased().contains("ibuprofen"))
     }
 
     @Test func aPrivateNameIsNeverInTheLine() throws {

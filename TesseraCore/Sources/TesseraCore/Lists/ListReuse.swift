@@ -215,4 +215,10 @@ public struct CopyList: EngineAction {
         let shown = shown(name.trimmingCharacters(in: .whitespacesAndNewlines), in: store)
         return outcome.wasRepeat ? "\(shown), already a list" : "\(shown), copied from \(sourceName(in: store))"
     }
+
+    /// From the run's own list: a repeat prints the existing list's title, not the typed name (Design on #866).
+    public func receipt(in store: ObjectStore, output: ObjectRecord) -> String? {
+        let shown = ListContents.shownName(of: output, in: store)
+        return outcome.wasRepeat ? "\(shown), already a list" : "\(shown), copied from \(sourceName(in: store))"
+    }
 }
