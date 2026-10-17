@@ -430,7 +430,19 @@ enum RecipeCopy {
 
     /// Paste's receipt, thing first: "Carbonara, on Recipes."; a private one "Private recipe, on Recipes." (K87.3).
     static func saved(_ shownTitle: String) -> String {
-        "\(shownTitle), on Recipes."
+        "\(shortName(shownTitle)), on Recipes."
+    }
+
+    /// A receipt's short name: the title's first noun phrase (Product 4:57, K87.2), so a long title never makes a long
+    /// line: "Sheet-pan paprika chicken with lemon" reads "Sheet-pan paprika chicken"; "Chili con carne" stays whole.
+    static func shortName(_ title: String) -> String {
+        var name = title
+        for cut in [" with ", ", ", ": ", " (", " - ", " – ", " — "] {
+            if let range = name.range(of: cut, options: .caseInsensitive) {
+                name = String(name[..<range.lowerBound])
+            }
+        }
+        return name.trimmingCharacters(in: .whitespaces)
     }
 
     /// The title a surface shows: "Private recipe" for a private one unless it's been tapped open.
