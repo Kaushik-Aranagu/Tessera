@@ -232,6 +232,11 @@ struct NowPage: View {
         .accessibilityLabel("Finish \(task.title)")
     }
 
+    /// A planned cook's GROCERIES key shows only while something is left to buy (Design on #700).
+    static func showsGroceriesKey(toBuy: Int?) -> Bool {
+        (toBuy ?? 0) > 0
+    }
+
     /// The recipe a planned cook task is about ("cook tacos thu" links it through `about`), nil for any other task.
     private func cookRecipe(of task: ObjectRecord) -> ObjectRecord? {
         guard let recipeClass = model.classDef(.recipe) else { return nil }
@@ -246,14 +251,17 @@ struct NowPage: View {
             // A planned cook ("cook tacos thu") reads as the cook, with what's left to buy and a GROCERIES key
             // (kitchen gap hunt G19); any other task as his words.
             let recipe = cookRecipe(of: record)
-            let line = HomeLines.line(for: recipe.map { facts.fact(plannedCook: record, recipe: $0) }
-                ?? facts.fact(task: record, startsAt: task.start), now: now)
+            let fact = recipe.map { facts.fact(plannedCook: record, recipe: $0) }
+                ?? facts.fact(task: record, startsAt: task.start)
+            let line = HomeLines.line(for: fact, now: now)
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
                 LineHero(line: line, opens: .object(recipe?.id ?? task.id)) {
                     if recipe != nil {
-                        PaintKey(paint: Theme.Colors.ink, isTap: true, action: { openLink(.groceries) },
-                                 label: { _ in Text("Groceries").textRole(.labelStrong) })
-                            .accessibilityHint("Opens Groceries")
+                        if Self.showsGroceriesKey(toBuy: fact.toBuy) {
+                            PaintKey(paint: Theme.Colors.ink, isTap: true, action: { openLink(.groceries) },
+                                     label: { _ in Text("Groceries").textRole(.labelStrong) })
+                                .accessibilityHint("Opens Groceries")
+                        }
                     } else {
                         finishKey(task)
                     }
