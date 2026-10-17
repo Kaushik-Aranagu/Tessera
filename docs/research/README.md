@@ -266,3 +266,9 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [walls-ui-harness-fix.md](walls-ui-harness-fix.md) | Builder B (#564), QA: harness fix so WallsUITests reads `seed` and `mustNotShow`, clears stale lines between rows, checks Home for leaks and has a control row |
 | [fixtures/home-job-crosscheck.md](fixtures/home-job-crosscheck.md) | AI architecture: BY, AI architecture's fixed home-lines-job.md against the 24 done moments, 22 match and 2 drift, plus 8 document fixes |
 | [fixtures/siri-body-weight.md](fixtures/siri-body-weight.md) | Core (Intents.swift): BX, 16 Siri cases for the "Body weight logged." wording (R2), Swift Testing names, and the "log my weight 82.4" gap |
+| [fixtures/pantry-sheet-77.md](fixtures/pantry-sheet-77.md) | Kitchen lead, Core: BV, 38 Pantry rows for sheet 77 (a week of logs, show-nothing cases, 14 never-sums rows); the label rows are parked |
+| [fixtures/perform-failures.md](fixtures/perform-failures.md) | Core, Builders A and B: BZ, an injected throw for each of the 52 swallowed writes by family, one plain failure line and no reward or haptic |
+| [fixtures/haptic-moments.md](fixtures/haptic-moments.md) | Core D6, Builder B, QA: CA, 19 finish and landing moments against master, 11 must-fire-nothing cases, the 31 raw haptic sites and 20 test names |
+| [fixtures/siri-new-intents.md](fixtures/siri-new-intents.md) | Core, Builder A: CB, 49 rows for "What's next" and "Add a grocery" Siri intents with private and money traps; Product rulings 5:58 applied |
+| [fixtures/sides-77-lines.md](fixtures/sides-77-lines.md) | Core 0ak, Builders A and B: CD, side lines and glances for the eight sheet 77 sides, with empty and private cases; rulings 6:01 applied |
+| [discovery-check.md](discovery-check.md) | Product: CC, the 14 discovery gaps against the boards, five missed gaps and six sharper done-whens |
