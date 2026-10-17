@@ -4,11 +4,11 @@
 
 ## 1. Groceries, and at the shop: FOR WHAT (LINKS)
 
-Accepted. The side groups the open rows under the cook each is for, in short names by day ("Tacos · Thursday", "Dal · Friday"), soonest cook first; rows with no share sit last under "Just because", and USUALLY rows under "Usually". A row with two shares shows once, under the soonest cook, with the other cook as a label ("also dal"). Checked rows stay in their group, struck, until the shop clears them. The context-line word is FOR WHAT; the way back is GROCERIES. At the shop (a live surface) the same content is a peek over the column, never a page. REMOVE (Design 65) stays the row's own swipe on the front and on the side. Tess's line: "7 for 2 cooks, 3 just because." (counts only, from the shares).
+Accepted. The side groups the open rows under the cook each is for, in short names by day ("TACOS, THURSDAY", "DAL, FRIDAY": a comma, since " · " is for a pack size only, copy-pass rule 8, Design sheet 77), soonest cook first; rows with no share sit last under "Just because", and USUALLY rows under "Usually". A row with two shares shows once, under the soonest cook, with the other cook as a label ("also dal"). Checked rows stay in their group, struck, until the shop clears them. The context-line word is FOR WHAT; the way back is GROCERIES. At the shop (a live surface) the same content is a peek over the column, never a page. REMOVE (Design 65) stays the row's own swipe on the front and on the side. Tess's line: "7 for 2 cooks, 3 just because." (counts only, from the shares).
 
 | # | Pass when |
 |---|---|
-| 1.1 | With tacos (Thu) and dal (Fri) planned and 3 plain rows, the side shows Tacos · Thursday first, Dal · Friday, then Just because with 3; the counts match the front's "14 to buy" |
+| 1.1 | With tacos (Thu) and dal (Fri) planned and 3 plain rows, the side shows TACOS, THURSDAY first, DAL, FRIDAY, then JUST BECAUSE with 3; the counts match the front's "14 to buy" |
 | 1.2 | A row shared by both cooks appears once under Tacos with "also dal" |
 | 1.3 | At the shop the side is a peek; DONE and the basket stay under it |
 | 1.4 | A left swipe on a row still removes; a swipe past 60 pt on the context line or an empty area opens the side; the word always works |
