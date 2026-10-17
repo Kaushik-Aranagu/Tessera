@@ -56,7 +56,7 @@ public final class TessCaptureEngine: TessCapturing {
         // Never log a pasted Claude key, even as a miss (the router refuses it, and the miss log is a file).
         // Nor a line with a secret word (Research 134): the miss log is a file.
         // Nor money or a body fact (Product P14, 12:30 PM PT).
-        if !result.understood, !looksLikeClaudeKey(phrase), !SecretWords.mentions(phrase),
+        if !result.understood, !result.isRefusal, !looksLikeClaudeKey(phrase), !SecretWords.mentions(phrase),
            !PrivateFacts.isWalled(phrase, lastWeightKg: TessRequest.lastWeightKg(context, engine: engine))
         {
             missLog?.record(phrase, at: context.now, route: result.source.rawValue, source: source)
@@ -246,6 +246,16 @@ public final class TessCaptureEngine: TessCapturing {
                 let name = hidden ? "Private item" : lines[0].prefix(1).uppercased() + lines[0].dropFirst()
                 return TessCapture(records: [], line: "\(name), already on Groceries.", source: .grammar,
                                    asking: .line)
+            }
+            // The same paste twice is one recipe: Tess says so, writes nothing, and the pasted text is not logged as a
+            // miss (G59, QA on #854). A private title reads "Private recipe".
+            if case let .recipe(text) = parse,
+               let existing = RecipeBook(store: engine.store, classes: engine.classes).recipe(pastedAs: text)
+            {
+                var capture = TessCapture(records: [], line: CreateRecipe.duplicateLine(of: existing, in: engine.store),
+                                          source: .grammar)
+                capture.isRefusal = true
+                return capture
             }
             do {
                 if case let .sets(parts) = parse {

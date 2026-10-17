@@ -120,17 +120,26 @@ struct PasteCorrectionTests {
 /// G59: a sentence is not a title, and the same paste twice is one recipe.
 @MainActor
 struct RecipeTitleTests {
-    @Test func aStepAsTheFirstLineIsNotTheTitle() throws {
-        let parsed = try #require(RecipeParser
-            .parse("Heat the oven to 200C.\n2 eggs\n1 cup flour\nBake it for 20 minutes."))
-        #expect(parsed.title == "Untitled recipe")
-        #expect(parsed.steps.first?.text == "Heat the oven to 200C.")
-        let long = try #require(RecipeParser
-            .parse("Stir the onions slowly in the pan until they turn golden and sweet\n2 onions\nSalt"))
-        #expect(long.title == "Untitled recipe")
-        // A name stays a name.
-        let name = try #require(RecipeParser.parse("Weeknight dal\n1 cup lentils\nSimmer 20 minutes."))
-        #expect(name.title == "Weeknight dal")
+    @Test func theTitleRule() throws {
+        /// Kitchen's ruling on #854: 12 words or fewer, no stop, no quantity first.
+        func title(_ first: String) throws -> String {
+            try #require(RecipeParser.parse("\(first)\n2 eggs\n1 cup flour\nBake it for 20 minutes.")).title
+        }
+        func words(_ count: Int) -> String {
+            Array(repeating: "dal", count: count).joined(separator: " ")
+        }
+        #expect(try title(words(9)) == words(9))
+        #expect(try title(words(12)) == words(12))
+        #expect(try title(words(13)) == "Untitled recipe")
+        #expect(try title("Dal:") == "Dal")
+        #expect(try title("Mix everything.") == "Untitled recipe")
+        #expect(try title("Is this the best dal?") == "Untitled recipe")
+        let parsed = try #require(RecipeParser.parse("Mix everything.\n2 eggs\n1 cup flour"))
+        #expect(parsed.steps.first?.text == "Mix everything.")
+        // A quantity first is an ingredient, never the title.
+        #expect(try #require(RecipeParser.parse("2 eggs\nMethod\n1. Whisk.")).title == "Untitled recipe")
+        #expect(try #require(RecipeParser.parse("1/2 cup flour\nMethod\n1. Whisk.")).title == "Untitled recipe")
+        #expect(try #require(RecipeParser.parse("A pinch of salt\nMethod\n1. Whisk.")).title == "Untitled recipe")
     }
 
     @Test func theSamePasteTwiceIsOneRecipe() throws {
