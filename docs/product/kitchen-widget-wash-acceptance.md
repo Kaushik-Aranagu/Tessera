@@ -13,7 +13,7 @@ Sources: sheet 88 (Widgets row; wash kind c), recipe-plate-acceptance P6-P8, P11
 | KW-W5 | Small widget | Plain ground, no wash, light and dark | P11 |
 | KW-W6 | Quiet widget | Plain ground, no wash, light and dark | P11 |
 | KW-W7 | Medium, empty (no planned cook) | No wash, plain ground, one quiet line. Default taken: "Nothing planned" (no widget copy exists in code); no button, no drawing of emptiness | sheet 88 empty states |
-| KW-W8 | Private recipe planned | Plain ground, no pigment, no recipe title. Default taken: shows "Private" as the only word, matching "Private note" | sheet 88 wall rule |
+| KW-W8 | Private recipe planned | Plain ground, no pigment, no recipe title. Ruled (Design, Oct 17): the only copy is "Private recipe, 7 pm." (lowercase time, no "at"); with no time, "Private recipe, today." or "Private recipe, tonight."; replaces the bare "Private" | sheet 88 wall rule |
 | KW-W9 | Wash colour | First three ingredient lines in the recipe's own order, staples skipped (butter, flour, sugar, olive oil, black pepper; salt, oil, water, pepper by key), no quantity maths, nothing repeated; pale foods shaded 12% toward ink; unknown falls to Kitchen green #12936A | sheet 88, table |
 | KW-W10 | Same every time | Seeded by the object (recipe id); two renders, two reloads and two devices give the same pixels | P8 |
 | KW-W11 | Reload | A timeline reload does not re-tint or re-seed; the wash changes only when the planned recipe changes | P8 |
