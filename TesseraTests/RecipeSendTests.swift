@@ -69,4 +69,9 @@ struct RecipeSendTests {
         ).record) }
         #expect(nothing == .nothing("Private recipe, nothing to add."))
     }
+
+    /// G68: the add is named for what it does, the whole recipe.
+    @Test func theVoiceOverActionSaysAll() {
+        #expect(RecipeCopy.addAllAction == "Add all to Groceries")
+    }
 }

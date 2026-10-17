@@ -42,7 +42,8 @@ struct PasteRecipe: View {
                     : linkLine ?? PasteCopy.idleLine(link: RecipePasteLink.bareLink(text) != nil, reading: reading,
                                                      read: revealed >= lines.count, lines: lines))
                     .font(Theme.voice)
-                    .foregroundStyle(Theme.Colors.tess)
+                    // The password refusal reads in ink (Design on #810).
+                    .foregroundStyle(linkLine == RecipeLinkLine.secretLink ? Theme.Colors.ink : Theme.Colors.tess)
                     .contentTransition(.opacity)
                     .fixedSize(horizontal: false, vertical: true)
                     .entrance(0)
@@ -129,6 +130,13 @@ struct PasteRecipe: View {
         }
         .onDisappear(perform: closeUndo)
         .onChange(of: text) { old, new in
+            // A link with a name or password in it is refused whole: never read, kept, saved or printed back (#810).
+            if RecipePasteLink.isSecretLink(new) {
+                linkLine = RecipeLinkLine.secretLink
+                reading = false
+                text = ""
+                return
+            }
             // A Claude key never becomes a recipe (QA on #218): cut it out before anything reads it, keeping the rest
             // of the paste (Product 8:20 AM, K87.11). It's never echoed; the line says where a key goes.
             switch keys.change(old: old, new: new) {
@@ -217,6 +225,11 @@ struct PasteRecipe: View {
             let outcome = await RecipePasteLink.read(link, reader: reader, asksClaude: model.asksClaude,
                                                      shelf: RecipeLinkShelf.beside(store))
             readingLink = false
+            // He changed the box while it read: his edit wins; the result is dropped (QA on #811).
+            guard RecipePasteLink.bareLink(text) == link else {
+                linkLine = nil
+                return
+            }
             withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
                 linkLine = outcome.line
                 if let recipe = outcome.result.text {
@@ -257,7 +270,8 @@ struct PasteRecipe: View {
             // Nothing written (a link, say): kept on the phone for week one, never in the op log.
             // Never a pasted line with a secret word in it (Research 134; QA F3 on #422).
             // Nor money or a body fact (board 0ah).
-            if !SecretWords.mentions(text), !PrivateFacts.isWalled(
+            // Nor a link that carries a name or password, anywhere in a longer paste (QA on #810).
+            if !SecretWords.mentions(text), !PasteCopy.hasSecretLink(text), !PrivateFacts.isWalled(
                 text,
                 lastWeightKg: BodyWeight.lastKg(in: model.store)
             ) {
@@ -486,6 +500,11 @@ struct PasteKeyFilter {
 }
 
 enum PasteCopy {
+    /// Whether any word of the paste is a link with a user or password before its host.
+    static func hasSecretLink(_ text: String) -> Bool {
+        text.split(whereSeparator: \.isWhitespace).contains { RecipeLinkReader.hasCredentials(String($0)) }
+    }
+
     /// Tess's line when no link line is up: the count once the brush has read, the link nudge for a bare link (a
     /// proposal; the read lines themselves are Core's), else the invitation.
     static func idleLine(link: Bool, reading: Bool, read: Bool,

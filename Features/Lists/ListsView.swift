@@ -141,6 +141,8 @@ private struct ListPage: View {
     @State private var runStarted = 0
     /// The open reset ask after "done" on a reusable list; nil when none.
     @State private var resetAsk: UUID?
+    /// NOT NOW on the reset ask: its own trigger for .notNow (Design on #823).
+    @State private var notNow = 0
     /// Private rows: "Private item" until tapped, masked again on leaving (as Groceries, B11).
     @State private var rows = ShopTrip()
     @FocusState private var writing: Bool
@@ -198,6 +200,8 @@ private struct ListPage: View {
                     VStack(alignment: .leading, spacing: Theme.Spacing.l) {
                         // Keyed by name, so a section that finishes folds away rather than the rows shuffling up
                         // (10.7; a removed last row finishes it the same way).
+                        // Names are unique here: sections() groups every item of a name into one section, so the
+                        // name is a stable key; an index in the key would re-key every later section when one folds.
                         ForEach(sections(open), id: \.name) { section in
                             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                                 if let title = section.name {
@@ -244,6 +248,7 @@ private struct ListPage: View {
             }
             .tesseraFeedback(.done, trigger: runChanged)
             .tesseraFeedback(.made, trigger: runStarted)
+            .tesseraFeedback(.notNow, trigger: notNow)
             .toolbar(.hidden, for: .navigationBar)
             .tesseraFeedback(.notNow, trigger: removed)
             // A cleared run (Design on #806); .done is for finishing.
@@ -508,6 +513,7 @@ private struct ListPage: View {
                     .frame(maxWidth: 220)
                 Button("Not now") {
                     withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { resetAsk = nil }
+                    notNow += 1
                 }
                 .buttonStyle(.labelWord)
                 .frame(minHeight: 44)
