@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pockets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@100..900&display=swap" rel="stylesheet">
+<!-- Design item 91: Pockets. Kaushik Oct 17 12:31 PM PT on sheet 88: no band or banner at the top; very faded images in small sections that make a screen look good, especially where it is not cluttered. Board by default; ?play runs the arrivals and the Groceries page turns for the recording. The "photo" is a drawn stand-in; the figure is original vector artwork. -->
+<style>
+:root{--board:#E9E6EE}
+*{box-sizing:border-box}
+body{margin:0;background:var(--board);font-family:'Inter Tight',system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#1c1a20;font-variant-numeric:tabular-nums}
+.wrap{padding:34px 40px 40px;width:1340px}
+.head{display:flex;gap:30px;margin-bottom:26px}
+.head h1{margin:0;font-size:34px;font-weight:650;letter-spacing:-.02em;flex:none;width:300px;line-height:38px}
+.head p{margin:0;font-size:17px;line-height:24px;color:#4a4652;max-width:980px}
+.grid{display:grid;grid-template-columns:repeat(3,393px);gap:0 22px;align-items:start}
+.colh{border-top:2px solid #1c1a20;padding-top:10px;margin-bottom:22px}
+.colh .opt{font-size:13px;font-weight:750;letter-spacing:.1em;color:#6b6674}
+.colh h2{margin:4px 0 6px;font-size:24px;font-weight:650;letter-spacing:-.02em;line-height:28px}
+.colh p{margin:0;font-size:16px;line-height:22px;color:#4a4652;min-height:44px}
+.rowh{grid-column:1/-1;display:flex;gap:22px;align-items:baseline;margin:34px 0 16px;border-top:1px solid rgba(28,26,32,.2);padding-top:12px}
+.rowh .opt{font-size:13px;font-weight:750;letter-spacing:.1em;color:#6b6674;flex:none;width:130px}
+.rowh p{margin:0;font-size:16px;line-height:22px;color:#4a4652;max-width:1000px}
+.ph{position:relative;width:393px;height:852px;overflow:hidden;border-radius:44px;color:rgb(var(--ink));background:color-mix(in srgb,rgb(var(--area)) 4.5%,var(--bg))}
+body.playing .ph{border-radius:0}
+.por{--ink:18,16,22;--bg:#FBFAF7;--ctx:#5A3DAF;--do:.62}
+.obs{--ink:245,242,236;--bg:#121014;--ctx:#B8A3FF;--do:.62}
+.kit{--area:18,147,106}.trn{--area:194,58,34}.obs.trn{--area:255,125,98}
+.ttl{position:absolute;left:22px;margin:0;font-size:52px;font-weight:650;letter-spacing:-.02em;line-height:56px}
+.ctx{position:absolute;left:22px;font-size:18px;font-weight:430;line-height:24px;color:var(--ctx);white-space:nowrap}
+.back{position:absolute;left:22px;top:58px;font-size:13px;font-weight:750;letter-spacing:.1em;text-transform:uppercase;color:rgb(var(--area))}
+.sw{position:absolute;left:22px;font-size:13px;font-weight:750;letter-spacing:.1em;text-transform:uppercase;line-height:16px;color:rgb(var(--area))}
+.rows{position:absolute;left:22px;right:22px}
+.r{font-size:22px;font-weight:560;letter-spacing:-.005em;line-height:28px;padding:8px 0;white-space:nowrap;position:relative}
+.r.lead{font-size:28px;font-weight:650;letter-spacing:-.012em;line-height:34px;padding:8px 0 4px}
+.r.lead:before{content:"";position:absolute;left:-13px;top:10px;bottom:6px;width:3px;border-radius:1.5px;background:rgb(var(--area));opacity:.72}
+.r .d{display:block;font-size:18px;font-weight:430;line-height:24px;color:rgba(var(--ink),var(--do))}
+.r.k span{font-weight:430;color:rgba(var(--ink),var(--do));margin-left:6px}
+/* the pocket: small, feathered on every side, behind the page's own whitespace, never under a word */
+.pk{position:absolute;pointer-events:none;-webkit-mask-image:radial-gradient(closest-side,#000 38%,transparent 100%);mask-image:radial-gradient(closest-side,#000 38%,transparent 100%)}
+.pk svg{display:block;width:100%;height:100%}
+.pk.dry{animation:dry .38s cubic-bezier(.22,.8,.2,1) both}
+@keyframes dry{from{opacity:0;filter:blur(5px) saturate(.6)}to{opacity:1;filter:none}}
+.mp path{fill:rgba(var(--ink),.045);stroke:rgba(var(--ink),.28);stroke-width:.8}
+.mp path.w{fill:rgba(var(--area),.62);stroke:rgba(var(--area),.9)}
+.mp path.h{fill:rgba(var(--area),.32)}
+.fl{position:absolute;left:22px;font-size:13px;font-weight:700;letter-spacing:.1em;color:rgba(var(--ink),.5)}
+.rail{position:absolute;right:9px;width:3px}
+.rail i{position:absolute;left:0;width:2px;border-radius:1px;background:rgba(var(--ink),.2)}
+.rail i.on{background:rgb(var(--area));width:3px;left:-.5px}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><defs>
+ <filter id="wob" x="-30%" y="-30%" width="160%" height="160%"><feTurbulence type="fractalNoise" baseFrequency=".012" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="46"/><feGaussianBlur stdDeviation="5"/></filter>
+ <filter id="grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="9"/><feColorMatrix values="0 0 0 0 .5  0 0 0 0 .5  0 0 0 0 .5  0 0 0 .55 0"/></filter>
+</defs></svg>
+<div class="wrap" id="wrap">
+<div class="head" id="head"><h1>91. Pockets</h1><p>Kaushik on sheet 88 (Oct 17, 12:31 PM PT): no band or banner at the top. Very faded images in small sections that make a screen look good, especially where it doesn't feel cluttered. <b>The rule:</b> a picture is a <b>pocket</b>, a small feathered patch, 160 pt or less across, at 14% to 18% strength, that sits in the emptiest part of the page, behind nothing and touching no word. It belongs to a page, so when the page turns (sheet 90) its pocket turns with it. It never sits at the top.</p></div>
+<div class="grid" id="grid">
+ <div><div class="colh"><div class="opt">RECIPE · HIS PHOTO</div><h2>The dish, in the corner of the page</h2><p>Foot of the ingredient list, bottom right, bleeding off the edge. The title and the rows are untouched.</p></div><div id="f1"></div></div>
+ <div><div class="colh"><div class="opt">INGREDIENT · ITS OWN COLOUR</div><h2>Sweet potatoes, in orange</h2><p>No photo exists for an ingredient; one soft patch in its colour, right of the quiet lines.</p></div><div id="f2"></div></div>
+ <div><div class="colh"><div class="opt">MUSCLES · THE ONE INFORMATION IMAGE</div><h2>A small figure, not a page of one</h2><p>Right of the rows, 150 pt tall, faded to ink 22%. Worked parts in the area colour.</p></div><div id="f3"></div></div>
+ <div class="rowh"><div class="opt">WITH PAGES (90)</div><p><b>A page carries its own pocket.</b> Groceries read aisle by aisle: Produce, Dairy and Frozen each leave the foot of their page empty, so each gets one patch in its own colour. When the page turns, the old pocket dissolves in 260 ms and the new one dries in over 380 ms, the same beat as the rows. It never moves with the rows.</p></div>
+ <div><div class="colh"><div class="opt">GROCERIES, PAGE BY PAGE</div><h2>One page, one patch</h2><p>The recording turns Produce, Dairy, Pantry and Frozen.</p></div><div id="f4"></div></div>
+ <div style="grid-column:span 2"><div class="colh"><div class="opt">THE RULES, IN ONE PLACE</div><h2>Where a pocket may sit, and where it may not</h2></div>
+  <p style="margin:0;font-size:17px;line-height:25px;color:#3a3642;max-width:760px">
+  <b>Size:</b> at most 160 × 160 pt, 5% of the screen. <b>Strength:</b> 14% to 18% in Porcelain, 12% to 16% in Obsidian; the figure 22%. <b>Edge:</b> feathered on every side, never a line, never a card, never a circle. <b>Place:</b> the largest empty rectangle the page has, bottom right by default, at least 24 pt from any word; if a longer title or a bigger text size would touch it, it is simply not drawn. <b>Never:</b> at the top, behind a title or a number, on Home, on a live workout, on a Private thing (plain ground), on a widget, or as a progress photo. <b>Loading:</b> a photo, if there is one, dries in over a colour patch in 380 ms (blur 5 to 0); no spinner, no grey box, no "add a photo". <b>Reduce Motion:</b> 150 ms crossfade. <b>VoiceOver:</b> hidden, except a photo, read once as "Photo of Sheet-pan paprika chicken". <b>Budget:</b> one pocket per page, and no pocket on a page that already has a lead edge marker and two section words.</p></div>
+</div></div>
+<script>
+const play = location.search.includes('play');
+if (play) document.body.classList.add('playing');
+const E = 'cubic-bezier(.22,.8,.2,1)';
+const blobs = (cols, seed) => `<svg viewBox="0 0 160 160" aria-hidden="true"><g filter="url(#wob)">${cols.map((c, i) => `<ellipse cx="${60 + ((i * 47 + seed * 13) % 60)}" cy="${60 + ((i * 31 + seed * 29) % 60)}" rx="${46 - i * 6}" ry="${40 - i * 4}" fill="${c}"/>`).join('')}</g></svg>`;
+const pocket = (x, y, s, cols, op, seed = 1) => { const d = document.createElement('div'); d.className = 'pk'; d.style.cssText = `left:${x}px;top:${y}px;width:${s}px;height:${s}px;opacity:${op}`; d.dataset.op = op; d.innerHTML = blobs(cols, seed); return d; };
+const dry = d => { d.getAnimations().forEach(a => a.cancel()); d.animate([{ opacity: 0, filter: 'blur(5px) saturate(.6)' }, { opacity: d.dataset.op, filter: 'none' }], { duration: 380, easing: E, fill: 'both' }); };
+const phone = (host, cls, html) => { const p = document.createElement('div'); p.className = 'ph ' + cls; p.innerHTML = html; host.appendChild(p); return p; };
+const rows = (top, list) => `<div class="rows" style="top:${top}px">${list.map(r => { const x = typeof r === 'string' ? { t: r } : r; return `<div class="r${x.lead ? ' lead' : ''}${x.k ? ' k' : ''}">${x.t}${x.k ? `<span>${x.k}</span>` : ''}${x.d ? `<span class="d">${x.d}</span>` : ''}</div>`; }).join('')}</div>`;
+
+/* 1 recipe */
+const a = phone(document.getElementById('f1'), 'por kit',
+  `<div class="back">‹ Recipes</div><h1 class="ttl" style="top:112px;font-size:44px;line-height:48px">Sheet-pan paprika<br>chicken</h1><div class="ctx" style="top:216px">serves 4, 45 min</div><div class="sw" style="top:274px">Ingredients</div>` +
+  rows(296, [{ t: '1 1/2 lb chicken thighs', k: '' }, '2 sweet potatoes', '1 lemon', '2 tbsp smoked paprika', '3 garlic cloves', '1 tbsp olive oil', 'Salt']));
+const p1 = pocket(232, 600, 190, ['#C23A22', '#E08A1E', '#F0C419', '#7A8F3A'], .17, 2); a.appendChild(p1);
+/* 2 ingredient */
+const b = phone(document.getElementById('f2'), 'por kit',
+  `<div class="back">‹ Pantry</div><h1 class="ttl" style="top:112px">Sweet potatoes</h1><div class="ctx" style="top:176px">in 2 recipes, 1 in the pantry</div><div class="sw" style="top:238px">Last cooked</div>` +
+  rows(260, ['Sheet-pan paprika chicken', 'Chickpea curry']) + `<div class="sw" style="top:430px">Pairs with</div>` + rows(452, ['Lemon', 'Smoked paprika']));
+const p2 = pocket(206, 560, 190, ['#D9731F', '#E8A15C', '#B9501A'], .16, 3); b.appendChild(p2);
+/* 3 muscles */
+const FIG = `<svg class="mp" viewBox="0 0 120 260" width="62" height="134" style="position:absolute"><g>
+<path class="h" d="M33 40 Q18 40 14 56 L12 78 Q16 84 26 80 L34 56Z"/><path d="M87 40 Q102 40 106 56 L108 78 Q104 84 94 80 L86 56Z"/>
+<path class="w" d="M34 42 Q60 34 86 42 L84 78 Q60 88 36 78Z"/><path class="h" d="M26 80 L14 118 Q20 124 28 118 L36 84Z"/><path d="M94 80 L106 118 Q100 124 92 118 L84 84Z"/>
+<path d="M38 82 Q60 92 82 82 L80 132 Q60 140 40 132Z"/><path d="M40 134 Q60 142 80 134 L78 192 L62 196 L60 150 L58 196 L42 192Z"/><path d="M42 196 L58 198 L56 252 L44 252Z"/><path d="M62 198 L78 196 L76 252 L64 252Z"/><ellipse cx="60" cy="22" rx="12" ry="15"/></g></svg>`;
+const c = phone(document.getElementById('f3'), 'obs trn',
+  `<div class="back">‹ Bench press</div><h1 class="ttl" style="top:112px">Muscles</h1><div class="ctx" style="top:176px">Chest, shoulders, triceps</div>` +
+  rows(260, [{ t: 'Chest', k: 'primary' }, { t: 'Front shoulders', k: 'half a set each' }, { t: 'Triceps', k: 'half a set each' }]) +
+  `<div style="position:absolute;left:232px;top:430px;opacity:.9" id="fg">${FIG.replace('width="62" height="134"', 'width="116" height="252"')}</div><div class="fl" style="left:262px;top:700px">FRONT</div>`);
+/* 4 groceries paged */
+const PG = [
+  { w: 'Produce', col: ['#3E8E41', '#7DB542', '#C8D96B'], rows: [{ t: 'Bananas', lead: 1, d: 'Next in the shop walk' }, 'Limes', 'Spinach', 'Cherry tomatoes', 'Avocados', 'Red onions'] },
+  { w: 'Dairy', col: ['#9DB7D5', '#E9E2CE', '#C9D6E8'], rows: ['Greek yogurt', 'Butter', 'Feta', 'Oat milk', 'Eggs'] },
+  { w: 'Pantry', col: ['#C79A3B', '#9A6A2A', '#E0C27A'], rows: ['Black beans', 'Corn tortillas', 'Rice', 'Olive oil', 'Chili flakes', 'Tahini'] },
+  { w: 'Frozen', col: ['#6FA8DC', '#B7D7F0', '#8FB6E8'], rows: ['Peas', 'Dumplings', 'Berries'] },
+];
+const d = phone(document.getElementById('f4'), 'por kit',
+  `<div class="back">‹ Kitchen</div><h1 class="ttl" style="top:112px">Groceries</h1><div class="ctx" style="top:176px">24 to get</div><div id="pgs"></div><div class="rail" style="top:270px;height:150px" id="rl"></div>`);
+const stage = d.querySelector('#pgs'), pks = [], pages = [];
+PG.forEach((g, k) => {
+  const el = document.createElement('div'); el.style.cssText = 'position:absolute;inset:0;visibility:hidden';
+  el.innerHTML = `<div class="sw" style="top:240px">${g.w}</div>` + rows(262, g.rows); stage.appendChild(el); pages.push(el);
+  const pk = pocket(214, 610, 190, g.col, .16, k + 5); pk.style.visibility = 'hidden'; el.appendChild(pk); pks.push(pk);
+});
+const rl = d.querySelector('#rl'); const segs = PG.map((_, k) => { const s = document.createElement('i'); s.style.top = k * 40 + 'px'; s.style.height = '34px'; rl.appendChild(s); return s; });
+let cur = 0; const show = k => { cur = k; pages.forEach((p, i) => p.style.visibility = i === k ? 'visible' : 'hidden'); pks.forEach((p, i) => p.style.visibility = i === k ? 'visible' : 'hidden'); segs.forEach((s, i) => s.classList.toggle('on', i === k)); };
+show(0); pks[0].style.visibility = 'visible';
+const turn = async to => {
+  const A = pages[cur], B = pages[to], pa = pks[cur], pb = pks[to];
+  B.style.visibility = 'visible'; pb.style.visibility = 'visible'; pb.style.opacity = 0;
+  const rr = el => [...el.querySelector('.rows').children];
+  const jobs = [];
+  jobs.push(...rr(A).map((r, i) => r.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(-18px)', opacity: 0 }], { duration: 260, delay: i * 24, easing: 'cubic-bezier(.5,0,.9,.4)', fill: 'both' }).finished));
+  jobs.push(A.querySelector('.sw').animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: 'both' }).finished);
+  jobs.push(pa.animate([{ opacity: pa.dataset.op }, { opacity: 0 }], { duration: 260, fill: 'both' }).finished);
+  rr(B).forEach((r, i) => jobs.push(r.animate([{ transform: 'translateY(34px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 440, delay: 190 + i * 38, easing: E, fill: 'both' }).finished));
+  jobs.push(B.querySelector('.sw').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 190, fill: 'both' }).finished);
+  jobs.push(pb.animate([{ opacity: 0, filter: 'blur(5px)' }, { opacity: pb.dataset.op, filter: 'none' }], { duration: 380, delay: 200, easing: E, fill: 'both' }).finished);
+  segs.forEach((s, i) => s.classList.toggle('on', i === to)); cur = to;
+  await Promise.all(jobs);
+  [...A.querySelectorAll('*')].forEach(x => x.getAnimations().forEach(y => y.cancel())); A.getAnimations().forEach(y => y.cancel());
+  A.style.visibility = 'hidden'; pa.style.visibility = 'hidden';
+  [...B.querySelectorAll('*')].forEach(x => x.getAnimations().forEach(y => y.cancel())); pb.style.opacity = pb.dataset.op; pb.style.filter = 'none';
+};
+d.addEventListener('click', () => turn((cur + 1) % PG.length));
+
+if (play) {
+  document.getElementById('head').style.display = 'none';
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const arrive = async () => {
+    [p1, p2].forEach(p => { p.style.opacity = 0; });
+    await wait(900); dry(p1); await wait(1600); dry(p2);
+  };
+  const fig = document.getElementById('fg');
+  const muscles = async () => {
+    fig.animate([{ opacity: 0, filter: 'blur(5px)' }, { opacity: .9, filter: 'none' }], { duration: 380, easing: E, fill: 'both' });
+  };
+  document.fonts.ready.then(async () => {
+    document.body.dataset.start = '1';
+    await arrive(); muscles();
+    await wait(1800);
+    for (let k = 1; k < PG.length; k++) { await turn(k); await wait(1900); }
+    await turn(0); await wait(1400);
+    document.body.dataset.done = '1';
+  });
+}
+</script>
+</body></html>
