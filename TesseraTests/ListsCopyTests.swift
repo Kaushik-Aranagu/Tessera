@@ -1,4 +1,5 @@
 @testable import Tessera
+import TesseraCore
 import Testing
 
 /// K86.12 and K86.13: the Lists context line and a run's state word.
@@ -29,5 +30,23 @@ struct ListsCopyTests {
         #expect(ListsCopy.added("Rice", to: "Packing") == "Rice, on Packing.")
         #expect(ListsCopy.added("Private item", to: "Packing") == "Private item, on Packing.")
         #expect(ListsCopy.cleared(3) == "3 done, cleared.")
+    }
+
+    @Test func aKeyClearsTheFieldAndIsNeverWritten() {
+        let fake = "sk-" + "ant-" + String(repeating: "x", count: 32)
+        var wrote = false
+        let attempt = ListsCopy.add(fake) { _ in wrote = true; return nil }
+        #expect(!wrote && attempt.draft.isEmpty && attempt.line == claudeKeyLine && attempt.record == nil)
+    }
+
+    @Test func anotherFailureKeepsTheTypedText() {
+        let attempt = ListsCopy.add("rice ") { _ in nil }
+        #expect(attempt.draft == "rice " && attempt.line == "Didn't save that. Try again.")
+    }
+
+    @Test func aBlankDraftClears() {
+        var wrote = false
+        let attempt = ListsCopy.add("   \n") { _ in wrote = true; return nil }
+        #expect(!wrote && attempt.draft.isEmpty && attempt.line == nil)
     }
 }

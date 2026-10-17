@@ -42,7 +42,7 @@ struct RecipePage: View {
     @ViewBuilder private var page: some View {
         let _ = model.revision
         let book = RecipeBook(store: model.store, classes: model.classes)
-        if let recipe = model.store.object(id: recipeID), !recipe.isDeleted {
+        if !RecipeCopy.isGone(recipeID, store: model.store), let recipe = model.store.object(id: recipeID) {
             let own = book.serves(recipe)
             let size = serves ?? own
             let lines = size.map { book.scaledLines(of: recipe, serves: $0) } ?? book.lines(of: recipe)
@@ -487,6 +487,11 @@ enum RecipeCopy {
             parts.append("cooked \(relative(last, now: now))")
         }
         return parts.joined(separator: ", ")
+    }
+
+    /// Whether the recipe a page shows is gone, so it reads "Recipe gone." with a way back (G3).
+    static func isGone(_ id: UUID, store: ObjectStore) -> Bool {
+        store.object(id: id).map(\.isDeleted) ?? true
     }
 
     /// "Step 1 of 4" while this recipe is cooking, else nil; never "Step 1 of 0" (G55).

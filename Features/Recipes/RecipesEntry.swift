@@ -33,7 +33,7 @@ struct RecipeView: View {
                             pasting = true
                         }
                     }
-                } else if let id = opened ?? Self.opening(requested: recipeID, rows: rows) {
+                } else if let id = Self.shown(opened: opened, requested: recipeID, rows: rows) {
                     RecipePage(recipeID: id)
                         .onAppear {
                             if opened == nil {
@@ -57,6 +57,12 @@ extension RecipeView {
         let id: UUID
         let lastOpenedAt: Date?
         let createdAt: Date
+    }
+
+    /// The recipe on screen: the one this visit opened, kept even once it's deleted (its page then reads "Recipe
+    /// gone."), else the opening pick.
+    static func shown(opened: UUID?, requested: UUID?, rows: [Row]) -> UUID? {
+        opened ?? opening(requested: requested, rows: rows)
     }
 
     /// The recipe "Recipes" opens (G51, Product: "last opened recipe, the newest if none"): the one asked for, else

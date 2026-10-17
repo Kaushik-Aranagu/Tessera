@@ -158,4 +158,13 @@ struct GroceriesWallTests {
         let again = await TessCaptureEngine(engine: engine).capture("new list: lexapro", context: TessContext())
         #expect(again.line == "Private list, already a list.", "\(again.line)")
     }
+
+    @Test func aPriceBeforeAListUnitIsStillAPrice() {
+        // QA on #776: a two-place decimal before a unit with no thing after it is a price.
+        #expect(AddListItem.kept("milk 3.49 gallon", store: store) == nil)
+        #expect(AddListItem.kept("ice cream 5.99 pint", store: store) == nil)
+        #expect(AddListItem.kept("1.25 lb chicken", store: store) == "1.25 lb chicken")
+        #expect(AddListItem.kept("2 gallons milk", store: store) == "2 gallons milk")
+        #expect(AddListItem.kept("1.25 cups flour", store: store) == "1.25 cups flour")
+    }
 }

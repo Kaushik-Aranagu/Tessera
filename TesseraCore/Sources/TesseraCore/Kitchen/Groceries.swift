@@ -305,7 +305,8 @@ extension Transaction {
             // throw (unknownField "shares").
             // A secret word never sits on the list in his words, from any path (QA on #773): the row is titled
             // "Private item", the way a typed secret line is refused.
-            try createGroceryRow(SecretWords.mentions(text) || SecretWords.hasValue(text) ? "Private item" : text,
+            // One rule with a typed line (QA on #775): "pins" and "combination" stay; "wifi password" doesn't.
+            try createGroceryRow(SecretWords.isSecretListLine(text) ? "Private item" : text,
                                  section: section, in: list)
         }
         var shares = GroceryShare.decode(store.value("shares", of: item)?.stringValue)

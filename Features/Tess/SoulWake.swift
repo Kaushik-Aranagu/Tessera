@@ -24,12 +24,8 @@ enum SoulWake {
             let eased = quiet ? phase : UnitCurve.easeOut.value(at: phase)
             return shut + (1 - shut) * CGFloat(eased)
         }
-        let blink = elapsed - 3.4
-        if !quiet, blink >= 0, blink <= SoulBlink.duration {
-            let phase = blink / SoulBlink.duration
-            let tri = phase < 0.5 ? phase * 2 : (1 - phase) * 2
-            let eased = tri * tri * (3 - 2 * tri)
-            return 1 - (1 - shut) * CGFloat(eased)
+        if !quiet, let blink = SoulBlink.once(since: elapsed - 3.4) {
+            return blink
         }
         return 1
     }

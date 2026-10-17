@@ -260,9 +260,9 @@ struct RoutinesPage: View {
     }
 }
 
-/// "Push A" at Body 21/500, under it "5 exercises, about 55 min" (on fixed days the days first, "Mon, Thu · …").
+/// "Push A" at Body 21/500, under it "5 exercises, about 55 min" (on fixed days the days first, "Mon, Thu. …").
 /// Swipe left to drop: DROP rises in liveInk past 90 pt.
-private struct RoutineRow: View {
+struct RoutineRow: View {
     let routine: ObjectRecord
     var isNext = false
     var mode: ScheduleMode = .rolling
@@ -338,12 +338,20 @@ private struct RoutineRow: View {
     }
 
     private func detail(slots: Int, sets: Int) -> String {
+        let days = mode == .fixed
+            ? Weekdays.ordered(PlanSchedule.weekdays(of: routine, store: model.store)) : nil
+        return Self.detail(slots: slots, about: TrainingPage.about(sets: sets), fixedDays: days)
+    }
+
+    /// "5 exercises, about 40 min"; on fixed days the days first, then a period: "Mon, Thu. 5 exercises, ..."
+    /// and "No days. 5 exercises, ..." when none are set. `fixedDays` is nil on a rolling plan.
+    static func detail(slots: Int, about: String, fixedDays: [Int]?) -> String {
         let body = slots > 0
-            ? "\(slots) \(slots == 1 ? "exercise" : "exercises"), \(TrainingPage.about(sets: sets))"
+            ? "\(slots) \(slots == 1 ? "exercise" : "exercises"), \(about)"
             : "no exercises yet"
-        guard mode == .fixed else { return body }
-        let days = Weekdays.ordered(PlanSchedule.weekdays(of: routine, store: model.store))
-        guard !days.isEmpty else { return "no days · " + body }
-        return days.map { Weekdays.short[$0 - 1] }.joined(separator: ", ") + " · " + body
+        guard let fixedDays else { return body }
+        let sentence = body.prefix(1).uppercased() + body.dropFirst()
+        guard !fixedDays.isEmpty else { return "No days. " + sentence }
+        return fixedDays.map { Weekdays.short[$0 - 1] }.joined(separator: ", ") + ". " + sentence
     }
 }

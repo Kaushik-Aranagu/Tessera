@@ -41,6 +41,8 @@ struct RootView: View {
                 PaintFlood(isOn: flooding, origin: CGPoint(x: proxy.size.width - 46, y: proxy.size.height - 30))
                     .ignoresSafeArea()
             }
+            // Stroke her: a pan across her band, read beside everything else on Home (never instead of it).
+            .soulStroke(model.soul, isHome: model.path.isEmpty && !model.isCommandExpanded)
             .overlay(alignment: .top) {
                 // A running process lights the top edge; tapping it resumes. A suspended one moves to the ledger.
                 TimelineView(.periodic(from: .now, by: 30)) { context in

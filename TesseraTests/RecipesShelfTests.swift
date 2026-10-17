@@ -52,4 +52,17 @@ struct RecipesShelfTests {
         #expect(RecipesShelf.context(count: 1, privateCount: 0) == "1 recipe")
         #expect(RecipesShelf.context(count: 38, privateCount: 2) == "38 recipes, 2 private")
     }
+
+    @Test func tessUsesTheShortNameAndOldDatesCarryTheYear() throws {
+        let long = try recipe("Sheet-pan paprika chicken with lemon")
+        try cook(long, at: saturday)
+        #expect(shelf.tess == "Sheet-pan paprika chicken, cooked 1 time.")
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "America/Los_Angeles") ?? .current
+        let lastYear = calendar.date(from: DateComponents(year: 2025, month: 10, day: 3, hour: 12)) ?? .now
+        let now = calendar.date(from: DateComponents(year: 2026, month: 10, day: 17, hour: 12)) ?? .now
+        #expect(RecipesShelf.day(lastYear, now: now, calendar: calendar) == "Oct 3, 2025")
+        let thisYear = calendar.date(from: DateComponents(year: 2026, month: 9, day: 3, hour: 12)) ?? .now
+        #expect(RecipesShelf.day(thisYear, now: now, calendar: calendar) == "Sep 3")
+    }
 }
