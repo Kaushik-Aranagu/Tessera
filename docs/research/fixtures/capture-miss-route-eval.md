@@ -20,20 +20,20 @@ No em-dashes. Clock for every row: Thu 15 Oct 2026 18:10 America/Los_Angeles (-0
 8. What is not spoken back [T, `1eb36a4`]: for a secret-worded or walled phrase, Claude's own line is dropped for the record receipt, and the one-time notice reads "Sent that to Claude. Turn this off in Settings: Claude." without the phrase. For an unwalled phrase the first notice quotes the phrase.
 9. What is not stored [T]: a secret or walled phrase is not written to the miss log (`TessCaptureEngine.swift:59-61`) and not queued in the retry inbox (`TessInbox.add`, `readWaiting`). A key-shaped phrase is never logged anywhere. The ledger row (`tessCall`) holds tokens, cost, latency, outcome and request id, no text.
 
-## 1. MISSES FIRST: 60 phrases that miss today and now go whole to Claude
+## 1. MISSES FIRST: 53 phrases that miss today and now go whole to Claude
 
-### 1.0 Where the 60 come from
+### 1.0 Where the 60 (now 53) come from
 
 - Source: `grammar-regression.md` (900 to 913 rows, statuses at bases `1d0833c` to `7f1feb7`), corrected by `suite-recount-oct-16.md` (`0eca9bb`: 913 rows, 745 pass, 87 wrong write, 81 miss) and `grammar-regression-group-n.md`. Rows whose expected parse is "nil, the model reads it" and pass are also misses for routing, and are used for the money group.
-- **Wrong-write rows cannot be in this list.** The grammar claims them and writes something (the 87 to 99 rows), so `GrammarTessModel` returns `.handled` and the router never reaches Claude [T]. They were scored on Claude only through the gate harness bypass (`grammar-miss-claude.md`, "Wrong-write rows reach Claude only in the eval"). I took 60 of the miss and nil-by-design rows instead.
+- **Wrong-write rows cannot be in this list.** The grammar claims them and writes something (the 87 to 99 rows), so `GrammarTessModel` returns `.handled` and the router never reaches Claude [T]. They were scored on Claude only through the gate harness bypass (`grammar-miss-claude.md`, "Wrong-write rows reach Claude only in the eval"). I took 60 of the miss and nil-by-design rows instead; the rulings in section 2b then moved 7 of them to the must-not-go list, leaving 53.
 - **Statuses are hand traces on older bases**, 50 or more grammar commits ago for some rows (the money-verb guard, `d8048c3`, `2655872` and the privacy follow-ups all landed after the recount). Stage 0 of the run plan re-confirms each row is still `nil` with a free local run before a cent is spent. Read "grammar today" below as "per the suite, to be reconfirmed".
-- Groups by cause (suite root-cause codes in brackets): time forms RC11 (15), times that trip the money wall (4), relative times and reminder leads RELT/LEAD (5), reschedule shapes RC13 (9), set plus errand RC6 (4), "out of X" and bare groceries RC17/18/ADD (5), hyphenated exercise alias ALIAS (3), people plan PLAN (1), cook timers RC15 (6), money phrases the phone cannot place (8).
+- Groups by cause (suite root-cause codes in brackets): time forms RC11 (15), clock-shaped numbers (4: three clocks after "at" and one bare price), relative times and reminder leads RELT/LEAD (5), reschedule shapes RC13 (9), set plus errand RC6 (4), "out of X" and bare groceries RC17/18/ADD (5), hyphenated exercise alias ALIAS (3), people plan PLAN (1), money phrases the phone cannot place (7). The 6 cook timers (P47 to P52) and the number-word weight (P60) are no longer positives: they are N21 to N27 in section 2. Their IDs are not reused, so P47 to P52 and P60 are gaps in the numbering.
 
 ### 1.1 Pass bars used in the table
 
 - **PB-TASK**: exactly one `createTask` (or `rescheduleTask` for a move), title is the said words minus the time and lead words, `startsAt` is the expected minute with the -07:00 offset (a day-only cell grades the day), nothing else written. The op is pending, actor tess, route claude, model `claude-haiku-5-5`. The phone-made ghost line passes `TessVoice.violations`. 3 of 3 runs.
 - **PB-ASKOK**: as PB-TASK, but a no-write reply that asks for the missing fact also passes; a write on the wrong day or hour fails. Used where the capture pack does not carry what the answer needs (open tasks).
-- **PB-MASK**: PB-TASK or the row's own bar, plus: the line shown is the phone's receipt, not Claude's words and not the phrase; no plain note or task holds the amount; the phrase is absent from the miss log.
+- **PB-MASK** (money-shaped phrases only: P19 and P53 to P59): PB-TASK or the row's own bar, plus: the line shown is the phone's receipt, not Claude's words and not the phrase; no plain note or task holds the amount; the phrase is absent from the miss log.
 - **PB-NOWRITE**: zero write calls in 3 of 3 runs. Any record is a failure.
 
 ### 1.2 Time forms the grammar cannot read (RC11, 15 rows)
@@ -58,16 +58,16 @@ All: grammar today `nil` (suite: `parseTask` does not read the form). Route now:
 | P14 | `call mom midnight` (C439), clock 23:30 | createTask "Call mom", Fri 16 00:00 | PB-TASK |
 | P15 | `move pay rent to sat morning` (C390), tasks store | rescheduleTask "Pay rent", Sat 17 09:00 | PB-ASKOK; "pay" and "rent" are money words but there is no amount, so not walled [T, W4 rule in `isMoneyShaped`] |
 
-### 1.3 Times that trip the money wall (4 rows)
+### 1.3 Clock-shaped numbers (4 rows)
 
-The two-decimal rule in `isMoneyShaped` ([T, last return line]: any word matching digits, a dot, two digits) reads a clock time like `7.30` as an amount. The grammar misses these today (RC11, and C410 is nil by design). Route now: walled but not grammar-asked, so Claude whole [T]; the miss log skips them; the notice and line are masked. This group shows what a wall false positive costs now.
+The two-decimal rule in `isMoneyShaped` ([T, last return line]: any word matching digits, a dot, two digits) used to read a clock time like `7.30` as an amount. The 5:30 PM Oct 17 ruling splits it: a clock-shaped number (7.30 or 7:30) **after "at" or "by"** is a time, so P16 to P18 are plain misses and unmasked clocks (no wall, normal miss log entry, the line is Claude's usual line, not a masked receipt). A **bare two-place decimal with no "at" or "by"** stays a price and is walled and masked as money (P19). The grammar misses all four today (RC11, and C410 is nil by design). Route now: Claude whole [T] for all four; only P19 is walled.
 
 | ID | Phrase (suite row) | Ideal result | Pass bar |
 |---|---|---|---|
-| P16 | `dinner at 7.30` (A094) | createTask "Dinner", Thu 15 19:30 | PB-MASK; title must not carry "7.30" (a title with it would become a private note by `EngineWall` [T]) |
-| P17 | `call mom at 7.30` (C409) | createTask "Call mom", Thu 15 19:30 | PB-MASK |
-| P18 | `dentist at 4.15` (C411) | createTask "Dentist", Fri 16 16:15 (16:15 today has passed) | PB-MASK |
-| P19 | `dinner 7.30` (C410) | createTask "Dinner", Thu 15 19:30; an ask is acceptable (suite: "a bare H.MM stays a number") | PB-MASK or PB-ASKOK |
+| P16 | `dinner at 7.30` (A094) | createTask "Dinner", Thu 15 19:30 | PB-TASK; title must not carry "7.30"; not walled, so the phrase is in the miss log and the line is not masked |
+| P17 | `call mom at 7.30` (C409) | createTask "Call mom", Thu 15 19:30 | PB-TASK; not walled |
+| P18 | `dentist at 4.15` (C411) | createTask "Dentist", Fri 16 16:15 (16:15 today has passed) | PB-TASK; not walled |
+| P19 | `dinner 7.30` (C410) | no "at" or "by", so `7.30` is a price (bare-decimal ruling): walled and masked. Ideal: an ask or no write; a createNote is acceptable (it becomes a private note); a task with 7.30 in the title fails | PB-MASK |
 
 ### 1.4 Relative times and reminder leads (RELT, LEAD, 5 rows)
 
@@ -136,22 +136,13 @@ Grammar today `nil` (`resolveExercise` drops the hyphen, TG:424-457 per the reco
 |---|---|---|---|---|---|
 | P46 | `lunch with ravi` (F531), people store | `nil`: no day and no lead, so `parseTask` returns nil (suite note at `1183d35`) | Claude whole [T]; "ravi" is a name, not a wall word | createTask "Lunch with ravi" Later, about Ravi, no question | PB-TASK with `startsAt` null; "planning or done?" ask fails (P800) |
 
-### 1.10 Cook timers (RC15, 6 rows): no tool exists
+### 1.10 Cook timers: moved out (ruling 4:10 PM Oct 17)
 
-Grammar today `nil` outside a recognised timer shape (suite: cook timers need the word "timer"). Route now: Claude whole [T]. Claude has no timer, stop or cook-step tool [T, the 11 tools], and the pack says nothing of the cook [T]. `docs/ai/architecture.md` section 7 says cook timers never leave the phone, but no cook wall exists in the route code [T, `grep cook` in `TessModel.swift` and `ClaudeTessModel.swift` finds nothing]. The honest ideal is "stays local"; these rows measure what a wasted send does.
+P47 to P52 (`8 mins`, `pasta 10`, `finished cooking`, `how long left`, `stop the rice`, `step 3`) are no longer positives. Cook timer phrases never leave the phone, so they are N21 to N26 in section 2 and must build zero Claude requests.
 
-| ID | Phrase (suite row), cook 18:00 | Ideal result | Pass bar |
-|---|---|---|---|
-| P47 | `8 mins` (A189) | timer "Simmer" 8, linked (on the phone, not Claude) | PB-NOWRITE; any task or note fails (N2, N4) |
-| P48 | `pasta 10` (A190) | timer "Pasta" 10 | PB-NOWRITE |
-| P49 | `finished cooking` (A191) | FinishCooking | PB-NOWRITE |
-| P50 | `how long left` (D461) | read-only timer answer | PB-NOWRITE |
-| P51 | `stop the rice` (D457) | StopKitchenTimer(Rice) | PB-NOWRITE |
-| P52 | `step 3` (D467) | GoToCookStep(2) | PB-NOWRITE; a task "Step 3" fails |
+### 1.11 Money phrases the phone cannot place (7 rows)
 
-### 1.11 Money phrases the phone cannot place (8 rows)
-
-These are where the decision bites. Grammar today `nil`: Money is not built, and a spend phrase with no day falls to the miss line (TG:133-141: `isMoney` plus a spend verb returns `parsePrivateLog`, which is nil without a past day [T]). Route now for P53 to P59: walled by money [T], not grammar-asked, so Claude whole [T]. The miss log skips them [T]. Output side: `EngineWall` makes any note or task Claude writes with the amount a private note [T, doc comment; `task(...)` read], and the line shown is the masked receipt [T].
+These are where the decision bites. Grammar today `nil`: Money is not built, and a spend phrase with no day falls to the miss line (TG:133-141: `isMoney` plus a spend verb returns `parsePrivateLog`, which is nil without a past day [T]). Route now for P53 to P59 (and P19 in section 1.3): walled by money [T], not grammar-asked, so Claude whole [T]. The miss log skips them [T]. Output side: `EngineWall` makes any note or task Claude writes with the amount a private note [T, doc comment; `task(...)` read], and the line shown is the masked receipt [T].
 
 Ideal for all: Money is not built, so the phone has nothing right to write. Acceptable: one `createNote`, which the phone stores as a private note, or no write. Not acceptable: a task, a grocery line, a list item, any plain-looking object carrying the amount.
 
@@ -164,15 +155,15 @@ Ideal for all: Money is not built, so the phone has nothing right to write. Acce
 | P57 | `paid will back 15` (E506), people store | yes (paid plus amount) [T] | as P53; "will" not read as the word or a person |
 | P58 | `Lunch was £10` (B350) | yes (currency sign) [T] | as P53 |
 | P59 | `spent 20 chf taxi` (H604) | yes (spend verb plus amount) [T] | as P53 |
-| P60 | `Eleven stone four` (B319) | **no**: a body weight said in words has no digit, so `isBodyShaped` needs-a-number test does not fire [T] | PB-NOWRITE or one createNote; shows a body fact outside the wall reaching Claude with its words quoted in the first notice [T] |
+| P60 | moved out: `Eleven stone four` (B319) is walled as a number-word weight and is N27 in section 2 | | |
 
-Count check: 15 + 4 + 5 + 9 + 4 + 5 + 3 + 1 + 6 + 8 = 60.
+Count check: 15 + 4 + 5 + 9 + 4 + 5 + 3 + 1 + 7 = 53 (60 minus the 6 cook timers and P60).
 
-Body and health phrases are not in this list on purpose. The grammar's `parseBodyFact` claims any body-shaped phrase that is not "something to do" as a private note before the miss path [T, `TessGrammar.swift:150-157`], so a body fact almost never misses; the tests that cover it ("182.4 lb this morning", "slept 5 hours", "took 2 advil") are grammar-claimed and stay on the phone [T, `PrivacyFollowupTests`]. P60 is the one spelled-out case I found. Hunting for more is a Stage 0 task.
+Body and health phrases are not in this list on purpose. The grammar's `parseBodyFact` claims any body-shaped phrase that is not "something to do" as a private note before the miss path [T, `TessGrammar.swift:150-157`], so a body fact almost never misses; the tests that cover it ("182.4 lb this morning", "slept 5 hours", "took 2 advil") are grammar-claimed and stay on the phone [T, `PrivacyFollowupTests`]. `Eleven stone four` was the one spelled-out case I found and is now N27. Hunting for more is a Stage 0 task.
 
-## 2. Twenty phrases that must NOT go to Claude
+## 2. Twenty-seven phrases that must NOT go to Claude
 
-Each row is a request that must build zero Claude requests (N16 and N17 build one and fail at transport, noted). Key text is built from two halves in the harness and never written here.
+Each row is a request that must build zero Claude requests (N17 and N18 build one and fail at transport, noted; N21 to N27 were added by the 4:10 PM Oct 17 rulings). Key text is built from two halves in the harness and never written here.
 
 | ID | Case | Exact local outcome |
 |---|---|---|
@@ -197,20 +188,28 @@ Each row is a request that must build zero Claude requests (N16 and N17 build on
 | N19 | Any miss with "Misses go to Claude" off, or no key saved, or "Not today" on | `isAvailable` is false, the router skips Claude, no request. Line "Didn't catch that." with " Try “80 × 8”." in a workout or " Try “milk, eggs”." on a groceries run; source none. An unwalled phrase is logged to the miss log, a walled one is not [T] |
 | N20 | A miss when the month is at the $50 cap | `ledger.reserve` returns nil, no request. `.asked`: "Claude paused until Nov 1." (the end of the phone's calendar month, month and day in abbreviated form), no records [T: `ClaudeTessModel.swift:62-67`; the date text itself is [I], I did not run the formatter] |
 
+| N21 | `8 mins`, cook running (was P47) | Answered on the phone as a cook timer; zero Claude requests (Core cook check, ruling 1) |
+| N22 | `pasta 10`, cook running (was P48) | Timer "Pasta" 10 on the phone; zero requests |
+| N23 | `finished cooking`, cook running (was P49) | FinishCooking on the phone; zero requests |
+| N24 | `how long left`, cook running (was P50) | Read-only timer answer on the phone; zero requests |
+| N25 | `stop the rice`, cook running (was P51) | StopKitchenTimer(Rice) on the phone; zero requests |
+| N26 | `step 3`, cook running (was P52) | GoToCookStep(2) on the phone; no task "Step 3"; zero requests |
+| N27 | `Eleven stone four` (was P60) | Number-word weight is a body fact: walled, private note, zero requests (ruling 4) |
+
 A bad or revoked key is not on this list: that case sends one request and gets the line "Claude didn't take the key. Check it in Settings: Claude." from a 401 or 403 [T]. See section 5 for the "spent-key" wording.
 
-## 2b. Rulings applied (Product, decisions 4:10 PM Oct 17)
+## 2b. Rulings applied (Product, decisions 4:10 PM and 5:30 PM Oct 17)
 
-Four rulings change rows above. Read this section over the tables; the run plan counts are restated at the end.
+Four rulings change rows above, and sections 1 and 3 now carry them. The run plan counts are restated at the end.
 
 | Ruling | Rows it changes | New expectation | Test name (Core) |
 |---|---|---|---|
-| Cook timers never leave the phone; Core adds a cook check | P47 to P52 (cook timers, 6 rows) move from section 1 to the must-not-go list as N21 to N26 | with a cook running (and for "timer" phrases without one), the phrase is answered on the phone and makes **zero** Claude requests; the risk in section 4 item 6 is closed once the check lands | `cookPhraseNeverReachesClaude` (6 phrases), `cookCheckRunsBeforeTheRouter` |
-| "dinner at 7.30" is a clock, not money | P16 to P19, and the `7.30pm` family (P04 and its siblings) | `isMoneyShaped` does not fire on `H.MM` that reads as a clock (hour 0 to 23, minutes 00 to 59, no currency sign); the title carries no time; a masked line and a missed miss log entry are now failures; money-shaped `12.50` stays walled | `clockTimeIsNotMoney`, `twoDecimalAmountStaysMoney` |
-| Task-less "move dentist to 7" is a plain miss | P25 to P28, P30, P31 | no special handling: it is an ordinary miss that goes to Claude; pass = an ask or no write, a guessed time still fails; the capture pack carrying open tasks is a separate improvement, not required | `taskLessRescheduleIsAnOrdinaryMiss` |
-| Number-word weights are walled | P60 `Eleven stone four` moves to the must-not-go list as N27 | `isBodyShaped` fires on a weight said in words (a number word beside a body unit such as stone, kilos, pounds); the phrase makes zero Claude requests and becomes a private note | `numberWordWeightIsWalled`, `elevenStoneFourMakesNoRequest` |
+| Cook timers never leave the phone; Core adds a cook check | P47 to P52 (cook timers, 6 rows) moved from section 1 to the must-not-go list as N21 to N26 | with a cook running (and for "timer" phrases without one), the phrase is answered on the phone and makes **zero** Claude requests; the risk in section 4 item 6 is closed once the check lands | `cookPhraseNeverReachesClaude` (6 phrases), `cookCheckRunsBeforeTheRouter` |
+| Clock rule (4:10 PM, made exact at 5:30 PM): a clock-shaped number AFTER "at" or "by" is a time | P16 to P18 (`dinner at 7.30`, `call mom at 7.30`, `dentist at 4.15`) are unmasked clocks and plain misses; P19 (`dinner 7.30`) is not changed | `isMoneyShaped` does not fire on a clock-shaped number (7.30 or 7:30) that comes right after "at" or "by"; those rows use PB-TASK: no mask, normal miss log entry, title carries no time. A bare two-place decimal with no "at" or "by" (`dinner 7.30`, `coffee 4.50`) stays a price and is walled and masked as money. Money still needs a currency sign, amount words or a bare two-place decimal | `clockTimeIsNotMoney`, `twoDecimalAmountStaysMoney` |
+| Task-less "move dentist to 7" is a plain miss | P25 to P28, P30, P31 | no special handling: it is an ordinary miss that goes to Claude; pass = an ask or no write, a guessed time still fails; the capture pack stays without open tasks (4:10 rule 3) | `taskLessRescheduleIsAnOrdinaryMiss` |
+| Number-word weights are walled | P60 `Eleven stone four` moved to the must-not-go list as N27 | `isBodyShaped` fires on a weight said in words (a number word beside a body unit such as stone, kilos, pounds); the phrase makes zero Claude requests and becomes a private note | `numberWordWeightIsWalled`, `elevenStoneFourMakesNoRequest` |
 
-Counts after the rulings: 60 miss rows become 53 (P47 to P52 and P60 move out), must-not-go rows become 27 (N01 to N27). The pass bar becomes at least 48 of 53 miss rows at 3 of 3, zero must-not hits across the 27, and the call count drops from 180 to 159 live calls in stage 1 (53 phrases x 3 runs), about $0.10 typical and $0.19 worst case against the $50 cap. Nothing runs without Kaushik's own yes in the running thread.
+Counts after the rulings: 60 miss rows become 53 (P47 to P52 and P60 move out), must-not-go rows become 27 (N01 to N27). P16 to P19 stay in the 53 as misses. The pass bar becomes at least 48 of 53 miss rows at 3 of 3, zero must-not hits across the 27, and the call count drops from 180 to 159 live calls in stage 1 (53 phrases x 3 runs), about $0.10 typical and $0.19 worst case against the $50 cap. Nothing runs without Kaushik's own yes in the running thread.
 
 ## 3. Run plan
 
@@ -228,31 +227,32 @@ The ledger's pre-call reservation is `((bytes / 4) + 10) * 100 + 512 * 500` n$ p
 
 | Stage | What | Key | Calls | Typical | Worst (reserved) |
 |---|---|---|---|---|---|
-| 0, free | A Swift Testing suite on Mac with the stub transport (`RouteStub`) and spy models. (a) Run the grammar on all 80 phrases and assert the 60 return nil and the 20 produce the section 2 outcomes. (b) Run the 80 through `TessRouter`: each of the 60 reaches the Claude spy once with the exact text; each negative reaches it zero times; no request body or system prompt holds key-shaped text; no walled phrase appears in the miss log, the inbox, the notice or the line. (c) Build every request body with `--dry` and check size and fields. (d) Hunt for more body-fact misses. | none | 0 | $0 | $0 |
-| 1, paid | Python harness in `scripts/ai/` in the house shape (`--dry` default, `--live` to send, `--runs` capped at 3, key from the environment only, host `api.anthropic.com` only, redirects refused, no retries, results appended to `docs/ai/` with the usual header, $1 stop before each call). Sends the 60 positives, 3 runs each, with the **production request shape**: no effort field, as `send()` builds it [T]. Negatives are asserted at zero requests. | his key | 180 | $0.11 | $0.22 |
-| 2, paid, optional | Real route on the simulator with his key: 12 phrases (P01, P08, P20, P25, P29, P35, P38, P43, P47, P53, P56, P60), once each, to see the real ghost rows, the masked receipts, the ledger rows and an empty miss log for walled phrases. Also N17 to N20 by hand (airplane mode, switch off, cap forced in a test store). | his key | 12 | $0.01 | $0.02 |
-| **Total** | | | **192** | **about $0.12** | **about $0.24** |
+| 0, free | A Swift Testing suite on Mac with the stub transport (`RouteStub`) and spy models. (a) Run the grammar on all 80 phrases and assert the 53 return nil (the cook phrases N21 to N26 and N27 are answered locally) and the 27 produce the section 2 outcomes. (b) Run the 80 through `TessRouter`: each of the 53 reaches the Claude spy once with the exact text; each negative reaches it zero times; no request body or system prompt holds key-shaped text; no walled phrase (P19, P53 to P59) appears in the miss log, the inbox, the notice or the line, and P16 to P18 (clocks after "at") are not walled and do appear in the miss log. (c) Build every request body with `--dry` and check size and fields. (d) Hunt for more body-fact misses. | none | 0 | $0 | $0 |
+| 1, paid | Python harness in `scripts/ai/` in the house shape (`--dry` default, `--live` to send, `--runs` capped at 3, key from the environment only, host `api.anthropic.com` only, redirects refused, no retries, results appended to `docs/ai/` with the usual header, $1 stop before each call). Sends the 53 positives, 3 runs each, with the **production request shape**: no effort field, as `send()` builds it [T]. Negatives are asserted at zero requests. | his key | 159 | $0.10 | $0.19 |
+| 2, paid, optional | Real route on the simulator with his key: 12 phrases (P01, P08, P16, P19, P20, P25, P29, P35, P38, P43, P53, P56), once each, to see the real ghost rows, the masked receipts, the ledger rows and an empty miss log for walled phrases. Also N17 to N20 by hand (airplane mode, switch off, cap forced in a test store). | his key | 12 | $0.01 | $0.02 |
+| **Total** | | | **171** | **about $0.11** | **about $0.21** |
 
-Against the $50 monthly in-app cap that is 0.5 percent at worst. Stage 1 runs outside the app, so it does not appear in the in-app ledger but is real spend on his key; Stage 2 does appear, as 12 `tessCall` rows. The harness stop is $1, four times the worst case.
+Against the $50 monthly in-app cap that is 0.5 percent at worst. Stage 1 runs outside the app, so it does not appear in the in-app ledger but is real spend on his key; Stage 2 does appear, as 12 `tessCall` rows. The harness stop is $1, about five times the worst case.
 
 ### Pass bar
 
-- **Positives (Stage 1).** At least 54 of 60 rows (90 percent) pass their bar in 3 of 3 runs. Zero must-not hits in all 180 calls: a write on a no-write row; a wrong tool, target or extra call; a time without the offset or in UTC; a day off by the 4 AM rule or by "a passed time today lands tomorrow"; a set or errand mixed up; a line that claims an action no tool did.
-- **Walled rows (P16 to P19, P53 to P59).** 3 of 3 each. No plain task, list item or grocery line carries an amount; the line shown is never Claude's words and never the phrase.
-- **Cook rows (P47 to P52).** 0 writes in 18 calls. A pass here means "wasted money, no harm"; the recommendation is a local stop (section 4, risk 6).
+- **Positives (Stage 1).** At least 48 of 53 rows (90 percent) pass their bar in 3 of 3 runs. Zero must-not hits in all 159 calls: a write on a no-write row; a wrong tool, target or extra call; a time without the offset or in UTC; a day off by the 4 AM rule or by "a passed time today lands tomorrow"; a set or errand mixed up; a line that claims an action no tool did.
+- **Walled rows (P19, P53 to P59).** 3 of 3 each. No plain task, list item or grocery line carries an amount; the line shown is never Claude's words and never the phrase.
+- **Clock rows (P16 to P18).** PB-TASK 3 of 3 each; the line is not masked and the phrase is in the miss log.
+- **Cook rows.** None: P47 to P52 are N21 to N26, zero requests, checked in Stage 0.
 - **Pack rows that need open tasks (P25 to P28, P30 to P33).** Pass on exact or on a sound ask; report the ask rate separately.
-- **Negatives (Stage 0 and 2).** 20 of 20 produce the exact outcome in section 2 with zero Claude requests (N17 and N18: one attempted request, zero tokens).
+- **Negatives (Stage 0 and 2).** 27 of 27 produce the exact outcome in section 2 with zero Claude requests (N17 and N18: one attempted request, zero tokens).
 - **Kaushik's read.** On the Stage 2 ghost rows he finds none he would take back.
 
 ## 4. Risks in the route itself
 
 1. **Money, body, health and secret words now reach Claude whole when the grammar misses.** That is the decision, so it is not a defect, but the walls that remain are narrow: the key (router and Claude route, both [T]); a walled phrase the grammar already asked about; Siri and Shortcuts; the pack's content (no notes, body weight, people, tasks or money [T]); the exercise name if walled [T]. Nothing else stops a phrase.
-2. **The wall flag now only controls local display, and it is wrong both ways.** False positives: a clock time written `7.30` or `4.15` is "money" (P16 to P19), so a harmless task gets a masked line, no miss log entry and, if Claude puts the time in the title, a private note [T]. False negatives: a fact the wall does not see is quoted back raw in the first notice (P60, "Eleven stone four"; also `12 50 at tesco` and `lunch was a tenner`, which have no digit pair with two decimals and no amount beside a money word [I from the regexes]). The first notice of the app's life quotes the phrase [T].
+2. **The wall flag now only controls local display, and it is wrong both ways.** The clock rule is settled (5:30 PM Oct 17): a clock after "at" or "by" is a time (P16 to P18, unmasked), a bare two-place decimal (`dinner 7.30`, `coffee 4.50`) stays a price and is masked (P19), so a harmless bare `dinner 7.30` still gets a masked line, no miss log entry and, if Claude puts the time in the title, a private note [T]; that is the intended cost. False negatives: a fact the wall does not see is quoted back raw in the first notice (`12 50 at tesco` and `lunch was a tenner`, which have no digit pair with two decimals and no amount beside a money word [I from the regexes]; `Eleven stone four` is now walled, N27). The first notice of the app's life quotes the phrase [T].
 3. **Secret words are almost always claimed first, which is the safe part.** `parseSecret` runs first and turns any secret-worded phrase into a private note or a task, so a secret value does not miss [T]. The exception is a line that starts "buy", "get", "grab", "pick up" or "add" with a secret word and no value: it returns nil there and can now reach Claude if nothing else reads it (for example "get the garage code from dad"). I traced `parseSecret` for it but not what the rest of the grammar does next [I]. A secret value without a secret word ("alarm 9981") has no wall at all.
 4. **Key-shaped text is caught by one regex.** It handles case, spaces around the dashes, a missing last dash and typographic dashes [T]. It cannot catch a key read out by voice letter by letter, a key with its prefix split across two lines inside the letters, or a key pasted without its prefix [I]. The harness should add those as boundary rows (report, not necessarily fix).
 5. **Claude's writes are walled on the output side, but the title is Claude's.** `EngineWall` strips amounts from a to-do and turns facts into private notes [T], so a task "Pay rent 1850" lands as "Pay rent". It does not stop a groceries line or a list item carrying a number; whether `AddGroceries` and `AddToList` run the price wall for a Claude write is written in comments only [T for the comment, not run].
-6. **Cook-timer phrases leave the phone although the docs say they never do.** `architecture.md` section 7 lists cook timers under "never leaves the phone"; the route has no cook check [T]. Claude has no timer tool, so each send is wasted money and can only produce a wrong write (P47 to P52). A cheap local stop when a cook process is running is the fix.
-7. **Pack gaps make some rows unanswerable.** The capture pack has no open tasks, so a reschedule to "7" cannot know the task's day (P25 to P33). The gate design (`grammar-miss-claude.md` section 1) added "pack adds" fields; production did not [T, `system()`]. Rows will mostly be asks or guesses until the pack carries the named task.
+6. **Closed (ruling 1, 4:10 PM Oct 17): cook-timer phrases stay on the phone.** `architecture.md` section 7 stands; Core adds a cook check before the route [T that none exists on `47365b0`]. Once it lands the six phrases build zero requests (N21 to N26). Until then the risk is real but small: Claude has no timer tool, so each send is wasted money and can only produce a wrong write.
+7. **Pack gaps make some rows unanswerable.** The capture pack has no open tasks and stays that way (4:10 PM Oct 17, rule 3), so a reschedule to "7" cannot know the task's day (P25 to P33). The gate design (`grammar-miss-claude.md` section 1) added "pack adds" fields; production did not [T, `system()`]. Rows are plain misses and will mostly be asks or no write; a guess fails.
 8. **Date handling relies on the prompt's "today is ..." line, which has no zone** [T, `TessModelCapture.today`]. The tool schema asks for ISO 8601, and a time with no zone is read in his calendar [T, comment in `Call`], so an offset-less answer is survivable, but a wrong offset is not caught. The fixture's earlier gate named a date-parser hook for this (hook 3); I did not check whether it landed.
 9. **The eval harness and production differ.** The older harness sends `effort: low` and goes straight to the Claude route [fixtures]; production sends no effort field and goes through the on-device model first [T]. Stage 1 must use the production shape, and its result is "how well Claude reads a miss", not "how many misses reach Claude".
 10. **Retry inbox is the one place that still keeps walls**, so an offline walled phrase is dropped with a line instead of waiting [T]. That is the safe choice, but the user loses the phrase; the line says so.
@@ -262,7 +262,7 @@ Against the $50 monthly in-app cap that is 0.5 percent at worst. Stage 1 runs ou
 
 ## 5. What I could not trace
 
-- **Today's grammar result for each of the 60 rows.** There is no Swift toolchain here. Statuses come from suite hand traces at older bases; some rows may now be claimed (the money-verb and privacy commits came after the recount). Stage 0 (a) settles it.
+- **Today's grammar result for each of the 53 rows.** There is no Swift toolchain here. Statuses come from suite hand traces at older bases; some rows may now be claimed (the money-verb and privacy commits came after the recount). Stage 0 (a) settles it.
 - **Whether the on-device model is available on his phone** and what it does with these phrases. If it writes a record, Claude is never asked (section 0, item 4).
 - **Actual token counts.** The tool JSON size is an estimate; the typical $0.0006 is the earlier gate's figure for the same pack. Whether Haiku 5.5 emits thinking tokens with no thinking field sent is not known from code (a comment at `reserve` says it may).
 - **What "spent-key line" means in the request.** I read it as the line for a key typed into the Ask bar (N01 to N08, the key line). If you meant a saved key that was rejected or an account that has run out, the lines are "Claude didn't take the key. Check it in Settings: Claude." (401 and 403) and "Claude is busy right now." (429 and 5xx) [T]; both cost one request, so they are not on the zero-request list.
