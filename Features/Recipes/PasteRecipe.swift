@@ -103,6 +103,7 @@ struct PasteRecipe: View {
             if reading {
                 SaveBar(
                     saved: saved != nil,
+                    canSave: PasteCopy.canSave(lines),
                     title: savedTitle,
                     onSave: save,
                     onUndo: {
@@ -221,6 +222,8 @@ struct PasteRecipe: View {
             ) {
                 CaptureMissLog.beside(model.store)?.record(text, at: AppClock.now, route: "none", source: "paste")
             }
+            // Never silence: the text stays to fix or retry (G54, ruled Oct 17, 4:35).
+            TessVoice.shared.say(PasteCopy.didntSave)
             return
         }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
@@ -260,6 +263,8 @@ struct PasteRecipe: View {
 /// Pinned at the bottom: Save (tap), or once saved "Carbonara, on Recipes." with Undo.
 private struct SaveBar: View {
     let saved: Bool
+    /// Nothing read (no ingredient, no step; a bare link, say): Save isn't drawn, so no tap ends in silence (G54).
+    let canSave: Bool
     let title: String
     let onSave: () -> Void
     let onUndo: () -> Void
@@ -278,8 +283,10 @@ private struct SaveBar: View {
             }
         } else {
             HStack(spacing: Theme.Spacing.l) {
-                PaintKey(paint: Theme.Colors.health, isTap: true, action: onSave) { _ in
-                    Text("Save recipe")
+                if canSave {
+                    PaintKey(paint: Theme.Colors.health, isTap: true, action: onSave) { _ in
+                        Text("Save recipe")
+                    }
                 }
                 Button("Edit", action: onEdit)
                     .textRole(.label)
@@ -430,6 +437,18 @@ struct PasteKeyFilter {
 }
 
 enum PasteCopy {
+    static let didntSave = "Didn't save that. Try again."
+
+    /// Save is drawn only when the parser found something to keep: an ingredient or a step (G54).
+    static func canSave(_ lines: [(line: String, kind: RecipeParser.LineKind)]) -> Bool {
+        lines.contains { line in
+            switch line.kind {
+            case .ingredient, .step: true
+            default: false
+            }
+        }
+    }
+
     /// The paste with every Claude key taken out and the rest kept (K87.11), through Core's cutter, which also takes
     /// a key's tail when a paste wraps it; anything still key-shaped leaves nothing (QA on #767).
     static func withoutKeys(_ text: String) -> String {

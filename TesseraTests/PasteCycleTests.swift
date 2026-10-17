@@ -14,4 +14,11 @@ struct PasteCycleTests {
         #expect(PasteCopy.nextReading(after: nil, current: .title) == nil)
         #expect(PasteCopy.nextReading(after: nil, current: .heading) == nil)
     }
+
+    /// G54: a bare link reads as nothing to keep, so Save isn't drawn; a read recipe can be saved.
+    @Test func saveIsDrawnOnlyWhenSomethingWasRead() {
+        #expect(!PasteCopy.canSave(CreateRecipe.lines(of: "https://example.com/shakshuka", corrections: [:])))
+        #expect(PasteCopy.canSave(CreateRecipe.lines(of: "Dal\n1 cup lentils\nSimmer 20 minutes", corrections: [:])))
+        #expect(PasteCopy.didntSave == "Didn't save that. Try again.")
+    }
 }
