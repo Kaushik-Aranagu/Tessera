@@ -69,11 +69,11 @@ public enum RecipeParser {
         return result
     }
 
-    /// A sentence is not a title (G59): it ends with a stop or runs past 8 words ("Heat the oven to 200C." as a paste's
-    /// first line is the first step; the recipe is then "Untitled recipe" until he names it).
+    /// A first line is a title when it has 12 words or fewer, does not end in ".", "!" or "?" and does not start with a
+    /// quantity (Kitchen's ruling on #854). Otherwise the recipe is "Untitled recipe" and the line is the first step.
     static func isSentence(_ line: String) -> Bool {
         let trimmed = line.trimmingCharacters(in: CharacterSet(charactersIn: "#*: ").union(.whitespaces))
-        return trimmed.hasSuffix(".") || trimmed.split(separator: " ").count > 8
+        return [".", "!", "?"].contains { trimmed.hasSuffix($0) } || trimmed.split(separator: " ").count > 12
     }
 
     /// Splits on "Ingredients" / "Method" headings when there are any, else by line shape: amounts and short

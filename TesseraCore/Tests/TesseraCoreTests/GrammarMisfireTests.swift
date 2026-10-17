@@ -207,4 +207,26 @@ struct CaptureMissLogTests {
         // In memory: nothing written anywhere.
         #expect(CaptureMissLog.beside(ObjectStore.open(inMemory: true)) == nil)
     }
+
+    @Test func aDuplicatePasteSaysSoAndIsNeverLogged() async throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let store = try ObjectStore(context: TesseraContext(url: dir.appendingPathComponent("tessera.sqlite")))
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        let capture = TessCaptureEngine(engine: engine)
+        let log = try #require(CaptureMissLog.beside(store))
+        let dal = "Weeknight dal\nIngredients\n1 cup red lentils\n1 onion\nMethod\n1. Simmer 20 minutes."
+        let first = await capture.capture(dal, context: TessContext())
+        #expect(first.understood)
+        let again = await capture.capture(dal, context: TessContext())
+        #expect(again.line == "Weeknight dal is already on Recipes." && !again.understood && again.isRefusal)
+        // A private title reads "Private recipe", and neither paste lands in the miss log.
+        let secret = "Lexapro stew\nIngredients\n1 cup red lentils\n1 onion\nMethod\n1. Simmer 20 minutes."
+        _ = await capture.capture(secret, context: TessContext())
+        let twice = await capture.capture(secret, context: TessContext())
+        #expect(twice.line == "Private recipe is already on Recipes.", "\(twice.line)")
+        #expect(log.all().isEmpty, "\(log.all().map(\.text))")
+        #expect(RecipeBook(store: store, classes: engine.classes).recipes().count == 2)
+    }
 }
