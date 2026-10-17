@@ -22,5 +22,6 @@ struct ListsCopyTests {
     @Test func tessSaysWhatsLeft() {
         #expect(ListsCopy.tess(list: "Packing", left: 2) == "Packing has 2 left.")
         #expect(ListsCopy.tess(list: "Packing", left: 1) == "Packing has 1 left.")
+        #expect(ListsCopy.tess(list: "Packing", left: 0) == "Packing, nothing left.")
     }
 }
