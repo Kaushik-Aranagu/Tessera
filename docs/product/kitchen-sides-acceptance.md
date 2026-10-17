@@ -4,11 +4,11 @@
 
 ## 1. Groceries, and at the shop: FOR WHAT (LINKS)
 
-Accepted. The side groups the open rows under the cook each is for, in short names by day ("Tacos · Thursday", "Dal · Friday"), soonest cook first; rows with no share sit last under "Just because", and USUALLY rows under "Usually". A row with two shares shows once, under the soonest cook, with the other cook as a label ("also dal"). Checked rows stay in their group, struck, until the shop clears them. The context-line word is FOR WHAT; the way back is GROCERIES. At the shop (a live surface) the same content is a peek over the column, never a page. REMOVE (Design 65) stays the row's own swipe on the front and on the side. Tess's line: "7 for 2 cooks, 3 just because." (counts only, from the shares).
+Accepted. The side groups the open rows under the cook each is for, in short names by day ("TACOS, THURSDAY", "DAL, FRIDAY": a comma, since " · " is for a pack size only, copy-pass rule 8, Design sheet 77), soonest cook first; rows with no share sit last under "Just because", and USUALLY rows under "Usually". A row with two shares shows once, under the soonest cook, with the other cook as a label ("also dal"). Checked rows stay in their group, struck, until the shop clears them. The context-line word is FOR WHAT; the way back is GROCERIES. At the shop (a live surface) the same content is a peek over the column, never a page. REMOVE (Design 65) stays the row's own swipe on the front and on the side. Tess's line: "7 for 2 cooks, 3 just because." (counts only, from the shares).
 
 | # | Pass when |
 |---|---|
-| 1.1 | With tacos (Thu) and dal (Fri) planned and 3 plain rows, the side shows Tacos · Thursday first, Dal · Friday, then Just because with 3; the counts match the front's "14 to buy" |
+| 1.1 | With tacos (Thu) and dal (Fri) planned and 3 plain rows, the side shows TACOS, THURSDAY first, DAL, FRIDAY, then JUST BECAUSE with 3; the counts match the front's "14 to buy" |
 | 1.2 | A row shared by both cooks appears once under Tacos with "also dal" |
 | 1.3 | At the shop the side is a peek; DONE and the basket stay under it |
 | 1.4 | A left swipe on a row still removes; a swipe past 60 pt on the context line or an empty area opens the side; the word always works |
@@ -66,7 +66,7 @@ THE WEEK'S COOKS (AHEAD, sheet 74) now, and it stays that way when Pantry arrive
 
 | Side | Glance | Why |
 |---|---|---|
-| FOR WHAT | "7 for 2 cooks", the two cooks named by short name | Design's draft |
+| FOR WHAT | "7 for 2 cooks", then "Tacos and chili" and "3 just because" (sheet 77); foot ALL LINKS | Drawn in sheet 77: the cooks named, the leftovers counted, so the three lines add up to the front |
 | PER 100 G | kcal big, then protein and fat; carbohydrate and fibre wait for the full side; the source line sits under the glance | Design's draft, with the source always visible since the number came from somewhere |
 | COOKS | The last cook with its day and duration: "Thursday, 46 min" | Design's draft, with the duration so the glance says something the front does not |
 | INGREDIENTS | "7 to buy" with the key ADD 7 TO GROCERIES; at 0, "Nothing to buy." and no key | Changed from "12 things": the glance's number and the key's number must be the same number, and the thing-count is already on the front |
@@ -78,16 +78,31 @@ THE WEEK'S COOKS (AHEAD, sheet 74) now, and it stays that way when Pantry arrive
 
 *Pantry is an area of his own. The front is `pantry-acceptance.md` (counts line, out / low / in groups by aisle, swipe left adds to Groceries). This is the side, drafted from decisions 2:36 so Design can draw against it. The pass rows stay valid whatever the drawing looks like.*
 
-**The Pantry side is OUT AND LOW.** What the phone thinks he is out of or low on, as a plain list for a shop, with when each was last bought. Glance: "4 out, 2 low", the one key ADD 6 TO GROCERIES (the same dry-run count as the recipe peek key; at 0, "Nothing out." and no key). Nutrition never appears here (`never-sums-audit.md` N6).
+**The Pantry side is OUT AND LOW.** What the phone thinks he is out of or low on, as a plain list for a shop, with when each was last bought. Glance (sheet 78): "4 out", "2 low" and "6 to buy", foot ALL OF THEM, kind AHEAD, the one key ADD 6 TO GROCERIES (the same dry-run count as the recipe peek key; at 0, "Nothing out." and no key). Nutrition never appears here (`never-sums-audit.md` N6).
 
 | # | Pass when |
 |---|---|
-| 6.1 | The front's counts line and the side's glance give the same two numbers ("4 out, 2 low") |
+| 6.1 | The front's counts line ("4 out, 2 low") and the side's glance ("4 out", "2 low") give the same numbers, and "6 to buy" equals the key's number |
 | 6.2 | The side lists out lines first, then low, each as one line: name and "bought Sat" when known; unknown ingredients are never listed |
-| 6.3 | The key adds every listed line to Groceries in one op and reads "6 added." with one UNDO (4 s); a line already on Groceries is not added twice, and the key's number counts only new rows |
+| 6.3 | The key adds every listed line to Groceries in one op and gives the receipt "Pantry, 6 added." with one UNDO (4 s, a new add; the state-word tap "Limes, in." is a change and gets 10 s); a line already on Groceries is not added twice, and the key's number counts only new rows |
 | 6.4 | With nothing known, the side opens on "Nothing known yet." and no key; no empty-state art |
 | 6.5 | The side holds no per-line controls; tapping a line opens its Ingredient page, where the state word cycles in, low, out |
 | 6.6 | Pantry's side is its own: the Kitchen tab's side stays THE WEEK'S COOKS before and after Pantry ships (row 5.2) |
 | 6.7 | Nothing in Pantry or its side is sent to Claude; the AI-12 pack snapshot carries no state and no bought date (`pantry-acceptance.md` Core 7) |
 | 6.8 | Reduce Motion is a 200 ms crossfade; Dynamic Type at AX sizes keeps one column; no pill, card or badge anywhere, and no notification (`pantry-acceptance.md`, Defaults taken) |
+
+## 7. Sheet 77 rows: Groceries FOR WHAT, Recipe COOKS, Paste WHAT I READ
+
+*From Design `sides-77.md`. Tess's line sits in her band at the glance and the full side, the same line at both stops. Digits, "and N more" from four, no controls, Reduce Motion a 150 ms crossfade.*
+
+| # | Pass when |
+|---|---|
+| 7.1 | FOR WHAT groups name the cook and the day in capitals with a comma: "TACOS, SUNDAY", "CHILI, TUESDAY", soonest first, then JUST BECAUSE and one USUALLY line; " · " appears only in a pack size |
+| 7.2 | A row for two cooks shows once, under the sooner cook, with "also chili" on it; the glance counts it once ("7 for 2 cooks" never counts a shared row twice) |
+| 7.3 | Tess says "7 for 2 cooks, 3 just because." at both stops; with no just-because rows she says "7 for 2 cooks."; with no plan she says nothing and the side opens on JUST BECAUSE alone |
+| 7.4 | Recipe COOKS lists each cook newest first with how long it took ("46 min", "1 h 1 min"); the glance reads "N times", the last cook's day and duration, and "about N min" |
+| 7.5 | The "about" figure and Tess's "Cooked 4 times, about 45 min." use the median of the recorded durations; with fewer than 2 cooks Tess says nothing and the glance shows no "about" line |
+| 7.6 | A cook with no recorded duration is listed by day only and left out of the median |
+| 7.7 | Paste WHAT I READ lists all lines in order: kept lines plain, a plain ignored line with its words dim and "ignored"; a private or secret-looking line shows only a bar and "ignored", never its words (the wall also stops it reaching Claude); the glance counts kept and ignored ("14 lines kept", "3 ignored") and Tess says "14 of 17 lines kept." |
+| 7.8 | None of these sides shows nutrition or any total of food values (`never-sums-audit.md`) |
 
