@@ -124,12 +124,13 @@ public struct ProcessTable {
             if let workout = process.subject, isWorkout(workout), idle >= Limits.wrapUpWorkout {
                 notes.append(wrapUp(process, workout: workout))
             } else if idle >= Limits.putAway {
-                let basket = shopBasketCount(process)
+                let basket = basketOf(process)
                 if (try? engine.perform(EndProcess(process: process.id, reason: .putAway, time: now), by: .system)) !=
                     nil
                 {
-                    if let basket, basket > 0 {
-                        shopNotes.append(Note(line: "Shopping moved to Later. \(basket) in the basket.", undo: nil))
+                    if let basket, basket.count > 0 {
+                        shopNotes.append(Note(line: "\(basket.name) moved to Later. \(basket.count) in the basket.",
+                                              undo: nil))
                     } else {
                         putAway += 1
                     }
@@ -144,10 +145,16 @@ public struct ProcessTable {
         return notes
     }
 
-    /// The checked rows in a shop's basket; nil when the process is not the shop. Rows are never dropped.
-    private func shopBasketCount(_ process: ProcessSnapshot) -> Int? {
-        guard let subject = process.subject, subject.id == Groceries.listID else { return nil }
-        return ListContents(store: store, classes: engine.classes).items(of: subject).count(where: \.isDone)
+    /// The checked rows in the basket of a shop or a list run, with the name the note uses; nil when the process is
+    /// neither. Rows are never dropped. A walled list name reads "Private list".
+    private func basketOf(_ process: ProcessSnapshot) -> (name: String, count: Int)? {
+        guard let subject = process.subject else { return nil }
+        if subject.id == Groceries.listID {
+            return ("Shopping", ListContents.basketCount(of: subject, in: store))
+        }
+        guard isList(subject) else { return nil }
+        let name = ObjectPrivacy.isPrivateWord(subject.title, in: store) ? "Private list" : subject.title
+        return (name, ListContents.basketCount(of: subject, in: store))
     }
 
     private func isList(_ object: ObjectRecord) -> Bool {
