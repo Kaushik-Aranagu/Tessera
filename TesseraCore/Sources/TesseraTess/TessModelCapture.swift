@@ -152,7 +152,8 @@ struct CatalogTool: Tool {
         guard recorder.records.count < TessTools.maxRecordsPerPhrase else { return TessTools.capLine }
         do {
             let records = try TessTools.run(name, arguments: Data(json.utf8), engine: engine, pending: pending,
-                                            now: now, calendar: calendar)
+                                            now: now, calendar: calendar,
+                                            budget: TessTools.maxRecordsPerPhrase - recorder.records.count)
             recorder.records += records
             return "Done: " + records.map(\.summary).joined(separator: "; ")
         } catch let answer as TessToolAnswer {
