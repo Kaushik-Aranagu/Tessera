@@ -15,7 +15,7 @@ Checked against Research AU (walls-ui-test-spec.md §1, walls-ui-phrases.json):
 FIX FIRST
 - **F1** The new test types a key-shaped literal (the Claude key prefix plus six characters; AppModelTests.swift:117).
   #534 just rebuilt its fake the same way #487 did, at run time and plainly fake, after the merge secret scan.
-  Do the same here, e.g. `["sk", "ant", "TEST"].joined(separator: "-") + "-FAKE"`.
+  Do the same here, e.g. join the prefix parts and a fake body at run time.
 
 Lows
 - **R1** "That stays on this phone." is a new line for a money or body question. It is in no fixture row and no

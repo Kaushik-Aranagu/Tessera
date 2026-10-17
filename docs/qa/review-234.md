@@ -13,7 +13,7 @@ Builder B. 11 files, +109/-51, plus home-themes.mp4. Static review (no Swift too
 - **H1 closed:** `badKey` → "didn't work", tested. `.notSaved` keeps the field open.
 
 ### ClaudeSection.swift:270, case-sensitive `hasPrefix("the Claude key prefix")`: doesn't matter
-- This is the *accept* check, not the leak guard. Anthropic keys are case-sensitive and always start lowercase `the Claude key prefix`, so an uppercased "SK-ANT-…" isn't a working key; refusing it with "That doesn't look like a Claude key" is the right answer.
+- This is the *accept* check, not the leak guard. Anthropic keys are case-sensitive and always start lowercase, so an uppercased version of the Claude key prefix is not a working key; refusing it with "That doesn't look like a Claude key" is the right answer.
 - The field sets autocapitalization `.never`, so the keyboard can't capitalise a pasted or typed key.
 - Core's `test(pasted:)` uses the same case-sensitive prefix, so the two agree.
 - Leak safety doesn't depend on it: anything with "the Claude key prefix" in any case is still blocked everywhere else.
