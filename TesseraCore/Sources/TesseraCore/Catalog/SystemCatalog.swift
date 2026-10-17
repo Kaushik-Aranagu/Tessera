@@ -318,8 +318,6 @@ public enum SystemCatalog {
             FieldSpec(key: "serves", name: "Serves", kind: .number),
             FieldSpec(key: "cookedAt", name: "Cooked", kind: .date),
             FieldSpec(key: "note", name: "Note", kind: .text),
-            // The plan task this cook was started from; DONE closes it with the cook.
-            FieldSpec(key: "plan", name: "Plan", kind: .ref, target: .task),
         ]),
         ClassSpec(key: .kitchenTimer, name: "Kitchen Timer", parent: .thing, symbol: "timer", colorRole: "health",
                   traits: [.timed], fields: [

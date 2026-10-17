@@ -47,7 +47,8 @@ struct KitchenGaps4Tests {
 
         // Home: planned, running and done all say "Private recipe".
         let facts = HomeFacts(engine: engine)
-        let task = try engine.perform(CreateTask(title: "x", startsAt: context.now, about: [health.id]), by: .tess).output
+        let task = try engine.perform(CreateTask(title: "x", startsAt: context.now, about: [health.id]), by: .tess)
+            .output
         #expect(facts.fact(plannedCook: task, recipe: health).title == "Private recipe")
         let cook = try engine.perform(StartCooking(recipe: health.id), by: .user).output
         try engine.perform(FinishCooking(cook: cook.id), by: .user)
@@ -100,7 +101,7 @@ struct KitchenGaps4Tests {
 
     // MARK: Groceries privacy (#688)
 
-    @Test func aHealthLineOnGroceriesReadsPrivateInSummaryAndReceipt() throws {
+    @Test func aHealthLineOnGroceriesReadsPrivateInSummaryAndReceipt() {
         let store = store
         let one = AddGroceries(lines: ["advil"])
         #expect(one.summary(in: store) == "Private item, on Groceries")
@@ -128,16 +129,17 @@ struct KitchenGaps4Tests {
 
     @Test func finishingACookClosesItsPlanTaskAndUndoReopensBoth() throws {
         let engine = try engine()
-        let tacos = try engine.perform(CreateRecipe(text: "Tacos\nIngredients\n2 onions\nMethod\nFry."), by: .user).output
+        let tacos = try engine.perform(CreateRecipe(text: "Tacos\nIngredients\n2 onions\nMethod\nFry."), by: .user)
+            .output
         let when = noon(plusDays: 0)
         let task = try engine.perform(CreateTask(title: "Cook tacos", startsAt: when.addingTimeInterval(7 * 3600),
                                                  about: [tacos.id]), by: .tess).output
         let other = try engine.perform(CreateTask(title: "Cook tacos", startsAt: when.addingTimeInterval(8 * 3600),
                                                   about: [tacos.id]), by: .tess).output
-        // MP-F4: started from the later task, that one closes; the earlier stays open.
-        let cook = try engine.perform(StartCooking(recipe: tacos.id, time: when, fromTask: other.id), by: .user).output
+        // MP-F4: two tasks the same day, the earliest open one closes; the other stays open.
+        let cook = try engine.perform(StartCooking(recipe: tacos.id, time: when), by: .user).output
         let finish = try engine.perform(FinishCooking(cook: cook.id, time: when.addingTimeInterval(3600)), by: .user)
-        #expect(isDone(other) && !isDone(task))
+        #expect(isDone(task) && !isDone(other))
         #expect(finish.record.receipt == "Tacos, done.")
         // MP-F2: one UNDO restores both.
         _ = engine.undo(finish.record)
@@ -145,7 +147,8 @@ struct KitchenGaps4Tests {
         #expect(store.value("cookedAt", of: cook) == nil)
 
         // Started elsewhere (no link): the earliest open one closes.
-        let dal = try engine.perform(CreateRecipe(text: "Dal\nIngredients\n1 cup lentils\nMethod\nSimmer."), by: .user).output
+        let dal = try engine.perform(CreateRecipe(text: "Dal\nIngredients\n1 cup lentils\nMethod\nSimmer."), by: .user)
+            .output
         let late = try engine.perform(CreateTask(title: "Cook dal", startsAt: when.addingTimeInterval(9 * 3600),
                                                  about: [dal.id]), by: .tess).output
         let early = try engine.perform(CreateTask(title: "Cook dal", startsAt: when.addingTimeInterval(5 * 3600),
@@ -157,9 +160,12 @@ struct KitchenGaps4Tests {
 
     @Test func aPlanOnAnotherDayOrNoPlanOrADoneTaskIsLeftAlone() throws {
         let engine = try engine()
-        let tacos = try engine.perform(CreateRecipe(text: "Tacos\nIngredients\n2 onions\nMethod\nFry."), by: .user).output
-        let tomorrow = try engine.perform(CreateTask(title: "Cook tacos", startsAt: noon(plusDays: 1), about: [tacos.id]),
-                                          by: .tess).output
+        let tacos = try engine.perform(CreateRecipe(text: "Tacos\nIngredients\n2 onions\nMethod\nFry."), by: .user)
+            .output
+        let tomorrow = try engine.perform(
+            CreateTask(title: "Cook tacos", startsAt: noon(plusDays: 1), about: [tacos.id]),
+            by: .tess
+        ).output
         // MP-F7: a task already closed (skipped) is not touched again.
         let skipped = try engine.perform(CreateTask(title: "Cook tacos", startsAt: noon(plusDays: 0),
                                                     about: [tacos.id]), by: .tess).output

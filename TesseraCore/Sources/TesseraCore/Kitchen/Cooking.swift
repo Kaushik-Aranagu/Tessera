@@ -97,14 +97,11 @@ public struct StartCooking: EngineAction {
     public var recipe: UUID
     public var serves: Int?
     public var time: Date?
-    /// The plan task the cook was started from, if any.
-    public var fromTask: UUID?
 
-    public init(recipe: UUID, serves: Int? = nil, time: Date? = nil, fromTask: UUID? = nil) {
+    public init(recipe: UUID, serves: Int? = nil, time: Date? = nil) {
         self.recipe = recipe
         self.serves = serves
         self.time = time
-        self.fromTask = fromTask
     }
 
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
@@ -125,9 +122,6 @@ public struct StartCooking: EngineAction {
         }
         let cook = try transaction.create(transaction.classDef(.cook), title: recipe.title)
         try transaction.setLinks("recipe", on: cook, to: [recipe])
-        if let fromTask {
-            try transaction.setLinks("plan", on: cook, to: [transaction.object(fromTask, is: .task)])
-        }
         if let size = serves ?? book.serves(recipe) {
             try transaction.set("serves", to: .number(Double(size)), on: cook)
         }
@@ -280,8 +274,8 @@ public struct FinishCooking: EngineAction {
         try closePlanTask(for: cook, at: end, in: &transaction)
     }
 
-    /// The same write closes the plan task dated for this recipe on the same house day (4 am turnover): the one the
-    /// cook started from, else the earliest open one. No task, nothing else changes.
+    /// The same write closes the plan task dated for this recipe on the same house day (4 am turnover): the earliest
+    /// open one. No task, nothing else changes.
     @MainActor
     private func closePlanTask(for cook: ObjectRecord, at end: Date, in transaction: inout Transaction) throws {
         guard let recipe = transaction.store.linkedObjects("recipe", of: cook).first,
@@ -295,9 +289,7 @@ public struct FinishCooking: EngineAction {
                   day.isSameDay(when, end) else { return nil }
             return (task, when)
         }
-        let started = store.linkedObjects("plan", of: cook).first?.id
-        guard let chosen = candidates.first(where: { $0.task.id == started })
-            ?? candidates.min(by: { $0.when < $1.when }) else { return }
+        guard let chosen = candidates.min(by: { $0.when < $1.when }) else { return }
         try transaction.set("isDone", to: .bool(true), on: chosen.task)
         try transaction.set("doneAt", to: .date(end), on: chosen.task)
         try transaction.endTaskProcess(chosen.task, done: true)
