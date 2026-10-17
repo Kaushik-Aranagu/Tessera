@@ -245,6 +245,8 @@ struct RecipePage: View {
     /// engine's "Tacos, 7 added." stands in its place with UNDO 10 s. Nothing new: the column stays, one line
     /// "Tacos, nothing to add.", no UNDO. Refused: the column springs back and Tess says so.
     private func send(recipe: UUID, serves: Int?) {
+        // One add at a time: a second (VoiceOver's action) never replaces the first's UNDO (QA on #819).
+        guard sent == nil else { return }
         let title = model.store.object(id: recipe)?.title ?? ""
         let outcome = RecipeCopy.send(isPrivate: RecipeCopy.isPrivate(title, model: model)) {
             let result = try model.engine.perform(AddRecipeToGroceries(recipe: recipe, serves: serves), by: .user)
