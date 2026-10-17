@@ -67,6 +67,7 @@ struct RootView: View {
             }
         }
         .background { ThemedBackground() }
+        .modifier(RestReceipt())
     }
 
     /// Paint floods out of Tess (~0.5 s); Home is swapped in underneath, then the paint fades. Tapping her again on

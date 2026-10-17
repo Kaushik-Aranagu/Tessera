@@ -449,14 +449,24 @@ public struct AddGroceries: EngineAction {
         return items
     }
 
-    public func summary(in _: ObjectStore) -> String {
+    /// A medicine or body line is never said back (#688): it reads "Private item".
+    @MainActor
+    private func shown(_ line: String, in store: ObjectStore) -> String {
+        EngineWall.isHealth(line, lastWeightKg: BodyWeight.lastKg(in: store)) ? "Private item" : line
+    }
+
+    @MainActor
+    public func summary(in store: ObjectStore) -> String {
         // Thing first, the list by name (lists copy sweep, Product 10:06 PM PT).
-        lines.count == 1 ? "\(lines[0].prefix(1).uppercased() + lines[0].dropFirst()), on Groceries"
+        let first = lines.first.map { shown($0, in: store) } ?? ""
+        return lines.count == 1 ? "\(first.prefix(1).uppercased() + first.dropFirst()), on Groceries"
             : "\(lines.count) things on Groceries"
     }
 
-    public func receipt(in _: ObjectStore) -> String? {
+    @MainActor
+    public func receipt(in store: ObjectStore) -> String? {
         guard !lines.isEmpty else { return nil }
+        let lines = lines.map { shown($0, in: store) }
         // Name the things: "Oat milk and eggs, on Groceries"; "Oat milk, eggs and 2 more, on Groceries" (Design R7).
         let names = switch lines.count {
         case 1: lines[0]

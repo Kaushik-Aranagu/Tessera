@@ -83,7 +83,7 @@
 | K53.3 | Today: Dal at 5 pm and Tacos at 7 pm, nothing tagged | The last after 4 pm, not the first: "Tacos, 7 pm." |
 | K53.4 | Today: only Dal at noon, nothing tagged | No dinner. Siri: "Nothing planned." Dal is not read as dinner. In the app, Tess says "Nothing planned." and the Home row does not name Dal under a dinner word |
 | K53.5 | Today: Dal at 3:59 pm and nothing else; then move it to 4:00 pm | At 3:59 pm: "Nothing planned." At 4:00 pm: it counts, "Dal, 4 pm." The cutoff is "after 4 pm" read as 4:00 pm or later; proposed, Product to rule (flag F2) |
-| K53.6 | Today: Dal at noon tagged dinner | The tag wins: "Dal, noon." A tagged slot is dinner at any hour |
+| K53.6 | Today: Dal at noon tagged dinner | The tag wins: "Dal, 12 pm." (ruled Oct 17, decisions 3:55: clocks write "12 pm", never "noon"). A tagged slot is dinner at any hour |
 | K53.7 | Today: two cooks tagged dinner (Tacos 6 pm, Dal 8 pm) | The later tagged one: "Dal, 8 pm." Tess adds nothing. Proposed, Product to rule (flag F3) |
 | K53.8 | Today: the tagged dinner is the stew | Exactly "Private recipe, 7 pm." (K45.14). The tag never reveals the name. A private recipe after 4 pm with no tag reads the same |
 | K53.9 | Today: a dinner cook without a time (tagged or the only one) | "Tacos, tonight." (K45.15); private "Private recipe, tonight." A cook with no time is not "after 4 pm", so an untagged one with no time is not dinner: "Nothing planned." Proposed, Product to rule (flag F4) |

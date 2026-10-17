@@ -28,17 +28,27 @@ final class TessVoice {
 
     private(set) var note: Note?
 
-    /// Shows `text` for 4 s (with UNDO when there's an op to undo).
-    func say(_ text: String, undo: OpRecord? = nil, takeBack: (() -> Void)? = nil) {
+    /// Shows `text` for 4 s (with UNDO when there's an op to undo). `holds` overrides how long it stays.
+    func say(_ text: String, undo: OpRecord? = nil, holds: Duration? = nil, takeBack: (() -> Void)? = nil) {
         let note = Note(text: text, undo: undo, takeBack: takeBack)
         self.note = note
         Task { @MainActor in
-            // A line with something to take back stays 10 s (M37); a plain line, 4 s.
-            try? await Task.sleep(for: .seconds(undo == nil && takeBack == nil ? 4 : 10))
+            try? await Task.sleep(for: Self.hold(undo: undo != nil || takeBack != nil, holds: holds))
             if self.note?.id == note.id {
                 self.note = nil
             }
         }
+    }
+
+    /// How long a line stays: a line with something to take back 10 s (M37), a plain line 4 s, or `holds`. Under
+    /// VoiceOver UNDO is a flat 10 s, whatever the line asked for (UndoSlot ruling), so it can be reached.
+    static func hold(undo: Bool, holds: Duration? = nil,
+                     voiceOver: Bool = UIAccessibility.isVoiceOverRunning) -> Duration
+    {
+        if undo, voiceOver {
+            return .seconds(10)
+        }
+        return holds ?? .seconds(undo ? 10 : 4)
     }
 
     func clear() {
