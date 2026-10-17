@@ -100,8 +100,9 @@ struct PrivateWordsTests {
             #expect(blob.contains(word), "\(word) lost from the iCloud copy")
         }
         // The rolling path takes the same flag.
-        let rolled = try #require(try TesseraBackup.writeRolling(from: store.context, in: dir.appendingPathComponent("iCloud"),
-                                                              now: .now, leavingOutPrivate: true))
+        let iCloud = dir.appendingPathComponent("iCloud")
+        let rolled = try #require(try TesseraBackup.writeRolling(from: store.context, in: iCloud, now: .now,
+                                                                 leavingOutPrivate: true))
         let rolledBlob = try text(of: TesseraExport(context: TesseraContext(url: rolled)).encoded())
         #expect(Self.secrets.allSatisfy { !rolledBlob.contains($0) })
     }

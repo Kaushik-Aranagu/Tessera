@@ -35,7 +35,11 @@ public struct Groceries {
             fixed = store.create(listClass, title: "Groceries")
             fixed.id = listID
         }
-        // A stray list with the built-in's name and no fixed id: its rows move across, then it goes.
+        foldStrays(into: fixed, store: store, listClass: listClass)
+    }
+
+    /// A stray list with the built-in's name and no fixed id: its rows move across, then it goes.
+    private static func foldStrays(into fixed: ObjectRecord, store: ObjectStore, listClass: ClassDef) {
         let strays = store.objects(of: listClass).filter { $0.id != listID && $0.title == "Groceries" }
         for stray in strays {
             var next = (fixed.orderedChildren.map(\.sortIndex).max() ?? -1) + 1

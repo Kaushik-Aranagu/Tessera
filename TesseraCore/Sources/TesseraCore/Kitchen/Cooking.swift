@@ -93,9 +93,9 @@ extension ObjectPrivacy {
     @MainActor
     static func cookTitle(_ object: ObjectRecord, in store: ObjectStore) -> String {
         let recipe = store.linkedObjects("recipe", of: object).first ?? object
-        let private_ = isPrivateRecipeTitle(recipe.title, lastWeightKg: BodyWeight.lastKg(in: store))
+        let isPrivate = isPrivateRecipeTitle(recipe.title, lastWeightKg: BodyWeight.lastKg(in: store))
             || isPrivateRecipeTitle(object.title, lastWeightKg: BodyWeight.lastKg(in: store))
-        return private_ ? recipeLabel : object.title
+        return isPrivate ? recipeLabel : object.title
     }
 }
 
