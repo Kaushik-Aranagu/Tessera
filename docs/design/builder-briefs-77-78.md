@@ -46,7 +46,7 @@ One brief per Mac lead, drawn only from sheets 76 (`depth.md`), 77 (`sides-77.md
 - COOKS shows each time cooked newest first with how long; Tess's median line only from 2 cooks.
 - Paste shows all 17 lines; a private or secret-looking line shows only a bar and "ignored"; a secret never reaches the side's text.
 - The week shows counts by job, titles and counts only, no money of his.
-- Pantry state word cycles in, low, out with one `.selection`, one UNDO, count rolls 260 ms; a line that becomes in leaves the page.
+- Pantry state word cycles in, low, out with one `.selection`, one UNDO, the digits just change (nothing counts up); a line that becomes in leaves the page.
 - ADD N TO GROCERIES: N equals the glance's "to buy"; at 0 "Nothing out." and no key.
 - The index has five rows (REVIEW, TODAY, TRAINING, KITCHEN, PANTRY), glass 700 tall, Pantry's line is the hero.
 
