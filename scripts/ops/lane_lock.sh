@@ -14,5 +14,5 @@ case "${1:-}" in
   printf 'lane=%s\npid=%s\nstart=%s\nstart_iso=%s\npurpose=%s\n' "$2" "$PPID" "$now" "$(date -u +%FT%TZ)" "$3" > "$F"; echo "acquired by $2 (pid $PPID)";;
  release) if [ "$(field lane)" = "${2:-}" ]; then drop; echo released; else echo "not held by ${2:-}" >&2; exit 1; fi;;
  status) if [ -d "$L" ]; then cat "$F"; echo "age_s=$((now - $(field start)))"; else echo free; fi;;
- *) echo "usage: acquire|release|status" >&2; exit 2;;
+ *) echo "usage: acquire|wait|release|status" >&2; exit 2;;
 esac
