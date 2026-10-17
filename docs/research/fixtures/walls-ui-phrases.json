@@ -222,7 +222,7 @@
       "expectPrivate": false,
       "expectNoClaude": true,
       "expectNotInMissLog": true,
-      "expectLine": "Milk, on the list.",
+      "expectLine": "Milk, on Groceries.",
       "lineMatch": "exact",
       "passesOnMaster": true,
       "masterEvidence": "TessGrammar+Kitchen.swift:49-65; TessCaptureEngine.swift:323-337",
@@ -353,7 +353,7 @@
       "lineMatch": null,
       "passesOnMaster": false,
       "masterEvidence": "Notes.swift:111 checks SecretWords only, so it is a plain note titled \"knee hurts\" with nothing walled.",
-      "pending": "Core 0aa",
+      "pending": null,
       "notes": "Decisions 1:15 pm: body facts typed on the Notes page go private."
     },
     {
@@ -367,7 +367,7 @@
       "lineMatch": null,
       "passesOnMaster": false,
       "masterEvidence": "Notes.swift:111 checks SecretWords only: a plain note titled with the amount.",
-      "pending": "Core 0aa",
+      "pending": null,
       "notes": "Decisions 1:15 pm: money with an amount stays private everywhere."
     },
     {
@@ -381,7 +381,7 @@
       "lineMatch": null,
       "passesOnMaster": false,
       "masterEvidence": "Notes.swift:111 uses SecretWords.mentions, which has no account words; the account rule lives only in SecretWords.swift:127-136 for pastes.",
-      "pending": "Core 0aa",
+      "pending": null,
       "notes": "Decisions 1:15 pm: an account-number line makes the whole note private."
     },
     {
@@ -505,7 +505,7 @@
       "expectPrivate": false,
       "expectNoClaude": true,
       "expectNotInMissLog": true,
-      "expectLine": "That looks like a Claude key. It goes in Settings, not a recipe.",
+      "expectLine": "That looks like a Claude key. It goes in Review, under Claude.",
       "lineMatch": "exact",
       "passesOnMaster": true,
       "masterEvidence": "PasteRecipe.swift:119-121 clears the text; :33 shows the line",
@@ -1335,7 +1335,7 @@
       "lineMatch": "exact",
       "passesOnMaster": false,
       "masterEvidence": "PrivateFacts.swift:104-108 walls a decimal or body unit only when every other word is a day word; master has no last-weight check (\"good\" is not a day word)",
-      "pending": "Core 0ai (body-word list, \"weight\" out of dayWords)",
+      "pending": null,
       "seed": {
         "lastWeightKg": null
       },
