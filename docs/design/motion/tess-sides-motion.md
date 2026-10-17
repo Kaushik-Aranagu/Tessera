@@ -45,3 +45,25 @@ The soul stays exactly as on any other label. There is no reveal animation, no g
 - A side's one key (ADD N TO GROCERIES, 75 rule 6): its own existing success haptic, once. The side's `.selection` never doubles it, because the key is pressed on a side that has already landed.
 - The soul adds none (§1, 18b's `.soulStroke` is the only haptic of hers).
 - For "releases 1 to 5": any new surface not named here gets no haptic until its sheet names one moment for it.
+
+## Pantry (sheet 78) and sheet 77's sides
+Sheet 77's eight sides add no motion of their own: each rides `SideHost` and takes the shared motion above. Its glance big facts (7, Push A, 4, 14, $3.20, 4, 38, Reading) arrive with the glance, blurred in over 300 ms, with no count-up. Pantry's own moving things:
+
+| What moves | Motion | Haptic | Tess | Reduce Motion |
+|---|---|---|---|---|
+| State word tap (in, low, out) on the front | Word changes with a 150 ms crossfade, lab default (facet-word rule) | One `.selection` | Nothing; her line is replaced by the receipt, see below | Same crossfade |
+| The line that changes group, or leaves as "in" | Line closes up over 320 ms (sheet 78); a line going low or out joins its group with the same 320 ms close and open, on the house curve | None beyond the tap's `.selection` | Nothing | 200 ms crossfade, no slide |
+| Hero "4 out, 2 low" and the index line | Sheet 78 says the count rolls (260 ms). Lab ruling, nothing counts up: lab default, the digits just change, no roll, as 77's open-side counts do | None | Nothing | Same, nothing moves |
+| Receipt "Limes, in." with UNDO (10 s) | Replaces Tess's line in the one app-wide UNDO slot; lands as any line does (300 ms blur, 420 ms) | None for the line | Her line is held back, then returns on UNDO or when the window ends | 200 ms crossfade, no blur |
+| UNDO on a state word | The row returns with the 320 ms open | `.undo` | Her line returns | 200 ms crossfade |
+| Left swipe, out or low line: "Milk, in Groceries." with UNDO (10 s) | The ghost row joins Groceries; on Pantry the line stays (it is not removed) | `.made` once, lab default (the add succeeded) | Nothing | 200 ms crossfade |
+| USUALLY HAVE name tap or skip swipe | Same as Groceries: the name goes to Groceries with its receipt and UNDO, or is skipped | `.made` for the add, `.notNow` for the skip | Nothing | 200 ms crossfade |
+| Side: OUT AND LOW, into glance and full side | The shared motion above. The glance shows "4" out, "2 low", "6 to buy" together, no stagger | `.selection` once on landing on the full side, none for the glance | `sideTurned` as for any side; her line "You buy milk about every 7 days." lands at stop 1 and stays | 200 ms crossfade (sheet 78 says 150 ms; the side rule above wins for stops, 150 ms stays for the facet word) |
+| ADD 6 TO GROCERIES (the side's one key) | Receipt "Pantry, 6 added." with UNDO 4 s (sheet 78: a new add), in the slot shared with Groceries. The 6 lines on the side do not move or change | The key's own success haptic once; the side's `.selection` never doubles it | Nothing | 200 ms crossfade of the receipt |
+| UNDO on that add | The receipt leaves; the Groceries rows added go with it | `.undo` | Her line returns | 200 ms crossfade |
+| Key at 0 ("Nothing out.") | The key is simply absent; no animation | None | Nothing | Same |
+
+- One UNDO slot: a new receipt from Pantry or Groceries replaces the one showing, with no stack and no stagger.
+- Lines and counts that change while the side is open just change, with no animation. The side's lines never reorder while open.
+- Private things never change her motion: Pantry holds none, and 77's Paste bar for a private line arrives like any other line, with `sideTurned` the same as on a side with nothing private.
+- No new haptic case anywhere above.
