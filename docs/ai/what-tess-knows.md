@@ -78,6 +78,7 @@ The cap line ("I keep 40 things. Forget one to make room.") shows once, as her l
 - **Never on the page:** secret-word notes or their values (they are private notes, never memory, SW2); forgotten
   hash objects; "[forgotten]" placeholders; evidence titles (the source line is a count); the Claude key or any
   part of it (a key-shaped line is refused before it is written); money, places, measured health values (refused).
+- **Capture exception (Oct 17, Core #860):** a capture phrase the grammar can't read may go to Claude whole, walled words included; only the key and key-shaped text never leave. This page's lines, receipts and private memory still never go (next bullet).
 - **Claude never sees:** this page, its gestures, its receipts, private lines, forgotten words or their hashes, the
   count line. Claude has **no forget tool** (decisions, 2:52 AM PT Oct 16): `forgetMemory` and `forgetAllMemory`
   must never be listed in `TessTools`, and Claude's `remember` only proposes a ghost row (AI-8).

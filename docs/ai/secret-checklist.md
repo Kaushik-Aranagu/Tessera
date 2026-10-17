@@ -66,3 +66,5 @@ Never paste a real key into a grep, a ticket or a screenshot.
     here beyond docs/research (excluded); QA runs it.
 
 Result today: FAIL on 3, 4, 7, 8, 11. PASS on 1, 2, 5, 6, 9. 10 N/A. 12, 13 manual.
+
+**Capture misses (Oct 17, Core #860).** Item 9's input guards are unchanged: a key or key-shaped text is refused in `TessRouter` first and again in the Claude route, so it never reaches Claude. Money, body, health and secret words in a capture phrase the grammar can't read are now allowed to go (his "yes, all but the key"); a walled phrase the grammar answered stays on the phone, and Siri and Shortcuts never send.
