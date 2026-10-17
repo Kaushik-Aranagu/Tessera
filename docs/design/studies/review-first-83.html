@@ -105,7 +105,7 @@ const FIRST_ROWS = [['Wednesday', '', 'nt'], ['Thursday', 'Push Day A, 3 tasks']
 const glance = k => k === 'full'
   ? `<div class="gl"><div class="gk">THE DAYS</div><div class="big">5<small>of 7 days</small></div><div class="gr">Wednesday, 6 tasks</div><div class="gr"><em>2 to go</em></div><div class="more">ALL DAYS<i></i></div></div>`
   : k === 'first'
-  ? `<div class="gl"><div class="gk">THE DAYS</div><div class="big">1<small>of 7 days</small></div><div class="gr">Thursday, 3 tasks</div><div class="gr"><em>2 to go</em></div><div class="more">ALL DAYS<i></i></div></div>`
+  ? `<div class="gl"><div class="gk">THE DAYS</div><div class="big">1<small>day</small></div><div class="gr">Thursday, 3 tasks</div><div class="gr"><em>2 to go</em></div><div class="more">ALL DAYS<i></i></div></div>`
   : `<div class="gl"><div class="gk">THE DAYS</div><div class="gr" style="font-size:19px">Nothing yet.</div></div>`;
 const axFirst = () => `<div class="abs name">REVIEW</div><div class="abs sw">THE DAYS</div><div class="abs ctxl"><span>Oct 12 to 18</span></div><div class="abs hero">1 session in your first week</div>
   <div class="abs al s2" style="top:410px">TRAINING, 1 SO FAR</div><div class="abs ar" style="top:440px"><small>Thursday</small>Push Day A</div>
@@ -122,14 +122,14 @@ if (!play) {
   b += ph('por', firstWeek() + band(''), '2 THE FIRST WEEK', '1 session in your first week', 'Began Wed, trained Thu, today Fri. M and T at 38%, no mark. One dab, one numeral, one line. No ring on Wed or Fri, no COOK, WEIGHT or MONEY bands: they arrive when he has them.');
   b += ph('por', zeroWeek() + band(''), '3 THE ZERO-DAY WEEK', 'Your first week starts today', 'Installed today: letters only, today in ink, and one quiet line. No bands, no zero, no "get started". The next day with nothing reads "A quiet week so far" on this same page.');
   b += ph('por', `<div class="body" style="transform:translateX(26px)">${firstWeek()}</div>` + fin(220, 600) + band(''), '4 THE RUN\'S LEFT END', 'No past weeks', 'A swipe toward earlier weeks moves the page 26 pt with resistance and springs back (380 ms). Nothing sits behind it: no empty week, no "no earlier weeks", no haptic. The name and context line hold still. Swiping on to a later week at the current one does the same, and it never wraps.');
-  b += ph('por', dim(firstWeek()) + glance('first') + fin(372, 420) + band(''), '5 THE DAYS, FIRST WEEK, STOP 1', '"1 of 7 days"', 'Right edge or the word. Fullest day named, "2 to go" because it is the current week. Tess says nothing.');
-  b += ph('por', sideFront(FIRST_ROWS, '1 of 7 days') + band(''), '6 THE DAYS, FIRST WEEK, STOP 2', 'Starts where he began', 'Monday and Tuesday are not listed. Wednesday and Friday are names only, Thursday carries its line, the days ahead at 38%.');
+  b += ph('por', dim(firstWeek()) + glance('first') + fin(372, 420) + band(''), '5 THE DAYS, FIRST WEEK, STOP 1', '"1 day"', 'Right edge or the word. Fullest day named, "2 to go" because it is the current week. Tess says nothing.');
+  b += ph('por', sideFront(FIRST_ROWS, '1 day') + band(''), '6 THE DAYS, FIRST WEEK, STOP 2', 'Starts where he began', 'Monday and Tuesday are not listed. Wednesday and Friday are names only, Thursday carries its line, the days ahead at 38%.');
   b += ph('por', dim(fullWeek()) + glance('full') + fin(372, 420) + band(''), '7 THE DAYS, FULL WEEK, STOP 1', '"5 of 7 days"', 'Same glance, same type, same foot word ALL DAYS. The first week is this page early.');
   b += ph('por', sideFront(FULL_ROWS, '5 of 7 days') + band('Wednesday was the fullest day.'), '8 THE DAYS, FULL WEEK, STOP 2', 'Seven days, one line each', 'Counted days in ink, today semibold, the rest at 38%. Tess speaks on the side only, from 3 counted days.');
   b += ph('por ax', axFirst() + band(''), '9 DYNAMIC TYPE, AX3', 'Columns become rows', 'Seven columns cannot hold 32/38 type, so from the first accessibility size each band is a label and one row per day that has something. Nothing truncates; the page scrolls and the foot keeps Tess\'s band clear.');
   b += ph('por', firstWeek() + vo(328, 72, 'Training, 1 so far. Thursday trained.') + band(''), '10 VOICEOVER', 'One element per band', 'Training, 1 so far. Thursday trained. The days before he began are skipped, the open days are not announced as missed.');
   b += ph('obs', firstWeek() + band(''), '11 OBSIDIAN', 'The first week', 'Ink 245,242,236 on #121014; the dab and numeral at the rest tint (55%). Nothing glows.');
-  b += ph('obs', sideFront(FIRST_ROWS, '1 of 7 days') + band(''), '12 OBSIDIAN', 'THE DAYS', 'Same side. Tess\'s #86B4FF is the only colour, and she is silent.');
+  b += ph('obs', sideFront(FIRST_ROWS, '1 day') + band(''), '12 OBSIDIAN', 'THE DAYS', 'Same side. Tess\'s #86B4FF is the only colour, and she is silent.');
   b += `</div>`;
   $('board').innerHTML = b;
   document.fonts.ready.then(() => { document.body.dataset.done = '1'; });
@@ -138,7 +138,7 @@ if (!play) {
   const w = $('board'); w.className = '';
   w.innerHTML = `<div class="ph por" id="ph"><div class="body" id="fr">${firstWeek()}</div>
     <div class="body" id="gb" style="opacity:0">${glance('first')}</div>
-    <div class="body" id="fb" style="opacity:0;background:var(--bg)">${sideFront(FIRST_ROWS, '1 of 7 days')}</div>
+    <div class="body" id="fb" style="opacity:0;background:var(--bg)">${sideFront(FIRST_ROWS, '1 day')}</div>
     <div class="abs soul"></div><div class="finger" id="fg"></div></div>`;
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;

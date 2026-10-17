@@ -17,8 +17,8 @@ Board `mockups/review-first-83.png` (12 phones, Porcelain and Obsidian), recordi
 - **Reduce Motion:** nothing moves or fades at the end.
 
 ## THE DAYS (by word or right edge, 76)
-- **Glance, full week:** "5 of 7 days", "Wednesday, 6 tasks" (the fullest day, most tasks), "2 to go", foot ALL DAYS. **First week:** "1 of 7 days", "Thursday, 3 tasks", "2 to go". **Zero-day:** only "Nothing yet." (no zero, no foot word). "N to go" shows only on the current week; a day counts when it has a session, a task done or a cook.
-- **Full side (back word ‹ REVIEW, Title "Oct 12 to 18", context "1 of 7 days" with THE DAYS at the right):** one 44 pt line per day, the name at 21 and what it held at 19 `inkSecondary`. Counted days in ink, today semibold, empty past days `inkSecondary`, days ahead 38%. **The first week starts at the day he began:** Monday and Tuesday are not listed, Wednesday and Friday are names only. The denominator stays 7.
+- **Glance, full week:** "5 of 7 days", "Wednesday, 6 tasks" (the fullest day, most tasks), "2 to go", foot ALL DAYS. **First week:** "1 day", "Thursday, 3 tasks", "2 to go". **Zero-day:** only "Nothing yet." (no zero, no foot word). "N to go" shows only on the current week; a day counts when it has a session, a task done or a cook.
+- **Full side (back word ‹ REVIEW, Title "Oct 12 to 18", context "1 day" with THE DAYS at the right):** one 44 pt line per day, the name at 21 and what it held at 19 `inkSecondary`. Counted days in ink, today semibold, empty past days `inkSecondary`, days ahead 38%. **The first week starts at the day he began:** Monday and Tuesday are not listed, Wednesday and Friday are names only. The denominator stays 7.
 - **Tess (side only):** full week "Wednesday was the fullest day." (from 3 counted days); first week and zero-day, nothing.
 
 ## Access
@@ -39,6 +39,6 @@ Board `mockups/review-first-83.png` (12 phones, Porcelain and Obsidian), recordi
 Dots, a streak, a miss ring in week one, "0 sessions", "no earlier weeks", "welcome", a nudge, red, a ghost of last week.
 
 ## Unresolved
-1. "1 of 7 days" in the first week reads like a score; alternative is "1 day". Product to rule (drawn as the pinned format).
+1. RULED (decisions 8:18): "1 day" in week one, "N of 7 days" from week two; no ring at all in the first week.
 2. The rule that the first week draws no ring (proposed here; rest-dab only exempts days before first use).
 3. Tess's side line is a proposal; Research to give the rule set.
