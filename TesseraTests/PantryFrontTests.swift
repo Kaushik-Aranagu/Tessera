@@ -51,4 +51,17 @@ struct PantryFrontTests {
         #expect(PantryFront.swipe(limes, groceries: groceries, store: model.store)
             == .already(receipt: "Limes, already on Groceries."))
     }
+
+    @Test func aCheckedRowInTheBasketCoversTheAdd() throws {
+        let recipe = try tacos()
+        let cook = try model.engine.perform(StartCooking(recipe: recipe.id, time: saturday), by: .user).output
+        try model.engine.perform(FinishCooking(cook: cook.id, time: saturday.addingTimeInterval(1800)), by: .user)
+        let limes = try #require(ledger.entries().first { $0.label == "Limes" })
+        try model.engine.perform(AddGroceries(lines: ["limes"]), by: .user)
+        let groceries = Groceries(store: model.store, classes: model.classes)
+        let row = try #require(groceries.list?.orderedChildren.first)
+        try model.engine.perform(CheckListItem(item: row.id, time: saturday), by: .user)
+        #expect(PantryFront.swipe(limes, groceries: groceries, store: model.store)
+            == .already(receipt: "Limes, in the basket."))
+    }
 }

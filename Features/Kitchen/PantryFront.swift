@@ -34,9 +34,29 @@ struct PantryFront {
     }
 
     static func swipe(_ entry: PantryLedger.Entry, groceries: Groceries, store: ObjectStore) -> Swipe {
-        if groceries.isOn(store.displayTitle(of: entry.ingredient)) {
-            return .already(receipt: "\(entry.label), already on Groceries.")
+        switch listed(entry.ingredient, groceries: groceries, store: store) {
+        case .open: .already(receipt: "\(entry.label), already on Groceries.")
+        // Ticked off and in the basket: "already on Groceries" would read as still to buy (Design on #743).
+        case .basket: .already(receipt: "\(entry.label), in the basket.")
+        case .none: .add(receipt: PantryCopy.added(entry.label))
         }
-        return .add(receipt: PantryCopy.added(entry.label))
+    }
+
+    /// Where a thing already sits on Groceries, if anywhere.
+    enum Listed: Equatable {
+        case open, basket, none
+    }
+
+    /// An open row first (Core's `Groceries.isOn`), then a checked one in the basket, Done not yet held: either
+    /// covers the add, as a checked row does for a planned recipe (gap hunt G47).
+    static func listed(_ ingredient: ObjectRecord, groceries: Groceries, store: ObjectStore) -> Listed {
+        if groceries.isOn(store.displayTitle(of: ingredient)) {
+            return .open
+        }
+        guard let list = groceries.list else { return .none }
+        let inBasket = ListContents(store: store, classes: groceries.classes).done(in: list).contains { item in
+            groceries.ingredient(of: item.object)?.id == ingredient.id
+        }
+        return inBasket ? .basket : .none
     }
 }
