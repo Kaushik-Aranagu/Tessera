@@ -17,3 +17,7 @@ Index of the docs in `docs/design/`.
 - [motion/tess-rest-minute.md](motion/tess-rest-minute.md): Tess at rest: a full minute of Home, untouched (board item 12)
 - [motion/tess-sides-motion.md](motion/tess-sides-motion.md): Motion for every side (lab, board REFILL 2, items 1 to 4)
 - [next-build-walk.md](next-build-walk.md): The v9 pin, one walk against its sheets (Design item 66)
+- [pantry.md](pantry.md): 78. Pantry, an area with a front and a side
+- [studies/pantry.html](studies/pantry.html): Sheet 78 study (`?play` records the clip)
+- [mockups/pantry.png](mockups/pantry.png): Sheet 78 board
+- [recordings/pantry.mp4](recordings/pantry.mp4): Sheet 78 clip (18 s, Porcelain)
