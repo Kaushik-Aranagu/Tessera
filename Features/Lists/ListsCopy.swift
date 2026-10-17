@@ -40,8 +40,14 @@ enum ListsCopy {
 
     /// A line that starts with the thing starts with a capital, whatever was stored: "rice" reads "Rice, removed."
     /// (Kitchen row 10.9 on #786).
+    /// A word that already has a capital after its first letter is left as typed: "iPhone" never reads "IPhone"
+    /// (QA on #805).
     static func leading(_ thing: String) -> String {
-        thing.prefix(1).uppercased() + thing.dropFirst()
+        let firstWord = thing.prefix { !$0.isWhitespace }
+        if firstWord.dropFirst().contains(where: \.isUppercase) {
+            return thing
+        }
+        return thing.prefix(1).uppercased() + thing.dropFirst()
     }
 
     static func cleared(_ count: Int) -> String {

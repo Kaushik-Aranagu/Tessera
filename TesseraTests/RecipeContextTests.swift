@@ -11,6 +11,7 @@ struct RecipeContextTests {
         #expect(PortionDrum.range(written: 14) == 1 ... 28)
         #expect(PortionDrum.range(written: 2) == 1 ... 12)
         #expect(PortionDrum.range(written: nil) == 1 ... 12)
+        #expect(PortionDrum.range(written: 5000) == 1 ... 48)
     }
 
     @Test func durationsAreHoursAndMinutes() {

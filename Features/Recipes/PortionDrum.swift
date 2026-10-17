@@ -9,8 +9,9 @@ struct PortionDrum: View {
     var range: ClosedRange<Int> = 1 ... 12
 
     /// From 1 to twice the written size, never less than 12, so "Makes 24" sits centred and highlighted (G57, K87.7).
+    /// Capped at 48, so a misread "serves 5000" never builds thousands of rows (QA on #803).
     static func range(written: Int?) -> ClosedRange<Int> {
-        1 ... max(12, 2 * (written ?? 0))
+        1 ... min(48, max(12, 2 * (written ?? 0)))
     }
 
     @State private var scrolled: Int?

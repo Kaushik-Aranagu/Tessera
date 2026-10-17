@@ -57,6 +57,7 @@ struct ListsCopyTests {
         // Stored text is often lowercase; the line still leads with a capital (Kitchen 10.9 on #786).
         #expect(ListsCopy.removed("rice") == "Rice, removed.")
         #expect(ListsCopy.backOn("rice", list: "Packing") == "Rice, back on Packing.")
+        #expect(ListsCopy.removed("iPhone charger") == "iPhone charger, removed.")
     }
 
     @Test func removeRisesFrom60AndIsWholeAt96() {
