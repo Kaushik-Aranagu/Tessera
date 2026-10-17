@@ -49,6 +49,23 @@ public enum TesseraBackup {
         case newerSchema
     }
 
+    /// What SAVE A COPY must do before the share sheet: the copy stays whole (every word, as the local backup does), so
+    /// the app always asks for Face ID first, and says so when the copy holds private words (G28, QA on #707).
+    public struct SavedCopyGate: Equatable, Sendable {
+        public var requiresAuth: Bool
+        public var line: String?
+
+        public static let privateWordsLine = "This copy has your private words."
+    }
+
+    /// Whether a saved copy of this store holds private words, now or in its op history.
+    @MainActor
+    public static func savedCopyGate(for context: TesseraContext) -> SavedCopyGate {
+        let labels = PrivateWords.labels(in: context)
+        let has = !labels.isEmpty || !PrivateWords.historyLabels(in: context, current: labels).isEmpty
+        return SavedCopyGate(requiresAuth: true, line: has ? SavedCopyGate.privateWordsLine : nil)
+    }
+
     // MARK: Writing
 
     /// Writes a consistent copy of the store to `url` (replacing anything there) and stamps it.

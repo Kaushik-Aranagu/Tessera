@@ -171,3 +171,25 @@ struct PrivateWordsTests {
         FileManager.default.contents(atPath: url.path) ?? Data()
     }
 }
+
+/// SAVE A COPY stays whole; Face ID comes first when it holds private words (QA on #707).
+@MainActor
+struct SavedCopyGateTests {
+    @Test func aCopyAlwaysAsksForFaceIDAndSaysWhenItHoldsPrivateWords() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        try engine.perform(CreateNote(body: "wifi password is hunter2zebra"), by: .user)
+        let gate = TesseraBackup.savedCopyGate(for: store.context)
+        #expect(gate.requiresAuth)
+        #expect(gate.line == "This copy has your private words.")
+    }
+
+    @Test func aWordPrivateOnlyInHistoryStillAsks() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        let note = try engine.perform(CreateNote(body: "wifi password is hunter2zebra"), by: .user).output
+        try engine.perform(EditNote(note: note.id, body: "plain now"), by: .user)
+        let gate = TesseraBackup.savedCopyGate(for: store.context)
+        #expect(gate.requiresAuth && gate.line == TesseraBackup.SavedCopyGate.privateWordsLine)
+    }
+}

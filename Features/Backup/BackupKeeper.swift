@@ -1,4 +1,5 @@
 import Foundation
+import LocalAuthentication
 import os
 import TesseraCore
 import UniformTypeIdentifiers
@@ -158,6 +159,23 @@ enum BackupKeeper {
         return files.filter { $0.pathExtension == TesseraBackup.fileExtension }
             .compactMap { try? TesseraBackup.inspect($0).createdAt }
             .max()
+    }
+
+    /// Asks for Face ID (or the passcode); tests pass a fake.
+    static var authenticate: () async -> Bool = {
+        let context = LAContext()
+        return await (try? context.evaluatePolicy(.deviceOwnerAuthentication,
+                                                  localizedReason: "Save a copy with your private words")) ?? false
+    }
+
+    /// SAVE A COPY: the copy stays whole, so Face ID comes first. Nil when he didn't pass
+    /// it; otherwise the copy and the line to say beside the share sheet (nil when the copy holds none).
+    static func savedCopy(_ context: TesseraContext) async throws -> (url: URL, line: String?)? {
+        let gate = TesseraBackup.savedCopyGate(for: context)
+        if gate.requiresAuth, await !authenticate() {
+            return nil
+        }
+        return try (copyForSaving(context), gate.line)
     }
 
     /// A fresh copy to hand to the share/export sheet.
