@@ -131,6 +131,22 @@ struct ClaudeRouteTests {
         #expect(!RouteStub.requests.contains { $0.url?.host()?.contains("evil") == true })
     }
 
+    @Test func aWalledMissIsNeverSpokenBack() async {
+        // His "All but the key": a sum goes whole, but neither the one-time notice nor Claude's own line echo it
+        // (QA on #860). Claude's reply here repeats the phrase; what is spoken is the records' receipt.
+        let phrase = "could you log that I paid 40 for gas earlier?"
+        #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil))
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Noted, paid 40 for gas."))]
+        let capture = await tess().capture(phrase, context: context)
+        #expect(capture.source == .claude && capture.records.count == 1, "\(capture.line)")
+        #expect(capture.line == "Sent that to Claude. Turn this off in Settings: Claude.", "\(capture.line)")
+        // The next miss, no notice: still not Claude's words.
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Noted, wifi code 4821 and paid 40 for gas."))]
+        let second = await tess().capture(phrase, context: context)
+        #expect(!second.line.contains("4821") && !second.line.contains("gas") && !second.line.contains("40"),
+                "\(second.line)")
+    }
+
     @Test func aMissGoesToClaudeAndLandsAsAPendingGhost() async throws {
         RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged."))]
         let capture = await tess().capture(miss, context: context)

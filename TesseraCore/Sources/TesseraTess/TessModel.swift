@@ -86,13 +86,16 @@ public struct TessRouter {
             return TessCapture(records: [], line: TessRouter.keyLine, source: .none)
         }
         var asked: TessCapture?
-        // A secret word never leaves the grammar (Research 134): no on-device model, no Claude, whatever the switch.
+        // A capture the grammar and the on-device model could not read goes whole to Claude, money, body, health and
+        // secret words included (his "yes, all but the key", Oct 17 12:32 PM PT; docs/ai/architecture.md). Only a key
+        // or key-shaped text stays on the phone: refused above and again in the Claude route. Every other Claude job
+        // keeps its own walls.
+        // The exception is for what the grammar cannot read. A walled phrase it understood and answered with a question
+        // or a refusal ("I don't keep sums of money.", "$212.37 at Costco?") is its own, and stays on the phone.
         let secret = SecretWords.mentions(request.text)
-        // Money and body facts stay on the phone (MU2, Research 138 MW1): one the grammar didn't take goes to the
-        // on-device model or to "Didn't catch that.", never to Claude, whatever the switch says.
         let walled = PrivateFacts.isWalled(request.text, lastWeightKg: request.lastWeightKg(engine))
         for model in models where model.isAvailable(for: request.use)
-            && !(secret && model.route != .grammar) && !(walled && model.route == .claude)
+            && !((secret || walled) && model.route == .claude && asked?.source == .grammar)
         {
             engine.attribution = (model.route, model.modelName)
             let result = await model.run(request, engine: engine)

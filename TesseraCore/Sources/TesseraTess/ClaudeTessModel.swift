@@ -52,12 +52,8 @@ public struct ClaudeTessModel: TessModel {
         // The switch and the key shape are checked here too, not only in `isAvailable` and the router: a direct
         // caller must not skip them (a4-bypass item 3).
         guard sendsMisses(), !looksLikeClaudeKey(request.text) else { return .missed }
-        // The second wall (MU2, Research 138 MW4 and 139): a secret, money or body phrase never leaves, even from the
-        // inbox or a direct caller. The inbox drains through here, so an old item queued before the wall is dropped.
-        guard !SecretWords.mentions(request.text), !PrivateFacts.isWalled(
-            request.text,
-            lastWeightKg: request.lastWeightKg(engine)
-        ) else { return .missed }
+        // His "yes, all but the key": a capture miss goes whole, so no secret, money or body wall runs here. The
+        // key-shape refusal above stays, and the system prompt is checked below.
         // Every round resends the system prompt and the tool definitions with the phrase (QA on #283).
         let system = system(request.context, engine: engine, lastWeightKg: request.lastWeightKg(engine))
         guard !looksLikeClaudeKey(system) else { return .missed }
@@ -139,7 +135,11 @@ public struct ClaudeTessModel: TessModel {
         guard !records.isEmpty else { return .missed }
         // Never claim more than was done: Claude's own line only if it passes Tess's voice checks.
         var line = reply.trimmingCharacters(in: .whitespacesAndNewlines)
-        if line.isEmpty || !TessVoice.violations(in: line).isEmpty {
+        // A walled phrase went whole (his "All but the key"), so nothing of it is spoken back: Claude's own line is
+        // ignored for the records' masked receipts, and the notice does not quote it (QA on #860).
+        let phraseWalled = SecretWords.mentions(request.text)
+            || PrivateFacts.isWalled(request.text, lastWeightKg: request.lastWeightKg(engine))
+        if phraseWalled || line.isEmpty || !TessVoice.violations(in: line).isEmpty {
             // Thing first when the action has a spoken form (RC23); the log summary is never read aloud raw.
             line = records.count == 1 ? (records[0].receipt ?? records[
                 0
@@ -148,7 +148,8 @@ public struct ClaudeTessModel: TessModel {
         // The first miss ever sent says where it went, once (Product 8:28 PM PT Oct 15).
         if !flags.noticeShown {
             flags.noticeShown = true
-            line = "Sent \u{201C}\(request.text)\u{201D} to Claude. Turn this off in Settings: Claude."
+            line = phraseWalled ? "Sent that to Claude. Turn this off in Settings: Claude."
+                : "Sent \u{201C}\(request.text)\u{201D} to Claude. Turn this off in Settings: Claude."
         }
         return .handled(TessCapture(records: records, line: line, source: .claude))
     }
