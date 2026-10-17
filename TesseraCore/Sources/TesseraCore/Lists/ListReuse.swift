@@ -118,7 +118,8 @@ public struct ResetList: EngineAction {
 }
 
 /// Copies a list under a new name: the same sections and items, all open, in one op; the original is untouched. Nothing
-/// in the API or the copy says "template" (lists-acceptance.md 4c, decisions: "Lisbon, copied from Packing.").
+/// in the API or the copy says "template" (lists-acceptance.md 4c; Product's final ruling: the receipt is "Packing,
+/// Lisbon, new list.").
 public struct CopyList: EngineAction {
     public static let descriptor = ActionDescriptor(
         name: "copyList",
@@ -228,14 +229,19 @@ public struct CopyList: EngineAction {
         "Copied \(sourceName(in: store)) to \(shown(name.trimmingCharacters(in: .whitespacesAndNewlines), in: store))"
     }
 
+    /// From the run's own list: a name that was already a list copied nothing, and the log says so (Product's low).
+    public func summary(in store: ObjectStore, output: ObjectRecord) -> String {
+        outcome.wasRepeat ? "Opened \(ListContents.shownName(of: output, in: store))" : summary(in: store)
+    }
+
     public func receipt(in store: ObjectStore) -> String? {
         let shown = shown(name.trimmingCharacters(in: .whitespacesAndNewlines), in: store)
-        return outcome.wasRepeat ? "\(shown), already a list" : "\(shown), copied from \(sourceName(in: store))"
+        return outcome.wasRepeat ? "\(shown), already a list" : "\(shown), new list"
     }
 
     /// From the run's own list: a repeat prints the existing list's title, not the typed name (Design on #866).
     public func receipt(in store: ObjectStore, output: ObjectRecord) -> String? {
         let shown = ListContents.shownName(of: output, in: store)
-        return outcome.wasRepeat ? "\(shown), already a list" : "\(shown), copied from \(sourceName(in: store))"
+        return outcome.wasRepeat ? "\(shown), already a list" : "\(shown), new list"
     }
 }

@@ -40,13 +40,14 @@ struct StarterListsTests {
         let engine = ActionEngine(store: store, classes: classes)
         let tess = TessCaptureEngine(engine: engine)
         let said = await tess.capture("copy packing for lisbon", context: TessContext())
-        #expect(said.line == "Lisbon, copied from Packing.", "\(said.line)")
+        #expect(said.line == "Packing, Lisbon, new list.", "\(said.line)")
         let lists = ListContents(store: store, classes: classes)
-        let lisbon = try #require(lists.lists().first { $0.title == "Lisbon" })
+        let lisbon = try #require(lists.lists().first { $0.title == "Packing, Lisbon" })
         #expect(lists.items(of: lisbon).count == 11 && lists.items(of: lisbon).allSatisfy { !$0.isDone })
         // The same phrase again opens that list: nothing new.
         let again = await tess.capture("copy packing for lisbon", context: TessContext())
-        #expect(again.line == "Lisbon, already a list." && lists.lists().filter { $0.title == "Lisbon" }.count == 1)
+        #expect(again.line == "Packing, Lisbon, already a list." && lists.lists()
+            .filter { $0.title == "Packing, Lisbon" }.count == 1)
     }
 
     @Test func aSourceThatMatchesTwoListsWritesNothing() async throws {
@@ -74,5 +75,29 @@ struct StarterListsTests {
         #expect(!CopyList.wasRepeat(made.record))
         let repeated = try engine.perform(CopyList(list: packing.id, name: "lisbon"), by: .user)
         #expect(CopyList.wasRepeat(repeated.record))
+    }
+
+    @Test func copyingAPrivateListIsMaskedInTheLogAndTheDay() async throws {
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let secret = try engine.perform(CreateList(name: "Lexapro refills"), by: .user).output
+        let tess = TessCaptureEngine(engine: engine)
+        let said = await tess.capture("copy lexapro for lisbon", context: TessContext())
+        #expect(said.line == "Private list, new list.", "\(said.line)")
+        #expect(!engine.history(limit: 20)
+            .contains { $0.summary.lowercased().contains("lexapro") && $0.action == "copyList" })
+        let copy = try #require(ListContents(store: store, classes: classes).lists()
+            .first { $0.id != secret.id && $0.title.lowercased().contains("lisbon") })
+        #expect(PrivateWords.labels(in: store.context)[copy.id] != nil)
+    }
+
+    @Test func createListRefusesASecretOrKeyName() throws {
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let key = ["sk", "ant", "api03", ""].joined(separator: "-") + String(repeating: "Ab3x", count: 8)
+        for name in ["wifi password zebra99", key] {
+            #expect(throws: ActionError.self) { try engine.perform(CreateList(name: name), by: .user) }
+        }
+        #expect(ListContents(store: store, classes: classes).lists().map(\.title) == ["Groceries"])
     }
 }

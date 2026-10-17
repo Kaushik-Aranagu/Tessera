@@ -432,9 +432,11 @@ public final class TessCaptureEngine: TessCapturing {
             }
             return (record, "\(shown), new list.")
         case let .copyList(source, name):
-            // The source by his words (G40: two matches write nothing and ask which); the copy is named as said.
+            // The source by his words (G40: two matches write nothing and ask which). The copy is the source's name,
+            // then his word: "copy packing for lisbon" makes "Packing, Lisbon" (Product's final ruling).
             let from = try ListLookup.find(source, store: engine.store, classes: engine.classes)
-            let result = try engine.perform(CopyList(list: from.id, name: name), by: .tess, pending: pending)
+            let result = try engine.perform(CopyList(list: from.id, name: "\(from.title), \(name)"), by: .tess,
+                                            pending: pending)
             return (result.record, (result.record.receipt ?? "Copied") + ".")
         case .shop:
             let record = try engine.perform(StartShop(), by: .tess, pending: pending).record
