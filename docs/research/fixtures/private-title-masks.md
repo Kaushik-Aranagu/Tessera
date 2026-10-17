@@ -16,7 +16,7 @@
 | `ObjectPrivacy.label(of:in:classes:)` | `ObjectPrivacy.swift:30` | "Private note", "Private task", "Private memory", "Private recipe", or nil | A note, task, memory or recipe; returns nil for a workout or routine, which is why the generic page leaks them (PT24) |
 | `ObjectPrivacy.isPrivateWord(_:in:)` | `ObjectPrivacy.swift:84` | Bool | A free word he typed that a line would echo |
 
-"Private routine" is **not** a literal anywhere in code (`git grep -F` finds none). The label for a routine's title is "Private workout" (`ObjectPrivacy.routineLabel`, decision 12:35 pm on #849). This doc uses that; Product should say if a routines list wants a separate "Private routine" (open question O1).
+"Private routine" is **not** a literal anywhere in code (`git grep -F` finds none). The label for a routine's title is "Private workout" (`ObjectPrivacy.routineLabel`, decision 12:35 pm on #849). Ruled (Product, decisions 4:20 PM Oct 17, O1): routines read "Private workout" too, one label everywhere.
 
 ## 2. Trap inputs (words only; seed these, then run every row)
 
@@ -90,7 +90,7 @@ Status: **traced** means I read the line on 47365b0 and saw the raw title (or th
 4. **`WorkoutSummary.title`** (`Training/WorkoutSummary.swift:12`) is a raw public property, and only `doneLine(in:)` masks it. Every raw read of `summary.title` is a leak risk; a `shownTitle(in:)` beside `doneLine(in:)` would give callers one call. Core's decision.
 5. **`AppModel.title(of:)`, `App/AppModel.swift:498-503`**, returns `object(id)?.title` for a route; it feeds back-button labels ("Back to <title>", `RoutineEditor.swift:102`) and the breadcrumb. A private routine's title shows there on the next screen.
 6. **`Features/Exercise/ExercisePage.swift:223`**, `Button(routine.title)` in the "add to routine" menu: raw routine titles in a menu.
-7. **`TesseraCore/.../Actions/PlanActions.swift:124`** creates the workout with `title: routine.title`, so a private routine's title is copied into every workout and into the op log. A mask at read time covers display; the log copy is raw. Ruling needed (O3).
+7. **`TesseraCore/.../Actions/PlanActions.swift:124`** creates the workout with `title: routine.title`, so a private routine's title is copied into every workout and into the op log. A mask at read time covers display; the log copy stays raw. Ruled (Product, 4:20 PM, O3): the op log KEEPS the raw title, because masking it would break undo and restore; anything the log shows him (summary, receipt, Day log) masks.
 8. **`RoutinesPage.swift:47`, :187, :190 and `TrainingPage.swift:207`** print `plan.title` (a plan, not a routine). A plan titled with a body weight is the same trap. Not covered by `routineTitle`; no plan-title mask exists. Inferred.
 9. **`ReviewView.swift:74, :132, :187`** print put-away item titles (tasks). A task is masked only if the engine wall rewrote it; a money-shaped task title from another path is raw. Same gap as PT7.
 10. **`NowPage.swift:197` and :232** ("Start with \(first.title)", "Finish \(task.title)") print task titles raw; same task gap.
@@ -98,9 +98,9 @@ Status: **traced** means I read the line on 47365b0 and saw the raw title (or th
 
 ## 5. Open questions
 
-- **O1.** Does a Routines list want "Private routine" as its own label? It does not exist in code. Today every site reads "Private workout".
+- **O1 (ruled).** One label, "Private workout", for routines and workouts. No "Private routine".
 - **O2.** The sweep says the routine's own pages need the rule or an explicit ruling. This doc rules mask (PT29 to PT35). If Product wants the editor hero raw because he is renaming there, PT32 changes to "raw only while the title field is focused".
-- **O3.** Should the op log keep a private routine's title raw (it is his data, on his phone, and exports already mask via `PrivateWords`)? Not decided anywhere I read.
+- **O3 (ruled).** The op log keeps the raw title; anything it shows him masks.
 
 ## 6. What I could not trace
 
