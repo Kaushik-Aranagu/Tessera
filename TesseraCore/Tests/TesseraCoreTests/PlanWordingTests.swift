@@ -431,6 +431,17 @@ struct PlanWordingTests {
         #expect(try !PlanProposalValidator.violations(proposal(line), against: pack).contains("V13"))
     }
 
+    @Test(arguments: ["Private recipe", "Private task", "Private note", "Private item", "private recipe "])
+    func privateLabelsAreNeverATitle(_ title: String) throws {
+        // KC13: the label itself is private, so a walled cook goes as "task", never as "Private recipe".
+        #expect(PlanPack.isPrivate(title, lastWeightKg: nil), "\(title)")
+        var input = PlanInput(now: now, calendar: DayPlanTests.calendar)
+        input.later = [PlanInput.Task(title: title, minutes: 20, updatedAt: now)]
+        let pack = try #require(PlanPack(plan: DayPlanner.plan(input), now: now, calendar: DayPlanTests.calendar,
+                                         calendarKnown: true, restDay: false, lastWeightKg: nil))
+        #expect(!pack.json.localizedCaseInsensitiveContains("Private"), "\(pack.json)")
+    }
+
     @Test(arguments: ["Physio at 5", "Call mom about the lawyer", "Pay Dr Lee"])
     func careMoneyAndPeopleTitlesGoAsTask(_ title: String) throws {
         // QA's walls audit of d6fd9ca: the plan pack uses the Home pack's wall.
