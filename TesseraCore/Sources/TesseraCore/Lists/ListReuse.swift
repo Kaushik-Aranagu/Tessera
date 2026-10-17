@@ -88,9 +88,7 @@ public struct ResetList: EngineAction {
             try transaction.set("isDone", to: .bool(false), on: item)
             try transaction.set("checkedAt", to: nil, on: item)
         }
-        if list.id == Groceries.listID {
-            try transaction.refreshShopLine(at: time ?? .now)
-        }
+        try transaction.refreshRunLine(of: list, at: time ?? .now)
         return done.count
     }
 

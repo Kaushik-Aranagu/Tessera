@@ -83,16 +83,16 @@ public struct ProcessTable {
     // MARK: Housekeeping
 
     /// Suspends the running process if it has been idle: a workout longer than `idleLimit` (the rest time plus
-    /// 10 minutes while backgrounded), a shop longer than `Limits.idleShop` (G44; checking a row resets the clock).
-    /// A shop keeps its basket. Returns the suspended process.
+    /// 10 minutes while backgrounded), a shop or a list run longer than `Limits.idleShop` (G44; checking
+    /// a row resets the clock). A shop or a run keeps its basket. Returns the suspended process.
     @discardableResult
     public func suspendIfIdle(now: Date = .now, idleLimit: TimeInterval) -> ProcessSnapshot? {
         guard let running = running(), let subject = running.subject else { return nil }
         let limit: TimeInterval
         if isWorkout(subject) {
             limit = idleLimit
-        } else if subject.id == Groceries.listID {
-            // The rest-based limit means nothing for a shop; it has its own.
+        } else if subject.id == Groceries.listID || isList(subject) {
+            // The rest-based limit means nothing for a shop or a list run; they have their own.
             limit = Limits.idleShop
         } else {
             return nil
@@ -148,6 +148,11 @@ public struct ProcessTable {
     private func shopBasketCount(_ process: ProcessSnapshot) -> Int? {
         guard let subject = process.subject, subject.id == Groceries.listID else { return nil }
         return ListContents(store: store, classes: engine.classes).items(of: subject).count(where: \.isDone)
+    }
+
+    private func isList(_ object: ObjectRecord) -> Bool {
+        guard let listClass = engine.classes[.list], let classDef = object.classDef else { return false }
+        return ClassResolver.isSubclass(classDef, of: listClass)
     }
 
     private func isWorkout(_ object: ObjectRecord) -> Bool {

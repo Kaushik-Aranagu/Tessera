@@ -196,6 +196,9 @@ public struct AddListItem: EngineAction {
         if let about, !about.isEmpty {
             try transaction.setLinks("about", on: item, to: about.map { try transaction.object($0) })
         }
+        if list.id != Groceries.listID {
+            try transaction.refreshRunLine(of: list)
+        }
         return item
     }
 
@@ -328,6 +331,9 @@ public struct CheckListItem: EngineAction {
         try transaction.set("isDone", to: .bool(isDone), on: item)
         try transaction.set("checkedAt", to: isDone ? .date(time ?? .now) : nil, on: item)
         try transaction.refreshShopLine(for: item, at: time ?? .now)
+        if let list = item.parent, list.id != Groceries.listID {
+            try transaction.refreshRunLine(of: list, at: time ?? .now)
+        }
     }
 
     public func summary(in store: ObjectStore) -> String {
