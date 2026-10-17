@@ -52,12 +52,8 @@ public struct ClaudeTessModel: TessModel {
         // The switch and the key shape are checked here too, not only in `isAvailable` and the router: a direct
         // caller must not skip them (a4-bypass item 3).
         guard sendsMisses(), !looksLikeClaudeKey(request.text) else { return .missed }
-        // The second wall (MU2, Research 138 MW4 and 139): a secret, money or body phrase never leaves, even from the
-        // inbox or a direct caller. The inbox drains through here, so an old item queued before the wall is dropped.
-        guard !SecretWords.mentions(request.text), !PrivateFacts.isWalled(
-            request.text,
-            lastWeightKg: request.lastWeightKg(engine)
-        ) else { return .missed }
+        // His "yes, all but the key": a capture miss goes whole, so no secret, money or body wall runs here. The
+        // key-shape refusal above stays, and the system prompt is checked below.
         // Every round resends the system prompt and the tool definitions with the phrase (QA on #283).
         let system = system(request.context, engine: engine, lastWeightKg: request.lastWeightKg(engine))
         guard !looksLikeClaudeKey(system) else { return .missed }
