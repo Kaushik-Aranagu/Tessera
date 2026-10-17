@@ -61,7 +61,7 @@ Every other row of 75 is unchanged. A screen with no run keeps both ways in, the
 - **Research:** add fixtures for the glance on THE DAYS and on the exercise's HISTORY to BD2. Add a run-end test (the last week rubber-bands and never wraps).
 
 ## Research BL calls (Oct 16, 4:50 PM PT; fixtures/depth-76.md)
-- **Bench numbers come from the formula.** The estimate is master's Epley (SystemCatalog.swift:357): 82.5 × 7 gives about 102 kg for 1. REP MAXES shows the best logged weight at each rep count, and a count with no logged set is estimated from that figure, rounded to 2.5 kg and marked "estimated" ("3 reps, 92.5 kg, estimated"). The study is fixed to match.
+- **Bench numbers come from the formula.** The estimate is master's Epley (SystemCatalog.swift:357): 82.5 × 7 gives about 102 kg for 1. REP MAXES shows the best logged weight at each rep count, and a count with no logged set is estimated from that figure, rounded to 2.5 kg and marked "estimated" ("3 reps, 92.5 kg, estimated"). The 1-rep row is the e1RM itself, to the whole kg, so it matches the glance ("1 rep, 102 kg, estimated"; Research BQ). The study is fixed to match.
 - **The left edge:** the map table rules. From a side it goes to the front, and from a front it leaves.
 - **iOS's full-content back swipe** (a right swipe anywhere goes back) is off on screens the SideHost holds, so the middle keeps its step back. The SideHost owns the left 24 pt through the system's own edge back swipe. Core checks the API name.
 - **THE DAYS:** a day counts when it has a session, a task done or a cook. Notes don't count. "N to go" shows only on the current week. The fullest day is the one with the most tasks done. The foot word is ALL DAYS.
