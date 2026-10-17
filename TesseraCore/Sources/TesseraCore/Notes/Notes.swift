@@ -39,7 +39,11 @@ public struct NoteList {
             return classObject?(classDef) ?? store.classObject(of: classDef)
         }
         return store.context.all(ObjectRecord.self)
-            .filter { !$0.isDeleted && !$0.isClassObject && $0.title.lowercased() == needle }
+            // A private note is never a mention's target: "@Private note" links nothing (board 0ad, PN-MENTION).
+            .filter {
+                !$0.isDeleted && !$0.isClassObject && $0.title.lowercased() == needle
+                    && store.value("isPrivate", of: $0) != .bool(true)
+            }
             .min { $0.createdAt < $1.createdAt }
     }
 

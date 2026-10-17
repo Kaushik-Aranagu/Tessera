@@ -33,6 +33,6 @@ Plan pack: `PlanPack.isPrivate` already calls `PrivateFacts.isWalled` (PlanWordi
 - **R1** `parseBodyFact` runs only after `parseTask` returns nil (TessGrammar.swift:141), so a dated body fact ("headache since tuesday", "knee hurts tomorrow") becomes a task titled with the body fact. It stays on the phone and the plan pack sends it as "task", but it lands in the task list, not a private note.
 - **R2** "bought 2 lemons" is now money-shaped (`spent` + amount) and grammar-isMoney, so it misses instead of reaching Groceries or a note. Product may want the amount rule to need a currency sign or money word when the verb is "bought".
 - **R3** NoteEditor `refusedKey` is never reset, so the key line stays after he keeps typing (NotesView resets it; the editor should match).
-- **R4** `withoutClaudeKeys` (`/(?i)sk-ant-\S*/`) leaves fragments when a pasted key is split by a space or newline. The engine guard still refuses the saved text if the prefix remains, so this is cosmetic.
+- **R4** `withoutClaudeKeys` (a case-insensitive match on the Claude key prefix followed by non-space characters) leaves fragments when a pasted key is split by a space or newline. The engine guard still refuses the saved text if the prefix remains, so this is cosmetic.
 - **R5** The new `claudeKeyLine`/`withoutClaudeKeys` doc comment sits inside `looksLikeClaudeKey`'s comment block in ClaudeKeyGuard.swift (nit).
 - **R6** New symptom words may over-wall: "doesn't hurt to ask", "sore loser", "slept on it". They go private (safe direction), so a miss rather than a leak.

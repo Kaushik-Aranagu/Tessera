@@ -239,13 +239,18 @@ public enum DayStory {
             }
             switch action {
             case "startCooking":
-                guard onDay(record.createdAt, zone: zone(of: record)),
-                      let cook = record.objectIDs.first(where: { lookup.kind(of: $0) == "cook" }),
-                      let finish = cookFinish[cook], seenRoots.insert(cook).inserted
+                // A cook files on the day it was finished, read in the finish's zone, like a done task (Product G2,
+                // trip-week TW4). The row shows the finish time and its length, an hour or more in h and min
+                // ("9:05 am Cooked overnight oats, 6 h 55 min"; Product 2:48 PM PT).
+                guard let cook = record.objectIDs.first(where: { lookup.kind(of: $0) == "cook" }),
+                      let finish = cookFinish[cook], onDay(finish.createdAt, zone: zone(of: finish)),
+                      seenRoots.insert(cook).inserted
                 else { continue }
                 let minutes = Int((finish.createdAt.timeIntervalSince(record.createdAt) / 60).rounded())
-                lines.append((DayLine(time: record.createdAt,
-                                      text: "Cooked \(lookup.title(of: cook) ?? "it"), \(minutes) min",
+                let length = minutes < 60 ? "\(minutes) min"
+                    : minutes % 60 == 0 ? "\(minutes / 60) h" : "\(minutes / 60) h \(minutes % 60) min"
+                lines.append((DayLine(time: finish.createdAt,
+                                      text: "Cooked \(lookup.title(of: cook) ?? "it"), \(length)",
                                       objectIDs: [cook], kind: .finished), false))
             case "startShop":
                 guard onDay(record.createdAt, zone: zone(of: record)), let finish = shopFinish[record.id] else {

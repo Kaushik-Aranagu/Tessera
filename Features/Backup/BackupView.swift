@@ -194,7 +194,7 @@ struct BackupView: View {
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.ink)
                     .fixedSize(horizontal: false, vertical: true)
-                PaintKey(paint: Theme.Colors.live, action: confirmRestore) { _ in
+                PaintKey(paint: Theme.Colors.live, hint: "Restores this backup", action: confirmRestore) { _ in
                     Text("Replace")
                 } meta: {
                     Text("Hold")

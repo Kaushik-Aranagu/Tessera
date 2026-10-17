@@ -1,5 +1,6 @@
 import SwiftUI
 import TesseraCore
+import TesseraTess
 
 // Today on Home (docs/design/today-on-home.md, M2 slices 8 and 9): the queue window under Now. Next, then Later,
 // in one bounded surface with a heading that rolls; swipe right to finish (the strike follows the finger), swipe
@@ -17,6 +18,8 @@ final class TessVoice {
         let id = UUID()
         let text: String
         let undo: OpRecord?
+        /// What UNDO runs besides (or instead of) undoing the op: several ops, or state that isn't an op.
+        var takeBack: (() -> Void)?
 
         static func == (lhs: Note, rhs: Note) -> Bool {
             lhs.id == rhs.id
@@ -26,12 +29,12 @@ final class TessVoice {
     private(set) var note: Note?
 
     /// Shows `text` for 4 s (with UNDO when there's an op to undo).
-    func say(_ text: String, undo: OpRecord? = nil) {
-        let note = Note(text: text, undo: undo)
+    func say(_ text: String, undo: OpRecord? = nil, takeBack: (() -> Void)? = nil) {
+        let note = Note(text: text, undo: undo, takeBack: takeBack)
         self.note = note
         Task { @MainActor in
             // A line with something to take back stays 10 s (M37); a plain line, 4 s.
-            try? await Task.sleep(for: .seconds(undo == nil ? 4 : 10))
+            try? await Task.sleep(for: .seconds(undo == nil && takeBack == nil ? 4 : 10))
             if self.note?.id == note.id {
                 self.note = nil
             }
@@ -470,7 +473,11 @@ private struct QueueRow: View {
             withTesseraAnimation(.spring(Spring(duration: 0.42, bounce: 0.12)), reduceMotion: reduceMotion) {
                 model.touch()
             }
-            voice.say(entry.time == nil ? "Moved to next week." : "Moved to tomorrow.", undo: record)
+            // Thing first with where it went, the way Tess says it (Design on #553): "Stretch, tomorrow 7 am."
+            let moved = model.store.object(id: entry.id).flatMap { model.store.value("startsAt", of: $0)?.dateValue }
+            let when = entry.time == nil ? "next week"
+                : moved.map { TessCaptureEngine.when($0, context: TessContext(now: AppClock.now)) } ?? "tomorrow"
+            voice.say("\(entry.title), \(when).", undo: record)
         }
     }
 }
@@ -486,7 +493,7 @@ extension EnvironmentValues {
 /// Press for 0.2 s without moving, then drag: reports the horizontal travel since the press landed. Built on
 /// `UILongPressGestureRecognizer`, which fails as soon as the finger moves before the press, so it never competes
 /// with a scroll view's pan.
-private struct RowPressDrag: UIGestureRecognizerRepresentable {
+struct RowPressDrag: UIGestureRecognizerRepresentable {
     var isEnabled: Bool
     var began: () -> Void
     var changed: (CGFloat) -> Void

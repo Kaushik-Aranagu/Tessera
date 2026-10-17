@@ -1,3 +1,4 @@
+import AppIntents
 import Foundation
 import FoundationModels
 @testable import TesseraCore
@@ -231,9 +232,34 @@ struct TessTests {
         let objects = store.context.objects.values
         #expect(!objects.contains { $0.title.contains("sk-ant") || $0.title.contains("4417") })
         #expect(objects.contains { $0.title == SecretWords.title })
-        // A task that only names a secret word stays a task.
-        _ = try CreateTaskIntent.add("reset my PIN", startsAt: nil, engine: engine)
-        #expect(store.context.objects.values.contains { $0.title.lowercased() == "reset my pin" })
+        // "reset my PIN" lands as the Ask bar files it: a private note, never read back (Product P14 parity).
+        #expect(try CreateTaskIntent.add("reset my PIN", startsAt: nil, engine: engine) == "Private note, kept.")
+    }
+
+    @Test func siriFilesPrivateThingsTheWayTheBarDoes() throws {
+        // Product P14 (board 0l): one rule for the Bar and Siri; nothing private is read back in his words.
+        #expect(try CreateTaskIntent.add("took advil 400mg", startsAt: nil, engine: engine) == "Private note, kept.")
+        #expect(try CreateTaskIntent.add("$212.37 at Costco", startsAt: nil, engine: engine) == "Private note, kept.")
+        #expect(try CreateTaskIntent.add("headache since tuesday", startsAt: nil, engine: engine)
+            == "Private note, kept.")
+        #expect(try CreateTaskIntent.add("remember my rent is 2100", startsAt: nil, engine: engine)
+            == "I don't keep sums of money.")
+        // Something to do stays a task (W4), read back without its amount.
+        #expect(try CreateTaskIntent.add("pay rent 2100 friday", startsAt: nil, engine: engine) == "Task added.")
+        let titles = store.context.objects.values.map(\.title)
+        #expect(titles.contains { $0.lowercased().hasPrefix("pay rent 2100") })
+        #expect(!titles.contains { $0.contains("advil") || $0.contains("212.37") || $0.contains("headache") })
+        #expect(try CreateTaskIntent.add("call mom", startsAt: nil, engine: engine).lowercased().contains("call mom"))
+        // Siri's writes need Face ID; the Lock Screen's set buttons don't (see SiriParityTests).
+        for policy in [LogSetIntent.authenticationPolicy, StartRoutineIntent.authenticationPolicy,
+                       FinishWorkoutIntent.authenticationPolicy, CreateTaskIntent.authenticationPolicy,
+                       TellTessIntent.authenticationPolicy]
+        {
+            guard case .requiresAuthentication = policy else {
+                Issue.record("a write intent doesn't need Face ID")
+                continue
+            }
+        }
     }
 
     @Test func intentsRunTheSameTypedActions() throws {

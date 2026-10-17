@@ -197,6 +197,13 @@ enum DemoData {
             }
         }
 
+        // Undated tasks, for Plan my day to place (plan-home.md).
+        for (title, minutes) in [("Reply to landlord", 20.0), ("Book physio", 15.0), ("Write the report", 60.0)] {
+            let task = store.create(taskClass, title: title)
+            try? store.set("length", to: .duration(minutes * 60), on: task)
+            try? store.set("isDone", to: .bool(false), on: task)
+        }
+
         let workout = store.create(workoutClass, title: "Push Day A")
         // Today's workout stays inside his day: from 03:10 to 04:00 "in 50 minutes" would land past 04:00, on
         // tomorrow, and Home would have no workout tonight (tonightWorkout() was nil 03:00 to 04:00).

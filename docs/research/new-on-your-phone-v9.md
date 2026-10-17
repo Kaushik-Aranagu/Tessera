@@ -11,6 +11,7 @@ Build a36b161 (pin a36b161b7294596848a319c0cc0fc50a3b25f2ee, Catalog v9).
 - **Groceries** keep each can's size, so two sizes stay two rows; kosher salt, more oils and "salt and black pepper" count as staples.
 - **Private stays private:** secret words, money and body facts never reach Claude, and a Claude key in a note is refused.
 - **Not yet fixed:** in the Notes list a private note still shows its second line, and a note written before this build can still show its first line in the Day log. Linking to a private note from another note can still open it in full, so hold off on @mentioning private notes. All three are first on the list for the next build.
+- **Not yet fixed:** until the next build, type secrets only into the Ask bar, as a plain statement, not a question. Other boxes, such as the Groceries Add line and routine names, don't hide them yet.
 - **Your data:** nothing changes. Save a copy first. Never restore a copy from this build onto the old one.
 
 ## Team appendix: the full list
