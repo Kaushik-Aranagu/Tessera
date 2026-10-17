@@ -138,6 +138,9 @@ private struct ListPage: View {
     @State private var pickHold: CGFloat = 0
     /// The reset's moment: the fold's strikes drain before the items rise back.
     @State private var unpainting = false
+    /// The drain's paint: nil at rest (a plain strike at full secondary ink, readable at every size and in dark mode),
+    /// 1 → 0 only while a reset drains it (QA on #844).
+    @State private var drain: Double?
     /// The option words under the context line (10.5): unfolded in place by a tap, no sheet.
     @State private var optionsOpen = false
     /// Bumped by a real remove; the haptic lives here because the removed row leaves in the same update. It's
@@ -265,18 +268,6 @@ private struct ListPage: View {
                 }
                 .padding(.horizontal, Theme.Spacing.gutter)
                 .padding(.vertical, Theme.Spacing.l)
-                // A tap anywhere outside the option words folds them (10.5); rows and words take their own taps first.
-                .background {
-                    if optionsOpen {
-                        Color.clear
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) {
-                                    optionsOpen = false
-                                }
-                            }
-                    }
-                }
             }
             .scrollIndicators(.hidden)
             // While a pick is up the page dims to 14% with a 2 pt blur (12.2); Reduce Motion keeps the dim, drops the
@@ -284,6 +275,18 @@ private struct ListPage: View {
             .opacity(picking == nil ? 1 : 0.14)
             .blur(radius: picking == nil || reduceMotion ? 0 : 2)
             .allowsHitTesting(picking == nil)
+            // A tap anywhere outside the option words folds them (10.5), down to the foot of a short list too (QA on
+            // #844); rows and words take their own taps first.
+            .background {
+                if optionsOpen {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { optionsOpen = false
+                            }
+                        }
+                }
+            }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if !done.isEmpty {
                     fold(done, name: name, reusable: contents.isReusable(list))
@@ -666,16 +669,21 @@ extension ListPage {
             TessVoice.shared.say(ListsCopy.nothingToReset(name))
             return
         }
-        withTesseraAnimation(
-            reduceMotion ? Theme.Motion.house : .easeInOut(duration: 0.36),
-            reduceMotion: reduceMotion
-        ) {
-            foldOpen = true
-            unpainting = true
+        // One reset at a time: a second call during the drain would reset again with an UNDO that restores nothing.
+        guard !unpainting else { return }
+        unpainting = true
+        foldOpen = true
+        drain = 1
+        Task { @MainActor in
+            withTesseraAnimation(
+                reduceMotion ? Theme.Motion.house : .easeInOut(duration: 0.36),
+                reduceMotion: reduceMotion
+            ) { drain = 0 }
         }
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(reduceMotion ? 0 : 380))
             unpainting = false
+            drain = nil
             guard let record = try? model.engine.perform(ResetList(list: listID, time: AppClock.now), by: .user)
                 .record
             else {
@@ -710,7 +718,7 @@ extension ListPage {
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.inkSecondary)
                         // The strike as paint, so a reset drains it right to left (10.4).
-                        .textRenderer(StrikeRenderer(progress: unpainting ? 0 : 1, color: Theme.Colors.inkSecondary))
+                        .modifier(FoldStrike(drain: drain))
                         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
                     }
                     .buttonStyle(HandleButtonStyle())
@@ -806,6 +814,19 @@ struct PutAwayShelf: Hashable {
             .scrollIndicators(.hidden)
             .background { ThemedBackground() }
             .toolbar(.hidden, for: .navigationBar)
+        }
+    }
+}
+
+/// A done item's strike in the fold: a plain strike at rest; the drain's paint only while a reset un-paints it.
+private struct FoldStrike: ViewModifier {
+    let drain: Double?
+
+    func body(content: Content) -> some View {
+        if let drain {
+            content.textRenderer(StrikeRenderer(progress: drain, color: Theme.Colors.inkSecondary))
+        } else {
+            content.strikethrough()
         }
     }
 }
