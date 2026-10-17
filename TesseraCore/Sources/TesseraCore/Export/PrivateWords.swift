@@ -169,9 +169,13 @@ extension TesseraBackup {
             }
             // An action whose own summary holds a private word goes too ("Pay Dr Lee 120").
             let summaries = try Row.fetchAll(db, sql: "SELECT id, summary FROM op")
+            // Summaries repeat ("Logged bench press 82.5 × 8"): each distinct line is judged once.
+            var judged: [String: Bool] = [:]
             for row in summaries {
                 let summary: String = row["summary"]
-                if PrivateWords.isPrivateText(summary, lastWeightKg: lastKg) {
+                let isPrivate = judged[summary] ?? PrivateWords.isPrivateText(summary, lastWeightKg: lastKg)
+                judged[summary] = isPrivate
+                if isPrivate {
                     try db.execute(sql: "DELETE FROM op WHERE id = ?", arguments: [row["id"] as String])
                 }
             }
