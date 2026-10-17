@@ -492,13 +492,27 @@ public struct AddGroceries: EngineAction {
     /// A medicine or body line is never said back (#688): it reads "Private item".
     @MainActor
     private func shown(_ line: String, in store: ObjectStore) -> String {
-        EngineWall.isHealth(line, lastWeightKg: BodyWeight.lastKg(in: store)) ? "Private item" : line
+        EngineWall.isHealth(line, lastWeightKg: BodyWeight.lastKg(in: store)) || AddListItem
+            .kept(line, store: store) == nil
+            ? "Private item" : line
     }
 
     /// The lines as the wall keeps them: price off, walled lines gone.
     @MainActor
     public static func kept(_ lines: [String], store: ObjectStore) -> [String] {
-        lines.compactMap { AddListItem.kept($0.trimmingCharacters(in: .whitespacesAndNewlines), store: store) }
+        let book = IngredientBook(store: store, classes: PrivateWords.systemClasses(in: store.context))
+        return lines.compactMap { line in
+            let given = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            // An ingredient he already has goes through whatever its name (a Pantry swipe; QA on #763): nothing new
+            // is written, and it is said as "Private item".
+            if let existing = book.find(given),
+               IngredientLine.key(for: existing.title) == IngredientLine.key(for: given),
+               !looksLikeClaudeKey(given)
+            {
+                return AddListItem.kept(given, store: store) ?? given
+            }
+            return AddListItem.kept(given, store: store)
+        }
     }
 
     @MainActor

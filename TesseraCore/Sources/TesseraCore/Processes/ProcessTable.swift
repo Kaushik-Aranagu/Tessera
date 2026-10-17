@@ -12,6 +12,8 @@ public struct ProcessTable {
         public static let putAway: TimeInterval = 7 * 86400
         /// A suspended workout this old is wrapped up with what was logged.
         public static let wrapUpWorkout: TimeInterval = 6 * 3600
+        /// A running shop untouched this long (overnight) is suspended as the system, basket kept (G44).
+        public static let idleShop: TimeInterval = 12 * 3600
     }
 
     public let engine: ActionEngine
@@ -80,13 +82,22 @@ public struct ProcessTable {
 
     // MARK: Housekeeping
 
-    /// Suspends the running process if it has been idle longer than `idleLimit`
-    /// (the rest time plus 10 minutes while backgrounded). Returns the suspended process.
+    /// Suspends the running process if it has been idle: a workout longer than `idleLimit` (the rest time plus
+    /// 10 minutes while backgrounded), a shop longer than `Limits.idleShop` (G44; checking a row resets the clock).
+    /// A shop keeps its basket. Returns the suspended process.
     @discardableResult
     public func suspendIfIdle(now: Date = .now, idleLimit: TimeInterval) -> ProcessSnapshot? {
-        // Only workouts go idle this way (the rest-based limit means nothing for a shop, a cook or a task).
-        guard let running = running(), let subject = running.subject, isWorkout(subject),
-              running.idle(at: now) > idleLimit else { return nil }
+        guard let running = running(), let subject = running.subject else { return nil }
+        let limit: TimeInterval
+        if isWorkout(subject) {
+            limit = idleLimit
+        } else if subject.id == Groceries.listID {
+            // The rest-based limit means nothing for a shop; it has its own.
+            limit = Limits.idleShop
+        } else {
+            return nil
+        }
+        guard running.idle(at: now) > limit else { return nil }
         _ = try? engine.perform(SuspendProcess(process: running.id, time: running.lastTouchedAt), by: .system)
         return running
     }
@@ -107,23 +118,36 @@ public struct ProcessTable {
     public func tidyNotes(now: Date = .now) -> [Note] {
         var notes: [Note] = []
         var putAway = 0
+        var shopNotes: [Note] = []
         for process in all() where process.state == .suspended {
             let idle = process.idle(at: now)
             if let workout = process.subject, isWorkout(workout), idle >= Limits.wrapUpWorkout {
                 notes.append(wrapUp(process, workout: workout))
             } else if idle >= Limits.putAway {
+                let basket = shopBasketCount(process)
                 if (try? engine.perform(EndProcess(process: process.id, reason: .putAway, time: now), by: .system)) !=
                     nil
                 {
-                    putAway += 1
+                    if let basket, basket > 0 {
+                        shopNotes.append(Note(line: "Shopping moved to Later. \(basket) in the basket.", undo: nil))
+                    } else {
+                        putAway += 1
+                    }
                 }
             }
         }
+        notes += shopNotes
         if putAway > 0 {
             let things = putAway == 1 ? "One thing" : "\(spelled(putAway).capitalized) things"
             notes.append(Note(line: "\(things) moved to Later.", undo: nil))
         }
         return notes
+    }
+
+    /// The checked rows in a shop's basket; nil when the process is not the shop. Rows are never dropped.
+    private func shopBasketCount(_ process: ProcessSnapshot) -> Int? {
+        guard let subject = process.subject, subject.id == Groceries.listID else { return nil }
+        return ListContents(store: store, classes: engine.classes).items(of: subject).count(where: \.isDone)
     }
 
     private func isWorkout(_ object: ObjectRecord) -> Bool {
