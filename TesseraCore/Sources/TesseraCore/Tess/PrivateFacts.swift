@@ -220,7 +220,8 @@ public enum PrivateFacts {
         let crossed = lower.replacing(/\d+(?:[.,]\d+)?\s*(?:kg|kgs|lb|lbs)?\s*[x×]\s*\d+(?:\s*reps?\b)?/, with: " ")
         // "for" and "by" are a set only with reps after, or a lift named: "bench 80 for 8", "80 for 8 reps".
         // "weighed 82 kg for 3 days" is not (QA on #644).
-        let lifted = words(crossed).contains(where: liftNames.contains)
+        // A set already written as N x M makes "80 for 8" beside it part of the set too (QA low on #644).
+        let lifted = words(crossed).contains(where: liftNames.contains) || crossed != lower
         let forms = lifted ? crossed.replacing(
             /\b\d{1,3}(?:[.,]\d+)?\s*(?:kg|kgs|lb|lbs)?\s*(?:for|by)\s*\d{1,2}\b(?:\s*reps?\b)?/,
             with: " "
@@ -232,11 +233,17 @@ public enum PrivateFacts {
         word.first?.isNumber == true
     }
 
-    /// How many numbers sit within two words of a real lift name.
+    /// How many numbers sit right beside a real lift name: just after it ("bench 82.4"), or just before it with at
+    /// most a unit between ("82 kg squat"). "bench day 82.4 kg" is not (QA low on #644).
     static func numbersBesideALift(_ words: [String]) -> Int {
         words.indices.count { index in
-            isNumberWord(words[index]) && words[max(0, index - 2) ... min(words.count - 1, index + 2)]
-                .contains(where: liftNames.contains)
+            guard isNumberWord(words[index]) else { return false }
+            let before = index > 0 && liftNames.contains(words[index - 1])
+            var next = index + 1
+            if next < words.count, bodyUnits.contains(words[next]) {
+                next += 1
+            }
+            return before || (next < words.count && liftNames.contains(words[next]))
         }
     }
 
