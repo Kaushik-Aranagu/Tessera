@@ -206,7 +206,12 @@ public struct AddListItem: EngineAction {
         let last = BodyWeight.lastKg(in: store)
         // A measure is never money: "1.25 cups flour" (a cooking unit right after two places; never kg or lb).
         let measured = bare.replacing(
-            /(?i)\b\d+[.,]\d{2}\s*(?:cups?|tbsps?|tablespoons?|tsps?|teaspoons?|g|grams?|ml|cl|dl|l|liters?|litres?|oz|ounces?|pints?|pt|quarts?|qt|gallons?|gal|sticks?)\s+(?!(?:at|for|from|on)\b)[a-z]/,
+            #/
+            (?i) \b \d+ [.,] \d{2} \s*
+            (?: cups? | tbsps? | tablespoons? | tsps? | teaspoons? | g | grams? | ml | cl | dl | l | liters? | litres?
+              | oz | ounces? | pints? | pt | quarts? | qt | gallons? | gal | sticks? )
+            \s+ (?! (?: at | for | from | on ) \b ) [a-z]
+            /#,
             // Only with the thing after it (QA on #776): "1.25 cups flour" is a measure; "milk 3.49 gallon" is a price.
             with: "1 x"
         )
