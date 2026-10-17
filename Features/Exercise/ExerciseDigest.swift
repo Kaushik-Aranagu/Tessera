@@ -103,7 +103,10 @@ struct ExerciseDigest {
 
     static func trend(_ values: [(Date, Double)], now: Date, calendar: Calendar) -> Trend? {
         guard let first = values.first, let last = values.last else { return nil }
-        let days = max(Int((now.timeIntervalSince(first.0) / 86400).rounded(.up)), 1)
+        // Calendar days between his 4 am days, not 24 h blocks: a span over a clock change stays whole days.
+        let tessera = TesseraDay(calendar: calendar)
+        let gap = calendar.dateComponents([.day], from: tessera.day(of: first.0), to: tessera.day(of: now)).day ?? 0
+        let days = max(gap, 1)
         let span = days >= 85 ? "90 days" : "\(days) \(days == 1 ? "day" : "days")"
         let delta = ((last.1 - first.1) * 10).rounded() / 10
         let change: String? = values.count > 1
