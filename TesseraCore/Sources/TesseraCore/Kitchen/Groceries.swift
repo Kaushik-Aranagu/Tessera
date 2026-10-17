@@ -303,7 +303,11 @@ extension Transaction {
             // A row for an ingredient he already has: its name was walled (or not) where he typed it, so the row is
             // made directly. AddListItem's wall would turn a walled name into a note and the share write below would
             // throw (unknownField "shares").
-            try createGroceryRow(text, section: section, in: list)
+            // A secret word never sits on the list in his words, from any path (QA on #773): the row is titled
+            // "Private item", the way a typed secret line is refused.
+            // One rule with a typed line (QA on #775): "pins" and "combination" stay; "wifi password" doesn't.
+            try createGroceryRow(SecretWords.isSecretListLine(text) ? "Private item" : text,
+                                 section: section, in: list)
         }
         var shares = GroceryShare.decode(store.value("shares", of: item)?.stringValue)
         var share = share

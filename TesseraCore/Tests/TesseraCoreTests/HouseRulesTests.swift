@@ -110,4 +110,35 @@ struct HouseRulesTests {
         #expect(Self.violations(in: redirects, file: "ClaudeKey.swift") == [2])
         #expect(Self.violations(in: redirects, file: Self.redirectsFile).isEmpty)
     }
+
+    // MARK: File protection (QA low on #674)
+
+    /// Lines that set a store's file protection to anything but complete protection. Tests may opt out (a locked Mac
+    /// refuses protected writes); the app never does.
+    static func protectionViolations(in source: String) -> [Int] {
+        source.components(separatedBy: .newlines).enumerated().compactMap { index, line in
+            guard line.contains("fileProtection"),
+                  line.firstMatch(of: /fileProtection\s*[=:]/) != nil else { return nil }
+            let allowed = line.contains(".completeFileProtection") || line
+                .contains("self.fileProtection = fileProtection")
+            return allowed ? nil : index + 1
+        }
+    }
+
+    @Test func onlyTestsTurnFileProtectionOff() throws {
+        var found: [String] = []
+        for file in try Self.swiftFiles() {
+            let source = try String(contentsOf: file, encoding: .utf8)
+            found += Self.protectionViolations(in: source).map { "\(file.lastPathComponent):\($0)" }
+        }
+        #expect(found.isEmpty, "\(found)")
+    }
+
+    @Test func theProtectionScanSeesAnOptOut() {
+        #expect(Self.protectionViolations(in: "job.fileProtection = []") == [1])
+        #expect(Self.protectionViolations(in: "TessMemoryStore(engine: e, fileProtection: [])") == [1])
+        #expect(Self
+            .protectionViolations(in: "public var fileProtection: Data.WritingOptions = .completeFileProtection")
+            .isEmpty)
+    }
 }
