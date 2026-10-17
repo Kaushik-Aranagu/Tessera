@@ -235,7 +235,7 @@ struct PasteRecipe: View {
     }
 }
 
-/// Pinned at the bottom: Save (tap), or once saved "Carbonara saved." with Undo.
+/// Pinned at the bottom: Save (tap), or once saved "Carbonara, on Recipes." with Undo.
 private struct SaveBar: View {
     let saved: Bool
     let title: String
@@ -246,7 +246,7 @@ private struct SaveBar: View {
     var body: some View {
         if saved {
             HStack(alignment: .firstTextBaseline) {
-                Text("\(title) saved.")
+                Text(RecipeCopy.saved(title))
                     .font(Theme.voice)
                     .foregroundStyle(Theme.Colors.tess)
                 Spacer()
