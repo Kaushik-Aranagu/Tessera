@@ -207,7 +207,8 @@ private struct GroceriesPage: View {
         }
         .onPreferenceChange(RowCenters.self) { rowCenters = $0 }
         .sensoryFeedback(.impact(weight: .light), trigger: landed)
-        .sensoryFeedback(.success, trigger: finished)
+        // The shop finished is .done in the house map; never a raw sensoryFeedback (Haptics.swift).
+        .tesseraFeedback(.done, trigger: finished)
     }
 
     @State private var rowCenters: [UUID: CGPoint] = [:]
@@ -274,10 +275,14 @@ private struct GroceriesPage: View {
                     }
                 }
             }
+            let checked = try? model.engine.perform(CheckListItem(item: item.id, time: AppClock.now), by: .user)
             withTesseraAnimation(.smooth(duration: 0.28), reduceMotion: reduceMotion) {
-                _ = try? model.engine.perform(CheckListItem(item: item.id, time: AppClock.now), by: .user)
                 striking.remove(item.id)
                 model.touch()
+            }
+            // A refused check: the row stays on the list and Tess says so (ER11).
+            if checked == nil {
+                GroceriesCopy.sayDidntSave()
             }
             try? await Task.sleep(for: .milliseconds(520))
             sinking.removeAll { $0.id == item.id }
@@ -288,9 +293,10 @@ private struct GroceriesPage: View {
     }
 
     private func uncheck(_ item: ListContents.Item) {
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
-            _ = try? model.engine.perform(CheckListItem(item: item.id, done: false), by: .user)
-            model.touch()
+        let unchecked = try? model.engine.perform(CheckListItem(item: item.id, done: false), by: .user)
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
+        if unchecked == nil {
+            GroceriesCopy.sayDidntSave()
         }
     }
 
@@ -303,18 +309,23 @@ private struct GroceriesPage: View {
             model.touch()
             if let result {
                 TessVoice.shared.say("Cleared \(count) from the basket.", undo: result.record)
+            } else {
+                GroceriesCopy.sayDidntSave()
             }
         }
     }
 
     private func toggleShop() {
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
-            if let shop = groceries.shop(in: model.engine), shop.state == .running {
-                _ = try? model.engine.perform(SuspendProcess(process: shop.id), by: .user)
+            let wrote = if let shop = groceries.shop(in: model.engine), shop.state == .running {
+                (try? model.engine.perform(SuspendProcess(process: shop.id), by: .user)) != nil
             } else {
-                _ = try? model.engine.perform(StartShop(), by: .user)
+                (try? model.engine.perform(StartShop(), by: .user)) != nil
             }
             model.touch()
+            if !wrote {
+                GroceriesCopy.sayDidntSave()
+            }
         }
     }
 
@@ -484,8 +495,8 @@ private struct GroceryRow: View {
                         + Text(name ?? GroceriesCopy.name(item)).fontWeight(.regular))
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.ink)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
+                        // A long name wraps, never cut (K36.19, the AX rule).
+                        .fixedSize(horizontal: false, vertical: true)
                         .textRenderer(StrikeRenderer(progress: isStriking ? 1 : 0, color: Theme.Colors.ink))
                     Spacer(minLength: Theme.Spacing.s)
                     if !recipes.isEmpty {
@@ -731,6 +742,13 @@ private struct GroceriesEmpty: View {
 }
 
 enum GroceriesCopy {
+    static let didntSave = "Didn't save that. Try again."
+
+    /// A refused write on Groceries says so; nothing scolds, so there is no warning haptic (ER11, Haptics.swift).
+    @MainActor static func sayDidntSave() {
+        TessVoice.shared.say(didntSave)
+    }
+
     /// Finishing the shop: the engine's receipt and its record, or the failure line with nothing to undo.
     @MainActor static func finish(engine: ActionEngine) -> (line: String, undo: OpRecord?) {
         finish { try? engine.perform(FinishShop(), by: .user).record }
@@ -738,7 +756,7 @@ enum GroceriesCopy {
 
     @MainActor static func finish(_ perform: () -> OpRecord?) -> (line: String, undo: OpRecord?) {
         guard let record = perform() else {
-            return ("Didn't save that. Try again.", nil)
+            return (didntSave, nil)
         }
         let receipt = record.receipt ?? "Shopping, finished"
         return (receipt.hasSuffix(".") ? receipt : receipt + ".", record)
