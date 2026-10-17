@@ -170,6 +170,32 @@ struct HomeDoneWordingTests {
         #expect(HomeStub.requests.isEmpty)
     }
 
+    @Test func homeLinesStopAtFortyCallsInAHouseDay() async throws {
+        HomeStub.reply = (200, Self.reply(context: "7:40 pm, a bench best", detail: nil))
+        func record(_ count: Int, at time: Date, use: TessUse = .lines) {
+            for _ in 0 ..< count {
+                ledger.record(use: use, model: ClaudeHomeDone.model, input: 0, output: 0, costNano: 1, latency: 0,
+                              outcome: "works", requestID: nil, at: time)
+            }
+        }
+        let now = Self.ended.addingTimeInterval(600) // 7:50 pm Thursday
+        // Yesterday's calls (before 04:00 today), other jobs' and a fortieth of nothing do not count.
+        record(40, at: Self.calendar.date(from: DateComponents(year: 2026, month: 10, day: 15, hour: 3))!)
+        record(40, at: now, use: .capture)
+        record(39, at: now)
+        #expect(job().callsToday() == 39)
+        #expect(await job().words(for: Self.line(), dayLabel: "Thursday evening", store: store) != nil)
+        #expect(HomeStub.requests.count == 1)
+        // That call made forty. The next finish waits for tomorrow.
+        #expect(job().callsToday() == ClaudeHomeDone.dailyCeiling)
+        #expect(await job().words(for: Self.line("Pull B"), dayLabel: "Thursday evening", store: store) == nil)
+        #expect(HomeStub.requests.count == 1)
+        // The next house day opens again.
+        let next = job()
+        next.now = { Self.ended.addingTimeInterval(86400) }
+        #expect(next.callsToday() == 0)
+    }
+
     @Test func offlineTriesAgainButATimeoutNever() async throws {
         HomeStub.failure = .notConnectedToInternet
         let job = job()
