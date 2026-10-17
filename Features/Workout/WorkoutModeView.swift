@@ -90,15 +90,15 @@ private struct WorkoutContent: View {
                     VStack(spacing: 0) {
                         WorkoutFinishView(
                             strokes: sessionStrokes,
-                            title: session.workout.title,
+                            title: ObjectPrivacy.routineTitle(session.workout.title, in: model.store),
                             startedAt: session.startedAt,
                             endedAt: finished,
                             summary: session.summary,
                             onGathered: {
                                 // A take-back inside the gather leaves nothing to sum up.
                                 guard session.finishedAt != nil else { return }
-                                // Tess's count line from Core's summary: "5 of 5 exercises, 16 sets, 1 best."
-                                summaryLine = model.ledger.summary(of: session.workout).line
+                                // Tess's count line from Core's summary: "Push Day A done, 5 of 5 exercises."
+                                summaryLine = model.ledger.summary(of: session.workout).doneLine(in: model.store)
                                 soul.handle(.workoutGathered)
                             },
                             onDone: leaveFinished
@@ -108,7 +108,7 @@ private struct WorkoutContent: View {
                             mode: soul.mode,
                             // LOG … AND FINISH keeps a 10 s UNDO that takes back the set and the finish together.
                             canUndo: session.canTakeBackFinish(at: now),
-                            eyes: model.tessHasEyes,
+                            eyes: model.tessHasEyes, wear: soul.wear(at:),
                             // The line (and its UNDO) stays for the whole 10 s window.
                             holdsLine: session.canTakeBackFinish(at: now),
                             onUndo: {
@@ -257,7 +257,7 @@ private struct WorkoutContent: View {
             LiveTessCorner(line: askReply ?? WorkoutLines.tess(session, phase: phase, summary: summaryLine),
                            mode: soul.mode,
                            canUndo: session.canUndoLast && !session.isEditing,
-                           eyes: model.tessHasEyes,
+                           eyes: model.tessHasEyes, wear: soul.wear(at:),
                            holdsLine: askReply == nil && phase == .workoutDone,
                            onUndo: {
                                withTesseraAnimation(reduceMotion: reduceMotion) { session.undoLast() }
@@ -584,7 +584,9 @@ extension WorkoutContent {
 
     private var lastReps: Int? {
         guard let entry = session.currentEntry else { return nil }
-        return session.setRows(of: entry).last.map { Int($0.reps) } ?? session.lastTimeReps.map(Int.init)
+        // `Int(Double)` traps on NaN, infinity or a huge value, so both reads go through the safe conversion.
+        let logged = session.setRows(of: entry).last.flatMap { RecipeLimits.whole($0.reps) }
+        return logged ?? session.lastTimeReps.flatMap(RecipeLimits.whole)
     }
 }
 

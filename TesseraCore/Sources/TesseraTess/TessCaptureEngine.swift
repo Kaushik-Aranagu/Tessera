@@ -232,19 +232,18 @@ public final class TessCaptureEngine: TessCapturing {
                 return TessCapture(records: [], line: ask.line, source: .grammar, asking: .datedLift(ask))
             default: break
             }
-            // The rest weekday already set changes nothing: the line, no new op, no UNDO (S17).
-            if case let .setRestWeekday(weekday) = parse,
-               RestWeekday.current(in: engine.store) == weekday
-            {
-                return TessCapture(records: [], line: RestWeekday.receipt(for: weekday), source: .grammar,
-                                   asking: .line)
+            if let unchanged = unchangedCapture(parse) {
+                return unchanged
             }
             // A bare thing already on Groceries changes nothing: the line, with no ghost and no UNDO (QA S1 on #316).
             if case let .groceries(lines) = parse, lines.count == 1, let line = IngredientLine.parse(lines[0]),
                line.amount == nil, line.unit == nil,
                Groceries(store: engine.store, classes: engine.classes).isOn(line.name)
             {
-                let name = lines[0].prefix(1).uppercased() + lines[0].dropFirst()
+                // The wall first (QA on #763): a second "lexapro" is "Private item, already on Groceries."
+                let hidden = EngineWall.isHealth(lines[0], lastWeightKg: BodyWeight.lastKg(in: engine.store))
+                    || AddListItem.kept(lines[0], store: engine.store) == nil
+                let name = hidden ? "Private item" : lines[0].prefix(1).uppercased() + lines[0].dropFirst()
                 return TessCapture(records: [], line: "\(name), already on Groceries.", source: .grammar,
                                    asking: .line)
             }
@@ -348,13 +347,36 @@ public final class TessCaptureEngine: TessCapturing {
         }
     }
 
+    /// A parse that would change nothing: the line, with no new op and no UNDO. The rest weekday already set (S17);
+    /// a list name that is already a list (G40).
+    private func unchangedCapture(_ parse: TessGrammar.Parse) -> TessCapture? {
+        if case let .setRestWeekday(weekday) = parse, RestWeekday.current(in: engine.store) == weekday {
+            return TessCapture(records: [], line: RestWeekday.receipt(for: weekday), source: .grammar, asking: .line)
+        }
+        if case let .list(name) = parse,
+           CreateList.existing(named: name, in: engine.store, classes: engine.classes) != nil
+        {
+            return TessCapture(records: [], line: "\(Self.listName(name, store: engine.store)), already a list.",
+                               source: .grammar, asking: .line)
+        }
+        return nil
+    }
+
     private func performKitchen(_ parse: TessGrammar.Parse, pending: Bool,
                                 context: TessContext) throws -> (OpRecord, String)
     {
         switch parse {
         case let .groceries(lines):
             let record = try engine.perform(AddGroceries(lines: lines), by: .tess, pending: pending).record
-            let name = lines.first.map { $0.prefix(1).uppercased() + $0.dropFirst() } ?? ""
+            // Said as the wall kept them: "buy milk 4.99" is "Milk, on Groceries." (Product 8:40 AM PT Oct 17).
+            let lines = AddGroceries.kept(lines, store: engine.store)
+            // The wall before the already-on line (QA on #763): a second "lexapro" is a "Private item" too.
+            let hidden = lines.count == 1 && (EngineWall.isHealth(
+                lines[0],
+                lastWeightKg: BodyWeight.lastKg(in: engine.store)
+            )
+                || AddListItem.kept(lines[0], store: engine.store) == nil)
+            let name = hidden ? "Private item" : lines.first.map { $0.prefix(1).uppercased() + $0.dropFirst() } ?? ""
             // One bare thing already on: nothing new was made ("Chickpeas, already on Groceries.").
             let made = record.ops.contains {
                 if case .create = $0 {
@@ -366,15 +388,24 @@ public final class TessCaptureEngine: TessCapturing {
             if lines.count == 1, !made {
                 return (record, "\(name), already on Groceries.")
             }
-            return (record, lines.count == 1 ? "\(name), on the list." : "\(lines.count) things on the list.")
+            // The list by name (Product 10:06 PM PT, lists copy sweep); a medicine or body line is never said back.
+            if hidden {
+                return (record, "Private item, on Groceries.")
+            }
+            return (record, lines.count == 1 ? "\(name), on Groceries." : "\(lines.count) things on Groceries.")
         case let .cook(recipe, date?):
+            // A private recipe never lends its name to the task title or the receipt (gap hunt G21).
+            let hidden = ObjectPrivacy.label(of: recipe, in: engine.store, classes: engine.classes)
             let record = try engine.perform(
-                CreateTask(title: "Cook \(recipe.title.lowercased())", startsAt: date, about: [recipe.id]),
+                CreateTask(title: hidden ?? "Cook \(recipe.title.lowercased())", startsAt: date, about: [recipe.id]),
                 by: .tess, pending: pending
             ).record
-            return (record, "\(recipe.title), \(Self.when(date, context: context)).")
+            return (record, "\(hidden ?? recipe.title), \(Self.when(date, context: context)).")
         case let .cook(recipe, nil):
             let record = try engine.perform(StartCooking(recipe: recipe.id), by: .tess, pending: pending).record
+            if let hidden = ObjectPrivacy.label(of: recipe, in: engine.store, classes: engine.classes) {
+                return (record, "\(hidden), cooking.")
+            }
             return (record, "Cooking \(recipe.title.lowercased()).")
         case let .timer(label, minutes):
             let cook = ProcessTable(engine: engine).running()?.subject
@@ -384,7 +415,12 @@ public final class TessCaptureEngine: TessCapturing {
             return (record, "\(label), \(TessVoice.number(minutes)) min.")
         case let .list(name):
             let record = try engine.perform(CreateList(name: name), by: .tess, pending: pending).record
-            return (record, "New list: \(name).")
+            // A repeat name opens the list that is there: nothing was made (G40).
+            let shown = Self.listName(name, store: engine.store)
+            if CreateList.wasRepeat(record) {
+                return (record, "\(shown), already a list.")
+            }
+            return (record, "\(shown), new list.")
         case .shop:
             let record = try engine.perform(StartShop(), by: .tess, pending: pending).record
             let line = Groceries(store: engine.store, classes: engine.classes).shoppingLine()
@@ -407,7 +443,7 @@ public final class TessCaptureEngine: TessCapturing {
         case let .recipe(text):
             let record = try engine.perform(CreateRecipe(text: text), by: .tess, pending: pending).record
             let parsed = RecipeParser.parse(text)
-            let timers = parsed?.steps.flatMap(\.timers).count ?? 0
+            let timers = parsed?.steps.flatMap(\.offeredTimers).count ?? 0
             let parts = [
                 "\(parsed?.ingredients.count ?? 0) ingredients", "\(parsed?.steps.count ?? 0) steps",
             ] + (timers > 0 ? ["\(timers) \(timers == 1 ? "timer" : "timers")"] : [])
@@ -421,6 +457,12 @@ public final class TessCaptureEngine: TessCapturing {
     /// other names stay whole.
     static func shortName(_ name: String) -> String {
         ["Bench Press": "Bench", "Back Squat": "Squat"][name] ?? name
+    }
+
+    /// A list's name as Tess says it: "Private list" for a walled name (QA on #771).
+    @MainActor
+    static func listName(_ name: String, store: ObjectStore) -> String {
+        ObjectPrivacy.isPrivateWord(name, in: store) ? "Private list" : name
     }
 
     /// What Tess says for a task whose title is private: its day, never its words.
@@ -460,6 +502,10 @@ public final class TessCaptureEngine: TessCapturing {
 
     static func line(for error: any Error) -> String {
         if case let ActionError.invalidArguments(_, reason) = error {
+            // A running workout is never suspended from the Bar: the refusal is the line itself (G56, QA on #788).
+            if reason == StartCooking.workoutRunningReason {
+                return StartCooking.workoutRunningLine
+            }
             return "Didn't save that. \(reason.prefix(1).uppercased() + reason.dropFirst())."
         }
         return "Didn't save that. Tap to retry."

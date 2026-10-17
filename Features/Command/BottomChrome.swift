@@ -219,7 +219,8 @@ struct BottomChrome: View {
     /// The soul at 0.72, breathing 1 ↔ 1.08 over 3.2 s; tap opens, hold opens, double tap goes Home.
     private var soulKey: some View {
         TessSoul(mode: model.tessMode, hostScale: 0.72, eyes: model.tessHasEyes, gaze: model.soul.gaze,
-                 wake: model.soul.wake)
+                 wake: model.soul.wake, stroke: model.soul.stroke, strokeBlink: model.soul.strokeBlink,
+                 beat: model.soul.beat, wear: model.soul.wear(at:)) { model.soul.placeDock($0) }
             .scaleEffect(0.72)
             .scaleEffect(breathe ? 1.08 : 1)
             .tesseraAnimation(.easeInOut(duration: 3.2).repeatForever(autoreverses: true), value: breathe)
@@ -732,7 +733,7 @@ extension BottomChrome {
         replyCount += 1
         let shown = replyCount
         Task { @MainActor in
-            try? await Task.sleep(for: .seconds(4))
+            try? await Task.sleep(for: TessVoice.hold(undo: canUndo, holds: .seconds(4)))
             guard replyCount == shown else { return }
             withTesseraAnimation(reduceMotion: reduceMotion) { reply = nil }
         }
@@ -757,8 +758,25 @@ extension BottomChrome {
             model.touch()
             undos += 1
             withTesseraAnimation(reduceMotion: reduceMotion) { voice.clear() }
+            // UNDO says what it took back, thing first: "Tacos, taken back." (K36.2, Product 10:55). A take-back
+            // closure speaks its own line.
+            if note.undo != nil, note.takeBack == nil {
+                let line = UndoCopy.takenBack(after: note.text)
+                Task { @MainActor in voice.say(line) }
+            }
         } else {
             model.undoLastCapture()
         }
+    }
+}
+
+/// What UNDO says once it has taken something back.
+enum UndoCopy {
+    /// The receipt's thing, then "taken back": "Tacos, 7 added." → "Tacos, taken back."; "Private item, on
+    /// Groceries." → "Private item, taken back.". A line with no thing first reads "Taken back."
+    static func takenBack(after receipt: String) -> String {
+        guard let comma = receipt.range(of: ", ") else { return "Taken back." }
+        let thing = receipt[..<comma.lowerBound].trimmingCharacters(in: .whitespaces)
+        return thing.isEmpty ? "Taken back." : "\(thing), taken back."
     }
 }

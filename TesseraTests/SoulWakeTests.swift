@@ -49,7 +49,12 @@ struct SoulWakeTests {
         let night = SoulRouter(clock: { clock.now }, wakeStore: store)
         night.handle(.foregrounded(underLive: false))
         #expect(night.wake == nil)
+        // 04:01 is his new day, but still quiet hours: the wake waits for 07:00.
         clock.now = at(4, 1)
+        let early = SoulRouter(clock: { clock.now }, wakeStore: store)
+        early.handle(.foregrounded(underLive: false))
+        #expect(early.wake == nil)
+        clock.now = at(7, 1)
         let morning = SoulRouter(clock: { clock.now }, wakeStore: store)
         morning.handle(.foregrounded(underLive: false))
         #expect(morning.wake != nil)
@@ -64,6 +69,16 @@ struct SoulWakeTests {
         let later = SoulRouter(clock: { clock.now }, wakeStore: store)
         later.handle(.foregrounded(underLive: false))
         #expect(later.wake == nil)
+    }
+
+    /// QA R1 on #558: a cold launch straight into the live workout gives the wake up (the day still counts).
+    @Test func theLiveWorkoutCutsAWakeInProgress() {
+        let clock = Clock(at(9, 0))
+        let soul = SoulRouter(clock: { clock.now }, wakeStore: freshStore())
+        soul.handle(.foregrounded(underLive: false))
+        #expect(soul.wake != nil)
+        soul.handle(.liveOpened)
+        #expect(soul.wake == nil)
     }
 
     @Test func eyesShutThenOpenThenOneBlink() {

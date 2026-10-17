@@ -11,7 +11,7 @@ struct PlanWordingOffTests {
     let model: AppModel
 
     init() {
-        model = AppModel(context: container.mainContext)
+        model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         DemoData.prepare(model)
         model.settingsAreReal = true
     }

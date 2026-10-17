@@ -1,4 +1,5 @@
 import SwiftUI
+import TesseraCore
 
 /// The serving size as a drum: the reps drum's sibling on paper. Numbers in a vertical snap scroll, no box; the
 /// centre one large in ink, its neighbours small and dim, the ends fading out. "serves" sits under it.
@@ -8,14 +9,23 @@ struct PortionDrum: View {
     var isEnabled = true
     var range: ClosedRange<Int> = 1 ... 12
 
+    /// From 1 to twice the written size, never less than 12, so "Makes 24" sits centred and highlighted (G57, K87.7).
+    /// Capped at 48, so a misread "serves 5000" never builds thousands of rows (QA on #803).
+    static func range(written: Int?) -> ClosedRange<Int> {
+        // Clamped to Core's shared cap before doubling, so an absurd size can never overflow and trap (G62, #832).
+        let cap = RecipeLimits.serves.upperBound
+        let size = min(max(written ?? 0, 0), cap / 2)
+        return 1 ... min(cap, max(12, 2 * size))
+    }
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var scrolled: Int?
     @State private var tick = 0
 
-    private enum Metrics {
-        static let width: CGFloat = 72
-        static let pitch: CGFloat = 52
-        static let rows: CGFloat = 3
-    }
+    /// The drum grows with the text size (G69): width and row pitch scale with Dynamic Type; three rows show.
+    @ScaledMetric(relativeTo: .title) private var width: CGFloat = 72
+    @ScaledMetric(relativeTo: .title) private var pitch: CGFloat = 52
+    private let rows: CGFloat = 3
 
     var body: some View {
         VStack(spacing: Theme.Spacing.xs) {
@@ -25,7 +35,7 @@ struct PortionDrum: View {
                 Text("–")
                     .textRole(.titleNumber)
                     .foregroundStyle(Theme.Colors.inkTertiary)
-                    .frame(width: Metrics.width, height: Metrics.pitch * Metrics.rows)
+                    .frame(width: width, height: pitch * rows)
             }
             Text("serves")
                 .font(Theme.voice(size: 18))
@@ -42,7 +52,8 @@ struct PortionDrum: View {
                 scrolled = new
             }
         }
-        .sensoryFeedback(.selection, trigger: tick)
+        // A detent is the house .selection (Haptics.swift: each weight detent); never a raw sensoryFeedback.
+        .tesseraFeedback(.selection, trigger: tick)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Serves")
         .accessibilityValue(isEnabled ? "\(serves)" : "not given")
@@ -64,8 +75,8 @@ struct PortionDrum: View {
                     Text("\(value)")
                         .textRole(isCurrent ? .titleNumber : .body)
                         .foregroundStyle(isCurrent ? Theme.Colors.ink : Theme.Colors.inkTertiary)
-                        .frame(width: Metrics.width, height: Metrics.pitch)
-                        .animation(.easeOut(duration: 0.16), value: isCurrent)
+                        .frame(width: width, height: pitch)
+                        .animation(reduceMotion ? nil : .easeOut(duration: 0.16), value: isCurrent)
                 }
             }
             .scrollTargetLayout()
@@ -73,8 +84,8 @@ struct PortionDrum: View {
         .scrollIndicators(.hidden)
         .scrollTargetBehavior(.viewAligned(limitBehavior: .never))
         .scrollPosition(id: $scrolled, anchor: .center)
-        .contentMargins(.vertical, Metrics.pitch * (Metrics.rows - 1) / 2, for: .scrollContent)
-        .frame(width: Metrics.width, height: Metrics.pitch * Metrics.rows)
+        .contentMargins(.vertical, pitch * (rows - 1) / 2, for: .scrollContent)
+        .frame(width: width, height: pitch * rows)
         .mask {
             LinearGradient(stops: [
                 .init(color: .clear, location: 0), .init(color: .black, location: 0.3),

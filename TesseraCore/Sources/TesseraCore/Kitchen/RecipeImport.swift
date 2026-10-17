@@ -181,11 +181,11 @@ public enum RecipeImport {
     /// The recipe as text the paste screen paints and `CreateRecipe(text:)` saves: title, serves, ingredients, method.
     public static func text(of recipe: ParsedRecipe) -> String {
         var lines = [recipe.title]
-        if let serves = recipe.serves {
+        if let serves = RecipeLimits.serves(recipe.serves) {
             lines.append("Serves \(serves)")
         }
-        if let total = recipe.totalMinutes {
-            lines.append("Total time: \(Int(total)) min")
+        if let total = RecipeLimits.minutes(recipe.totalMinutes), let whole = RecipeLimits.whole(total) {
+            lines.append("Total time: \(whole) min")
         }
         lines.append("")
         lines.append("Ingredients")

@@ -176,6 +176,23 @@ struct BackupLogicalDayTests {
         #expect(files() == ["12", "14", "16", "18", "19", "20", "21"].map { "Tessera-2026-10-\($0).tessera" })
     }
 
+    @Test func aSavedCopyIsNamedApartAndNeverPruned() throws {
+        #expect(TesseraBackup.savedCopyName(day: "2026-10-17") == "Before update 2026-10-17.tessera")
+        #expect(!TesseraBackup.isRollingName(TesseraBackup.savedCopyName(day: "2026-10-17")))
+        #expect(TesseraBackup.isRollingName("Tessera-2026-10-17.tessera"))
+        #expect(!TesseraBackup.isRollingName("Tessera-2026-10-17.zip"))
+        // Eight rolling days plus a saved copy in the same folder: the oldest rolling day goes, the saved copy stays.
+        try FileManager.default.createDirectory(at: backups, withIntermediateDirectories: true)
+        let saved = TesseraBackup.savedCopyName(day: "2026-10-01")
+        try Data("x".utf8).write(to: backups.appendingPathComponent(saved))
+        for day in [10, 12, 14, 16, 18, 19, 20, 21] {
+            try write(at(10, day, 8))
+        }
+        #expect(files().contains(saved))
+        #expect(files().filter(TesseraBackup.isRollingName).count == 7)
+        #expect(!files().contains("Tessera-2026-10-10.tessera"))
+    }
+
     @Test func t12AStrayPartialIsCleanedUp() throws {
         try FileManager.default.createDirectory(at: backups, withIntermediateDirectories: true)
         let stray = backups.appendingPathComponent(".Tessera-2026-10-18.tessera.partial")

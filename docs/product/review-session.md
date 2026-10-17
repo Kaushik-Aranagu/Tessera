@@ -150,7 +150,7 @@ Every key is a painted stroke word, not a button. **Tess** is the soul in the co
     key. Paste it again?" and nothing saved.
 35. **Your key.** [if merged by install] Paste your key from the Console (typed by you, never in chat). Expect
     "Checking it with Claude." then "Key saved. Ends in ...a1B2." (your last four), "Key ends in ...a1B2 · works",
-    and "This month $0.00 of $10." The Test costs nothing.
+    and "This month $0.00 of $50." The Test costs nothing.
 36. **Remove and undo.** [if merged by install] Tap REMOVE. Expect "Claude key removed. Everything stays on this
     phone." with UNDO for 10 s; UNDO says "Claude key is back."
 

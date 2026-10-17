@@ -1,0 +1,4 @@
+# Review #703 (head c90b35a3): PASS (static)
+- TessVoice.hold(undo:holds:voiceOver:): UNDO or take-back + VoiceOver = flat 10 s whatever `holds` asked; otherwise `holds` ?? (undo ? 10 : 4). Plain lines are never stretched, with or without VoiceOver. Both call sites use it: TessVoice.say (derives undo from undo/takeBack) and BottomChrome.say (canUndo, base 4 s). Behaviour without VoiceOver is unchanged for every existing caller (#702's 4 s first-launch UNDO stays 4 s). Tests cover the 3 cases incl. plain+holds 6 s.
+- Merge-tree clean against master 2a25aeb (#702 in).
+- Not covered (out of this PR's scope, still owed by Core's UndoWindow, board core.md F1): "paused in the background or locked" (Task.sleep keeps running, so a line can expire while the app is away), "a newer claim closes the older" in the shared slot, and the VoiceOver check being read once when the line shows rather than live. Core's UndoWindow does not exist on master yet.

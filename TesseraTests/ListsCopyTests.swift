@@ -1,0 +1,107 @@
+@testable import Tessera
+import TesseraCore
+import Testing
+
+/// K86.12 and K86.13: the Lists context line and a run's state word.
+@MainActor
+struct ListsCopyTests {
+    @Test func theContextLineIsACountWithNoRun() {
+        #expect(ListsCopy.context(lists: 2) == "2 lists")
+        #expect(ListsCopy.context(lists: 1) == "1 list")
+        #expect(!ListsCopy.context(lists: 2).contains("running"))
+    }
+
+    @Test func runningAppearsOnlyWhileARunIsOpen() {
+        #expect(ListsCopy.context(lists: 2, running: 1) == "2 lists, 1 running")
+    }
+
+    @Test func theStateWordUsesAComma() {
+        #expect(ListsCopy.runState(left: 2) == "RUNNING, 2 LEFT")
+        #expect(!ListsCopy.runState(left: 2).contains("·") && !ListsCopy.runState(left: 2).contains("."))
+    }
+
+    @Test func tessSaysWhatsLeft() {
+        #expect(ListsCopy.tess(list: "Packing", left: 2) == "Packing has 2 left.")
+        #expect(ListsCopy.tess(list: "Packing", left: 1) == "Packing has 1 left.")
+        #expect(ListsCopy.tess(list: "Packing", left: 0) == "Packing, nothing left.")
+    }
+
+    @Test func theAddReceiptNamesTheThingFirst() {
+        #expect(ListsCopy.added("Rice", to: "Packing") == "Rice, on Packing.")
+        #expect(ListsCopy.added("Private item", to: "Packing") == "Private item, on Packing.")
+        #expect(ListsCopy.cleared(3) == "3 done, cleared.")
+    }
+
+    @Test func aKeyClearsTheFieldAndIsNeverWritten() {
+        let fake = "sk-" + "ant-" + String(repeating: "x", count: 32)
+        var wrote = false
+        let attempt = ListsCopy.add(fake) { _ in wrote = true; return nil }
+        #expect(!wrote && attempt.draft.isEmpty && attempt.line == claudeKeyLine && attempt.record == nil)
+    }
+
+    @Test func anotherFailureKeepsTheTypedText() {
+        let attempt = ListsCopy.add("rice ") { _ in nil }
+        #expect(attempt.draft == "rice " && attempt.line == "Didn't save that. Try again.")
+    }
+
+    @Test func aBlankDraftClears() {
+        var wrote = false
+        let attempt = ListsCopy.add("   \n") { _ in wrote = true; return nil }
+        #expect(!wrote && attempt.draft.isEmpty && attempt.line == nil)
+    }
+
+    @Test func aRemoveNamesTheThingFirstAndUndoSaysWhereItWent() {
+        #expect(ListsCopy.removed("Rice") == "Rice, removed.")
+        #expect(ListsCopy.backOn("Rice", list: "Packing") == "Rice, back on Packing.")
+        #expect(ListsCopy.removed(ShopTrip.privateLabel) == "Private item, removed.")
+        // Stored text is often lowercase; the line still leads with a capital (Kitchen 10.9 on #786).
+        #expect(ListsCopy.removed("rice") == "Rice, removed.")
+        #expect(ListsCopy.backOn("rice", list: "Packing") == "Rice, back on Packing.")
+        #expect(ListsCopy.removed("iPhone charger") == "iPhone charger, removed.")
+    }
+
+    @Test func removeRisesFrom60AndIsWholeAt96() {
+        #expect(SwipeToRemove.reveal(-40) == 0)
+        #expect(SwipeToRemove.reveal(-60) == 0)
+        #expect(SwipeToRemove.reveal(-78) == 0.5)
+        #expect(SwipeToRemove.reveal(-96) == 1 && SwipeToRemove.reveal(-120) == 1)
+    }
+
+    @Test func reusableAndResetReadThingFirst() {
+        #expect(ListsCopy.reusable("Packing", isOn: true) == "Packing, reusable.")
+        #expect(ListsCopy.reusable("Packing", isOn: false) == "Packing, not reusable.")
+        #expect(ListsCopy.reset("Packing") == "Packing, reset.")
+        #expect(ListsCopy.reusableWord(isOn: true) == "Reusable, on")
+        #expect(ListsCopy.reusableWord(isOn: false) == "Reusable, off")
+        #expect(ListsCopy.reset("Private list") == "Private list, reset.")
+    }
+
+    @Test func runLinesUseTheShownName() {
+        #expect(ListsCopy.running("Packing") == "Packing, running")
+        #expect(ListsCopy.runStarted("Packing", left: 6) == "Packing, 6 left.")
+        #expect(ListsCopy.runStarted("Private list", left: 0) == "Private list, nothing left.")
+        #expect(ListsCopy.runDone("Packing", left: 0) == "Packing, done.")
+        #expect(ListsCopy.runDone("Packing", left: 3) == "Packing, done. 3 left.")
+    }
+
+    @Test func theResetAskNamesTheListFirst() {
+        #expect(ListsCopy.resetAsk("Packing") == "Packing, done. Reset it for next time?")
+        #expect(ListsCopy.resetAsk("Private list") == "Private list, done. Reset it for next time?")
+    }
+
+    @Test func putAwayReadsThingFirst() {
+        #expect(ListsCopy.putAway("Packing", basket: 0) == "Packing put away.")
+        #expect(ListsCopy.putAway("Packing", basket: 3) == "Packing put away. 3 in the basket.")
+    }
+
+    /// Kitchen on #823: a reset with nothing checked says so, with no UNDO.
+    @Test func nothingToResetReadsThingFirst() {
+        #expect(ListsCopy.nothingToReset("Packing") == "Packing, nothing to reset.")
+    }
+
+    @Test func pickOneWords() {
+        #expect(ListsCopy.pickOneWord(isOn: true) == "Pick one, on")
+        #expect(ListsCopy.pickOne("Films", isOn: true) == "Films, pick one on.")
+        #expect(ListsCopy.allPicked == "That's all of them.")
+    }
+}

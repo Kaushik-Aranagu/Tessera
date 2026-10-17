@@ -86,13 +86,16 @@ public enum RestWeekday {
 }
 
 public extension SettingsStore {
+    /// Where the once-per-install decision is kept.
+    static let firstLaunchKey = "restWeekday.firstLaunchDecided"
+
     /// The first launch with the reader (Product 11:52 AM PT Oct 16, his Oct 15 "Sun rest"): when nothing has ever
     /// been written to `restWeekday`, writes Sunday as one op, receipt "Sunday, rest day." with UNDO. Once: an UNDO
     /// or a later "Any" leaves a record, so it never writes again. Nil when nothing was written.
     @discardableResult
     func writeFirstRestWeekday(defaults: UserDefaults = .standard) -> OpRecord? {
         // Decided once per install: the op-log scan below never repeats on later launches.
-        let key = "restWeekday.firstLaunchDecided"
+        let key = Self.firstLaunchKey
         guard !defaults.bool(forKey: key) else { return nil }
         let store = engine.store
         guard RestWeekday.current(in: store) == nil, !RestWeekday.hasEverBeenWritten(in: store, classes: engine.classes)
@@ -103,9 +106,9 @@ public extension SettingsStore {
         var settings = read()
         settings.restWeekday = RestWeekday.sunday
         let record = try? engine.perform(WriteSettings(settings: settings), by: .tess).record
-        if record != nil {
-            defaults.set(true, forKey: key)
-        }
+        // Decided even when the write failed (QA low on #641): a failure is never rescanned on every launch, and
+        // "rest day Sunday" still sets it.
+        defaults.set(true, forKey: key)
         return record
     }
 }

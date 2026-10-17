@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pantry area</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300..700&display=swap" rel="stylesheet">
+<!-- Design item 78 (Kaushik's 2:36 PM PT Oct 16 ruling: Pantry is an area with its own front and side). The Pantry front (OUT, LOW, USUALLY HAVE; a tap on a state word cycles in, low, out), its side OUT AND LOW (AHEAD) with the glance and the full side, the empty state, and the fifth row in the area index (73). Board by default; ?play records: front, tap a state word, UNDO, the index, then the side glance and full. -->
+<style>
+:root{--board:#E9E6EE}
+*{box-sizing:border-box}
+body{margin:0;background:var(--board);font-family:'Inter Tight',system-ui,sans-serif;-webkit-font-smoothing:antialiased;transform-origin:0 0;color:#1c1a20}
+body.x2{transform:scale(2)}
+.wrap{padding:34px 40px 40px}
+.head{display:flex;gap:30px;margin-bottom:22px}
+.head h1{margin:0;font-size:34px;font-weight:600;letter-spacing:-.015em;flex:none;width:420px}
+.head p{margin:0;font-size:17px;line-height:24px;color:#4a4652;max-width:1000px}
+.grid{display:grid;grid-template-columns:repeat(4,393px);gap:22px 22px;align-items:start}
+.cap{margin-top:12px}
+.cap .opt{font-size:13px;font-weight:700;letter-spacing:.08em;color:#6b6674}
+.cap h2{margin:4px 0 6px;font-size:22px;font-weight:600;letter-spacing:-.01em}
+.cap p{margin:0;font-size:16px;line-height:22px;color:#4a4652}
+.ph{position:relative;width:393px;height:852px;background:var(--bg);color:rgb(var(--ink));overflow:hidden;border-radius:44px}
+body.playing .ph{border-radius:0}
+.por{--ink:18,16,22;--bg:#FBFAF7;--bg0:rgba(251,250,247,0);--tess:#2450D8;--ctx:#5A3DAF;--pan:#A4601A;--today:rgb(18,16,22);--train:#C23A22;--kit:#12936A;--rev:#5A3DAF;--glass:rgba(251,250,247,.66)}
+.obs{--ink:245,242,236;--bg:#121014;--bg0:rgba(18,16,20,0);--tess:#86B4FF;--ctx:#B8A3FF;--pan:#E3A857;--today:rgb(245,242,236);--train:#FF7D62;--kit:#52D3A3;--rev:#B8A3FF;--glass:rgba(30,27,34,.62)}
+.abs{position:absolute}
+.body{position:absolute;inset:0}
+.name{left:22px;top:52px;font-weight:700;font-size:15px;letter-spacing:.08em}
+.day{left:22px;top:138px;font-size:17px;color:rgba(var(--ink),.66)}
+.ctxl{left:22px;right:22px;top:186px;font-size:17px;color:var(--ctx);display:flex;justify-content:space-between}
+.ctxl b{font-weight:700;font-size:13px;letter-spacing:.08em;color:rgb(var(--ink));padding-top:2px}
+.hero{left:22px;top:212px;width:350px;font-size:44px;line-height:50px;font-weight:500;letter-spacing:-.02em}
+.lbl{font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.55);height:26px;line-height:26px}
+.pl{left:22px;width:350px;top:296px}
+.pl .g{margin-top:22px}
+.pl .g:first-child{margin-top:0}
+.r{position:relative;display:flex;justify-content:space-between;align-items:center;height:40px;clip-path:inset(0 -30px);font-size:21px;line-height:28px;transition:height .32s cubic-bezier(.2,.9,.25,1),opacity .24s}
+.r.gone{height:0;opacity:0}
+.r .ring{position:absolute;left:-16px;top:14.5px;width:11px;height:11px;border-radius:50%;border:1.3px solid rgba(var(--ink),.42)}
+.st{font-size:19px;font-weight:600;color:color-mix(in oklab,var(--pan) 72%,rgb(var(--ink)));padding:8px 0 8px 18px;margin-right:-0px}
+.st.o{font-weight:700}
+.st.l{opacity:.8}
+.r em{font-style:normal;font-size:19px;color:rgba(var(--ink),.62);white-space:nowrap}
+.usu{font-size:21px;line-height:30px}
+.usu i{font-style:normal;color:rgba(var(--ink),.55)}
+.quiet{left:22px;width:330px;top:300px;font-size:21px;line-height:30px;color:rgba(var(--ink),.55)}
+.key{left:22px;font-weight:700;font-size:15px;letter-spacing:.08em}
+.key i{display:block;height:2px;margin-top:5px;background:currentColor}
+.gl{position:absolute;left:150px;right:0;top:186px;bottom:96px;padding:20px 22px 0 46px;background:linear-gradient(90deg,var(--bg0),var(--bg) 34px)}
+.gl .gk{font-weight:700;font-size:13px;letter-spacing:.08em;color:rgba(var(--ink),.55)}
+.gl .big{font-size:56px;line-height:62px;white-space:nowrap;font-weight:500;letter-spacing:-.02em;margin-top:10px}
+.gl .big small{font-size:21px;font-weight:400;letter-spacing:0;margin-left:6px}
+.gl .gr{font-size:19px;line-height:26px;margin-top:12px}
+.gl .gr em{font-style:normal;color:rgba(var(--ink),.62)}
+.gl .more{position:absolute;left:46px;bottom:22px;font-weight:700;font-size:13px;letter-spacing:.08em}
+.gl .more i{display:block;height:2px;margin-top:5px;background:currentColor}
+.soul{left:323px;top:759px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 40%,#E2432A 0 28%,transparent 46%),radial-gradient(circle at 66% 38%,#2450D8 0 30%,transparent 50%),radial-gradient(circle at 50% 70%,#F0A500 0 28%,transparent 48%);filter:blur(2px)}
+.tl{position:absolute;right:71px;width:270px;top:779px;transform:translateY(-50%);text-align:right;font-size:19px;line-height:25px;color:var(--tess)}
+.tl .u{display:block;font-weight:700;font-size:15px;letter-spacing:.08em;line-height:20px;margin-top:4px;color:rgb(var(--ink))}
+.finger{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(18,16,22,.16);border:1.5px solid rgba(18,16,22,.25);opacity:0;pointer-events:none;z-index:9}
+/* The index (73), now with five rows */
+.layer{position:absolute;inset:0;transform-origin:50% 0;will-change:transform,filter}
+.glass{position:absolute;left:0;right:0;top:0;height:700px;border-radius:0 0 40px 40px;background:var(--glass);-webkit-backdrop-filter:blur(26px) saturate(1.4);backdrop-filter:blur(26px) saturate(1.4);box-shadow:inset 0 -1px 0 rgba(255,255,255,.55),0 18px 50px rgba(18,16,22,.10);transform-origin:50% 0}
+.ix{position:absolute;left:22px;right:22px}
+.ix .it{height:104px;transform-origin:0 50%;transition:transform .2s cubic-bezier(.2,.9,.25,1),opacity .2s}
+.ix .wd{font-size:40px;line-height:46px;font-weight:600;letter-spacing:-.02em;color:rgba(var(--ink),.42);transition:color .2s}
+.ix .ln{font-size:17px;line-height:24px;margin-top:4px;color:rgba(var(--ink),.5);transition:color .2s}
+.ix .it.here .wd{color:rgb(var(--ink))}
+.ix .it.on .wd,.ix .it.on .ln{color:color-mix(in oklab,var(--a) 72%,rgb(var(--ink)))}
+.ix .it.on{transform:scale(1.06)}
+.hint{left:22px;font-size:15px;color:rgba(var(--ink),.45)}
+.seam{background:var(--bg)}
+</style></head>
+<body>
+<div class="wrap" id="board"></div>
+<script>
+const play = location.search.includes('play');
+if (location.search.includes('x2')) document.body.classList.add('x2');
+const band = line => `<div class="abs soul"></div>${line ? `<div class="tl">${line}</div>` : ''}`;
+const TESS_FRONT = 'Tacos took the cilantro and limes.';
+const TESS_SIDE = 'You buy milk about every 7 days.';
+const OUT = [['Cilantro', 'Tue'], ['Limes', 'Tue'], ['Milk', 'Sat'], ['Eggs', 'Sat']];
+const LOW = [['Tortillas', 'Sat'], ['Onions', 'Sat']];
+
+// The Pantry front. Area frame: name at 52 (73), day word 138, context 186, hero 212, groups from 296.
+const front = (o = {}) => {
+  if (o.empty) return `<div class="abs day">Friday</div><div class="abs ctxl"><span>no shop cleared yet</span><b>OUT AND LOW</b></div>
+    <div class="abs hero">Nothing yet</div><div class="abs quiet">Clear a shop or finish a cook and this fills in.</div>`;
+  const out = OUT.filter(([n]) => !(o.gone || []).includes(n));
+  const row = (n, k) => `<div class="r" data-n="${n}">${k === 'o' ? '<span class="ring"></span>' : ''}<span>${n}</span><span class="st ${k}">${k === 'o' ? 'out' : 'low'}</span></div>`;
+  return `<div class="abs day">Friday</div><div class="abs ctxl"><span>since Saturday's shop</span><b>OUT AND LOW</b></div>
+  <div class="abs hero"><span id="nO">${out.length}</span> out, 2 low</div>
+  <div class="abs pl" id="pl">
+    <div class="g"><div class="lbl">OUT</div>${OUT.map(([n]) => row(n, 'o').replace('class="r"', `class="r${(o.gone || []).includes(n) ? ' gone' : ''}"`)).join('')}</div>
+    <div class="g"><div class="lbl">LOW</div>${LOW.map(([n]) => row(n, 'l')).join('')}</div>
+    <div class="g"><div class="lbl">USUALLY HAVE</div><div class="usu">Rice, coffee <i>and 2 more</i></div></div></div>`;
+};
+// The side, OUT AND LOW (AHEAD): what the next shop needs, with when each was last bought. One key, no state controls.
+const sideFull = () => `<div class="abs day">Friday</div><div class="abs ctxl"><span>6 to buy</span><b>PANTRY</b></div>
+  <div class="abs pl" style="top:240px">
+    <div class="g"><div class="lbl">OUT</div>${OUT.map(([n, d]) => `<div class="r"><span>${n}</span><em>bought ${d}</em></div>`).join('')}</div>
+    <div class="g"><div class="lbl">LOW</div>${LOW.map(([n, d]) => `<div class="r"><span>${n}</span><em>bought ${d}</em></div>`).join('')}</div></div>
+  <div class="abs key" style="top:588px">ADD 6 TO GROCERIES<i></i></div>`;
+const sideGlance = () => `<div class="gl"><div class="gk">OUT AND LOW</div><div class="big">4<small>out</small></div><div class="gr">2 <em>low</em></div><div class="gr">6 <em>to buy</em></div><div class="more">ALL OF THEM<i></i></div></div>`;
+
+const AREAS = [
+  { w: 'Review', a: 'var(--rev)', line: 'This week, 3 of 6 sessions' },
+  { w: 'Today', a: 'var(--today)', line: 'Push Day A, 13 sets left' },
+  { w: 'Training', a: 'var(--train)', line: 'Push Day A is on' },
+  { w: 'Kitchen', a: 'var(--kit)', line: 'Tacos, 7 pm' },
+  { w: 'Pantry', a: 'var(--pan)', line: '4 out, 2 low' },
+];
+const index = (here, on) => `<div class="ix" style="top:96px">${AREAS.map((a, i) => `<div class="it${i === here ? ' here' : ''}${i === on ? ' on' : ''}" style="--a:${a.a}"><div class="wd">${a.w}</div><div class="ln">${a.line}</div></div>`).join('')}</div>`;
+
+if (!play) {
+  const ph = (cls, inner, opt, h, p) => `<div><div class="ph ${cls}">${inner}</div><div class="cap"><div class="opt">${opt}</div><h2>${h}</h2><p>${p}</p></div></div>`;
+  const nm = '<div class="abs name">PANTRY</div>';
+  let b = `<div class="head"><h1>Sheet 78: Pantry, an area</h1><p>The fifth area, after Kitchen. Its front is what is out, what is low and what he usually has; its side is OUT AND LOW, the next shop with when each thing was last bought. The app never sums or totals nutrition, and nothing here shows any. The one place a state changes is the state word on the front: a tap cycles in, low, out, with .selection and one UNDO. No notification, badge or Home offer, ever.</p></div><div class="grid">`;
+  b += ph('por', nm + `<div class="body">${front()}</div>${band(TESS_FRONT)}`, 'FRONT', 'Out, low, what he usually has', 'The name at 52, the hero is the count, out lines wear the faint ring from the recipe page. USUALLY HAVE is one line of names, two named and "and 2 more" from four.');
+  b += ph('por', nm + `<div class="body">${front({ gone: ['Limes'] }).replace('<span id="nO">3</span>', '3')}</div>${band('Limes, in.<span class="u">UNDO</span>')}`, 'A TAP ON A STATE WORD', 'Limes, in.', 'The word cycles out to in; the line closes up and the count rolls. .selection once. The receipt takes the one UNDO slot and Tess\'s line comes back after it.');
+  b += ph('por', nm + `<div class="body">${front({ empty: 1 })}</div>${band('Say "out of milk" and I\'ll keep it.')}`, 'EMPTY', 'Nothing known yet', 'No art, no ring. The phone only knows what a shop clear, a finished cook or his words have told it.');
+  b += ph('por', `<div class="layer" style="transform:scale(.9) translateY(40px);filter:blur(6px);opacity:.6">${nm}<div class="body">${front()}</div></div><div class="glass"></div>${index(4, 3)}<div class="abs hint" style="top:652px">Let go to open</div><div class="finger" style="left:250px;top:448px;opacity:1"></div>${band()}`, 'THE INDEX, FIVE AREAS', 'Pantry is the fifth row', 'Same 104 pt pitch; the glass grows from 600 to 700 and still ends above Tess\'s band. Pantry\'s line is its hero: "4 out, 2 low".');
+  b += ph('por', `<div class="body" style="opacity:.3">${nm}${front()}</div>${sideGlance()}<div class="finger" style="left:372px;top:420px;opacity:1"></div>${band(TESS_SIDE)}`, 'THE SIDE, STOP 1', 'The glance: 4 out', 'Right half from x 150: the big fact, 2 low, 6 to buy (the key\'s own number). Foot word ALL OF THEM.');
+  b += ph('por', `${nm}${sideFull()}${band(TESS_SIDE)}`, 'THE SIDE, STOP 2 · AHEAD', 'OUT AND LOW', 'Out lines first, then low, each with when it was bought. One key, ADD 6 TO GROCERIES, and no state words: states change on the front.');
+  b += ph('obs', nm + `<div class="body">${front()}</div>${band(TESS_FRONT)}`, 'OBSIDIAN', 'The front', 'The pantry colour is its own ochre (Porcelain #A4601A, Obsidian #E3A857) and appears only on the state words and in the index.');
+  b += ph('obs', `${nm}${sideFull()}${band(TESS_SIDE)}`, 'OBSIDIAN', 'The side', 'Nothing on the side is red, and nothing is summed.');
+  b += `</div>`;
+  document.getElementById('board').innerHTML = b;
+  document.fonts.ready.then(() => { document.body.dataset.done = '1'; });
+} else {
+  document.body.classList.add('playing');
+  const w = document.getElementById('board'); w.className = '';
+  w.innerHTML = `<div class="ph por" id="ph">
+    <div class="layer" id="layer"><div class="abs name">PANTRY</div><div class="body" id="front">${front()}</div></div>
+    <div class="body" id="gb" style="opacity:0">${sideGlance()}</div>
+    <div class="body" id="fb" style="opacity:0"><div class="abs name" style="background:var(--bg);width:200px;height:24px"></div>${sideFull()}</div>
+    <div class="glass" id="glass" style="opacity:0;transform:translateY(-40px)"></div>
+    <div id="ixw" style="opacity:0">${index(4, -1)}<div class="abs hint" style="top:652px">Let go to open</div></div>
+    <div id="bands"><div class="abs soul"></div>
+      <div class="tl" id="t1">${TESS_FRONT}</div>
+      <div class="tl" id="t2" style="opacity:0">Limes, in.<span class="u">UNDO</span></div>
+      <div class="tl" id="t3" style="opacity:0">${TESS_SIDE}</div></div>
+    <div class="finger" id="fg"></div></div>`;
+  const $ = id => document.getElementById(id);
+  const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  const out = x => 1 - Math.pow(1 - x, 3);
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const tween = (ms, f, e = ease) => new Promise(r => { const t0 = performance.now(); (function k(n) { const q = Math.min((n - t0) / ms, 1); f(e(q)); q < 1 ? requestAnimationFrame(k) : r(); })(t0); });
+  const fg = $('fg'), layer = $('layer'), glass = $('glass'), ixw = $('ixw'), gb = $('gb'), fb = $('fb'), fr = $('front');
+  const items = [...document.querySelectorAll('.ix .it')];
+  const finger = (x, y, on = 1) => { fg.style.left = x + 'px'; fg.style.top = y + 'px'; fg.style.opacity = on; };
+  const fade = (el, to, ms = 240) => el.animate([{ opacity: el.style.opacity || 0 }, { opacity: to }], { duration: ms, fill: 'forwards' });
+  const rowOf = n => document.querySelector(`.r[data-n="${n}"]`);
+  const mark = (here, on) => items.forEach((it, i) => { it.classList.toggle('here', i === here); it.classList.toggle('on', i === on); });
+  const form = q => { layer.style.transform = `scale(${1 - .1 * q}) translateY(${40 * q}px)`; layer.style.filter = `blur(${6 * q}px)`; layer.style.opacity = 1 - .4 * q;
+    glass.style.opacity = q; glass.style.transform = `translateY(${-40 * (1 - q)}px)`; ixw.style.opacity = q;
+    items.forEach((it, i) => { it.style.transform = `translateY(${-24 * (1 - Math.min(1, q * 1.4 - i * .1))}px)`; }); };
+  const rowAt = y => Math.max(0, Math.min(4, Math.floor((y - 96) / 104)));
+  const swapTess = (hide, show) => { [hide, show].forEach(e => e.style.transition = 'opacity .25s'); hide.style.opacity = 0; show.style.opacity = 1; };
+  async function cycle(gone) {
+    rowOf('Limes').classList.toggle('gone', gone);
+    $('nO').textContent = gone ? 3 : 4;
+    $('nO').animate([{ opacity: .2, transform: 'translateY(8px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 260, easing: 'cubic-bezier(.2,.9,.25,1)' });
+  }
+  $('nO').style.display = 'inline-block';
+  const inn = p => { const p1 = Math.min(p, 1), p2 = Math.max(0, p - 1);
+    fr.style.opacity = 1 - .7 * p1 - .3 * p2; fr.style.transform = `translateX(${-44 * p2}px)`;
+    gb.style.opacity = p <= 1 ? p1 : 1 - p2; gb.style.transform = `translateX(${60 * (1 - p1) - 40 * p2}px)`;
+    fb.style.opacity = p2; fb.style.transform = `translateX(${60 * (1 - p2)}px)`;
+    $('t1').style.opacity = 1 - p1; $('t3').style.opacity = p1; };
+  ['t1','t2','t3'].forEach(i => { $(i).style.opacity = i === 't1' ? 1 : 0; });
+  document.fonts.ready.then(async () => {
+    document.body.dataset.start = '1';
+    await wait(1500);
+    // 1. A tap on the state word: Limes, out to in.
+    finger(300, 440); await tween(300, q => finger(300 + 50 * q, 440 - 58 * q)); await wait(120);
+    await cycle(true); swapTess($('t1'), $('t2')); finger(350, 382, 0); await wait(2600);
+    // 2. UNDO in the one slot: the line comes back.
+    finger(330, 804); await wait(220); finger(330, 804, 0);
+    await cycle(false); swapTess($('t2'), $('t1')); await wait(1700);
+    // 3. Pull down: the index with five areas. Pantry is the one he is in.
+    mark(4, 4); items.forEach(it => it.style.transition = 'none'); finger(250, 300); await wait(160);
+    await tween(520, q => { const y = 300 + 92 * q; finger(250, y); form(Math.min(1, Math.max(0, (y - 320) / 70))); }, out);
+    items.forEach(it => it.style.transition = ''); await wait(800);
+    let last = -1;
+    const drag = (y0, y1, ms) => tween(ms, q => { const y = y0 + (y1 - y0) * q; finger(250, y); const r = rowAt(y); if (r !== last) { last = r; mark(4, r); } });
+    await drag(392, 448, 500); await wait(700);
+    await drag(448, 552, 600); await wait(700);
+    finger(250, 552, 0); await tween(420, q => form(1 - q)); await wait(900);
+    // 4. The right edge: the glance, then the full side.
+    ['t1','t3'].forEach(i => $(i).style.transition = 'none');
+    await tween(380, q => { finger(386 - 150 * q, 420); inn(q); }); finger(0, 0, 0); await wait(2400);
+    await tween(380, q => { finger(300 - 170 * q, 420); inn(1 + q); }); finger(0, 0, 0); await wait(3200);
+    document.body.dataset.done = '1';
+  });
+}
+</script>
+</body></html>

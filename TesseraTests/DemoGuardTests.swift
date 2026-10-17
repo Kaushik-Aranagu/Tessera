@@ -9,7 +9,7 @@ struct DemoGuardTests {
     let model: AppModel
 
     init() {
-        model = AppModel(context: container.mainContext)
+        model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
     }
 
     @Test func offTheSimulatorNothingIsSeededOrWiped() throws {

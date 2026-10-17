@@ -1,5 +1,6 @@
 import SwiftUI
 import TesseraCore
+import TesseraTess
 
 /// Paste a recipe (kitchen screen 11). The raw text stays exactly where it lands, in body type, and the parser
 /// paints over it as it reads, top to bottom like a brush passing: amounts get a cadmium under-stroke, ingredient
@@ -20,23 +21,50 @@ struct PasteRecipe: View {
     @State private var saved: (id: UUID, record: OpRecord)?
     /// A Claude key pasted here by mistake: refused on the spot, never read, saved or shown.
     @State private var refusedKey = false
+    /// The key line's filter: it cuts a key out and keeps the line up across the cut's own change (QA on #767).
+    @State private var keys = PasteKeyFilter()
     @FocusState private var editing: Bool
+    /// Tess's line while a pasted link is read, and what reading it gave (G54, K87.4). Never the link itself.
+    @State private var linkLine: String?
+    @State private var readingLink = false
+    /// The next change to the box is the link reader's, not his, so its line stays up.
+    @State private var fromLink = false
+    /// The shelf's links, read when the page shows and after each read.
+    @State private var waitingLinks: [URL] = []
 
+    /// The saved line's name: a private recipe is only "Private recipe" here too, spoken or drawn (G53).
     private var savedTitle: String {
-        saved.flatMap { model.store.object(id: $0.id)?.title } ?? "Recipe"
+        guard let title = saved.flatMap({ model.store.object(id: $0.id)?.title }) else { return "Recipe" }
+        return RecipeCopy.shownTitle(title, isPrivate: RecipeCopy.isPrivate(title, model: model), shown: false)
     }
 
     var body: some View {
         let lines = CreateRecipe.lines(of: text, corrections: corrections)
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text(refusedKey ? "That looks like a Claude key. It goes in Settings, not a recipe."
-                    : reading && revealed >= lines.count ? PasteCopy.tess(lines) : "Paste a recipe and I'll read it.")
+                Text(refusedKey ? claudeKeyLine
+                    : linkLine ?? PasteCopy.idleLine(link: RecipePasteLink.bareLink(text) != nil, reading: reading,
+                                                     read: revealed >= lines.count, lines: lines))
                     .font(Theme.voice)
-                    .foregroundStyle(Theme.Colors.tess)
+                    // The password refusal reads in ink (Design on #810).
+                    .foregroundStyle(linkLine == RecipeLinkLine.secretLink ? Theme.Colors.ink : Theme.Colors.tess)
                     .contentTransition(.opacity)
                     .fixedSize(horizontal: false, vertical: true)
                     .entrance(0)
+
+                // Links kept for later (K86.7): read only on his tap, oldest first, never by themselves.
+                if !reading, text.isEmpty, !readingLink, let waiting = waitingLinks.first {
+                    Button(PasteCopy.readWaiting(waitingLinks.count)) {
+                        // The reader's own fill: its "Reading <host>." line stays up (QA on #830).
+                        fromLink = true
+                        text = waiting.absoluteString
+                        readLink(waiting)
+                    }
+                    .buttonStyle(.labelWord)
+                    .padding(.top, Theme.Spacing.m)
+                    .accessibilityHint("Reads the oldest link kept for later")
+                    .entrance(1)
+                }
 
                 if reading {
                     VStack(alignment: .leading, spacing: Theme.Spacing.s) {
@@ -99,6 +127,10 @@ struct PasteRecipe: View {
             if reading {
                 SaveBar(
                     saved: saved != nil,
+                    canSave: PasteCopy.canSave(lines),
+                    // A bare link: Read it, on his tap only (K86.7); never Save on a link.
+                    readLink: RecipePasteLink.bareLink(text).map { link in { readLink(link) } },
+                    readingLink: readingLink,
                     title: savedTitle,
                     onSave: save,
                     onUndo: {
@@ -114,19 +146,48 @@ struct PasteRecipe: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+        .onDisappear(perform: closeUndo)
+        .onAppear { waitingLinks = RecipeLinkShelf.beside(model.store)?.waiting() ?? [] }
+        .onChange(of: readingLink) { _, isReading in
+            if !isReading {
+                waitingLinks = RecipeLinkShelf.beside(model.store)?.waiting() ?? []
+            }
+        }
         .onChange(of: text) { old, new in
-            // A Claude key never becomes a recipe (QA on #218): clear it before anything reads it.
-            if looksLikeClaudeKey(new) {
+            // A link with a name or password in it is refused whole: never read, kept, saved or printed back (#810).
+            // The same inside a longer paste: a recipe holding one is never painted or saveable (Kitchen on #821).
+            if RecipePasteLink.isSecretLink(new) || PasteCopy.hasSecretLink(new) {
+                linkLine = RecipeLinkLine.secretLink
+                reading = false
+                fromLink = false
                 text = ""
-                refusedKey = true
                 return
             }
-            if !new.isEmpty {
-                refusedKey = false
+            // His own change retires the last link line, so a refusal or "kept for later" never goes stale.
+            if fromLink {
+                fromLink = false
+            } else if !new.isEmpty, new != old {
+                linkLine = nil
             }
-            // A paste lands as one big change: read it straight away.
-            if new.count - old.count > 40 {
-                read()
+            // A Claude key never becomes a recipe (QA on #218): cut it out before anything reads it, keeping the rest
+            // of the paste (Product 8:20 AM, K87.11). It's never echoed; the line says where a key goes.
+            switch keys.change(old: old, new: new) {
+            case let .cut(kept):
+                refusedKey = true
+                text = kept
+            case let .keptAfterCut(read: shouldRead):
+                refusedKey = true
+                if shouldRead {
+                    read()
+                }
+            case let .plain(read: shouldRead):
+                if !new.isEmpty {
+                    refusedKey = false
+                }
+                // A paste lands as one big change: read it straight away.
+                if shouldRead {
+                    read()
+                }
             }
         }
         .onChange(of: editing) { _, isEditing in
@@ -179,7 +240,47 @@ struct PasteRecipe: View {
         }
     }
 
+    /// Reads the pasted link once. Read: the recipe's text lands in the box and the brush paints it, with the
+    /// reader's line. Offline: "Recipe link, kept for later." and the box clears, the link on the shelf. Claude (L3)
+    /// only while "Tess asks Claude" is on (G32).
+    private func readLink(_ link: URL) {
+        guard !readingLink else { return }
+        readingLink = true
+        linkLine = RecipeLinkLine.reading(link.host() ?? "the page")
+        let store = model.store
+        var claude = ClaudeRecipeReader(keys: SystemKeychain(), ledger: TessUsageLedger(store: store,
+                                                                                        classes: model.classes))
+        { [model] in model.asksClaude }
+        claude.lastWeightKg = { BodyWeight.lastKg(in: store) }
+        let reader = RecipeLinkReader(claude: claude)
+        Task { @MainActor in
+            let outcome = await RecipePasteLink.read(link, reader: reader, asksClaude: model.asksClaude,
+                                                     shelf: RecipeLinkShelf.beside(store))
+            readingLink = false
+            // He changed the box while it read: his edit wins; the result is dropped (QA on #811).
+            guard RecipePasteLink.bareLink(text) == link else {
+                linkLine = nil
+                return
+            }
+            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+                linkLine = outcome.line
+                if let recipe = outcome.result.text {
+                    // Painted like a paste: the box takes the recipe's text and the brush reads it.
+                    reading = false
+                    corrections = [:]
+                    // Only a real change fires onChange; an unchanged box would leave the flag set.
+                    fromLink = recipe != text
+                    text = recipe
+                } else if outcome.kept {
+                    reading = false
+                    text = ""
+                }
+            }
+        }
+    }
+
     private func edit() {
+        linkLine = nil
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
             reading = false
             corrections = [:]
@@ -203,12 +304,15 @@ struct PasteRecipe: View {
             // Nothing written (a link, say): kept on the phone for week one, never in the op log.
             // Never a pasted line with a secret word in it (Research 134; QA F3 on #422).
             // Nor money or a body fact (board 0ah).
-            if !SecretWords.mentions(text), !PrivateFacts.isWalled(
+            // Nor a link that carries a name or password, anywhere in a longer paste (QA on #810).
+            if !SecretWords.mentions(text), !PasteCopy.hasSecretLink(text), !PrivateFacts.isWalled(
                 text,
                 lastWeightKg: BodyWeight.lastKg(in: model.store)
             ) {
                 CaptureMissLog.beside(model.store)?.record(text, at: AppClock.now, route: "none", source: "paste")
             }
+            // Never silence: the text stays to fix or retry (G54, ruled Oct 17, 4:35).
+            TessVoice.shared.say(PasteCopy.didntSave)
             return
         }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
@@ -217,11 +321,23 @@ struct PasteRecipe: View {
         }
         let id = result.output.id
         Task { @MainActor in
-            try? await Task.sleep(for: .seconds(2))
+            // The receipt's UNDO holds 4 s (10 s under VoiceOver) before the page moves on (K87.2).
+            try? await Task.sleep(for: TessVoice.hold(undo: true, holds: .seconds(4)))
             if saved?.id == id {
+                // The receipt stays through the push; onDisappear closes the UNDO once the page is covered.
                 onSaved(id)
             }
         }
+    }
+
+    /// Leaving Paste closes the UNDO window: back from the recipe finds a fresh page, never a live UNDO (G52c).
+    private func closeUndo() {
+        guard saved != nil else { return }
+        saved = nil
+        text = ""
+        reading = false
+        revealed = 0
+        corrections = [:]
     }
 
     private func undo(_ record: OpRecord) {
@@ -233,9 +349,13 @@ struct PasteRecipe: View {
     }
 }
 
-/// Pinned at the bottom: Save (tap), or once saved "Carbonara saved." with Undo.
+/// Pinned at the bottom: Save (tap), or once saved "Carbonara, on Recipes." with Undo.
 private struct SaveBar: View {
     let saved: Bool
+    /// Nothing read (no ingredient, no step; a bare link, say): Save isn't drawn, so no tap ends in silence (G54).
+    let canSave: Bool
+    var readLink: (() -> Void)?
+    var readingLink = false
     let title: String
     let onSave: () -> Void
     let onUndo: () -> Void
@@ -244,7 +364,7 @@ private struct SaveBar: View {
     var body: some View {
         if saved {
             HStack(alignment: .firstTextBaseline) {
-                Text("\(title) saved.")
+                Text(RecipeCopy.saved(title))
                     .font(Theme.voice)
                     .foregroundStyle(Theme.Colors.tess)
                 Spacer()
@@ -254,8 +374,16 @@ private struct SaveBar: View {
             }
         } else {
             HStack(spacing: Theme.Spacing.l) {
-                PaintKey(paint: Theme.Colors.health, isTap: true, action: onSave) { _ in
-                    Text("Save recipe")
+                if canSave {
+                    PaintKey(paint: Theme.Colors.health, isTap: true, action: onSave) { _ in
+                        Text("Save recipe")
+                    }
+                } else if let readLink {
+                    PaintKey(paint: Theme.Colors.ink, isTap: true, action: readLink) { _ in
+                        Text(readingLink ? "Reading" : "Read it")
+                    }
+                    .disabled(readingLink)
+                    .accessibilityHint("Reads the recipe from the page")
                 }
                 Button("Edit", action: onEdit)
                     .textRole(.label)
@@ -378,7 +506,85 @@ private struct IngredientPaint: View {
     }
 }
 
+/// The Paste box's key check, as a small state machine so it tests without a screen. A key-shaped change is cut
+/// (`.cut`); the box then changes again to the cut text, and that change keeps the key line up and reads what was
+/// kept (`.keptAfterCut`) instead of clearing the line as an ordinary edit would.
+struct PasteKeyFilter {
+    private var lastCut: String?
+
+    enum Action: Equatable {
+        case cut(String)
+        case keptAfterCut(read: Bool)
+        case plain(read: Bool)
+    }
+
+    mutating func change(old: String, new: String) -> Action {
+        if looksLikeClaudeKey(new) {
+            let kept = PasteCopy.withoutKeys(new)
+            lastCut = kept
+            return .cut(kept)
+        }
+        if let cut = lastCut, new == cut {
+            lastCut = nil
+            return .keptAfterCut(read: !new.isEmpty)
+        }
+        lastCut = nil
+        return .plain(read: new.count - old.count > 40)
+    }
+}
+
 enum PasteCopy {
+    /// "Read 1 waiting" / "Read 3 waiting": the links kept for later.
+    static func readWaiting(_ count: Int) -> String {
+        "Read \(count) waiting"
+    }
+
+    /// Whether any word of the paste is a link with a user or password before its host.
+    static func hasSecretLink(_ text: String) -> Bool {
+        // Brackets, quotes and sentence marks around a link don't hide it: "(https://u:p@host)." (QA on #821).
+        let wrapping = CharacterSet(charactersIn: "()[]{}<>\"'“”‘’.,;:!?")
+        // Only link-shaped words are checked, as the bare-link rule reads them: an email (chef@bakery.com), an @handle
+        // or "4 @ 350" is a recipe's ordinary text, never a password link (QA on #830).
+        return text.split(whereSeparator: \.isWhitespace).contains { word in
+            let trimmed = String(word).trimmingCharacters(in: wrapping)
+            let lower = trimmed.lowercased()
+            guard lower.hasPrefix("https://") || lower.hasPrefix("http://") || lower.hasPrefix("www.") else {
+                return false
+            }
+            return RecipeLinkReader.hasCredentials(trimmed)
+        }
+    }
+
+    /// Tess's line when no link line is up: the count once the brush has read, the link nudge for a bare link (a
+    /// proposal; the read lines themselves are Core's), else the invitation.
+    static func idleLine(link: Bool, reading: Bool, read: Bool,
+                         lines: [(line: String, kind: RecipeParser.LineKind)]) -> String
+    {
+        if link {
+            return "A link. Tap Read it and I'll read the page."
+        }
+        return reading && read ? tess(lines) : "Paste a recipe and I'll read it."
+    }
+
+    static let didntSave = "Didn't save that. Try again."
+
+    /// Save is drawn only when the parser found something to keep: an ingredient or a step (G54).
+    static func canSave(_ lines: [(line: String, kind: RecipeParser.LineKind)]) -> Bool {
+        lines.contains { line in
+            switch line.kind {
+            case .ingredient, .step: true
+            default: false
+            }
+        }
+    }
+
+    /// The paste with every Claude key taken out and the rest kept (K87.11), through Core's cutter, which also takes
+    /// a key's tail when a paste wraps it; anything still key-shaped leaves nothing (QA on #767).
+    static func withoutKeys(_ text: String) -> String {
+        let kept = withoutClaudeKeys(text)
+        return looksLikeClaudeKey(kept) ? "" : kept
+    }
+
     /// Ingredient → step → ignore → ingredient, from what the line was last marked as (else how it read), so a line
     /// that won't read as an ingredient still moves on to step. Titles, headings and details aren't cycled.
     static func nextReading(after marked: String?, current: RecipeParser.LineKind) -> String? {

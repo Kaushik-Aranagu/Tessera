@@ -29,18 +29,18 @@ section 3; "none yet" means that section has no row for it, so the check line is
 | [x] | R5 | N13: a private note's row shows only "Private note" | Builder B 0p | #508 | 56dd028 | NP1 | Notes: add "gate code 4417" as a private note's second line; the row reads "Private note" and the time, and VoiceOver reads the same. |
 | [ ] | R6 | N15: one-time launch pass marks notes from before #422 private when they hold a secret word with a value | Core 0aa | none yet | **not yet** | NP2 | Sim: on 7b321d2 write "wifi password is hunter2", install a36b161, then the release: Notes and the Day log read "Private note"; a second launch writes nothing. |
 | [x] | R7 | P14: Siri Add a Task checks `PrivateFacts.isWalled(title)` | Core 0l | #534 | 56dd028 | P14 | Sim Siri, Add a Task "pay rent 2100 friday": no plain task with 2100 in its title. |
-| [ ] | R8 | PN-MENTION: "@Private note" never resolves to a private note (Core half); the object page never shows its body (Builder B half) | Core 0ad, Builder B 0r | #551 (Core half) | Core half 56dd028; Builder B half **folded into R18** | MN1, then PF1 | Plain note "see @Private note", tap it: no private note opens. Done only when R18 is in. Old links saved before 56dd028 stay (2:32 pm, no migration); R18's mask covers what they open. |
+| [x] | R8 | PN-MENTION: "@Private note" never resolves to a private note (Core half); the object page never shows its body (Builder B half) | Core 0ad, Builder B 0r | #551 (Core half) | Core half 56dd028; Builder B half in e149e66 (#580, #597) | MN1, then PF1 | Plain note "see @Private note", tap it: no private note opens. Done only when R18 is in. Old links saved before 56dd028 stay (2:32 pm, no migration); R18's mask covers what they open. |
 | [x] | R9 | ", best" in the Day log and Review's tapped day | Core 0w | #504 | 56dd028 | DB1 | Log a set that beats his best (kg), open the Day log, then Review on that day: "Bench 85 × 8, best." and the hero says "Bench best". |
 | [x] | R10 | #403 Tess's eyes, inert | Builder A 0j | #403 | 56dd028 | EY0 | Phone build, no flags: no eyes on Home or the live workout corner, and no setting for them. |
 | [x] | R11 | Trip bands: Review counts each item by its own op zone (with G1 The week, G2 cook day) | Core 0ae | #552 | 56dd028 | TB1 | `ReviewTripWeekTests` (13) pass; Sim `-demoTime` on a trip week: a task done 9 pm Pacific and a cook finished after midnight land on their own zone's day. |
 | [ ] | R12 | SAVE A COPY default name "Before update <day>.tessera"; rotation touches only the rolling prefix | Core 0af | none yet | **not yet** | SC1 | SAVE A COPY: the suggested name is "Before update <day>.tessera"; background past the daily copy and the rolling seven never prune it. |
 | [ ] | R13 | SAVE A COPY warns when he picks the Backups folder (after R12) | Builder B 0t | none yet | **not yet** | SC2 | SAVE A COPY into Backups: "This is the Backups folder. Daily copies here get replaced. Save somewhere else?"; saving elsewhere is one tap. |
-| [ ] | R14 | DST fall-back: DS8 repeated 1:30 am, with DS29 and DS36 | Core 0ag | none yet | **not yet**, **due before the Oct 31 night** | none yet (fixture DS8, DS29, DS36) | `TessGrammarFallBackTests` `oneThirtyInFirstPassIsSecondPass` (DS8: "bins 1:30am" at 1:45 am PDT is 1:30 am PST that night, not Mon Nov 2) and `datedLiftSundayIsNoon` (DS29), plus `noticedWeeksSameClockIsTwo` (DS36) pass (`fixtures/dst-nov-1.md`). |
-| [ ] | R15 | Review foot line out of Tess's band (Design v9 walk, must land) | Builder B 0x | none yet | **not yet** | **FB1** | Sim: Home's link line (`HomeSpatialView` HomeLinkLine) sits clear of Tess's band. |
-| [ ] | R16 | Routines Tess line and "Add an exercise" out of the band, 84 pt inset (Design v9 walk, must land) | Builder A 0q | none yet | **not yet** | **FB2** | Sim: Routines' Tess line and "Add an exercise" sit clear of the band at the 84 pt inset. |
+| [x] | R14 | DST fall-back: DS8 repeated 1:30 am, with DS29 and DS36 | Core 0ag | none yet | e149e66 (#576, 8332d0e; DS29/DS36 not re-read) | none yet (fixture DS8, DS29, DS36) | `TessGrammarFallBackTests` `oneThirtyInFirstPassIsSecondPass` (DS8: "bins 1:30am" at 1:45 am PDT is 1:30 am PST that night, not Mon Nov 2) and `datedLiftSundayIsNoon` (DS29), plus `noticedWeeksSameClockIsTwo` (DS36) pass (`fixtures/dst-nov-1.md`). |
+| [x] | R15 | Review foot line out of Tess's band (Design v9 walk, must land) | Builder B 0x | none yet | e149e66 (#583) | **FB1** | Sim: Home's link line (`HomeSpatialView` HomeLinkLine) sits clear of Tess's band. |
+| [x] | R16 | Routines Tess line and "Add an exercise" out of the band, 84 pt inset (Design v9 walk, must land) | Builder A 0q | none yet | e149e66 (#601) | **FB2** | Sim: Routines' Tess line and "Add an exercise" sit clear of the band at the 84 pt inset. |
 | [x] | R17 | Resume key progress reads targetSets (nothing writes "sets") | Builder A 0r | #546 | 56dd028 | **RK1** | Sim: start an exercise planned for 4 sets, log one, leave and resume: progress counts toward 4, not 3. |
-| [ ] | R18 | Private-field mask: a private object shows only "Private note", "Private task" or "Private memory" on the generic page, `PropertyList` and the class page's newest row; closes R8's Builder B half; a workout's notes show only "Note kept private" on its front (decisions 5:07 pm, PM21 to PM36) | Core 0ai | none yet | **not yet** | PF1 | `WallsUITests/testObjectPageMask` with `-wallsSeedPrivate` (PM1 to PM34; PM35 and PM36 in the package and live suites), then VoiceOver on Push A's Linked from and its front: no field names, values or counts, and no words of the workout's notes ("left knee sore", "weighed 82.4 before", "felt strong") anywhere. |
-| [ ] | R19 | Bare-number body wall ("is 82.4 good?" near his last weight); **first in Core's 0ai** (Product 4:50 pm (3)) | Core 0ai | none yet (with #564) | **not yet** | BW1 | `WallsUITests` BN01 to BN11: "is 82.4 good?" makes no Claude call and no Home task with the number; "is 3.5 good?", "is 120 good?", "bench 82.5 x 5 good?" stay plain. |
+| [x] | R18 | Private-field mask: a private object shows only "Private note", "Private task" or "Private memory" on the generic page, `PropertyList` and the class page's newest row; closes R8's Builder B half; a workout's notes show only "Note kept private" on its front (decisions 5:07 pm, PM21 to PM36) | Core 0ai | none yet | e149e66 (#580, #597) | PF1 | `WallsUITests/testObjectPageMask` with `-wallsSeedPrivate` (PM1 to PM34; PM35 and PM36 in the package and live suites), then VoiceOver on Push A's Linked from and its front: no field names, values or counts, and no words of the workout's notes ("left knee sore", "weighed 82.4 before", "felt strong") anywhere. |
+| [ ] | R19 | Bare-number body wall ("is 82.4 good?" near his last weight); **first in Core's 0ai** (Product 4:50 pm (3)) | Core 0ai | none yet (with #564) | code in e149e66 (PrivateFacts bare-number wall, #627); WallsUITests BN01-BN11 not merged (#564), so the row stays open | BW1 | `WallsUITests` BN01 to BN11: "is 82.4 good?" makes no Claude call and no Home task with the number; "is 3.5 good?", "is 120 good?", "bench 82.5 x 5 good?" stay plain. |
 
 ## Open items to read out at 9:30 am
 
@@ -58,6 +58,16 @@ section 3; "none yet" means that section has no row for it, so the check line is
 
 19 rows. In 56dd028: R1, R3, R4, R5, R7, R9, R10, R11, R17 (9 rows). Half in: R2 (wording open), R8 (Builder B half
 folded into R18). Not yet in any release: R6, R12, R13, R14, R15, R16, R18, R19 (8 rows).
+
+## Release 8 (e149e66), read Sat Oct 17 from the git history
+
+Release 8 e149e66 went onto his phone at 9:50 PM PT Oct 16 (Product). Checked by which rider PRs are ancestors of it
+and by greps of its tree; nothing was run. Newly in: R14 (the DST fall-back DS8 fix, #576; DS29 and DS36 not re-read,
+so re-check them before the Oct 31 night), R15 (#583), R16 (#601), R18 (#580, #597), and with R18 the Builder B half
+of R8. R19's code is in (the bare-number wall in `PrivateFacts`), but its proof, `WallsUITests` BN01 to BN11, rides
+#564, which has not merged, so R19 stays open. Still not in any release: R6 (no N15 launch pass found in the tree),
+R12, R13. R2 still waits on the "Body weight logged." wording. The 9:30 AM Thu call therefore has R2, R6, R12, R13 and
+R19 left, plus the DS29 and DS36 re-read.
 
 ## The rule
 

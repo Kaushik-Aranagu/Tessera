@@ -5,6 +5,30 @@ import Testing
 
 @MainActor
 struct KitchenCaptureTests {
+    @Test func aMedicineOnGroceriesIsNeverSaidBack() async throws {
+        // Product 8:13 and 10:06 PM PT: a medicine on the list is a health fact.
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        let advil = await TessCaptureEngine(engine: engine).capture("buy advil", context: TessContext())
+        #expect(!advil.line.lowercased().contains("advil"), "\(advil.line)")
+    }
+
+    @Test func cookingFromTheBarWhileAWorkoutRunsSaysSo() async throws {
+        // QA on #788 (G56): the Bar's refusal is "Workout running.", not a generic failure, and nothing is written.
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let tess = TessCaptureEngine(engine: engine)
+        _ = try engine.perform(CreateRecipe(text: RecipeParserTests.carbonara), by: .user)
+        let workout = try store.create(#require(classes[.workout]), title: "Push day")
+        try engine.perform(StartWorkout(workout: workout.id), by: .user)
+        let ops = engine.history(from: .distantPast, to: .distantFuture).count
+        let cooking = await tess.capture("cook carbonara", context: TessContext())
+        #expect(cooking.line == "Workout running." && cooking.records.isEmpty, "\(cooking.line)")
+        #expect(engine.history(from: .distantPast, to: .distantFuture).count == ops)
+        #expect(ProcessTable(engine: engine).running()?.subject?.id == workout.id)
+    }
+
     @Test func kitchenPhrasesFromTheBar() async throws {
         let store = ObjectStore.open(inMemory: true)
         let classes = try store.prepareCatalog()
@@ -22,9 +46,9 @@ struct KitchenCaptureTests {
         let recipe = try #require(RecipeBook(store: store, classes: classes).recipes().first)
 
         let milk = await tess.capture("buy milk", context: context)
-        #expect(milk.line == "Milk, on the list.")
+        #expect(milk.line == "Milk, on Groceries.")
         let list = await tess.capture("eggs, bread and 2 lemons", context: context)
-        #expect(list.line == "3 things on the list.")
+        #expect(list.line == "3 things on Groceries.")
         #expect(groceries.shoppingOrder().map(\.text) == ["lemons", "bread", "milk", "eggs"])
 
         let planned = await tess.capture("cook carbonara thu", context: context)
@@ -45,7 +69,7 @@ struct KitchenCaptureTests {
         #expect(timers.allSatisfy { $0.cook != nil }) // they belong to the cook in progress
 
         let packing = await tess.capture("list: packing", context: context)
-        #expect(packing.line == "New list: Packing.")
+        #expect(packing.line == "Packing, new list.")
 
         // Ordinary phrases still go where they did.
         let call = await tess.capture("call mum thu", context: context)

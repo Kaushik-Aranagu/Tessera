@@ -37,4 +37,94 @@ struct ShoppingTests {
         #expect(try lists.items(of: #require(groceries.list)).count == 3)
         #expect(groceries.shop(in: engine) == nil)
     }
+
+    // MARK: G43
+
+    /// 14 rows, a running shop, all 14 checked.
+    private func checkedShop() throws -> (engine: ActionEngine, store: ObjectStore, process: UUID) {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let names = (1 ... 14).map { "thing\($0)" }
+        try engine.perform(AddGroceries(lines: names), by: .user)
+        try engine.perform(StartShop(), by: .user)
+        let groceries = Groceries(store: store, classes: classes)
+        for row in groceries.shoppingOrder() {
+            try engine.perform(CheckListItem(item: row.id), by: .user)
+        }
+        let process = try #require(ProcessTable(engine: engine).running()).id
+        return (engine, store, process)
+    }
+
+    @Test func finishShopUndoBringsBackTheBasketAndTheShop() throws {
+        let (engine, store, process) = try checkedShop()
+        let groceries = Groceries(store: store, classes: engine.classes)
+        let lists = ListContents(store: store, classes: engine.classes)
+        let list = try #require(groceries.list)
+        let before = lists.items(of: list).map { ($0.id, $0.checkedAt) }
+        #expect(before.count == 14)
+        let done = try engine.perform(FinishShop(), by: .user)
+        #expect(done.output == 14)
+        #expect(ProcessTable(engine: engine).running() == nil)
+        #expect(lists.items(of: list).isEmpty)
+
+        #expect(engine.undo(done.record) == .applied)
+        let after = lists.items(of: list)
+        #expect(after.count == 14)
+        #expect(after.allSatisfy { $0.isDone })
+        #expect(Set(after.map(\.id)) == Set(before.map(\.0)))
+        for item in after {
+            #expect(item.checkedAt == before.first { $0.0 == item.id }.flatMap(\.1))
+        }
+        let shop = try #require(groceries.shop(in: engine))
+        #expect(shop.state == .running && shop.id == process)
+        #expect(ProcessTable(engine: engine).running()?.nextStep == "Shopping, all in the basket")
+    }
+
+    @Test func finishShopUndoRestoresPantryStates() throws {
+        let (engine, store, _) = try checkedShop()
+        let list = try #require(Groceries(store: store, classes: engine.classes).list)
+        let rows = list.orderedChildren
+        let done = try engine.perform(FinishShop(), by: .user)
+        #expect(rows.allSatisfy { $0.isDeleted })
+        engine.undo(done.record)
+        #expect(rows.count == 14)
+        #expect(rows.allSatisfy { !$0.isDeleted })
+    }
+
+    @Test func finishShopReceiptNamesTheShopFirst() throws {
+        let (engine, _, _) = try checkedShop()
+        let done = try engine.perform(FinishShop(), by: .user)
+        #expect(done.record.receipt == "Shopping, finished")
+        #expect(done.record.summary == "Finished shopping")
+    }
+
+    @Test func finishShopWithNothingCheckedStillFinishes() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        try engine.perform(AddGroceries(lines: ["milk", "eggs"]), by: .user)
+        try engine.perform(StartShop(), by: .user)
+        let done = try engine.perform(FinishShop(), by: .user)
+        #expect(done.output == 0)
+        #expect(ProcessTable(engine: engine).running() == nil)
+        #expect(done.record.receipt == "Shopping, finished")
+        #expect(Groceries(store: store, classes: classes).shoppingOrder().count == 2)
+    }
+
+    @Test func finishShopFailureWritesNothing() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        // No groceries list at all: there is no shop to finish, and nothing is made to finish on.
+        store.softDelete(try #require(store.object(id: Groceries.listID)))
+        let objects = store.context.objects.count
+        let records = engine.history(limit: 100).count
+        #expect(throws: ActionError.self) {
+            try engine.perform(FinishShop(), by: .user)
+        }
+        #expect(store.context.objects.count == objects)
+        #expect(engine.history(limit: 100).count == records)
+        #expect(ProcessTable(engine: engine).running() == nil)
+    }
 }

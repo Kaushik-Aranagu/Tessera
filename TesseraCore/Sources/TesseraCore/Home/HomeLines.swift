@@ -6,6 +6,8 @@ import Foundation
 public struct HomeFact: Equatable, Sendable {
     public enum Kind: String, Sendable {
         case workout, cook, shop, task, rest
+        /// A running list that is not Groceries ("Packing").
+        case list
     }
 
     public enum State: String, Sendable {
@@ -232,6 +234,9 @@ public enum HomeLines {
         case .shop:
             guard let left = fact.step, left > 0 else { return "\(fact.title): all in the basket." }
             return "\(fact.title): \(left) left."
+        case .list:
+            guard let left = fact.step, left > 0 else { return "\(fact.title): all done." }
+            return "\(fact.title): \(left) left."
         case .task:
             // His own words; the time sits at the right, drawn by the page.
             return fact.title
@@ -257,20 +262,20 @@ public enum HomeLines {
             return "\(exercise) paused at set \(step)."
         case .planned:
             if let at = fact.startsAt, !fact.tomorrow {
-                return "\(fact.title) at \(DayStoryClock.sentenceTime(at, calendar: calendar))."
+                return "\(fact.title), \(DayStoryClock.sentenceTime(at, calendar: calendar))."
             }
             return "\(fact.title) \(fact.tomorrow ? "tomorrow" : dayWord(now, calendar: calendar))."
         }
     }
 
-    /// "Tacos tonight" (a cook is an evening thing until it has a time), "Tacos at 7" with one (Kitchen lead, G8).
+    /// "Tacos tonight" (a cook is an evening thing until it has a time), "Tacos, 7 pm" with one (Kitchen lead, G8).
     static func cookWhen(_ fact: HomeFact, now: Date, calendar: Calendar) -> String {
         if fact.tomorrow {
             return "\(fact.title) tomorrow"
         }
         if let at = fact.startsAt {
-            // Hero times carry "pm" (TW17, Product): "Tacos at 7 pm".
-            return "\(fact.title) at \(HouseTime.clock(at, calendar: calendar))"
+            // Hero times carry "pm" (TW17, Product): "Tacos, 7 pm".
+            return "\(fact.title), \(HouseTime.clock(at, calendar: calendar))"
         }
         let evening: Set<DayPart> = [.evening, .shutdown, .late]
         let word = evening.contains(DayPart(hour: calendar.component(.hour, from: now))) ? "tonight" : "today"
@@ -293,11 +298,13 @@ public enum HomeLines {
             ?? "\(fact.title), paused"
         case (.workout, .planned):
             if let at = fact.startsAt, !fact.tomorrow {
-                "\(fact.title) at \(DayStoryClock.sentenceTime(at, calendar: calendar))"
+                "\(fact.title), \(DayStoryClock.sentenceTime(at, calendar: calendar))"
             } else {
                 fact.title
             }
         case (.task, _): fact.title
+        case (.list, _): fact.step.map { $0 > 0 ? "\(fact.title), \($0) left" : "\(fact.title), all done" } ?? fact
+            .title
         case (.cook, .planned): cookWhen(fact, now: now, calendar: calendar)
         case (.cook, .done): "\(fact.title) done"
         case (.cook, _): fact.step.map { "\(fact.title), step \($0)" } ?? fact.title
@@ -322,6 +329,10 @@ public enum HomeLines {
             return fact.startsAt.map { same(DayStoryClock.sentenceTime($0, calendar: calendar)) } ?? (nil, nil)
         }
         switch (fact.kind, fact.state) {
+        case (.list, _):
+            // A running list names itself in the context and counts in the detail; a name that does not fit says
+            // nothing, never a cut one ("Packing" and "6 left", within the caps).
+            return fitsContext(fact.title) ? same(fact.title) : (nil, nil)
         case (.rest, _), (.task, _):
             // The day label above the hero already names the day, so the rest line says "today" (Builder B's #366);
             // the weekday lives on as the widget's meta through `weekday(now:calendar:)`.
@@ -340,6 +351,10 @@ public enum HomeLines {
         case (.workout, .planned):
             // The closed day's look ahead: "tomorrow, first" (m4-steers §7), so Now and the widget agree.
             return same(fact.tomorrow ? "tomorrow, first" : dayWord(now, calendar: calendar))
+        case (.cook, .planned) where (fact.toBuy ?? 0) == 0:
+            // Nothing left to buy: the context goes back to the day word; the row keeps "nothing to buy" (Kitchen K87,
+            // rulings C8 and B6). Tomorrow's cook keeps "tomorrow" (QA on #780).
+            return same(fact.tomorrow ? "tomorrow" : dayWord(now, calendar: calendar))
         default:
             return kitchenContext(for: fact, calendar: calendar).map { ($0, $0) } ?? (nil, nil)
         }
@@ -371,6 +386,8 @@ public enum HomeLines {
             return fact.steps.map { "Step \(step) of \($0)." } ?? "Step \(step)."
         case .shop:
             return fact.step.map { $0 == 0 ? "All in the basket." : "\(count($0, "item")) left." }
+        case .list:
+            return fact.step.map { $0 == 0 ? "All done." : "\($0) left." }
         default:
             return nil
         }
@@ -506,6 +523,7 @@ public struct HomeFacts {
         }
         if let cook = classes[.cook], store.isSubclass(classDef, ofClassID: cook.id) {
             let recipe = store.linkedObjects("recipe", of: subject).first
+            let title = cookTitle(subject, recipe: recipe)
             let steps = recipe.map { RecipeBook(store: store, classes: classes).steps(of: $0).count } ?? 0
             return HomeFact(id: subject.id, kind: .cook, title: title, state: state,
                             step: (process.resumePoint?.index ?? 0) + 1, steps: steps > 0 ? steps : nil,
@@ -515,6 +533,13 @@ public struct HomeFacts {
             let left = Groceries(store: store, classes: classes).shoppingOrder().count
             return HomeFact(id: subject.id, kind: .shop, title: title, state: state, step: left,
                             startedAt: process.startedAt, lastTouchedAt: process.lastTouchedAt)
+        }
+        // A running list that is not Groceries: its name (masked when walled) and the items left.
+        if let list = engine.classes[.list], store.isSubclass(classDef, ofClassID: list.id) {
+            let left = ListContents(store: store, classes: classes).open(in: subject).count
+            return HomeFact(id: subject.id, kind: .list, title: ListContents.shownName(of: subject, in: store),
+                            state: state, step: left, startedAt: process.startedAt,
+                            lastTouchedAt: process.lastTouchedAt)
         }
         return nil
     }
@@ -529,18 +554,27 @@ public struct HomeFacts {
 
     /// A cook finished today stays on Home like a done workout, until 04:00 (Research G1).
     public func fact(doneCook cook: ObjectRecord) -> HomeFact {
-        HomeFact(id: cook.id, kind: .cook, title: store.displayTitle(of: cook), state: .done,
-                 startedAt: store.value("startedAt", of: cook)?.dateValue,
-                 endedAt: store.value("cookedAt", of: cook)?.dateValue)
+        HomeFact(
+            id: cook.id,
+            kind: .cook,
+            title: cookTitle(cook, recipe: store.linkedObjects("recipe", of: cook).first),
+            state: .done,
+            startedAt: store.value("startedAt", of: cook)?.dateValue,
+            endedAt: store.value("cookedAt", of: cook)?.dateValue
+        )
     }
 
-    /// Cooks finished on his day containing `now`, newest first.
+    /// Cooks finished on his day containing `now`, newest first. Each files on the day it was finished in the zone it
+    /// was finished in (board 0ae G3, like Review's cooking band), so a cook finished in flight before 4 am Pacific
+    /// is not today's once he lands in New York.
     public func cooksFinished(on now: Date) -> [ObjectRecord] {
         guard let cookClass = engine.classes[.cook] else { return [] }
         let day = TesseraDay(calendar: calendar)
+        let zones = OpZones(store: store)
+        let today = day.day(of: now)
         return store.objects(of: cookClass).filter { cook in
             guard !cook.isDeleted, let at = store.value("cookedAt", of: cook)?.dateValue else { return false }
-            return day.isSameDay(at, now)
+            return zones.dayKey(of: at, for: cook.id, calendar: calendar) == today
         }
         .sorted {
             (store.value("cookedAt", of: $0)?.dateValue ?? .distantPast) >
@@ -548,11 +582,29 @@ public struct HomeFacts {
         }
     }
 
+    /// A cook's name on Home: "Private recipe" when the recipe's title is private (gap hunt G21, ObjectPrivacy).
+    private func cookTitle(_ object: ObjectRecord, recipe: ObjectRecord?) -> String {
+        let last = BodyWeight.lastKg(in: store)
+        if let label = ObjectPrivacy.label(of: recipe ?? object, in: store, classes: engine.classes) {
+            return label
+        }
+        let title = store.displayTitle(of: object)
+        return PrivateFacts.isPrivateTitle(title, lastWeightKg: last) || EngineWall.isHealth(title, lastWeightKg: last)
+            ? ObjectPrivacy.recipeLabel : title
+    }
+
     /// A cook planned for today ("cook tacos thu": a task about the recipe), with what's still to buy for it.
     public func fact(plannedCook task: ObjectRecord, recipe: ObjectRecord) -> HomeFact {
-        HomeFact(id: task.id, kind: .cook, title: store.displayTitle(of: recipe), state: .planned,
-                 toBuy: Groceries(store: store, classes: engine.classes).toBuy(for: recipe.id),
-                 startsAt: store.value("due", of: task)?.dateValue)
+        // The planned time first (a captured cook has startsAt, never due); a date-only due (midnight) has no clock.
+        var at = store.value("startsAt", of: task)?.dateValue
+        if at == nil, let due = store.value("due", of: task)?.dateValue,
+           calendar.dateComponents([.hour, .minute], from: due) != DateComponents(hour: 0, minute: 0)
+        {
+            at = due
+        }
+        return HomeFact(id: task.id, kind: .cook, title: cookTitle(recipe, recipe: recipe), state: .planned,
+                        toBuy: Groceries(store: store, classes: engine.classes).toBuy(for: recipe.id),
+                        startsAt: at)
     }
 
     /// A timed task on Now or Next: his words, with its time.

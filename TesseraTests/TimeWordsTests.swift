@@ -69,7 +69,7 @@ struct TimeWordsTests {
     /// Rider 0r: the Resume key's progress counts each entry's "targetSets", not a "sets" field nothing writes.
     @Test func plannedSetsReadTargetSets() throws {
         let container = TesseraSchema.makeContainer(inMemory: true)
-        let model = AppModel(context: container.mainContext)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         let store = model.store
         let workout = try store.create(#require(model.classDef(.workout)), title: "Push Day A")
         let entries = [4.0, 3, 5].map { sets in

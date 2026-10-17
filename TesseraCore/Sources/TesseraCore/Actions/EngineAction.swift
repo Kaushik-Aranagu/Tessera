@@ -13,11 +13,24 @@ public protocol EngineAction: Codable, Sendable {
     /// What Tess says for it, thing first: "Films, made.", "Milk, on Groceries." Nil when it has no spoken form yet;
     /// the caller then falls back (Research receipts-thing-first RC23).
     @MainActor func receipt(in store: ObjectStore) -> String?
+    /// The summary for this run, when it depends on what `apply` returned ("Packing, nothing to reset."). Carried per
+    /// op, never through shared state (QA on #826). Defaults to `summary(in:)`.
+    @MainActor func summary(in store: ObjectStore, output: Output) -> String
+    /// The receipt for this run, from what `apply` returned. Defaults to `receipt(in:)`.
+    @MainActor func receipt(in store: ObjectStore, output: Output) -> String?
 }
 
 public extension EngineAction {
     @MainActor func receipt(in _: ObjectStore) -> String? {
         nil
+    }
+
+    @MainActor func summary(in store: ObjectStore, output _: Output) -> String {
+        summary(in: store)
+    }
+
+    @MainActor func receipt(in store: ObjectStore, output _: Output) -> String? {
+        receipt(in: store)
     }
 }
 

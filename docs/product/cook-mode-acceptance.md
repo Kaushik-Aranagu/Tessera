@@ -27,7 +27,7 @@ These wait because the scenarios that need them (S08, S09) are edge cases in a f
 | 1 Cook face | A sibling `CookTimerAttributes`, drawn in the rest activity's language (horizon line, countdown, Done face). There is one cook activity for all kitchen timers: the soonest leads and the rest show as "+N". `RestActivityController.end()` keeps ending only rest activities. |
 | 2 Timers know their step | Yes. `Kitchen Timer.step`; the minutes are the lower bound of the step's range ("20-25 min" gives 20). The label is the verb nearest the duration ("Roast" for "Add the chicken and roast 20 min"), else "Step 3" (ruled Oct 16 after Research's day-one walk, W12 and G6; the first-verb rule gave "Add"). |
 | 3 Alerts | The local notification is the only alert: id `kitchen-timer.<id>`, `.active`, thread `tessera.kitchen`. Activity updates are silent. While cook mode is open, the in-app flare replaces the banner for this cook's timers. |
-| 4 Timer end and the resume point | A finished timer does not move the resume point. Its step slides back in as an overlay with a haptic. Swiping is the only way to change step. |
+| 4 Timer end and the resume point | A finished timer does not move the resume point. Its step slides back in as an overlay with a haptic. The Next key is the way to move on; there is no step swipe in cook mode (Product, Oct 17, 4:52). |
 | 5 Deep link | `tessera://cook` opens cook mode on the activity's cook. A tap on the notification goes there too. |
 | 7 Idle rule | Product's rule (19:06): never suspended while a timer runs or within 45 min of the last step change. Otherwise 45 min. The limit is per owner app in `ProcessTable`. |
 | 8 Reconcile | As Research wrote it. An ended timer that isn't stopped stays flared until he stops it. |
@@ -40,14 +40,14 @@ These wait because the scenarios that need them (S08, S09) are edge cases in a f
 
 **On the simulator, in the recording (`docs/recordings/NN-cook-mode.mp4`, starting on the page with no blank lead-in).** The recording must show each of these steps:
 1. Tap Cook on the Weeknight dal recipe page. A dark full-screen cover rises, showing step 1 at the Title tier with its scaled amounts under it.
-2. Swipe up. Step 2 arrives, and step 1 stays as a dim line above it.
+2. Press Next. Step 2 arrives, and step 1 stays as a dim line above it.
 3. Hold the cadmium "8 minutes" key. A horizon line appears at the top and starts burning down.
 4. Start a second timer. Two stacked lines appear, each labelled. For the recording, shorten a timer with `-demoTime` or a short fixture recipe, so the end shows within the clip.
 5. A timer ends. Its line flares cadmium and its step slides back in, with a haptic.
 6. Lock the phone. The cook Live Activity shows the soonest timer and "+1". When it ends, the Done face flips on its own and the notification arrives.
 7. Background the app for more than 13 min with a timer running (fixture or clock shift), then return. The cook is still running and still Now.
 7b. Drag a running timer's line left. It fades, and Tess says "Simmer stopped." with UNDO. Tapping the flared stack stops a finished timer.
-8. Hold Finish on the last step. The cover closes, the Cook entry is written, and Tess's line appears ("Weeknight dal, first time.").
+8. Hold Finish on the last step. The cover closes, the Cook entry is written, and Tess's line appears. The line is true to the history (Product, Oct 17 4:57): "Weeknight dal, first time." when it is the first cook ever; "Weeknight dal, first time this month." when it is the first in a month; "Weeknight dal, second time this month." from the second. Cooking.swift picks the form by fact.
 
 **UI bar.**
 - Every target is at least 64 pt.
@@ -71,11 +71,11 @@ The meal plan feeding groceries ("cook carbonara thursday" puts its ingredients 
 
 **3. Pause (day-one walk W15, W16).** "pause" holds the bead and this cook's step timers together: the key row reads "PAUSED" with the step's minutes kept ("20 MIN LEFT"), the pending notification for the step's timer is removed, and the Lock Screen shows the cook paused. A spoken timer in the cook ("timer bread 8") is not a step's and keeps running: the oven does not know about the doorbell. "go on", "resume" or a tap on PAUSED walks the bead again, reschedules the step's timer under the same id, and every later minute on the clock shifts by the paused length. Pause is slice 12b; until it lands, Tess says "Pause comes later." and the clock keeps walking.
 
-**4. Running over and "5 more minutes" (W18, G7, Research's star).** When a timed step's timer ends, the bead holds at the step's end and the step stays lit until he moves on (next, a swipe, or the flare's stop); the clock never lights the next step on its own, because an oven step is done when he says so. "5 more minutes", "5 more" or "give it 5" while a step is held stretches that step by 5 and restarts its own timer under the same id (KT7), never a second timer; the minutes ahead shift by the same 5 and the key row follows ("11 MIN LEFT"). With no step held, "5 more" on the current timed step extends its running timer the same way. Product can overrule the hold; the shift rule stands either way.
+**4. Running over and "5 more minutes" (W18, G7, Research's star).** When a timed step's timer ends, the bead holds at the step's end and the step stays lit until he moves on (the Next key, or the flare's stop); the clock never lights the next step on its own, because an oven step is done when he says so. "5 more minutes", "5 more" or "give it 5" while a step is held stretches that step by 5 and restarts its own timer under the same id (KT7), never a second timer; the minutes ahead shift by the same 5 and the key row follows ("11 MIN LEFT"). With no step held, "5 more" on the current timed step extends its running timer the same way. Product can overrule the hold; the shift rule stands either way.
 
 **5. A spoken extra timer during a cook (W7, G8).** It sits on one labelled line under the key row, outside the stroke ("Bread · 8 MIN"), never as a step on the clock, because the clock is the recipe and the timer is his. Several stack by end time, soonest first. It ends with the same flare as a step's timer, on its own line, and it survives pause, done and leaving the page (Finish keeps timers that belong to no step, ASSUMED-10). Builder A draws it with Design; Design's words win on size and placement.
 
-Day-one walk numbers accepted as written in `docs/research/fixtures/recipe-clock-day-one.md`, including W23's "2 HR 45 MIN LEFT" at 10:32 pm (step 1's 2 minutes are spent; the rest figure in `recipe-clock-steps.md` stays 2 HR 47 MIN).
+Day-one walk numbers accepted as written in `docs/research/fixtures/recipe-clock-day-one.md`, including W23's "2 HR 45 MIN LEFT" (10:32 pm; step 1's 2 minutes are spent; the rest figure in `recipe-clock-steps.md` stays 2 HR 47 MIN).
 
 
 ## Overnight cook's row time (decision 2:38 PM Oct 16, Core #552)

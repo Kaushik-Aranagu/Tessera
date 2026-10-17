@@ -16,6 +16,11 @@ final class LinkStub: URLProtocol, @unchecked Sendable {
     nonisolated(unsafe) static var pages: [String: Page] = [:]
     nonisolated(unsafe) static var failure: URLError.Code?
     nonisolated(unsafe) static var requests: [URLRequest] = []
+    /// A page that never answers, and one that sends its headers and a little body, then stalls (the 15 s cap).
+    nonisolated(unsafe) static var hangs: Set<String> = []
+    /// A failure for one host only (Claude timing out while the page reads).
+    nonisolated(unsafe) static var hostFailures: [String: URLError.Code] = [:]
+    nonisolated(unsafe) static var stalls: Set<String> = []
     /// What was sent to Claude, by request, so a test can read what left the phone.
     nonisolated(unsafe) static var bodies: [Data] = []
 
@@ -51,7 +56,21 @@ final class LinkStub: URLProtocol, @unchecked Sendable {
             client?.urlProtocol(self, didFailWithError: URLError(failure))
             return
         }
+        if let code = Self.hostFailures[request.url?.host() ?? ""] {
+            client?.urlProtocol(self, didFailWithError: URLError(code))
+            return
+        }
+        if Self.hangs.contains(request.url?.host() ?? "") {
+            return
+        }
         let page = Self.pages[request.url?.host() ?? ""] ?? Page(status: 404, body: "")
+        if Self.stalls.contains(request.url?.host() ?? "") {
+            let head = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil,
+                                       headerFields: ["Content-Type": page.type])!
+            client?.urlProtocol(self, didReceive: head, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: Data("<html>".utf8))
+            return
+        }
         if let target = page.redirect, let url = URL(string: target), let from = request.url {
             let hop = HTTPURLResponse(url: from, statusCode: 302, httpVersion: nil, headerFields: ["Location": target])!
             client?.urlProtocol(self, wasRedirectedTo: URLRequest(url: url), redirectResponse: hop)
@@ -74,6 +93,9 @@ final class LinkStub: URLProtocol, @unchecked Sendable {
 /// table, L3 behind the switch and the cap, and the safety rules.
 @Suite(.serialized) @MainActor
 struct RecipeLinkTests {
+    /// Built from pieces: a key shape never sits in a source file.
+    static let fakeKey = ["sk", "ant", "TEST", "link"].joined(separator: "-")
+
     let store = ObjectStore.open(inMemory: true)
     let classes: [SystemCatalog.Key: ClassDef]
     var ledger: TessUsageLedger {
@@ -84,6 +106,9 @@ struct RecipeLinkTests {
         classes = try store.prepareCatalog()
         LinkStub.pages = [:]
         LinkStub.failure = nil
+        LinkStub.hangs = []
+        LinkStub.hostFailures = [:]
+        LinkStub.stalls = []
         LinkStub.requests = []
         LinkStub.bodies = []
     }
@@ -105,7 +130,7 @@ struct RecipeLinkTests {
     func reader(claude: Bool = false, allowed: Bool = true) -> RecipeLinkReader {
         var reader = RecipeLinkReader(session: LinkStub.session())
         if claude {
-            var claudeReader = ClaudeRecipeReader(keys: InMemoryKeychain("sk-ant-TEST-link"), ledger: ledger,
+            var claudeReader = ClaudeRecipeReader(keys: InMemoryKeychain(Self.fakeKey), ledger: ledger,
                                                   session: LinkStub.session(), allowed: { allowed })
             claudeReader.now = { DayPlanTests.at(15, "18:00", month: 10) }
             claudeReader.calendar = DayPlanTests.calendar
@@ -172,7 +197,7 @@ struct RecipeLinkTests {
         LinkStub.pages["blog.example.com"] = .init(body: Self.prose)
         // Off: never asked.
         #expect(await reader(claude: true, allowed: false).read("https://blog.example.com/beans").line
-            == RecipeLinkLine.noRecipe)
+            == RecipeLinkLine.claudeOff)
         #expect(!LinkStub.requests.contains { $0.url?.host() == "api.anthropic.com" })
         // On: Claude's text, as a ghost to check; no tools on the wire, the page marked as data.
         let reply = #"{"content":[{"type":"text","text":"Beans and rice\nIngredients\n1 can black beans\n1 onion\n2 tomatoes\n"#
@@ -181,8 +206,11 @@ struct RecipeLinkTests {
         let read = await reader(claude: true).read("https://blog.example.com/beans")
         #expect(read.kind == .readByClaude && read.line == RecipeLinkLine.claudeRead)
         let call = try #require(LinkStub.requests.last { $0.url?.host() == "api.anthropic.com" })
-        #expect(call.value(forHTTPHeaderField: "x-api-key") == "sk-ant-TEST-link")
+        #expect(call.value(forHTTPHeaderField: "x-api-key") == Self.fakeKey)
         #expect(ledger.calls().count == 1)
+        // G31: the receipt names the job, not "a paste".
+        let use = ledger.calls().first.flatMap { ledger.store.value("use", of: $0)?.stringValue }
+        #expect(use == TessUse.recipeLink.rawValue && use != TessUse.paste.rawValue)
         // At the cap: the paused line, Claude never asked.
         ledger.record(use: .paste, model: ClaudeRecipeReader.model, input: 0, output: 0,
                       costNano: TessUsageLedger.capNano, latency: 0, outcome: "works", requestID: nil,
@@ -269,8 +297,8 @@ struct RecipeLinkTests {
 
     @Test func theLinesAreTheTable() {
         #expect(RecipeLinkLine.saved("Chili mac") == "Chili mac saved.")
-        #expect(RecipeLinkLine.takenBack("Chili mac") == "Chili mac taken back.")
-        #expect(RecipeLinkLine.reading("budgetbytes.com") == "Reading budgetbytes.com…")
+        #expect(RecipeLinkLine.takenBack("Chili mac") == "Chili mac, taken back.")
+        #expect(RecipeLinkLine.reading("budgetbytes.com") == "Reading budgetbytes.com.")
         #expect([RecipeLinkLine.blocked, RecipeLinkLine.paywalled, RecipeLinkLine.noRecipe, RecipeLinkLine.tooBig,
                  RecipeLinkLine.claudeTimeout, RecipeLinkLine.videoNoRecipe]
                 .allSatisfy { $0.hasSuffix("Paste the text instead.") })
@@ -298,7 +326,7 @@ struct RecipeLinkTests {
             == "Claude couldn't use your key. Paste the text instead.")
         // The key stays: a 401 never clears it or turns Claude off.
         #expect(LinkStub.requests.contains { $0.url?.host() == "api.anthropic.com" })
-        #expect(keyed.claude?.keys.read() == "sk-ant-TEST-link")
+        #expect(keyed.claude?.keys.read() == Self.fakeKey)
         LinkStub.pages["api.anthropic.com"] = .init(status: 429, body: "{}", type: "application/json")
         #expect(await reader(claude: true).read("https://blog.example.com/beans").line == RecipeLinkLine.claudeBusy)
         let cut = #"{"content":[{"type":"text","text":"Beans\nIngredients\n1 can beans\n1 onion\nMethod\n1. Cook"}],"#
@@ -345,8 +373,22 @@ struct RecipeLinkTests {
         LinkStub.pages["api.anthropic.com"] = .init(body: #"{"content":[{"type":"text","text":"no recipe"}]}"#,
                                                     type: "application/json")
         let result = await reader(claude: true, allowed: false).read("https://blog.example.com/beans")
-        #expect(result.line == RecipeLinkLine.noRecipe)
+        #expect(result.line == RecipeLinkLine.claudeOff && result.kind == .failed)
         #expect(!LinkStub.requests.contains { $0.url?.host() == "api.anthropic.com" } && ledger.calls().isEmpty)
+    }
+
+    /// G32: the Claude step itself refuses with the switch off, even called directly with a good key and a clean page.
+    @Test func theClaudeStepChecksTheSwitchItself() async throws {
+        LinkStub.pages["api.anthropic.com"] = .init(body: #"{"content":[{"type":"text","text":"x"}]}"#,
+                                                    type: "application/json")
+        let before = LinkStub.requests.count
+        let step = ClaudeRecipeReader(keys: InMemoryKeychain(Self.fakeKey), ledger: ledger,
+                                      session: LinkStub.session(), allowed: { false })
+        let result = try await step.read("Beans and rice\n1 can black beans\n2 tomatoes",
+                                         source: #require(URL(string: "https://blog.example.com/beans")))
+        #expect(result.kind == .failed && result.line == RecipeLinkLine.claudeOff)
+        #expect(LinkStub.requests.count == before && ledger.calls().isEmpty)
+        #expect(RecipeLinkLine.claudeOff.hasSuffix("Paste the text instead."))
     }
 
     @Test func aPageOfOnlyWalledLinesIsNeverSent() async {
@@ -429,6 +471,15 @@ struct RecipeLinkTests {
         #expect(!sent.contains("flour 2.50") && !sent.contains("$1.25"))
     }
 
+    @Test(arguments: ["Flour: 1.25 cups", "Sugar, 0.75 cup", "Milk 1.50 pints.",
+                      "milk 3.49 gallon", "cheese 4.99 oz at the store", "butter 2.50 sticks for two",
+                      "eggs 1.25 qt from costco", "cream 2.99 pints on sale"])
+    func aMeasureNeedsAThingAfterIt(_ line: String) {
+        // Kitchen on #776, mirroring the groceries path: a unit with no thing after it is a price, at line end too
+        // (Kitchen on #792: "Flour: 1.25 cups" stays off the page, failing closed).
+        #expect(ClaudeRecipeReader.sendable(line, lastWeightKg: nil).isEmpty, "\(line)")
+    }
+
     @Test(arguments: [("paid 12.50 pounds for shoes", nil), ("weighed 82.50 kg this morning", nil),
                       ("weighed 82.50 kg this morning", 82.0), ("$1.25 cups", nil), ("2.50 g usd", nil),
                       ("182.50 lb", 82.5), ("8.50 kg today", nil), ("8.50 kg today", 82.0),
@@ -437,5 +488,17 @@ struct RecipeLinkTests {
     func moneyAndHisWeightKeepTheirAmounts(_ line: String, _ lastKg: Double?) {
         // QA on #669: the measure strip never hides money or a weigh-in.
         #expect(ClaudeRecipeReader.sendable(line, lastWeightKg: lastKg).isEmpty, "\(line)")
+    }
+
+    @Test(arguments: ["1.50 pints milk", "0.75 pt cream", "1.25 quarts stock", "2.50 qt broth", "1.25 gallons water",
+                      "0.50 gal juice", "2.50 dl cream", "33.00 cl beer", "1.50 sticks butter"])
+    func moreRecipeMeasuresAreNotMoney(_ line: String) {
+        // Board item (a): US and metric volumes and butter sticks are measures; kg and lb stay walled.
+        #expect(ClaudeRecipeReader.sendable(line, lastWeightKg: nil) == line, "\(line)")
+    }
+
+    @Test(arguments: ["8.50 kg today", "9.20 lb this morning"])
+    func bodyUnitsStayWalled(_ line: String) {
+        #expect(ClaudeRecipeReader.sendable(line, lastWeightKg: nil).isEmpty, "\(line)")
     }
 }

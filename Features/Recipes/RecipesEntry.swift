@@ -7,15 +7,39 @@ import TesseraCore
 struct RecipeView: View {
     let recipeID: UUID?
     @Environment(AppModel.self) private var model
+    /// The recipe this visit opened, kept: if it's deleted while showing, its page says "Recipe gone." rather than
+    /// jumping to another recipe (Kitchen on G3/G51).
+    @State private var opened: UUID?
+    /// Started on Paste (no recipes yet): stays there until Paste moves on.
+    @State private var pasting: Bool?
 
     var body: some View {
         let _ = model.revision
         NavigationStack {
             Group {
-                if let id = recipeID ?? RecipeBook(store: model.store, classes: model.classes).recipes().first?.id {
+                let rows = RecipeBook(store: model.store, classes: model.classes).recipes()
+                    .filter { !$0.isDeleted }
+                    .map { Row(id: $0.id, lastOpenedAt: model.store.value("lastOpenedAt", of: $0)?.dateValue,
+                               createdAt: $0.createdAt) }
+                if pasting ?? (opened == nil && Self.opening(requested: recipeID, rows: rows) == nil) {
+                    // The first recipe pasted here keeps its receipt and UNDO: the page moves on only when Paste
+                    // says so, not the moment the recipe exists (G52).
+                    PasteRecipe { id in
+                        opened = id
+                        pasting = false
+                    }
+                    .onAppear {
+                        if pasting == nil {
+                            pasting = true
+                        }
+                    }
+                } else if let id = Self.shown(opened: opened, requested: recipeID, rows: rows) {
                     RecipePage(recipeID: id)
-                } else {
-                    PasteRecipe()
+                        .onAppear {
+                            if opened == nil {
+                                opened = id
+                            }
+                        }
                 }
             }
             .toolbarTitleDisplayMode(.inline)
@@ -24,6 +48,34 @@ struct RecipeView: View {
         #if DEBUG
             .task { KitchenDemo.seedIfRequested(model) }
         #endif
+    }
+}
+
+extension RecipeView {
+    /// One recipe as the opener sees it.
+    struct Row: Equatable {
+        let id: UUID
+        let lastOpenedAt: Date?
+        let createdAt: Date
+    }
+
+    /// The recipe on screen: the one this visit opened, kept even once it's deleted (its page then reads "Recipe
+    /// gone."), else the opening pick.
+    static func shown(opened: UUID?, requested: UUID?, rows: [Row]) -> UUID? {
+        opened ?? opening(requested: requested, rows: rows)
+    }
+
+    /// The recipe "Recipes" opens (G51, Product: "last opened recipe, the newest if none"): the one asked for, else
+    /// the latest `lastOpenedAt`, else the newest by `createdAt`. Rows are live recipes only.
+    static func opening(requested: UUID?, rows: [Row]) -> UUID? {
+        if let requested {
+            return requested
+        }
+        let opened = rows.compactMap { row in row.lastOpenedAt.map { (row.id, $0) } }
+        if let latest = opened.max(by: { $0.1 < $1.1 }) {
+            return latest.0
+        }
+        return rows.max { $0.createdAt < $1.createdAt }?.id
     }
 }
 

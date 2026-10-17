@@ -12,6 +12,8 @@ public struct ProcessTable {
         public static let putAway: TimeInterval = 7 * 86400
         /// A suspended workout this old is wrapped up with what was logged.
         public static let wrapUpWorkout: TimeInterval = 6 * 3600
+        /// A running shop untouched this long (overnight) is suspended as the system, basket kept (G44).
+        public static let idleShop: TimeInterval = 12 * 3600
     }
 
     public let engine: ActionEngine
@@ -80,13 +82,22 @@ public struct ProcessTable {
 
     // MARK: Housekeeping
 
-    /// Suspends the running process if it has been idle longer than `idleLimit`
-    /// (the rest time plus 10 minutes while backgrounded). Returns the suspended process.
+    /// Suspends the running process if it has been idle: a workout longer than `idleLimit` (the rest time plus
+    /// 10 minutes while backgrounded), a shop or a list run longer than `Limits.idleShop` (G44; checking
+    /// a row resets the clock). A shop or a run keeps its basket. Returns the suspended process.
     @discardableResult
     public func suspendIfIdle(now: Date = .now, idleLimit: TimeInterval) -> ProcessSnapshot? {
-        // Only workouts go idle this way (the rest-based limit means nothing for a shop, a cook or a task).
-        guard let running = running(), let subject = running.subject, isWorkout(subject),
-              running.idle(at: now) > idleLimit else { return nil }
+        guard let running = running(), let subject = running.subject else { return nil }
+        let limit: TimeInterval
+        if isWorkout(subject) {
+            limit = idleLimit
+        } else if subject.id == Groceries.listID || isList(subject) {
+            // The rest-based limit means nothing for a shop or a list run; they have their own.
+            limit = Limits.idleShop
+        } else {
+            return nil
+        }
+        guard running.idle(at: now) > limit else { return nil }
         _ = try? engine.perform(SuspendProcess(process: running.id, time: running.lastTouchedAt), by: .system)
         return running
     }
@@ -107,23 +118,48 @@ public struct ProcessTable {
     public func tidyNotes(now: Date = .now) -> [Note] {
         var notes: [Note] = []
         var putAway = 0
+        var shopNotes: [Note] = []
         for process in all() where process.state == .suspended {
             let idle = process.idle(at: now)
             if let workout = process.subject, isWorkout(workout), idle >= Limits.wrapUpWorkout {
                 notes.append(wrapUp(process, workout: workout))
             } else if idle >= Limits.putAway {
+                let basket = basketOf(process)
                 if (try? engine.perform(EndProcess(process: process.id, reason: .putAway, time: now), by: .system)) !=
                     nil
                 {
-                    putAway += 1
+                    if let basket, basket.count > 0 {
+                        shopNotes.append(Note(line: "\(basket.name) moved to Later. \(basket.count) in the basket.",
+                                              undo: nil))
+                    } else {
+                        putAway += 1
+                    }
                 }
             }
         }
+        notes += shopNotes
         if putAway > 0 {
             let things = putAway == 1 ? "One thing" : "\(spelled(putAway).capitalized) things"
             notes.append(Note(line: "\(things) moved to Later.", undo: nil))
         }
         return notes
+    }
+
+    /// The checked rows in the basket of a shop or a list run, with the name the note uses; nil when the process is
+    /// neither. Rows are never dropped. A walled list name reads "Private list".
+    private func basketOf(_ process: ProcessSnapshot) -> (name: String, count: Int)? {
+        guard let subject = process.subject else { return nil }
+        if subject.id == Groceries.listID {
+            return ("Shopping", ListContents.basketCount(of: subject, in: store))
+        }
+        guard isList(subject) else { return nil }
+        let name = ObjectPrivacy.isPrivateWord(subject.title, in: store) ? "Private list" : subject.title
+        return (name, ListContents.basketCount(of: subject, in: store))
+    }
+
+    private func isList(_ object: ObjectRecord) -> Bool {
+        guard let listClass = engine.classes[.list], let classDef = object.classDef else { return false }
+        return ClassResolver.isSubclass(classDef, of: listClass)
     }
 
     private func isWorkout(_ object: ObjectRecord) -> Bool {
@@ -145,8 +181,9 @@ public struct ProcessTable {
         _ = try? engine.perform(EndProcess(process: process.id, reason: .wrappedUp, time: end), by: .system)
         let entries = workout.orderedChildren
         let started = entries.count { !$0.orderedChildren.isEmpty }
+        let noun = entries.count == 1 ? "exercise" : "exercises"
         return Note(
-            line: "\(store.displayTitle(of: workout)) saved. \(started) of \(entries.count) exercises.",
+            line: "\(store.displayTitle(of: workout)) saved. \(started) of \(entries.count) \(noun).",
             undo: nil
         )
     }

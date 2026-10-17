@@ -54,3 +54,5 @@
 | 48 | what should I watch | nothing in grammar-only Tess (no guessing) | Lists slice 8 |
 | 49 | todo buy bulbs | task in Later (todo wins over buy) | check |
 | 50 | buy milk tomorrow | task "Buy milk", tomorrow (dated buy is a task) | **fails** (fix 1) |
+
+App-copy groups (receipts, errors, refusals, Siri, timers) are in [kitchen-phrases-2.md](kitchen-phrases-2.md).

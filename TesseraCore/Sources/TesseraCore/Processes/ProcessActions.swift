@@ -35,7 +35,9 @@ public struct StartProcess: EngineAction {
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
         let subject = try transaction.object(subject)
         let now = time ?? .now
-        if let existing = transaction.openProcess(for: subject) {
+        let existing = transaction.openProcess(for: subject)
+        try transaction.refuseWhileWorkoutRuns(except: existing?.id, for: subject, action: Self.descriptor.name)
+        if let existing {
             try transaction.makeRunning(existing, at: now)
             try transaction.saveContext(existing, resumePoint: resumePoint, nextStep: nextStep, at: now)
             return existing
@@ -145,6 +147,8 @@ public struct ResumeProcess: EngineAction {
     public func apply(_ transaction: inout Transaction) throws {
         let process = try transaction.object(process, is: .process)
         let now = time ?? .now
+        try transaction.refuseWhileWorkoutRuns(except: process.id, for: transaction.store.linkedObjects("subject", of: process).first,
+                                               action: Self.descriptor.name)
         try transaction.makeRunning(process, at: now)
         try transaction.set("lastTouchedAt", to: .date(now), on: process)
     }
@@ -235,6 +239,23 @@ extension Transaction {
     func openProcess(for subject: ObjectRecord) -> ObjectRecord? {
         store.backlinks(to: subject).last { source in
             source.classDef?.id == classes[.process]?.id && processState(source).isOpen
+        }
+    }
+
+    /// A running workout is never suspended by starting or resuming anything else (gap hunt G56, QA on #783): refuse
+    /// with the Cook key's line, and write nothing. Another workout may take over, as it always could.
+    func refuseWhileWorkoutRuns(except keep: UUID?, for subject: ObjectRecord?, action: String) throws {
+        guard let workoutClass = classes[.workout], let processClass = classes[.process] else { return }
+        if let subjectClass = subject?.classDef, ClassResolver.isSubclass(subjectClass, of: workoutClass) {
+            return
+        }
+        let running = store.objects(of: processClass).contains { process in
+            process.id != keep && processState(process) == .running
+                && store.linkedObjects("subject", of: process).first?.classDef
+                .map { ClassResolver.isSubclass($0, of: workoutClass) } == true
+        }
+        if running {
+            throw ActionError.invalidArguments(action: action, reason: StartCooking.workoutRunningReason)
         }
     }
 

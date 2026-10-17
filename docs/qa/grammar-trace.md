@@ -2,7 +2,7 @@
 
 *Repo maintainer, 2026-10-15. I traced each phrase by hand through `TessGrammar.parse` on master after #62, with the 10 seed recipes plus Carbonara and Weeknight dal present. This was a static read, so nothing was run. Phrase numbers refer to `docs/product/kitchen-phrases.md`. "K:" means `TessGrammar+Kitchen.swift` and "G:" means `TessGrammar.swift`.*
 
-**Parse order (current, since #115 and #117):** `parseNote`, then the pasted recipe, then the question guard (a lead of what, whats, when, how, did, anything, everything, show, `am i`, or a trailing `?`, declines to the model and never writes), then input the running process owns (cook `next`/`done`; workout `rest|timer N`; while shopping, a short undated phrase goes to groceries), then the relative set (only with an exercise in focus), then comma sets, then `parseLift`, then `parseKitchen` (list, shop, timer, buy/get, comma list, cook), then `parseReschedule` (one matching open task; an unmatched `move … to …` declines to the model), then `parseTask`. *When this trace was written, every kitchen rule ran before the set, lift and task rules; most rows below were fixed by moving `parseKitchen` after `parseLift`. The rules and their reasons are in [research/grammar-collisions.md](../research/grammar-collisions.md); the QA read is [review-115.md](review-115.md).*
+**Parse order:** `parseNote`, then `parseKitchen` (pasted recipe, then list, shop, timer, buy/get, comma list, cook), then `parseRelativeSet`, `parseLift` and `parseTask`. Every kitchen rule runs before the set, lift and task rules. Moving `parseKitchen` after `parseLift`, and putting a date check on buy/get and on timers, fixes most of the rows below.
 
 ## Kitchen phrases that don't match the doc
 

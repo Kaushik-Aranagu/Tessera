@@ -31,9 +31,50 @@ struct WorkoutSummaryTests {
         #expect(summary.sets == 3 && summary.volume == 82.5 * 8 + 80 * 16)
         #expect(summary.records.count == 1 && summary.records.first?.kind == .e1RM)
         #expect(summary.line == "1 of 5 exercises, 3 sets, 1 best.")
+        #expect(summary.doneLine == "\(summary.title) done, 1 of 5 exercises.")
+        #expect(summary.doneLine(in: store) == "\(summary.title) done, 1 of 5 exercises.")
         #expect(summary.duration == 3600)
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = .gmt
         #expect(ledger.finishedWorkouts(on: start, calendar: calendar).map(\.id) == [today.id])
+    }
+
+    @Test func aPrivateRoutineTitleNeverPrintsInTheDoneLine() throws {
+        // QA on #781: "Physio rehab" is a care word; Tess's done line says "Private workout".
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let plan = try #require(store.object(id: StarterContent.planID))
+        let routine = try #require(store.linkedObjects("routines", of: plan).first)
+        try engine.perform(RenameObject(object: routine.id, title: "Knee rehab day"), by: .user)
+        let workout = try engine.perform(StartRoutine(routine: routine.id), by: .user).output
+        try engine.perform(FinishWorkout(workout: workout.id), by: .user)
+        let line = TrainingLedger(store: store, classes: classes).summary(of: workout).doneLine(in: store)
+        #expect(line.hasPrefix("Private workout done,") && !line.lowercased().contains("rehab"), "\(line)")
+    }
+
+    @Test func theDoneLineAgreesInNumberAndSaysNothingOfZeroPlanned() throws {
+        // QA on #781: "1 of 1 exercise", and a workout with nothing planned says "done." with no "0 of 0".
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let plan = try #require(store.object(id: StarterContent.planID))
+        let routine = try #require(store.linkedObjects("routines", of: plan).first)
+        let workout = try engine.perform(StartRoutine(routine: routine.id), by: .user).output
+        let base = TrainingLedger(store: store, classes: classes).summary(of: workout)
+        func line(done: Int, planned: Int) -> String {
+            WorkoutSummary(id: base.id, workout: workout, title: "Push Day A", startedAt: nil, endedAt: nil,
+                           exercisesDone: done, exercisesPlanned: planned, sets: 1, volume: 0, records: []).doneLine
+        }
+        #expect(line(done: 1, planned: 1) == "Push Day A done, 1 of 1 exercise.")
+        #expect(line(done: 2, planned: 5) == "Push Day A done, 2 of 5 exercises.")
+        #expect(line(done: 0, planned: 0) == "Push Day A done.")
+    }
+
+    @Test func theDoneHeroMasksAPrivateRoutineTitle() {
+        // Product on #849: the hero reads "Private routine" like the count line under it masks the title.
+        let store = ObjectStore.open(inMemory: true)
+        #expect(ObjectPrivacy.routineTitle("Knee rehab day", in: store) == "Private routine")
+        #expect(ObjectPrivacy.routineTitle("Push Day A", in: store) == "Push Day A")
     }
 }

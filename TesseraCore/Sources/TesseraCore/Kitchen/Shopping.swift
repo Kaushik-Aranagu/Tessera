@@ -58,8 +58,11 @@ public struct FinishShop: EngineAction {
 
     @discardableResult
     public func apply(_ transaction: inout Transaction) throws -> Int {
-        let list = try transaction.groceriesList()
-        let cleared = try ClearDoneItems(list: list.id).apply(&transaction)
+        // No groceries list means no shop: fail and write nothing (never make a list just to finish on it).
+        guard let list = transaction.store.object(id: Groceries.listID), !list.isDeleted else {
+            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "there is no shop to finish")
+        }
+        let cleared = try transaction.clearDone(in: list)
         if let process = transaction.openProcess(for: list) {
             try transaction.end(process, reason: .done, at: time ?? .now)
         }
@@ -69,18 +72,26 @@ public struct FinishShop: EngineAction {
     public func summary(in _: ObjectStore) -> String {
         "Finished shopping"
     }
+
+    /// What Tess says for it; one UNDO brings the checked rows and the running shop back.
+    public func receipt(in _: ObjectStore) -> String? {
+        "Shopping, finished"
+    }
 }
 
 extension Transaction {
     /// While shopping, any change to the list keeps Now's line current ("Shopping, 8 left").
-    mutating func refreshShopLine(for item: ObjectRecord) throws {
+    mutating func refreshShopLine(for item: ObjectRecord, at now: Date = .now) throws {
         guard let list = item.parent, list.id == Groceries.listID else { return }
-        try refreshShopLine()
+        try refreshShopLine(at: now)
     }
 
-    mutating func refreshShopLine() throws {
+    /// `now` is the touch: checking a row at a given time resets the shop's idle clock to that time (G44).
+    mutating func refreshShopLine(at now: Date = .now) throws {
         guard let list = store.object(id: Groceries.listID), let process = openProcess(for: list) else { return }
         let line = Groceries(store: store, classes: classes).shoppingLine()
-        try saveContext(process, resumePoint: nil, nextStep: line, at: .now)
+        // A backdated check never moves the idle clock back (QA on #771): the later of the last touch and now.
+        let touched = max(store.value("lastTouchedAt", of: process)?.dateValue ?? now, now)
+        try saveContext(process, resumePoint: nil, nextStep: line, at: touched)
     }
 }

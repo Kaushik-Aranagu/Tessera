@@ -10,7 +10,7 @@ struct WorkoutSessionTests {
     let model: AppModel
 
     init() {
-        model = AppModel(context: container.mainContext)
+        model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
     }
 
     private func startedSession() throws -> (AppModel, WorkoutSession) {
@@ -392,7 +392,7 @@ struct WorkoutRestRelaunchTests {
     let model: AppModel
 
     init() {
-        model = AppModel(context: container.mainContext)
+        model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
     }
 
     private func startedSession() throws -> (AppModel, WorkoutSession) {

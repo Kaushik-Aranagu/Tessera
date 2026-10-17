@@ -72,7 +72,7 @@ THE WEEK'S COOKS (AHEAD, sheet 74) now, and it stays that way when Pantry arrive
 | INGREDIENTS | "7 to buy" with the key ADD 7 TO GROCERIES; at 0, "Nothing to buy." and no key | Changed from "12 things": the glance's number and the key's number must be the same number, and the thing-count is already on the front |
 | THE WEEK'S COOKS | The next cook in Home's own words: "Tacos tonight, 2 to buy." | Changed from "the next cook" alone: Tess's line and Home never disagree, so the glance is Home's line for that cook |
 
-**Everywhere:** the way back is the front's name; sides never carry controls beyond the one key named above; Reduce Motion is a 200 ms crossfade; Dynamic Type at AX sizes keeps one column. Each Kitchen side lands in its own PR with a recording that starts on the front and turns it over.
+**Everywhere:** the way back is the front's name; sides never carry controls beyond the one key named above; Reduce Motion is a 150 ms crossfade (sheet 78); Dynamic Type at AX sizes keeps one column. Each Kitchen side lands in its own PR with a recording that starts on the front and turns it over.
 
 ## 6. Pantry: its front and its side (draft; Design's sheet 77 draws it)
 
@@ -89,7 +89,7 @@ THE WEEK'S COOKS (AHEAD, sheet 74) now, and it stays that way when Pantry arrive
 | 6.5 | The side holds no per-line controls; tapping a line opens its Ingredient page, where the state word cycles in, low, out |
 | 6.6 | Pantry's side is its own: the Kitchen tab's side stays THE WEEK'S COOKS before and after Pantry ships (row 5.2) |
 | 6.7 | Nothing in Pantry or its side is sent to Claude; the AI-12 pack snapshot carries no state and no bought date (`pantry-acceptance.md` Core 7) |
-| 6.8 | Reduce Motion is a 200 ms crossfade; Dynamic Type at AX sizes keeps one column; no pill, card or badge anywhere, and no notification (`pantry-acceptance.md`, Defaults taken) |
+| 6.8 | Reduce Motion is a 150 ms crossfade (sheet 78, `pantry-acceptance.md` S16, K26.7); Dynamic Type at AX sizes keeps one column; no pill, card or badge anywhere, and no notification (`pantry-acceptance.md`, Defaults taken) |
 
 ## 7. Sheet 77 rows: Groceries FOR WHAT, Recipe COOKS, Paste WHAT I READ
 
