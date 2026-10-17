@@ -44,9 +44,9 @@ public enum PrivateFacts {
             return true
         }
         // Only the set itself is the bar (AI architecture D1 on #643): "Rent 1850 for 5x5" is still money.
-        // "dinner at 7.30" is a clock, not money (Research #880), unless a money word is there too.
+        // "dinner at 7.30" and "dentist by 4.15" are clocks, not money (Research #880), unless a money word is there.
         let clockless = words(lower).contains(where: moneyWords.contains)
-            ? lower : lower.replacing(/\bat\s+(?:[01]?\d|2[0-3])\.[0-5]\d\b/, with: " at ")
+            ? lower : lower.replacing(/\b(?:at|by)\s+(?:[01]?\d|2[0-3])\.[0-5]\d\b/, with: " at ")
         let words = words(withoutTimes(withoutNotation(clockless)))
         if words.contains(where: isAmount), words.contains(where: moneyWords.contains) {
             return true

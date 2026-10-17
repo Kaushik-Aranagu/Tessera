@@ -123,7 +123,12 @@ struct MoneyWallTests {
         #expect(inbox.waiting().map(\.title) == ["ring the gym about chalk"])
     }
 
-    @Test(arguments: ["set a timer for the pasta ten minutes", "how long on the pasta timer", "timer"])
+    @Test(arguments: [
+        "set a timer for the pasta ten minutes",
+        "how long on the pasta timer",
+        "timer",
+        "both timers are done"
+    ])
     func aCookTimerPhraseNeverReachesClaude(_ phrase: String) async {
         let claude = Spy(route: .claude)
         _ = await TessRouter(engine: engine, models: [claude])
@@ -142,6 +147,26 @@ struct MoneyWallTests {
             #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil), "\(phrase)")
         }
         #expect(!PrivateFacts.isWalled("bring a stone for the wall", lastWeightKg: nil))
+    }
+
+    @Test(arguments: ["8 mins", "pasta 10", "finished cooking", "how long left", "stop the rice", "step 3"])
+    func whileACookRunsItsPhrasesNeverReachClaude(_ phrase: String) async throws {
+        let recipe = try engine.perform(
+            CreateRecipe(text: "Rice\nIngredients\n1 cup rice\nMethod\n1. Rinse.\n2. Simmer 15 minutes.\n3. Rest."),
+            by: .user
+        ).output
+        try engine.perform(StartCooking(recipe: recipe.id), by: .user)
+        let claude = Spy(route: .claude)
+        _ = await TessRouter(engine: engine, models: [claude])
+            .run(TessRequest(text: phrase, context: TessContext(), use: .capture))
+        #expect(claude.heard.isEmpty, "\(phrase)")
+        // And once the cook is done, the same phrase is an ordinary miss.
+        let cook = try #require(ProcessTable(engine: engine).running()?.subject)
+        try engine.perform(FinishCooking(cook: cook.id), by: .user)
+        let after = Spy(route: .claude)
+        _ = await TessRouter(engine: engine, models: [after])
+            .run(TessRequest(text: phrase, context: TessContext(), use: .capture))
+        #expect(after.heard == [phrase], "\(phrase)")
     }
 
     @Test func aTaskLessMoveIsAPlainMiss() async {
