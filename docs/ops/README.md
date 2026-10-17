@@ -12,6 +12,7 @@ How the team works, and the tools that keep it cheap. Scripts are in `scripts/op
 - [relay-batch.md](relay-batch.md): one relay message per Mac lead.
 - [test-sh-audit.md](test-sh-audit.md): where `scripts/test.sh` spends its time.
 - [discovery-gaps.md](discovery-gaps.md): gaps found by the discovery lane.
+- [idle-detector.md](idle-detector.md): when a team is below its pace line, what it pulls and who it asks.
 
 ## More docs (index added by Ops, Oct 17)
 
