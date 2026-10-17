@@ -151,6 +151,9 @@ extension TesseraBackup {
     /// Removes private objects, their links and the ops that touched them from a copy that is leaving the phone.
     static func leaveOutPrivate(_ ids: [UUID: String], from copy: DatabaseQueue, context: TesseraContext) throws {
         // Objects that were private once but are plain now stay; their ops, which hold the old words, go.
+        // Accepted for now (Product, QA on #707): ops of anything that ever hit the Home wall are over-dropped from the
+        // iCloud copy, even when the object was never really private. Losing a plain history line is cheaper than
+        // keeping an old private word.
         let past = PrivateWords.historyLabels(in: context, current: ids)
         let lastKg = BodyWeight.lastKg(in: ObjectStore(context: context))
         // Deleted rows must not linger in free pages: overwrite on delete, then rebuild the file below.
