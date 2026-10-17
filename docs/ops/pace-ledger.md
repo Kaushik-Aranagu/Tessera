@@ -18,7 +18,7 @@ Pace line for a team = weekly share x $8,500 x hours since the weekly reset / 16
 | Motion lab | 4 | 75 | +2 | 336k context |
 | Usage governor | n/a | 1 | n/a | completed |
 | Ops | 3 | 5 | n/a | 284k context, restart at next milestone |
-| **Cloud total** | | **2,360 plus governor** | **about +43 in 40 min** | about $65/h, near the 90% weekly line of about $50/h |
+| **Cloud total** | | **2,354 plus governor $1** | **about +43 in 40 min** | about $65/h, near the 90% weekly line of about $50/h |
 
 Reading: spend is already about equal to the weekly line, so the rule is hold, not push. Threads over 250k context (Research, Design, Kitchen, AI arch, Motion lab, Coordinator, Ops) pay the most per turn; restarting them at their next milestone is the cheapest saving ([worker-rotation.md](worker-rotation.md)).
 
