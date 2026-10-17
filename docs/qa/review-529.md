@@ -54,3 +54,19 @@ QA, Oct 16 2026, ~2:00 PM PT. Head **c19dfce**: one commit on master, merges cle
 ## Lows
 - **R1.** The offer re-reads only when `model.revision` changes, so at 21:00 the plan stays up until the next write. That's harmless.
 - **R2.** `HomePlanModel` reads `Calendar.current` and `TesseraDay(calendar:)`, which is consistent with the rest of Home.
+
+## Re-review at ffaa0b2 (rebased on master; merge-tree clean): **PASS**
+- Wording off: `AppModel.planWordingReady = false` (AppModel.swift:64) is checked in `HomePlanModel.word` before any
+  call (HomePlan.swift:115). With the flag off, ClaudePlanWording is never reached, so neither VIA CLAUDE nor the
+  one-time line can show. PlanWordingOffTests sets asksClaude true and checks the plan shows, wordingCalls == 0 and
+  viaClaude is false. The counter goes up after the guard, so the test pins the call site rather than the flag alone.
+- S2 fixed: `spoken`, `heroForms` and the context all use `HouseTime.clock` (HomePlan.swift:206, :220, :226).
+  `context` shows the first ghost row's time in plan order ("from 8:15 am"). Without a row it shows nothing.
+- S1 superseded: the line now reads "Titles and counts only. Never notes, places, health or money." (HomePlan.swift:271,
+  Design's copy pass). It covers money and is unreachable while the wording is off.
+- Hero digits: "3 tasks" and "1 task" (HomePlan.swift:217).
+- The UI test still subclasses SimulatorOnlyTestCase and covers skip, keep, hold and UNDO. `-planNow` is read only
+  through LaunchFlags (NowPage.swift:155).
+- Nothing new in data safety, the Catalog or migrations. No key literals.
+- Low R3: `HomePlanModel.init` is no longer private (it was made internal for the test). Shared state still goes
+  through `.shared`. Not blocking.
