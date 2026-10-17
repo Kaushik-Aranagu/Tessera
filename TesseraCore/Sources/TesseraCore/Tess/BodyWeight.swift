@@ -22,7 +22,7 @@ public enum BodyWeight {
         let weighIns = store.objects(of: noteClass).filter { note in
             !note.isDeleted && store.value("isPrivate", of: note) == .bool(true)
         }.sorted { $0.createdAt > $1.createdAt }
-        let exercises = exerciseWords(in: store)
+        let exercises = exerciseNames(in: store)
         for note in weighIns {
             if let kg = kilograms(in: store.value("body", of: note)?.stringValue ?? note.title, exercises: exercises) {
                 return kg
@@ -36,23 +36,34 @@ public enum BodyWeight {
                                          "row", "rows", "curl", "curls", "lunge", "lunges", "rdl", "clean", "snatch",
                                          "pullup", "pullups", "dip", "dips", "thrust", "set", "sets", "reps"]
 
-    /// The words of his exercises' names ("Bench Press" gives "bench" and "press"), and the common lifts.
+    /// His exercises' names, lowercased ("bench press", "good morning"), matched as whole phrases. A name made only
+    /// of day, body or weigh words is left out (QA on #638: "Good Morning" must never hide "82 kg this morning").
     @MainActor
-    static func exerciseWords(in store: ObjectStore) -> Set<String> {
-        let exercises = store.allClasses().filter { $0.systemKey == SystemCatalog.Key.exercise.systemKey }
-        let names = exercises.flatMap { store.objects(of: $0) }.flatMap { PrivateFacts.words($0.title.lowercased()) }
-        return liftWords.union(names.filter { $0.count > 2 && $0.first?.isLetter == true })
+    static func exerciseNames(in store: ObjectStore) -> [String] {
+        let plain = PrivateFacts.dayWords.union(PrivateFacts.bodyWords).union(PrivateFacts.bodyUnits)
+            .union(PrivateFacts.weighWords).union(["good", "bb", "db", "kb"])
+        // The library's exercises are classes under Exercise ("Bench Press"); his own may be objects too.
+        guard let exercise = store.allClasses().first(where: { $0.systemKey == SystemCatalog.Key.exercise.systemKey })
+        else { return [] }
+        let classes = store.allClasses().filter { ClassResolver.isSubclass($0, of: exercise) }
+        let names = classes.map(\.name) + classes.flatMap { store.objects(of: $0) }.map(\.title)
+        return Set(names.map { $0.lowercased() }).sorted().filter { name in
+            !PrivateFacts.words(name).allSatisfy(plain.contains)
+        }
     }
 
     /// "82 kg this morning", "weighed 181", "weighed in at 7:30, 81.8": the weight a weigh-in line holds, in kg. Only a
     /// weigh-in counts (QA W1, AI architecture on #627): a weigh word, or a weight unit with nothing but day words
     /// beside it. "bp 120/80", "ibuprofen 200 mg" and "squat 140 kg" are never his weight, and a clock time is never a
     /// number to read.
-    static func kilograms(in text: String, exercises: Set<String> = liftWords) -> Double? {
+    static func kilograms(in text: String, exercises: [String] = []) -> Double? {
         let lower = PrivateFacts.withoutTimes(text.lowercased())
         let words = PrivateFacts.words(lower)
         // A named exercise makes the number a bar, not a weigh-in (Product 8:28 PM PT): "weighed squat at 140 kg".
-        guard !words.contains(where: exercises.contains) else { return nil }
+        let padded = " \(words.joined(separator: " ")) "
+        guard !words.contains(where: liftWords.contains),
+              !exercises.contains(where: { padded.contains(" \(PrivateFacts.words($0).joined(separator: " ")) ") })
+        else { return nil }
         let units: Set = ["kg", "kgs", "kilos", "lb", "lbs", "pounds"]
         let weighs = lower.firstMatch(of: /\b(?:weigh|weighs|weighed|weigh-in|weight|bw)\b/) != nil
         let rest = words

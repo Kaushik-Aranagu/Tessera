@@ -297,8 +297,8 @@ public final class TessCaptureEngine: TessCapturing {
             let made = try engine.perform(CreateTask(title: title, startsAt: startsAt), by: .tess, pending: pending)
             let record = made.record
             // Said as the engine wall stored it (Product 8:09 PM PT): "pay rent 2100 fri" is "Pay rent, Fri.", its
-            // amount
-            // gone. A stored title that is still private is never said back (P14, Research S18): "Task added for Fri."
+            // amount gone. A stored title that is still private is never said back (P14, Research S18): "Task added
+            // for Fri."
             let stored = made.output.title
             if stored == SecretWords.title {
                 return (record, "\(SecretWords.title), kept.")

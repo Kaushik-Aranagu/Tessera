@@ -356,6 +356,26 @@ struct WallsBypassTests {
         #expect(BodyWeight.lastKg(in: store) == 82)
     }
 
+    @Test func theLibraryNeverHidesAMorningWeighIn() throws {
+        // QA on #638: "Good Morning" is in the library; "82 kg this morning" is still his weight.
+        try ExerciseLibraryInstaller.install(shape: .patternSpine, store: store, classes: classes)
+        #expect(BodyWeight.exerciseNames(in: store).contains("bench press"))
+        #expect(!BodyWeight.exerciseNames(in: store).contains("good morning"))
+        let note = try engine.perform(CreateNote(body: "82 kg this morning", isPrivate: true), by: .user)
+        note.output.createdAt = Self.at(14, 7)
+        #expect(BodyWeight.lastKg(in: store) == 82)
+        try engine.perform(CreateNote(body: "romanian deadlift 100 kg", isPrivate: true), by: .user)
+        #expect(BodyWeight.lastKg(in: store) == 82)
+        #expect(PrivateFacts.isWalled("how's 76 looking?", lastWeightKg: BodyWeight.lastKg(in: store)))
+        #expect(PrivateFacts.isWalled("is 82 less?", lastWeightKg: 82))
+    }
+
+    @Test func dayNamesAreUSEnglishInAnyLocale() {
+        var calendar = Self.calendar
+        calendar.locale = Locale(identifier: "fr_FR")
+        #expect(TesseraDay.weekdayName(of: Self.at(18, 12), calendar: calendar) == "Sunday")
+    }
+
     @Test(arguments: ["Room 82", "bus 76 at 8", "gate 80", "ticket #84"])
     func aNumberThatNamesSomethingIsNotHisWeight(_ phrase: String) {
         #expect(!PrivateFacts.isWalled(phrase, lastWeightKg: 82), "\(phrase)")

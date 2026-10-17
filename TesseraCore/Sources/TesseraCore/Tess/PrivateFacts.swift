@@ -135,8 +135,13 @@ public enum PrivateFacts {
     /// A plural noun after a number makes it a count, not his weight: "80 stickers", "76 emails" (Product 8:28 PM PT).
     static func isCountNoun(_ word: String) -> Bool {
         word.count > 3 && word.hasSuffix("s") && !bodyWords.contains(word) && !bodyUnits.contains(word)
-            && !dayWords.contains(word)
+            && !dayWords.contains(word) && !notNouns.contains(word)
     }
+
+    /// Words ending in "s" that are not things counted (QA on #638: "is 82 less?").
+    static let notNouns: Set<String> = ["less", "plus", "minus", "this", "does", "looks", "seems", "always", "perhaps",
+                                        "unless", "across", "thus", "yours", "ours", "hers", "theirs", "goes", "says",
+                                        "means", "feels", "sounds", "gets", "makes", "stays", "keeps", "shows"]
 
     /// A bare number that is his weight (Product 2:56 and 4:46 PM PT): within 10% of his last logged weight, with or
     /// without a day word ("is 82.4 good?", "how's 76 looking?"); with none logged, a decimal beside a body word

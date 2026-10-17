@@ -98,7 +98,7 @@ struct ReviewWeekData {
 
     /// Always US English, like every other line Tess writes (Product 8:30 PM PT).
     func dayName(_ index: Int) -> String {
-        days[index].formatted(.dateTime.weekday(.wide).locale(Locale(identifier: "en_US_POSIX")))
+        TesseraDay.weekdayName(of: days[index], calendar: calendar)
     }
 
     func letter(_ index: Int) -> String {
