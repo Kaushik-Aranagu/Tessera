@@ -122,7 +122,7 @@ const sideLately = () => { let y = 252, h = sideHead('3 habits', 'LATELY');
 const sideCounts = () => sideHead('3 habits', 'HOW IT COUNTS') + `<div class="abs glab" style="left:22px;top:252px">EACH ONE</div>
   ${[['Read', '5 a week, by hand'], ['Train', '3 a week, workouts'], ['Meditate', '4 a week, by hand']].map(([n, v], i) => `<div class="abs sl" style="top:${280 + i * 40}px"><span>${n}</span><em>${v}</em></div>`).join('')}
   <div class="abs glab" style="left:22px;top:430px">THE WEEK</div>
-  <div class="abs fact" style="top:458px">A week runs Monday to Sunday.</div><div class="abs fact" style="top:490px">A day starts at 4 am.</div><div class="abs fact" style="top:522px">Going past the number keeps counting.</div>`;
+  <div class="abs fact" style="top:458px">A week runs Monday to Sunday.</div><div class="abs fact" style="top:490px">A day starts 4 am.</div><div class="abs fact" style="top:522px">Going past the number keeps counting.</div>`;
 const sideGlance = () => `<div class="gl"><div class="gk">LATELY</div><div class="big">3<small>habits</small></div><div class="gr">Read <em>today</em></div><div class="gr">Train <em>Tuesday</em></div><div class="more">ALL OF IT<i></i></div></div>`;
 const sideEmpty = () => `<div class="abs lbl s2" style="left:22px;top:58px">‹ REVIEW</div><div class="abs t44" style="left:22px;top:84px">Habits</div><div class="abs ctx" style="top:146px">No habits yet</div><div class="abs sw" style="top:146px">HABITS</div><div class="abs quiet" style="top:210px">Nothing to look back on yet.</div>`;
 const T_EMPTY = 'Say “new habit read 5 a week” and I’ll keep it.';
