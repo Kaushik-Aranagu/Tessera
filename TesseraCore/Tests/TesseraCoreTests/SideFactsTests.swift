@@ -66,12 +66,12 @@ struct SideFactsTests {
         try store.set("reps", to: .number(8), on: set)
         let fields = try #require(SideFacts.defaultFields(of: set, in: store, classes: classes))
         #expect(fields.contains { $0.key == "weight" }, "\(fields.map(\.name))")
-        let me = ClassDef(name: "Check-in")
-        store.context.insert(me)
+        let checkInClass = ClassDef(name: "Check-in")
+        store.context.insert(checkInClass)
         let field = FieldDef(name: "Weight", key: "bodyWeight", kind: .number)
-        field.owner = me
+        field.owner = checkInClass
         store.context.insert(field)
-        let checkIn = store.create(me, title: "Sunday")
+        let checkIn = store.create(checkInClass, title: "Sunday")
         try store.set("bodyWeight", to: .number(82.4), on: checkIn)
         #expect(SideFacts.defaultFields(of: checkIn, in: store, classes: classes)?.isEmpty == true)
     }
