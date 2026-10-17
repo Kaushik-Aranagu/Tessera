@@ -27,9 +27,9 @@ Only edits this pass: the K67 triage tables appended to `kitchen-gap-hunt-4.md` 
 | Money | Every price example is stripped, or has a sign or currency word. Clean. |
 | Year, metric, UTC | Metric and year hits are input examples ("82.5 kg") or the file name (Open 3). The UTC/Z times in `recipe-clock-dst-acceptance.md` sit in engine columns beside the PST/PDT app times. Clean. |
 
-## Open items (items 1 and 4 ruled Oct 17, decisions 3:55; items 2 and 3 still open)
+## Open items (items 1 and 4 ruled Oct 17, decisions 3:55; items 2 and 3 ruled Oct 17, 4:35)
 
 1. **Aisle receipts. Ruled Oct 17 (decisions 3:55): saves read "on <list>." ("Milk, on Groceries."), an aisle change reads "Chicken, moved to Dairy and eggs."; both lines edited.** `groceries-ai-acceptance.md` line 67 ("Oat milk, in Dairy and eggs.") and `kitchen-refill7-acceptance.md` K44.4 ("Milk, in Dairy and eggs."). Dairy and eggs is an aisle, not a list, so "in" may be right. Product to say: aisle receipts use "in", or "Milk, on Groceries." for all.
-2. **Cobalt on a merge. Still open, no ruling covers it; `us-shop-acceptance.md` K7.9 left as is.** `us-shop-acceptance.md` K7.9 says the merged amount rolls "under the cobalt wash". Fine if the merge is Tess's wet ink; wrong if a hand merge. Product to say which.
-3. **File name year. Still open, no ruling covers it.** `kitchen-gap-hunt-5.md` G26 note gives the backup file as "Tessera-2026-10-21.tessera". If that name is shown in the app it carries a 4-digit year; Product to rule whether file names are exempt.
+2. **Cobalt on a merge. Ruled Oct 17 (decisions 4:35): cobalt is Tess's band only, merge lines are ink; K7.9 edited.** `us-shop-acceptance.md` K7.9 said the merged amount rolls "under the cobalt wash"; it now says ink.
+3. **File name year. Ruled Oct 17 (decisions 4:35): backup file names use a 4-digit year.** `kitchen-gap-hunt-5.md` G26 note gives the backup file as "Tessera-2026-10-21.tessera". If that name is shown in the app it carries a 4-digit year; Product to rule whether file names are exempt.
 4. **Noon (HouseTime). Ruled Oct 17 (decisions 3:55): clocks write "12 pm", never "noon"; edits listed in `kitchen-noon-recheck-oct17.md`.** `kitchen-refill9-lane1-acceptance.md` F5 (K64.6) and K53.6/K45.17 in refill7 and refill8 said "Dal, noon." while `HouseTime.clock` writes "12 pm".
