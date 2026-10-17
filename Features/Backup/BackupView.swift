@@ -30,7 +30,8 @@ struct BackupView: View {
         let _ = refresh
         let folder = BackupKeeper.pickedFolder
         let failures = BackupKeeper.failures
-        let latest = BackupKeeper.latestLocal
+        let copies = BackupKeeper.localDates
+        let latest = copies.max()
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 if isPresented {
@@ -57,7 +58,7 @@ struct BackupView: View {
                     .padding(.top, Theme.Spacing.s)
                     .entrance(1, hero: true)
 
-                Text(BackupCopy.local(latest, kept: BackupKeeper.localCount, now: AppClock.now))
+                Text(BackupCopy.local(latest, kept: copies.count, now: AppClock.now))
                     .textRole(.body)
                     .foregroundStyle(Theme.Colors.ink)
                     .fixedSize(horizontal: false, vertical: true)

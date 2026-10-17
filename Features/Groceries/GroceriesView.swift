@@ -738,7 +738,6 @@ private struct GroceriesEmpty: View {
 enum GroceriesCopy {
     static let didntSave = "Didn't save that. Try again."
 
-    /// A refused write on Groceries says so; nothing scolds, so there is no warning haptic (ER11, Haptics.swift).
     /// Starts or sets aside the shop. A refused start says why: "Workout running." while a workout runs (QA on
     /// #792), else "Didn't save that. Try again." Nil when it went through.
     @MainActor static func toggleShop(_ groceries: Groceries, engine: ActionEngine) -> String? {
@@ -748,6 +747,7 @@ enum GroceriesCopy {
         return RecipeCopy.startCook { try engine.perform(StartShop(), by: .user) }
     }
 
+    /// A refused write on Groceries says so; nothing scolds, so there is no warning haptic (ER11, Haptics.swift).
     @MainActor static func sayDidntSave() {
         TessVoice.shared.say(didntSave)
     }

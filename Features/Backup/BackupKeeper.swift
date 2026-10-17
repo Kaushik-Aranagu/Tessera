@@ -157,12 +157,9 @@ enum BackupKeeper {
         localDates.max()
     }
 
-    /// The daily copies on this phone right now (up to 7), so Backups says the real count (QA low).
-    static var localCount: Int {
-        localDates.count
-    }
-
-    private static var localDates: [Date] {
+    /// The days of the daily copies on this phone right now (up to 7), each file checked once: Backups reads the
+    /// latest and the real count from one call (QA on #796).
+    static var localDates: [Date] {
         let files = (try? FileManager.default.contentsOfDirectory(at: localFolder, includingPropertiesForKeys: nil))
             ?? []
         return files.filter { $0.pathExtension == TesseraBackup.fileExtension }
