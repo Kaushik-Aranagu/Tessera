@@ -24,6 +24,10 @@ Meter (ground truth, from the coordinator's rate_limit_event reads [M]): weekly 
 
 Hottest cloud threads since 5:22 PM: Coordinator +$22, Research +$7. Threads over 250k context (Research, Design, Kitchen, AI arch, Motion lab, Coordinator, Ops) pay the most per turn; restart them at their next milestone ([worker-rotation.md](worker-rotation.md)).
 
+## Check 2: Oct 16, 7:15 PM PT (02:15Z Oct 17)
+
+Meter [M]: weekly 34% (flat from 33% at 6:02 PM, about 1%/h over the last hour), 5-hour 28% (resets 9:40 PM PT). The 6:02 to 7:15 burn is about 0.8%/h, well under the 1.9%/h sustainable line, so the project is no longer overspending and has about 66 points of headroom for the 9.8 hours to the Sun Oct 18 5:00 AM PT reset (100% allowed this week). Team dollars not read this round: the team session ids are held by the coordinator, and the meter outranks dollars anyway. Verdict: green; the slack is unused, so lanes waiting on a lock (Builder A and Core sat behind Builder B tonight) are the limit now, not budget.
+
 ## How to add a row
 
 1. Read `usage.cost_usd` for each team session id (coordinator holds the list).
