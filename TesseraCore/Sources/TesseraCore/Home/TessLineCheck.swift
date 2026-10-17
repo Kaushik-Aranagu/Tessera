@@ -161,8 +161,10 @@ public enum TessLineCheck {
     /// days" fails. `counts` maps a counted noun ("days", "exercises", "sets", "bests") to the values it may take.
     static func countsHold(_ text: String, counts: [String: Set<Int>]) -> Bool {
         guard !counts.isEmpty else { return true }
-        for match in text.lowercased().matches(of: /(\d+)\s+(?:new\s+|more\s+)?([a-z]+)/) {
-            guard let value = Int(match.output.1) else { continue }
+        let lower = text.lowercased()
+        for match in lower.matches(of: /(\d+)\s+(?:new\s+|more\s+)?([a-z]+)/) {
+            // "4 of 5 exercises": the 5 is the plan, licensed by `numbers`, not a count of what he did.
+            guard let value = Int(match.output.1), !lower[..<match.range.lowerBound].hasSuffix("of ") else { continue }
             var noun = String(match.output.2)
             if !noun.hasSuffix("s") {
                 noun += "s"

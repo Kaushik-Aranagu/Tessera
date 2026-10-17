@@ -187,6 +187,17 @@ struct HomeDoneWordingTests {
         #expect(!HomeStub.requests.contains { $0.url?.host()?.contains("evil") == true })
     }
 
+    @Test func anUnreadableCacheIsNeverWrittenOver() async throws {
+        // QA on #658: a file that can't be read (a locked device) keeps its history.
+        let url = FileManager.default.temporaryDirectory
+            .appending(path: "home-lines-\(UUID().uuidString)/home-lines-cache.json")
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data("not json yet".utf8).write(to: url)
+        HomeStub.reply = (200, Self.reply(context: "7:40 pm, a bench best", detail: nil))
+        _ = await job(cache: url).words(for: Self.line(), dayLabel: "Thursday evening", store: store)
+        #expect(try String(contentsOf: url, encoding: .utf8) == "not json yet")
+    }
+
     @Test func theCacheOutlivesTheAppAndStaysOutOfBackups() async throws {
         let url = FileManager.default.temporaryDirectory
             .appending(path: "home-lines-\(UUID().uuidString)/home-lines-cache.json")

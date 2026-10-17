@@ -103,9 +103,11 @@ final class AppModel {
 
     /// Claude's words for a finished workout's Home slots, or nil: the rules words stand (Kaushik's "Sonnet on
     /// Home", 2:41 PM PT Oct 16). Show the rules line first; a returned slot replaces its rules words.
-    func homeDoneWords(for line: HomeLine, dayLabel: String) async -> HomeDoneWords? {
-        guard !Self.isDemo, line.fact.kind == .workout, line.fact.state == .done else { return nil }
-        return await homeDone.words(for: line, dayLabel: dayLabel, store: store)
+    func homeDoneWords(for line: HomeLine) async -> HomeDoneWords? {
+        guard !Self.isDemo, line.fact.kind == .workout, line.fact.state == .done, let ended = line.fact.endedAt
+        else { return nil }
+        let label = HomeDonePack.dayLabel(finish: ended, calendar: homeDone.calendar)
+        return await homeDone.words(for: line, dayLabel: label, store: store)
     }
 
     /// Bumped after writes so views re-read derived data.

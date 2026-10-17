@@ -42,6 +42,8 @@ public final class ClaudeHomeDone {
     public let cacheURL: URL?
     /// Asked workouts: their words that passed, or empty when nothing did. A key here is never asked again.
     private var asked: [UUID: HomeDoneWords]
+    /// False while a cache file exists that couldn't be read (a locked device): nothing is written over it.
+    private var cacheRead: Bool
     private var inFlight: Set<UUID> = []
     private static let log = Logger(subsystem: "com.kaushikaranagu.tessera", category: "tess.home")
 
@@ -54,8 +56,21 @@ public final class ClaudeHomeDone {
         self.session = session
         self.cacheURL = cacheURL
         self.allowed = allowed
-        asked = cacheURL.flatMap { try? Data(contentsOf: $0) }
-            .flatMap { try? JSONDecoder().decode([UUID: HomeDoneWords].self, from: $0) } ?? [:]
+        asked = [:]
+        cacheRead = false
+        readCache()
+    }
+
+    /// Reads the kept workouts; a file that exists but can't be read leaves `cacheRead` false (QA on #658).
+    private func readCache() {
+        guard let cacheURL, FileManager.default.fileExists(atPath: cacheURL.path(percentEncoded: false)) else {
+            cacheRead = true
+            return
+        }
+        guard let data = try? Data(contentsOf: cacheURL),
+              let saved = try? JSONDecoder().decode([UUID: HomeDoneWords].self, from: data) else { return }
+        asked.merge(saved) { mine, _ in mine }
+        cacheRead = true
     }
 
     /// `Application Support/Tessera/home-lines-cache.json`.
@@ -171,7 +186,10 @@ public final class ClaudeHomeDone {
 
     private func remember(_ id: UUID, _ words: HomeDoneWords) {
         asked[id] = words
-        guard let cacheURL, let data = try? JSONEncoder().encode(asked) else { return }
+        if !cacheRead {
+            readCache()
+        }
+        guard cacheRead, let cacheURL, let data = try? JSONEncoder().encode(asked) else { return }
         // Complete protection and never in a backup (§3): the words are his day.
         try? FileManager.default.createDirectory(at: cacheURL.deletingLastPathComponent(),
                                                  withIntermediateDirectories: true)

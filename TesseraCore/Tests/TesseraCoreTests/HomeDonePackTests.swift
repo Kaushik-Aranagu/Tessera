@@ -60,6 +60,15 @@ struct HomeDonePackTests {
         Row(id: "N3", title: "Push B", bests: ["bmi 24 5x5"], walled: true, hardFail: ["bmi"]),
         Row(id: "N4", title: "Bench 82.4 kg 5x5", bests: ["Bench"], walled: false, hardFail: []),
         Row(id: "W10", title: "Push B", bests: ["Press"], walled: false, hardFail: []),
+        // QA on #658: health, care and people words with no number.
+        Row(id: "H1", title: "Knee rehab", bests: ["Squat"], walled: true, hardFail: ["rehab"]),
+        Row(id: "H2", title: "Physio", bests: ["Row"], walled: true, hardFail: ["Physio"]),
+        Row(id: "H3", title: "Recovery day", bests: ["Row"], walled: true, hardFail: ["Recovery"]),
+        Row(id: "H4", title: "Back pain mobility", bests: ["Row"], walled: true, hardFail: ["pain"]),
+        Row(id: "H5", title: "Therapy", bests: ["Row"], walled: true, hardFail: ["Therapy"]),
+        Row(id: "H6", title: "Push A", bests: ["Mom's bench"], walled: true, hardFail: ["Mom"]),
+        Row(id: "H7", title: "Legs", bests: ["Squat"], walled: false, hardFail: []),
+        Row(id: "H8", title: "Push A", bests: ["Bench"], walled: false, hardFail: []),
     ]
 
     @Test(arguments: rows)
@@ -153,6 +162,12 @@ struct HomeDonePackTests {
             let body = (try? Self.pack(fact).get())?.json ?? ""
             #expect(!body.contains("tacocat") && !body.contains("120/80") && !body.contains("sick"))
         }
+    }
+
+    @Test func theDayLabelIsTheHouseDayAndPartOfDay() {
+        #expect(HomeDonePack.dayLabel(finish: Self.ended, calendar: Self.calendar) == "Thursday evening")
+        let lateNight = Self.ended.addingTimeInterval(6 * 3600) // 1:40 am Friday is still his Thursday
+        #expect(HomeDonePack.dayLabel(finish: lateNight, calendar: Self.calendar) == "Thursday night")
     }
 
     @Test func theStoreGivesTheWallHisWeight() throws {
