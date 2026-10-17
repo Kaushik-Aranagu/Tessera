@@ -354,7 +354,8 @@ enum HomeLink: Hashable, CaseIterable, Identifiable {
         case .groceries: GroceriesView()
         case .lists: ListsView()
         case .pantry: PantryView()
-        case .recipes: RecipeView(recipeID: nil)
+        // The class page of Recipe (sheet 87); a row opens its recipe.
+        case .recipes: RecipesShelfView()
         case .pasteRecipe: PasteRecipeView()
         case .notes: NotesView()
         case .review: ReviewView()
