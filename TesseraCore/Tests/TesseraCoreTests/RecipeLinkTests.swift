@@ -55,6 +55,8 @@ final class LinkStub: URLProtocol, @unchecked Sendable {
         if let target = page.redirect, let url = URL(string: target), let from = request.url {
             let hop = HTTPURLResponse(url: from, statusCode: 302, httpVersion: nil, headerFields: ["Location": target])!
             client?.urlProtocol(self, wasRedirectedTo: URLRequest(url: url), redirectResponse: hop)
+            // A refused hop (Claude's calls) ends on the 302 itself.
+            client?.urlProtocol(self, didReceive: hop, cacheStoragePolicy: .notAllowed)
             client?.urlProtocolDidFinishLoading(self)
             return
         }
@@ -189,6 +191,17 @@ struct RecipeLinkTests {
         #expect(await reader(claude: true).read("https://blog.example.com/beans").line
             == "Claude's paused until Nov 1. Paste the text instead.")
         #expect(LinkStub.requests.count == asked + 1) // the page only
+    }
+
+    @Test func claudesRedirectIsNeverFollowed() async {
+        // Product 9:53 PM PT: a 301 from the API host is refused; the page text never reaches the other host.
+        LinkStub.pages["blog.example.com"] = .init(body: Self.prose)
+        let evil = "evil" + ".example"
+        LinkStub.pages["api.anthropic.com"] = .init(body: "", redirect: "https://\(evil)/v1/messages")
+        LinkStub.pages[evil] = .init(body: "{}", type: "application/json")
+        let read = await reader(claude: true).read("https://blog.example.com/beans")
+        #expect(read.kind != .readByClaude)
+        #expect(!LinkStub.requests.contains { $0.url?.host() == evil })
     }
 
     @Test func privateLinesNeverReachClaude() async throws {

@@ -5,6 +5,8 @@ import Testing
 
 /// A canned reply for every request, and the last request seen.
 final class StubProtocol: URLProtocol, @unchecked Sendable {
+    /// Where every request is redirected, when set.
+    nonisolated(unsafe) static var redirect: String?
     nonisolated(unsafe) static var reply: (status: Int, body: String)? = (200, #"{"input_tokens": 8}"#)
     nonisolated(unsafe) static var failure: URLError.Code?
     nonisolated(unsafe) static var requests: [URLRequest] = []
@@ -47,6 +49,17 @@ final class StubProtocol: URLProtocol, @unchecked Sendable {
             client?.urlProtocol(self, didFailWithError: URLError(failure))
             return
         }
+        // A 301 to another host (Product 9:53 PM PT): the client must never take it.
+        if let target = Self.redirect, request.url?.host() != URL(string: target)?.host(),
+           let url = URL(string: target)
+        {
+            let hop = HTTPURLResponse(url: request.url!, statusCode: 301, httpVersion: nil,
+                                      headerFields: ["Location": target])!
+            client?.urlProtocol(self, wasRedirectedTo: URLRequest(url: url), redirectResponse: hop)
+            client?.urlProtocol(self, didReceive: hop, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocolDidFinishLoading(self)
+            return
+        }
         let (status, body) = Self.queue.isEmpty ? Self.reply ?? (200, "{}") : Self.queue.removeFirst()
         let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil,
                                        headerFields: ["request-id": "req_test"])!
@@ -75,6 +88,7 @@ struct ClaudeKeyTests {
         StubProtocol.reply = (200, #"{"input_tokens": 8}"#)
         StubProtocol.failure = nil
         StubProtocol.requests = []
+        StubProtocol.redirect = nil
     }
 
     var ledger: TessUsageLedger {
@@ -83,6 +97,14 @@ struct ClaudeKeyTests {
 
     func check() -> ClaudeKeyCheck {
         ClaudeKeyCheck(keys: keys, ledger: ledger, session: StubProtocol.session())
+    }
+
+    @Test func aRedirectIsNeverFollowedWithTheKey() async {
+        // Product 9:53 PM PT: a 301 from the API host is refused, so the key never reaches the other host.
+        StubProtocol.redirect = "https://" + "evil" + ".example/v1/messages/count_tokens"
+        let result = await check().test(pasted: Self.key)
+        #expect(result.outcome != .works)
+        #expect(!StubProtocol.requests.contains { $0.url?.host()?.contains("evil") == true })
     }
 
     @Test func aWorkingKeyIsSavedCheckedForFreeAndNeverLeaves() async throws {

@@ -5,6 +5,8 @@ import Testing
 
 /// StubProtocol for ClaudeRouteTests: its own state, so the two suites can run side by side.
 final class RouteStub: URLProtocol, @unchecked Sendable {
+    /// Where every request is redirected, when set.
+    nonisolated(unsafe) static var redirect: String?
     nonisolated(unsafe) static var reply: (status: Int, body: String)? = (200, #"{"input_tokens": 8}"#)
     nonisolated(unsafe) static var failure: URLError.Code?
     nonisolated(unsafe) static var requests: [URLRequest] = []
@@ -47,6 +49,17 @@ final class RouteStub: URLProtocol, @unchecked Sendable {
             client?.urlProtocol(self, didFailWithError: URLError(failure))
             return
         }
+        // A 301 to another host (Product 9:53 PM PT): the client must never take it.
+        if let target = Self.redirect, request.url?.host() != URL(string: target)?.host(),
+           let url = URL(string: target)
+        {
+            let hop = HTTPURLResponse(url: request.url!, statusCode: 301, httpVersion: nil,
+                                      headerFields: ["Location": target])!
+            client?.urlProtocol(self, wasRedirectedTo: URLRequest(url: url), redirectResponse: hop)
+            client?.urlProtocol(self, didReceive: hop, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocolDidFinishLoading(self)
+            return
+        }
         let (status, body) = Self.queue.isEmpty ? Self.reply ?? (200, "{}") : Self.queue.removeFirst()
         let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil,
                                        headerFields: ["request-id": "req_test"])!
@@ -84,6 +97,7 @@ struct ClaudeRouteTests {
         RouteStub.queue = []
         RouteStub.failure = nil
         RouteStub.requests = []
+        RouteStub.redirect = nil
         RouteStub.bodies = []
     }
 
@@ -108,6 +122,14 @@ struct ClaudeRouteTests {
 
     /// A question: the grammar never writes it, and there's no on-device model in tests.
     let miss = "could you log bench 80 for 8 from earlier?"
+
+    @Test func aRedirectIsNeverFollowedFromTess() async {
+        // Product 9:53 PM PT: Tess's call refuses a 301; nothing is sent to the other host and nothing is written.
+        RouteStub.redirect = "https://" + "evil" + ".example/v1/messages"
+        let capture = await tess().capture(miss, context: context)
+        #expect(capture.source != .claude && capture.records.isEmpty)
+        #expect(!RouteStub.requests.contains { $0.url?.host()?.contains("evil") == true })
+    }
 
     @Test func aMissGoesToClaudeAndLandsAsAPendingGhost() async throws {
         RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged."))]
