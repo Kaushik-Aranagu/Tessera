@@ -9,13 +9,15 @@ import Foundation
 public enum PrivateFacts {
     /// Whether a title must stay off surfaces he doesn't unlock (Siri read-backs, the Live Activity, Spotlight): a
     /// secret word, money or a body fact (Product P14, decisions 12:26 PM PT Oct 16).
-    public static func isPrivateTitle(_ title: String) -> Bool {
-        title == SecretWords.title || SecretWords.mentions(title) || isWalled(title)
+    /// `lastWeightKg` is his last logged body weight, or nil with none logged or with a set in focus (a number is then
+    /// the bar). No default: every caller says which (board 0ai, Product 4:46 PM PT).
+    public static func isPrivateTitle(_ title: String, lastWeightKg: Double?) -> Bool {
+        title == SecretWords.title || SecretWords.mentions(title) || isWalled(title, lastWeightKg: lastWeightKg)
     }
 
     /// Whether a phrase must never reach Claude: money-shaped or body-shaped (secret words have their own wall).
-    public static func isWalled(_ phrase: String) -> Bool {
-        isMoneyShaped(phrase) || isBodyShaped(phrase)
+    public static func isWalled(_ phrase: String, lastWeightKg: Double?) -> Bool {
+        isMoneyShaped(phrase) || isBodyShaped(phrase, lastWeightKg: lastWeightKg)
     }
 
     // MARK: Money (W1)
@@ -61,7 +63,14 @@ public enum PrivateFacts {
     static let weighWords: Set<String> = ["weigh", "weighs", "weighed", "weighing", "weigh-in", "bw", "scale"]
     static let bodyUnits: Set<String> = ["lb", "lbs", "kg", "kgs", "pounds", "kilos"]
     static let dayWords: Set<String> = ["this", "morning", "today", "tonight", "evening", "night", "am", "pm", "at",
-                                        "yesterday", "now", "in", "me", "i", "my", "was", "is", "weight"]
+                                        "yesterday", "now", "in", "me", "i", "my", "was", "is"]
+    /// Words that make a bare number his body weight (Product 4:46 PM PT): "my weight is 82.4, good?".
+    static let bodyWords: Set<String> = ["weight", "weigh", "weighed", "kg", "lb", "lbs", "bmi"]
+    /// A number with one of these after it is something else: a duration, a distance, food, a share or a set
+    /// (Product 4:55 PM PT): "80 min walk", "75 g oats", "85% done".
+    static let otherUnits: Set<String> = ["min", "mins", "minute", "minutes", "h", "hr", "hrs", "hour", "hours", "km",
+                                          "mi", "mile", "miles", "g", "gram", "grams", "%", "cal", "cals", "kcal",
+                                          "rep", "reps", "set", "sets", "x", "×", "oz", "ml", "cup", "cups"]
     static let vitals: Set<String> = ["bp", "hr", "hrv", "spo2", "pulse", "resting", "temp", "temperature", "glucose",
                                       "bpm", "systolic", "diastolic"]
     static let medicines: Set<String> = ["advil", "tylenol", "ibuprofen", "acetaminophen", "aspirin", "aleve",
@@ -78,9 +87,12 @@ public enum PrivateFacts {
 
     /// Whether a phrase is a fact about his body: his weight, a vital, sleep as a fact, a medicine or a symptom. A lift
     /// weight is the bar, not his body (MB31, MB32); food amounts and distances pass (MB33, MB40).
-    public static func isBodyShaped(_ phrase: String) -> Bool {
+    public static func isBodyShaped(_ phrase: String, lastWeightKg: Double?) -> Bool {
         let lower = phrase.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard !lower.isEmpty, !isTraining(lower) else { return false }
+        if isBareWeight(lower, lastWeightKg: lastWeightKg) {
+            return true
+        }
         let words = words(lower)
         let hasNumber = words.contains { $0.first?.isNumber == true }
         // "Feeling sick" is a body fact (HW19, health slice 1); slang and "sick of" are not (Research CR1).
@@ -106,6 +118,28 @@ public enum PrivateFacts {
         let unitOrDecimal = words.contains(where: bodyUnits.contains) || words.contains { $0.contains(".") }
             || words.contains { $0.wholeMatch(of: /\d+(?:\.\d+)?(?:lbs?|kgs?)/) != nil }
         return unitOrDecimal && rest.allSatisfy(dayWords.contains)
+    }
+
+    /// A bare number that is his weight (Product 2:56 and 4:46 PM PT): within 10% of his last logged weight, with or
+    /// without a day word ("is 82.4 good?", "how's 76 looking?"); with none logged, a decimal beside a body word
+    /// ("my weight is 82.4"). A number with another unit after it stays plain, read on the raw phrase ("85% done").
+    static func isBareWeight(_ lower: String, lastWeightKg: Double?) -> Bool {
+        let text = withoutTimes(lower)
+        let numbers = text.matches(of: /(\d+(?:[.,]\d+)?)\s*(%|×|[a-z]+)?/).compactMap { match -> Double? in
+            let unit = match.output.2.map(String.init)
+            guard unit.map({ !otherUnits.contains($0) }) ?? true,
+                  var value = Double(match.output.1.replacingOccurrences(of: ",", with: ".")) else { return nil }
+            if let unit, ["lb", "lbs", "pounds"].contains(unit) {
+                value *= 0.453_592
+            }
+            return value
+        }
+        guard !numbers.isEmpty else { return false }
+        if let last = lastWeightKg, last > 0, numbers.contains(where: { abs($0 - last) <= last * 0.1 }) {
+            return true
+        }
+        let bodyWord = words(text).contains(where: bodyWords.contains) || text.contains("body fat")
+        return bodyWord && text.firstMatch(of: /\d[.,]\d/) != nil
     }
 
     // MARK: Shared
