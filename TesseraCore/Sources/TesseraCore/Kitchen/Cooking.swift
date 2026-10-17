@@ -106,6 +106,11 @@ public struct StartCooking: EngineAction {
                                                         .init("serves", .integer, "At what size", required: false),
                                                     ])
 
+    /// The refusal line while a workout is running (gap hunt G56, Product 8:16): the Cook key never suspends one.
+    public static let workoutRunningLine = "Workout running."
+    /// The `ActionError.invalidArguments` reason of that refusal.
+    public static let workoutRunningReason = workoutRunningLine
+
     public var recipe: UUID
     public var serves: Int?
     public var time: Date?
@@ -118,6 +123,16 @@ public struct StartCooking: EngineAction {
 
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
         let recipe = try transaction.object(recipe, is: .recipe)
+        // A running workout is never suspended by a cook: refuse, and write nothing.
+        if let workoutClass = transaction.classes[.workout], let processClass = transaction.classes[.process],
+           transaction.store.objects(of: processClass).contains(where: { process in
+               transaction.processState(process) == .running
+                   && transaction.store.linkedObjects("subject", of: process).first?.classDef
+                   .map { ClassResolver.isSubclass($0, of: workoutClass) } == true
+           })
+        {
+            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: Self.workoutRunningReason)
+        }
         let book = RecipeBook(store: transaction.store, classes: transaction.classes)
         // Already cooking this (running or set aside)? Pick that cook back up rather than starting a second one.
         if let cookClass = transaction.classes[.cook],

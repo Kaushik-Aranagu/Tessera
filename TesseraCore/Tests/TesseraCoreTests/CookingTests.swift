@@ -49,4 +49,31 @@ struct CookingTests {
             try engine.perform(StartKitchenTimer(label: "x", minutes: 0), by: .user)
         }
     }
+
+    @Test func cookingRefusesWhileAWorkoutRuns() throws {
+        // G56: the Cook key never silently suspends a workout.
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let table = ProcessTable(engine: engine)
+        let recipe = try engine.perform(CreateRecipe(text: RecipeParserTests.carbonara), by: .user).output
+        let workout = try store.create(#require(classes[.workout]), title: "Push day")
+        try engine.perform(StartWorkout(workout: workout.id), by: .user)
+        let before = table.running()
+        let cookClass = try #require(classes[.cook])
+        let ops = engine.history(from: .distantPast, to: .distantFuture).count
+
+        #expect(StartCooking.workoutRunningLine == "Workout running.")
+        #expect(throws: ActionError.invalidArguments(action: "startCooking", reason: "Workout running.")) {
+            try engine.perform(StartCooking(recipe: recipe.id), by: .user)
+        }
+        #expect(store.objects(of: cookClass).isEmpty)
+        #expect(table.running()?.subject?.id == workout.id && table.running()?.state == .running)
+        #expect(table.running()?.lastTouchedAt == before?.lastTouchedAt)
+        #expect(engine.history(from: .distantPast, to: .distantFuture).count == ops)
+
+        // Once the workout is set aside, cooking works as before.
+        try engine.perform(SuspendProcess(process: #require(table.running()).id), by: .user)
+        let cook = try engine.perform(StartCooking(recipe: recipe.id), by: .user).output
+        #expect(table.running()?.subject?.id == cook.id)
+    }
 }
