@@ -15,6 +15,25 @@ final class WallsUITests: SimulatorOnlyTestCase {
         let expectLine: String?
         let lineMatch: String?
         let pending: String?
+        let mustNotShow: [String]?
+        let seed: Seed?
+    }
+
+    /// `seed`: a string for objectPage rows (section 11), an object for the body-number rows (section 12).
+    enum Seed: Decodable {
+        case named(String)
+        case weight(Double?)
+
+        private enum Keys: String, CodingKey { case lastWeightKg }
+
+        init(from decoder: Decoder) throws {
+            if let name = try? decoder.singleValueContainer().decode(String.self) {
+                self = .named(name)
+            } else {
+                let keys = try decoder.container(keyedBy: Keys.self)
+                self = try .weight(keys.decodeIfPresent(Double.self, forKey: .lastWeightKg))
+            }
+        }
     }
 
     struct WallFixture: Decodable {
@@ -34,10 +53,19 @@ final class WallsUITests: SimulatorOnlyTestCase {
     }
 
     static func rows(_ surface: String) throws -> [WallRow] {
+        try allRows().filter { $0.surface == surface }
+    }
+
+    static func allRows() throws -> [WallRow] {
         let bundle = Bundle(for: WallsUITests.self)
         let url = try XCTUnwrap(bundle.url(forResource: "walls-ui-phrases", withExtension: "json"))
         return try JSONDecoder().decode(WallFixture.self, from: Data(contentsOf: url)).rows
-            .filter { $0.surface == surface }
+    }
+
+    /// The launch flags a row's seed needs: his last weight, "none" for no weight logged, nothing with no seed.
+    static func seedFlags(_ row: WallRow) -> [String] {
+        guard case let .weight(kg) = row.seed else { return [] }
+        return ["-wallsSeedPrivate", kg.map { String($0) } ?? "none"]
     }
 
     private func text(for row: WallRow) -> String {
@@ -71,20 +99,41 @@ final class WallsUITests: SimulatorOnlyTestCase {
         }
     }
 
-    private func assertLine(_ row: WallRow, in app: XCUIApplication) {
+    private func assertLine(_ row: WallRow, in app: XCUIApplication, tessLine: Bool = false) {
         guard let line = row.expectLine else { return }
+        // On the Ask bar, only Tess's own line counts: Home rows ("Private note") can hold the same words.
+        let texts = tessLine ? app.staticTexts.matching(identifier: "tess.line") : app.staticTexts
         let found = row.lineMatch == "prefix"
-            ? app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", line)).firstMatch
-            : app.staticTexts[line]
+            ? texts.matching(NSPredicate(format: "label BEGINSWITH %@", line)).firstMatch
+            : texts.matching(NSPredicate(format: "label == %@", line)).firstMatch
         XCTAssertTrue(found.waitForExistence(timeout: 6), "\(row.id): the line reads \(line)")
     }
 
-    private func assertNoValue(_ row: WallRow, in app: XCUIApplication) {
-        for value in Self.fakeValues + [String(repeating: "x", count: 8)] {
-            let leak = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS[c] %@", value))
-                .firstMatch
-            XCTAssertFalse(leak.exists, "\(row.id): \(value) shows on screen")
+    private func assertNoValue(_ row: WallRow, in app: XCUIApplication, also: [String] = []) {
+        for value in also + Self.fakeValues + [String(repeating: "x", count: 8)] {
+            XCTAssertFalse(shows(value, in: app), "\(row.id): \(value) shows on screen (Home leak)")
         }
+    }
+
+    /// The whole tree, any element whose label holds the text (case-insensitive).
+    private func shows(_ text: String, in app: XCUIApplication) -> Bool {
+        app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS[c] %@", text)).firstMatch.exists
+    }
+
+    /// Any line the fixture expects, still on screen: a check run now could pass on an earlier row's line.
+    private func staleLine(in app: XCUIApplication, lines: [String]) -> String? {
+        lines.first { line in
+            !app.staticTexts.matching(identifier: "tess.line")
+                .matching(NSPredicate(format: "label BEGINSWITH %@", line)).firstMatch
+                .waitForNonExistence(timeout: 8)
+        }
+    }
+
+    /// Closes the Ask, if it's still open, so Home shows.
+    private func closeAsk(_ app: XCUIApplication) {
+        guard app.textFields.firstMatch.exists else { return }
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.03)).tap()
+        _ = app.textFields.firstMatch.waitForNonExistence(timeout: 3)
     }
 
     private func assertCounts(_ row: WallRow, before: (claude: Int, misses: Int), in app: XCUIApplication) {
@@ -110,32 +159,64 @@ final class WallsUITests: SimulatorOnlyTestCase {
 
     // MARK: - Surfaces
 
+    /// Ask bar rows, one launch per seed group (his last weight, none logged, no seed), in the fixture's order.
     func testAskBarWalls() throws {
-        let app = launch()
-        let soul = app.buttons["Tess"]
-        XCTAssertTrue(soul.waitForExistence(timeout: 15))
+        let rows = try Self.rows("askBar")
+        let lines = try Array(Set(Self.allRows().compactMap(\.expectLine))).sorted()
+        var groups: [[String]: [WallRow]] = [:]
+        var order: [[String]] = []
+        for row in rows {
+            let flags = Self.seedFlags(row)
+            if groups[flags] == nil {
+                order.append(flags)
+            }
+            groups[flags, default: []].append(row)
+        }
+        var spyMoved = false
+        var app: XCUIApplication?
+        for flags in order {
+            app?.terminate()
+            let launched = launch(flags)
+            app = launched
+            spyMoved = askRows(groups[flags] ?? [], lines: lines, in: launched) || spyMoved
+        }
+        // The spy's own check: plain phrases nothing on the phone reads reach Claude, or the seam isn't wired.
+        XCTAssertTrue(spyMoved, "spy not wired")
+        // The leak search's own check: an ordinary task holding a number must be found on Home.
+        if let app {
+            closeAsk(app)
+            type("buy milk 82.4", in: app)
+            sleep(3)
+            closeAsk(app)
+            XCTAssertTrue(shows("82.4", in: app), "leak search is blind")
+        }
+    }
+
+    /// Types each row on the Ask bar; whether any reached the spy.
+    private func askRows(_ rows: [WallRow], lines: [String], in app: XCUIApplication) -> Bool {
+        XCTAssertTrue(app.buttons["Tess"].waitForExistence(timeout: 15))
         sleep(2)
         var spyMoved = false
-        for row in try Self.rows("askBar") {
-            let before = probe(app)
-            soul.tap()
-            let write = app.descendants(matching: .any).matching(NSPredicate(format: "label ==[c] %@", "Write"))
-                .firstMatch
-            XCTAssertTrue(write.waitForExistence(timeout: 5))
-            write.tap()
-            let field = app.textFields.firstMatch
-            XCTAssertTrue(field.waitForExistence(timeout: 5))
-            if row.build == "KEY" {
-                paste(text(for: row), into: field, app: app)
-            } else {
-                field.typeText(text(for: row))
-                app.typeText("\n")
+        for row in rows {
+            closeAsk(app)
+            if let stale = staleLine(in: app, lines: lines) {
+                check(row) { XCTFail("\(row.id): stale line, row cannot be trusted (\(stale))") }
+                continue
             }
+            let before = probe(app)
+            type(text(for: row), in: app, paste: row.build == "KEY")
             check(row) {
-                assertLine(row, in: app)
+                assertLine(row, in: app, tessLine: true)
                 sleep(3)
-                if row.expectPrivate || row.build == "KEY" || ["A06", "A07", "A20", "A21"].contains(row.id) {
-                    assertNoValue(row, in: app)
+                closeAsk(app)
+                let privateRow = row.expectPrivate || row.build == "KEY" || ["A06", "A07", "A20", "A21"]
+                    .contains(row.id)
+                if privateRow {
+                    assertNoValue(row, in: app, also: row.mustNotShow ?? [])
+                } else {
+                    for value in row.mustNotShow ?? [] {
+                        XCTAssertFalse(shows(value, in: app), "\(row.id): \(value) shows on screen (Home leak)")
+                    }
                 }
                 assertCounts(row, before: before, in: app)
             }
@@ -144,8 +225,24 @@ final class WallsUITests: SimulatorOnlyTestCase {
             }
             sleep(1)
         }
-        // The spy's own check: plain phrases nothing on the phone reads reach Claude, or the seam isn't wired.
-        XCTAssertTrue(spyMoved, "spy not wired")
+        return spyMoved
+    }
+
+    /// Opens Write from the soul and enters the text (pasted for key rows), then Return.
+    private func type(_ text: String, in app: XCUIApplication, paste pasted: Bool = false) {
+        app.buttons["Tess"].tap()
+        let write = app.descendants(matching: .any).matching(NSPredicate(format: "label ==[c] %@", "Write"))
+            .firstMatch
+        XCTAssertTrue(write.waitForExistence(timeout: 5))
+        write.tap()
+        let field = app.textFields.firstMatch
+        XCTAssertTrue(field.waitForExistence(timeout: 5))
+        if pasted {
+            paste(text, into: field, app: app)
+        } else {
+            field.typeText(text)
+            app.typeText("\n")
+        }
     }
 
     func testNotesPageWalls() throws {

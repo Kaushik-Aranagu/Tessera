@@ -143,11 +143,6 @@ struct BottomChrome: View {
 
     // MARK: Rest
 
-    /// One line per capture: Tess's reply wins; there are no generic fallbacks. UNDO stays while there's a capture.
-    private var line: String? {
-        reply ?? voice.note?.text ?? model.launchNote
-    }
-
     private var resting: some View {
         HStack(alignment: .center, spacing: Theme.Spacing.m) {
             if !model.isCommandExpanded, line != nil || canUndo || setAsk != nil || liftAsk != nil || holdHint == 1 {
@@ -201,6 +196,7 @@ struct BottomChrome: View {
                         .font(Theme.voice)
                         .foregroundStyle(Theme.Colors.tess)
                         .contentTransition(.opacity)
+                        .accessibilityIdentifier("tess.line")
                     }
                     if canUndo {
                         Button("Undo") { undo() }
@@ -534,6 +530,11 @@ struct BottomChrome: View {
 // MARK: - Speak and the asks (same file, so they reach the view's private state)
 
 extension BottomChrome {
+    /// One line per capture: Tess's reply wins; there are no generic fallbacks. UNDO stays while there's a capture.
+    private var line: String? {
+        reply ?? voice.note?.text ?? model.launchNote
+    }
+
     /// Core's shared guard (anything that starts like a Claude key, in any case).
     static func looksLikeClaudeKey(_ text: String) -> Bool {
         TesseraCore.looksLikeClaudeKey(text)
