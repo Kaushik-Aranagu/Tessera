@@ -74,6 +74,7 @@
     },
     {
       "id": "A06",
+      "allButKey": "question use: wall stays (decision 2:32 AM Oct 17 covers capture misses only)",
       "phrase": "what's my wifi password?",
       "surface": "askBar",
       "expectPrivate": false,
@@ -88,6 +89,7 @@
     },
     {
       "id": "A07",
+      "allButKey": "question use: wall stays (decision 2:32 AM Oct 17 covers capture misses only)",
       "phrase": "door code 4417?",
       "surface": "askBar",
       "expectPrivate": false,
@@ -1231,6 +1233,7 @@
     },
     {
       "id": "BN01",
+      "allButKey": "question use: wall stays (decision 2:32 AM Oct 17 covers capture misses only)",
       "phrase": "is 82.4 good?",
       "surface": "askBar",
       "expectPrivate": false,
@@ -1252,6 +1255,7 @@
     },
     {
       "id": "BN02",
+      "allButKey": "question use: wall stays (decision 2:32 AM Oct 17 covers capture misses only)",
       "phrase": "how's 76 looking?",
       "surface": "askBar",
       "expectPrivate": false,
@@ -1272,6 +1276,7 @@
     },
     {
       "id": "BN03",
+      "allButKey": "question use: wall stays (decision 2:32 AM Oct 17 covers capture misses only)",
       "phrase": "82.4?",
       "surface": "askBar",
       "expectPrivate": false,
@@ -1292,6 +1297,7 @@
     },
     {
       "id": "BN04",
+      "allButKey": "question use: wall stays (decision 2:32 AM Oct 17 covers capture misses only)",
       "phrase": "my weight is 82.4, good?",
       "surface": "askBar",
       "expectPrivate": false,
@@ -1414,6 +1420,7 @@
     },
     {
       "id": "BN11",
+      "allButKey": "question use: wall stays (decision 2:32 AM Oct 17 covers capture misses only)",
       "phrase": "is 82.4 good?",
       "surface": "liveWorkoutAsk",
       "expectPrivate": false,
@@ -2036,6 +2043,7 @@
     },
     {
       "id": "BM31",
+      "allButKey": "question use: wall stays (decision 2:32 AM Oct 17 covers capture misses only)",
       "phrase": "is 82.4 good?",
       "surface": "liveWorkoutAsk",
       "expectPrivate": false,
