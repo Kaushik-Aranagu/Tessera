@@ -129,6 +129,26 @@ public struct Groceries {
         GroceryShare.decode(store.value("shares", of: item)?.stringValue).lazy.compactMap(\.packSize).first
     }
 
+    /// A shop put away with things in its basket counts them as bought (Product 9:45 AM PT, ruling 5): each checked
+    /// row's ingredient, on the day it was checked, while the shop's latest process is in Later. Pantry reads this
+    /// beside the rows a shop clear took off.
+    public func putAwayBasket() -> [(ingredient: ObjectRecord, at: Date)] {
+        guard let list, let processClass = classes[.process] else { return [] }
+        let latest = store.backlinks(to: list).filter { $0.classDef?.id == processClass.id }
+            .max { (store.value("startedAt", of: $0)?.dateValue ?? .distantPast)
+                < (store.value("startedAt", of: $1)?.dateValue ?? .distantPast)
+            }
+        guard let latest, store.value("state", of: latest)?.stringValue == ProcessState.putAway.rawValue else {
+            return []
+        }
+        return list.orderedChildren.compactMap { item in
+            guard store.value("isDone", of: item) == .bool(true),
+                  let when = store.value("checkedAt", of: item)?.dateValue,
+                  let ingredient = ingredient(of: item) else { return nil }
+            return (ingredient, when)
+        }
+    }
+
     /// The recipes an item is for.
     public func recipes(for item: ObjectRecord) -> [ObjectRecord] {
         guard let recipeClass = classes[.recipe] else { return [] }

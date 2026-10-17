@@ -32,13 +32,22 @@ enum ListNoteTags {
 
     /// The date after a `prefix` line, if there is one.
     static func stamp(_ prefix: String, in text: String?) -> Date? {
-        guard let line = lines(text).last(where: { $0.hasPrefix(prefix) }) else { return nil }
-        return try? Date(String(line.dropFirst(prefix.count)), strategy: .iso8601)
+        lines(text).compactMap { stampDate(prefix, line: $0) }.last
+    }
+
+    /// The date of an exact stamp line: the prefix, then an ISO date and nothing else (Product 9:45 AM PT, QA on
+    /// #802). "picked: up at 5" is his note.
+    static func stampDate(_ prefix: String, line: String) -> Date? {
+        guard line.hasPrefix(prefix) else { return nil }
+        let rest = String(line.dropFirst(prefix.count))
+        // The parser forgives trailing words; a stamp is only the date exactly as it was written.
+        guard let date = try? Date(rest, strategy: .iso8601), date.formatted(.iso8601) == rest else { return nil }
+        return date
     }
 
     /// `text` with the `prefix` line set to `date` (or dropped for nil); nil when nothing is left.
     static func setting(stamp prefix: String, to date: Date?, in text: String?) -> String? {
-        var kept = lines(text).filter { !$0.hasPrefix(prefix) }
+        var kept = lines(text).filter { stampDate(prefix, line: $0) == nil }
         if let date {
             kept.append(prefix + date.formatted(.iso8601))
         }

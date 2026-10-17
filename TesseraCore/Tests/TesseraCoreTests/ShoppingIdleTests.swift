@@ -119,4 +119,19 @@ struct ShoppingIdleTests {
         #expect(rows.count == 12)
         #expect(rows.allSatisfy { $0.isDone && $0.checkedAt != nil && !$0.object.isDeleted })
     }
+
+    @Test func aPutAwayBasketCountsAsBought() throws {
+        // Product 9:45 AM PT, ruling 5: what was in the basket when the shop went to Later was bought.
+        let (engine, store, table) = try shop()
+        let groceries = Groceries(store: store, classes: engine.classes)
+        #expect(groceries.putAwayBasket().isEmpty) // still running: not yet
+        _ = table.suspendIfIdle(now: t0 + 3600 + idle + 60, idleLimit: idle)
+        #expect(groceries.putAwayBasket().isEmpty) // idle in the ledger: not yet
+        _ = table.tidyNotes(now: t0 + 3600 + ProcessTable.Limits.putAway + 60)
+        let bought = groceries.putAwayBasket()
+        #expect(bought.count == 12 && bought.allSatisfy { $0.at == t0 + 3600 }, "\(bought.map(\.ingredient.title))")
+        // Back to the store: the shop runs again and the basket is a basket again.
+        try engine.perform(StartShop(time: t0 + 3600 + ProcessTable.Limits.putAway + 120), by: .user)
+        #expect(groceries.putAwayBasket().isEmpty)
+    }
 }

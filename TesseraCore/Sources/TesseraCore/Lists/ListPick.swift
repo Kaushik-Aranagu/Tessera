@@ -64,7 +64,7 @@ public struct SetListPickOne: EngineAction {
         guard ListNoteTags.has(ListNoteTags.pickOne, in: notes) != isOn else {
             throw ActionError.invalidArguments(
                 action: Self.descriptor.name,
-                reason: "Pick one is already \(isOn ? "on" : "off") for \(list.title)"
+                reason: "Pick one is already \(isOn ? "on" : "off") for \(ListContents.shownName(of: list, in: transaction.store))"
             )
         }
         let updated = ListNoteTags.setting(ListNoteTags.pickOne, to: isOn, in: notes)
@@ -72,11 +72,13 @@ public struct SetListPickOne: EngineAction {
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "Turned Pick one \(on ?? true ? "on" : "off") for \(store.object(id: list)?.title ?? "the list")"
+        "Turned Pick one \(on ?? true ? "on" : "off") for "
+            + (store.object(id: list).map { ListContents.shownName(of: $0, in: store) } ?? "the list")
     }
 
     public func receipt(in store: ObjectStore) -> String? {
-        "\(store.object(id: list)?.title ?? "The list"), pick one \(on ?? true ? "on" : "off")"
+        (store.object(id: list).map { ListContents.shownName(of: $0, in: store) } ?? "The list")
+            + ", pick one \(on ?? true ? "on" : "off")"
     }
 }
 
@@ -110,13 +112,15 @@ public struct AcceptPick: EngineAction {
 
     public func summary(in store: ObjectStore) -> String {
         guard let object = store.object(id: item) else { return "Picked an item" }
-        return "Picked \(AddListItem.shownTitle(object.title, store: store)) from \(object.parent?.title ?? "the list")"
+        let list = object.parent.map { ListContents.shownName(of: $0, in: store) } ?? "the list"
+        return "Picked \(AddListItem.shownTitle(object.title, store: store)) from \(list)"
     }
 
     /// Thing first, the list by name: "Heat, from Films". A medicine or body fact reads "Private item".
     public func receipt(in store: ObjectStore) -> String? {
         guard let object = store.object(id: item) else { return nil }
         let shown = AddListItem.shownTitle(object.title, store: store)
-        return "\(shown.prefix(1).uppercased() + shown.dropFirst()), from \(object.parent?.title ?? "the list")"
+        let list = object.parent.map { ListContents.shownName(of: $0, in: store) } ?? "the list"
+        return "\(shown.prefix(1).uppercased() + shown.dropFirst()), from \(list)"
     }
 }

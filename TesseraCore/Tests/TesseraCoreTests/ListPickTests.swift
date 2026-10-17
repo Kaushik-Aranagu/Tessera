@@ -274,4 +274,15 @@ struct ListPickTests {
         )
         #expect(fixture.lists.pickedAt(fixture.items[0]) != nil)
     }
+
+    @Test func onlyAnExactStampIsAPick() {
+        // QA on #802: "picked: " with a date and nothing else is the stamp; anything else is his note, kept.
+        let date = Date(timeIntervalSinceReferenceDate: 800_000_000)
+        let stamp = ListNoteTags.pickedPrefix + date.formatted(.iso8601)
+        #expect(ListNoteTags.stamp(ListNoteTags.pickedPrefix, in: "picked: up at 5") == nil)
+        #expect(ListNoteTags.stamp(ListNoteTags.pickedPrefix, in: "\(stamp) and again") == nil)
+        #expect(ListNoteTags.stamp(ListNoteTags.pickedPrefix, in: "Loved it\n\(stamp)") == date)
+        let notes = ListNoteTags.setting(stamp: ListNoteTags.pickedPrefix, to: nil, in: "picked: up at 5\n\(stamp)")
+        #expect(notes == "picked: up at 5")
+    }
 }
