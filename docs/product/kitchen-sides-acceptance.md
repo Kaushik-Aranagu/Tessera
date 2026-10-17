@@ -78,13 +78,13 @@ THE WEEK'S COOKS (AHEAD, sheet 74) now, and it stays that way when Pantry arrive
 
 *Pantry is an area of his own. The front is `pantry-acceptance.md` (counts line, out / low / in groups by aisle, swipe left adds to Groceries). This is the side, drafted from decisions 2:36 so Design can draw against it. The pass rows stay valid whatever the drawing looks like.*
 
-**The Pantry side is OUT AND LOW.** What the phone thinks he is out of or low on, as a plain list for a shop, with when each was last bought. Glance: "4 out, 2 low", the one key ADD 6 TO GROCERIES (the same dry-run count as the recipe peek key; at 0, "Nothing out." and no key). Nutrition never appears here (`never-sums-audit.md` N6).
+**The Pantry side is OUT AND LOW.** What the phone thinks he is out of or low on, as a plain list for a shop, with when each was last bought. Glance (sheet 78): "4 out", "2 low" and "6 to buy", foot ALL OF THEM, kind AHEAD, the one key ADD 6 TO GROCERIES (the same dry-run count as the recipe peek key; at 0, "Nothing out." and no key). Nutrition never appears here (`never-sums-audit.md` N6).
 
 | # | Pass when |
 |---|---|
-| 6.1 | The front's counts line and the side's glance give the same two numbers ("4 out, 2 low") |
+| 6.1 | The front's counts line ("4 out, 2 low") and the side's glance ("4 out", "2 low") give the same numbers, and "6 to buy" equals the key's number |
 | 6.2 | The side lists out lines first, then low, each as one line: name and "bought Sat" when known; unknown ingredients are never listed |
-| 6.3 | The key adds every listed line to Groceries in one op and reads "6 added." with one UNDO (4 s); a line already on Groceries is not added twice, and the key's number counts only new rows |
+| 6.3 | The key adds every listed line to Groceries in one op and gives the receipt "Pantry, 6 added." with one UNDO (4 s, a new add; the state-word tap "Limes, in." is a change and gets 10 s); a line already on Groceries is not added twice, and the key's number counts only new rows |
 | 6.4 | With nothing known, the side opens on "Nothing known yet." and no key; no empty-state art |
 | 6.5 | The side holds no per-line controls; tapping a line opens its Ingredient page, where the state word cycles in, low, out |
 | 6.6 | Pantry's side is its own: the Kitchen tab's side stays THE WEEK'S COOKS before and after Pantry ships (row 5.2) |
