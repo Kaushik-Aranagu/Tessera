@@ -15,10 +15,10 @@ enum AppClock {
         date.addingTimeInterval(offset)
     }
 
-    static func configure(arguments: [String] = ProcessInfo.processInfo.arguments) {
+    static func configure() {
         #if DEBUG
             // Simulator only: a shifted clock on the phone would stamp logs and backups with wrong dates.
-            guard let time = LaunchFlags.value(after: "-demoTime", in: arguments) else { return }
+            guard let time = LaunchFlags.value(after: "-demoTime") else { return }
             let parts = time.split(separator: ":").compactMap { Int($0) }
             guard parts.count == 2 else { return }
             let real = Date()
