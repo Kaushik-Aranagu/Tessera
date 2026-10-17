@@ -226,8 +226,12 @@ struct ListReuseTests {
         #expect(back.record.receipt == "Lease, back on Private list", "\(back.record.receipt ?? "-")")
         try engine.perform(CheckListItem(item: added.output.id, time: start + 120), by: .user)
         let cleared = try engine.perform(ClearDoneItems(list: list.id), by: .user)
-        #expect(cleared.record.summary == "Cleared Private list" && cleared.record.receipt == "Private list, done items cleared")
-        #expect(throws: ActionError.invalidArguments(action: "clearDoneItems", reason: "nothing checked on Private list")) {
+        #expect(cleared.record.summary == "Cleared Private list" && cleared.record
+            .receipt == "Private list, done items cleared")
+        #expect(throws: ActionError.invalidArguments(
+            action: "clearDoneItems",
+            reason: "nothing checked on Private list"
+        )) {
             try engine.perform(ClearDoneItems(list: list.id), by: .user)
         }
         for record in engine.history(limit: 50) {
@@ -245,5 +249,19 @@ struct ListReuseTests {
         #expect(clear.output == 2 && clear.record.receipt == "Gym bag, reset")
         let none = try engine.perform(ClearDoneItems(list: bag.id), by: .user)
         #expect(none.record.receipt == "Gym bag, nothing to reset." && none.record.ops.isEmpty)
+    }
+
+    @Test func aRefusalNeverNamesAPrivateList() throws {
+        // The developer refusal reads the list's shown name, so a walled title stays out of it.
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let list = try engine.perform(CreateList(name: "Lexapro refills"), by: .user).output
+        do {
+            try engine.perform(SetListReusable(list: list.id, reusable: false), by: .user)
+            Issue.record("a list that is not reusable cannot be switched off")
+        } catch {
+            let reason = String(describing: error)
+            #expect(!reason.lowercased().contains("lexapro") && reason.contains("Private list"), "\(reason)")
+        }
     }
 }

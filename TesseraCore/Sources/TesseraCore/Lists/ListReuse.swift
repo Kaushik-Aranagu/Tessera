@@ -40,7 +40,7 @@ public struct SetListReusable: EngineAction {
         guard ListNoteTags.has(ListNoteTags.reusable, in: notes) != isOn else {
             throw ActionError.invalidArguments(
                 action: Self.descriptor.name,
-                reason: "\(list.title) is already \(isOn ? "reusable" : "not reusable")"
+                reason: "\(ListContents.shownName(of: list, in: transaction.store)) is already \(isOn ? "reusable" : "not reusable")"
             )
         }
         let updated = ListNoteTags.setting(ListNoteTags.reusable, to: isOn, in: notes)
