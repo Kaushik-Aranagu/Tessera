@@ -76,4 +76,38 @@ struct CookingTests {
         let cook = try engine.perform(StartCooking(recipe: recipe.id), by: .user).output
         #expect(table.running()?.subject?.id == cook.id)
     }
+
+    @Test func nothingElseStartsOrResumesWhileAWorkoutRuns() throws {
+        // QA on #783: StartProcess and ResumeProcess refuse with the Cook key's line; the workout itself may resume.
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let table = ProcessTable(engine: engine)
+        let recipe = try engine.perform(CreateRecipe(text: RecipeParserTests.carbonara), by: .user).output
+        let cook = try engine.perform(StartCooking(recipe: recipe.id), by: .user).output
+        let cookProcess = try #require(table.running())
+        let workout = try store.create(#require(classes[.workout]), title: "Push day")
+        let other = try store.create(#require(classes[.workout]), title: "Pull day")
+        try engine.perform(StartWorkout(workout: workout.id), by: .user)
+        let ops = engine.history(from: .distantPast, to: .distantFuture).count
+
+        let refusal = { (name: String) in ActionError.invalidArguments(action: name, reason: "Workout running.") }
+        #expect(throws: refusal("resumeProcess")) {
+            try engine.perform(ResumeProcess(process: cookProcess.id), by: .user)
+        }
+        #expect(throws: refusal("startProcess")) {
+            try engine.perform(StartProcess(subject: cook.id), by: .user)
+        }
+        #expect(throws: refusal("startProcess")) {
+            try engine.perform(StartShop(), by: .user)
+        }
+        #expect(throws: refusal("startProcess")) {
+            try engine.perform(StartWorkout(workout: other.id), by: .user)
+        }
+        #expect(engine.history(from: .distantPast, to: .distantFuture).count == ops)
+        #expect(table.running()?.subject?.id == workout.id)
+
+        // The running workout itself starts again in place.
+        try engine.perform(StartWorkout(workout: workout.id), by: .user)
+        #expect(table.running()?.subject?.id == workout.id)
+    }
 }

@@ -171,6 +171,10 @@ struct HomeLinesTests {
         #expect(zero.context == HomeLines.dayWord(Self.at(9), calendar: Self.calendar), "\(zero.context ?? "-")")
         #expect(zero.text.hasSuffix("nothing to buy."), "\(zero.text)")
         #expect(zero.context != "nothing to buy")
+        // Tomorrow's stocked cook says tomorrow, never today's word (QA on #780).
+        var ahead = stocked
+        ahead.tomorrow = true
+        #expect(HomeLines.line(for: ahead, now: Self.at(21), calendar: Self.calendar).context == "tomorrow")
     }
 
     @Test func theCapsTheCheckerEnforces() {
