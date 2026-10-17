@@ -264,9 +264,13 @@ private struct InstanceBody: View {
                 : Format.identifier(object.classDef?.name ?? "Thing", upperFirst: true)
         )
 
-        if privateLabel == nil, let notes = model.store.value("notes", of: object)?.stringValue {
-            // A workout's notes are a body fact: they read "Note kept private" (Product 5:20 PM PT).
-            Text(ObjectPrivacy.hidesNotes(of: object, classes: model.classes) ? ObjectPrivacy.keptNoteLabel : notes)
+        // A workout's notes are a body fact: they read "Note kept private" (Product 5:20 PM PT).
+        if privateLabel == nil, let notes = ObjectPrivacy.notesLine(
+            of: object,
+            in: model.store,
+            classes: model.classes
+        ) {
+            Text(notes)
                 .textRole(.body).foregroundStyle(Theme.Colors.inkSecondary).entrance(4)
         }
 
@@ -424,7 +428,11 @@ private struct PropertyList: View {
                 dash
             } else {
                 VStack(alignment: .trailing, spacing: Theme.Spacing.s) {
-                    ForEach(targets) { target in ObjectHandle(title: target.title, route: .object(target.id)) }
+                    // A private target shows its label, never its words (QA on #580).
+                    ForEach(targets) { target in
+                        ObjectHandle(title: ObjectPrivacy.label(of: target, in: model.store, classes: model.classes)
+                            ?? target.title, route: .object(target.id))
+                    }
                 }
             }
         case .classRef:

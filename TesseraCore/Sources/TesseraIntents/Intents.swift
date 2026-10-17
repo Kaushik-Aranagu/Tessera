@@ -170,9 +170,16 @@ public struct CreateTaskIntent: AppIntent {
         case let .ask(line):
             return line
         default:
-            let record = try engine.perform(CreateTask(title: title, startsAt: startsAt), by: .intent).record
-            return PrivateFacts.isPrivateTitle(title) ? TessCaptureEngine.privateTaskLine(startsAt, context: context)
-                : "\(record.summary)."
+            let made = try engine.perform(CreateTask(title: title, startsAt: startsAt), by: .intent)
+            // A line the engine wall made a private note says so (QA low on 0ai); a private title is never read back.
+            let stored = made.output.title
+            if stored == SecretWords.title {
+                return "\(SecretWords.title), kept."
+            }
+            let last = BodyWeight.lastKg(in: engine.store)
+            let isPrivate = stored == ObjectPrivacy.taskLabel || PrivateFacts.isPrivateTitle(title, lastWeightKg: last)
+                || PrivateFacts.isPrivateTitle(stored, lastWeightKg: last)
+            return isPrivate ? TessCaptureEngine.privateTaskLine(startsAt, context: context) : "\(made.record.summary)."
         }
     }
 }
@@ -196,7 +203,8 @@ public struct TellTessIntent: AppIntent {
     public func perform() async throws -> some IntentResult & ProvidesDialog {
         let capture = await runtime.tess.capture(phrase, context: TessContext(commitImmediately: true))
         // What it wrote is never read back in his words when the words are private (Product P14).
-        let hidden = PrivateFacts.isPrivateTitle(phrase) && !capture.records.isEmpty
+        let hidden = PrivateFacts.isPrivateTitle(phrase, lastWeightKg: BodyWeight.lastKg(in: runtime.engine.store))
+            && !capture.records.isEmpty
             && !capture.line.hasPrefix("\(SecretWords.title), kept") && !capture.line.hasPrefix("Task added")
         return .result(dialog: "\(hidden ? "Saved." : capture.line)")
     }

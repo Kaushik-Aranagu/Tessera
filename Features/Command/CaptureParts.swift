@@ -187,7 +187,7 @@ struct CommandInterpreter {
             return claudeKeyLine
         }
         let secret = SecretWords.mentions(text)
-        if secret || PrivateFacts.isWalled(text) {
+        if secret || PrivateFacts.isWalled(text, lastWeightKg: BodyWeight.lastKg(in: model.store)) {
             if text.hasSuffix("?") {
                 return secret ? "It's in your private notes." : "That stays on this phone."
             }
