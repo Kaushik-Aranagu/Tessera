@@ -20,7 +20,7 @@ struct RecipePage: View {
     @Environment(\.dismiss) private var dismiss
     @Namespace private var zoom
     @State private var serves: Int?
-    @State private var sent: (count: Int, record: OpRecord)?
+    @State private var sent: (line: String, record: OpRecord)?
     @State private var drag: CGFloat = 0
     @State private var columnWidth: CGFloat = 260
     @State private var away = false
@@ -87,17 +87,18 @@ struct RecipePage: View {
                 ZStack(alignment: .topLeading) {
                     HStack(alignment: .top, spacing: Theme.Spacing.m) {
                         ScrollView {
-                            IngredientColumn(lines: lines, zoom: zoom)
+                            IngredientColumn(lines: lines, zoom: zoom) { send(recipe: recipe.id, serves: size) }
                                 .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { columnWidth = $0 }
                         }
                         .scrollIndicators(.hidden)
                         .scrollBounceBehavior(.basedOnSize)
                         .offset(x: away ? -columnWidth * 1.4 : min(0, drag))
                         .simultaneousGesture(sendGesture(recipe: recipe.id, serves: size))
-                        PortionDrum(serves: Binding(get: { size ?? 2 }, set: { serves = $0 }), isEnabled: own != nil)
+                        PortionDrum(serves: Binding(get: { size ?? 2 }, set: { serves = $0 }), isEnabled: own != nil,
+                                    range: PortionDrum.range(written: own))
                     }
                     if let sent {
-                        SentLine(count: sent.count) { undoSend(sent.record) }
+                        SentLine(line: sent.line) { undoSend(sent.record) }
                             .frame(width: columnWidth)
                             .transition(.opacity)
                     }
@@ -152,7 +153,7 @@ struct RecipePage: View {
                 RecipeDepth(route: route)
                     .navigationTransition(.zoom(sourceID: routeID(route), in: zoom))
             }
-            .sensoryFeedback(.success, trigger: sent?.count)
+            .tesseraFeedback(.made, trigger: sent?.line)
             .onDisappear { titleShown = false }
             .onChange(of: scenePhase) { _, phase in
                 if phase != .active {
@@ -223,22 +224,43 @@ struct RecipePage: View {
                     withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { drag = 0 }
                     return
                 }
-                guard let result = try? model.engine.perform(AddRecipeToGroceries(recipe: recipe, serves: serves),
-                                                             by: .user) else { return }
-                withAnimation(reduceMotion ? .easeOut(duration: 0.15) : .smooth(duration: 0.36)) {
-                    away = true
-                    drag = 0
-                    sent = (result.output.count, result.record)
-                    model.touch()
-                }
-                Task { @MainActor in
-                    try? await Task.sleep(for: .seconds(4))
-                    withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
-                        away = false
-                        sent = nil
-                    }
-                }
+                self.send(recipe: recipe, serves: serves)
             }
+    }
+
+    /// The add, from the swipe or VoiceOver's "Add to Groceries" (G58, K87.8). Added: the column leaves and the
+    /// engine's "Tacos, 7 added." stands in its place with UNDO 10 s. Nothing new: the column stays, one line
+    /// "Tacos, nothing to add.", no UNDO. Refused: the column springs back and Tess says so.
+    private func send(recipe: UUID, serves: Int?) {
+        let title = model.store.object(id: recipe)?.title ?? ""
+        let outcome = RecipeCopy.send(isPrivate: RecipeCopy.isPrivate(title, model: model)) {
+            let result = try model.engine.perform(AddRecipeToGroceries(recipe: recipe, serves: serves), by: .user)
+            return (result.output.count, result.record)
+        }
+        guard case let .added(line, record) = outcome else {
+            withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { drag = 0 }
+            if case let .nothing(line) = outcome {
+                TessVoice.shared.say(line)
+            } else if case let .failed(line) = outcome {
+                TessVoice.shared.say(line)
+            }
+            return
+        }
+        withAnimation(reduceMotion ? .easeOut(duration: 0.15) : .smooth(duration: 0.36)) {
+            away = true
+            drag = 0
+            sent = (line, record)
+            model.touch()
+        }
+        UIAccessibility.post(notification: .announcement, argument: line)
+        Task { @MainActor in
+            try? await Task.sleep(for: TessVoice.hold(undo: true, holds: .seconds(10)))
+            guard sent?.record.id == record.id else { return }
+            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+                away = false
+                sent = nil
+            }
+        }
     }
 
     private func undoSend(_ record: OpRecord) {
@@ -251,14 +273,14 @@ struct RecipePage: View {
     }
 }
 
-/// "12 to buy, on Groceries" where the column was, with Undo.
+/// "Tacos, 7 added." where the column was, with Undo (K34.7, K37.6).
 private struct SentLine: View {
-    let count: Int
+    let line: String
     let undo: () -> Void
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
-            (Text("\(count)").fontWeight(.semibold) + Text(" to buy, on Groceries"))
+            Text(line)
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
             Spacer()
@@ -276,6 +298,8 @@ private struct SentLine: View {
 private struct IngredientColumn: View {
     let lines: [RecipeBook.Line]
     let zoom: Namespace.ID
+    /// The same add as the swipe, for VoiceOver and Switch Control (G58).
+    var onAdd: () -> Void = {}
     @State private var metric: UUID?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -310,11 +334,20 @@ private struct IngredientColumn: View {
                 }
                 .opacity(dim ? 0.45 : 1)
                 .frame(minHeight: 44)
+                // One stop per row: "2 cups flour, chopped"; activating opens the ingredient (G58).
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(RecipeCopy.spokenRow(amount(line), line.line))
+                .accessibilityActions {
+                    if line.line.metricText != nil {
+                        Button("Show in metric") { flip(line) }
+                    }
+                    Button("Add to Groceries", action: onAdd)
+                }
             }
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Ingredients")
-        .accessibilityHint("Swipe left to add them to groceries")
+        .accessibilityAction(named: "Add to Groceries", onAdd)
     }
 
     private func amount(_ line: RecipeBook.Line) -> String {
@@ -416,8 +449,44 @@ private struct RecipeOriginal: View {
 
 @MainActor
 enum RecipeCopy {
-    /// What Tess says when the Cook key can't start a cook: the engine's "Workout running." while a workout runs
-    /// (G56), "Didn't save that. Try again." for any other refusal, nil when it started.
+    /// What the recipe page's add came to.
+    enum SendOutcome: Equatable {
+        /// New rows: the engine's "Tacos, 7 added." with UNDO.
+        case added(String, OpRecord)
+        /// Everything was already there or a staple: "Tacos, nothing to add.", no UNDO (Product e1981a39).
+        case nothing(String)
+        case failed(String)
+
+        static func == (lhs: Self, rhs: Self) -> Bool {
+            switch (lhs, rhs) {
+            case let (.added(a, x), .added(b, y)): a == b && x === y
+            case let (.nothing(a), .nothing(b)), let (.failed(a), .failed(b)): a == b
+            default: false
+            }
+        }
+    }
+
+    /// The add's outcome from the engine: its own summary line ("Tacos, 7 added." / "Tacos, nothing to add.").
+    /// A private recipe never lends its name (G53, QA on #808): "Private recipe, 7 added." / "Private recipe,
+    /// nothing to add.", built from the count, never from the engine's line.
+    static func send(isPrivate: Bool = false,
+                     _ perform: () throws -> (count: Int, record: OpRecord)) -> SendOutcome
+    {
+        guard let result = try? perform() else { return .failed("Didn't save that. Try again.") }
+        let line = isPrivate
+            ? "Private recipe, \(result.count == 0 ? "nothing to add" : "\(result.count) added")."
+            : result.record.receipt ?? result.record.summary
+        return result.count == 0 ? .nothing(line) : .added(line, result.record)
+    }
+
+    /// One VoiceOver stop per ingredient row: "2 cups flour, chopped".
+    static func spokenRow(_ amount: String, _ line: IngredientLine) -> String {
+        [amount, line.name].filter { !$0.isEmpty }.joined(separator: " ") + (line.prep.map { ", \($0)" } ?? "")
+    }
+
+    /// What Tess says when a write that starts or resumes something is refused: the engine's "Workout running."
+    /// while a workout runs (G56; the Cook key and Resume), "Didn't save that. Try again." for any other refusal, nil
+    /// when it went through.
     static func startCook(_ perform: () throws -> some Any) -> String? {
         do {
             _ = try perform()
@@ -481,7 +550,7 @@ enum RecipeCopy {
             parts.append("serves \(serves)")
         }
         if let total = model.store.number("totalMinutes", of: recipe) {
-            parts.append(total >= 60 ? "\(hours(total)) h" : "\(Int(total)) min")
+            parts.append(duration(total))
         }
         if let last = CookLog(store: model.store, classes: model.classes).lastCooked(recipe) {
             parts.append("cooked \(relative(last, now: now))")
@@ -511,10 +580,17 @@ enum RecipeCopy {
         }
     }
 
-    static func hours(_ minutes: Double) -> String {
-        (minutes / 60).formatted(.number.precision(.fractionLength(0 ... 1)))
+    /// Hours and minutes, as the cook log says them (O2, G60): "1 h 35 min", "1 h", "45 min". Never "1.6 h".
+    static func duration(_ minutes: Double) -> String {
+        let total = Int(minutes.rounded())
+        let (hours, rest) = (total / 60, total % 60)
+        if hours == 0 {
+            return "\(rest) min"
+        }
+        return rest == 0 ? "\(hours) h" : "\(hours) h \(rest) min"
     }
 
+    /// "today", "yesterday", "40 days ago", then months ("3 months ago"), then "last year" / "2 years ago" (G60).
     static func relative(_ date: Date, now: Date) -> String {
         let tesseraDay = TesseraDay()
         let days = Calendar.current.dateComponents([.day], from: tesseraDay.day(of: date),
@@ -522,7 +598,10 @@ enum RecipeCopy {
         return switch days {
         case ..<1: "today"
         case 1: "yesterday"
-        default: "\(days) days ago"
+        case ..<60: "\(days) days ago"
+        case ..<365: "\(days / 30) months ago"
+        case ..<730: "last year"
+        default: "\(days / 365) years ago"
         }
     }
 
@@ -532,8 +611,16 @@ enum RecipeCopy {
         return line.prep.map { "\(line.name), \($0)" + taste } ?? line.name + taste
     }
 
-    static func cookLine(_ cook: ObjectRecord, at date: Date, model: AppModel) -> String {
+    static func cookLine(_ cook: ObjectRecord, at date: Date, model: AppModel, now: Date = AppClock.now) -> String {
         let size = CookLog(store: model.store, classes: model.classes).serves(of: cook).map { ", for \($0)" } ?? ""
-        return date.formatted(.dateTime.weekday(.wide).day().month(.wide)) + size
+        return cookDay(date, now: now) + size
+    }
+
+    /// "Tuesday, October 14, 9:05 am"; a date outside this year adds it: "Tuesday, October 14, 2025, 9:05 am" (G60).
+    static func cookDay(_ date: Date, now: Date, calendar: Calendar = .current) -> String {
+        let sameYear = calendar.component(.year, from: date) == calendar.component(.year, from: now)
+        let day = sameYear ? date.formatted(.dateTime.weekday(.wide).day().month(.wide))
+            : date.formatted(.dateTime.weekday(.wide).day().month(.wide).year())
+        return "\(day), \(HouseTime.clock(date, calendar: calendar))"
     }
 }

@@ -77,6 +77,8 @@ public enum TesseraIntentsCatalog {
         "renameListSection": "in-app only: lists",
         "clearDoneItems": "in-app only: lists",
         "setListReusable": "in-app only: lists",
+        "startListRun": "in-app only: lists (Tess \"run packing\" is Lists slice 8)",
+        "finishListRun": "in-app only: lists (Tess \"done\" on a list page is Lists slice 8)",
         "setListPickOne": "in-app only: lists",
         "acceptPick": "in-app only: the pick moment (Tess \"pick from films\" is Lists slice 8)",
         "resetList": "in-app only: lists (Tess \"reset gym bag\" is Lists slice 8)",

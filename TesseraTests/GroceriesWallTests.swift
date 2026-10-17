@@ -96,6 +96,11 @@ struct GroceriesAddWallTests {
         let fake = "sk-" + "ant-" + String(repeating: "x", count: 32)
         let outcome = GroceriesWall.add("milk, \(fake), rent $1200", store: model.store) { _ in nil }
         #expect(outcome.draft == "milk, rent $1200" && !looksLikeClaudeKey(outcome.draft))
-        #expect(outcome.voice == "Didn't save that. Try again." && outcome.undo == nil)
+        #expect(outcome.voice == "Didn't save that. Try again. \(claudeKeyLine)" && outcome.undo == nil)
+    }
+
+    @Test func aRefusedWriteStillSaysTheWallLineForWalledSiblings() {
+        let outcome = GroceriesWall.add("milk, rent $1200", store: model.store) { _ in nil }
+        #expect(outcome.voice == "Didn't save that. Try again. That stays on this phone.")
     }
 }
