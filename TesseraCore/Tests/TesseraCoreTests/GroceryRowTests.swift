@@ -10,11 +10,15 @@ struct GroceryRowTests {
         let store = ObjectStore.open(inMemory: true)
         let classes = try store.prepareCatalog()
         let engine = ActionEngine(store: store, classes: classes)
-        let recipe = try engine.perform(CreateRecipe(text: "Mystery\nIngredients\n1 wifi password\n2 eggs\nMethod\n1. Mix."),
-                                        by: .user).output
+        let recipe = try engine.perform(
+            CreateRecipe(text: "Mystery\nIngredients\n1 wifi password\n2 eggs\nMethod\n1. Mix."),
+            by: .user
+        ).output
         let added = try engine.perform(AddRecipeToGroceries(recipe: recipe.id), by: .user)
         let rows = Groceries(store: store, classes: classes).shoppingOrder().map(\.text)
         #expect(rows.count == 2, "\(rows)")
+        // The secret-word ingredient lands as "Private item", never in his words (QA on #773).
+        #expect(rows.contains("Private item") && !rows.contains { $0.lowercased().contains("password") }, "\(rows)")
         engine.undo(added.record)
         #expect(Groceries(store: store, classes: classes).shoppingOrder().isEmpty)
     }
