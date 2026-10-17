@@ -18,7 +18,7 @@ public enum ActionRegistry {
         AddRecipeToGroceries.descriptor, RemoveRecipeFromGroceries.descriptor, AddGroceries.descriptor,
         CreateRecipe.descriptor, EditRecipe.descriptor,
         CreateList.descriptor, AddListItem.descriptor, CheckListItem.descriptor, MoveListItem.descriptor,
-        RenameListSection.descriptor, ClearDoneItems.descriptor,
+        RenameListSection.descriptor, ClearDoneItems.descriptor, SetListReusable.descriptor, ResetList.descriptor,
         FinishWorkoutEarly.descriptor,
         RollForwardTasks.descriptor, StartTask.descriptor,
         WaitOnTask.descriptor, KeepPlannedTask.descriptor,
@@ -80,6 +80,8 @@ public enum ActionRegistry {
         RenameListSection.descriptor
             .name: { try decode(RenameListSection.self, RenameListSection.descriptor.name, $0) },
         ClearDoneItems.descriptor.name: { try decode(ClearDoneItems.self, ClearDoneItems.descriptor.name, $0) },
+        SetListReusable.descriptor.name: { try decode(SetListReusable.self, SetListReusable.descriptor.name, $0) },
+        ResetList.descriptor.name: { try decode(ResetList.self, ResetList.descriptor.name, $0) },
         FinishWorkoutEarly.descriptor.name: {
             try decode(FinishWorkoutEarly.self, FinishWorkoutEarly.descriptor.name, $0)
         },

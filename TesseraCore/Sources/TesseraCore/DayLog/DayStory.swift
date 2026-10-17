@@ -90,6 +90,7 @@ public enum DayStory {
     /// Edits, reorders, plumbing: never a line (day-log-first.md, the 26 drops).
     static let dropped: Set = [
         "editSet", "editRecipe", "editNote", "renameObject", "renameListSection", "moveListItem", "clearDoneItems",
+        "setListReusable", "resetList",
         "addSlot", "moveSlot", "editSlot", "removeSlot", "swapSlotExercise", "deleteObject",
         "removeRecipeFromGroceries", "moveTask", "keepPlannedTask", "rollForwardTasks", "waitOnTask", "startTask",
         "goToCookStep",

@@ -76,6 +76,8 @@ public enum TesseraIntentsCatalog {
         "moveListItem": "in-app only: lists",
         "renameListSection": "in-app only: lists",
         "clearDoneItems": "in-app only: lists",
+        "setListReusable": "in-app only: lists",
+        "resetList": "in-app only: lists (Tess \"reset gym bag\" is Lists slice 8)",
         "finishWorkoutEarly": "in-app only: live mode's finish early",
         "moveTask": "in-app only for now (Now's \"not now\" and Later)",
         "keepPlannedTask": "in-app only: Plan my day's keep",
