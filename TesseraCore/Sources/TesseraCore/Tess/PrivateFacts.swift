@@ -92,6 +92,12 @@ public enum PrivateFacts {
     /// weight is the bar, not his body (MB31, MB32); food amounts and distances pass (MB33, MB40).
     public static func isBodyShaped(_ phrase: String, lastWeightKg: Double?) -> Bool {
         let lower = phrase.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        // A vital is his body even beside set notation: "Heart rate day 5x5" (Research W13, decisions 7:31 PM PT).
+        if lower.contains("heart rate") || lower.contains("blood pressure")
+            || lower.firstMatch(of: /\b(?:hrv|spo2)\b|\bbp\s*\d+\s*\/\s*\d+/) != nil
+        {
+            return true
+        }
         guard !lower.isEmpty, !isTraining(lower) else { return false }
         if isBareWeight(lower, lastWeightKg: lastWeightKg) {
             return true
