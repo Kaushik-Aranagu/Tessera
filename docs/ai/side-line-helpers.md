@@ -66,7 +66,7 @@ extension CookLog {
 }
 ```
 - **Reads:** `cooks(of:)` (`Kitchen/Cooking.swift:30`), each cook's `createdAt` (set by `StartCooking`, line 89) and `cookedAt` (set by `FinishCooking`, line 238). The Cook class has **no** `startedAt` field (`Catalog/SystemCatalog.swift:316-321`), although `HomeLines.fact(doneCook:)` reads one and so gets nil; do not copy that. The Process object for the cook has `startedAt` and `endedAt` (`Processes/ProcessModel.swift`), a possible alternative; unverified whether it survives after the cook is done.
-- **Known risk:** a cook set aside and resumed reuses the same Cook (`StartCooking` picks the open one back up), so `createdAt` to `cookedAt` includes the pause. Spec: drop any cook longer than 6 hours, and name the cutoff a constant (`CookLog.longestPlausible`). Product to confirm 6 hours (unverified rule; mine).
+- **Known risk:** a cook set aside and resumed reuses the same Cook (`StartCooking` picks the open one back up), so `createdAt` to `cookedAt` includes the pause. Spec (Kitchen ruling, Oct 16): the cutoff is 6 hours (`CookLog.longestPlausible`), except for a recipe whose own `totalMinutes` is 6 hours or more, where the cutoff is twice that total. A flat 6 hours would drop every overnight-oats cook (6 h 55 min is normal, decision 2:38). Test: oats cooks of 6 h 55, 7 h 10 and 6 h 40 give a median of 6 h 55, not nil (Kitchen rows 7.9 to 7.11, PR #628).
 - **House day:** none for the duration itself. A cook finished across 04:00 is still one duration. Group by day only if a caller needs it, via `TesseraDay`.
 - **Too little:** `medianMinutes` nil under 2 finished cooks (E5, SL-C4). Two cooks give the mean of the two (SL-C5: 44 and 54 gives 49). Odd counts take the middle; even counts the mean of the middle two, rounded to the nearest minute.
 - **Feeds:** Recipe original (17) "COOKS"; rows SL-C3, SL-C4, SL-C5; glance GL-12.
@@ -114,6 +114,6 @@ public struct MonthFacts: Equatable, Sendable {
 ## 7. Open points
 
 2. Rolls are not moves (fixture Q3); Product to rule.
-3. 6-hour cook cutoff and 2-week month minimum are my proposals, not facts.
+3. The 6-hour cook cutoff is ruled by Kitchen (section 4). The 2-week month minimum is still my proposal, not a fact.
 4. "Sessions" in the month sum: days trained or workouts finished.
 5. Food table (fixture Q5) is out of scope here.
