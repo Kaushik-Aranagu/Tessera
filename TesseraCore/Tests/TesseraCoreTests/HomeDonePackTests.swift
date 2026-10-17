@@ -54,6 +54,7 @@ struct HomeDonePackTests {
         Row(id: "W12b", title: "Door code 4417", bests: ["Bench"], walled: true, hardFail: ["4417"]),
         Row(id: "W13", title: "Heart rate day 5x5", bests: ["Row"], walled: true, hardFail: ["heart rate day"]),
         Row(id: "W14", title: "Push B 5x5 80 for 8", bests: ["Bench"], walled: false, hardFail: []),
+        Row(id: "W14b", title: "Push B 5x5 80 for 8", bests: ["Bench"], lastWeightKg: 82, walled: false, hardFail: []),
         // AI architecture on #643: notation never excuses a weigh-in; a named lift keeps the bar.
         Row(id: "N1", title: "Weigh in 82.4 kg 5x5", bests: ["Bench"], walled: true, hardFail: ["82.4"]),
         Row(id: "N2", title: "Morning 82.4 5x5", bests: ["Bench"], walled: true, hardFail: ["82.4"]),

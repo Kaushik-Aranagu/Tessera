@@ -216,16 +216,31 @@ public enum PrivateFacts {
     /// The phrase with its set notation taken out ("82.5 x 8", "5x5", "80 for 8", "5 reps"), so the rest is still
     /// read for money and his body. "for" and "by" need a bar-sized number (up to 3 digits) and a rep count (up to 2):
     /// "4417 by 2" is no set.
+    static let setPattern = #"\d+(?:[.,]\d+)?\s*(?:kg|kgs|lb|lbs)?\s*[x×]\s*\d+(?:\s*reps?\b)?"#
+    /// A time word after the second number makes "for 3 days" a span, never a set.
+    static let timeWordPattern =
+        #"(?:days?|weeks?|wks?|months?|years?|yrs?|hours?|hrs?|mins?|minutes?|seconds?|secs?|nights?|times?)"#
+    static let forSetPattern =
+        #"\b\d{1,3}(?:[.,]\d+)?\s*(?:kg|kgs|lb|lbs)?\s*(?:for|by)\s*\d{1,2}\b(?!\s*"# + timeWordPattern
+            + #"\b)(?:\s*reps?\b)?"#
+    nonisolated(unsafe) static let setRegex = try! Regex(setPattern) // swiftlint:disable:this force_try
+    nonisolated(unsafe) static let forSetRegex = try! Regex(forSetPattern) // swiftlint:disable:this force_try
+    /// "80 for 8" is part of an N x M set only when it sits right beside it: "5x5 80 for 8" (QA low on #644, #654).
+    /// "weighed 82 kg for 3 days after 5x5 bench" keeps the 82.
+    nonisolated(unsafe) static let setBesideFor = try! Regex( // swiftlint:disable:this force_try
+        "(?:" + setPattern + #")\s*"# + forSetPattern + "|" + forSetPattern + #"\s*(?:"# + setPattern + ")"
+    )
+
     static func withoutNotation(_ lower: String) -> String {
-        let crossed = lower.replacing(/\d+(?:[.,]\d+)?\s*(?:kg|kgs|lb|lbs)?\s*[x×]\s*\d+(?:\s*reps?\b)?/, with: " ")
+        let crossed = lower.replacing(setBesideFor, with: " ").replacing(setRegex, with: " ")
         // "for" and "by" are a set only with reps after, or a lift named: "bench 80 for 8", "80 for 8 reps".
         // "weighed 82 kg for 3 days" is not (QA on #644).
-        // A set already written as N x M makes "80 for 8" beside it part of the set too (QA low on #644).
-        let lifted = words(crossed).contains(where: liftNames.contains) || crossed != lower
-        let forms = lifted ? crossed.replacing(
-            /\b\d{1,3}(?:[.,]\d+)?\s*(?:kg|kgs|lb|lbs)?\s*(?:for|by)\s*\d{1,2}\b(?:\s*reps?\b)?/,
-            with: " "
-        ) : crossed.replacing(/\b\d{1,3}(?:[.,]\d+)?\s*(?:kg|kgs|lb|lbs)?\s*(?:for|by)\s*\d{1,2}\s*reps?\b/, with: " ")
+        let lifted = words(crossed).contains(where: liftNames.contains)
+        let forms = lifted ? crossed.replacing(forSetRegex, with: " ")
+            : crossed.replacing(
+                /\b\d{1,3}(?:[.,]\d+)?\s*(?:kg|kgs|lb|lbs)?\s*(?:for|by)\s*\d{1,2}\s*reps?\b/,
+                with: " "
+            )
         return forms.replacing(/\b\d{1,2}\s*reps?\b/, with: " ")
     }
 

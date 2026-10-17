@@ -384,6 +384,16 @@ struct WallsBypassTests {
         #expect(PrivateFacts.isWalled("weighed 82 kg for 3 days", lastWeightKg: nil))
     }
 
+    @Test func aSetElsewhereDoesNotStripAWeighIn() {
+        // QA low on #654: "for 3 days" is a span and the 5x5 is far from it.
+        let phrase = "weighed 82 kg for 3 days after 5x5 bench"
+        #expect(PrivateFacts.withoutNotation(phrase).contains("82"))
+        #expect(PrivateFacts.isWalled(phrase, lastWeightKg: 82))
+        #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil))
+        #expect(!PrivateFacts.withoutNotation("5x5 80 for 8").contains("80"))
+        #expect(PrivateFacts.withoutNotation("5x5 80 for 8 days").contains("80"))
+    }
+
     @Test func aVitalIsWalledBesideSetNotation() throws {
         // Research W13 (decisions 7:31 PM PT) reaches every surface, not only Home.
         #expect(PrivateFacts.isWalled("Heart rate day 5x5", lastWeightKg: nil))
