@@ -63,7 +63,7 @@ This sheet replaces sheet 71's "which pages get a side page" and Product's 10:00
 - A book: YOUR NOTES (LINKS).
 - A person: LAST TIMES (BEFORE).
 - A chore: LAST TIMES (BEFORE).
-- Day log: THE DAY, by word, because x moves by day.
+- Day log: THE DAY, by the word and from the right edge (sheet 82, ruled 8:12 PM): the scrub owns the left 80 pt and the window scrolls on y only, so the right edge is free.
 - Shutdown: TOMORROW (AHEAD), as a peek.
 
 ## Tess on the side (AI)
