@@ -264,3 +264,5 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [oct-22-qa-page.md](oct-22-qa-page.md) | Product, QA: one-page rider check for the Thu Oct 22 call (BT), 28 lines, one open rider per line, with a 5-minute call script |
 | [string-sweep-recount.md](string-sweep-recount.md) | Core, Builders A and B: string sweep recount (BS), 15 misses against the "no at before a time", receipt-order and bare-fallback rules |
 | [walls-ui-harness-fix.md](walls-ui-harness-fix.md) | Builder B (#564), QA: harness fix so WallsUITests reads `seed` and `mustNotShow`, clears stale lines between rows, checks Home for leaks and has a control row |
+| [fixtures/home-job-crosscheck.md](fixtures/home-job-crosscheck.md) | AI architecture: BY, AI architecture's fixed home-lines-job.md against the 24 done moments, 22 match and 2 drift, plus 8 document fixes |
+| [fixtures/siri-body-weight.md](fixtures/siri-body-weight.md) | Core (Intents.swift): BX, 16 Siri cases for the "Body weight logged." wording (R2), Swift Testing names, and the "log my weight 82.4" gap |
