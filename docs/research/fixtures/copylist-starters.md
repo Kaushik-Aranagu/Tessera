@@ -8,11 +8,11 @@ Sources read: `TesseraCore/Sources/TesseraCore/Lists/ListReuse.swift` (CopyList,
 ## Rulings applied (Product, decisions 3:50 PM Oct 17)
 
 These replace the earlier open questions; every row below is read with them.
-1. **The copy's name** is "<source>, <typed name>": copying Packing as Lisbon makes "Packing, Lisbon". The old receipt "Lisbon, copied from Packing." is retired. The receipt is "Packing, Lisbon, new list." A copy of that copy typed Porto is "Packing, Lisbon, Porto" (receipt "Packing, Lisbon, Porto, new list."; confirm with Kitchen lead that names do not collapse).
+1. **The copy's name** is "<source>, <typed name>": copying Packing as Lisbon makes "Packing, Lisbon". The old receipt "Lisbon, copied from Packing." is retired. The receipt is "Packing, Lisbon, new list." A copy of that copy typed Porto is "Packing, Lisbon, Porto" (receipt "Packing, Lisbon, Porto, new list."; ruled at decisions 4:00 PM: source title plus the word, no special case).
 2. **Ambiguity** wording is the engine line "More than one list like pack." The Bar question "Packing, or Packing, Lisbon?" is retired (closes G4003).
 3. **Op log payload and `DayStory.title(of:)` mask a private list**: both show "Private list". This turns PV11 and PV13 from open questions into **Core build items**, with tests `copy_opLogPayloadMasksPrivateTitle` and `dayStory_privateListTitleIsMasked`. The op payload for a copied private row follows the same mask.
 4. **Starters** install with Core's next Lists PR (closes the "not installed" gap on ST01 to ST05; the rows stay as acceptance for that PR).
-5. Receipt and summary strings in the rows and the Swift skeleton were updated by search to these rulings. Rows where a name is private (PV07 to PV09) read "Private list, new list." and need the Kitchen lead to confirm the exact private form.
+5. Receipt and summary strings in the rows and the Swift skeleton were updated by search to these rulings. Rows where a name is private (PV07 to PV09) read "Private list, new list." and the private form is ruled (decisions 4:00 PM).
 
 ## How to read the status column
 
