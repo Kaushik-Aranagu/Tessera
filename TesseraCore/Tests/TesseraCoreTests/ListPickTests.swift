@@ -223,15 +223,15 @@ struct ListPickTests {
     @Test func pickOneIsOffByDefaultAndTurnsOnAndOffWithUndo() throws {
         let fixture = try setUp()
         #expect(!fixture.lists.isPickOne(fixture.films))
-        let on = try fixture.engine.perform(SetListPickOne(list: fixture.films.id), by: .user)
+        let turnedOn = try fixture.engine.perform(SetListPickOne(list: fixture.films.id), by: .user)
         #expect(fixture.lists.isPickOne(fixture.films))
-        #expect(on.record.receipt == "Films, pick one on")
+        #expect(turnedOn.record.receipt == "Films, pick one on")
         #expect(!fixture.lists.isReusable(fixture.films))
-        fixture.engine.undo(on.record)
+        fixture.engine.undo(turnedOn.record)
         #expect(!fixture.lists.isPickOne(fixture.films))
         try fixture.engine.perform(SetListPickOne(list: fixture.films.id), by: .user)
-        let off = try fixture.engine.perform(SetListPickOne(list: fixture.films.id, on: false), by: .user)
-        #expect(off.record.receipt == "Films, pick one off")
+        let turnedOff = try fixture.engine.perform(SetListPickOne(list: fixture.films.id, on: false), by: .user)
+        #expect(turnedOff.record.receipt == "Films, pick one off")
         #expect(!fixture.lists.isPickOne(fixture.films))
     }
 
