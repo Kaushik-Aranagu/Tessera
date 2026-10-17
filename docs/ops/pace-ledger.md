@@ -28,6 +28,10 @@ Hottest cloud threads since 5:22 PM: Coordinator +$22, Research +$7. Threads ove
 
 Meter [M]: weekly 34% (flat from 33% at 6:02 PM, about 1%/h over the last hour), 5-hour 28% (resets 9:40 PM PT). The 6:02 to 7:15 burn is about 0.8%/h, well under the 1.9%/h sustainable line, so the project is no longer overspending and has about 66 points of headroom for the 9.8 hours to the Sun Oct 18 5:00 AM PT reset (100% allowed this week). Team dollars not read this round: the team session ids are held by the coordinator, and the meter outranks dollars anyway. Verdict: green; the slack is unused, so lanes waiting on a lock (Builder A and Core sat behind Builder B tonight) are the limit now, not budget.
 
+## Check 3: Oct 17, 2:35 AM PT (09:35Z)
+
+Meter [M] (coordinator session): weekly 44%, 5-hour 24% (resets 7:00 AM PT). Since check 2 (34% at 7:15 PM) that is +10 points in 7.3 h, about 1.4%/h. Left to the Sun Oct 18 5:00 AM PT reset: 56 points in about 32 h, so up to 1.7%/h fits if the week is spent to 100% (allowed this week). Verdict: green with about 0.3%/h of room, so lanes can keep two running; the overnight lock-screen stall, not budget, is what cost output. Rotating the 250k+ leads (rotation-handoffs.md) would add room.
+
 ## How to add a row
 
 1. Read `usage.cost_usd` for each team session id (coordinator holds the list).
