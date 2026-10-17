@@ -98,7 +98,7 @@ private struct WorkoutContent: View {
                                 // A take-back inside the gather leaves nothing to sum up.
                                 guard session.finishedAt != nil else { return }
                                 // Tess's count line from Core's summary: "Push Day A done, 5 of 5 exercises."
-                                summaryLine = model.ledger.summary(of: session.workout).doneLine
+                                summaryLine = model.ledger.summary(of: session.workout).doneLine(in: model.store)
                                 soul.handle(.workoutGathered)
                             },
                             onDone: leaveFinished
