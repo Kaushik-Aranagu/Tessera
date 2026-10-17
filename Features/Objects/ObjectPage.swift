@@ -540,10 +540,17 @@ struct FlowLayout: Layout {
 /// catalog is frozen, so no new field): a whole "#reusable" or "#pick-one" line, or a "picked: <date>" stamp. Those
 /// lines never show; nil when nothing else is left.
 enum ObjectNotes {
+    /// Only the engine's exact stamp, "picked: " and an ISO 8601 date, as Core matches it; a line he typed that
+    /// merely starts "picked: " stays (Kitchen on #809).
+    static func isPickedStamp(_ line: String) -> Bool {
+        guard line.hasPrefix("picked: ") else { return false }
+        return (try? Date(String(line.dropFirst("picked: ".count)), strategy: .iso8601)) != nil
+    }
+
     static func shown(_ notes: String?) -> String? {
         let kept = (notes ?? "").split(separator: "\n", omittingEmptySubsequences: false).filter { line in
             let trimmed = line.trimmingCharacters(in: .whitespaces)
-            return trimmed != "#reusable" && trimmed != "#pick-one" && !trimmed.hasPrefix("picked: ")
+            return trimmed != "#reusable" && trimmed != "#pick-one" && !isPickedStamp(trimmed)
         }.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
         return kept.isEmpty ? nil : kept
     }
