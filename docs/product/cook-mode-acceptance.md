@@ -77,3 +77,14 @@ The meal plan feeding groceries ("cook carbonara thursday" puts its ingredients 
 
 Day-one walk numbers accepted as written in `docs/research/fixtures/recipe-clock-day-one.md`, including W23's "2 HR 45 MIN LEFT" at 10:32 pm (step 1's 2 minutes are spent; the rest figure in `recipe-clock-steps.md` stays 2 HR 47 MIN).
 
+
+## Overnight cook's row time (decision 2:38 PM Oct 16, Core #552)
+
+Found by the release walk as shipped without acceptance rows. A cook filed on its finish day (decision 1:40) is the row.
+
+| # | Pass when |
+|---|---|
+| O1 | Overnight oats started at 2:10 am the day before and finished at 9:05 am: the log row sits on the finish day and reads "9:05 am Cooked overnight oats, 6 h 55 min" (the finish time, not the start) |
+| O2 | Durations of 60 minutes or more read in hours and minutes ("6 h 55 min", "1 h"); under an hour stays in minutes ("45 min"); never "415 min" or "1 h 0 min" |
+| O3 | Clocks are lowercase ("9:05 am"), and the row sorts with the finish day's other rows by that time |
+| O4 | A cook that starts and finishes the same day shows its finish time the same way, so one rule serves both |

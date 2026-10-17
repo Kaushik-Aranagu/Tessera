@@ -16,7 +16,7 @@ enum DemoData {
     {
         // A caller can narrow it (tests), never widen it: off the simulator nothing here runs.
         guard allowed, LaunchFlags.allowed else { return }
-        if arguments.contains("-resetDemo") {
+        if LaunchFlags.has("-resetDemo", in: arguments) {
             reset(model)
         }
         // Kaushik's starter plan is always installed; the demo adds its own plan and history once.
