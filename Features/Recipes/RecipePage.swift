@@ -191,10 +191,15 @@ struct RecipePage: View {
             onCook(recipe, serves)
             return
         }
-        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
-            _ = try? model.engine.perform(StartCooking(recipe: recipe, serves: serves), by: .user)
-            model.touch()
+        let refusal = RecipeCopy.startCook {
+            try model.engine.perform(StartCooking(recipe: recipe, serves: serves), by: .user)
         }
+        // Refused (a workout running, G56): no cook starts, the workout is untouched, and Tess says why.
+        if let refusal {
+            TessVoice.shared.say(refusal)
+            return
+        }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { model.touch() }
     }
 
     private func routeID(_ route: Route) -> UUID {
@@ -411,6 +416,19 @@ private struct RecipeOriginal: View {
 
 @MainActor
 enum RecipeCopy {
+    /// What Tess says when the Cook key can't start a cook: the engine's "Workout running." while a workout runs
+    /// (G56), "Didn't save that. Try again." for any other refusal, nil when it started.
+    static func startCook(_ perform: () throws -> some Any) -> String? {
+        do {
+            _ = try perform()
+            return nil
+        } catch let ActionError.invalidArguments(_, reason) where reason == StartCooking.workoutRunningReason {
+            return StartCooking.workoutRunningLine
+        } catch {
+            return "Didn't save that. Try again."
+        }
+    }
+
     /// Whether a recipe's title is private (the full recipe wall), so every surface reads "Private recipe" (G53).
     /// Switches to Core's helper when it lands.
     static func isPrivate(_ title: String, model: AppModel) -> Bool {
