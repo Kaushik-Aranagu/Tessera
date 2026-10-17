@@ -141,11 +141,19 @@ struct RecipePage: View {
             }
             .sensoryFeedback(.success, trigger: sent?.count)
         } else {
-            Text("This recipe is gone. Undo brings it back.")
-                .font(Theme.voice)
-                .foregroundStyle(Theme.Colors.context)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background { ThemedBackground() }
+            // Product's wording (kitchen gap hunt G3): the fact, then the one way back.
+            VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+                Text("Recipe gone.")
+                    .font(Theme.voice)
+                    .foregroundStyle(Theme.Colors.context)
+                Button("Back to the list") { dismiss() }
+                    .buttonStyle(.labelWord(Theme.Colors.ink))
+            }
+            .padding(.horizontal, Theme.Spacing.gutter)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            .background { ThemedBackground() }
+            .background { EdgeSwipeBack() }
+            .toolbar(.hidden, for: .navigationBar)
         }
     }
 
