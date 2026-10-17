@@ -56,7 +56,7 @@ final class RestActivityController {
             enqueue { await Self.push(content, alert: alert, to: id) }
         } else if state.phase == .resting, ActivityAuthorizationInfo().areActivitiesEnabled {
             // The activity starts when the first rest begins.
-            let attributes = RestActivityAttributes(workoutTitle: session.workout.title)
+            let attributes = Self.attributes(for: session)
             do {
                 activity = try Activity.request(attributes: attributes, content: Self.content(state), pushType: nil)
                 workoutID = session.workout.id
@@ -68,6 +68,12 @@ final class RestActivityController {
     }
 
     // MARK: Mapping
+
+    /// The Live Activity's fixed attributes. The title is masked: the Lock Screen and Dynamic Island show it without
+    /// unlocking, so a private routine reads "Private workout" there.
+    static func attributes(for session: WorkoutSession) -> RestActivityAttributes {
+        RestActivityAttributes(workoutTitle: session.shownTitle)
+    }
 
     /// The set the Done button logs: the dialled set, or the next exercise's opening set once this one is done
     /// (Done pages on first, like the key does in the app). Nil when the workout has nothing left to log.

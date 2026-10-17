@@ -90,7 +90,7 @@ private struct WorkoutContent: View {
                     VStack(spacing: 0) {
                         WorkoutFinishView(
                             strokes: sessionStrokes,
-                            title: ObjectPrivacy.routineTitle(session.workout.title, in: model.store),
+                            title: session.shownTitle,
                             startedAt: session.startedAt,
                             endedAt: finished,
                             summary: session.summary,
@@ -113,7 +113,7 @@ private struct WorkoutContent: View {
                             holdsLine: session.canTakeBackFinish(at: now),
                             onUndo: {
                                 withTesseraAnimation(reduceMotion: reduceMotion) { session.takeBackFinish() }
-                                let back = "\(session.workout.title), back on."
+                                let back = "\(session.shownTitle), back on."
                                 askReply = back
                                 undoHaptic += 1
                                 Task { @MainActor in
