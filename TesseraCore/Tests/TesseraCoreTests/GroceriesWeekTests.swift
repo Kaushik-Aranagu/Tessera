@@ -259,6 +259,8 @@ struct GroceriesWeekTests {
         try engine.perform(AddRecipeToGroceries(recipe: pasta.id), by: .user)
         let bigger = try engine.perform(AddRecipeToGroceries(recipe: pasta.id, serves: 8), by: .user)
         #expect(!bigger.record.ops.isEmpty)
+        // The rows it already had were rebuilt, not added (G66): no row is new at the bigger size.
+        #expect(bigger.output.isEmpty && bigger.record.summary.hasSuffix("nothing to add."), "\(bigger.record.summary)")
         let quantity = row("orecchiette")?.quantity
         #expect(quantity == "24 oz" || quantity == "1.5 lb" || quantity == "1½ lb", "\(quantity ?? "nil")")
         #expect(try engine.perform(AddRecipeToGroceries(recipe: pasta.id), by: .user).record.ops.isEmpty)

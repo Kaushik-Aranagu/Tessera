@@ -397,6 +397,9 @@ public struct AddRecipeToGroceries: EngineAction {
             Self.lastAdded[recipe.id] = 0
             return []
         }
+        // Ingredients this recipe already had a row for: a bigger size rebuilds them, they are not new (G66).
+        let groceries = Groceries(store: transaction.store, classes: transaction.classes)
+        let known = Set(groceries.share(of: recipe).compactMap { groceries.ingredient(of: $0.object)?.id })
         try RemoveRecipeFromGroceries(recipe: recipe.id).apply(&transaction)
         let before = Set(list.orderedChildren.map(\.id))
         var items: [ObjectRecord] = []
@@ -430,7 +433,9 @@ public struct AddRecipeToGroceries: EngineAction {
         try transaction.refreshShopLine()
         // New rows only: joined rows still carry the recipe line, but "Added N" counts what is new (G-R14). The
         // receipt reads the same set, so the two never disagree (QA L1, Kitchen lead).
-        let made = items.filter { !before.contains($0.id) }
+        let made = items.filter { item in
+            !before.contains(item.id) && !(groceries.ingredient(of: item).map { known.contains($0.id) } ?? false)
+        }
         Self.lastAdded[recipe.id] = made.count
         return made
     }
