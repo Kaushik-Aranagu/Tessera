@@ -78,6 +78,7 @@ Research's done-job fixtures (`docs/research/fixtures/home-done-job.md`, HD1 to 
 5. **Shape and tokens:** as section 1, with `{"lines": [{"item": "h1", "context"?, "detail"?}]}`, both slots optional, and max tokens 512. The script's `id` with both fields required, and its 1,500 tokens, are eval-only.
 6. **Step-aside at $40 holds.** `.lines` steps aside at 80% of the $50 month like every lines job, so done lines are the first thing to go quiet before the cap. That is intended.
 7. **C6 compares numbers, not digit strings.** Read each number in the line as a value ("8:05 pm" gives 8 and 5, "05" equals 5) and check it against `HomeLine.numbers`. A literal port of the script's string compare would refuse "8:05 pm, a bench best".
+9. **Wall the title and each best name** (decisions 7:22 PM, `home-pack-walls-audit.md`). Routine titles and exercise names are free text and exempt from the secret-word rules, so the pack builder runs `SecretWords.mentions` and `PrivateFacts.isWalled` on the title and every best name. On a hit there is no call at all (a partial mask would still leak through the rules line). Do not port the eval script's `guard_pack`, which is only a word list.
 8. **Field name:** `HomeFact.sinceLastDays`. `lastSameRoutineDaysAgo` in the script and `first-features.md` is the same fact under an older name.
 
 ## 3. Cache and key
