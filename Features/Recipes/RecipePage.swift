@@ -23,6 +23,9 @@ struct RecipePage: View {
     @State private var sent: (line: String, record: OpRecord)?
     /// When the receipt went up, so a hand-off keeps what is left of its window rather than a fresh 10 s (QA on #819).
     @State private var sentAt: Date?
+    /// A refused add's line, a tap on which tries again (ER14); clears on its own after 10 s.
+    @State private var failed: String?
+    @State private var failedID: String?
     @State private var drag: CGFloat = 0
     @State private var columnWidth: CGFloat = 260
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -142,7 +145,17 @@ struct RecipePage: View {
 
                 // Already on the list (and not just sent): how much of it is still to buy.
                 let onList = Groceries(store: model.store, classes: model.classes).share(of: recipe).count
-                if sent == nil, onList > 0 {
+                if let failed {
+                    // The failure line is the retry: "Didn't save that. Try again." (ER14, G70).
+                    Button(failed) { send(recipe: recipe.id, serves: size) }
+                        .textRole(.body)
+                        .foregroundStyle(Theme.Colors.ink)
+                        .buttonStyle(HandleButtonStyle())
+                        .frame(minHeight: 44)
+                        .padding(.top, Theme.Spacing.s)
+                        .accessibilityHint("Tries the add again")
+                        .transition(.opacity)
+                } else if sent == nil, onList > 0 {
                     (Text("\(onList)").fontWeight(.semibold) + Text(" to buy, on Groceries"))
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.ink)
@@ -288,7 +301,15 @@ struct RecipePage: View {
             if case let .nothing(line) = outcome {
                 TessVoice.shared.say(line)
             } else if case let .failed(line) = outcome {
-                TessVoice.shared.say(line)
+                let shown = UUID().uuidString
+                failedID = shown
+                withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { failed = line }
+                Task { @MainActor in
+                    try? await Task.sleep(for: .seconds(10))
+                    if failedID == shown {
+                        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { failed = nil }
+                    }
+                }
             }
             return
         }
@@ -300,6 +321,7 @@ struct RecipePage: View {
             drag = 0
             sent = (line, record)
             sentAt = .now
+            failed = nil
             model.touch()
         }
         UIAccessibility.post(notification: .announcement, argument: line)
@@ -547,7 +569,10 @@ enum RecipeCopy {
     static func send(isPrivate: Bool = false,
                      _ perform: () throws -> (count: Int, record: OpRecord)) -> SendOutcome
     {
-        guard let result = try? perform() else { return .failed("Didn't save that. Try again.") }
+        // ER14 (ruled Oct 17, 4:35): a private recipe's failure keeps the form and prints only the kind.
+        guard let result = try? perform() else {
+            return .failed(isPrivate ? "Didn't save that. Private recipe." : "Didn't save that. Try again.")
+        }
         // The engine's own line, masked for a private recipe since #836: "Tacos, 3 updated.", "Tacos, 2 added, 3
         // updated.", "Private recipe, 2 added.". A write of any kind (new rows or changed amounts) is an add with
         // its 10 s change UNDO; only a write of nothing is "nothing to add" (Product 11:20, QA on #836).

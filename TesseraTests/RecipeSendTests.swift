@@ -108,4 +108,12 @@ struct RecipeSendTests {
         _ = model.engine.undo(record)
         #expect(add(2) == .nothing("Tacos, nothing to add."))
     }
+
+    /// G70 (ER14): a private recipe's failed add prints only the kind, never a word of its title.
+    @Test func aPrivateRefusalSaysOnlyTheKind() {
+        let outcome = RecipeCopy.send(isPrivate: true) { () throws -> (count: Int, record: OpRecord) in
+            throw ActionError.invalidArguments(action: "addRecipeToGroceries", reason: "x")
+        }
+        #expect(outcome == .failed("Didn't save that. Private recipe."))
+    }
 }
