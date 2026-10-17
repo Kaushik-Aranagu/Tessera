@@ -24,10 +24,10 @@ enum PantryCopy {
         }
     }
 
-    /// Tess's band line: what the last cook used up, "Tacos took the cilantro and limes." Up to three names, then
-    /// "and N more".
+    /// Tess's band line: what the last cook used up, "Tacos took the cilantro and limes."; from 4, the count.
     static func tess(recipe: String, names: [String]) -> String {
-        "\(recipe) took the \(list(names))."
+        // Up to 3 names, then the count (Product, Oct 17): "Tacos took 5 things."
+        names.count > 3 ? "\(recipe) took \(names.count) things." : "\(recipe) took the \(list(names))."
     }
 
     /// The empty page's one line.
