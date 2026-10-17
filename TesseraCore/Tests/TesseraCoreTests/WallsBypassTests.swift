@@ -344,6 +344,30 @@ struct WallsBypassTests {
         #expect(BodyWeight.lastKg(in: store) == 80)
     }
 
+    @Test(arguments: ["Weigh in 182.4 lb 5x5", "Rent 1850 for 5x5", "paid 40 for 5x5 class"])
+    func aSetTokenNeverExcusesTheRest(_ phrase: String) throws {
+        // AI architecture D1 on #643, on every surface.
+        #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil), "\(phrase)")
+        _ = try engine.perform(CreateTask(title: phrase), by: .tess)
+        #expect(!everythingShown().contains("182.4") && !everythingShown().contains("1850"))
+    }
+
+    @Test(arguments: ["Bench 82.4 kg 5x5", "bench 82.50 x 8", "Push B 5x5 80 for 8", "80 for 8"])
+    func theBarStaysTheBar(_ phrase: String) {
+        // MB31, MB32: a set is never money or his body, even inside his band.
+        #expect(!PrivateFacts.isWalled(phrase, lastWeightKg: 82), "\(phrase)")
+    }
+
+    @Test func aVitalIsWalledBesideSetNotation() throws {
+        // Research W13 (decisions 7:31 PM PT) reaches every surface, not only Home.
+        #expect(PrivateFacts.isWalled("Heart rate day 5x5", lastWeightKg: nil))
+        #expect(PrivateFacts.isWalled("bp 120/80 after 5x5", lastWeightKg: nil))
+        #expect(!PrivateFacts.isWalled("bench 80x5", lastWeightKg: nil))
+        _ = try engine.perform(CreateTask(title: "heart rate day 5x5"), by: .tess)
+        #expect(try store.objects(of: #require(classes[.task])).isEmpty)
+        #expect(!everythingShown().lowercased().contains("heart rate"))
+    }
+
     @Test(arguments: ["Room 82", "bus 76 at 8", "gate 80", "ticket #84"])
     func aNumberThatNamesSomethingIsNotHisWeight(_ phrase: String) {
         #expect(!PrivateFacts.isWalled(phrase, lastWeightKg: 82), "\(phrase)")

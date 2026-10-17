@@ -54,6 +54,11 @@ struct HomeDonePackTests {
         Row(id: "W12b", title: "Door code 4417", bests: ["Bench"], walled: true, hardFail: ["4417"]),
         Row(id: "W13", title: "Heart rate day 5x5", bests: ["Row"], walled: true, hardFail: ["heart rate day"]),
         Row(id: "W14", title: "Push B 5x5 80 for 8", bests: ["Bench"], walled: false, hardFail: []),
+        // AI architecture on #643: notation never excuses a weigh-in; a named lift keeps the bar.
+        Row(id: "N1", title: "Weigh in 82.4 kg 5x5", bests: ["Bench"], walled: true, hardFail: ["82.4"]),
+        Row(id: "N2", title: "Morning 82.4 5x5", bests: ["Bench"], walled: true, hardFail: ["82.4"]),
+        Row(id: "N3", title: "Push B", bests: ["bmi 24 5x5"], walled: true, hardFail: ["bmi"]),
+        Row(id: "N4", title: "Bench 82.4 kg 5x5", bests: ["Bench"], walled: false, hardFail: []),
         Row(id: "W10", title: "Push B", bests: ["Press"], walled: false, hardFail: []),
     ]
 
@@ -73,6 +78,37 @@ struct HomeDonePackTests {
         let line = HomeLines.workoutText(for: Self.done(row.title, bests: row.bests), now: Self.ended,
                                          calendar: Self.calendar)
         #expect(line.hasPrefix("\(row.title) done."), "\(row.id)")
+    }
+
+    @Test func homeDonePackWalledRowsAssertNoJsonAtAll() {
+        // AI architecture on #643: a walled row has no pack at all, so there is no body to scan.
+        for row in Self.rows where row.walled {
+            let result = Self.pack(
+                Self.done(row.title, bests: row.bests, sets: row.sets),
+                lastWeightKg: row.lastWeightKg
+            )
+            #expect((try? result.get()) == nil, "\(row.id)")
+        }
+    }
+
+    @Test(arguments: ["Weigh in 182.4 lb 5x5", "Rent 1850 for 5x5", "Locker 4417 by 2"])
+    func homeDonePackWallsPrivateNumberBesideSetNotation(_ title: String) {
+        // AI architecture D1 on #643: one set token never switches the walls off for the rest of the title.
+        #expect(Self.pack(Self.done(title)) == .failure(.walled), "\(title)")
+        #expect(Self.pack(Self.done("Push B", bests: [title])) == .failure(.walled), "\(title)")
+    }
+
+    @Test func homeDonePackWallsBareNumberNearLastWeighIn() {
+        // A whole number in his band walls only because of his last weigh-in.
+        #expect((try? Self.pack(Self.done("Morning 82", bests: ["Row"])).get()) != nil)
+        #expect(Self.pack(Self.done("Morning 82", bests: ["Row"]), lastWeightKg: 82) == .failure(.walled))
+    }
+
+    @Test func thePackHasNoRoomForANote() throws {
+        // W3, W11: the pack's fields are exactly these; a note, weight, rep or place has nowhere to go.
+        let pack = try Self.pack(Self.done("Push B", bests: ["Press"])).get()
+        let fields = Mirror(reflecting: pack).children.compactMap(\.label)
+        #expect(fields == ["title", "finish", "dayLabel", "bests", "sinceLastDays", "rulesLine", "numbers", "names"])
     }
 
     @Test func homeDonePackControlCaseSendsTitleAndBests() throws {
@@ -116,6 +152,16 @@ struct HomeDonePackTests {
             let body = (try? Self.pack(fact).get())?.json ?? ""
             #expect(!body.contains("tacocat") && !body.contains("120/80") && !body.contains("sick"))
         }
+    }
+
+    @Test func theStoreGivesTheWallHisWeight() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        try engine.perform(CreateNote(body: "82 kg", isPrivate: true), by: .user)
+        let fact = Self.done("Morning 81", bests: ["Row"])
+        #expect(HomeDonePack.build(fact, dayLabel: "Thursday night", calendar: Self.calendar, store: store)
+            == .failure(.walled))
     }
 
     @Test func renameObjectOnRoutineStillReachesPackWallWhenSourceUnwalled() throws {
