@@ -37,6 +37,9 @@ private struct GroceriesPage: View {
     @State private var basketTarget: CGPoint = .zero
     @State private var breathe = false
     @State private var landed = 0
+    /// SHOP mode's private rows (B8): masked until tapped, masked again when the trip ends.
+    @State private var trip = ShopTrip()
+    @Environment(\.scenePhase) private var scenePhase
     @FocusState private var writing: Bool
 
     private var groceries: Groceries {
@@ -70,7 +73,10 @@ private struct GroceriesPage: View {
                 // cross-fade of two whole layouts).
                 ZStack(alignment: .topLeading) {
                     if shopping {
-                        AtTheShop(aisles: aisles, striking: striking, recipes: recipes(for:), onTap: check)
+                        AtTheShop(aisles: aisles, striking: striking, recipes: recipes(for:),
+                                  label: { trip.label(for: $0, name: GroceriesCopy.name($0),
+                                                      lastWeightKg: BodyWeight.lastKg(in: model.store)) },
+                                  onTap: shopTap)
                             .padding(.top, Theme.Spacing.m)
                             .transition(AisleHandoff.transition(reduceMotion: reduceMotion))
                     } else {
@@ -108,6 +114,17 @@ private struct GroceriesPage: View {
             .padding(.bottom, Theme.Spacing.section)
             .tesseraAnimation(Theme.Motion.house, value: aisles.map(\.aisle))
             .tesseraAnimation(Theme.Motion.house, value: shopping)
+            .onChange(of: shopping) { _, now in
+                if !now {
+                    trip.end()
+                }
+            }
+            // A lock or an app switch masks every opened row again (QA F1 on #732).
+            .onChange(of: scenePhase) { _, phase in
+                if phase != .active {
+                    trip.end()
+                }
+            }
             .opacity(basketOpen && !shopping ? 0.5 : 1)
             .tesseraAnimation(Theme.Motion.house, value: basketOpen)
         }
@@ -193,7 +210,9 @@ private struct GroceriesPage: View {
     @State private var rowCenters: [UUID: CGPoint] = [:]
 
     private func recipes(for item: ListContents.Item) -> [String] {
-        groceries.recipes(for: item.object).map(\.title)
+        // A private recipe is only ever "Private recipe", here too (QA F2 on #732).
+        ShopTrip.recipeNames(groceries.recipes(for: item.object).map(\.title),
+                             lastWeightKg: BodyWeight.lastKg(in: model.store))
     }
 
     private func add() {
@@ -209,6 +228,14 @@ private struct GroceriesPage: View {
 
     /// The ink strike runs through first (light tap when it ends), then the item folds into a sage dab that arcs
     /// into the basket, and the count rolls up.
+    /// In SHOP mode a masked private row opens on its first tap; any other tap strikes.
+    private func shopTap(_ item: ListContents.Item) {
+        switch trip.tap(item, lastWeightKg: BodyWeight.lastKg(in: model.store)) {
+        case .reveal: break
+        case .strike: check(item)
+        }
+    }
+
     private func check(_ item: ListContents.Item) {
         guard !striking.contains(item.id) else { return }
         withTesseraAnimation(.smooth(duration: 0.32), reduceMotion: reduceMotion) { _ = striking.insert(item.id) }
@@ -416,6 +443,8 @@ private struct GroceryRow: View {
     let isStriking: Bool
     let recipes: [String]
     var height: CGFloat = 48
+    /// The words to show in place of the item's own (SHOP mode's "Private item").
+    var name: String?
     let onTap: () -> Void
     @State private var showsRecipes = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -425,7 +454,7 @@ private struct GroceryRow: View {
             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                 HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.s) {
                     (Text(item.quantity.map { "\($0) " } ?? "").fontWeight(.semibold)
-                        + Text(GroceriesCopy.name(item)).fontWeight(.regular))
+                        + Text(name ?? GroceriesCopy.name(item)).fontWeight(.regular))
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.ink)
                         .lineLimit(1)
@@ -461,7 +490,7 @@ private struct GroceryRow: View {
             withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { showsRecipes.toggle() }
         })
         .accessibilityElement(children: .combine)
-        .accessibilityHint("Puts it in the basket")
+        .accessibilityHint(name == ShopTrip.privateLabel ? "Shows it" : "Puts it in the basket")
         .accessibilityAction(named: "Which recipes") { showsRecipes.toggle() }
     }
 }
@@ -472,6 +501,8 @@ private struct AtTheShop: View {
     let aisles: [(aisle: String, items: [ListContents.Item])]
     let striking: Set<UUID>
     let recipes: (ListContents.Item) -> [String]
+    /// What each row reads (a private one: "Private item" until tapped).
+    let label: (ListContents.Item) -> String
     let onTap: (ListContents.Item) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -488,7 +519,7 @@ private struct AtTheShop: View {
                         VStack(alignment: .leading, spacing: 0) {
                             ForEach(current.items) { item in
                                 GroceryRow(item: item, isStriking: striking.contains(item.id), recipes: recipes(item),
-                                           height: 64) { onTap(item) }
+                                           height: 64, name: label(item)) { onTap(item) }
                                     .transition(.opacity)
                             }
                         }
