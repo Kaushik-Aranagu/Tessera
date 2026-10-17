@@ -7,7 +7,7 @@ import Testing
 @MainActor
 struct PrivateWordsTests {
     /// Words that must never leave the phone, and words that may.
-    static let secrets = ["hunter2zebra", "82.4", "120.50", "Dr Lee", "zebra99"]
+    static let secrets = ["hunter2zebra", "82.4", "120.50", "Dr Lee", "zebra99", "lexapro", "advil", "melatonin"]
     static let ordinary = ["Bench felt heavy", "Buy lemons", "Pasta night"]
 
     func folder() throws -> URL {
@@ -29,6 +29,9 @@ struct PrivateWordsTests {
         let list = try engine.perform(CreateList(name: "Packing"), by: .user).output
         try engine.perform(AddListItem(list: list.id, text: "Pasta night"), by: .user)
         try engine.perform(AddListItem(list: list.id, text: "reset router zebra99 pin"), by: .user) // a secret line
+        try engine.perform(AddListItem(list: list.id, text: "lexapro"), by: .user) // a bare medicine (QA on #710)
+        try engine.perform(AddListItem(list: list.id, text: "take melatonin"), by: .user)
+        try engine.perform(AddGroceries(lines: ["advil"]), by: .user)
         store.save()
         return store
     }
@@ -144,7 +147,8 @@ struct PrivateWordsTests {
         try engine.perform(RenameObject(object: renamed.id, title: "Pay Dr Zed77"), by: .user)
         try engine.perform(RenameObject(object: renamed.id, title: "Buy lemons2"), by: .user)
         store.save()
-        let words = ["Zed77", "hunter2zebra", "zebra99", "Dr Lee", "120.50", "82.4", "Wifi password", "router zebra99"]
+        let words = ["Zed77", "hunter2zebra", "zebra99", "Dr Lee", "120.50", "82.4", "Wifi password", "router zebra99",
+                     "lexapro", "advil", "melatonin"]
         let iCloud = dir.appendingPathComponent("iCloud")
         let direct = dir.appendingPathComponent("direct.tessera")
         try TesseraBackup.write(from: store.context, to: direct, leavingOutPrivate: true)

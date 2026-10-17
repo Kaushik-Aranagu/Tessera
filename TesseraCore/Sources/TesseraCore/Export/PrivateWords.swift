@@ -33,6 +33,8 @@ enum PrivateWords {
     static func isPrivateTitle(_ title: String, lastWeightKg: Double?) -> Bool {
         isPrivateText(title, lastWeightKg: lastWeightKg)
             || PrivateFacts.words(title.lowercased()).contains(where: titleWords.contains)
+            // A bare medicine is a health fact (QA on #710): "lexapro", "advil", "take melatonin".
+            || EngineWall.isHealth(title, lastWeightKg: lastWeightKg)
     }
 
     /// A list of numbers ("25, 20, 15, 1.25": the plates an equipment object holds) is not a spend or a weigh-in.
