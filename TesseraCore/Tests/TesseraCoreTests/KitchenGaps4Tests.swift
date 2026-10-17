@@ -65,8 +65,8 @@ struct KitchenGaps4Tests {
         let bare = await tess.capture("timer bread 1500", context: context)
         #expect(bare.line == "Didn't save that. A timer runs up to 24 hours.", "\(bare.line)")
         #expect(CookLog(store: store, classes: engine.classes).timers().isEmpty)
-        let ok = await tess.capture("timer rise 24 hours", context: context)
-        #expect(ok.line == "Rise, 1440 min." || ok.line.hasPrefix("Rise,"), "\(ok.line)")
+        let allowed = await tess.capture("timer rise 24 hours", context: context)
+        #expect(allowed.line.hasPrefix("Rise,"), "\(allowed.line)")
     }
 
     // MARK: G23
@@ -112,5 +112,80 @@ struct KitchenGaps4Tests {
         let plain = AddGroceries(lines: ["milk"])
         #expect(plain.summary(in: store) == "Milk, on Groceries")
         #expect(plain.receipt(in: store) == "Milk, on Groceries")
+    }
+
+    // MARK: Finish closes the plan task (MP-F1 to MP-F7)
+
+    private func noon(plusDays days: Int) -> Date {
+        let calendar = Calendar.current
+        let base = calendar.date(byAdding: .day, value: days, to: calendar.startOfDay(for: .now))!
+        return calendar.date(byAdding: .hour, value: 12, to: base)!
+    }
+
+    private func isDone(_ task: ObjectRecord) -> Bool {
+        store.value("isDone", of: task) == .bool(true)
+    }
+
+    @Test func finishingACookClosesItsPlanTaskAndUndoReopensBoth() throws {
+        let engine = try engine()
+        let tacos = try engine.perform(CreateRecipe(text: "Tacos\nIngredients\n2 onions\nMethod\nFry."), by: .user).output
+        let when = noon(plusDays: 0)
+        let task = try engine.perform(CreateTask(title: "Cook tacos", startsAt: when.addingTimeInterval(7 * 3600),
+                                                 about: [tacos.id]), by: .tess).output
+        let other = try engine.perform(CreateTask(title: "Cook tacos", startsAt: when.addingTimeInterval(8 * 3600),
+                                                  about: [tacos.id]), by: .tess).output
+        // MP-F4: started from the later task, that one closes; the earlier stays open.
+        let cook = try engine.perform(StartCooking(recipe: tacos.id, time: when, fromTask: other.id), by: .user).output
+        let finish = try engine.perform(FinishCooking(cook: cook.id, time: when.addingTimeInterval(3600)), by: .user)
+        #expect(isDone(other) && !isDone(task))
+        #expect(finish.record.receipt == "Tacos, done.")
+        // MP-F2: one UNDO restores both.
+        _ = engine.undo(finish.record)
+        #expect(!isDone(other) && !isDone(task))
+        #expect(store.value("cookedAt", of: cook) == nil)
+
+        // Started elsewhere (no link): the earliest open one closes.
+        let dal = try engine.perform(CreateRecipe(text: "Dal\nIngredients\n1 cup lentils\nMethod\nSimmer."), by: .user).output
+        let late = try engine.perform(CreateTask(title: "Cook dal", startsAt: when.addingTimeInterval(9 * 3600),
+                                                 about: [dal.id]), by: .tess).output
+        let early = try engine.perform(CreateTask(title: "Cook dal", startsAt: when.addingTimeInterval(5 * 3600),
+                                                  about: [dal.id]), by: .tess).output
+        let again = try engine.perform(StartCooking(recipe: dal.id, time: when), by: .user).output
+        try engine.perform(FinishCooking(cook: again.id, time: when.addingTimeInterval(3600)), by: .user)
+        #expect(isDone(early) && !isDone(late))
+    }
+
+    @Test func aPlanOnAnotherDayOrNoPlanOrADoneTaskIsLeftAlone() throws {
+        let engine = try engine()
+        let tacos = try engine.perform(CreateRecipe(text: "Tacos\nIngredients\n2 onions\nMethod\nFry."), by: .user).output
+        let tomorrow = try engine.perform(CreateTask(title: "Cook tacos", startsAt: noon(plusDays: 1), about: [tacos.id]),
+                                          by: .tess).output
+        // MP-F7: a task already closed (skipped) is not touched again.
+        let skipped = try engine.perform(CreateTask(title: "Cook tacos", startsAt: noon(plusDays: 0),
+                                                    about: [tacos.id]), by: .tess).output
+        try engine.perform(SetTaskDone(task: skipped.id, time: noon(plusDays: 0)), by: .user)
+        let doneAt = store.value("doneAt", of: skipped)
+        let cook = try engine.perform(StartCooking(recipe: tacos.id, time: noon(plusDays: 0)), by: .user).output
+        try engine.perform(FinishCooking(cook: cook.id, time: noon(plusDays: 0).addingTimeInterval(60)), by: .user)
+        #expect(!isDone(tomorrow))
+        #expect(store.value("doneAt", of: skipped) == doneAt)
+        // MP-F5: no plan task at all, the cook ends alone.
+        let chili = try engine.perform(CreateRecipe(text: "Chili\nIngredients\n1 can beans\nMethod\nSimmer."),
+                                       by: .user).output
+        let chiliCook = try engine.perform(StartCooking(recipe: chili.id), by: .user).output
+        let finish = try engine.perform(FinishCooking(cook: chiliCook.id), by: .user)
+        #expect(finish.record.receipt == "Chili, done.")
+    }
+
+    @Test func aPrivateRecipeReceiptNeverNamesIt() throws {
+        let engine = try engine()
+        let secret = try engine.perform(CreateRecipe(text: "Melatonin lasagna\nIngredients\n2 onions\nMethod\nBake."),
+                                        by: .user).output
+        let task = try engine.perform(CreateTask(title: "Private recipe", startsAt: noon(plusDays: 0),
+                                                 about: [secret.id]), by: .tess).output
+        let cook = try engine.perform(StartCooking(recipe: secret.id, time: noon(plusDays: 0)), by: .user).output
+        let finish = try engine.perform(FinishCooking(cook: cook.id, time: noon(plusDays: 0)), by: .user)
+        #expect(isDone(task))
+        #expect(finish.record.receipt == "Private recipe done.")
     }
 }

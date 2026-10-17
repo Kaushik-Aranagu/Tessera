@@ -42,10 +42,15 @@ public enum ObjectPrivacy {
                 .isPrivateTitle(object.title, lastWeightKg: last) ? taskLabel : nil
         }
         if isA(.recipe) {
-            return object.title == recipeLabel || PrivateFacts.isPrivateTitle(object.title, lastWeightKg: last)
-                || EngineWall.isHealth(object.title, lastWeightKg: last) ? recipeLabel : nil
+            return isPrivateRecipeTitle(object.title, lastWeightKg: last) ? recipeLabel : nil
         }
         return nil
+    }
+
+    /// Whether a recipe's title is private (a secret word, money, a body fact or a medicine).
+    public static func isPrivateRecipeTitle(_ title: String, lastWeightKg: Double?) -> Bool {
+        title == recipeLabel || PrivateFacts.isPrivateTitle(title, lastWeightKg: lastWeightKg)
+            || EngineWall.isHealth(title, lastWeightKg: lastWeightKg)
     }
 
     /// A field that is always private on its class: a workout's notes are a body fact (Product 5:07 PM PT).
