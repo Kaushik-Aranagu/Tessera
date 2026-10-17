@@ -249,14 +249,15 @@ private struct ListPage: View {
 
     /// One new line: "Rice, on Packing." with UNDO 4 s; a walled thing reads "Private item, on Packing."
     private func add() {
-        let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty, let list = model.store.object(id: listID) else { return }
-        // A failed add keeps what was typed and says so (Kitchen on #760).
-        guard let record = try? model.engine.perform(AddListItem(list: listID, text: text), by: .user).record else {
-            TessVoice.shared.say("Didn't save that. Try again.")
-            return
+        guard let list = model.store.object(id: listID) else { return }
+        let attempt = ListsCopy.add(draft) { text in
+            try? model.engine.perform(AddListItem(list: listID, text: text), by: .user).record
         }
-        draft = ""
+        draft = attempt.draft
+        if let line = attempt.line {
+            TessVoice.shared.say(line)
+        }
+        guard let record = attempt.record else { return }
         model.touch()
         let title = model.store.displayTitle(of: list)
         let shown = ListsShelf.shownName(title, lastWeightKg: BodyWeight.lastKg(in: model.store))

@@ -9,6 +9,8 @@ struct RecipesShelfView: View {
         NavigationStack {
             RecipesShelfPage()
                 .navigationDestination(for: UUID.self) { RecipePage(recipeID: $0) }
+                // Paste from the shelf stays in the shelf, so back lands here, not Home (QA on #774).
+                .navigationDestination(for: ShelfPaste.self) { _ in ShelfPaste.Page() }
                 .toolbar(.hidden, for: .navigationBar)
         }
         .environment(\.animateEntrance, true)
@@ -18,7 +20,6 @@ struct RecipesShelfView: View {
 private struct RecipesShelfPage: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.openHomeLink) private var openLink
     /// Tess speaks once per visit, not each time the shelf reappears (QA on #765).
     @State private var spoke = false
 
@@ -54,7 +55,7 @@ private struct RecipesShelfPage: View {
                         .padding(.top, Theme.Spacing.xxl)
                         .entrance(2)
                     // The way in from an empty shelf (QA on #765).
-                    Button("Paste a recipe") { openLink(.pasteRecipe) }
+                    NavigationLink("Paste a recipe", value: ShelfPaste())
                         .buttonStyle(.labelWord)
                         .padding(.top, Theme.Spacing.m)
                         .entrance(3)
@@ -98,6 +99,19 @@ private struct RecipesShelfPage: View {
             if let tess = shelf.tess {
                 TessVoice.shared.say(tess)
             }
+        }
+    }
+}
+
+/// The Paste path pushed inside the shelf's stack; a save moves on to the new recipe.
+struct ShelfPaste: Hashable {
+    struct Page: View {
+        @State private var saved: UUID?
+
+        var body: some View {
+            PasteRecipe { saved = $0 }
+                .navigationDestination(item: $saved) { RecipePage(recipeID: $0) }
+                .toolbarTitleDisplayMode(.inline)
         }
     }
 }
