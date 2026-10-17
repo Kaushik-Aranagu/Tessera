@@ -30,7 +30,7 @@ Meter [M]: weekly 34% (flat from 33% at 6:02 PM, about 1%/h over the last hour),
 
 ## Check 3: Oct 17, 2:35 AM PT (09:35Z)
 
-Meter [M] (coordinator session): weekly 44%, 5-hour 24% (resets 7:00 AM PT). Since check 2 (34% at 7:15 PM) that is +10 points in 7.3 h, about 1.4%/h. Left to the Sun Oct 18 5:00 AM PT reset: 56 points in about 32 h, so up to 1.7%/h fits if the week is spent to 100% (allowed this week). Verdict: green with about 0.3%/h of room, so lanes can keep two running; the overnight lock-screen stall, not budget, is what cost output. Rotating the 250k+ leads (rotation-handoffs.md) would add room.
+Meter [M] (coordinator session): weekly 44%, 5-hour 24% (resets 7:00 AM PT). Since check 2 (34% at 7:15 PM) that is +10 points in 7.3 h, about 1.4%/h. Left to the Sun Oct 18 5:00 AM PT reset: 56 points in about 26.4 h, so up to 2.1%/h fits if the week is spent to 100% (allowed this week). Verdict: green with about 0.7%/h of room, so lanes can keep two running; the overnight lock-screen stall, not budget, is what cost output. Rotating the 250k+ leads (rotation-handoffs.md) would add room.
 
 ## How to add a row
 
