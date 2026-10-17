@@ -85,6 +85,9 @@ struct PantryLedgerTests {
         let entries = ledger.entries()
         #expect(entries.contains { $0.isPrivate && $0.label == "Private item" })
         #expect(!entries.contains { $0.label.lowercased().contains("advil") }, "the name never shows")
+        // A private row opens nothing; a plain one opens its ingredient.
+        #expect(entries.filter(\.isPrivate).allSatisfy { !PantryLine.opens($0) })
+        #expect(entries.filter { !$0.isPrivate }.allSatisfy { PantryLine.opens($0) })
     }
 
     @Test func optionalAndToTasteLinesArentUsed() throws {

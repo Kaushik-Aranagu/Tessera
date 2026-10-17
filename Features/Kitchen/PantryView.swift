@@ -68,32 +68,45 @@ private struct PantryPage: View {
 }
 
 /// One ingredient: its name in ink (in sits back a step), and for in, when it was bought.
-private struct PantryLine: View {
+struct PantryLine: View {
     let entry: PantryLedger.Entry
     let now: Date
+
+    /// A private row opens nothing: its page would show the name (pantry-acceptance S15, K26.16; QA on #724).
+    static func opens(_ entry: PantryLedger.Entry) -> Bool {
+        !entry.isPrivate
+    }
 
     var body: some View {
         // Never the name of a walled thing: "Private item" (QA M1 on #722).
         let name = entry.label
-        NavigationLink(value: Route.object(entry.ingredient.id)) {
-            HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.s) {
-                Text(name)
-                    .textRole(.body)
-                    .foregroundStyle(entry.state == .have ? Theme.Colors.inkSecondary : Theme.Colors.ink)
-                if entry.state == .have, let bought = entry.lastBoughtAt {
-                    Text(PantryDayWord.bought(bought, now: now))
-                        .textRole(.label)
-                        .foregroundStyle(Theme.Colors.inkSecondary)
-                }
-                Spacer(minLength: 0)
-            }
-            .frame(minHeight: 44)
-            .contentShape(Rectangle())
+        if Self.opens(entry) {
+            NavigationLink(value: Route.object(entry.ingredient.id)) { row(name) }
+                .buttonStyle(HandleButtonStyle())
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(label(name))
+                .accessibilityHint("Opens \(name)")
+        } else {
+            row(name)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(label(name))
         }
-        .buttonStyle(HandleButtonStyle())
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(label(name))
-        .accessibilityHint("Opens \(name)")
+    }
+
+    private func row(_ name: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.s) {
+            Text(name)
+                .textRole(.body)
+                .foregroundStyle(entry.state == .have ? Theme.Colors.inkSecondary : Theme.Colors.ink)
+            if entry.state == .have, let bought = entry.lastBoughtAt {
+                Text(PantryDayWord.bought(bought, now: now))
+                    .textRole(.label)
+                    .foregroundStyle(Theme.Colors.inkSecondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .frame(minHeight: 44)
+        .contentShape(Rectangle())
     }
 
     private func label(_ name: String) -> String {
