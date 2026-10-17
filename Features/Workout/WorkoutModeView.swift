@@ -90,7 +90,7 @@ private struct WorkoutContent: View {
                     VStack(spacing: 0) {
                         WorkoutFinishView(
                             strokes: sessionStrokes,
-                            title: session.workout.title,
+                            title: ObjectPrivacy.routineTitle(session.workout.title, in: model.store),
                             startedAt: session.startedAt,
                             endedAt: finished,
                             summary: session.summary,
