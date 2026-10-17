@@ -232,7 +232,8 @@ struct RecipePage: View {
     /// engine's "Tacos, 7 added." stands in its place with UNDO 10 s. Nothing new: the column stays, one line
     /// "Tacos, nothing to add.", no UNDO. Refused: the column springs back and Tess says so.
     private func send(recipe: UUID, serves: Int?) {
-        let outcome = RecipeCopy.send {
+        let title = model.store.object(id: recipe)?.title ?? ""
+        let outcome = RecipeCopy.send(isPrivate: RecipeCopy.isPrivate(title, model: model)) {
             let result = try model.engine.perform(AddRecipeToGroceries(recipe: recipe, serves: serves), by: .user)
             return (result.output.count, result.record)
         }
@@ -466,9 +467,15 @@ enum RecipeCopy {
     }
 
     /// The add's outcome from the engine: its own summary line ("Tacos, 7 added." / "Tacos, nothing to add.").
-    static func send(_ perform: () throws -> (count: Int, record: OpRecord)) -> SendOutcome {
+    /// A private recipe never lends its name (G53, QA on #808): "Private recipe, 7 added." / "Private recipe,
+    /// nothing to add.", built from the count, never from the engine's line.
+    static func send(isPrivate: Bool = false,
+                     _ perform: () throws -> (count: Int, record: OpRecord)) -> SendOutcome
+    {
         guard let result = try? perform() else { return .failed("Didn't save that. Try again.") }
-        let line = result.record.receipt ?? result.record.summary
+        let line = isPrivate
+            ? "Private recipe, \(result.count == 0 ? "nothing to add" : "\(result.count) added")."
+            : result.record.receipt ?? result.record.summary
         return result.count == 0 ? .nothing(line) : .added(line, result.record)
     }
 

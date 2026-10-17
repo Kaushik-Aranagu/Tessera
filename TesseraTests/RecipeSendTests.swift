@@ -51,4 +51,22 @@ struct RecipeSendTests {
         #expect(RecipeCopy.spokenRow("2 cups", line) == "2 cups \(line.name)\(line.prep.map { ", \($0)" } ?? "")")
         #expect(!RecipeCopy.spokenRow("", line).hasPrefix(" "))
     }
+
+    /// A walled title never shows or is spoken in the add's line (QA on #808).
+    @Test func aPrivateRecipeSaysPrivateRecipe() throws {
+        let title = "Rent 1200 stew"
+        let stew = try model.engine.perform(CreateRecipe(text: "\(title)\n2 carrots\n1 onion\n\nSimmer."), by: .user)
+            .output
+        #expect(RecipeCopy.isPrivate(stew.title, model: model))
+        let outcome = RecipeCopy.send(isPrivate: RecipeCopy.isPrivate(stew.title, model: model)) {
+            let result = try model.engine.perform(AddRecipeToGroceries(recipe: stew.id), by: .user)
+            return (result.output.count, result.record)
+        }
+        guard case let .added(line, _) = outcome else { Issue.record("expected an add"); return }
+        #expect(line == "Private recipe, 2 added." && !line.contains("stew") && !line.contains("Rent"))
+        let nothing = RecipeCopy.send(isPrivate: true) { try (0, model.engine.perform(
+            AddRecipeToGroceries(recipe: stew.id), by: .user
+        ).record) }
+        #expect(nothing == .nothing("Private recipe, nothing to add."))
+    }
 }
