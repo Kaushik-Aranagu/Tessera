@@ -70,6 +70,8 @@ struct ListsCopyTests {
         #expect(ListsCopy.reusable("Packing", isOn: true) == "Packing, reusable.")
         #expect(ListsCopy.reusable("Packing", isOn: false) == "Packing, not reusable.")
         #expect(ListsCopy.reset("Packing") == "Packing, reset.")
+        #expect(ListsCopy.reusableWord(isOn: true) == "Reusable, on")
+        #expect(ListsCopy.reusableWord(isOn: false) == "Reusable, off")
         #expect(ListsCopy.reset("Private list") == "Private list, reset.")
     }
 }

@@ -132,10 +132,18 @@ private struct ListPage: View {
                     Button {
                         withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { optionsOpen.toggle() }
                     } label: {
-                        Text(ListsCopy.pageContext(open: open.count, all: open.count + done.count))
-                            .font(Theme.voice(size: 21))
-                            .foregroundStyle(Theme.Colors.context)
-                            .frame(minHeight: 44, alignment: .leading)
+                        // The visible cue that it opens (Design on #806): a small mark that turns as it unfolds.
+                        HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.xs) {
+                            Text(ListsCopy.pageContext(open: open.count, all: open.count + done.count))
+                                .font(Theme.voice(size: 21))
+                                .foregroundStyle(Theme.Colors.context)
+                            Text("›")
+                                .font(Theme.voice(size: 21))
+                                .foregroundStyle(Theme.Colors.inkSecondary)
+                                .rotationEffect(.degrees(optionsOpen ? 90 : 0))
+                                .accessibilityHidden(true)
+                        }
+                        .frame(minHeight: 44, alignment: .leading)
                     }
                     .buttonStyle(HandleButtonStyle())
                     .accessibilityHint(optionsOpen ? "Hides the list's options" : "Shows the list's options")
@@ -186,7 +194,8 @@ private struct ListPage: View {
             .background { EdgeSwipeBack() }
             .toolbar(.hidden, for: .navigationBar)
             .tesseraFeedback(.notNow, trigger: removed)
-            .tesseraFeedback(.done, trigger: reset)
+            // A cleared run (Design on #806); .done is for finishing.
+            .tesseraFeedback(.aisleCleared, trigger: reset)
             .onDisappear { rows.end() }
             .onChange(of: scenePhase) { _, phase in
                 if phase != .active {
@@ -311,12 +320,14 @@ private struct ListPage: View {
     private func options(_: ObjectRecord, name: String, reusable: Bool) -> some View {
         HStack(spacing: Theme.Spacing.l) {
             Button {
-                setReusable(!reusable, name: name)
+                setReusable(!reusable, was: reusable, name: name)
             } label: {
-                Text("Reusable")
+                // The state in words, not colour alone (Design on #806).
+                Text(ListsCopy.reusableWord(isOn: reusable))
                     .textRole(.labelStrong)
                     .textCase(.uppercase)
                     .foregroundStyle(reusable ? Theme.Colors.ink : Theme.Colors.inkSecondary)
+                    .contentTransition(.opacity)
                     .frame(minHeight: 44)
             }
             .buttonStyle(HandleButtonStyle())
@@ -329,7 +340,10 @@ private struct ListPage: View {
     }
 
     /// "Packing, reusable." / "Packing, not reusable." with UNDO 10 s, a change.
-    private func setReusable(_ isOn: Bool, name: String) {
+    private func setReusable(_ isOn: Bool, was: Bool, name: String) {
+        // A fast double tap sends the same value twice; the second is ignored, never "Didn't save" (QA on #806).
+        let now = ListContents(store: model.store, classes: model.classes)
+        guard let list = model.store.object(id: listID), now.isReusable(list) == was else { return }
         guard let record = try? model.engine.perform(SetListReusable(list: listID, reusable: isOn), by: .user).record
         else {
             TessVoice.shared.say("Didn't save that. Try again.")
@@ -397,7 +411,11 @@ private struct ListPage: View {
     }
 
     private func clear(_ count: Int) {
-        guard let record = try? model.engine.perform(ClearDoneItems(list: listID), by: .user).record else { return }
+        guard let record = try? model.engine.perform(ClearDoneItems(list: listID), by: .user).record else {
+            // A refused clear says so; the fold and its items stay (QA on #806).
+            TessVoice.shared.say("Didn't save that. Try again.")
+            return
+        }
         model.touch()
         foldOpen = false
         // A change, so UNDO keeps 10 s (Design on #760).
