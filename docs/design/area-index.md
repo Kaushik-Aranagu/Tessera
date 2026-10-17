@@ -40,3 +40,6 @@ His ask (Oct 16, 1:51 PM PT): the REVIEW / TODAY / TRAINING / KITCHEN row "looks
 - **A, the index, goes ahead.** C is dropped for good. B's edge spine isn't a way between areas; its idea moves into Today's side page (74).
 - **x on a tab page is no longer the rail.** The index (pull down, or tap the name) is the one way between areas, so a left swipe on a tab page opens that screen's own side page, under sheet 71's order. This replaces "x is still the rail" above, and 71's row "Tab pages: none". Each tab page's side page is mapped in `today-side.md` (74).
 - **Later, with many more areas:** the index will need an order (pinned, recent, grouped by kind) and maybe typing a name. That gets its own sheet when the fifth area is near.
+
+## Confirmed values (motion lab's assumptions, Oct 16)
+The flight uses the house curve. The page's rise and the sheet's close take 460 ms, the same as the flight, and a tap-open is 460 ms on the house curve. The 0.9 page scales about the screen centre. The pull follows the finger 1:1. Each row's word sits at +36 and its live line at +66 inside its 104 pt slot, and the rows form in as a fade over the 40 ms stagger. The glass fill is `--glass` in the study (66% Porcelain, 62% Obsidian). All confirmed as the lab built them.

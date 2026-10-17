@@ -41,3 +41,6 @@ He liked option 1 but found it too forward, and the half-and-half split looked o
 - **Groceries' hold title moves to round 2.** The left-to-right vermilion split goes. The whole title grows bolder and leans to Kitchen's green, and the strike draws at done.
 - **One strike.** Round 2's 3 pt strike replaces RevealingHero's unused 2.5 pt one.
 - **The recipe title is Title 44** (sheet 69), not Hero. That's a Builder B row.
+
+## Confirmed values (motion lab's assumptions, Oct 16)
+The 250 ms lift takes the whole title to the area's 72% mix, starting when the strike ends. "Quiet ink at 50%" is ink at 50% opacity at weight 500. The dry's 900 ms is measured from done, then it runs over 2 s. Before done, p steps as 0.85 × sets done ÷ sets planned. The weight axis is Inter Tight variable, 640 at full. All confirmed as the lab built them.
