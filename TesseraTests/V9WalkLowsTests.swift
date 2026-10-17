@@ -29,4 +29,13 @@ struct V9WalkLowsTests {
         #expect(text == "Push\u{00A0}Day\u{00A0}A, done")
         #expect(text.split(separator: " ").count == 2)
     }
+
+    @Test func aLongNameGluesOnlyItsLastTwoWords() {
+        // Design on the v9 walk: only a short name (16 characters or fewer) is one unit; a long one wraps.
+        let long = WorkoutFinishView.heroText(title: "Upper Body Hypertrophy A")
+        #expect(long == "Upper Body Hypertrophy\u{00A0}A, done")
+        let sixteen = WorkoutFinishView.heroText(title: "Pull Day Heavy A")
+        #expect(sixteen == "Pull\u{00A0}Day\u{00A0}Heavy\u{00A0}A, done")
+        #expect(WorkoutFinishView.heroText(title: "Extraordinarilylongname") == "Extraordinarilylongname, done")
+    }
 }
