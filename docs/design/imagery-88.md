@@ -42,3 +42,8 @@ Original vector, viewBox 120 x 260, left half drawn and mirrored. Front: traps, 
 
 ## Unresolved
 RULED 8:37: Routine mini map yes; his own camera photo on the plate WAITS (a new stored data type; Product decides after he sees the plate), so hold-the-plate is not built in v1; Research supplies the ingredient colour table and muscle fixtures.
+
+## Plate rules added after Research's colour table (Oct 16, 8:32 PM PT)
+- **Kitchen green** is `#12936A` (the kit token), the end of the fallback chain.
+- **Pale foods** (milk, flour, sugar, rice, garlic, yogurt, cauliflower; any hex with luminance above 0.85) keep their own hue but are shaded toward ink by 12% before the 34% wash, so the plate still reads as a plate. No other floor.
+- **Recipe fallback wash** takes the first three ingredient lines in the recipe's own order (the author lists the main ones first); no quantity maths, nothing repeated, and a pantry staple such as salt or oil is skipped (Research's table marks them).
