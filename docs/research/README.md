@@ -275,3 +275,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [week-two-stale-check.md](week-two-stale-check.md) | Product: 25 stale lines in the week-two kit against what has merged, and a 5-line Monday order for the Oct 19 plan |
 | [fixtures/pantry-78.md](fixtures/pantry-78.md) | Builder B, Core, Kitchen lead: Pantry rows against sheet 78, the BV rows reconciled, 25 new rows and 10 flagged conflicts |
 | [week-two-plan.md](week-two-plan.md) | Mon Oct 19 run order, pull list P0-P10, messages A and B, board edits per answer |
+| [fixtures/home-pack-walls.md](fixtures/home-pack-walls.md) | Home done pack walls W1-W14 with the 7:31 rulings |
