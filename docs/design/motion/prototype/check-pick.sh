@@ -20,6 +20,8 @@ case $pick in
   peek) beats="2.2 3.6 3.9" ;;
   tilt) beats="3.1" ;;
   side) beats="1.0 1.42 2.8 4.6 6.2 6.88" ;;
+  index) beats="1.0 1.31 1.78 2.47 3.07 3.6 4.06 5.45 6.75 6.9 7.36" ;;
+  accent) beats="1.0 2.2 3.4 4.6 5.02 5.5 7.5" ;;
   *) echo "unknown pick $pick"; exit 2 ;;
 esac
 crop=${CROP:-}
