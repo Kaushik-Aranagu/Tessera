@@ -14,6 +14,11 @@ enum ListsCopy {
         "\(thing), on \(list)."
     }
 
+    /// Clearing the fold: "3 done, cleared." (Design on #760).
+    static func cleared(_ count: Int) -> String {
+        "\(count) done, cleared."
+    }
+
     /// A running list's state word: "RUNNING, 2 LEFT" (comma, never a dot or " · ").
     static func runState(left: Int) -> String {
         "RUNNING, \(left) LEFT"

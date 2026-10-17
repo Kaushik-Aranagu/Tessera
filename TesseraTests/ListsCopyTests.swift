@@ -28,5 +28,6 @@ struct ListsCopyTests {
     @Test func theAddReceiptNamesTheThingFirst() {
         #expect(ListsCopy.added("Rice", to: "Packing") == "Rice, on Packing.")
         #expect(ListsCopy.added("Private item", to: "Packing") == "Private item, on Packing.")
+        #expect(ListsCopy.cleared(3) == "3 done, cleared.")
     }
 }

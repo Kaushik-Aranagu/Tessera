@@ -16,7 +16,7 @@ struct ListsShelf {
         let name: String
         let isGroceries: Bool
         let tier: Tier
-        /// "3 OF 7", "EMPTY", "14 TO BUY".
+        /// "3 OF 7", "EMPTY", "14 TO GET".
         let state: String
     }
 
@@ -46,7 +46,7 @@ struct ListsShelf {
     /// The state word under a name: Groceries counts what's left to buy; any other list its done of all.
     static func state(open: Int, all: Int, isGroceries: Bool) -> String {
         if isGroceries {
-            return open == 0 ? "NOTHING TO GET" : "\(open) TO BUY"
+            return open == 0 ? "NOTHING TO GET" : "\(open) TO GET"
         }
         if all == 0 {
             return "EMPTY"

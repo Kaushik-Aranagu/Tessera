@@ -20,7 +20,7 @@ struct ListsShelfTests {
     @Test func stateWords() {
         #expect(ListsShelf.state(open: 4, all: 7, isGroceries: false) == "3 OF 7")
         #expect(ListsShelf.state(open: 0, all: 0, isGroceries: false) == "EMPTY")
-        #expect(ListsShelf.state(open: 14, all: 20, isGroceries: true) == "14 TO BUY")
+        #expect(ListsShelf.state(open: 14, all: 20, isGroceries: true) == "14 TO GET")
         #expect(ListsShelf.state(open: 0, all: 3, isGroceries: true) == "NOTHING TO GET")
     }
 

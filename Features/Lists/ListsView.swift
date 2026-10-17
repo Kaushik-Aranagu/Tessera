@@ -27,8 +27,8 @@ private struct ListsShelfPage: View {
                                lastWeightKg: BodyWeight.lastKg(in: model.store))
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text("LISTS")
-                    .textRole(.labelStrong)
+                Text("Lists")
+                    .textRole(.title)
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
                     .entrance(0)
@@ -304,6 +304,7 @@ private struct ListPage: View {
         guard let record = try? model.engine.perform(ClearDoneItems(list: listID), by: .user).record else { return }
         model.touch()
         foldOpen = false
-        TessVoice.shared.say("\(count) cleared.", undo: record, holds: .seconds(4))
+        // A change, so UNDO keeps 10 s (Design on #760).
+        TessVoice.shared.say(ListsCopy.cleared(count), undo: record)
     }
 }
