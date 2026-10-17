@@ -21,10 +21,32 @@ public struct Groceries {
     }
 
     /// Makes the one groceries list with its fixed id. Called when the catalog is prepared.
+    /// Exactly one built-in Groceries list after this runs (G29): a copy made while it was deleted brings it back with
+    /// its rows, and a second "Groceries" made by `groceriesList()` while it was gone folds into it.
     static func installIfNeeded(store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) {
-        guard store.object(id: listID) == nil, let listClass = classes[.list] else { return }
-        let list = store.create(listClass, title: "Groceries")
-        list.id = listID
+        guard let listClass = classes[.list] else { return }
+        let fixed: ObjectRecord
+        if let existing = store.object(id: listID) {
+            if existing.isDeleted {
+                store.restore(existing)
+            }
+            fixed = existing
+        } else {
+            fixed = store.create(listClass, title: "Groceries")
+            fixed.id = listID
+        }
+        // A stray list with the built-in's name and no fixed id: its rows move across, then it goes.
+        let strays = store.objects(of: listClass).filter { $0.id != listID && $0.title == "Groceries" }
+        for stray in strays {
+            var next = (fixed.orderedChildren.map(\.sortIndex).max() ?? -1) + 1
+            for row in stray.orderedChildren {
+                store.noteChange(row)
+                row.parent = fixed
+                row.sortIndex = next
+                next += 1
+            }
+            store.softDelete(stray)
+        }
     }
 
     /// Sections in walking order, each with its open items.
