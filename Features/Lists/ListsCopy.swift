@@ -60,6 +60,11 @@ enum ListsCopy {
         "Reusable, \(isOn ? "on" : "off")"
     }
 
+    /// The ask after "done" on a reusable list (10.11): "Packing, done. Reset it for next time?"
+    static func resetAsk(_ list: String) -> String {
+        "\(list), done. Reset it for next time?"
+    }
+
     /// A reset's receipt: "Packing, reset." (10.4, 10.11).
     static func reset(_ list: String) -> String {
         "\(list), reset."
