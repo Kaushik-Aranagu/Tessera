@@ -213,3 +213,31 @@ struct ObjectModelTests {
         #expect(store.value("reps", of: set) == .number(8))
     }
 }
+
+/// The Training `Int.init` sweep: a stored number a screen turns into an Int can never be a trap.
+@MainActor
+struct StoredNumberTests {
+    @Test func nonFiniteAndHugeNumbersReadAsNoValue() throws {
+        let store = ObjectStore.open(inMemory: true)
+        _ = try store.prepareCatalog()
+        let plan = try #require(store.object(id: StarterContent.planID))
+        let routine = try #require(store.linkedObjects("routines", of: plan).first)
+        let slot = try #require(routine.orderedChildren.first)
+        for bad in [Double.nan, .infinity, -.infinity, 1e300, 1e15] {
+            try store.set("sets", to: .number(bad), on: slot)
+            // Whatever the store keeps (it may drop or inherit), the read is safe for Int(...).
+            if let read = store.number("sets", of: slot) {
+                #expect(read.isFinite && abs(read) < 1e15, "\(bad) read as \(read)")
+                _ = Int(read)
+            }
+        }
+        // A value written behind the store's back (a restore, an old file) reads as no value.
+        let field = try #require(slot.classDef.flatMap { store.field("sets", of: $0) })
+        slot.values[field.id] = .number(.nan)
+        #expect(store.number("sets", of: slot) == nil)
+        slot.values[field.id] = .number(1e300)
+        #expect(store.number("sets", of: slot) == nil)
+        try store.set("sets", to: .number(4), on: slot)
+        #expect(store.number("sets", of: slot) == 4)
+    }
+}

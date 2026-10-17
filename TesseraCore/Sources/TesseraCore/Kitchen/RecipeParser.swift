@@ -50,7 +50,7 @@ public enum RecipeParser {
                 result.append((line, .heading))
             } else if servesCount(in: line) != nil || timeLine(line) != nil {
                 result.append((line, .meta))
-            } else if index == 0, !startsWithAmount(line) {
+            } else if index == 0, !startsWithAmount(line), !isSentence(line) {
                 result.append((line, .title))
             } else {
                 let isIngredient = switch mode {
@@ -67,6 +67,13 @@ public enum RecipeParser {
             }
         }
         return result
+    }
+
+    /// A first line is a title when it has 12 words or fewer, does not end in ".", "!" or "?" and does not start with a
+    /// quantity (Kitchen's ruling on #854). Otherwise the recipe is "Untitled recipe" and the line is the first step.
+    static func isSentence(_ line: String) -> Bool {
+        let trimmed = line.trimmingCharacters(in: CharacterSet(charactersIn: "#*: ").union(.whitespaces))
+        return [".", "!", "?"].contains { trimmed.hasSuffix($0) } || trimmed.split(separator: " ").count > 12
     }
 
     /// Splits on "Ingredients" / "Method" headings when there are any, else by line shape: amounts and short

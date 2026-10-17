@@ -236,6 +236,9 @@ public enum HomeLines {
             return "\(fact.title): \(left) left."
         case .list:
             guard let left = fact.step, left > 0 else { return "\(fact.title): all done." }
+            if fact.state == .paused {
+                return "\(fact.title): paused, \(left) left."
+            }
             return "\(fact.title): \(left) left."
         case .task:
             // His own words; the time sits at the right, drawn by the page.
@@ -303,6 +306,7 @@ public enum HomeLines {
                 fact.title
             }
         case (.task, _): fact.title
+        case (.list, .paused): "\(fact.title), paused"
         case (.list, _): fact.step.map { $0 > 0 ? "\(fact.title), \($0) left" : "\(fact.title), all done" } ?? fact
             .title
         case (.cook, .planned): cookWhen(fact, now: now, calendar: calendar)
@@ -329,6 +333,9 @@ public enum HomeLines {
             return fact.startsAt.map { same(DayStoryClock.sentenceTime($0, calendar: calendar)) } ?? (nil, nil)
         }
         switch (fact.kind, fact.state) {
+        case (.list, .paused):
+            // A paused list is him away from it, like a paused shop (QA on #850).
+            return since("paused", fact.lastTouchedAt ?? fact.startedAt)
         case (.list, _):
             // A running list names itself in the context and counts in the detail; a name that does not fit says
             // nothing, never a cut one ("Packing" and "6 left", within the caps).

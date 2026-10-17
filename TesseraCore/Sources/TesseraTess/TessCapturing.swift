@@ -61,6 +61,9 @@ public struct TessCapture {
         case datedLift(TessDatedLiftAsk)
     }
 
+    /// A refusal that is its own answer ("Dal is already on Recipes."): the phrase never goes to the miss log.
+    public var isRefusal = false
+
     public var understood: Bool {
         !records.isEmpty
     }

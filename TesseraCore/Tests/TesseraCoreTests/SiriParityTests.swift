@@ -84,7 +84,9 @@ struct SiriParityTests {
         // A stored title that is still private keeps the private line (S18).
         let refill = try add("refill lexapro 40 dollars friday")
         #expect(!refill.lowercased().contains("lexapro") && !refill.contains("40"), "\(refill)")
-        #expect(claude.heard.isEmpty)
+        // His "yes, all but the key": a Bar phrase the grammar cannot read goes whole to Claude, sums included. Siri
+        // and Shortcuts never do (they commit at once), and what the grammar claimed stays on the phone.
+        #expect(claude.heard == ["pay rent $1,800", "paid 40 for gas"], "\(claude.heard)")
     }
 
     @Test func paidWithADayIsAPrivateDatedNoteEverywhere() async throws {

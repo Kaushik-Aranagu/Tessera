@@ -116,3 +116,54 @@ struct PasteCorrectionTests {
         #expect(Groceries(store: store, classes: classes).share(of: recipe).isEmpty)
     }
 }
+
+/// G59: a sentence is not a title, and the same paste twice is one recipe.
+@MainActor
+struct RecipeTitleTests {
+    @Test func theTitleRule() throws {
+        /// Kitchen's ruling on #854: 12 words or fewer, no stop, no quantity first.
+        func title(_ first: String) throws -> String {
+            try #require(RecipeParser.parse("\(first)\n2 eggs\n1 cup flour\nBake it for 20 minutes.")).title
+        }
+        func words(_ count: Int) -> String {
+            Array(repeating: "dal", count: count).joined(separator: " ")
+        }
+        #expect(try title(words(9)) == words(9))
+        #expect(try title(words(12)) == words(12))
+        #expect(try title(words(13)) == "Untitled recipe")
+        #expect(try title("Dal:") == "Dal")
+        #expect(try title("Mix everything.") == "Untitled recipe")
+        #expect(try title("Is this the best dal?") == "Untitled recipe")
+        let parsed = try #require(RecipeParser.parse("Mix everything.\n2 eggs\n1 cup flour"))
+        #expect(parsed.steps.first?.text == "Mix everything.")
+        // A quantity first is an ingredient, never the title.
+        #expect(try #require(RecipeParser.parse("2 eggs\nMethod\n1. Whisk.")).title == "Untitled recipe")
+        #expect(try #require(RecipeParser.parse("1/2 cup flour\nMethod\n1. Whisk.")).title == "Untitled recipe")
+        #expect(try #require(RecipeParser.parse("A pinch of salt\nMethod\n1. Whisk.")).title == "Untitled recipe")
+    }
+
+    @Test func theSamePasteTwiceIsOneRecipe() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let text = "Weeknight dal\nIngredients\n1 cup lentils\nMethod\n1. Simmer 20 minutes."
+        let first = try engine.perform(CreateRecipe(text: text), by: .user).output
+        let book = RecipeBook(store: store, classes: classes)
+        #expect(book.recipe(pastedAs: text)?.id == first.id)
+        do {
+            try engine.perform(CreateRecipe(text: text), by: .user)
+            Issue.record("a second copy was written")
+        } catch {
+            #expect("\(error)".contains("Weeknight dal is already on Recipes."), "\(error)")
+        }
+        #expect(book.recipes().count == 1)
+        // A private title is never named.
+        let secret = "Lexapro stew\nIngredients\n1 cup lentils\nMethod\n1. Simmer."
+        try engine.perform(CreateRecipe(text: secret), by: .user)
+        do {
+            try engine.perform(CreateRecipe(text: secret), by: .user)
+        } catch {
+            #expect(!"\(error)".lowercased().contains("lexapro") && "\(error)".contains("Private recipe"), "\(error)")
+        }
+    }
+}

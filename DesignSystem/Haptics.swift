@@ -3,7 +3,7 @@ import SwiftUI
 
 /// The app's one haptic vocabulary (docs/design/task-reward.md, "The haptics map"). Each case is a moment, and each
 /// moment has exactly one haptic. Views play them through `.tesseraFeedback`, never a raw `.sensoryFeedback`, so this
-/// map is the code. Nothing scolds: there is no error or warning case.
+/// map is the code. Nothing scolds, with one exception: `.notSaved`, the soft warning when a write did not save.
 enum Haptic: Equatable, Sendable {
     /// A task, note, grocery, recipe or habit lands; a plan is kept.
     case made
@@ -41,6 +41,8 @@ enum Haptic: Equatable, Sendable {
     case pinned
     /// His finger strokes across Tess (tess-picks.md idea 3): one soft tick as it comes onto her.
     case soulStroke
+    /// A write did not save ("Didn't save that. Try again."): the map's single warning, once per failure.
+    case notSaved
 
     /// The system feedback for the moment; `nil` for `.done`, which plays the three-beat pattern.
     var feedback: SensoryFeedback? {
@@ -63,6 +65,7 @@ enum Haptic: Equatable, Sendable {
         case .aisleCleared: .impact(weight: .medium)
         case .pinned: .impact(weight: .medium)
         case .soulStroke: .impact(flexibility: .soft, intensity: 0.3)
+        case .notSaved: .warning
         }
     }
 }
@@ -74,6 +77,10 @@ struct HapticCue: Equatable {
     private(set) var count = 0
 
     mutating func play(_ haptic: Haptic) {
+        // The warning never repeats back to back: a second failure with nothing else played in between stays quiet.
+        if haptic == .notSaved, self.haptic == .notSaved, count > 0 {
+            return
+        }
         self.haptic = haptic
         count += 1
     }

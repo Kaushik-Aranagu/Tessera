@@ -58,6 +58,13 @@ public struct RecipeBook {
         return store.objects(of: recipeClass).sorted { $0.createdAt < $1.createdAt }
     }
 
+    /// The saved recipe whose pasted text is exactly this one (the paste screen and Tess check before a second is
+    /// written, G59). Private lines are cut the way `CreateRecipe` stores them.
+    public func recipe(pastedAs text: String) -> ObjectRecord? {
+        let wanted = SecretWords.cut(text).text
+        return recipes().first { store.value("sourceText", of: $0)?.stringValue == wanted }
+    }
+
     public func serves(_ recipe: ObjectRecord) -> Int? {
         RecipeLimits.serves(store.number("serves", of: recipe))
     }
@@ -180,9 +187,23 @@ public struct CreateRecipe: EngineAction {
         return lines
     }
 
+    /// "Weeknight dal is already on Recipes." (a walled or private title is "Private recipe").
+    @MainActor
+    public static func duplicateLine(of existing: ObjectRecord, in store: ObjectStore) -> String {
+        let walled = store.value("isPrivate", of: existing) == .bool(true)
+            || ObjectPrivacy.isPrivateRecipeTitle(existing.title, lastWeightKg: BodyWeight.lastKg(in: store))
+        return "\(walled ? ObjectPrivacy.recipeLabel : existing.title) is already on Recipes."
+    }
+
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
         guard let parsed = RecipeParser.parse(text, lines: Self.lines(of: text, corrections: corrections)) else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "no ingredients or steps found")
+        }
+        // The same paste twice is one recipe: nothing is written, and the refusal names the one he has (G59).
+        let book = RecipeBook(store: transaction.store, classes: transaction.classes)
+        if let existing = book.recipe(pastedAs: parsed.source) {
+            throw ActionError.invalidArguments(action: Self.descriptor.name,
+                                               reason: Self.duplicateLine(of: existing, in: transaction.store))
         }
         let recipe = try transaction.create(transaction.classDef(.recipe), title: title ?? parsed.title)
         // The original text keeps every line but the private ones (Research 137 PR1).
