@@ -216,8 +216,8 @@ private struct ListPage: View {
                             startPick(list)
                         } onPressingChanged: { pressing in
                             guard contents.isPickOne(list) else { return }
-                            withAnimation(pressing && !reduceMotion ? .linear(duration: 0.6) :
-                                .easeOut(duration: 0.15))
+                            withTesseraAnimation(pressing ? .linear(duration: 0.6) : .easeOut(duration: 0.15),
+                                                 reduceMotion: reduceMotion)
                             {
                                 pickHold = pressing ? 1 : 0
                             }
@@ -270,11 +270,6 @@ private struct ListPage: View {
                 .padding(.vertical, Theme.Spacing.l)
             }
             .scrollIndicators(.hidden)
-            // While a pick is up the page dims to 14% with a 2 pt blur (12.2); Reduce Motion keeps the dim, drops the
-            // blur.
-            .opacity(picking == nil ? 1 : 0.14)
-            .blur(radius: picking == nil || reduceMotion ? 0 : 2)
-            .allowsHitTesting(picking == nil)
             // A tap anywhere outside the option words folds them (10.5), down to the foot of a short list too (QA on
             // #844); rows and words take their own taps first.
             .background {
@@ -292,6 +287,12 @@ private struct ListPage: View {
                     fold(done, name: name, reusable: contents.isReusable(list))
                 }
             }
+            // While a pick is up the page, done fold included, dims to 14% with a 2 pt blur (12.2) and is hidden from
+            // VoiceOver (QA on #851); Reduce Motion keeps the dim, drops the blur.
+            .opacity(picking == nil ? 1 : 0.14)
+            .blur(radius: picking == nil || reduceMotion ? 0 : 2)
+            .allowsHitTesting(picking == nil)
+            .accessibilityHidden(picking != nil)
             .background { ThemedBackground() }
             .background { EdgeSwipeBack() }
             // The pick moment over the page: the rest dims to 14% with a 2 pt blur (12.2).
@@ -824,7 +825,7 @@ private struct FoldStrike: ViewModifier {
 
     func body(content: Content) -> some View {
         if let drain {
-            content.textRenderer(StrikeRenderer(progress: drain, color: Theme.Colors.inkSecondary))
+            content.textRenderer(FoldDrainRenderer(progress: drain, color: Theme.Colors.inkSecondary))
         } else {
             content.strikethrough()
         }
@@ -836,4 +837,31 @@ struct PickState: Equatable {
     var item: ListContents.Item?
     var skipped: Set<UUID>
     var between = false
+}
+
+/// The fold's drain: the text stays at full ink the whole time (no dim flash as it starts; Design on #848) while the
+/// strike line shortens right to left as `progress` goes 1 → 0.
+private struct FoldDrainRenderer: TextRenderer, Animatable {
+    var progress: Double
+    var color: Color
+
+    var animatableData: Double {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    func draw(layout: Text.Layout, in context: inout GraphicsContext) {
+        for line in layout {
+            context.draw(line)
+        }
+        guard progress > 0 else { return }
+        for line in layout {
+            let bounds = line.typographicBounds.rect
+            let midY = bounds.minY + bounds.height * 0.55
+            var path = Path()
+            path.move(to: CGPoint(x: bounds.minX, y: midY))
+            path.addLine(to: CGPoint(x: bounds.minX + bounds.width * progress, y: midY))
+            context.stroke(path, with: .color(color), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+        }
+    }
 }
