@@ -26,6 +26,9 @@ A private recipe's name appears nowhere: not the row's context, the side, Tess's
 ## Removing an item ("Rice, removed.")
 As sheet 65 and Product NE11/AQ15, drawn on a list page (Groceries), the same on Packing: swipe left, REMOVE rises in `live` at 60 pt, commits past 96, the rows close up, the count rolls ("9 to get" to "8 to get"), Tess "Rice, removed." with UNDO under her line. **UNDO is 10 s** (a change; 10 s under VoiceOver), one app-wide slot; UNDO returns the row wet and Tess says "Rice, back on Groceries." Never a hold, a red row, a confirm or a trash can. Shelf and recipe rows are not removed by swipe; removing a list or recipe is its own page's act (not drawn here).
 
+## A private item (ruled 8:35)
+A list item that is private reads only **"Private item"** at 66% ink, the same as "Private recipe", in its list (drawn in PANTRY on Groceries). Its receipts name the thing first: **"Private item, on Groceries."** when it lands and **"Private item, removed."** with the 10 s UNDO (UNDO returns it: "Private item, back on Groceries."). The Lists side's count line reads as a count only, **KEPT PRIVATE: "Private item", 2**, nothing tappable behind it. Its words appear nowhere else: not the row's context, Tess, VoiceOver ("Private item", actions Check off and Remove) or Spotlight.
+
 ## Accessibility
 - **VoiceOver:** back, title (heading), context, side word (button), then one stop per row reading name then day ("Private recipe, Wednesday"); a list row carries custom actions Check off and Remove (Remove announces "Rice, removed."); each side is also a custom action ("Show its objects", "Show on them"). Then Tess's line.
 - **Dynamic Type AX3:** one column; Title 58; names wrap in full; the context wraps and the side word drops under it; the day drops under its row; Tess at most 3 lines; rows at least 44 pt.
@@ -42,5 +45,5 @@ As sheet 65 and Product NE11/AQ15, drawn on a list page (Groceries), the same on
 ## Unresolved
 1. **Lists' side kind and word (ON THEM, PARTS) and Tess's phrase "new list: packing"** are proposals; Core owns the grammar.
 2. every-side.md row 26 says ITS OBJECTS is PARTS, sheet 77 says LINKS; drawn as 77. On Recipes' own front the word could read MOST COOKED instead.
-3. Does a list or a list item get a private label ("Private item") when PrivateFacts walls it? Drawn only for recipes.
+3. ~~Does a list item get a private label ("Private item") when PrivateFacts walls it?~~ **RULED yes (8:35).** See "A private item". A list's own name stays his words and is not drawn here.
 4. Sheet 86 may change type steps; only the token block should need to change.
