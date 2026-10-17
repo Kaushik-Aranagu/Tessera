@@ -259,7 +259,7 @@ public struct CheckListItem: EngineAction {
         let isDone = done ?? true
         try transaction.set("isDone", to: .bool(isDone), on: item)
         try transaction.set("checkedAt", to: isDone ? .date(time ?? .now) : nil, on: item)
-        try transaction.refreshShopLine(for: item)
+        try transaction.refreshShopLine(for: item, at: time ?? .now)
     }
 
     public func summary(in store: ObjectStore) -> String {
