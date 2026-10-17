@@ -9,6 +9,8 @@ public enum ObjectPrivacy {
     public static let noteLabel = SecretWords.title
     public static let taskLabel = "Private task"
     public static let memoryLabel = "Private memory"
+    /// A recipe has no flag on master; the title rule decides (kitchen-week-one-private-filter PF4, gap hunt G21).
+    public static let recipeLabel = "Private recipe"
     /// What a workout's notes read on the generic page (Product 5:20 PM PT).
     public static let keptNoteLabel = "Note kept private"
 
@@ -38,6 +40,10 @@ public enum ObjectPrivacy {
         if isA(.task) {
             return object.title == taskLabel || PrivateFacts
                 .isPrivateTitle(object.title, lastWeightKg: last) ? taskLabel : nil
+        }
+        if isA(.recipe) {
+            return object.title == recipeLabel || PrivateFacts.isPrivateTitle(object.title, lastWeightKg: last)
+                || EngineWall.isHealth(object.title, lastWeightKg: last) ? recipeLabel : nil
         }
         return nil
     }

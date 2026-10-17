@@ -506,6 +506,7 @@ public struct HomeFacts {
         }
         if let cook = classes[.cook], store.isSubclass(classDef, ofClassID: cook.id) {
             let recipe = store.linkedObjects("recipe", of: subject).first
+            let title = cookTitle(subject, recipe: recipe)
             let steps = recipe.map { RecipeBook(store: store, classes: classes).steps(of: $0).count } ?? 0
             return HomeFact(id: subject.id, kind: .cook, title: title, state: state,
                             step: (process.resumePoint?.index ?? 0) + 1, steps: steps > 0 ? steps : nil,
@@ -529,7 +530,8 @@ public struct HomeFacts {
 
     /// A cook finished today stays on Home like a done workout, until 04:00 (Research G1).
     public func fact(doneCook cook: ObjectRecord) -> HomeFact {
-        HomeFact(id: cook.id, kind: .cook, title: store.displayTitle(of: cook), state: .done,
+        HomeFact(id: cook.id, kind: .cook, title: cookTitle(cook, recipe: store.linkedObjects("recipe", of: cook).first),
+                 state: .done,
                  startedAt: store.value("startedAt", of: cook)?.dateValue,
                  endedAt: store.value("cookedAt", of: cook)?.dateValue)
     }
@@ -548,6 +550,17 @@ public struct HomeFacts {
         }
     }
 
+    /// A cook's name on Home: "Private recipe" when the recipe's title is private (gap hunt G21, ObjectPrivacy).
+    private func cookTitle(_ object: ObjectRecord, recipe: ObjectRecord?) -> String {
+        let last = BodyWeight.lastKg(in: store)
+        if let label = ObjectPrivacy.label(of: recipe ?? object, in: store, classes: engine.classes) {
+            return label
+        }
+        let title = store.displayTitle(of: object)
+        return PrivateFacts.isPrivateTitle(title, lastWeightKg: last) || EngineWall.isHealth(title, lastWeightKg: last)
+            ? ObjectPrivacy.recipeLabel : title
+    }
+
     /// A cook planned for today ("cook tacos thu": a task about the recipe), with what's still to buy for it.
     public func fact(plannedCook task: ObjectRecord, recipe: ObjectRecord) -> HomeFact {
         // The planned time first (a captured cook has startsAt, never due); a date-only due (midnight) has no clock.
@@ -557,7 +570,7 @@ public struct HomeFacts {
         {
             at = due
         }
-        return HomeFact(id: task.id, kind: .cook, title: store.displayTitle(of: recipe), state: .planned,
+        return HomeFact(id: task.id, kind: .cook, title: cookTitle(recipe, recipe: recipe), state: .planned,
                         toBuy: Groceries(store: store, classes: engine.classes).toBuy(for: recipe.id),
                         startsAt: at)
     }
