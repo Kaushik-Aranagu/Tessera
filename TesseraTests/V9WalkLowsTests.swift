@@ -15,9 +15,9 @@ struct V9WalkLowsTests {
     }
 
     @Test func fixedDaysListDaysThenPeriod() {
-        #expect(RoutineRow.detail(slots: 5, about: "about 40 min", fixedDays: [1, 4])
+        #expect(RoutineRow.detail(slots: 5, about: "about 40 min", fixedDays: [2, 5])
             == "Mon, Thu. 5 exercises, about 40 min")
-        #expect(RoutineRow.detail(slots: 1, about: "about 8 min", fixedDays: [2]) == "Tue. 1 exercise, about 8 min")
+        #expect(RoutineRow.detail(slots: 1, about: "about 8 min", fixedDays: [3]) == "Tue. 1 exercise, about 8 min")
     }
 
     @Test func fixedEmptyRoutineKeepsTheWords() {
