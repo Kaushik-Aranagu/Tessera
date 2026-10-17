@@ -412,12 +412,14 @@ enum RecipeCopy {
         ObjectPrivacy.isPrivateRecipeTitle(title, lastWeightKg: BodyWeight.lastKg(in: model.store))
     }
 
-    /// The pasted text with any line that is the title (trimmed, any case) read as "Private recipe" while masked.
+    /// The pasted text with any line that holds the title (any case, any "# ", "**" or ":" around it, as the parser
+    /// trims) read as "Private recipe" while masked (QA on #752).
     static func maskedSource(_ source: String, title: String, masked: Bool) -> String {
-        guard masked else { return source }
-        let key = title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let key = title.trimmingCharacters(in: CharacterSet(charactersIn: "#*: ").union(.whitespacesAndNewlines))
+            .lowercased()
+        guard masked, !key.isEmpty else { return source }
         return source.components(separatedBy: "\n").map { line in
-            line.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == key ? ObjectPrivacy.recipeLabel : line
+            line.lowercased().contains(key) ? ObjectPrivacy.recipeLabel : line
         }.joined(separator: "\n")
     }
 

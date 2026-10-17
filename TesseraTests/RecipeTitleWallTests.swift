@@ -33,5 +33,10 @@ struct RecipeTitleWallTests {
         #expect(RecipeCopy.maskedSource("  rent 1200 STEW  \nSimmer.", title: "Rent 1200 stew", masked: true)
             == "Private recipe\nSimmer.")
         #expect(RecipeCopy.maskedSource(source, title: "Rent 1200 stew", masked: false) == source)
+        // Markdown around the pasted title line, as the parser trims it.
+        for line in ["# Rent 1200 stew", "**Rent 1200 stew**", "Rent 1200 stew:"] {
+            #expect(RecipeCopy.maskedSource("\(line)\nSimmer.", title: "Rent 1200 stew", masked: true)
+                == "Private recipe\nSimmer.", "\(line)")
+        }
     }
 }
