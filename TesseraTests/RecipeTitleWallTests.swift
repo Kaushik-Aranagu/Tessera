@@ -25,4 +25,13 @@ struct RecipeTitleWallTests {
         #expect(!RecipeCopy.isPrivate("Weeknight dal", model: model))
         #expect(RecipeCopy.shownTitle("Weeknight dal", isPrivate: false, shown: false) == "Weeknight dal")
     }
+
+    @Test func thePastedTitleLineStaysMaskedWhileTheTitleIs() {
+        let source = "Rent 1200 stew\n2 cups lentils\n\nSimmer."
+        #expect(RecipeCopy.maskedSource(source, title: "Rent 1200 stew", masked: true)
+            == "Private recipe\n2 cups lentils\n\nSimmer.")
+        #expect(RecipeCopy.maskedSource("  rent 1200 STEW  \nSimmer.", title: "Rent 1200 stew", masked: true)
+            == "Private recipe\nSimmer.")
+        #expect(RecipeCopy.maskedSource(source, title: "Rent 1200 stew", masked: false) == source)
+    }
 }

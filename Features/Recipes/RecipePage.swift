@@ -346,8 +346,9 @@ private struct RecipeDepth: View {
 private struct RecipeOriginal: View {
     let recipe: ObjectRecord
     @Environment(AppModel.self) private var model
-    /// The title tapped open on this page; leaving masks it again (G53).
+    /// The title tapped open on this page; leaving or locking masks it again (G53).
     @State private var titleShown = false
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         let cooks = CookLog(store: model.store, classes: model.classes).cooks(of: recipe)
@@ -359,6 +360,7 @@ private struct RecipeOriginal: View {
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
                     .onTapGesture { titleShown = true }
+                    .accessibilityAddTraits(isPrivate && !titleShown ? .isButton : [])
                     .accessibilityHint(isPrivate && !titleShown ? "Shows it" : "")
                     .onDisappear { titleShown = false }
                 MarginSection(label: "Cooked", color: Theme.Colors.inkSecondary) {
@@ -377,7 +379,9 @@ private struct RecipeOriginal: View {
                     }
                 }
                 // Only when there's text he pasted: a recipe made another way has no AS PASTED (gap hunt G4).
-                if let source = RecipeCopy.pasted(model.store.value("sourceText", of: recipe)?.stringValue) {
+                if let pasted = RecipeCopy.pasted(model.store.value("sourceText", of: recipe)?.stringValue) {
+                    // The title's own line in the paste stays masked while the title is (QA on #752).
+                    let source = RecipeCopy.maskedSource(pasted, title: recipe.title, masked: isPrivate && !titleShown)
                     MarginSection(label: "As pasted") {
                         Text(source)
                             .font(Theme.voice)
@@ -392,6 +396,11 @@ private struct RecipeOriginal: View {
         }
         .scrollIndicators(.hidden)
         .background { ThemedBackground() }
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active {
+                titleShown = false
+            }
+        }
     }
 }
 
@@ -401,6 +410,15 @@ enum RecipeCopy {
     /// Switches to Core's helper when it lands.
     static func isPrivate(_ title: String, model: AppModel) -> Bool {
         ObjectPrivacy.isPrivateRecipeTitle(title, lastWeightKg: BodyWeight.lastKg(in: model.store))
+    }
+
+    /// The pasted text with any line that is the title (trimmed, any case) read as "Private recipe" while masked.
+    static func maskedSource(_ source: String, title: String, masked: Bool) -> String {
+        guard masked else { return source }
+        let key = title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return source.components(separatedBy: "\n").map { line in
+            line.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == key ? ObjectPrivacy.recipeLabel : line
+        }.joined(separator: "\n")
     }
 
     /// The title a surface shows: "Private recipe" for a private one unless it's been tapped open.
