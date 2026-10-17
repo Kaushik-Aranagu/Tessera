@@ -80,4 +80,40 @@ extension RecipeLinkTests {
         #expect(try String(contentsOf: shelf.fileURL, encoding: .utf8) == "not json yet")
         #expect(shelf.waiting().isEmpty)
     }
+
+    @Test(arguments: ["https://name:hunter2@budgetbytes.com/chili-mac/", "http://name@budgetbytes.com/x",
+                      "www.name:hunter2@budgetbytes.com", "https://name:hunter%202@budgetbytes.com/"])
+    func aLinkWithAPasswordIsNeverReadOrKept(_ text: String) async throws {
+        // QA on #807: a user or password in the link is refused whole, never fetched or written down.
+        let shelf = shelf()
+        #expect(RecipePasteLink.bareLink(text) == nil && RecipePasteLink.isSecretLink(text), "\(text)")
+        #expect(RecipeLinkReader.safeURL(text) == nil)
+        LinkStub.failure = .notConnectedToInternet
+        let result = await reader().read(text)
+        #expect(result.line == RecipeLinkLine.secretLink && !result.isOffline && LinkStub.requests.isEmpty)
+        try shelf.keep(#require(URL(string: "https://name:hunter2@budgetbytes.com/x")))
+        #expect(!FileManager.default.fileExists(atPath: shelf.fileURL.path(percentEncoded: false)))
+        #expect(!RecipeLinkLine.secretLink.contains("hunter2"))
+    }
+
+    @Test func offlineIsTypedNotWorded() async {
+        LinkStub.failure = .notConnectedToInternet
+        let result = await reader().read("https://budgetbytes.com/")
+        #expect(result.isOffline && result.kind == .failed)
+        LinkStub.failure = .cannotFindHost
+        #expect(await !reader().read("https://budgetbytes.com/").isOffline)
+    }
+
+    @Test func theShelfHoldsFiftyAndErases() throws {
+        let shelf = shelf()
+        for index in 0 ..< 55 {
+            try shelf.keep(#require(URL(string: "https://budgetbytes.com/r\(index)")))
+        }
+        #expect(shelf.waiting().count == RecipeLinkShelf.limit)
+        #expect(shelf.waiting().first?.absoluteString == "https://budgetbytes.com/r5") // the oldest went first
+        #expect(shelf.fileURL.lastPathComponent == RecipeLinkShelf.fileName)
+        shelf.erase()
+        #expect(shelf.waiting().isEmpty && !FileManager.default
+            .fileExists(atPath: shelf.fileURL.path(percentEncoded: false)))
+    }
 }
