@@ -6,7 +6,7 @@ Read against origin/master. Principle from the discovery item: Tess's line and t
 
 - Exactly one plain line through `TessVoice.shared.say` (HomeQueue.swift:32), no Undo button (`undo: nil`): **"Didn't save. Try again."** It lives in tess-voice.md:67 as "Didn't save that. Tap to retry."; flag for Product: a thing-first variant when the subject is known ("Pay rent didn't save. Try again.", "Bench 80 x 8 didn't save. Try again.") reads better and matches decisions.md:43 (receipts stay thing-first). The helper should take an optional `subject:` and fall back to the bare line. Straight apostrophes only.
 - No reward animation (no strike, no fleck, no sink-to-basket, no `model.touch()` reward spring), no counter bump (`finishes`, `moves`, `landed`, `haptic`, `ticks`), data unchanged (`store` objects and `engine.history()` equal before and after).
-- No haptic at all. The map says "Nothing scolds: there is no error or warning case" (Haptics.swift:6), so a failure plays nothing; the case that must NOT fire is named per family.
+- One soft `.warning` haptic, once, only for a write that didn't save (ruled 12:45 PM; the old "Nothing scolds" comment at Haptics.swift:6 is superseded), never on a repeat of the same failure; info lines play none. The case that must NOT fire is named per family.
 - Undo failure: `ActionEngine.undo` does not throw, it returns `ReplayOutcome` (ActionEngine.swift:17-22: `.applied`, `.partial`, `.nothingToDo`). A failed undo is `.nothingToDo` or `.partial` while the store write threw. Proposed line for Product to rule on: **"Didn't undo. Try again."**, with the original change left in place and `Haptic.undo` (Haptics.swift:21) silent.
 
 ## How a test injects the throw
