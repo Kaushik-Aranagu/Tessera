@@ -82,7 +82,7 @@ Sheet 87: Lists is the shelf in the sweep-19 frame (Title "Lists"); Groceries is
 
 Sheet 87 and 88: a private recipe's name appears nowhere (row, context, side, Tess, VoiceOver, Spotlight, index, widget, Siri). Its label masks as "Private recipe". The Kitchen widget shows plain ground with no pigment and no recipe title. Siri follows the private-task precedent ("Private task, 8 pm.", no "at"; `decisions.md` 5:58 PM Oct 16). Related: `kitchen-widget-wash-acceptance.md` KW-W8 (its bare "Private" is replaced by the ruled "Private recipe, 7 pm.") and `meal-plan-groceries-acceptance.md`.
 
-Setup: week plan holds tacos (Thu) as an ordinary recipe and a recipe named in test code "Sunday secret stew" marked Private, planned for Friday at 7 pm. The stew's name is never typed in expected copy below; the test asserts its absence.
+Setup: week plan holds tacos (Thu) as an ordinary recipe and a recipe named in test code "Sunday secret stew" marked Private, planned for Friday, 7 pm. The stew's name is never typed in expected copy below; the test asserts its absence.
 
 | # | Surface | Action | Expected |
 |---|---|---|---|
@@ -97,7 +97,7 @@ Setup: week plan holds tacos (Thu) as an ordinary recipe and a recipe named in t
 | K32.9 | Siri | Ask "What's on the plan this week?" | Siri reads each cook in order; the private one is spoken as "Private recipe" with its day. Digits are spoken as counts ("2 cooks this week"). Never its name |
 | K32.10 | Siri, locked phone | Run K32.8 with the phone locked | Same text; the private cook's line is "Private recipe, 7 pm." and nothing about it is displayed on the lock screen |
 | K32.11 | Spotlight and index | Search the stew's name in Spotlight and in the area index | No result for it; a search for "Private recipe" returns nothing that opens the stew. No donation to Siri suggestions carries its name |
-| K32.12 | Notifications and Live Activity | A reminder for Friday's cook is due at 6 pm | The notification title reads "Private recipe" and the body the time ("7 pm"); no name. Quiet hours 23:00 to 07:00 apply: a reminder inside them is held to 07:00. A cook Live Activity for a private recipe shows "Private recipe" only |
+| K32.12 | Notifications and Live Activity | A reminder for Friday's cook is due 6 pm | The notification title reads "Private recipe" and the body the time ("7 pm"); no name. Quiet hours 23:00 to 07:00 apply: a reminder inside them is held to 07:00. A cook Live Activity for a private recipe shows "Private recipe" only |
 | K32.13 | VoiceOver | Focus the Friday row, then the widget | "Private recipe, Friday"; the widget reads "Private recipe, 7 pm". Custom action names never include the name |
 | K32.14 | Groceries from the plan | Add Friday's ingredients to Groceries | Receipts name the thing first: "Private item, on Groceries." for any item that is walled; ordinary items "Olive oil, on Groceries." The recipe's name is not written on any grocery row's note |
 | K32.15 | Claude | Run every Kitchen job with the week planned | The sent log and request bodies hold nothing from the private recipe (no name, no text, no ingredients); a recipe-reading job for it makes zero requests. A stubbed Claude records nothing about it |

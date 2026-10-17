@@ -21,7 +21,7 @@ Fixture zone Europe/London (ASSUMED-12), phone local time throughout.
 
 | # | State / input | Pass when |
 |---|---|---|
-| K6.9 | Cook timer for the 8 h rest, started 9:30 pm, ends 5:30 am (inside quiet hours) | Ending is still scheduled as `kitchen-timer.<id>` and rings at 5:30 am: a time he started himself is kept, not snapped (decision 2:00 (9): a time he typed still rings; default taken that a cook timer counts as one) |
+| K6.9 | Cook timer for the 8 h rest, started 9:30 pm, ends 5:30 am (inside quiet hours) | Ending is still scheduled as `kitchen-timer.<id>` and rings at 5:30 am: a time he started himself is kept, not snapped (decision 2:00 (9): a time he typed still rings; ruled, decisions 3:00 Oct 17: a cook timer he started rings in quiet hours, only app-raised follow-ups hold to 7:00 am) |
 | K6.10 | App-raised ask (not a timer) due at 23:30 | Held until 7:00 am, not shown at 23:30 (asks hold 23:00-07:00) |
 | K6.11 | Task given only a day, default time would land at 2:00 am | Time becomes 7:00 am and the receipt names the day (1:22 PM, 2:00 PM (5)) |
 | K6.12 | Boundary clocks 22:59 and 23:00 | A held-type alert at 22:59 shows; at 23:00 it holds. At 7:00 it releases and at 6:59 it still holds |
@@ -40,7 +40,7 @@ Fixture zone Europe/London (ASSUMED-12), phone local time throughout.
 
 ## Open, defaults taken
 
-- Whether a cook timer counts as "a time he typed" for K6.9. Default: yes, it rings in quiet hours. The decisions say task times he typed ring; they do not name cook timers.
+- Ruled (decisions 3:00 Oct 17): a cook timer he started rings in quiet hours (K6.9); only app-raised follow-ups hold to 7:00 am.
 - "1 h 1 min" form for K6.5 follows the "6 h 55 min" form; no found rule for odd minutes beyond 6 h 55 min.
 - Exactly 4:00 am belongs to the new day (K6.16).
 - A cook that crosses 4 am keeps running (K6.18).

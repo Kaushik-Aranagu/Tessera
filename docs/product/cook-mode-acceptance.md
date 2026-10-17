@@ -75,7 +75,7 @@ The meal plan feeding groceries ("cook carbonara thursday" puts its ingredients 
 
 **5. A spoken extra timer during a cook (W7, G8).** It sits on one labelled line under the key row, outside the stroke ("Bread · 8 MIN"), never as a step on the clock, because the clock is the recipe and the timer is his. Several stack by end time, soonest first. It ends with the same flare as a step's timer, on its own line, and it survives pause, done and leaving the page (Finish keeps timers that belong to no step, ASSUMED-10). Builder A draws it with Design; Design's words win on size and placement.
 
-Day-one walk numbers accepted as written in `docs/research/fixtures/recipe-clock-day-one.md`, including W23's "2 HR 45 MIN LEFT" at 10:32 pm (step 1's 2 minutes are spent; the rest figure in `recipe-clock-steps.md` stays 2 HR 47 MIN).
+Day-one walk numbers accepted as written in `docs/research/fixtures/recipe-clock-day-one.md`, including W23's "2 HR 45 MIN LEFT" (10:32 pm; step 1's 2 minutes are spent; the rest figure in `recipe-clock-steps.md` stays 2 HR 47 MIN).
 
 
 ## Overnight cook's row time (decision 2:38 PM Oct 16, Core #552)

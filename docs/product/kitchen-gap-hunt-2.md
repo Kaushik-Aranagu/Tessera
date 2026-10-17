@@ -24,3 +24,16 @@
 3. **G9's two defaults** are the plain-text step and, if Product wants long timers, a 72 h cap. Until ruled, the plain-text row is the default taken.
 4. **G10's expected result** assumes the removal gate is checked wherever `keys.read()` is called (one shared check), not in each job. The 10 s UNDO window itself is unchanged (`undo-windows-audit.md` X19).
 5. **G11's merge copy** is the only new line in the file besides G6's and G7's; all 3 are proposed and none is in `kitchen-phrases.md`.
+
+## Triage (K49, Oct 17)
+
+Owners by where the fix lives. "Wall" means it touches a privacy or money wall, so the fix needs the walls tests.
+
+| Gap | Owner | Wall? | Note |
+|---|---|---|---|
+| G6 | Core | No (data integrity) | `DeleteObject` guard for the built-in Groceries list; Groceries must never make a second list. |
+| G7 | Core | No | A deleted recipe's share leaves grocery rows; recipe delete must remove its share and the "for <recipe>" label together. Pairs with K47. |
+| G8 | Core | No | `Cooking.finishLine` ordinals ("21st", "22nd", "23rd", "31st"); one engine test. |
+| G9 | Core, then Builder B | No | Engine limit is 24 h; the cook-mode UI must stop offering a timer the engine refuses (or say why). |
+| G10 | Core first, then Builder B | **Yes** (key and spend) | Key removal must stop Tess calls at once, not after the 10 s UNDO; first item on Core's board. |
+| G11 | Core | No | `RenameObject` onto an existing ingredient key must merge or refuse, never make two with one key. |
