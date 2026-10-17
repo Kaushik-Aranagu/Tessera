@@ -1,0 +1,45 @@
+import Foundation
+@testable import TesseraCore
+import Testing
+
+/// G105: one check for a title or a word he typed. Receipts, UNDO, Tess lines, screens and the export all agree.
+@MainActor
+struct PrivacyParityTests {
+    let store = ObjectStore.open(inMemory: true)
+
+    nonisolated static let walled: [String] = [
+        "Dentist cake", "dentist", "therapy ideas", "lexapro", "rent", "take melatonin", "wifi password zebra99",
+        "paid 40 for gas",
+    ]
+    nonisolated static let plain: [String] = ["Weeknight dal", "milk", "socks", "Push A"]
+
+    @Test(arguments: PrivacyParityTests.walled)
+    func everySurfaceMasksIt(_ title: String) {
+        let last: Double? = nil
+        #expect(ObjectPrivacy.isPrivateTitle(title, lastWeightKg: last), "\(title)")
+        #expect(ObjectPrivacy.isPrivateRecipeTitle(title, lastWeightKg: last))
+        #expect(ObjectPrivacy.isPrivateWord(title, in: store))
+        #expect(PrivateWords.isPrivateTitle(title, lastWeightKg: last))
+        #expect(AddListItem.shownTitle(title, store: store) == "Private item")
+    }
+
+    @Test(arguments: PrivacyParityTests.plain)
+    func aPlainTitleIsPlainEverywhere(_ title: String) {
+        #expect(!ObjectPrivacy.isPrivateTitle(title, lastWeightKg: nil), "\(title)")
+        #expect(!ObjectPrivacy.isPrivateWord(title, in: store))
+        #expect(!PrivateWords.isPrivateTitle(title, lastWeightKg: nil))
+        #expect(AddListItem.shownTitle(title, store: store) == title)
+    }
+
+    @Test func aRecipeCalledDentistCakeIsPrivateOnTheScreenAndInTheExport() throws {
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let cake = try engine.perform(
+            CreateRecipe(text: "Dentist cake\nIngredients\n1 cup flour\nMethod\n1. Bake it."), by: .user
+        ).output
+        #expect(ObjectPrivacy.label(of: cake, in: store, classes: classes) == "Private recipe")
+        #expect(PrivateWords.labels(in: store.context)[cake.id] != nil)
+        let line = try engine.perform(AddRecipeToGroceries(recipe: cake.id), by: .user).record.summary
+        #expect(!line.lowercased().contains("dentist"), "\(line)")
+    }
+}

@@ -596,8 +596,7 @@ public struct HomeFacts {
             return label
         }
         let title = store.displayTitle(of: object)
-        return PrivateFacts.isPrivateTitle(title, lastWeightKg: last) || EngineWall.isHealth(title, lastWeightKg: last)
-            ? ObjectPrivacy.recipeLabel : title
+        return ObjectPrivacy.isPrivateTitle(title, lastWeightKg: last) ? ObjectPrivacy.recipeLabel : title
     }
 
     /// A cook planned for today ("cook tacos thu": a task about the recipe), with what's still to buy for it.
