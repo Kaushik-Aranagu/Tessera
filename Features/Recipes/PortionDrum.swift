@@ -1,4 +1,5 @@
 import SwiftUI
+import TesseraCore
 
 /// The serving size as a drum: the reps drum's sibling on paper. Numbers in a vertical snap scroll, no box; the
 /// centre one large in ink, its neighbours small and dim, the ends fading out. "serves" sits under it.
@@ -11,11 +12,13 @@ struct PortionDrum: View {
     /// From 1 to twice the written size, never less than 12, so "Makes 24" sits centred and highlighted (G57, K87.7).
     /// Capped at 48, so a misread "serves 5000" never builds thousands of rows (QA on #803).
     static func range(written: Int?) -> ClosedRange<Int> {
-        // Clamped before doubling, so an absurd size can never overflow and trap (G62).
-        let size = min(max(written ?? 0, 0), 24)
-        return 1 ... max(12, 2 * size)
+        // Clamped to Core's shared cap before doubling, so an absurd size can never overflow and trap (G62, #832).
+        let cap = RecipeLimits.serves.upperBound
+        let size = min(max(written ?? 0, 0), cap / 2)
+        return 1 ... min(cap, max(12, 2 * size))
     }
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var scrolled: Int?
     @State private var tick = 0
 
@@ -73,7 +76,7 @@ struct PortionDrum: View {
                         .textRole(isCurrent ? .titleNumber : .body)
                         .foregroundStyle(isCurrent ? Theme.Colors.ink : Theme.Colors.inkTertiary)
                         .frame(width: width, height: pitch)
-                        .animation(.easeOut(duration: 0.16), value: isCurrent)
+                        .animation(reduceMotion ? nil : .easeOut(duration: 0.16), value: isCurrent)
                 }
             }
             .scrollTargetLayout()

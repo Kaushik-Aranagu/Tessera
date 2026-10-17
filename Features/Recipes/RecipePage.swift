@@ -98,15 +98,27 @@ struct RecipePage: View {
                 ZStack(alignment: .topLeading) {
                     let column = IngredientColumn(lines: lines, zoom: zoom) { send(recipe: recipe.id, serves: size) }
                         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { columnWidth = $0 }
-                    let drum = PortionDrum(serves: Binding(get: { min(max(size ?? 2, 1), 48) }, set: { serves = $0 }),
-                                           isEnabled: own != nil, range: PortionDrum.range(written: own))
+                    let drum = PortionDrum(
+                        serves: Binding(get: { min(max(size ?? 2, 1), PortionDrum.range(written: own).upperBound) },
+                                        set: { serves = $0 }),
+                        isEnabled: own != nil,
+                        range: PortionDrum.range(written: own)
+                    )
                     if typeSize.isAccessibilitySize {
                         // The page scrolls as one, the drum above the list (G69).
                         VStack(alignment: .leading, spacing: Theme.Spacing.l) {
                             drum
-                            column
-                                .offset(x: away ? -columnWidth * 1.4 : min(0, drag))
-                                .simultaneousGesture(sendGesture(recipe: recipe.id, serves: size))
+                            // The sent line stands where the column was, never over the drum (Kitchen on #829), and
+                            // outside the column's offset so it stays while the column leaves (QA on #843).
+                            ZStack(alignment: .topLeading) {
+                                column
+                                    .offset(x: away ? -columnWidth * 1.4 : min(0, drag))
+                                    .simultaneousGesture(sendGesture(recipe: recipe.id, serves: size))
+                                if let sent {
+                                    SentLine(line: sent.line) { undoSend(sent.record) }
+                                        .transition(.opacity)
+                                }
+                            }
                         }
                     } else {
                         HStack(alignment: .top, spacing: Theme.Spacing.m) {
@@ -118,7 +130,7 @@ struct RecipePage: View {
                             drum
                         }
                     }
-                    if let sent {
+                    if let sent, !typeSize.isAccessibilitySize {
                         SentLine(line: sent.line) { undoSend(sent.record) }
                             .frame(width: columnWidth)
                             .transition(.opacity)
@@ -327,6 +339,13 @@ private struct SentLine: View {
     }
 }
 
+/// Whether an ingredient row stacks its amount over its name: at the accessibility sizes (G69).
+enum IngredientColumnLayout {
+    static func stacks(_ size: DynamicTypeSize) -> Bool {
+        size.isAccessibilitySize
+    }
+}
+
 /// The ingredients: amount in 600 in a fixed tabular column (so nothing jumps when it rolls), name in 400, prep in
 /// secondary ink; staples at 45% with their amounts at 400. Tap a row to zoom into the ingredient; tap a spoon or
 /// cup amount to see it in metric for a moment.
@@ -335,6 +354,8 @@ private struct IngredientColumn: View {
     let zoom: Namespace.ID
     /// "1 1/2 tbsp" fits at every text size (G69).
     @ScaledMetric(relativeTo: .body) private var amountWidth: CGFloat = 92
+    @Environment(\.dynamicTypeSize) private var typeSize
+
     /// The same add as the swipe, for VoiceOver and Switch Control (G58).
     var onAdd: () -> Void = {}
     @State private var metric: UUID?
@@ -344,7 +365,11 @@ private struct IngredientColumn: View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(Array(lines.enumerated()), id: \.element.id) { index, line in
                 let dim = line.isStaple || line.line.toTaste
-                HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.s) {
+                // At accessibility sizes the amount sits over the name, so the name keeps the full width (G69).
+                let layout = IngredientColumnLayout.stacks(typeSize)
+                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.xs))
+                    : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: Theme.Spacing.s))
+                layout {
                     Text(amount(line))
                         .textRole(.body)
                         .fontWeight(dim ? .regular : .semibold)
@@ -353,7 +378,7 @@ private struct IngredientColumn: View {
                         .contentTransition(.numericText())
                         .animation(reduceMotion ? nil : .smooth(duration: 0.22).delay(Double(index) * 0.015),
                                    value: line.line.amount)
-                        .frame(width: amountWidth, alignment: .leading)
+                        .frame(width: IngredientColumnLayout.stacks(typeSize) ? nil : amountWidth, alignment: .leading)
                         .onTapGesture { flip(line) }
                     NavigationLink(value: Route.object(line.ingredient?.id ?? line.id)) {
                         (Text(line.line.name)
@@ -594,7 +619,8 @@ enum RecipeCopy {
         if let serves {
             parts.append("serves \(serves)")
         }
-        if let total = model.store.number("totalMinutes", of: recipe) {
+        // The clamped time, as the engine reads it (#832): a stored 5000 reads "72 h", never "83 h 20 min".
+        if let total = RecipeLimits.minutes(model.store.number("totalMinutes", of: recipe)) {
             parts.append(duration(total))
         }
         if let last = CookLog(store: model.store, classes: model.classes).lastCooked(recipe) {
@@ -627,9 +653,10 @@ enum RecipeCopy {
 
     /// Hours and minutes, as the cook log says them (O2, G60): "1 h 35 min", "1 h", "45 min". Never "1.6 h".
     static func duration(_ minutes: Double) -> String {
-        // NaN, infinity or an absurd stored value never traps the page (G62): at most 99 h 59 min.
-        guard minutes.isFinite else { return "0 min" }
-        let total = Int(min(max(minutes, 0), 5999).rounded())
+        // NaN, infinity or an absurd stored value never traps the page (G62): Core's cap, at most 72 h (#832).
+        guard let clamped = RecipeLimits.minutes(minutes), let total = RecipeLimits.whole(clamped.rounded()) else {
+            return "0 min"
+        }
         let (hours, rest) = (total / 60, total % 60)
         if hours == 0 {
             return "\(rest) min"
