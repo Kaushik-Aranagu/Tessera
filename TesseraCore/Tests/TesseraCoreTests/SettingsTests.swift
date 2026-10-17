@@ -123,7 +123,8 @@ struct SettingsTests {
 
     @Test func settingsAreInTheExport() throws {
         try settings.update { $0.restWeekday = 1 }
-        let json = try String(data: TesseraExport(context: store.context).encoded(), encoding: .utf8) ?? ""
+        // Test-only lossless export (maskingPrivate: false); the app never does this.
+        let json = try String(data: TesseraExport(context: store.context, maskingPrivate: false).encoded(), encoding: .utf8) ?? ""
         #expect(json.contains(SettingsStore.objectID.uuidString))
     }
 

@@ -50,8 +50,17 @@ struct PrivateWordsTests {
         }
         #expect(json.contains("Private note") && json.contains("Private task") && json.contains("Private item"))
         // Unmasked, the same store still holds every word (the engine's own round trip).
-        let whole = try text(of: TesseraExport(context: store.context).encoded())
+        // Test-only lossless export (maskingPrivate: false); the app never does this.
+        let whole = try text(of: TesseraExport(context: store.context, maskingPrivate: false).encoded())
         #expect(Self.secrets.allSatisfy { whole.contains($0) })
+    }
+
+    @Test func aDefaultExportMasks() throws {
+        let dir = try folder()
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let store = try storeWithEverything(at: dir.appendingPathComponent("tessera.sqlite"))
+        let json = try text(of: TesseraExport(context: store.context).encoded())
+        #expect(Self.secrets.allSatisfy { !json.contains($0) } && json.contains("Private note"))
     }
 
     @Test func aRecipeWithASecretTitleMasksToPrivateRecipe() throws {
@@ -74,7 +83,8 @@ struct PrivateWordsTests {
         try TesseraBackup.write(from: store.context, to: file)
         let copy = try TesseraContext(url: file)
         let titles = copy.all(ObjectRecord.self).map(\.title)
-        let blob = try text(of: TesseraExport(context: copy).encoded())
+        // Test-only lossless export (maskingPrivate: false); the app never does this.
+        let blob = try text(of: TesseraExport(context: copy, maskingPrivate: false).encoded())
         for word in Self.secrets + Self.ordinary {
             #expect(blob.contains(word), "\(word) missing from the local copy")
         }
@@ -92,7 +102,8 @@ struct PrivateWordsTests {
         try TesseraBackup.write(from: store.context, to: file, leavingOutPrivate: true)
         _ = try TesseraBackup.inspect(file) // still a good backup
         let copy = try TesseraContext(url: file)
-        let blob = try text(of: TesseraExport(context: copy).encoded())
+        // Test-only lossless export (maskingPrivate: false); the app never does this.
+        let blob = try text(of: TesseraExport(context: copy, maskingPrivate: false).encoded())
         for word in Self.secrets {
             #expect(!blob.contains(word), "\(word) reached the iCloud copy")
         }
@@ -103,7 +114,8 @@ struct PrivateWordsTests {
         let iCloud = dir.appendingPathComponent("iCloud")
         let rolled = try #require(try TesseraBackup.writeRolling(from: store.context, in: iCloud, now: .now,
                                                                  leavingOutPrivate: true))
-        let rolledBlob = try text(of: TesseraExport(context: TesseraContext(url: rolled)).encoded())
+        // Test-only lossless export (maskingPrivate: false); the app never does this.
+        let rolledBlob = try text(of: TesseraExport(context: TesseraContext(url: rolled), maskingPrivate: false).encoded())
         #expect(Self.secrets.allSatisfy { !rolledBlob.contains($0) })
     }
 }

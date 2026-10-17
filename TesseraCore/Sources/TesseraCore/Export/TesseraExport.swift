@@ -100,9 +100,9 @@ public extension TesseraExport {
     /// Reads the whole store. With `maskingPrivate` (the shared file, G28) every private note, item, recipe or secret
     /// line reads "Private note", "Private item" or "Private recipe": title and field values both, and the op log's
     /// summaries and values for it. Money and body words count as private. Not lossless then, and there is no opt-in in
-    /// v1. Without it the export is the whole store, for tests and the engine's own round trips; anything the person
+    /// v1. It defaults to true, so every export masks. `false` is test-only, for lossless round trips; the app never does it. Anything the person
     /// can send elsewhere must pass `maskingPrivate: true`.
-    init(context: TesseraContext, now: Date = .now, maskingPrivate: Bool = false) throws {
+    init(context: TesseraContext, now: Date = .now, maskingPrivate: Bool = true) throws {
         let classDefs = context.all(ClassDef.self).sorted { $0.createdAt < $1.createdAt }
         let records = context.all(ObjectRecord.self).sorted { $0.createdAt < $1.createdAt }
         let objectLinks = context.all(ObjectLink.self).sorted { $0.createdAt < $1.createdAt }
