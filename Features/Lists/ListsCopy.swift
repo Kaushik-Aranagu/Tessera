@@ -9,6 +9,11 @@ enum ListsCopy {
         return running > 0 ? "\(count), \(running) running" : count
     }
 
+    /// An Add line receipt, thing first: "Rice, on Packing." (Product, decisions 10:06; lists-copy-sweep-oct17.md).
+    static func added(_ thing: String, to list: String) -> String {
+        "\(thing), on \(list)."
+    }
+
     /// A running list's state word: "RUNNING, 2 LEFT" (comma, never a dot or " · ").
     static func runState(left: Int) -> String {
         "RUNNING, \(left) LEFT"
