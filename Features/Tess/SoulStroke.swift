@@ -87,16 +87,19 @@ enum SoulRipple {
 /// finger still gets it; it only reports to the router (views never set her state).
 struct SoulStrokeGesture: ViewModifier {
     let soul: SoulRouter
+    /// Only where the band is hers: Home's tab pages (a pushed page may draw rows down into it, QA on #662).
+    let isHome: Bool
     @State private var tracker = SoulStrokeTracker()
-    @State private var began = false
+    /// True from the pan's first change to its end, reset by the gesture itself even when it's cancelled.
+    @GestureState private var isPanning = false
 
     private var drag: some Gesture {
         DragGesture(minimumDistance: 6, coordinateSpace: .global)
-            .onChanged { value in
+            .updating($isPanning) { value, panning, _ in
                 guard let centre = soul.dockCentre else { return }
                 let time = value.time.timeIntervalSinceReferenceDate
-                if !began {
-                    began = true
+                if !panning {
+                    panning = true
                     tracker.began(at: value.startLocation, time: time, centre: centre)
                 }
                 switch tracker.moved(to: value.location, time: time, centre: centre) {
@@ -106,7 +109,6 @@ struct SoulStrokeGesture: ViewModifier {
                 }
             }
             .onEnded { value in
-                began = false
                 guard let centre = soul.dockCentre else { return }
                 let stroke = tracker.ended(at: value.location, time: value.time.timeIntervalSinceReferenceDate,
                                            centre: centre)
@@ -116,25 +118,31 @@ struct SoulStrokeGesture: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            // The band beside her is empty ground, so a finger there would fall through to the page: a clear strip
-            // over the band catches it (nothing of the page lives in Tess's band, 736 to 820).
-            .background(alignment: .bottom) {
-                Color.clear
-                    .frame(height: SoulStrokeTracker.bandAbove + SoulStrokeTracker.bandBelow)
-                    .contentShape(Rectangle())
-                    .gesture(drag)
-                    .padding(.bottom, 32)
+            // The band beside her is empty ground on Home, so a finger there would fall through to the page: a
+            // clear strip over the band catches it. Placed from her dock (so it follows the safe area), and only
+            // when the band is hers and she'd take a stroke.
+            // Behind the chrome's own words (her line and UNDO stay tappable), above the page.
+            .background {
+                if isHome, !soul.refusesStroke, let centre = soul.dockCentre {
+                    GeometryReader { proxy in
+                        let frame = proxy.frame(in: .global)
+                        let above = SoulStrokeTracker.bandAbove, below = SoulStrokeTracker.bandBelow
+                        Color.clear
+                            .frame(width: frame.width, height: above + below)
+                            .contentShape(Rectangle())
+                            .gesture(drag)
+                            .position(x: frame.width / 2, y: centre.y - frame.minY + (below - above) / 2)
+                    }
                     .accessibilityHidden(true)
+                }
             }
-            // A pan that starts on her line or UNDO still strokes her.
-            .simultaneousGesture(drag)
             .tesseraFeedback(.soulStroke, trigger: soul.strokeTicks)
     }
 }
 
 extension View {
     /// Lets a pan across her band stroke her (idea 3).
-    func soulStroke(_ soul: SoulRouter) -> some View {
-        modifier(SoulStrokeGesture(soul: soul))
+    func soulStroke(_ soul: SoulRouter, isHome: Bool) -> some View {
+        modifier(SoulStrokeGesture(soul: soul, isHome: isHome))
     }
 }
