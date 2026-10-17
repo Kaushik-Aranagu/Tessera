@@ -102,4 +102,25 @@ struct KitchenGaps2Tests {
         try engine.perform(StartKitchenTimer(label: "Rest", minutes: 24 * 60), by: .user)
     }
 
+    // MARK: G11
+
+    @Test func renameOntoAnExistingIngredientKeyIsRefused() throws {
+        let engine = try engine()
+        try engine.perform(
+            CreateRecipe(text: "Salsa\nIngredients\n2 tomatoes\n1 roma tomato\nMethod\nChop."), by: .user
+        )
+        let book = IngredientBook(store: store, classes: engine.classes)
+        let tomato = try #require(book.find("tomato"))
+        let roma = try #require(book.all().first { $0.title.lowercased().hasPrefix("roma") })
+        #expect(throws: ActionError.self) {
+            try engine.perform(RenameObject(object: roma.id, title: "Tomatoes"), by: .tess)
+        }
+        #expect(roma.title.lowercased().hasPrefix("roma"))
+        // A fresh key is a plain rename; renaming to its own key is fine.
+        try engine.perform(RenameObject(object: roma.id, title: "Roma tomatoes"), by: .tess)
+        #expect(roma.title == "Roma tomatoes")
+        try engine.perform(RenameObject(object: tomato.id, title: "Tomatoes"), by: .tess)
+        #expect(book.all().count == 2)
+    }
+
 }
