@@ -16,7 +16,8 @@ struct RecipesShelfView: View {
                 // Paste from the shelf stays in the shelf, so back lands here, not Home (QA on #774). A save swaps
                 // Paste for the new recipe, so back from it is the shelf, never Paste again (#774 walk).
                 .navigationDestination(for: ShelfPaste.self) { _ in
-                    ShelfPaste.Page(onTop: { pasteDepth = path.count }) { id in
+                    // Cleared as Paste leaves, so a recipe opened within the hold is never swapped (QA on #790).
+                    ShelfPaste.Page(onTop: { pasteDepth = path.count }, offTop: { pasteDepth = nil }) { id in
                         // Only while Paste is still on top: if he already went back, the save stays on the shelf
                         // and nothing is popped (QA on #790).
                         guard !path.isEmpty, path.count == pasteDepth else { return }
@@ -121,6 +122,7 @@ struct ShelfPaste: Hashable {
     /// Paste under a "‹ RECIPES" back word, with the bar hidden like the shelf.
     struct Page: View {
         var onTop: () -> Void = {}
+        var offTop: () -> Void = {}
         let onSaved: (UUID) -> Void
         @Environment(\.dismiss) private var dismiss
 
@@ -134,6 +136,7 @@ struct ShelfPaste: Hashable {
                 }
                 .toolbar(.hidden, for: .navigationBar)
                 .onAppear(perform: onTop)
+                .onDisappear(perform: offTop)
         }
     }
 }
