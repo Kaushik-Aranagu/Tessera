@@ -2,10 +2,11 @@ import Foundation
 import Observation
 import TesseraCore
 
-/// The trip (Groceries' SHOP mode, K46): the aisles come in the shop's walk order (K7.3: produce, bakery, dairy and
+/// Groceries' private rows, in the list and on the trip (SHOP mode, K46; B8, B11): the aisles come in the shop's walk
+/// order (K7.3: produce, bakery, dairy and
 /// eggs, meat and seafood, cans and jars, pantry, spices, frozen, household, other), and a private item reads
 /// "Private item" until he taps its row. That tap shows its words for that row only, and the next tap strikes it as
-/// any row's would. Leaving SHOP mode masks every row again.
+/// any row's would. Leaving SHOP mode or the page, or locking the phone, masks every row again.
 @MainActor @Observable
 final class ShopTrip {
     static let privateLabel = "Private item"
