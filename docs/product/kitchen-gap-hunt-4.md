@@ -25,3 +25,19 @@
 3. **G22 is one new line** ("Timers run up to 24 h."), proposed. The cap itself is unchanged; a 72 h cap (G9's alternative) would move both rows together.
 4. **G23 and G24 share a rule**: the month and the day word are his 4 AM day, not the calendar date. If Product rules it once for G23, G24's day word follows.
 5. **New copy in this file, all proposed**: G19 "Tacos, 7 pm, 2 to buy."; G21 "Private recipe, cooking." and the task title "Private recipe"; G22 "Timers run up to 24 h."; G25 "Private recipe, on step 2." and "Private recipe done.". Everything else reuses lines already in `kitchen-phrases.md`, `kitchen-refill5-acceptance.md`, `kitchen-widget-wash-acceptance.md` or `HomeLines.swift`.
+
+---
+
+## Triage (K67, Oct 17)
+
+Product boarded G19 to G25 on Builder B. Owners below.
+
+| # | Owner | Build target | Wall |
+|---|---|---|---|
+| G19 Home cook lines | Builder B | No | No |
+| G20 "at 7 pm" in `HomeLines.swift` | Builder B | No | No |
+| G21 mark a recipe Private | Core (field and engine), Builder B (UI) | No | No |
+| G22 timer grammar and 24 h message | Core | No | No |
+| G23 4 AM month count | Core | No | No |
+| G24 Pantry bought-day | Builder B, with Core | Yes | No |
+| G25 Kitchen widget | Builder A (widgets) | Yes | No |

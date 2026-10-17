@@ -36,10 +36,10 @@
 
 | # | Owner | Board | Wall? | Note |
 |---|---|---|---|---|
-| G12 | Builder B | Builder B's board, Week items | No | Week passes the same weekly rhythm as Now and Review. |
-| G13 | Builder B | Builder B's board, Week items | No | Week reads `isRest`; the past-due VoiceOver line is proposed copy. |
-| G14 | Builder B | Builder B's board, Week items | No | Sessions counted, not days; the VoiceOver naming is proposed copy. |
+| G12 | Builder A (training week) | Builder A's board, after #662 | No | Week passes the same weekly rhythm as Now and Review. |
+| G13 | Builder A (training week) | Builder A's board, after #662 | No | Week reads `isRest`; the past-due VoiceOver line is proposed copy. |
+| G14 | Builder A (training week) | Builder A's board, after #662 | No | Sessions counted, not days; the VoiceOver naming is proposed copy. |
 | G15 | Builder B | Builder B's board, Lists | No | Empty clear writes nothing and offers no UNDO; the engine seam is small, Builder B owns the row. |
 | G16 | Core | Core's board, tool duplicates | No | The list tool routes Groceries lines through `AddGroceries`; Packing and Errands unchanged. |
-| G17 | Builder B (build target), Core for the merge order | Builder B's board, Pantry | No | Core settles the merge order for state and date before Builder B builds the Pantry hero. |
+| G17 | Builder B (build target), Core for the merge order | Builder B's board, Pantry | No | G11 is ruled as refuse (no merge in v1), so the merge scenario does not arise in v1; Core still settles the merge order for state and date before Builder B builds the Pantry hero. |
 | G18 | Builder B (build target), Core for the merge order | Builder B's board, Pantry | No | Core settles the staple exception (explicit phrase wins) in the same merge order; no money or private words involved. |
