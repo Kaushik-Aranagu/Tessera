@@ -74,8 +74,7 @@ private struct GroceriesPage: View {
                 ZStack(alignment: .topLeading) {
                     if shopping {
                         AtTheShop(aisles: aisles, striking: striking, recipes: recipes(for:),
-                                  label: { trip.label(for: $0, name: GroceriesCopy.name($0),
-                                                      lastWeightKg: BodyWeight.lastKg(in: model.store)) },
+                                  label: rowLabel,
                                   onTap: shopTap)
                             .padding(.top, Theme.Spacing.m)
                             .transition(AisleHandoff.transition(reduceMotion: reduceMotion))
@@ -97,7 +96,7 @@ private struct GroceriesPage: View {
                                 VStack(alignment: .leading, spacing: 24) {
                                     ForEach(Array(aisles.enumerated()), id: \.element.aisle) { index, aisle in
                                         AisleSection(name: aisle.aisle, items: aisle.items, striking: striking,
-                                                     recipes: recipes(for:), onTap: check)
+                                                     recipes: recipes(for:), label: rowLabel, onTap: shopTap)
                                             .entrance(3 + min(index, 3))
                                             .transition(.opacity)
                                     }
@@ -119,6 +118,8 @@ private struct GroceriesPage: View {
                     trip.end()
                 }
             }
+            // Leaving the page masks every opened row again (B11).
+            .onDisappear { trip.end() }
             // A lock or an app switch masks every opened row again (QA F1 on #732).
             .onChange(of: scenePhase) { _, phase in
                 if phase != .active {
@@ -155,7 +156,8 @@ private struct GroceriesPage: View {
                     .accessibilityHint("Clears the basket and ends the shop")
                 }
                 if !basket.isEmpty, !shopping {
-                    BasketFold(items: basket, isOpen: $basketOpen, breathe: breathe, onTap: uncheck,
+                    BasketFold(items: basket, isOpen: $basketOpen, breathe: breathe, label: basketLabel,
+                               onTap: uncheck,
                                onClear: { clearBasket(count: basket.count) })
                         .onGeometryChange(for: CGPoint.self) { proxy in
                             let frame = proxy.frame(in: .named("groceries"))
@@ -228,7 +230,17 @@ private struct GroceriesPage: View {
 
     /// The ink strike runs through first (light tap when it ends), then the item folds into a sage dab that arcs
     /// into the basket, and the count rolls up.
-    /// In SHOP mode a masked private row opens on its first tap; any other tap strikes.
+    /// What a row reads, in the list and in SHOP mode: "Private item" until it's tapped open (B8, B11).
+    private func rowLabel(_ item: ListContents.Item) -> String {
+        trip.label(for: item, name: GroceriesCopy.name(item), lastWeightKg: BodyWeight.lastKg(in: model.store))
+    }
+
+    /// The basket never opens a row: a private item there is always "Private item".
+    private func basketLabel(_ item: ListContents.Item) -> String {
+        trip.maskedLabel(for: item, name: GroceriesCopy.name(item), lastWeightKg: BodyWeight.lastKg(in: model.store))
+    }
+
+    /// A masked private row opens on its first tap, in the list or in SHOP mode; any other tap strikes.
     private func shopTap(_ item: ListContents.Item) {
         switch trip.tap(item, lastWeightKg: BodyWeight.lastKg(in: model.store)) {
         case .reveal: break
@@ -413,6 +425,8 @@ private struct AisleSection: View {
     let items: [ListContents.Item]
     let striking: Set<UUID>
     let recipes: (ListContents.Item) -> [String]
+    /// What each row reads (a private one: "Private item" until tapped).
+    let label: (ListContents.Item) -> String
     let onTap: (ListContents.Item) -> Void
     @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -425,7 +439,7 @@ private struct AisleSection: View {
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(items) { item in
                     GroceryRow(item: item, isStriking: striking.contains(item.id), recipes: recipes(item),
-                               height: 48) { onTap(item) }
+                               height: 48, name: label(item)) { onTap(item) }
                         .transition(.asymmetric(insertion: .push(from: .top).combined(with: .opacity),
                                                 removal: .opacity.combined(with: .scale(scale: 1, anchor: .top))))
                 }
@@ -600,6 +614,8 @@ private struct BasketFold: View {
     let items: [ListContents.Item]
     @Binding var isOpen: Bool
     let breathe: Bool
+    /// What each basket row reads (a private one stays "Private item"; a tap here takes it back out).
+    let label: (ListContents.Item) -> String
     let onTap: (ListContents.Item) -> Void
     let onClear: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -625,7 +641,7 @@ private struct BasketFold: View {
                     ForEach(items) { item in
                         Button { onTap(item) } label: {
                             (Text(item.quantity.map { "\($0) " } ?? "").fontWeight(.semibold)
-                                + Text(GroceriesCopy.name(item)).fontWeight(.regular))
+                                + Text(label(item)).fontWeight(.regular))
                                 .textRole(.body)
                                 .foregroundStyle(Theme.Colors.inkSecondary)
                                 .textRenderer(StrikeRenderer(progress: 1, color: Theme.Colors.inkSecondary))

@@ -45,4 +45,23 @@ struct ShopTripTests {
     @Test func aPrivateRecipeNameIsOnlyPrivateRecipe() {
         #expect(ShopTrip.recipeNames(["Tacos", "Wifi code lasagna"], lastWeightKg: nil) == ["Tacos", "Private recipe"])
     }
+
+    /// Pantry's swipe adds a thing by its own name (`AddGroceries(lines:)`); a walled one still reads "Private item".
+    @Test func aWalledThingSwipedFromPantryReadsPrivateItemOnGroceries() throws {
+        let rows = try items(["advil"])
+        let trip = ShopTrip()
+        #expect(rows.allSatisfy { trip.label(for: $0, name: $0.text, lastWeightKg: nil) == "Private item" })
+        #expect(rows.allSatisfy { trip.maskedLabel(for: $0, name: $0.text, lastWeightKg: nil) == "Private item" })
+    }
+
+    @Test func theBasketStaysMaskedEvenForARowThatWasOpened() throws {
+        let rows = try items(["advil", "milk"])
+        let advil = try #require(rows.first { $0.text.lowercased().contains("advil") })
+        let milk = try #require(rows.first { $0.text.lowercased().contains("milk") })
+        let trip = ShopTrip()
+        #expect(trip.tap(advil, lastWeightKg: nil) == .reveal)
+        #expect(trip.tap(advil, lastWeightKg: nil) == .strike)
+        #expect(trip.maskedLabel(for: advil, name: advil.text, lastWeightKg: nil) == "Private item")
+        #expect(trip.maskedLabel(for: milk, name: milk.text, lastWeightKg: nil) == milk.text)
+    }
 }
