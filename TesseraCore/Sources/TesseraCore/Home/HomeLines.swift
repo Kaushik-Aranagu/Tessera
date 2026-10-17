@@ -544,13 +544,17 @@ public struct HomeFacts {
         )
     }
 
-    /// Cooks finished on his day containing `now`, newest first.
+    /// Cooks finished on his day containing `now`, newest first. Each files on the day it was finished in the zone it
+    /// was finished in (board 0ae G3, like Review's cooking band), so a cook finished in flight before 4 am Pacific
+    /// is not today's once he lands in New York.
     public func cooksFinished(on now: Date) -> [ObjectRecord] {
         guard let cookClass = engine.classes[.cook] else { return [] }
         let day = TesseraDay(calendar: calendar)
+        let zones = OpZones(store: store)
+        let today = day.day(of: now)
         return store.objects(of: cookClass).filter { cook in
             guard !cook.isDeleted, let at = store.value("cookedAt", of: cook)?.dateValue else { return false }
-            return day.isSameDay(at, now)
+            return zones.dayKey(of: at, for: cook.id, calendar: calendar) == today
         }
         .sorted {
             (store.value("cookedAt", of: $0)?.dateValue ?? .distantPast) >

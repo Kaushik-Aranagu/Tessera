@@ -60,7 +60,7 @@ enum GroceriesWall {
         let draft: String
         /// What Tess says.
         let voice: String?
-        /// The add to take back, with the 4 s UNDO, only when nothing was walled.
+        /// The add to take back, with the 4 s UNDO, whenever something was written.
         let undo: OpRecord?
     }
 
@@ -68,24 +68,28 @@ enum GroceriesWall {
     /// stays in the draft with the strongest reason's line and no UNDO. If the engine refuses, the draft stays, minus
     /// any key, and she says so.
     static func add(_ draft: String, engine: ActionEngine, store: ObjectStore) -> AddOutcome {
+        add(draft, store: store) { try? engine.perform(AddGroceries(lines: $0), by: .user).record }
+    }
+
+    /// The same, with the write passed in so a refused write can be tested.
+    static func add(_ draft: String, store: ObjectStore, perform: ([String]) -> OpRecord?) -> AddOutcome {
         let lines = GroceryLines.split(draft)
         guard !lines.isEmpty else { return AddOutcome(draft: draft, voice: nil, undo: nil) }
         let split = split(lines, store: store)
         var record: OpRecord?
         if !split.kept.isEmpty {
-            guard let added = try? engine.perform(AddGroceries(lines: split.kept), by: .user).record else {
+            guard let added = perform(split.kept) else {
                 // A key never stays visible, even when the add fails (QA on #769).
                 let kept = (split.kept + split.walled.filter { $0.reason != .key }.map(\.line)).joined(separator: ", ")
                 return AddOutcome(draft: kept, voice: "Didn't save that. Try again.", undo: nil)
             }
             record = added
         }
-        let held = heldDraft(split.walled)
-        if let walledLine = spoken(split.walled) {
-            return AddOutcome(draft: held, voice: walledLine, undo: nil)
-        }
+        // Kept rows keep their receipt and UNDO; the wall's line follows them (Design on #782). UNDO takes back only
+        // what was written, so a walled line was never in it.
         let receipt = record?.receipt.map { $0.hasSuffix(".") ? $0 : $0 + "." }
-        return AddOutcome(draft: held, voice: receipt, undo: record)
+        let voice = [receipt, spoken(split.walled)].compactMap(\.self).joined(separator: " ")
+        return AddOutcome(draft: heldDraft(split.walled), voice: voice.isEmpty ? nil : voice, undo: record)
     }
 
     /// The line beside the held draft; none of them offers UNDO, since nothing was written.
