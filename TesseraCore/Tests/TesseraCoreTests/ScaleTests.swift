@@ -205,3 +205,51 @@ struct OnDiskTests {
         )
     }
 }
+
+@MainActor
+struct ICloudCopyScaleTests {
+    /// The background backup's iCloud write walks every op and object on the main actor (`PrivateWords.labels` and
+    /// `historyLabels`): timed here at the scale size (TESSERA_SCALE=1500 is about five years).
+    @Test func theICloudCopyStaysFastAtScale() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let store = try ObjectStore(context: TesseraContext(url: folder.appendingPathComponent("tessera.sqlite")))
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let bench = try #require(classes[.benchPress])
+        let workouts = ScaleTests.workouts
+        for day in 0 ..< workouts {
+            let workout = try #require(store.create(#require(classes[.workout]), title: "Push day"))
+            let entry = try engine.perform(AddExercise(workout: workout.id, exercise: bench.id), by: .user).output
+            for set in 0 ..< 5 {
+                try engine.perform(LogSet(entry: entry.id, weight: 60 + Double(day % 40), reps: Double(5 + set)),
+                                   by: .user)
+            }
+            try engine.perform(FinishWorkout(workout: workout.id, time: Date(timeIntervalSince1970: 1_700_000_000 +
+                    Double(day) * 86400)), by: .user)
+            if day % 10 == 0 {
+                try engine.perform(CreateNote(body: "wifi password is hunter\(day)zebra"), by: .user)
+                try engine.perform(CreateTask(title: "Buy lemons \(day)"), by: .user)
+            }
+        }
+        store.save()
+        let clock = ContinuousClock()
+        var labels: [UUID: String] = [:]
+        let labelsTime = clock.measure { labels = PrivateWords.labels(in: store.context) }
+        var past: [UUID: String] = [:]
+        let historyTime = clock.measure { past = PrivateWords.historyLabels(in: store.context, current: labels) }
+        let file = folder.appendingPathComponent("icloud.tessera")
+        let write = try clock.measure { try TesseraBackup.write(from: store.context, to: file, leavingOutPrivate: true) }
+        // The next background after one more action: the graph changed, the decoded ops are reused.
+        try engine.perform(CreateNote(body: "wifi password is hunter0zebra"), by: .user)
+        store.save()
+        let second = try clock.measure { try TesseraBackup.write(from: store.context, to: file, leavingOutPrivate: true) }
+        let ops = store.context.all(OpRecord.self).count
+        print("ICLOUD \(workouts) workouts, \(ops) op records: labels=\(ScaleTests.milliseconds(labelsTime))ms "
+            + "(\(labels.count)) historyLabels=\(ScaleTests.milliseconds(historyTime))ms (\(past.count)) "
+            + "iCloudWrite(warm labels)=\(ScaleTests.milliseconds(write))ms "
+            + "secondBackupAfterAChange=\(ScaleTests.milliseconds(second))ms")
+        #expect(ScaleTests.milliseconds(write) < 20000)
+    }
+}

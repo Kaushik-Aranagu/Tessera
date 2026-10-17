@@ -19,7 +19,7 @@ struct ReceiptTests {
         #expect(made.record.receipt == "Packing, made" && made.record.summary == "New list: Packing")
         let list = made.output
         let added = try engine.perform(AddListItem(list: list.id, text: "charger", section: "Cables"), by: .tess)
-        #expect(added.record.receipt == "Charger, added to Packing")
+        #expect(added.record.receipt == "Charger, on Packing")
         let item = added.output
         #expect(try engine.perform(CheckListItem(item: item.id), by: .tess).record.receipt == "Charger, got")
         #expect(try engine.perform(CheckListItem(item: item.id, done: false), by: .tess).record.receipt
@@ -28,6 +28,7 @@ struct ReceiptTests {
             == "Charger, moved to Tech")
         #expect(try engine.perform(RenameListSection(list: list.id, from: "Tech", to: "Cables"), by: .tess).record
             .receipt == "Tech, now Cables")
+        try engine.perform(CheckListItem(item: item.id), by: .tess)
         #expect(try engine.perform(ClearDoneItems(list: list.id), by: .tess).record.receipt
             == "Packing, done items cleared")
     }

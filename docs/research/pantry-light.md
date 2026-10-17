@@ -36,7 +36,7 @@ There is no separate purchase log. The history is the Groceries list items thems
 6. **Due.** Days since the last buy is at least ceil(0.85 x U) and at most 2 x U. The 0.85 lets a shop a day early still count (U 7 gives 6, U 14 gives 12). Past 2 x U he has likely stopped, or buys it elsewhere, so it goes quiet.
 7. **Not already there.** Skip it if an open or checked Groceries item already links any ingredient in the group.
 8. **Once per gap.** When a shop run ends (`ClearDoneItems` on Groceries, which `FinishShop` also calls) while an item was shown and not bought, write `usualSkippedAt` on its ingredients. It stays quiet until the next buy. Swiping a name left (Design §R) writes the same field.
-9. **At most 3 names**, most overdue first (days since / U), then more buys in the window, then name.
+9. **Usually 4 names, never more** (ruled Oct 17), most overdue first (days since / U), then more buys in the window, then name.
 
 This differs from backlog row R ("past 1.5x the median gap"). At 1.5x, weekly milk shows only after he has gone a whole week without it; the point is to catch it on the shop he is about to forget it. Proposal: replace R's 1.5x with rule 6.
 
@@ -107,7 +107,7 @@ Expiry dates, stock counts, "how much is left", pack sizes, use rates from cooki
 5. Two buys 2 days apart count once; 3 days apart count twice.
 6. Due, but already on the list (open or in the basket): not shown.
 7. Shown, then the run ends without it: quiet until the next buy; undoing the clear undoes the quiet.
-8. Never more than 3 names; the line is empty, and takes no space, with fewer than 3 buys.
+8. Usually 4 names, never more than 4; the line is empty, and takes no space, with fewer than 3 buys.
 9. No code path adds an item without a tap; grep the slice for `AddGroceries` callers.
 10. Groceries screen: the line shows at the foot, the tap says "Milk, in Groceries." with Undo, and `-demoTime 18:10 -resetDemo` shows a demo row with one name.
 

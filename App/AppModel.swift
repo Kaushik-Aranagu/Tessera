@@ -180,7 +180,7 @@ final class AppModel {
                                                               .map(BackupCopy.folderName))
             // The first launch with the restWeekday reader: Sunday, as one op with UNDO ("Sunday, rest day.";
             // Research 146). Once; an UNDO or a later "Any" leaves a record, so it is never written twice.
-            SettingsStore(engine: engine).writeFirstRestWeekday()
+            restReceipt = SettingsStore(engine: engine).writeFirstRestWeekday()
         }
         runtime = TesseraRuntime(engine: engine)
         soul.runScript()
@@ -208,6 +208,8 @@ final class AppModel {
 
     /// One calm line in Tess's voice when launch didn't go normally (a failed migration). Shown in the Ask bar.
     var launchNote: String?
+    /// The first launch's "Sunday, rest day." op, shown once in Tess's band with UNDO, then cleared.
+    var restReceipt: OpRecord?
 
     /// Tess's capture engine and the App Intents runtime (Core's TesseraTess / TesseraIntents).
     @ObservationIgnored private(set) var runtime: TesseraRuntime!

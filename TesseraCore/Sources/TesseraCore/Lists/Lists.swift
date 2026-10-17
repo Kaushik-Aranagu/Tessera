@@ -150,7 +150,7 @@ public struct AddListItem: EngineAction {
     }
 
     /// What the wall keeps as the item: nil when the line becomes a private note.
-    @MainActor static func kept(_ given: String, store: ObjectStore) -> String? {
+    @MainActor public static func kept(_ given: String, store: ObjectStore) -> String? {
         let bare = EngineWall.withoutPrice(given)
         let last = BodyWeight.lastKg(in: store)
         let isNote = bare.isEmpty || SecretWords.isSecretListLine(given) || PrivateFacts.isMoneyShaped(bare)
@@ -167,11 +167,11 @@ public struct AddListItem: EngineAction {
         guard let kept = Self.kept(text.trimmingCharacters(in: .whitespacesAndNewlines), store: store) else {
             return SecretWords.title
         }
-        // Thing first, as Siri reads it (Design on #627): "Private item, added to Errands".
+        // Thing first, the list by name (Product 10:06 PM PT lists copy sweep): "Rice, on Packing".
         let listTitle = store.object(id: list)?.title ?? "the list"
         let thing = Self.isPrivateItem(kept, store: store) ? Self.privateItemLabel : kept.prefix(1).uppercased() + kept
             .dropFirst()
-        return "\(thing), added to \(listTitle)"
+        return "\(thing), on \(listTitle)"
     }
 
     public func receipt(in store: ObjectStore) -> String? {
@@ -182,7 +182,7 @@ public struct AddListItem: EngineAction {
         if Self.isPrivateItem(kept, store: store) {
             return "\(Self.privateItemLabel), on \(listTitle)"
         }
-        return "\(kept.prefix(1).uppercased() + kept.dropFirst()), added to \(listTitle)"
+        return "\(kept.prefix(1).uppercased() + kept.dropFirst()), on \(listTitle)"
     }
 
     static let privateItemLabel = "Private item"
@@ -326,14 +326,13 @@ public struct ClearDoneItems: EngineAction {
     @discardableResult
     public func apply(_ transaction: inout Transaction) throws -> Int {
         let list = try transaction.object(list, is: .list)
-        let done = list.orderedChildren.filter { transaction.store.value("isDone", of: $0) == .bool(true) }
-        for item in done {
-            transaction.delete(item)
+        // Nothing checked: nothing to clear, so no op and no receipt (G15). Like AddGroceries with nothing to add, it
+        // throws, and `perform` rolls back and logs nothing.
+        let cleared = try transaction.clearDone(in: list)
+        guard cleared > 0 else {
+            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "nothing checked on \(list.title)")
         }
-        if list.id == Groceries.listID {
-            try transaction.refreshShopLine()
-        }
-        return done.count
+        return cleared
     }
 
     public func summary(in store: ObjectStore) -> String {
@@ -342,5 +341,19 @@ public struct ClearDoneItems: EngineAction {
 
     public func receipt(in store: ObjectStore) -> String? {
         "\(store.object(id: list)?.title ?? "The list"), done items cleared"
+    }
+}
+
+extension Transaction {
+    /// Soft-deletes the checked items of a list and returns how many; writes nothing when there are none.
+    mutating func clearDone(in list: ObjectRecord) throws -> Int {
+        let done = list.orderedChildren.filter { store.value("isDone", of: $0) == .bool(true) }
+        for item in done {
+            delete(item)
+        }
+        if !done.isEmpty, list.id == Groceries.listID {
+            try refreshShopLine()
+        }
+        return done.count
     }
 }

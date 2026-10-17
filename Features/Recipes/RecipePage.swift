@@ -99,7 +99,7 @@ struct RecipePage: View {
                 // Already on the list (and not just sent): how much of it is still to buy.
                 let onList = Groceries(store: model.store, classes: model.classes).share(of: recipe).count
                 if sent == nil, onList > 0 {
-                    (Text("\(onList)").fontWeight(.semibold) + Text(" to buy, in Groceries"))
+                    (Text("\(onList)").fontWeight(.semibold) + Text(" to buy, on Groceries"))
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.ink)
                         .padding(.top, Theme.Spacing.s)
@@ -141,11 +141,19 @@ struct RecipePage: View {
             }
             .sensoryFeedback(.success, trigger: sent?.count)
         } else {
-            Text("This recipe is gone. Undo brings it back.")
-                .font(Theme.voice)
-                .foregroundStyle(Theme.Colors.context)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background { ThemedBackground() }
+            // Product's wording (kitchen gap hunt G3): the fact, then the one way back.
+            VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+                Text("Recipe gone.")
+                    .font(Theme.voice)
+                    .foregroundStyle(Theme.Colors.context)
+                Button("Back to the list") { dismiss() }
+                    .buttonStyle(.labelWord(Theme.Colors.ink))
+            }
+            .padding(.horizontal, Theme.Spacing.gutter)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+            .background { ThemedBackground() }
+            .background { EdgeSwipeBack() }
+            .toolbar(.hidden, for: .navigationBar)
         }
     }
 
@@ -209,14 +217,14 @@ struct RecipePage: View {
     }
 }
 
-/// "12 to buy, in Groceries" where the column was, with Undo.
+/// "12 to buy, on Groceries" where the column was, with Undo.
 private struct SentLine: View {
     let count: Int
     let undo: () -> Void
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
-            (Text("\(count)").fontWeight(.semibold) + Text(" to buy, in Groceries"))
+            (Text("\(count)").fontWeight(.semibold) + Text(" to buy, on Groceries"))
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
             Spacer()

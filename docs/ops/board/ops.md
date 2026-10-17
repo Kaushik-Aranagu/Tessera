@@ -8,7 +8,7 @@ Lead: Ops thread. Mission (Kaushik, Oct 16 5:43 PM PT): keep improving the infra
 
 **Next (all junior tier unless noted):**
 1. Pace ledger row 2: read the meter (coordinator rate_limit_event), cost per cloud team, burn per hour; report hot teams to the coordinator.
-2. CPU lane: a list of chores that need no model (swift test --scale, docs_index_check, staleness, pr_digest, tree_check) run by a Mac script on a schedule, so idle hours still produce results at zero tokens.
+2. CPU lane follow-ups: schedule `scripts/ops/cpu_chores.sh` on the Mac (coordinator decides), and send Product the 269 unindexed docs and 46 stale board lines it found.
 3. Per-team budget table: weekly percent and senior/middle/junior mix per team, added to the staffing model, for the coordinator to approve.
 4. Relay adoption: send lane-lock, verdict line, worker rotation and relay batch to the coordinator as one proposal for the Mac leads.
 5. Subscription event cost note: PR events repeat 2 to 3 times at about 4k tokens each; write the "skip echoes, one status line" rule into the merge recipe.

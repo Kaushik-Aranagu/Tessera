@@ -1,5 +1,9 @@
 # Design studio
 
+**STATUS 8:10 PM PT Oct 16: sheets 77, 78, 79 (briefs), 80 (What was sent + Backups) done and ruled; done fleck stays; items (3) and (4) are inside sheets 75, 76, 77. OPEN: widgets-rest clip re-record (study has no play mode), release walks when a build lands, verdicts on new heads. Asked Product to refill.**
+
+**REFILL (5:42 PM PT Oct 16, decisions 5:42; two lanes, Next at 3 or more).** Lane 1: sheet 77 is the seven drawn sides sheet 75 declares (already under way), and sheet 78 is Pantry as an area with its own front and side (decisions 2:36; Kitchen has the rows). Sheet numbers go in order (decisions 5:47). Lane 2: the post-install walk clip for each release, starting with release 5 against a36b161 (decisions 3:03: it no longer blocks). Next: (3) foot words, empty-state lines and the 1-rep figure for the drawn sides (Research BQ asked); (4) facet words (196) and glances for sheet 76's pages: Review THE DAYS and the exercise's four pages; (5) DONE 7:30 PM: no "at" before a time, app-wide, swept through every sheet (b9ac42b, clips 1ae7e00); (6) keep the DESIGN PASS list current at every verdict.
+
 **DESIGN PASS at merged head (decisions 4:50 PM PT Oct 16):** keep one line per app PR (number, merged SHA, PASS or FIX FIRST) here, next to QA's RELEASE GATE line in qa.md. Releases are checked against both.
 - #403 merged a88a1ed, head 15160e0: PASS
 - #504 merged 134759f, head 7f37de8: PASS
@@ -15,7 +19,20 @@
 - #551 merged b7ea747, head 5c22981: PASS
 - #552 merged aed5c24, head 4af772e: PASS
 - #558 merged 64ffb93, head 02c59a0: PASS
-- Open: #553 head 2ece632 PASS (QA's FIX FIRST stands); #564 head bf0ba93 FIX FIRST (a money or body question must answer "That stays on this phone.")
+- #576 head da006da: no design surface (time logic only)
+- Open: #663 head 23629b6 PASS (hero "3 tasks, Push A, 6 pm"; Now context "next, half past five" 4 words/20 chars; spoken forms "this evening, six", "tomorrow, half past seven", "Friday, nine", "tonight, X"; test guards against any " at " before a clock)
+- Open: #662 head 2efdd13 PASS from the diff and clips (no new user-facing strings; stroke clip 4.8 s and wear clip 9 s sampled at 6 frames each: wear shows the soul colour shifting, the stroke clip shows no visible response in the sampled frames, so motion timing is the lab compare 0.959/0.960 and the motion lab). Non-blocking: re-cut the stroke clip with a touch dot, cropped to the band; clips still show the old Home copy "Push Day A at 7 pm" (Builder B HomeLines fix pending); branch is behind master, merge master first so #634/#638 receipts keep "tomorrow 6:30 pm" with no "at")
+- Open: #643 head fe29955 PASS (engine-only Home done pack with its wall; no user-facing strings, nothing calls it yet)
+- Open: #641 head 0134753 PASS (receipt "Sunday, rest day." names the thing first; Core-only, nothing shows it yet. Note for Builder B when it is surfaced: a first-launch receipt is not something he did, so no haptic, 4 s in the UNDO slot, never over a live workout)
+- Open: #638 head 9cc8a7a PASS (carries from e971db8: parser, count words and US-English day name change no copy) (receipts name the task from the stored title: "Pay rent, tomorrow 9 am." / "Pay rent, Fri."; a private title says "Private task"; list receipts are thing-first: "Private item, added to Errands", "Milk, added to Errands")
+- Open: #637 head eaf588c PASS (ObjectPage latches note-or-masked per appearance, so typing a walled word no longer swaps the editor mid-sentence; the only visible change is that the flip is gone)
+- Open: #627 head 5ea9a64 PASS (receipts "Private item, on Errands." and "Private task, added" name the thing first and never show words; "Task added for Fri." stays until Core names it; follow-up: the Siri line "Added Private item" reads verb-first like "Added <title>", move both to receipt form when the intents line is next touched)
+- Open: #634 head 055d96b PASS (move receipt now "Call mom, tomorrow 6:30 pm" with no "at", per copy-pass rule 6; hiding keepPlannedTask from the model has no design surface)
+- Open: #601 head 2ee37fe PASS (routines receipts in the band; R2 closed; clip of drop and UNDO wanted, not blocking)
+- Open: #597 head d25e88d PASS from the diff (plain notes open in NoteEditor; private stay masked); clip check of the editor's back word pending, not blocking
+- Open: #580 head e54cbdd PASS (5e54dbf was FIX FIRST: Linked from ungated)
+- Open: #583 head 36927f3 PASS (Review foot line lifted 56 pt out of the band; R1 closed)
+- Open: #553 head da1e6ca PASS (copy unchanged since 2ece632; F2 day fix reads right); #564 head bf0ba93 FIX FIRST (a money or body question must answer "That stays on this phone.")
 
 
 **RELEASES (decisions 3:03 PM PT Oct 16):** a walk clip of what's new after each install. It no longer blocks, and a FIX FIRST becomes a roll-forward release. Design PASS at each PR's merged head is still a gate.
@@ -131,3 +148,8 @@ Items 2 to 4 of the last round are done (see Done). Item 1's first pass is done;
 **Later:**
 - Glyph for the Tell Tess control as an SF Symbols template, once slice 10 starts.
 - Sheet 75 inventory (decisions 2:44, Research #561): add the 4 missing screens (routes inside the live workout cover, generic pages inside the Recipes cover, Paste's second stack, private Tess memories on the generic page) and fix the 3 stale rows in screens-inventory.md. Line style is one sentence: "Moved twice, due today."
+- Drawn sides (decisions 5:07, Research drawn-sides-acceptance.md): foot words, empty-state lines and the 1-rep figure are yours to set.
+- DISCOVERY items for Design (decisions 5:51): (D1) a "What was sent" list under the Claude section (job names and counts for 30 days, no text; every-side.md row 21 gives the week page WHAT LEAVES THE PHONE): draw it. (D2) The Backups line saying what a copy holds (decisions 5:51). (D3, DECIDED 7:20 PM: the fleck stays, task-reward.md top; Builder B D6 does not shrink) Decide whether the done fleck stays (task-reward.md): if it's dropped, say so, and Builder B D6 shrinks. (D4) Widget and Siri snippet states already drawn (widget-states.md, lockscreen.md): review Builder A's build against them when it lands.
+- (decisions 5:57) Rule on the ellipsis "…" in strings (RecipeLinkReader:22) for the copy-pass doc, and confirm the PaintDab lint wording from no-dots.md Tokens (report-only first).
+
+- 8:08 REFILL (Product; ranked by how soon he meets it): (E1) Notes front: first-use empty, a private note row, a long list; done when 3 states drawn in sheet 81 with the no-"at" and "Private note" rules. (E2) Day log empty and first day (no dots, no guilt line); done when drawn with its side glance. (E3) Review's first week: one trained day, no past weeks, no miss ring; done when drawn beside a full week. (E4) One error and offline state across areas ("Didn't save. Try again.", "Claude is busy. Kept it for later."): placement, one haptic rule, Reduce Motion; done when a single sheet covers every area. (E5) Habits front and its side (Product rules Habits after sheet 75; propose, I rule); done when drawn with empty, streak-free and done-today states. (E6) Lists and Recipes front: empty, one item, long list, private item label ("Private recipe"); done when drawn. Rank order E1, E2, E3, E4, E5, E6; drafting in Sonnet-low subagents.

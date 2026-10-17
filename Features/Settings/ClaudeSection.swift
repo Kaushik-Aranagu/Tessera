@@ -514,6 +514,7 @@ extension ClaudeKeyWords {
         case .capture: "A capture"
         case .question: "A question"
         case .paste: "A paste"
+        case .recipeLink: "Recipe link"
         default: "Tess"
         }
     }

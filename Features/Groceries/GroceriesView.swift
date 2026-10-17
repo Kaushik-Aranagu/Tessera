@@ -697,10 +697,7 @@ enum GroceriesCopy {
 
     /// "eggs, milk and 2 lemons" → three lines.
     static func lines(in text: String) -> [String] {
-        text.replacing(/\s+and\s+/, with: ",")
-            .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
+        GroceryLines.split(text)
     }
 }
 

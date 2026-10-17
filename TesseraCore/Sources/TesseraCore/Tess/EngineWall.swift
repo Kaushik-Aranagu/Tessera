@@ -45,7 +45,7 @@ public enum EngineWall {
     }
 
     /// A medicine, a dose or a body fact (Product 8:13 PM PT: a medicine name is a health fact everywhere).
-    static func isHealth(_ phrase: String, lastWeightKg: Double?) -> Bool {
+    public static func isHealth(_ phrase: String, lastWeightKg: Double?) -> Bool {
         isMedicine(phrase) || PrivateFacts.isBodyShaped(phrase, lastWeightKg: lastWeightKg)
     }
 

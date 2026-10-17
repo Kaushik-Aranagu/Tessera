@@ -2,7 +2,7 @@
 
 *Kitchen lead, 2026-10-15 18:30. Checked master at 6bc4a37 against `ship-list-kitchen.md`. All nine engine slices are met in substance; the gaps below are small. **Fix** = Core should fix before or with the matching screen; **Screen needs** = the engine half a screen slice will need.*
 
-## Fix
+## Fix (all six landed in the engine hotfix #70; see below)
 
 1. **"buy" / "get" with a date stopped being a task.** `TessGrammar+Kitchen.swift` `parseKitchen`: "get haircut thu" or "buy present for mum fri" now go to groceries. Only treat "buy/get X" as groceries when `TessDates.extract` finds no date; otherwise fall through to `parseTask`.
 2. **Comma lists catch lifts.** `TessGrammar.parse` runs `parseKitchen` before `parseRelativeSet` / `parseLift`, and the bare comma rule turns "bench 80x8, 82.5x6" into groceries. Move `parseKitchen` after `parseLift` (keep the pasted-recipe check first), or skip the comma rule when any part matches the set grammar. Add both phrases to `KitchenCaptureTests`.
