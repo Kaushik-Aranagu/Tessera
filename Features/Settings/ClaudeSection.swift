@@ -358,14 +358,14 @@ struct ClaudeSection: View {
             }
             withTesseraAnimation(reduceMotion: reduceMotion) {
                 line = result.line
-                last4 = result.last4
+                last4 = result.saved ? keys.read().map { String($0.suffix(4)) } : nil
                 status = ClaudeKeyWords.status(result.outcome.rawValue)
                 writing = result.outcome == .badKey || result.outcome == .notSaved
                 replacing = false
             }
             // The key passed: if the clipboard hasn't changed since the paste, it still holds the key, so clear it
             // (QA C5). Writing the clipboard never reads it, so no paste banner.
-            if result.last4 != nil, result.outcome != .badKey, let change = pasteChange,
+            if result.saved, result.outcome != .badKey, let change = pasteChange,
                UIPasteboard.general.changeCount == change
             {
                 UIPasteboard.general.items = []
