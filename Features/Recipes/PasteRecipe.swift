@@ -22,8 +22,10 @@ struct PasteRecipe: View {
     @State private var refusedKey = false
     @FocusState private var editing: Bool
 
+    /// The saved line's name: a private recipe is only "Private recipe" here too, spoken or drawn (G53).
     private var savedTitle: String {
-        saved.flatMap { model.store.object(id: $0.id)?.title } ?? "Recipe"
+        guard let title = saved.flatMap({ model.store.object(id: $0.id)?.title }) else { return "Recipe" }
+        return RecipeCopy.shownTitle(title, isPrivate: RecipeCopy.isPrivate(title, model: model), shown: false)
     }
 
     var body: some View {

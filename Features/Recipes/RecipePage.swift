@@ -22,6 +22,9 @@ struct RecipePage: View {
     @State private var drag: CGFloat = 0
     @State private var columnWidth: CGFloat = 260
     @State private var away = false
+    /// A private recipe's title, tapped open for this visit; leaving or locking masks it again (G53).
+    @State private var titleShown = false
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         page.task(id: recipeID) { markOpened() }
@@ -53,19 +56,24 @@ struct RecipePage: View {
                 .accessibilityHint("Back to the recipes")
                 .entrance(0)
 
-                NavigationLink(value: Route.object(recipe.id)) {
-                    Text(recipe.title)
-                        .textRole(.hero)
-                        .foregroundStyle(Theme.Colors.ink)
-                        .multilineTextAlignment(.leading)
-                        .lineLimit(3)
-                        .minimumScaleFactor(0.6)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                let masked = RecipeCopy.isPrivate(recipe.title, model: model) && !titleShown
+                Group {
+                    if masked {
+                        // A private recipe reads "Private recipe" until tapped (G53); the next tap opens as usual.
+                        Button {
+                            withTesseraAnimation(reduceMotion: reduceMotion) { titleShown = true }
+                        } label: {
+                            heroTitle(ObjectPrivacy.recipeLabel)
+                        }
+                        .accessibilityHint("Shows it")
+                    } else {
+                        NavigationLink(value: Route.object(recipe.id)) { heroTitle(recipe.title) }
+                            .accessibilityHint("The original text and when it was cooked")
+                    }
                 }
                 .buttonStyle(HandleButtonStyle())
                 .matchedTransitionSource(id: recipe.id, in: zoom)
                 .accessibilityAddTraits(.isHeader)
-                .accessibilityHint("The original text and when it was cooked")
                 .entrance(1, hero: true)
 
                 Text(RecipeCopy.context(recipe, serves: size, model: model, now: AppClock.now))
@@ -140,6 +148,12 @@ struct RecipePage: View {
                     .navigationTransition(.zoom(sourceID: routeID(route), in: zoom))
             }
             .sensoryFeedback(.success, trigger: sent?.count)
+            .onDisappear { titleShown = false }
+            .onChange(of: scenePhase) { _, phase in
+                if phase != .active {
+                    titleShown = false
+                }
+            }
         } else {
             // Product's wording (kitchen gap hunt G3): the fact, then the one way back.
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
@@ -155,6 +169,16 @@ struct RecipePage: View {
             .background { EdgeSwipeBack() }
             .toolbar(.hidden, for: .navigationBar)
         }
+    }
+
+    private func heroTitle(_ text: String) -> some View {
+        Text(text)
+            .textRole(.hero)
+            .foregroundStyle(Theme.Colors.ink)
+            .multilineTextAlignment(.leading)
+            .lineLimit(3)
+            .minimumScaleFactor(0.6)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func cook(_ recipe: UUID, _ serves: Int?) {
@@ -322,14 +346,21 @@ private struct RecipeDepth: View {
 private struct RecipeOriginal: View {
     let recipe: ObjectRecord
     @Environment(AppModel.self) private var model
+    /// The title tapped open on this page; leaving masks it again (G53).
+    @State private var titleShown = false
 
     var body: some View {
         let cooks = CookLog(store: model.store, classes: model.classes).cooks(of: recipe)
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Spacing.xxl) {
-                Text(recipe.title)
+                let isPrivate = RecipeCopy.isPrivate(recipe.title, model: model)
+                Text(RecipeCopy.shownTitle(recipe.title, isPrivate: isPrivate, shown: titleShown))
                     .textRole(.title)
                     .foregroundStyle(Theme.Colors.ink)
+                    .accessibilityAddTraits(.isHeader)
+                    .onTapGesture { titleShown = true }
+                    .accessibilityHint(isPrivate && !titleShown ? "Shows it" : "")
+                    .onDisappear { titleShown = false }
                 MarginSection(label: "Cooked", color: Theme.Colors.inkSecondary) {
                     if cooks.isEmpty {
                         Text("Not yet.")
@@ -366,6 +397,17 @@ private struct RecipeOriginal: View {
 
 @MainActor
 enum RecipeCopy {
+    /// Whether a recipe's title is private (the full recipe wall), so every surface reads "Private recipe" (G53).
+    /// Switches to Core's helper when it lands.
+    static func isPrivate(_ title: String, model: AppModel) -> Bool {
+        ObjectPrivacy.isPrivateRecipeTitle(title, lastWeightKg: BodyWeight.lastKg(in: model.store))
+    }
+
+    /// The title a surface shows: "Private recipe" for a private one unless it's been tapped open.
+    static func shownTitle(_ title: String, isPrivate: Bool, shown: Bool) -> String {
+        isPrivate && !shown ? ObjectPrivacy.recipeLabel : title
+    }
+
     /// The text he pasted, or nil when there is none or only blank space.
     static func pasted(_ source: String?) -> String? {
         guard let source, !source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
