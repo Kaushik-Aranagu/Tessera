@@ -292,7 +292,10 @@ struct RecipePage: View {
             }
             return
         }
-        withAnimation(reduceMotion ? .easeOut(duration: 0.15) : .smooth(duration: 0.36)) {
+        withTesseraAnimation(
+            reduceMotion ? .easeOut(duration: 0.15) : .smooth(duration: 0.36),
+            reduceMotion: reduceMotion
+        ) {
             away = true
             drag = 0
             sent = (line, record)

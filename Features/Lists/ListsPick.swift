@@ -28,6 +28,8 @@ struct PickMoment: View {
         }
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(200))
+            // Closed during the gap (a tap outside): it stays closed (QA on #851).
+            guard picking != nil else { return }
             let next = ListContents(store: model.store, classes: model.classes)
                 .pick(from: list, excluding: state.skipped, now: AppClock.now)
             withTesseraAnimation(reduceMotion ? .easeInOut(duration: 0.2) : .spring(duration: 0.52, bounce: 0.18),
@@ -96,5 +98,9 @@ struct PickMoment: View {
             }
         }
         .padding(.horizontal, Theme.Spacing.gutter)
+        // VoiceOver's scrub closes it, as a tap outside does (Design on #851).
+        .accessibilityAction(.escape) {
+            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { picking = nil }
+        }
     }
 }
