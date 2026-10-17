@@ -225,15 +225,18 @@ private struct GroceriesPage: View {
         guard !lines.isEmpty else { return }
         let split = GroceriesWall.split(lines, store: model.store)
         if !split.kept.isEmpty {
-            // Keep what was typed if it couldn't be added.
-            guard (try? model.engine.perform(AddGroceries(lines: split.kept), by: .user)) != nil else { return }
+            // Keep what was typed if it couldn't be added, and say so (QA on #766).
+            guard (try? model.engine.perform(AddGroceries(lines: split.kept), by: .user)) != nil else {
+                TessVoice.shared.say("Didn't save that. Try again.")
+                return
+            }
         }
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
-            draft = split.walled.map(\.line).joined(separator: ", ")
+            draft = GroceriesWall.heldDraft(split.walled)
             model.touch()
         }
-        if let reason = split.walled.first?.reason {
-            TessVoice.shared.say(GroceriesWall.line(reason))
+        if let line = GroceriesWall.spoken(split.walled) {
+            TessVoice.shared.say(line)
         }
     }
 
