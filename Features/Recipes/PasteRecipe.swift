@@ -47,7 +47,8 @@ struct PasteRecipe: View {
                                                      read: revealed >= lines.count, lines: lines))
                     .font(Theme.voice)
                     // The password refusal reads in ink (Design on #810).
-                    .foregroundStyle(linkLine == RecipeLinkLine.secretLink ? Theme.Colors.ink : Theme.Colors.tess)
+                    // A refusal (a password link, a recipe already saved) reads in ink, not Tess's cobalt (Design).
+                    .foregroundStyle(linkLine.map(PasteCopy.isRefusal) == true ? Theme.Colors.ink : Theme.Colors.tess)
                     .contentTransition(.opacity)
                     .fixedSize(horizontal: false, vertical: true)
                     .entrance(0)
@@ -298,19 +299,17 @@ struct PasteRecipe: View {
     }
 
     private func save() {
-        guard let result = try? model.engine.perform(
-            CreateRecipe(text: text, corrections: corrections.isEmpty ? nil : corrections), by: .user
-        ) else {
-            // Nothing written (a link, say): kept on the phone for week one, never in the op log.
-            // Never a pasted line with a secret word in it (Research 134; QA F3 on #422).
-            // Nor money or a body fact (board 0ah).
-            // Nor a link that carries a name or password, anywhere in a longer paste (QA on #810).
-            if !SecretWords.mentions(text), !PasteCopy.hasSecretLink(text), !PrivateFacts.isWalled(
-                text,
-                lastWeightKg: BodyWeight.lastKg(in: model.store)
-            ) {
-                CaptureMissLog.beside(model.store)?.record(text, at: AppClock.now, route: "none", source: "paste")
-            }
+        let outcome = PasteCopy.save(text, corrections: corrections, engine: model.engine, store: model.store,
+                                     classes: model.classes, missLog: CaptureMissLog.beside(model.store))
+        let result: (output: ObjectRecord, record: OpRecord)
+        switch outcome {
+        case let .saved(recipe, record):
+            result = (recipe, record)
+        case let .duplicate(line):
+            // Information, not a failure: ink, no haptic, his text kept (Product and Design 12:45).
+            linkLine = line
+            return
+        case .failed:
             // Never silence: the text stays to fix or retry (G54, ruled Oct 17, 4:35).
             TessVoice.shared.say(PasteCopy.didntSave)
             return
@@ -534,6 +533,66 @@ struct PasteKeyFilter {
 }
 
 enum PasteCopy {
+    /// What Save came to.
+    enum SaveOutcome {
+        case saved(ObjectRecord, OpRecord)
+        /// Already on Recipes: "<title> is already on Recipes." ("Private recipe" when walled). Nothing is written or
+        /// logged.
+        case duplicate(String)
+        case failed
+    }
+
+    /// Save, out of the view so it tests. The same paste twice is one recipe (G59, #854): it says which and logs
+    /// nothing, so a private duplicate (a medicine title, say) never reaches the miss log. Any other refusal logs the
+    /// paste for week one, unless it holds a secret word, money, a body fact or a password link.
+    @MainActor
+    static func save(_ text: String, corrections: [Int: String], engine: ActionEngine, store: ObjectStore,
+                     classes: [SystemCatalog.Key: ClassDef], missLog: CaptureMissLog?) -> SaveOutcome
+    {
+        if let line = duplicateLine(text, store: store, classes: classes) {
+            return .duplicate(line)
+        }
+        do {
+            let done = try engine.perform(
+                CreateRecipe(text: text, corrections: corrections.isEmpty ? nil : corrections), by: .user
+            )
+            return .saved(done.output, done.record)
+        } catch let ActionError.invalidArguments(_, reason) where isDuplicate(reason) {
+            // The engine's own refusal, if the check above missed (corrections): the same line, nothing logged.
+            return .duplicate(reason)
+        } catch {
+            // Nothing written (a link, say): kept on the phone for week one, never in the op log.
+            // Never a pasted line with a secret word in it (Research 134; QA F3 on #422), money or a body fact
+            // (board 0ah), or a link that carries a name or password (QA on #810).
+            if !SecretWords.mentions(text), !hasSecretLink(text),
+               !PrivateFacts.isWalled(text, lastWeightKg: BodyWeight.lastKg(in: store))
+            {
+                missLog?.record(text, at: AppClock.now, route: "none", source: "paste")
+            }
+            return .failed
+        }
+    }
+
+    /// The engine's duplicate refusal: "<title> is already on Recipes." ("Private recipe" for a walled one).
+    static func isDuplicate(_ line: String) -> Bool {
+        line.hasSuffix(" is already on Recipes.")
+    }
+
+    /// Whether Tess's line on Paste is a refusal, drawn in ink.
+    static func isRefusal(_ line: String) -> Bool {
+        line == RecipeLinkLine.secretLink || isDuplicate(line)
+    }
+
+    /// Before Save writes: if this paste is already a saved recipe, the line naming it, masked when the title is
+    /// walled. Nil when it's new.
+    @MainActor
+    static func duplicateLine(_ text: String, store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) -> String? {
+        guard let existing = RecipeBook(store: store, classes: classes).recipe(pastedAs: text) else { return nil }
+        let walled = store.value("isPrivate", of: existing) == .bool(true)
+            || ObjectPrivacy.isPrivateRecipeTitle(existing.title, lastWeightKg: BodyWeight.lastKg(in: store))
+        return "\(walled ? ObjectPrivacy.recipeLabel : existing.title) is already on Recipes."
+    }
+
     /// "Read 1 waiting" / "Read 3 waiting": the links kept for later.
     static func readWaiting(_ count: Int) -> String {
         "Read \(count) waiting"
