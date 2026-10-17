@@ -32,7 +32,7 @@ struct PasteRecipe: View {
         let lines = CreateRecipe.lines(of: text, corrections: corrections)
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text(refusedKey ? "That looks like a Claude key. It goes in Settings, not a recipe."
+                Text(refusedKey ? claudeKeyLine
                     : reading && revealed >= lines.count ? PasteCopy.tess(lines) : "Paste a recipe and I'll read it.")
                     .font(Theme.voice)
                     .foregroundStyle(Theme.Colors.tess)
@@ -117,9 +117,11 @@ struct PasteRecipe: View {
             }
         }
         .onChange(of: text) { old, new in
-            // A Claude key never becomes a recipe (QA on #218): clear it before anything reads it.
+            // A Claude key never becomes a recipe (QA on #218): cut it out before anything reads it, keeping the rest
+            // of
+            // the paste (Product 8:20 AM, K87.11). It's never echoed; the line says where a key goes.
             if looksLikeClaudeKey(new) {
-                text = ""
+                text = PasteCopy.withoutKeys(new)
                 refusedKey = true
                 return
             }
@@ -381,6 +383,18 @@ private struct IngredientPaint: View {
 }
 
 enum PasteCopy {
+    /// The paste with every key-shaped word taken out and the rest kept, line by line (K87.11). A line that was only
+    /// the key goes; nothing key-shaped is left behind.
+    static func withoutKeys(_ text: String) -> String {
+        text.components(separatedBy: "\n").compactMap { line -> String? in
+            guard looksLikeClaudeKey(line) else { return line }
+            let kept = line.split(separator: " ", omittingEmptySubsequences: false)
+                .filter { !looksLikeClaudeKey(String($0)) }.joined(separator: " ")
+                .trimmingCharacters(in: .whitespaces)
+            return kept.isEmpty || looksLikeClaudeKey(kept) ? nil : kept
+        }.joined(separator: "\n")
+    }
+
     /// Ingredient → step → ignore → ingredient, from what the line was last marked as (else how it read), so a line
     /// that won't read as an ingredient still moves on to step. Titles, headings and details aren't cycled.
     static func nextReading(after marked: String?, current: RecipeParser.LineKind) -> String? {
