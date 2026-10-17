@@ -27,11 +27,11 @@
 |---|---|
 | 9.1 | The back word "‹ KITCHEN" sits at the top, LISTS is in labels, and the context line reads "6 lists, packing running" |
 | 9.2 | Names are sized by last touched (56, then two at 34, the rest at 21 at 75%), and the running list is first and largest; two running lists both read RUNNING, the newer first (G10, G11) |
-| 9.3 | State words sit under the names in labels: "3 OF 7", "RUNNING · 9 LEFT" in vermilion with a lit seam, "REUSABLE", "PICK ONE", "EMPTY" for a list with nothing on it, and "14 TO BUY" under Groceries |
+| 9.3 | State words sit under the names in labels: "3 OF 7", "RUNNING, 9 LEFT" in vermilion with a lit seam, "REUSABLE", "PICK ONE", "EMPTY" for a list with nothing on it, and "14 TO BUY" under Groceries |
 | 9.4 | On arrival, the names settle into their sizes with a stagger |
-| 9.5 | Pasting a block anywhere gives a wet cobalt ghost list at the foot of the column with its state word "12 THINGS · 2 SECTIONS" at 55% and Tess's "Twelve things, two sections." with UNDO for 4 s (a new capture); the context line counts up ("7 lists, packing running"). It dries in 2 s or on tap, then moves to its place by last touched: to the top at 56 when nothing runs, or just under the running list at 34 when one does (G10) |
+| 9.5 | Pasting a block anywhere gives a wet cobalt ghost list at the foot of the column with its state word "12 THINGS, 2 SECTIONS" at 55% and Tess's "12 things, 2 sections." with UNDO for 4 s (a new capture); the context line counts up ("7 lists, packing running"). It dries in 2 s or on tap, then moves to its place by last touched: to the top at 56 when nothing runs, or just under the running list at 34 when one does (G10) |
 | 9.6 | Groceries appears once and opens Groceries. "Put away" sits at the foot at 21/400, 45%; the word is never "Archived" (Product) |
-| 9.7 | The door: "Lists" at Title 34 on Home's Kitchen page under Groceries with "PACKING · 9 LEFT" in vermilion labels; it opens with a zoom from 0.94 to 1 over 420 ms (G1) |
+| 9.7 | The door: "Lists" at Title 34 on Home's Kitchen page under Groceries with "PACKING, 9 LEFT" in vermilion labels; it opens with a zoom from 0.94 to 1 over 420 ms (G1) |
 
 **10 · A list page**
 | # | Pass when |
