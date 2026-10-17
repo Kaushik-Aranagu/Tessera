@@ -44,4 +44,9 @@ struct PasteCycleTests {
         #expect(!PasteCopy.hasSecretLink("Dal\nfrom https://example.com/dal\n1 cup lentils"))
         #expect(RecipeLinkLine.secretLink == "That link has a password in it. Paste the text instead.")
     }
+
+    @Test func waitingLinksReadAsACount() {
+        #expect(PasteCopy.readWaiting(1) == "Read 1 waiting")
+        #expect(PasteCopy.readWaiting(3) == "Read 3 waiting")
+    }
 }
