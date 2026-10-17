@@ -37,6 +37,8 @@ def stale_lines(path, merged):
         elif HEAD_RE.match(line) or line.startswith("#"):
             is_open = False
         if is_open:
+            if "(merged #" in line:  # already marked by its board owner
+                continue
             hit = sorted({int(n) for n in re.findall(r"#(\d+)\b", line)} & merged)
             if hit:
                 flagged.append((i, hit, line.strip()[:90]))
