@@ -59,7 +59,17 @@ public struct RecipeBook {
     }
 
     public func serves(_ recipe: ObjectRecord) -> Int? {
-        store.number("serves", of: recipe).map(Int.init)
+        RecipeLimits.serves(store.number("serves", of: recipe))
+    }
+
+    /// The recipe's total time in minutes, inside 1 to 1440 (G62).
+    public func totalMinutes(_ recipe: ObjectRecord) -> Double? {
+        RecipeLimits.minutes(store.number("totalMinutes", of: recipe))
+    }
+
+    /// The recipe's active time in minutes, inside 1 to 1440 (G62).
+    public func activeMinutes(_ recipe: ObjectRecord) -> Double? {
+        RecipeLimits.minutes(store.number("activeMinutes", of: recipe))
     }
 
     public func lines(of recipe: ObjectRecord) -> [Line] {
@@ -118,7 +128,7 @@ enum RecipeTimers {
     }
 
     static func format(_ value: Double) -> String {
-        value.rounded() == value ? String(Int(value)) : String(value)
+        value.rounded() == value ? RecipeLimits.whole(value).map(String.init) ?? String(value) : String(value)
     }
 }
 
@@ -177,14 +187,14 @@ public struct CreateRecipe: EngineAction {
         let recipe = try transaction.create(transaction.classDef(.recipe), title: title ?? parsed.title)
         // The original text keeps every line but the private ones (Research 137 PR1).
         try transaction.set("sourceText", to: .text(SecretWords.cut(parsed.source).text), on: recipe)
-        if let serves = parsed.serves {
+        if let serves = RecipeLimits.serves(parsed.serves) {
             try transaction.set("serves", to: .number(Double(serves)), on: recipe)
         }
-        if let active = parsed.activeMinutes {
+        if let active = RecipeLimits.minutes(parsed.activeMinutes) {
             try transaction.set("activeMinutes", to: .number(active), on: recipe)
         }
         let stepMinutes = parsed.steps.flatMap(\.timers).reduce(0) { $0 + $1.upperBound }
-        if let total = parsed.totalMinutes ?? (stepMinutes > 0 ? stepMinutes : nil) {
+        if let total = RecipeLimits.minutes(parsed.totalMinutes ?? (stepMinutes > 0 ? stepMinutes : nil)) {
             try transaction.set("totalMinutes", to: .number(total), on: recipe)
         }
         try Self.write(parsed, into: recipe, transaction: &transaction)
@@ -283,7 +293,7 @@ public struct EditRecipe: EngineAction {
             transaction.setTitle(title, on: recipe)
         }
         if let serves {
-            try transaction.set("serves", to: serves > 0 ? .number(Double(serves)) : nil, on: recipe)
+            try transaction.set("serves", to: RecipeLimits.serves(serves).map { .number(Double($0)) }, on: recipe)
         }
     }
 
@@ -296,7 +306,7 @@ public extension RecipeBook {
     /// The recipe's lines at another size (not stored). Without a size on the recipe, they're returned as written.
     func scaledLines(of recipe: ObjectRecord, serves target: Int) -> [Line] {
         let lines = lines(of: recipe)
-        guard let serves = serves(recipe) else { return lines }
+        guard let serves = serves(recipe), let target = RecipeLimits.serves(target) else { return lines }
         let scaled = RecipeMath.scaled(lines.map(\.line), from: serves, to: target)
         return zip(lines, scaled).map { line, scaled in
             Line(id: line.id, object: line.object, line: scaled, ingredient: line.ingredient, isStaple: line.isStaple)
