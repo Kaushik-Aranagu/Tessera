@@ -150,7 +150,7 @@ public struct AddListItem: EngineAction {
     }
 
     /// What the wall keeps as the item: nil when the line becomes a private note.
-    @MainActor static func kept(_ given: String, store: ObjectStore) -> String? {
+    @MainActor public static func kept(_ given: String, store: ObjectStore) -> String? {
         let bare = EngineWall.withoutPrice(given)
         let last = BodyWeight.lastKg(in: store)
         let isNote = bare.isEmpty || SecretWords.isSecretListLine(given) || PrivateFacts.isMoneyShaped(bare)

@@ -166,4 +166,21 @@ struct KitchenGaps3Tests {
         #expect(record.receipt == "Groceries, done items cleared")
         #expect(Groceries(store: store, classes: engine.classes).aisles().isEmpty)
     }
+
+    /// G16
+    @Test func listToolAddsGroceriesThroughTheAddLine() throws {
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        try engine.perform(AddGroceries(lines: ["milk"]), by: .user)
+        let json = #"{"list":"groceries","items":[{"text":"milk"},{"text":"eggs"},{"text":"milk $4"}]}"#
+        let records = try TessTools.run("addToList", arguments: Data(json.utf8), engine: engine)
+        for record in records where record.state == .pending {
+            try engine.commit(record)
+        }
+        let groceries = Groceries(store: store, classes: classes)
+        let rows = groceries.aisles().flatMap(\.items)
+        #expect(rows.count == 2)
+        #expect(groceries.isOn("milk") && groceries.isOn("eggs"))
+        #expect(groceries.aisles().contains { $0.aisle == Aisle.dairy.rawValue && $0.items.count == 2 })
+    }
 }
