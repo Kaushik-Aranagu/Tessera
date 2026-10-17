@@ -48,17 +48,19 @@ public struct SetListReusable: EngineAction {
     }
 
     public func summary(in store: ObjectStore) -> String {
-        "Made \(store.object(id: list)?.title ?? "the list") \(reusable ?? true ? "reusable" : "not reusable")"
+        "Made \(store.object(id: list).map { ListContents.shownName(of: $0, in: store) } ?? "the list") "
+            + (reusable ?? true ? "reusable" : "not reusable")
     }
 
     public func receipt(in store: ObjectStore) -> String? {
-        "\(store.object(id: list)?.title ?? "The list"), \(reusable ?? true ? "reusable" : "not reusable")"
+        "\(store.object(id: list).map { ListContents.shownName(of: $0, in: store) } ?? "The list"), "
+            + (reusable ?? true ? "reusable" : "not reusable")
     }
 }
 
 /// Unchecks every item on a list in one action; the items stay, in order. Works on any list ("reset packing" on a
 /// list that isn't reusable is uncheck all). One undo checks them again with their `checkedAt`. With nothing checked
-/// there is nothing to reset, so it throws and writes nothing (G15, as `ClearDoneItems`).
+/// it is a quiet no-op: nothing written, so no UNDO, and "Packing, nothing to reset." (Product 9:45 AM PT, ruling 2).
 public struct ResetList: EngineAction {
     public static let descriptor = ActionDescriptor(
         name: "resetList",
@@ -81,9 +83,8 @@ public struct ResetList: EngineAction {
     public func apply(_ transaction: inout Transaction) throws -> Int {
         let list = try transaction.object(list, is: .list)
         let done = list.orderedChildren.filter { transaction.store.value("isDone", of: $0) == .bool(true) }
-        guard !done.isEmpty else {
-            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "nothing checked on \(list.title)")
-        }
+        Self.lastReset[list.id] = done.count
+        guard !done.isEmpty else { return 0 }
         for item in done {
             try transaction.set("isDone", to: .bool(false), on: item)
             try transaction.set("checkedAt", to: nil, on: item)
@@ -92,12 +93,22 @@ public struct ResetList: EngineAction {
         return done.count
     }
 
+    /// Items unchecked by list in the last `apply`, for the receipt written right after it.
+    nonisolated(unsafe) static var lastReset: [UUID: Int] = [:]
+
     public func summary(in store: ObjectStore) -> String {
-        "Reset \(store.object(id: list)?.title ?? "the list")"
+        let name = store.object(id: list).map { ListContents.shownName(of: $0, in: store) } ?? "the list"
+        return Self.lastReset[list] == 0 ? "\(name), nothing to reset." : "Reset \(name)"
     }
 
-    /// Thing first (Product, screens 10.11): "Packing, reset".
+    /// Thing first (Product, screens 10.11): "Packing, reset", or "Packing, nothing to reset." with nothing checked.
     public func receipt(in store: ObjectStore) -> String? {
-        "\(store.object(id: list)?.title ?? "The list"), reset"
+        Self.receipt(for: list, in: store)
+    }
+
+    @MainActor
+    static func receipt(for list: UUID, in store: ObjectStore) -> String {
+        let name = store.object(id: list).map { ListContents.shownName(of: $0, in: store) } ?? "The list"
+        return lastReset[list] == 0 ? "\(name), nothing to reset." : "\(name), reset"
     }
 }

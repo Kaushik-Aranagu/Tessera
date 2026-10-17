@@ -17,12 +17,13 @@ enum ListNoteTags {
     }
 
     static func has(_ tag: String, in text: String?) -> Bool {
-        lines(text).contains { $0.trimmingCharacters(in: .whitespaces) == tag }
+        // Exact whole lines only (Product 9:45 AM PT, ruling 1): " #reusable" or "#reusable!" is his note.
+        lines(text).contains { $0 == tag }
     }
 
     /// `text` with the flag line added or removed; nil when nothing is left.
     static func setting(_ tag: String, to isOn: Bool, in text: String?) -> String? {
-        var kept = lines(text).filter { $0.trimmingCharacters(in: .whitespaces) != tag }
+        var kept = lines(text).filter { $0 != tag }
         if isOn {
             kept.append(tag)
         }

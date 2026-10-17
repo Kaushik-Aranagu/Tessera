@@ -470,7 +470,7 @@ public struct ClearDoneItems: EngineAction {
         let title = store.object(id: list)?.title ?? "The list"
         // A reusable list was reset, not cleared: its items are all still there.
         if let object = store.object(id: list), ListNoteTags.isReusable(object, in: store) {
-            return "\(title), reset"
+            return ResetList.receipt(for: list, in: store)
         }
         return "\(title), done items cleared"
     }

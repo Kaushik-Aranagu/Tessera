@@ -114,11 +114,38 @@ struct ListReuseTests {
         #expect(lists.open(in: bag).count == 4)
     }
 
-    @Test func resetWithNothingCheckedWritesNothing() throws {
-        let (engine, _, bag, _) = try setUp()
-        let before = engine.history(limit: 500).count
-        #expect(throws: ActionError.self) { try engine.perform(ResetList(list: bag.id), by: .user) }
-        #expect(engine.history(limit: 500).count == before)
+    @Test func resetWithNothingCheckedIsAQuietNoOp() throws {
+        // Product 9:45 AM PT, ruling 2: no throw, no write (so no UNDO), and "Gym bag, nothing to reset."
+        let (engine, _, bag, items) = try setUp()
+        let reset = try engine.perform(ResetList(list: bag.id), by: .user)
+        #expect(reset.output == 0 && reset.record.ops.isEmpty)
+        #expect(reset.record.receipt == "Gym bag, nothing to reset." && reset.record
+            .summary == "Gym bag, nothing to reset.")
+        // The next real reset still says reset.
+        try check(items, 2, engine: engine)
+        #expect(try engine.perform(ResetList(list: bag.id), by: .user).record.receipt == "Gym bag, reset")
+    }
+
+    @Test func flagsAreExactWholeLines() throws {
+        // Product ruling 1: only "#reusable" on its own line counts; his note text never does.
+        let (engine, lists, bag, _) = try setUp()
+        for note in [" #reusable", "#reusable!", "pack #reusable bags", "#Reusable"] {
+            try store.set("notes", to: .richText(note), on: bag)
+            #expect(!lists.isReusable(bag), "\(note)")
+        }
+        try store.set("notes", to: .richText("Pack the night before\n#reusable"), on: bag)
+        #expect(lists.isReusable(bag))
+    }
+
+    @Test func aPrivateListIsNeverNamedInAResetOrFlag() throws {
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let list = try engine.perform(CreateList(name: "Rent 2100 stuff"), by: .user).output
+        let item = try engine.perform(AddListItem(list: list.id, text: "Lease"), by: .user).output
+        let flag = try engine.perform(SetListReusable(list: list.id), by: .user).record
+        #expect(flag.receipt == "Private list, reusable")
+        try engine.perform(CheckListItem(item: item.id, time: start), by: .user)
+        #expect(try engine.perform(ResetList(list: list.id), by: .user).record.receipt == "Private list, reset")
     }
 
     @Test func resetOnlyTouchesItsOwnList() throws {
