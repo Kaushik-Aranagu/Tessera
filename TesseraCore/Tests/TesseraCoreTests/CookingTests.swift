@@ -100,14 +100,13 @@ struct CookingTests {
         #expect(throws: refusal("startProcess")) {
             try engine.perform(StartShop(), by: .user)
         }
-        #expect(throws: refusal("startProcess")) {
-            try engine.perform(StartWorkout(workout: other.id), by: .user)
-        }
         #expect(engine.history(from: .distantPast, to: .distantFuture).count == ops)
         #expect(table.running()?.subject?.id == workout.id)
 
-        // The running workout itself starts again in place.
+        // The running workout itself starts again in place, and another workout may still take over.
         try engine.perform(StartWorkout(workout: workout.id), by: .user)
         #expect(table.running()?.subject?.id == workout.id)
+        try engine.perform(StartWorkout(workout: other.id), by: .user)
+        #expect(table.running()?.subject?.id == other.id)
     }
 }
