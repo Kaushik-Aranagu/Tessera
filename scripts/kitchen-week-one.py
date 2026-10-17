@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 """Kitchen week one: the counts behind docs/product/kitchen-v2-scope.md, read from a store copy.
 
-Usage:  python3 scripts/kitchen-week-one.py <tessera.sqlite or backup.tessera> [--since YYYY-MM-DD]
+Usage:  python3 scripts/kitchen-week-one.py <tessera.sqlite or backup.tessera> [--since YYYY-MM-DD] [--titles]
+        python3 scripts/kitchen-week-one.py --self-test
+
+Private filter (docs/product/kitchen-week-one-private-filter.md): only the classes the counts need are read (never
+Note, Event, Training, body or money fields). No title is printed unless --titles is given, and then a private title
+(secret-worded, or shaped like money or a body measure) prints as "Private recipe". A path under Application Support
+is refused: copy the store first.
 
 Reads only. Takes a `.tessera` backup (a plain SQLite copy, TesseraBackup.swift) or the simulator's
 Application Support/Tessera/tessera.sqlite. Copy the file first; never point it at the live store.
@@ -10,14 +16,48 @@ Standard library only. The capture-miss log (capture-misses.jsonl beside the sto
 """
 
 import hashlib
+import io
 import json
 import os
+import re
 import sqlite3
+import tempfile
+import contextlib
 import sys
 import uuid
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
+
+READ_CLASSES = {"recipe", "cook", "kitchenTimer", "process", "listItem", "ingredient", "task"}  # PF1
+
+# Mirrors TesseraCore SecretWords (Notes/SecretWords.swift); keep the two in step until Core exports the list (open 1).
+SECRET_WORDS = {"password", "passwords", "passcode", "passcodes", "pin", "pins", "code", "codes", "combo",
+                "combination", "passphrase", "pw", "pwd"}
+PRIVATE_RECIPE = "Private recipe"
+PRIVATE_ITEM = "Private item"
+BODY_UNIT = re.compile(r"\d\s*(kg|kgs|lb|lbs|cm|bpm|kcal|%)(\W|$)", re.I)
+
+
+def _tokens(text):
+    text = (text or "").lower().replace(":", " : ")
+    return [t.strip(".,!?;'\"()") for t in text.split() if t.strip(".,!?;'\"()")]
+
+
+def is_private_title(text):
+    """PF4/PF5/PF7: secret-worded (SecretWords.mentions), or shaped like money or a body measure."""
+    tokens = _tokens(text)
+    for i, t in enumerate(tokens):
+        if t in SECRET_WORDS or (t == "wifi" and i + 1 < len(tokens) and tokens[i + 1] in (":", "is")):
+            return True
+    if re.search(r"[$\u20ac\u00a3\u00a5]", text or "") or BODY_UNIT.search(text or ""):
+        return True
+    return any(re.fullmatch(r"\d[\d,.]{2,}", t) for t in tokens)  # "Rent 1200": a 3+ digit amount
+
+
+def shown_title(text, stand_in):
+    return stand_in if is_private_title(text) else (text or "")
+
 
 PACIFIC = ZoneInfo("America/Los_Angeles")
 
@@ -63,11 +103,16 @@ def scalar(value):
 
 
 def main():
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    if "--self-test" in sys.argv:
+        return self_test()
+    args = [a for a in sys.argv[1:] if not a.startswith("--") and not re.fullmatch(r"\d{4}-\d\d-\d\d", a)]
     if not args:
         print(__doc__)
         sys.exit(2)
     path = args[0]
+    if "application support" in os.path.abspath(path).lower():  # PF12
+        sys.exit("Refusing a store under Application Support: copy the file somewhere else and point the script at the copy.")
+    with_titles = "--titles" in sys.argv
     since = None
     if "--since" in sys.argv:
         # Midnight Pacific on that date (his day), not UTC.
@@ -86,7 +131,9 @@ def main():
     objects = {}
     by_class = defaultdict(list)
     unreadable = 0
-    for r in db.execute("SELECT * FROM object WHERE isClassObject = 0"):
+    read_ids = [cid for cid, key in classes.items() if key in READ_CLASSES]
+    marks = ",".join("?" * len(read_ids))
+    for r in db.execute(f"SELECT * FROM object WHERE isClassObject = 0 AND classID IN ({marks})", read_ids):  # PF1
         values = {}
         raw = r["values"]
         if raw:
@@ -157,8 +204,10 @@ def main():
     out.append(f"Recipe edits after saving (editRecipe ops): {edits}")
     opened_not_cooked = [r for r in live("recipe") if value(r, "lastOpenedAt", "date")
                          and not any(r["id"] in links[(c["id"], "recipe")] for c in live("cook"))]
-    out.append(f"Recipes opened but never cooked: {len(opened_not_cooked)}"
-               + (": " + ", ".join(r["title"] for r in opened_not_cooked[:8]) if opened_not_cooked else ""))
+    line = f"Recipes opened but never cooked: {len(opened_not_cooked)}"
+    if with_titles and opened_not_cooked:  # PF2/PF3: titles only on request, private ones replaced
+        line += ": " + ", ".join(shown_title(r["title"], PRIVATE_RECIPE) for r in opened_not_cooked[:8])
+    out.append(line)
 
     # Cooks.
     cooks = [o for o in live("cook") if in_window(o["created"])]
@@ -201,7 +250,8 @@ def main():
         else:
             source["typed"] += 1
             ing = next((ingredient_by_id[i] for i in links[(it["id"], "about")] if i in ingredient_by_id), None)
-            if ing and value(ing, "isStaple") is True:
+            if ing and value(ing, "isStaple") is True and not is_private_title(it["title"]) \
+                    and it["title"] != PRIVATE_ITEM:  # PF7: a private line gets no staple credit
                 typed_staples += 1
     out.append(f"Grocery items: {len(items)} ({source['recipe']} from recipes, {source['typed']} typed, "
                f"{typed_staples} typed staples)")
@@ -235,8 +285,71 @@ def main():
     else:
         out.append("Capture misses: no capture-misses.jsonl beside the store (it never rides in a backup)")
 
-    print("\n".join(out))
+    return "\n".join(out).replace("$", "")  # PF10: no amount ever prints
+
+
+def self_test():
+    """Builds a fixture store from made-up rows and checks the filter against it (PF2 to PF10, PF12)."""
+    now = (datetime.now(timezone.utc) - REFERENCE).total_seconds()
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "fixture.sqlite")
+        db = sqlite3.connect(path)
+        db.executescript("""
+            CREATE TABLE classDef(id TEXT, systemKey TEXT);
+            CREATE TABLE fieldDef(id TEXT, ownerID TEXT, key TEXT);
+            CREATE TABLE object(id TEXT, classID TEXT, parentID TEXT, title TEXT, createdAt REAL, deletedAt REAL,
+                                "values" TEXT, isClassObject INTEGER);
+            CREATE TABLE link(fieldID TEXT, fromID TEXT, toObjectID TEXT);
+            CREATE TABLE op(action TEXT, actor TEXT, createdAt REAL, objectIDs TEXT);
+        """)
+        for cid, key in [("C1", "system.recipe"), ("C2", "system.listItem"), ("C3", "system.note")]:
+            db.execute("INSERT INTO classDef VALUES(?,?)", (cid, key))
+        db.execute("INSERT INTO fieldDef VALUES('F1','C1','lastOpenedAt')")
+        opened = json.dumps({"F1": {"date": {"_0": now}}})
+        titles = ["Tacos", "Private recipe", "Door code 4417 soup", "Rent 1200", "Weight 80 kg", "Pay $40 pasta"]
+        for n, t in enumerate(titles):
+            db.execute("INSERT INTO object VALUES(?,?,?,?,?,NULL,?,0)", (f"R{n}", "C1", None, t, now, opened))
+        db.execute("INSERT INTO object VALUES('RD','C1',NULL,'Deleted secret pin 9',?,?,?,0)", (now, now, opened))
+        for n, t in enumerate(["Milk", "Private item", "wifi password hunter2"]):
+            db.execute("INSERT INTO object VALUES(?,?,?,?,?,NULL,NULL,0)", (f"L{n}", "C2", GROCERIES_ID, t, now))
+        db.execute("INSERT INTO object VALUES('N1','C3',NULL,'Note about my salary',?,NULL,NULL,0)", (now,))
+        db.commit()
+        db.close()
+        before = hashlib.sha256(open(path, "rb").read()).hexdigest()
+
+        def run(*extra):
+            sys.argv = ["kitchen-week-one.py", path, *extra]
+            return main()
+
+        plain, with_titles = run(), run("--titles")
+        after = hashlib.sha256(open(path, "rb").read()).hexdigest()
+        failures = []
+
+        def check(ok, what):
+            print(("ok   " if ok else "FAIL ") + what)
+            if not ok:
+                failures.append(what)
+
+        check("Recipes saved: 6" in plain and "Recipes opened but never cooked: 6" in plain, "counts include every live recipe, not the deleted one")
+        check("Tacos" not in plain, "no title without --titles (PF2)")
+        for secret in ["Door code", "4417", "Rent", "1200", "Weight", "80 kg", "Pay", "40", "pin 9", "hunter2", "Milk", "salary"]:
+            check(secret not in plain and secret not in with_titles, f"{secret!r} never printed (PF4/5/6/7/10/13)")
+        check("Tacos" in with_titles and with_titles.count(PRIVATE_RECIPE) == 5, "--titles shows Tacos and 5 stand-ins (PF3)")
+        check("Grocery items: 3 (0 from recipes, 3 typed, 0 typed staples)" in plain, "grocery items counted, none named (PF6)")
+        check("$" not in plain + with_titles, "no $ in output (PF10)")
+        check(before == after, "store file unchanged (PF12)")
+        try:
+            sys.argv = ["x", "/Users/someone/Library/Application Support/Tessera/tessera.sqlite"]
+            main()
+            check(False, "live path refused")
+        except SystemExit as e:
+            check("Application Support" in str(e), "live Application Support path refused (PF12)")
+        check(not re.search(r"FROM object[^\"]*\bnote\b", open(__file__).read().replace("system.note", "")), "no query on note")
+        print("\n--- sample output with --titles ---\n" + with_titles)
+        sys.exit(1 if failures else 0)
 
 
 if __name__ == "__main__":
-    main()
+    result = main()
+    if result:
+        print(result)
