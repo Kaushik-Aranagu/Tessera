@@ -58,7 +58,11 @@ public struct Groceries {
         for record in store.context.all(OpRecord.self) {
             for op in record.ops {
                 guard case let .create(object, _, _, _) = op, ids.contains(object) else { continue }
-                if record.action == CreateList.descriptor.name { his.insert(object) } else { made.insert(object) }
+                if record.action == CreateList.descriptor.name {
+                    his.insert(object)
+                } else {
+                    made.insert(object)
+                }
             }
         }
         return made.subtracting(his)
@@ -470,7 +474,9 @@ public struct AddGroceries: EngineAction {
 
     public func apply(_ transaction: inout Transaction) throws -> [ObjectRecord] {
         var items: [ObjectRecord] = []
-        for text in lines {
+        // The wall, for every caller (Add line, Bar, Siri, tools; Product 8:40 AM PT Oct 17): a price comes off, and a
+        // line that is only money, a secret or a key writes nothing.
+        for text in Self.kept(lines, store: transaction.store) {
             guard let line = IngredientLine.parse(text) else { continue }
             let ingredient = try transaction.ingredient(named: line.name)
             let share = GroceryShare(recipe: nil, amount: line.amount, unit: line.unit, packSize: line.packSize)
@@ -489,9 +495,16 @@ public struct AddGroceries: EngineAction {
         EngineWall.isHealth(line, lastWeightKg: BodyWeight.lastKg(in: store)) ? "Private item" : line
     }
 
+    /// The lines as the wall keeps them: price off, walled lines gone.
+    @MainActor
+    public static func kept(_ lines: [String], store: ObjectStore) -> [String] {
+        lines.compactMap { AddListItem.kept($0.trimmingCharacters(in: .whitespacesAndNewlines), store: store) }
+    }
+
     @MainActor
     public func summary(in store: ObjectStore) -> String {
-        // Thing first, the list by name (lists copy sweep, Product 10:06 PM PT).
+        // Thing first, the list by name (lists copy sweep, Product 10:06 PM PT); only what the wall kept.
+        let lines = Self.kept(lines, store: store)
         let first = lines.first.map { shown($0, in: store) } ?? ""
         return lines.count == 1 ? "\(first.prefix(1).uppercased() + first.dropFirst()), on Groceries"
             : "\(lines.count) things on Groceries"
@@ -499,8 +512,8 @@ public struct AddGroceries: EngineAction {
 
     @MainActor
     public func receipt(in store: ObjectStore) -> String? {
+        let lines = Self.kept(lines, store: store).map { shown($0, in: store) }
         guard !lines.isEmpty else { return nil }
-        let lines = lines.map { shown($0, in: store) }
         // Name the things: "Oat milk and eggs, on Groceries"; "Oat milk, eggs and 2 more, on Groceries" (Design R7).
         let names = switch lines.count {
         case 1: lines[0]
