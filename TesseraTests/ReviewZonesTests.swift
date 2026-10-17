@@ -12,7 +12,7 @@ struct ReviewZonesTests {
 
     @Test func aHotelWednesdayCountsOnWednesday() throws {
         let container = TesseraSchema.makeContainer(inMemory: true)
-        let model = AppModel(context: container.mainContext)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         var home = Calendar(identifier: .gregorian)
         home.timeZone = Self.la
         var there = home

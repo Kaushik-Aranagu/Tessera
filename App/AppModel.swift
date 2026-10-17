@@ -80,11 +80,6 @@ final class AppModel {
 
     @ObservationIgnored private var planWordingStore: ClaudePlanWording?
 
-    /// Where once-per-install launch decisions are kept: a throwaway suite under the app tests (QA low on #641), so a
-    /// test run never decides for his install, and the real defaults otherwise.
-    static let launchDefaults: UserDefaults = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil
-        ? .standard : UserDefaults(suiteName: "tessera-app-tests-\(UUID().uuidString)") ?? .standard
-
     /// A demo flag is on: Claude's Home words are never read or written (home-lines-job.md §5).
     static var isDemo: Bool {
         ["-demo", "-resetDemo", "-theme", "-fakeClaudeKey"].contains(where: { LaunchFlags.has($0) })
@@ -159,7 +154,9 @@ final class AppModel {
     /// Where you were when Tess took you Home; tapping her again goes back.
     var homeReturnPath: [Route]?
 
-    init(context: TesseraContext) {
+    /// `launchDefaults`: where once-per-install launch decisions are kept; the app tests pass a throwaway suite (QA on
+    /// #665), so a test run never decides for an install.
+    init(context: TesseraContext, launchDefaults: UserDefaults = .standard) {
         self.context = context
         store = ObjectStore(context: context)
         do {
@@ -185,7 +182,7 @@ final class AppModel {
                                                               .map(BackupCopy.folderName))
             // The first launch with the restWeekday reader: Sunday, as one op with UNDO ("Sunday, rest day.";
             // Research 146). Once; an UNDO or a later "Any" leaves a record, so it is never written twice.
-            SettingsStore(engine: engine).writeFirstRestWeekday(defaults: Self.launchDefaults)
+            SettingsStore(engine: engine).writeFirstRestWeekday(defaults: launchDefaults)
         }
         runtime = TesseraRuntime(engine: engine)
         soul.runScript()

@@ -35,7 +35,7 @@ struct ReviewTripWeekTests {
     /// One app on an in-memory store, with the starter plan made Thu Oct 1, 9:00 am PDT (first use before the week).
     static func makeModel() -> AppModel {
         let container = TesseraSchema.makeContainer(inMemory: true)
-        let model = AppModel(context: container.mainContext)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         model.store.object(id: StarterContent.planID)?.createdAt = at(1, 9)
         return model
     }

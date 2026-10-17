@@ -73,7 +73,7 @@ struct ExerciseAndPlansTests {
     // MARK: Exercise digest
 
     @Test func routingSendsOnlyConcreteExercisesToTheExercisePage() throws {
-        let model = AppModel(context: container.mainContext)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         let bench = try #require(model.classDef(.benchPress))
         #expect(ExerciseRouting.isExercise(bench, classes: model.classes))
         #expect(try !ExerciseRouting.isExercise(#require(model.classDef(.barbellLift)), classes: model.classes))
@@ -85,7 +85,7 @@ struct ExerciseAndPlansTests {
     }
 
     @Test func digestReadsRecordsHistoryAndPath() throws {
-        let model = AppModel(context: container.mainContext)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         let bench = try #require(model.classDef(.benchPress))
         let now = Date.now
         log(model, bench, daysAgo: 7, sets: [(80, 8), (80, 7)], now: now)
@@ -133,7 +133,7 @@ struct ExerciseAndPlansTests {
 
     @Test func weekComesFromCoreAndRollsOnFromToday() throws {
         // Fresh install: his PPL×2, nothing done. Today is Push A and the days after roll on in order.
-        let model = AppModel(context: container.mainContext)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         // A pinned Monday, so the test never lands on the Sunday the first launch makes a rest day.
         let now = try #require(Calendar.current.date(from: DateComponents(year: 2026, month: 10, day: 19, hour: 12)))
         let week = PlanData(model: model, plan: nil, now: now).week(now: now)
@@ -147,7 +147,7 @@ struct ExerciseAndPlansTests {
     }
 
     @Test func aFinishedWorkoutMarksTodayDoneAndThePlanRollsOn() throws {
-        let model = AppModel(context: container.mainContext)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         let routine = try #require(model.todaysRoutine())
         model.startRoutine(routine)
         let session = try #require(model.session)
@@ -210,7 +210,7 @@ struct ExerciseAndPlansTests {
     }
 
     @Test func theRoutineLibraryIsGroupedByMovementPattern() throws {
-        let model = AppModel(context: container.mainContext)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         let groups = ExerciseLibraryList.groups(model)
         #expect(groups.count >= 6)
         let push = try #require(groups.first { $0.pattern.name == "Horizontal Push" })

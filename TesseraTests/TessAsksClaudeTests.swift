@@ -12,7 +12,7 @@ struct TessAsksClaudeTests {
     let defaults: UserDefaults
 
     init() throws {
-        model = AppModel(context: container.mainContext)
+        model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         let suite = "TessAsksClaudeTests.\(UUID().uuidString)"
         defaults = try #require(UserDefaults(suiteName: suite))
     }
