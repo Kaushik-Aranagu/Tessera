@@ -193,7 +193,7 @@ struct PantryLine: View {
             Text(entry.state.word)
                 .textRole(.body)
                 .fontWeight(entry.state == .out ? .bold : .semibold)
-                .foregroundStyle(Theme.Colors.ink)
+                .foregroundStyle(PantryColour.stateWord)
         }
         .padding(.leading, 24)
         .overlay(alignment: .leading) {
