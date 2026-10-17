@@ -305,4 +305,53 @@ struct RecipeLinkTests {
         LinkStub.pages["api.anthropic.com"] = .init(body: cut, type: "application/json")
         #expect(await reader(claude: true).read("https://blog.example.com/beans").line == RecipeLinkLine.noRecipe)
     }
+
+    // MARK: a4-2
+
+    func sentBody() throws -> String {
+        let index = try #require(LinkStub.requests.lastIndex { $0.url?.host() == "api.anthropic.com" })
+        return String(decoding: LinkStub.bodies[index], as: UTF8.self)
+    }
+
+    @Test func recipeReaderNeverSendsWalledLines() async throws {
+        let key = "sk-" + "ant-" + "api03-" + String(repeating: "Zy9x", count: 8)
+        let page = """
+        <html><body><article><p>We stirred beans into onions and tomatoes until it tasted right, then ate it.</p>
+        <p>I paid $40 for the pot at Costco, the receipt said 212.37 in the end.</p>
+        <p>This morning my weigh in was 182.4 kg, which is why I cook this.</p>
+        <p>My heart rate was 150 after all that cooking, so I sat down.</p>
+        <p>The door code is 4417 if you come round to eat it.</p><p>Note to self \(key) is not mine to share.</p>
+        <p>You can PIN the dough to the board when it gets sticky and tired.</p>
+        <p>Then we ate it with rice and a lot of salt.</p></article></body></html>
+        """
+        LinkStub.pages["blog.example.com"] = .init(body: page)
+        LinkStub.pages["api.anthropic.com"] = .init(body: #"{"content":[{"type":"text","text":"no recipe"}]}"#,
+                                                    type: "application/json")
+        _ = await reader(claude: true).read("https://blog.example.com/beans")
+        let body = try sentBody()
+        #expect(body.contains("stirred beans") && body.contains("with rice") && body.contains("PIN the dough"))
+        for walled in ["paid", "212.37", "182.4", "heart rate", "4417", key] {
+            #expect(!body.contains(walled), "\(walled)")
+        }
+        // The wall also reads his last weigh-in: a bare number beside it is his weight.
+        #expect(ClaudeRecipeReader.sendable("Today the scale said 82.4\nAdd 1 onion", lastWeightKg: 82.4) == "Add 1 onion")
+        #expect(ClaudeRecipeReader.sendable("Add 1 onion", lastWeightKg: 82.4) == "Add 1 onion")
+    }
+
+    @Test func recipeReaderOffWhenSwitchOff() async {
+        LinkStub.pages["blog.example.com"] = .init(body: Self.prose)
+        LinkStub.pages["api.anthropic.com"] = .init(body: #"{"content":[{"type":"text","text":"no recipe"}]}"#,
+                                                    type: "application/json")
+        let result = await reader(claude: true, allowed: false).read("https://blog.example.com/beans")
+        #expect(result.line == RecipeLinkLine.noRecipe)
+        #expect(!LinkStub.requests.contains { $0.url?.host() == "api.anthropic.com" } && ledger.calls().isEmpty)
+    }
+
+    @Test func aPageOfOnlyWalledLinesIsNeverSent() async {
+        LinkStub.pages["blog.example.com"] = .init(body: "<html><body><p>Paid $40 for lunch</p>"
+            + "<p>Weigh in 182.4 kg</p></body></html>")
+        LinkStub.pages["api.anthropic.com"] = .init(body: #"{"content":[]}"#, type: "application/json")
+        _ = await reader(claude: true).read("https://blog.example.com/lunch")
+        #expect(!LinkStub.requests.contains { $0.url?.host() == "api.anthropic.com" })
+    }
 }
