@@ -23,7 +23,7 @@
 | K7.17 | Planning, low / out / unknown | Low, out and unknown lines are added, as ghost rows in their aisles with the recipe's share. The peek reads "low", "out", or nothing for unknown |
 | K7.18 | ADD N TO GROCERIES key | N is the dry-run count of rows the add would make, so it equals the rows that land (D1 Paprika chicken fixture: ADD 6 TO GROCERIES). At 0 the key is absent. Receipt "Chicken, 6 added." with UNDO 10 s |
 | K7.19 | Pantry OUT AND LOW key | The side's key ADD N TO GROCERIES uses the same dry run; out and low names land in their US aisles in walk order; at 0 it reads "Nothing out." with no key |
-| K7.20 | Pantry swipe | Left swipe on an out or low line adds a ghost row, "Milk, in Groceries." UNDO 4 s. A name already on Groceries is not added twice; receipt "Milk, already on Groceries.", no UNDO (S10) |
+| K7.20 | Pantry swipe | Left swipe on an out or low line adds a ghost row, "Milk, on Groceries." UNDO 4 s. A name already on Groceries is not added twice; receipt "Milk, already on Groceries.", no UNDO (S10) |
 | K7.21 | Amounts survive the add | An out line added from Pantry carries its last typed amount and unit as written ("2 lb" stays "2 lb") |
 | K7.22 | Shop clear closes the loop | Clearing the shop sets checked ingredients to in with `lastBoughtAt`; they leave the Pantry front (S8) and the next plan skips them |
 | K7.23 | Walls | No price, pantry state or `lastBoughtAt` is sent to Claude; the pack snapshot holds none (pantry-acceptance Core row 7) |
