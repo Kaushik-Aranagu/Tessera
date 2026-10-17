@@ -1,6 +1,6 @@
 {
   "about": "Walls UI fixture (Product item AU). Every value is made up: hunter2, tacocat and 4417 are placeholders, and the fake store is not a real shop. WallsUITests reads these rows so no session types secret-shaped phrases by hand. Surfaces: askBar (Ask Tess, Write), notesPage (Notes writing line), siriAddTask (CreateTaskIntent.add in a unit test; Siri can't be driven from a UI test), paste (Kitchen, Paste a recipe), objectPage (the generic object page, its PropertyList, Linked from and the class page's newest row; Core 0ai private-field mask, rows PM01 to PM20, seeded with -wallsSeedPrivate; fixture docs/research/fixtures/private-field-mask.md, read on origin/master 64ffb93; rows PM21 to PM36 mask a workout's notes (decisions 5:07 pm, Core 0ai), with W1 to W7 added to the same seed, read on origin/master b41695d; PM35 runs as a planMyDay package row and PM36 as a liveWorkoutAsk row). Rows BN01 to BN11 (decisions 2:56, Core 0ai) seed lastWeightKg (null means no weight logged) and check the bare-number body wall; expectNoClaude true means walled, false means the phrase stays plain. The key rows have phrase null and build KEY: the test takes its value from ClaudeSection.fakeKey in test code, so nothing key-shaped is in this file. lineMatch is exact or prefix; expectLine null means no line check. passesOnMaster and masterEvidence were read on origin/master fbede70 (Oct 16, 2026). pending names the owner of a known fail; the test wraps those rows in XCTExpectFailure. Spec: docs/research/walls-ui-test-spec.md. Rows BM01 to BM31 (decisions 4:46 pm, Core 0ai rider, read on origin/master 6f9b639) cover the five paths that bypassed PrivateFacts: modelWrite, toolWrite, rememberFact, memoryTurnover and planMyDay run as package tests (seed.write says what the test writes), plus the bar trap on liveWorkoutAsk and askBar (seed.focus is the set in focus; null means a live workout with no set in focus). For package rows, mustNotShow lists strings no stored title, memory line, receipt or Claude pack may hold.",
-  "master": "fbede70",
+  "master": "38cb7ab",
   "rows": [
     {
       "id": "A01",
@@ -138,9 +138,9 @@
       "expectNotInMissLog": true,
       "expectLine": "Didn't catch that.",
       "lineMatch": "exact",
-      "passesOnMaster": false,
-      "masterEvidence": "Claude wall passes (PrivateFacts.swift:32-34, TessModel.swift:77-79). Fails the miss log: TessGrammar.swift:116-120 returns nil, and TessCaptureEngine.swift:58 logs any not-understood phrase without a PrivateFacts check.",
-      "pending": "Core: add !PrivateFacts.isWalled(phrase) at TessCaptureEngine.swift:58",
+      "passesOnMaster": true,
+      "masterEvidence": "Passes on master 38cb7ab, read by hand: the grammar and the walls now cover it (TessGrammar.swift:112-139, TessGrammar+Privacy.swift, TessCaptureEngine.swift:58-62 miss-log guard, PrivateFacts.swift sick in symptoms).",
+      "pending": null,
       "notes": "Money with a currency sign. Line stays the miss line until the money ask lands; money never goes in the miss log (12:30 pm ruling)."
     },
     {
@@ -152,9 +152,9 @@
       "expectNotInMissLog": true,
       "expectLine": "Private note",
       "lineMatch": "prefix",
-      "passesOnMaster": false,
-      "masterEvidence": "TessGrammar.swift:116-120 returns nil before parsePastLog (:127), so no dated note; TessCaptureEngine.swift:58 logs it. Claude wall passes.",
-      "pending": "Core 0j R2 / 0aa",
+      "passesOnMaster": true,
+      "masterEvidence": "Passes on master 38cb7ab, read by hand: the grammar and the walls now cover it (TessGrammar.swift:112-139, TessGrammar+Privacy.swift, TessCaptureEngine.swift:58-62 miss-log guard, PrivateFacts.swift sick in symptoms).",
+      "pending": null,
       "notes": "Product 1:15 pm: a PRIVATE dated note (notes-day-one.md N29). The test checks the line starts with \"Private note\" so Core can pick the dated wording."
     },
     {
@@ -166,9 +166,9 @@
       "expectNotInMissLog": true,
       "expectLine": "I don't keep sums of money.",
       "lineMatch": "exact",
-      "passesOnMaster": false,
-      "masterEvidence": "Line passes (TessGrammar.swift:71, :145-149). Fails the miss log: the answer has no records, so TessCapturing.swift:64 understood is false and TessCaptureEngine.swift:58 logs the amount.",
-      "pending": "Core, same one-line fix as A10",
+      "passesOnMaster": true,
+      "masterEvidence": "Passes on master 38cb7ab, read by hand: the grammar and the walls now cover it (TessGrammar.swift:112-139, TessGrammar+Privacy.swift, TessCaptureEngine.swift:58-62 miss-log guard, PrivateFacts.swift sick in symptoms).",
+      "pending": null,
       "notes": "Nothing kept in memory or notes."
     },
     {
@@ -208,9 +208,9 @@
       "expectNotInMissLog": true,
       "expectLine": "Private note, kept.",
       "lineMatch": "exact",
-      "passesOnMaster": false,
-      "masterEvidence": "PrivateFacts.swift:55-58 has no sick, so isWalled is false; the grammar misses, the spy sees a Claude call and TessCaptureEngine.swift:58 logs it.",
-      "pending": "Core 0ac Slice 1",
+      "passesOnMaster": true,
+      "masterEvidence": "Passes on master 38cb7ab, read by hand: the grammar and the walls now cover it (TessGrammar.swift:112-139, TessGrammar+Privacy.swift, TessCaptureEngine.swift:58-62 miss-log guard, PrivateFacts.swift sick in symptoms).",
+      "pending": null,
       "notes": "Expected per Slice 1 (decisions 1:36 pm, HW19). May fail until Core 0ac ships Slice 1 with the CR1 slang mask."
     },
     {

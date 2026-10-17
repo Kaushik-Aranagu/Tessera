@@ -263,3 +263,4 @@ Ranked idea briefs from the Research lab (round 1: 2026-10-15; round 2: 2026-10-
 | [drawn-sides-acceptance.md](drawn-sides-acceptance.md) | Builders A and B, QA: acceptance rows for each drawn side after Core 0ak (BQ), 87 rows across THE SETS, PER 100 G, the exercise side, WHERE IT'S MENTIONED, ITS STORY, WHAT'S IN ONE and THE DAYS |
 | [oct-22-qa-page.md](oct-22-qa-page.md) | Product, QA: one-page rider check for the Thu Oct 22 call (BT), 28 lines, one open rider per line, with a 5-minute call script |
 | [string-sweep-recount.md](string-sweep-recount.md) | Core, Builders A and B: string sweep recount (BS), 15 misses against the "no at before a time", receipt-order and bare-fallback rules |
+| [walls-ui-harness-fix.md](walls-ui-harness-fix.md) | Builder B (#564), QA: harness fix so WallsUITests reads `seed` and `mustNotShow`, clears stale lines between rows, checks Home for leaks and has a control row |
