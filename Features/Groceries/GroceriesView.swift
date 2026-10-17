@@ -156,7 +156,8 @@ private struct GroceriesPage: View {
                     .accessibilityHint("Clears the basket and ends the shop")
                 }
                 if !basket.isEmpty, !shopping {
-                    BasketFold(items: basket, isOpen: $basketOpen, breathe: breathe, label: rowLabel, onTap: uncheck,
+                    BasketFold(items: basket, isOpen: $basketOpen, breathe: breathe, label: basketLabel,
+                               onTap: uncheck,
                                onClear: { clearBasket(count: basket.count) })
                         .onGeometryChange(for: CGPoint.self) { proxy in
                             let frame = proxy.frame(in: .named("groceries"))
@@ -232,6 +233,11 @@ private struct GroceriesPage: View {
     /// What a row reads, in the list and in SHOP mode: "Private item" until it's tapped open (B8, B11).
     private func rowLabel(_ item: ListContents.Item) -> String {
         trip.label(for: item, name: GroceriesCopy.name(item), lastWeightKg: BodyWeight.lastKg(in: model.store))
+    }
+
+    /// The basket never opens a row: a private item there is always "Private item".
+    private func basketLabel(_ item: ListContents.Item) -> String {
+        trip.maskedLabel(for: item, name: GroceriesCopy.name(item), lastWeightKg: BodyWeight.lastKg(in: model.store))
     }
 
     /// A masked private row opens on its first tap, in the list or in SHOP mode; any other tap strikes.

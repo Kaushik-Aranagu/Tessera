@@ -95,9 +95,8 @@ private struct PantryPage: View {
         if let note = TessVoice.shared.note, note.undo != nil || note.takeBack != nil {
             return
         }
-        if ledger.entries().isEmpty {
-            TessVoice.shared.say(PantryCopy.empty)
-        } else if let used = ledger.lastCookUsedUp() {
+        // An empty page has no Tess line until Core's grammar reads "out of milk" (Product).
+        if let used = ledger.lastCookUsedUp() {
             TessVoice.shared.say(PantryCopy.tess(recipe: used.recipe, names: used.names))
         }
     }

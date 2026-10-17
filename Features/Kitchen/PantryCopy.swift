@@ -30,9 +30,6 @@ enum PantryCopy {
         "\(recipe) took the \(list(names))."
     }
 
-    /// Her line on an empty Pantry.
-    static let empty = "Say \"out of milk\" and I'll keep it."
-
     /// The empty page's one line.
     static let emptyBody = "Clear a shop or finish a cook and this fills in."
 

@@ -25,6 +25,12 @@ final class ShopTrip {
         return Self.privateLabel
     }
 
+    /// What a row reads where it never opens (the basket): "Private item" for any walled item, opened or not
+    /// (Design and QA on #735).
+    func maskedLabel(for item: ListContents.Item, name: String, lastWeightKg: Double?) -> String {
+        Self.isPrivate(item.text, lastWeightKg: lastWeightKg) ? Self.privateLabel : name
+    }
+
     enum Tap: Equatable {
         /// The first tap on a masked row shows its words.
         case reveal
