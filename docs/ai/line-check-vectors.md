@@ -81,10 +81,10 @@ Unless the row says otherwise, the item is the done Push A above, with rules det
 
 | id | line | numbers | names | expect | check |
 |---|---|---|---|---|---|
-| L39 | You got through 3 exercises and 12 sets, with 1 new bench best today. | done | Push A, Bench | pass | C2 at the cap, 14 words |
+| L39 | You got through 3 exercises and 12 sets, with 1 new bench best today. | done | Push A, Bench; house day = the finish's day | pass | C2 at the cap, 14 words; "today" passes only with a house day (C15), with none it fails closed |
 | L40 | You got through all 3 exercises and 12 sets, with 1 new bench best today. | done | Push A, Bench | fail | C2, 15 words |
-| L41 | Bench, incline barbell press, cable crossover: 3 exercises, 12 sets, 1 new best. | done | Push A, Bench | pass | C3 at the cap, 80 chars |
-| L42 | Bench, incline barbell press, cable crossovers: 3 exercises, 12 sets, 1 new best. | done | Push A, Bench | fail | C3, 81 chars |
+| L41 | Bench, incline barbell press, cable crossover: 3 exercises, 12 sets, 1 new best. | done | Push A, Bench, incline barbell press, cable crossover | pass | C3 at the cap, 80 chars |
+| L42 | Bench, incline barbell press, cable crossovers: 3 exercises, 12 sets, 1 new best. | done | Push A, Bench, incline barbell press, cable crossovers | fail | C3, 81 chars |
 | L43 | 3 exercises, 12 sets, 1 new best | done | Push A, Bench | fail | C4, no stop |
 | L44 | 3 exercises, 12 sets. 1 new best. | done | Push A, Bench | fail | C4, two sentences |
 | L45 | 3 exercises and 1 new best. | done | Push A, Bench | fail | C7, 12 dropped (no D2 on a detail) |
@@ -132,3 +132,17 @@ A capitalised word mid-sentence that is not in that list still fails: "today, a 
 - `fixtures/home-lines-eval.json` `allowedNamesAlways` holds "Push", "Pull", "Legs", "A", "B", so the eval's C9 passes "Push B" (L33). This sheet fails it.
 - Read word by word, the no-repeat rule would fail home-lines.md's own examples ("a bench best" under "Push A done", "today, a cook day" under "Rest day"). This sheet reads it as weekday, title phrase and state word.
 - No months list exists in code yet.
+
+## Added in the build (Core 0t, #652 and #655; Oct 17)
+
+The code is the owner of these; this sheet records what the vectors above rely on.
+
+- **C15, the house-day check, done items only.** A weekday name or relative-day word ("yesterday", "today", "tonight", "tomorrow", "last night", "this morning", "this evening") must be supported by the finish's house day (4 am turnover). "usual", "usually", "as usual", "after work" and "before work" fail outright. With no house day passed it fails closed. Part of day comes from the finish time, not the label. Planned items keep L1, L2 and L52 as written.
+- **Times the facts can't show** (also C15): last/this week, weekend, lately, recently, earlier, midnight, dawn, dusk, sunrise, sunset, lunch, dinner, breakfast, bedtime, this/last year.
+- **CLOCK.** Every clock reads "7:40 pm" or "7 pm" (12-hour, a space, am or pm); "7:40pm", "19:40", "7.40 pm" and "7:4 pm" fail.
+- **C6 per noun.** Digits are compared as values, and a counted noun takes only the values the facts give it: days since, exercises, sets, bests. "first in 3 days" fails when 3 is the exercise count and the gap is 9. "4 of 5 exercises": the 5 is the plan, licensed by `numbers`.
+- **C9 and names.** Exercise names a line may use must be in the item's names, so L41 and L42 list their lifts there and stay a pure length test (C3).
+- **C12 with his weight.** The engine's own wall runs on the line with his last weigh-in.
+- **C13.** US English: a British spelling (house list, -ise/-isation and -our stems) fails; a short American list (promising, surprising, praising, supervised, supervising, advising) is exempt.
+- **Named checks:** HOUSE ("record" for "best"), GREET, NOREPEAT, SECRET. C1 is the whole-reply check (`replyProblems`).
+- **Home done job on Sonnet** uses `tool_choice` auto: Sonnet 5.5 refuses a forced tool. 0 of 192 eval items came back with no tool call; a miss lands as C1 and keeps the rules line.
