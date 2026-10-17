@@ -71,4 +71,23 @@ struct ListsShelfTests {
         #expect(ListsCopy.pageContext(open: 0, all: 0) == "nothing on it yet")
         #expect(ListsCopy.pageContext(open: 4, all: 7) == "3 of 7")
     }
+
+    /// 9.2, 9.3, 13.3: a run is first, reads RUNNING, N LEFT, counts in the context line, and is Tess's line.
+    @Test func aRunningListLeadsTheShelf() throws {
+        let packing = try model.engine.perform(CreateList(name: "Packing"), by: .user).output
+        try model.engine.perform(AddListItem(list: packing.id, text: "socks"), by: .user)
+        try model.engine.perform(CreateList(name: "Books"), by: .user)
+        try model.engine.perform(StartListRun(list: packing.id), by: .user)
+        let shelf = ListsShelf(store: model.store, classes: model.classes, lastWeightKg: nil, engine: model.engine)
+        let first = try #require(shelf.rows.first)
+        #expect(first.name == "Packing" && first.isRunning && first.state == "RUNNING, 1 LEFT")
+        #expect(shelf.context.hasSuffix(", 1 running"))
+        #expect(shelf.tess == "Packing has 1 left.")
+    }
+
+    @Test func aReusableListReadsReusable() throws {
+        let gym = try model.engine.perform(CreateList(name: "Gym bag"), by: .user).output
+        try model.engine.perform(SetListReusable(list: gym.id), by: .user)
+        #expect(shelf.rows.first { $0.id == gym.id }?.state == "REUSABLE")
+    }
 }

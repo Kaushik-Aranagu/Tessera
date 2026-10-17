@@ -19,13 +19,14 @@ struct ListsView: View {
 
 private struct ListsShelfPage: View {
     @Environment(AppModel.self) private var model
+    @State private var spoke = false
     @Environment(\.openHomeLink) private var openLink
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         let _ = model.revision
         let shelf = ListsShelf(store: model.store, classes: model.classes,
-                               lastWeightKg: BodyWeight.lastKg(in: model.store))
+                               lastWeightKg: BodyWeight.lastKg(in: model.store), engine: model.engine)
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 BackWord(title: "Kitchen") { dismiss() }
@@ -60,6 +61,12 @@ private struct ListsShelfPage: View {
         }
         .scrollIndicators(.hidden)
         .background { ThemedBackground() }
+        .onAppear {
+            // Once per visit, the running list's fact (13.3); never an item's words.
+            guard !spoke, let line = shelf.tess else { return }
+            spoke = true
+            TessVoice.shared.say(line)
+        }
     }
 
     /// 108 pt after a 56, 80 after a 34, 58 after a 21 (from baseline to baseline, roughly).
@@ -81,7 +88,8 @@ private struct ListsShelfPage: View {
                 .multilineTextAlignment(.leading)
             Text(row.state)
                 .textRole(.label)
-                .foregroundStyle(Theme.Colors.inkSecondary)
+                // A run's state word is vermilion, the live colour (9.3).
+                .foregroundStyle(row.isRunning ? Theme.Colors.live : Theme.Colors.inkSecondary)
         }
         .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
         .contentShape(Rectangle())
@@ -115,6 +123,7 @@ private struct ListPage: View {
     /// .notNow, the row leaving (Design on #786); UNDO plays its own.
     @State private var removed = 0
     @State private var reset = 0
+    @State private var runChanged = 0
     /// Private rows: "Private item" until tapped, masked again on leaving (as Groceries, B11).
     @State private var rows = ShopTrip()
     @FocusState private var writing: Bool
@@ -126,6 +135,7 @@ private struct ListPage: View {
             let open = contents.open(in: list), done = contents.done(in: list)
             let name = ListsShelf.shownName(model.store.displayTitle(of: list),
                                             lastWeightKg: BodyWeight.lastKg(in: model.store))
+            let run = contents.run(of: list, in: model.engine)
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     BackWord(title: "Lists") { dismiss() }
@@ -134,7 +144,9 @@ private struct ListPage: View {
                     } label: {
                         // The visible cue that it opens (Design on #806): a small mark that turns as it unfolds.
                         HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.xs) {
-                            Text(ListsCopy.pageContext(open: open.count, all: open.count + done.count))
+                            // A run reads "Packing, running" (10.7).
+                            Text(run != nil ? ListsCopy.running(name)
+                                : ListsCopy.pageContext(open: open.count, all: open.count + done.count))
                                 .font(Theme.voice(size: 21))
                                 .foregroundStyle(Theme.Colors.context)
                             Text("›")
@@ -149,7 +161,7 @@ private struct ListPage: View {
                     .accessibilityHint(optionsOpen ? "Hides the list's options" : "Shows the list's options")
                     .entrance(0)
                     if optionsOpen, list.id != Groceries.listID {
-                        options(list, name: name, reusable: contents.isReusable(list))
+                        options(list, name: name, reusable: contents.isReusable(list), running: run != nil)
                             .transition(.opacity.combined(with: .move(edge: .top)))
                     }
                     Text(name)
@@ -192,6 +204,15 @@ private struct ListPage: View {
             }
             .background { ThemedBackground() }
             .background { EdgeSwipeBack() }
+            // A run lights the page: the vermilion seam at the top, as the shop does (10.7).
+            .overlay(alignment: .top) {
+                if run?.state == .running {
+                    ProcessSeam(color: Theme.Colors.live)
+                        .ignoresSafeArea(edges: .top)
+                        .transition(.opacity)
+                }
+            }
+            .tesseraFeedback(.done, trigger: runChanged)
             .toolbar(.hidden, for: .navigationBar)
             .tesseraFeedback(.notNow, trigger: removed)
             // A cleared run (Design on #806); .done is for finishing.
@@ -227,6 +248,13 @@ private struct ListPage: View {
         rows.label(for: item, name: item.text, lastWeightKg: BodyWeight.lastKg(in: model.store))
     }
 
+    /// Whether this list has a run open: rows grow to 64 pt (10.7).
+    private var running: Bool {
+        model.store.object(id: listID).flatMap {
+            ListContents(store: model.store, classes: model.classes).run(of: $0, in: model.engine)
+        } != nil
+    }
+
     private func row(_ item: ListContents.Item) -> some View {
         let shown = label(item)
         return Button { tap(item) } label: {
@@ -235,7 +263,7 @@ private struct ListPage: View {
                 .foregroundStyle(Theme.Colors.ink)
                 .lineLimit(2)
                 .textRenderer(StrikeRenderer(progress: striking.contains(item.id) ? 1 : 0, color: Theme.Colors.ink))
-                .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
+                .frame(maxWidth: .infinity, minHeight: running ? 64 : 48, alignment: .leading)
                 .contentShape(Rectangle())
         }
         .buttonStyle(HandleButtonStyle())
@@ -317,8 +345,21 @@ private struct ListPage: View {
     /// The fold: "4 done". Tap shows them (a tap on one takes it back out); hold 0.7 s clears them.
     /// The option words, ink words with no shape: Reusable now; Run it, Pick one and Put away arrive with their
     /// engine actions. The on word is ink at full weight, the off word secondary ink.
-    private func options(_: ObjectRecord, name: String, reusable: Bool) -> some View {
+    private func options(_: ObjectRecord, name: String, reusable: Bool, running: Bool) -> some View {
         HStack(spacing: Theme.Spacing.l) {
+            // Run it starts (or picks back up) a run; while one is open the word is Done (10.5, 10.11).
+            Button {
+                running ? finishRun(name: name) : startRun(name: name)
+            } label: {
+                Text(running ? "Done" : "Run it")
+                    .textRole(.labelStrong)
+                    .textCase(.uppercase)
+                    .foregroundStyle(running ? Theme.Colors.live : Theme.Colors.ink)
+                    .contentTransition(.opacity)
+                    .frame(minHeight: 44)
+            }
+            .buttonStyle(HandleButtonStyle())
+            .accessibilityHint(running ? "Finishes the run" : "Runs the list on Now")
             Button {
                 setReusable(!reusable, was: reusable, name: name)
             } label: {
@@ -337,6 +378,43 @@ private struct ListPage: View {
         }
         .contentShape(Rectangle())
         .onTapGesture { withTesseraAnimation(Theme.Motion.snappy, reduceMotion: reduceMotion) { optionsOpen = false } }
+    }
+
+    /// "Packing, 6 left." with UNDO 4 s, a new run; the page lights (10.7). While a workout runs the engine refuses:
+    /// "Workout running." and nothing starts (G56).
+    private func startRun(name: String) {
+        var record: OpRecord?
+        if let refusal = RecipeCopy.startCook({
+            record = try model.engine.perform(StartListRun(list: listID, time: AppClock.now), by: .user).record
+        }) {
+            TessVoice.shared.say(refusal)
+            return
+        }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+            optionsOpen = false
+            model.touch()
+        }
+        runChanged += 1
+        let left = model.store.object(id: listID).map { ListContents(store: model.store, classes: model.classes)
+            .open(in: $0).count
+        } ?? 0
+        TessVoice.shared.say(ListsCopy.runStarted(name, left: left), undo: record, holds: .seconds(4))
+    }
+
+    /// "Packing, done." (or "… done. 3 left") with UNDO 10 s. A plain list loses its checked items; a reusable list
+    /// keeps every strike for the reset hold (10.11).
+    private func finishRun(name: String) {
+        guard let result = try? model.engine.perform(FinishListRun(list: listID, time: AppClock.now), by: .user)
+        else {
+            TessVoice.shared.say("Didn't save that. Try again.")
+            return
+        }
+        withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
+            optionsOpen = false
+            model.touch()
+        }
+        runChanged += 1
+        TessVoice.shared.say(ListsCopy.runDone(name, left: result.output.left), undo: result.record)
     }
 
     /// "Packing, reusable." / "Packing, not reusable." with UNDO 10 s, a change.

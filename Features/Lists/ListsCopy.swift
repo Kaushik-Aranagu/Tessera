@@ -70,6 +70,21 @@ enum ListsCopy {
     }
 
     /// A running list's state word: "RUNNING, 2 LEFT" (comma, never a dot or " · ").
+    /// The page's context line while a run is open: "Packing, running" (10.7).
+    static func running(_ list: String) -> String {
+        "\(list), running"
+    }
+
+    /// A run's start, with the shown name: "Packing, 6 left." / "Packing, nothing left."
+    static func runStarted(_ list: String, left: Int) -> String {
+        left == 0 ? "\(list), nothing left." : "\(list), \(left) left."
+    }
+
+    /// A run's finish: "Packing, done." or "Packing, done. 3 left." (Product, Oct 16 12:38 PM).
+    static func runDone(_ list: String, left: Int) -> String {
+        left > 0 ? "\(list), done. \(left) left." : "\(list), done."
+    }
+
     static func runState(left: Int) -> String {
         "RUNNING, \(left) LEFT"
     }
