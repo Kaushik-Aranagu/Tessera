@@ -584,7 +584,9 @@ extension WorkoutContent {
 
     private var lastReps: Int? {
         guard let entry = session.currentEntry else { return nil }
-        return session.setRows(of: entry).last.map { Int($0.reps) } ?? session.lastTimeReps.map(Int.init)
+        // `Int(Double)` traps on NaN, infinity or a huge value, so both reads go through the safe conversion.
+        let logged = session.setRows(of: entry).last.flatMap { RecipeLimits.whole($0.reps) }
+        return logged ?? session.lastTimeReps.flatMap(RecipeLimits.whole)
     }
 }
 
