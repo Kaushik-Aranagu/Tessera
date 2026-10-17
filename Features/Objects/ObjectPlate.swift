@@ -1,4 +1,5 @@
 import SwiftUI
+import TesseraCore
 
 /// The plate (sheet 88): 56 pt at the top edge of an object page, full bleed, opaque to 34 and melting into the
 /// ground by 56. A generative wash in the object's pigments is there at first paint; a photo, when there is one,
@@ -13,23 +14,26 @@ struct ObjectPlate: View {
     /// Seeds the wash from the object's id, so the same object draws the same plate every time.
     let seed: UInt64
     let photo: Image?
-    /// VoiceOver for a photo, through the masked title: "Photo of Sheet-pan paprika chicken, from budgetbytes.com".
-    let photoLabel: String?
+    /// VoiceOver for a photo, built here from the title and site so no caller can pass a raw string (QA on #758).
+    let photoLabel: String
 
-    init(objectID: UUID, isPrivate: Bool, pigments: @autoclosure () -> [UInt32] = [PlateWash.kitchenGreen],
-         photo: Image? = nil, photoLabel: String? = nil)
+    init(objectID: UUID, isPrivate: Bool, title: String, site: String? = nil,
+         pigments: @autoclosure () -> [UInt32] = [PlateWash.kitchenGreen], photo: Image? = nil)
     {
         self.isPrivate = isPrivate
         self.pigments = isPrivate ? [] : pigments()
         seed = PlateWash.seed(objectID)
         self.photo = isPrivate ? nil : photo
-        self.photoLabel = photoLabel
+        photoLabel = Self.photoLabel(title: title, isPrivate: isPrivate, site: site)
     }
 
-    /// "Photo of Sheet-pan paprika chicken, from budgetbytes.com", with a private title only "Private recipe".
+    /// "Photo of Sheet-pan paprika chicken, from budgetbytes.com". A private plate is only "Photo of Private
+    /// recipe", with no site either (QA on #758).
     static func photoLabel(title: String, isPrivate: Bool, site: String?) -> String {
-        let name = isPrivate ? "Private recipe" : title
-        return site.map { "Photo of \(name), from \($0)" } ?? "Photo of \(name)"
+        if isPrivate {
+            return "Photo of \(ObjectPrivacy.recipeLabel)"
+        }
+        return site.map { "Photo of \(title), from \($0)" } ?? "Photo of \(title)"
     }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -48,7 +52,7 @@ struct ObjectPlate: View {
                         .opacity(dried ? 1 : 0)
                         .blur(radius: dried || reduceMotion ? 0 : 5)
                         .saturation(dried || reduceMotion ? 1 : 0.6)
-                        .accessibilityLabel(photoLabel ?? "Photo")
+                        .accessibilityLabel(photoLabel)
                         .onAppear {
                             withAnimation(reduceMotion ? .easeOut(duration: 0.15) : Theme.Motion.house
                                 .speed(0.36 / 0.38))
