@@ -14,7 +14,7 @@ Input: groups in order, each with a word and a row count. Output: pages, each wi
 | PG02 | one group of 7 | 2 pages, the second keeps the word | past 6 it continues (rules 1, 2) | `sevenRowsSplitInTwo` |
 | PG03 | one group of 0 | no page | an empty group draws nothing | `emptyGroupDrawsNoPage` |
 | PG04 | PRODUCE 10 | PRODUCE 5, PRODUCE 5 | rule 2 "nearest even break" stands (R1 ruled); the board's 6+4 is redrawn by Design | `produceTenSplitsFiveFive` |
-| PG05 | THIS WEEK 7, EARLIER 13 | THIS WEEK 4, THIS WEEK 3, EARLIER 5, EARLIER 4, EARLIER 4 (5 pages, 20 notes) | even split: 7 as 4+3, 13 as 5+4+4; none of the pages can merge (3+5 is over 6 only if two groups share, and 3+5 is 8) | `notesTwentySplitsEvenly` |
+| PG05 | THIS WEEK 7, EARLIER 13 | THIS WEEK 4, THIS WEEK 3, EARLIER 5, EARLIER 4, EARLIER 4 (5 pages, 20 notes) | even split: 7 as 4+3, 13 as 5+4+4; THIS WEEK 3 plus EARLIER 5 would be 8 rows, over 6, so no pages merge | `notesTwentySplitsEvenly` |
 | PG06 | Set history: THU OCT 16 6, MON OCT 13 6 | 2 pages of 6 | exact fits never split (the board) | `twoFullGroupsTwoPages` |
 | PG07 | A 2, B 3 | 1 page, two words, one hairline | small neighbours share, at most two groups (rule 2) | `smallNeighboursShareAPage` |
 | PG08 | A 2, B 2, C 2 | A+B on page 1, C on page 2 | never three groups on a page | `neverThreeGroupsOnAPage` |
