@@ -49,6 +49,9 @@ public struct ClaudeTessModel: TessModel {
     public func run(_ request: TessRequest, engine: ActionEngine) async -> TessResult {
         // Siri and Shortcuts commit at once (no ghost, no UNDO): Claude never writes for them (QA R3 on #283).
         guard !request.context.commitImmediately, let key = keys.read() else { return .missed }
+        // The switch and the key shape are checked here too, not only in `isAvailable` and the router: a direct
+        // caller must not skip them (a4-bypass item 3).
+        guard sendsMisses(), !looksLikeClaudeKey(request.text) else { return .missed }
         // The second wall (MU2, Research 138 MW4 and 139): a secret, money or body phrase never leaves, even from the
         // inbox or a direct caller. The inbox drains through here, so an old item queued before the wall is dropped.
         guard !SecretWords.mentions(request.text), !PrivateFacts.isWalled(
@@ -57,6 +60,7 @@ public struct ClaudeTessModel: TessModel {
         ) else { return .missed }
         // Every round resends the system prompt and the tool definitions with the phrase (QA on #283).
         let system = system(request.context, engine: engine, lastWeightKg: request.lastWeightKg(engine))
+        guard !looksLikeClaudeKey(system) else { return .missed }
         let tools = (try? TessTools.definitionsJSON()).flatMap { String(data: $0, encoding: .utf8) } ?? ""
         let estimate = TessUsageLedger.estimate(text: request.text + system + tools,
                                                 maxTokens: Self.maxTokens, model: Self.model) * Int64(Self.maxRounds)

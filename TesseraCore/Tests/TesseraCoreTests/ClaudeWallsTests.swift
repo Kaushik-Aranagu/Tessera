@@ -81,4 +81,26 @@ struct ClaudeWallsTests {
         let body = try #require(String(data: RouteStub.bodies[0], encoding: .utf8))
         #expect(!body.contains("182.4") && body.contains("no workout in focus"))
     }
+
+    // MARK: a4-3
+
+    @Test func claudeRunRefusesWhenSwitchOffOrTextIsKeyShaped() async throws {
+        let phrase = "could you log bench 80 for 8 from earlier?"
+        let off = await claude(sends: { false }).run(TessRequest(text: phrase, context: context, use: .capture),
+                                                     engine: engine)
+        #expect(off.isMissed)
+        let shaped = "log this " + "sk-" + "ant-" + "api03-" + String(repeating: "a1B2c3", count: 6)
+        let pasted = await claude().run(TessRequest(text: shaped, context: context, use: .capture), engine: engine)
+        #expect(pasted.isMissed)
+        #expect(RouteStub.requests.isEmpty && ledger.calls().isEmpty)
+        // With the switch on and an ordinary phrase the same call does go out.
+        _ = await claude().run(TessRequest(text: phrase, context: context, use: .capture), engine: engine)
+        #expect(RouteStub.requests.count == 1)
+    }
+}
+
+extension TessResult {
+    var isMissed: Bool {
+        if case .missed = self { true } else { false }
+    }
 }
