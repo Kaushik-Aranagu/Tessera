@@ -30,8 +30,7 @@ private struct PantryPage: View {
 
     var body: some View {
         let _ = model.revision
-        let entries = ledger.entries().filter { $0.state != .have }
-        let known = !ledger.entries().isEmpty
+        let front = PantryFront(ledger: ledger, now: AppClock.now)
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 Text("Pantry")
@@ -39,20 +38,20 @@ private struct PantryPage: View {
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
                     .entrance(0)
-                if let context = PantryCopy.context(lastShop: ledger.lastShop(), now: AppClock.now) {
+                if let context = front.context {
                     Text(context)
                         .font(Theme.voice(size: 21))
                         .foregroundStyle(Theme.Colors.context)
                         .padding(.top, Theme.Spacing.s)
                         .entrance(1)
                 }
-                Text(PantryLedger.hero(known ? ledger.entries() : []))
+                Text(front.hero)
                     .textRole(.hero)
                     .foregroundStyle(Theme.Colors.ink)
                     .contentTransition(.identity)
                     .padding(.top, Theme.Spacing.xs)
                     .entrance(1)
-                if !known {
+                if front.isEmpty {
                     Text(PantryCopy.emptyBody)
                         .font(Theme.voice)
                         .foregroundStyle(Theme.Colors.inkSecondary)
@@ -60,8 +59,7 @@ private struct PantryPage: View {
                         .padding(.top, Theme.Spacing.l)
                         .entrance(2)
                 }
-                ForEach([PantryLedger.State.out, .low], id: \.self) { state in
-                    let lines = entries.filter { $0.state == state }
+                ForEach([(PantryLedger.State.out, front.out), (.low, front.low)], id: \.0) { state, lines in
                     if !lines.isEmpty {
                         VStack(alignment: .leading, spacing: 0) {
                             Text(state.word.uppercased())
@@ -80,24 +78,24 @@ private struct PantryPage: View {
             }
             .padding(.horizontal, Theme.Spacing.gutter)
             .padding(.vertical, Theme.Spacing.l)
-            .tesseraAnimation(value: entries.map(\.id))
+            .tesseraAnimation(value: (front.out + front.low).map(\.id))
         }
         .scrollIndicators(.hidden)
         .background { ThemedBackground() }
         .background { EdgeSwipeBack() }
         .toolbar(.hidden, for: .navigationBar)
-        .onAppear(perform: speak)
+        .onAppear { speak(front) }
     }
 
-    /// Her band: what the last cook used up, or how to start on an empty page.
-    private func speak() {
+    /// Her band: what the last cook used up.
+    private func speak(_ front: PantryFront) {
         // Never over an open UNDO: that line keeps its window (QA L2 on #727).
         if let note = TessVoice.shared.note, note.undo != nil || note.takeBack != nil {
             return
         }
         // An empty page has no Tess line until Core's grammar reads "out of milk" (Product).
-        if let used = ledger.lastCookUsedUp() {
-            TessVoice.shared.say(PantryCopy.tess(recipe: used.recipe, names: used.names))
+        if let tess = front.tess {
+            TessVoice.shared.say(tess)
         }
     }
 
@@ -106,6 +104,12 @@ private struct PantryPage: View {
     /// Whether it landed: the swipe's haptic plays only for a real add (Design on #727).
     @discardableResult
     private func add(_ entry: PantryLedger.Entry) -> Bool {
+        let groceries = Groceries(store: model.store, classes: model.classes)
+        // Already there: no second row and no UNDO (S10).
+        if case let .already(receipt) = PantryFront.swipe(entry, groceries: groceries, store: model.store) {
+            TessVoice.shared.say(receipt)
+            return false
+        }
         let name = model.store.displayTitle(of: entry.ingredient)
         guard let record = try? model.engine.perform(AddGroceries(lines: [name]), by: .user).record else {
             TessVoice.shared.say("Didn't save that. Try again.")
@@ -122,6 +126,7 @@ struct PantryLine: View {
     let entry: PantryLedger.Entry
     var onAdd: () -> Bool = { false }
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var pull: CGFloat = 0
     @State private var added = 0
 
@@ -173,11 +178,18 @@ struct PantryLine: View {
     }
 
     private func row(_ name: String) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.s) {
+        // At accessibility sizes the state word goes under the name, one column, nothing clipped (S16).
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.xs))
+            : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: Theme.Spacing.s))
+        return layout {
             Text(name)
                 .textRole(.body)
                 .foregroundStyle(Theme.Colors.ink)
-            Spacer(minLength: Theme.Spacing.m)
+                .fixedSize(horizontal: false, vertical: true)
+            if !typeSize.isAccessibilitySize {
+                Spacer(minLength: Theme.Spacing.m)
+            }
             Text(entry.state.word)
                 .textRole(.body)
                 .fontWeight(entry.state == .out ? .bold : .semibold)
