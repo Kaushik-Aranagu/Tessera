@@ -167,7 +167,11 @@ public struct AddListItem: EngineAction {
         guard let kept = Self.kept(text.trimmingCharacters(in: .whitespacesAndNewlines), store: store) else {
             return SecretWords.title
         }
-        return Self.isPrivateItem(kept, store: store) ? "Added \(Self.privateItemLabel)" : "Added \(kept)"
+        // Thing first, as Siri reads it (Design on #627): "Private item, added to Errands".
+        let listTitle = store.object(id: list)?.title ?? "the list"
+        let thing = Self.isPrivateItem(kept, store: store) ? Self.privateItemLabel : kept.prefix(1).uppercased() + kept
+            .dropFirst()
+        return "\(thing), added to \(listTitle)"
     }
 
     public func receipt(in store: ObjectStore) -> String? {

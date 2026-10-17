@@ -290,7 +290,8 @@ struct WallsBypassTests {
         _ = try engine.perform(CreateTask(title: "refill lexapro $40 fri"), by: .tess)
         _ = try engine.perform(CreateTask(title: "refill lexapro $40", startsAt: Self.at(16, 9)), by: .tess)
         let tasks = try store.objects(of: #require(classes[.task])).map(\.title)
-        #expect(tasks == [ObjectPrivacy.taskLabel], "\(tasks)")
+        // Product 8:28 PM PT: a medicine task stays a task, with a time or not, shown as "Private task".
+        #expect(tasks == [ObjectPrivacy.taskLabel, ObjectPrivacy.taskLabel], "\(tasks)")
         #expect(!everythingShown().lowercased().contains("lexapro") && !everythingShown().contains("40"))
     }
 
@@ -328,7 +329,7 @@ struct WallsBypassTests {
         try engine.perform(AddListItem(list: list.id, text: "pins"), by: .user)
         let lexapro = try engine.perform(AddListItem(list: list.id, text: "lexapro"), by: .user)
         #expect(list.orderedChildren.map(\.title) == ["pins", "lexapro"])
-        #expect(lexapro.record.summary == "Added Private item")
+        #expect(lexapro.record.summary == "Private item, added to Errands")
         #expect(lexapro.record.receipt == "Private item, on Errands")
         let shown = engine.history().flatMap { [$0.summary, $0.receipt ?? ""] }.joined()
         #expect(!shown.contains("lexapro") && !shown.contains("82.4") && !shown.contains("wifi"))
@@ -385,6 +386,37 @@ struct WallsBypassTests {
         #expect(!everythingShown().lowercased().contains("heart rate"))
     }
 
+    @Test func aCountOrALiftIsNotHisWeight() throws {
+        // Product 8:28 PM PT.
+        #expect(!PrivateFacts.isWalled("80 stickers", lastWeightKg: 82))
+        #expect(!PrivateFacts.isWalled("order 76 envelopes", lastWeightKg: 82))
+        #expect(PrivateFacts.isWalled("is 82.4 good?", lastWeightKg: 82))
+        #expect(BodyWeight.kilograms(in: "weighed squat at 140 kg") == nil)
+        try weigh(82, at: Self.at(10, 7))
+        try engine.perform(CreateNote(body: "weighed squat at 140 kg", isPrivate: true), by: .user)
+        #expect(BodyWeight.lastKg(in: store) == 82)
+    }
+
+    @Test func theLibraryNeverHidesAMorningWeighIn() throws {
+        // QA on #638: "Good Morning" is in the library; "82 kg this morning" is still his weight.
+        try ExerciseLibraryInstaller.install(shape: .patternSpine, store: store, classes: classes)
+        #expect(BodyWeight.exerciseNames(in: store).contains("bench press"))
+        #expect(!BodyWeight.exerciseNames(in: store).contains("good morning"))
+        let note = try engine.perform(CreateNote(body: "82 kg this morning", isPrivate: true), by: .user)
+        note.output.createdAt = Self.at(14, 7)
+        #expect(BodyWeight.lastKg(in: store) == 82)
+        try engine.perform(CreateNote(body: "romanian deadlift 100 kg", isPrivate: true), by: .user)
+        #expect(BodyWeight.lastKg(in: store) == 82)
+        #expect(PrivateFacts.isWalled("how's 76 looking?", lastWeightKg: BodyWeight.lastKg(in: store)))
+        #expect(PrivateFacts.isWalled("is 82 less?", lastWeightKg: 82))
+    }
+
+    @Test func dayNamesAreUSEnglishInAnyLocale() {
+        var calendar = Self.calendar
+        calendar.locale = Locale(identifier: "fr_FR")
+        #expect(TesseraDay.weekdayName(of: Self.at(18, 12), calendar: calendar) == "Sunday")
+    }
+
     @Test(arguments: ["Room 82", "bus 76 at 8", "gate 80", "ticket #84"])
     func aNumberThatNamesSomethingIsNotHisWeight(_ phrase: String) {
         #expect(!PrivateFacts.isWalled(phrase, lastWeightKg: 82), "\(phrase)")
@@ -412,7 +444,7 @@ struct WallsBypassTests {
     @Test func aListItemsLinesMatchWhatWasKept() throws {
         let list = try engine.perform(CreateList(name: "Errands"), by: .user).output
         let milk = try engine.perform(AddListItem(list: list.id, text: "milk $4"), by: .user)
-        #expect(milk.output.title == "milk" && milk.record.summary == "Added milk")
+        #expect(milk.output.title == "milk" && milk.record.summary == "Milk, added to Errands")
         #expect(milk.record.receipt == "Milk, added to Errands")
     }
 

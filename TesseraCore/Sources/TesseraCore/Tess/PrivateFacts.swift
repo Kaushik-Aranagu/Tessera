@@ -144,6 +144,17 @@ public enum PrivateFacts {
         #"\b(?:"# + namingWords.joined(separator: "|") + #")\s*#?\s*\d+\b|#\s*\d+\b"#
     )
 
+    /// A plural noun after a number makes it a count, not his weight: "80 stickers", "76 emails" (Product 8:28 PM PT).
+    static func isCountNoun(_ word: String) -> Bool {
+        word.count > 3 && word.hasSuffix("s") && !bodyWords.contains(word) && !bodyUnits.contains(word)
+            && !dayWords.contains(word) && !notNouns.contains(word)
+    }
+
+    /// Words ending in "s" that are not things counted (QA on #638: "is 82 less?").
+    static let notNouns: Set<String> = ["less", "plus", "minus", "this", "does", "looks", "seems", "always", "perhaps",
+                                        "unless", "across", "thus", "yours", "ours", "hers", "theirs", "goes", "says",
+                                        "means", "feels", "sounds", "gets", "makes", "stays", "keeps", "shows"]
+
     /// A bare number that is his weight (Product 2:56 and 4:46 PM PT): within 10% of his last logged weight, with or
     /// without a day word ("is 82.4 good?", "how's 76 looking?"); with none logged, a decimal beside a body word
     /// ("my weight is 82.4"). A number with another unit after it stays plain, read on the raw phrase ("85% done").
@@ -154,7 +165,7 @@ public enum PrivateFacts {
             .replacing(namedNumber, with: " ")
         let numbers = text.matches(of: /(\d+(?:[.,]\d+)?)\s*(%|×|[a-z]+)?/).compactMap { match -> Double? in
             let unit = match.output.2.map(String.init)
-            guard unit.map({ !otherUnits.contains($0) }) ?? true,
+            guard unit.map({ !otherUnits.contains($0) && !isCountNoun($0) }) ?? true,
                   var value = Double(match.output.1.replacingOccurrences(of: ",", with: ".")) else { return nil }
             if let unit, ["lb", "lbs", "pounds"].contains(unit) {
                 value *= 0.453_592

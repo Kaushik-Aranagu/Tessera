@@ -106,3 +106,11 @@ THE WEEK'S COOKS (AHEAD, sheet 74) now, and it stays that way when Pantry arrive
 | 7.7 | Paste WHAT I READ lists all lines in order: kept lines plain, a plain ignored line with its words dim and "ignored"; a private or secret-looking line shows only a bar and "ignored", never its words (the wall also stops it reaching Claude); the glance counts kept and ignored ("14 lines kept", "3 ignored") and Tess says "14 of 17 lines kept." |
 | 7.8 | None of these sides shows nutrition or any total of food values (`never-sums-audit.md`) |
 
+
+**COOKS median and long cooks (Kitchen ruling, from Research `docs/ai/side-line-helpers.md` §4).** The helper drops any cook longer than 6 hours from the median because a cook set aside and resumed includes its pause. An overnight recipe (overnight oats, a 6 h 55 min cook) is legitimately long, so the cutoff cannot be a flat 6 hours for those.
+
+| # | Pass when |
+|---|---|
+| 7.9 | The COOKS list shows every finished cook with its duration, long ones included ("6 h 55 min"); only the median skips cooks it judges implausible |
+| 7.10 | The cutoff is 6 hours, except for a recipe whose own total time (`totalMinutes`) is 6 hours or more, where the cutoff is twice that total; overnight oats with three cooks of 6 h 55 min, 7 h 10 min and 6 h 40 min gives a median of 6 h 55 min, not nil |
+| 7.11 | A planned-cook "to buy" count sums distinct rows, so a row two cooks share counts once, matching row 7.2 and the Groceries front |
