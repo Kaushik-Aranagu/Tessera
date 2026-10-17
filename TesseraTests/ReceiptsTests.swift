@@ -11,6 +11,11 @@ struct ReceiptsTests {
         #expect(Receipt.takenBack("") == "Taken back.")
     }
 
+    @Test func dropNamesTheRoutineAndItsUndoPutsItBack() {
+        #expect(Receipt.dropped("Legs B") == "Legs B, dropped.")
+        #expect(Receipt.backOnPlan("Legs B") == "Legs B, back on the plan.")
+    }
+
     @Test func routineEditsNameTheExerciseFirst() {
         let slot = UUID()
         #expect(Receipt.routineEdit(AddSlot(routine: UUID(), exercise: UUID()), exercise: "Bench press",
@@ -29,7 +34,7 @@ struct ReceiptsTests {
 
     @Test func setLoggedNamesTheSet() {
         #expect(WorkoutLines.loggedLine(3) == "Set 3 logged.")
-        #expect(WorkoutLines.loggedLine(nil) == "Logged.")
+        #expect(WorkoutLines.loggedLine(nil) == "Set, logged.")
     }
 
     @Test func topSetCheckNamesTheSets() {
@@ -37,9 +42,10 @@ struct ReceiptsTests {
     }
 
     @Test func typedLogNamesTheExercise() {
-        #expect(CommandInterpreter.loggedReceipt(exercise: "Bench Press", weight: 82.5, reps: 8, e1RM: 104.5)
-            == "Bench press 82.5 × 8, logged. e1RM 104.5.")
-        #expect(CommandInterpreter.loggedReceipt(exercise: "Squat", weight: 100, reps: 5, e1RM: nil)
+        // No e1RM in a receipt; a new best still says so (Product, 2:29 PM PT Oct 16).
+        #expect(CommandInterpreter.loggedReceipt(exercise: "Bench Press", weight: 82.5, reps: 8, best: true)
+            == "Bench press 82.5 × 8, logged, best.")
+        #expect(CommandInterpreter.loggedReceipt(exercise: "Squat", weight: 100, reps: 5, best: false)
             == "Squat 100 × 5, logged.")
     }
 }

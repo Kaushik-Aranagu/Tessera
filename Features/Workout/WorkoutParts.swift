@@ -224,13 +224,13 @@ enum WorkoutLines {
             return note
         }
         if case .rest = phase, let seated = session.lastSeated {
-            // The receipt (live-workout.md §6): "Set 3 logged. 80 × 8." and "New best: 85 × 5. e1RM 99."
+            // The receipt (live-workout.md §6): "Set 3 logged. 80 × 8." and "New best: 85 × 5." (no e1RM in a
+            // receipt; the estimate lives on the exercise page, Product 2:29 PM PT Oct 16).
             let set = "\(Format.kilograms(seated.weight)) × \(Int(seated.reps))"
             if seated.records.isEmpty {
                 return "Set \(seated.number) logged. \(set)."
             }
-            return "New best: \(set)." +
-                (seated.e1RM.map { " e1RM \(Format.kilograms(($0 * 10).rounded() / 10))." } ?? "")
+            return "New best: \(set)."
         }
         switch phase {
         case .exerciseDone: return "\(session.currentExercise?.name ?? "That") is done."
@@ -240,9 +240,9 @@ enum WorkoutLines {
         }
     }
 
-    /// The receipt after a set lands, thing first (receipts-thing-first.md RC10): "Set 3 logged.".
+    /// The receipt after a set lands, thing first (receipts-thing-first.md RC10): "Set 3 logged.", else "Set, logged.".
     static func loggedLine(_ number: Int?) -> String {
-        number.map { "Set \($0) logged." } ?? "Logged."
+        number.map { "Set \($0) logged." } ?? "Set, logged."
     }
 
     /// While dialling a set.

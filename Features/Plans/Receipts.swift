@@ -9,6 +9,15 @@ enum Receipt {
         thing.isEmpty ? "Taken back." : "\(thing), taken back."
     }
 
+    /// A routine dropped from the plan, and its UNDO line: "Legs B, dropped.", "Legs B, back on the plan.".
+    static func dropped(_ routine: String) -> String {
+        "\(routine), dropped."
+    }
+
+    static func backOnPlan(_ routine: String) -> String {
+        "\(routine), back on the plan."
+    }
+
     /// The exercise a routine edit touches, read before the change runs (a removed slot is gone after it).
     @MainActor
     static func exercise(of action: any EngineAction, in store: ObjectStore) -> String? {
