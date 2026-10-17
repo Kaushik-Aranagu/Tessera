@@ -221,22 +221,15 @@ private struct GroceriesPage: View {
     /// the draft with its line ("That stays on this phone.", "That one stays out of Groceries." or the key line) and
     /// no UNDO, never a silent clear.
     private func add() {
-        let lines = GroceriesCopy.lines(in: draft)
-        guard !lines.isEmpty else { return }
-        let split = GroceriesWall.split(lines, store: model.store)
-        if !split.kept.isEmpty {
-            // Keep what was typed if it couldn't be added, and say so (QA on #766).
-            guard (try? model.engine.perform(AddGroceries(lines: split.kept), by: .user)) != nil else {
-                TessVoice.shared.say("Didn't save that. Try again.")
-                return
-            }
-        }
+        guard !GroceriesCopy.lines(in: draft).isEmpty else { return }
+        let outcome = GroceriesWall.add(draft, engine: model.engine, store: model.store)
         withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
-            draft = GroceriesWall.heldDraft(split.walled)
+            draft = outcome.draft
             model.touch()
         }
-        if let line = GroceriesWall.spoken(split.walled) {
-            TessVoice.shared.say(line)
+        if let voice = outcome.voice {
+            // A new add's UNDO holds 4 s (10 s under VoiceOver); a walled line or a failure has none.
+            TessVoice.shared.say(voice, undo: outcome.undo, holds: outcome.undo == nil ? nil : .seconds(4))
         }
     }
 
