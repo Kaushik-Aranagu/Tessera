@@ -4,16 +4,15 @@ Lead: Ops thread. Mission (Kaushik, Oct 16 5:43 PM PT): keep improving the infra
 
 **Lane 1 (infrastructure):** cheaper, safer merges. **Lane 2 (work quality):** stale boards, verdict lines, relay friction.
 
-**Now:** staffing model proposal ([../staffing-model.md](../staffing-model.md)), then PR digest and test.sh timing.
+**Now:** pace-ledger row 2 (due 7:30 to 8 PM PT Oct 16), then refill and the 24/7 CPU lane below.
 
-**Next:**
-1. Adopt the verdict line with QA and Design (template in ../verdict-line.md).
-2. PR-status digest: one table of open PRs, head SHA, QA/Design verdict, mergeable state, so merge workers read one file instead of many.
-3. test.sh speed audit: time each stage, find what can run in parallel or be skipped when only docs change.
-4. Board and memory staleness check: script that flags board entries naming merged PRs and memory files over 3000 bytes.
-5. Fresh-worker rotation rule for merge workers (restart past about 250k tokens) written into the merge recipe.
-6. Mac lane-lock convention: a lock file naming who owns a simulator or a pkill pattern, so one lane never kills another's run.
-7. Relay batching: a single relay-queue format the coordinator can send in one message to each Mac lead.
-8. Docs index check: docs/README.md lists every new docs file.
+**Next (all junior tier unless noted):**
+1. Pace ledger row 2: read the meter (coordinator rate_limit_event), cost per cloud team, burn per hour; report hot teams to the coordinator.
+2. CPU lane: a list of chores that need no model (swift test --scale, docs_index_check, staleness, pr_digest, tree_check) run by a Mac script on a schedule, so idle hours still produce results at zero tokens.
+3. Per-team budget table: weekly percent and senior/middle/junior mix per team, added to the staffing model, for the coordinator to approve.
+4. Relay adoption: send lane-lock, verdict line, worker rotation and relay batch to the coordinator as one proposal for the Mac leads.
+5. Subscription event cost note: PR events repeat 2 to 3 times at about 4k tokens each; write the "skip echoes, one status line" rule into the merge recipe.
+6. Idle detector: a one-page rule for when a team is below its pace line (what it pulls, who it asks), so no lane sits empty.
+7. Board staleness sweep: run staleness.py over every team board and send the stale list to Product.
 
-**Done:** #589 merge pre-checks as code + premerge workflow; #590 verdict line, verdicts.py, staleness.py.
+**Done:** #589 merge pre-checks and premerge workflow; #590 verdict line, verdicts.py, staleness.py; #592 staffing model; #593 pinned checkout; #596 test.sh audit, pr_digest.py, lane_lock.sh; #598, #600, #603 ledger and worker rotation.
