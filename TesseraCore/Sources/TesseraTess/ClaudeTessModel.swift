@@ -56,7 +56,7 @@ public struct ClaudeTessModel: TessModel {
             lastWeightKg: request.lastWeightKg(engine)
         ) else { return .missed }
         // Every round resends the system prompt and the tool definitions with the phrase (QA on #283).
-        let system = system(request.context, engine: engine)
+        let system = system(request.context, engine: engine, lastWeightKg: request.lastWeightKg(engine))
         let tools = (try? TessTools.definitionsJSON()).flatMap { String(data: $0, encoding: .utf8) } ?? ""
         let estimate = TessUsageLedger.estimate(text: request.text + system + tools,
                                                 maxTokens: Self.maxTokens, model: Self.model) * Int64(Self.maxRounds)
@@ -152,10 +152,22 @@ public struct ClaudeTessModel: TessModel {
     }
 
     /// The capture pack: today, the workout and last set in focus, and Tess's rules. Never notes, health or history.
-    func system(_ context: TessContext, engine: ActionEngine) -> String {
-        TessVoice.instructions(today: TessModelCapture.today(context),
-                               currentWorkout: TessModelCapture.workout(context, engine: engine),
-                               lastSet: TessModelCapture.lastSet(context, engine: engine))
+    /// The exercise name is his free text: a name that trips the wall (a secret word, money, a body fact, a key) sends
+    /// "no workout in focus" and no last set (a4-bypass item 1).
+    func system(_ context: TessContext, engine: ActionEngine, lastWeightKg: Double?) -> String {
+        let walled = Self.exerciseIsWalled(context, engine: engine, lastWeightKg: lastWeightKg)
+        return TessVoice.instructions(
+            today: TessModelCapture.today(context),
+            currentWorkout: walled ? "no workout in focus" : TessModelCapture.workout(context, engine: engine),
+            lastSet: walled ? "no last set" : TessModelCapture.lastSet(context, engine: engine)
+        )
+    }
+
+    /// Whether the exercise in focus has a name that must not leave the phone.
+    static func exerciseIsWalled(_ context: TessContext, engine: ActionEngine, lastWeightKg: Double?) -> Bool {
+        guard let entry = context.entry.flatMap({ engine.store.object(id: $0) }),
+              let exercise = engine.store.linkedClass("exercise", of: entry) else { return false }
+        return HomeDonePack.isWalled(exercise.name, lastWeightKg: lastWeightKg)
     }
 
     // MARK: The request
