@@ -166,7 +166,11 @@ struct HomeLinesTests {
         #expect(line.context == "2 to buy" && line.detail == nil && line.numbers == [2])
         #expect(text(tacos, now: Self.at(21, 30)) == "Tacos tonight, 2 to buy.")
         let stocked = HomeFact(id: UUID(), kind: .cook, title: "Tacos", state: .planned, toBuy: 0)
-        #expect(HomeLines.line(for: stocked, now: Self.at(9), calendar: Self.calendar).context == "nothing to buy")
+        // At zero the context is the day word again; the row keeps "nothing to buy" (Kitchen K87, C8 and B6).
+        let zero = HomeLines.line(for: stocked, now: Self.at(9), calendar: Self.calendar)
+        #expect(zero.context == HomeLines.dayWord(Self.at(9), calendar: Self.calendar), "\(zero.context ?? "-")")
+        #expect(zero.text.hasSuffix("nothing to buy."), "\(zero.text)")
+        #expect(zero.context != "nothing to buy")
     }
 
     @Test func theCapsTheCheckerEnforces() {
