@@ -1,9 +1,10 @@
 # WallsUITests: the walls, typed by a test instead of a person
 
 For: Builder B (writes the test and the App-side seam). Owner: Research lab. Product item AU. Oct 16, 2026, read on
-origin/master fbede70. Fixture: [`fixtures/walls-ui-phrases.json`](fixtures/walls-ui-phrases.json) (98 rows: 36 typed, 20
-objectPage rows for the Core 0ai private-field mask in section 11, 11 bare-number body rows in section 12, and 31
-rows for the five bypass paths in the 0ai rider plus the bar trap in section 13).
+origin/master fbede70. Fixture: [`fixtures/walls-ui-phrases.json`](fixtures/walls-ui-phrases.json) (114 rows: 36 typed, 36
+rows for the Core 0ai private-field mask in section 11 (34 objectPage rows, PM01 to PM34, and the two package and live
+rows PM35 and PM36 for workout notes), 11 bare-number body rows in section 12, and 31 rows for the five bypass paths
+in the 0ai rider plus the bar trap in section 13).
 
 **Why.** The v9 gate's V5 and the Design walk's beats 7 and 8 need secret-shaped, money and body phrases typed on the
 Simulator. Builder A's safety check blocks a session from typing secret-shaped phrases, so those beats were covered by
@@ -22,10 +23,11 @@ takes its value from `ClaudeSection.fakeKey` in test code.
 | siriAddTask | 5 | 3 | S03, S04 (P14 not on master) |
 | paste | 5 | 4 | P04 (money in the miss log) |
 | objectPage (section 11, read on 64ffb93) | 20 | 5 | PM01 to PM03, PM05 to PM07, PM11, PM12, PM14 to PM20 (no private-field mask; PM18 and PM19 have no newest row yet) |
+| objectPage, planMyDay and liveWorkoutAsk, workout notes (section 11, read on b41695d) | 16 | 10 | PM21 to PM24, PM33, PM34 (the front prints a workout's notes, `ObjectPage.swift:232-234`) |
 | askBar and live workout ask, bare-number body wall (section 12) | 11 | 7 | BN01, BN02, BN04, BN11 (no last-weight check, decisions 2:56) |
 | Five bypass paths, package tests (section 13, read on 6f9b639) | 25 | 12 | BM01 to BM04, BM06 to BM09 (no engine wall on model or Claude writes), BM13, BM14 (RememberFact keeps a bare weight), BM18, BM19 (turnover keeps it), BM24 (Plan my day sends it) |
 | Bar trap, live workout ask and askBar (section 13) | 6 | 5 | BM31 (no last-weight check) |
-| **Total** | **98** | **52** | **46** |
+| **Total** | **114** | **62** | **52** |
 
 Two findings matter for the gate itself:
 
@@ -304,7 +306,7 @@ In Notes, type "wifi password is tacocat4417" and check it shows as Private note
 
 Product, 2:45 pm: any object flagged private shows only its class's private label ("Private note", "Private task",
 "Private memory") on the generic object page, in `PropertyList` and in the class page's "newest" row. Rows PM01 to
-PM20 are the fixture's PM1 to PM20 ([`fixtures/private-field-mask.md`](fixtures/private-field-mask.md)), with
+PM20 are the fixture's PM1 to PM20 (workout notes, PM21 to PM36, are below) ([`fixtures/private-field-mask.md`](fixtures/private-field-mask.md)), with
 `surface` `objectPage`. Read on origin/master 64ffb93.
 
 **New fields.** These rows add `seed` (which fixture object), `route` (how the test gets to the page) and
@@ -337,8 +339,39 @@ PM18 and PM19 wait on Core 0ak's newest row and PM07 on Core 0ac slice 2 (or the
 their `pending` says so, and they run under `XCTExpectFailure` like any other pending row (section 8). About 1 minute
 in all: one launch, twenty pages at about 3 s each.
 
-**In the riders gate:** row PF1 in `next-build-v9r.md` section 3 runs `testObjectPageMask` with the run line in
-section 8 (`-only-testing:TesseraUITests/WallsUITests/testObjectPageMask`).
+**Workout notes, PM21 to PM36 (decisions 5:07 pm, item 4; read on origin/master b41695d).** A workout's `notes` (the
+rich-text field every Thing has, `SystemCatalog.swift:56-58`) is a body fact. The generic front prints it today
+(`ObjectPage.swift:232-234`), so "left knee sore" shows under the hero. After 0ai the front shows one muted line, "Note
+kept private", in the notes slot, with no words and no line count, whatever the note says; the workout itself is not
+masked (hero, class line, Properties, Contents, Linked from and Start workout show as today). Every other surface reads
+no notes on master and must stay that way: the Day log line (`DayStory.swift:224-229`), Review and WeekFacts
+(`WeekFacts.swift:3-5`), the summary, finish screen and Now's done line (`WorkoutSummary.swift:30-36`,
+`WorkoutFinishView.swift:36-71`, `HomeLines.swift:479-488`), exercise HISTORY (`ExerciseDigest.swift:13-19`,
+`ExerciseViews.swift:98-150`), the Training page, the live screen and the Live Activity (`RestActivityAttributes.swift:6-30`;
+the only widget on master is `RestLiveActivity`, `TesseraWidgetsBundle.swift:5-8`), and the Claude packs
+(`TessModelCapture.swift:70-83`, `PlanWording.swift:8`). Nothing on master writes a workout's notes, so the seed does.
+
+| Rows | Surface | What | Pass on master |
+|---|---|---|---|
+| PM21 to PM24 | objectPage | Front: a symptom ("left knee sore"), a weight ("weighed 82.4 before"), a plain note ("felt strong", the trap: masked too, since 5:07 pm names the field, not the words) and three lines with "locker 4417" (one marker, no count) | 0 |
+| PM25 to PM27 | objectPage | Controls: no notes, a blank note (no marker for either), and the field mask doesn't mask the workout | 3 |
+| PM28 to PM32 | objectPage | Linked from and refs, Day log and Review, summary and Now, exercise HISTORY, Training and Home: no note words | 5 |
+| PM33 | objectPage | A planned workout's front, then Start workout and the live screen; Lock Screen and Dynamic Island by hand | 0 |
+| PM34 | objectPage | VoiceOver on PM21 to PM24 and PM33's front | 0 |
+| PM35 | planMyDay (package) | Never packed for Claude: the Plan my day pack | 1 |
+| PM36 | liveWorkoutAsk (UI, `-wallsSpy`) | Never packed for Claude: the live ask's capture pack | 1 |
+
+**Seeding.** `-wallsSeedPrivate` also writes W1 to W7 (`fixtures/private-field-mask.md` section 3b): notes on today's
+Push A, yesterday's legs workout and the latest pull workout, a control with none, a workout planned for 7:00 pm with
+notes, a three-line note and a blank one. `-openObject` reaches W4, W6 and W7. The leaking rows' `pending` is "Core
+0ai: workout notes mask (decisions 5:07)". The checks are the table above plus one: `expectLine` "Note kept private"
+appears exactly once on rows PM21 to PM24, PM33 and PM34, and never on PM25 to PM27. PM27's "no Notes row" is an exact
+match, since `CONTAINS` would match the marker. If Product picks a blank over the marker (fixture Q4), those rows drop
+`expectLine`. About 50 s more: twelve pages, one live start and the two package or spy rows.
+
+**In the riders gate:** row PF1 in `next-build-v9r.md` section 3 runs `testObjectPageMask` (PM01 to PM34) with the
+run line in section 8 (`-only-testing:TesseraUITests/WallsUITests/testObjectPageMask`), plus PM35 in the package suite
+and PM36 in `testLiveWorkoutWalls`.
 
 ## 12. The bare-number body wall (Core 0ai, rider R19)
 
