@@ -14,4 +14,9 @@ struct ObjectNotesTests {
     @Test func hisOwnHashWordsStay() {
         #expect(ObjectNotes.shown("#tbt photo") == "#tbt photo")
     }
+
+    @Test func onlyTheExactPickedStampIsHidden() {
+        #expect(ObjectNotes.shown("picked: 2026-10-17T18:00:00Z") == nil)
+        #expect(ObjectNotes.shown("picked: the blue one") == "picked: the blue one")
+    }
 }

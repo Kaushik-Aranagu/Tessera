@@ -20,6 +20,7 @@ public enum ActionRegistry {
         CreateList.descriptor, AddListItem.descriptor, CheckListItem.descriptor, MoveListItem.descriptor,
         RenameListSection.descriptor, ClearDoneItems.descriptor, SetListReusable.descriptor, ResetList.descriptor,
         StartListRun.descriptor, FinishListRun.descriptor, PutAwayListRun.descriptor,
+        SetListPickOne.descriptor, AcceptPick.descriptor,
         FinishWorkoutEarly.descriptor,
         RollForwardTasks.descriptor, StartTask.descriptor,
         WaitOnTask.descriptor, KeepPlannedTask.descriptor,
@@ -86,6 +87,8 @@ public enum ActionRegistry {
         StartListRun.descriptor.name: { try decode(StartListRun.self, StartListRun.descriptor.name, $0) },
         FinishListRun.descriptor.name: { try decode(FinishListRun.self, FinishListRun.descriptor.name, $0) },
         PutAwayListRun.descriptor.name: { try decode(PutAwayListRun.self, PutAwayListRun.descriptor.name, $0) },
+        SetListPickOne.descriptor.name: { try decode(SetListPickOne.self, SetListPickOne.descriptor.name, $0) },
+        AcceptPick.descriptor.name: { try decode(AcceptPick.self, AcceptPick.descriptor.name, $0) },
         FinishWorkoutEarly.descriptor.name: {
             try decode(FinishWorkoutEarly.self, FinishWorkoutEarly.descriptor.name, $0)
         },

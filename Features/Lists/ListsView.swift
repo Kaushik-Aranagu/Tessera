@@ -125,6 +125,10 @@ private struct ListPage: View {
     @State private var reset = 0
     @State private var runChanged = 0
     @State private var runStarted = 0
+    /// The open reset ask after "done" on a reusable list; nil when none.
+    @State private var resetAsk: UUID?
+    /// NOT NOW on the reset ask: its own trigger for .notNow (Design on #823).
+    @State private var notNow = 0
     /// Private rows: "Private item" until tapped, masked again on leaving (as Groceries, B11).
     @State private var rows = ShopTrip()
     @FocusState private var writing: Bool
@@ -171,11 +175,20 @@ private struct ListPage: View {
                         .accessibilityAddTraits(.isHeader)
                         .padding(.top, Theme.Spacing.xs)
                         .entrance(1)
+                    if resetAsk != nil {
+                        resetAskView(name: name)
+                            .padding(.top, Theme.Spacing.l)
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
                     addLine(name)
                         .padding(.top, Theme.Spacing.xl)
                         .entrance(2)
                     VStack(alignment: .leading, spacing: Theme.Spacing.l) {
-                        ForEach(Array(sections(open).enumerated()), id: \.offset) { _, section in
+                        // Keyed by name, so a section that finishes folds away rather than the rows shuffling up
+                        // (10.7; a removed last row finishes it the same way).
+                        // Names are unique here: sections() groups every item of a name into one section, so the
+                        // name is a stable key; an index in the key would re-key every later section when one folds.
+                        ForEach(sections(open), id: \.name) { section in
                             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                                 if let title = section.name {
                                     Text(title)
@@ -189,6 +202,12 @@ private struct ListPage: View {
                                 }
                                 .padding(.leading, section.name == nil ? 0 : 42)
                             }
+                            .transition(reduceMotion ? .opacity
+                                : .asymmetric(
+                                    insertion: .opacity,
+                                    removal: .opacity.combined(with: .scale(scale: 0.96,
+                                                                            anchor: .top))
+                                ))
                         }
                     }
                     .padding(.top, Theme.Spacing.xxl)
@@ -215,6 +234,7 @@ private struct ListPage: View {
             }
             .tesseraFeedback(.done, trigger: runChanged)
             .tesseraFeedback(.made, trigger: runStarted)
+            .tesseraFeedback(.notNow, trigger: notNow)
             .toolbar(.hidden, for: .navigationBar)
             .tesseraFeedback(.notNow, trigger: removed)
             // A cleared run (Design on #806); .done is for finishing.
@@ -411,7 +431,48 @@ private struct ListPage: View {
             model.touch()
         }
         runChanged += 1
+        // A reusable list keeps its strikes and asks (10.11): RESET is a hold, NOT NOW or 10 s of quiet changes
+        // nothing. A plain list says its receipt with UNDO.
+        let checked = model.store.object(id: listID).map {
+            ListContents(store: model.store, classes: model.classes).done(in: $0).count
+        } ?? 0
+        if result.output.wasReusable, checked > 0 {
+            let ask = UUID()
+            withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { resetAsk = ask }
+            Task { @MainActor in
+                try? await Task.sleep(for: TessVoice.hold(undo: true, holds: .seconds(10)))
+                if resetAsk == ask {
+                    withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { resetAsk = nil }
+                }
+            }
+            return
+        }
         TessVoice.shared.say(ListsCopy.runDone(name, left: result.output.left), undo: result.record)
+    }
+
+    /// "Packing, done. Reset it for next time?" with RESET (a 0.7 s hold, the ink line filling) and NOT NOW (10.11).
+    private func resetAskView(name: String) -> some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.m) {
+            Text(ListsCopy.resetAsk(name))
+                .font(Theme.voice)
+                .foregroundStyle(Theme.Colors.tess)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: Theme.Spacing.l) {
+                PaintKey(paint: Theme.Colors.ink, duration: 0.7, hint: "Unchecks everything for next time",
+                         action: {
+                             withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { resetAsk = nil }
+                             reset(name: name)
+                         }, label: { _ in Text("Reset").textRole(.labelStrong) }, meta: { Text("Hold") })
+                    .frame(maxWidth: 220)
+                Button("Not now") {
+                    withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { resetAsk = nil }
+                    notNow += 1
+                }
+                .buttonStyle(.labelWord)
+                .frame(minHeight: 44)
+            }
+        }
+        .accessibilityElement(children: .contain)
     }
 
     /// "Packing, reusable." / "Packing, not reusable." with UNDO 10 s, a change.
