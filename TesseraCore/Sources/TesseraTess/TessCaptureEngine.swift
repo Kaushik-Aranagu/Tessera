@@ -232,6 +232,13 @@ public final class TessCaptureEngine: TessCapturing {
                 return TessCapture(records: [], line: ask.line, source: .grammar, asking: .datedLift(ask))
             default: break
             }
+            // The rest weekday already set changes nothing: the line, no new op, no UNDO (S17).
+            if case let .setRestWeekday(weekday) = parse,
+               RestWeekday.current(in: engine.store) == weekday
+            {
+                return TessCapture(records: [], line: RestWeekday.receipt(for: weekday), source: .grammar,
+                                   asking: .line)
+            }
             // A bare thing already on Groceries changes nothing: the line, with no ghost and no UNDO (QA S1 on #316).
             if case let .groceries(lines) = parse, lines.count == 1, let line = IngredientLine.parse(lines[0]),
                line.amount == nil, line.unit == nil,
@@ -309,6 +316,11 @@ public final class TessCaptureEngine: TessCapturing {
                 return (record, Self.privateTaskLine(startsAt, context: context))
             }
             return (record, startsAt.map { "\(stored), \(Self.when($0, context: context))." } ?? "\(stored), in Later.")
+        case let .setRestWeekday(weekday):
+            var settings = SettingsStore(engine: engine).read()
+            settings.restWeekday = weekday
+            let record = try engine.perform(WriteSettings(settings: settings), by: .tess, pending: pending).record
+            return (record, RestWeekday.receipt(for: weekday))
         case let .privateNote(body, remembered, on):
             let record = try engine.perform(
                 CreateNote(body: body, on: on, isPrivate: true),

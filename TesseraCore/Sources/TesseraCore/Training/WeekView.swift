@@ -49,15 +49,31 @@ public extension TrainingLedger {
         let today = tesseraDay.today(now)
         let done = dates.map { finishedWorkouts(onDay: $0, calendar: calendar) }
         let ahead = dates.indices.filter { done[$0].isEmpty && dates[$0] >= today }
+        // The rest weekday (RG1): out of the pool before the spread, ahead and past, with or without a rhythm (RG2).
+        let restNow = RestWeekday.current(in: store)
+        func isRestWeekday(_ index: Int) -> Bool {
+            restNow.map { calendar.component(.weekday, from: dates[index]) == $0 } ?? false
+        }
+        // What was in force on a past day (RG7): read lazily from the settings op log, once.
+        var changes: [RestWeekday.Change]?
+        func restWeekday(onPast index: Int) -> Int? {
+            let history = changes ?? RestWeekday.changes(in: store)
+            changes = history
+            return RestWeekday.inForce(endingAt: tesseraDay.end(of: dates[index]), changes: history, current: restNow)
+        }
+        func wasRestWeekday(_ index: Int) -> Bool {
+            restWeekday(onPast: index).map { calendar.component(.weekday, from: dates[index]) == $0 } ?? false
+        }
+        let pool = ahead.filter { !isRestWeekday($0) }
         // Zero or less means no rhythm (QA E4): every day ahead gets the next routine, as without a count.
         let perWeek = (sessionsPerWeek ?? plan.flatMap { store.number("sessionsPerWeek", of: $0) }.map { Int($0) })
             .flatMap { $0 > 0 ? $0 : nil }
-        var training = Set(ahead)
+        var training = Set(pool)
         if let perWeek {
             let trainedYesterday = calendar.date(byAdding: .day, value: -1, to: today)
                 .map { !finishedWorkouts(onDay: $0, calendar: calendar).isEmpty } ?? false
-            let startsToday = ahead.first.map { calendar.isDate(dates[$0], inSameDayAs: today) } ?? false
-            training = Self.spread(ahead, due: max(0, perWeek - done.count { !$0.isEmpty }),
+            let startsToday = pool.first.map { calendar.isDate(dates[$0], inSameDayAs: today) } ?? false
+            training = Self.spread(pool, due: max(0, perWeek - done.count { !$0.isEmpty }),
                                    trainedYesterday: trainedYesterday && startsToday)
             // A workout under way today makes today a training day, whatever the spread says (QA E6).
             if hasWorkoutUnderway(on: now, calendar: calendar), let first = ahead.first,
@@ -77,7 +93,7 @@ public extension TrainingLedger {
             let yesterday = index > 0 ? !done[index - 1].isEmpty
                 : calendar.date(byAdding: .day, value: -1, to: dates[0])
                 .map { !finishedWorkouts(onDay: $0, calendar: calendar).isEmpty } ?? false
-            let thatWeek = Array(index ..< dates.count)
+            let thatWeek = Array(index ..< dates.count).filter { !wasRestWeekday($0) }
             return Self.spread(thatWeek, due: max(0, pastRhythm - before), trainedYesterday: yesterday)
                 .contains(index)
         }
@@ -87,13 +103,18 @@ public extension TrainingLedger {
                 return WeekDay(day: day, state: .done, done: done[index], planned: nil)
             }
             if day < today {
+                // A past rest weekday keeps its mark however the setting changed since (RG7).
+                if wasRestWeekday(index) {
+                    return WeekDay(day: day, state: .past, done: [], planned: nil, isRest: true)
+                }
                 let due = wasDue(index)
                 return WeekDay(day: day, state: .past, done: [], planned: nil, isRest: pastRhythm != nil && !due,
                                wasDue: due)
             }
             let state: WeekDay.State = calendar.isDate(day, inSameDayAs: today) ? .today : .upcoming
             guard training.contains(index) else {
-                return WeekDay(day: day, state: state, done: [], planned: nil, isRest: !cycle.isEmpty)
+                return WeekDay(day: day, state: state, done: [], planned: nil,
+                               isRest: !cycle.isEmpty || isRestWeekday(index))
             }
             var planned: ObjectRecord?
             if !cycle.isEmpty {
