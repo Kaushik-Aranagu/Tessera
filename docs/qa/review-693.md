@@ -1,0 +1,6 @@
+# Review #693 (head 08cb8140): PASS (static; App tests pending, simulator down)
+- KeyRemoval holds the key as a private String in a struct kept in @State `held`. No Codable, no description, no print/log; nothing writes it anywhere. take() reads then deletes at once; restore() saves back; a false save shows "I couldn't bring the key back. Add it again?".
+- Cleared: undoRemove sets held nil; finishRemoval sets held nil; the existing scenePhase .background and .onDisappear handlers both call finishRemoval while removed, so backgrounding or leaving drops the copy.
+- Window: the key is out of the Keychain from the tap, and all five Claude paths (ClaudeTessModel x2, HomeDoneWording, PlanWording, RecipeLinkReader) read keys.read() at call time, so none due in the window can send. A call already in flight before the tap holds its own copy; unavoidable.
+- Tests: fake key built from "sk-" + "ant-" parts; UI test asserts no "ends in", "ending in", "..." label and no 4-character tail on screen. Last4 UI removed ("Key saved").
+- Lows: take() does not check the delete took (the Keychain delete is void; on a failed delete a call could still send in the window). Suggest read-back after delete and keep the old behaviour if the key is still there. Branch also stacks #687/#688/#690 content; merge order matters.
