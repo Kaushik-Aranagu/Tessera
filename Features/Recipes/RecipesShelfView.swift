@@ -5,12 +5,25 @@ import TesseraCore
 /// first: the name in ink (a private one "Private recipe" at 66%) and its day. A row opens its recipe. No cards, no
 /// art; a long name wraps, never cut. The side (ITS OBJECTS) waits on SideHost.
 struct RecipesShelfView: View {
+    @State private var path = NavigationPath()
+    /// The stack depth with Paste on top, set as Paste appears.
+    @State private var pasteDepth: Int?
+
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             RecipesShelfPage()
                 .navigationDestination(for: UUID.self) { RecipePage(recipeID: $0) }
-                // Paste from the shelf stays in the shelf, so back lands here, not Home (QA on #774).
-                .navigationDestination(for: ShelfPaste.self) { _ in ShelfPaste.Page() }
+                // Paste from the shelf stays in the shelf, so back lands here, not Home (QA on #774). A save swaps
+                // Paste for the new recipe, so back from it is the shelf, never Paste again (#774 walk).
+                .navigationDestination(for: ShelfPaste.self) { _ in
+                    ShelfPaste.Page(onTop: { pasteDepth = path.count }) { id in
+                        // Only while Paste is still on top: if he already went back, the save stays on the shelf
+                        // and nothing is popped (QA on #790).
+                        guard !path.isEmpty, path.count == pasteDepth else { return }
+                        path.removeLast()
+                        path.append(id)
+                    }
+                }
                 .toolbar(.hidden, for: .navigationBar)
         }
         .environment(\.animateEntrance, true)
@@ -105,13 +118,22 @@ private struct RecipesShelfPage: View {
 
 /// The Paste path pushed inside the shelf's stack; a save moves on to the new recipe.
 struct ShelfPaste: Hashable {
+    /// Paste under a "‹ RECIPES" back word, with the bar hidden like the shelf.
     struct Page: View {
-        @State private var saved: UUID?
+        var onTop: () -> Void = {}
+        let onSaved: (UUID) -> Void
+        @Environment(\.dismiss) private var dismiss
 
         var body: some View {
-            PasteRecipe { saved = $0 }
-                .navigationDestination(item: $saved) { RecipePage(recipeID: $0) }
-                .toolbarTitleDisplayMode(.inline)
+            PasteRecipe(onSaved: onSaved)
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    BackWord(title: "Recipes") { dismiss() }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, Theme.Spacing.gutter)
+                        .background { ThemedBackground() }
+                }
+                .toolbar(.hidden, for: .navigationBar)
+                .onAppear(perform: onTop)
         }
     }
 }

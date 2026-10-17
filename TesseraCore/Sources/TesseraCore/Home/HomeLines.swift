@@ -340,6 +340,10 @@ public enum HomeLines {
         case (.workout, .planned):
             // The closed day's look ahead: "tomorrow, first" (m4-steers §7), so Now and the widget agree.
             return same(fact.tomorrow ? "tomorrow, first" : dayWord(now, calendar: calendar))
+        case (.cook, .planned) where (fact.toBuy ?? 0) == 0:
+            // Nothing left to buy: the context goes back to the day word; the row keeps "nothing to buy" (Kitchen K87,
+            // rulings C8 and B6).
+            return same(dayWord(now, calendar: calendar))
         default:
             return kitchenContext(for: fact, calendar: calendar).map { ($0, $0) } ?? (nil, nil)
         }
@@ -530,10 +534,14 @@ public struct HomeFacts {
 
     /// A cook finished today stays on Home like a done workout, until 04:00 (Research G1).
     public func fact(doneCook cook: ObjectRecord) -> HomeFact {
-        HomeFact(id: cook.id, kind: .cook, title: cookTitle(cook, recipe: store.linkedObjects("recipe", of: cook).first),
-                 state: .done,
-                 startedAt: store.value("startedAt", of: cook)?.dateValue,
-                 endedAt: store.value("cookedAt", of: cook)?.dateValue)
+        HomeFact(
+            id: cook.id,
+            kind: .cook,
+            title: cookTitle(cook, recipe: store.linkedObjects("recipe", of: cook).first),
+            state: .done,
+            startedAt: store.value("startedAt", of: cook)?.dateValue,
+            endedAt: store.value("cookedAt", of: cook)?.dateValue
+        )
     }
 
     /// Cooks finished on his day containing `now`, newest first.

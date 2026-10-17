@@ -341,7 +341,7 @@ private struct ListPage: View {
 
 /// The back word at the top of a page ("‹ KITCHEN", "‹ LISTS"): with the bar hidden, VoiceOver and Switch Control need
 /// a way back (QA on #760).
-private struct BackWord: View {
+struct BackWord: View {
     let title: String
     let action: () -> Void
 

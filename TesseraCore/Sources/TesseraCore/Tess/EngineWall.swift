@@ -73,6 +73,8 @@ public enum EngineWall {
             .replacing(/(?i)\s*(?:for\s+)?\b\d[\d,]*(?:\.\d+)?\s?(?:dollars?|bucks|usd|quid)\b/, with: "")
             // A bare amount with exactly two places at the end is a price (Product 8:40 AM PT Oct 17): "milk 4.99".
             .replacing(/\s+\d+[.,]\d{2}[.!]?\s*$/, with: "")
+            // A price before "at", "for", "from" or "on" is a price too (QA on #779): "eggs 4.99 at costco".
+            .replacing(/(?i)\s+\d+[.,]\d{2}(?=\s+(?:at|for|from|on)\b)/, with: "")
         return stripped.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
     }
 
