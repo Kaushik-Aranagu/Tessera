@@ -503,14 +503,14 @@ extension ClaudeKeyWords {
         return [time, useName(use), modelName(model), cents(nano)].joined(separator: " · ")
     }
 
-    /// "Thu 16 Oct, 12 pm": the house clock (HouseTime), never "12:00 pm" or a 24-hour time, whatever the phone's
+    /// "Thu Oct 16, 12 pm": the house clock (HouseTime), never "12:00 pm" or a 24-hour time, whatever the phone's
     /// clock setting (kitchen gap hunt G39). The day is fixed English too, so the receipt reads the same everywhere.
     static func receiptTime(_ date: Date, calendar: Calendar = .current) -> String {
         let day = DateFormatter()
         day.locale = Locale(identifier: "en_US_POSIX")
         day.calendar = calendar
         day.timeZone = calendar.timeZone
-        day.dateFormat = "EEE d MMM"
+        day.dateFormat = "EEE MMM d"
         return "\(day.string(from: date)), \(HouseTime.clock(date, calendar: calendar))"
     }
 
