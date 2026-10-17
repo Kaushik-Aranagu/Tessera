@@ -62,6 +62,21 @@ struct TaskStoryTests {
         #expect(decoded is KeepPlannedTask)
     }
 
+    @Test func keepIsDecodableButNotOfferedToTheModel() throws {
+        #expect(ActionRegistry.descriptors.contains { $0.name == "keepPlannedTask" })
+        #expect(!ActionRegistry.catalog.contains("keepPlannedTask"))
+        let tools = try JSONSerialization.jsonObject(with: ActionRegistry.toolDefinitionsJSON()) as? [[String: Any]]
+        let names = tools?.compactMap { $0["name"] as? String } ?? []
+        #expect(!names.isEmpty)
+        #expect(!names.contains("keepPlannedTask"))
+        #expect(names.contains("moveTask"))
+        let decoded = try ActionRegistry.decode(
+            name: "keepPlannedTask",
+            arguments: Data(#"{"task":"\#(UUID())"}"#.utf8)
+        )
+        #expect(decoded is KeepPlannedTask)
+    }
+
     @Test func taskStoryCountsHandMovesNotNightlyRolls() throws {
         // SA-STORY-1 and SA-STORY-3 (SH25).
         let task = try plumber()

@@ -54,12 +54,21 @@ public struct ActionDescriptor: Sendable, Hashable {
     public let parameters: [Parameter]
     /// Destructive actions need a confirmation when Tess or an intent runs them.
     public let isDestructive: Bool
+    /// False for actions that stay registered (decoding, the op log) but are never offered to Tess or Siri.
+    public let isOfferedToModel: Bool
 
-    public init(name: String, summary: String, parameters: [Parameter], isDestructive: Bool = false) {
+    public init(
+        name: String,
+        summary: String,
+        parameters: [Parameter],
+        isDestructive: Bool = false,
+        isOfferedToModel: Bool = true
+    ) {
         self.name = name
         self.summary = summary
         self.parameters = parameters
         self.isDestructive = isDestructive
+        self.isOfferedToModel = isOfferedToModel
     }
 
     /// One compact line for the on-device model's prompt: `logSet(entry: object, weight: number, …) — Log a set`.
