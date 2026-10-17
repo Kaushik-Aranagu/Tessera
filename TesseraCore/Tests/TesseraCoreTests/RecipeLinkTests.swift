@@ -449,10 +449,12 @@ struct RecipeLinkTests {
         #expect(!sent.contains("flour 2.50") && !sent.contains("$1.25"))
     }
 
-    @Test(arguments: ["milk 3.49 gallon", "cheese 4.99 oz at the store", "butter 2.50 sticks for two",
+    @Test(arguments: ["Flour: 1.25 cups", "Sugar, 0.75 cup", "Milk 1.50 pints.",
+                      "milk 3.49 gallon", "cheese 4.99 oz at the store", "butter 2.50 sticks for two",
                       "eggs 1.25 qt from costco", "cream 2.99 pints on sale"])
     func aMeasureNeedsAThingAfterIt(_ line: String) {
-        // Kitchen on #776, mirroring the groceries path: a unit with no thing after it is a price.
+        // Kitchen on #776, mirroring the groceries path: a unit with no thing after it is a price, at line end too
+        // (Kitchen on #792: "Flour: 1.25 cups" stays off the page, failing closed).
         #expect(ClaudeRecipeReader.sendable(line, lastWeightKg: nil).isEmpty, "\(line)")
     }
 
