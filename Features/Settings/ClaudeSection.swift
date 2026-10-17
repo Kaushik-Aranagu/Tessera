@@ -68,6 +68,8 @@ struct ClaudeSection: View {
     /// Tess's answer to the last flip of the switch, shown under it.
     @State private var switchLine: String?
     @State private var removal: Task<Void, Never>?
+    /// The key between REMOVE and the end of its 10 s: out of the Keychain, held only here for UNDO.
+    @State private var held: KeyRemoval?
     /// The clipboard's change count when a key was pasted, so a key still sitting there can be cleared after it passes.
     @State private var pasteChange: Int?
     @Environment(\.scenePhase) private var scenePhase
@@ -371,9 +373,10 @@ struct ClaudeSection: View {
         }
     }
 
-    /// One tap, no confirm: everything folds away and S1 shows, with UNDO for 10 s. The Keychain item goes only
-    /// when the 10 s are up.
+    /// One tap, no confirm: everything folds away and S1 shows, with UNDO for 10 s. The key leaves the Keychain at
+    /// once, so no Claude job due in the window can send (kitchen gap hunt G10); UNDO puts it back.
     private func remove() {
+        held = KeyRemoval.take(from: keys)
         withTesseraAnimation(.easeInOut(duration: 0.22), reduceMotion: reduceMotion) {
             removed = true
             writing = false
@@ -389,13 +392,17 @@ struct ClaudeSection: View {
 
     private func undoRemove() {
         removal?.cancel()
+        let back = held?.restore(to: keys) ?? false
+        held = nil
         withTesseraAnimation(reduceMotion: reduceMotion) {
             removed = false
-            line = "Claude key is back."
+            hasKey = back
+            line = back ? "Claude key is back." : "I couldn't bring the key back. Add it again?"
         }
     }
 
     private func finishRemoval() {
+        held = nil
         keys.delete()
         removed = false
         hasKey = false
@@ -522,5 +529,23 @@ extension ClaudeKeyWords {
     static func cents(_ nano: Int64) -> String {
         guard nano > 0 else { return "free" }
         return String(format: "%.1f¢", (Double(nano) / 1_000_000).rounded(.up) / 10)
+    }
+}
+
+/// A removed key's 10 s of UNDO. Taking it deletes it from the Keychain at once and keeps it only in this value;
+/// restoring writes it back. Nothing here logs or shows any part of it.
+struct KeyRemoval {
+    private let key: String
+
+    /// Takes the key out of the Keychain; nil when there was none.
+    static func take(from keys: any TessKeychain) -> KeyRemoval? {
+        guard let key = keys.read() else { return nil }
+        keys.delete()
+        return KeyRemoval(key: key)
+    }
+
+    /// Puts the key back; false if the Keychain wouldn't take it.
+    func restore(to keys: any TessKeychain) -> Bool {
+        keys.save(key)
     }
 }
