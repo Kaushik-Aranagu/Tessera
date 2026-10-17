@@ -12,9 +12,10 @@ final class ClaudeSettingsUITests: SimulatorOnlyTestCase {
         app.launchArguments = ["-demo", "-demoTime", "18:10", "-resetDemo", "-openLink", "review", "-fakeClaudeKey"]
         app.launch()
 
-        let keyLine = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Claude key, ends in"))
+        let keyLine = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Claude key saved"))
             .firstMatch
         XCTAssertTrue(keyLine.waitForExistence(timeout: 15))
+        assertNoKeyTail(in: app)
         app.swipeUp()
         app.swipeUp()
         sleep(1)
@@ -25,6 +26,7 @@ final class ClaudeSettingsUITests: SimulatorOnlyTestCase {
         app.buttons["UNDO"].tap()
         XCTAssertTrue(app.staticTexts["Claude key is back."].waitForExistence(timeout: 3))
         XCTAssertTrue(keyLine.exists)
+        assertNoKeyTail(in: app)
         sleep(2)
 
         app.buttons["REMOVE"].tap()
@@ -69,5 +71,17 @@ final class ClaudeSettingsUITests: SimulatorOnlyTestCase {
         back.tap()
         XCTAssertTrue(toggle.waitForExistence(timeout: 3))
         sleep(1)
+    }
+
+    /// Product 9:53: presence is yes or no. No text or label on screen names any part of the key.
+    private func assertNoKeyTail(in app: XCUIApplication) {
+        for words in ["ends in", "ending in", "..."] {
+            let tail = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS[c] %@", words))
+            XCTAssertEqual(tail.count, 0, "A label says \"\(words)\" about the key")
+        }
+        // The fake key's own last characters never show (built here, nothing key-shaped in the file).
+        let lastFour = String(repeating: "x", count: 4)
+        let shown = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", lastFour))
+        XCTAssertEqual(shown.count, 0, "Part of the key shows")
     }
 }
