@@ -107,7 +107,13 @@ struct GroceriesWallTests {
         #expect(AddGroceries.kept(["Wifi password"], store: ObjectStore.open(inMemory: true)).isEmpty)
     }
 
-    @Test(arguments: [("milk 4.99.", "milk"), ("1.50 lb apples", "1.50 lb apples"), ("2 kg rice", "2 kg rice")])
+    @Test(arguments: [
+        ("milk 4.99.", "milk"),
+        ("1.50 lb apples", "1.50 lb apples"),
+        ("2 kg rice", "2 kg rice"),
+        ("1.25 lb chicken", "1.25 lb chicken"),
+        ("2 for 1 crackers", "2 for 1 crackers"),
+    ])
     func moreAmountsLand(_ line: String, _ kept: String) throws {
         try engine.perform(AddGroceries(lines: [line]), by: .user)
         #expect(rows().count == 1, "\(line)")
