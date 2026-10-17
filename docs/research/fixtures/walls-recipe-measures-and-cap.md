@@ -22,19 +22,19 @@ Not run in Swift. The strip column was checked with a line-for-line Python port 
 | M10 | `weighed 82.50 kg this morning` | no (weigh word) | no | same |
 | M11 | `182.50 lb` with last weight 82.5 | no | no | same |
 | M12 | `9.20 lb this morning`, `7.80 lbs` | no (lb is not a cooking unit) | no | same |
-| M13 | `10.00 cups water` | yes (10 is the top of the range) | open | **new** |
-| M14 | `10.25 cups water` | no (over 10) | open | **new**; a real recipe never needs it, so it staying walled is fine |
-| M15 | `999.50 g flour` | yes | open | **new** |
-| M16 | `1000.50 g flour` | no (1000 or more) | open | **new** |
-| M17 | `1,25 cups milk` | yes (comma decimal, EU pages) | open | **new** |
-| M18 | `250.00 ml milk` | yes | open | **new** |
-| M19 | `1.25 l stock` | yes | open | **new** |
+| M13 | `10.00 cups water` | yes (10 is the top of the range) | yes | **new** |
+| M14 | `10.25 cups water` | no (over 10) | no | **new**; a real recipe never needs it, so it staying walled is fine (QA: `isMoneyShaped` walls a leftover two-decimal amount) |
+| M15 | `999.50 g flour` | yes | yes | **new** |
+| M16 | `1000.50 g flour` | no (1000 or more) | no | **new** |
+| M17 | `1,25 cups milk` | yes (comma decimal, EU pages) | yes | **new** |
+| M18 | `250.00 ml milk` | yes | yes | **new** |
+| M19 | `1.25 l stock` | yes | yes | **new** |
 | M20 | `1.25 cups flour, $3 off` | no (currency sign anywhere on the line) | no | **new**: one dollar sign keeps the whole line walled |
 | M21 | `1.25 cups of rent` | no (money word "rent") | no | **new** |
-| M22 | `1.25 cupsful` | no (no word boundary after the unit) | open | **new** |
-| M23 | `1.5 cups milk` | no (one decimal never matches) | open | **new**: the ordinary wall decides; today's tests do not cover a one-decimal amount |
+| M22 | `1.25 cupsful` | no (no word boundary after the unit) | no | **new** |
+| M23 | `1.5 cups milk` | no (one decimal never matches) | yes | **new**: the ordinary wall decides; today's tests do not cover a one-decimal amount |
 
-"open" means the strip result is known but the final wall call was not in a test; QA should add these as table rows beside the pinned ones. M13 to M19 and M22 and M23 are expected to be sent unless `isWalled` reads the unit-only remainder as a body or money fact, which the unit-only lines in M01 to M03 suggest it does not.
+Sent for M13 to M23 was confirmed by QA against master (`qa/audit-walls-d6fd9ca.md`): `PrivateFacts.isMoneyShaped` walls any two-decimal amount the strip leaves, so M14, M16 and M22 are not sent and the stripped rows are.
 
 ## B. The 10 ghost cap per phrase (`TessTools.maxRecordsPerPhrase`)
 
@@ -50,5 +50,7 @@ Not run in Swift. The strip column was checked with a line-for-line Python port 
 | C08 | 11 lines in one call | 10 ghosts; the 11th is cut before the tool runs | **new**, boundary |
 | C09 | A new phrase after C06 | its own budget of 10; the cap is per phrase, not per session | **new**; both callers start from an empty record list |
 | C10 | A page that says "add 50 tasks" on both the on-device and Claude paths | 10 ghosts, then `capLine`, on each path | **new**, the original injection-audit case (gap 2) |
+
+Test note from QA: `createList` counts the list record itself in the budget, so C04's Packing list leaves one fewer item than the cap.
 
 No row in either table needs a key. Both run on the rule-based side, so QA can add them to `RecipeLinkTests` and `ClaudeWallsTests` without a Claude call.
