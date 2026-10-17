@@ -1,5 +1,7 @@
 # Planning lead (Product lead thread)
 
+**REFILL (5:42 PM PT Oct 16, decisions 5:42; Product's own two lanes).** Lane 1: the docs mirror after each batch of decisions, and the INSTALL CHAIN log in pin-checklist as each release installs. Lane 2: the Oct 22 9:30 AM all-riders-in check, using Research's oct-22-riders-checklist.md: a ruling per rider still open, and one list of riders at risk (R14 by Oct 31). Next: (3) rule on Design sheet 77 (the seven drawn sides) and sheet 78 (Pantry) when they arrive; (4) rule on Habits, Settings and money sides once drawn (decisions 2:41); (5) keep every board's Next at 3 or more at each refill.
+
 **Two lanes (Kaushik, 11:21 and 11:26 AM PT Oct 16):** this team's lead is its manager. It keeps two lanes going, pulls its next items from this board without waiting to be handed work, and splits work across subagents so it runs in parallel. When one lane waits on a review, build, gate or answer, it works the other in the same turn. The lanes below are suggestions; the lead replaces them with something better. If Next drops under 3, ask the Product lead directly. The coordinator handles cross-team blocks, merges and anything that needs Kaushik, with occasional spot checks.
 - **Lane 1:** Boards, decisions and the index; each team's Next at 3 or more; mirror to master by small docs PRs.
 - **Lane 2:** The pin-naming checklist (`../../product/pin-checklist.md`), so the pin SHA is named the minute #366 and the stuck-listening fix merge.
@@ -29,3 +31,7 @@
 **Mon Oct 19:** the coordinator asks the three training week-one questions (`training-week-one.md`). Defaults until he answers: keep the rest timer, swap is easy enough, finish isn't forgotten.
 
 **Thursday Oct 22, end of his first kitchen week** (Groceries and Recipes reached the phone with 21566b8 on Oct 15): the three one-word questions from `kitchen-week-one.md` go on that day's morning list in one message (pantry check, saving a recipe from a website, reaching for something else). The answers go to the Kitchen lead to scope v2.
+
+- 7:20 REFILL:
+4. Run the no-"at" check on the design sheets. Done when design/, design/motion/ and design/kitchen/ hold no "at" before a time outside quoted rule examples, with the worst files (themes.md, motion/tess-motion.md) fixed and their owner named (decisions 6:36 pm).
+5. Settle the finish line for a finished cook. Done when one line is chosen for a finished cook and master's CookLog.finishLine, the cook-mode acceptance step 8 and scenario S11 all say it, with rows 27 and 28 of the grammar fixture passing (cook-timer-phrases.md, Conflicts found 1).
