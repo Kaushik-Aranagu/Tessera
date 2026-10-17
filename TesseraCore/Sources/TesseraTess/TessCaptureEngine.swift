@@ -356,7 +356,8 @@ public final class TessCaptureEngine: TessCapturing {
         if case let .list(name) = parse,
            CreateList.existing(named: name, in: engine.store, classes: engine.classes) != nil
         {
-            return TessCapture(records: [], line: "\(name), already a list.", source: .grammar, asking: .line)
+            return TessCapture(records: [], line: "\(Self.listName(name, store: engine.store)), already a list.",
+                               source: .grammar, asking: .line)
         }
         return nil
     }
@@ -415,10 +416,11 @@ public final class TessCaptureEngine: TessCapturing {
         case let .list(name):
             let record = try engine.perform(CreateList(name: name), by: .tess, pending: pending).record
             // A repeat name opens the list that is there: nothing was made (G40).
+            let shown = Self.listName(name, store: engine.store)
             if CreateList.wasRepeat(record) {
-                return (record, "\(name), already a list.")
+                return (record, "\(shown), already a list.")
             }
-            return (record, "\(name), new list.")
+            return (record, "\(shown), new list.")
         case .shop:
             let record = try engine.perform(StartShop(), by: .tess, pending: pending).record
             let line = Groceries(store: engine.store, classes: engine.classes).shoppingLine()
@@ -458,6 +460,12 @@ public final class TessCaptureEngine: TessCapturing {
     }
 
     /// What Tess says for a task whose title is private: its day, never its words.
+    /// A list's name as Tess says it: "Private list" for a walled name (QA on #771).
+    @MainActor
+    static func listName(_ name: String, store: ObjectStore) -> String {
+        ObjectPrivacy.isPrivateWord(name, in: store) ? "Private list" : name
+    }
+
     public static func privateTaskLine(_ startsAt: Date?, context: TessContext) -> String {
         guard let startsAt, let day = when(startsAt, context: context).split(separator: " ").first else {
             return "Task added."

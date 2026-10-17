@@ -53,13 +53,23 @@ struct ShoppingIdleTests {
         #expect(table.running() != nil)
     }
 
+    @Test func aBackdatedCheckNeverMovesTheIdleClockBack() throws {
+        // QA on #771: the later of the last touch and the check's time.
+        let (engine, store, table) = try shop(checked: 10)
+        let groceries = Groceries(store: store, classes: engine.classes)
+        let items = try ListContents(store: store, classes: engine.classes).items(of: #require(groceries.list))
+        try engine.perform(CheckListItem(item: items[0].id, time: t0 + 11 * 3600), by: .user)
+        try engine.perform(CheckListItem(item: items[1].id, time: t0), by: .user) // backdated
+        #expect(table.suspendIfIdle(now: t0 + 13 * 3600, idleLimit: idle) == nil)
+    }
+
     @Test func idleShopKeepsItsBasket() throws {
         let (engine, store, table) = try shop()
         let groceries = Groceries(store: store, classes: engine.classes)
         let line = groceries.shoppingLine()
         _ = table.suspendIfIdle(now: t0 + 3600 + idle + 60, idleLimit: idle)
         let rows = try ListContents(store: store, classes: engine.classes).items(of: #require(groceries.list))
-        #expect(rows.count == 12 && rows.allSatisfy { $0.isDone } && rows.allSatisfy { !$0.object.isDeleted })
+        #expect(rows.count == 12 && rows.allSatisfy(\.isDone) && rows.allSatisfy { !$0.object.isDeleted })
         #expect(groceries.shoppingLine() == line)
     }
 

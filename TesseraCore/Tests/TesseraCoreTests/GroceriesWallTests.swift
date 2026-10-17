@@ -136,4 +136,26 @@ struct GroceriesWallTests {
         }
         #expect(check.receipt == "Private item, got")
     }
+
+    @Test func aPantrySwipeOnAWalledIngredientMakesARowNotANote() throws {
+        // QA on #770: the swipe adds the row; no note is made and nothing throws.
+        try store.create(#require(classes[.ingredient]), title: "Wifi password")
+        let notes = try store.objects(of: #require(classes[.note])).count
+        let record = try engine.perform(AddGroceries(lines: ["Wifi password"]), by: .user).record
+        #expect(rows().count == 1)
+        #expect(try store.objects(of: #require(classes[.note])).count == notes)
+        #expect(record.receipt == "Private item, on Groceries")
+    }
+
+    @Test(arguments: ["82.4 kg fasted", "82.4 kg after run", "82.4 kg lighter", "82.4 kg post workout"])
+    func aWeighInWithAnEverydayWordIsNotFood(_ line: String) {
+        #expect(AddListItem.kept(line, store: store) == nil, "\(line)")
+    }
+
+    @Test func theBarNeverEchoesAWalledListName() async {
+        let made = await TessCaptureEngine(engine: engine).capture("new list: lexapro", context: TessContext())
+        #expect(!made.line.lowercased().contains("lexapro"), "\(made.line)")
+        let again = await TessCaptureEngine(engine: engine).capture("new list: lexapro", context: TessContext())
+        #expect(again.line == "Private list, already a list.", "\(again.line)")
+    }
 }

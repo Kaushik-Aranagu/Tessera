@@ -113,7 +113,11 @@ public struct CreateList: EngineAction {
     public static func wasRepeat(_ record: OpRecord) -> Bool {
         guard record.action == descriptor.name else { return false }
         let made = record.ops.contains {
-            if case .create = $0 { true } else { false }
+            if case .create = $0 {
+                true
+            } else {
+                false
+            }
         }
         return !made
     }
@@ -223,8 +227,10 @@ public struct AddListItem: EngineAction {
             return false
         }
         let word = String(match.output.1)
+        // Words that read as a weigh-in, never a food (QA on #770): "82.4 kg fasted", "after run", "lighter".
+        let neverFood: Set = ["after", "before", "fasted", "post", "pre", "up", "down", "lighter", "heavier"]
         return !PrivateFacts.dayWords.contains(word) && !PrivateFacts.bodyWords.contains(word)
-            && !PrivateFacts.weighWords.contains(word)
+            && !PrivateFacts.weighWords.contains(word) && !neverFood.contains(word)
     }
 
     /// A line that was only a sum, judged on what was typed (Kitchen on #759): "$40 at costco" strips to "at costco",
