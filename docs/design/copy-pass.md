@@ -8,9 +8,9 @@ Research 126 (`docs/research/copy-one-voice.md`, master) read every new line in 
 1. **A receipt is the thing, a comma, then what happened.** "Call mom, done.", "Tacos, 2 added.", "Dune, finished.", "Rest on Sundays, kept.", "12 things, forgotten.", "Clean the bathroom, done." Never a verb first. UNDO under it reverts exactly what the line names.
 2. **"Best", never "record"** (Review, the Day log, the lens, summaries): "a best, a first, the week's top count".
 3. **One rest day, worded once.** Hero "Rest today", context "Legs A waits for tomorrow" (fixed days: "Legs A waits for Thursday", no "next"), Tess "Rest today. Legs A waits for tomorrow.", UNDO "Legs A, back on today." A planned rest day's context is "Push A tomorrow". Nothing else says rest in any other words.
-4. **A planned session beats a rest day:** hero "Push A at 7 pm" with `START PUSH A`, never "Rest day" beside a START key.
+4. **A planned session beats a rest day:** hero "Push A, 7 pm" with `START PUSH A`, never "Rest day" beside a START key.
 5. **Digits** for counts everywhere, heroes included: "3 sessions", "4 hours free", "9 to get, for tacos and 2 more". Research updates tess-voice; no hero exception.
-6. **Clock times** in sentences and heroes as "6 pm", "7:40 pm"; `6 PM` only in label case. The bare hour goes ("Tacos at 7 pm", "Push A at 6 pm"); a hero that no longer fits one line wraps to two in the fitting form. **No "at" before a time where a day and a time are joined** (decisions 5:11 PM PT Oct 16): "Call mom, tomorrow 6:30 pm.", "Stretch, Thursday 7 am.". This covers history receipts, Tess's lines and Home's lines, and it supersedes every earlier example with "at" (the "Tacos at 7 pm" and "Push A at 6 pm" hero forms keep their "at", because there it joins a thing and a time, not a day and a time).
+6. **Clock times** in sentences and heroes as "6 pm", "7:40 pm"; `6 PM` only in label case. The bare hour goes ("Tacos, 7 pm", "Push A, 6 pm"); a hero that no longer fits one line wraps to two in the fitting form. **No "at" before a time, anywhere** (decisions 5:11 PM and 6:32 PM PT Oct 16, the 6:32 ruling is app-wide): "Call mom, tomorrow 6:30 pm.", "Stretch, Thursday 7 am.", "Tacos, 7 pm.", "Push A, 6 pm.". This covers heroes, history receipts, Tess's lines and Home's lines, and it supersedes every earlier example with "at" (the narrower reading, which kept "at" between a thing and a time, is withdrawn).
 7. **Dates** as "Oct 12", "Nov 1" on screen and in sheet prose.
 8. **No "…", no " · " outside a pack size, no "Home" on screen** (the page is Today).
 9. **Context lines never repeat a word the page already shows** (home-lines §2): no "the week so far" under "so far", no "morning" under a morning label, no "tonight" under "Tacos tonight".
@@ -34,7 +34,7 @@ Research 126 (`docs/research/copy-one-voice.md`, master) read every new line in 
 | 47 `groceries-tess.md` | "9 to get, for tacos and two more" | "9 to get, for tacos and 2 more" |
 | 47 | "Scallions, for the tacos?" / "Scallions, for the tacos." | "Scallions, for tacos?" / "Scallions, for tacos." |
 | 47 | "Added 2 for tacos." + UNDO | "Tacos, 2 added." + UNDO (Product 3:15 AM) |
-| 47 | "tonight" under "Tacos tonight", `COOK` | "at 7 pm" |
+| 47 | "tonight" under "Tacos tonight", `COOK` | ", 7 pm" |
 | 47 | "for curry and two more", "for chili and two more" | "for curry and 2 more", "for chili and 2 more" |
 | 49 `tess-knows.md` | "Kept. You rest on Sundays." | "Rest on Sundays, kept." |
 | 49 | "Everything forgotten, 12 things." | "12 things, forgotten." |
@@ -51,12 +51,12 @@ Research 126 (`docs/research/copy-one-voice.md`, master) read every new line in 
 | 50 | "Claude paused until 1 Nov." | "Claude paused until Nov 1." |
 | 53 `plan-home.md` | "this morning, slept 6h40" / "this morning" | "from 8 am" |
 | 53 | "Four hours free" / "Two hours free" | "4 hours free" / "2 hours free" |
-| 53 | "Three tasks, Push A at 6" | "3 tasks, Push A at 6 pm" (two lines in the fitting form) |
+| 53 | "Three tasks, Push A at 6" | "3 tasks, Push A, 6 pm" (two lines in the fitting form) |
 | 53 | "Sends your task and calendar titles, never notes, places or health." | "Titles and counts only. Never notes, places, health or money." |
 | 53 | "this morning, 8 am" | "at 8 am" |
 | 54 `widget-states.md`, `lockscreen.md` | `6:00 PM` / "6:00 pm" | `6 PM` / "6 pm" |
 | 54 | "Resume" while running (medium) | "Push A" |
-| 54 | "Call landlord at six." | "Call landlord at 6 pm." |
+| 54 | "Call landlord at six." | "Call landlord, 6 pm." |
 | 54 | "Rest day." | meta `SUNDAY` on a planned rest day; "Rest today, Legs A waits for tomorrow." on a marked one |
 | 54 | "Push A done." + UNDO SET 22 (Log a set snippet) | "Set 22 logged." + UNDO; "Push A done." with no UNDO |
 | 54 | "Pull A tomorrow, first." | stays. "first" says it is tomorrow's first line, which the closed-day widget has no other way to show (Core #369 built it so) |

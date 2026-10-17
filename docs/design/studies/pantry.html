@@ -106,7 +106,7 @@ const AREAS = [
   { w: 'Review', a: 'var(--rev)', line: 'This week, 3 of 6 sessions' },
   { w: 'Today', a: 'var(--today)', line: 'Push Day A, 13 sets left' },
   { w: 'Training', a: 'var(--train)', line: 'Push Day A is on' },
-  { w: 'Kitchen', a: 'var(--kit)', line: 'Tacos at 7 pm' },
+  { w: 'Kitchen', a: 'var(--kit)', line: 'Tacos, 7 pm' },
   { w: 'Pantry', a: 'var(--pan)', line: '4 out, 2 low' },
 ];
 const index = (here, on) => `<div class="ix" style="top:96px">${AREAS.map((a, i) => `<div class="it${i === here ? ' here' : ''}${i === on ? ' on' : ''}" style="--a:${a.a}"><div class="wd">${a.w}</div><div class="ln">${a.line}</div></div>`).join('')}</div>`;
