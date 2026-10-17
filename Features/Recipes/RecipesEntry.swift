@@ -10,6 +10,8 @@ struct RecipeView: View {
     /// The recipe this visit opened, kept: if it's deleted while showing, its page says "Recipe gone." rather than
     /// jumping to another recipe (Kitchen on G3/G51).
     @State private var opened: UUID?
+    /// Started on Paste (no recipes yet): stays there until Paste moves on.
+    @State private var pasting: Bool?
 
     var body: some View {
         let _ = model.revision
@@ -19,15 +21,25 @@ struct RecipeView: View {
                     .filter { !$0.isDeleted }
                     .map { Row(id: $0.id, lastOpenedAt: model.store.value("lastOpenedAt", of: $0)?.dateValue,
                                createdAt: $0.createdAt) }
-                if let id = opened ?? Self.opening(requested: recipeID, rows: rows) {
+                if pasting ?? (opened == nil && Self.opening(requested: recipeID, rows: rows) == nil) {
+                    // The first recipe pasted here keeps its receipt and UNDO: the page moves on only when Paste
+                    // says so, not the moment the recipe exists (G52).
+                    PasteRecipe { id in
+                        opened = id
+                        pasting = false
+                    }
+                    .onAppear {
+                        if pasting == nil {
+                            pasting = true
+                        }
+                    }
+                } else if let id = opened ?? Self.opening(requested: recipeID, rows: rows) {
                     RecipePage(recipeID: id)
                         .onAppear {
                             if opened == nil {
                                 opened = id
                             }
                         }
-                } else {
-                    PasteRecipe()
                 }
             }
             .toolbarTitleDisplayMode(.inline)
