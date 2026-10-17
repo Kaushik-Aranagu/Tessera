@@ -36,6 +36,8 @@ public struct HomeDonePack: Equatable, Sendable {
     public let numbers: [Int]
     /// The names a returned line may use: the title and the bests.
     public let names: [String]
+    /// What each counted noun may be (TessLineCheck's `counts`): days since, exercises, sets, bests.
+    public var counts: [String: Set<Int>] = [:]
 
     /// The pack for a done workout, or why there is none.
     /// His last weight is read from the store here, so no caller can leave the bare-number wall without it.
@@ -63,7 +65,12 @@ public struct HomeDonePack: Equatable, Sendable {
             title: fact.title, finish: finish, dayLabel: dayLabel, bests: fact.records,
             sinceLastDays: fact.sinceLastDays,
             rulesLine: HomeLines.workoutText(for: fact, now: ended, calendar: calendar),
-            numbers: numbers, names: [fact.title] + fact.records
+            numbers: numbers, names: [fact.title] + fact.records,
+            counts: [
+                "days": Set([fact.sinceLastDays].compactMap(\.self)),
+                "exercises": [fact.exercisesDone], "sets": [fact.sets],
+                "bests": [fact.records.count],
+            ]
         ))
     }
 
@@ -72,6 +79,12 @@ public struct HomeDonePack: Equatable, Sendable {
     /// training notation (W9, Home pack only).
     public static func isWalled(_ name: String, lastWeightKg: Double?) -> Bool {
         let lower = name.lowercased()
+        // Health, money, places and people are never packed, number or not (QA on #658): "Knee rehab", "Physio".
+        if PrivateFacts.words(lower).contains(where: offLimits.contains)
+            || TessMemoryScreen.placeWords.contains(where: { $0.contains(" ") && lower.contains($0) })
+        {
+            return true
+        }
         if looksLikeClaudeKey(name) || SecretWords.mentions(name) || PrivateFacts.isWalled(
             name,
             lastWeightKg: lastWeightKg
@@ -93,6 +106,30 @@ public struct HomeDonePack: Equatable, Sendable {
         let barOfASet = /\d+(?:[.,]\d+)?\s*(?:kg|kgs|lb|lbs)?\s+\d+\s*[x×]\s*\d+/
         let rest = PrivateFacts.withoutNotation(lifted ? lower.replacing(barOfASet, with: " ") : lower)
         return rest.firstMatch(of: /\d+[.,]\d+|\d{3,}/) != nil
+    }
+
+    /// Words a title or best name may not hold: the memory screen's health, money and place words, and care and
+    /// people words.
+    static let offLimits: Set<String> = TessMemoryScreen.healthWords.union(TessMemoryScreen.moneyWords)
+        .union(TessMemoryScreen.placeWords.filter { !$0.contains(" ") })
+        .union(["rehab", "physio", "physiotherapy", "pt", "therapy", "therapist", "pain", "painful", "injury",
+                "injured", "surgery", "post-op", "doctor", "dr", "dentist", "clinic", "hospital", "mom", "mum", "dad",
+                "wife", "husband", "girlfriend", "boyfriend", "partner", "son", "daughter", "kid", "kids", "friend",
+                "friends", "coach"])
+        // A unit beside a lift is the bar ("Bench 82.4 kg 5x5"); the weight wall above judges units.
+        .subtracting(["kg", "lb", "lbs"])
+
+    /// "Thursday evening": the finish's house weekday and its part of day, in US English.
+    public static func dayLabel(finish: Date, calendar: Calendar) -> String {
+        let day = TesseraDay(calendar: calendar).day(of: finish)
+        let weekday = TesseraDay.weekdayName(of: day.addingTimeInterval(12 * 3600), calendar: calendar)
+        let part = switch calendar.component(.hour, from: finish) {
+        case 4 ..< 12: "morning"
+        case 12 ..< 17: "afternoon"
+        case 17 ..< 21: "evening"
+        default: "night"
+        }
+        return "\(weekday) \(part)"
     }
 
     /// The `<facts>` item as JSON, keys sorted, for the request body.
