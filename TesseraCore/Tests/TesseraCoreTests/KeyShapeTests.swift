@@ -19,6 +19,8 @@ struct KeyShapeTests {
             Self.sk + "- " + Self.ant + "-" + Self.fill, // KS06: a space after the first dash
             Self.sk + "-" + Self.ant + Self.fill, // KS07: no last dash
             Self.sk + " - " + Self.ant + " - " + Self.fill, // dictation spacing
+            Self.sk + "\u{2011}" + Self.ant + "\u{2011}" + Self.fill, // a pasted non-ASCII hyphen (QA low on #684)
+            Self.sk + "\u{2013}" + Self.ant + "-" + Self.fill,
         ]
         for key in keys {
             #expect(looksLikeClaudeKey(key), "\(key.prefix(12))")
@@ -29,7 +31,8 @@ struct KeyShapeTests {
     @Test func plainPhrasesAreNotKeys() {
         // KS08, KS09 and near misses.
         for phrase in ["could you log bench from earlier?", "put 40 dollars toward the thing for mum", "skant",
-                       "sk-and-x", "ask ant about the ski trip", Self.sk + "-" + Self.ant + "s", "desk-antenna"]
+                       "sk-and-x", "ask ant about the ski trip", "risk-anticipation", "risk-antiquated plans",
+                       Self.sk + "-" + Self.ant + "s", "desk-antenna"]
         {
             #expect(!looksLikeClaudeKey(phrase), "\(phrase)")
         }

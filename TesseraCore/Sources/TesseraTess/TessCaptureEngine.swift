@@ -366,7 +366,11 @@ public final class TessCaptureEngine: TessCapturing {
             if lines.count == 1, !made {
                 return (record, "\(name), already on Groceries.")
             }
-            return (record, lines.count == 1 ? "\(name), on the list." : "\(lines.count) things on the list.")
+            // The list by name (Product 10:06 PM PT, lists copy sweep); a medicine or body line is never said back.
+            if lines.count == 1, EngineWall.isHealth(lines[0], lastWeightKg: BodyWeight.lastKg(in: engine.store)) {
+                return (record, "Private item, on Groceries.")
+            }
+            return (record, lines.count == 1 ? "\(name), on Groceries." : "\(lines.count) things on Groceries.")
         case let .cook(recipe, date?):
             let record = try engine.perform(
                 CreateTask(title: "Cook \(recipe.title.lowercased())", startsAt: date, about: [recipe.id]),

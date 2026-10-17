@@ -428,7 +428,9 @@ public struct AddGroceries: EngineAction {
     }
 
     public func summary(in _: ObjectStore) -> String {
-        lines.count == 1 ? "Added \(lines[0])" : "Added \(lines.count) things"
+        // Thing first, the list by name (lists copy sweep, Product 10:06 PM PT).
+        lines.count == 1 ? "\(lines[0].prefix(1).uppercased() + lines[0].dropFirst()), on Groceries"
+            : "\(lines.count) things on Groceries"
     }
 
     public func receipt(in _: ObjectStore) -> String? {
