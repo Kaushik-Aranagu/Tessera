@@ -444,7 +444,8 @@ public struct AddRecipeToGroceries: EngineAction {
         let wanted = line.line.amountMax ?? line.line.amount
         return list.orderedChildren.contains { item in
             guard !item.isDeleted, store.value("isDone", of: item) != .bool(true),
-                  store.linkedObjects("about", of: item).contains(where: { $0.id == ingredient.id }) else { return false }
+                  store.linkedObjects("about", of: item).contains(where: { $0.id == ingredient.id })
+            else { return false }
             return GroceryShare.decode(store.value("shares", of: item)?.stringValue).contains { share in
                 share.recipe == recipe.id && share.unit == line.line.unit && share.packSize == line.line.packSize
                     && (share.amount ?? 0) >= (wanted ?? 0)
@@ -457,8 +458,15 @@ public struct AddRecipeToGroceries: EngineAction {
 
     /// "Tacos, 10 added." (Product W12); "Tacos, nothing to add." when nothing was new (Product e1981a39). The short
     /// name, unless another recipe on the list shares it (Kitchen lead, #389).
+    /// A private recipe lends no word of its title (QA on #807's run): "Private recipe, 3 added.".
     public func summary(in store: ObjectStore) -> String {
-        let name = store.object(id: recipe).map { RecipeBook.shortName(of: $0, store: store) } ?? "Recipe"
+        let object = store.object(id: recipe)
+        let isPrivate = object.map { recipe in
+            store.value("isPrivate", of: recipe) == .bool(true)
+                || ObjectPrivacy.isPrivateRecipeTitle(recipe.title, lastWeightKg: BodyWeight.lastKg(in: store))
+        } ?? false
+        let name = isPrivate ? ObjectPrivacy.recipeLabel
+            : object.map { RecipeBook.shortName(of: $0, store: store) } ?? "Recipe"
         let made = Self.lastAdded[recipe] ?? 0
         return made == 0 ? "\(name), nothing to add." : "\(name), \(made) added."
     }
