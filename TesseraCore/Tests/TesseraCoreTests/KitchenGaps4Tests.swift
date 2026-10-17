@@ -97,4 +97,20 @@ struct KitchenGaps4Tests {
         #expect(log.finishLine(for: recipe, at: at(11, 1, 4, 10), calendar: calendar)
             == "Overnight oats, first time this month.")
     }
+
+    // MARK: Groceries privacy (#688)
+
+    @Test func aHealthLineOnGroceriesReadsPrivateInSummaryAndReceipt() throws {
+        let store = store
+        let one = AddGroceries(lines: ["advil"])
+        #expect(one.summary(in: store) == "Private item, on Groceries")
+        #expect(one.receipt(in: store) == "Private item, on Groceries")
+        let two = AddGroceries(lines: ["milk", "advil"])
+        #expect(two.receipt(in: store) == "Milk and Private item, on Groceries")
+        let three = AddGroceries(lines: ["advil", "milk", "eggs"])
+        #expect(three.receipt(in: store) == "Private item, milk and 1 more, on Groceries")
+        let plain = AddGroceries(lines: ["milk"])
+        #expect(plain.summary(in: store) == "Milk, on Groceries")
+        #expect(plain.receipt(in: store) == "Milk, on Groceries")
+    }
 }
