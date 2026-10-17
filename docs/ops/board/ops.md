@@ -9,9 +9,8 @@ Lead: Ops thread. Mission (Kaushik, Oct 16 5:43 PM PT): keep improving the infra
 **Next (all junior tier unless noted):**
 1. Pace ledger row 4: read the meter (coordinator rate_limit_event), cost per cloud team, burn per hour; report hot teams to the coordinator.
 2. Per-team budget refit at the Sun Oct 18 5:00 AM PT weekly reset: update the shares in the staffing model from the first week of meter data, for the coordinator to approve.
-3. Job timeout for runs that start before a screen lock: `run` could kill or flag a job that makes no progress for N minutes, since a stalled job still beats and holds the lock.
-4. Subscription event cost note: PR events repeat 2 to 3 times at about 4k tokens each; write the "skip echoes, one status line" rule into the merge recipe.
-5. Relay adoption: send lane-lock, verdict line, worker rotation and relay batch to the coordinator as one proposal for the Mac leads.
-6. Standing chore after each Product refill: mirror the team boards, `product/decisions.md` and the acceptance docs from the project files to `docs/` in one docs PR. First run waits for Kaushik's OK in the Ops thread.
+3. Subscription event cost note: PR events repeat 2 to 3 times at about 4k tokens each; write the "skip echoes, one status line" rule into the merge recipe.
+4. Relay adoption: send lane-lock, verdict line, worker rotation and relay batch to the coordinator as one proposal for the Mac leads.
+5. Standing chore after each Product refill: mirror the team boards, `product/decisions.md` and the acceptance docs from the project files to `docs/` in one docs PR. First run waits for Kaushik's OK in the Ops thread.
 
-**Done:** #589 merge pre-checks and premerge workflow; #590 verdict line, verdicts.py, staleness.py; #592 staffing model; #593 pinned checkout; #596 test.sh audit, pr_digest.py, lane_lock.sh; #598, #600, #603 ledger and worker rotation; #675, #677 lane lock queue, heartbeat and locked-screen guard; #680 pace ledger check 3; #709, #712 zero-token CPU chores; #715 docs indexes (261 unindexed to 0); #718 merged items marked on the QA and Motion boards; #723 board tidy; #725 sheet 78 to master; idle detector page.
+**Done:** #589 merge pre-checks and premerge workflow; #590 verdict line, verdicts.py, staleness.py; #592 staffing model; #593 pinned checkout; #596 test.sh audit, pr_digest.py, lane_lock.sh; #598, #600, #603 ledger and worker rotation; #675, #677 lane lock queue, heartbeat and locked-screen guard; #680 pace ledger check 3; #709, #712 zero-token CPU chores; #715 docs indexes (261 unindexed to 0); #718 merged items marked on the QA and Motion boards; #723 board tidy; #725 sheet 78 to master; idle detector page; stalled-job timeout in lane_lock.sh run.

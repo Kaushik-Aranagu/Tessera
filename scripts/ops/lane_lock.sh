@@ -8,10 +8,10 @@ drop() { rm -f "$L/info" "$L/beat"; rmdir "$L"; }
 lastbeat() { b=$(cat "$L/beat" 2>/dev/null || true); echo "${b:-$(field start)}"; }
 beat() { date +%s > "$L/beat"; }
 # True when the Mac screen is locked (simulator UI runs stall then). Reads ioreg only (no python, so no developer-tools prompt). Unknown or non-macOS counts as unlocked.
-# LANE_LOCK_SCREEN=locked|unlocked forces the answer (tests); LANE_LOCK_SCREEN_OK=1 skips the check (package-only jobs).
+# LANE_LOCK_SCREEN=locked|unlocked forces the answer, LANE_LOCK_SCREEN=file:<path> means locked while that file exists (tests); LANE_LOCK_SCREEN_OK=1 skips the check (package-only jobs).
 screen_locked() {
   [ "${LANE_LOCK_SCREEN_OK:-}" = 1 ] && return 1
-  case "${LANE_LOCK_SCREEN:-}" in locked) return 0;; unlocked) return 1;; esac
+  case "${LANE_LOCK_SCREEN:-}" in locked) return 0;; unlocked) return 1;; file:*) [ -e "${LANE_LOCK_SCREEN#file:}" ]; return;; esac
   [ "$(uname)" = Darwin ] || return 1
   ioreg -n Root -d1 -a 2>/dev/null | grep -A1 -E 'CGSSessionScreenIsLocked|IOConsoleLocked' | grep -q '<true/>' && return 0
   return 1
@@ -47,8 +47,27 @@ case "${1:-}" in
    # Known limit: the hand-back drops our queue ticket, so after the screen unlocks this job rejoins at the back of the line.
    echo "$(date -u +%FT%TZ) screen locked after queueing, giving the lock back ($lane)" | tee -a "$LOG"; "$0" release "$lane" || true
   done
-  ( while sleep 60; do "$0" beat "$lane" || break; done ) & hb=$!
-  rc=0; "$@" || rc=$?; kill "$hb" 2>/dev/null || true; "$0" release "$lane" || true; exit $rc;;
+  # Watchdog: a job that is still running when the screen has been locked for LANE_LOCK_STALL ticks in a row (default 5 min), or that runs longer than
+  # LANE_LOCK_JOB_MAX s (default 7200, the same cap that frees a stale hold), is stopped so it cannot sit on the lock. A tick is LANE_LOCK_TICK s (default 60).
+  tick=${LANE_LOCK_TICK:-60}; stall=${LANE_LOCK_STALL:-5}; jobmax=${LANE_LOCK_JOB_MAX:-7200}; killed="/tmp/tessera-mac-lock.killed.$lane.$$"; rm -f "$killed"
+  # Every descendant of a pid (test.sh -> subshell -> xcodebuild -> xctest), so none is left driving the simulator after the lock is released.
+  kids() { for c in $(pgrep -P "$1" 2>/dev/null); do kids "$c"; echo "$c"; done; }
+  "$@" & job=$!
+  ( n=0; t=0
+    while sleep "$tick"; do
+     "$0" beat "$lane" || break
+     t=$((t + tick)); if screen_locked; then n=$((n + 1)); else n=0; fi
+     if [ "$n" -ge "$stall" ]; then r="screen locked for $((n * tick))s"; elif [ "$t" -ge "$jobmax" ]; then r="ran longer than ${jobmax}s"; else continue; fi
+     echo "$(date -u +%FT%TZ) stopping job ($lane): $r" | tee -a "$LOG"; echo "$r" > "$killed"
+     l="$(kids "$job") $job"; kill -TERM $l 2>/dev/null || true; sleep 10; kill -KILL $l 2>/dev/null || true; break
+    done ) & hb=$!
+  # Ctrl-C, TERM or HUP on this script stops the job tree and the watchdog and gives the lock back (async jobs ignore SIGINT, so they need this).
+  trap 'l="$(kids "$job") $job"; kill -TERM $l 2>/dev/null || true; kill "$hb" 2>/dev/null || true; "$0" release "$lane" || true; exit 130' INT TERM HUP
+  trap 'rm -f "$killed"' EXIT
+  rc=0; wait "$job" || rc=$?
+  # If the watchdog fired it is still in its 10 s grace before KILL: let it finish, then report.
+  if [ -f "$killed" ]; then wait "$hb" || true; echo "STOPPED: $(cat "$killed")" >&2; rc=75; else kill "$hb" 2>/dev/null || true; fi
+  "$0" release "$lane" || true; exit $rc;;
  release) if [ "$(field lane)" = "${2:-}" ]; then drop; echo released; else echo "not held by ${2:-}" >&2; exit 1; fi;;
  status) if [ -d "$L" ]; then cat "$F"; echo "age_s=$((now - $(field start))) beat_age_s=$((now - $(lastbeat)))"; else echo free; fi;;
  *) echo "usage: acquire|wait|beat|run|release|status" >&2; exit 2;;
