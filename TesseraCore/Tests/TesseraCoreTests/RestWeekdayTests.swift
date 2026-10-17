@@ -410,26 +410,52 @@ struct RestWeekdayTests {
         #expect(try store.objects(of: #require(classes[.task])).isEmpty)
     }
 
+    /// A throwaway defaults suite, so the once-per-install flag never leaks between tests.
+    func fresh() -> UserDefaults {
+        UserDefaults(suiteName: "restWeekday.test.\(UUID().uuidString)")!
+    }
+
+    @Test func rg7AWeekBeforeTheFirstLaunchWriteHasNoRestWeekday() throws {
+        // The first-launch write (old value nil) on Wed 14 Oct, a move to Friday on Wed 21 Oct.
+        let plain = try RestWeekdayTests(rest: nil)
+        let started = try RestWeekdayTests(rest: nil)
+        let settings = SettingsStore(engine: started.engine)
+        let first = try #require(settings.writeFirstRestWeekday(defaults: fresh()))
+        first.createdAt = Self.at(14, 9)
+        try started.setRest(6, at: Self.at(21, 9))
+        let now = Self.at(23, 12)
+        func marks(_ test: RestWeekdayTests, containing day: Int) -> [[Bool]] {
+            test.ledger.week(containing: Self.at(day, 12), plan: test.plan, now: now, sessionsPerWeek: 6,
+                             calendar: test.calendar).map { [$0.isRest, $0.wasDue] }
+        }
+        // A week before the write reads as if there was never a rest weekday.
+        #expect(marks(started, containing: 7) == marks(plain, containing: 7))
+        // The week after the write has its Sunday dab; the Friday it moved to marks only from the 21st.
+        let written = started.ledger.week(containing: Self.at(15, 12), plan: started.plan, now: now,
+                                          sessionsPerWeek: 6, calendar: started.calendar)
+        #expect(written[6].isRest && !written[6].wasDue)
+    }
+
     @Test func s04TheFirstLaunchWritesSundayOnceWithUndo() throws {
         let plain = try RestWeekdayTests(rest: nil)
         let settings = SettingsStore(engine: plain.engine)
         let before = plain.engine.history(limit: 100).count
-        let record = try #require(settings.writeFirstRestWeekday())
+        let record = try #require(settings.writeFirstRestWeekday(defaults: fresh()))
         #expect(plain.engine.history(limit: 100).count == before + 1)
         #expect(RestWeekday.current(in: plain.store) == 1 && RestWeekday.receipt(for: 1) == "Sunday, rest day.")
         // Once: a relaunch writes nothing, and neither does one after UNDO (his answer stands) or after "Any".
-        #expect(settings.writeFirstRestWeekday() == nil)
+        #expect(settings.writeFirstRestWeekday(defaults: fresh()) == nil)
         plain.engine.undo(record)
         #expect(RestWeekday.current(in: plain.store) == nil)
-        #expect(settings.writeFirstRestWeekday() == nil)
+        #expect(settings.writeFirstRestWeekday(defaults: fresh()) == nil)
         #expect(plain.engine.history(limit: 100).count == before + 1)
     }
 
     @Test func theFirstLaunchLeavesAStoredRestDayAlone() throws {
         let settings = SettingsStore(engine: engine) // restWeekday 1 from init
         let other = try RestWeekdayTests(rest: 4)
-        #expect(settings.writeFirstRestWeekday() == nil)
-        #expect(SettingsStore(engine: other.engine).writeFirstRestWeekday() == nil)
+        #expect(settings.writeFirstRestWeekday(defaults: fresh()) == nil)
+        #expect(SettingsStore(engine: other.engine).writeFirstRestWeekday(defaults: fresh()) == nil)
         #expect(RestWeekday.current(in: other.store) == 4)
     }
 }

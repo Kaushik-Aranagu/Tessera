@@ -56,13 +56,32 @@ public enum RestWeekday {
             }
     }
 
+    /// Whether any op, standing or undone, ever set the field. Stops at the first.
+    static func hasEverBeenWritten(in store: ObjectStore, classes: [SystemCatalog.Key: ClassDef]) -> Bool {
+        let settingsClass = store.object(id: SettingsStore.objectID)?.classDef ?? classes[.settings]
+        guard let fieldID = settingsClass.flatMap({ store.field("restWeekday", of: $0)?.id }) else { return false }
+        return store.context.operations.values.contains { record in
+            record.objectIDs.contains(SettingsStore.objectID) && record.ops.contains {
+                if case let .setValue(target, id, _, _) = $0 {
+                    target == SettingsStore.objectID && id == fieldID
+                } else {
+                    false
+                }
+            }
+        }
+    }
+
     /// The rest weekday in force on a past day that ended at `end`: the last change before it, else what the first
     /// later change replaced, else `current` (no change on record).
     static func inForce(endingAt end: Date, changes: [Change], current: Int?) -> Int? {
         if let last = changes.last(where: { $0.time < end }) {
             return last.new
         }
-        return changes.first?.old ?? current
+        // Before the first change: what it replaced. A nil old (the first-launch write) means no rest weekday then.
+        if let first = changes.first {
+            return first.old
+        }
+        return current
     }
 }
 
@@ -71,12 +90,22 @@ public extension SettingsStore {
     /// been written to `restWeekday`, writes Sunday as one op, receipt "Sunday, rest day." with UNDO. Once: an UNDO
     /// or a later "Any" leaves a record, so it never writes again. Nil when nothing was written.
     @discardableResult
-    func writeFirstRestWeekday() -> OpRecord? {
+    func writeFirstRestWeekday(defaults: UserDefaults = .standard) -> OpRecord? {
+        // Decided once per install: the op-log scan below never repeats on later launches.
+        let key = "restWeekday.firstLaunchDecided"
+        guard !defaults.bool(forKey: key) else { return nil }
         let store = engine.store
-        guard RestWeekday.current(in: store) == nil,
-              RestWeekday.changes(in: store, classes: engine.classes, standingOnly: false).isEmpty else { return nil }
+        guard RestWeekday.current(in: store) == nil, !RestWeekday.hasEverBeenWritten(in: store, classes: engine.classes)
+        else {
+            defaults.set(true, forKey: key)
+            return nil
+        }
         var settings = read()
         settings.restWeekday = RestWeekday.sunday
-        return try? engine.perform(WriteSettings(settings: settings), by: .tess).record
+        let record = try? engine.perform(WriteSettings(settings: settings), by: .tess).record
+        if record != nil {
+            defaults.set(true, forKey: key)
+        }
+        return record
     }
 }
