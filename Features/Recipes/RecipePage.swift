@@ -145,8 +145,6 @@ struct RecipePage: View {
                     .navigationTransition(.zoom(sourceID: routeID(route), in: zoom))
             }
             .sensoryFeedback(.success, trigger: sent?.count)
-            // "Recipes" opens this one next time (G51).
-            .onAppear { RecipeView.lastOpened = recipeID }
         } else {
             // Product's wording (kitchen gap hunt G3): the fact, then the one way back.
             VStack(alignment: .leading, spacing: Theme.Spacing.m) {
