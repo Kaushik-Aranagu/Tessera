@@ -49,7 +49,12 @@ struct SoulWakeTests {
         let night = SoulRouter(clock: { clock.now }, wakeStore: store)
         night.handle(.foregrounded(underLive: false))
         #expect(night.wake == nil)
+        // 04:01 is his new day, but still quiet hours: the wake waits for 07:00.
         clock.now = at(4, 1)
+        let early = SoulRouter(clock: { clock.now }, wakeStore: store)
+        early.handle(.foregrounded(underLive: false))
+        #expect(early.wake == nil)
+        clock.now = at(7, 1)
         let morning = SoulRouter(clock: { clock.now }, wakeStore: store)
         morning.handle(.foregrounded(underLive: false))
         #expect(morning.wake != nil)

@@ -34,7 +34,7 @@ enum SoulBeat {
     /// The beat on a frame: the satellites gather toward the mains' centre, she swells, her colour lifts.
     static func beating(_ frame: SoulFrame, gather amount: CGFloat, wear: CGFloat, swells: Bool = true) -> SoulFrame {
         var result = frame
-        result.look.saturation += wear + 0.25 * amount
+        result.look.saturation += wear + 0.3 * amount
         guard amount > 0 else { return result }
         let centreX = frame.dabs.prefix(3).reduce(0) { $0 + $1.x } / 3
         let centreY = frame.dabs.prefix(3).reduce(0) { $0 + $1.y } / 3
@@ -46,7 +46,7 @@ enum SoulBeat {
         }
         // In the quiet hours she doesn't swell (decisions 12:13 PM PT, G7).
         if swells {
-            result.look.scale *= 1 + 0.1 * amount
+            result.look.scale *= 1 + 0.12 * amount
         }
         return result
     }

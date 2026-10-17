@@ -70,6 +70,8 @@ struct SoulBeatTests {
         #expect(SoulBeat.gather(0.6) < 0.01)
         let frame = SoulFrame.sample(.idle, time: 3, elapsed: 0)
         let beating = SoulBeat.beating(frame, gather: 1, wear: 0.1)
-        #expect(abs(beating.look.saturation - (frame.look.saturation + 0.35)) < 0.001)
+        // §6: saturation +0.3 at the gather, the swell to 1.12.
+        #expect(abs(beating.look.saturation - (frame.look.saturation + 0.4)) < 0.001)
+        #expect(abs(beating.look.scale - frame.look.scale * 1.12) < 0.001)
     }
 }

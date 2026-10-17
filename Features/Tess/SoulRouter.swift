@@ -138,7 +138,8 @@ final class SoulRouter {
     var rest: TessSoul.Mode {
         guard page == .home else { return .idle }
         let hour = Calendar.current.component(.hour, from: clock())
-        return hour >= 23 || hour < 6 ? .resting : .idle
+        // Quiet hours end at 07:00 (decisions 2:00 PM PT Oct 16, Research EQ32).
+        return Self.isQuietHour(hour) ? .resting : .idle
     }
 
     /// The whole contract is this one switch (§14's table): one case per event, read top to bottom.
@@ -291,6 +292,8 @@ final class SoulRouter {
     private func wakeIfFirstOpen(quiet: Bool) {
         guard page == .home else { return }
         let now = clock()
+        // The wake comes with the first open outside quiet hours (motion lab on #558).
+        guard !Self.isQuietHour(Calendar.current.component(.hour, from: now)) else { return }
         let today = TesseraDay().day(of: now)
         // `-freshDay` (simulator only, for recordings): every launch is the first open of the day.
         if !LaunchFlags.has("-freshDay"), let last = wakeStore.object(forKey: Self.wokeOnKey) as? Date, last == today {
@@ -306,6 +309,11 @@ final class SoulRouter {
             guard !Task.isCancelled else { return }
             self?.wake = nil
         }
+    }
+
+    /// 23:00 to 07:00.
+    static func isQuietHour(_ hour: Int) -> Bool {
+        hour >= 23 || hour < 7
     }
 
     /// Her centre on screen, from the view that draws her at the dock.
