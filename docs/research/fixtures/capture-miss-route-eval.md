@@ -199,6 +199,19 @@ Each row is a request that must build zero Claude requests (N16 and N17 build on
 
 A bad or revoked key is not on this list: that case sends one request and gets the line "Claude didn't take the key. Check it in Settings: Claude." from a 401 or 403 [T]. See section 5 for the "spent-key" wording.
 
+## 2b. Rulings applied (Product, decisions 4:10 PM Oct 17)
+
+Four rulings change rows above. Read this section over the tables; the run plan counts are restated at the end.
+
+| Ruling | Rows it changes | New expectation | Test name (Core) |
+|---|---|---|---|
+| Cook timers never leave the phone; Core adds a cook check | P47 to P52 (cook timers, 6 rows) move from section 1 to the must-not-go list as N21 to N26 | with a cook running (and for "timer" phrases without one), the phrase is answered on the phone and makes **zero** Claude requests; the risk in section 4 item 6 is closed once the check lands | `cookPhraseNeverReachesClaude` (6 phrases), `cookCheckRunsBeforeTheRouter` |
+| "dinner at 7.30" is a clock, not money | P16 to P19, and the `7.30pm` family (P04 and its siblings) | `isMoneyShaped` does not fire on `H.MM` that reads as a clock (hour 0 to 23, minutes 00 to 59, no currency sign); the title carries no time; a masked line and a missed miss log entry are now failures; money-shaped `12.50` stays walled | `clockTimeIsNotMoney`, `twoDecimalAmountStaysMoney` |
+| Task-less "move dentist to 7" is a plain miss | P25 to P28, P30, P31 | no special handling: it is an ordinary miss that goes to Claude; pass = an ask or no write, a guessed time still fails; the capture pack carrying open tasks is a separate improvement, not required | `taskLessRescheduleIsAnOrdinaryMiss` |
+| Number-word weights are walled | P60 `Eleven stone four` moves to the must-not-go list as N27 | `isBodyShaped` fires on a weight said in words (a number word beside a body unit such as stone, kilos, pounds); the phrase makes zero Claude requests and becomes a private note | `numberWordWeightIsWalled`, `elevenStoneFourMakesNoRequest` |
+
+Counts after the rulings: 60 miss rows become 53 (P47 to P52 and P60 move out), must-not-go rows become 27 (N01 to N27). The pass bar becomes at least 48 of 53 miss rows at 3 of 3, zero must-not hits across the 27, and the call count drops from 180 to 159 live calls in stage 1 (53 phrases x 3 runs), about $0.11 worst case against the $50 cap. Nothing runs without Kaushik's own yes in the running thread.
+
 ## 3. Run plan
 
 **Nothing runs without Kaushik's own yes in the running thread.** Not Stage 0 builds with a key, not Stage 1, not Stage 2. A yes to one stage is not a yes to the next. The runner is `--dry` by default and must refuse to read a key without an explicit live flag, as `plan_my_day_eval.py` and `claude_facts_eval.py` do.
