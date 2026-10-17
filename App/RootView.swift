@@ -35,9 +35,10 @@ struct RootView: View {
                     Color.clear.frame(height: 56).allowsHitTesting(false)
                 }
                 BottomChrome(onSoulDoubleTap: goHome)
-                    .soulStroke(model.soul)
                     .environment(\.zoomNamespace, zoom)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                    // Full width, so the band strip spans the screen (a stroke starts beside her, not on her).
+                    .soulStroke(model.soul)
 
                 PaintFlood(isOn: flooding, origin: CGPoint(x: proxy.size.width - 46, y: proxy.size.height - 30))
                     .ignoresSafeArea()

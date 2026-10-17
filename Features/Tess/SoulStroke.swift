@@ -90,31 +90,44 @@ struct SoulStrokeGesture: ViewModifier {
     @State private var tracker = SoulStrokeTracker()
     @State private var began = false
 
+    private var drag: some Gesture {
+        DragGesture(minimumDistance: 6, coordinateSpace: .global)
+            .onChanged { value in
+                guard let centre = soul.dockCentre else { return }
+                let time = value.time.timeIntervalSinceReferenceDate
+                if !began {
+                    began = true
+                    tracker.began(at: value.startLocation, time: time, centre: centre)
+                }
+                switch tracker.moved(to: value.location, time: time, centre: centre) {
+                case .entered: soul.handle(.strokeEntered)
+                case .left: soul.handle(.strokeLeft)
+                case nil: break
+                }
+            }
+            .onEnded { value in
+                began = false
+                guard let centre = soul.dockCentre else { return }
+                let stroke = tracker.ended(at: value.location, time: value.time.timeIntervalSinceReferenceDate,
+                                           centre: centre)
+                soul.handle(.strokeEnded(isStroke: stroke))
+            }
+    }
+
     func body(content: Content) -> some View {
         content
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 6, coordinateSpace: .global)
-                    .onChanged { value in
-                        guard let centre = soul.dockCentre else { return }
-                        let time = value.time.timeIntervalSinceReferenceDate
-                        if !began {
-                            began = true
-                            tracker.began(at: value.startLocation, time: time, centre: centre)
-                        }
-                        switch tracker.moved(to: value.location, time: time, centre: centre) {
-                        case .entered: soul.handle(.strokeEntered)
-                        case .left: soul.handle(.strokeLeft)
-                        case nil: break
-                        }
-                    }
-                    .onEnded { value in
-                        began = false
-                        guard let centre = soul.dockCentre else { return }
-                        let stroke = tracker.ended(at: value.location, time: value.time.timeIntervalSinceReferenceDate,
-                                                   centre: centre)
-                        soul.handle(.strokeEnded(isStroke: stroke))
-                    }
-            )
+            // The band beside her is empty ground, so a finger there would fall through to the page: a clear strip
+            // over the band catches it (nothing of the page lives in Tess's band, 736 to 820).
+            .background(alignment: .bottom) {
+                Color.clear
+                    .frame(height: SoulStrokeTracker.bandAbove + SoulStrokeTracker.bandBelow)
+                    .contentShape(Rectangle())
+                    .gesture(drag)
+                    .padding(.bottom, 32)
+                    .accessibilityHidden(true)
+            }
+            // A pan that starts on her line or UNDO still strokes her.
+            .simultaneousGesture(drag)
             .tesseraFeedback(.soulStroke, trigger: soul.strokeTicks)
     }
 }
