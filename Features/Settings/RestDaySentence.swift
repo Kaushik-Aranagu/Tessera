@@ -14,18 +14,18 @@ struct RestDaySentence: View {
 
     var body: some View {
         let _ = model.revision
-        let day = AppModel.isDemo ? demoDay ?? RestWeekday.sunday : RestWeekday.current(in: model.store)
+        let rest = AppModel.isDemo ? demoDay ?? RestWeekday.sunday : RestWeekday.current(in: model.store)
         VStack(alignment: .leading, spacing: Theme.Spacing.s) {
             HStack(spacing: 0) {
                 Text("Rest day: ")
-                Button(Self.word(day)) {
+                Button(Self.word(rest)) {
                     withTesseraAnimation(reduceMotion: reduceMotion) { choosing.toggle() }
                 }
                 .buttonStyle(.valueWash)
                 .fontWeight(.semibold)
                 .contentTransition(.opacity)
                 .accessibilityLabel("Rest day")
-                .accessibilityValue(Self.word(day))
+                .accessibilityValue(Self.word(rest))
                 .accessibilityHint("Shows the days to pick from")
                 Text(".")
             }
