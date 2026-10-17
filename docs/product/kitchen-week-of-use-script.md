@@ -200,7 +200,7 @@ Statuses: **fails today** (read from code, a fix is owed), **build target** (the
 | G31 | Claude receipts name no Kitchen job | Core | fails today | 3, 7 |
 | G32 | Link read ignores "Tess asks Claude" | Core | ruled (switch covers the tap); fails today | 3 |
 | G33 | Empty Kitchen page on Home | Builder B | passes today (kept as a row) | 1 |
-| G34 | Siri reads "Saved." for a private grocery | Core | fails today (copy proposed) | 6, 7 |
+| G34 | Siri reads "Saved." for a private grocery | Core | fails today (copy ruled Oct 17, 4:35) | 6, 7 |
 | G35 | Shortcuts description and prompt omit Groceries | Core | fails today | 7 |
 | G36 | Export operation log keeps private words | Core | fails today | 7 |
 | G37 | Export keeps deleted and shared private words | Core | fails today | 7 |
