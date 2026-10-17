@@ -17,6 +17,8 @@ Stage 4 also compiles TesseraCore a second time (as a dependency for iOS), indep
 
 ## Docs-only diffs
 
+**No diff base, no skipping:** a run with no diff base (an exact-SHA release gate run, or any run where the merge base is unknown) always runs the full suite. The skip rules below apply only to a PR run against a known base.
+
 Stages 1-4 all test code. For a diff that touches only docs, none of them can fail from the change.
 
 Safe skip rule (all must hold, computed from `git diff --name-only origin/master...HEAD`):

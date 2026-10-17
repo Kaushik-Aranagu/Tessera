@@ -4,7 +4,7 @@ Several lanes share one Mac, one iOS simulator and one Xcode. Two concurrent `xc
 
 ## Convention
 
-- **Lock**: the directory `/tmp/tessera-mac-lock.d` on the Mac (`mkdir` is atomic, so only one lane wins). Override with `LOCKDIR` only for testing.
+- **Lock**: the directory `/tmp/tessera-mac-lock.d` on the Mac (`mkdir` is atomic, so only one lane wins). There is no override. A stale or foreign directory is removed with `rm -f info; rmdir`, so a directory holding any other file is left alone and the helper stops with an error.
 - **Content** (file `info` inside it, `key=value` lines): `lane` (lane name), `pid` (the holder's long-lived shell pid), `start` (epoch seconds), `start_iso` (UTC), `purpose` (short text, e.g. `app tests for PR 312`).
 - **Stale after 2 hours** (7200 s), or when the pid is no longer alive. A stale lock may be taken over by the next lane; the helper says so when it does.
 - **Package-only runs** (`swift test` in `TesseraCore/`, no simulator, no Xcode) do not need the lock.
