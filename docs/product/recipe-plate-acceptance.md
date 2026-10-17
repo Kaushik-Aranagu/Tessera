@@ -28,11 +28,11 @@
 | P15 | A huge image: the fetch reads at most 2 MB and stops (a `Content-Length` over the cap, or a body that runs past it, is dropped without downloading the rest); the recipe saves with the wash. An image under 2 MB whose decoded size is absurd (over 16 megapixels) is refused the same way before it is decoded, so a small file cannot exhaust memory |
 | P16 | A non-image content type (`text/html`, `application/json`, `text/plain`, or no type at all) gives the wash. SVG is not rendered (`image/svg+xml` gives the wash); only JPEG, PNG, WebP and HEIC are decoded, and a file that claims `image/jpeg` but fails to decode gives the wash |
 | P17 | A recipe that is Private at Save, or whose page text holds a secret word, never requests the image URL at all (not "fetched and hidden"): the test asserts zero image requests. Making a recipe Private later deletes the stored photo (P4) and a later re-save does not fetch |
-| P18 | The image request goes through the same link-fetch guard as the page: https only, at most 3 redirects, no cookies or credentials, no private-network addresses, a 10 s timeout, `api.anthropic.com` never involved. A private-address or non-https og-image URL gives the wash |
+| P18 | The image request goes through the same link-fetch guard as the page: https only, at most 5 redirects (RULED, Product Oct 17 8:40 AM, matching ER2 and the code), no cookies or credentials, no private-network addresses, a 10 s timeout, `api.anthropic.com` never involved. A private-address or non-https og-image URL gives the wash |
 | P19 | The og-image URL is stored nowhere but the object's source link; it appears in no log, receipt, Tess line or backup, and the fetched bytes are not sent to Claude (P5) |
 
 ## Open for Product (not blocking the rows above)
 
 1. A recipe whose link has no og-image but whose page has other images shows the wash; the app never picks a body image. Confirm that is wanted.
 2. The photo can go stale if the source page changes it; since the app never refetches, a re-save from the link is the only refresh. Fine for v1.
-3. P15's 16 megapixel ceiling, P18's 3 redirects and 10 s timeout are Kitchen's defaults, taken from the link fetch guard; Core or Builder B adjusts them only to match the guard they share.
+3. P15's 16 megapixel ceiling, P18's 5 redirects (ruled) and 10 s timeout are Kitchen's defaults, taken from the link fetch guard; Core or Builder B adjusts them only to match the guard they share.

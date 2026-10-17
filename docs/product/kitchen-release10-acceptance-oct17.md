@@ -58,3 +58,7 @@ Result is judged on the code at f8bb516e. FAIL means the code contradicts the ru
 | Cook timers and overnight finish time on 8:30 pm style lines | Start a cook, read the finish line, check clocks are lowercase and have no "at" |
 | First launch writes Sunday as rest day, Kitchen unaffected | Fresh install, open Groceries and Recipes, confirm nothing else changed |
 | Recordings (kitchen walk) | Screen-record Groceries, Paste, Recipe page, Lists on the phone and attach |
+
+## Rulings since this read (Product, decisions.md Oct 17 8:40 AM)
+
+The two docs conflicts are ruled: list receipts say "on" (so Lists.swift:174 and :185 "added to" stay FAIL against the ruled wording, and `kitchen-misfire-rows.md` line 79 is corrected), and recipe-link redirects are 5 (so recipe-plate P18 and kitchen-refill5 K33.2 are corrected from 3, and the code at 5 PASSES). The Bar's "Milk, on the list." (`TessCaptureEngine.swift:369`) still fails the ruled "Milk, on Groceries.".
