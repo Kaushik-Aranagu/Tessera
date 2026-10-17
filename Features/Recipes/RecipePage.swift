@@ -304,6 +304,8 @@ struct RecipePage: View {
                 let shown = UUID().uuidString
                 failedID = shown
                 withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { failed = line }
+                // VoiceOver hears it too, as the success path does (Design on #889).
+                UIAccessibility.post(notification: .announcement, argument: line)
                 Task { @MainActor in
                     try? await Task.sleep(for: .seconds(10))
                     if failedID == shown {
