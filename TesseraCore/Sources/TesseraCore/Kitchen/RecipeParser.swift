@@ -7,6 +7,11 @@ public struct ParsedRecipe: Hashable, Sendable {
         public var text: String
         /// Durations mentioned in the step, in minutes ("simmer 20 min" → 20; "1–2 hours" → 60...120).
         public var timers: [ClosedRange<Double>]
+
+        /// The timers the step offers: nothing over 24 hours (G9).
+        public var offeredTimers: [ClosedRange<Double>] {
+            RecipeParser.offeredTimers(timers)
+        }
     }
 
     public var title: String
@@ -166,6 +171,15 @@ public enum RecipeParser {
         line.replacing(/^(?i)(?:step\s*)?\d+[.):]?\s+/, with: "")
             .replacing(/^[•\-–*·]\s*/, with: "")
             .trimmingCharacters(in: .whitespaces)
+    }
+
+    /// The longest kitchen timer: 24 hours. A longer duration ("48 hours") is read for the recipe clock but never
+    /// offered as a timer (G9).
+    public static let maxTimerMinutes: Double = 24 * 60
+
+    /// The durations in a step that can become a timer (nothing over 24 hours).
+    public static func offeredTimers(_ durations: [ClosedRange<Double>]) -> [ClosedRange<Double>] {
+        durations.filter { $0.upperBound <= maxTimerMinutes }
     }
 
     /// Every duration in a step, in minutes: "20 min", "1–2 hours", "30 seconds", "1 hr 15 min".

@@ -28,7 +28,7 @@ public enum RecipeLinkLine {
 
     /// "7 ingredients, 3 steps, 2 timers."
     public static func found(_ recipe: ParsedRecipe) -> String {
-        let timers = recipe.steps.reduce(0) { $0 + $1.timers.count }
+        let timers = recipe.steps.reduce(0) { $0 + $1.offeredTimers.count }
         var parts = ["\(recipe.ingredients.count) \(recipe.ingredients.count == 1 ? "ingredient" : "ingredients")",
                      "\(recipe.steps.count) \(recipe.steps.count == 1 ? "step" : "steps")"]
         if timers > 0 {

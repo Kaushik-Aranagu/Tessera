@@ -18,6 +18,11 @@ public struct RecipeBook {
         public let text: String
         public let timers: [ClosedRange<Double>]
         public let uses: [ObjectRecord]
+
+        /// The timers the step offers: every duration up to 24 hours. A longer one ("48 hours") stays plain text.
+        public var offeredTimers: [ClosedRange<Double>] {
+            RecipeParser.offeredTimers(timers)
+        }
     }
 
     public let store: ObjectStore

@@ -28,6 +28,7 @@ struct ReceiptTests {
             == "Charger, moved to Tech")
         #expect(try engine.perform(RenameListSection(list: list.id, from: "Tech", to: "Cables"), by: .tess).record
             .receipt == "Tech, now Cables")
+        try engine.perform(CheckListItem(item: item.id), by: .tess)
         #expect(try engine.perform(ClearDoneItems(list: list.id), by: .tess).record.receipt
             == "Packing, done items cleared")
     }
