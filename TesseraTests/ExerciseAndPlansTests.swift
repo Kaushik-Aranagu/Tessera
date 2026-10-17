@@ -137,8 +137,11 @@ struct ExerciseAndPlansTests {
         let now = AppClock.now
         let week = PlanData(model: model, plan: nil, now: now).week(now: now)
         let todayIndex = try #require(week.days.firstIndex { $0.state == .today })
+        // The first launch writes Sunday as the rest day (Research 146): it has no routine, so a Sunday run has
+        // nothing to compare, and the days after skip it.
+        guard week.days[todayIndex].routine != nil else { return }
         #expect(week.days[todayIndex].routine == "Push A")
-        let after = week.days[(todayIndex + 1)...].map(\.routine)
+        let after = week.days[(todayIndex + 1)...].compactMap(\.routine)
         #expect(Array(after) == Array(["Pull A", "Legs A", "Push B", "Pull B", "Legs B", "Push A"].prefix(after.count)))
         #expect(week.days[..<todayIndex].allSatisfy { $0.state == .open }) // past days are never "missed"
         #expect(week.headline == "0 of 6\nsessions")
