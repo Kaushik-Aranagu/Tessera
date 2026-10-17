@@ -20,6 +20,8 @@ struct PasteRecipe: View {
     @State private var saved: (id: UUID, record: OpRecord)?
     /// A Claude key pasted here by mistake: refused on the spot, never read, saved or shown.
     @State private var refusedKey = false
+    /// The key line's filter: it cuts a key out and keeps the line up across the cut's own change (QA on #767).
+    @State private var keys = PasteKeyFilter()
     @FocusState private var editing: Bool
 
     /// The saved line's name: a private recipe is only "Private recipe" here too, spoken or drawn (G53).
@@ -118,19 +120,24 @@ struct PasteRecipe: View {
         }
         .onChange(of: text) { old, new in
             // A Claude key never becomes a recipe (QA on #218): cut it out before anything reads it, keeping the rest
-            // of
-            // the paste (Product 8:20 AM, K87.11). It's never echoed; the line says where a key goes.
-            if looksLikeClaudeKey(new) {
-                text = PasteCopy.withoutKeys(new)
+            // of the paste (Product 8:20 AM, K87.11). It's never echoed; the line says where a key goes.
+            switch keys.change(old: old, new: new) {
+            case let .cut(kept):
                 refusedKey = true
-                return
-            }
-            if !new.isEmpty {
-                refusedKey = false
-            }
-            // A paste lands as one big change: read it straight away.
-            if new.count - old.count > 40 {
-                read()
+                text = kept
+            case let .keptAfterCut(read: shouldRead):
+                refusedKey = true
+                if shouldRead {
+                    read()
+                }
+            case let .plain(read: shouldRead):
+                if !new.isEmpty {
+                    refusedKey = false
+                }
+                // A paste lands as one big change: read it straight away.
+                if shouldRead {
+                    read()
+                }
             }
         }
         .onChange(of: editing) { _, isEditing in
@@ -382,17 +389,39 @@ private struct IngredientPaint: View {
     }
 }
 
+/// The Paste box's key check, as a small state machine so it tests without a screen. A key-shaped change is cut
+/// (`.cut`); the box then changes again to the cut text, and that change keeps the key line up and reads what was
+/// kept (`.keptAfterCut`) instead of clearing the line as an ordinary edit would.
+struct PasteKeyFilter {
+    private var lastCut: String?
+
+    enum Action: Equatable {
+        case cut(String)
+        case keptAfterCut(read: Bool)
+        case plain(read: Bool)
+    }
+
+    mutating func change(old: String, new: String) -> Action {
+        if looksLikeClaudeKey(new) {
+            let kept = PasteCopy.withoutKeys(new)
+            lastCut = kept
+            return .cut(kept)
+        }
+        if let cut = lastCut, new == cut {
+            lastCut = nil
+            return .keptAfterCut(read: !new.isEmpty)
+        }
+        lastCut = nil
+        return .plain(read: new.count - old.count > 40)
+    }
+}
+
 enum PasteCopy {
-    /// The paste with every key-shaped word taken out and the rest kept, line by line (K87.11). A line that was only
-    /// the key goes; nothing key-shaped is left behind.
+    /// The paste with every Claude key taken out and the rest kept (K87.11), through Core's cutter, which also takes
+    /// a key's tail when a paste wraps it; anything still key-shaped leaves nothing (QA on #767).
     static func withoutKeys(_ text: String) -> String {
-        text.components(separatedBy: "\n").compactMap { line -> String? in
-            guard looksLikeClaudeKey(line) else { return line }
-            let kept = line.split(separator: " ", omittingEmptySubsequences: false)
-                .filter { !looksLikeClaudeKey(String($0)) }.joined(separator: " ")
-                .trimmingCharacters(in: .whitespaces)
-            return kept.isEmpty || looksLikeClaudeKey(kept) ? nil : kept
-        }.joined(separator: "\n")
+        let kept = withoutClaudeKeys(text)
+        return looksLikeClaudeKey(kept) ? "" : kept
     }
 
     /// Ingredient → step → ignore → ingredient, from what the line was last marked as (else how it read), so a line
