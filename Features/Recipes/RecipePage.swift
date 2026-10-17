@@ -21,6 +21,8 @@ struct RecipePage: View {
     @Namespace private var zoom
     @State private var serves: Int?
     @State private var sent: (line: String, record: OpRecord)?
+    /// When the receipt went up, so a hand-off keeps what is left of its window rather than a fresh 10 s (QA on #819).
+    @State private var sentAt: Date?
     @State private var drag: CGFloat = 0
     @State private var columnWidth: CGFloat = 260
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -178,7 +180,8 @@ struct RecipePage: View {
                 // Leaving inside the window hands the receipt and its UNDO to Tess's shared line, so the UNDO
                 // follows him (G67).
                 if let sent {
-                    TessVoice.shared.say(sent.line, undo: sent.record)
+                    TessVoice.shared.say(sent.line, undo: sent.record,
+                                         holds: RecipeCopy.holdLeft(since: sentAt, now: .now))
                     self.sent = nil
                     away = false
                 }
@@ -261,6 +264,8 @@ struct RecipePage: View {
     /// engine's "Tacos, 7 added." stands in its place with UNDO 10 s. Nothing new: the column stays, one line
     /// "Tacos, nothing to add.", no UNDO. Refused: the column springs back and Tess says so.
     private func send(recipe: UUID, serves: Int?) {
+        // One add at a time: a second (VoiceOver's action) never replaces the first's UNDO (QA on #819).
+        guard sent == nil else { return }
         let title = model.store.object(id: recipe)?.title ?? ""
         let outcome = RecipeCopy.send(isPrivate: RecipeCopy.isPrivate(title, model: model)) {
             let result = try model.engine.perform(AddRecipeToGroceries(recipe: recipe, serves: serves), by: .user)
@@ -279,6 +284,7 @@ struct RecipePage: View {
             away = true
             drag = 0
             sent = (line, record)
+            sentAt = .now
             model.touch()
         }
         UIAccessibility.post(notification: .announcement, argument: line)
@@ -479,6 +485,12 @@ private struct RecipeOriginal: View {
 
 @MainActor
 enum RecipeCopy {
+    /// What is left of the add's 10 s UNDO window, at least 1 s (VoiceOver keeps its flat 10 s in TessVoice).
+    static func holdLeft(since start: Date?, now: Date) -> Duration {
+        let elapsed = start.map { now.timeIntervalSince($0) } ?? 0
+        return .milliseconds(Int(max(1, 10 - elapsed) * 1000))
+    }
+
     /// VoiceOver's action on the ingredients as a whole: it adds every line, so it says "all" (G68).
     static let addAllAction = "Add all to Groceries"
 

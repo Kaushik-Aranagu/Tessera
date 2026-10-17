@@ -1,3 +1,4 @@
+import Foundation
 @testable import Tessera
 import TesseraCore
 import Testing
@@ -73,5 +74,13 @@ struct RecipeSendTests {
     /// G68: the add is named for what it does, the whole recipe.
     @Test func theVoiceOverActionSaysAll() {
         #expect(RecipeCopy.addAllAction == "Add all to Groceries")
+    }
+
+    /// QA on #819: a hand-off keeps what is left of the window, never a fresh 10 s.
+    @Test func theHandOffKeepsWhatIsLeft() {
+        let start = Date(timeIntervalSince1970: 1000)
+        #expect(RecipeCopy.holdLeft(since: start, now: start.addingTimeInterval(3)) == .seconds(7))
+        #expect(RecipeCopy.holdLeft(since: start, now: start.addingTimeInterval(30)) == .seconds(1))
+        #expect(RecipeCopy.holdLeft(since: nil, now: start) == .seconds(10))
     }
 }

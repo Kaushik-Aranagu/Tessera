@@ -27,6 +27,8 @@ struct PasteRecipe: View {
     /// Tess's line while a pasted link is read, and what reading it gave (G54, K87.4). Never the link itself.
     @State private var linkLine: String?
     @State private var readingLink = false
+    /// The next change to the box is the link reader's, not his, so its line stays up.
+    @State private var fromLink = false
     /// The shelf's links, read when the page shows and after each read.
     @State private var waitingLinks: [URL] = []
 
@@ -53,6 +55,8 @@ struct PasteRecipe: View {
                 // Links kept for later (K86.7): read only on his tap, oldest first, never by themselves.
                 if !reading, text.isEmpty, !readingLink, let waiting = waitingLinks.first {
                     Button(PasteCopy.readWaiting(waitingLinks.count)) {
+                        // The reader's own fill: its "Reading <host>." line stays up (QA on #830).
+                        fromLink = true
                         text = waiting.absoluteString
                         readLink(waiting)
                     }
@@ -151,11 +155,19 @@ struct PasteRecipe: View {
         }
         .onChange(of: text) { old, new in
             // A link with a name or password in it is refused whole: never read, kept, saved or printed back (#810).
-            if RecipePasteLink.isSecretLink(new) {
+            // The same inside a longer paste: a recipe holding one is never painted or saveable (Kitchen on #821).
+            if RecipePasteLink.isSecretLink(new) || PasteCopy.hasSecretLink(new) {
                 linkLine = RecipeLinkLine.secretLink
                 reading = false
+                fromLink = false
                 text = ""
                 return
+            }
+            // His own change retires the last link line, so a refusal or "kept for later" never goes stale.
+            if fromLink {
+                fromLink = false
+            } else if !new.isEmpty, new != old {
+                linkLine = nil
             }
             // A Claude key never becomes a recipe (QA on #218): cut it out before anything reads it, keeping the rest
             // of the paste (Product 8:20 AM, K87.11). It's never echoed; the line says where a key goes.
@@ -256,6 +268,8 @@ struct PasteRecipe: View {
                     // Painted like a paste: the box takes the recipe's text and the brush reads it.
                     reading = false
                     corrections = [:]
+                    // Only a real change fires onChange; an unchanged box would leave the flag set.
+                    fromLink = recipe != text
                     text = recipe
                 } else if outcome.kept {
                     reading = false
@@ -527,7 +541,18 @@ enum PasteCopy {
 
     /// Whether any word of the paste is a link with a user or password before its host.
     static func hasSecretLink(_ text: String) -> Bool {
-        text.split(whereSeparator: \.isWhitespace).contains { RecipeLinkReader.hasCredentials(String($0)) }
+        // Brackets, quotes and sentence marks around a link don't hide it: "(https://u:p@host)." (QA on #821).
+        let wrapping = CharacterSet(charactersIn: "()[]{}<>\"'“”‘’.,;:!?")
+        // Only link-shaped words are checked, as the bare-link rule reads them: an email (chef@bakery.com), an @handle
+        // or "4 @ 350" is a recipe's ordinary text, never a password link (QA on #830).
+        return text.split(whereSeparator: \.isWhitespace).contains { word in
+            let trimmed = String(word).trimmingCharacters(in: wrapping)
+            let lower = trimmed.lowercased()
+            guard lower.hasPrefix("https://") || lower.hasPrefix("http://") || lower.hasPrefix("www.") else {
+                return false
+            }
+            return RecipeLinkReader.hasCredentials(trimmed)
+        }
     }
 
     /// Tess's line when no link line is up: the count once the brush has read, the link nudge for a bare link (a
