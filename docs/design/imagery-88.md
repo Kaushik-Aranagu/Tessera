@@ -32,7 +32,33 @@ An image appears only where it carries **information** (the muscle map) or **ide
 | **Body weight, progress photo** | Later, one page | Not drawn. If built: one page under Body weight, nowhere else, dated label, a copy holds it, nothing leaves the phone. |
 
 ## The muscle figure
-Original vector, viewBox 120 x 260, left half drawn and mirrored. Front: traps, delts, chest, arms, forearms, abs, obliques, hips, quads, calves; back: traps, rear delts, lats, arms (triceps), forearms, low back, glutes, hamstrings, calves. Each region is a closed path with a 0.8 stroke at ink 28% and a fill at ink 4.5%. The muscle table is the phone's (Research's fixtures); a Claude-filled row keeps "From Claude, Oct 16" (every-side.md rule) and the figure reads the same table. Obsidian: ink 245,242,236, fill the dark train colour at 72%. VoiceOver reads one element ("Bench Press works chest, front shoulders and triceps. Chest is primary.") and the rows below carry the detail; regions are not separate stops. At AX3 the figures shrink to 220 tall, the context becomes "Chest and 2 more", rows stack name over role, and the page scrolls under its fade.
+Original vector, viewBox 120 x 260, left half drawn and mirrored. Front: traps, delts, chest, arms, forearms, abs, obliques, hips, quads, adductors (the inner-thigh strip beside the quads, same stroke and fill, area colour at its usual opacity), calves; back: traps, rear delts, lats, arms (triceps), forearms, low back, glutes, hamstrings, calves. Each region is a closed path with a 0.8 stroke at ink 28% and a fill at ink 4.5%. The muscle table is the phone's (Research's fixtures); a Claude-filled row keeps "From Claude, Oct 16" (every-side.md rule) and the figure reads the same table. Obsidian: ink 245,242,236, fill the dark train colour at 72%. VoiceOver reads one element ("Bench Press works chest, front shoulders and triceps. Chest is primary.") and the rows below carry the detail; regions are not separate stops. At AX3 the figures shrink to 220 tall, the context becomes "Chest and 2 more", rows stack name over role, and the page scrolls under its fade.
+
+## Muscle label map
+The phone stores 18 muscle names. The figure and the rows show plain US words. The stored name never changes; only what is shown does. One row on the MUSCLES page per stored muscle the exercise works, in the shown name.
+
+| Stored name | Shown name | Front figure draws | Back figure draws |
+|---|---|---|---|
+| Chest | Chest | Chest | none |
+| Front Delts | Front shoulders | Shoulder cap | none |
+| Side Delts | Side shoulders | Shoulder cap | Shoulder cap |
+| Rear Delts | Rear shoulders | none | Shoulder cap |
+| Triceps | Triceps | none | Back of the arm |
+| Biceps | Biceps | Front of the arm | none |
+| Forearms | Forearms | Forearm | Forearm |
+| Lats | Lats | none | Lats |
+| Upper Back | Upper back | Upper trapezius, the neck line | Upper trapezius |
+| Lower Back | Lower back | none | Lower back |
+| Abs | Abs | Abs | none |
+| Obliques | Obliques | Obliques | none |
+| Glutes | Glutes | none | Glutes |
+| Quads | Quads | Front of the thigh | none |
+| Hamstrings | Hamstrings | none | Hamstrings |
+| Adductors | Inner thighs | Inner-thigh strip beside the quads | none |
+| Abductors | Outer hips | Hips | Glutes, outer edge |
+| Calves | Calves | Calves | Calves |
+
+Rules: the figure draws every muscle in the table, so nothing worked is ever left off the drawing. Where two stored names share one drawn region (Front and Side Delts on the front), both light it. A row for Adductors reads "Inner thighs". VoiceOver and the Routine line use the shown names ("Works chest, shoulders and triceps" folds the 3 shoulder names into "shoulders"; the MUSCLES rows keep them apart).
 
 ## Asks per builder team
 - **Builder B:** `ObjectPlate` (wash, photo layer, mask, grain), the og-image read at Save, the Kitchen widget wash.
