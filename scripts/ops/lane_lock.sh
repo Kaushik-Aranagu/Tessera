@@ -7,14 +7,13 @@ field() { sed -n "s/^$1=//p" "$F" 2>/dev/null || true; }
 drop() { rm -f "$L/info" "$L/beat"; rmdir "$L"; }
 lastbeat() { b=$(cat "$L/beat" 2>/dev/null || true); echo "${b:-$(field start)}"; }
 beat() { date +%s > "$L/beat"; }
-# True when the Mac screen is locked (simulator UI runs stall then). Unknown or non-macOS counts as unlocked.
+# True when the Mac screen is locked (simulator UI runs stall then). Reads ioreg only (no python, so no developer-tools prompt). Unknown or non-macOS counts as unlocked.
 # LANE_LOCK_SCREEN=locked|unlocked forces the answer (tests); LANE_LOCK_SCREEN_OK=1 skips the check (package-only jobs).
 screen_locked() {
   [ "${LANE_LOCK_SCREEN_OK:-}" = 1 ] && return 1
   case "${LANE_LOCK_SCREEN:-}" in locked) return 0;; unlocked) return 1;; esac
   [ "$(uname)" = Darwin ] || return 1
   ioreg -n Root -d1 -a 2>/dev/null | grep -A1 -E 'CGSSessionScreenIsLocked|IOConsoleLocked' | grep -q '<true/>' && return 0
-  /usr/bin/python3 -c 'import sys,Quartz; sys.exit(0 if (Quartz.CGSessionCopyCurrentDictionary() or {}).get("CGSSessionScreenIsLocked") else 1)' 2>/dev/null && return 0
   return 1
 }
 case "${1:-}" in
@@ -45,6 +44,7 @@ case "${1:-}" in
    while screen_locked; do echo "$(date -u +%FT%TZ) screen locked, waiting ($lane)" | tee -a "$LOG"; [ "$(date +%s)" -lt "$limit" ] || { echo "TIMEOUT: screen still locked" >&2; exit 1; }; sleep 60; done
    "$0" wait "$lane" "$purpose" 3600 || exit 1
    screen_locked || break
+   # Known limit: the hand-back drops our queue ticket, so after the screen unlocks this job rejoins at the back of the line.
    echo "$(date -u +%FT%TZ) screen locked after queueing, giving the lock back ($lane)" | tee -a "$LOG"; "$0" release "$lane" || true
   done
   ( while sleep 60; do "$0" beat "$lane" || break; done ) & hb=$!
