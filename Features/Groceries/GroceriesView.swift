@@ -39,6 +39,7 @@ private struct GroceriesPage: View {
     @State private var landed = 0
     /// SHOP mode's private rows (B8): masked until tapped, masked again when the trip ends.
     @State private var trip = ShopTrip()
+    @Environment(\.scenePhase) private var scenePhase
     @FocusState private var writing: Bool
 
     private var groceries: Groceries {
@@ -115,6 +116,12 @@ private struct GroceriesPage: View {
             .tesseraAnimation(Theme.Motion.house, value: shopping)
             .onChange(of: shopping) { _, now in
                 if !now {
+                    trip.end()
+                }
+            }
+            // A lock or an app switch masks every opened row again (QA F1 on #732).
+            .onChange(of: scenePhase) { _, phase in
+                if phase != .active {
                     trip.end()
                 }
             }
@@ -203,7 +210,9 @@ private struct GroceriesPage: View {
     @State private var rowCenters: [UUID: CGPoint] = [:]
 
     private func recipes(for item: ListContents.Item) -> [String] {
-        groceries.recipes(for: item.object).map(\.title)
+        // A private recipe is only ever "Private recipe", here too (QA F2 on #732).
+        ShopTrip.recipeNames(groceries.recipes(for: item.object).map(\.title),
+                             lastWeightKg: BodyWeight.lastKg(in: model.store))
     }
 
     private func add() {
@@ -481,7 +490,7 @@ private struct GroceryRow: View {
             withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) { showsRecipes.toggle() }
         })
         .accessibilityElement(children: .combine)
-        .accessibilityHint("Puts it in the basket")
+        .accessibilityHint(name == ShopTrip.privateLabel ? "Shows it" : "Puts it in the basket")
         .accessibilityAction(named: "Which recipes") { showsRecipes.toggle() }
     }
 }

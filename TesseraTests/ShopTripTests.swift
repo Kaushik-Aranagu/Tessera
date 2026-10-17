@@ -41,4 +41,8 @@ struct ShopTripTests {
         let order = ShopTrip.walkOrder(["Frozen", "Produce", "Household", "Dairy and eggs", "Mystery", "Bakery"])
         #expect(order == ["Produce", "Bakery", "Dairy and eggs", "Frozen", "Household", "Mystery"])
     }
+
+    @Test func aPrivateRecipeNameIsOnlyPrivateRecipe() {
+        #expect(ShopTrip.recipeNames(["Tacos", "Wifi code lasagna"], lastWeightKg: nil) == ["Tacos", "Private recipe"])
+    }
 }

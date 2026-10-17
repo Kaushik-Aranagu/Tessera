@@ -40,6 +40,12 @@ final class ShopTrip {
         return .strike
     }
 
+    /// The recipes a row is for, each private one only "Private recipe".
+    static func recipeNames(_ titles: [String], lastWeightKg: Double?) -> [String] {
+        titles
+            .map { ObjectPrivacy.isPrivateRecipeTitle($0, lastWeightKg: lastWeightKg) ? ObjectPrivacy.recipeLabel : $0 }
+    }
+
     /// Leaving SHOP mode: every private row masks again.
     func end() {
         revealed = []
