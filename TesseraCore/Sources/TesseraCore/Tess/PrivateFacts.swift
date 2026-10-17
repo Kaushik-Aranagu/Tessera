@@ -73,7 +73,7 @@ public enum PrivateFacts {
                                           "rep", "reps", "set", "sets", "x", "×", "oz", "ml", "cup", "cups"]
     static let vitals: Set<String> = ["bp", "hr", "hrv", "spo2", "pulse", "resting", "temp", "temperature", "glucose",
                                       "bpm", "systolic", "diastolic"]
-    static let medicines: Set<String> = ["advil", "tylenol", "ibuprofen", "acetaminophen", "aspirin", "aleve",
+    public static let medicines: Set<String> = ["advil", "tylenol", "ibuprofen", "acetaminophen", "aspirin", "aleve",
                                          "lexapro", "zoloft", "sertraline", "prozac", "adderall", "xanax", "melatonin",
                                          "benadryl", "claritin", "zyrtec", "pill", "pills", "tablet", "tablets",
                                          "capsule", "capsules", "dose", "meds", "medication"]

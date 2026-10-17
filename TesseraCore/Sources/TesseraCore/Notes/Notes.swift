@@ -111,8 +111,9 @@ public struct CreateNote: EngineAction {
         guard !looksLikeClaudeKey(text), !(title.map(looksLikeClaudeKey) ?? false) else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "refused: looksLikeKey")
         }
-        // A line with a secret word is private whoever writes it: the model and Claude never get to title it.
-        let isPrivate = isPrivate == true || SecretWords.mentions(text)
+        // A line with a secret word, money or a body fact is private whoever writes it: the model and Claude never get
+        // to title it (board 0aa and 0ai).
+        let isPrivate = isPrivate == true || Self.isPrivateText(text, store: transaction.store)
         let note = try transaction.create(transaction.classDef(.note),
                                           title: isPrivate ? SecretWords.title : title ?? Self.firstLine(text))
         try transaction.set("body", to: .text(text), on: note)
@@ -127,13 +128,18 @@ public struct CreateNote: EngineAction {
         return note
     }
 
+    @MainActor
+    static func isPrivateText(_ text: String, store: ObjectStore) -> Bool {
+        SecretWords.mentions(text) || PrivateFacts.isWalled(text, lastWeightKg: BodyWeight.lastKg(in: store))
+    }
+
     static func firstLine(_ text: String) -> String {
         let line = text.split(separator: "\n").first.map(String.init) ?? text
         return line.count > 60 ? String(line.prefix(59)) + "…" : line
     }
 
-    public func summary(in _: ObjectStore) -> String {
-        isPrivate == true || SecretWords.mentions(body) ? SecretWords.title : "Noted"
+    public func summary(in store: ObjectStore) -> String {
+        isPrivate == true || Self.isPrivateText(body, store: store) ? SecretWords.title : "Noted"
     }
 }
 

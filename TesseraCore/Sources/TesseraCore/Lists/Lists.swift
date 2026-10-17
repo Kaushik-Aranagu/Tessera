@@ -124,9 +124,15 @@ public struct AddListItem: EngineAction {
 
     public func apply(_ transaction: inout Transaction) throws -> ObjectRecord {
         let list = try transaction.object(list, is: .list)
-        let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else {
+        let given = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !given.isEmpty else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "the item is empty")
+        }
+        // The engine wall (board 0ai, Kitchen 2:09 PM PT): a price comes off and the item stays ("milk $4" is milk); a
+        // line that was only money, or holds a secret, is a private note instead. Medicines stay items.
+        let text = EngineWall.withoutPrice(given)
+        if text.isEmpty || SecretWords.hasValue(given) || PrivateFacts.isMoneyShaped(text) {
+            return try CreateNote(body: given, isPrivate: true).apply(&transaction)
         }
         let last = list.orderedChildren.last?.sortIndex ?? -1
         let item = try transaction.create(transaction.classDef(.listItem), title: text, parent: list)
@@ -143,12 +149,20 @@ public struct AddListItem: EngineAction {
         return item
     }
 
+    /// What the wall kept: nil when the line became a private note.
+    var kept: String? {
+        let given = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let bare = EngineWall.withoutPrice(given)
+        return bare.isEmpty || SecretWords.hasValue(given) || PrivateFacts.isMoneyShaped(bare) ? nil : bare
+    }
+
     public func summary(in _: ObjectStore) -> String {
-        "Added \(text)"
+        kept.map { "Added \($0)" } ?? SecretWords.title
     }
 
     public func receipt(in store: ObjectStore) -> String? {
-        "\(text.prefix(1).uppercased() + text.dropFirst()), added to \(store.object(id: list)?.title ?? "the list")"
+        guard let kept else { return "\(SecretWords.title), kept" }
+        return "\(kept.prefix(1).uppercased() + kept.dropFirst()), added to \(store.object(id: list)?.title ?? "the list")"
     }
 }
 
