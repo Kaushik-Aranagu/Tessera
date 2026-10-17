@@ -162,7 +162,7 @@ Rule: money in a typed or spoken phrase is stripped once, before anything leaves
 
 ## Assumptions and flags
 
-1. **Sheet 78 wins over older text.** Two conflicts remain between sheet 78 and `kitchen-sides-acceptance.md`: row 6.4 says the nothing-known side opens on "Nothing known yet." while sheet 78 and S11 say "Nothing out."; row 6.8 gives Reduce Motion as 200 ms while S16 and sheet 78 say 150 ms. K26.4 keeps "Nothing known yet." for nothing known and "Nothing out." for known-but-none; K26.7 uses 150 ms. Design/Product to confirm and fix 6.4 and 6.8.
+1. **Sheet 78 wins over older text.** Two conflicts remain between sheet 78 and `kitchen-sides-acceptance.md`: row 6.4 says the nothing-known side opens on "Nothing known yet." while sheet 78 and S11 say "Nothing out."; row 6.8 gives Reduce Motion as 200 ms while S16 and sheet 78 say 150 ms. K26.4 keeps "Nothing known yet." for nothing known and "Nothing out." for known-but-none; K26.7 uses 150 ms. Oct 17: row 6.8 now reads 150 ms and S11 cites K26.9; row 6.4 stands for the nothing-known side.
 2. **Pantry has no expiry.** K27 treats expiry wording as bought dates plus a grep proof that no expiry or forecast word exists (Open question 1, sheet 78). Real expiry needs a new decision and new rows.
 3. **Key at zero new rows.** K28.4 hides the key when everything is already on Groceries (6.3 counts only new rows). No copy exists for that case and none is added without Design.
 4. **Bare decimals are not money.** K28.15 follows the house rule (money only with an amount or currency sign). If Product wants any trailing decimal dropped, only the log changes, not the receipt.
