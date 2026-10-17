@@ -102,7 +102,9 @@ struct HomeDoneWordingTests {
                                  cacheURL: cache) { allowed }
         job.now = { Self.ended.addingTimeInterval(600) }
         job.calendar = Self.calendar
-        job.timeout = 30 // the full suite loads the machine; the 6 s deadline is the app's
+        // The deadline races the main actor, which the full suite keeps busy for long stretches; it isn't under test
+        // here (the 6 s deadline is the app's).
+        job.timeout = 600
         return job
     }
 
