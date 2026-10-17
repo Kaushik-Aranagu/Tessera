@@ -49,9 +49,10 @@ struct DayBoundaryTests {
         // Pay rent is still on-day (not carried); the dentist is tomorrow's.
         #expect(today.map(\.title) == ["Pay rent"] && today.first?.isCarriedOver == false)
         #expect(tasks.upcoming(at(10, 17, 1), calendar: calendar).map(\.title) == ["Dentist"])
-        // "Not now" at 01:00 moves Pay rent to Saturday 23:00, keeping its time.
-        try engine.perform(MoveTask(task: rent.id, time: at(10, 17, 1)), by: .user)
-        #expect(store.value("startsAt", of: rent)?.dateValue == at(10, 17, 23))
+        // "Not now" at 01:00 would move Pay rent to Saturday 23:00, inside quiet hours: it lands at 7 am that
+        // Saturday (Product 0ab, 2:00 PM PT; QA F2 on #553).
+        try engine.perform(MoveTask(task: rent.id, time: at(10, 17, 1), calendar: calendar), by: .user)
+        #expect(store.value("startsAt", of: rent)?.dateValue == at(10, 17, 7))
     }
 
     @Test func x3x4TessReadsHisDay() {
