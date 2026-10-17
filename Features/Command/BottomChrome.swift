@@ -112,7 +112,7 @@ struct BottomChrome: View {
         .onDisappear(perform: askLeft)
         .onAppear {
             model.soul.handle(.appeared)
-            breathe = !reduceMotion
+            breathe = !reduceMotion && !LaunchFlags.has("-wallsSpy") // a UI test needs the app to idle
             #if DEBUG
                 if LaunchFlags.has("-tessScript") {
                     playScript()
@@ -733,7 +733,10 @@ extension BottomChrome {
         replyCount += 1
         let shown = replyCount
         Task { @MainActor in
-            try? await Task.sleep(for: TessVoice.hold(undo: canUndo, holds: .seconds(4)))
+            // `-wallsSpy` (simulator only): the line stays until the next one, so a UI test that reaches it late
+            // (XCUITest waits up to 120 s per step for an app that never idles) still reads it.
+            try? await Task.sleep(for: LaunchFlags.has("-wallsSpy") ? .seconds(600)
+                : TessVoice.hold(undo: canUndo, holds: .seconds(4)))
             guard replyCount == shown else { return }
             withTesseraAnimation(reduceMotion: reduceMotion) { reply = nil }
         }
