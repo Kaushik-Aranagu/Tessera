@@ -35,3 +35,14 @@
 - **Model:** Sonnet 5.5, effort low, one strict tool `fillFacts`, tool choice auto.
 - **Gate:** range rows 90%+, exact rows 90%+, refuse rows 18 of 18, no extra fields 90 of 90, zero hard fails, zero cut off, a full run under $0.25 (worst case $0.234). The runner is `scripts/ai/claude_facts_eval.py`, dry by default. A live run needs Kaushik's own ask in the running thread.
 - **Opt-in:** per class (Product 2:52), behind "Tess asks Claude" and the monthly cap. It stays off until the eval passes and he says yes.
+
+## 4. Where a filled fact lives (spec for Core)
+
+Nothing here exists yet; Core builds it behind the opt-in. It is a catalog version of its own (the next number, additive).
+
+- **Muscles.** A filled exercise writes its `primaryMuscles` and `secondaryMuscles` refs, the fields Exercise already has, as a pending ghost row through `ActionEngine` (by `.tess`, route `claude`), so undo and the receipt work like every other Claude write. Only `MuscleSeed` names are accepted; anything else drops the whole answer.
+- **Nutrition.** An Ingredient gains four optional number fields (kcal, protein g, fat g, carbs g, all per 100 g) and one `factsSource` text field. The table value and a Claude value use the same fields; `factsSource` is empty for the table and "From Claude, Oct 16" for a fill (house date style, written by the phone, never by Claude).
+- **Asked once.** A `factsAsked` date on the object. Any answer, including a decline, sets it, so nothing asks that thing again. A decline writes nothing else.
+- **Table wins.** A table row, when it lands later, replaces a Claude fill and clears `factsSource`.
+- **Checks before a write:** every number is non-negative and under a per-field ceiling, macros do not sum above 100 g, and the walls pass on the name.
+- **Never summed.** The app shows one ingredient's values only (Product 2:36 pm).
