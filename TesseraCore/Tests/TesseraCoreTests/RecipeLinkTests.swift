@@ -217,6 +217,27 @@ struct RecipeLinkTests {
         off.willAskClaude = { asked += 1 }
         _ = await off.read("https://blog.example.com/beans")
         #expect(asked == 1)
+        // No saved key: nothing leaves, so it stays quiet.
+        var keyless = RecipeLinkReader(session: LinkStub.session())
+        keyless.claude = ClaudeRecipeReader(keys: InMemoryKeychain(nil), ledger: ledger, session: LinkStub.session(),
+                                            allowed: { true })
+        keyless.willAskClaude = { asked += 1 }
+        _ = await keyless.read("https://blog.example.com/beans")
+        #expect(asked == 1, "fired with no key")
+        // A page that is only private lines: nothing to send.
+        LinkStub.pages["private.example.com"] = .init(body: "<html><body><p>wifi password zebra99</p></body></html>")
+        var secret = reader(claude: true)
+        secret.willAskClaude = { asked += 1 }
+        _ = await secret.read("https://private.example.com/x")
+        #expect(asked == 1, "fired for an all-private page")
+        // At the cap: the paused line, nothing sent.
+        ledger.record(use: .paste, model: ClaudeRecipeReader.model, input: 0, output: 0,
+                      costNano: TessUsageLedger.capNano, latency: 0, outcome: "works", requestID: nil,
+                      at: DayPlanTests.at(15, "18:00", month: 10))
+        var capped = reader(claude: true)
+        capped.willAskClaude = { asked += 1 }
+        _ = await capped.read("https://blog.example.com/beans")
+        #expect(asked == 1, "fired at the cap")
     }
 
     @Test func claudeReadsOnlyWhenAllowedAndUnderTheCap() async throws {

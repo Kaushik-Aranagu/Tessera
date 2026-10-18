@@ -114,8 +114,9 @@ public struct RecipeLinkReader {
     public let session: URLSession
     /// Claude for L3; nil means L3 never runs.
     public var claude: ClaudeRecipeReader?
-    /// Fires just before the page is handed to Claude (L3), after the page fetch and the card and page-text readers
-    /// failed, and only when Claude will really be asked. Never at L1 or L2: the fetch has its own "Reading ...".
+    /// Fires just before a request really leaves for Claude (L3): after the page fetch and the card and page-text
+    /// readers failed, and with the switch on, a key saved, something to send and room under the cap. Never at L1 or
+    /// L2: the fetch has its own "Reading ...".
     public var willAskClaude: (@MainActor () -> Void)?
     /// The hard cap on a page read; tests shorten it.
     var pageLimit: Duration = .seconds(15)
@@ -192,10 +193,9 @@ public struct RecipeLinkReader {
         guard let claude else {
             return RecipeLinkResult(kind: .failed, line: RecipeLinkLine.noRecipe, text: nil, sourceURL: source)
         }
-        if claude.allowed() {
-            willAskClaude?()
-        }
-        return await claude.read(page.visible, source: source)
+        var asking = claude
+        asking.willRequest = willAskClaude
+        return await asking.read(page.visible, source: source)
     }
 
     struct Parsed: Sendable {
@@ -435,6 +435,9 @@ public struct ClaudeRecipeReader {
     public let ledger: TessUsageLedger
     public let session: URLSession
     public var allowed: () -> Bool
+    /// Fires once the request is certain: the switch is on, a key is saved, the page has something to send and the cap
+    /// has room, just before the request leaves.
+    public var willRequest: (@MainActor () -> Void)?
     /// His last weigh-in, for the bare-number wall (nil with none logged). Read at each call.
     public var lastWeightKg: () -> Double? = { nil }
     public var timeout: TimeInterval = 20
@@ -577,6 +580,7 @@ public struct ClaudeRecipeReader {
         let data: Data
         let response: URLResponse
         do {
+            willRequest?()
             (data, response) = try await session.data(for: request, delegate: NoRedirects.shared)
         } catch let error as URLError {
             outcome = error.code == .timedOut ? "timeout" : "offline"
