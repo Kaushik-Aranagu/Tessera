@@ -282,24 +282,32 @@ struct ClaudeKeyTests {
         #expect(keys.read() == Self.key)
     }
 
-    @Test func theMonthStartsAtMidnightOnTheFirst() throws {
+    @Test func theMonthTurnsAtFourInTheMorningOnTheFirst() throws {
+        // Product 8:24 PM PT Oct 17: the ledger month rolls at 4 AM house time, like his day.
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = try #require(TimeZone(identifier: "America/Los_Angeles"))
-        let lastMonth = try #require(calendar.date(from: DateComponents(
-            year: 2026,
-            month: 9,
-            day: 30,
-            hour: 23,
-            minute: 59
-        )))
-        let thisMonth = try #require(calendar.date(from: DateComponents(year: 2026, month: 10, day: 1)))
-        ledger.record(use: .capture, model: ClaudeKeyCheck.model, input: 0, output: 0, costNano: 500,
-                      latency: 0, outcome: "works", requestID: nil, at: lastMonth)
-        ledger.record(use: .capture, model: ClaudeKeyCheck.model, input: 0, output: 0, costNano: 700,
-                      latency: 0, outcome: "works", requestID: nil, at: thisMonth)
-        #expect(ledger.monthTotal(now: thisMonth.addingTimeInterval(3600), calendar: calendar) == 700)
-        #expect(ledger.canSpend(TessUsageLedger.capNano - 700, now: thisMonth, calendar: calendar))
-        #expect(!ledger.canSpend(TessUsageLedger.capNano - 699, now: thisMonth, calendar: calendar))
+        func at(_ month: Int, _ day: Int, _ hour: Int, _ minute: Int = 0) throws -> Date {
+            try #require(calendar.date(from: DateComponents(year: 2026, month: month, day: day, hour: hour,
+                                                            minute: minute)))
+        }
+        let monthEnd = try at(9, 30, 23, 59) // September
+        let lateOnTheFirst = try at(10, 1, 3, 59) // still September
+        let fourAM = try at(10, 1, 4) // October
+        for (cost, when) in [(500, monthEnd), (300, lateOnTheFirst), (700, fourAM)] {
+            ledger.record(use: .capture, model: ClaudeKeyCheck.model, input: 0, output: 0, costNano: Int64(cost),
+                          latency: 0, outcome: "works", requestID: nil, at: when)
+        }
+        // September holds the month-end use and 3:59 AM on the 1st; October starts at 4:00 AM.
+        let noonOnThe30th = try at(9, 30, 12), fourOhOne = try at(10, 1, 4, 1), novemberFirst = try at(11, 1, 4)
+        #expect(ledger.monthTotal(now: noonOnThe30th, calendar: calendar) == 800)
+        #expect(ledger.monthTotal(now: lateOnTheFirst, calendar: calendar) == 800)
+        #expect(ledger.monthTotal(now: fourAM, calendar: calendar) == 700)
+        #expect(ledger.monthTotal(now: fourOhOne, calendar: calendar) == 700)
+        #expect(ledger.canSpend(TessUsageLedger.capNano - 700, now: fourAM, calendar: calendar))
+        #expect(!ledger.canSpend(TessUsageLedger.capNano - 699, now: fourAM, calendar: calendar))
+        // The reset date shown is the same edge: Nov 1 at 4 AM, so the paused copy names Nov 1.
+        let october = TessUsageLedger.monthInterval(containing: fourAM, calendar: calendar)
+        #expect(october.start == fourAM && october.end == novemberFirst)
     }
 }
 
