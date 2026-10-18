@@ -105,7 +105,7 @@ Same columns and statuses as section 6. Line numbers are the 1083-line copy on t
 | N22 | G220: the cook screen in Low Power equals Reduce Motion (bead still, no ring, 150 ms fades, haptics kept); the horizon steps once a minute, every 10 s in the last minute (Oct 17 9:22 PM). | CCK:17, CCK:20 | OK, with FIX (lab): CCK:80 still lists "10 s steps: Design confirms" as open. |
 | N23 | G222: the cook Lock Screen card uses system timer text; the update carries no sound; the notification is the only alert (Oct 17 9:46 PM). | CCK:46 | OK |
 | N24 | G226: the Home cook bar steps every 5 s (not each second); in Low Power or Reduce Motion one step a minute with a 150 ms fade. | CCK:23 | OK |
-| N25 | G227: the one Reduce Motion fade is 150 ms everywhere (Oct 17 9:23 PM, HS43). | CCK:20, tess-pantry-v2-motion-check.md:14 | FIX (lab): tess-motion.md:237 (Look flood "250 ms crossfade" in Reduce Motion), GRO:67 (flood "stays" in Low Power). |
+| N25 | G227: the one Reduce Motion fade is 150 ms everywhere (Oct 17 9:23 PM, HS43). | CCK:20, tess-pantry-v2-motion-check.md:14 | FIX open (guard): tess-motion.md:237 (Look flood "250 ms crossfade" in Reduce Motion), GRO:67 (flood "stays" in Low Power). |
 | N26 | G240: a cook step change is a focus move with no announcement; a timer end is one announcement, not a live region. | CCK:31, CCK:52 (end only) | GAP (lab): no step-change row in CCK (grep "focus" finds nothing). |
 | N27 | G244: the shop seam is still and lit in Low Power or Reduce Motion; in normal power the timeline runs only across the 1.35 s glint. | GRO:16 | OK |
 | N28 | G245: one cached reduced flag drives the grocery check, aisle handoff, peek and basket breath; meaning, count and haptics unchanged. | GRO:14, GRO:15 | OK |
