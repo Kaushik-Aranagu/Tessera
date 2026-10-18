@@ -16,7 +16,7 @@ public enum RecipeLinkLine {
     public static let tooBig = "Too big to read safely. Paste the text instead."
     /// A link with a name or password in it ("name:secret@host"): never read, kept or shown (QA on #807).
     public static let secretLink = "That link has a password in it. Paste the text instead."
-    public static let askingClaude = "No recipe card there. Asking Claude."
+    public static let askingClaude = "Asking Claude to read the recipe."
     public static let claudeRead = "Claude read it. Check it, then save."
     /// A key Claude refused on this read. Never M2 here: "Paste it again?" would invite the key into the recipe field.
     /// The key and the switch stay as they are.
@@ -114,6 +114,9 @@ public struct RecipeLinkReader {
     public let session: URLSession
     /// Claude for L3; nil means L3 never runs.
     public var claude: ClaudeRecipeReader?
+    /// Fires just before the page is handed to Claude (L3), after the page fetch and the card and page-text readers
+    /// failed, and only when Claude will really be asked. Never at L1 or L2: the fetch has its own "Reading ...".
+    public var willAskClaude: (@MainActor () -> Void)?
     /// The hard cap on a page read; tests shorten it.
     var pageLimit: Duration = .seconds(15)
 
@@ -188,6 +191,9 @@ public struct RecipeLinkReader {
         // L3: Claude, if he lets Tess ask it.
         guard let claude else {
             return RecipeLinkResult(kind: .failed, line: RecipeLinkLine.noRecipe, text: nil, sourceURL: source)
+        }
+        if claude.allowed() {
+            willAskClaude?()
         }
         return await claude.read(page.visible, source: source)
     }
