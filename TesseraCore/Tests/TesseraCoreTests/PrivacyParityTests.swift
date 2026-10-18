@@ -86,4 +86,23 @@ struct PrivacyParityTests {
     func aBodyWeightWithAPoundOrKiloUnitStaysPrivate(_ phrase: String) {
         #expect(ObjectPrivacy.isPrivateTitle(phrase, lastWeightKg: 82), "\(phrase)")
     }
+
+    @Test(arguments: ["weighed 82.4 kg this morning", "paid 120.50 for shoes", "wifi password is hunter2zebra"])
+    func anEditThatAddsAPrivateFactMakesTheNotePrivate(_ words: String) throws {
+        let classes = try store.prepareCatalog()
+        let engine = ActionEngine(store: store, classes: classes)
+        let note = try engine.perform(CreateNote(body: "Bench felt heavy"), by: .user).output
+        #expect(note.title == "Bench felt heavy")
+        try engine.perform(EditNote(note: note.id, body: words), by: .user)
+        #expect(note.title == SecretWords.title && store.value("isPrivate", of: note) == .bool(true), "\(words)")
+        #expect(ObjectPrivacy.label(of: note, in: store, classes: classes) == "Private note")
+        // A title edited to a private fact does the same.
+        let other = try engine.perform(CreateNote(body: "Plain thing"), by: .user).output
+        try engine.perform(EditNote(note: other.id, title: words), by: .user)
+        #expect(other.title == SecretWords.title, "\(words)")
+        // A plain edit stays plain.
+        let plain = try engine.perform(CreateNote(body: "Leg day"), by: .user).output
+        try engine.perform(EditNote(note: plain.id, body: "Leg day went well"), by: .user)
+        #expect(plain.title == "Leg day" && store.value("isPrivate", of: plain) != .bool(true))
+    }
 }
