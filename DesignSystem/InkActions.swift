@@ -48,14 +48,17 @@ struct InkStroke: Shape {
 /// hairline draws out from the centre beneath it; it fires on release and the line fades.
 struct LabelActionStyle: ButtonStyle {
     var color: Color = Theme.Colors.inkSecondary
+    /// The UNDO word plays nothing of its own: its one haptic is `.undo` from the app-wide slot (38:32).
+    var silent = false
 
     func makeBody(configuration: Configuration) -> some View {
-        LabelActionBody(configuration: configuration, color: color)
+        LabelActionBody(configuration: configuration, color: color, silent: silent)
     }
 
     private struct LabelActionBody: View {
         let configuration: Configuration
         let color: Color
+        let silent: Bool
         @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
         var body: some View {
@@ -75,7 +78,7 @@ struct LabelActionStyle: ButtonStyle {
                 }
                 .frame(minWidth: 44, minHeight: 44)
                 .contentShape(Rectangle())
-                .sensoryFeedback(.selection, trigger: configuration.isPressed) { _, new in new }
+                .tesseraFeedback(trigger: configuration.isPressed) { _, new in new && !silent ? .selection : nil }
         }
     }
 }
@@ -85,8 +88,8 @@ extension ButtonStyle where Self == LabelActionStyle {
         LabelActionStyle()
     }
 
-    static func labelWord(_ color: Color) -> LabelActionStyle {
-        LabelActionStyle(color: color)
+    static func labelWord(_ color: Color, silent: Bool = false) -> LabelActionStyle {
+        LabelActionStyle(color: color, silent: silent)
     }
 }
 

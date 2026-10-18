@@ -287,7 +287,7 @@ Test files: `PantryStateTests`, `PantryEventTests`, `PantryGrammarTests`, `Pantr
 | R9 | "low on X" phrases? | Include; state only, no row. |
 | R10 | Does "got/bought" set `lastBoughtAt`? | Yes; "have" does not. |
 | R11 | "what do i have" opens Pantry? | Yes, exact; a day word means the schedule. |
-| R12 | Private line tappable (S15 says no; decision 5:16 says tap-to-reveal; G102)? | Not tappable until G102 is ruled. |
+| R12 | Private line tappable (S15 says no; decision 5:16 says tap-to-reveal; G102)? | Not tappable; follows G102 (ruled Oct 17 4:30 PM). |
 | R13 | Private recipe in CAN COOK? | Counted, no names, no add. |
 | R14 | USUALLY HAVE with exactly 4 names? | All four if they fit one line, else the "and 2 more" form. |
 | R15 | First state for an unknown ingredient from the screen? | No tap target (P8); first state comes from Tess, a clear or a cook. |
@@ -408,3 +408,15 @@ Part 2: 32 cases checked (18 PASS, 14 map to a gap or a rule), 14 gaps G109-G122
 - Reduce Motion crossfades for the side, the index and the CAN COOK re-sort.
 - Whether "out of milk" by voice lands as the same text (speech engine spellings: "out of milk." with the stop, "oat milk" heard as "old milk").
 - The recipe page ring and weight on a real recipe, and the greyed CAN COOK word on a fresh install.
+
+## Revision, Oct 18 (Product rulings R1-R20 and the walk-script cross-check)
+
+This block supersedes any older line above that disagrees with it. Walk script: `kitchen-pantry-v2-walk-script-oct18.md` (gaps G170-G180).
+
+- **Backfill marker (R1):** the marker is a Settings key, `pantryBackfilled`, not a flag on the ingredient (replaces the marker wording in the backfill row). Which type and accessor holds it is for Core to name (G176).
+- **Tie rule (Product 4:32 PM Oct 17):** when two events carry the same time, the surer state wins (told beats cooked beats inferred); an older event never overwrites a newer one. This replaces the equal-time write rule in the shop-clear row.
+- **Egg and Eggs fold:** item matching folds singular and plural of the same name into one ingredient key.
+- **R12:** a private Pantry line is not tappable and has no reveal (G102). It reads "Private item" with no hint.
+- **Test count:** Product's ruling counts 118 named tests, not 124; Research publishes the list (G173).
+- **Clause group B (screens, new):** B1 a private Pantry line has no tap target and no "Opens" hint (R12, G102). B2 USUALLY HAVE with exactly 4 names shows all four if they fit one line, else the "and 2 more" form (R14). B3 an unknown ingredient has no tap target; its first state comes from Tess, a clear or a cook (R15). Owner: Builder B screen.
+- **Catalog number:** Pantry state fields ride the catalog bump after v10 (Product 4:30 PM Oct 17).

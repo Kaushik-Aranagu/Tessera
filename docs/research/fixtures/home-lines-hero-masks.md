@@ -181,7 +181,7 @@ The raw title must appear in no `accessibilityLabel`, `accessibilityHint` or `ac
 | ID | Row | Expected |
 |---|---|---|
 | NG1 | No lock glyph | The Home hero tree for HH1 to HH23 holds no `Image(systemName:)` whose name contains `lock`, and no lock character in any string |
-| NG2 | No dimming | The hero and the context carry the same foreground style as the control's (`Theme.Colors.context` for the context, ink for the hero); no `.opacity` or `.foregroundStyle` branch on privacy |
+| NG2 | No dimming | The hero and the context carry the same foreground style as the control's (`Theme.Colors.context` for the context, ink for the hero); no `.opacity` or `.foregroundStyle` branch on privacy. The same assertion covers the Recipes shelf row (`RecipesShelfView.swift:83` dims a private recipe to 66% today) and the Notes row, every private row at 100% ink, so the 66% cannot return |
 | NG3 | No asterisks | No string for HH1 to HH23 contains `*`, a run of bullets, or a masking character (the words are the label, nothing added) |
 | NG4 | No extra words | No string contains "private" other than as the leading word of the label (so `Private workout done`, never `Private: workout done` or `Private workout (private)`) |
 | NG5 | Raw never leaks | For titles M, B, R, C, S, no string for the row (text, hero, ctx, detail, key, hint, label, widget line, Claude pack) contains any token of the raw title, case-folded and whitespace-collapsed (T7) |
@@ -234,7 +234,7 @@ Core (in `TesseraCore/Tests/TesseraCoreTests/HomeLinesTests.swift`, new `@Suite(
 Home UI builder (in `TesseraTests/`):
 
 - `homeKeysAndHintsReadPrivateWorkoutForPrivateTitle` (VO1 to VO6, U2 to U6)
-- `homeHeroHasNoLockOrDimForPrivateTitle` (NG1, NG2)
+- `homeHeroHasNoLockOrDimForPrivateTitle` (NG1, NG2), plus `recipesShelfPrivateRowIsFullInk` and `notesPrivateRowIsFullInk` (NG2 extended)
 - `noHomeAccessibilityStringHoldsARawPrivateTitle` (VO7, VO8, NG5)
 
 ### 6c. Gaps by owner

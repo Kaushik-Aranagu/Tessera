@@ -279,7 +279,7 @@ public struct AddListItem: EngineAction {
 
     /// A kept item that is a medicine or a body fact: his list shows it, nothing else names it.
     @MainActor static func isPrivateItem(_ kept: String, store: ObjectStore) -> Bool {
-        EngineWall.isHealth(kept, lastWeightKg: BodyWeight.lastKg(in: store))
+        ObjectPrivacy.isPrivateWord(kept, in: store)
     }
 
     public func summary(in store: ObjectStore) -> String {

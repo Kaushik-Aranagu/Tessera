@@ -38,7 +38,7 @@ bare `.askClaude` (SR:22); the router already maps it to working on Home and to 
 | N8 | Siri and Shortcuts | Claude never writes for them | none | `ClaudeTessModel.swift:51` |
 | N9 | Second ask while working | joins the running constellation; the later `claudeDone` ends it | no second split | TM §14 rule 5; not built |
 | N10 | Done in flight | `askClaude` queues behind Done; `claudeFailed` clears the queue | queued | `SR:84-90`, `SR:122` |
-| L1 | Reduce Motion | Events still fire. Working: 200 ms crossfade to the faded grade, mains loosened 1.5x, satellites 40%, no readers; Done its still frame. Mouth dip as a 150 ms crossfade | same events | TM §13; working look not built |
+| L1 | Reduce Motion | Events still fire. Tess keeps full opacity and halo (G225, D4); "working" shows by position and size only (the three mains loosened 1.5x), no fade, no satellite dimming, no readers; Done its still frame. Mouth dip as a 150 ms crossfade | same events | TM §13; working look not built; Motion lab's #946 amends this working row and the RM clip |
 | L2 | Low Power | Events still fire. Six lights, no readers, 30 fps, colour back over 550 ms, Done as built; mouth as Reduce Motion | same events | TM §13; no Low Power path on master |
 | L3 | Eyes off (the default) | No face, so `claudeFailed` has no dip: lights gather, colour returns, the line says what happened | same events | `tess-picks.md` rules; mouth not built |
 

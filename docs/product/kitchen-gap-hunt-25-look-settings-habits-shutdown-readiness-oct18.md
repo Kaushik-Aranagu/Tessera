@@ -1,0 +1,127 @@
+# Gap hunt 25: Build readiness for the Look and Settings pages, Habits and Shutdown (checklist for the Mac leads)
+
+Written Oct 18 PDT, after hunt 24. One list for Core, Builder A and Builder B: what must be true before Settings (sheet 93) can be built, before the Review foot SETTINGS word opens it, and before Habits and Shutdown can ship once Core adds the Habit class. It folds in every Product ruling through 11:40 PM Oct 17.
+
+## Method
+
+- Master read: `551b3c9` (merge of #978). This checkout (`8e78bdd`) differs from it in three docs files only (`git diff --name-only 551b3c9 HEAD`), so every app and engine cite stands on master. The local `master` ref in this clone is stale; ignore it.
+- Static read only: no Swift toolchain, nothing built or run. Every cite below was re-read with `git grep` and `sed -n` on this checkout. A cite I could not confirm is dropped or fixed, and listed under "Cite fixes".
+- `docs/product/decisions.md` on this branch ends at line 995 (7:40 PM Oct 17). Rulings after that are in the project-folder copy `/mnt/project-files/tessera/product/decisions.md` (1063 lines). Rulings below cite entry time and that copy's line.
+- Sheets read from `/mnt/project-files/tessera/design/`: `settings-93.md`, `looks-recut.md`, `claude-settings.md`, `settings-80.md`, `habits-85.md`, `shutdown.md`, `shutdown-grammar.md`. Research rows SP01 to SP50 (`docs/research/fixtures/sheets-93-94-95.md`) are carried, not repeated.
+- What exists on master: `Features/Review/ReviewView.swift` (the week plus a stack of sentences), `Features/Settings/ClaudeSection.swift` and `RestDaySentence.swift`, `DesignSystem/LookSentence.swift`, `Looks.swift` (all five looks already hold the recut values: `Looks.swift:54-85`, `Shared/LookTable.swift:19-28`), `Features/Habits/HabitsCopy.swift` (pure words, tested by `TesseraTests/HabitsCopyTests.swift`). What does not: any `SettingsView`, any `Habit` class (`git grep -i habit` over `TesseraCore/Sources` finds nothing; the catalog is version 9, `SystemCatalog.swift:350`), any Shutdown page (`.shutdown` is only a day part, `NowRanker.swift:27,37`), any paging (`git grep "PagedRun\|pageTurn\|PageTurn"` over App, Features, DesignSystem, Shared and the engine finds nothing), any `SideHost` type (comments only: `PantryView.swift:12`, `RecipesShelfView.swift:6`).
+- Code PRs named in earlier rulings (#890, #885, #895, #912, #917, #407, core/pantry-1) are not on master; read those rows as "true after that PR lands".
+- Tags: [RULED] folds a ruling; [BLOCKER] stops the build; [CARRY] an open earlier gap this row depends on. Row key: # | gap id | what must be true | evidence (master) | how to check | owner | goes after.
+- No row, test or fixture below holds a key or anything key-shaped. Key state is "saved" or "none" everywhere (decision 9:53 PM, line 77).
+
+## Core
+
+| # | Gap | Must be true | Evidence | How to check | Owner | After |
+|---|---|---|---|---|---|---|
+| C1 | G334, G348 (carry) | [RULED] The mask table gets a Habit case the day the class lands: a masked habit reads "Private habit" through the one private-text function, in rows, the check-in ask, receipts, VoiceOver, widgets, Spotlight, export. Today a Habit name would show raw | `ObjectPrivacy.swift:28-57` (`label(of:)` has note, memory, task, recipe only), `:18` (routine label); `PrivateWords.swift:16-19` (labels set); decision 9:56 PM (line 1039) | Unit test: "Therapy" or "dr Patel intake" as a habit name gives "Private habit"; "Read" stays raw | Core | hunt 24 C1 (one private-text function) |
+| C2 | Habit class (ship-list-m3 row 2) | [BLOCKER] Core adds `Habit`: name, weekly target, manual check-ins, optional rule "counts when a Workout or Cook finishes". The count is a query (check-ins plus finished objects that week, Monday first), never stored, so undo needs no repair. Rides in the one catalog bump after #407's v10, not a renumber | `docs/product/ship-list-m3.md:8,26`; catalog version 9 at `SystemCatalog.swift:350`; `HabitsCopy.swift:3` ("for when Core's Habit engine lands") | `habitCountIsAQuery`, `undoingACheckInRestoresTheCount`, `aWorkoutFinishCountsForAWorkoutRule` | Core | #407 (v10) |
+| C3 | rule, no gap id | [RULED] The week and the day come from one place: Monday to Sunday, day key from `TesseraDay` (04:00). Habit counts, the Shutdown opener and the Day log agree at 03:59 and 04:01 | `Engine/TesseraDay.swift:20` (`startHour = 4`); `HabitsCopy.swift:65-68` (the copy hard-codes "A day starts 4 am.") | Check-in at 03:30 Sunday lands on Saturday's day | Core | C2 |
+| C4 | G419 (NEW) | [RULED, sheet 85] Habit check-in is one op, one UNDO slot (4 s new, 10 s change, 10 s under VoiceOver). A second mark the same day writes nothing, plays nothing ("Read is already in for today."). Tapping a done stroke clears it (10 s UNDO). A rule-counted day (a finished workout) cannot be unmarked by hand | `HabitsCopy.swift:19-21` (the line exists); `decisions.md:243` (one slot) | `alreadyMarkedWritesNothing`, `ruleDayCannotBeUnticked` | Core | C2 |
+| C5 | Shutdown, SD1 | [BLOCKER] One close op: kept rows move to tomorrow, LATER rows to Later, the tomorrow line is stored, the day's Day log line is frozen, and the 10 s UNDO reverses all of it. Late night (23:00 or later) closes quietly, stamped 22:00, with no page; a 22:00 silent close has no UNDO and CLOSE THE DAY reopens it until 04:00 | `shutdown.md` "What the hold writes"; `decisions.md:221` (2:00 PM Oct 16, items 1, 2, 7); `Tasks.swift:175-180` (the 7 am snap already exists); zero close op on master (`git grep -i "closeDay\|dayClosed"` finds nothing) | `closeIsOneUndoableStep`, `closeAt2330StampsTen` | Core | C3 |
+| C6 | G417 (NEW) | [RULED] The tomorrow line is his own typed or spoken words, and it is the one place a raw private phrase can reach the closed-day hero (Hero 56), Tess's "Tomorrow, first: ..." line, the widget and Siri. It passes the one private-text function at every reader; the stored line keeps his words; a masked line reads "Private line" | `shutdown.md` "The hold and the closed day"; `HomeLines.swift:134,359-360` ("tomorrow, first" word path); no mask on a stored line because no stored line exists | "Call dr Patel at 8" as the line: hero, Tess line, widget and read-back all read "Private line" | Core, Builder B | hunt 24 C1 |
+| C7 | Habits check-in ask | [RULED] Core owns the ask rule: "Read today?" once per habit per day, one at a time, never on a day a record already counts, never during a workout, held 23:00-07:00 and from the moment the day is closed (a closed day never asks) | `decisions.md:593` (AQ6 at 598) | `askIsOncePerHabitPerDay`, `closedDayNeverAsks`, `noAskDuringWorkout` | Core | C2, C5 |
+| C8 | G375 (carry), G377 | [RULED, 11:07 PM item 4 and 5] Settings fields: no new field is needed for v1 (Quiet hours and Day starts are read-only words, "11 pm to 7 am" and "4 am"). Page turn, Haptics and Units are new `TesseraSettings` fields, optional, defaults applied by the reader: Page turn "Turn", Haptics on, Units lb | `TesseraSettings.swift:5-38` (look names, `missesGoToClaude`, folder name and date, `restWeekday` only); `SystemCatalog.swift:237-245` (the Settings class); `AppClock.swift:36` (`Format.unit` is a bare `nonisolated(unsafe) static var`, kg) | Round-trip: write each, restore a copy, values return; an older build keeps a newer build's value | Core | #407 (same bump) |
+| C9 | G415 (NEW) | Units "lb, mi": "mi" has no reader (no distance anywhere in the app: `git grep -i "miles\|\"mi\""` finds none). Either Product drops "mi" from the row for v1 ("lb" or "kg" only) or Core names the first distance consumer. Stored mass stays kilograms | `AppClock.swift:34-40`; sheet 93 page 2 | Product's word, then `unitsSettingNeverRewritesStoredMass` | Core, Product | none |
+| C10 | G361 (carry) | [RULED] Automatic Claude calls share one gate (not in Low Power, 07:00 floor, the switch, the cap). Settings holds no automatic call; the Test button and a tapped job are asked-for and run in Low Power | no `ClaudeClient` or `TessJob` on master; `ClaudeSection.swift:300-360` (Test and Replace paths) | Low Power on: Test still runs, no automatic call is made | Core | hunt 24 C11 |
+| C11 | G421 (NEW) | A key-removal receipt ("Claude key removed. Everything stays on this phone.") has no UNDO. Product to say whether it closes an open UNDO slot from another screen (a rest-day pick 3 s earlier) or sits beside it as a plain line | `decisions.md:243` (a newer claim closes the older one); `:1049` (10:47 PM, no UNDO on key removal) | Pick a rest day, remove the key: the rest-day UNDO either survives or is named gone in the build note | Core, Product | none |
+
+## Builder A
+
+| # | Gap | Must be true | Evidence | How to check | Owner | After |
+|---|---|---|---|---|---|---|
+| A1 | G413 (NEW) | [RULED, 10:15 PM item H13] Haptics, off silences every app haptic except the one soft `.warning` for a failed save, and notifications still ring. One gate sits inside the `Haptic` map and `DonePattern`, and the raw sites move onto it: 27 raw `.sensoryFeedback(` calls across 16 files bypass the map today, `LookSentence.swift:69-70` among them | `DesignSystem/Haptics.swift` (map and `DonePattern`); `git grep -c "\.sensoryFeedback("` over App, Features, DesignSystem (Paint 3, HomeQueue 4, BottomChrome 3, GroceriesView 3, Haptics 2, LookSentence 2, and ten files with 1) | Haptics off: Look tap, a Done, a swipe-add all silent; a failed save still plays one `.warning`, never twice in a row | Builder A (gate), Builder B (call sites) | hunt 24 A6 |
+| A2 | G385, G219 (carry) | [RULED] One cached reduced flag (Reduce Motion or Low Power, refreshed on `NSProcessInfoPowerStateDidChange`). Every Settings motion reads it: the page turn, the in-place opens, the Look change, the page-turn preview | `MotionPolicy.swift:5-11` (Reduce Motion only); `TessSoul.swift:109` (the only Low Power read) | `settingsMotionIsOneCrossfadeInLowPower` | Builder A | hunt 24 A5 |
+| A3 | HS43 (carry) | [RULED, 9:23 PM] The reduced Look change is a 150 ms crossfade; under Low Power too. The paint flood from the soul (700 ms) does not run reduced: a crossfade instead, and the soul keeps her own Low Power form | `LookSentence.swift:119` (`reduceMotion ? 0.25 : 0.7`, Reduce Motion only); `Features/Tess/PaintFlood.swift:5-27` (scale gated on Reduce Motion only; no Low Power read); `App/RootView.swift:41` | Low Power on, tap a Look name: 150 ms crossfade, no bloom | Builder A | A2 |
+| A4 | Looks recut | [RULED, built] Keep `LookTableDriftTests` and `LookTableTests` as the guard for the recut tokens (all five looks match `looks-recut.md`: Plein ground `F3EDE2`, Lacquer `130A0D`, Celadon `E0EAE2`). Plein is still the `ThemeConcept` default at `Looks.swift:169` while the store defaults to Porcelain by day: nothing to change, but the Looks page must not draw `PleinGround` | `Looks.swift:54-85,91-93,169`; `Shared/LookTable.swift:19-28`; `TesseraTests/LookTableDriftTests.swift` | Drift test green; Plein page paints flat | Builder A | none |
+| A5 | Hold keys | [RULED, G323] Delete everything (held confirm) and CLOSE THE DAY use the named-action-only key mode: double tap speaks "Hold to ..." and the named action completes; Voice Control and Switch Control reach it by name. Remove key is a tap key with a two-step, not a hold | `Paint.swift:312-314` (every key completes on `.accessibilityAction` today); `decisions.md:1039` item 2; `:1049` | `PaintKey` mode test; VoiceOver: double tap on Delete everything does not delete | Builder A (key) | hunt 24 A4 |
+| A6 | G418 | [RULED] Widgets, Lock Screen and Live Activities never carry a raw habit name or tomorrow line; the new-day words appear at 07:00; no entry changes words 23:00-07:00 | `decisions.md:1053`, `:1051` (G348) | hunt 24 A12 test plus a habit and a tomorrow line | Builder A | C1, C6 |
+
+## Builder B
+
+| # | Gap | Must be true | Evidence | How to check | Owner | After |
+|---|---|---|---|---|---|---|
+| B1 | G412 (NEW) | [BLOCKER] A `SettingsView` exists and Review's foot gets one label word SETTINGS (the entry, decision 9:24 PM, line 1019); the foot stops stacking sentences. Until then the three sentences stay where they are and no string says "Settings" | `ReviewView.swift:219-239` (Look, Rest day, Claude, Backups on the Review page); `ClaudeSection.swift:458,465` ("‹ Settings" and "Back to Settings" with Review as the host); pointer strings at `TesseraCore/Sources/TesseraCore/Diagnostics/ClaudeKeyGuard.swift:4`, `BottomChrome.swift:468`, `WorkoutModeView.swift:158` say "It goes in Review, under Claude." | The Settings PR changes the three strings together to "Settings, under Claude." and the capture-miss notice to "Settings: Claude." (QA checks both) | Builder B | B2 |
+| B2 | G411 (NEW) | Sheet 93's folder copy is behind the rulings: page 1 still reads "Tess" (ruling: page 1 is CLAUDE), Quiet hours still "Tap opens two clocks" (ruling: read-only), "Sends only what you ask her." (ruling: "Sends only what Receipts lists.", 10:44 PM line 1047), Tess colours has no meaning. Design updates `settings-93.md` before B1 starts, and the Settings foot text that decision 9:24 PM cites ("settings-93.md foot, commit 663f9a9e") is not in that file | `/mnt/project-files/tessera/design/settings-93.md` (1728 bytes, no foot section); decisions lines 1019, 1047 | Diff of the sheet against lines 1019, 1047, 1049, 1057 | Design, Builder B | none |
+| B3 | G414 (NEW) | One value grammar across the rows: "Haptics, on" / "Haptics, off" is ruled (10:47 PM, line 1049); "yes" and "no" stay for the key state only; sheet 93 says "Off"/"On" for Tess asks Claude and "Turn, on" for Page turn; master says "Tess asks Claude: yes." (`ClaudeSection.swift:170-176`). Product to give the Tess row and the Page turn row their words | `ClaudeSection.swift:170-176`; `LookSentence.swift` (name as value word); sheet 93 page 1 | A single copy table, tested like `HabitsCopyTests` | Builder B, Product | none |
+| B4 | G375 (carry), RULED | [RULED, 11:07 PM item 4] Remove key is a two-step: "Remove the Claude key?" with "Remove" and "Keep it"; a plain receipt; no UNDO; `KeyRemoval` is deleted so nothing holds the key; the line carries no key content, no tail, no last four. Today Remove is one tap, shows "Undo" and `held: KeyRemoval?` keeps the key in memory for 10 s | `ClaudeSection.swift:72` (`held`), `:105-106` (Undo), `:232` (Remove), `:378-410` (`remove`, `undoRemove`, `finishRemoval`), `:544-558` (`KeyRemoval`); `TesseraTests/KeyRemovalTests.swift` (to be rewritten) | `removeKeyIsTwoStepNoUndo`; memory check: after Remove, no value in the view holds the key; VoiceOver focus lands on "Keep it" | Builder B | C11 |
+| B5 | Key presence | [RULED, 9:53 PM line 77] Key state is "Key saved" or "No Claude key yet." on screen and in the accessibility label; never a tail. Master already complies; keep it when the page is rebuilt. The older sheets (`claude-settings.md`, `settings-80.md`) still draw "...a1B2" and lose to the ruling | `ClaudeSection.swift:219-223`; `TesseraTests/ClaudeKeySafetyTests.swift` | Grep the page and its labels for "ends in": none | Builder B | none |
+| B6 | G422 (NEW) | Page 1 (CLAUDE) holds the switch, Key, This month and Receipts under "Tess asks Claude" opening in place (10:44 PM). An opened row must not push the page past the screen or past six rows; at AX3 the value drops under the name. Design to say which row folds when the key line opens | decisions line 1047; `sheets-93-94-95.md` SP30, SP50 | AX3 render with key line, spend meter and receipts open | Builder B, Design | B2 |
+| B7 | SP01 to SP50 (carry) | Four pages, three rows each, authored (never merged by the page build), rail on the right, the section word the only heading, no band or banner at top, vertical swipe on a stepper steps it and on a name turns the page, no haptic on a user page turn, Rotate falls back to Turn | `sheets-93-94-95.md` SP01-SP05, SP40-SP49; decisions 12:31 PM (line 915), 12:46 PM (917), 3:55 PM (925) | Rows SP01 to SP50 | Builder B | paging lands (zero on master) |
+| B8 | Side | [RULED, line 197] Settings declares its own side: WHAT LEAVES THE PHONE (right edge, middle, or the word); Habits declares LATELY and HOW IT COUNTS; Shutdown, a time-bound page, declares its own. No type exists to declare it | `SideHost` appears only in comments (`PantryView.swift:12`) | Each screen has a declaration test | Builder B | SideHost lands |
+| B9 | Rest day, Look | Rest day row reads "Sunday" or "Any" (master: "Rest day: Sunday." and "any day", `RestDaySentence.swift:20,99`); the Look row keeps the day/night/pin behavior of `LookSentence` or Design says how the five names sit in place (SP21, open) | `RestDaySentence.swift:20,99`; `LookSentence.swift:7-60` | Design's word, then SP18, SP21 | Builder B, Design | B2 |
+| B10 | G416 (NEW) | Habit words take the masked name. `HabitsCopy.added`, `checkIn`, `alreadyIn`, `doneForWeek` and `voiceOver` take a raw `name` today, so a private habit would be said aloud. Callers pass the shown name from C1; `walled` stays as the walls list | `HabitsCopy.swift:13,19,25,30,72`; `HabitsCopyTests.swift` | `privateHabitNeverReachesAnyHabitsLine`: add a "Private habit" case to the walls test | Builder B | C1, C2 |
+| B11 | Habits page | [RULED] Habits front per sheet 85: count at zero is the target ("5 a week", never "0 of 5"), swipe right or tap a stroke, fleck to the soul, one done haptic, UNDO; no streak, no "missed", no percentage, no red, no ring, on the front or the side | `habits-85.md`; `HabitsCopy.swift:77-78`; `SoulRouter.swift:36` (a habit tick already routes to the soul beat) | Sheet 85 acceptance rows 1 to 6 | Builder B | C2, C4, B10 |
+| B12 | G418 (NEW) | Where does the habit ask sit on the Shutdown page? `shutdown.md` says nothing enters Tess's band and has no row for it; decision 593 says the ask runs in Tess's band. Product to choose: the ask takes the band for its one moment with DONE and NOT TODAY (a key row), or it is a row above TOMORROW, FIRST. Leaving the page is the not now | `shutdown.md` y table (736 to 820 empty); `decisions.md:593`, `:221` item 4 | The chosen row in the Shutdown acceptance list | Product, Design, Builder B | none |
+| B13 | Shutdown page | [RULED] The page per `shutdown.md`: opener at Title 34, carry-over, at most 3 rolling rows with "N MORE", the writing line, hold 0.7 s with `.success` (his finger, before quiet hours), closed day, UNDO 10 s. Reduce Motion and Low Power: crossfades only, no lift, no bead, no keyboard ride | `shutdown.md` "Reduce Motion and VoiceOver"; `shutdown-grammar.md:64-65` | `shutdown-flow.md` scenarios | Builder B | C5, C6, A5, B12 |
+| B14 | G420 (NEW) | Habits' and Shutdown's specs carry no Low Power row though 9:56 PM item 6 says yes. Proposed rows are in "Low Power pass" below; Design adds them to `habits-85.md` and `shutdown.md` | `grep -in "low power"` over the five sheets: no hit | The rows exist in the sheets | Design | none |
+
+## Cross-team rows
+
+| # | Gap | Must be true | Evidence | How to check | Owner | After |
+|---|---|---|---|---|---|---|
+| X1 | Export, Data page | Export Health and Delete everything: the Health row is a status row opening Health's permissions, a separate row for the masked file; Delete everything's held confirm names what goes (store, local and before-restore copies, key, bookmark) and what stays (iCloud folder copies, Health workouts); no UNDO | decision 11:07 PM items 6 and 7 (line 1057); `ExportRow.swift:12` (`ready = false`); no wipe path on master | hunt 22 G378, G379, G369 | Core, Builder B | hunt 24 C7 |
+| X2 | Order | Habits and Shutdown need the Habit class (C2) and the close op (C5) before any screen; Settings needs paging, SideHost and B2. None of the three can start on master as it is | rows above | Mac lead confirms the order | Mac leads | none |
+
+## Low Power pass (Settings, Habits, Shutdown)
+
+Rule (decisions 8:20 PM line 1003, 9:23 PM line 1017): screens, sides and page turns follow Reduce Motion; the soul keeps her own Low Power form at full opacity; his own touches keep their haptics; Tess-initiated landings are silent 23:00-07:00.
+
+| Screen | Low Power behavior to require | Master |
+|---|---|---|
+| Look change | 150 ms crossfade, no flood | `LookSentence.swift:119`, `PaintFlood.swift:5` read Reduce Motion only (A3) |
+| Page turn and its preview | tapped word cuts with a 150 ms crossfade, a swipe is untouched; preview is a crossfade | no paging (B7) |
+| Claude Test, Replace | run; the cloud wisps become a still mark | `ClaudeSection.swift` has no wisps |
+| Back up (Data page) | a tapped copy runs; the daily one is not Settings' | `TesseraApp.swift:87` |
+| Habits check-in | the stroke fades in place (150 ms), no fall or fleck, count crossfades, done haptic still plays | spec has Reduce Motion only (B14) |
+| Habit ask at Shutdown | unchanged text; no motion; held 23:00-07:00 | C7 |
+| Shutdown hold | no stroke paint, no bead, no lift; the close still works; `.success` stays his | spec has Reduce Motion only (B13, B14) |
+
+## VoiceOver pass
+
+| Surface | Required | Master |
+|---|---|---|
+| Settings page | One container "Claude, page 1 of 4"; each row one element "Quiet hours, 11 pm to 7 am"; Day starts adjustable; the side is a custom action "Show what leaves the phone" | not built |
+| Key line | "Claude key saved, works" with no tail; Test, Replace and Remove separate buttons; Remove asks "Remove the Claude key?" and focus lands on "Keep it" | label at `ClaudeSection.swift:223` is right; Remove is one tap (B4) |
+| Delete everything | "Hold to delete everything", named action completes, never a single-step action | not built (A5) |
+| Habit row | One stop "Read, 3 of 5 this week, marked today" with Mark today, Mark another day, Open; a private habit reads "Private habit" | `HabitsCopy.swift:72` (raw name, B10) |
+| Shutdown | Order: opener, carry-over, each row ("Book the physio, tomorrow"), "Tomorrow, first: ...", "Close the day, hold" with named action; UNDO 10 s | not built |
+
+## Counts
+
+- 33 rows: Core 11 (C1 to C11), Builder A 6 (A1 to A6), Builder B 14 (B1 to B14), cross-team 2 (X1, X2), plus the two pass tables.
+- NEW gaps: 12, G411 to G422. G411 sheet 93 behind the rulings (B2); G412 no SettingsView and the foot word (B1); G413 Haptics off has no gate (A1); G414 row value grammar (B3); G415 "mi" has no reader (C9); G416 Habit words take raw names (B10); G417 the tomorrow line is a raw-text path (C6); G418 no slot for the habit ask on Shutdown (B12); G419 habit check-in op rules (C4); G420 no Low Power rows in Habits and Shutdown specs (B14); G421 key-removal receipt and the UNDO slot (C11); G422 page 1 height with the key line open (B6).
+
+## Order of work
+
+1. Merge queue as in hunt 24 (#890, #912 with core/g105b, #885, #895, #917, #407 v10).
+2. Core: C1, then C2, C3, C4; C8 in the same bump; C5, C6, C7 after C3; C9 and C11 wait on Product.
+3. Builder A: A1 (gate), A2, A3, A5; A4 stays green throughout.
+4. Design: B2 and the Low Power rows (B14) before Builder B starts Settings, Habits or Shutdown.
+5. Builder B: B4, B5 (key lines, can start now); B10 and B11 after C1 and C2; B1, B6, B7, B8, B9 once paging and SideHost land; B12 then B13 after C5 and C6.
+6. Last: X1 (Data page), then the phone walk (haptic feel, real Low Power, VoiceOver on held keys, AX3, the clipboard after a key paste at `ClaudeSection.swift:364-370`).
+
+## Cite fixes made while checking
+
+- Hunt 24's `ObjectPrivacy.swift:41-66` for `label(of:)` is `:28-57` on this checkout (the method signature starts at line 28).
+- `TesseraDay.startHour` is at `TesseraCore/Sources/TesseraCore/Engine/TesseraDay.swift:20`, not under `Tasks/`.
+- The key-removal cites in hunt 22 (G375: 105, 378-402, 546-554) stand; `held` is at `:72`, `finishRemoval` at `:404-411`.
+- Not verified: decision 9:24 PM names a foot in `settings-93.md` (Design commit 663f9a9e); the folder copy has no such text and the commit is not in this clone, so B1 rests on the decision alone. `docs/research/settings-claude.md` is said (10:44 PM) to drop the key tail; I read the decision, not an edited file.
+- I did not read or quote any Key check thread.
+
+## Rulings in (Product)
+
+Product accepted all nine calls as my defaults (decisions.md, 12:22 AM PT Oct 18):
+
+1. Pointer strings, the back word and the Review foot SETTINGS entry change together in the one Settings PR (G412).
+2. Remove key is a two-step with a plain receipt, no UNDO, and nothing holds the key (B4/G375). Builder A row boarded.
+3. The 27 raw `.sensoryFeedback` sites go through the haptic map (#958); Haptics off gates them (G413).
+4. Off/On everywhere (G414).
+5. Drop "mi" until distance exists (G415).
+6. Habit names and the Shutdown tomorrow line use the one private-text function, with a "Private habit" case (G416, G417).
+7. "Read today?" sits in the Shutdown band as one plain line; decisions line 593 wins over shutdown.md (G418).
+8. The key-removal receipt closes no other UNDO slot (G421).
+9. Design refreshes settings-93.md (G411).

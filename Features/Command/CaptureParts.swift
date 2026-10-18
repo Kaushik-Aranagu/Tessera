@@ -120,9 +120,11 @@ struct InkLabelWordStyle: ButtonStyle {
     /// UNDO (and Finish or Resume while something runs) keep their colour at rest; every other label word rests in
     /// ink and shows its colour only on press (no-dots B5).
     var keepsColor = false
+    /// The UNDO word plays nothing of its own: its one haptic is `.undo` from the app-wide slot (38:32).
+    var silent = false
 
     static var undo: InkLabelWordStyle {
-        InkLabelWordStyle(color: Theme.Colors.liveInk, keepsColor: true)
+        InkLabelWordStyle(color: Theme.Colors.liveInk, keepsColor: true, silent: true)
     }
 
     func makeBody(configuration: Configuration) -> some View {
@@ -138,7 +140,7 @@ struct InkLabelWordStyle: ButtonStyle {
             }
             .frame(minWidth: 44, minHeight: 44)
             .contentShape(Rectangle())
-            .sensoryFeedback(.selection, trigger: configuration.isPressed) { _, pressed in pressed }
+            .tesseraFeedback(trigger: configuration.isPressed) { _, pressed in pressed && !silent ? .selection : nil }
     }
 }
 

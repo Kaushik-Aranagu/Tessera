@@ -52,7 +52,7 @@
 | FW15 | 10:30 am. Holds the Groceries title | The page becomes the trip, one `.impact` haptic. Hero is the first aisle with open rows (Produce), lit seam beneath. Count line `14 to get`. Line under the hero reads `then` plus the next aisle with open rows. Tess says nothing | K46.1, K46.2 |
 | FW16 | 10:40 am. Checks the Produce rows one by one | Each strikes in ink and sinks; no receipt per strike. When Produce has no open row the hero advances with a 380 ms slide and one `.success` haptic | K46.3, K46.17 |
 | FW17 | 10:55 am. Types `foil` on the trip's Add line, then taps UNDO inside 4 s | Tess: `Foil, on Groceries.` UNDO 4 s; the row lands in Household and does not take the hero. UNDO line: `Foil, taken back.` | K46.18 |
-| FW18 | 11:05 am. Reaches the Private item row; taps it once, then moves on | The row reads `Private item` until the tap; the tap shows its words for that row only; it masks again when he leaves it. The hero, count line and VoiceOver say `Private item` until that tap. Other private rows stay masked | K46.24 |
+| FW18 | 11:05 am. Reaches the Private item row; taps it once, then moves on | The row reads `Private item` before and after the tap; the tap strikes it (puts it in the basket) and nothing shows its words (G102, Oct 17). The hero, count line and VoiceOver say `Private item` always; the VoiceOver hint is "Puts it in the basket". Other private rows read the same | K46.24 |
 | FW19 | 11:30 am. All 14 rows struck. Holds DONE | Tess: `Cleared 14 from the basket.` UNDO 10 s | K46.20 |
 | FW20 | 11:30 am plus 6 s. Taps UNDO, then holds DONE again | UNDO line: `Cleared 14, taken back.` and the rows return struck. Holding DONE again clears them again. Open rows: none | K46.20, K46.22 |
 | FW21 | 11:45 am. Opens Pantry | Hero `Nothing out` (everything he checked is in; none is out or low). Context line `since Sunday's shop` (template of "since Saturday's shop"). Groups OUT and LOW are not drawn. The in things are not listed on the front. The side reads `Nothing out.` with no key. The Private item is never named | S11, S1, S8, K26.9, S15 (state words written by the shop clear: pantry-acceptance P) |
@@ -82,7 +82,7 @@
 | FW31 | 7:05 pm. With Reduce Motion on, the Brown timer ends | Its line turns cadmium and the step slides back as a 150 ms fade, the haptic still given; no pulse. The resume point does not move. He taps the flared stack to stop it | cook-mode script steps 5 and 7b, K35.2, K84.17, K84.18 |
 | FW32 | 7:10 pm. On step 4 holds the "30 MIN" key (Simmer), then drags that line left | The line fades. Tess: `Simmer stopped.` UNDO 10 s, in the bottom band within thumb reach | K35.15, K84.15, K35.20 |
 | FW33 | 7:10 pm plus 5 s. Taps UNDO | The timer is back with its remaining time kept, same id; the notification is rescheduled. Lock Screen Live Activity shows the soonest timer large with `+1` for the other | K35.15, K35.5, cook-mode script step 6 |
-| FW34 | 7:12 pm. Locks the phone; Rice ends | Notification title `Rice`, body `Rice is done.`, with sound; the Activity flips to its Done face on its own. Tapping it opens `tessera://cook` with Rice flared and Simmer still counting | K35.6, K35.7, cook-mode script step 6 |
+| FW34 | 7:12 pm. Locks the phone; Rice ends | Notification title `Timer`, body `Rice is done.` (Design ruling for #940: the title is always "Timer"; the body is "<label> is done.", or "Timer is done." for a private, empty or number-only label), with sound; the Activity flips to its Done face on its own. Tapping it opens `tessera://cook` with Rice flared and Simmer still counting | K35.6, K35.7, cook-mode script step 6 |
 | FW35 | 7:25 pm. Backgrounds the app 15 min, returns | The cook is still running and still Now; timers reconciled from their end time, none doubled | cook-mode script step 7, K35.17 |
 | FW36 | 8:08 pm. On the last step taps the bar once, then holds it | A single tap gives a short haptic and the hint `Hold to finish`; it never finishes by accident. The label changes from NEXT to DONE with no layout shift; the hold fills left to right | K84.14 |
 | FW37 | 8:10 pm. The hold completes | The cover closes; this cook's timers stop with no confirm. Tess: `Chili con carne, done.` UNDO 10 s (a plan task existed, so "done", template of "Tacos, done."). Home: `Chili con carne done.` with `8:10 pm`. The plan task leaves Tasks in the same operation | MP-F1, K35.16, K62.15, K84.28 |
@@ -184,7 +184,7 @@ Siri "What's for dinner": Sat `Nothing planned.`; Tue `Chili con carne, 7 pm.`; 
 | File | Group | Not exercised | Why |
 |---|---|---|---|
 | `kitchen-refill5-acceptance.md` | K29 | All but K29.4 (11 of 12) | Cook-mode grocery speech and the sent log need a spoken ask in a cook and a Claude key |
-| | K30 | All but K30.1 (14 of 15) | Plate, wash and photo rows need a link recipe with an image |
+| | K30 | All but K30.1 (14 of 15) | Plate and photo rows need a link recipe with an image; the wash rows are withdrawn (drawn stand-in withdrawn, Kaushik 1:29 AM Oct 18) |
 | | K31 | K31.4, 5, 7, 10, 11, 12, 14, 15, 16 | 100-item list, VoiceOver and Reduce Motion variants |
 | | K32 | K32.1 to 4, 6, 7, 9, 10, 13 to 15 | Week side, small widget, Siri week, Claude with a Private recipe |
 | | K33 | K33.3 to K33.17 | Link queue edge cases; the script runs K33.1 and K33.2 |
@@ -202,7 +202,7 @@ Siri "What's for dinner": Sat `Nothing planned.`; Tue `Chili con carne, 7 pm.`; 
 | | K45 | K45.3 to 10, 15, 17 to 22 | Siri write edge cases and Dinner rows |
 | | K46 | K46.4 to 16, 19, 21, 23, 26 | Trip edge cases, offline, one-hand reach, Home while the trip is open |
 | | K47 | All 24 | Recipe delete, undo and restore |
-| `kitchen-refill8-acceptance.md` | K51, K52, K54, K55, K58 | All | Trip reveal rows, locked Siri reads, delete window, photo failure, USUALLY rows |
+| `kitchen-refill8-acceptance.md` | K51, K52, K54, K55, K58 | All | Trip private-row strike rows (no reveal, G102), locked Siri reads, delete window, photo failure, USUALLY rows |
 | | K53 | 14 of 17 (K53.2, K53.4 and K53.14 are run) | Dinner definition |
 | `kitchen-refill9-lane1-acceptance.md` | K61 | K61.6 to K61.34 | Turning Private off, backups, widget, Siri variants |
 | | K62 | K62.2 to 4, 6 to 9, 12 to 14, 16 to 18, 22, 23, 25 to 32 | Half-hour and tomorrow plans, pause, two cooks, delete, quiet hours |
