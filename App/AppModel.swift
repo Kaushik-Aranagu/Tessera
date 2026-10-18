@@ -284,6 +284,23 @@ final class AppModel {
         return land(result)
     }
 
+    private var isDrainingWaiting = false
+
+    /// On the way to the foreground: the phrases that waited for Claude go through the walls again and are read, each
+    /// as its own ghost; a week-old one is deleted. Nothing happens with Claude off or no key, and a phrase that is
+    /// still offline stays.
+    func drainWaitingPhrases() async {
+        guard !isDrainingWaiting, let engine = runtime.tess as? TessCaptureEngine,
+              engine.waitingCount > 0 else { return }
+        isDrainingWaiting = true
+        defer { isDrainingWaiting = false }
+        let read = await engine.readWaiting(context: TessContext(now: AppClock.now, entry: session?.currentEntry?.id))
+        for capture in read {
+            commitCapture()
+            _ = land(capture)
+        }
+    }
+
     /// The open set-count ask ("2 × 10: 2 sets, or 2 kg?"), if the last phrase raised one.
     var pendingSetAsk: TessSetCountAsk? {
         (runtime.tess as? TessCaptureEngine)?.pendingAsk

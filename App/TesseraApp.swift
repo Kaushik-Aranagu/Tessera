@@ -92,6 +92,7 @@ struct TesseraApp: App {
                 if phase == .active {
                     model.soul.handle(.foregrounded(underLive: model.isWorkoutPresented))
                     model.tidyProcesses()
+                    Task { await model.drainWaitingPhrases() }
                     // Siri or the Lock Screen may have taken a set back while we were away.
                     model.session?.refreshAfterExternalWrite()
                 }

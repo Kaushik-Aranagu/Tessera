@@ -333,6 +333,27 @@ struct ClaudeRouteTests {
         #expect(!sent.isEmpty && !sent.contains("tacocat") && !sent.contains("38.20") && !sent.contains("182.4"))
     }
 
+    @Test func aPhraseUnsentAfterAWeekIsDeletedAndANewerOneStays() async {
+        let inbox = TessInbox(store: store, classes: classes)
+        let day: TimeInterval = 24 * 3600
+        inbox.add("log bench from eight days ago", at: context.now - 8 * day)
+        inbox.add("log bench from six days ago", at: context.now - 6 * day)
+        #expect(tess().waitingCount == 2)
+        // Offline again: nothing is sent, the old one goes, the newer one waits.
+        RouteStub.failure = .notConnectedToInternet
+        #expect(await tess().readWaiting(context: context).isEmpty)
+        #expect(inbox.waiting().map(\.title) == ["log bench from six days ago"])
+    }
+
+    @Test func aWeekOldPhraseIsDeletedEvenWithClaudeOff() async {
+        let inbox = TessInbox(store: store, classes: classes)
+        inbox.add("log bench from earlier", at: context.now - 8 * 24 * 3600)
+        inbox.add("log squat from earlier", at: context.now - 3600)
+        let off = tess(sends: false)
+        #expect(await off.readWaiting(context: context).isEmpty)
+        #expect(inbox.waiting().map(\.title) == ["log squat from earlier"] && RouteStub.requests.isEmpty)
+    }
+
     @Test func nothingWaitsForSiriAndAKeyNeverWaits() async {
         RouteStub.failure = .notConnectedToInternet
         let tess = tess()

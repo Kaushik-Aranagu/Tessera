@@ -15,6 +15,16 @@ public struct TessInbox {
         self.classes = classes
     }
 
+    /// A phrase still unsent after this long is deleted: Claude never reads a week-old "tomorrow".
+    public static let maxAge: TimeInterval = 7 * 24 * 3600
+
+    /// Deletes every waiting phrase older than `maxAge`.
+    func expire(now: Date) {
+        for item in waiting() where now.timeIntervalSince(item.createdAt) > Self.maxAge {
+            remove(item)
+        }
+    }
+
     /// Oldest first.
     public func waiting() -> [ObjectRecord] {
         guard let waitingClass = classes[.tessWaiting] else { return [] }
@@ -53,12 +63,14 @@ public extension TessCaptureEngine {
     }
 
     /// Reads the waiting phrases with Claude, oldest first, each as its own pending ghost. A phrase leaves the inbox
-    /// once Claude has read it (whatever it made of it); one that's offline again stays. Call it when the app opens
-    /// online, never on a timer.
+    /// once Claude has read it (whatever it made of it); one that's offline again stays. The app calls it each time
+    /// it comes to the foreground (`AppModel.drainWaitingPhrases`), never on a timer.
     func readWaiting(context: TessContext) async -> [TessCapture] {
+        let inbox = TessInbox(store: engine.store, classes: engine.classes)
+        // A week unsent and it goes, whether or not Claude is on.
+        inbox.expire(now: context.now)
         guard var claude, !context.commitImmediately else { return [] }
         claude.retrying = true
-        let inbox = TessInbox(store: engine.store, classes: engine.classes)
         var captures: [TessCapture] = []
         for item in inbox.waiting() where claude.isAvailable(for: .capture) {
             // Queued before the walls (Research 139): a secret, money or body phrase leaves the inbox unread.
