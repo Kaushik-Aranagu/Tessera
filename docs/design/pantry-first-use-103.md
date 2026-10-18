@@ -15,7 +15,7 @@ The Pantry learns; it is never set up. There is no "add your pantry" form, no sc
 
 **How it fills (what the user sees, in order):**
 1. **Saying it.** "out of milk" lands a ghost row: the label OUT draws in at 296 with "Milk" and its state word, receipt "Milk, out." (thing first), UNDO in the one app-wide UNDO slot (4 s, a new thing). The hero changes to "1 out" and the quiet line leaves. `.made` once; the hero digit just changes (nothing counts up).
-2. **Finishing a shop.** Items bought become IN, never listed one by one: the first shop adds a single group, USUALLY HAVE, as one line of names under sheet 78's cap rule ("Rice, coffee and 2 more"). Receipt: "Pantry, 6 kept." with UNDO.
+2. **Finishing a shop.** Items bought become IN, never listed one by one: the first shop adds a single group, USUALLY HAVE, as one line of names under sheet 78's cap rule ("Rice, coffee and 2 more"). Groceries' Done owns the UNDO slot for that shop; "Pantry, 6 kept." shows only on the Pantry page, with no UNDO (Product, lane 83).
 3. **Finishing a cook.** The ingredients it used move to LOW or OUT only where the recipe quantity exceeds what shops added; with no shop history nothing moves and nothing is guessed ("not sure" is a state, not a default). Tess: "Tacos took the cilantro and limes." only when a line moved.
 4. **NOT SURE** appears as a group only after the first line exists, and only for things named in a cook the phone has no shop for.
 Nothing in this order ever asks a question the phone could answer, and no state is invented: an unknown thing is absent, not "in".
@@ -26,7 +26,7 @@ Nothing in this order ever asks a question the phone could answer, and no state 
 
 **Private:** a private item reads "Private item" at 100% ink in every group, the context, the hero count and VoiceOver (G102, sheet 100). The first-use page names nothing, so there is nothing to mask on day one; "Private item, out." is the receipt if the first thing is private. Bare words never mask.
 
-**Motion:** the first group draws in with the house settle (320 ms), the quiet line crossfades out in 150 ms. Reduce Motion and Low Power: a 150 ms crossfade for both. One `.made` for a said item, one `.selection` for a state tap, no haptic when the page fills from a shop or cook (the finishing surface owns that haptic).
+**Motion:** the first group draws in with the house spring (0.42 s, decisions lane 83), the quiet line crossfades out in 150 ms. Reduce Motion and Low Power: a 150 ms crossfade for both. One `.made` for a said item, one `.selection` for a state tap, no haptic when the page fills from a shop or cook (the finishing surface owns that haptic).
 
 **VoiceOver:** order is area word, day, hero ("Pantry, nothing yet"), the quiet line, then groups as they appear. When the first line arrives focus does not move; the receipt is announced once ("Milk, out"). Dynamic Type AX3: one column; the hero wraps; the quiet line may take 3 lines; rows at least 44 pt.
 
