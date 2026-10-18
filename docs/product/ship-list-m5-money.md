@@ -28,12 +28,12 @@ Build order: 1 → 2 → 4 → 3; screen 6 after 1, 7 after 2, 5 after 3.
 
 | Phrase | Maps to | Feedback line |
 |---|---|---|
-| `spent 12.40 lunch`, `spent 12.40 on lunch`, `spent 12.40 for lunch` | `LogSpend` 12.40, no currency, note "lunch", category "lunch", now | "Logged 12.40, lunch. 1st this month." |
+| `spent 12.40 lunch`, `spent 12.40 on lunch`, `spent 12.40 for lunch` | `LogSpend` 12.40, no currency, note "lunch", category "lunch", now | "Logged 12.40, lunch. 1st this month." Superseded by amendment 1. |
 | `12.40 lunch` (two decimal places, or a currency symbol) | as above | as above |
-| `spent 20 eur taxi`, `€20 taxi` | `LogSpend` 20 EUR, typed as said | "Logged €20, taxi." |
-| `spent 12.40 lunch with sam` | note "lunch with sam", category "lunch" (first word) | "Logged 12.40, lunch with sam." |
-| `spent 30 dinner sat`, `spent 8 parking yesterday` | `LogSpend` dated the most recent past Saturday, or yesterday | "Logged 30, dinner, Sat 10 Oct." |
-| `38.20`, `total 38.20`, `£38.20` (a total awaited) | `LogShopTotal` | "Groceries, 38.20. Logged." |
+| `spent 20 eur taxi`, `€20 taxi` | `LogSpend` 20 EUR, typed as said | "Logged €20, taxi." Superseded by amendment 1. |
+| `spent 12.40 lunch with sam` | note "lunch with sam", category "lunch" (first word) | "Logged 12.40, lunch with sam." Superseded by amendment 1. |
+| `spent 30 dinner sat`, `spent 8 parking yesterday` | `LogSpend` dated the most recent past Saturday, or yesterday | "Logged 30, dinner, Sat 10 Oct." Superseded by amendment 1. |
+| `38.20`, `total 38.20`, `£38.20` (a total awaited) | `LogShopTotal` | "Groceries, 38.20. Logged." Superseded by amendment 1. |
 | `skip`, `no total` (a total awaited) | `SkipShopTotal` | "No total. Fine." |
 
 Rules:
@@ -77,7 +77,7 @@ Shared: light ground, the house paper and washes; Design picks the Money lean in
 
 **5. Receipt total instrument.** When a shop finishes, the Groceries page folds away and one question stays: "Total?" in Body. Under it the **amount dial**, the weight dial's sibling: whole units on the drum, cents on a second smaller drum, and a typed field behind a tap for people who would rather type. Release commits as a ghost row ("Groceries, 38.20. Logged."). Skip is one word under it, calm copy. The same prompt is the Now slot for 2 hours.
 
-**6. Spend page.** The hero is the amount, as typed. One context line in Body: "lunch · Thu 15 Oct, 13:10". The word is a tag that edits in place; date, currency, note and links (the shop, the Groceries list) sit one level deeper, never a form. Delete is a swipe with undo.
+**6. Spend page.** The hero is the amount, as typed. One context line in Body: "lunch · Thu 15 Oct, 13:10". The word is a tag that edits in place; date, currency, note and links (the shop, the Groceries list) sit one level deeper, never a form. Delete is a swipe with undo. Superseded by amendment 3 (house clock).
 
 **7. Month page.** The month line is the hero: "October, logged" in Title tier, then the count and the top categories as one sentence. Behind it, one gesture away, the spends as a typographic ledger: day numerals in the left margin, amount in 600 and word in 400, no rows, no separators. Other currencies follow as their own short ledger. Pinch out to the previous month. No budget, no chart, no "left to spend". Empty state is one cobalt line from Tess: "Tell me what you spent. Try: spent 4.50 coffee."
 
@@ -118,3 +118,22 @@ Beyond the smallest version, not in this list:
 3. **Can a bare "38" answer a waiting shop total?** Default: yes, but only while the shop-total question is the open one on screen and no workout is running, so it can never become a set.
 4. **Does "paid" work like "spent"?** Default: yes when an amount follows ("paid 650 rent"). If it names a chore, that chore is ticked in the same ghost row. "paid rent" with no amount stays an upkeep check-in.
 5. **A split: the full amount or his share?** Default: his share ("split 60 with Sam" logs 30), with "split, 60 total" kept in the text.
+
+## Amendments, Oct 17 9:45 pm PDT (hunt 19 and Product rulings)
+
+Source: `kitchen-gap-hunt-19-money-reading-notes-lowpower-voiceover-oct17.md` and Product's rulings of Oct 17, 9:40 pm PDT. The text above stays as approved; where an amendment disagrees, the amendment wins. Build slice 1 from this list read with these rows.
+
+| # | Item | Amended rule | Gap |
+|---|---|---|---|
+| 1 | Receipts and Tess lines | The thing comes first in every receipt, UNDO answer and op summary. "12.40 lunch, logged." "€20 taxi, logged." "Groceries total, 38.20, logged." "12.40 lunch, taken back." Op summaries read "12.40 lunch", never "Spent 12.40, lunch". The UNDO key reads "Undo <thing>". A test checks that every capture line begins with the thing. | G302 |
+| 2 | Masked Spend | A masked Spend reads "Private spend" on every surface except its own page and the Month page. The amount still shows there, because it is the screen's data. `ObjectPrivacy.label(of:)` gets a Spend case (a spend always carries an amount). Amounts stay off Home, Review and the Day log (counts only: "Spent 3 times"). Bare words never mask: "rent" alone stays plain. | G303, G295 |
+| 3 | House clock and dates | Every clock reads "8:30 pm" through `HouseTime.clock`, never "13:10". Dates use US order. The spend page line reads "lunch, Thu Oct 15, 1:10 pm". Receipts use "Sat Oct 10". Any line that shows the 7 pm style times reads "7 pm". | G306 |
+| 4 | Low Power forms | Under the shared flag (Reduce Motion or Low Power) the Groceries page swaps for the Total question with a 150 ms crossfade. The drums still turn under his finger but do not coast or tick on their own. Entering a screen is a 150 ms crossfade. His own touches keep their haptics. | G291, G289 |
+| 5 | Tess-initiated slot | The "Groceries total?" slot on Now follows quiet hours (23:00 to 07:00): `NowPicker` does not place it in that window. The question still shows once at the finish, which is his act. A morning re-ask stays a Product call. No sound or haptic of its own. | G292 |
+| 6 | Retry inbox and Claude calls | The retry inbox pauses in Low Power and resumes on power ok or his tap. Automatic Claude calls do not run in Low Power (`readWaiting`, when wired, waits). A messy phrase he types himself is a call he asked for and still runs. | G293 |
+| 7 | One UNDO slot | One app-wide UNDO slot: 4 s for a new spend, 10 s for a change (`EditSpend`), a flat 10 s under VoiceOver. Under VoiceOver the 2 s ghost row waits for a tap or an action before it commits. | G308 |
+| 8 | Skip the total | Skip gets the 10 s UNDO ("Groceries total, skipped." then "Groceries total is back."). The control is named "Skip the Groceries total". | G309 |
+| 9 | Delete a spend | Delete is a named action, "Delete <amount word>", on the row and the page, with a 10 s UNDO ("12.40 lunch is back."). | G304 |
+| 10 | Amount dial without sight | The dial exposes a label, a value ("12 dollars 40") and an adjustable action. VoiceOver lands on the typed field by default; focus moves there on open. | G305 |
+| 11 | Spoken forms | Each ledger line has a spoken label ("groceries, 312 dollars 40"). The drawn "312.40" stays the drawn form only. | G307 |
+| 12 | Month ledger at large type | At accessibility sizes the ledger is one column: the day numeral on its own line above the amount and word. Each line is one combined element ("Oct 15, lunch, 12 dollars 40"). | G310 |

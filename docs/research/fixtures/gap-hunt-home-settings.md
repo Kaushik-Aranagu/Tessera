@@ -54,7 +54,7 @@ Columns: id, finding (file:line), expected outcome, status, owner, Swift Testing
 | HS09 | G602. `TessSoul.lowPower` is read only inside `onChange(of: mode)`; no `NSProcessInfoPowerStateDidChange` observer. `TessSoul.swift:66, 109` | Switching Low Power on or off while Home is open changes the soul's form at once; an observer drives it | gap | Builder B | `soulReadsLowPowerOnPowerStateChange` |
 | HS10 | `NowPage` DrainBar ticks every 1 s with a 1 s linear animation per tick. `NowPage.swift:386-402` | Under Reduce Motion or Low Power the bar steps without the animation (150 ms crossfade at most); no 1 Hz animated redraw | inferred | Builder B | `drainBarStepsWithoutAnimationWhenReduced` |
 | HS11 | `DayStrip` breath is `.repeatForever` under `tesseraAnimation`, switched off by Reduce Motion only. `DayStrip.swift:219-229` | Off under Low Power too (no repeating animation in Low Power) | gap | Builder B | `dayStripBreathStopsInLowPower` |
-| HS12 | G603. Claude's context ask (`askClaude`) runs on every Home line with no Low Power rule. `HomeLineHero.swift:128-163` | Decision needed: a Low Power ask is either skipped (rules line stays) or runs as today; the words must say which. Default proposed: runs, because it is one short call and gated by the $ cap | gap | Design + Core | `homeAskClaudeRuleInLowPower` |
+| HS12 | G603. Claude's context ask (`askClaude`) runs on every Home line with no Low Power rule. `HomeLineHero.swift:128-163` | Decision needed: a Low Power ask is either skipped (rules line stays) or runs as today; the words must say which. Answered (#947): the Home ask runs in Low Power, because it is one short call and gated by the $ cap; the rules line does not replace it | gap | Design + Core | `homeAskClaudeRuleInLowPower` |
 | HS13 | Home clock ticks: DayStrip 30 s, finish-key label 30 s, seam 30 s. `DayStrip.swift:108`; `NowPage.swift:226`; `RootView.swift:48` | Kept; no tick faster than 30 s except the cook timer bar (HS10) | traced | Builder B | `homeClockTicksAreThirtySeconds` |
 | HS14 | Reduce Motion paths on Home that already crossfade: `HomeQueue.swift:183`, `ReviewPage.swift:370`, `HomeSpatialView.swift:303`; zero Low Power use | Same branches taken by `reduced` (HS03) | traced | Builder B | `homeReducedBranchesUseSharedFlag` |
 
@@ -92,15 +92,15 @@ Columns: id, finding (file:line), expected outcome, status, owner, Swift Testing
 
 | Id | Finding (file:line) | Expected outcome | Status | Owner | Swift Testing name |
 |---|---|---|---|---|---|
-| HS35 | G598. No Settings screen; sections hang in Review. `ReviewView.swift:219-233` | One Settings screen (Back to Review, header, four sections); a Low Power / Quiet hours / Haptics word row decided by Design | gap | Design (spec) + Builder B | `settingsScreenListsAllSections` |
-| HS36 | `TesseraSettings` has no keys for quiet hours or haptics. `TesseraSettings.swift:8-24` | Fixed at 23:00 to 07:00 unless a setting is ruled; if Product wants a setting, Core adds the key in one op, default nil | gap | Core | `settingsQuietHoursDefault` |
+| HS35 | G598. No Settings screen; sections hang in Review. `ReviewView.swift:219-233` | One Settings screen (Back to Review, header, four sections); a Low Power / Quiet hours / Haptics word row decided by Design. Answered (#947): HS35 goes to Design, who own where the screen lives and its entry word | gap | Design (spec) + Builder B | `settingsScreenListsAllSections` |
+| HS36 | `TesseraSettings` has no keys for quiet hours or haptics. `TesseraSettings.swift:8-24` | Answered (#947): quiet hours are fixed at 23:00 to 07:00; the `SoulRouter` comment saying 06:00 is the wrong one (see HS48). If a setting is ever ruled, Core adds the key in one op, default nil | gap | Core | `settingsQuietHoursDefault` |
 | HS37 | G605. `ClaudeSection` inline Test, Replace, Remove are three buttons separated by `Text(" · ")` that VoiceOver reads as "dot". `ClaudeSection.swift:220-235` | Separators `accessibilityHidden`; group labelled "Claude key, saved, <status>" with Test, Replace, Remove as actions or elements in order | gap | Builder B | `keyRowSeparatorsHiddenFromVoiceOver` |
 | HS38 | Remove key is a plain button with a 10 s undo. `ClaudeSection.swift:365-402` | Remove is a named-action-only key (clears something, G229), UNDO speaks and holds 10 s | gap | Builder B | `removeKeyIsNamedActionOnly` |
 | HS39 | G606. "Tess asks Claude: yes" is a button with value; no `.isToggle`. The inline answer line is not announced. `ClaudeSection.swift:165-188` | Trait `isToggle`, value "on" / "off"; switch line announced | gap | Builder B | `missesSwitchIsToggleAndAnnounces` |
 | HS40 | `RestDaySentence` days: labels present; selected day has no `.isSelected`; choice not announced. `RestDaySentence.swift:20-30, 70-77` | Selected day announces "selected"; the pick posts "Rest day, <day>" via the Tess line (it does: receipt with UNDO) | inferred | Builder B | `restDayDaysCarrySelectedTrait` |
 | HS41 | `RestDaySentence` writes through `WriteSettings` with UNDO. `RestDaySentence.swift:78-100` | Traced | traced | Builder B | `restDayWriteUndoes` |
 | HS42 | `ClaudeSection` motion: every transition uses `withTesseraAnimation`; the repeat-free `MonthLine` draw (`ClaudeSection.swift:438`) is 0.5 s | Traced for Reduce Motion; fails Low Power the same as HS03 | traced + gap | Builder B | `claudeSectionMotionFollowsPolicy` |
-| HS43 | `LookSentence` `withTesseraAnimation(.easeInOut(duration: reduceMotion ? 0.25 : 0.7), ...)`. `LookSentence.swift:119` | Reduced time is 150 ms (the ruled crossfade), not 250 ms | gap | Design + Builder B | `lookSentenceReducedIs150ms` |
+| HS43 | `LookSentence` `withTesseraAnimation(.easeInOut(duration: reduceMotion ? 0.25 : 0.7), ...)`. `LookSentence.swift:119` | Answered (#947): reduced time is a 150 ms crossfade (the ruled one), not 250 ms | gap | Design + Builder B | `lookSentenceReducedIs150ms` |
 | HS44 | `LookSentence` slots are adjustable with a named pin action. `LookSentence.swift:95-102` | Traced | traced | Builder B | `lookSlotsAreAdjustable` |
 | HS45 | `BackupView`: back label "Back to Review", header, hints, named "Choose the folder"; restore hint present. `BackupView.swift:45-139, 215` | Traced. The restore key replaces data: named-action-only per the G229 class (clears something) | traced + gap | Builder B | `restoreIsNamedActionOnly` |
 | HS46 | `ClaudeReceipts` back reads "Back to Settings" but the visible text says "‹ Settings" and Settings does not exist as a screen. `ClaudeSection.swift:459-465` | Label matches the destination ("Back to Review" until the Settings screen lands) | gap | Builder B | `receiptsBackLabelNamesDestination` |
@@ -120,7 +120,7 @@ Columns: id, finding (file:line), expected outcome, status, owner, Swift Testing
 
 ## 5. Questions for Product and Design
 
-1. HS12: does the Home ask to Claude run in Low Power? Default: yes, because it is one short call behind the cap.
-2. HS36: is quiet hours a setting or fixed? Default: fixed 23:00 to 07:00 until he asks.
-3. HS43: confirm 150 ms for the reduced Look change (replaces the 250 ms in code).
-4. HS35: where does the Settings screen live and what is its entry word? Design.
+1. HS12: answered (#947). The Home ask to Claude runs in Low Power, because it is one short call behind the cap.
+2. HS36: answered (#947). Quiet hours are fixed at 23:00 to 07:00; the `SoulRouter` 06:00 comment is wrong.
+3. HS43: answered (#947). The reduced Look change is a 150 ms crossfade (replaces the 250 ms in code).
+4. HS35: answered (#947). It goes to Design (owner), who decide where the Settings screen lives and its entry word.
