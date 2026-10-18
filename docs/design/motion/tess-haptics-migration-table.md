@@ -12,13 +12,13 @@ Key: **swap** = same sound, change only the modifier (no behavior change). **cha
 
 | # | File:line | Today | Replace with | Moment |
 |---|---|---|---|---|
-| 1 | `DesignSystem/InkActions.swift:78` | `.selection` on `isPressed` (when true) | `.tesseraFeedback(.selection, trigger: configuration.isPressed)` with the same "new only" filter | Any ink word pressed |
+| 1 | `DesignSystem/InkActions.swift:78` | `.selection` on `isPressed` (when true) | `.tesseraFeedback(.selection, trigger: configuration.isPressed)` with the same "new only" filter, for every ink word except UNDO (row 26) | Any ink word pressed |
 | 2 | `DesignSystem/LookSentence.swift:69` | `.selection` on `taps` | `.tesseraFeedback(.selection, trigger: taps)` | Look word cycles |
 | 3 | `DesignSystem/Paint.swift:307` | `.selection` on `completions`, `isTap && !isSilent` | `.tesseraFeedback(.selection, trigger: completions)` keeping the filter | Tap key completes |
 | 4 | `Features/Backup/BackupView.swift:104` | `.selection` on `folderTaps` | `.tesseraFeedback(.selection, ...)` | Folder chosen |
 | 5 | `Features/Command/BottomChrome.swift:130` | `.selection` on `opens` | `.tesseraFeedback(.selection, ...)` | Tess opens |
 | 6 | `Features/Command/BottomChrome.swift:132` | `.decrease` on `undos` | `.tesseraFeedback(.undo, trigger: undos)` | UNDO (the one app-wide slot) |
-| 7 | `Features/Command/CaptureParts.swift:141` | `.selection` on `isPressed` | `.tesseraFeedback(.selection, ...)` | Capture part pressed |
+| 7 | `Features/Command/CaptureParts.swift:141` | `.selection` on `isPressed` | `.tesseraFeedback(.selection, ...)` for every capture part except the UNDO word (row 26) | Capture part pressed |
 | 8 | `Features/Exercise/CarriageRail.swift:47` | `.selection` on `current` | `.tesseraFeedback(.selection, ...)` | Rail detent |
 | 9 | `Features/Home/HomeQueue.swift:276` | `.selection` on `armed` | `.tesseraFeedback(.selection, ...)` | Swipe armed |
 | 10 | `Features/Home/HomeQueue.swift:277` | light 0.5 on `holding` | `.tesseraFeedback(.pickedUp, trigger: holding)` | Row picked up |
