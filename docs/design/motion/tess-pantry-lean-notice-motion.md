@@ -1,4 +1,4 @@
-# Motion for board 36, 37, 41, 42 (Oct 18). Specs only; values marked (lab) are defaults for Design to overrule
+# Motion for board 36, 37, 41, 42 (Oct 17, PM). Specs only; values marked (lab) are defaults for Design to overrule
 
 Sources: design/gaps-98.md (Pantry v2 states, error states), design/area-motion-97.md (area lean), Theme.Motion.house (the 380 ms house spring / 320 ms colour mix). All motion goes through MotionPolicy. Low Power = Reduce Motion everywhere here.
 
@@ -8,6 +8,7 @@ A tap on the right-hand state word cycles the state. The line itself never moves
 - Ring (out only, 11 pt faint ring): draws in 220 ms from 0 to full stroke when going to out; erases 160 ms when leaving out. Nothing else on the line changes.
 - Group move: out and low lines belong to OUT and LOW; going to "in" leaves the line: it closes up over 320 ms (sheet 78 close-up) while the name joins USUALLY HAVE as a name, which opens its slot over 320 ms. Hero digits count (4 out, 2 low) roll 220 ms, one step at a time; unknown is never counted.
 - Haptic: `.selection` once at the tap. Nothing at the group move. A private line ("Private item") runs the identical motion and haptic (no reveal, nothing hints).
+- A tap that changes nothing (a tie, G178 at 6:39 PM Oct 17) writes nothing and plays no receipt, no haptic and no word motion; the motion above is for a real change only.
 - Undo slot shows the receipt "Limes, low. Undo" per the app-wide UNDO rule; no extra motion.
 - Reduce Motion / Low Power: word and ring, group move and digits are one 150 ms crossfade together; haptic unchanged.
 

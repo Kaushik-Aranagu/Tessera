@@ -1,4 +1,4 @@
-# Home line to Now to Done: one continuous motion of a day (board 45). Oct 18; (lab) = default for Design to overrule
+# Home line to Now to Done: one continuous motion of a day (board 45). Oct 17, PM; (lab) = default for Design to overrule
 
 Stitches values that already exist (today-on-home.md promotion, task-reward.md done, day-strip.md now marker, evening-on-now.md, tess-picks section 20) into one ordered timeline, so nothing is invented and nothing fights. One haptic per moment throughout. Reduce Motion / Low Power: every beat is a 150 ms crossfade (promotion is a 200 ms hero crossfade, no size morph), haptics unchanged.
 

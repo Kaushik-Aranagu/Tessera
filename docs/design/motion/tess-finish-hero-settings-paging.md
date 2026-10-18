@@ -1,4 +1,4 @@
-# Motion for board 38 (Private workout finish hero) and 40 (Settings 4 pages with Page turn preview). Oct 18; (lab) = default for Design to overrule
+# Motion for board 38 (Private workout finish hero) and 40 (Settings 4 pages with Page turn preview). Oct 17, PM; (lab) = default for Design to overrule
 
 ## 38 Finish hero, ordinary and Private workout (sheet 95)
 Same timeline for both; only the words differ ("Push Day A" or "Private workout").

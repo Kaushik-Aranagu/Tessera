@@ -10,7 +10,7 @@ Source of truth for looks and rules: design/pages-90.md. This note adds timeline
 | Soften | blur out 0 to 14 pt, 340 ms | blur in 14 to 0 pt, 400 ms, starts at 190 ms | 590 ms | none |
 | Rotate | slot k leaves at 24k ms: lift 14 pt and fade, 160 ms | slot k arrives at 80 + 24k ms from 40 pt below, 260 ms | 80 + 24(N-1) + 260 = 460 ms at N = 6 (388 ms at N = 3), never padded | forward top to bottom, back bottom to top |
 Section word, with every option: crossfades 200 ms centred on the midpoint of the row motion. Title, context line, rail and pinned things never move except the rail's current segment (3 pt ink) sliding to the next segment over 200 ms.
-Rotate numbers are Design's (Oct 18): 160 out, 260 in, 24 ms stagger, arrivals start 80 ms after the first leave; the 34 ms stagger is withdrawn; fewer rows shrink the total.
+Rotate numbers are Design's (Oct 17, PM): 160 out, 260 in, 24 ms stagger, arrivals start 80 ms after the first leave; the 34 ms stagger is withdrawn; fewer rows shrink the total.
 
 ## Drag follows the finger (Slide and Rotate only; Turn and Soften wait for release)
 - Slide: page tracks the thumb 1:1. Rotate: progress p = drag / 120 pt clamped to 0..1; slot k shows its leave and arrive at progress p shifted by 24k ms of the table so the ripple is visible while dragging.

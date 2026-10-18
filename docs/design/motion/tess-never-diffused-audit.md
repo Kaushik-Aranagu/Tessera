@@ -26,5 +26,5 @@ Widgets, Lock Screen card and the Live Activity do not draw her (tess-picks.md, 
 3. No poster, thumbnail, contact-sheet or QA still is taken inside the 500 ms working fade; use rest or the gather's last frame. Check: frame.mjs poster times are listed in each sheet and none falls in the fade window.
 Each item gets a line in tess-motion-check.md so QA tests it.
 
-## Board items 1-35 pass (item 39, Oct 18)
+## Board items 1-35 pass (item 39, Oct 17, PM)
 Only these board items dim or fade her: item 3/5 working fade (his own ask, live motion, ends whole: keep), item 13 quiet versions (fixes 1 and 2 above), M1 error notice (it dims Tess's LINE text to 60% on tap for 150 ms, not the soul and not imagery: keep, never use that frame as a picture), item 22 sleep (fix 2). Items 26-35 so far add no soul dimming; 32 (Low Power = Reduce Motion) must not bring back the x0.6 opacity (fix 1). No new fixes beyond the three.
