@@ -5,8 +5,8 @@ For: Product, then Core (pack, tool, writes) and Builder B (the offer line). Fro
 ## 1. When the offer appears (all must hold)
 
 1. The exercise is custom (not one of the seeded exercises) and its `primaryMuscles` is empty [code: the field is a ref list to the 18 Muscle objects, `SystemCatalog.swift:84-85`].
-2. `factsAsked` is empty: any earlier answer, including a decline, ends the offer for good (asked once, ever).
-3. A key is saved, "Tess asks Claude" is On, the Exercise class opt-in is On (per class, Product 2:52), the month is under the cap, not demo.
+2. `factsAsked` is empty (the field and `factsSource` are [unbuilt]; they come with the next catalog number, `gap-lane-oct17.md` (c)): any earlier answer, including a decline, ends the offer for good (asked once, ever).
+3. A key is saved, "Tess asks Claude" is On, the Exercise class opt-in is On (per class, decisions.md:93), the month is under the cap, not demo.
 4. The name passes the one `isPrivateText` test (G105). A walled name never shows the offer.
 5. The eval gate has passed **and** Kaushik has said yes in the running thread. Until then the offer does not exist, whatever the switches say.
 
