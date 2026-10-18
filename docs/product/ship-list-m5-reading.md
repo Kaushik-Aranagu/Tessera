@@ -24,17 +24,17 @@ Build order: 1 → 2 → 4 → 3; screen 5 after 2, 6 after 3, 7 after 1.
 
 | Phrase | Maps to | Feedback line |
 |---|---|---|
-| `read Dune`, `to read Dune`, `queue Dune` | `QueueBook` (state queued) | "Dune is in the queue." |
-| `read Dune by Frank Herbert` | `QueueBook` with author | "Dune is in the queue." |
-| `reading Dune`, `started Dune`, `start Dune` | `QueueBook` if new, then `StartReading` | "Reading Dune, p 0." |
-| `reading Dune 612 pages` | as above, with pages | "Reading Dune, p 0 of 612." |
+| `read Dune`, `to read Dune`, `queue Dune` | `QueueBook` (state queued) | "Dune is in the queue." Superseded by amendment 1. |
+| `read Dune by Frank Herbert` | `QueueBook` with author | "Dune is in the queue." Superseded by amendment 1. |
+| `reading Dune`, `started Dune`, `start Dune` | `QueueBook` if new, then `StartReading` | "Reading Dune, p 0." Superseded by amendment 1. |
+| `reading Dune 612 pages` | as above, with pages | "Reading Dune, p 0 of 612." Superseded by amendment 1. |
 | `p 142`, `p142`, `page 142`, `pg 142` | `SetBookPage` on the last touched reading book | "Dune, p 142." (always names the book) |
 | `p 142 of 612` | `SetBookPage`, and sets pages if unknown | "Dune, p 142 of 612." |
 | `Dune p 142` | `SetBookPage` on the named book | "Dune, p 142." |
-| `finished Dune` | `FinishBook`, no review | "Finished Dune. One line on it?" |
-| `finished Dune: slow start, great end` | `FinishBook` with review | "Finished Dune: slow start, great end." |
-| `finished` (no title) | `FinishBook` on the last touched reading book | "Finished Dune." |
-| `set Dune aside`, `dropped Dune`, `stop reading Dune` | `SetBookAside` | "Set Dune aside." |
+| `finished Dune` | `FinishBook`, no review | "Finished Dune. One line on it?" Superseded by amendment 1. |
+| `finished Dune: slow start, great end` | `FinishBook` with review | "Finished Dune: slow start, great end." Superseded by amendment 1. |
+| `finished` (no title) | `FinishBook` on the last touched reading book | "Finished Dune." Superseded by amendment 1. |
+| `set Dune aside`, `dropped Dune`, `stop reading Dune` | `SetBookAside` | "Set Dune aside." Superseded by amendment 1. |
 
 Rules:
 - Phrases are ghost rows like everything else: pending, commit after 2 s or on tap, undo.
@@ -72,9 +72,29 @@ Beyond the smallest version, not in this list:
 ## Decisions (Product took every default)
 
 1. **Does "reading Dune" take Now?** Default: no. A book starts suspended, so it shows in What's running and only becomes running (Now) on Resume. This keeps a weeks-long book from holding Now and from suspending a workout.
-2. **When is the evening slot?** Default: from 19:00, only when nothing is running and no timed item is current. One time for every day.
+2. **When is the evening slot?** Default: from 19:00, only when nothing is running and no timed item is current. One time for every day. Superseded by amendment 5 (7 pm to 11 pm, house clock).
 3. **Is the queue its own class state or a Lists list?** Default: book state (queued) inside `Book`, shown on the Reading shelf. Groceries-style built-in "To read" list on the Lists shelf is Later, to avoid two sources of truth.
 4. **Do books follow the stale rules?** Default: they leave the Home ledger after 3 days like any process but are never put away at 7 days; the evening slot brings them back.
 5. **Is set aside restorable?** Default: yes. "reading Dune" on a dropped or finished book starts it again at its saved page (a re-read starts at p 0 only if said: "rereading Dune").
 6. **Reading app or a Lists sibling?** Default: its own small app, `Features/Reading/`, with the sibling rail later if Money joins it.
 7. **Network lookup** (research question 1). Default: offline first, lookup off, typed title is the record.
+
+## Amendments, Oct 17 9:45 pm PDT (hunt 19 and Product rulings)
+
+Source: `kitchen-gap-hunt-19-money-reading-notes-lowpower-voiceover-oct17.md` and Product's rulings of Oct 17, 9:40 pm PDT. The text above stays as approved; where an amendment disagrees, the amendment wins. Build slice 1 from this list read with these rows.
+
+| # | Item | Amended rule | Gap |
+|---|---|---|---|
+| 1 | Receipts and Tess lines | The thing comes first in every receipt, UNDO answer and op summary. "Dune, started." "Dune, p 0." "Dune, p 0 of 612." "Dune, in the queue." "Dune, finished. One line on it?" "Dune, finished: slow start, great end." "Dune, set aside." UNDO answers read "Dune, taken back." Op summaries read "Dune, p 120 to 142" and "Dune, finished: slow start, great end". The UNDO key reads "Undo <thing>". A test checks that every capture line begins with the thing. | G302 |
+| 2 | Private book | A Book can be private. A private Book reads "Private book" wherever it is masked, and its review line shows on the book page only. `ObjectPrivacy.label(of:)` gets a Book case. Bare words never mask: a title alone does not make a book private. | G303 |
+| 3 | House clock | Every clock reads "8:30 pm" through `HouseTime.clock`. Any line that shows the evening time reads "7 pm", never "19:00". The "p 142 of 612 · started 9 days ago" line uses US dates. | G306 |
+| 4 | Low Power forms | Under the shared flag (Reduce Motion or Low Power) the page drum still turns under his finger but does not coast or tick on its own. The resume glint becomes a 150 ms highlight on the page number plus the same haptic (his own touch). The resume landing is a 150 ms crossfade. | G291, G289 |
+| 5 | Tess-initiated slot | The Reading evening slot follows quiet hours (23:00 to 07:00): it runs 7 pm to 11 pm, then gives Now back. It never lands at night. No sound or haptic of its own. | G292 |
+| 6 | Retry inbox and Claude calls | The retry inbox pauses in Low Power and resumes on power ok or his tap. Automatic Claude calls do not run in Low Power. A phrase he types himself is a call he asked for and still runs. | G293 |
+| 7 | One UNDO slot | One app-wide UNDO slot: 4 s for a new thing (a queued or started book), 10 s for a change (`SetBookPage`, a review line), a flat 10 s under VoiceOver. In code every UNDO line holds 10 s unless the caller passes `holds: .seconds(4)` (HomeQueue.swift:45-52), so slice 1 must pass `holds` for a queued or started book. Under VoiceOver the 2 s ghost row waits for a tap or an action before it commits. | G308 |
+| 8 | Finish key | Finish is a named action only ("Finish <title>"), with no default double-tap completion, because a stray tap opens the review flow. Set aside stays a plain button. | G304 |
+| 9 | Page drum without sight | The drum exposes a label, a value ("page 142 of 612") and an adjustable action. VoiceOver lands on a typed page field by default; focus moves there on open. | G305 |
+| 10 | Spoken forms | Spoken labels use "page 142 of 612, started 9 days ago". "P 142" stays the drawn form only. | G307 |
+| 11 | Shelf at large type | At accessibility sizes the shelf is one column: the page sits under the title. | G310 |
+| 12 | Resume with VoiceOver | On resume, focus moves to the page value and "Dune, page 142" is announced once. | G311 |
+| 13 | Haptics and drum timing (Design look check, Oct 17 9:59 pm PDT; sheets in commit 0c2098d2) | Ruled (decisions 9:34 pm and "Motion lab on #963, confirmed", about 9:58 pm): the capture commit plays `.made`; Log plays `.made` once and the drums travel 420 ms to "41.60"; Finished plays `.done` once; set aside plays nothing; Reduce Motion and Low Power are one path. | Design, Product |

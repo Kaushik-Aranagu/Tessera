@@ -273,8 +273,8 @@ private struct QueueRow: View {
         ))
         .onTapGesture { model.open(.object(entry.id)) }
         .modifier(ZoomSource(id: Route.object(entry.id), namespace: namespace))
-        .sensoryFeedback(.selection, trigger: armed) { _, now in now }
-        .sensoryFeedback(.impact(weight: .light, intensity: 0.5), trigger: holding) { _, now in now }
+        .tesseraFeedback(trigger: armed) { _, now in now ? .selection : nil }
+        .tesseraFeedback(trigger: holding) { _, now in now ? .pickedUp : nil }
         // A held row that leaves the tree (it finished, or the page changed) must give the pager back.
         .onDisappear {
             if holding {
@@ -287,8 +287,8 @@ private struct QueueRow: View {
                 settle()
             }
         }
-        .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: finishes)
-        .sensoryFeedback(.impact(weight: .light), trigger: moves)
+        .tesseraFeedback(.done, trigger: finishes)
+        .tesseraFeedback(.notNow, trigger: moves)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(entry.time.map { "\(entry.title), \(Format.clock($0))" } ?? entry.title)
         .accessibilityHint("Opens \(entry.title)")

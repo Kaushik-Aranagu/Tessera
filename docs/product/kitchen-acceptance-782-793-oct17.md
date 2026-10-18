@@ -69,7 +69,7 @@ Diff: GV, RecipesShelfView. No test file changed.
 | ER11 finish fails: line (from #782, now the shared constant) | PASS | GV:332-346, 745, 759 | `finishFailureSaysDidntSave` |
 | ER11 add fails: line, draft stays | PASS (from #769/#782) | GW:81-85 | `aRefusedWriteKeepsTheDraftButNeverTheKey` |
 | One shared failure line, sentence form "Didn't save that. Try again." (ruled) | PASS | GV:745-750 | no test on `sayDidntSave` |
-| ER11 `.warning` haptic | NOT BUILT, by design | DesignSystem/Haptics.swift:6 (no error or warning case exists) | n/a |
+| ER11 one soft `.warning` haptic, once, only when a write didn't save, never on repeat; info lines none (ruled 12:45 PM, supersedes "no error or warning case") | NOT BUILT | DesignSystem/Haptics.swift:6 (comment still says no error or warning case; central hook is Builder A's open PR) | no test |
 | ER11 "tap the line to retry" | NOT BUILT | the band has no retry | no test |
 | ER11 remove fails | NOT BUILT on Groceries (no remove or swipe on Groceries) | n/a | n/a |
 | Finish haptic is the house `.done` (no raw sensory feedback) | PASS | GV:210-211 | no test |

@@ -127,9 +127,9 @@ struct BottomChrome: View {
                 }
             #endif
         }
-        .sensoryFeedback(.selection, trigger: opens)
-        .sensoryFeedback(.success, trigger: model.soul.isBright) { _, lit in lit }
-        .sensoryFeedback(.decrease, trigger: undos)
+        .tesseraFeedback(.selection, trigger: opens)
+        .tesseraFeedback(trigger: model.soul.isBright) { _, lit in lit ? .made : nil }
+        .tesseraFeedback(.undo, trigger: undos)
         // Core's overnight lines (the 04:00 roll, a workout wrapped up while away) show once, beside the soul
         // (late-night #13).
         .onChange(of: model.processNotes, initial: true) { _, notes in

@@ -303,11 +303,10 @@ struct PaintKey<Label: View, Meta: View>: View {
                 withAnimation(.easeIn(duration: 0.22)) { fill = 1 }
             }
         }
-        .sensoryFeedback(.impact(weight: .light), trigger: isPressing) { _, new in new && !isTap }
-        .sensoryFeedback(.selection, trigger: completions) { _, _ in isTap && !isSilent }
-        .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: completions) { _, _ in
-            !isTap && !isSilent
-        }
+        // A tap key completes with the house selection tick. A hold plays nothing here: a key cannot know its moment,
+        // so each hold's owner plays its own case through `tesseraFeedback` (hero finish .done, plan kept .made,
+        // Clear the basket .cleared, Lists reset .aisleCleared); no press-start tick (one haptic per moment).
+        .tesseraFeedback(trigger: completions) { _, _ in isTap && !isSilent ? .selection : nil }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
         .accessibilityHint(hint)

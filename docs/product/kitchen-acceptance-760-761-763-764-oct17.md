@@ -117,7 +117,7 @@ Files: `Features/Lists/ListsView.swift` (new, 333 lines), `ListsShelf.swift`, `L
 | 10.11 "done" ask, RESET, put away | NOT BUILT | | none |
 | 10.12 back word "‹ LISTS", empty page "nothing on it yet" | PASS | `:125`, `ListsCopy.swift:25-27` | `aPrivateListNameIsMasked...` |
 | 10.12 empty-shelf line "Paste a list anywhere to make one." | superseded by 13.1 "No other lists yet." (built) | | |
-| 13.8 private item reads "Private item" until tapped; fold masked; receipt thing first | PASS | `ShopTrip.label/maskedLabel` `:198`, `:276-280`; engine receipt | `...NeverEchoesAWalledLine` ("advil" gives "Private item, on Packing.") |
+| 13.8 private item reads "Private item" until tapped; fold masked; receipt thing first (G102, Oct 17: now always "Private item"; one tap strikes it) | PASS (superseded by G102; the build must now strike on first tap) | `ShopTrip.label/maskedLabel` `:198`, `:276-280`; engine receipt | `...NeverEchoesAWalledLine` ("advil" gives "Private item, on Packing.") |
 | 13.8 "Private item, removed." / "back on" | NOT BUILT | no remove | none |
 | 13.9 Lists side, KEPT PRIVATE; 13.5 side | NOT BUILT | | none |
 | 13.2 "new list: packing" receipt and repeat-name rule | NOT BUILT | `CreateList` untouched (see G40) | none |

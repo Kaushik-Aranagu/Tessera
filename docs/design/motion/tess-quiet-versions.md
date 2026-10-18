@@ -9,11 +9,11 @@ Reduce Motion (RM) is his accessibility setting: motion is the problem. Low Powe
 
 | State or pick | Reduce Motion | Low Power | What stays | Haptic |
 |---|---|---|---|---|
-| Idle | Still frame; breath is opacity only, 0.85 to 1 over 3.2 s | Same motion at 20 fps; halo breath held at its mean | Blink, the dab lift order, the mode shown by size and grade | None |
+| Idle | Still frame; breath is opacity only, 0.85 to 1 over 3.2 s | Same motion at 30 fps; halo breath held at its mean (30 fps ruled DEC:1069 item 3; the older 20 fps is superseded) | Blink, the dab lift order, the mode shown by size and grade | None |
 | Roam | No travel; she stays home, the line names the row | No roam; she stays at the dock, the work runs there | The line, the work, Done | None (Done's own `.success`) |
 | Listening | Blooms in the corner, no travel; eyes hold | Travel stays; mic level smoothed at 30 fps | The bloom size following the level, the words | None |
-| Asking (one-ask wait) | No lean; breath still | Lean stays; 20 fps | The question, the two ink words | None |
-| Working | 200 ms crossfade to the faded grade, mains loosened 1.5x, satellites 40% | Six lights, no readers, 30 fps; fade and gather as built | The "Planning your day." line, the gather, colour back | None until Done |
+| Asking (one-ask wait) | No lean; breath still | Lean stays; 30 fps | The question, the two ink words | None |
+| Working | 200 ms crossfade to the loosened pose, mains 1.5x, satellites at their idle places; opacity 1, grade and halo as at rest (G225, D4) | Six lights, no readers, 30 fps; fade and gather as built | The "Planning your day." line, the gather, colour back | None until Done |
 | Reward / Done | Done: its still frame, 1.8 s. Beat: 200 ms crossfade, no gather, no glance | Done as built; beat unchanged (940 ms, six fills) | Done's pour timing as a still, the blink | One `.success` (Done's own), none for the beat |
 | Colour change | One 600 ms crossfade of the pigments, no wet swell | No repaint starts; one in flight finishes at 30 fps; the palette waits for the next idle | The new colours | None |
 | Wake | No stretch; eyes open with a 200 ms crossfade | Same | The open eyes, the day's first line | None |
@@ -40,7 +40,7 @@ Reduce Motion (RM) is his accessibility setting: motion is the problem. Low Powe
 
 ## Tests
 - RM on: no `CMMotionManager`; stroke starts no ripple but sounds its tick and blinks once; wake opens eyes in a 200 ms crossfade with no width change; a roam request leaves her at home and the line names the row.
-- LP on: working shows six lights and no readers; the idle tick is 20 fps and every other mode 30; no repaint starts; Done lasts 1.8 s with one `.success`.
+- LP on: working shows six lights and no readers; the idle tick and every other mode run 30 fps (ruled DEC:1069 item 3; was 20 for idle); no repaint starts; Done lasts 1.8 s with one `.success`.
 - Both on: the RM result, for every row above.
 - Switch while working: toggling LP mid-split leaves the light count unchanged until Done; toggling RM mid-roam ends with her at home through a 200 ms crossfade.
 - Switch at rest: a toggle produces one 200 ms crossfade and no cut; two toggles inside 200 ms produce no jump.
