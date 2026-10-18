@@ -56,6 +56,7 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
 - There is always work; put in enough resources to find it and saturate (Oct 16, 5:42 PM PT) (cmsg_01VTPva3JGXrfvetgUvAWE7M3wPJPcq3jxnNVw6y6g6ZGD)
 - Brief update in your thread every 2 to 3 hours that ends with what you need from him; a daily presentation of today, next and the week (Oct 16, 8:20 PM PT) (cmsg_01VTPva3JGXrfvetgUvAWE7MQvAYv1ZP13asD93vc8YGGY)
 - A fresh thread must know it continues another chat and have breadcrumbs to old conversations and rules (Oct 17, 12:18 PM PT) (cmsg_01VTPva3JGXrfvetgUvAWE7MEAkdcHifViwJXzLz4XeVnh)
+- Coordinator's how-we-work rule, 9:30 PM PT Oct 17 (not Kaushik's words): authors send PRs to QA and do not copy the coordinator; QA sends the coordinator verdicts, batched when several land close together; leads message the coordinator only for Mac relays, blockers, rotations and rulings, plus the 3-hourly updates in their own threads; no "ready to merge" note once QA has sent the verdict.
 
 ### Product
 - Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7M9buvsufEBhXZqJtov6ZY72; old session cse_013bC75Wtuv4sc7B2EmqcXVZ.

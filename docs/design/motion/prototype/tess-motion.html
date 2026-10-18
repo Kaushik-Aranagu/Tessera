@@ -525,17 +525,17 @@ function composeSoul(t, s) {
   const fade = workFade(t, work);
   const reduced = s.reduced ? s.reduced(t) : 0;
   const grade = {
-    saturation: lerp(frame.look.saturation, .62, fade) * lerp(1, .5, reduced) + (beat ? beat.sat : 0),
+    saturation: lerp(frame.look.saturation, .62, fade) + (beat ? beat.sat : 0),
     contrast: lerp(frame.look.contrast, 1, fade),
-    opacity: frame.look.opacity * lerp(1, .9, fade) * lerp(1, .6, reduced) * (s.opacityMul ? s.opacityMul(t) : 1),
-    fade: Math.max(fade, reduced), haloBoost: s.haloBoost ? s.haloBoost(t) : 1,
+    opacity: frame.look.opacity * lerp(1, .9, fade) * (s.opacityMul ? s.opacityMul(t) : 1),
+    fade, haloBoost: s.haloBoost ? s.haloBoost(t) : 1,
     palette: s.palette ? s.palette(t) : null,
   };
   if (reduced > 0) {
-    // Reduce Motion: no travel. The three mains loosen apart in place and hold; the satellites fade.
+    // Reduce Motion (G225, D4): no travel, no fade. The three mains loosen apart in place and hold; opacity, grade and halo stay as at rest.
     parts = parts.map((p, i) => {
       const d = i < 3 ? 1.5 : 1;
-      return { ...p, x: lerp(p.x, C.x + (p.x - C.x) * d, reduced), y: lerp(p.y, C.y + (p.y - C.y) * d, reduced), alpha: p.alpha * (i >= 3 ? 1 - reduced * .6 : 1) };
+      return { ...p, x: lerp(p.x, C.x + (p.x - C.x) * d, reduced), y: lerp(p.y, C.y + (p.y - C.y) * d, reduced) };
     });
   }
   drawSoul(parts, frame, C, scale, grade);
@@ -755,7 +755,7 @@ SCENES.eyes = () => {
   };
 };
 
-// 6. Reduce Motion: nothing travels. The colour drains and the dabs loosen in place; Done is its still frame.
+// 6. Reduce Motion: nothing travels and nothing fades. The three mains loosen in place at full opacity; Done is its still frame.
 SCENES.reduced = () => {
   const S = 1.6, G = 6.2;
   return {
@@ -770,7 +770,7 @@ SCENES.reduced = () => {
     lines: [{ text: 'Planning your day.', at: S - .1, until: G }, { text: 'Plan ready. Push A at 12:15 pm.', at: G + .1 }],
     caps: [
       { at: 0, text: 'Reduce Motion: no travel. An opacity breath; the blink stays.' },
-      { at: S, text: 'Working: a 200 ms crossfade to faded and loosened.' },
+      { at: S, text: 'Working: a 200 ms crossfade to loosened; full opacity, halo kept.' },
       { at: G, text: 'Done: a 200 ms crossfade back. Haptics stay.', haptic: 'success' },
     ],
   };

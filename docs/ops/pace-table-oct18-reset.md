@@ -19,7 +19,7 @@ Burn: 76% at 6:45 PM to 79% at 9:16 PM = about 1.2 points per hour [M, from usag
 | Design | Sonnet 5.5, medium | 9.6 h | $11.40 | $1.2 | 4% |
 | AI architecture | Sonnet 5.5 [1m], medium | 23.4 h | $13.86 | $0.6 | 2% |
 | Motion lab | Sonnet 5.5, medium | 7.2 h | $7.19 | $1.0 | 3% |
-| Product (fresh 4:30 PM) | Sonnet 5.5 [1m], medium | 4.9 h | $6.08 | $1.3 | 4% |
+| Product (fresh 4:30 PM) | Sonnet 5.5 [1m], medium | 4.9 h | $6.08 | $1.24 | 4% |
 | QA (fresh 9 PM) | Sonnet 5.5, medium | 0.4 h | $1.25 | n/a | n/a |
 | Ops (fresh 9 PM) | Sonnet 5.5, medium | 0.4 h | see ledger | n/a | n/a |
 Visible total about $28.7 per hour [M]. Mac teams (Core, Builder A, Builder B) are not in this table.
