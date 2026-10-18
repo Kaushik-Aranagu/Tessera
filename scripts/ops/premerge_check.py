@@ -17,6 +17,8 @@ KEY_RE = re.compile(re.escape(KEY_PREFIX) + r"[A-Za-z0-9_\-]{20,}")
 KEY_ASSIGN_RE = re.compile(r"(?i)(api[_-]?key|secret|token)\s*[:=]\s*[\"'][A-Za-z0-9_\-]{24,}[\"']")
 BARE_PREFIX_RE = re.compile(re.escape(KEY_PREFIX))
 DATA_SAFETY = ["ProcessInfo", "CommandLine", "LaunchFlags", "UserDefaults", "FileManager", "SceneStorage", "#if DEBUG"]
+# The one reviewed file allowed to read ProcessInfo (Low Power), per the coordinator's ruling on #945.
+PROCESSINFO_ALLOWED = {"App/PowerState.swift"}
 PY_FORBIDDEN = re.compile(r"\b(subprocess|os\.system|socket|requests|pickle)\b|\b(exec|eval)\(")
 PY_IMPORT = re.compile(r"^\s*(?:import|from)\s+([A-Za-z_][\w.]*)")
 PIN_RE = re.compile(r"(?i)(^|\W)(PIN|only[- ]SHA)\b")
@@ -85,7 +87,8 @@ def check(files, kind):
                 for pat in DATA_SAFETY:
                     if pat in text:
                         hit = (p, n, "data-safety: added " + pat)
-                        (reports if is_test(p) or pat != "ProcessInfo" else stops).append(hit)
+                        allowed = pat == "ProcessInfo" and p in PROCESSINFO_ALLOWED
+                        (reports if is_test(p) or pat != "ProcessInfo" or allowed else stops).append(hit)
         if kind == "code" and re.search(r"(?i)migrat|schema|catalog", p) and (f["removed"] or f["status"] == "D"):
             reports.append((p, 0, "migrations: lines removed or file deleted; confirm additive only"))
         if kind in ("docs", "scripts"):

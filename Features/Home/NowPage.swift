@@ -386,7 +386,7 @@ struct DrainBar: View {
     var body: some View {
         // The bar moves a pixel or two a step, so it steps every 5 s; in Low Power or Reduce Motion once a minute,
         // with a short fade (G226, K84.19).
-        let calm = reduceMotion || ProcessInfo.processInfo.isLowPowerModeEnabled
+        let calm = reduceMotion || PowerState.isLowPower
         let step = Self.step(calm: calm)
         TimelineView(.periodic(from: .now, by: step)) { context in
             let now = AppClock.adjust(context.date)
