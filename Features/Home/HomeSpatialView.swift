@@ -276,10 +276,7 @@ struct HomeSpatialView: View {
         Self.remembered = index
         picked = index
         pulling = false
-        withAnimation(MotionPolicy.resolve(
-            .timingCurve(0.2, 0.9, 0.25, 1, duration: 0.46),
-            reduceMotion: reduceMotion
-        )) {
+        withAnimation(indexCurve) {
             indexProgress = 0
         } completion: {
             picked = nil

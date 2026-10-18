@@ -40,10 +40,16 @@ struct AreaIndexTests {
         #expect(AreaLines.taskTitle(task.title, id: task.id, model: model) == "Private task")
         let plain = try model.engine.perform(CreateTask(title: "Call the bank"), by: .user).output
         #expect(AreaLines.taskTitle(plain.title, id: plain.id, model: model) == "Call the bank")
-        for routine in model.objects(of: .routine) {
+        // Seed a routine (the starter content may not): a private name must read "Private workout" in the row.
+        DemoData.prepare(model)
+        let routines = model.objects(of: .routine)
+        #expect(!routines.isEmpty, "the test needs a routine to mean anything")
+        for routine in routines {
             try model.engine.perform(RenameObject(object: routine.id, title: "Knee rehab day"), by: .user)
         }
         let now = Date(timeIntervalSince1970: 1_792_000_000)
-        #expect(!AreaLines.training(model, now: now).lowercased().contains("rehab"))
+        let line = AreaLines.training(model, now: now)
+        #expect(!line.lowercased().contains("rehab"), "\(line)")
+        #expect(ObjectPrivacy.routineTitle("Knee rehab day", in: model.store) == "Private workout")
     }
 }
