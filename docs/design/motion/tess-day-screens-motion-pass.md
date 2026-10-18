@@ -28,7 +28,7 @@ play in LP and quiet hours; Tess-initiated landings follow quiet hours (23:00 to
 | Keep a row (swipe right) | title dries by a 700 ms clip sweep, time +250 ms; Tess "Reply to landlord, 8 am." with UNDO, 10 s | one 150 ms ink fade | spoken receipt; actions "Keep" and "Skip" | `.made` once |
 | Skip a row (swipe left) | row slides off, queue closes 320 ms | 150 ms fade | spoken line + **10 s UNDO** | `.notNow` once (RELH:11 and :30; the earlier lab sheet's "none" is retired: the row moves, so it is `.notNow`, "nothing is written") |
 | Skip the plan (hero swipe left or the action) | silent for a sighted user | 150 ms fade | spoken "Plan skipped for today." + 10 s UNDO ("Plan, taken back.") | none; `.undo` only on UNDO |
-| **Hold START WITH (0.7 s)** | line empties to a 0.9 pt trace at 35%, repaints with a bead; the hero lifts (up 24 pt, blur, 320 ms) and the first item rises into the hero (480 ms house); Tess "Plan kept. X is up." with UNDO 10 s | fill without thickening, no bead, hero and first item crossfade 150 ms | double tap does **not** complete (speaks "Hold to keep the plan; use the action Keep the plan"); the named action completes with no hold fill | **`.made` once at completion, however many rows**. The press-begin tick and the raw medium 0.8 are deleted (migration table rows 22 and 23). |
+| **Hold START WITH (0.7 s)** | line empties to a 0.9 pt trace at 35%, repaints with a bead; the hero lifts (up 24 pt, blur, 320 ms) and the first item rises into the hero (480 ms house); Tess "Plan kept. X is up." with UNDO 10 s | fill without thickening, no bead, hero and first item crossfade 150 ms | double tap does **not** complete (speaks the hint "Hold to keep N tasks"; the named action is "Keep"); the named action completes with no hold fill | **`.made` once at completion, however many rows**. The press-begin tick and the raw medium 0.8 are deleted (migration table rows 22 and 23). |
 | Rows past five | "N MORE" label stays untouched; those rows never dry | same | "N more" is a button | none |
 | Claude call out | cloud mark, three wisps rise off the soul; Tess works | no wisps; soul at full opacity (G225) | "Thinking" once | none |
 | Claude call in Low Power | automatic call does not run; the wording is owed and retried on the next open with power OK; his own pull still runs | same | same | none |
@@ -37,8 +37,8 @@ play in LP and quiet hours; Tess-initiated landings follow quiet hours (23:00 to
 | UNDO of a keep | the row's ink returns to proposed; "Reply to landlord, taken back." | fade | flat 10 s | `.undo` once |
 
 Defects to fix with it: `keepPlan` loops every row (`HomePlan.swift:173-181`), so cap it to the visible five and state the count in the
-hint ("Keeps 5 tasks", unruled wording; lab default); `Paint.swift:314` completes a hold key on one VoiceOver double tap (see section 6);
-plan receipts pass a `takeBack` closure that says nothing (`HomePlan.swift:156`, `:188`); `HomePlan.swift` never calls `soul.handle(.askClaude)`.
+hint ("Hold to keep N tasks", action "Keep"; ruled 10:05 PM, DEC:1043); `Paint.swift:314` completes a hold key on one VoiceOver double tap (see section 6);
+the row-keep receipt passes `undo: record` (`HomePlan.swift:156`) and the plan-kept receipt passes `takeBack:` (`:188`), and both closures change data and speak nothing; `HomePlan.swift` never calls `soul.handle(.askClaude)`.
 
 ## 2. Speak
 
@@ -69,7 +69,7 @@ VoiceOver wait too. The VoiceOver 10 s is a separate branch, tested.
 | Type the first line | keyboard rises 340 ms (system); TOMORROW, FIRST, line and hairline ride up; the rest fades back to 25%, blur 3, 420 ms | no ride: the column hides, the line shows above the keys in place | normal text field | none |
 | Say the line | words stream into the line (6 pt blur), the lead phrase squeezes 320 ms, a wet cobalt breath dries to ink over 3 s; Tess "Reply to the landlord, tomorrow first." | 150 ms crossfade | announced when settled | `.listening` at the hold start |
 | Habit ask | "Read today?" with DONE and NOT TODAY after the opener dries; a masked habit asks **"Private habit today?"** | 150 ms | the two words are buttons | the answer is `.selection`; DONE writes "Read, done." with UNDO 10 s |
-| **Hold CLOSE THE DAY (0.7 s)** | ink line empties to a trace at 35%, repaints with a bead | fill without the bead; the check-in stroke without the drop (the Low Power row, G317) | double tap does **not** close; the named action "Close the day" does | **`.done` once** (the map's "Shutdown complete"). Retires the sheet's `.success` (`shutdown-grammar.md:86`, :128; `shutdown.md:42`; audit M8). |
+| **Hold CLOSE THE DAY (0.7 s)** | ink line empties to a trace at 35%, repaints with a bead | fill without the bead; the check-in stroke without the drop (the Low Power row, G317) | double tap does **not** close; the named action "Close the day" does | **`.done` once** (the map's "Shutdown complete"). Retires the sheet's `.success` (`shutdown-grammar.md:21`, :63 item 5; `shutdown.md:42`; audit M8). |
 | Handoff | each kept row's TOMORROW lifts toward the top, 620 ms, 80 ms apart, shrinking and blurring; the column folds, blur 3, 420 ms; the soul plays `done` | crossfades, no lift | rows announced as moved | none |
 | Closed day | the day label crossfades to "Thursday night"; the hero is his line or tomorrow's first timed item; Tess "Closed. Your line is set for 8 am." with UNDO 10 s | 150 ms | spoken once | none |
 | UNDO of the close | "Shutdown, taken back."; everything reverses, the soul wakes | 150 ms | flat 10 s | `.undo` once, never `.success` |
@@ -114,7 +114,7 @@ look and move identically once masked.
 
 `PaintKey` completes on one double tap (`Paint.swift:314`, `.accessibilityAction { complete() }`). Ruling: a hold key that writes more than one
 thing (START WITH, CLOSE THE DAY, Finish, Done, Reset) speaks "Hold to <verb>" on double tap and completes only through a named
-action ("Keep the plan", "Close the day", "Finish <title>", "Done", "Reset"). Tap keys stay tap. Single-write holds (a habit check-in on a
+action ("Keep", "Close the day", "Finish <title>", "Done", "Reset"). Tap keys stay tap. Single-write holds (a habit check-in on a
 list line) still follow the one-stop-with-actions rule. Voice Control and Switch Control complete by the action names. The hold's visual
 fill does not run for a named action: the result lands at once, with the same single haptic as the hold.
 
@@ -133,5 +133,8 @@ fill does not run for a named action: the result lands at once, with the same si
 
 ## 8. Asks
 
-- Product: confirm the lab defaults here: Plan row skip is `.notNow`; the Day log week-boundary tick is `.pickedUp`; the Plan hold hint "Keeps N tasks" (unruled wording).
+- Product (ruled, DEC:1043): Plan row skip is `.notNow`; the Day log week-boundary tick is `.pickedUp`; the Plan hold hint is "Hold to keep N tasks" with action "Keep". Nothing left to confirm.
 - Design (their files): `shutdown.md` and `shutdown-grammar.md` say `.success` for the close (map: `.done`); `habits-grammar.md:25` says medium 0.8 (map: `.done`); `day-log-v1.md:52` says "PR" (must be "best"). Kitchen's G319, G320 and G327 to G333 (spoken forms) were proposals; only the six calls above are ruled.
+- Build: `TessVoice.hold(undo:holds:)` gives any UNDO line 10 s unless the caller passes `holds` (`HomeQueue.swift:45-52`), so every row here that says "UNDO 4 s" (check-in, new habit) must pass `holds: .seconds(4)`; under VoiceOver it is a flat 10 s regardless.
+- Build: there is no timer or poll at 22:00; the Shutdown mark is written on the next open (row 76, test 7).
+- Design (new strings, unruled): "Plan skipped for today." and "Private habit today?" need Design's wording verdict before the build.

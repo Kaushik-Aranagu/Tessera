@@ -28,7 +28,7 @@ Shared rules:
 
 | Rule | Normal | Reduce Motion / Low Power |
 |---|---|---|
-| Tick floor | a tick no closer than 30 ms to the last (the weight reel's `WeightReel.swift:183` floor); skipped ticks are dropped, never queued; the tick on the landing number always plays. Supersedes board 49's 40 ms: the three drums now feel like the reel. | same floor; ticks only while his finger moves it |
+| Tick floor | a tick no closer than 40 ms to the last (25 per second, DEC:1001); skipped ticks are dropped, never queued; the tick on the landing number always plays. The weight reel's own floor at `WeightReel.swift:183` is a separate code question (build ask: bring it to the same 25 per second). | same floor; ticks only while his finger moves it |
 | Coast | as the table | **none**: the drum stops where his finger lifts; it never turns on its own and never ticks on its own (amendment 4) |
 | Settle | 90 ms snap to the row, house spring, no overshoot, no extra tick | none; the row is already aligned at lift |
 | Edge mask | rows fade to 25% (14% for the Reading neighbours, `money-reading-grammar` row 220) | same |
@@ -110,7 +110,7 @@ existing "waiting" receipt is the only sign.
 
 ## 5. Differences from board 49 (so Design and Builder B see what changed)
 
-1. Tick floor 30 ms (the reel's), was 40 ms.
+1. Tick floor stays 40 ms (25 per second, DEC:1001); an earlier draft of this sheet said 30 ms and was wrong.
 2. Log plays `.made`, was `.impact(medium, 0.8)`; Finished plays `.done`, was `.impact(medium, 0.8)`. Both match the haptic map and the migration table.
 3. Reduce Motion and Low Power are one: no coast, no snap, no tick on its own, 150 ms crossfades; was "RM only".
 4. The resume glint under Reduce Motion is a 150 ms highlight plus `.selection`, was `.selection` alone.
@@ -119,7 +119,7 @@ existing "waiting" receipt is the only sign.
 
 ## 6. Tests the build should carry
 
-1. A 40-number flick plays at most one tick per 30 ms and always ticks on the landing number; a drag under Reduce Motion or Low Power never ticks after the finger lifts.
+1. A 40-number flick plays at most one tick per 40 ms and always ticks on the landing number; a drag under Reduce Motion or Low Power never ticks after the finger lifts.
 2. Drums in Low Power: no coast, no settle snap.
 3. Log plays `.made` once; Skip plays nothing; UNDO plays `.undo` once and never a `.selection` with it (the UNDO word must not be a pressed ink word that ticks, see the migration table's UNDO note).
 4. Finished plays `.done` once, at the bloom, and not twice with the soul (the raw `.success` at `TessSoul.swift:143` must be gone first).

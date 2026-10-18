@@ -1,5 +1,7 @@
 # Board 49 (Money dial and Reading drums) and 50 (Release 14 motion checks for the walk). Oct 17, PM; (lab) = default for Design to overrule
 
+> **Board 49 (drums) is superseded by `tess-money-reading-motion-amended.md`** (Money/Reading drum model, Log `.made`, Finished `.done`, Reduce Motion and Low Power one path, tick floor 40 ms). Lines below that say medium 0.8 or "one finished item gives one `.success`" are stale.
+
 ## 49 Drum motion: Money dial (design/money-dial.md) and Reading page drum (design/reading.md)
 Both are the weight dial's siblings: tabular numerals on 100 pt (whole units, pages) or 60 pt (cents) rows, masked to 25% at the edges, current row full ink. One motion model for every drum, parameters per drum:
 | Drum | Row | Coast | Tick | Release writes |

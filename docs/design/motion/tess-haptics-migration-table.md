@@ -30,7 +30,7 @@ Key: **swap** = same sound, change only the modifier (no behavior change). **cha
 
 | # | File:line | Today | Replace with | Why |
 |---|---|---|---|---|
-| 14 | `Features/Command/BottomChrome.swift:131` | `.success` on `soul.isBright` (every capture commit, any kind) | `.tesseraFeedback(.made, ...)`; `.done` when the phrase finished something ("x done"); `.undo` is row 6 | 38:112, fixture haptic-moments rows 15, 19-23. Keep the "lit only" filter. Capture-miss route and walled phrases play the same `.made` (one haptic, receipts unchanged). |
+| 14 | `Features/Command/BottomChrome.swift:131` | `.success` on `soul.isBright` (every capture commit, any kind) | `.tesseraFeedback(.made, ...)`; `.done` when the phrase finished something ("x done"); `.undo` is row 6 | 38:112, fixture haptic-moments rows 15, 19-23. Keep the "lit only" filter. A phrase that is read and written plays `.made`; a capture-miss that only gets a line ("That's too long to send. Say it shorter.", a dropped cook phrase "Didn't catch that.") plays no haptic (DEC:941, 945, 947). A miss routed to Claude and written plays `.made` once when the write lands. |
 | 15 | `Features/Recipes/PasteRecipe.swift:199` | `.success` on `saved?.id` | `.tesseraFeedback(.made, ...)` | 38:113 |
 | 16 | `Features/Exercise/ExercisePage.swift:210` | `.success` on `added` | `.tesseraFeedback(.made, ...)` | Adding to a routine is a made object; fixture says "decide made" and this is the decision |
 | 17 | `Features/Home/HomeQueue.swift:290` | medium 0.8 on `finishes` | `.tesseraFeedback(.done, trigger: finishes)` | 38:110 |
