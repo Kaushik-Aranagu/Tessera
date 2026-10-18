@@ -88,6 +88,25 @@ struct TessToolsTests {
         }
     }
 
+    @Test func answerQueryCountSkipsPrivateObjects() throws {
+        let store = ObjectStore.open(inMemory: true)
+        let engine = try ActionEngine(store: store, classes: store.prepareCatalog())
+        try engine.perform(CreateNote(body: "Bench felt heavy"), by: .user)
+        try engine.perform(CreateNote(body: "the wifi password is hunter2zebra"), by: .user)
+        try engine.perform(CreateTask(title: "Buy lemons"), by: .user)
+        try engine.perform(CreateTask(title: "Weigh in 82.4 kg"), by: .user)
+        try engine.perform(CreateRecipe(text: "Tacos\nIngredients\n2 onions\nMethod\n1. Fry."), by: .user)
+        try engine.perform(CreateRecipe(text: "Melatonin lasagna\nIngredients\n2 onions\nMethod\n1. Bake."), by: .user)
+        for (from, line) in [("notes", "1 note."), ("tasks", "1 task."), ("recipes", "1 recipe.")] {
+            do {
+                _ = try call("answerQuery", #"{"from":"\#(from)","during":null}"#, engine)
+                Issue.record("answerQuery should answer, not log")
+            } catch let answer as TessToolAnswer {
+                #expect(answer.line == line, "\(from): \(answer.line)")
+            }
+        }
+    }
+
     @Test func aTimeWithNoZoneIsReadInHisZone() throws {
         // QA T1: "15:00" from a model with no offset is 3 pm where he is, not 3 pm UTC (8 am in Los Angeles).
         let store = ObjectStore.open(inMemory: true)

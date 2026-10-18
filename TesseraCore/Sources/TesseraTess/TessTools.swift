@@ -289,7 +289,10 @@ public enum TessTools {
             guard let classDef = call.store.allClasses().first(where: {
                 countable.contains($0.id) && IngredientLine.key(for: $0.name) == IngredientLine.key(for: from)
             }) else { throw TessToolError("nothing called \(from)") }
-            let objects = call.store.objects(of: classDef)
+            // What goes to Claude drops private objects (ruling 61): on-screen counts keep them, this count does not.
+            let objects = call.store.objects(of: classDef).filter {
+                ObjectPrivacy.label(of: $0, in: call.store, classes: call.engine.classes) == nil
+            }
             let calendar = Calendar.current
             let day = TesseraDay(calendar: calendar)
             // His day and week (04:00 edges): "coffees today" at 01:00 counts from 04:00 yesterday.
