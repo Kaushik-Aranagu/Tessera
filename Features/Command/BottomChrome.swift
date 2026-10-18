@@ -23,6 +23,8 @@ struct BottomChrome: View {
     @State private var opens = 0
     @State private var reply: String?
     @State private var replyCount = 0
+    /// Whether the reply on show reports the capture UNDO would take back.
+    @State private var replyUndoesCapture = false
     @State private var ghost: String?
     @State private var drying: CGFloat = 0
     @State private var dryTask: Task<Void, Never>?
@@ -143,10 +145,7 @@ struct BottomChrome: View {
 
     // MARK: Rest
 
-    /// One line per capture: Tess's reply wins; there are no generic fallbacks. UNDO stays while there's a capture.
-    private var line: String? {
-        reply ?? voice.note?.text ?? model.launchNote
-    }
+    // One line per capture: Tess's reply wins; there are no generic fallbacks. UNDO stays while there's a capture.
 
     private var resting: some View {
         HStack(alignment: .center, spacing: Theme.Spacing.m) {
@@ -526,7 +525,7 @@ struct BottomChrome: View {
         } else if let lift {
             withTesseraAnimation(reduceMotion: reduceMotion) { liftAsk = lift }
         } else {
-            say(answer)
+            say(answer, undoesCapture: !isQuestion && model.lastCapture != nil)
         }
     }
 }
@@ -534,6 +533,28 @@ struct BottomChrome: View {
 // MARK: - Speak and the asks (same file, so they reach the view's private state)
 
 extension BottomChrome {
+    private var line: String? {
+        slot?.text
+    }
+
+    /// What UNDO under the line would take back: the capture its reply reported, or a Home line's own op.
+    private enum SlotUndo {
+        case capture
+        case note(TessVoice.Note)
+    }
+
+    /// The one source for the Ask slot (Kitchen hunt 26, ruled): the line shown and the UNDO under it always come
+    /// from the same place, so UNDO can't take back something other than what the line says.
+    private var slot: (text: String, undo: SlotUndo?)? {
+        if let reply {
+            return (reply, replyUndoesCapture && model.lastCapture != nil ? .capture : nil)
+        }
+        if let note = voice.note {
+            return (note.text, note.undo != nil || note.takeBack != nil ? .note(note) : nil)
+        }
+        return model.launchNote.map { ($0, nil) }
+    }
+
     /// An ask can't wait off screen (tess-motion.md §14 `askLeft`): leaving with one open lets it go, or the router
     /// would keep refusing the lens. Emitted here because the ask's onChange won't run once the view is gone.
     private func askLeft() {
@@ -712,7 +733,8 @@ extension BottomChrome {
     #endif
 
     /// Tess's line beside the soul, faded after 4 s.
-    private func say(_ text: String) {
+    private func say(_ text: String, undoesCapture: Bool = false) {
+        replyUndoesCapture = undoesCapture
         withTesseraAnimation(reduceMotion: reduceMotion) { reply = text }
         // Her side of the line (back to rest after 4 s) is the router's timer.
         model.soul.handle(.lineShown)
@@ -728,21 +750,19 @@ extension BottomChrome {
     /// UNDO only ever sits under the line whose record it reverts: a Home line ("Done. …", "Carried 2 tasks") shows
     /// it only when that line has its own op; a capture's line shows it for that capture.
     private var canUndo: Bool {
-        if let note = voice.note {
-            return note.undo != nil || note.takeBack != nil
-        }
-        return model.lastCapture != nil
+        slot?.undo != nil
     }
 
     /// Home's last action (done, moved) first, else the last capture.
     private func undo() {
-        if let note = voice.note, note.undo != nil || note.takeBack != nil {
+        guard let shown = slot, let action = shown.undo else { return }
+        switch action {
+        case let .note(note):
             if let record = note.undo {
                 _ = model.engine.undo(record)
             }
             note.takeBack?()
             model.touch()
-            undos += 1
             withTesseraAnimation(reduceMotion: reduceMotion) { voice.clear() }
             // UNDO says what it took back, thing first: "Tacos, taken back." (K36.2, Product 10:55). A take-back
             // closure speaks its own line.
@@ -750,9 +770,12 @@ extension BottomChrome {
                 let line = UndoCopy.takenBack(after: note.text)
                 Task { @MainActor in voice.say(line) }
             }
-        } else {
+        case .capture:
             model.undoLastCapture()
+            withTesseraAnimation(reduceMotion: reduceMotion) { reply = nil }
+            replyUndoesCapture = false
         }
+        undos += 1
     }
 }
 
