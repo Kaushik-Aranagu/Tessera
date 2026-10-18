@@ -35,7 +35,7 @@ Tick in this order; each line names the cite in (b) below.
 | Recipes (non-cook: paste, portion drum) | not specced | INFERRED 150 ms | INFERRED = RM | `.made` on paste save (HMT row 15) | B | HMT:34 (no motion spec) |
 | Cook mode / clock page | bead breath x1.14 2.4 s, 30 fps walk; step lights wet 2 s; DrainBar 1 step/5 s | bead still, 1-min steps 150 ms; step lands dry; key figure 150 ms crossfade at minute boundary | = RM; soul LP form; Claude "how long left" by position+size | `.timeUp` yes; bead soft impact YES in LP, NO 23-07 (Tess's); hold-start/Next ruled retired (IDX H8) | B (clock A) | CCK:13-26, 69-77 |
 | Cook timer end | flare + ring 600 ms, overlay slide 24 pt | line cadmium 150 ms, no bloom/ring, overlay crossfade | = RM | `.timeUp` once, only if live <=2 s | A/B | CCK:50-65 |
-| Pantry | word crossfade 160 ms, ring 220 ms, close-up 320 ms, greyed 42%->100% 420 ms | one 150 ms crossfade together | = RM | `.selection` once at tap; no-change tap none; swipe-add `.made` (DEC:1045); failed save one `.warning` | B | PAN:37-69, IDX H7/H13/H15 |
+| Pantry | word crossfade 160 ms, ring 220 ms, close-up 320 ms, greyed 42%->100% 420 ms | one 150 ms crossfade together | = RM | `.selection` once at tap; no-change tap none; swipe-add `.made` (DEC:1031); failed save one `.warning` | B | PAN:37-69, IDX H7/H13/H15 |
 | Money (dial, Log, Month) | drum coast 620 ms, snap 90 ms; fold 360 ms; ledger 440 ms stagger 30 ms | no coast, no snap, no tick on its own; fold = 150 ms fade; drums jump | = RM (one path) | drum `.selection` (40 ms floor); Log `.made`; UNDO `.undo`; Skip none | A | MRA:29-34, 44-58, 66-73 |
 | Reading | coast ~900 ms; resume rise 460 ms + glint 760 ms; flight 620 ms | resume 150 ms; glint -> 150 ms page-number highlight; flight fades | = RM | resume: none normal, `.selection` in RM/LP (replaces glint); Finished `.done`; set aside none | A | MRA:77-93 |
 | Habits (not built) | stroke fall 26 pt, wet, dry 2 s; week-met stroke 700 ms; fleck 520 ms | strokes fade in place; no fall/fleck; week-met whole | = RM (G318) | check-in `.done` (his, plays 23-07); fleck/rule-counted none | B (haptic A) | DAY:80-97, HAB:14-34 |
@@ -82,11 +82,11 @@ Tick in this order; each line names the cite in (b) below.
 
 ## (c) Conflicts and gaps between specs
 
-1. Clear the basket: GRO:38 `.done` vs IDX H5 `.success` (tap key); GRO:43 lists it named-action-only vs DEC:1027/1039 (IDX U3).
+1. **Ruled (DEC:1069 item 1): `.done`, a tap key; GRO:38 and GRO:43 now say so.** Was: GRO:38 `.done` vs IDX H5 `.success` (tap key); GRO:43 lists it named-action-only vs DEC:1027/1039 (IDX U3).
 2. Cook clock matrix CCK:71-75 (Next medium, hold-start medium 0.8, Done `.success`) vs IDX H1/H6/H8 (Next bar retired, no hold-start haptic, Done `.done`).
-3. Rest-end notification: TRN:95 "Set 3 is up" vs LAW:44 / IDX Q3 "Rest is up", masked body. TRN:97 vs LAW:41 on the activity carrying an alert.
+3. **Ruled (DEC:1069 item 2): title "Timer", body "Rest is up"; TRN:95 now says so.** Was: TRN:95 "Set 3 is up" vs LAW:44 / IDX Q3 "Rest is up", masked body. TRN:97 vs LAW:41 on the activity carrying an alert.
 4. Look flood: GRO:67 "stays in LP" vs HS43 150 ms (IDX M4, SET:77); MOT:237 says 250 ms; LRB s.5.6 keeps 250 ms normal / 150 RM+LP and 700 ms on Review's sentence (lab default, unruled).
-5. Soul LP fps: QV:12, MOT:242 say 20 fps; ruling 30 fps six lights (IDX M1/M2). QV:29/:35 keep the side spring in LP vs SID:36 (150 ms).
+5. **Ruled (DEC:1069 item 3): 30 fps, full opacity; QV and MOT lines now say so.** Was: QV:12, MOT:242 say 20 fps; ruling 30 fps six lights (IDX M1/M2). QV:29/:35 keep the side spring in LP vs SID:36 (150 ms).
 6. Settings numbers: Product ruled (Oct 18, 7:20 AM, #984 calls, `decisions.md`): Rotate 160 / 260 / 24 (460 ms at six rows) is the Rotate turn only; every other Look and Settings motion has a 260 ms ceiling. Still lab defaults: one 24 ms stagger on Settings, 120 ms step crossfade, 250 ms Looks flood. Stale: `tess-settings-motion.md:14` (40 ms, 420 ms grow), `pages-90.md:21` (480 ms / 34 ms), and the board's "Rotate 650 ms".
 7. Plan skip haptic: SPD:47 earlier "none" vs DAY:29 / IDX H11 `.notNow`. Day-log week tick: SPD:64 `.impact(.light)` vs DAY:106 `.pickedUp`.
 8. Plan hold hint wording: DAY:31/:40/:117/:136 "Keep the plan" vs DEC:1043 "Hold to keep N tasks" (IDX U4).
