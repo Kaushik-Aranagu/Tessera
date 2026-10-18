@@ -524,3 +524,7 @@ All 26 blockers are placed below. Status in brackets: R = RULED, C = CALL, H = H
 |G407|-|Flip PR for cookModeReady, with test rewrite|CALL||
 |G408|-|Mirror decisions.md into the repo|RULED||
 |G410|-|Name one owner for the clock page|RULED||
+
+## Changes since this index was drafted
+
+- G206 and G209 (hunt 15) moved from PRODUCT CALL to RULED (Core answers via the coordinator, Oct 18 7:15 AM): G206 the iCloud folder copy is a leaving-the-phone copy and drops Pantry state; G209 CAN COOK stays grey until at least 60% of a recipe's non-staple lines are known, floor of 3 lines. Totals above are as drafted: subtract 2 from PRODUCT CALL and add 2 to RULED.
