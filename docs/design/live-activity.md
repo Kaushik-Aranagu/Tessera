@@ -37,12 +37,16 @@ Principles, from research: one number, one action, the system's own glass, cream
 
 ## When rest is over: Go
 Trigger this with `staleDate` = the end of rest, and branch on `context.isStale`.
-- "Go" replaces the countdown and rises in: 14pt up, blur 6→0, 700ms. In the activity, use `.transition(.push(from: .bottom))`.
-- **The sky warms:** the washes cross-fade to cadmium `rgba(232,189,76,.75)` and vermilion `rgba(226,96,63,.6)` over about 1.4s.
+- "Go" replaces the countdown. In the activity, use `.transition(.push(from: .bottom))` only; the timing is the system's (an activity runs no explicit animation, so no 14pt, blur or 700ms of ours).
+- **The sky warms:** the washes switch to cadmium `rgba(232,189,76,.75)` and vermilion `rgba(226,96,63,.6)` with the system's content transition. No cross-fade of ours.
 - The line empties.
-- A soft vermilion glow breathes behind the tick (2.2s), saying "tap the set".
+- A soft vermilion glow sits behind the tick, still, saying "tap the set". It does not breathe: an activity cannot run the animation.
 - "+15" dims to 25%, and the bottom left reads "Rested 2:30".
-- One haptic alert plays when rest ends. Never repeat it.
+- **The rest activity carries no alert.** The rest-up signal is notification N2: title "Rest is up", body "Set 3 is next." (or "Next set is ready." when the exercise name is private or empty). If notifications are off, N2 is skipped and the flip by `staleDate` is the only signal. Never both, never repeated.
+- **Set aside:** a rest left alone stays on the ready face for 10 min, then the face reads "<title>" over "set aside" (a private title reads "Private workout") and the activity ends. Nothing rings for it.
+
+## Reduce Motion and Low Power on these surfaces
+Both are the system's: it simplifies its own transitions and throttles updates. The app authors and tests nothing for either (every clock derives from `endsAt`, and the face flips by `staleDate`). The only app-side rule is **Always-On drops the washes and the horizon**, keeping the word and the time.
 
 ## Colour mood: Cobalt sky (final)
 | Wash 1 (top left) | Wash 2 (top right) | Line | Tick |

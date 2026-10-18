@@ -15,13 +15,13 @@ This sheet covers everything Tessera puts on the Lock Screen and in the Island: 
 | State | Left | Right column (the Done button) | Bottom row |
 |---|---|---|---|
 | **Resting** | The countdown, 48 Light, tabular, the colon at 55% | "Bench" 17/400 at 62%, "82.5 × 8" 24/400, the vermilion tick | "Rest, then set 4" · **+15** \| **Skip** |
-| **Go** (rest is up, `staleDate`) | "Go" pushes in from below. The washes warm to cadmium and vermilion over 1.4s, and the line empties | The same, with a soft vermilion glow breathing behind the tick | "Rested 2:30" · +15 at 25% \| **Skip** |
+| **Go** (rest is up, `staleDate`) | "Go" pushes in from below. The washes switch to cadmium and vermilion with the system's content transition, and the line empties | The same, with a still soft vermilion glow behind the tick | "Rested 2:30" · +15 at 25% \| **Skip** |
 | **Always-On** | "Ready at" over "18:12", still, with no ticking | The same, without washes | "Rest, then set 4" |
 | **After Done** (a tap on the set, without unlocking) | The next rest, full | "Set 3 logged." Body 21 with **UNDO** in `liveInk` under it (the column is `UndoLastSet` until the rest ends) | "Rest, then set 4" |
 | **UNDO tapped** | The rest it came from | "Set 3 taken back." for 2s, then the set again | As before |
 | **After the last set**, 60s | "All 22 sets in." Title 34, "Push A, ready to finish" at 62% | none | ENDS IN A MINUTE, horizon full |
 
-- **Rest-up alert:** when notifications are allowed, N2 rings and the activity stays silent. When they aren't, the activity's own alert plays once. Never both (decision 6:30 PM PT).
+- **Rest-up alert:** the activity carries no alert. N2 rings ("Rest is up" / "Set 3 is next.", or "Next set is ready." when the name is private or empty). If notifications are off, the flip by `staleDate` is the only signal.
 - **Live Activities off** (M52): "Live Activities are off. Rest shows here." in the app, once ever.
 
 ## The cook Live Activity (Builder A)
@@ -40,8 +40,8 @@ This sheet covers everything Tessera puts on the Lock Screen and in the Island: 
 | | Title | Body | Long-press actions | On next open (Tess, with UNDO) |
 |---|---|---|---|---|
 | **N1, a timed task** | "Call mom" | "It's 9 am." or "It's 9 am. 30 min." | **Done** · **Not now** (moves to the same time tomorrow) | "Call mom done." or "Call mom moved to Saturday." UNDO: "Call mom taken back." |
-| **N2, rest is up, app not on screen** | "Set 4 is up" | "Bench, 82.5 × 8" | none (the activity has the buttons) | none |
-| **N3, a kitchen timer** | "Pasta is done" | "Carbonara, step 3", or "10 min." with no cook | **Stop** | "Pasta stopped." UNDO: "Pasta taken back." |
+| **N2, rest is up, app not on screen** | "Rest is up" | "Set 4 is next." ("Next set is ready." when the exercise name is private or empty); no exercise name or weights | none (the activity has the buttons) | none |
+| **N3, a kitchen timer** | "Timer" (always) | "Pasta is done." ("Timer is done." when the label is private, empty or only a number) | **Stop** | "Pasta stopped." UNDO: "Pasta taken back." |
 
 - The actions are system menu rows, drawn by iOS. We never add a content extension or custom platter.
 - Each runs without unlocking, like the activity's buttons.
