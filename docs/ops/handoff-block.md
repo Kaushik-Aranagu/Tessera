@@ -74,7 +74,8 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
 
 ### Kitchen
 - Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7MJ6x15H146i8Ubn1hrFjuEJ (Kitchen lead, rotated 6:45 PM Oct 17, session_01TRh7xwt9UhB98fN8BteVgs stood down), before it cmsg_01VTPva3JGXrfvetgUvAWE7MBXXiW98VQjyxykT4o3aJzs and cmsg_01VTPva3JGXrfvetgUvAWE7MHov6f1LgB5VxUochonHG95; older sessions cse_01WEnBRbu1uKt5FybKX4ffbe, cse_01Fe7U23BpiBM3LSkVTTfatZ.
-- Fresh thread: cmsg_01VTPva3JGXrfvetgUvAWE7M89s9yq77kzrHiVK6fDMbrZ; session cse_01WXUguo5FzJwPMPZohELbQR.
+- Fresh thread (rotated 9:15 AM PT Oct 18): cmsg_01VTPva3JGXrfvetgUvAWE7M4Apt8RTcQ1bkk4838dHvZT; session session_01FYpVsczTwVXiUhydnzexBt.
+- Retired (Kitchen, 9:15 AM Oct 18; a message returns session_inactive): thread cmsg_01VTPva3JGXrfvetgUvAWE7M89s9yq77kzrHiVK6fDMbrZ; session session_01WXUguo5FzJwPMPZohELbQR.
 - Read the old chat with fetch_thread (oldest_first) or list_events on the old session; read a rule's exact words with fetch_messages on its id.
 - Handoff note: ops/rotation-handoffs.md, section "Kitchen" if present; if not, ask the coordinator for the note the outgoing lead sent.
 - Rules for Kitchen (plus G):
@@ -165,8 +166,9 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
 
 ### Ops
 - Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7M4sZwbno9N8W6eaaMTwMASs (Ops lead, rotated 8:56 PM Oct 17); old session cse_01RWgiTA9S2ayUkTS9R4LtQ2 (stood down).
-- Fresh thread (rotated 8:56 PM PT Oct 17): cmsg_01VTPva3JGXrfvetgUvAWE7M6dJfVeBsPFV1RHWEuVJhxU; session session_018JM7uZ2p9n5pHhe2U4JvC8.
-- Handoff note: ops/rotation-handoffs.md, section "Ops lead, 8:56 PM PT Oct 17". Board: ops/board/ops.md.
+- Fresh thread (rotated 9:15 AM PT Oct 18): cmsg_01VTPva3JGXrfvetgUvAWE7M1vz7FSmbHaEGzZghmdPzNf; session session_015Nf4mTXVRg1fwrCCGNxDtR.
+- Retired (Ops, 9:15 AM Oct 18; a message returns session_inactive): thread cmsg_01VTPva3JGXrfvetgUvAWE7M6dJfVeBsPFV1RHWEuVJhxU; session session_018JM7uZ2p9n5pHhe2U4JvC8.
+- Handoff note: ops/rotation-handoffs.md, section "Ops team, 9:15 AM PT Oct 18" (the earlier "Ops lead, 8:56 PM PT Oct 17" section sits before it). Board: ops/board/ops.md.
 - Rules for Ops (plus G): team update every 2 to 3 hours in the Ops thread, 3 to 4 plain lines (hold after 11 PM PT until 7:48 AM); never touch keys, never change permissions; anything that changes another team's workflow goes to the coordinator as a proposal first; docs PRs keep PIN and approval-gate lines byte-identical; delegate broad scans to read-only Sonnet subagents.
 
 ### Tess motion lab
