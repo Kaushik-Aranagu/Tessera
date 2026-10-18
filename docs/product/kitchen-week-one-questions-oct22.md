@@ -1,6 +1,6 @@
 # Kitchen week one: the three questions for Thursday Oct 22
 
-*Kitchen lead, prepared Sun Oct 18 (PDT). Docs only, no code, nothing run: no Swift toolchain here, and the counts below are the labels `scripts/kitchen-week-one.py` prints, read from the script, not from his data. The day it runs is Thu Oct 22: counts at 8 am PDT, message to Product by 9 am PDT, as `kitchen-v2-scope.md` says. The three questions are the ones in `kitchen-week-one.md`; the cut they set is the answer-to-slice table in `kitchen-v2-scope.md` ("How the answers set the cut"). Where a ruling since Oct 16 changes that table, the line below says so. No key or key-shaped text appears in this page or in the counts.*
+*Kitchen lead, prepared Sat Oct 17 (PDT). Docs only, no code, nothing run: no Swift toolchain here, and the counts below are the labels `scripts/kitchen-week-one.py` prints, read from the script, not from his data. The day it runs is Thu Oct 22: counts at 8 am PDT, message to Product by 9 am PDT, as `kitchen-v2-scope.md` says. The three questions are the ones in `kitchen-week-one.md`; the cut they set is the answer-to-slice table in `kitchen-v2-scope.md` ("How the answers set the cut"). Where a ruling since Oct 16 changes that table, the line below says so. No key or key-shaped text appears in this page or in the counts.*
 
 **How to run the counts.** Copy `tessera.sqlite` (or a `.tessera` backup) first, then `python3 scripts/kitchen-week-one.py <copy>`. Add `--since 2026-10-15` for the week. It reads only the classes it needs and prints no title unless `--titles` is given; a private title then prints as "Private recipe". Never point it at the live store.
 
@@ -80,7 +80,7 @@ Plain words for him: "Did you ever pick up something else, a clock, paper, a mes
 
 ## The message, filled from the counts (Product sends)
 
-> Kitchen week one: you saved [n] recipes ([p] pasted or from links, [g] by ghost row), cooked [c] times ([t] timers, [e] stopped early), and shopped [s] times with [i] items ([r] from recipes, [y] typed). Three questions, one word each:
+> Kitchen week one: you saved [n] recipes ([p] pasted or from links, [g] by the quick add), cooked [c] times ([t] timers, [e] stopped early), and shopped [s] times with [i] items ([r] from recipes, [y] typed). Three questions, one word each:
 > 1. Did you ever want to know whether you already had something at home? (Yes / No / Not sure)
 > 2. Did you try to save a recipe from a website? (Yes / No / Photo)
 > 3. Was there a moment you reached for something else instead of Tessera? (Clock / Paper / Messages / Nothing / Other)
