@@ -184,7 +184,7 @@ Siri "What's for dinner": Sat `Nothing planned.`; Tue `Chili con carne, 7 pm.`; 
 | File | Group | Not exercised | Why |
 |---|---|---|---|
 | `kitchen-refill5-acceptance.md` | K29 | All but K29.4 (11 of 12) | Cook-mode grocery speech and the sent log need a spoken ask in a cook and a Claude key |
-| | K30 | All but K30.1 (14 of 15) | Plate, wash and photo rows need a link recipe with an image |
+| | K30 | All but K30.1 (14 of 15) | Plate and photo rows need a link recipe with an image; the wash rows are withdrawn (drawn stand-in withdrawn, Kaushik 1:29 AM Oct 18) |
 | | K31 | K31.4, 5, 7, 10, 11, 12, 14, 15, 16 | 100-item list, VoiceOver and Reduce Motion variants |
 | | K32 | K32.1 to 4, 6, 7, 9, 10, 13 to 15 | Week side, small widget, Siri week, Claude with a Private recipe |
 | | K33 | K33.3 to K33.17 | Link queue edge cases; the script runs K33.1 and K33.2 |

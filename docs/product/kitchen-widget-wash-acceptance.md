@@ -1,5 +1,7 @@
 # K24: Kitchen widget wash rows
 
+> **Open for Product (Oct 18):** Kaushik's 1:29 AM Oct 18 ruling withdraws every drawn food stand-in (Recipe pocket is his photo or nothing, Ingredient has no pocket, no drawing on Groceries, Pantry or Kitchen pages). The widget wash is tinted by the recipe's ingredient colours, so rows KW-W1, KW-W2, KW-W9 to KW-W13, KW-W15, KW-W16 and KW-W18 are HELD until Product says whether a widget is a Kitchen page. Do not build them. Rows that say "plain ground, no wash" stand. See `kitchen-standin-sweep-oct18.md`.
+
 *Kitchen lead, 2026-10-17*
 
 Sources: sheet 88 (Widgets row; wash kind c), recipe-plate-acceptance P6-P8, P11, P12, ingredient-colours.md. Code check: Widgets/ holds only the rest Live Activity; no Kitchen widget exists yet, so rows are build targets for Builder B. Kitchen acceptance has no widget line; these rows add it.
