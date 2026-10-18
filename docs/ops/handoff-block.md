@@ -82,7 +82,7 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
 
 ### QA
 - Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7M3cdnVjUDBstQ8XtwdEoetT (Repo maintainer, resolved Oct 17 7:21 AM PT); old session cse_016hxroCB7KSo9FQG2RL5PdR.
-- Fresh thread (rotated about 4:30 PM PT Oct 17, per the coordinator): cmsg_01VTPva3JGXrfvetgUvAWE7MCy1jQu1AAK4DaoaMNk6LTX (QA); session session_01LivGht4DsiiWp8zDyRGFtz. Retired: thread cmsg_01VTPva3JGXrfvetgUvAWE7MCGo649SeUBPdKzkV1rnwTw, session session_011G5V3Hxc6iNaYxFTxRs5Eg; and thread cmsg_01VTPva3JGXrfvetgUvAWE7MGRpS7oj5KfU9dSEo1Piu6j, session cse_01SPUv55gtzktZjCda2KjMoW (and the earlier cmsg_01VTPva3JGXrfvetgUvAWE7M5h3w4owqhDYuba8C5nBymK, cse_01M6UTgTZa2bJBa8bLiyL3rv).
+- Fresh thread (rotated again about 8:56 PM PT Oct 17, per the coordinator): cmsg_01VTPva3JGXrfvetgUvAWE7M4ssnyX2AFNBvTnuUMj5Y1K (QA); session session_016tTiZavEry3vudhWSeD15v. Retired: thread cmsg_01VTPva3JGXrfvetgUvAWE7MCy1jQu1AAK4DaoaMNk6LTX, session session_01LivGht4DsiiWp8zDyRGFtz (the 4:30 PM generation); thread cmsg_01VTPva3JGXrfvetgUvAWE7MCGo649SeUBPdKzkV1rnwTw, session session_011G5V3Hxc6iNaYxFTxRs5Eg; and thread cmsg_01VTPva3JGXrfvetgUvAWE7MGRpS7oj5KfU9dSEo1Piu6j, session cse_01SPUv55gtzktZjCda2KjMoW (and the earlier cmsg_01VTPva3JGXrfvetgUvAWE7M5h3w4owqhDYuba8C5nBymK, cse_01M6UTgTZa2bJBa8bLiyL3rv).
 - Read the old chat with fetch_thread (oldest_first) or list_events on the old session; read a rule's exact words with fetch_messages on its id.
 - Handoff note: ops/rotation-handoffs.md, section "QA" if present; if not, ask the coordinator for the note the outgoing lead sent.
 - Rules for QA (plus G):
@@ -155,6 +155,12 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
 - Handoff note: section "Builder B" in docs/ops/handoff-notes.md (repo; the Mac lead writes it there) and ops/rotation-handoffs.md. Until the outgoing lead has written it (open PRs with heads, frozen PRs, worktree, test.sh habits), ask the coordinator to paste it.
 - Scope: Home, ask slot, BottomChrome, Settings, Review, Notes, Habits, Groceries, Recipes, Plan my day, Speak, Day log, Shutdown, link fetch, AI-1/AI-9, Kitchen week, Lists. The pin and install gates are Builder A's, not yours.
 - Rules: G plus the Mac rules section above.
+
+### Ops
+- Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7M4sZwbno9N8W6eaaMTwMASs (Ops lead, rotated 8:56 PM Oct 17); old session cse_01RWgiTA9S2ayUkTS9R4LtQ2 (stood down).
+- Fresh thread (rotated 8:56 PM PT Oct 17): cmsg_01VTPva3JGXrfvetgUvAWE7M6dJfVeBsPFV1RHWEuVJhxU; session session_018JM7uZ2p9n5pHhe2U4JvC8.
+- Handoff note: ops/rotation-handoffs.md, section "Ops lead, 8:56 PM PT Oct 17". Board: ops/board/ops.md.
+- Rules for Ops (plus G): team update every 2 to 3 hours in the Ops thread, 3 to 4 plain lines (hold after 11 PM PT until 7:48 AM); never touch keys, never change permissions; anything that changes another team's workflow goes to the coordinator as a proposal first; docs PRs keep PIN and approval-gate lines byte-identical; delegate broad scans to read-only Sonnet subagents.
 
 ### Tess motion lab
 - Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7M6sP74VaZtcGZHEKYPWaqrp; old session cse_01DRmRTCUkFkcxiqBGpsU9Jw.
