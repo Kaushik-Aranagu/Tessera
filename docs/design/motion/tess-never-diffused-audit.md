@@ -1,7 +1,7 @@
 # Tess never diffused: audit of current motion scenes (item 28, Oct 17)
 
 Rule (Kaushik 12:46 PM): never a diffused or faded Tess as imagery ("looks like it died"). Audited
-docs/design/motion/prototype/tess-motion.html (master 0b6b824) and tess-*.md. Imagery here means any still, clip frame or
+docs/design/motion/prototype/tess-motion.html (at 0b6b824) and tess-*.md. Imagery here means any still, clip frame or
 banner where she is the picture; the live soul's own working colour is his 11:58 PM Oct 15 ask and is listed separately.
 
 ## Fix (reads as dimmed Tess)
@@ -22,7 +22,7 @@ Widgets, Lock Screen card and the Live Activity do not draw her (tess-picks.md, 
 
 ## Acceptance list for Builder A (all three must hold)
 1. Reduce Motion, Working: the soul's group opacity stays 1.0 (no x0.6). The three mains loosen 1.5x in place, satellites drop, colour may drain to the working grade. Check: a frame of Reduce Motion Working has the same alpha on the mains as Idle.
-2. Asleep (23:00 to 07:00): eyes closed and the slow breath carry sleep; pigment strength equals Idle's in every look. Check: the sleep clip's mean colour of the soul crop matches Idle within 2%.
+2. Asleep (23:00 to 07:00): eyes closed and the slow breath carry sleep; pigment strength equals Idle's in every look. Check (named test): `prototype/check-pigment.sh <idle.mp4> <sleep.mp4>` (see tess-motion-check.md section 6) crops the soul, averages it to one RGB with ffmpeg and fails if any channel differs by more than 2%.
 3. No poster, thumbnail, contact-sheet or QA still is taken inside the 500 ms working fade; use rest or the gather's last frame. Check: frame.mjs poster times are listed in each sheet and none falls in the fade window.
 Each item gets a line in tess-motion-check.md so QA tests it.
 
