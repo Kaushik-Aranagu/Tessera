@@ -23,8 +23,8 @@ struct BottomChrome: View {
     @State private var opens = 0
     @State private var reply: String?
     @State private var replyCount = 0
-    /// Whether the reply on show reports the capture UNDO would take back.
-    @State private var replyUndoesCapture = false
+    /// The capture the reply on show reported (still wet or dried), the only one its UNDO may take back.
+    @State private var replyCapture: UUID?
     @State private var ghost: String?
     @State private var drying: CGFloat = 0
     @State private var dryTask: Task<Void, Never>?
@@ -525,7 +525,7 @@ struct BottomChrome: View {
         } else if let lift {
             withTesseraAnimation(reduceMotion: reduceMotion) { liftAsk = lift }
         } else {
-            say(answer, undoesCapture: !isQuestion && model.lastCapture != nil)
+            say(answer, capture: isQuestion ? nil : model.pendingCapture?.id)
         }
     }
 }
@@ -539,7 +539,7 @@ extension BottomChrome {
 
     /// What UNDO under the line would take back: the capture its reply reported, or a Home line's own op.
     private enum SlotUndo {
-        case capture
+        case capture(AskSlot.CaptureUndo)
         case note(TessVoice.Note)
     }
 
@@ -547,7 +547,9 @@ extension BottomChrome {
     /// from the same place, so UNDO can't take back something other than what the line says.
     private var slot: (text: String, undo: SlotUndo?)? {
         if let reply {
-            return (reply, replyUndoesCapture && model.lastCapture != nil ? .capture : nil)
+            let undo = AskSlot.captureUndo(reply: replyCapture, pending: model.pendingCapture?.id,
+                                           last: model.lastCapture?.id)
+            return (reply, undo.map(SlotUndo.capture))
         }
         if let note = voice.note {
             return (note.text, note.undo != nil || note.takeBack != nil ? .note(note) : nil)
@@ -699,7 +701,7 @@ extension BottomChrome {
         let line = model.answer(choice)
         withTesseraAnimation(reduceMotion: reduceMotion) { liftAsk = nil }
         if !line.isEmpty {
-            say(line)
+            say(line, capture: model.pendingCapture?.id)
         }
     }
 
@@ -708,7 +710,7 @@ extension BottomChrome {
         withTesseraAnimation(reduceMotion: reduceMotion) { setAsk = nil }
         // The engine may already have dropped the ask (a new phrase): then there's nothing to say (QA C2).
         if !line.isEmpty {
-            say(line)
+            say(line, capture: model.pendingCapture?.id)
         }
     }
 
@@ -733,8 +735,8 @@ extension BottomChrome {
     #endif
 
     /// Tess's line beside the soul, faded after 4 s.
-    private func say(_ text: String, undoesCapture: Bool = false) {
-        replyUndoesCapture = undoesCapture
+    private func say(_ text: String, capture: UUID? = nil) {
+        replyCapture = capture
         withTesseraAnimation(reduceMotion: reduceMotion) { reply = text }
         // Her side of the line (back to rest after 4 s) is the router's timer.
         model.soul.handle(.lineShown)
@@ -770,10 +772,14 @@ extension BottomChrome {
                 let line = UndoCopy.takenBack(after: note.text)
                 Task { @MainActor in voice.say(line) }
             }
-        case .capture:
+        case .capture(.discard):
+            // Still wet: the ghost goes and nothing is written.
+            model.discardCapture()
+            say(UndoCopy.takenBack(after: shown.text))
+        case .capture(.undo):
             model.undoLastCapture()
-            withTesseraAnimation(reduceMotion: reduceMotion) { reply = nil }
-            replyUndoesCapture = false
+            // A capture's UNDO says what it took back too, thing first (Design on #995).
+            say(UndoCopy.takenBack(after: shown.text))
         }
         undos += 1
     }
@@ -787,5 +793,24 @@ enum UndoCopy {
         guard let comma = receipt.range(of: ", ") else { return "Taken back." }
         let thing = receipt[..<comma.lowerBound].trimmingCharacters(in: .whitespaces)
         return thing.isEmpty ? "Taken back." : "\(thing), taken back."
+    }
+}
+
+/// The Ask slot's rule for a capture's UNDO (Kitchen hunt 26; QA on #995): it takes back only the capture its own reply
+/// reported, whether still wet (a ghost) or dried; never an earlier one.
+enum AskSlot {
+    enum CaptureUndo: Equatable {
+        /// Still a ghost: drop it, nothing written.
+        case discard
+        /// Dried: undo it through the op log.
+        case undo
+    }
+
+    static func captureUndo(reply: UUID?, pending: UUID?, last: UUID?) -> CaptureUndo? {
+        guard let reply else { return nil }
+        if pending == reply {
+            return .discard
+        }
+        return last == reply ? .undo : nil
     }
 }
