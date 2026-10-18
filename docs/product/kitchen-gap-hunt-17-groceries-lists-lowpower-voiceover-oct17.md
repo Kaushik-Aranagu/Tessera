@@ -1,6 +1,6 @@
-# Gap hunt 17: Groceries and Lists under Low Power and VoiceOver (static read, branch kitchen-followon-939 at dab7e71, Sat Oct 17 PDT)
+# Gap hunt 17: Groceries and Lists under Low Power and VoiceOver (static read, master bed4ea3, Sat Oct 17 PDT)
 
-Written Sat Oct 17, evening PDT. Graded against the local checkout of `kitchen-followon-939` at dab7e71 (read only; no commit or push from this pass). No app, engine or design file changed between 6008b07 (the master hunt 16 was graded on) and dab7e71 (`git diff --stat 6008b07 HEAD -- Features DesignSystem TesseraCore App` is empty), so every cite below also stands on master. Static read only: nothing built or run (no Swift toolchain, no simulator), so every "shown" below is what the code draws or the spec says, and "inferred" marks a reading I did not see executed. No Claude key was printed or stored. Highest earlier gap number was G243 (hunt 16, `kitchen-gap-hunt-16-cook-recipe-lowpower-voiceover-oct17.md`, checked by `git grep` for G244 and G245 over `docs`, zero hits), so this file starts at G244.
+Written Sat Oct 17, evening PDT. Graded against master bed4ea3 (the checkout differs from it only by docs; read only). No app, engine or design file changed between 6008b07 (the master hunt 16 was graded on) and bed4ea3 (`git diff --stat 6008b07 HEAD -- Features DesignSystem TesseraCore App` is empty), so every cite below also stands on master. Static read only: nothing built or run (no Swift toolchain, no simulator), so every "shown" below is what the code draws or the spec says, and "inferred" marks a reading I did not see executed. No Claude key was printed or stored. Highest earlier gap number was G243 (hunt 16, `kitchen-gap-hunt-16-cook-recipe-lowpower-voiceover-oct17.md`, checked by `git grep` for G244 and G245 over `docs`, zero hits), so this file starts at G244.
 
 Scope: the Groceries screen (`Features/Groceries/GroceriesView.swift`, `ShopTrip.swift`, `GroceriesWall.swift`), the Lists screens (`Features/Lists/ListsView.swift`, `ListsShelf.swift`, `ListsCopy.swift`, `ListsPick.swift`, `ListsSwipe.swift`), the Kitchen door and the Now rows that open them (`HomeSpatialView.swift`, `NowPage.swift`). Two passes, in this order: (1) Low Power, (2) VoiceOver and Dynamic Type.
 
@@ -114,3 +114,13 @@ Carried and still open from earlier hunts, not renumbered: G102, G105 (extended 
 PASS by absence worth keeping: no timers, polls or keep-awake on either screen; no clock text on either screen; the UNDO hold is 10 s under VoiceOver; private rows draw at full ink; receipts name the thing first in words.
 
 Cross-cutting calls for Product: (1) G257, do the bare money and care words in `titleWords` ("dr", "doctor", "rent", "pay") mask grocery rows and list names, given "Dr Pepper" and the rule that money needs an amount or sign; (2) G258, does the named-action-only finish key (G229) cover Groceries "Done", "Clear the basket" and Lists "Reset"; (3) G250, is a Tess line with UNDO on every full-screen layer the rule (one shared view), and where does it sit above the Groceries basket; (4) G249, the pick landing's haptic weight (12.2 says medium, the map says light) and whether `Haptic` gets an origin so Tess's landings can follow quiet hours; (5) G247, whether the system zoom into a screen becomes a crossfade in Low Power.
+
+## Rulings in (Product, Oct 17 9:17 pm PDT, recorded in decisions.md)
+
+- **G257 ruled:** bare words never mask. "dr" or "rent" alone stay raw in rows and list names. Masking is only by the one existing check (a title plus a name like "Dr Patel", or an amount or sign for money). "Dr Pepper" stays raw.
+- **G258 ruled:** Groceries Done, Clear the basket and Lists Reset are named-action-only for VoiceOver, like G229 (double tap speaks the hint, the named action completes). UNDO 10 s for each.
+- **G250 ruled:** one shared Tess line with UNDO on every full-screen layer, including Groceries with items in the basket and Lists. One app-wide UNDO slot.
+- **G249 ruled:** his own touches keep their haptic in Low Power and in quiet hours (as G223); only Tess-initiated landings follow quiet hours. Weights: check and uncheck light, Done and Clear success, Reset medium.
+- **G247 ruled:** in Low Power the zoom into a screen is a 150 ms crossfade.
+
+**Walk list note (QA, #941):** G250 is inferred from code (Lists and Groceries reply line hidden under the full-screen cover) and stays on the Mac walk list until seen on the phone or simulator.
