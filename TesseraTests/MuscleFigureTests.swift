@@ -49,4 +49,14 @@ struct MuscleFigureTests {
         #expect(MuscleFigure.hit(off, in: size, regions: MuscleFigureArt.frontRegions, roles: roles) == nil)
         #expect(MuscleFigure.hit(left, in: size, regions: MuscleFigureArt.frontRegions, roles: [:]) == nil)
     }
+
+    @Test func theShownWordsFollowDesignsLabelMapAndTheStoredNameNeverChanges() {
+        #expect(MuscleWords.shown("Adductors") == "Inner thighs")
+        #expect(MuscleWords.shown("Abductors") == "Outer hips")
+        #expect(MuscleWords.shown("Front Delts") == "Front shoulders")
+        #expect(MuscleWords.shown("Chest") == "Chest")
+        #expect(MuscleWords.works(["Chest", "Front Delts", "Side Delts", "Triceps"])
+            == "Works chest, shoulders and triceps")
+        #expect(MuscleWords.works([]) == "")
+    }
 }

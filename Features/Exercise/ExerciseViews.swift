@@ -236,24 +236,26 @@ private struct MuscleList: View {
         }
     }
 
-    /// Both sides, always drawn side by side (no flip), under the rows (board 84). Not drawn at a text size too
-    /// large for the figure to clear the words.
-    @ViewBuilder private var figures: some View {
-        if !typeSize.isAccessibilitySize {
-            let muscles = rows.map { (name: $0.name, role: MuscleRole($0.role)) }
-            HStack(spacing: Theme.Spacing.m) {
-                ForEach([false, true], id: \.self) { back in
-                    MuscleFigure(back: back, roles: MuscleFigureMap.roles(muscles, back: back)) { regionID in
-                        if let row = rows.first(where: { MuscleFigureMap.matches($0.name, regionID: regionID) }) {
-                            model.open(.object(row.id))
-                        }
-                    }
-                    .frame(maxWidth: 166)
-                }
+    /// Both sides, always drawn side by side (no flip), under the rows (board 84). At accessibility text sizes they
+    /// shrink to 220 tall and the rows above stack (imagery-88.md). VoiceOver reads them as one element.
+    private var figures: some View {
+        let muscles = rows.map { (name: $0.name, role: MuscleRole($0.role)) }
+        let spoken = MuscleWords.works(rows.map(\.name))
+        return HStack(spacing: Theme.Spacing.m) {
+            ForEach([false, true], id: \.self) { back in
+                MuscleFigure(back: back, roles: MuscleFigureMap.roles(muscles, back: back),
+                             onTap: { regionID in
+                                 if let row = rows
+                                     .first(where: { MuscleFigureMap.matches($0.name, regionID: regionID) })
+                                 {
+                                     model.open(.object(row.id))
+                                 }
+                             },
+                             spoken: back ? "" : spoken)
+                    .frame(maxWidth: typeSize.isAccessibilitySize ? 220 * 200 / 440 : 166)
             }
-            .frame(maxWidth: .infinity)
-            .transition(.opacity)
         }
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -278,7 +280,7 @@ private struct MuscleRowView: View {
                          seed: index)
                     .opacity(primary ? 1 : 0.7)
                     .frame(width: 34, alignment: .leading)
-                Text(row.name)
+                Text(MuscleWords.shown(row.name))
                     .textRole(.bodyStrong)
                     .foregroundStyle(Theme.Colors.ink)
                 Spacer(minLength: Theme.Spacing.s)
@@ -292,8 +294,8 @@ private struct MuscleRowView: View {
         .buttonStyle(HandleButtonStyle())
         .modifier(ZoomSource(id: Route.object(row.id), namespace: namespace))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(row.name), \(ExerciseWords.role(row.role))")
-        .accessibilityHint("Opens \(row.name)")
+        .accessibilityLabel("\(MuscleWords.shown(row.name)), \(ExerciseWords.role(row.role))")
+        .accessibilityHint("Opens \(MuscleWords.shown(row.name))")
         .accessibilityAddTraits(.isButton)
     }
 }

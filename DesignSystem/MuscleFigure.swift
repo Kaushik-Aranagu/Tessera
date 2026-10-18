@@ -53,6 +53,36 @@ enum FigurePath {
     }
 }
 
+/// The phone stores 18 muscle names; the rows, the figure's VoiceOver line and the Routine line show plain US words
+/// (imagery-88.md, "Muscle label map"). The stored name never changes; only what is shown does.
+enum MuscleWords {
+    static func shown(_ stored: String) -> String {
+        switch stored.lowercased() {
+        case "front delts": "Front shoulders"
+        case "side delts": "Side shoulders"
+        case "rear delts": "Rear shoulders"
+        case "upper back": "Upper back"
+        case "lower back": "Lower back"
+        case "adductors": "Inner thighs"
+        case "abductors": "Outer hips"
+        default: stored
+        }
+    }
+
+    /// "Works chest, shoulders and triceps": the three shoulder names fold into "shoulders", in the shown words.
+    static func works(_ stored: [String]) -> String {
+        var words: [String] = []
+        for name in stored {
+            let shown = shown(name)
+            let word = shown.hasSuffix("shoulders") ? "shoulders" : shown.lowercased()
+            if !words.contains(word) {
+                words.append(word)
+            }
+        }
+        return words.isEmpty ? "" : "Works \(words.formatted(.list(type: .and)))"
+    }
+}
+
 /// Region ids are the stored muscle names without spaces; Side Delts has no region of its own and rides the delt
 /// that shows on that side.
 enum MuscleFigureMap {
@@ -92,6 +122,8 @@ struct MuscleFigure: View {
     var tint: Color = Theme.Colors.training
     /// Tapping a worked part opens that muscle (the same open as its row); nil when nothing handles taps.
     var onTap: ((String) -> Void)?
+    /// The one VoiceOver line for the whole figure ("Works chest, shoulders and triceps"); empty hides it.
+    var spoken = ""
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -119,7 +151,7 @@ struct MuscleFigure: View {
         }
         .aspectRatio(200.0 / 440.0, contentMode: .fit)
         .tesseraAnimation(.easeOut(duration: 0.26), value: roles.map { "\($0.key)\($0.value)" }.sorted())
-        .accessibilityHidden(true)
+        .modifier(FigureAccessibility(spoken: spoken))
     }
 
     private var figure: some View {
@@ -174,5 +206,18 @@ struct MuscleFigure: View {
             }
         }
         return best?.id
+    }
+}
+
+/// VoiceOver reads the figure as one element (regions are not separate stops); no line means hidden.
+private struct FigureAccessibility: ViewModifier {
+    let spoken: String
+
+    func body(content: Content) -> some View {
+        if spoken.isEmpty {
+            content.accessibilityHidden(true)
+        } else {
+            content.accessibilityElement(children: .ignore).accessibilityLabel(spoken)
+        }
     }
 }
