@@ -38,7 +38,7 @@ Lab spec to pair with Kitchen's gap hunt 22 (no hunt 22 file exists yet; this is
 |---|---|---|---|
 | The row | "Export" label word + "This file hides your private things." (as built), arrives with order 5 | fade | none |
 | Tap EXPORT | Face ID first (ruled: required before an export leaves the app), then the system share sheet (as SAVE A COPY, `BackupView.swift:184`); no custom progress (a file this size needs none) | same | none |
-| Written | shared line "Backup, saved." with no UNDO (a file already shared cannot be taken back) *(lab default: receipts name the thing first)* | fade | `.made` once |
+| Written | shared line "Backup, saved." with no UNDO (a file already shared cannot be taken back) *(ruled; receipts name the thing first)* | fade | `.made` once |
 | Write fails | "Didn't save that. Try again." | fade | one `.notSaved` |
 | Opening an export file to restore | the masked warning: "This file hides your private things, so they will not come back. Restore from Backups to keep them." with RESTORE / CANCEL; opens in place, 150 ms | fade | none; RESTORE is a tap key (not a hold) |
 Private words never appear in the row, the receipt or a VoiceOver label; the file is the masked one (DEC:35, 1041, G196/G198).
