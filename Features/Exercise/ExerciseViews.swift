@@ -214,6 +214,8 @@ private struct RepMaxGrid: View {
 private struct MuscleList: View {
     let rows: [ExerciseDigest.MuscleRow]
     let token: Int
+    @Environment(AppModel.self) private var model
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         if rows.isEmpty {
@@ -223,12 +225,41 @@ private struct MuscleList: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.top, Theme.Spacing.s)
         } else {
-            LazyVStack(spacing: 0) {
-                ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
-                    MuscleRowView(row: row, index: index).riseIn(index, token: token, stagger: 0.04)
+            VStack(spacing: Theme.Spacing.l) {
+                LazyVStack(spacing: 0) {
+                    ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
+                        MuscleRowView(row: row, index: index).riseIn(index, token: token, stagger: 0.04)
+                    }
                 }
+                figures
             }
         }
+    }
+
+    /// Both sides, always drawn side by side (no flip), under the rows (board 84). Not drawn at a text size too
+    /// large for the figure to clear the words.
+    @ViewBuilder private var figures: some View {
+        if !typeSize.isAccessibilitySize {
+            let muscles = rows.map { (name: $0.name, role: MuscleRole($0.role)) }
+            HStack(spacing: Theme.Spacing.m) {
+                ForEach([false, true], id: \.self) { back in
+                    MuscleFigure(back: back, roles: MuscleFigureMap.roles(muscles, back: back)) { regionID in
+                        if let row = rows.first(where: { MuscleFigureMap.matches($0.name, regionID: regionID) }) {
+                            model.open(.object(row.id))
+                        }
+                    }
+                    .frame(maxWidth: 166)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .transition(.opacity)
+        }
+    }
+}
+
+private extension MuscleRole {
+    init(_ role: ExerciseDigest.Role) {
+        self = role == .primary ? .primary : .secondary
     }
 }
 
