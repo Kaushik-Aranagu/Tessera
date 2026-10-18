@@ -49,7 +49,7 @@ Sheet 88 rule: an image is information or identity, small, on the phone, never d
 | K30.12 | Dark | Open a Private recipe in Obsidian and in Porcelain | Plain ground in both: no photo, no plate. Zero requests for its image at Save (P17); making a recipe Private deletes its stored photo |
 | K30.13 | Dynamic Type AX3 | Open a recipe with a photo at AX3 | The plate stays 393 x 56 pt (points, not scaled); the title and rows move down under it; Tess's band at 686 to 820 and the page's 50 pt fade from 686 are unchanged |
 | K30.14 | VoiceOver | Focus a recipe with a photo, then one with no photo | Photo: one image read right after the title, "Photo of Sheet-pan paprika chicken, from budgetbytes.com". No photo: no plate, no stop. The empty class page has no image stop |
-| K30.15 | Scope | Open Groceries, Pantry, Lists, Paste and cook mode | No image or drawing on any of them (P12). The Ingredient page has no plate or pocket (drawn stand-in withdrawn, Kaushik 1:29 AM Oct 18); the Kitchen medium widget wash is open for Product (`kitchen-standin-sweep-oct18.md`) and is never a photo |
+| K30.15 | Scope | Open Groceries, Pantry, Lists, Paste and cook mode | No image or drawing on any of them (P12). The Ingredient page has no plate or pocket (drawn stand-in withdrawn, Kaushik 1:29 AM Oct 18); the Kitchen medium widget wash is withdrawn too (Product ruled, Oct 18) (`kitchen-standin-sweep-oct18.md`) and is never a photo |
 
 ---
 

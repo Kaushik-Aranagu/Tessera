@@ -21,7 +21,7 @@
 | P8 | WITHDRAWN (drawn stand-in withdrawn, Kaushik 1:29 AM Oct 18): no seeded wash exists; the photo, when there is one, is stored once and costs no refetch |
 | P9 | VoiceOver reads a photo as one image after the title: "Photo of Sheet-pan paprika chicken, from budgetbytes.com"; with no photo there is no image stop; an Ingredient has no plate |
 | P10 | Dynamic Type does not scale the plate; the title and rows move down under it as text grows, and Tess's band and the page's fade are unchanged |
-| P11 | OPEN FOR PRODUCT (widget wash is ingredient pigment; `kitchen-standin-sweep-oct18.md`): the Kitchen medium widget carries a 10 pt wash on its top edge and never a photo; small and quiet widgets are plain; tinted and clear modes drop it |
+| P11 | WITHDRAWN (Product ruled, Oct 18: widget wash withdrawn, plain ground; `kitchen-standin-sweep-oct18.md`); was: the Kitchen medium widget carries a 10 pt wash on its top edge and never a photo; small and quiet widgets are plain; tinted and clear modes drop it |
 | P12 | No image and no drawing appears on Groceries, Pantry, Lists, Paste, cook mode or any Kitchen side; the Recipe's own photo is the only Kitchen image (drawn stand-in withdrawn, Kaushik 1:29 AM Oct 18) |
 | P13 | Never summed, never private: nothing on the plate carries nutrition, a price or a note (`never-sums-audit.md`) |
 | P14 | Image fetch fails (timeout, 404, 5xx, offline, DNS error): the recipe still saves and shows no plate (P3). No error line, no retry loop and no second request; Tess says nothing about the image. A re-save from the link is the only refresh |

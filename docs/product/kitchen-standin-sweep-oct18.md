@@ -64,3 +64,10 @@ Code:
 - `TesseraTests/PlateWashTests.swift:7` (tests the wash).
 - Nothing outside those three files calls ObjectPlate or PlateWash today (grep across `*.swift`), so no Recipe, Ingredient, Groceries or Pantry screen draws a stand-in yet; the risk is Builder B wiring it. Brief for Builder B: ObjectPocket for a Recipe is photo only, nil otherwise; no Ingredient pocket.
 - No `Image(systemName:)` or `systemImage` food glyph found in `Features/Groceries`, `Features/Kitchen`, `Features/Recipes`, `Features/Lists`.
+
+## Rulings in (Product, Oct 18)
+
+1. Widget wash withdrawn too; the Kitchen widget is plain ground. Widget rows KW-W1, W2, W9 to W13, W15, W16, W18, recipe-plate P11 and K30.15 now read WITHDRAWN.
+2. Ingredient.colour: no readers and no new writes; the column stays (additive migrations). ingredient-colours.md is marked withdrawn.
+3. The Dynamic Island Kitchen mark (K41.10) stays.
+4. Dead code deletion (ObjectPlate, PlateWash, PlateWashTests) is boarded for Builder B.
