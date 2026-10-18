@@ -193,7 +193,7 @@ struct GrammarTraceTests {
             case .groceries: "groceries"
             case .cook: "cook"
             case .timer: "timer"
-            case .list: "list"
+            case .list, .copyList: "list"
             case .task: "task"
             case .lift, .set, .sets: "lift"
             case .note, .privateNote: "note"

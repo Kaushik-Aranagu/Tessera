@@ -185,6 +185,8 @@ final class AppModel {
             // The first launch with the restWeekday reader: Sunday, as one op with UNDO ("Sunday, rest day.";
             // Research 146). Once; an UNDO or a later "Any" leaves a record, so it is never written twice.
             restReceipt = SettingsStore(engine: engine).writeFirstRestWeekday(defaults: launchDefaults)
+            // The three starter lists (Gym bag, Leaving the house, Packing): once each, never put back after a delete.
+            _ = try? StarterLists.installIfNeeded(store: store, classes: classes)
         }
         runtime = TesseraRuntime(engine: engine)
         soul.runScript()

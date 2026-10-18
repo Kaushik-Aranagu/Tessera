@@ -431,6 +431,13 @@ public final class TessCaptureEngine: TessCapturing {
                 return (record, "\(shown), already a list.")
             }
             return (record, "\(shown), new list.")
+        case let .copyList(source, name):
+            // The source by his words (G40: two matches write nothing and ask which). The copy is the source's name,
+            // then his word: "copy packing for lisbon" makes "Packing, Lisbon" (Product's final ruling).
+            let from = try ListLookup.find(source, store: engine.store, classes: engine.classes)
+            let result = try engine.perform(CopyList(list: from.id, name: "\(from.title), \(name)"), by: .tess,
+                                            pending: pending)
+            return (result.record, (result.record.receipt ?? "Copied") + ".")
         case .shop:
             let record = try engine.perform(StartShop(), by: .tess, pending: pending).record
             let line = Groceries(store: engine.store, classes: engine.classes).shoppingLine()
@@ -511,6 +518,10 @@ public final class TessCaptureEngine: TessCapturing {
     }
 
     static func line(for error: any Error) -> String {
+        // A lookup that found no list, or two (G40): its own words, nothing written.
+        if let lookup = error as? TessToolError {
+            return lookup.description
+        }
         if case let ActionError.invalidArguments(_, reason) = error {
             // A running workout is never suspended from the Bar: the refusal is the line itself (G56, QA on #788).
             if reason == StartCooking.workoutRunningReason {
