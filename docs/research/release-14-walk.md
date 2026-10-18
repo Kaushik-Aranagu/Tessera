@@ -5,7 +5,7 @@ reachable. Release 14 is everything on master since 13, so install 13's page fir
 Read Sat Oct 17 from the PR diffs (GitHub) and git history. Nothing was built or run. Exact lines are quoted only
 where the code has them.
 
-PRs 864, 866 and 867 are merged and already on master. PRs 564, 868, 871, 884, 885, 886 and 890 are open (re-read Sun Oct 18, none merged, every head SHA below unchanged
+PRs 864, 866, 867 and 871 are merged and already on master (#871 as `4a265e0e`; re-traced Oct 18 against master `962aa6cb`). PRs 564, 868, 884, 885, 886 and 890 were open at the Oct 18 read (head SHAs below unchanged
 since the first read except the two new ones): everything marked "if merged" below only appears if that PR lands
 before release 14 is cut.
 
@@ -17,17 +17,16 @@ before release 14 is cut.
   behind it.
 - **The fold drains from full ink.** Resetting a done fold no longer starts with a dim flash; the strike shortens
   right to left.
-- **Copy a list (if merged, #871).** Type "copy packing for lisbon". You get a new list with Packing's items, all open.
+- **Copy a list (merged, #871).** Type "copy packing for lisbon". You get a new list with Packing's items, all open.
   The line reads "Packing, Lisbon, new list." (the new list is named "Packing, Lisbon"). Say it again and it opens
   that list: "Packing, Lisbon, already a list."
   Try: type "copy packing for lisbon", then UNDO.
-- **Two lists match (if merged, #871).** "copy trip for lisbon" with Trip one and Trip two says "More than one list like
+- **Two lists match (merged, #871).** "copy trip for lisbon" with Trip one and Trip two says "More than one list like
   trip." and writes nothing. A word that is not one of your lists is not a copy ("copy the report to dad" stays a task).
-- **Three starter lists (if merged, #871).** Gym bag, Leaving the house and Packing appear once, reusable, items open.
+- **Three starter lists (merged, #871).** Gym bag, Leaving the house and Packing appear once, reusable, items open.
   Delete one and it stays gone.
-- **A list name with a secret word or a key is refused** (if merged, #871), for new lists and copies alike.
-- **Copy without the phrase (merged, #866).** The copy exists in the engine and the day log ("New list:"), but nothing
-  you can type reaches it in this build unless #871 lands.
+- **A list name with a secret word or a key is refused** (merged, #871), for new lists and copies alike.
+- **Copy without the phrase (merged, #866).** The copy exists in the engine and the day log ("New list:"); with #871 merged, "copy packing for lisbon" reaches it.
 
 ## Recipes
 - **A name with a number stays a name (if merged, #886).** Pasting "30-Minute Dal" or "7 Layer Dip" gives a recipe
@@ -70,7 +69,7 @@ before release 14 is cut.
 A stored number that is NaN, infinite or past 1e15 now reads as no value everywhere, so no screen can crash on it.
 
 ## Not on screen
-Starter lists need an app launch to appear (if #871). The test-only flags in #564 (`-wallsSpy`, `-wallsSeedPrivate`)
+Starter lists need an app launch to appear (#871, merged). The test-only flags in #564 (`-wallsSpy`, `-wallsSeedPrivate`)
 do nothing on the phone.
 
 ---
@@ -84,14 +83,14 @@ Merged rows are on master now. Open rows carry "if merged" and the head SHA read
 |---|---|---|---|---|---|---|
 | W1 | #864 merged (350ac0a) | Any screen reading a stored number: routine editor rep range, a task's length, Prefill, rest weekday | Nothing changes for normal numbers (12 reads 12) | A crash or trap on a NaN, infinity or huge stored value | traced (`FieldValue.numericValue` guard, tests in ObjectModelTests) | none |
 | W2 | #864 | Groceries after two shops | Two shop clears counted after the second shop | Stale count (cache) | traced (ShopClearsTests, package only) | none |
-| W3 | #866 merged (88e1395) | Day log after a copy | "New list: Lisbon" | The source's private title; a "New list" line for a repeat | traced (DayStoryTests) but unreachable from the UI without #871 | none |
-| W4 | #866 | Typing "copy packing for lisbon" in the Ask bar | on master alone: no copy (no grammar rule); Tess falls through as before | A new list | inferred (grammar rule only in #871) | none |
+| W3 | #866 merged (88e1395) | Day log after a copy | "New list: Lisbon" | The source's private title; a "New list" line for a repeat | traced (DayStoryTests); reachable from the Ask bar now that #871 is merged | none |
+| W4 | #866 | Typing "copy packing for lisbon" in the Ask bar | #871 merged: a new list "Packing, Lisbon" (grammar rule `TessGrammar+Kitchen.swift:44-51`); before it, no copy | A list named "Lisbon" | traced (`StarterListsTests.swift:42-46`) | none |
 | W5 | #867 merged (f656f2b) | Pick one list, VoiceOver on, two-finger scrub | The pick closes | The pick staying open | traced (`.accessibilityAction(.escape)` in ListsPick.swift); needs device or simulator with VoiceOver | none |
 | W6 | #867 | Pick one: swipe to pick again, tap outside inside 200 ms | Stays closed | A new pick opening | traced (`guard picking != nil`) | none |
 | W7 | #867 | List page while a pick is up | Done fold dimmed to 14% with the page; page hidden from VoiceOver | A bright done fold | traced (opacity, blur, `accessibilityHidden` moved after safeAreaInset) | none |
 | W8 | #867 | Reset a done fold | Full ink text, strike shortens right to left | A dim flash at the start | traced (`FoldDrainRenderer`); Mac-only visual check | none |
 | W9 | #867 | Hold on Pick one name; send a recipe to Groceries | Animations follow Reduce Motion | Motion with Reduce Motion on | traced (`withTesseraAnimation`) | none |
-| W10 | #871 open (34fc965), if merged | Ask bar: "copy packing for lisbon" (starters installed) | "Packing, Lisbon, new list." and a list "Packing, Lisbon" with 11 open items; UNDO removes it | A list named plain "Lisbon" (the PR text says "Lisbon, copied from Packing."; the diff and tests say otherwise) | traced (StarterListsTests) | none |
+| W10 | #871 merged (`4a265e0e`; head was 34fc965) | Ask bar: "copy packing for lisbon" (starters installed) | "Packing, Lisbon, new list." and a list "Packing, Lisbon" with 11 open items; UNDO removes it | A list named plain "Lisbon" (the PR text says "Lisbon, copied from Packing."; the diff and tests say otherwise) | traced (StarterListsTests) | none |
 | W11 | #871 | Same phrase again | "Packing, Lisbon, already a list." and still one such list | A second copy | traced | none |
 | W12 | #871 | "copy trip for lisbon" with Trip one and Trip two | "More than one list like trip." and nothing written | A new list | traced | none |
 | W13 | #871 | "copy costco for lisbon", "copy the report to dad" | Read as before (task or miss) | "no list called costco" | traced (test asserts it is NOT said; the PR text says otherwise) | none |
@@ -137,10 +136,10 @@ Merged rows are on master now. Open rows carry "if merged" and the head SHA read
 
 ## Notes for the walk
 
-- **Merged versus open.** Merged: #864, #866, #867. Open: #564 (18 commits, conflicts cleared, mergeable_state clean at
-  read), #868, #871, #884, #885, #886, #890. W34 to W51 were added Sun Oct 18 for #885 (339ebeb) and #890
+- **Merged versus open.** Merged: #864, #866, #867, #871. Open at the Oct 18 read: #564 (18 commits, conflicts cleared, mergeable_state clean at
+  read), #868, #884, #885, #886, #890. W34 to W51 were added Sun Oct 18 for #885 (339ebeb) and #890
   (3980906) and for the rulings of 3:38 PM, 4:20 PM, 4:22 PM, 4:25 PM, 4:35 PM, 4:50 PM and 5:30 PM Oct 17.
-  Re-read Oct 18: #564 7219247, #868 b574dec, #871 34fc965, #884 5665c60, #886 5bbd506, all still open and unchanged. The whole merged range since 13 (bbadf141) is 52 commits, 18 merges; every other
+  Re-read Oct 18: #564 7219247, #868 b574dec, #871 34fc965, #884 5665c60, #886 5bbd506, all then open and unchanged; #871 has since merged. The whole merged range since 13 (bbadf141) is 52 commits, 18 merges; every other
   merge is Research or Ops docs, so release 14 on master alone changes the app only through #864, #866, #867.
 - **Rulings that change the walk.** (a) Tap-to-reveal is removed on all four surfaces (4:20 PM item 7, 4:25 PM): #885
   does three of them (W34 to W37); the recipe page is W38. (b) One title rule (4:20 PM item 1, 4:25 PM): #886 matches
@@ -156,8 +155,8 @@ Merged rows are on master now. Open rows carry "if merged" and the head SHA read
 - **Mac-only checks, added.** #885 is SwiftUI (W34 to W37: simulator, VoiceOver for W35 and W36). #890 and #886 are
   package tests only (`swift test` in TesseraCore, 912 and 911 per their text).
 - **#866 and #871 disagree with their own PR text.** #866's body promises "Lisbon, copied from Packing." (merged
-  code prints exactly that). #871 changes it to "Packing, Lisbon, new list." and names the copy "Packing, Lisbon".
-  Walk to the diff, not the PR text. If #871 does not merge, #866 stays unreachable from the UI.
+  code prints exactly that for the engine action alone). #871 (merged) changes the phrase path to "Packing, Lisbon, new list." and names the copy "Packing, Lisbon" by composing the name in `TessCaptureEngine.swift:435`.
+  Walk to the diff, not the PR text.
 - **Mac-only checks.** #864 and #871 touch app files (`AppModel.swift`), so they need an app build. #867 is
   SwiftUI and VoiceOver (W5 to W9): simulator or device only. #564's WallsUITests runs about 12 minutes on a
   simulator and needs `scripts/test.sh --app-only`. #868's test is app-target and compiles for the device per its text.
