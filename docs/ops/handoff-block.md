@@ -57,6 +57,7 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
 - Brief update in your thread every 2 to 3 hours that ends with what you need from him; a daily presentation of today, next and the week (Oct 16, 8:20 PM PT) (cmsg_01VTPva3JGXrfvetgUvAWE7MQvAYv1ZP13asD93vc8YGGY)
 - A fresh thread must know it continues another chat and have breadcrumbs to old conversations and rules (Oct 17, 12:18 PM PT) (cmsg_01VTPva3JGXrfvetgUvAWE7MEAkdcHifViwJXzLz4XeVnh)
 - Coordinator's how-we-work rule, 9:30 PM PT Oct 17 (not Kaushik's words): authors send PRs to QA and do not copy the coordinator; QA sends the coordinator verdicts, batched when several land close together; leads message the coordinator only for Mac relays, blockers, rotations and rulings, plus the 3-hourly updates in their own threads; no "ready to merge" note once QA has sent the verdict.
+- Coordinator's merge rule, 10 PM PT Oct 17 (not Kaushik's words): leads never merge. Only the coordinator's merge workers merge, using the merge recipe and a pinned head, after QA's verdict. (Kaushik's rule above means he never has to merge; the workers do it.) Tonight a lead squash-merged #953 with no head pin and no premerge check; the audit was clean but skipped the recipe.
 
 ### Product
 - Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7M9buvsufEBhXZqJtov6ZY72; old session cse_013bC75Wtuv4sc7B2EmqcXVZ.

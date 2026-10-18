@@ -33,3 +33,6 @@ Visible total about $28.7 per hour [M]. Mac teams (Core, Builder A, Builder B) a
 ## Open [I]
 - Dollar-to-percent fit is stale (usage-governor.md section 3: week 100% about $8k to $11k, from Oct 16). It should be refit from this morning's reading before the refit is proposed.
 - Mac teams' spend is invisible here; the meter already includes them.
+
+## Update 10:45 PM PT Oct 17 [M, relayed by Product]
+Week 83% at about 10:00 PM, then about 1.3% per hour at 10:42 PM against about 2.7% per hour room: the coordinator asked Product for a one-lane trim at 10 PM, then Product reopened a second (gap) lane at 10:43 PM. Master efb867b8 at 10:00 PM after #955 to #959. The trim and the reopen show the swing: burn moves with how many lanes are active, so the reset-time refit should use per-lane cost, not the hourly average.
