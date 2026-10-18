@@ -37,7 +37,7 @@ private struct GroceriesPage: View {
     @State private var basketTarget: CGPoint = .zero
     @State private var breathe = false
     @State private var landed = 0
-    /// SHOP mode's private rows (B8): masked until tapped, masked again when the trip ends.
+    /// SHOP mode's rows: a private one is always masked (G102).
     @State private var trip = ShopTrip()
     @FocusState private var writing: Bool
 
@@ -427,7 +427,7 @@ private struct AisleSection: View {
     let items: [ListContents.Item]
     let striking: Set<UUID>
     let recipes: (ListContents.Item) -> [String]
-    /// What each row reads (a private one: "Private item" until tapped).
+    /// What each row reads: a private one is always masked (G102).
     let label: (ListContents.Item) -> String
     let onTap: (ListContents.Item) -> Void
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -459,8 +459,8 @@ private struct GroceryRow: View {
     let isStriking: Bool
     let recipes: [String]
     var height: CGFloat = 48
-    /// The words to show in place of the item's own (SHOP mode's "Private item").
-    var name: String?
+    /// The words the row shows, already masked at the source ("Private item" for a private one); never the raw text.
+    let name: String
     let onTap: () -> Void
     @State private var showsRecipes = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -470,7 +470,7 @@ private struct GroceryRow: View {
             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                 HStack(alignment: .firstTextBaseline, spacing: Theme.Spacing.s) {
                     (Text(item.quantity.map { "\($0) " } ?? "").fontWeight(.semibold)
-                        + Text(name ?? GroceriesCopy.name(item)).fontWeight(.regular))
+                        + Text(name).fontWeight(.regular))
                         .textRole(.body)
                         .foregroundStyle(Theme.Colors.ink)
                         // A long name wraps, never cut (K36.19, the AX rule).
@@ -517,7 +517,7 @@ private struct AtTheShop: View {
     let aisles: [(aisle: String, items: [ListContents.Item])]
     let striking: Set<UUID>
     let recipes: (ListContents.Item) -> [String]
-    /// What each row reads (a private one: "Private item" until tapped).
+    /// What each row reads: a private one is always masked (G102).
     let label: (ListContents.Item) -> String
     let onTap: (ListContents.Item) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
