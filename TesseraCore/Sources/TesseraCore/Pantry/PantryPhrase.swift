@@ -20,8 +20,6 @@ public struct PantryPhrase: Equatable {
     /// The names as typed, trimmed of fillers. Empty for `.open`.
     public let items: [String]
 
-    static let fillerLead = #"^(?:(?:some|any|more|the|my|our|enough|all the|a bit of)\s+)+"#
-    static let fillerTail = #"(?:\s+(?:again|now|today|too|as well|already|right now))+$"#
     static let openWords: Set<String> = ["pantry", "open pantry", "show pantry", "what's out", "whats out",
                                          "what am i out of", "what do i have"]
 
@@ -67,7 +65,8 @@ public struct PantryPhrase: Equatable {
         var result: [String] = []
         for part in parts {
             var name = part.trimmingCharacters(in: .whitespaces)
-            name = name.replacing(try! Regex(fillerLead), with: "").replacing(try! Regex(fillerTail), with: "")
+            name = name.replacing(/^(?:(?:some|any|more|the|my|our|enough|all the|a bit of)\s+)+/, with: "")
+                .replacing(/(?:\s+(?:again|now|today|too|as well|already|right now))+$/, with: "")
                 .trimmingCharacters(in: .whitespaces)
             // Never counts, quantities or articles: "have 2 lemons", "have a lemon", "out of 5".
             let withoutPercent = name.replacing(/\d+%/, with: "")
