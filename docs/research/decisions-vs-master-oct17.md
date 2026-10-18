@@ -8,9 +8,9 @@ Board citations are to `/mnt/project-files/tessera/ops/board/<file>:<line>`.
 
 | Verdict | Count |
 |---|---|
+| MATCH | 13 |
 | UNBUILT-KNOWN | 22 |
 | PARTIAL | 1 |
-| UNBUILT-KNOWN | 23 |
 | MISMATCH | 1 |
 | UNTRACEABLE | 2 |
 | Total rows | 39 |
