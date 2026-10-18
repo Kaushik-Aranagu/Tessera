@@ -11,6 +11,7 @@ public struct ClaudeTessModel: TessModel {
     static let maxTokens = 512
     /// The longest phrase sent to Claude, in characters.
     static let maxPhraseCharacters = 600
+    static let tooLongLine = "That's too long to send. Say it shorter."
     /// Tool rounds before Tess gives up on a phrase.
     static let maxRounds = 3
 
@@ -57,7 +58,7 @@ public struct ClaudeTessModel: TessModel {
         // A phrase past the cap never goes: Claude reads a sentence, not a page (a pasted recipe has its own path).
         guard request.text.count <= Self.maxPhraseCharacters else {
             // A refusal is its own answer: the long phrase is not logged as a miss either.
-            var refusal = TessCapture(records: [], line: "That's too long to send. Say it shorter.", source: .none)
+            var refusal = TessCapture(records: [], line: Self.tooLongLine, source: .none)
             refusal.isRefusal = true
             return .asked(refusal)
         }
