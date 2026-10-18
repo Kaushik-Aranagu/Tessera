@@ -3,11 +3,19 @@
 
 Usage: git diff --unified=0 --no-color BASE...HEAD | python3 scripts/ops/premerge_check.py [--kind auto|docs|code|scripts]
 
-Reads the diff on stdin and never touches the network, the shell or the repo. Prints findings as
+Reads the diff on stdin and never touches the network, the shell or the repo (the two optional files below are the only
+other reads). Prints findings as
 file:line plus a rule name, never the matched text. Exit 0 = clean (REPORT lines allowed), 1 = STOP.
 The tree-equality check lives in scripts/ops/tree_check.sh (it needs git).
+
+A changed pinned line is allowed only with a deliberate-change ruling: --pr-body FILE (the PR description) carries one
+line per removed pinned line, `PIN-CHANGE: <decisions stamp> | <path>:<old line number>`, and --decisions FILE (the
+decisions log as it stands on the base branch, never the PR head) must hold a bullet starting `- <stamp>` that names
+`<file name>:<old line number>`. Every removed pinned line needs its own ruling, and install-pin or release lines can
+never be ruled. Anything else stays a STOP. See docs/ops/premerge-pinned-lines.md.
 """
 import argparse
+import os
 import re
 import sys
 
@@ -20,15 +28,17 @@ DATA_SAFETY = ["ProcessInfo", "CommandLine", "LaunchFlags", "UserDefaults", "Fil
 PY_FORBIDDEN = re.compile(r"\b(subprocess|os\.system|socket|requests|pickle)\b|\b(exec|eval)\(")
 PY_IMPORT = re.compile(r"^\s*(?:import|from)\s+([A-Za-z_][\w.]*)")
 PIN_RE = re.compile(r"(?i)(^|\W)(PIN|only[- ]SHA)\b")
+RULING_RE = re.compile(r"^\s*PIN-CHANGE:\s*(.+?)\s*\|\s*(\S+?):(\d+)\s*$")
+INSTALL_RE = re.compile(r"(?i)\b(install\w*|release\w*|signing|profile|sha)\b|\b[0-9a-f]{7,40}\b")
 ALLOWED_ONLY_SHA = "Only a named pin or release SHA installs: never master by itself, never any other commit."
 
 
 def parse(diff):
     """Yield (path, status, [(line_no, text, added)]) per file."""
-    files, cur, new_line = [], None, 0
+    files, cur, new_line, old_line = [], None, 0, 0
     for raw in diff.splitlines():
         if raw.startswith("diff --git "):
-            cur = {"path": raw.split(" b/", 1)[-1], "status": "M", "added": [], "removed": []}
+            cur = {"path": raw.split(" b/", 1)[-1], "status": "M", "added": [], "removed": [], "removed_at": []}
             files.append(cur)
         elif cur is None:
             continue
@@ -41,6 +51,8 @@ def parse(diff):
         elif raw.startswith("@@"):
             m = re.search(r"\+(\d+)", raw)
             new_line = int(m.group(1)) if m else 0
+            mo = re.search(r"-(\d+)", raw)
+            old_line = int(mo.group(1)) if mo else 0
         elif raw.startswith("+++") or raw.startswith("---"):
             continue
         elif raw.startswith("+"):
@@ -48,7 +60,68 @@ def parse(diff):
             new_line += 1
         elif raw.startswith("-"):
             cur["removed"].append(raw[1:])
+            cur["removed_at"].append((old_line, raw[1:]))
+            old_line += 1
     return files
+
+
+def read_text(path):
+    """Read one named input file; None when no path was given or it cannot be read."""
+    if not path:
+        return None
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return fh.read()
+    except OSError:
+        return None
+
+
+def parse_rulings(body):
+    """PIN-CHANGE lines from the PR body as (stamp, path, old_line)."""
+    out = []
+    for raw in (body or "").splitlines():
+        m = RULING_RE.match(raw)
+        if m:
+            out.append((m.group(1).strip(), m.group(2), int(m.group(3))))
+    return out
+
+
+def entry_names(decisions, stamp, name, line_no):
+    """True when a decisions bullet starting `- <stamp>` names `<name>:<line_no>` before the next bullet or heading."""
+    if not decisions or not stamp:
+        return False
+    target = re.compile(r"(?<![\w.-])" + re.escape(name) + ":" + str(line_no) + r"(?!\d)")
+    head = re.compile(r"^- " + re.escape(stamp) + r"(?=[\s(:,]|$)")
+    block = None
+    for raw in decisions.splitlines():
+        if block is not None:
+            if raw.startswith(("- ", "#")):
+                if target.search(" ".join(block)):
+                    return True
+                block = None
+            else:
+                block.append(raw)
+                continue
+        if head.match(raw):
+            block = [raw]
+    return block is not None and bool(target.search(" ".join(block)))
+
+
+def pin_ruled(f, pin_old, pin_new, rulings, decisions):
+    """(stamp, old line) per removed pinned line when each has its own ruling that the base-branch decisions log
+    backs and no extra pinned line is added; an empty list otherwise."""
+    if not rulings or decisions is None or len(pin_new) > len(pin_old):
+        return []
+    used = []
+    for old_no, text in [(n, t) for n, t in f["removed_at"] if PIN_RE.search(t)]:
+        if INSTALL_RE.search(text):
+            return []
+        hit = [st for st, rp, rl in rulings
+               if rp == f["path"] and rl == old_no and entry_names(decisions, st, os.path.basename(rp), rl)]
+        if not hit:
+            return []
+        used.append((hit[0], old_no))
+    return used
 
 
 def kind_of(files):
@@ -64,7 +137,7 @@ def is_test(path):
     return "Tests/" in path or path.endswith(("Tests.swift", "Test.swift"))
 
 
-def check(files, kind):
+def check(files, kind, rulings=None, decisions=None):
     stops, reports = [], []
     if kind == "docs":
         for f in files:
@@ -91,10 +164,13 @@ def check(files, kind):
         if kind in ("docs", "scripts"):
             pin_old = [l for l in f["removed"] if PIN_RE.search(l)]
             pin_new = [l for l in f["added"] if PIN_RE.search(l[1])]
+            ruled = pin_ruled(f, pin_old, pin_new, rulings, decisions) if pin_old else []
+            for st, old_no in ruled:
+                reports.append((p, old_no, "pin: changed on purpose under decisions entry '%s' naming %s:%d; QA confirm" % (st, os.path.basename(p), old_no)))
             for _, text in pin_new:
                 if text.strip() == ALLOWED_ONLY_SHA:
                     continue
-                if pin_old:
+                if pin_old and not ruled:
                     stops.append((p, 0, "pin: PIN or only-SHA line changed; must be byte-identical"))
                     break
             else:
@@ -117,13 +193,15 @@ def check(files, kind):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--kind", default="auto", choices=["auto", "docs", "code", "scripts"])
+    ap.add_argument("--pr-body", default=None, help="file holding the PR description (PIN-CHANGE lines)")
+    ap.add_argument("--decisions", default=None, help="decisions log as on the base branch")
     args = ap.parse_args()
     files = parse(sys.stdin.read())
     if not files:
         print("STOP: empty diff on stdin")
         return 1
     kind = kind_of(files) if args.kind == "auto" else args.kind
-    stops, reports = check(files, kind)
+    stops, reports = check(files, kind, parse_rulings(read_text(args.pr_body)), read_text(args.decisions))
     print("kind=%s files=%d" % (kind, len(files)))
     for p, n, why in reports:
         print("REPORT %s:%d %s" % (p, n, why))
