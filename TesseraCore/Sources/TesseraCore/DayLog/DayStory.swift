@@ -479,7 +479,14 @@ public struct StoreDayLookup: DayLookup {
         {
             return ObjectPrivacy.cookTitle(object, in: store)
         }
-        return object.title
+        // A private workout, routine, list or list item reads its label in the story (QA on #895, G103/G104).
+        if let label = ObjectPrivacy.label(of: object, in: store, classes: classes),
+           let item = classes[.listItem], let classDef = object.classDef,
+           ClassResolver.isSubclass(classDef, of: item)
+        {
+            return label
+        }
+        return store.displayTitle(of: object)
     }
 
     public func kind(of id: UUID) -> String? {

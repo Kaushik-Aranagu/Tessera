@@ -189,12 +189,17 @@ private struct TrainingAtRest: View {
         .accessibilityHint("Opens \(title)")
     }
 
+    /// A routine's title as the room may see it ("Private workout" when the title is private).
+    private func shown(_ title: String) -> String {
+        ObjectPrivacy.routineTitle(title, in: model.store)
+    }
+
     private var titleAndRoute: (String, Route) {
         switch plan {
-        case let .routine(routine): (routine.title, .object(routine.id))
-        case let .scheduled(workout): (workout.title, .object(workout.id))
-        case let .running(session): (session.workout.title, .object(session.workout.id))
-        case let .done(summary): ("\(summary.title) done", .object(summary.workout.id))
+        case let .routine(routine): (shown(routine.title), .object(routine.id))
+        case let .scheduled(workout): (shown(workout.title), .object(workout.id))
+        case let .running(session): (session.shownTitle, .object(session.workout.id))
+        case let .done(summary): ("\(shown(summary.title)) done", .object(summary.workout.id))
         }
     }
 
@@ -232,13 +237,14 @@ private struct TrainingAtRest: View {
             if landed {
                 return .running
             }
-            return model.canStart(routine) ? .ready("Start \(routine.title)") : .label("Add an exercise to start")
+            return model
+                .canStart(routine) ? .ready("Start \(shown(routine.title))") : .label("Add an exercise to start")
         case let .scheduled(workout):
-            return landed ? .running : .ready("Start \(workout.title)")
+            return landed ? .running : .ready("Start \(shown(workout.title))")
         case let .running(session):
             let total = session.entries.reduce(0) { $0 + session.targetSets(of: $1) }
             let done = session.entries.reduce(0) { $0 + session.setRows(of: $1).count }
-            return .paused("Resume \(session.workout.title)", total > 0 ? Double(done) / Double(total) : 0)
+            return .paused("Resume \(session.shownTitle)", total > 0 ? Double(done) / Double(total) : 0)
         case .done:
             return .label(tomorrowLine)
         }
@@ -256,7 +262,7 @@ private struct TrainingAtRest: View {
         guard let next = plan.flatMap({ model.ledger.nextRoutine(in: $0, now: tomorrow) }) else {
             return "Done for today"
         }
-        return "\(next.title) tomorrow"
+        return "\(shown(next.title)) tomorrow"
     }
 
     private func stripState(_ lanes: [TrainingLane]) -> [TrainingStrip.Segment] {

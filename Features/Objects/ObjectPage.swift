@@ -152,7 +152,7 @@ private struct ClassBody: View {
             MarginSection(label: "Used in") {
                 VStack(spacing: 0) {
                     ForEach(workouts, id: \.workout.id) { item in
-                        ObjectRow(title: item.workout.title, route: .object(item.workout.id)) {
+                        ObjectRow(title: model.store.displayTitle(of: item.workout), route: .object(item.workout.id)) {
                             Text("×\(item.count)").textRole(.data).foregroundStyle(Theme.Colors.inkSecondary)
                         }
                     }
@@ -186,7 +186,7 @@ private struct ClassBody: View {
     private func uniqueWorkouts(_ history: [AppModel.SessionSummary]) -> [(workout: ObjectRecord, count: Int)] {
         var counts: [String: (ObjectRecord, Int)] = [:]
         for session in history {
-            let key = session.workout.title
+            let key = session.workout.title // grouped raw; shown through displayTitle
             counts[key] = (counts[key]?.0 ?? session.workout, (counts[key]?.1 ?? 0) + 1)
         }
         return counts.values.map { (workout: $0.0, count: $0.1) }.sorted { $0.count > $1.count }

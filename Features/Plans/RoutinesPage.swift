@@ -214,8 +214,8 @@ struct RoutinesPage: View {
                       let result = try? model.engine.perform(MoveRoutineInPlan(plan: plan.id, routine: routine.id,
                                                                                to: target), by: .user)
                 else { return }
-                said("\(routine.title) moved.", records: [result.record], haptic: .selection) {
-                    Receipt.takenBack(routine.title)
+                said("\(model.store.displayTitle(of: routine)) moved.", records: [result.record], haptic: .selection) {
+                    Receipt.takenBack(model.store.displayTitle(of: routine))
                 }
             }
     }
@@ -236,7 +236,7 @@ struct RoutinesPage: View {
     private func drop(_ routine: ObjectRecord) {
         guard let result = try? model.engine.perform(DropRoutineFromPlan(plan: plan.id, routine: routine.id),
                                                      by: .user) else { return }
-        let title = routine.title
+        let title = model.store.displayTitle(of: routine)
         said(Receipt.dropped(title), records: [result.record], haptic: .notNow) { Receipt.backOnPlan(title) }
     }
 
@@ -284,7 +284,7 @@ struct RoutineRow: View {
         } label: {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(alignment: .firstTextBaseline) {
-                    Text(routine.title)
+                    Text(model.store.displayTitle(of: routine))
                         .font(Theme.voice(size: 21).weight(.medium))
                         .foregroundStyle(Theme.Colors.ink)
                     Spacer(minLength: Theme.Spacing.s)
@@ -333,7 +333,7 @@ struct RoutineRow: View {
                 }
         )
         .accessibilityElement(children: .combine)
-        .accessibilityHint("Opens \(routine.title)")
+        .accessibilityHint("Opens \(model.store.displayTitle(of: routine))")
         .accessibilityAction(named: "Drop from the plan", onDrop)
     }
 

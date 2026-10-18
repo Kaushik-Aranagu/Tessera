@@ -432,7 +432,7 @@ private struct ListPage: View {
         }
         guard let record = attempt.record else { return }
         model.touch()
-        let title = model.store.displayTitle(of: list)
+        let title = model.store.rawTitle(of: list)
         let shown = ListsShelf.shownName(title, lastWeightKg: BodyWeight.lastKg(in: model.store))
         guard let receipt = record.receipt else { return }
         TessVoice.shared.say(ListsCopy.spoken(receipt: receipt, listTitle: title, shownList: shown), undo: record,

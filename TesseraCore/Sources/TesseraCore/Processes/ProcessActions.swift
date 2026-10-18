@@ -147,8 +147,11 @@ public struct ResumeProcess: EngineAction {
     public func apply(_ transaction: inout Transaction) throws {
         let process = try transaction.object(process, is: .process)
         let now = time ?? .now
-        try transaction.refuseWhileWorkoutRuns(except: process.id, for: transaction.store.linkedObjects("subject", of: process).first,
-                                               action: Self.descriptor.name)
+        try transaction.refuseWhileWorkoutRuns(
+            except: process.id,
+            for: transaction.store.linkedObjects("subject", of: process).first,
+            action: Self.descriptor.name
+        )
         try transaction.makeRunning(process, at: now)
         try transaction.set("lastTouchedAt", to: .date(now), on: process)
     }

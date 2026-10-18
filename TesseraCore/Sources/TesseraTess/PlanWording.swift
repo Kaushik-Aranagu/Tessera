@@ -38,7 +38,7 @@ public struct PlanPack: Sendable, Equatable {
     /// or "Pay Dr Lee" goes as "task".
     static let privateLabels: Set<String> = Set([
         "Private recipe", "Private task", "Private note", "Private item", "Private memory",
-        ObjectPrivacy.noteLabel, ObjectPrivacy.taskLabel, ObjectPrivacy.memoryLabel, ObjectPrivacy.keptNoteLabel,
+        ObjectPrivacy.noteLabel, ObjectPrivacy.taskLabel, ObjectPrivacy.routineLabel, ObjectPrivacy.listLabel, ObjectPrivacy.memoryLabel, ObjectPrivacy.keptNoteLabel,
     ].map { $0.lowercased() })
 
     static func isPrivate(_ title: String, lastWeightKg: Double?) -> Bool {

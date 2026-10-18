@@ -81,7 +81,7 @@ public struct RoutineQuery: EntityStringQuery {
         await MainActor.run {
             identifiers.compactMap { id in
                 guard let routine = runtime.store.object(id: id), !routine.isDeleted else { return nil }
-                return RoutineEntity(id: routine.id, title: routine.title)
+                return RoutineEntity(id: routine.id, title: runtime.store.displayTitle(of: routine))
             }
         }
     }
@@ -99,6 +99,9 @@ public struct RoutineQuery: EntityStringQuery {
     @MainActor
     static func all(_ runtime: TesseraRuntime) -> [RoutineEntity] {
         guard let routineClass = runtime.engine.classes[.routine] else { return [] }
-        return runtime.store.objects(of: routineClass).map { RoutineEntity(id: $0.id, title: $0.title) }
+        return runtime.store.objects(of: routineClass).map { RoutineEntity(
+            id: $0.id,
+            title: runtime.store.displayTitle(of: $0)
+        ) }
     }
 }

@@ -48,8 +48,12 @@ public struct WorkoutSummary: Identifiable {
 
     /// Tess's line: "6 of 6 exercises, 22 sets, 1 best." Counts, never judgement ("best", not "record": Product).
     public var line: String {
-        let exercises = exercisesPlanned == 1 ? "exercise" : "exercises"
-        var parts = ["\(exercisesDone) of \(exercisesPlanned) \(exercises)", "\(sets) \(sets == 1 ? "set" : "sets")"]
+        var parts: [String] = []
+        // Nothing planned says no "0 of 0".
+        if exercisesPlanned > 0 {
+            parts.append("\(exercisesDone) of \(exercisesPlanned) \(exercisesPlanned == 1 ? "exercise" : "exercises")")
+        }
+        parts.append("\(sets) \(sets == 1 ? "set" : "sets")")
         if !records.isEmpty {
             parts.append("\(records.count) \(records.count == 1 ? "best" : "bests")")
         }

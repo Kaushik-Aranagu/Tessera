@@ -49,9 +49,9 @@ struct NowPage: View {
                     LineHero(line: HomeLines.line(for: fact, now: now)) {
                         PaintKey(paint: Theme.Colors.liveInk, isTap: true, progress: progress(of: process),
                                  action: { model.isWorkoutPresented = true }, label: { _ in
-                                     Text("Resume \(session.workout.title)").textRole(.labelStrong)
+                                     Text("Resume \(session.shownTitle)").textRole(.labelStrong)
                                  })
-                                 .accessibilityLabel("Resume \(session.workout.title)")
+                                 .accessibilityLabel("Resume \(session.shownTitle)")
                     }
                 } else if let process = ledger.first, let fact = facts.fact(process: process) {
                     LineHero(line: HomeLines.line(for: fact, now: now), opens: .object(fact.id ?? process.id)) {
@@ -163,7 +163,10 @@ struct NowPage: View {
     /// skip the whole plan: nothing written, nothing said.
     private func planHero(now _: Date) -> some View {
         let calendar = Calendar.current
-        let forms = PlanWords.heroForms(tasks: planModel.rows.count, workout: planModel.workout, calendar: calendar)
+        let forms = PlanWords.heroForms(
+            tasks: planModel.rows.count, workout: planModel.workout, calendar: calendar,
+            workoutTitle: planModel.workout.map { ObjectPrivacy.routineTitle($0.title, in: model.store) }
+        )
         return VStack(alignment: .leading, spacing: Theme.Spacing.m) {
             if let context = PlanWords.context(first: planModel.rows.first, calendar: calendar) {
                 Text(context)
@@ -296,8 +299,10 @@ struct NowPage: View {
             {
                 if model.canStart(routine) {
                     PaintKey(paint: Theme.Colors.ink, isTap: true, action: { model.startRoutine(routine) },
-                             label: { _ in Text("Start \(routine.title)").textRole(.labelStrong) })
-                        .accessibilityLabel("Start \(routine.title)")
+                             label: { _ in
+                                 Text("Start \(model.store.displayTitle(of: routine))").textRole(.labelStrong)
+                             })
+                             .accessibilityLabel("Start \(model.store.displayTitle(of: routine))")
                 }
             }
         } else if let done = model.finishedToday(now: now).first {

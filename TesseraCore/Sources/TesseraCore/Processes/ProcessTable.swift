@@ -171,7 +171,7 @@ public struct ProcessTable {
         let end = process.lastTouchedAt ?? .now
         // Opened and never logged: not a session. Close it without saving a trained day (undo brings it back).
         if !workout.orderedChildren.contains(where: { !$0.orderedChildren.isEmpty }) {
-            let title = store.displayTitle(of: workout)
+            let title = ObjectPrivacy.routineTitle(store.displayTitle(of: workout), in: store)
             let deleted = try? engine.perform(DiscardEmptyWorkout(process: process.id, workout: workout.id, time: end),
                                               by: .system).record
             // M37, with a 10 s UNDO that brings the workout back (lines audit 2, item 1).
@@ -182,8 +182,9 @@ public struct ProcessTable {
         let entries = workout.orderedChildren
         let started = entries.count { !$0.orderedChildren.isEmpty }
         let noun = entries.count == 1 ? "exercise" : "exercises"
+        let counts = entries.isEmpty ? "" : " \(started) of \(entries.count) \(noun)."
         return Note(
-            line: "\(store.displayTitle(of: workout)) saved. \(started) of \(entries.count) \(noun).",
+            line: "\(ObjectPrivacy.routineTitle(store.displayTitle(of: workout), in: store)) saved.\(counts)",
             undo: nil
         )
     }

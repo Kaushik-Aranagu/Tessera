@@ -155,7 +155,7 @@ struct RunningSeam: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(session.workout.title) is running. Return to workout")
+        .accessibilityLabel("\(session.shownTitle) is running. Return to workout")
     }
 }
 
@@ -226,7 +226,7 @@ struct CommandInterpreter {
         }
         guard let session = model.session,
               let index = session.entries.firstIndex(where: { session.exerciseClass(of: $0)?.id == exercise.id })
-        else { return "\(exercise.name) isn’t in \(workout.title)." }
+        else { return "\(exercise.name) isn’t in \(model.store.displayTitle(of: workout))." }
         session.select(entryAt: index)
         session.weight = weight
         session.reps = reps
