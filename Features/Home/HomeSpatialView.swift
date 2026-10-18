@@ -65,6 +65,7 @@ struct HomeSpatialView: View {
 
     @Environment(AppModel.self) private var model
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.lowPowerMotion) private var lowPower
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.scenePhase) private var scenePhase
     @State private var position = ScrollPosition(id: HomeSpatialView.remembered)
@@ -79,6 +80,8 @@ struct HomeSpatialView: View {
     @State private var picked: Int?
     @State private var pulling = false
     @State private var pullAxisDown: Bool?
+    /// A page's vertical scroll is away from its top: pulling then scrolls it back and never opens the index.
+    @State private var pageScrolled = false
     @State private var pickTicks = 0
     @State private var arrivals = 0
     @Namespace private var areaWord
@@ -86,7 +89,8 @@ struct HomeSpatialView: View {
     var body: some View {
         VStack(spacing: Theme.Spacing.l) {
             AreaName(titles: Page.allCases.map(\.title), progress: progress, namespace: areaWord,
-                     indexShown: indexProgress > 0.001, current: Int(progress.rounded()), onTap: openIndex)
+                     indexShown: indexProgress > 0.001, current: Int(progress.rounded()), flies: !calm,
+                     onTap: openIndex)
                 .padding(.horizontal, Theme.Spacing.gutter)
                 .padding(.top, Theme.Spacing.s)
                 .tesseraFeedback(.selection, trigger: pickTicks)
@@ -116,11 +120,12 @@ struct HomeSpatialView: View {
             }
             .scrollDisabled(rowGrabbed || indexProgress > 0.001)
             // The page stays live under the index: 90%, blurred, dropped (sheet 73 A).
-            .scaleEffect(1 - 0.1 * indexProgress)
-            .blur(radius: 6 * indexProgress)
-            .offset(y: 40 * indexProgress)
+            .scaleEffect(calm ? 1 : 1 - 0.1 * indexProgress)
+            .blur(radius: calm ? 0 : 6 * indexProgress)
+            .offset(y: calm ? 0 : 40 * indexProgress)
             .simultaneousGesture(pull)
             .environment(\.homePagerIdle, pagerIdle)
+            .environment(\.homePageScrolled) { pageScrolled = $0 }
             .environment(\.homeRowGrabbed, rowGrabbed)
             .environment(\.homeRowGrab) { rowGrabbed = $0 }
             // Opens where Home was left (TODAY the first time) without a visible jump.
@@ -149,6 +154,7 @@ struct HomeSpatialView: View {
                 progress = new
             }
             .onChange(of: position.viewID(type: Int.self)) { _, new in
+                pageScrolled = false
                 if let new {
                     Self.remembered = new
                 }
@@ -182,7 +188,7 @@ struct HomeSpatialView: View {
         .overlay(alignment: .top) {
             AreaIndexSheet(titles: Page.allCases.map(\.title), lines: indexLines,
                            current: Int(progress.rounded()), progress: indexProgress, picked: picked,
-                           pulling: pulling, namespace: areaWord, onPick: pick, onClose: closeIndex)
+                           pulling: pulling, calm: calm, namespace: areaWord, onPick: pick, onClose: closeIndex)
                 .ignoresSafeArea(edges: .top)
         }
         .environment(\.homeLinkZoom, linkZoom)
@@ -215,12 +221,24 @@ struct HomeSpatialView: View {
         if typeSize.isAccessibilitySize {
             ScrollView(.vertical) { padded }
                 .scrollIndicators(.hidden)
+                .onScrollGeometryChange(for: Bool.self) { $0.contentOffset.y > 1 } action: { _, new in
+                    pageScrolled = new
+                }
         } else {
             padded
         }
     }
 
     // MARK: The index
+
+    /// Reduce Motion or Low Power: a 150 ms crossfade, nothing scales, blurs, drops or flies.
+    private var calm: Bool {
+        reduceMotion || lowPower
+    }
+
+    private var indexCurve: Animation {
+        calm ? MotionPolicy.reducedMotionFade : .timingCurve(0.2, 0.9, 0.25, 1, duration: 0.46)
+    }
 
     private var indexLines: [String] {
         let lines = AreaLines.lines(model, now: AppClock.now)
@@ -232,7 +250,7 @@ struct HomeSpatialView: View {
         guard !model.isCommandExpanded else { return }
         pulling = false
         picked = nil
-        withTesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.46), reduceMotion: reduceMotion) {
+        withAnimation(indexCurve) {
             indexProgress = 1
         }
     }
@@ -241,7 +259,7 @@ struct HomeSpatialView: View {
         guard indexProgress > 0 else { return }
         pulling = false
         picked = nil
-        withTesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.46), reduceMotion: reduceMotion) {
+        withAnimation(indexCurve) {
             indexProgress = 0
         }
     }
@@ -274,7 +292,8 @@ struct HomeSpatialView: View {
     private var pull: some Gesture {
         DragGesture(minimumDistance: 12, coordinateSpace: .global)
             .onChanged { value in
-                guard !rowGrabbed, !model.isCommandExpanded, !typeSize.isAccessibilitySize else { return }
+                guard !rowGrabbed, !pageScrolled, !model.isCommandExpanded,
+                      !typeSize.isAccessibilitySize else { return }
                 if pullAxisDown == nil {
                     pullAxisDown = value.translation.height > 0
                         && abs(value.translation.height) > abs(value.translation.width) * 1.5
@@ -288,17 +307,21 @@ struct HomeSpatialView: View {
                     picked = nil
                     return
                 }
+                // Above the first row there is no row under the finger: letting go there closes the index.
                 let row = Int(((value.location.y - AreaIndexSheet.firstRow) / AreaIndexSheet.rowPitch).rounded(.down))
-                let target = min(max(row, 0), Page.allCases.count - 1)
+                let target: Int? = row < 0 ? nil : min(row, Page.allCases.count - 1)
                 if picked != target {
                     picked = target
-                    pickTicks += 1
+                    if target != nil {
+                        pickTicks += 1
+                    }
                 }
             }
             .onEnded { _ in
                 defer { pullAxisDown = nil }
                 guard pullAxisDown == true else { return }
-                if indexProgress >= 1, let picked {
+                // Letting go on the area you are in, or above the first row, closes the index.
+                if indexProgress >= 1, let picked, picked != Int(progress.rounded()) {
                     pick(picked)
                 } else {
                     closeIndex()

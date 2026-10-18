@@ -31,7 +31,7 @@ enum AreaLines {
             return capped(HomeLines.line(for: fact, now: now).hero)
         }
         if let task = model.currentTask(around: now) {
-            return capped(task.title)
+            return capped(taskTitle(task.title, id: task.id, model: model))
         }
         return "Nothing on"
     }
@@ -42,14 +42,15 @@ enum AreaLines {
             return capped("\(session.shownTitle) is on")
         }
         if let workout = model.tonightWorkout(around: now) ?? model.todaysRoutine(now: now) {
-            return capped("\(model.store.displayTitle(of: workout)) is on")
+            // Through the masking accessor: a private routine reads "Private workout".
+            return capped("\(ObjectPrivacy.routineTitle(model.store.displayTitle(of: workout), in: model.store)) is on")
         }
         return "Nothing on"
     }
 
     /// "Tacos, 7 pm": tonight's cook; the quiet line when nothing is planned.
     static func kitchen(_ model: AppModel, now: Date) -> String {
-        guard let recipeClass = model.classDef(.recipe) else { return "Nothing planned" }
+        guard let recipeClass = model.classDef(.recipe) else { return "Nothing cooking tonight" }
         for item in model.schedule(around: now) {
             guard let task = model.object(item.id),
                   let recipe = model.store.linkedObjects("about", of: task).first(where: { object in
@@ -58,7 +59,13 @@ enum AreaLines {
             let title = RecipeCopy.shownTitle(recipe.title, isPrivate: RecipeCopy.isPrivate(recipe.title, model: model))
             return capped("\(title), \(HouseTime.clock(item.start))")
         }
-        return "Nothing planned"
+        return "Nothing cooking tonight"
+    }
+
+    /// A task's title as the room may see it: "Private task" for a private one.
+    static func taskTitle(_ title: String, id: UUID, model: AppModel) -> String {
+        guard let record = model.object(id) else { return title }
+        return ObjectPrivacy.label(of: record, in: model.store, classes: model.classes) ?? title
     }
 
     /// The context cap: 6 words and 32 characters, whole words only.
@@ -81,6 +88,8 @@ struct AreaName: View {
     /// Whether the index is open: the matched word then belongs to the sheet's row.
     let indexShown: Bool
     let current: Int
+    /// Whether the word flies into place (off under Reduce Motion and Low Power: the word just swaps).
+    let flies: Bool
     let onTap: () -> Void
 
     private let height: CGFloat = 22
@@ -112,7 +121,7 @@ struct AreaName: View {
             .tracking(1.2)
             .foregroundStyle(Theme.Colors.ink)
             .fixedSize()
-        if index == current {
+        if index == current, flies {
             text.matchedGeometryEffect(id: "areaWord", in: namespace, isSource: !indexShown)
         } else {
             text
@@ -131,11 +140,11 @@ struct AreaIndexSheet: View {
     let progress: Double
     let picked: Int?
     let pulling: Bool
+    /// Reduce Motion or Low Power: a 150 ms crossfade, with no drop, stagger or flight.
+    let calm: Bool
     let namespace: Namespace.ID
     let onPick: (Int) -> Void
     let onClose: () -> Void
-
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     static let height: CGFloat = 580
     static let firstRow: CGFloat = 96
@@ -161,10 +170,12 @@ struct AreaIndexSheet: View {
             }
             .padding(.top, Self.firstRow)
             .frame(height: Self.height, alignment: .top)
-            .offset(y: reduceMotion ? 0 : -40 * (1 - progress))
+            .offset(y: calm ? 0 : -40 * (1 - progress))
         }
         .opacity(progress > 0.001 ? 1 : 0)
         .allowsHitTesting(progress > 0.9)
+        // Closed, the rows are not read (opacity 0 alone leaves them in the accessibility tree).
+        .accessibilityHidden(progress < 0.5)
     }
 
     private var glass: some View {
@@ -175,12 +186,12 @@ struct AreaIndexSheet: View {
             .frame(height: Self.height)
             .ignoresSafeArea(edges: .top)
             .opacity(progress)
-            .offset(y: reduceMotion ? 0 : -40 * (1 - progress))
+            .offset(y: calm ? 0 : -40 * (1 - progress))
     }
 
     /// Rows form with a 40 ms stagger as the sheet opens; Reduce Motion crossfades them together.
     private func rowOpacity(_ index: Int) -> Double {
-        guard !reduceMotion else { return progress }
+        guard !calm else { return progress }
         return min(max((progress - 0.08 * Double(index)) / 0.6, 0), 1)
     }
 
@@ -216,7 +227,7 @@ struct AreaIndexSheet: View {
             .foregroundStyle(color)
             .scaleEffect(picked ? 1.06 : 1, anchor: .leading)
             .tesseraAnimation(.spring(response: 0.25, dampingFraction: 0.8), value: picked)
-        if picked {
+        if picked, !calm {
             text.matchedGeometryEffect(id: "areaWord", in: namespace, isSource: true)
         } else {
             text
@@ -233,4 +244,10 @@ struct AreaIndexSheet: View {
         default: return ink
         }
     }
+}
+
+extension EnvironmentValues {
+    /// Low Power, fed once at the root from `PowerState.isLowPower` (App/PowerState.swift, #945) so no second
+    /// read of the system flag exists; false until that helper is wired in.
+    @Entry var lowPowerMotion = false
 }

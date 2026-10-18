@@ -28,7 +28,22 @@ struct AreaIndexTests {
         let container = TesseraSchema.makeContainer(inMemory: true)
         let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
         let now = Date(timeIntervalSince1970: 1_792_000_000)
-        #expect(AreaLines.kitchen(model, now: now) == "Nothing planned")
+        #expect(AreaLines.kitchen(model, now: now) == "Nothing cooking tonight")
         #expect(AreaLines.today(model, now: now).count <= 32)
+    }
+
+    @Test func aPrivateTaskAndAPrivateRoutineNeverPrintInTheIndex() throws {
+        // QA and Design on #1055: the TODAY and TRAINING rows read through the masking accessors.
+        let container = TesseraSchema.makeContainer(inMemory: true)
+        let model = AppModel(context: container.mainContext, launchDefaults: .testSuite())
+        let task = try model.engine.perform(CreateTask(title: "Pay Dr Lin rent 1200"), by: .user).output
+        #expect(AreaLines.taskTitle(task.title, id: task.id, model: model) == "Private task")
+        let plain = try model.engine.perform(CreateTask(title: "Call the bank"), by: .user).output
+        #expect(AreaLines.taskTitle(plain.title, id: plain.id, model: model) == "Call the bank")
+        for routine in model.objects(of: .routine) {
+            try model.engine.perform(RenameObject(object: routine.id, title: "Knee rehab day"), by: .user)
+        }
+        let now = Date(timeIntervalSince1970: 1_792_000_000)
+        #expect(!AreaLines.training(model, now: now).lowercased().contains("rehab"))
     }
 }
