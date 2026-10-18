@@ -127,6 +127,10 @@ public struct CreateList: EngineAction {
         guard !name.isEmpty else {
             throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "the list needs a name")
         }
+        // A name with a secret word in it, or a key, is never a list name (G77): it would sit on screen and in the log.
+        guard !looksLikeClaudeKey(name), !SecretWords.mentions(name) else {
+            throw ActionError.invalidArguments(action: Self.descriptor.name, reason: "that can't be a list name")
+        }
         outcome.wasRepeat = false
         if let existing = Self.existing(named: name, in: transaction.store, classes: transaction.classes) {
             outcome.wasRepeat = true
