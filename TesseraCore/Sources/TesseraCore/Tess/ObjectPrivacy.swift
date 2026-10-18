@@ -70,10 +70,14 @@ public enum ObjectPrivacy {
         if text == SecretWords.title {
             return true
         }
-        // A grocery amount with a unit ("5 kg flour", "1 pound butter") is never masked as money or a weigh-in: those
-        // rules are for money and body lines. A secret, a medicine or a title word still is.
-        if AddListItem.isAmountOfAThing(text) {
-            return SecretWords.mentions(text) || hasTitleWord(text) || EngineWall.isMedicine(text)
+        // A grocery amount that opens the line ("5 kg flour", "1 pound butter") is never masked as money or a weigh-in:
+        // those rules are for money and body lines. A secret, a medicine or a title word still is, and so is whatever
+        // follows the amount ("5 kg flour and weighed 82 kg"). An amount in the middle of a line is not this case.
+        if let rest = withoutLeadingAmount(text) {
+            return SecretWords.mentions(text) || hasTitleWord(text) || isDoctorName(text) || EngineWall.isMedicine(text)
+                || (!rest.trimmingCharacters(in: .whitespaces).isEmpty
+                    && (isPrivateText(rest, lastWeightKg: lastWeightKg)
+                        || EngineWall.isHealth(rest, lastWeightKg: lastWeightKg)))
         }
         if isPrivateText(text, lastWeightKg: lastWeightKg) {
             return true
@@ -81,6 +85,16 @@ public enum ObjectPrivacy {
         return hasTitleWord(text) || isDoctorName(text)
             // A bare medicine is a health fact: "lexapro", "advil", "take melatonin".
             || EngineWall.isHealth(text, lastWeightKg: lastWeightKg)
+    }
+
+    /// The text after a grocery amount that opens it ("2 kg rice" then the rest), or nil when it does not open with
+    /// one.
+    static func withoutLeadingAmount(_ text: String) -> String? {
+        let lower = text.lowercased()
+        guard let match = lower.firstMatch(
+            of: /^\s*\d+(?:[.,]\d+)?\s*(?:kg|kgs|lb|lbs|pound|pounds|kilo|kilos|g|oz|ml|l)\s+[a-z]+/
+        ), AddListItem.isAmountOfAThing(String(match.0)) else { return nil }
+        return String(lower[match.range.upperBound...])
     }
 
     /// A title word, or its plural ("dentists"); joined words ("dentist-appt") are not.

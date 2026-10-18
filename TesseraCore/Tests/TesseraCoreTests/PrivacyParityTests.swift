@@ -105,4 +105,13 @@ struct PrivacyParityTests {
         try engine.perform(EditNote(note: plain.id, body: "Leg day went well"), by: .user)
         #expect(plain.title == "Leg day" && store.value("isPrivate", of: plain) != .bool(true))
     }
+
+    @Test(arguments: [
+        "weighed 82 kg and felt great", "paid $4,000 deposit and 2 kg rice", "5 kg flour and weighed 82 kg",
+        "2 kg rice paid 120.50 at costco",
+    ])
+    func anAmountInTheMiddleOrBeforeABodyFactStillMasks(_ phrase: String) {
+        #expect(ObjectPrivacy.isPrivateTitle(phrase, lastWeightKg: 82), "\(phrase)")
+        #expect(ObjectPrivacy.isPrivateTitle(phrase, lastWeightKg: nil), "\(phrase)")
+    }
 }
