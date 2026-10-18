@@ -148,7 +148,7 @@ struct TessSoul: View {
         let sinceSplit = date.timeIntervalSince(work.split)
         let sinceGather = work.gather.map { date.timeIntervalSince($0) }
         if reduceMotion {
-            // A 200 ms loosening in place (position and size, never faded), and back.
+            // A 200 ms loosening in place (position only, never faded), and back.
             let into = min(max(sinceSplit / 0.2, 0), 1)
             let back = sinceGather.map { min(max($0 / 0.2, 0), 1) } ?? 0
             return (SoulWork.reduced(base, amount: CGFloat(into * (1 - back))), nil)
