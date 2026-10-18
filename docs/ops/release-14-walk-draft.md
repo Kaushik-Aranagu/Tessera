@@ -62,7 +62,7 @@ Default: Porcelain, phone. Each step needs a private/test item; never type a rea
 - core/g105b (221d7444): no PR yet; not in 14.
 
 ## Motion feel (added by the motion lab, Oct 17 PM; quick looks after the numbered steps, never blocks)
-M1. Haptic sanity. Finish one task or workout: one `.success`, no second buzz. Tap a Pantry state word (#917): one `.selection` and a quick word change; no ochre. FIX FIRST if a tap buzzes twice.
+M1. Haptic sanity. Finish one task or workout: one `.success`, no second buzz. Tap a Pantry row: it opens the object page (a private row opens nothing); no haptic and no state change; no ochre. FIX FIRST if a tap buzzes twice.
 M2. Soul sanity. On any screen she blinks and breathes at rest; for a private item or private workout she does nothing different (no glance, pause or beat). FIX FIRST if she reacts to a private thing.
 M3. Low Power. With Low Power on, screens and sides change by a quick crossfade (about 150 ms), no sliding (decision Oct 17 PM: Low Power = Reduce Motion). FIX FIRST if a side still slides.
 (The #662 stroke tick, #786/#806 swipes and #871 copy are already steps 1, 2, 3 and 10 above.)
