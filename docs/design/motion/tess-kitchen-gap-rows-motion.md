@@ -22,7 +22,7 @@ House rules reused: Low Power = Reduce Motion = one 150 ms crossfade; one haptic
 
 | Moment | Normal | RM / LP | VoiceOver | Haptic |
 |---|---|---|---|---|
-| N34 (G267) Proposed plan rows waiting | One repeating opacity animation drives the breath, 0.5 to 0.66 (DAY:26). It stops after a few cycles (lab default: 6 cycles) and rests at the mean 0.6. It replaces the 30 fps `TimelineView` on Home, Now and Training. | Rows sit still at a fixed breath, 0.6 (GRO:53, `HomePlan.swift:342`); no timeline. | n/a | none |
+| N34 (G267) Proposed plan rows waiting | One repeating opacity animation drives the breath, 0.5 to 0.66 (DAY:26). It stops after a few cycles (lab default: 6 cycles) and rests at the mean 0.6. It replaces the 30 fps `TimelineView` on Home and Now (`Features/Home/HomePlan.swift:307`, `Features/Home/NowPage.swift:500`). Training has no proposed-plan-row breath; `TrainingPage.swift:622` is the next-stroke guide (20 fps, already paused in Reduce Motion), outside G267. | Rows sit still at a fixed breath, 0.6 (GRO:53, `HomePlan.swift:342`); no timeline. | n/a | none |
 | N44 (G320) A kept plan row | The ink is dry and the row stays in the list; the "Proposed" state is gone. | One 150 ms ink fade (as the Keep moment in DAY). | Reads "<title>, <time>, kept", for example "Reply to landlord, 8 am, kept." No "Proposed", no hint. The only action is Undo, through the shared slot (spoken "<title>, taken back."). The Keep and Skip actions are dropped; skip also checks that the row is not kept. | none on the row; `.undo` once on Undo |
 
 ## Widgets and Live Activities
@@ -70,7 +70,7 @@ House rules reused: Low Power = Reduce Motion = one 150 ms crossfade; one haptic
 
 - N26: test that a step change posts no announcement and the timer-end line has no live-region trait.
 - N31: `groceriesUndoSharesBottomChromeUndo`; label "Undo" and hint "Puts back what was just done" asserted; one `.undo` per press.
-- N34: `proposedRowsDoNotBreatheInLowPower`; no `TimelineView` left at 30 fps (`NowPage:496`, `HomePlan:307`); the normal-power loop stops after its cycles.
+- N34: `proposedRowsDoNotBreatheInLowPower`; no `TimelineView` left at 30 fps (`Features/Home/NowPage.swift:500`, `Features/Home/HomePlan.swift:307`); the normal-power loop stops after its cycles.
 - N44: kept row label has no "Proposed" and no hint; accessibility actions are only Undo; skip is guarded on a kept row.
 - N46: grep finds one shared ReducedMotion helper used by the Go swap and the digits; a Low Power view build shows crossfade and no roll.
 - N47: `dailyBackupSkipsWhenDayDone`, `lateTailUsesStrictGreater`, `lowPowerRunsFirstDailyCopyOnly`.
