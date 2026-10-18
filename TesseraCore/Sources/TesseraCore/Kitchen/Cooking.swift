@@ -207,8 +207,11 @@ public struct GoToCookStep: EngineAction {
         let steps = RecipeBook(store: transaction.store, classes: transaction.classes).steps(of: recipe)
         let index = max(0, min(step, steps.count - 1))
         try transaction.saveContext(process, resumePoint: ResumePoint(index: index),
-                                    nextStep: ObjectPrivacy.stepLine(steps.indices.contains(index) ? steps[index].text : nil,
-                                                                     cook: cook, in: transaction.store),
+                                    nextStep: ObjectPrivacy.stepLine(
+                                        steps.indices.contains(index) ? steps[index].text : nil,
+                                        cook: cook,
+                                        in: transaction.store
+                                    ),
                                     at: time ?? .now)
     }
 
