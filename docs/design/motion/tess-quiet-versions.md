@@ -13,7 +13,7 @@ Reduce Motion (RM) is his accessibility setting: motion is the problem. Low Powe
 | Roam | No travel; she stays home, the line names the row | No roam; she stays at the dock, the work runs there | The line, the work, Done | None (Done's own `.success`) |
 | Listening | Blooms in the corner, no travel; eyes hold | Travel stays; mic level smoothed at 30 fps | The bloom size following the level, the words | None |
 | Asking (one-ask wait) | No lean; breath still | Lean stays; 20 fps | The question, the two ink words | None |
-| Working | 200 ms crossfade to the faded grade, mains loosened 1.5x, satellites 40% | Six lights, no readers, 30 fps; fade and gather as built | The "Planning your day." line, the gather, colour back | None until Done |
+| Working | 200 ms crossfade to the loosened pose, mains 1.5x, satellites at their idle places; opacity 1, grade and halo as at rest (G225, D4) | Six lights, no readers, 30 fps; fade and gather as built | The "Planning your day." line, the gather, colour back | None until Done |
 | Reward / Done | Done: its still frame, 1.8 s. Beat: 200 ms crossfade, no gather, no glance | Done as built; beat unchanged (940 ms, six fills) | Done's pour timing as a still, the blink | One `.success` (Done's own), none for the beat |
 | Colour change | One 600 ms crossfade of the pigments, no wet swell | No repaint starts; one in flight finishes at 30 fps; the palette waits for the next idle | The new colours | None |
 | Wake | No stretch; eyes open with a 200 ms crossfade | Same | The open eyes, the day's first line | None |
