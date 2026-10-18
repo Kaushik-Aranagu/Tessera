@@ -61,7 +61,8 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
 
 ### Product
 - Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7M9buvsufEBhXZqJtov6ZY72; old session cse_013bC75Wtuv4sc7B2EmqcXVZ.
-- Current thread (rotated 7:20 AM PT Oct 18, per the coordinator): cmsg_01VTPva3JGXrfvetgUvAWE7MWi2dCL7tNxRpj8bBAegpPg; session session_01TtjFYrCSBXmZzXXajVQvgq.
+- Current thread (rotated 4:13 PM PT Oct 18, per the coordinator): cmsg_01VTPva3JGXrfvetgUvAWE7MPpZf8SHuuu5MKd4dyxghiS; session session_01URwf36dgzxqtXqPtSKpSDn.
+- Retired (Product, 4:13 PM Oct 18; a message returns session_inactive): thread cmsg_01VTPva3JGXrfvetgUvAWE7MWi2dCL7tNxRpj8bBAegpPg; session session_01TtjFYrCSBXmZzXXajVQvgq.
 - Retired (Product, 7:20 AM Oct 18; a message returns session_inactive): thread cmsg_01VTPva3JGXrfvetgUvAWE7M4PS458UQbE4cTCBrUUs8ZG; session session_01RBgnhXvCZZhM8wDwJqs5Rx. Earlier line: Fresh thread (rotated about 4:30 PM PT Oct 17, per the coordinator): cmsg_01VTPva3JGXrfvetgUvAWE7M4PS458UQbE4cTCBrUUs8ZG; session session_01RBgnhXvCZZhM8wDwJqs5Rx. Retired: thread cmsg_01VTPva3JGXrfvetgUvAWE7MRLK2oiTKs6EG9Uu5qfT6M1, session cse_01STY2yX8fnVksnqnnPkcBQG.
 - Read the old chat with fetch_thread (oldest_first) or list_events on the old session; read a rule's exact words with fetch_messages on its id.
 - Handoff note: ops/rotation-handoffs.md, section "Product" if present; if not, ask the coordinator for the note the outgoing lead sent.
@@ -117,7 +118,8 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
 ### Research
 - Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7MCHUVZQTvpxVy5UZmhdenMF; old session cse_01WMUdQQHF9pRNj9dwSJFGef.
 - Previous fresh thread (retired 9:40 PM PT Oct 17): cmsg_01VTPva3JGXrfvetgUvAWE7MPtwgew3oJ7cvhswUWWXx7k; session cse_017t1kiDAoSpJVo4NVP2BpZU.
-- Current thread (rotated 7:20 AM PT Oct 18, per the coordinator): cmsg_01VTPva3JGXrfvetgUvAWE7MWr4kZQo1z1nwP1aRpCcNCw; session session_01LdX7E6RE6FmHbEE6K5Hth9.
+- Current thread (rotated 4:13 PM PT Oct 18, per the coordinator): cmsg_01VTPva3JGXrfvetgUvAWE7M8ZFLBCB5S55JXA8Vkm1q2m; session session_0149nnvEZKkqzcu5DJ1rLWqH.
+- Retired (Research, 4:13 PM Oct 18; a message returns session_inactive): thread cmsg_01VTPva3JGXrfvetgUvAWE7MWr4kZQo1z1nwP1aRpCcNCw; session session_01LdX7E6RE6FmHbEE6K5Hth9.
 - Retired (Research, 7:20 AM Oct 18; a message returns session_inactive): thread cmsg_01VTPva3JGXrfvetgUvAWE7MVwggk1QksBUnspxQ8a39Qi; session session_016prm61LgTia7soLeQ5zxP8. Earlier line: Current thread (rotated 9:40 PM PT Oct 17): cmsg_01VTPva3JGXrfvetgUvAWE7MVwggk1QksBUnspxQ8a39Qi; session cse_016prm61LgTia7soLeQ5zxP8 (send_message form: session_016prm61LgTia7soLeQ5zxP8).
 - Read the old chat with fetch_thread (oldest_first) or list_events on the old session; read a rule's exact words with fetch_messages on its id.
 - Handoff note: ops/rotation-handoffs.md, section "Research" if present; if not, ask the coordinator for the note the outgoing lead sent.
