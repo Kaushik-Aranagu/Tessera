@@ -13,7 +13,7 @@
 | `WorkoutSession.shownTitle` | `Features/Workout/WorkoutSession.swift:30-31` | `routineTitle(workout.title, ...)` | The one masked session title; reuse it for any running session |
 | `ListContents.shownName(of:in:)` | `TesseraCore/Sources/TesseraCore/Lists/ListRuns.swift:19` | "Private list" (`privateListLabel`, :17) | A list's name |
 | `AddListItem.shownTitle(_:store:)` | `TesseraCore/Sources/TesseraCore/Lists/Lists.swift:310` | "Private item" (`privateItemLabel`, :307) | A list item's title |
-| `ObjectPrivacy.label(of:in:classes:)` | `ObjectPrivacy.swift:30` | "Private note", "Private task", "Private memory", "Private recipe", or nil | A note, task, memory or recipe; returns nil for a workout or routine, which is why the generic page leaks them (PT24) |
+| `ObjectPrivacy.label(of:in:classes:)` | `ObjectPrivacy.swift:30` | "Private note", "Private task", "Private memory", "Private recipe", or "Private workout" for a workout (label since 12:35 PM Oct 17) | A note, task, memory, recipe or workout; the generic page must use this label rather than nil (PT24) |
 | `ObjectPrivacy.isPrivateWord(_:in:)` | `ObjectPrivacy.swift:84` | Bool | A free word he typed that a line would echo |
 
 "Private routine" is **not** a literal anywhere in code (`git grep -F` finds none). The label for a routine's title is "Private workout" (`ObjectPrivacy.routineLabel`, decision 12:35 pm on #849). Ruled (Product, decisions 4:20 PM Oct 17, O1): routines read "Private workout" too, one label everywhere.

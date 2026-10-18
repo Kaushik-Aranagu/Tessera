@@ -232,8 +232,8 @@ Decision (Product and Design, Oct 17; sheet 92, then G175 closed by Design in ga
 
 | Id | Input | Expected | Master today | Status | Owner | Test | PR #896 |
 |---|---|---|---|---|---|---|---|
-| PO01 | Pantry state word, Porcelain | plain ink (`Theme.Colors.ink`, built in #917): no ochre, no `areaLean` on the row; `#126E52` is not the state word colour | was `ochre.mix(with: ink, by: 0.28)`; now ink since be05f0b6 | traced (#917) | Builder B | `pantryStateWordIsInk` (AL15) | not in the 118 |
-| PO02 | Pantry state word, Obsidian | plain ink (`Theme.Colors.ink`): no ochre, no `areaLean` on the row; `#72DCB1` is not the state word colour | same | traced (#917) | Builder B | `pantryStateWordIsInkOnObsidian` | NEW |
+| PO01 | Pantry state word, Porcelain | plain ink (`Theme.Colors.ink`, built in #917): no ochre, no `areaLean` on the row; `#126E52` is not the state word colour | was `ochre.mix(with: ink, by: 0.28)`; now ink since be05f0b6 | traced at #917's head, not on master | Builder B | `pantryStateWordIsInk` | not in the 118 |
+| PO02 | Pantry state word, Obsidian | plain ink (`Theme.Colors.ink`): no ochre, no `areaLean` on the row; `#72DCB1` is not the state word colour | same | traced at #917's head, not on master | Builder B | `pantryStateWordIsInkOnObsidian` | NEW |
 | PO03 | Search the app target for the old values | `0xA4601A` and `0xE3A857` appear nowhere; `PantryColour.swift` is deleted or holds no ochre | `PantryColour.swift:8-9` | gap | Builder B | `noOchreLiteralRemains` (AN08) | NEW |
 | PO04 | Weights | out stays 700, low 600; colour change only | `PantryView.swift:195` | traced | Builder B | `stateWordKeepsItsWeights` | NEW |
 | PO05 | Where lean may appear | resting colour of text only, never a fill, ring or ground; the out ring stays ink at 42% | ring `PantryView.swift:202` | traced (ring) | Builder B | `leanIsNeverAFill` (AN03) | NEW |
