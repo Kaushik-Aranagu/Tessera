@@ -117,4 +117,4 @@ Cross-cutting calls for Product:
 
 ## Rulings in (Product)
 
-(none yet)
+Product accepted all seven calls as written (Oct 17, late evening). Call 1: the routine-title helper is a thin wrapper over the one private-text function and reads "Private workout".
