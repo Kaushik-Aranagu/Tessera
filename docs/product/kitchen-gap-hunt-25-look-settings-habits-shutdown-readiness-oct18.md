@@ -114,4 +114,14 @@ Rule (decisions 8:20 PM line 1003, 9:23 PM line 1017): screens, sides and page t
 
 ## Rulings in (Product)
 
-(none yet)
+Product accepted all nine calls as my defaults (decisions.md, 12:22 AM PT Oct 18):
+
+1. Pointer strings, the back word and the Review foot SETTINGS entry change together in the one Settings PR (G412).
+2. Remove key is a two-step with a plain receipt, no UNDO, and nothing holds the key (B4/G375). Builder A row boarded.
+3. The 27 raw `.sensoryFeedback` sites go through the haptic map (#958); Haptics off gates them (G413).
+4. Off/On everywhere (G414).
+5. Drop "mi" until distance exists (G415).
+6. Habit names and the Shutdown tomorrow line use the one private-text function, with a "Private habit" case (G416, G417).
+7. "Read today?" sits in the Shutdown band as one plain line; decisions line 593 wins over shutdown.md (G418).
+8. The key-removal receipt closes no other UNDO slot (G421).
+9. Design refreshes settings-93.md (G411).
