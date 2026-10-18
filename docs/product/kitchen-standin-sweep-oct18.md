@@ -20,7 +20,7 @@ Scope: Kitchen-owned docs in `docs/product/` (kitchen-*.md except the gap-hunt f
 | recipe-plate-acceptance.md:20 (P7) | pale foods shaded 12% before the wash | WITHDRAWN, nothing to shade |
 | recipe-plate-acceptance.md:21 (P8) | wash seeded by the object, same every time | WITHDRAWN; photo stored once, no refetch |
 | recipe-plate-acceptance.md:22 (P9) | VoiceOver hides the wash; Ingredient plate hidden | no image stop without a photo; Ingredient has no plate |
-| recipe-plate-acceptance.md:24 (P11) | Kitchen medium widget carries a 10 pt wash | marked OPEN FOR PRODUCT (see Ambiguity 1) |
+| recipe-plate-acceptance.md:24 (P11) | Kitchen medium widget carries a 10 pt wash | marked WITHDRAWN (Product ruled, Oct 18; see Rulings in 1) |
 | recipe-plate-acceptance.md:25 (P12) | no image on Groceries, Pantry...; the plate is the only Kitchen image | no image and no drawing; the Recipe's own photo is the only Kitchen image |
 | recipe-plate-acceptance.md:27-31 (P14, P15, P16, P18) | failure gives the wash fallback / the wash | gives no plate |
 | recipe-plate-acceptance.md:36 (Open 1) | no og-image shows the wash | shows no plate |
@@ -38,13 +38,13 @@ Scope: Kitchen-owned docs in `docs/product/` (kitchen-*.md except the gap-hunt f
 | kitchen-error-states-acceptance.md:20 (ER15) | Nothing: wash fallback | Nothing: no plate, no drawn fallback |
 | kitchen-first-week-script.md:187 | Plate, wash and photo rows need a link recipe with an image | wash rows are withdrawn |
 | kitchen-first-use-empty-states.md:27 | No plate, no wash, no placeholder icon | adds "or drawing" |
-| kitchen-widget-wash-acceptance.md:3 | (none) | HELD banner over KW-W1, W2, W9 to W13, W15, W16, W18 (see Ambiguity 1) |
+| kitchen-widget-wash-acceptance.md:3 | (none) | WITHDRAWN banner over KW-W1, W2, W9 to W13, W15, W16, W18 (Product ruled, Oct 18; see Rulings in 1) |
 
 Every edited row carries "(drawn stand-in withdrawn, Kaushik 1:29 AM Oct 18)" or the banner naming it. Count: 7 files, 37 table lines edited or marked (the table above groups a few adjacent rows), 18 diff hunks.
 
 Checked and left alone because they already say "none": kitchen-first-use-empty-states.md:62 (no illustration), :94 (no drawing of emptiness), :146 (no illustration anywhere); kitchen-sides-acceptance.md:88 (no empty-state art); kitchen-refill6-lane1-acceptance.md:144 and the "plain ground, no wash" Private/empty rows (K32.5 to K32.7, K38.4, K41.2, K41.5, K41.7, K61.28, KW-W5 to KW-W8), which stay true. kitchen-seed-recipes.md "pan" lines are cooking steps, not drawings. kitchen-refill6-lane1-acceptance.md:113 "checklist glyphs" are characters in pasted text. kitchen-refill8-acceptance.md:157 "a photo of a plate" is a test photo.
 
-## Ambiguity needing Product
+## Ambiguity needing Product (all three ruled below)
 
 1. **The Kitchen medium widget wash.** `kitchen-widget-wash-acceptance.md` (KW-W1, W2, W9 to W13, W15, W16, W18) and `recipe-plate-acceptance.md` P11 and `kitchen-refill5-acceptance.md` K30.15 draw a 10 pt wash tinted by the recipe's first three ingredient colours. That is an ingredient-pigment drawing, but a widget is not a "Kitchen page". I held the rows (banner, no deletion) instead of ruling. Default if Product says withdrawn: the widget is plain ground always, KW-W9 to W13 and W15 to W16 are struck, KW-W3, W4, W18 stay as "no wash".
 2. **The Kitchen mark** on the Dynamic Island (`kitchen-refill6-lane2-acceptance.md:141` K41.10) is an app mark, not food; left alone.
@@ -68,6 +68,6 @@ Code:
 ## Rulings in (Product, Oct 18)
 
 1. Widget wash withdrawn too; the Kitchen widget is plain ground. Widget rows KW-W1, W2, W9 to W13, W15, W16, W18, recipe-plate P11 and K30.15 now read WITHDRAWN.
-2. Ingredient.colour: no readers and no new writes; the column stays (additive migrations). ingredient-colours.md is marked withdrawn.
+2. Ingredient.colour: no readers and no new writes; the column stays (additive migrations). `docs/research/fixtures/ingredient-colours.md` is Research's file and still reads "For: Builder B (ObjectPlate wash)"; Product marks it withdrawn there (not in this PR).
 3. The Dynamic Island Kitchen mark (K41.10) stays.
 4. Dead code deletion (ObjectPlate, PlateWash, PlateWashTests) is boarded for Builder B.
