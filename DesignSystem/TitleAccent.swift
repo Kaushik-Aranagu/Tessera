@@ -23,7 +23,9 @@ struct TitleAccent: Equatable {
     /// "Push Day A, bench set 2" → "bench set 2": the moment after the comma (sheet 72, decisions 3:05).
     static func keyWord(in title: String) -> Range<String.Index>? {
         guard let comma = title.firstIndex(of: ",") else {
-            // A masked title ("Private workout") leads with what it is, not with "Private" (Design low on #895).
+            // A masked title ("Private workout", "Private recipe", "Private item") leads with what it is, not with
+            // "Private" (Design low on #895). Case-sensitive, so a real title like "Private lessons" keys on
+            // "lessons": harmless.
             let lead = "Private "
             guard title.hasPrefix(lead), title.count > lead.count else { return nil }
             return title.index(title.startIndex, offsetBy: lead.count) ..< title.endIndex

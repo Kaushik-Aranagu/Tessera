@@ -17,6 +17,9 @@ struct TitleAccentTests {
         let done = "Private workout, done"
         #expect(TitleAccent.keyWord(in: done).map { String(done[$0]) } == "done")
         #expect(TitleAccent.keyWord(in: "Private ") == nil)
+        for label in ["Private recipe", "Private item", "Private list", "Private note"] {
+            #expect(TitleAccent.keyWord(in: label).map { String(label[$0]) } == String(label.dropFirst(8)))
+        }
     }
 
     @Test func progressHoldsUnderTheCapUntilDone() {
