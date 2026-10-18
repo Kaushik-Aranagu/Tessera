@@ -99,4 +99,9 @@ Cross-cutting calls for Product:
 
 ## Rulings in (Product)
 
-(none yet)
+Product accepted the calls as my defaults (decisions.md, Oct 18 morning):
+
+1. G447: the listener re-checks its state after each await; a release during the permission prompt ends the listen.
+2. G451: every notification title and body passes the one private-text function ("Private task" when masked), same as the timer.
+3. G451 to G460 are Core's build-gate list (the app schedules no notifications yet).
+4. The other gaps (G442 to G446, G448 to G450, G452 to G460 outside the two blockers) ride the same defaults pattern and are listed in the PR for one-pass ruling.
