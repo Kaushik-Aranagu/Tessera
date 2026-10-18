@@ -51,6 +51,9 @@ public struct TessInbox {
 }
 
 public extension TessCaptureEngine {
+    /// The most ghosts one drain lands.
+    static let maxDrainedGhosts = 3
+
     /// How many phrases wait for Claude ("1 waiting for Tess").
     var waitingCount: Int {
         TessInbox(store: engine.store, classes: engine.classes).waiting().count
@@ -73,6 +76,11 @@ public extension TessCaptureEngine {
         claude.retrying = true
         var captures: [TessCapture] = []
         for item in inbox.waiting() where claude.isAvailable(for: .capture) {
+            // At most 3 ghosts per foreground: commit acts on the whole group, so every one has to be on screen.
+            // The rest keep waiting and drain after the group is kept or dropped.
+            if captures.count >= TessCaptureEngine.maxDrainedGhosts {
+                break
+            }
             // Queued before the walls (Research 139): a secret, money or body phrase leaves the inbox unread.
             if SecretWords.mentions(item.title) || PrivateFacts.isWalled(
                 item.title,

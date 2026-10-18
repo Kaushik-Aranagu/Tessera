@@ -385,6 +385,19 @@ struct ClaudeRouteTests {
         #expect(read.first?.line.contains("Turn this off in Settings: Claude.") == true)
     }
 
+    @Test func aDrainLandsAtMostThreeGhostsAndTheRestKeepWaiting() async {
+        let inbox = TessInbox(store: store, classes: classes)
+        for index in 1 ... 5 {
+            inbox.add("could you log bench \(70 + index) for 8 from earlier?", at: context.now - Double(6000 - index))
+        }
+        RouteStub.queue = Array(repeating: [(200, Self.logBench), (200, Self.answer("Logged."))], count: 5)
+            .flatMap(\.self)
+        let tess = tess()
+        #expect(await tess.readWaiting(context: context).count == 3 && tess.waitingCount == 2)
+        #expect(inbox.waiting().map(\.title) == ["could you log bench 74 for 8 from earlier?",
+                                                 "could you log bench 75 for 8 from earlier?"])
+    }
+
     @Test func nothingWaitsForSiriAndAKeyNeverWaits() async {
         RouteStub.failure = .notConnectedToInternet
         let tess = tess()
