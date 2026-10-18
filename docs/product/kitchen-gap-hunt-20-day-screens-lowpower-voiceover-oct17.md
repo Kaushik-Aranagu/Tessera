@@ -129,7 +129,7 @@ Cross-cutting calls for Product:
 Product, Oct 17 9:56 pm PDT, recorded in decisions.md:
 
 1. **G334 ruled:** a masked habit reads "Private habit" (names the kind, like "Private spend" and "Private book"), via the one title-plus-name check, before Core adds the Habit class. Changes my default "Private item".
-2. **G323 ruled:** every hold key that writes more than one thing is named-action-only for VoiceOver (START WITH, CLOSE THE DAY, Finish, Done); tap keys stay tap.
+2. **G323 ruled:** every hold key that writes more than one thing is named-action-only for VoiceOver (START WITH, CLOSE THE DAY, Finish, Done, Reset; decisions 1039 names Finish, Done and Reset); tap keys stay tap.
 3. **G321 and G322 ruled:** yes (silent skip stays for a sighted swipe; VoiceOver gets a spoken line plus a 10 s UNDO; the hold keeps only the visible rows).
 4. **G312 and G316 ruled:** yes; both automatic Claude calls wait for power ok and retry on the next open; the week story waits until 07:00 if it would land earlier.
 5. **G324 and G325 ruled:** yes (the listen ends on a pause as for a tap; the voice ghost wait under VoiceOver is a flat 10 s with a Cancel action).
