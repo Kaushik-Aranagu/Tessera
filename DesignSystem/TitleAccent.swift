@@ -49,6 +49,7 @@ struct AccentTitle: View {
     @State private var strike: Double = 0
     @State private var dry: Double = 0
     @State private var lift = false
+    @State private var finishing: Task<Void, Never>?
 
     var body: some View {
         AccentFace(text: text, spec: spec, tint: accent.tint, progress: accent.shownProgress, dry: dry)
@@ -57,14 +58,18 @@ struct AccentTitle: View {
             .scaleEffect(lift ? 1.02 : 1, anchor: .leading)
             .opacity(1 - 0.5 * dry)
             .tesseraAnimation(.timingCurve(0.3, 0, 0.2, 1, duration: 0.6), value: accent.shownProgress)
-            .onChange(of: accent.isDone, initial: true) { was, isDone in
+            .onChange(of: accent.isDone, initial: true) { _, isDone in
                 guard isDone else {
+                    // Undoing a finish: the sleeping steps of the finish must not run on.
+                    finishing?.cancel()
+                    finishing = nil
+                    lift = false
                     strike = 0
                     dry = 0
                     return
                 }
-                // Already done when it appeared (or Reduce Motion): drawn dried, the strike whole.
-                if accent.isSettled || was == isDone || reduceMotion {
+                // Arrived already done (or Reduce Motion): drawn dried, the strike whole.
+                if accent.isSettled || reduceMotion {
                     withTesseraAnimation(.easeInOut(duration: 0.15), reduceMotion: reduceMotion) {
                         strike = 1
                         dry = 1
@@ -73,19 +78,30 @@ struct AccentTitle: View {
                 }
                 finish()
             }
+            .onDisappear {
+                finishing?.cancel()
+                finishing = nil
+            }
             .accessibilityLabel(text)
+            .accessibilityValue(accent.isDone ? "done" : "")
     }
 
     /// Strike (420 ms, ease-out), one 250 ms lift, then 900 ms later the 2 s dry.
     private func finish() {
         let still = reduceMotion
         withTesseraAnimation(.easeOut(duration: 0.42), reduceMotion: still) { strike = 1 }
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(420))
+        finishing?.cancel()
+        finishing = Task { @MainActor in
+            // Each step checks it is still wanted: an undone finish or a left page stops the sequence.
+            func step(_ milliseconds: Int) async -> Bool {
+                try? await Task.sleep(for: .milliseconds(milliseconds))
+                return !Task.isCancelled && accent.isDone
+            }
+            guard await step(420) else { return }
             withTesseraAnimation(.easeOut(duration: 0.125), reduceMotion: still) { lift = true }
-            try? await Task.sleep(for: .milliseconds(125))
+            guard await step(125) else { return }
             withTesseraAnimation(.easeIn(duration: 0.125), reduceMotion: still) { lift = false }
-            try? await Task.sleep(for: .milliseconds(900))
+            guard await step(900) else { return }
             withTesseraAnimation(.easeInOut(duration: 2), reduceMotion: still) { dry = 1 }
         }
     }
@@ -112,14 +128,14 @@ private struct AccentFace: View, Animatable {
         let weight = 500 + 140 * live
         let ink = Theme.Colors.ink
         let lean = tint.map { ink.mix(with: $0, by: 0.6 * live) } ?? ink
-        Text(attributed(weight: weight, lean: lean, ink: ink))
+        Text(attributed(ink: ink))
             .font(AccentFont.font(spec, weight: weight))
             .tracking((spec.tracking - 0.012 * live) * spec.size)
             .lineHeight(.multiple(factor: spec.lineHeight))
             .foregroundStyle(lean)
     }
 
-    private func attributed(weight _: Double, lean _: Color, ink: Color) -> AttributedString {
+    private func attributed(ink: Color) -> AttributedString {
         var string = AttributedString(text)
         guard let key = TitleAccent.keyWord(in: text),
               let lower = AttributedString.Index(key.lowerBound, within: string),

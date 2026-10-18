@@ -66,12 +66,12 @@ struct LineHero<Key: View>: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// Title accent (72): a workout leans to Training's vermilion, a cook to Kitchen's green; a done one strikes and
+    /// Title accent (72): a workout leans to Training's colour, a cook to Kitchen's green; a done one strikes and
     /// dries (already done when it appears: drawn dried). Nothing in progress, no accent.
     private var accent: TitleAccent? {
         let fact = line.fact
         let tint: Color = switch fact.kind {
-        case .workout: Theme.Colors.liveInk
+        case .workout: Theme.Colors.training
         case .cook: Theme.Colors.health
         default: Theme.Colors.ink
         }
@@ -123,13 +123,15 @@ struct HomeHeroText: View {
         .accessibilityLabel(text)
     }
 
-    /// An average advance of about 0.56 em for the display face at this weight.
+    /// An average advance of about 0.56 em for the display face at this weight; 0.60 for an accent title, which grows
+    /// to weight 640 as it fills and so must fit at that weight (never an ellipsis).
     private var form: Form {
         guard width > 0 else { return .hero }
-        if CGFloat(text.count) <= width / (heroSize * 0.56) {
+        let advance: CGFloat = accent == nil ? 0.56 : 0.60
+        if CGFloat(text.count) <= width / (heroSize * advance) {
             return .hero
         }
-        return CGFloat(text.count) <= width / (titleSize * 0.56) ? .title : .wrapped
+        return CGFloat(text.count) <= width / (titleSize * advance) ? .title : .wrapped
     }
 }
 
