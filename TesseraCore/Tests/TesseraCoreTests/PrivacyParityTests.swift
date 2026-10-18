@@ -114,4 +114,22 @@ struct PrivacyParityTests {
         #expect(ObjectPrivacy.isPrivateTitle(phrase, lastWeightKg: 82), "\(phrase)")
         #expect(ObjectPrivacy.isPrivateTitle(phrase, lastWeightKg: nil), "\(phrase)")
     }
+
+    @Test(arguments: [
+        "82 kg and felt great",
+        "82 kg then bench",
+        "82 kg but tired",
+        "180 pounds and sore",
+        "82 kg with a cold"
+    ])
+    func aWeightFollowedByASentenceStaysPrivate(_ phrase: String) {
+        // With his last weight known, as in real use; the connectors are not foods, so the amount rule never exempts
+        // it.
+        #expect(ObjectPrivacy.isPrivateTitle(phrase, lastWeightKg: 82), "\(phrase)")
+    }
+
+    @Test(arguments: ["2 kg of rice", "1 lb of butter", "2 kg rice and beans", "500 g flour"])
+    func aGroceryAmountStillReadsPlain(_ phrase: String) {
+        #expect(!ObjectPrivacy.isPrivateTitle(phrase, lastWeightKg: 82), "\(phrase)")
+    }
 }

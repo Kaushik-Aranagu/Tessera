@@ -260,6 +260,25 @@ public struct AddListItem: EngineAction {
             "for",
             "from",
             "on",
+            // A conjunction or filler after a weight is a sentence, not a food ("82 kg and felt great", "82 kg then
+            // bench"); "of" stays out, since "2 kg of rice" is a grocery line.
+            "and",
+            "or",
+            "then",
+            "but",
+            "so",
+            "felt",
+            "feel",
+            "feeling",
+            "with",
+            "while",
+            "when",
+            "though",
+            "because",
+            "as",
+            "if",
+            "was",
+            "is",
         ]
         return !PrivateFacts.dayWords.contains(word) && !PrivateFacts.bodyWords.contains(word)
             && !PrivateFacts.weighWords.contains(word) && !neverFood.contains(word)
