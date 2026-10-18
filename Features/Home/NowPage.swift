@@ -12,6 +12,8 @@ struct NowPage: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.openHomeLink) private var openLink
     @State private var finishes = 0
+    /// Keeping the plan plays `.made` (the hold itself is silent).
+    @State private var planKept = 0
     /// The current Now, passed back to the ranker so it holds against equal challengers (no flicker).
     @State private var incumbent: UUID?
     private let planModel = HomePlanModel.shared
@@ -116,7 +118,7 @@ struct NowPage: View {
 
             Spacer(minLength: 0)
         }
-        .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: finishes)
+        .tesseraFeedback(.done, trigger: finishes)
         .onChange(of: top?.id, initial: true) { _, id in
             incumbent = id
         }
@@ -190,6 +192,7 @@ struct NowPage: View {
     @ViewBuilder private var planKey: some View {
         if let first = planModel.first {
             PaintKey(paint: Theme.Colors.ink, duration: 0.7, hint: "Keeps the plan", action: {
+                planKept += 1
                 withTesseraAnimation(Theme.Motion.house, reduceMotion: reduceMotion) {
                     planModel.keepPlan(model: model)
                 }
@@ -199,6 +202,7 @@ struct NowPage: View {
                     .fixedSize(horizontal: false, vertical: true)
             })
             .accessibilityLabel("Start with \(first.title)")
+            .tesseraFeedback(.made, trigger: planKept)
         }
     }
 

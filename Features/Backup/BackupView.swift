@@ -101,7 +101,7 @@ struct BackupView: View {
                         picking = true
                         return .handled
                     })
-                    .sensoryFeedback(.selection, trigger: folderTaps)
+                    .tesseraFeedback(.selection, trigger: folderTaps)
                     .accessibilityAction(named: "Choose the folder") { picking = true }
                     .padding(.top, Theme.Spacing.m)
                     .entrance(3)

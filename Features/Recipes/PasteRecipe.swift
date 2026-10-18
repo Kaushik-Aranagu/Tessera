@@ -196,7 +196,7 @@ struct PasteRecipe: View {
                 read()
             }
         }
-        .sensoryFeedback(.success, trigger: saved?.id)
+        .tesseraFeedback(.made, trigger: saved?.id)
         #if DEBUG
             // `-pasteDemo`: lands a recipe as if pasted, for recordings.
             .task {
