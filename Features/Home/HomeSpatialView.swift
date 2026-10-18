@@ -74,23 +74,23 @@ struct HomeSpatialView: View {
     @State private var pagerIdle = true
     @State private var rowGrabbed = false
     @Namespace private var linkZoom
-    /// The glass tab lens (42): where it sits in tab units while held, and the page it was held from.
-    @State private var lens: Double?
-    @State private var lensFrom = 0
-    /// Whether the lens has crossed a word since it formed; a hold with no slide is a cancel.
-    @State private var lensSlid = false
-    /// The pages' scale while the lens is up: 1 at rest, 0.78 held.
-    @State private var deckScale: CGFloat = 1
-    @State private var lensTicks = 0
+    /// The area index (sheet 73 A): 0 closed … 1 open; the row under the finger; whether a pull (not a tap) is open.
+    @State private var indexProgress = 0.0
+    @State private var picked: Int?
+    @State private var pulling = false
+    @State private var pullAxisDown: Bool?
+    @State private var pickTicks = 0
+    @State private var arrivals = 0
+    @Namespace private var areaWord
 
     var body: some View {
         VStack(spacing: Theme.Spacing.l) {
-            PaintedRail(titles: Page.allCases.map(\.title), progress: progress, lens: lens,
-                        onSelect: { show($0) }, onHold: holdLens, onSlide: slideLens, onRelease: releaseLens,
-                        onCancel: cancelLens)
+            AreaName(titles: Page.allCases.map(\.title), progress: progress, namespace: areaWord,
+                     indexShown: indexProgress > 0.001, current: Int(progress.rounded()), onTap: openIndex)
                 .padding(.horizontal, Theme.Spacing.gutter)
                 .padding(.top, Theme.Spacing.s)
-                .tesseraFeedback(.selection, trigger: lensTicks)
+                .tesseraFeedback(.selection, trigger: pickTicks)
+                .tesseraFeedback(.areaLands, trigger: arrivals)
 
             ScrollView(.horizontal) {
                 HStack(spacing: 0) {
@@ -114,14 +114,12 @@ struct HomeSpatialView: View {
                     settled = true
                 }
             }
-            .scrollDisabled(rowGrabbed || lens != nil)
-            // While the lens is held, the deck below stands in for the pager.
-            .opacity(deckScale < 1 || lens != nil ? 0 : 1)
-            .overlay {
-                if deckScale < 1 || lens != nil {
-                    deck
-                }
-            }
+            .scrollDisabled(rowGrabbed || indexProgress > 0.001)
+            // The page stays live under the index: 90%, blurred, dropped (sheet 73 A).
+            .scaleEffect(1 - 0.1 * indexProgress)
+            .blur(radius: 6 * indexProgress)
+            .offset(y: 40 * indexProgress)
+            .simultaneousGesture(pull)
             .environment(\.homePagerIdle, pagerIdle)
             .environment(\.homeRowGrabbed, rowGrabbed)
             .environment(\.homeRowGrab) { rowGrabbed = $0 }
@@ -174,16 +172,18 @@ struct HomeSpatialView: View {
                 .navigationTransition(.zoom(sourceID: link, in: linkZoom))
         }
         .environment(\.openHomeLink) { presented = $0 }
-        // Leaving the app mid-hold never strands the deck.
+        // Leaving the app with the index open closes it.
         .onChange(of: scenePhase) { _, phase in
-            if phase != .active, lens != nil {
-                cancelLens()
+            if phase != .active {
+                closeIndex()
             }
         }
-        .onDisappear {
-            if lens != nil {
-                cancelLens()
-            }
+        .onDisappear { closeIndex() }
+        .overlay(alignment: .top) {
+            AreaIndexSheet(titles: Page.allCases.map(\.title), lines: indexLines,
+                           current: Int(progress.rounded()), progress: indexProgress, picked: picked,
+                           pulling: pulling, namespace: areaWord, onPick: pick, onClose: closeIndex)
+                .ignoresSafeArea(edges: .top)
         }
         .environment(\.homeLinkZoom, linkZoom)
     }
@@ -220,101 +220,90 @@ struct HomeSpatialView: View {
         }
     }
 
-    // MARK: The lens
+    // MARK: The index
 
-    /// The four real pages side by side at `deckScale`, 14 pt apart, following the lens 1:1 in tab units; the one
-    /// under the lens at full strength, its neighbours live at 55%.
-    private var deck: some View {
-        GeometryReader { proxy in
-            let width = proxy.size.width
-            // One page, one place: the deck settles on the word under the lens, not between pages.
-            let spot = (lens ?? progress).rounded()
-            ZStack {
-                deckGround
-                ForEach(Page.allCases) { sibling in
-                    let offset = CGFloat(Double(sibling.rawValue) - spot) * (width * deckScale + 14)
-                    fitted(content(for: sibling))
-                        .environment(\.inHomeDeck, true)
-                        .frame(width: width, height: proxy.size.height)
-                        .background { ThemedBackground() }
-                        .clipShape(RoundedRectangle(cornerRadius: 40, style: .continuous))
-                        .scaleEffect(deckScale)
-                        .offset(x: offset)
-                        .opacity(sibling.rawValue == Int(spot.rounded()) ? 1 : 0.55)
-                        .allowsHitTesting(false)
-                }
-            }
-        }
-        .accessibilityHidden(true)
+    private var indexLines: [String] {
+        let lines = AreaLines.lines(model, now: AppClock.now)
+        return Page.allCases.map { lines[$0] ?? "" }
     }
 
-    /// Obsidian's #0A0A0C; the other looks their own ground darkened 4%.
-    @ViewBuilder
-    private var deckGround: some View {
-        if ThemeStore.shared.paintLook.isDark {
-            Color(red: 10 / 255, green: 10 / 255, blue: 12 / 255).ignoresSafeArea()
-        } else {
-            ThemedBackground().overlay(Color.black.opacity(0.04)).ignoresSafeArea()
+    /// A tap on the name opens the index without a finger.
+    private func openIndex() {
+        guard !model.isCommandExpanded else { return }
+        pulling = false
+        picked = nil
+        withTesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.46), reduceMotion: reduceMotion) {
+            indexProgress = 1
         }
     }
 
-    private func holdLens(_ spot: Double) {
-        // Listening or an ask owns the page: the hold is refused (tess-motion.md §15); a tap still works.
-        guard !model.soul.refusesLens, !model.isCommandExpanded else { return }
-        model.soul.handle(.lensHeld)
-        lensFrom = Int(progress.rounded())
-        lensSlid = false
-        lensTicks += 1
-        withTesseraAnimation(.spring(response: 0.32, dampingFraction: 0.72), reduceMotion: reduceMotion) {
-            lens = spot
-        }
-        // Reduce Motion: no shrink; the lens and the ticks still play.
-        guard !reduceMotion else { return }
-        withAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.36)) { deckScale = 0.78 }
-    }
-
-    private func slideLens(_ spot: Double) {
-        guard let old = lens else { return }
-        if Int(old.rounded()) != Int(spot.rounded()) {
-            lensTicks += 1
-            lensSlid = true
-            withTesseraAnimation(.spring(response: 0.3, dampingFraction: 0.82), reduceMotion: reduceMotion) {
-                lens = spot
-            }
-        } else {
-            lens = spot
+    private func closeIndex() {
+        guard indexProgress > 0 else { return }
+        pulling = false
+        picked = nil
+        withTesseraAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.46), reduceMotion: reduceMotion) {
+            indexProgress = 0
         }
     }
 
-    /// Let go: the page under the lens opens and the deck grows back; the lens melts into the ink line.
-    private func releaseLens() {
-        guard let spot = lens else { return }
-        model.soul.handle(.lensReleased)
-        // A hold with no slide is a cancel: back to the page it was held from, no page change.
-        let target = lensSlid ? Int(spot.rounded()) : lensFrom
+    /// The chosen word flies from its row into the name's place and the page rises to full size and unblurs; Reduce
+    /// Motion crossfades and the word swaps without flying.
+    private func pick(_ index: Int) {
         var settle = Transaction()
         settle.disablesAnimations = true
         withTransaction(settle) {
-            position.scrollTo(id: target)
-            progress = Double(target)
+            position.scrollTo(id: index)
+            progress = Double(index)
         }
-        Self.remembered = target
-        if reduceMotion {
-            withTesseraAnimation(reduceMotion: true) { lens = nil }
-            return
-        }
-        withAnimation(.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.48)) {
-            lens = Double(target)
-            deckScale = 1
+        Self.remembered = index
+        picked = index
+        pulling = false
+        withAnimation(MotionPolicy.resolve(
+            .timingCurve(0.2, 0.9, 0.25, 1, duration: 0.46),
+            reduceMotion: reduceMotion
+        )) {
+            indexProgress = 0
         } completion: {
-            withAnimation(.easeOut(duration: 0.28)) { lens = nil }
+            picked = nil
+            arrivals += 1
         }
     }
 
-    /// The touch was taken away mid-hold: put everything back where it was, with no page change.
-    private func cancelLens() {
-        lensSlid = false
-        releaseLens()
+    /// Pull a tab page down past its top (80 pt): from 20 pt to 90 pt the index forms, and past 90 pt the row under
+    /// the finger is picked (one selection tick per row); let go on a row to open it, let go short to cancel.
+    private var pull: some Gesture {
+        DragGesture(minimumDistance: 12, coordinateSpace: .global)
+            .onChanged { value in
+                guard !rowGrabbed, !model.isCommandExpanded, !typeSize.isAccessibilitySize else { return }
+                if pullAxisDown == nil {
+                    pullAxisDown = value.translation.height > 0
+                        && abs(value.translation.height) > abs(value.translation.width) * 1.5
+                }
+                guard pullAxisDown == true else { return }
+                let drag = value.translation.height
+                let formed = min(max((drag - 20) / 70, 0), 1)
+                pulling = formed >= 1
+                indexProgress = formed
+                guard formed >= 1 else {
+                    picked = nil
+                    return
+                }
+                let row = Int(((value.location.y - AreaIndexSheet.firstRow) / AreaIndexSheet.rowPitch).rounded(.down))
+                let target = min(max(row, 0), Page.allCases.count - 1)
+                if picked != target {
+                    picked = target
+                    pickTicks += 1
+                }
+            }
+            .onEnded { _ in
+                defer { pullAxisDown = nil }
+                guard pullAxisDown == true else { return }
+                if indexProgress >= 1, let picked {
+                    pick(picked)
+                } else {
+                    closeIndex()
+                }
+            }
     }
 
     private func show(_ index: Int) {
@@ -439,147 +428,6 @@ extension EnvironmentValues {
 }
 
 // MARK: - Sibling rail
-
-/// Three label words (active in ink, the others muted) over a painted vermilion underline, 64×4 with an uneven
-/// radius, that glides continuously with the swipe. Tapping a word pages there.
-/// The tab words over the pages (docs/design/home-first-review.md, 42). A tap swaps the page; a swipe on the pages
-/// stretches the ink carriage. Hold the row 260 ms and a Liquid Glass lens forms under the finger: the pages shrink
-/// to 78% side by side, the lens and the pages follow the finger with one tick per word, and letting go opens the
-/// page under the lens. A hold with no slide is a cancel.
-private struct PaintedRail: View {
-    let titles: [String]
-    /// 0 … titles.count − 1, fractional while paging.
-    let progress: Double
-    /// The lens, while held: where it sits in tab units.
-    let lens: Double?
-    var onSelect: (Int) -> Void
-    var onHold: (Double) -> Void
-    var onSlide: (Double) -> Void
-    var onRelease: () -> Void
-    var onCancel: () -> Void
-
-    @State private var widths: [Int: CGFloat] = [:]
-    @State private var pressedAt: Date?
-    @State private var holdTask: Task<Void, Never>?
-    @State private var travelled: CGFloat = 0
-    /// True while a finger is on the row; resets on its own when the system cancels the touch (Control Center, a
-    /// call, Siri, backgrounding), which never calls onEnded.
-    @GestureState private var touching = false
-
-    private static let holdDelay: Duration = .milliseconds(260)
-
-    var body: some View {
-        let current = Int(progress.rounded())
-        let lensWord = lens.map { Int($0.rounded()) }
-        VStack(spacing: Theme.Spacing.xs) {
-            GeometryReader { proxy in
-                let cell = proxy.size.width / CGFloat(max(titles.count, 1))
-                ZStack(alignment: .leading) {
-                    if let lens {
-                        // The one Liquid Glass surface on the page: the navigation layer.
-                        let index = Int(lens.rounded())
-                        let width = (widths[index] ?? 60) * 1.12 + 20
-                        Capsule()
-                            .fill(.clear)
-                            .frame(width: width, height: 40)
-                            .glassEffect(.regular.interactive(), in: Capsule())
-                            .offset(x: cell * (CGFloat(lens) + 0.5) - width / 2)
-                            .transition(.scale(scale: 0.6).combined(with: .opacity))
-                    }
-                    HStack(spacing: 0) {
-                        ForEach(Array(titles.enumerated()), id: \.offset) { index, title in
-                            word(title, at: index, lit: index == (lensWord ?? current), swollen: lensWord == index,
-                                 selected: index == current)
-                        }
-                    }
-                }
-                .frame(height: 44)
-                .contentShape(Rectangle())
-                .gesture(touch(cell: cell))
-                .onChange(of: touching) { _, down in
-                    // A touch that ended without onEnded (cancelled): let go of everything.
-                    guard !down, pressedAt != nil else { return }
-                    holdTask?.cancel()
-                    pressedAt = nil
-                    if lens != nil {
-                        onCancel()
-                    }
-                }
-            }
-            .frame(height: 44)
-            .tesseraAnimation(Theme.Motion.snappy, value: current)
-            .tesseraAnimation(.spring(response: 0.2, dampingFraction: 0.8), value: lensWord)
-            .tesseraAnimation(.spring(response: 0.32, dampingFraction: 0.72), value: lens == nil)
-
-            GeometryReader { proxy in
-                let cell = proxy.size.width / CGFloat(max(titles.count, 1))
-                // A thin ink carriage at rest; it turns live only while the pages move (ink-line.md). It fades while
-                // the lens is up.
-                let paging = abs(progress - progress.rounded()) > 0.01
-                Rectangle()
-                    .fill(paging ? Theme.Colors.live : Theme.Colors.ink)
-                    .frame(width: HomeStroke.carriage.width, height: HomeStroke.carriage.height)
-                    .offset(x: cell * (CGFloat(progress) + 0.5) - HomeStroke.carriage.width / 2)
-                    .opacity(lens == nil ? 1 : 0)
-                    .animation(.easeOut(duration: 0.2), value: paging)
-                    .animation(.easeOut(duration: 0.28), value: lens == nil)
-            }
-            .frame(height: HomeStroke.carriage.height)
-            .accessibilityHidden(true)
-        }
-    }
-
-    private func word(_ title: String, at index: Int, lit: Bool, swollen: Bool, selected: Bool) -> some View {
-        let traits: AccessibilityTraits = selected ? [.isButton, .isSelected] : .isButton
-        return Text(title)
-            .textRole(.label)
-            .lineLimit(1)
-            .fixedSize()
-            .foregroundStyle(lit ? Theme.Colors.ink : Theme.Colors.muted)
-            .scaleEffect(swollen ? 1.12 : 1)
-            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { widths[index] = $0 }
-            .frame(maxWidth: .infinity, minHeight: 44)
-            .contentShape(Rectangle())
-            .accessibilityElement()
-            .accessibilityLabel(title)
-            .accessibilityAddTraits(traits)
-            .accessibilityAction { onSelect(index) }
-    }
-
-    /// One touch: a quick tap selects the word; held 260 ms it becomes the lens and slides.
-    private func touch(cell: CGFloat) -> some Gesture {
-        DragGesture(minimumDistance: 0)
-            .updating($touching) { _, state, _ in state = true }
-            .onChanged { value in
-                let position = min(max(Double(value.location.x / cell - 0.5), 0), Double(titles.count - 1))
-                if pressedAt == nil {
-                    pressedAt = .now
-                    travelled = 0
-                    holdTask = Task { @MainActor in
-                        try? await Task.sleep(for: Self.holdDelay)
-                        guard !Task.isCancelled, travelled < 10 else { return }
-                        onHold(position)
-                    }
-                }
-                travelled = max(travelled, abs(value.translation.width), abs(value.translation.height))
-                if lens != nil {
-                    onSlide(position)
-                }
-            }
-            .onEnded { value in
-                holdTask?.cancel()
-                defer { pressedAt = nil }
-                if lens != nil {
-                    onRelease()
-                } else if travelled < 10 {
-                    let index = Int((value.location.x / cell).rounded(.down))
-                    onSelect(min(max(index, 0), titles.count - 1))
-                }
-            }
-    }
-}
-
-// MARK: - Shared bits
 
 /// Each page's hero travels at 70% of the page while paging (30% parallax). Reduce Motion: none.
 private struct SiblingParallax: ViewModifier {
