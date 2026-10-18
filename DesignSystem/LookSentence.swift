@@ -66,8 +66,8 @@ struct LookSentence: View {
         }
         .textRole(.body)
         .foregroundStyle(Theme.Colors.ink)
-        .sensoryFeedback(.selection, trigger: taps)
-        .sensoryFeedback(.impact(weight: .medium, intensity: 0.8), trigger: pins)
+        .tesseraFeedback(.selection, trigger: taps)
+        .tesseraFeedback(.pinned, trigger: pins)
     }
 
     private func hint(_ text: String) -> some View {

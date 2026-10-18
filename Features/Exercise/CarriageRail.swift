@@ -44,7 +44,7 @@ struct CarriageRail: View {
         }
         .coordinateSpace(.named(Self.space))
         .onPreferenceChange(WordFrames.self) { frames = $0 }
-        .sensoryFeedback(.selection, trigger: current)
+        .tesseraFeedback(.selection, trigger: current)
     }
 
     @ViewBuilder

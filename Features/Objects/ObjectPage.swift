@@ -51,7 +51,7 @@ struct ObjectPage: View {
     /// shows only the label "Private note" and none of its text.
     static func opensAsNote(_ note: ObjectRecord, model: AppModel) -> Bool {
         note.classDef?.id == model.classDef(.note)?.id
-            && ObjectPrivacy.label(of: note, in: model.store, classes: model.classes) == nil
+            && ObjectMask.label(of: note, in: model.store, classes: model.classes) == nil
     }
 
     /// The latched choice once made; the live check only before the first appearance.
@@ -253,7 +253,7 @@ private struct InstanceBody: View {
         let backlinks = model.store.backlinks(to: object)
         let children = object.orderedChildren
         // A private object shows only its label: no title, fields, notes or contents (board 0ai mask).
-        let privateLabel = ObjectPrivacy.label(of: object, in: model.store, classes: model.classes)
+        let privateLabel = ObjectMask.label(of: object, in: model.store, classes: model.classes)
 
         Header(
             path: lineage.map { ($0.name, Route.classDef($0.id)) },
@@ -301,7 +301,7 @@ private struct InstanceBody: View {
                         if let classDef = source.classDef, model.prototype(of: classDef)?.id == source.id {
                             ObjectRow(title: classDef.name, route: .classDef(classDef.id))
                         } else {
-                            ObjectRow(title: ObjectPrivacy.label(of: source, in: model.store, classes: model.classes)
+                            ObjectRow(title: ObjectMask.label(of: source, in: model.store, classes: model.classes)
                                 ?? source.title, route: .object(source.id))
                         }
                     }
@@ -329,7 +329,7 @@ private struct ChildRow: View {
             }
         } else {
             ObjectRow(
-                title: ObjectPrivacy.label(of: child, in: model.store, classes: model.classes)
+                title: ObjectMask.label(of: child, in: model.store, classes: model.classes)
                     ?? (child.title.isEmpty ? child.classDef?.name ?? "Item" : child.title),
                 route: .object(child.id)
             )
@@ -431,7 +431,7 @@ private struct PropertyList: View {
                 VStack(alignment: .trailing, spacing: Theme.Spacing.s) {
                     // A private target shows its label, never its words (QA on #580).
                     ForEach(targets) { target in
-                        ObjectHandle(title: ObjectPrivacy.label(of: target, in: model.store, classes: model.classes)
+                        ObjectHandle(title: ObjectMask.label(of: target, in: model.store, classes: model.classes)
                             ?? target.title, route: .object(target.id))
                     }
                 }
@@ -553,5 +553,30 @@ enum ObjectNotes {
             return trimmed != "#reusable" && trimmed != "#pick-one" && !isPickedStamp(trimmed)
         }.joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
         return kept.isEmpty ? nil : kept
+    }
+}
+
+/// What an object page prints in place of a private object's title (G141): Core's label, plus the kinds it doesn't
+/// cover yet. An ingredient or a list item with a secret word, money, a body fact or a medicine reads "Private item";
+/// such a list reads "Private list". Masked at the source: every row, link and header on the page goes through here,
+/// and only the live text field ever shows the raw words.
+enum ObjectMask {
+    @MainActor
+    static func label(of object: ObjectRecord, in store: ObjectStore,
+                      classes: [SystemCatalog.Key: ClassDef]) -> String?
+    {
+        if let core = ObjectPrivacy.label(of: object, in: store, classes: classes) {
+            return core
+        }
+        guard let classDef = object.classDef else { return nil }
+        func isA(_ key: SystemCatalog.Key) -> Bool {
+            classes[key].map { ClassResolver.isSubclass(classDef, of: $0) } ?? false
+        }
+        let walled = ObjectPrivacy.isPrivateRecipeTitle(object.title, lastWeightKg: BodyWeight.lastKg(in: store))
+        guard walled else { return nil }
+        if isA(.ingredient) || isA(.listItem) {
+            return ShopTrip.privateLabel
+        }
+        return isA(.list) ? "Private list" : nil
     }
 }

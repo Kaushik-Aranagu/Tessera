@@ -192,7 +192,7 @@ private struct GroceriesPage: View {
             }
         }
         .onPreferenceChange(RowCenters.self) { rowCenters = $0 }
-        .sensoryFeedback(.impact(weight: .light), trigger: landed)
+        .tesseraFeedback(.notNow, trigger: landed)
         // The shop finished is .done in the house map; never a raw sensoryFeedback (Haptics.swift).
         .tesseraFeedback(.done, trigger: finished)
     }
@@ -343,7 +343,6 @@ private struct ShopTitle: View {
     @State private var fill: CGFloat = 0
     /// Once the hold lands the title stays vermilion as it folds away (Design).
     @State private var held = false
-    @State private var started = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -364,7 +363,6 @@ private struct ShopTitle: View {
             .fixedSize(horizontal: false, vertical: true)
             .contentShape(Rectangle())
             .onLongPressGesture(minimumDuration: 0.7, maximumDistance: 30) {
-                started += 1
                 held = true
                 onHold()
                 // If the shop didn't start, the title is still here: drain it back to ink (QA G8). Once the shop
@@ -382,7 +380,6 @@ private struct ShopTitle: View {
                     withTesseraAnimation(.smooth(duration: 0.22), reduceMotion: reduceMotion) { fill = 0 }
                 }
             }
-            .sensoryFeedback(.impact(flexibility: .rigid), trigger: started)
             .accessibilityAddTraits(.isHeader)
             .accessibilityAction(named: "Start shopping", onHold)
     }
@@ -561,7 +558,6 @@ private struct AtTheShop: View {
                 }
             }
             .animation(reduceMotion ? .easeOut(duration: 0.18) : .smooth(duration: 0.42), value: current.aisle)
-            .sensoryFeedback(.impact(weight: .medium), trigger: current.aisle)
         }
     }
 }
@@ -620,6 +616,8 @@ private struct BasketFold: View {
     let label: (ListContents.Item) -> String
     let onTap: (ListContents.Item) -> Void
     let onClear: () -> Void
+    /// Clear the basket plays `.cleared` itself: the hold's key is silent (the map has no cue in a key).
+    @State private var clears = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -653,11 +651,15 @@ private struct BasketFold: View {
                         .buttonStyle(HandleButtonStyle())
                         .accessibilityHint("Puts it back on the list")
                     }
-                    PaintKey(paint: Theme.Colors.health, hint: "Clears the basket", action: onClear) { _ in
+                    PaintKey(paint: Theme.Colors.health, hint: "Clears the basket", action: {
+                        clears += 1
+                        onClear()
+                    }) { _ in
                         Text("Clear the basket")
                     } meta: {
                         Text("Hold")
                     }
+                    .tesseraFeedback(.cleared, trigger: clears)
                 }
                 .padding(.horizontal, Theme.Spacing.gutter)
                 .transition(.opacity.combined(with: .move(edge: .bottom)))

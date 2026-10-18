@@ -525,17 +525,17 @@ function composeSoul(t, s) {
   const fade = workFade(t, work);
   const reduced = s.reduced ? s.reduced(t) : 0;
   const grade = {
-    saturation: lerp(frame.look.saturation, .62, fade) * lerp(1, .5, reduced) + (beat ? beat.sat : 0),
+    saturation: lerp(frame.look.saturation, .62, fade) + (beat ? beat.sat : 0),
     contrast: lerp(frame.look.contrast, 1, fade),
-    opacity: frame.look.opacity * lerp(1, .9, fade) * lerp(1, .6, reduced) * (s.opacityMul ? s.opacityMul(t) : 1),
-    fade: Math.max(fade, reduced), haloBoost: s.haloBoost ? s.haloBoost(t) : 1,
+    opacity: frame.look.opacity * lerp(1, .9, fade) * (s.opacityMul ? s.opacityMul(t) : 1),
+    fade, haloBoost: s.haloBoost ? s.haloBoost(t) : 1,
     palette: s.palette ? s.palette(t) : null,
   };
   if (reduced > 0) {
-    // Reduce Motion: no travel. The three mains loosen apart in place and hold; the satellites fade.
+    // Reduce Motion (G225, D4): no travel, no fade. The three mains loosen apart in place and hold; opacity, grade and halo stay as at rest.
     parts = parts.map((p, i) => {
       const d = i < 3 ? 1.5 : 1;
-      return { ...p, x: lerp(p.x, C.x + (p.x - C.x) * d, reduced), y: lerp(p.y, C.y + (p.y - C.y) * d, reduced), alpha: p.alpha * (i >= 3 ? 1 - reduced * .6 : 1) };
+      return { ...p, x: lerp(p.x, C.x + (p.x - C.x) * d, reduced), y: lerp(p.y, C.y + (p.y - C.y) * d, reduced) };
     });
   }
   drawSoul(parts, frame, C, scale, grade);
@@ -755,7 +755,7 @@ SCENES.eyes = () => {
   };
 };
 
-// 6. Reduce Motion: nothing travels. The colour drains and the dabs loosen in place; Done is its still frame.
+// 6. Reduce Motion: nothing travels and nothing fades. The three mains loosen in place at full opacity; Done is its still frame.
 SCENES.reduced = () => {
   const S = 1.6, G = 6.2;
   return {
@@ -770,7 +770,7 @@ SCENES.reduced = () => {
     lines: [{ text: 'Planning your day.', at: S - .1, until: G }, { text: 'Plan ready. Push A at 12:15 pm.', at: G + .1 }],
     caps: [
       { at: 0, text: 'Reduce Motion: no travel. An opacity breath; the blink stays.' },
-      { at: S, text: 'Working: a 200 ms crossfade to faded and loosened.' },
+      { at: S, text: 'Working: a 200 ms crossfade to loosened; full opacity, halo kept.' },
       { at: G, text: 'Done: a 200 ms crossfade back. Haptics stay.', haptic: 'success' },
     ],
   };
@@ -1333,7 +1333,7 @@ SCENES.lowpower = () => {
     soul: { modes, centre: () => HOME, work, lowPower: true, tick: 30, eyes: t => ({ alpha: 1, blink: t > 4.1 && t < 4.26 ? Math.abs(1 - 2 * (t - 4.1) / .16) : 1, look: { x: 0, y: 0 } }) },
     lines: [{ text: 'Planning your day.', at: S - .2, until: D }, { text: 'Plan ready. Push A at 12:15 pm.', at: D + .55 }],
     caps: [
-      { at: 0, text: 'Low Power: at rest she ticks at 20 fps. Same breath.' },
+      { at: 0, text: 'Low Power: at rest she ticks at 30 fps. Same breath.' },
       { at: S, text: 'Fade: unchanged, 500 ms.' },
       { at: S + .3, text: 'Split: six lights, not twelve. No readers. 30 fps.' },
       { at: 4.1, text: 'The blink stays; the halo breath is held.' },
@@ -2043,6 +2043,86 @@ PICKS['error-notice'] = () => {
       { at: TAP + 1, text: '4.2 waiting. The page has not moved.' },
       { at: OK, text: '5.0 success: 150 ms crossfade to the area’s receipt. No second haptic.' },
     ],
+  };
+};
+// Board 26, 27, 31 (tess-page-turn-motion.md): four page turns on a 6-row list, Groceries, PRODUCE page 1 to page 2.
+// Slide, Turn, Soften, Rotate, one after the other (2.3 s each). Curve Theme.Motion.pageTurn (.22, .8, .2, 1).
+// No haptic on the turn. Reduce Motion (?rm=1): every option is one 150 ms crossfade, no stagger, no blur, no travel.
+PICKS['page-turn'] = () => {
+  const turnCurve = bezier(.22, .8, .2, 1);
+  const P1 = ['Bananas', 'Spinach', 'Lemons', 'Tomatoes', 'Avocados', 'Garlic'], Q1 = ['6', '2 bags', '4', '500 g', '3', '2 bulbs'];
+  const P2 = ['Milk', 'Eggs', 'Greek yoghurt', 'Butter', 'Cheddar', 'Oat drink'], Q2 = ['2 L', '12', '500 g', '250 g', '300 g', '1 L'];
+  const N = 6, ROW0 = 372, DY = 56, SEG = 2.3, T0 = .55, CF = .15;
+  const OPTS = [
+    { name: 'Slide', total: .52 },
+    { name: 'Turn', total: .19 + .038 * (N - 1) + .44 },
+    { name: 'Soften', total: .59 },
+    { name: 'Rotate', total: .08 + .024 * (N - 1) + .26 },
+  ];
+  const cv = (t, a, d) => (RM ? clamp01((t - a) / d) : turnCurve(clamp01((t - a) / d)));
+  const word = (str, x, y, size, color, weight, a, blur = 0) => {
+    if (a < .005) return;
+    ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    if (blur > .05) ctx.filter = `blur(${(blur * DPR).toFixed(2)}px)`;
+    ctx.globalAlpha = a; ctx.font = font(size, weight); ctx.fillStyle = color; ctx.textAlign = 'left'; ctx.fillText(str, x, y); ctx.restore();
+  };
+  const rowAt = (titles, qtys, i, dy, a, blur) => {
+    const y = ROW0 + i * DY + dy;
+    word(titles[i], 24, y, 19, LOOK.ink, 500, a, blur);
+    ctx.save(); ctx.textAlign = 'right'; ctx.restore();
+    const w = width(qtys[i], 16, 500); word(qtys[i], 369 - w, y, 16, LOOK.inkSoft, 500, a, blur);
+  };
+  // Per row: [oldAlpha, oldDy, oldBlur, newAlpha, newDy, newBlur] at local time u (s since the tap).
+  const state = (o, i, u) => {
+    if (RM) { const c = clamp01(u / CF); return [1 - c, 0, 0, c, 0, 0]; }
+    if (o === 0) { const e = cv(u, 0, .52); return [1, -(H) * e, 0, 1, H * (1 - e), 0]; }
+    if (o === 1) { const l = cv(u, .024 * i, .26), a = cv(u, .19 + .038 * i, .44); return [1 - l, -18 * l, 0, a, 34 * (1 - a), 0]; }
+    if (o === 2) { const l = cv(u, 0, .34), a = cv(u, .19, .4); return [1 - l, 0, 14 * l, a, 0, 14 * (1 - a)]; }
+    const l = cv(u, .024 * i, .16), a = cv(u, .08 + .024 * i, .26); return [1 - l, -14 * l, 0, a, 40 * (1 - a), 0];
+  };
+  const caps = [];
+  const rail = (t, u, o) => {
+    // two segments; the current one (3 pt ink) slides to the next over 200 ms
+    const y = 112, sw = 40, g = 8, e = RM ? clamp01(u / CF) : ramp(u, 0, .2, easeInOut);
+    ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.fillStyle = LOOK.inkSoft; ctx.globalAlpha = .45; ctx.fillRect(24, y, sw * 2 + g, 1);
+    ctx.globalAlpha = 1; ctx.fillStyle = LOOK.ink; ctx.fillRect(24 + (sw + g) * e, y - 1, sw, 3); ctx.restore();
+  };
+  OPTS.forEach((o, k) => {
+    const s = k * SEG, mid = o.total / 2;
+    const tot = RM ? '150 ms crossfade.' : ['page up and in, 520 ms.', '820 ms, 38 ms apart.', 'blur out and in, 590 ms.', '460 ms, 24 ms apart.'][k];
+    caps.push({ at: s, text: `${k + 1} of 4 ${o.name}. Page 1, PRODUCE.` });
+    caps.push({ at: s + T0, text: `${o.name}: ${tot}`, haptic: 'none on a user turn' });
+  });
+  return {
+    duration: SEG * 4, lines: [],
+    draw: t => {
+      const k = Math.min(3, Math.floor(t / SEG)), o = OPTS[k], lt = t - k * SEG, u = lt - T0;
+      ground();
+      text('7:42', 32, 34, 16, LOOK.ink, 600);
+      tx('GROCERIES', 24, 64, 15, LOOK.ink, 700, 'left', 1, .08);
+      rail(t, u, k);
+      text('Groceries', 24, 168, 34, LOOK.ink, 600);
+      text('24 to get.', 24, 204, 21, LOOK.context, 500);
+      // section word crossfades 200 ms centred on the middle of the row motion (150 ms in Reduce Motion)
+      const wd = RM ? CF : .2, wc = RM ? 0 : o.total / 2;
+      const wa = clamp01((u - (wc - wd / 2)) / wd);
+      tx('PRODUCE', 24, 300, 16, LOOK.inkSoft, 600, 'left', 1 - wa, .08);
+      tx('DAIRY', 24, 300, 16, LOOK.inkSoft, 600, 'left', wa, .08);
+      ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      if (k === 0 && !RM) { ctx.beginPath(); ctx.rect(0, 320, W, 400); ctx.clip(); }
+      for (let i = 0; i < N; i++) {
+        const [oa, od, ob, na, nd, nb] = state(k, i, Math.max(0, u));
+        const pre = u < 0;
+        ctx.save(); ctx.restore();
+        rowAt(P1, Q1, i, od, pre ? 1 : oa, ob);
+        if (!pre) rowAt(P2, Q2, i, nd, na, nb);
+      }
+      ctx.restore();
+      tx('Add an item', 24, 785, 19, LOOK.inkSoft, 500, 'left', .8);
+    },
+    soul: calmSoul([]),
+    caps,
   };
 };
 for (const [name, make] of Object.entries(PICKS)) SCENES['pick-' + name] = () => { const s = make(); s.lines = s.lines || []; return s; };
