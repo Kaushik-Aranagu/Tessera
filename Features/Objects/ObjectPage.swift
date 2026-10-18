@@ -200,7 +200,7 @@ private struct ExerciseSummary: View {
         let best = history.flatMap(\.sets).max { $0.e1RM < $1.e1RM }
         let top = history.first?.sets.max { $0.weight * 100 + $0.reps < $1.weight * 100 + $1.reps }
         VStack(spacing: Theme.Spacing.m) {
-            // An empty value drops out; no lone "—" (decisions 5:57).
+            // An empty value drops out; no lone dash (decisions 5:57).
             if let best {
                 Stat(label: "Best e1RM", value: "\(Format.kilograms((best.e1RM * 10).rounded() / 10))kg",
                      tint: Theme.Colors.ink)
@@ -452,7 +452,7 @@ private struct PropertyList: View {
             if let value {
                 Text(describe(value, unit: field.unit)).textRole(.data).foregroundStyle(Theme.Colors.ink)
             } else {
-                // A cell that must show something says "none", never a lone "—" (decisions 5:57).
+                // A cell that must show something says "none", never a lone dash (decisions 5:57).
                 Text(field.kind == .computed ? "ƒ \(field.expression ?? "")" : ObjectCopy.none)
                     .textRole(.data)
                     .foregroundStyle(Theme.Colors.inkTertiary)
@@ -564,6 +564,11 @@ enum ObjectNotes {
 
 /// The object page's words.
 enum ObjectCopy {
-    /// An empty cell that must show something.
+    /// An empty cell that must show something (decisions 5:57): never a lone dash.
     static let none = "none"
+
+    /// A cell's value, or "none" when it has none.
+    static func cell(_ value: String?) -> String {
+        value ?? none
+    }
 }

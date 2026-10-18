@@ -141,7 +141,7 @@ private struct ExerciseSummary: View {
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.m))
             : AnyLayout(HStackLayout(alignment: .top, spacing: 0))
         return layout {
-            // An empty value drops out; no lone "—" (decisions 5:57).
+            // An empty value drops out; no lone dash (decisions 5:57).
             if let best = digest.bestE1RM {
                 stat(Format.kilograms(best), label: "Best e1RM, kg",
                      spoken: "Best estimated one-rep max, \(Format.kilograms(best)) kilograms")
