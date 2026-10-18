@@ -228,6 +228,31 @@ struct ClaudeRouteTests {
         #expect(TessInbox(store: store, classes: classes).waiting().count == 1)
     }
 
+    @Test func aWalledMissOfflineIsNeverInTheMissLogOrTheLedger() async throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let fileStore = try ObjectStore(context: TesseraContext(url: dir.appendingPathComponent("tessera.sqlite")))
+        let fileClasses = try fileStore.prepareCatalog()
+        let fileEngine = ActionEngine(store: fileStore, classes: fileClasses)
+        let capture = TessCaptureEngine(engine: fileEngine)
+        var claude = ClaudeTessModel(keys: InMemoryKeychain(Self.key),
+                                     ledger: TessUsageLedger(store: fileStore, classes: fileClasses), flags: flags,
+                                     session: RouteStub.session(), sendsMisses: { true })
+        claude.now = { TesseraDayTests.at(10, 15, 18, 10) }
+        claude.calendar = TesseraDayTests.calendar
+        capture.claude = claude
+        let log = try #require(CaptureMissLog.beside(fileStore))
+        RouteStub.failure = .notConnectedToInternet
+        let walled = await capture.capture("could you log that I paid 40 for gas earlier?", context: context)
+        #expect(walled.line == ClaudeTessModel.walledOfflineLine)
+        #expect(log.all().isEmpty, "\(log.all().map(\.text))")
+        #expect(TessUsageLedger(store: fileStore, classes: fileClasses).calls().isEmpty)
+        // A plain miss offline keeps its ledger row and is queued.
+        _ = await capture.capture(miss, context: context)
+        #expect(TessUsageLedger(store: fileStore, classes: fileClasses).calls().count == 1)
+    }
+
     @Test func aSecretMissOfflineSaysTheSameWhenItReachesTheRoute() async {
         // The grammar keeps a secret phrase on the phone, so it rarely gets here; the route itself still holds.
         var claude = ClaudeTessModel(keys: InMemoryKeychain(Self.key), ledger: ledger, flags: flags,
