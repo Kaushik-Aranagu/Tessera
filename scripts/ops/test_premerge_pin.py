@@ -72,6 +72,23 @@ class PinRuling(unittest.TestCase):
         other = "| Other, pin a look | flood | flood stays |"
         self.assertTrue(stopped(run(diff([OLD, other], [NEW, other + " x"]), BODY, DECISIONS)))
 
+    def test_new_text_adding_only_sha_stops(self):
+        self.assertTrue(stopped(run(diff([OLD], ["| Settings, pin a look | only SHA abcdef1234567 |"]), BODY, DECISIONS)))
+
+    def test_new_text_adding_release_install_stops(self):
+        self.assertTrue(stopped(run(diff([OLD], ["| Settings, pin a look | release 14 install |"]), BODY, DECISIONS)))
+
+    def test_partial_stamp_stops(self):
+        body = "PIN-CHANGE: 11 | " + PATH + ":67\n"
+        decisions = DECISIONS.replace("- " + STAMP, "- 11:33 AM PT Oct 18")
+        self.assertTrue(stopped(run(diff([OLD], [NEW]), body, decisions)))
+
+    def test_install_named_file_never_ruled(self):
+        path = "docs/ops/pin-release.md"
+        body = "PIN-CHANGE: " + STAMP + " | " + path + ":67\n"
+        decisions = DECISIONS.replace("example-lowpower.md:67", "pin-release.md:67")
+        self.assertTrue(stopped(run(diff([OLD], [NEW], path=path), body, decisions)))
+
     def test_extra_added_pin_line_stops(self):
         self.assertTrue(stopped(run(diff([OLD], [NEW, "| Another, pin a look | x | y |"]), BODY, DECISIONS)))
 

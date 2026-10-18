@@ -9,7 +9,7 @@
 
 ## What the guard checks
 - Each removed pinned line has its own `PIN-CHANGE` line, and the named entry exists with that stamp and names that file and that old line. A body that only cites an entry is not enough; a missing entry, a wrong file or a wrong line stays STOP.
-- Lines mentioning install, release, signing, profile, SHA or a hex id of 7 or more characters can never be ruled.
+- Lines mentioning install, release, signing, profile, SHA or a hex id of 7 or more characters can never be ruled, and neither can a replacement that adds such text. Files named with pin, release, install, signing or profile are never ruled. The stamp must be the full shape `H:MM AM PT Mon D`.
 - The PR may not add more pinned lines than it removes; every other pinned line must stay byte-identical.
 - A ruled change prints `REPORT <path>:<old line> pin: changed on purpose under decisions entry '<stamp>' naming <file>:<line>; QA confirm`. QA copies that line into the verdict. Without the two inputs the guard behaves as before.
 - Removing a pinned line with no replacement is not covered by this path and is unchanged.

@@ -29,6 +29,8 @@ PY_FORBIDDEN = re.compile(r"\b(subprocess|os\.system|socket|requests|pickle)\b|\
 PY_IMPORT = re.compile(r"^\s*(?:import|from)\s+([A-Za-z_][\w.]*)")
 PIN_RE = re.compile(r"(?i)(^|\W)(PIN|only[- ]SHA)\b")
 RULING_RE = re.compile(r"^\s*PIN-CHANGE:\s*(.+?)\s*\|\s*(\S+?):(\d+)\s*$")
+STAMP_RE = re.compile(r"\d{1,2}:\d{2} [AP]M PT [A-Z][a-z]{2} \d{1,2}")
+INSTALL_PATH_RE = re.compile(r"(?i)(^|[^a-z])(pin|release|install|signing|profile)([^a-z]|$)")
 INSTALL_RE = re.compile(r"(?i)\b(install\w*|release\w*|signing|profile|sha)\b|\b[0-9a-f]{7,40}\b")
 ALLOWED_ONLY_SHA = "Only a named pin or release SHA installs: never master by itself, never any other commit."
 
@@ -110,14 +112,16 @@ def entry_names(decisions, stamp, name, line_no):
 def pin_ruled(f, pin_old, pin_new, rulings, decisions):
     """(stamp, old line) per removed pinned line when each has its own ruling that the base-branch decisions log
     backs and no extra pinned line is added; an empty list otherwise."""
-    if not rulings or decisions is None or len(pin_new) > len(pin_old):
+    if not rulings or decisions is None or len(pin_new) > len(pin_old) or INSTALL_PATH_RE.search(f["path"]):
+        return []
+    if any(INSTALL_RE.search(text) for _, text in pin_new):
         return []
     used = []
     for old_no, text in [(n, t) for n, t in f["removed_at"] if PIN_RE.search(t)]:
         if INSTALL_RE.search(text):
             return []
         hit = [st for st, rp, rl in rulings
-               if rp == f["path"] and rl == old_no and entry_names(decisions, st, os.path.basename(rp), rl)]
+               if STAMP_RE.fullmatch(st) and rp == f["path"] and rl == old_no and entry_names(decisions, st, os.path.basename(rp), rl)]
         if not hit:
             return []
         used.append((hit[0], old_no))
