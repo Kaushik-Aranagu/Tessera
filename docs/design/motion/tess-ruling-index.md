@@ -106,3 +106,5 @@ Same columns and statuses as section 6. Line numbers are the 1083-line copy on t
 **Still to fold into specs:** N14 and N16 are done (`tess-capture-miss-motion.md`); N21's Speak listen-end and masked notification rows are still owed.
 
 **Design files not on master yet:** `shutdown.md` (branch commit `3fd66f0f`) and `pockets-91.md` (`9fb7d9b1`, branch `claude/project-thread-b3tu3f`) are cited by the day-screens and muscle-figure specs; read them at those commits until Design's PRs merge.
+
+**Open asks for Product (from `tess-capture-miss-motion.md`):** (1) the offline line holds 10 s (lab default); (2) Cancel has no spoken confirmation, focus returns to the box (lab default).
