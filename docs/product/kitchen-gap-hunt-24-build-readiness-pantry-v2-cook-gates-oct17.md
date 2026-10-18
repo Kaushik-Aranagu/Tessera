@@ -93,4 +93,8 @@ Written Oct 17 PDT, after hunt 23. One list for Core, Builder A and Builder B: w
 
 ## Rulings in (Product)
 
-(none yet)
+1. G410 ruled (Oct 17, late evening): Builder A owns the clock page (cook screen) end to end; Builder B owns the recipe page, Pantry screens and the Cook hand-off. Boards updated.
+2. G408: Ops is re-mirroring decisions.md into the repo.
+3. G406: first item on core.md.
+
+G407 and G409 still open.
