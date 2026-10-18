@@ -287,7 +287,7 @@ Test files: `PantryStateTests`, `PantryEventTests`, `PantryGrammarTests`, `Pantr
 | R9 | "low on X" phrases? | Include; state only, no row. |
 | R10 | Does "got/bought" set `lastBoughtAt`? | Yes; "have" does not. |
 | R11 | "what do i have" opens Pantry? | Yes, exact; a day word means the schedule. |
-| R12 | Private line tappable (S15 says no; decision 5:16 says tap-to-reveal; G102)? | Not tappable until G102 is ruled. |
+| R12 | Private line tappable (S15 says no; decision 5:16 says tap-to-reveal; G102)? | Not tappable; follows G102 (ruled Oct 17 4:30 PM). |
 | R13 | Private recipe in CAN COOK? | Counted, no names, no add. |
 | R14 | USUALLY HAVE with exactly 4 names? | All four if they fit one line, else the "and 2 more" form. |
 | R15 | First state for an unknown ingredient from the screen? | No tap target (P8); first state comes from Tess, a clear or a cook. |

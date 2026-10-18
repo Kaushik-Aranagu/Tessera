@@ -77,10 +77,10 @@ character (inferred, G94). Non-English punctuation FAIL (G96, G97). Title equal 
 
 | Surface | Verdict | file:line |
 |---|---|---|
-| Row in list / SHOP mode (item) | masked "Private item" until tapped; RAW after one tap (G102) | ShopTrip.swift:23-26, 42-48; GroceriesView.swift:239-254, 489-490 |
+| Row in list / SHOP mode (item) | masked "Private item" until tapped; RAW after one tap (G102) (Ruled Oct 17: G102 no reveal; fix in Builder B's PR #885 for Groceries and lists, recipe page still open.) | ShopTrip.swift:23-26, 42-48; GroceriesView.swift:239-254, 489-490 |
 | Basket rows | masked always | ShopTrip.swift:30-32; GroceriesView.swift:244-246, 663 |
 | Row "for <recipe>" (long press) | masked "Private recipe" | ShopTrip.swift:51-54; GroceriesView.swift:216-220, 503 |
-| Row VoiceOver label / hint | follows the masked label (hint "Shows it") | GroceriesView.swift:525-527 |
+| Row VoiceOver label / hint | follows the masked label (hint "Shows it") (Ruled Oct 17: G102 no reveal; fix in Builder B's PR #885 for Groceries and lists, recipe page still open.) | GroceriesView.swift:525-527 |
 | Add receipt / UNDO (typed or Tess) | masked for medicine or body fact | Groceries.swift:642-688; TessCaptureEngine.swift:243-246, 383-405; BottomChrome.swift:761-767 |
 | Recipe add receipt, recipe page | masked "Private recipe, N added." | Groceries.swift:557-573; RecipePage.swift:547-560 |
 | Check / uncheck receipt | masked via `shownTitle` (health only, G105) | Lists.swift:346-357 |
@@ -103,6 +103,7 @@ character (inferred, G94). Non-English punctuation FAIL (G96, G97). Title equal 
   "decisions 3:12 #4"); the 3:35 PM rule as given forbids any raw title in Groceries. ShopTrip.swift:23-26, 42-48,
   GroceriesView.swift:239-254, 526. Fix if the rule supersedes: drop `revealed`, the row always reads "Private item", one
   tap strikes it, remove the "Shows it" hint. Owner: Product ruling, then Builder B screen.
+  (Ruled Oct 17: G102 no reveal; fix in Builder B's PR #885 for Groceries and lists, recipe page still open.)
 - **G103 (important)** The generic object page prints raw Groceries titles. `ObjectPrivacy.label(of:)` has branches for
   note, memory, task and recipe only, so a list item ("Lexapro") returns nil, and so do a list, an ingredient, a cook and
   recipe lines. The item's own page title (ObjectPage.swift:260), the Groceries list's Contents rows (331-334) and any
@@ -142,7 +143,7 @@ Counts: 16 gaps (G93-G108): 0 blocker, 8 important (G93, G94, G96, G98, G102, G1
 
 ## Still open
 
-- Whether the 3:35 PM rule overrides tap-to-reveal (G102) and which words count as private (G105).
+- Resolved: the 3:35 PM rule overrides tap-to-reveal (G102, ruled Oct 17: no reveal; a masked row always reads "Private item" and one tap strikes it; fix in Builder B's PR #885 for Groceries and lists, recipe page still open). Which words count as private (G105) stays open.
 - Definition of "quantity" in the title rule (G94, G95).
 - No test for: trailing space or CRLF duplicate, undo then repaste, private-title collision, "!" or "?" kept as step 1.
 - Who owns the Tess "Done:" task titles in the Day log (G104, adjacent).
@@ -151,7 +152,7 @@ Counts: 16 gaps (G93-G108): 0 blocker, 8 important (G93, G94, G96, G98, G102, G1
 ## Phone only
 
 - Paste screen ink line, no haptic, text kept after a duplicate Save; the Save bar after the line.
-- VoiceOver reading of masked rows and the "Shows it" hint; Dynamic Type at AX sizes on the duplicate line.
+- VoiceOver reading of masked rows and the "Shows it" hint; Dynamic Type at AX sizes on the duplicate line. (Ruled Oct 17: G102 no reveal; fix in Builder B's PR #885 for Groceries and lists, recipe page still open.)
 - The generic object page for a Groceries item and for the Groceries list (G103) on a real private item.
 - Day log with a private list name (G104).
 - Paste of a real web recipe with curly quotes and emoji (G96) and a CJK recipe (G97).
