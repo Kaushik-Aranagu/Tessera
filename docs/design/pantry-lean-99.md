@@ -37,3 +37,8 @@ Rule (sheet 92 section 3, G102): one string in the same type as any title, same 
 | P5 | Object page header and class line (#912) | A masked header should keep the title type, and the class line should read "object Private item : Ingredient"-free; the class name stays, the words do not. | Header same type; class line prints the class only. | 92 s3 |
 | P6 | Any alignment | Masked strings are shorter than real titles, so a right-aligned time or count must stay pinned, not float inward. | Fixed trailing column; no centring on short text. | 92 s3 |
 P1 is the only one I can name from the source; P2 to P6 are checks to make on the phone or simulator when the Mac is back.
+
+## 4. The Pantry index line: Kitchen lean (PO06, Oct 17, 7:00 PM PT)
+- **The index line takes Kitchen's `areaLean`** (the 72% mix; Porcelain #126E52, Obsidian #72DCB1), like any Kitchen caps label. It is a label, one of the four places `areaLean` is allowed (caps labels, key word, lead numeral, section hairline). The state words below it stay ink.
+- **Until the area-colour pass lands, it is ink.** Research's ink default is right for today's build; the fixture row should expect ink now and lean after Builder A's pass, so PO06 carries a pending note, not a failure.
+- Never on the rows, the ring, the "bought Sat" values or the greyed OUT and LOW lines.
