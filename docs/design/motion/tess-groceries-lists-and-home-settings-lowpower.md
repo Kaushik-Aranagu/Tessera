@@ -1,6 +1,6 @@
 # Groceries and Lists motion under the new rulings, and a Home and Settings Low Power pass (board items 59, 60)
 
-For: Builder A (flag, haptic origin, shared line), Builder B (Groceries, Lists, Home), Design (zoom, line spot), QA. Written Oct 17, PM (Pacific). Read from the code on master `eaa4c305` (file:line below) and from kitchen gap hunt 17 (G244 to G250). Kitchen gap hunt 18 was not on master when this was written; if it grades the same lines differently, its number wins and only that row changes. Product's rulings (Oct 17, PM, relayed): the Low Power zoom into a screen is a 150 ms crossfade (G247); one shared Tess line with UNDO on every full-screen layer (G250); haptic weights: check and uncheck light, Done and Clear success, Reset medium (G249).
+For: Builder A (flag, haptic origin, shared line), Builder B (Groceries, Lists, Home), Design (zoom, line spot), QA. Written Oct 17, PM (Pacific). Read from the code on master `eaa4c305` (file:line below) and from kitchen gap hunt 17 (G244 to G250). Kitchen gap hunt 18 was not on master when this was written; if it grades the same lines differently, its number wins and only that row changes. Product's rulings (decisions.md 9:17 PM Oct 17, project mirror line 1009): the Low Power zoom into a screen is a 150 ms crossfade (G247); one shared Tess line with UNDO on every full-screen layer (G250); haptic weights: check and uncheck light, Done and Clear success, Reset medium (G249).
 
 **One flag.** `isReduced` = Reduce Motion or Low Power (D5, cached, updated on `NSProcessInfoPowerStateDidChange`); every `reduceMotion` below means it. Meaning never changes in the reduced form: same strike, same count, same words, same haptics.
 
@@ -40,6 +40,8 @@ Dead code to delete (G247): the `reduceMotion ? .easeInOut(0.2) : ...` ternaries
 | Aisle cleared by his last strike in it | `.aisleCleared` (medium), keyed to his strike, not to the aisle value, so an UNDO or a row landing from Pantry or the Bar never buzzes (GroceriesView:581) | his touch | yes | yes |
 | Pick lands (ListsPick) | `.pickedUp` (light 0.5) stays until Product rules 12.2's "medium" | his touch | yes | yes |
 | Remove armed on the swipe | `.selection` (ListsSwipe:34) | his touch | yes | yes |
+Done, Clear the basket and Reset are named-action-only for VoiceOver (G258, 9:17 PM): double tap speaks the hold hint, the named action completes, and the haptic above plays once either way; UNDO covers each for 10 s.
+
 Rules: raw `.sensoryFeedback` on these screens (GroceriesView:209, 402, 581) goes through `tesseraFeedback`; `Haptic` gains an origin (his touch, or Tess's landing) so a landing can follow quiet hours; nothing on these two screens is a Tess landing today. Tests: `uncheckPlaysLightImpact`, `finishPlaysOneDone`, `resetPlaysMedium`, `undoDoesNotBuzzAisleCleared`, `lowPowerKeepsGroceryHaptics`.
 
 ## 60. Home and Settings Low Power pass (static read, nothing run)
@@ -66,5 +68,5 @@ Rule: in Low Power, ambient motion stops, motion that carries meaning becomes a 
 
 Checks: one device pass with `-lowPower` and a real toggle: Home at rest for 30 s draws nothing that moves; Training with a waiting lane shows a still guide; the Claude section opens with no 6 pt slide; `reduceMotionFlagIncludesLowPower` (one unit test on the flag, as gap hunt 16 G219 asks) covers every row at once.
 
-## Amends the cook sheet in #946
-`Haptics.swift` documents `.timeUp` (heavy impact 0.9) as the haptic for "Rest is up, or a kitchen timer ends, with the app on screen", and `12-cook-mode.md` says the timer-end haptic is a `.success`. #946 follows the cook sheet. Lab recommendation: the kitchen timer end is `.timeUp`, the map's word, because the map is the code and a heavy tap is felt through a pocket, while `.success` belongs to Done. One line for Product to rule; if it lands as `.timeUp`, the rows "Timer end, `.success`" in the #946 sheet and the test names carry the new case in the next PR. The rule that it stays in Low Power does not change.
+## The kitchen timer end is `timeUp` (settled)
+`Haptics.swift` names `.timeUp` (heavy impact 0.9) for "Rest is up, or a kitchen timer ends, with the app on screen", and the cook sheet said `.success`. Product ruled at 9:18 PM Oct 17 (decisions item 2) that the haptic map wins: the kitchen timer end is `timeUp`, and it plays in Low Power. The cook sheet in #946 carries it (fixed in eb69f1de).
