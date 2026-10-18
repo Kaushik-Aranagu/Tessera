@@ -208,6 +208,41 @@ struct ClaudeRouteTests {
         #expect(ledger.calls().count == 2)
     }
 
+    @Test(arguments: [
+        "could you log that I paid 40 for gas earlier?",
+        "could you note that I weighed 82.4 kg this morning please?",
+    ])
+    func aWalledMissOfflineIsNeitherQueuedNorLoggedAndSaysSo(_ phrase: String) async {
+        // Money, body and secret words: the ruled line, nothing in the inbox, nothing logged, the other lines
+        // unchanged.
+        #expect(PrivateFacts.isWalled(phrase, lastWeightKg: nil) || SecretWords.mentions(phrase), "\(phrase)")
+        RouteStub.failure = .notConnectedToInternet
+        let capture = await tess().capture(phrase, context: context)
+        #expect(capture.records.isEmpty && capture.line == "Couldn't read that offline. Try again online.",
+                "\(capture.line)")
+        #expect(capture.isRefusal)
+        #expect(TessInbox(store: store, classes: classes).waiting().isEmpty)
+        // A plain miss offline still waits for Claude.
+        let plain = await tess().capture(miss, context: context)
+        #expect(plain.line == "No connection. Saved it for Claude.")
+        #expect(TessInbox(store: store, classes: classes).waiting().count == 1)
+    }
+
+    @Test func aSecretMissOfflineSaysTheSameWhenItReachesTheRoute() async {
+        // The grammar keeps a secret phrase on the phone, so it rarely gets here; the route itself still holds.
+        var claude = ClaudeTessModel(keys: InMemoryKeychain(Self.key), ledger: ledger, flags: flags,
+                                     session: RouteStub.session(), sendsMisses: { true })
+        claude.now = { TesseraDayTests.at(10, 15, 18, 10) }
+        claude.calendar = TesseraDayTests.calendar
+        RouteStub.failure = .notConnectedToInternet
+        let phrase = "could you hold the wifi password zebra99 for me later?"
+        #expect(SecretWords.mentions(phrase))
+        let result = await claude.run(TessRequest(text: phrase, context: context, use: .capture), engine: engine)
+        guard case let .asked(capture) = result else { Issue.record("expected the offline line"); return }
+        #expect(capture.line == "Couldn't read that offline. Try again online." && capture.isRefusal)
+        #expect(TessInbox(store: store, classes: classes).waiting().isEmpty)
+    }
+
     @Test func aToolThatFailsMidwayLeavesNoGhost() async throws {
         // Claude asks for an exercise that doesn't exist, then gives up.
         RouteStub.queue = [
