@@ -53,6 +53,11 @@ public enum ObjectPrivacy {
         if isA(.recipe) {
             return isPrivateRecipeTitle(object.title, lastWeightKg: last) ? recipeLabel : nil
         }
+        // An ingredient masks on the one check, like the item it becomes on Groceries (G103, G105). Items and lists
+        // are #895's branches.
+        if isA(.ingredient) {
+            return isPrivateRecipeTitle(object.title, lastWeightKg: last) ? "Private item" : nil
+        }
         return nil
     }
 
@@ -62,10 +67,34 @@ public enum ObjectPrivacy {
     /// the shared export all ask this, so a thing reads private everywhere or nowhere ("Dentist cake" is "Private
     /// recipe" on a screen and in a file alike).
     public static func isPrivateTitle(_ text: String, lastWeightKg: Double?) -> Bool {
-        text == SecretWords.title || isPrivateText(text, lastWeightKg: lastWeightKg)
-            || PrivateFacts.words(text.lowercased()).contains(where: titleWords.contains)
+        if text == SecretWords.title {
+            return true
+        }
+        // A grocery amount with a unit ("5 kg flour", "1 pound butter") is never masked as money or a weigh-in: those
+        // rules are for money and body lines. A secret, a medicine or a title word still is.
+        if AddListItem.isAmountOfAThing(text) {
+            return SecretWords.mentions(text) || hasTitleWord(text) || EngineWall.isMedicine(text)
+        }
+        if isPrivateText(text, lastWeightKg: lastWeightKg) {
+            return true
+        }
+        return hasTitleWord(text) || isDoctorName(text)
             // A bare medicine is a health fact: "lexapro", "advil", "take melatonin".
             || EngineWall.isHealth(text, lastWeightKg: lastWeightKg)
+    }
+
+    /// A title word, or its plural ("dentists"); joined words ("dentist-appt") are not.
+    static func hasTitleWord(_ text: String) -> Bool {
+        PrivateFacts.words(text.lowercased()).contains { word in
+            titleWords.contains(word) || (word.hasSuffix("s") && titleWords.contains(String(word.dropLast())))
+        }
+    }
+
+    /// "Dr. Patel" and "Dr Patel": a "dr" with a stop, or followed by a capitalised name other than Pepper. A bare "dr"
+    /// is not a title word, so "Dr Pepper" stays raw.
+    static func isDoctorName(_ text: String) -> Bool {
+        text.firstMatch(of: /\b[Dd]r\./) != nil
+            || text.firstMatch(of: /\bDr\s+(?!Pepper\b)\p{Lu}/) != nil
     }
 
     /// Medical and care words that make a bare title private even with no number (Product: money and body titles are
@@ -75,7 +104,7 @@ public enum ObjectPrivacy {
     /// "sleep tea", "Dr Pepper".
     static let titleWords: Set<String> = TessMemoryScreen.healthWords
         .subtracting(["blood", "heart", "energy", "sleep", "tight", "tip", "pepper", "dr", "kg", "lb", "lbs", "kcal",
-                      "calories", "pain", "recovery", "weight"])
+                      "calories", "pain", "recovery", "weight", "slept", "sleepy", "drained"])
         .union(["rehab", "physio", "physiotherapy", "therapy", "therapist", "surgery", "doctor", "dentist", "clinic",
                 "hospital"])
 

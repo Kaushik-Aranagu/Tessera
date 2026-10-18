@@ -239,7 +239,9 @@ public struct AddListItem: EngineAction {
     /// "1.50 lb apples", "2 kg rice": a number, a unit, then a word that isn't a day or body word.
     static func isAmountOfAThing(_ line: String) -> Bool {
         let lower = line.lowercased()
-        guard let match = lower.firstMatch(of: /\b\d+(?:[.,]\d+)?\s*(?:kg|kgs|lb|lbs|g|oz|ml|l)\s+([a-z]+)/) else {
+        guard let match = lower
+            .firstMatch(of: /\b\d+(?:[.,]\d+)?\s*(?:kg|kgs|lb|lbs|pound|pounds|kilo|kilos|g|oz|ml|l)\s+([a-z]+)/)
+        else {
             return false
         }
         let word = String(match.output.1)
