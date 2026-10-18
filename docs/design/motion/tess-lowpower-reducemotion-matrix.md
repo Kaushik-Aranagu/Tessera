@@ -93,7 +93,7 @@ Tick in this order; each line names the cite in (b) below.
 9. Gaps (no spec): Notes motion, Watch, non-cook Recipes, Money/Reading haptics in SLM/SLR (IDX H10), the Haptics gate in LP.
 
 ## Changes from Kitchen's open calls (Oct 18, rows N22 to N59 in `tess-ruling-index.md`)
-Not yet merged into the table above; Builder A reads these as the newer cells.
+Folded in by #1036 (Oct 18) as an appended section, not yet merged cell by cell into the table above; Builder A reads these as the newer cells.
 
 1. First cell "Notes": Normal `page fades 380 ms, context and body draw in, words settle at 128 ms; write flies 420 ms; list entrance opacity only under the flag (G290)`; RM `row crossfades to the page, opacity only (G289)`; LP `= RM`; Haptics `note write .made; delete tap + UNDO 10 s`; Cite `NRM:5-36`. (Replaces "NOT specced for motion (INFERRED house policy)" at MAT:43.)
 2. First cell "Speak (listen, ghost, commit)": LP cell becomes `soul LP form; bloom still x1.2 and level not fed (G313); dry stays 3 s as 4 steps ~0.75 s`; RM cell adds `Write dry 0.6 s (G314)`. Fix MAT:64 item 3 to match (drop "mic <=20 samples/s").
