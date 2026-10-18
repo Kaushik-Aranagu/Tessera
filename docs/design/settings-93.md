@@ -4,7 +4,7 @@ Product ask Oct 17 (4:10 PM PT). Spec only; no study. Nothing in the app changes
 
 ## The page (top to bottom, one scroll of 5 pages at most under sheet 90's rules; here 4 pages of 6 or fewer)
 Page 1, **Tess**
-- Tess asks Claude: "Off" or "On". Under it one line: "Sends only what you ask her." Off is the default and stays off until the key is there.
+- Tess asks Claude: "Off" or "On". Under it one line: "Sends only what Receipts lists." (Product ruling Oct 17: the switch also gates capture misses, plan wording, Home lines and recipe reads, so "what you ask her" overclaimed.) Key, This month and Receipts live inside this row and open in place, so page 1 stays 6 rows or fewer. Off is the default and stays off until the key is there.
 - Quiet hours: "11 pm to 7 am". Tap opens two clocks in place.
 - Page turn: "Turn, on". Tap opens the four words in place (Slide, Turn, Soften, Rotate), each previewing once on a mini page (R4: re-picking the same word does not replay).
 Page 2, **Your day**
