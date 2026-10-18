@@ -83,7 +83,7 @@ struct AccentTitle: View {
                 finishing = nil
             }
             .accessibilityLabel(text)
-            .accessibilityValue(accent.isDone ? "done" : "")
+            .accessibilityValue(accent.isDone && !text.lowercased().hasSuffix("done") ? "done" : "")
     }
 
     /// Strike (420 ms, ease-out), one 250 ms lift, then 900 ms later the 2 s dry.
@@ -92,10 +92,10 @@ struct AccentTitle: View {
         withTesseraAnimation(.easeOut(duration: 0.42), reduceMotion: still) { strike = 1 }
         finishing?.cancel()
         finishing = Task { @MainActor in
-            // Each step checks it is still wanted: an undone finish or a left page stops the sequence.
+            // Each step checks it is still wanted: an undone finish or a left page cancels the task.
             func step(_ milliseconds: Int) async -> Bool {
                 try? await Task.sleep(for: .milliseconds(milliseconds))
-                return !Task.isCancelled && accent.isDone
+                return !Task.isCancelled
             }
             guard await step(420) else { return }
             withTesseraAnimation(.easeOut(duration: 0.125), reduceMotion: still) { lift = true }
