@@ -5,8 +5,9 @@ reachable. Release 14 is everything on master since 13, so install 13's page fir
 Read Sat Oct 17 from the PR diffs (GitHub) and git history. Nothing was built or run. Exact lines are quoted only
 where the code has them.
 
-PRs 864, 866 and 867 are merged and already on master. PRs 564, 868, 871, 884 and 886 are open: everything marked
-"if merged" below only appears if that PR lands before release 14 is cut.
+PRs 864, 866 and 867 are merged and already on master. PRs 564, 868, 871, 884, 885, 886 and 890 are open (re-read Sun Oct 18, none merged, every head SHA below unchanged
+since the first read except the two new ones): everything marked "if merged" below only appears if that PR lands
+before release 14 is cut.
 
 ## Pick one and lists
 - **Pick one closes with VoiceOver.** The two-finger scrub closes the pick. A tap outside during the short pause
@@ -51,6 +52,17 @@ PRs 864, 866 and 867 are merged and already on master. PRs 564, 868, 871, 884 an
   and row W27 describe #884 as built until that PR lands, then change.
 - **Clocks are not money (if merged, #884).** "dinner at 7.30" is a time. "rent at 7.30" is still money.
 - **Stone is a body fact (if merged, #884).** "Eleven stone four" and "12 st 3" stay private.
+
+## Private rows and titles (if merged, #885 and #890)
+- **A private row never opens (if merged, #885).** On Groceries (list, SHOP mode and basket) and on a list page, a
+  private row always reads "Private item". One tap strikes it like any other row; nothing shows its words. VoiceOver
+  says "Puts it in the basket" (Groceries) or "Checks it off" (a list), never "Shows it".
+  Try: put "advil" on Groceries, tap the row.
+  Not covered: the recipe page still lets a tap show a private recipe title (see W38).
+- **One check for private titles (if merged, #890).** "Dentist cake" reads "Private recipe" on every screen, in Tess's
+  lines and in a shared export. "blood orange", "hearts of palm", "energy drink", "sleep tea", "Dr Pepper", "Rent car"
+  and "flour 5 kg" stay as typed. A plain task "dentist" stays raw on Home.
+  Try: paste a recipe titled "Dentist cake".
 
 ## Quietly safer
 A stored number that is NaN, infinite or past 1e15 now reads as no value everywhere, so no screen can crash on it.
@@ -101,12 +113,46 @@ Merged rows are on master now. Open rows carry "if merged" and the head SHA read
 | W31 | #884 | Review, Claude receipts | No walled phrase word in any row | A word of a walled phrase | traced (test); screen read inferred | none |
 | W32 | #886 open (5bbd506), if merged | Paste "30-Minute Dal", "7 Layer Dip", "5 Spice Chicken", "3 Cheese Pasta Bake" | Title kept | "Untitled recipe" | traced (RecipeTests) | none |
 | W33 | #886 | Paste first lines "2 eggs", "1/2 cup flour", "200g flour", "2 Tbsp butter", "1. Preheat the oven" | Untitled recipe (quantity or step, not a title) | An ingredient as the title | traced | none |
+| W34 | #885 open (339ebeb), if merged | Groceries list, then SHOP mode: a private row ("advil") among plain ones | Reads "Private item"; one tap strikes it into the basket; the basket also reads "Private item" | The words "advil" at any point; a first tap that does nothing | traced (`shopTap` now calls `check`; ShopTripTests `aPrivateRowAlwaysReadsPrivateItem`); screen check needs a simulator | none |
+| W35 | #885 | VoiceOver on a private Groceries row and a plain one | Both hint "Puts it in the basket" | A hint "Shows it" | traced (GroceriesView `GroceryRow`) | none |
+| W36 | #885 | A list page holding "advil": tap the row; VoiceOver hint | Reads "Private item"; the tap strikes it at once; hint "Checks it off" | A first tap that only reveals; "Shows it" | traced (`ListPage.tap` guard removed, hint literal) | none |
+| W37 | #885 | Private row, then leave the page, lock the phone, end SHOP mode, come back | Still "Private item", no state to reset | Words shown after any of those | traced (`revealed`, `tap`, `end()` and the scenePhase and onDisappear hooks deleted) | none |
+| W38 | #885 | Recipes: a recipe with a private title (e.g. "Ibuprofen tea"), hero and detail page | Per decisions 4:20 PM item (7) and 4:25 PM: always "Private recipe", no tap shows it, no "Shows it" hint | A tap that shows the title | **gap**: head 339ebeb changes four files (GroceriesView, ShopTrip, ListsView, ShopTripTests) and not RecipePage; on master `titleShown` is at RecipePage.swift:31 and :457, "Shows it" at :81 and :471 | none (Builder B, new PR) |
+| W39 | #890 open (3980906), if merged | Paste "Dentist cake" (ingredients and a step), then look at Recipes, Home, the add-to-Groceries line, a shared export | "Private recipe" in every place | The word "Dentist" on a screen, a Tess line or in the file | traced (PrivacyParityTests `aRecipeCalledDentistCakeIsPrivateOnTheScreenAndInTheExport`) | none |
+| W40 | #890 | Titles "blood orange", "hearts of palm", "energy drink", "sleep tea", "Dr Pepper", "Rent car", "flour 5 kg", "ground beef 2 lb", "pain au chocolat", "recovery shake", "Weight Watchers chili" | Stay as typed everywhere | "Private" on any of them | traced (PrivacyParityTests `aPlainTitleIsPlainEverywhere`; decisions 4:22 PM and 4:35 PM) | none |
+| W41 | #890 | List items or Groceries lines "dentist", "therapy ideas", "lexapro", "rent 2100", "take melatonin", "paid 40 for gas"; Tess's line after adding | Row and line read "Private item"; "Private item, already on Groceries." on a repeat | The word in a receipt, UNDO line or Tess line | traced (`AddGroceries.shown`, `AddListItem.isPrivateItem`, TessCaptureEngine now ask `ObjectPrivacy.isPrivateWord`) | none |
+| W42 | #890 | Home with a plain task "dentist"; a note "dentist friday" | Task raw (tasks keep their own rules). Note per decisions 4:50 PM item (1): "Private note" only if flagged or it holds a secret, money or body word, not on the word "dentist" alone | A titleWords check on notes | inferred (the diff touches no task or note code; PR text and 4:50 PM agree) | none |
+| W43 | #890 | Titles "slept badly", "sleepy time tea", "drained tuna" | Per decisions 4:50 PM item (2): "sleepy time tea" and "drained tuna" stay raw (tired and burnout still mask) | "Private" on "drained tuna" | **gap**: head 3980906 subtracts 13 words from `TessMemoryScreen.healthWords` and "slept", "sleepy", "drained" are not among them (TessMemory.swift:101-105 holds all three) | none (Core) |
+| W44 | #890 | Titles "dentists" and "dentist-appt" | Per 4:50 PM item (3): "dentists" masks, "dentist-appt" stays raw | "dentists" raw | **gap** for the plural: matching is an exact token (`PrivateFacts.words` then `titleWords.contains`), so "dentists" does not match; "dentist-appt" stays one token and is raw (as ruled) | none (Core) |
+| W45 | #890 | List item or recipe "Dr. Patel", "Dr Patel", "Dr Pepper" | Per 4:50 PM item (5): first two mask, "Dr Pepper" stays raw | "Dr Patel" raw | **gap**: head removes bare "dr" from the set and adds no phrase rule; "Dr Pepper" is right, the other two read raw | none (Core builds the phrase rule) |
+| W46 | #890 | Siri read-back of a list, routine or workout named "Dentist cake" or "dentist"; "5 kg flour" as a Groceries line | Per 4:50 PM items (6) and (7): Siri goes through the one check; a unit amount never masks a grocery item | The raw name in Siri's line | **gap** for Siri (Intents.swift is not in the diff); "flour 5 kg" is traced raw, "5 kg flour" inferred | none (Core) |
+| W47 | #890 | Shared export of a task "Pay the therapist" and a weigh-in note | Task title masked (health title word); weigh-in note masked | The word "therapist" in the file | traced (PrivateWordsTests now use "Pay the therapist"; `PrivateWords.titleWords` delegates to `ObjectPrivacy.titleWords`) | none; note "Pay Dr Lee" no longer masks as a title (bare "dr" removed), see W45 |
+| W48 | #886 open (5bbd506), if merged | Paste first lines "3 eggs benedict", "7 Up Cake", "2 Eggs", "5 Spice", "5-Ingredient Chili", "2-3 eggs", "1 14.5 oz can" | Per decisions 4:20 PM item (1) and 4:25 PM: "3 eggs benedict" and "7 Up Cake" are titles; "2 Eggs", "5 Spice", "2-3 eggs", "1 14.5 oz can" are amounts; "5-Ingredient Chili" a title | "Untitled recipe" over "3 eggs benedict" | **gap** for "3 eggs benedict": at head the second word is lowercase, so `startsWithAmount` returns true and the title is lost; the other six read as ruled except "1 14.5 oz can", which is inferred (depends on `IngredientLine.parse`) | none (Core) |
+| W49 | #884 open (5665c60), if merged | Start a cook, then say "call mom half 7"; then "8 mins" | Per decisions 3:38 PM and 4:20 PM item (6): "call mom half 7" takes the normal route; "8 mins" stays on the phone, a dropped cook phrase reads "Didn't catch that." and is not logged | "call mom half 7" blocked from Claude while cooking | **gap**: at head any phrase is kept off Claude while a cook runs (the `cooking` flag has no phrase test); the not-logged rule is inferred (no miss-log code in the diff) | none (Core, next PR) |
+| W50 | #884 | "dinner at 7.30", "dentist by 4.15", "dinner 7.30", "coffee 4.50" | Per decisions 5:30 PM: first two are clocks; the last two are prices and walled as money | "dinner 7.30" read as a clock | traced (regex clears only "at" or "by" before a clock-shaped number, and only when no money word is present) | none |
+| W51 | docs | Survivor check, tap-to-reveal copy | Zero live promises of reveal or "Shows it" | A spec row that still promises reveal | **gap**: see "Tap-to-reveal survivors" below | Research or Product (docs) |
+
 
 ## Notes for the walk
 
 - **Merged versus open.** Merged: #864, #866, #867. Open: #564 (18 commits, conflicts cleared, mergeable_state clean at
-  read), #868, #871, #884, #886. The whole merged range since 13 (bbadf141) is 52 commits, 18 merges; every other
+  read), #868, #871, #884, #885, #886, #890. W34 to W51 were added Sun Oct 18 for #885 (339ebeb) and #890
+  (3980906) and for the rulings of 3:38 PM, 4:20 PM, 4:22 PM, 4:25 PM, 4:35 PM, 4:50 PM and 5:30 PM Oct 17.
+  Re-read Oct 18: #564 7219247, #868 b574dec, #871 34fc965, #884 5665c60, #886 5bbd506, all still open and unchanged. The whole merged range since 13 (bbadf141) is 52 commits, 18 merges; every other
   merge is Research or Ops docs, so release 14 on master alone changes the app only through #864, #866, #867.
+- **Rulings that change the walk.** (a) Tap-to-reveal is removed on all four surfaces (4:20 PM item 7, 4:25 PM): #885
+  does three of them (W34 to W37); the recipe page is W38. (b) One title rule (4:20 PM item 1, 4:25 PM): #886 matches
+  it except "3 eggs benedict" (W48); the hyphen-to-letter exemption and "2-3 eggs" as an amount match. (c) The one
+  private-text check with trimmed title words (4:22 PM, 4:35 PM, 4:50 PM): #890 matches 4:22 and 4:35 (W39, W40)
+  and misses three of the 4:50 PM items (W43 to W46). (d) Clock rule (5:30 PM): #884 matches (W50). (e) Cook gate
+  narrowed (3:38 PM): not yet in #884 (W49, and the note on W27). 4:20 PM reached the repo copy of decisions.md only
+  by reference: docs/product/decisions.md ends at line 943 here, the project copy at line 965 holds the 4:20 PM to
+  4:50 PM entries.
+- **#885 and #890 together.** `ShopTrip.isPrivate` calls `ObjectPrivacy.isPrivateRecipeTitle`, which #890 reroutes
+  through the one check. With #885 alone a Groceries row masks by the old rule; with both, "dentist" and "therapy"
+  rows mask on Groceries too. Walk W34 with and without #890 (inferred from the two diffs; not run).
+- **Mac-only checks, added.** #885 is SwiftUI (W34 to W37: simulator, VoiceOver for W35 and W36). #890 and #886 are
+  package tests only (`swift test` in TesseraCore, 912 and 911 per their text).
 - **#866 and #871 disagree with their own PR text.** #866's body promises "Lisbon, copied from Packing." (merged
   code prints exactly that). #871 changes it to "Packing, Lisbon, new list." and names the copy "Packing, Lisbon".
   Walk to the diff, not the PR text. If #871 does not merge, #866 stays unreachable from the UI.
@@ -118,3 +164,41 @@ Merged rows are on master now. Open rows carry "if merged" and the head SHA read
   keeps R19 open until it merges. R2, R6 and R13 are untouched by these PRs. R12 rides release 13.
 - **Order.** Install 13 first (its page: `new-on-your-phone-r13.md`); release 14 has no rollback notes of its own
   and keeps the same Step 0 copy rule as the riders checklist.
+
+## Tap-to-reveal survivors (gap, W51)
+
+Read Oct 18 from master 6899613b: `grep -rn` over docs/ for "Shows it", "tap to reveal", "tap-to-reveal", "until he
+taps that row", "until tapped", "Double tap to show" and "first tap reveals", with matches that mean something else
+dropped ("shows it in grams", "until he taps Save", "double tap to show all areas"). Nothing was edited.
+"reveal" alone was searched too: every other hit is plain English (reveal a secret to Claude, progressive
+disclosure) or a ruling that removes the behaviour. The rows below are the survivors; the code survivors are listed
+last because #885 does not remove them.
+
+**Live specs and acceptance rows that still promise a reveal or "Shows it" (stale since G102):**
+- docs/product/kitchen-refill8-acceptance.md:8, :26, :28 (K51, "masked until he taps that row"), :45 (VoiceOver
+  "Private item. Double tap to show."), :216 (same hint in the copy list)
+- docs/product/kitchen-refill7-acceptance.md:183 (K46.24), :254 (F4)
+- docs/product/kitchen-refill9-lane1-acceptance.md:178 ("row reveals per K51.2")
+- docs/product/kitchen-week-of-use-script.md:91 (K51 "private rows tap-to-reveal on the trip")
+- docs/product/kitchen-acceptance-752-756-758-oct17.md:120 ("Private recipe, button, Shows it")
+- docs/product/kitchen-acceptance-760-761-763-764-oct17.md:120 (13.8, PASS on "until tapped")
+- docs/product/kitchen-lists-screen-walk-oct17.md:106, :108 ("Private item" until tapped)
+- docs/product/kitchen-gap-hunt-11-recipes-groceries-oct17.md:80, :83, :101, :105, :145, :154 (the G102 finding
+  itself; :80 and :83 describe the pre-G102 build, :101 to :105 are the ruling request)
+- docs/product/kitchen-gap-hunt-12-pantry-v2-spec-oct17.md:290 (R12 question, answered by 4:30 PM "R12 follows G102")
+- docs/research/fixtures/pantry-v2.md:23 (describes `revealed` and "Shows it" as still on master), :207, :320 (the
+  removal task)
+- docs/research/decisions-vs-master-oct17.md:23, :39 (row 5, "UNBUILT-KNOWN")
+
+**Decision text and board history (superseded; keep, but a reader can miss the later ruling):**
+- docs/product/decisions.md:11 (5:16 AM, "tap that row to reveal"), :19 (5:00 AM), :63 (3:09 AM item 4), :935
+  (the G102 ruling that supersedes them). The 4:20 PM and 4:25 PM entries are not in this copy (it ends at line 943).
+- docs/ops/board/design.md:87, :94, :103, :105, :106 (PASS rows on #760, #752, #735, #732 quoting "Shows it")
+- docs/ops/board/kitchen.md:58, docs/ops/board/core.md:330, docs/ops/board/ios-b.md:222 (K51 and G37 lanes)
+- docs/qa/review-732.md:13, docs/qa/review-735.md:4 (review text of the reveal behaviour)
+- docs/research/fixtures/decisions-328-332-338.md (lines 3, 12, 15, 25, 32, 34, 37, 49, 70 to 78, 85 to 99, 328):
+  this file is the removal spec, so it names the old behaviour on purpose.
+
+**In code on master, not docs (outside this check, listed so W38 and W35 have lines):**
+Features/Recipes/RecipePage.swift:81 and :471 ("Shows it"), :31 and :457 (`titleShown`);
+Features/Lists/ListsView.swift:364 and Features/Groceries/GroceriesView.swift:526 go away with #885.
