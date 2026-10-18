@@ -10,7 +10,6 @@ Board citations are to `/mnt/project-files/tessera/ops/board/<file>:<line>`.
 | MATCH | 16 |
 | UNBUILT-KNOWN | 18 |
 | PARTIAL | 2 |
-| PARTIAL | 1 |
 | MISMATCH | 1 |
 | UNTRACEABLE | 2 |
 | Total rows | 39 |
