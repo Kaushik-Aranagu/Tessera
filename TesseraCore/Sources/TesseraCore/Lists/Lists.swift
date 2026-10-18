@@ -243,7 +243,9 @@ public struct AddListItem: EngineAction {
     /// "1.50 lb apples", "2 kg rice": a number, a unit, then a word that isn't a day or body word.
     static func isAmountOfAThing(_ line: String) -> Bool {
         let lower = line.lowercased()
-        guard let match = lower.firstMatch(of: /\b\d+(?:[.,]\d+)?\s*(?:kg|kgs|lb|lbs|g|oz|ml|l)\s+([a-z]+)/) else {
+        guard let match = lower
+            .firstMatch(of: /\b\d+(?:[.,]\d+)?\s*(?:kg|kgs|lb|lbs|pound|pounds|kilo|kilos|g|oz|ml|l)\s+([a-z]+)/)
+        else {
             return false
         }
         let word = String(match.output.1)
@@ -283,7 +285,7 @@ public struct AddListItem: EngineAction {
 
     /// A kept item that is a medicine or a body fact: his list shows it, nothing else names it.
     @MainActor static func isPrivateItem(_ kept: String, store: ObjectStore) -> Bool {
-        EngineWall.isHealth(kept, lastWeightKg: BodyWeight.lastKg(in: store))
+        ObjectPrivacy.isPrivateWord(kept, in: store)
     }
 
     public func summary(in store: ObjectStore) -> String {
