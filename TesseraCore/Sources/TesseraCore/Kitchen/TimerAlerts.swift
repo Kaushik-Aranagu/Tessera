@@ -6,17 +6,23 @@ import Foundation
 public struct TimerAlert: Equatable, Sendable {
     /// The timer object's id, also the notification request's identifier.
     public let id: UUID
-    public let title: String
+    /// What the timer is for as it may be said: "Rice", or "Timer" when the label is private, empty or only a number.
+    public let label: String
     public let fireAt: Date
 
-    /// What the notification says: "Rice is done." (a private label reads "Timer is done.").
-    public var body: String {
-        "\(title) is done."
+    /// Always "Timer": the label never goes in the title (Design's copy verdict).
+    public var title: String {
+        "Timer"
     }
 
-    public init(id: UUID, title: String, fireAt: Date) {
+    /// "Rice is done." / "Timer is done."
+    public var body: String {
+        "\(label) is done."
+    }
+
+    public init(id: UUID, label: String, fireAt: Date) {
         self.id = id
-        self.title = title
+        self.label = label
         self.fireAt = fireAt
     }
 }
@@ -50,8 +56,10 @@ public struct KitchenTimerAlerts {
         CookLog(store: store, classes: classes).timers(at: now)
             .filter { $0.endsAt > now && !$0.object.isDeleted }
             .map { timer in
-                let hidden = ObjectPrivacy.isPrivateWord(timer.label, in: store)
-                return TimerAlert(id: timer.id, title: hidden ? "Timer" : timer.label, fireAt: timer.endsAt)
+                let name = timer.label.trimmingCharacters(in: .whitespacesAndNewlines)
+                let plain = name.isEmpty || name.allSatisfy { $0.isNumber || ".,: ".contains($0) }
+                let hidden = plain || ObjectPrivacy.isPrivateWord(name, in: store)
+                return TimerAlert(id: timer.id, label: hidden ? "Timer" : name, fireAt: timer.endsAt)
             }
     }
 

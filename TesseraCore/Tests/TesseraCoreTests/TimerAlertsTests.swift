@@ -40,7 +40,7 @@ struct TimerAlertsTests {
         let spy = Spy()
         let timer = try engine.perform(StartKitchenTimer(label: "pasta", minutes: 10, time: start), by: .user).output
         await alerts.reconcile(with: spy, now: start)
-        #expect(spy.scheduled[timer.id] == TimerAlert(id: timer.id, title: "pasta", fireAt: start + 600))
+        #expect(spy.scheduled[timer.id] == TimerAlert(id: timer.id, label: "pasta", fireAt: start + 600))
         #expect(spy.scheduled[timer.id]?.body == "pasta is done.")
         #expect(spy.permissionAsks == 1)
         // Again, nothing new: one request per timer, permission not asked twice.
@@ -94,9 +94,25 @@ struct TimerAlertsTests {
             .map(\.body) == ["Timer is done."])
     }
 
+    @Test(arguments: [
+        ("lexapro", "Timer is done."),
+        ("10", "Timer is done."),
+        ("", "Timer is done."),
+        ("  ", "Timer is done."),
+        ("Rice", "Rice is done."),
+    ])
+    func theBodyNamesTheTimerOrSaysTimer(_ label: String, _ body: String) async throws {
+        let (engine, alerts) = try setUp()
+        let spy = Spy()
+        try engine.perform(StartKitchenTimer(label: label, minutes: 5, time: start), by: .user)
+        await alerts.reconcile(with: spy, now: start)
+        let alert = try #require(spy.scheduled.values.first)
+        #expect(alert.title == "Timer" && alert.body == body, "\(label) -> \(alert.body)")
+    }
+
     @Test func thePlanAddsWhatIsMissingAndCancelsWhatIsStale() {
-        let one = TimerAlert(id: UUID(), title: "a", fireAt: start)
-        let two = TimerAlert(id: UUID(), title: "b", fireAt: start)
+        let one = TimerAlert(id: UUID(), label: "a", fireAt: start)
+        let two = TimerAlert(id: UUID(), label: "b", fireAt: start)
         let stale = UUID()
         let plan = KitchenTimerAlerts.plan(wanted: [one, two], scheduled: [two.id, stale])
         #expect(plan.add == [one] && plan.cancel == [stale])
