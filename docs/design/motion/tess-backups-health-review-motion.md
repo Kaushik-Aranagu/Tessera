@@ -3,8 +3,8 @@
 Lab spec to pair with Kitchen's gap hunt 22 (no hunt 22 file exists yet; this is written against decisions.md up to line 1053 and master). Docs only. Columns: **Normal / Reduce Motion (RM) / Low Power (LP)**; LP = RM (D5): 150 ms crossfade, no offset, blur, scale or stagger. Haptic names are the map in `DesignSystem/Haptics.swift`. Defaults the lab picked are marked *(lab default)* and listed in §6. The key, its tail and its length never appear anywhere here (DEC:77); a backup never holds the key (DEC:51, 1049), and the folder bookmark lives in UserDefaults, outside the store (`BackupKeeper.swift:17`).
 
 ## 0. What exists on master
-- **Backups** (`Features/Backup/BackupView.swift`, pushed from Review's foot, `ReviewView.swift:232-238`): entrance order 0 to 5 through `EntranceModifier` (`Editorial.swift:60-82`), a private `say()` line (`BackupView.swift:332`) that is not the shared Tess line, a folder UNDO that is a bare 10 s `Task.sleep` (`:316-320`), a raw `.sensoryFeedback(.selection)` on the folder tap (`:104`), a Restore hold key through `PaintKey` (`:210`) that plays the raw medium 0.8 at completion (`Paint.swift:309-311`) and completes on one VoiceOver double tap (`Paint.swift:314`).
-- **Export** (`ExportRow.swift`): built but dark. `ExportFile.ready = false` (`:453`), `onExport: {}` is a stub (`BackupView.swift:130`), `MaskedRestoreWarning` is not referenced from `restore(from:)`.
+- **Backups** (`Features/Backup/BackupView.swift`, pushed from Review's foot, `ReviewView.swift:232-238`): entrance order 0 to 5 through `EntranceModifier` (`Editorial.swift:60-82`), a private `say()` line (`BackupView.swift:332`) that is not the shared Tess line, a folder UNDO that is a bare 10 s `Task.sleep` (`:316-320`), a raw `.sensoryFeedback(.selection)` on the folder tap (`:104`), a Restore hold key through `PaintKey` (`:210`) that plays the raw medium 0.8 at completion (`Paint.swift:308-310`) and completes on one VoiceOver double tap (`Paint.swift:314`).
+- **Export** (`ExportRow.swift`): built but dark. `ExportFile.ready = false` (`:12`), `onExport: {}` is a stub (`BackupView.swift:130`), `MaskedRestoreWarning` is not referenced from `restore(from:)`.
 - **Health** (`App/Health/HealthExporter.swift`): writes a finished workout, no UI, swallows every error (`:69-71`).
 - **Review**: the live page is `Features/Home/ReviewPage.swift` (tap a day plays `.selection` at `:312`); `ReviewView.swift` is the older week page with Look, Rest and Claude inline. There is **no week story in the app**: only the Core pack (`WeekFacts.swift`); no Claude call, no power gate, no Monday trigger.
 - Low Power is read only by the soul (`TessSoul.swift:109`); `EntranceModifier` and the page animations do not read it. The Low Power flag PR via `PowerState` is what makes LP = RM true here.
@@ -23,13 +23,13 @@ Lab spec to pair with Kitchen's gap hunt 22 (no hunt 22 file exists yet; this is
 | Copy fails (his action) | line "Couldn't make a copy just now." stays until replaced | fade | **one** `.notSaved`, once per failure | `errors-84.md:21`: only for what he just did |
 | Daily copy by itself (first background move) | nothing on screen; if it failed, the quiet failure line shows next open | same | **none** (background work never warns) | `BackupKeeper.runDaily` |
 | Pick a restore file | system picker; then "Replace" appears under a "What's here now is kept in Backups, so this can be undone." line | 150 ms fade | none | `confirming` already animates (`:277`); `pending` appears with no animation today (`:167`, `:233`, `:295`): wrap in the house animation |
-| Hold REPLACE (0.9 s) | the key fills along the line; release early drains in 220 ms | linear fill without the bead; same 0.9 s | **`.made` once at completion** *(lab default)*; the raw press-begin tick and medium 0.8 are deleted | PaintKey default is medium 0.8 today (`Paint.swift:309`), not "none" as the migration table says (row 21 region) |
+| Hold REPLACE (0.9 s) | the key fills along the line; release early drains in 220 ms | linear fill without the bead; same 0.9 s | **`.made` once at completion** *(ruled)*; the raw press-begin tick and medium 0.8 are deleted | PaintKey plays the raw medium 0.8 today (`Paint.swift:308-310`); the migration table's "default none" is the target after rows 22 to 23. Say "today medium 0.8, target none unless Product rules" |
 | Restore staged | "A restore is waiting" + CANCEL; Tess "Restore waiting. It happens when you reopen." *(wording for Design)* | fade | none (staged, not done) | |
 | Cancel restore | line "Cancelled. Nothing will be replaced." | fade | `.selection` (his tap) | |
 | Bad file / newer file / damaged | the existing lines ("That file isn't a Tessera backup.", "That copy is from a newer Tessera. Update first.", "That copy is damaged. Try the day before.") | fade | one `.notSaved` per refusal (he just did it) | each once, never on an immediate repeat |
 
-- **One Tess line, one slot.** Backups falls under the shared line with UNDO (DEC:1023): it sits directly above the key row, UNDO at its right (GL19, DEC:1043 U2), and with no key row above the bottom chrome. `BackupView.say()` is a private copy of that idea and should become the shared call; until Settings ships the Backups page keeps its local line and the lab spec describes the target. `settings-place.md`'s "line grows under the line it is about" is superseded.
-- **VoiceOver.** REPLACE is a hold key that writes: it speaks "Hold to restore" on double tap and completes only through the named action **"Restore"** *(lab default)* with no hold fill and the same single haptic. Every line above is announced when it appears; UNDO is an action on that line, flat 10 s.
+- **One Tess line, one slot.** Backups falls under the shared line with UNDO (DEC:1023): it sits directly above the key row, UNDO at its right (GL19, DEC:1045), and with no key row above the bottom chrome. `BackupView.say()` is a private copy of that idea and should become the shared call; until Settings ships the Backups page keeps its local line and the lab spec describes the target. `settings-place.md`'s "line grows under the line it is about" is superseded.
+- **VoiceOver.** REPLACE is a hold key that writes: it speaks "Hold to restore" on double tap and completes only through the named action **"Restore"** *(ruled)* with no hold fill and the same single haptic. Every line above is announced when it appears; UNDO is an action on that line, flat 10 s.
 - **Quiet hours.** Everything on this screen is his touch, so haptics play in quiet hours and Low Power. The daily copy makes no sound or line at 23:00 to 07:00.
 - **Tests.** Folder tap plays no haptic, folder pick plays `.selection` once; UNDO plays `.undo` and not `.selection`; REPLACE completion plays one haptic however it completes (hold or action); a failed background copy plays none; a refused restore plays one `.notSaved`; with RM or LP every transition lasts 150 ms.
 
@@ -37,8 +37,8 @@ Lab spec to pair with Kitchen's gap hunt 22 (no hunt 22 file exists yet; this is
 | Moment | Normal | RM and LP | Haptic |
 |---|---|---|---|
 | The row | "Export" label word + "This file hides your private things." (as built), arrives with order 5 | fade | none |
-| Tap EXPORT | the system share sheet (as SAVE A COPY, `BackupView.swift:184`); no custom progress (a file this size needs none) | same | none |
-| Written | shared line "Export, saved." with no UNDO (a file already shared cannot be taken back) *(lab default: receipts name the thing first)* | fade | `.made` once |
+| Tap EXPORT | Face ID first (ruled: required before an export leaves the app), then the system share sheet (as SAVE A COPY, `BackupView.swift:184`); no custom progress (a file this size needs none) | same | none |
+| Written | shared line "Backup, saved." with no UNDO (a file already shared cannot be taken back) *(lab default: receipts name the thing first)* | fade | `.made` once |
 | Write fails | "Didn't save that. Try again." | fade | one `.notSaved` |
 | Opening an export file to restore | the masked warning: "This file hides your private things, so they will not come back. Restore from Backups to keep them." with RESTORE / CANCEL; opens in place, 150 ms | fade | none; RESTORE is a tap key (not a hold) |
 Private words never appear in the row, the receipt or a VoiceOver label; the file is the masked one (DEC:35, 1041, G196/G198).
@@ -67,13 +67,13 @@ The story of the week that just ended shows Monday morning and stays under the n
 |---|---|---|
 | `settings-place.md:77-80` Tess line grows under the line it is about, UNDO at its end | one shared line above the key row, UNDO at right (DEC:1023, 1029, 1043) | Design |
 | `settings-place.md` "Restore stays inline" with no hold detail | Restore is a hold key that writes: named-action VoiceOver, single haptic | Design |
-| Migration table row for the Restore key says PaintKey default "none" | PaintKey completes with medium 0.8 today (`Paint.swift:309`) | Lab, next PR |
+| Migration table row for the Restore key says PaintKey default "none" | PaintKey plays medium 0.8 today (`Paint.swift:308-310`); target none after rows 22 to 23 unless Product rules | Lab, next PR |
 | `settings-80.md` D2 line "A copy holds everything, Private note, weight and money included." | absent from `BackupView.swift` | Design and Builder B |
 | Copy: sheet "Copy saved to iCloud Drive/Tessera. One a day from now on." | code "Saved a copy there. One a day from now on." | Design |
 
 ## 6. Asks
-1. **Product:** Restore's haptic (lab default `.made` at completion) and its VoiceOver action name ("Restore").
-2. **Product:** move Backups' line onto the shared Tess slot now, or when the Settings Data page ships (lab recommendation: now, one rule).
-3. **Product:** the export receipt "Export, saved.", share sheet vs folder, and whether export needs Face ID like SAVE A COPY.
-4. **Product / Builder A:** the Health permission is asked from the finish observer today; move it to a place he chose.
+1. ~~Restore's haptic and action name~~ **Ruled (Product):** Restore plays `.made` once at completion; the named action is "Restore".
+2. ~~Backups' line~~ **Ruled (Product):** the Backups line goes onto the shared Tess slot now.
+3. ~~Export receipt~~ **Ruled (Product):** the receipt is "Backup, saved." (not "Export, saved."); the share sheet is the system's; Face ID is required before an export leaves the app.
+4. **Ruled (Product), Builder A builds:** the Health permission is asked only on his foreground tap, at most once a day, never from a background finish; move it out of the finish observer.
 5. **Design:** `review-week.md` arrival numbers vs the shared entrance; "Read Tuesday"; the "A restore is waiting" Tess line wording.

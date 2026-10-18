@@ -53,12 +53,12 @@ Spec per CK:46 and LS:28-31, made explicit:
 | Started (lead timer) | label (masked as "Timer" when private/empty/number-only), system countdown, "Step 2 of 3", +1 and Stop | same | same | none |
 | Another timer starts | the lead stays the soonest end; the others sit as a count ("+1 more") | same | same | none |
 | T0, app in front | the cook page does the flare/ring (CK:48-56); the activity flips on its own | page: 150 ms crossfade; activity: system | page: as RM | **`.timeUp`** once |
-| T0, locked | the activity flips to "<label> is done." by `staleDate`, system default transition, nothing of ours; **N3 rings** (fixed title "Timer", body "<label> is done." / "Timer is done.") | same | same | N3's sound and vibration; no in-app haptic |
-| Stop | clears the activity and cancels N3 | same | same | none |
+| T0, locked | the activity flips to "<label> is done." by `staleDate`, system default transition, nothing of ours; **the timer line rings** (fixed title "Timer", body "<label> is done." / "Timer is done.") | same | same | the timer line's sound and vibration; no in-app haptic |
+| Stop | clears the activity and cancels the timer line | same | same | none |
 | Quiet hours | his own started timers ring at any hour (LS:52, CK:46) | same | same | follows the notification's setting |
 
 Rules: the activity is silent (no `AlertConfiguration`, test `liveActivityUpdateCarriesNoAlert`, CK:77); one tap target opens the cook
-page at that step; two timers ending within 600 ms play one haptic and one N3 (stacked count in the body "2 timers are done.": new copy, Design to rule before it ships).
+page at that step; two timers ending within 600 ms play one haptic and one timer line (stacked count in the body "2 timers are done.": new copy, Design to rule before it ships).
 
 ## 4. Workout activity - none beyond the rest activity
 
@@ -71,7 +71,9 @@ The rest activity is the workout's only surface; it starts at the first rest, en
 | Undo after Done | one state change, Undo as a button for 10 s, then back to resting | system | system | one UNDO slot (matches the app's 10 s change window); plays `.undo` only if the app is in front |
 | All sets in | the activity does not end at once: a still face for 60 s ("Push A, all sets in."), then default dismissal | system | system | no timer, no countdown on it, so it costs nothing in LP |
 
-The set-aside face (ready for 10 min, then "<title> set aside", `RLA:206-222`, `RestActivityController.swift:124` (`readyLife`) and `:130` (the `staleDate`)) is code-only; add it to LA so the sheet and the build agree.
+The set-aside face (ready for 10 min, then "<title> set aside", `RLA:206-222`, `RestActivityController.swift:124` (`readyLife`) and `:130` (the `staleDate`)) is code-only; add it to LA so the sheet and the build agree. It may stay on the Lock Screen until the system ends it (a push to end it needs a paid account); it shows "<title> set aside" and ticks nothing (G338, DEC:1051 item 2).
+
+**Lock Screen keys (G346, DEC:1051 item 5).** Done, +15 and Skip stay tap keys (none is a hold key, so none is named-action-only). Done has the 10 s UNDO above; Skip set has no UNDO face; +15 has none (it re-bases, and +15 again is the inverse). Each speaks one line to VoiceOver: "Set 3 done, undo available", "Fifteen seconds added", "Set skipped" *(wording for Design)*.
 
 ## 5. Widgets (home and lock screen) - unbuilt
 
@@ -85,6 +87,12 @@ Per WS:13-26 and :105; the motion rules are the same system-owned set.
 | Circular lock widget | `Text(timerInterval:)`, no gauge (WS:146) | same | same |
 | Tinted / Always-On | keeps type, drops the ground (WS:26) | same | same |
 
+**Reloads (G340, DEC:1051 item 3).** `reloadTimelines` is called only after an app write or a widget button; the pre-scheduled entry at `restEndsAt` is a countdown he started, not a reload. Test: grep shows no other `reloadAllTimelines` / `reloadTimelines` caller (background task, push, timer).
+
+**Quiet hours (G341, DEC:1051 item 3).** No entry changes its words from 23:00 to 07:00 except a countdown he started (the rest and cook countdowns still flip at their end). Test: a widget timeline built at 22:50 has no entry between 23:00 and 07:00 other than `restEndsAt` or a started timer's end. The data day turns at 04:00, but new-day widget words appear at 07:00 (ruled, DEC:1053); the 04:00 turn changes only what "today" means for the next write.
+
+**Masked words (G348, DEC:1049).** Every free-text field in an extension (widget row, rest-activity exercise name, cook label) is the masked form from the one private-text function, not `.privacySensitive` alone; a private row reads "Private item / recipe / list / workout / habit / spend / book", with no tap-to-reveal. Test: with a private workout running, no extension payload contains its title.
+
 Nothing in a widget may poll or tick. No App Group exists yet, which blocks the whole row; it is Core's call, not the lab's.
 
 ## 6. What the build owes (in order)
@@ -93,7 +101,7 @@ Nothing in a widget may poll or tick. No App Group exists yet, which blocks the 
 2. Under `isLuminanceReduced` drop washes and the horizon.
 3. Add `.id` + push to the compact trailing "Go".
 4. Delete `lookDay`/`lookNight` from the activity state (`Shared/RestActivityAttributes.swift:33-34`, written by the controller at `RestActivityController.swift:118`, unused by the drawing).
-5. Cook activity and N3, silent activity, one `.timeUp` in front.
+5. Cook activity and the timer line, silent activity, one `.timeUp` in front.
 6. Undo-after-Done and 60 s "all sets in" faces.
 7. Remove from LA: the Go glow breathing, the 700 ms/blur timing and the 1.4 s wash fade (not buildable), so the sheet stops promising them.
 
@@ -101,7 +109,7 @@ Nothing in a widget may poll or tick. No App Group exists yet, which blocks the 
 
 1. The activity update never carries an `AlertConfiguration` (rest and cook).
 2. Rest end locked: one N2 at `restEndsAt`, none when the app saw the end live; foreground plays `.timeUp` once and no sound.
-3. N2 and N3 titles are fixed; the body is masked for private, empty or number-only labels.
+3. N2 and the timer line have fixed titles; the body is masked for private, empty or number-only labels.
 4. `isLuminanceReduced` draws no wash and no horizon.
-5. Two cook timers within 600 ms produce one N3.
+5. Two cook timers within 600 ms produce one timer line.
 6. Grep: no `withAnimation` or `.animation(` in `Widgets/`.
