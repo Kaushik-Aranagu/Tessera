@@ -41,6 +41,7 @@ struct TimerAlertsTests {
         let timer = try engine.perform(StartKitchenTimer(label: "pasta", minutes: 10, time: start), by: .user).output
         await alerts.reconcile(with: spy, now: start)
         #expect(spy.scheduled[timer.id] == TimerAlert(id: timer.id, title: "pasta", fireAt: start + 600))
+        #expect(spy.scheduled[timer.id]?.body == "pasta is done.")
         #expect(spy.permissionAsks == 1)
         // Again, nothing new: one request per timer, permission not asked twice.
         await alerts.reconcile(with: spy, now: start + 30)
@@ -89,7 +90,8 @@ struct TimerAlertsTests {
         let spy = Spy()
         try engine.perform(StartKitchenTimer(label: "lexapro", minutes: 5, time: start), by: .user)
         await alerts.reconcile(with: spy, now: start)
-        #expect(spy.scheduled.values.map(\.title) == ["Timer"])
+        #expect(spy.scheduled.values.map(\.title) == ["Timer"] && spy.scheduled.values
+            .map(\.body) == ["Timer is done."])
     }
 
     @Test func thePlanAddsWhatIsMissingAndCancelsWhatIsStale() {

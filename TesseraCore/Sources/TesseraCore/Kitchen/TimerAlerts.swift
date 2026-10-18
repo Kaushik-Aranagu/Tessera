@@ -9,6 +9,11 @@ public struct TimerAlert: Equatable, Sendable {
     public let title: String
     public let fireAt: Date
 
+    /// What the notification says: "Rice is done." (a private label reads "Timer is done.").
+    public var body: String {
+        "\(title) is done."
+    }
+
     public init(id: UUID, title: String, fireAt: Date) {
         self.id = id
         self.title = title
@@ -96,8 +101,11 @@ public struct KitchenTimerAlerts {
         public func schedule(_ alert: TimerAlert) async {
             let content = UNMutableNotificationContent()
             content.title = alert.title
-            content.body = "Time's up."
+            content.body = alert.body
             content.sound = .default
+            // An active alert, grouped in the kitchen thread (cook-mode acceptance).
+            content.interruptionLevel = .active
+            content.threadIdentifier = "tessera.kitchen"
             let seconds = max(1, alert.fireAt.timeIntervalSinceNow)
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: seconds, repeats: false)
             try? await center.add(UNNotificationRequest(identifier: Self.prefix + alert.id.uuidString, content: content,
