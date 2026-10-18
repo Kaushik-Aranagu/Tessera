@@ -25,4 +25,4 @@ Retired (a message to these gets `session_inactive`): Ops thread cmsg_01VTPva3JG
 3. For each new id in the table, grep it the same way and confirm the team's board header, its handoff section and the memory thread-ids file name it.
 4. Add the move to the table and the retired list in the same edit, and send Ops the new ids so the repo mirror of handoff-block.md follows.
 
-Last run (Oct 17, 2:30 PM PT): ops/board/motion.md already marks the old lab retired (fine). Stale: memory design-thread-ids.md (old motion lab session), memory tess-motion-lab.md (old session and thread ids), memory ai-arch-routing.md (old coordinator session). Owners: Product (design-thread-ids), Motion lab, coordinator.
+Last run (Oct 17, 9:25 PM PT, Ops): after the 8:56 PM rotations the retired-id grep found stale non-retired lines in memory design-thread-ids.md line 13 (QA id; Product told) and rotation-handoffs.md line 122 (fixed). memory team-addresses-pointer.md fixed (Ops, QA, Kitchen). Earlier run (2:30 PM): stale lines in design-thread-ids.md, tess-motion-lab.md and ai-arch-routing.md (old motion lab and coordinator ids) were reported to their owners; not re-checked.
