@@ -141,10 +141,14 @@ private struct ExerciseSummary: View {
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: Theme.Spacing.m))
             : AnyLayout(HStackLayout(alignment: .top, spacing: 0))
         return layout {
-            stat(digest.bestE1RM.map { Format.kilograms($0) } ?? "—", label: "Best e1RM, kg",
-                 spoken: digest.bestE1RM.map { "Best estimated one-rep max, \(Format.kilograms($0)) kilograms" })
-            stat(digest.bestSet ?? "—", label: "Best set",
-                 spoken: digest.bestSet.map { "Best set, \($0.replacingOccurrences(of: "×", with: "by"))" })
+            // An empty value drops out; no lone "—" (decisions 5:57).
+            if let best = digest.bestE1RM {
+                stat(Format.kilograms(best), label: "Best e1RM, kg",
+                     spoken: "Best estimated one-rep max, \(Format.kilograms(best)) kilograms")
+            }
+            if let set = digest.bestSet {
+                stat(set, label: "Best set", spoken: "Best set, \(set.replacingOccurrences(of: "×", with: "by"))")
+            }
         }
     }
 
