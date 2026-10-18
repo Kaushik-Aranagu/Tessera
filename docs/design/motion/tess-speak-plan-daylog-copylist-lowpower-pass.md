@@ -33,6 +33,8 @@ Code facts: hold 400 ms (`BottomChrome:252`), pause 1.2 s, silence 5 s, cap 60 s
 | UNDO tap | Tess's line "Milk, taken back."-style, 10 s | same | `.undo` once. Today the UNDO word also plays `.selection` (`CaptureParts:141`) and `.decrease` (`BottomChrome:132`): one moment, one haptic, so the word plays only `.undo` |
 | Refusal line (mic off etc.) | house spring in; line in cobalt with one ink word that still works | 150 ms fade | none (information; `.notSaved` is for a write that did not save) |
 | Cancel (drag left off the soul, or tap the veil) | nothing saved, no line | same | none |
+| Release during the first mic prompt (DEC:1085, G447) | the bloom never starts: no "Listening", no ghost, no words; the soul stays at rest (touch-down swell undoes in 130 ms); nothing records after he taps Allow unless he is still holding, in which case the hold flow starts then | no swell; same | none (a listen that never began is not a miss or a save) |
+| Masked notification wording (DEC:1085, G451; Core gate, no app notifications scheduled yet) | every notification title and body passes the one private-text function: "Private task" when masked, same as the timer rule; no motion, the alert is the system's | same | system sound only |
 
 Raw literals to route through the policy (code): `SpeakLayer:49` and `:53`; `BottomChrome:76`, `:87`, `:272`, `:482`, `:654`; the hand-gated ones in `CaptureParts:74-96` and `Paint.swift:296`, `:324`, `:342`, `:350` and `:396` can stay if the flag feeds them.
 
