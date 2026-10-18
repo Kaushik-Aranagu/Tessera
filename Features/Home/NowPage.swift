@@ -581,9 +581,13 @@ struct LedgerRow: View {
 
     /// The row's name and next step. A list run never shows a walled name: its title is the shelf's shown name and
     /// its step is built from that and the live count, never the engine's stored "<title>, 6 left" (QA on #814).
+    /// A private recipe's cook reads "Private recipe" and "Step 2 of 6", never the step's own text (QA on #1032).
     static func shown(_ process: ProcessSnapshot, store: ObjectStore, classes: [SystemCatalog.Key: ClassDef],
                       lastWeightKg: Double?) -> (title: String, nextStep: String?)
     {
+        if case let .some(step) = KitchenMask.cookStep(process, store: store, classes: classes) {
+            return (ObjectPrivacy.recipeLabel, step)
+        }
         guard let subject = process.subject, let listClass = classes[.list], let subjectClass = subject.classDef,
               ClassResolver.isSubclass(subjectClass, of: listClass), subject.id != Groceries.listID
         else { return (process.subject?.title ?? process.object.title, process.nextStep) }

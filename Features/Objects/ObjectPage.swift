@@ -568,6 +568,9 @@ enum ObjectMask {
         if let core = ObjectPrivacy.label(of: object, in: store, classes: classes) {
             return core
         }
+        if let part = KitchenMask.label(of: object, in: store, classes: classes) {
+            return part
+        }
         guard let classDef = object.classDef else { return nil }
         func isA(_ key: SystemCatalog.Key) -> Bool {
             classes[key].map { ClassResolver.isSubclass(classDef, of: $0) } ?? false
