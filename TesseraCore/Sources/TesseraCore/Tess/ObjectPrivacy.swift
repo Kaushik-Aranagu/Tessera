@@ -93,7 +93,7 @@ public enum ObjectPrivacy {
     /// "Dr. Patel" and "Dr Patel": a "dr" with a stop, or followed by a capitalised name other than Pepper. A bare "dr"
     /// is not a title word, so "Dr Pepper" stays raw.
     static func isDoctorName(_ text: String) -> Bool {
-        text.firstMatch(of: /\b[Dd]r\./) != nil
+        text.firstMatch(of: /\b[Dd]r\.(?!\s*(?i:pepper)\b)/) != nil
             || text.firstMatch(of: /\bDr\s+(?!Pepper\b)\p{Lu}/) != nil
     }
 

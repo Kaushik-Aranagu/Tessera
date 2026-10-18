@@ -58,7 +58,7 @@ struct PrivacyParityTests {
         for walled in ["Dr Patel", "Dr. Smith", "dr. lee", "dentists", "Dentist appt"] {
             #expect(ObjectPrivacy.isPrivateTitle(walled, lastWeightKg: nil), "\(walled)")
         }
-        for plain in ["Dr Pepper", "dr pepper", "drive home", "dentist-appt"] {
+        for plain in ["Dr Pepper", "dr pepper", "Dr. Pepper", "dr. pepper", "drive home", "dentist-appt"] {
             #expect(!ObjectPrivacy.isPrivateTitle(plain, lastWeightKg: nil), "\(plain)")
         }
     }
@@ -74,5 +74,16 @@ struct PrivacyParityTests {
         let lentils = try #require(ingredients.first { $0.title.lowercased().contains("lentil") })
         #expect(ObjectPrivacy.label(of: medicine, in: store, classes: classes) == "Private item")
         #expect(ObjectPrivacy.label(of: lentils, in: store, classes: classes) == nil)
+    }
+
+    @Test(arguments: [
+        "180 pounds today",
+        "82 kilos this morning",
+        "82 kilos",
+        "weighed 180 pounds",
+        "180 lb this morning",
+    ])
+    func aBodyWeightWithAPoundOrKiloUnitStaysPrivate(_ phrase: String) {
+        #expect(ObjectPrivacy.isPrivateTitle(phrase, lastWeightKg: 82), "\(phrase)")
     }
 }
