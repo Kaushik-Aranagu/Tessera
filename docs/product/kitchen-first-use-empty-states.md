@@ -24,7 +24,7 @@
 | **Status** | **Build target.** K30.1 holds the words; a search of `Features/Recipes/` (`RecipesEntry.swift`, `RecipePage.swift`) finds no "No recipes yet." The Home Kitchen page already links to Recipes and "Paste a recipe" (`HomeSpatialView.swift:362-383`, master). |
 | **Words** | Context line "None yet". Row area, one line at 66% ink: "No recipes yet." Tess: "Paste a link or a page and I'll read it." |
 | **The one action** | Paste. The footer link line carries "Paste a recipe" (the Home word, same destination). The Tess line is also the key: tapping it opens the paste screen (Tess's line is a plain text button, no fill). |
-| **Not there** | No plate, no wash, no placeholder icon, no "add a photo", no count, no "Get started". |
+| **Not there** | No plate, no wash, no placeholder icon or drawing, no "add a photo", no count, no "Get started" (drawn stand-in withdrawn, Kaushik 1:29 AM Oct 18). |
 | **VoiceOver** | "Recipes. None yet. No recipes yet. Paste a link or a page and I'll read it." The Tess line is a button with hint "Opens Paste a recipe". |
 | **Dynamic Type** | AX5: the four lines stack in the frame order; "None yet" never truncates; the footer link line wraps below the Tess line. |
 | **After one action** | Pasting a recipe (receipt "Tacos, on Recipes.") replaces the row area with the one row; Tess's first-use line goes and stays gone. |
