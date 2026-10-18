@@ -91,3 +91,16 @@ Tick in this order; each line names the cite in (b) below.
 7. Plan skip haptic: SPD:47 earlier "none" vs DAY:29 / IDX H11 `.notNow`. Day-log week tick: SPD:64 `.impact(.light)` vs DAY:106 `.pickedUp`.
 8. Plan hold hint wording: DAY:31/:40/:117/:136 "Keep the plan" vs DEC:1043 "Hold to keep N tasks" (IDX U4).
 9. Gaps (no spec): Notes motion, Watch, non-cook Recipes, Money/Reading haptics in SLM/SLR (IDX H10), the Haptics gate in LP.
+
+## Changes from Kitchen's open calls (Oct 18, rows N22 to N59 in `tess-ruling-index.md`)
+Not yet merged into the table above; Builder A reads these as the newer cells.
+
+1. First cell "Notes": Normal `page fades 380 ms, context and body draw in, words settle at 128 ms; write flies 420 ms; list entrance opacity only under the flag (G290)`; RM `row crossfades to the page, opacity only (G289)`; LP `= RM`; Haptics `note write .made; delete tap + UNDO 10 s`; Cite `NRM:5-36`. (Replaces "NOT specced for motion (INFERRED house policy)" at MAT:43.)
+2. First cell "Speak (listen, ghost, commit)": LP cell becomes `soul LP form; bloom still x1.2 and level not fed (G313); dry stays 3 s as 4 steps ~0.75 s`; RM cell adds `Write dry 0.6 s (G314)`. Fix MAT:64 item 3 to match (drop "mic <=20 samples/s").
+3. First cell "Cook mode / clock page": LP cell adds `horizon steps once a minute, every 10 s in the last minute (ruled Oct 17 9:22 PM); Home DrainBar one step a minute (G226)`.
+4. First cell "Backups / Export / Health": LP cell becomes `= RM; first daily copy still runs, late-tail and folder re-check wait for power OK (G359)`; Normal cell folder words `Backup folder, ... changed/stopped` with 10 s UNDO (G371).
+5. First cell "Widgets (home/lock)": LP cell becomes `system; Go swap is a crossfade and digits do not roll (G339); no extra entries; no word change 23-07 except started countdowns`.
+6. First cell "Sides / page turns": Haptics cell becomes `.selection on full side only; none on exercise rail turns or on appear (G386)`.
+7. First cell "Ask / BottomChrome / capture": Haptics cell adds `typed "undo" = spoken (G441); receipt line first, first-send notice second (G428)`.
+8. New row after "Training / workout": `Plans and Exercise pages (week/month, zooms, Trend tip, Add to routine)`; Normal `day-word stagger, page zoom, wet-tip breath`; RM `tesseraAnimation, no offsets (G387); zooms 150 ms crossfade (G384)`; LP `= RM; Trend tip still at 0.75, no loop (G383)`; Haptics `.made on add (UNDO 4 s, 10 s VoiceOver, G390); .notSaved once on a failed write (G393)`; Owner `A`; Cite `none yet`.
+9. First cell "Home: Now hero, queue, day strip": LP cell adds `proposed plan words still at the breath's mean (G267)`; no other change.
