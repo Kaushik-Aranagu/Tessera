@@ -41,7 +41,7 @@ private struct PantryPage: View {
                 if let context = front.context {
                     Text(context)
                         .font(Theme.voice(size: 21))
-                        .foregroundStyle(Theme.Colors.areaLean(.kitchen))
+                        .foregroundStyle(Theme.Colors.context)
                         .padding(.top, Theme.Spacing.s)
                         .entrance(1)
                 }
@@ -193,7 +193,7 @@ struct PantryLine: View {
             Text(entry.state.word)
                 .textRole(.body)
                 .fontWeight(entry.state == .out ? .bold : .semibold)
-                .foregroundStyle(Theme.Colors.areaLean(.kitchen))
+                .foregroundStyle(PantryColour.stateWord)
         }
         .padding(.leading, 24)
         .overlay(alignment: .leading) {
