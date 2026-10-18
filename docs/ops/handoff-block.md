@@ -155,6 +155,14 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
    - Motion: all 11 ideas plus the mouth, the same in every area; picks in docs/design/motion/tess-picks.md (Oct 16, 9:55 AM PT) (cmsg_01VTPva3JGXrfvetgUvAWE7MJPLyya4ray7YyPPbJKfYjr)
    - Never a diffused or faded Tess as imagery; he likes Tess as she is (Oct 17, 12:46 PM PT) (cmsg_01VTPva3JGXrfvetgUvAWE7MNEpdWKZTk52xHoonWPt9wC)
 
+## Recent product rulings (pointers only; the words live in decisions.md, newest first)
+Product's rulings are not copied into this file. Look these up by stamp in product/decisions.md (repo: docs/product/decisions.md) before asking:
+- titleWords trim (private title list): 4:22 PM PT Oct 17 (Core #890), later trims 4:35 and 4:50 PM.
+- G102 (private grocery row reads "Private item", one tap checks it): 5:40 PM Oct 17 (#883).
+- #902 tie rule (equal timestamps: surer pantry state wins) and the Pantry backfill key pantryBackfilled: 4:32 PM Oct 17.
+- Area hairline is decoration, no contrast bar (labels, key words and numbers keep 4.5:1): 5:58 PM Oct 17.
+Stamps from 1:41 PM onward are mapped to real PT by the CLOCK CORRECTION line in decisions.md.
+
 ## Not included on purpose
 
 - Rules with a secret or from the key-check threads (see the Secret rule above); the memory file's Key and privacy section is the pointer.

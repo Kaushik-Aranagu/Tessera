@@ -14,6 +14,8 @@ How the team works, and the tools that keep it cheap. Scripts are in `scripts/op
 - [discovery-gaps.md](discovery-gaps.md): gaps found by the discovery lane.
 - [idle-detector.md](idle-detector.md): when a team is below its pace line, what it pulls and who it asks.
 - [handoff-block.md](handoff-block.md): the block every fresh thread's brief carries, plus breadcrumbs for the leads that moved on Oct 17.
+- [team-addresses.md](team-addresses.md): current thread and session ids for every team, the retired ids, and the two-minute address check.
+- [offline-mac-playbook.md](offline-mac-playbook.md): what cloud teams do while the Mac leads are paused and how relays queue.
 
 ## More docs (index added by Ops, Oct 17)
 
