@@ -110,7 +110,8 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
 
 ### Research
 - Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7MCHUVZQTvpxVy5UZmhdenMF; old session cse_01WMUdQQHF9pRNj9dwSJFGef.
-- Fresh thread: cmsg_01VTPva3JGXrfvetgUvAWE7MPtwgew3oJ7cvhswUWWXx7k; session cse_017t1kiDAoSpJVo4NVP2BpZU.
+- Previous fresh thread (retired 9:40 PM PT Oct 17): cmsg_01VTPva3JGXrfvetgUvAWE7MPtwgew3oJ7cvhswUWWXx7k; session cse_017t1kiDAoSpJVo4NVP2BpZU.
+- Current thread (rotated 9:40 PM PT Oct 17): cmsg_01VTPva3JGXrfvetgUvAWE7MVwggk1QksBUnspxQ8a39Qi; session cse_016prm61LgTia7soLeQ5zxP8 (send_message form: session_016prm61LgTia7soLeQ5zxP8).
 - Read the old chat with fetch_thread (oldest_first) or list_events on the old session; read a rule's exact words with fetch_messages on its id.
 - Handoff note: ops/rotation-handoffs.md, section "Research" if present; if not, ask the coordinator for the note the outgoing lead sent.
 - Rules for Research (plus G):
