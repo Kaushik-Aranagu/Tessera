@@ -51,7 +51,7 @@ What goes: the Title 44 rows for books being read (one line per thing, the same 
 | 84 | **The title** at Title 44, the fitting form (44 → 34 → two lines of 34) |
 | 146 | **The context line**: "p 142 of 612, started 9 days ago"; "p 142" when the pages are unknown |
 | 220 | **The page drum** as the instrument (`reading.md`): 96 Light tabular, 100 pt rows, the neighbours at 14%, "of 612" at 34 Light on the baseline; a flick coasts and ticks `.selection` per page; on release `SetBookPage`, Tess: "Dune, p 168." The one glint on arrival is the look's `sheen` (Reduce Motion: `.selection` instead) |
-| 480 | **FINISHED** and **SET ASIDE** as ink-line words, side by side. FINISHED is a hold (0.6 s): the line fills, `FinishBook`, `.impact(medium, 0.8)`; then the "One line on it?" writing line opens under it at Field 18 with the hairline that inks in (the Notes grammar), Return saves the review, Tess: "Finished Dune: slow start, great end." SET ASIDE: Tess "Set Dune aside." with UNDO |
+| 480 | **FINISHED** and **SET ASIDE** as ink-line words, side by side. FINISHED is a hold (0.6 s): the line fills, `FinishBook`, `.done` once; then the "One line on it?" writing line opens under it at Field 18 with the hairline that inks in (the Notes grammar), Return saves the review, Tess: "Finished Dune: slow start, great end." SET ASIDE: Tess "Set Dune aside." with UNDO, no haptic (set aside plays nothing) |
 | one swipe up | author, pages and the review as sentences with value words, unchanged |
 
 What goes: the READING breadcrumb label (it is the back word now), the Title 56 hero (44, as every page one tap down), the sage stroke word (an ink-line word, its fill the only colour, as `ink-line.md`).

@@ -22,7 +22,7 @@ For Builder B, after Core's `ShopReceipt` and `LogShopTotal` (ship-list-m5-money
 - **Rather type?** Tap the numeral and it becomes a field in place at the same size, with the decimal pad. Return goes straight to Log.
 
 ## Acting
-- **"Log £38.20"** is a stroke word in sage at Title 34 that tracks the drums live. A tap logs it via `LogShopTotal(amount, typed, currency?)`, with `.impact(medium, 0.8)`.
+- **"Log £38.20"** is a stroke word in sage at Title 34 that tracks the drums live. A tap logs it via `LogShopTotal(amount, typed, currency?)`, with `.made` (Motion lab #963: the drums travel 420 ms to the amount, e.g. "41.60", then `.made` once).
 - **SKIP** is a label word on the right, calling `SkipShopTotal`. The question never comes back.
 - **After logging:** the instrument folds up (scale 0.96, −20pt, fade, 360ms), the next Now rises in its place, and Tess says **"Groceries, £38.20. Logged."** beside her soul with UNDO. After a skip she says "No total. Fine."
 - There is no `.success`, no confetti, and no month total here. The month line lives on the Month page.

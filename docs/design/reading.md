@@ -20,7 +20,7 @@ Shared: vermilion only for a running book, cobalt only for Tess. There are no co
   - A flick coasts (ease-out cubic, about 900ms) and ticks `.selection` per page. The context line's number follows live.
   - On release it writes `SetBookPage`, and Tess says "Dune, p 168."
 - **One level deeper** (swipe up): author, pages and the review as sentences with value words that edit in place, never a form. For example: "By **Frank Herbert**. **612** pages."
-- **Finished** is a stroke word in sage at Title 34. **Hold it (0.6s):** it empties to a 20% trace, repaints left to right, and the tip blooms (`FinishBook`, `.impact(medium, 0.8)`).
+- **Finished** is a stroke word in sage at Title 34. **Hold it (0.6s):** it empties to a 20% trace, repaints left to right, and the tip blooms (`FinishBook`, `.done` once; a set-aside plays nothing).
   - SET ASIDE leaves, and one faint writing line opens under it: "One line on it?" at 50%, with a 1pt cobalt line. Tess asks the same.
   - What you type is a cobalt ghost. On Return it dries to ink over 600ms and saves as the review. Tess says "Finished Dune: slow start, great end."
   - Leaving it empty is fine. The line just fades when you leave.
