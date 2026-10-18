@@ -30,7 +30,7 @@ Lab spec for Builder B (Settings screens) and Builder A (haptics, Look). Docs on
 - Test: a page turn plays zero haptics in each of the four words; re-picking the current word does not start a preview; with LP on, each word's turn lasts 150 ms.
 
 ## 3. The CLAUDE page (page 1)
-Rows top to bottom: **Tess asks Claude** (yes / no), **This month** (spend line), **key state** (Key saved / No Claude key yet.), **Receipts** one layer down. Per Product's 10:44 PM call (DEC:1049 area) Key, This month and Receipts sit under "Tess asks Claude", which opens in place, so page 1 stays at six rows; the line under the switch reads "Sends only what Receipts lists." Copy per Research's table, third person ("Tess asks Claude: yes.", DEC:597). Cap is $50 (DEC:570); sheet text that says $10 is stale.
+Rows top to bottom: **Tess asks Claude** (yes / no), **This month** (spend line), **key state** (Key saved / No Claude key yet.), **Receipts** one layer down. Per Product's 10:44 PM call (DEC:1047) Key, This month and Receipts sit under "Tess asks Claude", which opens in place, so page 1 stays at six rows; the line under the switch reads "Sends only what Receipts lists." Copy per Research's table, third person ("Tess asks Claude: yes.", DEC:597). Cap is $50 (DEC:570); sheet text that says $10 is stale.
 
 | Moment | Normal | RM and LP | Haptic | Code |
 |---|---|---|---|---|
@@ -76,7 +76,7 @@ Rows top to bottom: **Tess asks Claude** (yes / no), **This month** (spend line)
 | `claude-settings.md` S4 drains the key to `...a1B2`; "$10" | no tail anywhere (DEC:77); cap $50 (DEC:570) | Design |
 | `settings-place.md:26` Look flood 250 ms under RM | 150 ms (HS43, DEC:1017); code `LookSentence.swift:119` literal 0.25 is dead because `withTesseraAnimation` already forces 150 ms | Design and Builder A |
 | `settings-93.md` "Delete everything: two taps, a held confirm" | ruled (DEC:1049): one held confirm, a hold key, named action "Delete everything" under VoiceOver, **no UNDO** (it cannot be undone) | Design (sheet) |
-| `claude-settings.md` "Receipts" row and "Sends only what you ask her." | Key, This month and Receipts sit under "Tess asks Claude" (opens in place); the line reads "Sends only what Receipts lists." (DEC:1049 area, 10:44 PM) | Design |
+| `claude-settings.md` "Receipts" row and "Sends only what you ask her." | Key, This month and Receipts sit under "Tess asks Claude" (opens in place); the line reads "Sends only what Receipts lists." (DEC:1047, 10:44 PM) | Design |
 | `claude-settings.md` REMOVE with UNDO 10 s | REMOVE has no UNDO (DEC:1049) | Design |
 | Strings still saying "It goes in Review, under Claude." / "Turn this off on Review: Claude." | become "Settings, under Claude." / "Settings: Claude." when Settings ships (DEC:1019); `ClaudeTessModel.swift:151` already says "in Settings" while DEC:1019 still says "on Review" and Product's 10:44 PM call says all six pointers say "Review" until Settings ships, built from one Core value `ClaudeWhere` | Core and Builder B |
 
