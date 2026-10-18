@@ -86,4 +86,13 @@ Cross-cutting calls for Product:
 
 ## Rulings in (Product)
 
-(none yet)
+Product accepted all calls as my defaults (decisions.md, Oct 18 early morning):
+
+1. G423: #884 gates any capture-miss release.
+2. G434: the Ask-slot line and UNDO always name the same op, newest wins.
+3. G424: reword the offline line to "No connection." until the retry inbox is wired.
+4. G426: the "Sent ... to Claude" notice shows on send, not on success.
+5. G427: notice and receipt use the one private-text function.
+6. G429: whole-word question match, router first.
+7. G430: a miss plays no haptic; the Claude write that lands plays .made once (#981), never a raw .success.
+8. G433: one plain line "Asking Claude" with Cancel; wait capped at 8 s.

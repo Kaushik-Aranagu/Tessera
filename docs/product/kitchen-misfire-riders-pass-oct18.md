@@ -61,3 +61,8 @@ Part D is new: "Other doors, riders and the Oct 22 gate". Expected cells that ne
 - D1 to D7 depend on 0ah, 0ai, 0an and 0w landing. Run Part C and D against the first release carrying each, not the last.
 - D2 and D8 are the over-wall traps (DEC 241: when unsure the rule leans toward walling). A fail there is annoying, not a leak; a pass on D1, D3, D4 and D7 is the leak check.
 - Timer notification, hold keys and Low Power have no phrase row by design. Their checks live in `cook-mode-acceptance.md:33`, the FW34 row, and DEC 1011 and 1027 (hold keys finish or clear: cook Done, Finish workout, Groceries Done, Lists Reset; "Clear the basket" is a tap key).
+
+
+## Rulings in (Product)
+
+C9 reads "Pay rent, Fri."; line 79 receipt wording follows decisions line 889 ("Rice, added on Trip."); D2 uses the default in this doc.
