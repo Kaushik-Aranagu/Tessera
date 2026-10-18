@@ -168,6 +168,9 @@ public enum RecipeParser {
         return words <= 5 && !clean.hasSuffix(".")
     }
 
+    /// Size words count like unit words after a number: "2 large eggs", "1 whole chicken".
+    static let sizeWords: Set<String> = ["small", "medium", "large", "extra-large", "whole", "half"]
+
     /// A quantity is a number or fraction followed by a unit word or a lowercase noun ("2 eggs", "1/2 cup", "200g
     /// flour"). "30-Minute Dal" and "7 Layer Dip" are names, so they stay titles (G94).
     static func startsWithAmount(_ line: String) -> Bool {
@@ -188,13 +191,14 @@ public enum RecipeParser {
         }
         guard tokens.count > 1 else { return true }
         // Two words, number first ("2 Eggs"): an amount of a thing; a name that starts with a number has more words.
-        if tokens.count == 2, tokens[1].allSatisfy(\.isLetter) {
+        // A trailing comma or stop does not change that ("2 Eggs,").
+        let second = tokens[1].trimmingCharacters(in: .punctuationCharacters)
+        if tokens.count == 2, !second.isEmpty, second.allSatisfy(\.isLetter) {
             return true
         }
-        // Three or more words are a title unless a unit word follows the number (Product 4:20 PM): "3 eggs benedict"
-        // and
-        // "7 Layer Dip" are names; "1 cup flour" and "2 Tbsp butter" are amounts.
-        return IngredientLine.parse(clean)?.unit != nil
+        // Three or more words are a title unless a unit or size word follows the number (Product 4:20 PM): "3 eggs
+        // benedict" and "7 Layer Dip" are names; "1 cup flour", "2 Tbsp butter" and "2 large eggs" are amounts.
+        return IngredientLine.parse(clean)?.unit != nil || sizeWords.contains(second.lowercased())
     }
 
     static func stripNumbering(_ line: String) -> String {

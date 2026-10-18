@@ -165,6 +165,12 @@ struct RecipeTitleTests {
         "3",
         "2 Eggs",
         "2 tbsp olive oil",
+        "2 Eggs,",
+        "2 eggs,",
+        "2 large eggs",
+        "1 whole chicken",
+        "3 extra-large eggs",
+        "2 medium onions",
         "500 g plain flour",
     ])
     func aQuantityIsNeverTheTitle(_ first: String) throws {
