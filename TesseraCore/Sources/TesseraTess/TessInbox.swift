@@ -81,6 +81,11 @@ public extension TessCaptureEngine {
                 inbox.remove(item)
                 continue
             }
+            // A timer phrase, or anything said while a cook runs, is read on the phone or not at all: it stays (until
+            // its week is up) and is never sent.
+            if TessRouter.staysOnPhone(item.title, engine: engine) {
+                continue
+            }
             var request = TessRequest(text: item.title, context: context, use: .capture)
             request.context.commitImmediately = false
             engine.attribution = (claude.route, claude.modelName)

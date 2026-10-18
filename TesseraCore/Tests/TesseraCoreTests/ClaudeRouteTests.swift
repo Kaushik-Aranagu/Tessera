@@ -354,6 +354,26 @@ struct ClaudeRouteTests {
         #expect(inbox.waiting().map(\.title) == ["log squat from earlier"] && RouteStub.requests.isEmpty)
     }
 
+    @Test func aCookRunningKeepsWaitingPhrasesHomeUntilItEnds() async throws {
+        let inbox = TessInbox(store: store, classes: classes)
+        inbox.add("stop the rice", at: context.now - 3600)
+        inbox.add("how is the timer doing", at: context.now - 3600)
+        let recipe = try engine.perform(
+            CreateRecipe(text: "Dal\nIngredients\n1 cup lentils\nMethod\n1. Simmer 20 minutes."), by: .user
+        ).output
+        let cook = try engine.perform(StartCooking(recipe: recipe.id, time: context.now), by: .user).output
+        let tess = tess()
+        #expect(await tess.readWaiting(context: context).isEmpty)
+        #expect(RouteStub.requests.isEmpty && tess.waitingCount == 2, "a cook phrase was sent")
+        // The cook ends: "stop the rice" goes; a phrase about a timer is never sent.
+        try engine.perform(FinishCooking(cook: cook.id, time: context.now), by: .user)
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged."))]
+        _ = await tess.readWaiting(context: context)
+        let sent = RouteStub.bodies.compactMap { String(data: $0, encoding: .utf8) }.joined()
+        #expect(sent.contains("stop the rice") && !sent.contains("timer doing"))
+        #expect(inbox.waiting().map(\.title) == ["how is the timer doing"])
+    }
+
     @Test func nothingWaitsForSiriAndAKeyNeverWaits() async {
         RouteStub.failure = .notConnectedToInternet
         let tess = tess()

@@ -290,15 +290,15 @@ final class AppModel {
     /// as its own ghost; a week-old one is deleted. Nothing happens with Claude off or no key, and a phrase that is
     /// still offline stays.
     func drainWaitingPhrases() async {
-        guard !isDrainingWaiting, let engine = runtime.tess as? TessCaptureEngine,
+        // Never while he has a ghost waiting: committing it would be a write he did not tap.
+        guard !isDrainingWaiting, pendingCapture == nil, let engine = runtime.tess as? TessCaptureEngine,
               engine.waitingCount > 0 else { return }
         isDrainingWaiting = true
         defer { isDrainingWaiting = false }
         let read = await engine.readWaiting(context: TessContext(now: AppClock.now, entry: session?.currentEntry?.id))
-        for capture in read {
-            commitCapture()
-            _ = land(capture)
-        }
+        guard let last = read.last else { return }
+        // One landing for the lot, so every drained ghost stays pending together and is seen.
+        _ = land(TessCapture(records: read.flatMap(\.records), line: last.line, source: .claude))
     }
 
     /// The open set-count ask ("2 × 10: 2 sets, or 2 kg?"), if the last phrase raised one.
