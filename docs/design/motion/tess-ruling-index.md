@@ -2,7 +2,7 @@
 
 Board 71. One page: each ruling, the spec that carries it, and every line that still contradicts it. Sources: `decisions.md` (DEC, line numbers from the 1043-line copy on the shared drive; the repo copy stops near line 995), the haptic map in `DesignSystem/Haptics.swift` (the map is the code and wins over any sheet), and the files in this folder. Stamps are real PT.
 
-Status: **OK** carried and nothing contradicts it. **FIX** a stale line exists. **GAP** no spec carries it.
+**This is a work list, not a ruling source:** the rulings are in `decisions.md` and the haptic map; a line here only points at them. Status: **OK** carried and nothing contradicts it. **FIX** a stale line exists. **GAP** no spec carries it.
 "MRA" = `tess-money-reading-motion-amended.md` (#963, not yet on master). "Day screens" = `tess-day-screens-motion-pass.md` (#966, not yet on master). "Row 26" = the UNDO-alone row in #964.
 
 ## 1. Haptics: which case plays
@@ -15,8 +15,8 @@ Status: **OK** carried and nothing contradicts it. **FIX** a stale line exists. 
 | H5 | Groceries Done `.done`; Clear the basket is a tap key and plays `.success`; Reset medium. (1009, 1025) | groceries-lp:33-45 | FIX (lab): groceries-lp:38 puts Clear on `.done`; groceries-lp:43 calls Clear named-action-only (it is a tap key, DEC 1027, 1039) |
 | H6 | Finishes play `.done` (Done, shutdown close, habit check-in, hold "Done for today"). (1025, 1041) | day-screens; haptics-sheet-audit M7-M9 | FIX (lab): groceries-finish-copylist-motion.md:12/:14/:19 (`.success`). FIX (Design): shutdown.md:42, shutdown-grammar.md:21/:63, evening-on-now.md:49, habits-grammar.md:25/:53, upkeep-people-grammar.md:22, recipe-clock.md:53, live-workout.md:31-32 |
 | H7 | Capture commit plays `.made`, not raw `.success`; Pantry swipe-add keeps `.made`. (1031, 9:34 PM) | day-screens:53; speak-plan; migration row 14 | GAP: pantry-v2-motion-check.md:40 still "Open for Product". FIX (Design): gaps-98.md:19 "nothing else" |
-| H8 | Hold-to-start timer plays no completion haptic; grocery check is the light cue; the Next bar is retired. (1035, 9:43 PM) | migration rows 21-23; audit M2-M4 | FIX (lab): cook-clock:71/:72 (Next step medium; hold-start medium 0.8). FIX (Design): 12-cook-mode.md:36/:41 |
-| H9 | The soul plays no haptic; delete the raw `.success` at TessSoul.swift:143. (1035, #957) | migration row 25; training; MRA | FIX (lab): tess-motion.md, tess-quiet-versions.md, tess-motion-build.md, tess-title-progress.md, tess-home-day-continuity.md still say "Done's own `.success`" |
+| H8 | Hold-to-start timer plays no completion haptic; grocery check is the light cue; the Next bar is retired. (1035 for the first two; 1007 and 1011 for the Next bar) | migration rows 21-23; audit M2-M4 | FIX (lab): cook-clock:71/:72 (Next step medium; hold-start medium 0.8). FIX (Design): 12-cook-mode.md:36/:41 |
+| H9 | The soul plays no haptic; delete the raw `.success` at TessSoul.swift:143. (the haptic map and sheet 38:111; #962, #957) | migration row 25; training; MRA | FIX (lab): tess-motion.md, tess-quiet-versions.md, tess-motion-build.md, tess-title-progress.md, tess-home-day-continuity.md still say "Done's own `.success`" |
 | H10 | Money Log plays `.made`, Finished book plays `.done`, set aside plays nothing. (1041, 9:58 PM) | MRA:53/:86-89 (branch) | GAP: SLM and SLR amendments have no haptic rows. FIX (lab): tess-drums-and-release14-walk.md:14/:31 needs a "superseded by MRA" banner. FIX (Design): money-dial.md:25, reading.md:23, money-reading-grammar.md:54/:69 |
 | H11 | Plan row skip `.notNow`; Day log week-boundary tick `.pickedUp`. (1043, 10:05 PM) | day-screens:29/:106; release-haptics | FIX (lab): speak-plan-daylog-copylist-lowpower-pass.md:47 (skip "none") and :64 (week tick `.impact(.light)`); day-screens:136 still lists them as asks |
 | H13 | One soft `.warning` per failed save, none for offline or info lines; Haptics-off silences all but this. (911, 967, 991, 1019) | error-notice; pantry-lean-notice; audit M14 | GAP: the "Haptics, on" row meaning is in no spec. FIX (lab): tess-error-notice.md:23 copy is "Didn't save that. Try again." FIX (Design): task-reward.md:99 bans `.warning` |
@@ -29,14 +29,14 @@ Status: **OK** carried and nothing contradicts it. **FIX** a stale line exists. 
 
 | # | Ruling | Carried by | Status and stale lines |
 |---|---|---|---|
-| M1 | RM keeps Tess at full opacity, halo and grade; asleep keeps full pigment; no poster frame in the 500 ms fade. (991, 1003) | tess-motion; never-diffused-audit; cook-clock | FIX (lab): tess-quiet-versions.md:12 says RM idle shows mode by grade; tess-motion.md:222 says never |
+| M1 | RM keeps Tess at full opacity, halo and grade; asleep keeps full pigment; no poster frame in the 500 ms fade. (991, 1003) | tess-motion; never-diffused-audit; cook-clock | FIX (lab): tess-quiet-versions.md:12 says 20 fps for the idle LP form (ruling: 30 fps, six lights). "Mode by size and grade" there matches the ruling. |
 | M2 | Low Power = Reduce Motion everywhere, sides included; soul keeps her own LP form. (991, 1003, 1023) | sides-motion; page-turn; groceries-lp; training | FIX (lab): tess-quiet-versions.md:29/:35 keep the side spring in LP. tess-motion.md:226 and quiet-versions:12 say 20 fps; ruling says 30 fps, six lights |
 | M3 | Zoom into a screen is a 150 ms crossfade in LP. (1009) | groceries-lp; day-screens:17; MRA:10 | OK |
 | M4 | The reduced Look change is 150 ms (HS43). (1017) | none | GAP. FIX (lab): tess-motion.md:237 (250 ms), groceries-lp:67 (flood stays in LP) |
 | M5 | Speak dry window stays 3 s in LP with a stepped drain; VoiceOver ghost wait is a flat 10 s with Cancel; listen ends on a pause. (1031, 1039) | day-screens:50-60; speak-plan | OK |
 | M6 | Low Power rows for Shutdown and Habits (G317, G318). (1039) | day-screens:72/:84 | FIX (Design): shutdown.md:56-57, shutdown-grammar.md:64, habits-grammar.md:54 have no LP row |
 | M7 | Drums: RM and LP are one path, no coast, no tick on its own; 420 ms travel. (1041) | MRA:32/:52 | FIX (Design): money-dial.md:32, reading.md:42 mention RM only |
-| M8 | Home's automatic Claude call, Plan wording and the week story wait for power OK; his own asked call runs. (1017, 1023, 1033, 1039) | day-screens:34/:126; MRA | OK |
+| M8 | Home's automatic Claude call, Plan wording and the week story wait for power OK; his own asked call runs. (1017, 1023, 1033, 1039; 1023 supersedes 1017, which said the Home ask runs in Low Power) | day-screens:34/:126; MRA | OK |
 | M9 | The clock page is the cook (G228); cover-only rows are history. (1007, 1011) | cook-clock:11-17 | FIX (lab): cook-clock:71 still lists Next step |
 
 ## 3. Quiet hours, notifications, activities
@@ -62,7 +62,7 @@ Status: **OK** carried and nothing contradicts it. **FIX** a stale line exists. 
 
 ## 5. What happens next
 
-- **Lab fixes now (mine):** this index. Once #963, #964 and #966 merge, one small follow-up PR carries D1 (40 ms), U4 (hint wording), the #966 QA lows, the banner on drums-and-release14-walk, H5/H6/H11/H14, M1/M2/M4, Q1/Q3 line edits in the lab files above.
+- **Lab fixes:** done in #972 (drum 40 ms, hold hint, #966 lows, banner on the old drums sheet, rows H11/H14) and this follow-up (index and Settings lows). Left: H5/H6 (groceries wording), M1/M2/M4, Q1/Q3 line edits in the older lab files listed above, and migration row 14's "a miss routed to Claude and written plays `.made`", which is a lab default for Product, not a ruling.
 - **Design's files (not mine):** every line marked FIX (Design). They are listed once here so Design can work them top to bottom.
-- **Product questions:** H7 (Pantry add `.made`, still "Open for Product"), H13 (what "Haptics, on" silences), U2 (placement of the shared UNDO line), the "PR" word in day-log-v1.md:52 (ruled word is "best").
+- **Product, answered at 10:42 PM Oct 17 (DEC:1045):** H7 Pantry add plays `.made`; H13 "Haptics, on" off silences every app haptic except the failed-save `.warning`, and timer-end and rest-end notifications still ring; U2 the shared UNDO line sits directly above the key row, UNDO at its right, and above the bottom chrome when there is no key row; user lines say "best", never "record" (day-log-v1.md:52 is Design's to fix).
 - Also noticed: board motion.md quotes Rotate 650 ms, page-turn spec carries Design's 460 ms.
