@@ -57,7 +57,6 @@ struct TessSoul: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.onWorkoutGround) private var onWorkoutGround
     @State private var layers: [SoulLayer] = []
-    @State private var doneCount = 0
     /// The working overlay, from its split to a second after its gather.
     @State private var work: SoulWorkTimes?
     /// Working ticks at 60 fps, then 30 after 20 s (the frame budget).
@@ -107,9 +106,6 @@ struct TessSoul: View {
             let now = Date.now
             layers = SoulBlend.push(new, onto: layers, at: now)
             lowPower = ProcessInfo.processInfo.isLowPowerModeEnabled
-            if new == .done {
-                doneCount += 1
-            }
             // Gone for Done and while she works (§1: the eyes are gone while she is split); back 200 ms after.
             if new == .done || new == .working || new == .gathering {
                 withTesseraAnimation(.linear(duration: 0.12), reduceMotion: reduceMotion) { eyesShown = false }
@@ -140,7 +136,6 @@ struct TessSoul: View {
                 workIsLong = true
             }
         }
-        .sensoryFeedback(.success, trigger: doneCount)
         .accessibilityElement()
         .accessibilityLabel(accessibilityText)
         .allowsHitTesting(false)
@@ -153,7 +148,7 @@ struct TessSoul: View {
         let sinceSplit = date.timeIntervalSince(work.split)
         let sinceGather = work.gather.map { date.timeIntervalSince($0) }
         if reduceMotion {
-            // A 200 ms crossfade to faded and loosened, and back.
+            // A 200 ms loosening in place (position and size, never faded), and back.
             let into = min(max(sinceSplit / 0.2, 0), 1)
             let back = sinceGather.map { min(max($0 / 0.2, 0), 1) } ?? 0
             return (SoulWork.reduced(base, amount: CGFloat(into * (1 - back))), nil)

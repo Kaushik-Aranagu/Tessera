@@ -96,4 +96,16 @@ struct SoulWorkTests {
         soul.handle(.askClaude)
         #expect(soul.mode == .thinking)
     }
+
+    @Test func reduceMotionNeverFadesHerAndShowsWorkByPositionAndSizeOnly() {
+        // Kaushik 12:46 PM: never a diffused or faded Tess; Reduce Motion keeps full opacity and the halo.
+        let loose = SoulWork.reduced(base, amount: 1)
+        #expect(loose.look.opacity == base.look.opacity)
+        #expect(loose.look.saturation == base.look.saturation)
+        #expect(loose.halo.opacity == base.halo.opacity)
+        #expect(zip(loose.dabs, base.dabs).allSatisfy { $0.opacity == $1.opacity })
+        #expect(abs(loose.dabs[0].x) >= abs(base.dabs[0].x), "the mains move apart in place")
+        let home = SoulWork.reduced(base, amount: 0)
+        #expect(home.dabs[0].x == base.dabs[0].x && home.dabs[0].scaleX == base.dabs[0].scaleX)
+    }
 }
