@@ -27,9 +27,6 @@ struct RecipePage: View {
     @State private var columnWidth: CGFloat = 260
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var away = false
-    /// A private recipe's title, tapped open for this visit; leaving or locking masks it again (G53).
-    @State private var titleShown = false
-    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         // At accessibility sizes the whole page is one scroll, so nothing is clipped (G69).
@@ -69,21 +66,13 @@ struct RecipePage: View {
                 .accessibilityHint("Back to the recipes")
                 .entrance(0)
 
-                let masked = RecipeCopy.isPrivate(recipe.title, model: model) && !titleShown
-                Group {
-                    if masked {
-                        // A private recipe reads "Private recipe" until tapped (G53); the next tap opens as usual.
-                        Button {
-                            withTesseraAnimation(reduceMotion: reduceMotion) { titleShown = true }
-                        } label: {
-                            heroTitle(ObjectPrivacy.recipeLabel)
-                        }
-                        .accessibilityHint("Shows it")
-                    } else {
-                        NavigationLink(value: Route.object(recipe.id)) { heroTitle(recipe.title) }
-                            .accessibilityHint("The original text and when it was cooked")
-                    }
+                // A private recipe always reads "Private recipe": nothing reveals it (G53, G102), and the tap opens
+                // its original page, which stays masked too.
+                let masked = RecipeCopy.isPrivate(recipe.title, model: model)
+                NavigationLink(value: Route.object(recipe.id)) {
+                    heroTitle(masked ? ObjectPrivacy.recipeLabel : recipe.title)
                 }
+                .accessibilityHint("The original text and when it was cooked")
                 .buttonStyle(HandleButtonStyle())
                 .matchedTransitionSource(id: recipe.id, in: zoom)
                 .accessibilityAddTraits(.isHeader)
@@ -188,7 +177,6 @@ struct RecipePage: View {
             }
             .tesseraFeedback(.made, trigger: sent?.line)
             .onDisappear {
-                titleShown = false
                 // Leaving inside the window hands the receipt and its UNDO to Tess's shared line, so the UNDO
                 // follows him (G67).
                 if let sent {
@@ -196,11 +184,6 @@ struct RecipePage: View {
                                          holds: RecipeCopy.holdLeft(since: sentAt, now: .now))
                     self.sent = nil
                     away = false
-                }
-            }
-            .onChange(of: scenePhase) { _, phase in
-                if phase != .active {
-                    titleShown = false
                 }
             }
         } else {
@@ -453,23 +436,17 @@ private struct RecipeDepth: View {
 private struct RecipeOriginal: View {
     let recipe: ObjectRecord
     @Environment(AppModel.self) private var model
-    /// The title tapped open on this page; leaving or locking masks it again (G53).
-    @State private var titleShown = false
-    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         let cooks = CookLog(store: model.store, classes: model.classes).cooks(of: recipe)
         ScrollView {
             VStack(alignment: .leading, spacing: Theme.Spacing.xxl) {
                 let isPrivate = RecipeCopy.isPrivate(recipe.title, model: model)
-                Text(RecipeCopy.shownTitle(recipe.title, isPrivate: isPrivate, shown: titleShown))
+                // Always masked when private; no tap shows it (G102).
+                Text(RecipeCopy.shownTitle(recipe.title, isPrivate: isPrivate))
                     .textRole(.title)
                     .foregroundStyle(Theme.Colors.ink)
                     .accessibilityAddTraits(.isHeader)
-                    .onTapGesture { titleShown = true }
-                    .accessibilityAddTraits(isPrivate && !titleShown ? .isButton : [])
-                    .accessibilityHint(isPrivate && !titleShown ? "Shows it" : "")
-                    .onDisappear { titleShown = false }
                 MarginSection(label: "Cooked", color: Theme.Colors.inkSecondary) {
                     if cooks.isEmpty {
                         Text("Not yet.")
@@ -488,7 +465,7 @@ private struct RecipeOriginal: View {
                 // Only when there's text he pasted: a recipe made another way has no AS PASTED (gap hunt G4).
                 if let pasted = RecipeCopy.pasted(model.store.value("sourceText", of: recipe)?.stringValue) {
                     // The title's own line in the paste stays masked while the title is (QA on #752).
-                    let source = RecipeCopy.maskedSource(pasted, title: recipe.title, masked: isPrivate && !titleShown)
+                    let source = RecipeCopy.maskedSource(pasted, title: recipe.title, masked: isPrivate)
                     MarginSection(label: "As pasted") {
                         Text(source)
                             .font(Theme.voice)
@@ -503,11 +480,6 @@ private struct RecipeOriginal: View {
         }
         .scrollIndicators(.hidden)
         .background { ThemedBackground() }
-        .onChange(of: scenePhase) { _, phase in
-            if phase != .active {
-                titleShown = false
-            }
-        }
     }
 }
 
@@ -612,9 +584,9 @@ enum RecipeCopy {
         return name.trimmingCharacters(in: .whitespaces)
     }
 
-    /// The title a surface shows: "Private recipe" for a private one unless it's been tapped open.
-    static func shownTitle(_ title: String, isPrivate: Bool, shown: Bool) -> String {
-        isPrivate && !shown ? ObjectPrivacy.recipeLabel : title
+    /// The title a surface shows: "Private recipe" for a private one, always; nothing reveals it (G102).
+    static func shownTitle(_ title: String, isPrivate: Bool) -> String {
+        isPrivate ? ObjectPrivacy.recipeLabel : title
     }
 
     /// The text he pasted, or nil when there is none or only blank space.

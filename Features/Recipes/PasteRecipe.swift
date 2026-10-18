@@ -35,7 +35,7 @@ struct PasteRecipe: View {
     /// The saved line's name: a private recipe is only "Private recipe" here too, spoken or drawn (G53).
     private var savedTitle: String {
         guard let title = saved.flatMap({ model.store.object(id: $0.id)?.title }) else { return "Recipe" }
-        return RecipeCopy.shownTitle(title, isPrivate: RecipeCopy.isPrivate(title, model: model), shown: false)
+        return RecipeCopy.shownTitle(title, isPrivate: RecipeCopy.isPrivate(title, model: model))
     }
 
     var body: some View {
