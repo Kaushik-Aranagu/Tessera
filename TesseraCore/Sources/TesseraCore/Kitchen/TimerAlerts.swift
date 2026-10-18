@@ -58,7 +58,8 @@ public struct KitchenTimerAlerts {
             .map { timer in
                 let name = timer.label.trimmingCharacters(in: .whitespacesAndNewlines)
                 let plain = name.isEmpty || name.allSatisfy { $0.isNumber || ".,: ".contains($0) }
-                let hidden = plain || ObjectPrivacy.isPrivateWord(name, in: store)
+                let ofPrivateCook = timer.cook.map { ObjectPrivacy.isPrivateCook($0, in: store) } ?? false
+                let hidden = plain || ofPrivateCook || ObjectPrivacy.isPrivateWord(name, in: store)
                 return TimerAlert(id: timer.id, label: hidden ? "Timer" : name, fireAt: timer.endsAt)
             }
     }

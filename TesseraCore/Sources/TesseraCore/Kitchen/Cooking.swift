@@ -67,7 +67,8 @@ public struct CookLog {
         let thisMonth = cooks(of: recipe).count {
             calendar.dateComponents([.year, .month], from: day.day(of: $0.at)) == month
         }
-        return "\(recipe.title), \(Self.ordinal(thisMonth)) time this month."
+        let name = ObjectPrivacy.isPrivateRecipe(recipe, in: store) ? ObjectPrivacy.recipeLabel : recipe.title
+        return "\(name), \(Self.ordinal(thisMonth)) time this month."
     }
 
     /// "first" to "ninth", then "10th", "11th", "12th", "13th", "21st", "22nd", "23rd", "31st".
@@ -86,19 +87,36 @@ public struct CookLog {
     }
 }
 
-/// Starts cooking a recipe at a size: a Cook object becomes the running process (Now), resuming at step 0.
 extension ObjectPrivacy {
+    @MainActor
+    static func isPrivateRecipe(_ recipe: ObjectRecord, in store: ObjectStore) -> Bool {
+        isPrivateRecipeTitle(recipe.title, lastWeightKg: BodyWeight.lastKg(in: store))
+    }
+
+    /// True when a cook's own title or its recipe's is private (the timer alert and the step lines go quiet).
+    @MainActor
+    static func isPrivateCook(_ cook: ObjectRecord, in store: ObjectStore) -> Bool {
+        let recipe = store.linkedObjects("recipe", of: cook).first ?? cook
+        return isPrivateRecipe(recipe, in: store)
+            || isPrivateRecipeTitle(cook.title, lastWeightKg: BodyWeight.lastKg(in: store))
+    }
+
+    /// A recipe step as it is stored on the process: the words, or "Private recipe" when the recipe is private.
+    @MainActor
+    static func stepLine(_ text: String?, cook: ObjectRecord, in store: ObjectStore) -> String? {
+        guard let text else { return nil }
+        return isPrivateCook(cook, in: store) ? recipeLabel : text
+    }
+
     /// What a cook or recipe is called in an op summary, the day story and the cook's own title: its title, or
     /// "Private recipe" when the recipe is private by the recipe rule (G21b).
     @MainActor
     static func cookTitle(_ object: ObjectRecord, in store: ObjectStore) -> String {
-        let recipe = store.linkedObjects("recipe", of: object).first ?? object
-        let isPrivate = isPrivateRecipeTitle(recipe.title, lastWeightKg: BodyWeight.lastKg(in: store))
-            || isPrivateRecipeTitle(object.title, lastWeightKg: BodyWeight.lastKg(in: store))
-        return isPrivate ? recipeLabel : object.title
+        isPrivateCook(object, in: store) ? recipeLabel : object.title
     }
 }
 
+/// Starts cooking a recipe at a size: a Cook object becomes the running process (Now), resuming at step 0.
 public struct StartCooking: EngineAction {
     public static let descriptor = ActionDescriptor(name: "startCooking", summary: "Start cooking a recipe",
                                                     parameters: [
@@ -153,7 +171,7 @@ public struct StartCooking: EngineAction {
         if let size = RecipeLimits.serves(serves) ?? book.serves(recipe) {
             try transaction.set("serves", to: .number(Double(size)), on: cook)
         }
-        let first = book.steps(of: recipe).first?.text
+        let first = ObjectPrivacy.stepLine(book.steps(of: recipe).first?.text, cook: cook, in: transaction.store)
         try StartProcess(subject: cook.id, ownerApp: "Kitchen", nextStep: first, resumePoint: ResumePoint(index: 0),
                          time: time).apply(&transaction)
         return cook
@@ -189,7 +207,9 @@ public struct GoToCookStep: EngineAction {
         let steps = RecipeBook(store: transaction.store, classes: transaction.classes).steps(of: recipe)
         let index = max(0, min(step, steps.count - 1))
         try transaction.saveContext(process, resumePoint: ResumePoint(index: index),
-                                    nextStep: steps.indices.contains(index) ? steps[index].text : nil, at: time ?? .now)
+                                    nextStep: ObjectPrivacy.stepLine(steps.indices.contains(index) ? steps[index].text : nil,
+                                                                     cook: cook, in: transaction.store),
+                                    at: time ?? .now)
     }
 
     public func summary(in _: ObjectStore) -> String {
