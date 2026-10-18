@@ -291,14 +291,18 @@ final class AppModel {
     /// still offline stays.
     func drainWaitingPhrases() async {
         // Never while he has a ghost waiting: committing it would be a write he did not tap.
-        guard !isDrainingWaiting, pendingCapture == nil, let engine = runtime.tess as? TessCaptureEngine,
+        guard !isDrainingWaiting, pendingCapture == nil, !isWorkoutPresented,
+              let engine = runtime.tess as? TessCaptureEngine,
               engine.waitingCount > 0 else { return }
         isDrainingWaiting = true
         defer { isDrainingWaiting = false }
         let read = await engine.readWaiting(context: TessContext(now: AppClock.now, entry: session?.currentEntry?.id))
         guard let last = read.last else { return }
+        // The first-send notice wins and is never dropped; else a lone phrase keeps its own line, and two or more
+        // read together get a count.
+        let line = read.first(where: \.isNotice)?.line ?? (read.count == 1 ? last.line : "Offline, \(read.count) read.")
         // One landing for the lot, so every drained ghost stays pending together and is seen.
-        _ = land(TessCapture(records: read.flatMap(\.records), line: last.line, source: .claude))
+        _ = land(TessCapture(records: read.flatMap(\.records), line: line, source: .claude))
     }
 
     /// The open set-count ask ("2 × 10: 2 sets, or 2 kg?"), if the last phrase raised one.

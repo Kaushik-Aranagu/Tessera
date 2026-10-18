@@ -374,6 +374,17 @@ struct ClaudeRouteTests {
         #expect(inbox.waiting().map(\.title) == ["how is the timer doing"])
     }
 
+    @Test func theFirstDrainedPhraseCarriesTheNoticeAndOnlyIt() async {
+        let inbox = TessInbox(store: store, classes: classes)
+        inbox.add(miss, at: context.now - 7200)
+        inbox.add("could you log squat 100 for 5 from earlier?", at: context.now - 3600)
+        RouteStub.queue = [(200, Self.logBench), (200, Self.answer("Bench 80 × 8 logged.")),
+                           (200, Self.logBench), (200, Self.answer("Squat logged."))]
+        let read = await tess().readWaiting(context: context)
+        #expect(read.map(\.isNotice) == [true, false], "\(read.map(\.line))")
+        #expect(read.first?.line.contains("Turn this off in Settings: Claude.") == true)
+    }
+
     @Test func nothingWaitsForSiriAndAKeyNeverWaits() async {
         RouteStub.failure = .notConnectedToInternet
         let tess = tess()
