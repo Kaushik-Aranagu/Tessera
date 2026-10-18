@@ -3,24 +3,25 @@
 Product ask Oct 17 (4:10 PM PT). Spec only; no study. Nothing in the app changes. One screen, a plain line per thing, no cards, no switches in boxes: a row is a name on the left in `ink`, its current value on the right in `inkSecondary`, and a tap turns or opens it in place.
 
 ## The page (top to bottom, one scroll of 5 pages at most under sheet 90's rules; here 4 pages of 6 or fewer)
-Page 1, **Tess**
+Page 1, **CLAUDE** (section word; was "Tess", Product 12:22 AM Oct 18)
 - Tess asks Claude: "Off" or "On". Under it one line: "Sends only what Receipts lists." (Product ruling Oct 17: the switch also gates capture misses, plan wording, Home lines and recipe reads, so "what you ask her" overclaimed.) Key, This month and Receipts live inside this row and open in place, so page 1 stays 6 rows or fewer. Off is the default and stays off until the key is there.
-- Quiet hours: "11 pm to 7 am". Tap opens two clocks in place.
+- Quiet hours are not a row: a read-only fact line "Quiet from 11 pm to 7 am" in `inkSecondary` with no value word to tap (fixed, no setting; see the addendum below).
 - Page turn: "Turn, on". Tap opens the four words in place (Slide, Turn, Soften, Rotate), each previewing once on a mini page (R4: re-picking the same word does not replay).
 Page 2, **Your day**
 - Day starts: "4 am". Tap steps the hour; one line explains "A late night stays on the day before."
 - Rest day: "Sunday" (or "Any").
-- Units: "lb, mi" (US English; stepper on the right word).
+- Units: "lb" (US English; "mi" returns when distance exists).
 Page 3, **Looks**
 - Look: the five names in place. Tess colours: "Today".
 - Haptics: "On".
 Page 4, **Data**
 - Back up: "Today, 9:02 am" and a tap to run one.
 - Export Health, Delete everything (the last one is the only vermilion word, two taps, a held confirm).
+- Remove key (inside the "Tess asks Claude" row): a two-step, tap then confirm in place. Receipt is one plain line naming the thing ("Key, removed."), with no UNDO; nothing holds the key for 10 s and it closes no other screen's UNDO slot (G375, G421).
 
 ## Rules
 - A row never wraps; the value shortens, never the name.
-- Plain value words, no "Enabled/Disabled". Clocks "11 pm".
+- Plain value words, no "Enabled/Disabled"; every on/off value reads Off or On (G414). Clocks "11 pm".
 - The page turn follows sheet 90: vertical swipe on a stepper row steps the stepper (sheet 90b), on a name turns the page.
 - Rail on the right edge as in sheet 90; the section word at the top of each page is the only heading.
 - Private: nothing on this screen shows anyone's words except their own settings.
