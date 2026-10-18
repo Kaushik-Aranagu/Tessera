@@ -31,3 +31,12 @@ Rename `ObjectPlate` to `ObjectPocket(object:, page:)`: seed wash by object, fea
 
 ## Open question for Kaushik (a picture)
 Is this faded enough, and small enough? The clip's top row shows Recipe, Ingredient and Muscles; the lower left shows Groceries turning pages. If yes, the pockets go to builders after the page-turn pick.
+
+## Kaushik on round 2 (Oct 18, 1:29 AM PT): the figure stays, the food drawings go
+His words: "Muscle figure seems alright. The pan and other grocery things not that great."
+- **Approved:** the muscle figure (front and back, `studies/muscle-figure.js`) on the Exercise MUSCLES page and the Routine. It is no longer waiting on his word.
+- **Withdrawn:** every drawn food stand-in. That is the drawn pan on Recipe, the ingredient colour drawing on Ingredient, and any drawing on Groceries, Pantry or Kitchen pages. A page about food shows no drawing.
+- **What a Recipe pocket is now:** only his own photo, feathered as above, when he has one. With no photo the page has plain ground and nothing in the pocket's place. No stand-in, no patch, no "add a photo".
+- **Ingredient:** no pocket (plain ground). The phone's colour table still exists for Core, but it is not drawn as a picture.
+- **Reversible:** if he wants a food drawing later, it starts from his photo or his reference, not from a made-up stand-in.
+- The table above ("Where it lives") reads with these changes: Recipe = his photo or nothing, Ingredient = nothing, Exercise MUSCLES and Routine = the figure.
