@@ -453,8 +453,7 @@ public struct AddRecipeToGroceries: EngineAction {
         // UNDO (Product e1981a39).
         let wanted = lines.filter { line in
             guard let ingredient = line.ingredient else { return false }
-            let staple = transaction.store.value("isStaple", of: ingredient) == .bool(true)
-                || AisleGuide.isStaple(IngredientLine.key(for: ingredient.title))
+            let staple = Staples.isStaple(ingredient, in: transaction.store)
             let covered = list.orderedChildren.contains { item in
                 transaction.store.value("isDone", of: item) == .bool(true) && !item.isDeleted
                     && transaction.store.linkedObjects("about", of: item).contains { $0.id == ingredient.id }
@@ -484,8 +483,7 @@ public struct AddRecipeToGroceries: EngineAction {
         var items: [ObjectRecord] = []
         for line in lines {
             guard let ingredient = line.ingredient else { continue }
-            let staple = transaction.store.value("isStaple", of: ingredient) == .bool(true)
-                || AisleGuide.isStaple(IngredientLine.key(for: ingredient.title))
+            let staple = Staples.isStaple(ingredient, in: transaction.store)
             // Staples, "to taste" and optional lines ("for serving") stay on the recipe page (G-R3, G-R4).
             if staple || line.line.toTaste || line.line.optional, includeStaples != true {
                 continue

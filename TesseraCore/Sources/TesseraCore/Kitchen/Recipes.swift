@@ -65,6 +65,14 @@ public struct RecipeBook {
         return recipes().first { store.value("sourceText", of: $0)?.stringValue == wanted }
     }
 
+    /// When the recipe was last cooked (a finished cook's `cookedAt`); nil when never. "Not cooked lately" sorts on it.
+    public func lastCooked(_ recipe: ObjectRecord) -> Date? {
+        guard let cookClass = classes[.cook] else { return nil }
+        return store.objects(of: cookClass)
+            .filter { store.linkedObjects("recipe", of: $0).contains { $0.id == recipe.id } }
+            .compactMap { store.value("cookedAt", of: $0)?.dateValue }.max()
+    }
+
     public func serves(_ recipe: ObjectRecord) -> Int? {
         RecipeLimits.serves(store.number("serves", of: recipe))
     }
@@ -93,7 +101,7 @@ public struct RecipeBook {
                 optional: store.value("optional", of: object) == .bool(true)
             )
             return Line(id: object.id, object: object, line: line, ingredient: ingredient,
-                        isStaple: ingredient.map { store.value("isStaple", of: $0) == .bool(true) } ?? false)
+                        isStaple: ingredient.map { Staples.isStaple($0, in: store) } ?? false)
         }
     }
 
