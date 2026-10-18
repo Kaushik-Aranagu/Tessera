@@ -52,7 +52,7 @@ window and reappears under any new line, including a capture's (UC13).
 | Backup "Stop using it" | `BackupView.forgotten` | 10 s | `Features/Backup/BackupView.swift:113-116`, `:285-304` |
 | Live set and edit | `WorkoutSession.undoable`, `lastEdit` | none; the key leaves with the line (4 s) | `WorkoutSession.swift:447-450`; `WorkoutSession+Edit.swift:85-104`; `LiveTessCorner.swift:39-46`, `:68-75` |
 | LOG AND FINISH | `canTakeBackFinish(at:)` | 10 s | `WorkoutModeView.swift:106-126` |
-| Routines, routine editor, recipe paste, Claude key, Siri | their own | see the audit X6, X7, X10, X19, X15 | `undo-windows-audit.md` |
+| Routines, routine editor, recipe paste, Siri | their own | see the audit X6, X7, X10, X15 (the Claude key has no UNDO, 10:47 PM Oct 17; audit X19 is superseded) | `undo-windows-audit.md` |
 
 ## Timing used below
 
