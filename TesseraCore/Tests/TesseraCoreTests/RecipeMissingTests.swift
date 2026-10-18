@@ -152,6 +152,17 @@ struct RecipeMissingTests {
         #expect(pantry.cookableCount([bare]) == 0)
     }
 
+    @Test func aRecipeIsTrustedOnlyWithSixtyPercentKnownAndAtLeastThreeLines() throws {
+        // G209: 60% of the counted lines known, never fewer than 3; a short recipe needs every line known.
+        let five = try recipe("Five", ["1 a1", "1 a2", "1 a3", "1 a4", "1 a5"].map { "\($0) thing" })
+        let known3 = need(five, ["a1 thing": .have, "a2 thing": .have, "a3 thing": .low])
+        #expect(known3.counted == 5 && known3.known == 3 && known3.isTrusted)
+        #expect(!need(five, ["a1 thing": .have, "a2 thing": .have]).isTrusted)
+        let two = try recipe("Two", ["1 cup rice", "2 carrots"])
+        #expect(!need(two, ["rice": .have]).isTrusted && need(two, ["rice": .have, "carrots": .have]).isTrusted)
+        #expect(!need(two, [:]).isTrusted)
+    }
+
     @Test func withNoStateAnywhereThereIsNoStateToSay() {
         let pantry = PantryBook(store: store, classes: classes)
         #expect(!pantry.hasAnyState)

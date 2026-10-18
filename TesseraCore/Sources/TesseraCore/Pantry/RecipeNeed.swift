@@ -20,6 +20,16 @@ public struct RecipeNeed {
     public let hidesNames: Bool
     /// A recipe with no ingredient lines is not judged: never cookable (R16).
     public let isJudged: Bool
+    /// The lines counted (not staple, optional or to taste) and how many of them have a known state.
+    public let counted: Int
+    public let known: Int
+
+    /// Enough is known for the CAN COOK word to stop being grey for this recipe (G209): at least 60% of the counted
+    /// lines, never fewer than 3 (a short recipe needs every line known). It does not change the order.
+    public var isTrusted: Bool {
+        guard isJudged, counted > 0 else { return false }
+        return known >= min(counted, max(3, Int((Double(counted) * 0.6).rounded(.up))))
+    }
 
     /// Missing and to check together: 0 is "can cook now".
     public var score: Int {
@@ -46,6 +56,7 @@ public extension RecipeMath {
     {
         var seen = Set<UUID>()
         var out: [RecipeNeed.Line] = [], unknown: [RecipeNeed.Line] = [], low: [RecipeNeed.Line] = []
+        var counted = 0, known = 0
         for line in lines {
             guard let ingredient = line.ingredient, !line.isStaple, !line.line.toTaste, !line.line.optional,
                   seen.insert(ingredient.id).inserted else { continue }
@@ -53,14 +64,16 @@ public extension RecipeMath {
                 ingredient: ingredient,
                 label: isPrivateIngredient(ingredient) ? "Private item" : ingredient.title
             )
+            counted += 1
             switch ingredient.isDeleted ? PantryState.unknown : state(ingredient) {
-            case .out: out.append(shown)
-            case .low: low.append(shown)
+            case .out: out.append(shown); known += 1
+            case .low: low.append(shown); known += 1
             case .unknown: unknown.append(shown)
-            case .have: break
+            case .have: known += 1
             }
         }
-        return RecipeNeed(out: out, unknown: unknown, low: low, hidesNames: hidesNames, isJudged: !lines.isEmpty)
+        return RecipeNeed(out: out, unknown: unknown, low: low, hidesNames: hidesNames, isJudged: !lines.isEmpty,
+                          counted: counted, known: known)
     }
 }
 
