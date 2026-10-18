@@ -1,6 +1,6 @@
 # Cook-phrase gate acceptance rows (N21-N26)
 
-Docs only. Open for Core: the exact shapes #884 holds (G06, G07) and which key line the router returns. Sources: research/fixtures/capture-miss-route-eval.md (N21-N26), research/fixtures/decisions-328-332-338.md (K03-K12, G01-G08, D01-D05), product/decisions.md (3:38 PM PT Oct 17 narrowing; 4:14 PM PT Oct 17 cap of 600 characters, line "That's too long to send. Say it shorter."), qa/review-884.md.
+Docs only. Core answered the hold shapes and the router line (see Open items). Sources: research/fixtures/capture-miss-route-eval.md (N21-N26), research/fixtures/decisions-328-332-338.md (K03-K12, G01-G08, D01-D05), product/decisions.md (3:38 PM PT Oct 17 narrowing; 4:14 PM PT Oct 17 cap of 600 characters, line "That's too long to send. Say it shorter."), qa/review-884.md.
 
 ## Ruling in one paragraph (Kaushik's capture-miss route, narrowed by Product's 3:38 PM Oct 17 ruling)
 While a cook runs, the six cook phrases N21-N26 stay on the phone. They are never sent to Claude through the capture-miss route (#860). Key-shaped text never leaves, with or without a cook. A phrase over 600 characters is refused. An unrelated miss mid-cook (for example "call mom half 7") takes the normal route. Once FinishCooking has run, the six phrases are ordinary misses.
