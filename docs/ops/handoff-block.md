@@ -14,7 +14,7 @@ HANDOFF: you are the fresh <TEAM> lead. You continue an earlier chat; you are no
    cloud thread -> fetch_thread (thread id, oldest_first) or list_events (old session id, ask for the last few hundred events);
    Mac session -> you cannot read it; ask the coordinator to relay the passage, or read your handoff note and board.
 2. Your handoff note: <where>: ops/rotation-handoffs.md in the project files (section "<TEAM>"),
-   mirrored to docs/ops/handoff-notes.md in the repo for Mac sessions (git show origin/master:docs/ops/handoff-notes.md).
+   mirrored to docs/ops/handoff-block.md in the repo for Mac sessions (git show origin/master:docs/ops/handoff-block.md).
    It lists open PRs, open verdicts, cards waiting on Kaushik and what to do next.
 3. Where the standing rules live (look here before asking Kaushik again):
    - project memory (the index you were given; cloud threads): /tmp/claude/memory/team/silo/MEMORY.md and the team files it names;
@@ -129,7 +129,7 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
 - Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7MAYovNFqJsR8HEKWCUp3Bx9; old session cse_01BQyrZn9PGsr94CrCvmUb8b.
 - Fresh thread: cmsg_01VTPva3JGXrfvetgUvAWE7MHSnAXPPHMDNfPXTyZd75VX; session cse_01G3n7sadfakzAogtiqM742p.
 - This is a Mac session: it cannot call fetch_thread or read these files from the project folder. Read the repo copies with git show origin/master:docs/ops/handoff-block.md, docs/ops/board/<team>.md and docs/product/decisions.md, and ask the coordinator to quote a message when you need his exact words.
-- Handoff note: ops/rotation-handoffs.md, section "Core" if present; if not, ask the coordinator for the note the outgoing lead sent.
+- Handoff note: ops/rotation-handoffs.md, section "Core". Until the outgoing lead has written it, ask the coordinator to paste the note the outgoing lead sent (the Mac cannot fetch it).
 - Rules for Core (plus G):
    - Integrate Claude early (yes) (Oct 15, 11:41 AM PT) (cmsg_01VTPva3JGXrfvetgUvAWE7MXfAj9rS5WnrrZNzcFQbtHD)
    - Long term, Tess is the manager agent and his first contact; keep that in the architecture docs (Oct 16, 11:27 AM PT) (cmsg_01VTPva3JGXrfvetgUvAWE7MXBTCyKqWtY6o5AB68nf99K)
@@ -138,13 +138,23 @@ Each note is the filled block for that lead's fresh thread. Message ids were rea
 - Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7MTz37meJ7v1kwQtEuNVtmfY; old session: the thread titled "iOS build" in list_thread_sessions (Mac session; the coordinator can read it).
 - Fresh thread: cmsg_01VTPva3JGXrfvetgUvAWE7MUBkL1XKPxcemXhXnudvRpC; session cse_018k2u1aFREN7kbum42Nnf8Q.
 - This is a Mac session: it cannot call fetch_thread or read these files from the project folder. Read the repo copies with git show origin/master:docs/ops/handoff-block.md, docs/ops/board/<team>.md and docs/product/decisions.md, and ask the coordinator to quote a message when you need his exact words.
-- Handoff note: ops/rotation-handoffs.md, section "Builder A" if present; if not, ask the coordinator for the note the outgoing lead sent.
+- Handoff note: ops/rotation-handoffs.md, section "Builder A". Until the outgoing lead has written it, ask the coordinator to paste the note the outgoing lead sent (the Mac cannot fetch it).
 - Rules for Builder A (plus G):
    - Release to his phone aggressively: daily and with each new feature (Oct 16, 3:02 PM PT) (cmsg_01VTPva3JGXrfvetgUvAWE7MBLpTsJ6CxszumZC5nRYaTs)
    - Round dial and great haptics; creating and finishing a task must feel good and rewarding (Oct 15, 11:19 PM PT) (cmsg_01VTPva3JGXrfvetgUvAWE7M2yYjh5bH5tgUeUjekxLF4D)
    - No cards; elegant, smooth transitions and text effects; the app must make him want to use it (Oct 15, 12:45 AM PT) (cmsg_01VTPva3JGXrfvetgUvAWE7MFAjBiVQe19swLsWzT6BSt9)
    - No default rounded rectangle or pill buttons and cards; more elegant, subtle controls (Oct 15, 12:00 PM PT) (cmsg_01VTPva3JGXrfvetgUvAWE7M8AkTjBBbEgur6vod4tmgHM)
    - UI carries 50% of the weight of the backend; be as creative and innovative in UI (Oct 15, 12:47 AM PT) (cmsg_01VTPva3JGXrfvetgUvAWE7MDdEf7HFeA7JuuPy9ZKPyLt)
+
+### Mac rules (Core, Builder A, Builder B)
+- you take relays from the coordinator, not direct sends from other teams. Use the one shared simulator through the lane lock (`scripts/ops/lane_lock.sh run <lane> "<purpose>" -- <cmd>`, docs/ops/lane-lock.md). Push WIP to your branch before any long gate. Stop only your own processes, by PID. Check the screen is unlocked and the simulator destination before trusting an app test. After a frozen-PR number is sent, no pushes until it lands. If your RC session parks or drops, the coordinator restarts it (a relay to your thread, or `start_rc_session`); you never start another session yourself.
+
+### Builder B (Mac)
+- Old thread: none recorded. Current thread: cmsg_01VTPva3JGXrfvetgUvAWE7MVrjJCAw7HRqQ33DygSn2Qc; session cse_01MP1MQQduHXSJ11GiBAgEB4 (send_message form: session_01MP1MQQduHXSJ11GiBAgEB4).
+- This is a Mac session: it cannot call fetch_thread or read the project folder. Read the repo copies with git show origin/master:docs/ops/handoff-block.md, docs/ops/board/ios-b.md and docs/product/decisions.md, and ask the coordinator to quote a message when you need his exact words.
+- Handoff note: ops/rotation-handoffs.md, section "Builder B". Until the outgoing lead has written it (open PRs with heads, frozen PRs, worktree, test.sh habits), ask the coordinator to paste it.
+- Scope: Home, ask slot, BottomChrome, Settings, Review, Notes, Habits, Groceries, Recipes, Plan my day, Speak, Day log, Shutdown, link fetch, AI-1/AI-9, Kitchen week, Lists. The pin and install gates are Builder A's, not yours.
+- Rules: G plus the Mac rules section above.
 
 ### Tess motion lab
 - Old thread: cmsg_01VTPva3JGXrfvetgUvAWE7M6sP74VaZtcGZHEKYPWaqrp; old session cse_01DRmRTCUkFkcxiqBGpsU9Jw.
@@ -161,6 +171,11 @@ Product's rulings are not copied into this file. Look these up by stamp in produ
 - G102 (private grocery row reads "Private item", one tap checks it): 5:40 PM Oct 17 (#883).
 - #902 tie rule (equal timestamps: surer pantry state wins) and the Pantry backfill key pantryBackfilled: 4:32 PM Oct 17.
 - Area hairline is decoration, no contrast bar (labels, key words and numbers keep 4.5:1): 5:58 PM Oct 17.
+- Size words (small, medium, large, extra-large, whole, half) count like unit words in the first-line title rule: 6:00 PM Oct 17.
+- G139 sticky Pantry mask (a cooked private recipe's ingredient reads "Private item" everywhere in Pantry): 6:10 PM Oct 17.
+- G175 (no ochre in Pantry, Reading B): 6:39 PM Oct 17.
+- Weight units are not money words ("2 pounds ground beef" never masks; no two-decimal price rule when a unit follows): 6:44 PM Oct 17.
+- lastUsedAt accessor named by Core, staples and optional lines get it too; Research test count 116: 6:45 PM Oct 17.
 Stamps from 1:41 PM onward are mapped to real PT by the CLOCK CORRECTION line in decisions.md.
 
 ## Not included on purpose
