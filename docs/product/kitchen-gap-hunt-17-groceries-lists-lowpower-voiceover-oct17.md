@@ -120,7 +120,9 @@ Cross-cutting calls for Product: (1) G257, do the bare money and care words in `
 - **G257 ruled:** bare words never mask. "dr" or "rent" alone stay raw in rows and list names. Masking is only by the one existing check (a title plus a name like "Dr Patel", or an amount or sign for money). "Dr Pepper" stays raw.
 - **G258 ruled:** Groceries Done, Clear the basket and Lists Reset are named-action-only for VoiceOver, like G229 (double tap speaks the hint, the named action completes). UNDO 10 s for each.
 - **G250 ruled:** one shared Tess line with UNDO on every full-screen layer, including Groceries with items in the basket and Lists. One app-wide UNDO slot.
-- **G249 ruled:** his own touches keep their haptic in Low Power and in quiet hours (as G223); only Tess-initiated landings follow quiet hours. Weights: check and uncheck light, Done and Clear success, Reset medium.
+- **G249 ruled:** his own touches keep their haptic in Low Power and in quiet hours (as G223); only Tess-initiated landings follow quiet hours. Weights: check and uncheck light, Done and Clear success, Reset medium. Refined later (Product, 9:28 pm, ruling on Research's #952): Done plays `.done`, Clear the basket plays `.success`. The wider PrivateWords list retires everywhere (one check for rows, list names and export); "Dr Patel" lives in the one private-text function Core adds.
 - **G247 ruled:** in Low Power the zoom into a screen is a 150 ms crossfade.
 
 **Walk list note (QA, #941):** G250 is inferred from code (Lists and Groceries reply line hidden under the full-screen cover) and stays on the Mac walk list until seen on the phone or simulator.
+
+- **G258 corrected (Product, Oct 17 9:29 pm PDT, after Design's GL15 answer; decisions.md):** named-action-only covers HOLD keys only (Done, Finish workout, Groceries Done, Lists Reset). "Clear the basket" is a tap key and keeps double-tap, with UNDO. A VoiceOver double tap on Done or Reset speaks "Hold to finish" or "Hold to reset"; Voice Control completes by the action names "Finish" and "Reset". The shared Tess line with UNDO sits directly above the key row.

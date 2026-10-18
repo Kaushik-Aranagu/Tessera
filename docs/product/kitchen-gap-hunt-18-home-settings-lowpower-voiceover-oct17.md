@@ -54,7 +54,7 @@ Carried, not renumbered (still open on this checkout):
 | Announcements | FAIL, carried G251: `TessVoice.say` posts nothing; Settings and Backups also swap their lines in place with no announcement (G276) | HomeQueue.swift:32-41 |
 | UNDO slot | FAIL: two extra slots live in Settings (G273). PASS for Home: one `TessVoice.shared` note, 4 s plain, 10 s with UNDO, a flat 10 s under VoiceOver | HomeQueue.swift:45-52; ClaudeSection.swift:99-107; BackupView.swift:110-116 |
 | Receipts name the thing first | mostly PASS ("Call mom, done.", "Sunday, rest day.", "Push A, 8:00 am."); FAIL for "Done. Next one is up." (G281) | HomeQueue.swift:465, 490; RestWeekday.swift:21-23; NowPage.swift:373 |
-| Masks on Home (workout, routine, task titles) | FAIL: zero hits for `ObjectPrivacy`, `PrivateWords` or `shownTitle` in `Features/Home`, `Features/Review`, `Features/Settings`, `Features/Backup` (grep). Ruled twice, not landed (G274, G275) | HomeLines.swift:518, 558, 619, 647 |
+| Masks on Home (workout and routine titles; plain tasks keep their own rules, see G275) | FAIL: zero hits for `ObjectPrivacy`, `PrivateWords` or `shownTitle` in `Features/Home`, `Features/Review`, `Features/Settings`, `Features/Backup` (grep). Ruled twice, not landed (G274; tasks in G275) | HomeLines.swift:518, 558, 647 |
 | Masks, other classes | PASS by absence: no note, list item or recipe title can reach a Home line (`HomeFact` has no such kind; the cook title masks at `HomeLines.swift:593-601`); no tap-to-reveal anywhere in Home, Settings, Backups (zero hits for `reveal` as a behaviour) | HomeLines.swift:8, 593-601 |
 | Hold keys | FAIL, carried G229 and G258: Home Finish completes on a double tap | NowPage.swift:224-233; Paint.swift:311-314 |
 | Reading order, Now | PASS: day label (header), context line, hero, key, countdown, queue | NowPage.swift:40-100 |
@@ -126,3 +126,13 @@ Cross-cutting calls for Product:
 3. G229 and G258, confirm the named-action-only ruling covers Home's Finish key on Now (a 0.7 s hold that finishes a task, with UNDO 10 s).
 4. G268 and G269, confirm that Low Power also covers the page-turn slide on Home's rail (a 150 ms fade, no scroll) and the cover zoom, and whether the one automatic Claude call on Home (a finished workout's words, `HomeLineHero.swift:148`) should wait for power; plan wording is off already.
 5. G277, whether Settings stays a section of "The week" for this build, in which case the name, header and back word fixes in G277 stand in for the page; and whether a silent Tess line that lands in quiet hours (the first-launch rest-day line) counts as a landing under the quiet-hours ruling.
+
+## Rulings in (Product, Oct 17 9:28 pm PDT, recorded in decisions.md)
+
+- **Private-text function first:** Core lands the one private-text function, then Builder B's Home masks (G274). Bare words ("balance", "pay") never mask.
+- **Shared Tess line (G272):** the Review, Settings and Backups covers fall under the shared Tess line with UNDO. Folder choice moves into the one UNDO slot. A key change gets no UNDO and no key content in the line (nothing keeps a copy): plain receipt only.
+- **Home's Finish key:** named-action-only for VoiceOver (as G229).
+- **Low Power:** covers page-turn slides. Home's one automatic Claude call does not run in Low Power (it runs on the next open with power ok); a call he asks for still runs.
+- **Settings placement:** reached from Review's foot (Design 93), not a section of "The week". A quiet-hours Tess line is a Tess-initiated landing, so it follows quiet hours.
+
+**Master read (QA, #951):** hunts 17 and 18 read master eaa4c30 and the docs-only changes after it; app, engine and design files were unchanged through master 8427b08 (checked at #951 review). G272 stays on the Mac walk list until seen.
