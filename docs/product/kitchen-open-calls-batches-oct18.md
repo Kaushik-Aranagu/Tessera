@@ -410,3 +410,7 @@ Product asked for the 225 open PRODUCT CALL gaps in `kitchen-open-gaps-index-oct
 **No default (5):** G422, G145, G206, G207, G209. Needing Design: G145, G207, G422. Needing Core: G206, G209.
 
 **Hunt rows not found:** none missing in hunts 10 to 27. G407 and G409 sit in checklist rows X1 and X3 of hunt 24, and G422 in row B6 of hunt 25 (no Fix column there; the default is the row's own "how to check" and ownership text).
+
+## Rulings in (Product, Oct 18 7:25 AM)
+
+All 10 batches ruled YES as the defaults above. The nine CONFLICTS rows take the ruling-consistent default shown in each cell. G145, G206, G207, G209 and G422 stand as already answered (Core and Design). Small calls inside the defaults: G77 refuse, G74 a Settings key as the once-marker, G84 follows the capture-miss route, G80 keep the colon, G440 hide the Show row until it ships. G386 is a page turn with no haptic (R2).
