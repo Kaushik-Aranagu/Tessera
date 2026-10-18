@@ -158,4 +158,15 @@ struct TimerAlertsTests {
         #expect(CookLog(store: store, classes: engine.classes).finishLine(for: recipe, at: start + 120)
             .hasPrefix("Tacos,"))
     }
+
+    @Test func aPrivateCooksTimerReadsTimerOnNow() throws {
+        let (engine, _) = try setUp()
+        let recipe = try engine.perform(
+            CreateRecipe(text: "Melatonin lasagna\nIngredients\n2 onions\nMethod\n1. Bake 30 minutes."), by: .user
+        ).output
+        let cook = try engine.perform(StartCooking(recipe: recipe.id, time: start), by: .user).output
+        try engine.perform(StartKitchenTimer(label: "lasagna", minutes: 30, cook: cook.id, time: start), by: .user)
+        let now = NowPicker(engine: engine).pick(at: start + 30).now
+        #expect(now?.nextStep == "Timer, 30 min", "\(now?.nextStep ?? "nil")")
+    }
 }

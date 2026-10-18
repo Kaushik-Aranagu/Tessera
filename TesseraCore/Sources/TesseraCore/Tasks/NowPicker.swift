@@ -55,6 +55,8 @@ public struct NowPicker {
         guard let running = ProcessTable(engine: engine).running(), let subject = running.subject else { return nil }
         let timer = CookLog(store: store, classes: engine.classes).timers()
             .first { $0.cook?.id == subject.id && $0.endsAt > now }
+        // A private recipe's timer is just "Timer" here, as on the lock screen.
+        let timerName = ObjectPrivacy.isPrivateCook(subject, in: store) ? "Timer" : timer?.label
         return NowItem(
             id: subject.id,
             kind: .process,
@@ -62,7 +64,7 @@ public struct NowPicker {
             title: store.displayTitle(of: subject),
             startsAt: timer?.startedAt ?? running.startedAt,
             endsAt: timer?.endsAt,
-            nextStep: timer.map { "\($0.label), \(Int(($0.remaining(at: now) / 60).rounded(.up))) min" }
+            nextStep: timer.map { "\(timerName ?? $0.label), \(Int(($0.remaining(at: now) / 60).rounded(.up))) min" }
                 ?? running.nextStep
         )
     }
