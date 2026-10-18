@@ -398,10 +398,12 @@ private struct IngredientColumn: View {
                 .accessibilityLabel(isPrivate ? RecipeCopy.privateRow(amount(line))
                     : RecipeCopy.spokenRow(amount(line), line.line))
                 .accessibilityActions {
-                    // Only the row's own action here; adding the recipe lives on the list as a whole (G68).
                     if line.line.metricText != nil {
                         Button("Show in metric") { flip(line) }
                     }
+                    // A .contain container isn't a focus stop, so its own action would be unreachable (G230): each
+                    // row offers it, named for what it does, the whole recipe ("Add all", G68).
+                    Button(RecipeCopy.addAllAction, action: onAdd)
                 }
             }
         }
