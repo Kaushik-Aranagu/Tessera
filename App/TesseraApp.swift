@@ -24,7 +24,7 @@ struct TesseraApp: App {
         if TesseraSchema.lastOpenOutcome != .inMemoryFallback {
             try? LegacyStore.migrate(into: container.mainContext)
         }
-        let model = AppModel(context: container.mainContext)
+        let model = AppModel(context: container.mainContext, seedsStarterLists: true)
         // Fake history only when asked for (simulator, recordings): never on Kaushik's phone.
         // -resetDemo starts the first-launch rest day over too (QA low on #641); LaunchFlags is simulator-only.
         if LaunchFlags.has("-resetDemo") {

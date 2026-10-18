@@ -158,7 +158,7 @@ final class AppModel {
 
     /// `launchDefaults`: where once-per-install launch decisions are kept; the app tests pass a throwaway suite (QA on
     /// #665), so a test run never decides for an install.
-    init(context: TesseraContext, launchDefaults: UserDefaults = .standard) {
+    init(context: TesseraContext, launchDefaults: UserDefaults = .standard, seedsStarterLists: Bool = false) {
         self.context = context
         store = ObjectStore(context: context)
         do {
@@ -186,7 +186,10 @@ final class AppModel {
             // Research 146). Once; an UNDO or a later "Any" leaves a record, so it is never written twice.
             restReceipt = SettingsStore(engine: engine).writeFirstRestWeekday(defaults: launchDefaults)
             // The three starter lists (Gym bag, Leaving the house, Packing): once each, never put back after a delete.
-            _ = try? StarterLists.installIfNeeded(store: store, classes: classes)
+            // Only the app's own launch asks for them: a test model starts with just the lists it makes.
+            if seedsStarterLists {
+                _ = try? StarterLists.installIfNeeded(store: store, classes: classes)
+            }
         }
         runtime = TesseraRuntime(engine: engine)
         soul.runScript()
