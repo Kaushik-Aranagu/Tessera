@@ -23,8 +23,8 @@ Default: Porcelain, phone. Each step needs a private/test item; never type a rea
    See: row reads "Private item" (never the words); one tap strikes it at once, no reveal step; UNDO brings it back.
    PASS / FIX FIRST.
 5. #890 one private-title check. Groceries, then Recipes.
-   Do: add "Blood orange" to Groceries; open a recipe titled "Dentist cake".
-   See: "Private item" and "Private recipe" (expected, widest wall). A plain task "dentist" still reads "Dentist" (Product has not ruled; not a fail).
+   Do: add "dentist" and "Blood orange" to Groceries; open a recipe titled "Dentist cake".
+   See: "dentist" reads "Private item" and "Dentist cake" reads "Private recipe" (expected, widest wall); "Blood orange" stays raw (the stays-raw check after the 4:22 PM trim, #890 parity test). A plain task "dentist" still reads "Dentist" (Product has not ruled; not a fail).
    PASS / FIX FIRST.
 6. #895 mask sweep. Rename a routine to "Knee rehab day"; start and finish it. Look at Home, Day log, History.
    See: "Private workout" everywhere he can read; Claude Home-done line must not name it. Op-log summaries masked: UNVERIFIED (review-895 FIX FIRST 22f38e8a closed, head not re-read here).
@@ -38,7 +38,7 @@ Default: Porcelain, phone. Each step needs a private/test item; never type a rea
    See: row shows host only (no path, "www." dropped). Read opens Paste with the link. Remove speaks "host, removed." with no UNDO (known low, not a fail).
    PASS / FIX FIRST.
 9. #917 Pantry. Kitchen > Pantry, rows in low and out.
-   See: state words are plain ink (no ochre); OUT bold with ring, LOW semibold, readable in Porcelain and Obsidian. Interim until areaLean lands (known row).
+   See: state words are plain ink (no ochre); OUT bold with ring, LOW semibold, readable in Porcelain and Obsidian. Plain ink is the end state; areaLean only on caps labels and the index line.
    PASS / FIX FIRST. Only if #917 is in the release.
 10. #871 copy phrase and starter lists. Tess ask bar, then Kitchen > Lists.
    Do: say "copy packing for lisbon"; then "copy keys for mum".
@@ -49,7 +49,7 @@ Default: Porcelain, phone. Each step needs a private/test item; never type a rea
    PASS / FIX FIRST.
 12. #884 capture-miss lows. Tess ask bar.
    Do: type "dentist by 4.15"; paste a phrase over 600 characters; while a cook timer runs say "8 mins".
-   See: first is not read as money; long phrase gets a fixed refusal line, nothing written; cook phrases without "timer" may still reach Claude (known partial, narrowing is a later PR). Refusal wording: UNVERIFIED.
+   See: first is not read as money; long phrase gets a fixed refusal line, nothing written; the refusal reads "That's too long to send. Say it shorter."; while a cook runs nothing goes to Claude (TessModel.swift:100-107): "8 mins" stays local and an unrelated phrase reads "Didn't catch that."
    PASS / FIX FIRST.
 13. #564 question walls. Tess ask bar.
    Do: ask "was $12 too much?" and "is 82.4 good?".

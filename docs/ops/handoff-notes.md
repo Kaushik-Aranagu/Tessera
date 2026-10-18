@@ -18,7 +18,8 @@ Mac sessions cannot write the project folder, so each Mac lead writes or correct
   2. G139/G140/G142: Pantry mask at source, sticky "Private item" (core.md:407, :411).
   3. Name the lastUsedAt accessor, written at cook finish (core.md:413, :417).
   4. Pantry v2 R1-R20: derivation, backfill and grammar first, package tests only (core.md:401; silo pr-open-app.md:21).
-  5. Narrow the cook gate to N21-N26 (silo pr-open-app.md:12; gate table :82).
+  5. PrivateFacts weight-unit fix ("2 pounds ground beef" never masks) and the "Dr. Pepper." fix on core/g105b (decisions.md 6:44 PM; QA review-933).
+  6. Narrow the cook gate to N21-N26 (silo pr-open-app.md:12; gate table :82).
 - Habits (ops/core-handoff.md:5-11, :20; silo lessons-mac.md:13, :15):
   - Package gate: `swift test` inside TesseraCore, no lock needed.
   - App gate: `scripts/ops/lane_lock.sh run <lane> "<purpose>" -- scripts/test.sh --app-only`, using master's script. Run xcodegen generate after adding or removing files.
@@ -41,7 +42,7 @@ Mac sessions cannot write the project folder, so each Mac lead writes or correct
   1. Haptic.notSaved central hook plus raw titles in NowPage, HomePlan, ReviewWeek, TrainingPage, Intents.swift:108 (ios-a.md:151; silo pr-open-builders.md:15).
   2. Mask sweep at source via ObjectPrivacy.routineTitle/shownTitle (ios-a.md:155-161). #895 may cover part; UNVERIFIED how much.
   3. Soul fixes: Reduce Motion keeps full opacity, Sleep keeps full colour (ios-a.md:153).
-  4. Pantry ochre removal and 100% ink for private recipes, RecipesShelfView.swift:83 (ios-a.md:177).
+  4. Pantry ochre removal is #917 (plain ink for state words; private recipes 100% ink, RecipesShelfView.swift:83, ios-a.md:177).
   5. Rotation-handoffs list: #662 strip fix, G12-G14 Week rest day, G25 Kitchen widget, KITCHEN index/Pantry peek (rotation-handoffs.md:24).
 - Habits (builder-a-handoff.md:24-26, :52; lessons-mac.md:13, :15):
   - Worktree ~/pilot/.claude/worktrees/recursing-moore-c565e2. Never create or switch worktrees. Run xcodegen generate after switching branches.
@@ -68,7 +69,7 @@ Mac sessions cannot write the project folder, so each Mac lead writes or correct
   1. PT58/PT59: PlanDigest.swift:96-97 and PlanData.swift:41-43 labels masked (silo pr-open-app.md:21; rotation-handoffs.md:68).
   2. Wall gap: a password link inside a longer paste is still saveable, PasteRecipe :274/:504-506 (silo pr-open-builders.md:16).
   3. #823 misses and "Tacos, taken back." in BottomChrome (pr-open-builders.md:16).
-  4. Remove tap-to-reveal on 4 surfaces (ShopTrip, ListsView, GroceriesView, RecipePage) and rewrite ShopTripTests (ios-b.md:279).
+  4. Tap-to-reveal removal on 4 surfaces is #885 + #912 (ios-b.md:279); also G182/G183 and the page-turn Settings PR (decisions.md, 7:37 PM-8:00 PM Oct 17).
   5. Settings as 4 pages of 6 rows with the Page turn row (ios-b.md:277); read design/gaps-98.md first (ios-b.md:281).
 - Habits: same Mac habits as Core. Lane-lock the simulator, push WIP before long gates, stop processes by PID only. A pkill by pattern from Builder B once killed another lane's run (silo lessons-mac.md:13). Use themed tokens (ios-b.md:57). Worktree and simulator name for B: UNVERIFIED, not in the repo notes read.
 - Blockers: Mac screen locked since ~1:51 PM Oct 17, so #564 WallsUITests and #868 PasteCycleTests wait for unlock (silo pr-open.md:11).
