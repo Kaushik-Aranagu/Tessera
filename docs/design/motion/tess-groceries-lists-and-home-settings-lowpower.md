@@ -64,7 +64,7 @@ Rule: in Low Power, ambient motion stops, motion that carries meaning becomes a 
 | Settings, monthly budget bar (ClaudeSection:432-438) | draws left to right over 0.5 s unless Reduce Motion | fills in place, no draw, in Low Power too |
 | Settings, rest-day sentence and the stray literals (RestDaySentence; ClaudeSection:191 `0.18`) | policy-routed except the `0.18` | the literal goes through the policy's 150 ms |
 | Settings, Page turn preview (tess-finish-hero-settings-paging.md item 40) | plays once per pick | the mini page crossfades 150 ms; no growing row |
-| Settings, pin a look | `.pinned` haptic, paint flood from the soul 700 ms | the flood becomes a 150 ms crossfade (HS43, G227); haptic stays |
+| Settings, pin a look | `.pinned` haptic, paint flood from the soul 700 ms | flood is one pass and stays (tess-motion.md 13); haptic stays |
 
 Checks: one device pass with `-lowPower` and a real toggle: Home at rest for 30 s draws nothing that moves; Training with a waiting lane shows a still guide; the Claude section opens with no 6 pt slide; `reduceMotionFlagIncludesLowPower` (one unit test on the flag, as gap hunt 16 G219 asks) covers every row at once.
 
