@@ -4,7 +4,7 @@ One index of every Kitchen-lead gap with a G id in `docs/product/kitchen-gap-hun
 
 **Status.** RULED = the hunt's own "Rulings in" block (or inline ruling) accepted a fix, or hunt 24 or 25 tags the row [RULED]. CALL = PRODUCT CALL (open): no accepted ruling is recorded in the hunt; it covers plain builds too. CLOSED = CLOSED IN CODE (none: see below). HIST = HISTORY: hunts 2 to 9, early board rounds, not re-graded (code status of G1 to G39 is in `kitchen-gap-status-oct17.md`).
 
-**CLOSED IN CODE: none.** Hunts 13, 14 and 24 say G139, G181, G182, G184 are fixed on branches (#912, core/g105b) pending merge. git grep on this checkout: `titleShown` is still in RecipePage.swift, `revealed` and "Shows it" in ShopTrip.swift and GroceriesView.swift, `pantryPrivate` nowhere, 0xA4601A in PantryColour.swift. Those rows stay RULED.
+**CLOSED IN CODE: none.** Hunts 13, 14 and 24 say G139, G181, G182, G184 are fixed on branches (#912, core/g105b) pending merge. git grep on this checkout: `titleShown` is still in RecipePage.swift, `revealed` in ShopTrip.swift and GroceriesView.swift, "Shows it" in GroceriesView.swift and ListsView.swift:364, `pantryPrivate` nowhere, 0xA4601A in PantryColour.swift. Those rows stay RULED.
 
 **Owner codes** (the "With" column): C Core engine, A Builder A, B Builder B, K Kitchen lead, P Product, D Design, R Research, O Ops/QA. A row sits under the first owner the hunt names, sorted blocker first. Sev: B blocker, I important, L low, - none given. Severity qualifiers (inferred, spec) are dropped; the tier is kept.
 
