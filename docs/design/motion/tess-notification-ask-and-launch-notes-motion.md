@@ -9,12 +9,12 @@ The ask is one plain line in the Tess slot with its answers as ink words (the on
 |---|---|---|---|---|
 | Ask arrives | the line enters the slot, 300 ms blur 4 pt to 0 with opacity; answers sit under it as ink words | 150 ms crossfade | announced once on arrival; never re-announced when the page redraws | none |
 | It waits | no timer, no fade, no auto-dismiss; it holds until he answers (G458); the soul follows the one-ask wait rules (`tess-motion.md:141`: no roam, split or repaint) | same | stays focusable | none |
-| Quiet hours (23:00 to 07:00) | a held ask shows and says nothing: no arrival motion, no announcement, no sound; it appears on the first open after 07:00 | same | not announced until it shows | none |
+| Quiet hours (23:00 to 07:00) | one reading (G458: a held ask says nothing): the ask is held, not drawn, so no arrival motion, no announcement, no sound; it is drawn with the normal arrival on the first open after 07:00 | same | not announced until it is drawn | none |
 | Large text | the answers stack under the line, one per row, each a 44 pt band; stacking is a layout change, no animation | same | order: line, then answers, "Not now" last | none |
 | He answers | the ask folds out (200 ms), Tess's one receipt line enters in the same slot; the notification choice is written once | 150 ms crossfade both | receipt announced | the area's own `.made`, once |
 | "Not now" | folds out, no receipt line, nothing written, the ask returns on the next eligible open per Product | 150 ms | named action "Not now" on the line (G458), spoken as "Not now" | none |
 
-Lab defaults: the arrival blur matches the error notice; "Not now" gets no haptic (it writes nothing).
+Lab defaults (marked per row where they apply): the arrival blur matches the error notice, the 200 ms fold on answer, the large-text stack as a no-animation layout change; "Not now" gets no haptic (it writes nothing).
 
 ## B. Launch notes (G442 to G446)
 Launch notes are plain lines that explain a bad start. They never use the warning haptic: `.warning` is for a write that did not save in front of him, and a launch note is information.
@@ -23,8 +23,8 @@ Launch notes are plain lines that explain a bad start. They never use the warnin
 |---|---|---|---|---|
 | Setup failed (G442) | "Couldn't set up your exercises. Close and reopen the app." | enters in the Home slot with the first-frame entrance (no extra motion; 150 ms crossfade in RM/LP); the next launch retries silently | stays until a good launch clears it | none |
 | Not saving this time (G443) | "Not saving this time." on Home and the Review header | plain line, no animation after it appears; it does not pulse and no UNDO shares the slot | the whole session; cleared only by a good launch | none (one `.warning` only when an actual write he made fails, per H13) |
-| Worded for the next launch (G444) | "Last time your data couldn't open. It's safe." instruction first, three lines at most | crossfade in, crossfade out; at three lines the layout does not grow the page, it scrolls inside the slot at large text | until read once, then 10 s under VoiceOver | none |
-| Old-store move (G445) | no line while it runs; it runs behind the first frame | nothing moves; the first frame is never delayed by it | n/a | none |
+| Worded for the next launch (G444) | "Last time your data couldn't open. It's safe." instruction first, three lines at most | crossfade in, crossfade out; at three lines the layout does not grow the page, it scrolls inside the slot at large text (lab default) | until read once, then 10 s under VoiceOver (lab default) | none |
+| Old-store move and open failure (G445) | no line while the move runs; it runs behind the first frame; a failure to open sets the same kind of launch note as G442 (wording from Core); the move stops retrying after a counted number of launches (Core's number) and logs every failure | nothing moves; the first frame is never delayed by it | n/a | none |
 | First-launch rest-day receipt (G446) | the shared receipt, 4 s hold | normal receipt entrance; outside 07:00 to 23:00 it is held until the next open (no 3 AM receipt) | 4 s (10 s under VoiceOver) | none |
 
 All launch notes are announced once, not on every Home redraw. A note and an UNDO never show together; the newest op wins the slot (DEC:1077 item 2).
