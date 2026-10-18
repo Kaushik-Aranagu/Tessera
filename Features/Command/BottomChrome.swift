@@ -514,7 +514,9 @@ struct BottomChrome: View {
         let lift = isQuestion ? nil : model.pendingDatedLift
         ghost = nil
         drying = 0
-        model.commandDraft = ""
+        // Offline, a capture the walls stopped can't be read yet: his words stay in the Ask for the retry online
+        // (Product ruling), and Tess's line says so.
+        model.commandDraft = AskCopy.keepsDraft(answer) ? model.commandDraft : ""
         withTesseraAnimation(.spring(response: 0.42, dampingFraction: 0.9), reduceMotion: reduceMotion) {
             model.isCommandExpanded = false
             // At rest the soul is small: `.done` would multiply its dabs into mud, so it brightens instead.
@@ -764,5 +766,16 @@ enum UndoCopy {
         guard let comma = receipt.range(of: ", ") else { return "Taken back." }
         let thing = receipt[..<comma.lowerBound].trimmingCharacters(in: .whitespaces)
         return thing.isEmpty ? "Taken back." : "\(thing), taken back."
+    }
+}
+
+/// The Ask's own rules for a reply.
+enum AskCopy {
+    /// Core's offline line for a capture the walls stopped (Product ruling): the typed words are kept for the retry.
+    static let offlineRetry = "Couldn't read that offline. Try again online."
+
+    /// Whether the Ask keeps what he typed after this reply.
+    static func keepsDraft(_ answer: String) -> Bool {
+        answer == offlineRetry
     }
 }
