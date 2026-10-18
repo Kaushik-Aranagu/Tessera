@@ -94,8 +94,17 @@ public struct TessRouter {
         // or a refusal ("I don't keep sums of money.", "$212.37 at Costco?") is its own, and stays on the phone.
         let secret = SecretWords.mentions(request.text)
         let walled = PrivateFacts.isWalled(request.text, lastWeightKg: request.lastWeightKg(engine))
+        // A cook timer never leaves the phone (Research #880): a phrase about a timer is read here or not at all.
+        let timerWords = request.text.lowercased().split { !$0.isLetter }
+        let aboutATimer = timerWords.contains("timer") || timerWords.contains("timers")
+        // While a cook is running, what he says belongs to the cook ("8 mins", "pasta 10", "step 3", "how long left",
+        // "stop the rice"): read on the phone or not at all (Research #880, N21 to N26).
+        let cooking = ProcessTable(engine: engine).running().flatMap(\.subject).map { subject in
+            engine.classes[.cook].map { subject.classDef?.id == $0.id } ?? false
+        } ?? false
         for model in models where model.isAvailable(for: request.use)
             && !((secret || walled) && model.route == .claude && asked?.source == .grammar)
+            && !((aboutATimer || cooking) && model.route == .claude)
         {
             engine.attribution = (model.route, model.modelName)
             let result = await model.run(request, engine: engine)
