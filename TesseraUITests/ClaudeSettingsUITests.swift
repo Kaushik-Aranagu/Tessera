@@ -22,15 +22,16 @@ final class ClaudeSettingsUITests: SimulatorOnlyTestCase {
 
         // Step one asks, and Keep leaves the key where it was.
         app.buttons["REMOVE"].tap()
-        XCTAssertTrue(app.buttons["REMOVE KEY"].waitForExistence(timeout: 3))
-        app.buttons["KEEP"].tap()
+        XCTAssertTrue(app.buttons["KEEP IT"].waitForExistence(timeout: 3))
+        app.buttons["KEEP IT"].tap()
         XCTAssertTrue(keyLine.waitForExistence(timeout: 3))
         assertNoKeyTail(in: app)
         sleep(1)
 
         // Step two removes it at once: a plain receipt, no UNDO, nothing held for 10 s.
         app.buttons["REMOVE"].tap()
-        app.buttons["REMOVE KEY"].tap()
+        XCTAssertTrue(app.buttons["KEEP IT"].waitForExistence(timeout: 3))
+        app.buttons["REMOVE"].tap()
         XCTAssertTrue(app.staticTexts["Claude key removed. Everything stays on this phone."]
             .waitForExistence(timeout: 3))
         XCTAssertFalse(app.buttons["UNDO"].exists)

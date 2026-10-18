@@ -203,10 +203,11 @@ struct ClaudeSection: View {
                     .accessibilityLabel("Claude key saved, \(status)")
                 HStack(spacing: 0) {
                     if confirmingRemove {
-                        Text("Remove the key? ").textRole(.body).foregroundStyle(Theme.Colors.ink)
-                        Button("Remove key", action: remove)
+                        Text("Remove the Claude key? ").textRole(.body).foregroundStyle(Theme.Colors.ink)
+                        Button("Remove", action: remove)
+                            .accessibilityLabel("Remove the Claude key")
                         Text(" · ").textRole(.labelStrong).foregroundStyle(Theme.Colors.inkSecondary)
-                        Button("Keep") { confirmingRemove = false }
+                        Button("Keep it") { confirmingRemove = false }
                     } else {
                         Button("Test") { retest() }
                         Text(" · ").textRole(.labelStrong).foregroundStyle(Theme.Colors.inkSecondary)
